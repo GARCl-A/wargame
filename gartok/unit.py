@@ -194,6 +194,16 @@ class Unit:
         return mod(self.charisma + self.hunger_attribute_penalty
                    + self._talent_sum("haggle_charisma"))
 
+    def price_mods(self):
+        """This member's talent contributions to a market visit's deal fraction
+        (`economy.PriceMod`). Yielded, not situational -- economy scopes each by
+        item and by buy/sell."""
+        n = self._talent_sum("food_haggle")
+        if n:
+            yield economy.PriceMod(
+                round(economy.CHA_DEAL_STEP * n, 3), "Provisioner",
+                applies=lambda item, side: side == "buy" and item in data.FOOD_ITEMS)
+
     def choose_talent(self, track, talent_id):
         """Spend a pick in `track` on `talent_id`. Returns True if it took."""
         t = talents.get(talent_id)
@@ -342,8 +352,10 @@ class Unit:
         if self._hp_roll is None:
             self._hp_roll = roll(1, self.race["hd"])
         con = self.mod_constitution
+        hit_dice = 1 + len(self._level_hp_rolls)
         self.hp_max = (max(1, self._hp_roll + con + ab.hp_max)
-                       + sum(max(1, die + con) for die in self._level_hp_rolls))
+                       + sum(max(1, die + con) for die in self._level_hp_rolls)
+                       + self._talent_sum("hp_per_hd") * hit_dice)
         if self.hunger_level >= 2:
             self.hp_max = 1
 
@@ -354,7 +366,8 @@ class Unit:
         dex_ac = self.mod_dexterity
         if armor is not None and armor["max_dex"] is not None:
             dex_ac = min(dex_ac, armor["max_dex"])
-        self.ac_base = 10 + dex_ac + (armor["ac"] if armor else 0)
+        self.ac_base = (10 + dex_ac + (armor["ac"] if armor else 0)
+                        + self._talent_sum("ac_bonus"))
         self.ac_natural = ab.ac_natural
 
         # Mental Defense (target of the Demoralize action; AC-like, uses Wisdom)
@@ -471,16 +484,22 @@ class Unit:
     @property
     def attack_bonus(self):
         """Base to-hit modifier and the attribute feeding it, as `(value, src)`.
-        No target, flank or condition mods -- those are situational and need the
-        Combatant. Empty hands hit with Strength (the unarmed attack)."""
+        Includes the flat talent bonus (Sure Strike / Deadeye); no target, flank
+        or condition mods -- those are situational and need the Combatant. Empty
+        hands hit with Strength (the unarmed attack)."""
         w = self.weapon
         if w is None:
-            return self.mod_strength, "STR"
-        if w["range"] > 0:
-            return self.mod_dexterity, "DEX"
-        if w["finesse"]:
-            return max(self.mod_strength, self.mod_dexterity), "STR/DEX"
-        return self.mod_strength, "STR"
+            base, stat, src = self.mod_strength, "str", "STR"
+        elif w["range"] > 0:
+            base, stat, src = self.mod_dexterity, "dex", "DEX"
+        elif w["finesse"]:
+            base = max(self.mod_strength, self.mod_dexterity)
+            stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
+            src = "STR/DEX"
+        else:
+            base, stat, src = self.mod_strength, "str", "STR"
+        base += self._talent_sum("to_hit_dex" if stat == "dex" else "to_hit_str")
+        return base, src
 
     @property
     def ac(self):

@@ -103,24 +103,37 @@ class Guild:
 
     def work_shift(self, workers, hours):
         """A stint at the lumber yard outside the walls: `workers` trade `hours`
-        of the day for copper. Pays `economy.lumber_pay(hours)` straight into
-        each worker's purse and banks the hours toward their work-XP. Advances
-        the campaign clock through `pass_time` (a long shift can cross midnight
-        and run the daily meal), so a starving worker may not live to be paid.
-        Returns the events to show."""
+        of the day for copper. Pays `economy.lumber_pay(hours)` (lifted by the
+        Piecework talent) straight into each worker's purse and banks the full
+        `hours` toward their work-XP. Brisk Hands is each worker's own -- a Brisk
+        worker finishes their share early, but the guild moves on as one token
+        only once the SLOWEST worker is done, so the clock saving lands only when
+        nobody on the crew is dragging. Advances the campaign clock through
+        `pass_time` (a long shift can cross midnight and run the daily meal), so a
+        starving worker may not live to be paid. Returns the events to show."""
         hours = int(hours)
         pay = economy.lumber_pay(hours)
-        events = self.pass_time(hours)
-        earners = [u for u in workers if u in self.roster]
+        crew = [u for u in workers if u in self.roster]
+        slowest = max((1 - u._talent_sum("activity_speed") for u in crew), default=1.0)
+        clock_hours = hours * slowest
+        events = self.pass_time(clock_hours)
+        earners = [u for u in workers if u in self.roster]   # a long shift can starve one
+        paid = []
         for u in earners:
-            u.gold += pay
+            gain = round(pay * (1 + u._talent_sum("coin_gain")))
+            u.gold += gain
             u.work_hours += hours
             u.collect_levels()                 # more work marks can lift the mean level
+            paid.append(gain)
 
         if earners:
             names = ", ".join(u.name for u in earners)
-            events.append(f"Lumber yard: {names} worked {hours} h "
-                          f"(+{pay} copper each).")
+            wage = (f"+{paid[0]} copper each" if len(set(paid)) == 1
+                    else f"+{sum(paid)} copper total")
+            note = f"Lumber yard: {names} worked {hours} h ({wage})."
+            if clock_hours < hours:
+                note += f"  Brisk Hands: crew done in {clock_hours:g} h."
+            events.append(note)
         return events
 
     @property

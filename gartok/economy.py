@@ -20,6 +20,8 @@ TORCH_ITEM = data.TORCH_ITEM
 
 STARTING_WEALTH_DICE = (5, 10)          # 5d10 copper rolled at character creation
 SELL_FACTOR = 0.5                       # resale = half the buy price, floored at 1
+CHA_DEAL_STEP = 0.04                    # deal fraction per point of haggle Charisma
+                                       #   mod (and per step of the food talent)
 
 # The lumber yard outside the walls: day-labour for anyone who is broke. You
 # borrow the foreman's axe and fell trees on land that is not yours, so you keep
@@ -60,23 +62,80 @@ DEAL_MIN, DEAL_MAX = -0.15, 0.25
 _ALIGN_DEAL = {0: 0.10, 1: 0.05, 2: 0.0, 3: -0.05, 4: -0.10}   # keyed by alignment_distance
 
 
-def market_deal(party, vendor_language, vendor_alignment):
-    """Best deal `party` can strike with a vendor of this language and alignment.
+# Haggling -- the "deal" is a list of contributions, not one scalar, so a new
+# source (a talent, later a vendor's standing) is just another `PriceMod` rather
+# than a new argument threaded through pricing. The base haggle is one untyped
+# mod; `buy_price` / `sell_price` fold the ones that apply to each line item
+# through `data.resolve_bonus` -- the same typed-bonus shape combat uses.
 
-    Only members who share the vendor's language can haggle at all; among those,
-    the one with the highest Charisma modifier speaks for the group. Their
-    Charisma narrows the spread; how close their alignment sits to the vendor's
-    nudges it further (same bent = a break, opposite = a premium).
+class PriceMod:
+    """One contribution to a market visit's deal fraction.
+
+    `applies(item, side)` -- side is "buy" or "sell" -- scopes the mod to some
+    line items (default: everything). `kind` feeds `data.resolve_bonus`: the same
+    kind does not stack, `None` stacks (and every penalty stacks).
     """
+
+    def __init__(self, amount, label, *, kind=None, applies=None):
+        self.amount = amount
+        self.label = label
+        self.kind = kind
+        self._applies = applies
+
+    def applies(self, item, side):
+        return self._applies is None or self._applies(item, side)
+
+
+def _haggle_fraction(party, vendor_language, vendor_alignment):
+    """The base deal for the whole party: only members who share the vendor's
+    language haggle; among those the highest Charisma modifier speaks. Their
+    Charisma narrows the spread; alignment distance nudges it (same bent = a
+    break, opposite = a premium)."""
     speakers = [m for m in party if vendor_alignment is not None
                 and vendor_language in m.languages]
     if not speakers:
         return 0.0
     voice = max(speakers, key=lambda m: (m.haggle_charisma_mod,
                 -data.alignment_distance(m.alignment, vendor_alignment)))
-    cha = max(0, voice.haggle_charisma_mod) * 0.04
+    cha = max(0, voice.haggle_charisma_mod) * CHA_DEAL_STEP
     align = _ALIGN_DEAL[data.alignment_distance(voice.alignment, vendor_alignment)]
     return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
+
+
+def market_deal(party, vendor_language, vendor_alignment):
+    """The single scalar deal (base haggle only). Kept for callers that just want
+    the headline number; per-item pricing goes through `deal_mods` + `buy_price`.
+    """
+    return _haggle_fraction(party, vendor_language, vendor_alignment)
+
+
+def deal_mods(party, vendor_language, vendor_alignment):
+    """Every `PriceMod` in play for this visit: the base haggle plus each
+    shopper's talent contributions. Hand the list to `buy_price` / `sell_price`.
+    """
+    mods = []
+    base = _haggle_fraction(party, vendor_language, vendor_alignment)
+    if base:
+        mods.append(PriceMod(base, "haggle"))
+    for m in party:
+        mods.extend(m.price_mods())
+    return mods
+
+
+def _as_mods(mods):
+    """Accept the `PriceMod` list, or the old scalar deal (tests / callers)."""
+    if isinstance(mods, (int, float)):
+        return [PriceMod(float(mods), "deal")] if mods else []
+    return list(mods)
+
+
+def deal_value(mods, item, side):
+    """Net deal fraction for one line item (`side` = "buy" | "sell"), clamped.
+    `item` None = the general deal, ignoring item-scoped mods."""
+    contribs = [(m.amount, m.kind, m.label) for m in _as_mods(mods)
+                if m.applies(item, side)]
+    total, _ = data.resolve_bonus(contribs)
+    return round(max(DEAL_MIN, min(DEAL_MAX, total)), 3)
 
 
 def lumber_pay(hours):
@@ -85,15 +144,18 @@ def lumber_pay(hours):
     return LUMBER_WAGE * (int(hours) // LUMBER_BLOCK_HOURS)
 
 
-def buy_price(name, deal=0.0):
-    """What the market charges for `name` (fallback: a token price by weight)."""
-    base = PRICES.get(name, max(1, round(data.item_weight(name) * 2)))
-    return max(1, round(base * (1 - deal)))
+def _base_price(name):
+    return PRICES.get(name, max(1, round(data.item_weight(name) * 2)))
 
 
-def sell_price(name, deal=0.0):
+def buy_price(name, mods=()):
+    """What the market charges for `name` (fallback: a token price by weight).
+    `mods` is a `PriceMod` list (from `deal_mods`) or a bare deal fraction."""
+    return max(1, round(_base_price(name) * (1 - deal_value(mods, name, "buy"))))
+
+
+def sell_price(name, mods=()):
     """What the market pays for `name` -- kept a fraction of the buy price, so
     resale is a loss even after a good haggle (`deal` up to `DEAL_MAX` = 0.25
     keeps the two factors 0.15 apart)."""
-    base = PRICES.get(name, max(1, round(data.item_weight(name) * 2)))
-    return max(1, round(base * (SELL_FACTOR + 0.4 * deal)))
+    return max(1, round(_base_price(name) * (SELL_FACTOR + 0.4 * deal_value(mods, name, "sell"))))

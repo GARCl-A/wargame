@@ -876,6 +876,18 @@ def test_unit_attack_bonus_picks_the_right_attribute():
     assert u.attack_bonus == (-1, "DEX")
 
 
+def test_attack_bonus_folds_in_the_to_hit_talent():
+    u = _unit(seed=1)
+    u.combat_xp = 10
+    u.choose_talent("combat", "strong")
+    u.choose_talent("combat", "sure_strike")      # +1 to hit on STR attacks
+    u.give_to_hand("Axe")
+    assert u.attack_bonus[0] == u.mod_strength + 1
+    u._base_inventory.append("Quiver")
+    u.give_to_hand("Light Crossbow")              # DEX attack -> Sure Strike doesn't apply
+    assert u.attack_bonus[0] == u.mod_dexterity
+
+
 def test_crossbow_without_ammo_is_improvised():
     u = _combatant()
     u.equip_weapon("Light Crossbow"); u.ammo = 0
@@ -1635,6 +1647,172 @@ def test_talents_and_hit_dice_survive_a_save_without_rerolling():
     assert back._level_hp_rolls == u._level_hp_rolls
     assert back.hp_max == u.hp_max
     assert back.constitution == u.constitution
+
+
+# --------------------------------------------------------------------------- #
+# talents: tier 2 (specialise the tier-1 identity)                             #
+# --------------------------------------------------------------------------- #
+
+def test_tier2_talent_needs_its_root_first():
+    u = _unit(seed=1)
+    u.combat_xp = 10                              # combat level 2 -> 2 picks
+    assert not u.choose_talent("combat", "sure_strike")   # no Strong yet
+    assert u.choose_talent("combat", "strong")
+    assert u.choose_talent("combat", "sure_strike")
+    assert u.talents["combat"] == ["strong", "sure_strike"]
+
+
+def test_sure_strike_and_deadeye_key_off_the_attack_attribute():
+    tgt = _combatant(seed=7)
+
+    def to_hit(weapon, *picks, ammo=False):
+        u = _unit(seed=1)
+        u.combat_xp = 10
+        for p in picks:
+            assert u.choose_talent("combat", p)
+        if ammo:
+            u._base_inventory.append("Quiver")
+        u.give_to_hand(weapon)
+        return sum(v for v, *_ in Combatant(u).attack_mods(tgt))
+
+    # Sure Strike (under Strong): +1 on a Strength swing, nothing on a bolt
+    assert to_hit("Axe", "strong", "sure_strike") == to_hit("Axe", "strong") + 1
+    assert to_hit("Light Crossbow", "strong", "sure_strike", ammo=True) \
+        == to_hit("Light Crossbow", "strong", ammo=True)
+    # Deadeye (under Agile): the mirror image
+    assert to_hit("Light Crossbow", "agile", "deadeye", ammo=True) \
+        == to_hit("Light Crossbow", "agile", ammo=True) + 1
+    assert to_hit("Axe", "agile", "deadeye") == to_hit("Axe", "agile")
+
+
+def test_heavy_hand_adds_one_melee_damage():
+    def dmg(*picks):
+        u = _unit(seed=1)
+        u.combat_xp = 10
+        for p in picks:
+            assert u.choose_talent("combat", p)
+        u.give_to_hand("Axe")
+        c = Combatant(u)
+        random.seed(99)
+        return c.damage_roll()
+
+    assert dmg("strong", "heavy_hand") == dmg("strong") + 1
+
+
+def test_long_reach_extends_ranged_and_thrown_not_melee():
+    u = _unit(seed=1)
+    u.combat_xp = 10
+    assert u.choose_talent("combat", "agile")
+    assert u.choose_talent("combat", "long_reach")
+    u._base_inventory.append("Quiver")
+
+    u.give_to_hand("Light Crossbow")
+    assert Combatant(u).attack_range == data.WEAPONS["Light Crossbow"]["range"] + 1
+    u.give_to_hand("Dagger")
+    assert Combatant(u).throw_range == data.WEAPONS["Dagger"]["thrown"] + 1
+    u.give_to_hand("Axe")
+    assert Combatant(u).attack_range == 1         # melee reach is untouched
+
+
+def test_hardy_adds_hp_per_hit_die_and_bulwark_adds_ac():
+    u = _unit(seed=1)
+    u.combat_xp = 21                              # combat level 3 -> 3 picks
+    u.collect_levels()                            # mean level 1 -> one extra hit die
+    hit_dice = 1 + len(u._level_hp_rolls)
+    assert u.choose_talent("combat", "tough")
+    hp_after_tough, ac_after_tough = u.hp_max, u.ac
+    assert u.choose_talent("combat", "hardy")
+    assert u.hp_max == hp_after_tough + hit_dice
+    assert u.choose_talent("combat", "bulwark")
+    assert u.ac == ac_after_tough + 1
+
+
+def test_tier2_talent_effect_survives_a_save():
+    u = _unit(seed=1)
+    u.combat_xp = 10
+    u.choose_talent("combat", "tough")
+    u.choose_talent("combat", "bulwark")
+    ac = u.ac
+    back = Unit.from_save(persist.unit_to_dict(u))
+    assert back.talents["combat"] == ["tough", "bulwark"]
+    assert back.ac == ac
+
+
+def _work_ready(*picks):
+    """A fresh Unit at work level 2 with the given work talents spent."""
+    u = Unit("player")
+    u.gold = 0
+    u._base_inventory = []
+    u.work_hours = economy.LUMBER_XP_HOURS * 6    # work_xp 6 -> work level 2 -> 2 picks
+    u._derive_combat()
+    for p in picks:
+        assert u.choose_talent("work", p)
+    return u
+
+
+def test_piecework_lifts_pay_and_brisk_hands_is_individual():
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    random.seed(3)
+    plain = _work_ready()
+    rich = _work_ready("carrier", "piecework")
+    quick = _work_ready("carrier", "brisk_hands")
+
+    # mixed crew: pay is per-worker; the guild leaves when the SLOWEST is done
+    guild = Guild([plain, rich, quick], clock=Clock(6 * 3600))
+    base = economy.lumber_pay(16)                 # 12 copper
+    guild.work_shift([plain, rich, quick], 16)
+    assert plain.gold == base
+    assert rich.gold == round(base * 1.20)        # Piecework: +20%
+    assert quick.gold == base                     # speed does not touch the pay
+    assert all(u.work_hours == economy.LUMBER_XP_HOURS * 6 + 16
+               for u in (plain, rich, quick))     # full hours banked for XP
+    assert guild.clock.seconds == 6 * 3600 + 16 * 3600    # plain drags: full 16 h
+
+    # a Brisk worker on their own: 16 h of work banked in 14.4 h of the clock
+    solo = Guild([_work_ready("carrier", "brisk_hands")], clock=Clock(6 * 3600))
+    solo.work_shift(solo.roster, 16)
+    assert solo.roster[0].work_hours == economy.LUMBER_XP_HOURS * 6 + 16
+    assert solo.clock.seconds == 6 * 3600 + round(16 * 0.9 * 3600)
+
+
+def test_provisioner_discounts_food_with_no_shared_language():
+    u = _work_ready("negotiator", "provisioner")
+    u.languages = ["Orcish"]                      # not the market's Ankarin
+    mods = economy.deal_mods([u], "Ankarin", "Lawful and Neutral")
+    assert economy.deal_value(mods, "Axe", "buy") == 0.0          # no general haggle
+    assert economy.deal_value(mods, "1kg Meat", "buy") == economy.CHA_DEAL_STEP
+    assert economy.deal_value(mods, "1kg Meat", "sell") == 0.0    # buy side only
+
+
+def test_provisioner_stacks_on_the_base_haggle_for_food_only():
+    u = _work_ready("negotiator", "provisioner")
+    u.languages = ["Ankarin"]
+    u.charisma = 12
+    u.alignment = "Lawful and Neutral"           # same as the vendor -> +0.10
+    u._derive_combat()
+    mods = economy.deal_mods([u], "Ankarin", "Lawful and Neutral")
+    general = economy.deal_value(mods, "Axe", "buy")
+    assert 0 < general < economy.DEAL_MAX
+    assert economy.deal_value(mods, "1kg Meat", "buy") == round(
+        general + economy.CHA_DEAL_STEP, 3)
+    assert economy.deal_value(mods, "1kg Meat", "sell") == general   # not on sells
+
+
+def test_fixer_lifts_the_recruiters_pitch():
+    r = _work_ready("negotiator", "fixer")
+    r.languages = ["Ankarin"]
+    r.alignment = "Neutral and Neutral"
+    r.mod_charisma = 0                            # pin after the talent re-derive
+    c = _unit(seed=2, languages=["Ankarin"], alignment="Neutral and Neutral")
+    c.mod_charisma = 0
+
+    p = recruit.convince(r, c, 2, rng=_FixedRNG(10, 10))   # 10 +1 Fixer = 11 vs 10
+    assert p.ok and (1, "Fixer") in p.modifiers
+    # same rolls, no talent: 10 vs 10 -> tie -> the stranger stays put
+    bare = _unit(seed=1, languages=["Ankarin"], alignment="Neutral and Neutral")
+    bare.mod_charisma = 0
+    assert not recruit.convince(bare, c, 2, rng=_FixedRNG(10, 10)).ok
 
 
 # --------------------------------------------------------------------------- #

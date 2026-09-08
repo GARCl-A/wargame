@@ -43,9 +43,10 @@ class MarketScreen(DragSelectMixin, Screen):
         self.node = node
         self.on_done = on_done
         self.purse = sum(m.gold for m in shoppers)   # pooled for the visit
-        # haggling: shared language + charisma + alignment bend every price
-        self.deal = economy.market_deal(shoppers, getattr(node, "language", None),
-                                     getattr(node, "alignment", None))
+        # haggling: language + charisma + alignment (and talents) bend the prices.
+        # `self.deal` is a list of economy.PriceMod, fed straight to buy/sell_price.
+        self.deal = economy.deal_mods(shoppers, getattr(node, "language", None),
+                                      getattr(node, "alignment", None))
         self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
         self.notice = None
         self.stock_rows = []                 # [(rect, name)]
@@ -92,15 +93,20 @@ class MarketScreen(DragSelectMixin, Screen):
     def _deal_note(self):
         """One-line summary of how the party's haggling moved the prices."""
         lang = getattr(self.node, "language", None)
+        general = economy.deal_value(self.deal, None, "buy")
+        food = economy.deal_value(self.deal, next(iter(data.FOOD_ITEMS)), "buy")
+        food_tag = (f"  ·  food -{round(food * 100)}%"
+                    if round(food, 3) != round(general, 3) else "")
         if not lang:
             return f"resale at {int(economy.SELL_FACTOR * 100)}% of price"
-        pct = round(self.deal * 100)
+        pct = round(general * 100)
         speaks = any(lang in m.languages for m in self.shoppers)
         if not speaks:
-            return f"no one speaks {lang}: no haggling (resale at {int(economy.SELL_FACTOR * 100)}%)"
+            return (f"no one speaks {lang}: no haggling "
+                    f"(resale at {int(economy.SELL_FACTOR * 100)}%)" + food_tag)
         how = (f"{pct}% discount" if pct > 0
                else f"{-pct}% markup" if pct < 0 else "no margin")
-        return f"vendor speaks {lang} · {self.node.alignment} · {how}"
+        return f"vendor speaks {lang} · {self.node.alignment} · {how}{food_tag}"
 
     # ------------------------------------------------------------------ #
     # input: click / shift-click to (multi-)select, or drag onto a card  #

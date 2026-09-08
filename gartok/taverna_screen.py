@@ -57,7 +57,8 @@ class TavernaScreen(Screen):
         pen = recruit.size_penalty(len(self.guild.roster))
         opts = [(m, m.mod_charisma
                  - recruit.ALIGNMENT_PENALTY * alignment_distance(m.alignment, cand.alignment)
-                 - pen)
+                 - pen
+                 + m._talent_sum("recruit_charisma"))
                 for m in self._eligible(cand)]
         return max(opts, key=lambda t: t[1]) if opts else None
 

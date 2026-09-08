@@ -259,7 +259,9 @@ class Combatant:
 
     @property
     def attack_range(self):
-        return self.weapon["range"] if self.ranged else 1
+        if self.ranged:
+            return self.weapon["range"] + self.char._talent_sum("ranged_reach")
+        return 1
 
     @property
     def can_throw(self):
@@ -267,7 +269,9 @@ class Combatant:
 
     @property
     def throw_range(self):
-        return self.weapon["thrown"] if self.can_throw else 0
+        if not self.can_throw:
+            return 0
+        return self.weapon["thrown"] + self.char._talent_sum("ranged_reach")
 
     @property
     def ac(self):
@@ -290,14 +294,23 @@ class Combatant:
         """List of (value, type, label) that enter the attack roll."""
         if thrown:
             mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
+            hit_stat = "dex"
         elif self.unarmed or self.improvised:
             mods = [(self.mod_strength, None, "STR")]
+            hit_stat = "str"
         elif self.ranged:
             mods = [(self.mod_dexterity, None, "DEX")]
+            hit_stat = "dex"
         elif self.weapon["finesse"]:
             mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
+            hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         else:
             mods = [(self.mod_strength, None, "STR")]
+            hit_stat = "str"
+        # tier-2 combat talent: +hit on the attribute this attack actually uses
+        talent = self.char._talent_sum("to_hit_dex" if hit_stat == "dex" else "to_hit_str")
+        if talent:
+            mods.append((talent, None, f"{hit_stat.upper()} talent"))
         if self._ability.attack_mods:
             mods += self._ability.attack_mods(self, target, flanking)
         mods += self._condition_mods("attack_mods")
@@ -313,7 +326,8 @@ class Combatant:
         if thrown:
             bonus += self.mod_strength              # thrown: add Strength to damage
         elif not self.ranged:                       # melee (includes unarmed)
-            bonus += self.mod_strength + self._ability.melee_damage
+            bonus += (self.mod_strength + self._ability.melee_damage
+                      + self.char._talent_sum("melee_damage"))
         return max(1, dice + bonus)
 
     def take_damage(self, amount, log):

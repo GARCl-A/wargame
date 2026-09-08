@@ -140,8 +140,11 @@ class LevelScreen(Screen):
     def _draw_node(self, screen, track, t, x, y, w):
         f = self.fonts
         state = self._node_state(track, t)
-        desc_lines = wrap_lines([t.effect], f.body_sm, w - 2 * SP3 - 10)
-        rect = pygame.Rect(x, y, w, 32 + len(desc_lines) * 15)
+        # a locked node collapses to its name + "needs X" -- the tree can run deep
+        desc_lines = ([] if state == "locked"
+                      else wrap_lines([t.effect], f.body_sm, w - 2 * SP3 - 10))
+        rect = pygame.Rect(x, y, w, (26 if state == "locked" else 32)
+                           + len(desc_lines) * 15)
         hov = state == "open" and rect.collidepoint(self.mouse)
 
         fill = {"taken": SURFACE_2, "open": SURFACE_3 if hov else SURFACE_2,
