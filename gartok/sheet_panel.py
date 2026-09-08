@@ -86,6 +86,7 @@ def draw_sheet(screen, rect, u, f):
     text(screen, f"{u.race['name']}  ·  {u.occupation['name']}  ·  {u.alignment}",
          f.body_sm, INK_DIM, (tok[0] + 26, y + 18))
     text(screen, f"{u.size}  ·  {u.age} anos  ·  {u.combat_xp} XP de combate"
+         + (f"  ·  {u.work_xp} XP de trabalho" if u.work_xp else "")
          + (f"  ·  ocupa {u.footprint}x{u.footprint}" if u.footprint > 1 else ""),
          f.body_sm, INK_FAINT, (tok[0] + 26, y + 33))
     note, ncol = _status_note(u)

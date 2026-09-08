@@ -68,7 +68,8 @@ def character_sheet(u):
 
     return [
         u.name,
-        f"Tendencia: {u.alignment}   Idade: {u.age}   XP de combate: {u.combat_xp}",
+        f"Tendencia: {u.alignment}   Idade: {u.age}   XP de combate: {u.combat_xp}"
+        + (f"   XP de trabalho: {u.work_xp}" if u.work_xp else ""),
         stats,
         line_a,
         line_b,

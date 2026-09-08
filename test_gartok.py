@@ -1094,6 +1094,63 @@ def test_guild_pass_time_feeds_starves_and_buries():
     assert doomed not in guild.roster and fed in guild.roster
 
 
+def test_eat_now_only_bites_when_hungry_and_carrying_food():
+    u = _unit(seed=1)
+    u._base_inventory = ["1kg Carne"]
+    assert u.eat_now() is False                       # saciado: no meal, food kept
+    assert u._base_inventory == ["1kg Carne"]
+    u.unfed_days = 2
+    assert u.eat_now() is True
+    assert u.unfed_days == 0 and u._base_inventory == []
+    u.unfed_days = 2
+    assert u.eat_now() is False                       # hungry but nothing to eat
+
+
+def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    random.seed(3)
+    u = Unit("player")
+    u.unfed_days = 1
+    u._base_inventory = ["1kg Carne"]
+    u._derive_combat()
+    guild = Guild([u], clock=Clock(10 * 3600))        # 10:00 day 1
+    events = guild.do_maintenance()                   # 1 h stop, no day crossed
+    assert guild.clock.day == 1 and guild.clock.hour_of_day == 11
+    assert u.unfed_days == 0 and u.rations == 0
+    assert any("comer" in e for e in events)
+
+
+def test_guild_screen_multidrop_moves_every_picked_pack_item():
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    random.seed(4)
+    a, b = Unit("player"), Unit("player")
+    a._base_inventory = ["Corda", "1kg Carne", "Mapa"]
+    b._base_inventory = []
+    g = Guild([a, b])
+    scr = GuildScreen(None, g, on_back=lambda: None, on_menu=lambda: None)
+    scr.selected = [(a, 0), (a, 2)]                       # Corda + Mapa, indices bracket a keeper
+    scr._give_many(b, "pack")
+    assert a._base_inventory == ["1kg Carne"]             # the un-picked row is untouched
+    assert sorted(b._base_inventory) == ["Corda", "Mapa"]
+    assert scr.selected == []
+
+
+def test_guild_screen_multidrop_on_a_hand_takes_the_first_that_fits():
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    random.seed(4)
+    a = Unit("player")
+    a.equipped_weapon = None
+    a._base_inventory = ["Corda", "Adaga"]
+    g = Guild([a])
+    scr = GuildScreen(None, g, on_back=lambda: None, on_menu=lambda: None)
+    scr.selected = [(a, 0), (a, 1)]
+    scr._give_many(a, "hand")
+    assert a.equipped_weapon == "Adaga" and a._base_inventory == ["Corda"]
+
+
 def test_hunger_survives_a_save_round_trip():
     from gartok import persist
     random.seed(7)
@@ -1483,6 +1540,67 @@ def test_arena_torches_scatter_across_the_whole_floor():
         b = Battle([Unit("player")], [Unit("enemy")], scenario=ArenaScenario())
         xs.update(o.pos[0] for o in b.ground if o.is_torch)
     assert any(x < 5 for x in xs) and any(x > 10 for x in xs)   # not just the old centre band
+
+
+# --------------------------------------------------------------------------- #
+# lumber yard: day-labour for copper                                           #
+# --------------------------------------------------------------------------- #
+
+def test_lumber_pay_is_by_the_whole_block():
+    assert economy.lumber_pay(0) == 0
+    assert economy.lumber_pay(3) == 0                 # short of a block: nothing
+    assert economy.lumber_pay(4) == 3
+    assert economy.lumber_pay(15) == 9                # three blocks, 3 h unpaid
+    assert economy.lumber_pay(16) == 12               # a full day
+
+
+def test_work_shift_pays_every_worker_and_banks_the_hours():
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    random.seed(4)
+    a, b = Unit("player"), Unit("player")
+    a.gold = b.gold = 0
+    a._base_inventory = b._base_inventory = []
+    for u in (a, b):
+        u._derive_combat()
+    guild = Guild([a, b], clock=Clock(6 * 3600))      # 06:00 day 1
+    events = guild.work_shift([a, b], 16)
+    assert a.gold == 12 and b.gold == 12
+    assert a.work_hours == 16 and b.work_hours == 16
+    assert guild.clock.hour_of_day == 22 and guild.clock.day == 1
+    assert any("Madeireira" in e for e in events)
+
+
+def test_work_shift_crossing_midnight_runs_the_daily_meal():
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    random.seed(5)
+    u = Unit("player")
+    u.gold = 0
+    u._base_inventory = ["1kg Batata"]
+    u._derive_combat()
+    guild = Guild([u], clock=Clock(20 * 3600))        # 20:00 day 1
+    guild.work_shift([u], 8)                          # -> 04:00 day 2, one meal
+    assert guild.clock.day == 2
+    assert u.gold == 6 and u.rations == 0 and u.unfed_days == 0
+
+
+def test_work_xp_is_one_mark_per_16_hours_and_survives_a_save():
+    u = _unit(seed=6, work_hours=0)
+    assert u.work_xp == 0
+    u.work_hours = 15
+    assert u.work_xp == 0
+    u.work_hours = 32
+    assert u.work_xp == 2
+    assert Unit.from_save(persist.unit_to_dict(u)).work_hours == 32
+
+
+def test_madeireira_is_a_work_town_one_hour_from_the_city():
+    from gartok import world
+    n = world.node("madeireira")
+    assert n.kind == "town" and n.work
+    _, hours = world.route("cidade", "madeireira")
+    assert hours == 1
 
 
 # --------------------------------------------------------------------------- #

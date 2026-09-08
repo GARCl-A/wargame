@@ -37,6 +37,7 @@ def unit_to_dict(u):
         "gold": u.gold,                          # copper coins carried by the member
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
         "combat_xp": u.combat_xp,                # +1 per enemy downed in a fight
+        "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},
         "age_base": u._age_base,
         "hp_roll": u._hp_roll,                   # 1dHD, rolled once at creation

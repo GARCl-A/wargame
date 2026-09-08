@@ -1,43 +1,67 @@
 """Guild screen: the roster-and-gear view between outings.
 
-Today the guild is just its members. A weapon is an item: it can sit in a
-member's pack or be held in a hand. Each doll has two hand slots -- the weapon
-hand (a weapon, 1 or 2 handed) and the off hand (a torch, for now). Click an
-item (a hand slot or a pack row), then click where it goes: a HAND, the OFF
-HAND, or the PACK. Moving works within one doll too (equip from the pack / stow
-what's held).
+Master-detail: a column of member cards on the left picks who you are looking
+at; a wide panel on the right lays that member's loadout out with room to
+breathe -- stat chips, a carry bar, and the MAOS / CORPO / MOCHILA slots.
+
+A weapon is an item: it can sit in a member's pack or be held in a hand. Each
+doll has two hand slots -- the weapon hand (a weapon, 1 or 2 handed) and the off
+hand (a torch, for now) -- plus a body slot for armor. Move items by:
+
+- **drag** an item onto a HAND / OFF HAND / CORPO / MOCHILA slot, onto another
+  MEMBER in the list (drops into their pack), or onto JOGAR FORA, or
+- **click** it to pick it up and click the destination (click it again, or click
+  away, to put it back), and
+- **shift/ctrl-click** to carry several pack items at once (a multi-drop onto a
+  hand/armor slot takes the first that fits and keeps the rest).
 
 The transfer edits the persistent `equipped_weapon` / `equipped_offhand` /
-`_base_inventory`, which every battle re-seeds a `Combatant` from -- so the next
-fight starts with the new loadout (which weapon is drawn, torch lit, ammo, kit).
-`Unit.load` / `.ac` / ... read straight off that loadout, so the cards stay
-truthful with no extra bookkeeping; the full-sheet modal wraps the member in a
-throwaway `Combatant` for the in-fight numbers.
+`equipped_armor` / `_base_inventory`, which every battle re-seeds a `Combatant`
+from -- so the next fight starts with the new loadout. `Unit.load` / `.ac` / ...
+read straight off that loadout, so the cards stay truthful with no extra
+bookkeeping; the full-sheet modal wraps the member in a throwaway `Combatant`.
 
-Reached from the map (opening it passes no time). `on_back()` returns to the
-map; `on_menu()` to the slot menu.
+This screen renders at the real window resolution (`native = True`): `app` hands
+`draw` the window surface and un-scaled mouse coords, so the layout can use the
+whole maximized screen. Reached from the map (opening it passes no time).
+`on_back()` returns to the map; `on_menu()` to the slot menu.
 """
 
 import pygame
 
 from . import data, world
 from .combatant import Combatant
+from .dragselect import DragSelectMixin
 from .screen import Screen
 from .sheet_panel import PANEL_H, PANEL_W, draw_sheet
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SURFACE_1,
-                    SURFACE_2, SURFACE_3, SURFACE_4, WARN, WIN_H, WIN_W,
+                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
+                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
                     panel, section, token_badge, text, tracked)
 
 
 TABS = (("membros", "MEMBROS"), ("reputacoes", "REPUTACOES"))
+
+LIST_MIN, LIST_MAX = 264, 380         # roster column width clamps
+DET_MAX = 1120                        # detail panel width cap on very wide screens
 
 
 def _kg(w):
     return f"{w:g} kg"
 
 
-class GuildScreen(Screen):
+def _fit(s, font, max_px):
+    """`s` clipped with an ellipsis so it fits `max_px`."""
+    if max_px <= 0 or font.size(s)[0] <= max_px:
+        return s
+    while s and font.size(s + "…")[0] > max_px:
+        s = s[:-1]
+    return s + "…"
+
+
+class GuildScreen(DragSelectMixin, Screen):
+    native = True                        # app draws us straight to the window
+
     def __init__(self, fonts, guild, on_back, on_menu):
         super().__init__()
         self.fonts = fonts
@@ -47,12 +71,14 @@ class GuildScreen(Screen):
         self.on_back = on_back
         self.on_menu = on_menu
         self.tab = "membros"                  # "membros" (roster+gear) | "reputacoes"
+        self.member = self.roster[0] if self.roster else None   # card shown on the right
         self.tab_hits = []                  # [(rect, key)]
-        self.selected = None                 # (unit, loc): loc is "hand" | "offhand" | pack index
+        self.member_hits = []              # [(rect, unit)] -- list cards select the member
+        self.selected = []                   # [(unit, loc), ...]: loc is "hand"|"offhand"|"armor"|pack index
         self.detail = None                   # unit whose full sheet is open (modal), or None
-        self.zones = []                     # [(rect, unit, "hand"|"offhand"|"pack")]
+        self.zones = []                     # [(rect, unit, "hand"|"offhand"|"armor"|"pack"|"discard")]
         self.sources = []                  # [(rect, unit, loc)]
-        self.info_hits = []                # [(rect, unit)] -- card headers open the sheet
+        self.info_hits = []                # [(rect, unit)] -- the detail header opens the sheet
         self.buttons = []                  # [(key, rect)]
 
     # ------------------------------------------------------------------ #
@@ -77,44 +103,86 @@ class GuildScreen(Screen):
             return unit.equipped_armor
         return unit._base_inventory[loc] if loc < len(unit._base_inventory) else None
 
-    def _carried(self):
-        if self.selected is None:
-            return None
-        return self._item_at(*self.selected)
+    def _carried_names(self):
+        """Names of the items currently picked up (selected / being dragged)."""
+        out = []
+        for unit, loc in self.selected:
+            name = self._item_at(unit, loc)
+            if name is not None:
+                out.append(name)
+        return out
 
     # ------------------------------------------------------------------ #
-    def _click(self, px):
+    # input: click to (multi-)select, or drag an item onto a slot        #
+    # (the press/drag machinery lives in DragSelectMixin)                #
+    # ------------------------------------------------------------------ #
+    def _source_at(self, px):
+        for rect, unit, loc in self.sources:
+            if rect.collidepoint(px):
+                return (unit, loc)
+        return None
+
+    def _zone_at(self, px):
+        for rect, unit, zone in self.zones:
+            if rect.collidepoint(px):
+                return (unit, zone)
+        return None
+
+    def _begin_drag(self, src):
+        if src not in self.selected:
+            self.selected = [src]
+
+    def _drop(self, px, dragging, src):
         if self.detail is not None:            # sheet modal: any click closes it
             self.detail = None
+            return
+
+        if dragging:
+            hit = self._zone_at(px)
+            if hit is not None:
+                self._give_many(*hit)
             return
 
         for key, rect in self.buttons:
             if rect.collidepoint(px):
                 (self.on_back if key == "back" else self.on_menu)()
                 return
-
         for rect, key in self.tab_hits:
             if rect.collidepoint(px):
-                self.tab = key
+                self.tab, self.selected = key, []
                 return
 
-        if self.selected is None:
-            for rect, unit in self.info_hits:
-                if rect.collidepoint(px):
-                    self.detail = unit
-                    return
-            for rect, unit, loc in self.sources:
-                if rect.collidepoint(px):
-                    self.selected = (unit, loc)
-                    return
+        mods = pygame.key.get_mods()
+        if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+            if src in self.selected:
+                self.selected.remove(src)
+            else:
+                self.selected.append(src)
             return
 
-        for rect, unit, zone in self.zones:
-            if rect.collidepoint(px):
-                self._give(unit, zone)
-                return
-        self.selected = None
+        if self.selected:
+            hit = self._zone_at(px)
+            if hit is not None:
+                self._give_many(*hit)
+            elif src in self.selected:
+                self.selected.remove(src)
+            elif src is not None:
+                self.selected = [src]
+            else:
+                self.selected = []
+            return
 
+        for rect, unit in self.member_hits:
+            if rect.collidepoint(px):
+                self.member, self.selected = unit, []
+                return
+        for rect, unit in self.info_hits:
+            if rect.collidepoint(px):
+                self.detail = unit
+                return
+        self.selected = [src] if src is not None else []
+
+    # ------------------------------------------------------------------ #
     def _take(self, src, loc):
         if loc == "hand":
             return src.take_from_hand()
@@ -124,218 +192,357 @@ class GuildScreen(Screen):
             return src.take_from_armor()
         return src.take_from_pack(loc)
 
-    def _give(self, dst, zone):
-        src, loc = self.selected
-        self.selected = None
-        name = self._item_at(src, loc)
-        if name is None:
-            return
-        if zone == "discard":
-            self._take(src, loc)
-            return
-        if src is dst and self._slot_of(loc) == zone:
-            return                                       # dropped back where it was
-        if (zone == "hand" and not dst.is_weapon(name)) or \
-           (zone == "offhand" and not dst.fits_offhand(name)) or \
-           (zone == "armor" and not dst.fits_armor(name)):
-            self.selected = (src, loc)                    # wrong slot: keep carrying it
-            return
-
-        self._take(src, loc)
-
+    @staticmethod
+    def _fits_slot(dst, zone, name):
         if zone == "hand":
-            dst.give_to_hand(name)
-        elif zone == "offhand":
-            dst.give_to_offhand(name)
-        elif zone == "armor":
-            dst.give_to_armor(name)
-        else:
+            return dst.is_weapon(name)
+        if zone == "offhand":
+            return dst.fits_offhand(name)
+        if zone == "armor":
+            return dst.fits_armor(name)
+        return True                                      # pack / discard take anything
+
+    def _give_many(self, dst, zone):
+        picks = [p for p in self.selected if self._item_at(*p) is not None]
+        self.selected = []
+        if not picks:
+            return
+
+        if zone == "discard":
+            _, touched = self._collect(picks)
+            for u in touched:
+                u._derive_combat()
+            return
+
+        if zone in ("hand", "offhand", "armor"):
+            fit = next((p for p in picks
+                        if self._fits_slot(dst, zone, self._item_at(*p))
+                        and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
+            if fit is None:
+                self.selected = picks                    # nothing fits: keep carrying
+                return
+            name = self._item_at(*fit)
+            src = fit[0]
+            self._take(*fit)
+            {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
+             "armor": dst.give_to_armor}[zone](name)
+            src._derive_combat()
+            dst._derive_combat()
+            return
+
+        # pack
+        if all(p[0] is dst and not isinstance(p[1], str) for p in picks):
+            return                                       # same pack: nothing to do
+        names, touched = self._collect(picks)
+        for name in names:
             dst.give_to_pack(name)
+        for u in touched:
+            u._derive_combat()
+        dst._derive_combat()
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
         f = self.fonts
-        screen.fill((18, 19, 24))
+        W, H = screen.get_size()
+        screen.fill(SURFACE_0)
         self.zones = []
         self.sources = []
         self.info_hits = []
         self.buttons = []
+        self.member_hits = []
+        self.tab_hits = []
 
-        text(screen, "GUILDA", f.title, INK, (MARGIN, MARGIN - 2))
-        carried = self._carried()
-        if carried is not None:
-            sub, col = (f"movendo  {carried} ({_kg(data.item_weight(carried))})  ·  "
-                        "clique numa MAO, OUTRA MAO, CORPO, MOCHILA ou JOGAR FORA  ·  "
-                        "clique fora para cancelar", ACCENT)
+        if self.member not in self.roster:
+            self.member = self.roster[0] if self.roster else None
+
+        pad = MARGIN if W < 1500 else SP5
+        text(screen, "GUILDA", f.title, INK, (pad, pad - 2))
+        carried = self._carried_names()
+        if carried:
+            if len(carried) == 1:
+                lead = f"movendo  {carried[0]} ({_kg(data.item_weight(carried[0]))})"
+            else:
+                tot = sum(data.item_weight(n) for n in carried)
+                lead = f"movendo  {len(carried)} itens ({_kg(tot)})"
+            sub, col = (lead + "  ·  solte numa MAO, CORPO, MOCHILA, num MEMBRO da "
+                        "lista ou em JOGAR FORA  ·  clique fora para cancelar", ACCENT)
         else:
             sub, col = (f"{self.battles_won} vitorias  ·  {len(self.roster)} membros  ·  "
-                        "clique num item para move-lo entre os bonecos", INK_DIM)
-        text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
+                        "arraste um item (ou clique)  ·  shift+clique junta varios", INK_DIM)
+        text(screen, _fit(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 30))
 
-        self.tab_hits = []
-        if carried is None:
-            self._draw_tabs(screen)
+        if not carried:
+            self._draw_tabs(screen, W, pad)
 
-        if carried is None and self.tab == "reputacoes":
-            self._draw_reputacoes(screen)
+        top = pad + 62
+        bottom = H - 64
+        if not carried and self.tab == "reputacoes":
+            self._draw_reputacoes(screen, W, top, pad)
         else:
-            n = max(1, len(self.roster))
-            gap = SP3
-            top = MARGIN + 64
-            card_h = WIN_H - top - 72
-            card_w = (WIN_W - 2 * MARGIN - (n - 1) * gap) // n
-            for i, unit in enumerate(self.roster):
-                rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
-                self._draw_card(screen, rect, unit, carried)
+            list_w = int(min(max(W * 0.24, LIST_MIN), LIST_MAX))
+            det_w = min(DET_MAX, W - 2 * pad - list_w - SP4)
+            packn = len(self.member._base_inventory) if self.member else 0
+            det_h = max(400, min(bottom - top,
+                                 340 + max(1, packn) * 34 + (34 if carried else 0)))
+            list_rect = pygame.Rect(pad, top, list_w, bottom - top)
+            det_rect = pygame.Rect(pad + list_w + SP4, top, det_w, det_h)
+            self._draw_roster(screen, list_rect, carried)
+            if self.member is not None:
+                self._draw_detail(screen, det_rect, self.member, carried)
 
-        self._draw_footer(screen)
+        self._draw_footer(screen, W, H, pad)
+
+        if self._dragging and carried:
+            gx, gy = self.mouse
+            label = carried[0] if len(carried) == 1 else f"{len(carried)} itens"
+            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
+            panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
+            text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
 
         if self.detail is not None:
             r = pygame.Rect(0, 0, PANEL_W, PANEL_H)
-            r.center = (WIN_W // 2, WIN_H // 2)
+            r.center = (W // 2, H // 2)
             draw_sheet(screen, r, Combatant(self.detail), f)
 
     # ------------------------------------------------------------------ #
-    def _draw_card(self, screen, rect, unit, carried):
+    def _draw_roster(self, screen, rect, carried):
+        """The left column: one compact card per member, the open one lit."""
         f = self.fonts
-        pad = SP3
+        n = max(1, len(self.roster))
+        gap = SP2
+        row_h = min(74, max(56, (rect.h - (n - 1) * gap) // n))
+        mouse = self.mouse
+        for i, unit in enumerate(self.roster):
+            r = pygame.Rect(rect.x, rect.y + i * (row_h + gap), rect.w, row_h)
+            if r.bottom > rect.bottom + 2:
+                break
+            sel = unit is self.member
+            hov = r.collidepoint(mouse)
+            drop = bool(carried) and not sel and hov
+            panel(screen, r,
+                  fill=SURFACE_3 if (sel or hov) else SURFACE_2,
+                  border=ACCENT if sel else INFO if drop else LINE_SOFT,
+                  width=2 if (sel or drop) else 1, radius=RADIUS)
+            if sel:
+                pygame.draw.rect(screen, ACCENT, (r.x, r.y + 4, 3, r.h - 8))
+
+            tok = (r.x + SP3 + 12, r.y + 24)
+            token_badge(screen, tok, unit.token, f)
+            nx = tok[0] + 24
+            text(screen, _fit(unit.name, f.card_name, r.right - nx - SP2),
+                 f.card_name, INK if sel else INK_DIM if not hov else INK,
+                 (nx, r.y + 6))
+            text(screen, _fit(f"{unit.race['name']}  ·  {unit.occupation['name']}",
+                              f.body_sm, r.right - nx - SP2),
+                 f.body_sm, INK_FAINT, (nx, r.y + 27))
+
+            over_norm = unit.load > unit.carry_normal
+            over_max = unit.load > unit.carry_max
+            ccol = DANGER if over_max else WARN if over_norm else INK_DIM
+            text(screen, f"PV {unit.hp_max}   CA {unit.ac}   ·   {_kg(unit.load)}",
+                 f.mono_sm, ccol, (r.x + SP3, r.bottom - 20))
+            if unit.hunger_level:
+                text(screen, "FOME", f.label,
+                     DANGER if unit.hunger_level >= 2 else WARN,
+                     (r.right - SP3, r.bottom - 19), right=True)
+
+            self.member_hits.append((r, unit))
+            if carried and not sel:
+                self.zones.append((r, unit, "pack"))
+
+    # ------------------------------------------------------------------ #
+    def _chip(self, screen, r, label, val):
+        f = self.fonts
+        panel(screen, r, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
+        text(screen, label, f.label, INFO, (r.centerx, r.y + 8), center=True)
+        text(screen, str(val), f.num, INK, (r.centerx, r.y + 24), center=True)
+
+    def _slot(self, screen, r, *, sel, accepts, drop):
+        panel(screen, r,
+              fill=ACCENT if sel else SURFACE_3 if (drop or accepts) else SURFACE_1,
+              border=ACCENT if (sel or drop) else INFO if accepts else LINE_SOFT,
+              width=1, radius=4)
+
+    def _draw_detail(self, screen, rect, unit, carried):
+        f = self.fonts
         mouse = self.mouse
         panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, width=2, radius=RADIUS)
+        pad = SP4
+        x = rect.x + pad
+        inner = rect.w - 2 * pad
 
-        head = pygame.Rect(rect.x, rect.y, rect.w, 46)
-        head_hov = carried is None and head.collidepoint(mouse)
-        pygame.draw.rect(screen, SURFACE_4 if head_hov else SURFACE_3, head,
+        # --- header ---------------------------------------------------- #
+        head = pygame.Rect(rect.x, rect.y, rect.w, 60)
+        head_hov = not carried and head.collidepoint(mouse)
+        pygame.draw.rect(screen, SURFACE_3 if head_hov else SURFACE_2, head,
                          border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
-        tok = (rect.x + pad + 12, rect.y + 23)
-        token_badge(screen, tok, unit.token, f)
-        text(screen, unit.name, f.card_name, INK, (tok[0] + 24, rect.y + 6))
+        pygame.draw.line(screen, LINE_SOFT, (rect.x, head.bottom), (rect.right - 1, head.bottom))
+        tok = (rect.x + pad + 15, rect.y + 30)
+        token_badge(screen, tok, unit.token, f, r=16)
+        nx = tok[0] + 28
+        text(screen, unit.name, f.card_name, INK, (nx, rect.y + 10))
         origin = self._recruited_by(unit)
-        text(screen, f"{unit.race['name']}  ·  {unit.occupation['name']}"
-             + (f"  ·  recrutado por {origin}" if origin else ""), f.body_sm,
-             INK_DIM, (tok[0] + 24, rect.y + 26))
+        sub = (f"{unit.race['name']}  ·  {unit.occupation['name']}"
+               + (f"  ·  recrutado por {origin}" if origin else ""))
+        text(screen, _fit(sub, f.body_sm, rect.right - nx - 110), f.body_sm,
+             INK_DIM, (nx, rect.y + 34))
         text(screen, "VER FICHA ›", f.label, ACCENT if head_hov else INK_FAINT,
-             (rect.right - pad, rect.y + 6), right=True)
-        if carried is None:
+             (rect.right - pad, rect.y + 12), right=True)
+        if not carried:
             self.info_hits.append((head, unit))
 
-        y = head.bottom + SP3
-        text(screen, f"PV {unit.hp_max}   CA {unit.ac}   DM {unit.mental_defense}   "
-             f"Desloc {unit.speed}", f.mono_sm, INK_DIM, (rect.x + pad, y))
-        y += 18
+        # Two inner columns under the header: the read-out (chips, carry,
+        # copper, hunger) on the left, the gear slots -- the drop targets -- on
+        # the wider right.
+        top = head.bottom + SP4
+        col_a = min(440, int(inner * 0.42))
+        bx = x + col_a + SP5
+        bw = rect.right - pad - bx
 
-        # --- carry ------------------------------------------------- #
+        # --- left column: stat chips ------------------------------- #
+        a = top
+        stats = (("PV", unit.hp_max), ("CA", unit.ac),
+                 ("DM", unit.mental_defense), ("DESLOC", unit.speed))
+        cw = (col_a - 3 * SP2) // 4
+        for i, (lbl, val) in enumerate(stats):
+            self._chip(screen, pygame.Rect(x + i * (cw + SP2), a, cw, 48), lbl, val)
+        a += 48 + SP4
+
+        # --- left column: carry bar ------------------------------- #
         over_norm = unit.load > unit.carry_normal
         over_max = unit.load > unit.carry_max
         ccol = DANGER if over_max else WARN if over_norm else OK
-        text(screen, f"Carga {_kg(unit.load)} / {_kg(unit.carry_normal)}",
-             f.mono_sm, ccol, (rect.x + pad, y))
-        note = ("  ACIMA DA CARGA ALTA  -2 FOR/DES, -1 desloc" if over_max
-                else "  sobrecarregado  -2 FOR/DES, -1 desloc" if over_norm else "")
+        tracked(screen, "CARGA", f.label, INFO, (x, a))
+        a += 15
+        bar = pygame.Rect(x, a, col_a, 12)
+        panel(screen, bar, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
+        span = bar.w - 2
+        cap = max(1, unit.carry_max)
+        fillw = int(span * min(1.0, unit.load / cap))
+        if fillw > 0:
+            pygame.draw.rect(screen, ccol, (bar.x + 1, bar.y + 1, fillw, bar.h - 2), border_radius=3)
+        mkx = bar.x + 1 + int(span * min(1.0, unit.carry_normal / cap))
+        pygame.draw.line(screen, INK, (mkx, bar.y - 3), (mkx, bar.bottom + 3))
+        a += 18
+        text(screen, f"{_kg(unit.load)}  ·  normal {_kg(unit.carry_normal)}  ·  "
+             f"alta {_kg(unit.carry_max)}", f.mono_sm, INK_DIM, (x, a))
+        a += 15
+        note = ("ACIMA DA CARGA ALTA  ·  -2 FOR/DES, -1 desloc" if over_max
+                else "sobrecarregado  ·  -2 FOR/DES, -1 desloc" if over_norm else "")
         if note:
-            text(screen, note, f.label, ccol, (rect.x + pad + 168, y + 1))
-        y += 16
-        text(screen, f"{unit.gold} cobre", f.mono_sm, ACCENT, (rect.x + pad, y))
-        text(screen, f"{unit.combat_xp} XP de combate", f.mono_sm, INFO,
-             (rect.right - pad, y), right=True)
-        y += 20
-        if unit.ability.id == "autotroph":
-            text(screen, "fome: autotrofo (nao come)", f.mono_sm, INK_DIM,
-                 (rect.x + pad, y - 4))
-        elif unit.hunger_level:
-            text(screen, f"fome: {unit.hunger_label}  ({unit.unfed_days}d sem comer)",
-                 f.mono_sm, DANGER if unit.hunger_level >= 2 else WARN,
-                 (rect.x + pad, y - 4))
-        else:
-            text(screen, "fome: saciado", f.mono_sm, OK, (rect.x + pad, y - 4))
-        y += 14
+            text(screen, note, f.label, ccol, (x, a))
+        a += 18
 
-        # --- hands: weapon hand + off hand ------------------------ #
-        y = section(screen, "MAOS", rect.x + pad, y, rect.w - 2 * pad, f)
+        # --- left column: copper / xp / hunger -------------------- #
+        xp = f"{unit.combat_xp} XP de combate"
+        if unit.work_xp:
+            xp += f"   ·   {unit.work_xp} XP de trabalho"
+        text(screen, f"{unit.gold} cobre", f.mono_sm, ACCENT, (x, a))
+        a += 16
+        text(screen, xp, f.mono_sm, INFO, (x, a))
+        a += 16
+        rtag = f"  ·  {unit.rations} racoes" if unit.rations else "  ·  sem racoes"
+        if unit.ability.id == "autotroph":
+            text(screen, "fome: autotrofo (nao come)", f.mono_sm, INK_DIM, (x, a))
+        elif unit.hunger_level:
+            text(screen, f"fome: {unit.hunger_label}  ({unit.unfed_days}d sem comer){rtag}",
+                 f.mono_sm, DANGER if unit.hunger_level >= 2 else WARN, (x, a))
+        else:
+            text(screen, f"fome: saciado{rtag}", f.mono_sm, OK, (x, a))
+
+        # --- right column: hands --------------------------------- #
+        x, inner = bx, bw
+        y = section(screen, "MAOS", x, top, inner, f)
         two_handed = bool(unit.equipped_weapon) and \
             data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
         for kind in ("hand", "offhand"):
-            hr = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 28)
+            hr = pygame.Rect(x, y, inner, 34)
             held = unit.equipped_weapon if kind == "hand" else unit.equipped_offhand
             blocked = kind == "offhand" and two_handed
-            sel = self.selected == (unit, kind)
-            accepts = carried is not None and not blocked and (
-                (kind == "hand" and unit.is_weapon(carried))
-                or (kind == "offhand" and unit.fits_offhand(carried)))
+            sel = (unit, kind) in self.selected
+            accepts = bool(carried) and not blocked and (
+                (kind == "hand" and any(unit.is_weapon(n) for n in carried))
+                or (kind == "offhand" and any(unit.fits_offhand(n) for n in carried)))
             drop = accepts and not sel and hr.collidepoint(mouse)
-            panel(screen, hr, fill=ACCENT if sel else SURFACE_3 if drop else SURFACE_1,
-                  border=ACCENT if (sel or drop) else LINE_SOFT, width=1, radius=4)
+            self._slot(screen, hr, sel=sel, accepts=accepts, drop=drop)
             ink = ACCENT_INK if sel else INK
 
             if held:
                 right = ""
                 if kind == "hand":
                     n, faces = data.WEAPONS[held]["damage"]
-                    right = f"{n}d{faces}  ·  "
-                text(screen, held, f.body_sm, ink, (hr.x + SP2, hr.y + 7))
+                    right = f"{n}d{faces}   ·   "
+                text(screen, held, f.body, ink, (hr.x + SP3, hr.y + 9))
                 text(screen, right + _kg(data.item_weight(held)), f.mono_sm,
-                     ACCENT_INK if sel else INK_DIM, (hr.right - SP2, hr.y + 8), right=True)
+                     ACCENT_INK if sel else INK_DIM, (hr.right - SP3, hr.y + 10), right=True)
                 self.sources.append((hr, unit, kind))
             elif blocked:
                 text(screen, "outra mao  ·  ocupada pela arma de 2 maos", f.body_sm,
-                     INK_FAINT, (hr.x + SP2, hr.y + 7))
+                     INK_FAINT, (hr.x + SP3, hr.y + 9))
             else:
-                empty = "arma: nenhuma (luta no soco)" if kind == "hand" else "outra mao: livre"
+                empty = ("arma: nenhuma (luta no soco)" if kind == "hand"
+                         else "outra mao: livre")
                 text(screen, empty, f.body_sm, ACCENT if drop else INK_FAINT,
-                     (hr.x + SP2, hr.y + 7))
+                     (hr.x + SP3, hr.y + 9))
 
             if not blocked:
                 self.zones.append((hr, unit, kind))
-            y += 28 + SP1
-        y += SP1
+            y += 34 + SP2
+        y += SP2
 
         # --- body: armor ----------------------------------------- #
-        y = section(screen, "CORPO", rect.x + pad, y, rect.w - 2 * pad, f)
-        ar = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 28)
+        y = section(screen, "CORPO", x, y, inner, f)
+        ar = pygame.Rect(x, y, inner, 34)
         worn = unit.equipped_armor
-        asel = self.selected == (unit, "armor")
-        adrop = (carried is not None and unit.fits_armor(carried)
-                 and not asel and ar.collidepoint(mouse))
-        panel(screen, ar, fill=ACCENT if asel else SURFACE_3 if adrop else SURFACE_1,
-              border=ACCENT if (asel or adrop) else LINE_SOFT, width=1, radius=4)
+        asel = (unit, "armor") in self.selected
+        afit = bool(carried) and any(unit.fits_armor(n) for n in carried)
+        adrop = afit and not asel and ar.collidepoint(mouse)
+        self._slot(screen, ar, sel=asel, accepts=afit, drop=adrop)
         if worn:
             armor = data.ARMOR[worn]
-            text(screen, worn, f.body_sm, ACCENT_INK if asel else INK, (ar.x + SP2, ar.y + 7))
-            text(screen, f"+{armor['ac']} CA  ·  {_kg(data.item_weight(worn))}", f.mono_sm,
-                 ACCENT_INK if asel else INK_DIM, (ar.right - SP2, ar.y + 8), right=True)
+            text(screen, worn, f.body, ACCENT_INK if asel else INK, (ar.x + SP3, ar.y + 9))
+            text(screen, f"+{armor['ac']} CA   ·   {_kg(data.item_weight(worn))}",
+                 f.mono_sm, ACCENT_INK if asel else INK_DIM, (ar.right - SP3, ar.y + 10),
+                 right=True)
             self.sources.append((ar, unit, "armor"))
         else:
             text(screen, "corpo: sem armadura", f.body_sm,
-                 ACCENT if adrop else INK_FAINT, (ar.x + SP2, ar.y + 7))
+                 ACCENT if adrop else INK_FAINT, (ar.x + SP3, ar.y + 9))
         self.zones.append((ar, unit, "armor"))
-        y += 28 + SP2
+        y += 34 + SP4
 
         # --- pack ------------------------------------------------- #
-        y = section(screen, "MOCHILA", rect.x + pad, y, rect.w - 2 * pad, f)
+        y = section(screen, "MOCHILA", x, y, inner, f)
         if not unit._base_inventory:
-            text(screen, "(vazia)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-            y += 20
+            text(screen, "(vazia)", f.body_sm, INK_FAINT, (x, y + 2))
+            y += 22
         for idx, item in enumerate(unit._base_inventory):
-            ir = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 26)
-            isel = self.selected == (unit, idx)
-            ihov = carried is None and ir.collidepoint(mouse)
+            ir = pygame.Rect(x, y, inner, 30)
+            if ir.bottom > rect.bottom - SP4:
+                text(screen, f"+{len(unit._base_inventory) - idx} itens", f.label,
+                     INK_FAINT, (x, y + 4))
+                y += 20
+                break
+            isel = (unit, idx) in self.selected
+            ihov = not carried and ir.collidepoint(mouse)
             panel(screen, ir, fill=ACCENT if isel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if isel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if isel else INK
-            text(screen, item, f.body_sm, ink, (ir.x + SP2, ir.y + 6))
+            text(screen, item, f.body, ink, (ir.x + SP3, ir.y + 7))
             text(screen, _kg(data.item_weight(item)), f.mono_sm,
-                 ACCENT_INK if isel else INK_DIM, (ir.right - SP2, ir.y + 7), right=True)
+                 ACCENT_INK if isel else INK_DIM, (ir.right - SP3, ir.y + 8), right=True)
             tag = self._item_tag(item)
             if tag:
                 text(screen, tag, f.label, ACCENT_INK if isel else INFO,
-                     (ir.right - SP2 - 52, ir.y + 7), right=True)
+                     (ir.right - SP3 - 64, ir.y + 8), right=True)
             self.sources.append((ir, unit, idx))
-            y += 26 + SP1
+            y += 30 + SP1
 
-        if carried is not None:
-            br = pygame.Rect(rect.x + pad, y + SP1, rect.w - 2 * pad, 24)
+        if carried and y + 26 < rect.bottom - SP3:
+            br = pygame.Rect(x, y + SP1, inner, 26)
             over = br.collidepoint(mouse)
             panel(screen, br, fill=SURFACE_3 if over else SURFACE_1,
-                  border=ACCENT if over else LINE_SOFT, width=1, radius=4)
+                  border=ACCENT if over else INFO, width=1, radius=4)
             text(screen, "guardar na mochila", f.label, ACCENT if over else INK_DIM,
                  (br.centerx, br.centery - 1), center=True)
             self.zones.append((br, unit, "pack"))
@@ -356,13 +563,13 @@ class GuildScreen(Screen):
         return ""
 
     # ------------------------------------------------------------------ #
-    def _draw_tabs(self, screen):
+    def _draw_tabs(self, screen, W, pad):
         """Right-aligned pill strip on the title row: MEMBROS | REPUTACOES."""
         f = self.fonts
-        x = WIN_W - MARGIN
+        x = W - pad
         for key, lbl in reversed(TABS):
             w = f.body_bd.size(lbl)[0] + 2 * SP3
-            r = pygame.Rect(x - w, MARGIN - 4, w, 28)
+            r = pygame.Rect(x - w, pad - 4, w, 28)
             x = r.x - SP2
             active = self.tab == key
             hov = r.collidepoint(self.mouse)
@@ -373,22 +580,21 @@ class GuildScreen(Screen):
                  r.center, center=True)
             self.tab_hits.append((r, key))
 
-    def _draw_reputacoes(self, screen):
+    def _draw_reputacoes(self, screen, W, top, outer):
         """The REPUTACOES tab: where the guild stands with each faction. Only the
         arena keeps a tally today; the panel also shows what it unlocks."""
         f = self.fonts
         rep = self.guild.arena_reputation
-        top = MARGIN + 72
-        r = pygame.Rect(MARGIN, top, WIN_W - 2 * MARGIN, 280)
+        r = pygame.Rect(outer, top + 8, min(W - 2 * outer, 900), 300)
         panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, width=2, radius=RADIUS)
         pad = SP4
         x, y = r.x + pad, r.y + pad
 
         tracked(screen, "ARENA", f.label, INFO, (x, y))
-        y += 16
+        y += 18
         text(screen, str(rep), f.num_lg, ACCENT, (x, y))
         text(screen, "de reputacao  ·  +1 a cada luta de arena vencida",
-             f.body_sm, INK_DIM, (x + 52, y + 14))
+             f.body_sm, INK_DIM, (x + 52, y + 12))
         y += 46
 
         y = section(screen, "O QUE ISSO LIBERA", x, y, r.w - 2 * pad, f)
@@ -396,21 +602,21 @@ class GuildScreen(Screen):
             unlocked = rep >= tier["rep"]
             text(screen, tier["name"], f.body, INK if unlocked else INK_DIM, (x, y))
             text(screen, f"entrada {tier['entry']}/cabeca  ·  bolsa {tier['purse']}  ·  "
-                 f"{tier['enemies']} oponente(s)", f.body_sm, INK_DIM, (x + 200, y + 2))
+                 f"{tier['enemies']} oponente(s)", f.body_sm, INK_DIM, (x + 210, y + 2))
             mark = "liberado" if unlocked else f"exige {tier['rep']} de reputacao"
             text(screen, mark, f.label, OK if unlocked else INK_FAINT,
                  (r.right - pad, y + 3), right=True)
-            y += 26
+            y += 28
 
     # ------------------------------------------------------------------ #
-    def _draw_footer(self, screen):
+    def _draw_footer(self, screen, W, H, pad):
         f = self.fonts
         mouse = self.mouse
-        y = WIN_H - 56
+        y = H - 52
 
-        if self._carried() is not None:
+        if self._carried_names():
             trash = pygame.Rect(0, 0, 220, 36)
-            trash.center = (WIN_W // 2, y + 18)
+            trash.center = (W // 2, y + 18)
             over = trash.collidepoint(mouse)
             panel(screen, trash, fill=DANGER if over else SURFACE_2,
                   border=DANGER, width=1, radius=RADIUS)
@@ -418,14 +624,14 @@ class GuildScreen(Screen):
                  ACCENT_INK if over else DANGER, trash.center, center=True)
             self.zones.append((trash, None, "discard"))
 
-        nxt = pygame.Rect(WIN_W - MARGIN - 220, y, 220, 36)
+        nxt = pygame.Rect(W - pad - 220, y, 220, 36)
         hov = nxt.collidepoint(mouse)
         panel(screen, nxt, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
         text(screen, "VOLTAR AO MAPA", f.body_bd, ACCENT_INK if hov else ACCENT,
              nxt.center, center=True)
         self.buttons.append(("back", nxt))
 
-        menu = pygame.Rect(MARGIN, y, 140, 36)
+        menu = pygame.Rect(pad, y, 140, 36)
         hovm = menu.collidepoint(mouse)
         panel(screen, menu, fill=SURFACE_3 if hovm else SURFACE_2, border=LINE_SOFT,
               width=1, radius=RADIUS)

@@ -14,6 +14,7 @@ so they stay the same face-to-face across visits; `recruit.refresh_pool` swaps
 them for a new set once a week.
 """
 
+from . import economy
 from .clock import Clock
 
 
@@ -42,6 +43,11 @@ class Guild:
     def hungry(self):
         return [u for u in self.roster if u.hunger_level > 0]
 
+    @property
+    def rations(self):
+        """Meals in the packs across the whole roster."""
+        return sum(u.rations for u in self.roster)
+
     # ------------------------------------------------------------------ #
     # time + daily upkeep                                                #
     # ------------------------------------------------------------------ #
@@ -58,7 +64,7 @@ class Guild:
         return events
 
     def _daily_upkeep(self):
-        events, casualties = [], []
+        events, casualties, ate = [], [], []
         for u in self.roster:
             outcome = u.consume_daily_food()
             if outcome == "dead":
@@ -66,9 +72,53 @@ class Guild:
                 events.append(f"{u.name} morreu de fome.")
             elif outcome == "hungry":
                 events.append(f"{u.name} nao comeu hoje: {u.hunger_label}.")
+            elif outcome == "ate" and u.ability.id != "autotroph":
+                ate.append(u)
             u._derive_combat()                 # refresh mods / hp_max for the new hunger
+        if ate:
+            who = "1 membro comeu" if len(ate) == 1 else f"{len(ate)} membros comeram"
+            events.append(f"{who} ({self.rations} racoes restantes).")
         if casualties:
             self.roster = [u for u in self.roster if u not in casualties]
+        return events
+
+    def do_maintenance(self, hours=1):
+        """A camp stop: the guild takes `hours` to see to itself. Advances the
+        clock (so a stop that crosses midnight still runs the daily meal) and
+        then lets anyone still hungry eat from their pack right now. Returns the
+        events to show. Eating is the only chore today; rest / gear repair hang
+        off here later."""
+        events = self.pass_time(hours)
+        fed = []
+        for u in self.roster:
+            if u.eat_now():
+                fed.append(u)
+                u._derive_combat()
+        if fed:
+            names = ", ".join(u.name for u in fed)
+            events.append(f"Parada para comer: {names} ({self.rations} racoes restantes).")
+        elif not events:
+            events.append("Parada tranquila. Ninguem precisou comer.")
+        return events
+
+    def work_shift(self, workers, hours):
+        """A stint at the lumber yard outside the walls: `workers` trade `hours`
+        of the day for copper. Pays `economy.lumber_pay(hours)` straight into
+        each worker's purse and banks the hours toward their work-XP. Advances
+        the campaign clock through `pass_time` (a long shift can cross midnight
+        and run the daily meal), so a starving worker may not live to be paid.
+        Returns the events to show."""
+        hours = int(hours)
+        pay = economy.lumber_pay(hours)
+        events = self.pass_time(hours)
+        earners = [u for u in workers if u in self.roster]
+        for u in earners:
+            u.gold += pay
+            u.work_hours += hours
+        if earners:
+            names = ", ".join(u.name for u in earners)
+            events.append(f"Madeireira: {names} trabalhou {hours} h "
+                          f"(+{pay} cobre por cabeca).")
         return events
 
     @property

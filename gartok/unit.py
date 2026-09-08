@@ -39,6 +39,7 @@ class Unit:
         self.gold = roll(*economy.STARTING_WEALTH_DICE)   # copper coins -- lives on the character
         self.unfed_days = 0                            # consecutive days without a meal
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
+        self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
 
         self._auto_name = name is None
@@ -76,6 +77,7 @@ class Unit:
         u.gold = d.get("gold", 0)
         u.unfed_days = d.get("unfed_days", 0)
         u.combat_xp = d.get("combat_xp", 0)
+        u.work_hours = d.get("work_hours", 0)
         u._auto_name = d["auto_name"]
         u.name = d["name"]
         u.token = u.race["token"]
@@ -126,6 +128,32 @@ class Unit:
             return "ate"
         self.unfed_days += 1
         return "dead" if self.unfed_days >= data.STARVATION_DEATH_DAYS else "hungry"
+
+    def eat_now(self):
+        """Eat a ration from the pack this instant -- the guild stopping to have a
+        meal rather than waiting for the day to turn. Only bites if the character
+        is actually hungry and carrying food; never advances hunger. Returns True
+        if a meal was eaten. The caller re-derives combat stats."""
+        if self.hunger_level == 0:
+            return False
+        food = next((it for it in self._base_inventory if it in data.FOOD_ITEMS), None)
+        if food is None:
+            return False
+        self._base_inventory.remove(food)
+        self.unfed_days = 0
+        return True
+
+    @property
+    def rations(self):
+        """Meals sitting in this character's pack."""
+        return sum(1 for it in self._base_inventory if it in data.FOOD_ITEMS)
+
+    @property
+    def work_xp(self):
+        """Marks of work experience -- one per `economy.LUMBER_XP_HOURS` hours of
+        day-labour at the lumber yard. Cosmetic for now (like the lost Level/XP);
+        a trade / proficiency system reads it later."""
+        return self.work_hours // economy.LUMBER_XP_HOURS
 
     # ------------------------------------------------------------------ #
     # generation                                                         #

@@ -8,8 +8,9 @@ the summed hours. Hovering a node previews that route.
 The side panel shows the node the guild is standing on and what can be done
 there: a battle node opens the squad picker (`on_battle`), a market node the
 market party picker (`on_market`), a taverna the recruiting party picker
-(`on_recruit`). `on_guild` opens the roster/gear screen; `on_menu` the slots. No
-travel time passes for opening those -- only for moving on the map.
+(`on_recruit`), a lumber-yard town the worker picker (`on_work`). `on_guild`
+opens the roster/gear screen; `on_menu` the slots. No travel time passes for
+opening those -- only for moving on the map (or working a shift at the yard).
 """
 
 import pygame
@@ -31,13 +32,14 @@ KIND_NAME = {"battle": "combate", "market": "mercado", "taverna": "taverna", "to
 
 class MapScreen(Screen):
     def __init__(self, fonts, guild, on_battle, on_market, on_recruit, on_guild,
-                 on_menu, on_wipe):
+                 on_menu, on_wipe, on_work):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
         self.on_battle = on_battle
         self.on_market = on_market
         self.on_recruit = on_recruit
+        self.on_work = on_work
         self.on_guild = on_guild
         self.on_menu = on_menu
         self.on_wipe = on_wipe
@@ -69,6 +71,10 @@ class MapScreen(Screen):
                     self.on_market(self._here())
                 elif key == "recruit":
                     self.on_recruit(self._here())
+                elif key == "work":
+                    self.on_work(self._here())
+                elif key == "maintain":
+                    self._maintain()
                 return
         for rect, n in self.hits:
             if rect.collidepoint(px):
@@ -84,6 +90,13 @@ class MapScreen(Screen):
         events = self.guild.pass_time(hours)
         self.guild.node = target.id
         self.notices = [f"Viagem ate {target.name}: {hours} h."] + events
+        if self.guild.empty:
+            self.on_wipe()
+
+    def _maintain(self):
+        """Stop where you stand for an hour: eat, and (later) see to the gear."""
+        events = self.guild.do_maintenance()
+        self.notices = ["Manutencao: 1 h de parada."] + events
         if self.guild.empty:
             self.on_wipe()
 
@@ -137,9 +150,11 @@ class MapScreen(Screen):
         clock = self.guild.clock
 
         hungry = self.guild.hungry
+        rations = self.guild.rations
         text(screen, "MAPA", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"{clock.label}   ·   {len(self.guild)} membros"
              + (f" ({len(hungry)} com fome)" if hungry else "")
+             + f"   ·   {rations} racoes"
              + f"   ·   {self.guild.gold} cobre   ·   {self.guild.battles_won} vitorias"
              f"   ·   reputacao de arena {self.guild.arena_reputation}",
              f.body, INK_DIM, (MARGIN, MARGIN + 30))
@@ -203,6 +218,9 @@ class MapScreen(Screen):
         elif kind == "taverna":                                    # tankard
             pygame.draw.rect(screen, c, (x - 4, y - 4, 7, 9), 2)
             pygame.draw.arc(screen, c, (x + 2, y - 4, 6, 8), -1.4, 1.4, 2)
+        elif kind == "work":                                        # axe
+            pygame.draw.line(screen, c, (x - 4, y + 6), (x + 3, y - 6), 2)
+            pygame.draw.arc(screen, c, (x + 1, y - 8, 7, 8), 1.2, 4.2, 2)
         else:                                                      # town roofline
             pygame.draw.lines(screen, c, False,
                               [(x - 5, y + 4), (x - 5, y - 1), (x, y - 5),
@@ -230,7 +248,10 @@ class MapScreen(Screen):
             screen.blit(aura, (x - 27, y - 27))
         pygame.draw.circle(screen, col, (x, y), 12)
         pygame.draw.circle(screen, tuple(c // 2 for c in col), (x, y), 12, 2)
-        self._glyph(screen, n.kind, x, y)
+        if n.work:
+            self._glyph(screen, "work", x, y)
+        else:
+            self._glyph(screen, n.kind, x, y)
         if hovered:
             pygame.draw.circle(screen, INK, (x, y), 16, 2)
 
@@ -334,6 +355,17 @@ class MapScreen(Screen):
             y += 44
             text(screen, "convenca um estranho a assinar com a guilda", f.body_sm,
                  INK_FAINT, (cx, y))
+        elif here.work:
+            wr = pygame.Rect(cx, y, cw, 38)
+            hovw = wr.collidepoint(self.mouse)
+            panel(screen, wr, fill=SURFACE_3 if hovw else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "TRABALHAR NA MADEIREIRA", f.body_bd, INK_DIM,
+                 wr.center, center=True)
+            self.buttons.append(("work", wr))
+            y += 44
+            text(screen, "troca horas do dia por cobre  ·  paga pouco, mas e certo",
+                 f.body_sm, INK_FAINT, (cx, y))
         else:
             text(screen, "Nada acontece aqui. Parada segura.", f.body_sm,
                  INK_FAINT, (cx, y))
@@ -373,5 +405,16 @@ class MapScreen(Screen):
         text(screen, "menu", f.body, INK if hovm else INK_DIM, m.center, center=True)
         self.buttons.append(("menu", m))
 
+        hungry = self.guild.hungry
+        mt = pygame.Rect(MARGIN + 344, y, 180, 36)
+        hovt = mt.collidepoint(self.mouse)
+        urgent = bool(hungry) and any(u.rations for u in hungry)
+        panel(screen, mt, fill=ACCENT if hovt else SURFACE_3 if urgent else SURFACE_2,
+              border=ACCENT if urgent else LINE_SOFT, width=1, radius=RADIUS)
+        text(screen, "MANUTENCAO (1 h)", f.body_bd,
+             ACCENT_INK if hovt else ACCENT if urgent else INK_DIM,
+             mt.center, center=True)
+        self.buttons.append(("maintain", mt))
+
         text(screen, "clique num lugar para viajar  ·  passar tempo pode virar a noite",
-             f.body_sm, INK_FAINT, (MARGIN + 348, y + 10))
+             f.body_sm, INK_FAINT, (MARGIN + 540, y + 10))

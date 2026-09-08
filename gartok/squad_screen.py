@@ -178,7 +178,10 @@ class SquadScreen(Screen):
         arma = unit.weapon_name or "desarmado"
         text(screen, f"{arma}  {n}d{faces}", f.body_sm, INK_DIM, (rect.x + pad, y))
         y += 17
-        text(screen, f"{unit.gold} cobre  ·  {unit.combat_xp} XP", f.mono_sm, ACCENT,
+        xp = f"{unit.combat_xp} XP"
+        if unit.work_xp:
+            xp += f" +{unit.work_xp}t"
+        text(screen, f"{unit.gold} cobre  ·  {xp}", f.mono_sm, ACCENT,
              (rect.x + pad, y))
         if unit.hunger_level:
             y += 16

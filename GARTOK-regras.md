@@ -578,12 +578,20 @@ economia. Cada uma nasce como "coisa do mundo" e só depois conversa com a luta.
 ### Fome 🟡
 
 Estado em `unit.py` (`unfed_days`, propriedades `hunger_*`); a rotina diária em
-`Guild.pass_time` / `Guild._daily_upkeep`, chamada só quando a guilda **viaja**
-no mapa (o tempo de batalha é em segundos e não conta refeição).
+`Guild.pass_time` / `Guild._daily_upkeep`, chamada quando a guilda **viaja** no
+mapa ou faz uma **parada de manutenção** (o tempo de batalha é em segundos e não
+conta refeição).
 
 - **Todo personagem come uma vez por dia.** Cada dia de mapa cruzado, o
   personagem consome **1 item de comida** da mochila (`data.FOOD_ITEMS` — hoje
-  `1kg Carne`, `1kg Batata`). Comeu → contador zera.
+  `1kg Carne`, `1kg Batata`). Comeu → contador zera. O upkeep diário devolve uma
+  linha de evento com quantos comeram e quantas rações sobraram, além dos avisos
+  de fome/morte.
+- **Manutenção (botão no mapa, `Guild.do_maintenance`):** a guilda para 1 h onde
+  está; passa o tempo (que pode cruzar a meia-noite e disparar a refeição diária)
+  e então **quem ainda está com fome e carrega comida come na hora**
+  (`Unit.eat_now` — só alivia, nunca avança a fome). É onde outras tarefas de
+  parada (descanso, conserto de equipamento) entram depois.
 - **Sem comida na mochila:** o contador de dias sem comer sobe.
 
   | Dias sem comer | Condição | Efeito |
@@ -604,6 +612,35 @@ no mapa (o tempo de batalha é em segundos e não conta refeição).
 - Comer/morrer **re-deriva** os atributos do personagem (`_derive_combat`), então
   a ficha, os cartões da guilda e a próxima batalha já mostram os números certos.
   Se a guilda inteira morrer de fome na estrada, a campanha acaba (`on_wipe`).
+
+### Madeireira: trabalho por hora 🟡
+
+Nó `madeireira` no mapa (tipo `town` com `work=True`), a **1 h da Cidade**. Tela
+em `work_screen.py`; regra em `Guild.work_shift` / `economy.lumber_pay`. É o
+**piso econômico**: quem perdeu tudo na arena e ficou pelado vai lá trocar tempo
+por cobre em vez de entrar nos Ermos e morrer.
+
+- **Como funciona:** escolhe quem vai (o mesmo seletor do mercado) e o **turno**
+  — 4, 8, 12 ou 16 h (`economy.LUMBER_SHIFT_HOURS`). Confirmar roda o turno:
+  passa o tempo (`pass_time`, pode cruzar a meia-noite e disparar a refeição do
+  dia) e paga cada trabalhador.
+- **Pagamento:** `economy.LUMBER_WAGE` = **3 cobre a cada 4 h** cheias
+  (`LUMBER_BLOCK_HOURS`), hora quebrada não conta. Um dia cheio de 16 h = **12
+  cobre** por cabeça. O cobre cai direto na bolsa de cada um.
+- **XP de trabalho:** `Unit.work_hours` acumula as horas; `Unit.work_xp` =
+  `work_hours // 16` (`LUMBER_XP_HOURS`). Ou seja **1 marca a cada 16 h
+  trabalhadas**. Hoje é só cosmético (como o Nível 0 / XP 1000 perdido) — um
+  sistema de ofício lê isso depois.
+- **Sem lenha:** o machado é emprestado e a árvore não é sua; você leva **só o
+  salário pelas horas**, nenhum item.
+- **Balanço:** 0,75 cobre/h é de propósito baixo. Um dia inteiro alimenta
+  (Batata 3c) e sobra ~9 cobre; reconstruir um kit mínimo (~30 cobre) leva ~3
+  dias. Uma bolsa de arena ganha (+11 líquido na Fossa, +40 no Ringue) ou um
+  saque nos Ermos rende muito mais rápido — a madeireira é rede de segurança,
+  não carreira.
+- Quem está **incapacitado de fome pode trabalhar** (não é combate); é
+  justamente quem mais precisa. Se um trabalhador morre de fome no meio do turno
+  (turno longo cruzando a virada), ele não recebe.
 
 ### Mercado e negociação 🟡
 

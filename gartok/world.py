@@ -6,7 +6,9 @@ and the caller advances the clock by the summed hours. `MapScreen` draws the
 graph; `app` turns the node the guild is on into the activity there.
 
 Node kinds:
-- "town":    a safe stop, nothing to do but pass through (and manage gear);
+- "town":    a safe stop, nothing to do but pass through (and manage gear).
+             A town with `work=True` is a lumber yard: put members to a shift
+             there to trade hours of the day for copper (`Guild.work_shift`);
 - "battle":  the chosen squad drops into a tactical fight on `scenario`;
 - "market":  a shop -- buy and sell gear for copper.
 - "taverna": strangers looking for work -- talk one into the guild (`recruit`).
@@ -27,7 +29,7 @@ from .scenario import ArenaScenario, ErmosScenario
 
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
-                 lethal=True, arena=False, language=None, alignment=None):
+                 lethal=True, arena=False, language=None, alignment=None, work=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -38,6 +40,7 @@ class Node:
         self.arena = arena                   # True -> staked, non-lethal, pays a purse
         self.language = language             # market: the tongue the vendor haggles in
         self.alignment = alignment           # market: the vendor's bent (price sympathy)
+        self.work = work                     # town: a lumber yard -- trade hours for copper
 
     @property
     def is_battle(self):
@@ -72,6 +75,10 @@ def arena_offers(reputation):
 NODES = [
     Node("cidade", "Cidade", "town", (0.16, 0.58),
          "O burgo murado. De onde a guilda parte."),
+    Node("madeireira", "Madeireira", "town", (0.05, 0.80),
+         "Serraria logo fora dos muros. O feitor empresta o machado -- voce "
+         "derruba arvore que nao e sua e leva so o pagamento pelas horas.",
+         work=True),
     Node("arena", "Arena", "battle", (0.33, 0.30),
          "Lutas de aposta nos fossos sob a cidade. Ninguem morre -- perde-se a bolsa.",
          ArenaScenario, lethal=False, arena=True),
@@ -90,6 +97,7 @@ NODES = [
 
 EDGES = [
     ("cidade", "arena", 2),
+    ("cidade", "madeireira", 1),
     ("cidade", "mercado", 1),
     ("cidade", "taverna", 1),
     ("cidade", "estrada", 4),

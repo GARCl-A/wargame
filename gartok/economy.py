@@ -21,6 +21,16 @@ TORCH_ITEM = data.TORCH_ITEM
 STARTING_WEALTH_DICE = (5, 10)          # 5d10 copper rolled at character creation
 SELL_FACTOR = 0.5                       # resale = half the buy price, floored at 1
 
+# The lumber yard outside the walls: day-labour for anyone who is broke. You
+# borrow the foreman's axe and fell trees on land that is not yours, so you keep
+# no wood -- just a flat wage for the hours. Kept deliberately meagre: a full
+# 16 h day feeds you and leaves a little over, while a won arena bout or a wilds
+# haul pays several times better. It is a floor, not a living.
+LUMBER_WAGE = 3                         # copper earned per whole block worked
+LUMBER_BLOCK_HOURS = 4                  # ...one block is four hours at the yard
+LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mark
+LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
+
 PRICES = {
     # weapons
     "Adaga": 8, "Machadinha": 10, "Machado": 35, "Martelo Leve": 10,
@@ -67,6 +77,12 @@ def market_deal(party, vendor_language, vendor_alignment):
     cha = max(0, voice.mod_charisma) * 0.04
     align = _ALIGN_DEAL[data.alignment_distance(voice.alignment, vendor_alignment)]
     return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
+
+
+def lumber_pay(hours):
+    """Flat wage for `hours` at the lumber yard: `LUMBER_WAGE` per whole block,
+    leftover hours unpaid (you are paid by the block, not the minute)."""
+    return LUMBER_WAGE * (int(hours) // LUMBER_BLOCK_HOURS)
 
 
 def buy_price(name, deal=0.0):

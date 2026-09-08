@@ -7,9 +7,10 @@ fight) and `LootScreen` (split the spoils). Each exposes `handle_event`,
 `update(dt)`, `draw(surface)` and reads `self.mouse` (canvas-space cursor).
 
 Campaign loop: menu -> draft -> MAP <-> guild
-                                    |-> squad  -> battle -> loot -> MAP
-                                    |-> party  -> market -> MAP
-                                    |-> party  -> taverna (recruit) -> MAP
+                                    |-> squad   -> battle -> loot -> MAP
+                                    |-> party   -> market -> MAP
+                                    |-> party   -> taverna (recruit) -> MAP
+                                    |-> workers -> lumber yard (work_shift) -> MAP
 The guild roams the world map as one token (`guild.node`); travelling advances
 the campaign clock, opening the guild/squad screens does not. `persist` autosaves
 after the draft, on every return to the map and after every battle. Permadeath: a
@@ -36,6 +37,7 @@ from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W
 from .unit import Unit
+from .work_screen import WorkScreen
 
 
 class App:
@@ -87,6 +89,7 @@ class App:
                                on_battle=self._open_squad,
                                on_market=self._open_market,
                                on_recruit=self._open_recruit,
+                               on_work=self._open_work,
                                on_guild=self._open_guild,
                                on_menu=self._start_menu,
                                on_wipe=self._campaign_over)
@@ -118,6 +121,23 @@ class App:
     def _open_market_stalls(self, shoppers, node, _offer):
         self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
                                   on_done=self._start_map)
+
+    def _open_work(self, node):
+        roster = self.guild.roster
+        self.scene = SquadScreen(self.fonts, roster, node,
+                                 on_confirm=self._open_lumber_yard, on_back=self._start_map,
+                                 max_pick=len(roster), title="QUEM VAI TRABALHAR",
+                                 confirm_label="IR A MADEIREIRA")
+
+    def _open_lumber_yard(self, workers, node, _offer):
+        self.scene = WorkScreen(self.fonts, self.guild, workers,
+                                on_done=self._after_work, on_back=self._start_map)
+
+    def _after_work(self):
+        if self.guild.empty:
+            self._campaign_over()
+        else:
+            self._start_map()
 
     def _open_recruit(self, node):
         roster = self.guild.roster
@@ -182,6 +202,12 @@ class App:
         scale, ox, oy = self._view
         return (int((pos[0] - ox) / scale), int((pos[1] - oy) / scale))
 
+    def _scene_pos(self, pos):
+        """Cursor `pos` in the coords the current scene wants: raw window pixels
+        for a `native` scene, fixed-canvas coords for the rest. Re-checked per
+        call because an event may swap the scene mid-frame."""
+        return pos if getattr(self.scene, "native", False) else self._to_canvas(pos)
+
     def _present(self):
         ww, wh = self.window.get_size()
         scale = min(ww / WIN_W, wh / WIN_H)
@@ -193,12 +219,23 @@ class App:
         self.window.blit(frame, (ox, oy))
         pygame.display.flip()
 
+    def _blit_scene(self):
+        """A `native` scene draws straight to the window at its real size; the
+        rest draw to the fixed canvas, which `_present` scales into the window."""
+        if getattr(self.scene, "native", False):
+            self.window.fill(BG)
+            self.scene.draw(self.window)
+            pygame.display.flip()
+        else:
+            self.scene.draw(self.canvas)
+            self._present()
+
     # ------------------------------------------------------------------ #
     def run(self):
         running = True
         while running:
             dt = self.clock.tick(60)
-            self.scene.mouse = self._to_canvas(pygame.mouse.get_pos())
+            self.scene.mouse = self._scene_pos(pygame.mouse.get_pos())
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -208,13 +245,11 @@ class App:
                     running = False
                 elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP,
                                     pygame.MOUSEMOTION):
-                    moved = pygame.event.Event(
-                        event.type, {**event.dict, "pos": self._to_canvas(event.pos)})
-                    self.scene.handle_event(moved)
+                    self.scene.handle_event(pygame.event.Event(
+                        event.type, {**event.dict, "pos": self._scene_pos(event.pos)}))
                 else:
                     self.scene.handle_event(event)
 
             self.scene.update(dt)
-            self.scene.draw(self.canvas)
-            self._present()
+            self._blit_scene()
         pygame.quit()

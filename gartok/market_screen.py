@@ -5,18 +5,20 @@ guild has no treasury) and the members' packs sit side by side, so you can shift
 items and spend freely without per-character fiddling. On the way out the purse
 is split back evenly among the shoppers.
 
-Interaction (same as the guild screen): click an item to pick it up, then click
-where it goes.
-- a stock row  -> picked "to buy"; click a shopper to buy it into their pack
-  (needs purse >= price and room under their carry max);
-- a shopper's item -> click another shopper to hand it over, or the SELL bar to
-  sell it back (at `economy.sell_price`, always a loss);
-- click anywhere else to cancel.
+Interaction (same as the guild screen): drag an item where it goes, or click to
+pick it up and click the destination. Shift/ctrl-click gathers several of a
+shopper's items for one move.
+- a stock row  -> drop on a shopper to buy it into their pack (needs purse >=
+  price and room under their carry max);
+- a shopper's item -> drop on another shopper to hand it over, or on the SELL bar
+  to sell it back (at `economy.sell_price`, always a loss);
+- drop on nothing / click away to cancel.
 """
 
 import pygame
 
 from . import data, economy
+from .dragselect import DragSelectMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
@@ -30,7 +32,7 @@ def _kg(w):
     return f"{w:g} kg"
 
 
-class MarketScreen(Screen):
+class MarketScreen(DragSelectMixin, Screen):
     def __init__(self, fonts, guild, shoppers, node, on_done):
         super().__init__()
         self.fonts = fonts
@@ -42,7 +44,7 @@ class MarketScreen(Screen):
         # haggling: shared language + charisma + alignment bend every price
         self.deal = economy.market_deal(shoppers, getattr(node, "language", None),
                                      getattr(node, "alignment", None))
-        self.sel = None                       # ("stock", name) | (member, "hand"|"offhand"|idx)
+        self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
         self.notice = None
         self.stock_rows = []                 # [(rect, name)]
         self.item_rows = []                  # [(rect, member, loc)]
@@ -70,12 +72,17 @@ class MarketScreen(Screen):
             return member.take_from_armor()
         return member.take_from_pack(loc)
 
-    def _selected_name(self):
-        if self.sel is None:
-            return None
-        if self.sel[0] == "stock":
-            return self.sel[1]
-        return self._item_at(*self.sel)
+    def _name_of(self, pick):
+        if pick[0] == "stock":
+            return pick[1]
+        return self._item_at(*pick)
+
+    def _selected_names(self):
+        return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
+
+    @property
+    def _buying(self):
+        return bool(self.sel) and self.sel[0][0] == "stock"
 
     def _fits(self, member, name):
         return member.load + data.item_weight(name) <= member.carry_max
@@ -94,7 +101,34 @@ class MarketScreen(Screen):
         return f"vendedor fala {lang} · {self.node.alignment} · {how}"
 
     # ------------------------------------------------------------------ #
-    def _click(self, px):
+    # input: click / shift-click to (multi-)select, or drag onto a card  #
+    # (the press/drag machinery lives in DragSelectMixin)                #
+    # ------------------------------------------------------------------ #
+    def _source_at(self, px):
+        for rect, name in self.stock_rows:
+            if rect.collidepoint(px):
+                return ("stock", name)
+        for rect, member, loc in self.item_rows:
+            if rect.collidepoint(px):
+                return (member, loc)
+        return None
+
+    def _begin_drag(self, src):
+        if src not in self.sel or src[0] == "stock":
+            self.sel = [src]
+
+    def _drop(self, px, dragging, src):
+        if dragging:
+            for rect, member in self.cards:
+                if rect.collidepoint(px):
+                    self._drop_on(member)
+                    return
+            for key, rect in self.buttons:
+                if key == "sell" and rect.collidepoint(px):
+                    self._sell()
+                    return
+            return
+
         for key, rect in self.buttons:
             if rect.collidepoint(px):
                 if key == "done":
@@ -103,71 +137,80 @@ class MarketScreen(Screen):
                     self._sell()
                 return
 
-        if self.sel is None:
-            for rect, name in self.stock_rows:
-                if rect.collidepoint(px):
-                    self.sel = ("stock", name)
-                    self.notice = None
-                    return
-            for rect, member, loc in self.item_rows:
-                if rect.collidepoint(px):
-                    self.sel = (member, loc)
-                    self.notice = None
-                    return
+        self.notice = None
+        mods = pygame.key.get_mods()
+        multi = src is not None and src[0] != "stock" \
+            and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL) \
+            and (not self.sel or self.sel[0][0] != "stock")
+        if multi:
+            if src in self.sel:
+                self.sel.remove(src)
+            else:
+                self.sel.append(src)
             return
 
-        for rect, member in self.cards:
-            if rect.collidepoint(px):
-                self._drop_on(member)
-                return
-        self.sel = None                       # clicked nowhere useful: cancel
+        if self.sel:
+            for rect, member in self.cards:
+                if rect.collidepoint(px):
+                    self._drop_on(member)
+                    return
+            self.sel = [src] if src is not None else []
+            return
+        self.sel = [src] if src is not None else []
 
     # ------------------------------------------------------------------ #
     def _drop_on(self, member):
-        name = self._selected_name()
-        if name is None:
-            self.sel = None
+        picks, self.sel = self.sel, []
+        picks = [p for p in picks if self._name_of(p) is not None]
+        if not picks:
             return
 
-        if self.sel[0] == "stock":
-            price = economy.buy_price(name, self.deal)
-            if self.purse < price:
-                self.notice = f"Sem cobre para {name} ({price})."
-                return
-            if not self._fits(member, name):
-                self.notice = f"{name} nao cabe na carga de {member.name}."
-                return
-            self.purse -= price
+        if picks[0][0] == "stock":
+            bought = 0
+            for _, name in picks:
+                price = economy.buy_price(name, self.deal)
+                if self.purse < price:
+                    self.notice = f"Sem cobre para {name} ({price})."
+                    break
+                if not self._fits(member, name):
+                    self.notice = f"{name} nao cabe na carga de {member.name}."
+                    continue
+                self.purse -= price
+                member.give_to_pack(name)
+                bought += 1
+            member._derive_combat()
+            if bought:
+                self.notice = f"{member.name} comprou {bought} item(ns)."
+            return
+
+        picks = [p for p in picks if p[0] is not member]   # dropped back home: skip
+        if not picks:
+            return
+        add = sum(data.item_weight(self._name_of(p)) for p in picks)
+        if member.load + add > member.carry_max:
+            self.notice = f"nao cabe na carga de {member.name}."
+            self.sel = picks
+            return
+        names, touched = self._collect(picks)
+        for name in names:
             member.give_to_pack(name)
-            self.notice = f"{member.name} compra {name} por {price}."
-            self.sel = None
-            return
-
-        src, loc = self.sel
-        if src is member:                     # dropped back on the owner: cancel
-            self.sel = None
-            return
-        if not self._fits(member, name):
-            self.notice = f"{name} nao cabe na carga de {member.name}."
-            return
-        self._take(src, loc)
-        member.give_to_pack(name)
-        self.notice = f"{name}: {src.name} -> {member.name}."
-        self.sel = None
+        for u in touched:
+            u._derive_combat()
+        member._derive_combat()
+        self.notice = f"{len(names)} item(ns) -> {member.name}."
 
     def _sell(self):
-        if self.sel is None or self.sel[0] == "stock":
+        picks = [p for p in self.sel
+                 if p[0] != "stock" and self._name_of(p) is not None]
+        self.sel = []
+        if not picks:
             return
-        src, loc = self.sel
-        name = self._item_at(src, loc)
-        if name is None:
-            self.sel = None
-            return
-        price = economy.sell_price(name, self.deal)
-        self._take(src, loc)
-        self.purse += price
-        self.notice = f"{src.name} vende {name} por {price}."
-        self.sel = None
+        names, touched = self._collect(picks)
+        total = sum(economy.sell_price(n, self.deal) for n in names)
+        self.purse += total
+        for u in touched:
+            u._derive_combat()
+        self.notice = f"vendeu {len(names)} item(ns) por {total}."
 
     def _checkout(self):
         n = max(1, len(self.shoppers))
@@ -188,14 +231,15 @@ class MarketScreen(Screen):
         text(screen, "MERCADO", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"bolsa comum: {self.purse} cobre", f.body_bd, ACCENT,
              (WIN_W - MARGIN, MARGIN + 2), right=True)
-        sel_name = self._selected_name()
-        if sel_name is not None:
-            buying = self.sel[0] == "stock"
-            msg = (f"comprar {sel_name} ({economy.buy_price(sel_name, self.deal)})  ·  "
-                   "clique num membro"
-                   if buying else
-                   f"movendo {sel_name}  ·  clique em outro membro, ou VENDER "
-                   f"({economy.sell_price(sel_name, self.deal)})")
+        names = self._selected_names()
+        if names:
+            one = names[0] if len(names) == 1 else f"{len(names)} itens"
+            if self._buying:
+                msg = (f"comprar {one} ({sum(economy.buy_price(n, self.deal) for n in names)})"
+                       "  ·  solte num membro")
+            else:
+                msg = (f"movendo {one}  ·  solte em outro membro, ou em VENDER "
+                       f"(+{sum(economy.sell_price(n, self.deal) for n in names)})")
             text(screen, msg + "  ·  clique fora para cancelar", f.body, ACCENT,
                  (MARGIN, MARGIN + 30))
         else:
@@ -211,6 +255,13 @@ class MarketScreen(Screen):
                                                 stock.h))
         self._draw_footer(screen)
 
+        if self._dragging and names:
+            gx, gy = self.mouse
+            label = names[0] if len(names) == 1 else f"{len(names)} itens"
+            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
+            panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
+            text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
+
     def _draw_stock(self, screen, rect):
         f = self.fonts
         panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
@@ -218,8 +269,8 @@ class MarketScreen(Screen):
         y = section(screen, "A VENDA", x, rect.y + SP3, w, f)
         for name in economy.MARKET_STOCK:
             r = pygame.Rect(x, y, w, 26)
-            sel = self.sel == ("stock", name)
-            hov = self.sel is None and r.collidepoint(self.mouse)
+            sel = ("stock", name) in self.sel
+            hov = not self.sel and r.collidepoint(self.mouse)
             price = economy.buy_price(name, self.deal)
             afford = self.purse >= price
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
@@ -244,13 +295,14 @@ class MarketScreen(Screen):
     def _draw_card(self, screen, rect, m):
         f = self.fonts
         pad = SP3
-        sel_name = self._selected_name()
-        take_ok = sel_name is not None and self._fits(m, sel_name)
-        owns_sel = self.sel is not None and self.sel[0] != "stock" and self.sel[0] is m
+        names = self._selected_names()
+        add = sum(data.item_weight(n) for n in names)
+        take_ok = bool(names) and m.load + add <= m.carry_max
+        owns_sel = any(p[0] is m for p in self.sel if p[0] != "stock")
         hov = rect.collidepoint(self.mouse)
         panel(screen, rect, fill=SURFACE_2,
               border=OK if (take_ok and hov and not owns_sel) else
-              DANGER if (sel_name and hov and not take_ok) else LINE_SOFT,
+              DANGER if (names and hov and not take_ok) else LINE_SOFT,
               width=2 if hov else 1, radius=RADIUS)
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
@@ -292,8 +344,8 @@ class MarketScreen(Screen):
 
     def _draw_item_row(self, screen, r, member, loc, name, tag=""):
         f = self.fonts
-        sel = self.sel == (member, loc)
-        hov = self.sel is None and r.collidepoint(self.mouse)
+        sel = (member, loc) in self.sel
+        hov = not self.sel and r.collidepoint(self.mouse)
         panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
               border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
         ink = ACCENT_INK if sel else INK
@@ -311,14 +363,15 @@ class MarketScreen(Screen):
         if self.notice:
             text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
 
-        sel_name = self._selected_name()
-        can_sell = self.sel is not None and self.sel[0] != "stock" and sel_name
+        names = self._selected_names()
+        can_sell = bool(names) and not self._buying
         if can_sell:
+            total = sum(economy.sell_price(n, self.deal) for n in names)
             sr = pygame.Rect(MARGIN, y, 240, 36)
             hov = sr.collidepoint(self.mouse)
             panel(screen, sr, fill=DANGER if hov else SURFACE_3, border=DANGER,
                   width=1, radius=RADIUS)
-            text(screen, f"VENDER POR {economy.sell_price(sel_name, self.deal)}", f.body_bd,
+            text(screen, f"VENDER POR {total}", f.body_bd,
                  ACCENT_INK if hov else DANGER, sr.center, center=True)
             self.buttons.append(("sell", sr))
 
