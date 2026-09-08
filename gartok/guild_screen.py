@@ -255,7 +255,7 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                               f.body_sm, r.right - nx - SP2),
                  f.body_sm, INK_FAINT, (nx, r.y + 27))
 
-            over_norm = unit.load > unit.carry_normal
+            over_norm = unit.encumbered
             over_max = unit.load > unit.carry_max
             ccol = DANGER if over_max else WARN if over_norm else INK_DIM
             text(screen, f"HP {unit.hp_max}   AC {unit.ac}   ·   {kg(unit.load)}",
@@ -355,9 +355,10 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         a += 48 + SP4
 
         # --- left column: carry bar ------------------------------- #
-        over_norm = unit.load > unit.carry_normal
+        over_norm = unit.encumbered
         over_max = unit.load > unit.carry_max
         ccol = DANGER if over_max else WARN if over_norm else OK
+        carrier = f"  (carrier +{unit.carry_relief:g})" if unit.carry_relief else ""
         tracked(screen, "LOAD", f.label, INFO, (x, a))
         a += 15
         bar = pygame.Rect(x, a, col_a, 12)
@@ -370,7 +371,7 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         mkx = bar.x + 1 + int(span * min(1.0, unit.carry_normal / cap))
         pygame.draw.line(screen, INK, (mkx, bar.y - 3), (mkx, bar.bottom + 3))
         a += 18
-        text(screen, f"{kg(unit.load)}  ·  normal {kg(unit.carry_normal)}  ·  "
+        text(screen, f"{kg(unit.load)}  ·  normal {kg(unit.carry_normal)}{carrier}  ·  "
              f"high {kg(unit.carry_max)}", f.mono_sm, INK_DIM, (x, a))
         a += 15
         note = ("OVER HIGH LOAD  ·  -2 STR/DEX, -1 speed" if over_max

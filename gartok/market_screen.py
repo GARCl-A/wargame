@@ -322,10 +322,11 @@ class MarketScreen(DragSelectMixin, Screen):
              INK_DIM, (tok[0] + 24, rect.y + pad + 20))
 
         y = rect.y + pad + 48
-        over_norm = m.load > m.carry_normal
+        over_norm = m.encumbered
         over_max = m.load > m.carry_max
         ccol = DANGER if over_max else WARN if over_norm else OK
-        text(screen, f"Load {kg(m.load)} / {kg(m.carry_normal)}", f.mono_sm,
+        carrier = f"  (carrier +{m.carry_relief:g})" if m.carry_relief else ""
+        text(screen, f"Load {kg(m.load)} / {kg(m.carry_normal)}{carrier}", f.mono_sm,
              ccol, (rect.x + pad, y))
         note = ("OVER HIGH LOAD  -2 STR/DEX, -1 speed" if over_max
                 else "overloaded  -2 STR/DEX, -1 speed" if over_norm else "")

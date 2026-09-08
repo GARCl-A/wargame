@@ -77,7 +77,8 @@ def character_sheet(u):
         hands_line,
         _armor_line(u),
         f"Inventory: {inv}",
-        f"Load: {u.load} / normal {u.carry_normal} / high {u.carry_max}"
+        f"Load: {u.load:g} / normal {u.carry_normal:g} / high {u.carry_max:g}"
+        + (f" (carrier +{u.carry_relief:g})" if u.carry_relief else "")
         + ("   OVERLOADED: -2 STR, -2 DEX, -1 speed" if u.encumbered else ""),
         f"Languages: {', '.join(u.languages)}"
         + ("  (mimics voices: Demoralize needs no language)" if u.ability.demoralize_ignores_language

@@ -1614,15 +1614,34 @@ def test_negotiator_lifts_only_the_haggle_charisma():
         u.charisma + u.hunger_attribute_penalty + 1)
 
 
-def test_carrier_relieves_only_cargo_weight():
+def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
     u = _unit(seed=5)
     u.work_hours = economy.LUMBER_XP_HOURS * 2
-    u._base_inventory = ["Rope", "1kg Meat"]     # cargo + a consumable
+    u._base_inventory = ["Rope", "1kg Meat"]      # 2 kg cargo + a consumable
     u._derive_combat()
-    load = u.load
+    load, base_normal = u.load, u.carry_normal
     assert u.choose_talent("work", "carrier")
     assert u.load == load                         # displayed weight unchanged
-    assert u.carry_load == round(load - 1.0, 1)   # 1 kg off the Rope, not the Meat
+    assert u.carry_relief == 1.0                  # a full kg: the Rope covers it
+    assert u.carry_normal == round(base_normal + 1.0, 1)
+
+    u._base_inventory = ["Chisel"]               # 0.3 kg of cargo -> only 0.3 relief
+    u._derive_combat()
+    assert u.carry_relief == round(data.item_weight("Chisel"), 1)
+
+    u._base_inventory = ["1kg Meat", "Axe"]      # only food + a weapon -> no relief
+    u._derive_combat()
+    assert u.carry_relief == 0.0 and u.carry_normal == base_normal
+
+
+def test_carrier_never_lifts_the_carry_max_ceiling():
+    u = _unit(seed=5)
+    u.work_hours = economy.LUMBER_XP_HOURS * 2
+    u._base_inventory = ["Rope"]
+    u._derive_combat()
+    ceiling = u.carry_max
+    assert u.choose_talent("work", "carrier")
+    assert u.carry_max == ceiling
 
 
 def test_mean_level_grants_a_hit_die():

@@ -327,9 +327,10 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         y = head.bottom + SP3
 
         # --- load bar ---------------------------------------------- #
-        over_norm = unit.load > unit.carry_normal
+        over_norm = unit.encumbered
         over_max = unit.load > unit.carry_max
         ccol = DANGER if over_max else WARN if over_norm else OK
+        carrier = f"  (carrier +{unit.carry_relief:g})" if unit.carry_relief else ""
         bar = pygame.Rect(x, y, inner, 10)
         panel(screen, bar, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
         span = bar.w - 2
@@ -341,7 +342,7 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         mkx = bar.x + 1 + int(span * min(1.0, unit.carry_normal / cap))
         pygame.draw.line(screen, INK, (mkx, bar.y - 3), (mkx, bar.bottom + 3))
         y += 15
-        text(screen, f"{kg(unit.load)}  ·  normal {kg(unit.carry_normal)}",
+        text(screen, f"{kg(unit.load)}  ·  normal {kg(unit.carry_normal)}{carrier}",
              f.mono_sm, ccol if (over_norm or over_max) else INK_DIM, (x, y))
         y += 16
         note = ("OVER HIGH LOAD  ·  -2 STR/DEX, -1 speed" if over_max

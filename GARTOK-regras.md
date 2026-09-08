@@ -273,8 +273,11 @@ não no modificador. Nível 2 em diante: a definir.
 
 **Árvore de trabalho (duas raízes):** **Negociador** (+1 Carisma **só** nos
 testes de compra/venda do mercado, via `haggle_charisma_mod`) e **Carregador**
-(desconta 1 kg do peso de cada item que **não** é arma nem consumível, **só** no
-teste de sobrecarga — o peso exibido não muda).
+(alarga o limiar de sobrecarga em **até 1 kg**, e só até o peso real da carga da
+mochila que **não** é arma nem consumível — folga pra levar tralha, não comida
+nem arma reserva; sem carga assim, sem bônus). Mexe **só** no teste de
+sobrecarga (`carry_normal` efetivo), nunca no `load` exibido nem no teto
+`carry_max`. `Unit.carry_relief` guarda quantos kg entraram.
 
 **Dado de vida por nível médio.** `nível médio = ⌊(nível de combate + nível de
 trabalho) / 2⌋`. Cada vez que ele sobe 1, o personagem ganha um dado de vida:

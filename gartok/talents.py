@@ -42,7 +42,8 @@ class Talent:
     # --- effect knobs (all optional) ---------------------------------- #
     attr_bonus: tuple = ()           # ((attribute, amount), ...) -- added to the SCORE
     haggle_charisma: int = 0         # +N Charisma, market buy/sell checks only
-    carry_light_items: int = 0       # -N kg per non-weapon/non-consumable item, carry check only
+    carry_buffer: int = 0            # +N kg of stagger-check headroom, spent only on
+                                     #   non-weapon/non-consumable cargo actually carried
     # combat, tier 2
     to_hit_str: int = 0              # +N to hit on Strength-based attacks
     to_hit_dex: int = 0             # +N to hit on Dexterity-based attacks
@@ -96,8 +97,8 @@ _LIST = [
     # work -- two roots, carrier and negotiator                           #
     # ================================================================== #
     Talent("carrier", "work", 1, "Carrier",
-           "carry 1 kg less per item that is not a weapon or a consumable.",
-           carry_light_items=1, icon="body/lift"),
+           "carry up to 1 kg more gear before you stagger (not food or weapons).",
+           carry_buffer=1, icon="body/lift"),
     Talent("piecework", "work", 2, "Piecework",
            "+20% coin from work that pays in coin.",
            requires="carrier", coin_gain=COIN_BONUS, icon="action/profit"),

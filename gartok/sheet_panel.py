@@ -158,10 +158,11 @@ def draw_sheet(screen, rect, u, f):
     for ln in wrap_lines([f"pack: {inv}"], f.body_sm, w):
         text(screen, ln, f.body_sm, INK_DIM, (x, y))
         y += 16
-    over_n = u.load > u.carry_normal
+    over_n = u.encumbered
     over_m = u.load > u.carry_max
     ccol = DANGER if over_m else WARN if over_n else OK
     text(screen, f"load: {u.load:g} / normal {u.carry_normal:g} / high {u.carry_max:g}"
+         + (f" (carrier +{u.carry_relief:g})" if u.carry_relief else "")
          + ("  OVERLOADED" if over_n and not over_m else
             "  OVER HIGH LOAD" if over_m else ""),
          f.mono_sm, ccol, (x, y))

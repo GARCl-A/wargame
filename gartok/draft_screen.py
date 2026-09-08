@@ -256,7 +256,7 @@ class DraftScreen(Screen):
 
         # --- inventory one-liner --------------------------- #
         inv = ", ".join(unit._base_inventory) if unit._base_inventory else "(empty)"
-        text(screen, f"carries {inv}  ·  {unit.gold} copper  ·  load {unit.load}/{unit.carry_normal}",
+        text(screen, f"carries {inv}  ·  {unit.gold} copper  ·  load {unit.load:g}/{unit.carry_normal:g}",
              f.body_sm, INK_FAINT, (s.x, s.y))
 
         # --- footer --------------------------------------- #

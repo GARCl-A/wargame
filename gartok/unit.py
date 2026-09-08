@@ -249,18 +249,21 @@ class Unit:
                    for a, amt in talents.get(tid).attr_bonus if a == attr)
 
     def _talent_sum(self, knob):
-        """Total of a numeric talent knob (`haggle_charisma`, `carry_light_items`)."""
+        """Total of a numeric talent knob (`haggle_charisma`, `carry_buffer`)."""
         return sum(getattr(talents.get(tid), knob)
                    for lst in self.talents.values() for tid in lst)
 
     def _carry_relief(self):
-        """Kg the Carrier talent shaves off the overload check: `carry_light_items`
-        per pack item that is not a weapon or a consumable (never below its weight)."""
-        per = self._talent_sum("carry_light_items")
-        if not per:
+        """Kg the Carrier talent adds to the stagger threshold: up to the talent's
+        `carry_buffer`, but no more than the real weight of the pack cargo that is
+        neither a weapon nor a consumable -- it is headroom for hauling gear, not
+        for food or spare weapons. No such cargo -> no relief."""
+        buf = self._talent_sum("carry_buffer")
+        if not buf:
             return 0.0
-        return sum(min(per, data.item_weight(it)) for it in self._base_inventory
-                   if not self.is_weapon(it) and it not in data.CONSUMABLE_ITEMS)
+        cargo = sum(data.item_weight(it) for it in self._base_inventory
+                    if not self.is_weapon(it) and it not in data.CONSUMABLE_ITEMS)
+        return round(min(buf, cargo), 1)
 
     def _apply_race(self):
         self.race = data.roll_race()
@@ -332,12 +335,13 @@ class Unit:
         # bracket used here and nowhere else -- the Goliath carries as Large.
         cm = data.SIZES[ab.carry_size or self.size]["carry"]
         str_carry = mod(self.strength + pen)
-        self.carry_normal = max(1, round((str_carry * 4 + 15) * cm))
+        base_normal = max(1, round((str_carry * 4 + 15) * cm))
         self.carry_max = max(2, round((str_carry * 6 + 35) * cm))
-        # The Carrier talent lightens non-weapon/non-consumable items for the
-        # overload check only -- `load` (shown on the sheet) stays the real weight.
-        self.carry_load = round(self.load - self._carry_relief(), 1)
-        self.encumbered = self.carry_load > self.carry_normal
+        # The Carrier talent widens the stagger threshold (never the displayed
+        # `load`, and never the `carry_max` ceiling) by the gear-hauling buffer.
+        self.carry_relief = self._carry_relief()
+        self.carry_normal = round(base_normal + self.carry_relief, 1)
+        self.encumbered = self.load > self.carry_normal
         enc = -2 if self.encumbered else 0           # -2 FOR and -2 DES while overloaded
 
         for a in ATTRIBUTES:
