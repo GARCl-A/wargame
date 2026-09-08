@@ -30,10 +30,9 @@ whole maximized screen. Reached from the map (opening it passes no time).
 import pygame
 
 from . import data, world
-from .combatant import Combatant
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
-from .sheet_panel import PANEL_H, PANEL_W, draw_sheet
+from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
@@ -47,7 +46,7 @@ LIST_MIN, LIST_MAX = 264, 380         # roster column width clamps
 DET_MAX = 1120                        # detail panel width cap on very wide screens
 
 
-class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
+class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True                        # app draws us straight to the window
 
     def __init__(self, fonts, guild, on_back, on_level=None, on_manage=None):
@@ -64,7 +63,6 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         self.tab_hits = []                  # [(rect, key)]
         self.member_hits = []              # [(rect, unit)] -- list cards select the member
         self.selected = []                   # [(unit, loc), ...]: loc is "hand"|"offhand"|"armor"|pack index
-        self.detail = None                   # unit whose full sheet is open (modal), or None
         self.zones = []                     # [(rect, unit, "hand"|"offhand"|"armor"|"pack"|"discard")]
         self.sources = []                  # [(rect, unit, loc)]
         self.info_hits = []                # [(rect, unit)] -- the detail header opens the sheet
@@ -100,8 +98,7 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             self.selected = [src]
 
     def _drop(self, px, dragging, src):
-        if self.detail is not None:            # sheet modal: any click closes it
-            self.detail = None
+        if self.close_sheet_on_click():        # sheet modal up: any click just closes it
             return
 
         if dragging:
@@ -152,7 +149,7 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                 return
         for rect, unit in self.info_hits:
             if rect.collidepoint(px):
-                self.detail = unit
+                self.open_sheet(unit)
                 return
         self.selected = [src] if src is not None else []
 
@@ -216,10 +213,7 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
             text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
 
-        if self.detail is not None:
-            r = pygame.Rect(0, 0, PANEL_W, PANEL_H)
-            r.center = (W // 2, H // 2)
-            draw_sheet(screen, r, Combatant(self.detail), f)
+        self.draw_sheet_modal(screen, f)
 
         set_pointer(self._hot)
 

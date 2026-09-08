@@ -10,11 +10,60 @@ over the guild screen (click a member to open, click anywhere to close).
 import pygame
 
 from . import data
+from .combatant import Combatant
 from .theme import (ACCENT, DANGER, DEMO_HL, INFO, INK, INK_DIM, INK_FAINT,
                     OK, SP1, SP2, SP3, SURFACE_1, SURFACE_2, WARN,
                     chip, panel, section, token_badge, text, wrap_lines)
 
 PANEL_W, PANEL_H = 560, 604
+
+
+class SheetModalMixin:
+    """Lets a screen pop the full character sheet over itself. The sheet needs a
+    `Combatant` view (to-hit, ammo, hand state), so a roster member is wrapped in
+    a throwaway one -- fresh, so it reads "full HP, standing".
+
+    A screen mixes this in, calls `open_sheet(unit)` from its own card hit, guards
+    its click handler with `if self.close_sheet_on_click(): return` and ends its
+    `draw` with `self.draw_sheet_modal(surface, fonts)`.
+    """
+
+    _sheet_unit = None
+
+    def open_sheet(self, unit):
+        self._sheet_unit = unit
+
+    @property
+    def sheet_open(self):
+        return self._sheet_unit is not None
+
+    def close_sheet_on_click(self):
+        """True (and closes the sheet) if a modal was up -- the click is spent on
+        dismissing it and the screen should do nothing else with it."""
+        if self._sheet_unit is None:
+            return False
+        self._sheet_unit = None
+        return True
+
+    def sheet_badge(self, screen, topright, fonts):
+        """Draw a small 'i' disc at `topright` (the card's inspect affordance) and
+        return its rect for the screen to hit-test."""
+        r = pygame.Rect(0, 0, 20, 20)
+        r.topright = topright
+        hot = r.collidepoint(self.mouse)
+        pygame.draw.circle(screen, SURFACE_1, r.center, 9)
+        pygame.draw.circle(screen, INFO, r.center, 9, 1)
+        text(screen, "i", fonts.body_bd, ACCENT if hot else INFO, r.center, center=True)
+        return r
+
+    def draw_sheet_modal(self, screen, fonts):
+        if self._sheet_unit is None:
+            return
+        w, h = screen.get_size()
+        r = pygame.Rect(0, 0, PANEL_W, PANEL_H)
+        r.center = (w // 2, h // 2)
+        draw_sheet(screen, r, Combatant(self._sheet_unit), fonts)
+
 
 _ATTRS = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
           ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma")]

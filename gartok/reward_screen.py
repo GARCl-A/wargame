@@ -7,12 +7,13 @@ member you click (the guild has no shared treasury). `on_done` returns to the ma
 import pygame
 
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
                     MARGIN, RADIUS, SP3, SURFACE_2, SURFACE_3,
                     panel, token_badge, text, tracked)
 
 
-class RewardScreen(Screen):
+class RewardScreen(SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, members, amount, on_done):
@@ -24,10 +25,17 @@ class RewardScreen(Screen):
         self.on_done = on_done
         self.paid_to = None                   # member who took the purse
         self.cards = []                      # [(rect, member)]
+        self.info_hits = []                # [(rect, member)] -- the card's 'i' disc opens the sheet
         self.buttons = []                   # [(key, rect)]
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
+        if self.close_sheet_on_click():
+            return
+        for rect, member in self.info_hits:
+            if rect.collidepoint(px):
+                self.open_sheet(member)
+                return
         for key, rect in self.buttons:
             if rect.collidepoint(px) and key == "done" and self.paid_to is not None:
                 self.on_done()
@@ -45,6 +53,7 @@ class RewardScreen(Screen):
         f = self.fonts
         screen.fill((18, 19, 24))
         self.cards = []
+        self.info_hits = []
         self.buttons = []
 
         text(screen, "ARENA PURSE", f.title, INK, (MARGIN, MARGIN - 2))
@@ -66,6 +75,7 @@ class RewardScreen(Screen):
             self.cards.append((rect, m))
 
         self._draw_footer(screen)
+        self.draw_sheet_modal(screen, f)
 
     def _draw_card(self, screen, rect, m):
         f = self.fonts
@@ -75,6 +85,9 @@ class RewardScreen(Screen):
         panel(screen, rect, fill=SURFACE_2,
               border=ACCENT if (took or hov) else LINE_SOFT,
               width=2 if (took or hov) else 1, radius=RADIUS)
+
+        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
+        self.info_hits.append((badge, m))
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
         token_badge(screen, tok, m, f)

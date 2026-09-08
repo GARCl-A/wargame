@@ -14,13 +14,14 @@ import pygame
 
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, panel, token_badge, text,
                     tracked)
 
 
-class SquadScreen(Screen):
+class SquadScreen(SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, roster, location, on_confirm, on_back, *,
@@ -40,6 +41,7 @@ class SquadScreen(Screen):
         self.disabled = set(disabled or ())   # units that cannot be picked (e.g. starving)
         self.picked = []                      # units, in click order
         self.cards = []                      # [(rect, unit)]
+        self.info_hits = []                # [(rect, unit)] -- the card's 'i' disc opens the sheet
         self.tiers = []                      # [(rect, index)]
         self.buttons = []                   # [(key, rect)]
         eligible = [u for u in roster if u not in self.disabled]
@@ -69,6 +71,12 @@ class SquadScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
+        if self.close_sheet_on_click():
+            return
+        for rect, unit in self.info_hits:
+            if rect.collidepoint(px):
+                self.open_sheet(unit)
+                return
         for key, rect in self.buttons:
             if rect.collidepoint(px):
                 if key == "back":
@@ -99,6 +107,7 @@ class SquadScreen(Screen):
         W, H = screen.get_size()
         screen.fill((18, 19, 24))
         self.cards = []
+        self.info_hits = []
         self.tiers = []
         self.buttons = []
 
@@ -128,6 +137,7 @@ class SquadScreen(Screen):
             self.cards.append((rect, unit))
 
         self._draw_footer(screen)
+        self.draw_sheet_modal(screen, f)
 
     # ------------------------------------------------------------------ #
     def _draw_offers(self, screen, top):
@@ -169,6 +179,9 @@ class SquadScreen(Screen):
         panel(screen, rect, fill=SURFACE_1 if off else SURFACE_2,
               border=DANGER if off else ACCENT if chosen else (INFO if hov else LINE_SOFT),
               width=2 if (chosen or hov or off) else 1, radius=RADIUS)
+
+        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
+        self.info_hits.append((badge, unit))
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
         token_badge(screen, tok, unit, f)

@@ -554,6 +554,48 @@ def test_every_screen_draws_native_at_any_window_size():
             scene.draw(surf)
 
 
+def test_squad_and_reward_screens_pop_the_sheet_modal():
+    """The card's 'i' disc opens the sheet; the dismiss click is spent only on
+    closing it, not on picking a fighter / paying the purse."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.guild import Guild
+    from gartok.theme import Fonts
+    from gartok.squad_screen import SquadScreen
+    from gartok.reward_screen import RewardScreen
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = Fonts()
+
+    random.seed(1)
+    roster = [Unit("player") for _ in range(3)]
+    guild = Guild(list(roster), node=world.START_NODE)
+    surf = pygame.Surface((1280, 800))
+    noop = lambda *a, **k: None
+
+    sq = SquadScreen(F, roster, next(n for n in world.NODES if n.kind == "battle"), noop, noop)
+    sq.mouse = (0, 0)
+    sq.draw(surf)
+    badge = next(r for r, u in sq.info_hits if u is roster[0])
+    picked_before = list(sq.picked)
+    sq._click(badge.center)
+    assert sq.sheet_open and sq._sheet_unit is roster[0]
+    sq.draw(surf)                                     # renders the modal
+    sq._click((5, 5))                                 # a click just closes it
+    assert not sq.sheet_open
+    assert sq.picked == picked_before                # the dismiss click didn't toggle
+
+    rw = RewardScreen(F, guild, list(roster), 120, noop)
+    rw.mouse = (0, 0)
+    rw.draw(surf)
+    rbadge = next(r for r, m in rw.info_hits if m is roster[0])
+    rw._click(rbadge.center)
+    assert rw.sheet_open
+    rw._click((5, 5))
+    assert not rw.sheet_open and rw.paid_to is None   # the dismiss click didn't pay the purse
+
+
 def test_guild_gold_is_the_sum_of_the_roster():
     from gartok.guild import Guild
     roster = [Unit("player") for _ in range(3)]
