@@ -1,45 +1,33 @@
-# Assets — Dungeon Tileset
-
-Fonte: `16x16dungeon.png` (sheet promo "16x16 Dungeon", tiles de 16px soltos:
-título, duas salas de exemplo e fileiras de tiles/objetos avulsos).
-
-## Gerado
-
-| Arquivo | O que é |
-|---|---|
-| `dungeon_tileset.png` | atlas empacotado, grade de 16px |
-| `dungeon_tileset.json` | manifesto `nome -> {x, y, w, h}` + `tile_size`, `columns` |
-| `tiles/*.png` | cada tile isolado, fundo transparente |
-
-Regenera tudo com:
+# Assets
 
 ```
-python gartok/assets/build_tileset.py
+assets/
+  icons/            game-icons.net silhouettes (SVG). LOADED at runtime.
+    body/  hat/  head/    flattened <category>/<name>.svg  (no per-author dir)
+    LICENSE.txt          CC BY 3.0 — see file
+  dungeon/          the "16x16 Dungeon" promo sheet + its sliced tileset. ORPHAN.
+    16x16dungeon.png     source sheet
+    build_tileset.py     slices it -> dungeon_tileset.png/.json + tiles/*.png
+    dungeon_tileset.*    packed atlas + name->rect manifest
+    tiles/              each tile isolated, transparent
 ```
 
-## Uso (pygame)
+## icons/ — used by the game
 
-```python
-from gartok.tileset import Tileset
-ts = Tileset.load(target=44)          # escala nearest pra célula de 44px
-screen.blit(ts["floor"], (x, y))
-```
+`gartok/artwork.py` loads these on demand, rasterises each SVG once at the size
+asked for, tints it, and caches by `(category, name, px, colour)`. Right now only
+`head/` is wired up: `theme.token_badge` draws the unit's **race silhouette** on
+the team-coloured disc (`artwork.RACE_ICON` maps race name -> file), falling back
+to the board letter when a race has no glyph.
 
-## Inventário (32 tiles)
+`body/` and `hat/` are staged for later (occupation art on the character sheet /
+guild detail panel). Nothing loads them yet.
 
-- **Piso** (16x16): `floor`, `floor_alt`, `floor_studs`, `floor_bars`;
-  `floor_medallion` (48x48, mosaico 3x3 do centro da sala).
-- **Parede**: `wall_top`, `wall_bottom`, `wall_left`, `wall_right`,
-  `wall_corner_tl/tr/bl/br`, `wall_left_chain`, `wall_brick` (16x16);
-  `wall_door_top` (16x32).
-- **Objetos**: `barrel`, `ladder`, `chair`, `chest_open`, `gravestone`,
-  `fence`, `bar`, `rubble`, `anvil` (16x16); `table`, `torch`, `archway`
-  (16x32); `weapon_rack` (32x32).
-- **Inimigos**: `slime_green`, `slime_blue`, `slime_pink` (16x16).
+Adding an icon: drop a white-on-transparent SVG into the right folder, reference
+it by bare name (`artwork.icon("head", "orc-head", 24)`).
 
-Tiles de 16x32 / 32x32 são alinhados pelo canto superior-esquerdo no blit;
-para encostar os pés numa célula, desenhe em `y - (h - 16)*escala`.
+## dungeon/ — orphaned
 
-> A fonte é um sheet promo de baixa resolução, então alguns objetos (mesa,
-> conjunto de cadeiras, estante de armas) são recortes estilizados do próprio
-> mockup, não sprites limpos de um atlas oficial.
+The board is rendered procedurally (see `gartok-ui-redesign`); this tileset is
+kept on disk in case props (barrels, chests) come back. Regenerate with
+`python gartok/assets/dungeon/build_tileset.py` (needs Pillow).

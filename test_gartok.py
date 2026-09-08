@@ -438,6 +438,57 @@ def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
     assert sorted(m.gold for m in shoppers) == [10, 10, 11]
 
 
+def test_dragselect_ignores_a_mouseup_with_no_matching_press():
+    """Entering the market via the squad picker's GO SHOPPING button leaves the
+    left button down; the release then lands on the scene that just replaced it.
+    That stray MOUSEBUTTONUP must not count as a click (which would fire
+    LEAVE THE MARKET and bounce the player straight back out)."""
+    import pygame
+    from gartok.dragselect import DragSelectMixin
+    from gartok.screen import Screen
+
+    class Probe(DragSelectMixin, Screen):
+        def __init__(self):
+            super().__init__()
+            self.drops = 0
+
+        def _source_at(self, px):
+            return None
+
+        def _drop(self, px, dragging, src):
+            self.drops += 1
+
+    p = Probe()
+    up = pygame.event.Event(pygame.MOUSEBUTTONUP, {"button": 1, "pos": (10, 10)})
+    p.handle_event(up)
+    assert p.drops == 0                               # stray release: no-op
+
+    down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": (5, 5)})
+    p.handle_event(down)
+    p.handle_event(up)
+    assert p.drops == 1                               # a real press/release still lands
+
+
+def test_every_race_has_a_token_icon_that_loads():
+    """`theme.token_badge` draws `artwork.RACE_ICON[race]` -> a file under
+    assets/icons/head/. A missing mapping or a typo'd filename silently blanks
+    the token, so pin both here."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import artwork
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    artwork.icon.cache_clear()
+
+    for name in data.RACE_NAMES:
+        assert name in artwork.RACE_ICON, f"race {name!r} has no token icon"
+        surf = artwork.race_icon(name, 24, (15, 15, 20))
+        assert surf is not None and surf.get_size() == (24, 24), name
+
+    assert artwork.race_icon("Goblin", 24) is artwork.race_icon("Goblin", 24)  # cached
+    assert artwork.icon("head", "no-such-glyph", 24) is None                   # graceful
+
+
 def test_guild_gold_is_the_sum_of_the_roster():
     from gartok.guild import Guild
     roster = [Unit("player") for _ in range(3)]

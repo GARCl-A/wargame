@@ -335,7 +335,7 @@ class GuildScreen(DragSelectMixin, Screen):
                 pygame.draw.rect(screen, ACCENT, (r.x, r.y + 4, 3, r.h - 8))
 
             tok = (r.x + SP3 + 12, r.y + 24)
-            token_badge(screen, tok, unit.token, f)
+            token_badge(screen, tok, unit, f)
             nx = tok[0] + 24
             text(screen, _fit(unit.name, f.card_name, r.right - nx - SP2),
                  f.card_name, INK if sel else INK_DIM if not hov else INK,
@@ -401,7 +401,7 @@ class GuildScreen(DragSelectMixin, Screen):
                          border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
         pygame.draw.line(screen, LINE_SOFT, (rect.x, head.bottom), (rect.right - 1, head.bottom))
         tok = (rect.x + pad + 15, rect.y + 30)
-        token_badge(screen, tok, unit.token, f, r=16)
+        token_badge(screen, tok, unit, f, r=16)
         nx = tok[0] + 28
         origin = self._recruited_by(unit)
         sub = (f"{unit.race['name']}  ·  {unit.occupation['name']}"

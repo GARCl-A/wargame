@@ -125,6 +125,7 @@ gartok/
   theme.py          design system: escala de espaço (SP), paleta, 2 famílias de fonte,
                     widgets (panel, chip, section, pips, Stack, token_badge)
   icons.py          ícones vetoriais (pygame.draw) das ações — sem arquivo de asset
+  artwork.py        carrega/tinge/cacheia os SVGs de assets/icons/ (silhuetas de raça no token)
   lighting.py       LightRenderer: camada de escuridão + buracos de luz radiais
   sheet.py          formata uma Unit em linhas de texto (usada na inspeção da batalha)
   sheet_panel.py    ficha completa desenhada (modal da tela de guilda)
@@ -136,8 +137,10 @@ test_gartok.py      testes de regras (rodam sob pytest ou `python test_gartok.py
 sim_test.py         simulação headless (200 batalhas IA vs IA)
 ```
 
-> `tileset.py` e `gartok/assets/` estão órfãos — a renderização é 100% procedural
-> desde a repaginação visual. Mantidos em disco caso props (barris, baús) voltem.
+> A renderização é procedural, com uma exceção: `artwork.py` carrega os SVGs de
+> `gartok/assets/icons/` (game-icons.net) — hoje só as silhuetas de raça no token
+> da unidade. `gartok/assets/dungeon/` + `tileset.py` seguem órfãos, mantidos em
+> disco caso props (barris, baús) voltem.
 
 ### Como adicionar um sistema novo
 

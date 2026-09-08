@@ -77,7 +77,7 @@ class LevelScreen(Screen):
 
         iy = pad + 46
         tok = (pad + 17, iy + 15)
-        token_badge(screen, tok, u.token, f, r=17)
+        token_badge(screen, tok, u, f, r=17)
         text(screen, u.name, f.card_name, INK, (tok[0] + 30, iy))
         dice = len(u._level_hp_rolls)
         sub = (f"{u.race['name']}  ·  {u.occupation['name']}  ·  mean level {u.mean_level}"

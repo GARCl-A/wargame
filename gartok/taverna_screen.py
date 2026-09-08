@@ -154,7 +154,7 @@ class TavernaScreen(Screen):
               width=2 if border != LINE_SOFT else 1, radius=RADIUS)
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, cand.token, f)
+        token_badge(screen, tok, cand, f)
         for j, ln in enumerate(wrap_lines([cand.name], f.card_name, rect.w - 74)[:2]):
             text(screen, ln, f.card_name, INK, (tok[0] + 24, rect.y + pad + j * 16))
 
@@ -247,7 +247,7 @@ class TavernaScreen(Screen):
               width=2 if border != LINE_SOFT else 1, radius=4)
 
         tok = (r.x + pad + 11, r.y + pad + 11)
-        token_badge(screen, tok, m.token, f, r=12)
+        token_badge(screen, tok, m, f, r=12)
         text(screen, m.name, f.body_bd, INK, (tok[0] + 22, r.y + pad))
         text(screen, f"CAR {m.mod_charisma:+}", f.mono_sm, WARN, (tok[0] + 22, r.y + pad + 16))
         text(screen, ", ".join(m.languages), f.body_sm, INK_FAINT,

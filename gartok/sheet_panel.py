@@ -81,7 +81,7 @@ def draw_sheet(screen, rect, u, f):
 
     # --- header ---------------------------------------------------------- #
     tok = (x + 14, y + 14)
-    token_badge(screen, tok, u.token, f, r=15)
+    token_badge(screen, tok, u, f, r=15)
     text(screen, u.name, f.heading, INK, (tok[0] + 26, y))
     text(screen, f"{u.race['name']}  ·  {u.occupation['name']}  ·  {u.alignment}",
          f.body_sm, INK_DIM, (tok[0] + 26, y + 18))

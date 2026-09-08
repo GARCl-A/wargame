@@ -10,7 +10,7 @@ from . import data
 from .combatant import Combatant
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, DEMO_HL, INFO, INK, INK_DIM,
-                    INK_FAINT, LINE, LINE_SOFT, MARGIN, OK, PLAYER_C, RADIUS, SP1,
+                    INK_FAINT, LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1,
                     SP2, SP3, SP4, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
                     WIN_H, WIN_W, Stack, chip, panel, section, token_badge, text, tracked,
                     wrap_lines)
@@ -151,7 +151,7 @@ class DraftScreen(Screen):
         pygame.draw.rect(screen, SURFACE_3, head,
                          border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
         tok = (rect.x + pad + 13, rect.y + 25)
-        token_badge(screen, tok, unit.token, f, r=15)
+        token_badge(screen, tok, unit, f, r=15)
         for j, ln in enumerate(wrap_lines([unit.name], f.card_name, rect.w - 74)[:2]):
             text(screen, ln, f.card_name, INK, (tok[0] + 26, rect.y + 8 + j * 17))
         s.y = head.bottom + SP3
@@ -278,8 +278,7 @@ class DraftScreen(Screen):
                 u = self.picks[i]
                 panel(screen, r, fill=SURFACE_2, border=OK, width=1)
                 dot = (r.x + SP3 + 9, r.centery)
-                pygame.draw.circle(screen, PLAYER_C, dot, 12)
-                text(screen, u.token, f.body_sm, (15, 15, 20), dot, center=True)
+                token_badge(screen, dot, u, f, r=12)
                 text(screen, u.name, f.body_bd, INK, (dot[0] + 20, r.y + SP2))
                 n, faces = u.weapon["damage"]
                 text(screen, f"HP {u.hp_max}  AC {u.ac}  Speed {u.speed}  {u.weapon_name} {n}d{faces}",

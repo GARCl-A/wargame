@@ -18,7 +18,7 @@ import os
 import pygame
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_ASSETS = os.path.join(_HERE, "assets")
+_ASSETS = os.path.join(_HERE, "assets", "dungeon")
 
 
 class Tileset:

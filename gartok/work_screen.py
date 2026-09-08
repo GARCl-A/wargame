@@ -88,7 +88,7 @@ class WorkScreen(Screen):
             panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
             pad = SP3
             tok = (rect.x + pad + 12, rect.y + pad + 12)
-            token_badge(screen, tok, u.token, f)
+            token_badge(screen, tok, u, f)
             text(screen, u.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
             text(screen, f"{u.race['name']}  ·  {u.occupation['name']}", f.body_sm,
                  INK_DIM, (tok[0] + 24, rect.y + pad + 20))

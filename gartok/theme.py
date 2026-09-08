@@ -14,6 +14,7 @@ One source of truth for how GARTOK Tactical looks. The screens (`draft_screen`,
 
 import pygame
 
+from . import artwork
 from .battle import COLS, ROWS
 
 # --- spacing scale ----------------------------------------------------------- #
@@ -222,14 +223,22 @@ def panel(surf, rect, *, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS, width=
     return rect
 
 
-TOKEN_INK = (15, 15, 20)                # race letter drawn on a unit token
+TOKEN_INK = (15, 15, 20)                # ink for the race glyph / letter on a unit token
 
 
-def token_badge(surf, center, letter, fonts, *, color=PLAYER_C, r=14):
-    """The round unit token: a coloured disc with the race letter on it. Used on
-    every roster card (draft / guild / squad / loot / market / reward / sheet)."""
+def token_badge(surf, center, unit, fonts, *, color=PLAYER_C, r=14):
+    """The round unit token: a coloured disc carrying the unit's race silhouette
+    (`artwork.race_icon`), falling back to its board letter when the race has no
+    glyph. Used on every roster card (draft / guild / squad / loot / market /
+    reward / sheet). `unit` may also be a bare letter string."""
     pygame.draw.circle(surf, color, center, r)
-    text(surf, letter, fonts.body_bd, TOKEN_INK, center, center=True)
+    race = getattr(unit, "race", None)
+    sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
+    if sil is not None:
+        surf.blit(sil, sil.get_rect(center=center))
+    else:
+        text(surf, getattr(unit, "token", unit), fonts.body_bd, TOKEN_INK,
+             center, center=True)
 
 
 def chip(surf, rect, label, value, fonts, *, accent=INFO):

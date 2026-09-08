@@ -42,6 +42,8 @@ class DragSelectMixin:
                 self._dragging = True
                 self._begin_drag(self._press_src)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            if self._press is None:
+                return                       # release of a press we never saw
             dragging, src = self._dragging, self._press_src
             self._press = self._press_src = None
             self._dragging = False

@@ -3,7 +3,7 @@ the log. Drawing only -- rules live in `battle` / `actions` / `vision`."""
 
 import pygame
 
-from . import actions, ai, data, icons, vision
+from . import actions, ai, artwork, data, icons, vision
 from .battle import COLS, ROWS
 from .board import cells
 from .lighting import LightRenderer
@@ -432,7 +432,11 @@ class BattleScreen(Screen):
                 pygame.draw.circle(screen, DANGER, center, rad - 3, 2)
             if u.demoralized:
                 pygame.draw.circle(screen, DEMO_HL, (r.x + 8, r.y + 8), 4)
-            text(screen, u.token, f.body_bd, (15, 15, 20), center, center=True)
+            sil = artwork.race_icon(u.race["name"], round(rad * 1.5), (15, 15, 20))
+            if sil is not None:
+                screen.blit(sil, sil.get_rect(center=center))
+            else:
+                text(screen, u.token, f.body_bd, (15, 15, 20), center, center=True)
 
             frac = max(0, u.hp) / u.hp_max
             bar = pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4)
@@ -469,8 +473,12 @@ class BattleScreen(Screen):
             tcol = PLAYER_C if u.team == "player" else ENEMY_C
             dot = (r.x + 12, r.centery - 3)
             pygame.draw.circle(screen, tcol if known else SURFACE_4, dot, 8)
-            text(screen, u.token if known else "?", f.mono_sm, (12, 12, 16),
-                 dot, center=True)
+            sil = artwork.race_icon(u.race["name"], 13, (12, 12, 16)) if known else None
+            if sil is not None:
+                screen.blit(sil, sil.get_rect(center=dot))
+            else:
+                text(screen, u.token if known else "?", f.mono_sm, (12, 12, 16),
+                     dot, center=True)
             nm = (u.name.split()[0] if known else "Enemy")
             col = INK if is_active else INK_DIM
             clip = screen.get_clip()

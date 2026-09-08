@@ -165,7 +165,7 @@ class SquadScreen(Screen):
               width=2 if (chosen or hov or off) else 1, radius=RADIUS)
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, unit.token, f)
+        token_badge(screen, tok, unit, f)
         text(screen, unit.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
         text(screen, f"{unit.race['name']}  ·  {unit.occupation['name']}", f.body_sm,
              INK_DIM, (tok[0] + 24, rect.y + pad + 20))
