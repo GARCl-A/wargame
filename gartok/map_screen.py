@@ -20,7 +20,7 @@ from . import world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, RADIUS, SP2, SP3, SP4,
-                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN, WIN_H, WIN_W,
+                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
                     panel, section, text, tracked, wrap_lines)
 
 SIDE_W = 372
@@ -32,6 +32,8 @@ KIND_NAME = {"battle": "combat", "market": "market", "tavern": "tavern", "town":
 
 
 class MapScreen(Screen):
+    native = True
+
     def __init__(self, fonts, guild, on_battle, on_market, on_recruit, on_guild,
                  on_wipe, on_work):
         super().__init__()
@@ -99,10 +101,11 @@ class MapScreen(Screen):
             self.on_wipe()
 
     # ------------------------------------------------------------------ #
-    def _area(self):
+    def _area(self, screen):
         top = MARGIN + 64
-        w = WIN_W - 3 * MARGIN - SIDE_W
-        return pygame.Rect(MARGIN, top, w, WIN_H - top - 64)
+        W, H = screen.get_size()
+        w = W - 3 * MARGIN - SIDE_W
+        return pygame.Rect(MARGIN, top, w, H - top - 64)
 
     def _node_xy(self, area, n):
         pad = 48                              # keep markers + labels off the frame
@@ -157,7 +160,7 @@ class MapScreen(Screen):
              f"   ·   arena reputation {self.guild.arena_reputation}",
              f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
-        area = self._area()
+        area = self._area(screen)
         panel(screen, area, fill=GROUND_DAY if clock.is_daylight else GROUND_NIGHT,
               border=LINE_SOFT, radius=RADIUS)
         clip = screen.get_clip()
@@ -369,7 +372,7 @@ class MapScreen(Screen):
                  INK_FAINT, (cx, y))
 
         y += 60
-        y = section(screen, "FROM HERE YOU ACN REACH", cx, y, cw, f)
+        y = section(screen, "FROM HERE YOU CAN REACH", cx, y, cw, f)
         for nid, hours in sorted(world.neighbors(here.id), key=lambda t: t[1]):
             n = world.node(nid)
             text(screen, n.name, f.body_sm, INK_DIM, (cx, y))
@@ -386,7 +389,7 @@ class MapScreen(Screen):
 
     def _draw_footer(self, screen):
         f = self.fonts
-        y = WIN_H - 52
+        y = screen.get_height() - 52
 
         g = pygame.Rect(MARGIN, y, 200, 36)
         hovg = g.collidepoint(self.mouse)

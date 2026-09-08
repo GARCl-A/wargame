@@ -14,11 +14,13 @@ from . import economy
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WIN_H, WIN_W, panel, section, text,
+                    SURFACE_2, SURFACE_3, panel, section, text,
                     token_badge, wrap_lines)
 
 
 class WorkScreen(Screen):
+    native = True
+
     def __init__(self, fonts, guild, workers, on_done, on_back):
         super().__init__()
         self.fonts = fonts
@@ -71,9 +73,9 @@ class WorkScreen(Screen):
         self._draw_workers(screen, top)
 
         if self.result is None:
-            self._draw_shift_picker(screen, WIN_H - 236)
+            self._draw_shift_picker(screen, screen.get_height() - 236)
         else:
-            self._draw_result(screen, WIN_H - 236)
+            self._draw_result(screen, screen.get_height() - 236)
         self._draw_footer(screen)
 
     # ------------------------------------------------------------------ #
@@ -81,7 +83,7 @@ class WorkScreen(Screen):
         f = self.fonts
         n = max(1, len(self.workers))
         gap = SP3
-        card_w = min(240, (WIN_W - 2 * MARGIN - (n - 1) * gap) // n)
+        card_w = min(240, (screen.get_width() - 2 * MARGIN - (n - 1) * gap) // n)
         card_h = 96
         for i, u in enumerate(self.workers):
             rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
@@ -99,10 +101,10 @@ class WorkScreen(Screen):
 
     def _draw_shift_picker(self, screen, top):
         f = self.fonts
-        top = section(screen, "SHIFT", MARGIN, top, WIN_W - 2 * MARGIN, f)
+        top = section(screen, "SHIFT", MARGIN, top, screen.get_width() - 2 * MARGIN, f)
         gap = SP2
         opts = economy.LUMBER_SHIFT_HOURS
-        w = (WIN_W - 2 * MARGIN - (len(opts) - 1) * gap) // len(opts)
+        w = (screen.get_width() - 2 * MARGIN - (len(opts) - 1) * gap) // len(opts)
         for i, h in enumerate(opts):
             r = pygame.Rect(MARGIN + i * (w + gap), top, w, 56)
             sel = h == self.hours
@@ -129,9 +131,9 @@ class WorkScreen(Screen):
 
     def _draw_result(self, screen, top):
         f = self.fonts
-        top = section(screen, "END OF SHIFT", MARGIN, top, WIN_W - 2 * MARGIN, f)
+        top = section(screen, "END OF SHIFT", MARGIN, top, screen.get_width() - 2 * MARGIN, f)
         lines = [w for ln in self.result
-                 for w in wrap_lines([ln], f.body_sm, WIN_W - 2 * MARGIN)]
+                 for w in wrap_lines([ln], f.body_sm, screen.get_width() - 2 * MARGIN)]
         for ln in lines:
             col = DANGER if "starved" in ln else OK if "copper" in ln else INFO
             text(screen, ln, f.body_sm, col, (MARGIN, top))
@@ -139,9 +141,9 @@ class WorkScreen(Screen):
 
     def _draw_footer(self, screen):
         f = self.fonts
-        y = WIN_H - 56
+        y = screen.get_height() - 56
         if self.result is None:
-            conf = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
+            conf = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
             hov = conf.collidepoint(self.mouse)
             panel(screen, conf, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
                   width=1, radius=RADIUS)
@@ -157,7 +159,7 @@ class WorkScreen(Screen):
                  back.center, center=True)
             self.buttons.append(("back", back))
         else:
-            d = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
+            d = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
             hov = d.collidepoint(self.mouse)
             panel(screen, d, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
                   width=1, radius=RADIUS)

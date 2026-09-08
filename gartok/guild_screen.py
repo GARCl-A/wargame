@@ -508,7 +508,8 @@ class GuildScreen(DragSelectMixin, Screen):
                 right = ""
                 if kind == "hand":
                     n, faces = data.WEAPONS[held]["damage"]
-                    right = f"{n}d{faces}   ·   "
+                    hit, _src = unit.attack_bonus
+                    right = f"{hit:+} to hit   ·   {n}d{faces}   ·   "
                 text(screen, held, f.body, ink, (hr.x + SP3, hr.y + 9))
                 text(screen, right + _kg(data.item_weight(held)), f.mono_sm,
                      ACCENT_INK if sel else INK_DIM, (hr.right - SP3, hr.y + 10), right=True)

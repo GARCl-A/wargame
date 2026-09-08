@@ -12,7 +12,7 @@ from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, DEMO_HL, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1,
                     SP2, SP3, SP4, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    WIN_H, WIN_W, Stack, chip, panel, section, token_badge, text, tracked,
+                    Stack, chip, panel, section, token_badge, text, tracked,
                     wrap_lines)
 from .unit import Unit
 
@@ -42,6 +42,8 @@ def _archetypes(u):
 
 
 class DraftScreen(Screen):
+    native = True
+
     def __init__(self, fonts, on_done):
         super().__init__()
         self.fonts = fonts
@@ -116,11 +118,11 @@ class DraftScreen(Screen):
         rail_h = 92
         card_h = 548
         group_h = card_h + SP4 + rail_h
-        slack = max(0, (WIN_H - 18) - (MARGIN + 58) - group_h)
+        slack = max(0, (screen.get_height() - 18) - (MARGIN + 58) - group_h)
         top = MARGIN + 58 + slack // 2
         rail_y = top + card_h + SP4
         gap = SP3
-        card_w = (WIN_W - 2 * MARGIN - (DRAFT_CHOICES - 1) * gap) // DRAFT_CHOICES
+        card_w = (screen.get_width() - 2 * MARGIN - (DRAFT_CHOICES - 1) * gap) // DRAFT_CHOICES
 
         self.card_rects = []
         self.edit_rects = []
@@ -130,8 +132,8 @@ class DraftScreen(Screen):
             hover = rect.collidepoint(mouse) and not self.edit_mode
             self._draw_card(screen, rect, unit, hover, mouse)
 
-        self._draw_squad_rail(screen, MARGIN, rail_y, WIN_W - 2 * MARGIN, rail_h)
-        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, WIN_H - 18))
+        self._draw_squad_rail(screen, MARGIN, rail_y, screen.get_width() - 2 * MARGIN, rail_h)
+        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
 
         if self.picker is not None:
             self._draw_picker(screen, mouse)
@@ -288,7 +290,7 @@ class DraftScreen(Screen):
                 text(screen, f"slot {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)
 
     def _draw_edit_button(self, screen, mouse):
-        r = pygame.Rect(WIN_W - MARGIN - 96, MARGIN, 96, 30)
+        r = pygame.Rect(screen.get_width() - MARGIN - 96, MARGIN, 96, 30)
         self.edit_btn_rect = r
         on = self.edit_mode
         hov = r.collidepoint(mouse)
@@ -307,7 +309,7 @@ class DraftScreen(Screen):
             options, current, title = (data.OCCUPATION_NAMES, unit.occupation["name"],
                                        "Pick an occupation")
 
-        veil = pygame.Surface((WIN_W, WIN_H), pygame.SRCALPHA)
+        veil = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
         veil.fill((0, 0, 0, 190))
         screen.blit(veil, (0, 0))
 
@@ -316,7 +318,7 @@ class DraftScreen(Screen):
         cw, ch, pad = 220, 27, SP4
         pw = cols * cw + 2 * pad
         ph = 52 + rows * ch + SP4
-        panel_r = pygame.Rect((WIN_W - pw) // 2, (WIN_H - ph) // 2, pw, ph)
+        panel_r = pygame.Rect((screen.get_width() - pw) // 2, (screen.get_height() - ph) // 2, pw, ph)
         panel(screen, panel_r, fill=SURFACE_2, border=ACCENT, width=2, radius=8)
         text(screen, title, f.title, INK, (panel_r.x + pad, panel_r.y + 12))
 

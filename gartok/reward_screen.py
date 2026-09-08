@@ -8,11 +8,13 @@ import pygame
 
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
-                    MARGIN, RADIUS, SP3, SURFACE_2, SURFACE_3, WIN_H,
-                    WIN_W, panel, token_badge, text, tracked)
+                    MARGIN, RADIUS, SP3, SURFACE_2, SURFACE_3,
+                    panel, token_badge, text, tracked)
 
 
 class RewardScreen(Screen):
+    native = True
+
     def __init__(self, fonts, guild, members, amount, on_done):
         super().__init__()
         self.fonts = fonts
@@ -56,7 +58,7 @@ class RewardScreen(Screen):
         n = max(1, len(self.members))
         gap = SP3
         top = MARGIN + 80
-        card_w = min(260, (WIN_W - 2 * MARGIN - (n - 1) * gap) // n)
+        card_w = min(260, (screen.get_width() - 2 * MARGIN - (n - 1) * gap) // n)
         card_h = 150
         for i, m in enumerate(self.members):
             rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
@@ -93,7 +95,7 @@ class RewardScreen(Screen):
     def _draw_footer(self, screen):
         f = self.fonts
         done = self.paid_to is not None
-        d = pygame.Rect(WIN_W - MARGIN - 240, WIN_H - 56, 240, 36)
+        d = pygame.Rect(screen.get_width() - MARGIN - 240, screen.get_height() - 56, 240, 36)
         hov = d.collidepoint(self.mouse)
         panel(screen, d, fill=ACCENT if (done and hov) else SURFACE_3 if done else SURFACE_2,
               border=ACCENT if done else LINE_SOFT, width=1, radius=RADIUS)

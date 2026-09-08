@@ -22,7 +22,7 @@ from .dragselect import DragSelectMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, WIN_H, WIN_W, panel, section,
+                    SURFACE_2, SURFACE_3, WARN, panel, section,
                     token_badge, text, tracked)
 
 STOCK_W = 300
@@ -33,6 +33,8 @@ def _kg(w):
 
 
 class MarketScreen(DragSelectMixin, Screen):
+    native = True
+
     def __init__(self, fonts, guild, shoppers, node, on_done):
         super().__init__()
         self.fonts = fonts
@@ -230,7 +232,7 @@ class MarketScreen(DragSelectMixin, Screen):
 
         text(screen, "MARKET", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
-             (WIN_W - MARGIN, MARGIN + 2), right=True)
+             (screen.get_width() - MARGIN, MARGIN + 2), right=True)
         names = self._selected_names()
         if names:
             one = names[0] if len(names) == 1 else f"{len(names)} items"
@@ -248,10 +250,10 @@ class MarketScreen(DragSelectMixin, Screen):
                  f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 64
-        stock = pygame.Rect(MARGIN, top, STOCK_W, WIN_H - top - 72)
+        stock = pygame.Rect(MARGIN, top, STOCK_W, screen.get_height() - top - 72)
         self._draw_stock(screen, stock)
         self._draw_shoppers(screen, pygame.Rect(stock.right + MARGIN, top,
-                                                WIN_W - stock.right - 2 * MARGIN,
+                                                screen.get_width() - stock.right - 2 * MARGIN,
                                                 stock.h))
         self._draw_footer(screen)
 
@@ -359,7 +361,7 @@ class MarketScreen(DragSelectMixin, Screen):
 
     def _draw_footer(self, screen):
         f = self.fonts
-        y = WIN_H - 52
+        y = screen.get_height() - 52
         if self.notice:
             text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
 
@@ -375,7 +377,7 @@ class MarketScreen(DragSelectMixin, Screen):
                  ACCENT_INK if hov else DANGER, sr.center, center=True)
             self.buttons.append(("sell", sr))
 
-        done = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
+        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
         hovd = done.collidepoint(self.mouse)
         panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)

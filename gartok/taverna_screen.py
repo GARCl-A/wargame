@@ -21,13 +21,15 @@ from .data import alignment_distance
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, WIN_H, WIN_W, panel, section,
+                    SURFACE_2, SURFACE_3, WARN, panel, section,
                     token_badge, text, tracked, wrap_lines)
 
 CANDIDATES = 3          # layout width; the live pool may hold fewer after a hire
 
 
 class TavernaScreen(Screen):
+    native = True
+
     def __init__(self, fonts, guild, party, node, on_done):
         super().__init__()
         self.fonts = fonts
@@ -125,8 +127,8 @@ class TavernaScreen(Screen):
         top = MARGIN + 68
         party_h = 120
         gap = SP3
-        cand_h = WIN_H - top - party_h - gap - 80
-        cw = (WIN_W - 2 * MARGIN - (CANDIDATES - 1) * gap) // CANDIDATES
+        cand_h = screen.get_height() - top - party_h - gap - 80
+        cw = (screen.get_width() - 2 * MARGIN - (CANDIDATES - 1) * gap) // CANDIDATES
 
         if not self.candidates:
             text(screen, "No one looking for work right now. Come back when the crowd changes.",
@@ -137,7 +139,7 @@ class TavernaScreen(Screen):
             self.cand_cards.append((rect, i))
 
         py = top + cand_h + gap
-        self._draw_party(screen, pygame.Rect(MARGIN, py, WIN_W - 2 * MARGIN, party_h))
+        self._draw_party(screen, pygame.Rect(MARGIN, py, screen.get_width() - 2 * MARGIN, party_h))
         self._draw_footer(screen)
 
     # ------------------------------------------------------------------ #
@@ -258,12 +260,12 @@ class TavernaScreen(Screen):
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
         f = self.fonts
-        y = WIN_H - 52
+        y = screen.get_height() - 52
         if self.notice:
             col = OK if "signs" in self.notice else INFO
             text(screen, self.notice, f.body_sm, col, (MARGIN, y - 22))
 
-        d = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
+        d = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
         hov = d.collidepoint(self.mouse)
         panel(screen, d, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
         text(screen, "LEAVE THE TAVERN", f.body_bd, ACCENT_INK if hov else ACCENT,

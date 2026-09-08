@@ -16,8 +16,9 @@ the campaign clock, opening the guild/squad screens does not. `persist` autosave
 after the draft, on every return to the map and after every battle. Permadeath: a
 member who does not survive is dropped; a full wipe ends the campaign.
 
-The scene always draws to a fixed `WIN_W x WIN_H` canvas; the loop scales that to
-the real window, letterboxed, so the window can be resized.
+Every scene is `native`: it draws straight to the real (resizable) window and
+lays itself out from `screen.get_size()`. `WIN_W x WIN_H` (theme.py) is just the
+opening window size and the battle screen's fixed board canvas.
 """
 
 import pygame
@@ -47,10 +48,8 @@ class App:
         pygame.init()
         pygame.display.set_caption("GARTOK Tactical")
         self.window = pygame.display.set_mode((WIN_W, WIN_H), pygame.RESIZABLE)
-        self.canvas = pygame.Surface((WIN_W, WIN_H))
         self.clock = pygame.time.Clock()
         self.fonts = Fonts()
-        self._view = (1.0, 0, 0)              # (scale, offset_x, offset_y)
 
         self.slot = None
         self.guild = None
@@ -203,39 +202,6 @@ class App:
         self._start_map()
 
     # ------------------------------------------------------------------ #
-    def _to_canvas(self, pos):
-        scale, ox, oy = self._view
-        return (int((pos[0] - ox) / scale), int((pos[1] - oy) / scale))
-
-    def _scene_pos(self, pos):
-        """Cursor `pos` in the coords the current scene wants: raw window pixels
-        for a `native` scene, fixed-canvas coords for the rest. Re-checked per
-        call because an event may swap the scene mid-frame."""
-        return pos if getattr(self.scene, "native", False) else self._to_canvas(pos)
-
-    def _present(self):
-        ww, wh = self.window.get_size()
-        scale = min(ww / WIN_W, wh / WIN_H)
-        sw, sh = int(WIN_W * scale), int(WIN_H * scale)
-        ox, oy = (ww - sw) // 2, (wh - sh) // 2
-        self._view = (scale, ox, oy)
-        self.window.fill(BG)
-        frame = pygame.transform.smoothscale(self.canvas, (sw, sh))
-        self.window.blit(frame, (ox, oy))
-        pygame.display.flip()
-
-    def _blit_scene(self):
-        """A `native` scene draws straight to the window at its real size; the
-        rest draw to the fixed canvas, which `_present` scales into the window."""
-        if getattr(self.scene, "native", False):
-            self.window.fill(BG)
-            self.scene.draw(self.window)
-            pygame.display.flip()
-        else:
-            self.scene.draw(self.canvas)
-            self._present()
-
-    # ------------------------------------------------------------------ #
     def _toggle_pause(self):
         """Esc: into / out of the pause menu. On the main menu Esc quits; there
         is no in-game quick exit -- leaving is a deliberate step from the menu."""
@@ -266,7 +232,7 @@ class App:
         self._running = True
         while self._running:
             dt = self.clock.tick(60)
-            self.scene.mouse = self._scene_pos(pygame.mouse.get_pos())
+            self.scene.mouse = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self._running = False
@@ -274,13 +240,11 @@ class App:
                     self.window = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self._toggle_pause()
-                elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP,
-                                    pygame.MOUSEMOTION):
-                    self.scene.handle_event(pygame.event.Event(
-                        event.type, {**event.dict, "pos": self._scene_pos(event.pos)}))
                 else:
                     self.scene.handle_event(event)
 
             self.scene.update(dt)
-            self._blit_scene()
+            self.window.fill(BG)
+            self.scene.draw(self.window)          # every scene draws at real window size
+            pygame.display.flip()
         pygame.quit()

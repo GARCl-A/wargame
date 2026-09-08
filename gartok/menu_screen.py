@@ -12,10 +12,12 @@ from . import persist
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, RADIUS, SP3, SP4, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WIN_H, WIN_W, panel, text)
+                    SURFACE_2, SURFACE_3, panel, text)
 
 
 class MenuScreen(Screen):
+    native = True                            # draw at the real window size
+
     def __init__(self, fonts, on_new, on_continue, on_delete):
         super().__init__()
         self.fonts = fonts
@@ -52,6 +54,7 @@ class MenuScreen(Screen):
     # ------------------------------------------------------------------ #
     def draw(self, screen):
         f = self.fonts
+        W, H = screen.get_size()
         screen.fill((18, 19, 24))
         mouse = self.mouse
         self.buttons = []
@@ -60,19 +63,19 @@ class MenuScreen(Screen):
         text(screen, "pick a slot to play", f.body, INK_DIM,
              (MARGIN, MARGIN + 32))
 
-        card_w = min(560, WIN_W - 2 * MARGIN)
+        card_w = min(560, W - 2 * MARGIN)
         card_h = 116
         gap = SP4
         total = persist.NUM_SLOTS * card_h + (persist.NUM_SLOTS - 1) * gap
-        x = (WIN_W - card_w) // 2
-        y = (WIN_H - total) // 2
+        x = (W - card_w) // 2
+        y = max(MARGIN + 72, (H - total) // 2)
 
         for s in self.slots:
             rect = pygame.Rect(x, y, card_w, card_h)
             self._draw_slot(screen, rect, s, mouse)
             y += card_h + gap
 
-        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, WIN_H - 18))
+        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, H - 18))
 
     def _draw_slot(self, screen, rect, s, mouse):
         f = self.fonts

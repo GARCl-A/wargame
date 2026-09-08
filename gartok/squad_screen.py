@@ -16,11 +16,13 @@ from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, WIN_H, WIN_W, panel, token_badge, text,
+                    SURFACE_2, SURFACE_3, WARN, panel, token_badge, text,
                     tracked)
 
 
 class SquadScreen(Screen):
+    native = True
+
     def __init__(self, fonts, roster, location, on_confirm, on_back, *,
                  max_pick=None, title="PICK SQUAD", confirm_label="CONFIRM",
                  arena_offers=None, disabled=None):
@@ -94,6 +96,7 @@ class SquadScreen(Screen):
     # ------------------------------------------------------------------ #
     def draw(self, screen):
         f = self.fonts
+        W, H = screen.get_size()
         screen.fill((18, 19, 24))
         self.cards = []
         self.tiers = []
@@ -109,14 +112,16 @@ class SquadScreen(Screen):
         if self.offers:
             top = self._draw_offers(screen, top)
 
-        cols = max(1, min(len(self.roster), 4))
-        rows = (len(self.roster) + cols - 1) // cols
         gap = SP3
-        avail_h = WIN_H - top - 72
-        card_w = (WIN_W - 2 * MARGIN - (cols - 1) * gap) // cols
+        n = len(self.roster)
+        cols = max(1, min(n, (W - 2 * MARGIN + gap) // (300 + gap)))
+        rows = (n + cols - 1) // cols
+        avail_h = H - top - 72
+        card_w = min(360, (W - 2 * MARGIN - (cols - 1) * gap) // cols)
         card_h = min(232, (avail_h - (rows - 1) * gap) // max(1, rows))
+        x0 = (W - (cols * card_w + (cols - 1) * gap)) // 2
         for i, unit in enumerate(self.roster):
-            cx = MARGIN + (i % cols) * (card_w + gap)
+            cx = x0 + (i % cols) * (card_w + gap)
             cy = top + (i // cols) * (card_h + gap)
             rect = pygame.Rect(cx, cy, card_w, card_h)
             self._draw_card(screen, rect, unit)
@@ -130,7 +135,8 @@ class SquadScreen(Screen):
         tracked(screen, "STAKE", f.label, INFO, (MARGIN, top))
         top += 16
         gap = SP2
-        w = (WIN_W - 2 * MARGIN - (len(self.offers) - 1) * gap) // max(1, len(self.offers))
+        W = screen.get_size()[0]
+        w = (W - 2 * MARGIN - (len(self.offers) - 1) * gap) // max(1, len(self.offers))
         for i, off in enumerate(self.offers):
             r = pygame.Rect(MARGIN + i * (w + gap), top, w, 54)
             sel = i == self.offer_idx
@@ -198,9 +204,10 @@ class SquadScreen(Screen):
 
     def _draw_footer(self, screen):
         f = self.fonts
+        W, H = screen.get_size()
         ok = self.ok
-        y = WIN_H - 56
-        conf = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
+        y = H - 56
+        conf = pygame.Rect(W - MARGIN - 240, y, 240, 36)
         hov = conf.collidepoint(self.mouse)
         panel(screen, conf, fill=ACCENT if (ok and hov) else SURFACE_3 if ok else SURFACE_1,
               border=ACCENT if ok else LINE_SOFT, width=1, radius=RADIUS)

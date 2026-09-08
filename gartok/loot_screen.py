@@ -15,7 +15,7 @@ from . import data
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WIN_H, WIN_W, panel, section,
+                    SURFACE_2, SURFACE_3, panel, section,
                     token_badge, text)
 
 
@@ -24,6 +24,8 @@ def _kg(w):
 
 
 class LootScreen(Screen):
+    native = True
+
     def __init__(self, fonts, guild, survivors, pool, on_done):
         super().__init__()
         self.fonts = fonts
@@ -97,10 +99,10 @@ class LootScreen(Screen):
 
         top = MARGIN + 72
         pile_w = 300
-        pile = pygame.Rect(MARGIN, top, pile_w, WIN_H - top - 72)
+        pile = pygame.Rect(MARGIN, top, pile_w, screen.get_height() - top - 72)
         self._draw_pile(screen, pile)
         self._draw_survivors(screen, pygame.Rect(pile.right + MARGIN, top,
-                                                 WIN_W - pile.right - 2 * MARGIN,
+                                                 screen.get_width() - pile.right - 2 * MARGIN,
                                                  pile.h))
         self._draw_footer(screen)
 
@@ -177,7 +179,7 @@ class LootScreen(Screen):
 
     def _draw_footer(self, screen):
         f = self.fonts
-        y = WIN_H - 52
+        y = screen.get_height() - 52
         if self.notice:
             text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
 
@@ -191,7 +193,7 @@ class LootScreen(Screen):
         if on:
             self.buttons.append(("auto", auto))
 
-        done = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
+        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
         hovd = done.collidepoint(self.mouse)
         panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)

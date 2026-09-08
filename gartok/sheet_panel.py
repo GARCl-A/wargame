@@ -22,14 +22,11 @@ _ATTRS = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
 
 def _to_hit(u):
     """Base attack bonus and the attribute it comes from -- no target, no
-    flanking, no conditions (those are situational and shown in battle)."""
-    if u.unarmed or u.improvised:
+    flanking, no conditions (those are situational and shown in battle). A
+    ranged weapon swung with no ammo left is a Strength melee attack."""
+    if u.improvised:
         return u.mod_strength, "STR"
-    if u.ranged:
-        return u.mod_dexterity, "DEX"
-    if u.weapon["finesse"]:
-        return max(u.mod_strength, u.mod_dexterity), "STR/DEX"
-    return u.mod_strength, "STR"
+    return u.attack_bonus
 
 
 def _weapon_lines(u):

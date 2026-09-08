@@ -110,6 +110,7 @@ gartok/
   persist.py        slots de save (JSON); só o roster + meta da campanha vão pro disco
 
   # telas (Screen base: handle_event / update(dt) / draw(surface), lê self.mouse)
+  # toda tela desenha direto na janela real e se distribui a partir de screen.get_size()
   screen.py         classe base das telas (dispatch de clique -> self._click)
   menu_screen.py    slots de save (Novo / Continuar / Apagar)
   draft_screen.py   montagem do roster inicial (cards + modo EDITAR)
@@ -130,8 +131,8 @@ gartok/
   sheet.py          formata uma Unit em linhas de texto (usada na inspeção da batalha)
   sheet_panel.py    ficha completa desenhada (modal da tela de guilda)
 
-  app.py            shell pygame: janela redimensionável (canvas fixo + letterbox),
-                    loop, troca de telas e o laço campanha ⇄ batalha
+  app.py            shell pygame: janela redimensionável, loop, troca de telas
+                    e o laço campanha ⇄ batalha
 main.py             ponto de entrada
 test_gartok.py      testes de regras (rodam sob pytest ou `python test_gartok.py`)
 sim_test.py         simulação headless (200 batalhas IA vs IA)

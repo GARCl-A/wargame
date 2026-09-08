@@ -16,19 +16,26 @@ from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
                     PANEL_X, PANEL_Y, PATH_DONE, PATH_PREV, PLAYER_C, RADIUS,
                     SP1, SP2, SP3, SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3,
                     SURFACE_4, THROW_HL, TILE, TORCH_C, WALL_FILL, WALL_HI,
-                    WALL_LO, WARN, WIN_W, Stack, panel, pips, text, tracked,
+                    WALL_LO, WARN, WIN_H, WIN_W, Stack, panel, pips, text, tracked,
                     wrap_lines)
 
 ENEMY_DELAY = 450  # ms between AI actions
 
 
 class BattleScreen(Screen):
+    # The board is a fixed-size composition (TILE=48 and the panel / log rects in
+    # theme.py). Rather than reflow it, we render to a fixed canvas and blit it
+    # centred in the real window -- native, so no letterbox smoothscale blur.
+    native = True
+
     def __init__(self, fonts, battle, on_battle_end):
         super().__init__()
         self.fonts = fonts
         self.battle = battle
         self.on_battle_end = on_battle_end
         self.lighting = LightRenderer()
+        self._canvas = pygame.Surface((WIN_W, WIN_H))
+        self._offset = (0, 0)                 # where the canvas sits in the window
         self.inspect = None
         self.inspect_open = True
         self.enemy_timer = 0
@@ -50,7 +57,8 @@ class BattleScreen(Screen):
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self._click(event.pos)
+            ox, oy = self._offset
+            self._click((event.pos[0] - ox, event.pos[1] - oy))
 
     def update(self, dt):
         b = self.battle
@@ -178,7 +186,14 @@ class BattleScreen(Screen):
     # ------------------------------------------------------------------ #
     # drawing                                                            #
     # ------------------------------------------------------------------ #
-    def draw(self, screen):
+    def draw(self, window):
+        W, H = window.get_size()
+        ox, oy = max(0, (W - WIN_W) // 2), max(0, (H - WIN_H) // 2)
+        self._offset = (ox, oy)
+        self.mouse = (self.mouse[0] - ox, self.mouse[1] - oy)   # -> canvas space
+        window.fill(BG)
+
+        screen = self._canvas
         screen.fill(BG)
         self._obs = self._observers()
         self._visible = vision.visible_cells(self.battle, self._obs)
@@ -194,6 +209,8 @@ class BattleScreen(Screen):
         self._draw_log(screen)
         if self.battle.winner:
             self._draw_winner(screen)
+
+        window.blit(screen, (ox, oy))
 
     def _cell_rect(self, cx, cy):
         return pygame.Rect(GRID_X + cx * TILE, GRID_Y + cy * TILE, TILE, TILE)
@@ -219,14 +236,14 @@ class BattleScreen(Screen):
             y = GRID_Y + cy * TILE
             pygame.draw.line(screen, LINE_SOFT, (GRID_X, y), (GRID_X + GRID_W, y))
 
-        # drop shadow first, so a block below never paints over it
+        # drop shadow: a dark block offset down-right, painted before the walls
+        # so each block covers its neighbours' shadows -> only the exposed south
+        # and east faces cast onto the floor, and the grid reads as 2.5D
+        shadow = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
+        pygame.draw.rect(shadow, (0, 0, 0, 110), shadow.get_rect(), border_radius=RADIUS)
         for wx, wy in walls:
-            if (wx, wy + 1) not in walls:
-                r = self._cell_rect(wx, wy)
-                sh = pygame.Surface((r.w, 12), pygame.SRCALPHA)
-                for i in range(12):
-                    sh.fill((*WALL_LO, int(120 * (1 - i / 12))), (0, i, r.w, 1))
-                screen.blit(sh, (r.x, r.bottom))
+            r = self._cell_rect(wx, wy)
+            screen.blit(shadow, (r.x + 5, r.y + 5))
 
         for wx, wy in walls:
             self._draw_wall_block(screen, wx, wy, walls)

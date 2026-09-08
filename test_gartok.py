@@ -489,6 +489,69 @@ def test_every_race_has_a_token_icon_that_loads():
     assert artwork.icon("head", "no-such-glyph", 24) is None                   # graceful
 
 
+def test_every_screen_draws_native_at_any_window_size():
+    """Every screen is `native`: it draws straight to the real window and lays
+    itself out from `screen.get_size()`. Render each at a few sizes -- catches a
+    stray fixed constant, an out-of-scope `screen`, or a layout that divides by
+    something that goes to zero on a small window."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.guild import Guild
+    from gartok.battle import Battle
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = Fonts()
+
+    random.seed(0)
+    roster = [Unit("player") for _ in range(5)]
+    guild = Guild(list(roster), node=world.START_NODE)
+    noop = lambda *a, **k: None
+    bnode = next(n for n in world.NODES if n.kind == "battle")
+    mnode = next(n for n in world.NODES if n.kind == "market")
+    tnode = next(n for n in world.NODES if n.kind == "tavern")
+    batt = Battle(list(roster[:3]), [Unit("enemy") for _ in range(3)],
+                  scenario=bnode.scenario(), daylight=True, lethal=True)
+
+    from gartok.menu_screen import MenuScreen
+    from gartok.draft_screen import DraftScreen
+    from gartok.map_screen import MapScreen
+    from gartok.squad_screen import SquadScreen
+    from gartok.battle_screen import BattleScreen
+    from gartok.loot_screen import LootScreen
+    from gartok.reward_screen import RewardScreen
+    from gartok.market_screen import MarketScreen
+    from gartok.taverna_screen import TavernaScreen
+    from gartok.work_screen import WorkScreen
+    from gartok.guild_screen import GuildScreen
+    from gartok.level_screen import LevelScreen
+    from gartok.pause_screen import PauseScreen
+
+    scenes = [
+        MenuScreen(F, noop, noop, noop),
+        DraftScreen(F, noop),
+        MapScreen(F, guild, noop, noop, noop, noop, noop, noop),
+        SquadScreen(F, roster, bnode, noop, noop),
+        BattleScreen(F, batt, noop),
+        LootScreen(F, guild, list(roster[:3]), ["Axe", "Rope"], noop),
+        RewardScreen(F, guild, list(roster[:3]), 120, noop),
+        MarketScreen(F, guild, list(roster[:3]), mnode, noop),
+        TavernaScreen(F, guild, list(roster[:3]), tnode, noop),
+        WorkScreen(F, guild, list(roster[:3]), noop, noop),
+        GuildScreen(F, guild, noop, noop),
+        LevelScreen(F, roster[0], noop, noop),
+    ]
+    scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
+
+    for scene in scenes:
+        assert getattr(scene, "native", False), type(scene).__name__
+        for size in ((1280, 800), (1920, 1080), (1024, 640)):
+            surf = pygame.Surface(size)
+            scene.mouse = (size[0] // 2, size[1] // 2)
+            scene.draw(surf)
+
+
 def test_guild_gold_is_the_sum_of_the_roster():
     from gartok.guild import Guild
     roster = [Unit("player") for _ in range(3)]
@@ -795,6 +858,22 @@ def test_ranged_attack_consumes_one_bolt():
     assert actions.ATTACK.can(batt, a, d)
     actions.ATTACK.execute(batt, a, d)
     assert a.ammo == 2
+
+
+def test_unit_attack_bonus_picks_the_right_attribute():
+    """`Unit.attack_bonus` -- the base to-hit the guild screen shows on the
+    weapon row (and `sheet_panel._to_hit` reuses)."""
+    u = _unit()
+    u.strength, u.dexterity = 16, 8               # +3 STR, -1 DEX
+    u._derive_combat()
+    u.take_from_hand()                            # start from empty hands
+    assert u.attack_bonus == (3, "STR")           # unarmed hits with Strength
+    u.give_to_hand("Axe")                         # plain melee -> STR
+    assert u.attack_bonus == (3, "STR")
+    u.give_to_hand("Dagger")                      # finesse -> better of STR/DEX
+    assert u.attack_bonus == (3, "STR/DEX")
+    u.give_to_hand("Light Crossbow")              # ranged -> DEX
+    assert u.attack_bonus == (-1, "DEX")
 
 
 def test_crossbow_without_ammo_is_improvised():

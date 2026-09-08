@@ -469,6 +469,20 @@ class Unit:
         return bool(w) and w["range"] > 0
 
     @property
+    def attack_bonus(self):
+        """Base to-hit modifier and the attribute feeding it, as `(value, src)`.
+        No target, flank or condition mods -- those are situational and need the
+        Combatant. Empty hands hit with Strength (the unarmed attack)."""
+        w = self.weapon
+        if w is None:
+            return self.mod_strength, "STR"
+        if w["range"] > 0:
+            return self.mod_dexterity, "DEX"
+        if w["finesse"]:
+            return max(self.mod_strength, self.mod_dexterity), "STR/DEX"
+        return self.mod_strength, "STR"
+
+    @property
     def ac(self):
         return self.ac_base + self.ac_natural
 
