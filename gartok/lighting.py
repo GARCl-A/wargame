@@ -4,6 +4,9 @@ Was ~100 lines buried in the old `app.py` god class. Holds its own mask cache;
 one instance per battle screen.
 """
 
+import math
+import random
+
 import pygame
 
 from . import vision
@@ -20,6 +23,15 @@ class LightRenderer:
         cx, cy = pos
         return (GRID_X + cx * TILE + TILE // 2, GRID_Y + cy * TILE + TILE // 2)
 
+    def _flicker_px(self, pos):
+        """A small per-frame wobble on a torch's reach -- a sine sway plus light
+        noise, so static darkness breathes. Snapped to 2px steps to keep the
+        mask cache down to a handful of keys per radius."""
+        t = pygame.time.get_ticks() / 1000.0
+        phase = pos[0] * 12.9898 + pos[1] * 78.233      # per-torch offset
+        wobble = math.sin(t * 8 + phase) * 2 + random.uniform(-1, 1)
+        return int(round(wobble / 2)) * 2
+
     def _source_visible(self, pos, visible):
         """Is the source at `pos` inside (or hugging) the area the character sees?"""
         return pos in visible or any(
@@ -31,7 +43,8 @@ class LightRenderer:
         result = []
         for pos, radius in vision.light_sources(battle):
             if self._source_visible(pos, visible):
-                result.append((self._cell_center_px(pos), radius * TILE + TILE // 2, 0.30))
+                reach = radius * TILE + TILE // 2 + self._flicker_px(pos)
+                result.append((self._cell_center_px(pos), reach, 0.30))
         for o in observers:                        # darkvision / own cell
             dark = o.ability.darkvision
             result.append((self._cell_center_px(o.pos),
