@@ -114,6 +114,8 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             if rect.collidepoint(px):
                 if key == "level" and self.on_level and self.member is not None:
                     self.on_level(self.member)
+                elif key == "share_food" and self.member is not None:
+                    self.member.share_food = not self.member.share_food
                 elif key == "manage" and self.on_manage:
                     self.on_manage()
                 elif key == "back":
@@ -398,6 +400,12 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                  f.mono_sm, DANGER if unit.hunger_level >= 2 else WARN, (x, a))
         else:
             text(screen, f"hunger: fed{rtag}", f.mono_sm, OK, (x, a))
+        if not carried and unit.ability.id != "autotroph":
+            a += 18
+            sf = pygame.Rect(x, a, 168, 22)
+            self._pill(screen, sf, "SHARING FOOD" if unit.share_food else "RATIONS PRIVATE",
+                       dot=unit.share_food)
+            self.buttons.append(("share_food", sf))
 
         # --- right column: hands --------------------------------- #
         x, inner = bx, bw

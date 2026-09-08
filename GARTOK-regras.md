@@ -635,16 +635,24 @@ mapa ou faz uma **parada de manutenção** (o tempo de batalha é em segundos e 
 conta refeição).
 
 - **Todo personagem come uma vez por dia.** Cada dia de mapa cruzado, o
-  personagem consome **1 item de comida** da mochila (`data.FOOD_ITEMS` — hoje
-  `1kg Carne`, `1kg Batata`). Comeu → contador zera. O upkeep diário devolve uma
-  linha de evento com quantos comeram e quantas rações sobraram, além dos avisos
-  de fome/morte.
+  personagem consome **1 item de comida** (`data.FOOD_ITEMS` — hoje `1kg Carne`,
+  `1kg Batata`). Comeu → contador zera. O upkeep diário devolve uma linha de
+  evento com quantos comeram e quantas rações sobraram, além dos avisos de
+  fome/morte.
+- **Comida compartilhada (padrão ligado).** Cada personagem come primeiro da
+  **própria mochila**; quem ficou sem comida saca uma ração da mochila de
+  qualquer companheiro de guilda com `share_food` ligado (`Unit.share_food`,
+  toggle no painel do membro na tela da guilda). O upkeep roda em duas passadas —
+  todo mundo come o próprio antes de alguém tocar no lastro comum — pra ninguém
+  perder a refeição pra um faminto mais cedo na fila. `Guild._shared_larder` monta
+  a lista de mochilas; `Unit._take_ration` faz o saque (própria mochila, depois o
+  lastro). Autótrofo nunca entra nisso.
 - **Manutenção (botão no mapa, `Guild.do_maintenance`):** a guilda para 1 h onde
   está; passa o tempo (que pode cruzar a meia-noite e disparar a refeição diária)
-  e então **quem ainda está com fome e carrega comida come na hora**
-  (`Unit.eat_now` — só alivia, nunca avança a fome). É onde outras tarefas de
-  parada (descanso, conserto de equipamento) entram depois.
-- **Sem comida na mochila:** o contador de dias sem comer sobe.
+  e então **quem ainda está com fome come na hora** — própria mochila, depois o
+  lastro compartilhado (`Unit.eat_now` — só alivia, nunca avança a fome). É onde
+  outras tarefas de parada (descanso, conserto de equipamento) entram depois.
+- **Sem comida em lugar nenhum que alcance:** o contador de dias sem comer sobe.
 
   | Dias sem comer | Condição | Efeito |
   |---:|---|---|

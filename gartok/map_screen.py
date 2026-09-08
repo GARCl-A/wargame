@@ -402,7 +402,11 @@ class MapScreen(Screen):
         hungry = self.guild.hungry
         mt = pygame.Rect(MARGIN + 212, y, 180, 36)
         hovt = mt.collidepoint(self.mouse)
-        urgent = bool(hungry) and any(u.rations for u in hungry)
+        # a stop helps only if a hungry member can reach a ration: their own pack,
+        # or the shared larder of a guild-mate who pools food
+        reachable = any(u.rations for u in hungry) or any(
+            u.share_food and u.rations for u in self.guild.roster)
+        urgent = bool(hungry) and reachable
         panel(screen, mt, fill=ACCENT if hovt else SURFACE_3 if urgent else SURFACE_2,
               border=ACCENT if urgent else LINE_SOFT, width=1, radius=RADIUS)
         text(screen, "MAINTENANCE (1 h)", f.body_bd,

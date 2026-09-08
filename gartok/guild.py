@@ -63,10 +63,24 @@ class Guild:
             events += self._daily_upkeep()
         return events
 
+    def _shared_larder(self, eater):
+        """The packs `eater` may draw a ration from -- every roster-mate whose
+        `share_food` is on. Own pack is handled first by the unit itself."""
+        return [u._base_inventory for u in self.roster
+                if u is not eater and u.share_food]
+
     def _daily_upkeep(self):
         events, casualties, ate = [], [], []
+        # Everyone eats from their own pack first (a full pass), so a hungry mate
+        # drawing on the shared larder next can't take a ration its owner still
+        # needs. Only then does the still-unfed hit the larder / the hunger step.
+        ate_own = {u for u in self.roster
+                   if u.ability.id != "autotroph" and u._take_ration()}
         for u in self.roster:
-            outcome = u.consume_daily_food()
+            if u in ate_own:
+                u.unfed_days, outcome = 0, "ate"
+            else:
+                outcome = u.consume_daily_food(self._shared_larder(u))
             if outcome == "dead":
                 casualties.append(u)
                 events.append(f"{u.name} starved to death.")
@@ -89,11 +103,12 @@ class Guild:
         events to show. Eating is the only chore today; rest / gear repair hang
         off here later."""
         events = self.pass_time(hours)
-        fed = []
+        fed = [u for u in self.roster if u.eat_now()]          # own packs first
         for u in self.roster:
-            if u.eat_now():
+            if u.hunger_level and u not in fed and u.eat_now(self._shared_larder(u)):
                 fed.append(u)
-                u._derive_combat()
+        for u in fed:
+            u._derive_combat()
         if fed:
             names = ", ".join(u.name for u in fed)
             events.append(f"Stopped to eat: {names} ({self.rations} rations left).")

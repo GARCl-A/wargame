@@ -40,6 +40,7 @@ class Unit:
         self.alignment = data.roll_alignment()
         self.gold = roll(*economy.STARTING_WEALTH_DICE)   # copper coins -- lives on the character
         self.unfed_days = 0                            # consecutive days without a meal
+        self.share_food = True                         # pools rations for hungry guild-mates
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
@@ -80,6 +81,7 @@ class Unit:
         u.alignment = d["alignment"]
         u.gold = d.get("gold", 0)
         u.unfed_days = d.get("unfed_days", 0)
+        u.share_food = d.get("share_food", True)
         u.combat_xp = d.get("combat_xp", 0)
         u.work_hours = d.get("work_hours", 0)
         u._auto_name = d["auto_name"]
@@ -119,31 +121,37 @@ class Unit:
         """Collapsed from hunger -- cannot be sent into a fight."""
         return self.hunger_level >= 3
 
-    def consume_daily_food(self):
-        """Resolve one day's meal: eat a ration from the pack if there is one,
-        else go hungrier. Returns 'ate' | 'hungry' | 'dead'. The caller re-derives
-        combat stats and clears the dead from the roster."""
+    def _take_ration(self, larder=None):
+        """Eat one ration: this character's own pack first, then each pack in
+        `larder` (guild-mates sharing food). Returns True if one was found."""
+        for pack in (self._base_inventory, *(larder or ())):
+            food = next((it for it in pack if it in data.FOOD_ITEMS), None)
+            if food is not None:
+                pack.remove(food)
+                return True
+        return False
+
+    def consume_daily_food(self, larder=None):
+        """Resolve one day's meal: eat a ration (own pack, then `larder`) if one
+        is to be had, else go hungrier. Returns 'ate' | 'hungry' | 'dead'. The
+        caller re-derives combat stats and clears the dead from the roster."""
         if self._ability.id == "autotroph":
             return "ate"
-        food = next((it for it in self._base_inventory if it in data.FOOD_ITEMS), None)
-        if food is not None:
-            self._base_inventory.remove(food)
+        if self._take_ration(larder):
             self.unfed_days = 0
             return "ate"
         self.unfed_days += 1
         return "dead" if self.unfed_days >= data.STARVATION_DEATH_DAYS else "hungry"
 
-    def eat_now(self):
-        """Eat a ration from the pack this instant -- the guild stopping to have a
-        meal rather than waiting for the day to turn. Only bites if the character
-        is actually hungry and carrying food; never advances hunger. Returns True
-        if a meal was eaten. The caller re-derives combat stats."""
+    def eat_now(self, larder=None):
+        """Eat a ration this instant -- the guild stopping to have a meal rather
+        than waiting for the day to turn. Only bites if the character is actually
+        hungry and a ration is to be had (own pack, then `larder`); never advances
+        hunger. Returns True if a meal was eaten. The caller re-derives combat."""
         if self.hunger_level == 0:
             return False
-        food = next((it for it in self._base_inventory if it in data.FOOD_ITEMS), None)
-        if food is None:
+        if not self._take_ration(larder):
             return False
-        self._base_inventory.remove(food)
         self.unfed_days = 0
         return True
 

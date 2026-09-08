@@ -36,6 +36,7 @@ def unit_to_dict(u):
         "alignment": u.alignment,
         "gold": u.gold,                          # copper coins carried by the member
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
+        "share_food": u.share_food,              # pools rations for hungry guild-mates
         "combat_xp": u.combat_xp,                # combat XP (see progression.py)
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
