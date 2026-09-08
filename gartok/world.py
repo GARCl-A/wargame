@@ -16,8 +16,9 @@ Node kinds:
 A battle node is lethal by default (permadeath, loot the corpses). The Arena is
 the exception: `lethal=False`, `arena=True` -- a paid, non-lethal bout. The squad
 stakes copper to enter -- `entry` per fighter, from the tier `world.arena_offers`
-picks for the guild's `arena_reputation`; winning pays the flat purse and raises
-the reputation, losing just forfeits the stake. Nobody dies either way.
+picks for the guild's `arena_reputation`; winning pays the flat purse, losing
+forfeits the stake. Nobody dies either way. Reputation with the Pits comes from
+completing arena deeds (`factions`), not from the win itself.
 
 `pos` is normalised (0..1, 0..1) inside the map area; `MapScreen` scales it.
 """
@@ -55,10 +56,11 @@ class Node:
         return self.kind == "tavern"
 
 
-# Arena bouts unlocked by reputation: stake `entry` copper PER FIGHTER sent in,
-# field `enemies` opponents, win the flat `purse` and +1 reputation. The purse
-# does not grow with the squad, so piling bodies onto a weak tier just eats the
-# take -- a lean squad of strong dolls keeps the most. Ordered cheapest first.
+# Arena bouts unlocked by reputation (`rep`, from the arena `factions` deeds):
+# stake `entry` copper PER FIGHTER sent in, field `enemies` opponents, win the
+# flat `purse`. The purse does not grow with the squad, so piling bodies onto a
+# weak tier just eats the take -- a lean squad of strong dolls keeps the most.
+# Ordered cheapest first.
 ARENA_TIERS = [
     {"rep": 0,  "name": "Rookie pit",   "entry": 4,   "purse": 15,  "enemies": 1},
     {"rep": 2,  "name": "Bronze ring",  "entry": 15,  "purse": 55,  "enemies": 2},

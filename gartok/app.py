@@ -55,6 +55,7 @@ class App:
         self.slot = None
         self.guild = None
         self._battle_squad = []              # roster units sent to the current battle
+        self._battle_node = None             # world node the current battle is at
         self._arena_offer = None             # arena stake tier for the current bout, or None
         self._start_menu()
 
@@ -172,6 +173,7 @@ class App:
 
     def _start_battle(self, squad, node, offer=None):
         self._battle_squad = squad
+        self._battle_node = node
         self._arena_offer = offer
         if offer:
             self._charge(squad, offer["entry"] * len(squad))
@@ -185,8 +187,10 @@ class App:
 
     def _battle_end(self, battle):
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
+                                         node=self._battle_node,
                                          arena_offer=self._arena_offer)
         self._battle_squad = []
+        self._battle_node = None
         self._arena_offer = None
 
         if outcome.campaign_over:             # full wipe: campaign over
@@ -196,7 +200,8 @@ class App:
         if outcome.arena_reward is not None:  # arena bout won: hand out the purse
             self._save()
             self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
-                                      outcome.arena_reward, on_done=self._start_map)
+                                      outcome.arena_reward, on_done=self._start_map,
+                                      deeds=outcome.deeds_earned)
             return
 
         if outcome.loot_pool and outcome.survivors:

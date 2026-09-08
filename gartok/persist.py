@@ -18,7 +18,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 2                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 3                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -59,7 +59,8 @@ def save_game(slot, guild):
     payload = {
         "save_version": SAVE_VERSION,
         "battles_won": guild.battles_won,
-        "arena_reputation": guild.arena_reputation,
+        "reputation": dict(guild.reputation),
+        "deeds_done": list(guild.deeds_done),
         "clock_seconds": guild.clock.seconds,
         "node": guild.node,
         "saved_at": time.time(),
@@ -84,7 +85,8 @@ def load_game(slot):
     pool = payload.get("taverna_pool")
     return Guild(roster,
                  battles_won=payload.get("battles_won", 0),
-                 arena_reputation=payload.get("arena_reputation", 0),
+                 reputation=payload.get("reputation", {}),
+                 deeds_done=payload.get("deeds_done", []),
                  clock=Clock(payload.get("clock_seconds", 0)),
                  node=payload.get("node"),
                  taverna_week=payload.get("taverna_week"),

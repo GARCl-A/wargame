@@ -1,28 +1,32 @@
 """Arena purse: pick which member of the winning squad pockets the prize.
 
 Shown after a won arena bout. The purse is copper; it lands whole on the one
-member you click (the guild has no shared treasury). `on_done` returns to the map.
+member you click (the guild has no shared treasury). If the bout also completed
+a faction deed (`deeds`), a banner names it above the cards. `on_done` returns
+to the map.
 """
 
 import pygame
 
+from . import factions
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
-                    MARGIN, RADIUS, SP3, SURFACE_2, SURFACE_3,
+                    MARGIN, OK, RADIUS, SP2, SP3, SURFACE_2, SURFACE_3,
                     panel, token_badge, text, tracked)
 
 
 class RewardScreen(SheetModalMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, members, amount, on_done):
+    def __init__(self, fonts, guild, members, amount, on_done, deeds=()):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
         self.members = members
         self.amount = amount
         self.on_done = on_done
+        self.deeds = list(deeds)              # factions.Deed completed by this bout
         self.paid_to = None                   # member who took the purse
         self.cards = []                      # [(rect, member)]
         self.info_hits = []                # [(rect, member)] -- the card's 'i' disc opens the sheet
@@ -64,9 +68,18 @@ class RewardScreen(SheetModalMixin, Screen):
                         f"(now on {self.paid_to.gold})", INFO)
         text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
 
+        top = MARGIN + 80
+        for d in self.deeds:
+            fac = factions.faction(d.faction).name
+            br = pygame.Rect(MARGIN, top, min(screen.get_width() - 2 * MARGIN, 640), 40)
+            panel(screen, br, fill=SURFACE_2, border=OK, width=1, radius=RADIUS)
+            text(screen, f"DEED  ·  {d.name}", f.body_bd, OK, (br.x + SP3, br.y + 5))
+            text(screen, f"{d.blurb}   +{d.rep} reputation with {fac}", f.body_sm,
+                 INK_DIM, (br.x + SP3, br.y + 22))
+            top = br.bottom + SP2
+
         n = max(1, len(self.members))
         gap = SP3
-        top = MARGIN + 80
         card_w = min(260, (screen.get_width() - 2 * MARGIN - (n - 1) * gap) // n)
         card_h = 150
         for i, m in enumerate(self.members):

@@ -546,6 +546,12 @@ def test_every_screen_draws_native_at_any_window_size():
     ]
     scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
 
+    guild.reputation = {"arena": 1}
+    guild.deeds_done = ["arena_first_blood"]
+    rep_tab = GuildScreen(F, guild, noop, noop)
+    rep_tab.tab = "reputations"                       # the faction-standing view
+    scenes.append(rep_tab)
+
     for scene in scenes:
         assert getattr(scene, "native", False), type(scene).__name__
         for size in ((1280, 800), (1920, 1080), (1024, 640)):
@@ -1049,7 +1055,8 @@ def test_save_slot_file_round_trip():
         return                                        # never clobber a real save
     random.seed(8)
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
-                  arena_reputation=3, clock=Clock(30 * 3600), node="wilds")
+                  reputation={"arena": 3}, deeds_done=["arena_first_blood"],
+                  clock=Clock(30 * 3600), node="wilds")
     guild.roster[0].gold = 42
     pool = recruit.refresh_pool(guild)
     recruit.bar(guild, pool[0], guild.roster[0])
@@ -1057,6 +1064,7 @@ def test_save_slot_file_round_trip():
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
         assert back.battles_won == 4 and back.arena_reputation == 3
+        assert back.deeds_done == ["arena_first_blood"]
         assert back.clock.seconds == 30 * 3600 and back.node == "wilds"
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
@@ -1415,7 +1423,7 @@ def test_absorb_battle_permadeath_and_clock():
 
 
 def test_absorb_battle_arena_win_pays_the_purse_not_loot():
-    from gartok import campaign
+    from gartok import campaign, world
     from gartok.guild import Guild
     random.seed(5)
     squad = [Unit("player")]
@@ -1425,10 +1433,86 @@ def test_absorb_battle_arena_win_pays_the_purse_not_loot():
     for u in battle.player_units:
         u.status = "up"
 
-    out = campaign.absorb_battle(guild, squad, battle,
-                                 arena_offer={"purse": 55, "enemies": 1, "entry": 15})
+    out = campaign.absorb_battle(guild, squad, battle, node=world.node("arena"),
+                                 arena_offer={"rep": 2, "purse": 55, "enemies": 1, "entry": 15})
     assert out.arena_reward == 55 and out.loot_pool == []
+    # a first arena win completes "First Blood" -> +1 reputation with the Pits
+    # (not Lone Wolf: this bout is above the entry tier)
+    assert [d.id for d in out.deeds_earned] == ["arena_first_blood"]
+    assert guild.arena_reputation == 1 and "arena_first_blood" in guild.deeds_done
+
+
+_ENTRY_TIER = {"rep": 0, "name": "Rookie pit", "entry": 4, "purse": 15, "enemies": 1}
+
+
+def _arena_bout(guild, n=1, tier=None, node_id="arena", win=True):
+    from gartok import campaign, world
+    squad = [Unit("player") for _ in range(n)]
+    guild.roster = list(squad)
+    battle = Battle(squad, [Unit("enemy") for _ in range(n)], lethal=False)
+    battle.winner = "player" if win else "enemy"
+    for u in battle.player_units:
+        u.status = "up"
+    return campaign.absorb_battle(guild, squad, battle, node=world.node(node_id),
+                                  arena_offer=tier or _ENTRY_TIER)
+
+
+def test_deeds_are_one_shot_and_only_move_rep_they_earn():
+    from gartok.guild import Guild
+    random.seed(6)
+    guild = Guild([Unit("player")])
+
+    first = _arena_bout(guild, n=2)               # a party win: First Blood only
+    assert [d.id for d in first.deeds_earned] == ["arena_first_blood"]
     assert guild.arena_reputation == 1
+
+    again = _arena_bout(guild, n=2)               # a 2nd arena win earns nothing now
+    assert again.deeds_earned == []
+    assert guild.arena_reputation == 1            # no per-win grind
+    assert guild.deeds_done == ["arena_first_blood"]
+
+
+def test_lone_wolf_wants_a_solo_win_in_the_entry_pit():
+    from gartok.guild import Guild
+    random.seed(9)
+
+    # a solo win in the entry pit clears First Blood AND Lone Wolf at once
+    g1 = Guild([Unit("player")])
+    earned = {d.id for d in _arena_bout(g1, n=1).deeds_earned}
+    assert earned == {"arena_first_blood", "arena_lone_wolf"}
+    assert g1.arena_reputation == 2
+
+    # two fighters -> not solo
+    g2 = Guild([Unit("player")])
+    assert "arena_lone_wolf" not in {d.id for d in _arena_bout(g2, n=2).deeds_earned}
+
+    # solo, but not the entry tier
+    g3 = Guild([Unit("player")])
+    bronze = dict(_ENTRY_TIER, rep=2, name="Bronze ring")
+    assert "arena_lone_wolf" not in {d.id for d in _arena_bout(g3, n=1, tier=bronze).deeds_earned}
+
+
+def test_dethrone_waits_for_the_champion_bout():
+    from gartok.guild import Guild
+    random.seed(10)
+
+    g1 = Guild([Unit("player")])
+    assert "arena_dethrone" not in {d.id for d in _arena_bout(g1, n=2).deeds_earned}
+
+    g2 = Guild([Unit("player")])
+    champ = dict(_ENTRY_TIER, champion=True)      # what "Challenge the Champion" will pass
+    assert "arena_dethrone" in {d.id for d in _arena_bout(g2, n=2, tier=champ).deeds_earned}
+
+
+def test_a_lost_or_non_arena_fight_completes_no_arena_deed():
+    from gartok.guild import Guild
+    random.seed(7)
+
+    g1 = Guild([Unit("player")])
+    assert _arena_bout(g1, n=1, win=False).deeds_earned == [] and g1.arena_reputation == 0
+
+    g2 = Guild([Unit("player")])                  # a win, but not in the pits
+    assert _arena_bout(g2, n=1, node_id="wilds").deeds_earned == [] and g2.arena_reputation == 0
 
 
 # --------------------------------------------------------------------------- #

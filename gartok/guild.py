@@ -2,12 +2,14 @@
 
 The guild *is* its roster -- there is no hall, no vault, no treasury; gold and
 items live on the individual characters. `Guild` is the set of members, the
-campaign tallies (`battles_won`, `arena_reputation`), and the campaign clock,
-plus where the guild currently sits on the world map (`node`). It is the seam
-hired hands and a bank hang off later.
+campaign tallies (`battles_won`), standing with each faction, and the campaign
+clock, plus where the guild currently sits on the world map (`node`). It is the
+seam hired hands and a bank hang off later.
 
-`arena_reputation` rises one point per won arena bout; `world.arena_offers`
-reads it to decide which (non-lethal, paid) fights the guild may take on.
+`reputation` is `{faction_id: score}` and moves only when a `factions.Deed` is
+completed (banked in `deeds_done`); there is no per-win grind. `arena_reputation`
+is a shortcut for `reputation["arena"]` -- `world.arena_offers` reads it to
+decide which (non-lethal, paid) fights the guild may take on.
 
 The guild also carries the taverna's current crop of strangers (`taverna_pool`)
 so they stay the same face-to-face across visits; `recruit.refresh_pool` swaps
@@ -19,11 +21,13 @@ from .clock import Clock
 
 
 class Guild:
-    def __init__(self, roster, battles_won=0, arena_reputation=0, clock=None, node=None,
+    def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
+                 clock=None, node=None,
                  taverna_week=None, taverna_pool=None, taverna_blocked=None):
         self.roster = roster                  # list[Unit] -- the members
         self.battles_won = battles_won
-        self.arena_reputation = arena_reputation
+        self.reputation = dict(reputation or {})   # {faction_id: score}, moved by deeds only
+        self.deeds_done = list(deeds_done or [])   # ids of completed factions.Deed
         self.clock = clock or Clock()
         self.node = node                      # current world-map node id (set on entry)
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
@@ -38,6 +42,12 @@ class Guild:
     @property
     def empty(self):
         return not self.roster
+
+    @property
+    def arena_reputation(self):
+        """Standing with the Pits -- what `world.arena_offers` gates the stake
+        tiers on. Rises only when an arena `factions.Deed` is completed."""
+        return self.reputation.get("arena", 0)
 
     @property
     def hungry(self):

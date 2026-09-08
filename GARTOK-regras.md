@@ -725,3 +725,38 @@ Neutro**).
   O teto de `deal` (0,25) garante que a venda continua **abaixo** da compra
   (fatores 0,15 apart), então não dá pra fazer dinheiro comprando e revendendo.
 - A tela mostra a linha "vendedor fala X · tendência Y · desconto/ágio Z%".
+
+### Reputação e facções 🟡
+
+Registro em `factions.py` (`Faction` + `Deed`, no estilo de `talents.py` /
+`abilities.py`); estado no `Guild` (`reputation = {id: pontos}`, `deeds_done`);
+`campaign.absorb_battle` chama `factions.settle(guild, node, outcome)` depois de
+dobrar a batalha.
+
+> **Uma facção é uma organização, não um lugar.** Ela pode ter território em
+> vários nós. A reputação com ela **só sobe completando *deeds*** — não há grind
+> por vitória. Um deed é um feito de uma vez só: uma condição nomeada que, quando
+> passa a valer, fica gravada pra sempre e paga seus `rep` pontos. O jogador faz
+> os deeds de uma facção **em qualquer ordem** (`requires` só quando a ordem
+> precisar ser forçada). Crescem à mão, um a um — as regras de cada facção *são*
+> o que ela quer de você. Missões de reputação repetíveis: depois.
+
+**Facção nº 1 — A Fossa (`arena`).** A subcampanha desta primeira arena são três
+deeds, independentes (qualquer ordem, dá pra fechar mais de um de uma vez):
+
+| Deed | Condição | Recompensa |
+|---|---|---|
+| **First Blood** | vencer um bout apostado na arena | +1 reputação |
+| **Lone Wolf** | vencer a luta mais barata (tier de entrada, `rep 0`) com **um único boneco** | +1 reputação |
+| **Dethrone the Champions** | vencer o **time campeão** da arena | +1 reputação |
+
+Os três → 3 de reputação. **Dethrone** ainda não é alcançável: falta o botão
+*Challenge the Champion*, uma aposta extra que joga contra um time feito à mão
+desta arena. Quando existir, ele passa um `arena_offer` com `champion=True` e o
+deed fecha sozinho. Até lá aparece como aberto.
+
+A reputação da arena continua liberando os tiers de aposta (`world.ARENA_TIERS`
+via `world.arena_offers`) — só que a fonte dela agora são os deeds, então o ritmo
+de unlock é deliberado (o próximo ponto espera o próximo deed escrito). A tela da
+Guilda (aba REPUTATIONS) mostra reputação, deeds feitos/abertos e o que destrava;
+a tela de recompensa da arena mostra um aviso quando um deed fecha.

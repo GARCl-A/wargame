@@ -29,7 +29,7 @@ whole maximized screen. Reached from the map (opening it passes no time).
 
 import pygame
 
-from . import data, world
+from . import data, factions, world
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
@@ -533,32 +533,49 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             self.tab_hits.append((r, key))
 
     def _draw_reputacoes(self, screen, W, top, outer):
-        """The REPUTATIONS tab: where the guild stands with each faction. Only the
-        arena keeps a tally today; the panel also shows what it unlocks."""
+        """The REPUTATIONS tab: per faction, the score, the deeds that earn it
+        (done + open) and -- arena only -- what the score unlocks. A flowing list
+        (no fixed-height box), so it grows with the faction count. Reputation
+        moves only by completing deeds (`factions`)."""
         f = self.fonts
-        rep = self.guild.arena_reputation
-        r = pygame.Rect(outer, top + 8, min(W - 2 * outer, 900), 300)
-        panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, width=2, radius=RADIUS)
-        pad = SP4
-        x, y = r.x + pad, r.y + pad
+        done = set(self.guild.deeds_done)
+        x = outer
+        w = min(W - 2 * outer, 900)
+        y = top + SP2
 
-        tracked(screen, "ARENA", f.label, INFO, (x, y))
-        y += 18
-        text(screen, str(rep), f.num_lg, ACCENT, (x, y))
-        text(screen, "reputation  ·  +1 for every arena bout won",
-             f.body_sm, INK_DIM, (x + 52, y + 12))
-        y += 46
+        for i, fac in enumerate(factions.FACTIONS.values()):
+            if i:
+                pygame.draw.line(screen, LINE_SOFT, (x, y), (x + w, y))
+                y += SP4
+            rep = self.guild.reputation.get(fac.id, 0)
+            tracked(screen, fac.name.upper(), f.label, INFO, (x, y))
+            text(screen, str(rep), f.num_lg, ACCENT, (x, y + 14))
+            text(screen, fac.blurb, f.body_sm, INK_DIM, (x + 56, y + 26))
+            y += 52
 
-        y = section(screen, "WHAT IT UNLOCKS", x, y, r.w - 2 * pad, f)
-        for tier in world.ARENA_TIERS:
-            unlocked = rep >= tier["rep"]
-            text(screen, tier["name"], f.body, INK if unlocked else INK_DIM, (x, y))
-            text(screen, f"entry {tier['entry']}/head  ·  purse {tier['purse']}  ·  "
-                 f"{tier['enemies']} opponent(s)", f.body_sm, INK_DIM, (x + 210, y + 2))
-            mark = "unlocked" if unlocked else f"needs {tier['rep']} reputation"
-            text(screen, mark, f.label, OK if unlocked else INK_FAINT,
-                 (r.right - pad, y + 3), right=True)
-            y += 28
+            y = section(screen, "DEEDS", x, y, w, f)
+            for d in factions.DEEDS_BY_FACTION[fac.id]:
+                got = d.id in done
+                pygame.draw.circle(screen, OK if got else INK_FAINT, (x + 4, y + 8), 4,
+                                   0 if got else 1)
+                text(screen, d.name, f.body, OK if got else INK, (x + 16, y))
+                text(screen, f"{d.blurb}  (+{d.rep} rep)" + ("" if got else "  --  open"),
+                     f.body_sm, INK_DIM, (x + 200, y + 2))
+                y += 24
+            y += SP3
+
+            if fac.id == "arena":
+                y = section(screen, "WHAT IT UNLOCKS", x, y, w, f)
+                for tier in world.ARENA_TIERS:
+                    unlocked = rep >= tier["rep"]
+                    text(screen, tier["name"], f.body, INK if unlocked else INK_DIM, (x, y))
+                    text(screen, f"entry {tier['entry']}/head  ·  purse {tier['purse']}  ·  "
+                         f"{tier['enemies']} opponent(s)", f.body_sm, INK_DIM, (x + 210, y + 2))
+                    mark = "unlocked" if unlocked else f"needs {tier['rep']} reputation"
+                    text(screen, mark, f.label, OK if unlocked else INK_FAINT,
+                         (x + w, y + 3), right=True)
+                    y += 28
+            y += SP4
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen, W, H, pad):

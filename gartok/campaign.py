@@ -8,7 +8,11 @@ once it is over this maps the outcome onto that roster:
 - survivors keep the little that carries forward (a lit torch, for now) and
   otherwise return at full HP -- the rest of the spoils come from the loot pool;
 - the campaign clock advances by the rounds fought (~6 s each);
-- a win bumps the tally, and an arena win also raises `arena_reputation`.
+- a win bumps the tally;
+- `factions.settle` checks the faction deeds against the result -- e.g. a first
+  arena win completes "First Blood" and earns a point of reputation with the
+  Pits. The deed checks read `node`, `arena_tier` and `squad_size` off the
+  outcome, so those are set before `settle`.
 
 `app` owns the *screen* that comes next (loot, reward, or straight to the map);
 this module owns the *state change*, returned as a `BattleOutcome`.
@@ -16,7 +20,7 @@ this module owns the *state change*, returned as a `BattleOutcome`.
 
 from dataclasses import dataclass, field
 
-from . import data, loot
+from . import data, factions, loot
 
 
 @dataclass
@@ -28,6 +32,9 @@ class BattleOutcome:
     arena_reward: int | None = None              # copper purse to hand out (arena win only)
     campaign_over: bool = False                   # the guild is empty now
     xp_awards: dict = field(default_factory=dict)  # {member name: combat XP gained this battle}
+    squad_size: int = 0                           # how many the guild sent into the fight
+    arena_tier: dict | None = None                # the staked tier dict, for an arena bout
+    deeds_earned: list = field(default_factory=list)  # factions.Deed completed by this result
 
 
 def _carry_forward(member, combatant):
@@ -40,11 +47,12 @@ def _carry_forward(member, combatant):
         + [data.TORCH_ITEM] * spares)
 
 
-def absorb_battle(guild, squad, battle, arena_offer=None):
+def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     """Fold `battle`'s result into `guild` (mutates it) and return a `BattleOutcome`.
 
     `squad` is the same-order list of roster units that `battle.player_units`
-    wraps. `arena_offer` is the staked tier for an arena bout, or None.
+    wraps. `node` is the world node the fight happened at (for the faction deeds);
+    `arena_offer` is the staked tier for an arena bout, or None.
     """
     survivors, fallen, fallen_combatants, xp_awards = [], [], [], {}
     for combatant, member in zip(battle.player_units, squad):
@@ -65,13 +73,17 @@ def absorb_battle(guild, squad, battle, arena_offer=None):
     if won:
         guild.record_victory()
 
+    outcome = BattleOutcome(won, survivors, fallen, xp_awards=xp_awards,
+                            squad_size=len(squad), arena_tier=arena_offer)
+
     if guild.empty:                               # full wipe: campaign over
-        return BattleOutcome(won, survivors, fallen, campaign_over=True, xp_awards=xp_awards)
+        outcome.campaign_over = True
+        return outcome
 
-    if arena_offer and won:                       # arena bout: reputation + the purse
-        guild.arena_reputation += 1
-        return BattleOutcome(won, survivors, fallen, arena_reward=arena_offer["purse"],
-                             xp_awards=xp_awards)
+    if arena_offer and won:                       # arena bout: the flat purse
+        outcome.arena_reward = arena_offer["purse"]
+    elif won and battle.lethal:                   # lethal win: loot the field
+        outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
 
-    pool = loot.field_loot(battle, fallen_combatants) if won and battle.lethal else []
-    return BattleOutcome(won, survivors, fallen, loot_pool=pool, xp_awards=xp_awards)
+    outcome.deeds_earned = factions.settle(guild, node, outcome)
+    return outcome

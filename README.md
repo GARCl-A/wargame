@@ -104,8 +104,9 @@ gartok/
   # mundo + campanha
   world.py          grafo do mapa: nós, arestas (horas), rota (Dijkstra), ofertas da arena
   clock.py          relógio da campanha (segundos), dia/noite
-  guild.py          a guilda = o roster; tempo/fome diária, ouro somado, reputação de arena
-  campaign.py       dobra o resultado de uma batalha de volta na guilda (permadeath, espólio)
+  guild.py          a guilda = o roster; tempo/fome diária, ouro somado, reputação por facção
+  factions.py       facções e seus deeds (feitos de uma vez que rendem reputação)
+  campaign.py       dobra o resultado de uma batalha de volta na guilda (permadeath, espólio, deeds)
   economy.py        preços, estoque do mercado e negociação (idioma + carisma + tendência)
   persist.py        slots de save (JSON); só o roster + meta da campanha vão pro disco
 
@@ -169,4 +170,9 @@ sim_test.py         simulação headless (200 batalhas IA vs IA)
 - **Novo sistema de mundo** (fora do combate): a rotina que passa o tempo em
   `guild.pass_time` / `_daily_upkeep`; resultado de batalha que volta pro roster
   em `campaign.absorb_battle`.
+- **Nova facção ou novo deed** (objetivo / reputação): uma `Faction` ou um `Deed`
+  em `factions.py`. O `Deed.check(guild, node, outcome)` roda em
+  `factions.settle`, chamado por `campaign.absorb_battle` — hoje só pós-batalha;
+  um gatilho de outro tipo (pós-mercado, pós-viagem) precisa de mais uma chamada
+  a `settle` no ponto do evento.
 - **Nova fonte de luz**: `vision.unit_light` / `ground_light`.
