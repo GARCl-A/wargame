@@ -1,6 +1,9 @@
 """Battle screen: the tactical grid, the initiative strip, the action panel and
 the log. Drawing only -- rules live in `battle` / `actions` / `vision`."""
 
+import math
+import random
+
 import pygame
 
 from . import actions, ai, artwork, data, icons, vision
@@ -20,6 +23,10 @@ from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
                     wrap_lines)
 
 ENEMY_DELAY = 450  # ms between AI actions
+
+
+def _sgn(v):
+    return (v > 0) - (v < 0)
 
 
 class BattleScreen(Screen):
@@ -46,6 +53,11 @@ class BattleScreen(Screen):
         self._obs = []
         self._visible = set()
 
+        # combat juice -- purely presentational, driven by HP deltas each frame
+        self._hp_seen = {}      # id(unit) -> last hp we drew
+        self._floaters = []     # rising damage / heal numbers
+        self._react = {}        # id(unit) -> {kind, t, dur, [dir]} squash + hop
+
     # ------------------------------------------------------------------ #
     # events                                                             #
     # ------------------------------------------------------------------ #
@@ -62,6 +74,8 @@ class BattleScreen(Screen):
 
     def update(self, dt):
         b = self.battle
+        self._advance_fx(dt)
+        self._detect_fx()
         if b.winner is not None:
             return
         if b.active.team == "enemy":
@@ -184,6 +198,85 @@ class BattleScreen(Screen):
             b.end_turn()
 
     # ------------------------------------------------------------------ #
+    # combat juice: floating numbers + hit reactions                      #
+    # ------------------------------------------------------------------ #
+    def _detect_fx(self):
+        """Compare each unit's HP to last frame; spawn a floating number and a
+        hit reaction on a change, and a lunge on whoever is acting."""
+        b = self.battle
+        actor = b.active if b.winner is None else None
+        for u in b.units:
+            hp = u.hp
+            prev = self._hp_seen.get(id(u))
+            self._hp_seen[id(u)] = hp
+            if prev is None or hp == prev:
+                continue
+            r = self._unit_rect(u)
+            delta = hp - prev
+            if delta < 0:
+                self._spawn_floater(r, str(delta), DANGER)
+                self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 260.0}
+                if actor and actor.alive and actor.team != u.team and actor is not u:
+                    ax, ay = actor.pos
+                    self._react[id(actor)] = {
+                        "kind": "lunge", "t": 0.0, "dur": 200.0,
+                        "dir": (_sgn(u.pos[0] - ax), _sgn(u.pos[1] - ay))}
+            else:
+                self._spawn_floater(r, f"+{delta}", OK)
+                self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 240.0}
+
+    def _spawn_floater(self, r, s, color):
+        stack = sum(1 for f in self._floaters
+                    if abs(f["x"] - r.centerx) < TILE and f["age"] < 240)
+        self._floaters.append({
+            "x": r.centerx + random.randint(-4, 4),
+            "y": r.top - 6 - 14 * stack,
+            "vy": -0.03, "age": 0.0, "hold": 140.0,
+            "alpha": 255.0, "fade": 0.28, "text": s, "color": color})
+
+    def _advance_fx(self, dt):
+        for f in self._floaters:
+            f["y"] += f["vy"] * dt
+            f["age"] += dt
+            if f["age"] > f["hold"]:
+                f["alpha"] -= f["fade"] * dt
+        self._floaters = [f for f in self._floaters if f["alpha"] > 0]
+        for k in list(self._react):
+            self._react[k]["t"] += dt
+            if self._react[k]["t"] >= self._react[k]["dur"]:
+                del self._react[k]
+
+    def _fx_rect(self, u, r):
+        """Offset + squash `r` for the unit's current hit reaction (a 3px hop on a
+        hit, a shove toward the target on a lunge)."""
+        fx = self._react.get(id(u))
+        if not fx:
+            return r
+        wave = math.sin(math.pi * min(1.0, fx["t"] / fx["dur"]))
+        if fx["kind"] == "lunge":
+            dx, dy, sq = fx["dir"][0] * 5 * wave, fx["dir"][1] * 5 * wave, 0.09 * wave
+        else:
+            dx, dy, sq = 0.0, -3 * wave, 0.14 * wave
+        out = pygame.Rect(0, 0, round(r.w * (1 + sq)), round(r.h * (1 - sq)))
+        out.midbottom = (r.centerx + round(dx), r.bottom + round(dy))
+        return out
+
+    def _draw_floaters(self, screen):
+        f = self.fonts
+        clip = screen.get_clip()
+        screen.set_clip(pygame.Rect(GRID_X, GRID_Y, GRID_W, GRID_H))
+        for fl in self._floaters:
+            a = max(0, min(255, int(fl["alpha"])))
+            img = f.num.render(fl["text"], True, fl["color"])
+            sh = f.num.render(fl["text"], True, (12, 12, 16))
+            img.set_alpha(a)
+            sh.set_alpha(a // 2)
+            rect = img.get_rect(center=(int(fl["x"]), int(fl["y"])))
+            screen.blit(sh, rect.move(1, 1))
+            screen.blit(img, rect)
+        screen.set_clip(clip)
+
+    # ------------------------------------------------------------------ #
     # drawing                                                            #
     # ------------------------------------------------------------------ #
     def draw(self, window):
@@ -204,6 +297,7 @@ class BattleScreen(Screen):
         self._draw_creatures(screen)
         self._draw_units(screen)
         self._draw_tactical(screen)              # overlay: above the fog
+        self._draw_floaters(screen)
         self._draw_initiative(screen)
         self._draw_panel(screen)
         self._draw_log(screen)
@@ -429,7 +523,7 @@ class BattleScreen(Screen):
                     and not (self._is_player_turn() and u.alive
                              and actions.ATTACK.can(b, b.active, u)):
                 continue
-            r = self._unit_rect(u)
+            r = self._fx_rect(u, self._unit_rect(u))
             if u.downed:
                 self._draw_body(screen, u, r)
                 continue
