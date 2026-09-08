@@ -67,8 +67,9 @@ def character_sheet(u):
 
     return [
         u.name,
-        f"Alignment: {u.alignment}   Age: {u.age}   Combat XP: {u.combat_xp}"
-        + (f"   Work XP: {u.work_xp}" if u.work_xp else ""),
+        f"Alignment: {u.alignment}   Age: {u.age}   "
+        f"Combat N{u.combat_level} ({u.combat_xp} XP)"
+        + (f"   Work N{u.work_level} ({u.work_xp})" if u.work_xp or u.work_level else ""),
         stats,
         line_a,
         line_b,

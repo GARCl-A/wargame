@@ -72,9 +72,9 @@ def market_deal(party, vendor_language, vendor_alignment):
                 and vendor_language in m.languages]
     if not speakers:
         return 0.0
-    voice = max(speakers, key=lambda m: (m.mod_charisma,
+    voice = max(speakers, key=lambda m: (m.haggle_charisma_mod,
                 -data.alignment_distance(m.alignment, vendor_alignment)))
-    cha = max(0, voice.mod_charisma) * 0.04
+    cha = max(0, voice.haggle_charisma_mod) * 0.04
     align = _ALIGN_DEAL[data.alignment_distance(voice.alignment, vendor_alignment)]
     return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
 

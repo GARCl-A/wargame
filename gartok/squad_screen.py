@@ -178,10 +178,12 @@ class SquadScreen(Screen):
         arma = unit.weapon_name or "unarmed"
         text(screen, f"{arma}  {n}d{faces}", f.body_sm, INK_DIM, (rect.x + pad, y))
         y += 17
-        xp = f"{unit.combat_xp} XP"
-        if unit.work_xp:
-            xp += f" +{unit.work_xp}w"
-        text(screen, f"{unit.gold} copper  ·  {xp}", f.mono_sm, ACCENT,
+        lvl = f"C{unit.combat_level}"
+        if unit.work_xp or unit.work_level:
+            lvl += f"/W{unit.work_level}"
+        if unit.pending_picks:
+            lvl += " *"
+        text(screen, f"{unit.gold} copper  ·  lvl {lvl}", f.mono_sm, ACCENT,
              (rect.x + pad, y))
         if unit.hunger_level:
             y += 16

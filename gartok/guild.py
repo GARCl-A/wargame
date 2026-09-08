@@ -115,6 +115,8 @@ class Guild:
         for u in earners:
             u.gold += pay
             u.work_hours += hours
+            u.collect_levels()                 # more work marks can lift the mean level
+
         if earners:
             names = ", ".join(u.name for u in earners)
             events.append(f"Lumber yard: {names} worked {hours} h "

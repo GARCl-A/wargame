@@ -36,8 +36,8 @@ from .screen import Screen
 from .sheet_panel import PANEL_H, PANEL_W, draw_sheet
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
-                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    panel, section, token_badge, text, tracked)
+                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
+                    panel, section, set_pointer, token_badge, text, tracked)
 
 
 TABS = (("members", "MEMBERS"), ("reputations", "REPUTATIONS"))
@@ -62,14 +62,14 @@ def _fit(s, font, max_px):
 class GuildScreen(DragSelectMixin, Screen):
     native = True                        # app draws us straight to the window
 
-    def __init__(self, fonts, guild, on_back, on_menu):
+    def __init__(self, fonts, guild, on_back, on_level=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
         self.roster = guild.roster
         self.battles_won = guild.battles_won
         self.on_back = on_back
-        self.on_menu = on_menu
+        self.on_level = on_level             # open the level screen for a member
         self.tab = "members"                  # "members" (roster+gear) | "reputations"
         self.member = self.roster[0] if self.roster else None   # card shown on the right
         self.tab_hits = []                  # [(rect, key)]
@@ -145,7 +145,10 @@ class GuildScreen(DragSelectMixin, Screen):
 
         for key, rect in self.buttons:
             if rect.collidepoint(px):
-                (self.on_back if key == "back" else self.on_menu)()
+                if key == "level" and self.on_level and self.member is not None:
+                    self.on_level(self.member)
+                elif key == "back":
+                    self.on_back()
                 return
         for rect, key in self.tab_hits:
             if rect.collidepoint(px):
@@ -251,6 +254,7 @@ class GuildScreen(DragSelectMixin, Screen):
         self.buttons = []
         self.member_hits = []
         self.tab_hits = []
+        self._hot = False
 
         if self.member not in self.roster:
             self.member = self.roster[0] if self.roster else None
@@ -304,6 +308,8 @@ class GuildScreen(DragSelectMixin, Screen):
             r.center = (W // 2, H // 2)
             draw_sheet(screen, r, Combatant(self.detail), f)
 
+        set_pointer(self._hot)
+
     # ------------------------------------------------------------------ #
     def _draw_roster(self, screen, rect, carried):
         """The left column: one compact card per member, the open one lit."""
@@ -318,6 +324,8 @@ class GuildScreen(DragSelectMixin, Screen):
                 break
             sel = unit is self.member
             hov = r.collidepoint(mouse)
+            if hov and not sel:
+                self._hot = True
             drop = bool(carried) and not sel and hov
             panel(screen, r,
                   fill=SURFACE_3 if (sel or hov) else SURFACE_2,
@@ -357,6 +365,22 @@ class GuildScreen(DragSelectMixin, Screen):
         text(screen, label, f.label, INFO, (r.centerx, r.y + 8), center=True)
         text(screen, str(val), f.num, INK, (r.centerx, r.y + 24), center=True)
 
+    def _pill(self, screen, r, label, *, accent=False, dot=False):
+        """A small labelled button with a hover fill. Feeds `self._hot` for the
+        pointer cursor."""
+        hov = r.collidepoint(self.mouse)
+        if hov:
+            self._hot = True
+        base = ACCENT if accent else INK_DIM
+        fill = ACCENT if (accent and hov) else SURFACE_4 if hov else SURFACE_1
+        ink = ACCENT_INK if (accent and hov) else INK if hov else base
+        panel(screen, r, fill=fill, border=ACCENT if accent else LINE_SOFT,
+              width=1, radius=RADIUS)
+        text(screen, label, self.fonts.label, ink,
+             (r.centerx + (4 if dot else 0), r.centery), center=True)
+        if dot:
+            pygame.draw.circle(screen, ink, (r.x + 9, r.centery), 3)
+
     def _slot(self, screen, r, *, sel, accepts, drop):
         panel(screen, r,
               fill=ACCENT if sel else SURFACE_3 if (drop or accepts) else SURFACE_1,
@@ -371,25 +395,36 @@ class GuildScreen(DragSelectMixin, Screen):
         x = rect.x + pad
         inner = rect.w - 2 * pad
 
-        # --- header ---------------------------------------------------- #
+        # --- header: identity + two real buttons (sheet / level) ------ #
         head = pygame.Rect(rect.x, rect.y, rect.w, 60)
-        head_hov = not carried and head.collidepoint(mouse)
-        pygame.draw.rect(screen, SURFACE_3 if head_hov else SURFACE_2, head,
+        pygame.draw.rect(screen, SURFACE_2, head,
                          border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
         pygame.draw.line(screen, LINE_SOFT, (rect.x, head.bottom), (rect.right - 1, head.bottom))
         tok = (rect.x + pad + 15, rect.y + 30)
         token_badge(screen, tok, unit.token, f, r=16)
         nx = tok[0] + 28
-        text(screen, unit.name, f.card_name, INK, (nx, rect.y + 10))
         origin = self._recruited_by(unit)
         sub = (f"{unit.race['name']}  ·  {unit.occupation['name']}"
                + (f"  ·  recruited by {origin}" if origin else ""))
-        text(screen, _fit(sub, f.body_sm, rect.right - nx - 110), f.body_sm,
-             INK_DIM, (nx, rect.y + 34))
-        text(screen, "VIEW SHEET ›", f.label, ACCENT if head_hov else INK_FAINT,
-             (rect.right - pad, rect.y + 12), right=True)
+
+        btn_w, btn_h = 96, 26
+        bx = rect.right - pad - btn_w
+        level_pend = bool(unit.pending_picks)
+        if self.on_level and not carried:
+            lb = pygame.Rect(bx, rect.y + 30 - btn_h // 2, btn_w, btn_h)
+            self._pill(screen, lb, "LEVEL UP" if level_pend else "LEVEL",
+                       accent=level_pend, dot=level_pend)
+            self.buttons.append(("level", lb))
+            bx -= btn_w + SP2
         if not carried:
-            self.info_hits.append((head, unit))
+            sb = pygame.Rect(bx, rect.y + 30 - btn_h // 2, btn_w, btn_h)
+            self._pill(screen, sb, "SHEET")
+            self.info_hits.append((sb, unit))
+
+        text(screen, _fit(unit.name, f.card_name, bx - nx - SP2), f.card_name,
+             INK, (nx, rect.y + 10))
+        text(screen, _fit(sub, f.body_sm, bx - nx - SP2), f.body_sm,
+             INK_DIM, (nx, rect.y + 34))
 
         # Two inner columns under the header: the read-out (chips, carry, copper,
         # hunger) on the left, the gear slots -- the drop targets -- on the
@@ -433,10 +468,12 @@ class GuildScreen(DragSelectMixin, Screen):
             text(screen, note, f.label, ccol, (x, a))
         a += 18
 
-        # --- left column: copper / xp / hunger -------------------- #
-        xp = f"{unit.combat_xp} combat XP"
-        if unit.work_xp:
-            xp += f"   ·   {unit.work_xp} work XP"
+        # --- left column: copper / levels / hunger ---------------- #
+        xp = f"combat N{unit.combat_level} ({unit.combat_xp} XP)"
+        if unit.work_xp or unit.work_level:
+            xp += f"   ·   work N{unit.work_level}"
+        if unit.pending_picks:
+            xp += "   ·   talent pick ready"
         text(screen, f"{unit.gold} copper", f.mono_sm, ACCENT, (x, a))
         a += 16
         text(screen, xp, f.mono_sm, INFO, (x, a))
@@ -626,14 +663,10 @@ class GuildScreen(DragSelectMixin, Screen):
 
         nxt = pygame.Rect(W - pad - 220, y, 220, 36)
         hov = nxt.collidepoint(mouse)
+        self._hot = self._hot or hov
         panel(screen, nxt, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
         text(screen, "BACK TO MAP", f.body_bd, ACCENT_INK if hov else ACCENT,
              nxt.center, center=True)
         self.buttons.append(("back", nxt))
 
-        menu = pygame.Rect(pad, y, 140, 36)
-        hovm = menu.collidepoint(mouse)
-        panel(screen, menu, fill=SURFACE_3 if hovm else SURFACE_2, border=LINE_SOFT,
-              width=1, radius=RADIUS)
-        text(screen, "menu", f.body, INK if hovm else INK_DIM, menu.center, center=True)
-        self.buttons.append(("menu", menu))
+        text(screen, "Esc for the pause menu", f.label, INK_FAINT, (pad, y + 12))

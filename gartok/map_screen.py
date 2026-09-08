@@ -9,8 +9,9 @@ The side panel shows the node the guild is standing on and what can be done
 there: a battle node opens the squad picker (`on_battle`), a market node the
 market party picker (`on_market`), a taverna the recruiting party picker
 (`on_recruit`), a lumber-yard town the worker picker (`on_work`). `on_guild`
-opens the roster/gear screen; `on_menu` the slots. No travel time passes for
-opening those -- only for moving on the map (or working a shift at the yard).
+opens the roster/gear screen. No travel time passes for opening those -- only for
+moving on the map (or working a shift at the yard). Leaving to the main menu is
+Esc -> the pause menu (`app`), not a button here.
 """
 
 import pygame
@@ -32,7 +33,7 @@ KIND_NAME = {"battle": "combat", "market": "market", "tavern": "tavern", "town":
 
 class MapScreen(Screen):
     def __init__(self, fonts, guild, on_battle, on_market, on_recruit, on_guild,
-                 on_menu, on_wipe, on_work):
+                 on_wipe, on_work):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -41,7 +42,6 @@ class MapScreen(Screen):
         self.on_recruit = on_recruit
         self.on_work = on_work
         self.on_guild = on_guild
-        self.on_menu = on_menu
         self.on_wipe = on_wipe
         self.notices = []                     # lines shown after a trip (route, meals, deaths)
         self.hits = []                        # [(rect, node)]
@@ -63,8 +63,6 @@ class MapScreen(Screen):
             if rect.collidepoint(px):
                 if key == "guild":
                     self.on_guild()
-                elif key == "menu":
-                    self.on_menu()
                 elif key == "attack":
                     self.on_battle(self._here())
                 elif key == "market":
@@ -398,15 +396,8 @@ class MapScreen(Screen):
              g.center, center=True)
         self.buttons.append(("guild", g))
 
-        m = pygame.Rect(MARGIN + 212, y, 120, 36)
-        hovm = m.collidepoint(self.mouse)
-        panel(screen, m, fill=SURFACE_3 if hovm else SURFACE_2, border=LINE_SOFT,
-              width=1, radius=RADIUS)
-        text(screen, "menu", f.body, INK if hovm else INK_DIM, m.center, center=True)
-        self.buttons.append(("menu", m))
-
         hungry = self.guild.hungry
-        mt = pygame.Rect(MARGIN + 344, y, 180, 36)
+        mt = pygame.Rect(MARGIN + 212, y, 180, 36)
         hovt = mt.collidepoint(self.mouse)
         urgent = bool(hungry) and any(u.rations for u in hungry)
         panel(screen, mt, fill=ACCENT if hovt else SURFACE_3 if urgent else SURFACE_2,
@@ -416,5 +407,6 @@ class MapScreen(Screen):
              mt.center, center=True)
         self.buttons.append(("maintain", mt))
 
-        text(screen, "click a place to travel  ·  passing time can turn to night",
-             f.body_sm, INK_FAINT, (MARGIN + 540, y + 10))
+        text(screen, "click a place to travel  ·  passing time can turn to night"
+             "  ·  Esc for the pause menu",
+             f.body_sm, INK_FAINT, (MARGIN + 408, y + 10))

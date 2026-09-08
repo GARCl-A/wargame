@@ -21,7 +21,7 @@ spinning up a Combatant.
 import random
 import uuid
 
-from . import abilities, data, economy
+from . import abilities, data, economy, progression, talents
 from .data import mod, roll
 
 ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
@@ -32,6 +32,8 @@ class Unit:
         self.team = team                     # "player" / "enemy" (vestigial: Combatant owns the real one)
         self.uid = uuid.uuid4().hex          # stable identity: survives save/load, outlives the name
         self.recruited_by = None             # uid of the guild member who recruited this one, or None
+        self.talents = {t: [] for t in talents.TRACKS}   # picked talent ids per XP track
+        self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
         self._roll_attributes()
         self._apply_race()
         self._apply_occupation()
@@ -60,6 +62,8 @@ class Unit:
         u.team = "player"
         u.uid = d.get("uid") or uuid.uuid4().hex     # back-fill: pre-uid saves get one now
         u.recruited_by = d.get("recruited_by")
+        u.talents = {t: list(d.get("talents", {}).get(t, [])) for t in talents.TRACKS}
+        u._level_hp_rolls = list(d.get("level_hp_rolls", []))
         u.base_attributes = dict(d["base_attributes"])
         for a in ATTRIBUTES:
             setattr(u, a, u.base_attributes[a])
@@ -151,9 +155,67 @@ class Unit:
     @property
     def work_xp(self):
         """Marks of work experience -- one per `economy.LUMBER_XP_HOURS` hours of
-        day-labour at the lumber yard. Cosmetic for now (like the lost Level/XP);
-        a trade / proficiency system reads it later."""
+        day-labour at the lumber yard. Feeds the work level / talent tree."""
         return self.work_hours // economy.LUMBER_XP_HOURS
+
+    # ------------------------------------------------------------------ #
+    # leveling: one level per XP track, its own talent tree; the mean of #
+    # the track levels grants hit dice. See progression.py / talents.py. #
+    # ------------------------------------------------------------------ #
+    @property
+    def combat_level(self):
+        return progression.combat_level(self.combat_xp)
+
+    @property
+    def work_level(self):
+        return progression.work_level(self.work_xp)
+
+    @property
+    def track_level(self):
+        return {"combat": self.combat_level, "work": self.work_level}
+
+    @property
+    def mean_level(self):
+        return progression.mean_level(self.combat_level, self.work_level)
+
+    def picks_available(self, track):
+        """Unspent talent picks in `track` (one earned per level in it)."""
+        return self.track_level[track] - len(self.talents[track])
+
+    @property
+    def pending_picks(self):
+        """Tracks with a talent pick waiting to be spent."""
+        return [t for t in talents.TRACKS if self.picks_available(t) > 0]
+
+    @property
+    def haggle_charisma_mod(self):
+        """Charisma modifier for market haggling only -- the Negotiator talent
+        lifts it without touching the real Charisma score."""
+        return mod(self.charisma + self.hunger_attribute_penalty
+                   + self._talent_sum("haggle_charisma"))
+
+    def choose_talent(self, track, talent_id):
+        """Spend a pick in `track` on `talent_id`. Returns True if it took."""
+        t = talents.get(talent_id)
+        if (t is None or t.track != track or talent_id in self.talents[track]
+                or self.picks_available(track) <= 0
+                or (t.requires and t.requires not in self.talents[track])):
+            return False
+        self.talents[track].append(talent_id)
+        self._apply_attributes()
+        self._derive_combat()
+        return True
+
+    def collect_levels(self):
+        """Roll the hit dice owed for the current mean level. Idempotent; call
+        after any XP gain. Not called on load -- `_level_hp_rolls` is restored."""
+        rolled = False
+        while len(self._level_hp_rolls) < self.mean_level:
+            self._level_hp_rolls.append(roll(1, self.race["hd"]))
+            rolled = True
+        if rolled:
+            self._derive_combat()
+        return rolled
 
     # ------------------------------------------------------------------ #
     # generation                                                         #
@@ -165,13 +227,37 @@ class Unit:
             setattr(self, a, self.base_attributes[a])
         self._age_base = random.randint(1, 100)
 
+    def _apply_attributes(self):
+        """Each attribute score = raw 3d6 roll + racial mod + talent bonus.
+        Rebuilt from scratch so it is safe to re-run when a talent is picked."""
+        for a, m in zip(ATTRIBUTES, self.race["mods"]):
+            setattr(self, a, self.base_attributes[a] + m + self._talent_attr(a))
+
+    def _talent_attr(self, attr):
+        """Total +score this character's talents grant to `attr`."""
+        return sum(amt for lst in self.talents.values() for tid in lst
+                   for a, amt in talents.get(tid).attr_bonus if a == attr)
+
+    def _talent_sum(self, knob):
+        """Total of a numeric talent knob (`haggle_charisma`, `carry_light_items`)."""
+        return sum(getattr(talents.get(tid), knob)
+                   for lst in self.talents.values() for tid in lst)
+
+    def _carry_relief(self):
+        """Kg the Carrier talent shaves off the overload check: `carry_light_items`
+        per pack item that is not a weapon or a consumable (never below its weight)."""
+        per = self._talent_sum("carry_light_items")
+        if not per:
+            return 0.0
+        return sum(min(per, data.item_weight(it)) for it in self._base_inventory
+                   if not self.is_weapon(it) and it not in data.CONSUMABLE_ITEMS)
+
     def _apply_race(self):
         self.race = data.roll_race()
         self._configure_race()
 
     def _configure_race(self):
-        for a, m in zip(ATTRIBUTES, self.race["mods"]):
-            setattr(self, a, self.base_attributes[a] + m)
+        self._apply_attributes()
         self.ability_id = self.race["ability"]
         self._ability = abilities.get(self.ability_id)
         self.size = self.race["size"]
@@ -238,7 +324,10 @@ class Unit:
         str_carry = mod(self.strength + pen)
         self.carry_normal = max(1, round((str_carry * 4 + 15) * cm))
         self.carry_max = max(2, round((str_carry * 6 + 35) * cm))
-        self.encumbered = self.load > self.carry_normal
+        # The Carrier talent lightens non-weapon/non-consumable items for the
+        # overload check only -- `load` (shown on the sheet) stays the real weight.
+        self.carry_load = round(self.load - self._carry_relief(), 1)
+        self.encumbered = self.carry_load > self.carry_normal
         enc = -2 if self.encumbered else 0           # -2 FOR and -2 DES while overloaded
 
         for a in ATTRIBUTES:
@@ -252,7 +341,9 @@ class Unit:
         # hunger tick) never re-rolls. Starving (tier 2+) caps it at 1.
         if self._hp_roll is None:
             self._hp_roll = roll(1, self.race["hd"])
-        self.hp_max = max(1, self._hp_roll + self.mod_constitution + ab.hp_max)
+        con = self.mod_constitution
+        self.hp_max = (max(1, self._hp_roll + con + ab.hp_max)
+                       + sum(max(1, die + con) for die in self._level_hp_rolls))
         if self.hunger_level >= 2:
             self.hp_max = 1
 

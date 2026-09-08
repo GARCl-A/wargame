@@ -240,6 +240,10 @@ TORCH_ITEM = "Torch"                     # a torch carried in the pack / between
 FOOD_ITEMS = {"1kg Meat", "1kg Potato"}
 STARVATION_DEATH_DAYS = 4                # missed meals in a row before a character dies
 
+# Items used up in play, not hauled cargo -- the Carrier talent's carry relief
+# skips these. Editable; grows as more consumables land.
+CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit"}
+
 ITEM_WEIGHTS = {
     TORCH_ITEM: TORCH_WEIGHT,
     "1kg Meat": 1.0, "1kg Potato": 1.0, "1kg Firewood": 1.0, "1kg Coal": 1.0, "1L Beer": 1.0,

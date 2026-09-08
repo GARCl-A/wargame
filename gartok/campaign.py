@@ -48,9 +48,10 @@ def absorb_battle(guild, squad, battle, arena_offer=None):
     survivors, fallen, fallen_combatants, xp_awards = [], [], [], {}
     for combatant, member in zip(battle.player_units, squad):
         if combatant.survived:
-            if combatant.kills:                   # +1 combat XP per enemy this member downed
-                member.combat_xp += combatant.kills
-                xp_awards[member.name] = combatant.kills
+            if combatant.combat_xp_earned:        # XP scaled by the level gap of each kill
+                member.combat_xp += combatant.combat_xp_earned
+                member.collect_levels()           # a new mean level rolls a hit die
+                xp_awards[member.name] = combatant.combat_xp_earned
             _carry_forward(member, combatant)
             survivors.append(member)
         else:

@@ -28,10 +28,12 @@ from .battle_screen import BattleScreen
 from .draft_screen import DraftScreen
 from .guild import Guild
 from .guild_screen import GuildScreen
+from .level_screen import LevelScreen
 from .loot_screen import LootScreen
 from .map_screen import MapScreen
 from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
+from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
@@ -91,7 +93,6 @@ class App:
                                on_recruit=self._open_recruit,
                                on_work=self._open_work,
                                on_guild=self._open_guild,
-                               on_menu=self._start_menu,
                                on_wipe=self._campaign_over)
 
     def _campaign_over(self):
@@ -101,7 +102,11 @@ class App:
 
     def _open_guild(self):
         self.scene = GuildScreen(self.fonts, self.guild,
-                                 on_back=self._start_map, on_menu=self._start_menu)
+                                 on_back=self._start_map, on_level=self._open_level)
+
+    def _open_level(self, unit):
+        self.scene = LevelScreen(self.fonts, unit,
+                                 on_back=self._open_guild, on_change=self._save)
 
     def _open_squad(self, node):
         offers = world.arena_offers(self.guild.arena_reputation) if node.arena else None
@@ -231,18 +236,44 @@ class App:
             self._present()
 
     # ------------------------------------------------------------------ #
+    def _toggle_pause(self):
+        """Esc: into / out of the pause menu. On the main menu Esc quits; there
+        is no in-game quick exit -- leaving is a deliberate step from the menu."""
+        if isinstance(self.scene, PauseScreen):
+            self._resume_from_pause()
+        elif isinstance(self.scene, MenuScreen):
+            self._running = False
+        else:
+            self.scene = PauseScreen(self.fonts, self.scene,
+                                     on_resume=self._resume_from_pause,
+                                     on_menu=self._pause_to_menu,
+                                     on_quit=self._quit)
+
+    def _resume_from_pause(self):
+        if isinstance(self.scene, PauseScreen):
+            self.scene = self.scene.resume_to
+
+    def _pause_to_menu(self):
+        if self.guild is not None:
+            self._save()
+        self._start_menu()
+
+    def _quit(self):
+        self._running = False
+
+    # ------------------------------------------------------------------ #
     def run(self):
-        running = True
-        while running:
+        self._running = True
+        while self._running:
             dt = self.clock.tick(60)
             self.scene.mouse = self._scene_pos(pygame.mouse.get_pos())
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    self._running = False
                 elif event.type == pygame.VIDEORESIZE:
                     self.window = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    running = False
+                    self._toggle_pause()
                 elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP,
                                     pygame.MOUSEMOTION):
                     self.scene.handle_event(pygame.event.Event(

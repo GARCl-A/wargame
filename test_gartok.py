@@ -1129,7 +1129,7 @@ def test_guild_screen_multidrop_moves_every_picked_pack_item():
     a._base_inventory = ["Rope", "1kg Meat", "Map"]
     b._base_inventory = []
     g = Guild([a, b])
-    scr = GuildScreen(None, g, on_back=lambda: None, on_menu=lambda: None)
+    scr = GuildScreen(None, g, on_back=lambda: None)
     scr.selected = [(a, 0), (a, 2)]                       # Corda + Mapa, indices bracket a keeper
     scr._give_many(b, "pack")
     assert a._base_inventory == ["1kg Meat"]             # the un-picked row is untouched
@@ -1145,7 +1145,7 @@ def test_guild_screen_multidrop_on_a_hand_takes_the_first_that_fits():
     a.equipped_weapon = None
     a._base_inventory = ["Rope", "Dagger"]
     g = Guild([a])
-    scr = GuildScreen(None, g, on_back=lambda: None, on_menu=lambda: None)
+    scr = GuildScreen(None, g, on_back=lambda: None)
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
     assert a.equipped_weapon == "Dagger" and a._base_inventory == ["Rope"]
@@ -1404,7 +1404,7 @@ def test_absorb_battle_folds_kills_into_combat_xp():
     battle = Battle(squad, [Unit("enemy")])
     battle.winner = "player"
     battle.player_units[0].status = battle.player_units[1].status = "up"
-    battle.player_units[0].kills = 2
+    battle.player_units[0].combat_xp_earned = 2
     out = campaign.absorb_battle(guild, squad, battle)
     assert squad[0].combat_xp == 2 and squad[1].combat_xp == 0
     assert out.xp_awards == {squad[0].name: 2}
@@ -1414,6 +1414,97 @@ def test_combat_xp_survives_a_save_round_trip():
     u = _unit(seed=1)
     u.combat_xp = 5
     assert Unit.from_save(persist.unit_to_dict(u)).combat_xp == 5
+
+
+# --------------------------------------------------------------------------- #
+# leveling: progression curves, talents, mean-level hit dice                    #
+# --------------------------------------------------------------------------- #
+
+def test_combat_level_thresholds():
+    from gartok import progression
+    assert progression.combat_level(2) == 0
+    assert progression.combat_level(3) == 1
+    assert progression.combat_level(9) == 1
+    assert progression.combat_level(10) == 2
+
+
+def test_xp_award_scales_by_level_gap():
+    from gartok import progression
+    assert progression.xp_award(0, 0) == 1
+    assert progression.xp_award(0, 10) == 11
+    assert progression.xp_award(1, 1) == 1
+    assert progression.xp_award(3, 0) == 0        # veteran mopping up: nothing
+
+
+def test_credit_kill_uses_the_attacker_and_victim_levels():
+    atk = _combatant(seed=1, combat_xp=10)        # combat level 2
+    vic = _combatant(seed=2, combat_xp=0)         # combat level 0
+    atk.credit_kill(vic)
+    assert atk.kills == 1 and atk.combat_xp_earned == 0
+    vic2 = _combatant(seed=3, combat_xp=10)
+    atk.credit_kill(vic2)
+    assert atk.combat_xp_earned == 1              # equal level -> +1
+
+
+def test_choosing_a_combat_root_raises_the_real_attribute():
+    u = _unit(seed=1)
+    u.combat_xp = 3
+    before = u.strength
+    hp_before = u.hp_max
+    assert u.pending_picks == ["combat"]
+    assert u.choose_talent("combat", "strong")
+    assert u.strength == before + 1               # the score itself, shown on the sheet
+    assert u.pending_picks == []
+    assert not u.choose_talent("combat", "agile")  # pick already spent
+    assert not u.choose_talent("combat", "strong")  # not twice
+    _ = hp_before  # derived stats were rebuilt (hp_max may or may not move by parity)
+
+
+def test_negotiator_lifts_only_the_haggle_charisma():
+    u = _unit(seed=4)
+    u.work_hours = economy.LUMBER_XP_HOURS * 2    # work level 1
+    cha_mod = u.mod_charisma
+    assert u.choose_talent("work", "negotiator")
+    assert u.mod_charisma == cha_mod              # the real Charisma is untouched
+    assert u.haggle_charisma_mod == data.mod(
+        u.charisma + u.hunger_attribute_penalty + 1)
+
+
+def test_carrier_relieves_only_cargo_weight():
+    u = _unit(seed=5)
+    u.work_hours = economy.LUMBER_XP_HOURS * 2
+    u._base_inventory = ["Rope", "1kg Meat"]     # cargo + a consumable
+    u._derive_combat()
+    load = u.load
+    assert u.choose_talent("work", "carrier")
+    assert u.load == load                         # displayed weight unchanged
+    assert u.carry_load == round(load - 1.0, 1)   # 1 kg off the Rope, not the Meat
+
+
+def test_mean_level_grants_a_hit_die():
+    u = _unit(seed=1)
+    hp0 = u.hp_max
+    u.combat_xp = 3                               # combat 1 / work 0 -> mean 0
+    assert not u.collect_levels()
+    assert u.hp_max == hp0
+    u.combat_xp = 10                              # combat 2 / work 0 -> mean 1
+    assert u.collect_levels()
+    assert len(u._level_hp_rolls) == 1
+    assert u.hp_max > hp0
+    assert not u.collect_levels()                 # idempotent
+
+
+def test_talents_and_hit_dice_survive_a_save_without_rerolling():
+    u = _unit(seed=1)
+    u.combat_xp = 10
+    u.collect_levels()
+    u.choose_talent("combat", "tough")
+    d = persist.unit_to_dict(u)
+    back = Unit.from_save(d)
+    assert back.talents == u.talents
+    assert back._level_hp_rolls == u._level_hp_rolls
+    assert back.hp_max == u.hp_max
+    assert back.constitution == u.constitution
 
 
 # --------------------------------------------------------------------------- #

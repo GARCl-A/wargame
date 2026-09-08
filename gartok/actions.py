@@ -149,7 +149,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         target.take_damage(attacker.damage_roll(crit=crit, thrown=thrown), battle.log)
         if was_up and target.team != attacker.team:
             if not target.alive:
-                attacker.kills += 1           # downed a standing enemy -> +1 combat XP later
+                attacker.credit_kill(target)  # downed a standing enemy -> combat XP later
             elif target.hp <= 0 and target.ferocity_downer is None:
                 target.ferocity_downer = attacker   # Ferocity: still up at 0 HP, credit the fall
         return "crit" if crit else "hit"

@@ -17,7 +17,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 1                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 2                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -36,8 +36,10 @@ def unit_to_dict(u):
         "alignment": u.alignment,
         "gold": u.gold,                          # copper coins carried by the member
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
-        "combat_xp": u.combat_xp,                # +1 per enemy downed in a fight
+        "combat_xp": u.combat_xp,                # combat XP (see progression.py)
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
+        "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
+        "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},
         "age_base": u._age_base,
         "hp_roll": u._hp_roll,                   # 1dHD, rolled once at creation

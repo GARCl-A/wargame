@@ -15,7 +15,7 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import data
+from . import data, progression
 from .data import resolve_bonus, roll
 
 AP_PER_TURN = 2
@@ -66,8 +66,16 @@ class Combatant:
         self.path = []                # cells walked this turn: [start, ..., pos]
         self.last_path = []           # the previous turn's path (kept for future mechanics)
         self.used_abilities = set()   # keys of once-per-battle effects already spent
-        self.kills = 0                # enemies this combatant downed (folded into combat_xp)
+        self.kills = 0                # enemies this combatant downed (count, for display)
+        self.combat_xp_earned = 0     # combat XP from those kills, by level difference
         self.ferocity_downer = None   # who brought this unit to 0 HP while Ferocity keeps it up
+
+    def credit_kill(self, victim):
+        """Book a downed enemy: +1 to the kill count, plus combat XP scaled by the
+        level gap (`progression.xp_award` -- nothing for a victim below your level)."""
+        self.kills += 1
+        self.combat_xp_earned += progression.xp_award(self.combat_level,
+                                                      victim.combat_level)
 
     def spend_once(self, key):
         """Mark a once-per-battle effect as used. Returns True the first time only."""
@@ -342,5 +350,5 @@ class Combatant:
                 self.go_down(log)
                 downer = self.ferocity_downer
                 if downer is not None and downer.team != self.team:
-                    downer.kills += 1             # the hit that brought it to 0 lands the kill now
+                    downer.credit_kill(self)     # the hit that brought it to 0 lands the kill now
                 self.ferocity_downer = None

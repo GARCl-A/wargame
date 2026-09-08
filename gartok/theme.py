@@ -246,6 +246,16 @@ def section(surf, label, x, y, w, fonts, *, color=INFO):
     return ry + SP2
 
 
+def set_pointer(hot):
+    """Hand cursor while `hot` (hovering something clickable), arrow otherwise.
+    A no-op if the platform/driver can't make system cursors (e.g. headless)."""
+    try:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND if hot
+                                else pygame.SYSTEM_CURSOR_ARROW)
+    except pygame.error:
+        pass
+
+
 def pips(surf, center, count, total, *, r=6, gap=6, on=ACCENT, off=SURFACE_4):
     """A row of `total` dots, `count` filled, centred on `center`."""
     span = total * (2 * r) + (total - 1) * gap

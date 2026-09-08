@@ -224,7 +224,7 @@ Nada disto existe no gerador; precisa ser reinventado se você quiser o RPG comp
 - **Combate**: iniciativa, ações por rodada, ataque/dano, acertos críticos, alcance.
   → o wargame propõe uma versão (§ combate abaixo).
 - **Progressão**: o que fazer com Nível/XP; personagens nascem em Nível 0 / XP 1000.
-  Hipótese: 1000 XP = 1 nível; ou XP é uma "reserva" que se gasta. Indeterminado.
+  O wargame reconstruiu isto do zero — ver **§Progressão** abaixo.
 - **Perícias / testes de atributo**: provavelmente `d20 + mod` vs dificuldade.
 - **Magia**: nenhuma classe conjuradora aparece; "Sangue primal", "Símbolo religioso"
   e "Pergaminho" sugerem que magia existe, mas não há sistema.
@@ -234,8 +234,57 @@ Nada disto existe no gerador; precisa ser reinventado se você quiser o RPG comp
 - **Morte**: o wargame define cair / estabilizar / permadeath (§Cair, estabilizar
   e morte). Sobreviventes voltam da batalha com **PV cheio**; não há ferimentos
   persistentes, fadiga nem descanso ao longo do relógio — ainda.
-- **Progressão**: sem XP/nível. `_hp_roll` é rolado uma vez e os atributos ficam
-  fixos (3d6 + mods raciais). Não há onde pendurar níveis no modelo hoje.
+- ~~**Progressão**: sem XP/nível.~~ Reconstruída — ver **§Progressão**.
+
+---
+
+## Progressão 🟡
+
+Curvas e regra de XP em `gartok/progression.py`; árvores em `gartok/talents.py`;
+estado no `Unit` (`talents`, `_level_hp_rolls`); tela em `gartok/level_screen.py`
+(aberta pelo card do membro na tela da Guilda).
+
+> **Sem classes, sem nível de classe.** Cada **trilha de XP** tem seu próprio
+> nível e sua própria **árvore de talentos**. Quanto mais o personagem faz uma
+> função, melhor fica nela. As árvores crescem à mão, nó a nó.
+
+**Trilhas hoje:**
+
+| Trilha | XP | Fonte |
+|---|---|---|
+| Combate | `combat_xp` | derrubar inimigos (ver abaixo) |
+| Trabalho | `work_xp` (marcas, 1 a cada 16 h) | turnos na Madeireira |
+
+**Nível por trilha** — limiares cumulativos em `progression.py`, um palpite
+inicial e ajustável. Combate: L1 = 3 XP, L2 = 10 XP (fixados pelo autor). Cada
+nível numa trilha dá **uma escolha** na árvore dela.
+
+**XP de combate — só de quem é do seu nível pra cima.** Derrubar um inimigo em pé
+vale `(nível de combate dele − o seu) + 1`, e **nada** se ele estiver abaixo do
+seu nível. Nível 0 mata nível 0 → +1; nível 0 mata nível 10 → +11; nível 3 mata
+nível 0 → 0. (`progression.xp_award`; crédito em `Combatant.credit_kill`, dobrado
+no fim da batalha por `campaign.absorb_battle`.) Inimigos são todos nível 0 por
+enquanto.
+
+**Árvore de combate (raiz):** ao chegar ao nível 1, escolhe que tipo de
+combatente é — **Forte** (+1 Força), **Ágil** (+1 Destreza) ou **Resistente**
+(+1 Constituição). É +1 no **atributo em si** (conta em tudo: carga, PV, mod…),
+não no modificador. Nível 2 em diante: a definir.
+
+**Árvore de trabalho (duas raízes):** **Negociador** (+1 Carisma **só** nos
+testes de compra/venda do mercado, via `haggle_charisma_mod`) e **Carregador**
+(desconta 1 kg do peso de cada item que **não** é arma nem consumível, **só** no
+teste de sobrecarga — o peso exibido não muda).
+
+**Dado de vida por nível médio.** `nível médio = ⌊(nível de combate + nível de
+trabalho) / 2⌋`. Cada vez que ele sobe 1, o personagem ganha um dado de vida:
+`1dDV_racial + mod Con` (mín 1), somado ao PV máximo. As rolagens ficam salvas
+(`_level_hp_rolls`) — recarregar o jogo não re-rola. Ex.: Combate 2 / Trabalho 0
+→ média 1 → +1 DV; Combate 1 / Trabalho 0 → média 0 → nada.
+
+**Ainda cru:** curva além de L2 é stub; as raízes não são exclusivas (pegar mais
+de uma é ok por ora — campo `group` fica pro futuro). Progressão de exploração /
+outras trilhas: depois.
 
 ---
 
@@ -629,8 +678,8 @@ por cobre em vez de entrar nos Ermos e morrer.
   cobre** por cabeça. O cobre cai direto na bolsa de cada um.
 - **XP de trabalho:** `Unit.work_hours` acumula as horas; `Unit.work_xp` =
   `work_hours // 16` (`LUMBER_XP_HOURS`). Ou seja **1 marca a cada 16 h
-  trabalhadas**. Hoje é só cosmético (como o Nível 0 / XP 1000 perdido) — um
-  sistema de ofício lê isso depois.
+  trabalhadas**. Alimenta o **nível de trabalho** e a árvore de talentos de
+  trabalho — ver **§Progressão**.
 - **Sem lenha:** o machado é emprestado e a árvore não é sua; você leva **só o
   salário pelas horas**, nenhum item.
 - **Balanço:** 0,75 cobre/h é de propósito baixo. Um dia inteiro alimenta
