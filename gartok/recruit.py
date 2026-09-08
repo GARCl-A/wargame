@@ -81,7 +81,7 @@ def convince(recruiter, candidate, roster_size, rng=random):
     pen = size_penalty(roster_size)
     if pen:
         mods.append((-pen, f"guild of {roster_size}"))
-    knack = recruiter._talent_sum("recruit_charisma")     # Fixer talent
+    knack = recruiter.talent_bonus("recruit_cha")     # Fixer talent
     if knack:
         mods.append((knack, "Fixer"))
 

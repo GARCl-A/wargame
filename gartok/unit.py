@@ -200,13 +200,13 @@ class Unit:
         """Charisma modifier for market haggling only -- the Negotiator talent
         lifts it without touching the real Charisma score."""
         return mod(self.charisma + self.hunger_attribute_penalty
-                   + self._talent_sum("haggle_charisma"))
+                   + self.talent_bonus("haggle_cha"))
 
     def price_mods(self):
         """This member's talent contributions to a market visit's deal fraction
         (`economy.PriceMod`). Yielded, not situational -- economy scopes each by
         item and by buy/sell."""
-        n = self._talent_sum("food_haggle")
+        n = self.talent_bonus("food_haggle")
         if n:
             yield economy.PriceMod(
                 round(economy.CHA_DEAL_STEP * n, 3), "Provisioner",
@@ -249,24 +249,20 @@ class Unit:
         """Each attribute score = raw 3d6 roll + racial mod + talent bonus.
         Rebuilt from scratch so it is safe to re-run when a talent is picked."""
         for a, m in zip(ATTRIBUTES, self.race["mods"]):
-            setattr(self, a, self.base_attributes[a] + m + self._talent_attr(a))
+            setattr(self, a, self.base_attributes[a] + m + self.talent_bonus("attr", a))
 
-    def _talent_attr(self, attr):
-        """Total +score this character's talents grant to `attr`."""
-        return sum(amt for lst in self.talents.values() for tid in lst
-                   for a, amt in talents.get(tid).attr_bonus if a == attr)
-
-    def _talent_sum(self, knob):
-        """Total of a numeric talent knob (`haggle_charisma`, `carry_buffer`)."""
-        return sum(getattr(talents.get(tid), knob)
-                   for lst in self.talents.values() for tid in lst)
+    def talent_bonus(self, channel, stat=""):
+        """Total this character's picked talents contribute to `channel` (see the
+        channel table in `talents.py`), narrowed to `stat` on `attr` / `to_hit`."""
+        picked = [tid for lst in self.talents.values() for tid in lst]
+        return talents.bonus(picked, channel, stat)
 
     def _carry_relief(self):
         """Kg the Carrier talent adds to the stagger threshold: up to the talent's
         `carry_buffer`, but no more than the real weight of the pack cargo that is
         neither a weapon nor a consumable -- it is headroom for hauling gear, not
         for food or spare weapons. No such cargo -> no relief."""
-        buf = self._talent_sum("carry_buffer")
+        buf = self.talent_bonus("carry_buffer")
         if not buf:
             return 0.0
         cargo = sum(data.item_weight(it) for it in self._base_inventory
@@ -332,69 +328,79 @@ class Unit:
     # combat derivation                                                  #
     # ------------------------------------------------------------------ #
     def _derive_combat(self):
-        pen = self.hunger_attribute_penalty          # 0 / -2 / -4, hits every attribute
-        ab = self._ability
+        """Recompute every stat that hangs off attributes + hunger + encumbrance
+        + armor + talents. Order matters: `_derive_carry` sets `encumbered`,
+        which the attribute mods read, which everything after them reads."""
+        self._derive_carry()
+        self._derive_attribute_mods()
+        self._derive_hp()
+        self._derive_ac()
+        self._derive_speed()
+        self.unarmed_damage = data.UNARMED_ATTACK.get(self.size, (1, 2))   # die by size
+        self.dr = self._ability.damage_reduction
 
-        # Carry capacity (kg). A normal person (FOR 10 -> mod 0, Medio) hauls
-        # 15 kg freely and 35 kg at a stagger; every point of FOR mod is +4 / +6.
-        # Judged from the hunger-adjusted Strength; encumbrance then penalises
-        # FOR/DES/speed -- it is the consequence of carrying too much, so it must
-        # not feed back and shrink this threshold. An ability may raise the size
-        # bracket used here and nowhere else -- the Goliath carries as Large.
-        cm = data.SIZES[ab.carry_size or self.size]["carry"]
+    def _derive_carry(self):
+        """Carry thresholds (kg) and the `encumbered` flag. A normal person
+        (FOR 10 -> mod 0, Medio) hauls 15 kg freely and 35 kg at a stagger; every
+        point of FOR mod is +4 / +6. Judged from the hunger-adjusted Strength --
+        encumbrance then penalises FOR/DES/speed, so it must not feed back and
+        shrink its own threshold. An ability may raise the size bracket used here
+        and nowhere else (the Goliath carries as Large). The Carrier talent
+        widens only the stagger threshold, never `load` or the `carry_max` ceiling."""
+        pen = self.hunger_attribute_penalty
+        cm = data.SIZES[self._ability.carry_size or self.size]["carry"]
         str_carry = mod(self.strength + pen)
         base_normal = max(1, round((str_carry * 4 + 15) * cm))
         self.carry_max = max(2, round((str_carry * 6 + 35) * cm))
-        # The Carrier talent widens the stagger threshold (never the displayed
-        # `load`, and never the `carry_max` ceiling) by the gear-hauling buffer.
         self.carry_relief = self._carry_relief()
         self.carry_normal = round(base_normal + self.carry_relief, 1)
         self.encumbered = self.load > self.carry_normal
-        enc = -2 if self.encumbered else 0           # -2 FOR and -2 DES while overloaded
 
+    def _derive_attribute_mods(self):
+        """`mod_<attr>` for all six: the score, minus hunger on every attribute
+        (0 / -2 / -4), minus 2 more on Strength and Dexterity while overloaded."""
+        pen = self.hunger_attribute_penalty
+        enc = -2 if self.encumbered else 0
         for a in ATTRIBUTES:
             extra = enc if a in ("strength", "dexterity") else 0
             setattr(self, f"mod_{a}", mod(getattr(self, a) + pen + extra))
 
-        # Unarmed attack (die comes from the creature's size)
-        self.unarmed_damage = data.UNARMED_ATTACK.get(self.size, (1, 2))
-
-        # HP: 1dHD rolled once, kept in _hp_roll so re-deriving (e.g. after a
-        # hunger tick) never re-rolls. Starving (tier 2+) caps it at 1.
+    def _derive_hp(self):
+        """Max HP: the creation roll + Con + ability bonus, one kept die per mean
+        level, and the Hardy talent per Hit Die. `_hp_roll` / `_level_hp_rolls`
+        are fixed, so re-deriving never re-rolls. Starving (tier 2+) caps it at 1."""
         if self._hp_roll is None:
             self._hp_roll = roll(1, self.race["hd"])
         con = self.mod_constitution
         hit_dice = 1 + len(self._level_hp_rolls)
-        self.hp_max = (max(1, self._hp_roll + con + ab.hp_max)
+        self.hp_max = (max(1, self._hp_roll + con + self._ability.hp_max)
                        + sum(max(1, die + con) for die in self._level_hp_rolls)
-                       + self._talent_sum("hp_per_hd") * hit_dice)
+                       + self.talent_bonus("hp_per_hd") * hit_dice)
         if self.hunger_level >= 2:
             self.hp_max = 1
 
-        # AC base: 10 + Dexterity + worn armor. Armor caps how much Dexterity
-        # still counts (heavier plate caps it harder). Racial natural bonus and
-        # Defend enter via condition on the Combatant.
+    def _derive_ac(self):
+        """AC base (10 + Dex + worn armor; armor caps how much Dex still counts)
+        and Mental Defense (10 + Wis, the Demoralize target). The racial natural
+        bonus and Defend enter as typed mods on the Combatant, not here."""
         armor = self.armor
         dex_ac = self.mod_dexterity
         if armor is not None and armor["max_dex"] is not None:
             dex_ac = min(dex_ac, armor["max_dex"])
         self.ac_base = (10 + dex_ac + (armor["ac"] if armor else 0)
-                        + self._talent_sum("ac_bonus"))
-        self.ac_natural = ab.ac_natural
-
-        # Mental Defense (target of the Demoralize action; AC-like, uses Wisdom)
+                        + self.talent_bonus("ac"))
+        self.ac_natural = self._ability.ac_natural
         self.mental_defense_base = 10 + self.mod_wisdom
 
-        # Speed (squares). Heavy armor shaves squares off; being overloaded costs
-        # one more. Floored at 1.
-        self.speed = data.squares(data.SIZES[self.size]["speed"]) + ab.speed
+    def _derive_speed(self):
+        """Speed in squares: size base + ability, minus heavy-armor drag, minus
+        one more while overloaded. Floored at 1."""
+        self.speed = data.squares(data.SIZES[self.size]["speed"]) + self._ability.speed
+        armor = self.armor
         if armor is not None and armor["speed"]:
             self.speed = max(1, self.speed - armor["speed"])
         if self.encumbered:
             self.speed = max(1, self.speed - 1)
-
-        # Damage reduction
-        self.dr = ab.damage_reduction
 
     # ------------------------------------------------------------------ #
     # roster management: shuffling items between the two hands and the   #
@@ -510,7 +516,7 @@ class Unit:
             src = "STR/DEX"
         else:
             base, stat, src = self.mod_strength, "str", "STR"
-        base += self._talent_sum("to_hit_dex" if stat == "dex" else "to_hit_str")
+        base += self.talent_bonus("to_hit", "dexterity" if stat == "dex" else "strength")
         return base, src
 
     @property

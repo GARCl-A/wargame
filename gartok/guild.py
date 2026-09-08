@@ -129,13 +129,13 @@ class Guild:
         hours = int(hours)
         pay = economy.lumber_pay(hours)
         crew = [u for u in workers if u in self.roster]
-        slowest = max((1 - u._talent_sum("activity_speed") for u in crew), default=1.0)
+        slowest = max((1 - u.talent_bonus("activity_speed") for u in crew), default=1.0)
         clock_hours = hours * slowest
         events = self.pass_time(clock_hours)
         earners = [u for u in workers if u in self.roster]   # a long shift can starve one
         paid = []
         for u in earners:
-            gain = round(pay * (1 + u._talent_sum("coin_gain")))
+            gain = round(pay * (1 + u.talent_bonus("coin_gain")))
             u.gold += gain
             u.work_hours += hours
             u.collect_levels()                 # more work marks can lift the mean level

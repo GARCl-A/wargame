@@ -260,7 +260,7 @@ class Combatant:
     @property
     def attack_range(self):
         if self.ranged:
-            return self.weapon["range"] + self.char._talent_sum("ranged_reach")
+            return self.weapon["range"] + self.char.talent_bonus("ranged_reach")
         return 1
 
     @property
@@ -271,7 +271,7 @@ class Combatant:
     def throw_range(self):
         if not self.can_throw:
             return 0
-        return self.weapon["thrown"] + self.char._talent_sum("ranged_reach")
+        return self.weapon["thrown"] + self.char.talent_bonus("ranged_reach")
 
     @property
     def ac(self):
@@ -308,7 +308,8 @@ class Combatant:
             mods = [(self.mod_strength, None, "STR")]
             hit_stat = "str"
         # tier-2 combat talent: +hit on the attribute this attack actually uses
-        talent = self.char._talent_sum("to_hit_dex" if hit_stat == "dex" else "to_hit_str")
+        talent = self.char.talent_bonus(
+            "to_hit", "dexterity" if hit_stat == "dex" else "strength")
         if talent:
             mods.append((talent, None, f"{hit_stat.upper()} talent"))
         if self._ability.attack_mods:
@@ -327,7 +328,7 @@ class Combatant:
             bonus += self.mod_strength              # thrown: add Strength to damage
         elif not self.ranged:                       # melee (includes unarmed)
             bonus += (self.mod_strength + self._ability.melee_damage
-                      + self.char._talent_sum("melee_damage"))
+                      + self.char.talent_bonus("melee_damage"))
         return max(1, dice + bonus)
 
     def take_damage(self, amount, log):

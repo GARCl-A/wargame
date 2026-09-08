@@ -1714,6 +1714,28 @@ def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
     assert u.carry_relief == 0.0 and u.carry_normal == base_normal
 
 
+def test_talent_effects_resolve_by_channel_and_stat():
+    from gartok import talents
+    # channel gate: melee_damage is not to_hit
+    assert talents.bonus(["heavy_hand"], "melee_damage") == 1
+    assert talents.bonus(["heavy_hand"], "to_hit", "strength") == 0
+    # stat gate on to_hit: Sure Strike is STR-only, Deadeye DEX-only, no crossover
+    assert talents.bonus(["sure_strike"], "to_hit", "strength") == 1
+    assert talents.bonus(["sure_strike"], "to_hit", "dexterity") == 0
+    assert talents.bonus(["deadeye"], "to_hit", "dexterity") == 1
+    # unknown ids are skipped, not fatal
+    assert talents.bonus(["nope", "strong"], "attr", "strength") == 1
+
+    u = _unit(seed=7)
+    u.talents = {"combat": ["agile", "deadeye"], "work": []}
+    u._apply_attributes()
+    u._derive_combat()
+    u.equipped_weapon = None                         # unarmed -> a STR attack
+    assert u.attack_bonus == (u.mod_strength, "STR")  # Deadeye (DEX-only) adds nothing
+    u.equipped_weapon = "Light Crossbow"             # ranged -> a DEX attack
+    assert u.attack_bonus == (u.mod_dexterity + 1, "DEX")
+
+
 def test_carrier_never_lifts_the_carry_max_ceiling():
     u = _unit(seed=5)
     u.work_hours = economy.LUMBER_XP_HOURS * 2
