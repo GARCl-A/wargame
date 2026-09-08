@@ -22,14 +22,10 @@ from .dragselect import DragSelectMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, panel, section,
+                    SURFACE_2, SURFACE_3, WARN, kg, panel, section,
                     token_badge, text, tracked)
 
 STOCK_W = 330
-
-
-def _kg(w):
-    return f"{w:g} kg"
 
 
 class MarketScreen(DragSelectMixin, Screen):
@@ -286,7 +282,7 @@ class MarketScreen(DragSelectMixin, Screen):
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if sel else INK if afford else INK_FAINT
             text(screen, name, f.body_sm, ink, (r.x + SP2, r.y + 6))
-            wtext = _kg(data.item_weight(name))
+            wtext = kg(data.item_weight(name))
             text(screen, wtext, f.mono_sm,
                  ACCENT_INK if sel else INK_DIM if fits else DANGER,
                  (r.right - SP2, r.y + 7), right=True)
@@ -329,7 +325,7 @@ class MarketScreen(DragSelectMixin, Screen):
         over_norm = m.load > m.carry_normal
         over_max = m.load > m.carry_max
         ccol = DANGER if over_max else WARN if over_norm else OK
-        text(screen, f"Load {_kg(m.load)} / {_kg(m.carry_normal)}", f.mono_sm,
+        text(screen, f"Load {kg(m.load)} / {kg(m.carry_normal)}", f.mono_sm,
              ccol, (rect.x + pad, y))
         note = ("OVER HIGH LOAD  -2 STR/DEX, -1 speed" if over_max
                 else "overloaded  -2 STR/DEX, -1 speed" if over_norm else "")

@@ -173,6 +173,20 @@ def tracked(surf, s, font, color, pos, spacing=1):
     return x
 
 
+def ellipsize(s, font, max_px):
+    """`s` clipped with a trailing ellipsis so it renders within `max_px`."""
+    if max_px <= 0 or font.size(s)[0] <= max_px:
+        return s
+    while s and font.size(s + "…")[0] > max_px:
+        s = s[:-1]
+    return s + "…"
+
+
+def kg(w):
+    """A weight in kilograms, trimmed (`2 kg`, not `2.0 kg`)."""
+    return f"{w:g} kg"
+
+
 def wrap_lines(lines, font, max_px):
     out = []
     for ln in lines:

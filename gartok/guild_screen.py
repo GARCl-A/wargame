@@ -31,13 +31,14 @@ import pygame
 
 from . import data, world
 from .combatant import Combatant
-from .dragselect import DragSelectMixin
+from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
 from .sheet_panel import PANEL_H, PANEL_W, draw_sheet
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
-                    panel, section, set_pointer, token_badge, text, tracked)
+                    ellipsize, kg, panel, section, set_pointer, token_badge,
+                    text, tracked)
 
 
 TABS = (("members", "MEMBERS"), ("reputations", "REPUTATIONS"))
@@ -46,23 +47,10 @@ LIST_MIN, LIST_MAX = 264, 380         # roster column width clamps
 DET_MAX = 1120                        # detail panel width cap on very wide screens
 
 
-def _kg(w):
-    return f"{w:g} kg"
-
-
-def _fit(s, font, max_px):
-    """`s` clipped with an ellipsis so it fits `max_px`."""
-    if max_px <= 0 or font.size(s)[0] <= max_px:
-        return s
-    while s and font.size(s + "…")[0] > max_px:
-        s = s[:-1]
-    return s + "…"
-
-
-class GuildScreen(DragSelectMixin, Screen):
+class GuildScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True                        # app draws us straight to the window
 
-    def __init__(self, fonts, guild, on_back, on_level=None):
+    def __init__(self, fonts, guild, on_back, on_level=None, on_manage=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -70,6 +58,7 @@ class GuildScreen(DragSelectMixin, Screen):
         self.battles_won = guild.battles_won
         self.on_back = on_back
         self.on_level = on_level             # open the level screen for a member
+        self.on_manage = on_manage           # open the Manage Gear screen (multi-member loadout)
         self.tab = "members"                  # "members" (roster+gear) | "reputations"
         self.member = self.roster[0] if self.roster else None   # card shown on the right
         self.tab_hits = []                  # [(rect, key)]
@@ -89,28 +78,6 @@ class GuildScreen(DragSelectMixin, Screen):
             return None
         who = next((u for u in self.roster if u.uid == unit.recruited_by), None)
         return who.name if who else "someone long gone"
-
-    @staticmethod
-    def _slot_of(loc):
-        return loc if isinstance(loc, str) else "pack"
-
-    def _item_at(self, unit, loc):
-        if loc == "hand":
-            return unit.equipped_weapon
-        if loc == "offhand":
-            return unit.equipped_offhand
-        if loc == "armor":
-            return unit.equipped_armor
-        return unit._base_inventory[loc] if loc < len(unit._base_inventory) else None
-
-    def _carried_names(self):
-        """Names of the items currently picked up (selected / being dragged)."""
-        out = []
-        for unit, loc in self.selected:
-            name = self._item_at(unit, loc)
-            if name is not None:
-                out.append(name)
-        return out
 
     # ------------------------------------------------------------------ #
     # input: click to (multi-)select, or drag an item onto a slot        #
@@ -147,6 +114,8 @@ class GuildScreen(DragSelectMixin, Screen):
             if rect.collidepoint(px):
                 if key == "level" and self.on_level and self.member is not None:
                     self.on_level(self.member)
+                elif key == "manage" and self.on_manage:
+                    self.on_manage()
                 elif key == "back":
                     self.on_back()
                 return
@@ -186,64 +155,6 @@ class GuildScreen(DragSelectMixin, Screen):
         self.selected = [src] if src is not None else []
 
     # ------------------------------------------------------------------ #
-    def _take(self, src, loc):
-        if loc == "hand":
-            return src.take_from_hand()
-        if loc == "offhand":
-            return src.take_from_offhand()
-        if loc == "armor":
-            return src.take_from_armor()
-        return src.take_from_pack(loc)
-
-    @staticmethod
-    def _fits_slot(dst, zone, name):
-        if zone == "hand":
-            return dst.is_weapon(name)
-        if zone == "offhand":
-            return dst.fits_offhand(name)
-        if zone == "armor":
-            return dst.fits_armor(name)
-        return True                                      # pack / discard take anything
-
-    def _give_many(self, dst, zone):
-        picks = [p for p in self.selected if self._item_at(*p) is not None]
-        self.selected = []
-        if not picks:
-            return
-
-        if zone == "discard":
-            _, touched = self._collect(picks)
-            for u in touched:
-                u._derive_combat()
-            return
-
-        if zone in ("hand", "offhand", "armor"):
-            fit = next((p for p in picks
-                        if self._fits_slot(dst, zone, self._item_at(*p))
-                        and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
-            if fit is None:
-                self.selected = picks                    # nothing fits: keep carrying
-                return
-            name = self._item_at(*fit)
-            src = fit[0]
-            self._take(*fit)
-            {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
-             "armor": dst.give_to_armor}[zone](name)
-            src._derive_combat()
-            dst._derive_combat()
-            return
-
-        # pack
-        if all(p[0] is dst and not isinstance(p[1], str) for p in picks):
-            return                                       # same pack: nothing to do
-        names, touched = self._collect(picks)
-        for name in names:
-            dst.give_to_pack(name)
-        for u in touched:
-            u._derive_combat()
-        dst._derive_combat()
-
-    # ------------------------------------------------------------------ #
     def draw(self, screen):
         f = self.fonts
         W, H = screen.get_size()
@@ -264,16 +175,16 @@ class GuildScreen(DragSelectMixin, Screen):
         carried = self._carried_names()
         if carried:
             if len(carried) == 1:
-                lead = f"moving  {carried[0]} ({_kg(data.item_weight(carried[0]))})"
+                lead = f"moving  {carried[0]} ({kg(data.item_weight(carried[0]))})"
             else:
                 tot = sum(data.item_weight(n) for n in carried)
-                lead = f"moving  {len(carried)} items ({_kg(tot)})"
+                lead = f"moving  {len(carried)} items ({kg(tot)})"
             sub, col = (lead + "  ·  drop on a HAND, BODY, PACK, a MEMBER in the "
                         "list or on THROW AWAY  ·  click outside to cancel", ACCENT)
         else:
             sub, col = (f"{self.battles_won} wins  ·  {len(self.roster)} members  ·  "
                         "drag an item (or click)  ·  shift+click gathers several", INK_DIM)
-        text(screen, _fit(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 30))
+        text(screen, ellipsize(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 30))
 
         if not carried:
             self._draw_tabs(screen, W, pad)
@@ -337,17 +248,17 @@ class GuildScreen(DragSelectMixin, Screen):
             tok = (r.x + SP3 + 12, r.y + 24)
             token_badge(screen, tok, unit, f)
             nx = tok[0] + 24
-            text(screen, _fit(unit.name, f.card_name, r.right - nx - SP2),
+            text(screen, ellipsize(unit.name, f.card_name, r.right - nx - SP2),
                  f.card_name, INK if sel else INK_DIM if not hov else INK,
                  (nx, r.y + 6))
-            text(screen, _fit(f"{unit.race['name']}  ·  {unit.occupation['name']}",
+            text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
                               f.body_sm, r.right - nx - SP2),
                  f.body_sm, INK_FAINT, (nx, r.y + 27))
 
             over_norm = unit.load > unit.carry_normal
             over_max = unit.load > unit.carry_max
             ccol = DANGER if over_max else WARN if over_norm else INK_DIM
-            text(screen, f"HP {unit.hp_max}   AC {unit.ac}   ·   {_kg(unit.load)}",
+            text(screen, f"HP {unit.hp_max}   AC {unit.ac}   ·   {kg(unit.load)}",
                  f.mono_sm, ccol, (r.x + SP3, r.bottom - 20))
             if unit.hunger_level:
                 text(screen, "HUNGER", f.label,
@@ -421,9 +332,9 @@ class GuildScreen(DragSelectMixin, Screen):
             self._pill(screen, sb, "SHEET")
             self.info_hits.append((sb, unit))
 
-        text(screen, _fit(unit.name, f.card_name, bx - nx - SP2), f.card_name,
+        text(screen, ellipsize(unit.name, f.card_name, bx - nx - SP2), f.card_name,
              INK, (nx, rect.y + 10))
-        text(screen, _fit(sub, f.body_sm, bx - nx - SP2), f.body_sm,
+        text(screen, ellipsize(sub, f.body_sm, bx - nx - SP2), f.body_sm,
              INK_DIM, (nx, rect.y + 34))
 
         # Two inner columns under the header: the read-out (chips, carry, copper,
@@ -459,8 +370,8 @@ class GuildScreen(DragSelectMixin, Screen):
         mkx = bar.x + 1 + int(span * min(1.0, unit.carry_normal / cap))
         pygame.draw.line(screen, INK, (mkx, bar.y - 3), (mkx, bar.bottom + 3))
         a += 18
-        text(screen, f"{_kg(unit.load)}  ·  normal {_kg(unit.carry_normal)}  ·  "
-             f"high {_kg(unit.carry_max)}", f.mono_sm, INK_DIM, (x, a))
+        text(screen, f"{kg(unit.load)}  ·  normal {kg(unit.carry_normal)}  ·  "
+             f"high {kg(unit.carry_max)}", f.mono_sm, INK_DIM, (x, a))
         a += 15
         note = ("OVER HIGH LOAD  ·  -2 STR/DEX, -1 speed" if over_max
                 else "overloaded  ·  -2 STR/DEX, -1 speed" if over_norm else "")
@@ -511,7 +422,7 @@ class GuildScreen(DragSelectMixin, Screen):
                     hit, _src = unit.attack_bonus
                     right = f"{hit:+} to hit   ·   {n}d{faces}   ·   "
                 text(screen, held, f.body, ink, (hr.x + SP3, hr.y + 9))
-                text(screen, right + _kg(data.item_weight(held)), f.mono_sm,
+                text(screen, right + kg(data.item_weight(held)), f.mono_sm,
                      ACCENT_INK if sel else INK_DIM, (hr.right - SP3, hr.y + 10), right=True)
                 self.sources.append((hr, unit, kind))
             elif blocked:
@@ -539,7 +450,7 @@ class GuildScreen(DragSelectMixin, Screen):
         if worn:
             armor = data.ARMOR[worn]
             text(screen, worn, f.body, ACCENT_INK if asel else INK, (ar.x + SP3, ar.y + 9))
-            text(screen, f"+{armor['ac']} AC   ·   {_kg(data.item_weight(worn))}",
+            text(screen, f"+{armor['ac']} AC   ·   {kg(data.item_weight(worn))}",
                  f.mono_sm, ACCENT_INK if asel else INK_DIM, (ar.right - SP3, ar.y + 10),
                  right=True)
             self.sources.append((ar, unit, "armor"))
@@ -567,7 +478,7 @@ class GuildScreen(DragSelectMixin, Screen):
                   border=ACCENT if isel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if isel else INK
             text(screen, item, f.body, ink, (ir.x + SP3, ir.y + 7))
-            text(screen, _kg(data.item_weight(item)), f.mono_sm,
+            text(screen, kg(data.item_weight(item)), f.mono_sm,
                  ACCENT_INK if isel else INK_DIM, (ir.right - SP3, ir.y + 8), right=True)
             tag = self._item_tag(item)
             if tag:
@@ -669,5 +580,15 @@ class GuildScreen(DragSelectMixin, Screen):
         text(screen, "BACK TO MAP", f.body_bd, ACCENT_INK if hov else ACCENT,
              nxt.center, center=True)
         self.buttons.append(("back", nxt))
+
+        if self.on_manage and not self._carried_names() and len(self.roster) > 1:
+            mg = pygame.Rect(nxt.x - 220 - SP2, y, 220, 36)
+            hovm = mg.collidepoint(mouse)
+            self._hot = self._hot or hovm
+            panel(screen, mg, fill=ACCENT if hovm else SURFACE_2, border=ACCENT,
+                  width=1, radius=RADIUS)
+            text(screen, "MANAGE GEAR", f.body_bd, ACCENT_INK if hovm else ACCENT,
+                 mg.center, center=True)
+            self.buttons.append(("manage", mg))
 
         text(screen, "Esc for the pause menu", f.label, INK_FAINT, (pad, y + 12))

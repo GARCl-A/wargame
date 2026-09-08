@@ -15,12 +15,7 @@ from . import data
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, panel, section,
-                    token_badge, text)
-
-
-def _kg(w):
-    return f"{w:g} kg"
+                    SURFACE_2, SURFACE_3, kg, panel, section, token_badge, text)
 
 
 class LootScreen(Screen):
@@ -122,7 +117,7 @@ class LootScreen(Screen):
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if sel else INK
             text(screen, name, f.body_sm, ink, (r.x + SP2, r.y + 6))
-            text(screen, _kg(data.item_weight(name)), f.mono_sm,
+            text(screen, kg(data.item_weight(name)), f.mono_sm,
                  ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 7), right=True)
             self.rows.append((r, i))
             y += 26 + SP1
@@ -156,11 +151,11 @@ class LootScreen(Screen):
         y = rect.y + pad + 46
         over = m.load > m.carry_max
         ccol = DANGER if over else OK
-        text(screen, f"Load {_kg(m.load)} / {_kg(m.carry_max)}", f.mono_sm, ccol,
+        text(screen, f"Load {kg(m.load)} / {kg(m.carry_max)}", f.mono_sm, ccol,
              (rect.x + pad, y))
         y += 14
         room = max(0.0, m.carry_max - m.load)
-        text(screen, f"room {_kg(round(room, 1))}", f.body_sm, INK_FAINT, (rect.x + pad, y))
+        text(screen, f"room {kg(round(room, 1))}", f.body_sm, INK_FAINT, (rect.x + pad, y))
         y += 20
 
         y = section(screen, "PACK", rect.x + pad, y, rect.w - 2 * pad, f)
@@ -168,7 +163,7 @@ class LootScreen(Screen):
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
         for it in m._base_inventory:
             text(screen, it, f.body_sm, INK_DIM, (rect.x + pad, y))
-            text(screen, _kg(data.item_weight(it)), f.mono_sm, INK_FAINT,
+            text(screen, kg(data.item_weight(it)), f.mono_sm, INK_FAINT,
                  (rect.right - pad, y), right=True)
             y += 16
 

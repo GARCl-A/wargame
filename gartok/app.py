@@ -27,6 +27,7 @@ from . import campaign, persist, world
 from .battle import Battle
 from .battle_screen import BattleScreen
 from .draft_screen import DraftScreen
+from .gear_screen import GearScreen
 from .guild import Guild
 from .guild_screen import GuildScreen
 from .level_screen import LevelScreen
@@ -101,7 +102,11 @@ class App:
 
     def _open_guild(self):
         self.scene = GuildScreen(self.fonts, self.guild,
-                                 on_back=self._start_map, on_level=self._open_level)
+                                 on_back=self._start_map, on_level=self._open_level,
+                                 on_manage=self._open_gear)
+
+    def _open_gear(self):
+        self.scene = GearScreen(self.fonts, self.guild, on_back=self._open_guild)
 
     def _open_level(self, unit):
         self.scene = LevelScreen(self.fonts, unit,

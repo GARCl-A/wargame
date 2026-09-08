@@ -525,6 +525,7 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.taverna_screen import TavernaScreen
     from gartok.work_screen import WorkScreen
     from gartok.guild_screen import GuildScreen
+    from gartok.gear_screen import GearScreen
     from gartok.level_screen import LevelScreen
     from gartok.pause_screen import PauseScreen
 
@@ -540,6 +541,7 @@ def test_every_screen_draws_native_at_any_window_size():
         TavernaScreen(F, guild, list(roster[:3]), tnode, noop),
         WorkScreen(F, guild, list(roster[:3]), noop, noop),
         GuildScreen(F, guild, noop, noop),
+        GearScreen(F, guild, noop),
         LevelScreen(F, roster[0], noop, noop),
     ]
     scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
