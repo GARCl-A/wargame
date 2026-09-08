@@ -317,8 +317,8 @@ class MarketScreen(DragSelectMixin, Screen):
         ccol = DANGER if over_max else WARN if over_norm else OK
         text(screen, f"Load {_kg(m.load)} / {_kg(m.carry_normal)}", f.mono_sm,
              ccol, (rect.x + pad, y))
-        note = ("OVER HIGH LOAD  -2 FOR/DES, -1 desloc" if over_max
-                else "overloaded  -2 FOR/DES, -1 desloc" if over_norm else "")
+        note = ("OVER HIGH LOAD  -2 STR/DEX, -1 speed" if over_max
+                else "overloaded  -2 STR/DEX, -1 speed" if over_norm else "")
         if note:
             y += 13
             text(screen, note, f.label, ccol, (rect.x + pad, y))

@@ -22,7 +22,7 @@ class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True, lethal=True):
         self.log_lines = []
         self.daylight = daylight              # outdoor scenarios read this for ambient light
-        self.lethal = lethal                 # False = arena bout: 0 PV knocks out, no permadeath
+        self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
         self.scenario = scenario or ArenaScenario()
         self.player_units = [Combatant(u, "player") for u in player_units]
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
@@ -40,7 +40,7 @@ class Battle:
         self.units = list(self.player_units) + list(self.enemy_units)
         for u in self.units:
             u.reset_battle_state()           # fresh state (also full heal on a rematch)
-            u.nonlethal = not self.lethal    # 0 PV -> knocked out instead of dying
+            u.nonlethal = not self.lethal    # 0 HP -> knocked out instead of dying
 
         self.creatures = []                  # neutral bodies (e.g. the Shepherd's sheep)
         self.scenario.build(self)            # board + deployment + scatter
@@ -179,7 +179,7 @@ class Battle:
             unit.ap -= 1
             unit.walking = True
             unit.moved = 0
-            self.log(f"{unit.name} anda (1 ponto de acao).")
+            self.log(f"{unit.name} moves (1 action point).")
         unit.moved += reach[dest]
         segment = self.path_to(unit, dest) or [unit.pos, dest]
         unit.path.extend(segment[1:])         # the cells walked this turn so far
@@ -221,8 +221,8 @@ class Battle:
         if players_up and dying_allies:
             if not self._mopup_open:
                 self._mopup_open = True
-                self.log("Inimigos abatidos -- estabilize os aliados caidos antes "
-                         "que o combate acabe.")
+                self.log("Enemies down -- stabilize the downed allies before "
+                         "the fight ends.")
             return None
 
         self.winner = "player"
@@ -238,25 +238,25 @@ class Battle:
         roll = d20()
         if roll >= data.DEATH_SAVE_MIN:
             unit.status = "stable"
-            self.log(f"{unit.name}: teste de morte d20({roll}) -> sobrevive, "
-                     f"inconsciente a 0 PV.")
+            self.log(f"{unit.name}: death save d20({roll}) -> survives, "
+                     f"unconscious at 0 HP.")
         else:
             unit.status = "dead"
-            self.log(f"{unit.name}: teste de morte d20({roll}) -> morreu.")
+            self.log(f"{unit.name}: death save d20({roll}) -> dies.")
         return unit.status
 
     def stabilize(self, unit):
         """Bring a dying unit to `stable` (from a successful Stabilize / FirstAid)."""
         unit.status = "stable"
-        self.log(f"{unit.name} foi estabilizado (inconsciente a 0 PV ate o fim do combate).")
+        self.log(f"{unit.name} was stabilized (unconscious at 0 HP until the end of the fight).")
 
     def repair(self, unit):
-        """Bring a broken automaton back into the fight at 1 PV (successful ally
+        """Bring a broken automaton back into the fight at 1 HP (successful ally
         Stabilize). No death clock was ever running -- there is no time limit."""
         unit.status = "up"
         unit.hp = 1
         unit.death_clock = 0
-        self.log(f"{unit.name} volta a funcionar (1 PV).")
+        self.log(f"{unit.name} is back online (1 HP).")
 
     def _resolve_dying_turn(self, unit):
         """The dying unit's turn: tick the counter, roll the death save on the DYING_TURNS-th."""
@@ -264,7 +264,7 @@ class Battle:
         if unit.death_clock >= data.DYING_TURNS:
             self._death_save(unit)
         else:
-            self.log(f"{unit.name} esta morrendo ({unit.death_clock}/{data.DYING_TURNS}).")
+            self.log(f"{unit.name} is dying ({unit.death_clock}/{data.DYING_TURNS}).")
 
     def _resolve_dangling_dying(self):
         """Battle over: every unit still dying makes one last death save."""
@@ -278,11 +278,11 @@ class Battle:
         for u in self.units:
             if u.team == team and u.status in ("dying", "stable", "broken"):
                 u.status = "dead"
-                self.log(f"{u.name} nao resiste aos ferimentos apos a derrota.")
+                self.log(f"{u.name} doesn't survive their wounds after the defeat.")
 
     def _announce_turn(self):
         u = self.active
-        self.log(f"Turno de {u.name} ({u.team}).")
+        self.log(f"{u.name}'s turn ({u.team}).")
 
     def end_turn(self):
         if self.winner:
@@ -303,13 +303,13 @@ class Battle:
             if u.status == "dying":
                 self._resolve_dying_turn(u)
                 if self._check_winner():
-                    self.log(f"*** Vitoria: {self.winner} ***")
+                    self.log(f"*** Victory: {self.winner} ***")
                     return
                 continue
             if u.alive:
                 break
         if self._check_winner():
-            self.log(f"*** Vitoria: {self.winner} ***")
+            self.log(f"*** Victory: {self.winner} ***")
             return
         self.active.start_turn(self.log)
         self._announce_turn()

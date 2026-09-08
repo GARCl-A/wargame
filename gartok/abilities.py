@@ -11,8 +11,8 @@ Adding or tuning an ability that reuses the existing passives/hooks = editing
 only this file. Adding a brand-new *kind* of hook still needs a call site in the
 core (unit.py / actions.py) -- there is no plugin bus, and the README says so.
 
-`name` / `effect` stay in Portuguese: they are shown in the UI and mirror
-GARTOK-regras.md.  `id` and every field name are English.
+`name` / `effect` are player-facing English; `id` and every field name are
+English too. GARTOK-regras.md (pt-BR) is the design doc and may lag the wording.
 """
 
 from dataclasses import dataclass
@@ -39,7 +39,7 @@ class Ability:
     extra_languages: int = 0
     demoralize_ignores_language: bool = False
     carry_size: Optional[str] = None  # size used for carry capacity only (overrides the real size)
-    breaks_when_downed: bool = False  # 0 PV -> "broken" (no death clock), not "dying"
+    breaks_when_downed: bool = False  # 0 HP -> "broken" (no death clock), not "dying"
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -59,41 +59,41 @@ class Ability:
 # --------------------------------------------------------------------------- #
 
 def _pack_tactics_mods(unit, target, flanking):
-    return [(2, "circunstancia", "Luta em bando")] if flanking else []
+    return [(2, "circumstance", "Pack Tactics")] if flanking else []
 
 
 def _ancestral_blood_mods(unit, target, flanking):
-    return [(2, "circunstancia", "Sangue ancestral")] if target.size == "Grande" else []
+    return [(2, "circumstance", "Ancestral Blood")] if target.size == "Large" else []
 
 
 def _mimic_sounds_feint(unit, target):
-    return [(4, "circunstancia", "Imitar sons")]
+    return [(4, "circumstance", "Mimic Sounds")]
 
 
 def _primal_blood(battle, unit, target, bonus, ac, log):
     nat = d20()
     total = nat + bonus
     hits = nat == 20 or total >= ac
-    log(f"  Sangue primal: rerrola d20({nat}) = {total} -> "
-        + ("acerto." if hits else "erra de novo."))
+    log(f"  Primal Blood: rerolls d20({nat}) = {total} -> "
+        + ("hit." if hits else "misses again."))
     if hits:
         target.take_damage(unit.damage_roll(crit=nat == 20), log)
 
 
 def _ferocity(unit, log):
-    """Drop to 0 PV and start dying, but keep fighting until the end of this turn
-    (`Unit.end_turn` resolves the fall). Only fires from >0 PV and not already
+    """Drop to 0 HP and start dying, but keep fighting until the end of this turn
+    (`Unit.end_turn` resolves the fall). Only fires from >0 HP and not already
     dying -- guaranteed by the call site (once per battle, on the fatal hit)."""
     unit.hp = 0
     unit.death_clock = 0
     unit.ferocity_pending = True
-    log(f"  Ferocidade! {unit.name} chega a 0 PV mas segue de pe ate o fim do seu turno.")
+    log(f"  Ferocity! {unit.name} hits 0 HP but stays on their feet until the end of their turn.")
 
 
 def _autotroph(unit, log):
     if unit.hp < unit.hp_max:
         unit.hp += 1
-        log(f"{unit.name} regenera 1 PV (autotrofo).")
+        log(f"{unit.name} regenerates 1 HP (autotroph).")
 
 
 # --------------------------------------------------------------------------- #
@@ -101,61 +101,61 @@ def _autotroph(unit, log):
 # --------------------------------------------------------------------------- #
 
 _LIST = [
-    Ability("darkvision", "Visao no escuro",
-            f"enxerga {data.DARKVISION} casas no escuro como se fosse claro.",
+    Ability("darkvision", "Darkvision",
+            f"sees {data.DARKVISION} squares in the dark as if it were lit.",
             darkvision=data.DARKVISION),
-    Ability("inorganic_body", "Corpo inorganico",
-            "reduz todo dano recebido em 1; a 0 PV fica QUEBRADO (sem teste de "
-            "morte) ate um aliado o consertar (Estabilizar: INT vs DC "
+    Ability("inorganic_body", "Inorganic Body",
+            "cuts all damage taken by 1; at 0 HP goes BROKEN (no death save) "
+            "until an ally repairs it (Stabilize: INT vs DC "
             f"{data.AUTOMATON_REPAIR_DC}).",
             damage_reduction=1, breaks_when_downed=True),
-    Ability("gallop", "Galopar",
-            "+3 m (2 casas) de deslocamento.", speed=2),
-    Ability("sleep_immunity", "Imunidade a sono",
-            "imune a atordoamento (nao usado no MVP); +1 CA [natural].", ac_natural=1),
-    Ability("strong_stomach", "Estomago forte",
-            "+3 PV maximos.", hp_max=3),
-    Ability("primal_blood", "Sangue primal",
-            "1x por batalha, rerrola um ataque errado.",
+    Ability("gallop", "Gallop",
+            "+3 m (2 squares) of speed.", speed=2),
+    Ability("sleep_immunity", "Sleep Immunity",
+            "immune to stun (unused in the MVP); +1 AC [natural].", ac_natural=1),
+    Ability("strong_stomach", "Strong Stomach",
+            "+3 max HP.", hp_max=3),
+    Ability("primal_blood", "Primal Blood",
+            "once per battle, rerolls a missed attack.",
             on_attack_miss=_primal_blood),
-    Ability("pack_tactics", "Luta em bando",
-            "+2 [circunstancia] no ataque se um aliado esta adjacente ao alvo.",
+    Ability("pack_tactics", "Pack Tactics",
+            "+2 [circumstance] to attack if an ally is adjacent to the target.",
             attack_mods=_pack_tactics_mods),
-    Ability("strong_body", "Corpo forte",
-            "para capacidade de carga (e so para isso), conta como criatura Grande.",
-            carry_size="Grande"),
-    Ability("amphibious", "Anfibio",
-            "+1 casa de deslocamento.", speed=1),
-    Ability("keen_hearing", "Audicao agucada",
-            "+3 iniciativa.", initiative=3),
-    Ability("climber", "Escalador",
-            "+1 casa de deslocamento.", speed=1),
-    Ability("extra_language", "Idioma adicional (Humano)",
-            "fala um segundo idioma sorteado: pode Desmoralizar inimigos que "
-            "compartilhem qualquer um dos dois.",
+    Ability("strong_body", "Strong Body",
+            "for carry capacity (and only that), counts as a Large creature.",
+            carry_size="Large"),
+    Ability("amphibious", "Amphibious",
+            "+1 square of speed.", speed=1),
+    Ability("keen_hearing", "Keen Hearing",
+            "+3 initiative.", initiative=3),
+    Ability("climber", "Climber",
+            "+1 square of speed.", speed=1),
+    Ability("extra_language", "Extra Language (Human)",
+            "speaks a second random language: can Demoralize enemies that share "
+            "either of the two.",
             extra_languages=1),
-    Ability("mimic_sounds", "Imitar sons",
-            "1x por batalha, +4 [circunstancia] num ataque (feinte); "
-            "Desmoralizar dispensa idioma em comum.",
+    Ability("mimic_sounds", "Mimic Sounds",
+            "once per battle, +4 [circumstance] on an attack (feint); "
+            "Demoralize needs no shared language.",
             feint=_mimic_sounds_feint, demoralize_ignores_language=True),
-    Ability("ancestral_blood", "Sangue ancestral",
-            "+2 [circunstancia] no ataque contra alvos Grandes.",
+    Ability("ancestral_blood", "Ancestral Blood",
+            "+2 [circumstance] to attack against Large targets.",
             attack_mods=_ancestral_blood_mods),
-    Ability("autotroph", "Autotrofo",
-            "regenera 1 PV no inicio do seu turno.",
+    Ability("autotroph", "Autotroph",
+            "regenerates 1 HP at the start of their turn.",
             on_turn_start=_autotroph),
-    Ability("ferocity", "Ferocidade",
-            "1x por batalha, ao cair fica a 0 PV e morrendo, mas so desmaia no "
-            "fim do seu turno (o teste de morte segue normal a partir dai).",
+    Ability("ferocity", "Ferocity",
+            "once per battle, when downed drops to 0 HP and dying, but only "
+            "falls at the end of their turn (the death save runs normally from there).",
             on_downed=_ferocity),
-    Ability("flight", "Voo",
-            "+2 casas de deslocamento, ignora terreno; +1 CA [natural].",
+    Ability("flight", "Flight",
+            "+2 squares of speed, ignores terrain; +1 AC [natural].",
             speed=2, ac_natural=1),
 ]
 
 ABILITIES = {a.id: a for a in _LIST}
 
-_NONE = Ability("none", "Sem habilidade", "sem efeito.")
+_NONE = Ability("none", "No ability", "no effect.")
 
 
 def get(ability_id):

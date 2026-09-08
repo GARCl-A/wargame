@@ -398,7 +398,7 @@ class BattleScreen(Screen):
             badge = pygame.Rect(0, 0, 34, 15)
             badge.center = (r.centerx, r.y + 8)
             panel(screen, badge, fill=WARN, border=None, radius=4)
-            text(screen, "QUEBR", f.mono_sm, (20, 18, 8), badge.center, center=True)
+            text(screen, "BRKN", f.mono_sm, (20, 18, 8), badge.center, center=True)
         if self.inspect is u:
             pygame.draw.rect(screen, INK, r, 1, border_radius=4)
 
@@ -450,7 +450,7 @@ class BattleScreen(Screen):
         b = self.battle
         strip = pygame.Rect(GRID_X, MARGIN, GRID_W, INIT_H)
         panel(screen, strip, fill=SURFACE_1)
-        tracked(screen, "INICIATIVA", f.label, INK_FAINT, (strip.x + SP2, strip.y + SP1))
+        tracked(screen, "INITIATIVE", f.label, INK_FAINT, (strip.x + SP2, strip.y + SP1))
 
         living = [u for u in b.order if u.alive or u.dying]
         n = max(1, len(living))
@@ -471,14 +471,14 @@ class BattleScreen(Screen):
             pygame.draw.circle(screen, tcol if known else SURFACE_4, dot, 8)
             text(screen, u.token if known else "?", f.mono_sm, (12, 12, 16),
                  dot, center=True)
-            nm = (u.name.split()[0] if known else "Inimigo")
+            nm = (u.name.split()[0] if known else "Enemy")
             col = INK if is_active else INK_DIM
             clip = screen.get_clip()
             screen.set_clip(r.inflate(-6, -6))
             text(screen, nm, f.body_sm, col, (r.x + 26, r.y + 4))
             screen.set_clip(clip)
             if u.dying:
-                text(screen, f"morrendo {u.death_clock}/{data.DYING_TURNS}", f.mono_sm,
+                text(screen, f"dying {u.death_clock}/{data.DYING_TURNS}", f.mono_sm,
                      DANGER, (r.x + 8, r.bottom - 14))
             elif known:
                 frac = max(0, u.hp) / u.hp_max
@@ -498,13 +498,13 @@ class BattleScreen(Screen):
 
         # --- header ------------------------------------------------- #
         head = s.row(30)
-        title = ("VITORIA" if b.winner else "SOCORRO AOS CAIDOS" if b.mopping_up
+        title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up
                  else f"Round {b.round_no}")
         text(screen, title, f.title, ACCENT if b.winner else WARN if b.mopping_up else INK,
              (head.x, head.y - 4))
         vision_active = self._is_player_turn() and not self.view_squad
-        vtxt = "ATIVO" if vision_active else "ESQUADRAO"
-        text(screen, f"visao {vtxt}  [L]", f.body_sm,
+        vtxt = "ACTIVE" if vision_active else "SQUAD"
+        text(screen, f"vision {vtxt}  [L]", f.body_sm,
              ACCENT if vision_active else INK_DIM,
              (head.right, head.y + 4), right=True)
         s.gap(SP3)
@@ -534,24 +534,24 @@ class BattleScreen(Screen):
         text(screen, act.token, f.body_bd, (15, 15, 20), dot, center=True)
         text(screen, act.name, f.heading, INK, (dot[0] + 24, card.y + 7))
         marks = "  ".join(x for x in (
-            "defendendo" if act.defending else "",
-            "desmoralizado" if act.demoralized else "") if x)
+            "defending" if act.defending else "",
+            "demoralized" if act.demoralized else "") if x)
         extra = "".join((
-            f"   flechas {act.ammo}" if act.needs_ammo else "",
+            f"   arrows {act.ammo}" if act.needs_ammo else "",
             f"   kit {act.first_aid_charges}x" if act.first_aid_charges else "",
             f"   {marks}" if marks else "",
         ))
-        text(screen, f"PV {max(act.hp,0)}/{act.hp_max}   CA {act.ac}   DM {act.mental_defense}" + extra,
+        text(screen, f"HP {max(act.hp,0)}/{act.hp_max}   AC {act.ac}   MD {act.mental_defense}" + extra,
              f.mono_sm, INK_DIM, (dot[0] + 24, card.y + 28))
 
         # AP pips (label above, pips below), right-aligned
         px = card.right - SP3 - 19
-        text(screen, "ACAO", f.label, INK_FAINT, (px + 4, card.y + 8), center=True)
+        text(screen, "ACTION", f.label, INK_FAINT, (px + 4, card.y + 8), center=True)
         pips(screen, (px, card.y + 30), act.ap, 2, r=7, gap=8)
 
         base = card.y + 50
         if act.walking:
-            text(screen, f"caminhada {act.moved}/{act.speed}", f.mono_sm,
+            text(screen, f"walk {act.moved}/{act.speed}", f.mono_sm,
                  INK_DIM, (card.x + SP3, base))
             track = pygame.Rect(card.x + SP3 + 116, base + 4, card.right - card.x - SP3 - 128, 5)
             pygame.draw.rect(screen, SURFACE_4, track, border_radius=2)
@@ -560,7 +560,7 @@ class BattleScreen(Screen):
                              pygame.Rect(track.x, track.y, int(track.w * frac), track.h),
                              border_radius=2)
         elif mine:
-            vd = vision.vision_desc(act) if not self.view_squad else "visao: esquadrao todo  [L]"
+            vd = vision.vision_desc(act) if not self.view_squad else "vision: whole squad  [L]"
             text(screen, vd, f.mono_sm, INK_FAINT, (card.x + SP3, base))
 
     def _draw_hint(self, screen, s):
@@ -568,18 +568,18 @@ class BattleScreen(Screen):
         if not self._is_player_turn():
             return
         if self.aim_action is actions.DEMORALIZE:
-            msg, col = "clique num inimigo roxo para Desmoralizar", DEMO_HL
+            msg, col = "click a purple enemy to Demoralize", DEMO_HL
         elif self.aim_action is actions.THROW:
-            msg, col = "clique num inimigo no alcance laranja", THROW_HL
+            msg, col = "click an enemy in the orange range", THROW_HL
         elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
-            msg, col = "clique num aliado caido adjacente (verde)", OK
+            msg, col = "click an adjacent downed ally (green)", OK
         elif actions.FLEE.available(self.battle, self.battle.active):
-            msg, col = "na borda do mapa: da pra Fugir do combate", OK
+            msg, col = "at the map edge: you can Flee the fight", OK
         elif self.battle.mopping_up:
-            msg, col = ("inimigos abatidos  ·  estabilize os caidos ou espaco "
-                        "para deixar o contador correr"), WARN
+            msg, col = ("enemies down  ·  stabilize the downed or space "
+                        "to let the counter run"), WARN
         else:
-            msg, col = "casa verde: andar  ·  inimigo: atacar  ·  espaco: terminar", INK_DIM
+            msg, col = "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
         text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))
 
     def _draw_actions(self, screen, s):
@@ -607,7 +607,7 @@ class BattleScreen(Screen):
             ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
             icons.icon(screen, action.id, ibox, ink)
 
-            label = f"{action.name}: clique no alvo" if armed else action.name
+            label = f"{action.name}: click the target" if armed else action.name
             text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
 
             if action.cost:
@@ -632,9 +632,9 @@ class BattleScreen(Screen):
         s.gap(SP2)
         head = s.row(20)
         caret = "v" if self.inspect_open else ">"
-        label = "INSPECIONAR" if who is insp else "UNIDADE ATIVA"
+        label = "INSPECT" if who is insp else "ACTIVE UNIT"
         tracked(screen, f"{caret}  {label}", f.label, INFO, (head.x, head.y + 3))
-        text(screen, "clique numa unidade", f.body_sm, INK_FAINT,
+        text(screen, "click a unit", f.body_sm, INK_FAINT,
              (head.right, head.y + 3), right=True)
         self.buttons.append(("inspect_toggle", head))
         pygame.draw.line(screen, LINE_SOFT, (head.x, head.bottom + 2),
@@ -656,15 +656,14 @@ class BattleScreen(Screen):
     # ------------------------------------------------------------------ #
     _LOG_RULES = (
         (("---", "***", "Round"), INK_FAINT),
-        (("ACERTO CRITICO", "CRITICO!", "critico"), WARN),
-        (("foi derrotado", "Vitoria:", "*** Vitoria", "MORTO", "morreu",
-          "cai, morrendo", "golpe de misericordia"), DANGER),
-        (("esta morrendo", "QUEBRADO", "ferocidade se esgota"), WARN),
-        (("recebe", "de dano"), (206, 150, 140)),
-        (("-> erra", "nao abala", "falha critica", "erro critico", "erra de novo",
-          "-> falha"), INK_FAINT),
-        (("-> acerto", "-> acerta", "regenera", "se recompoe", "estabiliza",
-          "estabilizado", "sobrevive", "-> sucesso", "consertado", "volta a funcionar"), OK),
+        (("CRITICAL HIT",), WARN),
+        (("DEAD", "dies.", "goes down, dying", "coup de grace", "Victory:",
+          "*** Victory", "doesn't survive"), DANGER),
+        (("is dying", "BROKEN", "ferocity runs out"), WARN),
+        (("takes", "damage"), (206, 150, 140)),
+        (("-> misses", "no effect", "critical miss", "misses again", "-> fail"), INK_FAINT),
+        (("-> hit", "-> lands", "regenerates", "recovers", "recompo", "stabiliz",
+          "survives", "-> success", "repaired", "back online"), OK),
     )
 
     def _log_color(self, line):
@@ -677,7 +676,7 @@ class BattleScreen(Screen):
         f = self.fonts
         well = pygame.Rect(GRID_X, LOG_Y, WIN_W - 2 * MARGIN, LOG_H)
         panel(screen, well, fill=SURFACE_0, border=LINE_SOFT)
-        tracked(screen, "REGISTRO", f.label, INK_FAINT, (well.x + SP2, well.y + SP1))
+        tracked(screen, "LOG", f.label, INK_FAINT, (well.x + SP2, well.y + SP1))
         lines = self.battle.log_lines[-7:]
         y = well.y + 22
         for i, ln in enumerate(lines):
@@ -689,10 +688,10 @@ class BattleScreen(Screen):
     def _draw_winner(self, screen):
         f = self.fonts
         b = self.battle
-        txt = "Voce venceu" if b.winner == "player" else "A IA venceu"
+        txt = "You won" if b.winner == "player" else "The AI won"
         box = pygame.Rect(0, 0, 360, 92)
         box.center = (GRID_X + GRID_W // 2, GRID_Y + GRID_H // 2)
         panel(screen, box, fill=SURFACE_2, border=ACCENT, width=2, radius=RADIUS)
         text(screen, txt, f.title, INK, (box.centerx, box.y + 30), center=True)
-        text(screen, "clique para continuar", f.body, INK_DIM,
+        text(screen, "click to continue", f.body, INK_DIM,
              (box.centerx, box.y + 62), center=True)

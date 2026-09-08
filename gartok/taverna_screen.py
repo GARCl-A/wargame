@@ -164,10 +164,10 @@ class TavernaScreen(Screen):
         text(screen, f"{cand.alignment}  ·  {cand.size}", f.body_sm, INK_DIM,
              (rect.x + pad, y)); y += 18
 
-        text(screen, f"PV {cand.hp_max}   CA {cand.ac}   Desloc {cand.speed}   "
+        text(screen, f"HP {cand.hp_max}   AC {cand.ac}   Speed {cand.speed}   "
              f"{cand.weapon_name or 'unarmed'}", f.mono_sm, INK_DIM, (rect.x + pad, y))
         y += 18
-        text(screen, f"resistance: CAR {cand.mod_charisma:+}", f.body_sm,
+        text(screen, f"resistance: CHA {cand.mod_charisma:+}", f.body_sm,
              WARN, (rect.x + pad, y)); y += 15
         text(screen, "speaks " + ", ".join(cand.languages), f.body_sm, INK_DIM,
              (rect.x + pad, y)); y += 18
@@ -185,7 +185,7 @@ class TavernaScreen(Screen):
         y = section(screen, "PITCH", rect.x + pad, y, rect.w - 2 * pad, f)
         if best is not None:
             m, net = best
-            text(screen, f"{m.name}  ·  CAR check {net:+}", f.body_sm, OK,
+            text(screen, f"{m.name}  ·  CHA check {net:+}", f.body_sm, OK,
                  (rect.x + pad, y)); y += 15
             text(screen, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})",
                  f.body_sm, INK_FAINT, (rect.x + pad, y))
@@ -208,7 +208,7 @@ class TavernaScreen(Screen):
         text(screen, f"{who.name}: {pitch.recruiter_roll} + mods = {pitch.recruiter_total}",
              f.mono_sm, INK_DIM, (rect.x + pad, y)); y += 13
         text(screen, f"vs resistance {pitch.candidate_total} "
-             f"({pitch.candidate_roll} + CAR)", f.mono_sm, INK_DIM, (rect.x + pad, y))
+             f"({pitch.candidate_roll} + CHA)", f.mono_sm, INK_DIM, (rect.x + pad, y))
         y += 13
         for val, label in pitch.modifiers:
             text(screen, f"{val:+}  {label}", f.body_sm, DANGER, (rect.x + pad, y))

@@ -16,33 +16,33 @@ from .theme import (ACCENT, DANGER, DEMO_HL, INFO, INK, INK_DIM, INK_FAINT,
 
 PANEL_W, PANEL_H = 560, 604
 
-_ATTRS = [("FOR", "strength"), ("DES", "dexterity"), ("CON", "constitution"),
-          ("INT", "intelligence"), ("SAB", "wisdom"), ("CAR", "charisma")]
+_ATTRS = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
+          ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma")]
 
 
 def _to_hit(u):
     """Base attack bonus and the attribute it comes from -- no target, no
     flanking, no conditions (those are situational and shown in battle)."""
     if u.unarmed or u.improvised:
-        return u.mod_strength, "FOR"
+        return u.mod_strength, "STR"
     if u.ranged:
-        return u.mod_dexterity, "DES"
+        return u.mod_dexterity, "DEX"
     if u.weapon["finesse"]:
-        return max(u.mod_strength, u.mod_dexterity), "FOR/DES"
-    return u.mod_strength, "FOR"
+        return max(u.mod_strength, u.mod_dexterity), "STR/DEX"
+    return u.mod_strength, "STR"
 
 
 def _weapon_lines(u):
     if u.unarmed:
         n, faces = u.unarmed_damage
-        dmg = f"{n}d{faces} {u.mod_strength:+} (FOR)"
+        dmg = f"{n}d{faces} {u.mod_strength:+} (STR)"
         return "unarmed", dmg, "melee"
     n, faces = (u.unarmed_damage if u.improvised else u.weapon["damage"])
     if u.improvised:
         return (f"{u.weapon_name} (no arrow -> improvised)",
-                f"{n}d{faces} {u.mod_strength:+} (FOR)", "melee")
+                f"{n}d{faces} {u.mod_strength:+} (STR)", "melee")
     bonus = u.mod_strength if not u.ranged else 0
-    dmg = f"{n}d{faces}" + (f" {bonus:+} (FOR)" if bonus else "")
+    dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
     if u.ranged:
         reach = f"range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
@@ -95,9 +95,9 @@ def draw_sheet(screen, rect, u, f):
     y += 52
 
     # --- derived combat chips ------------------------------------------- #
-    stats = (("PV", f"{max(u.hp, 0)}/{u.hp_max}" if u.hp != u.hp_max else u.hp_max, OK),
-             ("CA", u.ac, INFO), ("DM", u.mental_defense, DEMO_HL),
-             ("DESLOC", u.speed, INFO), ("INIC", f"{u.initiative_bonus():+}", WARN))
+    stats = (("HP", f"{max(u.hp, 0)}/{u.hp_max}" if u.hp != u.hp_max else u.hp_max, OK),
+             ("AC", u.ac, INFO), ("MD", u.mental_defense, DEMO_HL),
+             ("SPD", u.speed, INFO), ("INIT", f"{u.initiative_bonus():+}", WARN))
     cg = SP1
     cw = (w - (len(stats) - 1) * cg) // len(stats)
     for i, (k, v, ac) in enumerate(stats):
@@ -119,7 +119,7 @@ def draw_sheet(screen, rect, u, f):
         text(screen, f"{m:+}", f.body_sm, mc, (acx, y + 38), center=True)
     y += 48 + SP1
     if u.hunger_level:
-        cap = ", max PV 1" if u.hunger_level >= 2 else ""
+        cap = ", max HP 1" if u.hunger_level >= 2 else ""
         text(screen, f"hunger ({u.hunger_label}): {u.hunger_attribute_penalty} to every "
              f"attribute{cap}", f.body_sm, DANGER, (x, y))
         y += 14
@@ -137,7 +137,7 @@ def draw_sheet(screen, rect, u, f):
     text(screen, f"damage:  {dmg}   ·   {reach}", f.mono_sm, INK_DIM, (x, y))
     y += 15
     if data.FIRST_AID_ITEM in u.inventory:
-        text(screen, f"first aid:  d20 {u.mod_wisdom:+} (SAB) vs 10   "
+        text(screen, f"first aid:  d20 {u.mod_wisdom:+} (WIS) vs 10   "
              f"·   {u.first_aid_charges} charges", f.mono_sm, INFO, (x, y))
         y += 15
     y += SP2
@@ -150,9 +150,9 @@ def draw_sheet(screen, rect, u, f):
     y += 16
     a = u.armor
     if a:
-        arm = (f"{u.armor_name}  ·  +{a['ac']} CA"
+        arm = (f"{u.armor_name}  ·  +{a['ac']} AC"
                + (f"  ·  max DES +{a['max_dex']}" if a["max_dex"] is not None else "")
-               + (f"  ·  -{a['speed']} desloc" if a["speed"] else ""))
+               + (f"  ·  -{a['speed']} speed" if a["speed"] else ""))
     else:
         arm = "(none)"
     text(screen, f"armor: {arm}", f.body_sm, INK_DIM, (x, y))
@@ -170,7 +170,7 @@ def draw_sheet(screen, rect, u, f):
          f.mono_sm, ccol, (x, y))
     y += 16
     if u.encumbered:
-        text(screen, "overloaded: -2 FOR, -2 DES, -1 desloc",
+        text(screen, "overloaded: -2 FOR, -2 DES, -1 speed",
              f.body_sm, WARN, (x, y))
         y += 15
     text(screen, f"copper: {u.gold}", f.mono_sm, ACCENT, (x, y))

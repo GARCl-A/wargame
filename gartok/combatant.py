@@ -45,7 +45,7 @@ class Combatant:
         self.pos = (0, 0)
         self.status = "up"            # up | dying | stable | broken | fled | dead
         self.death_clock = 0          # dying: own turns elapsed; save on DYING_TURNS
-        self.nonlethal = False        # set by Battle for a non-lethal fight: 0 PV -> knocked out
+        self.nonlethal = False        # set by Battle for a non-lethal fight: 0 HP -> knocked out
         self.ferocity_pending = False # Orc downed this turn, falls at end_turn
         self.initiative = 0           # set by Battle._roll_initiative
         self.weapon_hand = c.equipped_weapon is not None
@@ -67,7 +67,7 @@ class Combatant:
         self.last_path = []           # the previous turn's path (kept for future mechanics)
         self.used_abilities = set()   # keys of once-per-battle effects already spent
         self.kills = 0                # enemies this combatant downed (folded into combat_xp)
-        self.ferocity_downer = None   # who brought this unit to 0 PV while Ferocity keeps it up
+        self.ferocity_downer = None   # who brought this unit to 0 HP while Ferocity keeps it up
 
     def spend_once(self, key):
         """Mark a once-per-battle effect as used. Returns True the first time only."""
@@ -99,7 +99,7 @@ class Combatant:
 
     @property
     def broken(self):
-        """Automaton at 0 PV: on the ground with no death clock, waits for an ally
+        """Automaton at 0 HP: on the ground with no death clock, waits for an ally
         to repair it (see abilities `breaks_when_downed`)."""
         return self.status == "broken"
 
@@ -120,24 +120,24 @@ class Combatant:
         return self.status in ("up", "stable", "broken", "fled")
 
     def go_down(self, log):
-        """Drop to 0 PV. An automaton goes `broken` (no death clock); everyone else
+        """Drop to 0 HP. An automaton goes `broken` (no death clock); everyone else
         enters `dying`, restarting the death counter. Called for a standing unit
         downed, or a `stable` unit that takes a hit."""
         self.hp = 0
         self.ferocity_pending = False
         if self.nonlethal:
             self.status = "stable"           # non-lethal fight: knocked out, survives
-            log(f"  {self.name} cai nocauteado (combate nao-letal).")
+            log(f"  {self.name} is knocked out (non-lethal fight).")
             return
         if self._ability.breaks_when_downed:
             if self.status != "broken":
                 self.status = "broken"
-                log(f"  {self.name} para de funcionar: QUEBRADO "
-                    f"(so volta se um aliado o consertar).")
+                log(f"  {self.name} stops working: BROKEN "
+                    f"(only back up if an ally repairs it).")
             return
         self.status = "dying"
         self.death_clock = 0
-        log(f"  {self.name} cai, morrendo ({data.DYING_TURNS} turnos ate o teste de morte).")
+        log(f"  {self.name} goes down, dying ({data.DYING_TURNS} turns to the death save).")
 
     # ------------------------------------------------------------------ #
     # conditions                                                         #
@@ -266,7 +266,7 @@ class Combatant:
         """Effective AC. Bonuses of the same type do not stack (see resolve_bonus)."""
         mods = self._condition_mods("ac_mods")
         if self.ac_natural:
-            mods.append((self.ac_natural, "natural", "raca"))
+            mods.append((self.ac_natural, "natural", "race"))
         total, _ = resolve_bonus(mods)
         return self.ac_base + total
 
@@ -281,15 +281,15 @@ class Combatant:
     def attack_mods(self, target, flanking=False, thrown=False):
         """List of (value, type, label) that enter the attack roll."""
         if thrown:
-            mods = [(self.mod_dexterity, None, "DES")]       # a throw hits with Dexterity
+            mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
         elif self.unarmed or self.improvised:
-            mods = [(self.mod_strength, None, "FOR")]
+            mods = [(self.mod_strength, None, "STR")]
         elif self.ranged:
-            mods = [(self.mod_dexterity, None, "DES")]
+            mods = [(self.mod_dexterity, None, "DEX")]
         elif self.weapon["finesse"]:
-            mods = [(max(self.mod_strength, self.mod_dexterity), None, "FOR/DES")]
+            mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
         else:
-            mods = [(self.mod_strength, None, "FOR")]
+            mods = [(self.mod_strength, None, "STR")]
         if self._ability.attack_mods:
             mods += self._ability.attack_mods(self, target, flanking)
         mods += self._condition_mods("attack_mods")
@@ -311,7 +311,7 @@ class Combatant:
     def take_damage(self, amount, log):
         amount = max(0, amount - self.dr)
         self.hp -= amount
-        log(f"{self.name} recebe {amount} de dano (PV {max(self.hp, 0)}/{self.hp_max}).")
+        log(f"{self.name} takes {amount} damage (HP {max(self.hp, 0)}/{self.hp_max}).")
         if self.hp <= 0:
             if self._ability.on_downed and self.spend_once("on_downed"):
                 self._ability.on_downed(self, log)
@@ -338,7 +338,7 @@ class Combatant:
         if self.ferocity_pending:
             self.ferocity_pending = False
             if self.hp <= 0 and self.alive:
-                log(f"{self.name}: a ferocidade se esgota.")
+                log(f"{self.name}: ferocity runs out.")
                 self.go_down(log)
                 downer = self.ferocity_downer
                 if downer is not None and downer.team != self.team:

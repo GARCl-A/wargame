@@ -171,8 +171,8 @@ class SquadScreen(Screen):
              INK_DIM, (tok[0] + 24, rect.y + pad + 20))
 
         y = rect.y + pad + 44
-        text(screen, f"PV {unit.hp_max}   CA {unit.ac}   DM {unit.mental_defense}   "
-             f"Desloc {unit.speed}", f.mono_sm, INK_DIM, (rect.x + pad, y))
+        text(screen, f"HP {unit.hp_max}   AC {unit.ac}   MD {unit.mental_defense}   "
+             f"Speed {unit.speed}", f.mono_sm, INK_DIM, (rect.x + pad, y))
         y += 18
         n, faces = unit.weapon["damage"]
         arma = unit.weapon_name or "unarmed"

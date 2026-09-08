@@ -11,7 +11,7 @@ Node kinds:
              there to trade hours of the day for copper (`Guild.work_shift`);
 - "battle":  the chosen squad drops into a tactical fight on `scenario`;
 - "market":  a shop -- buy and sell gear for copper.
-- "taverna": strangers looking for work -- talk one into the guild (`recruit`).
+- "tavern": strangers looking for work -- talk one into the guild (`recruit`).
 
 A battle node is lethal by default (permadeath, loot the corpses). The Arena is
 the exception: `lethal=False`, `arena=True` -- a paid, non-lethal bout. The squad
@@ -36,7 +36,7 @@ class Node:
         self.pos = pos
         self.blurb = blurb
         self.scenario = scenario             # a Scenario subclass, for "battle"
-        self.lethal = lethal                 # False -> 0 PV knocks out, no permadeath
+        self.lethal = lethal                 # False -> 0 HP knocks out, no permadeath
         self.arena = arena                   # True -> staked, non-lethal, pays a purse
         self.language = language             # market: the tongue the vendor haggles in
         self.alignment = alignment           # market: the vendor's bent (price sympathy)
@@ -51,8 +51,8 @@ class Node:
         return self.kind == "market"
 
     @property
-    def is_taverna(self):
-        return self.kind == "taverna"
+    def is_tavern(self):
+        return self.kind == "tavern"
 
 
 # Arena bouts unlocked by reputation: stake `entry` copper PER FIGHTER sent in,
@@ -73,41 +73,41 @@ def arena_offers(reputation):
 
 
 NODES = [
-    Node("cidade", "The City", "town", (0.16, 0.58),
+    Node("city", "The City", "town", (0.16, 0.58),
          "The walled burg. Where the guild sets out from."),
-    Node("madeireira", "Lumber Yard", "town", (0.05, 0.80),
+    Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",
          work=True),
     Node("arena", "Arena", "battle", (0.33, 0.30),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
          ArenaScenario, lethal=False, arena=True),
-    Node("mercado", "Market", "market", (0.28, 0.84),
+    Node("market", "Market", "market", (0.28, 0.84),
          "Buy and sell gear for copper. The traders speak Ankarin.",
-         language="Ankarin", alignment="Leal e Neutro"),
-    Node("taverna", "Tavern", "taverna", (0.07, 0.30),
+         language="Ankarin", alignment="Lawful and Neutral"),
+    Node("tavern", "Tavern", "tavern", (0.07, 0.30),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild."),
-    Node("estrada", "Old Road", "town", (0.55, 0.52),
+    Node("road", "Old Road", "town", (0.55, 0.52),
          "A dirt track cutting across the open country to the east."),
-    Node("ermos", "The Wilds", "battle", (0.83, 0.40),
+    Node("wilds", "The Wilds", "battle", (0.83, 0.40),
          "Open ground under the sky, outside the walls.", ErmosScenario),
-    Node("ruinas", "Ruins", "battle", (0.78, 0.80),
+    Node("ruins", "Ruins", "battle", (0.78, 0.80),
          "Toppled stones of something ancient. Dark inside.", ArenaScenario),
 ]
 
 EDGES = [
-    ("cidade", "arena", 2),
-    ("cidade", "madeireira", 1),
-    ("cidade", "mercado", 1),
-    ("cidade", "taverna", 1),
-    ("cidade", "estrada", 4),
-    ("arena", "estrada", 3),
-    ("estrada", "ermos", 6),
-    ("estrada", "ruinas", 7),
-    ("ermos", "ruinas", 4),
+    ("city", "arena", 2),
+    ("city", "lumber_yard", 1),
+    ("city", "market", 1),
+    ("city", "tavern", 1),
+    ("city", "road", 4),
+    ("arena", "road", 3),
+    ("road", "wilds", 6),
+    ("road", "ruins", 7),
+    ("wilds", "ruins", 4),
 ]
 
-START_NODE = "cidade"
+START_NODE = "city"
 
 _BY_ID = {n.id: n for n in NODES}
 

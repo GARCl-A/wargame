@@ -5,7 +5,7 @@ this maps the outcome onto the persistent roster:
 
 - permadeath drops the fallen from `guild.roster`;
 - survivors keep the little that carries forward (a lit torch, for now) and
-  otherwise return at full PV -- the rest of the spoils come from the loot pool;
+  otherwise return at full HP -- the rest of the spoils come from the loot pool;
 - the campaign clock advances by the rounds fought (~6 s each);
 - a win bumps the tally, and an arena win also raises `arena_reputation`.
 

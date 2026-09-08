@@ -33,27 +33,27 @@ LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
 
 PRICES = {
     # weapons
-    "Adaga": 8, "Machadinha": 10, "Machado": 35, "Martelo Leve": 10,
-    "Martelo": 35, "Clava": 6, "Bordao": 5, "Lanca Curta": 12,
-    "Picareta Leve": 10, "Picareta": 30, "Besta Leve": 80,
+    "Dagger": 8, "Hatchet": 10, "Axe": 35, "Light Hammer": 10,
+    "Hammer": 35, "Club": 6, "Quarterstaff": 5, "Shortspear": 12,
+    "Light Pick": 10, "Pick": 30, "Light Crossbow": 80,
     # armor (buy price climbs steeply with the AC it grants -- plate is a
     # long-run goal, several top-tier arena purses)
-    "Gibao de couro": 20, "Couro batido": 55, "Cota de malha": 160,
-    "Brunea": 400, "Armadura de placas": 950,
+    "Leather Jerkin": 20, "Studded Leather": 55, "Chainmail": 160,
+    "Brigandine": 400, "Plate Armor": 950,
     # kit
-    TORCH_ITEM: 2, "Aljava": 25, "Kit de primeiros socorros": 40, "Lanterna": 30,
-    "Corda": 4, "Saco": 2,
+    TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
+    "Rope": 4, "Sack": 2,
     # food (a day's meal each)
-    "1kg Carne": 5, "1kg Batata": 3,
+    "1kg Meat": 5, "1kg Potato": 3,
 }
 
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
-    "1kg Carne", "1kg Batata",
-    "Adaga", "Machadinha", "Clava", "Lanca Curta", "Machado", "Martelo",
-    "Besta Leve", "Aljava",
-    "Gibao de couro", "Couro batido", "Cota de malha", "Brunea", "Armadura de placas",
-    TORCH_ITEM, "Kit de primeiros socorros", "Lanterna",
+    "1kg Meat", "1kg Potato",
+    "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer",
+    "Light Crossbow", "Quiver",
+    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
+    TORCH_ITEM, "First Aid Kit", "Lantern",
 ]
 
 DEAL_MIN, DEAL_MAX = -0.15, 0.25

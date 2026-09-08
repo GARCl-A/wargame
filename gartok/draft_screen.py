@@ -24,7 +24,7 @@ DRAFT_CHOICES = 3
 def _archetypes(u):
     """Two or three quick read tags to help the pick."""
     tags = []
-    if u.size == "Grande":
+    if u.size == "Large":
         tags.append(("LARGE", INFO))
     if u.dr or u.ac >= 12 or u.hp_max >= 9:
         tags.append(("TOUGH", OK))
@@ -191,9 +191,9 @@ class DraftScreen(Screen):
         row = s.row(46)
         cg = SP1
         cw = (row.w - 3 * cg) // 4
-        for i, (k, v, ac) in enumerate((("PV", unit.hp_max, OK), ("CA", unit.ac, INFO),
-                                        ("DM", unit.mental_defense, DEMO_HL),
-                                        ("DESLOC", unit.speed, INFO))):
+        for i, (k, v, ac) in enumerate((("HP", unit.hp_max, OK), ("AC", unit.ac, INFO),
+                                        ("MD", unit.mental_defense, DEMO_HL),
+                                        ("SPD", unit.speed, INFO))):
             chip(screen, pygame.Rect(row.x + i * (cw + cg), row.y, cw, 46),
                  k, v, f, accent=ac)
         s.gap(SP3)
@@ -202,9 +202,9 @@ class DraftScreen(Screen):
         s.y = section(screen, "ATTRIBUTES", s.x, s.y, s.w, f)
         arow = s.row(46)
         aw = arow.w // 6
-        for i, (k, name) in enumerate((("FOR", "strength"), ("DES", "dexterity"),
+        for i, (k, name) in enumerate((("STR", "strength"), ("DEX", "dexterity"),
                                        ("CON", "constitution"), ("INT", "intelligence"),
-                                       ("SAB", "wisdom"), ("CAR", "charisma"))):
+                                       ("WIS", "wisdom"), ("CHA", "charisma"))):
             val = getattr(unit, name)
             m = getattr(unit, f"mod_{name}")
             acx = arow.x + i * aw + aw // 2
@@ -282,7 +282,7 @@ class DraftScreen(Screen):
                 text(screen, u.token, f.body_sm, (15, 15, 20), dot, center=True)
                 text(screen, u.name, f.body_bd, INK, (dot[0] + 20, r.y + SP2))
                 n, faces = u.weapon["damage"]
-                text(screen, f"PV {u.hp_max}  CA {u.ac}  Desloc {u.speed}  {u.weapon_name} {n}d{faces}",
+                text(screen, f"HP {u.hp_max}  AC {u.ac}  Speed {u.speed}  {u.weapon_name} {n}d{faces}",
                      f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 18))
             else:
                 pygame.draw.rect(screen, LINE_SOFT, r, 1, border_radius=RADIUS)

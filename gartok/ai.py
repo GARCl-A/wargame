@@ -4,13 +4,13 @@ Simple heuristic over `actions.py`: if unarmed, recover the dropped weapon;
 otherwise spend the points attacking the weakest target in range (or demoralize
 it if out of reach); otherwise advance. Sees through each unit's own eyes.
 
-**Tendency colours the edges** (§8 / "Fugir do combate" in GARTOK-regras.md), on
+**Tendency colours the edges** (§8 / "Flee the fight" in GARTOK-regras.md), on
 the morality axis mostly:
-- **Mau** finishes downed enemies -- a coup de grace on an adjacent body, so the
+- **Evil** finishes downed enemies -- a coup de grace on an adjacent body, so the
   player cannot stabilize it. Only in a lethal fight (the arena knocks out anyway).
-- **Bom** stabilizes an adjacent downed ally before doing anything else, and when
+- **Good** stabilizes an adjacent downed ally before doing anything else, and when
   it does run it drags the wounded out with it (that part is in `Flee.execute`).
-- **Caótico** breaks and runs sooner; **Leal** holds the line while any ally
+- **Chaotic** breaks and runs sooner; **Lawful** holds the line while any ally
   still stands.
 """
 

@@ -1,12 +1,11 @@
 """Things that sit on the board but are not units.
 
-`GroundObject` replaces the old dict-with-a-`tipo`-key: a dropped weapon or a
+`GroundObject` replaces the old dict-with-a-`kind`-key: a dropped weapon or a
 torch lying on a cell. `Creature` is a neutral, non-controllable body (the
 Shepherd's sheep) that only blocks its cell and gets drawn.
 
 A new kind of ground object = a new `kind` string plus wherever the rules react
-to it; consumers ask `obj.kind` / `obj.is_weapon` / `obj.is_torch` instead of
-`o.get("tipo", "arma")`.
+to it; consumers ask `obj.kind` / `obj.is_weapon` / `obj.is_torch`.
 """
 
 

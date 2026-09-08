@@ -46,7 +46,7 @@ def _recruit(batt, team="player"):
 # --------------------------------------------------------------------------- #
 
 def test_typed_bonus_does_not_stack():
-    total, _ = resolve_bonus([(2, "circunstancia", "A"), (4, "circunstancia", "B")])
+    total, _ = resolve_bonus([(2, "circumstance", "A"), (4, "circumstance", "B")])
     assert total == 4, total
 
 
@@ -56,7 +56,7 @@ def test_untyped_bonus_stacks():
 
 
 def test_penalties_always_stack():
-    total, _ = resolve_bonus([(-1, "status", "A"), (-1, "status", "B"), (2, "circunstancia", "C")])
+    total, _ = resolve_bonus([(-1, "status", "A"), (-1, "status", "B"), (2, "circumstance", "C")])
     assert total == 0, total
 
 
@@ -114,8 +114,8 @@ def test_passive_ability_adds_in_derivation():
 def test_large_centaur_moves_12m_from_gallop_not_size():
     # a Large creature moves like a Medium by default (9 m); the Centaur only
     # exceeds that because of Gallop (+3 m) -> 12 m = 8 squares.
-    assert SIZES["Grande"]["speed"] == SIZES["Medio"]["speed"] == 9.0
-    u = _unit(size="Grande")
+    assert SIZES["Large"]["speed"] == SIZES["Medium"]["speed"] == 9.0
+    u = _unit(size="Large")
     u._ability = abilities.get("none")
     u._derive_combat()
     assert u.speed == squares(9.0) == 6
@@ -162,10 +162,10 @@ def test_ferocity_falls_at_end_of_turn_then_clock_runs():
 
 
 def test_goliath_carries_as_a_large_creature():
-    small = _unit(size="Medio")
+    small = _unit(size="Medium")
     small._ability = abilities.get("none")
     small._derive_combat()
-    goliath = _unit(size="Medio")
+    goliath = _unit(size="Medium")
     goliath._ability = abilities.get("strong_body")
     goliath._derive_combat()
     assert goliath.carry_normal == small.carry_normal * 2      # Large carry multiplier
@@ -282,7 +282,7 @@ def test_dark_map_only_sees_own_cell():
     batt.ground = []                                  # no torches on the ground
     for u in batt.units:                              # no light source, no darkvision
         u.weapon_hand = u.torch_hand = False
-        u.inventory, u._ability = ["Saco"], abilities.get("none")
+        u.inventory, u._ability = ["Sack"], abilities.get("none")
     p, e = batt.units
     p.pos, e.pos = (2, 2), (12, 9)
     assert batt.can_see(p, p.pos) is True
@@ -318,7 +318,7 @@ def test_ambient_light_sees_without_a_torch():
     batt.ground = []                                  # nothing emitting light
     for u in batt.units:                              # no light source, no darkvision
         u.weapon_hand = u.torch_hand = False
-        u.inventory, u._ability = ["Saco"], abilities.get("none")
+        u.inventory, u._ability = ["Sack"], abilities.get("none")
     p, e = batt.units
     p.pos, e.pos = (2, 2), (12, 9)
     assert batt.can_see(p, (8, 2)) is True            # daylight: a torch would be needed in the arena
@@ -333,15 +333,15 @@ def test_battle_runs_with_a_partial_squad():
 
 def test_world_route_takes_the_cheapest_path():
     from gartok import world
-    assert world.route("cidade", "cidade") == (["cidade"], 0)
-    path, hours = world.route("cidade", "arena")
-    assert path == ["cidade", "arena"] and hours == 2
+    assert world.route("city", "city") == (["city"], 0)
+    path, hours = world.route("city", "arena")
+    assert path == ["city", "arena"] and hours == 2
     # cidade->estrada is 4 direct, but cidade->arena->estrada is 2+3=5, so direct wins
-    path, hours = world.route("cidade", "estrada")
-    assert hours == 4 and path == ["cidade", "estrada"]
+    path, hours = world.route("city", "road")
+    assert hours == 4 and path == ["city", "road"]
     # multi-hop: cidade -> ... -> ermos
-    path, hours = world.route("cidade", "ermos")
-    assert path[0] == "cidade" and path[-1] == "ermos"
+    path, hours = world.route("city", "wilds")
+    assert path[0] == "city" and path[-1] == "wilds"
     assert hours == sum(w for a, b, w in world.EDGES
                         if {a, b} in [set(p) for p in zip(path, path[1:])])
 
@@ -354,16 +354,16 @@ def test_field_loot_gathers_the_dead_and_the_ground():
     enemies = [Unit("enemy"), Unit("enemy")]
     batt = Battle(squad, enemies)
     for e in batt.enemy_units:                        # freeze known kit
-        e.weapon_hand, e.weapon_name = True, "Machado"
+        e.weapon_hand, e.weapon_name = True, "Axe"
         e.torch_hand = False
-        e.inventory = ["Corda"]
+        e.inventory = ["Rope"]
     dead_ally = batt.player_units[0]
-    dead_ally.weapon_hand, dead_ally.weapon_name = True, "Adaga"
+    dead_ally.weapon_hand, dead_ally.weapon_name = True, "Dagger"
     dead_ally.inventory = []
-    batt.ground = [GroundObject.weapon((3, 3), "Clava"), GroundObject.torch((4, 4))]
+    batt.ground = [GroundObject.weapon((3, 3), "Club"), GroundObject.torch((4, 4))]
 
     pool = loot.field_loot(batt, [dead_ally])
-    assert sorted(pool) == ["Adaga", "Clava", "Corda", "Corda", "Machado", "Machado", "Tocha"]
+    assert sorted(pool) == ["Axe", "Axe", "Club", "Dagger", "Rope", "Rope", "Torch"]
 
 
 def test_arena_offers_scale_with_reputation():
@@ -422,7 +422,7 @@ def test_lethal_flag_defaults_true_and_permadeath_still_bites():
 
 def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
     from gartok.market_screen import MarketScreen
-    assert economy.sell_price("Machado") < economy.buy_price("Machado")
+    assert economy.sell_price("Axe") < economy.buy_price("Axe")
     random.seed(1)
     shoppers = [Unit("player") for _ in range(3)]
     for m in shoppers:
@@ -501,7 +501,7 @@ def test_defend_adds_condition():
 
 def test_throw_disarms_and_drops_object():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Adaga")
+    a.equip_weapon("Dagger")
     a.pos, d.pos = (5, 5), (8, 5)
     a.ap = 2
     n_obj = len(batt.ground)
@@ -513,20 +513,20 @@ def test_throw_disarms_and_drops_object():
 def test_pickup_recovers_weapon_from_ground():
     batt, a, d = _melee_battle()
     a.disarm()
-    batt.ground.append(GroundObject.weapon(a.pos, "Machado"))
+    batt.ground.append(GroundObject.weapon(a.pos, "Axe"))
     a.ap = 2
     assert actions.PICK_UP.available(batt, a)
     actions.PICK_UP.execute(batt, a)
-    assert not a.unarmed and a.weapon_name == "Machado"
+    assert not a.unarmed and a.weapon_name == "Axe"
 
 
 def test_demoralize_requires_shared_language():
     batt, a, d = _melee_battle()
-    a.languages, d.languages = ["Elfico"], ["Orquico"]
+    a.languages, d.languages = ["Elvish"], ["Orcish"]
     a._ability = abilities.get("none")
     a.ap = 2
     assert actions.DEMORALIZE.can(batt, a, d) is False
-    d.languages = ["Elfico"]
+    d.languages = ["Elvish"]
     # can() still depends on mutual sight; force bright light with adjacency + torch
     a.torch_hand = True
     assert actions.DEMORALIZE.can(batt, a, d) is True
@@ -538,42 +538,42 @@ def test_demoralize_requires_shared_language():
 
 def test_crossbow_takes_two_hands():
     u = _combatant()
-    u.equip_weapon("Besta Leve")
+    u.equip_weapon("Light Crossbow")
     assert u.weapon["hands"] == 2 and u.free_hands == 0
     dropped = u.equip_torch()                         # only fits by dropping the crossbow
-    assert dropped == [("weapon", "Besta Leve")] and u.has_torch and u.unarmed
+    assert dropped == [("weapon", "Light Crossbow")] and u.has_torch and u.unarmed
 
 
 def test_one_handed_weapon_and_torch_coexist():
     u = _combatant()
-    u.equip_weapon("Adaga")
+    u.equip_weapon("Dagger")
     dropped = u.equip_torch()
     assert dropped == [] and not u.unarmed and u.has_torch and u.free_hands == 0
 
 
 def test_stowed_weapon_weighs_the_same_as_wielded():
     from gartok.data import WEAPONS, item_weight
-    assert item_weight("Machado") == WEAPONS["Machado"]["weight"]
+    assert item_weight("Axe") == WEAPONS["Axe"]["weight"]
     u = _unit()
     u.equipped_weapon = None
-    u._base_inventory = ["Machado"]
-    assert Combatant(u).load == round(WEAPONS["Machado"]["weight"], 1)
+    u._base_inventory = ["Axe"]
+    assert Combatant(u).load == round(WEAPONS["Axe"]["weight"], 1)
 
 
 def test_load_sums_weapon_torch_and_items():
     from gartok.data import WEAPONS, TORCH_WEIGHT, item_weight
     u = _combatant()
-    u.equip_weapon("Machado")
+    u.equip_weapon("Axe")
     u.torch_hand = True
-    u.inventory = ["Corda", "Mapa"]
-    expected = round(WEAPONS["Machado"]["weight"] + TORCH_WEIGHT
-                     + item_weight("Corda") + item_weight("Mapa"), 1)
+    u.inventory = ["Rope", "Map"]
+    expected = round(WEAPONS["Axe"]["weight"] + TORCH_WEIGHT
+                     + item_weight("Rope") + item_weight("Map"), 1)
     assert u.load == expected
 
 
 def test_pickup_torch_with_free_hand_does_not_drop_weapon():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Adaga")                           # one-handed weapon
+    a.equip_weapon("Dagger")                           # one-handed weapon
     batt.ground.append(GroundObject.torch(a.pos))
     a.ap = 2
     n_obj = len(batt.ground)
@@ -584,8 +584,8 @@ def test_pickup_torch_with_free_hand_does_not_drop_weapon():
 def test_shepherd_spawns_neutral_sheep_that_blocks():
     random.seed(0)
     shepherd = _unit()
-    shepherd.set_occupation("Pastor")
-    assert shepherd.starting_creature == "Ovelha" and shepherd._base_inventory == []
+    shepherd.set_occupation("Shepherd")
+    assert shepherd.starting_creature == "Sheep" and shepherd._base_inventory == []
     batt = Battle([shepherd], [Unit("enemy")])
     assert len(batt.creatures) == 1 and batt.creatures[0] not in batt.units
 
@@ -656,7 +656,7 @@ def test_first_aid_consumes_charge_either_way():
 
 def test_medic_carries_first_aid_kit():
     u = _unit()
-    u.set_occupation("Medico")
+    u.set_occupation("Physician")
     c = Combatant(u)
     assert data.FIRST_AID_ITEM in c.inventory
     assert c.first_aid_charges == data.FIRST_AID_CHARGES
@@ -727,14 +727,14 @@ def test_lost_lethal_battle_takes_the_whole_squad():
 
 def test_besteiro_starts_with_ammo():
     u = _unit()
-    u.set_occupation("Besteiro")
-    assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Besta Leve"
+    u.set_occupation("Crossbowman")
+    assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Light Crossbow"
 
 
 def test_ranged_attack_consumes_one_bolt():
     batt, a, d = _melee_battle()
     batt.board.walls = set()                          # clear lane between shooter and target
-    a.equip_weapon("Besta Leve"); a.ammo = 3
+    a.equip_weapon("Light Crossbow"); a.ammo = 3
     a.pos, d.pos = (2, 5), (9, 5)
     a.torch_hand = False
     for u in batt.units:                              # light the lane so LOS+sight hold
@@ -748,11 +748,11 @@ def test_ranged_attack_consumes_one_bolt():
 
 def test_crossbow_without_ammo_is_improvised():
     u = _combatant()
-    u.equip_weapon("Besta Leve"); u.ammo = 0
+    u.equip_weapon("Light Crossbow"); u.ammo = 0
     assert u.improvised and not u.ranged and u.attack_range == 1
     # to-hit uses Strength (melee), not Dexterity
     labels = {lbl for _, _, lbl in u.attack_mods(None)}
-    assert "FOR" in labels and "DES" not in labels
+    assert "STR" in labels and "DEX" not in labels
     # damage die is the size unarmed die, never 1d8
     faces = data.UNARMED_ATTACK[u.size][1]
     assert max(u.damage_roll() for _ in range(200)) <= faces + u.mod_strength + u._ability.melee_damage
@@ -787,7 +787,7 @@ def test_pack_tactics_and_flank_do_not_stack():
     b.pos = (6, 5)
     mods = a.attack_mods(e, actions._pack_flank(batt, a, e))
     if actions._flanked(batt, a, e):
-        mods.append((2, "circunstancia", "Flanquear"))
+        mods.append((2, "circumstance", "Flanquear"))
     total, _ = resolve_bonus(mods)
     assert total == 2 + max(0, a.mod_strength)        # +2 circ once, not +4
 
@@ -801,7 +801,7 @@ def test_unit_save_round_trip_keeps_rolled_values():
     from gartok.unit import ATTRIBUTES
     random.seed(7)
     u = Unit("player")
-    u._base_inventory = ["Corda", "Mapa"]
+    u._base_inventory = ["Rope", "Map"]
     v = Unit.from_save(persist.unit_to_dict(u))
     for f in ("name", "alignment", "age", "hp_max", "ac", "speed",
               "mental_defense", "languages", "_base_inventory", "gold"):
@@ -819,25 +819,25 @@ def test_weapon_is_an_item_hand_and_pack():
     assert u.equipped_weapon is None and start in u._base_inventory
     c = Combatant(u)
     assert c.unarmed and not c.weapon_hand           # fights unarmed next battle
-    u.give_to_hand("Machado")                        # draw a different weapon
-    assert u.equipped_weapon == "Machado"
+    u.give_to_hand("Axe")                        # draw a different weapon
+    assert u.equipped_weapon == "Axe"
     c = Combatant(u)
-    assert c.weapon_name == "Machado" and not c.unarmed
+    assert c.weapon_name == "Axe" and not c.unarmed
 
 
 def test_offhand_torch_lights_unless_a_two_handed_weapon_blocks_it():
     u = _unit()
-    u.equipped_weapon, u.equipped_offhand = "Adaga", data.TORCH_ITEM
+    u.equipped_weapon, u.equipped_offhand = "Dagger", data.TORCH_ITEM
     assert Combatant(u).torch_hand                    # one-handed weapon: off hand free
-    u.equipped_weapon = "Besta Leve"                  # two-handed: off hand occupied
+    u.equipped_weapon = "Light Crossbow"                  # two-handed: off hand occupied
     assert not Combatant(u).torch_hand
     assert u.equipped_offhand == data.TORCH_ITEM      # still assigned, just not lit
 
 
 def test_equipping_two_handed_weapon_bumps_offhand_torch_to_pack():
     u = _unit()
-    u.equipped_weapon, u.equipped_offhand = "Adaga", data.TORCH_ITEM
-    u.give_to_hand("Besta Leve")
+    u.equipped_weapon, u.equipped_offhand = "Dagger", data.TORCH_ITEM
+    u.give_to_hand("Light Crossbow")
     assert u.equipped_offhand is None and data.TORCH_ITEM in u._base_inventory
 
 
@@ -845,13 +845,13 @@ def test_equipped_weapon_survives_save():
     from gartok import persist
     random.seed(9)
     u = Unit("player")
-    u.give_to_hand("Machado")
+    u.give_to_hand("Axe")
     u.give_to_offhand(data.TORCH_ITEM)
-    u.give_to_pack("Adaga")
+    u.give_to_pack("Dagger")
     v = Unit.from_save(persist.unit_to_dict(u))
-    assert v.equipped_weapon == "Machado"
+    assert v.equipped_weapon == "Axe"
     assert v.equipped_offhand == data.TORCH_ITEM and Combatant(v).torch_hand
-    assert "Adaga" in v._base_inventory
+    assert "Dagger" in v._base_inventory
 
 
 def test_save_slot_file_round_trip():
@@ -863,7 +863,7 @@ def test_save_slot_file_round_trip():
         return                                        # never clobber a real save
     random.seed(8)
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
-                  arena_reputation=3, clock=Clock(30 * 3600), node="ermos")
+                  arena_reputation=3, clock=Clock(30 * 3600), node="wilds")
     guild.roster[0].gold = 42
     pool = recruit.refresh_pool(guild)
     recruit.bar(guild, pool[0], guild.roster[0])
@@ -871,7 +871,7 @@ def test_save_slot_file_round_trip():
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
         assert back.battles_won == 4 and back.arena_reputation == 3
-        assert back.clock.seconds == 30 * 3600 and back.node == "ermos"
+        assert back.clock.seconds == 30 * 3600 and back.node == "wilds"
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
         assert back.roster[0].gold == 42
@@ -943,7 +943,7 @@ def test_flee_drags_an_adjacent_downed_ally_and_leaves_the_far_one():
 def test_evil_ai_gives_a_downed_enemy_the_coup_de_grace():
     from gartok import ai
     batt, a, d = _melee_battle()
-    d.alignment = "Caotico e Mal"
+    d.alignment = "Chaotic and Evil"
     a.go_down(batt.log)                              # the player is dying, adjacent to d
     assert a.dying
     d.ap = 2
@@ -955,7 +955,7 @@ def test_evil_ai_gives_a_downed_enemy_the_coup_de_grace():
 def test_neutral_ai_ignores_a_downed_enemy():
     from gartok import ai
     batt, a, d = _melee_battle()
-    d.alignment = "Neutro e Neutro"
+    d.alignment = "Neutral and Neutral"
     a.go_down(batt.log)
     assert ai._finish_off(batt, d) is None
 
@@ -964,7 +964,7 @@ def test_good_ai_stabilizes_a_downed_ally_first():
     from gartok import ai
     batt, a, d = _melee_battle()
     mate = _recruit(batt, "enemy")
-    d.alignment = "Leal e Bom"
+    d.alignment = "Lawful and Good"
     d.pos, mate.pos = (6, 5), (7, 5)
     mate.go_down(batt.log)
     d.ap = 2
@@ -979,7 +979,7 @@ def test_ai_never_flees_a_non_lethal_bout():
     random.seed(0)
     batt = Battle([Unit("player"), Unit("player")], [Unit("enemy")], lethal=False)
     e = batt.enemy_units[0]
-    e.pos, e.hp, e.alignment = (0, 5), 1, "Caotico e Mal"
+    e.pos, e.hp, e.alignment = (0, 5), 1, "Chaotic and Evil"
     assert ai._should_flee(batt, e) is False
 
 
@@ -1014,7 +1014,7 @@ def test_encumbrance_penalises_str_dex_and_speed():
     assert not u.encumbered
     unloaded_speed = u.speed
     exp_str, exp_dex = mod(u.strength - 2), mod(u.dexterity - 2)
-    u._base_inventory = ["Barra de ferro"] * 20          # ~100 kg, well over carry_normal
+    u._base_inventory = ["Iron Bar"] * 20          # ~100 kg, well over carry_normal
     u._derive_combat()
     assert u.encumbered
     assert u.mod_strength == exp_str and u.mod_dexterity == exp_dex
@@ -1027,7 +1027,7 @@ def test_encumbrance_does_not_shrink_carry_capacity():
     u._base_inventory = []
     u._derive_combat()
     cap_n, cap_m = u.carry_normal, u.carry_max
-    u._base_inventory = ["Barra de ferro"] * 20
+    u._base_inventory = ["Iron Bar"] * 20
     u._derive_combat()
     assert u.encumbered and u.carry_normal == cap_n and u.carry_max == cap_m
 
@@ -1035,7 +1035,7 @@ def test_encumbrance_does_not_shrink_carry_capacity():
 def test_dropping_weight_lifts_encumbrance():
     u = _unit(seed=5)
     u.equipped_weapon = None
-    u._base_inventory = ["Barra de ferro"] * 20
+    u._base_inventory = ["Iron Bar"] * 20
     u._derive_combat()
     assert u.encumbered
     u._base_inventory = []
@@ -1046,7 +1046,7 @@ def test_dropping_weight_lifts_encumbrance():
 def test_encumbrance_survives_a_save_round_trip():
     from gartok import persist
     u = _unit(seed=5)
-    u._base_inventory = ["Barra de ferro"] * 20
+    u._base_inventory = ["Iron Bar"] * 20
     u._derive_combat()
     assert u.encumbered
     u2 = Unit.from_save(persist.unit_to_dict(u))
@@ -1055,11 +1055,11 @@ def test_encumbrance_survives_a_save_round_trip():
 
 def test_eating_a_ration_resets_hunger():
     u = _unit(seed=1)
-    u._base_inventory = ["1kg Batata", "Corda"]
+    u._base_inventory = ["1kg Potato", "Rope"]
     u.unfed_days = 2
     assert u.consume_daily_food() == "ate"
-    assert u.unfed_days == 0 and "1kg Batata" not in u._base_inventory
-    assert "Corda" in u._base_inventory
+    assert u.unfed_days == 0 and "1kg Potato" not in u._base_inventory
+    assert "Rope" in u._base_inventory
 
 
 def test_autotroph_never_eats_or_starves():
@@ -1083,11 +1083,11 @@ def test_guild_pass_time_feeds_starves_and_buries():
     from gartok.guild import Guild
     from gartok.clock import Clock
     random.seed(3)
-    fed = Unit("player"); fed._base_inventory = ["1kg Carne", "1kg Carne"]
+    fed = Unit("player"); fed._base_inventory = ["1kg Meat", "1kg Meat"]
     doomed = Unit("player"); doomed._base_inventory = []
     guild = Guild([fed, doomed], clock=Clock(6 * 3600))    # 06:00 day 1
     guild.pass_time(24)                                     # -> day 2
-    assert fed.unfed_days == 0 and "1kg Carne" in fed._base_inventory
+    assert fed.unfed_days == 0 and "1kg Meat" in fed._base_inventory
     assert doomed.unfed_days == 1 and doomed in guild.roster
     for _ in range(data.STARVATION_DEATH_DAYS):
         guild.pass_time(24)
@@ -1096,9 +1096,9 @@ def test_guild_pass_time_feeds_starves_and_buries():
 
 def test_eat_now_only_bites_when_hungry_and_carrying_food():
     u = _unit(seed=1)
-    u._base_inventory = ["1kg Carne"]
+    u._base_inventory = ["1kg Meat"]
     assert u.eat_now() is False                       # saciado: no meal, food kept
-    assert u._base_inventory == ["1kg Carne"]
+    assert u._base_inventory == ["1kg Meat"]
     u.unfed_days = 2
     assert u.eat_now() is True
     assert u.unfed_days == 0 and u._base_inventory == []
@@ -1112,7 +1112,7 @@ def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
     random.seed(3)
     u = Unit("player")
     u.unfed_days = 1
-    u._base_inventory = ["1kg Carne"]
+    u._base_inventory = ["1kg Meat"]
     u._derive_combat()
     guild = Guild([u], clock=Clock(10 * 3600))        # 10:00 day 1
     events = guild.do_maintenance()                   # 1 h stop, no day crossed
@@ -1126,14 +1126,14 @@ def test_guild_screen_multidrop_moves_every_picked_pack_item():
     from gartok.guild_screen import GuildScreen
     random.seed(4)
     a, b = Unit("player"), Unit("player")
-    a._base_inventory = ["Corda", "1kg Carne", "Mapa"]
+    a._base_inventory = ["Rope", "1kg Meat", "Map"]
     b._base_inventory = []
     g = Guild([a, b])
     scr = GuildScreen(None, g, on_back=lambda: None, on_menu=lambda: None)
     scr.selected = [(a, 0), (a, 2)]                       # Corda + Mapa, indices bracket a keeper
     scr._give_many(b, "pack")
-    assert a._base_inventory == ["1kg Carne"]             # the un-picked row is untouched
-    assert sorted(b._base_inventory) == ["Corda", "Mapa"]
+    assert a._base_inventory == ["1kg Meat"]             # the un-picked row is untouched
+    assert sorted(b._base_inventory) == ["Map", "Rope"]
     assert scr.selected == []
 
 
@@ -1143,12 +1143,12 @@ def test_guild_screen_multidrop_on_a_hand_takes_the_first_that_fits():
     random.seed(4)
     a = Unit("player")
     a.equipped_weapon = None
-    a._base_inventory = ["Corda", "Adaga"]
+    a._base_inventory = ["Rope", "Dagger"]
     g = Guild([a])
     scr = GuildScreen(None, g, on_back=lambda: None, on_menu=lambda: None)
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
-    assert a.equipped_weapon == "Adaga" and a._base_inventory == ["Corda"]
+    assert a.equipped_weapon == "Dagger" and a._base_inventory == ["Rope"]
 
 
 def test_hunger_survives_a_save_round_trip():
@@ -1212,37 +1212,37 @@ def test_absorb_battle_arena_win_pays_the_purse_not_loot():
 # --------------------------------------------------------------------------- #
 
 def test_alignment_distance_axes():
-    assert data.alignment_distance("Leal e Bom", "Leal e Bom") == 0
-    assert data.alignment_distance("Leal e Bom", "Caotico e Mal") == 4
-    assert data.alignment_distance("Leal e Neutro", "Neutro e Neutro") == 1
+    assert data.alignment_distance("Lawful and Good", "Lawful and Good") == 0
+    assert data.alignment_distance("Lawful and Good", "Chaotic and Evil") == 4
+    assert data.alignment_distance("Lawful and Neutral", "Neutral and Neutral") == 1
 
 
 def test_no_shared_language_means_no_deal():
     m = _unit(seed=1)
-    m.languages = ["Orquico"]
-    assert economy.market_deal([m], "Ankarin", "Leal e Neutro") == 0.0
-    assert economy.buy_price("Adaga", 0.0) == economy.PRICES["Adaga"]
+    m.languages = ["Orcish"]
+    assert economy.market_deal([m], "Ankarin", "Lawful and Neutral") == 0.0
+    assert economy.buy_price("Dagger", 0.0) == economy.PRICES["Dagger"]
 
 
 def test_charisma_and_alignment_bend_the_price_but_resale_stays_a_loss():
     good = _unit(seed=1)
     good.languages = ["Ankarin"]
     good.charisma = 18
-    good.alignment = "Leal e Neutro"                        # same as the vendor
+    good.alignment = "Lawful and Neutral"                        # same as the vendor
     good._derive_combat()
-    deal = economy.market_deal([good], "Ankarin", "Leal e Neutro")
+    deal = economy.market_deal([good], "Ankarin", "Lawful and Neutral")
     assert deal > 0
-    assert economy.buy_price("Machado", deal) < economy.buy_price("Machado", 0.0)
-    assert economy.sell_price("Machado", deal) > economy.sell_price("Machado", 0.0)
-    assert economy.sell_price("Machado", deal) < economy.buy_price("Machado", deal)
+    assert economy.buy_price("Axe", deal) < economy.buy_price("Axe", 0.0)
+    assert economy.sell_price("Axe", deal) > economy.sell_price("Axe", 0.0)
+    assert economy.sell_price("Axe", deal) < economy.buy_price("Axe", deal)
 
     hostile = _unit(seed=1)
     hostile.languages = ["Ankarin"]
     hostile.charisma = 6
-    hostile.alignment = "Caotico e Mal"                     # opposed -> premium
+    hostile.alignment = "Chaotic and Evil"                     # opposed -> premium
     hostile._derive_combat()
-    bad = economy.market_deal([hostile], "Ankarin", "Leal e Neutro")
-    assert bad < 0 and economy.buy_price("Machado", bad) > economy.buy_price("Machado", 0.0)
+    bad = economy.market_deal([hostile], "Ankarin", "Lawful and Neutral")
+    assert bad < 0 and economy.buy_price("Axe", bad) > economy.buy_price("Axe", 0.0)
 
 
 def test_market_deal_picks_the_best_speaker():
@@ -1250,11 +1250,11 @@ def test_market_deal_picks_the_best_speaker():
     from gartok import world
     random.seed(1)
     loud = Unit("player"); loud.languages = ["Ankarin"]; loud.charisma = 17
-    loud.alignment = "Leal e Neutro"; loud._derive_combat()
-    mute = Unit("player"); mute.languages = ["Orquico"]; mute.charisma = 20
+    loud.alignment = "Lawful and Neutral"; loud._derive_combat()
+    mute = Unit("player"); mute.languages = ["Orcish"]; mute.charisma = 20
     ms = MarketScreen.__new__(MarketScreen)
     ms.shoppers = [loud, mute]
-    ms.node = world.node("mercado")
+    ms.node = world.node("market")
     ms.deal = economy.market_deal(ms.shoppers, ms.node.language, ms.node.alignment)
     assert ms.deal > 0                                      # the Orc's 20 CHA is wasted
 
@@ -1267,7 +1267,7 @@ def _bare_human(strength=20, **over):
     """An unloaded Humano (Medio, cm 1.0, no natural armor). Strength 20 by
     default -> carry_normal 35 kg, room for a mid-weight armor before encumbrance."""
     u = _unit(**over)
-    u.set_race("Humano")
+    u.set_race("Human")
     u.base_attributes["strength"] = strength
     u._configure_race()                                # Humano mods are all 0
     u.equipped_weapon = u.equipped_offhand = None
@@ -1281,10 +1281,10 @@ def test_armor_raises_ac_and_caps_dexterity():
     u.dexterity = 18                                    # +4 Dexterity mod
     u._derive_combat()
     bare_ac = u.ac
-    u.give_to_armor("Cota de malha")                    # +3 AC, Dex to AC capped at +2, 10 kg
+    u.give_to_armor("Chainmail")                    # +3 AC, Dex to AC capped at +2, 10 kg
     assert not u.encumbered
     assert u.ac == bare_ac - 4 + 2 + 3
-    assert u.equipped_armor == "Cota de malha"
+    assert u.equipped_armor == "Chainmail"
 
 
 def test_leather_armor_keeps_full_dexterity():
@@ -1292,39 +1292,39 @@ def test_leather_armor_keeps_full_dexterity():
     u.dexterity = 18
     u._derive_combat()
     base = u.ac
-    u.give_to_armor("Gibao de couro")                   # +1 AC, no Dex cap
+    u.give_to_armor("Leather Jerkin")                   # +1 AC, no Dex cap
     assert not u.encumbered and u.ac == base + 1
 
 
 def test_plate_slows_you_and_its_weight_encumbers_on_top():
     u = _bare_human(strength=10, seed=1)                # carry_normal 15 kg
     base_speed = u.speed
-    u.give_to_armor("Armadura de placas")               # -2 squares, and 28 kg overloads
+    u.give_to_armor("Plate Armor")               # -2 squares, and 28 kg overloads
     assert u.encumbered
     assert u.speed == max(1, base_speed - 2 - 1)        # armor -2, encumbrance -1
 
 
 def test_equipping_armor_stows_the_old_piece():
     u = _bare_human(seed=1)
-    u.give_to_armor("Gibao de couro")
-    u.give_to_armor("Cota de malha")
-    assert u.equipped_armor == "Cota de malha"
-    assert "Gibao de couro" in u._base_inventory
+    u.give_to_armor("Leather Jerkin")
+    u.give_to_armor("Chainmail")
+    assert u.equipped_armor == "Chainmail"
+    assert "Leather Jerkin" in u._base_inventory
 
 
 def test_armor_weighs_the_same_worn_or_stowed():
     u = _bare_human(seed=1)
     base = u.load
-    u.give_to_pack("Cota de malha")
+    u.give_to_pack("Chainmail")
     stowed = u.load
-    assert stowed == base + data.ARMOR["Cota de malha"]["weight"]
-    u.give_to_armor(u.take_from_pack(u._base_inventory.index("Cota de malha")))
+    assert stowed == base + data.ARMOR["Chainmail"]["weight"]
+    u.give_to_armor(u.take_from_pack(u._base_inventory.index("Chainmail")))
     assert u.load == stowed
 
 
 def test_worn_armor_reaches_the_combatant():
     u = _bare_human(seed=1)
-    u.give_to_armor("Cota de malha")
+    u.give_to_armor("Chainmail")
     c = Combatant(u)
     assert c.ac == u.ac and c.speed == u.speed
 
@@ -1332,17 +1332,17 @@ def test_worn_armor_reaches_the_combatant():
 def test_armor_is_stocked_and_priced_by_the_ac_it_grants():
     for name in data.ARMOR:
         assert name in economy.MARKET_STOCK and name in economy.PRICES
-    assert (economy.PRICES["Gibao de couro"] < economy.PRICES["Cota de malha"]
-            < economy.PRICES["Armadura de placas"])
+    assert (economy.PRICES["Leather Jerkin"] < economy.PRICES["Chainmail"]
+            < economy.PRICES["Plate Armor"])
 
 
 def test_armor_survives_a_save_round_trip():
     from gartok import persist
     u = _bare_human(seed=7)
-    u.give_to_armor("Brunea")
+    u.give_to_armor("Brigandine")
     ac, speed, enc = u.ac, u.speed, u.encumbered
     u2 = Unit.from_save(persist.unit_to_dict(u))
-    assert u2.equipped_armor == "Brunea"
+    assert u2.equipped_armor == "Brigandine"
     assert u2.ac == ac and u2.speed == speed and u2.encumbered == enc
 
 
@@ -1352,7 +1352,7 @@ def test_armor_survives_a_save_round_trip():
 
 def test_downing_a_standing_enemy_credits_the_killer():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Machado")
+    a.equip_weapon("Axe")
     d.dr = 0
     random.seed(2)
     for _ in range(30):
@@ -1366,7 +1366,7 @@ def test_downing_a_standing_enemy_credits_the_killer():
 
 def test_finishing_a_downed_enemy_does_not_double_count():
     batt, a, d = _melee_battle()
-    a.equip_weapon("Machado")
+    a.equip_weapon("Axe")
     d.go_down(batt.log)                                 # already dying: someone else's kill
     random.seed(2)
     for _ in range(30):
@@ -1382,7 +1382,7 @@ def test_ferocity_credits_the_hit_that_brought_the_orc_to_zero():
     d.char._ability = abilities.get("ferocity")
     d.char.ability_id = "ferocity"
     d.dr = 0
-    a.equip_weapon("Machado")
+    a.equip_weapon("Axe")
     random.seed(2)
     for _ in range(30):
         if d.ferocity_pending or not d.alive:
@@ -1429,7 +1429,7 @@ class _FixedRNG:
         return self.vals.pop(0)
 
 
-def _person(seed, *, lang="Comum", align="Neutro e Neutro", cha=0):
+def _person(seed, *, lang="Comum", align="Neutral and Neutral", cha=0):
     u = _unit(seed=seed, languages=[lang], alignment=align)
     u.mod_charisma = cha
     return u
@@ -1437,7 +1437,7 @@ def _person(seed, *, lang="Comum", align="Neutro e Neutro", cha=0):
 
 def test_recruit_needs_a_shared_language():
     r = _person(1, lang="Ankarin")
-    c = _person(2, lang="Orquico")
+    c = _person(2, lang="Orcish")
     assert not recruit.can_pitch(r, c)
     p = recruit.convince(r, c, 3)
     assert not p.ok and p.reason == "no shared language"
@@ -1488,8 +1488,8 @@ def test_enlist_pulls_the_recruit_out_of_the_pool():
 
 
 def test_recruit_alignment_distance_docks_the_pitch():
-    r = _person(1, align="Leal e Bom")
-    c = _person(2, align="Caotico e Mal")                  # distance 4
+    r = _person(1, align="Lawful and Good")
+    c = _person(2, align="Chaotic and Evil")                  # distance 4
     p = recruit.convince(r, c, 0, rng=_FixedRNG(15, 12))   # 15 - 4 = 11  vs  12 -> fail
     assert not p.ok
     assert any(v == -4 for v, _ in p.modifiers)
@@ -1577,7 +1577,7 @@ def test_work_shift_crossing_midnight_runs_the_daily_meal():
     random.seed(5)
     u = Unit("player")
     u.gold = 0
-    u._base_inventory = ["1kg Batata"]
+    u._base_inventory = ["1kg Potato"]
     u._derive_combat()
     guild = Guild([u], clock=Clock(20 * 3600))        # 20:00 day 1
     guild.work_shift([u], 8)                          # -> 04:00 day 2, one meal
@@ -1597,9 +1597,9 @@ def test_work_xp_is_one_mark_per_16_hours_and_survives_a_save():
 
 def test_madeireira_is_a_work_town_one_hour_from_the_city():
     from gartok import world
-    n = world.node("madeireira")
+    n = world.node("lumber_yard")
     assert n.kind == "town" and n.work
-    _, hours = world.route("cidade", "madeireira")
+    _, hours = world.route("city", "lumber_yard")
     assert hours == 1
 
 

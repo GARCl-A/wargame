@@ -4,9 +4,9 @@ Combat did not exist in the generator; the WEAPONS table and the mechanical
 effect of the RACIAL ABILITIES were designed here for the wargame, keeping the
 d20 style.
 
-Naming: identifiers are English; the domain *content* (race, occupation,
-alignment, size, language, weapon and item names) stays in Portuguese because it
-is shared, verbatim, with GARTOK-regras.md and shown in the UI.
+Naming: everything is English -- identifiers and the domain *content* (race,
+occupation, alignment, size, language, weapon and item names). GARTOK-regras.md
+(pt-BR) is the design doc and may lag this wording.
 """
 
 import random
@@ -71,10 +71,10 @@ def resolve_bonus(mods):
 # --------------------------------------------------------------------------- #
 
 SIZES = {
-    "Diminuto": {"speed": 4.5, "carry": 0.5, "footprint": 1},
-    "Pequeno":  {"speed": 6.0, "carry": 1.0, "footprint": 1},
-    "Medio":    {"speed": 9.0, "carry": 1.0, "footprint": 1},
-    "Grande":   {"speed": 9.0, "carry": 2.0, "footprint": 2},
+    "Tiny": {"speed": 4.5, "carry": 0.5, "footprint": 1},
+    "Small":  {"speed": 6.0, "carry": 1.0, "footprint": 1},
+    "Medium":    {"speed": 9.0, "carry": 1.0, "footprint": 1},
+    "Large":   {"speed": 9.0, "carry": 2.0, "footprint": 2},
 }
 
 
@@ -83,10 +83,10 @@ SIZES = {
 # --------------------------------------------------------------------------- #
 
 UNARMED_ATTACK = {
-    "Diminuto": (1, 2),
-    "Pequeno":  (1, 2),
-    "Medio":    (1, 3),
-    "Grande":   (1, 4),
+    "Tiny": (1, 2),
+    "Small":  (1, 2),
+    "Medium":    (1, 3),
+    "Large":   (1, 4),
 }
 
 
@@ -99,15 +99,15 @@ DEATH_SAVE_MIN = 11         # d20 >= this survives (11-20 = 50%)
 FIRST_AID_DC = 10          # first-aid kit: d20 + mod Wisdom vs this
 AUTOMATON_REPAIR_DC = 15   # repairing a "broken" automaton: d20 + mod Intelligence vs this
 FIRST_AID_CHARGES = 10     # a kit starts with this many charges (rechargeable)
-QUIVER_AMMO = 20          # a quiver (Aljava) starts with this many bolts
+QUIVER_AMMO = 20          # a quiver starts with this many bolts
 
 
 # --------------------------------------------------------------------------- #
 # Ammo and improvised weapon                                                   #
 # --------------------------------------------------------------------------- #
 
-AMMO_ITEM = "Aljava"                     # inventory item that feeds a ranged weapon
-FIRST_AID_ITEM = "Kit de primeiros socorros"
+AMMO_ITEM = "Quiver"                     # inventory item that feeds a ranged weapon
+FIRST_AID_ITEM = "First Aid Kit"
 
 
 # --------------------------------------------------------------------------- #
@@ -121,7 +121,7 @@ TORCH_RADIUS = squares(6)         # torch: lights a 6 m radius (held or dropped)
 
 # Inventory items that emit light -> lit radius in squares.
 LIGHT_SOURCES = {
-    "Lanterna": squares(9),       # 9 m radius
+    "Lantern": squares(9),       # 9 m radius
 }
 
 
@@ -133,24 +133,24 @@ LIGHT_SOURCES = {
 
 RACES = [
     # threshold, name,          token,  Str Dex Con Int Wis Cha  ability         language     age     hd  size
-    (15,  "Anao",           "A", ( 1,  0,  2,  0, -1, -2), "darkvision",     "Enanico",   5.000, 10, "Medio"),
-    (17,  "Automato",       "T", ( 1,  1,  0,  0, -1, -1), "inorganic_body", "Ankarin",   1.000,  8, "Medio"),
-    (19,  "Centauro",       "C", ( 1, -2,  0,  0,  2, -1), "gallop",         "Elfico",    2.500, 10, "Grande"),
-    (34,  "Elfo",           "E", (-2,  2, -1,  1,  0,  0), "sleep_immunity", "Elfico",    8.750,  8, "Medio"),
-    (35,  "Gnoll",          "N", ( 0,  0,  2, -1,  0, -1), "strong_stomach", "Orquico",   0.625,  8, "Medio"),
-    (36,  "Gnomo",          "G", (-2,  1, -1,  0,  1,  1), "primal_blood",   "Gnomico",   6.250,  8, "Pequeno"),
-    (51,  "Goblin",         "O", (-1,  2,  1, -1,  0, -1), "pack_tactics",   "Goblinico", 0.625,  6, "Pequeno"),
-    (54,  "Golias",         "L", ( 2,  1,  0, -1, -1, -1), "strong_body",    "Jotun",     1.000, 10, "Medio"),
-    (57,  "Grippli",        "P", (-1,  1,  0,  0,  1, -1), "amphibious",     "Silvestre", 1.500,  8, "Pequeno"),
-    (60,  "Halfling",       "H", (-2,  2, -2,  0,  1,  1), "keen_hearing",   "Pequine",   1.500,  6, "Pequeno"),
-    (64,  "Hobgoblin",      "B", ( 1,  1,  1, -1, -2,  0), "darkvision",     "Goblinico", 0.625,  8, "Medio"),
-    (74,  "Homem Lagarto",  "Z", ( 1,  1,  0, -1,  0, -1), "climber",        "Draconico", 0.875, 10, "Medio"),
-    (89,  "Humano",         "M", ( 0,  0,  0,  0,  0,  0), "extra_language", "Ankarin",   1.000,  8, "Medio"),
-    (92,  "Kenku",          "K", (-3,  1, -1,  0,  1,  2), "mimic_sounds",   "Silvestre", 1.000,  6, "Medio"),
-    (95,  "Kobold",         "D", (-2,  1,  0,  1, -1,  1), "ancestral_blood","Draconico", 2.500,  6, "Pequeno"),
-    (96,  "Leshy",          "Y", (-1,  0,  1, -1,  1,  0), "autotroph",      "Planti",    1.000,  6, "Pequeno"),
-    (99,  "Orc",            "R", ( 2,  1,  1, -1,  0, -3), "ferocity",       "Orquico",   0.625, 10, "Medio"),
-    (100, "Sprite",         "S", (-2,  0, -2,  0,  2,  2), "flight",         "Gnomico",   1.500,  6, "Diminuto"),
+    (15,  "Dwarf",           "A", ( 1,  0,  2,  0, -1, -2), "darkvision",     "Dwarvish",   5.000, 10, "Medium"),
+    (17,  "Automaton",       "T", ( 1,  1,  0,  0, -1, -1), "inorganic_body", "Ankarin",   1.000,  8, "Medium"),
+    (19,  "Centaur",       "C", ( 1, -2,  0,  0,  2, -1), "gallop",         "Elvish",    2.500, 10, "Large"),
+    (34,  "Elf",           "E", (-2,  2, -1,  1,  0,  0), "sleep_immunity", "Elvish",    8.750,  8, "Medium"),
+    (35,  "Gnoll",          "N", ( 0,  0,  2, -1,  0, -1), "strong_stomach", "Orcish",   0.625,  8, "Medium"),
+    (36,  "Gnome",          "G", (-2,  1, -1,  0,  1,  1), "primal_blood",   "Gnomish",   6.250,  8, "Small"),
+    (51,  "Goblin",         "O", (-1,  2,  1, -1,  0, -1), "pack_tactics",   "Goblin", 0.625,  6, "Small"),
+    (54,  "Goliath",         "L", ( 2,  1,  0, -1, -1, -1), "strong_body",    "Jotun",     1.000, 10, "Medium"),
+    (57,  "Grippli",        "P", (-1,  1,  0,  0,  1, -1), "amphibious",     "Sylvan", 1.500,  8, "Small"),
+    (60,  "Halfling",       "H", (-2,  2, -2,  0,  1,  1), "keen_hearing",   "Halfling",   1.500,  6, "Small"),
+    (64,  "Hobgoblin",      "B", ( 1,  1,  1, -1, -2,  0), "darkvision",     "Goblin", 0.625,  8, "Medium"),
+    (74,  "Lizardfolk",  "Z", ( 1,  1,  0, -1,  0, -1), "climber",        "Draconic", 0.875, 10, "Medium"),
+    (89,  "Human",         "M", ( 0,  0,  0,  0,  0,  0), "extra_language", "Ankarin",   1.000,  8, "Medium"),
+    (92,  "Kenku",          "K", (-3,  1, -1,  0,  1,  2), "mimic_sounds",   "Sylvan", 1.000,  6, "Medium"),
+    (95,  "Kobold",         "D", (-2,  1,  0,  1, -1,  1), "ancestral_blood","Draconic", 2.500,  6, "Small"),
+    (96,  "Leshy",          "Y", (-1,  0,  1, -1,  1,  0), "autotroph",      "Verdant",    1.000,  6, "Small"),
+    (99,  "Orc",            "R", ( 2,  1,  1, -1,  0, -3), "ferocity",       "Orcish",   0.625, 10, "Medium"),
+    (100, "Sprite",         "S", (-2,  0, -2,  0,  2,  2), "flight",         "Gnomish",   1.500,  6, "Tiny"),
 ]
 
 def _race_dict(threshold, name, token, mods, ability, language, age, hd, size):
@@ -195,17 +195,17 @@ def race_by_name(name):
 # --------------------------------------------------------------------------- #
 
 WEAPONS = {
-    "Adaga":         {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 6, "hands": 1, "weight": 0.5},
-    "Machadinha":    {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.0},
-    "Machado":       {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
-    "Martelo Leve":  {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
-    "Martelo":       {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
-    "Clava":         {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
-    "Bordao":        {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 2.0},
-    "Lanca Curta":   {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
-    "Picareta Leve": {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
-    "Picareta":      {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
-    "Besta Leve":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5},
+    "Dagger":         {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 6, "hands": 1, "weight": 0.5},
+    "Hatchet":    {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.0},
+    "Axe":       {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
+    "Light Hammer":  {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
+    "Hammer":       {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
+    "Club":         {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
+    "Quarterstaff":        {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 2.0},
+    "Shortspear":   {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
+    "Light Pick": {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
+    "Pick":      {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
+    "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5},
 }
 
 
@@ -220,11 +220,11 @@ WEAPONS = {
 # --------------------------------------------------------------------------- #
 
 ARMOR = {
-    "Gibao de couro":     {"ac": 1, "max_dex": None, "speed": 0, "weight": 4.0},
-    "Couro batido":       {"ac": 2, "max_dex": 3,    "speed": 0, "weight": 6.0},
-    "Cota de malha":      {"ac": 3, "max_dex": 2,    "speed": 0, "weight": 10.0},
-    "Brunea":             {"ac": 4, "max_dex": 1,    "speed": 1, "weight": 18.0},
-    "Armadura de placas": {"ac": 5, "max_dex": 0,    "speed": 2, "weight": 28.0},
+    "Leather Jerkin":     {"ac": 1, "max_dex": None, "speed": 0, "weight": 4.0},
+    "Studded Leather":       {"ac": 2, "max_dex": 3,    "speed": 0, "weight": 6.0},
+    "Chainmail":      {"ac": 3, "max_dex": 2,    "speed": 0, "weight": 10.0},
+    "Brigandine":             {"ac": 4, "max_dex": 1,    "speed": 1, "weight": 18.0},
+    "Plate Armor": {"ac": 5, "max_dex": 0,    "speed": 2, "weight": 28.0},
 }
 
 
@@ -234,20 +234,20 @@ ARMOR = {
 # --------------------------------------------------------------------------- #
 
 TORCH_WEIGHT = 0.5
-TORCH_ITEM = "Tocha"                     # a torch carried in the pack / between battles
+TORCH_ITEM = "Torch"                     # a torch carried in the pack / between battles
 
 # Pack items that count as a day's meal (see the hunger rule in unit.py / guild.py).
-FOOD_ITEMS = {"1kg Carne", "1kg Batata"}
+FOOD_ITEMS = {"1kg Meat", "1kg Potato"}
 STARVATION_DEATH_DAYS = 4                # missed meals in a row before a character dies
 
 ITEM_WEIGHTS = {
     TORCH_ITEM: TORCH_WEIGHT,
-    "1kg Carne": 1.0, "1kg Batata": 1.0, "1kg Lenha": 1.0, "1kg Carvao": 1.0, "1L Cerveja": 1.0,
-    "Cinzel": 0.3, "Tesoura": 0.2, "Aljava": 1.5, "Corda": 2.0, "Algemas de ferro": 1.0,
-    "Mapa": 0.1, "Saco": 0.3, "Tijolo de pedra": 3.0, "1 m2 Couro": 2.0, "Pa": 2.0,
-    "Correntes": 5.0, "Pergaminho": 0.1, "Barra de ferro": 5.0, "Lanterna": 1.0, "Bussola": 0.2,
-    "Baralho": 0.2, "Capa": 1.0, "Dicionario": 2.0, "Kit de primeiros socorros": 0.8, "Instrumento musical": 2.0,
-    "Balanca": 1.0, "Simbolo Religioso": 0.5, "Balde": 1.0,
+    "1kg Meat": 1.0, "1kg Potato": 1.0, "1kg Firewood": 1.0, "1kg Coal": 1.0, "1L Beer": 1.0,
+    "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
+    "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
+    "Chains": 5.0, "Scroll": 0.1, "Iron Bar": 5.0, "Lantern": 1.0, "Compass": 0.2,
+    "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
+    "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,
 }
 
 
@@ -264,16 +264,16 @@ def item_weight(name):
 # ported table). This module keeps only the raw generator data + game constants.
 
 # --------------------------------------------------------------------------- #
-# Alignment  (two axes: order Leal/Neutro/Caotico, morality Bom/Neutro/Mal)     #
+# Alignment  (two axes: order Lawful/Neutral/Chaotic, morality Good/Neutral/Evil)     #
 #   Feeds both the enemy AI (tendency) and market haggling (price sympathy).    #
 # --------------------------------------------------------------------------- #
-_ORDER_AXIS = {"Leal": 1, "Neutro": 0, "Caotico": -1}
-_MORAL_AXIS = {"Bom": 1, "Neutro": 0, "Mal": -1}
+_ORDER_AXIS = {"Lawful": 1, "Neutral": 0, "Chaotic": -1}
+_MORAL_AXIS = {"Good": 1, "Neutral": 0, "Evil": -1}
 
 
 def alignment_axes(alignment):
-    """'Leal e Mal' -> (order, morality), each in {-1, 0, 1}."""
-    order, morality = alignment.split(" e ")
+    """'Lawful and Evil' -> (order, morality), each in {-1, 0, 1}."""
+    order, morality = alignment.split(" and ")
     return _ORDER_AXIS[order], _MORAL_AXIS[morality]
 
 
@@ -287,7 +287,7 @@ def alignment_distance(a, b):
 # Items from the occupation table that are actually creatures on the battlefield
 # (not controllable, standing still for now). They stay out of the inventory / carry.
 CREATURE_ITEMS = {
-    "Ovelha": {"name": "Ovelha", "token": "o", "footprint": 1},
+    "Sheep": {"name": "Sheep", "token": "o", "footprint": 1},
 }
 
 
@@ -296,37 +296,37 @@ CREATURE_ITEMS = {
 # --------------------------------------------------------------------------- #
 
 OCCUPATIONS = [
-    (5,   "Acougueiro",  "Machadinha",    "1kg Carne"),
-    (11,  "Agricultor",  "Machadinha",    "1kg Batata"),
-    (14,  "Artesao",     "Martelo Leve",  "Cinzel"),
-    (19,  "Barbeiro",    "Adaga",         "Tesoura"),
-    (21,  "Besteiro",    "Besta Leve",    "Aljava"),
-    (25,  "Cacador",     "Lanca Curta",   "Corda"),
-    (27,  "Carcereiro",  "Clava",         "Algemas de ferro"),
-    (28,  "Cartografo",  "Adaga",         "Mapa"),
-    (29,  "Cervejeiro",  "Adaga",         "1L Cerveja"),
-    (32,  "Comerciante", "Adaga",         "Saco"),
-    (35,  "Construtor",  "Martelo",       "Tijolo de pedra"),
-    (38,  "Coureiro",    "Adaga",         "1 m2 Couro"),
-    (40,  "Coveiro",     "Picareta Leve", "Pa"),
-    (42,  "Escravo",     "Clava",         "Correntes"),
-    (43,  "Escriba",     "Adaga",         "Pergaminho"),
-    (46,  "Ferreiro",    "Martelo",       "Barra de ferro"),
-    (48,  "Guarda",      "Clava",         "Lanterna"),
-    (51,  "Guia",        "Bordao",        "Bussola"),
-    (55,  "Jogador",     "Adaga",         "Baralho"),
-    (61,  "Ladrao",      "Adaga",         "Capa"),
-    (67,  "Lenhador",    "Machado",       "1kg Lenha"),
-    (68,  "Linguista",   "Adaga",         "Dicionario"),
-    (69,  "Medico",      "Adaga",         "Kit de primeiros socorros"),
-    (72,  "Mensageiro",  "Bordao",        "Saco"),
-    (77,  "Mercenario",  "Machado",       "Corda"),
-    (81,  "Minerador",   "Picareta",      "1kg Carvao"),
-    (85,  "Musico",      "Adaga",         "Instrumento musical"),
-    (88,  "Ourives",     "Adaga",         "Balanca"),
-    (91,  "Padre",       "Bordao",        "Simbolo Religioso"),
-    (96,  "Pastor",      "Bordao",        "Ovelha"),
-    (100, "Taverneiro",  "Adaga",         "Balde"),
+    (5,   "Butcher",  "Hatchet",    "1kg Meat"),
+    (11,  "Farmer",  "Hatchet",    "1kg Potato"),
+    (14,  "Craftsman",     "Light Hammer",  "Chisel"),
+    (19,  "Barber",    "Dagger",         "Scissors"),
+    (21,  "Crossbowman",    "Light Crossbow",    "Quiver"),
+    (25,  "Hunter",     "Shortspear",   "Rope"),
+    (27,  "Jailer",  "Club",         "Iron Shackles"),
+    (28,  "Cartographer",  "Dagger",         "Map"),
+    (29,  "Brewer",  "Dagger",         "1L Beer"),
+    (32,  "Merchant", "Dagger",         "Sack"),
+    (35,  "Builder",  "Hammer",       "Stone Brick"),
+    (38,  "Tanner",    "Dagger",         "1sqm Hide"),
+    (40,  "Gravedigger",     "Light Pick", "Shovel"),
+    (42,  "Slave",     "Club",         "Chains"),
+    (43,  "Scribe",     "Dagger",         "Scroll"),
+    (46,  "Blacksmith",    "Hammer",       "Iron Bar"),
+    (48,  "Guard",      "Club",         "Lantern"),
+    (51,  "Guide",        "Quarterstaff",        "Compass"),
+    (55,  "Gambler",     "Dagger",         "Deck of Cards"),
+    (61,  "Thief",      "Dagger",         "Cloak"),
+    (67,  "Woodcutter",    "Axe",       "1kg Firewood"),
+    (68,  "Linguist",   "Dagger",         "Dictionary"),
+    (69,  "Physician",      "Dagger",         "First Aid Kit"),
+    (72,  "Messenger",  "Quarterstaff",        "Sack"),
+    (77,  "Mercenary",  "Axe",       "Rope"),
+    (81,  "Miner",   "Pick",      "1kg Coal"),
+    (85,  "Musician",      "Dagger",         "Musical Instrument"),
+    (88,  "Goldsmith",     "Dagger",         "Scales"),
+    (91,  "Priest",       "Quarterstaff",        "Holy Symbol"),
+    (96,  "Shepherd",      "Quarterstaff",        "Sheep"),
+    (100, "Innkeeper",  "Dagger",         "Bucket"),
 ]
 
 
@@ -359,15 +359,15 @@ def occupation_by_name(name):
 # --------------------------------------------------------------------------- #
 
 ALIGNMENTS = [
-    (10,  "Leal e Bom"),
-    (34,  "Leal e Neutro"),
-    (39,  "Leal e Mal"),
-    (63,  "Neutro e Bom"),
-    (72,  "Neutro e Neutro"),
-    (82,  "Neutro e Mal"),
-    (92,  "Caotico e Bom"),
-    (97,  "Caotico e Neutro"),
-    (100, "Caotico e Mal"),
+    (10,  "Lawful and Good"),
+    (34,  "Lawful and Neutral"),
+    (39,  "Lawful and Evil"),
+    (63,  "Neutral and Good"),
+    (72,  "Neutral and Neutral"),
+    (82,  "Neutral and Evil"),
+    (92,  "Chaotic and Good"),
+    (97,  "Chaotic and Neutral"),
+    (100, "Chaotic and Evil"),
 ]
 
 

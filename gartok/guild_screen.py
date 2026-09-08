@@ -339,7 +339,7 @@ class GuildScreen(DragSelectMixin, Screen):
             over_norm = unit.load > unit.carry_normal
             over_max = unit.load > unit.carry_max
             ccol = DANGER if over_max else WARN if over_norm else INK_DIM
-            text(screen, f"PV {unit.hp_max}   CA {unit.ac}   ·   {_kg(unit.load)}",
+            text(screen, f"HP {unit.hp_max}   AC {unit.ac}   ·   {_kg(unit.load)}",
                  f.mono_sm, ccol, (r.x + SP3, r.bottom - 20))
             if unit.hunger_level:
                 text(screen, "HUNGER", f.label,
@@ -401,8 +401,8 @@ class GuildScreen(DragSelectMixin, Screen):
 
         # --- left column: stat chips ------------------------------- #
         a = top
-        stats = (("PV", unit.hp_max), ("CA", unit.ac),
-                 ("DM", unit.mental_defense), ("DESLOC", unit.speed))
+        stats = (("HP", unit.hp_max), ("AC", unit.ac),
+                 ("MD", unit.mental_defense), ("SPD", unit.speed))
         cw = (col_a - 3 * SP2) // 4
         for i, (lbl, val) in enumerate(stats):
             self._chip(screen, pygame.Rect(x + i * (cw + SP2), a, cw, 48), lbl, val)
@@ -427,8 +427,8 @@ class GuildScreen(DragSelectMixin, Screen):
         text(screen, f"{_kg(unit.load)}  ·  normal {_kg(unit.carry_normal)}  ·  "
              f"high {_kg(unit.carry_max)}", f.mono_sm, INK_DIM, (x, a))
         a += 15
-        note = ("OVER HIGH LOAD  ·  -2 FOR/DES, -1 desloc" if over_max
-                else "overloaded  ·  -2 FOR/DES, -1 desloc" if over_norm else "")
+        note = ("OVER HIGH LOAD  ·  -2 STR/DEX, -1 speed" if over_max
+                else "overloaded  ·  -2 STR/DEX, -1 speed" if over_norm else "")
         if note:
             text(screen, note, f.label, ccol, (x, a))
         a += 18
@@ -501,7 +501,7 @@ class GuildScreen(DragSelectMixin, Screen):
         if worn:
             armor = data.ARMOR[worn]
             text(screen, worn, f.body, ACCENT_INK if asel else INK, (ar.x + SP3, ar.y + 9))
-            text(screen, f"+{armor['ac']} CA   ·   {_kg(data.item_weight(worn))}",
+            text(screen, f"+{armor['ac']} AC   ·   {_kg(data.item_weight(worn))}",
                  f.mono_sm, ACCENT_INK if asel else INK_DIM, (ar.right - SP3, ar.y + 10),
                  right=True)
             self.sources.append((ar, unit, "armor"))

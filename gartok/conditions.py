@@ -34,7 +34,7 @@ class Defending(Condition):
     id = "defending"
 
     def ac_mods(self):
-        return [(1, "circunstancia", "Defender")]
+        return [(1, "circumstance", "Defend")]
 
     def on_turn_start(self, unit, log):
         return True  # the Defend bonus lasts until the start of the next turn
@@ -44,14 +44,14 @@ class Demoralized(Condition):
     id = "demoralized"
 
     def attack_mods(self):
-        return [(-1, "status", "Desmoralizado")]
+        return [(-1, "status", "Demoralized")]
 
     def ac_mods(self):
-        return [(-1, "status", "Desmoralizado")]
+        return [(-1, "status", "Demoralized")]
 
     def mental_defense_mods(self):
-        return [(-1, "status", "Desmoralizado")]
+        return [(-1, "status", "Demoralized")]
 
     def on_turn_end(self, unit, log):
-        log(f"{unit.name} se recompoe (nao esta mais desmoralizado).")
+        log(f"{unit.name} recovers (no longer demoralized).")
         return True

@@ -25,9 +25,9 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
 SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
 GROUND_NIGHT = (21, 23, 32)
-KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "taverna": WARN, "town": NEUTRAL_C}
-KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "taverna": "TAVERN", "town": "STOP"}
-KIND_NAME = {"battle": "combat", "market": "market", "taverna": "tavern", "town": "stop"}
+KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "tavern": WARN, "town": NEUTRAL_C}
+KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP"}
+KIND_NAME = {"battle": "combat", "market": "market", "tavern": "tavern", "town": "stop"}
 
 
 class MapScreen(Screen):
@@ -215,7 +215,7 @@ class MapScreen(Screen):
         elif kind == "market":                                     # coin
             pygame.draw.circle(screen, c, (x, y), 5, 2)
             pygame.draw.line(screen, c, (x, y - 2), (x, y + 2), 2)
-        elif kind == "taverna":                                    # tankard
+        elif kind == "tavern":                                    # tankard
             pygame.draw.rect(screen, c, (x - 4, y - 4, 7, 9), 2)
             pygame.draw.arc(screen, c, (x + 2, y - 4, 6, 8), -1.4, 1.4, 2)
         elif kind == "work":                                        # axe
@@ -276,7 +276,7 @@ class MapScreen(Screen):
     def _draw_legend(self, screen, area):
         f = self.fonts
         rows = [("battle", "combat"), ("market", "market"),
-                ("taverna", "tavern"), ("town", "stop")]
+                ("tavern", "tavern"), ("town", "stop")]
         box = pygame.Rect(0, 0, 116, 15 * len(rows) + 12)
         box.topright = (area.right - SP3, area.y + SP3)
         panel(screen, box, fill=SURFACE_1, border=LINE_SOFT, radius=6)
@@ -345,7 +345,7 @@ class MapScreen(Screen):
                   border=LINE_SOFT, width=1, radius=RADIUS)
             text(screen, "ENTER THE MARKET", f.body_bd, INK_DIM, mr.center, center=True)
             self.buttons.append(("market", mr))
-        elif here.is_taverna:
+        elif here.is_tavern:
             tr = pygame.Rect(cx, y, cw, 38)
             hovt = tr.collidepoint(self.mouse)
             panel(screen, tr, fill=SURFACE_3 if hovt else SURFACE_1,
@@ -371,7 +371,7 @@ class MapScreen(Screen):
                  INK_FAINT, (cx, y))
 
         y += 60
-        y = section(screen, "FROM HERE YOU CAN REACH", cx, y, cw, f)
+        y = section(screen, "FROM HERE YOU ACN REACH", cx, y, cw, f)
         for nid, hours in sorted(world.neighbors(here.id), key=lambda t: t[1]):
             n = world.node(nid)
             text(screen, n.name, f.body_sm, INK_DIM, (cx, y))

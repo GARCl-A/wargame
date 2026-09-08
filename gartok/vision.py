@@ -124,11 +124,11 @@ def visible_cells(battle, obs):
 def vision_desc(unit):
     """Short phrase for the panel: how this unit sees in the dark."""
     if unit.ability.darkvision:
-        return f"visao no escuro, {unit.ability.darkvision} casas"
+        return f"darkvision, {unit.ability.darkvision} squares"
     if unit.has_torch:
-        return f"tocha na mao, {data.TORCH_RADIUS} casas"
+        return f"torch in hand, {data.TORCH_RADIUS} squares"
     for it in unit.inventory:
         radius = data.LIGHT_SOURCES.get(it, 0)
         if radius:
-            return f"{it.lower()}, {radius} casas"
-    return "sem luz propria (so ve luz na linha de visao)"
+            return f"{it.lower()}, {radius} squares"
+    return "no light of their own (only sees light along the line of sight)"

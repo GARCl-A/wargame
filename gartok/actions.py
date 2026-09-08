@@ -61,7 +61,7 @@ class Action:
 
 def _pack_flank(battle, attacker, target):
     """Loose flank (Pack Tactics): any ally, other than the attacker, adjacent to
-    the target. Feeds the racial 'Luta em bando' bonus."""
+    the target. Feeds the racial 'Pack Tactics' bonus."""
     return any(u.alive and u.team == attacker.team and u is not attacker
                and battle.units_distance(u, target) == 1
                for u in battle.units)
@@ -77,7 +77,7 @@ def _facing(battle, unit, target_cells):
 
 def _flanked(battle, attacker, target):
     """Strict flank: the attacker and an ally are both adjacent to the target and
-    on opposite sides (a line between them crosses the target). +2 [circunstancia]."""
+    on opposite sides (a line between them crosses the target). +2 [circumstance]."""
     if battle.units_distance(attacker, target) > 1:
         return False
     tcells = battle.cells_of(target)
@@ -135,25 +135,25 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     total = nat + bonus
     ac = target.ac
     crit = nat == 20
-    desc = f"{prefix}: d20({nat}) {detail} = {total} vs CA {ac}"
+    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac}"
     if nat == 1:
-        battle.log(desc + "  -> erro critico.")
+        battle.log(desc + "  -> critical miss.")
         return "miss"
     if crit or total >= ac:
         if target.dying:                     # a hit on a dying body finishes it
-            battle.log(desc + "  -> golpe de misericordia: MORTO.")
+            battle.log(desc + "  -> coup de grace: DEAD.")
             target.status = "dead"
             return "crit" if crit else "hit"
-        battle.log(desc + ("  -> ACERTO CRITICO!" if crit else "  -> acerto."))
+        battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> hit."))
         was_up = target.alive
         target.take_damage(attacker.damage_roll(crit=crit, thrown=thrown), battle.log)
         if was_up and target.team != attacker.team:
             if not target.alive:
                 attacker.kills += 1           # downed a standing enemy -> +1 combat XP later
             elif target.hp <= 0 and target.ferocity_downer is None:
-                target.ferocity_downer = attacker   # Ferocity: still up at 0 PV, credit the fall
+                target.ferocity_downer = attacker   # Ferocity: still up at 0 HP, credit the fall
         return "crit" if crit else "hit"
-    battle.log(desc + "  -> erra.")
+    battle.log(desc + "  -> misses.")
     return "miss"
 
 
@@ -162,7 +162,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
 # --------------------------------------------------------------------------- #
 
 class Move(Action):
-    id, name, target = "move", "Andar", "cell"
+    id, name, target = "move", "Move", "cell"
 
     def available(self, battle, actor):
         return bool(battle.reachable(actor))
@@ -185,7 +185,7 @@ class Move(Action):
 # --------------------------------------------------------------------------- #
 
 class Attack(Action):
-    id, name, target = "attack", "Atacar", "enemy"
+    id, name, target = "attack", "Attack", "enemy"
 
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _attackable_target(actor, target):
@@ -210,15 +210,15 @@ class Attack(Action):
         actor.walking = False
         if actor.ranged:
             actor.ammo -= 1
-            battle.log(f"{actor.name} atira ({actor.ammo} flecha(s) restante(s)).")
+            battle.log(f"{actor.name} shoots ({actor.ammo} arrow(s) left).")
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
-            mods.append((2, "circunstancia", "Flanquear"))
+            mods.append((2, "circumstance", "Flank"))
 
         ab = actor.ability
         if ab.feint and actor.spend_once("feint"):
             mods += ab.feint(actor, target)
-            battle.log(f"{actor.name} usa {ab.name} para distrair.")
+            battle.log(f"{actor.name} uses {ab.name} to distract.")
 
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
@@ -236,13 +236,13 @@ class Attack(Action):
 # --------------------------------------------------------------------------- #
 
 class Defend(Action):
-    id, name = "defend", "Defender"
+    id, name = "defend", "Defend"
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and not actor.defending
 
     def label(self, battle, actor):
-        return "Defender (1 ponto, +1 CA)"
+        return "Defend (1 pt, +1 AC)"
 
     def execute(self, battle, actor, target=None):
         if actor.ap < self.cost:
@@ -250,10 +250,10 @@ class Defend(Action):
         actor.ap -= 1
         actor.walking = False
         if actor.defending:
-            battle.log(f"{actor.name} ja esta defendendo (bonus de circunstancia nao acumula).")
+            battle.log(f"{actor.name} is already defending (circumstance bonus doesn't stack).")
         else:
             actor.add_condition(Defending())
-            battle.log(f"{actor.name} se defende: +1 CA [circunstancia] ate o proximo turno.")
+            battle.log(f"{actor.name} defends: +1 AC [circumstance] until next turn.")
 
 
 # --------------------------------------------------------------------------- #
@@ -261,7 +261,7 @@ class Defend(Action):
 # --------------------------------------------------------------------------- #
 
 class Throw(Action):
-    id, name, target, aimed = "throw", "Arremessar", "enemy", True
+    id, name, target, aimed = "throw", "Throw", "enemy", True
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.can_throw
@@ -277,8 +277,8 @@ class Throw(Action):
 
     def label(self, battle, actor):
         if not self.available(battle, actor):
-            return "Arremessar arma (1 ponto)"
-        return f"Arremessar {actor.weapon_name} (1 ponto)"
+            return "Throw weapon (1 pt)"
+        return f"Throw {actor.weapon_name} (1 pt)"
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
@@ -293,17 +293,17 @@ class Throw(Action):
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True)
         if _flanked(battle, actor, target):
-            mods.append((2, "circunstancia", "Flanquear"))
+            mods.append((2, "circumstance", "Flank"))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} arremessa {weapon_name} em {target.name}"
+        prefix = f"{actor.name} throws {weapon_name} at {target.name}"
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True)
 
         actor.disarm()
         landing = _drop_cell(battle, target)
         battle.ground.append(GroundObject.weapon(landing, weapon_name))
-        battle.log(f"  {weapon_name} cai no chao em {landing}; {actor.name} fica desarmado.")
+        battle.log(f"  {weapon_name} lands at {landing}; {actor.name} is disarmed.")
 
 
 # --------------------------------------------------------------------------- #
@@ -311,14 +311,14 @@ class Throw(Action):
 # --------------------------------------------------------------------------- #
 
 class PickUp(Action):
-    id, name = "pickup", "Pegar"
+    id, name = "pickup", "Pick up"
 
     def available(self, battle, actor):
         return (actor.ap >= self.cost
                 and any(_pickable(actor, o) for o in battle.ground_in_reach(actor)))
 
     def label(self, battle, actor):
-        return "Pegar / trocar objeto (1 ponto)"
+        return "Pick up / swap object (1 pt)"
 
     def _queue(self, battle, actor):
         # unarmed prioritizes a weapon; otherwise the nearest
@@ -336,7 +336,7 @@ class PickUp(Action):
                     dest = p
                     break
         battle.ground.append(GroundObject(kind, dest, weapon_name))
-        battle.log(f"  {actor.name} larga {'a tocha' if kind == GroundObject.TORCH else weapon_name} em {dest}.")
+        battle.log(f"  {actor.name} drops {'the torch' if kind == GroundObject.TORCH else weapon_name} at {dest}.")
 
     def execute(self, battle, actor, target=None):
         if actor.ap < self.cost:
@@ -352,10 +352,10 @@ class PickUp(Action):
         # equip; whatever does not fit in two hands falls to the ground
         if obj.is_torch:
             dropped = actor.equip_torch()
-            battle.log(f"{actor.name} pega uma tocha (ilumina {data.TORCH_RADIUS} casas).")
+            battle.log(f"{actor.name} picks up a torch (lights {data.TORCH_RADIUS} squares).")
         else:
             dropped = actor.equip_weapon(obj.weapon_name)
-            battle.log(f"{actor.name} pega {obj.weapon_name} do chao.")
+            battle.log(f"{actor.name} picks up {obj.weapon_name} from the ground.")
 
         for kind, weapon_name in dropped:
             self._drop_on_ground(battle, actor, kind, weapon_name)
@@ -366,7 +366,7 @@ class PickUp(Action):
 # --------------------------------------------------------------------------- #
 
 class Demoralize(Action):
-    id, name, target, aimed = "demoralize", "Desmoralizar", "enemy", True
+    id, name, target, aimed = "demoralize", "Demoralize", "enemy", True
 
     def _can_provoke(self, actor, target):
         return actor.ability.demoralize_ignores_language or _shared_language(actor, target)
@@ -381,7 +381,7 @@ class Demoralize(Action):
         return self._can_provoke(actor, target)
 
     def label(self, battle, actor):
-        return "Desmoralizar (1 ponto, CAR vs Defesa Mental)"
+        return "Demoralize (1 pt, CHA vs Mental Defense)"
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -389,26 +389,26 @@ class Demoralize(Action):
         actor.ap -= 1
         actor.walking = False
 
-        bonus, applied = resolve_bonus([(actor.mod_charisma, None, "CAR")])
+        bonus, applied = resolve_bonus([(actor.mod_charisma, None, "CHA")])
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
 
         if actor.ability.demoralize_ignores_language and not _shared_language(actor, target):
-            battle.log(f"{actor.name} imita a voz de {target.name} para provoca-lo.")
+            battle.log(f"{actor.name} mimics {target.name}'s voice to provoke them.")
 
         nat = d20()
         total = nat + bonus
         md = target.mental_defense
         crit = nat == 20
-        desc = (f"{actor.name} tenta desmoralizar {target.name}: "
-                f"d20({nat}) {detail} = {total} vs DM {md}")
+        desc = (f"{actor.name} tries to demoralize {target.name}: "
+                f"d20({nat}) {detail} = {total} vs MD {md}")
         if nat == 1:
-            battle.log(desc + "  -> falha critica.")
+            battle.log(desc + "  -> critical miss.")
         elif crit or total >= md:
             target.add_condition(Demoralized())
-            battle.log(desc + ("  -> ACERTO CRITICO!" if crit else "  -> acerta.")
-                       + f" {target.name} fica desmoralizado (-1 status ate o fim do turno dele).")
+            battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> lands.")
+                       + f" {target.name} is demoralized (-1 status until the end of their turn).")
         else:
-            battle.log(desc + "  -> nao abala.")
+            battle.log(desc + "  -> no effect.")
 
 
 # --------------------------------------------------------------------------- #
@@ -416,7 +416,7 @@ class Demoralize(Action):
 # --------------------------------------------------------------------------- #
 
 class Stabilize(Action):
-    id, name, target, aimed = "stabilize", "Estabilizar", "ally", True
+    id, name, target, aimed = "stabilize", "Stabilize", "ally", True
 
     def _downed_allies(self, battle, actor):
         """Adjacent allied bodies this action can work on: dying units, or broken
@@ -433,7 +433,7 @@ class Stabilize(Action):
                 and target in self._downed_allies(battle, actor))
 
     def label(self, battle, actor):
-        return (f"Estabilizar aliado caido (1 ponto: 50%, ou consertar automato "
+        return (f"Stabilize a downed ally (1 pt: 50%, or repair automaton "
                 f"INT vs {data.AUTOMATON_REPAIR_DC})")
 
     def highlight_targets(self, battle, actor):
@@ -446,17 +446,17 @@ class Stabilize(Action):
             nat = d20()
             total = nat + actor.mod_intelligence
             ok = total >= data.AUTOMATON_REPAIR_DC
-            battle.log(f"{actor.name} tenta consertar {target.name}: "
+            battle.log(f"{actor.name} tries to repair {target.name}: "
                        f"d20({nat}) {actor.mod_intelligence:+}(INT) = {total} vs "
                        f"{data.AUTOMATON_REPAIR_DC} -> "
-                       + ("consertado." if ok else "falha."))
+                       + ("repaired." if ok else "fails."))
             if ok:
                 battle.repair(target)
             return ok
         nat = d20()
         ok = nat >= data.DEATH_SAVE_MIN
-        battle.log(f"{actor.name} tenta estabilizar {target.name}: d20({nat}) -> "
-                   + ("sucesso." if ok else "falha."))
+        battle.log(f"{actor.name} tries to stabilize {target.name}: d20({nat}) -> "
+                   + ("success." if ok else "fails."))
         if ok:
             battle.stabilize(target)
         return ok
@@ -470,7 +470,7 @@ class Stabilize(Action):
 
 
 class FirstAid(Stabilize):
-    id, name = "first_aid", "Primeiros socorros"
+    id, name = "first_aid", "First Aid"
 
     def _downed_allies(self, battle, actor):
         # a med kit is for the dying; a broken automaton needs the plain Stabilize
@@ -483,8 +483,8 @@ class FirstAid(Stabilize):
         return actor.first_aid_charges > 0 and super().can(battle, actor, target)
 
     def label(self, battle, actor):
-        return (f"Primeiros socorros (1 ponto, SAB vs {data.FIRST_AID_DC}, "
-                f"{actor.first_aid_charges} cargas)")
+        return (f"First Aid (1 pt, WIS vs {data.FIRST_AID_DC}, "
+                f"{actor.first_aid_charges} charges)")
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -495,10 +495,10 @@ class FirstAid(Stabilize):
         nat = d20()
         total = nat + actor.mod_wisdom
         ok = total >= data.FIRST_AID_DC
-        battle.log(f"{actor.name} usa o kit em {target.name}: "
-                   f"d20({nat}) {actor.mod_wisdom:+}(SAB) = {total} vs {data.FIRST_AID_DC} -> "
-                   + ("sucesso." if ok else "falha.")
-                   + f"  ({actor.first_aid_charges} carga(s))")
+        battle.log(f"{actor.name} uses the kit on {target.name}: "
+                   f"d20({nat}) {actor.mod_wisdom:+}(WIS) = {total} vs {data.FIRST_AID_DC} -> "
+                   + ("success." if ok else "fails.")
+                   + f"  ({actor.first_aid_charges} charge(s))")
         if ok:
             battle.stabilize(target)
 
@@ -513,7 +513,7 @@ class Flee(Action):
     ahead that the chase fizzles. Deterministic -- the button lights up exactly
     when the escape would work. Ends your turn; downed allies are left behind."""
 
-    id, name = "flee", "Fugir"
+    id, name = "flee", "Flee"
 
     @staticmethod
     def _at_edge(battle, actor):
@@ -538,10 +538,10 @@ class Flee(Action):
 
     def label(self, battle, actor):
         if not self._at_edge(battle, actor):
-            return "Fugir (chegue na borda do mapa)"
+            return "Flee (reach the map edge)"
         if not self._escapes(battle, actor):
-            return "Fugir (inimigos rapidos demais / perto demais)"
-        return "Fugir do combate (1 ponto, encerra o turno)"
+            return "Flee (pursuers too fast / too close)"
+        return "Flee the fight (1 pt, ends the turn)"
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -549,13 +549,13 @@ class Flee(Action):
         actor.ap = 0
         actor.walking = False
         actor.status = "fled"
-        battle.log(f"{actor.name} foge do combate pela borda do mapa.")
+        battle.log(f"{actor.name} flees the fight off the map edge.")
         # drag out any downed ally you are standing next to -- the rest are left
         for ally in battle.units:
             if (ally is not actor and ally.team == actor.team and ally.downed
                     and battle.units_distance(actor, ally) <= 1):
                 ally.status = "fled"
-                battle.log(f"  {actor.name} arrasta {ally.name} para fora do combate.")
+                battle.log(f"  {actor.name} drags {ally.name} out of the fight.")
         battle._check_winner()
 
 
@@ -564,7 +564,7 @@ class Flee(Action):
 # --------------------------------------------------------------------------- #
 
 class EndTurn(Action):
-    id, name, cost = "end", "Terminar turno", 0
+    id, name, cost = "end", "End turn", 0
 
     def available(self, battle, actor):
         return battle.winner is None
