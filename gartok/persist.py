@@ -3,8 +3,9 @@ the active slot after the draft, after every battle and after every manage step.
 
 Only the player roster and a small campaign meta (wins, clock, map node, and the
 taverna's current weekly pool of would-be recruits) are persisted. Enemies are
-rolled fresh each battle and `Battle` deep-copies the roster, so disk never sees
-battle state -- a saved unit is always "full HP, standing".
+rolled fresh each battle and battle state lives on a throwaway `Combatant`
+wrapper, never on the `Unit`, so disk never sees it -- a saved unit is always
+"full HP, standing".
 """
 
 import json

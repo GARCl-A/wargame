@@ -1,7 +1,8 @@
 """Folding a finished battle back into the campaign.
 
-`Battle` fights with deep copies of the squad (see `battle.py`); once it is over
-this maps the outcome onto the persistent roster:
+`Battle` wraps each squad member in a `Combatant` that carries all the battle
+state (see `battle.py`), so the persistent roster is untouched during the fight;
+once it is over this maps the outcome onto that roster:
 
 - permadeath drops the fallen from `guild.roster`;
 - survivors keep the little that carries forward (a lit torch, for now) and
@@ -42,8 +43,8 @@ def _carry_forward(member, combatant):
 def absorb_battle(guild, squad, battle, arena_offer=None):
     """Fold `battle`'s result into `guild` (mutates it) and return a `BattleOutcome`.
 
-    `squad` is the same-order list of roster units `battle.player_units` was
-    deep-copied from. `arena_offer` is the staked tier for an arena bout, or None.
+    `squad` is the same-order list of roster units that `battle.player_units`
+    wraps. `arena_offer` is the staked tier for an arena bout, or None.
     """
     survivors, fallen, fallen_combatants, xp_awards = [], [], [], {}
     for combatant, member in zip(battle.player_units, squad):

@@ -6,8 +6,8 @@ own dead (their body is right there), and loose objects on the ground -- weapons
 that were dropped or thrown, torches. `LootScreen` lets the survivors take what
 fits under `carry_max`; the rest is left behind.
 
-Read off the *battle* combatants (deep copies), never the roster: a weapon a
-unit threw is on `battle.ground`, not on the unit, so nothing is counted twice.
+Read off the *battle* combatants, never the roster: a weapon a unit threw is on
+`battle.ground`, not on the combatant, so nothing is counted twice.
 """
 
 from . import data
