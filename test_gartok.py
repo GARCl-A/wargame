@@ -368,7 +368,7 @@ def test_field_loot_gathers_the_dead_and_the_ground():
 
 def test_arena_offers_scale_with_reputation():
     from gartok import world
-    assert [o["name"] for o in world.arena_offers(0)] == ["Fossa dos novatos"]
+    assert [o["name"] for o in world.arena_offers(0)] == ["Rookie pit"]
     assert len(world.arena_offers(2)) == 2
     assert len(world.arena_offers(99)) == len(world.ARENA_TIERS)
     # ordered cheapest first; one fighter's entry always below the purse
@@ -451,7 +451,7 @@ def test_clock_tracks_day_and_daylight():
     c = Clock()
     assert c.day == 1 and c.hour_of_day == 0 and not c.is_daylight   # midnight
     c.advance_hours(9)
-    assert c.hour_of_day == 9 and c.is_daylight and c.phase == "dia"
+    assert c.hour_of_day == 9 and c.is_daylight and c.phase == "day"
     c.advance_hours(10)                               # 19:00
     assert c.hour_of_day == 19 and not c.is_daylight
     c.advance_hours(6)                                # 01:00 next day
@@ -993,13 +993,13 @@ def test_hunger_ramps_penalties_and_caps_hp():
     u.unfed_days = 1
     u._derive_combat()
     assert u.mod_strength == fed_str - 1                  # -2 to the score = -1 to the mod
-    assert u.hunger_label == "com fome" and not u.incapacitated
+    assert u.hunger_label == "hungry" and not u.incapacitated
     u.unfed_days = 2
     u._derive_combat()
     assert u.mod_strength == fed_str - 2 and u.hp_max == 1
     u.unfed_days = 3
     u._derive_combat()
-    assert u.incapacitated and u.hunger_label == "morrendo de fome"
+    assert u.incapacitated and u.hunger_label == "starving to death"
     u.unfed_days = 0
     u._derive_combat()
     assert u.mod_strength == fed_str and u.hp_max == fed_hp   # re-derive never re-rolls HP
@@ -1118,7 +1118,7 @@ def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
     events = guild.do_maintenance()                   # 1 h stop, no day crossed
     assert guild.clock.day == 1 and guild.clock.hour_of_day == 11
     assert u.unfed_days == 0 and u.rations == 0
-    assert any("comer" in e for e in events)
+    assert any("eat" in e for e in events)
 
 
 def test_guild_screen_multidrop_moves_every_picked_pack_item():
@@ -1440,7 +1440,7 @@ def test_recruit_needs_a_shared_language():
     c = _person(2, lang="Orquico")
     assert not recruit.can_pitch(r, c)
     p = recruit.convince(r, c, 3)
-    assert not p.ok and p.reason == "sem idioma em comum"
+    assert not p.ok and p.reason == "no shared language"
 
 
 def test_recruit_is_a_charisma_contest_and_ties_go_to_the_stranger():
@@ -1568,7 +1568,7 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
     assert a.gold == 12 and b.gold == 12
     assert a.work_hours == 16 and b.work_hours == 16
     assert guild.clock.hour_of_day == 22 and guild.clock.day == 1
-    assert any("Madeireira" in e for e in events)
+    assert any("Lumber yard" in e for e in events)
 
 
 def test_work_shift_crossing_midnight_runs_the_daily_meal():

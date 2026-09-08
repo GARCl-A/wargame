@@ -91,14 +91,14 @@ class MarketScreen(DragSelectMixin, Screen):
         """One-line summary of how the party's haggling moved the prices."""
         lang = getattr(self.node, "language", None)
         if not lang:
-            return f"revenda a {int(economy.SELL_FACTOR * 100)}% do preco"
+            return f"resale at {int(economy.SELL_FACTOR * 100)}% of price"
         pct = round(self.deal * 100)
         speaks = any(lang in m.languages for m in self.shoppers)
         if not speaks:
-            return f"ninguem fala {lang}: sem negociacao (revenda a {int(economy.SELL_FACTOR * 100)}%)"
-        how = (f"desconto de {pct}%" if pct > 0
-               else f"agio de {-pct}%" if pct < 0 else "sem margem")
-        return f"vendedor fala {lang} · {self.node.alignment} · {how}"
+            return f"no one speaks {lang}: no haggling (resale at {int(economy.SELL_FACTOR * 100)}%)"
+        how = (f"{pct}% discount" if pct > 0
+               else f"{-pct}% markup" if pct < 0 else "no margin")
+        return f"vendor speaks {lang} · {self.node.alignment} · {how}"
 
     # ------------------------------------------------------------------ #
     # input: click / shift-click to (multi-)select, or drag onto a card  #
@@ -170,17 +170,17 @@ class MarketScreen(DragSelectMixin, Screen):
             for _, name in picks:
                 price = economy.buy_price(name, self.deal)
                 if self.purse < price:
-                    self.notice = f"Sem cobre para {name} ({price})."
+                    self.notice = f"Not enough copper for {name} ({price})."
                     break
                 if not self._fits(member, name):
-                    self.notice = f"{name} nao cabe na carga de {member.name}."
+                    self.notice = f"{name} won't fit {member.name}'s load."
                     continue
                 self.purse -= price
                 member.give_to_pack(name)
                 bought += 1
             member._derive_combat()
             if bought:
-                self.notice = f"{member.name} comprou {bought} item(ns)."
+                self.notice = f"{member.name} bought {bought} item(s)."
             return
 
         picks = [p for p in picks if p[0] is not member]   # dropped back home: skip
@@ -188,7 +188,7 @@ class MarketScreen(DragSelectMixin, Screen):
             return
         add = sum(data.item_weight(self._name_of(p)) for p in picks)
         if member.load + add > member.carry_max:
-            self.notice = f"nao cabe na carga de {member.name}."
+            self.notice = f"won't fit {member.name}'s load."
             self.sel = picks
             return
         names, touched = self._collect(picks)
@@ -197,7 +197,7 @@ class MarketScreen(DragSelectMixin, Screen):
         for u in touched:
             u._derive_combat()
         member._derive_combat()
-        self.notice = f"{len(names)} item(ns) -> {member.name}."
+        self.notice = f"{len(names)} item(s) -> {member.name}."
 
     def _sell(self):
         picks = [p for p in self.sel
@@ -210,7 +210,7 @@ class MarketScreen(DragSelectMixin, Screen):
         self.purse += total
         for u in touched:
             u._derive_combat()
-        self.notice = f"vendeu {len(names)} item(ns) por {total}."
+        self.notice = f"sold {len(names)} item(s) for {total}."
 
     def _checkout(self):
         n = max(1, len(self.shoppers))
@@ -228,23 +228,23 @@ class MarketScreen(DragSelectMixin, Screen):
         self.cards = []
         self.buttons = []
 
-        text(screen, "MERCADO", f.title, INK, (MARGIN, MARGIN - 2))
-        text(screen, f"bolsa comum: {self.purse} cobre", f.body_bd, ACCENT,
+        text(screen, "MARKET", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
              (WIN_W - MARGIN, MARGIN + 2), right=True)
         names = self._selected_names()
         if names:
-            one = names[0] if len(names) == 1 else f"{len(names)} itens"
+            one = names[0] if len(names) == 1 else f"{len(names)} items"
             if self._buying:
-                msg = (f"comprar {one} ({sum(economy.buy_price(n, self.deal) for n in names)})"
-                       "  ·  solte num membro")
+                msg = (f"buy {one} ({sum(economy.buy_price(n, self.deal) for n in names)})"
+                       "  ·  drop on a member")
             else:
-                msg = (f"movendo {one}  ·  solte em outro membro, ou em VENDER "
+                msg = (f"moving {one}  ·  drop on another member, or on SELL "
                        f"(+{sum(economy.sell_price(n, self.deal) for n in names)})")
-            text(screen, msg + "  ·  clique fora para cancelar", f.body, ACCENT,
+            text(screen, msg + "  ·  click outside to cancel", f.body, ACCENT,
                  (MARGIN, MARGIN + 30))
         else:
-            text(screen, f"bolsa comum: {self.purse} cobre  ·  {len(self.shoppers)} "
-                 f"comprando  ·  {self._deal_note()}",
+            text(screen, f"common purse: {self.purse} copper  ·  {len(self.shoppers)} "
+                 f"shopping  ·  {self._deal_note()}",
                  f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 64
@@ -257,7 +257,7 @@ class MarketScreen(DragSelectMixin, Screen):
 
         if self._dragging and names:
             gx, gy = self.mouse
-            label = names[0] if len(names) == 1 else f"{len(names)} itens"
+            label = names[0] if len(names) == 1 else f"{len(names)} items"
             gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
             panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
             text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
@@ -266,7 +266,7 @@ class MarketScreen(DragSelectMixin, Screen):
         f = self.fonts
         panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
         x, w = rect.x + SP3, rect.w - 2 * SP3
-        y = section(screen, "A VENDA", x, rect.y + SP3, w, f)
+        y = section(screen, "FOR SALE", x, rect.y + SP3, w, f)
         for name in economy.MARKET_STOCK:
             r = pygame.Rect(x, y, w, 26)
             sel = ("stock", name) in self.sel
@@ -315,16 +315,16 @@ class MarketScreen(DragSelectMixin, Screen):
         over_norm = m.load > m.carry_normal
         over_max = m.load > m.carry_max
         ccol = DANGER if over_max else WARN if over_norm else OK
-        text(screen, f"Carga {_kg(m.load)} / {_kg(m.carry_normal)}", f.mono_sm,
+        text(screen, f"Load {_kg(m.load)} / {_kg(m.carry_normal)}", f.mono_sm,
              ccol, (rect.x + pad, y))
-        note = ("ACIMA DA CARGA ALTA  -2 FOR/DES, -1 desloc" if over_max
-                else "sobrecarregado  -2 FOR/DES, -1 desloc" if over_norm else "")
+        note = ("OVER HIGH LOAD  -2 FOR/DES, -1 desloc" if over_max
+                else "overloaded  -2 FOR/DES, -1 desloc" if over_norm else "")
         if note:
             y += 13
             text(screen, note, f.label, ccol, (rect.x + pad, y))
         y += 18
 
-        for loc, label in (("hand", "arma"), ("offhand", "outra mao"), ("armor", "corpo")):
+        for loc, label in (("hand", "weapon"), ("offhand", "off hand"), ("armor", "body")):
             held = self._item_at(m, loc)
             if not held:
                 continue
@@ -332,15 +332,15 @@ class MarketScreen(DragSelectMixin, Screen):
             self._draw_item_row(screen, r, m, loc, held, tag=label.upper())
             y += 24 + SP1
 
-        y = section(screen, "MOCHILA", rect.x + pad, y + SP1, rect.w - 2 * pad, f)
+        y = section(screen, "PACK", rect.x + pad, y + SP1, rect.w - 2 * pad, f)
         if not m._base_inventory:
-            text(screen, "(vazia)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
+            text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
         for idx, item in enumerate(m._base_inventory):
             r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
             self._draw_item_row(screen, r, m, idx, item)
             y += 24 + SP1
 
-        tracked(screen, "COBRE (COMUM)", f.label, INFO, (rect.x + pad, rect.bottom - 22))
+        tracked(screen, "COPPER (COMMON)", f.label, INFO, (rect.x + pad, rect.bottom - 22))
 
     def _draw_item_row(self, screen, r, member, loc, name, tag=""):
         f = self.fonts
@@ -371,7 +371,7 @@ class MarketScreen(DragSelectMixin, Screen):
             hov = sr.collidepoint(self.mouse)
             panel(screen, sr, fill=DANGER if hov else SURFACE_3, border=DANGER,
                   width=1, radius=RADIUS)
-            text(screen, f"VENDER POR {total}", f.body_bd,
+            text(screen, f"SELL FOR {total}", f.body_bd,
                  ACCENT_INK if hov else DANGER, sr.center, center=True)
             self.buttons.append(("sell", sr))
 
@@ -379,6 +379,6 @@ class MarketScreen(DragSelectMixin, Screen):
         hovd = done.collidepoint(self.mouse)
         panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)
-        text(screen, "SAIR DO MERCADO", f.body_bd, ACCENT_INK if hovd else ACCENT,
+        text(screen, "LEAVE THE MARKET", f.body_bd, ACCENT_INK if hovd else ACCENT,
              done.center, center=True)
         self.buttons.append(("done", done))

@@ -1,6 +1,6 @@
 """Draft screen: build your squad by picking 1 of 3 candidates, three times.
 
-The pencil/EDITAR toggle swaps a candidate's race or occupation before you lock
+The pencil/EDIT toggle swaps a candidate's race or occupation before you lock
 it in. Presentation only -- the character model lives in `unit` / `data`.
 """
 
@@ -25,20 +25,20 @@ def _archetypes(u):
     """Two or three quick read tags to help the pick."""
     tags = []
     if u.size == "Grande":
-        tags.append(("GRANDE", INFO))
+        tags.append(("LARGE", INFO))
     if u.dr or u.ac >= 12 or u.hp_max >= 9:
-        tags.append(("RESISTENTE", OK))
+        tags.append(("TOUGH", OK))
     if u.ranged:
-        tags.append(("DISTANCIA", INFO))
+        tags.append(("RANGED", INFO))
     if u.speed >= 7:
-        tags.append(("VELOZ", OK))
+        tags.append(("FAST", OK))
     if u.mod_strength >= 2:
-        tags.append(("BRUTO", WARN))
+        tags.append(("BRUTE", WARN))
     if u.mod_charisma >= 1:
-        tags.append(("PROVOCADOR", WARN))
+        tags.append(("TAUNTER", WARN))
     if u.ability.darkvision:
-        tags.append(("VE NO ESCURO", INFO))
-    return tags[:3] or [("EQUILIBRADO", INK_FAINT)]
+        tags.append(("SEES IN DARK", INFO))
+    return tags[:3] or [("BALANCED", INK_FAINT)]
 
 
 class DraftScreen(Screen):
@@ -103,13 +103,13 @@ class DraftScreen(Screen):
         mouse = self.mouse
         round_no = len(self.picks) + 1
 
-        text(screen, "MONTAGEM DO ESQUADRAO", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, "SQUAD DRAFT", f.title, INK, (MARGIN, MARGIN - 2))
         if self.edit_mode:
-            sub, col = ("MODO EDICAO  ·  clique em 'trocar' para mudar raca / ocupacao  ·  "
-                        "EDITANDO volta a escolher", ACCENT)
+            sub, col = ("EDIT MODE  ·  click 'swap' to change race / occupation  ·  "
+                        "EDITING goes back to picking", ACCENT)
         else:
-            sub, col = (f"Rodada {round_no} de {DRAFT_ROUNDS}  ·  escolha 1 dos {DRAFT_CHOICES}  "
-                        f"·  esquadrao {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
+            sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
+                        f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
         text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
         self._draw_edit_button(screen, mouse)
 
@@ -131,7 +131,7 @@ class DraftScreen(Screen):
             self._draw_card(screen, rect, unit, hover, mouse)
 
         self._draw_squad_rail(screen, MARGIN, rail_y, WIN_W - 2 * MARGIN, rail_h)
-        text(screen, "[Esc] sair", f.body_sm, INK_FAINT, (MARGIN, WIN_H - 18))
+        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, WIN_H - 18))
 
         if self.picker is not None:
             self._draw_picker(screen, mouse)
@@ -168,21 +168,21 @@ class DraftScreen(Screen):
             tx += w + SP1
         s.gap(SP3)
         ctx = s.row(16)
-        text(screen, f"{unit.alignment}   ·   {unit.size}   ·   {unit.age} anos",
+        text(screen, f"{unit.alignment}   ·   {unit.size}   ·   {unit.age} yrs",
              f.body_sm, INK_DIM, (ctx.x, ctx.y))
         s.gap(SP3)
 
         # --- edit rows ------------------------------------------- #
         if self.edit_mode:
-            for field, lbl, val in (("race", "RACA", unit.race["name"]),
-                                    ("occupation", "OCUPACAO", unit.occupation["name"])):
+            for field, lbl, val in (("race", "RACE", unit.race["name"]),
+                                    ("occupation", "OCCUPATION", unit.occupation["name"])):
                 br = s.row(28)
                 s.gap(SP1)
                 hov = br.collidepoint(mouse)
                 panel(screen, br, fill=SURFACE_3 if hov else SURFACE_1,
                       border=ACCENT if hov else LINE, width=1, radius=4)
                 text(screen, f"{lbl}  {val}", f.body_sm, INK, (br.x + SP2, br.y + 7))
-                text(screen, "trocar", f.label, ACCENT if hov else INK_DIM,
+                text(screen, "swap", f.label, ACCENT if hov else INK_DIM,
                      (br.right - SP2, br.y + 8), right=True)
                 self.edit_rects.append((br, unit, field))
             s.gap(SP2)
@@ -199,7 +199,7 @@ class DraftScreen(Screen):
         s.gap(SP3)
 
         # --- attributes (one compact row) --------------------- #
-        s.y = section(screen, "ATRIBUTOS", s.x, s.y, s.w, f)
+        s.y = section(screen, "ATTRIBUTES", s.x, s.y, s.w, f)
         arow = s.row(46)
         aw = arow.w // 6
         for i, (k, name) in enumerate((("FOR", "strength"), ("DES", "dexterity"),
@@ -217,11 +217,11 @@ class DraftScreen(Screen):
         s.gap(SP3)
 
         # --- weapon ------------------------------------------- #
-        s.y = section(screen, "ARMA", s.x, s.y, s.w, f)
+        s.y = section(screen, "WEAPON", s.x, s.y, s.w, f)
         n, faces = unit.weapon["damage"]
-        reach = f"alcance {unit.weapon['range']}" if unit.ranged else "corpo-a-corpo"
-        hands = "2 maos" if unit.weapon["hands"] == 2 else "1 mao"
-        ammo = f"  ·  {preview.ammo} flechas" if preview.needs_ammo else ""
+        reach = f"range {unit.weapon['range']}" if unit.ranged else "melee"
+        hands = "2 hands" if unit.weapon["hands"] == 2 else "1 hand"
+        ammo = f"  ·  {preview.ammo} arrows" if preview.needs_ammo else ""
         wrow = s.row(34)
         text(screen, unit.weapon_name, f.body_bd, INK, (wrow.x, wrow.y))
         text(screen, f"{n}d{faces}  ·  {reach}  ·  {hands}{ammo}", f.body_sm, INK_DIM,
@@ -230,21 +230,21 @@ class DraftScreen(Screen):
 
         # --- languages -------------------------------------- #
         lrow = s.row(30)
-        tracked(screen, "IDIOMAS", f.label, INFO, (lrow.x, lrow.y + 1))
+        tracked(screen, "LANGUAGES", f.label, INFO, (lrow.x, lrow.y + 1))
         text(screen, ", ".join(unit.languages), f.body_sm, INK, (lrow.x + 66, lrow.y))
         if unit.ability.demoralize_ignores_language:
-            note = "imita vozes: Desmoraliza sem idioma em comum"
+            note = "mimics voices: Demoralize needs no shared language"
         elif unit.ability.extra_languages:
-            note = "2o idioma: mais alvos para Desmoralizar"
+            note = "2nd language: more targets to Demoralize"
         else:
-            note = "Desmoralizar exige um idioma em comum"
+            note = "Demoralize needs a shared language"
         text(screen, note, f.body_sm, INK_DIM, (lrow.x, lrow.y + 15))
         s.gap(SP2)
 
         # --- ability --------------------------------------- #
         eff = wrap_lines([unit.ability.effect], f.body_sm, s.w - SP3) \
             if not self.edit_mode else []
-        s.y = section(screen, "HABILIDADE", s.x, s.y + SP1, s.w, f)
+        s.y = section(screen, "ABILITY", s.x, s.y + SP1, s.w, f)
         hb = s.row(22 + len(eff) * 15 + SP2)
         panel(screen, hb, fill=SURFACE_1, border=INFO, width=1, radius=4)
         text(screen, unit.ability.name, f.body_bd, INFO, (hb.x + SP2, hb.y + 5))
@@ -253,8 +253,8 @@ class DraftScreen(Screen):
         s.gap(SP3)
 
         # --- inventory one-liner --------------------------- #
-        inv = ", ".join(unit._base_inventory) if unit._base_inventory else "(vazio)"
-        text(screen, f"leva {inv}  ·  {unit.gold} cobre  ·  carga {unit.load}/{unit.carry_normal}",
+        inv = ", ".join(unit._base_inventory) if unit._base_inventory else "(empty)"
+        text(screen, f"carries {inv}  ·  {unit.gold} copper  ·  load {unit.load}/{unit.carry_normal}",
              f.body_sm, INK_FAINT, (s.x, s.y))
 
         # --- footer --------------------------------------- #
@@ -262,14 +262,14 @@ class DraftScreen(Screen):
             fr = pygame.Rect(rect.x + pad, rect.bottom - 36, rect.w - 2 * pad, 26)
             panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
                   border=ACCENT if hover else LINE, width=1, radius=4)
-            text(screen, "ESCOLHER" if hover else "clique para escolher",
+            text(screen, "PICK" if hover else "click to pick",
                  f.label if hover else f.body_sm,
                  ACCENT_INK if hover else INK_DIM, fr.center, center=True)
 
     # ------------------------------------------------------------------ #
     def _draw_squad_rail(self, screen, x, y, w, h):
         f = self.fonts
-        tracked(screen, "SEU ESQUADRAO", f.label, INK_FAINT, (x, y))
+        tracked(screen, "YOUR SQUAD", f.label, INK_FAINT, (x, y))
         y += 16
         slot_w = (w - 2 * SP2) // 3
         for i in range(TEAM_SIZE):
@@ -286,7 +286,7 @@ class DraftScreen(Screen):
                      f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 18))
             else:
                 pygame.draw.rect(screen, LINE_SOFT, r, 1, border_radius=RADIUS)
-                text(screen, f"vaga {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)
+                text(screen, f"slot {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)
 
     def _draw_edit_button(self, screen, mouse):
         r = pygame.Rect(WIN_W - MARGIN - 96, MARGIN, 96, 30)
@@ -295,7 +295,7 @@ class DraftScreen(Screen):
         hov = r.collidepoint(mouse)
         panel(screen, r, fill=ACCENT if on else (SURFACE_3 if hov else SURFACE_2),
               border=ACCENT if (on or hov) else LINE, width=1, radius=4)
-        text(screen, "EDITANDO" if on else "EDITAR", self.fonts.label,
+        text(screen, "EDITING" if on else "EDIT", self.fonts.label,
              ACCENT_INK if on else INK, r.center, center=True)
 
     # ------------------------------------------------------------------ #
@@ -303,10 +303,10 @@ class DraftScreen(Screen):
         f = self.fonts
         unit, field = self.picker
         if field == "race":
-            options, current, title = data.RACE_NAMES, unit.race["name"], "Escolher raca"
+            options, current, title = data.RACE_NAMES, unit.race["name"], "Pick a race"
         else:
             options, current, title = (data.OCCUPATION_NAMES, unit.occupation["name"],
-                                       "Escolher ocupacao")
+                                       "Pick an occupation")
 
         veil = pygame.Surface((WIN_W, WIN_H), pygame.SRCALPHA)
         veil.fill((0, 0, 0, 190))
@@ -332,5 +332,5 @@ class DraftScreen(Screen):
                   border=ACCENT if sel else (LINE if hov else LINE_SOFT), width=1, radius=4)
             text(screen, name, f.body_sm, ACCENT if sel else INK, (it.x + SP2, it.y + 4))
             self.picker_rects.append((it, name))
-        text(screen, "clique fora para cancelar", f.body_sm, INK_FAINT,
+        text(screen, "click outside to cancel", f.body_sm, INK_FAINT,
              (panel_r.x + pad, panel_r.bottom - 20))

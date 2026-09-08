@@ -26,8 +26,8 @@ SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
 GROUND_NIGHT = (21, 23, 32)
 KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "taverna": WARN, "town": NEUTRAL_C}
-KIND_BADGE = {"battle": "COMBATE", "market": "MERCADO", "taverna": "TAVERNA", "town": "PARADA"}
-KIND_NAME = {"battle": "combate", "market": "mercado", "taverna": "taverna", "town": "parada"}
+KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "taverna": "TAVERN", "town": "STOP"}
+KIND_NAME = {"battle": "combat", "market": "market", "taverna": "tavern", "town": "stop"}
 
 
 class MapScreen(Screen):
@@ -89,14 +89,14 @@ class MapScreen(Screen):
             return
         events = self.guild.pass_time(hours)
         self.guild.node = target.id
-        self.notices = [f"Viagem ate {target.name}: {hours} h."] + events
+        self.notices = [f"Travelled to {target.name}: {hours} h."] + events
         if self.guild.empty:
             self.on_wipe()
 
     def _maintain(self):
         """Stop where you stand for an hour: eat, and (later) see to the gear."""
         events = self.guild.do_maintenance()
-        self.notices = ["Manutencao: 1 h de parada."] + events
+        self.notices = ["Maintenance: 1 h stop."] + events
         if self.guild.empty:
             self.on_wipe()
 
@@ -151,12 +151,12 @@ class MapScreen(Screen):
 
         hungry = self.guild.hungry
         rations = self.guild.rations
-        text(screen, "MAPA", f.title, INK, (MARGIN, MARGIN - 2))
-        text(screen, f"{clock.label}   ·   {len(self.guild)} membros"
-             + (f" ({len(hungry)} com fome)" if hungry else "")
-             + f"   ·   {rations} racoes"
-             + f"   ·   {self.guild.gold} cobre   ·   {self.guild.battles_won} vitorias"
-             f"   ·   reputacao de arena {self.guild.arena_reputation}",
+        text(screen, "MAP", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, f"{clock.label}   ·   {len(self.guild)} members"
+             + (f" ({len(hungry)} hungry)" if hungry else "")
+             + f"   ·   {rations} rations"
+             + f"   ·   {self.guild.gold} copper   ·   {self.guild.battles_won} wins"
+             f"   ·   arena reputation {self.guild.arena_reputation}",
              f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
         area = self._area()
@@ -275,8 +275,8 @@ class MapScreen(Screen):
 
     def _draw_legend(self, screen, area):
         f = self.fonts
-        rows = [("battle", "combate"), ("market", "mercado"),
-                ("taverna", "taverna"), ("town", "parada")]
+        rows = [("battle", "combat"), ("market", "market"),
+                ("taverna", "tavern"), ("town", "stop")]
         box = pygame.Rect(0, 0, 116, 15 * len(rows) + 12)
         box.topright = (area.right - SP3, area.y + SP3)
         panel(screen, box, fill=SURFACE_1, border=LINE_SOFT, radius=6)
@@ -292,7 +292,7 @@ class MapScreen(Screen):
             return
         f = self.fonts
         _, hours = world.route(self.guild.node, hov.id)
-        s = f"{hov.name}   ·   {hours} h   ·   clique p/ viajar"
+        s = f"{hov.name}   ·   {hours} h   ·   click to travel"
         r = pygame.Rect(0, 0, f.body_sm.size(s)[0] + 18, 22)
         r.topleft = (self.mouse[0] + 14, self.mouse[1] - 6)
         r.clamp_ip(area.inflate(-SP2, -SP2))
@@ -313,7 +313,7 @@ class MapScreen(Screen):
         cw = SIDE_W - 2 * pad
         y = area.y + pad
 
-        tracked(screen, "VOCE ESTA EM", f.label, INFO, (cx, y))
+        tracked(screen, "YOU ARE AT", f.label, INFO, (cx, y))
         y += 18
         text(screen, here.name, f.heading, INK, (cx, y))
         y += 24
@@ -324,54 +324,54 @@ class MapScreen(Screen):
             y += 16
 
         y += SP3
-        y = section(screen, "AQUI", cx, y, cw, f)
+        y = section(screen, "HERE", cx, y, cw, f)
         if here.is_battle:
             br = pygame.Rect(cx, y, cw, 38)
             hovb = br.collidepoint(self.mouse)
             panel(screen, br, fill=ACCENT if hovb else SURFACE_3,
                   border=ACCENT, width=1, radius=RADIUS)
-            label = "APOSTAR NA ARENA" if here.arena else "ATACAR"
+            label = "BET AT THE ARENA" if here.arena else "ATTACK"
             text(screen, label, f.body_bd, ACCENT_INK if hovb else ACCENT,
                  br.center, center=True)
             self.buttons.append(("attack", br))
             y += 44
-            note = ("nao-letal · aposta em cobre, ganha a bolsa" if here.arena
-                    else "combate letal · saqueia os corpos")
+            note = ("non-lethal · stake copper, win the purse" if here.arena
+                    else "lethal combat · loot the bodies")
             text(screen, note, f.body_sm, INK_FAINT, (cx, y))
         elif here.is_market:
             mr = pygame.Rect(cx, y, cw, 38)
             hovm = mr.collidepoint(self.mouse)
             panel(screen, mr, fill=SURFACE_3 if hovm else SURFACE_1,
                   border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "ENTRAR NO MERCADO", f.body_bd, INK_DIM, mr.center, center=True)
+            text(screen, "ENTER THE MARKET", f.body_bd, INK_DIM, mr.center, center=True)
             self.buttons.append(("market", mr))
         elif here.is_taverna:
             tr = pygame.Rect(cx, y, cw, 38)
             hovt = tr.collidepoint(self.mouse)
             panel(screen, tr, fill=SURFACE_3 if hovt else SURFACE_1,
                   border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "ENTRAR NA TAVERNA", f.body_bd, INK_DIM, tr.center, center=True)
+            text(screen, "ENTER THE TAVERN", f.body_bd, INK_DIM, tr.center, center=True)
             self.buttons.append(("recruit", tr))
             y += 44
-            text(screen, "convenca um estranho a assinar com a guilda", f.body_sm,
+            text(screen, "talk a stranger into signing with the guild", f.body_sm,
                  INK_FAINT, (cx, y))
         elif here.work:
             wr = pygame.Rect(cx, y, cw, 38)
             hovw = wr.collidepoint(self.mouse)
             panel(screen, wr, fill=SURFACE_3 if hovw else SURFACE_1,
                   border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "TRABALHAR NA MADEIREIRA", f.body_bd, INK_DIM,
+            text(screen, "WORK AT THE LUMBER YARD", f.body_bd, INK_DIM,
                  wr.center, center=True)
             self.buttons.append(("work", wr))
             y += 44
-            text(screen, "troca horas do dia por cobre  ·  paga pouco, mas e certo",
+            text(screen, "trade hours of the day for copper  ·  pays little, but it's sure",
                  f.body_sm, INK_FAINT, (cx, y))
         else:
-            text(screen, "Nada acontece aqui. Parada segura.", f.body_sm,
+            text(screen, "Nothing happens here. A safe stop.", f.body_sm,
                  INK_FAINT, (cx, y))
 
         y += 60
-        y = section(screen, "DAQUI VOCE ALCANCA", cx, y, cw, f)
+        y = section(screen, "FROM HERE YOU CAN REACH", cx, y, cw, f)
         for nid, hours in sorted(world.neighbors(here.id), key=lambda t: t[1]):
             n = world.node(nid)
             text(screen, n.name, f.body_sm, INK_DIM, (cx, y))
@@ -382,7 +382,7 @@ class MapScreen(Screen):
             lines = [w for ln in self.notices for w in wrap_lines([ln], f.body_sm, cw)]
             yy = rect.bottom - pad - 13 * len(lines)
             for ln in lines:
-                col = DANGER if "morreu" in ln else INFO
+                col = DANGER if "starved" in ln else INFO
                 text(screen, ln, f.body_sm, col, (cx, yy))
                 yy += 13
 
@@ -394,7 +394,7 @@ class MapScreen(Screen):
         hovg = g.collidepoint(self.mouse)
         panel(screen, g, fill=ACCENT if hovg else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)
-        text(screen, "GUILDA / EQUIPAR", f.body_bd, ACCENT_INK if hovg else ACCENT,
+        text(screen, "GUILD / GEAR", f.body_bd, ACCENT_INK if hovg else ACCENT,
              g.center, center=True)
         self.buttons.append(("guild", g))
 
@@ -411,10 +411,10 @@ class MapScreen(Screen):
         urgent = bool(hungry) and any(u.rations for u in hungry)
         panel(screen, mt, fill=ACCENT if hovt else SURFACE_3 if urgent else SURFACE_2,
               border=ACCENT if urgent else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "MANUTENCAO (1 h)", f.body_bd,
+        text(screen, "MAINTENANCE (1 h)", f.body_bd,
              ACCENT_INK if hovt else ACCENT if urgent else INK_DIM,
              mt.center, center=True)
         self.buttons.append(("maintain", mt))
 
-        text(screen, "clique num lugar para viajar  ·  passar tempo pode virar a noite",
+        text(screen, "click a place to travel  ·  passing time can turn to night",
              f.body_sm, INK_FAINT, (MARGIN + 540, y + 10))

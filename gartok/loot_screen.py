@@ -3,7 +3,7 @@
 The pile on the left is everything left on the field (see `loot.field_loot`):
 the defeated enemies' gear, your own dead's gear, loose weapons and torches.
 Click an item, then click a survivor to drop it in their pack -- if it fits
-under their `carry_max` (a hard ceiling). "Pegar o que couber" fills packs
+under their `carry_max` (a hard ceiling). "Take what fits" fills packs
 greedily. Whatever is still in the pile when you finish is left behind.
 
 Re-equipping (draw which weapon, light a torch) happens later on the guild screen.
@@ -43,7 +43,7 @@ class LootScreen(Screen):
         return member.load + data.item_weight(name) <= member.carry_max
 
     def _give(self, member, name):
-        member.give_to_pack(name)
+        member.give_to_pack(name)
 
     def _click(self, px):
         for key, rect in self.buttons:
@@ -67,7 +67,7 @@ class LootScreen(Screen):
                         self.sel = None
                         self.notice = None
                     else:
-                        self.notice = f"{member.name} nao aguenta {name} (carga maxima)."
+                        self.notice = f"{member.name} can't carry {name} (max load)."
                     return
 
     def _auto_pick(self):
@@ -80,7 +80,7 @@ class LootScreen(Screen):
                     self.pool.remove(name)
                     break
         self.sel = None
-        self.notice = "Pegue o resto na mao a mao ou deixe pra tras."
+        self.notice = "Grab the rest by hand or leave it behind."
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
@@ -90,9 +90,9 @@ class LootScreen(Screen):
         self.cards = []
         self.buttons = []
 
-        text(screen, "SAQUE", f.title, INK, (MARGIN, MARGIN - 2))
-        left = f"{len(self.pool)} itens no campo" if self.pool else "campo limpo"
-        text(screen, f"{left}  ·  teto = carga maxima de cada um  ·  o que sobrar fica pra tras",
+        text(screen, "LOOT", f.title, INK, (MARGIN, MARGIN - 2))
+        left = f"{len(self.pool)} items on the field" if self.pool else "field cleared"
+        text(screen, f"{left}  ·  ceiling = each one's max load  ·  whatever's left stays behind",
              f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 72
@@ -108,9 +108,9 @@ class LootScreen(Screen):
         f = self.fonts
         panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
         x, w = rect.x + SP3, rect.w - 2 * SP3
-        y = section(screen, "NO CHAO", x, rect.y + SP3, w, f)
+        y = section(screen, "ON THE GROUND", x, rect.y + SP3, w, f)
         if not self.pool:
-            text(screen, "(nada)", f.body_sm, INK_FAINT, (x, y + 2))
+            text(screen, "(nothing)", f.body_sm, INK_FAINT, (x, y + 2))
             return
         for i, name in enumerate(self.pool):
             r = pygame.Rect(x, y, w, 26)
@@ -154,16 +154,16 @@ class LootScreen(Screen):
         y = rect.y + pad + 46
         over = m.load > m.carry_max
         ccol = DANGER if over else OK
-        text(screen, f"Carga {_kg(m.load)} / {_kg(m.carry_max)}", f.mono_sm, ccol,
+        text(screen, f"Load {_kg(m.load)} / {_kg(m.carry_max)}", f.mono_sm, ccol,
              (rect.x + pad, y))
         y += 14
         room = max(0.0, m.carry_max - m.load)
-        text(screen, f"folga {_kg(round(room, 1))}", f.body_sm, INK_FAINT, (rect.x + pad, y))
+        text(screen, f"room {_kg(round(room, 1))}", f.body_sm, INK_FAINT, (rect.x + pad, y))
         y += 20
 
-        y = section(screen, "MOCHILA", rect.x + pad, y, rect.w - 2 * pad, f)
+        y = section(screen, "PACK", rect.x + pad, y, rect.w - 2 * pad, f)
         if not m._base_inventory:
-            text(screen, "(vazia)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
+            text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
         for it in m._base_inventory:
             text(screen, it, f.body_sm, INK_DIM, (rect.x + pad, y))
             text(screen, _kg(data.item_weight(it)), f.mono_sm, INK_FAINT,
@@ -171,7 +171,7 @@ class LootScreen(Screen):
             y += 16
 
         if sel and hov:
-            msg = "clique: pegar" if drop_ok else "nao cabe"
+            msg = "click: take" if drop_ok else "won't fit"
             text(screen, msg, f.label, OK if drop_ok else DANGER,
                  (rect.centerx, rect.bottom - 16), center=True)
 
@@ -186,7 +186,7 @@ class LootScreen(Screen):
         on = bool(self.pool)
         panel(screen, auto, fill=SURFACE_3 if (on and hova) else SURFACE_2 if on else SURFACE_1,
               border=LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "pegar o que couber", f.body, INK if on else INK_FAINT,
+        text(screen, "take what fits", f.body, INK if on else INK_FAINT,
              auto.center, center=True)
         if on:
             self.buttons.append(("auto", auto))
@@ -195,6 +195,6 @@ class LootScreen(Screen):
         hovd = done.collidepoint(self.mouse)
         panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)
-        lbl = "CONCLUIR" if not self.pool else "DEIXAR O RESTO E SEGUIR"
+        lbl = "DONE" if not self.pool else "LEAVE THE REST AND GO"
         text(screen, lbl, f.body_bd, ACCENT_INK if hovd else ACCENT, done.center, center=True)
         self.buttons.append(("done", done))

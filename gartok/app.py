@@ -109,14 +109,14 @@ class App:
         self.scene = SquadScreen(self.fonts, self.guild.roster, node,
                                  on_confirm=self._start_battle, on_back=self._start_map,
                                  arena_offers=offers, disabled=disabled,
-                                 confirm_label="APOSTAR E LUTAR" if node.arena else "CONFIRMAR")
+                                 confirm_label="STAKE AND FIGHT" if node.arena else "CONFIRM")
 
     def _open_market(self, node):
         roster = self.guild.roster
         self.scene = SquadScreen(self.fonts, roster, node,
                                  on_confirm=self._open_market_stalls, on_back=self._start_map,
-                                 max_pick=len(roster), title="QUEM VAI AO MERCADO",
-                                 confirm_label="IR AS COMPRAS")
+                                 max_pick=len(roster), title="WHO GOES TO THE MARKET",
+                                 confirm_label="GO SHOPPING")
 
     def _open_market_stalls(self, shoppers, node, _offer):
         self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
@@ -126,8 +126,8 @@ class App:
         roster = self.guild.roster
         self.scene = SquadScreen(self.fonts, roster, node,
                                  on_confirm=self._open_lumber_yard, on_back=self._start_map,
-                                 max_pick=len(roster), title="QUEM VAI TRABALHAR",
-                                 confirm_label="IR A MADEIREIRA")
+                                 max_pick=len(roster), title="WHO GOES TO WORK",
+                                 confirm_label="GO TO THE LUMBER YARD")
 
     def _open_lumber_yard(self, workers, node, _offer):
         self.scene = WorkScreen(self.fonts, self.guild, workers,
@@ -143,8 +143,8 @@ class App:
         roster = self.guild.roster
         self.scene = SquadScreen(self.fonts, roster, node,
                                  on_confirm=self._open_taverna, on_back=self._start_map,
-                                 max_pick=len(roster), title="QUEM VAI A TAVERNA",
-                                 confirm_label="IR A TAVERNA")
+                                 max_pick=len(roster), title="WHO GOES TO THE TAVERN",
+                                 confirm_label="GO TO THE TAVERN")
 
     def _open_taverna(self, party, node, _offer):
         self.scene = TavernaScreen(self.fonts, self.guild, party, node,

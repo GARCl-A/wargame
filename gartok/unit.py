@@ -97,7 +97,7 @@ class Unit:
     # ------------------------------------------------------------------ #
     @property
     def hunger_level(self):
-        """0 fed · 1 com fome · 2 esfomeado · 3 morrendo de fome."""
+        """0 fed · 1 hungry · 2 starving · 3 starving to death."""
         if self._ability.id == "autotroph":
             return 0
         return min(self.unfed_days, 3)
@@ -108,7 +108,7 @@ class Unit:
 
     @property
     def hunger_label(self):
-        return ("", "com fome", "esfomeado", "morrendo de fome")[self.hunger_level]
+        return ("", "hungry", "starving", "starving to death")[self.hunger_level]
 
     @property
     def incapacitated(self):

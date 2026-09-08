@@ -51,11 +51,11 @@ class Clock:
 
     @property
     def phase(self):
-        return "dia" if self.is_daylight else "noite"
+        return "day" if self.is_daylight else "night"
 
     @property
     def label(self):
-        return f"Dia {self.day}  {self.hour_of_day:02d}:{self.minute_of_hour:02d}  ({self.phase})"
+        return f"Day {self.day}  {self.hour_of_day:02d}:{self.minute_of_hour:02d}  ({self.phase})"
 
     def __repr__(self):
         return f"<Clock {self.label}>"

@@ -43,7 +43,7 @@ class WorkScreen(Screen):
                     self.on_back()
                 elif key == "confirm" and self.result is None:
                     self.result = self.guild.work_shift(self.workers, self.hours) or \
-                        ["Turno cumprido."]
+                        ["Shift done."]
                 elif key == "done" and self.result is not None:
                     self.on_done()
                 return
@@ -61,10 +61,10 @@ class WorkScreen(Screen):
         self.chips = []
         self.buttons = []
 
-        text(screen, "MADEIREIRA", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, "LUMBER YARD", f.title, INK, (MARGIN, MARGIN - 2))
         clock = self.guild.clock
-        text(screen, f"{clock.label}   ·   {len(self.workers)} na turma   ·   "
-             f"pagamento: {economy.LUMBER_WAGE} cobre a cada "
+        text(screen, f"{clock.label}   ·   {len(self.workers)} on the crew   ·   "
+             f"pay: {economy.LUMBER_WAGE} copper every "
              f"{economy.LUMBER_BLOCK_HOURS} h", f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 72
@@ -93,13 +93,13 @@ class WorkScreen(Screen):
             text(screen, f"{u.race['name']}  ·  {u.occupation['name']}", f.body_sm,
                  INK_DIM, (tok[0] + 24, rect.y + pad + 20))
             y = rect.y + pad + 46
-            text(screen, f"{u.gold} cobre", f.mono_sm, ACCENT, (rect.x + pad, y))
-            text(screen, f"{u.work_xp} XP de trabalho", f.mono_sm, INFO,
+            text(screen, f"{u.gold} copper", f.mono_sm, ACCENT, (rect.x + pad, y))
+            text(screen, f"{u.work_xp} work XP", f.mono_sm, INFO,
                  (rect.right - pad, y), right=True)
 
     def _draw_shift_picker(self, screen, top):
         f = self.fonts
-        top = section(screen, "TURNO", MARGIN, top, WIN_W - 2 * MARGIN, f)
+        top = section(screen, "SHIFT", MARGIN, top, WIN_W - 2 * MARGIN, f)
         gap = SP2
         opts = economy.LUMBER_SHIFT_HOURS
         w = (WIN_W - 2 * MARGIN - (len(opts) - 1) * gap) // len(opts)
@@ -112,7 +112,7 @@ class WorkScreen(Screen):
                   radius=RADIUS)
             text(screen, f"{h} h", f.body_bd, ACCENT if sel else INK,
                  (r.x + SP2, r.y + 8))
-            text(screen, f"+{economy.lumber_pay(h)} cobre", f.body_sm, INK_DIM,
+            text(screen, f"+{economy.lumber_pay(h)} copper", f.body_sm, INK_DIM,
                  (r.x + SP2, r.y + 30))
             self.chips.append((r, h))
         top += 66
@@ -120,20 +120,20 @@ class WorkScreen(Screen):
         marks = self.hours // economy.LUMBER_XP_HOURS
         now = self.guild.clock.seconds
         crosses_day = (now + self.hours * 3600) // 86400 != now // 86400
-        note = f"turno de {self.hours} h  ·  +{self.pay} cobre por cabeca"
+        note = f"{self.hours} h shift  ·  +{self.pay} copper each"
         if marks:
-            note += f"  ·  +{marks} XP de trabalho"
+            note += f"  ·  +{marks} work XP"
         if crosses_day:
-            note += "  ·  passa da meia-noite: refeicao do dia"
+            note += "  ·  crosses midnight: the day's meal"
         text(screen, note, f.body_sm, INK_FAINT, (MARGIN, top))
 
     def _draw_result(self, screen, top):
         f = self.fonts
-        top = section(screen, "FIM DO TURNO", MARGIN, top, WIN_W - 2 * MARGIN, f)
+        top = section(screen, "END OF SHIFT", MARGIN, top, WIN_W - 2 * MARGIN, f)
         lines = [w for ln in self.result
                  for w in wrap_lines([ln], f.body_sm, WIN_W - 2 * MARGIN)]
         for ln in lines:
-            col = DANGER if "morreu" in ln else OK if "cobre" in ln else INFO
+            col = DANGER if "starved" in ln else OK if "copper" in ln else INFO
             text(screen, ln, f.body_sm, col, (MARGIN, top))
             top += 16
 
@@ -145,7 +145,7 @@ class WorkScreen(Screen):
             hov = conf.collidepoint(self.mouse)
             panel(screen, conf, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
                   width=1, radius=RADIUS)
-            text(screen, "CONFIRMAR TURNO", f.body_bd, ACCENT_INK if hov else ACCENT,
+            text(screen, "CONFIRM SHIFT", f.body_bd, ACCENT_INK if hov else ACCENT,
                  conf.center, center=True)
             self.buttons.append(("confirm", conf))
 
@@ -153,7 +153,7 @@ class WorkScreen(Screen):
             hovb = back.collidepoint(self.mouse)
             panel(screen, back, fill=SURFACE_3 if hovb else SURFACE_2,
                   border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "voltar", f.body, INK if hovb else INK_DIM,
+            text(screen, "back", f.body, INK if hovb else INK_DIM,
                  back.center, center=True)
             self.buttons.append(("back", back))
         else:
@@ -161,6 +161,6 @@ class WorkScreen(Screen):
             hov = d.collidepoint(self.mouse)
             panel(screen, d, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
                   width=1, radius=RADIUS)
-            text(screen, "SEGUIR", f.body_bd, ACCENT_INK if hov else ACCENT,
+            text(screen, "CONTINUE", f.body_bd, ACCENT_INK if hov else ACCENT,
                  d.center, center=True)
             self.buttons.append(("done", d))

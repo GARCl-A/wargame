@@ -69,15 +69,15 @@ class Guild:
             outcome = u.consume_daily_food()
             if outcome == "dead":
                 casualties.append(u)
-                events.append(f"{u.name} morreu de fome.")
+                events.append(f"{u.name} starved to death.")
             elif outcome == "hungry":
-                events.append(f"{u.name} nao comeu hoje: {u.hunger_label}.")
+                events.append(f"{u.name} did not eat today: {u.hunger_label}.")
             elif outcome == "ate" and u.ability.id != "autotroph":
                 ate.append(u)
             u._derive_combat()                 # refresh mods / hp_max for the new hunger
         if ate:
-            who = "1 membro comeu" if len(ate) == 1 else f"{len(ate)} membros comeram"
-            events.append(f"{who} ({self.rations} racoes restantes).")
+            who = "1 member ate" if len(ate) == 1 else f"{len(ate)} members ate"
+            events.append(f"{who} ({self.rations} rations left).")
         if casualties:
             self.roster = [u for u in self.roster if u not in casualties]
         return events
@@ -96,9 +96,9 @@ class Guild:
                 u._derive_combat()
         if fed:
             names = ", ".join(u.name for u in fed)
-            events.append(f"Parada para comer: {names} ({self.rations} racoes restantes).")
+            events.append(f"Stopped to eat: {names} ({self.rations} rations left).")
         elif not events:
-            events.append("Parada tranquila. Ninguem precisou comer.")
+            events.append("A quiet stop. No one needed to eat.")
         return events
 
     def work_shift(self, workers, hours):
@@ -117,8 +117,8 @@ class Guild:
             u.work_hours += hours
         if earners:
             names = ", ".join(u.name for u in earners)
-            events.append(f"Madeireira: {names} trabalhou {hours} h "
-                          f"(+{pay} cobre por cabeca).")
+            events.append(f"Lumber yard: {names} worked {hours} h "
+                          f"(+{pay} copper each).")
         return events
 
     @property

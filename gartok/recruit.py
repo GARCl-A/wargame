@@ -72,22 +72,22 @@ def convince(recruiter, candidate, roster_size, rng=random):
     """
     lang = shared_languages(recruiter, candidate)
     if not lang:
-        return Pitch(False, reason="sem idioma em comum")
+        return Pitch(False, reason="no shared language")
 
     mods = []
     dist = data.alignment_distance(recruiter.alignment, candidate.alignment)
     if dist:
-        mods.append((-ALIGNMENT_PENALTY * dist, f"alinhamento oposto ({dist})"))
+        mods.append((-ALIGNMENT_PENALTY * dist, f"opposite alignment ({dist})"))
     pen = size_penalty(roster_size)
     if pen:
-        mods.append((-pen, f"guilda de {roster_size}"))
+        mods.append((-pen, f"guild of {roster_size}"))
 
     rr, cr = rng.randint(1, 20), rng.randint(1, 20)
     r_total = rr + recruiter.mod_charisma + sum(v for v, _ in mods)
     c_total = cr + candidate.mod_charisma
     ok = r_total > c_total                       # a tie goes to the stranger: they stay put
     return Pitch(ok, rr, r_total, cr, c_total, mods, lang[0],
-                 reason="" if ok else "nao se convenceu")
+                 reason="" if ok else "not convinced")
 
 
 # --------------------------------------------------------------------------- #

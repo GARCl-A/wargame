@@ -45,12 +45,12 @@ class RewardScreen(Screen):
         self.cards = []
         self.buttons = []
 
-        text(screen, "BOLSA DA ARENA", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, "ARENA PURSE", f.title, INK, (MARGIN, MARGIN - 2))
         if self.paid_to is None:
-            sub, col = (f"{self.amount} cobre  ·  clique em quem embolsa a bolsa", ACCENT)
+            sub, col = (f"{self.amount} copper  ·  click who pockets the purse", ACCENT)
         else:
-            sub, col = (f"{self.paid_to.name} embolsa {self.amount} cobre "
-                        f"(agora com {self.paid_to.gold})", INFO)
+            sub, col = (f"{self.paid_to.name} pockets {self.amount} copper "
+                        f"(now on {self.paid_to.gold})", INFO)
         text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
 
         n = max(1, len(self.members))
@@ -81,10 +81,10 @@ class RewardScreen(Screen):
              INK_DIM, (tok[0] + 24, rect.y + pad + 20))
 
         y = rect.y + pad + 52
-        tracked(screen, "COBRE", f.label, INFO, (rect.x + pad, y))
+        tracked(screen, "COPPER", f.label, INFO, (rect.x + pad, y))
         text(screen, str(m.gold), f.num, ACCENT if took else INK, (rect.x + pad, y + 14))
         if not took and self.paid_to is None:
-            text(screen, "clique para dar a bolsa", f.label, INK_FAINT,
+            text(screen, "click to hand over the purse", f.label, INK_FAINT,
                  (rect.x + pad, rect.bottom - 22))
         elif took:
             text(screen, f"+{self.amount}", f.body_bd, ACCENT,
@@ -97,7 +97,7 @@ class RewardScreen(Screen):
         hov = d.collidepoint(self.mouse)
         panel(screen, d, fill=ACCENT if (done and hov) else SURFACE_3 if done else SURFACE_2,
               border=ACCENT if done else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "SEGUIR", f.body_bd,
+        text(screen, "CONTINUE", f.body_bd,
              ACCENT_INK if (done and hov) else ACCENT if done else INK_FAINT,
              d.center, center=True)
         self.buttons.append(("done", d))

@@ -60,10 +60,10 @@ class Node:
 # does not grow with the squad, so piling bodies onto a weak tier just eats the
 # take -- a lean squad of strong dolls keeps the most. Ordered cheapest first.
 ARENA_TIERS = [
-    {"rep": 0,  "name": "Fossa dos novatos", "entry": 4,   "purse": 15,  "enemies": 1},
-    {"rep": 2,  "name": "Ringue de bronze",  "entry": 15,  "purse": 55,  "enemies": 2},
-    {"rep": 5,  "name": "Grade de ferro",    "entry": 40,  "purse": 150, "enemies": 3},
-    {"rep": 10, "name": "Arena de prata",    "entry": 100, "purse": 380, "enemies": 3},
+    {"rep": 0,  "name": "Rookie pit",   "entry": 4,   "purse": 15,  "enemies": 1},
+    {"rep": 2,  "name": "Bronze ring",  "entry": 15,  "purse": 55,  "enemies": 2},
+    {"rep": 5,  "name": "Iron cage",    "entry": 40,  "purse": 150, "enemies": 3},
+    {"rep": 10, "name": "Silver arena", "entry": 100, "purse": 380, "enemies": 3},
 ]
 
 
@@ -73,26 +73,26 @@ def arena_offers(reputation):
 
 
 NODES = [
-    Node("cidade", "Cidade", "town", (0.16, 0.58),
-         "O burgo murado. De onde a guilda parte."),
-    Node("madeireira", "Madeireira", "town", (0.05, 0.80),
-         "Serraria logo fora dos muros. O feitor empresta o machado -- voce "
-         "derruba arvore que nao e sua e leva so o pagamento pelas horas.",
+    Node("cidade", "The City", "town", (0.16, 0.58),
+         "The walled burg. Where the guild sets out from."),
+    Node("madeireira", "Lumber Yard", "town", (0.05, 0.80),
+         "A sawmill just outside the walls. The foreman lends the axe -- you fell "
+         "a tree that isn't yours and take only the wage for the hours.",
          work=True),
     Node("arena", "Arena", "battle", (0.33, 0.30),
-         "Lutas de aposta nos fossos sob a cidade. Ninguem morre -- perde-se a bolsa.",
+         "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
          ArenaScenario, lethal=False, arena=True),
-    Node("mercado", "Mercado", "market", (0.28, 0.84),
-         "Comprar e vender equipamento por cobre. Os mercadores falam Ankarin.",
+    Node("mercado", "Market", "market", (0.28, 0.84),
+         "Buy and sell gear for copper. The traders speak Ankarin.",
          language="Ankarin", alignment="Leal e Neutro"),
-    Node("taverna", "Taverna", "taverna", (0.07, 0.30),
-         "Fumaca, cerveja morna e gente sem contrato. Convenca alguem a se juntar a guilda."),
-    Node("estrada", "Estrada Velha", "town", (0.55, 0.52),
-         "Trilha de terra que corta o descampado a leste."),
-    Node("ermos", "Ermos", "battle", (0.83, 0.40),
-         "Campo aberto sob o ceu, fora das muralhas.", ErmosScenario),
-    Node("ruinas", "Ruinas", "battle", (0.78, 0.80),
-         "Pedras tombadas de algo antigo. Escuro la dentro.", ArenaScenario),
+    Node("taverna", "Tavern", "taverna", (0.07, 0.30),
+         "Smoke, warm beer and folk with no contract. Talk someone into joining the guild."),
+    Node("estrada", "Old Road", "town", (0.55, 0.52),
+         "A dirt track cutting across the open country to the east."),
+    Node("ermos", "The Wilds", "battle", (0.83, 0.40),
+         "Open ground under the sky, outside the walls.", ErmosScenario),
+    Node("ruinas", "Ruins", "battle", (0.78, 0.80),
+         "Toppled stones of something ancient. Dark inside.", ArenaScenario),
 ]
 
 EDGES = [

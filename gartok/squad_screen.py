@@ -22,7 +22,7 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
 
 class SquadScreen(Screen):
     def __init__(self, fonts, roster, location, on_confirm, on_back, *,
-                 max_pick=None, title="ESCOLHER ESQUADRAO", confirm_label="CONFIRMAR",
+                 max_pick=None, title="PICK SQUAD", confirm_label="CONFIRM",
                  arena_offers=None, disabled=None):
         super().__init__()
         self.fonts = fonts
@@ -101,8 +101,8 @@ class SquadScreen(Screen):
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
         n = len(self.picked)
-        text(screen, f"{self.location.name}  ·  {n}/{self.max_pick} escolhidos  ·  "
-             f"clique para marcar (1 a {self.max_pick})", f.body,
+        text(screen, f"{self.location.name}  ·  {n}/{self.max_pick} picked  ·  "
+             f"click to toggle (1 to {self.max_pick})", f.body,
              ACCENT if self.ok else INK_DIM, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 68
@@ -127,7 +127,7 @@ class SquadScreen(Screen):
     # ------------------------------------------------------------------ #
     def _draw_offers(self, screen, top):
         f = self.fonts
-        tracked(screen, "APOSTA", f.label, INFO, (MARGIN, top))
+        tracked(screen, "STAKE", f.label, INFO, (MARGIN, top))
         top += 16
         gap = SP2
         w = (WIN_W - 2 * MARGIN - (len(self.offers) - 1) * gap) // max(1, len(self.offers))
@@ -139,8 +139,8 @@ class SquadScreen(Screen):
                   border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1, radius=RADIUS)
             text(screen, off["name"], f.body_bd, ACCENT if sel else INK,
                  (r.x + SP2, r.y + 6))
-            text(screen, f"entrada {off['entry']}/cabeca  ·  premio {off['purse']}  ·  "
-                 f"{off['enemies']} oponente(s)", f.body_sm, INK_DIM,
+            text(screen, f"entry {off['entry']}/head  ·  purse {off['purse']}  ·  "
+                 f"{off['enemies']} opponent(s)", f.body_sm, INK_DIM,
                  (r.x + SP2, r.y + 26))
             self.tiers.append((r, i))
         top += 62
@@ -149,8 +149,8 @@ class SquadScreen(Screen):
         cost = self.entry_cost
         gold = self.picked_gold
         can_pay = gold >= cost
-        text(screen, f"entrada: {off['entry']} x {len(self.picked)} lutador(es) = "
-             f"{cost} cobre  ·  bolsa combinada do esquadrao: {gold} cobre", f.body_sm,
+        text(screen, f"entry: {off['entry']} x {len(self.picked)} fighter(s) = "
+             f"{cost} copper  ·  squad's combined purse: {gold} copper", f.body_sm,
              OK if can_pay else DANGER, (MARGIN, top))
         return top + 22
 
@@ -175,21 +175,21 @@ class SquadScreen(Screen):
              f"Desloc {unit.speed}", f.mono_sm, INK_DIM, (rect.x + pad, y))
         y += 18
         n, faces = unit.weapon["damage"]
-        arma = unit.weapon_name or "desarmado"
+        arma = unit.weapon_name or "unarmed"
         text(screen, f"{arma}  {n}d{faces}", f.body_sm, INK_DIM, (rect.x + pad, y))
         y += 17
         xp = f"{unit.combat_xp} XP"
         if unit.work_xp:
-            xp += f" +{unit.work_xp}t"
-        text(screen, f"{unit.gold} cobre  ·  {xp}", f.mono_sm, ACCENT,
+            xp += f" +{unit.work_xp}w"
+        text(screen, f"{unit.gold} copper  ·  {xp}", f.mono_sm, ACCENT,
              (rect.x + pad, y))
         if unit.hunger_level:
             y += 16
-            text(screen, f"FOME: {unit.hunger_label}", f.label,
+            text(screen, f"HUNGER: {unit.hunger_label}", f.label,
                  DANGER if unit.hunger_level >= 2 else WARN, (rect.x + pad, y))
 
-        mark = ("INCAPAZ (fome)" if off else "ESCOLHIDO" if chosen
-                else "clique para incluir")
+        mark = ("UNFIT (hunger)" if off else "PICKED" if chosen
+                else "click to add")
         text(screen, mark, f.label,
              DANGER if off else ACCENT if chosen else INK_FAINT,
              (rect.x + pad, rect.bottom - 22))
@@ -211,5 +211,5 @@ class SquadScreen(Screen):
         hovb = back.collidepoint(self.mouse)
         panel(screen, back, fill=SURFACE_3 if hovb else SURFACE_2, border=LINE_SOFT,
               width=1, radius=RADIUS)
-        text(screen, "voltar", f.body, INK if hovb else INK_DIM, back.center, center=True)
+        text(screen, "back", f.body, INK if hovb else INK_DIM, back.center, center=True)
         self.buttons.append(("back", back))

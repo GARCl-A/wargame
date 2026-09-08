@@ -57,7 +57,7 @@ class MenuScreen(Screen):
         self.buttons = []
 
         text(screen, "GARTOK TACTICAL", f.title, INK, (MARGIN, MARGIN))
-        text(screen, "escolha um slot para jogar", f.body, INK_DIM,
+        text(screen, "pick a slot to play", f.body, INK_DIM,
              (MARGIN, MARGIN + 32))
 
         card_w = min(560, WIN_W - 2 * MARGIN)
@@ -72,7 +72,7 @@ class MenuScreen(Screen):
             self._draw_slot(screen, rect, s, mouse)
             y += card_h + gap
 
-        text(screen, "[Esc] sair", f.body_sm, INK_FAINT, (MARGIN, WIN_H - 18))
+        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, WIN_H - 18))
 
     def _draw_slot(self, screen, rect, s, mouse):
         f = self.fonts
@@ -85,35 +85,35 @@ class MenuScreen(Screen):
 
         if s["empty"]:
             hov = hov_card
-            text(screen, "vazio", f.body, INK_DIM, (rect.x + SP3, rect.y + 34))
-            text(screen, "clique para começar um novo jogo", f.body_sm,
+            text(screen, "empty", f.body, INK_DIM, (rect.x + SP3, rect.y + 34))
+            text(screen, "click to start a new game", f.body_sm,
                  ACCENT if hov else INK_FAINT, (rect.x + SP3, rect.y + 56))
             self.buttons.append(("new", i, rect))
             return
 
-        squad = "  ·  ".join(name.split()[0] for name in s["squad"]) or "(sem esquadrão)"
+        squad = "  ·  ".join(name.split()[0] for name in s["squad"]) or "(no squad)"
         when = time.strftime("%d/%m %H:%M", time.localtime(s["saved_at"])) if s["saved_at"] else ""
         text(screen, squad, f.body_bd, INK, (rect.x + SP3, rect.y + 30))
-        text(screen, f"{s['battles_won']} vitórias    {when}", f.body_sm, INK_DIM,
+        text(screen, f"{s['battles_won']} wins    {when}", f.body_sm, INK_DIM,
              (rect.x + SP3, rect.y + 52))
 
         if self.confirm_delete == i:
-            text(screen, "apagar este jogo?", f.body_sm, DANGER,
+            text(screen, "delete this game?", f.body_sm, DANGER,
                  (rect.x + SP3, rect.bottom - 34))
             self._btn(screen, "delete_yes", i,
                       pygame.Rect(rect.right - 210, rect.bottom - 40, 92, 28),
-                      "apagar", DANGER, mouse)
+                      "delete", DANGER, mouse)
             self._btn(screen, "delete_no", i,
                       pygame.Rect(rect.right - 108, rect.bottom - 40, 92, 28),
-                      "cancelar", INK_DIM, mouse)
+                      "cancel", INK_DIM, mouse)
             return
 
         self._btn(screen, "continue", i,
                   pygame.Rect(rect.right - 210, rect.bottom - 40, 120, 28),
-                  "continuar", ACCENT, mouse)
+                  "continue", ACCENT, mouse)
         self._btn(screen, "delete", i,
                   pygame.Rect(rect.right - 80, rect.bottom - 40, 64, 28),
-                  "apagar", INK_DIM, mouse)
+                  "delete", INK_DIM, mouse)
 
     def _btn(self, screen, key, slot, rect, label, color, mouse):
         hov = rect.collidepoint(mouse)

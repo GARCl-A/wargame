@@ -87,19 +87,19 @@ class TavernaScreen(Screen):
     def _pitch(self, member):
         cand = self.candidates[self.sel]
         if not recruit.can_pitch(member, cand):
-            self.notice = f"{member.name} e {cand.name} nao tem idioma em comum."
+            self.notice = f"{member.name} and {cand.name} share no language."
             return
         if recruit.barred(self.guild, cand, member):
-            self.notice = f"{member.name} ja tentou {cand.name} nesta semana."
+            self.notice = f"{member.name} already tried {cand.name} this week."
             return
         pitch = recruit.convince(member, cand, len(self.guild.roster))
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
-            self.notice = f"{cand.name} assina com a guilda (recrutado por {member.name})."
+            self.notice = f"{cand.name} signs with the guild (recruited by {member.name})."
         else:
             recruit.bar(self.guild, cand, member)
-            self.notice = f"{cand.name} recusa {member.name}. Ele so pode tentar de novo semana que vem."
+            self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
         self.sel = None
 
     # ------------------------------------------------------------------ #
@@ -110,16 +110,16 @@ class TavernaScreen(Screen):
         self.party_cards = []
         self.buttons = []
 
-        text(screen, "TAVERNA", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, "TAVERN", f.title, INK, (MARGIN, MARGIN - 2))
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         if self.sel is not None:
             cand = self.candidates[self.sel]
-            sub, col = (f"proposta a {cand.name}  ·  clique em quem do grupo vai falar  ·  "
-                        "clique fora para cancelar", ACCENT)
+            sub, col = (f"pitching {cand.name}  ·  click who from the party speaks  ·  "
+                        "click outside to cancel", ACCENT)
         else:
-            sub, col = (f"guilda de {len(self.guild.roster)}  ·  penalidade de tamanho "
+            sub, col = (f"guild of {len(self.guild.roster)}  ·  size penalty "
                         f"-{recruit.size_penalty(len(self.guild.roster))}  ·  "
-                        f"caras novas em {days_left} dia(s)", INK_DIM)
+                        f"new faces in {days_left} day(s)", INK_DIM)
         text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 68
@@ -129,7 +129,7 @@ class TavernaScreen(Screen):
         cw = (WIN_W - 2 * MARGIN - (CANDIDATES - 1) * gap) // CANDIDATES
 
         if not self.candidates:
-            text(screen, "Ninguem procurando trabalho agora. Volte quando o pessoal mudar.",
+            text(screen, "No one looking for work right now. Come back when the crowd changes.",
                  f.body, INK_DIM, (MARGIN, top + 20))
         for i, cand in enumerate(self.candidates):
             rect = pygame.Rect(MARGIN + i * (cw + gap), top, cw, cand_h)
@@ -165,14 +165,14 @@ class TavernaScreen(Screen):
              (rect.x + pad, y)); y += 18
 
         text(screen, f"PV {cand.hp_max}   CA {cand.ac}   Desloc {cand.speed}   "
-             f"{cand.weapon_name or 'desarmado'}", f.mono_sm, INK_DIM, (rect.x + pad, y))
+             f"{cand.weapon_name or 'unarmed'}", f.mono_sm, INK_DIM, (rect.x + pad, y))
         y += 18
-        text(screen, f"resistencia: CAR {cand.mod_charisma:+}", f.body_sm,
+        text(screen, f"resistance: CAR {cand.mod_charisma:+}", f.body_sm,
              WARN, (rect.x + pad, y)); y += 15
-        text(screen, "fala " + ", ".join(cand.languages), f.body_sm, INK_DIM,
+        text(screen, "speaks " + ", ".join(cand.languages), f.body_sm, INK_DIM,
              (rect.x + pad, y)); y += 18
 
-        y = section(screen, "HABILIDADE", rect.x + pad, y, rect.w - 2 * pad, f)
+        y = section(screen, "ABILITY", rect.x + pad, y, rect.w - 2 * pad, f)
         text(screen, cand.ability.name, f.body_bd, INFO, (rect.x + pad, y)); y += 15
         for ln in wrap_lines([cand.ability.effect], f.body_sm, rect.w - 2 * pad)[:3]:
             text(screen, ln, f.body_sm, INK_FAINT, (rect.x + pad, y)); y += 13
@@ -182,32 +182,32 @@ class TavernaScreen(Screen):
             y = self._draw_last(screen, rect, y, last)
 
         best = self._best(cand)
-        y = section(screen, "PROPOSTA", rect.x + pad, y, rect.w - 2 * pad, f)
+        y = section(screen, "PITCH", rect.x + pad, y, rect.w - 2 * pad, f)
         if best is not None:
             m, net = best
-            text(screen, f"{m.name}  ·  teste CAR {net:+}", f.body_sm, OK,
+            text(screen, f"{m.name}  ·  CAR check {net:+}", f.body_sm, OK,
                  (rect.x + pad, y)); y += 15
-            text(screen, f"(1d20{net:+} tem que passar de 1d20 {cand.mod_charisma:+})",
+            text(screen, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})",
                  f.body_sm, INK_FAINT, (rect.x + pad, y))
         elif not open_pitch and any(recruit.can_pitch(m, cand) for m in self.party):
-            text(screen, "todos ja tentaram esta semana", f.body_sm, DANGER,
+            text(screen, "everyone already tried this week", f.body_sm, DANGER,
                  (rect.x + pad, y))
         else:
-            text(screen, "ninguem no grupo fala com ele", f.body_sm, DANGER,
+            text(screen, "no one in the party can speak with them", f.body_sm, DANGER,
                  (rect.x + pad, y))
 
-        mark = "clique para propor" if self.sel is None else "clique num membro do grupo"
+        mark = "click to pitch" if self.sel is None else "click a party member"
         text(screen, mark, f.label, INK_FAINT, (rect.x + pad, rect.bottom - 20))
 
     def _draw_last(self, screen, rect, y, last):
         f = self.fonts
         pad = SP3
         pitch, who = last
-        y = section(screen, "ULTIMA TENTATIVA", rect.x + pad, y, rect.w - 2 * pad, f,
+        y = section(screen, "LAST ATTEMPT", rect.x + pad, y, rect.w - 2 * pad, f,
                     color=OK if pitch.ok else DANGER)
         text(screen, f"{who.name}: {pitch.recruiter_roll} + mods = {pitch.recruiter_total}",
              f.mono_sm, INK_DIM, (rect.x + pad, y)); y += 13
-        text(screen, f"vs resistencia {pitch.candidate_total} "
+        text(screen, f"vs resistance {pitch.candidate_total} "
              f"({pitch.candidate_roll} + CAR)", f.mono_sm, INK_DIM, (rect.x + pad, y))
         y += 13
         for val, label in pitch.modifiers:
@@ -218,7 +218,7 @@ class TavernaScreen(Screen):
     # ------------------------------------------------------------------ #
     def _draw_party(self, screen, area):
         f = self.fonts
-        tracked(screen, "SEU GRUPO", f.label, INFO, (area.x, area.y - 16))
+        tracked(screen, "YOUR PARTY", f.label, INFO, (area.x, area.y - 16))
         panel(screen, area, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
         n = max(1, len(self.party))
         gap = SP2
@@ -235,13 +235,13 @@ class TavernaScreen(Screen):
         state = None
         if cand is not None:
             if recruit.barred(self.guild, cand, m):
-                state = ("JA TENTOU", DANGER)
+                state = ("TRIED", DANGER)
             elif recruit.can_pitch(m, cand):
-                state = ("PODE FALAR", OK)
+                state = ("CAN SPEAK", OK)
             else:
-                state = ("sem idioma", DANGER)
+                state = ("no language", DANGER)
         hov = r.collidepoint(self.mouse) and self.sel is not None
-        can = state is not None and state[0] == "PODE FALAR"
+        can = state is not None and state[0] == "CAN SPEAK"
         border = OK if (can and hov) else DANGER if (state and not can and hov) else LINE_SOFT
         panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1, border=border,
               width=2 if border != LINE_SOFT else 1, radius=4)
@@ -260,12 +260,12 @@ class TavernaScreen(Screen):
         f = self.fonts
         y = WIN_H - 52
         if self.notice:
-            col = OK if "assina" in self.notice else INFO
+            col = OK if "signs" in self.notice else INFO
             text(screen, self.notice, f.body_sm, col, (MARGIN, y - 22))
 
         d = pygame.Rect(WIN_W - MARGIN - 240, y, 240, 36)
         hov = d.collidepoint(self.mouse)
         panel(screen, d, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
-        text(screen, "SAIR DA TAVERNA", f.body_bd, ACCENT_INK if hov else ACCENT,
+        text(screen, "LEAVE THE TAVERN", f.body_bd, ACCENT_INK if hov else ACCENT,
              d.center, center=True)
         self.buttons.append(("done", d))
