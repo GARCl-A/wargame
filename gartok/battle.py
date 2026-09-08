@@ -1,0 +1,315 @@
+"""Battle state: board, units, ground objects, initiative order and turn flow.
+
+Resolving each action (attack, throw, ...) lives in `actions.py`; geometry and
+pathfinding in `board.py`; vision and light in `vision.py`. `Battle` only holds
+the state and coordinates the turn, exposing helpers the actions query.
+
+Battle owns its *combatants*: it wraps every character it is given in a
+`combatant.Combatant` (see there), so the fight never touches the persistent
+roster and a rematch could reuse the same picks.
+"""
+
+from . import data, vision
+from .board import COLS, ROWS, cells, chebyshev, cells_distance
+from .combatant import Combatant
+from .data import d20
+from .scenario import ArenaScenario
+
+__all__ = ["Battle", "COLS", "ROWS", "chebyshev"]
+
+
+class Battle:
+    def __init__(self, player_units, enemy_units, scenario=None, daylight=True, lethal=True):
+        self.log_lines = []
+        self.daylight = daylight              # outdoor scenarios read this for ambient light
+        self.lethal = lethal                 # False = arena bout: 0 PV knocks out, no permadeath
+        self.scenario = scenario or ArenaScenario()
+        self.player_units = [Combatant(u, "player") for u in player_units]
+        self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
+        self.setup()
+
+    # ------------------------------------------------------------------ #
+    def log(self, msg):
+        self.log_lines.append(msg)
+        del self.log_lines[:-200]
+
+    def setup(self):
+        self.log_lines.clear()
+        self.ambient_light = False           # scenario.build sets the real value
+        self.ground = []                     # GroundObject list (dropped weapons, torches)
+        self.units = list(self.player_units) + list(self.enemy_units)
+        for u in self.units:
+            u.reset_battle_state()           # fresh state (also full heal on a rematch)
+            u.nonlethal = not self.lethal    # 0 PV -> knocked out instead of dying
+
+        self.creatures = []                  # neutral bodies (e.g. the Shepherd's sheep)
+        self.scenario.build(self)            # board + deployment + scatter
+        self.round_no = 1
+        self.winner = None
+        self._mopup_open = False              # enemies down, allies still bleeding out
+        self._roll_initiative()
+        self.log("--- Round 1 ---")
+        self._announce_turn()
+
+    def creature_cells(self):
+        return {c for cr in self.creatures for c in cells(cr.pos, cr.footprint)}
+
+    def _roll_initiative(self):
+        for u in self.units:
+            u.initiative = d20() + u.initiative_bonus()
+        self.order = sorted(self.units, key=lambda u: u.initiative, reverse=True)
+        self.turn_idx = 0
+        self.active.start_turn(self.log)
+
+    # ------------------------------------------------------------------ #
+    # state queries (used by actions, AI and UI)                         #
+    # ------------------------------------------------------------------ #
+    @property
+    def active(self):
+        return self.order[self.turn_idx]
+
+    @property
+    def mopping_up(self):
+        """Enemies are down; the fight runs on only so standing allies can
+        stabilize the dying (and the dying finish their death saves)."""
+        return self._mopup_open and self.winner is None
+
+    def cells_of(self, unit, pos=None):
+        return cells(pos or unit.pos, unit.footprint)
+
+    def unit_at(self, pos, include_downed=False):
+        for u in self.units:
+            if (u.alive or (include_downed and u.downed)) and pos in self.cells_of(u):
+                return u
+        return None
+
+    def occupied(self, exclude=None):
+        result = set()
+        for u in self.units:
+            if u.alive and u is not exclude:
+                result.update(self.cells_of(u))
+        return result
+
+    def cells_by_side(self, unit):
+        """({ally cells}, {enemy cells}) of living units, excluding `unit`.
+
+        An enemy blocks passage and stopping; an ally can be crossed, just not
+        ended on.
+        """
+        allies, enemies = set(), set()
+        for u in self.units:
+            if not u.alive or u is unit:
+                continue
+            dest = allies if u.team == unit.team else enemies
+            dest.update(self.cells_of(u))
+        return allies, enemies
+
+    def units_distance(self, a, b):
+        return cells_distance(self.cells_of(a), self.cells_of(b))
+
+    def los_between(self, a, b):
+        """Clear LOS between some cell of `a` and some cell of `b`."""
+        return any(self.board.los_clear(ca, cb)
+                   for ca in self.cells_of(a) for cb in self.cells_of(b))
+
+    def ground_at(self, pos):
+        for o in self.ground:
+            if o.pos == pos:
+                return o
+        return None
+
+    def ground_in_reach(self, unit):
+        """Ground objects on the footprint or adjacent to it (for the PickUp action)."""
+        ucells = self.cells_of(unit)
+        return [o for o in self.ground
+                if min(chebyshev(o.pos, c) for c in ucells) <= 1]
+
+    # vision (delegates to vision.py) --------------------------------- #
+    def can_see(self, observer, target_pos):
+        return vision.can_see(self, observer, target_pos)
+
+    def can_see_unit(self, observer, target):
+        return vision.can_see_unit(self, observer, target)
+
+    # ------------------------------------------------------------------ #
+    # movement  (Move action: 1 point; 2 points per turn)                #
+    # ------------------------------------------------------------------ #
+    def reachable(self, unit, budget=None):
+        """BFS of reachable anchors -> {pos: cost}. 1 per step (diagonals included)."""
+        if budget is None:
+            if unit.walking:
+                budget = unit.speed - unit.moved
+            elif unit.ap >= 1:
+                budget = unit.speed
+            else:
+                return {}
+        allies, enemies = self.cells_by_side(unit)
+        blocked = enemies | self.board.walls | self.creature_cells()
+        return self.board.reachable(unit.pos, budget, blocked, unit.footprint, allies)
+
+    def reachable_cells(self, unit):
+        """Union of the cells the footprint would cover at each reachable anchor (UI highlight)."""
+        result = set()
+        for anchor in self.reachable(unit):
+            result.update(cells(anchor, unit.footprint))
+        return result
+
+    def path_to(self, unit, dest):
+        """The cells `unit` would walk through to reach the anchor `dest`,
+        ``[unit.pos, ..., dest]`` (``[]`` if unreachable)."""
+        _, enemies = self.cells_by_side(unit)
+        blocked = enemies | self.board.walls | self.creature_cells()
+        return self.board.path_to(unit.pos, dest, blocked, unit.footprint)
+
+    def path_step_toward(self, unit, goal, budget):
+        allies, enemies = self.cells_by_side(unit)
+        blocked = enemies | self.board.walls | self.creature_cells()
+        target = self.unit_at(goal)
+        target_cells = self.cells_of(target) if target else None
+        return self.board.path_step_toward(unit.pos, goal, budget, blocked, unit.footprint,
+                                           target_cells, allies)
+
+    def move_unit(self, unit, dest):
+        reach = self.reachable(unit)
+        if dest not in reach:
+            return False
+        if not unit.walking:                 # start the Move action (1 point)
+            if unit.ap < 1:
+                return False
+            unit.ap -= 1
+            unit.walking = True
+            unit.moved = 0
+            self.log(f"{unit.name} anda (1 ponto de acao).")
+        unit.moved += reach[dest]
+        segment = self.path_to(unit, dest) or [unit.pos, dest]
+        unit.path.extend(segment[1:])         # the cells walked this turn so far
+        unit.pos = dest
+        if unit.moved >= unit.speed:          # walk exhausted; next step = new action
+            unit.walking = False
+        return True
+
+    # ------------------------------------------------------------------ #
+    # turn flow                                                          #
+    # ------------------------------------------------------------------ #
+    def _living_side(self, team):
+        return [u for u in self.units if u.alive and u.team == team]
+
+    def _check_winner(self):
+        if self.winner:
+            return self.winner
+        players_up = self._living_side("player")
+        enemies_up = self._living_side("enemy")
+        if players_up and enemies_up:
+            return None
+
+        if not players_up and enemies_up:
+            # squad wiped while the enemy still stands.
+            self.winner = "enemy"
+            if self.lethal:
+                # a lost lethal battle is total -- everyone on the ground goes with it.
+                self._wipe_side("player")
+                self._resolve_dangling_dying()
+            # a lost arena bout: the knocked-out squad just loses the match.
+            return self.winner
+
+        # The enemy side is gone. If allies are still bleeding out and someone is
+        # standing to help, let the fight run on: the standing allies get their
+        # turns to stabilize the dying, and the dying keep rolling death saves,
+        # before the battle is finally called.
+        dying_allies = [u for u in self.units
+                        if u.team == "player" and u.status == "dying"]
+        if players_up and dying_allies:
+            if not self._mopup_open:
+                self._mopup_open = True
+                self.log("Inimigos abatidos -- estabilize os aliados caidos antes "
+                         "que o combate acabe.")
+            return None
+
+        self.winner = "player"
+        self._resolve_dangling_dying()
+        return self.winner
+
+    # ------------------------------------------------------------------ #
+    # falling, stabilizing and death                                     #
+    # ------------------------------------------------------------------ #
+    def _death_save(self, unit):
+        """d20 >= DEATH_SAVE_MIN -> stable; otherwise dead. Logs and returns the
+        new status."""
+        roll = d20()
+        if roll >= data.DEATH_SAVE_MIN:
+            unit.status = "stable"
+            self.log(f"{unit.name}: teste de morte d20({roll}) -> sobrevive, "
+                     f"inconsciente a 0 PV.")
+        else:
+            unit.status = "dead"
+            self.log(f"{unit.name}: teste de morte d20({roll}) -> morreu.")
+        return unit.status
+
+    def stabilize(self, unit):
+        """Bring a dying unit to `stable` (from a successful Stabilize / FirstAid)."""
+        unit.status = "stable"
+        self.log(f"{unit.name} foi estabilizado (inconsciente a 0 PV ate o fim do combate).")
+
+    def repair(self, unit):
+        """Bring a broken automaton back into the fight at 1 PV (successful ally
+        Stabilize). No death clock was ever running -- there is no time limit."""
+        unit.status = "up"
+        unit.hp = 1
+        unit.death_clock = 0
+        self.log(f"{unit.name} volta a funcionar (1 PV).")
+
+    def _resolve_dying_turn(self, unit):
+        """The dying unit's turn: tick the counter, roll the death save on the DYING_TURNS-th."""
+        unit.death_clock += 1
+        if unit.death_clock >= data.DYING_TURNS:
+            self._death_save(unit)
+        else:
+            self.log(f"{unit.name} esta morrendo ({unit.death_clock}/{data.DYING_TURNS}).")
+
+    def _resolve_dangling_dying(self):
+        """Battle over: every unit still dying makes one last death save."""
+        for u in self.units:
+            if u.status == "dying":
+                self._death_save(u)
+
+    def _wipe_side(self, team):
+        """A lost battle is total: everyone on this side still on the ground
+        (dying, stabilized or broken) is lost with the defeat."""
+        for u in self.units:
+            if u.team == team and u.status in ("dying", "stable", "broken"):
+                u.status = "dead"
+                self.log(f"{u.name} nao resiste aos ferimentos apos a derrota.")
+
+    def _announce_turn(self):
+        u = self.active
+        self.log(f"Turno de {u.name} ({u.team}).")
+
+    def end_turn(self):
+        if self.winner:
+            return
+        self.active.end_turn(self.log)       # demoralized expires at the end of the sufferer's turn
+        self._advance_turn()
+
+    def _advance_turn(self):
+        """Advance to the next standing unit. A dying unit gets a turn on the way
+        (its death counter ticks / it rolls the save); stable and dead are skipped."""
+        for _ in range(len(self.order) + 1):
+            self.turn_idx += 1
+            if self.turn_idx >= len(self.order):
+                self.turn_idx = 0
+                self.round_no += 1
+                self.log(f"--- Round {self.round_no} ---")
+            u = self.active
+            if u.status == "dying":
+                self._resolve_dying_turn(u)
+                if self._check_winner():
+                    self.log(f"*** Vitoria: {self.winner} ***")
+                    return
+                continue
+            if u.alive:
+                break
+        if self._check_winner():
+            self.log(f"*** Vitoria: {self.winner} ***")
+            return
+        self.active.start_turn(self.log)
+        self._announce_turn()
