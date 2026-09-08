@@ -7,7 +7,7 @@ bonuses, conditions, abilities, board/vision and the actions. They do not test t
 import os
 import random
 
-from gartok import abilities, actions, data, economy, persist, recruit
+from gartok import abilities, actions, data, economy, persist, recruit, talents
 from gartok.board import COLS, ROWS, Board
 from gartok.battle import Battle
 from gartok.scenario import ErmosScenario
@@ -1736,6 +1736,26 @@ def test_tier2_talent_effect_survives_a_save():
     back = Unit.from_save(persist.unit_to_dict(u))
     assert back.talents["combat"] == ["tough", "bulwark"]
     assert back.ac == ac
+
+
+def test_tree_layout_places_every_node_below_its_parent():
+    """`level_screen._tree_layout` positions the talent graph: every node placed,
+    roots on top, each child one tier below its `requires` and its parent
+    centred over its children. Tier-agnostic -- a deeper tree lays out the same."""
+    from gartok.level_screen import _tree_layout
+    for track in talents.TRACKS:
+        nodes = talents.TREE[track]
+        pos, span, depths = _tree_layout(track)
+        assert set(pos) == {t.id for t in nodes}
+        assert depths >= 2
+        for t in nodes:
+            col, depth = pos[t.id]
+            assert 0 <= col <= span
+            assert depth == (0 if t.requires is None
+                             else pos[t.requires][1] + 1)
+            kids = [c for c in nodes if c.requires == t.id]
+            if kids:
+                assert col == sum(pos[k.id][0] for k in kids) / len(kids)
 
 
 def _work_ready(*picks):

@@ -37,6 +37,7 @@ class Talent:
     name: str
     effect: str
     requires: str | None = None      # id of a talent that must be taken first
+    icon: str = ""                   # "<category>/<name>" under assets/icons/ (level screen)
 
     # --- effect knobs (all optional) ---------------------------------- #
     attr_bonus: tuple = ()           # ((attribute, amount), ...) -- added to the SCORE
@@ -66,52 +67,53 @@ _LIST = [
     # specialise in                                                       #
     # ================================================================== #
     Talent("strong", "combat", 1, "Strong",
-           "+1 Strength.", attr_bonus=(("strength", 1),)),
+           "+1 Strength.", attr_bonus=(("strength", 1),), icon="action/muscle-up"),
     Talent("sure_strike", "combat", 2, "Sure Strike",
            "+1 to hit with Strength-based attacks.",
-           requires="strong", to_hit_str=1),
+           requires="strong", to_hit_str=1, icon="action/targeting"),
     Talent("heavy_hand", "combat", 2, "Heavy Hand",
            "+1 damage on melee attacks.",
-           requires="strong", melee_damage=1),
+           requires="strong", melee_damage=1, icon="action/crush"),
 
     Talent("agile", "combat", 1, "Agile",
-           "+1 Dexterity.", attr_bonus=(("dexterity", 1),)),
+           "+1 Dexterity.", attr_bonus=(("dexterity", 1),), icon="action/acrobatic"),
     Talent("long_reach", "combat", 2, "Long Reach",
            "+1 square of range with ranged and thrown weapons.",
-           requires="agile", ranged_reach=1),
+           requires="agile", ranged_reach=1, icon="action/bowman"),
     Talent("deadeye", "combat", 2, "Deadeye",
            "+1 to hit with Dexterity-based attacks.",
-           requires="agile", to_hit_dex=1),
+           requires="agile", to_hit_dex=1, icon="action/ricochet"),
 
     Talent("tough", "combat", 1, "Tough",
-           "+1 Constitution.", attr_bonus=(("constitution", 1),)),
+           "+1 Constitution.", attr_bonus=(("constitution", 1),), icon="body/bell-shield"),
     Talent("hardy", "combat", 2, "Hardy",
            "+1 max HP for every Hit Die you have.",
-           requires="tough", hp_per_hd=1),
+           requires="tough", hp_per_hd=1, icon="body/heart-inside"),
     Talent("bulwark", "combat", 2, "Bulwark",
-           "+1 AC.", requires="tough", ac_bonus=1),
+           "+1 AC.", requires="tough", ac_bonus=1, icon="body/surrounded-shield"),
 
     # ================================================================== #
     # work -- two roots, carrier and negotiator                           #
     # ================================================================== #
     Talent("carrier", "work", 1, "Carrier",
            "carry 1 kg less per item that is not a weapon or a consumable.",
-           carry_light_items=1),
+           carry_light_items=1, icon="body/lift"),
     Talent("piecework", "work", 2, "Piecework",
            "+20% coin from work that pays in coin.",
-           requires="carrier", coin_gain=COIN_BONUS),
+           requires="carrier", coin_gain=COIN_BONUS, icon="action/profit"),
     Talent("brisk_hands", "work", 2, "Brisk Hands",
            "work finishes 10% faster -- you keep the time.",
-           requires="carrier", activity_speed=ACTIVITY_SPEEDUP),
+           requires="carrier", activity_speed=ACTIVITY_SPEEDUP, icon="action/sprint"),
 
     Talent("negotiator", "work", 1, "Negotiator",
-           "+1 Charisma for market buy and sell checks.", haggle_charisma=1),
+           "+1 Charisma for market buy and sell checks.", haggle_charisma=1,
+           icon="action/shaking-hands"),
     Talent("fixer", "work", 2, "Fixer",
            "+1 to your pitch when talking someone into the guild.",
-           requires="negotiator", recruit_charisma=1),
+           requires="negotiator", recruit_charisma=1, icon="action/convince"),
     Talent("provisioner", "work", 2, "Provisioner",
            "+1 to haggling on food, shared language or not.",
-           requires="negotiator", food_haggle=1),
+           requires="negotiator", food_haggle=1, icon="action/trade"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}
