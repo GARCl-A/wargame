@@ -25,7 +25,7 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     SURFACE_2, SURFACE_3, WARN, panel, section,
                     token_badge, text, tracked)
 
-STOCK_W = 300
+STOCK_W = 330
 
 
 def _kg(w):
@@ -281,13 +281,19 @@ class MarketScreen(DragSelectMixin, Screen):
             hov = not self.sel and r.collidepoint(self.mouse)
             price = economy.buy_price(name, self.deal)
             afford = self.purse >= price
+            fits = any(self._fits(m, name) for m in self.shoppers)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if sel else INK if afford else INK_FAINT
             text(screen, name, f.body_sm, ink, (r.x + SP2, r.y + 6))
+            wtext = _kg(data.item_weight(name))
+            text(screen, wtext, f.mono_sm,
+                 ACCENT_INK if sel else INK_DIM if fits else DANGER,
+                 (r.right - SP2, r.y + 7), right=True)
+            wx = r.right - SP2 - f.mono_sm.size(wtext)[0] - SP2
             text(screen, str(price), f.mono_sm,
                  ACCENT_INK if sel else INK_DIM if afford else INK_FAINT,
-                 (r.right - SP2, r.y + 7), right=True)
+                 (wx, r.y + 7), right=True)
             self.stock_rows.append((r, name))
             y += 26 + SP1
 
