@@ -23,7 +23,7 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import campaign, persist, world
+from . import arena, campaign, persist, world
 from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
@@ -59,6 +59,7 @@ class App:
         self._battle_squad = []              # roster units sent to the current battle
         self._battle_node = None             # world node the current battle is at
         self._arena_offer = None             # arena stake tier for the current bout, or None
+        self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._start_menu()
 
     # ------------------------------------------------------------------ #
@@ -98,6 +99,7 @@ class App:
         persist.save_game(self.slot, self.guild)
 
     def _start_map(self):
+        self._map_notices += arena.sync(self.guild)
         self._save()
         self.scene = MapScreen(self.fonts, self.guild,
                                on_battle=self._open_squad,
@@ -106,6 +108,9 @@ class App:
                                on_work=self._open_work,
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over)
+        if self._map_notices:
+            self.scene.notices = self._map_notices
+            self._map_notices = []
 
     def _campaign_over(self):
         """Roster gone (a wipe, or the last member starved on the road)."""
@@ -125,7 +130,12 @@ class App:
                                  on_back=self._open_guild, on_change=self._save)
 
     def _open_squad(self, node):
-        offers = world.arena_offers(self.guild.arena_reputation) if node.arena else None
+        if node.arena and arena.defense_due(self.guild):
+            self._start_title_defense(node)
+            return
+        offers = list(world.arena_offers(self.guild.arena_reputation)) if node.arena else None
+        if node.arena and "arena_dethrone" not in self.guild.deeds_done:
+            offers.append(arena.champion_bout())
         disabled = {u for u in self.guild.roster if u.incapacitated}
         self.scene = SquadScreen(self.fonts, self.guild.roster, node,
                                  on_confirm=self._start_battle, on_back=self._start_map,
@@ -188,12 +198,29 @@ class App:
         self._arena_offer = offer
         if offer:
             self._charge(squad, offer["entry"] * len(squad))
-            enemy_count = offer["enemies"]
+            enemies = [Unit("enemy") for _ in range(offer["enemies"])]
+            if offer.get("champion"):
+                enemies[0] = arena.load_champion()
+            elif "arena_dethrone" in self.guild.deeds_done:
+                cameo = arena.cameo_enemy()
+                if cameo is not None:
+                    enemies[0] = cameo
         else:
-            enemy_count = len(squad)
-        enemies = [Unit("enemy") for _ in range(enemy_count)]
+            enemies = [Unit("enemy") for _ in range(len(squad))]
         battle = Battle(squad, enemies, scenario=node.scenario(),
-                        daylight=self.guild.clock.is_daylight, lethal=node.lethal)
+                        daylight=self.guild.clock.is_daylight, lethal=node.lethal,
+                        arena=node.arena)
+        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+
+    def _start_title_defense(self, node):
+        """A due title challenge: the champion alone against one scaled newcomer."""
+        champ = arena.champion_of(self.guild)
+        challenger = arena.build_challenger(champ.mean_level + 1)
+        self._battle_squad = [champ]
+        self._battle_node = node
+        self._arena_offer = arena.defense_bout()
+        battle = Battle([champ], [challenger], scenario=node.scenario(),
+                        daylight=self.guild.clock.is_daylight, lethal=False, arena=True)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _battle_end(self, battle):
@@ -203,6 +230,7 @@ class App:
         self._battle_squad = []
         self._battle_node = None
         self._arena_offer = None
+        note = outcome.arena_title_event
 
         if outcome.campaign_over:             # full wipe: campaign over
             self._campaign_over()
@@ -212,8 +240,11 @@ class App:
             self._save()
             self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
                                       outcome.arena_reward, on_done=self._start_map,
-                                      deeds=outcome.deeds_earned)
+                                      deeds=outcome.deeds_earned, note=note)
             return
+
+        if note:                             # lost defense / vacant title: no purse screen
+            self._map_notices.append(note)
 
         if outcome.loot_pool and outcome.survivors:
             self._save()

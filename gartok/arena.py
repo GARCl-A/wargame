@@ -1,0 +1,144 @@
+"""The Champion of the Pit: the arena's one personal title.
+
+Beating the pit's champion team -- Adelio Small-Knife and two hired nobodies --
+is the deed `factions.arena_dethrone`. Whoever on the winning squad lands the
+blow that puts Adelio down takes his title. It is a *character's* title, held on
+the `Unit` (`unit.arena_title`), never the guild's. A messy finish (nobody on the
+player's side put him down cleanly -- e.g. his own hireling dropped him) leaves
+the title vacant, and there is no rematch: the deed is banked either way.
+
+The title only bites inside the arena (`battle.arena`), all in `actions.Demoralize`:
+- Demoralize any target, shared language or not;
+- +1 to the roll when a language IS shared;
+- +1 Mental Defense against Demoralize.
+
+Holding it draws challengers. Every `CHALLENGE_CYCLE` days a formal challenge
+falls due; the champion has `CHALLENGE_GRACE` days to turn up at the arena for a
+1v1 or the title is forfeit -- again, for good. `guild.arena_challenge_day` is the
+day the current challenge came due (or None). The challenger is built to the
+champion's own mean level + 1, so as the champion levels on these fights the
+newcomers drifting into the pits keep pace.
+
+Once Adelio has been dethroned he becomes a fixture: `ADELIO_CAMEO_CHANCE` that
+any ordinary pit bout fields him as one of the opponents. He never levels.
+"""
+
+import random
+
+from . import npc_lib, talents
+from .unit import Unit
+
+CHAMPION_SLUG = "adelio-small-knife"
+
+CHAMPION_GOONS = 2                 # random level-0 bodies fighting alongside the champion
+CHAMPION_ENTRY = 20               # stake per fighter to challenge for the title
+CHAMPION_PURSE = 120             # flat purse for taking the champion team down
+DEFENSE_PURSE = 90              # flat purse for turning a title challenger away
+
+CHALLENGE_CYCLE = 15            # days between formal title challenges
+CHALLENGE_GRACE = 7           # days the champion has to reach the arena and defend
+
+ADELIO_CAMEO_CHANCE = 0.05    # chance an ordinary pit bout fields the dethroned Adelio
+
+# A throwaway name generator for one-off challengers: string 2-4 of these
+# together. Good enough for now; promote to its own module when NPCs need it too.
+_SYLLABLES = [
+    "ka", "dor", "ven", "mir", "thal", "grok", "un", "el", "bran", "sur",
+    "tik", "mor", "za", "hel", "dun", "ash", "kor", "vel", "nim", "gar",
+    "oth", "ru", "sen", "kael", "drix", "ma", "tor", "yl", "bex", "orn",
+]
+
+
+def _random_name():
+    return "".join(random.choice(_SYLLABLES)
+                   for _ in range(random.randint(2, 4))).capitalize()
+
+
+def champion_bout():
+    """The staked offer for challenging Adelio's team (shape matches `world`'s
+    arena tiers, so `SquadScreen` and `campaign.absorb_battle` read it unchanged).
+    No `rep` key: it is not a rep tier and must not satisfy the Lone Wolf deed."""
+    return {"name": "Challenge the Champion", "champion": True,
+            "entry": CHAMPION_ENTRY, "purse": CHAMPION_PURSE,
+            "enemies": 1 + CHAMPION_GOONS}
+
+
+def defense_bout():
+    """The offer for a mandatory 1v1 title defense (no stake, a purse for a win)."""
+    return {"name": "Defend the Title", "defense": True,
+            "entry": 0, "purse": DEFENSE_PURSE, "enemies": 1}
+
+
+def champion_of(guild):
+    """The roster member holding the Champion of the Pit title, or None."""
+    return next((u for u in guild.roster if u.arena_title), None)
+
+
+def defense_due(guild):
+    """A challenge has come due and its grace window is still open -- turning up
+    at the arena now means a 1v1 for the title."""
+    day = guild.arena_challenge_day
+    return (day is not None and champion_of(guild) is not None
+            and day <= guild.clock.day <= day + CHALLENGE_GRACE)
+
+
+def defense_deadline(guild):
+    """Last day the champion can defend before forfeiting, or None."""
+    day = guild.arena_challenge_day
+    return None if day is None else day + CHALLENGE_GRACE
+
+
+def sync(guild):
+    """Housekeeping to run whenever the guild lands back on the map. Strips a
+    title whose defense window has lapsed and clears a stale challenge. Returns
+    event lines for the caller to surface."""
+    day = guild.arena_challenge_day
+    champ = champion_of(guild)
+    if champ is None:
+        guild.arena_challenge_day = None
+        return []
+    if day is not None and guild.clock.day > day + CHALLENGE_GRACE:
+        champ.arena_title = False
+        guild.arena_challenge_day = None
+        return [f"{champ.name} never answered the challenge -- "
+                f"the Champion of the Pit title is forfeit."]
+    return []
+
+
+def build_challenger(mean_level):
+    """A fresh opponent pitched at `mean_level`: XP spread evenly across both
+    tracks to hit that mean, then random talent picks that respect the tree."""
+    u = Unit("enemy")
+    for track in talents.TRACKS:
+        u.set_track_level(track, mean_level)
+    for track in talents.TRACKS:
+        guard = 0
+        while u.picks_available(track) > 0 and guard < 20:
+            guard += 1
+            picked = u.talents[track]
+            options = [t.id for t in talents.TREE[track]
+                       if t.id not in picked
+                       and (t.requires is None or t.requires in picked)]
+            if not options:
+                break
+            u.choose_talent(track, random.choice(options))
+    u.set_name(_random_name())
+    return u
+
+
+def load_champion():
+    """Adelio, from the NPC library, rigged as the pit champion for a bout."""
+    adelio = npc_lib.load_npc(CHAMPION_SLUG)
+    adelio.arena_role = "champion"
+    adelio.arena_title = True                     # +1 MD in his own pit while he still holds it
+    return adelio
+
+
+def cameo_enemy():
+    """The dethroned Adelio, `ADELIO_CAMEO_CHANCE` of the time, else None."""
+    if random.random() >= ADELIO_CAMEO_CHANCE:
+        return None
+    try:
+        return npc_lib.load_npc(CHAMPION_SLUG)
+    except OSError:
+        return None

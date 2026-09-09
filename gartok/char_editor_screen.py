@@ -35,6 +35,7 @@ _ITEM_CATALOG = sorted(set(data.WEAPONS) | set(data.ARMOR) | set(data.ITEM_WEIGH
                        | {data.TORCH_ITEM, data.AMMO_ITEM, data.FIRST_AID_ITEM})
 
 _MAX_NAME = 28
+_MAX_BIO = 240
 
 
 class CharEditorScreen(Screen):
@@ -84,11 +85,13 @@ class CharEditorScreen(Screen):
         self.edit_field = field
         u = self.unit
         self.edit_buf = "" if (field == "name" and u._auto_name) \
-            else u.name if field == "name" else str(u.age)
+            else u.name if field == "name" else u.bio if field == "bio" else str(u.age)
 
     def _commit_edit(self):
         if self.edit_field == "name":
             self.unit.set_name(self.edit_buf)
+        elif self.edit_field == "bio":
+            self.unit.set_bio(self.edit_buf)
         elif self.edit_field == "age" and self.edit_buf:
             self.unit.set_age(int(self.edit_buf))
         self.edit_field = None
@@ -99,11 +102,12 @@ class CharEditorScreen(Screen):
     def handle_event(self, event):
         if self.edit_field and event.type == pygame.KEYDOWN:
             digits_only = self.edit_field == "age"
+            cap = _MAX_BIO if self.edit_field == "bio" else _MAX_NAME
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 self._commit_edit()
             elif event.key == pygame.K_BACKSPACE:
                 self.edit_buf = self.edit_buf[:-1]
-            elif event.unicode and len(self.edit_buf) < _MAX_NAME \
+            elif event.unicode and len(self.edit_buf) < cap \
                     and (event.unicode.isdigit() if digits_only
                          else event.unicode.isprintable()):
                 self.edit_buf += event.unicode
@@ -135,7 +139,7 @@ class CharEditorScreen(Screen):
             self._save()
         elif kind == "randomize":
             self._load_unit(Unit("player"))
-        elif kind in ("name", "age"):
+        elif kind in ("name", "age", "bio"):
             self._start_edit(kind)
         elif kind == "picker":
             _, pk = action
@@ -304,6 +308,8 @@ class CharEditorScreen(Screen):
         text(screen, f"{u.race['size']}  ·  token {u.race['token']}  ·  "
              f"ability: {u.ability.name}", f.body_sm, INK_FAINT, (x, y + 2))
         y += 20
+        self._edit_row(screen, pygame.Rect(x, y, w, 26), "BIO", "bio", u.bio)
+        y += 26 + SP1
 
         # --- attributes ----------------------------------------------- #
         y = section(screen, "ATTRIBUTES  (3d6 score, 3..18)", x, y + SP1, w, f)

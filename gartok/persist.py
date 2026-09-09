@@ -18,7 +18,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 3                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 4                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -40,6 +40,8 @@ def unit_to_dict(u):
         "share_food": u.share_food,              # pools rations for hungry guild-mates
         "combat_xp": u.combat_xp,                # combat XP (see progression.py)
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
+        "bio": u.bio,                            # free-text backstory (blank for a rolled character)
+        "arena_title": u.arena_title,            # holds the "Champion of the Pit" title (arena.py)
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
         "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},
@@ -63,6 +65,7 @@ def save_game(slot, guild):
         "battles_won": guild.battles_won,
         "reputation": dict(guild.reputation),
         "deeds_done": list(guild.deeds_done),
+        "arena_challenge_day": guild.arena_challenge_day,
         "clock_seconds": guild.clock.seconds,
         "node": guild.node,
         "saved_at": time.time(),
@@ -89,6 +92,7 @@ def load_game(slot):
                  battles_won=payload.get("battles_won", 0),
                  reputation=payload.get("reputation", {}),
                  deeds_done=payload.get("deeds_done", []),
+                 arena_challenge_day=payload.get("arena_challenge_day"),
                  clock=Clock(payload.get("clock_seconds", 0)),
                  node=payload.get("node"),
                  taverna_week=payload.get("taverna_week"),

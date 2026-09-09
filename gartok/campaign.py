@@ -20,7 +20,7 @@ this module owns the *state change*, returned as a `BattleOutcome`.
 
 from dataclasses import dataclass, field
 
-from . import data, factions, loot
+from . import arena, data, factions, loot
 
 
 @dataclass
@@ -35,6 +35,7 @@ class BattleOutcome:
     squad_size: int = 0                           # how many the guild sent into the fight
     arena_tier: dict | None = None                # the staked tier dict, for an arena bout
     deeds_earned: list = field(default_factory=list)  # factions.Deed completed by this result
+    arena_title_event: str | None = None          # a one-liner if the Champion of the Pit title changed hands
 
 
 def _carry_forward(member, combatant):
@@ -86,4 +87,45 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
 
     outcome.deeds_earned = factions.settle(guild, node, outcome)
+
+    if arena_offer and arena_offer.get("champion") and won:
+        _claim_champion_title(guild, squad, battle, outcome)
+    elif arena_offer and arena_offer.get("defense"):
+        _settle_title_defense(guild, outcome, won)
     return outcome
+
+
+def _claim_champion_title(guild, squad, battle, outcome):
+    """The champion team is down: the title goes to whoever on the squad landed
+    the blow that first put Adelio down. No clean hand -> it stays vacant."""
+    champ = next((c for c in battle.enemy_units
+                  if getattr(c, "arena_role", None) == "champion"), None)
+    downer = getattr(champ, "downed_by", None) if champ is not None else None
+    winner = None
+    if downer is not None:
+        for combatant, member in zip(battle.player_units, squad):
+            if combatant is downer and member in guild.roster:
+                winner = member
+    if winner is None:
+        outcome.arena_title_event = ("Nobody on your side put the champion down "
+                                     "cleanly -- the title stays vacant.")
+        return
+    winner.arena_title = True
+    guild.arena_challenge_day = guild.clock.day + arena.CHALLENGE_CYCLE
+    outcome.arena_title_event = (f"{winner.name} lands the finishing blow and "
+                                 f"takes the Champion of the Pit.")
+
+
+def _settle_title_defense(guild, outcome, won):
+    champ = arena.champion_of(guild)
+    if won:
+        guild.arena_challenge_day = guild.clock.day + arena.CHALLENGE_CYCLE
+        if champ is not None:
+            outcome.arena_title_event = (f"{champ.name} turns the challenger away "
+                                         f"and keeps the title.")
+    else:
+        guild.arena_challenge_day = None
+        if champ is not None:
+            champ.arena_title = False
+            outcome.arena_title_event = (f"{champ.name} is beaten -- the Champion "
+                                         f"of the Pit title is lost.")

@@ -2,8 +2,8 @@
 
 Shown after a won arena bout. The purse is copper; it lands whole on the one
 member you click (the guild has no shared treasury). If the bout also completed
-a faction deed (`deeds`), a banner names it above the cards. `on_done` returns
-to the map.
+a faction deed (`deeds`), a banner names it above the cards; `note` adds one more
+line (the Champion of the Pit title changing hands). `on_done` returns to the map.
 """
 
 import pygame
@@ -19,7 +19,7 @@ from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT
 class RewardScreen(SheetModalMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, members, amount, on_done, deeds=()):
+    def __init__(self, fonts, guild, members, amount, on_done, deeds=(), note=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -27,6 +27,7 @@ class RewardScreen(SheetModalMixin, Screen):
         self.amount = amount
         self.on_done = on_done
         self.deeds = list(deeds)              # factions.Deed completed by this bout
+        self.note = note                      # extra one-liner (arena title change), or None
         self.paid_to = None                   # member who took the purse
         self.cards = []                      # [(rect, member)]
         self.info_hits = []                # [(rect, member)] -- the card's 'i' disc opens the sheet
@@ -77,6 +78,12 @@ class RewardScreen(SheetModalMixin, Screen):
             text(screen, f"{d.blurb}   +{d.rep} reputation with {fac}", f.body_sm,
                  INK_DIM, (br.x + SP3, br.y + 22))
             top = br.bottom + SP2
+
+        if self.note:
+            nr = pygame.Rect(MARGIN, top, min(screen.get_width() - 2 * MARGIN, 640), 32)
+            panel(screen, nr, fill=SURFACE_2, border=INFO, width=1, radius=RADIUS)
+            text(screen, self.note, f.body_sm, INFO, (nr.x + SP3, nr.y + 8))
+            top = nr.bottom + SP2
 
         n = max(1, len(self.members))
         gap = SP3

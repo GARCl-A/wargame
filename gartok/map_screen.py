@@ -16,7 +16,7 @@ Esc -> the pause menu (`app`), not a button here.
 
 import pygame
 
-from . import world
+from . import arena, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, RADIUS, SP2, SP3, SP4,
@@ -159,6 +159,11 @@ class MapScreen(Screen):
              + f"   ·   {self.guild.gold} copper   ·   {self.guild.battles_won} wins"
              f"   ·   arena reputation {self.guild.arena_reputation}",
              f.body, INK_DIM, (MARGIN, MARGIN + 30))
+        if arena.defense_due(self.guild):
+            champ = arena.champion_of(self.guild)
+            text(screen, f"TITLE DEFENSE: {champ.name} must defend the Champion of the "
+                 f"Pit at the Arena by day {arena.defense_deadline(self.guild)}",
+                 f.body_sm, WARN, (MARGIN, MARGIN + 48))
 
         area = self._area(screen)
         panel(screen, area, fill=GROUND_DAY if clock.is_daylight else GROUND_NIGHT,
@@ -331,14 +336,18 @@ class MapScreen(Screen):
             hovb = br.collidepoint(self.mouse)
             panel(screen, br, fill=ACCENT if hovb else SURFACE_3,
                   border=ACCENT, width=1, radius=RADIUS)
-            label = "BET AT THE ARENA" if here.arena else "ATTACK"
+            defense = here.arena and arena.defense_due(self.guild)
+            label = ("DEFEND YOUR TITLE" if defense
+                     else "BET AT THE ARENA" if here.arena else "ATTACK")
             text(screen, label, f.body_bd, ACCENT_INK if hovb else ACCENT,
                  br.center, center=True)
             self.buttons.append(("attack", br))
             y += 44
-            note = ("non-lethal · stake copper, win the purse" if here.arena
+            note = ("1v1 for the Champion of the Pit -- no stake, no backup" if defense
+                    else "non-lethal · stake copper, win the purse" if here.arena
                     else "lethal combat · loot the bodies")
-            text(screen, note, f.body_sm, INK_FAINT, (cx, y))
+            text(screen, note, f.body_sm,
+                 WARN if defense else INK_FAINT, (cx, y))
         elif here.is_market:
             mr = pygame.Rect(cx, y, cw, 38)
             hovm = mr.collidepoint(self.mouse)

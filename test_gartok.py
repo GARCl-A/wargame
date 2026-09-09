@@ -1110,8 +1110,10 @@ def test_save_slot_file_round_trip():
     random.seed(8)
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
                   reputation={"arena": 3}, deeds_done=["arena_first_blood"],
-                  clock=Clock(30 * 3600), node="wilds")
+                  arena_challenge_day=12, clock=Clock(30 * 3600), node="wilds")
     guild.roster[0].gold = 42
+    guild.roster[0].arena_title = True
+    guild.roster[0].bio = "kept the belt through a lean winter"
     pool = recruit.refresh_pool(guild)
     recruit.bar(guild, pool[0], guild.roster[0])
     try:
@@ -1119,6 +1121,8 @@ def test_save_slot_file_round_trip():
         back = persist.load_game(slot)
         assert back.battles_won == 4 and back.arena_reputation == 3
         assert back.deeds_done == ["arena_first_blood"]
+        assert back.arena_challenge_day == 12
+        assert back.roster[0].arena_title and "belt" in back.roster[0].bio
         assert back.clock.seconds == 30 * 3600 and back.node == "wilds"
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
@@ -1567,6 +1571,95 @@ def test_a_lost_or_non_arena_fight_completes_no_arena_deed():
 
     g2 = Guild([Unit("player")])                  # a win, but not in the pits
     assert _arena_bout(g2, n=1, node_id="wilds").deeds_earned == [] and g2.arena_reputation == 0
+
+
+# --------------------------------------------------------------------------- #
+# arena: the Champion of the Pit title                                         #
+# --------------------------------------------------------------------------- #
+
+def _champion_battle(guild, squad):
+    """A champion bout where `squad[0]` lands the blow that puts Adelio down."""
+    from gartok import arena
+    champ = arena.load_champion()
+    battle = Battle(list(squad), [champ, Unit("enemy"), Unit("enemy")],
+                    lethal=False, arena=True)
+    battle.winner = "player"
+    for u in battle.player_units:
+        u.status = "up"
+    cc = next(c for c in battle.enemy_units
+              if getattr(c, "arena_role", None) == "champion")
+    battle.player_units[0].credit_kill(cc)        # the finishing blow
+    return battle
+
+
+def test_champion_title_goes_to_the_finisher():
+    from gartok import arena, campaign, world
+    from gartok.guild import Guild
+    random.seed(11)
+    winner, other = Unit("player"), Unit("player")
+    guild = Guild([winner, other], node="arena")
+    battle = _champion_battle(guild, [winner, other])
+    out = campaign.absorb_battle(guild, [winner, other], battle,
+                                 node=world.node("arena"), arena_offer=arena.champion_bout())
+    assert "arena_dethrone" in {d.id for d in out.deeds_earned}
+    assert winner.arena_title and not other.arena_title
+    assert guild.arena_challenge_day == guild.clock.day + arena.CHALLENGE_CYCLE
+
+
+def test_champion_title_stays_vacant_on_a_messy_finish():
+    from gartok import arena, campaign, world
+    from gartok.guild import Guild
+    random.seed(12)
+    p = Unit("player")
+    guild = Guild([p], node="arena")
+    champ = arena.load_champion()
+    battle = Battle([p], [champ, Unit("enemy")], lethal=False, arena=True)
+    battle.winner = "player"
+    for u in battle.player_units:
+        u.status = "up"
+    # nobody credited with putting the champion down
+    out = campaign.absorb_battle(guild, [p], battle, node=world.node("arena"),
+                                 arena_offer=arena.champion_bout())
+    assert "arena_dethrone" in {d.id for d in out.deeds_earned}   # deed still lands
+    assert not p.arena_title and guild.arena_challenge_day is None
+
+
+def test_title_defense_is_due_and_forfeits_when_missed():
+    from gartok import arena
+    from gartok.guild import Guild
+    from gartok.clock import Clock, SECONDS_PER_DAY
+    champ = Unit("player")
+    champ.arena_title = True
+    guild = Guild([champ], node="city")
+    guild.clock = Clock(0)
+    guild.arena_challenge_day = 5
+    guild.clock.seconds = 5 * SECONDS_PER_DAY
+    assert arena.defense_due(guild)
+    guild.clock.seconds = (5 + arena.CHALLENGE_GRACE + 1) * SECONDS_PER_DAY
+    assert not arena.defense_due(guild)
+    assert arena.sync(guild) and not champ.arena_title and guild.arena_challenge_day is None
+
+
+def test_challenger_is_built_one_mean_level_above():
+    from gartok import arena
+    random.seed(13)
+    ch = arena.build_challenger(4)
+    assert ch.mean_level == 4
+    assert all(ch.picks_available(t) == 0 for t in ("combat", "work"))
+
+
+def test_arena_title_only_bites_inside_the_arena():
+    a = Unit("player"); a.languages = ["Elvish"]
+    d = Unit("enemy"); d.languages = ["Orcish"]
+    a._ability = abilities.get("none")
+
+    for in_arena, expected in ((True, True), (False, False)):
+        batt = Battle([a], [d], arena=in_arena)
+        ac, dc = batt.player_units[0], batt.enemy_units[0]
+        ac.arena_title = True
+        ac.ap, ac.torch_hand = 2, True
+        ac.pos, dc.pos = (5, 5), (6, 5)
+        assert actions.DEMORALIZE.can(batt, ac, dc) is expected
 
 
 # --------------------------------------------------------------------------- #

@@ -370,8 +370,10 @@ class PickUp(Action):
 class Demoralize(Action):
     id, name, target, aimed = "demoralize", "Demoralize", "enemy", True
 
-    def _can_provoke(self, actor, target):
-        return actor.ability.demoralize_ignores_language or _shared_language(actor, target)
+    def _can_provoke(self, battle, actor, target):
+        return (actor.ability.demoralize_ignores_language
+                or _shared_language(actor, target)
+                or (battle.arena and getattr(actor, "arena_title", False)))
 
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _hostile_target(actor, target):
@@ -380,7 +382,7 @@ class Demoralize(Action):
             return False
         if not (battle.can_see_unit(actor, target) and battle.can_see_unit(target, actor)):
             return False
-        return self._can_provoke(actor, target)
+        return self._can_provoke(battle, actor, target)
 
     def label(self, battle, actor):
         return "Demoralize (1 pt, CHA vs Mental Defense)"
@@ -395,7 +397,11 @@ class Demoralize(Action):
         actor.ap -= 1
         actor.walking = False
 
-        bonus, applied = resolve_bonus([(actor.mod_charisma, None, "CHA")])
+        mods = [(actor.mod_charisma, None, "CHA")]
+        titled = battle.arena and getattr(actor, "arena_title", False)
+        if titled and _shared_language(actor, target):
+            mods.append((1, "circumstance", "Champion of the Pit"))
+        bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
 
         if actor.ability.demoralize_ignores_language and not _shared_language(actor, target):
@@ -404,6 +410,8 @@ class Demoralize(Action):
         nat = d20()
         total = nat + bonus
         md = target.mental_defense
+        if battle.arena and getattr(target, "arena_title", False):
+            md += 1                                # the champion is hard to rattle in their own pit
         crit = nat == 20
         desc = (f"{actor.name} tries to demoralize {target.name}: "
                 f"d20({nat}) {detail} = {total} vs MD {md}")

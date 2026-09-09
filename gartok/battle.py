@@ -19,10 +19,12 @@ __all__ = ["Battle", "COLS", "ROWS", "chebyshev"]
 
 
 class Battle:
-    def __init__(self, player_units, enemy_units, scenario=None, daylight=True, lethal=True):
+    def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
+                 lethal=True, arena=False):
         self.log_lines = []
         self.daylight = daylight              # outdoor scenarios read this for ambient light
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
+        self.arena = arena                   # True = fought in the pits: the Champion of the Pit title bites here
         self.scenario = scenario or ArenaScenario()
         self.player_units = [Combatant(u, "player") for u in player_units]
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]

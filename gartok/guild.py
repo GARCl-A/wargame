@@ -22,12 +22,13 @@ from .clock import Clock
 
 class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
-                 clock=None, node=None,
+                 arena_challenge_day=None, clock=None, node=None,
                  taverna_week=None, taverna_pool=None, taverna_blocked=None):
         self.roster = roster                  # list[Unit] -- the members
         self.battles_won = battles_won
         self.reputation = dict(reputation or {})   # {faction_id: score}, moved by deeds only
         self.deeds_done = list(deeds_done or [])   # ids of completed factions.Deed
+        self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
         self.node = node                      # current world-map node id (set on entry)
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`

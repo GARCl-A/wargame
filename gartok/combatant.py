@@ -69,14 +69,18 @@ class Combatant:
         self.used_abilities = set()   # keys of once-per-battle effects already spent
         self.kills = 0                # enemies this combatant downed (count, for display)
         self.combat_xp_earned = 0     # combat XP from those kills, by level difference
+        self.downed_by = None         # the combatant whose blow first put this one down (arena title)
         self.ferocity_downer = None   # who brought this unit to 0 HP while Ferocity keeps it up
 
     def credit_kill(self, victim):
         """Book a downed enemy: +1 to the kill count, plus combat XP scaled by the
-        level gap (`progression.xp_award` -- nothing for a victim below your level)."""
+        level gap (`progression.xp_award` -- nothing for a victim below your level).
+        Also records who put the victim down (the arena title goes to whoever
+        lands the blow on the champion)."""
         self.kills += 1
         self.combat_xp_earned += progression.xp_award(self.combat_level,
                                                       victim.combat_level)
+        victim.downed_by = self
 
     def spend_once(self, key):
         """Mark a once-per-battle effect as used. Returns True the first time only."""

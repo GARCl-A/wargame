@@ -43,6 +43,8 @@ class Unit:
         self.share_food = True                         # pools rations for hungry guild-mates
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
+        self.bio = ""                                  # free-text backstory (authored NPCs; editable in the creator)
+        self.arena_title = False                       # holds the arena's "Champion of the Pit" (see arena.py)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
 
@@ -86,6 +88,8 @@ class Unit:
         u.share_food = d.get("share_food", True)
         u.combat_xp = d.get("combat_xp", 0)
         u.work_hours = d.get("work_hours", 0)
+        u.bio = d.get("bio", "")
+        u.arena_title = d.get("arena_title", False)
         u._auto_name = d["auto_name"]
         u.name = d["name"]
         u.token = u.race["token"]
@@ -341,6 +345,9 @@ class Unit:
 
     def set_alignment(self, alignment):
         self.alignment = alignment                 # one of data.ALIGNMENTS
+
+    def set_bio(self, text):
+        self.bio = (text or "").strip()
 
     def set_base_attribute(self, attr, score):
         """Set the raw (pre-racial) score for `attr`, clamped to the 3..18 a 3d6
