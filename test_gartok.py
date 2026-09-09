@@ -714,6 +714,54 @@ def test_custom_scenario_falls_back_to_edge_columns_for_a_blank_side():
     assert batt.enemy_units[0].pos[0] >= COLS - 3       # blank enemy side: edge columns
 
 
+def test_custom_scenario_deploys_a_named_npc_on_the_npc_zone():
+    random.seed(0)
+    goon = Unit("enemy")
+    boss = Unit("enemy")
+    boss.set_name("Adelio Small-Knife")                 # a named library character
+    batt = Battle([Unit("player")], [goon, boss],
+                  scenario=CustomScenario({"deploy_enemy": [[14, 2]],
+                                           "deploy_npc": [[8, 6, "whoever"]]}))
+    named = next(c for c in batt.enemy_units if not c._auto_name)
+    generic = next(c for c in batt.enemy_units if c._auto_name)
+    assert named.pos == (8, 6) and generic.pos == (14, 2)
+
+
+def test_map_npc_units_pins_a_library_character_to_its_cell():
+    import shutil
+    import tempfile
+
+    from gartok import map_lib, npc_lib
+    o1, npc_lib.NPC_DIR = npc_lib.NPC_DIR, tempfile.mkdtemp()
+    o2, map_lib.MAP_DIR = map_lib.MAP_DIR, tempfile.mkdtemp()
+    try:
+        boss = _unit(seed=2)
+        boss.set_name("Adelio")
+        slug = npc_lib.save_npc(boss)
+        m = map_lib.new_map("Ambush")
+        m["deploy_npc"] = [[9, 7, slug]]
+        m["deploy_enemy"] = [[14, 2]]
+        map_lib.save_map(m)
+
+        data_ = map_lib.load_map("ambush")
+        npcs = map_lib.npc_units(data_)
+        assert len(npcs) == 1
+        assert npcs[0].name == "Adelio" and npcs[0].map_cell == (9, 7)
+
+        random.seed(0)
+        batt = Battle([Unit("player")], npcs + [Unit("enemy")],
+                      scenario=CustomScenario(data_))
+        adelio = next(c for c in batt.enemy_units if c.name == "Adelio")
+        other = next(c for c in batt.enemy_units if c.name != "Adelio")
+        assert adelio.pos == (9, 7)                     # pinned to its cell
+        assert other.pos[0] >= COLS - 3                 # generic enemy: edge columns
+    finally:
+        shutil.rmtree(npc_lib.NPC_DIR, ignore_errors=True)
+        npc_lib.NPC_DIR = o1
+        shutil.rmtree(map_lib.MAP_DIR, ignore_errors=True)
+        map_lib.MAP_DIR = o2
+
+
 def test_custom_scenario_lit_map_scatters_no_torches():
     random.seed(0)
     batt = Battle([Unit("player")], [Unit("enemy")],

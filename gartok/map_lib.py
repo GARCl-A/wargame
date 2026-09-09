@@ -5,11 +5,12 @@ file per map under `maps/` at the repo root, versioned in git. Authored content,
 like `world.py` and the NPC library (`npc_lib`): a map laid out in the editor can
 ship with the game.
 
-A file is a flat dict -- the grid size, the wall / torch / deployment cells (each
-a `[x, y]` pair, sorted for a stable diff) and the two lighting flags -- plus a
-`map_slug` (the file's stem, the stable id). `scenario.CustomScenario` turns one
-back into a playable battle. Nothing wires a world node to a custom map yet --
-that, like `use NPC x`, comes later.
+A file is a flat dict -- the grid size, the wall / torch / player+enemy cells
+(each a sorted `[x, y]` pair), `deploy_npc` as `[x, y, slug]` triples pinning a
+named library character to a cell, and the two lighting flags -- plus a
+`map_slug` (the file's stem, the stable id). `scenario.CustomScenario` +
+`npc_units` turn one back into a playable battle. Nothing wires a world node to a
+custom map yet -- that, like `use NPC x`, comes later.
 """
 
 import json
@@ -17,18 +18,20 @@ import os
 import re
 
 from .board import COLS, ROWS
-from .npc_lib import slugify
+from .npc_lib import load_npc, slugify
 
 MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "maps")
 
-_CELL_KEYS = ("walls", "torches", "deploy_player", "deploy_enemy")
+_CELL_KEYS = ("walls", "torches", "deploy_player", "deploy_enemy", "deploy_npc")
 
 
 def new_map(name="Untitled"):
     """A blank map dict: full grid, nothing on it, indoor and dark."""
-    return {"name": name, "cols": COLS, "rows": ROWS,
-            "walls": [], "torches": [], "deploy_player": [], "deploy_enemy": [],
-            "ambient_light": False, "outdoor": False}
+    d = {"name": name, "cols": COLS, "rows": ROWS,
+         "ambient_light": False, "outdoor": False}
+    for key in _CELL_KEYS:
+        d[key] = []
+    return d
 
 
 def map_path(slug):
@@ -48,7 +51,9 @@ def save_map(data, slug=None):
     for key in _CELL_KEYS:
         payload[key] = sorted([list(c) for c in data.get(key, [])])
     text = json.dumps(payload, ensure_ascii=False, indent=2)
-    text = re.sub(r"\[\s+(-?\d+),\s+(-?\d+)\s+\]", r"[\1, \2]", text)  # one cell per line
+    text = re.sub(r"\[\s+(-?\d+),\s+(-?\d+)\s+\]", r"[\1, \2]", text)          # [x, y]
+    text = re.sub(r'\[\s+(-?\d+),\s+(-?\d+),\s+("(?:[^"\\]|\\.)*")\s+\]',
+                  r"[\1, \2, \3]", text)                                        # [x, y, "slug"]
     tmp = map_path(slug) + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(text)
@@ -67,6 +72,25 @@ def delete_map(slug):
         os.remove(map_path(slug))
     except FileNotFoundError:
         pass
+
+
+def npc_units(data):
+    """The named NPCs a map places -- loaded from the library, each tagged with
+    the cell it was dropped on (`unit.map_cell`) so `scenario.CustomScenario`
+    stands it there. Missing library files are skipped. The caller hands these to
+    `Battle` as (part of) the enemy side."""
+    out = []
+    for entry in data.get("deploy_npc", []):
+        if len(entry) < 3:
+            continue
+        x, y, slug = entry[0], entry[1], entry[2]
+        try:
+            u = load_npc(slug)
+        except OSError:
+            continue
+        u.map_cell = (x, y)
+        out.append(u)
+    return out
 
 
 def list_maps():

@@ -13,7 +13,8 @@ torch scatter). A concrete location on the world map picks a subclass:
   campaign clock (`battle.daylight`) -- lit by day, pitch dark by night (bring
   your own torch; nothing scattered).
 - `CustomScenario` -- a map hand-laid in the editor (`map_lib` dict): fixed
-  walls, torches and deployment zones, no random scatter.
+  walls, torches and deployment zones (player / generic enemy / named NPC), no
+  random scatter.
 """
 
 import random
@@ -43,29 +44,33 @@ class Scenario:
 
     # ------------------------------------------------------------------ #
     def _spawn_cells(self, team):
-        """Candidate deployment cells for a side -- the base is the three columns
-        on that side's edge. `CustomScenario` overrides this with the zone the
-        map author painted."""
+        """A side's edge columns -- the base deployment area."""
         cols = (0, 1, 2) if team == "player" else (COLS - 3, COLS - 2, COLS - 1)
         return [(x, y) for x in cols for y in range(ROWS)]
+
+    def _deploy_cells(self, u):
+        """Ordered candidate cells for `u` (the first that fits wins). Base: that
+        side's edge columns in random order. `CustomScenario` puts the authored
+        zones in front."""
+        area = list(self._spawn_cells(u.team))
+        random.shuffle(area)
+        return area
 
     def _deploy(self, battle):
         taken = set(battle.board.walls)
         for u in battle.units:
-            self._place_unit(u, self._spawn_cells(u.team), taken)
+            self._place(u, self._deploy_cells(u), taken)
 
     @staticmethod
-    def _place_unit(u, spawn, taken):
-        options = list(spawn)
-        random.shuffle(options)
-        for p in options:
+    def _place(u, candidates, taken):
+        for p in candidates:
             shape = cells(p, u.footprint)
             if all(0 <= cx < COLS and 0 <= cy < ROWS for cx, cy in shape) \
                     and not (taken & set(shape)):
                 u.pos = p
                 taken.update(shape)
                 return
-        u.pos = spawn[0] if spawn else (0, 0)    # fallback: crowded map
+        u.pos = candidates[0] if candidates else (0, 0)    # fallback: crowded map
 
     def _place_creatures(self, battle):
         """Neutral creatures that come with a unit (e.g. the Shepherd's sheep)."""
@@ -111,9 +116,10 @@ class ErmosScenario(Scenario):
 
 class CustomScenario(Scenario):
     """A battle built from a map laid out in the editor (`map_lib`): fixed walls,
-    fixed torches, and the deployment cells the author painted. Falls back to the
-    base side-column deployment for a side the map leaves blank. What the author
-    did not light stays dark -- no torch scatter."""
+    fixed torches, and the deployment cells the author painted -- a player zone, a
+    generic enemy zone, and an NPC zone for a named opponent (Adelio and the
+    like). Falls back to the base edge columns for whatever the map leaves blank.
+    What the author did not light stays dark -- no torch scatter."""
 
     def __init__(self, data):
         self.ambient_light = bool(data.get("ambient_light"))
@@ -121,13 +127,36 @@ class CustomScenario(Scenario):
         self._walls = [tuple(c) for c in data.get("walls", [])]
         self._torches = [tuple(c) for c in data.get("torches", [])]
         self._zones = {"player": [tuple(c) for c in data.get("deploy_player", [])],
-                       "enemy": [tuple(c) for c in data.get("deploy_enemy", [])]}
+                       "enemy": [tuple(c) for c in data.get("deploy_enemy", [])],
+                       "npc": [(e[0], e[1]) for e in data.get("deploy_npc", [])]}
 
     def _make_board(self):
         return Board(walls=self._walls)
 
-    def _spawn_cells(self, team):
-        return self._zones[team] or super()._spawn_cells(team)
+    @staticmethod
+    def _is_npc(u):
+        """A named library character (Adelio, a hand-built champion), not a
+        generated `Unit("enemy")`."""
+        return bool(getattr(u, "arena_role", None)) or not getattr(u, "_auto_name", True)
+
+    def _deploy_cells(self, u):
+        if u.team == "player":
+            order = [self._zones["player"]]
+        else:
+            slot = getattr(u, "map_cell", None)   # `map_lib.npc_units` pins each NPC to its cell
+            npc, enemy = self._zones["npc"], self._zones["enemy"]
+            if slot is not None:
+                order = [[slot], npc, enemy]
+            elif self._is_npc(u):
+                order = [npc, enemy]
+            else:
+                order = [enemy, npc]
+        cells_ = []
+        for zone in order + [self._spawn_cells(u.team)]:
+            for c in zone:
+                if c not in cells_:
+                    cells_.append(c)
+        return cells_
 
     def _scatter_torches(self, battle):
         if battle.ambient_light:
