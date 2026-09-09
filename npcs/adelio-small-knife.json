@@ -1,0 +1,50 @@
+{
+  "uid": "a191e540a1284ae1a89525317ae859d1",
+  "recruited_by": null,
+  "name": "Adelio Small-Knife",
+  "auto_name": false,
+  "bio": "A village cutpurse who talked his way into the Pits a season ago. He fights dirty, ducks early and has held the bottom rung's belt longer than anyone bet he would -- the best of a bad lot, and he knows it.",
+  "race": "Halfling",
+  "occupation": "Thief",
+  "alignment": "Neutral and Evil",
+  "gold": 32,
+  "unfed_days": 0,
+  "share_food": true,
+  "combat_xp": 3,
+  "work_hours": 32,
+  "talents": {
+    "combat": [
+      "agile"
+    ],
+    "work": [
+      "negotiator"
+    ]
+  },
+  "level_hp_rolls": [
+    1
+  ],
+  "base_attributes": {
+    "strength": 10,
+    "dexterity": 13,
+    "constitution": 10,
+    "intelligence": 8,
+    "wisdom": 11,
+    "charisma": 11
+  },
+  "age_base": 41,
+  "age": 62,
+  "hp_roll": 2,
+  "hp_override": 5,
+  "hp_max": 5,
+  "languages": [
+    "Halfling",
+    "Ankarin"
+  ],
+  "equipped_weapon": "Dagger",
+  "equipped_offhand": "Torch",
+  "equipped_armor": "Studded Leather",
+  "inventory": [
+    "Cloak"
+  ],
+  "npc_slug": "adelio-small-knife"
+}
