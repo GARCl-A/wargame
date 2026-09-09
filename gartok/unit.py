@@ -21,7 +21,7 @@ spinning up a Combatant.
 import random
 import uuid
 
-from . import abilities, data, economy, progression, talents
+from . import abilities, data, economy, names, progression, talents
 from .data import mod, roll
 
 ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
@@ -49,7 +49,7 @@ class Unit:
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
 
         self._auto_name = name is None
-        self.name = name or f"{self.race['name']} {self.occupation['name']}"
+        self.name = name or names.random_name()
         self.token = self.race["token"]
 
         self._derive_combat()
@@ -326,8 +326,6 @@ class Unit:
         self._after_edit()
 
     def _after_edit(self):
-        if self._auto_name:
-            self.name = f"{self.race['name']} {self.occupation['name']}"
         self.token = self.race["token"]
         self._derive_combat()
 
@@ -338,10 +336,10 @@ class Unit:
     # through `persist.unit_to_dict` unchanged.                            #
     # ------------------------------------------------------------------ #
     def set_name(self, name):
-        """A blank name switches back to the auto `Race Occupation` label."""
+        """A blank name hands the unit a fresh procedural one and marks it a nobody."""
         name = (name or "").strip()
         self._auto_name = not name
-        self.name = name or f"{self.race['name']} {self.occupation['name']}"
+        self.name = name or names.random_name()
 
     def set_alignment(self, alignment):
         self.alignment = alignment                 # one of data.ALIGNMENTS

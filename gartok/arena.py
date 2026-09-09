@@ -42,19 +42,6 @@ ADELIO_CAMEO_CHANCE = 0.05    # chance an ordinary pit bout fields the dethroned
 
 CHAMPION_MAP = "the-pit"          # the hand-laid arena the title bout is fought on
 
-# A throwaway name generator for one-off challengers: string 2-4 of these
-# together. Good enough for now; promote to its own module when NPCs need it too.
-_SYLLABLES = [
-    "ka", "dor", "ven", "mir", "thal", "grok", "un", "el", "bran", "sur",
-    "tik", "mor", "za", "hel", "dun", "ash", "kor", "vel", "nim", "gar",
-    "oth", "ru", "sen", "kael", "drix", "ma", "tor", "yl", "bex", "orn",
-]
-
-
-def _random_name():
-    return "".join(random.choice(_SYLLABLES)
-                   for _ in range(random.randint(2, 4))).capitalize()
-
 
 def champion_bout():
     """The staked offer for challenging Adelio's team (shape matches `world`'s
@@ -127,7 +114,6 @@ def build_challenger(mean_level):
             if not options:
                 break
             u.choose_talent(track, random.choice(options))
-    u.set_name(_random_name())
     return u
 
 
