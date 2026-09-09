@@ -46,6 +46,7 @@ def unit_to_dict(u):
         "age_base": u._age_base,                 # the generator's d100 roll (age at age_mult x1)
         "age": u.age,                            # shown age -- editable in the creator, else age_base x age_mult
         "hp_roll": u._hp_roll,                   # 1dHD, rolled once at creation
+        "hp_override": u._hp_override,           # creator-set HP max that wins over the formula, or None
         "hp_max": u.hp_max,                      # kept for pre-hunger saves / at-a-glance
         "languages": list(u.languages),          # racial + random extras
         "equipped_weapon": u.equipped_weapon,    # weapon hand (None = unarmed)

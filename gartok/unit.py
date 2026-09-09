@@ -44,6 +44,7 @@ class Unit:
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
+        self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
 
         self._auto_name = name is None
         self.name = name or f"{self.race['name']} {self.occupation['name']}"
@@ -89,6 +90,7 @@ class Unit:
         u.name = d["name"]
         u.token = u.race["token"]
         u._hp_roll = d.get("hp_roll")
+        u._hp_override = d.get("hp_override")            # creator-set HP max, or None
         if u._hp_roll is None:                           # pre-hunger save: back it out of hp_max
             u._hp_roll = max(1, d["hp_max"] - mod(u.constitution) - u._ability.hp_max)
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
@@ -363,6 +365,13 @@ class Unit:
     def set_gold(self, copper):
         self.gold = max(0, int(copper))
 
+    def set_hp(self, value):
+        """Pin the HP max to `value` (>= 1), or pass `None` to drop back to the
+        rolled formula. The override is sticky: it survives race / level / Con
+        edits until cleared, and round-trips through `persist.unit_to_dict`."""
+        self._hp_override = None if value is None else max(1, int(value))
+        self._derive_combat()
+
     def set_track_level(self, track, level):
         """Set the combat / work level directly: `combat_xp` (or `work_hours`)
         jumps to that level's threshold, hit dice and talent picks resync to the
@@ -445,14 +454,18 @@ class Unit:
     def _derive_hp(self):
         """Max HP: the creation roll + Con + ability bonus, one kept die per mean
         level, and the Hardy talent per Hit Die. `_hp_roll` / `_level_hp_rolls`
-        are fixed, so re-deriving never re-rolls. Starving (tier 2+) caps it at 1."""
+        are fixed, so re-deriving never re-rolls. A sandbox `_hp_override` (set in
+        the creator) replaces the whole formula. Starving (tier 2+) caps it at 1."""
         if self._hp_roll is None:
             self._hp_roll = roll(1, self.race["hd"])
         con = self.mod_constitution
         hit_dice = 1 + len(self._level_hp_rolls)
-        self.hp_max = (max(1, self._hp_roll + con + self._ability.hp_max)
-                       + sum(max(1, die + con) for die in self._level_hp_rolls)
-                       + self.talent_bonus("hp_per_hd") * hit_dice)
+        if self._hp_override is not None:
+            self.hp_max = max(1, self._hp_override)
+        else:
+            self.hp_max = (max(1, self._hp_roll + con + self._ability.hp_max)
+                           + sum(max(1, die + con) for die in self._level_hp_rolls)
+                           + self.talent_bonus("hp_per_hd") * hit_dice)
         if self.hunger_level >= 2:
             self.hp_max = 1
 

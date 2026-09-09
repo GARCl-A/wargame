@@ -3,8 +3,9 @@
 A sandbox, not a player flow -- it is not bound by draft / XP gating. Every
 editable field is set straight to a valid value: race / occupation / alignment
 from their tables, the six attributes as 3d6 scores (3..18), combat / work level
-by stepper (talent picks and hit dice follow), talents from the trees, languages,
-the purse, and the full loadout from the item catalog. The right column shows a
+by stepper (talent picks and hit dice follow), HP (a stepper pins an override,
+AUTO drops back to the roll), talents from the trees, languages, the purse, and
+the full loadout from the item catalog. The right column shows a
 live character sheet (the real `sheet.character_sheet`, through a throwaway
 `Combatant`) and the NPC library.
 
@@ -155,6 +156,10 @@ class CharEditorScreen(Screen):
             u.set_track_level(track, u.track_level[track] + delta)
         elif kind == "gold":
             u.set_gold(u.gold + action[1])
+        elif kind == "hp":
+            u.set_hp(u.hp_max + action[1])
+        elif kind == "hp_auto":
+            u.set_hp(None)
         elif kind == "talent":
             _, track, tid = action
             (u.drop_talent if tid in u.talents[track] else u.choose_talent)(track, tid)
@@ -348,10 +353,35 @@ class CharEditorScreen(Screen):
                 text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM, br.center, center=True)
                 self._hit(br, ("level", track, sign))
         y += 26 + SP1
+
+        # HP: the steppers pin an override, AUTO clears it (see Unit.set_hp).
+        hr = pygame.Rect(x, y, half, 26)
+        panel(screen, hr, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
+        pinned = u._hp_override is not None
+        text(screen, f"HP  {u.hp_max}", f.body_sm, ACCENT if pinned else INK,
+             (hr.x + SP2, hr.y + 6))
+        if pinned:
+            rs = pygame.Rect(hr.right - 78, hr.y + 4, 34, 18)
+            rh = rs.collidepoint(self.mouse)
+            panel(screen, rs, fill=SURFACE_4 if rh else SURFACE_1, border=LINE_SOFT,
+                  width=0, radius=3)
+            text(screen, "auto", f.label, ACCENT if rh else INK_DIM, rs.center, center=True)
+            self._hit(rs, ("hp_auto",))
+        dn = pygame.Rect(hr.right - 40, hr.y + 3, 18, 20)
+        up = pygame.Rect(hr.right - 20, hr.y + 3, 18, 20)
+        for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
+            h = br.collidepoint(self.mouse)
+            panel(screen, br, fill=SURFACE_4 if h else SURFACE_1, border=LINE_SOFT,
+                  width=0, radius=3)
+            text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM, br.center, center=True)
+            self._hit(br, ("hp", sign))
+        y += 26 + SP1
+
         dice = len(u._level_hp_rolls)
         lo, hi = self._hp_bounds(u)
         text(screen, f"mean level {u.mean_level}  ·  {1 + dice} hit "
-             f"{'die' if dice == 0 else 'dice'}  ·  HP {u.hp_max}  (rolls {lo}-{hi})",
+             f"{'die' if dice == 0 else 'dice'} (d{u.race['hd']})  ·  "
+             f"HP rolls {lo}-{hi}" + ("  ·  pinned" if pinned else ""),
              f.body_sm, INK_FAINT, (x, y + 2))
         y += 20
 
