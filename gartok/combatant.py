@@ -62,7 +62,8 @@ class Combatant:
         self.conditions = []
         self.ap = AP_PER_TURN
         self.walking = False          # a walk is in progress (same Move action)
-        self.moved = 0                # squares already spent in the current walk
+        self.moved = 0                # movement cost already spent in the current walk
+        self.diag_steps = 0          # diagonals taken in the current walk (1,2,1,2… cost)
         self.path = []                # cells walked this turn: [start, ..., pos]
         self.last_path = []           # the previous turn's path (kept for future mechanics)
         self.used_abilities = set()   # keys of once-per-battle effects already spent
@@ -348,6 +349,7 @@ class Combatant:
         self.ap = AP_PER_TURN
         self.walking = False
         self.moved = 0
+        self.diag_steps = 0
         self.last_path = self.path
         self.path = [self.pos]
         self.conditions = [c for c in self.conditions

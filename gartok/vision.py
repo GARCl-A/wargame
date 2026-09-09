@@ -8,7 +8,7 @@ Pure functions over the battle state:
 """
 
 from . import data
-from .board import COLS, ROWS, cells, chebyshev
+from .board import COLS, ROWS, cells, grid_distance
 
 
 def unit_light(unit):
@@ -44,7 +44,7 @@ def light_sources(battle):
 
 def cell_lit(battle, pos):
     """Cell lit? (within a light source's radius, with LOS to it)."""
-    return any(chebyshev(fp, pos) <= radius and battle.board.los_clear(fp, pos)
+    return any(grid_distance(fp, pos) <= radius and battle.board.los_clear(fp, pos)
                for fp, radius in _light_sources(battle))
 
 
@@ -57,7 +57,7 @@ def can_see(battle, observer, target_pos):
     apply, so walls and distance matter, torches don't.
     """
     ocells = cells(observer.pos, observer.footprint)
-    dist = min(chebyshev(oc, target_pos) for oc in ocells)
+    dist = min(grid_distance(oc, target_pos) for oc in ocells)
     if dist == 0:
         return True                              # you always see your own cell
     if dist > data.SIGHT_MAX \

@@ -10,7 +10,7 @@ roster and a rematch could reuse the same picks.
 """
 
 from . import data, vision
-from .board import COLS, ROWS, cells, chebyshev, cells_distance
+from .board import COLS, ROWS, cells, chebyshev, cells_distance, route_cost
 from .combatant import Combatant
 from .data import d20
 from .scenario import ArenaScenario
@@ -134,8 +134,15 @@ class Battle:
     # ------------------------------------------------------------------ #
     # movement  (Move action: 1 point; 2 points per turn)                #
     # ------------------------------------------------------------------ #
+    @staticmethod
+    def _walk_diags(unit):
+        """Diagonals already spent in the walk `unit` is in the middle of (0 when
+        no Move action is open -- a fresh walk starts the 1, 2, 1, 2 ... over)."""
+        return unit.diag_steps if unit.walking else 0
+
     def reachable(self, unit, budget=None):
-        """BFS of reachable anchors -> {pos: cost}. 1 per step (diagonals included)."""
+        """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
+        along a route alternate 1, 2, 1, 2 ... (`board.route_cost`)."""
         if budget is None:
             if unit.walking:
                 budget = unit.speed - unit.moved
@@ -145,7 +152,8 @@ class Battle:
                 return {}
         allies, enemies = self.cells_by_side(unit)
         blocked = enemies | self.board.walls | self.creature_cells()
-        return self.board.reachable(unit.pos, budget, blocked, unit.footprint, allies)
+        return self.board.reachable(unit.pos, budget, blocked, unit.footprint,
+                                    allies, self._walk_diags(unit))
 
     def reachable_cells(self, unit):
         """Union of the cells the footprint would cover at each reachable anchor (UI highlight)."""
@@ -159,7 +167,8 @@ class Battle:
         ``[unit.pos, ..., dest]`` (``[]`` if unreachable)."""
         _, enemies = self.cells_by_side(unit)
         blocked = enemies | self.board.walls | self.creature_cells()
-        return self.board.path_to(unit.pos, dest, blocked, unit.footprint)
+        return self.board.path_to(unit.pos, dest, blocked, unit.footprint,
+                                  self._walk_diags(unit))
 
     def path_step_toward(self, unit, goal, budget):
         allies, enemies = self.cells_by_side(unit)
@@ -167,7 +176,7 @@ class Battle:
         target = self.unit_at(goal)
         target_cells = self.cells_of(target) if target else None
         return self.board.path_step_toward(unit.pos, goal, budget, blocked, unit.footprint,
-                                           target_cells, allies)
+                                           target_cells, allies, self._walk_diags(unit))
 
     def move_unit(self, unit, dest):
         reach = self.reachable(unit)
@@ -179,9 +188,11 @@ class Battle:
             unit.ap -= 1
             unit.walking = True
             unit.moved = 0
+            unit.diag_steps = 0              # a fresh walk restarts the diagonal alternation
             self.log(f"{unit.name} moves (1 action point).")
-        unit.moved += reach[dest]
         segment = self.path_to(unit, dest) or [unit.pos, dest]
+        step_cost, unit.diag_steps = route_cost(segment, unit.diag_steps)
+        unit.moved += step_cost
         unit.path.extend(segment[1:])         # the cells walked this turn so far
         unit.pos = dest
         if unit.moved >= unit.speed:          # walk exhausted; next step = new action

@@ -15,7 +15,7 @@ the morality axis mostly:
 """
 
 from . import actions, data
-from .board import chebyshev
+from .board import grid_distance
 
 
 def _axes(unit):
@@ -45,7 +45,7 @@ def _recover_weapon(battle, unit):
     if any(o.is_weapon for o in battle.ground_in_reach(unit)):
         actions.PICK_UP.execute(battle, unit)
         return True
-    obj = min(weapons, key=lambda o: chebyshev(unit.pos, o.pos))
+    obj = min(weapons, key=lambda o: grid_distance(unit.pos, o.pos))
     dest = battle.path_step_toward(unit, obj.pos, unit.speed)
     if dest == unit.pos:
         return False

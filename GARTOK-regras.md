@@ -315,11 +315,18 @@ inglês; nomes de raça/ocupação/arma/… seguem em português.
 - **Andar** (1 ponto) = move até o deslocamento em casas (8 direções). Pode fracionar
   a caminhada em vários cliques enquanto não estourar o deslocamento; ao esgotá-lo,
   andar de novo custa outro ponto.
+  - **Diagonais alternam 1-2-1-2** (regra 3.5/Pathfinder): passo reto custa 1;
+    a 1ª diagonal custa 1, a 2ª custa 2, a 3ª custa 1, e assim por diante —
+    aproxima o √2 sem sair dos inteiros. A contagem vale **por Ação de Andar**:
+    as várias frações de uma mesma caminhada compartilham a alternância; um Andar
+    novo recomeça do 1. Guardada em `Combatant.diag_steps`; o custo de um trajeto
+    sai de `board.route_cost`.
   - **Inimigos bloqueiam de vez:** não dá pra parar **nem atravessar** a casa de
     um personagem inimigo (nem de uma criatura neutra, como a Ovelha).
   - **Aliado dá pra atravessar**, mas **não terminar o movimento em cima** dele.
   - Implementado em `Battle.cells_by_side` → `board.reachable` /
     `path_step_toward` (inimigos entram como `blocked`, aliados como `passable`).
+    O pathfinding é Dijkstra sobre `(casa, paridade de diagonais)`.
 - **Defender** (1 ponto) = **+1 de bônus de circunstância** na CA até o começo do
   próximo turno.
 - **Arremessar** (1 ponto) = arremessa a arma em mãos, se ela for **arma de
@@ -359,8 +366,13 @@ somam — o Kenku flanqueando fica com +4, não +6.
   `circunstância`, flanco e Luta em bando **não somam** (+2, nunca +4).
 - **Dano**: `dado da arma (+ mod Força se corpo-a-corpo)`, mínimo 1, menos a redução de dano do alvo.
 - **Alcance**: corpo-a-corpo = casas adjacentes; à distância = alcance da arma em
-  casas. Distância entre unidades = **menor Chebyshev entre as casas dos dois
-  footprints** (uma criatura Grande "encosta" por qualquer casa do seu 2×2).
+  casas. Distância entre unidades = **menor distância entre as casas dos dois
+  footprints** (uma criatura Grande "encosta" por qualquer casa do seu 2×2). A
+  distância usa a **métrica diagonal** (`board.grid_distance`: `maior + menor//2`
+  — as diagonais alternam 1-2), então todo raio de alcance é um **octógono**, não
+  um quadrado. Vale para ataque à distância, arremesso, Desmoralizar e visão/luz.
+  Adjacência (`≤ 1`) é igual nas duas métricas, então corpo-a-corpo, Pegar,
+  Estabilizar, flanco e a quina diagonal não mudam.
 - **Linha de visão**: ataque à distância e arremesso exigem **LOS livre** *e* **enxergar** o
   alvo (ver §Visão). Corpo-a-corpo (casa adjacente) não exige enxergar.
 - **Cair**: PV ≤ 0 **não remove mais a unidade na hora** — ela entra em `morrendo`
@@ -491,6 +503,9 @@ Regra em `board.py` (`los_clear`) e `vision.py` (`cell_lit`, `can_see`).
     - alvos dentro de **12 casas (18 m)** de quem tem **Visão no escuro** — esse vê
       como se fosse claro.
   - Toda luz revela a área **para os dois times**.
+  - Todo raio (luz e Visão no escuro) é medido pela **métrica diagonal**
+    (`grid_distance`): um **octógono**, não um quadrado — 12 casas de alcance
+    reto, ~9 na diagonal pura.
 - **Fontes de luz:**
   | Fonte | Raio | Como se usa |
   |---|---|---|

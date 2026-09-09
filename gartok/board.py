@@ -5,6 +5,7 @@ passed in as a set of blocked cells to the pathfinding calls, so the board never
 depends on battle state.
 """
 
+import heapq
 import random
 from collections import deque
 
@@ -15,6 +16,39 @@ def chebyshev(a, b):
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
 
+def grid_distance(a, b):
+    """Diagonal-aware grid distance (D&D 3.5 / Pathfinder "every other diagonal
+    costs 2"). Along the shortest route, `min(dx, dy)` steps are diagonal and cost
+    1, 2, 1, 2, ...; the rest are straight and cost 1 each. Turns a range from a
+    square into an octagon."""
+    dx, dy = abs(a[0] - b[0]), abs(a[1] - b[1])
+    lo, hi = min(dx, dy), max(dx, dy)
+    return hi + lo // 2
+
+
+def _is_diag(a, b):
+    return a[0] != b[0] and a[1] != b[1]
+
+
+def _step_cost(a, b, diags):
+    """(cost, diagonals-so-far) of one 8-direction step. Straight = 1. Diagonals
+    alternate 1, 2, 1, 2, ... over the move; `diags` counts how many have been
+    taken before this step."""
+    if not _is_diag(a, b):
+        return 1, diags
+    return (1, diags + 1) if diags % 2 == 0 else (2, diags + 1)
+
+
+def route_cost(path, diags=0):
+    """(total cost, diagonals taken) of walking `path` = [c0, c1, ...], starting
+    from `diags` diagonals already spent this move."""
+    cost = 0
+    for a, b in zip(path, path[1:]):
+        step, diags = _step_cost(a, b, diags)
+        cost += step
+    return cost, diags
+
+
 def cells(pos, footprint=1):
     """Cells a `footprint`x`footprint` shape covers with its anchor (top-left) at `pos`."""
     x, y = pos
@@ -22,8 +56,8 @@ def cells(pos, footprint=1):
 
 
 def cells_distance(cells_a, cells_b):
-    """Smallest Chebyshev distance between two sets of cells."""
-    return min(chebyshev(p, q) for p in cells_a for q in cells_b)
+    """Smallest diagonal-aware distance between two sets of cells."""
+    return min(grid_distance(p, q) for p in cells_a for q in cells_b)
 
 
 def fits(pos, footprint, blocked):
@@ -134,92 +168,107 @@ class Board:
         return True
 
     # ------------------------------------------------------------------ #
-    # pathfinding (8 directions, cost 1 per step)                         #
+    # pathfinding (8 directions; diagonals alternate cost 1, 2, 1, 2 ...) #
     # ------------------------------------------------------------------ #
-    def reachable(self, start, budget, blocked=frozenset(), footprint=1,
-                  passable=frozenset()):
-        """BFS of anchors -> {anchor: cost}. A `footprint`x`footprint` shape only
-        lands where it fits whole (inside the grid, not touching `blocked`). Cells
-        in `passable` (e.g. allies) can be crossed but not ended on."""
+    def _dijkstra(self, start, blocked, footprint, diags=0, budget=None, goal=None):
+        """Dijkstra over ``(anchor, diagonal parity)`` under the diagonal
+        alternation rule (see `route_cost`). Returns ``(dist, prev)``:
+        ``dist`` maps every anchor reachable within `budget` to its least cost;
+        ``prev`` holds back-pointers for a least-cost route to each. `diags` is
+        how many diagonals were already spent on the move before `start`."""
+        start_state = (start, diags % 2)
+        best = {start_state: 0}
         dist = {start: 0}
-        q = deque([start])
-        while q:
-            cur = q.popleft()
-            if dist[cur] >= budget:
-                continue
-            for nb in neighbors(cur):
-                if nb in dist or not fits(nb, footprint, blocked) \
-                        or self.diagonal_corner_blocked(cur, nb):
-                    continue
-                dist[nb] = dist[cur] + 1
-                q.append(nb)
-        dist.pop(start, None)
-        if passable:
-            dist = {p: c for p, c in dist.items()
-                    if not passable.intersection(cells(p, footprint))}
-        return dist
-
-    def path_to(self, start, goal, blocked=frozenset(), footprint=1):
-        """Shortest anchor path ``[start, ..., goal]`` (8 directions, cost 1 per
-        step). Returns ``[]`` if `goal` cannot be reached. Allies are not passed
-        in `blocked` here: a path may cross an ally's cell, it just cannot end on
-        one (the caller only ever asks for a `goal` that is a valid landing)."""
-        if start == goal:
-            return [start]
         prev = {start: None}
-        q = deque([start])
-        while q:
-            cur = q.popleft()
-            if cur == goal:
+        pq = [(0, start, diags)]
+        while pq:
+            cost, cur, cd = heapq.heappop(pq)
+            if cost > best.get((cur, cd % 2), cost):
+                continue
+            if goal is not None and cur == goal:
                 break
             for nb in neighbors(cur):
-                if nb not in prev and fits(nb, footprint, blocked) \
-                        and not self.diagonal_corner_blocked(cur, nb):
-                    prev[nb] = cur
-                    q.append(nb)
-        if goal not in prev:
-            return []
+                if not fits(nb, footprint, blocked) \
+                        or self.diagonal_corner_blocked(cur, nb):
+                    continue
+                step, ncd = _step_cost(cur, nb, cd)
+                nc = cost + step
+                if budget is not None and nc > budget:
+                    continue
+                if nc < best.get((nb, ncd % 2), float("inf")):
+                    best[(nb, ncd % 2)] = nc
+                    heapq.heappush(pq, (nc, nb, ncd))
+                    if nc < dist.get(nb, float("inf")):
+                        dist[nb] = nc
+                        prev[nb] = cur
+        return dist, prev
+
+    @staticmethod
+    def _trace(prev, dest):
         path = []
-        c = goal
+        c = dest
         while c is not None:
             path.append(c)
             c = prev[c]
         path.reverse()
         return path
 
+    def reachable(self, start, budget, blocked=frozenset(), footprint=1,
+                  passable=frozenset(), diags=0):
+        """Anchors -> {anchor: cost} within `budget`. A `footprint`x`footprint`
+        shape only lands where it fits whole (inside the grid, not touching
+        `blocked`). Cells in `passable` (e.g. allies) can be crossed but not ended
+        on. `diags` = diagonals already spent this move (the alternation carries
+        over across the clicks of one Move action)."""
+        dist, _ = self._dijkstra(start, blocked, footprint, diags, budget)
+        dist.pop(start, None)
+        if passable:
+            dist = {p: c for p, c in dist.items()
+                    if not passable.intersection(cells(p, footprint))}
+        return dist
+
+    def path_to(self, start, goal, blocked=frozenset(), footprint=1, diags=0):
+        """Least-cost anchor path ``[start, ..., goal]``. Returns ``[]`` if `goal`
+        cannot be reached. Allies are not passed in `blocked` here: a path may
+        cross an ally's cell, it just cannot end on one (the caller only ever asks
+        for a `goal` that is a valid landing)."""
+        if start == goal:
+            return [start]
+        _, prev = self._dijkstra(start, blocked, footprint, diags, goal=goal)
+        if goal not in prev:
+            return []
+        return self._trace(prev, goal)
+
     def path_step_toward(self, start, goal, budget, blocked=frozenset(),
-                         footprint=1, target_cells=None, passable=frozenset()):
-        """Anchor `budget` steps from `start` along the shortest path to touching
-        `target_cells` (by default the `goal` cell itself). Cells in `passable`
-        (allies) can be crossed but not stopped on: step back."""
+                         footprint=1, target_cells=None, passable=frozenset(),
+                         diags=0):
+        """Anchor as far as `budget` (in movement cost) from `start` along the
+        least-cost path to touching `target_cells` (by default the `goal` cell).
+        Cells in `passable` (allies) can be crossed but not stopped on: step back.
+
+        Only the `budget` disc is explored -- a cell the unit cannot reach this
+        turn can never be the pick, so a far-off target costs the same as a near
+        one. This runs once per acting unit each turn."""
         target_cells = target_cells or [goal]
+        dist, prev = self._dijkstra(start, blocked, footprint, diags, budget=budget)
 
-        def touching(cur):
-            return cells_distance(cells(cur, footprint), target_cells) <= 1
+        def touch(p):
+            return cells_distance(cells(p, footprint), target_cells)
 
-        prev = {start: None}
-        q = deque([start])
-        dest = None
-        while q:
-            cur = q.popleft()
-            if touching(cur):
-                dest = cur
+        reached = list(dist)
+        touching = [p for p in reached if touch(p) <= 1]
+        if touching:
+            dest = min(touching, key=lambda p: dist[p])
+        else:
+            dest = min(reached, key=lambda p: (touch(p), dist[p]))
+
+        path = self._trace(prev, dest)          # [start, ..., dest]
+        cd, spent, idx = diags, 0, 0
+        for i in range(1, len(path)):
+            step, cd = _step_cost(path[i - 1], path[i], cd)
+            if spent + step > budget:
                 break
-            for nb in neighbors(cur):
-                if nb not in prev and fits(nb, footprint, blocked) \
-                        and not self.diagonal_corner_blocked(cur, nb):
-                    prev[nb] = cur
-                    q.append(nb)
-
-        if dest is None:
-            dest = min(prev, key=lambda p: cells_distance(cells(p, footprint), target_cells))
-        path = []
-        c = dest
-        while c is not None:
-            path.append(c)
-            c = prev[c]
-        path.reverse()                          # [start, ..., dest]
-        idx = min(budget, len(path) - 1)
+            spent, idx = spent + step, i
         while idx > 0 and passable.intersection(cells(path[idx], footprint)):
             idx -= 1                             # do not stop on top of an ally
         return path[idx]

@@ -11,7 +11,7 @@ one entry in the lists at the end of the file. Nothing else needs to know it exi
 import random
 
 from . import data
-from .board import COLS, ROWS, cells, chebyshev, neighbors
+from .board import COLS, ROWS, cells, chebyshev, grid_distance, neighbors
 from .conditions import Defending, Demoralized
 from .data import DEMORALIZE_RANGE, d20, resolve_bonus
 from .ground import GroundObject
@@ -123,10 +123,12 @@ def _pickable(unit, obj):
 
 
 def _cells_in_radius(origin, radius):
+    """Cells within `radius` of `origin` by the diagonal-aware metric (an octagon,
+    not a square -- matches how the range checks actually measure)."""
     ox, oy = origin
     for dx in range(-radius, radius + 1):
         for dy in range(-radius, radius + 1):
-            if dx or dy:
+            if (dx or dy) and grid_distance((0, 0), (dx, dy)) <= radius:
                 yield (ox + dx, oy + dy)
 
 
@@ -382,6 +384,10 @@ class Demoralize(Action):
 
     def label(self, battle, actor):
         return "Demoralize (1 pt, CHA vs Mental Defense)"
+
+    def highlight_cells(self, battle, actor):
+        return [p for c in cells(actor.pos, actor.footprint)
+                for p in _cells_in_radius(c, DEMORALIZE_RANGE)]
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
