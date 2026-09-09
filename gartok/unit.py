@@ -71,6 +71,7 @@ class Unit:
         u._age_base = d["age_base"]
         u.race = data.race_by_name(d["race"])
         u._configure_race()
+        u.age = d.get("age", u.age)                     # creator-set age wins; older saves fall back to the derived one
         u.languages = list(d["languages"])              # keep the saved picks, don't re-sort
         u.occupation = data.occupation_by_name(d["occupation"])
         u._configure_occupation()
@@ -323,6 +324,82 @@ class Unit:
             self.name = f"{self.race['name']} {self.occupation['name']}"
         self.token = self.race["token"]
         self._derive_combat()
+
+    # ------------------------------------------------------------------ #
+    # sandbox editing: the Editor's character creator sets fields straight #
+    # to any valid value -- no draft / XP gating. Each keeps the model     #
+    # whole (re-applies attributes, re-derives combat) and round-trips     #
+    # through `persist.unit_to_dict` unchanged.                            #
+    # ------------------------------------------------------------------ #
+    def set_name(self, name):
+        """A blank name switches back to the auto `Race Occupation` label."""
+        name = (name or "").strip()
+        self._auto_name = not name
+        self.name = name or f"{self.race['name']} {self.occupation['name']}"
+
+    def set_alignment(self, alignment):
+        self.alignment = alignment                 # one of data.ALIGNMENTS
+
+    def set_base_attribute(self, attr, score):
+        """Set the raw (pre-racial) score for `attr`, clamped to the 3..18 a 3d6
+        roll can produce. Racial mods and talents still apply on top."""
+        self.base_attributes[attr] = max(3, min(18, int(score)))
+        self._apply_attributes()
+        self._derive_combat()
+
+    def set_age(self, years):
+        """Set the shown age directly -- persisted as-is (see `persist.unit_to_dict`).
+        `_age_base` stays the generator's d100 roll; a race swap re-derives the age
+        from it, so `age / age_mult` is the roll this age is equivalent to at x1."""
+        self.age = max(1, int(years))
+
+    def set_language(self, name, on):
+        """Toggle a language on/off; never drops the last one."""
+        if on and name in data.LANGUAGES and name not in self.languages:
+            self.languages.append(name)
+        elif not on and name in self.languages and len(self.languages) > 1:
+            self.languages.remove(name)
+
+    def set_gold(self, copper):
+        self.gold = max(0, int(copper))
+
+    def set_track_level(self, track, level):
+        """Set the combat / work level directly: `combat_xp` (or `work_hours`)
+        jumps to that level's threshold, hit dice and talent picks resync to the
+        new mean level -- picks the level no longer supports are dropped."""
+        thresholds = (progression.COMBAT_XP_THRESHOLDS if track == "combat"
+                      else progression.WORK_XP_THRESHOLDS)
+        level = max(0, min(len(thresholds), int(level)))
+        marks = thresholds[level - 1] if level else 0
+        if track == "combat":
+            self.combat_xp = marks
+        else:
+            self.work_hours = marks * economy.LUMBER_XP_HOURS
+        del self._level_hp_rolls[self.mean_level:]          # a lower level owes fewer dice
+        for t in talents.TRACKS:
+            del self.talents[t][self.track_level[t]:]       # ...and fewer picks (pick order = valid prefix)
+        self.collect_levels()                              # roll any dice a higher level now owes
+        self._apply_attributes()
+        self._derive_combat()
+
+    def drop_talent(self, track, talent_id):
+        """Un-pick a talent and, cascading, anything that required it."""
+        picked = self.talents[track]
+        if talent_id not in picked:
+            return False
+        doomed = {talent_id}
+        grew = True
+        while grew:
+            grew = False
+            for tid in picked:
+                t = talents.get(tid)
+                if t and t.requires in doomed and tid not in doomed:
+                    doomed.add(tid)
+                    grew = True
+        self.talents[track] = [tid for tid in picked if tid not in doomed]
+        self._apply_attributes()
+        self._derive_combat()
+        return True
 
     # ------------------------------------------------------------------ #
     # combat derivation                                                  #

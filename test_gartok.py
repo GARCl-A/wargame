@@ -578,9 +578,13 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.gear_screen import GearScreen
     from gartok.level_screen import LevelScreen
     from gartok.pause_screen import PauseScreen
+    from gartok.editor_menu_screen import EditorMenuScreen
+    from gartok.char_editor_screen import CharEditorScreen
 
     scenes = [
-        MenuScreen(F, noop, noop, noop),
+        MenuScreen(F, noop, noop, noop, on_editor=noop),
+        EditorMenuScreen(F, noop, noop),
+        CharEditorScreen(F, noop),
         DraftScreen(F, noop),
         MapScreen(F, guild, noop, noop, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
@@ -2277,6 +2281,74 @@ def test_madeireira_is_a_work_town_one_hour_from_the_city():
     assert n.kind == "town" and n.work
     _, hours = world.route("city", "lumber_yard")
     assert hours == 1
+
+
+# --------------------------------------------------------------------------- #
+# character creator: sandbox editing on the Unit + the NPC library             #
+# --------------------------------------------------------------------------- #
+
+def test_sandbox_attribute_edits_clamp_to_a_3d6_score():
+    u = _unit(seed=3)
+    u.set_base_attribute("strength", 25)
+    assert u.base_attributes["strength"] == 18
+    u.set_base_attribute("strength", 1)
+    assert u.base_attributes["strength"] == 3
+    u.set_gold(-5)
+    assert u.gold == 0
+    u.set_language("Elvish", True)
+    assert "Elvish" in u.languages
+    while len(u.languages) > 1:
+        u.set_language(u.languages[-1], False)
+    assert len(u.languages) == 1                 # never drops the last tongue
+
+
+def test_set_track_level_grants_picks_and_resyncs_on_the_way_down():
+    u = _unit(seed=1)
+    u.set_track_level("combat", 3)
+    assert u.combat_level == 3 and u.picks_available("combat") == 3
+    assert u.choose_talent("combat", "strong")
+    assert u.choose_talent("combat", "sure_strike")
+    u.set_track_level("combat", 1)
+    assert u.combat_level == 1
+    assert u.talents["combat"] == ["strong"]      # the valid prefix survives
+    assert len(u._level_hp_rolls) <= u.mean_level
+
+
+def test_drop_talent_cascades_to_its_dependents():
+    u = _unit(seed=1)
+    u.set_track_level("combat", 3)
+    u.choose_talent("combat", "strong")
+    u.choose_talent("combat", "sure_strike")
+    u.drop_talent("combat", "strong")
+    assert u.talents["combat"] == []
+
+
+def test_npc_library_round_trips_a_hand_built_character():
+    import shutil
+    import tempfile
+
+    from gartok import npc_lib
+    old, npc_lib.NPC_DIR = npc_lib.NPC_DIR, tempfile.mkdtemp()
+    try:
+        u = _unit(seed=2)
+        u.set_name("Old Grix")
+        u.set_alignment("Lawful and Evil")
+        u.set_age(300)
+        u.set_track_level("combat", 2)
+        slug = npc_lib.save_npc(u)
+        assert slug == "old-grix"
+        assert [r["slug"] for r in npc_lib.list_npcs()] == ["old-grix"]
+        back = npc_lib.load_npc(slug)
+        assert back.name == "Old Grix"
+        assert back.alignment == "Lawful and Evil"
+        assert back.age == 300                        # creator-set age, not age_base x mult
+        assert back.combat_level == 2
+        assert back.uid == u.uid
+        npc_lib.delete_npc(slug)
+        assert npc_lib.list_npcs() == []
+    finally:
+        shutil.rmtree(npc_lib.NPC_DIR, ignore_errors=True)
+        npc_lib.NPC_DIR = old
 
 
 # --------------------------------------------------------------------------- #

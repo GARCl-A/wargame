@@ -26,7 +26,9 @@ import pygame
 from . import campaign, persist, world
 from .battle import Battle
 from .battle_screen import BattleScreen
+from .char_editor_screen import CharEditorScreen
 from .draft_screen import DraftScreen
+from .editor_menu_screen import EditorMenuScreen
 from .gear_screen import GearScreen
 from .guild import Guild
 from .guild_screen import GuildScreen
@@ -65,7 +67,16 @@ class App:
     def _start_menu(self):
         self.scene = MenuScreen(self.fonts, on_new=self._new_game,
                                 on_continue=self._continue_game,
-                                on_delete=persist.delete_slot)
+                                on_delete=persist.delete_slot,
+                                on_editor=self._start_editor)
+
+    def _start_editor(self):
+        self.scene = EditorMenuScreen(self.fonts,
+                                      on_character=self._open_char_editor,
+                                      on_back=self._start_menu)
+
+    def _open_char_editor(self):
+        self.scene = CharEditorScreen(self.fonts, on_back=self._start_editor)
 
     def _new_game(self, slot):
         self.slot = slot

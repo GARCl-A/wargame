@@ -18,12 +18,13 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INK, INK_DIM, INK_FAINT,
 class MenuScreen(Screen):
     native = True                            # draw at the real window size
 
-    def __init__(self, fonts, on_new, on_continue, on_delete):
+    def __init__(self, fonts, on_new, on_continue, on_delete, on_editor=None):
         super().__init__()
         self.fonts = fonts
         self.on_new = on_new
         self.on_continue = on_continue
         self.on_delete = on_delete
+        self.on_editor = on_editor
         self.confirm_delete = None            # slot index awaiting delete confirmation
         self.buttons = []                    # [(key, slot, rect)]
         self._refresh()
@@ -48,6 +49,8 @@ class MenuScreen(Screen):
                 self._refresh()
             elif key == "delete_no":
                 self.confirm_delete = None
+            elif key == "editor" and self.on_editor:
+                self.on_editor()
             return
         self.confirm_delete = None
 
@@ -74,6 +77,17 @@ class MenuScreen(Screen):
             rect = pygame.Rect(x, y, card_w, card_h)
             self._draw_slot(screen, rect, s, mouse)
             y += card_h + gap
+
+        if self.on_editor:
+            er = pygame.Rect(x, y + SP3, card_w, 34)
+            hov = er.collidepoint(mouse)
+            panel(screen, er, fill=SURFACE_3 if hov else SURFACE_2,
+                  border=ACCENT if hov else LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "EDITOR", f.label, ACCENT if hov else INK_DIM,
+                 (er.centerx, er.centery - 8), center=True)
+            text(screen, "character & scenario creator", f.body_sm, INK_FAINT,
+                 (er.centerx, er.centery + 4), center=True)
+            self.buttons.append(("editor", None, er))
 
         text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, H - 18))
 

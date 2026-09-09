@@ -43,7 +43,8 @@ def unit_to_dict(u):
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
         "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},
-        "age_base": u._age_base,
+        "age_base": u._age_base,                 # the generator's d100 roll (age at age_mult x1)
+        "age": u.age,                            # shown age -- editable in the creator, else age_base x age_mult
         "hp_roll": u._hp_roll,                   # 1dHD, rolled once at creation
         "hp_max": u.hp_max,                      # kept for pre-hunger saves / at-a-glance
         "languages": list(u.languages),          # racial + random extras
