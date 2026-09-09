@@ -40,6 +40,8 @@ CHALLENGE_GRACE = 7           # days the champion has to reach the arena and def
 
 ADELIO_CAMEO_CHANCE = 0.05    # chance an ordinary pit bout fields the dethroned Adelio
 
+CHAMPION_MAP = "the-pit"          # the hand-laid arena the title bout is fought on
+
 # A throwaway name generator for one-off challengers: string 2-4 of these
 # together. Good enough for now; promote to its own module when NPCs need it too.
 _SYLLABLES = [
@@ -57,8 +59,11 @@ def _random_name():
 def champion_bout():
     """The staked offer for challenging Adelio's team (shape matches `world`'s
     arena tiers, so `SquadScreen` and `campaign.absorb_battle` read it unchanged).
-    No `rep` key: it is not a rep tier and must not satisfy the Lone Wolf deed."""
-    return {"name": "Challenge the Champion", "champion": True,
+    No `rep` key: it is not a rep tier and must not satisfy the Lone Wolf deed.
+    `map` points `app._start_battle` at the authored map (`maps/the-pit.json`)
+    instead of the procedural `ArenaScenario`; the win condition is unchanged --
+    put the whole champion team down, the hole is only scenery."""
+    return {"name": "Challenge the Champion", "champion": True, "map": CHAMPION_MAP,
             "entry": CHAMPION_ENTRY, "purse": CHAMPION_PURSE,
             "enemies": 1 + CHAMPION_GOONS}
 

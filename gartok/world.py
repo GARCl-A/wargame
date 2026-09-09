@@ -61,9 +61,14 @@ class Node:
 # flat `purse`. The purse does not grow with the squad, so piling bodies onto a
 # weak tier just eats the take -- a lean squad of strong dolls keeps the most.
 # Ordered cheapest first.
+#
+# The Pits has three deeds (`factions`), worth 1 rep each, so the ladder is built
+# to top out at Bronze: clearing all three -- champion bout included -- opens the
+# second ring and that is the whole arena sub-campaign. Iron and Silver sit past
+# any reputation the deeds can grant; they are room to grow, not a live path.
 ARENA_TIERS = [
     {"rep": 0,  "name": "Rookie pit",   "entry": 4,   "purse": 15,  "enemies": 1},
-    {"rep": 2,  "name": "Bronze ring",  "entry": 15,  "purse": 55,  "enemies": 2},
+    {"rep": 3,  "name": "Bronze ring",  "entry": 15,  "purse": 55,  "enemies": 2},
     {"rep": 5,  "name": "Iron cage",    "entry": 40,  "purse": 150, "enemies": 3},
     {"rep": 10, "name": "Silver arena", "entry": 100, "purse": 380, "enemies": 3},
 ]

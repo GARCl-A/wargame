@@ -419,7 +419,8 @@ def test_field_loot_gathers_the_dead_and_the_ground():
 def test_arena_offers_scale_with_reputation():
     from gartok import world
     assert [o["name"] for o in world.arena_offers(0)] == ["Rookie pit"]
-    assert len(world.arena_offers(2)) == 2
+    assert [o["name"] for o in world.arena_offers(2)] == ["Rookie pit"]  # 3 deeds = 3 rep
+    assert len(world.arena_offers(3)) == 2                               # ...opens Bronze
     assert len(world.arena_offers(99)) == len(world.ARENA_TIERS)
     # ordered cheapest first; one fighter's entry always below the purse
     for tier in world.ARENA_TIERS:
@@ -1696,6 +1697,28 @@ def _champion_battle(guild, squad):
               if getattr(c, "arena_role", None) == "champion")
     battle.player_units[0].credit_kill(cc)        # the finishing blow
     return battle
+
+
+def test_champion_bout_is_fought_on_the_authored_pit_map():
+    from gartok import arena, map_lib
+    random.seed(3)
+    offer = arena.champion_bout()
+    assert offer["map"] == arena.CHAMPION_MAP
+
+    champ = arena.load_champion()
+    batt = Battle([Unit("player")], [champ, Unit("enemy"), Unit("enemy")],
+                  scenario=CustomScenario(map_lib.load_map(offer["map"])),
+                  lethal=False, arena=True)
+    assert any(z < 0 for z in batt.board.elevation.values())   # the hole it is named for
+    champ_c = next(c for c in batt.enemy_units
+                   if getattr(c, "arena_role", None) == "champion")
+    assert champ_c.pos == (14, 7)                              # the map's NPC cell
+    # win condition unchanged: the whole team has to go down, not just Adelio
+    champ_c.status = "stable"
+    assert batt._check_winner() is None
+    for goon in (c for c in batt.enemy_units if c is not champ_c):
+        goon.status = "stable"
+    assert batt._check_winner() == "player"
 
 
 def test_champion_title_goes_to_the_finisher():

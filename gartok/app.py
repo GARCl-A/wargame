@@ -23,7 +23,7 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, persist, world
+from . import arena, campaign, map_lib, persist, world
 from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
@@ -40,6 +40,7 @@ from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
 from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
+from .scenario import CustomScenario
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W
@@ -212,7 +213,11 @@ class App:
                     enemies[0] = cameo
         else:
             enemies = [Unit("enemy") for _ in range(len(squad))]
-        battle = Battle(squad, enemies, scenario=node.scenario(),
+        if offer and offer.get("map"):
+            scenario = CustomScenario(map_lib.load_map(offer["map"]))
+        else:
+            scenario = node.scenario()
+        battle = Battle(squad, enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
