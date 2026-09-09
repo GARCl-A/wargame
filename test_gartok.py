@@ -10,7 +10,7 @@ import random
 from gartok import abilities, actions, data, economy, persist, recruit, talents
 from gartok.board import COLS, ROWS, Board, grid_distance
 from gartok.battle import Battle
-from gartok.scenario import ErmosScenario
+from gartok.scenario import CustomScenario, ErmosScenario
 from gartok.conditions import Defending, Demoralized
 from gartok.data import SIZES, resolve_bonus, squares
 from gartok.ground import GroundObject
@@ -580,11 +580,13 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.pause_screen import PauseScreen
     from gartok.editor_menu_screen import EditorMenuScreen
     from gartok.char_editor_screen import CharEditorScreen
+    from gartok.map_editor_screen import MapEditorScreen
 
     scenes = [
         MenuScreen(F, noop, noop, noop, on_editor=noop),
-        EditorMenuScreen(F, noop, noop),
+        EditorMenuScreen(F, noop, noop, on_scenario=noop),
         CharEditorScreen(F, noop),
+        MapEditorScreen(F, noop),
         DraftScreen(F, noop),
         MapScreen(F, guild, noop, noop, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
@@ -688,6 +690,62 @@ def test_ermos_daylight_follows_the_clock():
     day = Battle([Unit("player")], [Unit("enemy")],
                  scenario=ErmosScenario(), daylight=True)
     assert day.ambient_light is True and not day.ground
+
+
+def test_custom_scenario_builds_the_authored_map():
+    random.seed(0)
+    data_map = {"walls": [[8, 4], [8, 5], [8, 6]], "torches": [[3, 3], [12, 8]],
+                "deploy_player": [[1, 1]], "deploy_enemy": [[14, 10]],
+                "ambient_light": False, "outdoor": False}
+    batt = Battle([Unit("player")], [Unit("enemy")],
+                  scenario=CustomScenario(data_map))
+    assert batt.board.walls == {(8, 4), (8, 5), (8, 6)}
+    assert {o.pos for o in batt.ground if o.is_torch} == {(3, 3), (12, 8)}
+    p, e = batt.player_units[0], batt.enemy_units[0]
+    assert p.pos == (1, 1) and e.pos == (14, 10)
+    assert batt.ambient_light is False
+
+
+def test_custom_scenario_falls_back_to_edge_columns_for_a_blank_side():
+    random.seed(0)
+    batt = Battle([Unit("player")], [Unit("enemy")],
+                  scenario=CustomScenario({"deploy_player": [[0, 0]]}))
+    assert batt.player_units[0].pos == (0, 0)
+    assert batt.enemy_units[0].pos[0] >= COLS - 3       # blank enemy side: edge columns
+
+
+def test_custom_scenario_lit_map_scatters_no_torches():
+    random.seed(0)
+    batt = Battle([Unit("player")], [Unit("enemy")],
+                  scenario=CustomScenario({"ambient_light": True}))
+    assert batt.ambient_light is True and not batt.ground
+
+
+def test_map_library_round_trips_a_laid_out_map():
+    import shutil
+    import tempfile
+
+    from gartok import map_lib
+    old, map_lib.MAP_DIR = map_lib.MAP_DIR, tempfile.mkdtemp()
+    try:
+        m = map_lib.new_map("Pit of Grix")
+        m["walls"] = {(8, 5), (8, 4)}
+        m["deploy_player"] = {(1, 1)}
+        slug = map_lib.save_map(m)
+        assert slug == "pit-of-grix"
+        assert [r["slug"] for r in map_lib.list_maps()] == ["pit-of-grix"]
+        back = map_lib.load_map(slug)
+        assert back["walls"] == [[8, 4], [8, 5]]        # sorted on write
+        assert back["name"] == "Pit of Grix"
+        random.seed(0)
+        batt = Battle([Unit("player")], [Unit("enemy")],
+                      scenario=CustomScenario(back))
+        assert (8, 5) in batt.board.walls
+        map_lib.delete_map(slug)
+        assert map_lib.list_maps() == []
+    finally:
+        shutil.rmtree(map_lib.MAP_DIR, ignore_errors=True)
+        map_lib.MAP_DIR = old
 
 
 # --------------------------------------------------------------------------- #

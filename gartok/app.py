@@ -34,6 +34,7 @@ from .guild import Guild
 from .guild_screen import GuildScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
+from .map_editor_screen import MapEditorScreen
 from .map_screen import MapScreen
 from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
@@ -74,10 +75,14 @@ class App:
     def _start_editor(self):
         self.scene = EditorMenuScreen(self.fonts,
                                       on_character=self._open_char_editor,
+                                      on_scenario=self._open_map_editor,
                                       on_back=self._start_menu)
 
     def _open_char_editor(self):
         self.scene = CharEditorScreen(self.fonts, on_back=self._start_editor)
+
+    def _open_map_editor(self):
+        self.scene = MapEditorScreen(self.fonts, on_back=self._start_editor)
 
     def _new_game(self, slot):
         self.slot = slot

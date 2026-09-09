@@ -1,8 +1,8 @@
 """Editor hub: pick what to build.
 
 Reached from the main menu's EDITOR button. Two doors: the character creator
-(`char_editor_screen`, open now) and a scenario creator (locked -- the next
-step). `on_character` opens the creator; `on_back` returns to the main menu.
+(`char_editor_screen`) and the scenario creator (`map_editor_screen`).
+`on_character` / `on_scenario` open them; `on_back` returns to the main menu.
 """
 
 import pygame
@@ -15,10 +15,11 @@ from .theme import (ACCENT, INK, INK_DIM, INK_FAINT, LINE_SOFT, MARGIN, RADIUS,
 class EditorMenuScreen(Screen):
     native = True
 
-    def __init__(self, fonts, on_character, on_back):
+    def __init__(self, fonts, on_character, on_back, on_scenario=None):
         super().__init__()
         self.fonts = fonts
         self.on_character = on_character
+        self.on_scenario = on_scenario
         self.on_back = on_back
         self.buttons = []                     # [(key, rect, enabled)]
 
@@ -28,6 +29,8 @@ class EditorMenuScreen(Screen):
                 continue
             if key == "character":
                 self.on_character()
+            elif key == "scenario":
+                self.on_scenario()
             elif key == "back":
                 self.on_back()
             return
@@ -53,8 +56,10 @@ class EditorMenuScreen(Screen):
                    "NPC library", True)
         y += card_h + SP3
         self._card(screen, pygame.Rect(x, y, card_w, card_h), "scenario",
-                   "SCENARIO CREATOR", "lay out a battle map and its props  ·  coming next",
-                   False)
+                   "SCENARIO CREATOR",
+                   "paint a battle map -- walls, torches and deployment zones; "
+                   "save it to the map library",
+                   self.on_scenario is not None)
 
         back = pygame.Rect(MARGIN, H - MARGIN - 30, 120, 30)
         hov = back.collidepoint(self.mouse)

@@ -12,6 +12,8 @@ torch scatter). A concrete location on the world map picks a subclass:
 - `ErmosScenario` -- open country: `outdoor`, so ambient light follows the
   campaign clock (`battle.daylight`) -- lit by day, pitch dark by night (bring
   your own torch; nothing scattered).
+- `CustomScenario` -- a map hand-laid in the editor (`map_lib` dict): fixed
+  walls, torches and deployment zones, no random scatter.
 """
 
 import random
@@ -40,25 +42,30 @@ class Scenario:
         return Board()
 
     # ------------------------------------------------------------------ #
+    def _spawn_cells(self, team):
+        """Candidate deployment cells for a side -- the base is the three columns
+        on that side's edge. `CustomScenario` overrides this with the zone the
+        map author painted."""
+        cols = (0, 1, 2) if team == "player" else (COLS - 3, COLS - 2, COLS - 1)
+        return [(x, y) for x in cols for y in range(ROWS)]
+
     def _deploy(self, battle):
         taken = set(battle.board.walls)
-        cols_p = (0, 1, 2)
-        cols_e = (COLS - 3, COLS - 2, COLS - 1)
-
-        def place(u, columns):
-            options = [(x, y) for x in columns for y in range(ROWS)]
-            random.shuffle(options)
-            for p in options:
-                shape = cells(p, u.footprint)
-                if all(0 <= cx < COLS and 0 <= cy < ROWS for cx, cy in shape) \
-                        and not (taken & set(shape)):
-                    u.pos = p
-                    taken.update(shape)
-                    return
-            u.pos = (columns[0], 0)              # fallback: crowded map
-
         for u in battle.units:
-            place(u, cols_p if u.team == "player" else cols_e)
+            self._place_unit(u, self._spawn_cells(u.team), taken)
+
+    @staticmethod
+    def _place_unit(u, spawn, taken):
+        options = list(spawn)
+        random.shuffle(options)
+        for p in options:
+            shape = cells(p, u.footprint)
+            if all(0 <= cx < COLS and 0 <= cy < ROWS for cx, cy in shape) \
+                    and not (taken & set(shape)):
+                u.pos = p
+                taken.update(shape)
+                return
+        u.pos = spawn[0] if spawn else (0, 0)    # fallback: crowded map
 
     def _place_creatures(self, battle):
         """Neutral creatures that come with a unit (e.g. the Shepherd's sheep)."""
@@ -100,3 +107,32 @@ class ErmosScenario(Scenario):
 
     def _make_board(self):
         return Board(min_seg=1, max_seg=2)
+
+
+class CustomScenario(Scenario):
+    """A battle built from a map laid out in the editor (`map_lib`): fixed walls,
+    fixed torches, and the deployment cells the author painted. Falls back to the
+    base side-column deployment for a side the map leaves blank. What the author
+    did not light stays dark -- no torch scatter."""
+
+    def __init__(self, data):
+        self.ambient_light = bool(data.get("ambient_light"))
+        self.outdoor = bool(data.get("outdoor"))
+        self._walls = [tuple(c) for c in data.get("walls", [])]
+        self._torches = [tuple(c) for c in data.get("torches", [])]
+        self._zones = {"player": [tuple(c) for c in data.get("deploy_player", [])],
+                       "enemy": [tuple(c) for c in data.get("deploy_enemy", [])]}
+
+    def _make_board(self):
+        return Board(walls=self._walls)
+
+    def _spawn_cells(self, team):
+        return self._zones[team] or super()._spawn_cells(team)
+
+    def _scatter_torches(self, battle):
+        if battle.ambient_light:
+            return
+        taken = battle.occupied() | battle.board.walls | battle.creature_cells()
+        for p in self._torches:
+            if p not in taken and battle.board.in_bounds(p):
+                battle.ground.append(GroundObject.torch(p))

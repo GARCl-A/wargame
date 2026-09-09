@@ -80,13 +80,15 @@ def neighbors(pos):
 
 
 class Board:
-    def __init__(self, min_seg=3, max_seg=6):
+    def __init__(self, min_seg=3, max_seg=6, walls=None):
         # `min_seg`/`max_seg` bound how many short wall segments get scattered in
         # the middle: the default is the cluttered arena; an open field passes
-        # something small (e.g. 1..2).
+        # something small (e.g. 1..2). `walls` (a hand-authored layout from the
+        # map editor) skips generation entirely and takes the given cells as-is.
         self.min_seg = min_seg
         self.max_seg = max_seg
-        self.walls = self._generate_walls()
+        self.walls = ({tuple(w) for w in walls} if walls is not None
+                      else self._generate_walls())
 
     def in_bounds(self, pos):
         return 0 <= pos[0] < COLS and 0 <= pos[1] < ROWS
