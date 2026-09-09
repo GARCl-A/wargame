@@ -39,6 +39,23 @@ class Combatant:
     def ability(self):
         return self._ability
 
+    # ------------------------------------------------------------------ #
+    # the Z axis: pits, climbing, falling                                #
+    # ------------------------------------------------------------------ #
+    @property
+    def flies(self):
+        return self._ability.flies
+
+    @property
+    def can_move_vertically(self):
+        """Changes floor height as ordinary movement -- a flier or a climber --
+        so the pathfinder is allowed to route them in and out of a pit."""
+        return self._ability.flies or self._ability.climb_speed
+
+    def auto_climb(self, dc):
+        """Clears a climb of this DC with no roll (the Lizardfolk's Climber)."""
+        return dc <= self._ability.auto_climb_dc
+
     def reset_battle_state(self):
         c = self.char
         self.hp = c.hp_max

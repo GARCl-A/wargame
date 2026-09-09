@@ -76,6 +76,32 @@ def _ally_to_help(battle, unit):
                  if actions.STABILIZE.can(battle, unit, a)), None)
 
 
+def _step_over_elevation(battle, unit, target):
+    """The unit can't walk any nearer -- a pit lip is between it and the target.
+    Climb (or, failing a climb spot, drop) onto the adjacent cell that best
+    closes on the target: nearer first, then matching its floor level so melee
+    can connect. Acts only when that beats standing still. Returns True if it
+    acted (a slipped climb still counts -- it spent the attempt)."""
+    tz = battle.elevation(target)
+
+    def score(cell):
+        return (grid_distance(cell, target.pos),
+                abs(battle.board.elevation_at(cell) - tz))
+
+    now = score(unit.pos)
+    best = None
+    for act in (actions.CLIMB, actions.DROP):
+        for c in act.highlight_cells(battle, unit):
+            s = score(c)
+            if s < now and act.can(battle, unit, c) and (best is None or s < best[0]):
+                best = (s, act, c)
+    if best is None:
+        return False
+    _, act, c = best
+    act.execute(battle, unit, c)
+    return True
+
+
 def _should_flee(battle, unit):
     """Whether the unit breaks and runs this turn. Never from a non-lethal bout
     (the arena -- nobody dies). Needs a map edge and a clean getaway
@@ -132,6 +158,10 @@ def take_turn(battle, unit):
 
         dest = battle.path_step_toward(unit, target.pos, unit.speed)
         if dest == unit.pos:
+            # can't walk any closer -- maybe a pit is in the way. try to climb or
+            # drop toward the target so the fight doesn't stall out.
+            if _step_over_elevation(battle, unit, target):
+                continue
             # cornered and out of range: defend (once) and end
             if actions.DEFEND.available(battle, unit):
                 actions.DEFEND.execute(battle, unit)

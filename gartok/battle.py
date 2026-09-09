@@ -79,6 +79,10 @@ class Battle:
     def cells_of(self, unit, pos=None):
         return cells(pos or unit.pos, unit.footprint)
 
+    def elevation(self, unit, pos=None):
+        """The floor height the unit stands on (its anchor cell)."""
+        return self.board.elevation_at(pos or unit.pos)
+
     def unit_at(self, pos, include_downed=False):
         for u in self.units:
             if (u.alive or (include_downed and u.downed)) and pos in self.cells_of(u):
@@ -155,7 +159,8 @@ class Battle:
         allies, enemies = self.cells_by_side(unit)
         blocked = enemies | self.board.walls | self.creature_cells()
         return self.board.reachable(unit.pos, budget, blocked, unit.footprint,
-                                    allies, self._walk_diags(unit))
+                                    allies, self._walk_diags(unit),
+                                    vertical=unit.can_move_vertically)
 
     def reachable_cells(self, unit):
         """Union of the cells the footprint would cover at each reachable anchor (UI highlight)."""
@@ -170,7 +175,8 @@ class Battle:
         _, enemies = self.cells_by_side(unit)
         blocked = enemies | self.board.walls | self.creature_cells()
         return self.board.path_to(unit.pos, dest, blocked, unit.footprint,
-                                  self._walk_diags(unit))
+                                  self._walk_diags(unit),
+                                  vertical=unit.can_move_vertically)
 
     def path_step_toward(self, unit, goal, budget):
         allies, enemies = self.cells_by_side(unit)
@@ -178,7 +184,8 @@ class Battle:
         target = self.unit_at(goal)
         target_cells = self.cells_of(target) if target else None
         return self.board.path_step_toward(unit.pos, goal, budget, blocked, unit.footprint,
-                                           target_cells, allies, self._walk_diags(unit))
+                                           target_cells, allies, self._walk_diags(unit),
+                                           vertical=unit.can_move_vertically)
 
     def move_unit(self, unit, dest):
         reach = self.reachable(unit)
@@ -245,6 +252,15 @@ class Battle:
     # ------------------------------------------------------------------ #
     # falling, stabilizing and death                                     #
     # ------------------------------------------------------------------ #
+    def apply_fall(self, unit, drop, log):
+        """Resolve a drop of `drop` floor levels: the first level is free, every
+        level after that is 1d6. A flier floats down and takes nothing."""
+        if drop <= 1 or unit.flies:
+            return
+        dmg = data.roll(drop - 1, 6)
+        log(f"{unit.name} falls {drop} levels -> {dmg} damage ({drop - 1}d6).")
+        unit.take_damage(dmg, log)
+
     def _death_save(self, unit):
         """d20 >= DEATH_SAVE_MIN -> stable; otherwise dead. Logs and returns the
         new status."""

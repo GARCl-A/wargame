@@ -134,6 +134,13 @@ class BattleScreen(Screen):
             return
         actor = b.active
 
+        if self.aim_action is not None and self.aim_action.target == "cell":
+            if self.aim_action.can(b, actor, tile):
+                self.aim_action.execute(b, actor, tile)
+                self.aim_action = None
+                self._after_player_action()
+            return
+
         if self.aim_action is not None:
             # `unit_at` returns whichever unit sits on the tile first; when a
             # standing unit shares the cell with a downed one (bodies do not
@@ -317,11 +324,25 @@ class BattleScreen(Screen):
         """A flat tactical board drawn from the design system -- a quiet checker
         for the floor, raised stone blocks for the walls (corners rounded only
         where a wall face is exposed, so clusters read as one mass)."""
-        walls = self.battle.board.walls
+        board = self.battle.board
+        walls = board.walls
         for cy in range(ROWS):
             for cx in range(COLS):
                 tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
                 screen.fill(tone, self._cell_rect(cx, cy))
+
+        for (cx, cy), z in board.elevation.items():   # a pit: sunken, darker the deeper
+            r = self._cell_rect(cx, cy)
+            k = min(1.0, -z / 6)
+            screen.fill(WALL_LO, r)
+            screen.fill(tuple(int(v * (1 - 0.5 * k)) for v in WALL_LO),
+                        r.inflate(-TILE // 4, -TILE // 4))
+            text(screen, str(-z), self.fonts.mono_sm, INK_FAINT, r.center, center=True)
+        for cx, cy in board.ropes:
+            r = self._cell_rect(cx, cy)
+            pygame.draw.line(screen, (198, 160, 104),
+                             (r.centerx, r.top + 3), (r.centerx, r.bottom - 3),
+                             max(2, TILE // 12))
 
         for cx in range(COLS + 1):
             x = GRID_X + cx * TILE
@@ -395,6 +416,8 @@ class BattleScreen(Screen):
                 color = OK
             elif self.aim_action is actions.DEMORALIZE:
                 color = DEMO_HL
+            elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP):
+                color = MOVE_HL
             else:
                 color = THROW_HL
             cell.fill((*color, 46))
@@ -706,7 +729,10 @@ class BattleScreen(Screen):
         b = self.battle
         my_turn = b.winner is None and self._is_player_turn()
         act = b.active
-        contextual = (actions.STABILIZE, actions.FIRST_AID)
+        # Climb/Drop only make sense at a pit edge -- hide them elsewhere. Push
+        # and Jump are general moves; they stay on the panel, greyed when unusable.
+        contextual = (actions.STABILIZE, actions.FIRST_AID,
+                      actions.CLIMB, actions.DROP)
 
         for action in actions.PANEL_ACTIONS:
             if action in contextual and not (my_turn and action.available(b, act)):

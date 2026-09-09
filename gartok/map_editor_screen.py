@@ -35,11 +35,16 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, FLOOR_A, FLOOR_B, INK,
 _MAX_NAME = 28
 
 _NPC_C = (168, 124, 214)                  # named-NPC deploy zone (violet)
+_PIT_C = (58, 56, 74)                     # a pit cell (recessed dark)
+_ROPE_C = (198, 160, 104)                 # a rope over the pit edge (tan)
 
-_TOOLS = [("wall", "WALL"), ("torch", "TORCH"), ("player", "PLAYER START"),
-          ("enemy", "ENEMY START"), ("npc", "NPC START"), ("erase", "ERASE")]
+_MAX_DEPTH = 6
 
-_LAYER_C = {"wall": WALL_HI, "torch": TORCH_C,
+_TOOLS = [("wall", "WALL"), ("torch", "TORCH"), ("pit", "PIT"), ("rope", "ROPE"),
+          ("player", "PLAYER START"), ("enemy", "ENEMY START"),
+          ("npc", "NPC START"), ("erase", "ERASE")]
+
+_LAYER_C = {"wall": WALL_HI, "torch": TORCH_C, "pit": (120, 116, 150), "rope": _ROPE_C,
             "player": PLAYER_C, "enemy": ENEMY_C, "npc": _NPC_C}
 
 
@@ -52,6 +57,7 @@ class MapEditorScreen(Screen):
         self.on_back = on_back
         self.hits = []                        # [(rect, action)] rebuilt each frame
         self.tool = "wall"
+        self.pit_depth = 1                    # PIT tool paints holes this many levels deep
         self.painting = None                  # "add" | "del" while a drag is live
         self.edit_name = False
         self.name_buf = ""
@@ -74,6 +80,8 @@ class MapEditorScreen(Screen):
         self.torches = cs("torches")
         self.zone_p = cs("deploy_player")
         self.zone_e = cs("deploy_enemy")
+        self.elev = {(e[0], e[1]): e[2] for e in m.get("elevation", []) if len(e) >= 3}
+        self.ropes = cs("ropes")
         self.npc_at = {(e[0], e[1]): e[2] for e in m.get("deploy_npc", []) if len(e) >= 3}
         self.ambient = bool(m.get("ambient_light"))
         self.outdoor = bool(m.get("outdoor"))
@@ -97,6 +105,8 @@ class MapEditorScreen(Screen):
                 "walls": srt(self.walls), "torches": srt(self.torches),
                 "deploy_player": srt(self.zone_p), "deploy_enemy": srt(self.zone_e),
                 "deploy_npc": sorted([x, y, slug] for (x, y), slug in self.npc_at.items()),
+                "elevation": sorted([x, y, z] for (x, y), z in self.elev.items()),
+                "ropes": srt(self.ropes),
                 "ambient_light": self.ambient and not self.outdoor,
                 "outdoor": self.outdoor}
 
@@ -143,12 +153,18 @@ class MapEditorScreen(Screen):
         return None
 
     def _apply(self, cell, mode):
-        for s in (self.walls, self.torches, self.zone_p, self.zone_e):
+        had_rope = cell in self.ropes
+        for s in (self.walls, self.torches, self.zone_p, self.zone_e, self.ropes):
             s.discard(cell)                    # a cell belongs to one layer at most
         self.npc_at.pop(cell, None)
+        self.elev.pop(cell, None)
         if mode == "add" and self.tool in ("wall", "torch", "player", "enemy"):
             {"wall": self.walls, "torch": self.torches,
              "player": self.zone_p, "enemy": self.zone_e}[self.tool].add(cell)
+        elif mode == "add" and self.tool == "pit":
+            self.elev[cell] = -self.pit_depth
+            if had_rope:
+                self.ropes.add(cell)          # deepening a roped pit keeps the rope
 
     # ------------------------------------------------------------------ #
     # input                                                              #
@@ -185,6 +201,14 @@ class MapEditorScreen(Screen):
                                        WARN)
                     else:
                         self.picking = cell
+                    return
+                if self.tool == "rope":           # toggle on a pit cell, not a drag
+                    if event.button == 3:
+                        self.ropes.discard(cell)
+                    elif cell in self.elev:
+                        self.ropes.symmetric_difference_update({cell})
+                    else:
+                        self.notice = ("rope needs a pit cell under it", WARN)
                     return
                 self.painting = "del" if event.button == 3 else "add"
                 self._apply(cell, self.painting)
@@ -241,7 +265,10 @@ class MapEditorScreen(Screen):
         elif kind == "clear":
             self.walls, self.torches = set(), set()
             self.zone_p, self.zone_e, self.npc_at = set(), set(), {}
+            self.elev, self.ropes = {}, set()
             self.notice = None
+        elif kind == "depth":
+            self.pit_depth = max(1, min(_MAX_DEPTH, self.pit_depth + action[1]))
         elif kind == "load":
             self._load(map_lib.load_map(action[1]), slug=action[1])
         elif kind == "ask_delete":
@@ -317,6 +344,13 @@ class MapEditorScreen(Screen):
                 tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
                 screen.fill(tone, (gx + cx * cell, gy + cy * cell, cell, cell))
 
+        for (cx, cy), z in self.elev.items():    # a pit: recessed dark, darker the deeper
+            r = pygame.Rect(gx + cx * cell, gy + cy * cell, cell, cell)
+            shade = min(1.0, -z / _MAX_DEPTH)
+            screen.fill(_PIT_C, r)
+            screen.fill(tuple(int(c * (1 - 0.55 * shade)) for c in _PIT_C),
+                        r.inflate(-cell // 4, -cell // 4))
+
         if not lit:                              # dim the floor no torch reaches;
             self._sync_dark()                    # painted walls/zones stay crisp on top
             veil = pygame.Surface((cell, cell), pygame.SRCALPHA)
@@ -345,6 +379,14 @@ class MapEditorScreen(Screen):
             y = gy + cy * cell
             pygame.draw.line(screen, LINE_SOFT, (gx, y), (gx + gw, y))
 
+        for (cx, cy), z in self.elev.items():        # depth number in the pit
+            text(screen, str(-z), self.fonts.body_sm, INK_DIM,
+                 (gx + cx * cell + cell // 2, gy + cy * cell + cell // 2), center=True)
+        for cx, cy in self.ropes:                    # rope hanging over the edge
+            rx = gx + cx * cell + cell // 2
+            pygame.draw.line(screen, _ROPE_C, (rx, gy + cy * cell + 2),
+                             (rx, gy + (cy + 1) * cell - 2), max(2, cell // 9))
+
         for wx, wy in self.walls:
             r = pygame.Rect(gx + wx * cell + 1, gy + wy * cell + 1, cell - 2, cell - 2)
             pygame.draw.rect(screen, WALL_FILL, r, border_radius=3)
@@ -367,6 +409,11 @@ class MapEditorScreen(Screen):
 
         if self.tool == "npc":
             hint = f"{COLS}x{ROWS}  ·  click a cell to pick an NPC  ·  right-click clears"
+        elif self.tool == "pit":
+            hint = (f"{COLS}x{ROWS}  ·  left-drag digs pits {self.pit_depth} deep  ·  "
+                    "right-drag fills  ·  DEPTH sets how deep")
+        elif self.tool == "rope":
+            hint = f"{COLS}x{ROWS}  ·  click a pit cell to hang a rope (easier climb)  ·  right-click removes"
         else:
             lightnote = ("lit throughout" if lit
                          else f"dark outside torchlight  ·  {len(self.torches)} torch(es)")
@@ -414,6 +461,17 @@ class MapEditorScreen(Screen):
             self.hits.append((r, ("tool", key)))
             y += 26 + SP1
         y += SP1
+
+        if self.tool in ("pit", "rope"):
+            r = pygame.Rect(x, y, w, 24)
+            panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
+            text(screen, f"PIT DEPTH  {self.pit_depth}", f.label, INK,
+                 (r.x + SP2, r.centery - 5))
+            for lbl, d, side in (("-", -1, r.right - 46), ("+", 1, r.right - 24)):
+                b = pygame.Rect(side, r.y + 3, 18, 18)
+                self._btn(screen, b, lbl, font=f.body_bd)
+                self.hits.append((b, ("depth", d)))
+            y += 24 + SP1
 
         r = pygame.Rect(x, y, w, 24)
         self._btn(screen, r, "CLEAR")

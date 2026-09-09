@@ -151,10 +151,55 @@ def _eye(surf, rect, c):
     pygame.draw.circle(surf, c, (int(x + s * 0.5), int(y + s * 0.5)), max(2, int(s * 0.14)))
 
 
+def _push(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # a wall on the right, an arrow shoving into it
+    pygame.draw.line(surf, c, (x + s * 0.86, y), (x + s * 0.86, y + s), w)
+    pygame.draw.line(surf, c, (x, y + s * 0.5), (x + s * 0.7, y + s * 0.5), w)
+    pygame.draw.lines(surf, c, False,
+                      [(x + s * 0.44, y + s * 0.24), (x + s * 0.72, y + s * 0.5),
+                       (x + s * 0.44, y + s * 0.76)], w)
+
+
+def _climb(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # a zig-zag climbing line up two rails
+    pygame.draw.line(surf, c, (x + s * 0.2, y), (x + s * 0.2, y + s), w)
+    pygame.draw.line(surf, c, (x + s * 0.8, y), (x + s * 0.8, y + s), w)
+    for i in range(3):
+        yy = y + s * (0.2 + i * 0.3)
+        pygame.draw.line(surf, c, (x + s * 0.2, yy), (x + s * 0.8, yy - s * 0.12), w)
+
+
+def _drop(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # a down arrow into an open box
+    pygame.draw.line(surf, c, (x + s * 0.5, y), (x + s * 0.5, y + s * 0.62), w)
+    pygame.draw.lines(surf, c, False,
+                      [(x + s * 0.28, y + s * 0.4), (x + s * 0.5, y + s * 0.64),
+                       (x + s * 0.72, y + s * 0.4)], w)
+    pygame.draw.lines(surf, c, False,
+                      [(x + s * 0.12, y + s * 0.66), (x + s * 0.12, y + s),
+                       (x + s * 0.88, y + s), (x + s * 0.88, y + s * 0.66)], w)
+
+
+def _jump(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # a leaping arc from a low ledge to a low ledge
+    pygame.draw.line(surf, c, (x, y + s * 0.9), (x + s * 0.2, y + s * 0.9), w)
+    pygame.draw.line(surf, c, (x + s * 0.8, y + s * 0.9), (x + s, y + s * 0.9), w)
+    pygame.draw.arc(surf, c, (x + s * 0.15, y, s * 0.7, s * 1.4), 0.5, 2.6, w)
+
+
 _GLYPHS = {
     "move": _move, "attack": _sword, "throw": _throw, "demoralize": _shout,
     "pickup": _hand, "defend": _shield, "end": _hourglass, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
+    "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,
 }
 
 NAMES = tuple(_GLYPHS)

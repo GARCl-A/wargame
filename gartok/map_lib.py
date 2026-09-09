@@ -22,7 +22,8 @@ from .npc_lib import load_npc, slugify
 
 MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "maps")
 
-_CELL_KEYS = ("walls", "torches", "deploy_player", "deploy_enemy", "deploy_npc")
+_CELL_KEYS = ("walls", "torches", "deploy_player", "deploy_enemy", "deploy_npc",
+              "elevation", "ropes")
 
 
 def new_map(name="Untitled"):
@@ -52,6 +53,8 @@ def save_map(data, slug=None):
         payload[key] = sorted([list(c) for c in data.get(key, [])])
     text = json.dumps(payload, ensure_ascii=False, indent=2)
     text = re.sub(r"\[\s+(-?\d+),\s+(-?\d+)\s+\]", r"[\1, \2]", text)          # [x, y]
+    text = re.sub(r"\[\s+(-?\d+),\s+(-?\d+),\s+(-?\d+)\s+\]",
+                  r"[\1, \2, \3]", text)                                        # [x, y, z]
     text = re.sub(r'\[\s+(-?\d+),\s+(-?\d+),\s+("(?:[^"\\]|\\.)*")\s+\]',
                   r"[\1, \2, \3]", text)                                        # [x, y, "slug"]
     tmp = map_path(slug) + ".tmp"

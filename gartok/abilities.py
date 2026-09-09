@@ -40,6 +40,9 @@ class Ability:
     demoralize_ignores_language: bool = False
     carry_size: Optional[str] = None  # size used for carry capacity only (overrides the real size)
     breaks_when_downed: bool = False  # 0 HP -> "broken" (no death clock), not "dying"
+    flies: bool = False               # moves freely in 3D (ignores pits) and takes no fall damage
+    climb_speed: bool = False         # moves up/down pit walls as normal movement (seam, unused)
+    auto_climb_dc: int = 0            # climbs any surface of this DC or lower with no check
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -129,7 +132,8 @@ _LIST = [
     Ability("keen_hearing", "Keen Hearing",
             "+3 initiative.", initiative=3),
     Ability("climber", "Climber",
-            "+1 square of speed.", speed=1),
+            "climbs any surface of DC 25 or lower with no check (still costs the action).",
+            auto_climb_dc=25),
     Ability("extra_language", "Extra Language (Human)",
             "speaks a second random language: can Demoralize enemies that share "
             "either of the two.",
@@ -149,8 +153,9 @@ _LIST = [
             "falls at the end of their turn (the death save runs normally from there).",
             on_downed=_ferocity),
     Ability("flight", "Flight",
-            "+2 squares of speed, ignores terrain; +1 AC [natural].",
-            speed=2, ac_natural=1),
+            "flies: moves freely in three dimensions (up and down pits with no "
+            "check, ignores terrain) and never takes falling damage.",
+            flies=True),
 ]
 
 ABILITIES = {a.id: a for a in _LIST}

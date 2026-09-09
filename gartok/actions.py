@@ -16,9 +16,45 @@ from .conditions import Defending, Demoralized
 from .data import DEMORALIZE_RANGE, d20, resolve_bonus
 from .ground import GroundObject
 
+PUSH_DC_BASE = 10          # Shove: Strength vs 10 + the target's Constitution modifier
+JUMP_DIVISOR = 5          # Jump: (d20 + Strength) / this = squares cleared, capped at speed
+
 
 def _sign(v):
     return (v > 0) - (v < 0)
+
+
+def _line(a, b):
+    """Every cell on the Bresenham line from `a` to `b`, both ends included."""
+    (x0, y0), (x1, y1) = a, b
+    dx, dy = abs(x1 - x0), abs(y1 - y0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    err = dx - dy
+    x, y = x0, y0
+    pts = [(x, y)]
+    while (x, y) != (x1, y1):
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x += sx
+        if e2 < dx:
+            err += dx
+            y += sy
+        pts.append((x, y))
+    return pts
+
+
+def _cell_free(battle, actor, pos, footprint=None):
+    """Is the `footprint` (the actor's by default) able to stand at `pos` -- in
+    bounds, no wall, no other body, no creature?"""
+    fp = footprint or actor.footprint
+    shape = cells(pos, fp)
+    if not all(battle.board.in_bounds(c) for c in shape):
+        return False
+    blocked = (battle.board.walls | battle.occupied(exclude=actor)
+               | battle.creature_cells())
+    return not blocked.intersection(shape)
 
 
 # --------------------------------------------------------------------------- #
@@ -193,6 +229,10 @@ class Attack(Action):
         if actor.ap < self.cost or not _attackable_target(actor, target):
             return False
         if battle.units_distance(actor, target) > actor.attack_range:
+            return False
+        # melee only reaches across a one-level lip; a deeper drop is out of reach
+        if actor.attack_range <= 1 \
+                and abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         if not battle.los_between(actor, target):
             return False
@@ -574,6 +614,218 @@ class Flee(Action):
 
 
 # --------------------------------------------------------------------------- #
+# The Z axis: Push, Climb, Drop in, Jump                                       #
+# --------------------------------------------------------------------------- #
+
+class Push(Action):
+    """Shove an adjacent enemy one square straight back. Strength vs 10 + their
+    Constitution modifier. If the square behind them is a pit, they go in (and
+    take the fall). A wall / body behind them stops the shove dead."""
+
+    id, name, target, aimed = "push", "Push", "enemy", True
+
+    def _targets(self, battle, actor):
+        return [u for u in battle.units
+                if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._targets(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or not _hostile_target(actor, target):
+            return False
+        if battle.units_distance(actor, target) > 1:
+            return False
+        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
+            return False
+        return battle.los_between(actor, target)
+
+    def label(self, battle, actor):
+        return "Push (1 pt, STR vs 10 + target CON)"
+
+    def highlight_targets(self, battle, actor):
+        return self._targets(battle, actor)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        dc = PUSH_DC_BASE + target.mod_constitution
+        nat = d20()
+        total = nat + actor.mod_strength
+        desc = (f"{actor.name} shoves {target.name}: d20({nat}) "
+                f"{actor.mod_strength:+}(STR) = {total} vs {dc}")
+        if nat != 20 and (nat == 1 or total < dc):
+            battle.log(desc + "  -> holds their ground.")
+            return
+
+        ax, ay = actor.pos
+        tx, ty = target.pos
+        dx, dy = _sign(tx - ax), _sign(ty - ay)
+        if dx == 0 and dy == 0:
+            battle.log(desc + "  -> no room to shove.")
+            return
+        dest = (tx + dx, ty + dy)
+        if battle.board.diagonal_corner_blocked(target.pos, dest) \
+                or not _cell_free(battle, actor, dest, target.footprint):
+            battle.log(desc + f"  -> {target.name} is shoved against something and can't move.")
+            return
+        z_from = battle.elevation(target)
+        z_to = battle.board.elevation_at(dest)
+        target.pos = dest
+        target.walking = False
+        battle.log(desc + f"  -> {target.name} is shoved to {dest}.")
+        if z_to < z_from:
+            battle.apply_fall(target, z_from - z_to, battle.log)
+
+
+class _VerticalStep(Action):
+    """Shared base for the single-square elevation moves (Climb / Drop in): the
+    candidate cells are the adjacent ones at a different floor height."""
+
+    target, aimed = "cell", True
+
+    def _spots(self, battle, actor):
+        z = battle.elevation(actor)
+        return [nb for nb in neighbors(actor.pos)
+                if self._wants(battle.board.elevation_at(nb), z)
+                and _cell_free(battle, actor, nb)
+                and not battle.board.diagonal_corner_blocked(actor.pos, nb)]
+
+    def _wants(self, z_nb, z_here):
+        raise NotImplementedError
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._spots(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        return (actor.ap >= self.cost and isinstance(target, tuple)
+                and target in self._spots(battle, actor))
+
+    def highlight_cells(self, battle, actor):
+        return self._spots(battle, actor)
+
+    def highlight_targets(self, battle, actor):
+        return []
+
+
+class Climb(_VerticalStep):
+    """Haul yourself one square up or down a pit wall. Strength vs the surface DC
+    (bare stone 15, a rope 10); the Lizardfolk's Climber clears it with no roll.
+    A slip just costs the action."""
+
+    id, name = "climb", "Climb"
+
+    def _wants(self, z_nb, z_here):
+        return z_nb != z_here
+
+    def label(self, battle, actor):
+        return "Climb (1 pt, STR vs surface DC)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        z_from = battle.elevation(actor)
+        z_to = battle.board.elevation_at(target)
+        low_cell = target if z_to < z_from else actor.pos
+        dc = battle.board.surface_dc(low_cell)
+        way = "down" if z_to < z_from else "up"
+        if actor.auto_climb(dc):
+            actor.pos = target
+            battle.log(f"{actor.name} climbs {way} (Climber -- no check).")
+            return
+        nat = d20()
+        total = nat + actor.mod_strength
+        desc = (f"{actor.name} climbs {way}: d20({nat}) {actor.mod_strength:+}(STR) "
+                f"= {total} vs DC {dc}")
+        if nat == 20 or total >= dc:
+            actor.pos = target
+            battle.log(f"{desc}  -> {'up and over' if way == 'up' else 'down'}.")
+        else:
+            battle.log(desc + "  -> slips, stays put.")
+
+
+class DropIn(_VerticalStep):
+    """Throw yourself into the pit -- a deliberate drop into a lower adjacent
+    square, no check, but you take the fall (every level past the first is 1d6)."""
+
+    id, name = "drop", "Drop in"
+
+    def _wants(self, z_nb, z_here):
+        return z_nb < z_here
+
+    def label(self, battle, actor):
+        return "Drop into the pit (1 pt, take the fall)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        z_from = battle.elevation(actor)
+        z_to = battle.board.elevation_at(target)
+        actor.pos = target
+        battle.log(f"{actor.name} drops into the pit at {target}.")
+        battle.apply_fall(actor, z_from - z_to, battle.log)
+
+
+class Jump(Action):
+    """A running jump: d20 + Strength, clear (result / 5) squares (never more than
+    your speed) straight toward the aimed cell, sailing over any pit in between.
+    A wall or a body ends the jump short; land lower than you left and you fall."""
+
+    id, name, target, aimed = "jump", "Jump", "cell", True
+
+    def _max_reach(self, battle, actor):
+        return max(0, min((20 + actor.mod_strength) // JUMP_DIVISOR, actor.speed))
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and self._max_reach(battle, actor) >= 1
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or not isinstance(target, tuple):
+            return False
+        if not battle.board.in_bounds(target) or target == actor.pos:
+            return False
+        return grid_distance(actor.pos, target) <= self._max_reach(battle, actor)
+
+    def label(self, battle, actor):
+        return "Jump (1 pt, STR: clears result/5 squares)"
+
+    def highlight_cells(self, battle, actor):
+        r = self._max_reach(battle, actor)
+        return [p for p in _cells_in_radius(actor.pos, r) if battle.board.in_bounds(p)]
+
+    def highlight_targets(self, battle, actor):
+        return []
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        nat = d20()
+        total = nat + actor.mod_strength
+        dist = max(0, min(total // JUMP_DIVISOR, actor.speed))
+        landing = actor.pos
+        for step, cell in enumerate(_line(actor.pos, target)[1:], start=1):
+            if step > dist or cell in battle.board.walls \
+                    or not _cell_free(battle, actor, cell):
+                break
+            landing = cell
+        z_from = battle.elevation(actor)
+        z_to = battle.board.elevation_at(landing)
+        actor.pos = landing
+        battle.log(f"{actor.name} jumps: d20({nat}) {actor.mod_strength:+}(STR) = "
+                   f"{total} -> {total // JUMP_DIVISOR} squares, lands at {landing}.")
+        if z_to < z_from:
+            battle.apply_fall(actor, z_from - z_to, battle.log)
+
+
+# --------------------------------------------------------------------------- #
 # End turn                                                                     #
 # --------------------------------------------------------------------------- #
 
@@ -599,8 +851,13 @@ PICK_UP = PickUp()
 DEMORALIZE = Demoralize()
 STABILIZE = Stabilize()
 FIRST_AID = FirstAid()
+PUSH = Push()
+CLIMB = Climb()
+DROP = DropIn()
+JUMP = Jump()
 FLEE = Flee()
 END = EndTurn()
 
 # Panel buttons, in order. Move and Attack are the default board click.
-PANEL_ACTIONS = [THROW, DEMORALIZE, STABILIZE, FIRST_AID, PICK_UP, DEFEND, FLEE, END]
+PANEL_ACTIONS = [THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP, STABILIZE, FIRST_AID,
+                 PICK_UP, DEFEND, FLEE, END]

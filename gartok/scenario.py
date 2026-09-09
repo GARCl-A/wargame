@@ -126,12 +126,15 @@ class CustomScenario(Scenario):
         self.outdoor = bool(data.get("outdoor"))
         self._walls = [tuple(c) for c in data.get("walls", [])]
         self._torches = [tuple(c) for c in data.get("torches", [])]
+        self._elevation = {(e[0], e[1]): e[2] for e in data.get("elevation", [])
+                           if len(e) >= 3}
+        self._ropes = [tuple(c) for c in data.get("ropes", [])]
         self._zones = {"player": [tuple(c) for c in data.get("deploy_player", [])],
                        "enemy": [tuple(c) for c in data.get("deploy_enemy", [])],
                        "npc": [(e[0], e[1]) for e in data.get("deploy_npc", [])]}
 
     def _make_board(self):
-        return Board(walls=self._walls)
+        return Board(walls=self._walls, elevation=self._elevation, ropes=self._ropes)
 
     @staticmethod
     def _is_npc(u):

@@ -2551,6 +2551,207 @@ def test_npc_library_round_trips_a_hand_built_character():
 
 
 # --------------------------------------------------------------------------- #
+# the Z axis: pits, falling, climbing, pushing, jumping                        #
+# --------------------------------------------------------------------------- #
+
+class _d20:
+    """Pin `actions.d20` to a fixed value for the body of a `with` block -- the
+    Z-axis tests care about the check outcome, not a particular seed."""
+    def __init__(self, value):
+        self.value = value
+
+    def __enter__(self):
+        self._orig = actions.d20
+        actions.d20 = lambda: self.value
+
+    def __exit__(self, *exc):
+        actions.d20 = self._orig
+
+
+def _set_stats(combatant, **scores):
+    """Force raw attribute scores on the wrapped character and re-derive."""
+    for k, v in scores.items():
+        setattr(combatant.char, k, v)
+    combatant.char._derive_combat()
+
+
+def _pit_battle(depth=2, rope=False):
+    random.seed(3)
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    a, d = batt.units
+    a._ability = d._ability = abilities.get("none")
+    a.pos, d.pos = (5, 5), (6, 5)
+    a.weapon_hand, a.torch_hand = True, False
+    batt.board.walls = {w for w in batt.board.walls if w[1] != 5}   # clear the row
+    batt.board.elevation = {(6, 5): -depth, (7, 5): -depth} if depth else {}
+    batt.board.ropes = {(6, 5)} if rope else set()
+    a.ap = d.ap = 2
+    return batt, a, d
+
+
+def test_fall_damage_skips_the_first_level():
+    batt, a, _ = _pit_battle()
+    batt.apply_fall(a, 1, batt.log)
+    assert a.hp == a.hp_max                                              # 1 level: free
+    hp = a.hp
+    batt.apply_fall(a, 3, batt.log)                                       # 3 levels: 2d6
+    assert hp - 12 <= a.hp < hp                                          # 2..12 damage
+
+
+def test_drop_in_takes_the_fall():
+    batt, a, d = _pit_battle(depth=3)
+    d.pos = (9, 9)
+    assert actions.DROP.can(batt, a, (6, 5))
+    hp = a.hp
+    actions.DROP.execute(batt, a, (6, 5))
+    assert a.pos == (6, 5) and a.hp < hp and a.ap == 1
+
+
+def test_climb_out_needs_a_strength_check():
+    batt, a, d = _pit_battle(depth=2)
+    a.pos, d.pos = (6, 5), (9, 9)          # a is in the pit
+    _set_stats(a, strength=4)              # STR mod -3
+    assert actions.CLIMB.can(batt, a, (5, 5))
+    with _d20(10):                          # 10 - 3 = 7, short of DC 15
+        actions.CLIMB.execute(batt, a, (5, 5))
+    assert a.pos == (6, 5) and a.ap == 1    # slipped, still down there
+    a.ap = 2
+    with _d20(19):                          # 19 - 3 = 16, clears DC 15
+        actions.CLIMB.execute(batt, a, (5, 5))
+    assert a.pos == (5, 5)
+
+
+def test_rope_lowers_the_climb_dc():
+    batt, a, d = _pit_battle(depth=2, rope=True)
+    assert batt.board.surface_dc((6, 5)) == 10
+    assert batt.board.surface_dc((7, 5)) == 15
+
+
+def test_lizardfolk_climbs_stone_with_no_check():
+    batt, a, d = _pit_battle(depth=2)
+    a.pos, d.pos = (6, 5), (9, 9)
+    a._ability = abilities.get("climber")
+    _set_stats(a, strength=3)               # a roll would never pass
+    with _d20(1):
+        actions.CLIMB.execute(batt, a, (5, 5))
+    assert a.pos == (5, 5)                  # auto-climb (DC 15 <= 25)
+
+
+def test_melee_cannot_reach_two_levels_down():
+    batt, a, d = _pit_battle(depth=2)
+    d.pos = (6, 5)                          # one square away but two levels down
+    assert actions.ATTACK.can(batt, a, d) is False
+    batt.board.elevation = {(6, 5): -1}     # a one-level lip: melee reaches
+    assert actions.ATTACK.can(batt, a, d) is True
+
+
+def test_push_shoves_the_target_back_a_square():
+    batt, a, d = _pit_battle(depth=0)
+    a.pos, d.pos = (5, 5), (6, 5)
+    _set_stats(a, strength=14)              # +2
+    _set_stats(d, constitution=10)          # DC 10
+    with _d20(3):                           # 3 + 2 = 5, target holds
+        actions.PUSH.execute(batt, a, d)
+    assert d.pos == (6, 5)
+    a.ap = 2
+    with _d20(12):                          # 12 + 2 = 14 >= 10, shoved
+        actions.PUSH.execute(batt, a, d)
+    assert d.pos == (7, 5) and a.ap == 1
+
+
+def test_push_against_a_wall_does_not_move_the_target():
+    batt, a, d = _pit_battle(depth=0)
+    a.pos, d.pos = (5, 5), (6, 5)
+    batt.board.walls = {(7, 5)}
+    with _d20(20):                          # roll succeeds, but the wall stops the shove
+        actions.PUSH.execute(batt, a, d)
+    assert d.pos == (6, 5) and a.ap == 1
+
+
+def test_push_into_a_pit_makes_the_target_fall():
+    batt, a, d = _pit_battle(depth=3)
+    a.pos, d.pos = (5, 5), (6, 5)
+    batt.board.elevation = {(7, 5): -3}
+    hp = d.hp
+    with _d20(20):
+        actions.PUSH.execute(batt, a, d)
+    assert d.pos == (7, 5) and d.hp < hp    # shoved in, took the fall
+
+
+def test_a_non_flier_cannot_path_across_an_elevation_change():
+    b = Board(walls=[], elevation={(4, y): -2 for y in range(ROWS)})
+    reach = b.reachable((3, 5), budget=8)
+    assert (5, 5) not in reach                     # the pit wall at column 4 blocks it
+    assert b.reachable((3, 5), budget=8, vertical=True).get((5, 5))  # a flier crosses
+
+
+def test_flight_lets_a_unit_move_in_three_dimensions():
+    batt, a, d = _pit_battle(depth=2)
+    a.pos, d.pos = (5, 5), (9, 9)
+    a._ability = abilities.get("flight")
+    assert a.can_move_vertically
+    assert (6, 5) in batt.reachable(a)             # can fly straight into the pit
+
+
+def test_jump_clears_squares_by_the_roll():
+    batt, a, d = _pit_battle(depth=2)
+    a.pos, d.pos = (3, 5), (9, 9)
+    _set_stats(a, strength=10)                     # +0: jump distance == roll // 5
+    assert actions.JUMP.can(batt, a, (7, 5))
+    with _d20(15):                                 # 15 // 5 = 3 squares -> lands at (6, 5)
+        actions.JUMP.execute(batt, a, (7, 5))
+    assert a.pos == (6, 5) and a.ap == 1
+
+
+def test_map_library_round_trips_pits_and_ropes():
+    import shutil
+    import tempfile
+    from gartok import map_lib
+    old, map_lib.MAP_DIR = map_lib.MAP_DIR, tempfile.mkdtemp()
+    try:
+        m = map_lib.new_map("Sink")
+        m["elevation"] = [[6, 5, -2], [7, 5, -3]]
+        m["ropes"] = [[6, 5]]
+        slug = map_lib.save_map(m)
+        back = map_lib.load_map(slug)
+        assert back["elevation"] == [[6, 5, -2], [7, 5, -3]]
+        assert back["ropes"] == [[6, 5]]
+        batt = Battle([Unit("player")], [Unit("enemy")],
+                      scenario=CustomScenario(back))
+        assert batt.board.elevation_at((7, 5)) == -3
+        assert batt.board.surface_dc((6, 5)) == 10
+    finally:
+        shutil.rmtree(map_lib.MAP_DIR, ignore_errors=True)
+        map_lib.MAP_DIR = old
+
+
+def test_path_step_toward_commits_to_the_long_way_around_a_wall():
+    """The route is planned over the whole board: a unit boxed against a wall
+    takes the detour instead of standing at the dead end."""
+    b = Board(walls=[(8, y) for y in range(11)])   # seals column 8, one gap at row 11
+    step = b.path_step_toward((7, 3), (9, 3), budget=6, blocked=b.walls)
+    assert step != (7, 3)                            # it moves toward the row-11 gap...
+    assert step[1] > 3                               # ...downward, not stuck at the wall
+
+
+def test_ai_crosses_a_pit_trench_instead_of_stalling():
+    """A pit that splits the whole board used to lock the melee AI into an
+    endless defend loop. Now both sides climb through and the fight ends."""
+    from gartok import ai
+    m = {"deploy_player": [[2, 5]], "deploy_enemy": [[13, 5]], "ambient_light": True,
+         "elevation": [[x, y, -2] for x in (7, 8) for y in range(12)]}
+    for seed in range(8):
+        random.seed(seed)
+        batt = Battle([Unit("player"), Unit("player")],
+                      [Unit("enemy"), Unit("enemy")], scenario=CustomScenario(m))
+        guard = 0
+        while batt.winner is None and guard < 1500:
+            guard += 1
+            ai.take_turn(batt, batt.active)
+        assert batt.winner is not None, f"seed {seed} never resolved ({guard} turns)"
+
+
+# --------------------------------------------------------------------------- #
 # runner                                                                       #
 # --------------------------------------------------------------------------- #
 

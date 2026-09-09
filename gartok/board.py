@@ -11,6 +11,9 @@ from collections import deque
 
 COLS, ROWS = 16, 12
 
+CLIMB_DC_STONE = 15         # Strength DC to climb a bare rock pit wall
+CLIMB_DC_ROPE = 10         # ... with a rope over the edge
+
 
 def chebyshev(a, b):
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
@@ -80,7 +83,7 @@ def neighbors(pos):
 
 
 class Board:
-    def __init__(self, min_seg=3, max_seg=6, walls=None):
+    def __init__(self, min_seg=3, max_seg=6, walls=None, elevation=None, ropes=None):
         # `min_seg`/`max_seg` bound how many short wall segments get scattered in
         # the middle: the default is the cluttered arena; an open field passes
         # something small (e.g. 1..2). `walls` (a hand-authored layout from the
@@ -89,9 +92,28 @@ class Board:
         self.max_seg = max_seg
         self.walls = ({tuple(w) for w in walls} if walls is not None
                       else self._generate_walls())
+        # The Z axis: a cell's floor height, 0 by default. Negative = a pit you
+        # can fall into and must climb out of; positive is reserved for future
+        # rises. Only cells that differ from 0 are stored.
+        if elevation is None:
+            self.elevation = {}
+        elif isinstance(elevation, dict):
+            self.elevation = {tuple(k): int(v) for k, v in elevation.items() if int(v)}
+        else:
+            self.elevation = {(int(x), int(y)): int(z) for x, y, z in elevation if int(z)}
+        # Cells with a rope over the pit wall: an easier climb (see `surface_dc`).
+        self.ropes = {tuple(c) for c in ropes} if ropes else set()
 
     def in_bounds(self, pos):
         return 0 <= pos[0] < COLS and 0 <= pos[1] < ROWS
+
+    def elevation_at(self, pos):
+        return self.elevation.get(tuple(pos), 0)
+
+    def surface_dc(self, cell):
+        """Strength DC to climb the wall between this cell and the one above it:
+        bare stone is hard, a rope makes it a formality."""
+        return CLIMB_DC_ROPE if tuple(cell) in self.ropes else CLIMB_DC_STONE
 
     # ------------------------------------------------------------------ #
     # wall generation                                                    #
@@ -172,12 +194,16 @@ class Board:
     # ------------------------------------------------------------------ #
     # pathfinding (8 directions; diagonals alternate cost 1, 2, 1, 2 ...) #
     # ------------------------------------------------------------------ #
-    def _dijkstra(self, start, blocked, footprint, diags=0, budget=None, goal=None):
+    def _dijkstra(self, start, blocked, footprint, diags=0, budget=None, goal=None,
+                  vertical=False):
         """Dijkstra over ``(anchor, diagonal parity)`` under the diagonal
         alternation rule (see `route_cost`). Returns ``(dist, prev)``:
         ``dist`` maps every anchor reachable within `budget` to its least cost;
         ``prev`` holds back-pointers for a least-cost route to each. `diags` is
-        how many diagonals were already spent on the move before `start`."""
+        how many diagonals were already spent on the move before `start`.
+        `vertical` (a flier / climber) lets a step change floor height; otherwise
+        a change in elevation is a wall -- you climb or jump across it, not walk."""
+        z_start = self.elevation_at(start)
         start_state = (start, diags % 2)
         best = {start_state: 0}
         dist = {start: 0}
@@ -193,6 +219,8 @@ class Board:
                 if not fits(nb, footprint, blocked) \
                         or self.diagonal_corner_blocked(cur, nb):
                     continue
+                if not vertical and self.elevation_at(nb) != z_start:
+                    continue                 # a drop / rise -- can't just walk it
                 step, ncd = _step_cost(cur, nb, cd)
                 nc = cost + step
                 if budget is not None and nc > budget:
@@ -216,43 +244,49 @@ class Board:
         return path
 
     def reachable(self, start, budget, blocked=frozenset(), footprint=1,
-                  passable=frozenset(), diags=0):
+                  passable=frozenset(), diags=0, vertical=False):
         """Anchors -> {anchor: cost} within `budget`. A `footprint`x`footprint`
         shape only lands where it fits whole (inside the grid, not touching
         `blocked`). Cells in `passable` (e.g. allies) can be crossed but not ended
         on. `diags` = diagonals already spent this move (the alternation carries
         over across the clicks of one Move action)."""
-        dist, _ = self._dijkstra(start, blocked, footprint, diags, budget)
+        dist, _ = self._dijkstra(start, blocked, footprint, diags, budget,
+                                 vertical=vertical)
         dist.pop(start, None)
         if passable:
             dist = {p: c for p, c in dist.items()
                     if not passable.intersection(cells(p, footprint))}
         return dist
 
-    def path_to(self, start, goal, blocked=frozenset(), footprint=1, diags=0):
+    def path_to(self, start, goal, blocked=frozenset(), footprint=1, diags=0,
+                vertical=False):
         """Least-cost anchor path ``[start, ..., goal]``. Returns ``[]`` if `goal`
         cannot be reached. Allies are not passed in `blocked` here: a path may
         cross an ally's cell, it just cannot end on one (the caller only ever asks
         for a `goal` that is a valid landing)."""
         if start == goal:
             return [start]
-        _, prev = self._dijkstra(start, blocked, footprint, diags, goal=goal)
+        _, prev = self._dijkstra(start, blocked, footprint, diags, goal=goal,
+                                 vertical=vertical)
         if goal not in prev:
             return []
         return self._trace(prev, goal)
 
     def path_step_toward(self, start, goal, budget, blocked=frozenset(),
                          footprint=1, target_cells=None, passable=frozenset(),
-                         diags=0):
+                         diags=0, vertical=False):
         """Anchor as far as `budget` (in movement cost) from `start` along the
-        least-cost path to touching `target_cells` (by default the `goal` cell).
+        least-cost route to touching `target_cells` (by default the `goal` cell).
         Cells in `passable` (allies) can be crossed but not stopped on: step back.
 
-        Only the `budget` disc is explored -- a cell the unit cannot reach this
-        turn can never be the pick, so a far-off target costs the same as a near
-        one. This runs once per acting unit each turn."""
+        The route is planned over the WHOLE board, not just the `budget` disc:
+        the unit will commit to the long way around a wall even when the first
+        step doesn't shorten the straight-line distance -- otherwise it just
+        stands at a dead end forever. Only the walk is capped at `budget`. This
+        runs once per acting unit each turn (a full-board Dijkstra on 16x12)."""
         target_cells = target_cells or [goal]
-        dist, prev = self._dijkstra(start, blocked, footprint, diags, budget=budget)
+        dist, prev = self._dijkstra(start, blocked, footprint, diags,
+                                    vertical=vertical)
 
         def touch(p):
             return cells_distance(cells(p, footprint), target_cells)
@@ -262,6 +296,8 @@ class Board:
         if touching:
             dest = min(touching, key=lambda p: dist[p])
         else:
+            # can't get adjacent at any range -- head for the closest approach,
+            # breaking ties toward the cheaper cell.
             dest = min(reached, key=lambda p: (touch(p), dist[p]))
 
         path = self._trace(prev, dest)          # [start, ..., dest]

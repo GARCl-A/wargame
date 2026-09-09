@@ -82,13 +82,13 @@ Mods na ordem **For / Des / Con / Int / Sab / Car**. `HD` = dado de vida.
 | 57 | Grippli | −1 | +1 | 0 | 0 | +1 | −1 | d8 | Pequeno | Silvestre | 1.5 | Anfíbio |
 | 60 | Halfling | −2 | +2 | −2 | 0 | +1 | +1 | d6 | Pequeno | Pequine | 1.5 | Audição aguçada |
 | 64 | Hobgoblin | +1 | +1 | +1 | −1 | −2 | 0 | d8 | Médio | Goblínico | 0.625 | Visão no escuro | OK 
-| 74 | Homem Lagarto | +1 | +1 | 0 | −1 | 0 | −1 | d10 | Médio | Dracônico | 0.875 | Escalador |
+| 74 | Homem Lagarto | +1 | +1 | 0 | −1 | 0 | −1 | d10 | Médio | Dracônico | 0.875 | Escalador | OK
 | 89 | Humano | 0 | 0 | 0 | 0 | 0 | 0 | d8 | Médio | Ankarin | 1.0 | Idioma adicional | OK
 | 92 | Kenku | −3 | +1 | −1 | 0 | +1 | +2 | d6 | Médio | Silvestre | 1.0 | Imitar sons | OK
 | 95 | Kobold | −2 | +1 | 0 | +1 | −1 | +1 | d6 | Pequeno | Dracônico | 2.5 | Sangue ancestral |
 | 96 | Leshy | −1 | 0 | +1 | −1 | +1 | 0 | d6 | Pequeno | Planti | 1.0 | Autótrofo | OK
 | 99 | Orc | +2 | +1 | +1 | −1 | 0 | −3 | d10 | Médio | Órquico | 0.625 | Ferocidade | OK
-| 100 | Sprite | −2 | 0 | −2 | 0 | +2 | +2 | d6 | Diminuto | Gnômico | 1.5 | Vôo |
+| 100 | Sprite | −2 | 0 | −2 | 0 | +2 | +2 | d6 | Diminuto | Gnômico | 1.5 | Vôo | OK
 
 **Idiomas mencionados:** Ankarin, Dracônico, Élfico, Enânico, Gnômico, Goblínico,
 Jotun, Órquico, Pequine, Planti, Silvestre. 🟢 *(nomes apenas; sem descrição)*
@@ -183,13 +183,13 @@ e são o palpite mais razoável dado o estilo d20:
 | Corpo forte | é uma habilidade de **carga**: só para calcular a capacidade de carga (normal e alta), o Golias conta como criatura **Grande** (mult. de carga 2,0 em vez de 1,0). Não muda footprint, deslocamento nem alcance |
 | Anfíbio | +1 casa de deslocamento |
 | Audição aguçada | +3 iniciativa |
-| Escalador | +1 casa de deslocamento |
+| Escalador | escala qualquer superfície de **DC 25 ou menos sem teste** (gasta a ação normalmente) — ver §Fossos e profundidade |
 | Idioma adicional (Humano) | fala um segundo idioma, sorteado entre os 11 idiomas raciais — pode usar **Desmoralizar** contra quem compartilhe qualquer um dos dois (Desmoralizar exige idioma em comum, ver §Desmoralizar) |
 | Imitar sons | 1×/batalha, +4 num ataque (feinte); pode **Desmoralizar sem idioma em comum** (imita a voz do alvo) — só na ofensiva: para *ser* desmoralizado, quem provoca o Kenku ainda precisa de idioma comum |
 | Sangue ancestral | +2 no ataque contra alvos Grandes+ |
 | Autótrofo | regenera 1 PV no início do turno |
 | Ferocidade | 1×/batalha, ao receber o golpe fatal fica com **0 PV** e a condição **morrendo**, mas só **desmaia no fim do turno dele** — até lá continua agindo normalmente. O contador de morte segue normal a partir daí. Só dispara com **mais de 0 PV e sem estar morrendo** |
-| Vôo | +2 deslocamento, ignora terreno, +1 CA |
+| Vôo | **voa**: desloca-se livre nas três dimensões (sobe e desce buracos sem teste, ignora terreno) e **nunca sofre dano de queda**. Sem bônus numérico |
 
 ---
 
@@ -487,6 +487,41 @@ junto com o resto do esquadrão.
   não anda pro `vazio` e não tem visão pra lá). **Uma parede só** na quina não
   fecha nada. Em `board.diagonal_corner_blocked`, aplicada em `reachable`,
   `path_step_toward` e `los_clear`.
+
+### Fossos e profundidade — o eixo Z 🟡
+
+O tabuleiro ganhou um **eixo Z**: cada casa tem uma **cota** inteira (`board.elevation`,
+0 por padrão). Cota **negativa** é um **buraco** (fosso) — só isso existe por ora;
+cota positiva (morros, plataformas) fica reservada. Um buraco de N casas de
+profundidade é uma casa com cota `−N`. Casas de fosso são pintadas no editor de
+cenários (ferramenta **PIT**, profundidade ajustável) e guardadas no mapa como
+triplas `[x, y, z]`.
+
+- **Andar não muda de cota.** O pathfinding normal nunca cruza uma diferença de
+  cota — a beira do fosso é uma parede pra quem anda. **Exceção:** quem **voa** (ou
+  tiver velocidade de escalada no futuro) se move nas três dimensões como
+  deslocamento comum e o buraco não o detém.
+- **Dano de queda.** Descer `h` níveis de uma vez custa `max(0, h−1)d6` — o
+  primeiro nível é de graça, cada nível além dele é 1d6. Quem voa não sofre queda.
+  Em `battle.apply_fall`.
+- **Escalar** (ação, 1 ponto, alvo = casa adjacente de cota diferente): teste de
+  **Força** `d20 + mod FOR` vs o **DC da superfície** — pedra nua **15**, com
+  **corda 10** (`board.surface_dc`; a corda é um marcador do editor sobre a casa de
+  fosso). Sucesso sobe/desce **uma** casa sem dano; falha gasta a ação e não sai do
+  lugar. O **Escalador** (Homem Lagarto) dispensa o teste em DC ≤ 25.
+- **Se jogar no fosso** (ação, 1 ponto): desce de propósito pra uma casa adjacente
+  mais baixa, sem teste, sofrendo o dano de queda.
+- **Pular** (ação, 1 ponto): salto horizontal. Rola `d20 + mod FOR` e avança em
+  linha rumo à casa mirada até **`resultado ÷ 5`** casas (nunca mais que o
+  deslocamento), passando **por cima** de qualquer fosso no caminho; parede ou
+  corpo interrompem o salto. Se aterrissar mais baixo que saiu, sofre a queda.
+- **Empurrar** (ação, 1 ponto, alvo = inimigo adjacente até 1 nível de diferença):
+  teste `d20 + mod FOR` do atacante vs **10 + mod Constituição** do alvo. Sucesso
+  empurra o alvo **1 casa** na direção oposta; se a casa de trás for um fosso, ele
+  cai (com a queda). Parede/corpo atrás do alvo travam o empurrão.
+- **Combate na vertical.** Corpo-a-corpo alcança entre duas cotas se a diferença
+  for **≤ 1** (briga na beira). Diferença de **2 ou mais** tira o alvo do alcance
+  do corpo-a-corpo até alguém subir/descer — ataque **à distância** ainda pega.
 
 ### Visão e luz 🟡
 
