@@ -24,6 +24,36 @@ def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
     assert sorted(m.gold for m in shoppers) == [10, 10, 11]
 
 
+def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
+    from gartok.market_screen import MarketScreen
+    random.seed(2)
+    buyer = Unit("player")
+    buyer._base_inventory = []
+    buyer.carry_max = 10_000                          # keep load out of this test
+    ms = MarketScreen.__new__(MarketScreen)
+    ms.shoppers = [buyer]
+    ms.deal = []
+    ms.qty = {}
+    ms.notice = None
+    unit_price = economy.buy_price("Meat")
+
+    ms.purse = unit_price * 100                       # plenty of coin and carry
+    ms.sel = [("stock", "Meat")]
+    ms.qty["Meat"] = 10
+    ms._drop_on(buyer)
+    assert buyer._base_inventory.count("Meat") == 10
+    assert ms.purse == unit_price * 90
+    assert ms.qty.get("Meat", 1) == 1                 # the stepper resets after a buy
+
+    buyer.carry_max = 10_000                          # _buy re-derived it; keep load out
+    ms.purse = unit_price * 3                         # only three affordable
+    ms.sel = [("stock", "Meat")]
+    ms.qty["Meat"] = 10
+    ms._drop_on(buyer)
+    assert buyer._base_inventory.count("Meat") == 13
+    assert ms.purse == 0 and "3 of 10" in ms.notice
+
+
 def test_dragselect_ignores_a_mouseup_with_no_matching_press():
     """Entering the market via the squad picker's GO SHOPPING button leaves the
     left button down; the release then lands on the scene that just replaced it.
@@ -149,6 +179,12 @@ def test_every_screen_draws_native_at_any_window_size():
     ]
     scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
 
+    for tab in ("armor", "kit"):                      # the other market category tabs
+        mkt = MarketScreen(F, guild, list(roster[:3]), mnode, noop)
+        mkt.tab = tab
+        mkt.qty["Meat"] = 12
+        scenes.append(mkt)
+
     guild.reputation = {"arena": 1}
     guild.deeds_done = ["arena_first_blood"]
     rep_tab = GuildScreen(F, guild, noop, noop)
@@ -210,13 +246,13 @@ def test_guild_screen_multidrop_moves_every_picked_pack_item():
     from gartok.guild_screen import GuildScreen
     random.seed(4)
     a, b = Unit("player"), Unit("player")
-    a._base_inventory = ["Rope", "1kg Meat", "Map"]
+    a._base_inventory = ["Rope", "Meat", "Map"]
     b._base_inventory = []
     g = Guild([a, b])
     scr = GuildScreen(None, g, on_back=lambda: None)
     scr.selected = [(a, 0), (a, 2)]                       # Corda + Mapa, indices bracket a keeper
     scr._give_many(b, "pack")
-    assert a._base_inventory == ["1kg Meat"]             # the un-picked row is untouched
+    assert a._base_inventory == ["Meat"]             # the un-picked row is untouched
     assert sorted(b._base_inventory) == ["Map", "Rope"]
     assert scr.selected == []
 

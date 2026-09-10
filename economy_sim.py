@@ -47,7 +47,7 @@ RACES = list(data.RACE_NAMES)
 OCCUPATIONS = list(data.OCCUPATION_NAMES)
 ALIGN_NAMES = [name for _, name in data.ALIGNMENTS]
 
-FOOD = sorted(data.FOOD_ITEMS)                       # {"1kg Meat", "1kg Potato"}
+FOOD = sorted(data.FOOD_ITEMS)                       # {"Meat", "Potato"}
 
 # Goods that can change hands: every occupation's starting item that isn't a
 # creature, plus food and a few staples. Everything has a price (real or a

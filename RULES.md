@@ -624,7 +624,7 @@ takes a **maintenance stop** (battle time is in seconds and does not count a
 meal).
 
 - **Every character eats once a day.** For each map day crossed, a character
-  consumes **1 food item** (`data.FOOD_ITEMS` — today `1kg Meat`, `1kg Potato`).
+  consumes **1 food item** (`data.FOOD_ITEMS` — today `Meat`, `Potato`).
   Ate → counter resets.
 - **Shared food (on by default).** Each character eats from their **own pack**
   first (a full first pass over the roster); anyone still hungry then draws a
@@ -648,7 +648,7 @@ meal).
   > The death trigger is `data.STARVATION_DEATH_DAYS = 4`.
 
 - **Autotroph (Leshy):** photosynthesises — never eats, never starves.
-- Food is **for sale at the market** (`1kg Meat` 5c, `1kg Potato` 3c).
+- Food is **for sale at the market** (`Meat` 5c, `Potato` 3c).
 - Eating/dying **re-derives** the character's attributes, so the sheet, the guild
   cards and the next battle already show the right numbers. If the whole guild
   starves on the road, the campaign ends.

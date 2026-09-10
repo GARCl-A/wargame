@@ -43,7 +43,7 @@ def test_work_shift_crossing_midnight_runs_the_daily_meal():
     random.seed(5)
     u = Unit("player")
     u.gold = 0
-    u._base_inventory = ["1kg Potato"]
+    u._base_inventory = ["Potato"]
     u._derive_combat()
     guild = Guild([u], clock=Clock(20 * 3600))        # 20:00 day 1
     guild.work_shift([u], 8)                          # -> 04:00 day 2, one meal

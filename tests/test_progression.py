@@ -133,7 +133,7 @@ def test_negotiator_lifts_only_the_haggle_charisma():
 def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
     u = _unit(seed=5)
     u.work_hours = economy.LUMBER_XP_HOURS * 2
-    u._base_inventory = ["Rope", "1kg Meat"]      # 2 kg cargo + a consumable
+    u._base_inventory = ["Rope", "Meat"]      # 2 kg cargo + a consumable
     u._derive_combat()
     load, base_normal = u.load, u.carry_normal
     assert u.choose_talent("work", "carrier")
@@ -145,7 +145,7 @@ def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
     u._derive_combat()
     assert u.carry_relief == round(data.item_weight("Chisel"), 1)
 
-    u._base_inventory = ["1kg Meat", "Axe"]      # only food + a weapon -> no relief
+    u._base_inventory = ["Meat", "Axe"]      # only food + a weapon -> no relief
     u._derive_combat()
     assert u.carry_relief == 0.0 and u.carry_normal == base_normal
 
@@ -399,8 +399,8 @@ def test_provisioner_discounts_food_with_no_shared_language():
     u.languages = ["Orcish"]                      # not the market's Ankarin
     mods = economy.deal_mods([u], "Ankarin", "Lawful and Neutral")
     assert economy.deal_value(mods, "Axe", "buy") == 0.0          # no general haggle
-    assert economy.deal_value(mods, "1kg Meat", "buy") == economy.CHA_DEAL_STEP
-    assert economy.deal_value(mods, "1kg Meat", "sell") == 0.0    # buy side only
+    assert economy.deal_value(mods, "Meat", "buy") == economy.CHA_DEAL_STEP
+    assert economy.deal_value(mods, "Meat", "sell") == 0.0    # buy side only
 
 
 def test_provisioner_stacks_on_the_base_haggle_for_food_only():
@@ -412,9 +412,9 @@ def test_provisioner_stacks_on_the_base_haggle_for_food_only():
     mods = economy.deal_mods([u], "Ankarin", "Lawful and Neutral")
     general = economy.deal_value(mods, "Axe", "buy")
     assert 0 < general < economy.DEAL_MAX
-    assert economy.deal_value(mods, "1kg Meat", "buy") == round(
+    assert economy.deal_value(mods, "Meat", "buy") == round(
         general + economy.CHA_DEAL_STEP, 3)
-    assert economy.deal_value(mods, "1kg Meat", "sell") == general   # not on sells
+    assert economy.deal_value(mods, "Meat", "sell") == general   # not on sells
 
 
 def test_fixer_lifts_the_recruiters_pitch():

@@ -58,8 +58,8 @@ Each occupation grants one starting weapon and one starting item.
 
 | Occupation | Weapon | Item |
 |---|---|---|
-| Butcher | Hatchet | 1kg Meat |
-| Farmer | Hatchet | 1kg Potato |
+| Butcher | Hatchet | Meat |
+| Farmer | Hatchet | Potato |
 | Craftsman | Light Hammer | Chisel |
 | Barber | Dagger | Scissors |
 | Crossbowman | Light Crossbow | Quiver |
@@ -125,8 +125,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | 1L Beer | 1 kg | -- |
 | 1kg Coal | 1 kg | -- |
 | 1kg Firewood | 1 kg | -- |
-| 1kg Meat | 1 kg | food, consumable |
-| 1kg Potato | 1 kg | food, consumable |
 | 1sqm Hide | 2 kg | -- |
 | Bucket | 1 kg | -- |
 | Chains | 5 kg | -- |
@@ -141,7 +139,9 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Iron Shackles | 1 kg | -- |
 | Lantern | 1 kg | light 6 sq |
 | Map | 0.1 kg | -- |
+| Meat | 1 kg | food, consumable |
 | Musical Instrument | 2 kg | -- |
+| Potato | 1 kg | food, consumable |
 | Quiver | 1.5 kg | -- |
 | Rope | 2 kg | -- |
 | Sack | 0.3 kg | -- |

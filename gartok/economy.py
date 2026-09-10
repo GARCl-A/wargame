@@ -46,17 +46,40 @@ PRICES = {
     TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
     "Rope": 4, "Sack": 2,
     # food (a day's meal each)
-    "1kg Meat": 5, "1kg Potato": 3,
+    "Meat": 5, "Potato": 3,
 }
 
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
-    "1kg Meat", "1kg Potato",
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer",
     "Light Crossbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
-    TORCH_ITEM, "First Aid Kit", "Lantern",
+    "Meat", "Potato", TORCH_ITEM, "First Aid Kit", "Lantern",
 ]
+
+
+# The market's category tabs, in display order. Weapons and armor read straight
+# off the data tables; everything else is "kit" (the stackable/consumable shelf,
+# where the quantity stepper lives).
+_MARKET_TABS = (("WEAPONS", "weapons"), ("ARMOR", "armor"), ("CONSUMABLES & KIT", "kit"))
+
+
+def _stock_category(name):
+    if name in data.WEAPONS:
+        return "weapons"
+    if name in data.ARMOR:
+        return "armor"
+    return "kit"
+
+
+def market_categories():
+    """`[(label, key, [names])]` for the market tabs, in display order -- the
+    active tab's list is what `market_screen` lays out."""
+    groups = {key: [] for _lbl, key in _MARKET_TABS}
+    for name in MARKET_STOCK:
+        groups[_stock_category(name)].append(name)
+    return [(lbl, key, groups[key]) for lbl, key in _MARKET_TABS]
+
 
 DEAL_MIN, DEAL_MAX = -0.15, 0.25
 _ALIGN_DEAL = {0: 0.10, 1: 0.05, 2: 0.0, 3: -0.05, 4: -0.10}   # keyed by alignment_distance

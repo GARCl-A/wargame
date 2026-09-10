@@ -24,7 +24,7 @@ from . import encounters
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat
 HUNT_SHIFT_HOURS = (4, 8, 12, 16)   # lengths offered, like the lumber yard
-MEAT_ITEM = "1kg Meat"
+MEAT_ITEM = "Meat"
 
 
 @dataclass
