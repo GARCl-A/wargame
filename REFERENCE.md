@@ -42,7 +42,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Primal Blood | once per battle, rerolls a missed attack. |
 | Pack Tactics | +2 [circumstance] to attack if an ally is adjacent to the target. |
 | Strong Body | for carry capacity (and only that), counts as a Large creature. |
-| Amphibious | +1 square of speed. |
+| Amphibious | breathes water: never runs out of breath while submerged, so it can stay underwater indefinitely. |
 | Keen Hearing | +3 initiative. |
 | Climber | climbs any surface of DC 25 or lower with no check (still costs the action). |
 | Extra Language (Human) | speaks a second random language: can Demoralize enemies that share either of the two. |

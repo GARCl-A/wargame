@@ -25,12 +25,12 @@ from .npc_lib import load_npc, slugify
 MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "maps")
 
 _CELL_KEYS = ("walls", "torches", "deploy_player", "deploy_enemy", "deploy_npc",
-              "elevation", "ropes")
+              "elevation", "ropes", "water")
 
 
-def new_map(name="Untitled"):
+def new_map(name="Untitled", cols=COLS, rows=ROWS):
     """A blank map dict: full grid, nothing on it, indoor and dark."""
-    d = {"name": name, "cols": COLS, "rows": ROWS,
+    d = {"name": name, "cols": cols, "rows": rows,
          "ambient_light": False, "outdoor": False}
     for key in _CELL_KEYS:
         d[key] = []

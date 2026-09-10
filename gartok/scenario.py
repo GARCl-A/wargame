@@ -19,7 +19,7 @@ torch scatter). A concrete location on the world map picks a subclass:
 
 import random
 
-from .board import COLS, ROWS, Board, cells, neighbors
+from .board import COLS, ROWS, Board, cells
 from .ground import Creature, GroundObject
 from . import data
 
@@ -53,8 +53,9 @@ class Scenario:
     # ------------------------------------------------------------------ #
     def _spawn_cells(self, team):
         """A side's edge columns -- the base deployment area."""
-        cols = (0, 1, 2) if team == "player" else (COLS - 3, COLS - 2, COLS - 1)
-        return [(x, y) for x in cols for y in range(ROWS)]
+        cols, rows = self._cols, self._rows
+        xs = (0, 1, 2) if team == "player" else (cols - 3, cols - 2, cols - 1)
+        return [(x, y) for x in xs for y in range(rows)]
 
     def _deploy_cells(self, u):
         """Ordered candidate cells for `u` (the first that fits wins). Base: that
@@ -65,16 +66,16 @@ class Scenario:
         return area
 
     def _deploy(self, battle):
+        self._cols, self._rows = battle.board.cols, battle.board.rows
         taken = set(battle.board.walls)
         for u in battle.units:
-            self._place(u, self._deploy_cells(u), taken)
+            self._place(u, self._deploy_cells(u), taken, battle.board)
 
     @staticmethod
-    def _place(u, candidates, taken):
+    def _place(u, candidates, taken, board):
         for p in candidates:
             shape = cells(p, u.footprint)
-            if all(0 <= cx < COLS and 0 <= cy < ROWS for cx, cy in shape) \
-                    and not (taken & set(shape)):
+            if all(board.in_bounds(c) for c in shape) and not (taken & set(shape)):
                 u.pos = p
                 taken.update(shape)
                 return
@@ -88,7 +89,7 @@ class Scenario:
             if not name:
                 continue
             base = data.CREATURE_ITEMS[name]
-            candidates = [p for c in battle.cells_of(u) for p in neighbors(c)
+            candidates = [p for c in battle.cells_of(u) for p in battle.board.neighbors(c)
                           if p not in taken and battle.board.in_bounds(p)]
             pos = random.choice(candidates) if candidates else u.pos
             taken.add(pos)
@@ -99,8 +100,8 @@ class Scenario:
             return
         taken = (battle.occupied() | battle.board.walls | battle.creature_cells()
                  | {o.pos for o in battle.ground})
-        free = [(x, y) for x in range(COLS) for y in range(ROWS)
-                if (x, y) not in taken]
+        free = [(x, y) for x in range(battle.board.cols)
+                for y in range(battle.board.rows) if (x, y) not in taken]
         random.shuffle(free)
         for p in free[:self.torch_count]:
             battle.ground.append(GroundObject.torch(p))
@@ -111,11 +112,11 @@ class ArenaScenario(Scenario):
     no ambient light, torches scattered anywhere on the floor to fight over."""
 
 
-def own_half(team):
+def own_half(team, cols=COLS):
     """The columns a side may keep its flag in: the player's is the left half of
     the board, the enemy's the right."""
-    mid = COLS // 2
-    return range(0, mid) if team == "player" else range(mid, COLS)
+    mid = cols // 2
+    return range(0, mid) if team == "player" else range(mid, cols)
 
 
 class FlagScenario(ArenaScenario):
@@ -137,13 +138,14 @@ class FlagScenario(ArenaScenario):
         """Drop the enemy flag on a random free cell of the right half (not a
         wall, not under a unit). Falls back to any free cell if the half is
         somehow full."""
+        cols, rows = battle.board.cols, battle.board.rows
         taken = battle.occupied() | battle.board.walls
-        free = [(x, y) for x in own_half("enemy") for y in range(ROWS)
+        free = [(x, y) for x in own_half("enemy", cols) for y in range(rows)
                 if (x, y) not in taken]
         if not free:
-            free = [(x, y) for x in range(COLS) for y in range(ROWS)
+            free = [(x, y) for x in range(cols) for y in range(rows)
                     if (x, y) not in taken]
-        battle.flags["enemy"] = rng.choice(free) if free else (COLS - 1, ROWS // 2)
+        battle.flags["enemy"] = rng.choice(free) if free else (cols - 1, rows // 2)
 
     def win_check(self, battle):
         flags = battle.flags
@@ -179,17 +181,21 @@ class CustomScenario(Scenario):
     def __init__(self, data):
         self.ambient_light = bool(data.get("ambient_light"))
         self.outdoor = bool(data.get("outdoor"))
+        self._cols = int(data.get("cols") or COLS)
+        self._rows = int(data.get("rows") or ROWS)
         self._walls = [tuple(c) for c in data.get("walls", [])]
         self._torches = [tuple(c) for c in data.get("torches", [])]
         self._elevation = {(e[0], e[1]): e[2] for e in data.get("elevation", [])
                            if len(e) >= 3}
         self._ropes = [tuple(c) for c in data.get("ropes", [])]
+        self._water = [tuple(c) for c in data.get("water", [])]
         self._zones = {"player": [tuple(c) for c in data.get("deploy_player", [])],
                        "enemy": [tuple(c) for c in data.get("deploy_enemy", [])],
                        "npc": [(e[0], e[1]) for e in data.get("deploy_npc", [])]}
 
     def _make_board(self):
-        return Board(walls=self._walls, elevation=self._elevation, ropes=self._ropes)
+        return Board(walls=self._walls, elevation=self._elevation, ropes=self._ropes,
+                     water=self._water, cols=self._cols, rows=self._rows)
 
     @staticmethod
     def _is_npc(u):

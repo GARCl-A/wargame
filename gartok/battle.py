@@ -10,7 +10,7 @@ roster and a rematch could reuse the same picks.
 """
 
 from . import data, vision
-from .board import COLS, ROWS, cells, chebyshev, cells_distance, route_cost
+from .board import COLS, ROWS, cells, chebyshev, cells_distance
 from .combatant import Combatant
 from .data import d20
 from .scenario import ArenaScenario
@@ -96,6 +96,7 @@ class Battle:
         self.order = sorted(self.units, key=lambda u: u.initiative, reverse=True)
         self.turn_idx = 0
         self.active.start_turn(self.log)
+        self._apply_submersion(self.active)
 
     # ------------------------------------------------------------------ #
     # state queries (used by actions, AI and UI)                         #
@@ -199,9 +200,14 @@ class Battle:
             self._pf_cache[key] = field
         return field
 
+    def _impassable_water(self, unit):
+        """Deep water a normal walk cannot cross -- you Swim it. A flier sails
+        over; everyone else routes around."""
+        return frozenset() if unit.flies else frozenset(self.board.deep_water)
+
     def reachable(self, unit, budget=None):
         """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
-        along a route alternate 1, 2, 1, 2 ... (`board.route_cost`)."""
+        along a route alternate 1, 2, 1, 2 ... (`board.path_cost`)."""
         if budget is None:
             if unit.walking:
                 budget = unit.speed - unit.moved
@@ -210,7 +216,8 @@ class Battle:
             else:
                 return {}
         allies, enemies = self.cells_by_side(unit)
-        blocked = frozenset(enemies | self.board.walls | self.creature_cells())
+        blocked = frozenset(enemies | self.board.walls | self.creature_cells()
+                            | self._impassable_water(unit))
         diags = self._walk_diags(unit)
         field = self._pf_field(unit.pos, unit.footprint, diags,
                                unit.can_move_vertically, blocked)
@@ -229,7 +236,8 @@ class Battle:
         """The cells `unit` would walk through to reach the anchor `dest`,
         ``[unit.pos, ..., dest]`` (``[]`` if unreachable)."""
         _, enemies = self.cells_by_side(unit)
-        blocked = frozenset(enemies | self.board.walls | self.creature_cells())
+        blocked = frozenset(enemies | self.board.walls | self.creature_cells()
+                            | self._impassable_water(unit))
         diags = self._walk_diags(unit)
         field = self._pf_field(unit.pos, unit.footprint, diags,
                                unit.can_move_vertically, blocked)
@@ -238,7 +246,8 @@ class Battle:
 
     def path_step_toward(self, unit, goal, budget):
         allies, enemies = self.cells_by_side(unit)
-        blocked = frozenset(enemies | self.board.walls | self.creature_cells())
+        blocked = frozenset(enemies | self.board.walls | self.creature_cells()
+                            | self._impassable_water(unit))
         target = self.unit_at(goal)
         target_cells = self.cells_of(target) if target else None
         diags = self._walk_diags(unit)
@@ -261,7 +270,7 @@ class Battle:
             unit.diag_steps = 0              # a fresh walk restarts the diagonal alternation
             self.log(f"{unit.name} moves (1 action point).")
         segment = self.path_to(unit, dest) or [unit.pos, dest]
-        step_cost, unit.diag_steps = route_cost(segment, unit.diag_steps)
+        step_cost, unit.diag_steps = self.board.path_cost(segment, unit.diag_steps)
         unit.moved += step_cost
         unit.path.extend(segment[1:])         # the cells walked this turn so far
         unit.pos = dest
@@ -326,12 +335,37 @@ class Battle:
     # ------------------------------------------------------------------ #
     def apply_fall(self, unit, drop, log):
         """Resolve a drop of `drop` floor levels: the first level is free, every
-        level after that is 1d6. A flier floats down and takes nothing."""
+        level after that is 1d6. A flier floats down and takes nothing; a plunge
+        into deep water is broken by the water."""
         if drop <= 1 or unit.flies:
+            return
+        if self.board.is_deep_water(unit.pos):
+            log(f"{unit.name} plunges into deep water -- the water breaks the fall.")
             return
         dmg = data.roll(drop - 1, 6)
         log(f"{unit.name} falls {drop} levels -> {dmg} damage ({drop - 1}d6).")
         unit.take_damage(dmg, log)
+
+    def _apply_submersion(self, unit):
+        """Breath check at the top of a submerged unit's turn. It holds out
+        `BREATH_BASE + CON mod` rounds; after that it takes on water -- escalating
+        damage (1d6, then 2d6, ...) each of its turns until it surfaces or goes
+        down. An Amphibious creature breathes water and never drowns."""
+        if not unit.alive:
+            return
+        if not self.board.is_deep_water(unit.pos) or unit.water_breathing:
+            unit.rounds_submerged = 0
+            return
+        unit.rounds_submerged += 1
+        capacity = data.BREATH_BASE + unit.mod_constitution
+        over = unit.rounds_submerged - capacity
+        if over <= 0:
+            self.log(f"{unit.name} holds their breath underwater "
+                     f"({unit.rounds_submerged}/{max(capacity, 0)}).")
+            return
+        dmg = data.roll(over, 6)
+        self.log(f"{unit.name} is drowning! ({over}d6)")
+        unit.take_damage(dmg, self.log)
 
     def _death_save(self, unit):
         """d20 >= DEATH_SAVE_MIN -> stable; otherwise dead. Logs and returns the
@@ -414,4 +448,8 @@ class Battle:
             self.log(f"*** Victory: {self.winner} ***")
             return
         self.active.start_turn(self.log)
+        self._apply_submersion(self.active)
+        if self._check_winner():
+            self.log(f"*** Victory: {self.winner} ***")
+            return
         self._announce_turn()

@@ -24,7 +24,7 @@ from collections import deque
 import pygame
 
 from . import data, map_lib, npc_lib
-from .board import COLS, ROWS, Board, grid_distance, neighbors
+from .board import COLS, ROWS, Board, grid_distance
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, FLOOR_A, FLOOR_B, INK,
                     INK_DIM, INK_FAINT, LINE, LINE_SOFT, MARGIN, NIGHT, OK,
@@ -37,14 +37,17 @@ _MAX_NAME = 28
 _NPC_C = (168, 124, 214)                  # named-NPC deploy zone (violet)
 _PIT_C = (58, 56, 74)                     # a pit cell (recessed dark)
 _ROPE_C = (198, 160, 104)                 # a rope over the pit edge (tan)
+_WATER_C = (74, 128, 174)                 # a flooded cell (blue)
 
 _MAX_DEPTH = 6
+_MIN_SIZE, _MAX_SIZE = 8, 48              # grid dimensions the editor allows
 
-_TOOLS = [("wall", "WALL"), ("torch", "TORCH"), ("pit", "PIT"), ("rope", "ROPE"),
-          ("player", "PLAYER START"), ("enemy", "ENEMY START"),
+_TOOLS = [("wall", "WALL"), ("torch", "TORCH"), ("pit", "PIT"), ("water", "WATER"),
+          ("rope", "ROPE"), ("player", "PLAYER START"), ("enemy", "ENEMY START"),
           ("npc", "NPC START"), ("erase", "ERASE")]
 
-_LAYER_C = {"wall": WALL_HI, "torch": TORCH_C, "pit": (120, 116, 150), "rope": _ROPE_C,
+_LAYER_C = {"wall": WALL_HI, "torch": TORCH_C, "pit": (120, 116, 150),
+            "water": _WATER_C, "rope": _ROPE_C,
             "player": PLAYER_C, "enemy": ENEMY_C, "npc": _NPC_C}
 
 
@@ -76,12 +79,15 @@ class MapEditorScreen(Screen):
     def _load(self, m, slug=None):
         cs = lambda k: {tuple(c) for c in m.get(k, [])}
         self.name = m.get("name", "Untitled")
+        self.cols = int(m.get("cols") or COLS)
+        self.rows = int(m.get("rows") or ROWS)
         self.walls = cs("walls")
         self.torches = cs("torches")
         self.zone_p = cs("deploy_player")
         self.zone_e = cs("deploy_enemy")
         self.elev = {(e[0], e[1]): e[2] for e in m.get("elevation", []) if len(e) >= 3}
         self.ropes = cs("ropes")
+        self.water = cs("water")
         self.npc_at = {(e[0], e[1]): e[2] for e in m.get("deploy_npc", []) if len(e) >= 3}
         self.ambient = bool(m.get("ambient_light"))
         self.outdoor = bool(m.get("outdoor"))
@@ -101,12 +107,12 @@ class MapEditorScreen(Screen):
 
     def _to_dict(self):
         srt = lambda s: sorted([list(c) for c in s])
-        return {"name": self.name, "cols": COLS, "rows": ROWS,
+        return {"name": self.name, "cols": self.cols, "rows": self.rows,
                 "walls": srt(self.walls), "torches": srt(self.torches),
                 "deploy_player": srt(self.zone_p), "deploy_enemy": srt(self.zone_e),
                 "deploy_npc": sorted([x, y, slug] for (x, y), slug in self.npc_at.items()),
                 "elevation": sorted([x, y, z] for (x, y), z in self.elev.items()),
-                "ropes": srt(self.ropes),
+                "ropes": srt(self.ropes), "water": srt(self.water),
                 "ambient_light": self.ambient and not self.outdoor,
                 "outdoor": self.outdoor}
 
@@ -123,10 +129,11 @@ class MapEditorScreen(Screen):
         """Can a walker cross from the player side to the enemy side? A map that
         walls one off would drop units with no path to the fight."""
         walls = self.walls
+        board = self._preview_board()
         enemy = self.zone_e | set(self.npc_at)
-        starts = {c for c in (self.zone_p or {(0, y) for y in range(ROWS)})
+        starts = {c for c in (self.zone_p or {(0, y) for y in range(self.rows)})
                   if c not in walls}
-        goals = {c for c in (enemy or {(COLS - 1, y) for y in range(ROWS)})
+        goals = {c for c in (enemy or {(self.cols - 1, y) for y in range(self.rows)})
                  if c not in walls}
         if not starts or not goals:
             return True
@@ -136,7 +143,7 @@ class MapEditorScreen(Screen):
             cur = q.popleft()
             if cur in goals:
                 return False
-            for nb in neighbors(cur):
+            for nb in board.neighbors(cur):
                 if nb not in seen and nb not in walls:
                     seen.add(nb)
                     q.append(nb)
@@ -148,23 +155,50 @@ class MapEditorScreen(Screen):
         if cs <= 0 or pos[0] < gx or pos[1] < gy:
             return None
         x, y = (pos[0] - gx) // cs, (pos[1] - gy) // cs
-        if 0 <= x < COLS and 0 <= y < ROWS:
+        if 0 <= x < self.cols and 0 <= y < self.rows:
             return (int(x), int(y))
         return None
 
+    def _preview_board(self):
+        return Board(walls=self.walls, elevation=dict(self.elev), ropes=self.ropes,
+                     water=self.water, cols=self.cols, rows=self.rows)
+
+    def _clamp_to_grid(self):
+        """After a resize: drop everything that fell outside the new bounds."""
+        inb = lambda c: 0 <= c[0] < self.cols and 0 <= c[1] < self.rows
+        for s in (self.walls, self.torches, self.zone_p, self.zone_e,
+                  self.ropes, self.water):
+            s.difference_update({c for c in s if not inb(c)})
+        self.elev = {c: z for c, z in self.elev.items() if inb(c)}
+        self.npc_at = {c: v for c, v in self.npc_at.items() if inb(c)}
+        self._light_sig = None
+
     def _apply(self, cell, mode):
         had_rope = cell in self.ropes
-        for s in (self.walls, self.torches, self.zone_p, self.zone_e, self.ropes):
-            s.discard(cell)                    # a cell belongs to one layer at most
+        had_water = cell in self.water
+        had_elev = self.elev.get(cell)
+        for s in (self.walls, self.torches, self.zone_p, self.zone_e,
+                  self.ropes, self.water):
+            s.discard(cell)                    # surface layers are mutually exclusive
         self.npc_at.pop(cell, None)
         self.elev.pop(cell, None)
-        if mode == "add" and self.tool in ("wall", "torch", "player", "enemy"):
+        if mode != "add":
+            return
+        if self.tool in ("wall", "torch", "player", "enemy"):
             {"wall": self.walls, "torch": self.torches,
              "player": self.zone_p, "enemy": self.zone_e}[self.tool].add(cell)
-        elif mode == "add" and self.tool == "pit":
+        elif self.tool == "pit":
             self.elev[cell] = -self.pit_depth
             if had_rope:
                 self.ropes.add(cell)          # deepening a roped pit keeps the rope
+            if had_water:
+                self.water.add(cell)          # a flooded pit stays flooded
+        elif self.tool == "water":
+            self.water.add(cell)              # flat cell -> puddle; over a pit -> deep water
+            if had_elev:
+                self.elev[cell] = had_elev
+            if had_rope:
+                self.ropes.add(cell)
 
     # ------------------------------------------------------------------ #
     # input                                                              #
@@ -265,10 +299,18 @@ class MapEditorScreen(Screen):
         elif kind == "clear":
             self.walls, self.torches = set(), set()
             self.zone_p, self.zone_e, self.npc_at = set(), set(), {}
-            self.elev, self.ropes = {}, set()
+            self.elev, self.ropes, self.water = {}, set(), set()
+            self._light_sig = None
             self.notice = None
         elif kind == "depth":
             self.pit_depth = max(1, min(_MAX_DEPTH, self.pit_depth + action[1]))
+        elif kind == "size":
+            axis, delta = action[1]
+            if axis == "w":
+                self.cols = max(_MIN_SIZE, min(_MAX_SIZE, self.cols + delta))
+            else:
+                self.rows = max(_MIN_SIZE, min(_MAX_SIZE, self.rows + delta))
+            self._clamp_to_grid()
         elif kind == "load":
             self._load(map_lib.load_map(action[1]), slug=action[1])
         elif kind == "ask_delete":
@@ -332,15 +374,16 @@ class MapEditorScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_grid(self, screen, area):
-        cell = max(6, min(area.w // COLS, (area.h - 40) // ROWS))  # 40px below for the hint
-        gw, gh = cell * COLS, cell * ROWS
+        cols, rows = self.cols, self.rows
+        cell = max(6, min(area.w // cols, (area.h - 40) // rows))  # 40px below for the hint
+        gw, gh = cell * cols, cell * rows
         gx = area.x + (area.w - gw) // 2
         gy = area.y + max(0, (area.h - 40 - gh) // 2)
         self._grid = (gx, gy, cell)
 
         lit = self.ambient or self.outdoor
-        for cy in range(ROWS):
-            for cx in range(COLS):
+        for cy in range(rows):
+            for cx in range(cols):
                 tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
                 screen.fill(tone, (gx + cx * cell, gy + cy * cell, cell, cell))
 
@@ -350,6 +393,12 @@ class MapEditorScreen(Screen):
             screen.fill(_PIT_C, r)
             screen.fill(tuple(int(c * (1 - 0.55 * shade)) for c in _PIT_C),
                         r.inflate(-cell // 4, -cell // 4))
+
+        for cx, cy in self.water:                # deep over a pit, a shallow puddle otherwise
+            deep = self.elev.get((cx, cy), 0) < 0
+            wl = pygame.Surface((cell, cell), pygame.SRCALPHA)
+            wl.fill((*_WATER_C, 150 if deep else 90))
+            screen.blit(wl, (gx + cx * cell, gy + cy * cell))
 
         if not lit:                              # dim the floor no torch reaches;
             self._sync_dark()                    # painted walls/zones stay crisp on top
@@ -372,10 +421,10 @@ class MapEditorScreen(Screen):
             text(screen, initial, self.fonts.body_bd, INK,
                  (gx + cx * cell + cell // 2, gy + cy * cell + cell // 2), center=True)
 
-        for cx in range(COLS + 1):
+        for cx in range(cols + 1):
             x = gx + cx * cell
             pygame.draw.line(screen, LINE_SOFT, (x, gy), (x, gy + gh))
-        for cy in range(ROWS + 1):
+        for cy in range(rows + 1):
             y = gy + cy * cell
             pygame.draw.line(screen, LINE_SOFT, (gx, y), (gx + gw, y))
 
@@ -407,17 +456,21 @@ class MapEditorScreen(Screen):
             col = DANGER if self.tool == "erase" else _LAYER_C.get(self.tool, ACCENT)
             pygame.draw.rect(screen, col, hr, 2)
 
+        size = f"{cols}x{rows}"
         if self.tool == "npc":
-            hint = f"{COLS}x{ROWS}  ·  click a cell to pick an NPC  ·  right-click clears"
+            hint = f"{size}  ·  click a cell to pick an NPC  ·  right-click clears"
         elif self.tool == "pit":
-            hint = (f"{COLS}x{ROWS}  ·  left-drag digs pits {self.pit_depth} deep  ·  "
+            hint = (f"{size}  ·  left-drag digs pits {self.pit_depth} deep  ·  "
                     "right-drag fills  ·  DEPTH sets how deep")
+        elif self.tool == "water":
+            hint = (f"{size}  ·  left-drag floods (puddle = difficult terrain; "
+                    "over a pit = deep water, swim across)  ·  right-drag drains")
         elif self.tool == "rope":
-            hint = f"{COLS}x{ROWS}  ·  click a pit cell to hang a rope (easier climb)  ·  right-click removes"
+            hint = f"{size}  ·  click a pit cell to hang a rope (easier climb)  ·  right-click removes"
         else:
             lightnote = ("lit throughout" if lit
                          else f"dark outside torchlight  ·  {len(self.torches)} torch(es)")
-            hint = f"{COLS}x{ROWS}  ·  left-drag paints, right-drag erases  ·  " + lightnote
+            hint = f"{size}  ·  left-drag paints, right-drag erases  ·  " + lightnote
         text(screen, hint, self.fonts.body_sm, INK_FAINT, (gx, gy + gh + SP2))
         if self._sealed():
             text(screen, "walls seal the two sides off -- no path across",
@@ -426,21 +479,21 @@ class MapEditorScreen(Screen):
     def _sync_dark(self):
         """Recompute `self._dark` -- cells beyond every torch's reach, walls
         blocking -- only when the walls or torches changed since last time."""
-        sig = (frozenset(self.walls), frozenset(self.torches))
+        sig = (frozenset(self.walls), frozenset(self.torches), self.cols, self.rows)
         if sig == self._light_sig:
             return
         self._light_sig = sig
-        board = Board(walls=self.walls)
+        board = self._preview_board()
         reached = set()
         for t in self.torches:
-            for cy in range(ROWS):
-                for cx in range(COLS):
+            for cy in range(self.rows):
+                for cx in range(self.cols):
                     p = (cx, cy)
                     if p not in reached and grid_distance(t, p) <= data.TORCH_RADIUS \
                             and board.los_clear(t, p):
                         reached.add(p)
-        self._dark = frozenset((cx, cy) for cy in range(ROWS) for cx in range(COLS)
-                               if (cx, cy) not in reached)
+        self._dark = frozenset((cx, cy) for cy in range(self.rows)
+                               for cx in range(self.cols) if (cx, cy) not in reached)
 
     # ------------------------------------------------------------------ #
     def _draw_panel(self, screen, rect):
@@ -491,6 +544,17 @@ class MapEditorScreen(Screen):
              INK, (vx, nr.centery - 6))
         self.hits.append((nr, ("name",)))
         y += 26 + SP1
+
+        for axis, lbl, val in (("w", "WIDTH", self.cols), ("h", "HEIGHT", self.rows)):
+            r = pygame.Rect(x, y, w, 24)
+            panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
+            text(screen, f"{lbl}  {val}", f.label, INK, (r.x + SP2, r.centery - 5))
+            for sym, d, side in (("-", -1, r.right - 46), ("+", 1, r.right - 24)):
+                b = pygame.Rect(side, r.y + 3, 18, 18)
+                self._btn(screen, b, sym, font=f.body_bd)
+                self.hits.append((b, ("size", (axis, d))))
+            y += 24 + SP1
+        y += SP1
 
         for key, label, val, note in (
                 ("ambient", "AMBIENT LIGHT",

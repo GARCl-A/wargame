@@ -101,6 +101,8 @@ FIRST_AID_DC = 10          # first-aid kit: d20 + mod Wisdom vs this
 AUTOMATON_REPAIR_DC = 15   # repairing a "broken" automaton: d20 + mod Intelligence vs this
 FIRST_AID_CHARGES = 10     # a kit starts with this many charges (rechargeable)
 QUIVER_AMMO = 20          # a quiver starts with this many bolts
+BREATH_BASE = 4            # rounds a unit can stay underwater = this + its Constitution mod;
+                          # every round past it: escalating drowning damage (1d6, 2d6, ...)
 
 
 # --------------------------------------------------------------------------- #

@@ -9,7 +9,8 @@ import heapq
 import random
 from collections import deque
 
-COLS, ROWS = 16, 12
+COLS, ROWS = 16, 12         # default board size (procedural scenarios; the editor
+                           # can size an authored map to anything)
 
 CLIMB_DC_STONE = 15         # Strength DC to climb a bare rock pit wall
 CLIMB_DC_ROPE = 10         # ... with a rope over the edge
@@ -42,16 +43,6 @@ def _step_cost(a, b, diags):
     return (1, diags + 1) if diags % 2 == 0 else (2, diags + 1)
 
 
-def route_cost(path, diags=0):
-    """(total cost, diagonals taken) of walking `path` = [c0, c1, ...], starting
-    from `diags` diagonals already spent this move."""
-    cost = 0
-    for a, b in zip(path, path[1:]):
-        step, diags = _step_cost(a, b, diags)
-        cost += step
-    return cost, diags
-
-
 def cells(pos, footprint=1):
     """Cells a `footprint`x`footprint` shape covers with its anchor (top-left) at `pos`."""
     x, y = pos
@@ -63,42 +54,60 @@ def cells_distance(cells_a, cells_b):
     return min(grid_distance(p, q) for p in cells_a for q in cells_b)
 
 
-def fits(pos, footprint, blocked):
-    """Is the footprint anchored at `pos` fully inside the grid and free of `blocked`?"""
+def fits(pos, footprint, blocked, cols=COLS, rows=ROWS):
+    """Is the footprint anchored at `pos` fully inside the grid and free of
+    `blocked`? Prefer `Board.fits` when a board is in hand -- it is sized to
+    that map."""
     x, y = pos
-    if not (0 <= x <= COLS - footprint and 0 <= y <= ROWS - footprint):
+    if not (0 <= x <= cols - footprint and 0 <= y <= rows - footprint):
         return False
     return not any(c in blocked for c in cells(pos, footprint))
 
 
-def neighbors(pos):
-    """The 8 adjacent cells inside the grid."""
-    return iter(_NEIGHBORS[pos])
+# Precomputed per board size: every cell -> its in-bounds (<=8) neighbours. The
+# pathfinder walks this millions of times a headless run, so it is built once
+# per (cols, rows) and cached, never rebuilt per call.
+#   neigh   : {pos: (neighbour, ...)}                   -- the public `neighbors()`
+#   neigh_d : {pos: ((neighbour, is_diagonal), ...)}    -- `_dijkstra`'s hot loop
+_neighbor_cache = {}
 
 
-# Precomputed once: every cell -> its in-bounds 8-neighbours. The pathfinder
-# walks this millions of times a headless run, so it is not rebuilt per call.
-#   _NEIGHBORS   : {pos: (neighbour, ...)}              -- the public `neighbors()`
-#   _NEIGHBORS_D : {pos: ((neighbour, is_diagonal), ...)} -- `_dijkstra`'s hot loop
-_NEIGHBORS = {
-    (x, y): tuple((x + dx, y + dy)
-                  for dx in (-1, 0, 1) for dy in (-1, 0, 1)
-                  if (dx or dy)
-                  and 0 <= x + dx < COLS and 0 <= y + dy < ROWS)
-    for x in range(COLS) for y in range(ROWS)
-}
-_NEIGHBORS_D = {
-    pos: tuple((nb, nb[0] != pos[0] and nb[1] != pos[1]) for nb in nbs)
-    for pos, nbs in _NEIGHBORS.items()
-}
+def _neighbors_for(cols, rows):
+    pair = _neighbor_cache.get((cols, rows))
+    if pair is None:
+        neigh = {
+            (x, y): tuple((x + dx, y + dy)
+                          for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                          if (dx or dy)
+                          and 0 <= x + dx < cols and 0 <= y + dy < rows)
+            for x in range(cols) for y in range(rows)
+        }
+        neigh_d = {
+            pos: tuple((nb, nb[0] != pos[0] and nb[1] != pos[1]) for nb in nbs)
+            for pos, nbs in neigh.items()
+        }
+        pair = _neighbor_cache[(cols, rows)] = (neigh, neigh_d)
+    return pair
+
+
+def neighbors(pos, cols=COLS, rows=ROWS):
+    """The <=8 adjacent cells inside a `cols`x`rows` grid (default board size).
+    Prefer `Board.neighbors` when a board is in hand -- it is sized to that map."""
+    return iter(_neighbors_for(cols, rows)[0][pos])
 
 
 class Board:
-    def __init__(self, min_seg=3, max_seg=6, walls=None, elevation=None, ropes=None):
+    def __init__(self, min_seg=3, max_seg=6, walls=None, elevation=None, ropes=None,
+                 water=None, cols=COLS, rows=ROWS):
         # `min_seg`/`max_seg` bound how many short wall segments get scattered in
         # the middle: the default is the cluttered arena; an open field passes
         # something small (e.g. 1..2). `walls` (a hand-authored layout from the
         # map editor) skips generation entirely and takes the given cells as-is.
+        # `cols`/`rows` size the grid -- procedural fights keep the 16x12 default;
+        # an authored map carries its own dimensions.
+        self.cols = int(cols)
+        self.rows = int(rows)
+        self._neigh, self._neigh_d = _neighbors_for(self.cols, self.rows)
         self.min_seg = min_seg
         self.max_seg = max_seg
         self.walls = ({tuple(w) for w in walls} if walls is not None
@@ -114,13 +123,56 @@ class Board:
             self.elevation = {(int(x), int(y)): int(z) for x, y, z in elevation if int(z)}
         # Cells with a rope over the pit wall: an easier climb (see `surface_dc`).
         self.ropes = {tuple(c) for c in ropes} if ropes else set()
+        # Water. A cell at ground level -> a puddle / mud flat: difficult terrain
+        # (costs one extra square to enter). A cell over a pit -> deep water: you
+        # cannot just walk it, you Swim across, and you drown if you stay under.
+        self.water = {tuple(c) for c in water} if water else set()
+        self.refresh_terrain()
+
+    def refresh_terrain(self):
+        """(Re)derive the terrain sets from `elevation` / `water`. Call after
+        editing either in place -- the editor's live preview, tests."""
+        # deep water = flooded pit; shallow water (ground level or a rise) is the
+        # only source of `difficult` today -- mud / rubble / scree can join later.
+        self.deep_water = {c for c in self.water if self.elevation.get(c, 0) < 0}
+        self.difficult = {c for c in self.water if self.elevation.get(c, 0) >= 0}
         self._flat = not self.elevation      # no pits -> the pathfinder skips every height check
 
     def in_bounds(self, pos):
-        return 0 <= pos[0] < COLS and 0 <= pos[1] < ROWS
+        return 0 <= pos[0] < self.cols and 0 <= pos[1] < self.rows
+
+    def neighbors(self, pos):
+        """The <=8 in-bounds neighbours of `pos` on this board."""
+        return iter(self._neigh[pos])
+
+    def fits(self, pos, footprint, blocked):
+        """Is the footprint anchored at `pos` fully inside this board and clear
+        of `blocked`?"""
+        x, y = pos
+        if not (0 <= x <= self.cols - footprint and 0 <= y <= self.rows - footprint):
+            return False
+        return not any(c in blocked for c in cells(pos, footprint))
 
     def elevation_at(self, pos):
         return self.elevation.get(tuple(pos), 0)
+
+    def is_deep_water(self, pos):
+        """A flooded pit cell -- impassable to a walk, needs a Swim, drowns you."""
+        return tuple(pos) in self.deep_water
+
+    def path_cost(self, path, diags=0):
+        """(total cost, diagonals taken) of walking `path` = [c0, c1, ...],
+        folding the +1 surcharge for entering a difficult-terrain cell. Mirrors
+        `_dijkstra`'s accounting so `Battle.move_unit` charges a walk exactly
+        what the reachability scan measured."""
+        cost = 0
+        diff = self.difficult
+        for a, b in zip(path, path[1:]):
+            step, diags = _step_cost(a, b, diags)
+            if b in diff:
+                step += 1
+            cost += step
+        return cost, diags
 
     def surface_dc(self, cell):
         """Strength DC to climb the wall between this cell and the one above it:
@@ -132,24 +184,25 @@ class Board:
     # ------------------------------------------------------------------ #
     def _generate_walls(self):
         """Short wall segments in the middle of the map, without splitting the sides."""
-        goals = [(x, y) for x in (COLS - 1, COLS - 2, COLS - 3) for y in range(ROWS)]
+        cols, rows = self.cols, self.rows
+        goals = [(x, y) for x in (cols - 1, cols - 2, cols - 3) for y in range(rows)]
         for _ in range(40):
             walls = set()
             for _ in range(random.randint(self.min_seg, self.max_seg)):
                 horiz = random.random() < 0.5
                 length = random.randint(2, 4)
-                cx = random.randint(4, COLS - 5)
-                cy = random.randint(1, ROWS - 2)
+                cx = random.randint(4, cols - 5)
+                cy = random.randint(1, rows - 2)
                 for i in range(length):
                     p = (cx + i, cy) if horiz else (cx, cy + i)
                     if self.in_bounds(p):
                         walls.add(p)
-            if self._sides_connected(walls, (0, 0), goals):
+            if self._sides_connected(walls, (0, 0), goals, cols, rows):
                 return walls
         return set()
 
     @staticmethod
-    def _sides_connected(walls, origin, goals):
+    def _sides_connected(walls, origin, goals, cols=COLS, rows=ROWS):
         seen = {origin}
         q = deque([origin])
         while q:
@@ -157,7 +210,7 @@ class Board:
             for dx in (-1, 0, 1):
                 for dy in (-1, 0, 1):
                     nb = (x + dx, y + dy)
-                    if (dx or dy) and 0 <= nb[0] < COLS and 0 <= nb[1] < ROWS \
+                    if (dx or dy) and 0 <= nb[0] < cols and 0 <= nb[1] < rows \
                             and nb not in seen and nb not in walls:
                         seen.add(nb)
                         q.append(nb)
@@ -209,7 +262,7 @@ class Board:
     def _dijkstra(self, start, blocked, footprint, diags=0, budget=None, goal=None,
                   vertical=False):
         """Dijkstra over ``(anchor, diagonal parity)`` under the diagonal
-        alternation rule (see `route_cost`). Returns ``(dist, prev)``:
+        alternation rule (see `path_cost`). Returns ``(dist, prev)``:
         ``dist`` maps every anchor reachable within `budget` to its least cost;
         ``prev`` holds back-pointers for a least-cost route to each. `diags` is
         how many diagonals were already spent on the move before `start`.
@@ -219,7 +272,8 @@ class Board:
         flat = self._flat or vertical
         z_start = 0 if flat else self.elevation_at(start)
         elev = self.elevation
-        neigh = _NEIGHBORS_D
+        neigh = self._neigh_d
+        difficult = self.difficult
         f1 = footprint == 1
         INF = float("inf")
 
@@ -239,7 +293,7 @@ class Board:
                 if f1:
                     if nb in blocked:
                         continue
-                elif not fits(nb, footprint, blocked):
+                elif not self.fits(nb, footprint, blocked):
                     continue
                 if is_diag:
                     (bx, ay), (ax, by) = (nb[0], cur[1]), (cur[0], nb[1])
@@ -252,6 +306,8 @@ class Board:
                     ncd = cd
                 if not flat and elev.get(nb, 0) != z_start:
                     continue                 # a drop / rise -- can't just walk it
+                if difficult and nb in difficult:
+                    step += 1                # difficult terrain: one extra square
                 nc = cost + step
                 if budget is not None and nc > budget:
                     continue

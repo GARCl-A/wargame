@@ -44,6 +44,7 @@ class Ability:
     flies: bool = False               # moves freely in 3D (ignores pits) and takes no fall damage
     climb_speed: bool = False         # moves up/down pit walls as normal movement (seam, unused)
     auto_climb_dc: int = 0            # climbs any surface of this DC or lower with no check
+    water_breathing: bool = False    # never runs out of breath while submerged
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -118,7 +119,9 @@ _LIST = [
             "for carry capacity (and only that), counts as a Large creature.",
             carry_size="Large"),
     Ability("amphibious", "Amphibious",
-            "+1 square of speed.", speed=1),
+            "breathes water: never runs out of breath while submerged, so it can "
+            "stay underwater indefinitely.",
+            water_breathing=True),
     Ability("keen_hearing", "Keen Hearing",
             "+3 initiative.", initiative=3),
     Ability("climber", "Climber",

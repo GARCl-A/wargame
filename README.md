@@ -77,7 +77,8 @@ reconstructed ruleset in [`RULES.md`](RULES.md):
 - **Temporary conditions** — Defending, Demoralized (`gartok/conditions.py`).
 - **The mechanical effect of the racial abilities** (`gartok/abilities.py`).
 - **Vision and light**, walls, ground objects, torches; **a per-cell Z axis**
-  (pits, fall damage).
+  (pits, fall damage); **water** — shallow (difficult terrain) and deep (Swim,
+  hold your breath or drown).
 - **Ammo** (crossbow + quiver, reload) and **improvised weapon**; **flanking**
   and Pack Tactics.
 - **1 cell = 1.5 m**.
@@ -98,7 +99,8 @@ World systems, outside combat:
 - **Factions & reputation**: one-shot deeds earn per-faction standing
   (`factions.py`); the arena's champion title lives in `arena.py`.
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,
-  `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`.
+  `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
+  map editor sets the grid size and paints walls / pits / water / torches / zones.
 
 ## Structure
 

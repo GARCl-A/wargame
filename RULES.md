@@ -147,6 +147,22 @@ The design choices worth stating in prose:
   no check, ignores terrain) and never takes falling damage. No numeric bonus.
 - **Climber** (Lizardfolk) — climbs any surface of DC 25 or lower with no check
   (still spends the action).
+- **Amphibious** (Grippli) — breathes water: never runs out of breath while
+  submerged, so it can stay underwater indefinitely and never drowns. (Was a flat
+  +1 speed; reworked when water terrain landed.)
+
+**Placeholder effects — to revisit when the relevant mechanic exists** (these
+carry a stand-in combat bonus today so the ability is never inert; `REFERENCE.md`
+lists only the current effect):
+
+- **Strong Stomach** — now `+3 max HP`; becomes *can eat spoiled food safely*
+  once food quality is a mechanic.
+- **Primal Blood** — now *reroll one missed attack per battle*; becomes *starts
+  with one spell* once magic exists.
+- **Keen Hearing** — now `+3 initiative`; becomes *a bonus to hear/notice things*
+  once perception is a mechanic.
+- **Ancestral Blood** — now `+2 [circumstance] vs Large targets`; becomes *a
+  bonus to learn new spells* once magic exists.
 
 ---
 
@@ -257,7 +273,8 @@ and neutral creatures in `gartok/ground.py`, map assembly in
     costs 1; the 1st diagonal costs 1, the 2nd costs 2, the 3rd costs 1, and so
     on — it approximates √2 with integers. The count is **per Walk action**: the
     fractions of one walk share the alternation; a fresh Walk restarts from 1.
-    Held in `Combatant.diag_steps`; a route's cost comes from `board.route_cost`.
+    Held in `Combatant.diag_steps`; a route's cost comes from `board.path_cost`
+    (which also adds `+1` for each difficult-terrain cell entered).
   - **Enemies block completely:** you cannot stop **or pass through** an enemy's
     cell (nor a neutral creature's, like the Sheep).
   - **Allies you can cross**, but not end your move on.
@@ -389,7 +406,11 @@ actions only happen from where the unit already stands.
 
 ### Terrain 🟡
 
-- For now there is one type: **wall**. Blocks movement and line of sight.
+- **Wall** — blocks movement and line of sight.
+- **Difficult terrain** — costs **one extra square** to enter (`board.difficult`,
+  folded into the pathfinder and the walk accounting). Not double: doubling
+  breaks on the diagonal-alternation rule, so it is a flat `+1`. **Shallow water**
+  (below) is the only source today; mud, rubble and scree can join later.
 - The generated map lays a few short wall segments in the middle; the generation
   guarantees the two sides stay connected (nobody gets boxed in).
 - **Diagonal corner:** the grid is square, so two walls often meet at a corner.
@@ -432,6 +453,29 @@ triples.
 - **Vertical combat.** Melee reaches between two elevations if the difference is
   **≤ 1** (a fight at the lip). A difference of **2 or more** takes the target
   out of melee reach until someone climbs — a **ranged** attack still connects.
+
+### Water — shallow and deep 🟡
+
+A cell can hold **water** (`board.water`, the **WATER** editor tool, stored in the
+map as `[x, y]` cells). Its behaviour depends on whether the cell is a pit:
+
+- **Shallow water** (water on ground level) — a puddle, a mud flat, knee-high
+  water. It is **difficult terrain** (see Terrain: `+1` to enter). Nothing else:
+  you wade through, no check, no breath.
+- **Deep water** (water over a pit) — a flooded trench. You **cannot walk** into
+  or across it (`Battle._impassable_water` blocks it for anyone not flying); a
+  flier passes over. A plunge into deep water takes **no fall damage** — the water
+  breaks the fall.
+- **Swim** (1-point action, like Jump) — the only way through deep water on foot.
+  `d20 + STR mod`, cross **`result ÷ 5`** cells toward the aimed cell, capped at
+  **half** the unit's speed. The swim runs only through water cells; a wall, a
+  body or the water's edge ends it there (climb out with a separate **Climb**).
+- **Breath.** A submerged unit holds its breath **`4 + Constitution mod`** rounds
+  (`data.BREATH_BASE`). Every round under past that: **escalating drowning
+  damage** — `1d6`, then `2d6`, then `3d6`, … — each of its turns until it
+  surfaces or goes down (`Battle._apply_submersion`, run at the top of the turn).
+  Surfacing resets the count.
+- **Amphibious** (Grippli) — breathes water; the breath clock never starts.
 
 ### Vision and light 🟡
 

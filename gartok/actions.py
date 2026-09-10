@@ -11,13 +11,14 @@ one entry in the lists at the end of the file. Nothing else needs to know it exi
 import random
 
 from . import data
-from .board import COLS, ROWS, cells, chebyshev, grid_distance, neighbors
+from .board import cells, chebyshev, grid_distance
 from .conditions import Defending, Demoralized
 from .data import DEMORALIZE_RANGE, d20, resolve_bonus
 from .ground import GroundObject
 
 PUSH_DC_BASE = 10          # Shove: Strength vs 10 + the target's Constitution modifier
 JUMP_DIVISOR = 5          # Jump: (d20 + Strength) / this = squares cleared, capped at speed
+SWIM_DIVISOR = 5          # Swim: (d20 + Strength) / this = squares crossed, capped at half speed
 
 
 def _sign(v):
@@ -144,7 +145,7 @@ def _shared_language(a, b):
 def _drop_cell(battle, target):
     """A free cell adjacent to the target where the thrown weapon lands."""
     tcells = set(cells(target.pos, target.footprint))
-    around = {v for c in tcells for v in neighbors(c)} - tcells
+    around = {v for c in tcells for v in battle.board.neighbors(c)} - tcells
     free = [p for p in around
             if battle.unit_at(p) is None and battle.ground_at(p) is None
             and p not in battle.board.walls]
@@ -402,7 +403,7 @@ class PickUp(Action):
     def _drop_on_ground(self, battle, actor, kind, weapon_name=None):
         dest = actor.pos
         if battle.ground_at(dest) is not None:
-            for p in neighbors(actor.pos):
+            for p in battle.board.neighbors(actor.pos):
                 if (p not in battle.board.walls and battle.unit_at(p) is None
                         and battle.ground_at(p) is None):
                     dest = p
@@ -601,7 +602,8 @@ class Flee(Action):
 
     @staticmethod
     def _at_edge(battle, actor):
-        return any(x == 0 or x == COLS - 1 or y == 0 or y == ROWS - 1
+        b = battle.board
+        return any(x == 0 or x == b.cols - 1 or y == 0 or y == b.rows - 1
                    for x, y in battle.cells_of(actor))
 
     @staticmethod
@@ -718,7 +720,7 @@ class _VerticalStep(Action):
 
     def _spots(self, battle, actor):
         z = battle.elevation(actor)
-        return [nb for nb in neighbors(actor.pos)
+        return [nb for nb in battle.board.neighbors(actor.pos)
                 if self._wants(battle.board.elevation_at(nb), z)
                 and _cell_free(battle, actor, nb)
                 and not battle.board.diagonal_corner_blocked(actor.pos, nb)]
@@ -855,6 +857,78 @@ class Jump(Action):
             battle.apply_fall(actor, z_from - z_to, battle.log)
 
 
+class Swim(Action):
+    """Strike out through deep water: d20 + Strength, cross (result / 5) squares
+    toward the aimed cell, never more than half your speed. You swim only through
+    water -- a wall, a body or the water's edge ends the swim there (haul yourself
+    out of the pit with a Climb). No check to stay afloat; a poor roll just means
+    a short swim."""
+
+    id, name, target, aimed = "swim", "Swim", "cell", True
+
+    def _at_water(self, battle, actor):
+        """The actor is in deep water, or on a cell touching it (can push off)."""
+        for c in battle.cells_of(actor):
+            if battle.board.is_deep_water(c):
+                return True
+            if any(battle.board.is_deep_water(nb) for nb in battle.board.neighbors(c)):
+                return True
+        return False
+
+    def _max_reach(self, battle, actor):
+        by_str = (20 + actor.mod_strength) // SWIM_DIVISOR
+        return max(1, min(by_str, max(1, actor.speed // 2)))
+
+    def available(self, battle, actor):
+        return (actor.ap >= self.cost and not actor.flies
+                and self._at_water(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or actor.flies or not isinstance(target, tuple):
+            return False
+        if not battle.board.in_bounds(target) or target == actor.pos:
+            return False
+        if not self._at_water(battle, actor):
+            return False
+        return grid_distance(actor.pos, target) <= self._max_reach(battle, actor)
+
+    def label(self, battle, actor):
+        return "Swim (1 pt, STR: crosses result/5 squares, half speed)"
+
+    def highlight_cells(self, battle, actor):
+        r = self._max_reach(battle, actor)
+        return [p for p in _cells_in_radius(actor.pos, r)
+                if battle.board.in_bounds(p)
+                and (battle.board.is_deep_water(p) or grid_distance(actor.pos, p) == 1)]
+
+    def highlight_targets(self, battle, actor):
+        return []
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        nat = d20()
+        total = nat + actor.mod_strength
+        dist = max(1, min(total // SWIM_DIVISOR, max(1, actor.speed // 2)))
+        landing = actor.pos
+        for step, cell in enumerate(_line(actor.pos, target)[1:], start=1):
+            if step > dist or cell in battle.board.walls \
+                    or not _cell_free(battle, actor, cell):
+                break
+            if not battle.board.is_deep_water(cell):
+                break                        # left the water -- climb out from here
+            landing = cell
+        z_from = battle.elevation(actor)
+        z_to = battle.board.elevation_at(landing)
+        actor.pos = landing
+        battle.log(f"{actor.name} swims: d20({nat}) {actor.mod_strength:+}(STR) = "
+                   f"{total} -> {total // SWIM_DIVISOR} squares, to {landing}.")
+        if z_to < z_from:
+            battle.apply_fall(actor, z_from - z_to, battle.log)
+
+
 # --------------------------------------------------------------------------- #
 # End turn                                                                     #
 # --------------------------------------------------------------------------- #
@@ -886,9 +960,10 @@ PUSH = Push()
 CLIMB = Climb()
 DROP = DropIn()
 JUMP = Jump()
+SWIM = Swim()
 FLEE = Flee()
 END = EndTurn()
 
 # Panel buttons, in order. Move and Attack are the default board click.
-PANEL_ACTIONS = [RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP, STABILIZE,
-                 FIRST_AID, PICK_UP, DEFEND, FLEE, END]
+PANEL_ACTIONS = [RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP, SWIM,
+                 STABILIZE, FIRST_AID, PICK_UP, DEFEND, FLEE, END]

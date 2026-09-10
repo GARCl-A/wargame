@@ -52,6 +52,11 @@ class Combatant:
         so the pathfinder is allowed to route them in and out of a pit."""
         return self._ability.flies or self._ability.climb_speed
 
+    @property
+    def water_breathing(self):
+        """Never runs out of breath while submerged (the Grippli's Amphibious)."""
+        return self._ability.water_breathing
+
     def auto_climb(self, dc):
         """Clears a climb of this DC with no roll (the Lizardfolk's Climber)."""
         return dc <= self._ability.auto_climb_dc
@@ -64,6 +69,7 @@ class Combatant:
         self.death_clock = 0          # dying: own turns elapsed; save on DYING_TURNS
         self.nonlethal = False        # set by Battle for a non-lethal fight: 0 HP -> knocked out
         self.ferocity_pending = False # Orc downed this turn, falls at end_turn
+        self.rounds_submerged = 0     # turns spent underwater in deep water (breath / drowning)
         self.initiative = 0           # set by Battle._roll_initiative
         self.weapon_hand = c.equipped_weapon is not None
         self.weapon_name = c.equipped_weapon

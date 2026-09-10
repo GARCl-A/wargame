@@ -8,7 +8,7 @@ Pure functions over the battle state:
 """
 
 from . import data
-from .board import COLS, ROWS, cells, grid_distance
+from .board import cells, grid_distance
 
 
 def unit_light(unit):
@@ -107,8 +107,8 @@ def visible_cells(battle, obs):
     vis = set()
     for o in obs:
         vis.update(cells(o.pos, o.footprint))
-    for cx in range(COLS):
-        for cy in range(ROWS):
+    for cx in range(b.board.cols):
+        for cy in range(b.board.rows):
             p = (cx, cy)
             if p in vis or p in b.board.walls:
                 continue

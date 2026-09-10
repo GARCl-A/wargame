@@ -72,6 +72,33 @@ def test_map_library_round_trips_a_laid_out_map():
         map_lib.MAP_DIR = old
 
 
+def test_map_library_round_trips_size_and_water():
+    import shutil
+    import tempfile
+
+    from gartok import map_lib
+    old, map_lib.MAP_DIR = map_lib.MAP_DIR, tempfile.mkdtemp()
+    try:
+        m = map_lib.new_map("Marsh", cols=24, rows=18)
+        m["elevation"] = [[10, 9, -3]]
+        m["water"] = [[10, 9], [11, 9], [12, 9]]     # one flooded pit cell + two puddles
+        slug = map_lib.save_map(m)
+        back = map_lib.load_map(slug)
+        assert back["cols"] == 24 and back["rows"] == 18
+        assert back["water"] == [[10, 9], [11, 9], [12, 9]]
+
+        random.seed(0)
+        batt = Battle([Unit("player")], [Unit("enemy")],
+                      scenario=CustomScenario(back))
+        assert batt.board.cols == 24 and batt.board.rows == 18
+        assert batt.board.is_deep_water((10, 9))          # over the pit
+        assert (11, 9) in batt.board.difficult            # ground-level puddle
+        assert (11, 9) not in batt.board.deep_water
+    finally:
+        shutil.rmtree(map_lib.MAP_DIR, ignore_errors=True)
+        map_lib.MAP_DIR = old
+
+
 def test_sandbox_attribute_edits_clamp_to_a_3d6_score():
     u = _unit(seed=3)
     u.set_base_attribute("strength", 25)

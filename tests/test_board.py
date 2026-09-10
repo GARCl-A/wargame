@@ -12,6 +12,23 @@ def test_los_blocked_by_wall():
     assert b.los_clear((4, 4), (4, 8)) is True
 
 
+def test_board_can_be_a_non_default_size():
+    b = Board(walls=[], cols=30, rows=24)
+    assert b.cols == 30 and b.rows == 24
+    assert b.in_bounds((29, 23)) and not b.in_bounds((30, 24))
+    assert (29, 12) in b.reachable((0, 12), budget=40)     # walks the wide board
+    assert list(b.neighbors((29, 23))) == [(28, 22), (28, 23), (29, 22)]
+
+
+def test_difficult_terrain_costs_one_extra_to_enter():
+    b = Board(walls=[], water=[(5, 5)])                     # ground-level water = difficult
+    assert (5, 5) in b.difficult and not b.deep_water
+    assert b.reachable((4, 5), 3)[(5, 5)] == 2              # straight step in: 1 + 1
+    assert b.reachable((4, 5), 3)[(4, 4)] == 1              # a normal cell nearby
+    cost, _ = b.path_cost([(4, 5), (5, 5), (6, 5)])
+    assert cost == 3                                        # 1(+1 difficult) + 1
+
+
 def test_two_walls_at_corner_block_diagonal_and_sight():
     b = Board()
     b.walls = {(4, 4), (5, 5)}
