@@ -23,7 +23,7 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, map_lib, persist, world
+from . import arena, campaign, hunt, map_lib, persist, world
 from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
@@ -32,6 +32,7 @@ from .editor_menu_screen import EditorMenuScreen
 from .gear_screen import GearScreen
 from .guild import Guild
 from .guild_screen import GuildScreen
+from .hunt_screen import HuntScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
 from .map_editor_screen import MapEditorScreen
@@ -61,6 +62,7 @@ class App:
         self._battle_squad = []              # roster units sent to the current battle
         self._battle_node = None             # world node the current battle is at
         self._arena_offer = None             # arena stake tier for the current bout, or None
+        self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._start_menu()
 
@@ -112,6 +114,7 @@ class App:
                                on_market=self._open_market,
                                on_recruit=self._open_recruit,
                                on_work=self._open_work,
+                               on_hunt=self._open_hunt,
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over)
         if self._map_notices:
@@ -176,6 +179,50 @@ class App:
         else:
             self._start_map()
 
+    # ------------------------------------------------------------------ #
+    # hunting the wilds -- a work-style activity that can spring a fight  #
+    # ------------------------------------------------------------------ #
+    def _open_hunt(self, node):
+        roster = self.guild.roster
+        self.scene = SquadScreen(self.fonts, roster, node,
+                                 on_confirm=self._open_hunt_ground, on_back=self._start_map,
+                                 max_pick=len(roster), title="WHO GOES HUNTING",
+                                 confirm_label="INTO THE WILDS")
+
+    def _open_hunt_ground(self, party, node, _offer):
+        self._hunt = hunt.HuntState(list(party), node, hours_left=0)
+        self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="setup",
+                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt)
+
+    def _start_hunt_battle(self, state, pack):
+        self._battle_squad = list(state.party)
+        self._battle_node = state.node
+        self._arena_offer = None
+        battle = Battle(state.party, pack, scenario=state.node.scenario(),
+                        daylight=self.guild.clock.is_daylight,
+                        lethal=state.node.lethal, arena=False)
+        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+
+    def _resume_hunt(self):
+        """Back from a won ambush with daylight still to spend."""
+        self._save()
+        self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="interlude",
+                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt)
+
+    def _finish_hunt(self):
+        """The hunt is over (dark, driven off, or the party is spent) -- the
+        screen banks the haul on entering its wrap-up phase."""
+        self._save()
+        self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="done",
+                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt)
+
+    def _end_hunt(self):
+        self._hunt = None
+        if self.guild.empty:
+            self._campaign_over()
+        else:
+            self._start_map()
+
     def _open_recruit(self, node):
         roster = self.guild.roster
         self.scene = SquadScreen(self.fonts, roster, node,
@@ -234,6 +281,7 @@ class App:
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _battle_end(self, battle):
+        hunt_state = self._hunt
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
                                          node=self._battle_node,
                                          arena_offer=self._arena_offer)
@@ -243,7 +291,21 @@ class App:
         note = outcome.arena_title_event
 
         if outcome.campaign_over:             # full wipe: campaign over
+            self._hunt = None
             self._campaign_over()
+            return
+
+        if hunt_state is not None:            # an ambush during a hunt
+            hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
+            won = battle.winner == "player"
+            resume = won and hunt_state.party and hunt_state.hours_left > 0
+            nxt = self._resume_hunt if resume else self._finish_hunt
+            if outcome.loot_pool and outcome.survivors:
+                self._save()
+                self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                                        outcome.loot_pool, on_done=nxt)
+                return
+            nxt()
             return
 
         if outcome.arena_reward is not None:  # arena bout won: hand out the purse

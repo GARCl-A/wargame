@@ -12,6 +12,8 @@ Node kinds:
 - "battle":  the chosen squad drops into a tactical fight on `scenario`;
 - "market":  a shop -- buy and sell gear for copper.
 - "tavern": strangers looking for work -- talk one into the guild (`recruit`).
+- "wilds":  open country with its own activities -- Hunt for meat (`hunt`), at
+            the risk of an ambush by a scaled pack (`encounters`).
 
 A battle node is lethal by default (permadeath, loot the corpses). The Arena is
 the exception: `lethal=False`, `arena=True` -- a paid, non-lethal bout. The squad
@@ -55,6 +57,10 @@ class Node:
     def is_tavern(self):
         return self.kind == "tavern"
 
+    @property
+    def is_wilds(self):
+        return self.kind == "wilds"
+
 
 # Arena bouts unlocked by reputation (`rep`, from the arena `factions` deeds):
 # stake `entry` copper PER FIGHTER sent in, field `enemies` opponents, win the
@@ -96,8 +102,9 @@ NODES = [
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild."),
     Node("road", "Old Road", "town", (0.55, 0.52),
          "A dirt track cutting across the open country to the east."),
-    Node("wilds", "The Wilds", "battle", (0.83, 0.40),
-         "Open ground under the sky, outside the walls.", ErmosScenario),
+    Node("wilds", "The Wilds", "wilds", (0.83, 0.40),
+         "Open ground under the sky, outside the walls. Hunt it for meat -- and "
+         "risk what else hunts here.", ErmosScenario),
     Node("ruins", "Ruins", "battle", (0.78, 0.80),
          "Toppled stones of something ancient. Dark inside.", ArenaScenario),
 ]

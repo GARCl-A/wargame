@@ -396,6 +396,128 @@ def test_world_route_takes_the_cheapest_path():
                         if {a, b} in [set(p) for p in zip(path, path[1:])])
 
 
+# --------------------------------------------------------------------------- #
+# encounters: enemies scaled to a place                                        #
+# --------------------------------------------------------------------------- #
+def test_weighted_choice_follows_the_weights():
+    from gartok import encounters
+    rng = random.Random(1)
+    counts = {}
+    for _ in range(4000):
+        k = encounters.weighted_choice({"a": 1, "b": 3}, rng)
+        counts[k] = counts.get(k, 0) + 1
+    assert counts["a"] < counts["b"]                       # 1:3 -- b clearly more often
+    assert 2.0 < counts["b"] / counts["a"] < 4.5           # roughly the ratio
+
+
+def test_build_enemy_hits_the_mean_level_with_valid_talents():
+    from gartok import encounters, talents
+    rng = random.Random(7)
+    for M in range(5):
+        u = encounters.build_enemy(M, rng)
+        assert u.mean_level == M
+        for track, picked in u.talents.items():
+            for tid in picked:
+                t = talents.get(tid)
+                assert t.requires is None or t.requires in picked   # tree respected
+
+
+def test_build_enemy_is_reproducible_under_a_seed():
+    """`build_enemy` still rolls HD/attributes off the global stream (like any
+    Unit), but with a fixed global seed + an explicit choice rng the whole enemy
+    -- levels, talents and all -- comes out identical every time."""
+    from gartok import encounters
+
+    def one():
+        random.seed(123)
+        u = encounters.build_enemy(3, random.Random(0))
+        return (u.combat_level, u.work_level, u.hp_max,
+                tuple(u.talents["combat"]), tuple(u.talents["work"]))
+
+    assert one() == one()
+
+
+def test_roll_pack_size_is_in_range():
+    from gartok import encounters
+    rng = random.Random(3)
+    for _ in range(200):
+        pack = encounters.roll_pack(rng=rng)
+        assert 1 <= len(pack) <= 6
+        assert all(0 <= u.mean_level <= 4 for u in pack)
+
+
+def test_build_challenger_still_scales():
+    from gartok import arena
+    random.seed(0)
+    u = arena.build_challenger(2)
+    assert u.mean_level == 2
+
+
+# --------------------------------------------------------------------------- #
+# the scenario win-condition seam                                              #
+# --------------------------------------------------------------------------- #
+def test_scenario_win_check_forces_the_winner():
+    from gartok.scenario import ArenaScenario
+
+    class PlayerWins(ArenaScenario):
+        def win_check(self, battle):
+            return "player"
+
+    class EnemyWins(ArenaScenario):
+        def win_check(self, battle):
+            return "enemy"
+
+    random.seed(0)
+    b = Battle([Unit("player")], [Unit("enemy")], scenario=PlayerWins())
+    assert b._check_winner() == "player"                   # nobody down, still a win
+    assert not b.enemy_units[0].dead                        # the seam doesn't kill anyone itself
+
+    b = Battle([Unit("player"), Unit("player")], [Unit("enemy")],
+               scenario=EnemyWins(), lethal=True)
+    b.player_units[0].take_damage(999, b.log)               # one already bleeding out
+    assert b._check_winner() == "enemy"
+    assert b.player_units[0].dead                           # a lethal loss finishes the downed
+    assert b.player_units[1].survived                       # ...but the one still standing lives
+
+
+# --------------------------------------------------------------------------- #
+# hunting the wilds                                                            #
+# --------------------------------------------------------------------------- #
+def test_hunt_stretch_stops_on_the_first_ambush():
+    from gartok import hunt
+
+    class AlwaysAmbush:
+        def random(self): return 0.0
+
+    st = hunt.HuntState([], None, hours_left=8)
+    elapsed, ambushed = hunt.hunt_stretch(st, AlwaysAmbush())
+    assert ambushed and elapsed == 1
+    assert st.hours_hunted == 1 and st.hours_left == 7
+
+    class NeverAmbush:
+        def random(self): return 1.0
+
+    st = hunt.HuntState([], None, hours_left=5)
+    elapsed, ambushed = hunt.hunt_stretch(st, NeverAmbush())
+    assert not ambushed and elapsed == 5
+    assert st.hours_hunted == 5 and st.hours_left == 0
+
+
+def test_grant_meat_splits_the_haul_and_banks_the_hours():
+    from gartok import hunt
+    random.seed(0)
+    party = [Unit("player"), Unit("player")]
+    for u in party:
+        u._base_inventory = []
+        u.work_hours = 0
+    st = hunt.HuntState(party, None, hours_left=0, hours_hunted=9)
+    lines = hunt.grant_meat(st)
+    total_meat = sum(u._base_inventory.count("1kg Meat") for u in party)
+    assert total_meat == 9 // hunt.HUNT_MEAT_HOURS            # 4 kg
+    assert all(u.work_hours == 9 for u in party)              # both credited the hours
+    assert any("meat" in ln for ln in lines)
+
+
 def test_field_loot_gathers_the_dead_and_the_ground():
     from gartok import loot
     from gartok.ground import GroundObject
@@ -562,6 +684,7 @@ def test_every_screen_draws_native_at_any_window_size():
     bnode = next(n for n in world.NODES if n.kind == "battle")
     mnode = next(n for n in world.NODES if n.kind == "market")
     tnode = next(n for n in world.NODES if n.kind == "tavern")
+    wnode = next(n for n in world.NODES if n.kind == "wilds")
     batt = Battle(list(roster[:3]), [Unit("enemy") for _ in range(3)],
                   scenario=bnode.scenario(), daylight=True, lethal=True)
 
@@ -575,6 +698,8 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.market_screen import MarketScreen
     from gartok.taverna_screen import TavernaScreen
     from gartok.work_screen import WorkScreen
+    from gartok.hunt import HuntState
+    from gartok.hunt_screen import HuntScreen
     from gartok.guild_screen import GuildScreen
     from gartok.gear_screen import GearScreen
     from gartok.level_screen import LevelScreen
@@ -589,7 +714,7 @@ def test_every_screen_draws_native_at_any_window_size():
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
         DraftScreen(F, noop),
-        MapScreen(F, guild, noop, noop, noop, noop, noop, noop),
+        MapScreen(F, guild, noop, noop, noop, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
         BattleScreen(F, batt, noop),
         LootScreen(F, guild, list(roster[:3]), ["Axe", "Rope"], noop),
@@ -597,6 +722,10 @@ def test_every_screen_draws_native_at_any_window_size():
         MarketScreen(F, guild, list(roster[:3]), mnode, noop),
         TavernaScreen(F, guild, list(roster[:3]), tnode, noop),
         WorkScreen(F, guild, list(roster[:3]), noop, noop),
+        HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=8),
+                   phase="setup", on_ambush=noop, on_done=noop),
+        HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=4, hours_hunted=6),
+                   phase="interlude", on_ambush=noop, on_done=noop),
         GuildScreen(F, guild, noop, noop),
         GearScreen(F, guild, noop),
         LevelScreen(F, roster[0], noop, noop),

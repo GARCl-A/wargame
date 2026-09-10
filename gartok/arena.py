@@ -25,8 +25,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 
 import random
 
-from . import npc_lib, talents
-from .unit import Unit
+from . import encounters, npc_lib
 
 CHAMPION_SLUG = "adelio-small-knife"
 
@@ -98,23 +97,9 @@ def sync(guild):
 
 
 def build_challenger(mean_level):
-    """A fresh opponent pitched at `mean_level`: XP spread evenly across both
-    tracks to hit that mean, then random talent picks that respect the tree."""
-    u = Unit("enemy")
-    for track in talents.TRACKS:
-        u.set_track_level(track, mean_level)
-    for track in talents.TRACKS:
-        guard = 0
-        while u.picks_available(track) > 0 and guard < 20:
-            guard += 1
-            picked = u.talents[track]
-            options = [t.id for t in talents.TREE[track]
-                       if t.id not in picked
-                       and (t.requires is None or t.requires in picked)]
-            if not options:
-                break
-            u.choose_talent(track, random.choice(options))
-    return u
+    """A fresh title challenger pitched at `mean_level` -- a scaled `Unit("enemy")`
+    with random valid talent picks (`encounters.build_enemy`)."""
+    return encounters.build_enemy(mean_level)
 
 
 def load_champion():

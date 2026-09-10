@@ -19,23 +19,24 @@ import pygame
 from . import arena, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
-                    INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, RADIUS, SP2, SP3, SP4,
+                    INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
                     panel, section, text, tracked, wrap_lines)
 
 SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
 GROUND_NIGHT = (21, 23, 32)
-KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "tavern": WARN, "town": NEUTRAL_C}
-KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP"}
-KIND_NAME = {"battle": "combat", "market": "market", "tavern": "tavern", "town": "stop"}
+KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "tavern": WARN, "town": NEUTRAL_C,
+              "wilds": OK}
+KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP",
+              "wilds": "WILDS"}
 
 
 class MapScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, on_battle, on_market, on_recruit, on_guild,
-                 on_wipe, on_work):
+                 on_wipe, on_work, on_hunt):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -43,6 +44,7 @@ class MapScreen(Screen):
         self.on_market = on_market
         self.on_recruit = on_recruit
         self.on_work = on_work
+        self.on_hunt = on_hunt
         self.on_guild = on_guild
         self.on_wipe = on_wipe
         self.notices = []                     # lines shown after a trip (route, meals, deaths)
@@ -73,6 +75,8 @@ class MapScreen(Screen):
                     self.on_recruit(self._here())
                 elif key == "work":
                     self.on_work(self._here())
+                elif key == "hunt":
+                    self.on_hunt(self._here())
                 elif key == "maintain":
                     self._maintain()
                 return
@@ -227,6 +231,10 @@ class MapScreen(Screen):
         elif kind == "work":                                        # axe
             pygame.draw.line(screen, c, (x - 4, y + 6), (x + 3, y - 6), 2)
             pygame.draw.arc(screen, c, (x + 1, y - 8, 7, 8), 1.2, 4.2, 2)
+        elif kind == "wilds":                                       # bow
+            pygame.draw.arc(screen, c, (x - 6, y - 6, 10, 12), -1.3, 1.3, 2)
+            pygame.draw.line(screen, c, (x - 4, y - 5), (x - 4, y + 5), 2)
+            pygame.draw.line(screen, c, (x - 4, y), (x + 6, y), 2)
         else:                                                      # town roofline
             pygame.draw.lines(screen, c, False,
                               [(x - 5, y + 4), (x - 5, y - 1), (x, y - 5),
@@ -247,7 +255,7 @@ class MapScreen(Screen):
                                 [(x + 1, y - 30), (x + 15, y - 26), (x + 1, y - 20)])
             return
 
-        if n.kind == "battle":                                     # danger aura
+        if n.kind in ("battle", "wilds"):                          # danger aura
             aura = pygame.Surface((54, 54), pygame.SRCALPHA)
             pygame.draw.circle(aura, (*col, 24), (27, 27), 27)
             pygame.draw.circle(aura, (*col, 30), (27, 27), 18)
@@ -279,10 +287,17 @@ class MapScreen(Screen):
                  ACCENT_INK if here else INK if active else INK_DIM,
                  r.center, center=True)
 
+    @staticmethod
+    def _wilds_actions():
+        """The activities on offer in the wilds -- (button key, label, one-liner).
+        Just Hunt for now; foraging and the like slot in here later."""
+        return [("hunt", "GO HUNTING",
+                 "spend the day for meat  ·  a pack may find you first")]
+
     def _draw_legend(self, screen, area):
         f = self.fonts
         rows = [("battle", "combat"), ("market", "market"),
-                ("tavern", "tavern"), ("town", "stop")]
+                ("tavern", "tavern"), ("wilds", "wilds"), ("town", "stop")]
         box = pygame.Rect(0, 0, 116, 15 * len(rows) + 12)
         box.topright = (area.right - SP3, area.y + SP3)
         panel(screen, box, fill=SURFACE_1, border=LINE_SOFT, radius=6)
@@ -376,6 +391,17 @@ class MapScreen(Screen):
             y += 44
             text(screen, "trade hours of the day for copper  ·  pays little, but it's sure",
                  f.body_sm, INK_FAINT, (cx, y))
+        elif here.is_wilds:
+            for key, label, note in self._wilds_actions():
+                r = pygame.Rect(cx, y, cw, 38)
+                hov = r.collidepoint(self.mouse)
+                panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
+                      border=LINE_SOFT, width=1, radius=RADIUS)
+                text(screen, label, f.body_bd, INK_DIM, r.center, center=True)
+                self.buttons.append((key, r))
+                y += 42
+                text(screen, note, f.body_sm, INK_FAINT, (cx, y))
+                y += 20
         else:
             text(screen, "Nothing happens here. A safe stop.", f.body_sm,
                  INK_FAINT, (cx, y))

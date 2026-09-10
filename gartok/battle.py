@@ -217,6 +217,17 @@ class Battle:
     def _check_winner(self):
         if self.winner:
             return self.winner
+
+        forced = self.scenario.win_check(self)
+        if forced:
+            # the scenario's own objective settled the fight before either side
+            # was wiped -- honour it, then tidy up like a normal finish.
+            self.winner = forced
+            if forced == "enemy" and self.lethal:
+                self._wipe_side("player")
+            self._resolve_dangling_dying()
+            return self.winner
+
         players_up = self._living_side("player")
         enemies_up = self._living_side("enemy")
         if players_up and enemies_up:

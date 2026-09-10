@@ -42,6 +42,14 @@ class Scenario:
     def _make_board(self):
         return Board()
 
+    def win_check(self, battle):
+        """Force a winner on a non-elimination objective: return "player" or
+        "enemy" to end the fight now, or None to fall through to the default
+        rule (a side loses when every member is down). `battle._check_winner`
+        consults this first, every turn. The base scenario has no objective
+        beyond wiping the other side, so it always returns None."""
+        return None
+
     # ------------------------------------------------------------------ #
     def _spawn_cells(self, team):
         """A side's edge columns -- the base deployment area."""
