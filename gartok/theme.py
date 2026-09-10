@@ -12,6 +12,8 @@ One source of truth for how GARTOK Tactical looks. The screens (`draft_screen`,
 - `Panel`, `chip`, `pips`, `text`, `Stack` keep the screens declarative.
 """
 
+import math
+
 import pygame
 
 from . import artwork
@@ -24,9 +26,11 @@ SP1, SP2, SP3, SP4, SP5, SP6 = SP
 RADIUS = 6
 
 # --- layout ---------------------------------------------------------------- #
-TILE = 48
+TILE = 48                             # default board zoom; the battle view now
+                                     # picks its own tile size to fit the window
+MIN_TILE, MAX_TILE = 18, 56           # zoom range of the battle board camera
 MARGIN = SP4
-INIT_H = 46                            # initiative strip above the grid
+INIT_H = 46                           # initiative strip above the grid
 
 GRID_W, GRID_H = COLS * TILE, ROWS * TILE
 GRID_X = MARGIN
@@ -41,6 +45,90 @@ LOG_H = 150
 
 WIN_W = PANEL_X + PANEL_W + MARGIN
 WIN_H = LOG_Y + LOG_H + MARGIN
+
+
+def battle_layout(size):
+    """Dock the action panel to the window's right edge and the log along the
+    bottom; the board viewport fills everything left over. Recomputed each frame
+    from the real window size, so the battle screen uses the whole window."""
+    W, H = size
+    pw = int(min(PANEL_W, max(260, W * 0.30)))
+    panel_r = pygame.Rect(W - MARGIN - pw, MARGIN, pw, max(1, H - 2 * MARGIN))
+    log_h = LOG_H if H > 620 else max(84, H // 4)
+    left_w = max(1, panel_r.x - 2 * MARGIN)
+    init = pygame.Rect(MARGIN, MARGIN, left_w, INIT_H)
+    log = pygame.Rect(MARGIN, H - MARGIN - log_h, left_w, log_h)
+    board_top = init.bottom + SP3
+    board = pygame.Rect(MARGIN, board_top, left_w,
+                        max(1, log.y - SP3 - board_top))
+    return {"panel": panel_r, "log": log, "init": init, "board": board}
+
+
+class BoardView:
+    """Maps the board grid onto a pan/zoom pixel viewport. `fit` lays the whole
+    board into a rect at a tile size that fills it (clamped to the zoom range);
+    the wheel zooms around the cursor and a drag pans a board bigger than the
+    view. All board<->screen conversion goes through `cell_rect` / `cell_at`."""
+
+    def __init__(self, cols, rows):
+        self.cols, self.rows = cols, rows
+        self.rect = pygame.Rect(0, 0, 1, 1)
+        self.tile = TILE
+        self.cam = [0.0, 0.0]              # board-cell offset of the viewport's top-left
+        self._user_zoom = False           # once the player zooms, stop auto-fitting
+
+    def fit(self, rect):
+        self.rect = rect
+        if not self._user_zoom:
+            fit_tile = max(1, int(min(rect.w / self.cols, rect.h / self.rows)))
+            self.tile = max(MIN_TILE, min(MAX_TILE, fit_tile))
+        self._clamp()
+
+    def _clamp(self):
+        for i, view in enumerate((self.rect.w, self.rect.h)):
+            span = (self.cols, self.rows)[i] * self.tile
+            if span <= view:
+                self.cam[i] = -(view - span) / 2 / self.tile     # centre a small board
+            else:
+                self.cam[i] = max(0.0, min(self.cam[i], (span - view) / self.tile))
+
+    def cell_rect(self, cx, cy):
+        x = self.rect.x + (cx - self.cam[0]) * self.tile
+        y = self.rect.y + (cy - self.cam[1]) * self.tile
+        return pygame.Rect(round(x), round(y), self.tile, self.tile)
+
+    def cell_at(self, px, clamp=False):
+        if not clamp and not self.rect.collidepoint(px):
+            return None
+        cx = math.floor((px[0] - self.rect.x) / self.tile + self.cam[0])
+        cy = math.floor((px[1] - self.rect.y) / self.tile + self.cam[1])
+        if clamp:
+            return (max(0, min(self.cols - 1, cx)), max(0, min(self.rows - 1, cy)))
+        if 0 <= cx < self.cols and 0 <= cy < self.rows:
+            return (cx, cy)
+        return None
+
+    def center_on(self, cell):
+        self.cam[0] = cell[0] + 0.5 - self.rect.w / 2 / self.tile
+        self.cam[1] = cell[1] + 0.5 - self.rect.h / 2 / self.tile
+        self._clamp()
+
+    def zoom(self, px, steps):
+        anchor = self.cell_at(px, clamp=True)
+        new = max(MIN_TILE, min(MAX_TILE, self.tile + steps * 4))
+        if new == self.tile:
+            return
+        self._user_zoom = True
+        self.tile = new
+        if anchor is not None and self.rect.collidepoint(px):
+            self.cam[0] = anchor[0] + 0.5 - (px[0] - self.rect.x) / self.tile
+            self.cam[1] = anchor[1] + 0.5 - (px[1] - self.rect.y) / self.tile
+        self._clamp()
+
+    def pan_px(self, dx, dy):
+        self.cam[0] -= dx / self.tile
+        self.cam[1] -= dy / self.tile
+        self._clamp()
 
 
 # --- palette --------------------------------------------------------------- #

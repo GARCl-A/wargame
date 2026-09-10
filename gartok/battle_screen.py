@@ -7,21 +7,21 @@ import random
 import pygame
 
 from . import actions, ai, artwork, data, icons, vision
-from .battle import COLS, ROWS
 from .board import cells
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
 from .sheet import character_sheet
 from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
-                    FLOOR_A, FLOOR_B, GRID_H, GRID_W, GRID_X, GRID_Y, INFO,
-                    INIT_H, INK, INK_DIM, INK_FAINT, LIGHT_C, LINE, LINE_SOFT,
-                    LOG_H, LOG_Y, MARGIN, MOVE_HL, NEUTRAL_C, OBJ_C, OK, PANEL_W,
-                    PANEL_X, PANEL_Y, PATH_DONE, PATH_PREV, PLAYER_C, RADIUS,
-                    SP1, SP2, SP3, SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3,
-                    SURFACE_4, THROW_HL, TILE, TORCH_C, WALL_FILL, WALL_HI,
-                    WALL_LO, WARN, WIN_H, WIN_W, Stack, panel, pips, text, tracked,
+                    FLOOR_A, FLOOR_B, INFO, INK, INK_DIM, INK_FAINT, LIGHT_C,
+                    LINE_SOFT, MOVE_HL, NEUTRAL_C, OBJ_C, OK,
+                    PATH_DONE, PATH_PREV, PLAYER_C, RADIUS, SP1, SP2, SP3,
+                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
+                    THROW_HL, TORCH_C, WALL_FILL, WALL_HI, WALL_LO, WARN,
+                    BoardView, Stack, battle_layout, panel, pips, text, tracked,
                     wrap_lines)
+
+_WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
 
 ENEMY_DELAY = 450  # ms between AI actions
 
@@ -31,9 +31,9 @@ def _sgn(v):
 
 
 class BattleScreen(Screen):
-    # The board is a fixed-size composition (TILE=48 and the panel / log rects in
-    # theme.py). Rather than reflow it, we render to a fixed canvas and blit it
-    # centred in the real window -- native, so no letterbox smoothscale blur.
+    # Native: draws straight to the real window and lays itself out from its
+    # size each frame (theme.battle_layout). The board sits in a pan/zoom camera
+    # (theme.BoardView), so a hand-authored map of any size is playable.
     native = True
 
     def __init__(self, fonts, battle, on_battle_end):
@@ -42,8 +42,9 @@ class BattleScreen(Screen):
         self.battle = battle
         self.on_battle_end = on_battle_end
         self.lighting = LightRenderer()
-        self._canvas = pygame.Surface((WIN_W, WIN_H))
-        self._offset = (0, 0)                 # where the canvas sits in the window
+        self.view = BoardView(battle.board.cols, battle.board.rows)
+        self._pan = None                      # (mouse, cam) anchor while dragging the board
+        self._centered_on = None              # unit the camera last snapped to
         self.inspect = None
         self.inspect_open = True
         self.enemy_timer = 0
@@ -69,14 +70,30 @@ class BattleScreen(Screen):
                 self.battle.end_turn()
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
+        elif event.type == pygame.MOUSEWHEEL:
+            self.view.zoom(pygame.mouse.get_pos(), event.y)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            ox, oy = self._offset
-            self._click((event.pos[0] - ox, event.pos[1] - oy))
+            self._click(event.pos)
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button in (2, 3):
+            if self.view.rect.collidepoint(event.pos):
+                self._pan = (event.pos, list(self.view.cam))
+        elif event.type == pygame.MOUSEBUTTONUP and event.button in (2, 3):
+            self._pan = None
+        elif event.type == pygame.MOUSEMOTION and self._pan is not None:
+            (ax, ay), cam0 = self._pan
+            self.view.cam = list(cam0)
+            self.view.pan_px(event.pos[0] - ax, event.pos[1] - ay)
 
     def update(self, dt):
         b = self.battle
         self._advance_fx(dt)
         self._detect_fx()
+        # keep the acting unit in frame on a board too big to fit the viewport
+        if (b.winner is None and self._pan is None and self.view.rect.w > 2
+                and self._centered_on is not b.active):
+            self._centered_on = b.active
+            if not self.view.rect.collidepoint(self.view.cell_rect(*b.active.pos).center):
+                self.view.center_on(b.active.pos)
         if b.winner is not None:
             return
         if b.awaiting_flag:                  # plant the flag before anyone acts
@@ -103,10 +120,7 @@ class BattleScreen(Screen):
         return vision.enemy_visible(self.battle, self._obs, u)
 
     def _tile_at_px(self, px):
-        x, y = px
-        if GRID_X <= x < GRID_X + GRID_W and GRID_Y <= y < GRID_Y + GRID_H:
-            return ((x - GRID_X) // TILE, (y - GRID_Y) // TILE)
-        return None
+        return self.view.cell_at(px)
 
     def _click(self, px):
         b = self.battle
@@ -246,7 +260,7 @@ class BattleScreen(Screen):
 
     def _spawn_floater(self, r, s, color):
         stack = sum(1 for f in self._floaters
-                    if abs(f["x"] - r.centerx) < TILE and f["age"] < 240)
+                    if abs(f["x"] - r.centerx) < self.view.tile and f["age"] < 240)
         self._floaters.append({
             "x": r.centerx + random.randint(-4, 4),
             "y": r.top - 6 - 14 * stack,
@@ -283,7 +297,7 @@ class BattleScreen(Screen):
     def _draw_floaters(self, screen):
         f = self.fonts
         clip = screen.get_clip()
-        screen.set_clip(pygame.Rect(GRID_X, GRID_Y, GRID_W, GRID_H))
+        screen.set_clip(self.view.rect)
         for fl in self._floaters:
             a = max(0, min(255, int(fl["alpha"])))
             img = f.num.render(fl["text"], True, fl["color"])
@@ -298,21 +312,20 @@ class BattleScreen(Screen):
     # ------------------------------------------------------------------ #
     # drawing                                                            #
     # ------------------------------------------------------------------ #
-    def draw(self, window):
-        W, H = window.get_size()
-        ox, oy = max(0, (W - WIN_W) // 2), max(0, (H - WIN_H) // 2)
-        self._offset = (ox, oy)
-        self.mouse = (self.mouse[0] - ox, self.mouse[1] - oy)   # -> canvas space
-        window.fill(BG)
-
-        screen = self._canvas
+    def draw(self, screen):
         screen.fill(BG)
+        self._L = battle_layout(screen.get_size())
+        self.view.cols, self.view.rows = self.battle.board.cols, self.battle.board.rows
+        self.view.fit(self._L["board"])
+
         self._obs = self._observers()
         self._visible = vision.visible_cells(self.battle, self._obs)
 
+        clip = screen.get_clip()
+        screen.set_clip(self.view.rect)
         self._draw_grid(screen)
         self._draw_ground(screen)
-        self.lighting.draw(screen, self.battle, self._visible, self._obs)
+        self.lighting.draw(screen, self.battle, self._visible, self._obs, self.view)
         self._draw_creatures(screen)
         self._draw_units(screen)
         if self.battle.is_ctf:
@@ -321,20 +334,21 @@ class BattleScreen(Screen):
         if self.battle.awaiting_flag:
             self._draw_flag_setup(screen)
         self._draw_floaters(screen)
+        screen.set_clip(clip)
+
         self._draw_initiative(screen)
         self._draw_panel(screen)
         self._draw_log(screen)
         if self.battle.winner:
             self._draw_winner(screen)
 
-        window.blit(screen, (ox, oy))
-
     def _cell_rect(self, cx, cy):
-        return pygame.Rect(GRID_X + cx * TILE, GRID_Y + cy * TILE, TILE, TILE)
+        return self.view.cell_rect(cx, cy)
 
     def _unit_rect(self, u):
-        r = self._cell_rect(*u.pos)
-        return pygame.Rect(r.x, r.y, TILE * u.footprint, TILE * u.footprint)
+        r = self.view.cell_rect(*u.pos)
+        t = self.view.tile
+        return pygame.Rect(r.x, r.y, t * u.footprint, t * u.footprint)
 
     def _draw_grid(self, screen):
         """A flat tactical board drawn from the design system -- a quiet checker
@@ -342,44 +356,62 @@ class BattleScreen(Screen):
         where a wall face is exposed, so clusters read as one mass)."""
         board = self.battle.board
         walls = board.walls
-        for cy in range(ROWS):
-            for cx in range(COLS):
-                tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
-                screen.fill(tone, self._cell_rect(cx, cy))
+        view = self.view
+        vr = view.rect
+        tile = view.tile
+        vis = lambda cx, cy: view.cell_rect(cx, cy).colliderect(vr)
+        for cy in range(board.rows):
+            for cx in range(board.cols):
+                if vis(cx, cy):
+                    tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
+                    screen.fill(tone, view.cell_rect(cx, cy))
 
         for (cx, cy), z in board.elevation.items():   # a pit: sunken, darker the deeper
-            r = self._cell_rect(cx, cy)
+            if not vis(cx, cy):
+                continue
+            r = view.cell_rect(cx, cy)
             k = min(1.0, -z / 6)
             screen.fill(WALL_LO, r)
             screen.fill(tuple(int(v * (1 - 0.5 * k)) for v in WALL_LO),
-                        r.inflate(-TILE // 4, -TILE // 4))
+                        r.inflate(-tile // 4, -tile // 4))
             text(screen, str(-z), self.fonts.mono_sm, INK_FAINT, r.center, center=True)
+
+        for cx, cy in board.water:                     # deep over a pit, a shallow puddle otherwise
+            if not vis(cx, cy):
+                continue
+            deep = board.elevation.get((cx, cy), 0) < 0
+            wl = pygame.Surface((tile, tile), pygame.SRCALPHA)
+            wl.fill((*_WATER_C, 150 if deep else 92))
+            screen.blit(wl, view.cell_rect(cx, cy))
+
         for cx, cy in board.ropes:
-            r = self._cell_rect(cx, cy)
+            if not vis(cx, cy):
+                continue
+            r = view.cell_rect(cx, cy)
             pygame.draw.line(screen, (198, 160, 104),
                              (r.centerx, r.top + 3), (r.centerx, r.bottom - 3),
-                             max(2, TILE // 12))
+                             max(2, tile // 12))
 
-        for cx in range(COLS + 1):
-            x = GRID_X + cx * TILE
-            pygame.draw.line(screen, LINE_SOFT, (x, GRID_Y), (x, GRID_Y + GRID_H))
-        for cy in range(ROWS + 1):
-            y = GRID_Y + cy * TILE
-            pygame.draw.line(screen, LINE_SOFT, (GRID_X, y), (GRID_X + GRID_W, y))
+        for cx in range(board.cols + 1):
+            x = round(vr.x + (cx - view.cam[0]) * tile)
+            pygame.draw.line(screen, LINE_SOFT, (x, vr.top), (x, vr.bottom))
+        for cy in range(board.rows + 1):
+            y = round(vr.y + (cy - view.cam[1]) * tile)
+            pygame.draw.line(screen, LINE_SOFT, (vr.left, y), (vr.right, y))
 
         # drop shadow: a dark block offset down-right, painted before the walls
         # so each block covers its neighbours' shadows -> only the exposed south
         # and east faces cast onto the floor, and the grid reads as 2.5D
-        shadow = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
+        shadow = pygame.Surface((tile, tile), pygame.SRCALPHA)
         pygame.draw.rect(shadow, (0, 0, 0, 110), shadow.get_rect(), border_radius=RADIUS)
         for wx, wy in walls:
-            r = self._cell_rect(wx, wy)
-            screen.blit(shadow, (r.x + 5, r.y + 5))
+            if vis(wx, wy):
+                r = view.cell_rect(wx, wy)
+                screen.blit(shadow, (r.x + 5, r.y + 5))
 
         for wx, wy in walls:
-            self._draw_wall_block(screen, wx, wy, walls)
-
-        pygame.draw.rect(screen, LINE, (GRID_X, GRID_Y, GRID_W, GRID_H), 1)
+            if vis(wx, wy):
+                self._draw_wall_block(screen, wx, wy, walls)
 
     def _draw_wall_block(self, screen, wx, wy, walls):
         r = self._cell_rect(wx, wy).inflate(-2, -2)
@@ -415,9 +447,9 @@ class BattleScreen(Screen):
         return self._anchor_of_click(self.battle.active, tile)
 
     def _path_points(self, cells_, footprint):
-        off = TILE * footprint // 2
-        return [(GRID_X + cx * TILE + off, GRID_Y + cy * TILE + off)
-                for cx, cy in cells_]
+        off = self.view.tile * footprint // 2
+        return [(self.view.cell_rect(cx, cy).x + off,
+                 self.view.cell_rect(cx, cy).y + off) for cx, cy in cells_]
 
     def _draw_tactical(self, screen):
         b = self.battle
@@ -425,20 +457,22 @@ class BattleScreen(Screen):
             return
         actor = b.active
 
-        cell = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
+        board = b.board
+        cell = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
 
         if self.aim_action is not None:
             if self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
                 color = OK
             elif self.aim_action is actions.DEMORALIZE:
                 color = DEMO_HL
-            elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP):
+            elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP,
+                                     actions.SWIM):
                 color = MOVE_HL
             else:
                 color = THROW_HL
             cell.fill((*color, 46))
             for pos in self.aim_action.highlight_cells(b, actor):
-                if 0 <= pos[0] < COLS and 0 <= pos[1] < ROWS:
+                if 0 <= pos[0] < board.cols and 0 <= pos[1] < board.rows:
                     screen.blit(cell, self._cell_rect(*pos))
             for u in self.aim_action.highlight_targets(b, actor):
                 if u.team == actor.team or self._enemy_visible(u):
@@ -493,11 +527,12 @@ class BattleScreen(Screen):
     # scene props                                                        #
     # ------------------------------------------------------------------ #
     def _draw_torch(self, screen, pos):
+        t = self.view.tile
         cx, cy = self._cell_rect(*pos).center
-        glow = pygame.Surface((TILE * 2, TILE * 2), pygame.SRCALPHA)
-        for rad, a in ((TILE * 3 // 4, 22), (TILE // 2, 34), (TILE // 4, 60)):
-            pygame.draw.circle(glow, (*TORCH_C, a), (TILE, TILE), rad)
-        screen.blit(glow, (cx - TILE, cy - TILE))
+        glow = pygame.Surface((t * 2, t * 2), pygame.SRCALPHA)
+        for rad, a in ((t * 3 // 4, 22), (t // 2, 34), (t // 4, 60)):
+            pygame.draw.circle(glow, (*TORCH_C, a), (t, t), rad)
+        screen.blit(glow, (cx - t, cy - t))
         pygame.draw.circle(screen, (58, 52, 46), (cx, cy + 4), 5)
         pygame.draw.circle(screen, TORCH_C, (cx, cy - 2), 6)
         pygame.draw.circle(screen, LIGHT_C, (cx, cy - 4), 3)
@@ -510,7 +545,7 @@ class BattleScreen(Screen):
                 self._draw_torch(screen, o.pos)
             else:
                 cx, cy = self._cell_rect(*o.pos).center
-                d = TILE // 4
+                d = self.view.tile // 4
                 pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
                 pygame.draw.polygon(screen, OBJ_C, pts)
                 pygame.draw.polygon(screen, (25, 22, 12), pts, 2)
@@ -521,7 +556,7 @@ class BattleScreen(Screen):
     def _can_plant_flag(self, tile):
         b = self.battle
         x, y = tile
-        return (x in own_half("player") and 0 <= y < ROWS
+        return (x in own_half("player", b.board.cols) and 0 <= y < b.board.rows
                 and tile not in b.board.walls and b.unit_at(tile) is None)
 
     def _draw_pennant(self, screen, pos, color):
@@ -545,17 +580,18 @@ class BattleScreen(Screen):
 
     def _draw_flag_setup(self, screen):
         f = self.fonts
-        tint = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
+        board = self.battle.board
+        tint = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
         tint.fill((*PLAYER_C, 32))
         hover = self._tile_at_px(self.mouse)
-        for x in own_half("player"):
-            for y in range(ROWS):
-                if (x, y) in self.battle.board.walls:
+        for x in own_half("player", board.cols):
+            for y in range(board.rows):
+                if (x, y) in board.walls:
                     continue
                 screen.blit(tint, self._cell_rect(x, y))
         if hover is not None and self._can_plant_flag(hover):
             pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
-        banner = pygame.Rect(GRID_X, GRID_Y, GRID_W, 30)
+        banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
         panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
         text(screen, "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
              f.body_bd, INK, banner.center, center=True)
@@ -647,18 +683,18 @@ class BattleScreen(Screen):
     def _draw_initiative(self, screen):
         f = self.fonts
         b = self.battle
-        strip = pygame.Rect(GRID_X, MARGIN, GRID_W, INIT_H)
+        strip = self._L["init"]
         panel(screen, strip, fill=SURFACE_1)
         tracked(screen, "INITIATIVE", f.label, INK_FAINT, (strip.x + SP2, strip.y + SP1))
 
         living = [u for u in b.order if u.alive or u.dying]
         n = max(1, len(living))
-        avail = strip.w - 92 - SP2
-        cw = min(112, avail // n)
+        avail = max(1, strip.w - 92 - SP2)
+        cw = max(24, min(112, avail // n))
         x = strip.x + 88
         y = strip.y + 6
         for u in living:
-            r = pygame.Rect(x, y, cw - SP1, INIT_H - 12)
+            r = pygame.Rect(x, y, cw - SP1, strip.h - 12)
             is_active = u is b.active and b.winner is None
             known = u.team == "player" or self._enemy_visible(u)
             fill = SURFACE_3 if is_active else SURFACE_2
@@ -697,7 +733,8 @@ class BattleScreen(Screen):
     def _draw_panel(self, screen):
         f = self.fonts
         b = self.battle
-        s = Stack(PANEL_X, PANEL_Y, PANEL_W)
+        pr = self._L["panel"]
+        s = Stack(pr.x, pr.y, pr.w)
 
         # --- header ------------------------------------------------- #
         head = s.row(30)
@@ -795,7 +832,7 @@ class BattleScreen(Screen):
         # Climb/Drop only make sense at a pit edge -- hide them elsewhere. Push
         # and Jump are general moves; they stay on the panel, greyed when unusable.
         contextual = (actions.STABILIZE, actions.FIRST_AID,
-                      actions.CLIMB, actions.DROP)
+                      actions.CLIMB, actions.DROP, actions.SWIM)
 
         for action in actions.PANEL_ACTIONS:
             if action in contextual and not (my_turn and action.available(b, act)):
@@ -852,7 +889,7 @@ class BattleScreen(Screen):
             return
         s.gap(SP3)
         body = s.row(4)
-        lines = wrap_lines(character_sheet(who), f.mono_sm, PANEL_W - SP2)
+        lines = wrap_lines(character_sheet(who), f.mono_sm, self._L["panel"].w - SP2)
         y = body.y
         for i, ln in enumerate(lines):
             col = INK if i == 0 else INK_DIM
@@ -882,10 +919,11 @@ class BattleScreen(Screen):
 
     def _draw_log(self, screen):
         f = self.fonts
-        well = pygame.Rect(GRID_X, LOG_Y, WIN_W - 2 * MARGIN, LOG_H)
+        well = self._L["log"]
         panel(screen, well, fill=SURFACE_0, border=LINE_SOFT)
         tracked(screen, "LOG", f.label, INK_FAINT, (well.x + SP2, well.y + SP1))
-        lines = self.battle.log_lines[-7:]
+        rows = max(1, (well.h - 24) // 17)
+        lines = self.battle.log_lines[-rows:]
         y = well.y + 22
         for i, ln in enumerate(lines):
             last = i == len(lines) - 1
@@ -898,7 +936,7 @@ class BattleScreen(Screen):
         b = self.battle
         txt = "You won" if b.winner == "player" else "The AI won"
         box = pygame.Rect(0, 0, 360, 92)
-        box.center = (GRID_X + GRID_W // 2, GRID_Y + GRID_H // 2)
+        box.center = self.view.rect.center
         panel(screen, box, fill=SURFACE_2, border=ACCENT, width=2, radius=RADIUS)
         text(screen, txt, f.title, INK, (box.centerx, box.y + 30), center=True)
         text(screen, "click to continue", f.body, INK_DIM,

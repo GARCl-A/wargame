@@ -10,18 +10,18 @@ import random
 import pygame
 
 from . import vision
-from .battle import COLS, ROWS
-from .theme import GRID_H, GRID_W, GRID_X, GRID_Y, NIGHT, TILE
+from .theme import NIGHT
 
 
 class LightRenderer:
     def __init__(self):
         self._mask_cache = {}          # (radius_px, core) -> darkness mask
+        self.view = None               # BoardView, set each frame by `draw`
 
     # ------------------------------------------------------------------ #
     def _cell_center_px(self, pos):
-        cx, cy = pos
-        return (GRID_X + cx * TILE + TILE // 2, GRID_Y + cy * TILE + TILE // 2)
+        r = self.view.cell_rect(*pos)
+        return r.center
 
     def _flicker_px(self, pos):
         """A small per-frame wobble on a torch's reach -- a sine sway plus light
@@ -40,15 +40,16 @@ class LightRenderer:
 
     def _sources(self, battle, visible, observers):
         """[(center_px, radius_px, core)] of the lights affecting the scene now."""
+        tile = self.view.tile
         result = []
         for pos, radius in vision.light_sources(battle):
             if self._source_visible(pos, visible):
-                reach = radius * TILE + TILE // 2 + self._flicker_px(pos)
+                reach = radius * tile + tile // 2 + self._flicker_px(pos)
                 result.append((self._cell_center_px(pos), reach, 0.30))
         for o in observers:                        # darkvision / own cell
             dark = o.ability.darkvision
             result.append((self._cell_center_px(o.pos),
-                           (dark if dark else 0) * TILE + TILE // 2, 0.55))
+                           (dark if dark else 0) * tile + tile // 2, 0.55))
         return result
 
     def _mask(self, radius_px, core):
@@ -67,25 +68,35 @@ class LightRenderer:
             self._mask_cache[key] = m
         return m
 
-    def draw(self, screen, battle, visible, observers):
+    def draw(self, screen, battle, visible, observers, view):
+        self.view = view
         if getattr(battle, "ambient_light", False):
             return                       # daylight scene: no darkness layer at all
-        ceiling = max(GRID_W, GRID_H)
-        darkness = pygame.Surface((GRID_W, GRID_H), pygame.SRCALPHA)
+        vr = view.rect
+        if vr.w < 4 or vr.h < 4:
+            return
+        tile = view.tile
+        ox, oy = vr.topleft
+        ceiling = max(vr.w, vr.h)
+        darkness = pygame.Surface(vr.size, pygame.SRCALPHA)
         darkness.fill((*NIGHT, 255))
         for (cxpx, cypx), radius_px, core in self._sources(battle, visible, observers):
-            radius_px = max(TILE // 2, min(radius_px, ceiling))
+            radius_px = int(max(tile // 2, min(radius_px, ceiling)))
             mask = self._mask(radius_px, core)
-            darkness.blit(mask, (cxpx - GRID_X - radius_px, cypx - GRID_Y - radius_px),
+            darkness.blit(mask, (cxpx - ox - radius_px, cypx - oy - radius_px),
                           special_flags=pygame.BLEND_RGBA_MIN)
-        occl = pygame.Surface((TILE, TILE), pygame.SRCALPHA)   # re-occlude what the character can't see
+        occl = pygame.Surface((tile, tile), pygame.SRCALPHA)   # re-occlude what the character can't see
         occl.fill((*NIGHT, 244))
-        for cx in range(COLS):
-            for cy in range(ROWS):
+        board = battle.board
+        for cx in range(board.cols):
+            for cy in range(board.rows):
                 if (cx, cy) not in visible:
-                    darkness.blit(occl, (cx * TILE, cy * TILE))
+                    r = view.cell_rect(cx, cy)
+                    if r.colliderect(vr):
+                        darkness.blit(occl, (r.x - ox, r.y - oy))
         # blur the edges to kill the square aliasing of the cells
         f = 4
-        darkness = pygame.transform.smoothscale(darkness, (GRID_W // f, GRID_H // f))
-        darkness = pygame.transform.smoothscale(darkness, (GRID_W, GRID_H))
-        screen.blit(darkness, (GRID_X, GRID_Y))
+        small = (max(1, vr.w // f), max(1, vr.h // f))
+        darkness = pygame.transform.smoothscale(darkness, small)
+        darkness = pygame.transform.smoothscale(darkness, vr.size)
+        screen.blit(darkness, vr.topleft)
