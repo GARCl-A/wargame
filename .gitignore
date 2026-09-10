@@ -7,3 +7,4 @@ Equipe.xlsx
 .venv/
 .pytest_cache/
 saves/
+sim_results/
