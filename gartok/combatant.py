@@ -328,7 +328,8 @@ class Combatant:
         return self.mental_defense_base + total
 
     def initiative_bonus(self):
-        return self.mod_wisdom + self._ability.initiative
+        return (self.mod_wisdom + self._ability.initiative
+                + self.talent_bonus("initiative"))
 
     def attack_mods(self, target, flanking=False, thrown=False):
         """List of (value, type, label) that enter the attack roll."""

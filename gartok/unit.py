@@ -485,12 +485,14 @@ class Unit:
         self.ac_base = (10 + dex_ac + (armor["ac"] if armor else 0)
                         + self.talent_bonus("ac"))
         self.ac_natural = self._ability.ac_natural
-        self.mental_defense_base = 10 + self.mod_wisdom
+        self.mental_defense_base = (10 + self.mod_wisdom
+                                    + self.talent_bonus("mental_defense"))
 
     def _derive_speed(self):
-        """Speed in squares: size base + ability, minus heavy-armor drag, minus
-        one more while overloaded. Floored at 1."""
-        self.speed = data.squares(data.SIZES[self.size]["speed"]) + self._ability.speed
+        """Speed in squares: size base + ability + talents, minus heavy-armor
+        drag, minus one more while overloaded. Floored at 1."""
+        self.speed = (data.squares(data.SIZES[self.size]["speed"])
+                      + self._ability.speed + self.talent_bonus("speed"))
         armor = self.armor
         if armor is not None and armor["speed"]:
             self.speed = max(1, self.speed - armor["speed"])

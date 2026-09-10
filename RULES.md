@@ -235,9 +235,10 @@ wilds packs scale 0–4.
 **Talent trees** — general → specific: a tier-1 root is a broad identity; each
 step deeper specialises the character in one action. **No pick is mutually
 exclusive** (the `group` field is reserved): one pick per track level, filled in
-any order, and over enough levels a character can hold every node. A tier-2 node
-just needs its tier-1 root first (`requires`). Tier 3+ is deferred. The node
-list with effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
+any order, and over enough levels a character can hold every node. A deeper node
+just needs the one above it first (`requires`), which chains down the branch. The
+first tier-3 node is `Fleet` (+1 Speed, behind Deadeye). The node list with
+effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
 **Hit die by mean level.** `mean level = ⌊(combat level + work level) / 2⌋`. Each
 time it rises by 1 the character gains a hit die: `1d(racial HD) + CON mod`
@@ -305,8 +306,8 @@ circumstance bonus to AC; Pack Tactics (+2 circ. to attack) does not add to the
 
 ### Initiative and attack
 
-- **Initiative**: `d20 + Wisdom mod` (+ racial bonus). Decreasing order, fixed
-  for the battle.
+- **Initiative**: `d20 + Wisdom mod` (+ racial bonus, + the Quick Wits talent).
+  Decreasing order, fixed for the battle.
 - **Attack**: `d20 + mods` vs the target's `AC`.
   - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or the
     **better of Strength and Dexterity** (a *finesse* weapon).
@@ -543,7 +544,8 @@ target's confidence instead of wounding them.
     Demoralize any target inside the arena, shared language or not (+1 to the
     roll when a language *is* shared), and gets +1 Mental Defense vs Demoralize.
 - **Hit:** `d20 + Charisma mod` vs the target's **Mental Defense** (`10 + WIS
-  mod`). Natural 20 = automatic crit; natural 1 = fumble. No damage.
+  mod`, + the Iron Will talent). Natural 20 = automatic crit; natural 1 =
+  fumble. No damage.
 - **Effect (hit):** the target becomes **Demoralized** — a **−1 `status`
   penalty** to **attack, AC and Mental Defense**.
 - **Duration:** the condition expires **at the end of the sufferer's own turn**.

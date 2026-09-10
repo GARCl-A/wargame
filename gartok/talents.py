@@ -16,6 +16,9 @@ exactly one consumer that reads it back:
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     ac                Unit._derive_ac                  --
+    mental_defense    Unit._derive_ac                  --
+    initiative        Combatant.initiative_bonus       --
+    speed             Unit._derive_speed               --
     carry_buffer      Unit._carry_relief (capped)      --
     haggle_cha        Unit.haggle_charisma_mod         --
     food_haggle       Unit.price_mods (economy)        --
@@ -32,7 +35,8 @@ general to specific: a tier-1 root is a broad identity; each step deeper makes
 the character a specialist in one particular action. **No pick is mutually
 exclusive** -- one pick per track level, the player fills the tree however they
 like (bottom-up, straight down one branch, spread wide), and over enough levels
-can hold every node. A tier-2 node just needs its tier-1 root first (`requires`).
+can hold every node. A deeper node just needs the one above it first (`requires`),
+which chains: `fleet` (tier 3) pulls in `deadeye` then `agile`.
 
 `name` / `effect` are player-facing (English, the current text standard); `id`
 and field names are English identifiers.
@@ -96,6 +100,8 @@ _LIST = [
     Talent("deadeye", "combat", 2, "Deadeye",
            "+1 to hit with Dexterity-based attacks.", requires="agile",
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
+    Talent("fleet", "combat", 3, "Fleet", "+1 square of Speed.", requires="deadeye",
+           effects=(Effect("speed", 1),), icon="action/leapfrog"),
 
     Talent("tough", "combat", 1, "Tough", "+1 Constitution.",
            effects=(Effect("attr", 1, "constitution"),), icon="body/bell-shield"),
@@ -104,6 +110,15 @@ _LIST = [
            effects=(Effect("hp_per_hd", 1),), icon="body/heart-inside"),
     Talent("bulwark", "combat", 2, "Bulwark", "+1 AC.", requires="tough",
            effects=(Effect("ac", 1),), icon="body/surrounded-shield"),
+
+    Talent("alert", "combat", 1, "Alert", "+1 Wisdom.",
+           effects=(Effect("attr", 1, "wisdom"),), icon="head/gaze"),
+    Talent("quick_wits", "combat", 2, "Quick Wits", "+2 initiative.",
+           requires="alert",
+           effects=(Effect("initiative", 2),), icon="head/quick-man"),
+    Talent("iron_will", "combat", 2, "Iron Will", "+2 Mental Defense.",
+           requires="alert",
+           effects=(Effect("mental_defense", 2),), icon="action/meditation"),
 
     # ================================================================== #
     # work -- two roots, carrier and negotiator                           #

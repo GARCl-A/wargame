@@ -191,9 +191,13 @@ One tree per XP track. A new level in a track grants one pick in its tree; `requ
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | agile |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | agile |
+| 3 | Fleet | +1 square of Speed. | deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | tough |
 | 2 | Bulwark | +1 AC. | tough |
+| 1 | Alert | +1 Wisdom. | -- |
+| 2 | Quick Wits | +2 initiative. | alert |
+| 2 | Iron Will | +2 Mental Defense. | alert |
 
 ### Work track
 

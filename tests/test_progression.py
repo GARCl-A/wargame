@@ -290,6 +290,41 @@ def test_hardy_adds_hp_per_hit_die_and_bulwark_adds_ac():
     assert u.ac == ac_after_tough + 1
 
 
+def test_alert_branch_lifts_wisdom_initiative_and_mental_defense():
+    u = _unit(seed=1)
+    u.combat_xp = 21                              # combat level 3 -> 3 picks
+    wis = u.wisdom
+
+    assert u.choose_talent("combat", "alert")     # +1 Wisdom score
+    assert u.wisdom == wis + 1
+    assert u.mental_defense == 10 + u.mod_wisdom  # the score bump, no flat add yet
+    md_after_alert = u.mental_defense
+    init_after_alert = Combatant(u).initiative_bonus()
+
+    assert u.choose_talent("combat", "quick_wits")
+    assert Combatant(u).initiative_bonus() == init_after_alert + 2
+
+    assert u.choose_talent("combat", "iron_will")
+    assert u.mental_defense == md_after_alert + 2
+    assert Combatant(u).mental_defense == md_after_alert + 2
+
+
+def test_fleet_adds_a_square_of_speed_and_chains_through_deadeye():
+    u = _unit(seed=1)
+    u.combat_xp = 21                              # 3 picks: agile -> deadeye -> fleet
+    assert not u.choose_talent("combat", "fleet")  # deadeye (and agile) not taken
+    assert u.choose_talent("combat", "agile")
+    assert not u.choose_talent("combat", "fleet")  # still needs deadeye
+    assert u.choose_talent("combat", "deadeye")
+    speed = u.speed
+    assert u.choose_talent("combat", "fleet")
+    assert u.speed == speed + 1
+
+    u.drop_talent("combat", "deadeye")            # cascade drops fleet with its prereq
+    assert u.talents["combat"] == ["agile"]
+    assert u.speed == speed
+
+
 def test_tier2_talent_effect_survives_a_save():
     u = _unit(seed=1)
     u.combat_xp = 10
