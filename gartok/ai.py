@@ -24,6 +24,14 @@ def _avg_die(nf):
     return n * (faces + 1) / 2
 
 
+def _hand_die(unit):
+    """Average damage die of the unit's hand attack (a real swing, an improvised
+    club, or bare fists)."""
+    if unit.unarmed or unit.improvised:
+        return _avg_die(unit.unarmed_damage)
+    return _avg_die(unit.weapon["damage"])
+
+
 def _pick_attack(battle, unit, target):
     """The attack to make on `target` this instant, or None. A Grippli with a
     Tongue weapon chooses between the hand weapon and the reach lash: whichever
@@ -34,9 +42,20 @@ def _pick_attack(battle, unit, target):
         return None
     if len(opts) == 1:
         return opts[0]
-    hand = _avg_die(unit.weapon["damage"]) if not unit.unarmed else _avg_die(unit.unarmed_damage)
-    tongue = _avg_die(unit.tongue_weapon["damage"])
-    return actions.ATTACK if hand >= tongue else actions.ATTACK_TONGUE
+    return (actions.ATTACK if _hand_die(unit) >= _avg_die(unit.tongue_weapon["damage"])
+            else actions.ATTACK_TONGUE)
+
+
+def _approach_reach(unit):
+    """How close the unit needs to get to a foe to strike -- so the path stops
+    there instead of always closing to adjacent. 1 normally; the Tongue's longer
+    reach only when the lash is the attack it would actually pick (no hand weapon,
+    or the tongue's die is at least as big) -- otherwise it keeps closing for the
+    hand weapon and still lashes if the walk falls short."""
+    if unit.has_tongue_weapon and (unit.unarmed or unit.improvised
+                                   or _avg_die(unit.tongue_weapon["damage"]) >= _hand_die(unit)):
+        return unit.tongue_reach
+    return 1
 
 
 def _axes(unit):
@@ -207,7 +226,8 @@ def take_turn(battle, unit):
             actions.DEMORALIZE.execute(battle, unit, target)
             continue
 
-        dest = battle.path_step_toward(unit, target.pos, unit.speed)
+        dest = battle.path_step_toward(unit, target.pos, unit.speed,
+                                       reach=_approach_reach(unit))
         if dest == unit.pos:
             # can't walk any closer -- maybe a pit or deep water is in the way.
             # try to climb / drop / swim toward the target so the fight doesn't

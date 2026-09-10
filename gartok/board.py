@@ -365,9 +365,11 @@ class Board:
 
     def path_step_toward(self, start, goal, budget, blocked=frozenset(),
                          footprint=1, target_cells=None, passable=frozenset(),
-                         diags=0, vertical=False, field=None):
+                         diags=0, vertical=False, field=None, reach=1):
         """Anchor as far as `budget` (in movement cost) from `start` along the
-        least-cost route to touching `target_cells` (by default the `goal` cell).
+        least-cost route to within `reach` cells of `target_cells` (by default the
+        `goal` cell) -- `reach=1` is footprint-adjacent; a longer-reach attacker
+        passes its own so it stops as soon as it can strike.
         Cells in `passable` (allies) can be crossed but not stopped on: step back.
 
         The route is planned over the WHOLE board, not just the `budget` disc:
@@ -384,12 +386,12 @@ class Board:
             return cells_distance(cells(p, footprint), target_cells)
 
         reached = list(dist)
-        touching = [p for p in reached if touch(p) <= 1]
+        touching = [p for p in reached if touch(p) <= reach]
         if touching:
             dest = min(touching, key=lambda p: dist[p])
         else:
-            # can't get adjacent at any range -- head for the closest approach,
-            # breaking ties toward the cheaper cell.
+            # can't get within reach at any range -- head for the closest
+            # approach, breaking ties toward the cheaper cell.
             dest = min(reached, key=lambda p: (touch(p), dist[p]))
 
         path = self._trace(prev, dest)          # [start, ..., dest]

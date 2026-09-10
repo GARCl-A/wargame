@@ -244,7 +244,7 @@ class Battle:
         return self.board.path_to(unit.pos, dest, blocked, unit.footprint, diags,
                                   vertical=unit.can_move_vertically, field=field)
 
-    def path_step_toward(self, unit, goal, budget):
+    def path_step_toward(self, unit, goal, budget, reach=1):
         allies, enemies = self.cells_by_side(unit)
         blocked = frozenset(enemies | self.board.walls | self.creature_cells()
                             | self._impassable_water(unit))
@@ -255,7 +255,8 @@ class Battle:
                                unit.can_move_vertically, blocked)
         return self.board.path_step_toward(unit.pos, goal, budget, blocked, unit.footprint,
                                            target_cells, allies, diags,
-                                           vertical=unit.can_move_vertically, field=field)
+                                           vertical=unit.can_move_vertically, field=field,
+                                           reach=reach)
 
     def move_unit(self, unit, dest):
         reach = self.reachable(unit)

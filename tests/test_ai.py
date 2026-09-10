@@ -94,7 +94,35 @@ def test_ai_never_flees_a_non_lethal_bout():
     assert ai._should_flee(batt, e) is False
 
 
-def test_ai_crosses_a_pit_trench_instead_of_stalling():
+def test_tongue_ai_stops_at_reach_two_to_lash_instead_of_closing():
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    batt.board.walls = set()
+    for u in batt.units:
+        u._ability = abilities.get("none")
+    d.char.talents["racial"] = ["tongue"]
+    d.char.equipped_weapon = None                     # only the tongue is armed
+    d.char.equipped_tongue = "Quarterstaff"
+    d.reset_battle_state()
+    a.pos, d.pos = (5, 5), (10, 5)                    # five apart; d.speed closes it
+    a.hp = a.hp_max = 40
+    a.dr = 0
+    d.ap = 2
+
+    assert ai._approach_reach(d) == 2
+    ai.take_turn(batt, d)
+    assert batt.units_distance(d, a) >= 2             # did not crowd in to adjacent
+    assert a.hp < 40                                  # lashed on arrival
+
+
+def test_tongue_ai_still_closes_for_a_bigger_hand_weapon():
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    d.char.talents["racial"] = ["tongue"]
+    d.char.equipped_weapon = "Broadsword"             # 1d12 in hand beats a 1d4 tongue
+    d.char.equipped_tongue = "Dagger"
+    d.reset_battle_state()
+    assert ai._approach_reach(d) == 1
     """A pit that splits the whole board used to lock the melee AI into an
     endless defend loop. Now both sides climb through and the fight ends."""
     from gartok import ai
