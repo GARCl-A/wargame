@@ -69,10 +69,6 @@ def _ancestral_blood_mods(unit, target, flanking):
     return [(2, "circumstance", "Ancestral Blood")] if target.size == "Large" else []
 
 
-def _mimic_sounds_feint(unit, target):
-    return [(4, "circumstance", "Mimic Sounds")]
-
-
 def _primal_blood(battle, unit, target, bonus, ac, log):
     nat = d20()
     total = nat + bonus
@@ -93,12 +89,6 @@ def _ferocity(unit, log):
     log(f"  Ferocity! {unit.name} hits 0 HP but stays on their feet until the end of their turn.")
 
 
-def _autotroph(unit, log):
-    if unit.hp < unit.hp_max:
-        unit.hp += 1
-        log(f"{unit.name} regenerates 1 HP (autotroph).")
-
-
 # --------------------------------------------------------------------------- #
 # Registry                                                                     #
 # --------------------------------------------------------------------------- #
@@ -108,10 +98,9 @@ _LIST = [
             f"sees {data.DARKVISION} squares in the dark as if it were lit.",
             darkvision=data.DARKVISION),
     Ability("inorganic_body", "Inorganic Body",
-            "cuts all damage taken by 1; at 0 HP goes BROKEN (no death save) "
-            "until an ally repairs it (Stabilize: INT vs DC "
-            f"{data.AUTOMATON_REPAIR_DC}).",
-            damage_reduction=1, breaks_when_downed=True),
+            "at 0 HP goes BROKEN instead of dying (no death save) until an ally "
+            f"repairs it (Stabilize: INT vs DC {data.AUTOMATON_REPAIR_DC}).",
+            breaks_when_downed=True),
     Ability("gallop", "Gallop",
             "+3 m (2 squares) of speed.", speed=2),
     Ability("sleep_immunity", "Sleep Immunity",
@@ -139,15 +128,14 @@ _LIST = [
             "either of the two.",
             extra_languages=1),
     Ability("mimic_sounds", "Mimic Sounds",
-            "once per battle, +4 [circumstance] on an attack (feint); "
-            "Demoralize needs no shared language.",
-            feint=_mimic_sounds_feint, demoralize_ignores_language=True),
+            "can Demoralize with no shared language (mimics the target's voice) "
+            "-- offence only; being demoralized still needs a common tongue.",
+            demoralize_ignores_language=True),
     Ability("ancestral_blood", "Ancestral Blood",
             "+2 [circumstance] to attack against Large targets.",
             attack_mods=_ancestral_blood_mods),
     Ability("autotroph", "Autotroph",
-            "regenerates 1 HP at the start of their turn.",
-            on_turn_start=_autotroph),
+            "photosynthesises: never needs to eat, immune to the hunger rules."),
     Ability("ferocity", "Ferocity",
             "once per battle, when downed drops to 0 HP and dying, but only "
             "falls at the end of their turn (the death save runs normally from there).",

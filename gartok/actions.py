@@ -251,8 +251,8 @@ class Attack(Action):
         actor.ap -= 1
         actor.walking = False
         if actor.ranged:
-            actor.ammo -= 1
-            battle.log(f"{actor.name} shoots ({actor.ammo} arrow(s) left).")
+            actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
+            battle.log(f"{actor.name} shoots ({actor.ammo} bolt(s) in the quiver).")
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
@@ -271,6 +271,36 @@ class Attack(Action):
         if result == "miss" and nat != 1 and ab.on_attack_miss \
                 and actor.spend_once("on_attack_miss"):
             ab.on_attack_miss(battle, actor, target, bonus, target.ac, battle.log)
+
+
+# --------------------------------------------------------------------------- #
+# Reload                                                                       #
+# --------------------------------------------------------------------------- #
+
+class Reload(Action):
+    """Chamber a bolt in the crossbow: takes one from the quiver, 1 action point.
+    A crossbow fires only while loaded and each shot empties it, so a crossbowman
+    gets one bolt away per turn (Reload + Attack = the whole turn)."""
+
+    id, name = "reload", "Reload"
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and actor.can_reload
+
+    def can(self, battle, actor, target=None):
+        return self.available(battle, actor)
+
+    def label(self, battle, actor):
+        return f"Reload the crossbow (1 pt, {actor.ammo} bolts left)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        actor.ammo -= 1
+        actor.crossbow_loaded = True
+        battle.log(f"{actor.name} reloads the crossbow ({actor.ammo} bolt(s) left).")
 
 
 # --------------------------------------------------------------------------- #
@@ -845,6 +875,7 @@ class EndTurn(Action):
 
 MOVE = Move()
 ATTACK = Attack()
+RELOAD = Reload()
 DEFEND = Defend()
 THROW = Throw()
 PICK_UP = PickUp()
@@ -859,5 +890,5 @@ FLEE = Flee()
 END = EndTurn()
 
 # Panel buttons, in order. Move and Attack are the default board click.
-PANEL_ACTIONS = [THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP, STABILIZE, FIRST_AID,
-                 PICK_UP, DEFEND, FLEE, END]
+PANEL_ACTIONS = [RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP, STABILIZE,
+                 FIRST_AID, PICK_UP, DEFEND, FLEE, END]

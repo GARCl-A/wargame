@@ -1,8 +1,9 @@
 """Enemy squad AI.
 
-Simple heuristic over `actions.py`: if unarmed, recover the dropped weapon;
-otherwise spend the points attacking the weakest target in range (or demoralize
-it if out of reach); otherwise advance. Sees through each unit's own eyes.
+Simple heuristic over `actions.py`: if unarmed, recover the dropped weapon; if
+holding an empty crossbow, reload it; otherwise spend the points attacking the
+weakest target in range (or demoralize it if out of reach); otherwise advance.
+Sees through each unit's own eyes.
 
 **Tendency colours the edges** (§8 / "Flee the fight" in GARTOK-regras.md), on
 the morality axis mostly:
@@ -147,6 +148,11 @@ def take_turn(battle, unit):
         target = _target(battle, unit)
         if target is None:
             break
+
+        # a crossbow only fires loaded -- keep it fed instead of closing to melee
+        if unit.can_reload:
+            actions.RELOAD.execute(battle, unit)
+            continue
 
         if actions.ATTACK.can(battle, unit, target):
             actions.ATTACK.execute(battle, unit, target)

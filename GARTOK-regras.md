@@ -174,7 +174,7 @@ e são o palpite mais razoável dado o estilo d20:
 | Habilidade | Efeito no wargame |
 |---|---|
 | Visão no escuro | enxerga **12 casas (18 m)** no escuro como se fosse claro |
-| Corpo inorgânico | reduz todo dano recebido em 1; a 0 PV fica **quebrado** em vez de morrendo — ver §Cair, estabilizar e morte |
+| Corpo inorgânico | a 0 PV fica **quebrado** em vez de morrendo (sem teste de morte), até um aliado consertar — ver §Cair, estabilizar e morte |
 | Galopar | +3 m (2 casas) de deslocamento — é daqui que vem o Centauro a 12 m |
 | Imunidade a sono | +1 CA [natural] (a imunidade a atordoamento em si não faz nada: não há atordoamento no jogo) |
 | Estômago forte | +3 PV máximos |
@@ -185,9 +185,9 @@ e são o palpite mais razoável dado o estilo d20:
 | Audição aguçada | +3 iniciativa |
 | Escalador | escala qualquer superfície de **DC 25 ou menos sem teste** (gasta a ação normalmente) — ver §Fossos e profundidade |
 | Idioma adicional (Humano) | fala um segundo idioma, sorteado entre os 11 idiomas raciais — pode usar **Desmoralizar** contra quem compartilhe qualquer um dos dois (Desmoralizar exige idioma em comum, ver §Desmoralizar) |
-| Imitar sons | 1×/batalha, +4 num ataque (feinte); pode **Desmoralizar sem idioma em comum** (imita a voz do alvo) — só na ofensiva: para *ser* desmoralizado, quem provoca o Kenku ainda precisa de idioma comum |
+| Imitar sons | pode **Desmoralizar sem idioma em comum** (imita a voz do alvo) — só na ofensiva: para *ser* desmoralizado, quem provoca o Kenku ainda precisa de idioma comum |
 | Sangue ancestral | +2 no ataque contra alvos Grandes+ |
-| Autótrofo | regenera 1 PV no início do turno |
+| Autótrofo | faz fotossíntese: **nunca precisa comer**, imune às regras de fome (não regenera PV em combate) |
 | Ferocidade | 1×/batalha, ao receber o golpe fatal fica com **0 PV** e a condição **morrendo**, mas só **desmaia no fim do turno dele** — até lá continua agindo normalmente. O contador de morte segue normal a partir daí. Só dispara com **mais de 0 PV e sem estar morrendo** |
 | Vôo | **voa**: desloca-se livre nas três dimensões (sobe e desce buracos sem teste, ignora terreno) e **nunca sofre dano de queda**. Sem bônus numérico |
 
@@ -347,12 +347,12 @@ inglês; nomes de raça/ocupação/arma/… seguem em português.
 
 Implementado em `data.resolve_bonus()`. Tipos em uso: `circunstancia`, `natural`, `status`.
 Exemplos: Defender (+1 circ. na CA) não acumula com nada de circunstância na CA;
-"Luta em bando" (+2 circ. no ataque) e o feinte de "Imitar sons" (+4 circ.) não
-somam — o Kenku flanqueando fica com +4, não +6.
+"Luta em bando" (+2 circ. no ataque) não soma com o +2 de flanco estrito — o Goblin
+flanqueando fica com +2, não +4.
 
 ### Iniciativa e ataque
 
-- **Iniciativa**: `d20 + mod Destreza` (+ bônus racial). Ordem decrescente, fixa na batalha.
+- **Iniciativa**: `d20 + mod Sabedoria` (+ bônus racial). Ordem decrescente, fixa na batalha.
 - **Ataque**: `d20 + mods` vs `CA` do alvo.
   - mod base = `mod Força` (corpo-a-corpo), `mod Destreza` (à distância / arremesso)
     ou o **melhor entre Força e Destreza** (arma *finesse*).
@@ -468,12 +468,17 @@ junto com o resto do esquadrão.
 
 ### Munição e arma improvisada 🟡
 
-- A **Besta Leve** exige **munição**. A **Aljava** (item do Besteiro) traz
-  **20 flechas**; cada tiro à distância gasta 1. Flechas **não se recuperam**.
-- **Sem flecha, a besta não dispara.** Ela passa a valer como **arma improvisada**:
-  ataque **corpo-a-corpo**, alcance 1, dano igual ao **ataque desarmado do
-  tamanho** (Pequeno/Diminuto 1d2 · Médio 1d3 · Grande 1d4) + mod Força.
-- "Arma improvisada" é um conceito reaproveitável; por ora só a besta sem flecha o aciona.
+- A **Besta Leve** exige **munição** e segura **uma flecha por vez**. A **Aljava**
+  (item do Besteiro) traz **20 flechas**; flechas **não se recuperam**.
+- **Recarregar** é uma ação de 1 ponto: tira uma flecha da Aljava e engatilha na
+  besta. **A besta entra na batalha descarregada.**
+- Disparar exige a besta **carregada** e a esvazia — na prática o Besteiro solta
+  **um tiro por turno** (Recarregar + Atirar gastam os 2 pontos).
+- **Besta descarregada = arma improvisada:** ataque **corpo-a-corpo**, alcance 1,
+  dano igual ao **ataque desarmado do tamanho** (Pequeno/Diminuto 1d2 · Médio 1d3
+  · Grande 1d4) + mod Força. Vale tanto sem flecha na Aljava quanto só sem ter
+  recarregado ainda.
+- "Arma improvisada" é um conceito reaproveitável; por ora só a besta o aciona.
 
 ### Terreno 🟡
 
@@ -667,8 +672,9 @@ principalmente no eixo moral:
 > Machadinha, Lança Curta e Martelo Leve são candidatos óbvios a arma de arremesso
 > mais adiante; por decisão de design começamos só com a Adaga.
 >
-> A **Besta Leve** consome flecha (Aljava = 20). Sem flecha vira arma improvisada
-> — ver §Munição e arma improvisada.
+> A **Besta Leve** segura uma flecha por vez (Aljava = 20) e precisa ser
+> **recarregada** (ação de 1 ponto) entre um tiro e outro — um tiro por turno.
+> Descarregada, vira arma improvisada — ver §Munição e arma improvisada.
 
 ---
 

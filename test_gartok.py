@@ -97,7 +97,7 @@ def test_passive_ability_adds_in_derivation():
     u = _unit()
     u._ability = abilities.get("none")
     u._derive_combat()
-    hp0, spd0, dr0 = u.hp_max, u.speed, u.dr
+    hp0, spd0 = u.hp_max, u.speed
     random.seed(0)                                    # same HP roll
     u2 = _unit()
     u2._ability = abilities.get("strong_stomach")
@@ -106,9 +106,9 @@ def test_passive_ability_adds_in_derivation():
     u2._ability = abilities.get("gallop")
     u2._derive_combat()
     assert u2.speed == spd0 + 2
-    u2._ability = abilities.get("inorganic_body")
+    u2._ability = abilities.get("sleep_immunity")
     u2._derive_combat()
-    assert u2.dr == dr0 + 1
+    assert u2.ac_natural == 1
 
 
 def test_large_centaur_moves_12m_from_gallop_not_size():
@@ -1185,19 +1185,38 @@ def test_besteiro_starts_with_ammo():
     assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Light Crossbow"
 
 
-def test_ranged_attack_consumes_one_bolt():
+def test_crossbow_starts_unloaded_and_must_reload_first():
+    u = _unit()
+    u.set_occupation("Crossbowman")
+    c = Combatant(u)
+    assert not c.crossbow_loaded and not c.ranged and c.improvised   # can't shoot yet
+    assert c.can_reload and c.attack_range == 1                       # swings it until reloaded
+
+
+def test_crossbow_reload_cycle():
     batt, a, d = _melee_battle()
     batt.board.walls = set()                          # clear lane between shooter and target
-    a.equip_weapon("Light Crossbow"); a.ammo = 3
+    a.equip_weapon("Light Crossbow"); a.ammo = 3; a.crossbow_loaded = True
     a.pos, d.pos = (2, 5), (9, 5)
     a.torch_hand = False
     for u in batt.units:                              # light the lane so LOS+sight hold
         u._ability = abilities.get("none")
     batt.ground = [GroundObject.torch((6, 5))]
     a.ap = 2
-    assert actions.ATTACK.can(batt, a, d)
+
+    # loaded -> the shot fires and empties the crossbow, quiver untouched
+    assert a.ranged and actions.ATTACK.can(batt, a, d)
     actions.ATTACK.execute(batt, a, d)
-    assert a.ammo == 2
+    assert a.ammo == 3 and not a.crossbow_loaded and a.improvised
+
+    # empty -> can't shoot; Reload chambers one bolt from the quiver (1 AP)
+    assert not actions.ATTACK.can(batt, a, d) and actions.RELOAD.can(batt, a)
+    actions.RELOAD.execute(batt, a)
+    assert a.ammo == 2 and a.crossbow_loaded and a.ap == 0
+
+    # quiver dry -> no reload, stuck swinging it as an improvised club
+    a.ammo, a.crossbow_loaded = 0, False
+    assert not actions.RELOAD.can(batt, a) and a.improvised and a.attack_range == 1
 
 
 def test_unit_attack_bonus_picks_the_right_attribute():
@@ -2285,7 +2304,9 @@ def test_sure_strike_and_deadeye_key_off_the_attack_attribute():
         if ammo:
             u._base_inventory.append("Quiver")
         u.give_to_hand(weapon)
-        return sum(v for v, *_ in Combatant(u).attack_mods(tgt))
+        c = Combatant(u)
+        c.crossbow_loaded = True                  # measure the bolt, not the improvised swing
+        return sum(v for v, *_ in c.attack_mods(tgt))
 
     # Sure Strike (under Strong): +1 on a Strength swing, nothing on a bolt
     assert to_hit("Axe", "strong", "sure_strike") == to_hit("Axe", "strong") + 1
@@ -2319,7 +2340,9 @@ def test_long_reach_extends_ranged_and_thrown_not_melee():
     u._base_inventory.append("Quiver")
 
     u.give_to_hand("Light Crossbow")
-    assert Combatant(u).attack_range == data.WEAPONS["Light Crossbow"]["range"] + 1
+    loaded = Combatant(u)
+    loaded.crossbow_loaded = True
+    assert loaded.attack_range == data.WEAPONS["Light Crossbow"]["range"] + 1
     u.give_to_hand("Dagger")
     assert Combatant(u).throw_range == data.WEAPONS["Dagger"]["thrown"] + 1
     u.give_to_hand("Axe")

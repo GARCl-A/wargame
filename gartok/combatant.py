@@ -74,6 +74,9 @@ class Combatant:
             self.torch_hand = weapon_hands < 2       # a 2-handed weapon leaves no off hand
         self.inventory = list(c._base_inventory)
         self.ammo = data.QUIVER_AMMO if data.AMMO_ITEM in self.inventory else 0
+        # a crossbow holds one bolt at a time and starts the fight empty: spend an
+        # action to Reload (chambers one from the quiver), fire, repeat.
+        self.crossbow_loaded = False
         self.first_aid_charges = (data.FIRST_AID_CHARGES
                                   if data.FIRST_AID_ITEM in self.inventory else 0)
         self.conditions = []
@@ -270,14 +273,22 @@ class Combatant:
         return not self.unarmed and self.weapon["range"] > 0
 
     @property
+    def can_reload(self):
+        """Crossbow is empty but there are bolts in the quiver -> the Reload
+        action can chamber one (1 AP)."""
+        return self.needs_ammo and not self.crossbow_loaded and self.ammo > 0
+
+    @property
     def improvised(self):
-        """Wielding a ranged weapon with no ammo left -> swung as an improvised
-        weapon: melee, size unarmed die, Strength."""
-        return self.needs_ammo and self.ammo <= 0
+        """Holding a crossbow that isn't loaded -> swung as an improvised weapon
+        (melee, size unarmed die, Strength) until an action is spent to Reload.
+        With no bolts left in the quiver that is the only option."""
+        return self.needs_ammo and not self.crossbow_loaded
 
     @property
     def ranged(self):
-        return self.needs_ammo and not self.improvised
+        """Can loose a bolt right now: a crossbow with one chambered."""
+        return self.needs_ammo and self.crossbow_loaded
 
     @property
     def attack_range(self):
@@ -310,7 +321,7 @@ class Combatant:
         return self.mental_defense_base + total
 
     def initiative_bonus(self):
-        return self.mod_dexterity + self._ability.initiative
+        return self.mod_wisdom + self._ability.initiative
 
     def attack_mods(self, target, flanking=False, thrown=False):
         """List of (value, type, label) that enter the attack roll."""
