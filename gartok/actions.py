@@ -169,8 +169,10 @@ def _cells_in_radius(origin, radius):
                 yield (ox + dx, oy + dy)
 
 
-def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False):
-    """Resolve a d20 roll already made: log and apply damage. Returns 'hit'|'miss'|'crit'."""
+def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
+                 weapon=None):
+    """Resolve a d20 roll already made: log and apply damage. Returns 'hit'|'miss'|'crit'.
+    `weapon` (a WEAPONS dict) overrides the held one for the damage roll -- the Tongue."""
     total = nat + bonus
     ac = target.ac
     crit = nat == 20
@@ -185,7 +187,8 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             return "crit" if crit else "hit"
         battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> hit."))
         was_up = target.alive
-        target.take_damage(attacker.damage_roll(crit=crit, thrown=thrown), battle.log)
+        target.take_damage(
+            attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon), battle.log)
         if was_up and target.team != attacker.team:
             if not target.alive:
                 attacker.credit_kill(target)  # downed a standing enemy -> combat XP later
@@ -223,6 +226,31 @@ class Move(Action):
 # Attack                                                                       #
 # --------------------------------------------------------------------------- #
 
+def _strike(battle, actor, target, *, weapon=None, prefix=None):
+    """The shared attack resolution once the AP is paid: assemble the mods (flank,
+    feint), roll, resolve the hit, fire the on-miss ability. `weapon` overrides the
+    held one (the Tongue). Returns 'hit'|'miss'|'crit'."""
+    mods = actor.attack_mods(target, _pack_flank(battle, actor, target), weapon=weapon)
+    if _flanked(battle, actor, target):
+        mods.append((2, "circumstance", "Flank"))
+
+    ab = actor.ability
+    if ab.feint and actor.spend_once("feint"):
+        mods += ab.feint(actor, target)
+        battle.log(f"{actor.name} uses {ab.name} to distract.")
+
+    bonus, applied = resolve_bonus(mods)
+    detail = " ".join(f"{v:+}({r})" for v, r in applied)
+    nat = d20()
+    result = _resolve_hit(battle, actor, target, nat, bonus, detail,
+                          prefix or f"{actor.name} -> {target.name}", weapon=weapon)
+
+    if result == "miss" and nat != 1 and ab.on_attack_miss \
+            and actor.spend_once("on_attack_miss"):
+        ab.on_attack_miss(battle, actor, target, bonus, target.ac, battle.log)
+    return result
+
+
 class Attack(Action):
     id, name, target = "attack", "Attack", "enemy"
 
@@ -231,14 +259,13 @@ class Attack(Action):
             return False
         if battle.units_distance(actor, target) > actor.attack_range:
             return False
-        # melee (reach included) only crosses a one-level lip; a deeper drop is
-        # out of reach even for a long-melee weapon like the Tongue
+        # melee only crosses a one-level lip; a deeper drop is out of reach
         if not actor.ranged \
                 and abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         if not battle.los_between(actor, target):
             return False
-        # a ranged attack needs to see the target; melee (reach included) does not
+        # a ranged attack needs to see the target; melee does not
         if actor.ranged and not battle.can_see_unit(actor, target):
             return False
         return True
@@ -255,24 +282,50 @@ class Attack(Action):
         if actor.ranged:
             actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
             battle.log(f"{actor.name} shoots ({actor.ammo} bolt(s) in the quiver).")
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        _strike(battle, actor, target)
 
-        ab = actor.ability
-        if ab.feint and actor.spend_once("feint"):
-            mods += ab.feint(actor, target)
-            battle.log(f"{actor.name} uses {ab.name} to distract.")
 
-        bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
-        nat = d20()
-        prefix = f"{actor.name} -> {target.name}"
-        result = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+class AttackTongue(Action):
+    """The Grippli's Tongue: a second weapon, an extra limb. A 1-handed weapon in
+    the Tongue slot, swung at +1 square of reach. A separate action so a Grippli
+    can choose it or the hand weapon each turn (a reach poke vs. a 2-handed blow)."""
 
-        if result == "miss" and nat != 1 and ab.on_attack_miss \
-                and actor.spend_once("on_attack_miss"):
-            ab.on_attack_miss(battle, actor, target, bonus, target.ac, battle.log)
+    id, name, target, aimed = "attack_tongue", "Lash", "enemy", True
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and actor.has_tongue_weapon
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or not actor.has_tongue_weapon:
+            return False
+        if not _attackable_target(actor, target):
+            return False
+        if battle.units_distance(actor, target) > actor.tongue_reach:
+            return False
+        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
+            return False
+        return battle.los_between(actor, target)
+
+    def label(self, battle, actor):
+        if not self.available(battle, actor):
+            return "Lash with the tongue (1 pt)"
+        return f"Lash {actor.tongue_weapon_name} (1 pt, reach {actor.tongue_reach})"
+
+    def highlight_cells(self, battle, actor):
+        return [p for c in cells(actor.pos, actor.footprint)
+                for p in _cells_in_radius(c, actor.tongue_reach)]
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units
+                if not u.dead and u.team != actor.team and self.can(battle, actor, u)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        _strike(battle, actor, target, weapon=actor.tongue_weapon,
+                prefix=f"{actor.name} -> {target.name} (tongue)")
 
 
 # --------------------------------------------------------------------------- #
@@ -950,6 +1003,7 @@ class EndTurn(Action):
 
 MOVE = Move()
 ATTACK = Attack()
+ATTACK_TONGUE = AttackTongue()
 RELOAD = Reload()
 DEFEND = Defend()
 THROW = Throw()
@@ -966,5 +1020,5 @@ FLEE = Flee()
 END = EndTurn()
 
 # Panel buttons, in order. Move and Attack are the default board click.
-PANEL_ACTIONS = [RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP, SWIM,
-                 STABILIZE, FIRST_AID, PICK_UP, DEFEND, FLEE, END]
+PANEL_ACTIONS = [ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
+                 SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, FLEE, END]

@@ -54,6 +54,7 @@ def unit_to_dict(u):
         "languages": list(u.languages),          # racial + random extras
         "equipped_weapon": u.equipped_weapon,    # weapon hand (None = unarmed)
         "equipped_offhand": u.equipped_offhand,  # off hand: a torch, or None
+        "equipped_tongue": u.equipped_tongue,    # Grippli Tongue slot: a 1-handed weapon, or None
         "equipped_armor": u.equipped_armor,      # body slot: armor name, or None
         "inventory": list(u._base_inventory),    # the pack: spare items, weapons included
     }

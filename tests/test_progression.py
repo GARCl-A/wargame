@@ -277,22 +277,37 @@ def test_long_reach_extends_ranged_and_thrown_not_melee():
     assert Combatant(u).attack_range == 1         # melee reach is untouched
 
 
-def test_tongue_is_a_grippli_racial_node_that_adds_a_square_of_melee_reach():
+def test_tongue_is_a_grippli_racial_node_that_opens_a_reach_weapon_slot():
     u = _unit(seed=1)
     u.set_race("Grippli")
     u.set_track_level("racial", 1)                # sandbox: pin one racial level
     assert u.picks_available("racial") == 1
+    assert not u.fits_tongue("Axe")              # no talent yet -> no slot
     assert u.choose_talent("racial", "tongue")
-    assert u.melee_reach == 2
+    assert u.has_tongue
 
-    assert Combatant(u).attack_range == 2         # unarmed reaches two squares
-    u.give_to_hand("Axe")
-    assert Combatant(u).attack_range == 2         # so does a melee weapon
-    u.give_to_hand("Light Crossbow")
-    u._base_inventory.append("Quiver")
+    assert u.give_to_tongue("Axe")
+    assert u.equipped_tongue == "Axe" and u.tongue_reach == 2
+    assert not u.give_to_tongue("Broadsword")    # 2-handed does not fit the single limb
+
     c = Combatant(u)
-    c.crossbow_loaded = True
-    assert c.attack_range == data.WEAPONS["Light Crossbow"]["range"]   # ranged ignores it
+    assert c.has_tongue_weapon and c.tongue_reach == 2
+    assert c.attack_range == 1                   # the HAND weapon is still reach 1
+    # the hand can carry the 2-handed Broadsword alongside -- no lockout
+    u.give_to_hand("Broadsword")
+    c = Combatant(u)
+    assert c.weapon_name == "Broadsword" and c.tongue_weapon_name == "Axe"
+
+
+def test_tongue_slot_empties_when_the_talent_goes_away():
+    u = _unit(seed=1)
+    u.set_race("Grippli")
+    u.set_track_level("racial", 1)
+    u.choose_talent("racial", "tongue")
+    u.give_to_tongue("Dagger")
+    u.set_race("Orc")                            # not a Grippli any more
+    assert not u.has_tongue and u.equipped_tongue is None
+    assert "Dagger" in u._base_inventory         # stowed, not lost
 
 
 def test_tongue_is_refused_to_non_grippli():

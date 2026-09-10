@@ -74,6 +74,9 @@ class Combatant:
         self.weapon_hand = c.equipped_weapon is not None
         self.weapon_name = c.equipped_weapon
         self.weapon = data.WEAPONS.get(c.equipped_weapon)
+        # the Tongue is a separate limb: its weapon rides alongside the hands
+        self.tongue_weapon_name = c.equipped_tongue if c.has_tongue else None
+        self.tongue_weapon = data.WEAPONS.get(self.tongue_weapon_name)
         self.torch_hand = False
         if c.equipped_offhand == data.TORCH_ITEM:
             weapon_hands = self.weapon["hands"] if self.weapon_hand else 0
@@ -265,6 +268,8 @@ class Combatant:
         w = sum(data.item_weight(it) for it in self.inventory)
         if self.weapon_hand:
             w += self.weapon["weight"]
+        if self.tongue_weapon:
+            w += self.tongue_weapon["weight"]
         if self.torch_hand:
             w += data.TORCH_WEIGHT
         if self.armor:
@@ -299,8 +304,18 @@ class Combatant:
 
     @property
     def attack_range(self):
+        """Reach of the HAND weapon. The Tongue weapon has its own, longer reach
+        (`tongue_reach`) -- see `actions.AttackTongue`."""
         if self.ranged:
             return self.weapon["range"] + self.char.talent_bonus("ranged_reach")
+        return 1
+
+    @property
+    def has_tongue_weapon(self):
+        return self.tongue_weapon is not None
+
+    @property
+    def tongue_reach(self):
         return 1 + self.char.talent_bonus("melee_reach")
 
     @property
@@ -331,9 +346,18 @@ class Combatant:
         return (self.mod_wisdom + self._ability.initiative
                 + self.talent_bonus("initiative"))
 
-    def attack_mods(self, target, flanking=False, thrown=False):
-        """List of (value, type, label) that enter the attack roll."""
-        if thrown:
+    def attack_mods(self, target, flanking=False, thrown=False, weapon=None):
+        """List of (value, type, label) that enter the attack roll. `weapon` (a
+        WEAPONS dict) overrides the held one -- the Tongue weapon, always a plain
+        1-handed melee strike."""
+        if weapon is not None:
+            if weapon["finesse"]:
+                mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
+                hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
+            else:
+                mods = [(self.mod_strength, None, "STR")]
+                hit_stat = "str"
+        elif thrown:
             mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
             hit_stat = "dex"
         elif self.unarmed or self.improvised:
@@ -358,8 +382,11 @@ class Combatant:
         mods += self._condition_mods("attack_mods")
         return mods
 
-    def damage_roll(self, crit=False, thrown=False):
-        if (self.unarmed or self.improvised) and not thrown:
+    def damage_roll(self, crit=False, thrown=False, weapon=None):
+        """`weapon` (a WEAPONS dict) overrides the held one -- the Tongue weapon."""
+        if weapon is not None:
+            n, faces = weapon["damage"]
+        elif (self.unarmed or self.improvised) and not thrown:
             n, faces = self.unarmed_damage
         else:
             n, faces = self.weapon["damage"]
@@ -367,7 +394,7 @@ class Combatant:
         bonus = 0
         if thrown:
             bonus += self.mod_strength              # thrown: add Strength to damage
-        elif not self.ranged:                       # melee (includes unarmed)
+        elif weapon is not None or not self.ranged:  # melee (includes unarmed and the Tongue)
             bonus += (self.mod_strength + self._ability.melee_damage
                       + self.char.talent_bonus("melee_damage"))
         return max(1, dice + bonus)

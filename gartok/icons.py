@@ -196,7 +196,8 @@ def _jump(surf, rect, c):
 
 
 _GLYPHS = {
-    "move": _move, "attack": _sword, "throw": _throw, "demoralize": _shout,
+    "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
+    "demoralize": _shout,
     "pickup": _hand, "defend": _shield, "end": _hourglass, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,

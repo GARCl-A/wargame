@@ -208,6 +208,7 @@ WEAPONS = {
     "Shortspear":   {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
     "Light Pick": {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
     "Pick":      {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
+    "Broadsword":    {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0},
     "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5},
 }
 

@@ -14,20 +14,24 @@ _ATTR_LABELS = [
 
 
 def _weapon_line(u):
-    rr = f", reach {u.melee_reach}" if u.melee_reach > 1 else ""
     if u.unarmed:
         n, faces = u.unarmed_damage
-        return f"Weapon: unarmed  {n}d{faces} (melee attack{rr})"
+        return f"Weapon: unarmed  {n}d{faces} (melee attack)"
     if u.improvised:
         n, faces = u.unarmed_damage
         return (f"Weapon: {u.weapon_name} NO ARROW -> improvised  "
-                f"{n}d{faces} (melee{rr})")
-    reach = f" (range {u.weapon['range']})" if u.ranged else f" (melee{rr})"
+                f"{n}d{faces} (melee)")
+    reach = f" (range {u.weapon['range']})" if u.ranged else " (melee)"
     thrown = f"  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
     ammo = f"  arrows {u.ammo}" if u.needs_ammo else ""
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
     n, faces = u.weapon["damage"]
     return f"Weapon: {u.weapon_name}  {n}d{faces}  [{hands}]" + reach + thrown + ammo
+
+
+def _tongue_line(u):
+    n, faces = u.tongue_weapon["damage"]
+    return f"Tongue: {u.tongue_weapon_name}  {n}d{faces}  (melee, reach {u.tongue_reach})"
 
 
 def _armor_line(u):
@@ -75,6 +79,7 @@ def character_sheet(u):
         line_a,
         line_b,
         _weapon_line(u),
+        *([_tongue_line(u)] if u.has_tongue_weapon else []),
         hands_line,
         _armor_line(u),
         f"Inventory: {inv}",

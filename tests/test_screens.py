@@ -292,3 +292,33 @@ def test_char_editor_duplicate_forks_an_unsaved_copy():
     assert scr.unit.name == "Ribit (copy)"
     assert scr.unit.race["name"] == "Grippli"
     assert scr.unit.combat_level == 2
+
+
+def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.theme import Fonts
+    from gartok.char_editor_screen import CharEditorScreen
+    from gartok.gear_screen import GearScreen
+    from gartok.sheet_panel import draw_sheet
+    from gartok.combatant import Combatant
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = Fonts()
+
+    u = Unit("player")
+    u.set_race("Grippli")
+    u.set_track_level("racial", 2)
+    u.choose_talent("racial", "tongue")
+    u.give_to_tongue("Dagger")
+    u.equipped_weapon = "Broadsword"                     # 2-handed in the hands, dagger on the tongue
+
+    surf = pygame.Surface((1600, 1000))
+    for scr in (GearScreen(F, Guild([u]), lambda: None),
+                CharEditorScreen(F, lambda: None)):
+        if isinstance(scr, CharEditorScreen):
+            scr._load_unit(u)
+        scr.mouse = (0, 0)
+        scr.draw(surf)
+    draw_sheet(surf, pygame.Rect(0, 0, 520, 900), Combatant(u), F)

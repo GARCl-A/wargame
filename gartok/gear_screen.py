@@ -355,16 +355,18 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         two_handed = bool(unit.equipped_weapon) and \
             data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
 
-        # --- hands ------------------------------------------------- #
+        # --- hands (+ the Grippli Tongue, when it has one) --------- #
         y = section(screen, "HANDS", x, y, inner, f)
-        for kind in ("hand", "offhand"):
+        slots = ["hand", "offhand"] + (["tongue"] if unit.has_tongue else [])
+        for kind in slots:
             hr = pygame.Rect(x, y, inner, 32)
-            held = unit.equipped_weapon if kind == "hand" else unit.equipped_offhand
+            held = {"hand": unit.equipped_weapon, "offhand": unit.equipped_offhand,
+                    "tongue": unit.equipped_tongue}[kind]
             blocked = kind == "offhand" and two_handed
             sel = (unit, kind) in self.selected
-            accepts = bool(carried) and not blocked and (
-                (kind == "hand" and any(unit.is_weapon(n) for n in carried))
-                or (kind == "offhand" and any(unit.fits_offhand(n) for n in carried)))
+            fits = {"hand": unit.is_weapon, "offhand": unit.fits_offhand,
+                    "tongue": unit.fits_tongue}[kind]
+            accepts = bool(carried) and not blocked and any(fits(n) for n in carried)
             drop = accepts and not sel and hr.collidepoint(mouse)
             self._slot(screen, hr, sel=sel, accepts=accepts, drop=drop)
             ink = ACCENT_INK if sel else INK
@@ -374,6 +376,9 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                     dn, faces = data.WEAPONS[held]["damage"]
                     hit, _src = unit.attack_bonus
                     right = f"{hit:+}  ·  {dn}d{faces}  ·  " + right
+                elif kind == "tongue":
+                    dn, faces = data.WEAPONS[held]["damage"]
+                    right = f"{dn}d{faces}  ·  reach {unit.tongue_reach}  ·  " + right
                 text(screen, ellipsize(held, f.body, inner - f.mono_sm.size(right)[0] - SP4),
                      f.body, ink, (hr.x + SP2, hr.y + 8))
                 text(screen, right, f.mono_sm, ACCENT_INK if sel else INK_DIM,
@@ -383,7 +388,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                 text(screen, "off hand  ·  2-handed weapon", f.body_sm, INK_FAINT,
                      (hr.x + SP2, hr.y + 8))
             else:
-                empty = "weapon: none" if kind == "hand" else "off hand: free"
+                empty = {"hand": "weapon: none", "offhand": "off hand: free",
+                         "tongue": "tongue: free  ·  1-handed weapon, +1 reach"}[kind]
                 text(screen, empty, f.body_sm, ACCENT if drop else INK_FAINT,
                      (hr.x + SP2, hr.y + 8))
             if not blocked:

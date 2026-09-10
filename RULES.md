@@ -220,10 +220,14 @@ state on the `Unit` (`talents`, `_level_hp_rolls`); screen in
 |---|---|---|
 | Combat | `combat_xp` | downing enemies (below) |
 | Work | `work_xp` (marks, 1 per 16 h) | lumber-yard shifts, wilds hunts |
+| Racial | `combat level + work level` | every level in another track feeds it |
 
 **Level per track** — cumulative thresholds in `progression.py`, a first guess,
 tunable. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author); past L2 is a stub.
-Each level in a track grants **one pick** in that track's tree.
+Each level in a track grants **one pick** in that track's tree. The **racial
+track** earns no XP of its own — its "XP" is the sum of the other track levels
+(`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. Its nodes
+are **race-gated**; only Grippli has one so far (`Tongue`).
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
@@ -240,10 +244,11 @@ just needs the one above it first (`requires`), which chains down the branch. Th
 first tier-3 node is `Fleet` (+1 Speed, behind Deadeye). The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
-**Hit die by mean level.** `mean level = ⌊(combat level + work level) / 2⌋`. Each
-time it rises by 1 the character gains a hit die: `1d(racial HD) + CON mod`
-(min 1), added to max HP. The rolls are saved (`_level_hp_rolls`) — reloading
-does not re-roll.
+**Hit die by racial level.** Each racial level grants a hit die: `1d(racial HD) +
+CON mod` (min 1), added to max HP. The rolls are saved (`_level_hp_rolls`) —
+reloading does not re-roll. The scale is set to match the old `⌊(combat + work) /
+2⌋`, but it now moves with *any* track and can be pinned directly in the
+character creator. `mean_level` survives only as the encounter-difficulty scalar.
 
 ---
 
@@ -284,6 +289,10 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   next turn.
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**
   (for now only the **Dagger**, range 9 m = 6 cells). See below.
+- **Lash** (1 point) = the Grippli's **Tongue** attack — the 1-handed weapon in
+  the `equipped_tongue` slot, swung at **+1 cell of reach**. A separate action, so
+  a Grippli chooses each turn between the reach lash and the hand weapon (e.g. a
+  2-handed Broadsword). The tongue is a third limb; it does not use a hand.
 - **Pick Up** (1 point) = picks up a `ground.GroundObject` in your cell or
   adjacent: a weapon only if you are **unarmed**; a torch for anyone (armed = a
   swap).
@@ -321,7 +330,8 @@ circumstance bonus to AC; Pack Tactics (+2 circ. to attack) does not add to the
   Tactics do **not** add (+2, never +4).
 - **Damage**: `weapon die (+ Strength mod if melee)`, minimum 1, minus the
   target's damage reduction.
-- **Reach**: melee = adjacent cells; ranged = the weapon's range in cells.
+- **Reach**: melee = adjacent cells; ranged = the weapon's range in cells; the
+  Grippli **Tongue** lash = melee + 1 cell.
   Distance between units = the **shortest distance between the two footprints'
   cells**. It uses the **diagonal metric** (`board.grid_distance`:
   `max + min // 2` — diagonals alternate 1-2), so every reach radius is an

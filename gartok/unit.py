@@ -48,6 +48,7 @@ class Unit:
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
         self._racial_override = None                   # sandbox: a pinned racial level (hit dice + racial picks), else derived
+        self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
 
         self._auto_name = name is None
         self.name = name or names.random_name()
@@ -83,6 +84,7 @@ class Unit:
         u.equipped_weapon = d.get("equipped_weapon", u.occupation["weapon"])
         u.equipped_offhand = d.get("equipped_offhand")
         u.equipped_armor = d.get("equipped_armor")
+        u.equipped_tongue = d.get("equipped_tongue")
         u.alignment = d["alignment"]
         u.gold = d.get("gold", 0)
         u.unfed_days = d.get("unfed_days", 0)
@@ -460,6 +462,9 @@ class Unit:
         """Recompute every stat that hangs off attributes + hunger + encumbrance
         + armor + talents. Order matters: `_derive_carry` sets `encumbered`,
         which the attribute mods read, which everything after them reads."""
+        if self.equipped_tongue and not self.has_tongue:   # lost the talent (race / drop): stow it
+            self._base_inventory.append(self.equipped_tongue)
+            self.equipped_tongue = None
         self._derive_carry()
         self._derive_attribute_mods()
         self._derive_hp()
@@ -555,6 +560,12 @@ class Unit:
     def fits_armor(name):
         return name in data.ARMOR
 
+    def fits_tongue(self, name):
+        """The Tongue slot takes one 1-handed weapon (it is a single extra limb),
+        and only if this character has the `tongue` talent."""
+        return (self.has_tongue and name in data.WEAPONS
+                and data.WEAPONS[name]["hands"] == 1)
+
     def give_to_hand(self, name):
         """Wield `name`; the weapon already held goes to the pack. A 2-handed
         weapon also bumps whatever was in the off hand. No-op if not a weapon."""
@@ -576,6 +587,16 @@ class Unit:
         self.equipped_offhand = name
         return True
 
+    def give_to_tongue(self, name):
+        """Hold `name` in the Tongue; the weapon already there goes to the pack.
+        No-op if it does not fit (not a 1-handed weapon, or no Tongue talent)."""
+        if not self.fits_tongue(name):
+            return False
+        if self.equipped_tongue:
+            self._base_inventory.append(self.equipped_tongue)
+        self.equipped_tongue = name
+        return True
+
     def give_to_pack(self, name):
         self._base_inventory.append(name)
 
@@ -585,6 +606,10 @@ class Unit:
 
     def take_from_offhand(self):
         name, self.equipped_offhand = self.equipped_offhand, None
+        return name
+
+    def take_from_tongue(self):
+        name, self.equipped_tongue = self.equipped_tongue, None
         return name
 
     def give_to_armor(self, name):
@@ -635,9 +660,15 @@ class Unit:
         return bool(w) and w["range"] > 0
 
     @property
-    def melee_reach(self):
-        """Squares a melee attack reaches -- 1, plus any `melee_reach` talent
-        (the Grippli Tongue). Ranged weapons ignore this."""
+    def has_tongue(self):
+        """Carries the Grippli Tongue -- a third limb with its own weapon slot
+        (`equipped_tongue`), granted by the `tongue` racial talent."""
+        return "tongue" in self.talents["racial"]
+
+    @property
+    def tongue_reach(self):
+        """Squares a tongue attack reaches: 1 + the `melee_reach` talent bonus.
+        Only the weapon in the Tongue slot gets this -- the hands stay at 1."""
         return 1 + self.talent_bonus("melee_reach")
 
     @property
@@ -670,10 +701,12 @@ class Unit:
 
     @property
     def load(self):
-        """Weight of the equipped loadout: weapon hand + off hand + pack + armor."""
+        """Weight of the equipped loadout: weapon hand + off hand + tongue + pack + armor."""
         w = sum(data.item_weight(it) for it in self._base_inventory)
         if self.equipped_weapon:
             w += data.WEAPONS[self.equipped_weapon]["weight"]
+        if self.equipped_tongue:
+            w += data.WEAPONS[self.equipped_tongue]["weight"]
         if self.equipped_offhand == data.TORCH_ITEM:
             w += data.TORCH_WEIGHT
         if self.armor:

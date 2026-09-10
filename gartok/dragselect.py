@@ -91,6 +91,8 @@ class LoadoutMoveMixin:
             return unit.equipped_weapon
         if loc == "offhand":
             return unit.equipped_offhand
+        if loc == "tongue":
+            return unit.equipped_tongue
         if loc == "armor":
             return unit.equipped_armor
         return unit._base_inventory[loc] if loc < len(unit._base_inventory) else None
@@ -104,6 +106,8 @@ class LoadoutMoveMixin:
             return src.take_from_hand()
         if loc == "offhand":
             return src.take_from_offhand()
+        if loc == "tongue":
+            return src.take_from_tongue()
         if loc == "armor":
             return src.take_from_armor()
         return src.take_from_pack(loc)
@@ -114,6 +118,8 @@ class LoadoutMoveMixin:
             return dst.is_weapon(name)
         if zone == "offhand":
             return dst.fits_offhand(name)
+        if zone == "tongue":
+            return dst.fits_tongue(name)
         if zone == "armor":
             return dst.fits_armor(name)
         return True                                      # pack / discard take anything
@@ -130,7 +136,7 @@ class LoadoutMoveMixin:
                 u._derive_combat()
             return
 
-        if zone in ("hand", "offhand", "armor"):
+        if zone in ("hand", "offhand", "tongue", "armor"):
             fit = next((p for p in picks
                         if self._fits_slot(dst, zone, self._item_at(*p))
                         and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
@@ -141,7 +147,7 @@ class LoadoutMoveMixin:
             src = fit[0]
             self._take(*fit)
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
-             "armor": dst.give_to_armor}[zone](name)
+             "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
             src._derive_combat()
             dst._derive_combat()
             return

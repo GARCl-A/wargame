@@ -79,15 +79,14 @@ def _to_hit(u):
 
 
 def _weapon_lines(u):
-    melee = f"reach {u.melee_reach}" if u.melee_reach > 1 else "melee"
     if u.unarmed:
         n, faces = u.unarmed_damage
         dmg = f"{n}d{faces} {u.mod_strength:+} (STR)"
-        return "unarmed", dmg, melee
+        return "unarmed", dmg, "melee"
     n, faces = (u.unarmed_damage if u.improvised else u.weapon["damage"])
     if u.improvised:
         return (f"{u.weapon_name} (no arrow -> improvised)",
-                f"{n}d{faces} {u.mod_strength:+} (STR)", melee)
+                f"{n}d{faces} {u.mod_strength:+} (STR)", "melee")
     bonus = u.mod_strength if not u.ranged else 0
     dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
@@ -95,7 +94,7 @@ def _weapon_lines(u):
         reach = f"range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
     else:
         thrown = f"  ·  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
-        reach = f"{melee}  ·  {hands}{thrown}"
+        reach = f"melee  ·  {hands}{thrown}"
     return u.weapon_name, dmg, reach
 
 
@@ -183,6 +182,13 @@ def draw_sheet(screen, rect, u, f):
     y += 15
     text(screen, f"damage:  {dmg}   ·   {reach}", f.mono_sm, INK_DIM, (x, y))
     y += 15
+    if u.has_tongue_weapon:
+        tn, tf = u.tongue_weapon["damage"]
+        tb = u.mod_strength + u.char.talent_bonus("melee_damage")
+        text(screen, f"tongue:  {u.tongue_weapon_name}  ·  {tn}d{tf}"
+             + (f" {tb:+} (STR)" if tb else "")
+             + f"   ·   melee, reach {u.tongue_reach}", f.mono_sm, INK_DIM, (x, y))
+        y += 15
     if data.FIRST_AID_ITEM in u.inventory:
         text(screen, f"first aid:  d20 {u.mod_wisdom:+} (WIS) vs 10   "
              f"·   {u.first_aid_charges} charges", f.mono_sm, INFO, (x, y))
@@ -195,6 +201,9 @@ def draw_sheet(screen, rect, u, f):
                                   "torch" if u.torch_hand else "") if p) or "hands free"
     text(screen, f"hands: {held}", f.body_sm, INK_DIM, (x, y))
     y += 16
+    if u.has_tongue_weapon:
+        text(screen, f"tongue: {u.tongue_weapon_name}", f.body_sm, INK_DIM, (x, y))
+        y += 16
     a = u.armor
     if a:
         arm = (f"{u.armor_name}  ·  +{a['ac']} AC"

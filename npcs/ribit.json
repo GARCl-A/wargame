@@ -50,8 +50,9 @@
   "languages": [
     "Sylvan"
   ],
-  "equipped_weapon": "Quarterstaff",
+  "equipped_weapon": null,
   "equipped_offhand": "Torch",
+  "equipped_tongue": "Quarterstaff",
   "equipped_armor": "Studded Leather",
   "inventory": [
     "1kg Potato"

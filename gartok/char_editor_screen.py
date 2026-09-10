@@ -159,11 +159,14 @@ class CharEditorScreen(Screen):
             opts = {"race": data.RACE_NAMES, "occupation": data.OCCUPATION_NAMES,
                     "alignment": [a for _, a in data.ALIGNMENTS],
                     "weapon": ["(unarmed)"] + list(data.WEAPONS),
+                    "tongue": ["(empty)"] + [n for n, w in data.WEAPONS.items()
+                                             if w["hands"] == 1],
                     "armor": ["(none)"] + list(data.ARMOR),
                     "additem": _ITEM_CATALOG}[pk]
             cur = {"race": u.race["name"], "occupation": u.occupation["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,
-                   "armor": u.equipped_armor, "additem": None}[pk]
+                   "tongue": u.equipped_tongue, "armor": u.equipped_armor,
+                   "additem": None}[pk]
             self.picker = (pk, opts, cur)
         elif kind == "attr":
             _, name, delta = action
@@ -219,6 +222,9 @@ class CharEditorScreen(Screen):
                 u.set_alignment(name)
             elif pk == "weapon":
                 u.take_from_hand() if name == "(unarmed)" else u.give_to_hand(name)
+                u._derive_combat()
+            elif pk == "tongue":
+                u.take_from_tongue() if name == "(empty)" else u.give_to_tongue(name)
                 u._derive_combat()
             elif pk == "armor":
                 u.take_from_armor() if name == "(none)" else u.give_to_armor(name)
@@ -488,6 +494,11 @@ class CharEditorScreen(Screen):
         self._pick_row(screen, wr, "WEAPON", u.equipped_weapon or "(unarmed)",
                        ("picker", "weapon"))
         y += 24 + SP1
+        if u.has_tongue:
+            tr2 = pygame.Rect(x, y, w, 24)
+            self._pick_row(screen, tr2, "TONGUE", u.equipped_tongue or "(empty)",
+                           ("picker", "tongue"))
+            y += 24 + SP1
         arr = pygame.Rect(x, y, w, 24)
         self._pick_row(screen, arr, "ARMOR", u.equipped_armor or "(none)",
                        ("picker", "armor"))
@@ -676,7 +687,8 @@ class CharEditorScreen(Screen):
         panel_r = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
         panel(screen, panel_r, fill=SURFACE_2, border=ACCENT, width=2, radius=8)
         noun = {"additem": "an item", "occupation": "an occupation",
-                "alignment": "an alignment", "armor": "armor"}.get(kind, f"a {kind}")
+                "alignment": "an alignment", "armor": "armor",
+                "tongue": "a tongue weapon"}.get(kind, f"a {kind}")
         text(screen, f"pick {noun}", f.title, INK, (panel_r.x + pad, panel_r.y + 12))
 
         prev = screen.get_clip()

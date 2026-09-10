@@ -19,6 +19,26 @@ from . import actions, data
 from .board import grid_distance
 
 
+def _avg_die(nf):
+    n, faces = nf
+    return n * (faces + 1) / 2
+
+
+def _pick_attack(battle, unit, target):
+    """The attack to make on `target` this instant, or None. A Grippli with a
+    Tongue weapon chooses between the hand weapon and the reach lash: whichever
+    connects, and when both do, the bigger damage die."""
+    opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
+            if a.can(battle, unit, target)]
+    if not opts:
+        return None
+    if len(opts) == 1:
+        return opts[0]
+    hand = _avg_die(unit.weapon["damage"]) if not unit.unarmed else _avg_die(unit.unarmed_damage)
+    tongue = _avg_die(unit.tongue_weapon["damage"])
+    return actions.ATTACK if hand >= tongue else actions.ATTACK_TONGUE
+
+
 def _axes(unit):
     """(order, morality) of the unit's tendency, each in {-1, 0, 1}."""
     return data.alignment_axes(unit.alignment)
@@ -178,8 +198,9 @@ def take_turn(battle, unit):
             actions.RELOAD.execute(battle, unit)
             continue
 
-        if actions.ATTACK.can(battle, unit, target):
-            actions.ATTACK.execute(battle, unit, target)
+        atk = _pick_attack(battle, unit, target)
+        if atk is not None:
+            atk.execute(battle, unit, target)
             continue
 
         if not target.demoralized and actions.DEMORALIZE.can(battle, unit, target):
@@ -200,7 +221,8 @@ def take_turn(battle, unit):
         battle.move_unit(unit, dest)
         unit.walking = False  # close the walk; the next action spends another point
 
-        if unit.ap > 0 and actions.ATTACK.can(battle, unit, target):
-            actions.ATTACK.execute(battle, unit, target)
+        atk = _pick_attack(battle, unit, target)
+        if unit.ap > 0 and atk is not None:
+            atk.execute(battle, unit, target)
 
     battle.end_turn()

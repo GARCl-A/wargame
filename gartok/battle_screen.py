@@ -465,6 +465,8 @@ class BattleScreen(Screen):
                 color = OK
             elif self.aim_action is actions.DEMORALIZE:
                 color = DEMO_HL
+            elif self.aim_action is actions.ATTACK_TONGUE:
+                color = ATK_HL
             elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP,
                                      actions.SWIM):
                 color = MOVE_HL
@@ -494,7 +496,8 @@ class BattleScreen(Screen):
                     pygame.draw.line(screen, (*MOVE_HL, 210), seg[:2], seg[2:], 2)
 
         for u in b.units:
-            if u.alive and u.team == "enemy" and actions.ATTACK.can(b, actor, u):
+            if u.alive and u.team == "enemy" and (actions.ATTACK.can(b, actor, u)
+                                                  or actions.ATTACK_TONGUE.can(b, actor, u)):
                 pygame.draw.rect(screen, ATK_HL, self._unit_rect(u), 3, border_radius=4)
 
         # walked-this-turn trail
@@ -809,6 +812,8 @@ class BattleScreen(Screen):
             return
         if self.aim_action is actions.DEMORALIZE:
             msg, col = "click a purple enemy to Demoralize", DEMO_HL
+        elif self.aim_action is actions.ATTACK_TONGUE:
+            msg, col = "click an enemy in tongue range", ATK_HL
         elif self.aim_action is actions.THROW:
             msg, col = "click an enemy in the orange range", THROW_HL
         elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
@@ -831,7 +836,7 @@ class BattleScreen(Screen):
         act = b.active
         # Climb/Drop only make sense at a pit edge -- hide them elsewhere. Push
         # and Jump are general moves; they stay on the panel, greyed when unusable.
-        contextual = (actions.STABILIZE, actions.FIRST_AID,
+        contextual = (actions.ATTACK_TONGUE, actions.STABILIZE, actions.FIRST_AID,
                       actions.CLIMB, actions.DROP, actions.SWIM)
 
         for action in actions.PANEL_ACTIONS:
@@ -843,7 +848,8 @@ class BattleScreen(Screen):
             r = s.row(34)
             s.gap(SP1)
             arm_c = DEMO_HL if action is actions.DEMORALIZE else \
-                THROW_HL if action is actions.THROW else ACCENT
+                THROW_HL if action is actions.THROW else \
+                ATK_HL if action is actions.ATTACK_TONGUE else ACCENT
             fill = arm_c if armed else SURFACE_2 if enabled else SURFACE_1
             panel(screen, r, fill=fill,
                   border=arm_c if armed else LINE_SOFT, width=1)

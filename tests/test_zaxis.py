@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import abilities, actions, Battle, fixed_d20, Unit
+from tests.helpers import abilities, actions, Battle, data, fixed_d20, Unit
 
 
 def _set_stats(combatant, **scores):
@@ -82,14 +82,16 @@ def test_melee_cannot_reach_two_levels_down():
     assert actions.ATTACK.can(batt, a, d) is True
 
 
-def test_tongue_reaches_two_squares_but_still_stops_at_a_deep_drop():
+def test_tongue_lash_reaches_two_squares_but_still_stops_at_a_deep_drop():
     batt, a, d = _pit_battle(depth=0)
+    a.char.talents["racial"] = ["tongue"]
+    a.tongue_weapon_name = "Dagger"
+    a.tongue_weapon = data.WEAPONS["Dagger"]
     a.pos, d.pos = (5, 5), (7, 5)           # two squares apart, flat ground
-    assert actions.ATTACK.can(batt, a, d) is False       # a normal fighter can't
-    a.char.talents["racial"] = ["tongue"]                # the Grippli Tongue: +1 melee reach
-    assert a.attack_range == 2 and actions.ATTACK.can(batt, a, d) is True
-    batt.board.elevation = {(6, 5): -2, (7, 5): -2}      # target now two levels down
-    assert actions.ATTACK.can(batt, a, d) is False       # reach is still melee: no deep drop
+    assert actions.ATTACK.can(batt, a, d) is False        # the hand weapon is reach 1
+    assert a.tongue_reach == 2 and actions.ATTACK_TONGUE.can(batt, a, d) is True
+    batt.board.elevation = {(6, 5): -2, (7, 5): -2}       # target now two levels down
+    assert actions.ATTACK_TONGUE.can(batt, a, d) is False  # still melee: no deep drop
 
 
 def test_push_shoves_the_target_back_a_square():

@@ -309,7 +309,37 @@ def test_crossbow_reload_cycle():
     assert not actions.RELOAD.can(batt, a) and a.improvised and a.attack_range == 1
 
 
-def test_unit_attack_bonus_picks_the_right_attribute():
+def test_tongue_lash_strikes_at_reach_two_with_the_tongue_weapon():
+    batt, a, d = _melee_battle()
+    batt.board.walls = set()
+    a.char.talents["racial"] = ["tongue"]
+    a.char.equipped_tongue = "Axe"
+    a.reset_battle_state()                            # re-seed the tongue weapon
+    a.pos, d.pos = (5, 5), (7, 5)                     # two squares apart
+    a.ap = 2
+    d.hp = d.hp_max = 60
+    d.dr = 0
+    assert not actions.ATTACK.can(batt, a, d)         # the hand weapon can't reach
+    assert actions.ATTACK_TONGUE.can(batt, a, d)
+    with fixed_d20(19):
+        actions.ATTACK_TONGUE.execute(batt, a, d)
+    assert a.ap == 1 and d.hp < 60                    # spent a point, landed the blow
+
+
+def test_ai_lashes_with_the_tongue_when_the_hand_weapon_falls_short():
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    batt.board.walls = set()
+    d.char.talents["racial"] = ["tongue"]
+    d.char.equipped_tongue = "Axe"
+    d.reset_battle_state()
+    a.pos, d.pos = (5, 5), (7, 5)                     # player two squares from the enemy
+    a.hp = a.hp_max = 40
+    a.dr = 0
+    d.ap = 2
+    hp = a.hp
+    ai.take_turn(batt, d)
+    assert a.hp < hp                                  # the enemy reached out and hit
     """`Unit.attack_bonus` -- the base to-hit the guild screen shows on the
     weapon row (and `sheet_panel._to_hit` reuses)."""
     u = _unit()
