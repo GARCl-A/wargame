@@ -121,13 +121,17 @@ def _alignments():
 
 
 def _talent_trees():
-    out = ["## Talent trees\n\nOne tree per XP track. A new level in a track "
-           "grants one pick in its tree; `requires` gates the deeper nodes."]
+    out = ["## Talent trees\n\nOne tree per track. A new level in a track grants "
+           "one pick in its tree; `requires` gates the deeper nodes. The racial "
+           "track's level is `combat + work` on a scale "
+           "(`progression.RACIAL_XP_THRESHOLDS`); its nodes are race-gated."]
     for track in talents.TRACKS:
+        racial = track == "racial"
+        head = ("Tier", "Talent", "Effect", "Requires") + (("Race",) if racial else ())
         rows = [(t.tier, t.name, t.effect, t.requires or "--")
+                + ((t.race or "any",) if racial else ())
                 for t in talents.TREE[track]]
-        out.append(f"### {track.capitalize()} track\n\n"
-                   + _table(("Tier", "Talent", "Effect", "Requires"), rows))
+        out.append(f"### {track.capitalize()} track\n\n" + _table(head, rows))
     return "\n\n".join(out)
 
 
@@ -170,6 +174,8 @@ def _constants():
         ("Lumber wage", f"{economy.LUMBER_WAGE} cp per {economy.LUMBER_BLOCK_HOURS} h"),
         ("Combat XP thresholds", ", ".join(map(str, progression.COMBAT_XP_THRESHOLDS))),
         ("Work XP thresholds", ", ".join(map(str, progression.WORK_XP_THRESHOLDS))),
+        ("Racial level thresholds (combat+work)",
+         ", ".join(map(str, progression.RACIAL_XP_THRESHOLDS))),
     ]
     return "## Constants\n\nThe tunable knobs, from `data.py`, `economy.py` and " \
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)

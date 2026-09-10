@@ -47,6 +47,7 @@ class Unit:
         self.arena_title = False                       # holds the arena's "Champion of the Pit" (see arena.py)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
+        self._racial_override = None                   # sandbox: a pinned racial level (hit dice + racial picks), else derived
 
         self._auto_name = name is None
         self.name = name or names.random_name()
@@ -95,6 +96,7 @@ class Unit:
         u.token = u.race["token"]
         u._hp_roll = d.get("hp_roll")
         u._hp_override = d.get("hp_override")            # creator-set HP max, or None
+        u._racial_override = d.get("racial_override")    # creator-pinned racial level, or None
         if u._hp_roll is None:                           # pre-hunger save: back it out of hp_max
             u._hp_roll = max(1, d["hp_max"] - mod(u.constitution) - u._ability.hp_max)
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
@@ -186,21 +188,48 @@ class Unit:
         return progression.work_level(self.work_xp)
 
     @property
+    def racial_xp(self):
+        """The racial track's "XP": the sum of the other track levels. Every
+        level anywhere feeds it (see `progression.RACIAL_XP_THRESHOLDS`)."""
+        return self.combat_level + self.work_level
+
+    @property
+    def racial_level(self):
+        """Racial-track level: a sandbox-pinned value, else derived from
+        `racial_xp`. Drives hit dice (`1 + racial_level`) and racial picks."""
+        if self._racial_override is not None:
+            return self._racial_override
+        return progression.racial_level(self.racial_xp)
+
+    @property
     def track_level(self):
-        return {"combat": self.combat_level, "work": self.work_level}
+        return {"combat": self.combat_level, "work": self.work_level,
+                "racial": self.racial_level}
 
     @property
     def mean_level(self):
+        """Encounter / arena difficulty scalar only -- hit points are off
+        `racial_level` now."""
         return progression.mean_level(self.combat_level, self.work_level)
 
     def picks_available(self, track):
         """Unspent talent picks in `track` (one earned per level in it)."""
         return self.track_level[track] - len(self.talents[track])
 
+    def _has_offerable(self, track):
+        """The `track` has at least one node this character could still take."""
+        tree = (talents.racial_tree(self.race["name"]) if track == "racial"
+                else talents.TREE[track])
+        return any(t.id not in self.talents[track]
+                   and (not t.requires or t.requires in self.talents[track])
+                   for t in tree)
+
     @property
     def pending_picks(self):
-        """Tracks with a talent pick waiting to be spent."""
-        return [t for t in talents.TRACKS if self.picks_available(t) > 0]
+        """Tracks with a talent pick waiting to be spent on a node that exists --
+        a racial track with no authored node for this race stays quiet."""
+        return [t for t in talents.TRACKS
+                if self.picks_available(t) > 0 and self._has_offerable(t)]
 
     @property
     def haggle_charisma_mod(self):
@@ -224,6 +253,7 @@ class Unit:
         t = talents.get(talent_id)
         if (t is None or t.track != track or talent_id in self.talents[track]
                 or self.picks_available(track) <= 0
+                or (t.race and t.race != self.race["name"])
                 or (t.requires and t.requires not in self.talents[track])):
             return False
         self.talents[track].append(talent_id)
@@ -232,10 +262,10 @@ class Unit:
         return True
 
     def collect_levels(self):
-        """Roll the hit dice owed for the current mean level. Idempotent; call
+        """Roll the hit dice owed for the current racial level. Idempotent; call
         after any XP gain. Not called on load -- `_level_hp_rolls` is restored."""
         rolled = False
-        while len(self._level_hp_rolls) < self.mean_level:
+        while len(self._level_hp_rolls) < self.racial_level:
             self._level_hp_rolls.append(roll(1, self.race["hd"]))
             rolled = True
         if rolled:
@@ -317,6 +347,8 @@ class Unit:
     def set_race(self, name):
         self.race = data.race_by_name(name)
         self._hp_roll = None                  # new hit die -> re-roll HP
+        offered = {t.id for t in talents.racial_tree(name)}
+        self.talents["racial"] = [tid for tid in self.talents["racial"] if tid in offered]
         self._configure_race()
         self._after_edit()
 
@@ -378,18 +410,24 @@ class Unit:
         self._derive_combat()
 
     def set_track_level(self, track, level):
-        """Set the combat / work level directly: `combat_xp` (or `work_hours`)
-        jumps to that level's threshold, hit dice and talent picks resync to the
-        new mean level -- picks the level no longer supports are dropped."""
-        thresholds = (progression.COMBAT_XP_THRESHOLDS if track == "combat"
-                      else progression.WORK_XP_THRESHOLDS)
-        level = max(0, min(len(thresholds), int(level)))
-        marks = thresholds[level - 1] if level else 0
-        if track == "combat":
-            self.combat_xp = marks
+        """Set a track level directly. `combat` / `work` jump `combat_xp` /
+        `work_hours` to that level's threshold. `racial` pins `_racial_override`
+        (hit dice + racial picks), or `level=None` drops it back to derived.
+        Hit dice and talent picks resync -- picks the new level no longer
+        supports are dropped."""
+        if track not in talents.XP_TRACKS:                  # "racial": derived, or a sandbox pin
+            self._racial_override = (None if level is None else
+                max(0, min(len(progression.RACIAL_XP_THRESHOLDS), int(level))))
         else:
-            self.work_hours = marks * economy.LUMBER_XP_HOURS
-        del self._level_hp_rolls[self.mean_level:]          # a lower level owes fewer dice
+            thresholds = (progression.COMBAT_XP_THRESHOLDS if track == "combat"
+                          else progression.WORK_XP_THRESHOLDS)
+            level = max(0, min(len(thresholds), int(level)))
+            marks = thresholds[level - 1] if level else 0
+            if track == "combat":
+                self.combat_xp = marks
+            else:
+                self.work_hours = marks * economy.LUMBER_XP_HOURS
+        del self._level_hp_rolls[self.racial_level:]        # a lower level owes fewer dice
         for t in talents.TRACKS:
             del self.talents[t][self.track_level[t]:]       # ...and fewer picks (pick order = valid prefix)
         self.collect_levels()                              # roll any dice a higher level now owes
@@ -457,8 +495,8 @@ class Unit:
             setattr(self, f"mod_{a}", mod(getattr(self, a) + pen + extra))
 
     def _derive_hp(self):
-        """Max HP: the creation roll + Con + ability bonus, one kept die per mean
-        level, and the Hardy talent per Hit Die. `_hp_roll` / `_level_hp_rolls`
+        """Max HP: the creation roll + Con + ability bonus, one kept die per
+        racial level, and the Hardy talent per Hit Die. `_hp_roll` / `_level_hp_rolls`
         are fixed, so re-deriving never re-rolls. A sandbox `_hp_override` (set in
         the creator) replaces the whole formula. Starving (tier 2+) caps it at 1."""
         if self._hp_roll is None:
@@ -595,6 +633,12 @@ class Unit:
         """Wields a weapon that fires at range (the crossbow)."""
         w = self.weapon
         return bool(w) and w["range"] > 0
+
+    @property
+    def melee_reach(self):
+        """Squares a melee attack reaches -- 1, plus any `melee_reach` talent
+        (the Grippli Tongue). Ranged weapons ignore this."""
+        return 1 + self.talent_bonus("melee_reach")
 
     @property
     def attack_bonus(self):

@@ -61,11 +61,13 @@ def build_enemy(mean_level, rng=random):
     u.set_track_level("combat", combat)
     u.set_track_level("work", work)
     for track in talents.TRACKS:
+        tree = (talents.TREE[track] if track in talents.XP_TRACKS
+                else talents.racial_tree(u.race["name"]))
         guard = 0
         while u.picks_available(track) > 0 and guard < 20:
             guard += 1
             picked = u.talents[track]
-            options = [t.id for t in talents.TREE[track]
+            options = [t.id for t in tree
                        if t.id not in picked
                        and (t.requires is None or t.requires in picked)]
             if not options:

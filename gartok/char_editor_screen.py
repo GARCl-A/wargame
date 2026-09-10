@@ -17,7 +17,7 @@ roll. `on_back` returns to the editor hub.
 
 import pygame
 
-from . import data, npc_lib, sheet, talents
+from . import data, npc_lib, persist, sheet, talents
 from .combatant import Combatant
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -81,6 +81,17 @@ class CharEditorScreen(Screen):
         self._refresh_library()
         self.notice = (f"saved  ·  npcs/{self.slug}.json", OK)
 
+    def _duplicate(self):
+        """Clone the current character into a fresh, unsaved copy -- new identity,
+        same everything else. SAVE then writes it as its own npcs/ file."""
+        d = persist.unit_to_dict(self.unit)
+        d.pop("uid", None)                     # from_save mints a new one
+        d["recruited_by"] = None
+        clone = Unit.from_save(d)
+        clone.set_name(f"{self.unit.name} (copy)")
+        self._load_unit(clone, slug=None)
+        self.notice = ("duplicated  ·  unsaved copy — SAVE writes a new file", OK)
+
     def _start_edit(self, field):
         self.edit_field = field
         u = self.unit
@@ -137,6 +148,8 @@ class CharEditorScreen(Screen):
             self.on_back()
         elif kind == "save":
             self._save()
+        elif kind == "duplicate":
+            self._duplicate()
         elif kind == "randomize":
             self._load_unit(Unit("player"))
         elif kind in ("name", "age", "bio"):
@@ -164,6 +177,8 @@ class CharEditorScreen(Screen):
             u.set_hp(u.hp_max + action[1])
         elif kind == "hp_auto":
             u.set_hp(None)
+        elif kind == "racial_auto":
+            u.set_track_level("racial", None)
         elif kind == "talent":
             _, track, tid = action
             (u.drop_talent if tid in u.talents[track] else u.choose_talent)(track, tid)
@@ -247,9 +262,10 @@ class CharEditorScreen(Screen):
         text(screen, sub, f.body_sm, scol, (pad, pad + 28))
 
         narrow = W < 980
-        bw, bh = (84, 28) if narrow else (108, 30)
+        bw, bh = (78, 28) if narrow else (104, 30)
         bx = W - pad - bw
         for key, label, danger in (("back", "BACK", False), ("save", "SAVE", False),
+                                   ("duplicate", "DUPLICATE", False),
                                    ("randomize", "RANDOMIZE", False)):
             r = pygame.Rect(bx, pad, bw, bh)
             self._btn(screen, r, label, danger=danger,
@@ -291,6 +307,7 @@ class CharEditorScreen(Screen):
         # --- identity --------------------------------------------------- #
         y = section(screen, "IDENTITY", x, y, w, f)
         half = (w - SP2) // 2
+        third = (w - 2 * SP2) // 3            # the three track columns (progression + talents)
         self._edit_row(screen, pygame.Rect(x, y, w, 26), "NAME", "name",
                        "" if u._auto_name else u.name)
         y += 26 + SP1
@@ -340,16 +357,19 @@ class CharEditorScreen(Screen):
         y += ch + SP2
 
         # --- progression -------------------------------------------- #
+        # RACIAL: sandbox pins the racial level straight; the AUTO tag on the
+        # line below drops it back to derived (combat + work on a scale).
         y = section(screen, "PROGRESSION", x, y, w, f)
         for i, track in enumerate(talents.TRACKS):
-            lr = pygame.Rect(x + i * (half + SP2), y, half, 26)
+            lr = pygame.Rect(x + i * (third + SP2), y, third, 26)
             panel(screen, lr, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
             lvl = u.track_level[track]
-            text(screen, f"{track.upper()}  N{lvl}", f.body_sm, INK,
-                 (lr.x + SP2, lr.y + 6))
+            pin = track == "racial" and u._racial_override is not None
+            text(screen, f"{track.upper()}  N{lvl}", f.body_sm,
+                 ACCENT if pin else INK, (lr.x + SP2, lr.y + 6))
             picks = u.picks_available(track)
             if picks:
-                text(screen, f"+{picks}", f.label, ACCENT, (lr.centerx + 6, lr.y + 8))
+                text(screen, f"+{picks}", f.label, ACCENT, (lr.right - 52, lr.y + 8))
             dn = pygame.Rect(lr.right - 40, lr.y + 3, 18, 20)
             up = pygame.Rect(lr.right - 20, lr.y + 3, 18, 20)
             for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
@@ -385,10 +405,22 @@ class CharEditorScreen(Screen):
 
         dice = len(u._level_hp_rolls)
         lo, hi = self._hp_bounds(u)
-        text(screen, f"mean level {u.mean_level}  ·  {1 + dice} hit "
-             f"{'die' if dice == 0 else 'dice'} (d{u.race['hd']})  ·  "
-             f"HP rolls {lo}-{hi}" + ("  ·  pinned" if pinned else ""),
-             f.body_sm, INK_FAINT, (x, y + 2))
+        rl_pinned = u._racial_override is not None
+        head = f"racial level {u.racial_level}"
+        text(screen, head, f.body_sm, ACCENT if rl_pinned else INK_FAINT, (x, y + 2))
+        hx = x + f.body_sm.size(head)[0] + SP1
+        if rl_pinned:
+            ar = pygame.Rect(hx, y, 34, 15)
+            ah = ar.collidepoint(self.mouse)
+            panel(screen, ar, fill=SURFACE_4 if ah else SURFACE_1, border=LINE_SOFT,
+                  width=0, radius=3)
+            text(screen, "auto", f.label, ACCENT if ah else INK_DIM, ar.center, center=True)
+            self._hit(ar, ("racial_auto",))
+            hx = ar.right + SP1
+        text(screen, f"·  {1 + dice} hit {'die' if dice == 0 else 'dice'} "
+             f"(d{u.race['hd']})  ·  HP rolls {lo}-{hi}"
+             + ("  ·  HP pinned" if pinned else ""),
+             f.body_sm, INK_FAINT, (hx, y + 2))
         y += 20
 
         # --- talents ----------------------------------------------- #
@@ -396,15 +428,20 @@ class CharEditorScreen(Screen):
         ty0 = y
         col_bottom = y
         for i, track in enumerate(talents.TRACKS):
-            colx = x + i * (half + SP2)
+            colx = x + i * (third + SP2)
             text(screen, track.upper(), f.label, INFO, (colx, ty0))
             ty = ty0 + 16
-            for t in talents.TREE[track]:
+            nodes = (talents.racial_tree(u.race["name"]) if track == "racial"
+                     else talents.TREE[track])
+            if not nodes:
+                text(screen, "— none for this race yet", f.label, INK_FAINT,
+                     (colx, ty + 2))
+            for t in nodes:
                 taken = t.id in u.talents[track]
                 blocked = t.requires and t.requires not in u.talents[track]
                 openp = not taken and not blocked and u.picks_available(track) > 0
                 indent = SP3 if t.requires else 0
-                tr = pygame.Rect(colx + indent, ty, half - indent, 18)
+                tr = pygame.Rect(colx + indent, ty, third - indent, 18)
                 edge = OK if taken else ACCENT if openp else LINE_SOFT
                 panel(screen, tr, fill=SURFACE_2 if (taken or openp) else SURFACE_1,
                       border=edge, width=1, radius=3)

@@ -277,6 +277,57 @@ def test_long_reach_extends_ranged_and_thrown_not_melee():
     assert Combatant(u).attack_range == 1         # melee reach is untouched
 
 
+def test_tongue_is_a_grippli_racial_node_that_adds_a_square_of_melee_reach():
+    u = _unit(seed=1)
+    u.set_race("Grippli")
+    u.set_track_level("racial", 1)                # sandbox: pin one racial level
+    assert u.picks_available("racial") == 1
+    assert u.choose_talent("racial", "tongue")
+    assert u.melee_reach == 2
+
+    assert Combatant(u).attack_range == 2         # unarmed reaches two squares
+    u.give_to_hand("Axe")
+    assert Combatant(u).attack_range == 2         # so does a melee weapon
+    u.give_to_hand("Light Crossbow")
+    u._base_inventory.append("Quiver")
+    c = Combatant(u)
+    c.crossbow_loaded = True
+    assert c.attack_range == data.WEAPONS["Light Crossbow"]["range"]   # ranged ignores it
+
+
+def test_tongue_is_refused_to_non_grippli():
+    u = _unit(seed=1)
+    u.set_race("Orc")
+    u.set_track_level("racial", 2)
+    assert not u.choose_talent("racial", "tongue")
+    assert u.talents["racial"] == []
+    assert "racial" not in u.pending_picks        # nothing to spend -> no nag
+
+
+def test_racial_level_is_the_summed_track_levels_on_a_scale():
+    u = _unit(seed=1)
+    assert u.racial_xp == 0 and u.racial_level == 0
+    u.set_track_level("combat", 2)                # sum 2 -> racial 1
+    assert u.racial_xp == 2 and u.racial_level == 1
+    assert len(u._level_hp_rolls) == 1
+    u.set_track_level("work", 2)                  # sum 4 -> racial 2
+    assert u.racial_level == 2 and len(u._level_hp_rolls) == 2
+    u.set_track_level("combat", 0)                # sum 2 -> racial 1: a die is handed back
+    assert u.racial_level == 1 and len(u._level_hp_rolls) == 1
+
+
+def test_racial_override_pins_hit_dice_and_round_trips():
+    u = _unit(seed=1)                             # combat 0 / work 0 -> racial 0
+    u.set_track_level("racial", 4)
+    assert u.racial_level == 4 and len(u._level_hp_rolls) == 4
+    hp = u.hp_max
+    back = Unit.from_save(persist.unit_to_dict(u))
+    assert back._racial_override == 4 and back.racial_level == 4 and back.hp_max == hp
+    back.set_track_level("racial", None)          # AUTO chip: drop back to derived
+    assert back._racial_override is None
+    assert back.racial_level == 0 and back._level_hp_rolls == []
+
+
 def test_hardy_adds_hp_per_hit_die_and_bulwark_adds_ac():
     u = _unit(seed=1)
     u.combat_xp = 21                              # combat level 3 -> 3 picks
@@ -341,11 +392,12 @@ def test_tree_layout_places_every_node_below_its_parent():
     roots on top, each child one tier below its `requires` and its parent
     centred over its children. Tier-agnostic -- a deeper tree lays out the same."""
     from gartok.level_screen import _tree_layout
-    for track in talents.TRACKS:
-        nodes = talents.TREE[track]
-        pos, span, depths = _tree_layout(track)
+    cases = [(t, talents.TREE[t], None) for t in talents.XP_TRACKS]
+    cases.append(("racial", talents.racial_tree("Grippli"), "Grippli"))
+    for track, nodes, race in cases:
+        pos, span, depths = _tree_layout(track, race)
         assert set(pos) == {t.id for t in nodes}
-        assert depths >= 2
+        assert depths >= 1
         for t in nodes:
             col, depth = pos[t.id]
             assert 0 <= col <= span

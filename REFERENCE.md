@@ -179,7 +179,7 @@ Two axes -- order (Lawful/Neutral/Chaotic) and morality (Good/Neutral/Evil).
 
 ## Talent trees
 
-One tree per XP track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes.
+One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work` on a scale (`progression.RACIAL_XP_THRESHOLDS`); its nodes are race-gated.
 
 ### Combat track
 
@@ -209,6 +209,12 @@ One tree per XP track. A new level in a track grants one pick in its tree; `requ
 | 1 | Negotiator | +1 Charisma for market buy and sell checks. | -- |
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | negotiator |
 | 2 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |
+
+### Racial track
+
+| Tier | Talent | Effect | Requires | Race |
+|---|---|---|---|---|
+| 1 | Tongue | your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- | Grippli |
 
 ## Factions and deeds
 
@@ -260,3 +266,4 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Lumber wage | 3 cp per 4 h |
 | Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105 |
 | Work XP thresholds | 2, 6, 12, 20, 30, 42 |
+| Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14 |

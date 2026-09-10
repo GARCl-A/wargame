@@ -301,7 +301,7 @@ class Combatant:
     def attack_range(self):
         if self.ranged:
             return self.weapon["range"] + self.char.talent_bonus("ranged_reach")
-        return 1
+        return 1 + self.char.talent_bonus("melee_reach")
 
     @property
     def can_throw(self):

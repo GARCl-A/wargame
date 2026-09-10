@@ -13,6 +13,7 @@ exactly one consumer that reads it back:
     attr              Unit._apply_attributes           attribute name
     to_hit            Unit.attack_bonus / Combatant     "strength" | "dexterity"
     melee_damage      Combatant.damage_roll            --
+    melee_reach       Combatant.attack_range           --
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     ac                Unit._derive_ac                  --
@@ -38,13 +39,21 @@ like (bottom-up, straight down one branch, spread wide), and over enough levels
 can hold every node. A deeper node just needs the one above it first (`requires`),
 which chains: `fleet` (tier 3) pulls in `deadeye` then `agile`.
 
+**The racial track** (`racial`) earns no XP of its own -- its level is
+`progression.racial_level(combat_level + work_level)`, so every level anywhere
+grants a racial pick (and a hit die). Its nodes are **race-gated**: a `Talent`
+with `race` set only shows / can be picked for that race. Grippli is the first
+race with an authored node (`tongue`); other races have racial levels and picks
+but no nodes yet, same way the combat / work trees started.
+
 `name` / `effect` are player-facing (English, the current text standard); `id`
 and field names are English identifiers.
 """
 
 from dataclasses import dataclass
 
-TRACKS = ("combat", "work")
+TRACKS = ("combat", "work", "racial")
+XP_TRACKS = ("combat", "work")        # the tracks that earn their own XP / level directly
 
 # Work-track tuning knobs, kept here so the trees are the one place to tune.
 COIN_BONUS = 0.20         # "Piecework": fraction added to coin from paid work
@@ -65,11 +74,12 @@ class Effect:
 @dataclass(frozen=True)
 class Talent:
     id: str
-    track: str                       # "combat" | "work"
+    track: str                       # "combat" | "work" | "racial"
     tier: int                        # 1 = a root; deeper nodes sit at higher tiers
     name: str
     effect: str                      # player-facing one-liner
     requires: str | None = None      # id of a talent that must be taken first
+    race: str | None = None          # racial track: only offered to this race (None = any)
     icon: str = ""                   # "<category>/<name>" under assets/icons/ (level screen)
     effects: tuple = ()              # Effect(...) contributions -- see the module docstring
 
@@ -142,16 +152,32 @@ _LIST = [
     Talent("provisioner", "work", 2, "Provisioner",
            "+1 to haggling on food, shared language or not.", requires="negotiator",
            effects=(Effect("food_haggle", 1),), icon="action/trade"),
+
+    # ================================================================== #
+    # racial -- race-gated; the level is racial_level (sum of the other    #
+    # tracks on a scale). One authored node so far.                       #
+    # ================================================================== #
+    Talent("tongue", "racial", 1, "Tongue",
+           "your tongue is a third limb and a weapon: +1 square of reach on "
+           "melee attacks.", race="Grippli",
+           effects=(Effect("melee_reach", 1),), icon="action/swallow"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}
 
 # Per-track, in list order (root then its children) -- what the level screen draws.
+# TREE["racial"] holds every racial node; `racial_tree` narrows it to one race.
 TREE = {track: [t for t in _LIST if t.track == track] for track in TRACKS}
 
 
 def get(talent_id):
     return TALENTS.get(talent_id)
+
+
+def racial_tree(race_name):
+    """The racial nodes offered to `race_name` -- those with no `race` gate plus
+    that race's own. Empty for a race with nothing authored yet."""
+    return [t for t in TREE["racial"] if t.race in (None, race_name)]
 
 
 def bonus(talent_ids, channel, stat=""):

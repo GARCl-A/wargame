@@ -1,0 +1,60 @@
+{
+  "uid": "140c6f4fdf194963a878b3f677059001",
+  "recruited_by": null,
+  "name": "Ribit",
+  "auto_name": false,
+  "race": "Grippli",
+  "occupation": "Farmer",
+  "alignment": "Lawful and Neutral",
+  "gold": 24,
+  "unfed_days": 0,
+  "share_food": true,
+  "combat_xp": 36,
+  "work_hours": 96,
+  "bio": "",
+  "arena_title": false,
+  "talents": {
+    "combat": [
+      "agile",
+      "alert",
+      "deadeye",
+      "fleet"
+    ],
+    "work": [
+      "carrier",
+      "brisk_hands"
+    ],
+    "racial": [
+      "tongue"
+    ]
+  },
+  "level_hp_rolls": [
+    1,
+    4,
+    3
+  ],
+  "base_attributes": {
+    "strength": 14,
+    "dexterity": 12,
+    "constitution": 12,
+    "intelligence": 8,
+    "wisdom": 12,
+    "charisma": 9
+  },
+  "age_base": 21,
+  "age": 27,
+  "hp_roll": 2,
+  "hp_override": 22,
+  "racial_override": null,
+  "hp_max": 22,
+  "languages": [
+    "Sylvan"
+  ],
+  "equipped_weapon": "Quarterstaff",
+  "equipped_offhand": "Torch",
+  "equipped_armor": "Studded Leather",
+  "inventory": [
+    "1kg Potato"
+  ],
+  "npc_slug": "ribit"
+}

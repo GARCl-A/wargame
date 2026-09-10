@@ -18,7 +18,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 4                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 5                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -49,6 +49,7 @@ def unit_to_dict(u):
         "age": u.age,                            # shown age -- editable in the creator, else age_base x age_mult
         "hp_roll": u._hp_roll,                   # 1dHD, rolled once at creation
         "hp_override": u._hp_override,           # creator-set HP max that wins over the formula, or None
+        "racial_override": u._racial_override,   # creator-pinned racial level (hit dice + racial picks), or None
         "hp_max": u.hp_max,                      # kept for pre-hunger saves / at-a-glance
         "languages": list(u.languages),          # racial + random extras
         "equipped_weapon": u.equipped_weapon,    # weapon hand (None = unarmed)

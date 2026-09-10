@@ -231,14 +231,15 @@ class Attack(Action):
             return False
         if battle.units_distance(actor, target) > actor.attack_range:
             return False
-        # melee only reaches across a one-level lip; a deeper drop is out of reach
-        if actor.attack_range <= 1 \
+        # melee (reach included) only crosses a one-level lip; a deeper drop is
+        # out of reach even for a long-melee weapon like the Tongue
+        if not actor.ranged \
                 and abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
         if not battle.los_between(actor, target):
             return False
-        # a ranged attack needs to see the target; melee does not
-        if actor.attack_range > 1 and not battle.can_see_unit(actor, target):
+        # a ranged attack needs to see the target; melee (reach included) does not
+        if actor.ranged and not battle.can_see_unit(actor, target):
             return False
         return True
 

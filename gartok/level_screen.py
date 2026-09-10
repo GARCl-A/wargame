@@ -5,9 +5,10 @@ progress bar to the next level and the tree of `talents.TREE[track]` laid out as
 a graph -- a root identity up top, the actions it unlocks branching below, joined
 by connectors so it reads at a glance what leads to what and how deep a branch
 runs. A track with an unspent pick lights its available nodes; click a lit node
-to take it (`Unit.choose_talent`). Hovering any node pops a detail card. The mean
-of the track levels drives hit dice, handled on XP gain, so nothing to do here
-but spend picks. `on_back` returns to the guild.
+to take it (`Unit.choose_talent`). Hovering any node pops a detail card. The
+racial track (its level = the other two summed, on a scale) drives hit dice,
+handled on XP gain, so nothing to do here but spend picks. `on_back` returns to
+the guild.
 
 Renders at the real window resolution (`native = True`), like the guild screen.
 """
@@ -24,8 +25,9 @@ from .theme import (ACCENT, INFO, INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT,
                     set_pointer, text, token_badge, tracked, wrap_lines)
 
 _TRACK_XP = {"combat": progression.COMBAT_XP_THRESHOLDS,
-             "work": progression.WORK_XP_THRESHOLDS}
-_TRACK_LABEL = {"combat": "COMBAT", "work": "WORK"}
+             "work": progression.WORK_XP_THRESHOLDS,
+             "racial": progression.RACIAL_XP_THRESHOLDS}
+_TRACK_LABEL = {"combat": "COMBAT", "work": "WORK", "racial": "RACIAL"}
 
 
 def _check(surf, cx, cy, col):
@@ -38,12 +40,12 @@ def _lerp(a, b, t):
     return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
 
 
-def _tree_layout(track):
+def _tree_layout(track, race=None):
     """Map every node of a track to (column, depth). Column is in leaf units: a
     parent sits at the mean of its children, each leaf takes the next slot.
     Purely `requires`-driven, so a deeper tree lays itself out the same way.
-    Returns (pos, span, depths)."""
-    nodes = talents.TREE[track]
+    The racial track is race-gated, so it needs `race`. Returns (pos, span, depths)."""
+    nodes = talents.racial_tree(race) if track == "racial" else talents.TREE[track]
     kids = {t.id: [c for c in nodes if c.requires == t.id] for t in nodes}
     roots = [t for t in nodes if not t.requires]
     pos, cursor = {}, [0.0]
@@ -118,8 +120,9 @@ class LevelScreen(Screen):
         token_badge(screen, tok, u, f, r=17)
         text(screen, u.name, f.card_name, INK, (tok[0] + 30, iy))
         dice = len(u._level_hp_rolls)
-        sub = (f"{u.race['name']}  ·  {u.occupation['name']}  ·  mean level {u.mean_level}"
-               + (f"  ·  +{dice} hit {'die' if dice == 1 else 'dice'}" if dice else ""))
+        sub = (f"{u.race['name']}  ·  {u.occupation['name']}  ·  "
+               f"racial level {u.racial_level}  ·  {1 + dice} hit "
+               f"{'die' if dice == 0 else 'dice'}")
         text(screen, sub, f.body_sm, INK_DIM, (tok[0] + 30, iy + 22))
 
         div = iy + 48
@@ -127,7 +130,7 @@ class LevelScreen(Screen):
 
         top = div + SP4
         gap = SP4
-        col_w = min(560, (W - 2 * pad - gap) // 2)
+        col_w = min(480, (W - 2 * pad - 2 * gap) // 3)
         self._hot = False
         for i, track in enumerate(talents.TRACKS):
             x = pad + i * (col_w + gap)
@@ -152,7 +155,7 @@ class LevelScreen(Screen):
         text(screen, f"LEVEL {level}", f.body_bd, INK, (ix + iw, cy - 2), right=True)
         cy += 20
 
-        xp = u.combat_xp if track == "combat" else u.work_xp
+        xp = {"combat": u.combat_xp, "work": u.work_xp, "racial": u.racial_xp}[track]
         into, span = progression.to_next(_TRACK_XP[track], xp)
         bar = pygame.Rect(ix, cy, iw, 10)
         panel(screen, bar, fill=SURFACE_0, border=LINE_SOFT, width=1, radius=4)
@@ -161,7 +164,8 @@ class LevelScreen(Screen):
             if fillw:
                 pygame.draw.rect(screen, ACCENT, (bar.x + 1, bar.y + 1, fillw, bar.h - 2),
                                  border_radius=3)
-            label = f"{into} / {span} XP to level {level + 1}"
+            unit = "levels" if track == "racial" else "XP"
+            label = f"{into} / {span} {unit} to level {level + 1}"
         else:
             label = "top of the track"
         cy += 16
@@ -176,7 +180,13 @@ class LevelScreen(Screen):
         self._draw_tree(screen, track, ix, ty, iw, y + h - SP4 - ty)
 
     def _draw_tree(self, screen, track, x, y, w, h):
-        pos, span, depths = _tree_layout(track)
+        nodes = (talents.racial_tree(self.unit.race["name"]) if track == "racial"
+                 else talents.TREE[track])
+        if not nodes:
+            text(screen, "no racial talents for this lineage yet",
+                 self.fonts.body_sm, INK_FAINT, (x, y + 4))
+            return
+        pos, span, depths = _tree_layout(track, self.unit.race["name"])
         unit_w = w / span
         pitch = min(h / depths, 128)
         # sit the tree high in the panel -- the empty room below reads as
@@ -191,7 +201,7 @@ class LevelScreen(Screen):
 
         # connectors first, so the nodes sit on top of them; the parent leg
         # starts below its name label so the line never crosses the text
-        for t in talents.TREE[track]:
+        for t in nodes:
             if not t.requires:
                 continue
             px, py = xy(t.requires)
@@ -205,7 +215,7 @@ class LevelScreen(Screen):
                               [(px, py), (px, midy), (qx, midy), (qx, qy)],
                               3 if st == "taken" else 2)
 
-        for t in talents.TREE[track]:
+        for t in nodes:
             self._draw_node(screen, track, t, *xy(t.id), node,
                             is_root=not t.requires, label_w=unit_w - SP2)
 

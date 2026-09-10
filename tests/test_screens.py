@@ -269,3 +269,26 @@ def test_guild_screen_multidrop_on_a_hand_takes_the_first_that_fits():
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
     assert a.equipped_weapon == "Dagger" and a._base_inventory == ["Rope"]
+
+
+def test_char_editor_duplicate_forks_an_unsaved_copy():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.theme import Fonts
+    from gartok.char_editor_screen import CharEditorScreen
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    scr = CharEditorScreen(Fonts(), lambda: None)
+    scr.unit.set_name("Ribit")
+    scr.unit.set_race("Grippli")
+    scr.unit.set_track_level("combat", 2)
+    scr.slug = "ribit"
+    original_uid = scr.unit.uid
+
+    scr._duplicate()
+
+    assert scr.slug is None                              # unsaved: SAVE writes a new file
+    assert scr.unit.uid != original_uid
+    assert scr.unit.name == "Ribit (copy)"
+    assert scr.unit.race["name"] == "Grippli"
+    assert scr.unit.combat_level == 2

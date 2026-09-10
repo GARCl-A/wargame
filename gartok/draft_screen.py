@@ -221,7 +221,8 @@ class DraftScreen(Screen):
         # --- weapon ------------------------------------------- #
         s.y = section(screen, "WEAPON", s.x, s.y, s.w, f)
         n, faces = unit.weapon["damage"]
-        reach = f"range {unit.weapon['range']}" if unit.ranged else "melee"
+        reach = (f"range {unit.weapon['range']}" if unit.ranged
+                 else f"reach {unit.melee_reach}" if unit.melee_reach > 1 else "melee")
         hands = "2 hands" if unit.weapon["hands"] == 2 else "1 hand"
         ammo = f"  ·  {preview.ammo} arrows" if preview.needs_ammo else ""
         wrow = s.row(34)

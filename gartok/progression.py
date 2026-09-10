@@ -9,7 +9,11 @@ experience (combat, work) has its own level, and its own talent tree in
   above, worth `(their level - your level) + 1` (`xp_award`). Below your level
   is worth nothing -- a veteran mopping up fresh recruits does not level.
 - **Work XP** is the lumber-yard marks (`Unit.work_xp`, one per 16 h).
-- The **mean** of the track levels drives the hit-die gain (see `Unit`).
+- The **racial track** earns nothing of its own: its "XP" is the sum of the
+  other track levels (`Unit.racial_xp`), run through `RACIAL_XP_THRESHOLDS`.
+  Its level is what drives the hit-die gain and grants the racial talent picks
+  (see `Unit`). `mean_level` survives only as the encounter/arena difficulty
+  scalar -- it no longer touches hit points.
 
 The thresholds are a first-pass guess and meant to be tuned here -- this module
 is the one place the curves live, like `economy.PRICES` for money.
@@ -21,6 +25,12 @@ COMBAT_XP_THRESHOLDS = [3, 10, 21, 36, 55, 78, 105]
 
 # Cumulative work *marks* (Unit.work_xp) for work level 1, 2, 3, ...  Stub.
 WORK_XP_THRESHOLDS = [2, 6, 12, 20, 30, 42]
+
+# The racial track's "XP" is `combat_level + work_level` (Unit.racial_xp): every
+# level anywhere feeds it. These cumulative sums for racial level 1, 2, 3, ...
+# are set to reproduce the old `floor((combat + work) / 2)` hit-die count, so
+# enemy HD / the balance sim / arena scaling do not move. Tune freely here.
+RACIAL_XP_THRESHOLDS = [2, 4, 6, 8, 10, 12, 14]
 
 
 def _level_for(thresholds, xp):
@@ -35,9 +45,17 @@ def work_level(work_xp):
     return _level_for(WORK_XP_THRESHOLDS, work_xp)
 
 
+def racial_level(racial_xp):
+    """Racial-track level for a `combat_level + work_level` sum -- how many hit
+    dice the character has earned past their starting one, and how many racial
+    talent picks they hold."""
+    return _level_for(RACIAL_XP_THRESHOLDS, racial_xp)
+
+
 def mean_level(*track_levels):
-    """The average track level, floored -- how many hit dice the character has
-    earned past their starting one."""
+    """The average track level, floored -- the encounter / arena difficulty
+    scalar (`encounters.build_enemy`, `arena.build_challenger`). No longer tied
+    to hit points; that is `racial_level` now."""
     return sum(track_levels) // len(track_levels)
 
 

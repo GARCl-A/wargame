@@ -14,14 +14,15 @@ _ATTR_LABELS = [
 
 
 def _weapon_line(u):
+    rr = f", reach {u.melee_reach}" if u.melee_reach > 1 else ""
     if u.unarmed:
         n, faces = u.unarmed_damage
-        return f"Weapon: unarmed  {n}d{faces} (melee attack)"
+        return f"Weapon: unarmed  {n}d{faces} (melee attack{rr})"
     if u.improvised:
         n, faces = u.unarmed_damage
         return (f"Weapon: {u.weapon_name} NO ARROW -> improvised  "
-                f"{n}d{faces} (melee)")
-    reach = f" (range {u.weapon['range']})" if u.ranged else " (melee)"
+                f"{n}d{faces} (melee{rr})")
+    reach = f" (range {u.weapon['range']})" if u.ranged else f" (melee{rr})"
     thrown = f"  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
     ammo = f"  arrows {u.ammo}" if u.needs_ammo else ""
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"

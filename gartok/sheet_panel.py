@@ -79,14 +79,15 @@ def _to_hit(u):
 
 
 def _weapon_lines(u):
+    melee = f"reach {u.melee_reach}" if u.melee_reach > 1 else "melee"
     if u.unarmed:
         n, faces = u.unarmed_damage
         dmg = f"{n}d{faces} {u.mod_strength:+} (STR)"
-        return "unarmed", dmg, "melee"
+        return "unarmed", dmg, melee
     n, faces = (u.unarmed_damage if u.improvised else u.weapon["damage"])
     if u.improvised:
         return (f"{u.weapon_name} (no arrow -> improvised)",
-                f"{n}d{faces} {u.mod_strength:+} (STR)", "melee")
+                f"{n}d{faces} {u.mod_strength:+} (STR)", melee)
     bonus = u.mod_strength if not u.ranged else 0
     dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
@@ -94,7 +95,7 @@ def _weapon_lines(u):
         reach = f"range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
     else:
         thrown = f"  ·  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
-        reach = f"melee  ·  {hands}{thrown}"
+        reach = f"{melee}  ·  {hands}{thrown}"
     return u.weapon_name, dmg, reach
 
 
