@@ -36,7 +36,7 @@ class MapScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, on_battle, on_market, on_recruit, on_guild,
-                 on_wipe, on_work, on_hunt):
+                 on_wipe, on_work, on_hunt, on_bank):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -45,6 +45,7 @@ class MapScreen(Screen):
         self.on_recruit = on_recruit
         self.on_work = on_work
         self.on_hunt = on_hunt
+        self.on_bank = on_bank
         self.on_guild = on_guild
         self.on_wipe = on_wipe
         self.notices = []                     # lines shown after a trip (route, meals, deaths)
@@ -77,6 +78,8 @@ class MapScreen(Screen):
                     self.on_work(self._here())
                 elif key == "hunt":
                     self.on_hunt(self._here())
+                elif key == "bank":
+                    self.on_bank(self._here())
                 elif key == "maintain":
                     self._maintain()
                 return
@@ -402,6 +405,18 @@ class MapScreen(Screen):
                 y += 42
                 text(screen, note, f.body_sm, INK_FAINT, (cx, y))
                 y += 20
+        elif here.bank:
+            br = pygame.Rect(cx, y, cw, 38)
+            hovb = br.collidepoint(self.mouse)
+            panel(screen, br, fill=SURFACE_3 if hovb else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "VISIT THE BANK", f.body_bd, INK_DIM, br.center, center=True)
+            self.buttons.append(("bank", br))
+            y += 44
+            chest = (f"strongbox: {self.guild.bank_load:g} / {self.guild.bank_capacity} kg"
+                     if self.guild.bank_unlocked
+                     else "rent a strongbox  ·  stash gear the guild isn't carrying")
+            text(screen, chest, f.body_sm, INK_FAINT, (cx, y))
         else:
             text(screen, "Nothing happens here. A safe stop.", f.body_sm,
                  INK_FAINT, (cx, y))

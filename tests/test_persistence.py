@@ -74,7 +74,8 @@ def test_save_slot_file_round_trip():
     random.seed(8)
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
                   reputation={"arena": 3}, deeds_done=["arena_first_blood"],
-                  arena_challenge_day=12, clock=Clock(30 * 3600), node="wilds")
+                  arena_challenge_day=12, clock=Clock(30 * 3600), node="wilds",
+                  bank_capacity=10, bank_items=["Rope", "Sack"])
     guild.roster[0].gold = 42
     guild.roster[0].arena_title = True
     guild.roster[0].bio = "kept the belt through a lean winter"
@@ -88,6 +89,7 @@ def test_save_slot_file_round_trip():
         assert back.arena_challenge_day == 12
         assert back.roster[0].arena_title and "belt" in back.roster[0].bio
         assert back.clock.seconds == 30 * 3600 and back.node == "wilds"
+        assert back.bank_capacity == 10 and back.bank_items == ["Rope", "Sack"]
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
         assert back.roster[0].gold == 42

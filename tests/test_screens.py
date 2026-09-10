@@ -135,6 +135,7 @@ def test_every_screen_draws_native_at_any_window_size():
                       scenario=FlagScenario(), lethal=False, arena=True)
 
     from gartok.menu_screen import MenuScreen
+    from gartok.bank_screen import BankScreen
     from gartok.draft_screen import DraftScreen
     from gartok.map_screen import MapScreen
     from gartok.squad_screen import SquadScreen
@@ -160,7 +161,7 @@ def test_every_screen_draws_native_at_any_window_size():
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
         DraftScreen(F, noop),
-        MapScreen(F, guild, noop, noop, noop, noop, noop, noop, noop),
+        MapScreen(F, guild, noop, noop, noop, noop, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
         BattleScreen(F, batt, noop),
         BattleScreen(F, ctf_batt, noop),                  # capture the flag: setup + pennants
@@ -176,7 +177,12 @@ def test_every_screen_draws_native_at_any_window_size():
         GuildScreen(F, guild, noop, noop),
         GearScreen(F, guild, noop),
         LevelScreen(F, roster[0], noop, noop),
+        BankScreen(F, guild, list(roster[:3]), noop),          # locked: no chest yet
     ]
+
+    stocked = Guild(list(roster), node=world.START_NODE, bank_capacity=10,
+                    bank_items=["Rope", "Dagger"])
+    scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
     scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
 
     for tab in ("armor", "kit"):                      # the other market category tabs

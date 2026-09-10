@@ -554,7 +554,12 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             y += 52
 
             y = section(screen, "DEEDS", x, y, w, f)
-            for d in factions.DEEDS_BY_FACTION[fac.id]:
+            deeds = factions.DEEDS_BY_FACTION[fac.id]
+            if not deeds:
+                text(screen, "None yet — this faction's standing doesn't move.",
+                     f.body_sm, INK_FAINT, (x, y))
+                y += 20
+            for d in deeds:
                 got = d.id in done
                 pygame.draw.circle(screen, OK if got else INK_FAINT, (x + 4, y + 8), 4,
                                    0 if got else 1)

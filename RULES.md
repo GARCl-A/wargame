@@ -763,6 +763,26 @@ deliberate. The ladder is built to top out at Bronze: clearing all three deeds
 opens the second ring, and that is the whole arena sub-campaign by design. Iron
 cage (5) and Silver arena (10) sit past any reachable reputation — room to grow.
 
+**Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Deed-less
+for now: their standing does not move, and the REPUTATIONS tab says so. What they
+sell today is the guild's **first shared property**: a **strongbox** at the bank.
+
+- The `city` node carries `bank=True`; **VISIT THE BANK** on the map opens
+  `bank_screen` for the chosen party (the market's party-picker path).
+- The chest is **guild state** (`guild.bank_capacity` kg, `guild.bank_items`) —
+  the guild owns nothing else as a body. `bank_capacity == 0` = not rented.
+- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**50 copper**), split
+  across the visiting party (poorest first, shortfall rolling onto whoever still
+  has coin), and grants `economy.BANK_CHEST_CAPACITY` (**10 kg**) of storage.
+  Stashing itself is free, so members keep their own money — nothing is pooled or
+  redivided. One tier for now; the field is shaped for a later, bigger box.
+- **Stashing** moves **pack** items only, in either direction: into the chest
+  while `bank_load + weight ≤ bank_capacity`, out of it while it fits the taker's
+  carry max. Wielding/wearing still happens on the gear screen.
+- The chest lives at the bank — gear in it is **only reachable from the City**.
+- Lending against the future (and collecting on it) is the Bankers' other trade,
+  not yet built.
+
 ### The Champion of the Pit 🟡
 
 Beating the champion team hands the **Champion of the Pit** title to whoever on

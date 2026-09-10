@@ -9,6 +9,8 @@ Node kinds:
 - "town":    a safe stop, nothing to do but pass through (and manage gear).
              A town with `work=True` is a lumber yard: put members to a shift
              there to trade hours of the day for copper (`Guild.work_shift`);
+             a town with `bank=True` has the Bankers -- rent a strongbox and
+             stash gear the guild isn't carrying (`bank_screen`);
 - "battle":  the chosen squad drops into a tactical fight on `scenario`;
 - "market":  a shop -- buy and sell gear for copper.
 - "tavern": strangers looking for work -- talk one into the guild (`recruit`).
@@ -33,7 +35,8 @@ from .scenario import ArenaScenario, ErmosScenario
 
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
-                 lethal=True, arena=False, language=None, alignment=None, work=False):
+                 lethal=True, arena=False, language=None, alignment=None, work=False,
+                 bank=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -45,6 +48,7 @@ class Node:
         self.language = language             # market: the tongue the vendor haggles in
         self.alignment = alignment           # market: the vendor's bent (price sympathy)
         self.work = work                     # town: a lumber yard -- trade hours for copper
+        self.bank = bank                     # town: the Bankers -- rent a strongbox (bank_screen)
 
     @property
     def is_battle(self):
@@ -107,7 +111,8 @@ def arena_offers(reputation):
 
 NODES = [
     Node("city", "The City", "town", (0.16, 0.58),
-         "The walled burg. Where the guild sets out from."),
+         "The walled burg. Where the guild sets out from -- and where the "
+         "Bankers keep their strongboxes.", bank=True),
     Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",

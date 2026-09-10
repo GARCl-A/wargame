@@ -33,6 +33,12 @@ LUMBER_BLOCK_HOURS = 4                  # ...one block is four hours at the yard
 LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mark
 LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
 
+# The Bankers rent the guild its first shared property: a strongbox at the bank
+# in the City. A flat fee for the right to it, no reputation gate. One tier for
+# now -- `BANK_CHEST_CAPACITY` is a value a later, pricier tier can raise.
+BANK_CHEST_PRICE = 50                   # copper for the right to a strongbox
+BANK_CHEST_CAPACITY = 10                # kg the strongbox holds
+
 PRICES = {
     # weapons
     "Dagger": 8, "Hatchet": 10, "Axe": 35, "Light Hammer": 10,

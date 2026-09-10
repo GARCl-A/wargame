@@ -24,6 +24,7 @@ opening window size and the battle screen's fixed board canvas.
 import pygame
 
 from . import arena, campaign, hunt, map_lib, persist, world
+from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
@@ -115,6 +116,7 @@ class App:
                                on_recruit=self._open_recruit,
                                on_work=self._open_work,
                                on_hunt=self._open_hunt,
+                               on_bank=self._open_bank,
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over)
         if self._map_notices:
@@ -171,6 +173,14 @@ class App:
     def _open_market_stalls(self, shoppers, node, _offer):
         self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
                                   on_done=self._start_map)
+
+    def _open_bank(self, node):
+        self._pick_party(node, "WHO VISITS THE BANK", "GO TO THE BANK",
+                         self._open_bank_vault)
+
+    def _open_bank_vault(self, party, node, _offer):
+        self.scene = BankScreen(self.fonts, self.guild, party,
+                                on_done=self._start_map)
 
     def _open_work(self, node):
         self._pick_party(node, "WHO GOES TO WORK", "GO TO THE LUMBER YARD",

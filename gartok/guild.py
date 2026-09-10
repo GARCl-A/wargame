@@ -4,7 +4,12 @@ The guild *is* its roster -- there is no hall, no vault, no treasury; gold and
 items live on the individual characters. `Guild` is the set of members, the
 campaign tallies (`battles_won`), standing with each faction, and the campaign
 clock, plus where the guild currently sits on the world map (`node`). It is the
-seam hired hands and a bank hang off later.
+seam hired hands hang off later.
+
+The one thing the guild owns as a body is the **bank chest** -- a strongbox
+rented from the Bankers in the City (`bank_capacity` kg, `bank_items` the names
+stashed). `bank_capacity == 0` means no chest yet; `bank_screen` rents it and
+moves gear in and out.
 
 `reputation` is `{faction_id: score}` and moves only when a `factions.Deed` is
 completed (banked in `deeds_done`); there is no per-win grind. `arena_reputation`
@@ -16,14 +21,15 @@ so they stay the same face-to-face across visits; `recruit.refresh_pool` swaps
 them for a new set once a week.
 """
 
-from . import economy
+from . import data, economy
 from .clock import Clock
 
 
 class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
                  arena_challenge_day=None, clock=None, node=None,
-                 taverna_week=None, taverna_pool=None, taverna_blocked=None):
+                 taverna_week=None, taverna_pool=None, taverna_blocked=None,
+                 bank_capacity=0, bank_items=None):
         self.roster = roster                  # list[Unit] -- the members
         self.battles_won = battles_won
         self.reputation = dict(reputation or {})   # {faction_id: score}, moved by deeds only
@@ -31,6 +37,8 @@ class Guild:
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
         self.node = node                      # current world-map node id (set on entry)
+        self.bank_capacity = bank_capacity    # kg the rented strongbox holds (0 = none rented)
+        self.bank_items = list(bank_items or [])   # item names stashed in the chest
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
@@ -49,6 +57,21 @@ class Guild:
         """Standing with the Pits -- what `world.arena_offers` gates the stake
         tiers on. Rises only when an arena `factions.Deed` is completed."""
         return self.reputation.get("arena", 0)
+
+    @property
+    def bank_unlocked(self):
+        """True once the guild has rented a strongbox from the Bankers."""
+        return self.bank_capacity > 0
+
+    @property
+    def bank_load(self):
+        """Weight of everything stashed in the bank chest."""
+        return sum(data.item_weight(it) for it in self.bank_items)
+
+    def rent_bank_chest(self):
+        """Take up the Bankers' offer: the guild's first strongbox. The caller
+        collects the fee first -- this only flips the capacity on."""
+        self.bank_capacity = economy.BANK_CHEST_CAPACITY
 
     @property
     def hungry(self):

@@ -50,6 +50,9 @@ def _arena_win(node, outcome):
 _FACTIONS = [
     Faction("arena", "The Pits",
             "The staked bouts in the cellars under the city. Win, and be known."),
+    Faction("bankers", "The Bankers",
+            "The coin-lenders of the city. They rent strongboxes, and -- for "
+            "those who dare -- lend against the future."),
 ]
 
 _DEEDS = [

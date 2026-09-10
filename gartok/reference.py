@@ -141,8 +141,9 @@ def _factions():
     for fid, fac in factions.FACTIONS.items():
         rows = [(d.name, d.blurb, f"+{d.rep}", d.requires or "--")
                 for d in factions.DEEDS_BY_FACTION[fid]]
-        out.append(f"### {fac.name}\n\n{fac.blurb}\n\n"
-                   + _table(("Deed", "Condition", "Rep", "Requires"), rows))
+        body = (_table(("Deed", "Condition", "Rep", "Requires"), rows) if rows
+                else "_No deeds yet -- standing with this faction does not move._")
+        out.append(f"### {fac.name}\n\n{fac.blurb}\n\n" + body)
     return "\n\n".join(out)
 
 
@@ -172,6 +173,8 @@ def _constants():
          f"{economy.STARTING_WEALTH_DICE[1]} copper"),
         ("Resale factor", f"{economy.SELL_FACTOR:g} of buy price"),
         ("Lumber wage", f"{economy.LUMBER_WAGE} cp per {economy.LUMBER_BLOCK_HOURS} h"),
+        ("Bank strongbox", f"{economy.BANK_CHEST_PRICE} cp to rent, holds "
+         f"{economy.BANK_CHEST_CAPACITY} kg"),
         ("Combat XP thresholds", ", ".join(map(str, progression.COMBAT_XP_THRESHOLDS))),
         ("Work XP thresholds", ", ".join(map(str, progression.WORK_XP_THRESHOLDS))),
         ("Racial level thresholds (combat+work)",

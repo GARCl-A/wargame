@@ -234,6 +234,12 @@ The staked bouts in the cellars under the city. Win, and be known.
 | Flag Runner | Capture the enemy flag in the Games. | +1 | arena_dethrone |
 | Untouchable | Capture the flag without knocking anyone out. | +1 | arena_dethrone |
 
+### The Bankers
+
+The coin-lenders of the city. They rent strongboxes, and -- for those who dare -- lend against the future.
+
+_No deeds yet -- standing with this faction does not move._
+
 ## Arena tiers
 
 Staked, non-lethal bouts. Unlocked by reputation with The Pits.
@@ -265,6 +271,7 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Starting wealth | 5d10 copper |
 | Resale factor | 0.5 of buy price |
 | Lumber wage | 3 cp per 4 h |
+| Bank strongbox | 50 cp to rent, holds 10 kg |
 | Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105 |
 | Work XP thresholds | 2, 6, 12, 20, 30, 42 |
 | Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14 |
