@@ -45,6 +45,7 @@ class Battle:
             u.nonlethal = not self.lethal    # 0 HP -> knocked out instead of dying
 
         self.creatures = []                  # neutral bodies (e.g. the Shepherd's sheep)
+        self._pf_cache = {}                   # per-turn Dijkstra field cache (see _pf_field)
         self.scenario.build(self)            # board + deployment + scatter
         self.round_no = 1
         self.winner = None
@@ -146,6 +147,25 @@ class Battle:
         no Move action is open -- a fresh walk starts the 1, 2, 1, 2 ... over)."""
         return unit.diag_steps if unit.walking else 0
 
+    def _pf_field(self, start, footprint, diags, vertical, blocked):
+        """A full-board Dijkstra scan ``(dist, prev)`` from `start`, memoised for
+        this turn. `reachable` / `path_to` / `path_step_toward` each ask for the
+        same scan several times per acting unit. The key is every input the scan
+        depends on -- including the whole `blocked` set (walls + creatures + enemy
+        cells), rebuilt by the caller every time -- so a hit is provably the
+        identical computation: if anything moved, the key differs and it recomputes.
+
+        The cache holds only plain int/tuple dicts (no unit or board references,
+        nothing to keep alive for the GC) and is cleared at the top of every turn
+        in `_advance_turn`, so it never holds more than a handful of entries."""
+        key = (start, footprint, diags % 2, vertical, blocked)  # blocked (a frozenset) is part of the key
+        field = self._pf_cache.get(key)
+        if field is None:
+            field = self.board._dijkstra(start, blocked, footprint, diags,
+                                         vertical=vertical)
+            self._pf_cache[key] = field
+        return field
+
     def reachable(self, unit, budget=None):
         """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
         along a route alternate 1, 2, 1, 2 ... (`board.route_cost`)."""
@@ -157,10 +177,13 @@ class Battle:
             else:
                 return {}
         allies, enemies = self.cells_by_side(unit)
-        blocked = enemies | self.board.walls | self.creature_cells()
+        blocked = frozenset(enemies | self.board.walls | self.creature_cells())
+        diags = self._walk_diags(unit)
+        field = self._pf_field(unit.pos, unit.footprint, diags,
+                               unit.can_move_vertically, blocked)
         return self.board.reachable(unit.pos, budget, blocked, unit.footprint,
-                                    allies, self._walk_diags(unit),
-                                    vertical=unit.can_move_vertically)
+                                    allies, diags,
+                                    vertical=unit.can_move_vertically, field=field)
 
     def reachable_cells(self, unit):
         """Union of the cells the footprint would cover at each reachable anchor (UI highlight)."""
@@ -173,19 +196,24 @@ class Battle:
         """The cells `unit` would walk through to reach the anchor `dest`,
         ``[unit.pos, ..., dest]`` (``[]`` if unreachable)."""
         _, enemies = self.cells_by_side(unit)
-        blocked = enemies | self.board.walls | self.creature_cells()
-        return self.board.path_to(unit.pos, dest, blocked, unit.footprint,
-                                  self._walk_diags(unit),
-                                  vertical=unit.can_move_vertically)
+        blocked = frozenset(enemies | self.board.walls | self.creature_cells())
+        diags = self._walk_diags(unit)
+        field = self._pf_field(unit.pos, unit.footprint, diags,
+                               unit.can_move_vertically, blocked)
+        return self.board.path_to(unit.pos, dest, blocked, unit.footprint, diags,
+                                  vertical=unit.can_move_vertically, field=field)
 
     def path_step_toward(self, unit, goal, budget):
         allies, enemies = self.cells_by_side(unit)
-        blocked = enemies | self.board.walls | self.creature_cells()
+        blocked = frozenset(enemies | self.board.walls | self.creature_cells())
         target = self.unit_at(goal)
         target_cells = self.cells_of(target) if target else None
+        diags = self._walk_diags(unit)
+        field = self._pf_field(unit.pos, unit.footprint, diags,
+                               unit.can_move_vertically, blocked)
         return self.board.path_step_toward(unit.pos, goal, budget, blocked, unit.footprint,
-                                           target_cells, allies, self._walk_diags(unit),
-                                           vertical=unit.can_move_vertically)
+                                           target_cells, allies, diags,
+                                           vertical=unit.can_move_vertically, field=field)
 
     def move_unit(self, unit, dest):
         reach = self.reachable(unit)
@@ -333,6 +361,7 @@ class Battle:
     def _advance_turn(self):
         """Advance to the next standing unit. A dying unit gets a turn on the way
         (its death counter ticks / it rolls the save); stable and dead are skipped."""
+        self._pf_cache.clear()               # the Dijkstra field cache is per-turn
         for _ in range(len(self.order) + 1):
             self.turn_idx += 1
             if self.turn_idx >= len(self.order):

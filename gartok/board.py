@@ -73,13 +73,24 @@ def fits(pos, footprint, blocked):
 
 def neighbors(pos):
     """The 8 adjacent cells inside the grid."""
-    x, y = pos
-    for dx in (-1, 0, 1):
-        for dy in (-1, 0, 1):
-            if dx or dy:
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < COLS and 0 <= ny < ROWS:
-                    yield (nx, ny)
+    return iter(_NEIGHBORS[pos])
+
+
+# Precomputed once: every cell -> its in-bounds 8-neighbours. The pathfinder
+# walks this millions of times a headless run, so it is not rebuilt per call.
+#   _NEIGHBORS   : {pos: (neighbour, ...)}              -- the public `neighbors()`
+#   _NEIGHBORS_D : {pos: ((neighbour, is_diagonal), ...)} -- `_dijkstra`'s hot loop
+_NEIGHBORS = {
+    (x, y): tuple((x + dx, y + dy)
+                  for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                  if (dx or dy)
+                  and 0 <= x + dx < COLS and 0 <= y + dy < ROWS)
+    for x in range(COLS) for y in range(ROWS)
+}
+_NEIGHBORS_D = {
+    pos: tuple((nb, nb[0] != pos[0] and nb[1] != pos[1]) for nb in nbs)
+    for pos, nbs in _NEIGHBORS.items()
+}
 
 
 class Board:
@@ -103,6 +114,7 @@ class Board:
             self.elevation = {(int(x), int(y)): int(z) for x, y, z in elevation if int(z)}
         # Cells with a rope over the pit wall: an easier climb (see `surface_dc`).
         self.ropes = {tuple(c) for c in ropes} if ropes else set()
+        self._flat = not self.elevation      # no pits -> the pathfinder skips every height check
 
     def in_bounds(self, pos):
         return 0 <= pos[0] < COLS and 0 <= pos[1] < ROWS
@@ -203,32 +215,51 @@ class Board:
         how many diagonals were already spent on the move before `start`.
         `vertical` (a flier / climber) lets a step change floor height; otherwise
         a change in elevation is a wall -- you climb or jump across it, not walk."""
-        z_start = self.elevation_at(start)
-        start_state = (start, diags % 2)
-        best = {start_state: 0}
+        walls = self.walls
+        flat = self._flat or vertical
+        z_start = 0 if flat else self.elevation_at(start)
+        elev = self.elevation
+        neigh = _NEIGHBORS_D
+        f1 = footprint == 1
+        INF = float("inf")
+
+        best = {(start, diags % 2): 0}
         dist = {start: 0}
         prev = {start: None}
         pq = [(0, start, diags)]
+        push, pop = heapq.heappush, heapq.heappop
         while pq:
-            cost, cur, cd = heapq.heappop(pq)
+            cost, cur, cd = pop(pq)
             if cost > best.get((cur, cd % 2), cost):
                 continue
-            if goal is not None and cur == goal:
+            if cur == goal:
                 break
-            for nb in neighbors(cur):
-                if not fits(nb, footprint, blocked) \
-                        or self.diagonal_corner_blocked(cur, nb):
+            parity = cd % 2
+            for nb, is_diag in neigh[cur]:
+                if f1:
+                    if nb in blocked:
+                        continue
+                elif not fits(nb, footprint, blocked):
                     continue
-                if not vertical and self.elevation_at(nb) != z_start:
+                if is_diag:
+                    (bx, ay), (ax, by) = (nb[0], cur[1]), (cur[0], nb[1])
+                    if (bx, ay) in walls and (ax, by) in walls:
+                        continue
+                    step = 1 if parity == 0 else 2
+                    ncd = cd + 1
+                else:
+                    step = 1
+                    ncd = cd
+                if not flat and elev.get(nb, 0) != z_start:
                     continue                 # a drop / rise -- can't just walk it
-                step, ncd = _step_cost(cur, nb, cd)
                 nc = cost + step
                 if budget is not None and nc > budget:
                     continue
-                if nc < best.get((nb, ncd % 2), float("inf")):
-                    best[(nb, ncd % 2)] = nc
-                    heapq.heappush(pq, (nc, nb, ncd))
-                    if nc < dist.get(nb, float("inf")):
+                nstate = (nb, ncd % 2)
+                if nc < best.get(nstate, INF):
+                    best[nstate] = nc
+                    push(pq, (nc, nb, ncd))
+                    if nc < dist.get(nb, INF):
                         dist[nb] = nc
                         prev[nb] = cur
         return dist, prev
@@ -244,37 +275,41 @@ class Board:
         return path
 
     def reachable(self, start, budget, blocked=frozenset(), footprint=1,
-                  passable=frozenset(), diags=0, vertical=False):
+                  passable=frozenset(), diags=0, vertical=False, field=None):
         """Anchors -> {anchor: cost} within `budget`. A `footprint`x`footprint`
         shape only lands where it fits whole (inside the grid, not touching
         `blocked`). Cells in `passable` (e.g. allies) can be crossed but not ended
         on. `diags` = diagonals already spent this move (the alternation carries
-        over across the clicks of one Move action)."""
-        dist, _ = self._dijkstra(start, blocked, footprint, diags, budget,
-                                 vertical=vertical)
-        dist.pop(start, None)
+        over across the clicks of one Move action). `field` is a precomputed
+        ``(dist, prev)`` full board scan (see `_dijkstra` / `Battle._pf_field`) --
+        the budget only filters it, so a scan without a budget serves any budget."""
+        dist = (field[0] if field is not None
+                else self._dijkstra(start, blocked, footprint, diags, budget,
+                                    vertical=vertical)[0])
+        dist = {p: c for p, c in dist.items() if c <= budget and p != start}
         if passable:
             dist = {p: c for p, c in dist.items()
                     if not passable.intersection(cells(p, footprint))}
         return dist
 
     def path_to(self, start, goal, blocked=frozenset(), footprint=1, diags=0,
-                vertical=False):
+                vertical=False, field=None):
         """Least-cost anchor path ``[start, ..., goal]``. Returns ``[]`` if `goal`
         cannot be reached. Allies are not passed in `blocked` here: a path may
         cross an ally's cell, it just cannot end on one (the caller only ever asks
-        for a `goal` that is a valid landing)."""
+        for a `goal` that is a valid landing). `field` -- see `reachable`."""
         if start == goal:
             return [start]
-        _, prev = self._dijkstra(start, blocked, footprint, diags, goal=goal,
-                                 vertical=vertical)
+        prev = (field[1] if field is not None
+                else self._dijkstra(start, blocked, footprint, diags, goal=goal,
+                                    vertical=vertical)[1])
         if goal not in prev:
             return []
         return self._trace(prev, goal)
 
     def path_step_toward(self, start, goal, budget, blocked=frozenset(),
                          footprint=1, target_cells=None, passable=frozenset(),
-                         diags=0, vertical=False):
+                         diags=0, vertical=False, field=None):
         """Anchor as far as `budget` (in movement cost) from `start` along the
         least-cost route to touching `target_cells` (by default the `goal` cell).
         Cells in `passable` (allies) can be crossed but not stopped on: step back.
@@ -285,8 +320,9 @@ class Board:
         stands at a dead end forever. Only the walk is capped at `budget`. This
         runs once per acting unit each turn (a full-board Dijkstra on 16x12)."""
         target_cells = target_cells or [goal]
-        dist, prev = self._dijkstra(start, blocked, footprint, diags,
-                                    vertical=vertical)
+        dist, prev = (field if field is not None
+                      else self._dijkstra(start, blocked, footprint, diags,
+                                          vertical=vertical))
 
         def touch(p):
             return cells_distance(cells(p, footprint), target_cells)
