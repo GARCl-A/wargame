@@ -567,11 +567,11 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             if fac.id == "arena":
                 y = section(screen, "WHAT IT UNLOCKS", x, y, w, f)
                 for tier in world.ARENA_TIERS:
-                    unlocked = rep >= tier["rep"]
-                    text(screen, tier["name"], f.body, INK if unlocked else INK_DIM, (x, y))
-                    text(screen, f"entry {tier['entry']}/head  ·  purse {tier['purse']}  ·  "
-                         f"{tier['enemies']} opponent(s)", f.body_sm, INK_DIM, (x + 210, y + 2))
-                    mark = "unlocked" if unlocked else f"needs {tier['rep']} reputation"
+                    unlocked = rep >= tier.rep
+                    text(screen, tier.name, f.body, INK if unlocked else INK_DIM, (x, y))
+                    text(screen, f"entry {tier.entry}/head  ·  purse {tier.purse}  ·  "
+                         f"{tier.enemies} opponent(s)", f.body_sm, INK_DIM, (x + 210, y + 2))
+                    mark = "unlocked" if unlocked else f"needs {tier.rep} reputation"
                     text(screen, mark, f.label, OK if unlocked else INK_FAINT,
                          (x + w, y + 3), right=True)
                     y += 28

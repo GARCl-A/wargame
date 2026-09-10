@@ -111,6 +111,53 @@ class ArenaScenario(Scenario):
     no ambient light, torches scattered anywhere on the floor to fight over."""
 
 
+def own_half(team):
+    """The columns a side may keep its flag in: the player's is the left half of
+    the board, the enemy's the right."""
+    mid = COLS // 2
+    return range(0, mid) if team == "player" else range(mid, COLS)
+
+
+class FlagScenario(ArenaScenario):
+    """Capture the flag, fought in the pits (the arena's second stage). Same
+    cluttered floor and torch scatter as `ArenaScenario`; the difference is the
+    objective. Each side has a flag: the player plants theirs anywhere in the
+    left half at the start (`battle.flags["player"]`, set by `battle_screen`),
+    the enemy's is dropped in the right half here. The bout ends the instant a
+    standing fighter reaches the *other* side's flag -- KO everyone and walk over,
+    or just run for it."""
+
+    is_ctf = True
+
+    def build(self, battle):
+        super().build(battle)
+        self.auto_place_enemy_flag(battle)
+
+    def auto_place_enemy_flag(self, battle, rng=random):
+        """Drop the enemy flag on a random free cell of the right half (not a
+        wall, not under a unit). Falls back to any free cell if the half is
+        somehow full."""
+        taken = battle.occupied() | battle.board.walls
+        free = [(x, y) for x in own_half("enemy") for y in range(ROWS)
+                if (x, y) not in taken]
+        if not free:
+            free = [(x, y) for x in range(COLS) for y in range(ROWS)
+                    if (x, y) not in taken]
+        battle.flags["enemy"] = rng.choice(free) if free else (COLS - 1, ROWS // 2)
+
+    def win_check(self, battle):
+        flags = battle.flags
+        if flags["player"] is None or flags["enemy"] is None:
+            return None                       # still planting -- no objective yet
+        for u in battle.units:
+            if not u.alive:
+                continue
+            goal = flags["enemy"] if u.team == "player" else flags["player"]
+            if goal in battle.cells_of(u):
+                return u.team
+        return None
+
+
 class ErmosScenario(Scenario):
     """Open country: sparse walls, `outdoor` -- lit by day, pitch dark by night.
     Nothing lying around: bring your own torch."""

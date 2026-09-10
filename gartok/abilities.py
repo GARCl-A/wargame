@@ -12,7 +12,8 @@ only this file. Adding a brand-new *kind* of hook still needs a call site in the
 core (unit.py / actions.py) -- there is no plugin bus, and the README says so.
 
 `name` / `effect` are player-facing English; `id` and every field name are
-English too. GARTOK-regras.md (pt-BR) is the design doc and may lag the wording.
+English too. RULES.md is the design-prose doc and may lag the wording; the
+generated REFERENCE.md is the authoritative catalog.
 """
 
 from dataclasses import dataclass

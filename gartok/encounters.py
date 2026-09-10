@@ -26,6 +26,10 @@ from .unit import Unit
 WILDS_COUNT_WEIGHTS = {1: 10, 2: 20, 3: 30, 4: 20, 5: 7, 6: 3}
 WILDS_LEVEL_WEIGHTS = {0: 40, 1: 25, 2: 18, 3: 12, 4: 5}
 
+# The arena's second stage (the Games): opponents run level 1..6, level 1 the
+# common draw and level 6 the rare one. Weights, retune freely.
+ARENA_LEVEL_WEIGHTS = {1: 30, 2: 24, 3: 18, 4: 13, 5: 9, 6: 6}
+
 _COMBAT_CAP = len(progression.COMBAT_XP_THRESHOLDS)
 _WORK_CAP = len(progression.WORK_XP_THRESHOLDS)
 

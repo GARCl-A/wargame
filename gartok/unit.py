@@ -106,7 +106,7 @@ class Unit:
 
     # ------------------------------------------------------------------ #
     # hunger: one meal a day, or the body starts giving out               #
-    #   (see GARTOK-regras.md; the Leshy "Autotrofo" is exempt)           #
+    #   (see RULES.md; the Leshy "Autotroph" is exempt)                   #
     # ------------------------------------------------------------------ #
     @property
     def hunger_level(self):

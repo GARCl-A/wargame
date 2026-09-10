@@ -10,9 +10,9 @@ A file is a flat dict -- the grid size, the wall / torch / player+enemy cells
 named library character to a cell, and the two lighting flags -- plus a
 `map_slug` (the file's stem, the stable id). `scenario.CustomScenario` +
 `npc_units` turn one back into a playable battle. The first consumer is the arena
-title bout: `arena.champion_bout()` carries `map="the-pit"` and `app._start_battle`
-builds a `CustomScenario` from it. Wiring a plain world node to a custom map, and
-`use NPC x`, still come later.
+title bout: `arena.champion_bout()` carries `map_slug="the-pit"` and
+`app._start_battle` builds a `CustomScenario` from it. Wiring a plain world node
+to a custom map, and `use NPC x`, still come later.
 """
 
 import json

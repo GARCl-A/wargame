@@ -16,8 +16,8 @@ first arena's whole "sub-campaign": win a bout, solo the entry pit, then dethron
 its champion team. Repeatable reputation missions, and the other factions, come
 later.
 
-The deed checks read `node`, `outcome.arena_tier` (the staked tier dict, or
-None) and `outcome.squad_size` off a `campaign.BattleOutcome`.
+The deed checks read `node`, `outcome.arena_tier` (the `world.Bout`, or None)
+and `outcome.squad_size` off a `campaign.BattleOutcome`.
 """
 
 from dataclasses import dataclass
@@ -61,15 +61,37 @@ _DEEDS = [
          "Win in the entry pit with a single fighter.", rep=1,
          check=lambda g, node, out: (
              _arena_win(node, out) and out.squad_size == 1
-             and bool(out.arena_tier) and out.arena_tier.get("rep") == 0)),
+             and out.arena_tier is not None and out.arena_tier.rep == 0)),
 
-    # Fires once "Challenge the Champion" exists: that bout will pass an
-    # `arena_offer` carrying `champion=True`. Until then the deed shows as open.
     Deed("arena_dethrone", "arena", "Dethrone the Champions",
          "Beat the pit's champion team.", rep=1,
          check=lambda g, node, out: (
              _arena_win(node, out)
-             and bool(out.arena_tier) and out.arena_tier.get("champion"))),
+             and out.arena_tier is not None and out.arena_tier.champion)),
+
+    # The Games -- the arena's second stage. Locked behind the champion bout; the
+    # bouts that satisfy these only appear once `arena_dethrone` is banked.
+    Deed("arena_bloodsport", "arena", "Bloodsport",
+         "Win a bout in the Games -- the arena's second stage.", rep=1,
+         requires="arena_dethrone",
+         check=lambda g, node, out: (
+             _arena_win(node, out)
+             and out.arena_tier is not None and out.arena_tier.stage2)),
+
+    Deed("arena_flag_runner", "arena", "Flag Runner",
+         "Capture the enemy flag in the Games.", rep=1,
+         requires="arena_dethrone",
+         check=lambda g, node, out: (
+             _arena_win(node, out)
+             and out.arena_tier is not None and out.arena_tier.ctf)),
+
+    Deed("arena_untouchable", "arena", "Untouchable",
+         "Capture the flag without knocking anyone out.", rep=1,
+         requires="arena_dethrone",
+         check=lambda g, node, out: (
+             _arena_win(node, out)
+             and out.arena_tier is not None and out.arena_tier.ctf
+             and out.player_kos == 0)),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

@@ -1,178 +1,205 @@
 # GARTOK Tactical
 
-Wargame tático por turnos baseado no **GARTOK RPG**, construído a partir do
-gerador de personagens em [Gerenciador-Gartok](https://github.com/GARCl-A/Gerenciador-Gartok).
+A turn-based tactical wargame based on the **GARTOK RPG**, rebuilt from the
+character generator at
+[Gerenciador-Gartok](https://github.com/GARCl-A/Gerenciador-Gartok).
 
-Cada unidade é um personagem GARTOK gerado aleatoriamente (raça + ocupação + 3d6).
+Every unit is a randomly generated GARTOK character (race + occupation + 3d6).
 
-**Draft:** o jogo começa numa tela de seleção — são sorteados 3 personagens, você
-escolhe 1, três vezes. Esses 3 formam a **guilda**.
+**Draft:** the game opens on a selection screen — three characters are rolled,
+you keep one, three times. Those three are your **guild**.
 
-**Campanha:** a guilda roda o mapa-múndi como um token. Cada lugar é uma batalha,
-um mercado ou uma parada. Numa batalha você monta o **esquadrão** (1 a 3 membros),
-cai num grid e vence eliminando o time inimigo. Viajar gasta o relógio (dia/noite,
-fome); morte é permanente; um wipe total encerra a run. Salva por slot.
+**Campaign:** the guild roams the world map as a single token. Each place is a
+battle, a market, a tavern, the lumber yard, or the wilds. For a battle you pick
+a **squad** (1–3 members), drop onto a grid, and win by putting the enemy team
+down. Travelling burns the clock (day/night, hunger); death is permanent; a total
+wipe ends the run. Saved by slot.
 
-## Rodar
+Progress toward the game's goal is **reputation with factions**, earned by
+pulling off a faction's signature challenges (`deeds`) — the arena (The Pits) is
+the first, with its staked bouts, its champion title, and a three-deed
+sub-campaign.
+
+## Run
 
 ```
 pip install -r requirements.txt
 python main.py
 ```
 
-Testes: `python test_gartok.py` (regras) e `python sim_test.py` (200 batalhas IA vs IA).
+Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
+(200 headless AI-vs-AI battles). `python -m gartok.reference` regenerates
+[`REFERENCE.md`](REFERENCE.md).
 
-## Controles
+## Controls
 
-| Ação | Como |
+| Action | How |
 |---|---|
-| Escolher personagem (draft) | clique num dos 3 cards |
-| Editar candidato (draft) | botão **EDITAR** (canto sup. dir.) → clique em "trocar" num card para mudar raça/ocupação; **EDITANDO** de novo volta a escolher |
-| Andar (1 ponto) | clique numa casa verde — o caminho até o cursor aparece; o trajeto já andado no turno fica marcado |
-| Atacar (1 ponto) | clique num inimigo com contorno vermelho |
-| Arremessar / Desmoralizar / Estabilizar / Primeiros socorros / Pegar / Defender / Fugir | botões no painel (Arremessar, Desmoralizar e Estabilizar pedem um clique no alvo) |
-| Alternar visão personagem ↔ esquadrão | `L` |
-| Inspecionar ficha | clique em qualquer unidade |
-| Terminar turno | `Espaço` ou botão |
-| Sair | `Esc` |
+| Pick a character (draft) | click one of the three cards |
+| Edit a candidate (draft) | **EDIT** button (top right) → click "swap" on a card to change race/occupation; **EDITING** again returns to picking |
+| Walk (1 point) | click a green cell — the path to the cursor is drawn; the walked trail this turn is marked |
+| Attack (1 point) | click an enemy with a red outline |
+| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In | panel buttons (the aimed ones ask for a target click) |
+| Toggle character ↔ squad vision | `L` |
+| Inspect a sheet | click any unit |
+| End turn | `Space` or the button |
+| Pause / quit | `Esc` |
 
-Ao fim da batalha, um clique volta ao mapa (ou às telas de espólio / recompensa).
+After a battle, one click returns to the map (or to the loot / reward screens).
 
-Cada unidade tem **2 pontos de ação por turno**; toda ação custa 1 ponto (menos
-Terminar turno). Andar move até o deslocamento e pode ser fracionado em vários
-cliques. **Regra central:** bônus do mesmo tipo não se acumulam (vale o maior);
-bônus sem tipo e todas as penalidades somam.
+Each unit has **2 action points per turn**; every action costs 1 (except End
+Turn). Walking moves up to the unit's speed and can be split across clicks.
+**Core rule:** bonuses of the same type do not stack (the largest wins); untyped
+bonuses and all penalties add.
 
-**Visão é por personagem, não por jogador:** o mapa é escuro; no seu turno você
-vê só o que o personagem ativo enxerga (tochas, itens de luz, visão no escuro).
-O esquadrão inimigo (vermelho) é uma IA simples.
+**Vision is per-character, not per-player:** the map is dark; on your turn you see
+only what the active character sees (torches, light items, darkvision). The enemy
+squad (red) is a simple AI.
 
-## O que veio do gerador e o que foi projetado
+## What came from the generator and what was designed
 
-Portado das planilhas `.xlsx` originais (`gartok/data.py`):
-atributos 3d6, 18 raças com mods e habilidades, 31 ocupações com arma+item,
-9 tendências, tamanhos/deslocamento/carga, fórmulas de CA / PV / modificadores.
+Ported from the original `.xlsx` sheets (`gartok/data.py`): 3d6 attributes,
+18 races with mods and abilities, 31 occupations with a weapon + item, 9
+alignments, sizes / speed / carry, the AC / HP / modifier formulas. The full
+catalog — every race, occupation, ability, weapon, armor, price, talent and
+tunable constant — is generated from the code into [`REFERENCE.md`](REFERENCE.md).
 
-Projetado para o wargame (não existia no gerador):
+Designed for the wargame (did not exist in the generator), with the full
+reconstructed ruleset in [`RULES.md`](RULES.md):
 
-- **Combate d20**: iniciativa `d20 + mod Des`; ataque `d20 + mods` vs CA;
-  dano = dado da arma + mod Força (corpo-a-corpo); crítico no 20, erro no 1.
-- **Pontos de ação** (2/turno) e **bônus tipados** (`data.resolve_bonus`).
-- **Ações** (`gartok/actions.py`): Andar, Atacar, Defender, Arremessar, Pegar,
-  Desmoralizar, Estabilizar, Primeiros socorros, Fugir.
-- **Cair / estabilizar / morte** (morrendo → estável | morto), permadeath.
-- **Condições** temporárias — Defendendo, Desmoralizado (`gartok/conditions.py`).
-- **Efeito mecânico das habilidades raciais** (`gartok/abilities.py`).
-- **Visão e luz**, paredes, objetos no chão, tochas.
-- **Munição** (besta + aljava) e **arma improvisada**; **flanco** e "luta em bando".
-- **Tabela de armas** (`WEAPONS` em `data.py`). **1 casa = 1,5 m**.
+- **d20 combat**: initiative `d20 + WIS mod`; attack `d20 + mods` vs AC; damage =
+  weapon die + STR mod (melee); crit on 20, fumble on 1.
+- **Action points** (2/turn) and **typed bonuses** (`data.resolve_bonus`).
+- **Actions** (`gartok/actions.py`): Walk, Attack, Defend, Throw, Pick Up,
+  Demoralize, Stabilize, First Aid, Flee, plus the Z-axis moves Climb / Push /
+  Jump / Drop In.
+- **Falling / stabilizing / death** (dying → stable | dead), permadeath.
+- **Temporary conditions** — Defending, Demoralized (`gartok/conditions.py`).
+- **The mechanical effect of the racial abilities** (`gartok/abilities.py`).
+- **Vision and light**, walls, ground objects, torches; **a per-cell Z axis**
+  (pits, fall damage).
+- **Ammo** (crossbow + quiver, reload) and **improvised weapon**; **flanking**
+  and Pack Tactics.
+- **1 cell = 1.5 m**.
 
-Sistemas de mundo, fora do combate:
+World systems, outside combat:
 
-- **Campanha**: guilda roda o mapa como um token; relógio + dia/noite; permadeath
-  e save por slot (`world.py`, `clock.py`, `guild.py`, `persist.py`).
-- **Fome**: uma refeição por dia; sem comida, penalidades crescentes até a morte.
-- **Economia**: cobre no personagem (sem tesouraria); mercado com negociação por
-  idioma e tendência; arena de apostas não-letal; espólio de campo.
+- **Campaign**: the guild roams the map as one token; a clock + day/night;
+  permadeath and save-by-slot (`world.py`, `clock.py`, `guild.py`, `persist.py`).
+- **Hunger**: one meal a day, a shared larder; without food, growing penalties
+  up to death.
+- **Progression**: no classes — each XP track (combat, work) has its own level
+  and its own talent tree (`progression.py`, `talents.py`, `level_screen.py`).
+- **Economy**: copper on the character (no treasury); a market with haggling by
+  language + Charisma + alignment; the arena's staked non-lethal bouts; field
+  loot; the lumber yard's day-labour wage.
+- **Recruitment**: a tavern pool refreshed weekly; a Charisma-vs-Charisma pitch,
+  no money (`recruit.py`).
+- **Factions & reputation**: one-shot deeds earn per-faction standing
+  (`factions.py`); the arena's champion title lives in `arena.py`.
+- **Editors**: sandbox character and map creators (`char_editor_screen.py`,
+  `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`.
 
-Detalhes e a reconstrução completa das regras: [`GARTOK-regras.md`](GARTOK-regras.md).
+## Structure
 
-## Estrutura
-
-Identificadores são em inglês; o conteúdo do domínio (nomes de raça, ocupação,
-tendência, tamanho, idioma, arma e item) fica em português, igual à
-`GARTOK-regras.md` e à tela.
+Identifiers are English; so is the domain content (race, occupation, alignment,
+size, language, weapon and item names). Only [`RULES.md`](RULES.md) design prose
+may lag the code wording.
 
 ```
 gartok/
-  # domínio + regras de combate
-  data.py           tabelas do GARTOK (portadas) + armas/pesos/constantes (projetados),
-                    dado, bônus tipados, eixos de alinhamento
-  abilities.py      habilidades raciais: passivo numérico e/ou gancho de cada uma
-  conditions.py     estados temporários de um combatente (Defending, Demoralized, …)
-  actions.py        ações de combate (cost, target, can/execute) + registro PANEL_ACTIONS
-  board.py          grade, paredes, pathfinding (BFS), linha de visão
-  vision.py         luz + o que cada personagem enxerga (visão de tela)
-  ground.py         objetos no chão (GroundObject) e criaturas neutras (Creature)
-  scenario.py       monta o mapa de uma batalha: terreno, deployment, tochas
-  unit.py           Unit = o personagem persistente (raça/ocupação/atributos/fome/loadout)
-  combatant.py      Combatant = uma Unit dentro de uma batalha (PV/PA/posição/condições/mãos)
-  battle.py         estado da batalha (envolve as unidades em Combatant), iniciativa, morte
-  ai.py             IA do esquadrão inimigo (sobre actions.py); tendência tempera as bordas
-  loot.py           junta o espólio de campo depois de uma vitória letal
+  # domain + combat rules
+  data.py           GARTOK tables (ported) + weapons/weights/constants (designed),
+                    dice, typed bonuses, alignment axes
+  reference.py      walks the registries -> REFERENCE.md (the data dictionary)
+  abilities.py      racial abilities: each one's numeric passive and/or hook
+  conditions.py     a combatant's temporary states (Defending, Demoralized, ...)
+  actions.py        combat actions (cost, target, can/execute) + the PANEL_ACTIONS registry
+  board.py          grid, walls, elevation, pathfinding (Dijkstra), line of sight
+  vision.py         light + what each character sees (screen vision)
+  ground.py         ground objects (GroundObject) and neutral creatures (Creature)
+  scenario.py       builds a battle's map: terrain, deployment, torches; win_check seam
+  encounters.py     enemy packs scaled to a target mean level
+  unit.py           Unit = the persistent character (race/occupation/attributes/hunger/loadout/talents)
+  combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
+  battle.py         battle state (wraps each unit in a Combatant), initiative, death
+  ai.py             enemy squad AI (over actions.py); alignment tempers the edges
+  loot.py           gathers the field loot after a lethal win
+  progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
+  talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
 
-  # mundo + campanha
-  world.py          grafo do mapa: nós, arestas (horas), rota (Dijkstra), ofertas da arena
-  clock.py          relógio da campanha (segundos), dia/noite
-  guild.py          a guilda = o roster; tempo/fome diária, ouro somado, reputação por facção
-  factions.py       facções e seus deeds (feitos de uma vez que rendem reputação)
-  campaign.py       dobra o resultado de uma batalha de volta na guilda (permadeath, espólio, deeds)
-  economy.py        preços, estoque do mercado e negociação (idioma + carisma + tendência)
-  persist.py        slots de save (JSON); só o roster + meta da campanha vão pro disco
+  # world + campaign
+  world.py          the map graph: nodes, edges (hours), route (Dijkstra), Bout (arena offers)
+  clock.py          the campaign clock (seconds), day/night
+  guild.py          the guild = the roster; daily time/hunger, summed gold, per-faction reputation
+  factions.py       factions and their deeds (one-shot achievements that grant reputation)
+  arena.py          the Champion of the Pit title: dethrone, defend, the 15/7-day cycle
+  campaign.py       folds a battle result back into the guild (permadeath, loot, deeds)
+  economy.py        prices, market stock, haggling (language + Charisma + alignment)
+  recruit.py        the recruitment contest + the weekly tavern pool
+  hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
+  persist.py        save slots (JSON); only the roster + campaign meta hit disk
+  npc_lib.py        the NPC library (git-tracked npcs/*.json, outside the saves)
+  map_lib.py        the map library (git-tracked maps/*.json) + npc_units
 
-  # telas (Screen base: handle_event / update(dt) / draw(surface), lê self.mouse)
-  # toda tela desenha direto na janela real e se distribui a partir de screen.get_size()
-  screen.py         classe base das telas (dispatch de clique -> self._click)
-  menu_screen.py    slots de save (Novo / Continuar / Apagar)
-  draft_screen.py   montagem do roster inicial (cards + modo EDITAR)
-  map_screen.py     o hub: dirige a guilda pelo mapa, dia/noite, atalhos p/ arena e mercado
-  guild_screen.py   roster + equipamento (mãos e mochila); abre a ficha completa (modal)
-  squad_screen.py   quem sai numa batalha ou vai ao mercado (+ tiers de aposta na arena)
-  battle_screen.py  tela de batalha (grade, iniciativa, painel de ação, log)
-  loot_screen.py    dividir o espólio entre os sobreviventes
-  reward_screen.py  escolher quem embolsa a bolsa de uma vitória de arena
-  market_screen.py  comprar/vender por cobre; bolsa comum, negociação por idioma+tendência
+  # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
+  # every screen draws straight to the real window and lays out from screen.get_size()
+  screen.py         the screens' base class (click dispatch -> self._click)
+  menu_screen.py / draft_screen.py / map_screen.py / guild_screen.py / gear_screen.py
+  squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
+  market_screen.py / taverna_screen.py / work_screen.py / hunt_screen.py / level_screen.py
+  pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
 
-  # apresentação compartilhada
-  theme.py          design system: escala de espaço (SP), paleta, 2 famílias de fonte,
+  # shared presentation
+  theme.py          the design system: spacing scale (SP), palette, two font families,
                     widgets (panel, chip, section, pips, Stack, token_badge)
-  icons.py          ícones vetoriais (pygame.draw) das ações — sem arquivo de asset
-  artwork.py        carrega/tinge/cacheia os SVGs de assets/icons/ (silhuetas de raça no token)
-  lighting.py       LightRenderer: camada de escuridão + buracos de luz radiais
-  sheet.py          formata uma Unit em linhas de texto (usada na inspeção da batalha)
-  sheet_panel.py    ficha completa desenhada (modal da tela de guilda)
+  icons.py          vector action icons (pygame.draw) -- no asset file
+  artwork.py        loads/tints/caches the SVGs under assets/icons/ (race silhouettes on the token)
+  lighting.py       LightRenderer: the darkness layer + radial light holes
+  sheet.py          formats a Unit into text lines (battle-inspect panel)
+  sheet_panel.py    the full drawn character sheet (guild-screen modal)
 
-  app.py            shell pygame: janela redimensionável, loop, troca de telas
-                    e o laço campanha ⇄ batalha
-main.py             ponto de entrada
-test_gartok.py      testes de regras (rodam sob pytest ou `python test_gartok.py`)
-sim_test.py         simulação headless (200 batalhas IA vs IA)
+  app.py            the pygame shell: resizable window, loop, screen switching,
+                    the campaign <-> battle loop
+main.py             entry point
+tests/              the rule tests, one file per domain (run: python -m pytest tests/)
+sim_test.py         headless simulation (200 AI-vs-AI battles)
+balance_sim.py      the balance tournament (race / occupation / combo rankings)
+economy_sim.py      the trade counterpart (net copper by race / occupation)
 ```
 
-> A renderização é procedural, com uma exceção: `artwork.py` carrega os SVGs de
-> `gartok/assets/icons/` (game-icons.net) — hoje só as silhuetas de raça no token
-> da unidade. `gartok/assets/dungeon/` + `tileset.py` seguem órfãos, mantidos em
-> disco caso props (barris, baús) voltem.
+> Rendering is procedural, with one exception: `artwork.py` loads the SVGs under
+> `gartok/assets/icons/` (game-icons.net) — today only the race silhouettes on
+> the unit token and the talent-node icons. `gartok/assets/dungeon/` +
+> `tileset.py` are orphaned, kept on disk in case props (barrels, chests) return.
 
-### Como adicionar um sistema novo
+### How to add a system
 
-- **Nova ação** (ex.: Empurrar, Agarrar): uma classe `Action` em `actions.py` e
-  uma entrada em `PANEL_ACTIONS`. A UI e a IA passam a enxergá-la sozinhas.
-- **Novo estado de combate** (ex.: veneno, caído, cego): uma classe `Condition` em
-  `conditions.py`; quem aplica chama `combatant.add_condition(...)`.
-- **Nova habilidade racial**: uma `Ability` em `abilities.py`. Se ela reaproveita
-  os passivos e ganchos que já existem (`hp_max`, `speed`, …, `on_turn_start`,
-  `on_attack_miss`, …), basta editar esse arquivo. Um **tipo novo de gancho**
-  ainda exige um ponto de chamada no núcleo (`combatant.py` para combate,
-  `unit.py` para derivação) — não há um barramento de plugins.
-- **Novo estado persistente do personagem** (ex.: XP, ferimentos, fadiga): campo
-  em `unit.py`, aplicado em `Unit._derive_combat` se afeta os números, salvo em
-  `persist.unit_to_dict` / `Unit.from_save`. O `Combatant` lê tudo isso de graça.
-- **Novo tipo de objeto no chão**: um `kind` novo em `ground.GroundObject` e onde
-  a regra reage a ele (os consumidores perguntam `obj.kind` / `obj.is_weapon`).
-- **Novo cenário de batalha** (mapa pré-montado, zonas de deployment, lighting):
-  uma subclasse de `Scenario` com `build(battle)` em `scenario.py`; aponte um
-  `world.Node` pra ela. Objetivo que não seja "elimine todos" ainda **não** tem
-  seam — `battle._check_winner` decide vitória sozinho.
-- **Novo lugar no mapa**: um `Node` em `world.NODES` + arestas em `world.EDGES`
-  (custo em horas). `app` transforma o `kind` do nó na atividade (batalha /
-  mercado / parada).
-- **Novo sistema de mundo** (fora do combate): a rotina que passa o tempo em
-  `guild.pass_time` / `_daily_upkeep`; resultado de batalha que volta pro roster
-  em `campaign.absorb_battle`.
-- **Nova facção ou novo deed** (objetivo / reputação): uma `Faction` ou um `Deed`
-  em `factions.py`. O `Deed.check(guild, node, outcome)` roda em
-  `factions.settle`, chamado por `campaign.absorb_battle` — hoje só pós-batalha;
-  um gatilho de outro tipo (pós-mercado, pós-viagem) precisa de mais uma chamada
-  a `settle` no ponto do evento.
-- **Nova fonte de luz**: `vision.unit_light` / `ground_light`.
+- **New action** (e.g. Grapple): an `Action` class in `actions.py` and an entry
+  in `PANEL_ACTIONS`. The UI and the AI see it for free.
+- **New combat state** (e.g. poison, prone, blind): a `Condition` class in
+  `conditions.py`; whoever applies it calls `combatant.add_condition(...)`.
+- **New racial ability**: an `Ability` in `abilities.py`. If it reuses the
+  existing passives and hooks (`hp_max`, `speed`, …, `on_turn_start`,
+  `on_attack_miss`, …) that file is the only edit. A brand-new *kind* of hook
+  still needs a core call site (`combatant.py` for combat, `unit.py` for
+  derivation) — there is no plugin bus.
+- **New persistent character state** (e.g. wounds, fatigue): a field on `unit.py`,
+  folded into `Unit._derive_combat` if it moves the numbers, saved in
+  `persist.unit_to_dict` / `Unit.from_save`. `Combatant` reads it for free.
+- **New ground-object type**: a new `kind` on `ground.GroundObject` and the rule
+  that reacts to it (consumers ask `obj.kind` / `obj.is_weapon`).
+- **New battle scenario** (prebuilt map, deployment zones, lighting): a `Scenario`
+  subclass with `build(battle)` in `scenario.py`; point a `world.Node` at it. A
+  non-elimination objective goes through `Scenario.win_check` (the seam exists;
+  nothing overrides it yet).
+- **New place on the map**: a `Node` in `world.NODES` + edges in `world.EDGES`
+  (cost in hours). `app` turns the node's `kind` into the activity.
+- **New world system** (outside combat): the routine that passes time in
+  `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the
+  roster in `campaign.absorb_battle`.
+- **New faction or deed** (objective / reputation): a `Faction` or a `Deed` in
+  `factions.py`. `Deed.check(guild, node, outcome)` runs in `factions.settle`,
+  called by `campaign.absorb_battle` — today only post-battle; another trigger
+  (post-market, post-travel) needs one more `settle` call at that event.
+- **New light source**: `vision.unit_light` / `ground_light`.

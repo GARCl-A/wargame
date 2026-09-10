@@ -5,7 +5,7 @@ holding an empty crossbow, reload it; otherwise spend the points attacking the
 weakest target in range (or demoralize it if out of reach); otherwise advance.
 Sees through each unit's own eyes.
 
-**Tendency colours the edges** (§8 / "Flee the fight" in GARTOK-regras.md), on
+**Tendency colours the edges** (§8 / "Fleeing" in RULES.md), on
 the morality axis mostly:
 - **Evil** finishes downed enemies -- a coup de grace on an adjacent body, so the
   player cannot stabilize it. Only in a lethal fight (the arena knocks out anyway).
@@ -103,6 +103,14 @@ def _step_over_elevation(battle, unit, target):
     return True
 
 
+def _ctf_goal(battle, unit):
+    """The cell a capture-the-flag runner is racing for -- the player's flag, once
+    it has been planted. None for a non-runner, or before the flag is down."""
+    if not battle.is_ctf or not unit.ctf_runner:
+        return None
+    return battle.flags["player"]
+
+
 def _should_flee(battle, unit):
     """Whether the unit breaks and runs this turn. Never from a non-lethal bout
     (the arena -- nobody dies). Needs a map edge and a clean getaway
@@ -132,6 +140,22 @@ def take_turn(battle, unit):
         if ally is not None:                  # good: save the friend first
             actions.STABILIZE.execute(battle, unit, ally)
             continue
+
+        goal = _ctf_goal(battle, unit)
+        if goal is not None:                  # flag runner: race for the player's flag
+            if goal in battle.cells_of(unit):
+                break                         # on it -- end_turn calls the capture
+            # step ONTO the flag cell (not adjacent, the way `path_step_toward`
+            # stops next to a unit) -- a downed body lying on it does not block.
+            reach = battle.reachable(unit)
+            route = battle.path_to(unit, goal)
+            step = goal if goal in reach else next(
+                (c for c in reversed(route) if c in reach), None)
+            if step is not None and step != unit.pos:
+                battle.move_unit(unit, step)
+                unit.walking = False
+                continue
+            # genuinely walled off from the flag -- fight through this turn
 
         if _should_flee(battle, unit):
             actions.FLEE.execute(battle, unit)

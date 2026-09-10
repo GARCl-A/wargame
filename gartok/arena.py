@@ -25,7 +25,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 
 import random
 
-from . import encounters, npc_lib
+from . import encounters, npc_lib, world
 
 CHAMPION_SLUG = "adelio-small-knife"
 
@@ -41,23 +41,54 @@ ADELIO_CAMEO_CHANCE = 0.05    # chance an ordinary pit bout fields the dethroned
 
 CHAMPION_MAP = "the-pit"          # the hand-laid arena the title bout is fought on
 
+# The Games -- the arena's second stage, opened by dethroning the champion. A
+# salon of violent sports: a bigger 3v3 brawl and a capture-the-flag bout, both
+# against opponents scaled level 1..6 (`encounters.ARENA_LEVEL_WEIGHTS`).
+STAGE2_ENTRY = 30              # stake per fighter for a Games bout
+STAGE2_PURSE = 130            # flat purse for winning one
+STAGE2_ENEMIES = 3           # opponents fielded (a 3v3)
+
 
 def champion_bout():
-    """The staked offer for challenging Adelio's team (shape matches `world`'s
-    arena tiers, so `SquadScreen` and `campaign.absorb_battle` read it unchanged).
-    No `rep` key: it is not a rep tier and must not satisfy the Lone Wolf deed.
-    `map` points `app._start_battle` at the authored map (`maps/the-pit.json`)
-    instead of the procedural `ArenaScenario`; the win condition is unchanged --
-    put the whole champion team down, the hole is only scenery."""
-    return {"name": "Challenge the Champion", "champion": True, "map": CHAMPION_MAP,
-            "entry": CHAMPION_ENTRY, "purse": CHAMPION_PURSE,
-            "enemies": 1 + CHAMPION_GOONS}
+    """The staked bout for challenging Adelio's team. No `rep`: it is not a rep
+    tier and must not satisfy the Lone Wolf deed. `map_slug` points
+    `app._start_battle` at the authored map (`maps/the-pit.json`) instead of the
+    procedural `ArenaScenario`; the win condition is unchanged -- put the whole
+    champion team down, the hole is only scenery."""
+    return world.Bout("Challenge the Champion", entry=CHAMPION_ENTRY,
+                       purse=CHAMPION_PURSE, enemies=1 + CHAMPION_GOONS,
+                       champion=True, map_slug=CHAMPION_MAP)
 
 
 def defense_bout():
-    """The offer for a mandatory 1v1 title defense (no stake, a purse for a win)."""
-    return {"name": "Defend the Title", "defense": True,
-            "entry": 0, "purse": DEFENSE_PURSE, "enemies": 1}
+    """A mandatory 1v1 title defense (no stake, a purse for a win)."""
+    return world.Bout("Defend the Title", entry=0, purse=DEFENSE_PURSE,
+                      enemies=1, defense=True)
+
+
+def brawl_bout():
+    """The Games' straight fight: a 3v3 with a bigger stake and purse than the
+    rep ladder, against opponents scaled level 1..6 (`stage2_pack`). Offered once
+    the champion has been dethroned."""
+    return world.Bout("Games: Brawl", entry=STAGE2_ENTRY, purse=STAGE2_PURSE,
+                      enemies=STAGE2_ENEMIES, stage2=True)
+
+
+def ctf_bout():
+    """The Games' capture-the-flag bout: same stake and field as the brawl, but
+    fought on a `FlagScenario` -- it ends when a fighter reaches the enemy flag,
+    not when a side is wiped."""
+    return world.Bout("Games: Capture the Flag", entry=STAGE2_ENTRY,
+                      purse=STAGE2_PURSE, enemies=STAGE2_ENEMIES,
+                      stage2=True, ctf=True)
+
+
+def stage2_pack(n=STAGE2_ENEMIES, rng=random):
+    """`n` opponents for a Games bout, each rolled level 1..6 off
+    `encounters.ARENA_LEVEL_WEIGHTS` (level 1 common, level 6 rare)."""
+    return [encounters.build_enemy(
+        encounters.weighted_choice(encounters.ARENA_LEVEL_WEIGHTS, rng), rng)
+        for _ in range(n)]
 
 
 def champion_of(guild):

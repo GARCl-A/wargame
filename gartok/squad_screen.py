@@ -61,7 +61,7 @@ class SquadScreen(SheetModalMixin, Screen):
     def entry_cost(self):
         """Total arena stake for the current pick: `entry` per fighter."""
         off = self.offer
-        return off["entry"] * len(self.picked) if off else 0
+        return off.entry * len(self.picked) if off else 0
 
     @property
     def ok(self):
@@ -153,10 +153,10 @@ class SquadScreen(SheetModalMixin, Screen):
             hov = r.collidepoint(self.mouse)
             panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1, radius=RADIUS)
-            text(screen, off["name"], f.body_bd, ACCENT if sel else INK,
+            text(screen, off.name, f.body_bd, ACCENT if sel else INK,
                  (r.x + SP2, r.y + 6))
-            text(screen, f"entry {off['entry']}/head  ·  purse {off['purse']}  ·  "
-                 f"{off['enemies']} opponent(s)", f.body_sm, INK_DIM,
+            text(screen, f"entry {off.entry}/head  ·  purse {off.purse}  ·  "
+                 f"{off.enemies} opponent(s)", f.body_sm, INK_DIM,
                  (r.x + SP2, r.y + 26))
             self.tiers.append((r, i))
         top += 62
@@ -165,7 +165,7 @@ class SquadScreen(SheetModalMixin, Screen):
         cost = self.entry_cost
         gold = self.picked_gold
         can_pay = gold >= cost
-        text(screen, f"entry: {off['entry']} x {len(self.picked)} fighter(s) = "
+        text(screen, f"entry: {off.entry} x {len(self.picked)} fighter(s) = "
              f"{cost} copper  ·  squad's combined purse: {gold} copper", f.body_sm,
              OK if can_pay else DANGER, (MARGIN, top))
         return top + 22

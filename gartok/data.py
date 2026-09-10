@@ -5,8 +5,9 @@ effect of the RACIAL ABILITIES were designed here for the wargame, keeping the
 d20 style.
 
 Naming: everything is English -- identifiers and the domain *content* (race,
-occupation, alignment, size, language, weapon and item names). GARTOK-regras.md
-(pt-BR) is the design doc and may lag this wording.
+occupation, alignment, size, language, weapon and item names). `RULES.md` is the
+design-prose doc; `python -m gartok.reference` turns these tables into
+`REFERENCE.md`, the authoritative catalog.
 """
 
 import random

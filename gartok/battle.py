@@ -46,16 +46,49 @@ class Battle:
 
         self.creatures = []                  # neutral bodies (e.g. the Shepherd's sheep)
         self._pf_cache = {}                   # per-turn Dijkstra field cache (see _pf_field)
+        # capture-the-flag: {"player": cell|None, "enemy": cell|None}, else None.
+        # the player's flag is planted by `battle_screen`; the scenario drops the
+        # enemy's during `build`.
+        self.flags = ({"player": None, "enemy": None}
+                      if getattr(self.scenario, "is_ctf", False) else None)
         self.scenario.build(self)            # board + deployment + scatter
         self.round_no = 1
         self.winner = None
         self._mopup_open = False              # enemies down, allies still bleeding out
+        if self.is_ctf:
+            self._assign_flag_runners()
         self._roll_initiative()
         self.log("--- Round 1 ---")
         self._announce_turn()
 
     def creature_cells(self):
         return {c for cr in self.creatures for c in cells(cr.pos, cr.footprint)}
+
+    # ------------------------------------------------------------------ #
+    # capture the flag                                                   #
+    # ------------------------------------------------------------------ #
+    @property
+    def is_ctf(self):
+        return self.flags is not None
+
+    @property
+    def awaiting_flag(self):
+        """The player still has to plant their flag before the fight can start."""
+        return self.is_ctf and self.flags["player"] is None
+
+    def _assign_flag_runners(self):
+        """Tag the fastest half of the enemy side as flag runners -- the AI sends
+        them for the player's flag while the rest hold and fight."""
+        ranked = sorted(self.enemy_units, key=lambda c: c.speed, reverse=True)
+        cut = max(1, (len(ranked) + 1) // 2)      # ceil(half) -- a 3v3 sends 2 runners
+        for i, c in enumerate(ranked):
+            c.ctf_runner = i < cut
+
+    def check_objective(self):
+        """Let a caller (the screen, mid-turn) settle a scenario objective the
+        instant it is met, instead of waiting for the turn to end."""
+        if self.winner is None and self._check_winner():
+            self.log(f"*** Victory: {self.winner} ***")
 
     def _roll_initiative(self):
         for u in self.units:

@@ -10,6 +10,7 @@ from . import actions, ai, artwork, data, icons, vision
 from .battle import COLS, ROWS
 from .board import cells
 from .lighting import LightRenderer
+from .scenario import own_half
 from .screen import Screen
 from .sheet import character_sheet
 from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
@@ -78,6 +79,8 @@ class BattleScreen(Screen):
         self._detect_fx()
         if b.winner is not None:
             return
+        if b.awaiting_flag:                  # plant the flag before anyone acts
+            return
         if b.active.team == "enemy":
             self.enemy_timer += dt
             if self.enemy_timer >= ENEMY_DELAY:
@@ -121,6 +124,13 @@ class BattleScreen(Screen):
         tile = self._tile_at_px(px)
         if tile is None:
             return
+
+        if b.awaiting_flag:
+            if self._can_plant_flag(tile):
+                b.flags["player"] = tile
+                b.scenario.auto_place_enemy_flag(b)
+            return
+
         self._obs = self._observers()
         clicked = b.unit_at(tile, include_downed=True)
         if clicked is not None and clicked.team == "enemy" \
@@ -197,6 +207,8 @@ class BattleScreen(Screen):
 
     def _after_player_action(self):
         b = self.battle
+        if b.is_ctf:                          # stepping onto the enemy flag ends it now
+            b.check_objective()
         if b.winner is not None or b.active.team != "player":
             return
         act = b.active
@@ -303,7 +315,11 @@ class BattleScreen(Screen):
         self.lighting.draw(screen, self.battle, self._visible, self._obs)
         self._draw_creatures(screen)
         self._draw_units(screen)
+        if self.battle.is_ctf:
+            self._draw_flags(screen)
         self._draw_tactical(screen)              # overlay: above the fog
+        if self.battle.awaiting_flag:
+            self._draw_flag_setup(screen)
         self._draw_floaters(screen)
         self._draw_initiative(screen)
         self._draw_panel(screen)
@@ -498,6 +514,51 @@ class BattleScreen(Screen):
                 pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
                 pygame.draw.polygon(screen, OBJ_C, pts)
                 pygame.draw.polygon(screen, (25, 22, 12), pts, 2)
+
+    # ------------------------------------------------------------------ #
+    # capture the flag                                                   #
+    # ------------------------------------------------------------------ #
+    def _can_plant_flag(self, tile):
+        b = self.battle
+        x, y = tile
+        return (x in own_half("player") and 0 <= y < ROWS
+                and tile not in b.board.walls and b.unit_at(tile) is None)
+
+    def _draw_pennant(self, screen, pos, color):
+        r = self._cell_rect(*pos)
+        pole = (r.x + r.w // 3, r.bottom - 5)
+        pygame.draw.line(screen, INK, (pole[0], r.y + 5), pole, 3)
+        flag = [(pole[0], r.y + 5), (pole[0] + r.w // 2, r.y + 12),
+                (pole[0], r.y + 19)]
+        pygame.draw.polygon(screen, color, flag)
+        pygame.draw.polygon(screen, INK, flag, 1)
+
+    def _draw_flags(self, screen):
+        for team, pos in self.battle.flags.items():
+            if pos is None:
+                continue
+            # your own flag you always know; the enemy's you have to find --
+            # it stays hidden until a cell you can see falls on it.
+            if team == "enemy" and pos not in self._visible:
+                continue
+            self._draw_pennant(screen, pos, PLAYER_C if team == "player" else ENEMY_C)
+
+    def _draw_flag_setup(self, screen):
+        f = self.fonts
+        tint = pygame.Surface((TILE, TILE), pygame.SRCALPHA)
+        tint.fill((*PLAYER_C, 32))
+        hover = self._tile_at_px(self.mouse)
+        for x in own_half("player"):
+            for y in range(ROWS):
+                if (x, y) in self.battle.board.walls:
+                    continue
+                screen.blit(tint, self._cell_rect(x, y))
+        if hover is not None and self._can_plant_flag(hover):
+            pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
+        banner = pygame.Rect(GRID_X, GRID_Y, GRID_W, 30)
+        panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
+        text(screen, "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
+             f.body_bd, INK, banner.center, center=True)
 
     def _draw_creatures(self, screen):
         f = self.fonts
@@ -720,6 +781,8 @@ class BattleScreen(Screen):
         elif self.battle.mopping_up:
             msg, col = ("enemies down  ·  stabilize the downed or space "
                         "to let the counter run"), WARN
+        elif self.battle.is_ctf:
+            msg, col = "reach the red flag to win  ·  guard your own", INFO
         else:
             msg, col = "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
         text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))

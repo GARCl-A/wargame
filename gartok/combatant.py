@@ -91,6 +91,7 @@ class Combatant:
         self.combat_xp_earned = 0     # combat XP from those kills, by level difference
         self.downed_by = None         # the combatant whose blow first put this one down (arena title)
         self.ferocity_downer = None   # who brought this unit to 0 HP while Ferocity keeps it up
+        self.ctf_runner = False       # capture-the-flag: this enemy rushes the player's flag (set by Battle)
 
     def credit_kill(self, victim):
         """Book a downed enemy: +1 to the kill count, plus combat XP scaled by the
@@ -110,7 +111,7 @@ class Combatant:
         return True
 
     # ------------------------------------------------------------------ #
-    # lifecycle: up -> dying -> (stable | dead)   (see GARTOK-regras.md) #
+    # lifecycle: up -> dying -> (stable | dead)   (see RULES.md)         #
     # ------------------------------------------------------------------ #
     @property
     def alive(self):

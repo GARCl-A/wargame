@@ -1,6 +1,6 @@
 """Leveling curves and the combat-XP rule  (designed for the wargame).
 
-The generator left Level 0 / XP 1000 with no meaning (GARTOK-regras.md Sec.9).
+The generator left Level 0 / XP 1000 with no meaning (RULES.md §9).
 This is the reconstruction: no classes, no class levels -- each *track* of
 experience (combat, work) has its own level, and its own talent tree in
 `talents.py`. A character gets better at what they actually do.

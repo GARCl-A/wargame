@@ -11,8 +11,8 @@ once it is over this maps the outcome onto that roster:
 - a win bumps the tally;
 - `factions.settle` checks the faction deeds against the result -- e.g. a first
   arena win completes "First Blood" and earns a point of reputation with the
-  Pits. The deed checks read `node`, `arena_tier` and `squad_size` off the
-  outcome, so those are set before `settle`.
+  Pits. The deed checks read `node`, `arena_tier` (a `world.Bout`) and
+  `squad_size` off the outcome, so those are set before `settle`.
 
 `app` owns the *screen* that comes next (loot, reward, or straight to the map);
 this module owns the *state change*, returned as a `BattleOutcome`.
@@ -33,7 +33,8 @@ class BattleOutcome:
     campaign_over: bool = False                   # the guild is empty now
     xp_awards: dict = field(default_factory=dict)  # {member name: combat XP gained this battle}
     squad_size: int = 0                           # how many the guild sent into the fight
-    arena_tier: dict | None = None                # the staked tier dict, for an arena bout
+    player_kos: int = 0                           # enemies the squad put down (for the "Untouchable" deed)
+    arena_tier: object = None                     # the world.Bout, for an arena fight
     deeds_earned: list = field(default_factory=list)  # factions.Deed completed by this result
     arena_title_event: str | None = None          # a one-liner if the Champion of the Pit title changed hands
 
@@ -53,7 +54,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
 
     `squad` is the same-order list of roster units that `battle.player_units`
     wraps. `node` is the world node the fight happened at (for the faction deeds);
-    `arena_offer` is the staked tier for an arena bout, or None.
+    `arena_offer` is the `world.Bout` for an arena fight, or None.
     """
     survivors, fallen, fallen_combatants, xp_awards = [], [], [], {}
     for combatant, member in zip(battle.player_units, squad):
@@ -74,23 +75,25 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     if won:
         guild.record_victory()
 
+    player_kos = sum(c.kills for c in battle.player_units)
     outcome = BattleOutcome(won, survivors, fallen, xp_awards=xp_awards,
-                            squad_size=len(squad), arena_tier=arena_offer)
+                            squad_size=len(squad), player_kos=player_kos,
+                            arena_tier=arena_offer)
 
     if guild.empty:                               # full wipe: campaign over
         outcome.campaign_over = True
         return outcome
 
     if arena_offer and won:                       # arena bout: the flat purse
-        outcome.arena_reward = arena_offer["purse"]
+        outcome.arena_reward = arena_offer.purse
     elif won and battle.lethal:                   # lethal win: loot the field
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
 
     outcome.deeds_earned = factions.settle(guild, node, outcome)
 
-    if arena_offer and arena_offer.get("champion") and won:
+    if arena_offer and arena_offer.champion and won:
         _claim_champion_title(guild, squad, battle, outcome)
-    elif arena_offer and arena_offer.get("defense"):
+    elif arena_offer and arena_offer.defense:
         _settle_title_defense(guild, outcome, won)
     return outcome
 

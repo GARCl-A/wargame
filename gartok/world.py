@@ -26,6 +26,7 @@ completing arena deeds (`factions`), not from the win itself.
 """
 
 import heapq
+from dataclasses import dataclass
 
 from .scenario import ArenaScenario, ErmosScenario
 
@@ -62,27 +63,46 @@ class Node:
         return self.kind == "wilds"
 
 
-# Arena bouts unlocked by reputation (`rep`, from the arena `factions` deeds):
-# stake `entry` copper PER FIGHTER sent in, field `enemies` opponents, win the
-# flat `purse`. The purse does not grow with the squad, so piling bodies onto a
-# weak tier just eats the take -- a lean squad of strong dolls keeps the most.
+@dataclass(frozen=True)
+class Bout:
+    """One arena match-up: stake `entry` copper per fighter, face `enemies`
+    opponents, win the flat `purse`. `ARENA_TIERS` are the staked ladder;
+    `arena.py` builds the one-off bouts (champion, title defense, the Games) to
+    the same shape so `SquadScreen` and `campaign` read them all the same way.
+
+    `rep` gates a ladder tier (None on the one-offs). The bool flags tag a bout
+    for its consumer: `champion`/`defense` for `campaign`, `stage2`/`ctf` for the
+    Games (`ctf` fights on a `FlagScenario`). `map_slug` swaps the node's
+    procedural scenario for an authored map (`map_lib`).
+    """
+    name: str
+    entry: int
+    purse: int
+    enemies: int
+    rep: int | None = None
+    champion: bool = False
+    defense: bool = False
+    stage2: bool = False
+    ctf: bool = False
+    map_slug: str | None = None
+
+
+# The Pits' first-stage deeds (`factions`) are worth 3 rep -- clearing them, champion
+# bout included, opens the Bronze ring. The second stage (the Games -- see `arena`)
+# adds three more deeds worth 3 rep, which brings the Iron cage (rep 5) into reach.
+# Silver still sits past any reputation the deeds can grant: room to grow.
 # Ordered cheapest first.
-#
-# The Pits has three deeds (`factions`), worth 1 rep each, so the ladder is built
-# to top out at Bronze: clearing all three -- champion bout included -- opens the
-# second ring and that is the whole arena sub-campaign. Iron and Silver sit past
-# any reputation the deeds can grant; they are room to grow, not a live path.
 ARENA_TIERS = [
-    {"rep": 0,  "name": "Rookie pit",   "entry": 4,   "purse": 15,  "enemies": 1},
-    {"rep": 3,  "name": "Bronze ring",  "entry": 15,  "purse": 55,  "enemies": 2},
-    {"rep": 5,  "name": "Iron cage",    "entry": 40,  "purse": 150, "enemies": 3},
-    {"rep": 10, "name": "Silver arena", "entry": 100, "purse": 380, "enemies": 3},
+    Bout("Rookie pit",   entry=4,   purse=15,  enemies=1, rep=0),
+    Bout("Bronze ring",  entry=15,  purse=55,  enemies=2, rep=3),
+    Bout("Iron cage",    entry=40,  purse=150, enemies=3, rep=5),
+    Bout("Silver arena", entry=100, purse=380, enemies=3, rep=10),
 ]
 
 
 def arena_offers(reputation):
-    """The bouts the guild may take on at its current `reputation` (>= 1 always)."""
-    return [t for t in ARENA_TIERS if reputation >= t["rep"]]
+    """The staked tiers the guild may take on at its current `reputation`."""
+    return [t for t in ARENA_TIERS if t.rep is not None and reputation >= t.rep]
 
 
 NODES = [
@@ -105,8 +125,6 @@ NODES = [
     Node("wilds", "The Wilds", "wilds", (0.83, 0.40),
          "Open ground under the sky, outside the walls. Hunt it for meat -- and "
          "risk what else hunts here.", ErmosScenario),
-    Node("ruins", "Ruins", "battle", (0.78, 0.80),
-         "Toppled stones of something ancient. Dark inside.", ArenaScenario),
 ]
 
 EDGES = [
@@ -117,8 +135,6 @@ EDGES = [
     ("city", "road", 4),
     ("arena", "road", 3),
     ("road", "wilds", 6),
-    ("road", "ruins", 7),
-    ("wilds", "ruins", 4),
 ]
 
 START_NODE = "city"

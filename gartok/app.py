@@ -41,7 +41,7 @@ from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
 from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
-from .scenario import CustomScenario
+from .scenario import CustomScenario, FlagScenario
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W
@@ -61,7 +61,7 @@ class App:
         self.guild = None
         self._battle_squad = []              # roster units sent to the current battle
         self._battle_node = None             # world node the current battle is at
-        self._arena_offer = None             # arena stake tier for the current bout, or None
+        self._arena_offer = None             # world.Bout for the current arena fight, or None
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._start_menu()
@@ -145,29 +145,36 @@ class App:
         offers = list(world.arena_offers(self.guild.arena_reputation)) if node.arena else None
         if node.arena and "arena_dethrone" not in self.guild.deeds_done:
             offers.append(arena.champion_bout())
+        elif node.arena:                       # champion beaten: the Games are open
+            offers += [arena.brawl_bout(), arena.ctf_bout()]
         disabled = {u for u in self.guild.roster if u.incapacitated}
         self.scene = SquadScreen(self.fonts, self.guild.roster, node,
                                  on_confirm=self._start_battle, on_back=self._start_map,
                                  arena_offers=offers, disabled=disabled,
                                  confirm_label="STAKE AND FIGHT" if node.arena else "CONFIRM")
 
-    def _open_market(self, node):
+    def _pick_party(self, node, title, confirm_label, then):
+        """The party picker shared by every non-combat outing (market, work,
+        hunt, tavern): the whole roster is eligible, 1..N may go, `then` gets
+        `(party, node, None)`. The arena's squad picker is separate -- it also
+        shows stake tiers and caps the pick at a squad."""
         roster = self.guild.roster
         self.scene = SquadScreen(self.fonts, roster, node,
-                                 on_confirm=self._open_market_stalls, on_back=self._start_map,
-                                 max_pick=len(roster), title="WHO GOES TO THE MARKET",
-                                 confirm_label="GO SHOPPING")
+                                 on_confirm=then, on_back=self._start_map,
+                                 max_pick=len(roster), title=title,
+                                 confirm_label=confirm_label)
+
+    def _open_market(self, node):
+        self._pick_party(node, "WHO GOES TO THE MARKET", "GO SHOPPING",
+                         self._open_market_stalls)
 
     def _open_market_stalls(self, shoppers, node, _offer):
         self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
                                   on_done=self._start_map)
 
     def _open_work(self, node):
-        roster = self.guild.roster
-        self.scene = SquadScreen(self.fonts, roster, node,
-                                 on_confirm=self._open_lumber_yard, on_back=self._start_map,
-                                 max_pick=len(roster), title="WHO GOES TO WORK",
-                                 confirm_label="GO TO THE LUMBER YARD")
+        self._pick_party(node, "WHO GOES TO WORK", "GO TO THE LUMBER YARD",
+                         self._open_lumber_yard)
 
     def _open_lumber_yard(self, workers, node, _offer):
         self.scene = WorkScreen(self.fonts, self.guild, workers,
@@ -183,11 +190,8 @@ class App:
     # hunting the wilds -- a work-style activity that can spring a fight  #
     # ------------------------------------------------------------------ #
     def _open_hunt(self, node):
-        roster = self.guild.roster
-        self.scene = SquadScreen(self.fonts, roster, node,
-                                 on_confirm=self._open_hunt_ground, on_back=self._start_map,
-                                 max_pick=len(roster), title="WHO GOES HUNTING",
-                                 confirm_label="INTO THE WILDS")
+        self._pick_party(node, "WHO GOES HUNTING", "INTO THE WILDS",
+                         self._open_hunt_ground)
 
     def _open_hunt_ground(self, party, node, _offer):
         self._hunt = hunt.HuntState(list(party), node, hours_left=0)
@@ -224,11 +228,8 @@ class App:
             self._start_map()
 
     def _open_recruit(self, node):
-        roster = self.guild.roster
-        self.scene = SquadScreen(self.fonts, roster, node,
-                                 on_confirm=self._open_taverna, on_back=self._start_map,
-                                 max_pick=len(roster), title="WHO GOES TO THE TAVERN",
-                                 confirm_label="GO TO THE TAVERN")
+        self._pick_party(node, "WHO GOES TO THE TAVERN", "GO TO THE TAVERN",
+                         self._open_taverna)
 
     def _open_taverna(self, party, node, _offer):
         self.scene = TavernaScreen(self.fonts, self.guild, party, node,
@@ -250,18 +251,23 @@ class App:
         self._battle_node = node
         self._arena_offer = offer
         if offer:
-            self._charge(squad, offer["entry"] * len(squad))
-            enemies = [Unit("enemy") for _ in range(offer["enemies"])]
-            if offer.get("champion"):
-                enemies[0] = arena.load_champion()
-            elif "arena_dethrone" in self.guild.deeds_done:
-                cameo = arena.cameo_enemy()
-                if cameo is not None:
-                    enemies[0] = cameo
+            self._charge(squad, offer.entry * len(squad))
+            if offer.stage2:                   # the Games: opponents scaled level 1..6
+                enemies = arena.stage2_pack(offer.enemies)
+            else:
+                enemies = [Unit("enemy") for _ in range(offer.enemies)]
+                if offer.champion:
+                    enemies[0] = arena.load_champion()
+                elif "arena_dethrone" in self.guild.deeds_done:
+                    cameo = arena.cameo_enemy()
+                    if cameo is not None:
+                        enemies[0] = cameo
         else:
             enemies = [Unit("enemy") for _ in range(len(squad))]
-        if offer and offer.get("map"):
-            scenario = CustomScenario(map_lib.load_map(offer["map"]))
+        if offer and offer.ctf:
+            scenario = FlagScenario()
+        elif offer and offer.map_slug:
+            scenario = CustomScenario(map_lib.load_map(offer.map_slug))
         else:
             scenario = node.scenario()
         battle = Battle(squad, enemies, scenario=scenario,
