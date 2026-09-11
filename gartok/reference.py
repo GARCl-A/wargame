@@ -148,9 +148,9 @@ def _factions():
 
 
 def _arena_tiers():
-    rows = [(b.name, b.rep, f"{b.entry}/fighter", b.purse, b.enemies)
+    rows = [(b.name, b.rep, f"{b.entry}/fighter", b.purse, b.enemies, b.level)
             for b in world.ARENA_TIERS]
-    head = ("Tier", "Reputation", "Stake", "Purse", "Opponents")
+    head = ("Tier", "Reputation", "Stake", "Purse", "Opponents", "Opponent level")
     return "## Arena tiers\n\nStaked, non-lethal bouts. Unlocked by reputation " \
            "with The Pits.\n\n" + _table(head, rows)
 

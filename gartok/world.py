@@ -74,15 +74,19 @@ class Bout:
     `arena.py` builds the one-off bouts (champion, title defense, the Games) to
     the same shape so `SquadScreen` and `campaign` read them all the same way.
 
-    `rep` gates a ladder tier (None on the one-offs). The bool flags tag a bout
-    for its consumer: `champion`/`defense` for `campaign`, `stage2`/`ctf` for the
-    Games (`ctf` fights on a `FlagScenario`). `map_slug` swaps the node's
-    procedural scenario for an authored map (`map_lib`).
+    `rep` gates a ladder tier (None on the one-offs). `level` is the mean level
+    the opponents are built to (`encounters.build_enemy`); the staked ladder
+    scales on it, the one-off bouts field their own hand-built opponents and
+    leave it 0. The bool flags tag a bout for its consumer: `champion`/`defense`
+    for `campaign`, `stage2`/`ctf` for the Games (`ctf` fights on a
+    `FlagScenario`). `map_slug` swaps the node's procedural scenario for an
+    authored map (`map_lib`). `matchup.build` reads all of this.
     """
     name: str
     entry: int
     purse: int
     enemies: int
+    level: int = 0
     rep: int | None = None
     champion: bool = False
     defense: bool = False
@@ -97,10 +101,10 @@ class Bout:
 # Silver still sits past any reputation the deeds can grant: room to grow.
 # Ordered cheapest first.
 ARENA_TIERS = [
-    Bout("Rookie pit",   entry=4,   purse=15,  enemies=1, rep=0),
-    Bout("Bronze ring",  entry=15,  purse=55,  enemies=2, rep=3),
-    Bout("Iron cage",    entry=40,  purse=150, enemies=3, rep=5),
-    Bout("Silver arena", entry=100, purse=380, enemies=3, rep=10),
+    Bout("Rookie pit",   entry=4,   purse=15,  enemies=1, rep=0,  level=0),
+    Bout("Bronze ring",  entry=15,  purse=55,  enemies=2, rep=3,  level=1),
+    Bout("Iron cage",    entry=40,  purse=150, enemies=3, rep=5,  level=2),
+    Bout("Silver arena", entry=100, purse=380, enemies=3, rep=10, level=3),
 ]
 
 

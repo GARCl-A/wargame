@@ -233,8 +233,8 @@ are **race-gated**; only Grippli has one so far (`Tongue`).
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
 below you. L0 kills L0 → +1; L0 kills L10 → +11; L3 kills L0 → 0.
 (`progression.xp_award`; credited in `Combatant.credit_kill`, doubled at the end
-of the battle by `campaign.absorb_battle`.) Arena enemies are all L0 for now;
-wilds packs scale 0–4.
+of the battle by `campaign.absorb_battle`.) Wilds packs scale 0–4; the staked
+arena tiers scale 0–3 (`world.ARENA_TIERS[*].level`); the Games run 1–6.
 
 **Talent trees** — general → specific: a tier-1 root is a broad identity; each
 step deeper specialises the character in one action. **No pick is mutually
@@ -260,7 +260,8 @@ combatant in a battle (HP, AP, conditions, hands, combat behaviour) in
 `gartok/conditions.py`, abilities in `gartok/abilities.py`, vision/light in
 `gartok/vision.py`, board/pathfinding/LOS in `gartok/board.py`, ground objects
 and neutral creatures in `gartok/ground.py`, map assembly in
-`gartok/scenario.py`, turn flow in `gartok/battle.py`.
+`gartok/scenario.py`, picking the opponents + map for a given fight in
+`gartok/matchup.py`, turn flow in `gartok/battle.py`.
 
 > **Design premise:** the rules are written thinking about *the world* — how
 > characters interact with it — not just about combat. Combat is the central
@@ -767,6 +768,9 @@ Arena reputation still gates the staked tiers (`world.ARENA_TIERS` via
 deliberate. The ladder is built to top out at Bronze: clearing all three deeds
 opens the second ring, and that is the whole arena sub-campaign by design. Iron
 cage (5) and Silver arena (10) sit past any reachable reputation — room to grow.
+Each tier's opponents are built to its `level` (0 / 1 / 2 / 3,
+`encounters.build_enemy`), so the ladder scales as its stake and purse do —
+assembled, with the map, in `matchup.build`.
 
 **Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Deed-less
 for now: their standing does not move, and the REPUTATIONS tab says so. What they

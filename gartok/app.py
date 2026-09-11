@@ -23,7 +23,7 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, hunt, map_lib, persist, world
+from . import arena, campaign, hunt, matchup, persist, world
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -42,11 +42,9 @@ from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
 from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
-from .scenario import CustomScenario, FlagScenario
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W
-from .unit import Unit
 from .work_screen import WorkScreen
 
 
@@ -262,24 +260,8 @@ class App:
         self._arena_offer = offer
         if offer:
             self._charge(squad, offer.entry * len(squad))
-            if offer.stage2:                   # the Games: opponents scaled level 1..6
-                enemies = arena.stage2_pack(offer.enemies)
-            else:
-                enemies = [Unit("enemy") for _ in range(offer.enemies)]
-                if offer.champion:
-                    enemies[0] = arena.load_champion()
-                elif "arena_dethrone" in self.guild.deeds_done:
-                    cameo = arena.cameo_enemy()
-                    if cameo is not None:
-                        enemies[0] = cameo
-        else:
-            enemies = [Unit("enemy") for _ in range(len(squad))]
-        if offer and offer.ctf:
-            scenario = FlagScenario()
-        elif offer and offer.map_slug:
-            scenario = CustomScenario(map_lib.load_map(offer.map_slug))
-        else:
-            scenario = node.scenario()
+        enemies, scenario = matchup.build(node, offer, squad_size=len(squad),
+                                          guild=self.guild)
         battle = Battle(squad, enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena)
@@ -288,11 +270,12 @@ class App:
     def _start_title_defense(self, node):
         """A due title challenge: the champion alone against one scaled newcomer."""
         champ = arena.champion_of(self.guild)
-        challenger = arena.build_challenger(champ.mean_level + 1)
+        offer = arena.defense_bout()
         self._battle_squad = [champ]
         self._battle_node = node
-        self._arena_offer = arena.defense_bout()
-        battle = Battle([champ], [challenger], scenario=node.scenario(),
+        self._arena_offer = offer
+        enemies, scenario = matchup.build(node, offer, squad_size=1, guild=self.guild)
+        battle = Battle([champ], enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=False, arena=True)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
