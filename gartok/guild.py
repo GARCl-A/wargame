@@ -9,6 +9,17 @@ has just the one member. `Guild.roster` is a read view flattened across every
 group; `Guild.node` is a single-group convenience over the first group (see the
 property below) and stops making sense once a second group exists.
 
+The guild also has one **leader** -- "who am I" (chosen at the draft; see
+`draft_screen.py`), the identity the player answers to before anyone else. It
+is a *run-unique* title, not scoped to a group. It auto-succeeds by Charisma
+the instant it stops being a living roster member (`_sync_leadership`), same as
+a `Group`'s own leader (`group.py`) -- but a *deliberate* swap
+(`Guild.set_leader`) only works once per run (`leader_swaps_used`); after that,
+only death reshuffles it. Every mutation that can change who leads what
+(`add_member`, `remove_members`, `split_group`, `merge_groups`, and `__init__`
+itself) ends by calling `_sync_leadership`, which also folds each group's
+`overextension` into its members' Mental Defense.
+
 The one thing the guild owns as a body is the **bank chest** -- a strongbox
 rented from the Bankers in the City (`bank_capacity` kg, `bank_items` the names
 stashed). `bank_capacity == 0` means no chest yet; `bank_screen` rents it and
@@ -33,11 +44,14 @@ class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
                  arena_challenge_day=None, clock=None, node=None,
                  taverna_week=None, taverna_pool=None, taverna_blocked=None,
-                 bank_capacity=0, bank_items=None, groups=None):
+                 bank_capacity=0, bank_items=None, groups=None,
+                 leader=None, leader_swaps_used=0):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
-        # every existing test call site).
-        self.groups = groups if groups is not None else [Group(roster, node=node)]
+        # every existing test call site) -- the guild leader, if given, also
+        # leads that first group (the draft's founding leader is naturally in
+        # charge of the one group there is to lead).
+        self.groups = groups if groups is not None else [Group(roster, node=node, leader=leader)]
         self.battles_won = battles_won
         self.reputation = dict(reputation or {})   # {faction_id: score}, moved by deeds only
         self.deeds_done = list(deeds_done or [])   # ids of completed factions.Deed
@@ -50,6 +64,9 @@ class Guild:
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
         self.taverna_blocked = taverna_blocked if taverna_blocked is not None else []
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
+        self.leader = leader                  # the guild's "who am I" -- None resolves below
+        self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change
+        self._sync_leadership()
 
     # ------------------------------------------------------------------ #
     # the roster: a flattened read view across every group                #
@@ -87,8 +104,42 @@ class Guild:
                 return g
         return None
 
+    # ------------------------------------------------------------------ #
+    # leadership: the guild's "who am I", and each group's own leader     #
+    # ------------------------------------------------------------------ #
+    def set_leader(self, unit):
+        """A deliberate change of who the guild answers to -- unlike a
+        `Group`'s leader, this costs the run's one free swap
+        (`leader_swaps_used`); once spent, only death reshuffles it."""
+        if unit not in self.roster:
+            raise ValueError("guild leader must be a roster member")
+        if unit is self.leader:
+            return
+        if self.leader_swaps_used >= 1:
+            raise ValueError("no free guild leader change left")
+        self.leader = unit
+        self.leader_swaps_used += 1
+
+    def _sync_leadership(self):
+        """Re-run after anything that can change who leads what: auto-succeeds
+        the guild leader (by Charisma) if they're no longer on the roster,
+        does the same per group (`Group.ensure_leader`), then folds each
+        group's `overextension` into its members' Mental Defense
+        (`Unit._derive_ac` reads `unit.group_overextension`)."""
+        if self.roster and self.leader not in self.roster:
+            self.leader = max(self.roster, key=lambda u: u.mod_charisma)
+        for g in self.groups:
+            g.ensure_leader()
+        for g in self.groups:
+            n = g.overextension
+            for u in g.members:
+                if u.group_overextension != n:
+                    u.group_overextension = n
+                    u._derive_combat()
+
     def add_member(self, unit, group):
         group.members.append(unit)
+        self._sync_leadership()
 
     def remove_members(self, units):
         """Drop each of `units` from whichever group holds it (permadeath /
@@ -101,6 +152,7 @@ class Guild:
                 g.members = [u for u in g.members if u not in dead]
                 if g.empty:
                     self.groups.remove(g)
+        self._sync_leadership()
 
     def split_group(self, group, members, *, name=None):
         """Peel `members` (a subset of `group.members`) off into a brand new
@@ -118,6 +170,7 @@ class Guild:
         group.members = [u for u in group.members if u not in peel]
         new_group = Group(peel, node=group.node, name=name)
         self.groups.append(new_group)
+        self._sync_leadership()
         return new_group
 
     def merge_groups(self, a, b):
@@ -130,6 +183,7 @@ class Guild:
             raise ValueError("can't merge a group with an order in flight")
         a.members += b.members
         self.groups.remove(b)
+        self._sync_leadership()
         return a
 
     def __len__(self):

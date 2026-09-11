@@ -93,6 +93,10 @@ World systems, outside combat:
   (`gartok/orders.py`, `campaign.advance`) advances the shared clock + day/night
   to the next order due; permadeath and save-by-slot (`world.py`, `clock.py`,
   `guild.py`, `group.py`, `persist.py`).
+- **Leadership**: the guild has one leader ("who am I", chosen at the draft);
+  every group has its own (who speaks for it, freely swappable); a group's
+  leader caps how many members it can hold before cohesion costs Mental
+  Defense (`Group.leader`/`capacity`, `Guild.leader`).
 - **Hunger**: one meal a day, a shared larder; without food, growing penalties
   up to death.
 - **Progression**: no classes — each XP track (combat, work) has its own level

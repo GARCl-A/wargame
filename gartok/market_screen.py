@@ -46,10 +46,14 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.node = node
         self.on_done = on_done
         self.purse = sum(m.gold for m in shoppers)   # pooled for the visit
-        # haggling: language + charisma + alignment (and talents) bend the prices.
-        # `self.deal` is a list of economy.PriceMod, fed straight to buy/sell_price.
+        # haggling: language + charisma + alignment (and talents) bend the prices;
+        # the shopping group's leader speaks for it when they're eligible (see
+        # economy._haggle_fraction). `self.deal` is a list of economy.PriceMod,
+        # fed straight to buy/sell_price.
+        group = guild.group_of(shoppers[0]) if guild and shoppers else None
         self.deal = economy.deal_mods(shoppers, getattr(node, "language", None),
-                                      getattr(node, "alignment", None))
+                                      getattr(node, "alignment", None),
+                                      leader=group.leader if group else None)
         self.tab = economy.market_categories()[0][1]     # "weapons"
         self.qty = {}                        # kit tab: stock name -> quantity to buy
         self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]

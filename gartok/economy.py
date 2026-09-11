@@ -117,35 +117,40 @@ class PriceMod:
         return self._applies is None or self._applies(item, side)
 
 
-def _haggle_fraction(party, vendor_language, vendor_alignment):
+def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
     """The base deal for the whole party: only members who share the vendor's
-    language haggle; among those the highest Charisma modifier speaks. Their
-    Charisma narrows the spread; alignment distance nudges it (same bent = a
-    break, opposite = a premium)."""
+    language haggle. Among those, the party's **leader** speaks (see
+    `Group.leader`, `guild.py`) if they're eligible; otherwise -- no leader
+    passed in, or the leader doesn't share the tongue -- the highest Charisma
+    modifier does. Their Charisma narrows the spread; alignment distance
+    nudges it (same bent = a break, opposite = a premium)."""
     speakers = [m for m in party if vendor_alignment is not None
                 and vendor_language in m.languages]
     if not speakers:
         return 0.0
-    voice = max(speakers, key=lambda m: (m.haggle_charisma_mod,
-                -data.alignment_distance(m.alignment, vendor_alignment)))
+    if leader is not None and leader in speakers:
+        voice = leader
+    else:
+        voice = max(speakers, key=lambda m: (m.haggle_charisma_mod,
+                    -data.alignment_distance(m.alignment, vendor_alignment)))
     cha = max(0, voice.haggle_charisma_mod) * CHA_DEAL_STEP
     align = _ALIGN_DEAL[data.alignment_distance(voice.alignment, vendor_alignment)]
     return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
 
 
-def market_deal(party, vendor_language, vendor_alignment):
+def market_deal(party, vendor_language, vendor_alignment, leader=None):
     """The single scalar deal (base haggle only). Kept for callers that just want
     the headline number; per-item pricing goes through `deal_mods` + `buy_price`.
     """
-    return _haggle_fraction(party, vendor_language, vendor_alignment)
+    return _haggle_fraction(party, vendor_language, vendor_alignment, leader)
 
 
-def deal_mods(party, vendor_language, vendor_alignment):
+def deal_mods(party, vendor_language, vendor_alignment, leader=None):
     """Every `PriceMod` in play for this visit: the base haggle plus each
     shopper's talent contributions. Hand the list to `buy_price` / `sell_price`.
     """
     mods = []
-    base = _haggle_fraction(party, vendor_language, vendor_alignment)
+    base = _haggle_fraction(party, vendor_language, vendor_alignment, leader)
     if base:
         mods.append(PriceMod(base, "haggle"))
     for m in party:

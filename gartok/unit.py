@@ -49,6 +49,7 @@ class Unit:
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
         self._racial_override = None                   # sandbox: a pinned racial level (hit dice + racial picks), else derived
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
+        self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
 
         self._auto_name = name is None
         self.name = name or names.random_name()
@@ -95,6 +96,7 @@ class Unit:
         u.arena_title = d.get("arena_title", False)
         u._auto_name = d["auto_name"]
         u.name = d["name"]
+        u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
         u._hp_roll = d.get("hp_roll")
         u._hp_override = d.get("hp_override")            # creator-set HP max, or None
@@ -520,7 +522,10 @@ class Unit:
     def _derive_ac(self):
         """AC base (10 + Dex + worn armor; armor caps how much Dex still counts)
         and Mental Defense (10 + Wis, the Demoralize target). The racial natural
-        bonus and Defend enter as typed mods on the Combatant, not here."""
+        bonus and Defend enter as typed mods on the Combatant, not here.
+        `group_overextension` (set by `Guild._sync_leadership`, see `group.py`)
+        docks Mental Defense flat: a group stretched past its leader's
+        Charisma is individually easier to rattle."""
         armor = self.armor
         dex_ac = self.mod_dexterity
         if armor is not None and armor["max_dex"] is not None:
@@ -529,7 +534,8 @@ class Unit:
                         + self.talent_bonus("ac"))
         self.ac_natural = self._ability.ac_natural
         self.mental_defense_base = (10 + self.mod_wisdom
-                                    + self.talent_bonus("mental_defense"))
+                                    + self.talent_bonus("mental_defense")
+                                    - self.group_overextension)
 
     def _derive_speed(self):
         """Speed in squares: size base + ability + talents, minus heavy-armor

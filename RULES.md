@@ -628,6 +628,45 @@ must be reloaded between shots.
 Rules that exist **outside combat** — the guild on the map, time passing, the
 economy. Each starts as a "world thing" and only then talks to the fight.
 
+### Leadership 🟡
+
+Two kinds of leader (`gartok/group.py`, `gartok/guild.py`), answering two
+different questions:
+
+- **The guild's leader** (`Guild.leader`) is "who am I" — chosen at the draft
+  (`DraftScreen`'s leader-pick step, after the three squad picks) and held for
+  the whole run. It is a title, not a place: it does not move a leader between
+  groups or change who leads any of them. It **auto-succeeds by Charisma** the
+  instant it stops being a living roster member (death); a *deliberate* change
+  (`Guild.set_leader`) costs the run's **one free swap** — spend it whenever,
+  on whoever, but after that only death reshuffles the title again.
+- **A group's leader** (`Group.leader`) is who speaks for *that* group, and
+  can be **swapped freely, any time**, for any member of the group — no cost,
+  no limit (a group is reshuffled by splits/merges constantly; its leader
+  should be too). It auto-succeeds by Charisma the moment the current leader
+  stops being a member (death, or split off into a different group). A fresh
+  group's default leader — and the guild's starting group at the draft — is
+  its highest-Charisma member unless set explicitly.
+
+**What a leader is for, today:**
+
+- **Haggling** (`economy._haggle_fraction`) — the shopping party's leader
+  speaks for it, if they share the vendor's language; otherwise the highest
+  Charisma modifier among the eligible speakers does, same as before leaders
+  existed.
+- **A cap on cohesion.** `Group.capacity` = `BASE_CAPACITY` (3) + the leader's
+  Charisma modifier — how many members one leader can hold as a coalition.
+  Past it, `Group.overextension` counts the excess and docks that amount, flat,
+  off every member's **Mental Defense** (`Unit._derive_ac`) — an overstretched
+  group doesn't get blocked from growing, it just gets easier to rattle
+  (Demoralize, and any future check against Mental Defense). This is the
+  answer to "what stops the guild from being 100,000 characters": not a wall,
+  a cost that keeps compounding.
+
+Recruitment pitches (`recruit.py`) already let the player pick who does the
+talking — the leader doesn't override that choice, it only fills in where no
+choice was being made (the market's "whoever has the best Charisma" auto-pick).
+
 ### Hunger 🟡
 
 State on `unit.py` (`unfed_days`, `hunger_*` properties); the daily routine in

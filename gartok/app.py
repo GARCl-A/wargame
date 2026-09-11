@@ -99,8 +99,8 @@ class App:
         self.guild = None
         self.scene = DraftScreen(self.fonts, on_done=self._draft_done)
 
-    def _draft_done(self, picks):
-        self.guild = Guild(picks, node=world.START_NODE)
+    def _draft_done(self, picks, leader):
+        self.guild = Guild(picks, node=world.START_NODE, leader=leader)
         self._start_map()
 
     def _continue_game(self, slot):

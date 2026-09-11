@@ -1,7 +1,12 @@
-"""Draft screen: build your squad by picking 1 of 3 candidates, three times.
+"""Draft screen: build your squad by picking 1 of 3 candidates, three times,
+then choosing which of the three leads the guild.
 
 The pencil/EDIT toggle swaps a candidate's race or occupation before you lock
 it in. Presentation only -- the character model lives in `unit` / `data`.
+
+The leader step ("who am I") answers `on_done(picks, leader)` instead of the
+old `on_done(picks)` -- see `Guild.leader` (`guild.py`) for what the choice
+does downstream (haggling, and the run's one free way to change your mind).
 """
 
 import pygame
@@ -49,6 +54,7 @@ class DraftScreen(Screen):
         self.fonts = fonts
         self.on_done = on_done
         self.picks = []
+        self.phase = "pick"        # "pick" (rounds 1-3) | "leader" (choose who leads)
         self.edit_mode = False
         self.picker = None
         self.edit_btn_rect = None
@@ -66,10 +72,17 @@ class DraftScreen(Screen):
         if len(self.picks) < DRAFT_ROUNDS:
             self._new_candidates()
         else:
-            self.on_done(self.picks)
+            self.phase = "leader"
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
+        if self.phase == "leader":
+            for rect, unit in self.card_rects:
+                if rect.collidepoint(px):
+                    self.on_done(self.picks, unit)
+                    return
+            return
+
         if self.picker is not None:
             for rect, name in self.picker_rects:
                 if rect.collidepoint(px):
@@ -104,16 +117,24 @@ class DraftScreen(Screen):
         screen.fill((18, 19, 24))
         mouse = self.mouse
         round_no = len(self.picks) + 1
+        leader_phase = self.phase == "leader"
 
-        text(screen, "SQUAD DRAFT", f.title, INK, (MARGIN, MARGIN - 2))
-        if self.edit_mode:
-            sub, col = ("EDIT MODE  ·  click 'swap' to change race / occupation  ·  "
-                        "EDITING goes back to picking", ACCENT)
+        if leader_phase:
+            text(screen, "WHO LEADS THE GUILD?", f.title, ACCENT, (MARGIN, MARGIN - 2))
+            sub, col = ("This is who you answer to -- their Charisma speaks for the "
+                        "group when it haggles, and leads any group they're in. "
+                        "Click one to found the guild.", ACCENT)
+            text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
         else:
-            sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
-                        f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
-        text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
-        self._draw_edit_button(screen, mouse)
+            text(screen, "SQUAD DRAFT", f.title, INK, (MARGIN, MARGIN - 2))
+            if self.edit_mode:
+                sub, col = ("EDIT MODE  ·  click 'swap' to change race / occupation  ·  "
+                            "EDITING goes back to picking", ACCENT)
+            else:
+                sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
+                            f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
+            text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
+            self._draw_edit_button(screen, mouse)
 
         rail_h = 92
         card_h = 548
@@ -126,20 +147,22 @@ class DraftScreen(Screen):
 
         self.card_rects = []
         self.edit_rects = []
-        for i, unit in enumerate(self.candidates):
+        cards = self.picks if leader_phase else self.candidates
+        for i, unit in enumerate(cards):
             rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
             self.card_rects.append((rect, unit))
             hover = rect.collidepoint(mouse) and not self.edit_mode
-            self._draw_card(screen, rect, unit, hover, mouse)
+            self._draw_card(screen, rect, unit, hover, mouse, leader_pick=leader_phase)
 
-        self._draw_squad_rail(screen, MARGIN, rail_y, screen.get_width() - 2 * MARGIN, rail_h)
+        if not leader_phase:
+            self._draw_squad_rail(screen, MARGIN, rail_y, screen.get_width() - 2 * MARGIN, rail_h)
         text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
 
         if self.picker is not None:
             self._draw_picker(screen, mouse)
 
     # ------------------------------------------------------------------ #
-    def _draw_card(self, screen, rect, unit, hover, mouse):
+    def _draw_card(self, screen, rect, unit, hover, mouse, leader_pick=False):
         f = self.fonts
         pad = SP3
         preview = Combatant(unit)             # in-fight view of the candidate (ammo, kit, ...)
@@ -269,7 +292,14 @@ class DraftScreen(Screen):
              f.body_sm, INK_FAINT, (s.x, s.y))
 
         # --- footer --------------------------------------- #
-        if not self.edit_mode:
+        if leader_pick:
+            fr = pygame.Rect(rect.x + pad, rect.bottom - 36, rect.w - 2 * pad, 26)
+            panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
+                  border=ACCENT if hover else LINE, width=1, radius=4)
+            text(screen, "MAKE LEADER" if hover else "click to lead the guild",
+                 f.label if hover else f.body_sm,
+                 ACCENT_INK if hover else INK_DIM, fr.center, center=True)
+        elif not self.edit_mode:
             fr = pygame.Rect(rect.x + pad, rect.bottom - 36, rect.w - 2 * pad, 26)
             panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
                   border=ACCENT if hover else LINE, width=1, radius=4)

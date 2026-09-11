@@ -160,6 +160,31 @@ def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
         persist.delete_slot(slot)
 
 
+def test_leadership_survives_a_save_round_trip():
+    from gartok import persist
+    from gartok.guild import Guild
+    slot = persist.NUM_SLOTS - 1
+    if os.path.exists(persist.slot_path(slot)):
+        return                                        # never clobber a real save
+    random.seed(11)
+    a, b, c = Unit("player"), Unit("player"), Unit("player")
+    guild = Guild([a, b, c], node="city", leader=b)   # b leads the guild AND its one starting group
+    guild.set_leader(c)                               # spend the one free swap: c leads the guild now
+    away = guild.split_group(guild.groups[0], [a])    # b's group is untouched by the guild-level swap
+    away.set_leader(a)
+    try:
+        persist.save_game(slot, guild)
+        back = persist.load_game(slot)
+        assert back.leader.uid == c.uid
+        assert back.leader_swaps_used == 1
+        back_a = next(u for u in back.roster if u.uid == a.uid)
+        back_b = next(u for u in back.roster if u.uid == b.uid)
+        assert back.group_of(back_a).leader.uid == a.uid       # the split-off group: its own leader
+        assert back.group_of(back_b).leader.uid == b.uid       # the original group kept its own leader
+    finally:
+        persist.delete_slot(slot)
+
+
 def test_uid_is_stable_across_a_save_round_trip():
     u = _unit(seed=3)
     assert Unit.from_save(persist.unit_to_dict(u)).uid == u.uid

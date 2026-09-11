@@ -33,7 +33,7 @@ from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    panel, section, text, tracked, wrap_lines)
+                    ellipsize, panel, section, text, tracked, wrap_lines)
 
 SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
@@ -418,7 +418,10 @@ class MapScreen(Screen):
             panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
                   border=border, width=2 if (sel or needs) else 1, radius=8)
             name = g.name or f"Group ({len(g.members)})"
-            text(screen, name, f.body_sm, ACCENT if sel else INK, (r.x + SP3, r.y + 7))
+            if g.leader is not None:
+                name += f"  ·  led by {g.leader.name}"
+            text(screen, ellipsize(name, f.body_sm, cw - 2 * SP3),
+                 f.body_sm, ACCENT if sel else INK, (r.x + SP3, r.y + 7))
             status_col = WARN if (needs and not sel) else INK_DIM
             text(screen, f"{world.node(g.node).name}  ·  {self._order_status(g)}",
                  f.label, status_col, (r.x + SP3, r.y + 22))

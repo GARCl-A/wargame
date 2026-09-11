@@ -71,6 +71,10 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         self._pack_area = None             # rect of the pack list, for wheel hit-testing
 
     # ------------------------------------------------------------------ #
+    def _is_group_leader(self, unit):
+        group = self.guild.group_of(unit)
+        return group is not None and group.leader is unit
+
     def _recruited_by(self, unit):
         """Name of the member who recruited `unit`, or None (draft member, or the
         recruiter has since been lost)."""
@@ -124,6 +128,10 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
                     self.on_level(self.member)
                 elif key == "share_food" and self.member is not None:
                     self.member.share_food = not self.member.share_food
+                elif key == "group_leader" and self.member is not None:
+                    self.guild.group_of(self.member).set_leader(self.member)
+                elif key == "guild_leader" and self.member is not None:
+                    self.guild.set_leader(self.member)
                 elif key == "manage" and self.on_manage:
                     self.on_manage()
                 elif key == "back":
@@ -258,7 +266,14 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             tok = (r.x + SP3 + 12, r.y + 24)
             token_badge(screen, tok, unit, f)
             nx = tok[0] + 24
-            text(screen, ellipsize(unit.name, f.card_name, r.right - nx - SP2),
+            name_w = r.right - nx - SP2
+            if unit is self.guild.leader:
+                text(screen, "GUILD LEADER", f.label, ACCENT, (r.right - SP3, r.y + 6), right=True)
+                name_w -= 96
+            elif self._is_group_leader(unit):
+                text(screen, "LEAD", f.label, INFO, (r.right - SP3, r.y + 6), right=True)
+                name_w -= 40
+            text(screen, ellipsize(unit.name, f.card_name, name_w),
                  f.card_name, INK if sel else INK_DIM if not hov else INK,
                  (nx, r.y + 6))
             text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
@@ -414,6 +429,28 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             self._pill(screen, sf, "SHARING FOOD" if unit.share_food else "RATIONS PRIVATE",
                        dot=unit.share_food)
             self.buttons.append(("share_food", sf))
+
+        # --- left column: leadership (Group.leader / Guild.leader) - #
+        if not carried:
+            group = self.guild.group_of(unit)
+            is_group_leader = self._is_group_leader(unit)
+            is_guild_leader = unit is self.guild.leader
+            a += 26
+            gl = pygame.Rect(x, a, 168, 22)
+            self._pill(screen, gl, "GROUP LEADER" if is_group_leader else "MAKE GROUP LEADER",
+                       accent=is_group_leader)
+            if not is_group_leader and group is not None and len(group.members) > 1:
+                self.buttons.append(("group_leader", gl))
+
+            free_swap = self.guild.leader_swaps_used < 1
+            a += 26
+            gl2 = pygame.Rect(x, a, 168, 22)
+            label = ("GUILD LEADER" if is_guild_leader
+                     else "MAKE GUILD LEADER" if free_swap
+                     else "no free change left")
+            self._pill(screen, gl2, label, accent=is_guild_leader)
+            if not is_guild_leader and free_swap:
+                self.buttons.append(("guild_leader", gl2))
 
         # --- right column: hands --------------------------------- #
         x, inner = bx, bw
