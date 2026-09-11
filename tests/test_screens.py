@@ -144,7 +144,6 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.reward_screen import RewardScreen
     from gartok.market_screen import MarketScreen
     from gartok.taverna_screen import TavernaScreen
-    from gartok.work_screen import WorkScreen
     from gartok.hunt import HuntState
     from gartok.hunt_screen import HuntScreen
     from gartok.guild_screen import GuildScreen
@@ -161,7 +160,7 @@ def test_every_screen_draws_native_at_any_window_size():
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
         DraftScreen(F, noop),
-        MapScreen(F, guild, noop, noop, noop, noop, noop, noop, noop, noop),
+        MapScreen(F, guild, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
         BattleScreen(F, batt, noop),
         BattleScreen(F, ctf_batt, noop),                  # capture the flag: setup + pennants
@@ -169,7 +168,6 @@ def test_every_screen_draws_native_at_any_window_size():
         RewardScreen(F, guild, list(roster[:3]), 120, noop),
         MarketScreen(F, guild, list(roster[:3]), mnode, noop),
         TavernaScreen(F, guild, list(roster[:3]), tnode, noop),
-        WorkScreen(F, guild, list(roster[:3]), noop, noop),
         HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=8),
                    phase="setup", on_ambush=noop, on_done=noop),
         HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=4, hours_hunted=6),
@@ -196,6 +194,23 @@ def test_every_screen_draws_native_at_any_window_size():
     rep_tab = GuildScreen(F, guild, noop, noop)
     rep_tab.tab = "reputations"                       # the faction-standing view
     scenes.append(rep_tab)
+
+    from gartok.group import Group
+    apart = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
+                                Group(list(roster[2:]), node="market")])
+    scenes.append(MapScreen(F, apart, noop, noop, noop))
+
+    together = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
+                                   Group(list(roster[2:]), node=world.START_NODE)])
+    scenes.append(MapScreen(F, together, noop, noop, noop))   # +N badge, MERGE button
+    split_scene = MapScreen(F, together, noop, noop, noop)
+    split_scene.mode = "split"
+    scenes.append(split_scene)
+
+    crowded = Guild(None, groups=[Group([roster[0], roster[1]], node=world.START_NODE),
+                                  Group([roster[2], roster[3]], node=world.START_NODE),
+                                  Group([roster[4]], node=world.START_NODE)])
+    scenes.append(MapScreen(F, crowded, noop, noop, noop))    # +2 badge, two MERGE rows
 
     for scene in scenes:
         assert getattr(scene, "native", False), type(scene).__name__

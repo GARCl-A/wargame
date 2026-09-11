@@ -1,0 +1,147 @@
+"""End-to-end (headless) tests for the tick -> app drain-queue wiring:
+`app._advance()` calls `campaign.advance` and, for every interactive order that
+comes due, opens the matching screen scoped to that group's own members --
+draining one at a time via `_after_activity` (the shared on_done/on_back target)
+until the queue is empty. Screen classes are monkey-patched in `gartok.app`'s
+namespace (same technique as `test_arena_games.py`) so no real pygame/font
+objects are needed."""
+
+import random
+
+from tests.helpers import Unit
+from gartok import orders
+from gartok.app import App
+from gartok.group import Group
+from gartok.guild import Guild
+from gartok.map_screen import MapScreen
+
+
+def _app(guild):
+    app = App.__new__(App)
+    app.fonts = None
+    app.guild = guild
+    app._battle_squad = []
+    app._battle_node = None
+    app._arena_offer = None
+    app._hunt = None
+    app._map_notices = []
+    app._pending = []
+    app._save = lambda: None            # no disk I/O in these tests
+    return app
+
+
+def test_a_travel_order_resolves_silently_and_returns_to_the_map():
+    random.seed(1)
+    g = Group([Unit("player")], node="city")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    g.order = orders.travel(g, "market")
+    app._advance()
+    assert g.node == "market" and g.order is None
+    assert isinstance(app.scene, MapScreen)
+    assert not app._pending
+
+
+def test_market_order_opens_the_market_screen_scoped_to_the_group():
+    import gartok.app as app_mod
+    random.seed(1)
+    a, b = Unit("player"), Unit("player")
+    g = Group([a, b], node="market")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    g.order = orders.interactive("market")
+
+    saved = {}
+    orig = app_mod.MarketScreen
+    app_mod.MarketScreen = lambda fonts, guild_, shoppers, node, on_done: saved.update(
+        shoppers=shoppers, node=node, on_done=on_done) or object()
+    try:
+        app._advance()
+    finally:
+        app_mod.MarketScreen = orig
+    assert saved["shoppers"] == [a, b]
+    assert saved["node"].id == "market"
+    assert saved["on_done"] == app._after_activity
+    assert g.order is None
+
+
+def test_arena_order_opens_squad_screen_with_offers_scoped_to_the_group():
+    import gartok.app as app_mod
+    random.seed(1)
+    a, b = Unit("player"), Unit("player")
+    g = Group([a, b], node="arena")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    g.order = orders.interactive("arena")
+
+    saved = {}
+    orig = app_mod.SquadScreen
+    app_mod.SquadScreen = lambda fonts, roster, node, **kw: saved.update(
+        roster=roster, kw=kw) or object()
+    try:
+        app._advance()
+    finally:
+        app_mod.SquadScreen = orig
+    assert saved["roster"] == [a, b]
+    assert saved["kw"]["confirm_label"] == "STAKE AND FIGHT"
+    assert any(o.rep == 0 for o in saved["kw"]["arena_offers"])   # Rookie pit is open
+
+
+def test_two_interactive_orders_drain_one_screen_at_a_time():
+    import gartok.app as app_mod
+    random.seed(1)
+    a, b = Unit("player"), Unit("player")
+    g1 = Group([a], node="market")
+    g2 = Group([b], node="tavern")
+    guild = Guild(None, groups=[g1, g2])
+    app = _app(guild)
+    g1.order = orders.interactive("market")
+    g2.order = orders.interactive("recruit")
+    assert g1.order.remaining == g2.order.remaining          # both due on the same tick
+
+    opened = []
+    orig_market, orig_taverna = app_mod.MarketScreen, app_mod.TavernaScreen
+    app_mod.MarketScreen = lambda fonts, guild_, shoppers, node, on_done: (
+        opened.append("market"), object())[1]
+    app_mod.TavernaScreen = lambda fonts, guild_, party, node, on_done: (
+        opened.append("recruit"), object())[1]
+    try:
+        app._advance()
+        assert opened == ["market"]                # only the first one opened so far
+        assert len(app._pending) == 1
+        app._after_activity()                       # simulate the market screen finishing
+        assert opened == ["market", "recruit"]
+        assert not app._pending
+    finally:
+        app_mod.MarketScreen, app_mod.TavernaScreen = orig_market, orig_taverna
+
+
+def test_a_group_that_starves_out_before_resolution_is_skipped():
+    """A pending order can outlive its group: `campaign.advance` snapshots the
+    active groups before running upkeep, so a group that starves out entirely
+    during that same tick must not surface as a "screen to open" -- there's no
+    one left to open it for. A second, well-fed group confirms this is the
+    partial-wipe path, not the whole-guild wipe short-circuit."""
+    random.seed(1)
+    doomed = Unit("player")
+    doomed._base_inventory = []
+    doomed.share_food = False
+    survivor = Unit("player")
+    survivor._base_inventory = ["Meat"] * 20
+    g1 = Group([doomed], node="market")
+    g2 = Group([survivor], node="market")
+    guild = Guild(None, groups=[g1, g2])
+    app = _app(guild)
+    g1.order = orders.interactive("market", hours=24 * 6)    # long enough to starve doomed
+    g2.order = orders.interactive("market", hours=24 * 6)    # same ETA -- survivor has food
+
+    opened = []
+    import gartok.app as app_mod
+    orig = app_mod.MarketScreen
+    app_mod.MarketScreen = lambda *a, **k: (opened.append("market"), object())[1]
+    try:
+        app._advance()
+    finally:
+        app_mod.MarketScreen = orig
+    assert not guild.empty and doomed not in guild.roster    # partial wipe, not a full one
+    assert opened == ["market"]                              # only the survivor's order surfaced

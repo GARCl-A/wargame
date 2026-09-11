@@ -100,6 +100,45 @@ def test_save_slot_file_round_trip():
         persist.delete_slot(slot)
 
 
+def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
+    """A save from before the groups layer has flat "roster"/"node" keys and no
+    "groups" key at all -- `load_game` must still rebuild a working Guild."""
+    import json
+
+    from gartok import persist
+    slot = persist.NUM_SLOTS - 1
+    if os.path.exists(persist.slot_path(slot)):
+        return                                        # never clobber a real save
+    random.seed(8)
+    old_payload = {
+        "save_version": 6,
+        "battles_won": 2,
+        "reputation": {},
+        "deeds_done": [],
+        "arena_challenge_day": None,
+        "clock_seconds": 3600,
+        "node": "wilds",
+        "bank_capacity": 0,
+        "bank_items": [],
+        "saved_at": 0,
+        "squad": ["Bob"],
+        "roster": [persist.unit_to_dict(Unit("player"))],
+        "taverna_week": None,
+        "taverna_pool": None,
+        "taverna_blocked": [],
+    }
+    os.makedirs(persist.SAVE_DIR, exist_ok=True)
+    with open(persist.slot_path(slot), "w", encoding="utf-8") as fh:
+        json.dump(old_payload, fh)
+    try:
+        guild = persist.load_game(slot)
+        assert len(guild.groups) == 1
+        assert guild.node == "wilds"
+        assert len(guild.roster) == 1
+    finally:
+        persist.delete_slot(slot)
+
+
 def test_uid_is_stable_across_a_save_round_trip():
     u = _unit(seed=3)
     assert Unit.from_save(persist.unit_to_dict(u)).uid == u.uid

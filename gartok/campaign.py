@@ -17,11 +17,15 @@ once it is over this maps the outcome onto that roster:
 
 `app` owns the *screen* that comes next (loot, reward, or straight to the map);
 this module owns the *state change*, returned as a `BattleOutcome`.
+
+`advance` (below) is the other half: the tick/orders engine that moves the map
+when groups are travelling, working, or approaching an activity independently
+of one another -- see `orders.py` for what an order is.
 """
 
 from dataclasses import dataclass, field
 
-from . import arena, data, factions, loot
+from . import arena, data, factions, loot, world
 
 
 @dataclass
@@ -70,7 +74,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
             fallen.append(member)
             fallen_combatants.append(combatant)
 
-    guild.roster = [u for u in guild.roster if u not in fallen]
+    guild.remove_members(fallen)
     guild.clock.advance_rounds(battle.round_no)
     won = battle.winner == "player"
     if won:
@@ -134,3 +138,66 @@ def _settle_title_defense(guild, outcome, won):
             champ.arena_title = False
             outcome.arena_title_event = (f"{champ.name} is beaten -- the Champion "
                                          f"of the Pit title is lost.")
+
+
+# --------------------------------------------------------------------------- #
+# the tick/orders engine -- advancing the map when groups are travelling,      #
+# working or approaching an activity independently of one another             #
+# --------------------------------------------------------------------------- #
+
+@dataclass
+class TickResult:
+    events: list = field(default_factory=list)   # upkeep / travel / work notices, in order
+    pending: list = field(default_factory=list)  # [(Group, Order)] interactive orders now due
+    wiped: bool = False                          # the guild starved out entirely mid-tick
+
+
+def advance(guild, dt=None):
+    """Jump the world forward, running daily upkeep for every day crossed, then
+    resolving whichever group(s) reached their order in that span.
+    `travel`/`work` orders resolve silently here; every other kind comes back
+    in `TickResult.pending` for the caller to play its screen and then set a
+    fresh order (or `orders.idle()`) on that group before calling `advance`
+    again. A group with no order, or an idle one, never blocks the jump and is
+    left alone.
+
+    `dt=None` (the default -- the ADVANCE button) jumps to the **soonest**
+    order completion across every group with one in flight; no-op if nothing
+    is. A caller may instead force a specific `dt` (hours) -- the map's
+    MAINTENANCE stop -- so every in-flight order's `remaining` stays in
+    lockstep with the shared clock even when nothing is due yet (an order that
+    happens to complete within a forced `dt` still resolves normally); a forced
+    stop also runs `Guild.eat_now_pass` (anyone still hungry eats right now,
+    without waiting for the next daily meal) -- that's what makes it a
+    *maintenance* stop rather than just a short jump."""
+    forced = dt is not None
+    active = [g for g in guild.groups if g.busy]
+    if not forced:
+        if not active:
+            return TickResult()
+        dt = min(g.order.remaining for g in active)
+
+    events = guild.pass_time(dt)
+    if forced:
+        events += guild.eat_now_pass()
+    if guild.empty:
+        return TickResult(events=events, wiped=True)
+
+    pending = []
+    for g in active:
+        if g.empty:                            # starved out during this tick's upkeep
+            continue
+        g.order.remaining -= dt
+        if g.order.remaining > 1e-9:
+            continue
+        order, g.order = g.order, None        # resolved -- the group goes idle
+        if order.kind == "travel":
+            g.node = order.dest
+            for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):
+                events.append(f"DEED · {d.name}  +{d.rep} reputation with "
+                              f"{factions.faction(d.faction).name}")
+        elif order.kind == "work":
+            events += guild._pay_shift(g.members, order.hours, order.eta)
+        elif order.interactive:                # arena/market/bank/recruit/hunt
+            pending.append((g, order))
+    return TickResult(events=events, pending=pending, wiped=guild.empty)

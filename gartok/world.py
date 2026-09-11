@@ -1,9 +1,11 @@
-"""The world map: a small graph of places the guild travels between.
+"""The world map: a small graph of places the guild's groups travel between.
 
-Nodes are places; edges carry a travel cost in whole hours. The guild sits on
-one node (`guild.node`); moving to another runs `route` (Dijkstra over `EDGES`)
-and the caller advances the clock by the summed hours. `MapScreen` draws the
-graph; `app` turns the node the guild is on into the activity there.
+Nodes are places; edges carry a travel cost in whole hours. Each `Group`
+(`gartok/group.py`) sits on one node; ordering it elsewhere (`orders.travel`)
+uses `route` (Dijkstra over `EDGES`) to price the trip in hours, and
+`campaign.advance` is what actually moves it there and advances the clock.
+`MapScreen` draws the graph; `app` turns the node a group's order resolves at
+into the activity screen there.
 
 Node kinds:
 - "town":    a safe stop, nothing to do but pass through (and manage gear).

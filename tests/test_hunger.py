@@ -138,6 +138,21 @@ def test_a_sharer_feeds_a_foodless_guild_mate_on_the_daily_meal():
     assert guild.rations == 1                            # 3 - mule's meal - weakling's
 
 
+def test_larder_is_scoped_to_the_group_not_the_whole_guild():
+    from gartok.guild import Guild
+    from gartok.group import Group
+    from gartok.clock import Clock
+    random.seed(3)
+    mule = Unit("player"); mule._base_inventory = ["Meat", "Meat", "Meat"]
+    weakling = Unit("player"); weakling._base_inventory = []   # a DIFFERENT group
+    guild = Guild(None, groups=[Group([mule], node="city"),
+                                Group([weakling], node="wilds")],
+                  clock=Clock(6 * 3600))
+    guild.pass_time(24)
+    assert weakling.unfed_days == 1                      # mule's food is out of reach
+    assert mule.unfed_days == 0
+
+
 def test_a_private_ration_is_never_touched_by_a_hungry_mate():
     from gartok.guild import Guild
     from gartok.clock import Clock

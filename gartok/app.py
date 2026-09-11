@@ -1,20 +1,24 @@
 """GARTOK Tactical shell: window, main loop and screen switching.
 
 The screens do the work: `MenuScreen` (save slots), `DraftScreen` (building the
-starting guild), `MapScreen` (the hub -- drive the guild between places),
-`GuildScreen` (roster + gear), `SquadScreen` (who fights), `BattleScreen` (the
-fight) and `LootScreen` (split the spoils). Each exposes `handle_event`,
+starting guild), `MapScreen` (the hub -- give groups orders and advance the
+world), `GuildScreen` (roster + gear), `SquadScreen` (who fights), `BattleScreen`
+(the fight) and `LootScreen` (split the spoils). Each exposes `handle_event`,
 `update(dt)`, `draw(surface)` and reads `self.mouse` (canvas-space cursor).
 
 Campaign loop: menu -> draft -> MAP <-> guild
-                                    |-> squad   -> battle -> loot -> MAP
-                                    |-> party   -> market -> MAP
-                                    |-> party   -> taverna (recruit) -> MAP
-                                    |-> workers -> lumber yard (work_shift) -> MAP
-The guild roams the world map as one token (`guild.node`); travelling advances
-the campaign clock, opening the guild/squad screens does not. `persist` autosaves
-after the draft, on every return to the map and after every battle. Permadeath: a
-member who does not survive is dropped; a full wipe ends the campaign.
+                       MAP: pick a group, click a place -> travel order
+                            (or an on-node action) -> ADVANCE
+                       ADVANCE -> campaign.advance -- ticks the clock to the
+                            soonest order, resolves travel/work silently, and
+                            hands anything else back here as `_pending`:
+                            squad -> battle -> loot -> [next pending] -> MAP
+                            party -> market -> [next pending] -> MAP
+                            party -> taverna (recruit) -> [next pending] -> MAP
+                            party -> the wilds (hunt) -> [next pending] -> MAP
+`persist` autosaves after the draft, on every return to the map and after every
+battle. Permadeath: a member who does not survive is dropped; a full wipe ends
+the campaign.
 
 Every scene is `native`: it draws straight to the real (resizable) window and
 lays itself out from `screen.get_size()`. `WIN_W x WIN_H` (theme.py) is just the
@@ -45,7 +49,6 @@ from .reward_screen import RewardScreen
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W
-from .work_screen import WorkScreen
 
 
 class App:
@@ -63,6 +66,7 @@ class App:
         self._arena_offer = None             # world.Bout for the current arena fight, or None
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
+        self._pending = []                   # [(Group, Order)] left to resolve from the last tick
         self._start_menu()
 
     # ------------------------------------------------------------------ #
@@ -98,25 +102,23 @@ class App:
     def _continue_game(self, slot):
         self.slot = slot
         self.guild = persist.load_game(slot)
-        if self.guild.node not in {n.id for n in world.NODES}:
-            self.guild.node = world.START_NODE
+        valid = {n.id for n in world.NODES}
+        for g in self.guild.groups:            # a stale/removed node id: drop back to the start
+            if g.node not in valid:
+                g.node = world.START_NODE
         self._start_map()
 
     def _save(self):
         persist.save_game(self.slot, self.guild)
 
     def _start_map(self):
+        self._pending = []
         self._map_notices += arena.sync(self.guild)
         self._save()
         self.scene = MapScreen(self.fonts, self.guild,
-                               on_battle=self._open_squad,
-                               on_market=self._open_market,
-                               on_recruit=self._open_recruit,
-                               on_work=self._open_work,
-                               on_hunt=self._open_hunt,
-                               on_bank=self._open_bank,
                                on_guild=self._open_guild,
-                               on_wipe=self._campaign_over)
+                               on_wipe=self._campaign_over,
+                               on_advance=self._advance)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -138,69 +140,77 @@ class App:
         self.scene = LevelScreen(self.fonts, unit,
                                  on_back=self._open_guild, on_change=self._save)
 
-    def _open_squad(self, node):
-        if node.arena and arena.defense_due(self.guild):
+    # ------------------------------------------------------------------ #
+    # the tick: MapScreen issues orders on groups; ADVANCE plays them out #
+    # ------------------------------------------------------------------ #
+    def _advance(self, dt=None):
+        """`dt=None` is the ADVANCE button (jump to the soonest order); a
+        forced `dt` (MAINTENANCE) still runs through the same tick, so any
+        order in flight loses exactly that many hours too. Auto orders
+        (travel/work) already happened by the time this returns; anything else
+        comes back as `self._pending` for `_after_activity` to play out."""
+        result = campaign.advance(self.guild, dt=dt)
+        self._map_notices += result.events
+        if result.wiped:
+            self._hunt = None
+            self._campaign_over()
+            return
+        self._pending = list(result.pending)
+        self._after_activity()
+
+    def _after_activity(self):
+        """Continue draining the last tick's pending orders, or return to the
+        map once there are none left. Every activity screen's on_done/on_back
+        routes here instead of straight back to the map."""
+        while self._pending:
+            group, order = self._pending.pop(0)
+            if group.empty:
+                # Not just belt-and-suspenders against campaign.advance's own
+                # empty-group guard: HuntScreen calls guild.pass_time directly
+                # while playing out an already-dequeued hunt order, which can
+                # starve a DIFFERENT group still waiting right here in
+                # self._pending. Skip it -- no one left to open a screen for.
+                continue
+            node = world.node(group.node)
+            if order.kind == "arena":
+                self._open_arena(group, node)
+            elif order.kind == "market":
+                self._open_market_stalls(list(group.members), node, None)
+            elif order.kind == "bank":
+                self._open_bank_vault(list(group.members), node, None)
+            elif order.kind == "recruit":
+                self._open_taverna(list(group.members), node, None)
+            elif order.kind == "hunt":
+                self._open_hunt_ground(list(group.members), node, None)
+            return
+        self._start_map()
+
+    def _open_arena(self, group, node):
+        if arena.defense_due(self.guild):
             self._start_title_defense(node)
             return
-        offers = list(world.arena_offers(self.guild.arena_reputation)) if node.arena else None
-        if node.arena and "arena_dethrone" not in self.guild.deeds_done:
+        offers = list(world.arena_offers(self.guild.arena_reputation))
+        if "arena_dethrone" not in self.guild.deeds_done:
             offers.append(arena.champion_bout())
-        elif node.arena:                       # champion beaten: the Games are open
+        else:                                   # champion beaten: the Games are open
             offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]
-        disabled = {u for u in self.guild.roster if u.incapacitated}
-        self.scene = SquadScreen(self.fonts, self.guild.roster, node,
-                                 on_confirm=self._start_battle, on_back=self._start_map,
+        disabled = {u for u in group.members if u.incapacitated}
+        self.scene = SquadScreen(self.fonts, group.members, node,
+                                 on_confirm=self._start_battle, on_back=self._after_activity,
                                  arena_offers=offers, disabled=disabled,
-                                 confirm_label="STAKE AND FIGHT" if node.arena else "CONFIRM")
-
-    def _pick_party(self, node, title, confirm_label, then):
-        """The party picker shared by every non-combat outing (market, work,
-        hunt, tavern): the whole roster is eligible, 1..N may go, `then` gets
-        `(party, node, None)`. The arena's squad picker is separate -- it also
-        shows stake tiers and caps the pick at a squad."""
-        roster = self.guild.roster
-        self.scene = SquadScreen(self.fonts, roster, node,
-                                 on_confirm=then, on_back=self._start_map,
-                                 max_pick=len(roster), title=title,
-                                 confirm_label=confirm_label)
-
-    def _open_market(self, node):
-        self._pick_party(node, "WHO GOES TO THE MARKET", "GO SHOPPING",
-                         self._open_market_stalls)
+                                 confirm_label="STAKE AND FIGHT")
 
     def _open_market_stalls(self, shoppers, node, _offer):
         self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
-                                  on_done=self._start_map)
-
-    def _open_bank(self, node):
-        self._pick_party(node, "WHO VISITS THE BANK", "GO TO THE BANK",
-                         self._open_bank_vault)
+                                  on_done=self._after_activity)
 
     def _open_bank_vault(self, party, node, _offer):
         self.scene = BankScreen(self.fonts, self.guild, party,
-                                on_done=self._start_map)
-
-    def _open_work(self, node):
-        self._pick_party(node, "WHO GOES TO WORK", "GO TO THE LUMBER YARD",
-                         self._open_lumber_yard)
-
-    def _open_lumber_yard(self, workers, node, _offer):
-        self.scene = WorkScreen(self.fonts, self.guild, workers,
-                                on_done=self._after_work, on_back=self._start_map)
-
-    def _after_work(self):
-        if self.guild.empty:
-            self._campaign_over()
-        else:
-            self._start_map()
+                                on_done=self._after_activity)
 
     # ------------------------------------------------------------------ #
-    # hunting the wilds -- a work-style activity that can spring a fight  #
+    # hunting the wilds -- an activity that can spring a fight            #
     # ------------------------------------------------------------------ #
-    def _open_hunt(self, node):
-        self._pick_party(node, "WHO GOES HUNTING", "INTO THE WILDS",
-                         self._open_hunt_ground)
-
     def _open_hunt_ground(self, party, node, _offer):
         self._hunt = hunt.HuntState(list(party), node, hours_left=0)
         self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="setup",
@@ -233,15 +243,11 @@ class App:
         if self.guild.empty:
             self._campaign_over()
         else:
-            self._start_map()
-
-    def _open_recruit(self, node):
-        self._pick_party(node, "WHO GOES TO THE TAVERN", "GO TO THE TAVERN",
-                         self._open_taverna)
+            self._after_activity()
 
     def _open_taverna(self, party, node, _offer):
         self.scene = TavernaScreen(self.fonts, self.guild, party, node,
-                                   on_done=self._start_map)
+                                   on_done=self._after_activity)
 
     @staticmethod
     def _charge(members, amount):
@@ -310,7 +316,7 @@ class App:
         if outcome.arena_reward is not None:  # arena bout won: hand out the purse
             self._save()
             self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
-                                      outcome.arena_reward, on_done=self._start_map,
+                                      outcome.arena_reward, on_done=self._after_activity,
                                       deeds=outcome.deeds_earned, note=note)
             return
 
@@ -320,9 +326,9 @@ class App:
         if outcome.loot_pool and outcome.survivors:
             self._save()
             self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
-                                    outcome.loot_pool, on_done=self._start_map)
+                                    outcome.loot_pool, on_done=self._after_activity)
             return
-        self._start_map()
+        self._after_activity()
 
     # ------------------------------------------------------------------ #
     def _toggle_pause(self):

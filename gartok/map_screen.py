@@ -1,24 +1,30 @@
-"""World map: drive the guild between places.
+"""World map: give orders to groups, then advance the world.
 
 Draws `world.NODES` as a graph -- points joined by edges labelled with their
-travel cost in hours. The guild sits on one node (`guild.node`); click another
-and the guild walks the cheapest route there, the campaign clock advancing by
-the summed hours. Hovering a node previews that route. Arriving runs
-`factions.settle` (a "travel" event), so a deed can fire on reaching a place --
-no faction has one yet, but the call site is live.
+travel cost in hours. The guild is one or more **groups** (`gartok/group.py`):
+each stands on its own node and carries its own squad. `self.selected` is the
+group every click in this screen acts on -- pick a different row in the GROUPS
+list to switch. Clicking a node issues that group a **travel order**
+(`orders.travel`) instead of moving it there on the spot; the side panel's
+per-node actions (fight, shop, work, ...) issue the matching order too. Nothing
+actually *happens* until **ADVANCE**, which calls `campaign.advance` -- the tick
+jumps the world to the soonest order completion, resolves travel/work silently,
+and hands any other kind back to `app` to play its screen. **MAINTENANCE**
+forces a short 1 h stop instead (still through the same tick, so an order in
+flight stays in sync with the clock).
 
-The side panel shows the node the guild is standing on and what can be done
-there: a battle node opens the squad picker (`on_battle`), a market node the
-market party picker (`on_market`), a taverna the recruiting party picker
-(`on_recruit`), a lumber-yard town the worker picker (`on_work`). `on_guild`
-opens the roster/gear screen. No travel time passes for opening those -- only for
-moving on the map (or working a shift at the yard). Leaving to the main menu is
-Esc -> the pause menu (`app`), not a button here.
+A group with no order sitting on the same node as another idle group may
+**SPLIT** (peel some of its members into a new group) or **MERGE** (fold a
+co-located group into it) -- both physical, both instant, neither costs time.
+
+`on_guild` opens the roster/gear screen; `on_wipe` fires if a tick starves the
+guild out entirely. Leaving to the main menu is Esc -> the pause menu (`app`),
+not a button here.
 """
 
 import pygame
 
-from . import arena, factions, world
+from . import arena, orders, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
@@ -32,32 +38,32 @@ KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "tavern": WARN, "town": NEUTRAL
               "wilds": OK}
 KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP",
               "wilds": "WILDS"}
+WORK_HOURS = (4, 8, 12, 16)
 
 
 class MapScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_battle, on_market, on_recruit, on_guild,
-                 on_wipe, on_work, on_hunt, on_bank):
+    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
-        self.on_battle = on_battle
-        self.on_market = on_market
-        self.on_recruit = on_recruit
-        self.on_work = on_work
-        self.on_hunt = on_hunt
-        self.on_bank = on_bank
         self.on_guild = on_guild
         self.on_wipe = on_wipe
-        self.notices = []                     # lines shown after a trip (route, meals, deaths)
+        self.on_advance = on_advance
+        self.selected = guild.groups[0]
+        self.mode = "map"                     # "map" | "split"
+        self.split_picks = set()              # unit uids toggled to leave, while splitting
+        self.notices = []                     # lines shown after a tick (route, meals, deaths)
         self.hits = []                        # [(rect, node)]
-        self.buttons = []                    # [(key, rect)]
+        self.buttons = []                     # [(key, rect)]
+        self.group_rows = []                 # [(rect, group)]
+        self.split_rows = []                 # [(rect, unit)]
         self._terr = None                    # cached terrain fill (key, surface)
 
     # ------------------------------------------------------------------ #
     def _here(self):
-        return world.node(self.guild.node)
+        return world.node(self.selected.node)
 
     def _hovered_node(self):
         for rect, n in self.hits:
@@ -65,52 +71,76 @@ class MapScreen(Screen):
                 return n
         return None
 
+    def _select(self, group):
+        self.selected = group
+        self.mode = "map"
+
+    def _issue(self, order):
+        if not self.selected.busy:
+            self.selected.order = order
+
+    def _go(self, target):
+        if self.selected.busy or target.id == self.selected.node:
+            return
+        try:
+            self.selected.order = orders.travel(self.selected, target.id)
+        except ValueError:
+            pass
+
     def _click(self, px):
+        if self.mode == "split":
+            self._click_split(px)
+            return
         for key, rect in self.buttons:
             if rect.collidepoint(px):
-                if key == "guild":
-                    self.on_guild()
-                elif key == "attack":
-                    self.on_battle(self._here())
-                elif key == "market":
-                    self.on_market(self._here())
-                elif key == "recruit":
-                    self.on_recruit(self._here())
-                elif key == "work":
-                    self.on_work(self._here())
-                elif key == "hunt":
-                    self.on_hunt(self._here())
-                elif key == "bank":
-                    self.on_bank(self._here())
-                elif key == "maintain":
-                    self._maintain()
+                self._handle_button(key)
+                return
+        for rect, g in self.group_rows:
+            if rect.collidepoint(px):
+                self._select(g)
                 return
         for rect, n in self.hits:
             if rect.collidepoint(px):
                 self._go(n)
                 return
 
-    def _go(self, target):
-        if target.id == self.guild.node:
-            return
-        path, hours = world.route(self.guild.node, target.id)
-        if path is None:
-            return
-        events = self.guild.pass_time(hours)
-        self.guild.node = target.id
-        self.notices = [f"Travelled to {target.name}: {hours} h."] + events
-        for d in factions.settle(self.guild, factions.Event("travel", node=target)):
-            self.notices.append(
-                f"DEED · {d.name}  +{d.rep} reputation with {factions.faction(d.faction).name}")
-        if self.guild.empty:
-            self.on_wipe()
+    def _handle_button(self, key):
+        if key == "guild":
+            self.on_guild()
+        elif key == "advance":
+            self.on_advance()
+        elif key == "maintain":
+            self.on_advance(dt=1)
+        elif key == "split":
+            self.mode, self.split_picks = "split", set()
+        elif key.startswith("merge:"):
+            other = self._group_by_gid(key[len("merge:"):])
+            if other is not None:
+                self.guild.merge_groups(self.selected, other)
+        elif key.startswith("work:"):
+            self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1])))
+        elif key in orders.INTERACTIVE_KINDS:
+            self._issue(orders.interactive(key))
 
-    def _maintain(self):
-        """Stop where you stand for an hour: eat, and (later) see to the gear."""
-        events = self.guild.do_maintenance()
-        self.notices = ["Maintenance: 1 h stop."] + events
-        if self.guild.empty:
-            self.on_wipe()
+    def _group_by_gid(self, gid):
+        return next((g for g in self.guild.groups if g.gid == gid), None)
+
+    def _click_split(self, px):
+        for key, rect in self.buttons:
+            if rect.collidepoint(px):
+                if key == "split_confirm" and self.split_picks:
+                    chosen = [u for u in self.selected.members if u.uid in self.split_picks]
+                    try:
+                        self._select(self.guild.split_group(self.selected, chosen))
+                    except ValueError:
+                        self.mode = "map"
+                else:
+                    self.mode = "map"
+                return
+        for rect, u in self.split_rows:
+            if rect.collidepoint(px):
+                self.split_picks.symmetric_difference_update({u.uid})
+                return
 
     # ------------------------------------------------------------------ #
     def _area(self, screen):
@@ -160,6 +190,8 @@ class MapScreen(Screen):
         screen.fill(SURFACE_0)
         self.hits = []
         self.buttons = []
+        self.group_rows = []
+        self.split_rows = []
         clock = self.guild.clock
 
         hungry = self.guild.hungry
@@ -190,15 +222,18 @@ class MapScreen(Screen):
         pygame.draw.rect(screen, LINE_SOFT, area, 1, border_radius=RADIUS)
 
         self._draw_tooltip(screen, area)
-        self._draw_side(screen, area)
+        if self.mode == "split":
+            self._draw_split_panel(screen, area)
+        else:
+            self._draw_side(screen, area)
         self._draw_footer(screen)
 
     # ------------------------------------------------------------------ #
     def _route_pairs(self):
         hov = self._hovered_node()
-        if hov is None or hov.id == self.guild.node:
+        if hov is None or hov.id == self.selected.node:
             return set()
-        path, _ = world.route(self.guild.node, hov.id)
+        path, _ = world.route(self.selected.node, hov.id)
         path = path or []
         return {frozenset(p) for p in zip(path, path[1:])}
 
@@ -248,7 +283,7 @@ class MapScreen(Screen):
                               [(x - 5, y + 4), (x - 5, y - 1), (x, y - 5),
                                (x + 5, y - 1), (x + 5, y + 4)], 2)
 
-    def _draw_marker(self, screen, x, y, n, here, hovered):
+    def _draw_marker(self, screen, x, y, n, here, hovered, others=0):
         col = KIND_COLOR[n.kind]
         sh = pygame.Surface((36, 16), pygame.SRCALPHA)
         pygame.draw.ellipse(sh, (0, 0, 0, 95), sh.get_rect())
@@ -261,21 +296,26 @@ class MapScreen(Screen):
             pygame.draw.line(screen, ACCENT_INK, (x, y - 13), (x, y - 30), 2)
             pygame.draw.polygon(screen, ACCENT,
                                 [(x + 1, y - 30), (x + 15, y - 26), (x + 1, y - 20)])
-            return
-
-        if n.kind in ("battle", "wilds"):                          # danger aura
-            aura = pygame.Surface((54, 54), pygame.SRCALPHA)
-            pygame.draw.circle(aura, (*col, 24), (27, 27), 27)
-            pygame.draw.circle(aura, (*col, 30), (27, 27), 18)
-            screen.blit(aura, (x - 27, y - 27))
-        pygame.draw.circle(screen, col, (x, y), 12)
-        pygame.draw.circle(screen, tuple(c // 2 for c in col), (x, y), 12, 2)
-        if n.work:
-            self._glyph(screen, "work", x, y)
         else:
-            self._glyph(screen, n.kind, x, y)
-        if hovered:
-            pygame.draw.circle(screen, INK, (x, y), 16, 2)
+            if n.kind in ("battle", "wilds"):                       # danger aura
+                aura = pygame.Surface((54, 54), pygame.SRCALPHA)
+                pygame.draw.circle(aura, (*col, 24), (27, 27), 27)
+                pygame.draw.circle(aura, (*col, 30), (27, 27), 18)
+                screen.blit(aura, (x - 27, y - 27))
+            pygame.draw.circle(screen, col, (x, y), 12)
+            pygame.draw.circle(screen, tuple(c // 2 for c in col), (x, y), 12, 2)
+            if n.work:
+                self._glyph(screen, "work", x, y)
+            else:
+                self._glyph(screen, n.kind, x, y)
+            if hovered:
+                pygame.draw.circle(screen, INK, (x, y), 16, 2)
+
+        if others:                                                 # other groups standing here
+            badge = pygame.Rect(0, 0, 22, 16)
+            badge.center = (x + 15, y - 15)
+            panel(screen, badge, fill=SURFACE_3, border=ACCENT, radius=8)
+            text(screen, f"+{others}", self.fonts.label, ACCENT, badge.center, center=True)
 
     def _draw_nodes(self, screen, area):
         f = self.fonts
@@ -283,8 +323,10 @@ class MapScreen(Screen):
         for n in world.NODES:
             x, y = self._node_xy(area, n)
             self.hits.append((pygame.Rect(x - 46, y - 34, 92, 66), n))
-            here = n.id == self.guild.node
-            self._draw_marker(screen, x, y, n, here, n is hov)
+            here = n.id == self.selected.node
+            occupants = sum(1 for g in self.guild.groups if g.node == n.id)
+            others = occupants - (1 if here else 0)
+            self._draw_marker(screen, x, y, n, here, n is hov, others)
 
             active = here or n is hov
             r = pygame.Rect(0, 0, f.body_sm.size(n.name)[0] + 14, 18)
@@ -317,11 +359,12 @@ class MapScreen(Screen):
 
     def _draw_tooltip(self, screen, area):
         hov = self._hovered_node()
-        if hov is None or hov.id == self.guild.node:
+        if hov is None or hov.id == self.selected.node:
             return
         f = self.fonts
-        _, hours = world.route(self.guild.node, hov.id)
-        s = f"{hov.name}   ·   {hours} h   ·   click to travel"
+        _, hours = world.route(self.selected.node, hov.id)
+        busy = "  (group is busy)" if self.selected.busy else ""
+        s = f"{hov.name}   ·   {hours} h   ·   click to send{busy}"
         r = pygame.Rect(0, 0, f.body_sm.size(s)[0] + 18, 22)
         r.topleft = (self.mouse[0] + 14, self.mouse[1] - 6)
         r.clamp_ip(area.inflate(-SP2, -SP2))
@@ -330,6 +373,57 @@ class MapScreen(Screen):
         text(screen, s, f.body_sm, INK, r.center, center=True)
 
     # ------------------------------------------------------------------ #
+    def _order_status(self, group):
+        """One-line status for a group's GROUPS-list row."""
+        o = group.order
+        if o is None or o.kind == "idle":
+            return "idle"
+        if o.kind == "travel":
+            return f"→ {world.node(o.dest).name} ({o.remaining:g} h)"
+        if o.kind == "work":
+            return f"working ({o.remaining:g} h left)"
+        return f"heading to {o.kind} ({o.remaining:g} h)"
+
+    def _draw_groups(self, screen, cx, y, cw, f):
+        y = section(screen, "GROUPS", cx, y, cw, f)
+        for g in self.guild.groups:
+            sel = g is self.selected
+            r = pygame.Rect(cx, y, cw, 30)
+            hov = r.collidepoint(self.mouse)
+            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
+                  border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1, radius=8)
+            name = g.name or f"Group ({len(g.members)})"
+            text(screen, name, f.body_sm, ACCENT if sel else INK, (r.x + SP2, r.y + 3))
+            text(screen, f"{world.node(g.node).name}  ·  {self._order_status(g)}",
+                 f.label, INK_DIM, (r.x + SP2, r.y + 16))
+            self.group_rows.append((r, g))
+            y += 34
+        return y + SP2
+
+    def _draw_group_actions(self, screen, cx, y, cw, f):
+        """SPLIT (peel members off) / MERGE (fold in a co-located idle group,
+        one row per such group -- there can be more than one)."""
+        g = self.selected
+        if g.busy:
+            return y
+        if len(g.members) > 1:
+            r = pygame.Rect(cx, y, cw, 30)
+            hov = r.collidepoint(self.mouse)
+            panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1, border=LINE_SOFT, radius=8)
+            text(screen, "SPLIT", f.body_sm, INK, r.center, center=True)
+            self.buttons.append(("split", r))
+            y += 34
+        mates = [o for o in self.guild.groups if o is not g and o.node == g.node and not o.busy]
+        for o in mates:
+            mr = pygame.Rect(cx, y, cw, 30)
+            hov = mr.collidepoint(self.mouse)
+            panel(screen, mr, fill=SURFACE_3 if hov else SURFACE_1, border=LINE_SOFT, radius=8)
+            name = o.name or f"Group ({len(o.members)})"
+            text(screen, f"MERGE WITH {name}", f.body_sm, INK, mr.center, center=True)
+            self.buttons.append((f"merge:{o.gid}", mr))
+            y += 34
+        return y
+
     def _draw_side(self, screen, area):
         f = self.fonts
         here = self._here()
@@ -342,7 +436,11 @@ class MapScreen(Screen):
         cw = SIDE_W - 2 * pad
         y = area.y + pad
 
-        tracked(screen, "YOU ARE AT", f.label, INFO, (cx, y))
+        y = self._draw_groups(screen, cx, y, cw, f)
+        y = self._draw_group_actions(screen, cx, y, cw, f)
+        y += SP2
+
+        tracked(screen, "SELECTED GROUP IS AT", f.label, INFO, (cx, y))
         y += 18
         text(screen, here.name, f.heading, INK, (cx, y))
         y += 24
@@ -354,7 +452,10 @@ class MapScreen(Screen):
 
         y += SP3
         y = section(screen, "HERE", cx, y, cw, f)
-        if here.is_battle:
+        if self.selected.busy:
+            text(screen, f"Busy: {self._order_status(self.selected)}", f.body_sm,
+                 WARN, (cx, y))
+        elif here.is_battle:
             br = pygame.Rect(cx, y, cw, 38)
             hovb = br.collidepoint(self.mouse)
             panel(screen, br, fill=ACCENT if hovb else SURFACE_3,
@@ -364,7 +465,7 @@ class MapScreen(Screen):
                      else "BET AT THE ARENA" if here.arena else "ATTACK")
             text(screen, label, f.body_bd, ACCENT_INK if hovb else ACCENT,
                  br.center, center=True)
-            self.buttons.append(("attack", br))
+            self.buttons.append(("arena", br))
             y += 44
             note = ("1v1 for the Champion of the Pit -- no stake, no backup" if defense
                     else "non-lethal · stake copper, win the purse" if here.arena
@@ -389,14 +490,18 @@ class MapScreen(Screen):
             text(screen, "talk a stranger into signing with the guild", f.body_sm,
                  INK_FAINT, (cx, y))
         elif here.work:
-            wr = pygame.Rect(cx, y, cw, 38)
-            hovw = wr.collidepoint(self.mouse)
-            panel(screen, wr, fill=SURFACE_3 if hovw else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "WORK AT THE LUMBER YARD", f.body_bd, INK_DIM,
-                 wr.center, center=True)
-            self.buttons.append(("work", wr))
-            y += 44
+            tracked(screen, "WORK A SHIFT", f.label, INK_DIM, (cx, y))
+            y += 18
+            gap = SP2
+            cw4 = (cw - 3 * gap) // 4
+            for i, h in enumerate(WORK_HOURS):
+                r = pygame.Rect(cx + i * (cw4 + gap), y, cw4, 34)
+                hov = r.collidepoint(self.mouse)
+                panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
+                      border=LINE_SOFT, width=1, radius=RADIUS)
+                text(screen, f"{h} h", f.body_sm, INK, r.center, center=True)
+                self.buttons.append((f"work:{h}", r))
+            y += 42
             text(screen, "trade hours of the day for copper  ·  pays little, but it's sure",
                  f.body_sm, INK_FAINT, (cx, y))
         elif here.is_wilds:
@@ -442,11 +547,53 @@ class MapScreen(Screen):
                 text(screen, ln, f.body_sm, col, (cx, yy))
                 yy += 13
 
+    def _draw_split_panel(self, screen, area):
+        f = self.fonts
+        x = area.right + MARGIN
+        rect = pygame.Rect(x, area.y, SIDE_W, area.h)
+        panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+
+        pad = SP4
+        cx = x + pad
+        cw = SIDE_W - 2 * pad
+        y = area.y + pad
+        text(screen, "SPLIT GROUP", f.heading, INK, (cx, y))
+        y += 26
+        text(screen, "pick who LEAVES to form a new group", f.body_sm, INK_DIM, (cx, y))
+        y += 26
+
+        for u in self.selected.members:
+            picked = u.uid in self.split_picks
+            r = pygame.Rect(cx, y, cw, 30)
+            hov = r.collidepoint(self.mouse)
+            panel(screen, r, fill=SURFACE_3 if (picked or hov) else SURFACE_1,
+                  border=ACCENT if picked else LINE_SOFT, width=2 if picked else 1, radius=8)
+            text(screen, u.name, f.body_sm, ACCENT if picked else INK, (r.x + SP2, r.y + 3))
+            text(screen, "leaving" if picked else "stays", f.label,
+                 ACCENT if picked else INK_FAINT, (r.right - SP2, r.y + 3), right=True)
+            self.split_rows.append((r, u))
+            y += 34
+
+        y = rect.bottom - pad - 76
+        ok = bool(self.split_picks)
+        cr = pygame.Rect(cx, y, cw, 36)
+        panel(screen, cr, fill=ACCENT if ok else SURFACE_1, border=ACCENT if ok else LINE_SOFT,
+              width=1, radius=RADIUS)
+        text(screen, "CONFIRM SPLIT", f.body_bd, ACCENT_INK if ok else INK_FAINT,
+             cr.center, center=True)
+        self.buttons.append(("split_confirm", cr))
+        y += 44
+        xr = pygame.Rect(cx, y, cw, 32)
+        hovx = xr.collidepoint(self.mouse)
+        panel(screen, xr, fill=SURFACE_3 if hovx else SURFACE_1, border=LINE_SOFT, radius=RADIUS)
+        text(screen, "cancel", f.body, INK if hovx else INK_DIM, xr.center, center=True)
+        self.buttons.append(("split_cancel", xr))
+
     def _draw_footer(self, screen):
         f = self.fonts
         y = screen.get_height() - 52
 
-        g = pygame.Rect(MARGIN, y, 200, 36)
+        g = pygame.Rect(MARGIN, y, 170, 36)
         hovg = g.collidepoint(self.mouse)
         panel(screen, g, fill=ACCENT if hovg else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)
@@ -455,10 +602,10 @@ class MapScreen(Screen):
         self.buttons.append(("guild", g))
 
         hungry = self.guild.hungry
-        mt = pygame.Rect(MARGIN + 212, y, 180, 36)
+        mt = pygame.Rect(MARGIN + 182, y, 160, 36)
         hovt = mt.collidepoint(self.mouse)
         # a stop helps only if a hungry member can reach a ration: their own pack,
-        # or the shared larder of a guild-mate who pools food
+        # or the shared larder of a group-mate who pools food
         reachable = any(u.rations for u in hungry) or any(
             u.share_food and u.rations for u in self.guild.roster)
         urgent = bool(hungry) and reachable
@@ -469,6 +616,16 @@ class MapScreen(Screen):
              mt.center, center=True)
         self.buttons.append(("maintain", mt))
 
-        text(screen, "click a place to travel  ·  passing time can turn to night"
-             "  ·  Esc for the pause menu",
-             f.body_sm, INK_FAINT, (MARGIN + 408, y + 10))
+        any_orders = any(g.busy for g in self.guild.groups)
+        av = pygame.Rect(MARGIN + 354, y, 150, 36)
+        hova = av.collidepoint(self.mouse)
+        panel(screen, av, fill=ACCENT if (hova and any_orders) else SURFACE_3 if any_orders
+              else SURFACE_1, border=ACCENT if any_orders else LINE_SOFT, width=1, radius=RADIUS)
+        text(screen, "ADVANCE", f.body_bd,
+             ACCENT_INK if (hova and any_orders) else ACCENT if any_orders else INK_FAINT,
+             av.center, center=True)
+        self.buttons.append(("advance", av))
+
+        text(screen, "click a group, then a place to send it  ·  ADVANCE plays out "
+             "the orders  ·  Esc for the pause menu",
+             f.body_sm, INK_FAINT, (MARGIN + 520, y + 10))

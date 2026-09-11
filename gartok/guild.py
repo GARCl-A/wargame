@@ -1,10 +1,13 @@
 """The guild: the player's organisation.
 
-The guild *is* its roster -- there is no hall, no vault, no treasury; gold and
-items live on the individual characters. `Guild` is the set of members, the
-campaign tallies (`battles_won`), standing with each faction, and the campaign
-clock, plus where the guild currently sits on the world map (`node`). It is the
-seam hired hands hang off later.
+The guild is the **shared** state across every member -- the campaign tallies
+(`battles_won`), standing with each faction, the campaign clock, the bank chest,
+the taverna pool -- plus the full membership. Physical state (who is where, who
+is travelling together) belongs to `Group` (see `group.py`): `Guild.groups` is a
+list of `Group`, and every member is in exactly one of them, even if that group
+has just the one member. `Guild.roster` is a read view flattened across every
+group; `Guild.node` is a single-group convenience over the first group (see the
+property below) and stops making sense once a second group exists.
 
 The one thing the guild owns as a body is the **bank chest** -- a strongbox
 rented from the Bankers in the City (`bank_capacity` kg, `bank_items` the names
@@ -23,20 +26,23 @@ them for a new set once a week.
 
 from . import data, economy
 from .clock import Clock
+from .group import Group
 
 
 class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
                  arena_challenge_day=None, clock=None, node=None,
                  taverna_week=None, taverna_pool=None, taverna_blocked=None,
-                 bank_capacity=0, bank_items=None):
-        self.roster = roster                  # list[Unit] -- the members
+                 bank_capacity=0, bank_items=None, groups=None):
+        # `groups` (a list[Group]) wins when given (persist's new save shape);
+        # else `roster`/`node` build the one starting group (draft, old saves,
+        # every existing test call site).
+        self.groups = groups if groups is not None else [Group(roster, node=node)]
         self.battles_won = battles_won
         self.reputation = dict(reputation or {})   # {faction_id: score}, moved by deeds only
         self.deeds_done = list(deeds_done or [])   # ids of completed factions.Deed
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
-        self.node = node                      # current world-map node id (set on entry)
         self.bank_capacity = bank_capacity    # kg the rented strongbox holds (0 = none rented)
         self.bank_items = list(bank_items or [])   # item names stashed in the chest
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
@@ -44,6 +50,87 @@ class Guild:
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
         self.taverna_blocked = taverna_blocked if taverna_blocked is not None else []
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
+
+    # ------------------------------------------------------------------ #
+    # the roster: a flattened read view across every group                #
+    # ------------------------------------------------------------------ #
+    @property
+    def roster(self):
+        return [u for g in self.groups for u in g.members]
+
+    @roster.setter
+    def roster(self, units):
+        """Single-group convenience: valid only with exactly one group
+        (replaces its whole membership wholesale) -- every real mutation
+        should go through `add_member`/`remove_members` instead, which stay
+        correct once a second group exists."""
+        if len(self.groups) != 1:
+            raise NotImplementedError(
+                "guild.roster assignment needs exactly one group; "
+                "use add_member/remove_members instead")
+        self.groups[0].members = list(units)
+
+    @property
+    def node(self):
+        """Single-group convenience over the first group's position. Ambiguous
+        (and unused) once a second group exists -- read `group.node` instead."""
+        return self.groups[0].node
+
+    @node.setter
+    def node(self, value):
+        self.groups[0].node = value
+
+    def group_of(self, unit):
+        """The `Group` holding `unit`, or None if it isn't on the roster."""
+        for g in self.groups:
+            if unit in g.members:
+                return g
+        return None
+
+    def add_member(self, unit, group):
+        group.members.append(unit)
+
+    def remove_members(self, units):
+        """Drop each of `units` from whichever group holds it (permadeath /
+        starvation), pruning any group this empties out entirely (no ghost
+        tokens left standing on the map). A unit not found on any group is
+        silently skipped."""
+        dead = set(units)
+        for g in list(self.groups):
+            if any(u in dead for u in g.members):
+                g.members = [u for u in g.members if u not in dead]
+                if g.empty:
+                    self.groups.remove(g)
+
+    def split_group(self, group, members, *, name=None):
+        """Peel `members` (a subset of `group.members`) off into a brand new
+        `Group` at the same node -- physically valid because they haven't gone
+        anywhere yet. `group` keeps whoever is left; it is pruned if that leaves
+        it empty (everyone moved to the new group). Refuses to empty `group`
+        entirely if that would leave the new group as EVERYONE (nothing to
+        split) or to peel off a group mid-order (its members aren't all in one
+        place right now conceptually until the order resolves)."""
+        peel = [u for u in group.members if u in set(members)]
+        if not peel or len(peel) == len(group.members):
+            raise ValueError("split needs a non-empty, proper subset of the group")
+        if group.busy:
+            raise ValueError("can't split a group with an order in flight")
+        group.members = [u for u in group.members if u not in peel]
+        new_group = Group(peel, node=group.node, name=name)
+        self.groups.append(new_group)
+        return new_group
+
+    def merge_groups(self, a, b):
+        """Fold `b` into `a` -- only valid when they're standing on the same
+        node (a group is a physical thing; merging elsewhere would teleport
+        someone). Removes `b` from the guild. Returns `a`."""
+        if a.node != b.node:
+            raise ValueError("can only merge groups standing on the same node")
+        if a.busy or b.busy:
+            raise ValueError("can't merge a group with an order in flight")
+        a.members += b.members
+        self.groups.remove(b)
+        return a
 
     def __len__(self):
         return len(self.roster)
@@ -98,9 +185,13 @@ class Guild:
         return events
 
     def _shared_larder(self, eater):
-        """The packs `eater` may draw a ration from -- every roster-mate whose
-        `share_food` is on. Own pack is handled first by the unit itself."""
-        return [u._base_inventory for u in self.roster
+        """The packs `eater` may draw a ration from -- every group-mate
+        (physically together, so the only ones who could actually hand over
+        food) whose `share_food` is on. Own pack is handled first by the unit
+        itself."""
+        group = self.group_of(eater)
+        mates = group.members if group is not None else self.roster
+        return [u._base_inventory for u in mates
                 if u is not eater and u.share_food]
 
     def _daily_upkeep(self):
@@ -127,8 +218,23 @@ class Guild:
             who = "1 member ate" if len(ate) == 1 else f"{len(ate)} members ate"
             events.append(f"{who} ({self.rations} rations left).")
         if casualties:
-            self.roster = [u for u in self.roster if u not in casualties]
+            self.remove_members(casualties)
         return events
+
+    def eat_now_pass(self):
+        """Anyone still hungry eats right now -- own pack, then the group
+        larder -- without waiting for the next daily meal. No clock advance
+        (the caller runs `pass_time` itself, or is mid-tick already)."""
+        fed = [u for u in self.roster if u.eat_now()]          # own packs first
+        for u in self.roster:
+            if u.hunger_level and u not in fed and u.eat_now(self._shared_larder(u)):
+                fed.append(u)
+        for u in fed:
+            u._derive_combat()
+        if not fed:
+            return []
+        names = ", ".join(u.name for u in fed)
+        return [f"Stopped to eat: {names} ({self.rations} rations left)."]
 
     def do_maintenance(self, hours=1):
         """A camp stop: the guild takes `hours` to see to itself. Advances the
@@ -137,35 +243,37 @@ class Guild:
         events to show. Eating is the only chore today; rest / gear repair hang
         off here later."""
         events = self.pass_time(hours)
-        fed = [u for u in self.roster if u.eat_now()]          # own packs first
-        for u in self.roster:
-            if u.hunger_level and u not in fed and u.eat_now(self._shared_larder(u)):
-                fed.append(u)
-        for u in fed:
-            u._derive_combat()
-        if fed:
-            names = ", ".join(u.name for u in fed)
-            events.append(f"Stopped to eat: {names} ({self.rations} rations left).")
-        elif not events:
+        events += self.eat_now_pass()
+        if not events:
             events.append("A quiet stop. No one needed to eat.")
         return events
 
+    def work_speedup(self, crew):
+        """The clock-time multiplier a work shift actually takes: 1.0 unless
+        someone on `crew` has Brisk Hands, in which case the whole guild moves
+        on only once the SLOWEST worker is done -- so the saving lands only
+        when nobody on the crew is dragging."""
+        return max((1 - u.talent_bonus("activity_speed") for u in crew), default=1.0)
+
     def work_shift(self, workers, hours):
-        """A stint at the lumber yard outside the walls: `workers` trade `hours`
-        of the day for copper. Pays `economy.lumber_pay(hours)` (lifted by the
-        Piecework talent) straight into each worker's purse and banks the full
-        `hours` toward their work-XP. Brisk Hands is each worker's own -- a Brisk
-        worker finishes their share early, but the guild moves on as one token
-        only once the SLOWEST worker is done, so the clock saving lands only when
-        nobody on the crew is dragging. Advances the campaign clock through
-        `pass_time` (a long shift can cross midnight and run the daily meal), so a
-        starving worker may not live to be paid. Returns the events to show."""
+        """A stint at the lumber yard outside the walls, done right now:
+        advances the campaign clock through `pass_time` (a long shift can cross
+        midnight and run the daily meal -- a starving worker may not live to be
+        paid) and then pays the crew. See `_pay_shift` for the pay/XP step alone
+        (used by the tick/orders engine, which advances the clock itself)."""
         hours = int(hours)
-        pay = economy.lumber_pay(hours)
         crew = [u for u in workers if u in self.roster]
-        slowest = max((1 - u.talent_bonus("activity_speed") for u in crew), default=1.0)
-        clock_hours = hours * slowest
+        clock_hours = hours * self.work_speedup(crew)
         events = self.pass_time(clock_hours)
+        events += self._pay_shift(workers, hours, clock_hours)
+        return events
+
+    def _pay_shift(self, workers, hours, clock_hours):
+        """Pay + bank work-XP for a completed shift -- no clock advance, the
+        caller already ran `pass_time`. `hours` is the nominal shift length
+        (what pay/XP are based on); `clock_hours` is how long it actually took
+        (Brisk Hands can shrink it), used only for the "done early" note."""
+        pay = economy.lumber_pay(hours)
         earners = [u for u in workers if u in self.roster]   # a long shift can starve one
         paid = []
         for u in earners:
@@ -175,6 +283,7 @@ class Guild:
             u.collect_levels()                 # more work marks can lift the mean level
             paid.append(gain)
 
+        events = []
         if earners:
             names = ", ".join(u.name for u in earners)
             wage = (f"+{paid[0]} copper each" if len(set(paid)) == 1

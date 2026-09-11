@@ -284,13 +284,14 @@ def test_arena_node_swaps_the_champion_bout_for_the_games_after_dethroning():
     orig = app_mod.SquadScreen
     app_mod.SquadScreen = fake_screen
     try:
+        group = app.guild.groups[0]
         app.guild.deeds_done = []
-        app._open_squad(world.node("arena"))
+        app._open_arena(group, world.node("arena"))
         assert any(o.champion for o in captured["offers"])
         assert not any(o.stage2 for o in captured["offers"])
 
         app.guild.deeds_done = ["arena_dethrone"]
-        app._open_squad(world.node("arena"))
+        app._open_arena(group, world.node("arena"))
         assert not any(o.champion for o in captured["offers"])
         names = {o.name for o in captured["offers"] if o.stage2}
         assert names == {"Games: Brawl", "Games: Capture the Flag",

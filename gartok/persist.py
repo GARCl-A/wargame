@@ -1,11 +1,13 @@
 """Save slots: each slot is one JSON file under `saves/`; the game autosaves to
 the active slot after the draft, after every battle and after every manage step.
 
-Only the player roster and a small campaign meta (wins, clock, map node, and the
-taverna's current weekly pool of would-be recruits) are persisted. Enemies are
-rolled fresh each battle and battle state lives on a throwaway `Combatant`
-wrapper, never on the `Unit`, so disk never sees it -- a saved unit is always
-"full HP, standing".
+The player roster is saved as **groups** (`gartok/group.py`): each group's own
+member list and map node, plus a small shared campaign meta (wins, clock, bank
+chest, the taverna's current weekly pool of would-be recruits). A save from
+before the groups layer (`"roster"`/`"node"`, no `"groups"` key) loads as one
+group holding the whole old roster. Enemies are rolled fresh each battle and
+battle state lives on a throwaway `Combatant` wrapper, never on the `Unit`, so
+disk never sees it -- a saved unit is always "full HP, standing".
 """
 
 import json
@@ -13,12 +15,13 @@ import os
 import time
 
 from .clock import Clock
+from .group import Group
 from .guild import Guild
 from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 6                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 7                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -60,6 +63,20 @@ def unit_to_dict(u):
     }
 
 
+def group_to_dict(g):
+    return {
+        "gid": g.gid,
+        "name": g.name,
+        "node": g.node,
+        "members": [unit_to_dict(u) for u in g.members],
+    }
+
+
+def group_from_dict(d):
+    return Group([Unit.from_save(m) for m in d["members"]],
+                 node=d.get("node"), name=d.get("name"), gid=d.get("gid"))
+
+
 def save_game(slot, guild):
     os.makedirs(SAVE_DIR, exist_ok=True)
     payload = {
@@ -69,12 +86,11 @@ def save_game(slot, guild):
         "deeds_done": list(guild.deeds_done),
         "arena_challenge_day": guild.arena_challenge_day,
         "clock_seconds": guild.clock.seconds,
-        "node": guild.node,
         "bank_capacity": guild.bank_capacity,
         "bank_items": list(guild.bank_items),
         "saved_at": time.time(),
-        "squad": [u.name for u in guild.roster],
-        "roster": [unit_to_dict(u) for u in guild.roster],
+        "squad": [u.name for u in guild.roster],   # flattened names, for the slot summary
+        "groups": [group_to_dict(g) for g in guild.groups],
         "taverna_week": guild.taverna_week,
         "taverna_pool": ([unit_to_dict(u) for u in guild.taverna_pool]
                          if guild.taverna_pool is not None else None),
@@ -87,18 +103,23 @@ def save_game(slot, guild):
 
 
 def load_game(slot):
-    """-> Guild (roster + campaign meta). Missing keys default (old saves)."""
+    """-> Guild (groups + campaign meta). Missing keys default (old saves); a
+    save from before the groups layer (`"roster"`/`"node"`, no `"groups"`) is
+    rebuilt as a single group holding the whole old roster at the old node."""
     with open(slot_path(slot), encoding="utf-8") as fh:
         payload = json.load(fh)
-    roster = [Unit.from_save(d) for d in payload["roster"]]
+    if "groups" in payload:
+        groups = [group_from_dict(d) for d in payload["groups"]]
+    else:
+        roster = [Unit.from_save(d) for d in payload["roster"]]
+        groups = [Group(roster, node=payload.get("node"))]
     pool = payload.get("taverna_pool")
-    return Guild(roster,
+    return Guild(None, groups=groups,
                  battles_won=payload.get("battles_won", 0),
                  reputation=payload.get("reputation", {}),
                  deeds_done=payload.get("deeds_done", []),
                  arena_challenge_day=payload.get("arena_challenge_day"),
                  clock=Clock(payload.get("clock_seconds", 0)),
-                 node=payload.get("node"),
                  bank_capacity=payload.get("bank_capacity", 0),
                  bank_items=payload.get("bank_items", []),
                  taverna_week=payload.get("taverna_week"),

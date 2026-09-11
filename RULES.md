@@ -637,16 +637,19 @@ meal).
 - **Every character eats once a day.** For each map day crossed, a character
   consumes **1 food item** (`data.FOOD_ITEMS` — today `Meat`, `Potato`).
   Ate → counter resets.
-- **Shared food (on by default).** Each character eats from their **own pack**
-  first (a full first pass over the roster); anyone still hungry then draws a
-  ration from any guild-mate with `share_food` on (`Unit.share_food`, toggled on
-  the member panel of the guild screen). Two passes so nobody loses their own
-  meal to a mate earlier in roster order. The Autotroph (Leshy) never enters
-  this.
-- **Maintenance** (a button on the map, `Guild.do_maintenance`): the guild stops
-  1 h where it is; passes the time (which can cross midnight and trigger the
-  daily meal) and then **anyone still hungry eats now** — own pack, then the
-  shared larder.
+- **Shared food (on by default), scoped to the group.** Each character eats from
+  their **own pack** first (a full first pass over the roster); anyone still
+  hungry then draws a ration from a **group-mate** (physically together, so the
+  only ones who could actually hand over food) with `share_food` on
+  (`Unit.share_food`, toggled on the member panel of the guild screen). Two
+  passes so nobody loses their own meal to a mate earlier in roster order. A
+  guild-mate in a different group is out of reach. The Autotroph (Leshy) never
+  enters this.
+- **Maintenance** (a button on the map -- `campaign.advance(guild, dt=1)`, a
+  forced tick): every group stops 1 h where it stands; passes the time (which
+  can cross midnight and trigger the daily meal) and then **anyone still
+  hungry eats now** (`Guild.eat_now_pass`) — own pack, then the group's shared
+  larder.
 - **No food anywhere in reach:** the days-unfed counter rises.
 
   | Days unfed | Condition | Effect |
@@ -674,14 +677,15 @@ own threshold.
 
 ### The lumber yard: day-labour by the hour 🟡
 
-The `lumber_yard` node (a `town` with `work=True`), 1 h from the City. Screen in
-`work_screen.py`; rule in `Guild.work_shift` / `economy.lumber_pay`. It is the
-**economic floor**: whoever lost everything in the arena goes there to trade time
-for copper instead of walking into the wilds and dying.
+The `lumber_yard` node (a `town` with `work=True`), 1 h from the City. Rule in
+`Guild.work_shift` / `economy.lumber_pay`; on the map it's an order, resolved
+silently by `campaign.advance` (`gartok/orders.py`). It is the **economic
+floor**: whoever lost everything in the arena goes there to trade time for
+copper instead of walking into the wilds and dying.
 
-- **How it works:** pick who goes and the **shift** — 4, 8, 12 or 16 h. Confirm
-  runs the shift: passes the time (can cross midnight and trigger the day's meal)
-  and pays each worker.
+- **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
+  or 16 h — which issues a work order; ADVANCE resolves it: passes the time (can
+  cross midnight and trigger the day's meal) and pays each worker.
 - **Pay:** `economy.LUMBER_WAGE` = **3 copper per whole 4-hour block**; a partial
   hour does not count. A full 16 h day = **12 copper** per head, straight into
   each one's purse.

@@ -126,8 +126,9 @@ def bar(guild, candidate, recruiter):
 
 def enlist(guild, candidate, recruiter):
     """Bind `candidate` to the roster as `recruiter`'s recruit and take them out
-    of the taverna pool."""
+    of the taverna pool. Joins `recruiter`'s own group -- the pitch only happens
+    because the two are standing in the same place."""
     candidate.recruited_by = recruiter.uid
-    guild.roster.append(candidate)
+    guild.add_member(candidate, guild.group_of(recruiter))
     if guild.taverna_pool and candidate in guild.taverna_pool:
         guild.taverna_pool.remove(candidate)

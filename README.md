@@ -9,11 +9,14 @@ Every unit is a randomly generated GARTOK character (race + occupation + 3d6).
 **Draft:** the game opens on a selection screen — three characters are rolled,
 you keep one, three times. Those three are your **guild**.
 
-**Campaign:** the guild roams the world map as a single token. Each place is a
-battle, a market, a tavern, the lumber yard, or the wilds. For a battle you pick
-a **squad** (1–3 members), drop onto a grid, and win by putting the enemy team
-down. Travelling burns the clock (day/night, hunger); death is permanent; a total
-wipe ends the run. Saved by slot.
+**Campaign:** the guild is one or more **groups** on the world map, each a
+physical unit of members standing on their own node. Give a group an order
+(travel, work, or head into a battle / market / tavern / the wilds), then hit
+ADVANCE: the world jumps to the soonest order due, resolving travel and work
+silently and handing you the rest to actually play. For a battle you pick a
+**squad** (1–3 members), drop onto a grid, and win by putting the enemy team
+down. Time only passes on ADVANCE or a MAINTENANCE stop (day/night, hunger);
+death is permanent; a total wipe ends the run. Saved by slot.
 
 Progress toward the game's goal is **reputation with factions**, earned by
 pulling off a faction's signature challenges (`deeds`) — the arena (The Pits) is
@@ -85,8 +88,11 @@ reconstructed ruleset in [`RULES.md`](RULES.md):
 
 World systems, outside combat:
 
-- **Campaign**: the guild roams the map as one token; a clock + day/night;
-  permadeath and save-by-slot (`world.py`, `clock.py`, `guild.py`, `persist.py`).
+- **Campaign**: the guild's members are split across **groups**, each its own
+  token that can travel/work/act independently; a tick/orders engine
+  (`gartok/orders.py`, `campaign.advance`) advances the shared clock + day/night
+  to the next order due; permadeath and save-by-slot (`world.py`, `clock.py`,
+  `guild.py`, `group.py`, `persist.py`).
 - **Hunger**: one meal a day, a shared larder; without food, growing penalties
   up to death.
 - **Progression**: no classes — each XP track (combat, work) has its own level
@@ -134,10 +140,13 @@ gartok/
   # world + campaign
   world.py          the map graph: nodes, edges (hours), route (Dijkstra), Bout (arena offers)
   clock.py          the campaign clock (seconds), day/night
-  guild.py          the guild = the roster; daily time/hunger, summed gold, per-faction reputation
+  guild.py          the guild = shared state (bank, reputation, taverna pool) + every group
+  group.py          Group = a physical subset of the guild: its own node + squad + order
+  orders.py         what a group is doing (travel/work/interactive) and how long it takes
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
   arena.py          the Champion of the Pit title: dethrone, defend, the 15/7-day cycle
-  campaign.py       folds a battle result back into the guild (permadeath, loot, deeds)
+  campaign.py       folds a battle result back into the guild (permadeath, loot, deeds);
+                    also the tick engine (`advance`) that plays orders out
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
   recruit.py        the recruitment contest + the weekly tavern pool
   hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
@@ -150,7 +159,7 @@ gartok/
   screen.py         the screens' base class (click dispatch -> self._click)
   menu_screen.py / draft_screen.py / map_screen.py / guild_screen.py / gear_screen.py
   squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
-  market_screen.py / taverna_screen.py / work_screen.py / hunt_screen.py / level_screen.py
+  market_screen.py / taverna_screen.py / hunt_screen.py / level_screen.py
   pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
 
   # shared presentation
