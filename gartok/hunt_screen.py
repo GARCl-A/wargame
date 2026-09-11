@@ -25,7 +25,7 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
 class HuntScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, state, phase, on_ambush, on_done):
+    def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -33,6 +33,9 @@ class HuntScreen(Screen):
         self.phase = phase                # "setup" | "interlude" | "done"
         self.on_ambush = on_ambush
         self.on_done = on_done
+        # `app` passes the real tick (`_hunt_tick`, via `campaign.advance`,
+        # keeps other groups synced); the `pass_time` fallback is test-only.
+        self.on_tick = on_tick or guild.pass_time
         self.hours = hunt.HUNT_SHIFT_HOURS[1]   # default: the second option
         self.stretch_events = []          # daily-upkeep lines from the last stretch
         self.result = None                # hunt.grant_meat lines, once wrapped up
@@ -50,7 +53,7 @@ class HuntScreen(Screen):
 
     def _do_stretch(self):
         elapsed, ambushed = hunt.hunt_stretch(self.state)
-        self.stretch_events = self.guild.pass_time(elapsed)
+        self.stretch_events = self.on_tick(elapsed)
         self.state.party = [u for u in self.state.party if u in self.guild.roster]
         if self.guild.empty or not self.state.party:
             self._wrap_up()

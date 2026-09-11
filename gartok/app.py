@@ -236,7 +236,19 @@ class App:
     def _open_hunt_ground(self, party, node, _offer):
         self._hunt = hunt.HuntState(list(party), node, hours_left=0)
         self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="setup",
-                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt)
+                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
+                                on_tick=self._hunt_tick)
+
+    def _hunt_tick(self, hours):
+        """A hunt stretch spends hours outside the map's tick/orders loop --
+        route it through `campaign.advance` (forced dt) so any OTHER group's
+        order stays in lockstep with the clock instead of drifting out of
+        sync with it, and anything that comes due for another group mid-hunt
+        is queued in `_pending` (drained by `_after_activity` once the hunt
+        wraps up) instead of silently lost."""
+        result = campaign.advance(self.guild, dt=hours)
+        self._pending += result.pending
+        return result.events
 
     def _start_hunt_battle(self, state, pack):
         self._battle_squad = list(state.party)
@@ -251,14 +263,16 @@ class App:
         """Back from a won ambush with daylight still to spend."""
         self._save()
         self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="interlude",
-                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt)
+                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
+                                on_tick=self._hunt_tick)
 
     def _finish_hunt(self):
         """The hunt is over (dark, driven off, or the party is spent) -- the
         screen banks the haul on entering its wrap-up phase."""
         self._save()
         self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="done",
-                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt)
+                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
+                                on_tick=self._hunt_tick)
 
     def _end_hunt(self):
         self._hunt = None

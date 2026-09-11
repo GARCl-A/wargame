@@ -127,6 +127,38 @@ def test_market_order_opens_the_market_screen_scoped_to_the_group():
     assert g.order is None
 
 
+def test_hunt_stretch_keeps_another_groups_work_order_in_lockstep_with_the_clock():
+    """A hunt plays out its hours through `HuntScreen`, outside the normal
+    tick/orders loop -- it must still cost every OTHER busy group its share
+    of the clock (here: a lumber-yard shift), not just the 1 h approach that
+    got it to `HuntScreen` in the first place."""
+    import gartok.app as app_mod
+    random.seed(1)
+    lumber = Group([Unit("player")], node="lumber_yard")
+    hunters = Group([Unit("player")], node="wilds")
+    guild = Guild(None, groups=[lumber, hunters])
+    app = _app(guild)
+    lumber.order = orders.work(guild, lumber, 8)          # 8 h shift, no speedup -> remaining 8
+    hunters.order = orders.interactive("hunt")
+
+    app._advance()                                         # chases the 1 h approach
+    assert lumber.order.remaining == 7
+    assert isinstance(app.scene, app_mod.HuntScreen)
+
+    from gartok import hunt
+    orig = hunt.hunt_stretch
+    hunt.hunt_stretch = lambda state, rng=None: (4, False)  # a clean 4 h stretch, no ambush
+    try:
+        app.scene.hours = 4                                  # the setup-screen's chosen shift
+        app.scene.state.hours_left = app.scene.hours          # what CONFIRM does before the stretch
+        app.scene._do_stretch()
+    finally:
+        hunt.hunt_stretch = orig
+
+    assert lumber.order.remaining == 3                     # 7 - 4, not stuck at 7
+    assert app.scene.phase == "done"
+
+
 def test_arena_order_opens_squad_screen_with_offers_scoped_to_the_group():
     import gartok.app as app_mod
     random.seed(1)
