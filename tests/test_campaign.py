@@ -125,6 +125,22 @@ def test_a_lost_or_non_arena_fight_completes_no_arena_deed():
     assert _arena_bout(g2, n=1, node_id="wilds").deeds_earned == [] and g2.arena_reputation == 0
 
 
+def test_settle_takes_any_event_and_arena_deeds_ignore_non_battle_ones():
+    from gartok import factions
+    from gartok.guild import Guild
+    guild = Guild([Unit("player")])
+
+    # a non-battle event (arriving somewhere): nothing earned, nothing raised on
+    # the missing outcome
+    assert factions.settle(guild, factions.Event("travel", node=world.node("arena"))) == []
+    assert guild.reputation == {}
+
+    # the same event must not satisfy an arena deed -- those key off kind "battle"
+    open_before = {d.id for d in factions.open_deeds(guild)}
+    factions.settle(guild, factions.Event("travel", node=world.node("arena")))
+    assert {d.id for d in factions.open_deeds(guild)} == open_before
+
+
 # --------------------------------------------------------------------------- #
 # arena: the Champion of the Pit title                                         #
 # --------------------------------------------------------------------------- #

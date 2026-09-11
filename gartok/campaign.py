@@ -11,8 +11,9 @@ once it is over this maps the outcome onto that roster:
 - a win bumps the tally;
 - `factions.settle` checks the faction deeds against the result -- e.g. a first
   arena win completes "First Blood" and earns a point of reputation with the
-  Pits. The deed checks read `node`, `arena_tier` (a `world.Bout`) and
-  `squad_size` off the outcome, so those are set before `settle`.
+  Pits. It is handed a `factions.Event("battle", node=, outcome=)`; the deed
+  checks read `arena_tier` (a `world.Bout`), `squad_size` and `player_kos` off
+  the outcome, so those are set before `settle`.
 
 `app` owns the *screen* that comes next (loot, reward, or straight to the map);
 this module owns the *state change*, returned as a `BattleOutcome`.
@@ -89,7 +90,8 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     elif won and battle.lethal:                   # lethal win: loot the field
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
 
-    outcome.deeds_earned = factions.settle(guild, node, outcome)
+    outcome.deeds_earned = factions.settle(
+        guild, factions.Event("battle", node=node, outcome=outcome))
 
     if arena_offer and arena_offer.champion and won:
         _claim_champion_title(guild, squad, battle, outcome)

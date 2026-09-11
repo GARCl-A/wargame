@@ -3,7 +3,9 @@
 Draws `world.NODES` as a graph -- points joined by edges labelled with their
 travel cost in hours. The guild sits on one node (`guild.node`); click another
 and the guild walks the cheapest route there, the campaign clock advancing by
-the summed hours. Hovering a node previews that route.
+the summed hours. Hovering a node previews that route. Arriving runs
+`factions.settle` (a "travel" event), so a deed can fire on reaching a place --
+no faction has one yet, but the call site is live.
 
 The side panel shows the node the guild is standing on and what can be done
 there: a battle node opens the squad picker (`on_battle`), a market node the
@@ -16,7 +18,7 @@ Esc -> the pause menu (`app`), not a button here.
 
 import pygame
 
-from . import arena, world
+from . import arena, factions, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
@@ -97,6 +99,9 @@ class MapScreen(Screen):
         events = self.guild.pass_time(hours)
         self.guild.node = target.id
         self.notices = [f"Travelled to {target.name}: {hours} h."] + events
+        for d in factions.settle(self.guild, factions.Event("travel", node=target)):
+            self.notices.append(
+                f"DEED · {d.name}  +{d.rep} reputation with {factions.faction(d.faction).name}")
         if self.guild.empty:
             self.on_wipe()
 

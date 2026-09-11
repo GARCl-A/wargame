@@ -734,8 +734,13 @@ Neutral**).
 
 Registry in `factions.py` (`Faction` + `Deed`, in the style of `talents.py` /
 `abilities.py`); state on the `Guild` (`reputation = {id: points}`,
-`deeds_done`); `campaign.absorb_battle` calls `factions.settle(guild, node,
-outcome)` after folding the battle.
+`deeds_done`). `factions.settle(guild, event)` runs after any moment a deed
+might fire on and banks the ones whose condition now holds; a `factions.Event`
+carries `kind` ("battle", "travel", …), the `node`, and per-kind payload (a
+battle event carries the `campaign.BattleOutcome`). Live call sites: after a
+battle (`campaign.absorb_battle`) and on arriving somewhere on the map
+(`map_screen`). A market / hunt / hire trigger is one `settle` line at that flow
+when a non-arena faction grows a deed that needs it.
 
 > **A faction is an organisation, not a place.** It can hold ground across
 > several nodes. Reputation with it **only rises by completing *deeds*** — there
