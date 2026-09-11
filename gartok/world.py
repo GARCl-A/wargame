@@ -111,7 +111,7 @@ class Bout:
 # Silver still sits past any reputation the deeds can grant: room to grow.
 # Ordered cheapest first.
 ARENA_TIERS = [
-    Bout("Rookie pit",   entry=4,   purse=15,  enemies=1, rep=0,  level=0),
+    Bout("Rookie pit",   entry=4,   purse=15,  enemies=3, rep=0,  level=0),
     Bout("Bronze ring",  entry=15,  purse=55,  enemies=2, rep=3,  level=1),
     Bout("Iron cage",    entry=40,  purse=150, enemies=3, rep=5,  level=2),
     Bout("Silver arena", entry=100, purse=380, enemies=3, rep=10, level=3),

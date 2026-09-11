@@ -247,7 +247,7 @@ Staked, non-lethal bouts. Unlocked by reputation with The Pits.
 
 | Tier | Reputation | Stake | Purse | Opponents | Opponent level |
 |---|---|---|---|---|---|
-| Rookie pit | 0 | 4/fighter | 15 | 1 | 0 |
+| Rookie pit | 0 | 4/fighter | 15 | 3 | 0 |
 | Bronze ring | 3 | 15/fighter | 55 | 2 | 1 |
 | Iron cage | 5 | 40/fighter | 150 | 3 | 2 |
 | Silver arena | 10 | 100/fighter | 380 | 3 | 3 |
