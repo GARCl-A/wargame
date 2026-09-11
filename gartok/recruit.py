@@ -14,8 +14,14 @@ drag the recruiter's side down:
 
 `can_pitch` is the language gate; `convince` rolls the contest and returns a
 `Pitch` with the full breakdown for the screen to show; `enlist` binds the
-recruit to the roster (`recruited_by` = the recruiter's uid -- inert for now,
-the seam for morale / desertion later).
+recruit to the roster (`recruited_by` = the recruiter's uid).
+
+A member can only sponsor so many people (`capacity`): `BASE_RECRUIT_CAPACITY`
++ their Charisma modifier -- low-Charisma members cap out fast and become the
+guild's floor. The guild leader adds their own racial level on top, a strong
+standing bonus that keeps the guild growing even once everyone else is tapped
+out. `recruited_by` is read live off the current roster, so a dead recruiter's
+spent slots simply stop existing with them -- no bookkeeping to free by hand.
 
 The strangers themselves live on the guild (`taverna_pool`, persisted) and
 `refresh_pool` re-rolls them once a week -- so the faces are stable across visits
@@ -36,6 +42,8 @@ ALIGNMENT_PENALTY = 1          # -1 to the contest per step of alignment distanc
 TAVERNA_SIZE = 3               # strangers in the taverna at a time
 REFRESH_DAYS = 7               # the pool re-rolls once this many days pass
 
+BASE_RECRUIT_CAPACITY = 1      # + Charisma modifier -- how many people you could personally recruit
+
 
 def shared_languages(recruiter, candidate):
     """The tongues the two have in common (a pitch needs at least one)."""
@@ -49,6 +57,25 @@ def can_pitch(recruiter, candidate):
 def size_penalty(roster_size):
     """The recruiter's handicap from an already-crowded guild."""
     return SIZE_PENALTY * max(0, roster_size - FREE_SLOTS)
+
+
+def capacity(guild, unit):
+    """How many people `unit` could personally sponsor into the guild. The
+    guild leader's own racial level (both XP tracks) adds on top -- the one
+    mechanical thing `Guild.leader` does today, and the reason the role is
+    worth holding onto beyond flavour."""
+    cap = BASE_RECRUIT_CAPACITY + unit.mod_charisma
+    if unit is guild.leader:
+        cap += unit.racial_level
+    return max(0, cap)
+
+
+def slots_used(guild, unit):
+    return sum(1 for u in guild.roster if u.recruited_by == unit.uid)
+
+
+def slots_free(guild, unit):
+    return capacity(guild, unit) - slots_used(guild, unit)
 
 
 @dataclass

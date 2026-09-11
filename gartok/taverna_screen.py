@@ -48,9 +48,11 @@ class TavernaScreen(Screen):
     # ------------------------------------------------------------------ #
     def _eligible(self, cand):
         """Party members who could still pitch `cand` (share a tongue, not yet
-        barred for failing on them this week)."""
+        barred for failing on them this week, and still have room to sponsor
+        someone new)."""
         return [m for m in self.party
-                if recruit.can_pitch(m, cand) and not recruit.barred(self.guild, cand, m)]
+                if recruit.can_pitch(m, cand) and not recruit.barred(self.guild, cand, m)
+                and recruit.slots_free(self.guild, m) > 0]
 
     def _best(self, cand):
         """(member, net modifier) for the strongest pitch still open, or None."""
@@ -94,6 +96,9 @@ class TavernaScreen(Screen):
             return
         if recruit.barred(self.guild, cand, member):
             self.notice = f"{member.name} already tried {cand.name} this week."
+            return
+        if recruit.slots_free(self.guild, member) <= 0:
+            self.notice = f"{member.name} has no room to sponsor anyone else."
             return
         pitch = recruit.convince(member, cand, len(self.guild.roster))
         self.last[cand.uid] = (pitch, member)
@@ -235,10 +240,13 @@ class TavernaScreen(Screen):
         f = self.fonts
         pad = SP2
         cand = self.candidates[self.sel] if self.sel is not None else None
+        free = recruit.slots_free(self.guild, m)
         state = None
         if cand is not None:
             if recruit.barred(self.guild, cand, m):
                 state = ("TRIED", DANGER)
+            elif free <= 0:
+                state = ("FULL", DANGER)
             elif recruit.can_pitch(m, cand):
                 state = ("CAN SPEAK", OK)
             else:
@@ -255,6 +263,9 @@ class TavernaScreen(Screen):
         text(screen, f"CAR {m.mod_charisma:+}", f.mono_sm, WARN, (tok[0] + 22, r.y + pad + 16))
         text(screen, ", ".join(m.languages), f.body_sm, INK_FAINT,
              (r.x + pad, r.y + pad + 34))
+        slots_col = DANGER if free <= 0 else INK_FAINT
+        text(screen, f"{max(0, free)} slot(s) free", f.body_sm, slots_col,
+             (r.x + pad, r.y + pad + 48))
         if state is not None:
             text(screen, state[0], f.label, state[1], (r.x + pad, r.bottom - 16))
 

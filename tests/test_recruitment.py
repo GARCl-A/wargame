@@ -79,3 +79,57 @@ def test_enlist_binds_the_recruit_to_the_recruiter():
     g = Guild([r])
     recruit.enlist(g, c, r)
     assert c in g.roster and c.recruited_by == r.uid
+
+
+def test_recruit_capacity_is_base_plus_charisma_for_a_non_leader():
+    from gartok.guild import Guild
+    leader, m = _person(1, cha=4), _person(2, cha=2)   # highest CHA auto-leads
+    g = Guild([leader, m])
+    assert g.leader is leader
+    assert recruit.capacity(g, m) == recruit.BASE_RECRUIT_CAPACITY + 2
+
+
+def test_recruit_capacity_never_goes_negative():
+    from gartok.guild import Guild
+    leader, m = _person(1, cha=4), _person(2, cha=-4)
+    g = Guild([leader, m])
+    assert recruit.capacity(g, m) == 0
+
+
+def test_guild_leader_adds_their_racial_level_to_capacity():
+    from gartok.guild import Guild
+    leader, m = _person(1, cha=0), _person(2, cha=0)
+    g = Guild([leader, m])
+    assert g.leader is leader                          # tie on CHA -> first stays leader (max() default)
+    leader.set_track_level("combat", 3)
+    leader.set_track_level("work", 2)
+    assert leader.racial_level > 0
+    assert recruit.capacity(g, leader) == recruit.BASE_RECRUIT_CAPACITY + leader.racial_level
+    assert recruit.capacity(g, m) == recruit.BASE_RECRUIT_CAPACITY   # no leader bonus
+
+
+def test_slots_free_drops_as_recruits_are_enlisted_and_blocks_past_capacity():
+    from gartok.guild import Guild
+    r = _person(1, cha=0)                               # capacity == BASE_RECRUIT_CAPACITY == 1
+    g = Guild([r])
+    assert recruit.slots_free(g, r) == 1
+    recruit.enlist(g, _person(2), r)
+    assert recruit.slots_free(g, r) == 0   # the taverna screen's eligibility gate reads this same check
+
+
+def test_a_dead_recruiters_line_keeps_working():
+    """Killing a recruiter doesn't cripple their own recruits' ability to
+    keep the chain going -- `recruited_by` pointing at a dead uid is inert,
+    not a standing penalty on the descendant."""
+    from gartok.guild import Guild
+    r, extra = _person(1, cha=0), _person(3, cha=4)
+    g = Guild([r, extra])
+    cand = _person(2, cha=4)
+    recruit.enlist(g, cand, r)
+    g.remove_members([r])                                # r dies; cand and extra survive
+    assert cand.recruited_by == r.uid                     # the record itself doesn't change
+    assert cand in g.roster and r not in g.roster
+    assert recruit.slots_free(g, cand) == recruit.BASE_RECRUIT_CAPACITY + 4   # unaffected
+    grandchild = _person(4)
+    recruit.enlist(g, grandchild, cand)                   # the chain still extends
+    assert grandchild.recruited_by == cand.uid

@@ -111,7 +111,8 @@ World systems, outside combat:
   language + Charisma + alignment; the arena's staked non-lethal bouts; field
   loot; the lumber yard's day-labour wage.
 - **Recruitment**: a tavern pool refreshed weekly; a Charisma-vs-Charisma pitch,
-  no money (`recruit.py`).
+  no money; each member can only sponsor so many people (Charisma-gated), the
+  guild leader's own level adding a strong bonus on top (`recruit.py`).
 - **Factions & reputation**: one-shot deeds earn per-faction standing
   (`factions.py`); the arena's champion title lives in `arena.py`.
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,

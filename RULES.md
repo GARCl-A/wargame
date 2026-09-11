@@ -672,9 +672,21 @@ different questions:
   Past it, `Group.overextension` counts the excess and docks that amount, flat,
   off every member's **Mental Defense** (`Unit._derive_ac`) — an overstretched
   group doesn't get blocked from growing, it just gets easier to rattle
-  (Demoralize, and any future check against Mental Defense). This is the
-  answer to "what stops the guild from being 100,000 characters": not a wall,
-  a cost that keeps compounding.
+  (Demoralize, and any future check against Mental Defense). This caps how big
+  one *group* can comfortably be — it does nothing to stop the roster itself
+  from splitting into any number of small groups instead.
+- **A hard wall on the roster itself.** `recruit.capacity(guild, unit)`
+  = `BASE_RECRUIT_CAPACITY` (1) + the unit's own Charisma modifier — how many
+  people *that specific member* can personally sponsor into the guild
+  (`recruit.slots_free`, checked against how many roster members already carry
+  their uid in `recruited_by`). Low-Charisma members cap out fast and become
+  the guild's floor — recruited, but unable to recruit in turn. **The guild
+  leader adds their own racial level on top** — the one mechanical thing
+  `Guild.leader` does today, and why the title is worth keeping past the
+  draft. This is the actual answer to "what stops the guild from being
+  100,000 characters": every new member needs a living sponsor with room left,
+  so growth is a tree fed mostly by the leader, not a free action for anyone
+  on the roster.
 
 Recruitment pitches (`recruit.py`) already let the player pick who does the
 talking — the leader doesn't override that choice, it only fills in where no
