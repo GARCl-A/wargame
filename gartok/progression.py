@@ -11,7 +11,7 @@ experience (combat, work) has its own level, and its own talent tree in
 - **Work XP** is hours worked, banked in 16 h marks (`Unit.work_xp`) -- but
   gated exactly like combat XP: an activity below your work level teaches you
   nothing (`work_xp_hours`). The lumber yard is level 0 bare-handed, level 1
-  swinging your own Axe (`economy.lumber_level`); hunting the wilds is level 3
+  once you own an Axe -- carried is enough (`economy.lumber_level`); hunting the wilds is level 3
   (`hunt.HUNT_LEVEL`), risk buying a longer runway before it too caps out.
 - The **racial track** earns nothing of its own: its "XP" is the sum of the
   other track levels (`Unit.racial_xp`), run through `RACIAL_XP_THRESHOLDS`.

@@ -74,6 +74,17 @@ def test_lumber_level_is_zero_unless_swinging_your_own_axe():
     assert economy.lumber_level(u) == economy.LUMBER_LEVEL_OWN_AXE == 1
 
 
+def test_lumber_level_counts_an_axe_carried_in_the_pack_too():
+    """You don't have to fight with the Axe in hand to get credit for owning
+    one -- it just has to be somewhere on you when you show up for the shift."""
+    u = _unit(seed=7)
+    u.equipped_weapon = "Dagger"
+    u._base_inventory = []
+    assert economy.lumber_level(u) == 0
+    u._base_inventory = ["Axe"]
+    assert economy.lumber_level(u) == economy.LUMBER_LEVEL_OWN_AXE == 1
+
+
 def test_own_axe_pays_a_better_wage():
     assert economy.lumber_pay(16, level=0) == 12
     assert economy.lumber_pay(16, level=1) == 16

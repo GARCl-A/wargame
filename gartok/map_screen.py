@@ -533,13 +533,32 @@ class MapScreen(Screen):
             y += 42
             text(screen, "trade hours of the day for copper  ·  pays little, but it's sure",
                  f.body_sm, INK_FAINT, (cx, y))
-            outgrown = [u for u in self.selected.members
-                       if u.work_level > economy.lumber_level(u)]
-            if outgrown:
-                y += 16
-                names = ", ".join(u.name for u in outgrown)
-                text(screen, f"{names}: past this job at their level -- bring their own "
+            y += 16
+            for u in self.selected.members:
+                level = economy.lumber_level(u)
+                own_axe = level >= economy.LUMBER_LEVEL_OWN_AXE
+                wage = economy.LUMBER_WAGE_OWN_AXE if own_axe else economy.LUMBER_WAGE
+                status = "own Axe" if own_axe else "foreman's axe"
+                text(screen, f"{u.name}: {status} -- {wage}c / "
+                     f"{economy.LUMBER_BLOCK_HOURS}h block",
+                     f.body_sm, OK if own_axe else INK_FAINT, (cx, y))
+                y += 15
+            need_axe = [u for u in self.selected.members
+                       if u.work_level > 0 and economy.lumber_level(u) == 0]
+            capped = [u for u in self.selected.members
+                     if economy.lumber_level(u) >= economy.LUMBER_LEVEL_OWN_AXE
+                     and u.work_level > economy.lumber_level(u)]
+            if need_axe:
+                y += 4
+                names = ", ".join(u.name for u in need_axe)
+                text(screen, f"{names}: past this job bare-handed -- bring their own "
                      "Axe for a better wage and to keep banking work XP",
+                     f.body_sm, WARN, (cx, y))
+            if capped:
+                y += 4
+                names = ", ".join(u.name for u in capped)
+                text(screen, f"{names}: has outgrown this job even with their own Axe -- "
+                     "no more work XP here, look for tougher work",
                      f.body_sm, WARN, (cx, y))
         elif here.is_wilds:
             for key, label, note in self._wilds_actions():
