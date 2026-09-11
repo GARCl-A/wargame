@@ -24,7 +24,7 @@ not a button here.
 
 import pygame
 
-from . import arena, orders, world
+from . import arena, economy, orders, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
@@ -514,6 +514,14 @@ class MapScreen(Screen):
             y += 42
             text(screen, "trade hours of the day for copper  ·  pays little, but it's sure",
                  f.body_sm, INK_FAINT, (cx, y))
+            outgrown = [u for u in self.selected.members
+                       if u.work_level > economy.lumber_level(u)]
+            if outgrown:
+                y += 16
+                names = ", ".join(u.name for u in outgrown)
+                text(screen, f"{names}: past this job at their level -- bring their own "
+                     "Axe for a better wage and to keep banking work XP",
+                     f.body_sm, WARN, (cx, y))
         elif here.is_wilds:
             for key, label, note in self._wilds_actions():
                 r = pygame.Rect(cx, y, cw, 38)

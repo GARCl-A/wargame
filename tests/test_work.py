@@ -59,3 +59,56 @@ def test_work_xp_is_one_mark_per_16_hours_and_survives_a_save():
     u.work_hours = 32
     assert u.work_xp == 2
     assert Unit.from_save(persist.unit_to_dict(u)).work_hours == 32
+
+
+# --------------------------------------------------------------------------- #
+# work-XP is gated like combat XP: nothing for a job you have outgrown         #
+# --------------------------------------------------------------------------- #
+
+def test_lumber_level_is_zero_unless_swinging_your_own_axe():
+    u = _unit(seed=7)
+    assert economy.lumber_level(u) == 0
+    u.equipped_weapon = "Dagger"
+    assert economy.lumber_level(u) == 0
+    u.equipped_weapon = "Axe"
+    assert economy.lumber_level(u) == economy.LUMBER_LEVEL_OWN_AXE == 1
+
+
+def test_own_axe_pays_a_better_wage():
+    assert economy.lumber_pay(16, level=0) == 12
+    assert economy.lumber_pay(16, level=1) == 16
+
+
+def test_outgrown_lumber_yard_pays_but_teaches_nothing():
+    """A work-level-1 worker gets zero work-XP from the bare-handed job (level
+    0 < their level 1) but full pay -- and full XP again once they bring their
+    own Axe, which lifts the job to level 1."""
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    random.seed(4)
+    u = Unit("player")
+    u.gold = 0
+    u.work_hours = economy.LUMBER_XP_HOURS * 2          # work_xp 2 -> work level 1
+    u._base_inventory = []
+    u._derive_combat()
+    before = u.work_hours
+    guild = Guild([u], clock=Clock(6 * 3600))
+    guild.work_shift([u], 16)
+    assert u.gold == 12 and u.work_hours == before      # paid, but no XP: outgrown
+
+    u.gold = 0
+    u.give_to_hand("Axe")
+    guild.work_shift([u], 16)
+    assert u.gold == 16                                 # the better, own-Axe wage
+    assert u.work_hours == before + 16                  # level 1 job teaches a level 1 worker
+
+
+def test_hunting_is_a_level_3_job_that_outlasts_the_lumber_yard():
+    from gartok import hunt
+    u = Unit("player")
+    u.work_hours = economy.LUMBER_XP_HOURS * 6          # work_xp 6 -> work level 2
+    state = hunt.HuntState(party=[u], node=world.node("wilds"),
+                           hours_left=0, hours_hunted=10)
+    before = u.work_hours
+    hunt.grant_meat(state)
+    assert u.work_hours == before + 10                  # level 3 job still teaches a level 2 worker

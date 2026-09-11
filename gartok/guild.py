@@ -24,7 +24,7 @@ so they stay the same face-to-face across visits; `recruit.refresh_pool` swaps
 them for a new set once a week.
 """
 
-from . import data, economy
+from . import data, economy, progression
 from .clock import Clock
 from .group import Group
 
@@ -273,13 +273,14 @@ class Guild:
         caller already ran `pass_time`. `hours` is the nominal shift length
         (what pay/XP are based on); `clock_hours` is how long it actually took
         (Brisk Hands can shrink it), used only for the "done early" note."""
-        pay = economy.lumber_pay(hours)
         earners = [u for u in workers if u in self.roster]   # a long shift can starve one
         paid = []
         for u in earners:
+            level = economy.lumber_level(u)
+            pay = economy.lumber_pay(hours, level)
             gain = round(pay * (1 + u.talent_bonus("coin_gain")))
             u.gold += gain
-            u.work_hours += hours
+            u.work_hours += progression.work_xp_hours(hours, level, u.work_level)
             u.collect_levels()                 # more work marks can lift the mean level
             paid.append(gain)
 

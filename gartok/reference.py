@@ -16,7 +16,7 @@ hand and points here for the numbers.
 import sys
 from pathlib import Path
 
-from . import abilities, data, economy, factions, progression, talents, world
+from . import abilities, data, economy, factions, hunt, progression, talents, world
 
 REFERENCE_PATH = Path(__file__).resolve().parent.parent / "REFERENCE.md"
 
@@ -172,7 +172,10 @@ def _constants():
         ("Starting wealth", f"{economy.STARTING_WEALTH_DICE[0]}d"
          f"{economy.STARTING_WEALTH_DICE[1]} copper"),
         ("Resale factor", f"{economy.SELL_FACTOR:g} of buy price"),
-        ("Lumber wage", f"{economy.LUMBER_WAGE} cp per {economy.LUMBER_BLOCK_HOURS} h"),
+        ("Lumber wage", f"{economy.LUMBER_WAGE} cp per {economy.LUMBER_BLOCK_HOURS} h "
+         f"(level 0, bare-handed); {economy.LUMBER_WAGE_OWN_AXE} cp with your own Axe "
+         f"(level {economy.LUMBER_LEVEL_OWN_AXE})"),
+        ("Hunting job level", hunt.HUNT_LEVEL),
         ("Bank strongbox", f"{economy.BANK_CHEST_PRICE} cp to rent, holds "
          f"{economy.BANK_CHEST_CAPACITY} kg"),
         ("Combat XP thresholds", ", ".join(map(str, progression.COMBAT_XP_THRESHOLDS))),

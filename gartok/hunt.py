@@ -19,12 +19,14 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 import random
 from dataclasses import dataclass
 
-from . import encounters
+from . import encounters, progression
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat
 HUNT_SHIFT_HOURS = (4, 8, 12, 16)   # lengths offered, like the lumber yard
 MEAT_ITEM = "Meat"
+HUNT_LEVEL = 3                   # the wilds' job level: real risk, so it keeps
+                                 # paying work-XP well past where the lumber yard caps
 
 
 @dataclass
@@ -70,7 +72,7 @@ def grant_meat(state):
         return ["Nobody made it back with the haul."]
 
     for u in hunters:
-        u.work_hours += state.hours_hunted
+        u.work_hours += progression.work_xp_hours(state.hours_hunted, HUNT_LEVEL, u.work_level)
         u.collect_levels()
 
     meat = state.meat

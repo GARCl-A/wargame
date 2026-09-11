@@ -8,7 +8,11 @@ experience (combat, work) has its own level, and its own talent tree in
 - **Combat XP** is earned only for downing an enemy of your combat level or
   above, worth `(their level - your level) + 1` (`xp_award`). Below your level
   is worth nothing -- a veteran mopping up fresh recruits does not level.
-- **Work XP** is the lumber-yard marks (`Unit.work_xp`, one per 16 h).
+- **Work XP** is hours worked, banked in 16 h marks (`Unit.work_xp`) -- but
+  gated exactly like combat XP: an activity below your work level teaches you
+  nothing (`work_xp_hours`). The lumber yard is level 0 bare-handed, level 1
+  swinging your own Axe (`economy.lumber_level`); hunting the wilds is level 3
+  (`hunt.HUNT_LEVEL`), risk buying a longer runway before it too caps out.
 - The **racial track** earns nothing of its own: its "XP" is the sum of the
   other track levels (`Unit.racial_xp`), run through `RACIAL_XP_THRESHOLDS`.
   Its level is what drives the hit-die gain and grants the racial talent picks
@@ -63,6 +67,15 @@ def xp_award(attacker_level, victim_level):
     """Combat XP for downing a `victim_level` enemy while at `attacker_level`:
     `(victim - attacker) + 1` if the victim is at or above you, else 0."""
     return victim_level - attacker_level + 1 if victim_level >= attacker_level else 0
+
+
+def work_xp_hours(hours, activity_level, worker_level):
+    """Hours of a work shift that actually bank toward work-XP: the same "no
+    free lunch" gate as `xp_award`, applied to a job instead of a kill -- full
+    credit for an activity at or above your own work level, none once you have
+    outgrown it (so a lumber yard you can already do in your sleep stops
+    teaching you anything, even though it still pays)."""
+    return hours if activity_level >= worker_level else 0
 
 
 def to_next(thresholds, xp):

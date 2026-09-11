@@ -271,7 +271,8 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Lantern radius | 6 sq |
 | Starting wealth | 5d10 copper |
 | Resale factor | 0.5 of buy price |
-| Lumber wage | 3 cp per 4 h |
+| Lumber wage | 3 cp per 4 h (level 0, bare-handed); 4 cp with your own Axe (level 1) |
+| Hunting job level | 3 |
 | Bank strongbox | 50 cp to rent, holds 10 kg |
 | Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105 |
 | Work XP thresholds | 2, 6, 12, 20, 30, 42 |

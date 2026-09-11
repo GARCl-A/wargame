@@ -29,9 +29,11 @@ CHA_DEAL_STEP = 0.04                    # deal fraction per point of haggle Char
 # 16 h day feeds you and leaves a little over, while a won arena bout or a wilds
 # haul pays several times better. It is a floor, not a living.
 LUMBER_WAGE = 3                         # copper earned per whole block worked
+LUMBER_WAGE_OWN_AXE = 4                 # ...more, once you swing your own Axe (see lumber_level)
 LUMBER_BLOCK_HOURS = 4                  # ...one block is four hours at the yard
 LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mark
 LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
+LUMBER_LEVEL_OWN_AXE = 1                # the yard's ceiling once you bring your own Axe
 
 # The Bankers rent the guild its first shared property: a strongbox at the bank
 # in the City. A flat fee for the right to it, no reputation gate. One tier for
@@ -167,10 +169,19 @@ def deal_value(mods, item, side):
     return round(max(DEAL_MIN, min(DEAL_MAX, total)), 3)
 
 
-def lumber_pay(hours):
-    """Flat wage for `hours` at the lumber yard: `LUMBER_WAGE` per whole block,
-    leftover hours unpaid (you are paid by the block, not the minute)."""
-    return LUMBER_WAGE * (int(hours) // LUMBER_BLOCK_HOURS)
+def lumber_level(unit):
+    """The lumber yard's job level for this worker: 0 with the foreman's lent
+    axe, 1 once they show up swinging their own Axe. Gates work-XP the same
+    way `progression.xp_award` gates combat XP -- see `work_xp_hours`."""
+    return LUMBER_LEVEL_OWN_AXE if unit.equipped_weapon == "Axe" else 0
+
+
+def lumber_pay(hours, level=0):
+    """Wage for `hours` at the lumber yard, paid by the whole block, leftover
+    hours unpaid. Your own Axe (`level` >= LUMBER_LEVEL_OWN_AXE) cuts faster,
+    for a better wage."""
+    wage = LUMBER_WAGE_OWN_AXE if level >= LUMBER_LEVEL_OWN_AXE else LUMBER_WAGE
+    return wage * (int(hours) // LUMBER_BLOCK_HOURS)
 
 
 def _base_price(name):

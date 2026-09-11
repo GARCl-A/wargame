@@ -450,14 +450,14 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
     assert plain.gold == base
     assert rich.gold == round(base * 1.20)        # Piecework: +20%
     assert quick.gold == base                     # speed does not touch the pay
-    assert all(u.work_hours == economy.LUMBER_XP_HOURS * 6 + 16
-               for u in (plain, rich, quick))     # full hours banked for XP
+    assert all(u.work_hours == economy.LUMBER_XP_HOURS * 6
+               for u in (plain, rich, quick))     # already work level 2: this job teaches nothing
     assert guild.clock.seconds == 6 * 3600 + 16 * 3600    # plain drags: full 16 h
 
     # a Brisk worker on their own: 16 h of work banked in 14.4 h of the clock
     solo = Guild([_work_ready("carrier", "brisk_hands")], clock=Clock(6 * 3600))
     solo.work_shift(solo.roster, 16)
-    assert solo.roster[0].work_hours == economy.LUMBER_XP_HOURS * 6 + 16
+    assert solo.roster[0].work_hours == economy.LUMBER_XP_HOURS * 6   # already outgrew this job
     assert solo.clock.seconds == 6 * 3600 + round(16 * 0.9 * 3600)
 
 
