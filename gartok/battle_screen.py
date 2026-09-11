@@ -258,7 +258,7 @@ class BattleScreen(Screen):
 
     def _after_player_action(self):
         b = self.battle
-        if b.is_ctf:                          # stepping onto the enemy flag ends it now
+        if b.is_ctf:                          # pick up a flag / plant it home right away
             b.check_objective()
         if b.winner is not None or b.active.team != "player":
             return
@@ -609,11 +609,13 @@ class BattleScreen(Screen):
         pygame.draw.polygon(screen, INK, flag, 1)
 
     def _draw_flags(self, screen):
-        for team, pos in self.battle.flags.items():
+        for team in self.battle.flags:
+            pos = self.battle.flag_pos(team)      # home, dropped, or riding its carrier
             if pos is None:
                 continue
             # your own flag you always know; the enemy's you have to find --
-            # it stays hidden until a cell you can see falls on it.
+            # it stays hidden until a cell you can see falls on it (even while
+            # someone is running it -- you have to spot the runner).
             if team == "enemy" and pos not in self._visible:
                 continue
             self._draw_pennant(screen, pos, PLAYER_C if team == "player" else ENEMY_C)
@@ -716,6 +718,14 @@ class BattleScreen(Screen):
             pygame.draw.rect(screen, (30, 30, 36), bar)
             pygame.draw.rect(screen, OK if frac > 0.4 else WARN if frac > 0.15 else DANGER,
                              pygame.Rect(bar.x, bar.y, int(bar.w * frac), bar.h))
+            if b.is_ctf:
+                flag_team = next((t for t, c in b.flag_carrier.items() if c is u), None)
+                if flag_team is not None:
+                    badge = pygame.Rect(0, 0, 34, 15)
+                    badge.center = (r.centerx, r.y + 8)
+                    panel(screen, badge, fill=PLAYER_C if flag_team == "player" else ENEMY_C,
+                          border=None, radius=4)
+                    text(screen, "FLAG", f.mono_sm, (15, 15, 20), badge.center, center=True)
             if self.inspect is u:
                 armed = self._armed is u
                 pygame.draw.rect(screen, DANGER if armed else INK, r,
@@ -865,7 +875,8 @@ class BattleScreen(Screen):
             msg, col = ("enemies down  ·  stabilize the downed or space "
                         "to let the counter run"), WARN
         elif self.battle.is_ctf:
-            msg, col = "reach the red flag to win  ·  guard your own", INFO
+            msg, col = ("grab the enemy flag and bring it home to win  ·  "
+                       "guard your own, and whoever's carrying it"), INFO
         else:
             msg, col = "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
         text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))

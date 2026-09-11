@@ -70,6 +70,12 @@ def _target(battle, unit):
     visible = [e for e in enemies if battle.can_see_unit(unit, e)]
     # nobody in sight: advance toward the nearest one anyway
     pool = visible or enemies
+    if battle.is_ctf:
+        # someone is running off with OUR flag -- stopping them beats whatever
+        # else this unit would otherwise pick a fight over
+        runner = battle.flag_carrier[unit.team]
+        if runner in pool:
+            return runner
     return min(pool, key=lambda e: (battle.units_distance(unit, e), e.hp))
 
 
@@ -143,11 +149,16 @@ def _step_over_terrain(battle, unit, target):
 
 
 def _ctf_goal(battle, unit):
-    """The cell a capture-the-flag runner is racing for -- the player's flag, once
-    it has been planted. None for a non-runner, or before the flag is down."""
+    """The cell a capture-the-flag runner is racing for: the player's flag
+    until they scoop it up, then their own side's flag to plant it on and
+    score. None for a non-runner, or before both flags are down."""
     if not battle.is_ctf or not unit.ctf_runner:
         return None
-    return battle.flags["player"]
+    if battle.flags["player"] is None or battle.flags["enemy"] is None:
+        return None
+    if battle.flag_carrier["player"] is unit:
+        return battle.flags["enemy"]          # got it -- now get it home
+    return battle.flag_pos("player")          # not carrying yet: go get it
 
 
 def _should_flee(battle, unit):
@@ -181,9 +192,9 @@ def take_turn(battle, unit):
             continue
 
         goal = _ctf_goal(battle, unit)
-        if goal is not None:                  # flag runner: race for the player's flag
+        if goal is not None:                  # flag runner: fetch it, then race it home
             if goal in battle.cells_of(unit):
-                break                         # on it -- end_turn calls the capture
+                break                         # on it -- end_turn picks it up / scores it
             # step ONTO the flag cell (not adjacent, the way `path_step_toward`
             # stops next to a unit) -- a downed body lying on it does not block.
             reach = battle.reachable(unit)

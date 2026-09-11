@@ -88,8 +88,8 @@ def brawl_bout():
 
 def ctf_bout():
     """The Games' capture-the-flag bout: same stake and field as the brawl, but
-    fought on a `FlagScenario` -- it ends when a fighter reaches the enemy flag,
-    not when a side is wiped."""
+    fought on a `FlagScenario` -- it ends when a fighter carries the enemy flag
+    back to their own, not when a side is wiped."""
     return world.Bout("Games: Capture the Flag", entry=STAGE2_ENTRY,
                       purse=STAGE2_PURSE, enemies=STAGE2_ENEMIES,
                       stage2=True, ctf=True)

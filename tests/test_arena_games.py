@@ -79,21 +79,45 @@ def test_the_boss_ctf_runs_on_the_authored_map_with_the_brothers_placed():
     assert brothers == {"Peep": (17, 8), "Ribit": (18, 14), "Bufo": (20, 8)}
 
 
-def test_reaching_the_enemy_flag_wins_it_without_a_wipe():
+def test_stepping_on_the_enemy_flag_picks_it_up_not_an_instant_win():
     b = _ctf_battle()
     b.flags["player"] = (1, 1)
     assert b.scenario.win_check(b) is None                 # nobody on a flag yet
     b.player_units[0].pos = b.flags["enemy"]
+    assert b._check_winner() is None                       # scooped up, not home yet
+    assert b.flag_carrier["enemy"] is b.player_units[0]
+    assert b.flag_pos("enemy") == b.flags["enemy"]          # rides along at the carrier
+
+
+def test_carrying_the_enemy_flag_home_wins_it_without_a_wipe():
+    b = _ctf_battle()
+    b.flags["player"] = (1, 1)
+    b.flag_carrier["enemy"] = b.player_units[0]             # already holding it
+    b.player_units[0].pos = b.flags["player"]               # brings it home
     assert b._check_winner() == "player"
     assert b.player_units[0].survived and not b.enemy_units[0].dead   # non-lethal
 
 
-def test_enemy_on_the_player_flag_wins_for_the_enemy():
+def test_enemy_carrying_the_player_flag_home_wins_for_the_enemy():
     b = _ctf_battle()
     b.flags["player"] = (2, 3)
     b.enemy_units[0].pos = (2, 3)
+    assert b._check_winner() is None                       # scooped up, not home yet
+    assert b.flag_carrier["player"] is b.enemy_units[0]
+    b.enemy_units[0].pos = b.flags["enemy"]                 # brings it home
     assert b._check_winner() == "enemy"
     assert b.player_units[0].survived                      # a lost bout kills nobody
+
+
+def test_a_downed_carrier_drops_the_flag_where_they_fell():
+    b = _ctf_battle()
+    b.flags["player"] = (1, 1)
+    carrier = b.player_units[0]
+    carrier.pos = (5, 5)
+    b.flag_carrier["enemy"] = carrier                       # already holding it
+    carrier.take_damage(999, b.log)
+    assert b.scenario.win_check(b) is None
+    assert b.flag_carrier["enemy"] is None and b.flags["enemy"] == (5, 5)
 
 
 def test_standing_on_your_own_flag_does_nothing():
@@ -132,25 +156,47 @@ def test_a_runner_closes_on_the_player_flag():
     assert abs(runner.pos[0] - 1) < before                  # moved toward the flag
 
 
-def test_a_runner_captures_over_a_downed_body_on_the_flag():
-    b = _ctf_battle(n_enemy=1)
+def test_a_runner_scoops_up_the_flag_over_a_downed_body_on_it():
+    random.seed(0)
+    # a second, untouched player unit keeps the fight from ending by plain
+    # elimination once `body` goes down -- this test is about the flag alone.
+    b = Battle([Unit("player"), Unit("player")], [Unit("enemy")],
+              scenario=FlagScenario(), lethal=False, arena=True)
     b.board.walls = set()
     b.flags["player"] = (2, 5)
     runner = b.enemy_units[0]
     runner.ctf_runner = True
     runner.pos = (6, 5)
     runner.char.speed = 3
-    body = b.player_units[0]                                # a KO'd fighter lying on the flag
+    body, safe = b.player_units                             # a KO'd fighter lying on the flag
     body.pos = (2, 5)
     body.take_damage(999, b.log)
+    safe.pos = (0, 0)
     assert not body.alive and (2, 5) not in b.occupied()   # a body does not hold the cell
     b.order = [runner]
     b.turn_idx = 0
     for _ in range(6):
-        if b.winner:
+        if b.flag_carrier["player"] is runner:
             break
         ai.take_turn(b, runner)
-    assert b.winner == "enemy"                              # walked onto the flag over the body
+    assert b.flag_carrier["player"] is runner               # walked onto the flag over the body
+    assert b.winner is None                                 # picked up, not home yet
+
+
+def test_a_runner_carrying_the_flag_heads_home_next():
+    b = _ctf_battle()
+    b.board.walls = set()
+    b.flags["player"] = (1, 1)
+    runner = b.enemy_units[0]
+    runner.ctf_runner = True
+    runner.pos = (1, 5)
+    b.flag_carrier["player"] = runner                        # already holding it
+    home_x = b.flags["enemy"][0]
+    before = abs(runner.pos[0] - home_x)
+    b.order = [runner]
+    b.turn_idx = 0
+    ai.take_turn(b, runner)
+    assert abs(runner.pos[0] - home_x) < before
 
 
 def test_a_non_runner_ignores_the_flag():
@@ -165,6 +211,24 @@ def test_a_non_runner_ignores_the_flag():
     b.turn_idx = 0
     ai.take_turn(b, plain)
     assert plain.pos[0] >= 10                               # never chased the far-left flag
+
+
+def test_a_defender_chases_whoever_is_carrying_the_enemys_flag():
+    """A non-runner would normally go for the nearest/weakest foe -- but once
+    someone is running off with its own side's flag, stopping them takes
+    priority over any other fight, even one that is closer or an easier kill."""
+    random.seed(0)
+    b = Battle([Unit("player"), Unit("player")], [Unit("enemy")],
+              scenario=FlagScenario(), lethal=False, arena=True)
+    b.board.walls = set()
+    d = b.enemy_units[0]
+    d.ctf_runner = False
+    d.pos = (10, 5)
+    near_weak, carrier = b.player_units
+    near_weak.pos, carrier.pos = (11, 5), (15, 5)           # near_weak is closer *and* weaker
+    near_weak.hp, carrier.hp = 1, near_weak.hp_max
+    b.flag_carrier["enemy"] = carrier                        # carrying OUR flag away
+    assert ai._target(b, d) is carrier
 
 
 def test_the_enemy_flag_stays_hidden_until_you_can_see_its_cell():

@@ -122,11 +122,15 @@ def own_half(team, cols=COLS):
 
 
 class _FlagObjective:
-    """Capture the flag: each side has a flag, and the bout ends the instant a
-    standing fighter reaches the *other* side's flag -- KO everyone and walk
-    over, or just run for it. The player plants theirs anywhere in the left half
-    at the start (`battle.flags["player"]`, set by `battle_screen`); the enemy's
-    is dropped in the right half by `auto_place_enemy_flag`, which the concrete
+    """Capture the flag: each side has a flag, and a bout is won by carrying
+    the *other* side's flag back to your own -- KO everyone and walk it home,
+    or just run it past them. Stepping onto an unclaimed flag scoops it up
+    (no action spent); it then rides along at the carrier's position until
+    they either plant it back on their own flag's cell (a capture) or go
+    down, dropping it right where they fell for anyone to pick up again. The
+    player plants theirs anywhere in the left half at the start
+    (`battle.flags["player"]`, set by `battle_screen`); the enemy's is dropped
+    in the right half by `auto_place_enemy_flag`, which the concrete
     scenario's `build` must call after `super().build`.
 
     Mixed in front of a terrain scenario: `FlagScenario` (the procedural pit),
@@ -151,16 +155,33 @@ class _FlagObjective:
                     if (x, y) not in taken]
         battle.flags["enemy"] = rng.choice(free) if free else (cols - 1, rows // 2)
 
+    def _update_carriers(self, battle):
+        """Drop anything its carrier can no longer hold (downed), then let a
+        standing fighter scoop up whichever flag they are standing on -- only
+        the *other* team may carry a given flag."""
+        for team, carrier in battle.flag_carrier.items():
+            if carrier is not None and not carrier.alive:
+                battle.flags[team] = carrier.pos
+                battle.flag_carrier[team] = None
+
+        for team, pos in battle.flags.items():
+            if battle.flag_carrier[team] is not None or pos is None:
+                continue                          # already held, or still being planted
+            holder = next((u for u in battle.units
+                          if u.alive and u.team != team and pos in battle.cells_of(u)), None)
+            if holder is not None:
+                battle.flag_carrier[team] = holder
+
     def win_check(self, battle):
-        flags = battle.flags
-        if flags["player"] is None or flags["enemy"] is None:
+        if battle.flags["player"] is None or battle.flags["enemy"] is None:
             return None                       # still planting -- no objective yet
-        for u in battle.units:
-            if not u.alive:
+        self._update_carriers(battle)
+        for carrier in battle.flag_carrier.values():
+            if carrier is None or not carrier.alive:
                 continue
-            goal = flags["enemy"] if u.team == "player" else flags["player"]
-            if goal in battle.cells_of(u):
-                return u.team
+            home = battle.flags[carrier.team]     # the carrier's own side's flag
+            if home is not None and home in battle.cells_of(carrier):
+                return carrier.team
         return None
 
 

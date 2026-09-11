@@ -48,9 +48,13 @@ class Battle:
         self._pf_cache = {}                   # per-turn Dijkstra field cache (see _pf_field)
         # capture-the-flag: {"player": cell|None, "enemy": cell|None}, else None.
         # the player's flag is planted by `battle_screen`; the scenario drops the
-        # enemy's during `build`.
-        self.flags = ({"player": None, "enemy": None}
-                      if getattr(self.scenario, "is_ctf", False) else None)
+        # enemy's during `build`. A flag's cell holds still while it sits at
+        # home or lies dropped; while `flag_carrier[team]` is a unit (always
+        # from the *other* team -- you can't carry your own colours), `flags`
+        # is stale and `flag_pos` reads the carrier's position instead.
+        is_ctf = getattr(self.scenario, "is_ctf", False)
+        self.flags = {"player": None, "enemy": None} if is_ctf else None
+        self.flag_carrier = {"player": None, "enemy": None} if is_ctf else None
         self.scenario.build(self)            # board + deployment + scatter
         self.round_no = 1
         self.winner = None
@@ -75,6 +79,12 @@ class Battle:
     def awaiting_flag(self):
         """The player still has to plant their flag before the fight can start."""
         return self.is_ctf and self.flags["player"] is None
+
+    def flag_pos(self, team):
+        """Where `team`'s flag actually is right now: on whoever is running it
+        (always the other side), or sitting still at `flags[team]`."""
+        carrier = self.flag_carrier[team]
+        return carrier.pos if carrier is not None else self.flags[team]
 
     def _assign_flag_runners(self):
         """Tag the fastest half of the enemy side as flag runners -- the AI sends
