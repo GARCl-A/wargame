@@ -146,7 +146,7 @@ class App:
         if node.arena and "arena_dethrone" not in self.guild.deeds_done:
             offers.append(arena.champion_bout())
         elif node.arena:                       # champion beaten: the Games are open
-            offers += [arena.brawl_bout(), arena.ctf_bout()]
+            offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]
         disabled = {u for u in self.guild.roster if u.incapacitated}
         self.scene = SquadScreen(self.fonts, self.guild.roster, node,
                                  on_confirm=self._start_battle, on_back=self._start_map,

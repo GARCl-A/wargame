@@ -7,7 +7,9 @@ back to `app`; back returns to the map. Members left behind are untouched.
 
 Arena mode (`arena_offers` given): a strip of stake tiers sits above the roster.
 Entry is staked per fighter (`entry` x squad size), so confirm also needs the
-picked members' combined gold to cover that whole fee.
+picked members' combined gold to cover that whole fee. Each bout caps the squad
+at its own `player_cap` (matched to the opponent count), so `max_pick` tracks the
+selected tier and an over-cap pick is trimmed when you switch tiers.
 """
 
 import pygame
@@ -33,7 +35,7 @@ class SquadScreen(SheetModalMixin, Screen):
         self.location = location
         self.on_confirm = on_confirm
         self.on_back = on_back
-        self.max_pick = max_pick or MAX_SQUAD
+        self._max_pick = max_pick or MAX_SQUAD
         self.title = title
         self.confirm_label = confirm_label
         self.offers = arena_offers or []
@@ -52,6 +54,13 @@ class SquadScreen(SheetModalMixin, Screen):
     @property
     def offer(self):
         return self.offers[self.offer_idx] if self.offers else None
+
+    @property
+    def max_pick(self):
+        """Fighters the current outing allows: the selected bout's cap, else the
+        ctor's `max_pick` (a plain party picker passes the whole roster)."""
+        off = self.offer
+        return off.player_cap if off is not None else self._max_pick
 
     @property
     def picked_gold(self):
@@ -87,6 +96,7 @@ class SquadScreen(SheetModalMixin, Screen):
         for rect, i in self.tiers:
             if rect.collidepoint(px):
                 self.offer_idx = i
+                del self.picked[self.max_pick:]     # a tighter tier drops the overflow
                 return
         for rect, unit in self.cards:
             if rect.collidepoint(px):
@@ -156,7 +166,7 @@ class SquadScreen(SheetModalMixin, Screen):
             text(screen, off.name, f.body_bd, ACCENT if sel else INK,
                  (r.x + SP2, r.y + 6))
             text(screen, f"entry {off.entry}/head  ·  purse {off.purse}  ·  "
-                 f"{off.enemies} opponent(s)", f.body_sm, INK_DIM,
+                 f"{off.player_cap} opponent(s)", f.body_sm, INK_DIM,
                  (r.x + SP2, r.y + 26))
             self.tiers.append((r, i))
         top += 62

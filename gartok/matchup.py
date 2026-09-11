@@ -17,12 +17,15 @@ bout types -- lives here, behind one call:
   champion's mean level + 1.
 - **the Games** (`offer.stage2`) -- `arena.stage2_pack`; a `FlagScenario` when
   `offer.ctf`, else the `ArenaScenario`.
+- **the Games' boss** (`offer.boss`) -- the authored NPC team the `offer.map_slug`
+  map places (`map_lib.npc_units`) plus `offer.enemies` goons at `offer.level`,
+  fought capture-the-flag on that map (`CustomFlagScenario`).
 - once the champion is down, an ordinary pit bout has an
   `arena.ADELIO_CAMEO_CHANCE` of fielding the dethroned Adelio in one slot.
 """
 
 from . import arena, encounters, map_lib
-from .scenario import CustomScenario, FlagScenario
+from .scenario import CustomFlagScenario, CustomScenario, FlagScenario
 from .unit import Unit
 
 
@@ -40,6 +43,10 @@ def _enemies(offer, squad_size, guild):
         champ = arena.champion_of(guild)
         mean = champ.mean_level + 1 if champ is not None else 1
         return [arena.build_challenger(mean)]
+    if offer.boss:
+        brothers = map_lib.npc_units(map_lib.load_map(offer.map_slug))
+        goons = [encounters.build_enemy(offer.level) for _ in range(offer.enemies)]
+        return brothers + goons
     if offer.stage2:
         return arena.stage2_pack(offer.enemies)
 
@@ -54,6 +61,8 @@ def _enemies(offer, squad_size, guild):
 
 
 def _scenario(node, offer):
+    if offer is not None and offer.ctf and offer.map_slug:
+        return CustomFlagScenario(map_lib.load_map(offer.map_slug))
     if offer is not None and offer.ctf:
         return FlagScenario()
     if offer is not None and offer.map_slug:

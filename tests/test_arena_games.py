@@ -32,6 +32,16 @@ def test_games_bouts_carry_the_stage2_tags():
     assert ctf.stage2 and ctf.ctf
     assert brawl.entry == ctf.entry == arena.STAGE2_ENTRY
     assert brawl.purse == ctf.purse == arena.STAGE2_PURSE
+    assert brawl.player_cap == ctf.player_cap == arena.STAGE2_ENEMIES
+
+
+def test_the_boss_bout_is_a_six_a_side_ctf_on_the_authored_map():
+    boss = arena.boss_bout()
+    assert boss.stage2 and boss.ctf and boss.boss
+    assert boss.map_slug == arena.BOSS_MAP
+    assert boss.enemies == arena.BOSS_GOONS and boss.level == arena.BOSS_GOON_LEVEL
+    assert boss.player_cap == arena.BOSS_SQUAD == 6         # brothers + goons, matched
+    assert boss.purse == arena.BOSS_PURSE
 
 
 # --------------------------------------------------------------------------- #
@@ -49,6 +59,24 @@ def test_flag_scenario_drops_the_enemy_flag_in_the_right_half():
     fx, fy = b.flags["enemy"]
     assert fx in own_half("enemy") and (fx, fy) not in b.board.walls
     assert b.flags["player"] is None and b.awaiting_flag and b.is_ctf
+
+
+def test_the_boss_ctf_runs_on_the_authored_map_with_the_brothers_placed():
+    from gartok import matchup
+    from gartok.guild import Guild
+    from gartok.scenario import CustomFlagScenario
+    guild = Guild([Unit("player")], node="arena")
+    guild.deeds_done = ["arena_dethrone"]
+    enemies, scen = matchup.build(world.node("arena"), arena.boss_bout(),
+                                  squad_size=6, guild=guild)
+    assert isinstance(scen, CustomFlagScenario)
+    b = Battle([Unit("player") for _ in range(6)], enemies, scenario=scen,
+               lethal=False, arena=True)
+    assert b.is_ctf and b.board.cols == 21 and b.board.rows == 17
+    fx, fy = b.flags["enemy"]
+    assert fx in own_half("enemy", b.board.cols) and (fx, fy) not in b.board.walls
+    brothers = {u.name: u.pos for u in b.enemy_units if not u._auto_name}
+    assert brothers == {"Peep": (17, 8), "Ribit": (18, 14), "Bufo": (20, 8)}
 
 
 def test_reaching_the_enemy_flag_wins_it_without_a_wipe():
@@ -199,6 +227,33 @@ def test_a_flag_capture_with_a_knockout_misses_untouchable():
     assert "arena_untouchable" not in guild.deeds_done
 
 
+def test_arena_squad_cap_follows_the_selected_bout():
+    from gartok.squad_screen import SquadScreen
+    roster = [Unit("player") for _ in range(6)]
+    scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
+                      on_back=lambda: None,
+                      arena_offers=[arena.brawl_bout(), arena.boss_bout()])
+    assert scr.max_pick == 3                              # brawl: 3 opponents, squad of 3
+    for u in roster:
+        scr._toggle(u)
+    assert len(scr.picked) == 3                           # capped at the tier
+
+    scr.offer_idx = 1                                     # the boss bout: 6 a side
+    assert scr.max_pick == 6
+    for u in roster:
+        if u not in scr.picked:
+            scr._toggle(u)
+    assert len(scr.picked) == 6
+
+
+def test_beating_the_ribbit_brothers_banks_their_deed():
+    guild, out = _games_win(arena.boss_bout(), kos=0)
+    earned = {d.id for d in out.deeds_earned}
+    assert "arena_ribbit_brothers" in earned                # the capstone deed
+    assert earned == {"arena_bloodsport", "arena_flag_runner",
+                      "arena_untouchable", "arena_ribbit_brothers"}
+
+
 def test_games_deeds_are_locked_until_the_champion_is_beaten():
     open_ids = {d.id for d in factions.open_deeds(Guild([Unit("player")]))}
     assert "arena_bloodsport" not in open_ids               # requires arena_dethrone
@@ -238,6 +293,7 @@ def test_arena_node_swaps_the_champion_bout_for_the_games_after_dethroning():
         app._open_squad(world.node("arena"))
         assert not any(o.champion for o in captured["offers"])
         names = {o.name for o in captured["offers"] if o.stage2}
-        assert names == {"Games: Brawl", "Games: Capture the Flag"}
+        assert names == {"Games: Brawl", "Games: Capture the Flag",
+                         "Games: The Ribbit Brothers"}
     finally:
         app_mod.SquadScreen = orig

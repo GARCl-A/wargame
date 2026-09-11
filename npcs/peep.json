@@ -1,25 +1,25 @@
 {
-  "uid": "a555ea2c865a47018b7499c0fe953b7a",
+  "uid": "e2411b0bcb7949a0bc9ed9204ad04a84",
   "recruited_by": null,
-  "name": "Ribit",
+  "name": "Peep",
   "auto_name": false,
   "race": "Grippli",
-  "occupation": "Hunter",
+  "occupation": "Crossbowman",
   "alignment": "Chaotic and Neutral",
-  "gold": 40,
+  "gold": 30,
   "unfed_days": 0,
   "share_food": true,
   "combat_xp": 78,
   "work_hours": 96,
-  "bio": "The eldest of the three and the one who does the talking. Fast, never where the blow lands, and fond of letting you tire yourself out in the open before the tongue finds your throat.",
+  "bio": "The runt, and the deadliest at range. Sits chin-deep in the water channels -- he breathes it fine -- and picks off anyone wading across while his brothers hold the bank.",
   "arena_title": false,
   "talents": {
     "combat": [
       "agile",
       "deadeye",
+      "long_reach",
       "fleet",
       "alert",
-      "iron_will",
       "quick_wits"
     ],
     "work": [
@@ -32,32 +32,33 @@
   },
   "level_hp_rolls": [
     5,
-    1,
-    6,
-    8
+    4,
+    2,
+    3
   ],
   "base_attributes": {
-    "strength": 10,
-    "dexterity": 13,
-    "constitution": 12,
-    "intelligence": 8,
-    "wisdom": 12,
-    "charisma": 8
+    "strength": 12,
+    "dexterity": 16,
+    "constitution": 13,
+    "intelligence": 11,
+    "wisdom": 14,
+    "charisma": 11
   },
-  "age_base": 16,
-  "age": 24,
-  "hp_roll": 6,
+  "age_base": 13,
+  "age": 19,
+  "hp_roll": 4,
   "hp_override": null,
   "racial_override": null,
-  "hp_max": 31,
+  "hp_max": 23,
   "languages": [
-    "Sylvan",
-    "Ankarin"
+    "Sylvan"
   ],
-  "equipped_weapon": "Dagger",
+  "equipped_weapon": "Light Crossbow",
   "equipped_offhand": null,
   "equipped_tongue": "Dagger",
   "equipped_armor": "Leather Jerkin",
-  "inventory": [],
-  "npc_slug": "ribit"
+  "inventory": [
+    "Quiver"
+  ],
+  "npc_slug": "peep"
 }

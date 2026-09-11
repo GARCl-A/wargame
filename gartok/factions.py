@@ -119,6 +119,12 @@ _DEEDS = [
          check=lambda g, e: (
              _arena_tier(e) is not None and _arena_tier(e).ctf
              and e.outcome.player_kos == 0)),
+
+    Deed("arena_ribbit_brothers", "arena", "The Ribbit Brothers",
+         "Beat the three Grippli in the Games.", rep=1,
+         requires="arena_dethrone",
+         check=lambda g, e: (
+             _arena_tier(e) is not None and _arena_tier(e).boss)),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

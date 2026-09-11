@@ -289,16 +289,17 @@ def test_arena_entry_is_staked_per_fighter():
 
     roster = [Unit("player") for _ in range(3)]
     for u in roster:
-        u.gold = 10
+        u.gold = 50
+    iron = world.ARENA_TIERS[2]                       # Iron cage: 3 opponents, squad of 3
     scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
-                      on_back=lambda: None, arena_offers=world.arena_offers(0))
-    assert scr.picked == roster                       # roster fits, all auto-picked
-    assert scr.entry_cost == world.ARENA_TIERS[0].entry * 3
+                      on_back=lambda: None, arena_offers=[iron])
+    assert scr.picked == roster                       # roster fits the cap, all auto-picked
+    assert scr.entry_cost == iron.entry * 3
     assert scr.ok and scr.picked_gold >= scr.entry_cost
 
     scr.picked = roster[:1]                           # solo pays a third
-    assert scr.entry_cost == world.ARENA_TIERS[0].entry
+    assert scr.entry_cost == iron.entry
 
     # the app bills that whole stake off the squad, richest first
-    App._charge(roster, world.ARENA_TIERS[0].entry * 3)
-    assert sum(u.gold for u in roster) == 30 - world.ARENA_TIERS[0].entry * 3
+    App._charge(roster, iron.entry * 3)
+    assert sum(u.gold for u in roster) == 150 - iron.entry * 3

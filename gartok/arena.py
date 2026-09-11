@@ -42,11 +42,23 @@ ADELIO_CAMEO_CHANCE = 0.05    # chance an ordinary pit bout fields the dethroned
 CHAMPION_MAP = "the-pit"          # the hand-laid arena the title bout is fought on
 
 # The Games -- the arena's second stage, opened by dethroning the champion. A
-# salon of violent sports: a bigger 3v3 brawl and a capture-the-flag bout, both
-# against opponents scaled level 1..6 (`encounters.ARENA_LEVEL_WEIGHTS`).
+# salon of violent sports: a 3v3 brawl and a capture-the-flag bout against
+# opponents scaled level 1..6 (`encounters.ARENA_LEVEL_WEIGHTS`), and the boss
+# bout -- the Ribbit brothers, 6-a-side on an authored map (`boss_bout`).
 STAGE2_ENTRY = 30              # stake per fighter for a Games bout
 STAGE2_PURSE = 130            # flat purse for winning one
 STAGE2_ENEMIES = 3           # opponents fielded (a 3v3)
+
+# The Games' boss: the three Ribbit brothers -- a hand-built Grippli team
+# (`npcs/ribit|bufo|peep.json`, placed by the map's `deploy_npc`) backed by
+# scaled goons, fought capture-the-flag on an authored map. The stage's capstone:
+# a 6-a-side bout, so the player may bring six.
+BOSS_ENTRY = 40
+BOSS_PURSE = 450
+BOSS_GOONS = 3                 # scaled bodies fighting alongside the brothers
+BOSS_GOON_LEVEL = 3          # the goons' mean level -- the expected player level here
+BOSS_SQUAD = 6               # brothers + goons; the player matches it
+BOSS_MAP = "capture-the-flag-the-gamers"
 
 
 def champion_bout():
@@ -81,6 +93,16 @@ def ctf_bout():
     return world.Bout("Games: Capture the Flag", entry=STAGE2_ENTRY,
                       purse=STAGE2_PURSE, enemies=STAGE2_ENEMIES,
                       stage2=True, ctf=True)
+
+
+def boss_bout():
+    """The Games' capstone: the three Ribbit brothers (the authored NPC team the
+    `BOSS_MAP` places) plus `BOSS_GOONS` goons at `BOSS_GOON_LEVEL`, fought
+    capture-the-flag on that map. A 6-a-side bout -- `squad_max=BOSS_SQUAD`."""
+    return world.Bout("Games: The Ribbit Brothers", entry=BOSS_ENTRY,
+                      purse=BOSS_PURSE, enemies=BOSS_GOONS, level=BOSS_GOON_LEVEL,
+                      stage2=True, ctf=True, boss=True, map_slug=BOSS_MAP,
+                      squad_max=BOSS_SQUAD)
 
 
 def stage2_pack(n=STAGE2_ENEMIES, rng=random):

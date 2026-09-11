@@ -78,9 +78,12 @@ class Bout:
     the opponents are built to (`encounters.build_enemy`); the staked ladder
     scales on it, the one-off bouts field their own hand-built opponents and
     leave it 0. The bool flags tag a bout for its consumer: `champion`/`defense`
-    for `campaign`, `stage2`/`ctf` for the Games (`ctf` fights on a
-    `FlagScenario`). `map_slug` swaps the node's procedural scenario for an
-    authored map (`map_lib`). `matchup.build` reads all of this.
+    for `campaign`, `stage2`/`ctf`/`boss` for the Games (`ctf` fights on a
+    `FlagScenario`; `boss` fields the map's authored NPC team plus scaled goons).
+    `map_slug` swaps the node's procedural scenario for an authored map
+    (`map_lib`). `squad_max` caps how many fighters the player may send -- 0 means
+    "match the opponent count" (`enemies`), which every arena bout but the boss
+    does. `matchup.build` reads all of this.
     """
     name: str
     entry: int
@@ -92,7 +95,14 @@ class Bout:
     defense: bool = False
     stage2: bool = False
     ctf: bool = False
+    boss: bool = False
     map_slug: str | None = None
+    squad_max: int = 0
+
+    @property
+    def player_cap(self):
+        """Fighters the player may field: `squad_max`, or the opponent count."""
+        return self.squad_max or self.enemies
 
 
 # The Pits' first-stage deeds (`factions`) are worth 3 rep -- clearing them, champion

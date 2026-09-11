@@ -15,6 +15,8 @@ torch scatter). A concrete location on the world map picks a subclass:
 - `CustomScenario` -- a map hand-laid in the editor (`map_lib` dict): fixed
   walls, torches and deployment zones (player / generic enemy / named NPC), no
   random scatter.
+- `FlagScenario` / `CustomFlagScenario` -- capture the flag (the `_FlagObjective`
+  mixin) on the procedural pit / on an authored map.
 """
 
 import random
@@ -119,14 +121,16 @@ def own_half(team, cols=COLS):
     return range(0, mid) if team == "player" else range(mid, cols)
 
 
-class FlagScenario(ArenaScenario):
-    """Capture the flag, fought in the pits (the arena's second stage). Same
-    cluttered floor and torch scatter as `ArenaScenario`; the difference is the
-    objective. Each side has a flag: the player plants theirs anywhere in the
-    left half at the start (`battle.flags["player"]`, set by `battle_screen`),
-    the enemy's is dropped in the right half here. The bout ends the instant a
-    standing fighter reaches the *other* side's flag -- KO everyone and walk over,
-    or just run for it."""
+class _FlagObjective:
+    """Capture the flag: each side has a flag, and the bout ends the instant a
+    standing fighter reaches the *other* side's flag -- KO everyone and walk
+    over, or just run for it. The player plants theirs anywhere in the left half
+    at the start (`battle.flags["player"]`, set by `battle_screen`); the enemy's
+    is dropped in the right half by `auto_place_enemy_flag`, which the concrete
+    scenario's `build` must call after `super().build`.
+
+    Mixed in front of a terrain scenario: `FlagScenario` (the procedural pit),
+    `CustomFlagScenario` (a map hand-laid in the editor)."""
 
     is_ctf = True
 
@@ -158,6 +162,11 @@ class FlagScenario(ArenaScenario):
             if goal in battle.cells_of(u):
                 return u.team
         return None
+
+
+class FlagScenario(_FlagObjective, ArenaScenario):
+    """Capture the flag in the pits (the arena's second stage): the cluttered
+    `ArenaScenario` floor and torch scatter, plus the flag objective."""
 
 
 class ErmosScenario(Scenario):
@@ -229,3 +238,12 @@ class CustomScenario(Scenario):
         for p in self._torches:
             if p not in taken and battle.board.in_bounds(p):
                 battle.ground.append(GroundObject.torch(p))
+
+
+class CustomFlagScenario(_FlagObjective, CustomScenario):
+    """Capture the flag on a map hand-laid in the editor: the authored board,
+    walls, torches and deploy zones (`CustomScenario`), plus the flag objective
+    (`_FlagObjective`) -- same rules as the pit `FlagScenario`, only the terrain
+    is authored. The Games' boss bout fights here (`arena.boss_bout`); the map's
+    `deploy_npc` places the Ribbit brothers, both sides race, the symmetric map
+    is the fairness."""

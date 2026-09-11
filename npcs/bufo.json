@@ -1,0 +1,64 @@
+{
+  "uid": "049ba8da78334b1db53c6d0fed6f7355",
+  "recruited_by": null,
+  "name": "Bufo",
+  "auto_name": false,
+  "race": "Grippli",
+  "occupation": "Butcher",
+  "alignment": "Neutral and Neutral",
+  "gold": 30,
+  "unfed_days": 0,
+  "share_food": true,
+  "combat_xp": 78,
+  "work_hours": 96,
+  "bio": "The big brother. Plants himself between you and the flag and does not move -- a wall of warty muscle with a broadsword in his fists and a spear on his tongue.",
+  "arena_title": false,
+  "talents": {
+    "combat": [
+      "strong",
+      "sure_strike",
+      "heavy_hand",
+      "tough",
+      "hardy",
+      "bulwark"
+    ],
+    "work": [
+      "carrier",
+      "brisk_hands"
+    ],
+    "racial": [
+      "tongue"
+    ]
+  },
+  "level_hp_rolls": [
+    8,
+    5,
+    1,
+    5
+  ],
+  "base_attributes": {
+    "strength": 17,
+    "dexterity": 13,
+    "constitution": 14,
+    "intelligence": 9,
+    "wisdom": 12,
+    "charisma": 10
+  },
+  "age_base": 15,
+  "age": 22,
+  "hp_roll": 4,
+  "hp_override": null,
+  "racial_override": null,
+  "hp_max": 38,
+  "languages": [
+    "Sylvan"
+  ],
+  "equipped_weapon": "Broadsword",
+  "equipped_offhand": null,
+  "equipped_tongue": "Shortspear",
+  "equipped_armor": "Chainmail",
+  "inventory": [
+    "Meat"
+  ],
+  "npc_slug": "bufo"
+}

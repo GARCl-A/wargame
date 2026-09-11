@@ -233,6 +233,7 @@ The staked bouts in the cellars under the city. Win, and be known.
 | Bloodsport | Win a bout in the Games -- the arena's second stage. | +1 | arena_dethrone |
 | Flag Runner | Capture the enemy flag in the Games. | +1 | arena_dethrone |
 | Untouchable | Capture the flag without knocking anyone out. | +1 | arena_dethrone |
+| The Ribbit Brothers | Beat the three Grippli in the Games. | +1 | arena_dethrone |
 
 ### The Bankers
 
