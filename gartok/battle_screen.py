@@ -84,6 +84,15 @@ class BattleScreen(Screen):
             self.view.cam = list(cam0)
             self.view.pan_px(event.pos[0] - ax, event.pos[1] - ay)
 
+    def handle_escape(self):
+        """Esc cancels an armed aimed action (Demoralize, Throw, ...) instead
+        of falling through to the pause menu -- the same gesture players
+        reach for first in any tactics game."""
+        if self.aim_action is not None:
+            self.aim_action = None
+            return True
+        return False
+
     def update(self, dt):
         b = self.battle
         self._advance_fx(dt)

@@ -368,7 +368,8 @@ class App:
                 elif event.type == pygame.VIDEORESIZE:
                     self.window = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    self._toggle_pause()
+                    if not self.scene.handle_escape():
+                        self._toggle_pause()
                 else:
                     self.scene.handle_event(event)
 

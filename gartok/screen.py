@@ -25,6 +25,12 @@ class Screen:
     def update(self, dt):
         pass
 
+    def handle_escape(self):
+        """Esc was pressed. Return True to consume it (e.g. cancel an aimed
+        action or back out of a sub-mode) so the app does not also open the
+        pause menu; False (the default) lets Esc fall through to pause."""
+        return False
+
     def _click(self, pos):
         """Left click at canvas-space `pos`. Screens rebuild their hit lists in
         `draw` and test them here."""

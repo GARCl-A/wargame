@@ -75,6 +75,13 @@ class MapScreen(Screen):
         self.selected = group
         self.mode = "map"
 
+    def handle_escape(self):
+        """Esc backs out of SPLIT mode instead of opening the pause menu."""
+        if self.mode == "split":
+            self.mode = "map"
+            return True
+        return False
+
     def _issue(self, order):
         if not self.selected.busy:
             self.selected.order = order
