@@ -7,16 +7,19 @@ character generator at
 Every unit is a randomly generated GARTOK character (race + occupation + 3d6).
 
 **Draft:** the game opens on a selection screen — three characters are rolled,
-you keep one, three times. Those three are your **guild**.
+you keep one, three times. Those three are your **guild**: name it, pick its
+banner (colour + emblem — cosmetic, recolours every unit token from then on),
+then choose who leads it.
 
 **Campaign:** the guild is one or more **groups** on the world map, each a
 physical unit of members standing on their own node. Give a group an order
-(travel, work, or head into a battle / market / tavern / the wilds), then hit
-ADVANCE: the world jumps to the soonest order due, resolving travel and work
-silently and handing you the rest to actually play. For a battle you pick a
-**squad** (1–3 members), drop onto a grid, and win by putting the enemy team
-down. Time only passes on ADVANCE or a MAINTENANCE stop (day/night, hunger);
-death is permanent; a total wipe ends the run. Saved by slot.
+(travel, work, or head into a battle / market / tavern / the wilds); once no
+group is left idle, the clock runs on its own (`campaign.advance`), resolving
+travel and work silently and handing you the rest to actually play. For a
+battle you pick a **squad** (1–3 members), drop onto a grid, and win by
+putting the enemy team down. Time only passes while the clock is running or on
+a MAINTENANCE stop (day/night, hunger); death is permanent; a total wipe ends
+the run. Saved by slot.
 
 Progress toward the game's goal is **reputation with factions**, earned by
 pulling off a faction's signature challenges (`deeds`) — the arena (The Pits) is
@@ -93,6 +96,9 @@ World systems, outside combat:
   (`gartok/orders.py`, `campaign.advance`) advances the shared clock + day/night
   to the next order due; permadeath and save-by-slot (`world.py`, `clock.py`,
   `guild.py`, `group.py`, `persist.py`).
+- **Identity**: the guild's name and banner (colour + emblem), picked at the
+  draft — cosmetic, recolours every unit token for the run
+  (`theme.set_player_color`, `Guild.banner_color`/`banner_icon`).
 - **Leadership**: the guild has one leader ("who am I", chosen at the draft);
   every group has its own (who speaks for it, freely swappable); a group's
   leader caps how many members it can hold before cohesion costs Mental

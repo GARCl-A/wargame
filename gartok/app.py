@@ -52,7 +52,7 @@ from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
-from .theme import BG, Fonts, WIN_H, WIN_W
+from .theme import BG, Fonts, WIN_H, WIN_W, set_player_color
 
 
 class App:
@@ -99,13 +99,16 @@ class App:
         self.guild = None
         self.scene = DraftScreen(self.fonts, on_done=self._draft_done)
 
-    def _draft_done(self, picks, leader):
-        self.guild = Guild(picks, node=world.START_NODE, leader=leader)
+    def _draft_done(self, picks, leader, name, banner_color, banner_icon):
+        self.guild = Guild(picks, node=world.START_NODE, leader=leader,
+                           name=name, banner_color=banner_color, banner_icon=banner_icon)
+        set_player_color(self.guild.banner_color)
         self._start_map()
 
     def _continue_game(self, slot):
         self.slot = slot
         self.guild = persist.load_game(slot)
+        set_player_color(self.guild.banner_color)
         valid = {n.id for n in world.NODES}
         for g in self.guild.groups:            # a stale/removed node id: drop back to the start
             if g.node not in valid:

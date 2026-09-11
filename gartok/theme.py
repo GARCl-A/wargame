@@ -149,7 +149,7 @@ INK_FAINT = (104, 110, 122)
 ACCENT    = (232, 194, 75)             # selection / active / focus (warm gold)
 ACCENT_INK = (24, 20, 8)              # text on an accent fill
 
-PLAYER_C  = (94, 156, 214)
+PLAYER_C  = (94, 156, 214)             # the default -- overwritten per-run by set_player_color
 ENEMY_C   = (214, 103, 92)
 NEUTRAL_C = (176, 170, 154)
 
@@ -327,13 +327,41 @@ def panel(surf, rect, *, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS, width=
 
 TOKEN_INK = (15, 15, 20)                # ink for the race glyph / letter on a unit token
 
+# The guild's banner colour, picked at the draft (see draft_screen.py's
+# "identity" phase). A curated palette, not a free picker -- named like a
+# heraldry tincture list, distinct enough from ENEMY_C to stay readable.
+BANNER_COLORS = [
+    ("Steel",   (94, 156, 214)),
+    ("Teal",    (80, 176, 170)),
+    ("Forest",  (104, 176, 108)),
+    ("Amber",   (224, 158, 72)),
+    ("Crimson", (196, 90, 90)),
+    ("Violet",  (150, 112, 196)),
+    ("Rose",    (206, 120, 152)),
+    ("Slate",   (150, 150, 162)),
+]
 
-def token_badge(surf, center, unit, fonts, *, color=PLAYER_C, r=14):
+
+def set_player_color(color):
+    """Recolour every unit token's disc (`token_badge`'s default fill) to the
+    guild's chosen banner colour. Called once when a guild is created or
+    loaded (`app.py`), not per frame. Deliberately does not touch
+    `battle_screen`'s player/enemy colour-coding -- that one is a readability
+    cue (tell your side from the enemy's), not an identity, and stays fixed."""
+    global PLAYER_C
+    PLAYER_C = tuple(color)
+
+
+def token_badge(surf, center, unit, fonts, *, color=None, r=14):
     """The round unit token: a coloured disc carrying the unit's race silhouette
     (`artwork.race_icon`), falling back to its board letter when the race has no
     glyph. Used on every roster card (draft / guild / squad / loot / market /
-    reward / sheet). `unit` may also be a bare letter string."""
-    pygame.draw.circle(surf, color, center, r)
+    reward / sheet). `unit` may also be a bare letter string.
+
+    `color` defaults to the live `PLAYER_C` (read here, not captured as a
+    default-argument value, so `set_player_color` takes effect on every
+    caller that doesn't pass its own colour -- which is all of them today)."""
+    pygame.draw.circle(surf, color or PLAYER_C, center, r)
     race = getattr(unit, "race", None)
     sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
     if sil is not None:

@@ -77,3 +77,29 @@ def icon(category, name, px, color=_WHITE):
 def race_icon(race_name, px, color=_WHITE):
     """The head silhouette for a race, or None if the race isn't mapped."""
     return icon("head", RACE_ICON.get(race_name), px, color)
+
+
+# A small curated gallery for the guild's banner emblem (see draft_screen.py's
+# "identity" phase) -- (category, slug, label). Not every icon under assets/
+# reads well tinted at emblem size on a flat disc; this is a hand-picked
+# subset, same spirit as RACE_ICON above. `Guild.banner_icon` stores the slug.
+BANNER_ICONS = [
+    ("action", "shield-bash", "Shield"),
+    ("body", "surrounded-shield", "Bulwark"),
+    ("body", "bell-shield", "Vigil"),
+    ("body", "sword-tie", "Blade"),
+    ("action", "wolf-howl", "Wolf Cry"),
+    ("head", "wolf-head", "Wolf"),
+    ("head", "snake-bite", "Serpent"),
+    ("body", "fire-silhouette", "Flame"),
+    ("gui", "stars-stack", "Stars"),
+    ("body", "psychic-waves", "Storm"),
+]
+_BANNER_ICON_CATEGORY = {slug: cat for cat, slug, _ in BANNER_ICONS}
+
+
+def banner_icon(slug, px, color=_WHITE):
+    """The emblem art for a `Guild.banner_icon` slug, or None if unmapped
+    (an old save could carry a slug from a since-trimmed gallery)."""
+    category = _BANNER_ICON_CATEGORY.get(slug)
+    return icon(category, slug, px, color) if category else None

@@ -1,29 +1,36 @@
 """Draft screen: build your squad by picking 1 of 3 candidates, three times,
-then choosing which of the three leads the guild.
+then naming the guild and picking its banner, then choosing which of the
+three leads it.
 
 The pencil/EDIT toggle swaps a candidate's race or occupation before you lock
 it in. Presentation only -- the character model lives in `unit` / `data`.
 
-The leader step ("who am I") answers `on_done(picks, leader)` instead of the
-old `on_done(picks)` -- see `Guild.leader` (`guild.py`) for what the choice
-does downstream (haggling, and the run's one free way to change your mind).
+`on_done(picks, leader, name, banner_color, banner_icon)` -- the "identity"
+phase (name + banner, purely cosmetic -- see `Guild.name`/`banner_color`/
+`banner_icon` in `guild.py`) recolours every unit token live via
+`theme.set_player_color` as the player picks, so the leader-pick cards that
+follow already show it. The leader step itself ("who am I") is `Guild.leader`
+-- see that module for what the choice does downstream (haggling, and the
+run's one free way to change your mind).
 """
 
 import pygame
 
-from . import data
+from . import artwork, data
 from .combatant import Combatant
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, DEMO_HL, INFO, INK, INK_DIM,
-                    INK_FAINT, LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1,
-                    SP2, SP3, SP4, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    Stack, chip, ellipsize, panel, section, token_badge, text,
-                    tracked, wrap_lines)
+from .theme import (ACCENT, ACCENT_INK, BANNER_COLORS, DANGER, DEMO_HL, INFO,
+                    INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT, MARGIN, OK,
+                    RADIUS, SP1, SP2, SP3, SP4, SURFACE_1, SURFACE_2,
+                    SURFACE_3, TOKEN_INK, WARN,
+                    Stack, chip, ellipsize, panel, section, set_player_color,
+                    token_badge, text, tracked, wrap_lines)
 from .unit import Unit
 
 TEAM_SIZE = 3
 DRAFT_ROUNDS = 3
 DRAFT_CHOICES = 3
+_MAX_GUILD_NAME = 24
 
 
 def _archetypes(u):
@@ -54,13 +61,26 @@ class DraftScreen(Screen):
         self.fonts = fonts
         self.on_done = on_done
         self.picks = []
-        self.phase = "pick"        # "pick" (rounds 1-3) | "leader" (choose who leads)
+        self.phase = "pick"        # "pick" (rounds 1-3) | "identity" | "leader"
         self.edit_mode = False
         self.picker = None
         self.edit_btn_rect = None
         self.card_rects = []
         self.edit_rects = []
         self.picker_rects = []
+        # identity: guild name (click-to-type, see char_editor_screen.py's
+        # pattern) + banner colour/icon, picked from a curated set (not a
+        # free painter -- see the module docstring)
+        self.guild_name = ""
+        self.editing_name = False
+        self.name_buf = ""
+        self.name_rect = None
+        self.banner_color = BANNER_COLORS[0][1]
+        self.banner_icon = artwork.BANNER_ICONS[0][1]
+        self.color_rects = []
+        self.icon_rects = []
+        self.continue_rect = None
+        set_player_color(self.banner_color)     # reset tokens to the default for a fresh draft
         self._new_candidates()
 
     # ------------------------------------------------------------------ #
@@ -72,14 +92,31 @@ class DraftScreen(Screen):
         if len(self.picks) < DRAFT_ROUNDS:
             self._new_candidates()
         else:
-            self.phase = "leader"
+            self.phase = "identity"
+
+    def handle_event(self, event):
+        if self.editing_name and event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                self.guild_name, self.editing_name = self.name_buf, False
+            elif event.key == pygame.K_BACKSPACE:
+                self.name_buf = self.name_buf[:-1]
+            elif event.unicode and len(self.name_buf) < _MAX_GUILD_NAME \
+                    and event.unicode.isprintable():
+                self.name_buf += event.unicode
+            return
+        super().handle_event(event)
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
+        if self.phase == "identity":
+            self._click_identity(px)
+            return
+
         if self.phase == "leader":
             for rect, unit in self.card_rects:
                 if rect.collidepoint(px):
-                    self.on_done(self.picks, unit)
+                    self.on_done(self.picks, unit, self.guild_name,
+                                self.banner_color, self.banner_icon)
                     return
             return
 
@@ -109,6 +146,24 @@ class DraftScreen(Screen):
                 self._pick(unit)
                 return
 
+    def _click_identity(self, px):
+        if self.editing_name:                 # a click anywhere commits the field being typed
+            self.guild_name, self.editing_name = self.name_buf, False
+        if self.name_rect and self.name_rect.collidepoint(px):
+            self.name_buf, self.editing_name = self.guild_name, True
+            return
+        for rect, color in self.color_rects:
+            if rect.collidepoint(px):
+                self.banner_color = color
+                set_player_color(color)       # live preview on every token already on screen
+                return
+        for rect, slug in self.icon_rects:
+            if rect.collidepoint(px):
+                self.banner_icon = slug
+                return
+        if self.continue_rect and self.continue_rect.collidepoint(px):
+            self.phase = "leader"
+
     # ------------------------------------------------------------------ #
     # drawing                                                            #
     # ------------------------------------------------------------------ #
@@ -116,6 +171,11 @@ class DraftScreen(Screen):
         f = self.fonts
         screen.fill((18, 19, 24))
         mouse = self.mouse
+
+        if self.phase == "identity":
+            self._draw_identity(screen)
+            return
+
         round_no = len(self.picks) + 1
         leader_phase = self.phase == "leader"
 
@@ -160,6 +220,89 @@ class DraftScreen(Screen):
 
         if self.picker is not None:
             self._draw_picker(screen, mouse)
+
+    # ------------------------------------------------------------------ #
+    def _draw_identity(self, screen):
+        """Name + banner (colour, then emblem), then FOUND THE GUILD. A form,
+        not a card gallery -- its own layout, no `card_rects`/`_draw_card`."""
+        f = self.fonts
+        W, _ = screen.get_size()
+        mouse = self.mouse
+
+        text(screen, "NAME YOUR GUILD", f.title, ACCENT, (MARGIN, MARGIN - 2))
+        text(screen, "Purely cosmetic -- pick a name and a banner. Every unit's "
+             "token shows the colour from here on.", f.body, INK_DIM,
+             (MARGIN, MARGIN + 30))
+
+        cx = MARGIN
+        cw = min(560, W - 2 * MARGIN)
+        y = MARGIN + 74
+
+        # --- name field (click-to-type, same pattern as char_editor_screen) #
+        tracked(screen, "GUILD NAME", f.label, INK_FAINT, (cx, y))
+        y += 16
+        self.name_rect = pygame.Rect(cx, y, cw, 40)
+        hov = self.name_rect.collidepoint(mouse)
+        panel(screen, self.name_rect, fill=SURFACE_3 if (hov or self.editing_name) else SURFACE_2,
+              border=ACCENT if (hov or self.editing_name) else LINE, width=1, radius=RADIUS)
+        shown = self.name_buf + "|" if self.editing_name else self.guild_name or "click to name your guild"
+        col = INK if (self.editing_name or self.guild_name) else INK_FAINT
+        text(screen, shown, f.body, col, (self.name_rect.x + SP3, self.name_rect.centery - 8))
+        y += 40 + SP4
+
+        # --- banner colour: a curated palette, not a free picker --------- #
+        tracked(screen, "BANNER COLOUR", f.label, INK_FAINT, (cx, y))
+        y += 18
+        self.color_rects = []
+        sw = 40
+        for i, (_, color) in enumerate(BANNER_COLORS):
+            r = pygame.Rect(cx + i * (sw + SP2), y, sw, sw)
+            sel = color == self.banner_color
+            hov = r.collidepoint(mouse)
+            pygame.draw.circle(screen, color, r.center, sw // 2)
+            pygame.draw.circle(screen, ACCENT if sel else (LINE if hov else LINE_SOFT),
+                               r.center, sw // 2, 3 if sel else 1)
+            self.color_rects.append((r, color))
+        y += sw + SP4
+
+        # --- banner emblem: a curated gallery, not a paint tool ---------- #
+        tracked(screen, "EMBLEM", f.label, INK_FAINT, (cx, y))
+        y += 18
+        self.icon_rects = []
+        isz = 44
+        per_row = max(1, (cw + SP2) // (isz + SP2))
+        for i, (_, slug, _label) in enumerate(artwork.BANNER_ICONS):
+            col_i, row_i = i % per_row, i // per_row
+            r = pygame.Rect(cx + col_i * (isz + SP2), y + row_i * (isz + SP2), isz, isz)
+            sel = slug == self.banner_icon
+            hov = r.collidepoint(mouse)
+            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
+                  border=ACCENT if sel else (LINE if hov else LINE_SOFT),
+                  width=2 if sel else 1, radius=8)
+            art = artwork.banner_icon(slug, isz - 16, TOKEN_INK)
+            if art is not None:
+                screen.blit(art, art.get_rect(center=r.center))
+            self.icon_rects.append((r, slug))
+        rows = (len(artwork.BANNER_ICONS) + per_row - 1) // per_row
+        y += rows * (isz + SP2) + SP4
+
+        # --- live preview + confirm --------------------------------- #
+        pv = (cx + 30, y + 30)
+        pygame.draw.circle(screen, self.banner_color, pv, 30)
+        art = artwork.banner_icon(self.banner_icon, 40, TOKEN_INK)
+        if art is not None:
+            screen.blit(art, art.get_rect(center=pv))
+        text(screen, self.guild_name or "The Guild", f.title, INK, (pv[0] + 46, y + 14))
+        y += 76
+
+        self.continue_rect = pygame.Rect(cx, y, cw, 44)
+        hov = self.continue_rect.collidepoint(mouse)
+        panel(screen, self.continue_rect, fill=ACCENT if hov else SURFACE_3,
+              border=ACCENT, width=1, radius=RADIUS)
+        text(screen, "FOUND THE GUILD", f.body_bd, ACCENT_INK if hov else ACCENT,
+             self.continue_rect.center, center=True)
+
+        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
 
     # ------------------------------------------------------------------ #
     def _draw_card(self, screen, rect, unit, hover, mouse, leader_pick=False):

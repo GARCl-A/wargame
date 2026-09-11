@@ -20,6 +20,12 @@ only death reshuffles it. Every mutation that can change who leads what
 itself) ends by calling `_sync_leadership`, which also folds each group's
 `overextension` into its members' Mental Defense.
 
+The guild also has a chosen **identity** -- `name`, `banner_color`, `banner_icon`
+-- set at the draft (`draft_screen.py`'s "identity" phase) purely for flavour:
+`app.py` feeds `banner_color` to `theme.set_player_color` so every unit token
+in the game renders in it. A guild from before this existed falls back to
+`DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON` below.
+
 The one thing the guild owns as a body is the **bank chest** -- a strongbox
 rented from the Bankers in the City (`bank_capacity` kg, `bank_items` the names
 stashed). `bank_capacity == 0` means no chest yet; `bank_screen` rents it and
@@ -39,13 +45,21 @@ from . import data, economy, progression
 from .clock import Clock
 from .group import Group
 
+# Fallbacks for a guild with no chosen identity (old saves, from before the
+# draft's naming/banner step existed). Plain data, not `theme`/`artwork`
+# imports -- this module stays pygame-free; the presentation layer resolves
+# these slugs/colours (`theme.BANNER_COLORS`, `artwork.BANNER_ICONS`).
+DEFAULT_BANNER_COLOR = (94, 156, 214)   # same value as theme.PLAYER_C's own default
+DEFAULT_BANNER_ICON = "shield-bash"     # artwork.BANNER_ICONS[0]
+
 
 class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
                  arena_challenge_day=None, clock=None, node=None,
                  taverna_week=None, taverna_pool=None, taverna_blocked=None,
                  bank_capacity=0, bank_items=None, groups=None,
-                 leader=None, leader_swaps_used=0):
+                 leader=None, leader_swaps_used=0,
+                 name="", banner_color=None, banner_icon=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -66,6 +80,9 @@ class Guild:
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
         self.leader = leader                  # the guild's "who am I" -- None resolves below
         self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change
+        self.name = name or ""                # chosen at the draft; "" shows as "The Guild"
+        self.banner_color = tuple(banner_color) if banner_color else DEFAULT_BANNER_COLOR
+        self.banner_icon = banner_icon or DEFAULT_BANNER_ICON
         self._sync_leadership()
 
     # ------------------------------------------------------------------ #

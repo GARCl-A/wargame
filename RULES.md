@@ -628,6 +628,19 @@ must be reloaded between shots.
 Rules that exist **outside combat** — the guild on the map, time passing, the
 economy. Each starts as a "world thing" and only then talks to the fight.
 
+### Identity 🟡
+
+Purely cosmetic, no mechanical effect: after the three squad picks, the draft's
+"identity" phase asks for a **guild name** and a **banner** — a colour and an
+emblem, both from a small curated set (`theme.BANNER_COLORS`,
+`artwork.BANNER_ICONS`), not a free painter. The chosen colour becomes every
+unit token's fill for the rest of the run (`theme.set_player_color`, read live
+by `theme.token_badge` — every roster card in the game uses it without
+knowing it changed). `battle_screen`'s player/enemy colour-coding is untouched
+on purpose: that one is a readability cue, not an identity, and must stay
+distinct from `ENEMY_C`. A save from before this existed shows "The Guild" in
+a default colour (`Guild.DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON`).
+
 ### Leadership 🟡
 
 Two kinds of leader (`gartok/group.py`, `gartok/guild.py`), answering two

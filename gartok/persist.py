@@ -4,11 +4,11 @@ the active slot after the draft, after every battle and after every manage step.
 The player roster is saved as **groups** (`gartok/group.py`): each group's own
 member list, map node and leader (a uid, resolved back to a `Unit` after its
 members load), plus a small shared campaign meta (wins, clock, bank chest, the
-guild's own leader + whether its one free change is spent, the taverna's
-current weekly pool of would-be recruits). A save from before the groups layer
-(`"roster"`/`"node"`, no `"groups"` key) loads as one group holding the whole
-old roster; a save from before leadership existed (no `"leader"` key on the
-guild or a group) auto-picks one by Charisma on load
+guild's own leader + whether its one free change is spent, the guild's chosen
+name/banner, the taverna's current weekly pool of would-be recruits). A save
+from before the groups layer (`"roster"`/`"node"`, no `"groups"` key) loads as
+one group holding the whole old roster; a save from before leadership existed
+(no `"leader"` key on the guild or a group) auto-picks one by Charisma on load
 (`Guild._sync_leadership`/`Group.ensure_leader`). Enemies are rolled fresh each
 battle and battle state lives on a throwaway `Combatant` wrapper, never on the
 `Unit`, so disk never sees it -- a saved unit is always "full HP, standing".
@@ -25,7 +25,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 8                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 9                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -97,6 +97,9 @@ def save_game(slot, guild):
         "bank_items": list(guild.bank_items),
         "leader": guild.leader.uid if guild.leader else None,
         "leader_swaps_used": guild.leader_swaps_used,
+        "name": guild.name,
+        "banner_color": list(guild.banner_color),
+        "banner_icon": guild.banner_icon,
         "saved_at": time.time(),
         "squad": [u.name for u in guild.roster],   # flattened names, for the slot summary
         "groups": [group_to_dict(g) for g in guild.groups],
@@ -136,7 +139,9 @@ def load_game(slot):
                  taverna_week=payload.get("taverna_week"),
                  taverna_pool=[Unit.from_save(d) for d in pool] if pool is not None else None,
                  taverna_blocked=payload.get("taverna_blocked"),
-                 leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0))
+                 leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
+                 name=payload.get("name", ""), banner_color=payload.get("banner_color"),
+                 banner_icon=payload.get("banner_icon"))
 
 
 def delete_slot(slot):

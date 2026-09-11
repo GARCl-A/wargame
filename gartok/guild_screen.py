@@ -29,13 +29,14 @@ whole maximized screen. Reached from the map (opening it passes no time).
 
 import pygame
 
-from . import data, factions, world
+from . import artwork, data, factions, world
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
-                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
+                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
+                    TOKEN_INK, WARN,
                     ellipsize, kg, panel, section, set_pointer, token_badge,
                     text, tracked)
 
@@ -191,7 +192,12 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             self.member = self.roster[0] if self.roster else None
 
         pad = MARGIN if W < 1500 else SP5
-        text(screen, "GUILD", f.title, INK, (pad, pad - 2))
+        banner = (pad + 16, pad + 14)
+        pygame.draw.circle(screen, self.guild.banner_color, banner, 16)
+        art = artwork.banner_icon(self.guild.banner_icon, 22, TOKEN_INK)
+        if art is not None:
+            screen.blit(art, art.get_rect(center=banner))
+        text(screen, self.guild.name or "The Guild", f.title, INK, (pad + 34, pad - 2))
         carried = self._carried_names()
         if carried:
             if len(carried) == 1:
