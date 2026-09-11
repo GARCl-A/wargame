@@ -199,14 +199,13 @@ class LevelScreen(Screen):
             return (round(x + unit_w * (col + 0.5)),
                     round(top + pitch * (depth + 0.5)))
 
-        # connectors first, so the nodes sit on top of them; the parent leg
-        # starts below its name label so the line never crosses the text
+        # connectors first, so the nodes sit on top of them
         for t in nodes:
             if not t.requires:
                 continue
             px, py = xy(t.requires)
             qx, qy = xy(t.id)
-            py += node // 2 + 22
+            py += node // 2 + 2
             qy -= node // 2 + 2
             st = self._node_state(track, t)
             col = OK if st == "taken" else ACCENT if st == "open" else LINE
@@ -216,10 +215,9 @@ class LevelScreen(Screen):
                               3 if st == "taken" else 2)
 
         for t in nodes:
-            self._draw_node(screen, track, t, *xy(t.id), node,
-                            is_root=not t.requires, label_w=unit_w - SP2)
+            self._draw_node(screen, track, t, *xy(t.id), node, is_root=not t.requires)
 
-    def _draw_node(self, screen, track, t, cx, cy, s, *, is_root, label_w):
+    def _draw_node(self, screen, track, t, cx, cy, s, *, is_root):
         f = self.fonts
         state = self._node_state(track, t)
         rs = s + 6 if is_root else s
@@ -253,12 +251,6 @@ class LevelScreen(Screen):
         if state == "taken":
             pygame.draw.circle(screen, OK, rect.topright, 8)
             _check(screen, rect.right, rect.top, SURFACE_0)
-
-        namecol = {"taken": OK, "open": ACCENT, "locked": INK_DIM}[state]
-        ny = rect.bottom + SP3
-        for ln in wrap_lines([t.name], f.body_sm, max(label_w, 60))[:2]:
-            text(screen, ln, f.body_sm, namecol, (cx, ny), center=True)
-            ny += 14
 
         if state == "open":
             self.node_hits.append((rect, track, t.id))

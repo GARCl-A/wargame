@@ -15,12 +15,14 @@ from . import data
 
 def _carried_by(u):
     """Item names a downed/defeated combatant still has: the weapon in hand, a
-    lit torch, and everything in the pack."""
+    lit torch or lantern, and everything in the pack."""
     items = []
     if getattr(u, "weapon_hand", False) and getattr(u, "weapon_name", None):
         items.append(u.weapon_name)
     if getattr(u, "torch_hand", False):
         items.append(data.TORCH_ITEM)
+    if getattr(u, "lantern_hand", False):
+        items.append(data.LANTERN_ITEM)
     items += list(getattr(u, "inventory", []))
     return items
 

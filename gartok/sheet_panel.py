@@ -98,6 +98,14 @@ def _weapon_lines(u):
     return u.weapon_name, dmg, reach
 
 
+def _titles(u):
+    """Earned personal titles shown on the sheet, most notable first."""
+    titles = []
+    if getattr(u, "arena_title", False):
+        titles.append("Champion of the Pit")
+    return titles
+
+
 def _status_note(u):
     if u.dying:
         return f"DYING {u.death_clock}/{data.DYING_TURNS}", DANGER
@@ -135,10 +143,15 @@ def draw_sheet(screen, rect, u, f):
          + (f"  ·  work N{u.work_level}" if u.work_xp or u.work_level else "")
          + (f"  ·  takes {u.footprint}x{u.footprint}" if u.footprint > 1 else ""),
          f.body_sm, INK_FAINT, (tok[0] + 26, y + 33))
+    header_h = 52
+    titles = _titles(u)
+    if titles:
+        text(screen, "  ·  ".join(titles), f.label, ACCENT, (tok[0] + 26, y + 48))
+        header_h += 14
     note, ncol = _status_note(u)
     if note:
         text(screen, note, f.label, ncol, (rect.right - pad, y), right=True)
-    y += 52
+    y += header_h
 
     # --- derived combat chips ------------------------------------------- #
     stats = (("HP", f"{max(u.hp, 0)}/{u.hp_max}" if u.hp != u.hp_max else u.hp_max, OK),
@@ -198,7 +211,8 @@ def draw_sheet(screen, rect, u, f):
     # --- kit / carry ------------------------------------------------- #
     y = section(screen, "GEAR", x, y, w, f)
     held = " + ".join(p for p in ("weapon" if u.weapon_hand else "",
-                                  "torch" if u.torch_hand else "") if p) or "hands free"
+                                  "torch" if u.torch_hand else "",
+                                  "lantern" if u.lantern_hand else "") if p) or "hands free"
     text(screen, f"hands: {held}", f.body_sm, INK_DIM, (x, y))
     y += 16
     if u.has_tongue_weapon:

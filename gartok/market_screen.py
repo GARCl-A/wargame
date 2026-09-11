@@ -26,16 +26,16 @@ import pygame
 from . import data, economy
 from .dragselect import DragSelectMixin
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, ellipsize, kg, panel, section,
                     token_badge, text, tracked)
 
 STOCK_W = 392
-PACK_ROWS_SHOWN = 8                       # pack rows before a "+N more" line kicks in
 
 
-class MarketScreen(DragSelectMixin, Screen):
+class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, shoppers, node, on_done):
@@ -56,6 +56,9 @@ class MarketScreen(DragSelectMixin, Screen):
         self.notice = None
         self.stock_rows = []                 # [(rect, name)]
         self.qty_hits = []                   # [(rect, name, delta)]
+        self.info_hits = []                  # [(rect, member)] -- the card's 'i' disc opens the sheet
+        self._pack_scroll = {}               # id(member) -> stacks scrolled past in the pack list
+        self._pack_areas = []                # [(rect, member)] -- pack list rects, for wheel hit-testing
         self.tab_hits = []                  # [(rect, key)]
         self.item_rows = []                  # [(rect, member, loc)]
         self.cards = []                      # [(rect, member)]
@@ -138,11 +141,24 @@ class MarketScreen(DragSelectMixin, Screen):
         if src not in self.sel or src[0] == "stock":
             self.sel = [src]
 
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            hit = next((m for r, m in self._pack_areas if r.collidepoint(self.mouse)), None)
+            if hit is not None:
+                n = len(self._stacks(hit._base_inventory))
+                cur = self._pack_scroll.get(id(hit), 0)
+                self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - event.y))
+                return
+        super().handle_event(event)
+
     def _bump_qty(self, name, delta):
         step = delta * (5 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1)
         self.qty[name] = max(1, self._buy_qty(name) + step)
 
     def _drop(self, px, dragging, src):
+        if self.close_sheet_on_click():        # sheet modal up: any click just closes it
+            return
+
         if dragging:
             for rect, member in self.cards:
                 if rect.collidepoint(px):
@@ -172,16 +188,22 @@ class MarketScreen(DragSelectMixin, Screen):
                 self.tab, self.sel, self.notice = key, [], None
                 return
 
+        for rect, member in self.info_hits:
+            if rect.collidepoint(px):
+                self.open_sheet(member)
+                return
+
         self.notice = None
         mods = pygame.key.get_mods()
         multi = src is not None and src[0] != "stock" \
             and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL) \
             and (not self.sel or self.sel[0][0] != "stock")
         if multi:
+            group = self._expand_stack(src)
             if src in self.sel:
-                self.sel.remove(src)
+                self.sel = [p for p in self.sel if p not in group]
             else:
-                self.sel.append(src)
+                self.sel += [p for p in group if p not in self.sel]
             return
 
         if self.sel:
@@ -281,6 +303,8 @@ class MarketScreen(DragSelectMixin, Screen):
         self.item_rows = []
         self.cards = []
         self.buttons = []
+        self.info_hits = []
+        self._pack_areas = []
 
         text(screen, "MARKET", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
@@ -324,6 +348,8 @@ class MarketScreen(DragSelectMixin, Screen):
             gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
             panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
             text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
+
+        self.draw_sheet_modal(screen, f)
 
     # ------------------------------------------------------------------ #
     def _draw_tabs(self, screen, rect):
@@ -471,9 +497,13 @@ class MarketScreen(DragSelectMixin, Screen):
               DANGER if (names and hov and not take_ok) else LINE_SOFT,
               width=2 if hov else 1, radius=RADIUS)
 
+        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
+        self.info_hits.append((badge, m))
+
         tok = (rect.x + pad + 12, rect.y + pad + 12)
         token_badge(screen, tok, m, f)
-        text(screen, m.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
+        text(screen, ellipsize(m.name, f.card_name, badge.x - (tok[0] + 24) - SP1),
+             f.card_name, INK, (tok[0] + 24, rect.y + pad))
         text(screen, f"{m.race['name']}  ·  {m.occupation['name']}", f.body_sm,
              INK_DIM, (tok[0] + 24, rect.y + pad + 20))
 
@@ -499,29 +529,48 @@ class MarketScreen(DragSelectMixin, Screen):
             self._draw_item_row(screen, r, m, loc, held, tag=label.upper())
             y += 24 + SP1
 
+        # Identical items stack into one row (×N) -- shift/ctrl-click grabs the
+        # whole stack. What does not fit in the card scrolls with the wheel.
         y = section(screen, "PACK", rect.x + pad, y + SP1, rect.w - 2 * pad, f)
-        if not m._base_inventory:
+        stacks = self._stacks(m._base_inventory)
+        if not stacks:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-        shown = m._base_inventory[:PACK_ROWS_SHOWN]
-        for idx, item in enumerate(shown):
+
+        row_h = 24 + SP1
+        max_bottom = rect.bottom - 26                 # leave room for the COPPER label
+        pack_area = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, max(0, max_bottom - y))
+        self._pack_areas.append((pack_area, m))
+        visible_n = max(1, (max_bottom - y) // row_h)
+        scroll = max(0, min(self._pack_scroll.get(id(m), 0),
+                            max(0, len(stacks) - visible_n)))
+        self._pack_scroll[id(m)] = scroll
+
+        if scroll:
+            text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (rect.x + pad, y + 2))
+            y += 14
+        shown = stacks[scroll:scroll + visible_n]
+        for name, idxs in shown:
+            idx, count = idxs[-1], len(idxs)          # items in a stack are interchangeable
             r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
-            self._draw_item_row(screen, r, m, idx, item)
-            y += 24 + SP1
-        extra = len(m._base_inventory) - len(shown)
-        if extra > 0:
-            text(screen, f"+{extra} more in the pack", f.label, INK_FAINT,
+            self._draw_item_row(screen, r, m, idx, name, count=count)
+            y += row_h
+        more_below = len(stacks) - scroll - len(shown)
+        if more_below > 0:
+            text(screen, f"v {more_below} more below", f.label, INK_FAINT,
                  (rect.x + pad, y + 2))
+            y += 14
 
         tracked(screen, "COPPER (COMMON)", f.label, INFO, (rect.x + pad, rect.bottom - 22))
 
-    def _draw_item_row(self, screen, r, member, loc, name, tag=""):
+    def _draw_item_row(self, screen, r, member, loc, name, tag="", count=1):
         f = self.fonts
         sel = (member, loc) in self.sel
         hov = not self.sel and r.collidepoint(self.mouse)
         panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
               border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
         ink = ACCENT_INK if sel else INK
-        text(screen, name, f.body_sm, ink, (r.x + SP2, r.y + 5))
+        label = name if count == 1 else f"{name}  ×{count}"
+        text(screen, label, f.body_sm, ink, (r.x + SP2, r.y + 5))
         right = f"{economy.sell_price(name, self.deal)}c"
         if tag:
             right = tag + "  ·  " + right

@@ -3,7 +3,7 @@
 import random
 from dataclasses import replace
 
-from tests.helpers import abilities, actions, Battle, CustomScenario, Unit, world
+from tests.helpers import abilities, actions, Battle, CustomScenario, data, Unit, world
 
 
 # --------------------------------------------------------------------------- #
@@ -29,6 +29,25 @@ def test_absorb_battle_permadeath_and_clock():
     assert out.fallen == [squad[1]] and set(out.survivors) == {squad[0], squad[2]}
     assert guild.battles_won == 1
     assert guild.clock.seconds == 4 * 6                # ~6 s per round fought
+
+
+def test_absorb_battle_carries_the_equipped_lantern_forward():
+    from gartok import campaign
+    from gartok.guild import Guild
+    random.seed(2)
+    member = Unit("player")
+    member.equipped_weapon, member.equipped_offhand = "Dagger", data.LANTERN_ITEM
+    squad = [member]
+    guild = Guild(list(squad))
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    battle.round_no = 1
+    battle.player_units[0].status = "up"
+
+    campaign.absorb_battle(guild, squad, battle)
+
+    assert member.equipped_offhand == data.LANTERN_ITEM
+    assert data.LANTERN_ITEM not in member._base_inventory   # equipped, not double-counted
 
 
 def test_absorb_battle_arena_win_pays_the_purse_not_loot():

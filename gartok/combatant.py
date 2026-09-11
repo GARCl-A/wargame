@@ -78,9 +78,14 @@ class Combatant:
         self.tongue_weapon_name = c.equipped_tongue if c.has_tongue else None
         self.tongue_weapon = data.WEAPONS.get(self.tongue_weapon_name)
         self.torch_hand = False
-        if c.equipped_offhand == data.TORCH_ITEM:
+        self.lantern_hand = False
+        if c.equipped_offhand in (data.TORCH_ITEM, data.LANTERN_ITEM):
             weapon_hands = self.weapon["hands"] if self.weapon_hand else 0
-            self.torch_hand = weapon_hands < 2       # a 2-handed weapon leaves no off hand
+            free_off_hand = weapon_hands < 2         # a 2-handed weapon leaves no off hand
+            if c.equipped_offhand == data.TORCH_ITEM:
+                self.torch_hand = free_off_hand
+            else:
+                self.lantern_hand = free_off_hand
         self.inventory = list(c._base_inventory)
         self.ammo = data.QUIVER_AMMO if data.AMMO_ITEM in self.inventory else 0
         # a crossbow holds one bolt at a time and starts the fight empty: spend an
@@ -207,7 +212,8 @@ class Combatant:
         return self.has_condition("demoralized")
 
     # ------------------------------------------------------------------ #
-    # hands / equipment  (two hands; weapon takes 1 or 2; torch takes 1) #
+    # hands / equipment (two hands; weapon takes 1 or 2; a torch or a     #
+    # lantern takes the off hand -- only one of the two at a time)        #
     # ------------------------------------------------------------------ #
     @property
     def unarmed(self):
@@ -217,8 +223,23 @@ class Combatant:
     def has_torch(self):
         return self.torch_hand
 
+    @property
+    def has_lantern(self):
+        return self.lantern_hand
+
+    @property
+    def light_radius(self):
+        """How far this combatant's own held light reaches, 0 if none. Only
+        an equipped light source counts -- one riding in the pack stays dark."""
+        if self.torch_hand:
+            return data.TORCH_RADIUS
+        if self.lantern_hand:
+            return data.LIGHT_SOURCES[data.LANTERN_ITEM]
+        return 0
+
     def _hands_used(self):
-        return (self.weapon["hands"] if self.weapon_hand else 0) + (1 if self.torch_hand else 0)
+        return ((self.weapon["hands"] if self.weapon_hand else 0)
+                + (1 if self.torch_hand else 0) + (1 if self.lantern_hand else 0))
 
     @property
     def free_hands(self):
@@ -238,6 +259,15 @@ class Combatant:
         self.torch_hand = False
         return ("torch", None)
 
+    def drop_lantern(self):
+        """A lantern bumped out of the off hand goes back in the pack, not the
+        ground -- it is not a torch stuck in dirt, and never appears as loot."""
+        if not self.lantern_hand:
+            return None
+        self.lantern_hand = False
+        self.inventory.append(data.LANTERN_ITEM)
+        return None
+
     def disarm(self):
         """Empties the weapon hand (thrown: the action already handles the ground object)."""
         self.weapon_hand = False
@@ -256,8 +286,9 @@ class Combatant:
         self.weapon = data.WEAPONS[weapon_name]
         self.weapon_hand = True
         dropped = []
-        if self._hands_used() > 2:                    # two-handed weapon + torch in the other
+        if self._hands_used() > 2:            # two-handed weapon + a torch/lantern in the other
             dropped.append(self.drop_torch())
+            self.drop_lantern()
         return [x for x in dropped if x]
 
     # ------------------------------------------------------------------ #
@@ -272,6 +303,8 @@ class Combatant:
             w += self.tongue_weapon["weight"]
         if self.torch_hand:
             w += data.TORCH_WEIGHT
+        if self.lantern_hand:
+            w += data.ITEM_WEIGHTS[data.LANTERN_ITEM]
         if self.armor:
             w += self.armor.get("weight", 0)
         return round(w, 1)

@@ -104,6 +104,27 @@ def test_pickup_torch_with_free_hand_does_not_drop_weapon():
     assert a.has_torch and not a.unarmed and len(batt.ground) == n_obj - 1
 
 
+def test_lantern_in_hand_blocks_picking_up_a_ground_torch():
+    batt, a, d = _melee_battle()
+    a.equip_weapon("Dagger")
+    a.lantern_hand = True
+    batt.ground.append(GroundObject.torch(a.pos))
+    a.ap = 2
+    n_obj = len(batt.ground)
+    actions.PICK_UP.execute(batt, a)
+    assert a.lantern_hand and not a.has_torch and len(batt.ground) == n_obj
+
+
+def test_two_handed_weapon_bumps_lantern_to_pack_not_ground():
+    u = _combatant()
+    u.equip_weapon("Dagger")
+    u.lantern_hand = True
+    n_lanterns = u.inventory.count(data.LANTERN_ITEM)
+    dropped = u.equip_weapon("Light Crossbow")           # two-handed: no off hand left
+    assert dropped == [] and not u.lantern_hand
+    assert u.inventory.count(data.LANTERN_ITEM) == n_lanterns + 1
+
+
 def test_shepherd_spawns_neutral_sheep_that_blocks():
     random.seed(0)
     shepherd = _unit()

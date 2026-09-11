@@ -122,9 +122,12 @@ DARKVISION = squares(18)          # ability "darkvision": sees 18 m in the dark
 DEMORALIZE_RANGE = squares(18)    # Demoralize action: 18 m, needs mutual sight + shared language
 TORCH_RADIUS = squares(6)         # torch: lights a 6 m radius (held or dropped)
 
-# Inventory items that emit light -> lit radius in squares.
+LANTERN_ITEM = "Lantern"          # an off-hand light source, like a torch but bigger and heavier
+
+# Off-hand light sources beyond the torch -> lit radius in squares. Only lights
+# while equipped in the off hand (see combatant.light_radius), same as a torch.
 LIGHT_SOURCES = {
-    "Lantern": squares(9),       # 9 m radius
+    LANTERN_ITEM: squares(9),    # 9 m radius
 }
 
 

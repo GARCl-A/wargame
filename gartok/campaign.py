@@ -25,7 +25,7 @@ of one another -- see `orders.py` for what an order is.
 
 from dataclasses import dataclass, field
 
-from . import arena, data, factions, loot, world
+from . import arena, data, factions, loot, orders, world
 
 
 @dataclass
@@ -45,13 +45,21 @@ class BattleOutcome:
 
 
 def _carry_forward(member, combatant):
-    """The only battle state a survivor keeps: a torch still in hand, plus any
-    spare torches picked up during the fight."""
-    member.equipped_offhand = data.TORCH_ITEM if combatant.torch_hand else None
-    spares = combatant.inventory.count(data.TORCH_ITEM)
+    """The only battle state a survivor keeps: a light source still in hand
+    (torch or lantern), plus any spare torches picked up during the fight."""
+    if combatant.torch_hand:
+        member.equipped_offhand = data.TORCH_ITEM
+    elif combatant.lantern_hand:
+        member.equipped_offhand = data.LANTERN_ITEM
+    else:
+        member.equipped_offhand = None
+    torch_spares = combatant.inventory.count(data.TORCH_ITEM)
+    lantern_spares = combatant.inventory.count(data.LANTERN_ITEM)
     member._base_inventory = (
-        [it for it in member._base_inventory if it != data.TORCH_ITEM]
-        + [data.TORCH_ITEM] * spares)
+        [it for it in member._base_inventory
+         if it not in (data.TORCH_ITEM, data.LANTERN_ITEM)]
+        + [data.TORCH_ITEM] * torch_spares
+        + [data.LANTERN_ITEM] * lantern_spares)
 
 
 def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
@@ -190,7 +198,14 @@ def advance(guild, dt=None):
         g.order.remaining -= dt
         if g.order.remaining > 1e-9:
             continue
-        order, g.order = g.order, None        # resolved -- the group goes idle
+        order = g.order
+        if order.kind == "travel" and order.path:
+            # arrived at a waypoint, not the final stop -- visibly stop here and
+            # queue the next edge, rather than resolving the whole route at once
+            g.node = order.dest
+            g.order = orders.next_leg(order.dest, list(order.path))
+            continue
+        g.order = None                         # resolved -- the group goes idle
         if order.kind == "travel":
             g.node = order.dest
             for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):

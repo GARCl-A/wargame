@@ -57,6 +57,32 @@ class DragSelectMixin:
         """A press just crossed the slop and became a drag. Screens override to
         narrow the selection to what's under the cursor."""
 
+    @staticmethod
+    def _stacks(names):
+        """Group a pack's item names into `(name, [indices])`, in first-seen
+        order -- so a screen can show one row per name with a ×N count instead
+        of one row per identical item."""
+        groups = {}
+        order = []
+        for i, name in enumerate(names):
+            if name not in groups:
+                groups[name] = []
+                order.append(name)
+            groups[name].append(i)
+        return [(name, groups[name]) for name in order]
+
+    def _expand_stack(self, src):
+        """`src` plus every other pack index carrying the same item name for the
+        same owner -- so one shift/ctrl-click on a consolidated stack row (see
+        `_stacks`) grabs the whole stack, not just the one index behind it."""
+        owner, loc = src
+        if isinstance(loc, str):
+            return [src]
+        name = self._item_at(owner, loc)
+        if name is None:
+            return [src]
+        return [(owner, i) for i, n in enumerate(owner._base_inventory) if n == name]
+
     def _collect(self, picks):
         by_owner = {}
         for owner, loc in picks:

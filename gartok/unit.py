@@ -333,7 +333,7 @@ class Unit:
         # A weapon is just a held item: `equipped_weapon` is the one in the weapon
         # hand (None = fighting unarmed); spares ride in `_base_inventory`.
         self.equipped_weapon = self.occupation["weapon"]
-        self.equipped_offhand = None                  # off hand: only a torch fits, for now
+        self.equipped_offhand = None                  # off hand: a torch or a light source
         self.equipped_armor = None                    # body slot: bought at the market
         self.item = self.occupation["item"]
         if self.item in data.CREATURE_ITEMS:         # e.g. the Shepherd's sheep
@@ -554,7 +554,7 @@ class Unit:
 
     @staticmethod
     def fits_offhand(name):
-        return name == data.TORCH_ITEM
+        return name == data.TORCH_ITEM or name in data.LIGHT_SOURCES
 
     @staticmethod
     def fits_armor(name):

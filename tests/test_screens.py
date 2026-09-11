@@ -54,6 +54,43 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     assert ms.purse == 0 and "3 of 10" in ms.notice
 
 
+def test_market_pack_scrolls_and_the_sheet_badge_opens_the_full_sheet():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.market_screen import MarketScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    random.seed(3)
+    mnode = next(n for n in world.NODES if n.kind == "market")
+    shopper = Unit("player")
+    shopper._base_inventory = [f"Trinket{i}" for i in range(30)]   # distinct: forces overflow
+    ms = MarketScreen(Fonts(), None, [shopper], mnode, lambda: None)
+    ms.mouse = (0, 0)
+    surf = pygame.Surface((1600, 1000))
+    ms.draw(surf)
+    pack_rows = [idx for _, _, idx in ms.item_rows if isinstance(idx, int)]
+    assert 0 < len(pack_rows) < 30                    # a real overflow, not "everything fits"
+
+    ms._pack_scroll[id(shopper)] = 4
+    ms.draw(surf)
+    pack_rows = [idx for _, _, idx in ms.item_rows if isinstance(idx, int)]
+    assert pack_rows[0] == 4                          # the list actually scrolled
+
+    assert ms.info_hits, "the card should offer an 'i' sheet badge"
+    badge_rect, who = ms.info_hits[0]
+    assert who is shopper
+    ms._drop(badge_rect.center, dragging=False, src=None)
+    assert ms.sheet_open
+
+
+def test_market_pack_stacks_identical_items_with_a_count():
+    from gartok.market_screen import MarketScreen
+    ms = MarketScreen.__new__(MarketScreen)
+    assert ms._stacks(["Potato"] * 4) == [("Potato", [0, 1, 2, 3])]
+
+
 def test_dragselect_ignores_a_mouseup_with_no_matching_press():
     """Entering the market via the squad picker's GO SHOPPING button leaves the
     left button down; the release then lands on the scene that just replaced it.
@@ -290,6 +327,57 @@ def test_guild_screen_multidrop_on_a_hand_takes_the_first_that_fits():
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
     assert a.equipped_weapon == "Dagger" and a._base_inventory == ["Rope"]
+
+
+def test_pack_stacks_group_identical_items_with_their_indices():
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    a = Unit("player")
+    a._base_inventory = ["Potato"] * 3 + ["Rope"] + ["Potato"] * 2
+    scr = GuildScreen(None, Guild([a]), on_back=lambda: None)
+    assert scr._stacks(a._base_inventory) == [
+        ("Potato", [0, 1, 2, 4, 5]), ("Rope", [3])]
+
+
+def test_shift_click_a_stack_row_grabs_every_index_in_it():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    a = Unit("player")
+    a._base_inventory = ["Potato"] * 3
+    scr = GuildScreen(None, Guild([a]), on_back=lambda: None)
+    try:
+        pygame.key.set_mods(pygame.KMOD_LSHIFT)
+        scr._drop((5, 5), dragging=False, src=(a, 2))
+    finally:
+        pygame.key.set_mods(pygame.KMOD_NONE)
+    assert sorted(idx for _, idx in scr.selected) == [0, 1, 2]
+
+
+def test_guild_pack_list_scrolls_instead_of_hiding_items_past_the_first_screenful():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    a = Unit("player")
+    a._base_inventory = [f"Scroll{i}" for i in range(40)]      # 40 distinct items: no stacking
+    scr = GuildScreen(Fonts(), Guild([a]), on_back=lambda: None)
+    scr.mouse = (0, 0)
+    surf = pygame.Surface((1600, 1000))
+    scr.draw(surf)
+    pack_rows = [idx for _, _, idx in scr.sources if isinstance(idx, int)]
+    assert 0 < len(pack_rows) < 40                    # a real overflow, not "everything fits"
+
+    scr._pack_scroll[id(a)] = 5
+    scr.draw(surf)
+    pack_rows = [idx for _, _, idx in scr.sources if isinstance(idx, int)]
+    assert pack_rows[:2] == [5, 6]                    # the list actually scrolled
 
 
 def test_char_editor_duplicate_forks_an_unsaved_copy():

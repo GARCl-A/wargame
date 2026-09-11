@@ -12,12 +12,11 @@ from .board import cells, grid_distance
 
 
 def unit_light(unit):
-    """Light radius (squares) the unit emits; 0 if none."""
+    """Light radius (squares) the unit emits; 0 if none. Only an equipped
+    light source counts -- one riding in the pack stays dark."""
     if not unit.alive:
         return 0
-    if unit.has_torch:
-        return data.TORCH_RADIUS
-    return max((data.LIGHT_SOURCES.get(it, 0) for it in unit.inventory), default=0)
+    return unit.light_radius
 
 
 def ground_light(obj):
@@ -127,8 +126,6 @@ def vision_desc(unit):
         return f"darkvision, {unit.ability.darkvision} squares"
     if unit.has_torch:
         return f"torch in hand, {data.TORCH_RADIUS} squares"
-    for it in unit.inventory:
-        radius = data.LIGHT_SOURCES.get(it, 0)
-        if radius:
-            return f"{it.lower()}, {radius} squares"
+    if unit.has_lantern:
+        return f"lantern in hand, {data.LIGHT_SOURCES[data.LANTERN_ITEM]} squares"
     return "no light of their own (only sees light along the line of sight)"

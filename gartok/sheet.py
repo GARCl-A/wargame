@@ -49,7 +49,8 @@ def _armor_line(u):
 def character_sheet(u):
     """Full unit sheet as a list of text lines (no newlines, no wrapping)."""
     held = " + ".join(x for x in ("weapon" if u.weapon_hand else "",
-                                  "torch" if u.torch_hand else "") if x) or "nothing"
+                                  "torch" if u.torch_hand else "",
+                                  "lantern" if u.lantern_hand else "") if x) or "nothing"
     hands_line = f"Hands: {held}" + (f"  ({u.free_hands} free)" if u.free_hands else "")
     inv = ", ".join(u.inventory) if u.inventory else "(empty)"
     if data.FIRST_AID_ITEM in u.inventory:

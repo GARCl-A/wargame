@@ -67,6 +67,8 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         self.sources = []                  # [(rect, unit, loc)]
         self.info_hits = []                # [(rect, unit)] -- the detail header opens the sheet
         self.buttons = []                  # [(key, rect)]
+        self._pack_scroll = {}             # id(unit) -> stacks scrolled past in the pack list
+        self._pack_area = None             # rect of the pack list, for wheel hit-testing
 
     # ------------------------------------------------------------------ #
     def _recruited_by(self, unit):
@@ -97,6 +99,15 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         if src not in self.selected:
             self.selected = [src]
 
+    def handle_event(self, event):
+        if (event.type == pygame.MOUSEWHEEL and self.member is not None
+                and self._pack_area and self._pack_area.collidepoint(self.mouse)):
+            n = len(self._stacks(self.member._base_inventory))
+            cur = self._pack_scroll.get(id(self.member), 0)
+            self._pack_scroll[id(self.member)] = max(0, min(n - 1, cur - event.y))
+            return
+        super().handle_event(event)
+
     def _drop(self, px, dragging, src):
         if self.close_sheet_on_click():        # sheet modal up: any click just closes it
             return
@@ -125,10 +136,11 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
 
         mods = pygame.key.get_mods()
         if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+            group = self._expand_stack(src)
             if src in self.selected:
-                self.selected.remove(src)
+                self.selected = [p for p in self.selected if p not in group]
             else:
-                self.selected.append(src)
+                self.selected += [p for p in group if p not in self.selected]
             return
 
         if self.selected:
@@ -164,6 +176,7 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         self.buttons = []
         self.member_hits = []
         self.tab_hits = []
+        self._pack_area = None
         self._hot = False
 
         if self.member not in self.roster:
@@ -195,7 +208,8 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         else:
             list_w = int(min(max(W * 0.24, LIST_MIN), LIST_MAX))
             det_w = min(DET_MAX, W - 2 * pad - list_w - SP4)
-            packn = len(self.member._base_inventory) if self.member else 0
+            packn = (len(self._stacks(self.member._base_inventory))
+                     if self.member else 0)
             det_h = max(400, min(bottom - top,
                                  340 + max(1, packn) * 34 + (34 if carried else 0)))
             list_rect = pygame.Rect(pad, top, list_w, bottom - top)
@@ -464,31 +478,51 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         y += 34 + SP4
 
         # --- pack ------------------------------------------------- #
+        # Identical items stack into one row (×N) -- shift/ctrl-click grabs
+        # the whole stack (see DragSelectMixin._expand_stack). What does not
+        # fit in the card scrolls with the mouse wheel.
         y = section(screen, "PACK", x, y, inner, f)
-        if not unit._base_inventory:
+        stacks = self._stacks(unit._base_inventory)
+        if not stacks:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
             y += 22
-        for idx, item in enumerate(unit._base_inventory):
+
+        row_h = 30 + SP1
+        max_bottom = rect.bottom - SP4
+        self._pack_area = pygame.Rect(x, y, inner, max(0, max_bottom - y))
+        visible_n = max(1, (max_bottom - y) // row_h)
+        scroll = max(0, min(self._pack_scroll.get(id(unit), 0),
+                            max(0, len(stacks) - visible_n)))
+        self._pack_scroll[id(unit)] = scroll
+
+        if scroll:
+            text(screen, f"^ {scroll} more above -- scroll up", f.label,
+                 INK_FAINT, (x, y + 2))
+            y += 16
+        shown = stacks[scroll:scroll + visible_n]
+        for name, idxs in shown:
+            idx, count = idxs[-1], len(idxs)          # items in a stack are interchangeable
             ir = pygame.Rect(x, y, inner, 30)
-            if ir.bottom > rect.bottom - SP4:
-                text(screen, f"+{len(unit._base_inventory) - idx} items", f.label,
-                     INK_FAINT, (x, y + 4))
-                y += 20
-                break
             isel = (unit, idx) in self.selected
             ihov = not carried and ir.collidepoint(mouse)
             panel(screen, ir, fill=ACCENT if isel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if isel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if isel else INK
-            text(screen, item, f.body, ink, (ir.x + SP3, ir.y + 7))
-            text(screen, kg(data.item_weight(item)), f.mono_sm,
+            label = name if count == 1 else f"{name}  ×{count}"
+            text(screen, label, f.body, ink, (ir.x + SP3, ir.y + 7))
+            text(screen, kg(data.item_weight(name)), f.mono_sm,
                  ACCENT_INK if isel else INK_DIM, (ir.right - SP3, ir.y + 8), right=True)
-            tag = self._item_tag(item)
+            tag = self._item_tag(name)
             if tag:
                 text(screen, tag, f.label, ACCENT_INK if isel else INFO,
                      (ir.right - SP3 - 64, ir.y + 8), right=True)
             self.sources.append((ir, unit, idx))
-            y += 30 + SP1
+            y += row_h
+        more_below = len(stacks) - scroll - len(shown)
+        if more_below > 0:
+            text(screen, f"v {more_below} more below -- scroll down", f.label,
+                 INK_FAINT, (x, y + 4))
+            y += 20
 
         if carried and y + 26 < rect.bottom - SP3:
             br = pygame.Rect(x, y + SP1, inner, 26)

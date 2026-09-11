@@ -168,6 +168,21 @@ def test_field_loot_gathers_the_dead_and_the_ground():
     assert sorted(pool) == ["Axe", "Axe", "Club", "Dagger", "Rope", "Rope", "Torch"]
 
 
+def test_field_loot_includes_a_fallen_enemys_equipped_lantern():
+    from gartok import data, loot
+    random.seed(4)
+    enemy = Unit("enemy")
+    batt = Battle([Unit("player")], [enemy])
+    e = batt.enemy_units[0]
+    e.weapon_hand, e.weapon_name = False, None
+    e.torch_hand, e.lantern_hand = False, True
+    e.inventory = []
+    batt.ground = []
+
+    pool = loot.field_loot(batt, [])
+    assert pool == [data.LANTERN_ITEM]
+
+
 def test_non_lethal_battle_knocks_out_and_keeps_everyone():
     random.seed(0)
     squad = [Unit("player"), Unit("player")]

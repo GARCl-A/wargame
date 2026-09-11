@@ -153,9 +153,10 @@ def _drop_cell(battle, target):
 
 
 def _pickable(unit, obj):
-    """Anyone can pick up / swap a torch; a weapon only if the unit is unarmed."""
+    """Anyone can pick up a torch if the off hand is free; a weapon only if
+    the unit is unarmed."""
     if obj.is_torch:
-        return not unit.has_torch
+        return not unit.has_torch and not unit.has_lantern
     return unit.unarmed
 
 

@@ -12,8 +12,8 @@ from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, DEMO_HL, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1,
                     SP2, SP3, SP4, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    Stack, chip, panel, section, token_badge, text, tracked,
-                    wrap_lines)
+                    Stack, chip, ellipsize, panel, section, token_badge, text,
+                    tracked, wrap_lines)
 from .unit import Unit
 
 TEAM_SIZE = 3
@@ -154,8 +154,13 @@ class DraftScreen(Screen):
                          border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
         tok = (rect.x + pad + 13, rect.y + 25)
         token_badge(screen, tok, unit, f, r=15)
-        for j, ln in enumerate(wrap_lines([unit.name], f.card_name, rect.w - 74)[:2]):
-            text(screen, ln, f.card_name, INK, (tok[0] + 26, rect.y + 8 + j * 17))
+        name_x = tok[0] + 26
+        name_w = rect.right - pad - name_x
+        text(screen, ellipsize(unit.name, f.card_name, name_w), f.card_name, INK,
+             (name_x, rect.y + 7))
+        text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
+                                f.body_sm, name_w),
+             f.body_sm, INK_DIM, (name_x, rect.y + 27))
         s.y = head.bottom + SP3
 
         # --- tags + context --------------------------------------- #
@@ -236,17 +241,16 @@ class DraftScreen(Screen):
         s.gap(SP2)
 
         # --- languages -------------------------------------- #
-        lrow = s.row(30)
-        tracked(screen, "LANGUAGES", f.label, INFO, (lrow.x, lrow.y + 1))
-        text(screen, ", ".join(unit.languages), f.body_sm, INK, (lrow.x + 66, lrow.y))
+        s.y = section(screen, "LANGUAGES", s.x, s.y, s.w, f)
+        text(screen, ", ".join(unit.languages), f.body_sm, INK, (s.x, s.y))
         if unit.ability.demoralize_ignores_language:
             note = "mimics voices: Demoralize needs no shared language"
         elif unit.ability.extra_languages:
             note = "2nd language: more targets to Demoralize"
         else:
             note = "Demoralize needs a shared language"
-        text(screen, note, f.body_sm, INK_DIM, (lrow.x, lrow.y + 15))
-        s.gap(SP2)
+        text(screen, note, f.body_sm, INK_DIM, (s.x, s.y + 15))
+        s.gap(32)
 
         # --- ability --------------------------------------- #
         eff = wrap_lines([unit.ability.effect], f.body_sm, s.w - SP3) \

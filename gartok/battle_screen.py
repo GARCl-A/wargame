@@ -47,6 +47,7 @@ class BattleScreen(Screen):
         self._centered_on = None              # unit the camera last snapped to
         self.inspect = None
         self.inspect_open = True
+        self._armed = None                    # enemy a repeat click on it will now attack
         self.enemy_timer = 0
         self.aim_action = None
         self.view_squad = False
@@ -70,6 +71,10 @@ class BattleScreen(Screen):
                 self.battle.end_turn()
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
+            elif event.key == pygame.K_a and self._is_player_turn():
+                self._confirm_armed_attack()
+            elif pygame.K_1 <= event.key <= pygame.K_9:
+                self._hotkey_action(event.key - pygame.K_1)
         elif event.type == pygame.MOUSEWHEEL:
             self.view.zoom(pygame.mouse.get_pos(), event.y)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -189,8 +194,13 @@ class BattleScreen(Screen):
             return
 
         if clicked is not None and clicked.team == "enemy":
+            if self._armed is not clicked:
+                # first click on this target: just look it over, don't swing yet
+                self._armed = clicked
+                return
             if actions.ATTACK.can(b, actor, clicked):
                 actions.ATTACK.execute(b, actor, clicked)
+                self._armed = None
                 self._after_player_action()
             return
         if clicked is None:
@@ -208,6 +218,24 @@ class BattleScreen(Screen):
             if cand:
                 return min(cand, key=lambda a: reach[a])
         return None
+
+    def _confirm_armed_attack(self):
+        """The 'A' hotkey: attacks whatever is currently armed (see `_click`) --
+        the same confirm step a second click on the target would do."""
+        b = self.battle
+        target = self._armed
+        if target is None or not actions.ATTACK.can(b, b.active, target):
+            return
+        actions.ATTACK.execute(b, b.active, target)
+        self._armed = None
+        self._after_player_action()
+
+    def _hotkey_action(self, idx):
+        """Number-key shortcut for the `idx`-th button currently on the action
+        panel (built fresh by `_draw_actions` every frame, same order as shown)."""
+        panel_actions = [key for key, _ in self.buttons if not isinstance(key, str)]
+        if idx < len(panel_actions):
+            self._action_click(panel_actions[idx])
 
     def _action_click(self, action):
         b = self.battle
@@ -643,7 +671,9 @@ class BattleScreen(Screen):
             panel(screen, badge, fill=WARN, border=None, radius=4)
             text(screen, "BRKN", f.mono_sm, (20, 18, 8), badge.center, center=True)
         if self.inspect is u:
-            pygame.draw.rect(screen, INK, r, 1, border_radius=4)
+            armed = self._armed is u
+            pygame.draw.rect(screen, DANGER if armed else INK, r,
+                             2 if armed else 1, border_radius=4)
 
     def _draw_units(self, screen):
         f = self.fonts
@@ -687,7 +717,9 @@ class BattleScreen(Screen):
             pygame.draw.rect(screen, OK if frac > 0.4 else WARN if frac > 0.15 else DANGER,
                              pygame.Rect(bar.x, bar.y, int(bar.w * frac), bar.h))
             if self.inspect is u:
-                pygame.draw.rect(screen, INK, r, 1, border_radius=4)
+                armed = self._armed is u
+                pygame.draw.rect(screen, DANGER if armed else INK, r,
+                                 2 if armed else 1, border_radius=4)
 
     # ------------------------------------------------------------------ #
     # initiative strip                                                   #
@@ -848,6 +880,7 @@ class BattleScreen(Screen):
         contextual = (actions.ATTACK_TONGUE, actions.STABILIZE, actions.FIRST_AID,
                       actions.CLIMB, actions.DROP, actions.SWIM)
 
+        hotkey_i = 0
         for action in actions.PANEL_ACTIONS:
             if action in contextual and not (my_turn and action.available(b, act)):
                 continue
@@ -867,7 +900,10 @@ class BattleScreen(Screen):
             ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
             icons.icon(screen, action.id, ibox, ink)
 
-            label = f"{action.name}: click the target" if armed else action.name
+            label = action.name if not armed else f"{action.name}: click the target"
+            if hotkey_i < 9:                    # 1-9 hotkeys, in panel order
+                label = f"[{hotkey_i + 1}] {label}"
+            hotkey_i += 1
             text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
 
             if action.cost:
@@ -899,6 +935,11 @@ class BattleScreen(Screen):
         self.buttons.append(("inspect_toggle", head))
         pygame.draw.line(screen, LINE_SOFT, (head.x, head.bottom + 2),
                          (head.right, head.bottom + 2))
+
+        if who is insp and self._armed is insp:
+            s.gap(SP1)
+            hint = s.row(16)
+            text(screen, "click again to attack", f.body_sm, DANGER, (hint.x, hint.y))
 
         if not self.inspect_open:
             return

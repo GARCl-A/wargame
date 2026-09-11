@@ -51,6 +51,27 @@ def test_equipping_two_handed_weapon_bumps_offhand_torch_to_pack():
     assert u.equipped_offhand is None and data.TORCH_ITEM in u._base_inventory
 
 
+def test_offhand_lantern_only_lights_while_equipped():
+    u = _unit()
+    u.equipped_weapon, u.equipped_offhand = "Dagger", data.LANTERN_ITEM
+    c = Combatant(u)
+    assert c.lantern_hand and c.light_radius == data.LIGHT_SOURCES[data.LANTERN_ITEM]
+    u.equipped_weapon = "Light Crossbow"                  # two-handed: off hand occupied
+    assert not Combatant(u).lantern_hand and Combatant(u).light_radius == 0
+    assert u.equipped_offhand == data.LANTERN_ITEM        # still assigned, just not lit
+
+    u2 = _unit()
+    u2._base_inventory = [data.LANTERN_ITEM]               # a lantern left in the pack
+    assert Combatant(u2).light_radius == 0                # does not light on its own
+
+
+def test_equipping_two_handed_weapon_bumps_offhand_lantern_to_pack():
+    u = _unit()
+    u.equipped_weapon, u.equipped_offhand = "Dagger", data.LANTERN_ITEM
+    u.give_to_hand("Light Crossbow")
+    assert u.equipped_offhand is None and data.LANTERN_ITEM in u._base_inventory
+
+
 def test_equipped_weapon_survives_save():
     from gartok import persist
     random.seed(9)

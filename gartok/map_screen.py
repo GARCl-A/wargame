@@ -386,7 +386,10 @@ class MapScreen(Screen):
         if o is None or o.kind == "idle":
             return "idle"
         if o.kind == "travel":
-            return f"→ {world.node(o.dest).name} ({o.remaining:g} h)"
+            dest_name = world.node(o.final_dest).name
+            if o.path:                            # more waypoints still to come
+                return f"→ {dest_name} via {world.node(o.dest).name} ({o.remaining:g} h)"
+            return f"→ {dest_name} ({o.remaining:g} h)"
         if o.kind == "work":
             return f"working ({o.remaining:g} h left)"
         return f"heading to {o.kind} ({o.remaining:g} h)"
@@ -395,14 +398,14 @@ class MapScreen(Screen):
         y = section(screen, "GROUPS", cx, y, cw, f)
         for g in self.guild.groups:
             sel = g is self.selected
-            r = pygame.Rect(cx, y, cw, 30)
+            r = pygame.Rect(cx, y, cw, 32)
             hov = r.collidepoint(self.mouse)
             panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1, radius=8)
             name = g.name or f"Group ({len(g.members)})"
-            text(screen, name, f.body_sm, ACCENT if sel else INK, (r.x + SP2, r.y + 3))
+            text(screen, name, f.body_sm, ACCENT if sel else INK, (r.x + SP2, r.y + 4))
             text(screen, f"{world.node(g.node).name}  ·  {self._order_status(g)}",
-                 f.label, INK_DIM, (r.x + SP2, r.y + 16))
+                 f.label, INK_DIM, (r.x + SP2, r.y + 19))
             self.group_rows.append((r, g))
             y += 34
         return y + SP2

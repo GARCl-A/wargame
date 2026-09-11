@@ -63,6 +63,26 @@ def test_simultaneous_completions_all_resolve_in_one_advance():
     assert a.order is None and b.order is None
 
 
+def test_multi_hop_travel_stops_at_each_waypoint_instead_of_jumping_to_the_end():
+    """city -> wilds has no direct edge: the cheapest route is city -> road (4h)
+    -> wilds (6h). The group should visibly arrive at "road" first, not teleport
+    straight to "wilds" the moment the whole trip's hours are up."""
+    random.seed(1)
+    g = Group([Unit("player")], node="city")
+    g.order = orders.travel(g, "wilds")
+    assert g.order.dest == "road" and g.order.path == ("wilds",)
+    assert g.order.remaining == 4 and g.order.final_dest == "wilds"
+    guild = _guild(g)
+
+    campaign.advance(guild)                          # dt = 4 h: the city->road leg
+    assert g.node == "road" and g.busy                # stopped here, not idle yet
+    assert g.order.dest == "wilds" and g.order.path == ()
+    assert g.order.remaining == 6
+
+    campaign.advance(guild)                          # dt = 6 h more: the road->wilds leg
+    assert g.node == "wilds" and g.order is None       # now idle at the final stop
+
+
 def test_travel_to_an_unreachable_node_raises():
     random.seed(1)
     g = Group([Unit("player")], node="city")
