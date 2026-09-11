@@ -85,6 +85,7 @@ class MapScreen(Screen):
     def _issue(self, order):
         if not self.selected.busy:
             self.selected.order = order
+            self._maybe_auto_advance()
 
     def _go(self, target):
         if self.selected.busy or target.id == self.selected.node:
@@ -92,7 +93,15 @@ class MapScreen(Screen):
         try:
             self.selected.order = orders.travel(self.selected, target.id)
         except ValueError:
-            pass
+            return
+        self._maybe_auto_advance()
+
+    def _maybe_auto_advance(self):
+        """A one-group guild has no one else to coordinate with -- the moment
+        its order is set, just run the clock (App._advance already chases it
+        through to the next real decision), no ADVANCE click needed."""
+        if len(self.guild.groups) == 1:
+            self.on_advance()
 
     def _click(self, px):
         if self.mode == "split":

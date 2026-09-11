@@ -8,7 +8,7 @@ objects are needed."""
 
 import random
 
-from tests.helpers import Unit
+from tests.helpers import Unit, world
 from gartok import orders
 from gartok.app import App
 from gartok.group import Group
@@ -40,6 +40,68 @@ def test_a_travel_order_resolves_silently_and_returns_to_the_map():
     assert g.node == "market" and g.order is None
     assert isinstance(app.scene, MapScreen)
     assert not app._pending
+
+
+def test_advance_chases_a_multi_hop_travel_through_every_waypoint_in_one_call():
+    """city -> wilds has no direct edge (the route goes through 'road'); one
+    call to `_advance()` should chase both legs silently -- no fresh click
+    needed at the intermediate waypoint -- landing the group at the final
+    stop, not just the first one."""
+    random.seed(1)
+    g = Group([Unit("player")], node="city")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    g.order = orders.travel(g, "wilds")
+    app._advance()
+    assert g.node == "wilds" and g.order is None
+    assert isinstance(app.scene, MapScreen)
+
+
+def test_advance_stops_chasing_as_soon_as_any_group_goes_idle():
+    """`mover`'s route needs two legs (city->road 4h, road->wilds 6h); `quick`
+    finishes in 1h. The soonest-completion jump is 1h, so `quick` resolves and
+    goes idle -- the chase must stop right there instead of also plowing
+    through `mover`'s first waypoint on the same click."""
+    random.seed(1)
+    mover = Group([Unit("player")], node="city")
+    quick = Group([Unit("player")], node="city")
+    guild = Guild(None, groups=[mover, quick])
+    app = _app(guild)
+    mover.order = orders.travel(mover, "wilds")
+    quick.order = orders.travel(quick, "market")
+    app._advance()
+    assert quick.node == "market" and quick.order is None
+    assert mover.node == "city" and mover.order is not None and mover.order.remaining == 3
+
+
+def test_a_lone_group_auto_advances_without_a_click():
+    """A one-group guild has no one else to coordinate with: the moment its
+    order is set, MapScreen fires `on_advance` itself instead of waiting on
+    the ADVANCE button."""
+    random.seed(1)
+    g = Group([Unit("player")], node="city")
+    guild = Guild(None, groups=[g])
+    scr = MapScreen.__new__(MapScreen)
+    scr.guild = guild
+    scr.selected = g
+    fired = []
+    scr.on_advance = lambda: fired.append(True)
+    scr._go(world.node("market"))
+    assert g.busy and fired == [True]
+
+
+def test_a_second_group_does_not_auto_advance():
+    random.seed(1)
+    a = Group([Unit("player")], node="city")
+    b = Group([Unit("player")], node="city")
+    guild = Guild(None, groups=[a, b])
+    scr = MapScreen.__new__(MapScreen)
+    scr.guild = guild
+    scr.selected = a
+    fired = []
+    scr.on_advance = lambda: fired.append(True)
+    scr._go(world.node("market"))
+    assert a.busy and fired == []
 
 
 def test_market_order_opens_the_market_screen_scoped_to_the_group():

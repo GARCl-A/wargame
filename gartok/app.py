@@ -144,17 +144,28 @@ class App:
     # the tick: MapScreen issues orders on groups; ADVANCE plays them out #
     # ------------------------------------------------------------------ #
     def _advance(self, dt=None):
-        """`dt=None` is the ADVANCE button (jump to the soonest order); a
-        forced `dt` (MAINTENANCE) still runs through the same tick, so any
-        order in flight loses exactly that many hours too. Auto orders
-        (travel/work) already happened by the time this returns; anything else
-        comes back as `self._pending` for `_after_activity` to play out."""
-        result = campaign.advance(self.guild, dt=dt)
-        self._map_notices += result.events
-        if result.wiped:
-            self._hunt = None
-            self._campaign_over()
-            return
+        """`dt=None` is the ADVANCE button: jump to the soonest order, then
+        keep chasing the next one on its own -- silent hops (a multi-leg
+        travel order stopping at a waypoint) don't need a fresh click, so this
+        loops through them and only stops once a group actually goes idle
+        (needs a new order) or comes back `pending` (needs its screen played).
+        A forced `dt` (MAINTENANCE) is one deliberate jump, no chasing.
+        Auto orders (travel/work) already happened by the time this returns;
+        anything else comes back as `self._pending` for `_after_activity`."""
+        chase = dt is None
+        while True:
+            busy_before = {g.gid for g in self.guild.groups if g.busy}
+            result = campaign.advance(self.guild, dt=dt)
+            self._map_notices += result.events
+            if result.wiped:
+                self._hunt = None
+                self._campaign_over()
+                return
+            if not chase or result.pending:
+                break
+            went_idle = any(g.gid in busy_before and not g.busy for g in self.guild.groups)
+            if went_idle or not any(g.busy for g in self.guild.groups):
+                break
         self._pending = list(result.pending)
         self._after_activity()
 
