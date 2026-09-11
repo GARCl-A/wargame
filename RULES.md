@@ -234,7 +234,8 @@ enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
 below you. L0 kills L0 → +1; L0 kills L10 → +11; L3 kills L0 → 0.
 (`progression.xp_award`; credited in `Combatant.credit_kill`, doubled at the end
 of the battle by `campaign.absorb_battle`.) Wilds packs scale 0–4; the staked
-arena tiers scale 0–3 (`world.ARENA_TIERS[*].level`); the Games run 1–6.
+arena tiers scale 0, 2, 3 -- Rookie pit / Iron cage / Silver arena
+(`world.ARENA_TIERS[*].level`); the Games run 1–6.
 
 **Talent trees** — general → specific: a tier-1 root is a broad identity; each
 step deeper specialises the character in one action. **No pick is mutually
@@ -769,12 +770,15 @@ bodies); the win condition is unchanged — put the whole team down.
 
 Arena reputation still gates the staked tiers (`world.ARENA_TIERS` via
 `world.arena_offers`), but the source is now the deeds, so the unlock pace is
-deliberate. The ladder is built to top out at Bronze: clearing all three deeds
-opens the second ring, and that is the whole arena sub-campaign by design. Iron
-cage (5) and Silver arena (10) sit past any reachable reputation — room to grow.
-Each tier's opponents are built to its `level` (0 / 1 / 2 / 3,
-`encounters.build_enemy`), so the ladder scales as its stake and purse do —
-assembled, with the map, in `matchup.build`.
+deliberate. Clearing all three stage-1 deeds (3 rep) opens the Games
+(`arena.py`'s stage2 bouts, gated on the `arena_dethrone` deed rather than a
+ladder tier of their own — a rung there would only ever unlock alongside the
+Games, and lose to Brawl on every stat, so there is no "Bronze ring"). The
+Games' own three deeds add another 3 rep (6 total), which brings the Iron cage
+into reach; Silver arena (10) still sits past any reachable reputation — room
+to grow. Each tier's opponents are built to its `level` (Rookie 0, Iron 2,
+Silver 3, `encounters.build_enemy`), so the ladder scales as its stake and
+purse do — assembled, with the map, in `matchup.build`.
 
 **Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Deed-less
 for now: their standing does not move, and the REPUTATIONS tab says so. What they

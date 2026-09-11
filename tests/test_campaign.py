@@ -62,7 +62,7 @@ def test_absorb_battle_arena_win_pays_the_purse_not_loot():
         u.status = "up"
 
     out = campaign.absorb_battle(guild, squad, battle, node=world.node("arena"),
-                                 arena_offer=world.Bout("Bronze ring", entry=15, purse=55,
+                                 arena_offer=world.Bout("Iron cage", entry=15, purse=55,
                                                         enemies=1, rep=2))
     assert out.arena_reward == 55 and out.loot_pool == []
     # a first arena win completes "First Blood" -> +1 reputation with the Pits
@@ -117,8 +117,8 @@ def test_lone_wolf_wants_a_solo_win_in_the_entry_pit():
 
     # solo, but not the entry tier
     g3 = Guild([Unit("player")])
-    bronze = replace(_ENTRY_TIER, rep=2, name="Bronze ring")
-    assert "arena_lone_wolf" not in {d.id for d in _arena_bout(g3, n=1, tier=bronze).deeds_earned}
+    higher = replace(_ENTRY_TIER, rep=2, name="Iron cage")
+    assert "arena_lone_wolf" not in {d.id for d in _arena_bout(g3, n=1, tier=higher).deeds_earned}
 
 
 def test_dethrone_waits_for_the_champion_bout():
@@ -293,8 +293,9 @@ def test_arena_title_only_bites_inside_the_arena():
 def test_arena_offers_scale_with_reputation():
     from gartok import world
     assert [o.name for o in world.arena_offers(0)] == ["Rookie pit"]
-    assert [o.name for o in world.arena_offers(2)] == ["Rookie pit"]  # 3 deeds = 3 rep
-    assert len(world.arena_offers(3)) == 2                               # ...opens Bronze
+    # 3 deeds = 3 rep, opens the Games -- not a ladder tier of their own
+    assert [o.name for o in world.arena_offers(3)] == ["Rookie pit"]
+    assert len(world.arena_offers(5)) == 2                               # ...opens Iron cage
     assert len(world.arena_offers(99)) == len(world.ARENA_TIERS)
     # ordered cheapest first; one fighter's entry always below the purse
     for tier in world.ARENA_TIERS:
@@ -309,7 +310,7 @@ def test_arena_entry_is_staked_per_fighter():
     roster = [Unit("player") for _ in range(3)]
     for u in roster:
         u.gold = 50
-    iron = world.ARENA_TIERS[2]                       # Iron cage: 3 opponents, squad of 3
+    iron = world.ARENA_TIERS[1]                       # Iron cage: 3 opponents, squad of 3
     scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
                       on_back=lambda: None, arena_offers=[iron])
     assert scr.picked == roster                       # roster fits the cap, all auto-picked

@@ -107,14 +107,15 @@ class Bout:
         return self.squad_max or self.enemies
 
 
-# The Pits' first-stage deeds (`factions`) are worth 3 rep -- clearing them, champion
-# bout included, opens the Bronze ring. The second stage (the Games -- see `arena`)
-# adds three more deeds worth 3 rep, which brings the Iron cage (rep 5) into reach.
-# Silver still sits past any reputation the deeds can grant: room to grow.
-# Ordered cheapest first.
+# The Pits' first-stage deeds (`factions`) are worth 3 rep -- clearing them,
+# champion bout included, opens the Games (`arena.py`'s stage2 bouts), which
+# key off the "arena_dethrone" deed rather than a ladder tier of their own (a
+# rung there would only ever unlock alongside the Games, and lose to Brawl on
+# every stat). The second stage's three deeds add another 3 rep, which brings
+# the Iron cage (rep 5) into reach. Silver still sits past any reputation the
+# deeds can grant: room to grow. Ordered cheapest first.
 ARENA_TIERS = [
     Bout("Rookie pit",   entry=4,   purse=15,  enemies=3, rep=0,  level=0),
-    Bout("Bronze ring",  entry=15,  purse=55,  enemies=2, rep=3,  level=1),
     Bout("Iron cage",    entry=40,  purse=150, enemies=3, rep=5,  level=2),
     Bout("Silver arena", entry=100, purse=380, enemies=3, rep=10, level=3),
 ]
