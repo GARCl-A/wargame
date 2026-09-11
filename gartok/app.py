@@ -8,10 +8,14 @@ world), `GuildScreen` (roster + gear), `SquadScreen` (who fights), `BattleScreen
 
 Campaign loop: menu -> draft -> MAP <-> guild
                        MAP: pick a group, click a place -> travel order
-                            (or an on-node action) -> ADVANCE
-                       ADVANCE -> campaign.advance -- ticks the clock to the
-                            soonest order, resolves travel/work silently, and
-                            hands anything else back here as `_pending`:
+                            (or an on-node action). There is no manual
+                            "advance" button -- the moment no group is left
+                            idle, `_advance` fires on its own and keeps
+                            chasing the clock (`campaign.advance`) to the
+                            soonest order, resolving travel/work silently,
+                            until either a group goes idle again (back to the
+                            map, pointed at it) or something needs the
+                            player's screen, handed back here as `_pending`:
                             squad -> battle -> loot -> [next pending] -> MAP
                             party -> market -> [next pending] -> MAP
                             party -> taverna (recruit) -> [next pending] -> MAP
@@ -112,7 +116,13 @@ class App:
         persist.save_game(self.slot, self.guild)
 
     def _start_map(self):
+        """Land on the map -- unless every group already has an order and
+        none is idle, in which case there's nothing for the player to do yet:
+        keep the clock running (`_advance`) instead of stopping here."""
         self._pending = []
+        if self.guild.can_auto_advance:
+            self._advance()
+            return
         self._map_notices += arena.sync(self.guild)
         self._save()
         self.scene = MapScreen(self.fonts, self.guild,
@@ -141,17 +151,18 @@ class App:
                                  on_back=self._open_guild, on_change=self._save)
 
     # ------------------------------------------------------------------ #
-    # the tick: MapScreen issues orders on groups; ADVANCE plays them out #
+    # the tick: MapScreen issues orders on groups; the clock plays them out #
     # ------------------------------------------------------------------ #
     def _advance(self, dt=None):
-        """`dt=None` is the ADVANCE button: jump to the soonest order, then
-        keep chasing the next one on its own -- silent hops (a multi-leg
-        travel order stopping at a waypoint) don't need a fresh click, so this
-        loops through them and only stops once a group actually goes idle
-        (needs a new order) or comes back `pending` (needs its screen played).
-        A forced `dt` (MAINTENANCE) is one deliberate jump, no chasing.
-        Auto orders (travel/work) already happened by the time this returns;
-        anything else comes back as `self._pending` for `_after_activity`."""
+        """`dt=None` is the default, self-driven tick: jump to the soonest
+        order, then keep chasing the next one on its own -- silent hops (a
+        multi-leg travel order stopping at a waypoint) don't need a fresh
+        click, so this loops through them and only stops once a group
+        actually goes idle (needs a new order) or comes back `pending` (needs
+        its screen played). A forced `dt` (MAINTENANCE) is one deliberate
+        jump, no chasing. Auto orders (travel/work) already happened by the
+        time this returns; anything else comes back as `self._pending` for
+        `_after_activity`."""
         chase = dt is None
         while True:
             busy_before = {g.gid for g in self.guild.groups if g.busy}

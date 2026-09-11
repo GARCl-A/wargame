@@ -140,6 +140,19 @@ class Guild:
         return not self.roster
 
     @property
+    def needs_orders(self):
+        """True while some group is idle and waiting on the player to send it
+        somewhere -- the map should stop there instead of running the clock."""
+        return any(not g.busy for g in self.groups if not g.empty)
+
+    @property
+    def can_auto_advance(self):
+        """Nothing needs the player right now, but at least one group still
+        has an order in flight -- keep the clock running on its own instead
+        of waiting on a click."""
+        return not self.needs_orders and any(g.busy for g in self.groups)
+
+    @property
     def arena_reputation(self):
         """Standing with the Pits -- what `world.arena_offers` gates the stake
         tiers on. Rises only when an arena `factions.Deed` is completed."""

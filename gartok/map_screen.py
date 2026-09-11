@@ -7,11 +7,15 @@ group every click in this screen acts on -- pick a different row in the GROUPS
 list to switch. Clicking a node issues that group a **travel order**
 (`orders.travel`) instead of moving it there on the spot; the side panel's
 per-node actions (fight, shop, work, ...) issue the matching order too. Nothing
-actually *happens* until **ADVANCE**, which calls `campaign.advance` -- the tick
-jumps the world to the soonest order completion, resolves travel/work silently,
-and hands any other kind back to `app` to play its screen. **MAINTENANCE**
-forces a short 1 h stop instead (still through the same tick, so an order in
-flight stays in sync with the clock).
+actually *happens* until the clock runs, via `campaign.advance` -- it jumps the
+world to the soonest order completion, resolves travel/work silently, and
+hands any other kind back to `app` to play its screen. There is no manual
+"advance" button: the moment every group has an order (none idle), the clock
+starts chasing on its own and only stops once a group goes idle again or
+something needs the player's screen -- see `_maybe_auto_advance` and
+`Guild.can_auto_advance`. **MAINTENANCE** forces a short 1 h stop instead
+(still through the same tick, so an order in flight stays in sync with the
+clock).
 
 A group with no order sitting on the same node as another idle group may
 **SPLIT** (peel some of its members into a new group) or **MERGE** (fold a
@@ -51,7 +55,9 @@ class MapScreen(Screen):
         self.on_guild = on_guild
         self.on_wipe = on_wipe
         self.on_advance = on_advance
-        self.selected = guild.groups[0]
+        # point at whichever group actually needs an order, not just the first
+        self.selected = next((g for g in guild.groups if not g.busy and not g.empty),
+                             guild.groups[0])
         self.mode = "map"                     # "map" | "split"
         self.split_picks = set()              # unit uids toggled to leave, while splitting
         self.notices = []                     # lines shown after a tick (route, meals, deaths)
@@ -97,10 +103,10 @@ class MapScreen(Screen):
         self._maybe_auto_advance()
 
     def _maybe_auto_advance(self):
-        """A one-group guild has no one else to coordinate with -- the moment
-        its order is set, just run the clock (App._advance already chases it
-        through to the next real decision), no ADVANCE click needed."""
-        if len(self.guild.groups) == 1:
+        """No group is left idle -- nothing else needs the player right now,
+        so just run the clock (`App._advance` chases it through to the next
+        real decision) instead of waiting on a click."""
+        if self.guild.can_auto_advance:
             self.on_advance()
 
     def _click(self, px):
@@ -123,8 +129,6 @@ class MapScreen(Screen):
     def _handle_button(self, key):
         if key == "guild":
             self.on_guild()
-        elif key == "advance":
-            self.on_advance()
         elif key == "maintain":
             self.on_advance(dt=1)
         elif key == "split":
@@ -407,16 +411,19 @@ class MapScreen(Screen):
         y = section(screen, "GROUPS", cx, y, cw, f)
         for g in self.guild.groups:
             sel = g is self.selected
-            r = pygame.Rect(cx, y, cw, 32)
+            needs = not g.busy and not g.empty        # idle: waiting on the player
+            r = pygame.Rect(cx, y, cw, 38)
             hov = r.collidepoint(self.mouse)
+            border = ACCENT if sel else WARN if needs else LINE_SOFT
             panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1, radius=8)
+                  border=border, width=2 if (sel or needs) else 1, radius=8)
             name = g.name or f"Group ({len(g.members)})"
-            text(screen, name, f.body_sm, ACCENT if sel else INK, (r.x + SP2, r.y + 4))
+            text(screen, name, f.body_sm, ACCENT if sel else INK, (r.x + SP3, r.y + 7))
+            status_col = WARN if (needs and not sel) else INK_DIM
             text(screen, f"{world.node(g.node).name}  ·  {self._order_status(g)}",
-                 f.label, INK_DIM, (r.x + SP2, r.y + 19))
+                 f.label, status_col, (r.x + SP3, r.y + 22))
             self.group_rows.append((r, g))
-            y += 34
+            y += 42
         return y + SP2
 
     def _draw_group_actions(self, screen, cx, y, cw, f):
@@ -643,16 +650,8 @@ class MapScreen(Screen):
              mt.center, center=True)
         self.buttons.append(("maintain", mt))
 
-        any_orders = any(g.busy for g in self.guild.groups)
-        av = pygame.Rect(MARGIN + 354, y, 150, 36)
-        hova = av.collidepoint(self.mouse)
-        panel(screen, av, fill=ACCENT if (hova and any_orders) else SURFACE_3 if any_orders
-              else SURFACE_1, border=ACCENT if any_orders else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "ADVANCE", f.body_bd,
-             ACCENT_INK if (hova and any_orders) else ACCENT if any_orders else INK_FAINT,
-             av.center, center=True)
-        self.buttons.append(("advance", av))
-
-        text(screen, "click a group, then a place to send it  ·  ADVANCE plays out "
-             "the orders  ·  Esc for the pause menu",
-             f.body_sm, INK_FAINT, (MARGIN + 520, y + 10))
+        hint = ("give every idle group an order and the clock runs itself"
+                if self.guild.needs_orders else
+                "every group is underway  ·  the clock is running on its own")
+        text(screen, f"{hint}  ·  Esc for the pause menu",
+             f.body_sm, INK_FAINT, (MARGIN + 354, y + 10))
