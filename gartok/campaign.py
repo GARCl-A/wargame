@@ -25,7 +25,7 @@ of one another -- see `orders.py` for what an order is.
 
 from dataclasses import dataclass, field
 
-from . import arena, data, factions, loot, orders, world
+from . import arena, data, factions, justice, loot, orders, world
 
 
 @dataclass
@@ -202,12 +202,29 @@ def advance(guild, dt=None):
         if order.kind == "travel" and order.path:
             # arrived at a waypoint, not the final stop -- visibly stop here and
             # queue the next edge, rather than resolving the whole route at once
+            prev = g.node
             g.node = order.dest
+            guard = _guard_catch(g, prev, order.path)
+            if guard is not None:
+                # NOT g.order = guard: same convention as an interactive order
+                # below -- once due, the group goes idle (order=None) and the
+                # data a resolved catch needs travels in the `pending` tuple
+                # instead, so a second advance() call before the player
+                # resolves it (e.g. another group's hunt tick) can't mistake
+                # this group for still busy and silently wipe the catch.
+                g.order = None
+                pending.append((g, guard))
+                continue
             g.order = orders.next_leg(order.dest, list(order.path))
             continue
         g.order = None                         # resolved -- the group goes idle
         if order.kind == "travel":
+            prev = g.node
             g.node = order.dest
+            guard = _guard_catch(g, prev, ())
+            if guard is not None:
+                pending.append((g, guard))
+                continue
             for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):
                 events.append(factions.deed_notice(d))
         elif order.kind == "work":
@@ -215,3 +232,84 @@ def advance(guild, dt=None):
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
     return TickResult(events=events, pending=pending, wiped=guild.empty)
+
+
+def _guard_catch(group, prev_node, resume_path):
+    """After `group` arrives at `group.node`: if it's a jurisdiction node, roll
+    the guard test (`justice.catch`) on its crime-carrying members. Returns a
+    "guard" `Order` to pause on if anyone is caught, else None -- the caller
+    proceeds exactly as it would have without this system."""
+    if not world.node(group.node).jurisdiction:
+        return None
+    caught = justice.catch(group)
+    if not caught:
+        return None
+    return orders.Order("guard", caught=tuple(u.uid for u in caught),
+                        prev_node=prev_node, resume_path=tuple(resume_path))
+
+
+# --------------------------------------------------------------------------- #
+# resolving a paused "guard" order -- the three choices `justice_screen`      #
+# offers, decided for the whole catch at once (see justice.py's docstring)    #
+# --------------------------------------------------------------------------- #
+
+def resolve_guard_prison(guild, group, order):
+    """'Accept prison': jail every caught unit (its own days, off its own
+    crime), then resume whatever the arrest interrupted."""
+    events = []
+    for u in list(group.members):
+        if u.uid in order.caught:
+            days = justice.jail(guild, u)
+            events.append(f"{u.name} accepts arrest -- {days} day(s) in the City's cells.")
+    events += _resume_after_guard(guild, group, order)
+    return events
+
+
+def resolve_guard_flee(guild, group, order):
+    """'Run': the group falls back to `order.prev_node` -- immediate, it
+    already covered that ground. Re-tests on arrival if that node is ALSO a
+    jurisdiction -- caught again there, the group can only fight or serve (no
+    further node to flee to is tracked, so a re-catch's own order carries
+    `prev_node=None` -- `justice_screen.GuardScreen` hides RUN once that's the
+    case; this is a no-op if called anyway)."""
+    if order.prev_node is None:
+        return []
+    caught = [u for u in group.members if u.uid in order.caught]
+    names = ", ".join(u.name for u in caught) if caught else "The group"
+    events = [f"{names} fall back toward {world.node(order.prev_node).name}."]
+    group.node = order.prev_node
+    recatch = justice.catch(group) if world.node(order.prev_node).jurisdiction else []
+    if recatch:
+        group.order = orders.Order("guard", caught=tuple(u.uid for u in recatch))
+        return events
+    group.order = orders.idle()
+    return events
+
+
+def resolve_guard_fight_aftermath(guild, group, order, outcome):
+    """After `app` has already run the patrol fight through `absorb_battle`:
+    every originally-caught unit that survived banks the crime the brawl adds
+    (`justice.resolve_fight_crime`), then the group's order resumes."""
+    events = []
+    for u in outcome.survivors:
+        if u.uid in order.caught:
+            justice.resolve_fight_crime(u, outcome)
+            events.append(f"{u.name} lives to fight another day -- crime now {u.crime}.")
+    events += _resume_after_guard(guild, group, order)
+    return events
+
+
+def _resume_after_guard(guild, group, order):
+    """Hand `group` back the order a guard pause interrupted: the rest of a
+    multi-leg route if any is owed, or idle -- firing the "arrived" travel
+    deed-settle event that was withheld while the catch was unresolved (skip
+    it entirely on a "flee", which never really arrived)."""
+    if group.empty:
+        return []
+    if order.resume_path:
+        group.order = orders.next_leg(group.node, list(order.resume_path))
+        return []
+    events = [factions.deed_notice(d) for d in
+             factions.settle(guild, factions.Event("travel", node=world.node(group.node)))]
+    group.order = orders.idle()
+    return events

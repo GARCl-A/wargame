@@ -20,6 +20,8 @@ Campaign loop: menu -> draft -> MAP <-> guild
                             party -> market -> [next pending] -> MAP
                             party -> taverna (recruit) -> [next pending] -> MAP
                             party -> the wilds (hunt) -> [next pending] -> MAP
+                            (any arrival) -> the guard (justice.py) -> prison |
+                              [battle -> loot] | flee -> [next pending] -> MAP
 `persist` autosaves after the draft, on every return to the map and after every
 battle. Permadeath: a member who does not survive is dropped; a full wipe ends
 the campaign.
@@ -31,7 +33,7 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, hunt, matchup, persist, tutorial_card, world
+from . import arena, campaign, hunt, justice, matchup, persist, tutorial_card, world
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -42,6 +44,7 @@ from .gear_screen import GearScreen
 from .guild import Guild
 from .guild_screen import GuildScreen
 from .hunt_screen import HuntScreen
+from .justice_screen import GuardScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
 from .map_editor_screen import MapEditorScreen
@@ -50,6 +53,7 @@ from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
 from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
+from .scenario import Scenario
 from .squad_screen import SquadScreen
 from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
@@ -71,6 +75,8 @@ class App:
         self._battle_node = None             # world node the current battle is at
         self._arena_offer = None             # world.Bout for the current arena fight, or None
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
+        self._guard_order = None             # in-flight "guard" Order -- carried across a patrol fight
+        self._guard_group = None             # the Group that order belongs to
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._pending = []                   # [(Group, Order)] left to resolve from the last tick
         self._draft_tutorial = TutorialState()   # the soft tutorial, before a Guild exists to hold it
@@ -224,6 +230,8 @@ class App:
                 self._open_hunt_ground(list(group.members), node, None)
             elif order.kind == "tanner":
                 self._open_tanner_stall(group, node, None)
+            elif order.kind == "guard":
+                self._open_guard_check(group, order)
             return
         self._start_map()
 
@@ -253,6 +261,40 @@ class App:
     def _open_tanner_stall(self, group, node, _offer):
         self.scene = TannerScreen(self.fonts, self.guild, group,
                                   on_done=self._after_activity)
+
+    # ------------------------------------------------------------------ #
+    # the guard: a jurisdiction node just caught someone (justice.py)     #
+    # ------------------------------------------------------------------ #
+    def _open_guard_check(self, group, order):
+        caught = [u for u in group.members if u.uid in order.caught]
+        self.scene = GuardScreen(self.fonts, self.guild, group, order, caught,
+                                 on_prison=self._resolve_guard_prison,
+                                 on_flee=self._resolve_guard_flee,
+                                 on_fight=self._start_guard_battle)
+
+    def _resolve_guard_prison(self, group, order):
+        self._map_notices += campaign.resolve_guard_prison(self.guild, group, order)
+        self._after_activity()
+
+    def _resolve_guard_flee(self, group, order):
+        self._map_notices += campaign.resolve_guard_flee(self.guild, group, order)
+        self._after_activity()
+
+    def _start_guard_battle(self, group, order):
+        caught = [u for u in group.members if u.uid in order.caught]
+        crime = max((u.crime for u in caught), default=0)
+        patrol = justice.patrol_pack(crime)
+        node = world.node(group.node)
+        self._battle_squad = list(group.members)
+        self._battle_node = node
+        self._arena_offer = None
+        self._guard_order, self._guard_group = order, group
+        # most jurisdiction nodes (city/market/tavern) carry no `scenario` --
+        # nobody has ever fought there before the guard made it necessary.
+        scenario = node.scenario() if node.scenario else Scenario()
+        battle = Battle(list(group.members), patrol, scenario=scenario,
+                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False)
+        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     # ------------------------------------------------------------------ #
     # hunting the wilds -- an activity that can spring a fight            #
@@ -347,6 +389,7 @@ class App:
 
     def _battle_end(self, battle):
         hunt_state = self._hunt
+        guard_order, guard_group = self._guard_order, self._guard_group
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
                                          node=self._battle_node,
                                          arena_offer=self._arena_offer)
@@ -357,7 +400,20 @@ class App:
 
         if outcome.campaign_over:             # full wipe: campaign over
             self._hunt = None
+            self._guard_order = self._guard_group = None
             self._campaign_over()
+            return
+
+        if guard_order is not None:            # fought off (or lost to) the patrol
+            self._guard_order = self._guard_group = None
+            self._map_notices += campaign.resolve_guard_fight_aftermath(
+                self.guild, guard_group, guard_order, outcome)
+            if outcome.loot_pool and outcome.survivors:
+                self._save()
+                self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                                        outcome.loot_pool, on_done=self._after_activity)
+                return
+            self._after_activity()
             return
 
         if hunt_state is not None:            # an ambush during a hunt

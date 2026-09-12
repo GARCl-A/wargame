@@ -39,9 +39,14 @@ decide which (non-lethal, paid) fights the guild may take on.
 The guild also carries the taverna's current crop of strangers (`taverna_pool`)
 so they stay the same face-to-face across visits; `recruit.refresh_pool` swaps
 them for a new set once a week.
+
+`jailed` is the same trick applied to anyone serving time with the City guard
+(`justice.py`): a `[(Unit, released_day), ...]` list, off every `Group` but
+still on the roster's books, so upkeep and saves keep seeing it. Freed by
+`justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import data, economy, missions, progression
+from . import data, economy, justice, missions, progression
 from .clock import Clock
 from .group import Group
 from .tutorial import TutorialState
@@ -62,7 +67,7 @@ class Guild:
                  leader=None, leader_swaps_used=0,
                  name="", banner_color=None, banner_icon=None, tutorial=None,
                  market_stock=None, missions=None,
-                 total_spent=0, items_sold_kinds=None):
+                 total_spent=0, items_sold_kinds=None, jailed=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -88,6 +93,7 @@ class Guild:
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
         self.taverna_blocked = taverna_blocked if taverna_blocked is not None else []
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
+        self.jailed = list(jailed or [])      # [(Unit, released_day), ...] -- see the docstring above
         self.leader = leader                  # the guild's "who am I" -- None resolves below
         self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change
         self.name = name or ""                # chosen at the draft; "" shows as "The Guild"
@@ -320,6 +326,8 @@ class Guild:
             self.remove_members(casualties)
         for m in missions.expire_overdue(self):
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
+        for u in justice.release_due(self):
+            events.append(f"{u.name} finishes their time and is released in the City.")
         return events
 
     def eat_now_pass(self):

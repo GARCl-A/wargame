@@ -207,3 +207,28 @@ def test_recruited_by_survives_a_save_round_trip():
     u = _unit(seed=3)
     u.recruited_by = "deadbeef"
     assert Unit.from_save(persist.unit_to_dict(u)).recruited_by == "deadbeef"
+
+
+def test_crime_and_jailed_survive_a_save_round_trip():
+    from gartok import justice
+    from gartok.guild import Guild
+    slot = persist.NUM_SLOTS - 1
+    if os.path.exists(persist.slot_path(slot)):
+        return                                        # never clobber a real save
+    random.seed(4)
+    free, culprit = Unit("player"), Unit("player")
+    free.crime, culprit.crime = 0, 5
+    guild = Guild([free, culprit], node="city")
+    justice.jail(guild, culprit)                      # off the roster, into guild.jailed
+    free.crime = 1                                     # a clean-ish member still on the books
+    try:
+        persist.save_game(slot, guild)
+        back = persist.load_game(slot)
+        assert [u.uid for u in back.roster] == [free.uid]
+        assert back.roster[0].crime == 1
+        assert len(back.jailed) == 1
+        back_u, back_day = back.jailed[0]
+        assert back_u.uid == culprit.uid and back_u.crime == 0
+        assert back_day == guild.jailed[0][1]
+    finally:
+        persist.delete_slot(slot)

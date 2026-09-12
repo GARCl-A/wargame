@@ -46,6 +46,7 @@ class Unit:
             self._apply_occupation()
         self.alignment = data.roll_alignment()
         self.gold = roll(*economy.STARTING_WEALTH_DICE)   # copper coins -- lives on the character
+        self.crime = 0                                  # rap sheet; the guard tests it at a jurisdiction node (justice.py)
         self.unfed_days = 0                            # consecutive days without a meal
         self.share_food = True                         # pools rations for hungry guild-mates
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
@@ -95,6 +96,7 @@ class Unit:
         u.equipped_tongue = d.get("equipped_tongue")
         u.alignment = d["alignment"]
         u.gold = d.get("gold", 0)
+        u.crime = d.get("crime", 0)
         u.unfed_days = d.get("unfed_days", 0)
         u.share_food = d.get("share_food", True)
         u.combat_xp = d.get("combat_xp", 0)

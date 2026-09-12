@@ -45,6 +45,48 @@ mas o código já está na árvore de trabalho:
 A 4ª deed (`bankers_trust`) **não existe ainda** — ela é parte do Sistema 4
 abaixo e depende da missão especial estar implementada.
 
+## Sistema 1 — implementado (2026-09-12, sessão 2)
+
+Commitado (rodar `git log` pra achar o commit; passou por `/pre-commit`).
+Tudo da seção "Sistema 1" abaixo está feito e testado
+(`tests/test_justice.py`, `tests/test_justice_integration.py`, mais um
+round-trip de save em `tests/test_persistence.py`). Detalhes pra quem for
+mexer nisso depois:
+
+- `gartok/justice.py` (novo): `guard_test`/`catch` (o teste), `jail`/
+  `release_due` (prisão, mesmo padrão do `taverna_pool` — `guild.jailed`),
+  `patrol_pack`/`patrol_level` (a patrulha escalada), `resolve_fight_crime`.
+- `Unit.crime`, `world.Node.jurisdiction` (city/market/tavern/arena; o
+  lumber_yard ficou de fora -- decisão do usuário), `Guild.jailed` -- tudo
+  persistido (`persist.py`, `SAVE_VERSION` foi pra 12).
+- `campaign.advance()` testa jurisdição em toda chegada (waypoint ou destino
+  final) e, se pega alguém, pausa o grupo numa `Order(kind="guard", ...)`
+  (campos novos em `orders.Order`: `caught`, `prev_node`, `resume_path`).
+  `campaign.resolve_guard_prison` / `resolve_guard_flee` /
+  `resolve_guard_fight_aftermath` resolvem as 3 escolhas e devolvem a rota
+  interrompida (ou tocam a rota adiante, ou deixam o grupo idle).
+- `justice_screen.GuardScreen` (nova tela) + `app.py` (`_open_guard_check`,
+  `_start_guard_battle`, e um branch novo em `_battle_end`) -- "lutar" cai no
+  pipeline de batalha normal (`campaign.absorb_battle`), num `Scenario()`
+  genérico quando o nó não tem um próprio (city/market/tavern nunca tinham
+  luta antes disso).
+
+Decisões tomadas dentro do espaço que o doc original deixava em aberto (não
+foi preciso perguntar de novo, mas registrando pra não parecerem arbitrárias):
+- **Só a unidade originalmente pega banca crime na luta** (`+1` + guardas
+  mortos) -- quem mais brigar do lado dela não ganha crime. Era uma pergunta
+  em aberto no doc original; ficou o default mais simples.
+- **Fugir só funciona uma vez por prisão**: se pega de novo no nó anterior
+  (`prev_node`), a nova ordem de guarda nasce sem `prev_node` (`None`) --
+  `GuardScreen` esconde o botão RUN nesse caso, só resta lutar ou aceitar
+  prisão. Não estava no doc original; é uma simplificação deliberada pra não
+  precisar rastrear o nó anterior ao anterior.
+- Fórmulas ainda placeholder, como o doc já avisava: `prison_days = crime * 2`,
+  patrulha = 2 guardas em `mean_level = min(6, crime)`.
+
+**Próximo passo, se for continuar a partir daqui: Sistema 2 (Old Road
+"unsafe")** -- ver a seção correspondente abaixo, que ainda não foi tocada.
+
 ## Decisões já fechadas (não é pra re-perguntar ao usuário)
 
 - **Crime é por personagem** (`Unit.crime`, como `gold`), não da guilda inteira.
@@ -233,10 +275,10 @@ Amarra os 3 sistemas acima. Estrutura:
 
 ## Ordem de implementação sugerida
 
-1. **Sistema 1** (Crime/jurisdição/guarda) — o que tem mais estado novo, e
-   nada nos outros sistemas depende dele.
+1. ~~**Sistema 1** (Crime/jurisdição/guarda)~~ -- **feito**, ver a seção logo
+   acima ("Sistema 1 — implementado").
 2. **Sistema 2** (Old Road unsafe) — pequeno, reaproveita quase tudo de
-   `encounters.py`, independente do Sistema 1.
+   `encounters.py`, independente do Sistema 1. **Próximo a implementar.**
 3. **Sistema 3** (Cofre genérico) — mecânica isolada, só teste de destreza +
    um item novo.
 4. **Sistema 4** (a missão em si) — amarra os 3 anteriores; a parte da

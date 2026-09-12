@@ -27,6 +27,11 @@ forfeits the stake. Nobody dies either way. Reputation with the Pits comes from
 completing arena deeds (`factions`), not from the win itself.
 
 `pos` is normalised (0..1, 0..1) inside the map area; `MapScreen` scales it.
+
+`jurisdiction` (e.g. `"the_city"`) marks a node the guard patrols: `campaign.advance`
+tests every crime-carrying member of a group that arrives there -- waypoint or
+final stop alike -- and can pause the group on the outcome (`justice.py`).
+Outside jurisdiction (`road`, `wilds`, the lumber yard) a rap sheet never comes up.
 """
 
 import heapq
@@ -38,7 +43,7 @@ from .scenario import ArenaScenario, ErmosScenario
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, work=False,
-                 bank=False, tanner=False):
+                 bank=False, tanner=False, jurisdiction=None):
         self.id = id
         self.name = name
         self.kind = kind
@@ -52,6 +57,7 @@ class Node:
         self.work = work                     # town: a lumber yard -- trade hours for copper
         self.bank = bank                     # town: the Bankers -- rent a strongbox (bank_screen)
         self.tanner = tanner                 # town: a mission board -- missions.TANNER_HIDES (tanner_screen)
+        self.jurisdiction = jurisdiction     # e.g. "the_city" -- the guard tests every arrival (justice.py)
 
     @property
     def is_battle(self):
@@ -130,19 +136,21 @@ def arena_offers(reputation):
 NODES = [
     Node("city", "The City", "town", (0.16, 0.58),
          "The walled burg. Where the guild sets out from -- and where the "
-         "Bankers keep their strongboxes.", bank=True, tanner=True),
+         "Bankers keep their strongboxes.", bank=True, tanner=True,
+         jurisdiction="the_city"),
     Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",
          work=True),
     Node("arena", "Arena", "battle", (0.33, 0.30),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
-         ArenaScenario, lethal=False, arena=True),
+         ArenaScenario, lethal=False, arena=True, jurisdiction="the_city"),
     Node("market", "Market", "market", (0.28, 0.84),
          "Buy and sell gear for copper. The traders speak Ankarin.",
-         language="Ankarin", alignment="Lawful and Neutral"),
+         language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city"),
     Node("tavern", "Tavern", "tavern", (0.07, 0.30),
-         "Smoke, warm beer and folk with no contract. Talk someone into joining the guild."),
+         "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
+         jurisdiction="the_city"),
     Node("road", "Old Road", "town", (0.55, 0.52),
          "A dirt track cutting across the open country to the east."),
     Node("wilds", "The Wilds", "wilds", (0.83, 0.40),

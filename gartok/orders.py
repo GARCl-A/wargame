@@ -12,6 +12,14 @@ as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
 `group.order is None` means idle -- eligible for a fresh order, and (unlike an
 active order) never blocks `campaign.advance` from jumping straight past it to
 the next group's completion.
+
+A "guard" order is a third, narrower kind: not issued by the player, and not
+in `INTERACTIVE_KINDS` either -- `campaign.advance` creates one itself, on top
+of whatever the group was actually doing, the moment it catches someone at a
+jurisdiction node (`justice.py`). It carries its own extra fields (`caught`,
+`prev_node`, `resume_path`) so `justice_screen.GuardScreen` can play out the
+three choices and `campaign.resolve_guard_*` can hand the group back its
+interrupted order once one is picked.
 """
 
 from dataclasses import dataclass
@@ -33,6 +41,9 @@ class Order:
     dest: str | None = None  # travel: the CURRENT leg's target node id
     hours: float = 0.0       # work: the nominal shift length (pay/XP basis, not the clock cost)
     path: tuple = ()         # travel: waypoints still to come after `dest`, ending at the final stop
+    caught: tuple = ()       # guard: uids of the units the guard just caught (justice.py)
+    prev_node: str | None = None   # guard: node to fall back to on "flee"
+    resume_path: tuple = ()  # guard: travel waypoints still owed once resolved (empty = was the final stop)
 
     @property
     def interactive(self):

@@ -27,7 +27,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 11                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 12                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -45,6 +45,7 @@ def unit_to_dict(u):
         "occupation": u.occupation["name"],
         "alignment": u.alignment,
         "gold": u.gold,                          # copper coins carried by the member
+        "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
         "share_food": u.share_food,              # pools rations for hungry guild-mates
         "combat_xp": u.combat_xp,                # combat XP (see progression.py)
@@ -113,6 +114,8 @@ def save_game(slot, guild):
         "taverna_pool": ([unit_to_dict(u) for u in guild.taverna_pool]
                          if guild.taverna_pool is not None else None),
         "taverna_blocked": guild.taverna_blocked,
+        "jailed": [{"unit": unit_to_dict(u), "released_day": day}
+                   for u, day in guild.jailed],
         "tutorial_seen": sorted(guild.tutorial.seen),
         "tutorial_enabled": guild.tutorial.enabled,
     }
@@ -151,6 +154,8 @@ def load_game(slot):
                  taverna_week=payload.get("taverna_week"),
                  taverna_pool=[Unit.from_save(d) for d in pool] if pool is not None else None,
                  taverna_blocked=payload.get("taverna_blocked"),
+                 jailed=[(Unit.from_save(d["unit"]), d["released_day"])
+                        for d in payload.get("jailed", [])],
                  leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
                  name=payload.get("name", ""), banner_color=payload.get("banner_color"),
                  banner_icon=payload.get("banner_icon"),
