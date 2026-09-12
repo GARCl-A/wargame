@@ -163,11 +163,26 @@ class MapScreen(Screen):
                 return
 
     # ------------------------------------------------------------------ #
-    def _area(self, screen):
+    def _area(self, size):
         top = MARGIN + 64
-        W, H = screen.get_size()
+        W, H = size
         w = W - 3 * MARGIN - SIDE_W
         return pygame.Rect(MARGIN, top, w, H - top - 64)
+
+    # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "map"
+
+    def tutorial_anchor(self, size):
+        """Bottom-right of the map area: every `world.NODES` position keeps
+        clear of x>0.5,y>0.6 (`lumber_yard`/`market` crowd the bottom-left,
+        the legend claims the top-right), so this is the one quadrant with no
+        node marker to cover, however the map is laid out."""
+        area = self._area(size)
+        w = min(340, area.w - 2 * SP2)
+        return (area.right - w - SP2, area.bottom - SP2, w, "up")
 
     def _node_xy(self, area, n):
         pad = 48                              # keep markers + labels off the frame
@@ -229,7 +244,7 @@ class MapScreen(Screen):
                  f"Pit at the Arena by day {arena.defense_deadline(self.guild)}",
                  f.body_sm, WARN, (MARGIN, MARGIN + 48))
 
-        area = self._area(screen)
+        area = self._area(screen.get_size())
         panel(screen, area, fill=GROUND_DAY if clock.is_daylight else GROUND_NIGHT,
               border=LINE_SOFT, radius=RADIUS)
         clip = screen.get_clip()

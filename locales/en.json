@@ -1,0 +1,111 @@
+{
+  "tutorial": {
+    "draft": {
+      "pick": {
+        "title": "Building your guild",
+        "body": [
+          "Each candidate is a random GARTOK character: a race, an occupation, and a roll of 3d6 down the line for every attribute. Pick three -- there's no reroll and no redo once you lock one in.",
+          "The EDIT button lets you swap a candidate's race or occupation before you pick, if none of the three rolled feel right."
+        ]
+      },
+      "identity": {
+        "title": "Name and banner",
+        "body": [
+          "Purely cosmetic: the name and banner colour you pick here follow the guild for the rest of the run, recolouring every unit's token from now on."
+        ]
+      },
+      "leader": {
+        "title": "Who leads?",
+        "body": [
+          "The leader is who the guild answers to -- their Charisma speaks for it when it haggles, and they lead any group they stand in. You get one free change of mind later; after that, only death reshuffles it."
+        ]
+      }
+    },
+    "map": {
+      "title": "Running the guild",
+      "body": [
+        "The guild is split into groups, each standing on its own spot on the map. Pick a group on the right, then click a place to send it there -- or use the panel for what's on offer where it already stands.",
+        "Once every group has something to do, the clock runs itself: travel and work play out silently, and you're handed back the screen the moment something needs a decision."
+      ],
+      "suggestion": "Check GUILD / GEAR, bottom left, to see who you're leading."
+    },
+    "guild": {
+      "members": {
+        "title": "Your roster",
+        "body": [
+          "Pick a member on the left to see their loadout on the right. Drag gear onto a HAND / OFF HAND / BODY / PACK slot, or click an item then click where it goes.",
+          "Each group has its own leader, and the guild itself has one -- shown here, chosen back at the draft."
+        ],
+        "suggestion": "Check the REPUTATIONS tab, top right, to see what you're actually playing for."
+      },
+      "reputations": {
+        "title": "What you're playing for",
+        "body": [
+          "There's no score to chase and no fight you must win. Standing with a faction only moves when you pull off one of its deeds -- a one-shot achievement, not a grind.",
+          "The arena (The Pits) is the first faction open to you: stake a bout, win a title, work through its own sub-campaign."
+        ]
+      }
+    },
+    "squad": {
+      "title": "Picking who goes",
+      "body": [
+        "Click a card to add or drop someone from the outing -- from 1 up to the cap shown at the top. For a staked arena bout, pick a tier first: the entry fee comes out of the whole squad's pooled copper."
+      ]
+    },
+    "battle": {
+      "title": "Fighting it out",
+      "body": [
+        "2 action points a turn: spend them on walking, attacking or a panel action (Throw, Demoralize, First Aid, ...) -- Space ends the turn.",
+        "You only see what the active character's own light reaches; L flips between their sight and the whole squad's. Down isn't dead yet -- Stabilize or First Aid before it is."
+      ]
+    },
+    "loot": {
+      "title": "Splitting the spoils",
+      "body": [
+        "Click an item on the ground, then click a survivor to drop it in their pack -- only if it fits their carry limit. \"take what fits\" grabs everything it can in one pass; whatever's left when you go stays on the field."
+      ]
+    },
+    "reward": {
+      "title": "The purse",
+      "body": [
+        "The stake's winnings are copper, and they land whole on whoever you click -- the guild keeps no shared treasury, so pick who pockets it."
+      ]
+    },
+    "market": {
+      "title": "Buying and selling",
+      "body": [
+        "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out."
+      ]
+    },
+    "taverna": {
+      "title": "Recruiting",
+      "body": [
+        "Pick a stranger, then pick who from the party makes the pitch -- their Charisma against the stranger's, no money involved. Lose and that member can't try that same stranger again until the pool turns over next week."
+      ]
+    },
+    "hunt": {
+      "title": "Hunting the wilds",
+      "body": [
+        "Pick a shift length and head out for meat -- every hour risks an ambush, a real fight, but the bodies are worth looting. Win it and you can keep hunting or call it a day with whatever you've banked."
+      ]
+    },
+    "bank": {
+      "title": "The strongbox",
+      "body": [
+        "Rent a chest once, then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out."
+      ]
+    },
+    "gear": {
+      "title": "Managing gear, side by side",
+      "body": [
+        "Same moves as the guild screen's loadout, but every member you pick gets their own column at once -- good for shuffling gear across several people in one visit. Right-click an item for a quick \"send to...\" menu."
+      ]
+    },
+    "level": {
+      "title": "Spending picks",
+      "body": [
+        "Combat and work level up on their own XP; a lit node means you have a pick to spend there. Click it to take it -- the racial track just tracks itself, driven by the other two."
+      ]
+    }
+  }
+}

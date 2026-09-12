@@ -79,6 +79,15 @@ class SquadScreen(SheetModalMixin, Screen):
         return self.offer is None or self.picked_gold >= self.entry_cost
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "squad"
+
+    def tutorial_anchor(self, size):
+        return self.footer_anchor(size, offset=56)
+
+    # ------------------------------------------------------------------ #
     def _click(self, px):
         if self.close_sheet_on_click():
             return

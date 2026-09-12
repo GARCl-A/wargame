@@ -55,6 +55,17 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         self._hot = False
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "gear"
+
+    def tutorial_anchor(self, size):
+        w, _h = size
+        pad = MARGIN if w < 1500 else SP5
+        return self.footer_anchor(size, offset=44, margin=pad)
+
+    # ------------------------------------------------------------------ #
     # input                                                              #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):

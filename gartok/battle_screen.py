@@ -136,6 +136,18 @@ class BattleScreen(Screen):
     def _tile_at_px(self, px):
         return self.view.cell_at(px)
 
+    # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py) -- the log is the one region `_click` never
+    # tests (only `self.buttons` and board tiles are hit-tested), so it's the
+    # one spot on this screen a card can sit without ever blocking a click
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "battle"
+
+    def tutorial_anchor(self, size):
+        log = battle_layout(size)["log"]
+        return (log.x + SP2, log.bottom - SP2, min(340, log.w - 2 * SP2), "up")
+
     def _click(self, px):
         b = self.battle
         if b.winner is not None:

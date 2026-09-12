@@ -46,6 +46,15 @@ class TavernaScreen(Screen):
         self.buttons = []                   # [(key, rect)]
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "taverna"
+
+    def tutorial_anchor(self, size):
+        return self.footer_anchor(size)
+
+    # ------------------------------------------------------------------ #
     def _eligible(self, cand):
         """Party members who could still pitch `cand` (share a tongue, not yet
         barred for failing on them this week, and still have room to sponsor

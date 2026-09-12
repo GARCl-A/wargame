@@ -69,6 +69,15 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.buttons = []                   # [(key, rect)]
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "market"
+
+    def tutorial_anchor(self, size):
+        return self.footer_anchor(size)
+
+    # ------------------------------------------------------------------ #
     @staticmethod
     def _item_at(member, loc):
         if loc == "hand":

@@ -21,11 +21,12 @@ import time
 from .clock import Clock
 from .group import Group
 from .guild import Guild
+from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 9                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 10                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -107,6 +108,8 @@ def save_game(slot, guild):
         "taverna_pool": ([unit_to_dict(u) for u in guild.taverna_pool]
                          if guild.taverna_pool is not None else None),
         "taverna_blocked": guild.taverna_blocked,
+        "tutorial_seen": sorted(guild.tutorial.seen),
+        "tutorial_enabled": guild.tutorial.enabled,
     }
     tmp = slot_path(slot) + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
@@ -141,7 +144,9 @@ def load_game(slot):
                  taverna_blocked=payload.get("taverna_blocked"),
                  leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
                  name=payload.get("name", ""), banner_color=payload.get("banner_color"),
-                 banner_icon=payload.get("banner_icon"))
+                 banner_icon=payload.get("banner_icon"),
+                 tutorial=TutorialState(seen=payload.get("tutorial_seen", []),
+                                       enabled=payload.get("tutorial_enabled", True)))
 
 
 def delete_slot(slot):

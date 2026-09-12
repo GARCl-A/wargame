@@ -118,6 +118,15 @@ World systems, outside combat:
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,
   `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
   map editor sets the grid size and paints walls / pits / water / torches / zones.
+- **Onboarding**: a soft, non-blocking tutorial (`tutorial.py`/`tutorial_card.py`)
+  covering every screen of a first playthrough (draft, map, each guild-screen
+  tab, squad, battle, loot, reward, market, taverna, the wilds, the bank, gear,
+  progression) — the first time a screen (or tab, or draft phase) matters, a
+  small card explains it, some pointing at where to look next, dismissed with
+  one click and reopenable from its `?` badge; per-slot, toggled and reset
+  from the pause menu. Its copy is the first thing routed through `i18n.py`, a
+  small dotted-key catalog reader (`locales/en.json`) meant to grow into the
+  game's general translation layer, not a tutorial-only shim.
 
 ## Structure
 
@@ -165,6 +174,10 @@ gartok/
   npc_lib.py        the NPC library (git-tracked npcs/*.json, outside the saves)
   map_lib.py        the map library (git-tracked maps/*.json) + npc_units
 
+  # onboarding + translation (i18n.py is project-wide; tutorial is its first consumer)
+  i18n.py           dotted-key string catalogs (locales/*.json), language fallback
+  tutorial.py       the soft tutorial's ids + TutorialState (seen/enabled, pygame-free)
+
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
@@ -181,6 +194,7 @@ gartok/
   lighting.py       LightRenderer: the darkness layer + radial light holes
   sheet.py          formats a Unit into text lines (battle-inspect panel)
   sheet_panel.py    the full drawn character sheet (guild-screen modal)
+  tutorial_card.py  draws the current screen's tutorial card + its `?` badge
 
   app.py            the pygame shell: resizable window, loop, screen switching,
                     the campaign <-> battle loop
@@ -226,3 +240,13 @@ economy_sim.py      the trade counterpart (net copper by race / occupation)
   called by `campaign.absorb_battle` — today only post-battle; another trigger
   (post-market, post-travel) needs one more `settle` call at that event.
 - **New light source**: `vision.unit_light` / `ground_light`.
+- **New tutorial card** (a screen or a tab/phase of one): an id in
+  `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
+  `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
+  screen (`tutorial_anchor()` too, if the default top-left placement would
+  collide with something clickable). `app.py`'s draw/click hooks pick it up for
+  free — see `screen.py`'s two defaults for the contract.
+- **New translated string anywhere else**: a key under its own namespace in
+  `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` is the only
+  namespace actually converted so far; the rest of the game's text is still
+  literal, on purpose (this is the framework, not a translation pass).

@@ -44,6 +44,7 @@ them for a new set once a week.
 from . import data, economy, progression
 from .clock import Clock
 from .group import Group
+from .tutorial import TutorialState
 
 # Fallbacks for a guild with no chosen identity (old saves, from before the
 # draft's naming/banner step existed). Plain data, not `theme`/`artwork`
@@ -59,7 +60,7 @@ class Guild:
                  taverna_week=None, taverna_pool=None, taverna_blocked=None,
                  bank_capacity=0, bank_items=None, groups=None,
                  leader=None, leader_swaps_used=0,
-                 name="", banner_color=None, banner_icon=None):
+                 name="", banner_color=None, banner_icon=None, tutorial=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -83,6 +84,11 @@ class Guild:
         self.name = name or ""                # chosen at the draft; "" shows as "The Guild"
         self.banner_color = tuple(banner_color) if banner_color else DEFAULT_BANNER_COLOR
         self.banner_icon = banner_icon or DEFAULT_BANNER_ICON
+        # the soft tutorial's dismissed/enabled state (tutorial.py) -- carried on
+        # the guild so it saves and loads by slot, like everything else here;
+        # the draft (before a Guild exists) keeps its own until `app._draft_done`
+        # hands it in
+        self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
 
     # ------------------------------------------------------------------ #

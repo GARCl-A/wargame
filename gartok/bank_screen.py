@@ -51,6 +51,15 @@ class BankScreen(DragSelectMixin, Screen):
         self.buttons = []                            # [(key, rect)]
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "bank"
+
+    def tutorial_anchor(self, size):
+        return self.footer_anchor(size)
+
+    # ------------------------------------------------------------------ #
     def _name_of(self, pick):
         if pick is None:
             return None

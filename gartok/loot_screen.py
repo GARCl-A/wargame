@@ -35,6 +35,15 @@ class LootScreen(Screen):
         self.buttons = []                   # [(key, rect)]
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "loot"
+
+    def tutorial_anchor(self, size):
+        return self.footer_anchor(size)
+
+    # ------------------------------------------------------------------ #
     @staticmethod
     def _fits(member, name):
         return member.load + data.item_weight(name) <= member.carry_max

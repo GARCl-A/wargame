@@ -15,7 +15,8 @@ from .theme import (ACCENT, DANGER, INK, INK_DIM, LINE_SOFT, RADIUS, SP2, SP3,
 
 
 class PauseScreen(Screen):
-    def __init__(self, fonts, resume_to, on_resume, on_menu, on_quit):
+    def __init__(self, fonts, resume_to, on_resume, on_menu, on_quit,
+                tutorial=None, on_tutorial_toggle=None, on_tutorial_reset=None):
         super().__init__()
         self.fonts = fonts
         self.resume_to = resume_to
@@ -23,13 +24,18 @@ class PauseScreen(Screen):
         self.on_resume = on_resume
         self.on_menu = on_menu
         self.on_quit = on_quit
+        self.tutorial = tutorial                      # tutorial.TutorialState -- read for the ON/OFF label
+        self.on_tutorial_toggle = on_tutorial_toggle
+        self.on_tutorial_reset = on_tutorial_reset
         self.buttons = []
 
     def _click(self, px):
         for key, rect in self.buttons:
             if rect.collidepoint(px):
                 {"resume": self.on_resume, "menu": self.on_menu,
-                 "quit": self.on_quit}[key]()
+                 "quit": self.on_quit,
+                 "tutorial_toggle": self.on_tutorial_toggle,
+                 "tutorial_reset": self.on_tutorial_reset}[key]()
                 return
 
     def draw(self, screen):
@@ -44,7 +50,8 @@ class PauseScreen(Screen):
         veil.fill((6, 7, 12, 210))
         screen.blit(veil, (0, 0))
 
-        card = pygame.Rect(0, 0, 320, 250)
+        tutorial_rows = 2 if self.tutorial is not None else 0
+        card = pygame.Rect(0, 0, 320, 250 + tutorial_rows * (40 + SP2))
         card.center = (W // 2, H // 2)
         panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, width=2, radius=RADIUS)
         text(screen, "PAUSED", f.title, INK, (card.centerx, card.y + 26), center=True)
@@ -54,6 +61,10 @@ class PauseScreen(Screen):
         self.buttons = []
         rows = [("resume", "RESUME", ACCENT), ("menu", "SAVE & MAIN MENU", INK),
                 ("quit", "QUIT GAME", DANGER)]
+        if self.tutorial is not None:
+            on = self.tutorial.enabled
+            rows.append(("tutorial_toggle", f"TUTORIALS: {'ON' if on else 'OFF'}", INK))
+            rows.append(("tutorial_reset", "RESET TUTORIALS", INK))
         by = card.y + 84
         for key, label, col in rows:
             r = pygame.Rect(card.x + SP3, by, card.w - 2 * SP3, 40)

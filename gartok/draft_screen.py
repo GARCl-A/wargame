@@ -146,6 +146,29 @@ class DraftScreen(Screen):
                 self._pick(unit)
                 return
 
+    # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py) -- one id per phase                      #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return {"pick": "draft.pick", "identity": "draft.identity",
+                "leader": "draft.leader"}.get(self.phase)
+
+    def tutorial_anchor(self, size):
+        w, h = size
+        if self.phase == "identity":
+            """The identity form only ever uses the left ~560px (`_draw_identity`);
+            the whole right side of the window is untouched."""
+            cw = min(560, w - 2 * MARGIN)
+            x = MARGIN + cw + SP4
+            return (x, MARGIN + 74, min(340, max(200, w - x - MARGIN)), "down")
+        """pick/leader share this layout (`draw`): the squad rail band under the
+        cards in "pick", the same now-empty band in "leader" (no rail drawn)."""
+        rail_h, card_h = 92, 548
+        group_h = card_h + SP4 + rail_h
+        slack = max(0, (h - 18) - (MARGIN + 58) - group_h)
+        rail_y = MARGIN + 58 + slack // 2 + card_h + SP4
+        return (MARGIN, rail_y, min(340, w - 2 * MARGIN), "down")
+
     def _click_identity(self, px):
         if self.editing_name:                 # a click anywhere commits the field being typed
             self.guild_name, self.editing_name = self.name_buf, False

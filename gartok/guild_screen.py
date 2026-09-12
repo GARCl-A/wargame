@@ -72,6 +72,21 @@ class GuildScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         self._pack_area = None             # rect of the pack list, for wheel hit-testing
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py) -- one id per tab, since that's the actual
+    # teachable moment (MEMBERS vs REPUTATIONS are different screens in
+    # everything but name)                                               #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        if self._carried_names():          # tab strip is hidden mid-drag; no card then
+            return None
+        return f"guild.{self.tab}"
+
+    def tutorial_anchor(self, size):
+        w, h = size
+        pad = MARGIN if w < 1500 else SP5
+        return (pad, h - 64, 360, "up")
+
+    # ------------------------------------------------------------------ #
     def _is_group_leader(self, unit):
         group = self.guild.group_of(unit)
         return group is not None and group.leader is unit

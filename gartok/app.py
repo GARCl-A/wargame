@@ -31,7 +31,7 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, hunt, matchup, persist, world
+from . import arena, campaign, hunt, matchup, persist, tutorial_card, world
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -53,6 +53,7 @@ from .reward_screen import RewardScreen
 from .squad_screen import SquadScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W, set_player_color
+from .tutorial import TutorialState
 
 
 class App:
@@ -71,7 +72,18 @@ class App:
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._pending = []                   # [(Group, Order)] left to resolve from the last tick
+        self._draft_tutorial = TutorialState()   # the soft tutorial, before a Guild exists to hold it
+        self._tutorial_card_rect = None
+        self._tutorial_badge_rect = None
+        self._tutorial_rect_scene = None     # which scene those rects were drawn for
         self._start_menu()
+
+    @property
+    def tutorial(self):
+        """The soft tutorial's state: the guild's own once there is one (so it
+        saves/loads by slot), `_draft_tutorial` before that (draft.py has no
+        guild yet to hold it on)."""
+        return self.guild.tutorial if self.guild is not None else self._draft_tutorial
 
     # ------------------------------------------------------------------ #
     # campaign flow                                                      #
@@ -97,11 +109,13 @@ class App:
     def _new_game(self, slot):
         self.slot = slot
         self.guild = None
+        self._draft_tutorial = TutorialState()
         self.scene = DraftScreen(self.fonts, on_done=self._draft_done)
 
     def _draft_done(self, picks, leader, name, banner_color, banner_icon):
         self.guild = Guild(picks, node=world.START_NODE, leader=leader,
-                           name=name, banner_color=banner_color, banner_icon=banner_icon)
+                           name=name, banner_color=banner_color, banner_icon=banner_icon,
+                           tutorial=self._draft_tutorial)
         set_player_color(self.guild.banner_color)
         self._start_map()
 
@@ -381,7 +395,10 @@ class App:
             self.scene = PauseScreen(self.fonts, self.scene,
                                      on_resume=self._resume_from_pause,
                                      on_menu=self._pause_to_menu,
-                                     on_quit=self._quit)
+                                     on_quit=self._quit,
+                                     tutorial=self.tutorial,
+                                     on_tutorial_toggle=self._toggle_tutorial,
+                                     on_tutorial_reset=self._reset_tutorial)
 
     def _resume_from_pause(self):
         if isinstance(self.scene, PauseScreen):
@@ -395,7 +412,42 @@ class App:
     def _quit(self):
         self._running = False
 
+    def _toggle_tutorial(self):
+        self.tutorial.enabled = not self.tutorial.enabled
+        if self.guild is not None:
+            self._save()
+
+    def _reset_tutorial(self):
+        self.tutorial.reset()
+        if self.guild is not None:
+            self._save()
+
     # ------------------------------------------------------------------ #
+    def _tutorial_click(self, event):
+        """True if this click was spent on the tutorial card/badge instead of
+        reaching the scene -- checked against LAST frame's rects (`run`
+        computes this frame's only after events are handled; the one-frame lag
+        is invisible at 60 fps). `_tutorial_rect_scene` guards against a scene
+        swap mid-batch (one event switches `self.scene`, e.g. a footer button,
+        and a later event in the same `pygame.event.get()` batch would
+        otherwise be checked against the OLD scene's rects): once the scene
+        no longer matches, those rects are treated as absent for this event
+        rather than possibly matching a same-position widget on the new one."""
+        if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
+            return False
+        if self._tutorial_rect_scene is not self.scene:
+            return False
+        key = self.scene.tutorial_key()
+        if key is None:
+            return False
+        if self._tutorial_card_rect and self._tutorial_card_rect.collidepoint(event.pos):
+            self.tutorial.dismiss(key)
+            return True
+        if self._tutorial_badge_rect and self._tutorial_badge_rect.collidepoint(event.pos):
+            self.tutorial.reopen(key)
+            return True
+        return False
+
     def run(self):
         self._running = True
         while self._running:
@@ -409,11 +461,16 @@ class App:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     if not self.scene.handle_escape():
                         self._toggle_pause()
+                elif self._tutorial_click(event):
+                    pass
                 else:
                     self.scene.handle_event(event)
 
             self.scene.update(dt)
             self.window.fill(BG)
             self.scene.draw(self.window)          # every scene draws at real window size
+            self._tutorial_card_rect, self._tutorial_badge_rect = tutorial_card.draw(
+                self.window, self.fonts, self.scene, self.tutorial)
+            self._tutorial_rect_scene = self.scene
             pygame.display.flip()
         pygame.quit()

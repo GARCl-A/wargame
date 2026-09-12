@@ -82,6 +82,17 @@ class LevelScreen(Screen):
         self._hover = None                  # (track, talent) under the cursor
 
     # ------------------------------------------------------------------ #
+    # soft tutorial (screen.py)                                          #
+    # ------------------------------------------------------------------ #
+    def tutorial_key(self):
+        return "level"
+
+    def tutorial_anchor(self, size):
+        w, _h = size
+        pad = MARGIN if w < 1500 else SP5
+        return self.footer_anchor(size, margin=pad)
+
+    # ------------------------------------------------------------------ #
     def _click(self, px):
         for key, rect in self.buttons:
             if rect.collidepoint(px) and key == "back":
