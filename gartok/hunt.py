@@ -57,8 +57,9 @@ def hunt_stretch(state, rng=random):
 
 
 def wilds_pack(rng=random):
-    """The pack that springs an ambush -- a scaled `encounters` roll."""
-    return encounters.roll_pack(rng=rng)
+    """The pack that springs an ambush -- a scaled `encounters` roll, mostly
+    wolves (see `encounters.WILDS_TABLE`)."""
+    return encounters.roll_encounter(encounters.WILDS_TABLE, rng=rng)
 
 
 def grant_meat(state):

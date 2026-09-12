@@ -38,7 +38,7 @@ from .scenario import ArenaScenario, ErmosScenario
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, work=False,
-                 bank=False):
+                 bank=False, tanner=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -51,6 +51,7 @@ class Node:
         self.alignment = alignment           # market: the vendor's bent (price sympathy)
         self.work = work                     # town: a lumber yard -- trade hours for copper
         self.bank = bank                     # town: the Bankers -- rent a strongbox (bank_screen)
+        self.tanner = tanner                 # town: a mission board -- missions.TANNER_HIDES (tanner_screen)
 
     @property
     def is_battle(self):
@@ -129,7 +130,7 @@ def arena_offers(reputation):
 NODES = [
     Node("city", "The City", "town", (0.16, 0.58),
          "The walled burg. Where the guild sets out from -- and where the "
-         "Bankers keep their strongboxes.", bank=True),
+         "Bankers keep their strongboxes.", bank=True, tanner=True),
     Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",

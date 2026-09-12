@@ -18,6 +18,7 @@ import json
 import os
 import time
 
+from . import missions
 from .clock import Clock
 from .group import Group
 from .guild import Guild
@@ -26,7 +27,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 10                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 11                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -96,6 +97,8 @@ def save_game(slot, guild):
         "clock_seconds": guild.clock.seconds,
         "bank_capacity": guild.bank_capacity,
         "bank_items": list(guild.bank_items),
+        "market_stock": dict(guild.market_stock),
+        "missions": [missions.mission_to_dict(m) for m in guild.missions],
         "leader": guild.leader.uid if guild.leader else None,
         "leader_swaps_used": guild.leader_swaps_used,
         "name": guild.name,
@@ -139,6 +142,8 @@ def load_game(slot):
                  clock=Clock(payload.get("clock_seconds", 0)),
                  bank_capacity=payload.get("bank_capacity", 0),
                  bank_items=payload.get("bank_items", []),
+                 market_stock=payload.get("market_stock"),
+                 missions=[missions.mission_from_dict(d) for d in payload.get("missions", [])],
                  taverna_week=payload.get("taverna_week"),
                  taverna_pool=[Unit.from_save(d) for d in pool] if pool is not None else None,
                  taverna_blocked=payload.get("taverna_blocked"),

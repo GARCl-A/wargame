@@ -55,6 +55,8 @@ PRICES = {
     "Rope": 4, "Sack": 2,
     # food (a day's meal each)
     "Meat": 5, "Potato": 3,
+    # raw materials (gathered, not manufactured -- see STOCK below)
+    "1sqm Hide": 12,
 }
 
 # What the market keeps in stock to buy (fixed list for now).
@@ -63,7 +65,26 @@ MARKET_STOCK = [
     "Light Crossbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
     "Meat", "Potato", TORCH_ITEM, "First Aid Kit", "Lantern",
+    "1sqm Hide",
 ]
+
+# Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.
+# A name listed here instead carries a live, finite count (`Guild.market_stock`,
+# seeded from this at a fresh guild): buying draws it down, selling back tops it
+# up, nothing else restocks it. Leather Jerkin/Studded Leather start scarce on
+# purpose (early armor is meant to feel earned); 1sqm Hide starts at zero -- the
+# tanner's mission (`missions.py`) wants it hunted in the Wilds, not bought, so
+# the market only ever has what a player has actually sold back to it.
+STOCK = {
+    "Leather Jerkin": 3, "Studded Leather": 3,
+    "1sqm Hide": 0,
+}
+
+
+def stock_of(market_stock, name):
+    """Units of `name` left to buy, or None if it isn't stock-limited (an
+    unlimited item -- everything not in `STOCK`)."""
+    return market_stock.get(name)
 
 
 # The market's category tabs, in display order. Weapons and armor read straight

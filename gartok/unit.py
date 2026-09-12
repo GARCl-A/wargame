@@ -28,15 +28,22 @@ ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom",
 
 
 class Unit:
-    def __init__(self, team, name=None):
+    def __init__(self, team, name=None, race=None):
         self.team = team                     # "player" / "enemy" (vestigial: Combatant owns the real one)
         self.uid = uuid.uuid4().hex          # stable identity: survives save/load, outlives the name
         self.recruited_by = None             # uid of the guild member who recruited this one, or None
         self.talents = {t: [] for t in talents.TRACKS}   # picked talent ids per XP track
         self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
         self._roll_attributes()
-        self._apply_race()
-        self._apply_occupation()
+        if race is not None:                 # a specific body (e.g. encounters' race_pool draw)
+            self.race = dict(race)
+            self._configure_race()
+        else:
+            self._apply_race()
+        if self.race["kind"] == "beast":
+            self._apply_beast()
+        else:
+            self._apply_occupation()
         self.alignment = data.roll_alignment()
         self.gold = roll(*economy.STARTING_WEALTH_DICE)   # copper coins -- lives on the character
         self.unfed_days = 0                            # consecutive days without a meal
@@ -330,6 +337,19 @@ class Unit:
     def _apply_occupation(self):
         self.occupation = data.roll_occupation()
         self._configure_occupation()
+
+    def _apply_beast(self):
+        """A beast has no job -- it fights with its own body, not a rolled
+        weapon (see `combatant.unarmed`/`data.UNARMED_ATTACK`; the extra bite
+        comes off its racial ability's `melee_damage`, like `_configure_race`
+        already wires up for anything else the ability grants)."""
+        self.occupation = dict(data.BEAST_OCCUPATION)
+        self.equipped_weapon = None
+        self.equipped_offhand = None
+        self.equipped_armor = None
+        self.item = None
+        self.starting_creature = None
+        self._base_inventory = []
 
     def _configure_occupation(self):
         # A weapon is just a held item: `equipped_weapon` is the one in the weapon

@@ -97,11 +97,13 @@ class Action:
 # --------------------------------------------------------------------------- #
 
 def _pack_flank(battle, attacker, target):
-    """Loose flank (Pack Tactics): any ally, other than the attacker, adjacent to
-    the target. Feeds the racial 'Pack Tactics' bonus."""
-    return any(u.alive and u.team == attacker.team and u is not attacker
-               and battle.units_distance(u, target) == 1
-               for u in battle.units)
+    """Loose flank (Pack Tactics): how many allies, other than the attacker,
+    are adjacent to the target -- 0 is falsy (no flank) same as the old bool;
+    a wolf's version of the ability reads the actual count to scale with the
+    size of the pack, not just whether it's flanked at all."""
+    return sum(1 for u in battle.units
+               if u.alive and u.team == attacker.team and u is not attacker
+               and battle.units_distance(u, target) == 1)
 
 
 def _facing(battle, unit, target_cells):

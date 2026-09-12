@@ -13,11 +13,18 @@ and the talent picks respect the trees (`Talent.requires`).
 The Wilds is the first consumer (open country near the city -> levels 0..4, the
 low end common). The arena tiers are meant to scale through here too, later;
 `arena.build_challenger` already delegates to `build_enemy`.
+
+A locality's **encounter table** (`EncounterEntry`, e.g. `WILDS_TABLE`) is a
+second, orthogonal roll on top of that: which *pool* of bodies (`data.BEAST_POOL`,
+`data.RACE_POOL`, ...) a pack is drawn from. `roll_encounter` picks one entry by
+weight, then hands its `race_pool` down to `roll_pack`/`build_enemy` -- headcount
+and level keep coming from the same weights regardless of who shows up.
 """
 
 import random
+from dataclasses import dataclass
 
-from . import progression, talents
+from . import data, progression, talents
 from .unit import Unit
 
 # The Wilds: a pack is 1..6 bodies, most often 3, tapering faster on the high
@@ -53,10 +60,13 @@ def _split_tracks(mean_level, rng):
     return combat, total - combat
 
 
-def build_enemy(mean_level, rng=random):
+def build_enemy(mean_level, rng=random, race_pool=None):
     """A fresh `Unit("enemy")` pitched at `mean_level`: track levels split at
-    random to that mean, then random talent picks that respect each tree."""
-    u = Unit("enemy")
+    random to that mean, then random talent picks that respect each tree.
+    `race_pool` (a list of race dicts, e.g. `data.BEAST_POOL`) draws the body
+    from there instead of a fresh random humanoid -- None keeps the old
+    behaviour (`Unit`'s own `data.roll_race()`)."""
+    u = Unit("enemy", race=rng.choice(race_pool) if race_pool else None)
     combat, work = _split_tracks(mean_level, rng)
     u.set_track_level("combat", combat)
     u.set_track_level("work", work)
@@ -77,7 +87,43 @@ def build_enemy(mean_level, rng=random):
 
 
 def roll_pack(count_weights=WILDS_COUNT_WEIGHTS, level_weights=WILDS_LEVEL_WEIGHTS,
-              rng=random):
-    """A list of enemy `Unit`s: a rolled headcount, each rolled its own level."""
+              rng=random, race_pool=None):
+    """A list of enemy `Unit`s: a rolled headcount, each rolled its own level
+    (and, with `race_pool` given, its own body drawn from that pool)."""
     n = weighted_choice(count_weights, rng)
-    return [build_enemy(weighted_choice(level_weights, rng), rng) for _ in range(n)]
+    return [build_enemy(weighted_choice(level_weights, rng), rng, race_pool=race_pool)
+            for _ in range(n)]
+
+
+@dataclass(frozen=True)
+class EncounterEntry:
+    """One line of a locality's encounter table: how likely it turns up
+    (`weight`, normalised against its table's siblings) and which pool of race
+    dicts a pack's bodies are drawn from -- `None` means an unrestricted
+    humanoid, correctly weighted by `RACES`' own thresholds (`build_enemy`'s
+    `race_pool=None` falls through to `Unit`'s own `data.roll_race()`); a
+    *tuple* pool (e.g. `data.BEAST_POOL`) always draws uniformly instead, since
+    the bodies in it don't carry rarity thresholds of their own yet. Headcount/
+    level weights are the table's own, passed to `roll_encounter` -- what
+    varies entry to entry is *who* shows up, not how many or how tough."""
+    weight: int
+    race_pool: tuple | None
+
+
+# The Wilds: mostly a wolf pack (the point of hunting there now -- see the
+# Wolf's `drop_item` in `data.BEASTS`); a rarer bandit gang keeps the old
+# all-humanoid rolls from before beasts existed from vanishing outright --
+# `None`, not `tuple(data.RACE_POOL)`, so it stays weighted by rarity instead
+# of flattening every race to an equal ~5.5% (`data.roll_race()`'s thresholds).
+WILDS_TABLE = (
+    EncounterEntry(70, tuple(data.BEAST_POOL)),
+    EncounterEntry(30, None),
+)
+
+
+def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
+                   level_weights=WILDS_LEVEL_WEIGHTS, rng=random):
+    """A pack rolled off a locality's `EncounterEntry` table: one entry picked
+    by weight decides the race pool every body in the pack is drawn from."""
+    i = weighted_choice({i: e.weight for i, e in enumerate(table)}, rng)
+    return roll_pack(count_weights, level_weights, rng, race_pool=table[i].race_pool)

@@ -51,6 +51,7 @@ from .menu_screen import MenuScreen
 from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
 from .squad_screen import SquadScreen
+from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
 from .theme import BG, Fonts, WIN_H, WIN_W, set_player_color
 from .tutorial import TutorialState
@@ -221,6 +222,8 @@ class App:
                 self._open_taverna(list(group.members), node, None)
             elif order.kind == "hunt":
                 self._open_hunt_ground(list(group.members), node, None)
+            elif order.kind == "tanner":
+                self._open_tanner_stall(group, node, None)
             return
         self._start_map()
 
@@ -246,6 +249,10 @@ class App:
     def _open_bank_vault(self, party, node, _offer):
         self.scene = BankScreen(self.fonts, self.guild, party,
                                 on_done=self._after_activity)
+
+    def _open_tanner_stall(self, group, node, _offer):
+        self.scene = TannerScreen(self.fonts, self.guild, group,
+                                  on_done=self._after_activity)
 
     # ------------------------------------------------------------------ #
     # hunting the wilds -- an activity that can spring a fight            #

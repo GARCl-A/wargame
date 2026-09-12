@@ -602,6 +602,22 @@ class MapScreen(Screen):
             text(screen, "Nothing happens here. A safe stop.", f.body_sm,
                  INK_FAINT, (cx, y))
 
+        # A node's flags aren't mutually exclusive (the City is both a bank and
+        # a tanner) -- checked after the kind-dispatch chain above, not nested
+        # in one branch of it, so a future node can carry `tanner` on its own.
+        # Still gated on not-busy, same as every button the chain above offers.
+        if here.tanner and not self.selected.busy:
+            y += 30
+            tr = pygame.Rect(cx, y, cw, 38)
+            hovt = tr.collidepoint(self.mouse)
+            panel(screen, tr, fill=SURFACE_3 if hovt else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "TALK TO THE TANNER", f.body_bd, INK_DIM, tr.center, center=True)
+            self.buttons.append(("tanner", tr))
+            y += 44
+            text(screen, "a paid job, on the clock -- see what's on offer",
+                 f.body_sm, INK_FAINT, (cx, y))
+
         y += 60
         y = section(screen, "FROM HERE YOU CAN REACH", cx, y, cw, f)
         for nid, hours in sorted(world.neighbors(here.id), key=lambda t: t[1]):

@@ -8,7 +8,14 @@ fits under `carry_max`; the rest is left behind.
 
 Read off the *battle* combatants, never the roster: a weapon a unit threw is on
 `battle.ground`, not on the combatant, so nothing is counted twice.
+
+A beast (`Unit.race["kind"] == "beast"`, see `data.BEAST_POOL`) never carries
+gear -- it drops its own trophy material instead, straight off the race dict
+(`drop_item`/`drop_chance`, e.g. the Wolf's `data.BEASTS` row): a new species'
+material is a data change in `data.py`, not a new branch here.
 """
+
+import random
 
 from . import data
 
@@ -27,7 +34,7 @@ def _carried_by(u):
     return items
 
 
-def field_loot(battle, fallen_combatants):
+def field_loot(battle, fallen_combatants, rng=random):
     """-> sorted list[str] of item names on the field after a player win.
 
     `fallen_combatants` are the player's own dead (from `battle.player_units`).
@@ -37,6 +44,10 @@ def field_loot(battle, fallen_combatants):
         if getattr(u, "fled", False):
             continue                      # ran off the map with their kit
         pool += _carried_by(u)
+        char = getattr(u, "char", None)
+        drop = char.race.get("drop_item") if char is not None else None
+        if drop and rng.random() < char.race.get("drop_chance", 0.0):
+            pool.append(drop)
     for obj in battle.ground:
         if obj.is_weapon and obj.weapon_name:
             pool.append(obj.weapon_name)

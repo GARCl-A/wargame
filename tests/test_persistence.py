@@ -86,7 +86,7 @@ def test_equipped_weapon_survives_save():
 
 
 def test_save_slot_file_round_trip():
-    from gartok import persist
+    from gartok import missions, persist
     from gartok.guild import Guild
     from gartok.clock import Clock
     slot = persist.NUM_SLOTS - 1
@@ -102,6 +102,8 @@ def test_save_slot_file_round_trip():
     guild.roster[0].bio = "kept the belt through a lean winter"
     pool = recruit.refresh_pool(guild)
     recruit.bar(guild, pool[0], guild.roster[0])
+    guild.market_stock["1sqm Hide"] = 2
+    m = missions.accept(guild, guild.groups[0].leader, missions.TANNER_HIDES)
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
@@ -117,6 +119,11 @@ def test_save_slot_file_round_trip():
         assert back.taverna_week == guild.taverna_week
         assert [u.uid for u in back.taverna_pool] == [u.uid for u in pool]
         assert back.taverna_blocked == [[pool[0].uid, guild.roster[0].uid]]
+        assert back.market_stock["1sqm Hide"] == 2
+        assert len(back.missions) == 1
+        assert back.missions[0].template_id == m.template_id
+        assert back.missions[0].unit_uid == m.unit_uid
+        assert back.missions[0].deadline_day == m.deadline_day
     finally:
         persist.delete_slot(slot)
 

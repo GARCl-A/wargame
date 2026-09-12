@@ -116,6 +116,12 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
     def _fits(self, member, name):
         return member.load + data.item_weight(name) <= member.carry_max
 
+    def _stock_of(self, name):
+        """Units of `name` left to buy, or None if unlimited -- also None with
+        no `guild` (a few tests build a bare screen with no campaign behind it)."""
+        guild = getattr(self, "guild", None)
+        return economy.stock_of(guild.market_stock, name) if guild else None
+
     def _deal_note(self):
         """One-line summary of how the party's haggling moved the prices."""
         lang = getattr(self.node, "language", None)
@@ -257,12 +263,17 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
 
     def _buy(self, member, names):
         """Buy each stock name (the kit tab's stepper quantity, else one), into
-        `member`'s pack -- stopping the moment the purse or the load runs out."""
+        `member`'s pack -- stopping the moment the purse, the load or the
+        vendor's stock runs out."""
         bought = 0
         wanted = sum(self._buy_qty(n) for n in names)
         stopped = None
         for name in names:
             for _ in range(self._buy_qty(name)):
+                stock = self._stock_of(name)
+                if stock is not None and stock <= 0:
+                    stopped = f"no {name} in stock"
+                    break
                 price = economy.buy_price(name, self.deal)
                 if self.purse < price:
                     stopped = "out of copper"
@@ -272,6 +283,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                     break
                 self.purse -= price
                 member.give_to_pack(name)
+                if stock is not None:
+                    self.guild.market_stock[name] = stock - 1
                 bought += 1
             if stopped:
                 break
@@ -295,6 +308,10 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         names, touched = self._collect(picks)
         total = sum(economy.sell_price(n, self.deal) for n in names)
         self.purse += total
+        for n in names:
+            stock = self._stock_of(n)
+            if stock is not None:
+                self.guild.market_stock[n] = stock + 1
         for u in touched:
             u._derive_combat()
         self.notice = f"sold {len(names)} item(s) for {total}."
@@ -407,7 +424,9 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             hov = not self.sel and r.collidepoint(self.mouse)
             base = economy.buy_price(name)
             price = economy.buy_price(name, self.deal)
-            afford = self.purse >= price
+            stock = self._stock_of(name)
+            out = stock is not None and stock <= 0
+            afford = self.purse >= price and not out
             fits = any(self._fits(m, name) for m in self.shoppers)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
@@ -426,6 +445,10 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                 if tag:
                     text(screen, tag, f.label, ACCENT_INK if sel else INFO,
                          (tag_x, r.centery - 5), right=True)
+            if stock is not None:
+                stock_label = "OUT OF STOCK" if out else f"{stock} in stock"
+                text(screen, stock_label, f.label, ACCENT_INK if sel else DANGER if out else WARN,
+                     (tag_x, r.centery + 5), right=True)
 
             wt = kg(data.item_weight(name))
             text(screen, wt, f.mono_sm,

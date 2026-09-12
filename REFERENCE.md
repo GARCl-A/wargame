@@ -51,6 +51,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Autotroph | photosynthesises: never needs to eat, immune to the hunger rules. |
 | Ferocity | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
+| Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 
 ## Occupations
 

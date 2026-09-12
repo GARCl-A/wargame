@@ -67,6 +67,14 @@ def _pack_tactics_mods(unit, target, flanking):
     return [(2, "circumstance", "Pack Tactics")] if flanking else []
 
 
+def _wolf_pack_tactics_mods(unit, target, flanking):
+    """A real pack, not just a flank: the bonus scales with how many allies
+    are already on the target, same "circumstance" bonus type as the Goblin's
+    (see `_pack_flank` in `actions.py`, which now hands back the adjacent-ally
+    *count* instead of a bare bool)."""
+    return [(2 * flanking, "circumstance", "Pack Tactics")] if flanking else []
+
+
 def _ancestral_blood_mods(unit, target, flanking):
     return [(2, "circumstance", "Ancestral Blood")] if target.size == "Large" else []
 
@@ -148,6 +156,10 @@ _LIST = [
             "flies: moves freely in three dimensions (up and down pits with no "
             "check, ignores terrain) and never takes falling damage.",
             flies=True),
+    Ability("wolf_pack_tactics", "Pack Tactics",
+            "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
+            "ally already on the target, not just the first.",
+            melee_damage=1, attack_mods=_wolf_pack_tactics_mods),
 ]
 
 ABILITIES = {a.id: a for a in _LIST}

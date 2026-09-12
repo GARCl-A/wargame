@@ -159,10 +159,12 @@ RACES = [
     (100, "Sprite",         "S", (-2,  0, -2,  0,  2,  2), "flight",         "Gnomish",   1.500,  6, "Tiny"),
 ]
 
-def _race_dict(threshold, name, token, mods, ability, language, age, hd, size):
+def _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
+               kind="humanoid", drop_item=None, drop_chance=0.0):
     return {
         "name": name, "token": token, "mods": mods, "ability": ability,
-        "language": language, "age_mult": age, "hd": hd, "size": size,
+        "language": language, "age_mult": age, "hd": hd, "size": size, "kind": kind,
+        "drop_item": drop_item, "drop_chance": drop_chance,
     }
 
 
@@ -170,6 +172,37 @@ _RACES = [_race_dict(*row) for row in RACES]
 
 # Every language in the world = the racial languages (no description in the generator).
 LANGUAGES = sorted({r["language"] for r in _RACES})
+
+# --------------------------------------------------------------------------- #
+# Beasts: the first non-humanoid `kind` -- enemy-only (never rolled as a       #
+# player's race), scaled through `encounters.build_enemy` exactly like a      #
+# humanoid, but with no occupation (see `Unit._apply_beast`): a beast never   #
+# carries a job's weapon/item, it fights with its own body (unarmed damage +  #
+# its racial ability's `melee_damage`) and drops its own `drop_item` instead  #
+# of gear (`loot.field_loot` reads it straight off the race dict -- a new     #
+# beast's material is just two more columns here, not a change to loot.py).  #
+# --------------------------------------------------------------------------- #
+
+BEASTS = [
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance
+    (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  0.75),
+]
+
+def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
+                drop_item, drop_chance):
+    return _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
+                      kind="beast", drop_item=drop_item, drop_chance=drop_chance)
+
+
+_BEASTS = [_beast_dict(*row) for row in BEASTS]
+
+# Public pools for anything that needs to draw an arbitrary body from one
+# (`encounters.EncounterEntry.race_pool`) -- `roll_race` stays the one path
+# that rolls a fresh *player* race (humanoid, weighted by `RACES`' thresholds).
+RACE_POOL = _RACES
+BEAST_POOL = _BEASTS
+
+BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
 
 
 _RACE_THRESHOLDS = [row[0] for row in RACES]

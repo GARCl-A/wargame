@@ -3,11 +3,11 @@
 An order is issued once (`travel`/`work`/`interactive`) and then ticked down by
 `campaign.advance` until it completes. `travel` and `work` resolve silently
 (auto) -- the group just arrives, or gets paid. Every other kind (`market`,
-`bank`, `recruit`, `hunt`, `arena`) is interactive: the order only covers
-*getting to* the activity, then `campaign.advance` hands the group back as
-`TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
-`TavernaScreen`, `HuntScreen`, the squad picker into `BattleScreen`) to actually
-play it.
+`bank`, `recruit`, `hunt`, `arena`, `tanner`) is interactive: the order only
+covers *getting to* the activity, then `campaign.advance` hands the group back
+as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
+`TavernaScreen`, `HuntScreen`, `TannerScreen`, the squad picker into
+`BattleScreen`) to actually play it.
 
 `group.order is None` means idle -- eligible for a fresh order, and (unlike an
 active order) never blocks `campaign.advance` from jumping straight past it to
@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from . import world
 
 AUTO_KINDS = frozenset({"travel", "work"})
-INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "hunt"})
+INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "hunt", "tanner"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | {"idle"}
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds

@@ -41,7 +41,7 @@ so they stay the same face-to-face across visits; `recruit.refresh_pool` swaps
 them for a new set once a week.
 """
 
-from . import data, economy, progression
+from . import data, economy, missions, progression
 from .clock import Clock
 from .group import Group
 from .tutorial import TutorialState
@@ -60,7 +60,8 @@ class Guild:
                  taverna_week=None, taverna_pool=None, taverna_blocked=None,
                  bank_capacity=0, bank_items=None, groups=None,
                  leader=None, leader_swaps_used=0,
-                 name="", banner_color=None, banner_icon=None, tutorial=None):
+                 name="", banner_color=None, banner_icon=None, tutorial=None,
+                 market_stock=None, missions=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -74,6 +75,9 @@ class Guild:
         self.clock = clock or Clock()
         self.bank_capacity = bank_capacity    # kg the rented strongbox holds (0 = none rented)
         self.bank_items = list(bank_items or [])   # item names stashed in the chest
+        # live market stock (economy.STOCK) -- a name absent here restocks freely
+        self.market_stock = dict(economy.STOCK) if market_stock is None else dict(market_stock)
+        self.missions = list(missions or [])  # active/finished missions.Mission, see missions.py
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
@@ -309,6 +313,8 @@ class Guild:
             events.append(f"{who} ({self.rations} rations left).")
         if casualties:
             self.remove_members(casualties)
+        for m in missions.expire_overdue(self):
+            events.append(f"{missions.template_of(m).name}: the deadline passed.")
         return events
 
     def eat_now_pass(self):
