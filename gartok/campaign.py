@@ -209,8 +209,7 @@ def advance(guild, dt=None):
         if order.kind == "travel":
             g.node = order.dest
             for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):
-                events.append(f"DEED · {d.name}  +{d.rep} reputation with "
-                              f"{factions.faction(d.faction).name}")
+                events.append(factions.deed_notice(d))
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta)
         elif order.interactive:                # arena/market/bank/recruit/hunt

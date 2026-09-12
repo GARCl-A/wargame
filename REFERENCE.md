@@ -240,7 +240,11 @@ The staked bouts in the cellars under the city. Win, and be known.
 
 The coin-lenders of the city. They rent strongboxes, and -- for those who dare -- lend against the future.
 
-_No deeds yet -- standing with this faction does not move._
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| Good for Business | Complete an economic job in the City. | +1 | -- |
+| Steady Customer | Spend 1000 copper at the market. | +1 | -- |
+| Diverse Portfolio | Sell 5 different kinds of goods to the market. | +1 | -- |
 
 ## Arena tiers
 

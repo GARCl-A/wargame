@@ -23,7 +23,7 @@ shopper's items for one move.
 
 import pygame
 
-from . import data, economy
+from . import data, economy, factions
 from .dragselect import DragSelectMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
@@ -261,6 +261,14 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         member._derive_combat()
         self.notice = f"{len(names)} item(s) -> {member.name}."
 
+    def _settle_market(self):
+        """Bankers deeds read the guild's lifetime market tallies straight off
+        `guild.total_spent`/`items_sold_kinds` (`factions.py`) -- fire this
+        after any buy or sell that could have just crossed one, and append a
+        DEED line to `self.notice` the same way the tanner does."""
+        for d in factions.settle(self.guild, factions.Event("market", node=self.node)):
+            self.notice = (self.notice or "") + "  ·  " + factions.deed_notice(d)
+
     def _buy(self, member, names):
         """Buy each stock name (the kit tab's stepper quantity, else one), into
         `member`'s pack -- stopping the moment the purse, the load or the
@@ -282,6 +290,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                     stopped = f"{name} won't fit {member.name}'s load"
                     break
                 self.purse -= price
+                self.guild.total_spent += price
                 member.give_to_pack(name)
                 if stock is not None:
                     self.guild.market_stock[name] = stock - 1
@@ -298,6 +307,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             self.notice = f"{member.name} bought {bought}× {what}."
         elif stopped:
             self.notice = f"{stopped[0].upper()}{stopped[1:]}."
+        if bought:
+            self._settle_market()
 
     def _sell(self):
         picks = [p for p in self.sel
@@ -312,9 +323,11 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             stock = self._stock_of(n)
             if stock is not None:
                 self.guild.market_stock[n] = stock + 1
+            self.guild.items_sold_kinds.add(n)
         for u in touched:
             u._derive_combat()
         self.notice = f"sold {len(names)} item(s) for {total}."
+        self._settle_market()
 
     def _checkout(self):
         n = max(1, len(self.shoppers))

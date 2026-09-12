@@ -4,6 +4,7 @@ import os
 import random
 
 from tests.helpers import data, economy, Unit
+from gartok.guild import Guild
 
 
 def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
@@ -31,6 +32,8 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     buyer._base_inventory = []
     buyer.carry_max = 10_000                          # keep load out of this test
     ms = MarketScreen.__new__(MarketScreen)
+    ms.guild = Guild([buyer])
+    ms.node = None
     ms.shoppers = [buyer]
     ms.deal = []
     ms.qty = {}

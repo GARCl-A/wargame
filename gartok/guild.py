@@ -61,7 +61,8 @@ class Guild:
                  bank_capacity=0, bank_items=None, groups=None,
                  leader=None, leader_swaps_used=0,
                  name="", banner_color=None, banner_icon=None, tutorial=None,
-                 market_stock=None, missions=None):
+                 market_stock=None, missions=None,
+                 total_spent=0, items_sold_kinds=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -78,6 +79,10 @@ class Guild:
         # live market stock (economy.STOCK) -- a name absent here restocks freely
         self.market_stock = dict(economy.STOCK) if market_stock is None else dict(market_stock)
         self.missions = list(missions or [])  # active/finished missions.Mission, see missions.py
+        # lifetime market tallies the Bankers' deeds read straight off the guild
+        # (`factions.py`), rather than off a single "market" event's payload
+        self.total_spent = total_spent               # copper ever paid to the market
+        self.items_sold_kinds = set(items_sold_kinds or ())  # distinct item names ever sold
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)

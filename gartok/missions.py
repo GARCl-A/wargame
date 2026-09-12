@@ -19,6 +19,8 @@ is what a place wants, authored, not rolled.
 
 from dataclasses import dataclass
 
+from . import factions, world
+
 
 @dataclass(frozen=True)
 class MissionTemplate:
@@ -31,6 +33,7 @@ class MissionTemplate:
     goal_qty: int
     reward: int             # copper, split evenly across the current group
     deadline_days: int      # in-game days from acceptance to the deadline
+    tag: str                # topic a bankers.Deed can key off, e.g. "economic"
 
 
 @dataclass
@@ -47,6 +50,7 @@ TANNER_HIDES = MissionTemplate(
     "The tanner wants 15 sqm of hide off anything with fur. The Wilds is "
     "thick with it, if you can bring down what's wearing it.",
     goal_item="1sqm Hide", goal_qty=15, reward=200, deadline_days=5,
+    tag="economic",
 )
 
 TEMPLATES = {TANNER_HIDES.id: TANNER_HIDES}
@@ -96,7 +100,9 @@ def can_turn_in(guild, mission):
 def turn_in(guild, mission):
     """Consume `goal_qty` of the goal item off the current group's packs and
     split the reward evenly across its members. Call `can_turn_in` first --
-    raises if the group can't cover the goal."""
+    raises if the group can't cover the goal. Returns the `factions.Deed`s a
+    bankers-style "economic job done" event just banked, for the caller to
+    show alongside the payout."""
     if not can_turn_in(guild, mission):
         raise ValueError("mission goal not met")
     t = template_of(mission)
@@ -111,6 +117,8 @@ def turn_in(guild, mission):
     for i, u in enumerate(group.members):
         u.gold += base + (1 if i < rem else 0)
     mission.state = "done"
+    return factions.settle(guild, factions.Event(
+        "mission", node=world.node(t.node), tag=t.tag))
 
 
 def expire_overdue(guild):

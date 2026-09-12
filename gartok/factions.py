@@ -13,16 +13,18 @@ faction is its own thing, not a node -- it may hold ground across several nodes.
 
 First faction: the Pits (staked bouts, at the `arena` node). Its deed list is the
 first arena's whole "sub-campaign": win a bout, solo the entry pit, then dethrone
-its champion team. Repeatable reputation missions, and the other factions, come
-later.
+its champion team. Second faction: the Bankers -- not combat, proof the guild
+moves money through the city (an economic job done, a market spend threshold, a
+spread of goods sold). Repeatable reputation missions come later.
 
 A deed check reads a `factions.Event` -- what just happened. `settle` is called
 after any moment a deed might fire on: a battle (`campaign.absorb_battle`, the
 event carries the `campaign.BattleOutcome`), arriving somewhere on the map
-(`map_screen`), and -- as non-arena factions grow deeds -- a market visit, a
-hunt, a hire. A check keys off `event.kind` first, then reads only the fields
-its own kind sets; it also gets `guild`, so a "visited every node" or "banked
-1000 copper" deed reads campaign state straight off that.
+(`map_screen`), a mission turned in (`missions.turn_in`, the event carries the
+template's `tag`), and a market visit (`market_screen`, after a buy or sell). A
+check keys off `event.kind` first, then reads only the fields its own kind sets;
+it also gets `guild`, so a "visited every node" or "banked 1000 copper" deed
+reads campaign state straight off that.
 """
 
 from dataclasses import dataclass
@@ -40,15 +42,17 @@ class Faction:
 class Event:
     """Something that just happened that a deed might fire on.
 
-    `kind` names it ("battle", "travel", "market", "hunt", "recruit", ...);
-    `node` is where it happened, or None. The rest is per-kind payload -- a deed
-    check reads only the fields its own kind sets. A battle event carries
-    `outcome` (a `campaign.BattleOutcome`); other kinds add their own fields as
-    deeds come to need them.
+    `kind` names it ("battle", "travel", "market", "mission", "hunt", "recruit",
+    ...); `node` is where it happened, or None. The rest is per-kind payload --
+    a deed check reads only the fields its own kind sets. A battle event
+    carries `outcome` (a `campaign.BattleOutcome`); a mission event carries
+    `tag` (the `missions.MissionTemplate.tag` just turned in, e.g. "economic");
+    other kinds add their own fields as deeds come to need them.
     """
     kind: str
     node: object = None
     outcome: object = None                    # kind == "battle"
+    tag: str = None                           # kind == "mission"
 
 
 @dataclass(frozen=True)
@@ -125,6 +129,24 @@ _DEEDS = [
          requires="arena_dethrone",
          check=lambda g, e: (
              _arena_tier(e) is not None and _arena_tier(e).boss)),
+
+    # The Bankers' first deed list: not combat, but the same "one-shot,
+    # any order" shape -- proof the guild is worth lending to, measured by
+    # how it moves money through the city. A fourth deed, gated on all three
+    # of these being done rather than a single `requires`, is meant to follow
+    # once there is something to spend that trust on (buying property).
+    Deed("bankers_good_for_business", "bankers", "Good for Business",
+         "Complete an economic job in the City.", rep=1,
+         check=lambda g, e: e.kind == "mission" and e.tag == "economic"),
+
+    Deed("bankers_steady_customer", "bankers", "Steady Customer",
+         "Spend 1000 copper at the market.", rep=1,
+         check=lambda g, e: e.kind == "market" and g.total_spent >= 1000),
+
+    Deed("bankers_diverse_portfolio", "bankers", "Diverse Portfolio",
+         "Sell 5 different kinds of goods to the market.", rep=1,
+         check=lambda g, e: (
+             e.kind == "market" and len(g.items_sold_kinds) >= 5)),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}
@@ -134,6 +156,13 @@ DEEDS_BY_FACTION = {fid: [d for d in _DEEDS if d.faction == fid] for fid in FACT
 
 def faction(fid):
     return FACTIONS[fid]
+
+
+def deed_notice(d):
+    """The one line every caller shows for a just-earned deed (`campaign.py`'s
+    travel/battle events, the tanner's turn-in, the market's buy/sell) -- kept
+    here so the wording only has one place to drift out of sync."""
+    return f"DEED · {d.name}  +{d.rep} reputation with {faction(d.faction).name}"
 
 
 def open_deeds(guild):

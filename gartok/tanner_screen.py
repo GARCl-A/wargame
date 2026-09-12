@@ -8,7 +8,7 @@ this particular group (see `missions.py`'s module docstring).
 
 import pygame
 
-from . import missions
+from . import factions, missions
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
                     MARGIN, OK, RADIUS, SP3, SURFACE_1, SURFACE_2, SURFACE_3,
@@ -80,8 +80,10 @@ class TannerScreen(Screen):
                 m = self._mission
                 if m is not None and missions.can_turn_in(self.guild, m):
                     reward = missions.template_of(m).reward
-                    missions.turn_in(self.guild, m)
+                    earned = missions.turn_in(self.guild, m)
                     self.notice = f"paid out {reward} copper, split across the group."
+                    for d in earned:
+                        self.notice += "  ·  " + factions.deed_notice(d)
             elif key == "done":
                 self.on_done()
                 return
