@@ -203,7 +203,7 @@ def test_arena_order_opens_squad_screen_with_offers_scoped_to_the_group():
         app_mod.SquadScreen = orig
     assert saved["roster"] == [a, b]
     assert saved["kw"]["confirm_label"] == "STAKE AND FIGHT"
-    assert any(o.rep == 0 for o in saved["kw"]["arena_offers"])   # Rookie pit is open
+    assert any(o.name == "The Pit: Scrapper" for o in saved["kw"]["arena_offers"])
 
 
 def test_two_interactive_orders_drain_one_screen_at_a_time():

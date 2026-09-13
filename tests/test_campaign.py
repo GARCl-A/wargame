@@ -290,27 +290,19 @@ def test_arena_title_only_bites_inside_the_arena():
         assert actions.DEMORALIZE.can(batt, ac, dc) is expected
 
 
-def test_arena_offers_scale_with_reputation():
-    from gartok import world
-    assert [o.name for o in world.arena_offers(0)] == ["Rookie pit"]
-    # 3 deeds = 3 rep, opens the Games -- not a ladder tier of their own
-    assert [o.name for o in world.arena_offers(3)] == ["Rookie pit"]
-    assert len(world.arena_offers(5)) == 2                               # ...opens Iron cage
-    assert len(world.arena_offers(99)) == len(world.ARENA_TIERS)
-    # ordered cheapest first; one fighter's entry always below the purse
-    for tier in world.ARENA_TIERS:
-        assert tier.entry < tier.purse
+
 
 
 def test_arena_entry_is_staked_per_fighter():
-    from gartok.app import App
+    from gartok import arena
     from gartok.squad_screen import SquadScreen
     from gartok import world
-
+    
     roster = [Unit("player") for _ in range(3)]
     for u in roster:
         u.gold = 50
-    iron = world.ARENA_TIERS[1]                       # Iron cage: 3 opponents, squad of 3
+    iron = arena.scrapper_bout()
+    
     scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
                       on_back=lambda: None, arena_offers=[iron])
     assert scr.picked == roster                       # roster fits the cap, all auto-picked
@@ -320,6 +312,66 @@ def test_arena_entry_is_staked_per_fighter():
     scr.picked = roster[:1]                           # solo pays a third
     assert scr.entry_cost == iron.entry
 
+    from gartok.app import App
     # the app bills that whole stake off the squad, richest first
     App._charge(roster, iron.entry * 3)
     assert sum(u.gold for u in roster) == 150 - iron.entry * 3
+
+
+def test_absorb_battle_carries_quiver_charges_forward():
+    from gartok import campaign
+    from gartok.guild import Guild
+    member = Unit("player")
+    member.give_to_pack(data.AMMO_ITEM)
+    squad = [member]
+    guild = Guild(list(squad))
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    battle.round_no = 1
+    battle.player_units[0].status = "up"
+    battle.player_units[0].ammo = 12
+
+    campaign.absorb_battle(guild, squad, battle)
+
+    assert member.quiver_charges == 12
+    assert data.AMMO_ITEM in member._base_inventory
+
+
+def test_absorb_battle_drops_empty_quiver():
+    from gartok import campaign
+    from gartok.guild import Guild
+    member = Unit("player")
+    member.give_to_pack(data.AMMO_ITEM)
+    squad = [member]
+    guild = Guild(list(squad))
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    battle.round_no = 1
+    battle.player_units[0].status = "up"
+    battle.player_units[0].ammo = 0
+
+    campaign.absorb_battle(guild, squad, battle)
+
+    assert member.quiver_charges == 0
+    assert data.AMMO_ITEM not in member._base_inventory
+
+
+def test_absorb_battle_rolls_over_to_spare_quiver():
+    from gartok import campaign
+    from gartok.guild import Guild
+    member = Unit("player")
+    member.give_to_pack(data.AMMO_ITEM)
+    member.give_to_pack(data.AMMO_ITEM)   # Two quivers
+    squad = [member]
+    guild = Guild(list(squad))
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    battle.round_no = 1
+    battle.player_units[0].status = "up"
+    battle.player_units[0].ammo = 0       # Used up the first quiver
+
+    campaign.absorb_battle(guild, squad, battle)
+
+    assert data.AMMO_ITEM in member._base_inventory
+    assert member._base_inventory.count(data.AMMO_ITEM) == 1
+    assert member.quiver_charges == data.QUIVER_AMMO

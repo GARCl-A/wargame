@@ -23,18 +23,20 @@ The thresholds are a first-pass guess and meant to be tuned here -- this module
 is the one place the curves live, like `economy.PRICES` for money.
 """
 
+from . import constants
+
 # Cumulative XP for combat level 1, 2, 3, ...  L1 and L2 are set (the user's
 # call); the rest is a stub with a widening gap (+4 each step). Tune freely.
-COMBAT_XP_THRESHOLDS = [3, 10, 21, 36, 55, 78, 105]
+COMBAT_XP_THRESHOLDS = list(constants.COMBAT_XP_THRESHOLDS)
 
 # Cumulative work *marks* (Unit.work_xp) for work level 1, 2, 3, ...  Stub.
-WORK_XP_THRESHOLDS = [2, 6, 12, 20, 30, 42]
+WORK_XP_THRESHOLDS = list(constants.WORK_XP_THRESHOLDS)
 
 # The racial track's "XP" is `combat_level + work_level` (Unit.racial_xp): every
 # level anywhere feeds it. These cumulative sums for racial level 1, 2, 3, ...
 # are set to reproduce the old `floor((combat + work) / 2)` hit-die count, so
 # enemy HD / the balance sim / arena scaling do not move. Tune freely here.
-RACIAL_XP_THRESHOLDS = [2, 4, 6, 8, 10, 12, 14]
+RACIAL_XP_THRESHOLDS = list(constants.RACIAL_XP_THRESHOLDS)
 
 
 def _level_for(thresholds, xp):

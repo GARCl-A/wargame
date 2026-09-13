@@ -14,7 +14,8 @@ def test_unit_save_round_trip_keeps_rolled_values():
     u._base_inventory = ["Rope", "Map"]
     v = Unit.from_save(persist.unit_to_dict(u))
     for f in ("name", "alignment", "age", "hp_max", "ac", "speed",
-              "mental_defense", "languages", "_base_inventory", "gold"):
+              "mental_defense", "languages", "_base_inventory", "gold",
+              "quiver_charges", "first_aid_charges"):
         assert getattr(v, f) == getattr(u, f), f
     assert v.race["name"] == u.race["name"]
     assert v.occupation["name"] == u.occupation["name"]
@@ -239,3 +240,22 @@ def test_mission_ambush_done_survives_a_dict_round_trip():
     m = missions.Mission("bankers_trust_chest", "some-uid", 1, 8, ambush_done=True)
     back = missions.mission_from_dict(missions.mission_to_dict(m))
     assert back.ambush_done is True
+
+
+def test_quiver_charges_survive_save_round_trip():
+    u = _unit()
+    u.give_to_pack(data.AMMO_ITEM)
+    u.quiver_charges = 14
+    d = persist.unit_to_dict(u)
+    assert d["quiver_charges"] == 14
+    v = Unit.from_save(d)
+    assert v.quiver_charges == 14
+
+
+def test_from_save_backfills_quiver_charges_for_old_saves():
+    u = _unit()
+    u.give_to_pack(data.AMMO_ITEM)
+    d = persist.unit_to_dict(u)
+    del d["quiver_charges"]
+    v = Unit.from_save(d)
+    assert v.quiver_charges == data.QUIVER_AMMO

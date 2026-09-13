@@ -25,7 +25,8 @@ def test_a_plain_node_fight_is_generic_enemies_on_the_node_scenario():
 
 def test_a_staked_tier_scales_its_opponents_to_the_bout_level():
     random.seed(1)
-    iron = next(b for b in world.ARENA_TIERS if b.name == "Iron cage")   # level 2, 3 enemies
+    import dataclasses
+    iron = dataclasses.replace(arena.scrapper_bout(), level=2, enemies=3)
     enemies, scenario = matchup.build(world.node("arena"), iron,
                                       squad_size=1, guild=_guild())
     assert len(enemies) == iron.enemies
@@ -74,7 +75,7 @@ def test_a_title_defense_is_one_challenger_scaled_to_the_champion():
 
 
 def test_the_dethroned_adelio_can_cameo_in_an_ordinary_pit_bout():
-    rookie = next(b for b in world.ARENA_TIERS if b.rep == 0)
+    rookie = arena.scrapper_bout()
     guild = _guild(deeds_done=["arena_dethrone"])
     adelio = arena.load_champion().name
     names = set()

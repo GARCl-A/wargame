@@ -9,7 +9,7 @@ bout types -- lives here, behind one call:
 - **no offer** -- a plain node fight: `squad_size` generic level-0 enemies on the
   node's own procedural scenario. (The wilds ambush pack is built by
   `hunt`/`encounters` and handed straight to `Battle`, not through here.)
-- **a staked tier** (`world.ARENA_TIERS`) -- `offer.enemies` opponents scaled to
+- **a staked tier** (bouts like Scrapper) -- `offer.enemies` opponents scaled to
   `offer.level` (`encounters.build_enemy`), on the arena's `ArenaScenario`.
 - **the champion bout** (`offer.champion`) -- Adelio (`arena.load_champion`)
   leading generic goons, on the authored `offer.map_slug` map.

@@ -56,6 +56,9 @@ def character_sheet(u):
     if data.FIRST_AID_ITEM in u.inventory:
         inv = inv.replace(data.FIRST_AID_ITEM,
                           f"{data.FIRST_AID_ITEM} ({u.first_aid_charges} charges)")
+    if data.AMMO_ITEM in u.inventory:
+        inv = inv.replace(data.AMMO_ITEM,
+                          f"{data.AMMO_ITEM} ({u.ammo} arrows)")
 
     down = (f"   [DYING {u.death_clock}/{data.DYING_TURNS}]" if u.dying
             else "   [STABLE - unconscious]" if u.stable

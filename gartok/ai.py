@@ -114,12 +114,18 @@ def _finish_off(battle, unit):
 
 
 def _ally_to_help(battle, unit):
-    """An adjacent downed ally this unit can stabilize -- only if it is of good
+    """A downed ally this unit wants to stabilize -- only if it is of good
     bent (it will spend the action to save a friend before fighting)."""
     if _axes(unit)[1] <= 0:
         return None
-    return next((a for a in battle.units
-                 if actions.STABILIZE.can(battle, unit, a)), None)
+    # Prefer an adjacent one if possible
+    adj = next((a for a in battle.units if actions.STABILIZE.can(battle, unit, a)), None)
+    if adj:
+        return adj
+    # Else nearest downed ally (not dead)
+    bodies = sorted((u for u in battle.units if u.team == unit.team and u.downed and not u.dead),
+                    key=lambda u: battle.units_distance(unit, u))
+    return bodies[0] if bodies else None
 
 
 def _step_over_terrain(battle, unit, target):
@@ -163,10 +169,9 @@ def _ctf_goal(battle, unit):
 
 def _should_flee(battle, unit):
     """Whether the unit breaks and runs this turn. Never from a non-lethal bout
-    (the arena -- nobody dies). Needs a map edge and a clean getaway
-    (`FLEE.available`). Chaotic units break sooner and while less outnumbered;
+    (the arena -- nobody dies). Chaotic units break sooner and while less outnumbered;
     lawful units stay while any ally is still standing."""
-    if not battle.lethal or not actions.FLEE.available(battle, unit):
+    if not battle.lethal:
         return False
     order = _axes(unit)[0]
     allies = [u for u in battle.units
@@ -188,8 +193,18 @@ def take_turn(battle, unit):
 
         ally = _ally_to_help(battle, unit)
         if ally is not None:                  # good: save the friend first
-            actions.STABILIZE.execute(battle, unit, ally)
-            continue
+            if actions.STABILIZE.can(battle, unit, ally):
+                actions.STABILIZE.execute(battle, unit, ally)
+                continue
+            else:
+                dest = battle.path_step_toward(unit, ally.pos, unit.speed, reach=1)
+                if dest == unit.pos:
+                    if _step_over_terrain(battle, unit, ally):
+                        continue
+                    break # walled off from the ally
+                battle.move_unit(unit, dest)
+                unit.walking = False
+                continue
 
         goal = _ctf_goal(battle, unit)
         if goal is not None:                  # flag runner: fetch it, then race it home
@@ -208,8 +223,24 @@ def take_turn(battle, unit):
             # genuinely walled off from the flag -- fight through this turn
 
         if _should_flee(battle, unit):
-            actions.FLEE.execute(battle, unit)
-            break
+            if actions.FLEE.available(battle, unit):
+                actions.FLEE.execute(battle, unit)
+                break
+            else:
+                cols, rows = battle.board.cols, battle.board.rows
+                edges = []
+                for x in range(cols):
+                    edges.extend([(x, 0), (x, rows - 1)])
+                for y in range(1, rows - 1):
+                    edges.extend([(0, y), (cols - 1, y)])
+                target_edge = min(edges, key=lambda c: grid_distance(unit.pos, c))
+                dest = battle.path_step_toward(unit, target_edge, unit.speed, reach=0)
+                if dest != unit.pos:
+                    battle.move_unit(unit, dest)
+                    unit.walking = False
+                    continue
+                else:
+                    break # stuck
 
         body = _finish_off(battle, unit)
         if body is not None:                  # evil: put the downed enemy away

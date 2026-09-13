@@ -14,6 +14,7 @@ Only the raw generator tables and game constants stay in `data.py`; the pricing
 and haggling *behaviour* lives here.
 """
 
+from . import constants
 from . import data
 
 TORCH_ITEM = data.TORCH_ITEM
@@ -28,7 +29,7 @@ CHA_DEAL_STEP = 0.04                    # deal fraction per point of haggle Char
 # no wood -- just a flat wage for the hours. Kept deliberately meagre: a full
 # 16 h day feeds you and leaves a little over, while a won arena bout or a wilds
 # haul pays several times better. It is a floor, not a living.
-LUMBER_WAGE = 3                         # copper earned per whole block worked
+LUMBER_WAGE = constants.LUMBER_WAGE                         # copper earned per whole block worked
 LUMBER_WAGE_OWN_AXE = 4                 # ...more, once you swing your own Axe (see lumber_level)
 LUMBER_BLOCK_HOURS = 4                  # ...one block is four hours at the yard
 LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mark
@@ -38,8 +39,8 @@ LUMBER_LEVEL_OWN_AXE = 1                # the yard's ceiling once you bring your
 # The Bankers rent the guild its first shared property: a strongbox at the bank
 # in the City. A flat fee for the right to it, no reputation gate. One tier for
 # now -- `BANK_CHEST_CAPACITY` is a value a later, pricier tier can raise.
-BANK_CHEST_PRICE = 50                   # copper for the right to a strongbox
-BANK_CHEST_CAPACITY = 10                # kg the strongbox holds
+BANK_CHEST_PRICE = constants.BANK_CHEST_PRICE                   # copper for the right to a strongbox
+BANK_CHEST_CAPACITY = constants.BANK_CHEST_CAPACITY                # kg the strongbox holds
 
 # The Bankers also sell the guild a house inside the walls -- the "City" half of
 # [[gartok-property-two-paths]]'s two paths to a base. Subordinate to the
@@ -73,11 +74,11 @@ LUMBER_PRICE = 6   # copper, market buy price -- the guild has to import its own
 # final stretch the guild has to hold before the land is truly its own.
 # Every number below is a placeholder, same status the City numbers carried
 # before anyone had played them.
-WILDS_CLAIM_SCOUT_HOURS = 4       # "achar terreno": a time cost, no check (the doc left this open either way)
+WILDS_CLAIM_SCOUT_HOURS = constants.WILDS_CLAIM_SCOUT_HOURS       # "achar terreno": a time cost, no check (the doc left this open either way)
 WILDS_CLAIM_CLEAR_LEVEL = 2       # stage 2's fight: the creatures already living there
 WILDS_CLAIM_CLEAR_SIZE = 3
 WILDS_CLAIM_FENCE_LUMBER = 10     # units of Lumber consumed to raise the fences
-WILDS_CLAIM_FENCE_HOURS = 8
+WILDS_CLAIM_FENCE_HOURS = constants.WILDS_CLAIM_FENCE_HOURS
 WILDS_CLAIM_SWEEP_LEVEL = 2       # stage 5's fight: a bandit camp or nest nearby
 WILDS_CLAIM_SWEEP_SIZE = 2
 WILDS_CLAIM_SUSTAIN_DAYS = 10     # days the garrison has to hold before ESTABLISHED

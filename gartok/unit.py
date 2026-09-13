@@ -34,6 +34,8 @@ class Unit:
         self.recruited_by = None             # uid of the guild member who recruited this one, or None
         self.talents = {t: [] for t in talents.TRACKS}   # picked talent ids per XP track
         self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
+        self.first_aid_charges = 0
+        self.quiver_charges = 0
         self._roll_attributes()
         if race is not None:                 # a specific body (e.g. encounters' race_pool draw)
             self.race = dict(race)
@@ -58,6 +60,7 @@ class Unit:
         self._racial_override = None                   # sandbox: a pinned racial level (hit dice + racial picks), else derived
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
+        self.consecutive_rest_hours = 0
 
         self._auto_name = name is None
         self.name = name or names.random_name()
@@ -98,6 +101,9 @@ class Unit:
         u.gold = d.get("gold", 0)
         u.crime = d.get("crime", 0)
         u.unfed_days = d.get("unfed_days", 0)
+        u.first_aid_charges = d.get("first_aid_charges", 0)
+        u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if data.AMMO_ITEM in u._base_inventory else 0)
+        u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)
         u.share_food = d.get("share_food", True)
         u.combat_xp = d.get("combat_xp", 0)
         u.work_hours = d.get("work_hours", 0)
@@ -113,6 +119,7 @@ class Unit:
         if u._hp_roll is None:                           # pre-hunger save: back it out of hp_max
             u._hp_roll = max(1, d["hp_max"] - mod(u.constitution) - u._ability.hp_max)
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
+        u.hp = d.get("hp", u.hp_max)
         return u
 
     @property
@@ -366,6 +373,10 @@ class Unit:
         else:
             self.starting_creature = None
             self._base_inventory = [self.item]
+            if self.item == data.FIRST_AID_ITEM:
+                self.first_aid_charges = data.FIRST_AID_CHARGES
+            elif self.item == data.AMMO_ITEM:
+                self.quiver_charges = data.QUIVER_AMMO
 
     # ------------------------------------------------------------------ #
     # draft editing: swap race / occupation before the battle            #
@@ -540,6 +551,7 @@ class Unit:
                            + self.talent_bonus("hp_per_hd") * hit_dice)
         if self.hunger_level >= 2:
             self.hp_max = 1
+        self.hp = min(getattr(self, "hp", self.hp_max), self.hp_max)
 
     def _derive_ac(self):
         """AC base (10 + Dex + worn armor; armor caps how much Dex still counts)
@@ -627,6 +639,10 @@ class Unit:
 
     def give_to_pack(self, name):
         self._base_inventory.append(name)
+        if name == data.FIRST_AID_ITEM:
+            self.first_aid_charges = data.FIRST_AID_CHARGES
+        elif name == data.AMMO_ITEM:
+            self.quiver_charges = data.QUIVER_AMMO
 
     def take_from_hand(self):
         name, self.equipped_weapon = self.equipped_weapon, None

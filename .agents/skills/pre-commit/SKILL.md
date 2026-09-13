@@ -38,6 +38,12 @@ out the other end — no exceptions, no "this one's obviously fine."
      `talents.py`, a new screen hook should look like the existing ones, etc.
      A parallel mechanism that duplicates an existing one is a smell, not a
      stylistic choice.
+   - **State & Logic Holes (Blind spots).** Actively hunt for edge cases in
+     persistence and object lifecycles. Does a counter decrement without ever
+     resetting? If a consumable is dropped, is the backup activated? Are we
+     assuming an attribute exists without enforcing it? Do not trust that the
+     old code was perfect — if you copy a pattern, audit it for hidden flaws
+     before committing.
    - **Efficiency.** Anything recomputed every frame that shouldn't be,
      redundant passes over the same data, an O(n²) shortcut where the
      existing pattern in this file is O(n).

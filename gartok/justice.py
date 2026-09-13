@@ -33,13 +33,13 @@ can't do two different things with itself at once:
 
 import random
 
-from . import data, encounters, world
+from . import constants, data, encounters, world
 from .group import Group
 
 GUARD_CHECK_MIN = 11        # d20 + crime >= this: same 50%-base idiom as data.DEATH_SAVE_MIN
-PRISON_DAYS_PER_CRIME = 2   # placeholder -- tune once this has been played
-PATROL_LEVEL_CAP = 6        # placeholder -- a patrol never scales past this mean level
-PATROL_SIZE = 2             # guards fielded against a caught unit
+PRISON_DAYS_PER_CRIME = constants.PRISON_DAYS_PER_CRIME   # placeholder -- tune once this has been played
+PATROL_LEVEL_CAP = constants.PATROL_LEVEL_CAP        # placeholder -- a patrol never scales past this mean level
+PATROL_SIZE = constants.PATROL_SIZE             # guards fielded against a caught unit
 
 
 def guard_test(unit):

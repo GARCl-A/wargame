@@ -286,8 +286,9 @@ class App:
         if arena.defense_due(self.guild):
             self._start_title_defense(node)
             return
-        offers = list(world.arena_offers(self.guild.arena_reputation))
+        offers = []
         if "arena_dethrone" not in self.guild.deeds_done:
+            offers.append(arena.scrapper_bout())
             offers.append(arena.champion_bout())
         else:                                   # champion beaten: the Games are open
             offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]

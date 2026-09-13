@@ -281,8 +281,7 @@ def test_a_clean_flag_capture_banks_all_three():
     guild, out = _games_win(arena.ctf_bout(), kos=0)
     assert {d.id for d in out.deeds_earned} == {
         "arena_bloodsport", "arena_flag_runner", "arena_untouchable"}
-    assert guild.reputation["arena"] == 6                   # opens the Iron cage (rep 5)
-    assert len(world.arena_offers(guild.reputation["arena"])) == 2
+    assert guild.reputation["arena"] == 6
 
 
 def test_a_flag_capture_with_a_knockout_misses_untouchable():

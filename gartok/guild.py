@@ -493,6 +493,26 @@ class Guild:
         events = []
         for _ in range(self.clock.day - start_day):
             events += self._daily_upkeep()
+        
+        # Passive healing: every 8h of continuous rest (not busy) heals the unit
+        for g in self.groups:
+            if not g.busy:
+                for u in g.members:
+                    if u.hp < u.hp_max:
+                        u.consecutive_rest_hours += hours
+                        while u.consecutive_rest_hours >= 8:
+                            u.consecutive_rest_hours -= 8
+                            heal = max(1, u.racial_level + u.mod_constitution)
+                            if u.hp < u.hp_max:
+                                u.hp = min(u.hp_max, u.hp + heal)
+                                events.append(f"{u.name} rests and recovers {heal} HP.")
+                                if u.hp == u.hp_max:
+                                    u.consecutive_rest_hours = 0
+                                    break
+            else:
+                for u in g.members:
+                    u.consecutive_rest_hours = 0
+
         return events
 
     def _shared_larder(self, eater):

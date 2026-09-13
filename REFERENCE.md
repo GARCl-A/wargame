@@ -252,16 +252,6 @@ The coin-lenders of the city. They rent strongboxes, and -- for those who dare -
 | Diverse Portfolio | Sell 5 different kinds of goods to the market. | +1 | -- |
 | Earned Trust | Carry the Bankers' trust all the way to Ledger Hold and back. | +1 | -- |
 
-## Arena tiers
-
-Staked, non-lethal bouts. Unlocked by reputation with The Pits.
-
-| Tier | Reputation | Stake | Purse | Opponents | Opponent level |
-|---|---|---|---|---|---|
-| Rookie pit | 0 | 4/fighter | 15 | 3 | 0 |
-| Iron cage | 5 | 40/fighter | 150 | 3 | 2 |
-| Silver arena | 10 | 100/fighter | 380 | 3 | 3 |
-
 ## Constants
 
 The tunable knobs, from `data.py`, `economy.py` and `progression.py`.

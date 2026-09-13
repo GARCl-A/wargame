@@ -61,6 +61,11 @@ BOSS_SQUAD = 6               # brothers + goons; the player matches it
 BOSS_MAP = "capture-the-flag-the-gamers"
 
 
+def scrapper_bout():
+    """An introductory fight in the Pit, available before the Champion is dethroned."""
+    return world.Bout("The Pit: Scrapper", entry=5, purse=20, enemies=3, level=0)
+
+
 def champion_bout():
     """The staked bout for challenging Adelio's team. No `rep`: it is not a rep
     tier and must not satisfy the Lone Wolf deed. `map_slug` points

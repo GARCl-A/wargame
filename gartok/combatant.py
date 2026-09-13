@@ -87,11 +87,13 @@ class Combatant:
             else:
                 self.lantern_hand = free_off_hand
         self.inventory = list(c._base_inventory)
-        self.ammo = data.QUIVER_AMMO if data.AMMO_ITEM in self.inventory else 0
+        self.ammo = (getattr(c, "quiver_charges", data.QUIVER_AMMO)
+                     if data.AMMO_ITEM in self.inventory else 0)
         # a crossbow holds one bolt at a time and starts the fight empty: spend an
         # action to Reload (chambers one from the quiver), fire, repeat.
         self.crossbow_loaded = False
-        self.first_aid_charges = (data.FIRST_AID_CHARGES
+        # first aid charges are now persistent (campaign-long).
+        self.first_aid_charges = (c.first_aid_charges
                                   if data.FIRST_AID_ITEM in self.inventory else 0)
         self.conditions = []
         self.ap = AP_PER_TURN

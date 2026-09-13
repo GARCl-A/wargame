@@ -293,7 +293,16 @@ def test_lethal_flag_defaults_true_and_permadeath_still_bites():
 def test_crossbowman_starts_with_ammo():
     u = _unit()
     u.set_occupation("Crossbowman")
+    assert u.quiver_charges == data.QUIVER_AMMO
     assert Combatant(u).ammo == data.QUIVER_AMMO and u.weapon_name == "Light Crossbow"
+
+
+def test_giving_quiver_sets_quiver_charges():
+    u = _unit()
+    assert u.quiver_charges == 0
+    u.give_to_pack(data.AMMO_ITEM)
+    assert u.quiver_charges == data.QUIVER_AMMO
+    assert Combatant(u).ammo == data.QUIVER_AMMO
 
 
 def test_crossbow_starts_unloaded_and_must_reload_first():

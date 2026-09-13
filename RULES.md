@@ -233,9 +233,7 @@ are **race-gated**; only Grippli has one so far (`Tongue`).
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
 below you. L0 kills L0 → +1; L0 kills L10 → +11; L3 kills L0 → 0.
 (`progression.xp_award`; credited in `Combatant.credit_kill`, doubled at the end
-of the battle by `campaign.absorb_battle`.) Wilds packs scale 0–4; the staked
-arena tiers scale 0, 2, 3 -- Rookie pit / Iron cage / Silver arena
-(`world.ARENA_TIERS[*].level`); the Games run 1–6.
+of the battle by `campaign.absorb_battle`.) Wilds packs scale 0–4; the Games run 1–6.
 
 **Talent trees** — general → specific: a tier-1 root is a broad identity; each
 step deeper specialises the character in one action. **No pick is mutually
@@ -384,8 +382,8 @@ Failure → nothing. Several allies can try in sequence, turn after turn.
 **First Aid (kit).** 1-point action; an adjacent `dying` ally; needs a **First
 Aid Kit** in hand with charges. A Wisdom check: `d20 + WIS mod` vs **DC 10**.
 Success → `stable`. Failure → nothing. **Consumes 1 charge either way.** The kit
-has 10 charges and is **rechargeable** — `reset_battle_state` refills the charges
-(and the ammo) each battle, until equipment gets campaign-long depth.
+has 10 charges and is **persistent** — once empty, it is discarded, and a new one
+must be purchased from the Market.
 
 **Coup de grace.** A normal attack (melee or ranged) may target a downed body:
 - `dying` target → the hit **kills instantly** (`dead`), no damage roll;
@@ -832,17 +830,10 @@ All three → 3 reputation. **Dethrone** is fought via the "Challenge the Champi
 bout on the hand-authored `maps/the-pit.json` (Adelio Small-Knife + 2 hired
 bodies); the win condition is unchanged — put the whole team down.
 
-Arena reputation still gates the staked tiers (`world.ARENA_TIERS` via
-`world.arena_offers`), but the source is now the deeds, so the unlock pace is
-deliberate. Clearing all three stage-1 deeds (3 rep) opens the Games
-(`arena.py`'s stage2 bouts, gated on the `arena_dethrone` deed rather than a
-ladder tier of their own — a rung there would only ever unlock alongside the
-Games, and lose to Brawl on every stat, so there is no "Bronze ring"). The
-Games' own three deeds add another 3 rep (6 total), which brings the Iron cage
-into reach; Silver arena (10) still sits past any reachable reputation — room
-to grow. Each tier's opponents are built to its `level` (Rookie 0, Iron 2,
-Silver 3, `encounters.build_enemy`), so the ladder scales as its stake and
-purse do — assembled, with the map, in `matchup.build`.
+Arena progression is now tied entirely to these narrative deeds rather than
+static reputation ladders. Completing the "First Blood" deed opens the way to
+the champion, and dethroning the champion unlocks The Games (`arena.py`'s
+stage 2 bouts). Each bout is defined in `arena.py` and assembled in `matchup.build`.
 
 **Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Deed-less
 for now: their standing does not move, and the REPUTATIONS tab says so. What they

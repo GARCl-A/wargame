@@ -26,7 +26,7 @@ of one another -- see `orders.py` for what an order is.
 import random
 from dataclasses import dataclass, field
 
-from . import arena, data, economy, encounters, factions, justice, loot, missions, orders, world
+from . import arena, constants, data, economy, encounters, factions, justice, loot, missions, orders, world
 
 
 @dataclass
@@ -61,6 +61,18 @@ def _carry_forward(member, combatant):
          if it not in (data.TORCH_ITEM, data.LANTERN_ITEM)]
         + [data.TORCH_ITEM] * torch_spares
         + [data.LANTERN_ITEM] * lantern_spares)
+    
+    member.first_aid_charges = combatant.first_aid_charges
+    if member.first_aid_charges <= 0 and data.FIRST_AID_ITEM in member._base_inventory:
+        member._base_inventory.remove(data.FIRST_AID_ITEM)
+        if data.FIRST_AID_ITEM in member._base_inventory:
+            member.first_aid_charges = data.FIRST_AID_CHARGES
+
+    member.quiver_charges = combatant.ammo
+    if member.quiver_charges <= 0 and data.AMMO_ITEM in member._base_inventory:
+        member._base_inventory.remove(data.AMMO_ITEM)
+        if data.AMMO_ITEM in member._base_inventory:
+            member.quiver_charges = data.QUIVER_AMMO
 
 
 def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
@@ -300,8 +312,8 @@ def _road_ambush_catch(group, resume_path):
     return orders.Order("ambush", pack=tuple(pack), resume_path=tuple(resume_path))
 
 
-FORTRESS_AMBUSH_LEVEL = 3   # placeholder, tune once this has been played -- see justice.py's own
-FORTRESS_AMBUSH_SIZE = 3    # placeholders for the guard patrol / Old Road pack
+FORTRESS_AMBUSH_LEVEL = constants.FORTRESS_AMBUSH_LEVEL   # placeholder, tune once this has been played -- see justice.py's own
+FORTRESS_AMBUSH_SIZE = constants.FORTRESS_AMBUSH_SIZE    # placeholders for the guard patrol / Old Road pack
 
 
 def _fortress_ambush_catch(guild, group, resume_path):
@@ -324,8 +336,8 @@ def _fortress_ambush_catch(guild, group, resume_path):
     return orders.Order("ambush", pack=pack, resume_path=tuple(resume_path))
 
 
-CITY_RAID_CHANCE = 0.25    # per arrival at a squatted City property -- placeholder, tune once played
-CITY_RAID_LEVEL = 4        # placeholders for the guard patrol sent to clear a squat
+CITY_RAID_CHANCE = constants.CITY_RAID_CHANCE    # per arrival at a squatted City property -- placeholder, tune once played
+CITY_RAID_LEVEL = constants.CITY_RAID_LEVEL        # placeholders for the guard patrol sent to clear a squat
 CITY_RAID_SIZE = 3
 
 

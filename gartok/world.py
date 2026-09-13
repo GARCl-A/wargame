@@ -172,23 +172,8 @@ class Bout:
         return self.squad_max or self.enemies
 
 
-# The Pits' first-stage deeds (`factions`) are worth 3 rep -- clearing them,
-# champion bout included, opens the Games (`arena.py`'s stage2 bouts), which
-# key off the "arena_dethrone" deed rather than a ladder tier of their own (a
-# rung there would only ever unlock alongside the Games, and lose to Brawl on
-# every stat). The second stage's three deeds add another 3 rep, which brings
-# the Iron cage (rep 5) into reach. Silver still sits past any reputation the
-# deeds can grant: room to grow. Ordered cheapest first.
-ARENA_TIERS = [
-    Bout("Rookie pit",   entry=4,   purse=15,  enemies=3, rep=0,  level=0),
-    Bout("Iron cage",    entry=40,  purse=150, enemies=3, rep=5,  level=2),
-    Bout("Silver arena", entry=100, purse=380, enemies=3, rep=10, level=3),
-]
-
-
-def arena_offers(reputation):
-    """The staked tiers the guild may take on at its current `reputation`."""
-    return [t for t in ARENA_TIERS if t.rep is not None and reputation >= t.rep]
+# The arena bouts are now directly managed by the narrative progression
+# in app.py (using the scrapper/champion bouts before The Games).
 
 
 NODES = [

@@ -147,12 +147,7 @@ def _factions():
     return "\n\n".join(out)
 
 
-def _arena_tiers():
-    rows = [(b.name, b.rep, f"{b.entry}/fighter", b.purse, b.enemies, b.level)
-            for b in world.ARENA_TIERS]
-    head = ("Tier", "Reputation", "Stake", "Purse", "Opponents", "Opponent level")
-    return "## Arena tiers\n\nStaked, non-lethal bouts. Unlocked by reputation " \
-           "with The Pits.\n\n" + _table(head, rows)
+
 
 
 def _constants():
@@ -188,7 +183,7 @@ def _constants():
 
 
 _SECTIONS = (_races, _abilities, _occupations, _weapons, _armor, _items, _sizes,
-             _alignments, _talent_trees, _factions, _arena_tiers, _constants)
+             _alignments, _talent_trees, _factions, _constants)
 
 
 def build():
