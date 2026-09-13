@@ -44,6 +44,20 @@ def test_a_travel_order_resolves_silently_and_returns_to_the_map():
     assert not app._pending
 
 
+def test_start_map_copies_pending_notices_onto_the_scene_and_clears_the_buffer():
+    """Regression: a stray edit once left this tail attached to the wrong
+    method entirely, so accumulated notices (route/meal/deed/guard-ambush
+    lines) silently never reached the player and `_map_notices` grew
+    unbounded instead of resetting each time the map is (re)built."""
+    random.seed(1)
+    guild = Guild([Unit("player")], node="city")
+    app = _app(guild)
+    app._map_notices = ["a notice from the last tick"]
+    app._start_map()
+    assert app.scene.notices == ["a notice from the last tick"]
+    assert app._map_notices == []
+
+
 def test_advance_chases_a_multi_hop_travel_through_every_waypoint_in_one_call():
     """city -> wilds has no direct edge (the route goes through 'road'); one
     call to `_advance()` should chase both legs silently -- no fresh click

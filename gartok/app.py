@@ -168,6 +168,9 @@ class App:
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over,
                                on_advance=self._advance)
+        if self._map_notices:
+            self.scene.notices = self._map_notices
+            self._map_notices = []
 
     def _wait_out_the_sentence(self):
         """Every group emptied out into `guild.jailed` -- nothing to show on
@@ -177,9 +180,6 @@ class App:
         while not self.guild.groups and self.guild.jailed:
             events += self.guild.pass_time(24)
         return events
-        if self._map_notices:
-            self.scene.notices = self._map_notices
-            self._map_notices = []
 
     def _campaign_over(self):
         """Roster gone (a wipe, or the last member starved on the road)."""
