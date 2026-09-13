@@ -80,6 +80,42 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
     assert gs.notice and "picks the lock" in gs.notice
 
 
+def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
+    """Regression: the menu used to decide "is this the mission's sealed
+    chest?" by re-scanning the whole pack for data.MISSION_CHEST_ITEM instead
+    of looking at the item actually right-clicked -- a unit carrying both
+    (e.g. via the sandbox editor) would always resolve as the sealed one,
+    even when the player opened the ordinary Locked Chest."""
+    import os
+    import pygame
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    from gartok.gear_screen import GearScreen
+    from gartok.theme import Fonts
+
+    random.seed(1)
+    u = Unit("player")
+    u.mod_dexterity = 0
+    u._base_inventory = [data.MISSION_CHEST_ITEM, data.CHEST_ITEM]
+    guild = _guild_of(u)
+    gs = GearScreen(Fonts(), guild, lambda: None)
+    surface = pygame.Surface((1600, 900))
+    gs.draw(surface)
+
+    rect, _unit, _loc = next(s for s in gs.sources if s[1] is u and s[2] == 1)  # the CHEST_ITEM row
+    gs._open_menu(rect.center)
+    gs.draw(surface)
+    open_hit = next(r for r, kind, _arg in gs.menu["hits"] if kind == "open")
+    with fixed_d20(data.CHEST_DC):
+        gs._menu_click(open_hit.center)
+
+    assert data.CHEST_ITEM not in u._base_inventory
+    assert data.MISSION_CHEST_ITEM in u._base_inventory   # untouched -- the sealed one stays sealed
+    assert data.GEM_ITEM in u._base_inventory
+    assert "picks the lock" in gs.notice and "trust mission" not in gs.notice
+
+
 def _guild_of(*units):
     from gartok.guild import Guild
     return Guild(list(units))

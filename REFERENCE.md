@@ -141,6 +141,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Iron Bar | 5 kg | -- |
 | Iron Shackles | 1 kg | -- |
 | Lantern | 1 kg | light 6 sq |
+| Letter of Receipt | 0.1 kg | -- |
 | Locked Chest | 8 kg | -- |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable |
@@ -152,6 +153,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Scales | 1 kg | -- |
 | Scissors | 0.2 kg | -- |
 | Scroll | 0.1 kg | -- |
+| Sealed Chest | 8 kg | -- |
 | Shovel | 2 kg | -- |
 | Stone Brick | 3 kg | -- |
 | Torch | 0.5 kg | -- |
@@ -247,6 +249,7 @@ The coin-lenders of the city. They rent strongboxes, and -- for those who dare -
 | Good for Business | Complete an economic job in the City. | +1 | -- |
 | Steady Customer | Spend 1000 copper at the market. | +1 | -- |
 | Diverse Portfolio | Sell 5 different kinds of goods to the market. | +1 | -- |
+| Earned Trust | Carry the Bankers' trust all the way to Ledger Hold and back. | +1 | -- |
 
 ## Arena tiers
 

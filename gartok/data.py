@@ -118,6 +118,13 @@ FIRST_AID_ITEM = "First Aid Kit"
 CHEST_ITEM = "Locked Chest"
 GEM_ITEM = "Gemstones"                   # what a chest holds; sellable, not stocked to buy back
 
+# The Bankers' trust mission (missions.py): a sealed chest that is NOT
+# data.CHEST_ITEM on purpose -- opening this one early (chest.py's same roll)
+# fails the mission and marks the opener a criminal instead of quietly paying
+# out. LETTER_ITEM is what Ledger Hold hands back once it's exchanged intact.
+MISSION_CHEST_ITEM = "Sealed Chest"
+LETTER_ITEM = "Letter of Receipt"
+
 
 # --------------------------------------------------------------------------- #
 # Vision and light  (designed for the wargame)                                 #
@@ -298,7 +305,7 @@ ITEM_WEIGHTS = {
     "Chains": 5.0, "Scroll": 0.1, "Iron Bar": 5.0, "Lantern": 1.0, "Compass": 0.2,
     "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
     "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,
-    CHEST_ITEM: 8.0, GEM_ITEM: 0.1,
+    CHEST_ITEM: 8.0, GEM_ITEM: 0.1, MISSION_CHEST_ITEM: 8.0, LETTER_ITEM: 0.1,
 }
 
 

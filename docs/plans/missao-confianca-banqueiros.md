@@ -299,6 +299,56 @@ implementar essa parte.
   botão novo na tela de equipamento/mochila (parecido com `gear_screen.py`),
   mas isso é decisão de tela, não de regra.
 
+## Sistema 4 — implementado (2026-09-13, sessão 3)
+
+Feito e testado (`tests/test_trust_mission.py`, mais cobertura em
+`tests/test_chest.py`, `tests/test_persistence.py` e `tests/test_screens.py`).
+O arco inteiro (`bankers_good_for_business`/`steady_customer`/
+`diverse_portfolio` -> `bankers_trust`, reputação 4) está fechado. Detalhes:
+
+- **Ankareth** é o novo nome de "The City" (id continua `"city"`); a
+  fortaleza é **Ledger Hold** (`ledger_hold`), um posto avançado dos
+  Banqueiros, ligada por aresta a partir de `road` -- as duas decisões que
+  eram bloqueio real, resolvidas com o usuário antes de implementar.
+- `missions.TRUST_CHEST`: aceitar em `trust_screen.py` (nó `city`, `trust=True`)
+  dá `data.MISSION_CHEST_ITEM` (não é o mesmo item do Sistema 3 --
+  `data.CHEST_ITEM` -- de propósito, pra nunca confundir os dois); entregar
+  usa `missions.turn_in` sem nenhuma mudança (o "goal_item" é só
+  `data.LETTER_ITEM`, 1 unidade).
+- `ledger_screen.py` (nó `ledger_hold`, `ledger=True`): troca o cofre selado
+  intacto pela carta, sem barra de progresso -- ou tem o que entregar, ou não.
+- A emboscada da fortaleza (`campaign._fortress_ambush_catch` +
+  `missions.pending_fortress_ambush`) reaproveita o MESMO mecanismo de pausa
+  "ambush" do Sistema 2 (`_arrival_pause` já generalizado) -- só dispara em
+  Ledger Hold, com uma missão ativa cujo cofre selado ainda está com o grupo,
+  e só uma vez (`Mission.ambush_done`).
+- Abrir o cofre selado antes da hora (`missions.open_mission_chest`, reusa
+  `chest.roll_lock`): sucesso rende as gemas mas falha a missão na hora e
+  soma `+1` de crime -- nunca chega a virar a deed `bankers_trust`.
+- `factions.bankers_trust`: só fecha com as 3 deeds econômicas já batidas
+  (`check` lê `guild.deeds_done` direto, sem `requires`, exatamente como o
+  plano original já desenhava).
+- O mapa autoral da emboscada continua um placeholder de propósito:
+  `world.FORTRESS_AMBUSH_MAP_SLUG = "ledger-hold-ambush"` + `world.fortress_scenario()`
+  checa se o arquivo existe (`map_lib.map_path`) e cai num `ErmosScenario()`
+  genérico enquanto não existir -- pintar o mapa com esse slug exato no editor
+  é a ÚNICA coisa que falta, nenhuma mudança de código.
+
+Dois bugs reais pegos pelo code-review antes do commit:
+1. `campaign._fortress_ambush_catch` não checava se o grupo estava
+   EM Ledger Hold -- disparava em qualquer chegada, missão ativa + cofre em
+   mãos bastavam. Corrigido: checa `world.node(group.node).ledger` primeiro,
+   mesmo padrão do `node.unsafe` do Sistema 2.
+2. `gear_screen._open_chest` decidia qual cofre era (genérico vs selado)
+   re-escaneando o pacote inteiro da unidade, não o item que foi
+   clicado -- uma unidade carregando os dois ao mesmo tempo (ex. via editor
+   sandbox) sempre resolvia como o selado. Corrigido: `_menu_click` agora
+   passa o item específico clicado.
+
+Isso fecha os 4 sistemas do plano. Não sobrou nenhum "próximo passo" deste
+documento -- qualquer trabalho futuro na guilda comprando propriedade na
+Cidade é um plano novo.
+
 ## Sistema 4 — a missão da Confiança (fecha o arco)
 
 Amarra os 3 sistemas acima. Estrutura:
@@ -357,10 +407,8 @@ Amarra os 3 sistemas acima. Estrutura:
    implementado" acima.
 3. ~~**Sistema 3** (Cofre genérico)~~ -- **feito**, ver "Sistema 3 —
    implementado" acima.
-4. **Sistema 4** (a missão em si) — amarra os 3 anteriores; a parte da
-   emboscada autoral fica com um placeholder até o mapa existir, mas o resto
-   (aceitar / trocar / entregar / a deed `bankers_trust`) pode ser implementado
-   e testado de ponta a ponta antes disso.
+4. ~~**Sistema 4** (a missão em si)~~ -- **feito**, ver "Sistema 4 —
+   implementado" acima. Plano fechado.
 
 ## Testes a cobrir quando for implementar
 

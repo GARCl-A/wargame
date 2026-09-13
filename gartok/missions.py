@@ -19,7 +19,7 @@ is what a place wants, authored, not rolled.
 
 from dataclasses import dataclass
 
-from . import factions, world
+from . import chest, data, factions, world
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,7 @@ class MissionTemplate:
     reward: int             # copper, split evenly across the current group
     deadline_days: int      # in-game days from acceptance to the deadline
     tag: str                # topic a bankers.Deed can key off, e.g. "economic"
+    starting_item: str | None = None   # handed to the signer's pack the moment they accept
 
 
 @dataclass
@@ -43,6 +44,7 @@ class Mission:
     accepted_day: int
     deadline_day: int
     state: str = "active"    # active | done | failed
+    ambush_done: bool = False   # the trust mission's fortress ambush: fires once (campaign.py)
 
 
 TANNER_HIDES = MissionTemplate(
@@ -53,7 +55,22 @@ TANNER_HIDES = MissionTemplate(
     tag="economic",
 )
 
-TEMPLATES = {TANNER_HIDES.id: TANNER_HIDES}
+# The Bankers' trust mission: accepting hands over a sealed chest
+# (`starting_item`) instead of asking the guild to gather anything; the
+# "goal" delivered back here is the letter Ledger Hold trades for it intact
+# (`ledger_screen.py`) -- `turn_in`'s ordinary goal_item/goal_qty count works
+# unchanged, it just counts a letter instead of hides. No copper reward: the
+# point is the trust, not the pay (see factions.py's `bankers_trust` deed).
+TRUST_CHEST = MissionTemplate(
+    "bankers_trust_chest", "bankers", "city", "A Test of Trust",
+    "The Bankers want proof the guild can be trusted with something precious "
+    "before they'll vouch for it: carry a sealed chest to their outpost at "
+    "Ledger Hold, safe, and bring back their letter of receipt. Don't peek.",
+    goal_item=data.LETTER_ITEM, goal_qty=1, reward=0, deadline_days=7,
+    tag="trust", starting_item=data.MISSION_CHEST_ITEM,
+)
+
+TEMPLATES = {TANNER_HIDES.id: TANNER_HIDES, TRUST_CHEST.id: TRUST_CHEST}
 
 
 def offers_at(guild, node_id):
@@ -73,6 +90,8 @@ def accept(guild, unit, template):
     m = Mission(template.id, unit.uid, guild.clock.day,
                guild.clock.day + template.deadline_days)
     guild.missions.append(m)
+    if template.starting_item:
+        unit.give_to_pack(template.starting_item)
     return m
 
 
@@ -121,6 +140,48 @@ def turn_in(guild, mission):
         "mission", node=world.node(t.node), tag=t.tag))
 
 
+def _active_trust_mission(guild):
+    return next((m for m in guild.missions
+                if m.template_id == TRUST_CHEST.id and m.state == "active"), None)
+
+
+def open_mission_chest(guild, unit):
+    """Pick the trust mission's own `data.MISSION_CHEST_ITEM` instead of
+    handing it over intact -- same lock, same odds as any other chest
+    (`chest.roll_lock`), but a hit doesn't quietly pay out: it fails whichever
+    trust mission that chest belonged to right now and marks the opener a
+    criminal (`Unit.crime`), so it can never become the `bankers_trust` deed.
+    A miss costs nothing, same as every other chest. Returns `(opened, gems)`,
+    `(False, 0)` if `unit` isn't carrying one."""
+    if data.MISSION_CHEST_ITEM not in unit._base_inventory:
+        return False, 0
+    gems = chest.roll_lock(unit)
+    if gems is None:
+        return False, 0
+    unit._base_inventory.remove(data.MISSION_CHEST_ITEM)
+    for _ in range(gems):
+        unit._base_inventory.append(data.GEM_ITEM)
+    mission = _active_trust_mission(guild)
+    if mission is not None:
+        mission.state = "failed"
+    unit.crime += 1
+    return True, gems
+
+
+def pending_fortress_ambush(guild, group):
+    """The trust mission's fortress ambush is due right now if: a trust
+    mission is active and hasn't sprung it yet, and someone in `group` is
+    still carrying the sealed chest (nothing to ambush for once it's already
+    been handed over or opened). Returns the `Mission` to mark `ambush_done`
+    on, or None -- called from `campaign.py`'s arrival check."""
+    mission = _active_trust_mission(guild)
+    if mission is None or mission.ambush_done:
+        return None
+    if not any(data.MISSION_CHEST_ITEM in u._base_inventory for u in group.members):
+        return None
+    return mission
+
+
 def expire_overdue(guild):
     """Fail every active mission whose deadline has passed -- called once a
     day from `Guild._daily_upkeep`. Returns the ones that just failed, for the
@@ -136,9 +197,10 @@ def expire_overdue(guild):
 def mission_to_dict(m):
     return {"template_id": m.template_id, "unit_uid": m.unit_uid,
             "accepted_day": m.accepted_day, "deadline_day": m.deadline_day,
-            "state": m.state}
+            "state": m.state, "ambush_done": m.ambush_done}
 
 
 def mission_from_dict(d):
     return Mission(d["template_id"], d["unit_uid"], d["accepted_day"],
-                   d["deadline_day"], d.get("state", "active"))
+                   d["deadline_day"], d.get("state", "active"),
+                   d.get("ambush_done", False))

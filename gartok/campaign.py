@@ -26,7 +26,7 @@ of one another -- see `orders.py` for what an order is.
 import random
 from dataclasses import dataclass, field
 
-from . import arena, data, encounters, factions, justice, loot, orders, world
+from . import arena, data, encounters, factions, justice, loot, missions, orders, world
 
 
 @dataclass
@@ -205,7 +205,7 @@ def advance(guild, dt=None):
             # queue the next edge, rather than resolving the whole route at once
             prev = g.node
             g.node = order.dest
-            pause = _arrival_pause(g, prev, order.path)
+            pause = _arrival_pause(guild, g, prev, order.path)
             if pause is not None:
                 # NOT g.order = pause: same convention as an interactive order
                 # below -- once due, the group goes idle (order=None) and the
@@ -222,7 +222,7 @@ def advance(guild, dt=None):
         if order.kind == "travel":
             prev = g.node
             g.node = order.dest
-            pause = _arrival_pause(g, prev, ())
+            pause = _arrival_pause(guild, g, prev, ())
             if pause is not None:
                 pending.append((g, pause))
                 continue
@@ -235,20 +235,26 @@ def advance(guild, dt=None):
     return TickResult(events=events, pending=pending, wiped=guild.empty)
 
 
-def _arrival_pause(group, prev_node, resume_path):
+def _arrival_pause(guild, group, prev_node, resume_path):
     """After `group` arrives at `group.node`: does anything happen there that
     must pause its order before the arrival is considered complete? Checked in
     order -- the guard (`justice.py`, jurisdiction) first, then a road ambush
-    (`encounters.py`, an unsafe node) -- and returns the `Order` to pause on,
-    or None to let the caller proceed exactly as it would without either
-    system. The two never both fire off one arrival in practice (no node is
-    both a jurisdiction and unsafe today), but the order is deliberate in case
-    that changes: the guard is a *legal* consequence of who you are, checked
-    before whatever the road throws at you."""
+    (`encounters.py`, an unsafe node), then the trust mission's fortress
+    ambush (`missions.py`, mission-conditional, not a node property at all) --
+    and returns the `Order` to pause on, or None to let the caller proceed
+    exactly as it would without any of them. The first two never both fire
+    off one arrival in practice (no node is both a jurisdiction and unsafe
+    today), but the order is deliberate in case that changes: the guard is a
+    *legal* consequence of who you are, checked before whatever the road
+    throws at you; the fortress ambush is checked last since it only ever
+    fires at one specific node anyway."""
     guard = _guard_catch(group, prev_node, resume_path)
     if guard is not None:
         return guard
-    return _road_ambush_catch(group, resume_path)
+    ambush = _road_ambush_catch(group, resume_path)
+    if ambush is not None:
+        return ambush
+    return _fortress_ambush_catch(guild, group, resume_path)
 
 
 def _guard_catch(group, prev_node, resume_path):
@@ -274,6 +280,30 @@ def _road_ambush_catch(group, resume_path):
         return None
     pack = encounters.roll_encounter(node.encounter_table)
     return orders.Order("ambush", pack=tuple(pack), resume_path=tuple(resume_path))
+
+
+FORTRESS_AMBUSH_LEVEL = 3   # placeholder, tune once this has been played -- see justice.py's own
+FORTRESS_AMBUSH_SIZE = 3    # placeholders for the guard patrol / Old Road pack
+
+
+def _fortress_ambush_catch(guild, group, resume_path):
+    """The trust mission's own one-off ambush at Ledger Hold
+    (`missions.pending_fortress_ambush`): bandits who know the sealed chest is
+    valuable, not a standing risk of the fortress itself the way `unsafe`
+    marks the Old Road (so gated on the guild's mission state too, not just
+    the node) -- but it still only ever happens AT Ledger Hold, hence the
+    `node.ledger` check up front, same shape as `_road_ambush_catch`'s own
+    `node.unsafe` gate. Marks the mission's `ambush_done` the moment it fires,
+    win or lose, so it never springs twice on the same shipment."""
+    if not world.node(group.node).ledger:
+        return None
+    mission = missions.pending_fortress_ambush(guild, group)
+    if mission is None:
+        return None
+    mission.ambush_done = True
+    pack = tuple(encounters.build_enemy(FORTRESS_AMBUSH_LEVEL)
+                for _ in range(FORTRESS_AMBUSH_SIZE))
+    return orders.Order("ambush", pack=pack, resume_path=tuple(resume_path))
 
 
 # --------------------------------------------------------------------------- #
@@ -313,7 +343,7 @@ def resolve_guard_flee(guild, group, order):
     names = ", ".join(u.name for u in caught) if caught else "The group"
     events = [f"{names} fall back toward {world.node(order.prev_node).name}."]
     group.node = order.prev_node
-    pause = _arrival_pause(group, None, ())
+    pause = _arrival_pause(guild, group, None, ())
     if pause is not None:
         group.order = None            # same "not busy" convention as advance()
         return events, pause

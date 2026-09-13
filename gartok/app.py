@@ -47,6 +47,7 @@ from .guild import Guild
 from .guild_screen import GuildScreen
 from .hunt_screen import HuntScreen
 from .justice_screen import GuardScreen
+from .ledger_screen import LedgerScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
 from .map_editor_screen import MapEditorScreen
@@ -59,6 +60,7 @@ from .scenario import Scenario
 from .squad_screen import SquadScreen
 from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
+from .trust_screen import TrustScreen
 from .theme import BG, Fonts, WIN_H, WIN_W, set_player_color
 from .tutorial import TutorialState
 
@@ -254,6 +256,10 @@ class App:
                 self._open_hunt_ground(list(group.members), node, None)
             elif order.kind == "tanner":
                 self._open_tanner_stall(group, node, None)
+            elif order.kind == "trust":
+                self._open_trust_offer(group, node, None)
+            elif order.kind == "ledger":
+                self._open_ledger_desk(group, node, None)
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
@@ -287,6 +293,14 @@ class App:
     def _open_tanner_stall(self, group, node, _offer):
         self.scene = TannerScreen(self.fonts, self.guild, group,
                                   on_done=self._after_activity)
+
+    def _open_trust_offer(self, group, node, _offer):
+        self.scene = TrustScreen(self.fonts, self.guild, group,
+                                 on_done=self._after_activity)
+
+    def _open_ledger_desk(self, group, node, _offer):
+        self.scene = LedgerScreen(self.fonts, self.guild, group,
+                                 on_done=self._after_activity)
 
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #

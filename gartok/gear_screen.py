@@ -22,7 +22,7 @@ so the next battle re-seeds every `Combatant` from the new loadout.
 
 import pygame
 
-from . import chest, data
+from . import chest, data, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -163,7 +163,7 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         lift = len(owners) > 1 or any(isinstance(p[1], str) for p in picks)
         dests = [u for u in self.managed if lift or id(u) not in owners]
         rows = [("member", u) for u in dests] + [("discard", None)]
-        if len(picks) == 1 and self._item_at(*picks[0]) == data.CHEST_ITEM:
+        if len(picks) == 1 and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", None))
 
         f = self.fonts
@@ -183,20 +183,32 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         for r, kind, arg in m["hits"]:
             if r.collidepoint(px):
                 if kind == "open":
-                    self._open_chest(m["picks"][0][0])
+                    unit, loc = m["picks"][0]
+                    self._open_chest(unit, self._item_at(unit, loc))
                     return
                 self.selected = list(m["picks"])
                 self._give_many(arg, "pack" if kind == "member" else "discard")
                 return
 
-    def _open_chest(self, unit):
+    def _open_chest(self, unit, item):
         """Pick the lock right where the chest sits -- no move, no drop, just
-        `chest.try_open`'s roll. A miss costs nothing (the chest stays put,
-        try again any time), so this never asks for confirmation."""
-        opened, gems = chest.try_open(unit)
-        self.notice = (f"{unit.name} picks the lock -- {gems} {data.GEM_ITEM} inside."
-                       if opened else
-                       f"{unit.name} can't pick the lock -- the chest is still there.")
+        the roll. A miss costs nothing (the chest stays put, try again any
+        time), so this never asks for confirmation. `item` is whichever chest
+        was actually right-clicked (not just "does `unit` have one somewhere"
+        -- a unit could carry both kinds at once, e.g. via the sandbox
+        editor). The Bankers' own sealed chest (`data.MISSION_CHEST_ITEM`)
+        picks the same lock but fails its mission and marks a crime on a hit
+        -- `missions.open_mission_chest`, not `chest.try_open`."""
+        sealed = item == data.MISSION_CHEST_ITEM
+        opened, gems = (missions.open_mission_chest(self.guild, unit) if sealed
+                       else chest.try_open(unit))
+        if not opened:
+            self.notice = f"{unit.name} can't pick the lock -- the chest is still there."
+        elif sealed:
+            self.notice = (f"{unit.name} breaks the Bankers' seal -- {gems} {data.GEM_ITEM} "
+                           f"spill out, but the trust mission is ruined. Crime: {unit.crime}.")
+        else:
+            self.notice = f"{unit.name} picks the lock -- {gems} {data.GEM_ITEM} inside."
         self.selected = []
 
     def _draw_menu(self, screen, W, H):
@@ -490,6 +502,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             return "FOOD"
         if item == data.CHEST_ITEM:
             return "CHEST"
+        if item == data.MISSION_CHEST_ITEM:
+            return "SEALED"
         return ""
 
     # ------------------------------------------------------------------ #

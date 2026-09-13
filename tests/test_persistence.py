@@ -232,3 +232,10 @@ def test_crime_and_jailed_survive_a_save_round_trip():
         assert back_day == guild.jailed[0][1]
     finally:
         persist.delete_slot(slot)
+
+
+def test_mission_ambush_done_survives_a_dict_round_trip():
+    from gartok import missions
+    m = missions.Mission("bankers_trust_chest", "some-uid", 1, 8, ambush_done=True)
+    back = missions.mission_from_dict(missions.mission_to_dict(m))
+    assert back.ambush_done is True

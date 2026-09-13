@@ -618,6 +618,30 @@ class MapScreen(Screen):
             text(screen, "a paid job, on the clock -- see what's on offer",
                  f.body_sm, INK_FAINT, (cx, y))
 
+        if here.trust and not self.selected.busy:
+            y += 30
+            br = pygame.Rect(cx, y, cw, 38)
+            hovb = br.collidepoint(self.mouse)
+            panel(screen, br, fill=SURFACE_3 if hovb else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "TALK TO THE BANKERS", f.body_bd, INK_DIM, br.center, center=True)
+            self.buttons.append(("trust", br))
+            y += 44
+            text(screen, "a test of trust -- see what they're offering",
+                 f.body_sm, INK_FAINT, (cx, y))
+
+        if here.ledger and not self.selected.busy:
+            y += 30
+            lr = pygame.Rect(cx, y, cw, 38)
+            hovl = lr.collidepoint(self.mouse)
+            panel(screen, lr, fill=SURFACE_3 if hovl else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "VISIT THE OUTPOST", f.body_bd, INK_DIM, lr.center, center=True)
+            self.buttons.append(("ledger", lr))
+            y += 44
+            text(screen, "hand over what you're carrying, if anything's owed",
+                 f.body_sm, INK_FAINT, (cx, y))
+
         y += 60
         y = section(screen, "FROM HERE YOU CAN REACH", cx, y, cw, f)
         for nid, hours in sorted(world.neighbors(here.id), key=lambda t: t[1]):

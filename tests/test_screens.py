@@ -223,6 +223,17 @@ def test_every_screen_draws_native_at_any_window_size():
     scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
     scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
 
+    from gartok.ledger_screen import LedgerScreen
+    from gartok.trust_screen import TrustScreen
+    scenes.append(TrustScreen(F, guild, guild.groups[0], noop))          # nothing accepted yet
+    scenes.append(LedgerScreen(F, guild, guild.groups[0], noop))         # nothing to hand over
+
+    from gartok import missions as _missions
+    accepted = Guild(list(roster), node=world.START_NODE)
+    _missions.accept(accepted, accepted.roster[0], _missions.TRUST_CHEST)
+    scenes.append(TrustScreen(F, accepted, accepted.groups[0], noop))    # carrying the chest
+    scenes.append(LedgerScreen(F, accepted, accepted.groups[0], noop))   # something to hand over
+
     for tab in ("armor", "kit"):                      # the other market category tabs
         mkt = MarketScreen(F, guild, list(roster[:3]), mnode, noop)
         mkt.tab = tab

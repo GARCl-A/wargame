@@ -147,6 +147,16 @@ _DEEDS = [
          "Sell 5 different kinds of goods to the market.", rep=1,
          check=lambda g, e: (
              e.kind == "market" and len(g.items_sold_kinds) >= 5)),
+
+    # Gated on all three economic deeds above rather than a single `requires`
+    # (that field only chains one prerequisite) -- `check` reads
+    # `guild.deeds_done` directly instead.
+    Deed("bankers_trust", "bankers", "Earned Trust",
+         "Carry the Bankers' trust all the way to Ledger Hold and back.", rep=1,
+         check=lambda g, e: (
+             e.kind == "mission" and e.tag == "trust"
+             and {"bankers_good_for_business", "bankers_steady_customer",
+                  "bankers_diverse_portfolio"} <= set(g.deeds_done))),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

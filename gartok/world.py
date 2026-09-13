@@ -38,22 +38,45 @@ Outside jurisdiction (`road`, `wilds`, the lumber yard) a rap sheet never comes 
 ambush) against `encounter_table` (an `encounters.EncounterEntry` tuple) --
 `campaign.advance` pauses the group on a lethal fight if it hits, same seam
 as `jurisdiction`. Only the Old Road (`road`) carries it for now.
+
+`trust`/`ledger` are one-mission flags for the Bankers' trust run
+(`missions.TRUST_CHEST`): `trust` (the City) offers/turns in the mission
+(`trust_screen.py`); `ledger` (Ledger Hold) trades the sealed chest for a
+letter (`ledger_screen.py`). The fortress ambush that can hit Ledger Hold
+along the way is mission-conditional, not a standing risk like `unsafe` --
+see `missions.pending_fortress_ambush` / `campaign._fortress_ambush_catch`.
 """
 
 import heapq
+import os
 from dataclasses import dataclass
 
 from . import encounters
-from .scenario import ArenaScenario, ErmosScenario
+from .scenario import ArenaScenario, CustomScenario, ErmosScenario
 
 ROAD_AMBUSH_CHANCE = 0.35   # per travel-leg arrival at an `unsafe` node, not per hour (unlike hunt.py)
+
+# The trust mission's fortress ambush battlefield -- painted in the map editor
+# once it exists (map_editor_screen.py); checking the file directly (rather
+# than a fixed reference that would crash `map_lib.load_map`) means dropping
+# a map under this exact slug is the only thing needed to switch over, no
+# code change here. `ErmosScenario` (open country) stands in until then.
+FORTRESS_AMBUSH_MAP_SLUG = "ledger-hold-ambush"
+
+
+def fortress_scenario():
+    from . import map_lib   # lazy: map_lib -> npc_lib -> persist pulls in half the package,
+                             # which would cycle straight back to world.py at import time
+    if os.path.exists(map_lib.map_path(FORTRESS_AMBUSH_MAP_SLUG)):
+        return CustomScenario(map_lib.load_map(FORTRESS_AMBUSH_MAP_SLUG))
+    return ErmosScenario()
 
 
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, work=False,
                  bank=False, tanner=False, jurisdiction=None,
-                 unsafe=False, encounter_table=None):
+                 unsafe=False, encounter_table=None, trust=False, ledger=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -70,6 +93,8 @@ class Node:
         self.jurisdiction = jurisdiction     # e.g. "the_city" -- the guard tests every arrival (justice.py)
         self.unsafe = unsafe                 # True -> ROAD_AMBUSH_CHANCE per arrival (campaign.py)
         self.encounter_table = encounter_table   # encounters.EncounterEntry tuple an unsafe node's ambush rolls off
+        self.trust = trust                   # town: the Bankers' trust mission (trust_screen)
+        self.ledger = ledger                 # town: trade the sealed chest for a letter (ledger_screen)
 
     @property
     def is_battle(self):
@@ -146,9 +171,9 @@ def arena_offers(reputation):
 
 
 NODES = [
-    Node("city", "The City", "town", (0.16, 0.58),
+    Node("city", "Ankareth", "town", (0.16, 0.58),
          "The walled burg. Where the guild sets out from -- and where the "
-         "Bankers keep their strongboxes.", bank=True, tanner=True,
+         "Bankers keep their strongboxes.", bank=True, tanner=True, trust=True,
          jurisdiction="the_city"),
     Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
@@ -169,6 +194,9 @@ NODES = [
     Node("wilds", "The Wilds", "wilds", (0.83, 0.40),
          "Open ground under the sky, outside the walls. Hunt it for meat -- and "
          "risk what else hunts here.", ErmosScenario),
+    Node("ledger_hold", "Ledger Hold", "town", (0.68, 0.70),
+         "A fortified counting-house the Bankers keep well outside the walls -- "
+         "armed, and used to precious cargo.", fortress_scenario, ledger=True),
 ]
 
 EDGES = [
@@ -179,6 +207,7 @@ EDGES = [
     ("city", "road", 4),
     ("arena", "road", 3),
     ("road", "wilds", 6),
+    ("road", "ledger_hold", 5),
 ]
 
 START_NODE = "city"
