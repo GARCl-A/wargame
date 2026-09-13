@@ -136,6 +136,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Deck of Cards | 0.2 kg | -- |
 | Dictionary | 2 kg | -- |
 | First Aid Kit | 0.8 kg | consumable |
+| Fruit | 0.2 kg | food, consumable |
 | Gemstones | 0.1 kg | -- |
 | Holy Symbol | 0.5 kg | -- |
 | Iron Bar | 5 kg | -- |
@@ -222,6 +223,9 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | Tier | Talent | Effect | Requires | Race |
 |---|---|---|---|---|
 | 1 | Tongue | your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- | Grippli |
+| 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- | Leshy |
+| 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- | Human |
+| 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- | Halfling |
 
 ## Factions and deeds
 

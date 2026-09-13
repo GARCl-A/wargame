@@ -50,6 +50,7 @@ def unit_to_dict(u):
         "first_aid_charges": u.first_aid_charges,
         "quiver_charges": u.quiver_charges,
         "consecutive_rest_hours": u.consecutive_rest_hours,
+        "last_daily_luck_day": getattr(u, "last_daily_luck_day", 0),
         "hp": getattr(u, "hp", u.hp_max),
         "share_food": u.share_food,              # pools rations for hungry guild-mates
         "combat_xp": u.combat_xp,                # combat XP (see progression.py)

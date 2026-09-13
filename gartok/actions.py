@@ -251,6 +251,16 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
     if result == "miss" and nat != 1 and ab.on_attack_miss \
             and actor.spend_once("on_attack_miss"):
         ab.on_attack_miss(battle, actor, target, bonus, target.ac, battle.log)
+    elif result == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
+        actor.use_luck(getattr(battle, "clock_day", 1))
+        nat2 = d20()
+        total2 = nat2 + bonus
+        hits = nat2 == 20 or total2 >= target.ac
+        battle.log(f"  Halfling Luck! {actor.name} rerolls attack: d20({nat2}) = {total2} -> "
+                   + ("hit." if hits else "misses again."))
+        if hits:
+            target.take_damage(actor.damage_roll(crit=nat2 == 20, weapon=weapon), battle.log)
+            result = "hit"
     return result
 
 
@@ -428,7 +438,16 @@ class Throw(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} throws {weapon_name} at {target.name}"
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True)
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, thrown=True)
+        if res == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
+            actor.use_luck(getattr(battle, "clock_day", 1))
+            nat2 = d20()
+            total2 = nat2 + bonus
+            hits = nat2 == 20 or total2 >= target.ac
+            battle.log(f"  Halfling Luck! {actor.name} rerolls throw: d20({nat2}) = {total2} -> "
+                       + ("hit." if hits else "misses again."))
+            if hits:
+                target.take_damage(actor.damage_roll(crit=nat2 == 20, thrown=True), battle.log)
 
         actor.disarm()
         landing = _drop_cell(battle, target)

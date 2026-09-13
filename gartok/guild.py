@@ -527,6 +527,10 @@ class Guild:
 
     def _daily_upkeep(self):
         events, casualties, ate = [], [], []
+        for u in self.roster:
+            if u.has_talent("fruitful"):
+                u.give_to_pack("Fruit")
+                events.append(f"{u.name} blooms at dawn and yields a fresh Fruit.")
         # Everyone eats from their own pack first (a full pass), so a hungry mate
         # drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.

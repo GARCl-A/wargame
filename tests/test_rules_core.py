@@ -85,6 +85,6 @@ def test_pack_tactics_and_flank_do_not_stack():
     b.pos = (6, 5)
     mods = a.attack_mods(e, actions._pack_flank(batt, a, e))
     if actions._flanked(batt, a, e):
-        mods.append((2, "circumstance", "Flanquear"))
+        mods.append((2, "circumstance", "Flank"))
     total, _ = resolve_bonus(mods)
     assert total == 2 + max(0, a.mod_strength)        # +2 circ once, not +4

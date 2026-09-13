@@ -280,7 +280,7 @@ def test_long_reach_extends_ranged_and_thrown_not_melee():
 def test_tongue_is_a_grippli_racial_node_that_opens_a_reach_weapon_slot():
     u = _unit(seed=1)
     u.set_race("Grippli")
-    u.set_track_level("racial", 1)                # sandbox: pin one racial level
+    u.set_track_level("racial", 5)                # first racial pick unlocks at level 5
     assert u.picks_available("racial") == 1
     assert not u.fits_tongue("Axe")              # no talent yet -> no slot
     assert u.choose_talent("racial", "tongue")
@@ -302,7 +302,7 @@ def test_tongue_is_a_grippli_racial_node_that_opens_a_reach_weapon_slot():
 def test_tongue_slot_empties_when_the_talent_goes_away():
     u = _unit(seed=1)
     u.set_race("Grippli")
-    u.set_track_level("racial", 1)
+    u.set_track_level("racial", 5)
     u.choose_talent("racial", "tongue")
     u.give_to_tongue("Dagger")
     u.set_race("Orc")                            # not a Grippli any more
@@ -313,10 +313,25 @@ def test_tongue_slot_empties_when_the_talent_goes_away():
 def test_tongue_is_refused_to_non_grippli():
     u = _unit(seed=1)
     u.set_race("Orc")
-    u.set_track_level("racial", 2)
+    u.set_track_level("racial", 5)
     assert not u.choose_talent("racial", "tongue")
     assert u.talents["racial"] == []
     assert "racial" not in u.pending_picks        # nothing to spend -> no nag
+
+
+def test_racial_talent_picks_unlock_at_level_5():
+    u = _unit(seed=1)
+    u.set_race("Grippli")
+    for lvl in range(5):
+        u.set_track_level("racial", lvl)
+        assert u.picks_available("racial") == 0
+        assert not u.choose_talent("racial", "tongue")
+    u.set_track_level("racial", 5)
+    assert u.picks_available("racial") == 1
+    assert u.choose_talent("racial", "tongue")
+    assert u.picks_available("racial") == 0
+    u.set_track_level("racial", 6)
+    assert u.picks_available("racial") == 1
 
 
 def test_racial_level_is_the_summed_track_levels_on_a_scale():

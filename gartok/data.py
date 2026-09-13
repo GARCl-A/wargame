@@ -290,7 +290,7 @@ TORCH_WEIGHT = 0.5
 TORCH_ITEM = "Torch"                     # a torch carried in the pack / between battles
 
 # Pack items that count as a day's meal (see the hunger rule in unit.py / guild.py).
-FOOD_ITEMS = {"Meat", "Potato"}
+FOOD_ITEMS = {"Meat", "Potato", "Fruit"}
 STARVATION_DEATH_DAYS = 4                # missed meals in a row before a character dies
 
 # Items used up in play, not hauled cargo -- the Carrier talent's carry relief
@@ -299,7 +299,7 @@ CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit"}
 
 ITEM_WEIGHTS = {
     TORCH_ITEM: TORCH_WEIGHT,
-    "Meat": 1.0, "Potato": 1.0, "1kg Firewood": 1.0, "1kg Coal": 1.0, "1L Beer": 1.0,
+    "Meat": 1.0, "Potato": 1.0, "Fruit": 0.2, "1kg Firewood": 1.0, "1kg Coal": 1.0, "1L Beer": 1.0,
     "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
     "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
     "Lumber": 2.0,   # a garrison's job output (economy.GARRISON_JOBS) -- see [[gartok-property-two-paths]]

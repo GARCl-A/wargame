@@ -61,6 +61,7 @@ class Unit:
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
         self.consecutive_rest_hours = 0
+        self.last_daily_luck_day = 0
 
         self._auto_name = name is None
         self.name = name or names.random_name()
@@ -104,6 +105,7 @@ class Unit:
         u.first_aid_charges = d.get("first_aid_charges", 0)
         u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if data.AMMO_ITEM in u._base_inventory else 0)
         u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)
+        u.last_daily_luck_day = d.get("last_daily_luck_day", 0)
         u.share_food = d.get("share_food", True)
         u.combat_xp = d.get("combat_xp", 0)
         u.work_hours = d.get("work_hours", 0)
@@ -233,7 +235,11 @@ class Unit:
         return progression.mean_level(self.combat_level, self.work_level)
 
     def picks_available(self, track):
-        """Unspent talent picks in `track` (one earned per level in it)."""
+        """Unspent talent picks in `track`. Combat and work grant 1 pick per level;
+        the racial track grants its first pick at racial level 5."""
+        if track == "racial":
+            earned = max(0, self.racial_level - 4)
+            return earned - len(self.talents["racial"])
         return self.track_level[track] - len(self.talents[track])
 
     def _has_offerable(self, track):
@@ -313,6 +319,17 @@ class Unit:
         channel table in `talents.py`), narrowed to `stat` on `attr` / `to_hit`."""
         picked = [tid for lst in self.talents.values() for tid in lst]
         return talents.bonus(picked, channel, stat)
+
+    def has_talent(self, talent_id):
+        return any(talent_id in lst for lst in self.talents.values())
+
+    def can_use_luck(self, day=1):
+        d = 1 if day is None else day
+        return bool(self.talent_bonus("halfling_luck") and self.last_daily_luck_day < d)
+
+    def use_luck(self, day=1):
+        d = 1 if day is None else day
+        self.last_daily_luck_day = d
 
     def _carry_relief(self):
         """Kg the Carrier talent adds to the stagger threshold: up to the talent's

@@ -19,24 +19,28 @@ from . import data
 GEM_YIELD_DICE = (1, 4)   # gems inside, rolled once per successful open: 1d4 + 1 (2..5)
 
 
-def roll_lock(unit):
+def roll_lock(unit, day=1):
     """The pick-the-lock roll alone, no chest or inventory involved: None on
     a miss, otherwise the gems a hit yields. Shared with
     `missions.open_mission_chest`, which needs the same odds but a different
     outcome on success."""
-    if data.d20() + unit.mod_dexterity < data.CHEST_DC:
+    roll = data.d20()
+    if roll + unit.mod_dexterity < data.CHEST_DC and unit.can_use_luck(day):
+        unit.use_luck(day)
+        roll = data.d20()
+    if roll + unit.mod_dexterity < data.CHEST_DC:
         return None
     return data.roll(*GEM_YIELD_DICE) + 1
 
 
-def try_open(unit):
+def try_open(unit, day=1):
     """Attempt to pick one `data.CHEST_ITEM` in `unit`'s pack. On success it
     is consumed and replaced with the gems inside; on a miss nothing changes.
     Returns `(opened, gems)` -- `gems` is 0 on a miss. No-op, `(False, 0)`, if
     `unit` isn't carrying one."""
     if data.CHEST_ITEM not in unit._base_inventory:
         return False, 0
-    gems = roll_lock(unit)
+    gems = roll_lock(unit, day=day)
     if gems is None:
         return False, 0
     unit._base_inventory.remove(data.CHEST_ITEM)

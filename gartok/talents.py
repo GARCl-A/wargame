@@ -161,6 +161,18 @@ _LIST = [
            "your tongue is a third limb and a weapon: +1 square of reach on "
            "melee attacks.", race="Grippli",
            effects=(Effect("melee_reach", 1),), icon="action/swallow"),
+    Talent("fruitful", "racial", 1, "Fruitful",
+           "your leafy body blooms at dawn: produce 1 fresh fruit each day to "
+           "nourish yourself or your companions.", race="Leshy",
+           effects=(Effect("fruitful", 1),), icon="action/fruiting"),
+    Talent("cosmopolitan", "racial", 1, "Cosmopolitan",
+           "at home among strangers: reduces alignment distance penalties by 1 "
+           "when recruiting, negotiating, or trading.", race="Human",
+           effects=(Effect("align_distance_reduction", 1),), icon="action/shaking-hands"),
+    Talent("halfling_luck", "racial", 1, "Halfling Luck",
+           "fate bends around you: once every 24 hours, reroll your first "
+           "failed d20 test (in or out of combat).", race="Halfling",
+           effects=(Effect("halfling_luck", 1),), icon="action/juggler"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

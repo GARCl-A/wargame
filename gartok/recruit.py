@@ -90,7 +90,7 @@ class Pitch:
     reason: str = ""                         # why it failed (empty on success)
 
 
-def convince(recruiter, candidate, roster_size, rng=random):
+def convince(recruiter, candidate, roster_size, rng=random, day=1):
     """Roll the recruiter's Charisma contest against the candidate's resolve.
 
     `roster_size` is how many members the guild has right now (it grows as you
@@ -103,8 +103,10 @@ def convince(recruiter, candidate, roster_size, rng=random):
 
     mods = []
     dist = data.alignment_distance(recruiter.alignment, candidate.alignment)
-    if dist:
-        mods.append((-ALIGNMENT_PENALTY * dist, f"opposite alignment ({dist})"))
+    red = int(recruiter.talent_bonus("align_distance_reduction"))
+    eff_dist = max(0, dist - red)
+    if eff_dist:
+        mods.append((-ALIGNMENT_PENALTY * eff_dist, f"opposite alignment ({eff_dist})"))
     pen = size_penalty(roster_size)
     if pen:
         mods.append((-pen, f"guild of {roster_size}"))
@@ -115,6 +117,13 @@ def convince(recruiter, candidate, roster_size, rng=random):
     rr, cr = rng.randint(1, 20), rng.randint(1, 20)
     r_total = rr + recruiter.mod_charisma + sum(v for v, _ in mods)
     c_total = cr + candidate.mod_charisma
+    if r_total <= c_total and recruiter.can_use_luck(day):
+        recruiter.use_luck(day)
+        rr2 = rng.randint(1, 20)
+        r_total2 = rr2 + recruiter.mod_charisma + sum(v for v, _ in mods)
+        mods.append((0, "Halfling Luck (reroll)"))
+        rr, r_total = rr2, r_total2
+
     ok = r_total > c_total                       # a tie goes to the stranger: they stay put
     return Pitch(ok, rr, r_total, cr, c_total, mods, lang[0],
                  reason="" if ok else "not convinced")

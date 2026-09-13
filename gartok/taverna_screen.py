@@ -66,8 +66,11 @@ class TavernaScreen(Screen):
     def _best(self, cand):
         """(member, net modifier) for the strongest pitch still open, or None."""
         pen = recruit.size_penalty(len(self.guild.roster))
+        def _dist(m):
+            raw = alignment_distance(m.alignment, cand.alignment)
+            return max(0, raw - int(m.talent_bonus("align_distance_reduction")))
         opts = [(m, m.mod_charisma
-                 - recruit.ALIGNMENT_PENALTY * alignment_distance(m.alignment, cand.alignment)
+                 - recruit.ALIGNMENT_PENALTY * _dist(m)
                  - pen
                  + m.talent_bonus("recruit_cha"))
                 for m in self._eligible(cand)]
@@ -109,7 +112,7 @@ class TavernaScreen(Screen):
         if recruit.slots_free(self.guild, member) <= 0:
             self.notice = f"{member.name} has no room to sponsor anyone else."
             return
-        pitch = recruit.convince(member, cand, len(self.guild.roster))
+        pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day)
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)

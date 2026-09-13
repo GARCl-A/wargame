@@ -432,7 +432,7 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
 
     u = Unit("player")
     u.set_race("Grippli")
-    u.set_track_level("racial", 2)
+    u.set_track_level("racial", 5)
     u.choose_talent("racial", "tongue")
     u.give_to_tongue("Dagger")
     u.equipped_weapon = "Broadsword"                     # 2-handed in the hands, dagger on the tongue

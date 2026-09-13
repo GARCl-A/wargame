@@ -199,13 +199,18 @@ def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
                 and vendor_language in m.languages]
     if not speakers:
         return 0.0
+    def _eff_dist(m):
+        raw = data.alignment_distance(m.alignment, vendor_alignment)
+        red = int(m.talent_bonus("align_distance_reduction"))
+        return max(0, raw - red)
+
     if leader is not None and leader in speakers:
         voice = leader
     else:
         voice = max(speakers, key=lambda m: (m.haggle_charisma_mod,
-                    -data.alignment_distance(m.alignment, vendor_alignment)))
+                    -_eff_dist(m)))
     cha = max(0, voice.haggle_charisma_mod) * CHA_DEAL_STEP
-    align = _ALIGN_DEAL[data.alignment_distance(voice.alignment, vendor_alignment)]
+    align = _ALIGN_DEAL[_eff_dist(voice)]
     return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
 
 

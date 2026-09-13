@@ -20,8 +20,9 @@ __all__ = ["Battle", "COLS", "ROWS", "chebyshev"]
 
 class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
-                 lethal=True, arena=False):
+                 lethal=True, arena=False, clock_day=1):
         self.log_lines = []
+        self.clock_day = clock_day
         self.daylight = daylight              # outdoor scenarios read this for ambient light
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
         self.arena = arena                   # True = fought in the pits: the Champion of the Pit title bites here
@@ -382,6 +383,11 @@ class Battle:
         """d20 >= DEATH_SAVE_MIN -> stable; otherwise dead. Logs and returns the
         new status."""
         roll = d20()
+        if roll < data.DEATH_SAVE_MIN and unit.can_use_luck(self.clock_day):
+            unit.use_luck(self.clock_day)
+            roll2 = d20()
+            self.log(f"  Halfling Luck! {unit.name} rerolls death save: d20({roll2}).")
+            roll = roll2
         if roll >= data.DEATH_SAVE_MIN:
             unit.status = "stable"
             self.log(f"{unit.name}: death save d20({roll}) -> survives, "

@@ -359,7 +359,8 @@ class App:
         self._claim_stage_pending = stage_after
         pack = [encounters.build_enemy(level) for _ in range(size)]
         battle = Battle(list(group.members), pack, scenario=node.scenario(),
-                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False)
+                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
+                        clock_day=self.guild.clock.day)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _open_tanner_stall(self, group, node, _offer):
@@ -445,7 +446,8 @@ class App:
         # `scenario` -- nobody fought there before these systems made it necessary.
         scenario = node.scenario() if node.scenario else Scenario()
         battle = Battle(list(group.members), enemies, scenario=scenario,
-                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False)
+                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
+                        clock_day=self.guild.clock.day)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     # ------------------------------------------------------------------ #
@@ -474,7 +476,8 @@ class App:
         self._arena_offer = None
         battle = Battle(state.party, pack, scenario=state.node.scenario(),
                         daylight=self.guild.clock.is_daylight,
-                        lethal=state.node.lethal, arena=False)
+                        lethal=state.node.lethal, arena=False,
+                        clock_day=self.guild.clock.day)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _resume_hunt(self):
@@ -524,7 +527,7 @@ class App:
                                           guild=self.guild)
         battle = Battle(squad, enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
-                        arena=node.arena)
+                        arena=node.arena, clock_day=self.guild.clock.day)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _start_title_defense(self, node):
@@ -536,7 +539,8 @@ class App:
         self._arena_offer = offer
         enemies, scenario = matchup.build(node, offer, squad_size=1, guild=self.guild)
         battle = Battle([champ], enemies, scenario=scenario,
-                        daylight=self.guild.clock.is_daylight, lethal=False, arena=True)
+                        daylight=self.guild.clock.is_daylight, lethal=False, arena=True,
+                        clock_day=self.guild.clock.day)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _battle_end(self, battle):

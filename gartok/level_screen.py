@@ -185,6 +185,9 @@ class LevelScreen(Screen):
         if picks:
             text(screen, f"{picks} pick{'s' if picks > 1 else ''} to spend "
                  "— choose a lit node", f.body_sm, ACCENT, (ix, cy))
+        elif track == "racial" and u.racial_level < 5:
+            text(screen, "first racial talent unlocks at racial level 5",
+                 f.mono_sm, INK_DIM, (ix, cy))
         cy += 18
 
         ty = cy + SP2

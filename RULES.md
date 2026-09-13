@@ -224,10 +224,13 @@ state on the `Unit` (`talents`, `_level_hp_rolls`); screen in
 
 **Level per track** — cumulative thresholds in `progression.py`, a first guess,
 tunable. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author); past L2 is a stub.
-Each level in a track grants **one pick** in that track's tree. The **racial
+Each level in combat and work grants **one pick** in that track's tree. The **racial
 track** earns no XP of its own — its "XP" is the sum of the other track levels
-(`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. Its nodes
-are **race-gated**; only Grippli has one so far (`Tongue`).
+(`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
+dice scale with every racial level (L1+), the **first racial talent pick unlocks
+only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
+(e.g., `Tongue` for Grippli, `Fruitful` for Leshy, `Cosmopolitan` for Human,
+`Halfling Luck` for Halfling).
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
@@ -397,14 +400,17 @@ the clock when the battle ends take **one last death save** to settle
 The **AI** treats downed bodies by **alignment**: **Evil** delivers the coup de
 grace to an adjacent `dying` enemy before fighting on; **Good** stabilizes an
 adjacent downed ally before anything else. Otherwise a body is not a target.
-There is still **no pathfinding** to reach a downed ally or the map edge — both
-actions only happen from where the unit already stands.
+The AI **pathfinds** to reach a downed ally (stopping adjacent to stabilize) or
+navigates toward the nearest map edge when it decides to flee.
 
 ### Ammo and improvised weapon 🟡
 
 - The **Light Crossbow** needs **ammo** and holds **one bolt at a time**. The
   **Quiver** (the Crossbowman's item) carries **20 bolts**; bolts are **not
   recovered**.
+- Quivers track **persistent charges** across battles. An emptied quiver is
+  discarded after battle, and automatically reloads from any spare quiver carried
+  in the unit's inventory.
 - **Reload** is a 1-point action: takes a bolt from the Quiver and chambers it.
   **The crossbow enters the battle unloaded.**
 - Firing needs the crossbow **loaded** and empties it — in practice the
@@ -609,8 +615,8 @@ moral axis:
   it flees, drags the wounded along.
 - **Chaotic:** breaks and runs **sooner** (HP ≤ 50 %, and merely outnumbered).
   **Lawful:** flees only when **no ally is still up**.
-- Still **no pathfinding to flee**: the AI only flees from an edge it already
-  stands on.
+- **Pathfinding to flee:** when an AI unit breaks and runs, it moves toward the
+  nearest map edge turn by turn before executing the Flee action.
 
 ### Weapons table 🟡
 
@@ -833,11 +839,19 @@ bodies); the win condition is unchanged — put the whole team down.
 Arena progression is now tied entirely to these narrative deeds rather than
 static reputation ladders. Completing the "First Blood" deed opens the way to
 the champion, and dethroning the champion unlocks The Games (`arena.py`'s
-stage 2 bouts). Each bout is defined in `arena.py` and assembled in `matchup.build`.
+stage 2 bouts): **Bloodsport** (win a stage 2 bout), **Flag Runner** (capture enemy
+flag), **Untouchable** (capture flag without KOs), and **The Ribbit Brothers** (beat
+the 3 Grippli boss team). Each bout is defined in `arena.py` and assembled in `matchup.build`.
 
-**Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Deed-less
-for now: their standing does not move, and the REPUTATIONS tab says so. What they
-sell today is the guild's **first shared property**: a **strongbox** at the bank.
+**Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Four deeds
+measure the guild's standing:
+- **Good for Business:** complete an economic job in the City.
+- **Steady Customer:** spend 1,000 copper at the market.
+- **Diverse Portfolio:** sell 5 different kinds of goods to the market.
+- **Earned Trust:** carry the Bankers' sealed chest intact to Ledger Hold and
+  return their receipt (`bankers_trust_chest` mission).
+
+What they sell today is the guild's **first shared property**: a **strongbox** at the bank.
 
 - The `city` node carries `bank=True`; **VISIT THE BANK** on the map opens
   `bank_screen` for the chosen party (the market's party-picker path).
@@ -854,6 +868,28 @@ sell today is the guild's **first shared property**: a **strongbox** at the bank
 - The chest lives at the bank — gear in it is **only reachable from the City**.
 - Lending against the future (and collecting on it) is the Bankers' other trade,
   not yet built.
+
+### Property and holdings 🟡
+
+Two distinct paths exist for guild land ownership:
+- **City Property:** Bought from the Bankers in Ankareth. A house with shared storage
+  and rest facilities, subject to recurring municipal taxes. Defaulting on taxes leads
+  to repossession or illegal squatting, risking guard raids.
+- **The Wilds Claim:** A sovereign territorial outpost established outside municipal
+  reach (`wilds_territory` node). The guild progresses through stages: scouting the land,
+  fencing the perimeter, and clearing wild predators. Once claimed, it supports garrison
+  jobs (e.g. lumber harvesting) and must be defended against roaming beast raids and
+  seizures.
+
+### Crime and justice 🟡
+
+- **Jurisdiction:** Ankareth and its immediate environs are under City guard watch.
+  Characters carrying crimes on their rap sheet risk arrest upon entering jurisdiction
+  nodes (`justice.py`).
+- **Sentences:** Members caught by the guard face prison time proportional to their
+  offenses, paying bail, or resisting arrest in a lethal encounter with city patrols.
+- **The Old Road:** Traveling beyond the walls across the Old Road carries ambush risk
+  from deserters, bandits, and roving packs.
 
 ### The Champion of the Pit 🟡
 
