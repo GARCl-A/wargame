@@ -35,11 +35,12 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, hunt, justice, matchup, persist, tutorial_card, world
+from . import arena, campaign, economy, encounters, hunt, justice, matchup, persist, tutorial_card, world
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
+from .city_property_screen import CityPropertyScreen, RepossessionScreen
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
 from .gear_screen import GearScreen
@@ -61,6 +62,7 @@ from .squad_screen import SquadScreen
 from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
 from .trust_screen import TrustScreen
+from .wilds_claim_screen import WildsClaimScreen
 from .theme import BG, Fonts, WIN_H, WIN_W, set_player_color
 from .tutorial import TutorialState
 
@@ -81,6 +83,7 @@ class App:
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
         self._pause_order = None             # in-flight "guard"/"ambush" Order -- carried across a forced battle
         self._pause_group = None             # the Group that order belongs to
+        self._claim_stage_pending = None     # a Wilds claim stage ("CLEARED"/"SWEPT") a battle in flight decides
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._pending = []                   # [(Group, Order)] left to resolve from the last tick
         self._draft_tutorial = TutorialState()   # the soft tutorial, before a Guild exists to hold it
@@ -250,6 +253,10 @@ class App:
                 self._open_market_stalls(list(group.members), node, None)
             elif order.kind == "bank":
                 self._open_bank_vault(list(group.members), node, None)
+            elif order.kind == "property":
+                self._open_city_property(group, node)
+            elif order.kind == "claim":
+                self._open_wilds_claim(group, node)
             elif order.kind == "recruit":
                 self._open_taverna(list(group.members), node, None)
             elif order.kind == "hunt":
@@ -264,6 +271,14 @@ class App:
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
                 self._start_road_ambush(group, order)
+            elif order.kind == "eviction":
+                self._start_property_raid(group, order)
+            elif order.kind == "wilds_raid":
+                self._start_wilds_raid(group, order)
+            elif order.kind == "wilds_seizure":
+                self._start_wilds_seizure(group, order)
+            elif order.kind == "wilds_retake":
+                self._start_wilds_retake(group, order)
             return
         self._start_map()
 
@@ -289,6 +304,62 @@ class App:
     def _open_bank_vault(self, party, node, _offer):
         self.scene = BankScreen(self.fonts, self.guild, party,
                                 on_done=self._after_activity)
+
+    def _open_city_property(self, group, node):
+        """`RepossessionScreen` pre-empts the normal property screen once too
+        many tax cycles are missed -- same shape as `_open_arena` checking
+        `arena.defense_due` before the normal squad picker."""
+        if self.guild.property_city_repossession_due:
+            self.scene = RepossessionScreen(self.fonts, self.guild,
+                                            on_return=self._resolve_repossession_return,
+                                            on_squat=self._resolve_repossession_squat)
+            return
+        self.scene = CityPropertyScreen(self.fonts, self.guild, list(group.members),
+                                        on_done=self._after_activity)
+
+    def _resolve_repossession_return(self):
+        self.guild.repossess_city_property()
+        self._map_notices.append("The property is returned to the Bankers -- the guild "
+                                 f"now owes {self.guild.bankers_debt} copper.")
+        self._after_activity()
+
+    def _resolve_repossession_squat(self):
+        self.guild.squat_city_property()
+        self._map_notices.append("The guild keeps the house without paying -- the guard "
+                                 "won't like that.")
+        self._after_activity()
+
+    # ------------------------------------------------------------------ #
+    # the Wilds claim (world.Node.claim, wilds_claim_screen.py)           #
+    # ------------------------------------------------------------------ #
+    def _open_wilds_claim(self, group, node):
+        self.scene = WildsClaimScreen(self.fonts, self.guild, group,
+                                      on_done=self._after_activity,
+                                      on_fight_clear=self._start_claim_clear_battle,
+                                      on_fight_sweep=self._start_claim_sweep_battle)
+
+    def _start_claim_clear_battle(self, group):
+        self._start_claim_battle(group, "CLEARED", economy.WILDS_CLAIM_CLEAR_LEVEL,
+                                 economy.WILDS_CLAIM_CLEAR_SIZE)
+
+    def _start_claim_sweep_battle(self, group):
+        self._start_claim_battle(group, "SWEPT", economy.WILDS_CLAIM_SWEEP_LEVEL,
+                                 economy.WILDS_CLAIM_SWEEP_SIZE)
+
+    def _start_claim_battle(self, group, stage_after, level, size):
+        """A deliberate claim-stage fight (CLEAR/SWEEP) -- not a forced pause
+        like a guard/ambush/raid, so `self._pause_order` stays untouched and
+        `_battle_end` falls through to its normal loot/`_after_activity` path
+        once `_claim_stage_pending` has done its job."""
+        node = world.node(group.node)
+        self._battle_squad = list(group.members)
+        self._battle_node = node
+        self._arena_offer = None
+        self._claim_stage_pending = stage_after
+        pack = [encounters.build_enemy(level) for _ in range(size)]
+        battle = Battle(list(group.members), pack, scenario=node.scenario(),
+                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False)
+        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _open_tanner_stall(self, group, node, _offer):
         self.scene = TannerScreen(self.fonts, self.guild, group,
@@ -333,6 +404,29 @@ class App:
     # first -- no choice, straight into a lethal fight (world.py)         #
     # ------------------------------------------------------------------ #
     def _start_road_ambush(self, group, order):
+        self._start_forced_battle(group, order, list(order.pack))
+
+    # ------------------------------------------------------------------ #
+    # a squatted City property (world.Node.city_property): the guard comes   #
+    # to clear it out (campaign._property_raid_catch)                       #
+    # ------------------------------------------------------------------ #
+    def _start_property_raid(self, group, order):
+        self._start_forced_battle(group, order, list(order.pack))
+
+    # ------------------------------------------------------------------ #
+    # a raid on a Wilds claim mid-SUSTAINING (campaign._wilds_claim_raid_check) #
+    # ------------------------------------------------------------------ #
+    def _start_wilds_raid(self, group, order):
+        self._start_forced_battle(group, order, list(order.pack))
+
+    # ------------------------------------------------------------------ #
+    # Sistema 4: a seizure attempt once ESTABLISHED, and retaking a seized  #
+    # claim (campaign._wilds_claim_seizure_check / _wilds_claim_retake_catch) #
+    # ------------------------------------------------------------------ #
+    def _start_wilds_seizure(self, group, order):
+        self._start_forced_battle(group, order, list(order.pack))
+
+    def _start_wilds_retake(self, group, order):
         self._start_forced_battle(group, order, list(order.pack))
 
     def _start_forced_battle(self, group, order, enemies):
@@ -461,10 +555,33 @@ class App:
             self._campaign_over()
             return
 
+        if self._claim_stage_pending is not None:   # a deliberate Wilds claim fight (CLEAR/SWEEP)
+            stage, self._claim_stage_pending = self._claim_stage_pending, None
+            if outcome.won:
+                {"CLEARED": self.guild.wilds_claim_mark_cleared,
+                 "SWEPT": self.guild.wilds_claim_mark_swept}[stage]()
+                self._map_notices.append(f"The Wilds claim advances -- now {stage.title()}.")
+            else:
+                self._map_notices.append("The attempt fails -- the claim's stage is unchanged.")
+            # falls through to the normal loot/`_after_activity` handling below --
+            # a claim fight is never a pause_order/hunt/arena bout
+
         if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
             self._pause_order = self._pause_group = None
             if pause_order.kind == "guard":
                 self._map_notices += campaign.resolve_guard_fight_aftermath(
+                    self.guild, pause_group, pause_order, outcome)
+            elif pause_order.kind == "eviction":
+                self._map_notices += campaign.resolve_property_raid(
+                    self.guild, pause_group, pause_order, outcome)
+            elif pause_order.kind == "wilds_raid":
+                self._map_notices += campaign.resolve_wilds_raid(
+                    self.guild, pause_group, pause_order, outcome)
+            elif pause_order.kind == "wilds_seizure":
+                self._map_notices += campaign.resolve_wilds_seizure(
+                    self.guild, pause_group, pause_order, outcome)
+            elif pause_order.kind == "wilds_retake":
+                self._map_notices += campaign.resolve_wilds_claim_retake(
                     self.guild, pause_group, pause_order, outcome)
             else:
                 self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)

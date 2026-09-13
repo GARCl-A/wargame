@@ -45,6 +45,23 @@ as `jurisdiction`. Only the Old Road (`road`) carries it for now.
 letter (`ledger_screen.py`). The fortress ambush that can hit Ledger Hold
 along the way is mission-conditional, not a standing risk like `unsafe` --
 see `missions.pending_fortress_ambush` / `campaign._fortress_ambush_catch`.
+
+`city_property` marks where the Bankers sell the guild a house
+(`city_property_screen.py`, [[gartok-property-two-paths]]'s "City" path) --
+today only the City itself, same node as `bank`/`trust` but its own flag since
+a node can carry more than one Bankers service at once.
+
+`garrison_job` names the job a `"garrison"` order (`orders.py`) can work while
+parked at this node, or None for a node with none -- `Guild._garrison_upkeep`
+checks it against the order's own `job` before banking any output
+(`economy.GARRISON_JOBS`).
+
+`claim` marks the Wilds claim campaign's own node (`WILDS_TERRITORY_NODE`,
+`wilds_claim_screen.py`, [[gartok-property-two-paths]]'s "Wilds" path) --
+distinct from `wilds` (Hunt) on purpose, the fantasy being the guild holding
+ground of its own rather than a plot of the same hunting grounds everyone
+else uses. It is the first (and, for now, only) node carrying `garrison_job`
+-- Sistema 1's engine sat dormant until this gave it somewhere real to work.
 """
 
 import heapq
@@ -76,7 +93,8 @@ class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, work=False,
                  bank=False, tanner=False, jurisdiction=None,
-                 unsafe=False, encounter_table=None, trust=False, ledger=False):
+                 unsafe=False, encounter_table=None, trust=False, ledger=False,
+                 city_property=False, garrison_job=None, claim=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -95,6 +113,9 @@ class Node:
         self.encounter_table = encounter_table   # encounters.EncounterEntry tuple an unsafe node's ambush rolls off
         self.trust = trust                   # town: the Bankers' trust mission (trust_screen)
         self.ledger = ledger                 # town: trade the sealed chest for a letter (ledger_screen)
+        self.city_property = city_property   # town: buy a house from the Bankers (city_property_screen)
+        self.garrison_job = garrison_job     # the job a "garrison" order can work here, or None
+        self.claim = claim                   # the Wilds claim campaign's node (wilds_claim_screen)
 
     @property
     def is_battle(self):
@@ -174,7 +195,7 @@ NODES = [
     Node("city", "Ankareth", "town", (0.16, 0.58),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", bank=True, tanner=True, trust=True,
-         jurisdiction="the_city"),
+         city_property=True, jurisdiction="the_city"),
     Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",
@@ -197,7 +218,13 @@ NODES = [
     Node("ledger_hold", "Ledger Hold", "town", (0.68, 0.70),
          "A fortified counting-house the Bankers keep well outside the walls -- "
          "armed, and used to precious cargo.", fortress_scenario, ledger=True),
+    Node("wilds_territory", "The Claim", "town", (0.95, 0.28),
+         "A stretch of the Wilds the guild means to make its own -- if it can "
+         "clear it, fence it, and hold it.", ErmosScenario,
+         claim=True, garrison_job="lumber"),
 ]
+
+WILDS_TERRITORY_NODE = "wilds_territory"
 
 EDGES = [
     ("city", "arena", 2),
@@ -208,6 +235,7 @@ EDGES = [
     ("arena", "road", 3),
     ("road", "wilds", 6),
     ("road", "ledger_hold", 5),
+    ("wilds", "wilds_territory", 2),
 ]
 
 START_NODE = "city"

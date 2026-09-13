@@ -27,7 +27,7 @@ from .unit import ATTRIBUTES, Unit
 
 SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 12                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 15                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -98,6 +98,18 @@ def save_game(slot, guild):
         "clock_seconds": guild.clock.seconds,
         "bank_capacity": guild.bank_capacity,
         "bank_items": list(guild.bank_items),
+        "property_city_unlocked": guild.property_city_unlocked,
+        "property_city_items": list(guild.property_city_items),
+        "property_city_tax_due_day": guild.property_city_tax_due_day,
+        "property_city_missed_payments": guild.property_city_missed_payments,
+        "property_city_squatting": guild.property_city_squatting,
+        "bankers_debt": guild.bankers_debt,
+        "property_city_debt_since": guild.property_city_debt_since,
+        "garrison_stock": {node_id: list(items) for node_id, items in guild.garrison_stock.items()},
+        "wilds_claim_stage": guild.wilds_claim_stage,
+        "wilds_claim_fence_lumber": guild.wilds_claim_fence_lumber,
+        "wilds_claim_sustain_days_left": guild.wilds_claim_sustain_days_left,
+        "wilds_claim_owner": guild.wilds_claim_owner,
         "market_stock": dict(guild.market_stock),
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
@@ -147,6 +159,18 @@ def load_game(slot):
                  clock=Clock(payload.get("clock_seconds", 0)),
                  bank_capacity=payload.get("bank_capacity", 0),
                  bank_items=payload.get("bank_items", []),
+                 property_city_unlocked=payload.get("property_city_unlocked", False),
+                 property_city_items=payload.get("property_city_items", []),
+                 property_city_tax_due_day=payload.get("property_city_tax_due_day"),
+                 property_city_missed_payments=payload.get("property_city_missed_payments", 0),
+                 property_city_squatting=payload.get("property_city_squatting", False),
+                 bankers_debt=payload.get("bankers_debt", 0),
+                 property_city_debt_since=payload.get("property_city_debt_since"),
+                 garrison_stock=payload.get("garrison_stock"),
+                 wilds_claim_stage=payload.get("wilds_claim_stage", "NONE"),
+                 wilds_claim_fence_lumber=payload.get("wilds_claim_fence_lumber", 0),
+                 wilds_claim_sustain_days_left=payload.get("wilds_claim_sustain_days_left"),
+                 wilds_claim_owner=payload.get("wilds_claim_owner"),
                  market_stock=payload.get("market_stock"),
                  total_spent=payload.get("total_spent", 0),
                  items_sold_kinds=payload.get("items_sold_kinds", []),

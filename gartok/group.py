@@ -51,6 +51,15 @@ class Group:
         explicit `orders.idle()` both mean idle."""
         return self.order is not None and self.order.kind != "idle"
 
+    @property
+    def locked(self):
+        """True while an order actually blocks splitting this group or merging
+        another into it -- same as `busy` except a standing `"garrison"` order
+        doesn't count: those members aren't going anywhere, so peeling some
+        off or folding another group in is still physically fine. See
+        `Guild.split_group`/`merge_groups`, [[gartok-property-two-paths]]."""
+        return self.busy and self.order.kind != "garrison"
+
     # ------------------------------------------------------------------ #
     # leadership                                                         #
     # ------------------------------------------------------------------ #

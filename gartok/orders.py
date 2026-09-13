@@ -13,15 +13,38 @@ as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
 active order) never blocks `campaign.advance` from jumping straight past it to
 the next group's completion.
 
-"guard" and "ambush" are two more, narrower kinds: neither is issued by the
-player, and neither is in `INTERACTIVE_KINDS` -- `campaign.advance` creates
-one itself, on top of whatever the group was actually doing, the moment it
-catches someone at a jurisdiction node (`justice.py`, "guard") or a pack finds
-it at an unsafe one (`world.Node.unsafe`, "ambush"). Both carry their own
-extra fields (`caught`/`prev_node` guard-only, `pack` ambush-only,
-`resume_path` shared) so `justice_screen.GuardScreen` / a forced battle can
-play out and `campaign.resolve_guard_*` / `campaign.resolve_road_ambush` can
-hand the group back its interrupted order once resolved.
+`"garrison"` is a fourth kind the player DOES issue, but it fits neither
+bucket above: nothing resolves it (no `eta`/`remaining` countdown -- it just
+sits on the group until cancelled or interrupted), and no screen opens for it
+either. `campaign.advance` excludes it from the groups it chases toward
+completion for exactly that reason (see its own docstring); its daily payoff
+runs instead through `Guild._garrison_upkeep`, alongside food, on every day
+crossed. `Group.busy` still reports True for it (a garrisoned group doesn't
+need fresh orders, same as any other order in flight) but `Group.locked`
+carves it out so `Guild.split_group`/`merge_groups` can still shuffle a
+garrison's membership without cancelling it first -- see [[gartok-property-two-paths]].
+
+"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure" and
+"wilds_retake" are six more, narrower kinds: none is issued by the player,
+and none is in `INTERACTIVE_KINDS` -- `campaign.advance` creates one itself,
+on top of whatever the group was actually doing, the moment it catches
+someone at a jurisdiction node (`justice.py`, "guard"), a pack finds it at an
+unsafe one (`world.Node.unsafe`, "ambush"), the guard comes to clear a
+squatted City property (`guild.property_city_squatting`, "eviction"), a
+raider band tests a Wilds claim mid-`"SUSTAINING"`
+(`guild.wilds_claim_stage`, "wilds_raid"), the same once `"ESTABLISHED"`
+against a garrison ("wilds_seizure" -- Sistema 4), or a group arrives at a
+Wilds claim the guild no longer holds (`guild.wilds_claim_owner == "seized"`,
+"wilds_retake" -- see [[gartok-property-two-paths]]). All six carry their
+own extra fields (`caught`/`prev_node` guard-only, `pack` everywhere but
+guard, `resume_path` on every kind that can interrupt travel rather than a
+garrison, `job` wilds_raid/wilds_seizure -- so a won fight can reissue the
+same `orders.garrison(job)` it interrupted) so `justice_screen.GuardScreen` /
+a forced battle can play out and `campaign.resolve_guard_*` /
+`campaign.resolve_road_ambush` / `campaign.resolve_property_raid` /
+`campaign.resolve_wilds_raid` / `campaign.resolve_wilds_seizure` /
+`campaign.resolve_wilds_claim_retake` can hand the group back its
+interrupted order once resolved.
 """
 
 from dataclasses import dataclass
@@ -30,7 +53,7 @@ from . import world
 
 AUTO_KINDS = frozenset({"travel", "work"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "hunt", "tanner",
-                               "trust", "ledger"})
+                               "trust", "ledger", "property", "claim"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | {"idle"}
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds
@@ -48,6 +71,7 @@ class Order:
     prev_node: str | None = None   # guard: node to fall back to on "flee"
     resume_path: tuple = ()  # guard/ambush: travel waypoints still owed once resolved (empty = was the final stop)
     pack: tuple = ()         # ambush: the enemy Units rolled at the moment of the catch (encounters.py)
+    job: str | None = None   # garrison: which job (economy.GARRISON_JOBS) the group is working
 
     @property
     def interactive(self):
@@ -97,6 +121,16 @@ def interactive(kind, hours=APPROACH_HOURS):
     if kind not in INTERACTIVE_KINDS:
         raise ValueError(f"not an interactive kind: {kind!r}")
     return Order(kind, eta=hours, remaining=hours)
+
+
+def garrison(job):
+    """Park a group where it stands, working `job` indefinitely -- see the
+    module docstring for why this is neither an `AUTO_KINDS` nor an
+    `INTERACTIVE_KINDS` member. Ended only by the player cancelling it (any
+    fresh order) or an event forcing the issue (an "eviction" raid);
+    `Guild._garrison_upkeep` reads `job` once a day to bank output, if the
+    group's node actually offers it (`world.Node.garrison_job`)."""
+    return Order("garrison", job=job)
 
 
 def idle():

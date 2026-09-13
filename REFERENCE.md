@@ -143,6 +143,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Lantern | 1 kg | light 6 sq |
 | Letter of Receipt | 0.1 kg | -- |
 | Locked Chest | 8 kg | -- |
+| Lumber | 2 kg | -- |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable |
 | Musical Instrument | 2 kg | -- |

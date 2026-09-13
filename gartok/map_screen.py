@@ -630,6 +630,51 @@ class MapScreen(Screen):
             text(screen, "a test of trust -- see what they're offering",
                  f.body_sm, INK_FAINT, (cx, y))
 
+        if here.city_property and not self.selected.busy:
+            y += 30
+            pr = pygame.Rect(cx, y, cw, 38)
+            hovp = pr.collidepoint(self.mouse)
+            panel(screen, pr, fill=SURFACE_3 if hovp else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "VISIT THE PROPERTY", f.body_bd, INK_DIM, pr.center, center=True)
+            self.buttons.append(("property", pr))
+            y += 44
+            if self.guild.property_city_repossession_due:
+                note, col = "the Bankers want the house back, or the tax paid", DANGER
+            elif self.guild.property_city_squatting:
+                note, col = "squatting -- the guard can still come to clear it out", WARN
+            elif self.guild.property_city_unlocked:
+                note = (f"house: {self.guild.property_city_load:g} / "
+                        f"{economy.CITY_PROPERTY_CAPACITY} kg")
+                col = INK_FAINT
+            elif self.guild.bankers_debt > 0:
+                note, col = f"owes the Bankers {self.guild.bankers_debt} copper", DANGER
+            else:
+                note, col = "buy a house from the Bankers -- taxed on a cycle", INK_FAINT
+            text(screen, note, f.body_sm, col, (cx, y))
+
+        if here.claim and not self.selected.busy:
+            y += 30
+            cr = pygame.Rect(cx, y, cw, 38)
+            hovc = cr.collidepoint(self.mouse)
+            panel(screen, cr, fill=SURFACE_3 if hovc else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "THE WILDS CLAIM", f.body_bd, INK_DIM, cr.center, center=True)
+            self.buttons.append(("claim", cr))
+            y += 44
+            stage = self.guild.wilds_claim_stage
+            if stage == "ESTABLISHED" and self.guild.wilds_claim_owner == "seized":
+                note, col = "SEIZED -- send a group to retake it", DANGER
+            elif stage == "ESTABLISHED":
+                note, col = "established -- the guild's own ground", OK
+            elif stage == "SUSTAINING":
+                note, col = f"sustaining: {self.guild.wilds_claim_sustain_days_left} day(s) left", WARN
+            elif stage == "NONE":
+                note, col = "unclaimed -- scout it to begin", INK_FAINT
+            else:
+                note, col = f"stage: {stage.title()}", INK_FAINT
+            text(screen, note, f.body_sm, col, (cx, y))
+
         if here.ledger and not self.selected.busy:
             y += 30
             lr = pygame.Rect(cx, y, cw, 38)

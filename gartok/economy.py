@@ -41,6 +41,50 @@ LUMBER_LEVEL_OWN_AXE = 1                # the yard's ceiling once you bring your
 BANK_CHEST_PRICE = 50                   # copper for the right to a strongbox
 BANK_CHEST_CAPACITY = 10                # kg the strongbox holds
 
+# The Bankers also sell the guild a house inside the walls -- the "City" half of
+# [[gartok-property-two-paths]]'s two paths to a base. Subordinate to the
+# Bankers (a recurring tax, not a one-off fee like the strongbox); gated on the
+# trust the guild has already earned (`bankers_trust`, see `factions.py`) on top
+# of the price. Numbers below are placeholders, same status `BANK_CHEST_PRICE`
+# carried before anyone had actually played it.
+CITY_PROPERTY_REP_GATE = 4                    # guild.reputation["bankers"] needed to buy
+CITY_PROPERTY_PRICE = 300                     # copper, one-time purchase
+CITY_PROPERTY_CAPACITY = 20                   # kg the property can store (a house beats a chest)
+CITY_PROPERTY_TAX = 40                        # copper, charged every CITY_PROPERTY_TAX_PERIOD_DAYS
+CITY_PROPERTY_TAX_PERIOD_DAYS = 7
+CITY_PROPERTY_MISSED_PAYMENTS_LIMIT = 3       # this many unpaid cycles -> the Bankers come to collect
+CITY_PROPERTY_DEBT_GRACE_DAYS = 14            # days of ignored debt before the guard gets involved
+
+# The garrison: parking a Group indefinitely at a property to work a job
+# instead of asking for fresh orders every day (`orders.garrison`,
+# `world.Node.garrison_job`, `Guild._garrison_upkeep`). v1 ships exactly one
+# job -- Wilds wood-gathering, once Sistema 3 adds the Wilds territory node --
+# but the mechanism (job name -> output item, yield per member) is generic so
+# a future job is just another `GARRISON_JOBS` entry, not new plumbing.
+GARRISON_JOBS = {"lumber": "Lumber"}           # order.job -> the item name it produces
+GARRISON_YIELD_PER_MEMBER_PER_DAY = 1          # units of that item, per garrisoned member, per day
+
+LUMBER_PRICE = 6   # copper, market buy price -- the guild has to import its own building material,
+                    # nothing gathers it for free until the claim below is ESTABLISHED (see GARRISON_JOBS)
+
+# The Wilds claim campaign ([[gartok-property-two-paths]]'s "Wilds" path):
+# six stages (`world.WILDS_CLAIM_STAGES`), two of them real fights, one a
+# logistics run (haul Lumber bought at the Market out to the claim), and a
+# final stretch the guild has to hold before the land is truly its own.
+# Every number below is a placeholder, same status the City numbers carried
+# before anyone had played them.
+WILDS_CLAIM_SCOUT_HOURS = 4       # "achar terreno": a time cost, no check (the doc left this open either way)
+WILDS_CLAIM_CLEAR_LEVEL = 2       # stage 2's fight: the creatures already living there
+WILDS_CLAIM_CLEAR_SIZE = 3
+WILDS_CLAIM_FENCE_LUMBER = 10     # units of Lumber consumed to raise the fences
+WILDS_CLAIM_FENCE_HOURS = 8
+WILDS_CLAIM_SWEEP_LEVEL = 2       # stage 5's fight: a bandit camp or nest nearby
+WILDS_CLAIM_SWEEP_SIZE = 2
+WILDS_CLAIM_SUSTAIN_DAYS = 10     # days the garrison has to hold before ESTABLISHED
+WILDS_RAID_CHANCE = 0.2           # rolled once per campaign.advance() call while SUSTAINING -- see campaign.py
+WILDS_RAID_LEVEL = 3
+WILDS_RAID_SIZE = 3
+
 PRICES = {
     # weapons
     "Dagger": 8, "Hatchet": 10, "Axe": 35, "Light Hammer": 10,
@@ -57,6 +101,8 @@ PRICES = {
     "Meat": 5, "Potato": 3,
     # raw materials (gathered, not manufactured -- see STOCK below)
     "1sqm Hide": 12,
+    # the Wilds claim's building material -- bought here, hauled out by hand
+    "Lumber": LUMBER_PRICE,
     # a locked chest's contents (chest.py) -- found, not manufactured; sellable
     # like everything else, but never in MARKET_STOCK below (nothing to buy back)
     data.GEM_ITEM: 60,
@@ -68,7 +114,7 @@ MARKET_STOCK = [
     "Light Crossbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
     "Meat", "Potato", TORCH_ITEM, "First Aid Kit", "Lantern",
-    "1sqm Hide",
+    "1sqm Hide", "Lumber",
 ]
 
 # Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.

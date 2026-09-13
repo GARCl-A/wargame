@@ -26,7 +26,7 @@ of one another -- see `orders.py` for what an order is.
 import random
 from dataclasses import dataclass, field
 
-from . import arena, data, encounters, factions, justice, loot, missions, orders, world
+from . import arena, data, economy, encounters, factions, justice, loot, missions, orders, world
 
 
 @dataclass
@@ -178,9 +178,16 @@ def advance(guild, dt=None):
     happens to complete within a forced `dt` still resolves normally); a forced
     stop also runs `Guild.eat_now_pass` (anyone still hungry eats right now,
     without waiting for the next daily meal) -- that's what makes it a
-    *maintenance* stop rather than just a short jump."""
+    *maintenance* stop rather than just a short jump.
+
+    A `"garrison"` order (`orders.py`) is excluded from `active` on purpose --
+    it has no `eta`/`remaining` countdown to chase (it never completes; its
+    payoff runs through `Guild._garrison_upkeep` on every day crossed
+    instead), so folding it in here would either wreck the soonest-completion
+    jump (its `remaining` is meaningless) or, on a forced stop, decrement it
+    toward a spurious "completion" no kind branch below handles."""
     forced = dt is not None
-    active = [g for g in guild.groups if g.busy]
+    active = [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
     if not forced:
         if not active:
             return TickResult()
@@ -232,6 +239,9 @@ def advance(guild, dt=None):
             events += guild._pay_shift(g.members, order.hours, order.eta)
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
+    claim_events, claim_pending = _wilds_claim_attack_check(guild)
+    events += claim_events
+    pending += claim_pending
     return TickResult(events=events, pending=pending, wiped=guild.empty)
 
 
@@ -240,21 +250,29 @@ def _arrival_pause(guild, group, prev_node, resume_path):
     must pause its order before the arrival is considered complete? Checked in
     order -- the guard (`justice.py`, jurisdiction) first, then a road ambush
     (`encounters.py`, an unsafe node), then the trust mission's fortress
-    ambush (`missions.py`, mission-conditional, not a node property at all) --
+    ambush (`missions.py`, mission-conditional, not a node property at all),
+    then a raid on a squatted City property (`guild.property_city_squatting`),
+    then a fight to retake a seized Wilds claim (`guild.wilds_claim_owner`) --
     and returns the `Order` to pause on, or None to let the caller proceed
     exactly as it would without any of them. The first two never both fire
     off one arrival in practice (no node is both a jurisdiction and unsafe
     today), but the order is deliberate in case that changes: the guard is a
     *legal* consequence of who you are, checked before whatever the road
-    throws at you; the fortress ambush is checked last since it only ever
-    fires at one specific node anyway."""
+    throws at you; the rest are checked last since each only ever fires at
+    one specific node anyway."""
     guard = _guard_catch(group, prev_node, resume_path)
     if guard is not None:
         return guard
     ambush = _road_ambush_catch(group, resume_path)
     if ambush is not None:
         return ambush
-    return _fortress_ambush_catch(guild, group, resume_path)
+    fortress = _fortress_ambush_catch(guild, group, resume_path)
+    if fortress is not None:
+        return fortress
+    raid = _property_raid_catch(guild, group, resume_path)
+    if raid is not None:
+        return raid
+    return _wilds_claim_retake_catch(guild, group, resume_path)
 
 
 def _guard_catch(group, prev_node, resume_path):
@@ -304,6 +322,108 @@ def _fortress_ambush_catch(guild, group, resume_path):
     pack = tuple(encounters.build_enemy(FORTRESS_AMBUSH_LEVEL)
                 for _ in range(FORTRESS_AMBUSH_SIZE))
     return orders.Order("ambush", pack=pack, resume_path=tuple(resume_path))
+
+
+CITY_RAID_CHANCE = 0.25    # per arrival at a squatted City property -- placeholder, tune once played
+CITY_RAID_LEVEL = 4        # placeholders for the guard patrol sent to clear a squat
+CITY_RAID_SIZE = 3
+
+
+def _property_raid_catch(guild, group, resume_path):
+    """The City guard coming to clear a squatted property
+    (`guild.property_city_squatting`, set by `guild.squat_city_property` after
+    the guild refuses a repossession offer): gated on `node.city_property` the
+    same way `_fortress_ambush_catch` gates on `node.ledger`, plus the squat
+    state itself, then rolls `CITY_RAID_CHANCE` once per arrival like
+    `_road_ambush_catch` does for an unsafe node. Unlike a road ambush, losing
+    this fight has a further consequence (`resolve_property_raid` ends the
+    squat for good) -- see [[gartok-property-two-paths]]."""
+    if not (guild.property_city_squatting and world.node(group.node).city_property):
+        return None
+    if random.random() >= CITY_RAID_CHANCE:
+        return None
+    pack = tuple(encounters.build_enemy(CITY_RAID_LEVEL) for _ in range(CITY_RAID_SIZE))
+    return orders.Order("eviction", pack=pack, resume_path=tuple(resume_path))
+
+
+def _wilds_claim_attack_check(guild):
+    """`(events, pending)` for whichever periodic Wilds-claim attack applies
+    right now, checked once per `advance()` call (see `_wilds_claim_raid_check`'s
+    docstring for why this can't live on `_arrival_pause` like every other
+    forced fight): a raid mid-`"SUSTAINING"`, or (Sistema 4) a seizure attempt
+    once `"ESTABLISHED"` and still `guild.wilds_claim_owner == "guild"`. The
+    two stages never overlap, so exactly one branch (or neither) ever fires."""
+    if guild.wilds_claim_stage == "SUSTAINING":
+        return [], _wilds_claim_raid_check(guild)
+    if guild.wilds_claim_stage == "ESTABLISHED" and guild.wilds_claim_owner == "guild":
+        return _wilds_claim_seizure_check(guild)
+    return [], []
+
+
+def _wilds_claim_raid_check(guild):
+    """Whether a raider band tests the Wilds claim's garrison during
+    `"SUSTAINING"`: not through `_arrival_pause` like every other forced
+    fight above, because a garrison never "arrives" again after
+    `orders.garrison` is issued (it's excluded from `active` on purpose), so
+    nothing would ever call this if it lived on that seam instead. Rolls
+    `economy.WILDS_RAID_CHANCE` once per garrisoned group actually sitting at
+    `world.WILDS_TERRITORY_NODE` -- carries `job` so a won fight can reissue
+    the exact `orders.garrison(job)` it interrupted. Losing only resets the
+    sustain countdown (`resolve_wilds_raid`) -- there is no ownership yet to
+    lose."""
+    pending = []
+    for g in guild.groups:
+        if g.empty or g.order is None or g.order.kind != "garrison":
+            continue
+        if g.node != world.WILDS_TERRITORY_NODE:
+            continue
+        if random.random() >= economy.WILDS_RAID_CHANCE:
+            continue
+        job = g.order.job
+        pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
+                    for _ in range(economy.WILDS_RAID_SIZE))
+        g.order = None
+        pending.append((g, orders.Order("wilds_raid", pack=pack, job=job)))
+    return pending
+
+
+def _wilds_claim_seizure_check(guild):
+    """Sistema 4: once `ESTABLISHED`, the same roll (`economy.WILDS_RAID_CHANCE`
+    -- reused rather than a second tuning knob for what is the same kind of
+    threat against the same ground) decides whether raiders test the claim.
+    **Unguarded**, they simply take it -- no fight, nobody to contest it
+    (`guild.wilds_claim_owner = "seized"` straight away, an `events` line for
+    the caller since there is no battle to report the outcome of instead).
+    **Garrisoned**, it plays out as a real fight (`"wilds_seizure"`, resolved
+    by `resolve_wilds_seizure`) -- winning holds the claim, losing seizes it
+    same as the unguarded case, but only after the garrison actually fell."""
+    if random.random() >= economy.WILDS_RAID_CHANCE:
+        return [], []
+    garrison = next((g for g in guild.groups if not g.empty and g.order is not None
+                     and g.order.kind == "garrison" and g.node == world.WILDS_TERRITORY_NODE),
+                    None)
+    if garrison is None:
+        guild.wilds_claim_owner = "seized"
+        return (["The Wilds claim sits unguarded -- it's seized without a fight."], [])
+    job = garrison.order.job
+    pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
+                for _ in range(economy.WILDS_RAID_SIZE))
+    garrison.order = None
+    return [], [(garrison, orders.Order("wilds_seizure", pack=pack, job=job))]
+
+
+def _wilds_claim_retake_catch(guild, group, resume_path):
+    """Arriving at a seized Wilds claim (Sistema 4, `guild.wilds_claim_owner
+    == "seized"`): the occupiers are still holding it, same one-off shape as
+    `_fortress_ambush_catch` (gated on `node.claim` rather than `node.ledger`,
+    and on the guild's ownership state rather than a mission flag). Winning
+    hands the ground back (`resolve_wilds_retake`) without redoing Sistema
+    3's campaign; the structure was never touched, only who holds it."""
+    if not (world.node(group.node).claim and guild.wilds_claim_owner == "seized"):
+        return None
+    pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
+                for _ in range(economy.WILDS_RAID_SIZE))
+    return orders.Order("wilds_retake", pack=pack, resume_path=tuple(resume_path))
 
 
 # --------------------------------------------------------------------------- #
@@ -369,6 +489,74 @@ def resolve_road_ambush(guild, group, order):
     there is no choice to make here (unlike a guard catch) -- whoever's left
     just resumes whatever the ambush interrupted."""
     return _resume_arrival(guild, group, order)
+
+
+def resolve_property_raid(guild, group, order, outcome):
+    """After `app` has already run the eviction fight through `absorb_battle`:
+    no choice to make (same as a road ambush), but losing has a consequence
+    beyond casualties -- the guard finally clears the squat for good. Winning
+    just drives the patrol off; the squat stands until the next roll."""
+    events = _resume_arrival(guild, group, order)
+    if outcome.won:
+        events.insert(0, "The guild's fighters drive off the guard patrol -- the "
+                      "property stays, for now.")
+    else:
+        guild.property_city_squatting = False
+        guild.property_city_unlocked = False
+        guild.property_city_items = []
+        events.insert(0, "The City guard finally clears the squatted property -- it's gone for good.")
+    return events
+
+
+def resolve_wilds_raid(guild, group, order, outcome):
+    """After `app` has already run the raid fight through `absorb_battle`: no
+    choice to make (same as a road ambush), but this one doesn't go through
+    `_resume_arrival` -- a garrisoned group was never "travelling" anywhere,
+    it was just standing there. Winning reissues the same `orders.garrison`
+    it interrupted; losing doesn't touch the stages already done, it only
+    resets the sustain countdown (`Guild.wilds_claim_start_sustaining`'s
+    value) and leaves survivors idle -- same "no partial punishment" shape
+    `resolve_property_raid` uses for a lost City squat."""
+    if group.empty:
+        return []
+    if outcome.won:
+        group.order = orders.garrison(order.job)
+        return ["The garrison drives off the raiders and keeps sustaining the claim."]
+    guild.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
+    group.order = orders.idle()
+    return ["The garrison is scattered -- sustaining the claim starts over."]
+
+
+def resolve_wilds_seizure(guild, group, order, outcome):
+    """After `app` has already run the seizure fight through `absorb_battle`
+    (Sistema 4, `ESTABLISHED` + garrisoned): winning resumes the same
+    garrison job; losing hands the claim to the occupiers
+    (`guild.wilds_claim_owner = "seized"`) -- unlike `resolve_wilds_raid`,
+    there is no "try again from here", the structure stands but someone else
+    holds it until a retake (`resolve_wilds_claim_retake`)."""
+    if outcome.won:
+        if not group.empty:
+            group.order = orders.garrison(order.job)
+        return ["The garrison drives off the raiders and holds the claim."]
+    guild.wilds_claim_owner = "seized"
+    if not group.empty:
+        group.order = orders.idle()
+    return ["The garrison falls -- the Wilds claim is seized."]
+
+
+def resolve_wilds_claim_retake(guild, group, order, outcome):
+    """After `app` has already run the retake fight through `absorb_battle`:
+    winning hands the claim back to the guild (`resolve_wilds_claim_retake`
+    itself never re-runs Sistema 3's campaign, the structure was never
+    touched); losing just resumes whatever arrival this interrupted -- the
+    claim stays seized, nothing stops the guild trying again."""
+    events = _resume_arrival(guild, group, order)
+    if outcome.won:
+        guild.wilds_claim_owner = "guild"
+        events.insert(0, "The Wilds claim is retaken -- the occupiers are driven out.")
+    else:
+        events.insert(0, "The attempt to retake the claim fails -- it stays lost.")
+    return events
 
 
 def _resume_arrival(guild, group, order):

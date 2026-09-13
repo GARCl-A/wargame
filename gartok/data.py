@@ -302,6 +302,7 @@ ITEM_WEIGHTS = {
     "Meat": 1.0, "Potato": 1.0, "1kg Firewood": 1.0, "1kg Coal": 1.0, "1L Beer": 1.0,
     "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
     "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
+    "Lumber": 2.0,   # a garrison's job output (economy.GARRISON_JOBS) -- see [[gartok-property-two-paths]]
     "Chains": 5.0, "Scroll": 0.1, "Iron Bar": 5.0, "Lantern": 1.0, "Compass": 0.2,
     "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
     "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,

@@ -31,6 +31,7 @@ def _app(guild):
     app._hunt = None
     app._pause_order = None
     app._pause_group = None
+    app._claim_stage_pending = None
     app._map_notices = []
     app._pending = []
     app._save = lambda: None

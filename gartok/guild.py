@@ -31,6 +31,40 @@ rented from the Bankers in the City (`bank_capacity` kg, `bank_items` the names
 stashed). `bank_capacity == 0` means no chest yet; `bank_screen` rents it and
 moves gear in and out.
 
+The guild may also own a **City property** -- a house bought from the Bankers
+(`property_city_unlocked`, `property_city_items`; see [[gartok-property-two-paths]]
+and `city_property_screen.py`), taxed on a cycle (`_city_property_upkeep`,
+called from `_daily_upkeep` below). Missing enough cycles
+(`property_city_missed_payments`) offers a choice next visit: return it
+(`repossess_city_property`, banking `bankers_debt`) or squat
+(`squat_city_property`, drawing periodic guard raids -- `campaign.py`'s
+"eviction" pause). Outstanding debt escalates to the guard the same way an
+ignored rap sheet does (`justice.py`) once `CITY_PROPERTY_DEBT_GRACE_DAYS`
+passes with nothing paid.
+
+A **garrison** is a `Group` parked on a standing `"garrison"` order
+(`orders.py`) instead of asking for fresh ones -- `_garrison_upkeep` (also
+called from `_daily_upkeep`) banks its job's daily output into
+`garrison_stock`, keyed by node id, generic across any future property.
+
+The **Wilds claim** (`wilds_claim_stage`, one of `WILDS_CLAIM_STAGES`, at
+`world.WILDS_TERRITORY_NODE`) is the guild's own territory, worked toward
+through `wilds_claim_screen.WildsClaimScreen`: scout, clear the land (a real
+fight), raise fences (consumes `wilds_claim_fence_lumber`, hauled in by hand),
+sweep the region (a second fight), then hold a garrison there for
+`economy.WILDS_CLAIM_SUSTAIN_DAYS` (`_wilds_claim_sustain_tick`, called from
+`_daily_upkeep`) -- interrupted by a raid (`campaign.resolve_wilds_raid`) or
+just pulling the garrison out early, either of which resets the countdown,
+never the stages already done.
+
+Once `ESTABLISHED`, `wilds_claim_owner` ("guild" | "seized") is Sistema 4's
+own ownership flag: the same periodic roll that raided a `SUSTAINING`
+garrison can now seize the claim outright instead (`campaign.
+_wilds_claim_seizure_check` -- ungarrisoned, no fight at all; garrisoned, a
+real one, `campaign.resolve_wilds_seizure`), and a seized claim is won back
+by simply travelling there and beating the occupiers
+(`campaign.resolve_wilds_claim_retake`) -- never a redo of the stages above.
+
 `reputation` is `{faction_id: score}` and moves only when a `factions.Deed` is
 completed (banked in `deeds_done`); there is no per-win grind. `arena_reputation`
 is a shortcut for `reputation["arena"]` -- `world.arena_offers` reads it to
@@ -46,7 +80,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import data, economy, justice, missions, progression
+from . import data, economy, justice, missions, progression, world
 from .clock import Clock
 from .group import Group
 from .tutorial import TutorialState
@@ -58,6 +92,9 @@ from .tutorial import TutorialState
 DEFAULT_BANNER_COLOR = (94, 156, 214)   # same value as theme.PLAYER_C's own default
 DEFAULT_BANNER_ICON = "shield-bash"     # artwork.BANNER_ICONS[0]
 
+# The Wilds claim's own stage machine (see the class docstring, economy.WILDS_CLAIM_*).
+WILDS_CLAIM_STAGES = ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED")
+
 
 class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
@@ -67,7 +104,13 @@ class Guild:
                  leader=None, leader_swaps_used=0,
                  name="", banner_color=None, banner_icon=None, tutorial=None,
                  market_stock=None, missions=None,
-                 total_spent=0, items_sold_kinds=None, jailed=None):
+                 total_spent=0, items_sold_kinds=None, jailed=None,
+                 property_city_unlocked=False, property_city_items=None,
+                 property_city_tax_due_day=None, property_city_missed_payments=0,
+                 property_city_squatting=False, bankers_debt=0,
+                 property_city_debt_since=None, garrison_stock=None,
+                 wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
+                 wilds_claim_sustain_days_left=None, wilds_claim_owner=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -94,6 +137,22 @@ class Guild:
         self.taverna_blocked = taverna_blocked if taverna_blocked is not None else []
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
         self.jailed = list(jailed or [])      # [(Unit, released_day), ...] -- see the docstring above
+        # the City property -- see the docstring above and economy.CITY_PROPERTY_*
+        self.property_city_unlocked = property_city_unlocked
+        self.property_city_items = list(property_city_items or [])
+        self.property_city_tax_due_day = property_city_tax_due_day   # clock.day the next tax is due, or None
+        self.property_city_missed_payments = property_city_missed_payments
+        self.property_city_squatting = property_city_squatting       # illegal occupier, after refusing repossession
+        self.bankers_debt = bankers_debt                              # copper owed after a repossession
+        self.property_city_debt_since = property_city_debt_since     # clock.day the debt started (grace window)
+        # a garrisoned group's job output, keyed by the node it's parked on --
+        # generic across any future property (economy.GARRISON_JOBS, world.Node.garrison_job)
+        self.garrison_stock = {k: list(v) for k, v in (garrison_stock or {}).items()}
+        # the Wilds claim campaign -- see the class docstring and WILDS_CLAIM_STAGES above
+        self.wilds_claim_stage = wilds_claim_stage
+        self.wilds_claim_fence_lumber = wilds_claim_fence_lumber
+        self.wilds_claim_sustain_days_left = wilds_claim_sustain_days_left   # only meaningful while SUSTAINING
+        self.wilds_claim_owner = wilds_claim_owner   # None before ESTABLISHED, else "guild" | "seized" (Sistema 4)
         self.leader = leader                  # the guild's "who am I" -- None resolves below
         self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change
         self.name = name or ""                # chosen at the draft; "" shows as "The Guild"
@@ -199,11 +258,13 @@ class Guild:
         it empty (everyone moved to the new group). Refuses to empty `group`
         entirely if that would leave the new group as EVERYONE (nothing to
         split) or to peel off a group mid-order (its members aren't all in one
-        place right now conceptually until the order resolves)."""
+        place right now conceptually until the order resolves) -- except a
+        standing `"garrison"` order (`Group.locked`), which never resolves by
+        design and doesn't move anyone."""
         peel = [u for u in group.members if u in set(members)]
         if not peel or len(peel) == len(group.members):
             raise ValueError("split needs a non-empty, proper subset of the group")
-        if group.busy:
+        if group.locked:
             raise ValueError("can't split a group with an order in flight")
         group.members = [u for u in group.members if u not in peel]
         new_group = Group(peel, node=group.node, name=name)
@@ -214,10 +275,12 @@ class Guild:
     def merge_groups(self, a, b):
         """Fold `b` into `a` -- only valid when they're standing on the same
         node (a group is a physical thing; merging elsewhere would teleport
-        someone). Removes `b` from the guild. Returns `a`."""
+        someone). Removes `b` from the guild. Returns `a`. A standing
+        `"garrison"` order on either side is not a blocker (`Group.locked`) --
+        only an order that actually moves or occupies someone is."""
         if a.node != b.node:
             raise ValueError("can only merge groups standing on the same node")
-        if a.busy or b.busy:
+        if a.locked or b.locked:
             raise ValueError("can't merge a group with an order in flight")
         a.members += b.members
         self.groups.remove(b)
@@ -264,6 +327,149 @@ class Guild:
         """Take up the Bankers' offer: the guild's first strongbox. The caller
         collects the fee first -- this only flips the capacity on."""
         self.bank_capacity = economy.BANK_CHEST_CAPACITY
+
+    # ------------------------------------------------------------------ #
+    # the City property (see the class docstring, economy.CITY_PROPERTY_*) #
+    # ------------------------------------------------------------------ #
+    @property
+    def property_city_load(self):
+        return sum(data.item_weight(it) for it in self.property_city_items)
+
+    @property
+    def bankers_services_blocked(self):
+        """Outstanding debt shuts the Bankers' doors -- no new strongbox, no
+        buying the property (back) -- until it's paid off."""
+        return self.bankers_debt > 0
+
+    def buy_city_property(self):
+        """Take up the Bankers' offer on a house. The caller collects the
+        price first -- this only flips ownership on and starts the tax clock."""
+        self.property_city_unlocked = True
+        self.property_city_missed_payments = 0
+        self.property_city_tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
+
+    @property
+    def property_city_repossession_due(self):
+        """True once missed cycles hit the limit -- `app` shows the choice
+        screen instead of the normal property screen on the next visit."""
+        return (self.property_city_unlocked
+                and self.property_city_missed_payments >= economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT)
+
+    def repossess_city_property(self):
+        """ACCEPT: hand the property back, bank the missed rent as debt owed
+        to the Bankers -- their services stay shut until it's paid."""
+        owed = self.property_city_missed_payments * economy.CITY_PROPERTY_TAX
+        self.property_city_unlocked = False
+        self.property_city_items = []
+        self.property_city_missed_payments = 0
+        self.property_city_tax_due_day = None
+        self.bankers_debt += owed
+        self.property_city_debt_since = self.clock.day
+
+    def squat_city_property(self):
+        """REFUSE: the guild keeps the house as an illegal occupier -- no more
+        tax to pay, but the guard now raids it periodically
+        (`campaign._property_raid_catch`) until it wins or the guild gives up
+        (`abandon_city_squat`)."""
+        self.property_city_squatting = True
+        self.property_city_missed_payments = 0
+        self.property_city_tax_due_day = None
+
+    def abandon_city_squat(self):
+        """Give up a squat before the guard forces the issue -- the property
+        is simply gone, no debt (nothing was ever paid back on it)."""
+        self.property_city_squatting = False
+        self.property_city_unlocked = False
+        self.property_city_items = []
+
+    # ------------------------------------------------------------------ #
+    # the garrison: a Group parked on a "garrison" order, working a job    #
+    # ------------------------------------------------------------------ #
+    def garrison_stock_at(self, node_id):
+        return self.garrison_stock.get(node_id, [])
+
+    def _garrison_upkeep(self):
+        """Once a day: every group parked on a `"garrison"` order banks its
+        job's output into `garrison_stock`, keyed by the node it's standing
+        on. A node whose `garrison_job` doesn't match the order's own `job`
+        (or offers none at all -- true of every node today, see
+        `world.Node.garrison_job`) produces nothing; the group still sits
+        there, fed by the normal per-group upkeep, just not working."""
+        events = []
+        for g in self.groups:
+            if g.empty or g.order is None or g.order.kind != "garrison":
+                continue
+            node = world.node(g.node)
+            if node.garrison_job != g.order.job:
+                continue
+            item = economy.GARRISON_JOBS.get(g.order.job)
+            if item is None:
+                continue
+            count = economy.GARRISON_YIELD_PER_MEMBER_PER_DAY * len(g.members)
+            self.garrison_stock.setdefault(g.node, []).extend([item] * count)
+            events.append(f"{node.name}: the garrison gathers {count} {item}.")
+        return events
+
+    # ------------------------------------------------------------------ #
+    # the Wilds claim campaign (see the class docstring, economy.WILDS_CLAIM_*) #
+    # ------------------------------------------------------------------ #
+    def wilds_claim_scout(self):
+        self.wilds_claim_stage = "SCOUTED"
+
+    def wilds_claim_mark_cleared(self):
+        self.wilds_claim_stage = "CLEARED"
+
+    def wilds_claim_deposit_lumber(self, n):
+        self.wilds_claim_fence_lumber += n
+
+    def wilds_claim_build_fences(self):
+        self.wilds_claim_fence_lumber -= economy.WILDS_CLAIM_FENCE_LUMBER
+        self.wilds_claim_stage = "FENCED"
+
+    def wilds_claim_mark_swept(self):
+        self.wilds_claim_stage = "SWEPT"
+
+    def wilds_claim_start_sustaining(self):
+        self.wilds_claim_stage = "SUSTAINING"
+        self.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
+
+    def _wilds_claim_garrisoned(self):
+        """True while some living group is actually parked, garrisoning, at
+        the claim node right now."""
+        return any(g.order is not None and g.order.kind == "garrison"
+                   and g.node == world.WILDS_TERRITORY_NODE and not g.empty
+                   for g in self.groups)
+
+    def _wilds_claim_sustain_tick(self):
+        """Once a day, while `SUSTAINING`: the countdown only advances for a
+        day the claim was actually garrisoned the whole time through -- no
+        partial credit, same "start the clock over" rule
+        `campaign.resolve_wilds_raid` applies to a raid the garrison loses.
+        Pulling the garrison out early (a fresh order, not a lost fight) has
+        the same effect -- sustaining only counts while someone is there."""
+        if self.wilds_claim_stage != "SUSTAINING":
+            return []
+        if not self._wilds_claim_garrisoned():
+            if self.wilds_claim_sustain_days_left != economy.WILDS_CLAIM_SUSTAIN_DAYS:
+                self.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
+                return ["The Wilds claim sits unguarded -- sustaining it starts over."]
+            return []
+        self.wilds_claim_sustain_days_left -= 1
+        if self.wilds_claim_sustain_days_left <= 0:
+            self.wilds_claim_stage = "ESTABLISHED"
+            self.wilds_claim_sustain_days_left = None
+            self.wilds_claim_owner = "guild"   # Sistema 4: what a seizure/retake actually flips
+            return ["The Wilds claim is ESTABLISHED -- the land is the guild's."]
+        return []
+
+    def pay_bankers_debt(self, amount):
+        """Apply `amount` (already collected by the caller) to `bankers_debt`,
+        never past zero. Returns how much was actually owed (<= amount)."""
+        paid = min(amount, self.bankers_debt)
+        self.bankers_debt -= paid
+        if self.bankers_debt == 0:
+            self.property_city_debt_since = None
+        return paid
 
     @property
     def hungry(self):
@@ -328,6 +534,42 @@ class Guild:
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
         for u in justice.release_due(self):
             events.append(f"{u.name} finishes their time and is released in the City.")
+        events += self._city_property_upkeep()
+        events += self._garrison_upkeep()
+        events += self._wilds_claim_sustain_tick()
+        return events
+
+    def _charge_roster(self, amount):
+        """Take `amount` copper off the whole roster as evenly as the coins
+        allow -- poorest first, same idiom `bank_screen._charge` uses for a
+        visiting party, just over everyone rather than one screen's guests."""
+        for i, m in enumerate(sorted(self.roster, key=lambda u: u.gold)):
+            share = min(m.gold, -(-amount // (len(self.roster) - i)))
+            m.gold -= share
+            amount -= share
+
+    def _city_property_upkeep(self):
+        """Run once a day (from `_daily_upkeep`): collect the property tax
+        when it falls due, and escalate long-ignored Bankers debt to the
+        guard -- same crime/guard pipeline `justice.py` already runs, so a
+        deadbeat guild eventually gets caught the normal way, not a bespoke
+        one. No-op with no property and no debt (the common case)."""
+        events = []
+        if self.property_city_unlocked and self.clock.day >= (self.property_city_tax_due_day or 0):
+            self.property_city_tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
+            if self.gold >= economy.CITY_PROPERTY_TAX:
+                self._charge_roster(economy.CITY_PROPERTY_TAX)
+                events.append(f"The Bankers collect {economy.CITY_PROPERTY_TAX} copper in property tax.")
+            else:
+                self.property_city_missed_payments += 1
+                events.append("The guild can't cover the property tax -- the Bankers note it.")
+        if self.bankers_debt > 0 and self.property_city_debt_since is not None:
+            if self.clock.day - self.property_city_debt_since >= economy.CITY_PROPERTY_DEBT_GRACE_DAYS:
+                self.property_city_debt_since = self.clock.day     # resets the grace window
+                if self.leader is not None:
+                    self.leader.crime += 1
+                    events.append(f"{self.leader.name}'s unpaid debt to the Bankers "
+                                  "reaches the guard's ears.")
         return events
 
     def eat_now_pass(self):
