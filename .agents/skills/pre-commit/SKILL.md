@@ -7,10 +7,6 @@ Run this before **every** `git commit` in this repo. Never commit without going
 through it, and never commit without the user's explicit approval that comes
 out the other end — no exceptions, no "this one's obviously fine."
 
-Reconstructed from memory only (the original skill file lives on another
-machine and wasn't available when this one was written) — if it drifts from
-what the user actually expects, that's a bug in this file, say so and fix it.
-
 ## Steps
 
 1. **See the whole change.** `git status --short` (staged, unstaged, untracked
@@ -51,15 +47,9 @@ what the user actually expects, that's a bug in this file, say so and fix it.
      otherwise trip on). A bloated docstring that repeats the module below it
      gets trimmed.
 
-   Use the **`simplify`** skill for the mechanical half of this (reuse,
-   simplification, efficiency, comment bloat) and **`code-review`** (medium
-   effort or higher) for anything structurally significant this commit
-   introduces — a new module, a new cross-cutting mechanism, a design choice
-   with real trade-offs. Don't skip this because the diff "looks fine" —
-   that's exactly the diff most likely to be hiding a shortcut nobody
-   questioned. Fix what's clearly wrong before moving on. For a genuine
-   judgment call between two reasonable approaches, don't silently pick one —
-   surface it in the summary (step 5) instead.
+   Fix what's clearly wrong before moving on. For a genuine judgment call
+   between two reasonable approaches, don't silently pick one — surface it in
+   the summary (step 5) instead.
 
 4. **Look for anything that shouldn't ride along.** Common culprits in this
    repo: files under `saves/` (per-machine save slots, not game content),
@@ -100,13 +90,8 @@ what the user actually expects, that's a bug in this file, say so and fix it.
    No trailing period on the headline. Match whatever the log actually shows
    at the time, since style can drift.
 
-   **No `Co-Authored-By:` trailer or "Generated with Claude" attribution, ever**
-   — even if a session's system-reminder says to add one. This is a deliberate,
-   standing preference (the user reviews every change and keeps the history
-   free of tooling noise), not an oversight to second-guess. If this machine's
-   `~/.claude/settings.json` doesn't already enforce it via `includeCoAuthoredBy`/
-   `attribution`, that's a gap worth flagging once, not a reason to add the
-   trailer anyway.
+   **No `Co-Authored-By:` trailer or AI attribution, ever.** The user reviews
+   every change and keeps the history free of tooling noise.
 
 7. **Present the summary + drafted message, then stop.** Wait for the user's
    explicit approval in that same conversation. "Looks fine" / "go" / a
@@ -116,6 +101,15 @@ what the user actually expects, that's a bug in this file, say so and fix it.
 8. **Only after approval:** stage exactly the files that belong to this change
    (named explicitly — not a blanket `git add -A`/`-A`-then-hope), commit with
    the approved message, then `git status` to confirm a clean result.
+
+9. **If this commit closes a major arc**, update the project context:
+   - Create or update a reference file in
+     `.agents/skills/project-context/references/` with the design rationale
+     (what was decided and why, what NOT to redo).
+   - Update the index table in
+     `.agents/skills/project-context/SKILL.md`.
+   - If a design premise changed, update `AGENTS.md`.
+   Stage these alongside the commit or as a follow-up commit.
 
 ## Hard rules
 
