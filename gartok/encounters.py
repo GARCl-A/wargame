@@ -120,6 +120,15 @@ WILDS_TABLE = (
     EncounterEntry(30, None),
 )
 
+# The Old Road: mostly a bandit gang -- "bandit" isn't its own race, it's the
+# same trick WILDS_TABLE's own 30% slice uses (`race_pool=None` falls through
+# to a plain, rarity-weighted `data.roll_race()`); a rarer wolf pack rounds it
+# out. Same weights as WILDS_TABLE, just inverted and off a different node.
+OLD_ROAD_TABLE = (
+    EncounterEntry(70, None),
+    EncounterEntry(30, tuple(data.BEAST_POOL)),
+)
+
 
 def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
                    level_weights=WILDS_LEVEL_WEIGHTS, rng=random):

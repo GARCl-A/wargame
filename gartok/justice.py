@@ -75,20 +75,23 @@ def jail(guild, unit):
 
 def release_due(guild):
     """Free everyone whose sentence is up, into a group at the City -- an
-    existing one standing there, or a fresh solo group if none is. Called
-    once a day from `Guild._daily_upkeep`. Returns the released units."""
+    existing, idle one standing there (a busy one is already committed to an
+    order; joining it mid-flight would send the newly-freed off on someone
+    else's errand with no say in it), or a fresh solo group if none fits.
+    Called once a day from `Guild._daily_upkeep`. Returns the released units."""
     due = [pair for pair in guild.jailed if guild.clock.day >= pair[1]]
     if not due:
         return []
     guild.jailed = [pair for pair in guild.jailed if guild.clock.day < pair[1]]
     released = [u for u, _ in due]
-    city_group = next((g for g in guild.groups if g.node == world.START_NODE), None)
+    city_group = next((g for g in guild.groups
+                       if g.node == world.START_NODE and not g.busy), None)
     for u in released:
         if city_group is None:
             city_group = Group([u], node=world.START_NODE)
             guild.groups.append(city_group)
         else:
-            guild.add_member(u, city_group)
+            city_group.members.append(u)   # not add_member: one sync below covers the whole batch
     guild._sync_leadership()
     return released
 

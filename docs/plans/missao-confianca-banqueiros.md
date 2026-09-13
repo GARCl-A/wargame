@@ -174,6 +174,50 @@ escolhas pra unidade pega:
   crime por matar guarda, ou só a unidade originalmente pega.
 - Onde exatamente a `Unit` presa reaparece ao ser solta.
 
+## Sistema 2 — implementado (2026-09-13, sessão 3)
+
+Feito e testado (`tests/test_road_ambush.py`, mais ajustes em `test_orders.py`
+e `test_map_orders_integration.py` -- ver abaixo). Detalhes:
+
+- `world.Node.unsafe`/`encounter_table` + `world.ROAD_AMBUSH_CHANCE = 0.35`,
+  exatamente como proposto abaixo; `encounters.OLD_ROAD_TABLE` também.
+- O gatilho usa o MESMO ponto de `campaign.advance()` que o Sistema 1 --
+  generalizado para `campaign._arrival_pause` (guarda primeiro, depois
+  emboscada; nenhum nó é os dois hoje, mas a ordem é deliberada). Um "guard"
+  ou "ambush" pausado nunca fica em `group.order` (fica `None`, igual toda
+  ordem interativa já existente) -- o dado trafega só na tupla `(group,
+  order)` do `pending`. Isso evita um bug real que o code-review pegou: uma
+  captura pendurada em `group.order` parecia "ocupada" pra uma SEGUNDA
+  chamada de `advance()` (ex. o tick de outro grupo caçando), que apagava a
+  captura sem nunca re-enfileirar nada.
+- Fugir (`campaign.resolve_guard_flee`) agora também rola o mesmo
+  `_arrival_pause` no nó de volta -- outro bug real do code-review: fugir
+  pra um nó "unsafe" pulava a emboscada, e um re-flagra da guarda ficava
+  pendurado em `group.order` sem nunca reabrir a tela (`app.py` agora
+  reenfileira o que `resolve_guard_flee` devolve).
+- `app.py` ganhou um bug PRÓPRIO deste sistema, também pego pelo code-review
+  e corrigido: prender o grupo INTEIRO de uma vez esvazia `guild.groups` sem
+  ninguém morrer -- `MapScreen.__init__` faz `guild.groups[0]` sem proteção e
+  crashava. `App._start_map` agora detecta isso e usa
+  `App._wait_out_the_sentence` (`guild.pass_time` em blocos de 24h, o mesmo
+  truque do `HuntScreen`) pra adiantar o relógio até a soltura repor um grupo.
+- `app.py` também foi consolidado depois do 1º code-review: os pares
+  `_guard_order/_guard_group` + `_ambush_order/_ambush_group` viraram um só
+  `_pause_order/_pause_group` (o `order.kind` já diferencia guarda de
+  emboscada), e `_start_guard_battle`/`_start_road_ambush` viraram uma linha
+  cada em cima de `_start_forced_battle` compartilhado.
+- Decisão consciente, não mudada: a emboscada da Old Road reaproveita as
+  MESMAS `WILDS_COUNT_WEIGHTS`/`WILDS_LEVEL_WEIGHTS` do Wilds (só troca o
+  `race_pool`) -- o plano abaixo só pedia pra inverter os pesos de raça, nada
+  sobre escalar por nível de personagem; fica como está até isso ser jogado.
+- Decisão consciente, não mudada: `encounters.roll_encounter(None)` quebraria
+  se um nó futuro setasse `unsafe=True` sem `encounter_table` -- não validado
+  de propósito (registro interno controlado em `world.NODES`, mesmo
+  tratamento que `bank`/`tanner` já recebem).
+
+**Próximo passo: Sistema 3 (cofre genérico com fechadura)** -- ver a seção
+correspondente abaixo.
+
 ## Sistema 2 — Old Road como nó "unsafe"
 
 ### Dados novos
@@ -277,10 +321,10 @@ Amarra os 3 sistemas acima. Estrutura:
 
 1. ~~**Sistema 1** (Crime/jurisdição/guarda)~~ -- **feito**, ver a seção logo
    acima ("Sistema 1 — implementado").
-2. **Sistema 2** (Old Road unsafe) — pequeno, reaproveita quase tudo de
-   `encounters.py`, independente do Sistema 1. **Próximo a implementar.**
+2. ~~**Sistema 2** (Old Road unsafe)~~ -- **feito**, ver "Sistema 2 —
+   implementado" acima.
 3. **Sistema 3** (Cofre genérico) — mecânica isolada, só teste de destreza +
-   um item novo.
+   um item novo. **Próximo a implementar.**
 4. **Sistema 4** (a missão em si) — amarra os 3 anteriores; a parte da
    emboscada autoral fica com um placeholder até o mapa existir, mas o resto
    (aceitar / trocar / entregar / a deed `bankers_trust`) pode ser implementado

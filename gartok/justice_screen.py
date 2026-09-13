@@ -7,7 +7,11 @@ at once -- the group can't do two different things with itself simultaneously:
 - FIGHT THE PATROL -- `app._start_guard_battle` drops the whole group into a
   real, lethal fight; `app._battle_end` reads the crime consequences back
   through `campaign.resolve_guard_fight_aftermath` once it's over.
-- RUN -- `campaign.resolve_guard_flee`, resolved right here.
+- RUN -- `campaign.resolve_guard_flee`, resolved right here. Falling back can
+  itself land the group on a new "guard" (re-caught) or "ambush" (an unsafe
+  fallback node) pause -- `app._resolve_guard_flee` re-queues that through the
+  normal `_pending` dispatch, so this same screen (or a forced battle) can
+  come right back up instead of the flee being the end of it.
 """
 
 import pygame

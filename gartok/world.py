@@ -32,18 +32,28 @@ completing arena deeds (`factions`), not from the win itself.
 tests every crime-carrying member of a group that arrives there -- waypoint or
 final stop alike -- and can pause the group on the outcome (`justice.py`).
 Outside jurisdiction (`road`, `wilds`, the lumber yard) a rap sheet never comes up.
+
+`unsafe` marks a node with its own standing danger: every arrival there rolls
+`ROAD_AMBUSH_CHANCE` (once per leg, not per hour like `hunt.py`'s wilds
+ambush) against `encounter_table` (an `encounters.EncounterEntry` tuple) --
+`campaign.advance` pauses the group on a lethal fight if it hits, same seam
+as `jurisdiction`. Only the Old Road (`road`) carries it for now.
 """
 
 import heapq
 from dataclasses import dataclass
 
+from . import encounters
 from .scenario import ArenaScenario, ErmosScenario
+
+ROAD_AMBUSH_CHANCE = 0.35   # per travel-leg arrival at an `unsafe` node, not per hour (unlike hunt.py)
 
 
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, work=False,
-                 bank=False, tanner=False, jurisdiction=None):
+                 bank=False, tanner=False, jurisdiction=None,
+                 unsafe=False, encounter_table=None):
         self.id = id
         self.name = name
         self.kind = kind
@@ -58,6 +68,8 @@ class Node:
         self.bank = bank                     # town: the Bankers -- rent a strongbox (bank_screen)
         self.tanner = tanner                 # town: a mission board -- missions.TANNER_HIDES (tanner_screen)
         self.jurisdiction = jurisdiction     # e.g. "the_city" -- the guard tests every arrival (justice.py)
+        self.unsafe = unsafe                 # True -> ROAD_AMBUSH_CHANCE per arrival (campaign.py)
+        self.encounter_table = encounter_table   # encounters.EncounterEntry tuple an unsafe node's ambush rolls off
 
     @property
     def is_battle(self):
@@ -152,7 +164,8 @@ NODES = [
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
          jurisdiction="the_city"),
     Node("road", "Old Road", "town", (0.55, 0.52),
-         "A dirt track cutting across the open country to the east."),
+         "A dirt track cutting across the open country to the east.",
+         unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
     Node("wilds", "The Wilds", "wilds", (0.83, 0.40),
          "Open ground under the sky, outside the walls. Hunt it for meat -- and "
          "risk what else hunts here.", ErmosScenario),

@@ -24,6 +24,8 @@ def _app(guild):
     app._battle_node = None
     app._arena_offer = None
     app._hunt = None
+    app._pause_order = None
+    app._pause_group = None
     app._map_notices = []
     app._pending = []
     app._save = lambda: None            # no disk I/O in these tests
@@ -46,15 +48,23 @@ def test_advance_chases_a_multi_hop_travel_through_every_waypoint_in_one_call():
     """city -> wilds has no direct edge (the route goes through 'road'); one
     call to `_advance()` should chase both legs silently -- no fresh click
     needed at the intermediate waypoint -- landing the group at the final
-    stop, not just the first one."""
+    stop, not just the first one.
+
+    'road' is `unsafe` (see test_justice_integration.py for the ambush pause
+    itself) -- not what this test is about, so the chance is zeroed out for
+    its duration to keep the chase deterministic."""
     random.seed(1)
-    g = Group([Unit("player")], node="city")
-    guild = Guild(None, groups=[g])
-    app = _app(guild)
-    g.order = orders.travel(g, "wilds")
-    app._advance()
-    assert g.node == "wilds" and g.order is None
-    assert isinstance(app.scene, MapScreen)
+    orig_chance, world.ROAD_AMBUSH_CHANCE = world.ROAD_AMBUSH_CHANCE, 0.0
+    try:
+        g = Group([Unit("player")], node="city")
+        guild = Guild(None, groups=[g])
+        app = _app(guild)
+        g.order = orders.travel(g, "wilds")
+        app._advance()
+        assert g.node == "wilds" and g.order is None
+        assert isinstance(app.scene, MapScreen)
+    finally:
+        world.ROAD_AMBUSH_CHANCE = orig_chance
 
 
 def test_advance_stops_chasing_as_soon_as_any_group_goes_idle():

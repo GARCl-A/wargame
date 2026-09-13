@@ -22,6 +22,8 @@ Campaign loop: menu -> draft -> MAP <-> guild
                             party -> the wilds (hunt) -> [next pending] -> MAP
                             (any arrival) -> the guard (justice.py) -> prison |
                               [battle -> loot] | flee -> [next pending] -> MAP
+                            (any arrival at an unsafe node) -> ambush ->
+                              [battle -> loot] -> [next pending] -> MAP
 `persist` autosaves after the draft, on every return to the map and after every
 battle. Permadeath: a member who does not survive is dropped; a full wipe ends
 the campaign.
@@ -75,8 +77,8 @@ class App:
         self._battle_node = None             # world node the current battle is at
         self._arena_offer = None             # world.Bout for the current arena fight, or None
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
-        self._guard_order = None             # in-flight "guard" Order -- carried across a patrol fight
-        self._guard_group = None             # the Group that order belongs to
+        self._pause_order = None             # in-flight "guard"/"ambush" Order -- carried across a forced battle
+        self._pause_group = None             # the Group that order belongs to
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._pending = []                   # [(Group, Order)] left to resolve from the last tick
         self._draft_tutorial = TutorialState()   # the soft tutorial, before a Guild exists to hold it
@@ -142,8 +144,21 @@ class App:
     def _start_map(self):
         """Land on the map -- unless every group already has an order and
         none is idle, in which case there's nothing for the player to do yet:
-        keep the clock running (`_advance`) instead of stopping here."""
+        keep the clock running (`_advance`) instead of stopping here.
+
+        `MapScreen` assumes at least one group exists to select -- true for
+        every wipe (routed to `_campaign_over` before ever reaching here), but
+        a mass ACCEPT ARREST (`justice.jail`) can empty `guild.groups` too,
+        without anyone dying. That is not game over: fast-forward the clock
+        (`_wait_out_the_sentence`) until the nearest release stands a fresh
+        group back up, same trick `HuntScreen` uses to tick the clock outside
+        the normal orders engine."""
         self._pending = []
+        if not self.guild.groups:
+            if not self.guild.jailed:            # truly nobody left anywhere
+                self._campaign_over()
+                return
+            self._map_notices += self._wait_out_the_sentence()
         if self.guild.can_auto_advance:
             self._advance()
             return
@@ -153,6 +168,15 @@ class App:
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over,
                                on_advance=self._advance)
+
+    def _wait_out_the_sentence(self):
+        """Every group emptied out into `guild.jailed` -- nothing to show on
+        the map. Advance a day at a time (`Guild.pass_time`, which is what
+        runs `justice.release_due`) until someone's sentence is up."""
+        events = []
+        while not self.guild.groups and self.guild.jailed:
+            events += self.guild.pass_time(24)
+        return events
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -232,6 +256,8 @@ class App:
                 self._open_tanner_stall(group, node, None)
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
+            elif order.kind == "ambush":
+                self._start_road_ambush(group, order)
             return
         self._start_map()
 
@@ -277,22 +303,39 @@ class App:
         self._after_activity()
 
     def _resolve_guard_flee(self, group, order):
-        self._map_notices += campaign.resolve_guard_flee(self.guild, group, order)
+        events, pause = campaign.resolve_guard_flee(self.guild, group, order)
+        self._map_notices += events
+        if pause is not None:          # re-caught, or ambushed, on the way back
+            self._pending.insert(0, (group, pause))
         self._after_activity()
 
     def _start_guard_battle(self, group, order):
         caught = [u for u in group.members if u.uid in order.caught]
         crime = max((u.crime for u in caught), default=0)
-        patrol = justice.patrol_pack(crime)
+        self._start_forced_battle(group, order, justice.patrol_pack(crime))
+
+    # ------------------------------------------------------------------ #
+    # the Old Road (or any other "unsafe" node): a pack found the group    #
+    # first -- no choice, straight into a lethal fight (world.py)         #
+    # ------------------------------------------------------------------ #
+    def _start_road_ambush(self, group, order):
+        self._start_forced_battle(group, order, list(order.pack))
+
+    def _start_forced_battle(self, group, order, enemies):
+        """A lethal fight the map forces on `group` rather than one the
+        player picked -- the guard's patrol (`order.kind == "guard"`) or a
+        road ambush (`"ambush"`). `order` is carried across to `_battle_end`
+        via `self._pause_order`/`self._pause_group`, which reads `order.kind`
+        to know which `campaign.resolve_*` finishes it."""
         node = world.node(group.node)
         self._battle_squad = list(group.members)
         self._battle_node = node
         self._arena_offer = None
-        self._guard_order, self._guard_group = order, group
-        # most jurisdiction nodes (city/market/tavern) carry no `scenario` --
-        # nobody has ever fought there before the guard made it necessary.
+        self._pause_order, self._pause_group = order, group
+        # most jurisdiction/unsafe nodes (city/market/tavern/road) carry no
+        # `scenario` -- nobody fought there before these systems made it necessary.
         scenario = node.scenario() if node.scenario else Scenario()
-        battle = Battle(list(group.members), patrol, scenario=scenario,
+        battle = Battle(list(group.members), enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
@@ -389,7 +432,7 @@ class App:
 
     def _battle_end(self, battle):
         hunt_state = self._hunt
-        guard_order, guard_group = self._guard_order, self._guard_group
+        pause_order, pause_group = self._pause_order, self._pause_group
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
                                          node=self._battle_node,
                                          arena_offer=self._arena_offer)
@@ -400,14 +443,17 @@ class App:
 
         if outcome.campaign_over:             # full wipe: campaign over
             self._hunt = None
-            self._guard_order = self._guard_group = None
+            self._pause_order = self._pause_group = None
             self._campaign_over()
             return
 
-        if guard_order is not None:            # fought off (or lost to) the patrol
-            self._guard_order = self._guard_group = None
-            self._map_notices += campaign.resolve_guard_fight_aftermath(
-                self.guild, guard_group, guard_order, outcome)
+        if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
+            self._pause_order = self._pause_group = None
+            if pause_order.kind == "guard":
+                self._map_notices += campaign.resolve_guard_fight_aftermath(
+                    self.guild, pause_group, pause_order, outcome)
+            else:
+                self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)
             if outcome.loot_pool and outcome.survivors:
                 self._save()
                 self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,

@@ -29,8 +29,8 @@ def _app(guild):
     app._battle_node = None
     app._arena_offer = None
     app._hunt = None
-    app._guard_order = None
-    app._guard_group = None
+    app._pause_order = None
+    app._pause_group = None
     app._map_notices = []
     app._pending = []
     app._save = lambda: None
@@ -142,6 +142,36 @@ def test_resolve_guard_prison_jails_and_resumes_to_idle_at_the_final_stop():
     assert any("cells" in e for e in events)
 
 
+def test_mass_arrest_emptying_the_only_group_does_not_crash_the_map():
+    """Regression: jailing an entire group can leave `guild.groups` empty
+    without anyone dying (nobody's wiped -- they're all coming back).
+    `MapScreen.__init__` assumes at least one group exists to select
+    (`guild.groups[0]`) and would raise `IndexError` otherwise -- `_start_map`
+    has to notice this and fast-forward the clock until release stands a
+    fresh group back up, instead of either crashing or treating it as a
+    wipe."""
+    random.seed(1)
+    a, b = Unit("player"), Unit("player")
+    a.crime = b.crime = 5
+    g = Group([a, b], node="city")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    g.order = orders.travel(g, "market")
+    with fixed_d20(20):
+        _result, order = _caught(guild, g)
+
+    campaign.resolve_guard_prison(guild, g, order)
+    assert guild.groups == [] and len(guild.jailed) == 2   # both jailed -- the group emptied out
+
+    app._start_map()                            # must not IndexError
+
+    assert len(guild.groups) == 1 and guild.groups[0].node == "city"
+    assert {u.uid for u in guild.groups[0].members} == {a.uid, b.uid}
+    assert guild.jailed == []
+    from gartok.map_screen import MapScreen
+    assert isinstance(app.scene, MapScreen)
+
+
 def test_resolve_guard_flee_falls_back_and_can_chain_into_another_catch():
     random.seed(1)
     culprit = Unit("player")
@@ -154,12 +184,12 @@ def test_resolve_guard_flee_falls_back_and_can_chain_into_another_catch():
     assert g.node == "market"
 
     with fixed_d20(20):                       # caught again immediately back at the city
-        events = campaign.resolve_guard_flee(guild, g, order)
-    assert g.node == "city"
-    assert g.order.kind == "guard"             # re-caught, no further node to flee to
-    assert g.order.prev_node is None           # RUN is off the table now (GuardScreen hides it)
+        events, pause = campaign.resolve_guard_flee(guild, g, order)
+    assert g.node == "city" and g.order is None   # idle -- same convention as advance()'s own catch
+    assert pause is not None and pause.kind == "guard"   # re-caught, no further node to flee to
+    assert pause.prev_node is None             # RUN is off the table now (GuardScreen hides it)
     assert any("fall back" in e for e in events)
-    assert campaign.resolve_guard_flee(guild, g, g.order) == []   # a no-op if reached anyway
+    assert campaign.resolve_guard_flee(guild, g, pause) == ([], None)   # a no-op if reached anyway
 
 
 def test_resolve_guard_flee_resumes_idle_when_the_fallback_node_is_clean():
@@ -174,8 +204,8 @@ def test_resolve_guard_flee_resumes_idle_when_the_fallback_node_is_clean():
     assert g.node == "market"
 
     with fixed_d20(1):                        # no catch this time back at the city
-        campaign.resolve_guard_flee(guild, g, order)
-    assert g.node == "city" and g.order.kind == "idle"
+        events, pause = campaign.resolve_guard_flee(guild, g, order)
+    assert g.node == "city" and g.order.kind == "idle" and pause is None
 
 
 def test_resolve_guard_fight_aftermath_only_banks_crime_for_the_caught_survivor():
@@ -224,7 +254,7 @@ def test_app_opens_guard_screen_then_the_patrol_fight_resolves_through_battle_en
     # lethal fight against a scaled patrol -- resolved the same way any other
     # battle folds back into the guild (campaign.absorb_battle).
     saved["kw"]["on_fight"](g, guard_order)
-    assert app._guard_order is guard_order and app._guard_group is g
+    assert app._pause_order is guard_order and app._pause_group is g
 
     # BattleScreen isn't monkeypatched here -- build the battle result by hand,
     # same technique test_campaign.py uses for absorb_battle.
@@ -238,5 +268,36 @@ def test_app_opens_guard_screen_then_the_patrol_fight_resolves_through_battle_en
     app._battle_end(fought)
 
     assert culprit.crime == 4 + 1              # brawled, no kills credited
-    assert app._guard_order is None and app._guard_group is None
+    assert app._pause_order is None and app._pause_group is None
     assert g.order.kind == "idle"
+
+
+def test_fleeing_into_a_recatch_reopens_guard_screen_instead_of_dropping_it():
+    """Regression: `_resolve_guard_flee` used to leave a re-catch sitting on
+    `group.order` without ever showing it -- the player would just be dropped
+    back on the map with an unresolved arrest nobody could see. RUN's result
+    now flows through the same `_pending` dispatch as any fresh catch."""
+    import gartok.app as app_mod
+    random.seed(1)
+    culprit = Unit("player")
+    culprit.crime = 5
+    g = Group([culprit], node="city")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    g.order = orders.travel(g, "market")
+
+    opened = []
+    orig = app_mod.GuardScreen
+    app_mod.GuardScreen = lambda fonts, guild_, group, order, caught, **kw: (
+        opened.append(order), object())[1]
+    try:
+        with fixed_d20(20):
+            app._advance()                    # first catch, at "market"
+        assert len(opened) == 1 and opened[0].prev_node == "city"
+        with fixed_d20(20):                   # RUN, then caught again right back at "city"
+            app._resolve_guard_flee(g, opened[0])
+    finally:
+        app_mod.GuardScreen = orig
+
+    assert len(opened) == 2                   # the re-catch reopened the screen, not silently lost
+    assert opened[1].prev_node is None and g.node == "city"

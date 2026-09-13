@@ -13,13 +13,15 @@ as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
 active order) never blocks `campaign.advance` from jumping straight past it to
 the next group's completion.
 
-A "guard" order is a third, narrower kind: not issued by the player, and not
-in `INTERACTIVE_KINDS` either -- `campaign.advance` creates one itself, on top
-of whatever the group was actually doing, the moment it catches someone at a
-jurisdiction node (`justice.py`). It carries its own extra fields (`caught`,
-`prev_node`, `resume_path`) so `justice_screen.GuardScreen` can play out the
-three choices and `campaign.resolve_guard_*` can hand the group back its
-interrupted order once one is picked.
+"guard" and "ambush" are two more, narrower kinds: neither is issued by the
+player, and neither is in `INTERACTIVE_KINDS` -- `campaign.advance` creates
+one itself, on top of whatever the group was actually doing, the moment it
+catches someone at a jurisdiction node (`justice.py`, "guard") or a pack finds
+it at an unsafe one (`world.Node.unsafe`, "ambush"). Both carry their own
+extra fields (`caught`/`prev_node` guard-only, `pack` ambush-only,
+`resume_path` shared) so `justice_screen.GuardScreen` / a forced battle can
+play out and `campaign.resolve_guard_*` / `campaign.resolve_road_ambush` can
+hand the group back its interrupted order once resolved.
 """
 
 from dataclasses import dataclass
@@ -43,7 +45,8 @@ class Order:
     path: tuple = ()         # travel: waypoints still to come after `dest`, ending at the final stop
     caught: tuple = ()       # guard: uids of the units the guard just caught (justice.py)
     prev_node: str | None = None   # guard: node to fall back to on "flee"
-    resume_path: tuple = ()  # guard: travel waypoints still owed once resolved (empty = was the final stop)
+    resume_path: tuple = ()  # guard/ambush: travel waypoints still owed once resolved (empty = was the final stop)
+    pack: tuple = ()         # ambush: the enemy Units rolled at the moment of the catch (encounters.py)
 
     @property
     def interactive(self):
