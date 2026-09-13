@@ -39,6 +39,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | File | What it covers |
 |---|---|
 | `gartok-talent-trees.md` | General→specialist premise, tier-2 spec, Alert root, Fleet tier-3; racial track; Grippli Tongue. |
+| `gartok-high-identity-races.md` | High-identity tier-1 racial talents (Leshy Fruitful, Human Cosmopolitan, Halfling Luck); 24h daily framework (clock.day); Racial Level 5 talent gate. |
 | `gartok-z-axis.md` | Per-cell elevation & pits: fall damage, Climb/Push/Jump/Drop-in, flight/climber. |
 | `gartok-map-size-water.md` | Board carries cols/rows; water terrain (shallow=difficult, deep=Swim+breath/drown); Amphibious; camera zoom/scroll. |
 | `gartok-arena-champion-title.md` | "Champion of the Pit": per-character title, arena-only Demoralize perks, title-defense cycle. |
