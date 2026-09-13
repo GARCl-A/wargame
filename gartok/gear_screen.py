@@ -22,7 +22,7 @@ so the next battle re-seeds every `Combatant` from the new loadout.
 
 import pygame
 
-from . import data
+from . import chest, data
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -47,6 +47,7 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         self.managed = list(self.roster)     # members shown as columns (clamped to fit)
         self.selected = []                   # [(unit, loc), ...]: loc is "hand"|"offhand"|"armor"|pack index
         self.menu = None                     # send-to menu: {pos, w, h, rh, rows:[(kind, arg)], picks} (+ rect/hits once drawn)
+        self.notice = None                   # last chest-opening result, shown in the footer
         self.zones = []                     # [(rect, unit|None, "hand"|"offhand"|"armor"|"pack"|"discard")]
         self.sources = []                  # [(rect, unit, loc)]
         self.toggle_hits = []              # [(rect, unit)]
@@ -162,11 +163,14 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         lift = len(owners) > 1 or any(isinstance(p[1], str) for p in picks)
         dests = [u for u in self.managed if lift or id(u) not in owners]
         rows = [("member", u) for u in dests] + [("discard", None)]
+        if len(picks) == 1 and self._item_at(*picks[0]) == data.CHEST_ITEM:
+            rows.append(("open", None))
 
         f = self.fonts
         w = 160
         for kind, arg in rows:
-            lbl = f"to {arg.name}" if kind == "member" else "throw away"
+            lbl = ("OPEN THE CHEST" if kind == "open" else
+                   f"to {arg.name}" if kind == "member" else "throw away")
             w = max(w, f.body.size(lbl)[0] + 2 * SP4)
         self.menu = {"pos": px, "w": w, "h": MENU_HEAD + len(rows) * 24 + SP1,
                      "rh": 24, "rows": rows, "picks": list(picks)}
@@ -178,9 +182,22 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             return
         for r, kind, arg in m["hits"]:
             if r.collidepoint(px):
+                if kind == "open":
+                    self._open_chest(m["picks"][0][0])
+                    return
                 self.selected = list(m["picks"])
                 self._give_many(arg, "pack" if kind == "member" else "discard")
                 return
+
+    def _open_chest(self, unit):
+        """Pick the lock right where the chest sits -- no move, no drop, just
+        `chest.try_open`'s roll. A miss costs nothing (the chest stays put,
+        try again any time), so this never asks for confirmation."""
+        opened, gems = chest.try_open(unit)
+        self.notice = (f"{unit.name} picks the lock -- {gems} {data.GEM_ITEM} inside."
+                       if opened else
+                       f"{unit.name} can't pick the lock -- the chest is still there.")
+        self.selected = []
 
     def _draw_menu(self, screen, W, H):
         f = self.fonts
@@ -202,7 +219,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             if hov:
                 self._hot = True
                 panel(screen, r, fill=SURFACE_4, border=LINE_SOFT, width=0, radius=4)
-            lbl = f"to {arg.name}" if kind == "member" else "throw away"
+            lbl = ("OPEN THE CHEST" if kind == "open" else
+                   f"to {arg.name}" if kind == "member" else "throw away")
             col = DANGER if kind == "discard" else ACCENT if hov else INK
             text(screen, lbl, f.body, col, (r.x + SP2, r.centery - 7))
             m["hits"].append((r, kind, arg))
@@ -470,6 +488,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             return "LIGHT"
         if item in data.FOOD_ITEMS:
             return "FOOD"
+        if item == data.CHEST_ITEM:
+            return "CHEST"
         return ""
 
     # ------------------------------------------------------------------ #
@@ -496,5 +516,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         text(screen, "BACK TO GUILD", f.body_bd, ACCENT_INK if hov else ACCENT,
              back.center, center=True)
         self.buttons.append(("back", back))
+
+        if self.notice:
+            text(screen, self.notice, f.body_sm, INFO, (pad, y - 20))
 
         text(screen, "Esc for the pause menu", f.label, INK_FAINT, (pad, y + 10))

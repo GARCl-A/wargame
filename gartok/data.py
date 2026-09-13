@@ -99,6 +99,7 @@ DYING_TURNS = 3              # dying unit rolls its death save on its 3rd own tu
 DEATH_SAVE_MIN = 11         # d20 >= this survives (11-20 = 50%)
 FIRST_AID_DC = 10          # first-aid kit: d20 + mod Wisdom vs this
 AUTOMATON_REPAIR_DC = 15   # repairing a "broken" automaton: d20 + mod Intelligence vs this
+CHEST_DC = 15              # picking a locked chest: d20 + mod Dexterity vs this (see chest.py)
 FIRST_AID_CHARGES = 10     # a kit starts with this many charges (rechargeable)
 QUIVER_AMMO = 20          # a quiver starts with this many bolts
 BREATH_BASE = 4            # rounds a unit can stay underwater = this + its Constitution mod;
@@ -111,6 +112,11 @@ BREATH_BASE = 4            # rounds a unit can stay underwater = this + its Cons
 
 AMMO_ITEM = "Quiver"                     # inventory item that feeds a ranged weapon
 FIRST_AID_ITEM = "First Aid Kit"
+
+# A locked chest: pick the lock (chest.py) for the gems inside, or hand it in
+# whole. Failure costs nothing -- try again -- so it is never removed on a miss.
+CHEST_ITEM = "Locked Chest"
+GEM_ITEM = "Gemstones"                   # what a chest holds; sellable, not stocked to buy back
 
 
 # --------------------------------------------------------------------------- #
@@ -292,6 +298,7 @@ ITEM_WEIGHTS = {
     "Chains": 5.0, "Scroll": 0.1, "Iron Bar": 5.0, "Lantern": 1.0, "Compass": 0.2,
     "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
     "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,
+    CHEST_ITEM: 8.0, GEM_ITEM: 0.1,
 }
 
 

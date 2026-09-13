@@ -57,6 +57,9 @@ PRICES = {
     "Meat": 5, "Potato": 3,
     # raw materials (gathered, not manufactured -- see STOCK below)
     "1sqm Hide": 12,
+    # a locked chest's contents (chest.py) -- found, not manufactured; sellable
+    # like everything else, but never in MARKET_STOCK below (nothing to buy back)
+    data.GEM_ITEM: 60,
 }
 
 # What the market keeps in stock to buy (fixed list for now).

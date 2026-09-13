@@ -136,10 +136,12 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Deck of Cards | 0.2 kg | -- |
 | Dictionary | 2 kg | -- |
 | First Aid Kit | 0.8 kg | consumable |
+| Gemstones | 0.1 kg | -- |
 | Holy Symbol | 0.5 kg | -- |
 | Iron Bar | 5 kg | -- |
 | Iron Shackles | 1 kg | -- |
 | Lantern | 1 kg | light 6 sq |
+| Locked Chest | 8 kg | -- |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable |
 | Musical Instrument | 2 kg | -- |

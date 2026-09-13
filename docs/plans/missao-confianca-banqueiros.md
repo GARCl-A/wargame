@@ -251,6 +251,38 @@ de Hunt em andamento (`app._hunt`) pra montar o equivalente aqui — provavelmen
 um `app._road_ambush` ou reaproveitar o mesmo `pending` que já existe pra
 paradas interativas (arena/mercado/banco/recrutamento/hunt) em `campaign.py`.
 
+## Sistema 3 — implementado (2026-09-13, sessão 3)
+
+Feito e testado (`tests/test_chest.py`). Detalhes:
+
+- `gartok/chest.py` (novo, pequeno): `try_open(unit)` -- `d20() + mod_dexterity
+  >= data.CHEST_DC` (`CHEST_DC = 15`, em `data.py` junto dos outros DCs, ex.
+  `FIRST_AID_DC`). Sucesso consome `data.CHEST_ITEM` e devolve `1d4+1` (2-5)
+  `data.GEM_ITEM`; falha não mexe em nada (pode tentar de novo, como o doc já
+  pedia). Fora de `actions.py` de propósito -- aquele módulo é só ações de
+  batalha, abrir cofre acontece no mapa/mochila, não em combate.
+- `data.CHEST_ITEM`/`GEM_ITEM` + pesos em `ITEM_WEIGHTS`; `economy.PRICES[GEM_ITEM]
+  = 60` (vendável, não fica em `MARKET_STOCK` -- só se acha, não se compra).
+- **Decisão da UI, a que o doc deixava em aberto**: o menu de "enviar para..."
+  que já existe em `gear_screen.py` (botão direito num item) ganhou uma linha
+  "OPEN THE CHEST" quando o único item selecionado é um cofre -- reaproveita
+  o menu contextual já existente em vez de inventar um botão novo na tela.
+- A parte "cofre da missão = mesma instância + flag de item de missão" fica
+  pro Sistema 4, que é quem sabe o que fazer com essa flag (falhar a missão +
+  crime). `chest.try_open` só conhece o cofre genérico.
+- Bug real achado (e corrigido) numa passada de code-review nesta sessão, sem
+  relação com o cofre em si: uma edição anterior (Sistema 2) tinha deixado o
+  trecho que copia `App._map_notices` pra `scene.notices` grudado depois de
+  um `return` dentro de `App._wait_out_the_sentence` -- código morto, nunca
+  executava. Corrigido de volta pro fim de `App._start_map` (onde sempre
+  esteve), com teste de regressão novo
+  (`test_start_map_copies_pending_notices_onto_the_scene_and_clears_the_buffer`).
+
+**Próximo passo: Sistema 4 (a missão em si)** -- ver a seção correspondente
+abaixo. Tem 2 bloqueios reais (nome da fortaleza/posição no grafo, nome
+próprio pra "The City") que o usuário ainda não decidiu -- perguntar antes de
+implementar essa parte.
+
 ## Sistema 3 — Cofre genérico com fechadura
 
 - Um item novo do tipo "cofre", com uma dificuldade de fechadura (DC).
@@ -323,8 +355,8 @@ Amarra os 3 sistemas acima. Estrutura:
    acima ("Sistema 1 — implementado").
 2. ~~**Sistema 2** (Old Road unsafe)~~ -- **feito**, ver "Sistema 2 —
    implementado" acima.
-3. **Sistema 3** (Cofre genérico) — mecânica isolada, só teste de destreza +
-   um item novo. **Próximo a implementar.**
+3. ~~**Sistema 3** (Cofre genérico)~~ -- **feito**, ver "Sistema 3 —
+   implementado" acima.
 4. **Sistema 4** (a missão em si) — amarra os 3 anteriores; a parte da
    emboscada autoral fica com um placeholder até o mapa existir, mas o resto
    (aceitar / trocar / entregar / a deed `bankers_trust`) pode ser implementado
