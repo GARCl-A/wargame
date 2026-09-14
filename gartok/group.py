@@ -58,7 +58,10 @@ class Group:
         doesn't count: those members aren't going anywhere, so peeling some
         off or folding another group in is still physically fine. See
         `Guild.split_group`/`merge_groups`, [[gartok-property-two-paths]]."""
-        return self.busy and self.order.kind != "garrison"
+        return self.order is not None and self.order.kind not in ("idle", "garrison")
+
+    def has_talent(self, talent_id):
+        return any(u.has_talent(talent_id) for u in self.members)
 
     # ------------------------------------------------------------------ #
     # leadership                                                         #

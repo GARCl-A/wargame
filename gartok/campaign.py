@@ -306,7 +306,12 @@ def _road_ambush_catch(group, resume_path):
     `encounter_table`. Returns an "ambush" `Order` carrying the rolled pack to
     pause on if it hits, else None."""
     node = world.node(group.node)
-    if not node.unsafe or random.random() >= world.ROAD_AMBUSH_CHANCE:
+    if not node.unsafe:
+        return None
+    chance = world.ROAD_AMBUSH_CHANCE
+    if group.has_talent("woodland_scout"):
+        chance /= 2.0
+    if random.random() >= chance:
         return None
     pack = encounters.roll_encounter(node.encounter_table)
     return orders.Order("ambush", pack=tuple(pack), resume_path=tuple(resume_path))

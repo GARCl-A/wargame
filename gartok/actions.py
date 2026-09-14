@@ -544,7 +544,14 @@ class Demoralize(Action):
         actor.ap -= 1
         actor.walking = False
 
-        mods = [(actor.mod_charisma, None, "CHA")]
+        base_mod = actor.mod_charisma
+        using_str = False
+        has_talent = getattr(actor.char, "has_talent", lambda x: False)
+        if has_talent("intimidating_presence") and actor.mod_strength > actor.mod_charisma:
+            base_mod = actor.mod_strength
+            using_str = True
+
+        mods = [(base_mod, None, "STR" if using_str else "CHA")]
         titled = battle.arena and getattr(actor, "arena_title", False)
         if titled and _shared_language(actor, target):
             mods.append((1, "circumstance", "Champion of the Pit"))

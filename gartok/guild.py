@@ -628,7 +628,16 @@ class Guild:
         someone on `crew` has Brisk Hands, in which case the whole guild moves
         on only once the SLOWEST worker is done -- so the saving lands only
         when nobody on the crew is dragging."""
-        return max((1 - u.talent_bonus("activity_speed") for u in crew), default=1.0)
+        if not crew:
+            return 1.0
+        goblins = sum(1 for u in crew if u.race["name"] == "Goblin")
+        mults = []
+        for u in crew:
+            speed = u.talent_bonus("activity_speed")
+            if u.has_talent("swarm_logic"):
+                speed += 0.10 * max(0, goblins - 1)
+            mults.append(1 - speed)
+        return max(mults)
 
     def work_shift(self, workers, hours):
         """A stint at the lumber yard outside the walls, done right now:

@@ -47,11 +47,15 @@ def hunt_stretch(state, rng=random):
     Mutates `state` (`hours_left` down, `hours_hunted` up). Returns
     `(elapsed_hours, ambushed)`."""
     elapsed = 0
+    chance = AMBUSH_CHANCE_PER_HOUR
+    if any(u.has_talent("woodland_scout") for u in state.party):
+        chance /= 2.0
+
     while state.hours_left > 0:
         state.hours_left -= 1
         state.hours_hunted += 1
         elapsed += 1
-        if rng.random() < AMBUSH_CHANCE_PER_HOUR:
+        if rng.random() < chance:
             return elapsed, True
     return elapsed, False
 

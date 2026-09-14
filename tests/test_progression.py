@@ -312,7 +312,7 @@ def test_tongue_slot_empties_when_the_talent_goes_away():
 
 def test_tongue_is_refused_to_non_grippli():
     u = _unit(seed=1)
-    u.set_race("Orc")
+    u.set_race("Dwarf")
     u.set_track_level("racial", 5)
     assert not u.choose_talent("racial", "tongue")
     assert u.talents["racial"] == []

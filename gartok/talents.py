@@ -173,6 +173,22 @@ _LIST = [
            "fate bends around you: once every 24 hours, reroll your first "
            "failed d20 test (in or out of combat).", race="Halfling",
            effects=(Effect("halfling_luck", 1),), icon="action/juggler"),
+    Talent("woodland_scout", "racial", 1, "Woodland Scout",
+           "the forest whispers its secrets to you: greatly reduces the chance of "
+           "the group suffering an ambush in the wilds or on the road.", race="Elf",
+           effects=(Effect("woodland_scout", 1),), icon="action/run"),
+    Talent("intimidating_presence", "racial", 1, "Intimidating Presence",
+           "a terrifying physical presence: you may use your Strength modifier "
+           "instead of Charisma when attempting to Demoralize enemies.", race="Orc",
+           effects=(Effect("intimidating_presence", 1),), icon="action/battered-axe"),
+    Talent("swarm_logic", "racial", 1, "Swarm Logic",
+           "there is safety, and speed, in numbers: you work 10% faster for "
+           "every other Goblin working alongside you.", race="Goblin",
+           effects=(Effect("swarm_logic", 1),), icon="action/backpack"),
+    Talent("tireless_worker", "racial", 1, "Tireless Worker",
+           "machines do not sleep or complain: you complete simple labor "
+           "and gathering tasks significantly faster.", race="Automaton",
+           effects=(Effect("activity_speed", 0.25),), icon="action/armor-vest"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

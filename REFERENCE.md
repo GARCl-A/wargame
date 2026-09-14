@@ -226,6 +226,10 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- | Leshy |
 | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- | Human |
 | 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- | Halfling |
+| 1 | Woodland Scout | the forest whispers its secrets to you: greatly reduces the chance of the group suffering an ambush in the wilds or on the road. | -- | Elf |
+| 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- | Orc |
+| 1 | Swarm Logic | there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- | Goblin |
+| 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- | Automaton |
 
 ## Factions and deeds
 
