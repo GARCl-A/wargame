@@ -62,8 +62,10 @@ CITY_PROPERTY_DEBT_GRACE_DAYS = 14            # days of ignored debt before the 
 # job -- Wilds wood-gathering, once Sistema 3 adds the Wilds territory node --
 # but the mechanism (job name -> output item, yield per member) is generic so
 # a future job is just another `GARRISON_JOBS` entry, not new plumbing.
-GARRISON_JOBS = {"lumber": "Lumber"}           # order.job -> the item name it produces
+GARRISON_JOBS = {"lumber": "Lumber", "study": None}           # order.job -> the item name it produces (None if it produces no items, e.g. study)
 GARRISON_YIELD_PER_MEMBER_PER_DAY = 1          # units of that item, per garrisoned member, per day
+
+TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 
 LUMBER_PRICE = 6   # copper, market buy price -- the guild has to import its own building material,
                     # nothing gathers it for free until the claim below is ESTABLISHED (see GARRISON_JOBS)

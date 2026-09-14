@@ -21,7 +21,7 @@ spinning up a Combatant.
 import random
 import uuid
 
-from . import abilities, data, economy, names, progression, talents
+from . import abilities, data, economy, magic, names, progression, talents
 from .data import mod, roll
 
 ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
@@ -36,6 +36,10 @@ class Unit:
         self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
         self.first_aid_charges = 0
         self.quiver_charges = 0
+        self.magic_source = None
+        self.spells_known = []
+        self.study_target = None
+        self.study_progress = 0
         self._roll_attributes()
         if race is not None:                 # a specific body (e.g. encounters' race_pool draw)
             self.race = dict(race)
@@ -111,6 +115,12 @@ class Unit:
         u.work_hours = d.get("work_hours", 0)
         u.bio = d.get("bio", "")
         u.arena_title = d.get("arena_title", False)
+        
+        u.magic_source = d.get("magic_source")
+        u.spells_known = list(d.get("spells_known", []))
+        u.study_target = d.get("study_target")
+        u.study_progress = d.get("study_progress", 0)
+
         u._auto_name = d["auto_name"]
         u.name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
@@ -360,6 +370,15 @@ class Unit:
                 self.languages.append(random.choice(extras))
         self.age = int(round(self._age_base * self.race["age_mult"]))
 
+        if self.race["name"] == "Gnome":
+            self.magic_source = "nature"
+            if not self.spells_known:
+                nature_spells = [s for s in magic.SPELLS.values() if s.source == "nature" and s.level == 0]
+                if nature_spells:
+                    self.spells_known.append(random.choice(nature_spells).id)
+        elif self.race["name"] == "Kobold":
+            self.magic_source = "blood"
+
     def _apply_occupation(self):
         self.occupation = data.roll_occupation()
         self._configure_occupation()
@@ -389,6 +408,10 @@ class Unit:
             self._base_inventory = []
         else:
             self.starting_creature = None
+            if self.item == "Scroll":
+                nature_spells = [s for s in magic.SPELLS.values() if s.source == "nature" and s.level == 0]
+                if nature_spells:
+                    self.item = f"Scroll:{random.choice(nature_spells).id}"
             self._base_inventory = [self.item]
             if self.item == data.FIRST_AID_ITEM:
                 self.first_aid_charges = data.FIRST_AID_CHARGES

@@ -80,7 +80,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import data, economy, justice, missions, progression, world
+from . import data, economy, justice, magic, missions, progression, world
 from .clock import Clock
 from .group import Group
 from .tutorial import TutorialState
@@ -402,6 +402,28 @@ class Guild:
             node = world.node(g.node)
             if node.garrison_job != g.order.job:
                 continue
+
+            if g.order.job == "study":
+                for u in g.members:
+                    if u.gold >= economy.TAVERN_STUDY_COST_PER_DAY:
+                        u.gold -= economy.TAVERN_STUDY_COST_PER_DAY
+                        if u.study_target and u.study_target in u._base_inventory:
+                            spell_id = u.study_target.split(":")[1]
+                            spell = magic.SPELLS.get(spell_id)
+                            if spell and u.magic_source:  # Must be initiated
+                                bonus = 2 if u.race["name"] == "Kobold" and spell.source == "blood" else 0
+                                progress = data.roll(1, 20) + u.mod_intelligence + bonus
+                                points_gained = max(0, progress)
+                                u.study_progress += points_gained
+                                if u.study_progress >= magic.points_to_learn(spell):
+                                    u.spells_known.append(spell.id)
+                                    u.study_target = None
+                                    u.study_progress = 0
+                                    events.append(f"{u.name} domina a magia {spell.name}!")
+                    else:
+                        events.append(f"{u.name} não pôde pagar o aluguel para estudar.")
+                continue
+
             item = economy.GARRISON_JOBS.get(g.order.job)
             if item is None:
                 continue

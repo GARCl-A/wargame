@@ -1182,6 +1182,67 @@ MOUNT = Mount()
 DISMOUNT = Dismount()
 END = EndTurn()
 
+class CastSpellAction(Action):
+    def __init__(self, spell_id):
+        from . import magic
+        self.spell = magic.SPELLS[spell_id]
+        self.id = f"cast_{spell_id}"
+        self.name = self.spell.name
+        self.cost = 1
+        
+        if self.spell.id == "magic_missile":
+            self.target = "enemy"
+            self.aimed = True
+        elif self.spell.id in ("light_globe", "floating_disk"):
+            self.target = "cell"
+            self.aimed = True
+            
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and self.spell.id in actor.spells_known
+        
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target):
+            return False
+            
+        if self.spell.id == "magic_missile":
+            if not _hostile_target(actor, target): return False
+            dist = battle.units_distance(actor, target)
+            return dist <= 6
+            
+        elif self.spell.id in ("light_globe", "floating_disk"):
+            if not target or not battle.board.in_bounds(target): return False
+            dist = grid_distance(battle.cells_of(actor)[0], target)
+            return dist <= 6 and _cell_free(battle, actor, target, footprint=1)
+            
+        return False
+        
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target): return
+        actor.ap -= self.cost
+        
+        if self.spell.id == "magic_missile":
+            battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
+            atk = d20()
+            if atk == 1:
+                battle.log(" Critical miss!")
+                return
+            hit_score = atk + actor.mod_intelligence
+            if atk == 20 or hit_score >= target.ac:
+                dmg = data.roll(1, 4)
+                battle.log(f" Hit ({hit_score} vs AC {target.ac}) for {dmg} magic damage.")
+                battle.damage(target, dmg, actor=actor)
+            else:
+                battle.log(f" Miss ({hit_score} vs AC {target.ac}).")
+                
+        elif self.spell.id == "light_globe":
+            battle.log(f"{actor.name} casts {self.spell.name}.")
+            battle.ground.append(GroundObject.torch(target))
+            
+        elif self.spell.id == "floating_disk":
+            battle.log(f"{actor.name} casts {self.spell.name}.")
+            battle.ground.append(GroundObject("floating_disk", target))
+
 # Panel buttons, in order. Move and Attack are the default board click.
+# Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
 PANEL_ACTIONS = [ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
                  SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, FLEE, END]

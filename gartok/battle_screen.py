@@ -50,6 +50,7 @@ class BattleScreen(Screen):
         self._armed = None                    # enemy a repeat click on it will now attack
         self.enemy_timer = 0
         self.aim_action = None
+        self.show_magic_menu = False
         self.view_squad = False
         self.buttons = []
 
@@ -157,6 +158,12 @@ class BattleScreen(Screen):
             if rect.collidepoint(px):
                 if key == "inspect_toggle":
                     self.inspect_open = not self.inspect_open
+                elif key == "magic_back":
+                    self.show_magic_menu = False
+                    self.aim_action = None
+                elif key == "magic_menu":
+                    self.show_magic_menu = True
+                    self.aim_action = None
                 else:
                     self._action_click(key)
                 return
@@ -898,10 +905,50 @@ class BattleScreen(Screen):
         b = self.battle
         my_turn = b.winner is None and self._is_player_turn()
         act = b.active
+        
+        if getattr(self, "show_magic_menu", False):
+            r = s.row(34)
+            s.gap(SP1)
+            panel(screen, r, fill=SURFACE_1, border=LINE_SOFT, width=1)
+            text(screen, "Voltar", f.body_bd, INK, r.center, center=True)
+            self.buttons.append(("magic_back", r))
+            
+            for sp_id in act.char.spells_known:
+                action = actions.CastSpellAction(sp_id)
+                enabled = my_turn and action.available(b, act)
+                armed = getattr(self.aim_action, "id", None) == action.id
+                
+                r = s.row(34)
+                s.gap(SP1)
+                fill = ACCENT if armed else SURFACE_2 if enabled else SURFACE_1
+                panel(screen, r, fill=fill, border=ACCENT if armed else LINE_SOFT, width=1)
+                ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
+                
+                ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
+                label = action.name if not armed else f"{action.name}: alvo"
+                text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
+                
+                if action.cost:
+                    cx = r.right - SP3
+                    text(screen, str(action.cost), self.fonts.mono_sm, ink, (cx, r.centery - 6), right=True)
+                    pygame.draw.circle(screen, ink, (cx - 16, r.centery), 3)
+                self.buttons.append((action, r))
+            return
+
         # Climb/Drop only make sense at a pit edge -- hide them elsewhere. Push
         # and Jump are general moves; they stay on the panel, greyed when unusable.
         contextual = (actions.ATTACK_TONGUE, actions.STABILIZE, actions.FIRST_AID,
                       actions.CLIMB, actions.DROP, actions.SWIM)
+
+        if act.char.spells_known:
+            r = s.row(34)
+            s.gap(SP1)
+            enabled = my_turn
+            fill = SURFACE_2 if enabled else SURFACE_1
+            panel(screen, r, fill=fill, border=LINE_SOFT, width=1)
+            ink = INK if enabled else INK_FAINT
+            text(screen, "Lançar Magia", f.body_bd, ink, r.center, center=True)
+            self.buttons.append(("magic_menu", r))
 
         hotkey_i = 0
         for action in actions.PANEL_ACTIONS:
