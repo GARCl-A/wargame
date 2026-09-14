@@ -26,12 +26,11 @@ from . import data, economy
 from .dragselect import DragSelectMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, ellipsize, kg, panel, section,
-                    text, token_badge)
+                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SURFACE_1,
+                    SURFACE_2, SURFACE_3, WARN, chip, ellipsize, kg, panel, section,
+                    set_pointer, text, token_badge)
 
-CHEST_W = 392
-PACK_ROWS_SHOWN = 10                      # pack rows before a "+N more" line kicks in
+CHEST_W = 340
 
 
 class BankScreen(DragSelectMixin, Screen):
@@ -43,10 +42,10 @@ class BankScreen(DragSelectMixin, Screen):
         self.guild = guild
         self.party = party
         self.on_done = on_done
-        self.sel = None                              # ("bank", idx) | (member, idx) | None
+        self.sel = None                              # ("bank", name) | (member, name) | None
         self.notice = None
-        self.chest_rows = []                         # [(rect, idx)]
-        self.item_rows = []                          # [(rect, member, idx)]
+        self.chest_rows = []                         # [(rect, name)]
+        self.item_rows = []                          # [(rect, member, name)]
         self.cards = []                              # [(rect, member)]
         self.buttons = []                            # [(key, rect)]
 
@@ -56,17 +55,21 @@ class BankScreen(DragSelectMixin, Screen):
     def tutorial_key(self):
         return "bank"
 
-    def tutorial_anchor(self, size):
-        return self.footer_anchor(size)
+    @staticmethod
+    def _stacks(inventory):
+        counts = {}
+        for item in inventory:
+            counts[item] = counts.get(item, 0) + 1
+        return [(item, counts[item]) for item in sorted(counts.keys())]
 
     # ------------------------------------------------------------------ #
     def _name_of(self, pick):
         if pick is None:
             return None
-        who, idx = pick
+        who, name = pick
         if who == "bank":
-            return self.guild.bank_items[idx] if idx < len(self.guild.bank_items) else None
-        return who._base_inventory[idx] if idx < len(who._base_inventory) else None
+            return name if name in self.guild.bank_items else None
+        return name if name in who._base_inventory else None
 
     @property
     def purse(self):
@@ -97,12 +100,12 @@ class BankScreen(DragSelectMixin, Screen):
     # input                                                              #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):
-        for rect, idx in self.chest_rows:
+        for rect, name in self.chest_rows:
             if rect.collidepoint(px):
-                return ("bank", idx)
-        for rect, member, idx in self.item_rows:
+                return ("bank", name)
+        for rect, member, name in self.item_rows:
             if rect.collidepoint(px):
-                return (member, idx)
+                return (member, name)
         return None
 
     def _begin_drag(self, src):
@@ -171,7 +174,8 @@ class BankScreen(DragSelectMixin, Screen):
             free = self.guild.bank_capacity - self.guild.bank_load
             self.notice = f"{name} won't fit — {free:g} kg free in the chest."
             return
-        member.take_from_pack(self.sel[1])
+        idx = member._base_inventory.index(name)
+        member.take_from_pack(idx)
         self.guild.bank_items.append(name)
         member._derive_combat()
         self.notice = f"stashed {name}."
@@ -181,7 +185,7 @@ class BankScreen(DragSelectMixin, Screen):
         if not self._fits(member, name):
             self.notice = f"{name} won't fit {member.name}'s load."
             return
-        self.guild.bank_items.pop(self.sel[1])
+        self.guild.bank_items.remove(name)
         member.give_to_pack(name)
         member._derive_combat()
         self.notice = f"{member.name} took {name}."
@@ -192,7 +196,8 @@ class BankScreen(DragSelectMixin, Screen):
         if not self._fits(member, name):
             self.notice = f"{name} won't fit {member.name}'s load."
             return
-        src.take_from_pack(self.sel[1])
+        idx = src._base_inventory.index(name)
+        src.take_from_pack(idx)
         member.give_to_pack(name)
         src._derive_combat()
         member._derive_combat()
@@ -290,22 +295,22 @@ class BankScreen(DragSelectMixin, Screen):
         y = section(screen, f"STASHED  ({len(self.guild.bank_items)})", x, y, w, f)
         if not self.guild.bank_items:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
-        for idx, item in enumerate(self.guild.bank_items):
-            r = pygame.Rect(x, y, w, 28)
-            if r.bottom > rect.bottom - SP3:
-                text(screen, f"+{len(self.guild.bank_items) - idx} more", f.label,
-                     INK_FAINT, (x, y + 4))
-                break
-            sel = self.sel == ("bank", idx)
+            
+        shown = self._stacks(self.guild.bank_items)
+        for item, count in shown:
+            r = pygame.Rect(x, y, w, 24)
+            sel = self.sel == ("bank", item)
             ihov = not self.sel and r.collidepoint(self.mouse)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            text(screen, ellipsize(item, f.body, w - 70), f.body,
-                 ACCENT_INK if sel else INK, (r.x + SP2, r.y + 6))
-            text(screen, kg(data.item_weight(item)), f.mono_sm,
-                 ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 7), right=True)
-            self.chest_rows.append((r, idx))
-            y += 28 + SP1
+            
+            label = item if count == 1 else f"{item}  ×{count}"
+            text(screen, ellipsize(label, f.body_sm, w - 60), f.body_sm,
+                 ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
+            text(screen, kg(data.item_weight(item) * count), f.mono_sm,
+                 ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
+            self.chest_rows.append((r, item))
+            y += 24 + SP1
 
     # ------------------------------------------------------------------ #
     def _draw_party(self, screen, area):
@@ -345,23 +350,22 @@ class BankScreen(DragSelectMixin, Screen):
                     rect.w - 2 * pad, f)
         if not m._base_inventory:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-        shown = m._base_inventory[:PACK_ROWS_SHOWN]
-        for idx, item in enumerate(shown):
+            
+        shown = self._stacks(m._base_inventory)
+        for item, count in shown:
             r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
-            sel = self.sel == (m, idx)
+            sel = self.sel == (m, item)
             ihov = not self.sel and r.collidepoint(self.mouse)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            text(screen, ellipsize(item, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
+                  
+            label = item if count == 1 else f"{item}  ×{count}"
+            text(screen, ellipsize(label, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
                  ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
-            text(screen, kg(data.item_weight(item)), f.mono_sm,
+            text(screen, kg(data.item_weight(item) * count), f.mono_sm,
                  ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
-            self.item_rows.append((r, m, idx))
+            self.item_rows.append((r, m, item))
             y += 24 + SP1
-        extra = len(m._base_inventory) - len(shown)
-        if extra > 0:
-            text(screen, f"+{extra} more in the pack", f.label, INK_FAINT,
-                 (rect.x + pad, y + 2))
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):

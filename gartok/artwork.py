@@ -47,6 +47,7 @@ RACE_ICON = {
     "Leshy":      "totem-head",
     "Orc":        "orc-head",
     "Sprite":     "air-man",
+    "Wolf":       "wolf-head",
 }
 
 

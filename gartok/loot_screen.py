@@ -40,9 +40,6 @@ class LootScreen(Screen):
     def tutorial_key(self):
         return "loot"
 
-    def tutorial_anchor(self, size):
-        return self.footer_anchor(size)
-
     # ------------------------------------------------------------------ #
     @staticmethod
     def _fits(member, name):

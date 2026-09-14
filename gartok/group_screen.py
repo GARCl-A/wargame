@@ -35,25 +35,28 @@ COL_MIN, COL_MAX = 288, 380              # loadout column width clamps
 MENU_HEAD = 22                           # send-to menu: header strip above the rows
 
 
-class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
+class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_back):
+    def __init__(self, fonts, guild, group, on_back):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
-        self.roster = guild.roster
+        self.group = group
         self.on_back = on_back
-        self.managed = list(self.roster)     # members shown as columns (clamped to fit)
+        self.tab = "gear"
+        self.managed = list(self.group.members)     # members shown as columns (clamped to fit)
         self.selected = []                   # [(unit, loc), ...]: loc is "hand"|"offhand"|"armor"|pack index
         self.menu = None                     # send-to menu: {pos, w, h, rh, rows:[(kind, arg)], picks} (+ rect/hits once drawn)
         self.notice = None                   # last chest-opening result, shown in the footer
         self.zones = []                     # [(rect, unit|None, "hand"|"offhand"|"armor"|"pack"|"discard")]
         self.sources = []                  # [(rect, unit, loc)]
-        self.toggle_hits = []              # [(rect, unit)]
+        self.tab_hits = []              # [(rect, unit)]
         self.buttons = []                  # [(key, rect)]
-        self._cap = len(self.roster)         # columns that fit (recomputed each frame)
-        self._hot = False
+        self._pack_scroll = {}             # id(unit) -> scroll offset
+        self._pack_area = None
+        self._cap = len(self.managed)
+        self._hot = False         # columns that fit (recomputed each frame)
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -81,6 +84,17 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             self.selected = [src]
 
     def handle_event(self, event):
+        if getattr(self, "editing_name", False) and event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                self.group.name = self.name_buf.strip() or None
+                self.editing_name = False
+            elif event.key == pygame.K_ESCAPE:
+                self.editing_name = False
+            elif event.key == pygame.K_BACKSPACE:
+                self.name_buf = self.name_buf[:-1]
+            elif event.unicode and len(self.name_buf) < 24 and event.unicode.isprintable():
+                self.name_buf += event.unicode
+            return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.menu:
             self._menu_click(event.pos)
             return
@@ -91,13 +105,6 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             self.menu = None
         super().handle_event(event)
 
-    def _toggle(self, unit):
-        self.selected = []
-        if unit in self.managed:
-            self.managed.remove(unit)
-        elif len(self.managed) < self._cap:
-            self.managed.append(unit)
-
     def _drop(self, px, dragging, src):
         if dragging:
             hit = self._zone_at(px)
@@ -105,16 +112,24 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                 self._give_many(*hit)
             return
 
+        for rect, tab in self.tab_hits:
+            if rect.collidepoint(px):
+                self.tab, self.selected = tab, []
+                return
+
         for key, rect in self.buttons:
             if rect.collidepoint(px):
-                if key == "back":
+                if key == "done" or key == "back":
                     self.on_back()
+                elif key == "distribute":
+                    self.group.distribute_load()
+                    self.notice = "Redistributed packs by carrying capacity."
+                elif key == "rename":
+                    self.editing_name = True
+                    self.name_buf = self.group.name or ""
                 return
         if not self.selected:
-            for rect, unit in self.toggle_hits:
-                if rect.collidepoint(px):
-                    self._toggle(unit)
-                    return
+            pass
 
         mods = pygame.key.get_mods()
         if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
@@ -234,98 +249,150 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             iy += m["rh"]
 
     # ------------------------------------------------------------------ #
+
+
+    # ------------------------------------------------------------------ #
     def draw(self, screen):
         f = self.fonts
         W, H = screen.get_size()
         screen.fill(SURFACE_0)
         self.zones = []
         self.sources = []
-        self.toggle_hits = []
+        self.tab_hits = []
         self.buttons = []
         self._hot = False
-
-        self.managed = [u for u in self.managed if u in self.roster]
+        
         pad = MARGIN if W < 1500 else SP5
-
-        text(screen, "MANAGE GEAR", f.title, INK, (pad, pad - 2))
-        carried = self._carried_names()
-        if carried:
-            if len(carried) == 1:
-                lead = f"moving  {carried[0]} ({kg(data.item_weight(carried[0]))})"
-            else:
-                tot = sum(data.item_weight(n) for n in carried)
-                lead = f"moving  {len(carried)} items ({kg(tot)})"
-            sub, col = (lead + "  ·  drop on a HAND / OFF / BODY, anywhere else on a "
-                        "column for the pack, or THROW AWAY  ·  click outside to "
-                        "cancel", ACCENT)
-        else:
-            sub, col = ("click a member to add or drop a column  ·  drag an item "
-                        "(or click)  ·  shift+click gathers  ·  right-click for "
-                        "send-to", INK_DIM)
-        text(screen, ellipsize(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 30))
-
         top = pad + 62
         bottom = H - 56
 
-        cols_area = W - 2 * pad
+        # --- header & tabs -------------------------------------------- #
+        name = self.group.name or "Unnamed Group"
+        text(screen, name, f.title, INK, (pad, pad - 2))
+        nw = f.title.size(name)[0]
+        
+        r = pygame.Rect(pad + nw + SP2, pad + 10, 24, 24)
+        hov = r.collidepoint(self.mouse)
+        if hov:
+            self._hot = True
+            panel(screen, r, fill=SURFACE_3, border=LINE_SOFT, radius=4)
+        text(screen, "✎", f.body, ACCENT if hov else INK_DIM, r.center, center=True)
+        self.buttons.append(("rename", r))
+
+        if getattr(self, "editing_name", False):
+            er = pygame.Rect(pad, pad - 4, max(200, nw + 50), 32)
+            panel(screen, er, fill=SURFACE_1, border=ACCENT, width=2, radius=4)
+            text(screen, self.name_buf + "·", f.title, INK, (pad + SP2, pad - 2))
+        
+        tx = pad
+        ty = pad + 40
+        for tab_id, label in (("gear", "GEAR"), ("quests", "QUESTS")):
+            active = self.tab == tab_id
+            tr = pygame.Rect(tx, ty, f.body.size(label)[0] + 2 * SP2, 22)
+            hov = tr.collidepoint(self.mouse)
+            if hov:
+                self._hot = True
+            col = ACCENT if active else INK if hov else INK_DIM
+            text(screen, label, f.body, col, tr.center, center=True)
+            if active:
+                pygame.draw.line(screen, ACCENT, tr.bottomleft, tr.bottomright, 2)
+            self.tab_hits.append((tr, tab_id))
+            tx += tr.w + SP4
+            
+        area = pygame.Rect(pad, top, W - 2 * pad, bottom - top)
+
+        if self.tab == "gear":
+            self._draw_gear(screen, area)
+        else:
+            self._draw_quests(screen, area)
+            
+        if self._dragging and self.tab == "gear":
+            carried = self._carried_names()
+            if carried:
+                gx, gy = self.mouse
+                label = carried[0] if len(carried) == 1 else f"{len(carried)} items"
+                gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
+                panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
+                text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
+                
+        if self.menu:
+            self._draw_menu(screen, W, H)
+        
+        # footer
+        text(screen, self.notice or "", f.body, OK, (pad, H - 36))
+        
+        br = pygame.Rect(W - pad - 100, H - 46, 100, 36)
+        hov = br.collidepoint(self.mouse)
+        if hov:
+            self._hot = True
+            panel(screen, br, fill=SURFACE_3, border=LINE_SOFT, radius=8)
+        text(screen, "DONE", f.title, INK, br.center, center=True)
+        self.buttons.append(("done", br))
+        
+        set_pointer("hand" if self._hot else "arrow")
+
+    def _draw_gear(self, screen, area):
+        f = self.fonts
+        W, H = screen.get_size()
+        carried = self._carried_names()
+        
+        cols_area = area.w
         self._cap = max(1, (cols_area + SP3) // (COL_MIN + SP3))
-        strip_h = self._draw_toggle_strip(screen, pad, top, cols_area)
-        ctop = top + strip_h + SP3
+        ctop = area.y
 
         shown = self.managed[:self._cap]
         n = max(1, len(shown))
         col_w = min(COL_MAX, (cols_area - (n - 1) * SP3) // n)
         for i, unit in enumerate(shown):
-            r = pygame.Rect(pad + i * (col_w + SP3), ctop, col_w, bottom - ctop)
+            r = pygame.Rect(area.x + i * (col_w + SP3), ctop, col_w, area.h)
             self._draw_column(screen, r, unit, carried)
 
         if len(self.managed) > self._cap:
             text(screen, f"+{len(self.managed) - self._cap} selected but hidden — "
-                 "widen the window or drop a column", f.label, INK_FAINT,
-                 (pad, bottom + 4))
+                 "widen the window", f.label, INK_FAINT,
+                 (area.x, area.bottom + 4))
 
-        self._draw_footer(screen, W, H, pad)
+        dr = pygame.Rect(W - area.x - 200 - 120, H - 42, 200, 28)
+        hov = dr.collidepoint(self.mouse)
+        if hov:
+            self._hot = True
+            panel(screen, dr, fill=SURFACE_3, border=LINE_SOFT, radius=8)
+        text(screen, "DISTRIBUTE LOAD", f.body, INK, dr.center, center=True)
+        self.buttons.append(("distribute", dr))
 
-        if self._dragging and carried:
-            gx, gy = self.mouse
-            label = carried[0] if len(carried) == 1 else f"{len(carried)} items"
-            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
-            panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
-            text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
-
-        if self.menu is not None:
-            self._draw_menu(screen, W, H)
-
-        set_pointer(self._hot)
-
-    # ------------------------------------------------------------------ #
-    def _draw_toggle_strip(self, screen, x, y, w):
-        """One row of chips -- every roster member; the managed ones lit. Wraps to
-        more rows if the roster is long. Returns the strip height."""
+    def _draw_quests(self, screen, area):
         f = self.fonts
-        cx, cy = x, y
-        h = 26
-        for unit in self.roster:
-            on = unit in self.managed
-            shown = on and self.managed.index(unit) < self._cap
-            lbl = ellipsize(unit.name, f.body_sm, 150)
-            cw = f.body_sm.size(lbl)[0] + 34
-            if cx + cw > x + w:
-                cx, cy = x, cy + h + SP2
-            r = pygame.Rect(cx, cy, cw, h)
-            if r.collidepoint(self.mouse):
-                self._hot = True
-            full = not on and len(self.managed) >= self._cap
-            panel(screen, r, fill=SURFACE_3 if on else SURFACE_1,
-                  border=ACCENT if shown else WARN if on else LINE_SOFT,
-                  width=1, radius=RADIUS)
-            token_badge(screen, (r.x + 12, r.centery), unit, f, r=8)
-            text(screen, lbl, f.body_sm,
-                 INK if on else INK_FAINT if full else INK_DIM,
-                 (r.x + 24, r.centery - 6))
-            self.toggle_hits.append((r, unit))
-            cx += cw + SP2
-        return (cy - y) + h
+        uids = {u.uid for u in self.group.members}
+        active = [m for m in self.guild.missions if m.state == "active" and m.unit_uid in uids]
+        
+        y = area.y
+        if not active:
+            text(screen, "No active quests for this group.", f.body, INK_DIM, area.center, center=True)
+            return
+
+        for m in active:
+            t = missions.template_of(m)
+            r = pygame.Rect(area.x, y, min(600, area.w), 80)
+            panel(screen, r, fill=SURFACE_1, border=LINE_SOFT, radius=8)
+            
+            text(screen, t.name, f.title, INK, (r.x + SP3, r.y + SP2))
+            
+            unit = next((u for u in self.group.members if u.uid == m.unit_uid), None)
+            uname = unit.name if unit else "Unknown"
+            text(screen, f"Accepted by {uname}", f.body_sm, INK_FAINT, (r.x + SP3, r.y + 32))
+            
+            days_left = m.deadline_day - self.guild.clock.day
+            dcol = DANGER if days_left <= 1 else WARN if days_left <= 3 else OK
+            text(screen, f"{max(0, days_left)} day(s) left", f.body, dcol, (r.right - SP3, r.y + SP2), right=True)
+            
+            if t.goal_qty > 0:
+                prog = missions.progress(self.guild, m)
+                text(screen, f"{prog} / {t.goal_qty} {t.goal_item}", f.mono, 
+                     OK if prog >= t.goal_qty else INK, (r.right - SP3, r.y + 32), right=True)
+            else:
+                text(screen, "Delivery", f.mono, INK, (r.right - SP3, r.y + 32), right=True)
+                 
+            y += r.h + SP3
 
     # ------------------------------------------------------------------ #
     def _slot(self, screen, r, *, sel, accepts, drop):
@@ -507,31 +574,44 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         return ""
 
     # ------------------------------------------------------------------ #
-    def _draw_footer(self, screen, W, H, pad):
+    def _draw_footer(self, screen):
         f = self.fonts
-        mouse = self.mouse
-        y = H - 44
+        y = screen.get_height() - 52
+        if self.notice:
+            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
+
+        x = MARGIN
+        if len(self.group.members) > 1 and self.tab == "gear":
+            distr = pygame.Rect(x, y, 240, 36)
+            hov_dist = distr.collidepoint(self.mouse)
+            if hov_dist:
+                self._hot = True
+            panel(screen, distr, fill=SURFACE_4 if hov_dist else SURFACE_2, border=LINE_SOFT,
+                  width=1, radius=RADIUS)
+            text(screen, "DISTRIBUTE LOAD", f.body_bd, INK if hov_dist else INK_DIM,
+                 distr.center, center=True)
+            self.buttons.append(("distribute", distr))
 
         if self._carried_names():
             trash = pygame.Rect(0, 0, 220, 32)
-            trash.center = (W // 2, y + 14)
-            over = trash.collidepoint(mouse)
+            trash.center = (screen.get_width() // 2, y + 18)
+            over = trash.collidepoint(self.mouse)
+            if over:
+                self._hot = True
             panel(screen, trash, fill=DANGER if over else SURFACE_2, border=DANGER,
                   width=1, radius=RADIUS)
             text(screen, "THROW AWAY", f.body_bd, ACCENT_INK if over else DANGER,
                  trash.center, center=True)
             self.zones.append((trash, None, "discard"))
 
-        back = pygame.Rect(W - pad - 200, y, 200, 32)
-        hov = back.collidepoint(mouse)
-        self._hot = self._hot or hov
-        panel(screen, back, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
+        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
+        hov = done.collidepoint(self.mouse)
+        if hov:
+            self._hot = True
+        panel(screen, done, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
               width=1, radius=RADIUS)
-        text(screen, "BACK TO GUILD", f.body_bd, ACCENT_INK if hov else ACCENT,
-             back.center, center=True)
-        self.buttons.append(("back", back))
+        text(screen, "BACK", f.body_bd, ACCENT_INK if hov else ACCENT,
+             done.center, center=True)
+        self.buttons.append(("done", done))
 
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (pad, y - 20))
-
-        text(screen, "Esc for the pause menu", f.label, INK_FAINT, (pad, y + 10))
+        text(screen, "Esc for the pause menu", f.label, INK_FAINT, (MARGIN, y + 36))

@@ -250,6 +250,23 @@ def text(surf, s, font, color, pos, *, right=False, center=False, bottom=False):
     surf.blit(img, rect)
     return rect
 
+def draw_tooltip(screen, font, lines, mouse_pos):
+    """Draws a tooltip near the mouse. `lines` is a list of (text, font, color) tuples, 
+    or just a string (which gets wrapped to a single style)."""
+    if isinstance(lines, str):
+        lines = [(ln, font, INK_DIM) for ln in wrap_lines([lines], font, 240)]
+    
+    tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
+    th = 2 * SP3 + len(lines) * 16
+    W, H = screen.get_size()
+    bx = min(mouse_pos[0] + 16, W - tw - SP2)
+    by = min(mouse_pos[1] + 16, H - th - SP2)
+    panel(screen, pygame.Rect(bx, by, tw, th), fill=SURFACE_2, border=LINE, width=1, radius=RADIUS)
+    yy = by + SP3
+    for s, fo, c in lines:
+        text(screen, s, fo, c, (bx + SP3, yy))
+        yy += 16
+
 
 def tracked(surf, s, font, color, pos, spacing=1):
     """Render `s` with extra letter-spacing (for small uppercase labels)."""

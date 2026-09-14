@@ -84,9 +84,6 @@ class SquadScreen(SheetModalMixin, Screen):
     def tutorial_key(self):
         return "squad"
 
-    def tutorial_anchor(self, size):
-        return self.footer_anchor(size, offset=56)
-
     # ------------------------------------------------------------------ #
     def _click(self, px):
         if self.close_sheet_on_click():
@@ -174,8 +171,10 @@ class SquadScreen(SheetModalMixin, Screen):
                   border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1, radius=RADIUS)
             text(screen, off.name, f.body_bd, ACCENT if sel else INK,
                  (r.x + SP2, r.y + 6))
+            from .arena import bout_level_range
+            lvl = bout_level_range(off, self.picked)
             text(screen, f"entry {off.entry}/head  ·  purse {off.purse}  ·  "
-                 f"{off.player_cap} opponent(s)", f.body_sm, INK_DIM,
+                 f"{off.player_cap} opponent(s)  ·  {lvl}", f.body_sm, INK_DIM,
                  (r.x + SP2, r.y + 26))
             self.tiers.append((r, i))
         top += 62

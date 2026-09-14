@@ -17,7 +17,7 @@ from . import factions, missions
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
                     MARGIN, OK, RADIUS, SP3, SURFACE_1, SURFACE_2, SURFACE_3,
-                    panel, text)
+                    panel, text, wrap_lines, blit_block)
 
 CARD_W = 560
 
@@ -95,8 +95,9 @@ class TrustScreen(Screen):
         text(screen, t.name, f.body_bd, INK, (x, y))
         y += 20
         if m is None:
-            text(screen, t.blurb, f.body_sm, INK_DIM, (x, y))
-            y += 34
+            lines = wrap_lines([t.blurb], f.body_sm, w)
+            y = blit_block(screen, lines, x, y, f.body_sm, INK_DIM, lh=18)
+            y += 16
             text(screen, f"carry: {t.starting_item}  ·  bring back: {t.goal_item}  ·  "
                  f"deadline: {t.deadline_days} days", f.mono_sm, INFO, (x, y))
             y += 30

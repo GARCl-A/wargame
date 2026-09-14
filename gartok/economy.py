@@ -49,7 +49,7 @@ BANK_CHEST_CAPACITY = constants.BANK_CHEST_CAPACITY                # kg the stro
 # of the price. Numbers below are placeholders, same status `BANK_CHEST_PRICE`
 # carried before anyone had actually played it.
 CITY_PROPERTY_REP_GATE = 4                    # guild.reputation["bankers"] needed to buy
-CITY_PROPERTY_PRICE = 300                     # copper, one-time purchase
+CITY_PROPERTY_PRICE = 1000                     # copper, one-time purchase
 CITY_PROPERTY_CAPACITY = 20                   # kg the property can store (a house beats a chest)
 CITY_PROPERTY_TAX = 40                        # copper, charged every CITY_PROPERTY_TAX_PERIOD_DAYS
 CITY_PROPERTY_TAX_PERIOD_DAYS = 7
@@ -92,7 +92,7 @@ PRICES = {
     # weapons
     "Dagger": 8, "Hatchet": 10, "Axe": 35, "Light Hammer": 10,
     "Hammer": 35, "Club": 6, "Quarterstaff": 5, "Shortspear": 12,
-    "Light Pick": 10, "Pick": 30, "Broadsword": 105, "Light Crossbow": 80,
+    "Light Pick": 10, "Pick": 30, "Broadsword": 105, "Rapier": 65, "Light Crossbow": 80,
     # armor (buy price climbs steeply with the AC it grants -- plate is a
     # long-run goal, several top-tier arena purses)
     "Leather Jerkin": 20, "Studded Leather": 55, "Chainmail": 160,
@@ -101,7 +101,7 @@ PRICES = {
     TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
     "Rope": 4, "Sack": 2,
     # food (a day's meal each)
-    "Meat": 5, "Potato": 3,
+    "Meat": 5, "Potato": 3, "1L Beer": 4,
     # raw materials (gathered, not manufactured -- see STOCK below)
     "1sqm Hide": 12,
     # the Wilds claim's building material -- bought here, hauled out by hand
@@ -114,10 +114,10 @@ PRICES = {
 
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
-    "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword",
+    "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
     "Light Crossbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
-    "Meat", "Potato", TORCH_ITEM, "First Aid Kit", "Lantern",
+    "Meat", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal",
 ]
 

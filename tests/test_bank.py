@@ -23,14 +23,14 @@ def test_renting_charges_the_party_evenly_and_flips_the_capacity_on():
     random.seed(1)
     party = [Unit("player") for _ in range(2)]
     for m in party:
-        m.gold = 40
+        m.gold = 60
     guild = Guild(list(party))
     s = _screen(guild, party)
 
     s._rent()
     assert guild.bank_unlocked and guild.bank_capacity == economy.BANK_CHEST_CAPACITY
-    assert [m.gold for m in party] == [15, 15]        # 50 split evenly
-    assert sum(m.gold for m in party) == 80 - economy.BANK_CHEST_PRICE
+    assert [m.gold for m in party] == [10, 10]        # 100 split evenly
+    assert sum(m.gold for m in party) == 120 - economy.BANK_CHEST_PRICE
 
 
 def test_stashing_never_moves_coin_between_members():
@@ -41,7 +41,7 @@ def test_stashing_never_moves_coin_between_members():
     guild = Guild([rich, broke], bank_capacity=10)
     s = _screen(guild, [rich, broke])
 
-    s.sel = (rich, 0)
+    s.sel = (rich, "Broadsword")
     s._deposit()
     s._leave()
     assert rich.gold == 60 and broke.gold == 0        # only the rent ever spends
@@ -65,11 +65,11 @@ def test_deposit_is_capped_by_the_chest():
     guild = Guild([p], bank_capacity=10)
     s = _screen(guild, [p])
 
-    s.sel = (p, 0)                                    # Chainmail exactly fills the chest
+    s.sel = (p, "Chainmail")                                    # Chainmail exactly fills the chest
     s._deposit()
     assert guild.bank_items == ["Chainmail"] and p._base_inventory == ["Rope"]
 
-    s.sel = (p, 0)                                    # Rope now -- no room left
+    s.sel = (p, "Rope")                                    # Rope now -- no room left
     s._deposit()
     assert guild.bank_items == ["Chainmail"] and "fit" in s.notice
 
@@ -82,12 +82,12 @@ def test_withdraw_is_capped_by_the_members_load():
     s = _screen(guild, [p])
 
     p.carry_max = 0.5                                 # can't take on even a rope
-    s.sel = ("bank", 0)
+    s.sel = ("bank", "Rope")
     s._withdraw(p)
     assert guild.bank_items == ["Rope"] and "fit" in s.notice
 
     p.carry_max = 999
-    s.sel = ("bank", 0)
+    s.sel = ("bank", "Rope")
     s._withdraw(p)
     assert guild.bank_items == [] and p._base_inventory == ["Rope"]
 
@@ -116,6 +116,6 @@ def test_clicking_rent_then_a_pack_item_onto_the_chest_stashes_it():
     assert guild.bank_unlocked
 
     s.draw(surf)                                      # chest is now the stash view
-    s.sel = (p, 0)
+    s.sel = (p, "Rope")
     chest = next(r for k, r in s.buttons if k == "chest")
     assert s._resolve(chest.center) and guild.bank_items == ["Rope"]

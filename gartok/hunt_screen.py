@@ -51,14 +51,6 @@ class HuntScreen(Screen):
     def tutorial_key(self):
         return "hunt"
 
-    def tutorial_anchor(self, size):
-        """Below the (fixed-height) party row, above wherever the phase content
-        starts (`body_top = H - 264` in `draw`) -- empty in all three phases,
-        unlike the band right above the footer (setup's hour chips sit there)."""
-        w, _h = size
-        party_bottom = MARGIN + 72 + 96
-        return (MARGIN, party_bottom + SP3, min(340, w - 2 * MARGIN), "down")
-
     # ------------------------------------------------------------------ #
     def _wrap_up(self):
         self.phase = "done"

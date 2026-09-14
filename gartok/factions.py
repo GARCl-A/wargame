@@ -101,7 +101,7 @@ _DEEDS = [
     Deed("arena_dethrone", "arena", "Dethrone the Champions",
          "Beat the pit's champion team.", rep=1,
          check=lambda g, e: (
-             _arena_tier(e) is not None and _arena_tier(e).champion)),
+             _arena_win(e) and _arena_tier(e) is not None and getattr(_arena_tier(e), "champion", False))),
 
     # The Games -- the arena's second stage. Locked behind the champion bout; the
     # bouts that satisfy these only appear once `arena_dethrone` is banked.

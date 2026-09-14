@@ -13,7 +13,7 @@ from . import data
 from .combatant import Combatant
 from .theme import (ACCENT, DANGER, DEMO_HL, INFO, INK, INK_DIM, INK_FAINT,
                     OK, SP1, SP2, SP3, SURFACE_1, SURFACE_2, WARN,
-                    chip, panel, section, token_badge, text, wrap_lines)
+                    chip, panel, section, token_badge, text, wrap_lines, draw_tooltip)
 
 PANEL_W, PANEL_H = 560, 604
 
@@ -62,7 +62,7 @@ class SheetModalMixin:
         w, h = screen.get_size()
         r = pygame.Rect(0, 0, PANEL_W, PANEL_H)
         r.center = (w // 2, h // 2)
-        draw_sheet(screen, r, Combatant(self._sheet_unit), fonts)
+        draw_sheet(screen, r, Combatant(self._sheet_unit), fonts, self.mouse)
 
 
 _ATTRS = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
@@ -122,7 +122,7 @@ def _status_note(u):
     return None, None
 
 
-def draw_sheet(screen, rect, u, f):
+def draw_sheet(screen, rect, u, f, mouse=None):
     veil = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
     veil.fill((0, 0, 0, 195))
     screen.blit(veil, (0, 0))
@@ -249,7 +249,18 @@ def draw_sheet(screen, rect, u, f):
 
     # --- languages + ability --------------------------------------- #
     y = section(screen, "LANGUAGES", x, y, w, f)
+    
+    # Add info hover
+    info_r = pygame.Rect(x + f.label.size("LANGUAGES")[0] + 6, y - 18, 16, 16)
+    pygame.draw.circle(screen, INK_FAINT, info_r.center, 7, 1)
+    text(screen, "?", f.label, INK_FAINT, info_r.center, center=True)
+    
     text(screen, ", ".join(u.languages), f.body_sm, INK, (x, y))
+    
+    tooltip = None
+    if mouse and info_r.collidepoint(mouse):
+        tooltip = "A shared language is required to Demoralize an enemy, and to Recruit new units."
+
     y += 20
 
     if getattr(u, 'recipes', None):
@@ -266,3 +277,6 @@ def draw_sheet(screen, rect, u, f):
 
     text(screen, "click anywhere to close", f.body_sm, INK_FAINT,
          (rect.centerx, rect.bottom - 18), center=True)
+
+    if tooltip and mouse:
+        draw_tooltip(screen, f.body_sm, tooltip, mouse)

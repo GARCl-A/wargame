@@ -37,20 +37,20 @@ def _archetypes(u):
     """Two or three quick read tags to help the pick."""
     tags = []
     if u.size == "Large":
-        tags.append(("LARGE", INFO))
+        tags.append(("LARGE", INFO, "Ocupa mais espaço no mapa e possui bônus de vida base."))
     if u.dr or u.ac >= 12 or u.hp_max >= 9:
-        tags.append(("TOUGH", OK))
+        tags.append(("TOUGH", OK, "Sobrevivência notável devido ao seu HP, Redução de Dano ou AC."))
     if u.ranged:
-        tags.append(("RANGED", INFO))
+        tags.append(("RANGED", INFO, "Carrega uma arma de longo alcance para ataque à distância."))
     if u.speed >= 7:
-        tags.append(("FAST", OK))
+        tags.append(("FAST", OK, "Movel e ágil, com alto movimento e chance de esquiva."))
     if u.mod_strength >= 2:
-        tags.append(("BRUTE", WARN))
+        tags.append(("BRUTE", WARN, "Extremamente forte. Causa alto dano corpo-a-corpo e carrega muito peso."))
     if u.mod_charisma >= 1:
-        tags.append(("TAUNTER", WARN))
+        tags.append(("TAUNTER", WARN, "Carismático. Eficaz em afetar o moral inimigo (Demoralize) e recrutar."))
     if u.ability.darkvision:
-        tags.append(("SEES IN DARK", INFO))
-    return tags[:3] or [("BALANCED", INK_FAINT)]
+        tags.append(("SEES IN DARK", INFO, "Enxerga na escuridão sem precisar carregar tochas."))
+    return tags[:3] or [("BALANCED", INK_FAINT, "Bem equilibrado, sem um foco específico.")]
 
 
 class DraftScreen(Screen):
@@ -153,22 +153,6 @@ class DraftScreen(Screen):
         return {"pick": "draft.pick", "identity": "draft.identity",
                 "leader": "draft.leader"}.get(self.phase)
 
-    def tutorial_anchor(self, size):
-        w, h = size
-        if self.phase == "identity":
-            """The identity form only ever uses the left ~560px (`_draw_identity`);
-            the whole right side of the window is untouched."""
-            cw = min(560, w - 2 * MARGIN)
-            x = MARGIN + cw + SP4
-            return (x, MARGIN + 74, min(340, max(200, w - x - MARGIN)), "down")
-        """pick/leader share this layout (`draw`): the squad rail band under the
-        cards in "pick", the same now-empty band in "leader" (no rail drawn)."""
-        rail_h, card_h = 92, 548
-        group_h = card_h + SP4 + rail_h
-        slack = max(0, (h - 18) - (MARGIN + 58) - group_h)
-        rail_y = MARGIN + 58 + slack // 2 + card_h + SP4
-        return (MARGIN, rail_y, min(340, w - 2 * MARGIN), "down")
-
     def _click_identity(self, px):
         if self.editing_name:                 # a click anywhere commits the field being typed
             self.guild_name, self.editing_name = self.name_buf, False
@@ -194,6 +178,7 @@ class DraftScreen(Screen):
         f = self.fonts
         screen.fill((18, 19, 24))
         mouse = self.mouse
+        self.tooltip = None
 
         if self.phase == "identity":
             self._draw_identity(screen)
@@ -243,6 +228,23 @@ class DraftScreen(Screen):
 
         if self.picker is not None:
             self._draw_picker(screen, mouse)
+
+        if getattr(self, "tooltip", None):
+            self._draw_tooltip(screen)
+
+    def _draw_tooltip(self, screen):
+        f = self.fonts
+        lines = [(ln, f.body_sm, INK_DIM) for ln in wrap_lines([self.tooltip], f.body_sm, 240)]
+        tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
+        th = 2 * SP3 + len(lines) * 16
+        W, H = screen.get_size()
+        bx = min(self.mouse[0] + 16, W - tw - SP2)
+        by = min(self.mouse[1] + 16, H - th - SP2)
+        panel(screen, pygame.Rect(bx, by, tw, th), fill=SURFACE_2, border=LINE, width=1, radius=RADIUS)
+        yy = by + SP3
+        for s, fo, c in lines:
+            text(screen, s, fo, c, (bx + SP3, yy))
+            yy += 16
 
     # ------------------------------------------------------------------ #
     def _draw_identity(self, screen):
@@ -355,12 +357,14 @@ class DraftScreen(Screen):
         # --- tags + context --------------------------------------- #
         tag_row = s.row(17)
         tx = tag_row.x
-        for label, tcol in _archetypes(unit):
+        for label, tcol, desc in _archetypes(unit):
             w = f.label.size(label)[0] + 12
             pill = pygame.Rect(tx, tag_row.y, w, 16)
             pygame.draw.rect(screen, SURFACE_1, pill, border_radius=4)
             pygame.draw.rect(screen, tcol, pill, 1, border_radius=4)
             text(screen, label, f.label, tcol, (pill.centerx, pill.centery - 1), center=True)
+            if pill.collidepoint(mouse):
+                self.tooltip = desc
             tx += w + SP1
         s.gap(SP3)
         ctx = s.row(16)

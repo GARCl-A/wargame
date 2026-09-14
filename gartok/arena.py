@@ -62,8 +62,8 @@ BOSS_MAP = "capture-the-flag-the-gamers"
 
 
 def scrapper_bout():
-    """An introductory fight in the Pit, available before the Champion is dethroned."""
-    return world.Bout("The Pit: Scrapper", entry=5, purse=20, enemies=3, level=0)
+    """An introductory fight in the Pit."""
+    return world.Bout("The Pit: Scrapper", entry=5, purse=20, enemies=3, level=0, rep=0)
 
 
 def champion_bout():
@@ -143,6 +143,7 @@ def sync(guild):
     event lines for the caller to surface."""
     day = guild.arena_challenge_day
     champ = champion_of(guild)
+
     if champ is None:
         guild.arena_challenge_day = None
         return []
@@ -152,6 +153,22 @@ def sync(guild):
         return [f"{champ.name} never answered the challenge -- "
                 f"the Champion of the Pit title is forfeit."]
     return []
+
+def bout_level_range(bout, squad):
+    """Returns a string describing the expected enemy levels for the UI."""
+    if bout.champion:
+        from .progression import mean_level
+        avg = sum(mean_level(u) for u in squad) // max(1, len(squad)) if squad else 0
+        return f"Lv {avg + 1} + goons (Lv 0)"
+    if bout.defense:
+        from .progression import mean_level
+        avg = sum(mean_level(u) for u in squad) // max(1, len(squad)) if squad else 0
+        return f"Lv {avg + 1}"
+    if bout.stage2:
+        if bout.boss:
+            return f"Bosses + goons (Lv {bout.level})"
+        return "Lv 1-6"
+    return f"Lv {bout.level}"
 
 
 def build_challenger(mean_level):

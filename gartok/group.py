@@ -96,3 +96,21 @@ class Group:
         recruitment/merges outright -- the guild can still grow, it just gets
         easier to rattle."""
         return max(0, len(self.members) - self.capacity)
+
+    def distribute_load(self):
+        """Removes all unequipped items from the members' packs and redistributes
+        them, prioritizing members with the most free carrying capacity."""
+        from . import data
+        items = []
+        for u in self.members:
+            items.extend(u._base_inventory)
+            u._base_inventory.clear()
+            u._derive_combat()
+            
+        items.sort(key=data.item_weight, reverse=True)
+        
+        for item in items:
+            best_member = max(self.members, key=lambda m: m.carry_max - m.load)
+            best_member.give_to_pack(item)
+            best_member._derive_combat()
+

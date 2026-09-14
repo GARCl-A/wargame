@@ -45,8 +45,9 @@ class Screen:
         """Where that card (and its reopen `?` badge) sits: `(x, y, max_w, grow)`
         -- `grow` is `"down"` (the card's body extends below `(x, y)`) or `"up"`
         (it extends above). Only screens that override `tutorial_key` need to
-        override this; the default is a generic top-left placement."""
-        return (24, 24, 340, "down")
+        override this; the default is top-right."""
+        W, H = size
+        return (W - 340 - 24, 24, 340, "down")
 
     def footer_anchor(self, size, *, offset=52, w=340, margin=None):
         """The shape most footer-only screens share: bottom-left, growing

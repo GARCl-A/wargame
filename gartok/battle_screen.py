@@ -52,6 +52,7 @@ class BattleScreen(Screen):
         self.enemy_timer = 0
         self.aim_action = None
         self.show_magic_menu = False
+        self.show_blocked_actions = False
         self.view_squad = False
         self.buttons = []
 
@@ -146,10 +147,6 @@ class BattleScreen(Screen):
     def tutorial_key(self):
         return "battle"
 
-    def tutorial_anchor(self, size):
-        log = battle_layout(size)["log"]
-        return (log.x + SP2, log.bottom - SP2, min(340, log.w - 2 * SP2), "up")
-
     def _click(self, px):
         b = self.battle
         if b.winner is not None:
@@ -165,6 +162,8 @@ class BattleScreen(Screen):
                 elif key == "magic_menu":
                     self.show_magic_menu = True
                     self.aim_action = None
+                elif key == "toggle_blocked":
+                    self.show_blocked_actions = not self.show_blocked_actions
                 else:
                     self._action_click(key)
                 return
@@ -981,33 +980,45 @@ class BattleScreen(Screen):
                 self.buttons.append((action, r))
             return
 
-        # Climb/Drop only make sense at a pit edge -- hide them elsewhere. Push
-        # and Jump are general moves; they stay on the panel, greyed when unusable.
-        contextual = (actions.ATTACK_TONGUE, actions.STABILIZE, actions.FIRST_AID,
-                      actions.CLIMB, actions.DROP, actions.SWIM)
+        # Climb/Drop/Swim only make sense at specific cells -- hide them elsewhere.
+        contextual = (actions.CLIMB, actions.DROP, actions.SWIM)
+
+        r = s.row(34)
+        s.gap(SP1)
+        tr = pygame.Rect(r.right - 34, r.y, 34, 34)
+        mr = pygame.Rect(r.x, r.y, r.w - 40, 34)
+        
+        t_fill = SURFACE_2 if self.show_blocked_actions else SURFACE_1
+        panel(screen, tr, fill=t_fill, border=LINE_SOFT, width=1)
+        text(screen, "(o)" if self.show_blocked_actions else "(-)", f.mono_sm, INK, tr.center, center=True)
+        self.buttons.append(("toggle_blocked", tr))
 
         if act.char.spells_known:
-            r = s.row(34)
-            s.gap(SP1)
             enabled = my_turn
             fill = SURFACE_2 if enabled else SURFACE_1
-            panel(screen, r, fill=fill, border=LINE_SOFT, width=1)
+            panel(screen, mr, fill=fill, border=LINE_SOFT, width=1)
             ink = INK if enabled else INK_FAINT
-            text(screen, "Lançar Magia", f.body_bd, ink, r.center, center=True)
-            self.buttons.append(("magic_menu", r))
+            text(screen, "Lançar Magia", f.body_bd, ink, mr.center, center=True)
+            self.buttons.append(("magic_menu", mr))
 
         hotkey_i = 0
         for action in actions.PANEL_ACTIONS:
+            applies, reason = action.applicable(b, act)
+            
             if action in contextual and not (my_turn and action.available(b, act)):
                 continue
-            enabled = my_turn if action is actions.END else (
-                my_turn and action.available(b, act))
+                
+            if not applies and not self.show_blocked_actions:
+                continue
+
+            enabled = applies and (my_turn if action is actions.END else (
+                my_turn and action.available(b, act)))
             armed = action.aimed and self.aim_action is action
             r = s.row(34)
             s.gap(SP1)
             arm_c = DEMO_HL if action is actions.DEMORALIZE else \
                 THROW_HL if action is actions.THROW else \
-                ATK_HL if action is actions.ATTACK_TONGUE else ACCENT
+                ATK_HL if action in (actions.ATTACK_TONGUE, actions.ATTACK) else ACCENT
             fill = arm_c if armed else SURFACE_2 if enabled else SURFACE_1
             panel(screen, r, fill=fill,
                   border=arm_c if armed else LINE_SOFT, width=1)
@@ -1017,6 +1028,8 @@ class BattleScreen(Screen):
             icons.icon(screen, action.id, ibox, ink)
 
             label = action.name if not armed else f"{action.name}: click the target"
+            if not applies:
+                label += f" ({reason})"
             if hotkey_i < 9:                    # 1-9 hotkeys, in panel order
                 label = f"[{hotkey_i + 1}] {label}"
             hotkey_i += 1

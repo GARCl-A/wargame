@@ -69,9 +69,16 @@ class Action:
     target = "none"        # "none" | "enemy" | "cell"
     aimed = False          # True: needs the target picked by clicking the screen
 
+    @classmethod
+    def applicable(cls, battle, actor):
+        """Should this action be shown on the action bar for this unit at all?
+        Returns (True, "") if it should, or (False, reason) if blocked."""
+        return True, ""
+
     def available(self, battle, actor):
         """Does the action show enabled for this unit now (no target chosen yet)?"""
-        return actor.ap >= self.cost
+        applies, _ = self.applicable(battle, actor)
+        return applies and actor.ap >= self.cost
 
     def can(self, battle, actor, target=None):
         """Can it be executed against this specific target?"""
@@ -283,7 +290,7 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
 
 
 class Attack(Action):
-    id, name, target = "attack", "Attack", "enemy"
+    id, name, target, aimed = "attack", "Attack", "enemy", True
 
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _attackable_target(actor, target):
@@ -323,6 +330,12 @@ class AttackTongue(Action):
 
     id, name, target, aimed = "attack_tongue", "Lash", "enemy", True
 
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.has_tongue_weapon:
+            return False, "Not a Grippli with Tongue."
+        return True, ""
+
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.has_tongue_weapon
 
@@ -335,7 +348,7 @@ class AttackTongue(Action):
             return False
         if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
             return False
-        return battle.los_between(actor, target)
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
 
     def label(self, battle, actor):
         if not self.available(battle, actor):
@@ -369,6 +382,15 @@ class Reload(Action):
     gets one bolt away per turn (Reload + Attack = the whole turn)."""
 
     id, name = "reload", "Reload"
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        wpn = getattr(actor, "weapon_name", "") or ""
+        off = getattr(actor, "offhand_name", "") or ""
+        has_ranged = "Crossbow" in wpn or "Crossbow" in off
+        if not has_ranged:
+            return False, "Not holding a crossbow."
+        return True, ""
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.can_reload
@@ -1055,6 +1077,12 @@ class Swim(Action):
 class EatCorpse(Action):
     id, name, cost, target, aimed = "eat_corpse", "Eat Corpse", 1, "enemy", True
 
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.char.has_talent("corpse_eater"):
+            return False, "Missing 'corpse_eater' talent."
+        return True, ""
+
     def available(self, battle, actor):
         if not super().available(battle, actor) or getattr(actor, "mounted_on", None) is not None:
             return False
@@ -1101,6 +1129,12 @@ class EatCorpse(Action):
 class Mount(Action):
     id, name, cost, target, aimed = "mount", "Mount", 1, "ally", True
 
+    @classmethod
+    def applicable(cls, battle, actor):
+        if actor.size not in ("Small", "Medium"):
+            return False, "Too large to ride a mount."
+        return True, ""
+
     def available(self, battle, actor):
         if not super().available(battle, actor):
             return False
@@ -1133,6 +1167,12 @@ class Mount(Action):
 
 class Dismount(Action):
     id, name, cost, target, aimed = "dismount", "Dismount", 1, "cell", True
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if getattr(actor, "mounted_on", None) is None:
+            return False, "Not currently mounted."
+        return True, ""
 
     def available(self, battle, actor):
         return super().available(battle, actor) and getattr(actor, "mounted_on", None) is not None
@@ -1291,7 +1331,10 @@ class CastSpellAction(Action):
             if atk == 20 or hit_score >= target.ac:
                 dmg = data.roll(1, 4)
                 battle.log(f" Hit ({hit_score} vs AC {target.ac}) for {dmg} magic damage.")
-                battle.damage(target, dmg, actor=actor)
+                was_up = target.alive
+                target.take_damage(dmg, battle.log)
+                if was_up and not target.alive and target.team != actor.team:
+                    actor.credit_kill(target)
             else:
                 battle.log(f" Miss ({hit_score} vs AC {target.ac}).")
                 
@@ -1329,6 +1372,14 @@ class ShareMagicAction(Action):
     cost = 1
     target = "none"
     
+    @classmethod
+    def applicable(cls, battle, actor):
+        if "sprite_nature_initiate" not in getattr(actor.char, "talents", {}).get("racial", []):
+            return False, "Not a Sprite Initiate."
+        if not actor.spells_known:
+            return False, "No spells known."
+        return True, ""
+    
     def available(self, battle, actor):
         # Only available if the actor has the sprite talent and knows at least one spell
         return (actor.ap >= self.cost and 
@@ -1359,5 +1410,5 @@ SHARE_MAGIC = ShareMagicAction()
 
 # Panel buttons, in order. Move and Attack are the default board click.
 # Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
-PANEL_ACTIONS = [ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
+PANEL_ACTIONS = [ATTACK, ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
                  SWIM, STABILIZE, FIRST_AID, PICK_UP, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]

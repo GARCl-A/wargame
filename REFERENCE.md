@@ -108,6 +108,7 @@ Each occupation grants one starting weapon and one starting item.
 | Broadsword | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Light Crossbow | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
 | Dwarf Axe | 1d10 | melee | -- | -- | 1 | 4 kg | -- |
+| Rapier | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 
 ## Armor
 
@@ -126,7 +127,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 
 | Item | Weight | Notes |
 |---|---|---|
-| 1L Beer | 1 kg | -- |
+| 1L Beer | 1 kg | food, consumable |
 | 1kg Coal | 1 kg | -- |
 | 1kg Firewood | 1 kg | -- |
 | 1sqm Hide | 2 kg | -- |
@@ -296,7 +297,7 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Resale factor | 0.5 of buy price |
 | Lumber wage | 3 cp per 4 h (level 0, bare-handed); 4 cp with your own Axe (level 1) |
 | Hunting job level | 3 |
-| Bank strongbox | 50 cp to rent, holds 10 kg |
+| Bank strongbox | 100 cp to rent, holds 30 kg |
 | Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105 |
 | Work XP thresholds | 2, 6, 12, 20, 30, 42 |
 | Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14 |

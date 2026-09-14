@@ -195,9 +195,19 @@ def _jump(surf, rect, c):
     pygame.draw.arc(surf, c, (x + s * 0.15, y, s * 0.7, s * 1.4), 0.5, 2.6, w)
 
 
+def _bite(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # top teeth
+    pygame.draw.line(surf, c, (x + s * 0.1, y + s * 0.3), (x + s * 0.9, y + s * 0.3), w)
+    pygame.draw.polygon(surf, c, [(x + s * 0.2, y + s * 0.3), (x + s * 0.4, y + s * 0.6), (x + s * 0.6, y + s * 0.3)], w)
+    # bottom teeth
+    pygame.draw.line(surf, c, (x + s * 0.1, y + s * 0.7), (x + s * 0.9, y + s * 0.7), w)
+    pygame.draw.polygon(surf, c, [(x + s * 0.4, y + s * 0.7), (x + s * 0.6, y + s * 0.4), (x + s * 0.8, y + s * 0.7)], w)
+
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
-    "demoralize": _shout,
+    "demoralize": _shout, "eat_corpse": _bite,
     "pickup": _hand, "defend": _shield, "end": _hourglass, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,

@@ -632,9 +632,13 @@ class Unit:
         if self._hp_override is not None:
             self.hp_max = max(1, self._hp_override)
         else:
-            self.hp_max = (max(1, self._hp_roll + con + self._ability.hp_max)
-                           + sum(max(1, die + con) for die in self._level_hp_rolls)
+            dice_sum = self._hp_roll + sum(self._level_hp_rolls)
+            self.hp_max = (dice_sum 
+                           + (con * hit_dice) 
+                           + self._ability.hp_max 
                            + self.talent_bonus("hp_per_hd") * hit_dice)
+            if self.hp_max < 1:
+                self.hp_max = 1
         if self.hunger_level >= 2:
             self.hp_max = 1
         self.hp = min(getattr(self, "hp", self.hp_max), self.hp_max)

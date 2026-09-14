@@ -172,7 +172,8 @@ class App:
         self.scene = MapScreen(self.fonts, self.guild,
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over,
-                               on_advance=self._advance)
+                               on_advance=self._advance,
+                               on_manage_group=self._open_group)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -198,6 +199,10 @@ class App:
 
     def _open_gear(self):
         self.scene = GearScreen(self.fonts, self.guild, on_back=self._open_guild)
+        
+    def _open_group(self, group):
+        from .group_screen import GroupScreen
+        self.scene = GroupScreen(self.fonts, self.guild, group, on_back=self._start_map)
 
     def _open_level(self, unit):
         self.scene = LevelScreen(self.fonts, unit,
@@ -288,9 +293,8 @@ class App:
         if arena.defense_due(self.guild):
             self._start_title_defense(node)
             return
-        offers = []
+        offers = [arena.scrapper_bout()]
         if "arena_dethrone" not in self.guild.deeds_done:
-            offers.append(arena.scrapper_bout())
             offers.append(arena.champion_bout())
         else:                                   # champion beaten: the Games are open
             offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]

@@ -260,6 +260,7 @@ WEAPONS = {
     "Broadsword":    {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0},
     "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5},
     "Dwarf Axe":     {"damage": (1, 10), "range": 0, "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
+    "Rapier":        {"damage": (1, 6), "range": 0, "finesse": True, "thrown": 0, "hands": 1, "weight": 1.0},
 }
 
 
@@ -300,10 +301,10 @@ TORCH_WEIGHT = 0.5
 TORCH_ITEM = "Torch"                     # a torch carried in the pack / between battles
 
 # Pack items that count as a day's meal (see the hunger rule in unit.py / guild.py).
-FOOD_ITEMS = {"Meat", "Potato", "Fruit", "Rotten Food"}
+FOOD_ITEMS = {"Meat", "Potato", "Fruit", "Rotten Food", "1L Beer"}
 STARVATION_DEATH_DAYS = 4                # missed meals in a row before a character dies
 
-FOOD_LIFESPAN = {"Fruit": 1, "Meat": 2, "Potato": 7}
+FOOD_LIFESPAN = {"Fruit": 1, "Meat": 2, "Potato": 7, "1L Beer": 30}
 
 # Items used up in play, not hauled cargo -- the Carrier talent's carry relief
 # skips these. Editable; grows as more consumables land.

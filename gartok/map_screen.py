@@ -48,13 +48,14 @@ WORK_HOURS = (4, 8, 12, 16)
 class MapScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance):
+    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
         self.on_guild = on_guild
         self.on_wipe = on_wipe
         self.on_advance = on_advance
+        self.on_manage_group = on_manage_group
         # point at whichever group actually needs an order, not just the first
         self.selected = next((g for g in guild.groups if not g.busy and not g.empty),
                              guild.groups[0])
@@ -131,6 +132,8 @@ class MapScreen(Screen):
             self.on_guild()
         elif key == "maintain":
             self.on_advance(dt=1)
+        elif key == "manage_group":
+            self.on_manage_group(self.selected)
         elif key == "split":
             self.mode, self.split_picks = "split", set()
         elif key.startswith("merge:"):
@@ -174,15 +177,6 @@ class MapScreen(Screen):
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "map"
-
-    def tutorial_anchor(self, size):
-        """Bottom-right of the map area: every `world.NODES` position keeps
-        clear of x>0.5,y>0.6 (`lumber_yard`/`market` crowd the bottom-left,
-        the legend claims the top-right), so this is the one quadrant with no
-        node marker to cover, however the map is laid out."""
-        area = self._area(size)
-        w = min(340, area.w - 2 * SP2)
-        return (area.right - w - SP2, area.bottom - SP2, w, "up")
 
     def _node_xy(self, area, n):
         pad = 48                              # keep markers + labels off the frame
@@ -450,6 +444,14 @@ class MapScreen(Screen):
         g = self.selected
         if g.busy:
             return y
+        
+        mg = pygame.Rect(cx, y, cw, 30)
+        hov = mg.collidepoint(self.mouse)
+        panel(screen, mg, fill=SURFACE_3 if hov else SURFACE_1, border=LINE_SOFT, radius=8)
+        text(screen, "MANAGE GEAR & QUESTS", f.body_sm, INK, mg.center, center=True)
+        self.buttons.append(("manage_group", mg))
+        y += 34
+
         if len(g.members) > 1:
             r = pygame.Rect(cx, y, cw, 30)
             hov = r.collidepoint(self.mouse)
@@ -662,7 +664,10 @@ class MapScreen(Screen):
             elif self.guild.bankers_debt > 0:
                 note, col = f"owes the Bankers {self.guild.bankers_debt} copper", DANGER
             else:
-                note, col = "buy a house from the Bankers -- taxed on a cycle", INK_FAINT
+                if self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE:
+                    note, col = "buy a house from the Bankers -- taxed on a cycle", INK_FAINT
+                else:
+                    note, col = f"needs {economy.CITY_PROPERTY_REP_GATE} reputation with the Bankers to buy", WARN
             text(screen, note, f.body_sm, col, (cx, y))
 
         if here.claim and not self.selected.busy:

@@ -51,9 +51,6 @@ class TavernaScreen(Screen):
     def tutorial_key(self):
         return "taverna"
 
-    def tutorial_anchor(self, size):
-        return self.footer_anchor(size)
-
     # ------------------------------------------------------------------ #
     def _eligible(self, cand):
         """Party members who could still pitch `cand` (share a tongue, not yet

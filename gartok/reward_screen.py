@@ -39,9 +39,6 @@ class RewardScreen(SheetModalMixin, Screen):
     def tutorial_key(self):
         return "reward"
 
-    def tutorial_anchor(self, size):
-        return self.footer_anchor(size, offset=56)
-
     # ------------------------------------------------------------------ #
     def _click(self, px):
         if self.close_sheet_on_click():
