@@ -21,6 +21,16 @@ from .data import resolve_bonus, roll
 AP_PER_TURN = 2
 
 
+def _bump_damage_die(n, faces):
+    """The Goliath's giant_grip damage step."""
+    scale = [(1, 2), (1, 3), (1, 4), (1, 6), (1, 8), (1, 10), (1, 12), (2, 8), (2, 10), (2, 12)]
+    try:
+        idx = scale.index((n, faces))
+        return scale[min(idx + 1, len(scale) - 1)]
+    except ValueError:
+        return n, faces
+
+
 class Combatant:
     def __init__(self, char, team=None):
         self.char = char
@@ -108,6 +118,8 @@ class Combatant:
         self.downed_by = None         # the combatant whose blow first put this one down (arena title)
         self.ferocity_downer = None   # who brought this unit to 0 HP while Ferocity keeps it up
         self.ctf_runner = False       # capture-the-flag: this enemy rushes the player's flag (set by Battle)
+        self.mounted_on = None        # another Combatant this unit is riding (Centaur mount)
+        self.rider = None             # a Combatant riding this one (Centaur mount)
 
     def credit_kill(self, victim):
         """Book a downed enemy: +1 to the kill count, plus combat XP scaled by the
@@ -173,6 +185,14 @@ class Combatant:
         """Drop to 0 HP. An automaton goes `broken` (no death clock); everyone else
         enters `dying`, restarting the death counter. Called for a standing unit
         downed, or a `stable` unit that takes a hit."""
+        # Dismount hook
+        if self.rider:
+            self.rider.mounted_on = None
+            self.rider = None
+        if self.mounted_on:
+            self.mounted_on.rider = None
+            self.mounted_on = None
+
         self.hp = 0
         self.ferocity_pending = False
         if self.nonlethal:
@@ -425,6 +445,10 @@ class Combatant:
             n, faces = self.unarmed_damage
         else:
             n, faces = self.weapon["damage"]
+        
+        if self.char.has_talent("giant_grip"):
+            n, faces = _bump_damage_die(n, faces)
+
         dice = roll(n, faces) + (roll(n, faces) if crit else 0)
         bonus = 0
         if thrown:

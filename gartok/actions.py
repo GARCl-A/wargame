@@ -131,6 +131,17 @@ def _flanked(battle, attacker, target):
     return False
 
 
+def _phalanxed(battle, target):
+    """Hobgoblin Phalanx: +1 AC if adjacent to at least one ally."""
+    if not target.char.has_talent("phalanx"):
+        return False
+    for u in battle.units:
+        if (u.alive and u.team == target.team and u is not target
+                and battle.units_distance(u, target) <= 1):
+            return True
+    return False
+
+
 def _hostile_target(actor, target):
     return target is not None and target.alive and target.team != actor.team
 
@@ -178,8 +189,11 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     `weapon` (a WEAPONS dict) overrides the held one for the damage roll -- the Tongue."""
     total = nat + bonus
     ac = target.ac
+    phalanx = _phalanxed(battle, target)
+    if phalanx:
+        ac += 1
     crit = nat == 20
-    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac}"
+    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac}" + (" [Phalanx]" if phalanx else "")
     if nat == 1:
         battle.log(desc + "  -> critical miss.")
         return "miss"
@@ -210,9 +224,13 @@ class Move(Action):
     id, name, target = "move", "Move", "cell"
 
     def available(self, battle, actor):
+        if getattr(actor, "mounted_on", None) is not None:
+            return False
         return bool(battle.reachable(actor))
 
     def can(self, battle, actor, target=None):
+        if getattr(actor, "mounted_on", None) is not None:
+            return False
         return target in battle.reachable(actor)
 
     def execute(self, battle, actor, target=None):
@@ -1013,6 +1031,119 @@ class Swim(Action):
 
 
 # --------------------------------------------------------------------------- #
+# Racial Actions                                                               #
+# --------------------------------------------------------------------------- #
+
+class EatCorpse(Action):
+    id, name, cost, target, aimed = "eat_corpse", "Eat Corpse", 1, "enemy", True
+
+    def available(self, battle, actor):
+        if not super().available(battle, actor) or getattr(actor, "mounted_on", None) is not None:
+            return False
+        if not actor.char.has_talent("corpse_eater"):
+            return False
+        for u in battle.units:
+            if u.team != actor.team and u.dead and getattr(u, "eaten", False) is False and battle.units_distance(u, actor) <= 1:
+                return True
+        return False
+
+    def can(self, battle, actor, target=None):
+        return (super().can(battle, actor, target) and target is not None 
+                and target.team != actor.team and target.dead 
+                and battle.units_distance(target, actor) <= 1
+                and getattr(target, "eaten", False) is False)
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units if self.can(battle, actor, u)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        target.eaten = True
+        actor.char.unfed_days = 0
+        battle.log(f"{actor.name} devours {target.name}'s corpse (hunger reset to 0).")
+        
+        nat = d20()
+        bonus = max(actor.mod_strength, actor.mod_charisma)
+        total = nat + bonus
+        battle.log(f"  Terrifying feast: d20({nat}) {bonus:+} = {total} (AoE Demoralize)")
+        
+        for u in battle.units:
+            if u.team != actor.team and u.alive and battle.can_see_unit(u, actor):
+                md = u.mental_defense
+                if total >= md:
+                    u.add_condition(Demoralized())
+                    battle.log(f"    {u.name} (MD {md}) is terrified -> DEMORALIZED.")
+                else:
+                    battle.log(f"    {u.name} (MD {md}) resists the horror.")
+
+
+class Mount(Action):
+    id, name, cost, target, aimed = "mount", "Mount", 1, "ally", True
+
+    def available(self, battle, actor):
+        if not super().available(battle, actor):
+            return False
+        if getattr(actor, "mounted_on", None) is not None or actor.size not in ("Small", "Medium"):
+            return False
+        for u in battle.units:
+            if u.alive and u.team == actor.team and u is not actor and u.char.has_talent("centaur_mount") and not getattr(u, "rider", None) and battle.units_distance(actor, u) <= 1:
+                return True
+        return False
+
+    def can(self, battle, actor, target=None):
+        return (super().can(battle, actor, target) and target is not None
+                and target.alive and target.team == actor.team and target is not actor
+                and target.char.has_talent("centaur_mount") and not getattr(target, "rider", None)
+                and battle.units_distance(actor, target) <= 1)
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units if self.can(battle, actor, u)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        actor.mounted_on = target
+        target.rider = actor
+        actor.pos = target.pos
+        battle.log(f"{actor.name} mounts {target.name}.")
+
+
+class Dismount(Action):
+    id, name, cost, target, aimed = "dismount", "Dismount", 1, "cell", True
+
+    def available(self, battle, actor):
+        return super().available(battle, actor) and getattr(actor, "mounted_on", None) is not None
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target):
+            return False
+        if getattr(actor, "mounted_on", None) is None or target is None:
+            return False
+        return target in battle.board.neighbors(actor.mounted_on.pos) and _cell_free(battle, actor, target)
+
+    def highlight_cells(self, battle, actor):
+        if not getattr(actor, "mounted_on", None):
+            return []
+        return [c for c in battle.board.neighbors(actor.mounted_on.pos) if _cell_free(battle, actor, c)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        mount = actor.mounted_on
+        actor.mounted_on = None
+        mount.rider = None
+        actor.pos = target
+        battle.log(f"{actor.name} dismounts to {target}.")
+
+
+# --------------------------------------------------------------------------- #
 # End turn                                                                     #
 # --------------------------------------------------------------------------- #
 
@@ -1046,8 +1177,11 @@ DROP = DropIn()
 JUMP = Jump()
 SWIM = Swim()
 FLEE = Flee()
+EAT_CORPSE = EatCorpse()
+MOUNT = Mount()
+DISMOUNT = Dismount()
 END = EndTurn()
 
 # Panel buttons, in order. Move and Attack are the default board click.
 PANEL_ACTIONS = [ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
-                 SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, FLEE, END]
+                 SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, FLEE, END]

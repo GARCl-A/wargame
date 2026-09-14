@@ -189,6 +189,24 @@ _LIST = [
            "machines do not sleep or complain: you complete simple labor "
            "and gathering tasks significantly faster.", race="Automaton",
            effects=(Effect("activity_speed", 0.25),), icon="action/armor-vest"),
+    Talent("centaur_mount", "racial", 1, "Mount",
+           "your strong back: allow a Medium or Small ally to ride you.", race="Centaur",
+           effects=(Effect("centaur_mount", 1),), icon="body/horse-head"),
+    Talent("giant_grip", "racial", 1, "Giant's Grip",
+           "immense physical strength: wield weapons as if you were one size larger "
+           "(+1 damage step).", race="Goliath",
+           effects=(Effect("giant_grip", 1),), icon="action/muscle-up"),
+    Talent("phalanx", "racial", 1, "Phalanx",
+           "martial discipline: +1 AC if you are adjacent to at least one ally.", race="Hobgoblin",
+           effects=(Effect("phalanx", 1),), icon="body/surrounded-shield"),
+    Talent("organic_harvester", "racial", 1, "Organic Harvester",
+           "scavenging instinct: 25% chance per organic loot type to find more meat "
+           "or hide after a beast battle.", race="Lizardfolk",
+           effects=(Effect("organic_harvester", 1),), icon="action/meat"),
+    Talent("corpse_eater", "racial", 1, "Corpse Eater",
+           "brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and "
+           "demoralizing enemies who see you.", race="Gnoll",
+           effects=(Effect("corpse_eater", 1),), icon="action/swallow"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

@@ -230,6 +230,11 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- | Orc |
 | 1 | Swarm Logic | there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- | Goblin |
 | 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- | Automaton |
+| 1 | Mount | your strong back: allow a Medium or Small ally to ride you. | -- | Centaur |
+| 1 | Giant's Grip | immense physical strength: wield weapons as if you were one size larger (+1 damage step). | -- | Goliath |
+| 1 | Phalanx | martial discipline: +1 AC if you are adjacent to at least one ally. | -- | Hobgoblin |
+| 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- | Lizardfolk |
+| 1 | Corpse Eater | brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- | Gnoll |
 
 ## Factions and deeds
 

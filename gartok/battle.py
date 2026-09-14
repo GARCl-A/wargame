@@ -137,8 +137,14 @@ class Battle:
 
     def occupied(self, exclude=None):
         result = set()
+        ignore = {exclude} if exclude else set()
+        if exclude:
+            if getattr(exclude, "rider", None):
+                ignore.add(exclude.rider)
+            if getattr(exclude, "mounted_on", None):
+                ignore.add(exclude.mounted_on)
         for u in self.units:
-            if u.alive and u is not exclude:
+            if u.alive and u not in ignore:
                 result.update(self.cells_of(u))
         return result
 
@@ -149,8 +155,13 @@ class Battle:
         ended on.
         """
         allies, enemies = set(), set()
+        ignore = {unit}
+        if getattr(unit, "rider", None):
+            ignore.add(unit.rider)
+        if getattr(unit, "mounted_on", None):
+            ignore.add(unit.mounted_on)
         for u in self.units:
-            if not u.alive or u is unit:
+            if not u.alive or u in ignore:
                 continue
             dest = allies if u.team == unit.team else enemies
             dest.update(self.cells_of(u))
@@ -286,6 +297,8 @@ class Battle:
         unit.moved += step_cost
         unit.path.extend(segment[1:])         # the cells walked this turn so far
         unit.pos = dest
+        if getattr(unit, "rider", None):
+            unit.rider.pos = dest
         if unit.moved >= unit.speed:          # walk exhausted; next step = new action
             unit.walking = False
         return True

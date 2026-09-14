@@ -24,6 +24,7 @@ of one another -- see `orders.py` for what an order is.
 """
 
 import random
+import math
 from dataclasses import dataclass, field
 
 from . import arena, constants, data, economy, encounters, factions, justice, loot, missions, orders, world
@@ -114,6 +115,17 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
         outcome.arena_reward = arena_offer.purse
     elif won and battle.lethal:                   # lethal win: loot the field
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
+        
+        # Lizardfolk Organic Harvester
+        if any(s.has_talent("organic_harvester") for s in survivors):
+            organics = [it for it in outcome.loot_pool if it in ("Meat", "1sqm Hide")]
+            counts = {}
+            for it in organics:
+                counts[it] = counts.get(it, 0) + 1
+            for it, count in counts.items():
+                if random.random() < 0.25:
+                    extra = math.ceil(count * 0.2)
+                    outcome.loot_pool.extend([it] * extra)
 
     outcome.deeds_earned = factions.settle(
         guild, factions.Event("battle", node=node, outcome=outcome))
