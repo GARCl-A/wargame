@@ -142,9 +142,9 @@ SURFACE_4 = (56, 61, 74)
 LINE      = (58, 63, 76)
 LINE_SOFT = (40, 44, 54)
 
-INK       = (230, 232, 237)
-INK_DIM   = (154, 160, 172)
-INK_FAINT = (104, 110, 122)
+INK       = (255, 255, 255)
+INK_DIM   = (200, 206, 218)
+INK_FAINT = (156, 162, 174)
 
 ACCENT    = (232, 194, 75)             # selection / active / focus (warm gold)
 ACCENT_INK = (24, 20, 8)              # text on an accent fill
@@ -207,26 +207,26 @@ class Fonts:
         S = lambda name, size, bold=False: pygame.font.SysFont(name, size, bold=bold)
 
         # weighted sans: identity, headings, labels, running text
-        self.title    = S(_SANS, 26, bold=True)
-        self.heading  = S(_SANS, 15, bold=True)
-        self.label    = S(_SANS, 11, bold=True)
-        self.body     = S(_SANS, 14)
-        self.body_sm  = S(_SANS, 12)
-        self.body_bd  = S(_SANS, 14, bold=True)
+        self.title    = S(_SANS, 28, bold=True)
+        self.heading  = S(_SANS, 16, bold=True)
+        self.label    = S(_SANS, 12, bold=True)
+        self.body     = S(_SANS, 15)
+        self.body_sm  = S(_SANS, 13)
+        self.body_bd  = S(_SANS, 15, bold=True)
 
         # monospace: numbers, dice math, the log
-        self.num_lg   = S(_MONO, 26, bold=True)
-        self.num      = S(_MONO, 19, bold=True)
-        self.mono     = S(_MONO, 12)
-        self.mono_sm  = S(_MONO, 11)
+        self.num_lg   = S(_MONO, 28, bold=True)
+        self.num      = S(_MONO, 20, bold=True)
+        self.mono     = S(_MONO, 13)
+        self.mono_sm  = S(_MONO, 12)
 
         # --- back-compat aliases used by sheet.py and older call sites --- #
         self.font      = self.body
         self.big       = self.title
         self.small     = self.body_sm
-        self.tiny      = S(_SANS, 11)
+        self.tiny      = S(_SANS, 12)
         self.kw        = self.label
-        self.card_name = S(_SANS, 17, bold=True)
+        self.card_name = S(_SANS, 18, bold=True)
         self.card_val  = self.num
 
 

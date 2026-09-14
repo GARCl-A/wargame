@@ -134,6 +134,10 @@ class DraftScreen(Screen):
             self.edit_mode = not self.edit_mode
             return
 
+        if getattr(self, "reroll_btn_rect", None) and self.reroll_btn_rect.collidepoint(px):
+            self._new_candidates()
+            return
+
         if self.edit_mode:
             for rect, unit, field in self.edit_rects:
                 if rect.collidepoint(px):
@@ -202,7 +206,7 @@ class DraftScreen(Screen):
                 sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
                             f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
             text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
-            self._draw_edit_button(screen, mouse)
+            self._draw_top_buttons(screen, mouse)
 
         rail_h = 92 if not leader_phase else 0
         avail_h = screen.get_height() - (MARGIN + 58) - rail_h - (SP4 if rail_h else 0) - 24
@@ -494,22 +498,31 @@ class DraftScreen(Screen):
                 dot = (r.x + SP3 + 9, r.centery)
                 token_badge(screen, dot, u, f, r=12)
                 text(screen, u.name, f.body_bd, INK, (dot[0] + 20, r.y + SP2))
-                n, faces = u.weapon["damage"]
-                text(screen, f"HP {u.hp_max}  AC {u.ac}  Speed {u.speed}  {u.weapon_name} {n}d{faces}",
+                text(screen, f"{u.race['name']}  ·  {u.occupation['name']}",
                      f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 18))
+                text(screen, f"STR {u.strength}  DEX {u.dexterity}  CON {u.constitution}  INT {u.intelligence}  WIS {u.wisdom}  CHA {u.charisma}",
+                     f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 36))
             else:
                 pygame.draw.rect(screen, LINE_SOFT, r, 1, border_radius=RADIUS)
                 text(screen, f"slot {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)
 
-    def _draw_edit_button(self, screen, mouse):
-        r = pygame.Rect(screen.get_width() - MARGIN - 96, MARGIN, 96, 30)
-        self.edit_btn_rect = r
+    def _draw_top_buttons(self, screen, mouse):
+        r_edit = pygame.Rect(screen.get_width() - MARGIN - 96, MARGIN, 96, 30)
+        self.edit_btn_rect = r_edit
         on = self.edit_mode
-        hov = r.collidepoint(mouse)
-        panel(screen, r, fill=ACCENT if on else (SURFACE_3 if hov else SURFACE_2),
-              border=ACCENT if (on or hov) else LINE, width=1, radius=4)
+        hov_edit = r_edit.collidepoint(mouse)
+        panel(screen, r_edit, fill=ACCENT if on else (SURFACE_3 if hov_edit else SURFACE_2),
+              border=ACCENT if (on or hov_edit) else LINE, width=1, radius=4)
         text(screen, "EDITING" if on else "EDIT", self.fonts.label,
-             ACCENT_INK if on else INK, r.center, center=True)
+             ACCENT_INK if on else INK, r_edit.center, center=True)
+
+        r_reroll = pygame.Rect(r_edit.left - SP2 - 96, MARGIN, 96, 30)
+        self.reroll_btn_rect = r_reroll
+        hov_reroll = r_reroll.collidepoint(mouse)
+        panel(screen, r_reroll, fill=SURFACE_3 if hov_reroll else SURFACE_2,
+              border=ACCENT if hov_reroll else LINE, width=1, radius=4)
+        text(screen, "REROLL", self.fonts.label,
+             INK, r_reroll.center, center=True)
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen, mouse):
