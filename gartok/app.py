@@ -557,6 +557,8 @@ class App:
     def _battle_end(self, battle):
         hunt_state = self._hunt
         pause_order, pause_group = self._pause_order, self._pause_group
+        was_champion_bout = bool(self._arena_offer and getattr(self._arena_offer, "champion", False))
+        battle_node = self._battle_node
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
                                          node=self._battle_node,
                                          arena_offer=self._arena_offer)
@@ -570,6 +572,12 @@ class App:
             self._pause_order = self._pause_group = None
             self._campaign_over()
             return
+
+        def after_arena_reward():
+            if was_champion_bout and outcome.won and not any(u.name.startswith("Adelio") for u in self.guild.roster):
+                self._prompt_recruit_adelio(outcome.survivors, battle_node)
+            else:
+                self._after_activity()
 
         if self._claim_stage_pending is not None:   # a deliberate Wilds claim fight (CLEAR/SWEEP)
             stage, self._claim_stage_pending = self._claim_stage_pending, None
@@ -625,7 +633,7 @@ class App:
         if outcome.arena_reward is not None:  # arena bout won: hand out the purse
             self._save()
             self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
-                                      outcome.arena_reward, on_done=self._after_activity,
+                                      outcome.arena_reward, on_done=after_arena_reward,
                                       deeds=outcome.deeds_earned, note=note)
             return
 
@@ -638,6 +646,20 @@ class App:
                                     outcome.loot_pool, on_done=self._after_activity)
             return
         self._after_activity()
+
+    def _prompt_recruit_adelio(self, survivors, node):
+        from .adelio_prompt_screen import AdelioPromptScreen
+        from .taverna_screen import TavernaScreen
+        from . import arena
+        def do_recruit():
+            adelio = arena.load_champion()
+            adelio.arena_title = False
+            adelio.arena_role = None
+            adelio.side = "player"
+            self.scene = TavernaScreen(self.fonts, self.guild, survivors, node,
+                                       on_done=self._after_activity,
+                                       candidates=[adelio], title="RECRUIT ADELIO")
+        self.scene = AdelioPromptScreen(self.fonts, on_recruit=do_recruit, on_leave=self._after_activity)
 
     # ------------------------------------------------------------------ #
     def _toggle_pause(self):

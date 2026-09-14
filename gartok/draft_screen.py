@@ -37,20 +37,20 @@ def _archetypes(u):
     """Two or three quick read tags to help the pick."""
     tags = []
     if u.size == "Large":
-        tags.append(("LARGE", INFO, "Ocupa mais espaço no mapa e possui bônus de vida base."))
+        tags.append(("LARGE", INFO, "Takes up more space on the grid; has higher base health."))
     if u.dr or u.ac >= 12 or u.hp_max >= 9:
-        tags.append(("TOUGH", OK, "Sobrevivência notável devido ao seu HP, Redução de Dano ou AC."))
+        tags.append(("TOUGH", OK, "High survivability from HP, Damage Reduction, or Armor Class."))
     if u.ranged:
-        tags.append(("RANGED", INFO, "Carrega uma arma de longo alcance para ataque à distância."))
+        tags.append(("RANGED", INFO, "Carries a ranged weapon to attack from distance."))
     if u.speed >= 7:
-        tags.append(("FAST", OK, "Movel e ágil, com alto movimento e chance de esquiva."))
+        tags.append(("FAST", OK, "Swift and agile, with high movement and evasion."))
     if u.mod_strength >= 2:
-        tags.append(("BRUTE", WARN, "Extremamente forte. Causa alto dano corpo-a-corpo e carrega muito peso."))
+        tags.append(("BRUTE", WARN, "Heavy hitter with high melee damage and carry capacity."))
     if u.mod_charisma >= 1:
-        tags.append(("TAUNTER", WARN, "Carismático. Eficaz em afetar o moral inimigo (Demoralize) e recrutar."))
+        tags.append(("TAUNTER", WARN, "Charismatic. Effective at demoralizing enemies and recruiting."))
     if u.ability.darkvision:
-        tags.append(("SEES IN DARK", INFO, "Enxerga na escuridão sem precisar carregar tochas."))
-    return tags[:3] or [("BALANCED", INK_FAINT, "Bem equilibrado, sem um foco específico.")]
+        tags.append(("SEES IN DARK", INFO, "Can see in darkness without needing a light source."))
+    return tags[:3] or [("BALANCED", INK_FAINT, "Balanced stats with no single specialization.")]
 
 
 class DraftScreen(Screen):
@@ -204,9 +204,10 @@ class DraftScreen(Screen):
             text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
             self._draw_edit_button(screen, mouse)
 
-        rail_h = 92
-        card_h = 548
-        group_h = card_h + SP4 + rail_h
+        rail_h = 92 if not leader_phase else 0
+        avail_h = screen.get_height() - (MARGIN + 58) - rail_h - (SP4 if rail_h else 0) - 24
+        card_h = min(560, max(460, avail_h))
+        group_h = card_h + (SP4 + rail_h if rail_h else 0)
         slack = max(0, (screen.get_height() - 18) - (MARGIN + 58) - group_h)
         top = MARGIN + 58 + slack // 2
         rail_y = top + card_h + SP4
@@ -435,15 +436,17 @@ class DraftScreen(Screen):
 
         # --- languages -------------------------------------- #
         s.y = section(screen, "LANGUAGES", s.x, s.y, s.w, f)
+        lang_rect = pygame.Rect(s.x, s.y, s.w, 18)
         text(screen, ", ".join(unit.languages), f.body_sm, INK, (s.x, s.y))
         if unit.ability.demoralize_ignores_language:
-            note = "mimics voices: Demoralize needs no shared language"
+            note = "Mimics voices: Demoralize needs no shared language."
         elif unit.ability.extra_languages:
-            note = "2nd language: more targets to Demoralize"
+            note = "Knows extra languages: can Demoralize a wider variety of targets."
         else:
-            note = "Demoralize needs a shared language"
-        text(screen, note, f.body_sm, INK_DIM, (s.x, s.y + 15))
-        s.gap(32)
+            note = "Demoralize action requires a shared language with the target."
+        if lang_rect.collidepoint(mouse):
+            self.tooltip = note
+        s.gap(20)
 
         # --- ability --------------------------------------- #
         eff = wrap_lines([unit.ability.effect], f.body_sm, s.w - SP3) \

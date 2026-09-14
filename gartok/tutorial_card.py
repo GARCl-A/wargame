@@ -80,14 +80,14 @@ def _draw_card(surface, fonts, key, anchor, mouse):
 
 
 def _draw_badge(surface, fonts, anchor, mouse):
-    x, y, _w, grow = anchor
-    center = (x + BADGE_R + 2, y + BADGE_R + 2 if grow == "down" else y - BADGE_R - 2)
-    r = pygame.Rect(0, 0, 2 * BADGE_R, 2 * BADGE_R)
+    W, H = surface.get_size()
+    center = (W - BADGE_R - 16, BADGE_R + 14)
+    r = pygame.Rect(0, 0, 2 * BADGE_R + 8, 2 * BADGE_R + 8)
     r.center = center
     hot = r.collidepoint(mouse)
     pygame.draw.circle(surface, SURFACE_2, center, BADGE_R)
-    pygame.draw.circle(surface, ACCENT, center, BADGE_R, 1)
-    text(surface, "?", fonts.label, ACCENT, center, center=True)
+    pygame.draw.circle(surface, ACCENT if hot else INK_DIM, center, BADGE_R, 1)
+    text(surface, "?", fonts.label, ACCENT if hot else INK_DIM, center, center=True)
     if hot:
         set_pointer(True)
     return r

@@ -62,8 +62,14 @@ def _pick_attack(battle, unit, target):
         if _hand_die(unit) < 2.5:  # Magic Missile is 1d4 (avg 2.5)
             return mm
             
-    return (actions.ATTACK if _hand_die(unit) >= _avg_die(unit.tongue_weapon["damage"])
-            else actions.ATTACK_TONGUE)
+    if actions.ATTACK in opts and actions.ATTACK_TONGUE in opts and unit.tongue_weapon:
+        return (actions.ATTACK if _hand_die(unit) >= _avg_die(unit.tongue_weapon["damage"])
+                else actions.ATTACK_TONGUE)
+    if actions.ATTACK in opts:
+        return actions.ATTACK
+    if actions.ATTACK_TONGUE in opts:
+        return actions.ATTACK_TONGUE
+    return opts[0]
 
 
 def _approach_reach(unit):
@@ -120,6 +126,34 @@ def _recover_weapon(battle, unit):
     battle.move_unit(unit, dest)
     unit.walking = False
     if unit.ap > 0 and any(o.is_weapon for o in battle.ground_in_reach(unit)):
+        actions.PICK_UP.execute(battle, unit)
+    return True
+
+
+def _torches_on_ground(battle):
+    return [o for o in battle.ground if o.is_torch]
+
+
+def _recover_torch(battle, unit):
+    """If in the dark with no darkvision and no torch in hand, and cannot see
+    any enemies, prioritize fetching a torch on the ground to illuminate."""
+    if getattr(battle, "ambient_light", False) or unit.ability.darkvision or unit.torch_hand:
+        return False
+    if any(battle.can_see_unit(unit, e) for e in battle.units if e.alive and e.team != unit.team):
+        return False
+    torches = _torches_on_ground(battle)
+    if not torches:
+        return False
+    if any(o.is_torch for o in battle.ground_in_reach(unit)):
+        actions.PICK_UP.execute(battle, unit)
+        return True
+    obj = min(torches, key=lambda o: grid_distance(unit.pos, o.pos))
+    dest = battle.path_step_toward(unit, obj.pos, unit.speed)
+    if dest == unit.pos:
+        return False
+    battle.move_unit(unit, dest)
+    unit.walking = False
+    if unit.ap > 0 and any(o.is_torch for o in battle.ground_in_reach(unit)):
         actions.PICK_UP.execute(battle, unit)
     return True
 
@@ -308,6 +342,9 @@ def take_turn(battle, unit):
         if _recover_weapon(battle, unit):
             continue
 
+        if _recover_torch(battle, unit):
+            continue
+
         target = _target(battle, unit)
         if target is None:
             break
@@ -342,7 +379,7 @@ def take_turn(battle, unit):
                 fd = actions.CastSpellAction("floating_disk")
                 if fd.available(battle, unit):
                     # Pick an adjacent cell towards the target that is empty
-                    adj = min((c for c in battle.board.cells_in_radius(unit.pos, 1) 
+                    adj = min((c for c in battle.board.neighbors(unit.pos) 
                                if fd.can(battle, unit, c)),
                               key=lambda c: grid_distance(c, target.pos), default=None)
                     if adj:

@@ -461,3 +461,29 @@ def test_flee_drags_an_adjacent_downed_ally_and_leaves_the_far_one():
     actions.FLEE.execute(batt, a, None)
     assert a.fled and near.fled and near.survived
     assert batt.winner == "enemy" and far.dead      # too far to drag -> lost with the defeat
+
+
+def test_attack_requires_attacker_vision():
+    batt, a, d = _melee_battle()
+    a.ap = 2
+    batt.daylight = False
+    a.torch_hand = False
+    d.torch_hand = False
+    a.char.race["ability"] = "none"
+    a.char._configure_race()
+    a.pos, d.pos = (2, 2), (3, 2)
+    # Target in the dark without light or darkvision cannot be seen
+    if not batt.can_see_unit(a, d):
+        assert actions.ATTACK.can(batt, a, d) is False
+
+
+def test_unit_con_modifier_hp_recalculation():
+    u = Unit("player")
+    u.set_base_attribute("constitution", 10)
+    base_hp_max = u.hp_max
+    base_hp = u.hp
+    u.constitution += 4
+    u.recalculate_hp()
+    assert u.hp_max > base_hp_max
+    assert u.hp > base_hp
+

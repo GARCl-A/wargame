@@ -411,7 +411,7 @@ class CityPropertyScreen(DragSelectMixin, Screen):
             y += 24 + SP1
         extra = len(m._base_inventory) - len(shown)
         if extra > 0:
-            text(screen, f"+{extra} more in the pack", f.label, INK_FAINT,
+            text(screen, f"+{extra} more", f.label, INK_FAINT,
                  (rect.x + pad, y + 2))
 
     # ------------------------------------------------------------------ #

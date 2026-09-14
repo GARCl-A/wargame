@@ -99,22 +99,28 @@ class TannerScreen(Screen):
         text(screen, "\"Bring me hide and I'll pay well for it.\"", f.body, INK_DIM,
              (MARGIN, MARGIN + 30))
 
-        card = pygame.Rect(MARGIN, MARGIN + 70,
-                           min(CARD_W, screen.get_width() - 2 * MARGIN), 150)
-        panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-        x, y, w = card.x + SP3, card.y + SP3, card.w - 2 * SP3
         t = self._template
         if t is None:
-            text(screen, "Nothing on offer here right now.", f.body_sm, INK_DIM, (x, y))
+            card = pygame.Rect(MARGIN, MARGIN + 70,
+                               min(CARD_W, screen.get_width() - 2 * MARGIN), 150)
+            panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+            text(screen, "Nothing on offer here right now.", f.body_sm, INK_DIM, (card.x + SP3, card.y + SP3))
             self._draw_footer(screen)
             return
         m = self._mission
+        card_w = min(CARD_W, screen.get_width() - 2 * MARGIN)
+        w = card_w - 2 * SP3
+        lines = wrap_lines([t.blurb], f.body_sm, w) if m is None else []
+        desc_h = len(lines) * 18 if lines else 20
+        card_h = 20 + desc_h + 16 + 20 + 30 + 36 + 2 * SP3 + 10
+        card = pygame.Rect(MARGIN, MARGIN + 70, card_w, max(150, card_h))
+        panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+        x, y = card.x + SP3, card.y + SP3
 
         text(screen, t.name, f.body_bd, INK, (x, y))
         y += 20
         offered = self._offered
         if m is None:
-            lines = wrap_lines([t.blurb], f.body_sm, w)
             y = blit_block(screen, lines, x, y, f.body_sm, INK_DIM, lh=18)
             y += 16
             text(screen, f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {t.reward} "

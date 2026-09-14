@@ -620,11 +620,29 @@ class Unit:
             extra = enc if a in ("strength", "dexterity") else 0
             setattr(self, f"mod_{a}", mod(getattr(self, a) + pen + extra))
 
+    @property
+    def title(self):
+        if getattr(self, "arena_title", False):
+            return "Champion of the Pit"
+        return ""
+
+    @property
+    def full_name(self):
+        t = self.title
+        return f"{self.name}, {t}" if t else self.name
+
+    def recalculate_hp(self):
+        """Re-derive attribute mods and HP max, preserving/shifting current HP by any delta."""
+        self._derive_attribute_mods()
+        self._derive_hp()
+
     def _derive_hp(self):
         """Max HP: the creation roll + Con + ability bonus, one kept die per
         racial level, and the Hardy talent per Hit Die. `_hp_roll` / `_level_hp_rolls`
         are fixed, so re-deriving never re-rolls. A sandbox `_hp_override` (set in
         the creator) replaces the whole formula. Starving (tier 2+) caps it at 1."""
+        old_max = getattr(self, "hp_max", None)
+        old_hp = getattr(self, "hp", None)
         if self._hp_roll is None:
             self._hp_roll = roll(1, self.race["hd"])
         con = self.mod_constitution
@@ -641,7 +659,11 @@ class Unit:
                 self.hp_max = 1
         if self.hunger_level >= 2:
             self.hp_max = 1
-        self.hp = min(getattr(self, "hp", self.hp_max), self.hp_max)
+        if old_max is not None and old_hp is not None:
+            delta = self.hp_max - old_max
+            self.hp = max(1, min(old_hp + delta, self.hp_max))
+        else:
+            self.hp = getattr(self, "hp", self.hp_max)
 
     def _derive_ac(self):
         """AC base (10 + Dex + worn armor; armor caps how much Dex still counts)
@@ -765,7 +787,9 @@ class Unit:
         return name
 
     def take_from_pack(self, idx):
-        return self._base_inventory.pop(idx)
+        val = self._base_inventory.pop(idx)
+        self._derive_combat()
+        return val
 
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""

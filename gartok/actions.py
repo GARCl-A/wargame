@@ -303,10 +303,14 @@ class Attack(Action):
             return False
         if not battle.los_between(actor, target):
             return False
-        # a ranged attack needs to see the target; melee does not
-        if actor.ranged and not battle.can_see_unit(actor, target):
+        if not battle.can_see_unit(actor, target):
             return False
         return True
+
+    def highlight_cells(self, battle, actor):
+        rng = actor.attack_range
+        return [p for c in cells(actor.pos, actor.footprint)
+                for p in _cells_in_radius(c, rng)]
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units
@@ -1131,8 +1135,13 @@ class Mount(Action):
 
     @classmethod
     def applicable(cls, battle, actor):
+        if getattr(actor, "mounted_on", None) is not None:
+            return False, "Already mounted."
         if actor.size not in ("Small", "Medium"):
             return False, "Too large to ride a mount."
+        has_mount = any(u.alive and u.team == actor.team and u is not actor and u.char.has_talent("centaur_mount") for u in battle.units)
+        if not has_mount:
+            return False, "No mount in squad."
         return True, ""
 
     def available(self, battle, actor):
@@ -1202,6 +1211,13 @@ class Dismount(Action):
 
 class WakeUp(Action):
     id, name, cost, target, aimed = "wake_up", "Wake Up", 1, "ally", True
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        has_sleeping = any(u.alive and u.team == actor.team and u.has_condition("sleeping") for u in battle.units)
+        if not has_sleeping:
+            return False, "No sleeping allies."
+        return True, ""
 
     def _sleeping_allies(self, battle, actor):
         return [u for u in battle.units
@@ -1368,7 +1384,7 @@ class CastSpellAction(Action):
 
 class ShareMagicAction(Action):
     id = "share_magic"
-    name = "Compartilhar Magia"
+    name = "Share Magic"
     cost = 1
     target = "none"
     
@@ -1381,7 +1397,6 @@ class ShareMagicAction(Action):
         return True, ""
     
     def available(self, battle, actor):
-        # Only available if the actor has the sprite talent and knows at least one spell
         return (actor.ap >= self.cost and 
                 "sprite_nature_initiate" in getattr(actor.char, "talents", {}).get("racial", []) and
                 len(actor.spells_known) > 0)
@@ -1392,7 +1407,7 @@ class ShareMagicAction(Action):
         
         allies = [u for u in battle.units if u.alive and u.team == actor.team and u != actor]
         if not allies:
-            battle.log(f"{actor.name} tenta compartilhar magia, mas não há aliados próximos!")
+            battle.log(f"{actor.name} tries to share magic, but no allies are nearby!")
             return
             
         ally = random.choice(allies)
@@ -1402,9 +1417,9 @@ class ShareMagicAction(Action):
         
         if spell_id not in ally.spells_known:
             ally.spells_known.append(spell_id)
-            battle.log(f"{actor.name} compartilha magia! {ally.name} aprende {spell_name} temporariamente.")
+            battle.log(f"{actor.name} shares magic! {ally.name} temporarily learns {spell_name}.")
         else:
-            battle.log(f"{actor.name} tenta compartilhar magia, mas {ally.name} já conhece {spell_name}.")
+            battle.log(f"{actor.name} tries to share magic, but {ally.name} already knows {spell_name}.")
 
 SHARE_MAGIC = ShareMagicAction()
 

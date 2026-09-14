@@ -109,6 +109,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             if rect.collidepoint(px):
                 if key == "back":
                     self.on_back()
+                elif key == "distribute":
+                    self._distribute_load()
                 return
         if not self.selected:
             for rect, unit in self.toggle_hits:
@@ -233,6 +235,22 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             m["hits"].append((r, kind, arg))
             iy += m["rh"]
 
+    def _distribute_load(self):
+        targets = [u for u in self.managed if u in self.roster] or list(self.roster)
+        if len(targets) <= 1:
+            return
+        items = []
+        for u in targets:
+            items.extend(u._base_inventory)
+            u._base_inventory.clear()
+            u._derive_combat()
+        items.sort(key=data.item_weight, reverse=True)
+        for item in items:
+            best = max(targets, key=lambda m: m.carry_max - m.load)
+            best.give_to_pack(item)
+            best._derive_combat()
+        self.notice = "Redistributed pack load across members."
+
     # ------------------------------------------------------------------ #
     def draw(self, screen):
         f = self.fonts
@@ -308,7 +326,7 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         for unit in self.roster:
             on = unit in self.managed
             shown = on and self.managed.index(unit) < self._cap
-            lbl = ellipsize(unit.name, f.body_sm, 150)
+            lbl = ellipsize(unit.full_name, f.body_sm, 150)
             cw = f.body_sm.size(lbl)[0] + 34
             if cx + cw > x + w:
                 cx, cy = x, cy + h + SP2
@@ -354,7 +372,7 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                          (rect.right - 1, head.bottom))
         token_badge(screen, (rect.x + pad + 13, rect.y + 20), unit, f, r=13)
         nx = rect.x + pad + 32
-        text(screen, ellipsize(unit.name, f.card_name, rect.right - nx - pad),
+        text(screen, ellipsize(unit.full_name, f.card_name, rect.right - nx - pad),
              f.card_name, INK, (nx, rect.y + 6))
         
         info = f"{unit.race['name']}  ·  {unit.occupation['name']}"
@@ -521,6 +539,16 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             text(screen, "THROW AWAY", f.body_bd, ACCENT_INK if over else DANGER,
                  trash.center, center=True)
             self.zones.append((trash, None, "discard"))
+
+        if len(self.managed) > 1:
+            dist = pygame.Rect(W - pad - 200 - SP3 - 180, y, 180, 32)
+            hov = dist.collidepoint(mouse)
+            self._hot = self._hot or hov
+            panel(screen, dist, fill=SURFACE_3 if hov else SURFACE_1, border=ACCENT if hov else LINE_SOFT,
+                  width=1, radius=RADIUS)
+            text(screen, "DISTRIBUTE LOAD", f.body_bd, ACCENT if hov else INK,
+                 dist.center, center=True)
+            self.buttons.append(("distribute", dist))
 
         back = pygame.Rect(W - pad - 200, y, 200, 32)
         hov = back.collidepoint(mouse)

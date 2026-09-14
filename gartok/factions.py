@@ -175,6 +175,39 @@ def deed_notice(d):
     return f"DEED · {d.name}  +{d.rep} reputation with {faction(d.faction).name}"
 
 
+@dataclass(frozen=True)
+class Unlock:
+    faction: str
+    rep_required: int
+    title: str
+    description: str
+
+
+def get_unlocks(faction_id: str):
+    """Dynamic catalog of perks/services unlocked as reputation rises."""
+    from . import economy
+    unlocks = []
+    if faction_id == "bankers":
+        unlocks.append(
+            Unlock(
+                "bankers",
+                economy.CITY_PROPERTY_REP_GATE,
+                "City Property",
+                f"Buy a house in the City ({economy.CITY_PROPERTY_PRICE} cp, {economy.CITY_PROPERTY_CAPACITY} kg storage)",
+            )
+        )
+    elif faction_id == "arena":
+        unlocks.append(
+            Unlock(
+                "arena",
+                2,
+                "The Games (Stage 2)",
+                "Brawl, Capture the Flag, and The Ribbit Brothers bouts",
+            )
+        )
+    return unlocks
+
+
 def open_deeds(guild):
     """Deeds not yet done whose `requires` (if any) is already done."""
     done = set(guild.deeds_done)

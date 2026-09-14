@@ -29,10 +29,13 @@ class LootScreen(Screen):
         self.pool = list(pool)
         self.on_done = on_done
         self.sel = None                       # index into self.pool, or None
+        self.pack_sel = None                  # (member, idx) of selected pack item, or None
         self.notice = None
         self.rows = []                        # [(rect, pool_index)]
+        self.pack_rows = []                   # [(rect, member, idx)]
         self.cards = []                      # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
+        self.pile_rect = None
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -56,10 +59,53 @@ class LootScreen(Screen):
                 elif key == "auto":
                     self._auto_pick()
                 return
+
+        # 1. Click on a pack item in a survivor's pack
+        for rect, m, idx in self.pack_rows:
+            if rect.collidepoint(px):
+                if self.pack_sel == (m, idx):
+                    # Clicking selected item again drops it to ground
+                    if idx < len(m._base_inventory):
+                        it = m.take_from_pack(idx)
+                        self.pool.append(it)
+                        self.notice = f"{m.name} dropped {it} to the ground."
+                    self.pack_sel = None
+                else:
+                    self.pack_sel = (m, idx)
+                    self.sel = None
+                return
+
+        # 2. If a pack item is selected, check dropping on ground pile or another survivor
+        if self.pack_sel is not None:
+            m, idx = self.pack_sel
+            if idx < len(m._base_inventory):
+                it = m._base_inventory[idx]
+                if self.pile_rect and self.pile_rect.collidepoint(px):
+                    dropped = m.take_from_pack(idx)
+                    self.pool.append(dropped)
+                    self.notice = f"{m.name} dropped {dropped} to the ground."
+                    self.pack_sel = None
+                    return
+                for rect, m2 in self.cards:
+                    if rect.collidepoint(px) and m2 != m:
+                        if self._fits(m2, it):
+                            moved = m.take_from_pack(idx)
+                            self._give(m2, moved)
+                            self.notice = f"Moved {moved} from {m.name} to {m2.name}."
+                        else:
+                            self.notice = f"{m2.name} can't carry {it} (max load)."
+                        self.pack_sel = None
+                        return
+            self.pack_sel = None
+
+        # 3. Click on ground pool row
         for rect, i in self.rows:
             if rect.collidepoint(px):
                 self.sel = None if self.sel == i else i
+                self.pack_sel = None
                 return
+
+        # 4. If ground item selected, dropping on survivor
         if self.sel is not None:
             for rect, member in self.cards:
                 if rect.collidepoint(px):
@@ -72,6 +118,7 @@ class LootScreen(Screen):
                     else:
                         self.notice = f"{member.name} can't carry {name} (max load)."
                     return
+            self.sel = None
 
     def _auto_pick(self):
         for name in list(self.pool):
@@ -83,6 +130,7 @@ class LootScreen(Screen):
                     self.pool.remove(name)
                     break
         self.sel = None
+        self.pack_sel = None
         self.notice = "Grab the rest by hand or leave it behind."
 
     # ------------------------------------------------------------------ #
@@ -90,12 +138,13 @@ class LootScreen(Screen):
         f = self.fonts
         screen.fill((18, 19, 24))
         self.rows = []
+        self.pack_rows = []
         self.cards = []
         self.buttons = []
 
         text(screen, "LOOT", f.title, INK, (MARGIN, MARGIN - 2))
         left = f"{len(self.pool)} items on the field" if self.pool else "field cleared"
-        text(screen, f"{left}  ·  ceiling = each one's max load  ·  whatever's left stays behind",
+        text(screen, f"{left}  ·  ceiling = each one's max load  ·  click pack item to drop or transfer",
              f.body, INK_DIM, (MARGIN, MARGIN + 30))
 
         top = MARGIN + 72
@@ -109,12 +158,14 @@ class LootScreen(Screen):
 
     def _draw_pile(self, screen, rect):
         f = self.fonts
-        panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+        self.pile_rect = rect
+        pack_hov = self.pack_sel is not None and rect.collidepoint(self.mouse)
+        panel(screen, rect, fill=SURFACE_2, border=OK if pack_hov else LINE_SOFT,
+              width=2 if pack_hov else 1, radius=RADIUS)
         x, w = rect.x + SP3, rect.w - 2 * SP3
         y = section(screen, "ON THE GROUND", x, rect.y + SP3, w, f)
         if not self.pool:
             text(screen, "(nothing)", f.body_sm, INK_FAINT, (x, y + 2))
-            return
         for i, name in enumerate(self.pool):
             r = pygame.Rect(x, y, w, 26)
             sel = self.sel == i
@@ -127,6 +178,10 @@ class LootScreen(Screen):
                  ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 7), right=True)
             self.rows.append((r, i))
             y += 26 + SP1
+
+        if pack_hov:
+            text(screen, "click: drop to ground", f.label, OK,
+                 (rect.centerx, rect.bottom - 16), center=True)
 
     def _draw_survivors(self, screen, area):
         n = max(1, len(self.survivors))
@@ -144,8 +199,15 @@ class LootScreen(Screen):
         name = self.pool[self.sel] if sel else None
         drop_ok = sel and self._fits(m, name)
         hov = rect.collidepoint(self.mouse)
+        
+        has_pack_sel = self.pack_sel is not None
+        sm, sidx = self.pack_sel if has_pack_sel else (None, None)
+        transfer_ok = False
+        if has_pack_sel and m != sm and sidx < len(sm._base_inventory):
+            transfer_ok = self._fits(m, sm._base_inventory[sidx])
+
         panel(screen, rect, fill=SURFACE_2,
-              border=OK if (drop_ok and hov) else DANGER if (sel and hov) else LINE_SOFT,
+              border=OK if ((drop_ok or transfer_ok) and hov) else DANGER if ((sel or (has_pack_sel and m != sm)) and hov) else LINE_SOFT,
               width=2 if hov else 1, radius=RADIUS)
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
@@ -167,16 +229,32 @@ class LootScreen(Screen):
         y = section(screen, "PACK", rect.x + pad, y, rect.w - 2 * pad, f)
         if not m._base_inventory:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-        for it in m._base_inventory:
-            text(screen, it, f.body_sm, INK_DIM, (rect.x + pad, y))
-            text(screen, kg(data.item_weight(it)), f.mono_sm, INK_FAINT,
-                 (rect.right - pad, y), right=True)
-            y += 16
+        for idx, it in enumerate(m._base_inventory):
+            r = pygame.Rect(rect.x + pad, y - 2, rect.w - 2 * pad, 20)
+            ihov = r.collidepoint(self.mouse)
+            sel_this = self.pack_sel == (m, idx)
+            if sel_this or ihov:
+                panel(screen, r, fill=ACCENT if sel_this else SURFACE_3,
+                      border=ACCENT if sel_this else LINE_SOFT, width=1, radius=4)
+            text(screen, it, f.body_sm, ACCENT_INK if sel_this else INK if ihov else INK_DIM,
+                 (r.x + 4, y))
+            text(screen, kg(data.item_weight(it)), f.mono_sm,
+                 ACCENT_INK if sel_this else INK_FAINT, (r.right - 4, y), right=True)
+            self.pack_rows.append((r, m, idx))
+            y += 22
 
         if sel and hov:
             msg = "click: take" if drop_ok else "won't fit"
             text(screen, msg, f.label, OK if drop_ok else DANGER,
                  (rect.centerx, rect.bottom - 16), center=True)
+        elif has_pack_sel and hov:
+            if m == sm:
+                text(screen, "click: drop to ground", f.label, WARN,
+                     (rect.centerx, rect.bottom - 16), center=True)
+            else:
+                msg = "click: transfer" if transfer_ok else "won't fit"
+                text(screen, msg, f.label, OK if transfer_ok else DANGER,
+                     (rect.centerx, rect.bottom - 16), center=True)
 
     def _draw_footer(self, screen):
         f = self.fonts

@@ -461,3 +461,68 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
         scr.mouse = (0, 0)
         scr.draw(surf)
     draw_sheet(surf, pygame.Rect(0, 0, 520, 900), Combatant(u), F)
+
+
+def test_gear_screen_distribute_load():
+    from gartok.gear_screen import GearScreen
+    from gartok.guild import Guild
+    from gartok import data
+    r = data.race_by_name("Human")
+    u1 = Unit("player", race=r)
+    u2 = Unit("player", race=r)
+    u1.set_base_attribute("strength", 10)
+    u2.set_base_attribute("strength", 10)
+    u1._base_inventory = ["Stone Brick", "Stone Brick"]
+    u2._base_inventory = []
+    g = Guild([u1, u2])
+    gs = GearScreen.__new__(GearScreen)
+    gs.guild = g
+    gs.roster = g.roster
+    gs.managed = [u1, u2]
+    gs.notice = None
+    gs._distribute_load()
+    # Heaviest items should be shared across members
+    assert len(u1._base_inventory) == 1
+    assert len(u2._base_inventory) == 1
+    assert gs.notice is not None
+
+
+def test_loot_screen_drop_pack_item_to_ground():
+    from gartok.loot_screen import LootScreen
+    from gartok.guild import Guild
+    import pygame
+    u = Unit("player")
+    u._base_inventory = ["Torch", "Dagger"]
+    g = Guild([u])
+    ls = LootScreen.__new__(LootScreen)
+    ls.guild = g
+    ls.survivors = [u]
+    ls.pool = ["Axe"]
+    ls.buttons = []
+    ls.pack_rows = [(pygame.Rect(0, 0, 100, 20), u, 0)]
+    ls.cards = [(pygame.Rect(100, 0, 100, 100), u)]
+    ls.rows = [(pygame.Rect(200, 0, 100, 20), 0)]
+    ls.pile_rect = pygame.Rect(300, 0, 100, 100)
+    ls.pack_sel = None
+    ls.sel = None
+    ls.notice = None
+
+    # 1. Click pack item to select it
+    ls._click((10, 10))
+    assert ls.pack_sel == (u, 0)
+
+    # 2. Click ground pile to drop it
+    ls._click((310, 10))
+    assert "Torch" in ls.pool
+    assert "Torch" not in u._base_inventory
+    assert ls.pack_sel is None
+
+
+def test_factions_get_unlocks():
+    from gartok import factions
+    bank_unlocks = factions.get_unlocks("bankers")
+    assert any(u.title == "City Property" and u.rep_required == 4 for u in bank_unlocks)
+
+    arena_unlocks = factions.get_unlocks("arena")
+    assert any("The Games" in u.title for u in arena_unlocks)
+

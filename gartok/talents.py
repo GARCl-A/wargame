@@ -180,18 +180,18 @@ _LIST = [
     Talent("intimidating_presence", "racial", 1, "Intimidating Presence",
            "a terrifying physical presence: you may use your Strength modifier "
            "instead of Charisma when attempting to Demoralize enemies.", race="Orc",
-           effects=(Effect("intimidating_presence", 1),), icon="action/battered-axe"),
+           effects=(Effect("intimidating_presence", 1),), icon="action/shouting"),
     Talent("swarm_logic", "racial", 1, "Swarm Logic",
            "there is safety, and speed, in numbers: you work 10% faster for "
            "every other Goblin working alongside you.", race="Goblin",
-           effects=(Effect("swarm_logic", 1),), icon="action/backpack"),
+           effects=(Effect("swarm_logic", 1),), icon="action/hive-mind"),
     Talent("tireless_worker", "racial", 1, "Tireless Worker",
            "machines do not sleep or complain: you complete simple labor "
            "and gathering tasks significantly faster.", race="Automaton",
-           effects=(Effect("activity_speed", 0.25),), icon="action/armor-vest"),
+           effects=(Effect("activity_speed", 0.25),), icon="gui/auto-repair"),
     Talent("centaur_mount", "racial", 1, "Mount",
            "your strong back: allow a Medium or Small ally to ride you.", race="Centaur",
-           effects=(Effect("centaur_mount", 1),), icon="body/horse-head"),
+           effects=(Effect("centaur_mount", 1),), icon="body/cavalry"),
     Talent("giant_grip", "racial", 1, "Giant's Grip",
            "immense physical strength: wield weapons as if you were one size larger "
            "(+1 damage step).", race="Goliath",
@@ -202,26 +202,26 @@ _LIST = [
     Talent("organic_harvester", "racial", 1, "Organic Harvester",
            "scavenging instinct: 25% chance per organic loot type to find more meat "
            "or hide after a beast battle.", race="Lizardfolk",
-           effects=(Effect("organic_harvester", 1),), icon="action/meat"),
+           effects=(Effect("organic_harvester", 1),), icon="action/eating"),
     Talent("corpse_eater", "racial", 1, "Corpse Eater",
            "brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and "
            "demoralizing enemies who see you.", race="Gnoll",
            effects=(Effect("corpse_eater", 1),), icon="action/swallow"),
     Talent("gnome_magic_excitement", "racial", 1, "Magic Excitement",
            "enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress.", race="Gnome",
-           effects=(), icon="action/sparkles"),
+           effects=(), icon="hat/magic-hat"),
     Talent("kenku_faith_initiate", "racial", 1, "Faith Initiate",
            "divine calling: you become initiated in faith magic. If already initiated, gain a free spell.", race="Kenku",
            effects=(), icon="action/prayer"),
     Talent("sprite_nature_initiate", "racial", 1, "Nature Initiate",
            "fey magic: you become initiated in nature magic and gain the Share Magic action.", race="Sprite",
-           effects=(), icon="action/leaf"),
+           effects=(), icon="hat/flower-hat"),
     Talent("dwarf_crafting", "racial", 1, "Dwarven Forging",
            "your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor.", race="Dwarf",
-           effects=(), icon="action/hammer-drop"),
+           effects=(), icon="body/blacksmith"),
     Talent("kobold_trapper", "racial", 1, "Trapper",
            "cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them.", race="Kobold",
-           effects=(), icon="action/bear-trap"),
+           effects=(), icon="body/sinking-trap"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

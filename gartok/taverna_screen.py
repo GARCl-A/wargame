@@ -30,14 +30,15 @@ CANDIDATES = 3          # layout width; the live pool may hold fewer after a hir
 class TavernaScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, party, node, on_done):
+    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
         self.party = party
         self.node = node
         self.on_done = on_done
-        self.candidates = recruit.refresh_pool(guild)   # live list on the guild
+        self.candidates = list(candidates) if candidates is not None else recruit.refresh_pool(guild)
+        self.title = title or "TAVERN"
         self.sel = None                       # index of the stranger being pitched, or None
         self.last = {}                         # candidate uid -> (recruit.Pitch, member) of the last try
         self.notice = None
@@ -127,7 +128,7 @@ class TavernaScreen(Screen):
         self.party_cards = []
         self.buttons = []
 
-        text(screen, "TAVERN", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         if self.sel is not None:
             cand = self.candidates[self.sel]

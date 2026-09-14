@@ -532,7 +532,7 @@ class BattleScreen(Screen):
                 color = OK
             elif self.aim_action is actions.DEMORALIZE:
                 color = DEMO_HL
-            elif self.aim_action is actions.ATTACK_TONGUE:
+            elif self.aim_action in (actions.ATTACK, actions.ATTACK_TONGUE):
                 color = ATK_HL
             elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP,
                                      actions.SWIM):
@@ -925,7 +925,9 @@ class BattleScreen(Screen):
         row = s.row(16)
         if not self._is_player_turn():
             return
-        if self.aim_action is actions.DEMORALIZE:
+        if self.aim_action is actions.ATTACK:
+            msg, col = "click a highlighted enemy to Attack", ATK_HL
+        elif self.aim_action is actions.DEMORALIZE:
             msg, col = "click a purple enemy to Demoralize", DEMO_HL
         elif self.aim_action is actions.ATTACK_TONGUE:
             msg, col = "click an enemy in tongue range", ATK_HL
@@ -955,7 +957,7 @@ class BattleScreen(Screen):
             r = s.row(34)
             s.gap(SP1)
             panel(screen, r, fill=SURFACE_1, border=LINE_SOFT, width=1)
-            text(screen, "Voltar", f.body_bd, INK, r.center, center=True)
+            text(screen, "Back", f.body_bd, INK, r.center, center=True)
             self.buttons.append(("magic_back", r))
             
             for sp_id in act.char.spells_known:
@@ -970,7 +972,7 @@ class BattleScreen(Screen):
                 ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
                 
                 ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
-                label = action.name if not armed else f"{action.name}: alvo"
+                label = action.name if not armed else f"{action.name}: target"
                 text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
                 
                 if action.cost:
@@ -998,7 +1000,7 @@ class BattleScreen(Screen):
             fill = SURFACE_2 if enabled else SURFACE_1
             panel(screen, mr, fill=fill, border=LINE_SOFT, width=1)
             ink = INK if enabled else INK_FAINT
-            text(screen, "Lançar Magia", f.body_bd, ink, mr.center, center=True)
+            text(screen, "Cast Spell", f.body_bd, ink, mr.center, center=True)
             self.buttons.append(("magic_menu", mr))
 
         hotkey_i = 0

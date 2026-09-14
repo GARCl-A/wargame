@@ -421,7 +421,7 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                          (rect.right - 1, head.bottom))
         token_badge(screen, (rect.x + pad + 13, rect.y + 20), unit, f, r=13)
         nx = rect.x + pad + 32
-        text(screen, ellipsize(unit.name, f.card_name, rect.right - nx - pad),
+        text(screen, ellipsize(unit.full_name, f.card_name, rect.right - nx - pad),
              f.card_name, INK, (nx, rect.y + 6))
         
         info = f"{unit.race['name']}  ·  {unit.occupation['name']}"

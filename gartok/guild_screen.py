@@ -62,7 +62,6 @@ class GuildScreen(SheetModalMixin, Screen):
         self.member = self.roster[0] if self.roster else None   # card shown on the right
         self.tab_hits = []                  # [(rect, key)]
         self.member_hits = []              # [(rect, unit)] -- list cards select the member
-        self.info_hits = []                # [(rect, unit)] -- the detail header opens the sheet
         self.buttons = []                  # [(key, rect)]
 
     # ------------------------------------------------------------------ #
@@ -105,6 +104,10 @@ class GuildScreen(SheetModalMixin, Screen):
                             group.set_leader(self.member)
                     elif key == "guild_leader" and self.member is not None:
                         self.guild.set_leader(self.member)
+                    elif key == "distribute" and self.member is not None:
+                        group = self.guild.group_of(self.member)
+                        if group and len(group.members) > 1:
+                            group.distribute_load()
                     elif key == "back":
                         self.on_back()
                     return
@@ -118,11 +121,6 @@ class GuildScreen(SheetModalMixin, Screen):
                 if rect.collidepoint(px):
                     self.member = unit
                     return
-                    
-            for rect, unit in self.info_hits:
-                if rect.collidepoint(px):
-                    self.open_sheet(unit)
-                    return
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
@@ -131,7 +129,6 @@ class GuildScreen(SheetModalMixin, Screen):
         screen.fill(SURFACE_0)
         self.zones = []
         self.sources = []
-        self.info_hits = []
         self.buttons = []
         self.member_hits = []
         self.tab_hits = []
@@ -209,7 +206,7 @@ class GuildScreen(SheetModalMixin, Screen):
             elif self._is_group_leader(unit):
                 text(screen, "LEAD", f.label, INFO, (r.right - SP3, r.y + 6), right=True)
                 name_w -= 40
-            text(screen, ellipsize(unit.name, f.card_name, name_w),
+            text(screen, ellipsize(unit.full_name, f.card_name, name_w),
                  f.card_name, INK if sel else INK_DIM if not hov else INK,
                  (nx, r.y + 6))
             text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
@@ -292,7 +289,7 @@ class GuildScreen(SheetModalMixin, Screen):
                                 "Combat and Work XP both feed into Racial XP!")
             bx -= btn_w + SP2
 
-        text(screen, ellipsize(unit.name, f.card_name, bx - nx - SP2), f.card_name,
+        text(screen, ellipsize(unit.full_name, f.card_name, bx - nx - SP2), f.card_name,
              INK, (nx, rect.y + 10))
         text(screen, ellipsize(sub, f.body_sm, bx - nx - SP2), f.body_sm,
              INK_DIM, (nx, rect.y + 34))
@@ -452,6 +449,18 @@ class GuildScreen(SheetModalMixin, Screen):
                 y += 24
             y += SP3
 
+            unlocks = factions.get_unlocks(fac.id)
+            if unlocks:
+                y = section(screen, "NEXT UNLOCKS", x, y, w, f)
+                for u in unlocks:
+                    unlocked = rep >= u.rep_required
+                    col = OK if unlocked else INK_DIM
+                    status = "UNLOCKED" if unlocked else f"Req: Rep {u.rep_required}"
+                    text(screen, f"{u.title} ({status})", f.body, col, (x + 16, y))
+                    text(screen, u.description, f.body_sm, INK_FAINT, (x + 240, y + 2))
+                    y += 24
+                y += SP3
+
             y += SP4
 
     # ------------------------------------------------------------------ #
@@ -459,6 +468,18 @@ class GuildScreen(SheetModalMixin, Screen):
         f = self.fonts
         mouse = self.mouse
         y = H - 52
+
+        if self.member is not None:
+            grp = self.guild.group_of(self.member)
+            if grp and len(grp.members) > 1:
+                dist = pygame.Rect(W - pad - 220 - SP3 - 180, y, 180, 36)
+                hov = dist.collidepoint(mouse)
+                self._hot = self._hot or hov
+                panel(screen, dist, fill=SURFACE_3 if hov else SURFACE_1,
+                      border=ACCENT if hov else LINE_SOFT, width=1, radius=RADIUS)
+                text(screen, "DISTRIBUTE LOAD", f.body_bd, ACCENT if hov else INK,
+                     dist.center, center=True)
+                self.buttons.append(("distribute", dist))
 
         nxt = pygame.Rect(W - pad - 220, y, 220, 36)
         hov = nxt.collidepoint(mouse)

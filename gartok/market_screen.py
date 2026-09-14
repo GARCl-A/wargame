@@ -183,12 +183,28 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         owner, name = pick
         all_locs = [i for i, n in enumerate(owner._base_inventory) if n == name]
         sel_locs = [p[1] for p in self.sel if p[0] is owner and p[1] in all_locs]
+        if delta >= 999:
+            self.sel = [p for p in self.sel if not (p[0] is owner and p[1] in all_locs)]
+            self.sel.extend([(owner, l) for l in all_locs])
+            return
         if delta > 0:
             to_add = [l for l in all_locs if l not in sel_locs][:step]
             self.sel.extend([(owner, l) for l in to_add])
         else:
             to_remove = sel_locs[-abs(step):]
             self.sel = [p for p in self.sel if not (p[0] is owner and p[1] in to_remove)]
+
+    def _sell_all(self):
+        picks = []
+        for p in self.sel:
+            if p[0] != "stock":
+                owner = p[0]
+                name = self._name_of(p)
+                for i, it in enumerate(owner._base_inventory):
+                    if it == name and (owner, i) not in picks:
+                        picks.append((owner, i))
+        self.sel = picks
+        self._sell()
 
     def _drop(self, px, dragging, src):
         if self.close_sheet_on_click():        # sheet modal up: any click just closes it
@@ -216,6 +232,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                     self._checkout()
                 elif key == "sell":
                     self._sell()
+                elif key == "sell_all":
+                    self._sell_all()
                 elif key == "distribute":
                     self._distribute_load()
                 return
@@ -390,6 +408,13 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
 
         top = MARGIN + 62
         self._draw_tabs(screen, pygame.Rect(MARGIN, top, STOCK_W, 28))
+        if len(self.shoppers) > 1:
+            dl_btn = pygame.Rect(screen.get_width() - MARGIN - 160, top, 160, 28)
+            hov_dl = dl_btn.collidepoint(self.mouse)
+            panel(screen, dl_btn, fill=SURFACE_4 if hov_dl else SURFACE_2, border=LINE_SOFT,
+                  width=1, radius=4)
+            text(screen, "DISTRIBUTE LOAD", f.label, INK if hov_dl else INK_DIM, dl_btn.center, center=True)
+            self.buttons.append(("distribute", dl_btn))
         body_top = top + 28 + SP2
         stock = pygame.Rect(MARGIN, body_top, STOCK_W,
                             screen.get_height() - body_top - 72)
@@ -541,8 +566,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         sel = pick in self.sel if pick[0] == "stock" else q > 0
         bw, bh = 16, 18
         cy = row.centery
-        minus = pygame.Rect(row.x + 150, cy - bh // 2, bw, bh)
-        plus = pygame.Rect(minus.right + 28, cy - bh // 2, bw, bh)
+        minus = pygame.Rect(row.x + 138, cy - bh // 2, bw, bh)
+        plus = pygame.Rect(minus.right + 26, cy - bh // 2, bw, bh)
         for r, glyph, delta in ((minus, "-", -1), (plus, "+", +1)):
             hov = r.collidepoint(self.mouse)
             panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
@@ -551,6 +576,16 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             self.qty_hits.append((r, pick, delta))
         text(screen, str(q), f.mono, ACCENT if sel else INK,
              ((minus.right + plus.x) // 2, cy - 1), center=True)
+        if pick[0] != "stock":
+            owner, name = pick
+            all_locs = [i for i, n in enumerate(owner._base_inventory) if n == name]
+            if len(all_locs) > 1:
+                all_btn = pygame.Rect(plus.right + 4, cy - bh // 2, 28, bh)
+                hov_all = all_btn.collidepoint(self.mouse)
+                panel(screen, all_btn, fill=SURFACE_3 if hov_all else SURFACE_1,
+                      border=ACCENT if hov_all else LINE_SOFT, width=1, radius=3)
+                text(screen, "ALL", f.label, ACCENT if hov_all else INK_DIM, all_btn.center, center=True)
+                self.qty_hits.append((all_btn, pick, 999))
 
     def _draw_shoppers(self, screen, area):
         n = max(1, len(self.shoppers))
@@ -707,14 +742,34 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         x = MARGIN
         if can_sell:
             total = sum(economy.sell_price(n, self.deal) for n in names)
-            sr = pygame.Rect(x, y, 240, 36)
+            sr = pygame.Rect(x, y, 220, 36)
             hov = sr.collidepoint(self.mouse)
             panel(screen, sr, fill=DANGER if hov else SURFACE_3, border=DANGER,
                   width=1, radius=RADIUS)
-            text(screen, f"SELL FOR {total}", f.body_bd,
+            text(screen, f"SELL ({len(names)}) FOR {total}", f.body_bd,
                  ACCENT_INK if hov else DANGER, sr.center, center=True)
             self.buttons.append(("sell", sr))
-            x += 240 + SP3
+            x += 220 + SP2
+
+            all_sellable = []
+            for p in self.sel:
+                if p[0] != "stock":
+                    owner = p[0]
+                    name = self._name_of(p)
+                    for i, it in enumerate(owner._base_inventory):
+                        if it == name and (owner, i) not in all_sellable:
+                            all_sellable.append((owner, i))
+            if len(all_sellable) > len(names):
+                all_names = [self._name_of(p) for p in all_sellable]
+                all_total = sum(economy.sell_price(n, self.deal) for n in all_names)
+                sar = pygame.Rect(x, y, 220, 36)
+                hov_sa = sar.collidepoint(self.mouse)
+                panel(screen, sar, fill=DANGER if hov_sa else SURFACE_3, border=DANGER,
+                      width=1, radius=RADIUS)
+                text(screen, f"SELL ALL ({len(all_sellable)}) FOR {all_total}", f.body_bd,
+                     ACCENT_INK if hov_sa else DANGER, sar.center, center=True)
+                self.buttons.append(("sell_all", sar))
+                x += 220 + SP2
             
         if len(self.shoppers) > 1:
             distr = pygame.Rect(x, y, 240, 36)

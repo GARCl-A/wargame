@@ -420,9 +420,9 @@ class Guild:
                                     u.spells_known.append(spell.id)
                                     u.study_target = None
                                     u.study_progress = 0
-                                    events.append(f"{u.name} domina a magia {spell.name}!")
+                                    events.append(f"{u.name} masters the spell {spell.name}!")
                     else:
-                        events.append(f"{u.name} não pôde pagar o aluguel para estudar.")
+                        events.append(f"{u.name} could not afford the rent to study.")
                 continue
 
             item = economy.GARRISON_JOBS.get(g.order.job)
