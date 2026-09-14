@@ -333,6 +333,8 @@ def item_weight(name):
         return ARMOR[name]["weight"]
     if name in SHIELDS:
         return SHIELDS[name]["weight"]
+    if name.startswith("Scroll of "):
+        return ITEM_WEIGHTS.get("Scroll", 0.1)
     return ITEM_WEIGHTS.get(name, 0.5)
 
 # --------------------------------------------------------------------------- #

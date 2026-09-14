@@ -10,10 +10,10 @@ class Spell:
     sources: tuple
 
 SPELLS = {
-    "light_globe": Spell("light_globe", "Globo de Luz", 0, ("nature", "blood", "faith")),
-    "magic_missile": Spell("magic_missile", "Míssil Mágico", 0, ("nature", "blood", "faith")),
-    "floating_disk": Spell("floating_disk", "Disco Flutuante", 0, ("nature", "blood", "faith")),
-    "sleep": Spell("sleep", "Sono", 1, ("nature", "blood", "faith")),
+    "light_globe": Spell("light_globe", "Light Globe", 0, ("nature", "blood", "faith")),
+    "magic_missile": Spell("magic_missile", "Magic Missile", 0, ("nature", "blood", "faith")),
+    "floating_disk": Spell("floating_disk", "Floating Disk", 0, ("nature", "blood", "faith")),
+    "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
 }
 
 def study_difficulty(spell):
