@@ -113,6 +113,30 @@ def _finish_off(battle, unit):
     return next((b for b in bodies if actions.ATTACK.can(battle, unit, b)), None)
 
 
+def _eat_corpse(battle, unit):
+    """Gnoll: eat an adjacent dead enemy body (Corpse Eater talent). Resets hunger
+    and AoE-demoralizes every enemy that can see the act. Returns True if acted."""
+    if not actions.EAT_CORPSE.available(battle, unit):
+        return False
+    bodies = [u for u in battle.units if actions.EAT_CORPSE.can(battle, unit, u)]
+    if not bodies:
+        return False
+    actions.EAT_CORPSE.execute(battle, unit, bodies[0])
+    return True
+
+
+def _try_mount(battle, unit):
+    """Mount an adjacent allied Centaur (centaur_mount talent) if one is available
+    and the unit is not already riding. Returns True if acted."""
+    if not actions.MOUNT.available(battle, unit):
+        return False
+    targets = actions.MOUNT.highlight_targets(battle, unit)
+    if not targets:
+        return False
+    actions.MOUNT.execute(battle, unit, targets[0])
+    return True
+
+
 def _ally_to_help(battle, unit):
     """A downed ally this unit wants to stabilize -- only if it is of good
     bent (it will spend the action to save a friend before fighting)."""
@@ -191,6 +215,9 @@ def take_turn(battle, unit):
         if unit.ap <= 0 or not unit.alive:
             break
 
+        if _try_mount(battle, unit):          # mount a Centaur ally if adjacent
+            continue
+
         ally = _ally_to_help(battle, unit)
         if ally is not None:                  # good: save the friend first
             if actions.STABILIZE.can(battle, unit, ally):
@@ -245,6 +272,9 @@ def take_turn(battle, unit):
         body = _finish_off(battle, unit)
         if body is not None:                  # evil: put the downed enemy away
             actions.ATTACK.execute(battle, unit, body)
+            continue
+
+        if _eat_corpse(battle, unit):         # Gnoll: devour a dead enemy
             continue
 
         if _recover_weapon(battle, unit):

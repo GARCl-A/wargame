@@ -21,15 +21,6 @@ from .data import resolve_bonus, roll
 AP_PER_TURN = 2
 
 
-def _bump_damage_die(n, faces):
-    """The Goliath's giant_grip damage step."""
-    scale = [(1, 2), (1, 3), (1, 4), (1, 6), (1, 8), (1, 10), (1, 12), (2, 8), (2, 10), (2, 12)]
-    try:
-        idx = scale.index((n, faces))
-        return scale[min(idx + 1, len(scale) - 1)]
-    except ValueError:
-        return n, faces
-
 
 class Combatant:
     def __init__(self, char, team=None):
@@ -446,9 +437,6 @@ class Combatant:
         else:
             n, faces = self.weapon["damage"]
         
-        if self.char.has_talent("giant_grip"):
-            n, faces = _bump_damage_die(n, faces)
-
         dice = roll(n, faces) + (roll(n, faces) if crit else 0)
         bonus = 0
         if thrown:
