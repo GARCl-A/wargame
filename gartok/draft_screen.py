@@ -23,7 +23,7 @@ from .theme import (ACCENT, ACCENT_INK, BANNER_COLORS, DANGER, DEMO_HL, INFO,
                     INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT, MARGIN, OK,
                     RADIUS, SP1, SP2, SP3, SP4, SURFACE_1, SURFACE_2,
                     SURFACE_3, TOKEN_INK, WARN,
-                    Stack, chip, ellipsize, panel, section, set_player_color,
+                    Stack, chip, ellipsize, panel, section, set_player_color, smooth_circle,
                     token_badge, text, tracked, wrap_lines)
 from .unit import Unit
 
@@ -79,6 +79,8 @@ class DraftScreen(Screen):
         self.banner_icon = artwork.BANNER_ICONS[0][1]
         self.color_rects = []
         self.icon_rects = []
+        self.leader_pick = None
+        self.leader_rects = []
         self.continue_rect = None
         set_player_color(self.banner_color)     # reset tokens to the default for a fresh draft
         self._new_candidates()
@@ -110,14 +112,6 @@ class DraftScreen(Screen):
     def _click(self, px):
         if self.phase == "identity":
             self._click_identity(px)
-            return
-
-        if self.phase == "leader":
-            for rect, unit in self.card_rects:
-                if rect.collidepoint(px):
-                    self.on_done(self.picks, unit, self.guild_name,
-                                self.banner_color, self.banner_icon)
-                    return
             return
 
         if self.picker is not None:
@@ -154,8 +148,7 @@ class DraftScreen(Screen):
     # soft tutorial (screen.py) -- one id per phase                      #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
-        return {"pick": "draft.pick", "identity": "draft.identity",
-                "leader": "draft.leader"}.get(self.phase)
+        return {"pick": "draft.pick", "identity": "draft.identity"}.get(self.phase)
 
     def _click_identity(self, px):
         if self.editing_name:                 # a click anywhere commits the field being typed
@@ -172,8 +165,13 @@ class DraftScreen(Screen):
             if rect.collidepoint(px):
                 self.banner_icon = slug
                 return
-        if self.continue_rect and self.continue_rect.collidepoint(px):
-            self.phase = "leader"
+        for rect, unit in self.leader_rects:
+            if rect.collidepoint(px):
+                self.leader_pick = unit
+                return
+        if self.continue_rect and self.continue_rect.collidepoint(px) and self.leader_pick is not None:
+            self.on_done(self.picks, self.leader_pick, self.guild_name or "The Guild",
+                         self.banner_color, self.banner_icon)
 
     # ------------------------------------------------------------------ #
     # drawing                                                            #
@@ -189,29 +187,21 @@ class DraftScreen(Screen):
             return
 
         round_no = len(self.picks) + 1
-        leader_phase = self.phase == "leader"
 
-        if leader_phase:
-            text(screen, "WHO LEADS THE GUILD?", f.title, ACCENT, (MARGIN, MARGIN - 2))
-            sub, col = ("This is who you answer to -- their Charisma speaks for the "
-                        "group when it haggles, and leads any group they're in. "
-                        "Click one to found the guild.", ACCENT)
-            text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
+        text(screen, "SQUAD DRAFT", f.title, INK, (MARGIN, MARGIN - 2))
+        if self.edit_mode:
+            sub, col = ("EDIT MODE  ·  click 'swap' to change race / occupation  ·  "
+                        "EDITING goes back to picking", ACCENT)
         else:
-            text(screen, "SQUAD DRAFT", f.title, INK, (MARGIN, MARGIN - 2))
-            if self.edit_mode:
-                sub, col = ("EDIT MODE  ·  click 'swap' to change race / occupation  ·  "
-                            "EDITING goes back to picking", ACCENT)
-            else:
-                sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
-                            f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
-            text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
-            self._draw_top_buttons(screen, mouse)
+            sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
+                        f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
+        text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
+        self._draw_top_buttons(screen, mouse)
 
-        rail_h = 92 if not leader_phase else 0
-        avail_h = screen.get_height() - (MARGIN + 58) - rail_h - (SP4 if rail_h else 0) - 24
+        rail_h = 92
+        avail_h = screen.get_height() - (MARGIN + 58) - rail_h - SP4 - 24
         card_h = min(560, max(460, avail_h))
-        group_h = card_h + (SP4 + rail_h if rail_h else 0)
+        group_h = card_h + SP4 + rail_h
         slack = max(0, (screen.get_height() - 18) - (MARGIN + 58) - group_h)
         top = MARGIN + 58 + slack // 2
         rail_y = top + card_h + SP4
@@ -220,15 +210,13 @@ class DraftScreen(Screen):
 
         self.card_rects = []
         self.edit_rects = []
-        cards = self.picks if leader_phase else self.candidates
-        for i, unit in enumerate(cards):
+        for i, unit in enumerate(self.candidates):
             rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
             self.card_rects.append((rect, unit))
             hover = rect.collidepoint(mouse) and not self.edit_mode
-            self._draw_card(screen, rect, unit, hover, mouse, leader_pick=leader_phase)
+            self._draw_card(screen, rect, unit, hover, mouse)
 
-        if not leader_phase:
-            self._draw_squad_rail(screen, MARGIN, rail_y, screen.get_width() - 2 * MARGIN, rail_h)
+        self._draw_squad_rail(screen, MARGIN, rail_y, screen.get_width() - 2 * MARGIN, rail_h)
         text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
 
         if self.picker is not None:
@@ -259,26 +247,33 @@ class DraftScreen(Screen):
         W, _ = screen.get_size()
         mouse = self.mouse
 
-        text(screen, "NAME YOUR GUILD", f.title, ACCENT, (MARGIN, MARGIN - 2))
-        text(screen, "Purely cosmetic -- pick a name and a banner. Every unit's "
-             "token shows the colour from here on.", f.body, INK_DIM,
-             (MARGIN, MARGIN + 30))
-
-        cx = MARGIN
         cw = min(560, W - 2 * MARGIN)
+        cx = (W - cw) // 2
+
+        text(screen, "FOUND THE GUILD", f.title, ACCENT, (cx, MARGIN - 2))
+        text(screen, "Name your guild, pick a banner, and choose your leader.", f.body, INK_DIM,
+             (cx, MARGIN + 30))
+
         y = MARGIN + 74
 
-        # --- name field (click-to-type, same pattern as char_editor_screen) #
-        tracked(screen, "GUILD NAME", f.label, INK_FAINT, (cx, y))
-        y += 16
-        self.name_rect = pygame.Rect(cx, y, cw, 40)
+        # --- preview + name field ----------------------------------- #
+        pv = (cx + 24, y + 28)
+        smooth_circle(screen, self.banner_color, pv, 24)
+        art = artwork.banner_icon(self.banner_icon, 32, TOKEN_INK)
+        if art is not None:
+            screen.blit(art, art.get_rect(center=pv))
+
+        nx = cx + 64
+        nw = cw - 64
+        tracked(screen, "GUILD NAME", f.label, INK_FAINT, (nx, y))
+        self.name_rect = pygame.Rect(nx, y + 16, nw, 40)
         hov = self.name_rect.collidepoint(mouse)
         panel(screen, self.name_rect, fill=SURFACE_3 if (hov or self.editing_name) else SURFACE_2,
               border=ACCENT if (hov or self.editing_name) else LINE, width=1, radius=RADIUS)
         shown = self.name_buf + "|" if self.editing_name else self.guild_name or "click to name your guild"
         col = INK if (self.editing_name or self.guild_name) else INK_FAINT
         text(screen, shown, f.body, col, (self.name_rect.x + SP3, self.name_rect.centery - 8))
-        y += 40 + SP4
+        y += 56 + SP3
 
         # --- banner colour: a curated palette, not a free picker --------- #
         tracked(screen, "BANNER COLOUR", f.label, INK_FAINT, (cx, y))
@@ -289,11 +284,11 @@ class DraftScreen(Screen):
             r = pygame.Rect(cx + i * (sw + SP2), y, sw, sw)
             sel = color == self.banner_color
             hov = r.collidepoint(mouse)
-            pygame.draw.circle(screen, color, r.center, sw // 2)
-            pygame.draw.circle(screen, ACCENT if sel else (LINE if hov else LINE_SOFT),
-                               r.center, sw // 2, 3 if sel else 1)
+            smooth_circle(screen, color, r.center, sw // 2)
+            smooth_circle(screen, ACCENT if sel else (LINE if hov else LINE_SOFT),
+                          r.center, sw // 2, 3 if sel else 1)
             self.color_rects.append((r, color))
-        y += sw + SP4
+        y += sw + SP3
 
         # --- banner emblem: a curated gallery, not a paint tool ---------- #
         tracked(screen, "EMBLEM", f.label, INK_FAINT, (cx, y))
@@ -309,27 +304,47 @@ class DraftScreen(Screen):
             panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
                   border=ACCENT if sel else (LINE if hov else LINE_SOFT),
                   width=2 if sel else 1, radius=8)
+            smooth_circle(screen, self.banner_color, r.center, 14)
             art = artwork.banner_icon(slug, isz - 16, TOKEN_INK)
             if art is not None:
                 screen.blit(art, art.get_rect(center=r.center))
             self.icon_rects.append((r, slug))
         rows = (len(artwork.BANNER_ICONS) + per_row - 1) // per_row
-        y += rows * (isz + SP2) + SP4
+        y += rows * (isz + SP2) + SP3
 
-        # --- live preview + confirm --------------------------------- #
-        pv = (cx + 30, y + 30)
-        pygame.draw.circle(screen, self.banner_color, pv, 30)
-        art = artwork.banner_icon(self.banner_icon, 40, TOKEN_INK)
-        if art is not None:
-            screen.blit(art, art.get_rect(center=pv))
-        text(screen, self.guild_name or "The Guild", f.title, INK, (pv[0] + 46, y + 14))
-        y += 76
+        # --- guild leader ------------------------------------------ #
+        tracked(screen, "WHO LEADS THE GUILD?", f.label, INK_FAINT, (cx, y))
+        y += 18
+        self.leader_rects = []
+        slot_h = 64
+        for i, unit in enumerate(self.picks):
+            r = pygame.Rect(cx, y + i * (slot_h + SP2), cw, slot_h)
+            sel = unit == self.leader_pick
+            hov = r.collidepoint(mouse)
+            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_2,
+                  border=ACCENT if sel else (LINE if hov else LINE_SOFT), width=2 if sel else 1, radius=8)
+            
+            dot = (r.x + SP3 + 12, r.centery)
+            token_badge(screen, dot, unit, f, r=18)
+            
+            name_x = dot[0] + 28
+            text(screen, ellipsize(unit.name, f.body_bd, 220), f.body_bd, ACCENT if sel else INK, (name_x, r.y + 10))
+            text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}", f.body_sm, 240), f.body_sm, INK_DIM, (name_x + 230, r.y + 11))
+            
+            stats = f"STR {unit.strength}   DEX {unit.dexterity}   CON {unit.constitution}   INT {unit.intelligence}   WIS {unit.wisdom}   CHA {unit.charisma}"
+            text(screen, stats, f.body_sm, INK_DIM, (name_x, r.y + 36))
+            
+            self.leader_rects.append((r, unit))
+        y += 3 * (slot_h + SP2) + SP4
+
+        # --- confirm --------------------------------- #
 
         self.continue_rect = pygame.Rect(cx, y, cw, 44)
         hov = self.continue_rect.collidepoint(mouse)
-        panel(screen, self.continue_rect, fill=ACCENT if hov else SURFACE_3,
-              border=ACCENT, width=1, radius=RADIUS)
-        text(screen, "FOUND THE GUILD", f.body_bd, ACCENT_INK if hov else ACCENT,
+        can_cont = self.leader_pick is not None
+        panel(screen, self.continue_rect, fill=ACCENT if hov and can_cont else SURFACE_3,
+              border=ACCENT if can_cont else LINE, width=1, radius=RADIUS)
+        text(screen, "FOUND THE GUILD", f.body_bd, (ACCENT_INK if hov else ACCENT) if can_cont else INK_DIM,
              self.continue_rect.center, center=True)
 
         text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
@@ -469,14 +484,7 @@ class DraftScreen(Screen):
              f.body_sm, INK_FAINT, (s.x, s.y))
 
         # --- footer --------------------------------------- #
-        if leader_pick:
-            fr = pygame.Rect(rect.x + pad, rect.bottom - 36, rect.w - 2 * pad, 26)
-            panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
-                  border=ACCENT if hover else LINE, width=1, radius=4)
-            text(screen, "MAKE LEADER" if hover else "click to lead the guild",
-                 f.label if hover else f.body_sm,
-                 ACCENT_INK if hover else INK_DIM, fr.center, center=True)
-        elif not self.edit_mode:
+        if not self.edit_mode:
             fr = pygame.Rect(rect.x + pad, rect.bottom - 36, rect.w - 2 * pad, 26)
             panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
                   border=ACCENT if hover else LINE, width=1, radius=4)

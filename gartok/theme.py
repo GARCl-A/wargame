@@ -15,6 +15,7 @@ One source of truth for how GARTOK Tactical looks. The screens (`draft_screen`,
 import math
 
 import pygame
+from pygame import gfxdraw
 
 from . import artwork
 from .battle import COLS, ROWS
@@ -369,6 +370,20 @@ def set_player_color(color):
     PLAYER_C = tuple(color)
 
 
+def smooth_circle(surf, color, center, radius, width=0):
+    """Draws an anti-aliased circle. Replaces pygame.draw.circle where edges matter."""
+    x, y = int(center[0]), int(center[1])
+    r = int(radius)
+    if width == 0:
+        gfxdraw.filled_circle(surf, x, y, r, color)
+        gfxdraw.aacircle(surf, x, y, r, color)
+    else:
+        pygame.draw.circle(surf, color, center, radius, width)
+        gfxdraw.aacircle(surf, x, y, r, color)
+        if width > 1:
+            gfxdraw.aacircle(surf, x, y, r - width + 1, color)
+
+
 def token_badge(surf, center, unit, fonts, *, color=None, r=14):
     """The round unit token: a coloured disc carrying the unit's race silhouette
     (`artwork.race_icon`), falling back to its board letter when the race has no
@@ -378,7 +393,7 @@ def token_badge(surf, center, unit, fonts, *, color=None, r=14):
     `color` defaults to the live `PLAYER_C` (read here, not captured as a
     default-argument value, so `set_player_color` takes effect on every
     caller that doesn't pass its own colour -- which is all of them today)."""
-    pygame.draw.circle(surf, color or PLAYER_C, center, r)
+    smooth_circle(surf, color or PLAYER_C, center, r)
     race = getattr(unit, "race", None)
     sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
     if sil is not None:
@@ -417,7 +432,7 @@ def pips(surf, center, count, total, *, r=6, gap=6, on=ACCENT, off=SURFACE_4):
     span = total * (2 * r) + (total - 1) * gap
     x = center[0] - span // 2 + r
     for i in range(total):
-        pygame.draw.circle(surf, on if i < count else off, (x, center[1]), r)
+        smooth_circle(surf, on if i < count else off, (x, center[1]), r)
         if i >= count:
-            pygame.draw.circle(surf, LINE, (x, center[1]), r, 1)
+            smooth_circle(surf, LINE, (x, center[1]), r, 1)
         x += 2 * r + gap

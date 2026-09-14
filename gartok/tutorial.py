@@ -10,7 +10,7 @@ any) the player forced back open with a screen's `?` badge.
 """
 
 TUTORIALS = (
-    "draft.pick", "draft.identity", "draft.leader",
+    "draft.pick", "draft.identity",
     "map",
     "guild.members", "guild.reputations",
     "squad", "battle", "loot", "reward",

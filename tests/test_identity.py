@@ -112,12 +112,11 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
     assert ds.banner_icon == chosen_icon
 
     ds.draw(screen)                     # re-populates continue_rect at the final layout
-    ds._click(ds.continue_rect.center)
-    assert ds.phase == "leader"
-
-    ds.draw(screen)
-    rect, leader_unit = ds.card_rects[0]
+    rect, leader_unit = ds.leader_rects[0]
     ds._click(rect.center)
+    
+    ds.draw(screen)
+    ds._click(ds.continue_rect.center)
 
     assert result["leader"] is leader_unit
     assert result["name"] == "Sable Wolves"

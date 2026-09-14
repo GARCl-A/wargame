@@ -69,8 +69,7 @@ def test_footer_anchor_clears_a_footer_of_the_given_height():
 def test_draft_screen_reports_one_id_per_phase():
     from gartok.draft_screen import DraftScreen
     ds = DraftScreen.__new__(DraftScreen)
-    for phase, expected in (("pick", "draft.pick"), ("identity", "draft.identity"),
-                            ("leader", "draft.leader")):
+    for phase, expected in (("pick", "draft.pick"), ("identity", "draft.identity")):
         ds.phase = phase
         assert ds.tutorial_key() == expected and expected in TUTORIALS
 
@@ -145,7 +144,7 @@ def test_every_anchor_returns_a_valid_grow_direction():
         x, y, w, grow = gs.tutorial_anchor(size)
         assert grow in ("up", "down") and w > 0
 
-    for phase in ("pick", "identity", "leader"):
+    for phase in ("pick", "identity"):
         ds.phase = phase
         x, y, w, grow = ds.tutorial_anchor(size)
         assert grow in ("up", "down") and w > 0
