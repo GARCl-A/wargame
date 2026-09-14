@@ -411,8 +411,9 @@ class Guild:
                             spell_id = u.study_target.split(":")[1]
                             spell = magic.SPELLS.get(spell_id)
                             if spell and u.magic_source:  # Must be initiated
-                                bonus = 2 if u.race["name"] == "Kobold" and spell.source == "blood" else 0
-                                progress = data.roll(1, 20) + u.mod_intelligence + bonus
+                                bonus = 2 if u.race["name"] == "Kobold" and "blood" in spell.sources else 0
+                                dice_qty = 2 if "gnome_magic_excitement" in u.talents["racial"] and u.study_progress == 0 else 1
+                                progress = data.roll(dice_qty, 20) + u.mod_intelligence + bonus
                                 points_gained = max(0, progress)
                                 u.study_progress += points_gained
                                 if u.study_progress >= magic.points_to_learn(spell):

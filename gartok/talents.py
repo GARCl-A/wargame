@@ -207,6 +207,15 @@ _LIST = [
            "brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and "
            "demoralizing enemies who see you.", race="Gnoll",
            effects=(Effect("corpse_eater", 1),), icon="action/swallow"),
+    Talent("gnome_magic_excitement", "racial", 1, "Magic Excitement",
+           "enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress.", race="Gnome",
+           effects=(), icon="action/sparkles"),
+    Talent("kenku_faith_initiate", "racial", 1, "Faith Initiate",
+           "divine calling: you become initiated in faith magic. If already initiated, gain a free spell.", race="Kenku",
+           effects=(), icon="action/prayer"),
+    Talent("sprite_nature_initiate", "racial", 1, "Nature Initiate",
+           "fey magic: you become initiated in nature magic and gain the Share Magic action.", race="Sprite",
+           effects=(), icon="action/leaf"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

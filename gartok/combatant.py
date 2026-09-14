@@ -96,6 +96,7 @@ class Combatant:
         # first aid charges are now persistent (campaign-long).
         self.first_aid_charges = (c.first_aid_charges
                                   if data.FIRST_AID_ITEM in self.inventory else 0)
+        self.spells_known = list(getattr(c, "spells_known", []))
         self.conditions = []
         self.ap = AP_PER_TURN
         self.walking = False          # a walk is in progress (same Move action)

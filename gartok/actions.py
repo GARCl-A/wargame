@@ -1318,7 +1318,41 @@ class CastSpellAction(Action):
             else:
                 battle.log(desc + " -> resisted.")
 
+class ShareMagicAction(Action):
+    id = "share_magic"
+    name = "Compartilhar Magia"
+    cost = 1
+    target = "none"
+    
+    def available(self, battle, actor):
+        # Only available if the actor has the sprite talent and knows at least one spell
+        return (actor.ap >= self.cost and 
+                "sprite_nature_initiate" in getattr(actor.char, "talents", {}).get("racial", []) and
+                len(actor.spells_known) > 0)
+                
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor): return
+        actor.ap -= self.cost
+        
+        allies = [u for u in battle.units if u.alive and u.team == actor.team and u != actor]
+        if not allies:
+            battle.log(f"{actor.name} tenta compartilhar magia, mas não há aliados próximos!")
+            return
+            
+        ally = random.choice(allies)
+        spell_id = random.choice(actor.spells_known)
+        from .magic import SPELLS
+        spell_name = SPELLS[spell_id].name if spell_id in SPELLS else spell_id
+        
+        if spell_id not in ally.spells_known:
+            ally.spells_known.append(spell_id)
+            battle.log(f"{actor.name} compartilha magia! {ally.name} aprende {spell_name} temporariamente.")
+        else:
+            battle.log(f"{actor.name} tenta compartilhar magia, mas {ally.name} já conhece {spell_name}.")
+
+SHARE_MAGIC = ShareMagicAction()
+
 # Panel buttons, in order. Move and Attack are the default board click.
 # Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
 PANEL_ACTIONS = [ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
-                 SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]
+                 SWIM, STABILIZE, FIRST_AID, PICK_UP, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]

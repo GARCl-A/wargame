@@ -303,6 +303,21 @@ class Unit:
                 or (t.requires and t.requires not in self.talents[track])):
             return False
         self.talents[track].append(talent_id)
+        
+        # Hooks for specific racial talents
+        if talent_id == "kenku_faith_initiate":
+            if not self.magic_source:
+                self.magic_source = "faith"
+            elif self.magic_source == "faith":
+                # Find lowest level faith spell not known
+                faith_spells = [s for s in magic.SPELLS.values() if "faith" in s.sources and s.id not in self.spells_known]
+                if faith_spells:
+                    faith_spells.sort(key=lambda s: s.level)
+                    self.spells_known.append(faith_spells[0].id)
+        elif talent_id == "sprite_nature_initiate":
+            if not self.magic_source:
+                self.magic_source = "nature"
+                
         self._apply_attributes()
         self._derive_combat()
         return True
@@ -390,7 +405,7 @@ class Unit:
         if self.race["name"] == "Gnome":
             self.magic_source = "nature"
             if not self.spells_known:
-                nature_spells = [s for s in magic.SPELLS.values() if s.source == "nature" and s.level == 0]
+                nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
                 if nature_spells:
                     self.spells_known.append(random.choice(nature_spells).id)
         elif self.race["name"] == "Kobold":
@@ -426,7 +441,7 @@ class Unit:
         else:
             self.starting_creature = None
             if self.item == "Scroll":
-                nature_spells = [s for s in magic.SPELLS.values() if s.source == "nature" and s.level == 0]
+                nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
                 if nature_spells:
                     self.item = f"Scroll:{random.choice(nature_spells).id}"
             self._base_inventory = [self.item]

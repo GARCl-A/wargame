@@ -236,6 +236,9 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Phalanx | martial discipline: +1 AC if you are adjacent to at least one ally. | -- | Hobgoblin |
 | 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- | Lizardfolk |
 | 1 | Corpse Eater | brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- | Gnoll |
+| 1 | Magic Excitement | enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress. | -- | Gnome |
+| 1 | Faith Initiate | divine calling: you become initiated in faith magic. If already initiated, gain a free spell. | -- | Kenku |
+| 1 | Nature Initiate | fey magic: you become initiated in nature magic and gain the Share Magic action. | -- | Sprite |
 
 ## Factions and deeds
 
