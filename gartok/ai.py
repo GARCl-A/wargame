@@ -39,6 +39,12 @@ def _pick_attack(battle, unit, target):
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
             
+    if "sleep" in getattr(unit, "spells_known", []):
+        if not getattr(target.char.ability, "sleep_immunity", False) and not target.has_condition("sleeping"):
+            sleep_spell = actions.CastSpellAction("sleep")
+            if sleep_spell.can(battle, unit, target):
+                return sleep_spell  # always prioritize putting them to sleep first
+
     mm = None
     if "magic_missile" in getattr(unit, "spells_known", []):
         mm = actions.CastSpellAction("magic_missile")
@@ -233,6 +239,12 @@ def take_turn(battle, unit):
 
         if _try_mount(battle, unit):          # mount a Centaur ally if adjacent
             continue
+
+        if actions.WAKE_UP.available(battle, unit):
+            targets = actions.WAKE_UP.highlight_targets(battle, unit)
+            if targets:
+                actions.WAKE_UP.execute(battle, unit, targets[0])
+                continue
 
         ally = _ally_to_help(battle, unit)
         if ally is not None:                  # good: save the friend first

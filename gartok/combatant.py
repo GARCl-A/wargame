@@ -448,6 +448,13 @@ class Combatant:
 
     def take_damage(self, amount, log):
         amount = max(0, amount - self.dr)
+        
+        # Wakes up if sleeping
+        sleeping_cond = next((c for c in self.conditions if c.id == "sleeping"), None)
+        if sleeping_cond:
+            self.conditions.remove(sleeping_cond)
+            log(f"{self.name} is jolted awake by the attack!")
+            
         self.hp -= amount
         log(f"{self.name} takes {amount} damage (HP {max(self.hp, 0)}/{self.hp_max}).")
         if self.hp <= 0:

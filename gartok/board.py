@@ -306,8 +306,9 @@ class Board:
                     ncd = cd
                 if not flat and elev.get(nb, 0) != z_start:
                     continue                 # a drop / rise -- can't just walk it
-                if difficult and nb in difficult:
+                if difficult and nb in difficult and not vertical:
                     step += 1                # difficult terrain: one extra square
+
                 nc = cost + step
                 if budget is not None and nc > budget:
                     continue

@@ -659,8 +659,10 @@ class FirstAid(Stabilize):
     id, name = "first_aid", "First Aid"
 
     def _downed_allies(self, battle, actor):
-        # a med kit is for the dying; a broken automaton needs the plain Stabilize
-        return [u for u in super()._downed_allies(battle, actor) if u.dying]
+        # a med kit is for the dying and the sick; a broken automaton needs the plain Stabilize
+        return [u for u in battle.units
+                if (u.dying or getattr(u.char, "sick", False)) and u.team == actor.team and u is not actor
+                and battle.units_distance(actor, u) <= 1]
 
     def available(self, battle, actor):
         return actor.first_aid_charges > 0 and super().available(battle, actor)
@@ -681,12 +683,23 @@ class FirstAid(Stabilize):
         nat = d20()
         total = nat + actor.mod_wisdom
         ok = total >= data.FIRST_AID_DC
+        ok = total >= data.FIRST_AID_DC
+        target_sick = getattr(target.char, "sick", False)
+        target_dying = target.dying
+        
         battle.log(f"{actor.name} uses the kit on {target.name}: "
                    f"d20({nat}) {actor.mod_wisdom:+}(WIS) = {total} vs {data.FIRST_AID_DC} -> "
                    + ("success." if ok else "fails.")
                    + f"  ({actor.first_aid_charges} charge(s))")
         if ok:
-            battle.stabilize(target)
+            if target_dying:
+                battle.stabilize(target)
+            if target_sick:
+                target.char.sick = False
+                battle.log(f"  {target.name} is cured of their sickness!")
+                target.char._derive_combat()
+                target.hp_max = target.char.hp_max
+                target.hp = min(target.hp, target.hp_max)
 
 
 # --------------------------------------------------------------------------- #
@@ -1142,6 +1155,40 @@ class Dismount(Action):
         actor.pos = target
         battle.log(f"{actor.name} dismounts to {target}.")
 
+class WakeUp(Action):
+    id, name, cost, target, aimed = "wake_up", "Wake Up", 1, "ally", True
+
+    def _sleeping_allies(self, battle, actor):
+        return [u for u in battle.units
+                if u.alive and u.team == actor.team and u is not actor
+                and u.has_condition("sleeping")
+                and battle.units_distance(actor, u) <= 1]
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._sleeping_allies(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        return (actor.ap >= self.cost and target is not None
+                and target in self._sleeping_allies(battle, actor))
+
+    def label(self, battle, actor):
+        return "Wake Up (1 pt, wake a sleeping ally)"
+
+    def highlight_targets(self, battle, actor):
+        return self._sleeping_allies(battle, actor)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        
+        sleeping_cond = next((c for c in target.conditions if c.id == "sleeping"), None)
+        if sleeping_cond:
+            target.conditions.remove(sleeping_cond)
+        
+        battle.log(f"{actor.name} shakes {target.name} awake!")
+
 
 # --------------------------------------------------------------------------- #
 # End turn                                                                     #
@@ -1180,6 +1227,7 @@ FLEE = Flee()
 EAT_CORPSE = EatCorpse()
 MOUNT = Mount()
 DISMOUNT = Dismount()
+WAKE_UP = WakeUp()
 END = EndTurn()
 
 class CastSpellAction(Action):
@@ -1196,6 +1244,9 @@ class CastSpellAction(Action):
         elif self.spell.id in ("light_globe", "floating_disk"):
             self.target = "cell"
             self.aimed = True
+        elif self.spell.id == "sleep":
+            self.target = "enemy"
+            self.aimed = True
             
     def available(self, battle, actor):
         return actor.ap >= self.cost and self.spell.id in actor.spells_known
@@ -1205,6 +1256,11 @@ class CastSpellAction(Action):
             return False
             
         if self.spell.id == "magic_missile":
+            if not _hostile_target(actor, target): return False
+            dist = battle.units_distance(actor, target)
+            return dist <= 6
+            
+        elif self.spell.id == "sleep":
             if not _hostile_target(actor, target): return False
             dist = battle.units_distance(actor, target)
             return dist <= 6
@@ -1241,8 +1297,28 @@ class CastSpellAction(Action):
         elif self.spell.id == "floating_disk":
             battle.log(f"{actor.name} casts {self.spell.name}.")
             battle.ground.append(GroundObject("floating_disk", target))
+            
+        elif self.spell.id == "sleep":
+            battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
+            if getattr(target.char.ability, "sleep_immunity", False):
+                battle.log(f"  {target.name} is immune to sleep effects!")
+                return
+            
+            atk = d20()
+            hit_score = atk + actor.mod_intelligence
+            md = target.mental_defense
+            desc = f" d20({atk}) {actor.mod_intelligence:+}(INT) = {hit_score} vs MD {md}"
+            
+            if atk == 1:
+                battle.log(desc + " -> Critical miss!")
+            elif atk == 20 or hit_score >= md:
+                from .conditions import Sleeping
+                target.add_condition(Sleeping())
+                battle.log(desc + (" -> CRITICAL HIT!" if atk == 20 else " -> lands.") + f" {target.name} falls asleep!")
+            else:
+                battle.log(desc + " -> resisted.")
 
 # Panel buttons, in order. Move and Attack are the default board click.
 # Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
 PANEL_ACTIONS = [ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
-                 SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, FLEE, END]
+                 SWIM, STABILIZE, FIRST_AID, PICK_UP, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]

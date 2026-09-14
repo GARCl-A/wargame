@@ -106,6 +106,7 @@ class Unit:
         u.gold = d.get("gold", 0)
         u.crime = d.get("crime", 0)
         u.unfed_days = d.get("unfed_days", 0)
+        u.sick = d.get("sick", False)
         u.first_aid_charges = d.get("first_aid_charges", 0)
         u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if data.AMMO_ITEM in u._base_inventory else 0)
         u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)
@@ -164,13 +165,16 @@ class Unit:
 
     def _take_ration(self, larder=None):
         """Eat one ration: this character's own pack first, then each pack in
-        `larder` (guild-mates sharing food). Returns True if one was found."""
+        `larder` (guild-mates sharing food). Returns the name of the eaten food if one was found."""
         for pack in (self._base_inventory, *(larder or ())):
-            food = next((it for it in pack if it in data.FOOD_ITEMS), None)
+            # Prefer fresh food
+            food = next((it for it in pack if any(it.startswith(f) for f in data.FOOD_ITEMS) and not it.startswith("Rotten Food")), None)
+            if food is None:
+                food = next((it for it in pack if it.startswith("Rotten Food")), None)
             if food is not None:
                 pack.remove(food)
-                return True
-        return False
+                return "Rotten Food" if food.startswith("Rotten Food") else food
+        return None
 
     def consume_daily_food(self, larder=None):
         """Resolve one day's meal: eat a ration (own pack, then `larder`) if one
@@ -178,8 +182,11 @@ class Unit:
         caller re-derives combat stats and clears the dead from the roster."""
         if self._ability.id == "autotroph":
             return "ate"
-        if self._take_ration(larder):
+        food = self._take_ration(larder)
+        if food:
             self.unfed_days = 0
+            if food == "Rotten Food" and self._ability.id != "strong_stomach":
+                self.sick = True
             return "ate"
         self.unfed_days += 1
         return "dead" if self.unfed_days >= data.STARVATION_DEATH_DAYS else "hungry"
@@ -191,15 +198,18 @@ class Unit:
         hunger. Returns True if a meal was eaten. The caller re-derives combat."""
         if self.hunger_level == 0:
             return False
-        if not self._take_ration(larder):
+        food = self._take_ration(larder)
+        if not food:
             return False
         self.unfed_days = 0
+        if food == "Rotten Food" and self._ability.id != "strong_stomach":
+            self.sick = True
         return True
 
     @property
     def rations(self):
         """Meals sitting in this character's pack."""
-        return sum(1 for it in self._base_inventory if it in data.FOOD_ITEMS)
+        return sum(1 for it in self._base_inventory if any(it.startswith(f) for f in data.FOOD_ITEMS))
 
     @property
     def work_xp(self):
@@ -323,6 +333,13 @@ class Unit:
         Rebuilt from scratch so it is safe to re-run when a talent is picked."""
         for a, m in zip(ATTRIBUTES, self.race["mods"]):
             setattr(self, a, self.base_attributes[a] + m + self.talent_bonus("attr", a))
+        if getattr(self, "sick", False):
+            self.constitution -= 4
+            self.strength -= 2
+            self.dexterity -= 2
+            self.intelligence -= 2
+            self.wisdom -= 2
+            self.charisma -= 2
 
     def talent_bonus(self, channel, stat=""):
         """Total this character's picked talents contribute to `channel` (see the

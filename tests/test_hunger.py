@@ -106,7 +106,7 @@ def test_guild_pass_time_feeds_starves_and_buries():
     doomed = Unit("player"); doomed._base_inventory = []
     guild = Guild([fed, doomed], clock=Clock(6 * 3600))    # 06:00 day 1
     guild.pass_time(24)                                     # -> day 2
-    assert fed.unfed_days == 0 and "Meat" in fed._base_inventory
+    assert fed.unfed_days == 0 and any(it.startswith("Meat") for it in fed._base_inventory)
     assert doomed.unfed_days == 1 and doomed in guild.roster
     for _ in range(data.STARVATION_DEATH_DAYS):
         guild.pass_time(24)

@@ -13,6 +13,7 @@ SPELLS = {
     "light_globe": Spell("light_globe", "Globo de Luz", 0, "nature"),
     "magic_missile": Spell("magic_missile", "Míssil Mágico", 0, "nature"),
     "floating_disk": Spell("floating_disk", "Disco Flutuante", 0, "nature"),
+    "sleep": Spell("sleep", "Sono", 1, "nature"),
 }
 
 def study_difficulty(spell):

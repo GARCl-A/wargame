@@ -151,6 +151,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Potato | 1 kg | food, consumable |
 | Quiver | 1.5 kg | -- |
 | Rope | 2 kg | -- |
+| Rotten Food | 1 kg | food, consumable |
 | Sack | 0.3 kg | -- |
 | Scales | 1 kg | -- |
 | Scissors | 0.2 kg | -- |

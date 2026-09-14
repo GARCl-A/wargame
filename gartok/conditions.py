@@ -55,3 +55,10 @@ class Demoralized(Condition):
     def on_turn_end(self, unit, log):
         log(f"{unit.name} recovers (no longer demoralized).")
         return True
+
+
+class Sleeping(Condition):
+    id = "sleeping"
+
+    def ac_mods(self):
+        return [(-2, "status", "Sleeping")]  # -2 AC while sleeping

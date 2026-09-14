@@ -482,4 +482,10 @@ class Battle:
         if self._check_winner():
             self.log(f"*** Victory: {self.winner} ***")
             return
+            
+        if self.active.has_condition("sleeping"):
+            self.log(f"{self.active.name} is fast asleep... (turn skipped).")
+            self.end_turn()
+            return
+            
         self._announce_turn()

@@ -520,17 +520,23 @@ class Guild:
         for g in self.groups:
             if not g.busy:
                 for u in g.members:
-                    if u.hp < u.hp_max:
+                    if u.hp < u.hp_max or getattr(u, "sick", False):
                         u.consecutive_rest_hours += hours
                         while u.consecutive_rest_hours >= 8:
                             u.consecutive_rest_hours -= 8
-                            heal = max(1, u.racial_level + u.mod_constitution)
+                            if getattr(u, "sick", False):
+                                u.sick = False
+                                events.append(f"{u.name} rests and recovers from their sickness.")
+                                u._derive_combat()
+                            
                             if u.hp < u.hp_max:
+                                heal = max(1, u.racial_level + u.mod_constitution)
                                 u.hp = min(u.hp_max, u.hp + heal)
                                 events.append(f"{u.name} rests and recovers {heal} HP.")
-                                if u.hp == u.hp_max:
-                                    u.consecutive_rest_hours = 0
-                                    break
+                                
+                            if u.hp == u.hp_max and not getattr(u, "sick", False):
+                                u.consecutive_rest_hours = 0
+                                break
             else:
                 for u in g.members:
                     u.consecutive_rest_hours = 0
@@ -547,8 +553,37 @@ class Guild:
         return [u._base_inventory for u in mates
                 if u is not eater and u.share_food]
 
+    def _rot_food(self, inventory):
+        rotten = 0
+        new_inv = []
+        for item in inventory:
+            base_item = item.split(" (")[0]
+            if base_item in data.FOOD_LIFESPAN:
+                if " (" in item:
+                    age = int(item.split(" (")[1].replace("d)", "")) + 1
+                else:
+                    age = 1
+                if age >= data.FOOD_LIFESPAN[base_item]:
+                    new_inv.append("Rotten Food")
+                    rotten += 1
+                else:
+                    new_inv.append(f"{base_item} ({age}d)")
+            else:
+                new_inv.append(item)
+        inventory[:] = new_inv
+        return rotten
+
     def _daily_upkeep(self):
         events, casualties, ate = [], [], []
+        
+        # 1) Apodrecer comida no inventário de todos (e baú)
+        total_rotten = 0
+        for u in self.roster:
+            total_rotten += self._rot_food(u._base_inventory)
+        total_rotten += self._rot_food(self.bank_items)
+        if total_rotten:
+            events.append(f"{total_rotten} portions of food rotted away.")
+
         for u in self.roster:
             if u.has_talent("fruitful"):
                 u.give_to_pack("Fruit")

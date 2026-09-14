@@ -290,8 +290,10 @@ TORCH_WEIGHT = 0.5
 TORCH_ITEM = "Torch"                     # a torch carried in the pack / between battles
 
 # Pack items that count as a day's meal (see the hunger rule in unit.py / guild.py).
-FOOD_ITEMS = {"Meat", "Potato", "Fruit"}
+FOOD_ITEMS = {"Meat", "Potato", "Fruit", "Rotten Food"}
 STARVATION_DEATH_DAYS = 4                # missed meals in a row before a character dies
+
+FOOD_LIFESPAN = {"Fruit": 1, "Meat": 2, "Potato": 7}
 
 # Items used up in play, not hauled cargo -- the Carrier talent's carry relief
 # skips these. Editable; grows as more consumables land.
@@ -306,6 +308,7 @@ ITEM_WEIGHTS = {
     "Chains": 5.0, "Scroll": 0.1, "Iron Bar": 5.0, "Lantern": 1.0, "Compass": 0.2,
     "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
     "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,
+    "Rotten Food": 1.0,
     CHEST_ITEM: 8.0, GEM_ITEM: 0.1, MISSION_CHEST_ITEM: 8.0, LETTER_ITEM: 0.1,
 }
 
