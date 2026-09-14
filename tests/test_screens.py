@@ -201,6 +201,7 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.editor_menu_screen import EditorMenuScreen
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.map_editor_screen import MapEditorScreen
+    from gartok.interactions_screen import InteractionsScreen
 
     scenes = [
         MenuScreen(F, noop, noop, noop, on_editor=noop),
@@ -208,7 +209,8 @@ def test_every_screen_draws_native_at_any_window_size():
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
         DraftScreen(F, noop),
-        MapScreen(F, guild, noop, noop, noop, noop),
+        MapScreen(F, guild, noop, noop, noop, noop, noop),
+        InteractionsScreen(F, guild, guild.groups[0], noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
         BattleScreen(F, batt, noop),
         BattleScreen(F, ctf_batt, noop),                  # capture the flag: setup + pennants
@@ -258,19 +260,19 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.group import Group
     apart = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
                                 Group(list(roster[2:]), node="market")])
-    scenes.append(MapScreen(F, apart, noop, noop, noop, noop))
+    scenes.append(MapScreen(F, apart, noop, noop, noop, noop, noop))
 
     together = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
                                    Group(list(roster[2:]), node=world.START_NODE)])
-    scenes.append(MapScreen(F, together, noop, noop, noop, noop))   # +N badge, MERGE button
-    split_scene = MapScreen(F, together, noop, noop, noop, noop)
+    scenes.append(MapScreen(F, together, noop, noop, noop, noop, noop))   # +N badge, MERGE button
+    split_scene = MapScreen(F, together, noop, noop, noop, noop, noop)
     split_scene.mode = "split"
     scenes.append(split_scene)
 
     crowded = Guild(None, groups=[Group([roster[0], roster[1]], node=world.START_NODE),
                                   Group([roster[2], roster[3]], node=world.START_NODE),
                                   Group([roster[4]], node=world.START_NODE)])
-    scenes.append(MapScreen(F, crowded, noop, noop, noop, noop))    # +2 badge, two MERGE rows
+    scenes.append(MapScreen(F, crowded, noop, noop, noop, noop, noop))    # +2 badge, two MERGE rows
 
     for scene in scenes:
         assert getattr(scene, "native", False), type(scene).__name__

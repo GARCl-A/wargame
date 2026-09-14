@@ -113,8 +113,13 @@ class BankScreen(DragSelectMixin, Screen):
 
     def _drop(self, px, dragging, src):
         for key, rect in self.buttons:
-            if key in ("done", "rent") and rect.collidepoint(px):
-                (self._leave if key == "done" else self._rent)()
+            if key in ("done", "rent", "buy_property") and rect.collidepoint(px):
+                if key == "done":
+                    self._leave()
+                elif key == "rent":
+                    self._rent()
+                elif key == "buy_property":
+                    self._buy_property()
                 return
 
         if dragging:
@@ -163,6 +168,19 @@ class BankScreen(DragSelectMixin, Screen):
         self.guild.rent_bank_chest()
         self.notice = (f"rented a strongbox — {self.guild.bank_capacity} kg of "
                        "storage at the bank.")
+
+    def _buy_property(self):
+        if self.guild.property_city_unlocked or self.guild.bankers_services_blocked:
+            return
+        if self.guild.reputation.get("bankers", 0) < economy.CITY_PROPERTY_REP_GATE:
+            return
+        if self.purse < economy.CITY_PROPERTY_PRICE:
+            self.notice = (f"the Bankers want {economy.CITY_PROPERTY_PRICE} copper for the "
+                           f"house — the party has {self.purse}.")
+            return
+        self._charge(economy.CITY_PROPERTY_PRICE)
+        self.guild.buy_city_property()
+        self.notice = "bought a house in the City — the Bankers' tax starts now."
 
     def _deposit(self):
         name = self._name_of(self.sel)
@@ -256,7 +274,37 @@ class BankScreen(DragSelectMixin, Screen):
         self.buttons.append(("chest", rect))
 
         x, w = rect.x + SP3, rect.w - 2 * SP3
-        y = section(screen, "THE STRONGBOX", x, rect.y + SP3, w, f)
+        y = rect.y + SP3
+
+        if not self.guild.property_city_unlocked and not self.guild.property_city_squatting and self.guild.bankers_debt <= 0:
+            y = section(screen, "CITY PROPERTY", x, y, w, f)
+            for ln in (f"The Bankers sell a house inside the walls for ",
+                       f"{economy.CITY_PROPERTY_PRICE} copper, taxed {economy.CITY_PROPERTY_TAX}",
+                       f"copper every {economy.CITY_PROPERTY_TAX_PERIOD_DAYS} days."):
+                text(screen, ln, f.body_sm, INK_DIM, (x, y))
+                y += 17
+            
+            rep_ok = self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
+            if not rep_ok:
+                text(screen, f"needs {economy.CITY_PROPERTY_REP_GATE} reputation with the ",
+                     f.body_sm, WARN, (x, y))
+                y += 17
+                text(screen, f"Bankers (have {self.guild.reputation.get('bankers', 0)})",
+                     f.body_sm, WARN, (x, y))
+                y += 17
+            y += SP2
+            pr = pygame.Rect(x, y, w, 38)
+            can_buy = rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
+            hovp = pr.collidepoint(self.mouse)
+            panel(screen, pr, fill=ACCENT if (can_buy and hovp) else SURFACE_3,
+                  border=ACCENT if can_buy else LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, f"BUY THE HOUSE — {economy.CITY_PROPERTY_PRICE} COPPER", f.body_bd,
+                 ACCENT_INK if (can_buy and hovp) else ACCENT if can_buy else INK_FAINT,
+                 pr.center, center=True)
+            self.buttons.append(("buy_property", pr))
+            y += 60
+
+        y = section(screen, "THE STRONGBOX", x, y, w, f)
 
         if not self.guild.bank_unlocked:
             for ln in ("The guild has no strongbox yet.",

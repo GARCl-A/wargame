@@ -173,7 +173,8 @@ class App:
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over,
                                on_advance=self._advance,
-                               on_manage_group=self._open_group)
+                               on_manage_group=self._open_group,
+                               on_interactions=self._open_interactions)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -203,6 +204,18 @@ class App:
     def _open_group(self, group):
         from .group_screen import GroupScreen
         self.scene = GroupScreen(self.fonts, self.guild, group, on_back=self._start_map)
+
+    def _open_interactions(self, group):
+        from .interactions_screen import InteractionsScreen
+        from . import orders
+        self.scene = InteractionsScreen(self.fonts, self.guild, group,
+                                        on_back=self._start_map,
+                                        on_action=lambda action: self._issue_interaction(group, action))
+
+    def _issue_interaction(self, group, action):
+        from . import orders
+        group.order = orders.interactive(action)
+        self._start_map()
 
     def _open_level(self, unit):
         self.scene = LevelScreen(self.fonts, unit,

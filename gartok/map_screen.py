@@ -48,7 +48,7 @@ WORK_HOURS = (4, 8, 12, 16)
 class MapScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group):
+    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group, on_interactions):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -56,6 +56,7 @@ class MapScreen(Screen):
         self.on_wipe = on_wipe
         self.on_advance = on_advance
         self.on_manage_group = on_manage_group
+        self.on_interactions = on_interactions
         # point at whichever group actually needs an order, not just the first
         self.selected = next((g for g in guild.groups if not g.busy and not g.empty),
                              guild.groups[0])
@@ -134,6 +135,8 @@ class MapScreen(Screen):
             self.on_advance(dt=1)
         elif key == "manage_group":
             self.on_manage_group(self.selected)
+        elif key == "interactions":
+            self.on_interactions(self.selected)
         elif key == "split":
             self.mode, self.split_picks = "split", set()
         elif key.startswith("merge:"):
@@ -608,18 +611,12 @@ class MapScreen(Screen):
         # a tanner) -- checked after the kind-dispatch chain above, not nested
         # in one branch of it, so a future node can carry `tanner` on its own.
         # Still gated on not-busy, same as every button the chain above offers.
+        interactions = []
         if here.tanner and not self.selected.busy:
-            y += 30
-            tr = pygame.Rect(cx, y, cw, 38)
-            hovt = tr.collidepoint(self.mouse)
-            panel(screen, tr, fill=SURFACE_3 if hovt else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "TALK TO THE TANNER", f.body_bd, INK_DIM, tr.center, center=True)
-            self.buttons.append(("tanner", tr))
-            y += 44
-            text(screen, "a paid job, on the clock -- see what's on offer",
-                 f.body_sm, INK_FAINT, (cx, y))
-
+            interactions.append("tanner")
+        if here.trust and not self.selected.busy:
+            interactions.append("trust")
+            
         if here.forge and not self.selected.busy:
             y += 30
             fr = pygame.Rect(cx, y, cw, 38)
@@ -631,20 +628,24 @@ class MapScreen(Screen):
             y += 44
             text(screen, "craft weapons, armors and traps",
                  f.body_sm, INK_FAINT, (cx, y))
-
-        if here.trust and not self.selected.busy:
+            
+        if interactions:
             y += 30
-            br = pygame.Rect(cx, y, cw, 38)
-            hovb = br.collidepoint(self.mouse)
-            panel(screen, br, fill=SURFACE_3 if hovb else SURFACE_1,
+            ir = pygame.Rect(cx, y, cw, 38)
+            hovi = ir.collidepoint(self.mouse)
+            panel(screen, ir, fill=SURFACE_3 if hovi else SURFACE_1,
                   border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "TALK TO THE BANKERS", f.body_bd, INK_DIM, br.center, center=True)
-            self.buttons.append(("trust", br))
+            text(screen, "AVAILABLE INTERACTIONS", f.body_bd, INK_DIM, ir.center, center=True)
+            self.buttons.append(("interactions", ir))
             y += 44
-            text(screen, "a test of trust -- see what they're offering",
+            text(screen, f"{len(interactions)} mission(s) / service(s) here",
                  f.body_sm, INK_FAINT, (cx, y))
+            y += 24
 
-        if here.city_property and not self.selected.busy:
+        has_property_business = (self.guild.property_city_unlocked or
+                                 self.guild.property_city_squatting or
+                                 self.guild.bankers_debt > 0)
+        if here.city_property and has_property_business and not self.selected.busy:
             y += 30
             pr = pygame.Rect(cx, y, cw, 38)
             hovp = pr.collidepoint(self.mouse)
@@ -663,11 +664,6 @@ class MapScreen(Screen):
                 col = INK_FAINT
             elif self.guild.bankers_debt > 0:
                 note, col = f"owes the Bankers {self.guild.bankers_debt} copper", DANGER
-            else:
-                if self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE:
-                    note, col = "buy a house from the Bankers -- taxed on a cycle", INK_FAINT
-                else:
-                    note, col = f"needs {economy.CITY_PROPERTY_REP_GATE} reputation with the Bankers to buy", WARN
             text(screen, note, f.body_sm, col, (cx, y))
 
         if here.claim and not self.selected.busy:
