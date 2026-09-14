@@ -38,10 +38,24 @@ def _pick_attack(battle, unit, target):
     connects, and when both do, the bigger damage die."""
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
+            
+    mm = None
+    if "magic_missile" in getattr(unit, "spells_known", []):
+        mm = actions.CastSpellAction("magic_missile")
+        if mm.can(battle, unit, target):
+            opts.append(mm)
+
     if not opts:
         return None
     if len(opts) == 1:
         return opts[0]
+        
+    if mm in opts:
+        if actions.ATTACK not in opts and actions.ATTACK_TONGUE not in opts:
+            return mm
+        if _hand_die(unit) < 2.5:  # Magic Missile is 1d4 (avg 2.5)
+            return mm
+            
     return (actions.ATTACK if _hand_die(unit) >= _avg_die(unit.tongue_weapon["damage"])
             else actions.ATTACK_TONGUE)
 
@@ -55,6 +69,8 @@ def _approach_reach(unit):
     if unit.has_tongue_weapon and (unit.unarmed or unit.improvised
                                    or _avg_die(unit.tongue_weapon["damage"]) >= _hand_die(unit)):
         return unit.tongue_reach
+    if "magic_missile" in getattr(unit, "spells_known", []) and _hand_die(unit) < 2.5:
+        return 6
     return 1
 
 
@@ -288,6 +304,13 @@ def take_turn(battle, unit):
         if unit.can_reload:
             actions.RELOAD.execute(battle, unit)
             continue
+            
+        if "light_globe" in getattr(unit, "spells_known", []):
+            lg = actions.CastSpellAction("light_globe")
+            if lg.available(battle, unit) and lg.can(battle, unit, target.pos):
+                if not any(o.is_torch for o in battle.ground if grid_distance(o.pos, target.pos) <= 3):
+                    lg.execute(battle, unit, target.pos)
+                    continue
 
         atk = _pick_attack(battle, unit, target)
         if atk is not None:
@@ -302,6 +325,18 @@ def take_turn(battle, unit):
                                        reach=_approach_reach(unit))
         if dest == unit.pos:
             # can't walk any closer -- maybe a pit or deep water is in the way.
+            
+            if "floating_disk" in getattr(unit, "spells_known", []):
+                fd = actions.CastSpellAction("floating_disk")
+                if fd.available(battle, unit):
+                    # Pick an adjacent cell towards the target that is empty
+                    adj = min((c for c in battle.board.cells_in_radius(unit.pos, 1) 
+                               if fd.can(battle, unit, c)),
+                              key=lambda c: grid_distance(c, target.pos), default=None)
+                    if adj:
+                        fd.execute(battle, unit, adj)
+                        continue
+            
             # try to climb / drop / swim toward the target so the fight doesn't
             # stall out.
             if _step_over_terrain(battle, unit, target):
