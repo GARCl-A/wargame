@@ -107,6 +107,7 @@ Each occupation grants one starting weapon and one starting item.
 | Pick | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
 | Broadsword | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Light Crossbow | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Dwarf Axe | 1d10 | melee | -- | -- | 1 | 4 kg | -- |
 
 ## Armor
 
@@ -117,6 +118,7 @@ Each occupation grants one starting weapon and one starting item.
 | Chainmail | +3 | +2 | -- | 10 kg | 160 |
 | Brigandine | +4 | +1 | -1 sq | 18 kg | 400 |
 | Plate Armor | +5 | +0 | -2 sq | 28 kg | 950 |
+| Dwarf Armor | +5 | +0 | -1 sq | 25 kg | -- |
 
 ## Items
 
@@ -128,6 +130,8 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | 1kg Coal | 1 kg | -- |
 | 1kg Firewood | 1 kg | -- |
 | 1sqm Hide | 2 kg | -- |
+| Alarm Trap | 1 kg | -- |
+| Bear Trap | 3 kg | -- |
 | Bucket | 1 kg | -- |
 | Chains | 5 kg | -- |
 | Chisel | 0.3 kg | -- |
@@ -239,6 +243,8 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Magic Excitement | enthusiasm for the unknown: on the first day studying a new spell, roll twice for progress. | -- | Gnome |
 | 1 | Faith Initiate | divine calling: you become initiated in faith magic. If already initiated, gain a free spell. | -- | Kenku |
 | 1 | Nature Initiate | fey magic: you become initiated in nature magic and gain the Share Magic action. | -- | Sprite |
+| 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- | Dwarf |
+| 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- | Kobold |
 
 ## Factions and deeds
 

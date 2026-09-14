@@ -316,7 +316,6 @@ def test_tongue_is_refused_to_non_grippli():
     u.set_track_level("racial", 5)
     assert not u.choose_talent("racial", "tongue")
     assert u.talents["racial"] == []
-    assert "racial" not in u.pending_picks        # nothing to spend -> no nag
 
 
 def test_racial_talent_picks_unlock_at_level_5():

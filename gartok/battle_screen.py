@@ -8,6 +8,7 @@ import pygame
 
 from . import actions, ai, artwork, data, icons, vision
 from .board import cells
+from .ground import GroundObject
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
@@ -111,7 +112,7 @@ class BattleScreen(Screen):
                 self.view.center_on(b.active.pos)
         if b.winner is not None:
             return
-        if b.awaiting_flag:                  # plant the flag before anyone acts
+        if b.awaiting_flag or b.awaiting_trap:       # plant the flag/traps before anyone acts
             return
         if b.active.team == "enemy":
             self.enemy_timer += dt
@@ -176,6 +177,15 @@ class BattleScreen(Screen):
             if self._can_plant_flag(tile):
                 b.flags["player"] = tile
                 b.scenario.auto_place_enemy_flag(b)
+            return
+            
+        trapper = b.awaiting_trap
+        if trapper:
+            if self._can_plant_trap(trapper, tile):
+                trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
+                b.ground.append(GroundObject.trap(tile, trap_type.lower(), trapper.team))
+                trapper.inventory.remove(trap_type)
+                b.trap_setup_queue.pop(0)
             return
 
         self._obs = self._observers()
@@ -389,6 +399,8 @@ class BattleScreen(Screen):
         self._draw_tactical(screen)              # overlay: above the fog
         if self.battle.awaiting_flag:
             self._draw_flag_setup(screen)
+        if self.battle.awaiting_trap:
+            self._draw_trap_setup(screen)
         self._draw_floaters(screen)
         screen.set_clip(clip)
 
@@ -655,6 +667,40 @@ class BattleScreen(Screen):
         banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
         panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
         text(screen, "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
+             f.body_bd, INK, banner.center, center=True)
+
+    def _can_plant_trap(self, trapper, tile):
+        b = self.battle
+        x, y = tile
+        taken = b.occupied() | b.board.walls | b.creature_cells() | {o.pos for o in b.ground}
+        if tile in taken or not b.board.in_bounds(tile):
+            return False
+        # Limit trap placement to adjacent cells of the trapper
+        return tile in cells(trapper.pos, trapper.footprint) or tile in b.board.neighbors(trapper.pos)
+
+    def _draw_trap_setup(self, screen):
+        f = self.fonts
+        board = self.battle.board
+        trapper = self.battle.awaiting_trap
+        
+        tint = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
+        tint.fill((*PLAYER_C, 32))
+        hover = self._tile_at_px(self.mouse)
+        
+        candidates = [p for c in self.battle.cells_of(trapper) for p in board.neighbors(c)
+                      if board.in_bounds(p)]
+                      
+        for p in candidates:
+            if self._can_plant_trap(trapper, p):
+                screen.blit(tint, self._cell_rect(*p))
+                
+        if hover is not None and self._can_plant_trap(trapper, hover):
+            pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
+            
+        banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
+        panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
+        trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
+        text(screen, f"TRAP PLACEMENT  ·  {trapper.name} is placing a {trap_type}",
              f.body_bd, INK, banner.center, center=True)
 
     def _draw_creatures(self, screen):

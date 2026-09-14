@@ -70,7 +70,10 @@ def test_worn_armor_reaches_the_combatant():
 
 
 def test_armor_is_stocked_and_priced_by_the_ac_it_grants():
+    crafted_only = set(data.CRAFTING_RECIPES)
     for name in data.ARMOR:
+        if name in crafted_only:
+            continue
         assert name in economy.MARKET_STOCK and name in economy.PRICES
     assert (economy.PRICES["Leather Jerkin"] < economy.PRICES["Chainmail"]
             < economy.PRICES["Plate Armor"])

@@ -252,6 +252,11 @@ def draw_sheet(screen, rect, u, f):
     text(screen, ", ".join(u.languages), f.body_sm, INK, (x, y))
     y += 20
 
+    if getattr(u, 'recipes', None):
+        y = section(screen, "RECIPES", x, y, w, f)
+        text(screen, ", ".join(u.recipes), f.body_sm, INK, (x, y))
+        y += 20
+
     y = section(screen, "RACIAL ABILITY", x, y, w, f)
     text(screen, u.ability.name, f.body_bd, INFO, (x, y))
     y += 17

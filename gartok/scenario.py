@@ -40,6 +40,27 @@ class Scenario:
         self._deploy(battle)
         self._place_creatures(battle)
         self._scatter_torches(battle)
+        self._place_ai_traps(battle)
+
+    def _place_ai_traps(self, battle):
+        """The AI automatically places one trap from its inventory, if it has any,
+        near its starting position before the battle starts."""
+        for u in battle.enemy_units:
+            trap_to_place = None
+            if "Bear Trap" in u.inventory:
+                trap_to_place = "Bear Trap"
+            elif "Alarm Trap" in u.inventory:
+                trap_to_place = "Alarm Trap"
+                
+            if trap_to_place:
+                taken = battle.occupied() | battle.board.walls | battle.creature_cells() | {o.pos for o in battle.ground}
+                candidates = [p for c in battle.cells_of(u) for p in battle.board.neighbors(c)
+                              if p not in taken and battle.board.in_bounds(p)]
+                if candidates:
+                    pos = random.choice(candidates)
+                    battle.ground.append(GroundObject.trap(pos, trap_to_place.lower(), u.team))
+                    u.inventory.remove(trap_to_place)
+                    # For now, AI places just one trap per unit.
 
     def _make_board(self):
         return Board()

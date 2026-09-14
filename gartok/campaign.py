@@ -47,21 +47,31 @@ class BattleOutcome:
 
 
 def _carry_forward(member, combatant):
-    """The only battle state a survivor keeps: a light source still in hand
-    (torch or lantern), plus any spare torches picked up during the fight."""
+    """The battle state a survivor keeps: what they are holding (including picked up 
+    or thrown weapons), light sources, and their ammo/first aid charges."""
+    if hasattr(combatant, "equipped_weapon"):
+        member.equipped_weapon = combatant.equipped_weapon
+    if not getattr(combatant, "weapon_hand", False):
+        member.equipped_weapon = None
+        
     if combatant.torch_hand:
         member.equipped_offhand = data.TORCH_ITEM
     elif combatant.lantern_hand:
         member.equipped_offhand = data.LANTERN_ITEM
     else:
         member.equipped_offhand = None
+        
     torch_spares = combatant.inventory.count(data.TORCH_ITEM)
     lantern_spares = combatant.inventory.count(data.LANTERN_ITEM)
+    bear_traps = combatant.inventory.count("Bear Trap")
+    alarm_traps = combatant.inventory.count("Alarm Trap")
     member._base_inventory = (
         [it for it in member._base_inventory
-         if it not in (data.TORCH_ITEM, data.LANTERN_ITEM)]
+         if it not in (data.TORCH_ITEM, data.LANTERN_ITEM, "Bear Trap", "Alarm Trap")]
         + [data.TORCH_ITEM] * torch_spares
-        + [data.LANTERN_ITEM] * lantern_spares)
+        + [data.LANTERN_ITEM] * lantern_spares
+        + ["Bear Trap"] * bear_traps
+        + ["Alarm Trap"] * alarm_traps)
     
     member.first_aid_charges = combatant.first_aid_charges
     if member.first_aid_charges <= 0 and data.FIRST_AID_ITEM in member._base_inventory:

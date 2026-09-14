@@ -618,6 +618,18 @@ class MapScreen(Screen):
             text(screen, "a paid job, on the clock -- see what's on offer",
                  f.body_sm, INK_FAINT, (cx, y))
 
+        if here.forge and not self.selected.busy:
+            y += 30
+            fr = pygame.Rect(cx, y, cw, 38)
+            hovf = fr.collidepoint(self.mouse)
+            panel(screen, fr, fill=SURFACE_3 if hovf else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "VISIT THE FORGE", f.body_bd, INK_DIM, fr.center, center=True)
+            self.buttons.append(("forge", fr))
+            y += 44
+            text(screen, "craft weapons, armors and traps",
+                 f.body_sm, INK_FAINT, (cx, y))
+
         if here.trust and not self.selected.busy:
             y += 30
             br = pygame.Rect(cx, y, cw, 38)

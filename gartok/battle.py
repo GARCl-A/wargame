@@ -62,6 +62,12 @@ class Battle:
         self._mopup_open = False              # enemies down, allies still bleeding out
         if self.is_ctf:
             self._assign_flag_runners()
+            
+        self.trap_setup_queue = [
+            u for u in self.player_units
+            if "Bear Trap" in u.inventory or "Alarm Trap" in u.inventory
+        ]
+        
         self._roll_initiative()
         self.log("--- Round 1 ---")
         self._announce_turn()
@@ -80,6 +86,13 @@ class Battle:
     def awaiting_flag(self):
         """The player still has to plant their flag before the fight can start."""
         return self.is_ctf and self.flags["player"] is None
+
+    @property
+    def awaiting_trap(self):
+        """The player still has a trap to plant before the fight can start."""
+        if self.awaiting_flag:
+            return None
+        return self.trap_setup_queue[0] if self.trap_setup_queue else None
 
     def flag_pos(self, team):
         """Where `team`'s flag actually is right now: on whoever is running it
@@ -292,14 +305,24 @@ class Battle:
             unit.moved = 0
             unit.diag_steps = 0              # a fresh walk restarts the diagonal alternation
             self.log(f"{unit.name} moves (1 action point).")
+            
         segment = self.path_to(unit, dest) or [unit.pos, dest]
-        step_cost, unit.diag_steps = self.board.path_cost(segment, unit.diag_steps)
-        unit.moved += step_cost
-        unit.path.extend(segment[1:])         # the cells walked this turn so far
-        unit.pos = dest
-        if getattr(unit, "rider", None):
-            unit.rider.pos = dest
-        if unit.moved >= unit.speed:          # walk exhausted; next step = new action
+        
+        for step in segment[1:]:
+            step_cost, unit.diag_steps = self.board.path_cost([unit.pos, step], unit.diag_steps)
+            unit.moved += step_cost
+            unit.path.append(step)
+            unit.pos = step
+            if getattr(unit, "rider", None):
+                unit.rider.pos = step
+                
+            trap = self.ground_at(step)
+            if trap and trap.is_trap and trap.trap_owner_team != unit.team:
+                self.trigger_trap(unit, trap)
+                if not unit.alive:
+                    break
+                    
+        if unit.moved >= unit.speed or not unit.alive:          # walk exhausted; next step = new action
             unit.walking = False
         return True
 
@@ -370,6 +393,20 @@ class Battle:
         dmg = data.roll(drop - 1, 6)
         log(f"{unit.name} falls {drop} levels -> {dmg} damage ({drop - 1}d6).")
         unit.take_damage(dmg, log)
+
+    def trigger_trap(self, unit, trap):
+        from . import data
+        self.ground.remove(trap)
+        self.log(f"{unit.name} steps on a {trap.trap_type}!")
+        if trap.trap_type == "bear trap":
+            dmg = data.roll(1, 8)
+            self.log(f"  *SNAP* {unit.name} takes {dmg} damage and is stopped.")
+            unit.take_damage(dmg, self.log)
+            unit.moved = unit.speed # stop movement
+        elif trap.trap_type == "alarm trap":
+            self.log(f"  *RING RING RING* A loud alarm sounds! Everyone's attention is drawn to {unit.name}.")
+            # Give a temporary penalty or condition if needed, but for now just stops movement slightly and logs
+            unit.moved += 1 # small movement penalty
 
     def _apply_submersion(self, unit):
         """Breath check at the top of a submerged unit's turn. It holds out

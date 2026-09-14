@@ -822,6 +822,11 @@ class Push(Action):
         target.pos = dest
         target.walking = False
         battle.log(desc + f"  -> {target.name} is shoved to {dest}.")
+        
+        trap = battle.ground_at(dest)
+        if trap and trap.is_trap and trap.trap_owner_team != target.team:
+            battle.trigger_trap(target, trap)
+            
         if z_to < z_from:
             battle.apply_fall(target, z_from - z_to, battle.log)
 

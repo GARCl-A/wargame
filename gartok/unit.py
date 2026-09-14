@@ -40,6 +40,9 @@ class Unit:
         self.spells_known = []
         self.study_target = None
         self.study_progress = 0
+        self.recipes = []
+        self.crafting_target = None
+        self.crafting_progress = 0
         self._roll_attributes()
         if race is not None:                 # a specific body (e.g. encounters' race_pool draw)
             self.race = dict(race)
@@ -121,6 +124,9 @@ class Unit:
         u.spells_known = list(d.get("spells_known", []))
         u.study_target = d.get("study_target")
         u.study_progress = d.get("study_progress", 0)
+        u.recipes = list(d.get("recipes", []))
+        u.crafting_target = d.get("crafting_target")
+        u.crafting_progress = d.get("crafting_progress", 0)
 
         u._auto_name = d["auto_name"]
         u.name = d["name"]
@@ -317,6 +323,14 @@ class Unit:
         elif talent_id == "sprite_nature_initiate":
             if not self.magic_source:
                 self.magic_source = "nature"
+        elif talent_id == "dwarf_crafting":
+            for r in ["Dwarf Axe", "Dwarf Shield", "Dwarf Armor"]:
+                if r not in self.recipes:
+                    self.recipes.append(r)
+        elif talent_id == "kobold_trapper":
+            for r in ["Bear Trap", "Alarm Trap"]:
+                if r not in self.recipes:
+                    self.recipes.append(r)
                 
         self._apply_attributes()
         self._derive_combat()
@@ -638,6 +652,8 @@ class Unit:
             dex_ac = min(dex_ac, armor["max_dex"])
         self.ac_base = (10 + dex_ac + (armor["ac"] if armor else 0)
                         + self.talent_bonus("ac"))
+        if self.equipped_offhand and self.equipped_offhand in data.SHIELDS:
+            self.ac_base += data.SHIELDS[self.equipped_offhand]["ac"]
         self.ac_natural = self._ability.ac_natural
         self.mental_defense_base = (10 + self.mod_wisdom
                                     + self.talent_bonus("mental_defense")
@@ -666,7 +682,7 @@ class Unit:
 
     @staticmethod
     def fits_offhand(name):
-        return name == data.TORCH_ITEM or name in data.LIGHT_SOURCES
+        return name == data.TORCH_ITEM or name in data.LIGHT_SOURCES or name in data.SHIELDS
 
     @staticmethod
     def fits_armor(name):
@@ -746,6 +762,27 @@ class Unit:
 
     def take_from_pack(self, idx):
         return self._base_inventory.pop(idx)
+
+    def progress_crafting(self):
+        """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
+        if not self.crafting_target:
+            return 0, False
+        target_val = 0
+        recipe_data = data.CRAFTING_RECIPES[self.crafting_target]
+        for mat in recipe_data["materials"]:
+            target_val += economy.PRICES.get(mat, 10)
+        target_val += recipe_data["complexity"]
+
+        prog = roll(1, 20) + self.mod_intelligence
+        prog = max(1, prog)
+        self.crafting_progress += prog
+        
+        is_done = self.crafting_progress >= target_val
+        if is_done:
+            self.give_to_pack(self.crafting_target)
+            self.crafting_target = None
+            self.crafting_progress = 0
+        return prog, is_done
 
     # ------------------------------------------------------------------ #
     # combat previews: read-only views of the equipped loadout, so the   #

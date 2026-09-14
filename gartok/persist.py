@@ -58,6 +58,9 @@ def unit_to_dict(u):
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
         "bio": u.bio,                            # free-text backstory (blank for a rolled character)
         "arena_title": u.arena_title,            # holds the "Champion of the Pit" title (arena.py)
+        "recipes": list(u.recipes),
+        "crafting_target": u.crafting_target,
+        "crafting_progress": u.crafting_progress,
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
         "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},

@@ -259,6 +259,7 @@ WEAPONS = {
     "Pick":      {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
     "Broadsword":    {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0},
     "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5},
+    "Dwarf Axe":     {"damage": (1, 10), "range": 0, "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
 }
 
 
@@ -278,6 +279,15 @@ ARMOR = {
     "Chainmail":      {"ac": 3, "max_dex": 2,    "speed": 0, "weight": 10.0},
     "Brigandine":             {"ac": 4, "max_dex": 1,    "speed": 1, "weight": 18.0},
     "Plate Armor": {"ac": 5, "max_dex": 0,    "speed": 2, "weight": 28.0},
+    "Dwarf Armor": {"ac": 5, "max_dex": 0,    "speed": 1, "weight": 25.0},
+}
+
+# --------------------------------------------------------------------------- #
+# Shields   (offhand item granting AC)                                         #
+# --------------------------------------------------------------------------- #
+
+SHIELDS = {
+    "Dwarf Shield": {"ac": 2, "weight": 3.0},
 }
 
 
@@ -309,6 +319,7 @@ ITEM_WEIGHTS = {
     "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
     "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,
     "Rotten Food": 1.0,
+    "Bear Trap": 3.0, "Alarm Trap": 1.0,
     CHEST_ITEM: 8.0, GEM_ITEM: 0.1, MISSION_CHEST_ITEM: 8.0, LETTER_ITEM: 0.1,
 }
 
@@ -319,7 +330,23 @@ def item_weight(name):
         return WEAPONS[name]["weight"]
     if name in ARMOR:
         return ARMOR[name]["weight"]
+    if name in SHIELDS:
+        return SHIELDS[name]["weight"]
     return ITEM_WEIGHTS.get(name, 0.5)
+
+# --------------------------------------------------------------------------- #
+# Crafting Recipes                                                             #
+#   materials: items consumed to build the recipe                              #
+#   complexity: added to the materials' copper value to form the craft target  #
+# --------------------------------------------------------------------------- #
+
+CRAFTING_RECIPES = {
+    "Dwarf Axe": {"materials": ["Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 10},
+    "Dwarf Shield": {"materials": ["Iron Bar", "Lumber", "1kg Coal"], "complexity": 10},
+    "Dwarf Armor": {"materials": ["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 15},
+    "Bear Trap": {"materials": ["Iron Bar"], "complexity": 5},
+    "Alarm Trap": {"materials": ["Iron Bar", "Rope"], "complexity": 5},
+}
 
 
 # Prices, market stock and haggling live in `economy.py` (behaviour, not a

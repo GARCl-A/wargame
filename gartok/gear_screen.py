@@ -361,7 +361,12 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         nx = rect.x + pad + 32
         text(screen, ellipsize(unit.name, f.card_name, rect.right - nx - pad),
              f.card_name, INK, (nx, rect.y + 6))
-        text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
+        
+        info = f"{unit.race['name']}  ·  {unit.occupation['name']}"
+        if getattr(unit, 'recipes', None):
+            info += f"  ·  {len(unit.recipes)} recipes"
+            
+        text(screen, ellipsize(info,
                                f.body_sm, rect.right - nx - pad),
              f.body_sm, INK_FAINT, (nx, rect.y + 27))
 

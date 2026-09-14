@@ -53,4 +53,9 @@ def field_loot(battle, fallen_combatants, rng=random):
             pool.append(obj.weapon_name)
         elif obj.is_torch:
             pool.append(data.TORCH_ITEM)
+        elif obj.is_trap:
+            if obj.trap_type == "bear trap":
+                pool.append("Bear Trap")
+            elif obj.trap_type == "alarm trap":
+                pool.append("Alarm Trap")
     return sorted(pool)

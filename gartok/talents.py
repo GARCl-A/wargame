@@ -216,6 +216,12 @@ _LIST = [
     Talent("sprite_nature_initiate", "racial", 1, "Nature Initiate",
            "fey magic: you become initiated in nature magic and gain the Share Magic action.", race="Sprite",
            effects=(), icon="action/leaf"),
+    Talent("dwarf_crafting", "racial", 1, "Dwarven Forging",
+           "your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor.", race="Dwarf",
+           effects=(), icon="action/hammer-drop"),
+    Talent("kobold_trapper", "racial", 1, "Trapper",
+           "cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them.", race="Kobold",
+           effects=(), icon="action/bear-trap"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

@@ -106,6 +106,7 @@ PRICES = {
     "1sqm Hide": 12,
     # the Wilds claim's building material -- bought here, hauled out by hand
     "Lumber": LUMBER_PRICE,
+    "Iron Bar": 15, "1kg Coal": 5,
     # a locked chest's contents (chest.py) -- found, not manufactured; sellable
     # like everything else, but never in MARKET_STOCK below (nothing to buy back)
     data.GEM_ITEM: 60,
@@ -117,7 +118,7 @@ MARKET_STOCK = [
     "Light Crossbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
     "Meat", "Potato", TORCH_ITEM, "First Aid Kit", "Lantern",
-    "1sqm Hide", "Lumber",
+    "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal",
 ]
 
 # Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.

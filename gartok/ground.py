@@ -12,11 +12,14 @@ to it; consumers ask `obj.kind` / `obj.is_weapon` / `obj.is_torch`.
 class GroundObject:
     WEAPON = "weapon"
     TORCH = "torch"
+    TRAP = "trap"
 
-    def __init__(self, kind, pos, weapon_name=None):
+    def __init__(self, kind, pos, weapon_name=None, trap_type=None, trap_owner_team=None):
         self.kind = kind
         self.pos = pos
         self.weapon_name = weapon_name
+        self.trap_type = trap_type
+        self.trap_owner_team = trap_owner_team
 
     @classmethod
     def weapon(cls, pos, weapon_name):
@@ -26,6 +29,10 @@ class GroundObject:
     def torch(cls, pos):
         return cls(cls.TORCH, pos)
 
+    @classmethod
+    def trap(cls, pos, trap_type, trap_owner_team):
+        return cls(cls.TRAP, pos, trap_type=trap_type, trap_owner_team=trap_owner_team)
+
     @property
     def is_weapon(self):
         return self.kind == self.WEAPON
@@ -33,6 +40,10 @@ class GroundObject:
     @property
     def is_torch(self):
         return self.kind == self.TORCH
+
+    @property
+    def is_trap(self):
+        return self.kind == self.TRAP
 
     def __repr__(self):
         extra = f" {self.weapon_name}" if self.weapon_name else ""

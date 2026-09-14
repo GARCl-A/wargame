@@ -737,6 +737,54 @@ class Guild:
             events.append(note)
         return events
 
+    def crafting_shift(self, unit, recipe, hours):
+        """A stint at the forge/workbench, done right now:
+        advances the campaign clock through `pass_time` and rolls progress."""
+        hours = int(hours)
+        if unit.crafting_target != recipe:
+            recipe_data = data.CRAFTING_RECIPES.get(recipe)
+            if not recipe_data:
+                return [f"Unknown recipe {recipe}."]
+            
+            # Verify materials
+            inv = list(unit._base_inventory)
+            missing = False
+            for mat in recipe_data["materials"]:
+                if mat in inv:
+                    inv.remove(mat)
+                else:
+                    missing = True
+                    break
+            
+            if missing:
+                return [f"{unit.name} can't craft {recipe} -- missing materials."]
+                
+            # Consume materials
+            for mat in recipe_data["materials"]:
+                unit._base_inventory.remove(mat)
+                
+            unit.crafting_target = recipe
+            unit.crafting_progress = 0
+
+        clock_hours = hours * self.work_speedup([unit])
+        events = self.pass_time(clock_hours)
+        
+        progress_total = 0
+        done = False
+        # One roll per hour
+        for _ in range(hours):
+            p, done = unit.progress_crafting()
+            progress_total += p
+            if done:
+                break
+                
+        if done:
+            events.append(f"{unit.name} finished crafting: {recipe}!")
+        else:
+            events.append(f"{unit.name} worked on {recipe} for {hours}h (+{progress_total} progress).")
+            
+        return events
+
     @property
     def gold(self):
         """Total copper across the roster (the guild has no purse of its own)."""

@@ -67,3 +67,10 @@ For detailed history of any feature or past design decision, use the
 `project-context` skill (`.agents/skills/project-context/`). It indexes every
 memory from the project's development and has the full files as references —
 read only what you need.
+
+## Feature Implementation Rules
+
+Whenever a new mechanic or action is added to the game, you MUST always:
+1. **Implement end-to-end**: Backend, core logic, and User Interface (UI). Features must be 100% playable with no loose ends.
+2. **AI Support**: Ensure the AI knows how to use and react to the new mechanic during combat.
+3. **Automated Tests**: Write tests covering the happy path, edge cases, and AI behavior.

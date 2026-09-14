@@ -267,6 +267,8 @@ class App:
                 self._open_trust_offer(group, node, None)
             elif order.kind == "ledger":
                 self._open_ledger_desk(group, node, None)
+            elif order.kind == "forge":
+                self._open_forge(group, node, None)
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
@@ -374,6 +376,11 @@ class App:
     def _open_ledger_desk(self, group, node, _offer):
         self.scene = LedgerScreen(self.fonts, self.guild, group,
                                  on_done=self._after_activity)
+
+    def _open_forge(self, group, node, _offer):
+        from .crafting_screen import CraftingScreen
+        self.scene = CraftingScreen(self.fonts, self.guild, group,
+                                    on_done=self._after_activity)
 
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #
