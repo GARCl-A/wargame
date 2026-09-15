@@ -27,19 +27,22 @@ not a button here.
 """
 
 import pygame
+from pygame import gfxdraw
 
 from . import arena, economy, orders, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    blit_block, ellipsize, panel, section, text, tracked, wrap_lines)
+                    blit_block, ellipsize, panel, section, smooth_circle, text, tracked,
+                    wrap_lines)
 
 SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
 GROUND_NIGHT = (21, 23, 32)
+PRISON_C = (146, 138, 176)                 # cold stone-violet -- distinct from tavern's WARN
 KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "tavern": WARN, "town": NEUTRAL_C,
-              "wilds": OK, "prison": WARN}
+              "wilds": OK, "prison": PRISON_C}
 KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP",
               "wilds": "WILDS", "prison": "PRISON"}
 WORK_HOURS = (4, 8, 12, 16)
@@ -294,30 +297,38 @@ class MapScreen(Screen):
 
     def _glyph(self, screen, kind, x, y):
         c = (14, 15, 20)
-        if kind == "battle":                                       # crossed blades
-            pygame.draw.line(screen, c, (x - 5, y - 5), (x + 5, y + 5), 2)
-            pygame.draw.line(screen, c, (x - 5, y + 5), (x + 5, y - 5), 2)
-        elif kind == "market":                                     # coin
-            pygame.draw.circle(screen, c, (x, y), 5, 2)
-            pygame.draw.line(screen, c, (x, y - 2), (x, y + 2), 2)
-        elif kind == "tavern":                                    # tankard
-            pygame.draw.rect(screen, c, (x - 4, y - 4, 7, 9), 2)
-            pygame.draw.arc(screen, c, (x + 2, y - 4, 6, 8), -1.4, 1.4, 2)
-        elif kind == "prison":                                    # bars
-            pygame.draw.rect(screen, c, (x - 5, y - 5, 10, 10), 2)
-            pygame.draw.line(screen, c, (x - 2, y - 5), (x - 2, y + 5), 2)
-            pygame.draw.line(screen, c, (x + 2, y - 5), (x + 2, y + 5), 2)
-        elif kind == "work":                                        # axe
-            pygame.draw.line(screen, c, (x - 4, y + 6), (x + 3, y - 6), 2)
-            pygame.draw.arc(screen, c, (x + 1, y - 8, 7, 8), 1.2, 4.2, 2)
-        elif kind == "wilds":                                       # bow
-            pygame.draw.arc(screen, c, (x - 6, y - 6, 10, 12), -1.3, 1.3, 2)
-            pygame.draw.line(screen, c, (x - 4, y - 5), (x - 4, y + 5), 2)
-            pygame.draw.line(screen, c, (x - 4, y), (x + 6, y), 2)
-        else:                                                      # town roofline
+        if kind == "battle":                                       # crossed swords, hilts and all
+            pygame.draw.line(screen, c, (x - 6, y - 6), (x + 6, y + 6), 2)
+            pygame.draw.line(screen, c, (x - 6, y + 6), (x + 6, y - 6), 2)
+            pygame.draw.line(screen, c, (x - 8, y - 4), (x - 4, y - 8), 2)
+            pygame.draw.line(screen, c, (x + 4, y - 8), (x + 8, y - 4), 2)
+        elif kind == "market":                                     # embossed coin
+            gfxdraw.aacircle(screen, x, y, 6, c)
+            gfxdraw.aacircle(screen, x, y, 4, c)
+            pygame.draw.line(screen, c, (x, y - 2), (x, y + 2), 1)
+        elif kind == "tavern":                                    # tankard, foam and all
+            pygame.draw.rect(screen, c, (x - 5, y - 4, 8, 10), 2, border_radius=1)
+            pygame.draw.arc(screen, c, (x + 2, y - 4, 7, 8), -1.4, 1.4, 2)
+            pygame.draw.line(screen, c, (x - 4, y - 2), (x + 2, y - 2), 1)
+        elif kind == "prison":                                    # bars over a cell door
+            pygame.draw.rect(screen, c, (x - 6, y - 6, 12, 11), 2)
+            pygame.draw.line(screen, c, (x - 2, y - 6), (x - 2, y + 5), 2)
+            pygame.draw.line(screen, c, (x + 2, y - 6), (x + 2, y + 5), 2)
+            pygame.draw.arc(screen, c, (x - 3, y + 3, 6, 5), 3.4, 6.0, 2)
+        elif kind == "work":                                        # felling axe
+            pygame.draw.line(screen, c, (x - 4, y + 7), (x + 4, y - 7), 2)
+            pygame.draw.arc(screen, c, (x + 1, y - 9, 8, 9), 1.1, 4.3, 2)
+        elif kind == "wilds":                                       # drawn bow, nocked arrow
+            pygame.draw.arc(screen, c, (x - 6, y - 7, 10, 14), -1.3, 1.3, 2)
+            pygame.draw.line(screen, c, (x - 4, y - 6), (x - 4, y + 6), 1)
+            pygame.draw.line(screen, c, (x - 5, y), (x + 7, y), 2)
+            pygame.draw.line(screen, c, (x + 4, y - 3), (x + 7, y), 2)
+            pygame.draw.line(screen, c, (x + 4, y + 3), (x + 7, y), 2)
+        else:                                                      # house: roof and door
             pygame.draw.lines(screen, c, False,
-                              [(x - 5, y + 4), (x - 5, y - 1), (x, y - 5),
-                               (x + 5, y - 1), (x + 5, y + 4)], 2)
+                              [(x - 6, y + 5), (x - 6, y - 1), (x, y - 6),
+                               (x + 6, y - 1), (x + 6, y + 5)], 2)
+            pygame.draw.rect(screen, c, (x - 2, y, 4, 5), 1)
 
     def _draw_marker(self, screen, x, y, n, here, hovered, others=0):
         col = KIND_COLOR[n.kind]
@@ -326,8 +337,8 @@ class MapScreen(Screen):
         screen.blit(sh, (x - 18, y + 5))
 
         if here:
-            pygame.draw.circle(screen, ACCENT, (x, y), 13)
-            pygame.draw.circle(screen, ACCENT_INK, (x, y), 13, 2)
+            smooth_circle(screen, ACCENT, (x, y), 13)
+            smooth_circle(screen, ACCENT_INK, (x, y), 13, 2)
             text(screen, "G", self.fonts.body_bd, ACCENT_INK, (x, y), center=True)
             pygame.draw.line(screen, ACCENT_INK, (x, y - 13), (x, y - 30), 2)
             pygame.draw.polygon(screen, ACCENT,
@@ -338,14 +349,14 @@ class MapScreen(Screen):
                 pygame.draw.circle(aura, (*col, 24), (27, 27), 27)
                 pygame.draw.circle(aura, (*col, 30), (27, 27), 18)
                 screen.blit(aura, (x - 27, y - 27))
-            pygame.draw.circle(screen, col, (x, y), 12)
-            pygame.draw.circle(screen, tuple(c // 2 for c in col), (x, y), 12, 2)
+            smooth_circle(screen, col, (x, y), 13)
+            smooth_circle(screen, tuple(c // 2 for c in col), (x, y), 13, 2)
             if n.work:
                 self._glyph(screen, "work", x, y)
             else:
                 self._glyph(screen, n.kind, x, y)
             if hovered:
-                pygame.draw.circle(screen, INK, (x, y), 16, 2)
+                smooth_circle(screen, INK, (x, y), 17, 2)
 
         if others:                                                 # other groups standing here
             badge = pygame.Rect(0, 0, 22, 16)
@@ -382,8 +393,8 @@ class MapScreen(Screen):
 
     def _draw_legend(self, screen, area):
         f = self.fonts
-        rows = [("battle", "combat"), ("market", "market"),
-                ("tavern", "tavern"), ("wilds", "wilds"), ("town", "stop")]
+        rows = [("battle", "combat"), ("market", "market"), ("tavern", "tavern"),
+                ("prison", "prison"), ("wilds", "wilds"), ("town", "stop")]
         box = pygame.Rect(0, 0, 116, 15 * len(rows) + 12)
         box.topright = (area.right - SP3, area.y + SP3)
         panel(screen, box, fill=SURFACE_1, border=LINE_SOFT, radius=6)

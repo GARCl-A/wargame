@@ -182,36 +182,36 @@ class Bout:
 
 
 NODES = [
-    Node("city", "Ankareth", "town", (0.16, 0.58),
+    Node("city", "Ankareth", "town", (0.30, 0.50),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", bank=True, tanner=True, trust=True,
          city_property=True, jurisdiction="the_city", forge=True),
-    Node("lumber_yard", "Lumber Yard", "town", (0.05, 0.80),
+    Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",
          work=True),
-    Node("arena", "Arena", "battle", (0.33, 0.30),
+    Node("arena", "Arena", "battle", (0.405, 0.32),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
          ArenaScenario, lethal=False, arena=True, jurisdiction="the_city"),
-    Node("market", "Market", "market", (0.28, 0.84),
+    Node("market", "Market", "market", (0.38, 0.64),
          "Buy and sell gear for copper. The traders speak Ankarin.",
          language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city"),
-    Node("tavern", "Tavern", "tavern", (0.07, 0.30),
+    Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
          jurisdiction="the_city", garrison_job="study"),
-    Node("prison", "Prison", "prison", (0.11, 0.44),
+    Node("prison", "Prison", "prison", (0.22, 0.36),
          "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
          jurisdiction="the_city"),
-    Node("road", "Old Road", "town", (0.55, 0.52),
+    Node("road", "Old Road", "town", (0.60, 0.50),
          "A dirt track cutting across the open country to the east.",
          unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
-    Node("wilds", "The Wilds", "wilds", (0.83, 0.40),
+    Node("wilds", "The Wilds", "wilds", (0.91, 0.37),
          "Open ground under the sky, outside the walls. Hunt it for meat -- and "
          "risk what else hunts here.", ErmosScenario),
-    Node("ledger_hold", "Ledger Hold", "town", (0.68, 0.70),
+    Node("ledger_hold", "Ledger Hold", "town", (0.76, 0.73),
          "A fortified counting-house the Bankers keep well outside the walls -- "
          "armed, and used to precious cargo.", fortress_scenario, ledger=True),
-    Node("wilds_territory", "The Claim", "town", (0.95, 0.28),
+    Node("wilds_territory", "The Claim", "town", (0.97, 0.31),
          "A stretch of the Wilds the guild means to make its own -- if it can "
          "clear it, fence it, and hold it.", ErmosScenario,
          claim=True, garrison_job="lumber"),
