@@ -20,7 +20,7 @@ import random
 from . import data
 
 
-def _carried_by(u):
+def carried_by(u):
     """Item names a downed/defeated combatant still has: the weapon in hand, a
     lit torch or lantern, and everything in the pack."""
     items = []
@@ -43,7 +43,7 @@ def field_loot(battle, fallen_combatants, rng=random):
     for u in list(battle.enemy_units) + list(fallen_combatants):
         if getattr(u, "fled", False):
             continue                      # ran off the map with their kit
-        pool += _carried_by(u)
+        pool += carried_by(u)
         char = getattr(u, "char", None)
         drop = char.race.get("drop_item") if char is not None else None
         if drop and rng.random() < char.race.get("drop_chance", 0.0):

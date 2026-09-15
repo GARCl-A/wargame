@@ -10,9 +10,9 @@ one entry in the lists at the end of the file. Nothing else needs to know it exi
 
 import random
 
-from . import data
-from .board import cells, chebyshev, grid_distance
-from .conditions import Defending, Demoralized
+from . import data, magic
+from .board import cells, cells_in_radius, chebyshev, grid_distance, line_cells
+from .conditions import Defending, Demoralized, Sleeping
 from .data import DEMORALIZE_RANGE, d20, resolve_bonus
 from .ground import GroundObject
 
@@ -23,27 +23,6 @@ SWIM_DIVISOR = 5          # Swim: (d20 + Strength) / this = squares crossed, cap
 
 def _sign(v):
     return (v > 0) - (v < 0)
-
-
-def _line(a, b):
-    """Every cell on the Bresenham line from `a` to `b`, both ends included."""
-    (x0, y0), (x1, y1) = a, b
-    dx, dy = abs(x1 - x0), abs(y1 - y0)
-    sx = 1 if x0 < x1 else -1
-    sy = 1 if y0 < y1 else -1
-    err = dx - dy
-    x, y = x0, y0
-    pts = [(x, y)]
-    while (x, y) != (x1, y1):
-        e2 = 2 * err
-        if e2 > -dy:
-            err -= dy
-            x += sx
-        if e2 < dx:
-            err += dx
-            y += sy
-        pts.append((x, y))
-    return pts
 
 
 def _cell_free(battle, actor, pos, footprint=None):
@@ -181,19 +160,8 @@ def _pickable(unit, obj):
     return unit.unarmed
 
 
-def _cells_in_radius(origin, radius):
-    """Cells within `radius` of `origin` by the diagonal-aware metric (an octagon,
-    not a square -- matches how the range checks actually measure)."""
-    ox, oy = origin
-    for dx in range(-radius, radius + 1):
-        for dy in range(-radius, radius + 1):
-            if (dx or dy) and grid_distance((0, 0), (dx, dy)) <= radius:
-                yield (ox + dx, oy + dy)
-
-
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None):
-    from .theme import OK, INK_FAINT, DANGER, WARN
     total = nat + bonus
     ac = target.ac
     phalanx = _phalanxed(battle, target)
@@ -204,10 +172,10 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     fx_text = f"{total} vs AC {ac}"
     if nat == 1:
         battle.log(desc + "  -> critical miss.")
-        battle.fx(target.pos, "Crit Miss!", INK_FAINT)
+        battle.fx(target.pos, "Crit Miss!", "faint")
         return "miss"
     if crit or total >= ac:
-        battle.fx(target.pos, fx_text, OK if not crit else WARN)
+        battle.fx(target.pos, fx_text, "ok" if not crit else "crit")
         if target.dying:
             battle.log(desc + "  -> coup de grace: DEAD.")
             target.status = "dead"
@@ -223,7 +191,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
                 target.ferocity_downer = attacker
         return "crit" if crit else "hit"
     battle.log(desc + "  -> misses.")
-    battle.fx(target.pos, fx_text, INK_FAINT)
+    battle.fx(target.pos, fx_text, "faint")
     return "miss"
 
 
@@ -316,7 +284,7 @@ class Attack(Action):
     def highlight_cells(self, battle, actor):
         rng = actor.attack_range
         return [p for c in cells(actor.pos, actor.footprint)
-                for p in _cells_in_radius(c, rng)]
+                for p in cells_in_radius(c, rng)]
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units
@@ -369,7 +337,7 @@ class AttackTongue(Action):
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
-                for p in _cells_in_radius(c, actor.tongue_reach)]
+                for p in cells_in_radius(c, actor.tongue_reach)]
 
     def highlight_targets(self, battle, actor):
         return [u for u in battle.units
@@ -476,7 +444,7 @@ class Throw(Action):
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
-                for p in _cells_in_radius(c, actor.throw_range)]
+                for p in cells_in_radius(c, actor.throw_range)]
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -592,7 +560,7 @@ class Demoralize(Action):
 
     def highlight_cells(self, battle, actor):
         return [p for c in cells(actor.pos, actor.footprint)
-                for p in _cells_in_radius(c, DEMORALIZE_RANGE)]
+                for p in cells_in_radius(c, DEMORALIZE_RANGE)]
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -675,8 +643,7 @@ class Stabilize(Action):
                        f"d20({nat}) {actor.mod_intelligence:+}(INT) = {total} vs "
                        f"{data.AUTOMATON_REPAIR_DC} -> "
                        + ("repaired." if ok else "fails."))
-            from .theme import OK, INK_FAINT
-            battle.fx(target.pos, f"{total} vs {data.AUTOMATON_REPAIR_DC}", OK if ok else INK_FAINT)
+            battle.fx(target.pos, f"{total} vs {data.AUTOMATON_REPAIR_DC}", "ok" if ok else "faint")
             if ok:
                 battle.repair(target)
             return ok
@@ -684,8 +651,7 @@ class Stabilize(Action):
         ok = nat >= data.DEATH_SAVE_MIN
         battle.log(f"{actor.name} tries to stabilize {target.name}: d20({nat}) -> "
                    + ("success." if ok else "fails."))
-        from .theme import OK, INK_FAINT
-        battle.fx(target.pos, f"d20({nat}) " + ("Success" if ok else "Fail"), OK if ok else INK_FAINT)
+        battle.fx(target.pos, f"d20({nat}) " + ("Success" if ok else "Fail"), "ok" if ok else "faint")
         if ok:
             battle.stabilize(target)
         return ok
@@ -727,10 +693,9 @@ class FirstAid(Stabilize):
         nat = d20()
         total = nat + actor.mod_wisdom
         ok = total >= data.FIRST_AID_DC
-        ok = total >= data.FIRST_AID_DC
         target_sick = getattr(target.char, "sick", False)
         target_dying = target.dying
-        
+
         battle.log(f"{actor.name} uses the kit on {target.name}: "
                    f"d20({nat}) {actor.mod_wisdom:+}(WIS) = {total} vs {data.FIRST_AID_DC} -> "
                    + ("success." if ok else "fails.")
@@ -997,7 +962,7 @@ class Jump(Action):
 
     def highlight_cells(self, battle, actor):
         r = self._max_reach(battle, actor)
-        return [p for p in _cells_in_radius(actor.pos, r) if battle.board.in_bounds(p)]
+        return [p for p in cells_in_radius(actor.pos, r) if battle.board.in_bounds(p)]
 
     def highlight_targets(self, battle, actor):
         return []
@@ -1011,7 +976,7 @@ class Jump(Action):
         total = nat + actor.mod_strength
         dist = max(0, min(total // JUMP_DIVISOR, actor.speed))
         landing = actor.pos
-        for step, cell in enumerate(_line(actor.pos, target)[1:], start=1):
+        for step, cell in enumerate(line_cells(actor.pos, target)[1:], start=1):
             if step > dist or cell in battle.board.walls \
                     or not _cell_free(battle, actor, cell):
                 break
@@ -1066,7 +1031,7 @@ class Swim(Action):
 
     def highlight_cells(self, battle, actor):
         r = self._max_reach(battle, actor)
-        return [p for p in _cells_in_radius(actor.pos, r)
+        return [p for p in cells_in_radius(actor.pos, r)
                 if battle.board.in_bounds(p)
                 and (battle.board.is_deep_water(p) or grid_distance(actor.pos, p) == 1)]
 
@@ -1082,7 +1047,7 @@ class Swim(Action):
         total = nat + actor.mod_strength
         dist = max(1, min(total // SWIM_DIVISOR, max(1, actor.speed // 2)))
         landing = actor.pos
-        for step, cell in enumerate(_line(actor.pos, target)[1:], start=1):
+        for step, cell in enumerate(line_cells(actor.pos, target)[1:], start=1):
             if step > dist or cell in battle.board.walls \
                     or not _cell_free(battle, actor, cell):
                 break
@@ -1320,96 +1285,137 @@ DISMOUNT = Dismount()
 WAKE_UP = WakeUp()
 END = EndTurn()
 
-class CastSpellAction(Action):
-    def __init__(self, spell_id):
-        from . import magic
-        self.spell = magic.SPELLS[spell_id]
-        self.id = f"cast_{spell_id}"
+class SpellAction(Action):
+    """Shared plumbing for a spell cast as a combat action: one subclass per
+    spell (same "one class = one mechanic" rule as the rest of this file),
+    looked up once against `magic.SPELLS` by `spell_id`. Built through the
+    `CastSpellAction(spell_id)` factory below, so `ai.py` / `battle_screen.py`
+    don't need to know the id -> class mapping."""
+    spell_id = ""
+    cost = 1
+
+    def __init__(self):
+        self.spell = magic.SPELLS[self.spell_id]
+        self.id = f"cast_{self.spell_id}"
         self.name = self.spell.name
-        self.cost = 1
-        
-        if self.spell.id == "magic_missile":
-            self.target = "enemy"
-            self.aimed = True
-        elif self.spell.id in ("light_globe", "floating_disk"):
-            self.target = "cell"
-            self.aimed = True
-        elif self.spell.id == "sleep":
-            self.target = "enemy"
-            self.aimed = True
-            
+
     def available(self, battle, actor):
-        return actor.ap >= self.cost and self.spell.id in actor.spells_known
-        
+        return actor.ap >= self.cost and self.spell_id in actor.spells_known
+
+
+class MagicMissileAction(SpellAction):
+    spell_id = "magic_missile"
+    target, aimed = "enemy", True
+
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
             return False
-            
-        if self.spell.id == "magic_missile":
-            if not _hostile_target(actor, target): return False
-            dist = battle.units_distance(actor, target)
-            return dist <= 6
-            
-        elif self.spell.id == "sleep":
-            if not _hostile_target(actor, target): return False
-            dist = battle.units_distance(actor, target)
-            return dist <= 6
-            
-        elif self.spell.id in ("light_globe", "floating_disk"):
-            if not target or not battle.board.in_bounds(target): return False
-            dist = grid_distance(battle.cells_of(actor)[0], target)
-            return dist <= 6 and _cell_free(battle, actor, target, footprint=1)
-            
-        return False
-        
+        if not _hostile_target(actor, target):
+            return False
+        return battle.units_distance(actor, target) <= 6
+
     def execute(self, battle, actor, target=None):
-        if not self.can(battle, actor, target): return
+        if not self.can(battle, actor, target):
+            return
         actor.ap -= self.cost
-        
-        if self.spell.id == "magic_missile":
-            battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
-            atk = d20()
-            if atk == 1:
-                battle.log(" Critical miss!")
-                return
-            hit_score = atk + actor.mod_intelligence
-            if atk == 20 or hit_score >= target.ac:
-                dmg = data.roll(1, 4)
-                battle.log(f" Hit ({hit_score} vs AC {target.ac}) for {dmg} magic damage.")
-                was_up = target.alive
-                target.take_damage(dmg, battle.log)
-                if was_up and not target.alive and target.team != actor.team:
-                    actor.credit_kill(target)
-            else:
-                battle.log(f" Miss ({hit_score} vs AC {target.ac}).")
-                
-        elif self.spell.id == "light_globe":
-            battle.log(f"{actor.name} casts {self.spell.name}.")
-            battle.ground.append(GroundObject.torch(target))
-            
-        elif self.spell.id == "floating_disk":
-            battle.log(f"{actor.name} casts {self.spell.name}.")
-            battle.ground.append(GroundObject("floating_disk", target))
-            
-        elif self.spell.id == "sleep":
-            battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
-            if getattr(target.char.ability, "sleep_immunity", False):
-                battle.log(f"  {target.name} is immune to sleep effects!")
-                return
-            
-            atk = d20()
-            hit_score = atk + actor.mod_intelligence
-            md = target.mental_defense
-            desc = f" d20({atk}) {actor.mod_intelligence:+}(INT) = {hit_score} vs MD {md}"
-            
-            if atk == 1:
-                battle.log(desc + " -> Critical miss!")
-            elif atk == 20 or hit_score >= md:
-                from .conditions import Sleeping
-                target.add_condition(Sleeping())
-                battle.log(desc + (" -> CRITICAL HIT!" if atk == 20 else " -> lands.") + f" {target.name} falls asleep!")
-            else:
-                battle.log(desc + " -> resisted.")
+        battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
+        atk = d20()
+        if atk == 1:
+            battle.log(" Critical miss!")
+            return
+        hit_score = atk + actor.mod_intelligence
+        if atk == 20 or hit_score >= target.ac:
+            dmg = data.roll(1, 4)
+            battle.log(f" Hit ({hit_score} vs AC {target.ac}) for {dmg} magic damage.")
+            was_up = target.alive
+            target.take_damage(dmg, battle.log)
+            if was_up and not target.alive and target.team != actor.team:
+                actor.credit_kill(target)
+        else:
+            battle.log(f" Miss ({hit_score} vs AC {target.ac}).")
+
+
+class SleepAction(SpellAction):
+    spell_id = "sleep"
+    target, aimed = "enemy", True
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target):
+            return False
+        if not _hostile_target(actor, target):
+            return False
+        return battle.units_distance(actor, target) <= 6
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
+        if getattr(target.char.ability, "sleep_immunity", False):
+            battle.log(f"  {target.name} is immune to sleep effects!")
+            return
+
+        atk = d20()
+        hit_score = atk + actor.mod_intelligence
+        md = target.mental_defense
+        desc = f" d20({atk}) {actor.mod_intelligence:+}(INT) = {hit_score} vs MD {md}"
+
+        if atk == 1:
+            battle.log(desc + " -> Critical miss!")
+        elif atk == 20 or hit_score >= md:
+            target.add_condition(Sleeping())
+            battle.log(desc + (" -> CRITICAL HIT!" if atk == 20 else " -> lands.") + f" {target.name} falls asleep!")
+        else:
+            battle.log(desc + " -> resisted.")
+
+
+class _PlacedSpellAction(SpellAction):
+    """Shared `can()` for the two spells that drop something on a cell
+    (Light Globe, Floating Disk) instead of targeting an enemy."""
+    target, aimed = "cell", True
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target):
+            return False
+        if not target or not battle.board.in_bounds(target):
+            return False
+        dist = grid_distance(battle.cells_of(actor)[0], target)
+        return dist <= 6 and _cell_free(battle, actor, target, footprint=1)
+
+
+class LightGlobeAction(_PlacedSpellAction):
+    spell_id = "light_globe"
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        battle.log(f"{actor.name} casts {self.spell.name}.")
+        battle.ground.append(GroundObject.torch(target))
+
+
+class FloatingDiskAction(_PlacedSpellAction):
+    spell_id = "floating_disk"
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        battle.log(f"{actor.name} casts {self.spell.name}.")
+        battle.ground.append(GroundObject("floating_disk", target))
+
+
+_SPELL_ACTIONS = {
+    "magic_missile": MagicMissileAction,
+    "sleep": SleepAction,
+    "light_globe": LightGlobeAction,
+    "floating_disk": FloatingDiskAction,
+}
+
+
+def CastSpellAction(spell_id):
+    """Build the Action for `spell_id` (see `_SPELL_ACTIONS`)."""
+    return _SPELL_ACTIONS[spell_id]()
 
 class ShareMagicAction(Action):
     id = "share_magic"
@@ -1419,31 +1425,30 @@ class ShareMagicAction(Action):
     
     @classmethod
     def applicable(cls, battle, actor):
-        if "sprite_nature_initiate" not in getattr(actor.char, "talents", {}).get("racial", []):
+        if not actor.char.has_talent("sprite_nature_initiate"):
             return False, "Not a Sprite Initiate."
         if not actor.spells_known:
             return False, "No spells known."
         return True, ""
-    
+
     def available(self, battle, actor):
-        return (actor.ap >= self.cost and 
-                "sprite_nature_initiate" in getattr(actor.char, "talents", {}).get("racial", []) and
-                len(actor.spells_known) > 0)
-                
+        return (actor.ap >= self.cost
+                and actor.char.has_talent("sprite_nature_initiate")
+                and len(actor.spells_known) > 0)
+
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor): return
         actor.ap -= self.cost
-        
+
         allies = [u for u in battle.units if u.alive and u.team == actor.team and u != actor]
         if not allies:
             battle.log(f"{actor.name} tries to share magic, but no allies are nearby!")
             return
-            
+
         ally = random.choice(allies)
         spell_id = random.choice(actor.spells_known)
-        from .magic import SPELLS
-        spell_name = SPELLS[spell_id].name if spell_id in SPELLS else spell_id
-        
+        spell_name = magic.SPELLS[spell_id].name if spell_id in magic.SPELLS else spell_id
+
         if spell_id not in ally.spells_known:
             ally.spells_known.append(spell_id)
             battle.log(f"{actor.name} shares magic! {ally.name} temporarily learns {spell_name}.")

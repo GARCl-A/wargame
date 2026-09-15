@@ -267,7 +267,7 @@ class App:
                 from . import loot
                 pool = []
                 for u in all_casualties:
-                    pool += loot._carried_by(u)
+                    pool += loot.carried_by(u)
                 if pool and self.guild.roster:
                     from .loot_screen import LootScreen
                     self.scene = LootScreen(self.fonts, self.guild.roster, pool, on_done=self._after_activity)
@@ -585,23 +585,12 @@ class App:
         self.scene = PrisonScreen(self.fonts, self.guild, party, node,
                                   on_done=self._after_activity)
 
-    @staticmethod
-    def _charge(members, amount):
-        """Take `amount` copper off the party, richest first."""
-        left = amount
-        for m in sorted(members, key=lambda u: u.gold, reverse=True):
-            paid = min(m.gold, left)
-            m.gold -= paid
-            left -= paid
-            if left <= 0:
-                break
-
     def _start_battle(self, squad, node, offer=None):
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = offer
         if offer:
-            self._charge(squad, offer.entry * len(squad))
+            economy.charge_richest_first(squad, offer.entry * len(squad))
         enemies, scenario = matchup.build(node, offer, squad_size=len(squad),
                                           guild=self.guild)
         battle = Battle(squad, enemies, scenario=scenario,

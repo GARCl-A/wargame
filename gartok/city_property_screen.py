@@ -61,12 +61,7 @@ class CityPropertyScreen(DragSelectMixin, Screen):
         return sum(m.gold for m in self.party)
 
     def _charge(self, amount):
-        """Same idiom as `bank_screen.BankScreen._charge` -- poorest first,
-        shortfall rolling onto whoever still has money."""
-        for i, m in enumerate(sorted(self.party, key=lambda x: x.gold)):
-            share = min(m.gold, -(-amount // (len(self.party) - i)))
-            m.gold -= share
-            amount -= share
+        economy.charge_evenly(self.party, amount)
 
     @property
     def _from_house(self):

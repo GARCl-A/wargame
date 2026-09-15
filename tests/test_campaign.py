@@ -312,9 +312,9 @@ def test_arena_entry_is_staked_per_fighter():
     scr.picked = roster[:1]                           # solo pays a third
     assert scr.entry_cost == iron.entry
 
-    from gartok.app import App
+    from gartok import economy
     # the app bills that whole stake off the squad, richest first
-    App._charge(roster, iron.entry * 3)
+    economy.charge_richest_first(roster, iron.entry * 3)
     assert sum(u.gold for u in roster) == 150 - iron.entry * 3
 
 

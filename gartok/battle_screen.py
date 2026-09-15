@@ -1,14 +1,12 @@
 """Battle screen: the tactical grid, the initiative strip, the action panel and
-the log. Drawing only -- rules live in `battle` / `actions` / `vision`."""
-
-import math
-import random
+the log. Drawing only -- rules live in `battle` / `actions` / `vision`; combat
+juice (floaters, hit reactions) lives in `battle_fx`."""
 
 import pygame
 
 from . import actions, ai, artwork, data, icons, vision
+from .battle_fx import BattleFX
 from .board import cells
-from .ground import GroundObject
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
@@ -25,10 +23,6 @@ from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
 _WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
 
 ENEMY_DELAY = 450  # ms between AI actions
-
-
-def _sgn(v):
-    return (v > 0) - (v < 0)
 
 
 class BattleScreen(Screen):
@@ -59,10 +53,7 @@ class BattleScreen(Screen):
         self._obs = []
         self._visible = set()
 
-        # combat juice -- purely presentational, driven by HP deltas each frame
-        self._hp_seen = {}      # id(unit) -> last hp we drew
-        self._floaters = []     # rising damage / heal numbers
-        self._react = {}        # id(unit) -> {kind, t, dur, [dir]} squash + hop
+        self.fx = BattleFX()    # combat juice: floaters + hit reactions (battle_fx.py)
 
     # ------------------------------------------------------------------ #
     # events                                                             #
@@ -103,8 +94,8 @@ class BattleScreen(Screen):
 
     def update(self, dt):
         b = self.battle
-        self._advance_fx(dt)
-        self._detect_fx()
+        self.fx.advance(dt)
+        self.fx.detect(b, self.view.tile, self._unit_rect, self._cell_rect)
         # keep the acting unit in frame on a board too big to fit the viewport
         if (b.winner is None and self._pan is None and self.view.rect.w > 2
                 and self._centered_on is not b.active):
@@ -173,18 +164,14 @@ class BattleScreen(Screen):
             return
 
         if b.awaiting_flag:
-            if self._can_plant_flag(tile):
-                b.flags["player"] = tile
-                b.scenario.auto_place_enemy_flag(b)
+            if b.can_plant_flag(tile):
+                b.plant_flag(tile)
             return
-            
+
         trapper = b.awaiting_trap
         if trapper:
-            if self._can_plant_trap(trapper, tile):
-                trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
-                b.ground.append(GroundObject.trap(tile, trap_type.lower(), trapper.team))
-                trapper.inventory.remove(trap_type)
-                b.trap_setup_queue.pop(0)
+            if b.can_plant_trap(trapper, tile):
+                b.plant_trap(trapper, tile)
             return
 
         self._obs = self._observers()
@@ -296,90 +283,6 @@ class BattleScreen(Screen):
             b.end_turn()
 
     # ------------------------------------------------------------------ #
-    # combat juice: floating numbers + hit reactions                      #
-    # ------------------------------------------------------------------ #
-    def _detect_fx(self):
-        """Compare each unit's HP to last frame; spawn a floating number and a
-        hit reaction on a change, and a lunge on whoever is acting."""
-        b = self.battle
-        actor = b.active if b.winner is None else None
-        for u in b.units:
-            hp = u.hp
-            prev = self._hp_seen.get(id(u))
-            self._hp_seen[id(u)] = hp
-            if prev is None or hp == prev:
-                continue
-            r = self._unit_rect(u)
-            delta = hp - prev
-            if delta < 0:
-                self._spawn_floater(r, str(delta), DANGER)
-                self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 260.0}
-                if actor and actor.alive and actor.team != u.team and actor is not u:
-                    ax, ay = actor.pos
-                    self._react[id(actor)] = {
-                        "kind": "lunge", "t": 0.0, "dur": 200.0,
-                        "dir": (_sgn(u.pos[0] - ax), _sgn(u.pos[1] - ay))}
-            else:
-                self._spawn_floater(r, f"+{delta}", OK)
-                self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 240.0}
-
-        for pos, text_str, color in getattr(b, "fx_events", []):
-            self._spawn_floater(self._cell_rect(*pos), text_str, color)
-        if hasattr(b, "fx_events"):
-            b.fx_events.clear()
-
-    def _spawn_floater(self, r, s, color):
-        stack = sum(1 for f in self._floaters
-                    if abs(f["x"] - r.centerx) < self.view.tile and f["age"] < 240)
-        self._floaters.append({
-            "x": r.centerx + random.randint(-4, 4),
-            "y": r.top - 6 - 14 * stack,
-            "vy": -0.03, "age": 0.0, "hold": 140.0,
-            "alpha": 255.0, "fade": 0.28, "text": s, "color": color})
-
-    def _advance_fx(self, dt):
-        for f in self._floaters:
-            f["y"] += f["vy"] * dt
-            f["age"] += dt
-            if f["age"] > f["hold"]:
-                f["alpha"] -= f["fade"] * dt
-        self._floaters = [f for f in self._floaters if f["alpha"] > 0]
-        for k in list(self._react):
-            self._react[k]["t"] += dt
-            if self._react[k]["t"] >= self._react[k]["dur"]:
-                del self._react[k]
-
-    def _fx_rect(self, u, r):
-        """Offset + squash `r` for the unit's current hit reaction (a 3px hop on a
-        hit, a shove toward the target on a lunge)."""
-        fx = self._react.get(id(u))
-        if not fx:
-            return r
-        wave = math.sin(math.pi * min(1.0, fx["t"] / fx["dur"]))
-        if fx["kind"] == "lunge":
-            dx, dy, sq = fx["dir"][0] * 5 * wave, fx["dir"][1] * 5 * wave, 0.09 * wave
-        else:
-            dx, dy, sq = 0.0, -3 * wave, 0.14 * wave
-        out = pygame.Rect(0, 0, round(r.w * (1 + sq)), round(r.h * (1 - sq)))
-        out.midbottom = (r.centerx + round(dx), r.bottom + round(dy))
-        return out
-
-    def _draw_floaters(self, screen):
-        f = self.fonts
-        clip = screen.get_clip()
-        screen.set_clip(self.view.rect)
-        for fl in self._floaters:
-            a = max(0, min(255, int(fl["alpha"])))
-            img = f.num.render(fl["text"], True, fl["color"])
-            sh = f.num.render(fl["text"], True, (12, 12, 16))
-            img.set_alpha(a)
-            sh.set_alpha(a // 2)
-            rect = img.get_rect(center=(int(fl["x"]), int(fl["y"])))
-            screen.blit(sh, rect.move(1, 1))
-            screen.blit(img, rect)
-        screen.set_clip(clip)
-
-    # ------------------------------------------------------------------ #
     # drawing                                                            #
     # ------------------------------------------------------------------ #
     def draw(self, screen):
@@ -405,7 +308,7 @@ class BattleScreen(Screen):
             self._draw_flag_setup(screen)
         if self.battle.awaiting_trap:
             self._draw_trap_setup(screen)
-        self._draw_floaters(screen)
+        self.fx.draw(screen, self.fonts, self.view.rect)
         screen.set_clip(clip)
 
         self._draw_initiative(screen)
@@ -657,12 +560,6 @@ class BattleScreen(Screen):
     # ------------------------------------------------------------------ #
     # capture the flag                                                   #
     # ------------------------------------------------------------------ #
-    def _can_plant_flag(self, tile):
-        b = self.battle
-        x, y = tile
-        return (x in own_half("player", b.board.cols) and 0 <= y < b.board.rows
-                and tile not in b.board.walls and b.unit_at(tile) is None)
-
     def _draw_pennant(self, screen, pos, color):
         r = self._cell_rect(*pos)
         pole = (r.x + r.w // 3, r.bottom - 5)
@@ -695,39 +592,30 @@ class BattleScreen(Screen):
                 if (x, y) in board.walls:
                     continue
                 screen.blit(tint, self._cell_rect(x, y))
-        if hover is not None and self._can_plant_flag(hover):
+        if hover is not None and self.battle.can_plant_flag(hover):
             pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
         banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
         panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
         text(screen, "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
              f.body_bd, INK, banner.center, center=True)
 
-    def _can_plant_trap(self, trapper, tile):
-        b = self.battle
-        x, y = tile
-        taken = b.occupied() | b.board.walls | b.creature_cells() | {o.pos for o in b.ground}
-        if tile in taken or not b.board.in_bounds(tile):
-            return False
-        # Limit trap placement to adjacent cells of the trapper
-        return tile in cells(trapper.pos, trapper.footprint) or tile in b.board.neighbors(trapper.pos)
-
     def _draw_trap_setup(self, screen):
         f = self.fonts
         board = self.battle.board
         trapper = self.battle.awaiting_trap
-        
+
         tint = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
         tint.fill((*PLAYER_C, 32))
         hover = self._tile_at_px(self.mouse)
-        
+
         candidates = [p for c in self.battle.cells_of(trapper) for p in board.neighbors(c)
                       if board.in_bounds(p)]
-                      
+
         for p in candidates:
-            if self._can_plant_trap(trapper, p):
+            if self.battle.can_plant_trap(trapper, p):
                 screen.blit(tint, self._cell_rect(*p))
-                
-        if hover is not None and self._can_plant_trap(trapper, hover):
+
+        if hover is not None and self.battle.can_plant_trap(trapper, hover):
             pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
             
         banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
@@ -785,7 +673,7 @@ class BattleScreen(Screen):
                     and not (self._is_player_turn() and u.alive
                              and actions.ATTACK.can(b, b.active, u)):
                 continue
-            r = self._fx_rect(u, self._unit_rect(u))
+            r = self.fx.rect_for(u, self._unit_rect(u))
             if u.downed:
                 self._draw_body(screen, u, r)
                 continue

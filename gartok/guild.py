@@ -412,25 +412,9 @@ class Guild:
 
             if g.order.job == "study":
                 for u in g.members:
-                    if u.gold >= economy.TAVERN_STUDY_COST_PER_DAY:
-                        u.gold -= economy.TAVERN_STUDY_COST_PER_DAY
-                        if u.study_target:
-                            spell_id = u.study_target
-                            spell = magic.SPELLS.get(spell_id)
-                            if spell and f"Scroll of {spell.name}" in u._base_inventory:
-                                if u.magic_source:  # Must be initiated
-                                    bonus = 2 if u.race["name"] == "Kobold" and "blood" in spell.sources else 0
-                                    dice_qty = 2 if "gnome_magic_excitement" in u.talents["racial"] and u.study_progress == 0 else 1
-                                    progress = data.roll(dice_qty, 20) + u.mod_intelligence + bonus
-                                    points_gained = max(0, progress)
-                                    u.study_progress += points_gained
-                                    if u.study_progress >= magic.points_to_learn(spell):
-                                        u.spells_known.append(spell.id)
-                                        u.study_target = None
-                                        u.study_progress = 0
-                                        events.append(f"{u.name} masters the spell {spell.name}!")
-                    else:
-                        events.append(f"{u.name} could not afford the rent to study.")
+                    event = magic.progress_study(u)
+                    if event:
+                        events.append(event)
                 continue
 
             item = economy.GARRISON_JOBS.get(g.order.job)
@@ -588,7 +572,7 @@ class Guild:
     def _daily_upkeep(self):
         events, casualties, ate = [], [], []
         
-        # 1) Apodrecer comida no inventário de todos (e baú)
+        # 1) rot food in everyone's inventory (and the bank chest)
         total_rotten = 0
         for u in self.roster:
             total_rotten += self._rot_food(u._base_inventory)
@@ -633,13 +617,9 @@ class Guild:
         return events, casualties
 
     def _charge_roster(self, amount):
-        """Take `amount` copper off the whole roster as evenly as the coins
-        allow -- poorest first, same idiom `bank_screen._charge` uses for a
-        visiting party, just over everyone rather than one screen's guests."""
-        for i, m in enumerate(sorted(self.roster, key=lambda u: u.gold)):
-            share = min(m.gold, -(-amount // (len(self.roster) - i)))
-            m.gold -= share
-            amount -= share
+        """Take `amount` copper off the whole roster -- `economy.charge_evenly`
+        over everyone rather than one screen's visiting guests."""
+        economy.charge_evenly(self.roster, amount)
 
     def _city_property_upkeep(self):
         """Run once a day (from `_daily_upkeep`): collect the property tax

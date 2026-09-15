@@ -10,7 +10,7 @@ If the pitch fails, they walk free and take your money with them.
 
 import pygame
 
-from . import recruit
+from . import economy, recruit
 from .data import alignment_distance
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -26,13 +26,7 @@ def _party_wealth(party):
 
 
 def _charge_party(party, amount):
-    left = amount
-    for m in sorted(party, key=lambda u: u.gold, reverse=True):
-        paid = min(m.gold, left)
-        m.gold -= paid
-        left -= paid
-        if left <= 0:
-            break
+    economy.charge_richest_first(party, amount)
 
 
 class PrisonScreen(Screen):

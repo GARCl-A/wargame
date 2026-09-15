@@ -13,7 +13,8 @@ from . import data, vision
 from .board import COLS, ROWS, cells, chebyshev, cells_distance
 from .combatant import Combatant
 from .data import d20
-from .scenario import ArenaScenario
+from .ground import GroundObject
+from .scenario import ArenaScenario, own_half
 
 __all__ = ["Battle", "COLS", "ROWS", "chebyshev"]
 
@@ -36,8 +37,11 @@ class Battle:
         self.log_lines.append(msg)
         del self.log_lines[:-200]
 
-    def fx(self, pos, text, color):
-        self.fx_events.append((pos, text, color))
+    def fx(self, pos, text, kind):
+        """Queue a floating combat-text event for the screen to draw: `kind` is
+        a semantic tag ("ok" / "crit" / "faint", see `battle_fx._FX_COLORS`)
+        -- battle state stays presentation-agnostic, the screen picks the colour."""
+        self.fx_events.append((pos, text, kind))
 
     def setup(self):
         self.log_lines.clear()
@@ -103,6 +107,35 @@ class Battle:
         (always the other side), or sitting still at `flags[team]`."""
         carrier = self.flag_carrier[team]
         return carrier.pos if carrier is not None else self.flags[team]
+
+    def can_plant_flag(self, tile):
+        """Is `tile` a legal spot for the player to plant their flag: inside
+        their own half, in bounds, no wall, nobody standing on it?"""
+        x, y = tile
+        return (x in own_half("player", self.board.cols) and 0 <= y < self.board.rows
+                and tile not in self.board.walls and self.unit_at(tile) is None)
+
+    def plant_flag(self, tile):
+        """Plant the player's flag at `tile` (see `awaiting_flag`) and let the
+        scenario drop the enemy's to match."""
+        self.flags["player"] = tile
+        self.scenario.auto_place_enemy_flag(self)
+
+    def can_plant_trap(self, trapper, tile):
+        """Is `tile` free (no unit / wall / creature / ground object) and within
+        `trapper`'s reach (its own footprint or an adjacent cell)?"""
+        taken = self.occupied() | self.board.walls | self.creature_cells() | {o.pos for o in self.ground}
+        if tile in taken or not self.board.in_bounds(tile):
+            return False
+        return tile in cells(trapper.pos, trapper.footprint) or tile in self.board.neighbors(trapper.pos)
+
+    def plant_trap(self, trapper, tile):
+        """Plant the next queued trap from `trapper`'s pack at `tile` (see
+        `awaiting_trap`), popping it off `trap_setup_queue`."""
+        trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
+        self.ground.append(GroundObject.trap(tile, trap_type.lower(), trapper.team))
+        trapper.inventory.remove(trap_type)
+        self.trap_setup_queue.pop(0)
 
     def _assign_flag_runners(self):
         """Tag the fastest half of the enemy side as flag runners -- the AI sends

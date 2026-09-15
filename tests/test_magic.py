@@ -162,7 +162,7 @@ def test_ai_prioritizes_sleep_over_a_hand_attack():
     batt, a, d = _melee_battle()
     _caster(a, ["sleep"])
     pick = ai._pick_attack(batt, a, d)
-    assert isinstance(pick, actions.CastSpellAction) and pick.spell.id == "sleep"
+    assert isinstance(pick, actions.SpellAction) and pick.spell.id == "sleep"
 
 
 def test_ai_does_not_re_sleep_an_already_sleeping_target():
@@ -171,7 +171,7 @@ def test_ai_does_not_re_sleep_an_already_sleeping_target():
     _caster(a, ["sleep"])
     d.add_condition(Sleeping())
     pick = ai._pick_attack(batt, a, d)
-    assert not (isinstance(pick, actions.CastSpellAction) and pick.spell.id == "sleep")
+    assert not (isinstance(pick, actions.SpellAction) and pick.spell.id == "sleep")
 
 
 def test_ai_prefers_magic_missile_over_a_weak_hand_attack():
@@ -179,7 +179,7 @@ def test_ai_prefers_magic_missile_over_a_weak_hand_attack():
     _caster(a, ["magic_missile"])
     a.disarm()                         # unarmed: a weak hand die well under 2.5 avg
     pick = ai._pick_attack(batt, a, d)
-    assert isinstance(pick, actions.CastSpellAction) and pick.spell.id == "magic_missile"
+    assert isinstance(pick, actions.SpellAction) and pick.spell.id == "magic_missile"
 
 
 # --------------------------------------------------------------------------- #

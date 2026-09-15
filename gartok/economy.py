@@ -287,3 +287,27 @@ def sell_price(name, mods=()):
     resale is a loss even after a good haggle (`deal` up to `DEAL_MAX` = 0.25
     keeps the two factors 0.15 apart)."""
     return max(1, round(_base_price(name) * (SELL_FACTOR + 0.4 * deal_value(mods, name, "sell"))))
+
+
+# ------------------------------------------------------------------ #
+# charging a group for a purchase: the two orderings every screen /   #
+# upkeep step that splits a cost across several purses ends up using  #
+# ------------------------------------------------------------------ #
+def charge_evenly(members, amount):
+    """Take `amount` copper off `members` as evenly as the coins allow --
+    poorest first, the shortfall rolling onto whoever still has money."""
+    for i, m in enumerate(sorted(members, key=lambda u: u.gold)):
+        share = min(m.gold, -(-amount // (len(members) - i)))
+        m.gold -= share
+        amount -= share
+
+
+def charge_richest_first(members, amount):
+    """Take `amount` copper off `members`, richest first."""
+    left = amount
+    for m in sorted(members, key=lambda u: u.gold, reverse=True):
+        paid = min(m.gold, left)
+        m.gold -= paid
+        left -= paid
+        if left <= 0:
+            break

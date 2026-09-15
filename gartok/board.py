@@ -54,6 +54,38 @@ def cells_distance(cells_a, cells_b):
     return min(grid_distance(p, q) for p in cells_a for q in cells_b)
 
 
+def line_cells(a, b):
+    """Every cell on the Bresenham line from `a` to `b`, both ends included.
+    Plain geometry, no wall-blocking -- see `Board.los_clear` for that."""
+    (x0, y0), (x1, y1) = a, b
+    dx, dy = abs(x1 - x0), abs(y1 - y0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    err = dx - dy
+    x, y = x0, y0
+    pts = [(x, y)]
+    while (x, y) != (x1, y1):
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x += sx
+        if e2 < dx:
+            err += dx
+            y += sy
+        pts.append((x, y))
+    return pts
+
+
+def cells_in_radius(origin, radius):
+    """Cells within `radius` of `origin` by the diagonal-aware metric (an octagon,
+    not a square -- matches how range checks actually measure)."""
+    ox, oy = origin
+    for dx in range(-radius, radius + 1):
+        for dy in range(-radius, radius + 1):
+            if (dx or dy) and grid_distance((0, 0), (dx, dy)) <= radius:
+                yield (ox + dx, oy + dy)
+
+
 def fits(pos, footprint, blocked, cols=COLS, rows=ROWS):
     """Is the footprint anchored at `pos` fully inside the grid and free of
     `blocked`? Prefer `Board.fits` when a board is in hand -- it is sized to
