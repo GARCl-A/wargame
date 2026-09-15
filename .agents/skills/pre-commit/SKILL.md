@@ -19,7 +19,15 @@ out the other end — no exceptions, no "this one's obviously fine."
    check for anything touching combat/AI, but isn't a hard gate the way pytest
    is.)
 
-3. **Review the diff for quality, not just correctness — this is not optional
+   is.)
+
+3. **Check for missing imports and undefined variables (Static Analysis).**
+   Python tests often miss `NameError`s in UI hover states or error paths.
+   Read the diff carefully: for every new variable, constant, or function used
+   in the changes, verify it is either defined in the scope or imported at the
+   top of the file. Do not commit code that references undefined variables.
+
+4. **Review the diff for quality, not just correctness — this is not optional
    and not the same thing as "tests pass."** A green suite proves the code
    works; it says nothing about whether it was the right way to build it. Go
    through the actual diff and ask, file by file:

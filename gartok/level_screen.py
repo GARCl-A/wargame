@@ -19,10 +19,11 @@ import pygame
 
 from . import artwork, progression, talents
 from .screen import Screen
-from .theme import (ACCENT, INFO, INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT,
+from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT,
                     MARGIN, OK, RADIUS, SP2, SP3, SP4, SP5, SURFACE_0,
                     SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, panel,
                     set_pointer, text, token_badge, tracked, wrap_lines)
+from .sheet_panel import SheetModalMixin
 
 _TRACK_XP = {"combat": progression.COMBAT_XP_THRESHOLDS,
              "work": progression.WORK_XP_THRESHOLDS,
@@ -67,7 +68,7 @@ def _tree_layout(track, race=None):
     return pos, max(cursor[0], 1.0), depths
 
 
-class LevelScreen(Screen):
+class LevelScreen(SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, unit, on_back, on_change=None):
@@ -88,10 +89,20 @@ class LevelScreen(Screen):
         return "level"
 
     # ------------------------------------------------------------------ #
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            if self.close_sheet_on_click():
+                return
+        if not self.sheet_open:
+            super().handle_event(event)
+
     def _click(self, px):
         for key, rect in self.buttons:
-            if rect.collidepoint(px) and key == "back":
-                self.on_back()
+            if rect.collidepoint(px):
+                if key == "back":
+                    self.on_back()
+                elif key == "sheet":
+                    self.open_sheet(self.unit)
                 return
         for rect, track, tid in self.node_hits:
             if rect.collidepoint(px):
@@ -121,6 +132,11 @@ class LevelScreen(Screen):
 
         text(screen, "PROGRESSION", f.title, INK, (pad, pad))
 
+        exp_x = pad + f.title.size("PROGRESSION")[0] + SP5
+        exp_y = pad + 10
+        text(screen, "Earn Combat XP in battles and Work XP at properties. Both feed into Racial XP.", f.body_sm, INK_DIM, (exp_x, exp_y))
+        text(screen, "Leveling up a track grants a talent pick. Racial levels also grant extra hit dice.", f.body_sm, INK_DIM, (exp_x, exp_y + 16))
+
         iy = pad + 46
         tok = (pad + 17, iy + 15)
         token_badge(screen, tok, u, f, r=17)
@@ -144,6 +160,7 @@ class LevelScreen(Screen):
 
         self._draw_tooltip(screen)
         self._draw_footer(screen, W, H, pad)
+        self.draw_sheet_modal(screen, f)
         set_pointer(self._hot)
 
     # ------------------------------------------------------------------ #
@@ -312,4 +329,13 @@ class LevelScreen(Screen):
         text(screen, "BACK", f.body_bd, col, (cx + 14, cy - 7))
         self.buttons.append(("back", b))
         if hov:
+            self._hot = True
+
+        bs = pygame.Rect(b.right + SP3, H - 52, 180, 36)
+        hov_s = bs.collidepoint(self.mouse)
+        col_s = ACCENT_INK if hov_s else ACCENT
+        panel(screen, bs, fill=ACCENT if hov_s else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
+        text(screen, "CHARACTER SHEET", f.body_bd, col_s, bs.center, center=True)
+        self.buttons.append(("sheet", bs))
+        if hov_s:
             self._hot = True
