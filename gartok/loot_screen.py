@@ -36,6 +36,26 @@ class LootScreen(Screen):
         self.cards = []                      # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
         self.pile_rect = None
+        self._pack_scroll = {}
+        self._pack_areas = []
+        self._pile_scroll = 0
+        self._pile_area = None
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            if self._pile_area and self._pile_area.collidepoint(self.mouse):
+                from .dragselect import DragSelectMixin
+                n = len(DragSelectMixin._stacks(self.pool))
+                self._pile_scroll = max(0, min(n - 1, self._pile_scroll - event.y))
+                return
+            hit = next((m for r, m in self._pack_areas if r.collidepoint(self.mouse)), None)
+            if hit is not None:
+                from .dragselect import DragSelectMixin
+                n = len(DragSelectMixin._stacks(hit._base_inventory))
+                cur = self._pack_scroll.get(id(hit), 0)
+                self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - event.y))
+                return
+        super().handle_event(event)
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -141,6 +161,8 @@ class LootScreen(Screen):
         self.pack_rows = []
         self.cards = []
         self.buttons = []
+        self._pack_areas = []
+        self._pile_area = None
 
         text(screen, "LOOT", f.title, INK, (MARGIN, MARGIN - 2))
         left = f"{len(self.pool)} items on the field" if self.pool else "field cleared"
@@ -157,6 +179,7 @@ class LootScreen(Screen):
         self._draw_footer(screen)
 
     def _draw_pile(self, screen, rect):
+        from .dragselect import DragSelectMixin
         f = self.fonts
         self.pile_rect = rect
         pack_hov = self.pack_sel is not None and rect.collidepoint(self.mouse)
@@ -164,20 +187,47 @@ class LootScreen(Screen):
               width=2 if pack_hov else 1, radius=RADIUS)
         x, w = rect.x + SP3, rect.w - 2 * SP3
         y = section(screen, "ON THE GROUND", x, rect.y + SP3, w, f)
-        if not self.pool:
+        
+        stacks = DragSelectMixin._stacks(self.pool)
+        if not stacks:
             text(screen, "(nothing)", f.body_sm, INK_FAINT, (x, y + 2))
-        for i, name in enumerate(self.pool):
+            return
+
+        row_h = 26 + SP1
+        max_bottom = rect.bottom - SP3
+        if pack_hov:
+            max_bottom -= 20
+            
+        self._pile_area = pygame.Rect(x, y, w, max(0, max_bottom - y))
+        visible_n = max(1, (max_bottom - y) // row_h)
+        self._pile_scroll = max(0, min(self._pile_scroll, max(0, len(stacks) - visible_n)))
+        
+        scroll = self._pile_scroll
+        if scroll:
+            text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (x, y + 2))
+            y += 14
+
+        shown = stacks[scroll:scroll + visible_n]
+        for name, idxs in shown:
+            count = len(idxs)
+            idx = idxs[-1]
             r = pygame.Rect(x, y, w, 26)
-            sel = self.sel == i
+            sel = self.sel in idxs
             hov = r.collidepoint(self.mouse)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
             ink = ACCENT_INK if sel else INK
-            text(screen, name, f.body_sm, ink, (r.x + SP2, r.y + 6))
+            label = name if count == 1 else f"{name}  ×{count}"
+            text(screen, label, f.body_sm, ink, (r.x + SP2, r.y + 6))
             text(screen, kg(data.item_weight(name)), f.mono_sm,
                  ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 7), right=True)
-            self.rows.append((r, i))
-            y += 26 + SP1
+            self.rows.append((r, self.sel if sel else idx))
+            y += row_h
+
+        more_below = len(stacks) - scroll - len(shown)
+        if more_below > 0:
+            text(screen, f"v {more_below} more below", f.label, INK_FAINT, (x, y + 2))
+            y += 14
 
         if pack_hov:
             text(screen, "click: drop to ground", f.label, OK,
@@ -227,21 +277,46 @@ class LootScreen(Screen):
         y += 20
 
         y = section(screen, "PACK", rect.x + pad, y, rect.w - 2 * pad, f)
-        if not m._base_inventory:
+        from .dragselect import DragSelectMixin
+        stacks = DragSelectMixin._stacks(m._base_inventory)
+        if not stacks:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-        for idx, it in enumerate(m._base_inventory):
+
+        row_h = 22
+        max_bottom = rect.bottom - 26
+        pack_area = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, max(0, max_bottom - y))
+        self._pack_areas.append((pack_area, m))
+        visible_n = max(1, (max_bottom - y) // row_h)
+        scroll = max(0, min(self._pack_scroll.get(id(m), 0), max(0, len(stacks) - visible_n)))
+        self._pack_scroll[id(m)] = scroll
+
+        if scroll:
+            text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (rect.x + pad, y + 2))
+            y += 14
+
+        shown = stacks[scroll:scroll + visible_n]
+        for name, idxs in shown:
+            count = len(idxs)
+            idx = idxs[-1]
             r = pygame.Rect(rect.x + pad, y - 2, rect.w - 2 * pad, 20)
             ihov = r.collidepoint(self.mouse)
-            sel_this = self.pack_sel == (m, idx)
+            sel_this = self.pack_sel is not None and self.pack_sel[0] == m and self.pack_sel[1] in idxs
+            
             if sel_this or ihov:
                 panel(screen, r, fill=ACCENT if sel_this else SURFACE_3,
                       border=ACCENT if sel_this else LINE_SOFT, width=1, radius=4)
-            text(screen, it, f.body_sm, ACCENT_INK if sel_this else INK if ihov else INK_DIM,
+            label = name if count == 1 else f"{name}  ×{count}"
+            text(screen, label, f.body_sm, ACCENT_INK if sel_this else INK if ihov else INK_DIM,
                  (r.x + 4, y))
-            text(screen, kg(data.item_weight(it)), f.mono_sm,
+            text(screen, kg(data.item_weight(name)), f.mono_sm,
                  ACCENT_INK if sel_this else INK_FAINT, (r.right - 4, y), right=True)
-            self.pack_rows.append((r, m, idx))
-            y += 22
+            self.pack_rows.append((r, m, self.pack_sel[1] if sel_this else idx))
+            y += row_h
+
+        more_below = len(stacks) - scroll - len(shown)
+        if more_below > 0:
+            text(screen, f"v {more_below} more below", f.label, INK_FAINT, (rect.x + pad, y + 2))
+            y += 14
 
         if sel and hov:
             msg = "click: take" if drop_ok else "won't fit"
