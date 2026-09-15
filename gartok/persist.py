@@ -35,7 +35,7 @@ else:
 
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 15                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 16                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -69,6 +69,10 @@ def unit_to_dict(u):
         "recipes": list(u.recipes),
         "crafting_target": u.crafting_target,
         "crafting_progress": u.crafting_progress,
+        "magic_source": u.magic_source,          # nature / blood / faith, or None (see magic.py)
+        "spells_known": list(u.spells_known),
+        "study_target": u.study_target,          # spell id being studied at the taverna, or None
+        "study_progress": u.study_progress,
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
         "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},

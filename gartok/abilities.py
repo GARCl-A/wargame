@@ -45,6 +45,7 @@ class Ability:
     climb_speed: bool = False         # moves up/down pit walls as normal movement (seam, unused)
     auto_climb_dc: int = 0            # climbs any surface of this DC or lower with no check
     water_breathing: bool = False    # never runs out of breath while submerged
+    sleep_immunity: bool = False      # the Sleep spell (magic.py) never affects this unit
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -114,7 +115,7 @@ _LIST = [
     Ability("gallop", "Gallop",
             "+3 m (2 squares) of speed.", speed=2),
     Ability("sleep_immunity", "Sleep Immunity",
-            "immune to sleep effects."),
+            "immune to sleep effects.", sleep_immunity=True),
     Ability("strong_stomach", "Strong Stomach",
             "Can eat Rotten Food without getting sick."),
     Ability("primal_blood", "Primal Blood",
