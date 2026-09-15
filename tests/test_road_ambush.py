@@ -184,6 +184,9 @@ def test_app_starts_the_ambush_battle_with_the_whole_group_then_resolves_it():
     finally:
         world.ROAD_AMBUSH_CHANCE = orig
 
+    assert app.scene.__class__.__name__ == "AmbushScreen"
+    app.scene.on_fight(app.scene.group, app.scene.order)
+    
     assert app._pause_order is not None and app._pause_group is g
     battle = app.scene.battle
     assert [u for u in battle.player_units] and battle.player_units[0].team == "player"

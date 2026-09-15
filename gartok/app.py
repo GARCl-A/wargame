@@ -36,6 +36,7 @@ opening window size and the battle screen's fixed board canvas.
 import pygame
 
 from . import arena, campaign, economy, encounters, hunt, justice, matchup, persist, tutorial_card, world
+from .ambush_screen import AmbushScreen
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -430,6 +431,9 @@ class App:
     # first -- no choice, straight into a lethal fight (world.py)         #
     # ------------------------------------------------------------------ #
     def _start_road_ambush(self, group, order):
+        self.scene = AmbushScreen(self.fonts, group, order, self._start_ambush_battle)
+
+    def _start_ambush_battle(self, group, order):
         self._start_forced_battle(group, order, list(order.pack))
 
     # ------------------------------------------------------------------ #
