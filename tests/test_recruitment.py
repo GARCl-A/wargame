@@ -133,3 +133,35 @@ def test_a_dead_recruiters_line_keeps_working():
     grandchild = _person(4)
     recruit.enlist(g, grandchild, cand)                   # the chain still extends
     assert grandchild.recruited_by == cand.uid
+
+
+def test_bail_cost():
+    from gartok.unit import ATTRIBUTES
+    cand = _person(1)
+    cand.set_track_level("combat", 2)
+    cand._racial_override = 1
+    
+    total = sum(getattr(cand, a) for a in ATTRIBUTES)
+    expected = (total * 1) + 20
+    
+    assert recruit.bail_cost(cand) == expected
+
+
+def test_prison_pool_management():
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    g = Guild([_person(1)], clock=Clock())
+    first = list(recruit.refresh_prison_pool(g))
+    assert recruit.refresh_prison_pool(g) is g.prison_pool and g.prison_pool == first
+    
+    cand = first[0]
+    rec = g.roster[0]
+    recruit.prison_bar(g, cand, rec)
+    assert recruit.prison_barred(g, cand, rec)
+    
+    g.clock.advance_hours(24 * recruit.REFRESH_DAYS)
+    recruit.refresh_prison_pool(g)
+    assert g.prison_blocked == []
+    
+    new_pool = list(recruit.refresh_prison_pool(g))
+    assert new_pool != first

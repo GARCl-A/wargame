@@ -105,6 +105,7 @@ class Guild:
                  name="", banner_color=None, banner_icon=None, tutorial=None,
                  market_stock=None, missions=None,
                  total_spent=0, items_sold_kinds=None, jailed=None,
+                 prison_week=None, prison_pool=None, prison_blocked=None,
                  property_city_unlocked=False, property_city_items=None,
                  property_city_tax_due_day=None, property_city_missed_payments=0,
                  property_city_squatting=False, bankers_debt=0,
@@ -136,6 +137,12 @@ class Guild:
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)
         self.taverna_blocked = taverna_blocked if taverna_blocked is not None else []
         #   ^ [[candidate_uid, recruiter_uid], ...] pitches already failed this week
+        
+        # the prison's strangers (bail & recruit), re-rolled weekly by `recruit.refresh_prison_pool`
+        self.prison_week = prison_week
+        self.prison_pool = prison_pool
+        self.prison_blocked = prison_blocked if prison_blocked is not None else []
+        
         self.jailed = list(jailed or [])      # [(Unit, released_day), ...] -- see the docstring above
         # the City property -- see the docstring above and economy.CITY_PROPERTY_*
         self.property_city_unlocked = property_city_unlocked

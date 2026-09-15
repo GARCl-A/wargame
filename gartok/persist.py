@@ -143,6 +143,10 @@ def save_game(slot, guild):
         "taverna_pool": ([unit_to_dict(u) for u in guild.taverna_pool]
                          if guild.taverna_pool is not None else None),
         "taverna_blocked": guild.taverna_blocked,
+        "prison_week": guild.prison_week,
+        "prison_pool": ([unit_to_dict(u) for u in guild.prison_pool]
+                         if guild.prison_pool is not None else None),
+        "prison_blocked": guild.prison_blocked,
         "jailed": [{"unit": unit_to_dict(u), "released_day": day}
                    for u, day in guild.jailed],
         "tutorial_seen": sorted(guild.tutorial.seen),
@@ -166,6 +170,7 @@ def load_game(slot):
         roster = [Unit.from_save(d) for d in payload["roster"]]
         groups = [Group(roster, node=payload.get("node"))]
     pool = payload.get("taverna_pool")
+    p_pool = payload.get("prison_pool")
     roster = [u for g in groups for u in g.members]
     leader = next((u for u in roster if u.uid == payload.get("leader")), None)
     return Guild(None, groups=groups,
@@ -195,8 +200,11 @@ def load_game(slot):
                  taverna_week=payload.get("taverna_week"),
                  taverna_pool=[Unit.from_save(d) for d in pool] if pool is not None else None,
                  taverna_blocked=payload.get("taverna_blocked"),
+                 prison_week=payload.get("prison_week"),
+                 prison_pool=[Unit.from_save(d) for d in p_pool] if p_pool is not None else None,
+                 prison_blocked=payload.get("prison_blocked"),
                  jailed=[(Unit.from_save(d["unit"]), d["released_day"])
-                        for d in payload.get("jailed", [])],
+                         for d in payload.get("jailed", [])],
                  leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
                  name=payload.get("name", ""), banner_color=payload.get("banner_color"),
                  banner_icon=payload.get("banner_icon"),

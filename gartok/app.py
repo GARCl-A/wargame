@@ -322,6 +322,8 @@ class App:
                 self._open_wilds_claim(group, node)
             elif order.kind == "recruit":
                 self._open_taverna(list(group.members), node, None)
+            elif order.kind == "prison":
+                self._open_prison(list(group.members), node, None)
             elif order.kind == "hunt":
                 self._open_hunt_ground(list(group.members), node, None)
             elif order.kind == "tanner":
@@ -577,6 +579,11 @@ class App:
     def _open_taverna(self, party, node, _offer):
         self.scene = TavernaScreen(self.fonts, self.guild, party, node,
                                    on_done=self._after_activity)
+
+    def _open_prison(self, party, node, _offer):
+        from .prison_screen import PrisonScreen
+        self.scene = PrisonScreen(self.fonts, self.guild, party, node,
+                                  on_done=self._after_activity)
 
     @staticmethod
     def _charge(members, amount):

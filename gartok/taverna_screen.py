@@ -358,11 +358,27 @@ class TavernaScreen(Screen):
         text(screen, f"CAR {m.mod_charisma:+}", f.mono_sm, WARN, (tok[0] + 22, r.y + pad + 16))
         text(screen, ", ".join(m.languages), f.body_sm, INK_FAINT,
              (r.x + pad, r.y + pad + 34))
+        
         slots_col = DANGER if free <= 0 else INK_FAINT
-        text(screen, f"{max(0, free)} slot(s) free", f.body_sm, slots_col,
-             (r.x + pad, r.y + pad + 48))
+        slots_text = f"{max(0, free)} slot(s) free"
+        slots_w = f.body_sm.size(slots_text)[0]
+        slots_rect = pygame.Rect(r.x + pad, r.y + pad + 48, max(slots_w, 80), 16)
+        text(screen, slots_text, f.body_sm, slots_col, (slots_rect.x, slots_rect.y))
+        
         if state is not None:
             text(screen, state[0], f.label, state[1], (r.x + pad, r.bottom - 16))
+            
+        if slots_rect.collidepoint(self.mouse):
+            cap = recruit.capacity(self.guild, m)
+            used = recruit.slots_used(self.guild, m)
+            calc_str = "Cap: 1 (base)"
+            if m.mod_charisma != 0: calc_str += f" {m.mod_charisma:+} (CHA)"
+            if m is self.guild.leader: calc_str += f" + {m.racial_level} (ldr)"
+            calc_str += f" = {cap}  |  Used: {used}"
+            tw, th = f.body_sm.size(calc_str)
+            tt_rect = pygame.Rect(self.mouse[0] + 12, self.mouse[1] + 12, tw + 16, th + 8)
+            panel(screen, tt_rect, fill=SURFACE_1, border=LINE_SOFT, radius=2)
+            text(screen, calc_str, f.body_sm, INK, (tt_rect.x + 8, tt_rect.y + 4))
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):

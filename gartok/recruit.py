@@ -40,6 +40,7 @@ SIZE_PENALTY = 1               # -1 to the contest per member past FREE_SLOTS
 ALIGNMENT_PENALTY = 1          # -1 to the contest per step of alignment distance
 
 TAVERNA_SIZE = 3               # strangers in the taverna at a time
+PRISON_SIZE = 3                # prisoners available for bail
 REFRESH_DAYS = 7               # the pool re-rolls once this many days pass
 
 BASE_RECRUIT_CAPACITY = 1      # + Charisma modifier -- how many people you could personally recruit
@@ -57,6 +58,13 @@ def can_pitch(recruiter, candidate):
 def size_penalty(roster_size):
     """The recruiter's handicap from an already-crowded guild."""
     return SIZE_PENALTY * max(0, roster_size - FREE_SLOTS)
+
+
+def bail_cost(candidate):
+    """Cost to pay a prisoner's bail (in copper): (sum(attributes) * racial_level) + 20."""
+    from .unit import ATTRIBUTES
+    total_attr = sum(getattr(candidate, a) for a in ATTRIBUTES)
+    return (total_attr * candidate.racial_level) + 20
 
 
 def capacity(guild, unit):
@@ -90,7 +98,7 @@ class Pitch:
     reason: str = ""                         # why it failed (empty on success)
 
 
-def convince(recruiter, candidate, roster_size, rng=random, day=1):
+def convince(recruiter, candidate, roster_size, rng=random, day=1, extra_mods=None):
     """Roll the recruiter's Charisma contest against the candidate's resolve.
 
     `roster_size` is how many members the guild has right now (it grows as you
@@ -101,7 +109,7 @@ def convince(recruiter, candidate, roster_size, rng=random, day=1):
     if not lang:
         return Pitch(False, reason="no shared language")
 
-    mods = []
+    mods = list(extra_mods or [])
     dist = data.alignment_distance(recruiter.alignment, candidate.alignment)
     red = int(recruiter.talent_bonus("align_distance_reduction"))
     eff_dist = max(0, dist - red)
@@ -168,3 +176,27 @@ def enlist(guild, candidate, recruiter):
     guild.add_member(candidate, guild.group_of(recruiter))
     if guild.taverna_pool and candidate in guild.taverna_pool:
         guild.taverna_pool.remove(candidate)
+    if guild.prison_pool and candidate in guild.prison_pool:
+        guild.prison_pool.remove(candidate)
+
+
+# --------------------------------------------------------------------------- #
+# the prison pool: who can be bailed out, refreshed weekly
+# --------------------------------------------------------------------------- #
+
+def refresh_prison_pool(guild):
+    week = current_week(guild.clock)
+    if guild.prison_pool is None or guild.prison_week != week:
+        guild.prison_week = week
+        guild.prison_pool = [Unit("player") for _ in range(PRISON_SIZE)]
+        guild.prison_blocked = []
+    return guild.prison_pool
+
+
+def prison_barred(guild, candidate, recruiter):
+    return [candidate.uid, recruiter.uid] in guild.prison_blocked
+
+
+def prison_bar(guild, candidate, recruiter):
+    if not prison_barred(guild, candidate, recruiter):
+        guild.prison_blocked.append([candidate.uid, recruiter.uid])

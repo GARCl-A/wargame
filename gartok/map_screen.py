@@ -538,6 +538,17 @@ class MapScreen(Screen):
             y += 44
             text(screen, "talk a stranger into signing with the guild", f.body_sm,
                  INK_FAINT, (cx, y))
+            
+            y += 30
+            pr = pygame.Rect(cx, y, cw, 38)
+            hovp = pr.collidepoint(self.mouse)
+            panel(screen, pr, fill=SURFACE_3 if hovp else SURFACE_1,
+                  border=LINE_SOFT, width=1, radius=RADIUS)
+            text(screen, "VISIT THE PRISON", f.body_bd, INK_DIM, pr.center, center=True)
+            self.buttons.append(("prison", pr))
+            y += 44
+            text(screen, "pay a criminal's bail for a better shot at recruiting them", f.body_sm,
+                 INK_FAINT, (cx, y))
         elif here.work:
             tracked(screen, "WORK A SHIFT", f.label, INK_DIM, (cx, y))
             y += 18
