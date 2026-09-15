@@ -528,3 +528,45 @@ def test_factions_get_unlocks():
     arena_unlocks = factions.get_unlocks("arena")
     assert any("The Games" in u.title for u in arena_unlocks)
 
+
+def test_market_screen_draw_multiple_shoppers_hover():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.market_screen import MarketScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    mnode = next(n for n in world.NODES if n.kind == "market")
+    shoppers = [Unit("player"), Unit("player")]
+    ms = MarketScreen(Fonts(), None, shoppers, mnode, lambda: None)
+    surf = pygame.Surface((1200, 800))
+    ms.mouse = (surf.get_width() - 50, 80)
+    ms.draw(surf)
+    for label, rect in ms.buttons:
+        if label == "distribute":
+            ms.mouse = rect.center
+            ms.draw(surf)
+
+
+def test_loot_screen_draw_with_pack_selection_hover():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.loot_screen import LootScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    u = Unit("player")
+    u._base_inventory = ["Torch"]
+    g = Guild([u])
+    ls = LootScreen(Fonts(), g, [u], ["Axe"], lambda: None)
+    surf = pygame.Surface((1200, 800))
+    ls.mouse = (100, 100)
+    ls.draw(surf)
+    ls.pack_sel = (u, 0)
+    if ls.cards:
+        ls.mouse = ls.cards[0][0].center
+    ls.draw(surf)
+
+

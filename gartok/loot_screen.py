@@ -15,7 +15,7 @@ from . import data
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, kg, panel, section, token_badge, text)
+                    SURFACE_2, SURFACE_3, WARN, kg, panel, section, token_badge, text)
 
 
 class LootScreen(Screen):
