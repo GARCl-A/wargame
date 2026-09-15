@@ -22,7 +22,7 @@ so the next battle re-seeds every `Combatant` from the new loadout.
 
 import pygame
 
-from . import chest, data, missions
+from . import chest, data, magic, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -162,15 +162,24 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         rows = [("member", u) for u in dests] + [("discard", None)]
         if len(picks) == 1 and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", None))
+        if len(picks) == 1:
+            unit, item = picks[0][0], self._item_at(*picks[0])
+            spell = magic.spell_for_scroll(item) if item else None
+            if spell and unit.magic_source and spell.id not in unit.spells_known:
+                rows.append(("study", spell))
 
         f = self.fonts
         w = 160
         for kind, arg in rows:
-            lbl = ("OPEN THE CHEST" if kind == "open" else
+            lbl = (self._study_label(picks[0][0], arg) if kind == "study" else
+                   "OPEN THE CHEST" if kind == "open" else
                    f"to {arg.name}" if kind == "member" else "throw away")
             w = max(w, f.body.size(lbl)[0] + 2 * SP4)
         self.menu = {"pos": px, "w": w, "h": MENU_HEAD + len(rows) * 24 + SP1,
                      "rh": 24, "rows": rows, "picks": list(picks)}
+
+    def _study_label(self, unit, spell):
+        return "stop studying" if unit.study_target == spell.id else f"study {spell.name}"
 
     def _menu_click(self, px):
         m = self.menu
@@ -182,6 +191,11 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                 if kind == "open":
                     unit, loc = m["picks"][0]
                     self._open_chest(unit, self._item_at(unit, loc))
+                    return
+                if kind == "study":
+                    unit = m["picks"][0][0]
+                    unit.study_target = None if unit.study_target == arg.id else arg.id
+                    self.selected = []
                     return
                 self.selected = list(m["picks"])
                 self._give_many(arg, "pack" if kind == "member" else "discard")
@@ -228,7 +242,8 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             if hov:
                 self._hot = True
                 panel(screen, r, fill=SURFACE_4, border=LINE_SOFT, width=0, radius=4)
-            lbl = ("OPEN THE CHEST" if kind == "open" else
+            lbl = (self._study_label(m["picks"][0][0], arg) if kind == "study" else
+                   "OPEN THE CHEST" if kind == "open" else
                    f"to {arg.name}" if kind == "member" else "throw away")
             col = DANGER if kind == "discard" else ACCENT if hov else INK
             text(screen, lbl, f.body, col, (r.x + SP2, r.centery - 7))

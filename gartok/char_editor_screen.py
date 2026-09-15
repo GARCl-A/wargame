@@ -535,7 +535,7 @@ class CharEditorScreen(Screen):
             text(screen, "×", f.body_bd, DANGER if h else INK_DIM, xr.center, center=True)
             self._hit(xr, ("unpack", idx))
             if item.startswith("Scroll of ") and u.magic_source:
-                spell = next((s for s in magic.SPELLS.values() if f"Scroll of {s.name}" == item), None)
+                spell = magic.spell_for_scroll(item)
                 if spell and spell.id not in u.spells_known:
                     studying = u.study_target == spell.id
                     sr = pygame.Rect(xr.left - 48, ir.y + 2, 44, 16)

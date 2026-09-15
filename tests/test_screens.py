@@ -510,6 +510,78 @@ def test_gear_screen_distribute_load():
     assert gs.notice is not None
 
 
+def test_gear_screen_scroll_right_click_offers_and_toggles_study():
+    """The only in-game path to set `Unit.study_target` (see the Magic section
+    of RULES.md): right-click a known scroll for a "study" row on the send-to
+    menu, mirroring the sandbox character editor's toggle."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.gear_screen import GearScreen
+    from gartok.guild import Guild
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    u.magic_source = "nature"
+    u._base_inventory = ["Scroll of Light Globe"]
+    g = Guild([u])
+    gs = GearScreen.__new__(GearScreen)
+    gs.fonts = Fonts()
+    gs.guild = g
+    gs.roster = g.roster
+    gs.managed = [u]
+    gs.selected = []
+    gs.notice = None
+    gs.mouse = (5, 5)
+    gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
+    gs.menu = None
+    gs._hot = False
+
+    surf = pygame.Surface((800, 600))
+
+    gs._open_menu((5, 5))
+    assert "study" in [kind for kind, _ in gs.menu["rows"]]
+    gs._draw_menu(surf, 800, 600)
+    study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
+
+    gs._menu_click(study_row.center)
+    assert u.study_target == "light_globe"
+
+    gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
+    gs._draw_menu(surf, 800, 600)
+    study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
+    gs._menu_click(study_row.center)
+    assert u.study_target is None
+
+
+def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.gear_screen import GearScreen
+    from gartok.guild import Guild
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    u.magic_source = None
+    u._base_inventory = ["Scroll of Light Globe"]
+    g = Guild([u])
+    gs = GearScreen.__new__(GearScreen)
+    from gartok.theme import Fonts
+    gs.fonts = Fonts()
+    gs.guild = g
+    gs.roster = g.roster
+    gs.managed = [u]
+    gs.selected = []
+    gs.notice = None
+    gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
+    gs.menu = None
+
+    gs._open_menu((5, 5))
+    assert "study" not in [kind for kind, _ in gs.menu["rows"]]
+
+
 def test_loot_screen_drop_pack_item_to_ground():
     from gartok.loot_screen import LootScreen
     from gartok.guild import Guild

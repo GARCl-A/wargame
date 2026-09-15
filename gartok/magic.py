@@ -16,6 +16,11 @@ SPELLS = {
     "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
 }
 
+def spell_for_scroll(item_name):
+    """The Spell a `Scroll of <Name>` item names, or None (not a scroll, or
+    no spell matches)."""
+    return next((s for s in SPELLS.values() if item_name == f"Scroll of {s.name}"), None)
+
 def study_difficulty(spell):
     """The DC to learn a spell. Daily rolls check against this average to accumulate points."""
     return 15 + spell.level
