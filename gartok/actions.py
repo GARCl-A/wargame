@@ -66,6 +66,7 @@ class Action:
     id = ""
     name = ""
     cost = 1
+    desc = ""
     target = "none"        # "none" | "enemy" | "cell"
     aimed = False          # True: needs the target picked by clicking the screen
 
@@ -192,8 +193,7 @@ def _cells_in_radius(origin, radius):
 
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None):
-    """Resolve a d20 roll already made: log and apply damage. Returns 'hit'|'miss'|'crit'.
-    `weapon` (a WEAPONS dict) overrides the held one for the damage roll -- the Tongue."""
+    from .theme import OK, INK_FAINT, DANGER, WARN
     total = nat + bonus
     ac = target.ac
     phalanx = _phalanxed(battle, target)
@@ -201,11 +201,14 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         ac += 1
     crit = nat == 20
     desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac}" + (" [Phalanx]" if phalanx else "")
+    fx_text = f"{total} vs AC {ac}"
     if nat == 1:
         battle.log(desc + "  -> critical miss.")
+        battle.fx(target.pos, "Crit Miss!", INK_FAINT)
         return "miss"
     if crit or total >= ac:
-        if target.dying:                     # a hit on a dying body finishes it
+        battle.fx(target.pos, fx_text, OK if not crit else WARN)
+        if target.dying:
             battle.log(desc + "  -> coup de grace: DEAD.")
             target.status = "dead"
             return "crit" if crit else "hit"
@@ -215,11 +218,12 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon), battle.log)
         if was_up and target.team != attacker.team:
             if not target.alive:
-                attacker.credit_kill(target)  # downed a standing enemy -> combat XP later
+                attacker.credit_kill(target)
             elif target.hp <= 0 and target.ferocity_downer is None:
-                target.ferocity_downer = attacker   # Ferocity: still up at 0 HP, credit the fall
+                target.ferocity_downer = attacker
         return "crit" if crit else "hit"
     battle.log(desc + "  -> misses.")
+    battle.fx(target.pos, fx_text, INK_FAINT)
     return "miss"
 
 
@@ -228,7 +232,8 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
 # --------------------------------------------------------------------------- #
 
 class Move(Action):
-    id, name, target = "move", "Move", "cell"
+    id, name, cost, target = "move", "Move", 1, "cell"
+    desc = "Move up to your speed."
 
     def available(self, battle, actor):
         if getattr(actor, "mounted_on", None) is not None:
@@ -290,7 +295,8 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
 
 
 class Attack(Action):
-    id, name, target, aimed = "attack", "Attack", "enemy", True
+    id, name, cost, target, aimed = "attack", "Attack", 1, "enemy", True
+    desc = "Melee or Ranged attack based on your equipped weapon."
 
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _attackable_target(actor, target):
@@ -333,7 +339,8 @@ class AttackTongue(Action):
     the Tongue slot, swung at +1 square of reach. A separate action so a Grippli
     can choose it or the hand weapon each turn (a reach poke vs. a 2-handed blow)."""
 
-    id, name, target, aimed = "attack_tongue", "Lash", "enemy", True
+    id, name, cost, target, aimed = "attack_tongue", "Lash", 1, "enemy", True
+    desc = "Lash an enemy with your tongue."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -386,7 +393,8 @@ class Reload(Action):
     A crossbow fires only while loaded and each shot empties it, so a crossbowman
     gets one bolt away per turn (Reload + Attack = the whole turn)."""
 
-    id, name = "reload", "Reload"
+    id, name, cost, target = "reload", "Reload", 1, "none"
+    desc = "Reload your crossbow."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -420,7 +428,8 @@ class Reload(Action):
 # --------------------------------------------------------------------------- #
 
 class Defend(Action):
-    id, name = "defend", "Defend"
+    id, name, cost, target = "defend", "Defend", 1, "none"
+    desc = "+2 AC until your next turn."
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and not actor.defending
@@ -445,7 +454,8 @@ class Defend(Action):
 # --------------------------------------------------------------------------- #
 
 class Throw(Action):
-    id, name, target, aimed = "throw", "Throw", "enemy", True
+    id, name, cost, target, aimed = "throw", "Throw", 1, "enemy", True
+    desc = "Throw your equipped weapon at a target in range."
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and actor.can_throw
@@ -504,7 +514,8 @@ class Throw(Action):
 # --------------------------------------------------------------------------- #
 
 class PickUp(Action):
-    id, name = "pickup", "Pick up"
+    id, name, cost, target = "pick_up", "Pick up", 1, "none"
+    desc = "Pick up a dropped item or torch in your cell."
 
     def available(self, battle, actor):
         return (actor.ap >= self.cost
@@ -559,7 +570,8 @@ class PickUp(Action):
 # --------------------------------------------------------------------------- #
 
 class Demoralize(Action):
-    id, name, target, aimed = "demoralize", "Demoralize", "enemy", True
+    id, name, cost, target, aimed = "demoralize", "Demoralize", 1, "enemy", True
+    desc = "Cha vs MD. Target is demoralized (cannot move, lower defenses)."
 
     def _can_provoke(self, battle, actor, target):
         return (actor.ability.demoralize_ignores_language
@@ -628,7 +640,8 @@ class Demoralize(Action):
 # --------------------------------------------------------------------------- #
 
 class Stabilize(Action):
-    id, name, target, aimed = "stabilize", "Stabilize", "ally", True
+    id, name, cost, target, aimed = "stabilize", "Stabilize", 1, "cell", True
+    desc = "50% chance to stabilize an adjacent dying ally."
 
     def _downed_allies(self, battle, actor):
         """Adjacent allied bodies this action can work on: dying units, or broken
@@ -662,6 +675,8 @@ class Stabilize(Action):
                        f"d20({nat}) {actor.mod_intelligence:+}(INT) = {total} vs "
                        f"{data.AUTOMATON_REPAIR_DC} -> "
                        + ("repaired." if ok else "fails."))
+            from .theme import OK, INK_FAINT
+            battle.fx(target.pos, f"{total} vs {data.AUTOMATON_REPAIR_DC}", OK if ok else INK_FAINT)
             if ok:
                 battle.repair(target)
             return ok
@@ -669,6 +684,8 @@ class Stabilize(Action):
         ok = nat >= data.DEATH_SAVE_MIN
         battle.log(f"{actor.name} tries to stabilize {target.name}: d20({nat}) -> "
                    + ("success." if ok else "fails."))
+        from .theme import OK, INK_FAINT
+        battle.fx(target.pos, f"d20({nat}) " + ("Success" if ok else "Fail"), OK if ok else INK_FAINT)
         if ok:
             battle.stabilize(target)
         return ok
@@ -682,7 +699,8 @@ class Stabilize(Action):
 
 
 class FirstAid(Stabilize):
-    id, name = "first_aid", "First Aid"
+    id, name, cost, target, aimed = "first_aid", "First Aid", 1, "cell", True
+    desc = "Use a medkit: 100% chance to stabilize, or cure sickness."
 
     def _downed_allies(self, battle, actor):
         # a med kit is for the dying and the sick; a broken automaton needs the plain Stabilize
@@ -738,7 +756,8 @@ class Flee(Action):
     ahead that the chase fizzles. Deterministic -- the button lights up exactly
     when the escape would work. Ends your turn; downed allies are left behind."""
 
-    id, name = "flee", "Flee"
+    id, name, cost, target = "flee", "Flee", 1, "none"
+    desc = "Flee the battle from the map edge."
 
     @staticmethod
     def _at_edge(battle, actor):
@@ -794,7 +813,8 @@ class Push(Action):
     Constitution modifier. If the square behind them is a pit, they go in (and
     take the fall). A wall / body behind them stops the shove dead."""
 
-    id, name, target, aimed = "push", "Push", "enemy", True
+    id, name, cost, target, aimed = "push", "Push", 1, "enemy", True
+    desc = "Push an adjacent enemy."
 
     def _targets(self, battle, actor):
         return [u for u in battle.units
@@ -892,7 +912,8 @@ class Climb(_VerticalStep):
     (bare stone 15, a rope 10); the Lizardfolk's Climber clears it with no roll.
     A slip just costs the action."""
 
-    id, name = "climb", "Climb"
+    id, name, cost = "climb", "Climb", 1
+    desc = "Climb an obstacle."
 
     def _wants(self, z_nb, z_here):
         return z_nb != z_here
@@ -929,7 +950,8 @@ class DropIn(_VerticalStep):
     """Throw yourself into the pit -- a deliberate drop into a lower adjacent
     square, no check, but you take the fall (every level past the first is 1d6)."""
 
-    id, name = "drop", "Drop in"
+    id, name, cost = "drop", "Drop in", 1
+    desc = "Drop into a lower adjacent square."
 
     def _wants(self, z_nb, z_here):
         return z_nb < z_here
@@ -954,7 +976,8 @@ class Jump(Action):
     your speed) straight toward the aimed cell, sailing over any pit in between.
     A wall or a body ends the jump short; land lower than you left and you fall."""
 
-    id, name, target, aimed = "jump", "Jump", "cell", True
+    id, name, cost, target, aimed = "jump", "Jump", 1, "cell", True
+    desc = "Jump across gaps or obstacles."
 
     def _max_reach(self, battle, actor):
         return max(0, min((20 + actor.mod_strength) // JUMP_DIVISOR, actor.speed))
@@ -1009,7 +1032,8 @@ class Swim(Action):
     out of the pit with a Climb). No check to stay afloat; a poor roll just means
     a short swim."""
 
-    id, name, target, aimed = "swim", "Swim", "cell", True
+    id, name, cost, target, aimed = "swim", "Swim", 1, "cell", True
+    desc = "Swim through deep water."
 
     def _at_water(self, battle, actor):
         """The actor is in deep water, or on a cell touching it (can push off)."""
@@ -1080,6 +1104,7 @@ class Swim(Action):
 
 class EatCorpse(Action):
     id, name, cost, target, aimed = "eat_corpse", "Eat Corpse", 1, "enemy", True
+    desc = "Devour a corpse to reset hunger and terrify foes."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -1132,6 +1157,7 @@ class EatCorpse(Action):
 
 class Mount(Action):
     id, name, cost, target, aimed = "mount", "Mount", 1, "ally", True
+    desc = "Mount an allied centaur."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -1176,6 +1202,7 @@ class Mount(Action):
 
 class Dismount(Action):
     id, name, cost, target, aimed = "dismount", "Dismount", 1, "cell", True
+    desc = "Dismount from your current mount."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -1211,6 +1238,7 @@ class Dismount(Action):
 
 class WakeUp(Action):
     id, name, cost, target, aimed = "wake_up", "Wake Up", 1, "ally", True
+    desc = "Wake up an adjacent sleeping ally."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -1256,7 +1284,8 @@ class WakeUp(Action):
 # --------------------------------------------------------------------------- #
 
 class EndTurn(Action):
-    id, name, cost = "end", "End turn", 0
+    id, name, cost, target = "end", "End Turn", 0, "none"
+    desc = "End your turn."
 
     def available(self, battle, actor):
         return battle.winner is None

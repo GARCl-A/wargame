@@ -262,7 +262,8 @@ class LootScreen(Screen):
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
         token_badge(screen, tok, m, f)
-        text(screen, m.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
+        name_txt = m.name + (" (Stabilized)" if getattr(m, "hp", 1) <= 0 else "")
+        text(screen, name_txt, f.card_name, INK, (tok[0] + 24, rect.y + pad))
         text(screen, f"{m.race['name']}  ·  {m.occupation['name']}", f.body_sm,
              INK_DIM, (tok[0] + 24, rect.y + pad + 20))
 

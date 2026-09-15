@@ -323,6 +323,11 @@ class BattleScreen(Screen):
                 self._spawn_floater(r, f"+{delta}", OK)
                 self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 240.0}
 
+        for pos, text_str, color in getattr(b, "fx_events", []):
+            self._spawn_floater(self._cell_rect(*pos), text_str, color)
+        if hasattr(b, "fx_events"):
+            b.fx_events.clear()
+
     def _spawn_floater(self, r, s, color):
         stack = sum(1 for f in self._floaters
                     if abs(f["x"] - r.centerx) < self.view.tile and f["age"] < 240)
@@ -408,6 +413,35 @@ class BattleScreen(Screen):
         self._draw_log(screen)
         if self.battle.winner:
             self._draw_winner(screen)
+        else:
+            self._draw_tooltips(screen)
+
+    def _draw_tooltips(self, screen):
+        from . import actions
+        mpos = pygame.mouse.get_pos()
+        hovered_action = None
+        for action, rect in self.buttons:
+            if isinstance(action, actions.Action) and rect.collidepoint(mpos):
+                hovered_action = action
+                break
+        
+        desc = getattr(hovered_action, "desc", "") if hovered_action else ""
+        if desc:
+            lines = wrap_lines(desc, self.fonts.body_sm, 200 - SP2 * 2)
+            tt_w = 200
+            tt_h = SP1 * 2 + len(lines) * 16
+            tt_rect = pygame.Rect(0, 0, tt_w, tt_h)
+            
+            btn_rect = next(r for a, r in self.buttons if a == hovered_action)
+            tt_rect.bottomleft = (btn_rect.left, btn_rect.top - 4)
+            if tt_rect.top < 0:
+                tt_rect.topleft = (btn_rect.left, btn_rect.bottom + 4)
+                
+            panel(screen, tt_rect, fill=SURFACE_3, border=LINE_SOFT)
+            y = tt_rect.y + SP1
+            for ln in lines:
+                text(screen, ln, self.fonts.body_sm, INK, (tt_rect.x + SP2, y))
+                y += 16
 
     def _cell_rect(self, cx, cy):
         return self.view.cell_rect(cx, cy)
@@ -926,7 +960,7 @@ class BattleScreen(Screen):
         if not self._is_player_turn():
             return
         if self.aim_action is actions.ATTACK:
-            msg, col = "click a highlighted enemy to Attack", ATK_HL
+            msg, col = "click a highlighted enemy to Attack (Flank: ally on opposite side grants +2 to hit)", ATK_HL
         elif self.aim_action is actions.DEMORALIZE:
             msg, col = "click a purple enemy to Demoralize", DEMO_HL
         elif self.aim_action is actions.ATTACK_TONGUE:
@@ -1039,9 +1073,9 @@ class BattleScreen(Screen):
 
             if action.cost:
                 cx = r.right - SP3
-                text(screen, str(action.cost), self.fonts.mono_sm, ink, (cx, r.centery - 6),
-                     right=True)
-                pygame.draw.circle(screen, ink, (cx - 16, r.centery), 3)
+                # draw action.cost yellow circles
+                for i in range(action.cost):
+                    pygame.draw.circle(screen, ACCENT, (cx - i * 14, r.centery), 4)
             self.buttons.append((action, r))
 
     def _draw_inspect(self, screen, s):

@@ -36,8 +36,12 @@ class Battle:
         self.log_lines.append(msg)
         del self.log_lines[:-200]
 
+    def fx(self, pos, text, color):
+        self.fx_events.append((pos, text, color))
+
     def setup(self):
         self.log_lines.clear()
+        self.fx_events = []
         self.ambient_light = False           # scenario.build sets the real value
         self.ground = []                     # GroundObject list (dropped weapons, torches)
         self.units = list(self.player_units) + list(self.enemy_units)
