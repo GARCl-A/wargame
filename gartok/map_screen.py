@@ -33,7 +33,7 @@ from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, INFO, INK, INK_DIM,
                     INK_FAINT, LINE, LINE_SOFT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2, SP3, SP4,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    ellipsize, panel, section, text, tracked, wrap_lines)
+                    blit_block, ellipsize, panel, section, text, tracked, wrap_lines)
 
 SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
@@ -571,15 +571,15 @@ class MapScreen(Screen):
             if need_axe:
                 y += 4
                 names = ", ".join(u.name for u in need_axe)
-                text(screen, f"{names}: past this job bare-handed -- bring their own "
-                     "Axe for a better wage and to keep banking work XP",
-                     f.body_sm, WARN, (cx, y))
+                msg = f"{names}: past this job bare-handed -- bring their own Axe for a better wage and to keep banking work XP"
+                wrapped = wrap_lines([msg], f.body_sm, cw)
+                y = blit_block(screen, wrapped, cx, y, f.body_sm, color=WARN, lh=15)
             if capped:
                 y += 4
                 names = ", ".join(u.name for u in capped)
-                text(screen, f"{names}: has outgrown this job even with their own Axe -- "
-                     "no more work XP here, look for tougher work",
-                     f.body_sm, WARN, (cx, y))
+                msg = f"{names}: has outgrown this job even with their own Axe -- no more work XP here, look for tougher work"
+                wrapped = wrap_lines([msg], f.body_sm, cw)
+                y = blit_block(screen, wrapped, cx, y, f.body_sm, color=WARN, lh=15)
         elif here.is_wilds:
             for key, label, note in self._wilds_actions():
                 r = pygame.Rect(cx, y, cw, 38)
