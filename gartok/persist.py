@@ -25,7 +25,15 @@ from .guild import Guild
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
 
-SAVE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "saves")
+import sys
+
+# Se estiver rodando como um executável do PyInstaller, sys.frozen será True.
+if getattr(sys, "frozen", False):
+    _BASE_DIR = os.path.dirname(sys.executable)
+else:
+    _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+
+SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 NUM_SLOTS = 3
 SAVE_VERSION = 15                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
