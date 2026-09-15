@@ -5371,6 +5371,8 @@ imported by:
  &#8226;   <a href="#gartok.actions">gartok.actions</a>
  &#8226;   <a href="#gartok.adelio_prompt_screen">gartok.adelio_prompt_screen</a>
  &#8226;   <a href="#gartok.ai">gartok.ai</a>
+ &#8226;   <a href="#gartok.alert_screen">gartok.alert_screen</a>
+ &#8226;   <a href="#gartok.ambush_screen">gartok.ambush_screen</a>
  &#8226;   <a href="#gartok.app">gartok.app</a>
  &#8226;   <a href="#gartok.arena">gartok.arena</a>
  &#8226;   <a href="#gartok.artwork">gartok.artwork</a>
@@ -5425,6 +5427,7 @@ imported by:
  &#8226;   <a href="#gartok.orders">gartok.orders</a>
  &#8226;   <a href="#gartok.pause_screen">gartok.pause_screen</a>
  &#8226;   <a href="#gartok.persist">gartok.persist</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.progression">gartok.progression</a>
  &#8226;   <a href="#gartok.recruit">gartok.recruit</a>
  &#8226;   <a href="#gartok.reward_screen">gartok.reward_screen</a>
@@ -5480,6 +5483,7 @@ imports:
  &#8226;   <a href="#gartok.data">gartok.data</a>
  &#8226;   <a href="#gartok.ground">gartok.ground</a>
  &#8226;   <a href="#gartok.magic">gartok.magic</a>
+ &#8226;   <a href="#gartok.theme">gartok.theme</a>
  &#8226;   <a href="#random">random</a>
 
   </div>
@@ -5533,12 +5537,52 @@ imported by:
 </div>
 
 <div class="node">
+  <a name="gartok.alert_screen"></a>
+  <a target="code" href="///C:/dev/wargame/gartok/alert_screen.py" type="text/plain"><tt>gartok.alert_screen</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#gartok">gartok</a>
+ &#8226;   <a href="#gartok.screen">gartok.screen</a>
+ &#8226;   <a href="#gartok.theme">gartok.theme</a>
+ &#8226;   <a href="#pygame">pygame</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#gartok.app">gartok.app</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="gartok.ambush_screen"></a>
+  <a target="code" href="///C:/dev/wargame/gartok/ambush_screen.py" type="text/plain"><tt>gartok.ambush_screen</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#gartok">gartok</a>
+ &#8226;   <a href="#gartok.screen">gartok.screen</a>
+ &#8226;   <a href="#gartok.theme">gartok.theme</a>
+ &#8226;   <a href="#pygame">pygame</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#gartok.app">gartok.app</a>
+
+  </div>
+
+</div>
+
+<div class="node">
   <a name="gartok.app"></a>
   <a target="code" href="///C:/dev/wargame/gartok/app.py" type="text/plain"><tt>gartok.app</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
     <a href="#gartok">gartok</a>
  &#8226;   <a href="#gartok.adelio_prompt_screen">gartok.adelio_prompt_screen</a>
+ &#8226;   <a href="#gartok.alert_screen">gartok.alert_screen</a>
+ &#8226;   <a href="#gartok.ambush_screen">gartok.ambush_screen</a>
  &#8226;   <a href="#gartok.arena">gartok.arena</a>
  &#8226;   <a href="#gartok.bank_screen">gartok.bank_screen</a>
  &#8226;   <a href="#gartok.battle">gartok.battle</a>
@@ -5562,6 +5606,7 @@ imports:
  &#8226;   <a href="#gartok.justice_screen">gartok.justice_screen</a>
  &#8226;   <a href="#gartok.ledger_screen">gartok.ledger_screen</a>
  &#8226;   <a href="#gartok.level_screen">gartok.level_screen</a>
+ &#8226;   <a href="#gartok.loot">gartok.loot</a>
  &#8226;   <a href="#gartok.loot_screen">gartok.loot_screen</a>
  &#8226;   <a href="#gartok.map_editor_screen">gartok.map_editor_screen</a>
  &#8226;   <a href="#gartok.map_screen">gartok.map_screen</a>
@@ -5571,6 +5616,7 @@ imports:
  &#8226;   <a href="#gartok.orders">gartok.orders</a>
  &#8226;   <a href="#gartok.pause_screen">gartok.pause_screen</a>
  &#8226;   <a href="#gartok.persist">gartok.persist</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.reward_screen">gartok.reward_screen</a>
  &#8226;   <a href="#gartok.scenario">gartok.scenario</a>
  &#8226;   <a href="#gartok.squad_screen">gartok.squad_screen</a>
@@ -5783,6 +5829,7 @@ imports:
     <a href="#gartok">gartok</a>
  &#8226;   <a href="#gartok.combatant">gartok.combatant</a>
  &#8226;   <a href="#gartok.data">gartok.data</a>
+ &#8226;   <a href="#gartok.magic">gartok.magic</a>
  &#8226;   <a href="#gartok.npc_lib">gartok.npc_lib</a>
  &#8226;   <a href="#gartok.persist">gartok.persist</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
@@ -5978,6 +6025,7 @@ imported by:
  &#8226;   <a href="#gartok.map_editor_screen">gartok.map_editor_screen</a>
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
  &#8226;   <a href="#gartok.missions">gartok.missions</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.recruit">gartok.recruit</a>
  &#8226;   <a href="#gartok.scenario">gartok.scenario</a>
  &#8226;   <a href="#gartok.sheet">gartok.sheet</a>
@@ -6030,6 +6078,7 @@ imported by:
  &#8226;   <a href="#gartok.city_property_screen">gartok.city_property_screen</a>
  &#8226;   <a href="#gartok.gear_screen">gartok.gear_screen</a>
  &#8226;   <a href="#gartok.group_screen">gartok.group_screen</a>
+ &#8226;   <a href="#gartok.loot_screen">gartok.loot_screen</a>
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
 
   </div>
@@ -6058,6 +6107,7 @@ imported by:
  &#8226;   <a href="#gartok.guild">gartok.guild</a>
  &#8226;   <a href="#gartok.map_screen">gartok.map_screen</a>
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
+ &#8226;   <a href="#gartok.taverna_screen">gartok.taverna_screen</a>
  &#8226;   <a href="#gartok.unit">gartok.unit</a>
  &#8226;   <a href="#gartok.wilds_claim_screen">gartok.wilds_claim_screen</a>
 
@@ -6148,6 +6198,7 @@ imports:
  &#8226;   <a href="#gartok.chest">gartok.chest</a>
  &#8226;   <a href="#gartok.data">gartok.data</a>
  &#8226;   <a href="#gartok.dragselect">gartok.dragselect</a>
+ &#8226;   <a href="#gartok.magic">gartok.magic</a>
  &#8226;   <a href="#gartok.missions">gartok.missions</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
  &#8226;   <a href="#gartok.theme">gartok.theme</a>
@@ -6451,6 +6502,7 @@ imports:
  &#8226;   <a href="#gartok.artwork">gartok.artwork</a>
  &#8226;   <a href="#gartok.progression">gartok.progression</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
+ &#8226;   <a href="#gartok.sheet_panel">gartok.sheet_panel</a>
  &#8226;   <a href="#gartok.talents">gartok.talents</a>
  &#8226;   <a href="#gartok.theme">gartok.theme</a>
  &#8226;   <a href="#math">math</a>
@@ -6499,6 +6551,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#gartok">gartok</a>
+ &#8226;   <a href="#gartok.app">gartok.app</a>
  &#8226;   <a href="#gartok.campaign">gartok.campaign</a>
 
   </div>
@@ -6512,6 +6565,7 @@ imported by:
 imports:
     <a href="#gartok">gartok</a>
  &#8226;   <a href="#gartok.data">gartok.data</a>
+ &#8226;   <a href="#gartok.dragselect">gartok.dragselect</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
  &#8226;   <a href="#gartok.theme">gartok.theme</a>
  &#8226;   <a href="#pygame">pygame</a>
@@ -6538,6 +6592,8 @@ imports:
 imported by:
     <a href="#gartok">gartok</a>
  &#8226;   <a href="#gartok.actions">gartok.actions</a>
+ &#8226;   <a href="#gartok.char_editor_screen">gartok.char_editor_screen</a>
+ &#8226;   <a href="#gartok.gear_screen">gartok.gear_screen</a>
  &#8226;   <a href="#gartok.guild">gartok.guild</a>
  &#8226;   <a href="#gartok.unit">gartok.unit</a>
 
@@ -6770,6 +6826,7 @@ imported by:
  &#8226;   <a href="#gartok.app">gartok.app</a>
  &#8226;   <a href="#gartok.campaign">gartok.campaign</a>
  &#8226;   <a href="#gartok.map_screen">gartok.map_screen</a>
+ &#8226;   <a href="#gartok.taverna_screen">gartok.taverna_screen</a>
  &#8226;   <a href="#gartok.wilds_claim_screen">gartok.wilds_claim_screen</a>
 
   </div>
@@ -6825,6 +6882,27 @@ imported by:
 </div>
 
 <div class="node">
+  <a name="gartok.prison_screen"></a>
+  <a target="code" href="///C:/dev/wargame/gartok/prison_screen.py" type="text/plain"><tt>gartok.prison_screen</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#gartok">gartok</a>
+ &#8226;   <a href="#gartok.data">gartok.data</a>
+ &#8226;   <a href="#gartok.recruit">gartok.recruit</a>
+ &#8226;   <a href="#gartok.screen">gartok.screen</a>
+ &#8226;   <a href="#gartok.theme">gartok.theme</a>
+ &#8226;   <a href="#pygame">pygame</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#gartok.app">gartok.app</a>
+
+  </div>
+
+</div>
+
+<div class="node">
   <a name="gartok.progression"></a>
   <a target="code" href="///C:/dev/wargame/gartok/progression.py" type="text/plain"><tt>gartok.progression</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
@@ -6862,6 +6940,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#gartok">gartok</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.taverna_screen">gartok.taverna_screen</a>
 
   </div>
@@ -6926,6 +7005,8 @@ imports:
   <div class="import">
 imported by:
     <a href="#gartok.adelio_prompt_screen">gartok.adelio_prompt_screen</a>
+ &#8226;   <a href="#gartok.alert_screen">gartok.alert_screen</a>
+ &#8226;   <a href="#gartok.ambush_screen">gartok.ambush_screen</a>
  &#8226;   <a href="#gartok.bank_screen">gartok.bank_screen</a>
  &#8226;   <a href="#gartok.battle_screen">gartok.battle_screen</a>
  &#8226;   <a href="#gartok.char_editor_screen">gartok.char_editor_screen</a>
@@ -6947,6 +7028,7 @@ imported by:
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
  &#8226;   <a href="#gartok.menu_screen">gartok.menu_screen</a>
  &#8226;   <a href="#gartok.pause_screen">gartok.pause_screen</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.reward_screen">gartok.reward_screen</a>
  &#8226;   <a href="#gartok.squad_screen">gartok.squad_screen</a>
  &#8226;   <a href="#gartok.tanner_screen">gartok.tanner_screen</a>
@@ -6993,6 +7075,7 @@ imports:
 imported by:
     <a href="#gartok.group_screen">gartok.group_screen</a>
  &#8226;   <a href="#gartok.guild_screen">gartok.guild_screen</a>
+ &#8226;   <a href="#gartok.level_screen">gartok.level_screen</a>
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
  &#8226;   <a href="#gartok.reward_screen">gartok.reward_screen</a>
  &#8226;   <a href="#gartok.squad_screen">gartok.squad_screen</a>
@@ -7072,6 +7155,8 @@ imported by:
 imports:
     <a href="#gartok">gartok</a>
  &#8226;   <a href="#gartok.data">gartok.data</a>
+ &#8226;   <a href="#gartok.economy">gartok.economy</a>
+ &#8226;   <a href="#gartok.orders">gartok.orders</a>
  &#8226;   <a href="#gartok.recruit">gartok.recruit</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
  &#8226;   <a href="#gartok.theme">gartok.theme</a>
@@ -7101,7 +7186,10 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#gartok.adelio_prompt_screen">gartok.adelio_prompt_screen</a>
+    <a href="#gartok.actions">gartok.actions</a>
+ &#8226;   <a href="#gartok.adelio_prompt_screen">gartok.adelio_prompt_screen</a>
+ &#8226;   <a href="#gartok.alert_screen">gartok.alert_screen</a>
+ &#8226;   <a href="#gartok.ambush_screen">gartok.ambush_screen</a>
  &#8226;   <a href="#gartok.app">gartok.app</a>
  &#8226;   <a href="#gartok.bank_screen">gartok.bank_screen</a>
  &#8226;   <a href="#gartok.battle_screen">gartok.battle_screen</a>
@@ -7125,6 +7213,7 @@ imported by:
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
  &#8226;   <a href="#gartok.menu_screen">gartok.menu_screen</a>
  &#8226;   <a href="#gartok.pause_screen">gartok.pause_screen</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.reward_screen">gartok.reward_screen</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
  &#8226;   <a href="#gartok.sheet_panel">gartok.sheet_panel</a>
@@ -9074,6 +9163,8 @@ imports:
   <div class="import">
 imported by:
     <a href="#gartok.adelio_prompt_screen">gartok.adelio_prompt_screen</a>
+ &#8226;   <a href="#gartok.alert_screen">gartok.alert_screen</a>
+ &#8226;   <a href="#gartok.ambush_screen">gartok.ambush_screen</a>
  &#8226;   <a href="#gartok.app">gartok.app</a>
  &#8226;   <a href="#gartok.artwork">gartok.artwork</a>
  &#8226;   <a href="#gartok.bank_screen">gartok.bank_screen</a>
@@ -9100,6 +9191,7 @@ imported by:
  &#8226;   <a href="#gartok.market_screen">gartok.market_screen</a>
  &#8226;   <a href="#gartok.menu_screen">gartok.menu_screen</a>
  &#8226;   <a href="#gartok.pause_screen">gartok.pause_screen</a>
+ &#8226;   <a href="#gartok.prison_screen">gartok.prison_screen</a>
  &#8226;   <a href="#gartok.reward_screen">gartok.reward_screen</a>
  &#8226;   <a href="#gartok.screen">gartok.screen</a>
  &#8226;   <a href="#gartok.sheet_panel">gartok.sheet_panel</a>
