@@ -234,6 +234,11 @@ def test_every_screen_draws_native_at_any_window_size():
     scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
     scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
 
+    from gartok.alert_screen import AlertScreen
+    scenes.append(AlertScreen(F, scenes[2], "DEATH ALERT",
+                              ["Someone starved.", "The guild mourns."], noop, is_danger=True))
+    scenes.append(AlertScreen(F, scenes[2], "HUNGER ALERT", ["Rations ran out."], noop))
+
     from gartok.ledger_screen import LedgerScreen
     from gartok.trust_screen import TrustScreen
     scenes.append(TrustScreen(F, guild, guild.groups[0], noop))          # nothing accepted yet

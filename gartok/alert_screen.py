@@ -43,7 +43,7 @@ class AlertScreen(Screen):
         screen.blit(veil, (0, 0))
 
         # Measure content
-        title_surf = f.bold_lg.render(self.title, True, DANGER if self.is_danger else ACCENT)
+        title_surf = f.title.render(self.title, True, DANGER if self.is_danger else ACCENT)
         msg_surfs = [f.body.render(m, True, INK) for m in self.messages]
         
         box_w = max([title_surf.get_width()] + [s.get_width() for s in msg_surfs]) + SP3 * 2
@@ -75,8 +75,7 @@ class AlertScreen(Screen):
         bg = SURFACE_3 if hover else SURFACE_2
         pygame.draw.rect(screen, bg, btn_rect, border_radius=RADIUS)
         pygame.draw.rect(screen, LINE_SOFT, btn_rect, 1, border_radius=RADIUS)
-        text(screen, "OK", f.label, INK if hover else INK_DIM, btn_rect.center, align="center")
+        text(screen, "OK", f.label, INK if hover else INK_DIM, btn_rect.center, center=True)
         self.buttons.append(("ok", btn_rect))
 
-        if hover:
-            set_pointer()
+        set_pointer(hover)
