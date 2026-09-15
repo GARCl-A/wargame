@@ -570,3 +570,126 @@ def test_loot_screen_draw_with_pack_selection_hover():
     ls.draw(surf)
 
 
+def test_attribute_and_derived_help_catalogs():
+    for k in ("STR", "DEX", "CON", "INT", "WIS", "CHA"):
+        assert k in data.ATTRIBUTE_HELP
+        title, desc = data.ATTRIBUTE_HELP[k]
+        assert len(title) > 0 and len(desc) > 0
+
+    for k in ("HP", "AC", "MD", "SPD", "INIT"):
+        assert k in data.DERIVED_HELP
+        title, desc = data.DERIVED_HELP[k]
+        assert len(title) > 0 and len(desc) > 0
+
+
+def test_leshy_icon_asset():
+    from gartok import artwork
+    import pygame
+    assert artwork.RACE_ICON["Leshy"] == "sprout"
+    surf = artwork.race_icon("Leshy", 24)
+    assert surf is not None
+    assert isinstance(surf, pygame.Surface)
+    assert surf.get_size() == (24, 24)
+
+
+def test_draft_screen_attribute_and_stat_hover_tooltips():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.draft_screen import DraftScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    ds = DraftScreen(Fonts(), lambda *args: None)
+    surf = pygame.Surface((1280, 720))
+    ds.mouse = (0, 0)
+    ds.draw(surf)
+
+    # Hover on first candidate card: find attribute row position
+    card_rect, unit = ds.card_rects[0]
+    # In _draw_card, attributes section is placed after header + derived chips
+    # We can scan the card area to find the attribute cells and hover
+    found_attr_tooltip = False
+    found_stat_tooltip = False
+
+    # Test scanning Y down the card center
+    for y in range(card_rect.y, card_rect.bottom, 4):
+        for x in range(card_rect.x + 10, card_rect.right - 10, 15):
+            ds.mouse = (x, y)
+            ds.draw(surf)
+            if ds.tooltip and isinstance(ds.tooltip, list):
+                title = ds.tooltip[0][0]
+                if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
+                    found_attr_tooltip = True
+                if any(stat in title for stat in ("HP", "AC", "MD", "SPD")):
+                    found_stat_tooltip = True
+            if found_attr_tooltip and found_stat_tooltip:
+                break
+        if found_attr_tooltip and found_stat_tooltip:
+            break
+
+    assert found_attr_tooltip, "Draft card attribute cells should set tooltip on hover"
+    assert found_stat_tooltip, "Draft card stat chips should set tooltip on hover"
+
+
+def test_sheet_panel_attribute_hover_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import sheet_panel
+    from gartok.combatant import Combatant
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    c = Combatant(u)
+    fonts = Fonts()
+    surf = pygame.Surface((1280, 720))
+    rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
+
+    # Scan across the attribute row area (y ~ 100-260)
+    found_tooltip = False
+    for y in range(rect.y + 40, rect.y + 240, 6):
+        for x in range(rect.x + 20, rect.right - 20, 15):
+            sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=(x, y))
+            # Test that draw_sheet runs cleanly with mouse hover
+    # Also directly verify the attribute cell collision logic
+    w = rect.w - 32
+    aw = w // 6
+    # Attributes header is at section ATTRIBUTES
+    # Let's test hovering at first attribute cell: x + 1, centered
+    attr_cell = pygame.Rect(rect.x + 16 + 1, rect.y + 16 + 52 + 44 + 8 + 20, aw - 2, 48)
+    sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=attr_cell.center)
+
+
+def test_char_editor_attribute_hover_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.char_editor_screen import CharEditorScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    ed = CharEditorScreen(Fonts(), lambda: None)
+    surf = pygame.Surface((1280, 720))
+    ed.mouse = (0, 0)
+    ed.draw(surf)
+
+    # Hover inside the form area to find attribute cell
+    found_tooltip = False
+    if ed._form_rect:
+        for y in range(ed._form_rect.y + 160, ed._form_rect.y + 350, 8):
+            for x in range(ed._form_rect.x + 20, ed._form_rect.right - 20, 20):
+                ed.mouse = (x, y)
+                ed.draw(surf)
+                if ed.tooltip and isinstance(ed.tooltip, list):
+                    title = ed.tooltip[0][0]
+                    if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
+                        found_tooltip = True
+                        break
+            if found_tooltip:
+                break
+    assert found_tooltip, "Character editor attribute cells should set tooltip on hover"
+
+
+

@@ -23,7 +23,8 @@ from .theme import (ACCENT, ACCENT_INK, BANNER_COLORS, DANGER, DEMO_HL, INFO,
                     INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT, MARGIN, OK,
                     RADIUS, SP1, SP2, SP3, SP4, SURFACE_1, SURFACE_2,
                     SURFACE_3, TOKEN_INK, WARN,
-                    Stack, chip, ellipsize, panel, section, set_player_color, smooth_circle,
+                    Stack, chip, draw_tooltip, ellipsize, format_tooltip,
+                    panel, section, set_player_color, smooth_circle,
                     token_badge, text, tracked, wrap_lines)
 from .unit import Unit
 
@@ -184,6 +185,8 @@ class DraftScreen(Screen):
 
         if self.phase == "identity":
             self._draw_identity(screen)
+            if getattr(self, "tooltip", None):
+                self._draw_tooltip(screen)
             return
 
         round_no = len(self.picks) + 1
@@ -226,18 +229,7 @@ class DraftScreen(Screen):
             self._draw_tooltip(screen)
 
     def _draw_tooltip(self, screen):
-        f = self.fonts
-        lines = [(ln, f.body_sm, INK_DIM) for ln in wrap_lines([self.tooltip], f.body_sm, 240)]
-        tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
-        th = 2 * SP3 + len(lines) * 16
-        W, H = screen.get_size()
-        bx = min(self.mouse[0] + 16, W - tw - SP2)
-        by = min(self.mouse[1] + 16, H - th - SP2)
-        panel(screen, pygame.Rect(bx, by, tw, th), fill=SURFACE_2, border=LINE, width=1, radius=RADIUS)
-        yy = by + SP3
-        for s, fo, c in lines:
-            text(screen, s, fo, c, (bx + SP3, yy))
-            yy += 16
+        draw_tooltip(screen, self.fonts.body_sm, self.tooltip, self.mouse)
 
     # ------------------------------------------------------------------ #
     def _draw_identity(self, screen):
@@ -331,8 +323,18 @@ class DraftScreen(Screen):
             text(screen, ellipsize(unit.name, f.body_bd, 220), f.body_bd, ACCENT if sel else INK, (name_x, r.y + 10))
             text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}", f.body_sm, 240), f.body_sm, INK_DIM, (name_x + 230, r.y + 11))
             
-            stats = f"STR {unit.strength}   DEX {unit.dexterity}   CON {unit.constitution}   INT {unit.intelligence}   WIS {unit.wisdom}   CHA {unit.charisma}"
-            text(screen, stats, f.body_sm, INK_DIM, (name_x, r.y + 36))
+            attr_x = name_x
+            for k, name in (("STR", "strength"), ("DEX", "dexterity"),
+                            ("CON", "constitution"), ("INT", "intelligence"),
+                            ("WIS", "wisdom"), ("CHA", "charisma")):
+                txt = f"{k} {getattr(unit, name)}"
+                tw = f.body_sm.size(txt)[0]
+                ar = pygame.Rect(attr_x, r.y + 36, tw, 16)
+                text(screen, txt, f.body_sm, INK_DIM, (attr_x, r.y + 36))
+                if ar.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
+                    t, d = data.ATTRIBUTE_HELP[k]
+                    self.tooltip = format_tooltip(t, d, f)
+                attr_x += tw + 12
             
             self.leader_rects.append((r, unit))
         y += 3 * (slot_h + SP2) + SP4
@@ -414,8 +416,11 @@ class DraftScreen(Screen):
         for i, (k, v, ac) in enumerate((("HP", unit.hp_max, OK), ("AC", unit.ac, INFO),
                                         ("MD", unit.mental_defense, DEMO_HL),
                                         ("SPD", unit.speed, INFO))):
-            chip(screen, pygame.Rect(row.x + i * (cw + cg), row.y, cw, 46),
-                 k, v, f, accent=ac)
+            chip_r = pygame.Rect(row.x + i * (cw + cg), row.y, cw, 46)
+            chip(screen, chip_r, k, v, f, accent=ac)
+            if chip_r.collidepoint(mouse) and k in data.DERIVED_HELP:
+                t, d = data.DERIVED_HELP[k]
+                self.tooltip = format_tooltip(t, d, f)
         s.gap(SP3)
 
         # --- attributes (one compact row) --------------------- #
@@ -434,6 +439,9 @@ class DraftScreen(Screen):
             text(screen, f"{val}", f.num, INK, (acx, arow.y + 22), center=True)
             mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
             text(screen, f"{m:+}", f.body_sm, mc, (acx, arow.y + 38), center=True)
+            if cell.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
+                t, d = data.ATTRIBUTE_HELP[k]
+                self.tooltip = format_tooltip(t, d, f)
         s.gap(SP3)
 
         # --- weapon ------------------------------------------- #
@@ -508,8 +516,18 @@ class DraftScreen(Screen):
                 text(screen, u.name, f.body_bd, INK, (dot[0] + 20, r.y + SP2))
                 text(screen, f"{u.race['name']}  ·  {u.occupation['name']}",
                      f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 18))
-                text(screen, f"STR {u.strength}  DEX {u.dexterity}  CON {u.constitution}  INT {u.intelligence}  WIS {u.wisdom}  CHA {u.charisma}",
-                     f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 36))
+                attr_x = dot[0] + 20
+                for k, name in (("STR", "strength"), ("DEX", "dexterity"),
+                                ("CON", "constitution"), ("INT", "intelligence"),
+                                ("WIS", "wisdom"), ("CHA", "charisma")):
+                    txt = f"{k} {getattr(u, name)}"
+                    tw = f.body_sm.size(txt)[0]
+                    ar = pygame.Rect(attr_x, r.y + SP2 + 36, tw, 16)
+                    text(screen, txt, f.body_sm, INK_DIM, (attr_x, r.y + SP2 + 36))
+                    if ar.collidepoint(self.mouse) and k in data.ATTRIBUTE_HELP:
+                        t, d = data.ATTRIBUTE_HELP[k]
+                        self.tooltip = format_tooltip(t, d, f)
+                    attr_x += tw + 8
             else:
                 pygame.draw.rect(screen, LINE_SOFT, r, 1, border_radius=RADIUS)
                 text(screen, f"slot {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)

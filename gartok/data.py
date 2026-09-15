@@ -469,3 +469,58 @@ def roll_alignment():
         if r <= threshold:
             return name
     return None
+
+
+# --------------------------------------------------------------------------- #
+# Attribute & Stat Help                                                        #
+# --------------------------------------------------------------------------- #
+
+ATTRIBUTE_HELP = {
+    "STR": (
+        "STRENGTH (STR)",
+        "Melee attack & damage rolls, carry weight capacity, athletics (jump, swim, climb, and push DC)."
+    ),
+    "DEX": (
+        "DEXTERITY (DEX)",
+        "Armor Class (AC), ranged & finesse weapon attack rolls, lockpicking, and disarming traps."
+    ),
+    "CON": (
+        "CONSTITUTION (CON)",
+        "Max Hit Points (HP), natural healing during rest, breath underwater, and push resistance."
+    ),
+    "INT": (
+        "INTELLIGENCE (INT)",
+        "Research and crafting progress, spell/psionic attack rolls, and repairing broken automatons."
+    ),
+    "WIS": (
+        "WISDOM (WIS)",
+        "Mental Defense (MD vs Demoralize), combat initiative bonus, and First Aid stabilization."
+    ),
+    "CHA": (
+        "CHARISMA (CHA)",
+        "Demoralize attack rolls, tavern recruitment contests, squad leadership limit, and shop bargaining."
+    ),
+}
+
+DERIVED_HELP = {
+    "HP": (
+        "HIT POINTS (HP)",
+        "Current / maximum health. Dropping to 0 HP makes a unit dying."
+    ),
+    "AC": (
+        "ARMOR CLASS (AC)",
+        "Physical defense target. Attacks meeting or beating AC inflict damage."
+    ),
+    "MD": (
+        "MENTAL DEFENSE (MD)",
+        "Resistance against Demoralize and psychological effects (10 + WIS mod)."
+    ),
+    "SPD": (
+        "SPEED (SPD)",
+        "Movement allowance per turn in cells (1 cell = 1.5 meters)."
+    ),
+    "INIT": (
+        "INITIATIVE (INIT)",
+        "Bonus added to turn order roll at start of combat (based on WIS)."
+    ),
+}

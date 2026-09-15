@@ -13,7 +13,8 @@ from . import data
 from .combatant import Combatant
 from .theme import (ACCENT, DANGER, DEMO_HL, INFO, INK, INK_DIM, INK_FAINT,
                     OK, SP1, SP2, SP3, SURFACE_1, SURFACE_2, WARN,
-                    chip, panel, section, token_badge, text, wrap_lines, draw_tooltip)
+                    chip, draw_tooltip, format_tooltip, panel, section,
+                    token_badge, text, wrap_lines)
 
 PANEL_W, PANEL_H = 560, 604
 
@@ -132,6 +133,7 @@ def draw_sheet(screen, rect, u, f, mouse=None):
     x = rect.x + pad
     w = rect.w - 2 * pad
     y = rect.y + pad
+    tooltip = None
 
     # --- header ---------------------------------------------------------- #
     tok = (x + 14, y + 14)
@@ -160,7 +162,11 @@ def draw_sheet(screen, rect, u, f, mouse=None):
     cg = SP1
     cw = (w - (len(stats) - 1) * cg) // len(stats)
     for i, (k, v, ac) in enumerate(stats):
-        chip(screen, pygame.Rect(x + i * (cw + cg), y, cw, 44), k, v, f, accent=ac)
+        cr = pygame.Rect(x + i * (cw + cg), y, cw, 44)
+        chip(screen, cr, k, v, f, accent=ac)
+        if mouse and cr.collidepoint(mouse) and k in data.DERIVED_HELP:
+            t, d = data.DERIVED_HELP[k]
+            tooltip = format_tooltip(t, d, f)
     y += 44 + SP3
 
     # --- attributes ---------------------------------------------------- #
@@ -176,6 +182,9 @@ def draw_sheet(screen, rect, u, f, mouse=None):
         text(screen, f"{val}", f.num, INK, (acx, y + 20), center=True)
         mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
         text(screen, f"{m:+}", f.body_sm, mc, (acx, y + 38), center=True)
+        if mouse and cell.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
+            t, d = data.ATTRIBUTE_HELP[k]
+            tooltip = format_tooltip(t, d, f)
     y += 48 + SP1
     if u.hunger_level:
         cap = ", max HP 1" if u.hunger_level >= 2 else ""
@@ -257,7 +266,6 @@ def draw_sheet(screen, rect, u, f, mouse=None):
     
     text(screen, ", ".join(u.languages), f.body_sm, INK, (x, y))
     
-    tooltip = None
     if mouse and info_r.collidepoint(mouse):
         tooltip = "A shared language is required to Demoralize an enemy, and to Recruit new units."
 

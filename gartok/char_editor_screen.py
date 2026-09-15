@@ -23,8 +23,8 @@ from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4,
                     SP5, SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
-                    ellipsize, panel, section, set_pointer, text, token_badge,
-                    wrap_lines)
+                    draw_tooltip, ellipsize, format_tooltip, panel, section,
+                    set_pointer, text, token_badge, wrap_lines)
 from .unit import Unit
 
 _ATTR_ABBR = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
@@ -256,6 +256,7 @@ class CharEditorScreen(Screen):
         W, H = screen.get_size()
         screen.fill(SURFACE_0)
         self.hits = []
+        self.tooltip = None
         self._clip = None
         pad = MARGIN if W < 1500 else SP5
 
@@ -292,6 +293,9 @@ class CharEditorScreen(Screen):
 
         if self.picker is not None:
             self._draw_picker(screen)
+
+        if getattr(self, "tooltip", None):
+            draw_tooltip(screen, f.body_sm, self.tooltip, self.mouse)
 
         set_pointer(any(r.collidepoint(self.mouse) for r, _ in self.hits)
                     or bool(self.picker))
@@ -360,6 +364,10 @@ class CharEditorScreen(Screen):
                 text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM,
                      br.center, center=True)
                 self._hit(br, ("attr", name, sign))
+            if cell.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse):
+                if abbr in data.ATTRIBUTE_HELP:
+                    t, d = data.ATTRIBUTE_HELP[abbr]
+                    self.tooltip = format_tooltip(t, d, f)
         y += ch + SP2
 
         # --- progression -------------------------------------------- #

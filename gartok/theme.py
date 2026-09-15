@@ -251,12 +251,24 @@ def text(surf, s, font, color, pos, *, right=False, center=False, bottom=False):
     surf.blit(img, rect)
     return rect
 
+def format_tooltip(title, description, fonts, max_px=260):
+    """Formats a structured tooltip with an accent title and wrapped body lines."""
+    lines = [(title, fonts.label, ACCENT)]
+    for ln in wrap_lines([description], fonts.body_sm, max_px):
+        lines.append((ln, fonts.body_sm, INK_DIM))
+    return lines
+
+
 def draw_tooltip(screen, font, lines, mouse_pos):
     """Draws a tooltip near the mouse. `lines` is a list of (text, font, color) tuples, 
     or just a string (which gets wrapped to a single style)."""
+    if not lines:
+        return
     if isinstance(lines, str):
-        lines = [(ln, font, INK_DIM) for ln in wrap_lines([lines], font, 240)]
-    
+        lines = [(ln, font, INK_DIM) for ln in wrap_lines(lines.split("\n"), font, 260)]
+    if not lines:
+        return
+
     tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
     th = 2 * SP3 + len(lines) * 16
     W, H = screen.get_size()

@@ -44,7 +44,7 @@ RACE_ICON = {
     "Human":      "caesar",
     "Kenku":      "kenku-head",
     "Kobold":     "horned-reptile",
-    "Leshy":      "totem-head",
+    "Leshy":      "sprout",
     "Orc":        "orc-head",
     "Sprite":     "air-man",
     "Wolf":       "wolf-head",
