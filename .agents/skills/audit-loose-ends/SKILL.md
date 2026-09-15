@@ -8,6 +8,11 @@ description: >-
 
 This skill instructs the agent to perform a deep inspection of the codebase and project documentation to create an actionable plan for closing all loose ends before a playtest.
 
+See also: a broader, tool-agnostic "project x-ray" (architecture drift,
+roadmap vs. stated goal, ranked next actions) exists as a separate skill some
+sessions use — this one is narrower and playtest-focused, not a replacement
+for it.
+
 ## Objective
 
 - Identify the current state of the project and the best immediate next steps.

@@ -7,6 +7,11 @@ Run this before **every** `git commit` in this repo. Never commit without going
 through it, and never commit without the user's explicit approval that comes
 out the other end — no exceptions, no "this one's obviously fine."
 
+This file is the canonical pre-commit process for this repo, read by both
+Antigravity (native `.agents/` support) and Claude Code (its user-level
+`pre-commit` skill checks for this file and defers to it). Keep it up to date
+here first if the process changes.
+
 ## Steps
 
 1. **See the whole change.** `git status --short` (staged, unstaged, untracked
