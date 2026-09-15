@@ -705,6 +705,201 @@ def test_char_editor_attribute_hover_tooltip():
                 ed.draw(surf)
                 if ed.tooltip and isinstance(ed.tooltip, list):
                     title = ed.tooltip[0][0]
+def test_loot_screen_drop_pack_item_to_ground():
+    from gartok.loot_screen import LootScreen
+    from gartok.guild import Guild
+    import pygame
+    u = Unit("player")
+    u._base_inventory = ["Torch", "Dagger"]
+    g = Guild([u])
+    ls = LootScreen.__new__(LootScreen)
+    ls.guild = g
+    ls.survivors = [u]
+    ls.pool = ["Axe"]
+    ls.buttons = []
+    ls.pack_rows = [(pygame.Rect(0, 0, 100, 20), u, 0)]
+    ls.cards = [(pygame.Rect(100, 0, 100, 100), u)]
+    ls.rows = [(pygame.Rect(200, 0, 100, 20), 0)]
+    ls.pile_rect = pygame.Rect(300, 0, 100, 100)
+    ls.pack_sel = None
+    ls.sel = None
+    ls.notice = None
+
+    # 1. Click pack item to select it
+    ls._click((10, 10))
+    assert ls.pack_sel == (u, 0)
+
+    # 2. Click ground pile to drop it
+    ls._click((310, 10))
+    assert "Torch" in ls.pool
+    assert "Torch" not in u._base_inventory
+    assert ls.pack_sel is None
+
+
+def test_factions_get_unlocks():
+    from gartok import factions
+    bank_unlocks = factions.get_unlocks("bankers")
+    assert any(u.title == "City Property" and u.rep_required == 4 for u in bank_unlocks)
+
+    arena_unlocks = factions.get_unlocks("arena")
+    assert any("The Games" in u.title for u in arena_unlocks)
+
+
+def test_market_screen_draw_multiple_shoppers_hover():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.market_screen import MarketScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    mnode = next(n for n in world.NODES if n.kind == "market")
+    shoppers = [Unit("player"), Unit("player")]
+    ms = MarketScreen(Fonts(), None, shoppers, mnode, lambda: None)
+    surf = pygame.Surface((1200, 800))
+    ms.mouse = (surf.get_width() - 50, 80)
+    ms.draw(surf)
+    for label, rect in ms.buttons:
+        if label == "distribute":
+            ms.mouse = rect.center
+            ms.draw(surf)
+
+
+def test_loot_screen_draw_with_pack_selection_hover():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.loot_screen import LootScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    u = Unit("player")
+    u._base_inventory = ["Torch"]
+    g = Guild([u])
+    ls = LootScreen(Fonts(), g, [u], ["Axe"], lambda: None)
+    surf = pygame.Surface((1200, 800))
+    ls.mouse = (100, 100)
+    ls.draw(surf)
+    ls.pack_sel = (u, 0)
+    if ls.cards:
+        ls.mouse = ls.cards[0][0].center
+    ls.draw(surf)
+
+
+def test_attribute_and_derived_help_catalogs():
+    for k in ("STR", "DEX", "CON", "INT", "WIS", "CHA"):
+        assert k in data.ATTRIBUTE_HELP
+        title, desc = data.ATTRIBUTE_HELP[k]
+        assert len(title) > 0 and len(desc) > 0
+
+    for k in ("HP", "AC", "MD", "SPD", "INIT"):
+        assert k in data.DERIVED_HELP
+        title, desc = data.DERIVED_HELP[k]
+        assert len(title) > 0 and len(desc) > 0
+
+
+def test_leshy_icon_asset():
+    from gartok import artwork
+    import pygame
+    assert artwork.RACE_ICON["Leshy"] == "sprout"
+    surf = artwork.race_icon("Leshy", 24)
+    assert surf is not None
+    assert isinstance(surf, pygame.Surface)
+    assert surf.get_size() == (24, 24)
+
+
+def test_draft_screen_attribute_and_stat_hover_tooltips():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.draft_screen import DraftScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    ds = DraftScreen(Fonts(), lambda *args: None)
+    surf = pygame.Surface((1280, 720))
+    ds.mouse = (0, 0)
+    ds.draw(surf)
+
+    # Hover on first candidate card: find attribute row position
+    card_rect, unit = ds.card_rects[0]
+    # In _draw_card, attributes section is placed after header + derived chips
+    # We can scan the card area to find the attribute cells and hover
+    found_attr_tooltip = False
+    found_stat_tooltip = False
+
+    # Test scanning Y down the card center
+    for y in range(card_rect.y, card_rect.bottom, 4):
+        for x in range(card_rect.x + 10, card_rect.right - 10, 15):
+            ds.mouse = (x, y)
+            ds.draw(surf)
+            if ds.tooltip and isinstance(ds.tooltip, list):
+                title = ds.tooltip[0][0]
+                if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
+                    found_attr_tooltip = True
+                if any(stat in title for stat in ("HP", "AC", "MD", "SPD")):
+                    found_stat_tooltip = True
+            if found_attr_tooltip and found_stat_tooltip:
+                break
+        if found_attr_tooltip and found_stat_tooltip:
+            break
+
+    assert found_attr_tooltip, "Draft card attribute cells should set tooltip on hover"
+    assert found_stat_tooltip, "Draft card stat chips should set tooltip on hover"
+
+
+def test_sheet_panel_attribute_hover_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import sheet_panel
+    from gartok.combatant import Combatant
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    c = Combatant(u)
+    fonts = Fonts()
+    surf = pygame.Surface((1280, 720))
+    rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
+
+    # Scan across the attribute row area (y ~ 100-260)
+    found_tooltip = False
+    for y in range(rect.y + 40, rect.y + 240, 6):
+        for x in range(rect.x + 20, rect.right - 20, 15):
+            sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=(x, y))
+            # Test that draw_sheet runs cleanly with mouse hover
+    # Also directly verify the attribute cell collision logic
+    w = rect.w - 32
+    aw = w // 6
+    # Attributes header is at section ATTRIBUTES
+    # Let's test hovering at first attribute cell: x + 1, centered
+    attr_cell = pygame.Rect(rect.x + 16 + 1, rect.y + 16 + 52 + 44 + 8 + 20, aw - 2, 48)
+    sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=attr_cell.center)
+
+
+def test_char_editor_attribute_hover_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.char_editor_screen import CharEditorScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    ed = CharEditorScreen(Fonts(), lambda: None)
+    surf = pygame.Surface((1280, 720))
+    ed.mouse = (0, 0)
+    ed.draw(surf)
+
+    # Hover inside the form area to find attribute cell
+    found_tooltip = False
+    if ed._form_rect:
+        for y in range(ed._form_rect.y + 160, ed._form_rect.y + 350, 8):
+            for x in range(ed._form_rect.x + 20, ed._form_rect.right - 20, 20):
+                ed.mouse = (x, y)
+                ed.draw(surf)
+                if ed.tooltip and isinstance(ed.tooltip, list):
+                    title = ed.tooltip[0][0]
                     if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
                         found_tooltip = True
                         break
@@ -712,5 +907,45 @@ def test_char_editor_attribute_hover_tooltip():
                 break
     assert found_tooltip, "Character editor attribute cells should set tooltip on hover"
 
+def test_market_screen_item_hover_tooltip():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.market_screen import MarketScreen
+    from gartok.theme import Fonts
+    from gartok.guild import Guild
+    from gartok.world import NODES
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
 
+    shopper = Unit("player")
+    shopper.give_to_pack("Dagger")
+    guild = Guild([shopper])
+    node = next(n for n in NODES if n.kind == "market")
+    guild.market_stock = {"Dagger": 5, "Meat": 10}
+    
+    ms = MarketScreen(Fonts(), guild, [shopper], node, lambda: None)
+    surf = pygame.Surface((1280, 720))
+    ms.mouse = (0, 0)
+    ms.draw(surf)
 
+    found_stock_tooltip = False
+    for r, name in ms.stock_rows:
+        ms.mouse = r.center
+        ms.draw(surf)
+        if ms.tooltip and isinstance(ms.tooltip, list):
+            if ms.tooltip[0][0] == name:
+                found_stock_tooltip = True
+                break
+
+    found_pack_tooltip = False
+    for r, member, loc in ms.item_rows:
+        ms.mouse = r.center
+        ms.draw(surf)
+        if ms.tooltip and isinstance(ms.tooltip, list):
+            found_pack_tooltip = True
+            break
+            
+    assert found_stock_tooltip, "MarketScreen stock rows should set tooltip on hover"
+    assert found_pack_tooltip, "MarketScreen pack items should set tooltip on hover"

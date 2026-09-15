@@ -88,3 +88,32 @@ def test_pack_tactics_and_flank_do_not_stack():
         mods.append((2, "circumstance", "Flank"))
     total, _ = resolve_bonus(mods)
     assert total == 2 + max(0, a.mod_strength)        # +2 circ once, not +4
+
+# --------------------------------------------------------------------------- #
+# data.item_tooltip                                                            #
+# --------------------------------------------------------------------------- #
+
+def test_item_tooltip():
+    from gartok.data import item_tooltip
+    
+    # Weapon
+    title, desc = item_tooltip("Dagger")
+    assert title == "Dagger"
+    assert "Weapon: 1d4 damage" in desc
+    assert "Finesse" in desc
+    
+    # Armor
+    title, desc = item_tooltip("Leather Jerkin")
+    assert title == "Leather Jerkin"
+    assert "+1 Armor Class" in desc
+    
+    # Kit
+    title, desc = item_tooltip("First Aid Kit")
+    assert title == "First Aid Kit"
+    assert "Restores HP" in desc
+    
+    # Food
+    title, desc = item_tooltip("Meat")
+    assert title == "Meat"
+    assert "day's ration" in desc
+    assert "Spoils in 2 day(s)" in desc

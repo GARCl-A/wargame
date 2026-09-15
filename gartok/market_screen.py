@@ -376,6 +376,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
     def draw(self, screen):
         f = self.fonts
         screen.fill((18, 19, 24))
+        self.tooltip = None
         self.stock_rows = []
         self.qty_hits = []
         self.tab_hits = []
@@ -435,7 +436,12 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
             text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
 
+        if getattr(self, "tooltip", None):
+            from .theme import draw_tooltip
+            draw_tooltip(screen, f.body_sm, self.tooltip, self.mouse)
+
         self.draw_sheet_modal(screen, f)
+
 
     # ------------------------------------------------------------------ #
     def _draw_tabs(self, screen, rect):
@@ -503,9 +509,9 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             spec = "" if kit else self._stock_spec(name)
             name_w = 138 if kit else 148
             text(screen, ellipsize(name, f.body_sm, name_w), f.body_sm, ink,
-                 (r.x + SP2, r.y + 4 if spec else r.centery - 7))
+                 (r.x + SP2, r.y + 2 if spec else r.centery - 7))
             if spec:
-                text(screen, spec, f.mono_sm, faint, (r.x + SP2, r.y + 18))
+                text(screen, spec, f.mono_sm, faint, (r.x + SP2, r.y + 17))
             if kit:
                 self._draw_stepper(screen, ("stock", name), r)
                 tag = self._kit_tag(name)
@@ -529,6 +535,11 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                           (prect.x - SP2, r.centery - 5), right=True)
                 pygame.draw.line(screen, faint, (br.x - 1, br.centery),
                                  (br.right + 1, br.centery), 1)
+
+            if hov:
+                from .theme import format_tooltip
+                t, d = data.item_tooltip(name)
+                self.tooltip = format_tooltip(t, d, f)
 
             self.stock_rows.append((r, name))
             y += row_h + SP1
@@ -616,9 +627,9 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         tok = (rect.x + pad + 12, rect.y + pad + 12)
         token_badge(screen, tok, m, f)
         text(screen, ellipsize(m.name, f.card_name, badge.x - (tok[0] + 24) - SP1),
-             f.card_name, INK, (tok[0] + 24, rect.y + pad))
+             f.card_name, INK, (tok[0] + 24, rect.y + pad - 2))
         text(screen, f"{m.race['name']}  ·  {m.occupation['name']}", f.body_sm,
-             INK_DIM, (tok[0] + 24, rect.y + pad + 20))
+             INK_DIM, (tok[0] + 24, rect.y + pad + 18))
 
         y = rect.y + pad + 48
         over_norm = m.encumbered
@@ -713,6 +724,12 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                       (prect.x - SP2, r.y + 7), right=True)
             pygame.draw.line(screen, faint, (br.x - 1, br.centery),
                              (br.right + 1, br.centery), 1)
+
+        if hov:
+            from .theme import format_tooltip
+            t, d = data.item_tooltip(name)
+            self.tooltip = format_tooltip(t, d, f)
+
         self.item_rows.append((r, member, loc))
 
     def _distribute_load(self):

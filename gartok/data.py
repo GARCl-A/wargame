@@ -524,3 +524,46 @@ DERIVED_HELP = {
         "Bonus added to turn order roll at start of combat (based on WIS)."
     ),
 }
+
+def item_tooltip(name):
+    """Returns (title, description) for an item's tooltip."""
+    desc = []
+    
+    if name in WEAPONS:
+        wp = WEAPONS[name]
+        n, faces = wp["damage"]
+        hands = "Two-handed" if wp["hands"] >= 2 else "One-handed"
+        reach = f"{wp['range'] * 1.5:g}m range" if wp["range"] else "Melee"
+        desc.append(f"Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.")
+        if wp["finesse"]:
+            desc.append("Finesse: Uses Dexterity for attack rolls if it is higher than Strength.")
+        if wp["thrown"]:
+            desc.append(f"Thrown: Can be thrown up to {wp['thrown'] * 1.5:g}m.")
+    elif name in ARMOR:
+        ar = ARMOR[name]
+        desc.append(f"Armor: +{ar['ac']} Armor Class.")
+        if ar["max_dex"] is not None:
+            desc.append(f"Maximum Dexterity bonus to AC is capped at +{ar['max_dex']}.")
+        if ar["speed"]:
+            desc.append(f"Heavy: Reduces movement speed by {ar['speed']} cells.")
+    elif name in SHIELDS:
+        sh = SHIELDS[name]
+        desc.append(f"Shield: +{sh['ac']} Armor Class when equipped in the off-hand.")
+    elif name == FIRST_AID_ITEM:
+        desc.append(f"Restores HP or stabilizes a dying unit. Starts with {FIRST_AID_CHARGES} charges.")
+    elif name == AMMO_ITEM:
+        desc.append(f"Ammunition for ranged weapons. Holds {QUIVER_AMMO} arrows/bolts.")
+    elif name == TORCH_ITEM:
+        desc.append(f"Provides light in a {TORCH_RADIUS * 1.5:g}m radius. Can be dropped on the ground.")
+    elif name in LIGHT_SOURCES:
+        r = LIGHT_SOURCES[name]
+        desc.append(f"Provides light in a {r * 1.5:g}m radius when equipped in the off-hand.")
+    elif name in FOOD_ITEMS:
+        desc.append("A day's ration. Prevents starvation when resting.")
+        if name in FOOD_LIFESPAN:
+            desc.append(f"Spoils in {FOOD_LIFESPAN[name]} day(s).")
+    
+    wt = item_weight(name)
+    desc.append(f"Weight: {wt:g} kg.")
+    
+    return name, " ".join(desc)
