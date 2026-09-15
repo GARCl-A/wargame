@@ -186,7 +186,11 @@ class App:
         runs `justice.release_due`) until someone's sentence is up."""
         events = []
         while not self.guild.groups and self.guild.jailed:
-            events += self.guild.pass_time(24)
+            evs, cas = self.guild.pass_time(24)
+            events += evs
+            if cas:
+                # We could show an alert here or just discard for jailed members?
+                pass
         return events
 
     def _campaign_over(self):
@@ -236,6 +240,8 @@ class App:
         time this returns; anything else comes back as `self._pending` for
         `_after_activity`."""
         chase = dt is None
+        all_hungry = set()
+        all_casualties = []
         while True:
             busy_before = {g.gid for g in self.guild.groups if g.busy}
             result = campaign.advance(self.guild, dt=dt)
@@ -244,13 +250,51 @@ class App:
                 self._hunt = None
                 self._campaign_over()
                 return
+            all_hungry.update(result.hungry)
+            all_casualties.extend(result.casualties)
+            
             if not chase or result.pending:
                 break
             went_idle = any(g.gid in busy_before and not g.busy for g in self.guild.groups)
             if went_idle or not any(g.busy for g in self.guild.groups):
                 break
         self._pending = list(result.pending)
-        self._after_activity()
+        
+        nxt = self._after_activity
+        
+        if all_casualties:
+            def show_starvation_loot():
+                from . import loot
+                pool = []
+                for u in all_casualties:
+                    pool += loot._carried_by(u)
+                if pool and self.guild.roster:
+                    from .loot_screen import LootScreen
+                    self.scene = LootScreen(self.fonts, self.guild.roster, pool, on_done=self._after_activity)
+                else:
+                    self._after_activity()
+                    
+            def show_death_alert():
+                from .alert_screen import AlertScreen
+                msgs = [f"{u.name} starved to death." for u in all_casualties]
+                self.scene = AlertScreen(self.fonts, self.scene, "DEATH ALERT", msgs, on_done=show_starvation_loot, is_danger=True)
+            
+            nxt = show_death_alert
+            
+        alive_hungry = [u for u in all_hungry if u not in all_casualties and u in self.guild.roster]
+        if alive_hungry:
+            old_nxt = nxt
+            def show_hunger_alert():
+                from .alert_screen import AlertScreen
+                msgs = []
+                for u in alive_hungry:
+                    # MAX STARVATION IS 4 days.
+                    days_left = max(1, 4 - u.unfed_days)
+                    msgs.append(f"{u.name} will starve in {days_left} day{'s' if days_left != 1 else ''}.")
+                self.scene = AlertScreen(self.fonts, self.scene, "HUNGER ALERT", msgs, on_done=old_nxt, is_danger=True)
+            nxt = show_hunger_alert
+            
+        nxt()
 
     def _after_activity(self):
         """Continue draining the last tick's pending orders, or return to the
@@ -607,62 +651,70 @@ class App:
             # falls through to the normal loot/`_after_activity` handling below --
             # a claim fight is never a pause_order/hunt/arena bout
 
-        if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
-            self._pause_order = self._pause_group = None
-            if pause_order.kind == "guard":
-                self._map_notices += campaign.resolve_guard_fight_aftermath(
-                    self.guild, pause_group, pause_order, outcome)
-            elif pause_order.kind == "eviction":
-                self._map_notices += campaign.resolve_property_raid(
-                    self.guild, pause_group, pause_order, outcome)
-            elif pause_order.kind == "wilds_raid":
-                self._map_notices += campaign.resolve_wilds_raid(
-                    self.guild, pause_group, pause_order, outcome)
-            elif pause_order.kind == "wilds_seizure":
-                self._map_notices += campaign.resolve_wilds_seizure(
-                    self.guild, pause_group, pause_order, outcome)
-            elif pause_order.kind == "wilds_retake":
-                self._map_notices += campaign.resolve_wilds_claim_retake(
-                    self.guild, pause_group, pause_order, outcome)
-            else:
-                self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)
+        def do_next_step():
+            if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
+                self._pause_order = self._pause_group = None
+                if pause_order.kind == "guard":
+                    self._map_notices += campaign.resolve_guard_fight_aftermath(
+                        self.guild, pause_group, pause_order, outcome)
+                elif pause_order.kind == "eviction":
+                    self._map_notices += campaign.resolve_property_raid(
+                        self.guild, pause_group, pause_order, outcome)
+                elif pause_order.kind == "wilds_raid":
+                    self._map_notices += campaign.resolve_wilds_raid(
+                        self.guild, pause_group, pause_order, outcome)
+                elif pause_order.kind == "wilds_seizure":
+                    self._map_notices += campaign.resolve_wilds_seizure(
+                        self.guild, pause_group, pause_order, outcome)
+                elif pause_order.kind == "wilds_retake":
+                    self._map_notices += campaign.resolve_wilds_claim_retake(
+                        self.guild, pause_group, pause_order, outcome)
+                else:
+                    self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)
+                if outcome.loot_pool and outcome.survivors:
+                    self._save()
+                    self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                                            outcome.loot_pool, on_done=self._after_activity)
+                    return
+                self._after_activity()
+                return
+
+            if hunt_state is not None:            # an ambush during a hunt
+                hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
+                won = battle.winner == "player"
+                resume = won and hunt_state.party and hunt_state.hours_left > 0
+                nxt = self._resume_hunt if resume else self._finish_hunt
+                if outcome.loot_pool and outcome.survivors:
+                    self._save()
+                    self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                                            outcome.loot_pool, on_done=nxt)
+                    return
+                nxt()
+                return
+
+            if outcome.arena_reward is not None:  # arena bout won: hand out the purse
+                self._save()
+                self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
+                                          outcome.arena_reward, on_done=after_arena_reward,
+                                          deeds=outcome.deeds_earned, note=note)
+                return
+
+            if note:                             # lost defense / vacant title: no purse screen
+                self._map_notices.append(note)
+
             if outcome.loot_pool and outcome.survivors:
                 self._save()
                 self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
                                         outcome.loot_pool, on_done=self._after_activity)
                 return
             self._after_activity()
-            return
 
-        if hunt_state is not None:            # an ambush during a hunt
-            hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
-            won = battle.winner == "player"
-            resume = won and hunt_state.party and hunt_state.hours_left > 0
-            nxt = self._resume_hunt if resume else self._finish_hunt
-            if outcome.loot_pool and outcome.survivors:
-                self._save()
-                self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
-                                        outcome.loot_pool, on_done=nxt)
-                return
-            nxt()
-            return
-
-        if outcome.arena_reward is not None:  # arena bout won: hand out the purse
-            self._save()
-            self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
-                                      outcome.arena_reward, on_done=after_arena_reward,
-                                      deeds=outcome.deeds_earned, note=note)
-            return
-
-        if note:                             # lost defense / vacant title: no purse screen
-            self._map_notices.append(note)
-
-        if outcome.loot_pool and outcome.survivors:
-            self._save()
-            self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
-                                    outcome.loot_pool, on_done=self._after_activity)
-            return
-        self._after_activity()
+        if outcome.fallen:
+            from .alert_screen import AlertScreen
+            msgs = [f"{u.name} was killed in combat." for u in outcome.fallen]
+            self.scene = AlertScreen(self.fonts, self.scene, "DEATH ALERT", msgs, on_done=do_next_step, is_danger=True)
+        else:
+            do_next_step()
 
     def _prompt_recruit_adelio(self, survivors, node):
         from .adelio_prompt_screen import AdelioPromptScreen

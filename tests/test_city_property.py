@@ -17,6 +17,7 @@ from gartok.guild import Guild
 
 def _app(guild):
     app = App.__new__(App)
+    app.scene = None
     app.fonts = None
     app.guild = guild
     app._battle_squad = []

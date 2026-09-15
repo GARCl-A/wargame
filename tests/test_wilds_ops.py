@@ -17,6 +17,7 @@ NODE = world.WILDS_TERRITORY_NODE
 
 def _app(guild):
     app = App.__new__(App)
+    app.scene = None
     app.fonts = None
     app.guild = guild
     app._battle_squad = []
@@ -187,6 +188,8 @@ def test_app_runs_the_seizure_battle_end_to_end():
     app._battle_squad = [a, b]
     app._battle_node = world.node(NODE)
     app._battle_end(battle)
+    if getattr(app.scene, "title", None) == "DEATH ALERT":
+        app.scene.on_done()
 
     assert app._pause_order is None
     assert guild.wilds_claim_owner == "seized"

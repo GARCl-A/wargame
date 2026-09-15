@@ -18,6 +18,7 @@ from gartok.map_screen import MapScreen
 
 def _app(guild):
     app = App.__new__(App)
+    app.scene = None
     app.fonts = None
     app.guild = guild
     app._battle_squad = []
@@ -260,6 +261,8 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
     app_mod.MarketScreen = lambda *a, **k: (opened.append("market"), object())[1]
     try:
         app._advance()
+        while getattr(app.scene, "title", None) == "DEATH ALERT":
+            app.scene.on_done()
     finally:
         app_mod.MarketScreen = orig
     assert not guild.empty and doomed not in guild.roster    # partial wipe, not a full one

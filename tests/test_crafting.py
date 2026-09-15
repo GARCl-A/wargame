@@ -51,14 +51,14 @@ def test_crafting_shift_consumes_materials_and_progresses():
     u.recipes.append("Bear Trap")
     u._base_inventory.append("Iron Bar")
 
-    notices = guild.crafting_shift(u, "Bear Trap", hours=1)
+    notices, _ = guild.crafting_shift(u, "Bear Trap", hours=1)
     assert u.crafting_target == "Bear Trap"
     assert "Iron Bar" not in u._base_inventory
 
     saved = _unit_mod.roll
     _unit_mod.roll = lambda n, d: 9999
     try:
-        notices = guild.crafting_shift(u, "Bear Trap", hours=1)
+        notices, _ = guild.crafting_shift(u, "Bear Trap", hours=1)
         assert any("finished crafting" in n for n in notices)
         assert u.crafting_target is None
     finally:
@@ -71,6 +71,6 @@ def test_crafting_shift_missing_materials():
     guild = Guild(roster=[u], node="city")
     u.recipes.append("Bear Trap")
 
-    notices = guild.crafting_shift(u, "Bear Trap", hours=1)
+    notices, _ = guild.crafting_shift(u, "Bear Trap", hours=1)
     assert any("missing materials" in n for n in notices)
     assert u.crafting_target is None

@@ -85,14 +85,14 @@ class WildsClaimScreen(Screen):
             return
 
     def _scout(self):
-        events = self.guild.pass_time(economy.WILDS_CLAIM_SCOUT_HOURS)
+        events, cas = self.guild.pass_time(economy.WILDS_CLAIM_SCOUT_HOURS)
         self.guild.wilds_claim_scout()
         self.notice = "  ".join(["the land is scouted -- ready to clear."] + events)
 
     def _build_fences(self):
         if self.guild.wilds_claim_fence_lumber < economy.WILDS_CLAIM_FENCE_LUMBER:
             return
-        events = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS)
+        events, cas = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS)
         self.guild.wilds_claim_build_fences()
         self.notice = "  ".join(["the fences go up -- time to sweep the region."] + events)
 

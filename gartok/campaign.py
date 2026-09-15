@@ -193,6 +193,8 @@ class TickResult:
     events: list = field(default_factory=list)   # upkeep / travel / work notices, in order
     pending: list = field(default_factory=list)  # [(Group, Order)] interactive orders now due
     wiped: bool = False                          # the guild starved out entirely mid-tick
+    casualties: list = field(default_factory=list) # characters who died during upkeep
+    hungry: list = field(default_factory=list)     # characters who are starving
 
 
 def advance(guild, dt=None):
@@ -224,14 +226,17 @@ def advance(guild, dt=None):
     active = [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
     if not forced:
         if not active:
-            return TickResult()
+            return TickResult(hungry=[u for u in guild.roster if u.hunger_level > 0])
         dt = min(g.order.remaining for g in active)
 
-    events = guild.pass_time(dt)
+    events, casualties = guild.pass_time(dt)
     if forced:
         events += guild.eat_now_pass()
+    
+    hungry = [u for u in guild.roster if u.hunger_level > 0]
+    
     if guild.empty:
-        return TickResult(events=events, wiped=True)
+        return TickResult(events=events, wiped=True, casualties=casualties, hungry=hungry)
 
     pending = []
     for g in active:
@@ -276,7 +281,7 @@ def advance(guild, dt=None):
     claim_events, claim_pending = _wilds_claim_attack_check(guild)
     events += claim_events
     pending += claim_pending
-    return TickResult(events=events, pending=pending, wiped=guild.empty)
+    return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties, hungry=hungry)
 
 
 def _arrival_pause(guild, group, prev_node, resume_path):

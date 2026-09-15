@@ -335,6 +335,7 @@ def test_arena_node_swaps_the_champion_bout_for_the_games_after_dethroning():
     from gartok.app import App
 
     app = App.__new__(App)
+    app.scene = None
     app.fonts = None
     app.guild = Guild([Unit("player")], node="arena")
     app.guild.reputation = {"arena": 3}

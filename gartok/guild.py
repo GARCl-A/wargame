@@ -514,8 +514,11 @@ class Guild:
         start_day = self.clock.day
         self.clock.advance_hours(hours)
         events = []
+        all_casualties = []
         for _ in range(self.clock.day - start_day):
-            events += self._daily_upkeep()
+            e, c = self._daily_upkeep()
+            events += e
+            all_casualties += c
         
         # Passive healing: every 8h of continuous rest (not busy) heals the unit
         for g in self.groups:
@@ -542,7 +545,7 @@ class Guild:
                 for u in g.members:
                     u.consecutive_rest_hours = 0
 
-        return events
+        return events, all_casualties
 
     def _shared_larder(self, eater):
         """The packs `eater` may draw a ration from -- every group-mate
@@ -619,7 +622,7 @@ class Guild:
         events += self._city_property_upkeep()
         events += self._garrison_upkeep()
         events += self._wilds_claim_sustain_tick()
-        return events
+        return events, casualties
 
     def _charge_roster(self, amount):
         """Take `amount` copper off the whole roster as evenly as the coins
@@ -675,11 +678,11 @@ class Guild:
         then lets anyone still hungry eat from their pack right now. Returns the
         events to show. Eating is the only chore today; rest / gear repair hang
         off here later."""
-        events = self.pass_time(hours)
+        events, casualties = self.pass_time(hours)
         events += self.eat_now_pass()
         if not events:
             events.append("A quiet stop. No one needed to eat.")
-        return events
+        return events, casualties
 
     def work_speedup(self, crew):
         """The clock-time multiplier a work shift actually takes: 1.0 unless
@@ -706,9 +709,28 @@ class Guild:
         hours = int(hours)
         crew = [u for u in workers if u in self.roster]
         clock_hours = hours * self.work_speedup(crew)
-        events = self.pass_time(clock_hours)
+        events, casualties = self.pass_time(clock_hours)
         events += self._pay_shift(workers, hours, clock_hours)
-        return events
+        return events, casualties
+
+    def work_property(self, clock_hours, max_charges, work_minutes):
+        """Work a city property (forge / tanner / ledger) for `max_charges` or
+        until the clock jumps `clock_hours`, whichever hits first. Returns a
+        tuple (finished_charges: int, events, casualties). This deliberately
+        advances the campaign clock through `pass_time` (a long shift can cross
+        midnight and trigger the daily upkeep)."""
+        if max_charges <= 0:
+            return 0, [], []
+        shift_minutes = clock_hours * 60
+        charges = min(max_charges, shift_minutes // work_minutes)
+        events, casualties = self.pass_time(clock_hours)
+        return charges, events, casualties
+
+    def work_wilds_claim(self, clock_hours):
+        """Work on the Wilds claim for `clock_hours`. Advances the campaign clock
+        through `pass_time`. Returns `(events, casualties)`."""
+        events, casualties = self.pass_time(clock_hours)
+        return events, casualties
 
     def _pay_shift(self, workers, hours, clock_hours):
         """Pay + bank work-XP for a completed shift -- no clock advance, the
@@ -744,7 +766,7 @@ class Guild:
         if unit.crafting_target != recipe:
             recipe_data = data.CRAFTING_RECIPES.get(recipe)
             if not recipe_data:
-                return [f"Unknown recipe {recipe}."]
+                return [f"Unknown recipe {recipe}."], []
             
             # Verify materials
             inv = list(unit._base_inventory)
@@ -757,7 +779,7 @@ class Guild:
                     break
             
             if missing:
-                return [f"{unit.name} can't craft {recipe} -- missing materials."]
+                return [f"{unit.name} can't craft {recipe} -- missing materials."], []
                 
             # Consume materials
             for mat in recipe_data["materials"]:
@@ -767,7 +789,7 @@ class Guild:
             unit.crafting_progress = 0
 
         clock_hours = hours * self.work_speedup([unit])
-        events = self.pass_time(clock_hours)
+        events, casualties = self.pass_time(clock_hours)
         
         progress_total = 0
         done = False
@@ -783,7 +805,7 @@ class Guild:
         else:
             events.append(f"{unit.name} worked on {recipe} for {hours}h (+{progress_total} progress).")
             
-        return events
+        return events, casualties
 
     @property
     def gold(self):

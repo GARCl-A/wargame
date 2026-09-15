@@ -30,7 +30,7 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
     for u in (a, b):
         u._derive_combat()
     guild = Guild([a, b], clock=Clock(6 * 3600))      # 06:00 day 1
-    events = guild.work_shift([a, b], 16)
+    events, _ = guild.work_shift([a, b], 16)
     assert a.gold == 12 and b.gold == 12
     assert a.work_hours == 16 and b.work_hours == 16
     assert guild.clock.hour_of_day == 22 and guild.clock.day == 1

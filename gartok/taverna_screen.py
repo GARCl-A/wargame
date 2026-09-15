@@ -114,6 +114,7 @@ class TavernaScreen(Screen):
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
+            self.candidates.pop(self.sel)
             self.notice = f"{cand.name} signs with the guild (recruited by {member.name})."
         else:
             recruit.bar(self.guild, cand, member)

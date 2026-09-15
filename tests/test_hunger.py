@@ -186,7 +186,7 @@ def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
     u._base_inventory = ["Meat"]
     u._derive_combat()
     guild = Guild([u], clock=Clock(10 * 3600))        # 10:00 day 1
-    events = guild.do_maintenance()                   # 1 h stop, no day crossed
+    events, _ = guild.do_maintenance()                   # 1 h stop, no day crossed
     assert guild.clock.day == 1 and guild.clock.hour_of_day == 11
     assert u.unfed_days == 0 and u.rations == 0
     assert any("eat" in e for e in events)
