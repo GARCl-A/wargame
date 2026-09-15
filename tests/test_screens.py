@@ -282,6 +282,27 @@ def test_every_screen_draws_native_at_any_window_size():
             scene.draw(surf)
 
 
+def test_guild_screen_member_detail_renders():
+    """GuildScreen only draws the detail panel if a member is selected. This test
+    ensures _draw_detail runs without crashing."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    roster = [Unit("player")]
+    guild = Guild(roster)
+    scr = GuildScreen(Fonts(), guild, lambda *args: None, lambda: None)
+    scr.member = roster[0]
+    
+    surf = pygame.Surface((1280, 800))
+    scr.mouse = (0, 0)
+    scr.draw(surf)
+
+
 def test_squad_and_reward_screens_pop_the_sheet_modal():
     """The card's 'i' disc opens the sheet; the dismiss click is spent only on
     closing it, not on picking a fighter / paying the purse."""

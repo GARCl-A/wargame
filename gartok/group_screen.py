@@ -25,6 +25,7 @@ import pygame
 from . import chest, data, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
@@ -35,7 +36,7 @@ COL_MIN, COL_MAX = 288, 380              # loadout column width clamps
 MENU_HEAD = 22                           # send-to menu: header strip above the rows
 
 
-class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
+class GroupScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_back):
@@ -98,6 +99,13 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.menu:
             self._menu_click(event.pos)
             return
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            if self.close_sheet_on_click():
+                return
+            for rect, unit in getattr(self, "sheet_hits", []):
+                if rect.collidepoint(event.pos):
+                    self.open_sheet(unit)
+                    return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self._open_menu(event.pos)
             return
@@ -260,6 +268,7 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         self.sources = []
         self.tab_hits = []
         self.buttons = []
+        self.sheet_hits = []
         self._hot = False
         
         pad = MARGIN if W < 1500 else SP5
@@ -271,6 +280,12 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         text(screen, name, f.title, INK, (pad, pad - 2))
         nw = f.title.size(name)[0]
         
+        sub_text = f"  ·  {len(self.group.members)} / {self.group.capacity} members"
+        if self.group.overextension > 0:
+            sub_text += f" (OVEREXTENDED: -{self.group.overextension} Mental Defense)"
+        text(screen, sub_text, f.body_bd, DANGER if self.group.overextension > 0 else INK_DIM, (pad + nw + 40, pad + 4))
+        text(screen, "Manage group gear, loadout and quests", f.body_sm, INK_FAINT, (pad, pad + 26))
+
         r = pygame.Rect(pad + nw + SP2, pad + 10, 24, 24)
         hov = r.collidepoint(self.mouse)
         if hov:
@@ -285,7 +300,7 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             text(screen, self.name_buf + "·", f.title, INK, (pad + SP2, pad - 2))
         
         tx = pad
-        ty = pad + 40
+        ty = pad + 48
         for tab_id, label in (("gear", "GEAR"), ("quests", "QUESTS")):
             active = self.tab == tab_id
             tr = pygame.Rect(tx, ty, f.body.size(label)[0] + 2 * SP2, 22)
@@ -329,6 +344,7 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         text(screen, "DONE", f.title, INK, br.center, center=True)
         self.buttons.append(("done", br))
         
+        self.draw_sheet_modal(screen, f)
         set_pointer("hand" if self._hot else "arrow")
 
     def _draw_gear(self, screen, area):
@@ -420,8 +436,14 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         pygame.draw.line(screen, LINE_SOFT, (rect.x, head.bottom),
                          (rect.right - 1, head.bottom))
         token_badge(screen, (rect.x + pad + 13, rect.y + 20), unit, f, r=13)
+        
+        badge_r = self.sheet_badge(screen, (rect.right - pad, rect.y + 16), f)
+        self.sheet_hits.append((badge_r, unit))
+        if badge_r.collidepoint(mouse):
+            self._hot = True
+
         nx = rect.x + pad + 32
-        text(screen, ellipsize(unit.full_name, f.card_name, rect.right - nx - pad),
+        text(screen, ellipsize(unit.full_name, f.card_name, badge_r.x - nx - pad),
              f.card_name, INK, (nx, rect.y + 6))
         
         info = f"{unit.race['name']}  ·  {unit.occupation['name']}"
@@ -429,7 +451,7 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             info += f"  ·  {len(unit.recipes)} recipes"
             
         text(screen, ellipsize(info,
-                               f.body_sm, rect.right - nx - pad),
+                               f.body_sm, badge_r.x - nx - pad),
              f.body_sm, INK_FAINT, (nx, rect.y + 27))
 
         y = head.bottom + SP3

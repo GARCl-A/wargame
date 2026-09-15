@@ -37,7 +37,7 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
                     TOKEN_INK, WARN,
                     ellipsize, kg, panel, section, set_pointer, token_badge,
-                    text, tracked, draw_tooltip)
+                    text, tracked, draw_tooltip, wrap_lines, format_tooltip)
 
 
 TABS = (("members", "MEMBERS"), ("reputations", "REPUTATIONS"))
@@ -108,6 +108,8 @@ class GuildScreen(SheetModalMixin, Screen):
                         group = self.guild.group_of(self.member)
                         if group and len(group.members) > 1:
                             group.distribute_load()
+                    elif key == "sheet" and self.member is not None:
+                        self.open_sheet(self.member)
                     elif key == "back":
                         self.on_back()
                     return
@@ -146,12 +148,13 @@ class GuildScreen(SheetModalMixin, Screen):
         if art is not None:
             screen.blit(art, art.get_rect(center=banner))
         text(screen, self.guild.name or "The Guild", f.title, INK, (pad + 34, pad - 2))
+        text(screen, "Manage your roster and character progression", f.body_sm, INK_FAINT, (pad + 34, pad + 26))
         sub, col = (f"{self.battles_won} wins  ·  {len(self.roster)} members", INK_DIM)
-        text(screen, ellipsize(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 30))
+        text(screen, ellipsize(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 44))
 
         self._draw_tabs(screen, W, pad)
 
-        top = pad + 62
+        top = pad + 76
         bottom = H - 64
         if self.tab == "reputations":
             self._draw_reputacoes(screen, W, top, pad)
@@ -361,12 +364,19 @@ class GuildScreen(SheetModalMixin, Screen):
             self._pill(screen, sf, "SHARING FOOD" if unit.share_food else "RATIONS PRIVATE",
                        dot=unit.share_food)
             self.buttons.append(("share_food", sf))
+            a += 26
 
         # --- left column: leadership (Group.leader / Guild.leader) - #
         group = self.guild.group_of(unit)
         is_group_leader = self._is_group_leader(unit)
         is_guild_leader = unit is self.guild.leader
-        a += 26
+        
+        a += 12
+        from .group import BASE_CAPACITY
+        cap = BASE_CAPACITY + unit.mod_charisma + (unit.racial_level // 2)
+        text(screen, f"leads up to {cap} members", f.mono_sm, INK_DIM, (x, a))
+        a += 18
+        
         gl = pygame.Rect(x, a, 168, 22)
         self._pill(screen, gl, "GROUP LEADER" if is_group_leader else "MAKE GROUP LEADER",
                    accent=is_group_leader)
@@ -382,6 +392,49 @@ class GuildScreen(SheetModalMixin, Screen):
         self._pill(screen, gl2, label, accent=is_guild_leader)
         if not is_guild_leader and free_swap:
             self.buttons.append(("guild_leader", gl2))
+
+        # --- right column: attributes & attacks -------------------- #
+        cy = top
+        cy = section(screen, "ATTRIBUTES", bx, cy, bw, f)
+        aw = min(bw // 6, 80)
+        for i, (k, name) in enumerate([("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"), ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma")]):
+            val = getattr(unit, name)
+            m = getattr(unit, f"mod_{name}")
+            acx = bx + i * aw + aw // 2
+            cell = pygame.Rect(bx + i * aw + 1, cy, aw - 2, 48)
+            pygame.draw.rect(screen, SURFACE_1, cell, border_radius=4)
+            text(screen, k, f.label, INK_FAINT, (acx, cy + 5), center=True)
+            text(screen, f"{val}", f.num, INK, (acx, cy + 20), center=True)
+            mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
+            text(screen, f"{m:+}", f.body_sm, mc, (acx, cy + 38), center=True)
+            if self.mouse and cell.collidepoint(self.mouse) and k in data.ATTRIBUTE_HELP:
+                t, d = data.ATTRIBUTE_HELP[k]
+                self.tooltip = format_tooltip(t, d, f)
+        cy += 48 + SP4
+        
+        from .sheet_panel import _weapon_lines, _to_hit
+        from .combatant import Combatant
+        c = Combatant(unit)
+        cy = section(screen, "ATTACK WITH THE WEAPON IN HAND", bx, cy, bw, f)
+        wname, dmg, reach = _weapon_lines(c)
+        bab, src = _to_hit(c)
+        text(screen, wname, f.body_bd, INK, (bx, cy))
+        cy += 17
+        text(screen, f"to hit:  d20 {bab:+} ({src})   ·   crit 20, fumble 1", f.mono_sm, INK_DIM, (bx, cy))
+        cy += 15
+        text(screen, f"damage:  {dmg}   ·   {reach}", f.mono_sm, INK_DIM, (bx, cy))
+        cy += 15 + SP4
+
+        cy = section(screen, "LANGUAGES", bx, cy, bw, f)
+        text(screen, ", ".join(unit.languages), f.body_sm, INK, (bx, cy))
+        cy += 24 + SP4
+        
+        cy = section(screen, "RACIAL ABILITY", bx, cy, bw, f)
+        text(screen, unit.ability.name, f.body_bd, INFO, (bx, cy))
+        cy += 17
+        for ln in wrap_lines([unit.ability.effect], f.body_sm, bw):
+            text(screen, ln, f.body_sm, INK_DIM, (bx, cy))
+            cy += 15
 
     def _item_tag(self, item):
         if item == data.AMMO_ITEM:

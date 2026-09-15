@@ -191,6 +191,12 @@ def draw_sheet(screen, rect, u, f, mouse=None):
         text(screen, f"hunger ({u.hunger_label}): {u.hunger_attribute_penalty} to every "
              f"attribute{cap}", f.body_sm, DANGER, (x, y))
         y += 14
+        
+    from .group import BASE_CAPACITY
+    cap = BASE_CAPACITY + u.mod_charisma + (u.racial_level // 2)
+    text(screen, f"leadership: can lead up to {cap} group members (3 + CHA + level/2)", f.body_sm, INFO, (x, y))
+    y += 14
+    
     y += SP2
 
     # --- weapon: to-hit + damage ------------------------------------- #

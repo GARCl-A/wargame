@@ -85,9 +85,10 @@ class Group:
     def capacity(self):
         """Members this group's leader can hold as one coalition before
         cohesion starts to suffer -- `BASE_CAPACITY` + the leader's Charisma
-        modifier. Retune `BASE_CAPACITY` freely, like `progression`'s
-        thresholds."""
-        return BASE_CAPACITY + (self.leader.mod_charisma if self.leader else 0)
+        modifier + half their racial level."""
+        if not self.leader:
+            return BASE_CAPACITY
+        return BASE_CAPACITY + self.leader.mod_charisma + (self.leader.racial_level // 2)
 
     @property
     def overextension(self):

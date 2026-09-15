@@ -285,10 +285,10 @@ class LevelScreen(Screen):
 
         lines = ([(t.name, f.body_bd, INK)]
                  + [(ln, f.body_sm, INK_DIM)
-                    for ln in wrap_lines([t.effect], f.body_sm, 240)]
+                    for ln in wrap_lines(t.effect.split("\n"), f.body_sm, 240)]
                  + [(status, f.label, scol)])
         tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
-        th = 2 * SP3 + len(lines) * 16
+        th = 2 * SP3 + sum(fo.get_height() + 2 for _, fo, _ in lines)
         W, H = screen.get_size()
         bx = min(self.mouse[0] + 16, W - tw - SP2)
         by = min(self.mouse[1] + 16, H - th - SP2)
@@ -297,7 +297,7 @@ class LevelScreen(Screen):
         yy = by + SP3
         for s, fo, c in lines:
             text(screen, s, fo, c, (bx + SP3, yy))
-            yy += 16
+            yy += fo.get_height() + 2
 
     def _draw_footer(self, screen, W, H, pad):
         f = self.fonts

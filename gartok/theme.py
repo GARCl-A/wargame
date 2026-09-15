@@ -270,7 +270,7 @@ def draw_tooltip(screen, font, lines, mouse_pos):
         return
 
     tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
-    th = 2 * SP3 + len(lines) * 16
+    th = 2 * SP3 + sum(fo.get_height() + 2 for _, fo, _ in lines)
     W, H = screen.get_size()
     bx = min(mouse_pos[0] + 16, W - tw - SP2)
     by = min(mouse_pos[1] + 16, H - th - SP2)
@@ -278,7 +278,7 @@ def draw_tooltip(screen, font, lines, mouse_pos):
     yy = by + SP3
     for s, fo, c in lines:
         text(screen, s, fo, c, (bx + SP3, yy))
-        yy += 16
+        yy += fo.get_height() + 2
 
 
 def tracked(surf, s, font, color, pos, spacing=1):
