@@ -107,14 +107,30 @@ World systems, outside combat:
   up to death.
 - **Progression**: no classes — each XP track (combat, work) has its own level
   and its own talent tree (`progression.py`, `talents.py`, `level_screen.py`).
+- **Magic**: a first foothold, not a full system yet — three spells gated by a
+  racial magic source, cast in battle (`actions.CastSpellAction`, `ai.py`),
+  learned by studying at the taverna over several in-game days (`magic.py`).
 - **Economy**: copper on the character (no treasury); a market with haggling by
   language + Charisma + alignment; the arena's staked non-lethal bouts; field
-  loot; the lumber yard's day-labour wage.
-- **Recruitment**: a tavern pool refreshed weekly; a Charisma-vs-Charisma pitch,
-  no money; each member can only sponsor so many people (Charisma-gated), the
+  loot; the lumber yard's day-labour wage; the Forge turns learned recipes and
+  materials into gear and battlefield traps (`crafting_screen.py`).
+- **Recruitment**: a tavern pool refreshed weekly (no money, a Charisma-vs-
+  Charisma pitch) or the prison's bail-and-pitch alternative (pay first, then
+  pitch); each member can only sponsor so many people (Charisma-gated), the
   guild leader's own level adding a strong bonus on top (`recruit.py`).
 - **Factions & reputation**: one-shot deeds earn per-faction standing
-  (`factions.py`); the arena's champion title lives in `arena.py`.
+  (`factions.py`); the arena's champion title lives in `arena.py`. Paid,
+  deadlined **missions** from a named giver (the Tanner, the Bankers) are a
+  separate, failable track alongside the silent deeds (`missions.py`).
+- **Base-building**: two paths to guild property, both playable start to
+  finish — a taxed house bought from the Bankers in the City, or a Wilds
+  claim fenced and garrisoned by hand through a scout/clear/fence/sweep/
+  sustain campaign, contestable by raids and seizure once established
+  (`city_property_screen.py`, `wilds_claim_screen.py`).
+- **Crime & justice**: a personal rap sheet that can get a character caught by
+  the City guard at a jurisdiction node — accept prison time, fight the
+  patrol, or flee; the Old Road carries its own ambush risk regardless of
+  crime (`justice.py`).
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,
   `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
   map editor sets the grid size and paints walls / pits / water / torches / zones.
@@ -156,6 +172,9 @@ gartok/
   loot.py           gathers the field loot after a lethal win
   progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
   talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
+  magic.py          spell registry (level, sources) + study-difficulty math -- casting
+                    lives in actions.py's CastSpellAction, learned via the taverna's
+                    "study" garrison job (guild.py), AI use in ai.py
 
   # world + campaign
   world.py          the map graph: nodes, edges (hours), route (Dijkstra), Bout (arena offers)
@@ -164,11 +183,17 @@ gartok/
   group.py          Group = a physical subset of the guild: its own node + squad + order
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
+  missions.py       paid, deadlined jobs from a named giver (the Tanner, the Bankers'
+                    trust chest) -- distinct from a Deed: has a reward and can fail
   arena.py          the Champion of the Pit title: dethrone, defend, the 15/7-day cycle
   campaign.py       folds a battle result back into the guild (permadeath, loot, deeds);
                     also the tick engine (`advance`) that plays orders out
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
-  recruit.py        the recruitment contest + the weekly tavern pool
+  constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
+  chest.py          a generic locked pack item (d20+DEX vs DC), opened via gear_screen
+  justice.py        crime per character, City jurisdiction, the guard's catch/patrol/prison
+  recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
+                    bail-and-pitch alternative
   hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
   npc_lib.py        the NPC library (git-tracked npcs/*.json, outside the saves)
@@ -181,9 +206,12 @@ gartok/
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
-  menu_screen.py / draft_screen.py / map_screen.py / guild_screen.py / gear_screen.py
-  squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
-  market_screen.py / taverna_screen.py / hunt_screen.py / level_screen.py
+  menu_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
+  gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
+  market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
+  bank_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
+  city_property_screen.py / wilds_claim_screen.py / justice_screen.py / interactions_screen.py
+  alert_screen.py / ambush_screen.py / adelio_prompt_screen.py
   pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
 
   # shared presentation

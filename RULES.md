@@ -193,8 +193,11 @@ game:
 - **Progression**: what Level / XP mean; characters start at Level 0 / XP 1000.
   → rebuilt from scratch (Progression section below).
 - **Skills / attribute checks**: presumably `d20 + mod` vs a difficulty.
-- **Magic**: no caster class appears; "Primal Blood", "Holy Symbol" and "Scroll"
-  hint that magic exists, but there is no system.
+- **Magic**: no caster class appears in the generator; "Primal Blood", "Holy
+  Symbol" and "Scroll" hinted it existed. A first system now does (see
+  "Magic" below) — three spells, a racial-talent path to a magic source, and
+  a slow study-at-the-tavern path to learn more. Still early: only three
+  spells exist.
 - **Weapons and equipment**: damage, weight, price are set; **armor and shields
   are not** — the wargame designed a five-tier armor table 🟡.
 - **The effect of the racial abilities** (§7).
@@ -251,6 +254,50 @@ CON mod` (min 1), added to max HP. The rolls are saved (`_level_hp_rolls`) —
 reloading does not re-roll. The scale is set to match the old `⌊(combat + work) /
 2⌋`, but it now moves with *any* track and can be pinned directly in the
 character creator. `mean_level` survives only as the encounter-difficulty scalar.
+
+---
+
+## Magic 🟡
+
+State on `unit.py` (`magic_source`, `spells_known`, `study_target`,
+`study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
+sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
+for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
+`conditions.py`. A first foothold, not a full system — three spells today.
+
+- **Sources.** `magic_source` (`nature` / `blood` / `faith`) gates which
+  spells a character can ever learn. It comes from a race (Gnome starts
+  `nature`, Kobold starts `blood`) or a racial talent (the Kenku's "Faith
+  Initiate", the Sprite's "Nature Initiate").
+- **Casting** costs 1 action point and only shows up once the spell's id is
+  in `spells_known`:
+  - **Magic Missile** (level 0) — ranged (6 cells), `d20 + INT` vs AC, `1d4`
+    damage on a hit; a natural 20 crits (rolls the die twice), a natural 1
+    fumbles with no effect.
+  - **Sleep** (level 1) — ranged (6 cells), `d20 + INT` vs the target's
+    Mental Defense; a hit applies `Sleeping` (`−2 status` to AC). A race with
+    the **Sleep Immunity** ability (the Elf) is never affected.
+  - **Light Globe** / **Floating Disk** (level 0) — drop a ground object at a
+    cell in range (6 cells): a light source, or a rideable/carryable disk.
+  - **Share Magic** — a Sprite Nature Initiate's own action: spends a point
+    to teach a random ally one of its known spells for the rest of the
+    battle.
+- **Learning a spell** happens outside combat, at the Tavern
+  (`taverna_screen.py`'s "rent a quiet room" button issues an
+  `orders.garrison("study")` order — the same engine the garrison jobs use,
+  see Property below). Each day the order holds, a member with a
+  `study_target` set and the matching `Scroll of <Spell>` in their pack pays
+  `economy.TAVERN_STUDY_COST_PER_DAY` (15 copper) and rolls `1d20 + INT mod`
+  toward `magic.points_to_learn(spell)` — `(15 + level) × (level + 1) × 7`
+  points, so a level-0 spell needs 105 (roughly a week of daily rolls) and
+  Sleep (level 1) needs 224. No gold, no scroll, or no `magic_source` yet all
+  mean no progress that day (the room is still paid for if the gold is
+  there). Hitting the threshold banks the spell and clears the study slot.
+- **Setting a study target**: right-click a `Scroll of <Spell>` on the Gear
+  screen for a "study" row on the send-to menu (the same idiom the locked
+  chest uses for "open") — offered once the character has a `magic_source`
+  and doesn't already know the spell, and toggles off the same way. The
+  sandbox character editor has the identical control for authored NPCs.
 
 ---
 
@@ -770,6 +817,28 @@ copper instead of walking into the wilds and dying.
 - A character **incapacitated by hunger can work** (it is not combat) — that is
   exactly who needs it most.
 
+### The Forge: crafting 🟡
+
+`crafting_screen.py`, at the City (`Node.forge = True`). A member needs a
+learned recipe (`Unit.recipes`) before they can start; the recipe's materials
+are consumed the moment `crafting_target` is set, not on completion — an
+abandoned craft doesn't get them back.
+
+- **Progress** rolls `1d20 + INT mod` per hour worked (`Unit.progress_crafting`,
+  driven by `Guild.crafting_shift`) toward the recipe's point target; hitting
+  it drops the finished item into the pack and clears the target.
+- **Recipes** are granted the same way a magic source is (see Magic above) —
+  a racial talent (the Dwarf's "Dwarf Crafting" hands over the Dwarf
+  Axe/Shield/Armor recipes outright) — with no other way to learn one yet.
+- **Traps** (Bear Trap, Alarm Trap) are crafted items, but they are placed
+  through a real battlefield mechanic, not just carried: at the start of a
+  battle a carrier is queued (`Battle.trap_setup_queue`/`awaiting_trap`) to
+  click a tile and plant it (`GroundObject.trap`, consuming the item), the
+  same click-to-place idiom the CTF flag uses. Once down, an enemy who walks
+  or is pushed onto it triggers it (`Battle.trigger_trap`) — a Bear Trap
+  damages and stops the mover, an Alarm Trap only stops it — and the trap is
+  removed from the board.
+
 ### The Wilds: hunting 🟡
 
 The `wilds` node (`kind = "wilds"`). Its first activity is **Hunt**: `hunt.py` +
@@ -803,6 +872,32 @@ Neutral**).
   reselling.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
+
+### Recruitment 🟡
+
+Rule in `recruit.py`; there is no taverna hall or vault — the guild *is* its
+roster. Whether a stranger signs on is a Charisma contest (`recruit.convince`,
+`d20 + Charisma` each side, a tie favours the stranger) between the pitching
+member and the candidate, docked for **no shared language** (no pitch at all),
+**alignment distance** (`−1` per step, 0–4), and **guild size** (`−1` per
+member past `FREE_SLOTS = 2`). A failed pitch bars that recruiter from that
+same candidate until the pool turns over (`taverna_blocked`); another member
+can still try.
+
+- **Capacity.** Each member can personally sponsor `BASE_RECRUIT_CAPACITY`
+  (1) + their own Charisma modifier recruits (`recruit.capacity`); the guild
+  leader adds their own racial level on top — the mechanical reason the title
+  is worth keeping past the draft (see Leadership above). This is what caps
+  the roster: every new member needs a living sponsor with room left.
+- **The Tavern** (`taverna_screen.py`): a free pool of `TAVERNA_SIZE` (3)
+  strangers, re-rolled every `REFRESH_DAYS` (7) days (`recruit.refresh_pool`).
+  No money changes hands.
+- **The Prison** (`prison_screen.py`, at the City's `prison` node): a second,
+  separate weekly pool (`recruit.refresh_prison_pool`) of minor criminals.
+  Unlike the Tavern, you must pay `recruit.bail_cost` — `(sum of the six
+  attributes × (racial level + 1)) + 20` copper — before you can even pitch;
+  the payment adds a **+2** bonus to the Charisma contest (their gratitude).
+  Lose the pitch and the bail is gone too — they walk free with your money.
 
 ### Reputation and factions 🟡
 
@@ -869,27 +964,105 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
 - Lending against the future (and collecting on it) is the Bankers' other trade,
   not yet built.
 
+### Missions 🟡
+
+Registry `gartok/missions.py` (`MissionTemplate` + `Mission`), distinct from a
+`factions.Deed`: a mission has a named giver, a concrete goal item/quantity, a
+copper reward, and a real deadline (`deadline_day`) — it can fail. Only one
+instance of a given template can be active guild-wide at a time
+(`missions.offers_at`); an overdue one expires automatically via
+`Guild._daily_upkeep` (`missions.expire_overdue`).
+
+- **Scoped to the accepting Unit, not the Group that signed it** — a group is
+  reshuffled by splits/merges constantly, so `progress`/`turn_in` always
+  resolve the signer's *current* group (`guild.group_of`) and count that
+  whole group's packs, the same trick the shared food larder uses.
+- **The Tanner** (`tanner_screen.py`, at the City): wants 15× `1sqm Hide`,
+  pays 200 copper, 5 days. Hides only drop from Wilds beasts, not from hours
+  hunted; a finite market stock (`economy.STOCK`, `Guild.market_stock`) keeps
+  the hide from just being bought instead of hunted.
+- **The Bankers' trust mission** (`trust_screen.py` at the City,
+  `ledger_screen.py` at Ledger Hold): hands the signer a sealed chest
+  (`data.MISSION_CHEST_ITEM`) instead of asking for a gathered item; the
+  "goal" is a letter of receipt, traded for the chest at Ledger Hold and
+  carried back. Opening the sealed chest early — mistaking it for an
+  ordinary locked one, see Crime below — fails the mission and marks the
+  opener a criminal instead of paying out.
+
 ### Property and holdings 🟡
 
-Two distinct paths exist for guild land ownership:
-- **City Property:** Bought from the Bankers in Ankareth. A house with shared storage
-  and rest facilities, subject to recurring municipal taxes. Defaulting on taxes leads
-  to repossession or illegal squatting, risking guard raids.
-- **The Wilds Claim:** A sovereign territorial outpost established outside municipal
-  reach (`wilds_territory` node). The guild progresses through stages: scouting the land,
-  fencing the perimeter, and clearing wild predators. Once claimed, it supports garrison
-  jobs (e.g. lumber harvesting) and must be defended against roaming beast raids and
-  seizures.
+Two mutually-affordable-but-not-mutually-exclusive paths to guild land, both
+shipped start to finish (buy/claim, use, lose, recover):
+
+- **City Property** (`city_property_screen.py`). Bought from the Bankers at
+  the City once `guild.reputation["bankers"] ≥ economy.CITY_PROPERTY_REP_GATE`
+  (4) — the Bankers' trust mission (see Missions) is the gate's real
+  prerequisite. `economy.CITY_PROPERTY_PRICE` = **1000 copper**, one-time,
+  for `economy.CITY_PROPERTY_CAPACITY` (**20 kg**) of shared storage, plus a
+  recurring tax (`economy.CITY_PROPERTY_TAX` = **40 copper** every
+  `CITY_PROPERTY_TAX_PERIOD_DAYS` = **7** days, charged automatically by
+  `Guild._city_property_upkeep`). `CITY_PROPERTY_MISSED_PAYMENTS_LIMIT` (3)
+  unpaid cycles force a choice (`RepossessionScreen`): **return** the
+  property (and owe the Bankers a debt that blocks their other services until
+  paid, escalating to the guard after `CITY_PROPERTY_DEBT_GRACE_DAYS` = 14
+  days), or **squat** — keep it tax-free but illegal, and the guard
+  periodically raids it (a new `"eviction"` order, same shape as a `"guard"`
+  or `"ambush"` pause).
+- **The Wilds Claim** (`wilds_claim_screen.py`, the `wilds_territory` node,
+  `Node.claim = True`). A mini-campaign through
+  `guild.WILDS_CLAIM_STAGES` = `NONE → SCOUTED → CLEARED → FENCED → SWEPT →
+  SUSTAINING → ESTABLISHED`: **Scout** is a pure time gate; **Clear** and
+  **Sweep** are real scaled fights (the whole present group, no stakes, no
+  squad picker); **Fence** consumes hauled-in Lumber (bought at the Market
+  until the claim can produce its own); **Sustain** parks a garrisoned group
+  there for a countdown, rolling a raid chance
+  (`economy.WILDS_RAID_CHANCE` = 0.2) each `campaign.advance()` — losing only
+  resets the sustain timer, never the earlier stages. Once **Established**,
+  the garrison produces Lumber daily (`economy.GARRISON_JOBS`,
+  `Guild._garrison_upkeep`) and the claim becomes a real target: an
+  unguarded one can be **silently seized** (no fight); a guarded one that
+  loses its defense is also seized, but the structure survives either way —
+  **retaking** it is a normal arrival fight against the occupiers, never a
+  redo of the claim campaign.
+- **The garrison engine** underneath both (`orders.garrison(job)`,
+  `Group.locked` vs `Group.busy`) is generic per node
+  (`guild.garrison_stock[node_id]`), not hard-wired to either property — the
+  Tavern's "study" job (see Magic above) reuses the exact same order kind.
+- **Not built yet, on purpose:** no autonomous job besides Wilds Lumber
+  (the City property has none), no mechanical battle-map cover from fences
+  (a checklist step only, no combat-terrain hookup), no per-unit job choice
+  inside a garrison.
 
 ### Crime and justice 🟡
 
-- **Jurisdiction:** Ankareth and its immediate environs are under City guard watch.
-  Characters carrying crimes on their rap sheet risk arrest upon entering jurisdiction
-  nodes (`justice.py`).
-- **Sentences:** Members caught by the guard face prison time proportional to their
-  offenses, paying bail, or resisting arrest in a lethal encounter with city patrols.
-- **The Old Road:** Traveling beyond the walls across the Old Road carries ambush risk
-  from deserters, bandits, and roving packs.
+Rule in `justice.py`. A **personal** record (`Unit.crime`), not a guild one —
+it can catch up with a character wherever the City's authority reaches
+(`world.Node.jurisdiction`).
+
+- **The catch.** `campaign.advance` tests every member of a group arriving at
+  a jurisdiction node: `d20 + crime ≥ 11` (`justice.GUARD_CHECK_MIN`) — a
+  clean record (`crime == 0`) can never roll high enough to be caught. Anyone
+  caught pauses the whole group on a `"guard"` order for
+  `justice_screen.GuardScreen`, decided once for everyone caught together:
+  - **Accept arrest** — `prison_days = crime × constants.PRISON_DAYS_PER_CRIME`
+    (2 days per point), crime resets to 0, the unit leaves its group into
+    `Guild.jailed` (released automatically, back into a City group, once its
+    day is up).
+  - **Fight the patrol** — a real, lethal fight against
+    `constants.PATROL_SIZE` (3) guards scaled to
+    `min(constants.PATROL_LEVEL_CAP, crime)`; winning does **not** clear the
+    slate — it adds `1 + kills` more crime on top.
+  - **Flee** — falls back to wherever the group came from, which can itself
+    land it on a fresh `"guard"` or `"ambush"` pause.
+- **The Old Road** (`world.Node.unsafe`) rolls an ambush per travel leg
+  through it — deserters, bandits and roving packs — the same
+  pause/resume seam the guard uses, unrelated to jurisdiction or crime.
+- **Locked chests** (`chest.py`, `data.CHEST_ITEM`): a generic pack item
+  picked open outside battle (`gear_screen.py`'s right-click send menu),
+  `d20 + Dexterity ≥ data.CHEST_DC`. A miss costs nothing, just try later.
+  The Bankers' mission chest (see Missions) is a deliberately different item
+  so it's never picked open by mistake — doing so fails that mission and
+  banks crime instead of quietly paying out.
 
 ### The Champion of the Pit 🟡
 
