@@ -307,7 +307,14 @@ def kg(w):
 
 def wrap_lines(lines, font, max_px):
     out = []
+    if isinstance(lines, str):
+        lines = [lines]
+    
+    flat_lines = []
     for ln in lines:
+        flat_lines.extend(ln.split("\n"))
+
+    for ln in flat_lines:
         words = ln.split(" ")
         cur = ""
         for w in words:
@@ -344,6 +351,29 @@ class Stack:
 
     def row(self, h):
         r = pygame.Rect(self.x, self.y, self.w, h)
+        self.y += h
+        return r
+
+    def text_block(self, surf, s, font, color=(210, 210, 210), *, gap=0, lh=None):
+        """Draws text (wrapping automatically) and advances y by the total height + gap.
+        Returns the bounding rect of the drawn text block."""
+        if not s:
+            r = pygame.Rect(self.x, self.y, self.w, 0)
+            self.y += gap
+            return r
+        lines = wrap_lines(s, font, self.w)
+        line_height = lh if lh is not None else font.get_linesize()
+        h = len(lines) * line_height
+        r = pygame.Rect(self.x, self.y, self.w, h)
+        for i, ln in enumerate(lines):
+            surf.blit(font.render(ln, True, color), (self.x, self.y + i * line_height))
+        self.y += h + gap
+        return r
+
+    def panel(self, surf, h, fill=(40, 44, 52), border=(68, 75, 89), radius=4, width=1):
+        """Draws a panel of height h, advances y, and returns the rect."""
+        r = pygame.Rect(self.x, self.y, self.w, h)
+        panel(surf, r, fill=fill, border=border, radius=radius, width=width)
         self.y += h
         return r
 
