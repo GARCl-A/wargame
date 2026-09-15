@@ -157,12 +157,10 @@ def sync(guild):
 def bout_level_range(bout, squad):
     """Returns a string describing the expected enemy levels for the UI."""
     if bout.champion:
-        from .progression import mean_level
-        avg = sum(mean_level(u) for u in squad) // max(1, len(squad)) if squad else 0
+        avg = sum(u.mean_level for u in squad) // max(1, len(squad)) if squad else 0
         return f"Lv {avg + 1} + goons (Lv 0)"
     if bout.defense:
-        from .progression import mean_level
-        avg = sum(mean_level(u) for u in squad) // max(1, len(squad)) if squad else 0
+        avg = sum(u.mean_level for u in squad) // max(1, len(squad)) if squad else 0
         return f"Lv {avg + 1}"
     if bout.stage2:
         if bout.boss:

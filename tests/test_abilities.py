@@ -21,9 +21,6 @@ def test_passive_ability_adds_in_derivation():
     u2._ability = abilities.get("gallop")
     u2._derive_combat()
     assert u2.speed == spd0 + 2
-    u2._ability = abilities.get("sleep_immunity")
-    u2._derive_combat()
-    assert u2.ac_natural == 1
 
 
 def test_large_centaur_moves_12m_from_gallop_not_size():

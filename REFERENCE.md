@@ -21,7 +21,7 @@ Attribute rolls are 3d6; the modifiers below are added after.
 | Halfling | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Keen Hearing |
 | Hobgoblin | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Darkvision |
 | Lizardfolk | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
-| Human | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language (Human) |
+| Human | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
 | Kenku | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
 | Kobold | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Ancestral Blood |
 | Leshy | -1 +0 +1 -1 +1 +0 | d6 | Small | Verdant | 1x | Autotroph |
@@ -37,7 +37,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Darkvision | sees 12 squares in the dark as if it were lit. |
 | Inorganic Body | at 0 HP goes BROKEN instead of dying (no death save) until an ally repairs it (Stabilize: INT vs DC 15). |
 | Gallop | +3 m (2 squares) of speed. |
-| Sleep Immunity | immune to stun (unused in the MVP); +1 AC [natural]. |
+| Sleep Immunity | immune to sleep effects. |
 | Strong Stomach | +3 max HP. |
 | Primal Blood | once per battle, rerolls a missed attack. |
 | Pack Tactics | +2 [circumstance] to attack if an ally is adjacent to the target. |
@@ -45,7 +45,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Amphibious | breathes water: never runs out of breath while submerged, so it can stay underwater indefinitely. |
 | Keen Hearing | +3 initiative. |
 | Climber | climbs any surface of DC 25 or lower with no check (still costs the action). |
-| Extra Language (Human) | speaks a second random language: can Demoralize enemies that share either of the two. |
+| Extra Language | speaks a second random language: can Demoralize enemies that share either of the two. |
 | Mimic Sounds | can Demoralize with no shared language (mimics the target's voice) -- offence only; being demoralized still needs a common tongue. |
 | Ancestral Blood | +2 [circumstance] to attack against Large targets. |
 | Autotroph | photosynthesises: never needs to eat, immune to the hunger rules. |

@@ -9,14 +9,9 @@
         ]
       },
       "identity": {
-        "title": "Name and banner",
+        "title": "Identity and leadership",
         "body": [
-          "Purely cosmetic: the name and banner colour you pick here follow the guild for the rest of the run, recolouring every unit's token from now on."
-        ]
-      },
-      "leader": {
-        "title": "Who leads?",
-        "body": [
+          "The name and banner colour you pick here follow the guild for the rest of the run, recolouring every unit's token from now on.",
           "The leader is who the guild answers to -- their Charisma speaks for it when it haggles, and they lead any group they stand in. You get one free change of mind later; after that, only death reshuffles it."
         ]
       }

@@ -135,7 +135,7 @@ _LIST = [
     Ability("climber", "Climber",
             "climbs any surface of DC 25 or lower with no check (still costs the action).",
             auto_climb_dc=25),
-    Ability("extra_language", "Extra Language (Human)",
+    Ability("extra_language", "Extra Language",
             "speaks a second random language: can Demoralize enemies that share "
             "either of the two.",
             extra_languages=1),
