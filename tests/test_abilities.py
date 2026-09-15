@@ -12,12 +12,8 @@ def test_passive_ability_adds_in_derivation():
     u = _unit()
     u._ability = abilities.get("none")
     u._derive_combat()
-    hp0, spd0 = u.hp_max, u.speed
-    random.seed(0)                                    # same HP roll
+    spd0 = u.speed
     u2 = _unit()
-    u2._ability = abilities.get("strong_stomach")
-    u2._derive_combat()
-    assert u2.hp_max == hp0 + 3
     u2._ability = abilities.get("gallop")
     u2._derive_combat()
     assert u2.speed == spd0 + 2

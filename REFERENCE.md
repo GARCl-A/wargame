@@ -38,7 +38,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Inorganic Body | at 0 HP goes BROKEN instead of dying (no death save) until an ally repairs it (Stabilize: INT vs DC 15). |
 | Gallop | +3 m (2 squares) of speed. |
 | Sleep Immunity | immune to sleep effects. |
-| Strong Stomach | +3 max HP. |
+| Strong Stomach | Can eat Rotten Food without getting sick. |
 | Primal Blood | once per battle, rerolls a missed attack. |
 | Pack Tactics | +2 [circumstance] to attack if an ally is adjacent to the target. |
 | Strong Body | for carry capacity (and only that), counts as a Large creature. |

@@ -116,7 +116,7 @@ _LIST = [
     Ability("sleep_immunity", "Sleep Immunity",
             "immune to sleep effects."),
     Ability("strong_stomach", "Strong Stomach",
-            "+3 max HP.", hp_max=3),
+            "Can eat Rotten Food without getting sick."),
     Ability("primal_blood", "Primal Blood",
             "once per battle, rerolls a missed attack.",
             on_attack_miss=_primal_blood),
