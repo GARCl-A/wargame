@@ -94,7 +94,7 @@ class Node:
                  lethal=True, arena=False, language=None, alignment=None, work=False,
                  bank=False, tanner=False, jurisdiction=None,
                  unsafe=False, encounter_table=None, trust=False, ledger=False,
-                 city_property=False, garrison_job=None, claim=False, forge=False):
+                 city_property=False, garrison_job=None, claim=False, forge=False, prison=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -129,6 +129,10 @@ class Node:
     @property
     def is_tavern(self):
         return self.kind == "tavern"
+
+    @property
+    def is_prison(self):
+        return self.kind == "prison"
 
     @property
     def is_wilds(self):
@@ -195,6 +199,9 @@ NODES = [
     Node("tavern", "Tavern", "tavern", (0.07, 0.30),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
          jurisdiction="the_city", garrison_job="study"),
+    Node("prison", "Prison", "prison", (0.11, 0.44),
+         "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
+         jurisdiction="the_city"),
     Node("road", "Old Road", "town", (0.55, 0.52),
          "A dirt track cutting across the open country to the east.",
          unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
@@ -217,6 +224,7 @@ EDGES = [
     ("city", "lumber_yard", 1),
     ("city", "market", 1),
     ("city", "tavern", 1),
+    ("city", "prison", 1),
     ("city", "road", 4),
     ("arena", "road", 3),
     ("road", "wilds", 6),

@@ -39,9 +39,9 @@ SIDE_W = 372
 GROUND_DAY = (34, 37, 44)
 GROUND_NIGHT = (21, 23, 32)
 KIND_COLOR = {"battle": ENEMY_C, "market": INFO, "tavern": WARN, "town": NEUTRAL_C,
-              "wilds": OK}
+              "wilds": OK, "prison": WARN}
 KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP",
-              "wilds": "WILDS"}
+              "wilds": "WILDS", "prison": "PRISON"}
 WORK_HOURS = (4, 8, 12, 16)
 
 
@@ -303,6 +303,10 @@ class MapScreen(Screen):
         elif kind == "tavern":                                    # tankard
             pygame.draw.rect(screen, c, (x - 4, y - 4, 7, 9), 2)
             pygame.draw.arc(screen, c, (x + 2, y - 4, 6, 8), -1.4, 1.4, 2)
+        elif kind == "prison":                                    # bars
+            pygame.draw.rect(screen, c, (x - 5, y - 5, 10, 10), 2)
+            pygame.draw.line(screen, c, (x - 2, y - 5), (x - 2, y + 5), 2)
+            pygame.draw.line(screen, c, (x + 2, y - 5), (x + 2, y + 5), 2)
         elif kind == "work":                                        # axe
             pygame.draw.line(screen, c, (x - 4, y + 6), (x + 3, y - 6), 2)
             pygame.draw.arc(screen, c, (x + 1, y - 8, 7, 8), 1.2, 4.2, 2)
@@ -538,8 +542,7 @@ class MapScreen(Screen):
             y += 44
             text(screen, "talk a stranger into signing with the guild", f.body_sm,
                  INK_FAINT, (cx, y))
-            
-            y += 30
+        elif here.is_prison:
             pr = pygame.Rect(cx, y, cw, 38)
             hovp = pr.collidepoint(self.mouse)
             panel(screen, pr, fill=SURFACE_3 if hovp else SURFACE_1,
@@ -547,7 +550,7 @@ class MapScreen(Screen):
             text(screen, "VISIT THE PRISON", f.body_bd, INK_DIM, pr.center, center=True)
             self.buttons.append(("prison", pr))
             y += 44
-            text(screen, "pay a criminal's bail for a better shot at recruiting them", f.body_sm,
+            text(screen, "pay a criminal's bail for a chance to recruit them", f.body_sm,
                  INK_FAINT, (cx, y))
         elif here.work:
             tracked(screen, "WORK A SHIFT", f.label, INK_DIM, (cx, y))
