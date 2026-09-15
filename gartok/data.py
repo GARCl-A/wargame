@@ -244,6 +244,7 @@ def race_by_name(name):
 #   Only the Dagger is thrown for now (9 m = 6 squares).                       #
 #   hands = how many hands the weapon takes (1 or 2); the torch takes 1 apart. #
 #   weight in kg (invented values, base of the carry rule).                    #
+#   reload = True if firing the weapon requires the Reload action to chamber.  #
 # --------------------------------------------------------------------------- #
 
 WEAPONS = {
@@ -258,7 +259,8 @@ WEAPONS = {
     "Light Pick": {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
     "Pick":      {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
     "Broadsword":    {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0},
-    "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5},
+    "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5, "reload": True},
+    "Shortbow":      {"damage": (1, 6), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 1.0, "reload": False},
     "Dwarf Axe":     {"damage": (1, 10), "range": 0, "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
     "Rapier":        {"damage": (1, 6), "range": 0, "finesse": True, "thrown": 0, "hands": 1, "weight": 1.0},
 }

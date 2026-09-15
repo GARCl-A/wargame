@@ -335,19 +335,27 @@ class Combatant:
     def can_reload(self):
         """Crossbow is empty but there are bolts in the quiver -> the Reload
         action can chamber one (1 AP)."""
-        return self.needs_ammo and not self.crossbow_loaded and self.ammo > 0
+        return self.needs_ammo and self.weapon.get("reload") and not self.crossbow_loaded and self.ammo > 0
 
     @property
     def improvised(self):
         """Holding a crossbow that isn't loaded -> swung as an improvised weapon
         (melee, size unarmed die, Strength) until an action is spent to Reload.
         With no bolts left in the quiver that is the only option."""
-        return self.needs_ammo and not self.crossbow_loaded
+        if not self.needs_ammo:
+            return False
+        if not self.weapon.get("reload"):
+            return self.ammo == 0
+        return not self.crossbow_loaded
 
     @property
     def ranged(self):
         """Can loose a bolt right now: a crossbow with one chambered."""
-        return self.needs_ammo and self.crossbow_loaded
+        if not self.needs_ammo:
+            return False
+        if not self.weapon.get("reload"):
+            return self.ammo > 0
+        return self.crossbow_loaded
 
     @property
     def attack_range(self):

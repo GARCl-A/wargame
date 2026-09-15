@@ -322,7 +322,8 @@ class Attack(Action):
         actor.ap -= 1
         actor.walking = False
         if actor.ranged:
-            actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
+            if actor.weapon.get("reload"):
+                actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
             battle.log(f"{actor.name} shoots ({actor.ammo} bolt(s) in the quiver).")
         _strike(battle, actor, target)
 
@@ -389,11 +390,10 @@ class Reload(Action):
 
     @classmethod
     def applicable(cls, battle, actor):
-        wpn = getattr(actor, "weapon_name", "") or ""
-        off = getattr(actor, "offhand_name", "") or ""
-        has_ranged = "Crossbow" in wpn or "Crossbow" in off
-        if not has_ranged:
-            return False, "Not holding a crossbow."
+        if not hasattr(actor, "weapon") or not actor.weapon:
+            return False, "Not holding a weapon."
+        if not actor.weapon.get("reload"):
+            return False, "Weapon does not need reloading."
         return True, ""
 
     def available(self, battle, actor):
@@ -403,7 +403,7 @@ class Reload(Action):
         return self.available(battle, actor)
 
     def label(self, battle, actor):
-        return f"Reload the crossbow (1 pt, {actor.ammo} bolts left)"
+        return f"Reload the weapon (1 pt, {actor.ammo} bolts left)"
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -412,7 +412,7 @@ class Reload(Action):
         actor.walking = False
         actor.ammo -= 1
         actor.crossbow_loaded = True
-        battle.log(f"{actor.name} reloads the crossbow ({actor.ammo} bolt(s) left).")
+        battle.log(f"{actor.name} reloads the weapon ({actor.ammo} bolt(s) left).")
 
 
 # --------------------------------------------------------------------------- #

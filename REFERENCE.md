@@ -107,6 +107,7 @@ Each occupation grants one starting weapon and one starting item.
 | Pick | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
 | Broadsword | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Light Crossbow | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Shortbow | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
 | Dwarf Axe | 1d10 | melee | -- | -- | 1 | 4 kg | -- |
 | Rapier | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 
