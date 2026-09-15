@@ -61,7 +61,9 @@ def size_penalty(roster_size):
 
 
 def bail_cost(candidate):
-    """Cost to pay a prisoner's bail (in copper): (sum(attributes) * racial_level) + 20."""
+    """Cost to pay a prisoner's bail (in copper):
+    (sum(attributes) * (racial_level + 1)) + 20. The `+1` keeps a level-0
+    candidate's bail scaled to their attributes instead of a flat 20 copper."""
     from .unit import ATTRIBUTES
     total_attr = sum(getattr(candidate, a) for a in ATTRIBUTES)
     return (total_attr * (candidate.racial_level + 1)) + 20

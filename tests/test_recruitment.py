@@ -136,14 +136,17 @@ def test_a_dead_recruiters_line_keeps_working():
 
 
 def test_bail_cost():
+    """(sum(attributes) * (racial_level + 1)) + 20 -- the `+1` (added in
+    7c80f3c, after this test's first version) keeps a level-0 candidate's
+    bail scaled to attributes instead of a flat 20 copper."""
     from gartok.unit import ATTRIBUTES
     cand = _person(1)
     cand.set_track_level("combat", 2)
     cand._racial_override = 1
-    
+
     total = sum(getattr(cand, a) for a in ATTRIBUTES)
-    expected = (total * 1) + 20
-    
+    expected = (total * (1 + 1)) + 20
+
     assert recruit.bail_cost(cand) == expected
 
 
