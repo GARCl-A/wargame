@@ -114,7 +114,7 @@ _LIST = [
     Ability("gallop", "Gallop",
             "+3 m (2 squares) of speed.", speed=2),
     Ability("sleep_immunity", "Sleep Immunity",
-            "immune to stun (unused in the MVP); +1 AC [natural].", ac_natural=1),
+            "immune to sleep effects."),
     Ability("strong_stomach", "Strong Stomach",
             "+3 max HP.", hp_max=3),
     Ability("primal_blood", "Primal Blood",
