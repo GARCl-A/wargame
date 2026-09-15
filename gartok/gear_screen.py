@@ -30,12 +30,13 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
                     ellipsize, kg, panel, section, set_pointer, text,
                     token_badge)
+from .widgets import ButtonsMixin, footer_bar
 
 COL_MIN, COL_MAX = 288, 380              # loadout column width clamps
 MENU_HEAD = 22                           # send-to menu: header strip above the rows
 
 
-class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
+class GearScreen(DragSelectMixin, LoadoutMoveMixin, ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, on_back):
@@ -274,8 +275,7 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         self.zones = []
         self.sources = []
         self.toggle_hits = []
-        self.buttons = []
-        self._hot = False
+        self._reset_buttons()
 
         self.managed = [u for u in self.managed if u in self.roster]
         pad = MARGIN if W < 1500 else SP5
@@ -541,40 +541,16 @@ class GearScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen, W, H, pad):
-        f = self.fonts
-        mouse = self.mouse
-        y = H - 44
-
         if self._carried_names():
             trash = pygame.Rect(0, 0, 220, 32)
-            trash.center = (W // 2, y + 14)
-            over = trash.collidepoint(mouse)
+            trash.center = (W // 2, H - 44 + 14)
+            over = trash.collidepoint(self.mouse)
             panel(screen, trash, fill=DANGER if over else SURFACE_2, border=DANGER,
                   width=1, radius=RADIUS)
-            text(screen, "THROW AWAY", f.body_bd, ACCENT_INK if over else DANGER,
+            text(screen, "THROW AWAY", self.fonts.body_bd, ACCENT_INK if over else DANGER,
                  trash.center, center=True)
             self.zones.append((trash, None, "discard"))
 
-        if len(self.managed) > 1:
-            dist = pygame.Rect(W - pad - 200 - SP3 - 180, y, 180, 32)
-            hov = dist.collidepoint(mouse)
-            self._hot = self._hot or hov
-            panel(screen, dist, fill=SURFACE_3 if hov else SURFACE_1, border=ACCENT if hov else LINE_SOFT,
-                  width=1, radius=RADIUS)
-            text(screen, "DISTRIBUTE LOAD", f.body_bd, ACCENT if hov else INK,
-                 dist.center, center=True)
-            self.buttons.append(("distribute", dist))
-
-        back = pygame.Rect(W - pad - 200, y, 200, 32)
-        hov = back.collidepoint(mouse)
-        self._hot = self._hot or hov
-        panel(screen, back, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "BACK TO GUILD", f.body_bd, ACCENT_INK if hov else ACCENT,
-             back.center, center=True)
-        self.buttons.append(("back", back))
-
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (pad, y - 20))
-
-        text(screen, "Esc for the pause menu", f.label, INK_FAINT, (pad, y + 10))
+        footer_bar(self, screen,
+                  secondary=("distribute", "DISTRIBUTE LOAD") if len(self.managed) > 1 else None,
+                  primary=("back", "BACK TO GUILD"), notice=self.notice, margin=pad)

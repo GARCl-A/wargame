@@ -40,6 +40,7 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
                     blit_block, chip, ellipsize, panel, section, set_pointer, smooth_circle,
                     text, tracked, wrap_lines)
+from .widgets import ButtonsMixin
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _TEXTURES = os.path.join(_HERE, "assets", "textures")
@@ -181,7 +182,7 @@ class MapCamera:
         self._clamp()
 
 
-class MapScreen(Screen):
+class MapScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group, on_interactions):
@@ -201,6 +202,7 @@ class MapScreen(Screen):
         self.notices = []                     # lines shown after a tick (route, meals, deaths)
         self.hits = []                        # [(rect, node)]
         self.buttons = []                     # [(key, rect)]
+        self._hot = False
         self.group_rows = []                 # [(rect, group)]
         self.split_rows = []                 # [(rect, unit)]
         self._terr = None                    # cached terrain fill (key, surface)
@@ -465,7 +467,7 @@ class MapScreen(Screen):
         for rr in range(max(1, r - width + 1), r + 1):
             gfxdraw.aacircle(surf, x, y, rr, color)
 
-    def _hot(self):
+    def _hovering(self):
         """Whether the mouse sits over anything `_click` would actually act
         on -- mirrors its own dispatch order, including the no-op cases
         (own node, a busy group) so the cursor doesn't promise a click that
@@ -536,7 +538,7 @@ class MapScreen(Screen):
     def draw(self, screen):
         screen.blit(self._backdrop(screen.get_size()), (0, 0))
         self.hits = []
-        self.buttons = []
+        self._reset_buttons()
         self.group_rows = []
         self.split_rows = []
         clock = self.guild.clock
@@ -564,7 +566,7 @@ class MapScreen(Screen):
         else:
             self._draw_side(screen, area)
         self._draw_footer(screen)
-        set_pointer(self._hot())
+        set_pointer(self._hovering())
 
     # ------------------------------------------------------------------ #
     def _route_pairs(self):
@@ -780,27 +782,18 @@ class MapScreen(Screen):
             return y
         
         mg = pygame.Rect(cx, y, cw, 30)
-        hov = mg.collidepoint(self.mouse)
-        panel(screen, mg, fill=SURFACE_3 if hov else SURFACE_1, border=LINE_SOFT, radius=8)
-        text(screen, "MANAGE GEAR & QUESTS", f.body_sm, INK, mg.center, center=True)
-        self.buttons.append(("manage_group", mg))
+        self.add_button(screen, mg, "manage_group", "MANAGE GEAR & QUESTS", font=f.body_sm)
         y += 34
 
         if len(g.members) > 1:
             r = pygame.Rect(cx, y, cw, 30)
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1, border=LINE_SOFT, radius=8)
-            text(screen, "SPLIT", f.body_sm, INK, r.center, center=True)
-            self.buttons.append(("split", r))
+            self.add_button(screen, r, "split", "SPLIT", font=f.body_sm)
             y += 34
         mates = [o for o in self.guild.groups if o is not g and o.node == g.node and not o.busy]
         for o in mates:
             mr = pygame.Rect(cx, y, cw, 30)
-            hov = mr.collidepoint(self.mouse)
-            panel(screen, mr, fill=SURFACE_3 if hov else SURFACE_1, border=LINE_SOFT, radius=8)
             name = o.name or f"Group ({len(o.members)})"
-            text(screen, f"MERGE WITH {name}", f.body_sm, INK, mr.center, center=True)
-            self.buttons.append((f"merge:{o.gid}", mr))
+            self.add_button(screen, mr, f"merge:{o.gid}", f"MERGE WITH {name}", font=f.body_sm)
             y += 34
         return y
 
@@ -853,15 +846,10 @@ class MapScreen(Screen):
                  WARN, (cx, y))
         elif here.is_battle:
             br = pygame.Rect(cx, y, cw, 38)
-            hovb = br.collidepoint(self.mouse)
-            panel(screen, br, fill=ACCENT if hovb else SURFACE_3,
-                  border=ACCENT, width=1, radius=RADIUS)
             defense = here.arena and arena.defense_due(self.guild)
             label = ("DEFEND YOUR TITLE" if defense
                      else "BET AT THE ARENA" if here.arena else "ATTACK")
-            text(screen, label, f.body_bd, ACCENT_INK if hovb else ACCENT,
-                 br.center, center=True)
-            self.buttons.append(("arena", br))
+            self.add_button(screen, br, "arena", label, primary=True)
             y += 44
             note = ("1v1 for the Champion of the Pit -- no stake, no backup" if defense
                     else "non-lethal · stake copper, win the purse" if here.arena
@@ -870,28 +858,16 @@ class MapScreen(Screen):
                  WARN if defense else INK_FAINT, (cx, y))
         elif here.is_market:
             mr = pygame.Rect(cx, y, cw, 38)
-            hovm = mr.collidepoint(self.mouse)
-            panel(screen, mr, fill=SURFACE_3 if hovm else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "ENTER THE MARKET", f.body_bd, INK_DIM, mr.center, center=True)
-            self.buttons.append(("market", mr))
+            self.add_button(screen, mr, "market", "ENTER THE MARKET")
         elif here.is_tavern:
             tr = pygame.Rect(cx, y, cw, 38)
-            hovt = tr.collidepoint(self.mouse)
-            panel(screen, tr, fill=SURFACE_3 if hovt else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "ENTER THE TAVERN", f.body_bd, INK_DIM, tr.center, center=True)
-            self.buttons.append(("recruit", tr))
+            self.add_button(screen, tr, "recruit", "ENTER THE TAVERN")
             y += 44
             text(screen, "talk a stranger into signing with the guild", f.body_sm,
                  INK_FAINT, (cx, y))
         elif here.is_prison:
             pr = pygame.Rect(cx, y, cw, 38)
-            hovp = pr.collidepoint(self.mouse)
-            panel(screen, pr, fill=SURFACE_3 if hovp else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "VISIT THE PRISON", f.body_bd, INK_DIM, pr.center, center=True)
-            self.buttons.append(("prison", pr))
+            self.add_button(screen, pr, "prison", "VISIT THE PRISON")
             y += 44
             text(screen, "pay a criminal's bail for a chance to recruit them", f.body_sm,
                  INK_FAINT, (cx, y))
@@ -902,11 +878,7 @@ class MapScreen(Screen):
             cw4 = (cw - 3 * gap) // 4
             for i, h in enumerate(WORK_HOURS):
                 r = pygame.Rect(cx + i * (cw4 + gap), y, cw4, 34)
-                hov = r.collidepoint(self.mouse)
-                panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
-                      border=LINE_SOFT, width=1, radius=RADIUS)
-                text(screen, f"{h} h", f.body_sm, INK, r.center, center=True)
-                self.buttons.append((f"work:{h}", r))
+                self.add_button(screen, r, f"work:{h}", f"{h} h", font=f.body_sm)
             y += 42
             text(screen, "trade hours of the day for copper  ·  pays little, but it's sure",
                  f.body_sm, INK_FAINT, (cx, y))
@@ -940,21 +912,13 @@ class MapScreen(Screen):
         elif here.is_wilds:
             for key, label, note in self._wilds_actions():
                 r = pygame.Rect(cx, y, cw, 38)
-                hov = r.collidepoint(self.mouse)
-                panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
-                      border=LINE_SOFT, width=1, radius=RADIUS)
-                text(screen, label, f.body_bd, INK_DIM, r.center, center=True)
-                self.buttons.append((key, r))
+                self.add_button(screen, r, key, label)
                 y += 42
                 text(screen, note, f.body_sm, INK_FAINT, (cx, y))
                 y += 20
         elif here.bank:
             br = pygame.Rect(cx, y, cw, 38)
-            hovb = br.collidepoint(self.mouse)
-            panel(screen, br, fill=SURFACE_3 if hovb else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "VISIT THE BANK", f.body_bd, INK_DIM, br.center, center=True)
-            self.buttons.append(("bank", br))
+            self.add_button(screen, br, "bank", "VISIT THE BANK")
             y += 44
             chest = (f"strongbox: {self.guild.bank_load:g} / {self.guild.bank_capacity} kg"
                      if self.guild.bank_unlocked
@@ -977,23 +941,15 @@ class MapScreen(Screen):
         if here.forge and not self.selected.busy:
             y += 30
             fr = pygame.Rect(cx, y, cw, 38)
-            hovf = fr.collidepoint(self.mouse)
-            panel(screen, fr, fill=SURFACE_3 if hovf else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "VISIT THE FORGE", f.body_bd, INK_DIM, fr.center, center=True)
-            self.buttons.append(("forge", fr))
+            self.add_button(screen, fr, "forge", "VISIT THE FORGE")
             y += 44
             text(screen, "craft weapons, armors and traps",
                  f.body_sm, INK_FAINT, (cx, y))
-            
+
         if interactions:
             y += 30
             ir = pygame.Rect(cx, y, cw, 38)
-            hovi = ir.collidepoint(self.mouse)
-            panel(screen, ir, fill=SURFACE_3 if hovi else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "AVAILABLE INTERACTIONS", f.body_bd, INK_DIM, ir.center, center=True)
-            self.buttons.append(("interactions", ir))
+            self.add_button(screen, ir, "interactions", "AVAILABLE INTERACTIONS")
             y += 44
             text(screen, f"{len(interactions)} mission(s) / service(s) here",
                  f.body_sm, INK_FAINT, (cx, y))
@@ -1005,11 +961,7 @@ class MapScreen(Screen):
         if here.city_property and has_property_business and not self.selected.busy:
             y += 30
             pr = pygame.Rect(cx, y, cw, 38)
-            hovp = pr.collidepoint(self.mouse)
-            panel(screen, pr, fill=SURFACE_3 if hovp else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "VISIT THE PROPERTY", f.body_bd, INK_DIM, pr.center, center=True)
-            self.buttons.append(("property", pr))
+            self.add_button(screen, pr, "property", "VISIT THE PROPERTY")
             y += 44
             if self.guild.property_city_repossession_due:
                 note, col = "the Bankers want the house back, or the tax paid", DANGER
@@ -1026,11 +978,7 @@ class MapScreen(Screen):
         if here.claim and not self.selected.busy:
             y += 30
             cr = pygame.Rect(cx, y, cw, 38)
-            hovc = cr.collidepoint(self.mouse)
-            panel(screen, cr, fill=SURFACE_3 if hovc else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "THE WILDS CLAIM", f.body_bd, INK_DIM, cr.center, center=True)
-            self.buttons.append(("claim", cr))
+            self.add_button(screen, cr, "claim", "THE WILDS CLAIM")
             y += 44
             stage = self.guild.wilds_claim_stage
             if stage == "ESTABLISHED" and self.guild.wilds_claim_owner == "seized":
@@ -1048,11 +996,7 @@ class MapScreen(Screen):
         if here.ledger and not self.selected.busy:
             y += 30
             lr = pygame.Rect(cx, y, cw, 38)
-            hovl = lr.collidepoint(self.mouse)
-            panel(screen, lr, fill=SURFACE_3 if hovl else SURFACE_1,
-                  border=LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "VISIT THE OUTPOST", f.body_bd, INK_DIM, lr.center, center=True)
-            self.buttons.append(("ledger", lr))
+            self.add_button(screen, lr, "ledger", "VISIT THE OUTPOST")
             y += 44
             text(screen, "hand over what you're carrying, if anything's owed",
                  f.body_sm, INK_FAINT, (cx, y))
@@ -1099,47 +1043,28 @@ class MapScreen(Screen):
         y = rect.bottom - pad - 76
         ok = bool(self.split_picks)
         cr = pygame.Rect(cx, y, cw, 36)
-        panel(screen, cr, fill=ACCENT if ok else SURFACE_1, border=ACCENT if ok else LINE_SOFT,
-              width=1, radius=RADIUS)
-        text(screen, "CONFIRM SPLIT", f.body_bd, ACCENT_INK if ok else INK_FAINT,
-             cr.center, center=True)
-        self.buttons.append(("split_confirm", cr))
+        self.add_button(screen, cr, "split_confirm", "CONFIRM SPLIT", primary=True, enabled=ok)
         y += 44
         xr = pygame.Rect(cx, y, cw, 32)
-        hovx = xr.collidepoint(self.mouse)
-        panel(screen, xr, fill=SURFACE_3 if hovx else SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        text(screen, "cancel", f.body, INK if hovx else INK_DIM, xr.center, center=True)
-        self.buttons.append(("split_cancel", xr))
+        self.add_button(screen, xr, "split_cancel", "cancel", font=f.body)
 
     def _draw_footer(self, screen):
-        f = self.fonts
         y = screen.get_height() - 52
 
         g = pygame.Rect(MARGIN, y, 170, 36)
-        hovg = g.collidepoint(self.mouse)
-        panel(screen, g, fill=ACCENT if hovg else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "GUILD / GEAR", f.body_bd, ACCENT_INK if hovg else ACCENT,
-             g.center, center=True)
-        self.buttons.append(("guild", g))
+        self.add_button(screen, g, "guild", "GUILD / GEAR", primary=True)
 
         hungry = self.guild.hungry
         mt = pygame.Rect(MARGIN + 182, y, 160, 36)
-        hovt = mt.collidepoint(self.mouse)
         # a stop helps only if a hungry member can reach a ration: their own pack,
         # or the shared larder of a group-mate who pools food
         reachable = any(u.rations for u in hungry) or any(
             u.share_food and u.rations for u in self.guild.roster)
         urgent = bool(hungry) and reachable
-        panel(screen, mt, fill=ACCENT if hovt else SURFACE_3 if urgent else SURFACE_2,
-              border=ACCENT if urgent else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "MAINTENANCE (1 h)", f.body_bd,
-             ACCENT_INK if hovt else ACCENT if urgent else INK_DIM,
-             mt.center, center=True)
-        self.buttons.append(("maintain", mt))
+        self.add_button(screen, mt, "maintain", "MAINTENANCE (1 h)", primary=urgent)
 
         hint = ("give every idle group an order and the clock runs itself"
                 if self.guild.needs_orders else
                 "every group is underway  ·  the clock is running on its own")
         text(screen, f"{hint}  ·  Esc for the pause menu",
-             f.body_sm, INK_FAINT, (MARGIN + 354, y + 10))
+             self.fonts.body_sm, INK_FAINT, (MARGIN + 354, y + 10))

@@ -15,6 +15,7 @@ from .theme import (ACCENT, DANGER, DEMO_HL, INFO, INK, INK_DIM, INK_FAINT,
                     OK, SP1, SP2, SP3, SURFACE_1, SURFACE_2, WARN,
                     chip, draw_tooltip, format_tooltip, panel, section,
                     token_badge, text, wrap_lines)
+from .widgets import draw_veil
 
 PANEL_W, PANEL_H = 560, 604
 
@@ -124,10 +125,7 @@ def _status_note(u):
 
 
 def draw_sheet(screen, rect, u, f, mouse=None):
-    veil = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    veil.fill((0, 0, 0, 195))
-    screen.blit(veil, (0, 0))
-
+    draw_veil(screen)
     panel(screen, rect, fill=SURFACE_2, border=ACCENT, width=2, radius=8)
     pad = 16
     x = rect.x + pad

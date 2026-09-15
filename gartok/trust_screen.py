@@ -15,14 +15,14 @@ import pygame
 
 from . import factions, missions
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
-                    MARGIN, OK, RADIUS, SP3, SURFACE_1, SURFACE_2, SURFACE_3,
-                    panel, text, wrap_lines, blit_block)
+from .theme import (INFO, INK, INK_DIM, LINE_SOFT, MARGIN, OK, RADIUS, SP3,
+                    SURFACE_2, panel, text, wrap_lines, blit_block)
+from .widgets import ButtonsMixin, footer_bar
 
 CARD_W = 560
 
 
-class TrustScreen(Screen):
+class TrustScreen(ButtonsMixin, Screen):
     native = True
     TEMPLATE = missions.TRUST_CHEST
 
@@ -34,6 +34,7 @@ class TrustScreen(Screen):
         self.on_done = on_done
         self.notice = None
         self.buttons = []              # [(key, rect)]
+        self._hot = False
 
     # No soft tutorial card yet (see tanner_screen.py's own note).
 
@@ -79,7 +80,7 @@ class TrustScreen(Screen):
     def draw(self, screen):
         f = self.fonts
         screen.fill((18, 19, 24))
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, "THE BANKERS", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, "\"Prove the guild can be trusted with something precious.\"",
@@ -106,15 +107,8 @@ class TrustScreen(Screen):
             y += 30
             offered = self._offered
             r = pygame.Rect(x, y, w, 36)
-            hov = offered and r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if hov else SURFACE_3 if offered else SURFACE_1,
-                  border=ACCENT if offered else LINE_SOFT, width=1, radius=RADIUS)
             label = "ACCEPT THE TEST OF TRUST" if offered else "ALREADY OUT WITH ANOTHER GROUP"
-            text(screen, label, f.body_bd,
-                 ACCENT_INK if hov else ACCENT if offered else INK_FAINT,
-                 r.center, center=True)
-            if offered:
-                self.buttons.append(("accept", r))
+            self.add_button(screen, r, "accept", label, enabled=offered, primary=offered)
         else:
             progress = missions.progress(self.guild, m)
             ready = progress >= t.goal_qty
@@ -124,28 +118,10 @@ class TrustScreen(Screen):
             text(screen, status, f.body_sm, OK if ready else INK_DIM, (x, y))
             y += 30
             r = pygame.Rect(x, y, w, 36)
-            hov = ready and r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if hov else SURFACE_3 if ready else SURFACE_1,
-                  border=ACCENT if ready else LINE_SOFT, width=1, radius=RADIUS)
             label = "TURN IN THE LETTER" if ready else "NOT BACK YET"
-            text(screen, label, f.body_bd,
-                 ACCENT_INK if hov else ACCENT if ready else INK_FAINT,
-                 r.center, center=True)
-            if ready:
-                self.buttons.append(("turn_in", r))
+            self.add_button(screen, r, "turn_in", label, enabled=ready, primary=ready)
 
         self._draw_footer(screen)
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
-
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE THE BANKERS", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen, primary=("done", "LEAVE THE BANKERS"), notice=self.notice)

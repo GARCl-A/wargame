@@ -14,12 +14,12 @@ import pygame
 
 from . import data, economy, orders
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SURFACE_1,
-                    SURFACE_3, WARN, panel, section, text, token_badge)
+from .theme import (ACCENT, DANGER, INK, INK_DIM, INK_FAINT,
+                    MARGIN, OK, SP1, SP2, WARN, section, text, token_badge)
+from .widgets import ButtonsMixin, footer_bar
 
 
-class WildsClaimScreen(Screen):
+class WildsClaimScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep):
@@ -32,6 +32,7 @@ class WildsClaimScreen(Screen):
         self.on_fight_sweep = on_fight_sweep
         self.notice = None
         self.buttons = []
+        self._hot = False
 
     def tutorial_key(self):
         return None
@@ -110,7 +111,7 @@ class WildsClaimScreen(Screen):
     def draw(self, screen):
         f = self.fonts
         screen.fill((18, 22, 18))
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, "THE WILDS CLAIM", f.title, INK, (MARGIN, MARGIN - 2))
         stage = self.guild.wilds_claim_stage
@@ -143,31 +144,15 @@ class WildsClaimScreen(Screen):
             y += 22
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, ACCENT, (MARGIN, y - 22))
-        done = pygame.Rect(screen.get_width() - MARGIN - 200, y, 200, 36)
-        hov = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE", f.body_bd, ACCENT_INK if hov else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen, primary=("done", "LEAVE"), notice=self.notice,
+                  notice_color=ACCENT)
 
     # ------------------------------------------------------------------ #
     # per-stage panels                                                    #
     # ------------------------------------------------------------------ #
     def _button(self, screen, key, label, top, w, *, enabled=True):
-        f = self.fonts
         r = pygame.Rect(MARGIN, top, w, 40)
-        hov = enabled and r.collidepoint(self.mouse)
-        panel(screen, r, fill=ACCENT if hov else SURFACE_3 if enabled else SURFACE_1,
-              border=ACCENT if enabled else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, label, f.body_bd, ACCENT_INK if hov else ACCENT if enabled else INK_FAINT,
-             r.center, center=True)
-        if enabled:
-            self.buttons.append((key, r))
+        self.add_button(screen, r, key, label, enabled=enabled, primary=True)
         return r.bottom + SP2
 
     def _draw_scout(self, screen, x, y, w):

@@ -10,10 +10,11 @@ import pygame
 
 from . import world
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, INK, INK_DIM, INK_FAINT, LINE_SOFT,
-                    MARGIN, RADIUS, SURFACE_1, SURFACE_2, SURFACE_3, panel, text)
+from .theme import (INK, INK_DIM, INK_FAINT, LINE_SOFT, MARGIN, RADIUS,
+                    SURFACE_2, SURFACE_3, panel, text)
+from .widgets import ButtonsMixin, footer_bar
 
-class InteractionsScreen(Screen):
+class InteractionsScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_back, on_action):
@@ -45,7 +46,7 @@ class InteractionsScreen(Screen):
     def draw(self, screen):
         f = self.fonts
         screen.fill((18, 19, 24))
-        self.buttons = []
+        self._reset_buttons()
 
         here = world.node(self.group.node)
 
@@ -76,12 +77,4 @@ class InteractionsScreen(Screen):
         self._draw_footer(screen)
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "BACK", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("back", done))
+        footer_bar(self, screen, primary=("back", "BACK"))

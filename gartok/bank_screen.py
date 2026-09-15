@@ -26,14 +26,15 @@ from . import data, economy
 from .dragselect import DragSelectMixin
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, chip, ellipsize, kg, panel, section,
-                    set_pointer, text, token_badge)
+                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
+                    SURFACE_2, SURFACE_3, WARN, ellipsize, kg, panel, section,
+                    text, token_badge)
+from .widgets import ButtonsMixin, footer_bar
 
 CHEST_W = 340
 
 
-class BankScreen(DragSelectMixin, Screen):
+class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, party, on_done):
@@ -48,6 +49,7 @@ class BankScreen(DragSelectMixin, Screen):
         self.item_rows = []                          # [(rect, member, name)]
         self.cards = []                              # [(rect, member)]
         self.buttons = []                            # [(key, rect)]
+        self._hot = False
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -226,7 +228,7 @@ class BankScreen(DragSelectMixin, Screen):
         self.chest_rows = []
         self.item_rows = []
         self.cards = []
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, "THE BANK", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
@@ -278,7 +280,7 @@ class BankScreen(DragSelectMixin, Screen):
                        f"copper every {economy.CITY_PROPERTY_TAX_PERIOD_DAYS} days."):
                 text(screen, ln, f.body_sm, INK_DIM, (x, y))
                 y += 17
-            
+
             rep_ok = self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
             if not rep_ok:
                 text(screen, f"needs {economy.CITY_PROPERTY_REP_GATE} reputation with the ",
@@ -290,13 +292,9 @@ class BankScreen(DragSelectMixin, Screen):
             y += SP2
             pr = pygame.Rect(x, y, w, 38)
             can_buy = rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-            hovp = pr.collidepoint(self.mouse)
-            panel(screen, pr, fill=ACCENT if (can_buy and hovp) else SURFACE_3,
-                  border=ACCENT if can_buy else LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, f"BUY THE HOUSE — {economy.CITY_PROPERTY_PRICE} COPPER", f.body_bd,
-                 ACCENT_INK if (can_buy and hovp) else ACCENT if can_buy else INK_FAINT,
-                 pr.center, center=True)
-            self.buttons.append(("buy_property", pr))
+            self.add_button(screen, pr, "buy_property",
+                            f"BUY THE HOUSE — {economy.CITY_PROPERTY_PRICE} COPPER",
+                            enabled=can_buy, primary=can_buy)
             y += 60
 
         y = section(screen, "THE STRONGBOX", x, y, w, f)
@@ -311,13 +309,9 @@ class BankScreen(DragSelectMixin, Screen):
             y += SP2
             r = pygame.Rect(x, y, w, 38)
             can = self.purse >= economy.BANK_CHEST_PRICE
-            hovr = r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if (can and hovr) else SURFACE_3,
-                  border=ACCENT if can else LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, f"RENT A STRONGBOX — {economy.BANK_CHEST_PRICE} COPPER", f.body_bd,
-                 ACCENT_INK if (can and hovr) else ACCENT if can else INK_FAINT,
-                 r.center, center=True)
-            self.buttons.append(("rent", r))
+            self.add_button(screen, r, "rent",
+                            f"RENT A STRONGBOX — {economy.BANK_CHEST_PRICE} COPPER",
+                            enabled=can, primary=can)
             return
 
         # capacity bar
@@ -338,7 +332,7 @@ class BankScreen(DragSelectMixin, Screen):
         y = section(screen, f"STASHED  ({len(self.guild.bank_items)})", x, y, w, f)
         if not self.guild.bank_items:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
-            
+
         shown = self._stacks(self.guild.bank_items)
         for item, count in shown:
             r = pygame.Rect(x, y, w, 24)
@@ -346,7 +340,7 @@ class BankScreen(DragSelectMixin, Screen):
             ihov = not self.sel and r.collidepoint(self.mouse)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            
+
             label = item if count == 1 else f"{item}  ×{count}"
             text(screen, ellipsize(label, f.body_sm, w - 60), f.body_sm,
                  ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
@@ -393,7 +387,7 @@ class BankScreen(DragSelectMixin, Screen):
                     rect.w - 2 * pad, f)
         if not m._base_inventory:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-            
+
         shown = self._stacks(m._base_inventory)
         for item, count in shown:
             r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
@@ -401,7 +395,7 @@ class BankScreen(DragSelectMixin, Screen):
             ihov = not self.sel and r.collidepoint(self.mouse)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-                  
+
             label = item if count == 1 else f"{item}  ×{count}"
             text(screen, ellipsize(label, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
                  ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
@@ -412,15 +406,4 @@ class BankScreen(DragSelectMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
-
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE THE BANK", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen, primary=("done", "LEAVE THE BANK"), notice=self.notice)

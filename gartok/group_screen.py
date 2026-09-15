@@ -31,12 +31,13 @@ from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, WARN,
                     ellipsize, kg, panel, section, set_pointer, text,
                     token_badge)
+from .widgets import ButtonsMixin, footer_bar
 
 COL_MIN, COL_MAX = 288, 380              # loadout column width clamps
 MENU_HEAD = 22                           # send-to menu: header strip above the rows
 
 
-class GroupScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
+class GroupScreen(DragSelectMixin, LoadoutMoveMixin, ButtonsMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_back):
@@ -267,10 +268,9 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
         self.zones = []
         self.sources = []
         self.tab_hits = []
-        self.buttons = []
         self.sheet_hits = []
-        self._hot = False
-        
+        self._reset_buttons()
+
         pad = MARGIN if W < 1500 else SP5
         top = pad + 62
         bottom = H - 56
@@ -332,26 +332,18 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
                 
         if self.menu:
             self._draw_menu(screen, W, H)
-        
-        # footer
-        text(screen, self.notice or "", f.body, OK, (pad, H - 36))
-        
-        br = pygame.Rect(W - pad - 100, H - 46, 100, 36)
-        hov = br.collidepoint(self.mouse)
-        if hov:
-            self._hot = True
-            panel(screen, br, fill=SURFACE_3, border=LINE_SOFT, radius=8)
-        text(screen, "DONE", f.title, INK, br.center, center=True)
-        self.buttons.append(("done", br))
-        
+
+        footer_bar(self, screen,
+                  secondary=("distribute", "DISTRIBUTE LOAD") if self.tab == "gear" else None,
+                  primary=("done", "DONE"), notice=self.notice, notice_color=OK, margin=pad)
+
         self.draw_sheet_modal(screen, f)
         set_pointer("hand" if self._hot else "arrow")
 
     def _draw_gear(self, screen, area):
         f = self.fonts
-        W, H = screen.get_size()
         carried = self._carried_names()
-        
+
         cols_area = area.w
         self._cap = max(1, (cols_area + SP3) // (COL_MIN + SP3))
         ctop = area.y
@@ -367,14 +359,6 @@ class GroupScreen(DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
             text(screen, f"+{len(self.managed) - self._cap} selected but hidden — "
                  "widen the window", f.label, INK_FAINT,
                  (area.x, area.bottom + 4))
-
-        dr = pygame.Rect(W - area.x - 200 - 120, H - 42, 200, 28)
-        hov = dr.collidepoint(self.mouse)
-        if hov:
-            self._hot = True
-            panel(screen, dr, fill=SURFACE_3, border=LINE_SOFT, radius=8)
-        text(screen, "DISTRIBUTE LOAD", f.body, INK, dr.center, center=True)
-        self.buttons.append(("distribute", dr))
 
     def _draw_quests(self, screen, area):
         f = self.fonts

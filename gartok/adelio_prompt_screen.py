@@ -3,11 +3,11 @@
 import pygame
 
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, INK, INK_DIM, LINE_SOFT, RADIUS,
-                    SP4, SURFACE_1, SURFACE_2, SURFACE_3, panel, text)
+from .theme import ACCENT, INK_DIM, LINE_SOFT, RADIUS, SP4, SURFACE_2, panel, text
+from .widgets import ButtonsMixin
 
 
-class AdelioPromptScreen(Screen):
+class AdelioPromptScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, on_recruit, on_leave):
@@ -16,6 +16,7 @@ class AdelioPromptScreen(Screen):
         self.on_recruit = on_recruit
         self.on_leave = on_leave
         self.buttons = []
+        self._hot = False
 
     def _click(self, px):
         for key, rect in self.buttons:
@@ -30,7 +31,7 @@ class AdelioPromptScreen(Screen):
         f = self.fonts
         W, H = screen.get_size()
         screen.fill((18, 19, 24))
-        self.buttons = []
+        self._reset_buttons()
 
         cw, ch = 540, 240
         card = pygame.Rect((W - cw) // 2, (H - ch) // 2, cw, ch)
@@ -51,13 +52,7 @@ class AdelioPromptScreen(Screen):
         by = card.bottom - SP4 - bh
 
         rec_r = pygame.Rect(card.x + SP4, by, bw, bh)
-        hov_r = rec_r.collidepoint(self.mouse)
-        panel(screen, rec_r, fill=ACCENT if hov_r else SURFACE_3, border=ACCENT, radius=RADIUS)
-        text(screen, "TALK TO ADELIO", f.body_bd, ACCENT_INK if hov_r else ACCENT, rec_r.center, center=True)
-        self.buttons.append(("recruit", rec_r))
+        self.add_button(screen, rec_r, "recruit", "TALK TO ADELIO", primary=True)
 
         leave_r = pygame.Rect(card.right - SP4 - bw, by, bw, bh)
-        hov_l = leave_r.collidepoint(self.mouse)
-        panel(screen, leave_r, fill=SURFACE_3 if hov_l else SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        text(screen, "LEAVE HIM", f.body, INK if hov_l else INK_DIM, leave_r.center, center=True)
-        self.buttons.append(("leave", leave_r))
+        self.add_button(screen, leave_r, "leave", "LEAVE HIM")

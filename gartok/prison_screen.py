@@ -13,10 +13,11 @@ import pygame
 from . import economy, recruit
 from .data import alignment_distance
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
+from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
+                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, panel, section,
                     token_badge, text, tracked, wrap_lines)
+from .widgets import ButtonsMixin, footer_bar
 
 CANDIDATES = 3
 
@@ -29,7 +30,7 @@ def _charge_party(party, amount):
     economy.charge_richest_first(party, amount)
 
 
-class PrisonScreen(Screen):
+class PrisonScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
@@ -47,6 +48,7 @@ class PrisonScreen(Screen):
         self.cand_cards = []
         self.party_cards = []
         self.buttons = []
+        self._hot = False
 
     def tutorial_key(self):
         return None
@@ -131,7 +133,7 @@ class PrisonScreen(Screen):
         screen.fill((20, 20, 22))
         self.cand_cards = []
         self.party_cards = []
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
         
@@ -306,17 +308,10 @@ class PrisonScreen(Screen):
             text(screen, calc_str, f.body_sm, INK, (tt_rect.x + 8, tt_rect.y + 4))
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
+        col = INFO
         if self.notice:
             col = OK if ("signs" in self.notice or "Bail paid!" in self.notice) else INFO
             if "lost" in self.notice or "Not enough" in self.notice:
                 col = DANGER
-            text(screen, self.notice, f.body_sm, col, (MARGIN, y - 22))
-
-        d = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hov = d.collidepoint(self.mouse)
-        panel(screen, d, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
-        text(screen, "LEAVE THE PRISON", f.body_bd, ACCENT_INK if hov else ACCENT,
-             d.center, center=True)
-        self.buttons.append(("done", d))
+        footer_bar(self, screen, primary=("done", "LEAVE THE PRISON"),
+                  notice=self.notice, notice_color=col)

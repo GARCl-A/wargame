@@ -29,15 +29,16 @@ whole maximized screen. Reached from the map (opening it passes no time).
 
 import pygame
 
-from . import artwork, data, factions, world
+from . import artwork, data, factions
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4, SP5,
+                    LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SP4, SP5,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
                     TOKEN_INK, WARN,
                     ellipsize, kg, panel, section, set_pointer, token_badge,
                     text, tracked, draw_tooltip, wrap_lines, format_tooltip)
+from .widgets import ButtonsMixin, footer_bar
 
 
 TABS = (("members", "MEMBERS"), ("reputations", "REPUTATIONS"))
@@ -46,7 +47,7 @@ LIST_MIN, LIST_MAX = 264, 380         # roster column width clamps
 DET_MAX = 1120                        # detail panel width cap on very wide screens
 
 
-class GuildScreen(SheetModalMixin, Screen):
+class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
     native = True                        # app draws us straight to the window
 
     def __init__(self, fonts, guild, on_back, on_level=None, on_manage=None):
@@ -518,28 +519,10 @@ class GuildScreen(SheetModalMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen, W, H, pad):
-        f = self.fonts
-        mouse = self.mouse
-        y = H - 52
-
+        show_distribute = False
         if self.member is not None:
             grp = self.guild.group_of(self.member)
-            if grp and len(grp.members) > 1:
-                dist = pygame.Rect(W - pad - 220 - SP3 - 180, y, 180, 36)
-                hov = dist.collidepoint(mouse)
-                self._hot = self._hot or hov
-                panel(screen, dist, fill=SURFACE_3 if hov else SURFACE_1,
-                      border=ACCENT if hov else LINE_SOFT, width=1, radius=RADIUS)
-                text(screen, "DISTRIBUTE LOAD", f.body_bd, ACCENT if hov else INK,
-                     dist.center, center=True)
-                self.buttons.append(("distribute", dist))
-
-        nxt = pygame.Rect(W - pad - 220, y, 220, 36)
-        hov = nxt.collidepoint(mouse)
-        self._hot = self._hot or hov
-        panel(screen, nxt, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
-        text(screen, "BACK TO MAP", f.body_bd, ACCENT_INK if hov else ACCENT,
-             nxt.center, center=True)
-        self.buttons.append(("back", nxt))
-
-        text(screen, "Esc for the pause menu", f.label, INK_FAINT, (pad, y + 12))
+            show_distribute = bool(grp and len(grp.members) > 1)
+        footer_bar(self, screen,
+                  secondary=("distribute", "DISTRIBUTE LOAD") if show_distribute else None,
+                  primary=("back", "BACK TO MAP"), margin=pad)

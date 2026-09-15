@@ -10,9 +10,10 @@ import pygame
 from .screen import Screen
 from .theme import (ACCENT, INK, INK_DIM, INK_FAINT, LINE_SOFT, MARGIN, RADIUS,
                     SP3, SP4, SURFACE_2, SURFACE_3, panel, set_pointer, text)
+from .widgets import ButtonsMixin
 
 
-class EditorMenuScreen(Screen):
+class EditorMenuScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, on_character, on_back, on_scenario=None):
@@ -21,25 +22,28 @@ class EditorMenuScreen(Screen):
         self.on_character = on_character
         self.on_scenario = on_scenario
         self.on_back = on_back
-        self.buttons = []                     # [(key, rect, enabled)]
+        self.cards = []                       # [(key, rect, enabled)] -- the two feature tiles
+        self.buttons = []                     # [(key, rect)] -- the footer BACK button
 
     def _click(self, px):
-        for key, rect, enabled in self.buttons:
+        for key, rect, enabled in self.cards:
             if not rect.collidepoint(px) or not enabled:
                 continue
             if key == "character":
                 self.on_character()
             elif key == "scenario":
                 self.on_scenario()
-            elif key == "back":
-                self.on_back()
             return
+        key = self.buttons_hit(px)
+        if key == "back":
+            self.on_back()
 
     def draw(self, screen):
         f = self.fonts
         W, H = screen.get_size()
         screen.fill((18, 19, 24))
-        self.buttons = []
+        self.cards = []
+        self._reset_buttons()
 
         text(screen, "EDITOR", f.title, INK, (MARGIN, MARGIN))
         text(screen, "build content outside a campaign", f.body, INK_DIM,
@@ -62,13 +66,9 @@ class EditorMenuScreen(Screen):
                    self.on_scenario is not None)
 
         back = pygame.Rect(MARGIN, H - MARGIN - 30, 120, 30)
-        hov = back.collidepoint(self.mouse)
-        panel(screen, back, fill=SURFACE_3 if hov else SURFACE_2,
-              border=ACCENT if hov else LINE_SOFT, width=1, radius=4)
-        text(screen, "BACK", f.label, ACCENT if hov else INK_DIM, back.center, center=True)
-        self.buttons.append(("back", back, True))
+        self.add_button(screen, back, "back", "BACK", font=f.label)
 
-        set_pointer(any(r.collidepoint(self.mouse) and e for _, r, e in self.buttons))
+        set_pointer(self._hot or any(r.collidepoint(self.mouse) and e for _, r, e in self.cards))
 
     def _card(self, screen, rect, key, title, blurb, enabled):
         f = self.fonts
@@ -82,4 +82,4 @@ class EditorMenuScreen(Screen):
         if not enabled:
             text(screen, "LOCKED", f.label, INK_FAINT,
                  (rect.right - SP4, rect.y + SP3), right=True)
-        self.buttons.append((key, rect, enabled))
+        self.cards.append((key, rect, enabled))

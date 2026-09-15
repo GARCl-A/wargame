@@ -21,13 +21,14 @@ from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, ellipsize, kg, panel, section,
-                    text, token_badge)
+                    text, token_badge, wrap_lines)
+from .widgets import ButtonsMixin, ModalScreen, footer_bar
 
 HOUSE_W = 392
 PACK_ROWS_SHOWN = 10
 
 
-class CityPropertyScreen(DragSelectMixin, Screen):
+class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, party, on_done):
@@ -42,6 +43,7 @@ class CityPropertyScreen(DragSelectMixin, Screen):
         self.item_rows = []
         self.cards = []
         self.buttons = []
+        self._hot = False
 
     def tutorial_key(self):
         return None
@@ -202,7 +204,7 @@ class CityPropertyScreen(DragSelectMixin, Screen):
         self.house_rows = []
         self.item_rows = []
         self.cards = []
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, "THE CITY PROPERTY", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
@@ -312,13 +314,7 @@ class CityPropertyScreen(DragSelectMixin, Screen):
         y += 20
         r = pygame.Rect(x, y, w, 34)
         can = self.purse > 0
-        hovr = r.collidepoint(self.mouse)
-        panel(screen, r, fill=ACCENT if (can and hovr) else SURFACE_3,
-              border=ACCENT if can else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "PAY TOWARD THE DEBT", f.body_bd,
-             ACCENT_INK if (can and hovr) else ACCENT if can else INK_FAINT,
-             r.center, center=True)
-        self.buttons.append(("pay_debt", r))
+        self.add_button(screen, r, "pay_debt", "PAY TOWARD THE DEBT", enabled=can, primary=can)
         return r.bottom + SP2
 
     def _draw_buy_offer(self, screen, x, y, w):
@@ -344,13 +340,8 @@ class CityPropertyScreen(DragSelectMixin, Screen):
         y += SP2
         r = pygame.Rect(x, y, w, 38)
         can = self._rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-        hovr = r.collidepoint(self.mouse)
-        panel(screen, r, fill=ACCENT if (can and hovr) else SURFACE_3,
-              border=ACCENT if can else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, f"BUY THE HOUSE -- {economy.CITY_PROPERTY_PRICE} COPPER", f.body_bd,
-             ACCENT_INK if (can and hovr) else ACCENT if can else INK_FAINT,
-             r.center, center=True)
-        self.buttons.append(("buy", r))
+        self.add_button(screen, r, "buy", f"BUY THE HOUSE -- {economy.CITY_PROPERTY_PRICE} COPPER",
+                        enabled=can, primary=can)
         return r.bottom + SP2
 
     # ------------------------------------------------------------------ #
@@ -411,26 +402,18 @@ class CityPropertyScreen(DragSelectMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
-
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE THE PROPERTY", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen, primary=("done", "LEAVE THE PROPERTY"), notice=self.notice)
 
 
-class RepossessionScreen(Screen):
+class RepossessionScreen(ModalScreen, Screen):
     """Forced open instead of `CityPropertyScreen` once
     `guild.property_city_repossession_due` -- the Bankers want their house
     back, or their tax paid; there is no third option here (unlike
     `justice_screen.GuardScreen`'s FIGHT, squatting is not a fight, it's a
-    standing risk played out later, in `campaign.py`'s "eviction" pause)."""
+    standing risk played out later, in `campaign.py`'s "eviction" pause).
+    No `resume_to` -- there is no screen underneath to freeze, so the shared
+    modal frame falls back to a flat backdrop (`draw_scene_behind`'s except
+    branch)."""
 
     native = True
 
@@ -445,43 +428,54 @@ class RepossessionScreen(Screen):
     def tutorial_key(self):
         return None
 
-    def _click(self, px):
-        for key, rect in self.buttons:
-            if not rect.collidepoint(px):
-                continue
-            if key == "return":
-                self.on_return()
-            elif key == "squat":
-                self.on_squat()
-            return
+    def on_button(self, key):
+        if key == "return":
+            self.on_return()
+        elif key == "squat":
+            self.on_squat()
 
-    def draw(self, screen):
+    def _lines(self, w):
         f = self.fonts
-        screen.fill((24, 18, 18))
-        self.buttons = []
-
-        text(screen, "THE BANKERS", f.title, INK, (MARGIN, MARGIN - 2))
         missed = self.guild.property_city_missed_payments
         owed = missed * economy.CITY_PROPERTY_TAX
-        text(screen, f"{missed} tax cycles missed -- {owed} copper behind. The "
-             "Bankers want the house back, or the debt paid.", f.body, DANGER,
-             (MARGIN, MARGIN + 30))
+        warn = wrap_lines([(f"{missed} tax cycles missed -- {owed} copper behind. "
+                           "The Bankers want the house back, or the debt paid.")],
+                          f.body, w)
+        return owed, warn
 
-        top = MARGIN + 90
-        w = min(560, screen.get_width() - 2 * MARGIN)
+    def card_rect(self, size):
+        W, H = size
+        f = self.fonts
+        w = min(560, W - 2 * MARGIN) + 2 * SP3
+        _, warn = self._lines(w - 2 * SP3)
+        h = (SP3 + f.title.get_height() + SP2 + len(warn) * (f.body.get_height() + 2)
+             + SP2 + 56 + SP2 + 56 + SP3)
+        r = pygame.Rect(0, 0, w, h)
+        r.center = (W // 2, H // 2)
+        return r
 
-        top = self._option(screen, "return", "RETURN THE PROPERTY",
-                           f"Hand it back. The guild owes {owed} copper -- the "
-                           "Bankers' other services are shut until it's paid.",
-                           top, w, INFO)
-        self._option(screen, "squat", "REFUSE -- SQUAT",
+    def draw_body(self, screen, card):
+        f = self.fonts
+        text(screen, "THE BANKERS", f.title, INK, (card.x + SP3, card.y + SP3))
+        owed, warn = self._lines(card.w - 2 * SP3)
+        y = card.y + SP3 + f.title.get_height() + SP2
+        for ln in warn:
+            text(screen, ln, f.body, DANGER, (card.x + SP3, y))
+            y += f.body.get_height() + 2
+        y += SP2
+
+        y = self._option(screen, card, "return", "RETURN THE PROPERTY",
+                         f"Hand it back. The guild owes {owed} copper -- the "
+                         "Bankers' other services are shut until it's paid.",
+                         y, INFO)
+        self._option(screen, card, "squat", "REFUSE -- SQUAT",
                      "Keep the house without paying. No more tax, but the guard "
                      "will come to clear it out, sooner or later.",
-                     top, w, DANGER)
+                     y, DANGER)
 
-    def _option(self, screen, key, label, sub, top, w, col):
+    def _option(self, screen, card, key, label, sub, top, col):
         f = self.fonts
-        r = pygame.Rect(MARGIN, top, w, 56)
+        r = pygame.Rect(card.x + SP3, top, card.w - 2 * SP3, 56)
         hov = r.collidepoint(self.mouse)
         panel(screen, r, fill=SURFACE_3 if hov else SURFACE_2, border=col,
               width=2 if hov else 1, radius=RADIUS)

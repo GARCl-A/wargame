@@ -16,13 +16,14 @@ import pygame
 
 from . import hunt
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
+from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, panel, section, text,
                     token_badge, wrap_lines)
+from .widgets import ButtonsMixin, footer_bar
 
 
-class HuntScreen(Screen):
+class HuntScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None):
@@ -97,7 +98,7 @@ class HuntScreen(Screen):
         f = self.fonts
         screen.fill((17, 21, 18))
         self.chips = []
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, "THE WILDS", f.title, INK, (MARGIN, MARGIN - 2))
         clock = self.guild.clock
@@ -193,29 +194,10 @@ class HuntScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 56
-        right = screen.get_width() - MARGIN
-
-        def button(key, label, x, wide=240, primary=True):
-            r = pygame.Rect(x, y, wide, 36)
-            hov = r.collidepoint(self.mouse)
-            if primary:
-                panel(screen, r, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
-                      width=1, radius=RADIUS)
-                text(screen, label, f.body_bd, ACCENT_INK if hov else ACCENT,
-                     r.center, center=True)
-            else:
-                panel(screen, r, fill=SURFACE_3 if hov else SURFACE_2,
-                      border=LINE_SOFT, width=1, radius=RADIUS)
-                text(screen, label, f.body, INK if hov else INK_DIM,
-                     r.center, center=True)
-            self.buttons.append((key, r))
-
         if self.phase == "setup":
-            button("confirm", "INTO THE WILDS", right - 240)
+            footer_bar(self, screen, primary=("confirm", "INTO THE WILDS"))
         elif self.phase == "interlude":
-            button("hunt_on", "KEEP HUNTING", right - 240)
-            button("head_back", "HEAD BACK", MARGIN, wide=160, primary=False)
+            footer_bar(self, screen, back=("head_back", "HEAD BACK"),
+                      primary=("hunt_on", "KEEP HUNTING"))
         else:
-            button("done", "CONTINUE", right - 240)
+            footer_bar(self, screen, primary=("done", "CONTINUE"))

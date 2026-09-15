@@ -10,11 +10,11 @@ way.
 import pygame
 
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INK, INK_DIM, LINE_SOFT, RADIUS, SP2, SP3,
-                    SURFACE_1, SURFACE_2, SURFACE_3, panel, set_pointer, text)
+from .theme import INK, INK_DIM, SP2, SP3, text
+from .widgets import ModalScreen
 
 
-class PauseScreen(Screen):
+class PauseScreen(ModalScreen, Screen):
     def __init__(self, fonts, resume_to, on_resume, on_menu, on_quit,
                 tutorial=None, on_tutorial_toggle=None, on_tutorial_reset=None):
         super().__init__()
@@ -29,50 +29,33 @@ class PauseScreen(Screen):
         self.on_tutorial_reset = on_tutorial_reset
         self.buttons = []
 
-    def _click(self, px):
-        for key, rect in self.buttons:
-            if rect.collidepoint(px):
-                {"resume": self.on_resume, "menu": self.on_menu,
-                 "quit": self.on_quit,
-                 "tutorial_toggle": self.on_tutorial_toggle,
-                 "tutorial_reset": self.on_tutorial_reset}[key]()
-                return
+    def on_button(self, key):
+        {"resume": self.on_resume, "menu": self.on_menu,
+         "quit": self.on_quit,
+         "tutorial_toggle": self.on_tutorial_toggle,
+         "tutorial_reset": self.on_tutorial_reset}[key]()
 
-    def draw(self, screen):
-        f = self.fonts
-        W, H = screen.get_size()
-        try:
-            self.resume_to.mouse = (-1, -1)      # keep its hover art quiet
-            self.resume_to.draw(screen)
-        except Exception:
-            screen.fill(SURFACE_1)
-        veil = pygame.Surface((W, H), pygame.SRCALPHA)
-        veil.fill((6, 7, 12, 210))
-        screen.blit(veil, (0, 0))
-
+    def card_rect(self, size):
+        W, H = size
         tutorial_rows = 2 if self.tutorial is not None else 0
         card = pygame.Rect(0, 0, 320, 250 + tutorial_rows * (40 + SP2))
         card.center = (W // 2, H // 2)
-        panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, width=2, radius=RADIUS)
+        return card
+
+    def draw_body(self, screen, card):
+        f = self.fonts
         text(screen, "PAUSED", f.title, INK, (card.centerx, card.y + 26), center=True)
         text(screen, "the campaign is saved on every stop", f.body_sm, INK_DIM,
              (card.centerx, card.y + 58), center=True)
 
-        self.buttons = []
-        rows = [("resume", "RESUME", ACCENT), ("menu", "SAVE & MAIN MENU", INK),
-                ("quit", "QUIT GAME", DANGER)]
+        rows = [("resume", "RESUME", True, False), ("menu", "SAVE & MAIN MENU", False, False),
+                ("quit", "QUIT GAME", False, True)]
         if self.tutorial is not None:
             on = self.tutorial.enabled
-            rows.append(("tutorial_toggle", f"TUTORIALS: {'ON' if on else 'OFF'}", INK))
-            rows.append(("tutorial_reset", "RESET TUTORIALS", INK))
+            rows.append(("tutorial_toggle", f"TUTORIALS: {'ON' if on else 'OFF'}", False, False))
+            rows.append(("tutorial_reset", "RESET TUTORIALS", False, False))
         by = card.y + 84
-        for key, label, col in rows:
+        for key, label, primary, danger in rows:
             r = pygame.Rect(card.x + SP3, by, card.w - 2 * SP3, 40)
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
-                  border=col if hov else LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, label, f.body_bd, col, r.center, center=True)
-            self.buttons.append((key, r))
+            self.add_button(screen, r, key, label, primary=primary, danger=danger)
             by += 40 + SP2
-
-        set_pointer(any(r.collidepoint(self.mouse) for _, r in self.buttons))

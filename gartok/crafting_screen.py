@@ -7,16 +7,17 @@ Progress requires rolling a 1d20+INT over hours.
 
 import pygame
 
-from . import data, economy
+from . import data
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, ellipsize, panel, section,
+                    LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
+                    SURFACE_2, SURFACE_3, panel, section,
                     text, token_badge)
+from .widgets import ButtonsMixin, footer_bar
 
 SIDE_W = 340
 
-class CraftingScreen(Screen):
+class CraftingScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_done):
@@ -73,7 +74,7 @@ class CraftingScreen(Screen):
     def draw(self, screen):
         f = self.fonts
         screen.fill((18, 19, 24))
-        self.buttons = []
+        self._reset_buttons()
         self.roster_rows = []
 
         text(screen, "THE FORGE", f.title, INK, (MARGIN, MARGIN - 2))
@@ -162,16 +163,13 @@ class CraftingScreen(Screen):
             text(screen, status_text, f.body_sm, status_color, (r.x + SP2, r.y + SP2 + 40))
 
             if is_active or self._has_materials(m, r_name):
-                # Draw buttons for 1h, 4h, 8h
                 bw = 100
                 bx = r.x + SP2
                 by = r.y + SP2 + 65
                 for h in [1, 4, 8]:
                     btn_r = pygame.Rect(bx, by, bw, 32)
-                    b_hov = btn_r.collidepoint(self.mouse)
-                    panel(screen, btn_r, fill=SURFACE_3 if b_hov else SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-                    text(screen, f"Work {h}h", f.body_sm, INK, btn_r.center, center=True)
-                    self.buttons.append((f"work:{h}:{r_name}", btn_r))
+                    self.add_button(screen, btn_r, f"work:{h}:{r_name}", f"Work {h}h",
+                                    font=f.body_sm)
                     bx += bw + SP2
             else:
                 text(screen, "Requires materials in personal pack to start.", f.body_sm, INK_FAINT, (r.x + SP2, r.y + SP2 + 65))
@@ -181,16 +179,9 @@ class CraftingScreen(Screen):
     def _draw_footer(self, screen):
         f = self.fonts
         y = screen.get_height() - 52
-
         ny = y - 22
         for notice in self.notices:
             text(screen, notice, f.body_sm, INFO, (MARGIN, ny))
             ny -= 20
 
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE THE FORGE", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen, primary=("done", "LEAVE THE FORGE"))

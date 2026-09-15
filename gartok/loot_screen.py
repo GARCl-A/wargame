@@ -13,12 +13,13 @@ import pygame
 
 from . import data
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
+from .theme import (ACCENT, ACCENT_INK, DANGER, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, kg, panel, section, token_badge, text)
+from .widgets import ButtonsMixin, footer_bar
 
 
-class LootScreen(Screen):
+class LootScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, survivors, pool, on_done):
@@ -35,6 +36,7 @@ class LootScreen(Screen):
         self.pack_rows = []                   # [(rect, member, idx)]
         self.cards = []                      # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
+        self._hot = False
         self.pile_rect = None
         self._pack_scroll = {}
         self._pack_areas = []
@@ -160,7 +162,7 @@ class LootScreen(Screen):
         self.rows = []
         self.pack_rows = []
         self.cards = []
-        self.buttons = []
+        self._reset_buttons()
         self._pack_areas = []
         self._pile_area = None
 
@@ -333,25 +335,7 @@ class LootScreen(Screen):
                      (rect.centerx, rect.bottom - 16), center=True)
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
-
-        auto = pygame.Rect(MARGIN, y, 220, 36)
-        hova = auto.collidepoint(self.mouse)
-        on = bool(self.pool)
-        panel(screen, auto, fill=SURFACE_3 if (on and hova) else SURFACE_2 if on else SURFACE_1,
-              border=LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, "take what fits", f.body, INK if on else INK_FAINT,
-             auto.center, center=True)
-        if on:
-            self.buttons.append(("auto", auto))
-
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
         lbl = "DONE" if not self.pool else "LEAVE THE REST AND GO"
-        text(screen, lbl, f.body_bd, ACCENT_INK if hovd else ACCENT, done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen,
+                  back=("auto", "take what fits", bool(self.pool)),
+                  primary=("done", lbl), notice=self.notice)

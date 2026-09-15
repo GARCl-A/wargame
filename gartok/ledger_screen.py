@@ -9,13 +9,14 @@ import pygame
 
 from . import data
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE_SOFT,
-                    MARGIN, RADIUS, SP3, SURFACE_1, SURFACE_2, SURFACE_3, panel, text)
+from .theme import (INK, INK_DIM, INK_FAINT, LINE_SOFT, MARGIN, RADIUS, SP3,
+                    SURFACE_2, panel, text)
+from .widgets import ButtonsMixin, footer_bar
 
 CARD_W = 560
 
 
-class LedgerScreen(Screen):
+class LedgerScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_done):
@@ -51,7 +52,7 @@ class LedgerScreen(Screen):
     def draw(self, screen):
         f = self.fonts
         screen.fill((18, 19, 24))
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, "LEDGER HOLD", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, "\"State your business.\"", f.body, INK_DIM, (MARGIN, MARGIN + 30))
@@ -67,27 +68,11 @@ class LedgerScreen(Screen):
                  f.body_sm, INK_DIM, (x, y))
             y += 30
             r = pygame.Rect(x, y, w, 36)
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if hov else SURFACE_3, border=ACCENT,
-                  width=1, radius=RADIUS)
-            text(screen, "HAND OVER THE CHEST", f.body_bd,
-                 ACCENT_INK if hov else ACCENT, r.center, center=True)
-            self.buttons.append(("exchange", r))
+            self.add_button(screen, r, "exchange", "HAND OVER THE CHEST", primary=True)
         else:
             text(screen, "Nothing to hand over here.", f.body_sm, INK_FAINT, (x, y))
 
         self._draw_footer(screen)
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
-
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE LEDGER HOLD", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        footer_bar(self, screen, primary=("done", "LEAVE LEDGER HOLD"), notice=self.notice)

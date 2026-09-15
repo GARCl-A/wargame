@@ -10,9 +10,10 @@ import pygame
 
 from . import persist
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, RADIUS, SP3, SP4, SURFACE_1,
-                    SURFACE_2, SURFACE_3, panel, text)
+from .theme import (ACCENT, DANGER, INK, INK_DIM, INK_FAINT,
+                    LINE_SOFT, MARGIN, RADIUS, SP3, SP4, SURFACE_2,
+                    SURFACE_3, panel, text)
+from .widgets import draw_button
 
 
 class MenuScreen(Screen):
@@ -133,10 +134,6 @@ class MenuScreen(Screen):
                   "delete", INK_DIM, mouse)
 
     def _btn(self, screen, key, slot, rect, label, color, mouse):
-        hov = rect.collidepoint(mouse)
-        on_accent = color is ACCENT
-        panel(screen, rect, fill=color if (hov and on_accent) else SURFACE_3 if hov else SURFACE_1,
-              border=color, width=1, radius=4)
-        ink = ACCENT_INK if (hov and on_accent) else color
-        text(screen, label, self.fonts.label, ink, rect.center, center=True)
+        draw_button(screen, rect, label, self.fonts, mouse, primary=(color is ACCENT),
+                   danger=(color is DANGER), font=self.fonts.label)
         self.buttons.append((key, slot, rect))

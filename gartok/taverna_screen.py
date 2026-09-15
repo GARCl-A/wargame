@@ -19,15 +19,16 @@ import pygame
 from . import economy, orders, recruit
 from .data import alignment_distance
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
+from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, panel, section,
                     token_badge, text, tracked, wrap_lines)
+from .widgets import ButtonsMixin, footer_bar
 
 CANDIDATES = 3          # layout width; the live pool may hold fewer after a hire
 
 
-class TavernaScreen(Screen):
+class TavernaScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
@@ -45,6 +46,7 @@ class TavernaScreen(Screen):
         self.cand_cards = []                 # [(rect, index)]
         self.party_cards = []                # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
+        self._hot = False
         self.tab = "recruits"               # "recruits" or "rooms"
 
     # ------------------------------------------------------------------ #
@@ -138,7 +140,7 @@ class TavernaScreen(Screen):
         screen.fill((18, 19, 24))
         self.cand_cards = []
         self.party_cards = []
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
 
@@ -233,15 +235,12 @@ class TavernaScreen(Screen):
         y += SP3
         btn_rect = pygame.Rect(area.x + SP3, y, 200, 36)
         is_studying = group.order is not None and group.order.kind == "garrison" and group.order.job == "study"
-        hov = btn_rect.collidepoint(self.mouse)
-        
+
         if is_studying:
             panel(screen, btn_rect, fill=SURFACE_3, border=OK, width=2, radius=RADIUS)
             text(screen, "STUDYING", f.body_bd, OK, btn_rect.center, center=True)
         else:
-            panel(screen, btn_rect, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
-            text(screen, "RENT ROOMS (STUDY)", f.body_bd, ACCENT_INK if hov else ACCENT, btn_rect.center, center=True)
-            self.buttons.append(("rent_study", btn_rect))
+            self.add_button(screen, btn_rect, "rent_study", "RENT ROOMS (STUDY)")
 
     # ------------------------------------------------------------------ #
     def _draw_candidate(self, screen, rect, i, cand):
@@ -382,15 +381,6 @@ class TavernaScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            col = OK if "signs" in self.notice else INFO
-            text(screen, self.notice, f.body_sm, col, (MARGIN, y - 22))
-
-        d = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hov = d.collidepoint(self.mouse)
-        panel(screen, d, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
-        text(screen, "LEAVE THE TAVERN", f.body_bd, ACCENT_INK if hov else ACCENT,
-             d.center, center=True)
-        self.buttons.append(("done", d))
+        col = OK if (self.notice and "signs" in self.notice) else INFO
+        footer_bar(self, screen, primary=("done", "LEAVE THE TAVERN"),
+                  notice=self.notice, notice_color=col)

@@ -27,6 +27,7 @@ from .theme import (ACCENT, ACCENT_INK, BANNER_COLORS, DANGER, DEMO_HL, INFO,
                     panel, section, set_player_color, smooth_circle,
                     token_badge, text, tracked, wrap_lines)
 from .unit import Unit
+from .widgets import draw_button
 
 TEAM_SIZE = 3
 DRAFT_ROUNDS = 3
@@ -535,20 +536,12 @@ class DraftScreen(Screen):
     def _draw_top_buttons(self, screen, mouse):
         r_edit = pygame.Rect(screen.get_width() - MARGIN - 96, MARGIN, 96, 30)
         self.edit_btn_rect = r_edit
-        on = self.edit_mode
-        hov_edit = r_edit.collidepoint(mouse)
-        panel(screen, r_edit, fill=ACCENT if on else (SURFACE_3 if hov_edit else SURFACE_2),
-              border=ACCENT if (on or hov_edit) else LINE, width=1, radius=4)
-        text(screen, "EDITING" if on else "EDIT", self.fonts.label,
-             ACCENT_INK if on else INK, r_edit.center, center=True)
+        draw_button(screen, r_edit, "EDITING" if self.edit_mode else "EDIT", self.fonts,
+                   mouse, primary=self.edit_mode, font=self.fonts.label)
 
         r_reroll = pygame.Rect(r_edit.left - SP2 - 96, MARGIN, 96, 30)
         self.reroll_btn_rect = r_reroll
-        hov_reroll = r_reroll.collidepoint(mouse)
-        panel(screen, r_reroll, fill=SURFACE_3 if hov_reroll else SURFACE_2,
-              border=ACCENT if hov_reroll else LINE, width=1, radius=4)
-        text(screen, "REROLL", self.fonts.label,
-             INK, r_reroll.center, center=True)
+        draw_button(screen, r_reroll, "REROLL", self.fonts, mouse, font=self.fonts.label)
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen, mouse):

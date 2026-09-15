@@ -17,13 +17,13 @@ import pygame
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
+from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, panel, token_badge, text,
-                    tracked)
+                    SURFACE_3, WARN, panel, text, tracked)
+from .widgets import ButtonsMixin, footer_bar, unit_card
 
 
-class SquadScreen(SheetModalMixin, Screen):
+class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, roster, location, on_confirm, on_back, *,
@@ -46,6 +46,7 @@ class SquadScreen(SheetModalMixin, Screen):
         self.info_hits = []                # [(rect, unit)] -- the card's 'i' disc opens the sheet
         self.tiers = []                      # [(rect, index)]
         self.buttons = []                   # [(key, rect)]
+        self._hot = False
         eligible = [u for u in roster if u not in self.disabled]
         if len(eligible) <= self.max_pick:
             self.picked = eligible
@@ -125,7 +126,7 @@ class SquadScreen(SheetModalMixin, Screen):
         self.cards = []
         self.info_hits = []
         self.tiers = []
-        self.buttons = []
+        self._reset_buttons()
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
         n = len(self.picked)
@@ -193,39 +194,30 @@ class SquadScreen(SheetModalMixin, Screen):
         pad = SP3
         chosen = unit in self.picked
         off = unit in self.disabled
-        hov = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_1 if off else SURFACE_2,
-              border=DANGER if off else ACCENT if chosen else (INFO if hov else LINE_SOFT),
-              width=2 if (chosen or hov or off) else 1, radius=RADIUS)
 
-        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
-        self.info_hits.append((badge, unit))
-
-        tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, unit, f)
-        text(screen, unit.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
-        text(screen, f"{unit.race['name']}  ·  {unit.occupation['name']}", f.body_sm,
-             INK_DIM, (tok[0] + 24, rect.y + pad + 20))
-
-        y = rect.y + pad + 44
-        text(screen, f"HP {unit.hp_max}   AC {unit.ac}   MD {unit.mental_defense}   "
-             f"Speed {unit.speed}", f.mono_sm, INK_DIM, (rect.x + pad, y))
-        y += 18
         n, faces = unit.weapon["damage"]
         arma = unit.weapon_name or "unarmed"
-        text(screen, f"{arma}  {n}d{faces}", f.body_sm, INK_DIM, (rect.x + pad, y))
-        y += 17
         lvl = f"C{unit.combat_level}"
         if unit.work_xp or unit.work_level:
             lvl += f"/W{unit.work_level}"
         if unit.pending_picks:
             lvl += " *"
-        text(screen, f"{unit.gold} copper  ·  lvl {lvl}", f.mono_sm, ACCENT,
-             (rect.x + pad, y))
+
+        lines = [
+            (f"HP {unit.hp_max}   AC {unit.ac}   MD {unit.mental_defense}   "
+             f"Speed {unit.speed}", INK_DIM),
+            (f"{arma}  {n}d{faces}", INK_DIM),
+            (f"{unit.gold} copper  ·  lvl {lvl}", ACCENT),
+        ]
         if unit.hunger_level:
-            y += 16
-            text(screen, f"HUNGER: {unit.hunger_label}", f.label,
-                 DANGER if unit.hunger_level >= 2 else WARN, (rect.x + pad, y))
+            lines.append((f"HUNGER: {unit.hunger_label}",
+                          DANGER if unit.hunger_level >= 2 else WARN))
+
+        unit_card(screen, rect, unit, f, self.mouse, selected=chosen, disabled=off,
+                 lines=lines, subtitle=f"{unit.race['name']}  ·  {unit.occupation['name']}")
+
+        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
+        self.info_hits.append((badge, unit))
 
         mark = ("UNFIT (hunger)" if off else "PICKED" if chosen
                 else "click to add")
@@ -234,22 +226,5 @@ class SquadScreen(SheetModalMixin, Screen):
              (rect.x + pad, rect.bottom - 22))
 
     def _draw_footer(self, screen):
-        f = self.fonts
-        W, H = screen.get_size()
-        ok = self.ok
-        y = H - 56
-        conf = pygame.Rect(W - MARGIN - 240, y, 240, 36)
-        hov = conf.collidepoint(self.mouse)
-        panel(screen, conf, fill=ACCENT if (ok and hov) else SURFACE_3 if ok else SURFACE_1,
-              border=ACCENT if ok else LINE_SOFT, width=1, radius=RADIUS)
-        text(screen, self.confirm_label, f.body_bd,
-             ACCENT_INK if (ok and hov) else ACCENT if ok else INK_FAINT,
-             conf.center, center=True)
-        self.buttons.append(("confirm", conf))
-
-        back = pygame.Rect(MARGIN, y, 140, 36)
-        hovb = back.collidepoint(self.mouse)
-        panel(screen, back, fill=SURFACE_3 if hovb else SURFACE_2, border=LINE_SOFT,
-              width=1, radius=RADIUS)
-        text(screen, "back", f.body, INK if hovb else INK_DIM, back.center, center=True)
-        self.buttons.append(("back", back))
+        footer_bar(self, screen, back=("back", "BACK"),
+                  primary=("confirm", self.confirm_label, self.ok))
