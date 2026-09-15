@@ -16,11 +16,11 @@ pack. `on_done` returns to the map (which autosaves).
 
 import pygame
 
-from . import recruit
+from . import economy, orders, recruit
 from .data import alignment_distance
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
+                    LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, WARN, panel, section,
                     token_badge, text, tracked, wrap_lines)
 
@@ -45,6 +45,7 @@ class TavernaScreen(Screen):
         self.cand_cards = []                 # [(rect, index)]
         self.party_cards = []                # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
+        self.tab = "recruits"               # "recruits" or "rooms"
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -77,27 +78,37 @@ class TavernaScreen(Screen):
     # ------------------------------------------------------------------ #
     def _click(self, px):
         for key, rect in self.buttons:
-            if rect.collidepoint(px) and key == "done":
-                self.on_done()
+            if rect.collidepoint(px):
+                if key == "done":
+                    self.on_done()
+                elif key == "tab_recruits":
+                    self.tab = "recruits"
+                    self.sel = None
+                elif key == "tab_rooms":
+                    self.tab = "rooms"
+                    self.sel = None
+                elif key == "rent_study":
+                    self.guild.group().order = orders.garrison("study")
                 return
 
-        if self.sel is None:
-            for rect, i in self.cand_cards:
+        if self.tab == "recruits":
+            if self.sel is None:
+                for rect, i in self.cand_cards:
+                    if rect.collidepoint(px):
+                        self.sel = i
+                        self.notice = None
+                        return
+                return
+
+            for rect, member in self.party_cards:
+                if rect.collidepoint(px):
+                    self._pitch(member)
+                    return
+            for rect, i in self.cand_cards:        # click another stranger: switch the pitch
                 if rect.collidepoint(px):
                     self.sel = i
-                    self.notice = None
                     return
-            return
-
-        for rect, member in self.party_cards:
-            if rect.collidepoint(px):
-                self._pitch(member)
-                return
-        for rect, i in self.cand_cards:        # click another stranger: switch the pitch
-            if rect.collidepoint(px):
-                self.sel = i
-                return
-        self.sel = None                       # clicked nowhere useful: cancel
+            self.sel = None                       # clicked nowhere useful: cancel
 
     def _pitch(self, member):
         cand = self.candidates[self.sel]
@@ -130,6 +141,34 @@ class TavernaScreen(Screen):
         self.buttons = []
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
+
+        # Tabs
+        tab_y = MARGIN + 40
+        tr_rect = pygame.Rect(MARGIN, tab_y, 120, 30)
+        tr_hov = tr_rect.collidepoint(self.mouse)
+        tr_on = self.tab == "recruits"
+        panel(screen, tr_rect, fill=SURFACE_3 if tr_on else (SURFACE_2 if tr_hov else SURFACE_1),
+              border=ACCENT if tr_on else LINE, width=2 if tr_on else 1, radius=4)
+        text(screen, "RECRUITS", f.label, ACCENT if tr_on else INK_DIM, tr_rect.center, center=True)
+        self.buttons.append(("tab_recruits", tr_rect))
+
+        room_rect = pygame.Rect(MARGIN + 130, tab_y, 120, 30)
+        rm_hov = room_rect.collidepoint(self.mouse)
+        rm_on = self.tab == "rooms"
+        panel(screen, room_rect, fill=SURFACE_3 if rm_on else (SURFACE_2 if rm_hov else SURFACE_1),
+              border=ACCENT if rm_on else LINE, width=2 if rm_on else 1, radius=4)
+        text(screen, "ROOMS", f.label, ACCENT if rm_on else INK_DIM, room_rect.center, center=True)
+        self.buttons.append(("tab_rooms", room_rect))
+
+        if self.tab == "recruits":
+            self._draw_recruits(screen, tab_y + 45)
+        elif self.tab == "rooms":
+            self._draw_rooms(screen, tab_y + 45)
+
+        self._draw_footer(screen)
+
+    def _draw_recruits(self, screen, top):
+        f = self.fonts
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         if self.sel is not None:
             cand = self.candidates[self.sel]
@@ -139,9 +178,8 @@ class TavernaScreen(Screen):
             sub, col = (f"guild of {len(self.guild.roster)}  ·  size penalty "
                         f"-{recruit.size_penalty(len(self.guild.roster))}  ·  "
                         f"new faces in {days_left} day(s)", INK_DIM)
-        text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
+        text(screen, sub, f.body, col, (MARGIN, top - 25))
 
-        top = MARGIN + 68
         party_h = 120
         gap = SP3
         cand_h = screen.get_height() - top - party_h - gap - 80
@@ -157,7 +195,53 @@ class TavernaScreen(Screen):
 
         py = top + cand_h + gap
         self._draw_party(screen, pygame.Rect(MARGIN, py, screen.get_width() - 2 * MARGIN, party_h))
-        self._draw_footer(screen)
+
+    def _draw_rooms(self, screen, top):
+        f = self.fonts
+        text(screen, "rent a quiet room for the day  ·  anyone with a study target will make progress",
+             f.body, INK_DIM, (MARGIN, top - 25))
+
+        W, H = screen.get_width(), screen.get_height()
+        area = pygame.Rect(MARGIN, top, W - 2 * MARGIN, H - top - 80)
+        panel(screen, area, fill=SURFACE_1, border=LINE, radius=RADIUS)
+
+        cost = economy.TAVERN_STUDY_COST_PER_DAY
+        group = self.guild.group()
+        total_cost = len(group.members) * cost
+        
+        y = area.y + SP3
+        text(screen, f"cost: {cost} copper per member / day (total: {total_cost} copper)", f.body, INK, (area.x + SP3, y))
+        y += 30
+
+        text(screen, "STUDY TARGETS:", f.label, INFO, (area.x + SP3, y))
+        y += 20
+        
+        studying_count = 0
+        for m in group.members:
+            if m.study_target:
+                studying_count += 1
+                text(screen, f"{m.name}", f.body_bd, INK, (area.x + SP3, y))
+                text(screen, f"studying {m.study_target}", f.body, ACCENT, (area.x + SP3 + 120, y))
+                text(screen, f"{m.study_progress} points", f.mono_sm, INK_DIM, (area.x + SP3 + 320, y))
+                y += 24
+        
+        if studying_count == 0:
+            text(screen, "no one has a study target set (select a scroll in the character sheet)",
+                 f.body, INK_FAINT, (area.x + SP3, y))
+            y += 24
+
+        y += SP3
+        btn_rect = pygame.Rect(area.x + SP3, y, 200, 36)
+        is_studying = group.order is not None and group.order.kind == "garrison" and group.order.job == "study"
+        hov = btn_rect.collidepoint(self.mouse)
+        
+        if is_studying:
+            panel(screen, btn_rect, fill=SURFACE_3, border=OK, width=2, radius=RADIUS)
+            text(screen, "STUDYING", f.body_bd, OK, btn_rect.center, center=True)
+        else:
+            panel(screen, btn_rect, fill=ACCENT if hov else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
+            text(screen, "RENT ROOMS (STUDY)", f.body_bd, ACCENT_INK if hov else ACCENT, btn_rect.center, center=True)
+            self.buttons.append(("rent_study", btn_rect))
 
     # ------------------------------------------------------------------ #
     def _draw_candidate(self, screen, rect, i, cand):

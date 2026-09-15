@@ -407,20 +407,21 @@ class Guild:
                 for u in g.members:
                     if u.gold >= economy.TAVERN_STUDY_COST_PER_DAY:
                         u.gold -= economy.TAVERN_STUDY_COST_PER_DAY
-                        if u.study_target and u.study_target in u._base_inventory:
-                            spell_id = u.study_target.split(":")[1]
+                        if u.study_target:
+                            spell_id = u.study_target
                             spell = magic.SPELLS.get(spell_id)
-                            if spell and u.magic_source:  # Must be initiated
-                                bonus = 2 if u.race["name"] == "Kobold" and "blood" in spell.sources else 0
-                                dice_qty = 2 if "gnome_magic_excitement" in u.talents["racial"] and u.study_progress == 0 else 1
-                                progress = data.roll(dice_qty, 20) + u.mod_intelligence + bonus
-                                points_gained = max(0, progress)
-                                u.study_progress += points_gained
-                                if u.study_progress >= magic.points_to_learn(spell):
-                                    u.spells_known.append(spell.id)
-                                    u.study_target = None
-                                    u.study_progress = 0
-                                    events.append(f"{u.name} masters the spell {spell.name}!")
+                            if spell and f"Scroll of {spell.name}" in u._base_inventory:
+                                if u.magic_source:  # Must be initiated
+                                    bonus = 2 if u.race["name"] == "Kobold" and "blood" in spell.sources else 0
+                                    dice_qty = 2 if "gnome_magic_excitement" in u.talents["racial"] and u.study_progress == 0 else 1
+                                    progress = data.roll(dice_qty, 20) + u.mod_intelligence + bonus
+                                    points_gained = max(0, progress)
+                                    u.study_progress += points_gained
+                                    if u.study_progress >= magic.points_to_learn(spell):
+                                        u.spells_known.append(spell.id)
+                                        u.study_target = None
+                                        u.study_progress = 0
+                                        events.append(f"{u.name} masters the spell {spell.name}!")
                     else:
                         events.append(f"{u.name} could not afford the rent to study.")
                 continue

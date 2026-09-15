@@ -17,7 +17,7 @@ roll. `on_back` returns to the editor hub.
 
 import pygame
 
-from . import data, npc_lib, persist, sheet, talents
+from . import data, magic, npc_lib, persist, sheet, talents
 from .combatant import Combatant
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -195,6 +195,8 @@ class CharEditorScreen(Screen):
                 self._gear(u.give_to_offhand, data.TORCH_ITEM)
         elif kind == "unpack":
             self._gear(u.take_from_pack, action[1])
+        elif kind == "study":
+            u.study_target = None if u.study_target == action[1] else action[1]
         elif kind == "load":
             self._load_unit(npc_lib.load_npc(action[1]), slug=action[1])
         elif kind == "ask_delete":
@@ -532,6 +534,16 @@ class CharEditorScreen(Screen):
             h = xr.collidepoint(self.mouse)
             text(screen, "×", f.body_bd, DANGER if h else INK_DIM, xr.center, center=True)
             self._hit(xr, ("unpack", idx))
+            if item.startswith("Scroll of ") and u.magic_source:
+                spell = next((s for s in magic.SPELLS.values() if f"Scroll of {s.name}" == item), None)
+                if spell and spell.id not in u.spells_known:
+                    studying = u.study_target == spell.id
+                    sr = pygame.Rect(xr.left - 48, ir.y + 2, 44, 16)
+                    sh = sr.collidepoint(self.mouse)
+                    s_col = ACCENT if studying else (OK if sh else INK_DIM)
+                    panel(screen, sr, fill=SURFACE_3 if sh else SURFACE_2, border=s_col, width=1, radius=3)
+                    text(screen, "study", f.label, s_col, sr.center, center=True)
+                    self._hit(sr, ("study", spell.id))
             y += 22
         addr = pygame.Rect(x, y, 120, 20)
         self._btn(screen, addr, "+ ADD ITEM")

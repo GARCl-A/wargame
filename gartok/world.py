@@ -194,7 +194,7 @@ NODES = [
          language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city"),
     Node("tavern", "Tavern", "tavern", (0.07, 0.30),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
-         jurisdiction="the_city"),
+         jurisdiction="the_city", garrison_job="study"),
     Node("road", "Old Road", "town", (0.55, 0.52),
          "A dirt track cutting across the open country to the east.",
          unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
