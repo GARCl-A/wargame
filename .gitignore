@@ -8,6 +8,6 @@ Equipe.xlsx
 .pytest_cache/
 saves/
 sim_results/
-.claude/
+.claude/settings.local.json
 localnote.txt
 scratch/

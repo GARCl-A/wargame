@@ -1,0 +1,15 @@
+{
+  "lint-touched-file": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "command": "py scripts/lint_touched_file.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
