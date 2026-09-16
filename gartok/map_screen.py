@@ -149,7 +149,7 @@ def _race_tag(u):
 class MapScreen(ButtonsMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group, on_interactions,
+    def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
                 pending_event=None, on_resolve_event=None):
         super().__init__()
         self.fonts = fonts
@@ -158,7 +158,6 @@ class MapScreen(ButtonsMixin, Screen):
         self.on_wipe = on_wipe
         self.on_advance = on_advance
         self.on_manage_group = on_manage_group
-        self.on_interactions = on_interactions
         self._pending_event = pending_event    # (Group, Order) an ambush paused here -- see app._resolve_pending_event
         self.on_resolve_event = on_resolve_event
         # point at whichever group actually needs the player -- an ambushed
@@ -479,8 +478,6 @@ class MapScreen(ButtonsMixin, Screen):
             self.on_advance(dt=1)
         elif key == "manage_group":
             self.on_manage_group(self.selected)
-        elif key == "interactions":
-            self.on_interactions(self.selected)
         elif key.startswith("work:"):
             self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1])))
         elif key in orders.INTERACTIVE_KINDS:
@@ -574,18 +571,15 @@ class MapScreen(ButtonsMixin, Screen):
         # A node's flags aren't mutually exclusive (the City is both a bank and
         # a tanner) -- checked after the kind-dispatch chain above, not nested
         # in one branch of it, so a future node can carry `tanner` on its own.
-        interactions = []
         if here.tanner:
-            interactions.append("tanner")
+            blocks.append({"type": "button", "key": "tanner", "label": "VISIT THE TANNER",
+                          "gap_before": T.S * 2})
         if here.trust:
-            interactions.append("trust")
+            blocks.append({"type": "button", "key": "trust", "label": "VISIT THE BANKERS",
+                          "gap_before": T.S * 2})
 
         if here.forge:
             blocks.append({"type": "button", "key": "forge", "label": "VISIT THE FORGE",
-                          "gap_before": T.S * 2})
-
-        if interactions:
-            blocks.append({"type": "button", "key": "interactions", "label": "AVAILABLE INTERACTIONS",
                           "gap_before": T.S * 2})
 
         has_property_business = (self.guild.property_city_unlocked or

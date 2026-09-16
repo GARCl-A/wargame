@@ -292,7 +292,6 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.editor_menu_screen import EditorMenuScreen
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.map_editor_screen import MapEditorScreen
-    from gartok.interactions_screen import InteractionsScreen
 
     scenes = [
         MenuScreen(F, noop, noop, noop, on_editor=noop),
@@ -300,8 +299,7 @@ def test_every_screen_draws_native_at_any_window_size():
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
         DraftScreen(F, noop),
-        MapScreen(F, guild, noop, noop, noop, noop, noop),
-        InteractionsScreen(F, guild, guild.groups[0], noop, noop),
+        MapScreen(F, guild, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
         BattleScreen(F, batt, noop),
         BattleScreen(F, ctf_batt, noop),                  # capture the flag: setup + pennants
@@ -356,19 +354,19 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.group import Group
     apart = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
                                 Group(list(roster[2:]), node="market")])
-    scenes.append(MapScreen(F, apart, noop, noop, noop, noop, noop))
+    scenes.append(MapScreen(F, apart, noop, noop, noop, noop))
 
     together = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
                                    Group(list(roster[2:]), node=world.START_NODE)])
-    scenes.append(MapScreen(F, together, noop, noop, noop, noop, noop))   # +N badge, MERGE button
-    split_scene = MapScreen(F, together, noop, noop, noop, noop, noop)
+    scenes.append(MapScreen(F, together, noop, noop, noop, noop))   # +N badge, MERGE button
+    split_scene = MapScreen(F, together, noop, noop, noop, noop)
     split_scene._split_target = split_scene.selected.gid
     scenes.append(split_scene)
 
     crowded = Guild(None, groups=[Group([roster[0], roster[1]], node=world.START_NODE),
                                   Group([roster[2], roster[3]], node=world.START_NODE),
                                   Group([roster[4]], node=world.START_NODE)])
-    scenes.append(MapScreen(F, crowded, noop, noop, noop, noop, noop))    # +2 badge, two MERGE rows
+    scenes.append(MapScreen(F, crowded, noop, noop, noop, noop))    # +2 badge, two MERGE rows
 
     for scene in scenes:
         assert getattr(scene, "native", False), type(scene).__name__
@@ -1248,7 +1246,7 @@ def test_map_screen_split_panel_shows_racial_level():
     u1.set_track_level("combat", 3)
     group = Group([u1, u2], node=world.START_NODE)
     g = Guild(None, groups=[group])
-    ms = MapScreen(F, g, lambda: None, lambda: None, lambda: None, lambda: None, lambda: None)
+    ms = MapScreen(F, g, lambda: None, lambda: None, lambda: None, lambda: None)
     ms._split_target = group.gid
     surf = pygame.Surface((1280, 800))
     ms.draw(surf)
@@ -1361,8 +1359,7 @@ def test_map_screen_level_up_observability():
     guild = Guild([u], node="city")
 
     scr = MapScreen(Fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
-                    on_advance=lambda *a, **k: None, on_manage_group=lambda g: None,
-                    on_interactions=lambda g: None)
+                    on_advance=lambda *a, **k: None, on_manage_group=lambda g: None)
     scr.mouse = (0, 0)
     scr.draw(surf)
 
@@ -1372,8 +1369,7 @@ def test_map_screen_level_up_observability():
     # a guild with nobody pending a level-up gets the plain, narrower label
     plain_guild = Guild([Unit("player")], node="city")
     plain_scr = MapScreen(Fonts(), plain_guild, on_guild=lambda: None, on_wipe=lambda: None,
-                          on_advance=lambda *a, **k: None, on_manage_group=lambda g: None,
-                          on_interactions=lambda g: None)
+                          on_advance=lambda *a, **k: None, on_manage_group=lambda g: None)
     plain_scr.mouse = (0, 0)
     plain_scr.draw(surf)
     plain_btn = next((r for k, r in plain_scr.buttons if k == "guild"), None)
