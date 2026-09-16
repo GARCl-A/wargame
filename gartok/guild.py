@@ -727,7 +727,9 @@ class Guild:
         (Brisk Hands can shrink it), used only for the "done early" note."""
         earners = [u for u in workers if u in self.roster]   # a long shift can starve one
         paid = []
+        events = []
         for u in earners:
+            old_work_lvl = u.work_level
             level = economy.lumber_level(u)
             pay = economy.lumber_pay(hours, level)
             gain = round(pay * (1 + u.talent_bonus("coin_gain")))
@@ -735,8 +737,8 @@ class Guild:
             u.work_hours += progression.work_xp_hours(hours, level, u.work_level)
             u.collect_levels()                 # more work marks can lift the mean level
             paid.append(gain)
-
-        events = []
+            if u.work_level > old_work_lvl:
+                events.append(f"{u.name} reached work level {u.work_level}!")
         if earners:
             names = ", ".join(u.name for u in earners)
             wage = (f"+{paid[0]} copper each" if len(set(paid)) == 1

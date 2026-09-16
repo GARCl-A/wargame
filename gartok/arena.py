@@ -25,7 +25,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 
 import random
 
-from . import encounters, npc_lib, world
+from . import encounters, npc_lib, progression, world
 
 CHAMPION_SLUG = "adelio-small-knife"
 
@@ -167,6 +167,21 @@ def bout_level_range(bout, squad):
             return f"Bosses + goons (Lv {bout.level})"
         return "Lv 1-6"
     return f"Lv {bout.level}"
+
+
+def bout_max_combat_level(bout):
+    """Highest combat level among opponents in this bout."""
+    if bout is None:
+        return 0
+    if bout.boss:
+        return 6
+    if bout.champion:
+        # Adelio's authored combat_xp (npcs/adelio-small-knife.json) is fixed at
+        # level 1 -- he never levels, so this doesn't need to track him live.
+        return 1
+    if bout.stage2 or bout.defense:
+        return len(progression.COMBAT_XP_THRESHOLDS)
+    return min(len(progression.COMBAT_XP_THRESHOLDS), 2 * bout.level)
 
 
 def build_challenger(mean_level):

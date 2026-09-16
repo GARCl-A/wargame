@@ -14,6 +14,7 @@ selected tier and an over-cap pick is trimmed when you switch tiers.
 
 import pygame
 
+from . import arena
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
@@ -78,6 +79,20 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
         if not (1 <= len(self.picked) <= self.max_pick):
             return False
         return self.offer is None or self.picked_gold >= self.entry_cost
+
+    @property
+    def no_xp_picked(self):
+        """Picked units that will not earn combat XP in the selected arena bout."""
+        if not self.offer:
+            return []
+        max_lvl = arena.bout_max_combat_level(self.offer)
+        return [u for u in self.picked if u.combat_level > max_lvl]
+
+    def unit_outlevels_bout(self, unit):
+        """Whether a unit's combat level strictly exceeds the max enemy level in this bout."""
+        if not self.offer:
+            return False
+        return unit.combat_level > arena.bout_max_combat_level(self.offer)
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -190,7 +205,16 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
         text(screen, f"entry: {off.entry} x {len(self.picked)} fighter(s) = "
              f"{cost} copper  ·  squad's combined purse: {gold} copper", f.body_sm,
              OK if can_pay else DANGER, (MARGIN, top))
-        return top + 22
+        top += 18
+
+        no_xp = self.no_xp_picked
+        if no_xp:
+            names = ", ".join(u.name for u in no_xp)
+            max_lvl = arena.bout_max_combat_level(off)
+            text(screen, f"No combat XP: {names} (level higher than enemies, max Lv {max_lvl})",
+                 f.body_sm, WARN, (MARGIN, top))
+            top += 18
+        return top + 4
 
     def _draw_card(self, screen, rect, unit):
         f = self.fonts
@@ -213,9 +237,15 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
             (f"{arma}  {n}d{faces}", INK_DIM),
             (f"{unit.gold} copper  ·  lvl {lvl}", ACCENT),
         ]
+        if unit.pending_picks:
+            lines.append(("TALENT PICK READY", ACCENT))
         if unit.hunger_level:
             lines.append((f"HUNGER: {unit.hunger_label}",
                           DANGER if unit.hunger_level >= 2 else WARN))
+        no_xp = self.unit_outlevels_bout(unit)
+        if no_xp:
+            max_lvl = arena.bout_max_combat_level(self.offer)
+            lines.append((f"NO COMBAT XP (enemy max Lv {max_lvl})", WARN))
 
         unit_card(screen, rect, unit, f, self.mouse, selected=chosen, disabled=off,
                  lines=lines, subtitle=f"{unit.race['name']}  ·  {unit.occupation['name']}")
@@ -235,10 +265,11 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
         badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
         self.info_hits.append((badge, unit))
 
-        mark = ("UNFIT (hunger)" if off else "PICKED" if chosen
+        mark = ("UNFIT (hunger)" if off
+                else ("PICKED (NO XP)" if (chosen and no_xp) else "PICKED") if chosen
                 else "click to add")
         text(screen, mark, f.label,
-             DANGER if off else ACCENT if chosen else INK_FAINT,
+             DANGER if off else WARN if (chosen and no_xp) else ACCENT if chosen else INK_FAINT,
              (rect.x + pad, rect.bottom - 22))
 
     def _draw_footer(self, screen):

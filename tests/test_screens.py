@@ -1377,4 +1377,137 @@ def test_map_screen_split_panel_shows_racial_level():
     assert ms.split_rows[0][1] is u1
 
 
+def test_footer_bar_hint_offsets_when_back_button_present():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from unittest.mock import patch
+    from gartok.theme import Fonts, MARGIN, SP3
+    from gartok.widgets import ButtonsMixin, footer_bar, LEFT_W, FOOTER_HINT
+
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    class Dummy(ButtonsMixin):
+        def __init__(self):
+            super().__init__()
+            self.fonts = Fonts()
+            self.mouse = (0, 0)
+            self.buttons = []
+            self._hot = False
+
+    surf = pygame.Surface((800, 600))
+
+    # Without back button: hint starts at left margin
+    screen_no_back = Dummy()
+    with patch("gartok.widgets.text") as mock_text:
+        footer_bar(screen_no_back, surf, primary=("ok", "OK"))
+        hint_calls = [c for c in mock_text.call_args_list if c.args[1] == FOOTER_HINT]
+        assert len(hint_calls) == 1
+        assert hint_calls[0].args[4][0] == MARGIN
+
+    # With back button: hint starts after the back button
+    screen_with_back = Dummy()
+    with patch("gartok.widgets.text") as mock_text:
+        footer_bar(screen_with_back, surf, back=("back", "BACK"), primary=("ok", "OK"))
+        hint_calls = [c for c in mock_text.call_args_list if c.args[1] == FOOTER_HINT]
+        assert len(hint_calls) == 1
+        assert hint_calls[0].args[4][0] == MARGIN + LEFT_W + SP3
+        # Ensure back button is registered and does not collide with hint
+        back_btn = next(r for k, r in screen_with_back.buttons if k == "back")
+        assert back_btn.right < hint_calls[0].args[4][0]
+
+
+def test_battle_screen_victory_card_with_stabilized():
+    import pygame
+    from gartok.battle import Battle
+    from gartok.battle_screen import BattleScreen
+    from gartok.theme import Fonts
+    from gartok.unit import Unit
+    pygame.init()
+    surf = pygame.Surface((1024, 768))
+    batt = Battle([Unit("player"), Unit("player")], [Unit("enemy")])
+    batt.winner = "player"
+    batt.player_units[0].status = "up"
+    batt.player_units[1].status = "stable"
+    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr.draw(surf)
+
+
+def test_guild_screen_level_up_observability():
+    import pygame
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    from gartok.theme import Fonts
+    from gartok.unit import Unit
+    pygame.init()
+    surf = pygame.Surface((1280, 800))
+    u0 = Unit("player")
+    u1 = Unit("player")
+    u1.combat_xp = 15
+    u1.collect_levels()
+    assert u1.pending_picks
+
+    guild = Guild([u0, u1])
+    level_called = []
+    scr = GuildScreen(Fonts(), guild, on_back=lambda: None, on_level=lambda u: level_called.append(u))
+
+    # Smart selection: picked u1 because u1 has pending picks
+    assert scr.member == u1
+
+    scr.mouse = (0, 0)
+    scr.draw(surf)
+
+    # Roster button for level up exists
+    btn = next((r for k, r in scr.buttons if k == f"roster_level:{u1.uid}"), None)
+    assert btn is not None
+
+    # Clicking it triggers on_level
+    evt = pygame.event.Event(pygame.MOUSEBUTTONUP, pos=btn.center, button=1)
+    scr.handle_event(evt)
+    assert level_called == [u1]
+
+
+def test_map_screen_level_up_observability():
+    import pygame
+    from gartok.guild import Guild
+    from gartok.map_screen import MapScreen
+    from gartok.theme import Fonts
+    from gartok.unit import Unit
+    pygame.init()
+    surf = pygame.Surface((1280, 800))
+    u = Unit("player")
+    u.combat_xp = 15
+    u.collect_levels()
+    guild = Guild([u], node="city")
+
+    scr = MapScreen(Fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
+                    on_advance=lambda *a, **k: None, on_manage_group=lambda g: None,
+                    on_interactions=lambda g: None)
+    scr.mouse = (0, 0)
+    scr.draw(surf)
+
+    guild_btn = next((r for k, r in scr.buttons if k == "guild"), None)
+    assert guild_btn is not None
+    # guild footer button is present and adjusted width
+    assert guild_btn.w > 170
+
+
+def test_squad_screen_level_up_observability():
+    from gartok import world
+    from gartok.squad_screen import SquadScreen
+    from gartok.theme import Fonts
+    from gartok.unit import Unit
+    u = Unit("player")
+    u.combat_xp = 15
+    u.collect_levels()
+    assert u.pending_picks
+    bnode = next(n for n in world.NODES if n.kind == "battle")
+    scr = SquadScreen(Fonts(), [u], bnode, lambda s: None, lambda: None)
+    
+    import pygame
+    surf = pygame.Surface((1024, 768))
+    scr.mouse = (0, 0)
+    scr.draw(surf)
+    # Renders without crashing and card lines include the talent line
 

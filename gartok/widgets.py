@@ -116,9 +116,11 @@ def footer_bar(screen_obj, surf, *, back=None, secondary=None, primary=None,
     if notice:
         text(surf, notice, screen_obj.fonts.body_sm, notice_color, (m, y - FOOTER_NOTICE_DY))
 
+    hx = m
     if back is not None:
         key, label, enabled = _padded(back)
         screen_obj.add_button(surf, pygame.Rect(m, y, LEFT_W, 36), key, label, enabled=enabled)
+        hx = m + LEFT_W + SP3
 
     rx = W - m
     if primary is not None:
@@ -134,7 +136,7 @@ def footer_bar(screen_obj, surf, *, back=None, secondary=None, primary=None,
         rx = rect.x - SP3
 
     if hint:
-        text(surf, hint, screen_obj.fonts.label, INK_FAINT, (m, y + 12))
+        text(surf, hint, screen_obj.fonts.label, INK_FAINT, (hx, y + 12))
 
 
 # --------------------------------------------------------------------------- #

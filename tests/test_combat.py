@@ -516,3 +516,13 @@ def test_unit_con_modifier_hp_recalculation():
     assert u.hp_max > base_hp_max
     assert u.hp > base_hp
 
+
+def test_stabilized_ally_logged_on_victory():
+    batt, a, d = _melee_battle()
+    b = _recruit(batt)
+    a.status = "stable"
+    d.status = "dead"
+    # Enemy wiped, a is stable, b is standing
+    assert batt._check_winner() == "player"
+    assert any("was stabilized and survived unconscious" in line for line in batt.log_lines)
+

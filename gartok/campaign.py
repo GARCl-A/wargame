@@ -44,6 +44,8 @@ class BattleOutcome:
     arena_tier: object = None                     # the world.Bout, for an arena fight
     deeds_earned: list = field(default_factory=list)  # factions.Deed completed by this result
     arena_title_event: str | None = None          # a one-liner if the Champion of the Pit title changed hands
+    stabilized: list = field(default_factory=list) # survivors that were stabilized / broken at end of combat
+    leveled_up: list = field(default_factory=list) # survivors that gained a combat level from XP
 
 
 def _carry_forward(member, combatant):
@@ -93,13 +95,18 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     wraps. `node` is the world node the fight happened at (for the faction deeds);
     `arena_offer` is the `world.Bout` for an arena fight, or None.
     """
-    survivors, fallen, fallen_combatants, xp_awards = [], [], [], {}
+    survivors, fallen, fallen_combatants, stabilized, xp_awards, leveled_up = [], [], [], [], {}, []
     for combatant, member in zip(battle.player_units, squad):
         if combatant.survived:
+            if combatant.status in ("stable", "broken"):
+                stabilized.append(member)
             if combatant.combat_xp_earned:        # XP scaled by the level gap of each kill
+                old_lvl = member.combat_level
                 member.combat_xp += combatant.combat_xp_earned
                 member.collect_levels()           # a new mean level rolls a hit die
                 xp_awards[member.name] = combatant.combat_xp_earned
+                if member.combat_level > old_lvl:
+                    leveled_up.append(member)
             _carry_forward(member, combatant)
             survivors.append(member)
         else:
@@ -115,7 +122,8 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     player_kos = sum(c.kills for c in battle.player_units)
     outcome = BattleOutcome(won, survivors, fallen, xp_awards=xp_awards,
                             squad_size=len(squad), player_kos=player_kos,
-                            arena_tier=arena_offer)
+                            arena_tier=arena_offer, stabilized=stabilized,
+                            leveled_up=leveled_up)
 
     if guild.empty:                               # full wipe: campaign over
         outcome.campaign_over = True

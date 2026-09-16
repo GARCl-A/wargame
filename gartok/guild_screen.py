@@ -60,7 +60,8 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
         self.on_level = on_level             # open the level screen for a member
         self.on_manage = on_manage           # open the Manage Gear screen (multi-member loadout)
         self.tab = "members"                  # "members" (roster+gear) | "reputations"
-        self.member = self.roster[0] if self.roster else None   # card shown on the right
+        pending = [u for u in self.roster if u.pending_picks]
+        self.member = pending[0] if pending else (self.roster[0] if self.roster else None)   # card shown on the right
         self.tab_hits = []                  # [(rect, key)]
         self.member_hits = []              # [(rect, unit)] -- list cards select the member
         self.buttons = []                  # [(key, rect)]
@@ -95,7 +96,13 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
             
             for key, rect in self.buttons:
                 if rect.collidepoint(px):
-                    if key == "level" and self.on_level and self.member is not None:
+                    if key.startswith("roster_level:") and self.on_level:
+                        uid = key.split(":", 1)[1]
+                        target = next((u for u in self.roster if u.uid == uid), None)
+                        if target:
+                            self.member = target
+                            self.on_level(target)
+                    elif key == "level" and self.on_level and self.member is not None:
                         self.on_level(self.member)
                     elif key == "share_food" and self.member is not None:
                         self.member.share_food = not self.member.share_food
@@ -139,8 +146,9 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
         self._hot = False
         self.tooltip = None
 
+        pending = [u for u in self.roster if u.pending_picks]
         if self.member not in self.roster:
-            self.member = self.roster[0] if self.roster else None
+            self.member = pending[0] if pending else (self.roster[0] if self.roster else None)
 
         pad = MARGIN if W < 1500 else SP5
         banner = (pad + 16, pad + 14)
@@ -150,7 +158,9 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
             screen.blit(art, art.get_rect(center=banner))
         text(screen, self.guild.name or "The Guild", f.title, INK, (pad + 34, pad - 2))
         text(screen, "Manage your roster and character progression", f.body_sm, INK_FAINT, (pad + 34, pad + 26))
-        sub, col = (f"{self.battles_won} wins  ·  {len(self.roster)} members", INK_DIM)
+        extra_lvl = f"  ·  {len(pending)} ready to level up" if pending else ""
+        sub, col = (f"{self.battles_won} wins  ·  {len(self.roster)} members{extra_lvl}",
+                    ACCENT if pending else INK_DIM)
         text(screen, ellipsize(sub, f.body, W - 2 * pad), f.body, col, (pad, pad + 44))
 
         self._draw_tabs(screen, W, pad)
@@ -222,10 +232,29 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
             ccol = DANGER if over_max else WARN if over_norm else INK_DIM
             text(screen, f"HP {unit.hp_max}   AC {unit.ac}   ·   {kg(unit.load)}",
                  f.mono_sm, ccol, (r.x + SP3, r.bottom - 20))
+            hx = r.right - SP3
             if unit.hunger_level:
                 text(screen, "HUNGER", f.label,
                      DANGER if unit.hunger_level >= 2 else WARN,
-                     (r.right - SP3, r.bottom - 19), right=True)
+                     (hx, r.bottom - 19), right=True)
+                hx -= f.label.size("HUNGER")[0] + SP2
+            if unit.pending_picks:
+                lbl = "LEVEL UP"
+                tw = f.label.size(lbl)[0]
+                bw, bh = tw + 18, 18
+                bx = hx - bw
+                by = r.bottom - 21
+                br = pygame.Rect(bx, by, bw, bh)
+                b_hov = br.collidepoint(mouse)
+                if b_hov:
+                    self._hot = True
+                panel(screen, br, fill=ACCENT if b_hov else SURFACE_1,
+                      border=ACCENT, width=1, radius=4)
+                pygame.draw.circle(screen, ACCENT_INK if b_hov else ACCENT,
+                                   (br.x + 6, br.centery), 3)
+                text(screen, lbl, f.label, ACCENT_INK if b_hov else ACCENT,
+                     (br.x + 12, br.y + 3))
+                self.buttons.append((f"roster_level:{unit.uid}", br))
 
             self.member_hits.append((r, unit))
 

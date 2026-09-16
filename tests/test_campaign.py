@@ -375,3 +375,39 @@ def test_absorb_battle_rolls_over_to_spare_quiver():
     assert data.AMMO_ITEM in member._base_inventory
     assert member._base_inventory.count(data.AMMO_ITEM) == 1
     assert member.quiver_charges == data.QUIVER_AMMO
+
+
+def test_absorb_battle_tracks_stabilized_survivors():
+    from gartok import campaign
+    from gartok.guild import Guild
+    squad = [Unit("player") for _ in range(3)]
+    guild = Guild(list(squad))
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    battle.player_units[0].status = "up"
+    battle.player_units[1].status = "stable"
+    battle.player_units[2].status = "dead"
+
+    out = campaign.absorb_battle(guild, squad, battle)
+
+    assert out.won
+    assert set(out.survivors) == {squad[0], squad[1]}
+    assert out.stabilized == [squad[1]]
+    assert out.fallen == [squad[2]]
+
+
+def test_absorb_battle_tracks_leveled_up_survivors():
+    from gartok import campaign
+    from gartok.guild import Guild
+    u = Unit("player")
+    u.combat_xp = 0
+    assert u.combat_level == 0
+    guild = Guild([u])
+    battle = Battle([u], [Unit("enemy")])
+    battle.winner = "player"
+    battle.player_units[0].status = "up"
+    battle.player_units[0].combat_xp_earned = 15
+
+    out = campaign.absorb_battle(guild, [u], battle)
+    assert u.combat_level == 2
+    assert out.leveled_up == [u]

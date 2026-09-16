@@ -388,6 +388,7 @@ class Battle:
             if forced == "enemy" and self.lethal:
                 self._wipe_side("player")
             self._resolve_dangling_dying()
+            self._log_aftermath()
             return self.winner
 
         players_up = self._living_side("player")
@@ -420,7 +421,16 @@ class Battle:
 
         self.winner = "player"
         self._resolve_dangling_dying()
+        self._log_aftermath()
         return self.winner
+
+    def _log_aftermath(self):
+        if self.winner == "player":
+            for u in self.units:
+                if u.team == "player" and u.status == "stable":
+                    self.log(f"{u.name} was stabilized and survived unconscious.")
+                elif u.team == "player" and u.status == "broken":
+                    self.log(f"{u.name} was recovered broken.")
 
     # ------------------------------------------------------------------ #
     # falling, stabilizing and death                                     #

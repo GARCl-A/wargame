@@ -77,8 +77,11 @@ def grant_meat(state):
         return ["Nobody made it back with the haul."]
 
     for u in hunters:
+        old_work_lvl = u.work_level
         u.work_hours += progression.work_xp_hours(state.hours_hunted, HUNT_LEVEL, u.work_level)
         u.collect_levels()
+        if u.work_level > old_work_lvl:
+            lines.append(f"{u.name} reached work level {u.work_level}!")
 
     meat = state.meat
     for i in range(meat):

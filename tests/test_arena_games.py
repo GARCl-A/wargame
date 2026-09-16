@@ -362,3 +362,71 @@ def test_arena_node_swaps_the_champion_bout_for_the_games_after_dethroning():
                          "Games: The Ribbit Brothers"}
     finally:
         app_mod.SquadScreen = orig
+
+
+def test_bout_max_combat_level():
+    assert arena.bout_max_combat_level(arena.scrapper_bout()) == 0
+    assert arena.bout_max_combat_level(arena.champion_bout()) == 1
+    assert arena.bout_max_combat_level(arena.boss_bout()) == 6
+    assert arena.bout_max_combat_level(arena.brawl_bout()) == 7
+    assert arena.bout_max_combat_level(arena.ctf_bout()) == 7
+    assert arena.bout_max_combat_level(world.Bout("Custom", entry=0, purse=0, enemies=2, level=2)) == 4
+    assert arena.bout_max_combat_level(None) == 0
+
+
+def test_squad_screen_shows_no_xp_warning_for_higher_level_units():
+    from gartok.squad_screen import SquadScreen
+
+    rookie = Unit("player", name="Rookie")
+    rookie.combat_xp = 0
+    vet = Unit("player", name="Veteran")
+    vet.combat_xp = 3
+    master = Unit("player", name="Master")
+    master.combat_xp = 10
+
+    roster = [rookie, vet, master]
+    scrapper = arena.scrapper_bout()
+    champion = arena.champion_bout()
+
+    scr = SquadScreen(None, roster, world.node("arena"),
+                      on_confirm=lambda *a: None, on_back=lambda: None,
+                      arena_offers=[scrapper, champion])
+
+    # Scrapper bout: max enemy combat level is 0
+    assert not scr.unit_outlevels_bout(rookie)
+    assert scr.unit_outlevels_bout(vet)
+    assert scr.unit_outlevels_bout(master)
+
+    scr.picked = [rookie, vet]
+    assert scr.no_xp_picked == [vet]
+
+    # Switch to champion bout: max enemy combat level is 1
+    scr.offer_idx = 1
+    assert not scr.unit_outlevels_bout(rookie)
+    assert not scr.unit_outlevels_bout(vet)
+    assert scr.unit_outlevels_bout(master)
+    assert scr.no_xp_picked == []
+
+    scr.picked = [vet, master]
+    assert scr.no_xp_picked == [master]
+
+
+def test_squad_screen_renders_arena_no_xp_notice():
+    import pygame
+    from gartok.theme import Fonts
+    from gartok.squad_screen import SquadScreen
+
+    pygame.init()
+    surf = pygame.Surface((1024, 768))
+    fonts = Fonts()
+
+    rookie = Unit("player", name="Rookie")
+    vet = Unit("player", name="Veteran")
+    vet.combat_xp = 3
+
+    scr = SquadScreen(fonts, [rookie, vet], world.node("arena"),
+                      on_confirm=lambda *a: None, on_back=lambda: None,
+                      arena_offers=[arena.scrapper_bout()])
+    scr.picked = [rookie, vet]
+    scr.draw(surf)
+

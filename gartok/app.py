@@ -705,10 +705,30 @@ class App:
                 return
             self._after_activity()
 
+        alerts = []
         if outcome.fallen:
-            from .alert_screen import AlertScreen
             msgs = [f"{u.name} was killed in combat." for u in outcome.fallen]
-            self.scene = AlertScreen(self.fonts, self.scene, "DEATH ALERT", msgs, on_done=do_next_step, is_danger=True)
+            alerts.append(("DEATH ALERT", msgs, True))
+        if outcome.stabilized:
+            msgs = [f"{u.name} was stabilized and survived unconscious." for u in outcome.stabilized]
+            alerts.append(("STABILIZED", msgs, False))
+        if getattr(outcome, "leveled_up", None):
+            msgs = [f"{u.name} reached combat level {u.combat_level}!" for u in outcome.leveled_up]
+            alerts.append(("LEVEL UP!", msgs, False))
+            self._map_notices += msgs
+
+        def run_alert(idx):
+            if idx >= len(alerts):
+                do_next_step()
+                return
+            title, msgs, is_danger = alerts[idx]
+            from .alert_screen import AlertScreen
+            self.scene = AlertScreen(self.fonts, self.scene, title, msgs,
+                                     on_done=lambda: run_alert(idx + 1),
+                                     is_danger=is_danger)
+
+        if alerts:
+            run_alert(0)
         else:
             do_next_step()
 

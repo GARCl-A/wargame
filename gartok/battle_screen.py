@@ -808,11 +808,44 @@ class BattleScreen(Screen):
             s.gap(SP3)
             self._draw_hint(screen, s)
             s.gap(SP3)
+        else:
+            self._draw_victory_card(screen, s)
+            s.gap(SP3)
 
         self.buttons = []
         self._draw_actions(screen, s)
         s.gap(SP3)
         self._draw_inspect(screen, s)
+
+    def _draw_victory_card(self, screen, s):
+        f = self.fonts
+        b = self.battle
+        card = s.row(84)
+        won = b.winner == "player"
+        panel(screen, card, fill=SURFACE_2,
+              border=ACCENT if won else DANGER, width=1)
+
+        title = "VICTORY" if won else "DEFEAT"
+        text(screen, title, f.heading, ACCENT if won else DANGER, (card.x + SP3, card.y + 6))
+
+        stabilized = [u for u in b.player_units if u.status in ("stable", "broken")]
+        fallen = [u for u in b.player_units if u.status == "dead"]
+
+        if stabilized and fallen:
+            s_names = ", ".join(u.name for u in stabilized)
+            f_names = ", ".join(u.name for u in fallen)
+            text(screen, f"Stabilized: {s_names}", f.body_sm, OK, (card.x + SP3, card.y + 26))
+            text(screen, f"Fallen: {f_names}", f.body_sm, DANGER, (card.x + SP3, card.y + 44))
+        elif stabilized:
+            names = ", ".join(u.name for u in stabilized)
+            text(screen, f"Stabilized: {names} (unconscious)", f.body_sm, OK, (card.x + SP3, card.y + 30))
+        elif fallen:
+            names = ", ".join(u.name for u in fallen)
+            text(screen, f"Fallen: {names}", f.body_sm, DANGER, (card.x + SP3, card.y + 30))
+        else:
+            text(screen, "All squad members survived standing.", f.body_sm, INK_DIM, (card.x + SP3, card.y + 30))
+
+        text(screen, "Click anywhere to continue", f.label, INK_FAINT, (card.x + SP3, card.y + 64))
 
     def _draw_turn_card(self, screen, s):
         f = self.fonts

@@ -567,6 +567,8 @@ class MapScreen(ButtonsMixin, Screen):
 
         text(screen, "MAP", f.title, INK, (MARGIN, MARGIN - 2))
 
+        pending = [u for u in self.guild.roster if u.pending_picks]
+
         groups = [
             [("DAY", str(clock.day), INK),
              ("TIME", f"{clock.hour_of_day:02d}:{clock.minute_of_hour:02d}", INK)],
@@ -577,6 +579,8 @@ class MapScreen(ButtonsMixin, Screen):
             [("WINS", str(self.guild.battles_won), INK),
              ("REPUTATION", str(self.guild.arena_reputation), INK)],
         ]
+        if pending:
+            groups.append([("LEVEL UP", f"{len(pending)} ready", ACCENT)])
         y = MARGIN + CHIP_Y
         x = MARGIN
         for gi, group in enumerate(groups):
@@ -808,6 +812,8 @@ class MapScreen(ButtonsMixin, Screen):
             status_col = WARN if (needs and not sel) else INK_DIM
             text(screen, f"{world.node(g.node).name}  ·  {self._order_status(g)}",
                  f.label, status_col, (r.x + SP3, r.y + 22))
+            if any(u.pending_picks for u in g.members):
+                text(screen, "● LEVEL UP", f.label, ACCENT, (r.right - SP3, r.y + 22), right=True)
             self.group_rows.append((r, g))
             y += 42
         return y + SP2
@@ -1092,11 +1098,19 @@ class MapScreen(ButtonsMixin, Screen):
     def _draw_footer(self, screen):
         y = screen.get_height() - 52
 
-        g = pygame.Rect(MARGIN, y, 170, 36)
-        self.add_button(screen, g, "guild", "GUILD / GEAR", primary=True)
+        pending_count = sum(1 for u in self.guild.roster if u.pending_picks)
+        if pending_count:
+            guild_label = f"GUILD ({pending_count} LEVEL UP)"
+            gw = max(195, self.fonts.body_sm.size(guild_label)[0] + 32)
+        else:
+            guild_label = "GUILD / GEAR"
+            gw = 170
+
+        g = pygame.Rect(MARGIN, y, gw, 36)
+        self.add_button(screen, g, "guild", guild_label, primary=True)
 
         hungry = self.guild.hungry
-        mt = pygame.Rect(MARGIN + 182, y, 160, 36)
+        mt = pygame.Rect(g.right + SP3, y, 160, 36)
         # a stop helps only if a hungry member can reach a ration: their own pack,
         # or the shared larder of a group-mate who pools food
         reachable = any(u.rations for u in hungry) or any(
@@ -1108,4 +1122,4 @@ class MapScreen(ButtonsMixin, Screen):
                 if self.guild.needs_orders else
                 "every group is underway  ·  the clock is running on its own")
         text(screen, f"{hint}  ·  Esc for the pause menu",
-             self.fonts.body_sm, INK_FAINT, (MARGIN + 354, y + 10))
+             self.fonts.body_sm, INK_FAINT, (mt.right + SP3, y + 10))

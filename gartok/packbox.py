@@ -107,6 +107,11 @@ class PackColumnMixin:
         token_badge(screen, (rect.x + pad + 13, rect.y + 20), unit, f, r=13)
 
         edge = self._column_header_edge(screen, rect, unit, pad)
+        if unit.pending_picks:
+            lvl_lbl = "● LEVEL UP"
+            lw = f.label.size(lvl_lbl)[0]
+            text(screen, lvl_lbl, f.label, ACCENT, (edge, rect.y + 6), right=True)
+            edge -= lw + SP2
         nx = rect.x + pad + 32
         text(screen, ellipsize(unit.full_name, f.card_name, edge - nx - pad),
              f.card_name, INK, (nx, rect.y + 6))
