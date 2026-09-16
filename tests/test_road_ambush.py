@@ -28,6 +28,7 @@ def _app(guild):
     app._claim_stage_pending = None
     app._map_notices = []
     app._pending = []
+    app._pending_event = None
     app._save = lambda: None
     return app
 
@@ -172,7 +173,10 @@ def test_fleeing_a_guard_catch_back_onto_an_unsafe_node_can_ambush():
     assert pause is not None and pause.kind == "ambush" and len(pause.pack) > 0
 
 
-def test_app_starts_the_ambush_battle_with_the_whole_group_then_resolves_it():
+def test_app_lands_on_the_map_with_the_ambush_pending_then_resolves_it_on_click():
+    """No more "AMBUSH! [FIGHT]" screen: `_advance` lands back on the map
+    with the group's fight stashed in `_pending_event` -- MapScreen's own
+    red CTA (`_resolve_pending_event`) is what actually starts the battle."""
     random.seed(1)
     orig = _forced_chance(1.0)
     try:
@@ -185,9 +189,14 @@ def test_app_starts_the_ambush_battle_with_the_whole_group_then_resolves_it():
     finally:
         world.ROAD_AMBUSH_CHANCE = orig
 
-    assert app.scene.__class__.__name__ == "AmbushScreen"
-    app.scene.on_fight(app.scene.group, app.scene.order)
-    
+    assert app.scene.__class__.__name__ == "MapScreen"
+    assert app._pending_event is not None
+    pending_group, pending_order = app._pending_event
+    assert pending_group is g and pending_order.kind == "ambush"
+
+    app._resolve_pending_event()
+
+    assert app._pending_event is None
     assert app._pause_order is not None and app._pause_group is g
     battle = app.scene.battle
     assert [u for u in battle.player_units] and battle.player_units[0].team == "player"

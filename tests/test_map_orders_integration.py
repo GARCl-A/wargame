@@ -30,6 +30,7 @@ def _app(guild):
     app._claim_stage_pending = None
     app._map_notices = []
     app._pending = []
+    app._pending_event = None
     app._save = lambda: None            # no disk I/O in these tests
     return app
 
@@ -110,6 +111,7 @@ def test_a_lone_group_auto_advances_without_a_click():
     scr = MapScreen.__new__(MapScreen)
     scr.guild = guild
     scr.selected = g
+    scr._pending_event = None
     fired = []
     scr.on_advance = lambda: fired.append(True)
     scr._go(world.node("market"))
@@ -124,6 +126,7 @@ def test_a_second_group_does_not_auto_advance():
     scr = MapScreen.__new__(MapScreen)
     scr.guild = guild
     scr.selected = a
+    scr._pending_event = None
     fired = []
     scr.on_advance = lambda: fired.append(True)
     scr._go(world.node("market"))

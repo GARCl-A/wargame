@@ -211,7 +211,7 @@ gartok/
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / wilds_claim_screen.py / justice_screen.py / interactions_screen.py
-  alert_screen.py / ambush_screen.py / adelio_prompt_screen.py
+  alert_screen.py / adelio_prompt_screen.py
   pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
 
   # shared presentation

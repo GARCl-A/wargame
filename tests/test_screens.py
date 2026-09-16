@@ -362,7 +362,7 @@ def test_every_screen_draws_native_at_any_window_size():
                                    Group(list(roster[2:]), node=world.START_NODE)])
     scenes.append(MapScreen(F, together, noop, noop, noop, noop, noop))   # +N badge, MERGE button
     split_scene = MapScreen(F, together, noop, noop, noop, noop, noop)
-    split_scene.mode = "split"
+    split_scene._split_target = split_scene.selected.gid
     scenes.append(split_scene)
 
     crowded = Guild(None, groups=[Group([roster[0], roster[1]], node=world.START_NODE),
@@ -1246,13 +1246,14 @@ def test_map_screen_split_panel_shows_racial_level():
 
     u1, u2 = Unit("player"), Unit("player")
     u1.set_track_level("combat", 3)
-    g = Guild(None, groups=[Group([u1, u2], node=world.START_NODE)])
+    group = Group([u1, u2], node=world.START_NODE)
+    g = Guild(None, groups=[group])
     ms = MapScreen(F, g, lambda: None, lambda: None, lambda: None, lambda: None, lambda: None)
-    ms.mode = "split"
+    ms._split_target = group.gid
     surf = pygame.Surface((1280, 800))
     ms.draw(surf)
-    assert len(ms.split_rows) == 2
-    assert ms.split_rows[0][1] is u1
+    assert len(ms._split_member_rects) == 2
+    assert ms._split_member_rects[0][0] == u1.uid
 
 
 def test_footer_bar_hint_offsets_when_back_button_present():
@@ -1367,8 +1368,19 @@ def test_map_screen_level_up_observability():
 
     guild_btn = next((r for k, r in scr.buttons if k == "guild"), None)
     assert guild_btn is not None
-    # guild footer button is present and adjusted width
-    assert guild_btn.w > 170
+
+    # a guild with nobody pending a level-up gets the plain, narrower label
+    plain_guild = Guild([Unit("player")], node="city")
+    plain_scr = MapScreen(Fonts(), plain_guild, on_guild=lambda: None, on_wipe=lambda: None,
+                          on_advance=lambda *a, **k: None, on_manage_group=lambda g: None,
+                          on_interactions=lambda g: None)
+    plain_scr.mouse = (0, 0)
+    plain_scr.draw(surf)
+    plain_btn = next((r for k, r in plain_scr.buttons if k == "guild"), None)
+
+    # the pending-level-up badge widens the button -- not pinned to an exact
+    # pixel count, which would just be re-asserting whatever font renders it
+    assert guild_btn.w > plain_btn.w
 
 
 def test_squad_screen_level_up_observability():

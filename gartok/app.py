@@ -22,8 +22,10 @@ Campaign loop: menu -> draft -> MAP <-> guild
                             party -> the wilds (hunt) -> [next pending] -> MAP
                             (any arrival) -> the guard (justice.py) -> prison |
                               [battle -> loot] | flee -> [next pending] -> MAP
-                            (any arrival at an unsafe node) -> ambush ->
-                              [battle -> loot] -> [next pending] -> MAP
+                            (any arrival at an unsafe node) -> ambush -> MAP
+                              (a red CTA replaces the "!" popup -- the group
+                              sits paused right there until the player clicks
+                              it) -> [battle -> loot] -> [next pending] -> MAP
 `persist` autosaves after the draft, on every return to the map and after every
 battle. Permadeath: a member who does not survive is dropped; a full wipe ends
 the campaign.
@@ -36,7 +38,6 @@ opening window size and the battle screen's fixed board canvas.
 import pygame
 
 from . import arena, campaign, economy, encounters, hunt, justice, matchup, persist, tutorial_card, world
-from .ambush_screen import AmbushScreen
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -87,6 +88,7 @@ class App:
         self._claim_stage_pending = None     # a Wilds claim stage ("CLEARED"/"SWEPT") a battle in flight decides
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._pending = []                   # [(Group, Order)] left to resolve from the last tick
+        self._pending_event = None           # (Group, Order) an ambush paused mid-map -- MapScreen's own CTA resolves it
         self._draft_tutorial = TutorialState()   # the soft tutorial, before a Guild exists to hold it
         self._tutorial_card_rect = None
         self._tutorial_badge_rect = None
@@ -175,7 +177,9 @@ class App:
                                on_wipe=self._campaign_over,
                                on_advance=self._advance,
                                on_manage_group=self._open_group,
-                               on_interactions=self._open_interactions)
+                               on_interactions=self._open_interactions,
+                               pending_event=self._pending_event,
+                               on_resolve_event=self._resolve_pending_event)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -240,7 +244,6 @@ class App:
         time this returns; anything else comes back as `self._pending` for
         `_after_activity`."""
         chase = dt is None
-        all_hungry = set()
         all_casualties = []
         while True:
             busy_before = {g.gid for g in self.guild.groups if g.busy}
@@ -250,18 +253,19 @@ class App:
                 self._hunt = None
                 self._campaign_over()
                 return
-            all_hungry.update(result.hungry)
             all_casualties.extend(result.casualties)
-            
+
             if not chase or result.pending:
                 break
             went_idle = any(g.gid in busy_before and not g.busy for g in self.guild.groups)
             if went_idle or not any(g.busy for g in self.guild.groups):
                 break
         self._pending = list(result.pending)
-        
+
         nxt = self._after_activity
-        
+
+        # hunger has no popup of its own any more -- COMMAND's own alert icon
+        # (map_screen._messages) already covers it every frame the map is up
         if all_casualties:
             def show_starvation_loot():
                 from . import loot
@@ -273,27 +277,14 @@ class App:
                     self.scene = LootScreen(self.fonts, self.guild.roster, pool, on_done=self._after_activity)
                 else:
                     self._after_activity()
-                    
+
             def show_death_alert():
                 from .alert_screen import AlertScreen
                 msgs = [f"{u.name} starved to death." for u in all_casualties]
                 self.scene = AlertScreen(self.fonts, self.scene, "DEATH ALERT", msgs, on_done=show_starvation_loot, is_danger=True)
-            
+
             nxt = show_death_alert
-            
-        alive_hungry = [u for u in all_hungry if u not in all_casualties and u in self.guild.roster]
-        if alive_hungry:
-            old_nxt = nxt
-            def show_hunger_alert():
-                from .alert_screen import AlertScreen
-                msgs = []
-                for u in alive_hungry:
-                    # MAX STARVATION IS 4 days.
-                    days_left = max(1, 4 - u.unfed_days)
-                    msgs.append(f"{u.name} will starve in {days_left} day{'s' if days_left != 1 else ''}.")
-                self.scene = AlertScreen(self.fonts, self.scene, "HUNGER ALERT", msgs, on_done=old_nxt, is_danger=True)
-            nxt = show_hunger_alert
-            
+
         nxt()
 
     def _after_activity(self):
@@ -337,7 +328,16 @@ class App:
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
-                self._start_road_ambush(group, order)
+                # No more "AMBUSH! [FIGHT]" popup -- land back on the map with
+                # this group paused (already idle, see campaign._arrival_pause)
+                # and let MapScreen's own red CTA start the fight when the
+                # player is ready. `_start_map` resets `self._pending`, so the
+                # rest of this tick's queue (rare, but possible) is stashed
+                # around the call instead of getting silently dropped.
+                self._pending_event = (group, order)
+                rest = self._pending
+                self._start_map()
+                self._pending = rest
             elif order.kind == "eviction":
                 self._start_property_raid(group, order)
             elif order.kind == "wilds_raid":
@@ -474,10 +474,14 @@ class App:
 
     # ------------------------------------------------------------------ #
     # the Old Road (or any other "unsafe" node): a pack found the group    #
-    # first -- no choice, straight into a lethal fight (world.py)         #
+    # first -- no choice, straight into a lethal fight (world.py). Set as  #
+    # `self._pending_event` by `_after_activity`, resolved by a click on   #
+    # MapScreen's own red CTA instead of a "press OK to fight" screen.     #
     # ------------------------------------------------------------------ #
-    def _start_road_ambush(self, group, order):
-        self.scene = AmbushScreen(self.fonts, group, order, self._start_ambush_battle)
+    def _resolve_pending_event(self):
+        group, order = self._pending_event
+        self._pending_event = None
+        self._start_ambush_battle(group, order)
 
     def _start_ambush_battle(self, group, order):
         self._start_forced_battle(group, order, list(order.pack))

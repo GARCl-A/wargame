@@ -74,9 +74,12 @@ def test_draft_screen_reports_one_id_per_phase():
         assert ds.tutorial_key() == expected and expected in TUTORIALS
 
 
-def test_map_screen_key_is_registered():
+def test_map_screen_opts_out_of_the_shared_tutorial_badge():
+    """MapScreen draws its own "?" affordance in COMMAND (top-right) -- the
+    global soft-tutorial badge (app.py/tutorial_card.py) lands in that same
+    corner, so this screen returns None instead of doubling up."""
     from gartok.map_screen import MapScreen
-    assert MapScreen.tutorial_key(MapScreen.__new__(MapScreen)) in TUTORIALS
+    assert MapScreen.tutorial_key(MapScreen.__new__(MapScreen)) is None
 
 
 def test_guild_screen_key_follows_the_active_tab():

@@ -31,6 +31,7 @@ def _app(guild):
     app._claim_stage_pending = None
     app._map_notices = []
     app._pending = []
+    app._pending_event = None
     app._save = lambda: None
     return app
 
