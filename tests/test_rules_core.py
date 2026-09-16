@@ -79,6 +79,17 @@ def test_strict_flank_needs_opposite_sides():
     assert actions._pack_flank(batt, a, e)           # loose flank still true
 
 
+def test_strict_flank_against_large_target_opposite_sides():
+    batt, a, b, e = _flank_battle()
+    e.footprint, e.pos = 2, (5, 5)                    # Large, occupies (5,5)-(6,6)
+    a.pos, b.pos = (5, 4), (5, 7)                     # due north / due south
+    assert actions._flanked(batt, a, e)
+    a.pos, b.pos = (4, 5), (7, 5)                     # due west / due east
+    assert actions._flanked(batt, a, e)
+    a.pos, b.pos = (4, 4), (6, 5)                     # both off the NW corner
+    assert not actions._flanked(batt, a, e)
+
+
 def test_pack_tactics_and_flank_do_not_stack():
     batt, a, b, e = _flank_battle()
     a._ability = abilities.get("pack_tactics")

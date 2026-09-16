@@ -94,11 +94,23 @@ def _pack_flank(battle, attacker, target):
 
 
 def _facing(battle, unit, target_cells):
-    """Rough unit-direction (sx, sy) from `unit`'s nearest cell to the target's centre."""
-    cx = sum(x for x, _ in target_cells) / len(target_cells)
-    cy = sum(y for _, y in target_cells) / len(target_cells)
-    ux, uy = min(battle.cells_of(unit), key=lambda c: (c[0] - cx) ** 2 + (c[1] - cy) ** 2)
-    return (_sign(ux - cx), _sign(uy - cy))
+    """Which side of the target's footprint `unit` is on: each axis is -1/0/1,
+    0 meaning `unit` is aligned within the footprint's span on that axis (e.g.
+    directly north of a Large target, not off to a diagonal corner) -- a
+    fractional centre would never land on 0 for an even (Large+) footprint and
+    bias every facing to a diagonal, so this uses the footprint's box instead."""
+    xs = [x for x, _ in target_cells]
+    ys = [y for _, y in target_cells]
+    min_x, max_x, min_y, max_y = min(xs), max(xs), min(ys), max(ys)
+
+    def dist(c):
+        x, y = c
+        return (x - min(max(x, min_x), max_x)) ** 2 + (y - min(max(y, min_y), max_y)) ** 2
+
+    ux, uy = min(battle.cells_of(unit), key=dist)
+    sx = -1 if ux < min_x else (1 if ux > max_x else 0)
+    sy = -1 if uy < min_y else (1 if uy > max_y else 0)
+    return (sx, sy)
 
 
 def _flanked(battle, attacker, target):
