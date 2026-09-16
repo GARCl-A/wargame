@@ -229,14 +229,14 @@ class MapScreen(ButtonsMixin, Screen):
         """Other idle bands standing right there -- MERGE candidates, offered
         from `g`'s own roster card once it's expanded (see roster_panel's
         SPLIT UI), never from a band that can't act on it either way."""
-        return [(o.gid, o.name or f"Group ({len(o.members)})") for o in self.guild.groups
+        return [(o.gid, o.display_name) for o in self.guild.groups
                if o is not g and o.node == g.node and not o.busy and not self._group_blocked(o)]
 
     def _group_dict(self, g):
         label, color = self._state(g)
         blocked = self._group_blocked(g)
         return {"key": g.gid,
-                "name": g.name or f"Group ({len(g.members)})",
+                "name": g.display_name,
                 "lead": g.leader.name if g.leader is not None else "",
                 "at": g.node,
                 "busy": g.busy,

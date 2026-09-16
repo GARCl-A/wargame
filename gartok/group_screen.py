@@ -283,7 +283,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, ButtonsMix
         bottom = H - 56
 
         # --- header & tabs -------------------------------------------- #
-        name = self.group.name or "Unnamed Group"
+        name = self.group.display_name
         text(screen, name, f.title, INK, (pad, pad - 2))
         nw = f.title.size(name)[0]
         

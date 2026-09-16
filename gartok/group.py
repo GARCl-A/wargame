@@ -42,6 +42,14 @@ class Group:
         return len(self.members)
 
     @property
+    def display_name(self):
+        if self.name:
+            return self.name
+        if self.leader:
+            return f"{self.leader.name}'s Band"
+        return f"Group ({len(self.members)})"
+
+    @property
     def empty(self):
         return not self.members
 
