@@ -94,6 +94,8 @@ class Unit:
         for a in ATTRIBUTES:
             setattr(u, a, u.base_attributes[a])
         u._age_base = d["age_base"]
+        u.magic_source = None                            # set for real below; _configure_race needs it to exist first
+        u.spells_known = []
         u.race = data.race_by_name(d["race"])
         u._configure_race()
         u.age = d.get("age", u.age)                     # creator-set age wins; older saves fall back to the derived one
