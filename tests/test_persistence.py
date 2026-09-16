@@ -22,6 +22,28 @@ def test_unit_save_round_trip_keeps_rolled_values():
     assert [getattr(v, a) for a in ATTRIBUTES] == [getattr(u, a) for a in ATTRIBUTES]
 
 
+def test_locked_items_round_trip_through_save():
+    from gartok import persist
+    u = Unit("player")
+    u._base_inventory = ["Rope", "Rope", "Torch"]
+    u.toggle_lock("Rope")
+    v = Unit.from_save(persist.unit_to_dict(u))
+    assert v.locked_items == {"Rope": 2}
+    assert v.locked_of("Rope") == 2 and v.locked_of("Torch") == 0
+
+
+def test_missing_locked_items_key_loads_as_unlocked():
+    """Older saves never wrote `locked_items` -- `persist.py` tolerates the
+    missing key rather than erroring."""
+    from gartok import persist
+    u = Unit("player")
+    u._base_inventory = ["Rope"]
+    d = persist.unit_to_dict(u)
+    del d["locked_items"]
+    v = Unit.from_save(d)
+    assert v.locked_items == {} and v.locked_of("Rope") == 0
+
+
 def test_weapon_is_an_item_hand_and_pack():
     u = _unit()
     start = u.equipped_weapon

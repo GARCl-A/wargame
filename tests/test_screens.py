@@ -515,6 +515,78 @@ def test_gear_screen_distribute_load():
     assert gs.notice is not None
 
 
+def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
+    """Clicking the padlock on a pack row toggles `Unit.locked_items` without
+    picking the item up -- and distribute_load then leaves it where it is."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import data
+    from gartok.gear_screen import GearScreen
+    from gartok.guild import Guild
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    human = data.race_by_name("Human")
+    u1 = Unit("player", race=human)
+    u2 = Unit("player", race=human)
+    for u in (u1, u2):
+        u.set_base_attribute("strength", 10)
+        u.equipped_weapon = u.equipped_offhand = u.equipped_armor = None
+    u1._base_inventory = ["Rope"]
+    u2._base_inventory = []
+    g = Guild([u1, u2])
+    gs = GearScreen(Fonts(), g, lambda: None)
+    surf = pygame.Surface((1600, 900))
+    gs.mouse = (0, 0)
+    gs.draw(surf)
+
+    assert u1.locked_of("Rope") == 0
+    lock_rect, member, name = gs._lock_hits[0]
+    assert member is u1 and name == "Rope"
+    gs.mouse = lock_rect.center
+    gs.draw(surf)                                         # refresh hit-lists at this mouse pos
+    gs._drop(lock_rect.center, False, None)
+    assert u1.locked_of("Rope") == 1
+    assert gs.selected == []                              # a lock click never picks the item up
+
+    gs._distribute_load()
+    assert u1._base_inventory == ["Rope"]                 # stayed put, still locked
+
+
+def test_group_screen_wheel_scroll_reveals_items_below_the_fold():
+    """Before the fix, a long pack just truncated at '+N more' with no way to
+    reach the rest; the wheel now scrolls the column like the Market already
+    did (see `packbox.PackColumnMixin`)."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    u._base_inventory = ["Rope" for _ in range(40)]       # far more than one column can show
+    g = Guild([u])
+    gs = GroupScreen(Fonts(), g, g.groups[0], lambda: None)
+    surf = pygame.Surface((1280, 720))
+    gs.mouse = (0, 0)
+    gs.draw(surf)
+
+    visible_before = {idx for _r, unit, idx in gs.sources if unit is u and isinstance(idx, int)}
+    last_idx = len(u._base_inventory) - 1
+    assert last_idx not in visible_before                 # off the bottom of the column
+
+    area = next(r for r, who in gs._pack_areas if who is u)
+    gs.mouse = area.center
+    gs.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=-100))  # scroll far down
+    gs.draw(surf)
+
+    visible_after = {idx for _r, unit, idx in gs.sources if unit is u and isinstance(idx, int)}
+    assert last_idx in visible_after
+
+
 def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     """The only in-game path to set `Unit.study_target` (see the Magic section
     of RULES.md): right-click a known scroll for a "study" row on the send-to

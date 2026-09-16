@@ -12,7 +12,10 @@ across the party (poorest first) -- so members keep their own coin and there is
 nothing to settle on the way out.
 
 Interaction (same as the market): drag an item where it goes, or click to pick it
-up and click the destination.
+up and click the destination. Shift/ctrl-click gathers several items -- from the
+chest, a pack, or both at once -- for one move; the per-stack stepper (`- N +` /
+`ALL`) does the same without a mouse-drag. A padlock on a pack item (not the
+chest -- it's shared storage) exempts it from DISTRIBUTE LOAD.
 - a party member's pack item -> drop on the CHEST to stash it (needs room under
   `bank_capacity`), or on another member to hand it over;
 - a chest item -> drop on a member to take it into their pack (needs room under
@@ -22,16 +25,18 @@ up and click the destination.
 
 import pygame
 
-from . import data, economy
+from . import data, economy, icons
 from .dragselect import DragSelectMixin
+from .packbox import LOCK_W
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, ellipsize, kg, panel, section,
-                    text, token_badge)
+                    SURFACE_2, SURFACE_3, SURFACE_4, WARN, ellipsize, kg, panel,
+                    section, text, token_badge)
 from .widgets import ButtonsMixin, footer_bar
 
 CHEST_W = 340
+WT_COL = 60                          # reserved width for the trailing weight text
 
 
 class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
@@ -43,12 +48,16 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         self.guild = guild
         self.party = party
         self.on_done = on_done
-        self.sel = None                              # ("bank", name) | (member, name) | None
+        self.sel = []                                # [(who, idx), ...] -- who is "bank" or a Unit
         self.notice = None
-        self.chest_rows = []                         # [(rect, name)]
-        self.item_rows = []                          # [(rect, member, name)]
+        self.chest_rows = []                         # [(rect, idx)]
+        self.item_rows = []                          # [(rect, member, idx)]
+        self.qty_hits = []                           # [(rect, pick, delta)]
+        self.lock_hits = []                          # [(rect, member, name)]
         self.cards = []                              # [(rect, member)]
         self.buttons = []                            # [(key, rect)]
+        self._pack_scroll = {}                       # "bank" | id(member) -> stacks scrolled past
+        self._pack_areas = []                        # [(rect, who)] -- wheel hit-testing
         self._hot = False
 
     # ------------------------------------------------------------------ #
@@ -57,21 +66,25 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
     def tutorial_key(self):
         return "bank"
 
-    @staticmethod
-    def _stacks(inventory):
-        counts = {}
-        for item in inventory:
-            counts[item] = counts.get(item, 0) + 1
-        return [(item, counts[item]) for item in sorted(counts.keys())]
-
     # ------------------------------------------------------------------ #
+    def _items_of(self, who):
+        return self.guild.bank_items if who == "bank" else who._base_inventory
+
     def _name_of(self, pick):
-        if pick is None:
-            return None
-        who, name = pick
-        if who == "bank":
-            return name if name in self.guild.bank_items else None
-        return name if name in who._base_inventory else None
+        who, idx = pick
+        items = self._items_of(who)
+        return items[idx] if 0 <= idx < len(items) else None
+
+    def _selected_names(self):
+        return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
+
+    def _get_qty(self, pick):
+        who, _idx = pick
+        name = self._name_of(pick)
+        if name is None:
+            return 0
+        all_locs = [i for i, n in enumerate(self._items_of(who)) if n == name]
+        return len([p for p in self.sel if p[0] == who and p[1] in all_locs])
 
     @property
     def purse(self):
@@ -83,30 +96,90 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
     def _charge(self, amount):
         economy.charge_evenly(self.party, amount)
 
-    @property
-    def _from_chest(self):
-        return self.sel is not None and self.sel[0] == "bank"
+    def _chest_room(self, weight):
+        return self.guild.bank_load + weight <= self.guild.bank_capacity
 
-    def _chest_room(self, name):
-        return self.guild.bank_load + data.item_weight(name) <= self.guild.bank_capacity
-
-    def _fits(self, member, name):
-        return member.load + data.item_weight(name) <= member.carry_max
+    def _fits(self, member, weight):
+        return member.load + weight <= member.carry_max
 
     # ------------------------------------------------------------------ #
     # input                                                              #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):
-        for rect, name in self.chest_rows:
+        for rect, _pick, _delta in self.qty_hits:
             if rect.collidepoint(px):
-                return ("bank", name)
-        for rect, member, name in self.item_rows:
+                return None                  # a stepper press starts no drag / select
+        for rect, _member, _name in self.lock_hits:
             if rect.collidepoint(px):
-                return (member, name)
+                return None                  # a padlock press starts no drag / select
+        for rect, idx in self.chest_rows:
+            if rect.collidepoint(px):
+                return ("bank", idx)
+        for rect, member, idx in self.item_rows:
+            if rect.collidepoint(px):
+                return (member, idx)
         return None
 
     def _begin_drag(self, src):
-        self.sel = src
+        if src not in self.sel:
+            self.sel = [src]
+
+    def _expand_stack(self, src):
+        """`src` plus every other index carrying the same item name for the same
+        owner -- one shift/ctrl-click on a stack row grabs the whole stack."""
+        who, _idx = src
+        name = self._name_of(src)
+        if name is None:
+            return [src]
+        return [(who, i) for i, n in enumerate(self._items_of(who)) if n == name]
+
+    def _collect(self, picks):
+        """Pull every `(who, idx)` pick off its owner -- highest index first so
+        an earlier removal doesn't shift the ones still to come. Returns
+        `(names, touched)`, `touched` being the Unit owners to re-derive (the
+        chest isn't one)."""
+        by_owner = {}
+        for who, idx in picks:
+            key = "bank" if who == "bank" else id(who)
+            by_owner.setdefault(key, (who, []))[1].append(idx)
+        names, touched = [], []
+        for who, idxs in by_owner.values():
+            for idx in sorted(idxs, reverse=True):
+                if who == "bank":
+                    names.append(self.guild.bank_items.pop(idx))
+                else:
+                    names.append(who.take_from_pack(idx))
+            if who != "bank":
+                touched.append(who)
+        return names, touched
+
+    def _bump_qty(self, pick, delta):
+        step = delta * (5 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1)
+        who, _idx = pick
+        name = self._name_of(pick)
+        all_locs = [i for i, n in enumerate(self._items_of(who)) if n == name]
+        sel_locs = [p[1] for p in self.sel if p[0] == who and p[1] in all_locs]
+        if delta >= 999:
+            self.sel = [p for p in self.sel if not (p[0] == who and p[1] in all_locs)]
+            self.sel.extend([(who, l) for l in all_locs])
+            return
+        if delta > 0:
+            to_add = [l for l in all_locs if l not in sel_locs][:step]
+            self.sel.extend([(who, l) for l in to_add])
+        else:
+            to_remove = sel_locs[-abs(step):]
+            self.sel = [p for p in self.sel if not (p[0] == who and p[1] in to_remove)]
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            hit = next((w for r, w in self._pack_areas if r.collidepoint(self.mouse)), None)
+            if hit is not None:
+                n = len(self._stacks(self._items_of(hit)))
+                key = "bank" if hit == "bank" else id(hit)
+                cur = self._pack_scroll.get(key, 0)
+                self._pack_scroll[key] = max(0, min(max(0, n - 1), cur - event.y))
+                return
+        super().handle_event(event)
 
     def _drop(self, px, dragging, src):
         for key, rect in self.buttons:
@@ -121,35 +194,55 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
 
         if dragging:
             self._resolve(px)
-            self.sel = None
+            self.sel = []
             return
 
-        if self.sel is not None:
-            if self._resolve(px):
-                self.sel = None
+        for rect, pick, delta in self.qty_hits:
+            if rect.collidepoint(px):
+                self._bump_qty(pick, delta)
                 return
-            self.sel = None if src == self.sel else src
+
+        for rect, member, name in self.lock_hits:
+            if rect.collidepoint(px):
+                member.toggle_lock(name)
+                return
+
+        for key, rect in self.buttons:
+            if key == "distribute" and rect.collidepoint(px):
+                self._distribute_load()
+                return
+
+        mods = pygame.key.get_mods()
+        if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+            group = self._expand_stack(src)
+            if src in self.sel:
+                self.sel = [p for p in self.sel if p not in group]
+            else:
+                self.sel += [p for p in group if p not in self.sel]
             return
-        self.sel = src
+
+        if self.sel:
+            if self._resolve(px):
+                return
+            self.sel = [src] if src is not None else []
+            return
+        self.sel = [src] if src is not None else []
 
     def _resolve(self, px):
-        """Land the carried item on whatever is under `px`. Returns True if the
+        """Land the carried picks on whatever is under `px`. Returns True if the
         release was spent (moved, or bounced off a full target)."""
-        if self.sel is None or self._name_of(self.sel) is None:
+        picks = [p for p in self.sel if self._name_of(p) is not None]
+        if not picks:
             return False
-        name = self._name_of(self.sel)
 
         for rect, member in self.cards:
             if rect.collidepoint(px):
-                if self._from_chest:
-                    self._withdraw(member)
-                elif self.sel[0] is not member:
-                    self._hand_over(member)
+                self._drop_on_member(member, picks)
                 return True
 
         for key, rect in self.buttons:
-            if key == "chest" and rect.collidepoint(px) and not self._from_chest:
-                self._deposit()
+            if key == "chest" and rect.collidepoint(px):
+                self._drop_on_chest(picks)
                 return True
         return False
 
@@ -179,44 +272,57 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         self.guild.buy_city_property()
         self.notice = "bought a house in the City — the Bankers' tax starts now."
 
-    def _deposit(self):
-        name = self._name_of(self.sel)
-        member = self.sel[0]
+    def _drop_on_chest(self, picks):
         if not self.guild.bank_unlocked:
             self.notice = "rent a strongbox first."
+            self.sel = picks
             return
-        if not self._chest_room(name):
+        picks = [p for p in picks if p[0] != "bank"]         # already in the chest: no-op
+        if not picks:
+            self.sel = []
+            return
+        add = sum(data.item_weight(self._name_of(p)) for p in picks)
+        if not self._chest_room(add):
             free = self.guild.bank_capacity - self.guild.bank_load
-            self.notice = f"{name} won't fit — {free:g} kg free in the chest."
+            self.notice = f"won't fit — {free:g} kg free in the chest."
+            self.sel = picks
             return
-        idx = member._base_inventory.index(name)
-        member.take_from_pack(idx)
-        self.guild.bank_items.append(name)
-        member._derive_combat()
-        self.notice = f"stashed {name}."
+        names, touched = self._collect(picks)
+        self.guild.bank_items.extend(names)
+        for u in touched:
+            u._derive_combat()
+        self.sel = []
+        one = names[0] if len(names) == 1 else f"{len(names)} items"
+        self.notice = f"stashed {one}."
 
-    def _withdraw(self, member):
-        name = self._name_of(self.sel)
-        if not self._fits(member, name):
-            self.notice = f"{name} won't fit {member.name}'s load."
+    def _drop_on_member(self, member, picks):
+        picks = [p for p in picks if p[0] is not member]     # dropped back home: skip
+        if not picks:
+            self.sel = []
             return
-        self.guild.bank_items.remove(name)
-        member.give_to_pack(name)
+        add = sum(data.item_weight(self._name_of(p)) for p in picks)
+        if not self._fits(member, add):
+            self.notice = f"won't fit {member.name}'s load."
+            self.sel = picks
+            return
+        from_chest = all(p[0] == "bank" for p in picks)
+        names, touched = self._collect(picks)
+        for name in names:
+            member.give_to_pack(name)
+        for u in touched:
+            u._derive_combat()
         member._derive_combat()
-        self.notice = f"{member.name} took {name}."
+        self.sel = []
+        one = names[0] if len(names) == 1 else f"{len(names)} items"
+        self.notice = (f"{member.name} took {one}." if from_chest
+                       else f"{one} → {member.name}.")
 
-    def _hand_over(self, member):
-        name = self._name_of(self.sel)
-        src = self.sel[0]
-        if not self._fits(member, name):
-            self.notice = f"{name} won't fit {member.name}'s load."
+    def _distribute_load(self):
+        from . import unit as unit_module
+        if len(self.party) <= 1:
             return
-        idx = src._base_inventory.index(name)
-        src.take_from_pack(idx)
-        member.give_to_pack(name)
-        src._derive_combat()
-        member._derive_combat()
-        self.notice = f"{name} → {member.name}."
+        unit_module.distribute_load(self.party)
+        self.notice = "redistributed packs by carrying capacity."
 
     def _leave(self):
         self.on_done()               # members kept their own coin -- nothing to settle
@@ -227,19 +333,21 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         screen.fill((18, 19, 24))
         self.chest_rows = []
         self.item_rows = []
+        self.qty_hits = []
+        self.lock_hits = []
         self.cards = []
+        self._pack_areas = []
         self._reset_buttons()
 
         text(screen, "THE BANK", f.title, INK, (MARGIN, MARGIN - 2))
         text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
              (screen.get_width() - MARGIN, MARGIN + 2), right=True)
 
-        name = self._name_of(self.sel)
-        if name:
-            where = "the chest" if self._from_chest else self.sel[0].name + "'s pack"
-            text(screen, f"moving {name} from {where}  ·  drop on the chest or a "
-                 "member  ·  click outside to cancel", f.body, ACCENT,
-                 (MARGIN, MARGIN + 30))
+        names = self._selected_names()
+        if names:
+            one = names[0] if len(names) == 1 else f"{len(names)} items"
+            text(screen, f"moving {one}  ·  drop on the chest or a member  ·  "
+                 "click outside to cancel", f.body, ACCENT, (MARGIN, MARGIN + 30))
         else:
             text(screen, f"{len(self.party)} at the bank  ·  the Bankers rent one "
                  "strongbox — a flat fee, no questions", f.body, INK_DIM,
@@ -253,17 +361,18 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
                                              chest.h))
         self._draw_footer(screen)
 
-        if self._dragging and name:
+        if self._dragging and names:
             gx, gy = self.mouse
-            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(name)[0] + 2 * SP2, 20)
+            label = names[0] if len(names) == 1 else f"{len(names)} items"
+            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
             panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
-            text(screen, name, f.body_sm, ACCENT_INK, gr.center, center=True)
+            text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
 
     # ------------------------------------------------------------------ #
     def _draw_chest(self, screen, rect):
         f = self.fonts
-        carried = self._name_of(self.sel)
-        depositing = bool(carried) and not self._from_chest
+        names = self._selected_names()
+        depositing = bool(names) and any(p[0] != "bank" for p in self.sel)
         hov = rect.collidepoint(self.mouse)
         panel(screen, rect, fill=SURFACE_2,
               border=INFO if (depositing and hov) else LINE_SOFT,
@@ -275,7 +384,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
 
         if not self.guild.property_city_unlocked and not self.guild.property_city_squatting and self.guild.bankers_debt <= 0:
             y = section(screen, "CITY PROPERTY", x, y, w, f)
-            for ln in (f"The Bankers sell a house inside the walls for ",
+            for ln in ("The Bankers sell a house inside the walls for ",
                        f"{economy.CITY_PROPERTY_PRICE} copper, taxed {economy.CITY_PROPERTY_TAX}",
                        f"copper every {economy.CITY_PROPERTY_TAX_PERIOD_DAYS} days."):
                 text(screen, ln, f.body_sm, INK_DIM, (x, y))
@@ -329,25 +438,9 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
              DANGER if over else INK_DIM, (x, y))
         y += 18
 
-        y = section(screen, f"STASHED  ({len(self.guild.bank_items)})", x, y, w, f)
-        if not self.guild.bank_items:
-            text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
-
-        shown = self._stacks(self.guild.bank_items)
-        for item, count in shown:
-            r = pygame.Rect(x, y, w, 24)
-            sel = self.sel == ("bank", item)
-            ihov = not self.sel and r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-
-            label = item if count == 1 else f"{item}  ×{count}"
-            text(screen, ellipsize(label, f.body_sm, w - 60), f.body_sm,
-                 ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
-            text(screen, kg(data.item_weight(item) * count), f.mono_sm,
-                 ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
-            self.chest_rows.append((r, item))
-            y += 24 + SP1
+        y = self._draw_stack_list(screen, "bank", x, y, w, rect.bottom - SP3,
+                                  header=f"STASHED  ({len(self.guild.bank_items)})",
+                                  show_lock=False)
 
     # ------------------------------------------------------------------ #
     def _draw_party(self, screen, area):
@@ -362,9 +455,10 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
     def _draw_card(self, screen, rect, m):
         f = self.fonts
         pad = SP3
-        name = self._name_of(self.sel)
-        incoming = bool(name) and not (self.sel[0] is m)
-        take_ok = incoming and self._fits(m, name)
+        names = self._selected_names()
+        add = sum(data.item_weight(n) for n in names)
+        incoming = bool(names) and any(p[0] is not m for p in self.sel)
+        take_ok = incoming and self._fits(m, add)
         hov = rect.collidepoint(self.mouse)
         panel(screen, rect, fill=SURFACE_2,
               border=OK if (take_ok and hov) else DANGER if (incoming and hov and not take_ok)
@@ -383,27 +477,104 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
              (rect.x + pad, y))
         y += 18
 
-        y = section(screen, f"PACK  ({len(m._base_inventory)})", rect.x + pad, y,
-                    rect.w - 2 * pad, f)
-        if not m._base_inventory:
-            text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
+        self._draw_stack_list(screen, m, rect.x + pad, y, rect.w - 2 * pad,
+                              rect.bottom - pad, header=f"PACK  ({len(m._base_inventory)})",
+                              show_lock=True)
 
-        shown = self._stacks(m._base_inventory)
-        for item, count in shown:
-            r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
-            sel = self.sel == (m, item)
-            ihov = not self.sel and r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
+    # ------------------------------------------------------------------ #
+    def _draw_stack_list(self, screen, who, x, y, w, bottom, *, header, show_lock):
+        """Stacked, scrollable rows for `who`'s items (`who` is `"bank"` or a
+        Unit) -- the chest and every party pack are drawn through this one path
+        so the multi-select stepper, the wheel scroll and the padlock (pack
+        only) all behave the same everywhere."""
+        f = self.fonts
+        items = self._items_of(who)
+        y = section(screen, header, x, y, w, f)
+        if not items:
+            text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
+            return y + 22
 
-            label = item if count == 1 else f"{item}  ×{count}"
-            text(screen, ellipsize(label, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
-                 ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
-            text(screen, kg(data.item_weight(item) * count), f.mono_sm,
-                 ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
-            self.item_rows.append((r, m, item))
-            y += 24 + SP1
+        row_h = 24 + SP1
+        area = pygame.Rect(x, y, w, max(0, bottom - y))
+        self._pack_areas.append((area, who))
+        stacks = self._stacks(items)
+        visible_n = max(1, (bottom - y) // row_h)
+        key = "bank" if who == "bank" else id(who)
+        scroll = max(0, min(self._pack_scroll.get(key, 0), max(0, len(stacks) - visible_n)))
+        self._pack_scroll[key] = scroll
+
+        if scroll:
+            text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (x, y + 2))
+            y += 14
+        shown = stacks[scroll:scroll + visible_n]
+        for name, idxs in shown:
+            idx, count = idxs[-1], len(idxs)          # items in a stack are interchangeable
+            r = pygame.Rect(x, y, w, 24)
+            self._draw_row(screen, r, who, idx, name, count, show_lock=show_lock)
+            y += row_h
+        more_below = len(stacks) - scroll - len(shown)
+        if more_below > 0:
+            text(screen, f"v {more_below} more below", f.label, INK_FAINT, (x, y + 2))
+            y += 14
+        return y
+
+    def _draw_row(self, screen, r, who, idx, name, count, *, show_lock):
+        f = self.fonts
+        pick = (who, idx)
+        q = self._get_qty(pick)
+        sel = q > 0
+        hov = not self.sel and r.collidepoint(self.mouse)
+        panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
+              border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
+        ink = ACCENT_INK if sel else INK
+
+        name_x = r.x + SP2
+        if show_lock:
+            locked = who.locked_of(name) >= count
+            lr = pygame.Rect(r.x + 2, r.y + 3, LOCK_W, 18)
+            lhov = lr.collidepoint(self.mouse)
+            icons.icon(screen, "lock" if locked else "unlock", lr,
+                       ACCENT_INK if sel else ACCENT if locked else (INK if lhov else INK_FAINT))
+            self.lock_hits.append((lr, who, name))
+            name_x += LOCK_W
+
+        bw, bh = 16, 18
+        cy = r.centery
+        cursor = r.right - SP2 - WT_COL
+        all_locs = [i for i, n in enumerate(self._items_of(who)) if n == name]
+        if len(all_locs) > 1:
+            all_btn = pygame.Rect(cursor - 28, cy - bh // 2, 28, bh)
+            hov_all = all_btn.collidepoint(self.mouse)
+            panel(screen, all_btn, fill=SURFACE_4 if hov_all else SURFACE_1,
+                  border=ACCENT if hov_all else LINE_SOFT, width=1, radius=3)
+            text(screen, "ALL", f.label, ACCENT if hov_all else INK_DIM, all_btn.center, center=True)
+            self.qty_hits.append((all_btn, pick, 999))
+            cursor = all_btn.x - 4
+
+        plus = pygame.Rect(cursor - bw, cy - bh // 2, bw, bh)
+        minus = pygame.Rect(plus.x - 26 - bw, cy - bh // 2, bw, bh)
+        for br, glyph, delta in ((minus, "-", -1), (plus, "+", +1)):
+            hov_b = br.collidepoint(self.mouse)
+            panel(screen, br, fill=SURFACE_4 if hov_b else SURFACE_1,
+                  border=ACCENT if hov_b else LINE_SOFT, width=1, radius=3)
+            text(screen, glyph, f.body_bd, ACCENT if hov_b else INK_DIM, br.center, center=True)
+            self.qty_hits.append((br, pick, delta))
+        if q:
+            text(screen, str(q), f.mono, ACCENT, ((minus.right + plus.x) // 2, cy - 1), center=True)
+
+        label = name if count == 1 else f"{name}  ×{count}"
+        text(screen, ellipsize(label, f.body_sm, minus.x - name_x - SP2), f.body_sm,
+             ACCENT_INK if sel else ink, (name_x, r.y + 5))
+        text(screen, kg(data.item_weight(name) * count), f.mono_sm,
+             ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
+
+        if who == "bank":
+            self.chest_rows.append((r, idx))
+        else:
+            self.item_rows.append((r, who, idx))
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
-        footer_bar(self, screen, primary=("done", "LEAVE THE BANK"), notice=self.notice)
+        secondary = ("distribute", "DISTRIBUTE LOAD") if len(self.party) > 1 else None
+        footer_bar(self, screen, primary=("done", "LEAVE THE BANK"), secondary=secondary,
+                  notice=self.notice)

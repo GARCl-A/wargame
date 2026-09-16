@@ -103,6 +103,7 @@ class Unit:
         u.occupation = data.occupation_by_name(d["occupation"])
         u._configure_occupation()
         u._base_inventory = list(d["inventory"])
+        u.locked_items = dict(d.get("locked_items", {}))
         u.equipped_weapon = d.get("equipped_weapon", u.occupation["weapon"])
         u.equipped_offhand = d.get("equipped_offhand")
         u.equipped_armor = d.get("equipped_armor")
@@ -443,10 +444,12 @@ class Unit:
         self.item = None
         self.starting_creature = None
         self._base_inventory = []
+        self.locked_items = {}
 
     def _configure_occupation(self):
         # A weapon is just a held item: `equipped_weapon` is the one in the weapon
         # hand (None = fighting unarmed); spares ride in `_base_inventory`.
+        self.locked_items = {}
         self.equipped_weapon = self.occupation["weapon"]
         self.equipped_offhand = None                  # off hand: a torch or a light source
         self.equipped_armor = None                    # body slot: bought at the market
@@ -790,8 +793,28 @@ class Unit:
 
     def take_from_pack(self, idx):
         val = self._base_inventory.pop(idx)
+        held = self._base_inventory.count(val)
+        if self.locked_items.get(val, 0) > held:
+            self.locked_items[val] = held
+            if not held:
+                del self.locked_items[val]
         self._derive_combat()
         return val
+
+    def locked_of(self, name):
+        """How many of `name` in this pack are locked against distribute_load --
+        clamped to what's actually held, so a lock never outlives its items."""
+        return min(self.locked_items.get(name, 0), self._base_inventory.count(name))
+
+    def toggle_lock(self, name):
+        """Lock the whole stack of `name`, or unlock it if already fully locked."""
+        held = self._base_inventory.count(name)
+        if held == 0:
+            return
+        if self.locked_of(name) >= held:
+            del self.locked_items[name]
+        else:
+            self.locked_items[name] = held
 
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
@@ -895,3 +918,25 @@ class Unit:
         if self.armor:
             w += self.armor.get("weight", 0)
         return round(w, 1)
+
+
+def distribute_load(units):
+    """Rebalance pack items across `units` by free carrying capacity, heaviest
+    first -- locked items (see `Unit.locked_items`/`toggle_lock`) stay put on
+    their current owner instead of joining the pool."""
+    items = []
+    for u in units:
+        seen = {}
+        keep, move = [], []
+        for name in u._base_inventory:
+            seen[name] = seen.get(name, 0) + 1
+            (keep if seen[name] <= u.locked_of(name) else move).append(name)
+        u._base_inventory[:] = keep
+        items.extend(move)
+        u._derive_combat()
+
+    items.sort(key=data.item_weight, reverse=True)
+    for item in items:
+        best = max(units, key=lambda m: m.carry_max - m.load)
+        best.give_to_pack(item)
+        best._derive_combat()

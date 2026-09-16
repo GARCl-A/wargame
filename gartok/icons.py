@@ -205,12 +205,32 @@ def _bite(surf, rect, c):
     pygame.draw.line(surf, c, (x + s * 0.1, y + s * 0.7), (x + s * 0.9, y + s * 0.7), w)
     pygame.draw.polygon(surf, c, [(x + s * 0.4, y + s * 0.7), (x + s * 0.6, y + s * 0.4), (x + s * 0.8, y + s * 0.7)], w)
 
+
+def _lock(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # closed shackle over a body -- exempt from distribute_load
+    pygame.draw.arc(surf, c, (x + s * 0.16, y, s * 0.68, s * 0.68), 0.3, 2.85, w)
+    body = pygame.Rect(x, y + s * 0.42, s, s * 0.56)
+    pygame.draw.rect(surf, c, body, w, border_radius=max(1, int(s * 0.1)))
+
+
+def _unlock(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # shackle swung open -- free to move in distribute_load
+    pygame.draw.arc(surf, c, (x - s * 0.08, y - s * 0.1, s * 0.68, s * 0.68), 0.95, 3.45, w)
+    body = pygame.Rect(x, y + s * 0.42, s, s * 0.56)
+    pygame.draw.rect(surf, c, body, w, border_radius=max(1, int(s * 0.1)))
+
+
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
     "demoralize": _shout, "eat_corpse": _bite,
     "pickup": _hand, "defend": _shield, "end": _hourglass, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,
+    "lock": _lock, "unlock": _unlock,
 }
 
 NAMES = tuple(_GLYPHS)

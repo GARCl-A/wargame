@@ -23,8 +23,9 @@ shopper's items for one move.
 
 import pygame
 
-from . import data, economy, factions
+from . import data, economy, factions, icons
 from .dragselect import DragSelectMixin
+from .packbox import LOCK_W
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -60,6 +61,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.notice = None
         self.stock_rows = []                 # [(rect, name)]
         self.qty_hits = []                   # [(rect, name, delta)]
+        self.lock_hits = []                  # [(rect, member, name)]
         self.info_hits = []                  # [(rect, member)] -- the card's 'i' disc opens the sheet
         self._pack_scroll = {}               # id(member) -> stacks scrolled past in the pack list
         self._pack_areas = []                # [(rect, member)] -- pack list rects, for wheel hit-testing
@@ -151,6 +153,9 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         for rect, _name, _delta in self.qty_hits:
             if rect.collidepoint(px):
                 return None                  # a stepper press starts no drag / select
+        for rect, _member, _name in self.lock_hits:
+            if rect.collidepoint(px):
+                return None                  # a padlock press starts no drag / select
         for rect, name in self.stock_rows:
             if rect.collidepoint(px):
                 return ("stock", name)
@@ -224,6 +229,11 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         for rect, pick, delta in self.qty_hits:
             if rect.collidepoint(px):
                 self._bump_qty(pick, delta)
+                return
+
+        for rect, member, name in self.lock_hits:
+            if rect.collidepoint(px):
+                member.toggle_lock(name)
                 return
 
         for key, rect in self.buttons:
@@ -379,6 +389,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.tooltip = None
         self.stock_rows = []
         self.qty_hits = []
+        self.lock_hits = []
         self.tab_hits = []
         self.item_rows = []
         self.cards = []
@@ -694,7 +705,18 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
               border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
         ink = ACCENT_INK if sel else INK
         label = name if count == 1 else f"{name}  ×{count}"
-        text(screen, label, f.body_sm, ink, (r.x + SP2, r.y + 5))
+
+        name_x = r.x + SP2
+        if isinstance(loc, int):
+            lr = pygame.Rect(r.x + 2, r.y + 3, LOCK_W, 18)
+            locked = member.locked_of(name) >= count
+            lhov = lr.collidepoint(self.mouse)
+            icons.icon(screen, "lock" if locked else "unlock", lr,
+                       ACCENT_INK if sel else ACCENT if locked else (INK if lhov else INK_FAINT))
+            self.lock_hits.append((lr, member, name))
+            name_x += LOCK_W
+
+        text(screen, label, f.body_sm, ink, (name_x, r.y + 5))
         
         base = economy.sell_price(name)
         price = economy.sell_price(name, self.deal)
@@ -733,18 +755,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.item_rows.append((r, member, loc))
 
     def _distribute_load(self):
-        from . import data
-        items = []
-        for u in self.shoppers:
-            items.extend(u._base_inventory)
-            u._base_inventory.clear()
-            u._derive_combat()
-            
-        items.sort(key=data.item_weight, reverse=True)
-        for item in items:
-            best_member = max(self.shoppers, key=lambda m: m.carry_max - m.load)
-            best_member.give_to_pack(item)
-            best_member._derive_combat()
+        from . import unit as unit_module
+        unit_module.distribute_load(self.shoppers)
         self.sel = []
         self.notice = "redistributed packs by carrying capacity."
 
