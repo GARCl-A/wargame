@@ -29,17 +29,18 @@ not a button here.
 import functools
 import math
 import os
+import random
 
 import pygame
 from pygame import gfxdraw
 
-from . import arena, economy, orders, world
+from . import arena, artwork, economy, orders, world
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM,
-                    INK_FAINT, LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SP4,
-                    SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, WARN,
-                    blit_block, chip, ellipsize, panel, section, set_pointer, smooth_circle,
-                    text, tracked, wrap_lines)
+                    INK_FAINT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2,
+                    SP3, SP4, WARN, blit_block, ellipsize, outlined_text,
+                    panel, section, set_pointer, smooth_circle, text,
+                    tracked, wrap_lines)
 from .widgets import ButtonsMixin
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -48,31 +49,51 @@ PARCHMENT_FILE = os.path.join(_TEXTURES, "parchment.jpg")
 DESK_FILE = os.path.join(_TEXTURES, "desk.jpg")
 
 SIDE_W = 372
-CHIP_Y = 34                                # gap from the title baseline to the chip row
-CHIP_H = 46
+CHIP_Y = 34                                # gap from the title baseline to the stat row
+CHIP_H = 40                                # label + value stack height of that row
 ALERT_H = 34
 FLASH_MS = 380.0                           # travel-order confirm pulse, on the destination node
-GROUND_DAY = (34, 37, 44)
-GROUND_NIGHT = (21, 23, 32)
+GROUND_DAY = (46, 36, 25)                  # the map's own dark ground -- warm, so it reads as
+GROUND_NIGHT = (23, 18, 13)                # one surface with the equally warm desk backdrop
+GROUND_HI = (66, 52, 35)                   # soft relief blobs worked into that ground
+
+# This screen's own dark palette for its chrome (sidebar, group cards) --
+# deliberately not theme.SURFACE_*: that ramp is a cool blue-grey tuned for
+# the app's flat UI screens, and sitting it next to a warm painted map read
+# as two different apps stitched together. Same surface ROLES (well / panel
+# / raised), just warmed to the map's own hue family.
+PANEL_WELL   = (19, 15, 11)
+PANEL_BG     = (27, 21, 15)
+PANEL_RAISED = (41, 33, 23)
+PANEL_LINE   = (61, 50, 36)
+
 # muted, painted tones for the map's own markings -- distinct hues, none of
 # them a saturated UI accent, so a node reads as inked onto the map rather
 # than as an app widget sitting on top of it.
-KIND_COLOR = {"battle": (176, 74, 58), "market": (86, 132, 118), "tavern": (188, 138, 64),
-              "town": (150, 140, 112), "wilds": (94, 132, 78), "prison": (112, 100, 138)}
+KIND_COLOR = {"battle": DANGER, "market": NEUTRAL_C, "tavern": NEUTRAL_C,
+              "town": NEUTRAL_C, "wilds": WARN, "prison": NEUTRAL_C}
 KIND_BADGE = {"battle": "COMBAT", "market": "MARKET", "tavern": "TAVERN", "town": "STOP",
               "wilds": "WILDS", "prison": "PRISON"}
+# game-icons.net silhouettes (assets/icons/, via artwork.icon) -- a real drawn
+# icon per node kind reads better than the hand-drawn line glyphs it replaces.
+KIND_ICON = {"battle": ("body", "sword-tie"), "market": ("gui", "wallet"),
+             "tavern": ("action", "drinking"), "town": ("gui", "house"),
+             "wilds": ("action", "wolf-howl"), "prison": ("body", "imprisoned")}
+WORK_ICON = ("action", "stick-splitting")
+HOME_ICON = ("gui", "house")
 WORK_HOURS = (4, 8, 12, 16)
 
-ROAD_SHADOW = (46, 32, 20)                 # sunk edge under a worn trail
-ROAD_FILL = (168, 140, 96)
+ROAD_SHADOW = (18, 13, 9)                  # sunk edge under a worn trail
+ROAD_FILL = (196, 170, 122)                # light tan road, now the brighter mark on dark ground
 PARCH_TAG = (214, 195, 152)                # a small paper tag pinned to the map
 PARCH_TAG_BORDER = (120, 96, 62)
-PARCH_INK = (54, 40, 26)                   # dark sepia ink for map-native labels
-# ACCENT (warm gold) is nearly the same luminance as the parchment -- fine on
-# the app's dark UI chrome, unreadable as a hover/route ring on paper. Ink
-# blue is a deliberate hue break from every KIND_COLOR, which all sit in the
-# red/brown/green family.
-ROUTE_HL = (44, 74, 128)
+PARCH_INK = (54, 40, 26)                   # dark sepia ink -- only for text on a PARCH_TAG card
+NODE_LABEL = (226, 213, 184)               # light warm ink for a name inked straight onto the ground
+NODE_LABEL_OUTLINE = (14, 11, 8)
+# Ink blue is a deliberate hue break from every KIND_COLOR, which all sit in
+# the red/brown/green family -- lightened here so it still pops on the dark
+# ground (was tuned for the old light-parchment version of this screen).
+ROUTE_HL = (128, 168, 230)
 
 
 @functools.lru_cache(maxsize=4)
@@ -358,37 +379,43 @@ class MapScreen(ButtonsMixin, Screen):
         return self._cam.node_xy(n)
 
     def _fallback_terrain(self, size, daylight):
-        """A plain gradient fill, used only if `parchment.jpg` fails to load."""
+        """The map's own dark ground: a flat base plus soft, low-contrast
+        relief blobs (same trick as the desk backdrop's darkening) -- this is
+        also the base every real `_terrain()` build starts from, so the map's
+        colour never depends on how bright `parchment.jpg` happens to be."""
         w, h = size
         surf = pygame.Surface(size).convert()
-        base = GROUND_DAY if daylight else GROUND_NIGHT
-        lift = 12 if daylight else 7
-        for y in range(h):
-            t = y / max(1, h - 1)
-            surf.fill(tuple(int(base[i] + lift - 2 * lift * t) for i in range(3)),
-                      (0, y, w, 1))
+        surf.fill(GROUND_DAY if daylight else GROUND_NIGHT)
+        rnd = random.Random(7)
+        for _ in range(70):
+            r = rnd.randint(40, 160)
+            blob = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
+            c = GROUND_HI if rnd.random() < 0.55 else (0, 0, 0)
+            pygame.draw.circle(blob, (*c, 14), (r, r), r)
+            surf.blit(blob, (rnd.randrange(-r, w), rnd.randrange(-r, h)))
         return surf
 
     def _terrain(self, size, daylight):
-        """Cached fill for the map area: the parchment texture cropped to fit,
-        colour-graded toward the same ink/tag palette the map draws with (so
-        the photo and the drawn markings read as one surface, not two things
-        cut out and stacked), darkened at night with a multiply tint that
-        keeps the paper's own grain instead of flattening it under a wash.
-        Rebuilt only on size/phase change."""
+        """Cached fill for the map area: the dark ground above, with the
+        parchment photo blitted on top at low alpha for grain only -- the
+        photo used to *be* the surface (light paper, dark ink on top), which
+        read brighter than the rest of the screen and made the map look
+        pasted on. Now the ground's own colour is always dark and warm, and
+        the texture just roughens it. Night darkens it further with a cool
+        multiply tint. Rebuilt only on size/phase change."""
         key = (size, daylight)
         if self._terr and self._terr[0] == key:
             return self._terr[1]
+        surf = self._fallback_terrain(size, daylight)
         parchment = _load_texture(PARCHMENT_FILE)
-        surf = _cover(parchment, size) if parchment else self._fallback_terrain(size, daylight)
-
-        grade = pygame.Surface(size, pygame.SRCALPHA)
-        grade.fill((*ROAD_FILL, 38))
-        surf.blit(grade, (0, 0))
+        if parchment is not None:
+            grain = _cover(parchment, size)
+            grain.set_alpha(44)
+            surf.blit(grain, (0, 0))
 
         if not daylight:
             moon = pygame.Surface(size)
-            moon.fill((122, 130, 162))
+            moon.fill((132, 138, 168))
             surf.blit(moon, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
 
         self._terr = (key, surf)
@@ -397,13 +424,13 @@ class MapScreen(ButtonsMixin, Screen):
     def _backdrop(self, size):
         """Cached fill for the whole window: the desk texture, heavily
         darkened -- the map sits lit on a dim table, not floating on flat UI
-        chrome. Falls back to the plain app background if the file is missing."""
+        chrome. Falls back to the map's own dark ground if the file is missing."""
         if self._desk and self._desk[0] == size:
             return self._desk[1]
         desk = _load_texture(DESK_FILE)
         if desk is None:
             surf = pygame.Surface(size)
-            surf.fill(SURFACE_0)
+            surf.fill(GROUND_NIGHT)
         else:
             surf = _cover(desk, size)
             dark = pygame.Surface(size, pygame.SRCALPHA)
@@ -411,6 +438,22 @@ class MapScreen(ButtonsMixin, Screen):
             surf.blit(dark, (0, 0))
         self._desk = (size, surf)
         return surf
+
+    @staticmethod
+    def _draw_area_shadow(screen, rect):
+        """A soft dark halo behind the map rect instead of a hard-edged panel
+        cut straight into the backdrop -- both surfaces are dark now, so a
+        crisp 1px border alone reads as a seam between two flat shapes. A few
+        expanding rounded rects at falling alpha (same trick as a node's
+        danger aura) blend the two instead."""
+        pad = 24
+        glow = pygame.Surface((rect.w + pad * 2, rect.h + pad * 2), pygame.SRCALPHA)
+        gr = glow.get_rect()
+        for i, a in enumerate((30, 22, 15, 9, 4)):
+            inset = i * 5
+            pygame.draw.rect(glow, (0, 0, 0, a), gr.inflate(-inset * 2, -inset * 2),
+                             border_radius=RADIUS + pad - inset)
+        screen.blit(glow, (rect.x - pad, rect.y - pad))
 
     def _bow(self, a, b, pa, pb):
         """How far a road curves off the straight line between two nodes --
@@ -486,12 +529,14 @@ class MapScreen(ButtonsMixin, Screen):
         return False
 
     def _draw_header(self, screen, size):
-        """Title, then a row of stat chips (reusing `theme.chip`, the same
-        widget the draft/sheet screens use for HP/AC/etc) instead of one long
-        string -- an urgent stat (someone hungry, an empty larder) gets its
-        own coloured label instead of hiding inside a parenthetical. The
-        arena deadline, when one is due, gets an actual bordered card rather
-        than a loose line of text."""
+        """Title, then day/time · roster · score as three grouped stat
+        clusters -- label above value, each pair sized to its own content
+        instead of a row of identical boxes, with a divider between
+        clusters. Colour stays reserved for the value, and only shows when
+        a stat is actually urgent (someone hungry, an empty larder);
+        everything else reads in plain ink. The arena deadline, when one is
+        due, still gets an actual bordered card rather than a loose line of
+        text."""
         f = self.fonts
         clock = self.guild.clock
         hungry = self.guild.hungry
@@ -499,36 +544,33 @@ class MapScreen(ButtonsMixin, Screen):
 
         text(screen, "MAP", f.title, INK, (MARGIN, MARGIN - 2))
 
-        # `chip()` sets its value in the big num font -- built for a short
-        # number (HP, AC, ...), not a sentence, so day/hour/phase are three
-        # short chips rather than one long `clock.label` that would overflow
-        # into its neighbour. The map's own day/night tint already carries
-        # the phase visually, so it isn't repeated here as text.
-        map_w = self._area(size).w
-        specs = [
-            ("DAY", str(clock.day), INFO),
-            ("TIME", f"{clock.hour_of_day:02d}:{clock.minute_of_hour:02d}", INFO),
-            ("MEMBERS", f"{len(self.guild)} ({len(hungry)} hungry)" if hungry
-             else str(len(self.guild)), WARN if hungry else INFO),
-            ("RATIONS", str(rations), DANGER if rations == 0 else INFO),
-            ("GOLD", str(self.guild.gold), INFO),
-            ("WINS", str(self.guild.battles_won), INFO),
-            ("REPUTATION", str(self.guild.arena_reputation), INFO),
+        groups = [
+            [("DAY", str(clock.day), INK),
+             ("TIME", f"{clock.hour_of_day:02d}:{clock.minute_of_hour:02d}", INK)],
+            [("MEMBERS", f"{len(self.guild)} ({len(hungry)} hungry)" if hungry
+              else str(len(self.guild)), WARN if hungry else INK),
+             ("RATIONS", str(rations), DANGER if rations == 0 else INK),
+             ("GOLD", str(self.guild.gold), INK)],
+            [("WINS", str(self.guild.battles_won), INK),
+             ("REPUTATION", str(self.guild.arena_reputation), INK)],
         ]
         y = MARGIN + CHIP_Y
-        gap = SP2
-        cw = (map_w - (len(specs) - 1) * gap) // len(specs)
-        for i, (label, value, accent) in enumerate(specs):
-            r = pygame.Rect(MARGIN + i * (cw + gap), y, cw, CHIP_H)
-            # `chip()` doesn't clip its own text -- an overlong value would
-            # bleed into the next chip's box and get painted over by it.
-            chip(screen, r, ellipsize(label, f.label, cw - SP2),
-                 ellipsize(str(value), f.num, cw - SP2), f, accent=accent)
+        x = MARGIN
+        for gi, group in enumerate(groups):
+            for label, value, color in group:
+                w = max(f.label.size(label)[0], f.num.size(value)[0])
+                tracked(screen, label, f.label, INK_FAINT, (x, y))
+                text(screen, value, f.num, color, (x, y + 16))
+                x += w + SP4
+            if gi < len(groups) - 1:              # divider between clusters
+                pygame.draw.line(screen, PANEL_LINE, (x - SP3, y), (x - SP3, y + CHIP_H - 4))
+                x += SP2
 
+        map_w = self._area(size).w
         if arena.defense_due(self.guild):
             champ = arena.champion_of(self.guild)
             ar = pygame.Rect(MARGIN, y + CHIP_H + SP2, map_w, ALERT_H)
-            panel(screen, ar, fill=SURFACE_2, border=WARN, width=1, radius=RADIUS)
+            panel(screen, ar, fill=PANEL_BG, border=WARN, width=1, radius=RADIUS)
             lx = tracked(screen, "TITLE DEFENSE", f.label, WARN, (ar.x + SP3, ar.y + 10))
             msg = (f"{champ.name} must defend the Champion of the Pit at the Arena "
                    f"by day {arena.defense_deadline(self.guild)}")
@@ -547,8 +589,9 @@ class MapScreen(ButtonsMixin, Screen):
 
         area = self._area(screen.get_size())
         self._cam.fit(area)
+        self._draw_area_shadow(screen, area)
         panel(screen, area, fill=GROUND_DAY if clock.is_daylight else GROUND_NIGHT,
-              border=LINE_SOFT, radius=RADIUS)
+              border=None)
         clip = screen.get_clip()
         screen.set_clip(area)
         screen.blit(self._terrain(area.size, clock.is_daylight), area.topleft)
@@ -558,7 +601,6 @@ class MapScreen(ButtonsMixin, Screen):
         self._draw_edges(screen)
         self._draw_nodes(screen)
         screen.set_clip(clip)
-        pygame.draw.rect(screen, LINE_SOFT, area, 1, border_radius=RADIUS)
 
         self._draw_tooltip(screen, area)
         if self.mode == "split":
@@ -602,40 +644,16 @@ class MapScreen(ButtonsMixin, Screen):
             text(screen, s, f.mono_sm, ROUTE_HL if on_route else PARCH_INK,
                  r.center, center=True)
 
-    def _glyph(self, screen, kind, x, y):
-        c = (14, 15, 20)
-        if kind == "battle":                                       # crossed swords, hilts and all
-            pygame.draw.line(screen, c, (x - 6, y - 6), (x + 6, y + 6), 2)
-            pygame.draw.line(screen, c, (x - 6, y + 6), (x + 6, y - 6), 2)
-            pygame.draw.line(screen, c, (x - 8, y - 4), (x - 4, y - 8), 2)
-            pygame.draw.line(screen, c, (x + 4, y - 8), (x + 8, y - 4), 2)
-        elif kind == "market":                                     # embossed coin
-            gfxdraw.aacircle(screen, x, y, 6, c)
-            gfxdraw.aacircle(screen, x, y, 4, c)
-            pygame.draw.line(screen, c, (x, y - 2), (x, y + 2), 1)
-        elif kind == "tavern":                                    # tankard, foam and all
-            pygame.draw.rect(screen, c, (x - 5, y - 4, 8, 10), 2, border_radius=1)
-            pygame.draw.arc(screen, c, (x + 2, y - 4, 7, 8), -1.4, 1.4, 2)
-            pygame.draw.line(screen, c, (x - 4, y - 2), (x + 2, y - 2), 1)
-        elif kind == "prison":                                    # bars over a cell door
-            pygame.draw.rect(screen, c, (x - 6, y - 6, 12, 11), 2)
-            pygame.draw.line(screen, c, (x - 2, y - 6), (x - 2, y + 5), 2)
-            pygame.draw.line(screen, c, (x + 2, y - 6), (x + 2, y + 5), 2)
-            pygame.draw.arc(screen, c, (x - 3, y + 3, 6, 5), 3.4, 6.0, 2)
-        elif kind == "work":                                        # felling axe
-            pygame.draw.line(screen, c, (x - 4, y + 7), (x + 4, y - 7), 2)
-            pygame.draw.arc(screen, c, (x + 1, y - 9, 8, 9), 1.1, 4.3, 2)
-        elif kind == "wilds":                                       # drawn bow, nocked arrow
-            pygame.draw.arc(screen, c, (x - 6, y - 7, 10, 14), -1.3, 1.3, 2)
-            pygame.draw.line(screen, c, (x - 4, y - 6), (x - 4, y + 6), 1)
-            pygame.draw.line(screen, c, (x - 5, y), (x + 7, y), 2)
-            pygame.draw.line(screen, c, (x + 4, y - 3), (x + 7, y), 2)
-            pygame.draw.line(screen, c, (x + 4, y + 3), (x + 7, y), 2)
-        else:                                                      # house: roof and door
-            pygame.draw.lines(screen, c, False,
-                              [(x - 6, y + 5), (x - 6, y - 1), (x, y - 6),
-                               (x + 6, y - 1), (x + 6, y + 5)], 2)
-            pygame.draw.rect(screen, c, (x - 2, y, 4, 5), 1)
+    @staticmethod
+    def _kind_icon(screen, slug, center, color):
+        """A drawn game-icons.net silhouette (see `KIND_ICON`/`WORK_ICON`/
+        `HOME_ICON`) tinted to sit on the marker's own coloured disc --
+        replaces the hand-drawn line glyphs this used to fall back on."""
+        if slug is None:
+            return
+        img = artwork.icon(slug[0], slug[1], 20, color=color)
+        if img is not None:
+            screen.blit(img, img.get_rect(center=center))
 
     def _draw_marker(self, screen, x, y, n, here, hovered, others=0):
         col = KIND_COLOR[n.kind]
@@ -646,7 +664,7 @@ class MapScreen(ButtonsMixin, Screen):
         if here:
             smooth_circle(screen, ACCENT, (x, y), 13)
             self._ring(screen, ACCENT_INK, (x, y), 13, 2)
-            text(screen, "G", self.fonts.body_bd, ACCENT_INK, (x, y), center=True)
+            self._kind_icon(screen, HOME_ICON, (x, y), ACCENT_INK)
             pygame.draw.line(screen, ACCENT_INK, (x, y - 13), (x, y - 30), 2)
             pygame.draw.polygon(screen, ACCENT,
                                 [(x + 1, y - 30), (x + 15, y - 26), (x + 1, y - 20)])
@@ -658,10 +676,8 @@ class MapScreen(ButtonsMixin, Screen):
                 screen.blit(aura, (x - 27, y - 27))
             smooth_circle(screen, col, (x, y), 13)
             self._ring(screen, tuple(c // 2 for c in col), (x, y), 13, 2)
-            if n.work:
-                self._glyph(screen, "work", x, y)
-            else:
-                self._glyph(screen, n.kind, x, y)
+            ink = tuple(c // 3 for c in col)
+            self._kind_icon(screen, WORK_ICON if n.work else KIND_ICON.get(n.kind), (x, y), ink)
             if hovered:
                 self._ring(screen, ROUTE_HL, (x, y), 17, 2)
             if self._flash is not None and self._flash[0] == n.id:
@@ -672,7 +688,7 @@ class MapScreen(ButtonsMixin, Screen):
         if others:                                                 # other groups standing here
             badge = pygame.Rect(0, 0, 22, 16)
             badge.center = (x + 15, y - 15)
-            panel(screen, badge, fill=SURFACE_3, border=ACCENT, radius=8)
+            panel(screen, badge, fill=PANEL_RAISED, border=ACCENT, radius=8)
             text(screen, f"+{others}", self.fonts.label, ACCENT, badge.center, center=True)
 
     @staticmethod
@@ -689,13 +705,12 @@ class MapScreen(ButtonsMixin, Screen):
             others = occupants - (1 if here else 0)
             self._draw_marker(screen, x, y, n, here, n is hov, others)
 
-            border = ACCENT if here else ROUTE_HL if n is hov else PARCH_TAG_BORDER
-            r = pygame.Rect(0, 0, f.body_sm.size(n.name)[0] + 14, 18)
-            r.center = (x, y + 27)
-            panel(screen, r, fill=ACCENT if here else PARCH_TAG, border=border, radius=9)
-            text(screen, n.name, f.body_sm,
-                 ACCENT_INK if here else PARCH_INK,
-                 r.center, center=True)
+            # Direct text with an outline instead of a pill behind it -- reads
+            # as inked onto the map rather than an app widget sitting on top.
+            fg = ACCENT if here else ROUTE_HL if n is hov else NODE_LABEL
+            outline = ACCENT_INK if here else NODE_LABEL_OUTLINE
+            outlined_text(screen, n.name, f.body_bd, fg, (x, y + 27),
+                          outline=outline, center=True)
 
     @staticmethod
     def _wilds_actions():
@@ -759,8 +774,8 @@ class MapScreen(ButtonsMixin, Screen):
             needs = not g.busy and not g.empty        # idle: waiting on the player
             r = pygame.Rect(cx, y, cw, 38)
             hov = r.collidepoint(self.mouse)
-            border = ACCENT if sel else WARN if needs else LINE_SOFT
-            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
+            border = ACCENT if sel else WARN if needs else PANEL_LINE
+            panel(screen, r, fill=PANEL_RAISED if (sel or hov) else PANEL_WELL,
                   border=border, width=2 if (sel or needs) else 1, radius=8)
             name = g.name or f"Group ({len(g.members)})"
             if g.leader is not None:
@@ -802,7 +817,7 @@ class MapScreen(ButtonsMixin, Screen):
         here = self._here()
         x = area.right + MARGIN
         rect = pygame.Rect(x, area.y, SIDE_W, area.h)
-        panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+        panel(screen, rect, fill=PANEL_BG, border=PANEL_LINE, radius=RADIUS)
 
         pad = SP4
         cx = x + pad
@@ -819,7 +834,7 @@ class MapScreen(ButtonsMixin, Screen):
         actions_h = (34 + (34 if len(g.members) > 1 else 0) + 34 * len(mates)) if not g.busy else 0
         groups_h = 30 + 42 * len(self.guild.groups) + actions_h
         panel(screen, pygame.Rect(x + SP2, y - SP2, SIDE_W - 2 * SP2, groups_h + 2 * SP2),
-              fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
+              fill=PANEL_WELL, border=PANEL_LINE, radius=RADIUS)
         y = self._draw_groups(screen, cx, y, cw, f)
         y = self._draw_group_actions(screen, cx, y, cw, f)
         y += SP3
@@ -828,7 +843,7 @@ class MapScreen(ButtonsMixin, Screen):
         blurb_lines = wrap_lines([here.blurb], f.body_sm, cw)
         loc_h = 18 + 24 + 22 + 16 * len(blurb_lines)
         panel(screen, pygame.Rect(x + SP2, y - SP2, SIDE_W - 2 * SP2, loc_h + 2 * SP2),
-              fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
+              fill=PANEL_WELL, border=PANEL_LINE, radius=RADIUS)
         tracked(screen, "SELECTED GROUP IS AT", f.label, INFO, (cx, y))
         y += 18
         text(screen, here.name, f.heading, INK, (cx, y))
@@ -1017,7 +1032,7 @@ class MapScreen(ButtonsMixin, Screen):
         f = self.fonts
         x = area.right + MARGIN
         rect = pygame.Rect(x, area.y, SIDE_W, area.h)
-        panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+        panel(screen, rect, fill=PANEL_BG, border=PANEL_LINE, radius=RADIUS)
 
         pad = SP4
         cx = x + pad
@@ -1032,8 +1047,8 @@ class MapScreen(ButtonsMixin, Screen):
             picked = u.uid in self.split_picks
             r = pygame.Rect(cx, y, cw, 30)
             hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=SURFACE_3 if (picked or hov) else SURFACE_1,
-                  border=ACCENT if picked else LINE_SOFT, width=2 if picked else 1, radius=8)
+            panel(screen, r, fill=PANEL_RAISED if (picked or hov) else PANEL_WELL,
+                  border=ACCENT if picked else PANEL_LINE, width=2 if picked else 1, radius=8)
             text(screen, u.name, f.body_sm, ACCENT if picked else INK, (r.x + SP2, r.y + 3))
             text(screen, "leaving" if picked else "stays", f.label,
                  ACCENT if picked else INK_FAINT, (r.right - SP2, r.y + 3), right=True)

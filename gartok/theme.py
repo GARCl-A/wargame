@@ -251,6 +251,20 @@ def text(surf, s, font, color, pos, *, right=False, center=False, bottom=False):
     surf.blit(img, rect)
     return rect
 
+def outlined_text(surf, s, font, color, pos, *, outline, px=2, center=False):
+    """`text()` with a solid outline -- legible straight over a photo texture
+    (the world map's parchment) where a flat fill can't guarantee contrast,
+    without needing a background panel behind the text."""
+    dark = font.render(s, True, outline)
+    rect = dark.get_rect(center=pos) if center else dark.get_rect(topleft=pos)
+    for dx in (-px, 0, px):
+        for dy in (-px, 0, px):
+            if dx or dy:
+                surf.blit(dark, rect.move(dx, dy))
+    img = font.render(s, True, color)
+    surf.blit(img, img.get_rect(center=pos) if center else pos)
+    return rect
+
 def format_tooltip(title, description, fonts, max_px=260):
     """Formats a structured tooltip with an accent title and wrapped body lines."""
     lines = [(title, fonts.label, ACCENT)]
