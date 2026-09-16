@@ -10,18 +10,20 @@ import pygame
 
 from . import persist
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, RADIUS, SP3, SP4, SURFACE_2,
-                    SURFACE_3, panel, text)
-from .widgets import draw_button
+from .ui.primitives import draw_button, text
+from .ui.tokens import T, fonts
+
+MARGIN = 16
+SP3 = 12
+SP4 = 16
 
 
 class MenuScreen(Screen):
     native = True                            # draw at the real window size
 
-    def __init__(self, fonts, on_new, on_continue, on_delete, on_editor=None):
+    def __init__(self, _fonts, on_new, on_continue, on_delete, on_editor=None):
         super().__init__()
-        self.fonts = fonts
+        self.F = fonts()
         self.on_new = on_new
         self.on_continue = on_continue
         self.on_delete = on_delete
@@ -57,15 +59,14 @@ class MenuScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
+        F = self.F
         W, H = screen.get_size()
-        screen.fill((18, 19, 24))
+        screen.fill(T.TABLE)
         mouse = self.mouse
         self.buttons = []
 
-        text(screen, "GARTOK TACTICAL", f.title, INK, (MARGIN, MARGIN))
-        text(screen, "pick a slot to play", f.body, INK_DIM,
-             (MARGIN, MARGIN + 32))
+        text(screen, F["big"], "GARTOK TACTICAL", (MARGIN, MARGIN), T.TX)
+        text(screen, F["body"], "pick a slot to play", (MARGIN, MARGIN + 32), T.TX_MUTED)
 
         card_w = min(560, W - 2 * MARGIN)
         card_h = 116
@@ -82,58 +83,60 @@ class MenuScreen(Screen):
         if self.on_editor:
             er = pygame.Rect(x, y + SP3, card_w, 34)
             hov = er.collidepoint(mouse)
-            panel(screen, er, fill=SURFACE_3 if hov else SURFACE_2,
-                  border=ACCENT if hov else LINE_SOFT, width=1, radius=RADIUS)
-            text(screen, "EDITOR", f.label, ACCENT if hov else INK_DIM,
-                 (er.centerx, er.centery - 8), center=True)
-            text(screen, "character & scenario creator", f.body_sm, INK_FAINT,
-                 (er.centerx, er.centery + 4), center=True)
+            
+            fill = T.STEEL_HI if hov else T.STEEL
+            border = T.BRASS if hov else T.STEEL_LINE
+            pygame.draw.rect(screen, fill, er)
+            pygame.draw.rect(screen, border, er, 1)
+            
+            text(screen, F["microb"], "EDITOR", (er.centerx, er.centery - 8), T.BRASS if hov else T.TX_MUTED, center=True)
+            text(screen, F["body"], "character & scenario creator", (er.centerx, er.centery + 4), T.TX_FAINT, center=True)
             self.buttons.append(("editor", None, er))
 
-        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, H - 18))
+        text(screen, F["body"], "[Esc] quit", (MARGIN, H - 18), T.TX_FAINT)
 
     def _draw_slot(self, screen, rect, s, mouse):
-        f = self.fonts
+        F = self.F
         i = s["index"]
         hov_card = s["empty"] and rect.collidepoint(mouse)
-        panel(screen, rect, fill=SURFACE_3 if hov_card else SURFACE_2,
-              border=ACCENT if hov_card else LINE_SOFT,
-              width=2 if hov_card else 1, radius=RADIUS)
-        text(screen, f"SLOT {i + 1}", f.label, INK_FAINT, (rect.x + SP3, rect.y + SP3))
+        
+        fill = T.STEEL_HI if hov_card else T.STEEL
+        border = T.BRASS if hov_card else T.STEEL_LINE
+        width = 2 if hov_card else 1
+        pygame.draw.rect(screen, fill, rect)
+        pygame.draw.rect(screen, border, rect, width)
+        
+        text(screen, F["microb"], f"SLOT {i + 1}", (rect.x + SP3, rect.y + SP3), T.TX_FAINT)
 
         if s["empty"]:
             hov = hov_card
-            text(screen, "empty", f.body, INK_DIM, (rect.x + SP3, rect.y + 34))
-            text(screen, "click to start a new game", f.body_sm,
-                 ACCENT if hov else INK_FAINT, (rect.x + SP3, rect.y + 56))
+            text(screen, F["body"], "empty", (rect.x + SP3, rect.y + 34), T.TX_MUTED)
+            text(screen, F["body"], "click to start a new game", (rect.x + SP3, rect.y + 56), T.BRASS if hov else T.TX_FAINT)
             self.buttons.append(("new", i, rect))
             return
 
         squad = "  ·  ".join(name.split()[0] for name in s["squad"]) or "(no squad)"
         when = time.strftime("%d/%m %H:%M", time.localtime(s["saved_at"])) if s["saved_at"] else ""
-        text(screen, squad, f.body_bd, INK, (rect.x + SP3, rect.y + 30))
-        text(screen, f"{s['battles_won']} wins    {when}", f.body_sm, INK_DIM,
-             (rect.x + SP3, rect.y + 52))
+        text(screen, F["bodyb"], squad, (rect.x + SP3, rect.y + 30), T.TX)
+        text(screen, F["body"], f"{s['battles_won']} wins    {when}", (rect.x + SP3, rect.y + 52), T.TX_MUTED)
 
         if self.confirm_delete == i:
-            text(screen, "delete this game?", f.body_sm, DANGER,
-                 (rect.x + SP3, rect.bottom - 34))
+            text(screen, F["body"], "delete this game?", (rect.x + SP3, rect.bottom - 34), T.BLOOD)
             self._btn(screen, "delete_yes", i,
                       pygame.Rect(rect.right - 210, rect.bottom - 40, 92, 28),
-                      "delete", DANGER, mouse)
+                      "delete", T.BLOOD, mouse)
             self._btn(screen, "delete_no", i,
                       pygame.Rect(rect.right - 108, rect.bottom - 40, 92, 28),
-                      "cancel", INK_DIM, mouse)
+                      "cancel", T.TX_MUTED, mouse)
             return
 
         self._btn(screen, "continue", i,
                   pygame.Rect(rect.right - 210, rect.bottom - 40, 120, 28),
-                  "continue", ACCENT, mouse)
+                  "continue", T.BRASS, mouse)
         self._btn(screen, "delete", i,
                   pygame.Rect(rect.right - 80, rect.bottom - 40, 64, 28),
-                  "delete", INK_DIM, mouse)
+                  "delete", T.TX_MUTED, mouse)
 
     def _btn(self, screen, key, slot, rect, label, color, mouse):
-        draw_button(screen, rect, label, self.fonts, mouse, primary=(color is ACCENT),
-                   danger=(color is DANGER), font=self.fonts.label)
+        draw_button(screen, self.F, rect, label, primary=(color is T.BRASS), danger=(color is T.BLOOD), mpos=mouse)
         self.buttons.append((key, slot, rect))
