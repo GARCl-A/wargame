@@ -57,6 +57,29 @@ def test_enlist_pulls_the_recruit_out_of_the_pool():
     assert cand in g.roster and cand not in g.taverna_pool and len(g.taverna_pool) == 2
 
 
+def test_taverna_screen_pitch_does_not_double_pop_the_shared_pool():
+    """Regression: TavernaScreen(candidates=None) hands out the live
+    guild.taverna_pool -- the same list `recruit.enlist` already trims on a
+    win. Popping self.sel again on top of that used to raise IndexError."""
+    from gartok.guild import Guild
+    from gartok.clock import Clock
+    from gartok.taverna_screen import TavernaScreen
+
+    random.seed(4)
+    recruiter = _person(1, cha=100)                    # always wins the contest
+    g = Guild([recruiter], clock=Clock())
+    scr = TavernaScreen(fonts=None, guild=g, party=[recruiter], node=None, on_done=lambda: None)
+    assert scr.candidates is g.taverna_pool
+
+    scr.sel = len(scr.candidates) - 1                  # click the last stranger in the row
+    cand = scr.candidates[scr.sel]
+    recruiter.languages = list(cand.languages)          # guarantee the pitch can be made at all
+    scr._pitch(recruiter)                              # must not raise IndexError
+
+    assert cand in g.roster and cand not in g.taverna_pool
+    assert cand not in scr.candidates
+
+
 def test_recruit_alignment_distance_docks_the_pitch():
     r = _person(1, align="Lawful and Good")
     c = _person(2, align="Chaotic and Evil")                  # distance 4

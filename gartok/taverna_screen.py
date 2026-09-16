@@ -128,7 +128,8 @@ class TavernaScreen(ButtonsMixin, Screen):
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
-            self.candidates.pop(self.sel)
+            if cand in self.candidates:            # enlist() may already have removed it,
+                self.candidates.remove(cand)       # when self.candidates IS guild.taverna_pool
             self.notice = f"{cand.name} signs with the guild (recruited by {member.name})."
         else:
             recruit.bar(self.guild, cand, member)
