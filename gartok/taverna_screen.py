@@ -254,7 +254,6 @@ class TavernaScreen(ButtonsMixin, Screen):
         pad = SP3
         last = self.last.get(cand.uid)
         picking = self.sel == i
-        open_pitch = self._eligible(cand)
 
         hovering = rect.collidepoint(self.mouse) and self.sel is None
         border = ACCENT if (picking or hovering) else LINE_SOFT
@@ -297,14 +296,12 @@ class TavernaScreen(ButtonsMixin, Screen):
                  (rect.x + pad, y)); y += 15
             text(screen, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})",
                  f.body_sm, INK_FAINT, (rect.x + pad, y))
-        elif not open_pitch and any(recruit.can_pitch(m, cand) for m in self.party):
-            text(screen, "everyone already tried this week", f.body_sm, DANGER,
-                 (rect.x + pad, y))
         else:
-            text(screen, "no one in the party can speak with them", f.body_sm, DANGER,
+            reason = recruit.pitch_block_reason(self.guild, self.party, cand)
+            text(screen, reason or "cannot recruit", f.body_sm, DANGER,
                  (rect.x + pad, y))
 
-        mark = "click to pitch" if self.sel is None else "click a party member"
+        mark = ("click to pitch" if best is not None else "click to inspect") if self.sel is None else "click a party member"
         text(screen, mark, f.label, INK_FAINT, (rect.x + pad, rect.bottom - 20))
 
     def _draw_last(self, screen, rect, y, last):
@@ -345,12 +342,12 @@ class TavernaScreen(ButtonsMixin, Screen):
         if cand is not None:
             if recruit.barred(self.guild, cand, m):
                 state = ("TRIED", DANGER)
+            elif not recruit.can_pitch(m, cand):
+                state = ("no language", DANGER)
             elif free <= 0:
                 state = ("FULL", DANGER)
-            elif recruit.can_pitch(m, cand):
-                state = ("CAN SPEAK", OK)
             else:
-                state = ("no language", DANGER)
+                state = ("CAN SPEAK", OK)
         hov = r.collidepoint(self.mouse) and self.sel is not None
         can = state is not None and state[0] == "CAN SPEAK"
         border = OK if (can and hov) else DANGER if (state and not can and hov) else LINE_SOFT

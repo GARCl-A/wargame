@@ -174,7 +174,6 @@ class PrisonScreen(ButtonsMixin, Screen):
         pad = SP3
         last = self.last.get(cand.uid)
         picking = self.sel == i
-        open_pitch = self._eligible(cand)
         cost = recruit.bail_cost(cand)
 
         hovering = rect.collidepoint(self.mouse) and self.sel is None
@@ -216,12 +215,11 @@ class PrisonScreen(ButtonsMixin, Screen):
             text(screen, f"{m.name}  ·  CHA check {net:+}", f.body_sm, OK, (rect.x + pad, y))
             y += 15
             text(screen, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})", f.body_sm, INK_FAINT, (rect.x + pad, y))
-        elif not open_pitch and any(recruit.can_pitch(m, cand) for m in self.party):
-            text(screen, "everyone already tried this week", f.body_sm, DANGER, (rect.x + pad, y))
         else:
-            text(screen, "no one in the party can speak with them", f.body_sm, DANGER, (rect.x + pad, y))
+            reason = recruit.pitch_block_reason(self.guild, self.party, cand, is_prison=True)
+            text(screen, reason or "cannot recruit", f.body_sm, DANGER, (rect.x + pad, y))
 
-        mark = "click to pay bail" if self.sel is None else "click a party member"
+        mark = ("click to pay bail" if best is not None else "click to inspect") if self.sel is None else "click a party member"
         text(screen, mark, f.label, INK_FAINT, (rect.x + pad, rect.bottom - 20))
 
     def _draw_last(self, screen, rect, y, last):
@@ -264,10 +262,10 @@ class PrisonScreen(ButtonsMixin, Screen):
             cost = recruit.bail_cost(cand)
             if recruit.prison_barred(self.guild, cand, m):
                 state = ("TRIED", DANGER)
-            elif free <= 0:
-                state = ("FULL", DANGER)
             elif not recruit.can_pitch(m, cand):
                 state = ("no language", DANGER)
+            elif free <= 0:
+                state = ("FULL", DANGER)
             elif _party_wealth(self.party) < cost:
                 state = ("CANT AFFORD", DANGER)
             else:

@@ -168,3 +168,56 @@ def test_prison_pool_management():
     
     new_pool = list(recruit.refresh_prison_pool(g))
     assert new_pool != first
+
+
+def test_pitch_block_reasons():
+    from gartok.guild import Guild
+    # 1. Eligible member -> None
+    r1 = _person(1, lang="Comum", cha=1)
+    cand_comum = _person(2, lang="Comum")
+    g = Guild([r1])
+    assert recruit.pitch_block_reason(g, [r1], cand_comum) is None
+
+    # 2. No one shares language
+    cand_orque = _person(3, lang="Orque")
+    assert recruit.pitch_block_reason(g, [r1], cand_orque) == "no one in the party can speak with them"
+
+    # 3. Whole party tried
+    recruit.bar(g, cand_comum, r1)
+    assert recruit.pitch_block_reason(g, [r1], cand_comum) == "everyone already tried this week"
+
+    # 4. All speakers tried, but other non-speakers exist in party
+    r2 = _person(4, lang="Anao", cha=1)
+    g.add_member(r2, g.groups[0])
+    assert recruit.pitch_block_reason(g, [r1, r2], cand_comum) == "all speakers already tried this week"
+
+    # 5. No sponsor slots free in entire party
+    cand_elfico = _person(5, lang="Elfico")
+    r3 = _person(6, lang="Elfico", cha=0)  # cap=1
+    g2 = Guild([r3])
+    dummy = _person(7)
+    recruit.enlist(g2, dummy, r3)          # r3 slots_free == 0
+    assert recruit.slots_free(g2, r3) == 0
+    assert recruit.pitch_block_reason(g2, [r3], cand_elfico) == "no sponsor slots free in party"
+
+    # 6. Speakers have no slots, but another party member has slots (who doesn't speak the tongue)
+    r4_open = _person(8, lang="Comum", cha=2)  # has slots, doesn't speak Elfico
+    g2.add_member(r4_open, g2.groups[0])
+    assert recruit.slots_free(g2, r4_open) > 0
+    assert recruit.pitch_block_reason(g2, [r3, r4_open], cand_elfico) == "speakers have no sponsor slots free"
+
+    # 7. Some speakers tried, others have no slots
+    r5_speaker = _person(9, lang="Elfico", cha=1)  # has slot, but will be barred
+    g2.add_member(r5_speaker, g2.groups[0])
+    recruit.bar(g2, cand_elfico, r5_speaker)
+    # r5_speaker is barred; r3 is unbarred but has 0 slots
+    assert recruit.pitch_block_reason(g2, [r3, r5_speaker], cand_elfico) == "speakers already tried or have no room"
+
+    # 8. Prison barred check
+    cand_prison = _person(10, lang="Comum")
+    r6 = _person(11, lang="Comum", cha=1)
+    g3 = Guild([r6])
+    assert recruit.pitch_block_reason(g3, [r6], cand_prison, is_prison=True) is None
+    recruit.prison_bar(g3, cand_prison, r6)
+    assert recruit.pitch_block_reason(g3, [r6], cand_prison, is_prison=True) == "everyone already tried this week"
+
