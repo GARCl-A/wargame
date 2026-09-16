@@ -180,10 +180,17 @@ class Battle:
         return self.board.elevation_at(pos or unit.pos)
 
     def unit_at(self, pos, include_downed=False):
+        """The unit standing at `pos` -- a live occupant always wins over a downed
+        body sharing the same cell (a shove can land someone on a fallen ally)."""
+        downed_match = None
         for u in self.units:
-            if (u.alive or (include_downed and u.downed)) and pos in self.cells_of(u):
+            if pos not in self.cells_of(u):
+                continue
+            if u.alive:
                 return u
-        return None
+            if include_downed and u.downed and downed_match is None:
+                downed_match = u
+        return downed_match
 
     def occupied(self, exclude=None):
         result = set()

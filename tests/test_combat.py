@@ -179,6 +179,16 @@ def test_death_save_can_kill():
     assert d.dead and not d.survived
 
 
+def test_stabilize_and_first_aid_are_ally_targeted():
+    """`target` drives how the battle screen resolves a click on the tile
+    (see BattleScreen._click): "cell" hands the action a raw coordinate, which
+    Stabilize/FirstAid can never match since they check against a Unit -- the
+    button silently did nothing. They must be "ally" like Mount/WakeUp so the
+    click resolves to the actual downed unit on that tile."""
+    assert actions.STABILIZE.target == "ally"
+    assert actions.FIRST_AID.target == "ally"
+
+
 def test_ally_stabilize_success_and_failure():
     batt, a, d = _melee_battle()
     b = _recruit(batt)
@@ -192,6 +202,25 @@ def test_ally_stabilize_success_and_failure():
     with fixed_d20(20):                               # clean -> stable
         actions.STABILIZE.execute(batt, b, a)
     assert a.stable and b.ap == 1
+
+
+def test_unit_at_prefers_the_living_occupant_over_a_downed_one():
+    """A shove can land a live unit on the same cell as a fallen ally (bodies
+    don't block); `unit_at` must resolve clicks/attacks to the standing one,
+    not whichever happens to be first in `battle.units`."""
+    batt, a, d = _melee_battle()
+    corpse = _recruit(batt, team="enemy")
+    corpse.pos = d.pos
+    corpse.go_down(batt.log)
+    assert batt.unit_at(d.pos) is d
+    assert batt.unit_at(d.pos, include_downed=True) is d
+
+
+def test_unit_at_falls_back_to_the_downed_body_alone():
+    batt, a, d = _melee_battle()
+    d.go_down(batt.log)
+    assert batt.unit_at(d.pos) is None
+    assert batt.unit_at(d.pos, include_downed=True) is d
 
 
 def test_first_aid_consumes_charge_either_way():

@@ -108,6 +108,27 @@ def test_push_shoves_the_target_back_a_square():
     assert d.pos == (7, 5) and a.ap == 1
 
 
+def test_push_can_shove_an_ally():
+    random.seed(3)
+    batt = Battle([Unit("player"), Unit("player")], [Unit("enemy")])
+    a, b, e = batt.units
+    a._ability = b._ability = e._ability = abilities.get("none")
+    a.pos, b.pos, e.pos = (5, 5), (6, 5), (9, 9)
+    batt.board.walls = {w for w in batt.board.walls if w[1] != 5}
+    a.ap = b.ap = 2
+    _set_stats(a, strength=14)              # +2
+    _set_stats(b, constitution=10)          # DC 10
+    assert actions.PUSH.can(batt, a, b) is True
+    with fixed_d20(12):                          # 12 + 2 = 14 >= 10, shoved
+        actions.PUSH.execute(batt, a, b)
+    assert b.pos == (7, 5) and a.ap == 1
+
+
+def test_push_cannot_target_self():
+    batt, a, d = _pit_battle(depth=0)
+    assert actions.PUSH.can(batt, a, a) is False
+
+
 def test_push_against_a_wall_does_not_move_the_target():
     batt, a, d = _pit_battle(depth=0)
     a.pos, d.pos = (5, 5), (6, 5)

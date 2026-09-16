@@ -7,6 +7,97 @@ from tests.helpers import data, economy, Unit
 from gartok.guild import Guild
 
 
+def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import json
+    import pygame
+    from gartok.battle import Battle
+    from gartok.battle_screen import BattleScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    import gartok.battle_screen as battle_screen_mod
+    monkeypatch.setattr(battle_screen_mod, "DEBUG_EXPORT_DIR", str(tmp_path))
+
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr._export_state()
+
+    files = list(tmp_path.iterdir())
+    assert len(files) == 1
+    payload = json.loads(files[0].read_text(encoding="utf-8"))
+    assert len(payload["units"]) == 2
+    assert payload["units"][0]["name"] == batt.units[0].name
+    assert "State exported to" in batt.log_lines[-1]
+
+
+def test_battle_log_wheel_scroll_over_the_log_panel():
+    """Scrolling with the mouse over the log well pages through history instead
+    of zooming the board (the board still zooms everywhere else)."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.battle import Battle
+    from gartok.battle_screen import BattleScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    surf = pygame.display.set_mode((1280, 800))
+
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    for i in range(80):
+        batt.log(f"line {i}")
+    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr.draw(surf)                            # populates self._L
+
+    log_rect = scr._L["log"]
+    scr.mouse = log_rect.center
+    zoom_before = tuple(scr.view.cam)
+    scr.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=3, x=0))
+    assert scr.log_scroll == 3
+    assert tuple(scr.view.cam) == zoom_before          # scrolled the log, not the board
+
+    scr.draw(surf)
+    assert scr.log_scroll <= 3                          # clamped to what actually fits
+    scroll_before = scr.log_scroll
+
+    scr.mouse = (10, 10)                                 # off the log panel: back to zooming
+    scr.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=1, x=0))
+    assert scr.log_scroll == scroll_before               # untouched by the off-panel wheel
+    assert tuple(scr.view.cam) != zoom_before            # the board zoomed instead
+
+
+def test_daylight_fog_dims_cells_outside_los():
+    """Daylight used to skip the darkness layer entirely (`ambient_light` short-
+    circuited `LightRenderer.draw`), so every cell looked identically "lit" and
+    there was no way to tell whether a given square was actually in the active
+    character's LOS. A cell outside `visible` must render visibly dimmer than
+    one inside it, even under full ambient light."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.lighting import LightRenderer
+    from gartok.theme import BoardView
+    pygame.init()
+    surf = pygame.display.set_mode((640, 480))
+
+    class FakeBoard:
+        cols, rows = 10, 10
+
+    class FakeBattle:
+        ambient_light = True
+        board = FakeBoard()
+
+    view = BoardView(FakeBoard.cols, FakeBoard.rows)
+    view.fit(pygame.Rect(0, 0, 640, 480))
+
+    surf.fill((255, 255, 255))
+    LightRenderer().draw(surf, FakeBattle(), {(2, 2)}, [], view)
+
+    seen = surf.get_at(view.cell_rect(2, 2).center)
+    unseen = surf.get_at(view.cell_rect(7, 7).center)
+    assert tuple(seen)[:3] == (255, 255, 255)            # in LOS: untouched
+    assert tuple(unseen)[:3] != (255, 255, 255)          # outside LOS: dimmed
+
+
 def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
     from gartok.market_screen import MarketScreen
     assert economy.sell_price("Axe") < economy.buy_price("Axe")

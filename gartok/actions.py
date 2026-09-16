@@ -145,6 +145,11 @@ def _hostile_target(actor, target):
     return target is not None and target.alive and target.team != actor.team
 
 
+def _shovable_target(actor, target):
+    """Push works on anyone standing, foe or friend -- just not yourself."""
+    return target is not None and target.alive and target is not actor
+
+
 def _attackable_target(actor, target):
     """Attack and Throw may also target a downed enemy body, to finish it off."""
     return target is not None and not target.dead and target.team != actor.team
@@ -620,7 +625,7 @@ class Demoralize(Action):
 # --------------------------------------------------------------------------- #
 
 class Stabilize(Action):
-    id, name, cost, target, aimed = "stabilize", "Stabilize", 1, "cell", True
+    id, name, cost, target, aimed = "stabilize", "Stabilize", 1, "ally", True
     desc = "50% chance to stabilize an adjacent dying ally."
 
     def _downed_allies(self, battle, actor):
@@ -677,7 +682,7 @@ class Stabilize(Action):
 
 
 class FirstAid(Stabilize):
-    id, name, cost, target, aimed = "first_aid", "First Aid", 1, "cell", True
+    id, name, cost, target, aimed = "first_aid", "First Aid", 1, "ally", True
     desc = "Use a medkit: 100% chance to stabilize, or cure sickness."
 
     def _downed_allies(self, battle, actor):
@@ -786,22 +791,23 @@ class Flee(Action):
 # --------------------------------------------------------------------------- #
 
 class Push(Action):
-    """Shove an adjacent enemy one square straight back. Strength vs 10 + their
-    Constitution modifier. If the square behind them is a pit, they go in (and
-    take the fall). A wall / body behind them stops the shove dead."""
+    """Shove an adjacent unit -- foe or friend -- one square straight back.
+    Strength vs 10 + their Constitution modifier. If the square behind them is
+    a pit, they go in (and take the fall). A wall / body behind them stops the
+    shove dead."""
 
-    id, name, cost, target, aimed = "push", "Push", 1, "enemy", True
-    desc = "Push an adjacent enemy."
+    id, name, cost, target, aimed = "push", "Push", 1, "unit", True
+    desc = "Push an adjacent unit."
 
     def _targets(self, battle, actor):
         return [u for u in battle.units
-                if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+                if u.alive and u is not actor and self.can(battle, actor, u)]
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and bool(self._targets(battle, actor))
 
     def can(self, battle, actor, target=None):
-        if actor.ap < self.cost or not _hostile_target(actor, target):
+        if actor.ap < self.cost or not _shovable_target(actor, target):
             return False
         if battle.units_distance(actor, target) > 1:
             return False

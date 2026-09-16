@@ -11,6 +11,7 @@ build/
 dist/
 saves/
 sim_results/
+debug_exports/
 .claude/settings.local.json
 localnote.txt
 scratch/

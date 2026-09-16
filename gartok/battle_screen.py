@@ -2,6 +2,10 @@
 the log. Drawing only -- rules live in `battle` / `actions` / `vision`; combat
 juice (floaters, hit reactions) lives in `battle_fx`."""
 
+import json
+import os
+import time
+
 import pygame
 
 from . import actions, ai, artwork, data, icons, vision
@@ -23,6 +27,8 @@ from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
 _WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
 
 ENEMY_DELAY = 450  # ms between AI actions
+
+DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "debug_exports")
 
 
 class BattleScreen(Screen):
@@ -49,6 +55,8 @@ class BattleScreen(Screen):
         self.show_blocked_actions = False
         self.view_squad = False
         self.buttons = []
+        self.log_scroll = 0                   # lines scrolled up from the live bottom
+        self._log_len_seen = 0
 
         self._obs = []
         self._visible = set()
@@ -70,7 +78,11 @@ class BattleScreen(Screen):
             elif pygame.K_1 <= event.key <= pygame.K_9:
                 self._hotkey_action(event.key - pygame.K_1)
         elif event.type == pygame.MOUSEWHEEL:
-            self.view.zoom(pygame.mouse.get_pos(), event.y)
+            log_rect = getattr(self, "_L", None) and self._L.get("log")
+            if log_rect and log_rect.collidepoint(self.mouse):
+                self.log_scroll = max(0, self.log_scroll + event.y)
+            else:
+                self.view.zoom(pygame.mouse.get_pos(), event.y)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self._click(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button in (2, 3):
@@ -155,6 +167,8 @@ class BattleScreen(Screen):
                     self.aim_action = None
                 elif key == "toggle_blocked":
                     self.show_blocked_actions = not self.show_blocked_actions
+                elif key == "export_state":
+                    self._export_state()
                 else:
                     self._action_click(key)
                 return
@@ -1031,14 +1045,83 @@ class BattleScreen(Screen):
         well = self._L["log"]
         panel(screen, well, fill=SURFACE_0, border=LINE_SOFT)
         tracked(screen, "LOG", f.label, INK_FAINT, (well.x + SP2, well.y + SP1))
+
+        export_r = pygame.Rect(0, well.y + 1, 62, 16)
+        export_r.right = well.right - SP2
+        panel(screen, export_r, fill=SURFACE_1, border=LINE_SOFT, width=1)
+        text(screen, "export", f.label, INK_FAINT, export_r.center, center=True)
+        self.buttons.append(("export_state", export_r))
+
         rows = max(1, (well.h - 24) // 17)
-        lines = self.battle.log_lines[-rows:]
+
+        all_lines = self.battle.log_lines
+        total = len(all_lines)
+        added = max(0, total - self._log_len_seen)
+        if self.log_scroll > 0:
+            self.log_scroll += added         # keep the same old lines in view as new ones arrive
+        self._log_len_seen = total
+        max_scroll = max(0, total - rows)
+        self.log_scroll = min(self.log_scroll, max_scroll)
+
+        end = total - self.log_scroll
+        start = max(0, end - rows)
+        lines = all_lines[start:end]
         y = well.y + 22
         for i, ln in enumerate(lines):
-            last = i == len(lines) - 1
+            last = self.log_scroll == 0 and i == len(lines) - 1
             col = INK if last else self._log_color(ln)
             text(screen, ln[:180], f.mono_sm, col, (well.x + SP3, y))
             y += 17
+        if self.log_scroll > 0:
+            text(screen, f"v {self.log_scroll} more below (scroll to follow)", f.label,
+                 INK_FAINT, (well.right - SP2, well.bottom - SP1), right=True, bottom=True)
+
+    def _export_state(self):
+        """Dump the battle to a JSON snapshot so a player who hits a weird bug
+        mid-fight can hand over the state that produced it, instead of trying
+        to describe it after the fact."""
+        b = self.battle
+        os.makedirs(DEBUG_EXPORT_DIR, exist_ok=True)
+        path = os.path.join(DEBUG_EXPORT_DIR, f"battle_{int(time.time())}.json")
+        snapshot = {
+            "round": b.round_no,
+            "turn_idx": b.turn_idx,
+            "winner": b.winner,
+            "lethal": b.lethal,
+            "arena": b.arena,
+            "is_ctf": b.is_ctf,
+            "ambient_light": b.ambient_light,
+            "board": {
+                "cols": b.board.cols,
+                "rows": b.board.rows,
+                "walls": sorted(b.board.walls),
+                "elevation": {f"{x},{y}": z for (x, y), z in b.board.elevation.items()},
+                "water": sorted(getattr(b.board, "water", set())),
+                "deep_water": sorted(getattr(b.board, "deep_water", set())),
+            },
+            "units": [
+                {
+                    "name": u.name,
+                    "team": u.team,
+                    "pos": list(u.pos),
+                    "footprint": u.footprint,
+                    "status": u.status,
+                    "hp": u.hp,
+                    "hp_max": u.hp_max,
+                    "ap": u.ap,
+                    "alive": u.alive,
+                    "downed": u.downed,
+                    "conditions": [c.id for c in u.conditions],
+                    "active": u is b.active,
+                }
+                for u in b.units
+            ],
+            "ground": [{"pos": list(o.pos), "kind": o.kind} for o in b.ground],
+            "log": list(b.log_lines),
+        }
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(snapshot, fh, indent=2, default=str)
+        b.log(f"State exported to {os.path.relpath(path)}")
 
     def _draw_winner(self, screen):
         f = self.fonts

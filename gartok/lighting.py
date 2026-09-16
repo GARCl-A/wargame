@@ -70,13 +70,14 @@ class LightRenderer:
 
     def draw(self, screen, battle, visible, observers, view):
         self.view = view
-        if getattr(battle, "ambient_light", False):
-            return                       # daylight scene: no darkness layer at all
         vr = view.rect
         if vr.w < 4 or vr.h < 4:
             return
         tile = view.tile
         ox, oy = vr.topleft
+        if getattr(battle, "ambient_light", False):
+            self._draw_daylight_fog(screen, battle, visible, view, vr, tile, ox, oy)
+            return
         ceiling = max(vr.w, vr.h)
         darkness = pygame.Surface(vr.size, pygame.SRCALPHA)
         darkness.fill((*NIGHT, 255))
@@ -100,3 +101,22 @@ class LightRenderer:
         darkness = pygame.transform.smoothscale(darkness, small)
         darkness = pygame.transform.smoothscale(darkness, vr.size)
         screen.blit(darkness, vr.topleft)
+
+    def _draw_daylight_fog(self, screen, battle, visible, view, vr, tile, ox, oy):
+        """Daylight has no darkness to speak of, but LOS still cuts off at walls
+        and range -- without some marker every cell reads as equally seen, which
+        is exactly the complaint: no way to tell whether a given square is in
+        the active character's LOS. A flat haze over out-of-vision cells (as
+        opposed to night's opaque black) answers that without pretending it's
+        dark out."""
+        fog = pygame.Surface((tile, tile), pygame.SRCALPHA)
+        fog.fill((*NIGHT, 110))
+        board = battle.board
+        overlay = pygame.Surface(vr.size, pygame.SRCALPHA)
+        for cx in range(board.cols):
+            for cy in range(board.rows):
+                if (cx, cy) not in visible:
+                    r = view.cell_rect(cx, cy)
+                    if r.colliderect(vr):
+                        overlay.blit(fog, (r.x - ox, r.y - oy))
+        screen.blit(overlay, vr.topleft)
