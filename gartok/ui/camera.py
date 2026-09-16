@@ -1,8 +1,7 @@
-"""Pan/zoom camera over a continuous world-space node graph -- the
-war-table's analogue of `map_screen.MapCamera`, but zoom/pan around a
-screen-space *center* instead of a fixed top-left, and with no forced
-"fit the whole graph" step: it just centers on the nodes it's given and
-lets the caller zoom/pan from there."""
+"""Pan/zoom camera over a continuous world-space node graph -- zooms/pans
+around a screen-space *center* instead of a fixed top-left, and with no
+forced "fit the whole graph" step: it just centers on the nodes it's given
+and lets the caller zoom/pan from there."""
 
 import pygame
 

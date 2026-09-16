@@ -63,14 +63,18 @@ from .theme import set_pointer
 from .ui.camera import MapCamera
 from .ui.command_bar import draw_command
 from .ui.inspector_panel import draw_inspector
-from .ui.map_panel import draw_map
+from .ui.map_panel import draw_map, node_hit_rect
+from .ui.primitives import draw_button
 from .ui.roster_panel import draw_roster
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 from .widgets import ButtonsMixin
 
-ROSTER_W = 300
-INSPECTOR_W = 380
+# fractions of window width, clamped -- same "proportional with a floor/
+# ceiling" shape as ui.map_panel.draw_minimap's own sizing, so the side
+# panels scale with the window instead of eating/wasting fixed pixels
+ROSTER_FRAC, ROSTER_MIN, ROSTER_MAX = 0.22, 260, 360
+INSPECTOR_FRAC, INSPECTOR_MIN, INSPECTOR_MAX = 0.26, 320, 440
 WORK_HOURS = (4, 8, 12, 16)
 
 KIND_TERRAIN = {"town": "town", "market": "town", "tavern": "town",
@@ -318,19 +322,25 @@ class MapScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
-                   danger=False, font=None):
-        """Recolours every button to this screen's steel/paper ramp instead
-        of `widgets.draw_button`'s default cool blue-grey/white."""
-        return super().add_button(surf, rect, key, label, enabled=enabled, primary=primary,
-                                  danger=danger, font=font or self._F["microb"],
-                                  fill_well=T.TABLE, fill_raised=T.STEEL_HI,
-                                  fill_hover=T.STEEL_HI, line=T.STEEL_LINE,
-                                  ink=T.TX, ink_dim=T.TX_MUTED, ink_faint=T.TX_FAINT)
+                   danger=False, font=None, sub=None):
+        """Draws through `ui.primitives.draw_button` (its disabled rendering
+        included) and keeps `ButtonsMixin`'s own hit-registration bookkeeping
+        (`self.buttons`/`self._hot`) -- this screen is fully on the `ui`
+        component set now, whose steel/paper tokens are already this screen's
+        own palette, so it no longer needs `widgets.draw_button`'s
+        recolouring hooks to get there."""
+        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
+                   enabled=enabled, mpos=self.mouse, fnt=font)
+        hov = enabled and rect.collidepoint(self.mouse)
+        if enabled:
+            self.buttons.append((key, rect))
+            self._hot = self._hot or hov
+        return hov
 
     def _inspector_button(self, surf, F, rect, mpos, *, key=None, label="", sub=None,
                           primary=False, danger=False, enabled=True, font=None):
         self.add_button(surf, rect, key, label, enabled=enabled, primary=primary,
-                        danger=danger, font=font)
+                        danger=danger, font=font, sub=sub)
 
     # ------------------------------------------------------------------ #
     def _here(self):
@@ -652,21 +662,19 @@ class MapScreen(ButtonsMixin, Screen):
         return items
 
     # ------------------------------------------------------------------ #
-    @staticmethod
-    def _node_hit_rect(x, y):
-        return pygame.Rect(x - 40, y - 30, 80, 60)
-
     def draw(self, screen):
         W, H = screen.get_size()
         screen.fill(T.TABLE)
         F = self._F
         self._reset_buttons()
 
+        roster_w = max(ROSTER_MIN, min(ROSTER_MAX, round(W * ROSTER_FRAC)))
+        inspector_w = max(INSPECTOR_MIN, min(INSPECTOR_MAX, round(W * INSPECTOR_FRAC)))
         cmd = pygame.Rect(0, 0, W, T.S * 9)
         margin = T.S * 2
         bh = H - cmd.bottom - margin
-        left = pygame.Rect(0, cmd.bottom, ROSTER_W, bh)
-        right = pygame.Rect(W - INSPECTOR_W, cmd.bottom, INSPECTOR_W, bh)
+        left = pygame.Rect(0, cmd.bottom, roster_w, bh)
+        right = pygame.Rect(W - inspector_w, cmd.bottom, inspector_w, bh)
         mid = pygame.Rect(left.right, cmd.bottom, right.x - left.right, bh)
 
         groups = [self._group_dict(g) for g in self.guild.groups]
@@ -675,7 +683,7 @@ class MapScreen(ButtonsMixin, Screen):
             screen, F, mid, self._cam, self._nodes, world.EDGES, WASH, self._region_r,
             groups, self.selected.gid, self.mouse, icon_fn=_icon_fn)
 
-        self.hits = [(self._node_hit_rect(*self._cam.world_to_screen(n.pos)), n)
+        self.hits = [(node_hit_rect(self._cam.world_to_screen(n.pos)), n)
                     for n in world.NODES]
 
         clock = self.guild.clock

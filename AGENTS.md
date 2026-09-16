@@ -61,6 +61,24 @@ When the two disagree, `REFERENCE.md` wins.
 
 Screens follow `screen.Screen` base; `native = True` means full-window layout.
 
+## UI conventions
+
+- **`gartok/ui/` is the single source of truth for screen presentation.**
+  Every new screen or non-trivial screen change builds on that component set:
+  data-driven `draw_x(surf, F, rect, ...data, mpos)` functions that take plain
+  dicts/tuples, never real domain objects (`Group`, `Node`, `Unit`) — the
+  screen itself adapts its model into that shape, the component stays
+  reusable across screens.
+- **`widgets.py`/`theme.py` are legacy** — the app's original bespoke ramp.
+  They still back untouched screens; don't add new usage. When a screen gets
+  touched non-trivially, migrate it onto `gartok/ui/` instead of extending
+  the old system. Migrated so far: `menu_screen.py`, `map_screen.py`.
+- A `ui/` component never reads module globals or hardcodes screen
+  coordinates/fixed pixel widths for panel sizing — it takes its rect/data as
+  parameters and sizes/lays out relative to those (proportional-with-clamp
+  for anything window-size-dependent, like `map_panel.draw_minimap` already
+  does), so the same component holds up at any window size.
+
 ## Deep context
 
 For detailed history of any feature or past design decision, use the

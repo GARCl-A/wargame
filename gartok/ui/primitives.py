@@ -60,7 +60,12 @@ def wrap(font, s, w):
 
 
 def draw_button(surf, F, rect, label, sub=None, primary=False, danger=False,
-                 ghost=False, mpos=(-1, -1), fnt=None):
+                 ghost=False, enabled=True, mpos=(-1, -1), fnt=None):
+    if not enabled:
+        caps(surf, fnt or F["microb"], label, rect.center, T.TX_FAINT, center=True)
+        pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
+        return rect.bottom + T.S
+
     hover = rect.collidepoint(mpos)
     if primary:
         fill = T.BLOOD if danger else T.BRASS

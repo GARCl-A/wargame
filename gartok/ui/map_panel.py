@@ -21,9 +21,36 @@ import pygame
 from .tokens import T, mix
 
 NODE_R = 15
+# click target beyond the drawn radius -- asymmetric so the box also covers
+# the name label drawn just below the node without ballooning sideways too
+NODE_HIT_PAD_X = 25
+NODE_HIT_PAD_Y = 15
+
+
+def node_hit_rect(p, pad_x=NODE_HIT_PAD_X, pad_y=NODE_HIT_PAD_Y):
+    """A node's clickable box, centered on its screen position. Shares
+    `NODE_R` instead of a caller guessing its own box size, so the hit
+    target can never drift out of sync with the drawn node."""
+    x, y = int(p[0]), int(p[1])
+    rx, ry = NODE_R + pad_x, NODE_R + pad_y
+    return pygame.Rect(x - rx, y - ry, 2 * rx, 2 * ry)
+
+
+_paper_cache = {}
+_PAPER_CACHE_MAX = 4      # a live window resize shouldn't leak one Surface per size
 
 
 def paper_surface(size, seed=11):
+    """The procedural noise + vignette texture is pure function of `size`
+    (never of camera/game state), so it's cached per size instead of
+    rebuilt every frame -- rebuilding it was ~120 blob surfaces plus a
+    48-step vignette gradient on every single `draw_map` call."""
+    key = (size, seed)
+    cached = _paper_cache.get(key)
+    if cached is not None:
+        return cached
+    if len(_paper_cache) >= _PAPER_CACHE_MAX:
+        _paper_cache.pop(next(iter(_paper_cache)))
     rnd = random.Random(seed)
     s = pygame.Surface(size).convert()
     s.fill(T.PAPER)
@@ -40,6 +67,7 @@ def paper_surface(size, seed=11):
         pygame.draw.rect(vig, (30, 24, 16, a),
                          pygame.Rect(i, i, size[0] - 2 * i, size[1] - 2 * i), 1)
     s.blit(vig, (0, 0))
+    _paper_cache[key] = s
     return s
 
 

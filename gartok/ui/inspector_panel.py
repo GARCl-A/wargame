@@ -40,12 +40,8 @@ def draw_role(surf, p, kind, c):
 
 def _default_button(surf, F, rect, mpos, *, key=None, label="", sub=None,
                     primary=False, danger=False, enabled=True, font=None):
-    if not enabled:
-        text(surf, font or F["microb"], label.upper(), rect.center, T.TX_FAINT, center=True)
-        pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
-        return
     draw_button(surf, F, rect, label, sub=sub, primary=primary, danger=danger,
-               mpos=mpos, fnt=font)
+               enabled=enabled, mpos=mpos, fnt=font)
 
 
 def block_height(item):
