@@ -26,27 +26,41 @@ LEFT_W, PRIMARY_W, SECONDARY_W = 140, 220, 180
 # --------------------------------------------------------------------------- #
 
 def draw_button(surf, rect, label, fonts, mouse, *, enabled=True, primary=False,
-                danger=False, font=None):
+                danger=False, font=None, fill_well=None, fill_raised=None,
+                fill_hover=None, line=None, ink=None, ink_dim=None, ink_faint=None):
     """The one button look in the game: filled + accent on hover (always
     filled for `primary`), outlined otherwise, dimmed when disabled. Returns
     whether the mouse is hovering it -- always False when `enabled` is False,
     so callers can feed the result straight into `set_pointer`/`self._hot`
-    without a separate `and enabled` check."""
+    without a separate `and enabled` check.
+
+    `fill_well`/`fill_raised`/`fill_hover`/`line`/`ink`/`ink_dim`/`ink_faint`
+    let a screen with its own surface ramp (e.g. map_screen's warm palette)
+    recolour the neutral parts of the button without touching the shared
+    accent/danger semantics -- default to the app's own cool ramp when left
+    unset."""
     hov = enabled and rect.collidepoint(mouse)
     accent = DANGER if danger else ACCENT
     accent_ink = INK if danger else ACCENT_INK
+    well = SURFACE_1 if fill_well is None else fill_well
+    raised = SURFACE_3 if fill_raised is None else fill_raised
+    hover = SURFACE_4 if fill_hover is None else fill_hover
+    border_line = LINE_SOFT if line is None else line
+    lbl_ink = INK if ink is None else ink
+    lbl_ink_dim = INK_DIM if ink_dim is None else ink_dim
+    lbl_ink_faint = INK_FAINT if ink_faint is None else ink_faint
     if not enabled:
-        fill, border, ink = SURFACE_1, LINE_SOFT, INK_FAINT
+        fill, border, txt_ink = well, border_line, lbl_ink_faint
     elif primary:
-        fill = accent if hov else SURFACE_3
+        fill = accent if hov else raised
         border = accent
-        ink = accent_ink if hov else accent
+        txt_ink = accent_ink if hov else accent
     else:
-        fill = SURFACE_4 if hov else SURFACE_1
-        border = accent if hov else LINE_SOFT
-        ink = INK if hov else INK_DIM
+        fill = hover if hov else well
+        border = accent if hov else border_line
+        txt_ink = lbl_ink if hov else lbl_ink_dim
     panel(surf, rect, fill=fill, border=border, width=1, radius=RADIUS)
-    text(surf, label, font or fonts.body_bd, ink, rect.center, center=True)
+    text(surf, label, font or fonts.body_bd, txt_ink, rect.center, center=True)
     return hov
 
 
@@ -62,9 +76,13 @@ class ButtonsMixin:
         self._hot = False
 
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
-                   danger=False, font=None):
+                   danger=False, font=None, fill_well=None, fill_raised=None,
+                   fill_hover=None, line=None, ink=None, ink_dim=None, ink_faint=None):
         hov = draw_button(surf, rect, label, self.fonts, self.mouse,
-                          enabled=enabled, primary=primary, danger=danger, font=font)
+                          enabled=enabled, primary=primary, danger=danger, font=font,
+                          fill_well=fill_well, fill_raised=fill_raised,
+                          fill_hover=fill_hover, line=line, ink=ink,
+                          ink_dim=ink_dim, ink_faint=ink_faint)
         if enabled:
             self.buttons.append((key, rect))
             self._hot = self._hot or hov

@@ -36,11 +36,10 @@ from pygame import gfxdraw
 
 from . import arena, artwork, economy, orders, world
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM,
-                    INK_FAINT, MARGIN, NEUTRAL_C, OK, RADIUS, SP2,
-                    SP3, SP4, WARN, blit_block, ellipsize, outlined_text,
-                    panel, section, set_pointer, smooth_circle, text,
-                    tracked, wrap_lines)
+from .theme import (ACCENT, ACCENT_INK, DANGER, MARGIN, NEUTRAL_C, OK,
+                    RADIUS, SP2, SP3, SP4, WARN, blit_block, ellipsize,
+                    outlined_text, panel, section, set_pointer, smooth_circle,
+                    text, tracked, wrap_lines)
 from .widgets import ButtonsMixin
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -66,6 +65,16 @@ PANEL_WELL   = (19, 15, 11)
 PANEL_BG     = (27, 21, 15)
 PANEL_RAISED = (41, 33, 23)
 PANEL_LINE   = (61, 50, 36)
+
+# Same override for running text: theme.INK/INK_DIM/INK_FAINT are stark
+# white/cool-grey, tuned for the same flat SURFACE_* screens -- stark white
+# read just as stitched-on as the cool button fills did. Warmed to a cream/tan
+# ramp instead, so headings, group names and body copy sit in the same hue
+# family as the chrome around them. Shadows the theme names on purpose --
+# every plain `text()`/`tracked()` call already below reads off these.
+INK       = (232, 221, 199)
+INK_DIM   = (188, 174, 148)
+INK_FAINT = (142, 130, 108)
 
 # muted, painted tones for the map's own markings -- distinct hues, none of
 # them a saturated UI accent, so a node reads as inked onto the map rather
@@ -252,6 +261,20 @@ class MapScreen(ButtonsMixin, Screen):
             (ax, ay), cam0 = self._pan
             self._cam.cam = list(cam0)
             self._cam.pan_px(event.pos[0] - ax, event.pos[1] - ay)
+
+    # ------------------------------------------------------------------ #
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
+                   danger=False, font=None):
+        """Recolours every button to this screen's own warm ramp (`PANEL_*`
+        fills, cream/tan ink) instead of `widgets.draw_button`'s default cool
+        blue-grey/white -- that ramp is tuned for the flat UI screens and
+        clashed sitting on the map's warm chrome. Accent/danger fills (gold,
+        red) are shared semantics and untouched."""
+        return super().add_button(surf, rect, key, label, enabled=enabled, primary=primary,
+                                  danger=danger, font=font, fill_well=PANEL_WELL,
+                                  fill_raised=PANEL_RAISED, fill_hover=PANEL_RAISED,
+                                  line=PANEL_LINE, ink=INK, ink_dim=INK_DIM,
+                                  ink_faint=INK_FAINT)
 
     # ------------------------------------------------------------------ #
     def _here(self):
@@ -768,7 +791,7 @@ class MapScreen(ButtonsMixin, Screen):
         return f"heading to {o.kind} ({o.remaining:g} h)"
 
     def _draw_groups(self, screen, cx, y, cw, f):
-        y = section(screen, "GROUPS", cx, y, cw, f)
+        y = section(screen, "GROUPS", cx, y, cw, f, color=ACCENT)
         for g in self.guild.groups:
             sel = g is self.selected
             needs = not g.busy and not g.empty        # idle: waiting on the player
@@ -844,7 +867,7 @@ class MapScreen(ButtonsMixin, Screen):
         loc_h = 18 + 24 + 22 + 16 * len(blurb_lines)
         panel(screen, pygame.Rect(x + SP2, y - SP2, SIDE_W - 2 * SP2, loc_h + 2 * SP2),
               fill=PANEL_WELL, border=PANEL_LINE, radius=RADIUS)
-        tracked(screen, "SELECTED GROUP IS AT", f.label, INFO, (cx, y))
+        tracked(screen, "SELECTED GROUP IS AT", f.label, ACCENT, (cx, y))
         y += 18
         text(screen, here.name, f.heading, INK, (cx, y))
         y += 24
@@ -855,7 +878,7 @@ class MapScreen(ButtonsMixin, Screen):
             y += 16
 
         y += SP3
-        y = section(screen, "HERE", cx, y, cw, f)
+        y = section(screen, "HERE", cx, y, cw, f, color=ACCENT)
         if self.selected.busy:
             text(screen, f"Busy: {self._order_status(self.selected)}", f.body_sm,
                  WARN, (cx, y))
@@ -1024,7 +1047,7 @@ class MapScreen(ButtonsMixin, Screen):
             lines = [w for ln in self.notices for w in wrap_lines([ln], f.body_sm, cw)]
             yy = rect.bottom - pad - 13 * len(lines)
             for ln in lines:
-                col = DANGER if "starved" in ln else INFO
+                col = DANGER if "starved" in ln else ACCENT
                 text(screen, ln, f.body_sm, col, (cx, yy))
                 yy += 13
 
