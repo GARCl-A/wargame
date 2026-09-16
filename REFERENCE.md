@@ -79,7 +79,7 @@ Each occupation grants one starting weapon and one starting item.
 | Guide | Quarterstaff | Compass |
 | Gambler | Dagger | Deck of Cards |
 | Thief | Dagger | Cloak |
-| Woodcutter | Axe | 1kg Firewood |
+| Woodcutter | Axe | Lumber |
 | Linguist | Dagger | Dictionary |
 | Physician | Dagger | First Aid Kit |
 | Messenger | Quarterstaff | Sack |
@@ -130,7 +130,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 |---|---|---|
 | 1L Beer | 1 kg | food, consumable |
 | 1kg Coal | 1 kg | -- |
-| 1kg Firewood | 1 kg | -- |
 | 1sqm Hide | 2 kg | -- |
 | Alarm Trap | 1 kg | -- |
 | Bear Trap | 3 kg | -- |

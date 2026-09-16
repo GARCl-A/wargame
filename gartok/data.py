@@ -314,7 +314,7 @@ CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit"}
 
 ITEM_WEIGHTS = {
     TORCH_ITEM: TORCH_WEIGHT,
-    "Meat": 1.0, "Potato": 1.0, "Fruit": 0.2, "1kg Firewood": 1.0, "1kg Coal": 1.0, "1L Beer": 1.0,
+    "Meat": 1.0, "Potato": 1.0, "Fruit": 0.2, "1kg Coal": 1.0, "1L Beer": 1.0,
     "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
     "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
     "Lumber": 2.0,   # a garrison's job output (economy.GARRISON_JOBS) -- see [[gartok-property-two-paths]]
@@ -410,7 +410,7 @@ OCCUPATIONS = [
     (51,  "Guide",        "Quarterstaff",        "Compass"),
     (55,  "Gambler",     "Dagger",         "Deck of Cards"),
     (61,  "Thief",      "Dagger",         "Cloak"),
-    (67,  "Woodcutter",    "Axe",       "1kg Firewood"),
+    (67,  "Woodcutter",    "Axe",       "Lumber"),
     (68,  "Linguist",   "Dagger",         "Dictionary"),
     (69,  "Physician",      "Dagger",         "First Aid Kit"),
     (72,  "Messenger",  "Quarterstaff",        "Sack"),
