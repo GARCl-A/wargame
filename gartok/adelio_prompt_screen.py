@@ -3,11 +3,11 @@
 import pygame
 
 from .screen import Screen
-from .theme import ACCENT, INK_DIM, LINE_SOFT, RADIUS, SP4, SURFACE_2, panel, text
-from .widgets import ButtonsMixin
+from .ui.tokens import T
+from .ui.primitives import draw_button, text, caps
 
 
-class AdelioPromptScreen(ButtonsMixin, Screen):
+class AdelioPromptScreen(Screen):
     native = True
 
     def __init__(self, fonts, on_recruit, on_leave):
@@ -16,7 +16,6 @@ class AdelioPromptScreen(ButtonsMixin, Screen):
         self.on_recruit = on_recruit
         self.on_leave = on_leave
         self.buttons = []
-        self._hot = False
 
     def _click(self, px):
         for key, rect in self.buttons:
@@ -28,31 +27,36 @@ class AdelioPromptScreen(ButtonsMixin, Screen):
                 return
 
     def draw(self, screen):
-        f = self.fonts
+        F = self.fonts
         W, H = screen.get_size()
-        screen.fill((18, 19, 24))
-        self._reset_buttons()
+        screen.fill(T.TABLE)
+        self.buttons.clear()
 
         cw, ch = 540, 240
         card = pygame.Rect((W - cw) // 2, (H - ch) // 2, cw, ch)
-        panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+        pygame.draw.rect(screen, T.STEEL, card)
+        pygame.draw.rect(screen, T.STEEL_LINE, card, 1)
 
-        text(screen, "THE FALLEN CHAMPION", f.title, ACCENT, (card.x + SP4, card.y + SP4))
+        caps(screen, F.title, "THE FALLEN CHAMPION", (card.x + T.S * 3, card.y + T.S * 3), T.TX)
+        
         lines = [
             "Adelio Small-Knife lies defeated on the sands of the Pit.",
             "His championship title is lost, but his blade is still sharp.",
             "Do you want to convince him to join your guild?",
         ]
+        
         y = card.y + 64
         for ln in lines:
-            text(screen, ln, f.body, INK_DIM, (card.x + SP4, y))
+            text(screen, F.body, ln, (card.x + T.S * 3, y), T.TX_MUTED)
             y += 24
 
         bw, bh = 200, 38
-        by = card.bottom - SP4 - bh
+        by = card.bottom - T.S * 3 - bh
 
-        rec_r = pygame.Rect(card.x + SP4, by, bw, bh)
-        self.add_button(screen, rec_r, "recruit", "TALK TO ADELIO", primary=True)
+        rec_r = pygame.Rect(card.x + T.S * 3, by, bw, bh)
+        draw_button(screen, {}, rec_r, "TALK TO ADELIO", primary=True, mpos=self.mouse, fnt=F.label)
+        self.buttons.append(("recruit", rec_r))
 
-        leave_r = pygame.Rect(card.right - SP4 - bw, by, bw, bh)
-        self.add_button(screen, leave_r, "leave", "LEAVE HIM")
+        leave_r = pygame.Rect(card.right - T.S * 3 - bw, by, bw, bh)
+        draw_button(screen, {}, leave_r, "LEAVE HIM", mpos=self.mouse, fnt=F.label)
+        self.buttons.append(("leave", leave_r))
