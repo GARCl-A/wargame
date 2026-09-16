@@ -223,7 +223,7 @@ def test_two_interactive_orders_drain_one_screen_at_a_time():
     orig_market, orig_taverna = app_mod.MarketScreen, app_mod.TavernaScreen
     app_mod.MarketScreen = lambda fonts, guild_, shoppers, node, on_done: (
         opened.append("market"), object())[1]
-    app_mod.TavernaScreen = lambda fonts, guild_, party, node, on_done: (
+    app_mod.TavernaScreen = lambda fonts, guild_, party, node, on_done, group=None: (
         opened.append("recruit"), object())[1]
     try:
         app._advance()

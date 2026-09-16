@@ -321,7 +321,7 @@ class App:
             elif order.kind == "claim":
                 self._open_wilds_claim(group, node)
             elif order.kind == "recruit":
-                self._open_taverna(list(group.members), node, None)
+                self._open_taverna(list(group.members), node, None, group=group)
             elif order.kind == "prison":
                 self._open_prison(list(group.members), node, None)
             elif order.kind == "hunt":
@@ -576,9 +576,9 @@ class App:
         else:
             self._after_activity()
 
-    def _open_taverna(self, party, node, _offer):
+    def _open_taverna(self, party, node, _offer, group=None):
         self.scene = TavernaScreen(self.fonts, self.guild, party, node,
-                                   on_done=self._after_activity)
+                                   on_done=self._after_activity, group=group)
 
     def _open_prison(self, party, node, _offer):
         from .prison_screen import PrisonScreen

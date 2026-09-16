@@ -31,11 +31,12 @@ CANDIDATES = 3          # layout width; the live pool may hold fewer after a hir
 class TavernaScreen(ButtonsMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
+    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
         self.party = party
+        self.group = group                    # backing Group, for the rooms/study order (None if not applicable)
         self.node = node
         self.on_done = on_done
         self.candidates = list(candidates) if candidates is not None else recruit.refresh_pool(guild)
@@ -89,8 +90,8 @@ class TavernaScreen(ButtonsMixin, Screen):
                 elif key == "tab_rooms":
                     self.tab = "rooms"
                     self.sel = None
-                elif key == "rent_study":
-                    self.guild.group().order = orders.garrison("study")
+                elif key == "rent_study" and self.group is not None:
+                    self.group.order = orders.garrison("study")
                 return
 
         if self.tab == "recruits":
@@ -208,33 +209,38 @@ class TavernaScreen(ButtonsMixin, Screen):
         panel(screen, area, fill=SURFACE_1, border=LINE, radius=RADIUS)
 
         cost = economy.TAVERN_STUDY_COST_PER_DAY
-        group = self.guild.group()
-        total_cost = len(group.members) * cost
-        
+        total_cost = len(self.party) * cost
+
         y = area.y + SP3
         text(screen, f"cost: {cost} copper per member / day (total: {total_cost} copper)", f.body, INK, (area.x + SP3, y))
         y += 30
 
         text(screen, "STUDY TARGETS:", f.label, INFO, (area.x + SP3, y))
         y += 20
-        
+
         studying_count = 0
-        for m in group.members:
+        for m in self.party:
             if m.study_target:
                 studying_count += 1
                 text(screen, f"{m.name}", f.body_bd, INK, (area.x + SP3, y))
                 text(screen, f"studying {m.study_target}", f.body, ACCENT, (area.x + SP3 + 120, y))
                 text(screen, f"{m.study_progress} points", f.mono_sm, INK_DIM, (area.x + SP3 + 320, y))
                 y += 24
-        
+
         if studying_count == 0:
             text(screen, "no one has a study target set (select a scroll in the character sheet)",
                  f.body, INK_FAINT, (area.x + SP3, y))
             y += 24
 
         y += SP3
+        if self.group is None:
+            text(screen, "this party isn't garrisoned here -- no rooms to rent.",
+                 f.body, INK_FAINT, (area.x + SP3, y))
+            return
+
         btn_rect = pygame.Rect(area.x + SP3, y, 200, 36)
-        is_studying = group.order is not None and group.order.kind == "garrison" and group.order.job == "study"
+        is_studying = (self.group.order is not None and self.group.order.kind == "garrison"
+                       and self.group.order.job == "study")
 
         if is_studying:
             panel(screen, btn_rect, fill=SURFACE_3, border=OK, width=2, radius=RADIUS)
