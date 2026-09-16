@@ -8,12 +8,11 @@ Reached from the main menu's EDITOR button. Two doors: the character creator
 import pygame
 
 from .screen import Screen
-from .theme import (ACCENT, INK, INK_DIM, INK_FAINT, LINE_SOFT, MARGIN, RADIUS,
-                    SP3, SP4, SURFACE_2, SURFACE_3, panel, set_pointer, text)
-from .widgets import ButtonsMixin
+from .ui.primitives import caps, draw_button, text, contained
+from .ui.tokens import T
 
 
-class EditorMenuScreen(ButtonsMixin, Screen):
+class EditorMenuScreen(Screen):
     native = True
 
     def __init__(self, fonts, on_character, on_back, on_scenario=None):
@@ -34,52 +33,64 @@ class EditorMenuScreen(ButtonsMixin, Screen):
             elif key == "scenario":
                 self.on_scenario()
             return
-        key = self.buttons_hit(px)
-        if key == "back":
-            self.on_back()
+        for key, rect in self.buttons:
+            if rect.collidepoint(px):
+                if key == "back":
+                    self.on_back()
+                return
 
     def draw(self, screen):
         f = self.fonts
         W, H = screen.get_size()
-        screen.fill((18, 19, 24))
+        screen.fill(T.TABLE)
         self.cards = []
-        self._reset_buttons()
+        self.buttons = []
 
-        text(screen, "EDITOR", f.title, INK, (MARGIN, MARGIN))
-        text(screen, "build content outside a campaign", f.body, INK_DIM,
-             (MARGIN, MARGIN + 32))
+        mpos = self.mouse
 
-        card_w = min(560, W - 2 * MARGIN)
+        caps(screen, f.title, "EDITOR", (T.S * 4, T.S * 4), T.TX)
+        text(screen, f.body, "build content outside a campaign", 
+             (T.S * 4, T.S * 4 + 32), T.TX_MUTED)
+
+        card_w = min(560, W - 2 * T.S * 4)
         card_h = 104
         x = (W - card_w) // 2
-        y = max(MARGIN + 96, H // 2 - card_h - SP3)
+        y = max(T.S * 4 + 96, H // 2 - card_h - T.S * 3)
 
         self._card(screen, pygame.Rect(x, y, card_w, card_h), "character",
                    "CHARACTER CREATOR",
                    "roll and hand-edit a full GARTOK character; save it to the "
-                   "NPC library", True)
-        y += card_h + SP3
+                   "NPC library", True, mpos)
+        y += card_h + T.S * 3
         self._card(screen, pygame.Rect(x, y, card_w, card_h), "scenario",
                    "SCENARIO CREATOR",
                    "paint a battle map -- walls, torches and deployment zones; "
                    "save it to the map library",
-                   self.on_scenario is not None)
+                   self.on_scenario is not None, mpos)
 
-        back = pygame.Rect(MARGIN, H - MARGIN - 30, 120, 30)
-        self.add_button(screen, back, "back", "BACK", font=f.label)
+        back = pygame.Rect(T.S * 4, H - T.S * 4 - 30, 120, 30)
+        draw_button(screen, {}, back, "BACK", ghost=True, mpos=mpos, fnt=f.label)
+        self.buttons.append(("back", back))
 
-        set_pointer(self._hot or any(r.collidepoint(self.mouse) and e for _, r, e in self.cards))
-
-    def _card(self, screen, rect, key, title, blurb, enabled):
+    def _card(self, screen, rect, key, title, blurb, enabled, mpos):
         f = self.fonts
-        hov = enabled and rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_3 if hov else SURFACE_2,
-              border=ACCENT if hov else LINE_SOFT, width=2 if hov else 1, radius=RADIUS)
-        tcol = INK if enabled else INK_FAINT
-        text(screen, title, f.heading, ACCENT if hov else tcol, (rect.x + SP4, rect.y + SP3))
-        text(screen, blurb, f.body_sm, INK_DIM if enabled else INK_FAINT,
-             (rect.x + SP4, rect.y + SP3 + 26))
-        if not enabled:
-            text(screen, "LOCKED", f.label, INK_FAINT,
-                 (rect.right - SP4, rect.y + SP3), right=True)
+        hov = enabled and rect.collidepoint(mpos)
+        
+        bg = T.STEEL_HI if hov else T.STEEL
+        bc = T.BRASS if hov else T.STEEL_LINE
+        
+        with contained(screen, rect):
+            pygame.draw.rect(screen, bg, rect)
+            pygame.draw.rect(screen, bc, rect, 1)
+            
+            tcol = T.TX if enabled else T.TX_FAINT
+            caps(screen, f.heading, title, (rect.x + T.S * 3, rect.y + T.S * 2), T.BRASS if hov else tcol)
+            
+            text(screen, f.body_sm, blurb,
+                 (rect.x + T.S * 3, rect.y + T.S * 2 + 26), T.TX_MUTED if enabled else T.TX_FAINT)
+            
+            if not enabled:
+                caps(screen, f.label, "LOCKED",
+                     (rect.right - T.S * 3, rect.y + T.S * 2), T.TX_FAINT, right=True)
+                 
         self.cards.append((key, rect, enabled))
