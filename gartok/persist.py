@@ -71,7 +71,7 @@ def unit_to_dict(u):
         "crafting_progress": u.crafting_progress,
         "magic_source": u.magic_source,          # nature / blood / faith, or None (see magic.py)
         "spells_known": list(u.spells_known),
-        "study_target": u.study_target,          # spell id being studied at the taverna, or None
+        "study_target": u.study_target,          # spell id or language name being studied at the taverna, or None
         "study_progress": u.study_progress,
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
         "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
@@ -82,7 +82,7 @@ def unit_to_dict(u):
         "hp_override": u._hp_override,           # creator-set HP max that wins over the formula, or None
         "racial_override": u._racial_override,   # creator-pinned racial level (hit dice + racial picks), or None
         "hp_max": u.hp_max,                      # kept for pre-hunger saves / at-a-glance
-        "languages": list(u.languages),          # racial + random extras
+        "languages": list(u.languages),          # racial + random extras + any learned via study
         "equipped_weapon": u.equipped_weapon,    # weapon hand (None = unarmed)
         "equipped_offhand": u.equipped_offhand,  # off hand: a torch, or None
         "equipped_tongue": u.equipped_tongue,    # Grippli Tongue slot: a 1-handed weapon, or None

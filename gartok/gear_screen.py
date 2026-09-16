@@ -176,6 +176,9 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, ButtonsMixi
             spell = magic.spell_for_scroll(item) if item else None
             if spell and unit.magic_source and spell.id not in unit.spells_known:
                 rows.append(("study", spell))
+            lang = magic.language_for_dictionary(item) if item else None
+            if lang and lang.name not in unit.languages:
+                rows.append(("study", lang))
 
         f = self.fonts
         w = 160
@@ -187,8 +190,8 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, ButtonsMixi
         self.menu = {"pos": px, "w": w, "h": MENU_HEAD + len(rows) * 24 + SP1,
                      "rh": 24, "rows": rows, "picks": list(picks)}
 
-    def _study_label(self, unit, spell):
-        return "stop studying" if unit.study_target == spell.id else f"study {spell.name}"
+    def _study_label(self, unit, target):
+        return "stop studying" if unit.study_target == target.id else f"study {target.name}"
 
     def _menu_click(self, px):
         m = self.menu

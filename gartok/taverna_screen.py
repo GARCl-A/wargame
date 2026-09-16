@@ -228,7 +228,7 @@ class TavernaScreen(ButtonsMixin, Screen):
                 y += 24
 
         if studying_count == 0:
-            text(screen, "no one has a study target set (select a scroll in the character sheet)",
+            text(screen, "no one has a study target set (select a scroll or dictionary in the character sheet)",
                  f.body, INK_FAINT, (area.x + SP3, y))
             y += 24
 

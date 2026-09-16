@@ -537,16 +537,23 @@ class CharEditorScreen(Screen):
             h = xr.collidepoint(self.mouse)
             text(screen, "×", f.body_bd, DANGER if h else INK_DIM, xr.center, center=True)
             self._hit(xr, ("unpack", idx))
+            target = None
             if item.startswith("Scroll of ") and u.magic_source:
                 spell = magic.spell_for_scroll(item)
                 if spell and spell.id not in u.spells_known:
-                    studying = u.study_target == spell.id
-                    sr = pygame.Rect(xr.left - 48, ir.y + 2, 44, 16)
-                    sh = sr.collidepoint(self.mouse)
-                    s_col = ACCENT if studying else (OK if sh else INK_DIM)
-                    panel(screen, sr, fill=SURFACE_3 if sh else SURFACE_2, border=s_col, width=1, radius=3)
-                    text(screen, "study", f.label, s_col, sr.center, center=True)
-                    self._hit(sr, ("study", spell.id))
+                    target = spell
+            elif item.startswith("Dictionary of "):
+                lang = magic.language_for_dictionary(item)
+                if lang and lang.name not in u.languages:
+                    target = lang
+            if target is not None:
+                studying = u.study_target == target.id
+                sr = pygame.Rect(xr.left - 48, ir.y + 2, 44, 16)
+                sh = sr.collidepoint(self.mouse)
+                s_col = ACCENT if studying else (OK if sh else INK_DIM)
+                panel(screen, sr, fill=SURFACE_3 if sh else SURFACE_2, border=s_col, width=1, radius=3)
+                text(screen, "study", f.label, s_col, sr.center, center=True)
+                self._hit(sr, ("study", target.id))
             y += 22
         addr = pygame.Rect(x, y, 120, 20)
         self._btn(screen, addr, "+ ADD ITEM")

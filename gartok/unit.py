@@ -463,6 +463,10 @@ class Unit:
                 nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
                 if nature_spells:
                     self.item = f"Scroll of {random.choice(nature_spells).name}"
+            elif self.item == "Dictionary":
+                foreign = [l for l in data.LANGUAGES if l not in self.languages]
+                if foreign:
+                    self.item = f"Dictionary of {random.choice(foreign)}"
             self._base_inventory = [self.item]
             if self.item == data.FIRST_AID_ITEM:
                 self.first_aid_charges = data.FIRST_AID_CHARGES

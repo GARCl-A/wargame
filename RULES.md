@@ -80,7 +80,8 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 
 Languages in the world are just the racial languages — names only, no
 description survived: Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin,
-Halfling, Jotun, Orcish, Sylvan, Verdant.
+Halfling, Jotun, Orcish, Sylvan, Verdant. A character isn't stuck with the
+languages they rolled — see "Learning a language" below.
 
 ---
 
@@ -298,6 +299,28 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   chest uses for "open") — offered once the character has a `magic_source`
   and doesn't already know the spell, and toggles off the same way. The
   sandbox character editor has the identical control for authored NPCs.
+
+### Learning a language 🟡
+
+Same process as learning a level-0 spell, minus the `magic_source` gate — any
+character can pick this up. `magic.language_for_dictionary` and
+`magic.progress_study`'s language branch do the work; state still lives on
+the shared `Unit.study_target` / `study_progress` pair, so a character is
+always studying at most one thing (a spell *or* a language, never both).
+
+- **The item**: a `Dictionary of <Language>` in the pack. The **Linguist**
+  occupation starts with one, naming a language *other than* the one they
+  already speak (`unit._configure_occupation`).
+- **Cost**: `magic.points_to_learn(0)` = 105 points, the same threshold as a
+  level-0 spell (roughly a week of daily `1d20 + INT mod` rolls at the
+  Tavern's "study" garrison job), no `magic_source` bonuses involved.
+- **Setting a study target**: right-click a `Dictionary of <Language>` on the
+  Gear screen for a "study" row — offered once the character doesn't already
+  speak it. Same toggle idiom as scrolls; the sandbox character editor has
+  the identical control.
+- Hitting the threshold appends the language to `Unit.languages` — it
+  immediately counts for Demoralize, haggling and recruitment (all gated on
+  `languages`, see §7 and Property/Economy below).
 
 ---
 

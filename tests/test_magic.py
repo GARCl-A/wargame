@@ -218,7 +218,7 @@ def test_studying_masters_the_spell_once_enough_points_are_banked():
     random.seed(1)
     u = _student()
     u.gold = 1000
-    u.study_progress = magic.points_to_learn(magic.SPELLS["light_globe"]) - 1
+    u.study_progress = magic.points_to_learn(magic.SPELLS["light_globe"].level) - 1
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
