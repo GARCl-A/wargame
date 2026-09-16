@@ -1,6 +1,7 @@
 """Generic drawing primitives shared by every war-table panel: text
-helpers, the one button style the whole screen uses, and `contained` --
-the "this content lives inside that rect, period" clip scope."""
+helpers, the one button style the whole screen uses, the `panel`/`modal_card`/
+`draw_card` chrome every card and dialog sits on, and `contained` -- the
+"this content lives inside that rect, period" clip scope."""
 
 import contextlib
 
@@ -22,6 +23,47 @@ def contained(surf, rect):
         yield
     finally:
         surf.set_clip(prev)
+
+
+def panel(surf, rect, hover=False, width=1):
+    """The steel card every card/modal in this design sits on -- brass
+    border and a lighter fill when `hover` is true, muted steel otherwise."""
+    fill = T.STEEL_HI if hover else T.STEEL
+    border = T.BRASS if hover else T.STEEL_LINE
+    pygame.draw.rect(surf, fill, rect)
+    pygame.draw.rect(surf, border, rect, width)
+
+
+def modal_card(surf, size, veil=False):
+    """Centers a `panel` of `size` on `surf`; with `veil` dims everything
+    behind it first. Returns the card Rect for the caller to place content in."""
+    W, H = surf.get_size()
+    if veil:
+        v = pygame.Surface((W, H), pygame.SRCALPHA)
+        v.fill((6, 7, 12, 210))
+        surf.blit(v, (0, 0))
+    rect = pygame.Rect(0, 0, *size)
+    rect.center = (W // 2, H // 2)
+    panel(surf, rect)
+    return rect
+
+
+def draw_card(surf, F, rect, title, subtitle=None, hover=False, enabled=True, locked=False):
+    """A selectable card: `panel` chrome plus a caps title and an optional
+    muted subtitle -- the "pick one of a few big choices" pattern (menu
+    slots, editor doors, and whatever else lands on a picker screen next)."""
+    active = hover and enabled
+    with contained(surf, rect):
+        panel(surf, rect, hover=active)
+        tcol = T.BRASS if active else (T.TX if enabled else T.TX_FAINT)
+        caps(surf, F["head"], title, (rect.x + T.S * 3, rect.y + T.S * 2), tcol)
+        if subtitle:
+            text(surf, F["body_sm"], subtitle,
+                 (rect.x + T.S * 3, rect.y + T.S * 2 + 26),
+                 T.TX_MUTED if enabled else T.TX_FAINT)
+        if locked:
+            caps(surf, F["microb"], "LOCKED",
+                 (rect.right - T.S * 3, rect.y + T.S * 2), T.TX_FAINT, right=True)
 
 
 def text(surf, font, s, pos, color, right=False, center=False):

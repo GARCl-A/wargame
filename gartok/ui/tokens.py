@@ -38,10 +38,12 @@ class T:
     GREEN      = (106, 146, 98)
 
     S = 8
-    F_MICRO = 11   # caps label
-    F_BODY  = 13   # body / stat
-    F_NAME  = 16   # proper name
-    F_BIG   = 28   # clock reading / critical number
+    F_MICRO   = 11   # caps label
+    F_BODY_SM = 12   # muted blurb / dialog subtitle
+    F_BODY    = 13   # body / stat
+    F_NAME    = 16   # proper name
+    F_HEAD    = 18   # card / section heading
+    F_BIG     = 28   # clock reading / critical number
 
 
 def mix(a, b, t):
@@ -52,13 +54,15 @@ def fonts():
     cond = "dejavusanscondensed,dejavusans,arial"
     serif = "dejavuserif,georgia,serif"
     return {
-        "micro":  pygame.font.SysFont(cond, T.F_MICRO),
-        "microb": pygame.font.SysFont(cond, T.F_MICRO, bold=True),
-        "body":   pygame.font.SysFont(cond, T.F_BODY),
-        "bodyb":  pygame.font.SysFont(cond, T.F_BODY, bold=True),
-        "name":   pygame.font.SysFont(serif, T.F_NAME),
-        "nameb":  pygame.font.SysFont(serif, T.F_NAME, bold=True),
-        "big":    pygame.font.SysFont(cond, T.F_BIG, bold=True),
-        "ink":    pygame.font.SysFont(serif, T.F_BODY),
-        "inkb":   pygame.font.SysFont(serif, T.F_BODY, bold=True),
+        "micro":   pygame.font.SysFont(cond, T.F_MICRO),
+        "microb":  pygame.font.SysFont(cond, T.F_MICRO, bold=True),
+        "body_sm": pygame.font.SysFont(cond, T.F_BODY_SM),
+        "body":    pygame.font.SysFont(cond, T.F_BODY),
+        "bodyb":   pygame.font.SysFont(cond, T.F_BODY, bold=True),
+        "name":    pygame.font.SysFont(serif, T.F_NAME),
+        "nameb":   pygame.font.SysFont(serif, T.F_NAME, bold=True),
+        "head":    pygame.font.SysFont(cond, T.F_HEAD, bold=True),
+        "big":     pygame.font.SysFont(cond, T.F_BIG, bold=True),
+        "ink":     pygame.font.SysFont(serif, T.F_BODY),
+        "inkb":    pygame.font.SysFont(serif, T.F_BODY, bold=True),
     }

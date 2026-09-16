@@ -8,7 +8,7 @@ Reached from the main menu's EDITOR button. Two doors: the character creator
 import pygame
 
 from .screen import Screen
-from .ui.primitives import caps, draw_button, text, contained
+from .ui.primitives import caps, draw_button, draw_card, text
 from .ui.tokens import T
 
 
@@ -48,8 +48,8 @@ class EditorMenuScreen(Screen):
 
         mpos = self.mouse
 
-        caps(screen, f.title, "EDITOR", (T.S * 4, T.S * 4), T.TX)
-        text(screen, f.body, "build content outside a campaign", 
+        caps(screen, f["big"], "EDITOR", (T.S * 4, T.S * 4), T.TX)
+        text(screen, f["body"], "build content outside a campaign",
              (T.S * 4, T.S * 4 + 32), T.TX_MUTED)
 
         card_w = min(560, W - 2 * T.S * 4)
@@ -69,28 +69,11 @@ class EditorMenuScreen(Screen):
                    self.on_scenario is not None, mpos)
 
         back = pygame.Rect(T.S * 4, H - T.S * 4 - 30, 120, 30)
-        draw_button(screen, {}, back, "BACK", ghost=True, mpos=mpos, fnt=f.label)
+        draw_button(screen, f, back, "BACK", ghost=True, mpos=mpos)
         self.buttons.append(("back", back))
 
     def _card(self, screen, rect, key, title, blurb, enabled, mpos):
-        f = self.fonts
         hov = enabled and rect.collidepoint(mpos)
-        
-        bg = T.STEEL_HI if hov else T.STEEL
-        bc = T.BRASS if hov else T.STEEL_LINE
-        
-        with contained(screen, rect):
-            pygame.draw.rect(screen, bg, rect)
-            pygame.draw.rect(screen, bc, rect, 1)
-            
-            tcol = T.TX if enabled else T.TX_FAINT
-            caps(screen, f.heading, title, (rect.x + T.S * 3, rect.y + T.S * 2), T.BRASS if hov else tcol)
-            
-            text(screen, f.body_sm, blurb,
-                 (rect.x + T.S * 3, rect.y + T.S * 2 + 26), T.TX_MUTED if enabled else T.TX_FAINT)
-            
-            if not enabled:
-                caps(screen, f.label, "LOCKED",
-                     (rect.right - T.S * 3, rect.y + T.S * 2), T.TX_FAINT, right=True)
-                 
+        draw_card(screen, self.fonts, rect, title, blurb, hover=hov,
+                  enabled=enabled, locked=not enabled)
         self.cards.append((key, rect, enabled))

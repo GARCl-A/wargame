@@ -293,9 +293,12 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.map_editor_screen import MapEditorScreen
 
+    from gartok.ui.tokens import fonts as ui_fonts
+    UI_F = ui_fonts()
+
     scenes = [
-        MenuScreen(F, noop, noop, noop, on_editor=noop),
-        EditorMenuScreen(F, noop, noop, on_scenario=noop),
+        MenuScreen(UI_F, noop, noop, noop, on_editor=noop),
+        EditorMenuScreen(UI_F, noop, noop, on_scenario=noop),
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
         DraftScreen(F, noop),
@@ -321,7 +324,7 @@ def test_every_screen_draws_native_at_any_window_size():
     stocked = Guild(list(roster), node=world.START_NODE, bank_capacity=10,
                     bank_items=["Rope", "Dagger"])
     scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
-    scenes.append(PauseScreen(F, scenes[2], noop, noop, noop))
+    scenes.append(PauseScreen(UI_F, scenes[2], noop, noop, noop))
 
     from gartok.alert_screen import AlertScreen
     scenes.append(AlertScreen(F, scenes[2], "DEATH ALERT",

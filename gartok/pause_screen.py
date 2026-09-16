@@ -10,7 +10,7 @@ way.
 import pygame
 
 from .screen import Screen
-from .ui.primitives import caps, draw_button, text
+from .ui.primitives import caps, draw_button, modal_card, text
 from .ui.tokens import T
 
 
@@ -40,31 +40,21 @@ class PauseScreen(Screen):
                 return
 
     def draw(self, screen):
-        W, H = screen.get_size()
-
         if self.resume_to:
             try:
                 self.resume_to.mouse = (-1, -1)
                 self.resume_to.draw(screen)
-            except Exception:
+            except Exception:  # noqa: BLE001 -- resume_to is whatever scene was live; never let its redraw crash the pause overlay
                 screen.fill(T.TABLE)
         else:
             screen.fill(T.TABLE)
 
-        veil = pygame.Surface((W, H), pygame.SRCALPHA)
-        veil.fill((6, 7, 12, 210))
-        screen.blit(veil, (0, 0))
-
         tutorial_rows = 2 if self.tutorial is not None else 0
-        card = pygame.Rect(0, 0, 320, 250 + tutorial_rows * 48)
-        card.center = (W // 2, H // 2)
-
-        pygame.draw.rect(screen, T.STEEL, card)
-        pygame.draw.rect(screen, T.STEEL_LINE, card, 1)
+        card = modal_card(screen, (320, 250 + tutorial_rows * 48), veil=True)
 
         f = self.fonts
-        caps(screen, f.title, "PAUSED", (card.centerx, card.y + 26), T.TX, center=True)
-        text(screen, f.body_sm, "the campaign is saved on every stop", 
+        caps(screen, f["big"], "PAUSED", (card.centerx, card.y + 26), T.TX, center=True)
+        text(screen, f["body_sm"], "the campaign is saved on every stop",
              (card.centerx, card.y + 58), T.TX_FAINT, center=True)
 
         rows = [
@@ -82,7 +72,7 @@ class PauseScreen(Screen):
         by = card.y + 84
         for key, label, primary, danger in rows:
             r = pygame.Rect(card.x + T.S * 3, by, card.w - 2 * T.S * 3, 40)
-            draw_button(screen, {}, r, label, primary=primary, danger=danger, 
-                        mpos=self.mouse, fnt=f.label)
+            draw_button(screen, f, r, label, primary=primary, danger=danger,
+                        mpos=self.mouse)
             self._buttons.append((key, r))
             by += 40 + T.S

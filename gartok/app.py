@@ -37,7 +37,18 @@ opening window size and the battle screen's fixed board canvas.
 
 import pygame
 
-from . import arena, campaign, economy, encounters, hunt, justice, matchup, persist, tutorial_card, world
+from . import (
+    arena,
+    campaign,
+    economy,
+    encounters,
+    hunt,
+    justice,
+    matchup,
+    persist,
+    tutorial_card,
+    world,
+)
 from .bank_screen import BankScreen
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -63,10 +74,11 @@ from .scenario import Scenario
 from .squad_screen import SquadScreen
 from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
+from .theme import BG, WIN_H, WIN_W, Fonts, set_player_color
 from .trust_screen import TrustScreen
-from .wilds_claim_screen import WildsClaimScreen
-from .theme import BG, Fonts, WIN_H, WIN_W, set_player_color
 from .tutorial import TutorialState
+from .ui.tokens import fonts as ui_fonts
+from .wilds_claim_screen import WildsClaimScreen
 
 
 class App:
@@ -76,6 +88,7 @@ class App:
         self.window = pygame.display.set_mode((WIN_W, WIN_H), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
         self.fonts = Fonts()
+        self.ui_fonts = ui_fonts()   # gartok/ui screens draw from this, never from Fonts()
 
         self.slot = None
         self.guild = None
@@ -106,13 +119,13 @@ class App:
     # campaign flow                                                      #
     # ------------------------------------------------------------------ #
     def _start_menu(self):
-        self.scene = MenuScreen(self.fonts, on_new=self._new_game,
+        self.scene = MenuScreen(self.ui_fonts, on_new=self._new_game,
                                 on_continue=self._continue_game,
                                 on_delete=persist.delete_slot,
                                 on_editor=self._start_editor)
 
     def _start_editor(self):
-        self.scene = EditorMenuScreen(self.fonts,
+        self.scene = EditorMenuScreen(self.ui_fonts,
                                       on_character=self._open_char_editor,
                                       on_scenario=self._open_map_editor,
                                       on_back=self._start_menu)
@@ -723,9 +736,9 @@ class App:
             do_next_step()
 
     def _prompt_recruit_adelio(self, survivors, node):
+        from . import arena
         from .adelio_prompt_screen import AdelioPromptScreen
         from .taverna_screen import TavernaScreen
-        from . import arena
         def do_recruit():
             adelio = arena.load_champion()
             adelio.arena_title = False
@@ -734,7 +747,7 @@ class App:
             self.scene = TavernaScreen(self.fonts, self.guild, survivors, node,
                                        on_done=self._after_activity,
                                        candidates=[adelio], title="RECRUIT ADELIO")
-        self.scene = AdelioPromptScreen(self.fonts, on_recruit=do_recruit, on_leave=self._after_activity)
+        self.scene = AdelioPromptScreen(self.ui_fonts, on_recruit=do_recruit, on_leave=self._after_activity)
 
     # ------------------------------------------------------------------ #
     def _toggle_pause(self):
@@ -745,7 +758,7 @@ class App:
         elif isinstance(self.scene, MenuScreen):
             self._running = False
         else:
-            self.scene = PauseScreen(self.fonts, self.scene,
+            self.scene = PauseScreen(self.ui_fonts, self.scene,
                                      on_resume=self._resume_from_pause,
                                      on_menu=self._pause_to_menu,
                                      on_quit=self._quit,

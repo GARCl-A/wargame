@@ -10,8 +10,8 @@ import pygame
 
 from . import persist
 from .screen import Screen
-from .ui.primitives import draw_button, text
-from .ui.tokens import T, fonts
+from .ui.primitives import draw_button, panel, text
+from .ui.tokens import T
 
 MARGIN = 16
 SP3 = 12
@@ -21,9 +21,9 @@ SP4 = 16
 class MenuScreen(Screen):
     native = True                            # draw at the real window size
 
-    def __init__(self, _fonts, on_new, on_continue, on_delete, on_editor=None):
+    def __init__(self, fonts, on_new, on_continue, on_delete, on_editor=None):
         super().__init__()
-        self.F = fonts()
+        self.F = fonts
         self.on_new = on_new
         self.on_continue = on_continue
         self.on_delete = on_delete
@@ -83,12 +83,9 @@ class MenuScreen(Screen):
         if self.on_editor:
             er = pygame.Rect(x, y + SP3, card_w, 34)
             hov = er.collidepoint(mouse)
-            
-            fill = T.STEEL_HI if hov else T.STEEL
-            border = T.BRASS if hov else T.STEEL_LINE
-            pygame.draw.rect(screen, fill, er)
-            pygame.draw.rect(screen, border, er, 1)
-            
+
+            panel(screen, er, hover=hov)
+
             text(screen, F["microb"], "EDITOR", (er.centerx, er.centery - 8), T.BRASS if hov else T.TX_MUTED, center=True)
             text(screen, F["body"], "character & scenario creator", (er.centerx, er.centery + 4), T.TX_FAINT, center=True)
             self.buttons.append(("editor", None, er))
@@ -99,13 +96,9 @@ class MenuScreen(Screen):
         F = self.F
         i = s["index"]
         hov_card = s["empty"] and rect.collidepoint(mouse)
-        
-        fill = T.STEEL_HI if hov_card else T.STEEL
-        border = T.BRASS if hov_card else T.STEEL_LINE
-        width = 2 if hov_card else 1
-        pygame.draw.rect(screen, fill, rect)
-        pygame.draw.rect(screen, border, rect, width)
-        
+
+        panel(screen, rect, hover=hov_card, width=2 if hov_card else 1)
+
         text(screen, F["microb"], f"SLOT {i + 1}", (rect.x + SP3, rect.y + SP3), T.TX_FAINT)
 
         if s["empty"]:
