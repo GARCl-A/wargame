@@ -419,9 +419,13 @@ class DraftScreen(Screen):
                                         ("SPD", unit.speed, INFO))):
             chip_r = pygame.Rect(row.x + i * (cw + cg), row.y, cw, 46)
             chip(screen, chip_r, k, v, f, accent=ac)
-            if chip_r.collidepoint(mouse) and k in data.DERIVED_HELP:
-                t, d = data.DERIVED_HELP[k]
-                self.tooltip = format_tooltip(t, d, f)
+            if chip_r.collidepoint(mouse):
+                if k == "HP":
+                    from .sheet_panel import format_hp_breakdown_tooltip
+                    self.tooltip = format_hp_breakdown_tooltip(unit, f)
+                elif k in data.DERIVED_HELP:
+                    t, d = data.DERIVED_HELP[k]
+                    self.tooltip = format_tooltip(t, d, f)
         s.gap(SP3)
 
         # --- attributes (one compact row) --------------------- #

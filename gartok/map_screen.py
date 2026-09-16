@@ -1073,6 +1073,9 @@ class MapScreen(ButtonsMixin, Screen):
             panel(screen, r, fill=PANEL_RAISED if (picked or hov) else PANEL_WELL,
                   border=ACCENT if picked else PANEL_LINE, width=2 if picked else 1, radius=8)
             text(screen, u.name, f.body_sm, ACCENT if picked else INK, (r.x + SP2, r.y + 3))
+            name_w = f.body_sm.size(u.name)[0]
+            tag = f"{u.race['name']} · R-Lvl {u.racial_level}"
+            text(screen, tag, f.label, ACCENT if picked else INK_DIM, (r.x + SP2 + name_w + SP2, r.y + 5))
             text(screen, "leaving" if picked else "stays", f.label,
                  ACCENT if picked else INK_FAINT, (r.right - SP2, r.y + 3), right=True)
             self.split_rows.append((r, u))

@@ -19,7 +19,7 @@ from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
-                    SURFACE_3, WARN, panel, text, tracked)
+                    SURFACE_3, WARN, draw_tooltip, format_tooltip, panel, text, tracked)
 from .widgets import ButtonsMixin, footer_bar, unit_card
 
 
@@ -126,6 +126,7 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
         self.cards = []
         self.info_hits = []
         self.tiers = []
+        self.tooltip = None
         self._reset_buttons()
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
@@ -155,6 +156,8 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
 
         self._draw_footer(screen)
         self.draw_sheet_modal(screen, f)
+        if self.tooltip and not self.sheet_open:
+            draw_tooltip(screen, f.body_sm, self.tooltip, self.mouse)
 
     # ------------------------------------------------------------------ #
     def _draw_offers(self, screen, top):
@@ -200,6 +203,7 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
         lvl = f"C{unit.combat_level}"
         if unit.work_xp or unit.work_level:
             lvl += f"/W{unit.work_level}"
+        lvl += f"/R{unit.racial_level}"
         if unit.pending_picks:
             lvl += " *"
 
@@ -215,6 +219,18 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
 
         unit_card(screen, rect, unit, f, self.mouse, selected=chosen, disabled=off,
                  lines=lines, subtitle=f"{unit.race['name']}  ·  {unit.occupation['name']}")
+
+        chip_lbl = f"RACIAL LVL {unit.racial_level}"
+        cw = f.label.size(chip_lbl)[0] + 10
+        chip_r = pygame.Rect(rect.x + pad + 36, rect.y + pad + 20, cw, 18)
+        if not self.sheet_open and chip_r.collidepoint(self.mouse):
+            dice_cnt = 1 + len(unit._level_hp_rolls)
+            die_word = "hit die" if dice_cnt == 1 else "hit dice"
+            self.tooltip = format_tooltip(
+                f"Racial Level {unit.racial_level}",
+                f"{unit.race['name']} track · {dice_cnt} {die_word} ({unit.hp_max} HP) · unlocks racial talents. Feeds on Combat & Work levels ({unit.racial_xp} total).",
+                f
+            )
 
         badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
         self.info_hits.append((badge, unit))

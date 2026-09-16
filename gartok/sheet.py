@@ -80,6 +80,7 @@ def character_sheet(u):
         f"Combat N{u.combat_level} ({u.combat_xp} XP)"
         + (f"   Work N{u.work_level} ({u.work_xp})" if u.work_xp or u.work_level else ""),
         stats,
+        f"HP Calc: {u.hp_formula()}",
         line_a,
         line_b,
         _weapon_line(u),

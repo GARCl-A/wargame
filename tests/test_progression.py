@@ -512,3 +512,53 @@ def test_fixer_lifts_the_recruiters_pitch():
     bare = _unit(seed=1, languages=["Ankarin"], alignment="Neutral and Neutral")
     bare.mod_charisma = 0
     assert not recruit.convince(bare, c, 2, rng=_FixedRNG(10, 10)).ok
+
+
+def test_hp_breakdown_and_formula():
+    u = _unit(seed=3)
+    u._hp_roll = 6
+    u.constitution = 14  # CON mod +2
+    u.recalculate_hp()
+
+    b = u.hp_breakdown()
+    assert b["hd"] == u.race["hd"]
+    assert b["base_roll"] == 6
+    assert b["level_rolls"] == []
+    assert b["hit_dice"] == 1
+    assert b["dice_sum"] == 6
+    assert b["con_mod"] == 2
+    assert b["con_total"] == 2
+    assert b["final_max"] == 8
+    assert not b["starving"]
+    assert b["override"] is None
+    assert "6 (d" in u.hp_formula()
+    assert "+2 (CON)" in u.hp_formula()
+
+    # Simulate leveling up with extra rolls
+    u._level_hp_rolls = [5, 7]
+    u.recalculate_hp()
+    b2 = u.hp_breakdown()
+    assert b2["hit_dice"] == 3
+    assert b2["level_rolls"] == [5, 7]
+    assert b2["dice_sum"] == 18
+    assert b2["con_total"] == 6  # +2 * 3 HD
+    assert b2["final_max"] == 24
+    assert "18 (3d" in u.hp_formula()
+    assert "+6 (CON)" in u.hp_formula()
+
+    # Test override
+    u.set_hp(35)
+    b_ov = u.hp_breakdown()
+    assert b_ov["override"] == 35
+    assert b_ov["final_max"] == 35
+    assert "manual override: 35" in u.hp_formula()
+    u.set_hp(None)
+
+    # Test starvation
+    u.unfed_days = 2
+    u.recalculate_hp()
+    b_starve = u.hp_breakdown()
+    assert b_starve["starving"]
+    assert b_starve["final_max"] == 1
+    assert "starving: 1 max" in u.hp_formula()
+

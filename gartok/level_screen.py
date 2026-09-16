@@ -88,15 +88,19 @@ class LevelScreen(SheetModalMixin, Screen):
     def tutorial_key(self):
         return "level"
 
-    # ------------------------------------------------------------------ #
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            if self.close_sheet_on_click():
-                return
-        if not self.sheet_open:
-            super().handle_event(event)
+    def handle_escape(self):
+        if self.sheet_open:
+            self.close_sheet_on_click()
+            return True
+        return False
 
     def _click(self, px):
+        if self.close_sheet_on_click():
+            return
+        for rect, unit in getattr(self, "info_hits", []):
+            if rect.collidepoint(px):
+                self.open_sheet(unit)
+                return
         for key, rect in self.buttons:
             if rect.collidepoint(px):
                 if key == "back":
@@ -127,9 +131,12 @@ class LevelScreen(SheetModalMixin, Screen):
         screen.fill(SURFACE_0)
         self.node_hits = []
         self.buttons = []
+        self.info_hits = []
         self._hover = None
+        self._hp_hover = False
         pad = MARGIN if W < 1500 else SP5
 
+        # title + explainer
         text(screen, "PROGRESSION", f.title, INK, (pad, pad))
 
         exp_x = pad + f.title.size("PROGRESSION")[0] + SP5
@@ -141,11 +148,25 @@ class LevelScreen(SheetModalMixin, Screen):
         tok = (pad + 17, iy + 15)
         token_badge(screen, tok, u, f, r=17)
         text(screen, u.name, f.card_name, INK, (tok[0] + 30, iy))
+        name_w = f.card_name.size(u.name)[0]
+        badge = self.sheet_badge(screen, (tok[0] + 30 + name_w + 26, iy + 2), f)
+        if not self.sheet_open:
+            self.info_hits.append((badge, u))
+            char_r = pygame.Rect(pad, iy, tok[0] + 30 + name_w + 28 - pad, 36)
+            self.buttons.append(("sheet", char_r))
+            if badge.collidepoint(self.mouse) or char_r.collidepoint(self.mouse):
+                self._hot = True
+
         dice = len(u._level_hp_rolls)
         sub = (f"{u.race['name']}  ·  {u.occupation['name']}  ·  "
                f"racial level {u.racial_level}  ·  {1 + dice} hit "
-               f"{'die' if dice == 0 else 'dice'}")
-        text(screen, sub, f.body_sm, INK_DIM, (tok[0] + 30, iy + 22))
+               f"{'die' if dice == 0 else 'dice'}  ·  HP {u.hp_max}")
+        sub_w, sub_h = f.body_sm.size(sub)
+        sub_r = pygame.Rect(tok[0] + 30, iy + 22, sub_w, sub_h)
+        sub_hot = not self.sheet_open and sub_r.collidepoint(self.mouse)
+        text(screen, sub, f.body_sm, INK if sub_hot else INK_DIM, (tok[0] + 30, iy + 22))
+        if sub_hot:
+            self._hp_hover = True
 
         div = iy + 48
         pygame.draw.line(screen, LINE_SOFT, (pad, div), (W - pad, div))
@@ -278,17 +299,25 @@ class LevelScreen(SheetModalMixin, Screen):
             pygame.draw.circle(screen, OK, rect.topright, 8)
             _check(screen, rect.right, rect.top, SURFACE_0)
 
-        if state == "open":
+        if state == "open" and not self.sheet_open:
             self.node_hits.append((rect, track, t.id))
-        if hov:
+        if hov and not self.sheet_open:
             self._hover = (track, t)
             if state == "open":
                 self._hot = True
 
     def _draw_tooltip(self, screen):
-        if not self._hover:
+        if self.sheet_open:
             return
         f = self.fonts
+        if getattr(self, "_hp_hover", False):
+            from .sheet_panel import format_hp_breakdown_tooltip
+            from .theme import draw_tooltip
+            lines = format_hp_breakdown_tooltip(self.unit, f)
+            draw_tooltip(screen, f.body_sm, lines, self.mouse)
+            return
+        if not self._hover:
+            return
         track, t = self._hover
         state = self._node_state(track, t)
         if state == "taken":
@@ -319,7 +348,7 @@ class LevelScreen(SheetModalMixin, Screen):
     def _draw_footer(self, screen, W, H, pad):
         f = self.fonts
         b = pygame.Rect(pad, H - 52, 150, 36)
-        hov = b.collidepoint(self.mouse)
+        hov = not self.sheet_open and b.collidepoint(self.mouse)
         col = INK if hov else INK_DIM
         panel(screen, b, fill=SURFACE_3 if hov else SURFACE_2, border=LINE_SOFT,
               width=1, radius=RADIUS)
@@ -327,15 +356,17 @@ class LevelScreen(SheetModalMixin, Screen):
         pygame.draw.lines(screen, col, False,
                           [(cx + 3, cy - 4), (cx - 2, cy), (cx + 3, cy + 4)], 2)
         text(screen, "BACK", f.body_bd, col, (cx + 14, cy - 7))
-        self.buttons.append(("back", b))
-        if hov:
-            self._hot = True
+        if not self.sheet_open:
+            self.buttons.append(("back", b))
+            if hov:
+                self._hot = True
 
         bs = pygame.Rect(b.right + SP3, H - 52, 180, 36)
-        hov_s = bs.collidepoint(self.mouse)
+        hov_s = not self.sheet_open and bs.collidepoint(self.mouse)
         col_s = ACCENT_INK if hov_s else ACCENT
         panel(screen, bs, fill=ACCENT if hov_s else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
         text(screen, "CHARACTER SHEET", f.body_bd, col_s, bs.center, center=True)
-        self.buttons.append(("sheet", bs))
-        if hov_s:
-            self._hot = True
+        if not self.sheet_open:
+            self.buttons.append(("sheet", bs))
+            if hov_s:
+                self._hot = True

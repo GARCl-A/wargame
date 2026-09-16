@@ -100,6 +100,58 @@ def _weapon_lines(u):
     return u.weapon_name, dmg, reach
 
 
+def format_hp_breakdown_tooltip(u, fonts, max_px=320):
+    """Formats a structured tooltip detailing how the unit's max HP is calculated."""
+    b = u.hp_breakdown()
+    lines = [("HIT POINTS (HP)", fonts.label, ACCENT)]
+
+    hd = b["hd"]
+    dice_cnt = b["hit_dice"]
+    die_word = "Hit Die" if dice_cnt == 1 else "Hit Dice"
+    lines.append((f"Base die: 1d{hd} ({dice_cnt} {die_word})", fonts.body_sm, INK))
+
+    roll_items = [f"Base (L0): {b['base_roll']}"]
+    for lvl, r in enumerate(b["level_rolls"], start=1):
+        roll_items.append(f"L{lvl}: {r}")
+    rolls_line = " · ".join(roll_items)
+    for ln in wrap_lines([f"Rolls: {rolls_line}"], fonts.mono_sm, max_px):
+        lines.append((ln, fonts.mono_sm, INK_DIM))
+    lines.append((f"Dice sum: {b['dice_sum']}", fonts.mono_sm, INK_DIM))
+
+    lines.append(("Bonuses:", fonts.label, INFO))
+    con_sign = f"{b['con_mod']:+}"
+    con_col = OK if b["con_total"] > 0 else (DANGER if b["con_total"] < 0 else INK_DIM)
+    lines.append((f"• CON mod: {con_sign} × {dice_cnt} HD = {b['con_total']:+}", fonts.mono_sm, con_col))
+
+    if b["talent_total"]:
+        lines.append((f"• Hardy talent: +{b['talent_per_hd']} × {dice_cnt} HD = +{b['talent_total']}", fonts.mono_sm, OK))
+    if b["ability_bonus"]:
+        lines.append((f"• {b['ability_name']}: +{b['ability_bonus']}", fonts.mono_sm, OK))
+
+    parts = [f"{b['dice_sum']} (dice)"]
+    if b["con_total"] >= 0:
+        parts.append(f"+ {b['con_total']} (CON)")
+    else:
+        parts.append(f"- {abs(b['con_total'])} (CON)")
+    if b["talent_total"]:
+        parts.append(f"+ {b['talent_total']} (talents)")
+    if b["ability_bonus"]:
+        parts.append(f"+ {b['ability_bonus']} (ability)")
+    calc_eq = f"Calc: {' '.join(parts)} = {b['raw_total']}"
+    for ln in wrap_lines([calc_eq], fonts.mono_sm, max_px):
+        lines.append((ln, fonts.mono_sm, INK))
+
+    if b["override"] is not None:
+        lines.append((f"Manual override: {b['override']}", fonts.body_sm, WARN))
+    if b["starving"]:
+        lines.append(("Starving: capped at 1 HP", fonts.body_sm, DANGER))
+    elif b["min_floor"]:
+        lines.append(("Minimum HP floor: 1", fonts.body_sm, WARN))
+
+    lines.append((f"Max HP: {b['final_max']}", fonts.body_bd, ACCENT))
+    return lines
+
+
 def _titles(u):
     """Earned personal titles shown on the sheet, most notable first."""
     titles = []
@@ -162,9 +214,12 @@ def draw_sheet(screen, rect, u, f, mouse=None):
     for i, (k, v, ac) in enumerate(stats):
         cr = pygame.Rect(x + i * (cw + cg), y, cw, 44)
         chip(screen, cr, k, v, f, accent=ac)
-        if mouse and cr.collidepoint(mouse) and k in data.DERIVED_HELP:
-            t, d = data.DERIVED_HELP[k]
-            tooltip = format_tooltip(t, d, f)
+        if mouse and cr.collidepoint(mouse):
+            if k == "HP":
+                tooltip = format_hp_breakdown_tooltip(u, f)
+            elif k in data.DERIVED_HELP:
+                t, d = data.DERIVED_HELP[k]
+                tooltip = format_tooltip(t, d, f)
     y += 44 + SP3
 
     # --- attributes ---------------------------------------------------- #

@@ -417,6 +417,9 @@ class CharEditorScreen(Screen):
                   width=0, radius=3)
             text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM, br.center, center=True)
             self._hit(br, ("hp", sign))
+        if hr.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse) and not (pinned and rs.collidepoint(self.mouse)):
+            from .sheet_panel import format_hp_breakdown_tooltip
+            self.tooltip = format_hp_breakdown_tooltip(u, f)
         y += 26 + SP1
 
         dice = len(u._level_hp_rolls)

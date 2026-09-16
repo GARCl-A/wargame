@@ -350,6 +350,53 @@ def test_squad_and_reward_screens_pop_the_sheet_modal():
     assert not rw.sheet_open and rw.paid_to is None   # the dismiss click didn't pay the purse
 
 
+def test_level_screen_pops_the_sheet_modal():
+    """The character card's inspect badge opens the sheet; dismiss click closes it;
+    escape key closes it; and footer button also opens it."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.theme import Fonts
+    from gartok.level_screen import LevelScreen
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = Fonts()
+
+    random.seed(1)
+    u = Unit("player")
+    surf = pygame.Surface((1280, 800))
+    noop = lambda *a, **k: None
+
+    lvl = LevelScreen(F, u, on_back=noop, on_change=noop)
+    lvl.mouse = (0, 0)
+    lvl.draw(surf)
+
+    assert len(lvl.info_hits) == 1
+    badge, hit_unit = lvl.info_hits[0]
+    assert hit_unit is u
+
+    # Inspect badge opens sheet
+    lvl._click(badge.center)
+    assert lvl.sheet_open and lvl._sheet_unit is u
+
+    # Draw modal while open
+    lvl.draw(surf)
+
+    # Dismiss click closes sheet
+    lvl._click((10, 10))
+    assert not lvl.sheet_open
+
+    # Footer button opens sheet
+    lvl.draw(surf)
+    sheet_btn = next(r for key, r in lvl.buttons if key == "sheet")
+    lvl._click(sheet_btn.center)
+    assert lvl.sheet_open
+
+    # Escape key dismisses sheet
+    assert lvl.handle_escape() is True
+    assert not lvl.sheet_open
+    assert lvl.handle_escape() is False
+
+
 def test_group_screen_multidrop_moves_every_picked_pack_item():
     from gartok.guild import Guild
     from gartok.group_screen import GroupScreen
@@ -1098,3 +1145,145 @@ def test_market_screen_item_hover_tooltip():
             
     assert found_stock_tooltip, "MarketScreen stock rows should set tooltip on hover"
     assert found_pack_tooltip, "MarketScreen pack items should set tooltip on hover"
+
+
+def test_sheet_panel_hp_breakdown_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import sheet_panel
+    from gartok.combatant import Combatant
+    from gartok.theme import Fonts
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    u._hp_roll = 7
+    u._level_hp_rolls = [6, 8]
+    u.recalculate_hp()
+
+    fonts = Fonts()
+    lines = sheet_panel.format_hp_breakdown_tooltip(u, fonts)
+    assert any("HIT POINTS (HP)" in text for text, _, _ in lines)
+    assert any("Base (L0): 7" in text for text, _, _ in lines)
+    assert any("L1: 6" in text for text, _, _ in lines)
+    assert any("L2: 8" in text for text, _, _ in lines)
+    assert any(f"Max HP: {u.hp_max}" in text for text, _, _ in lines)
+
+    # Hovering over HP chip in draw_sheet
+    surf = pygame.Surface((1280, 720))
+    rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
+    hp_chip_pos = (rect.x + 30, rect.y + 16 + 52 + 20)
+    sheet_panel.draw_sheet(surf, rect, Combatant(u), fonts, mouse=hp_chip_pos)
+
+
+def test_level_screen_hp_hover_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.level_screen import LevelScreen
+    from gartok.theme import Fonts
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    ls = LevelScreen(Fonts(), u, lambda: None)
+    surf = pygame.Surface((1280, 720))
+
+    # Hover over the subtitle where HP is located (scan y around 70-130)
+    found_hp_hover = False
+    for y in range(70, 130, 4):
+        ls.mouse = (120, y)
+        ls.draw(surf)
+        if getattr(ls, "_hp_hover", False):
+            found_hp_hover = True
+            break
+    assert found_hp_hover, "LevelScreen subtitle should trigger _hp_hover"
+
+
+def test_char_editor_screen_hp_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.char_editor_screen import CharEditorScreen
+    from gartok.theme import Fonts
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    u = Unit("player")
+    cs = CharEditorScreen(Fonts(), lambda: None)
+    cs.unit = u
+    surf = pygame.Surface((1280, 720))
+
+    # Scan across the left column around progression/HP area
+    found_hp_tooltip = False
+    for y in range(200, 500, 5):
+        for x in (50, 100, 150):
+            cs.mouse = (x, y)
+            cs.draw(surf)
+            if cs.tooltip and any("HIT POINTS (HP)" in text for text, _, _ in cs.tooltip):
+                found_hp_tooltip = True
+                break
+        if found_hp_tooltip:
+            break
+    assert found_hp_tooltip, "CharEditorScreen should display HP breakdown tooltip on hover"
+
+
+def test_squad_screen_racial_level_display_and_tooltip():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.theme import Fonts
+    from gartok.squad_screen import SquadScreen
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = Fonts()
+
+    u = Unit("player")
+    u.set_track_level("combat", 2)
+    u.set_track_level("work", 2)
+    assert u.racial_level >= 2
+
+    sq = SquadScreen(F, [u], next(n for n in world.NODES if n.kind == "battle"), lambda *a: None, lambda: None)
+    surf = pygame.Surface((1280, 800))
+    sq.mouse = (0, 0)
+    sq.draw(surf)
+
+    # Hover over the racial level badge on the card (x ~ 60..100, y ~ 110..130)
+    card_rect, _ = sq.cards[0]
+    badge_x = card_rect.x + 16 + 40
+    badge_y = card_rect.y + 16 + 25
+    sq.mouse = (badge_x, badge_y)
+    sq.draw(surf)
+    assert sq.tooltip is not None
+    title, desc = sq.tooltip[0][0], sq.tooltip[1][0]
+    assert f"Racial Level {u.racial_level}" in title
+    assert u.race["name"] in desc
+
+
+def test_map_screen_split_panel_shows_racial_level():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.guild import Guild
+    from gartok.group import Group
+    from gartok.theme import Fonts
+    from gartok.map_screen import MapScreen
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = Fonts()
+
+    u1, u2 = Unit("player"), Unit("player")
+    u1.set_track_level("combat", 3)
+    g = Guild(None, groups=[Group([u1, u2], node=world.START_NODE)])
+    ms = MapScreen(F, g, lambda: None, lambda: None, lambda: None, lambda: None, lambda: None)
+    ms.mode = "split"
+    surf = pygame.Surface((1280, 800))
+    ms.draw(surf)
+    assert len(ms.split_rows) == 2
+    assert ms.split_rows[0][1] is u1
+
+
+

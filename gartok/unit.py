@@ -670,6 +670,84 @@ class Unit:
         else:
             self.hp = getattr(self, "hp", self.hp_max)
 
+    def hp_breakdown(self):
+        """Detailed breakdown of how this unit's max HP was calculated.
+
+        Returns a dict containing:
+          - hd: Hit Die face (e.g. 8 for 1d8)
+          - base_roll: creation roll (Level 0)
+          - level_rolls: list of rolls for each gained racial level (Level 1..N)
+          - hit_dice: total hit dice count (1 + len(level_rolls))
+          - dice_sum: sum of hit dice rolls
+          - con_mod: Constitution modifier
+          - con_total: con_mod * hit_dice
+          - ability_name: racial ability name
+          - ability_bonus: flat HP bonus from racial ability
+          - talent_per_hd: HP per Hit Die from talents (e.g. Hardy)
+          - talent_total: talent_per_hd * hit_dice
+          - raw_total: uncapped total (dice_sum + con_total + ability_bonus + talent_total)
+          - final_max: actual hp_max
+          - override: _hp_override if pinned, else None
+          - starving: whether hunger_level >= 2
+          - min_floor: whether raw_total was < 1 and clamped to 1
+        """
+        hd = self.race["hd"]
+        base_roll = self._hp_roll if self._hp_roll is not None else 1
+        level_rolls = list(self._level_hp_rolls)
+        hit_dice = 1 + len(level_rolls)
+        dice_sum = base_roll + sum(level_rolls)
+        con_mod = self.mod_constitution
+        con_total = con_mod * hit_dice
+        ability_name = self._ability.name
+        ability_bonus = self._ability.hp_max
+        talent_per_hd = self.talent_bonus("hp_per_hd")
+        talent_total = talent_per_hd * hit_dice
+        raw_total = dice_sum + con_total + ability_bonus + talent_total
+        final_max = self.hp_max
+        is_starving = self.hunger_level >= 2
+        return {
+            "hd": hd,
+            "base_roll": base_roll,
+            "level_rolls": level_rolls,
+            "hit_dice": hit_dice,
+            "dice_sum": dice_sum,
+            "con_mod": con_mod,
+            "con_total": con_total,
+            "ability_name": ability_name,
+            "ability_bonus": ability_bonus,
+            "talent_per_hd": talent_per_hd,
+            "talent_total": talent_total,
+            "raw_total": raw_total,
+            "final_max": final_max,
+            "override": self._hp_override,
+            "starving": is_starving,
+            "min_floor": raw_total < 1 and self._hp_override is None and not is_starving,
+        }
+
+    def hp_formula(self):
+        """Concise one-line string summarizing the HP calculation."""
+        b = self.hp_breakdown()
+        if b["override"] is not None:
+            return f"manual override: {b['override']}"
+        parts = []
+        rolls = [str(b["base_roll"])] + [str(r) for r in b["level_rolls"]]
+        if len(rolls) == 1:
+            parts.append(f"{rolls[0]} (d{b['hd']})")
+        else:
+            parts.append(f"{b['dice_sum']} ({len(rolls)}d{b['hd']}: {', '.join(rolls)})")
+        if b["con_total"]:
+            parts.append(f"{b['con_total']:+} (CON)")
+        if b["talent_total"]:
+            parts.append(f"+{b['talent_total']} (talents)")
+        if b["ability_bonus"]:
+            parts.append(f"+{b['ability_bonus']} ({b['ability_name']})")
+        expr = " ".join(parts)
+        if b["starving"]:
+            return f"{expr} -> starving: 1 max"
+        if b["min_floor"]:
+            return f"{expr} -> min floor: 1 max"
+        return f"{expr} = {b['final_max']} max"
+
     def _derive_ac(self):
         """AC base (10 + Dex + worn armor; armor caps how much Dex still counts)
         and Mental Defense (10 + Wis, the Demoralize target). The racial natural

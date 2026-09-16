@@ -11,8 +11,8 @@ logic. Every screen already carries `self.mouse` (`screen.Screen`) and
 import pygame
 
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, RADIUS, SP3, SURFACE_1, SURFACE_2,
-                    SURFACE_3, SURFACE_4, panel, set_pointer, text, token_badge)
+                    LINE_SOFT, MARGIN, RADIUS, SP1, SP3, SURFACE_1, SURFACE_2,
+                    SURFACE_3, SURFACE_4, ellipsize, panel, set_pointer, text, token_badge)
 
 FOOTER_H = 52
 FOOTER_NOTICE_DY = 22          # a notice/error line sits this far above the row
@@ -210,8 +210,22 @@ def unit_card(surf, rect, unit, fonts, mouse, *, selected=False, disabled=False,
     token_badge(surf, tok, unit, fonts)
     text(surf, unit.name, fonts.card_name, INK, (tok[0] + 24, rect.y + pad))
     y = rect.y + pad + 20
+
+    r_lvl = getattr(unit, "racial_level", None)
+    if r_lvl is not None:
+        chip_lbl = f"RACIAL LVL {r_lvl}"
+        cw = fonts.label.size(chip_lbl)[0] + 10
+        ch = 18
+        chip_r = pygame.Rect(tok[0] + 24, y, cw, ch)
+        panel(surf, chip_r, fill=SURFACE_1, border=ACCENT, radius=4, width=1)
+        text(surf, chip_lbl, fonts.label, ACCENT, chip_r.center, center=True)
+        sub_x = chip_r.right + SP1
+    else:
+        sub_x = tok[0] + 24
+
     if subtitle:
-        text(surf, subtitle, fonts.body_sm, INK_DIM, (tok[0] + 24, y))
+        max_w = rect.right - pad - sub_x
+        text(surf, ellipsize(subtitle, fonts.body_sm, max_w), fonts.body_sm, INK_DIM, (sub_x, y + 1))
         y = rect.y + pad + 44
     else:
         y = rect.y + pad + 40
