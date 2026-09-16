@@ -429,11 +429,11 @@ class App:
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     def _open_tanner_stall(self, group, node, _offer):
-        self.scene = TannerScreen(self.fonts, self.guild, group,
+        self.scene = TannerScreen(self.ui_fonts, self.guild, group,
                                   on_done=self._after_activity)
 
     def _open_trust_offer(self, group, node, _offer):
-        self.scene = TrustScreen(self.fonts, self.guild, group,
+        self.scene = TrustScreen(self.ui_fonts, self.guild, group,
                                  on_done=self._after_activity)
 
     def _open_ledger_desk(self, group, node, _offer):
