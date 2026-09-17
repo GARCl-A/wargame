@@ -3,9 +3,23 @@ true across the guild. See gartok/group.py + the Guild.roster/node shims."""
 
 import random
 
-from tests.helpers import Unit
+from tests.helpers import Unit, packed
+from gartok import data
 from gartok.group import Group
 from gartok.guild import Guild
+
+_HUMAN = data.race_by_name("Human")
+
+
+def _bare():
+    """A Human with STR 10 and nothing equipped -- so `load` is just the
+    pack, and `carry_normal` is predictable across units."""
+    u = Unit("player", race=_HUMAN)
+    u.set_base_attribute("strength", 10)
+    u.equipped_weapon = None
+    u.equipped_offhand = None
+    u.equipped_armor = None
+    return u
 
 
 def test_group_of_finds_the_right_group():
@@ -127,3 +141,39 @@ def test_roster_assignment_shim_requires_exactly_one_group():
         assert False, "expected NotImplementedError"
     except NotImplementedError:
         pass
+
+
+def test_group_total_load_sums_every_members_load():
+    a, b = _bare(), _bare()
+    a._base_inventory = packed(["Stone Brick"])        # 3.0 kg
+    b._base_inventory = packed(["Rope", "Rope"])        # 2.0 kg each
+    g = Group([a, b], node="city")
+    assert g.total_load == a.load + b.load == 3.0 + 4.0
+
+
+def test_group_total_carry_normal_sums_every_members_threshold():
+    a, b = _bare(), _bare()
+    g = Group([a, b], node="city")
+    assert g.total_carry_normal == a.carry_normal + b.carry_normal
+
+
+def test_group_rations_sums_meals_across_every_members_pack():
+    a, b = _bare(), _bare()
+    a._base_inventory = packed(["Meat", "Fruit"])
+    b._base_inventory = packed(["Potato"])
+    g = Group([a, b], node="city")
+    assert g.rations == 3
+
+
+def test_group_rations_days_rounds_down_to_whole_days():
+    a, b = _bare(), _bare()
+    a._base_inventory = packed(["Meat", "Fruit", "Potato"])    # 3 meals, 2 members
+    b._base_inventory = []
+    g = Group([a, b], node="city")
+    assert g.rations == 3
+    assert g.rations_days == 1                          # 3 // 2, not 1.5
+
+
+def test_group_rations_days_is_zero_for_an_empty_group():
+    g = Group([], node="city")
+    assert g.rations_days == 0

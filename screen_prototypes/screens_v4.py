@@ -13,67 +13,34 @@ item_row, footer. Os dois arquivos de tela consomem os mesmos helpers.
   python screens_v4.py --shot
 """
 
-import math
+import os
 import sys
 
 import pygame
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-class T:
-    TABLE      = (17, 18, 20)
-    STEEL      = (26, 28, 32)
-    STEEL_HI   = (36, 39, 45)
-    STEEL_LINE = (56, 60, 68)
-    TX         = (228, 228, 230)
-    TX_MUTED   = (146, 152, 162)
-    TX_FAINT   = (92, 98, 108)
-    BRASS      = (214, 168, 84)
-    BRASS_DIM  = (120, 94, 48)
-    BLOOD      = (176, 66, 58)
-    GREEN      = (106, 146, 98)
-    BLUE       = (92, 124, 150)
-    S = 8
-    F_MICRO, F_BODY, F_NAME, F_BIG = 11, 13, 16, 26
+from gartok.ui.tokens import T, mix, fonts as _ui_fonts
+from gartok.ui.primitives import text, caps, hline, draw_button
+from gartok.ui.inspector_panel import draw_role, ROLE_MARK
+from gartok.ui.roster_panel import hp_color
 
-
-def mix(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+# Not in the shared war-table palette yet (gartok/ui/tokens.py) -- only the
+# guild-screen prototype's garrison-band color uses it.
+BLUE = (92, 124, 150)
 
 
 def fonts():
-    cond = "dejavusanscondensed,dejavusans,arial"
-    serif = "dejavuserif,georgia,serif"
-    return {
-        "micro":  pygame.font.SysFont(cond, T.F_MICRO),
-        "microb": pygame.font.SysFont(cond, T.F_MICRO, bold=True),
-        "body":   pygame.font.SysFont(cond, T.F_BODY),
-        "bodyb":  pygame.font.SysFont(cond, T.F_BODY, bold=True),
-        "name":   pygame.font.SysFont(serif, T.F_NAME),
-        "nameb":  pygame.font.SysFont(serif, T.F_NAME, bold=True),
-        "titleb": pygame.font.SysFont(serif, 24, bold=True),
-        "big":    pygame.font.SysFont(cond, T.F_BIG, bold=True),
-    }
+    """Shared war-table fonts plus a serif display size these prototypes
+    use for screen titles -- not in gartok/ui/tokens.py yet."""
+    F = _ui_fonts()
+    F["titleb"] = pygame.font.SysFont("dejavuserif,georgia,serif", 24, bold=True)
+    return F
 
 
 # ---------------------------------------------------------------- helpers
-def text(s, f, t, pos, c, right=False, center=False):
-    img = f.render(t, True, c)
-    r = img.get_rect()
-    setattr(r, "topright" if right else "center" if center else "topleft", pos)
-    s.blit(img, r)
-    return r
-
-
-def caps(s, f, t, pos, c, **kw):
-    return text(s, f, t.upper(), pos, c, **kw)
-
-
-def hline(s, x1, x2, y, c=T.STEEL_LINE):
-    pygame.draw.line(s, c, (x1, y), (x2, y), 1)
-
-
-def hp_color(v):
-    return T.GREEN if v >= .85 else T.BRASS if v >= .45 else T.BLOOD
+def role_mark(s, p, kind, c):
+    draw_role(s, p, ROLE_MARK.get(kind, "sword"), c)
 
 
 def load_bar(s, rect, ratio, over=False):
@@ -88,22 +55,6 @@ def load_bar(s, rect, ratio, over=False):
 
 
 ROLES = ["vanguard", "hand", "archer", "healer"]
-
-
-def role_mark(s, p, kind, c):
-    x, y = p
-    if kind == "vanguard":
-        pygame.draw.polygon(s, c, [(x, y - 6), (x + 5, y - 3), (x + 5, y + 2),
-                                   (x, y + 6), (x - 5, y + 2), (x - 5, y - 3)], 1)
-    elif kind == "archer":
-        pygame.draw.arc(s, c, pygame.Rect(x - 5, y - 6, 10, 12), -1.2, 1.2, 1)
-        pygame.draw.line(s, c, (x + 3, y - 5), (x + 3, y + 5), 1)
-    elif kind == "healer":
-        pygame.draw.line(s, c, (x, y - 5), (x, y + 5), 2)
-        pygame.draw.line(s, c, (x - 4, y - 1), (x + 4, y - 1), 2)
-    else:
-        pygame.draw.line(s, c, (x - 4, y + 5), (x + 4, y - 5), 2)
-        pygame.draw.line(s, c, (x - 3, y - 3), (x + 2, y + 2), 1)
 
 
 def button(s, F, rect, label, primary=False, ghost=False, sub=None, danger=False):
@@ -122,7 +73,7 @@ def button(s, F, rect, label, primary=False, ghost=False, sub=None, danger=False
     return rect
 
 
-def tabs(s, F, pos, items, active, right=False):
+def tabs(s, F, pos, items, active, mpos=(-1, -1), right=False):
     x = pos[0]
     widths = []
     for t in items:
@@ -130,17 +81,20 @@ def tabs(s, F, pos, items, active, right=False):
         widths.append(w)
     if right:
         x -= sum(widths)
+    rects = {}
     for t, w in zip(items, widths):
         r = pygame.Rect(x, pos[1], w, T.S * 4)
+        rects[t] = r
         on = t == active
+        # Use ghost=not on so the active tab looks "pressed" or highlighted
+        draw_button(s, F, r, t, ghost=not on, mpos=mpos)
         if on:
-            pygame.draw.rect(s, T.STEEL_HI, r)
             pygame.draw.line(s, T.BRASS, (r.x, r.bottom - 2), (r.right, r.bottom - 2), 2)
-        caps(s, F["microb"], t, r.center, T.TX if on else T.TX_FAINT, center=True)
         x += w
+    return rects
 
 
-def header(s, F, rect, title, sub, tabitems, active):
+def header(s, F, rect, title, sub, tabitems, active, mpos=(-1, -1)):
     pygame.draw.rect(s, T.STEEL, rect)
     hline(s, rect.x, rect.right, rect.bottom - 1)
     # voltar: seta discreta, nao botao
@@ -150,10 +104,10 @@ def header(s, F, rect, title, sub, tabitems, active):
                        (cx + 6, rect.centery + 7)], 2)
     text(s, F["titleb"], title, (rect.x + T.S * 6, rect.y + T.S * 2), T.TX)
     caps(s, F["micro"], sub, (rect.x + T.S * 6, rect.y + T.S * 2 + 30), T.TX_FAINT)
-    tabs(s, F, (rect.right - T.S * 3, rect.y + T.S * 2), tabitems, active, right=True)
+    return tabs(s, F, (rect.right - T.S * 3, rect.y + T.S * 2), tabitems, active, mpos=mpos, right=True)
 
 
-def footer(s, F, rect, hint, actions):
+def footer(s, F, rect, hint, actions, mpos=(-1, -1)):
     pygame.draw.rect(s, T.STEEL, rect)
     hline(s, rect.x, rect.right, rect.y)
     caps(s, F["micro"], hint, (rect.x + T.S * 3, rect.centery - 6), T.TX_FAINT)
@@ -161,7 +115,7 @@ def footer(s, F, rect, hint, actions):
     for label, primary in reversed(actions):
         w = T.S * 22 if primary else T.S * 18
         r = pygame.Rect(x - w, rect.y + T.S * 2, w, rect.h - T.S * 4)
-        button(s, F, r, label, primary=primary)
+        draw_button(s, F, r, label, primary=primary, mpos=mpos)
         x -= w + T.S * 2
 
 
@@ -209,9 +163,9 @@ BANDS = [
     dict(nm="Pyrskeldral's Band", kind="ADVENTURING", where="→ Arena",
          n=4, cap=10, hurt=0, col=T.BRASS),
     dict(nm="Hold Watch", kind="GARRISON", where="Ledger Hold",
-         n=8, cap=8, hurt=1, col=T.BLUE),
+         n=8, cap=8, hurt=1, col=BLUE),
     dict(nm="Ankareth Watch", kind="GARRISON", where="Ankareth",
-         n=6, cap=8, hurt=0, col=T.BLUE),
+         n=6, cap=8, hurt=0, col=BLUE),
     dict(nm="Seam Crew", kind="WORK", where="The Claim",
          n=7, cap=8, hurt=0, col=T.GREEN),
     dict(nm="Timber Crew", kind="WORK", where="Lumber Yard",

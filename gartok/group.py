@@ -112,3 +112,36 @@ class Group:
         from . import unit
         unit.distribute_load(self.members)
 
+    # ------------------------------------------------------------------ #
+    # logistics: the band's answer to "can we move" / "are we fed" --   #
+    # each member already tracks its own `load`/`rations` (unit.py);    #
+    # these just total them for a band-wide readout.                    #
+    # ------------------------------------------------------------------ #
+    @property
+    def total_load(self):
+        """Combined carry weight across every member."""
+        return sum(u.load for u in self.members)
+
+    @property
+    def total_carry_normal(self):
+        """Combined normal-carry threshold across every member -- pairs with
+        `total_load` for a band-wide load bar (`carry_max` is the harder,
+        soft-blocked ceiling per member; summing it too would flatter an
+        unevenly-loaded group, so it's left per-member)."""
+        return sum(u.carry_normal for u in self.members)
+
+    @property
+    def rations(self):
+        """Meals sitting in the group's packs -- the shared larder every
+        member here can draw from (see `Guild._shared_larder`)."""
+        return sum(u.rations for u in self.members)
+
+    @property
+    def rations_days(self):
+        """Whole days this larder covers if every member here eats once a
+        day. Rounds down: 0 means someone goes hungry today without a
+        resupply, even if the group is carrying a few spare meals."""
+        if not self.members:
+            return 0
+        return self.rations // len(self.members)
+
