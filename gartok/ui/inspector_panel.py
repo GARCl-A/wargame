@@ -21,6 +21,26 @@ from .tokens import T
 
 ROLE_MARK = {"vanguard": "shield", "archer": "bow", "hand": "sword", "healer": "cross"}
 
+_HEAL_OCC = {"Priest", "Herbalist", "Physician", "Healer"}
+_GUARD_OCC = {"Guard", "Soldier", "Mercenary", "Watchman"}
+
+
+def role_for(occupation):
+    """Combat-role glyph key (into `ROLE_MARK`) for an occupation dict --
+    shared by every roster-ish zone (the map's ROSTER party pips, the
+    group screen's rail/columns) so the same occupation always draws the
+    same icon everywhere. Takes the plain `Unit.occupation` dict, not the
+    `Unit` itself."""
+    weapon = ((occupation or {}).get("weapon") or "").lower()
+    if "bow" in weapon or "crossbow" in weapon:
+        return "archer"
+    name = (occupation or {}).get("name", "")
+    if name in _HEAL_OCC:
+        return "healer"
+    if name in _GUARD_OCC:
+        return "vanguard"
+    return "hand"
+
 
 def draw_role(surf, p, kind, c):
     x, y = p

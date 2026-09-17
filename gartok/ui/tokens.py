@@ -42,6 +42,7 @@ class T:
     F_BODY_SM = 12   # muted blurb / dialog subtitle
     F_BODY    = 13   # body / stat
     F_NAME    = 16   # proper name
+    F_TITLE   = 24   # screen title
     F_HEAD    = 18   # card / section heading
     F_BIG     = 28   # clock reading / critical number
 
@@ -61,6 +62,7 @@ def fonts():
         "bodyb":   pygame.font.SysFont(cond, T.F_BODY, bold=True),
         "name":    pygame.font.SysFont(serif, T.F_NAME),
         "nameb":   pygame.font.SysFont(serif, T.F_NAME, bold=True),
+        "titleb":  pygame.font.SysFont(serif, T.F_TITLE, bold=True),
         "head":    pygame.font.SysFont(cond, T.F_HEAD, bold=True),
         "big":     pygame.font.SysFont(cond, T.F_BIG, bold=True),
         "ink":     pygame.font.SysFont(serif, T.F_BODY),

@@ -915,6 +915,22 @@ class Unit:
         self._derive_combat()
         return name
 
+    def split_pack(self, idx, qty):
+        """Peel `qty` off the stack at `idx` into its own new stack right
+        after it -- lets a partial quantity be moved/locked on its own
+        without touching the rest. `locked_items` stays keyed by name (a
+        lock counts against the total across every stack of that name, see
+        `locked_of`), so splitting never changes how much is locked, only
+        how it's grouped. No-op (`False`) unless `0 < qty < held` -- moving
+        the whole stack isn't a split, and `_pack_add` would just merge a
+        same-named stack of qty 0 straight back in."""
+        name, held = self._base_inventory[idx]
+        if not (0 < qty < held):
+            return False
+        self._base_inventory[idx] = (name, held - qty)
+        self._base_inventory.insert(idx + 1, (name, qty))
+        return True
+
     def remove_named(self, name, qty=1):
         """Remove up to `qty` of `name` by name rather than index -- for
         callers (missions, chests, the ledger, ...) that know what they want

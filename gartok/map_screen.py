@@ -62,7 +62,7 @@ from .screen import Screen
 from .theme import set_pointer
 from .ui.camera import MapCamera
 from .ui.command_bar import draw_command
-from .ui.inspector_panel import draw_inspector
+from .ui.inspector_panel import draw_inspector, role_for
 from .ui.map_panel import draw_map, node_hit_rect
 from .ui.primitives import draw_button
 from .ui.roster_panel import draw_roster
@@ -87,11 +87,6 @@ KIND_ICON = {"battle": ("body", "sword-tie"), "market": ("gui", "wallet"),
             "tavern": ("action", "drinking"), "town": ("gui", "house"),
             "wilds": ("action", "wolf-howl"), "prison": ("body", "imprisoned")}
 WORK_ICON = ("action", "stick-splitting")
-
-# best-effort occupation -> party-row glyph; cosmetic only, unknown
-# occupations just fall back to "hand"
-HEAL_OCC = {"Priest", "Herbalist", "Physician", "Healer"}
-GUARD_OCC = {"Guard", "Soldier", "Mercenary", "Watchman"}
 
 
 def _icon_fn(surf, node, center):
@@ -123,19 +118,6 @@ def _party_icon_fn(surf, item, center):
     img = artwork.race_icon(race_name, 20, T.TX) if race_name else None
     if img is not None:
         surf.blit(img, img.get_rect(center=center))
-
-
-def _role_for(u):
-    occ = u.occupation or {}
-    weapon = (occ.get("weapon") or "").lower()
-    if "bow" in weapon or "crossbow" in weapon:
-        return "archer"
-    name = occ.get("name", "")
-    if name in HEAL_OCC:
-        return "healer"
-    if name in GUARD_OCC:
-        return "vanguard"
-    return "hand"
 
 
 def _hp_frac(u):
@@ -249,7 +231,7 @@ class MapScreen(ButtonsMixin, Screen):
                 "state_color": color,
                 "detail": self._order_status(g),
                 "rations_label": f"RATIONS: {sum(u.rations for u in g.members)}",
-                "party": [(u.name, _role_for(u), _hp_frac(u), u.race.get("name", "")) for u in g.members],
+                "party": [(u.name, role_for(u.occupation), _hp_frac(u), u.race.get("name", "")) for u in g.members],
                 "roster_members": [(u.uid, u.name, _race_tag(u)) for u in g.members],
                 "mates": self._mates_for(g)}
 

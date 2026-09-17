@@ -92,6 +92,34 @@ def test_distribute_load_with_everything_locked_moves_nothing():
     assert b._base_inventory == []
 
 
+def test_split_pack_peels_a_partial_quantity_into_its_own_stack():
+    u = Unit("player")
+    u._base_inventory = packed(["Coal"] * 40)
+
+    assert u.split_pack(0, 15) is True
+    assert u._base_inventory == [("Coal", 25), ("Coal", 15)]
+
+
+def test_split_pack_rejects_the_whole_stack_or_nothing():
+    u = Unit("player")
+    u._base_inventory = packed(["Rope", "Rope", "Rope"])
+
+    assert u.split_pack(0, 0) is False
+    assert u.split_pack(0, 3) is False
+    assert u._base_inventory == packed(["Rope", "Rope", "Rope"])
+
+
+def test_split_pack_keeps_the_lock_total_across_both_halves():
+    u = Unit("player")
+    u._base_inventory = packed(["Rope"] * 6)
+    u.toggle_lock("Rope")
+    assert u.locked_of("Rope") == 6
+
+    u.split_pack(0, 2)
+    assert u._base_inventory == [("Rope", 4), ("Rope", 2)]
+    assert u.locked_of("Rope") == 6                   # a lock counts against the name, not one stack
+
+
 def test_group_distribute_load_delegates_and_respects_locks():
     random.seed(4)
     a, b = _bare(), _bare()

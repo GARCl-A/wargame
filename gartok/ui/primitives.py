@@ -134,3 +134,52 @@ def draw_button(surf, F, rect, label, sub=None, primary=False, danger=False,
         text(surf, F["body"], sub, (rect.centerx, rect.centery + 10),
              mix(fg, T.TABLE, .25) if primary else T.TX_FAINT, center=True)
     return rect.bottom + T.S
+
+
+def scrollbar(surf, rect, scroll, max_scroll, content_h):
+    """A thin brass-on-steel track+thumb along `rect`'s right edge -- the
+    same shape every scrollable list in this design uses (the caller only
+    draws this when `max_scroll > 0`)."""
+    sb_bg = pygame.Rect(rect.right - 4, rect.y, 4, rect.h)
+    pygame.draw.rect(surf, T.STEEL_LINE, sb_bg)
+    sb_h = max(20.0, rect.h * (rect.h / content_h))
+    sb_y = rect.y + (rect.h - sb_h) * (scroll / max_scroll) if max_scroll else rect.y
+    pygame.draw.rect(surf, T.BRASS, pygame.Rect(sb_bg.x, sb_y, 4, sb_h))
+
+
+def tabs(surf, F, pos, items, active, mpos=(-1, -1), right=False):
+    """A row of tab buttons -- `items` is a list of ids, drawn upper-cased.
+    `right=True` lays them out leftward from `pos` (the row's right edge)
+    instead of rightward from it. The active tab gets a brass underline."""
+    x = pos[0]
+    widths = [F["microb"].size(t.upper())[0] + T.S * 4 for t in items]
+    if right:
+        x -= sum(widths)
+    rects = {}
+    for t, w in zip(items, widths):
+        r = pygame.Rect(x, pos[1], w, T.S * 4)
+        rects[t] = r
+        on = t == active
+        draw_button(surf, F, r, t, ghost=not on, mpos=mpos)
+        if on:
+            pygame.draw.line(surf, T.BRASS, (r.x, r.bottom - 2), (r.right, r.bottom - 2), 2)
+        x += w
+    return rects
+
+
+def header(surf, F, rect, title, sub, tabitems, active, mpos=(-1, -1)):
+    """The screen-title chrome every full-window screen opens with: a
+    discreet back arrow (drawn only -- the caller wires the click, since
+    "back" means different things to different screens), the title in the
+    display serif, a caps subtitle line, and a row of `tabs` anchored to
+    the rect's right edge. Returns the tab hit rects."""
+    pygame.draw.rect(surf, T.STEEL, rect)
+    hline(surf, rect.x, rect.right, rect.bottom - 1)
+    cx = rect.x + T.S * 3
+    pygame.draw.lines(surf, T.TX_MUTED, False,
+                      [(cx + 6, rect.centery - 7), (cx - 2, rect.centery),
+                       (cx + 6, rect.centery + 7)], 2)
+    text(surf, F["titleb"], title, (rect.x + T.S * 6, rect.y + T.S * 2), T.TX)
+    caps(surf, F["micro"], sub, (rect.x + T.S * 6, rect.y + T.S * 2 + 30), T.TX_FAINT)
+    return tabs(surf, F, (rect.right - T.S * 3, rect.y + T.S * 2), tabitems, active,
+                mpos=mpos, right=True)
