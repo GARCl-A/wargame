@@ -3,7 +3,7 @@
 import os
 import random
 
-from tests.helpers import data, economy, Unit
+from tests.helpers import data, economy, Unit, packed
 from gartok.guild import Guild
 
 
@@ -135,7 +135,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     ms.sel = [("stock", "Meat")]
     ms.qty["Meat"] = 10
     ms._drop_on(buyer)
-    assert buyer._base_inventory.count("Meat") == 10
+    assert buyer.count_of("Meat") == 10
     assert ms.purse == unit_price * 90
     assert ms.qty.get("Meat", 1) == 1                 # the stepper resets after a buy
 
@@ -144,7 +144,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     ms.sel = [("stock", "Meat")]
     ms.qty["Meat"] = 10
     ms._drop_on(buyer)
-    assert buyer._base_inventory.count("Meat") == 13
+    assert buyer.count_of("Meat") == 13
     assert ms.purse == 0 and "3 of 10" in ms.notice
 
 
@@ -159,7 +159,7 @@ def test_market_pack_scrolls_and_the_sheet_badge_opens_the_full_sheet():
     random.seed(3)
     mnode = next(n for n in world.NODES if n.kind == "market")
     shopper = Unit("player")
-    shopper._base_inventory = [f"Trinket{i}" for i in range(30)]   # distinct: forces overflow
+    shopper._base_inventory = packed([f"Trinket{i}" for i in range(30)])   # distinct: forces overflow
     ms = MarketScreen(Fonts(), None, [shopper], mnode, lambda: None)
     ms.mouse = (0, 0)
     surf = pygame.Surface((1600, 1000))
@@ -182,7 +182,7 @@ def test_market_pack_scrolls_and_the_sheet_badge_opens_the_full_sheet():
 def test_market_pack_stacks_identical_items_with_a_count():
     from gartok.market_screen import MarketScreen
     ms = MarketScreen.__new__(MarketScreen)
-    assert ms._stacks(["Potato"] * 4) == [("Potato", [0, 1, 2, 3])]
+    assert ms._stacks(packed(["Potato"] * 4)) == [("Potato", 0, 4)]
 
 
 def test_dragselect_ignores_a_mouseup_with_no_matching_press():
@@ -494,14 +494,14 @@ def test_group_screen_multidrop_moves_every_picked_pack_item():
     from gartok.group_screen import GroupScreen
     random.seed(4)
     a, b = Unit("player"), Unit("player")
-    a._base_inventory = ["Rope", "Meat", "Map"]
+    a._base_inventory = packed(["Rope", "Meat", "Map"])
     b._base_inventory = []
     g = Guild([a, b])
     scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
     scr.selected = [(a, 0), (a, 2)]                       # Corda + Mapa, indices bracket a keeper
     scr._give_many(b, "pack")
-    assert a._base_inventory == ["Meat"]             # the un-picked row is untouched
-    assert sorted(b._base_inventory) == ["Map", "Rope"]
+    assert a._base_inventory == packed(["Meat"])     # the un-picked row is untouched
+    assert sorted(b._base_inventory) == [("Map", 1), ("Rope", 1)]
     assert scr.selected == []
 
 
@@ -511,23 +511,23 @@ def test_group_screen_multidrop_on_a_hand_takes_the_first_that_fits():
     random.seed(4)
     a = Unit("player")
     a.equipped_weapon = None
-    a._base_inventory = ["Rope", "Dagger"]
+    a._base_inventory = packed(["Rope", "Dagger"])
     g = Guild([a])
     scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
     scr.selected = [(a, 0), (a, 1)]
     scr._give_many(a, "hand")
-    assert a.equipped_weapon == "Dagger" and a._base_inventory == ["Rope"]
+    assert a.equipped_weapon == "Dagger" and a._base_inventory == packed(["Rope"])
 
 
 def test_pack_stacks_group_identical_items_with_their_indices():
     from gartok.guild import Guild
     from gartok.group_screen import GroupScreen
     a = Unit("player")
-    a._base_inventory = ["Potato"] * 3 + ["Rope"] + ["Potato"] * 2
+    a._base_inventory = packed(["Potato"] * 3 + ["Rope"] + ["Potato"] * 2)
     g = Guild([a])
     scr = GroupScreen(None, g, g.groups[0], on_back=lambda: None)
     assert scr._stacks(a._base_inventory) == [
-        ("Potato", [0, 1, 2, 4, 5]), ("Rope", [3])]
+        ("Potato", 0, 5), ("Rope", 1, 1)]
 
 
 def SKIP_test_shift_click_a_stack_row_grabs_every_index_in_it():
@@ -639,7 +639,7 @@ def test_gear_screen_distribute_load():
     u2 = Unit("player", race=r)
     u1.set_base_attribute("strength", 10)
     u2.set_base_attribute("strength", 10)
-    u1._base_inventory = ["Stone Brick", "Stone Brick"]
+    u1._base_inventory = packed(["Stone Brick", "Stone Brick"])
     u2._base_inventory = []
     g = Guild([u1, u2])
     gs = GearScreen.__new__(GearScreen)
@@ -672,7 +672,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     for u in (u1, u2):
         u.set_base_attribute("strength", 10)
         u.equipped_weapon = u.equipped_offhand = u.equipped_armor = None
-    u1._base_inventory = ["Rope"]
+    u1._base_inventory = packed(["Rope"])
     u2._base_inventory = []
     g = Guild([u1, u2])
     gs = GearScreen(Fonts(), g, lambda: None)
@@ -690,7 +690,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     assert gs.selected == []                              # a lock click never picks the item up
 
     gs._distribute_load()
-    assert u1._base_inventory == ["Rope"]                 # stayed put, still locked
+    assert u1._base_inventory == packed(["Rope"])          # stayed put, still locked
 
 
 def test_group_screen_wheel_scroll_reveals_items_below_the_fold():
@@ -706,7 +706,7 @@ def test_group_screen_wheel_scroll_reveals_items_below_the_fold():
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
-    u._base_inventory = ["Rope" for _ in range(40)]       # far more than one column can show
+    u._base_inventory = packed([f"Rope{i}" for i in range(40)])   # 40 distinct stacks: no merging, far more than one column can show
     g = Guild([u])
     gs = GroupScreen(Fonts(), g, g.groups[0], lambda: None)
     surf = pygame.Surface((1280, 720))
@@ -740,7 +740,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
 
     u = Unit("player")
     u.magic_source = "nature"
-    u._base_inventory = ["Scroll of Light Globe"]
+    u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
     gs.fonts = Fonts()
@@ -781,7 +781,7 @@ def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
 
     u = Unit("player")
     u.magic_source = None
-    u._base_inventory = ["Scroll of Light Globe"]
+    u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
     from gartok.theme import Fonts
@@ -813,7 +813,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     u = Unit("player")
     u.magic_source = None
     u.languages = ["Ankarin"]
-    u._base_inventory = ["Dictionary of Elvish"]
+    u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
     gs.fonts = Fonts()
@@ -855,7 +855,7 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
 
     u = Unit("player")
     u.languages = ["Ankarin", "Elvish"]
-    u._base_inventory = ["Dictionary of Elvish"]
+    u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
     gs.fonts = Fonts()
@@ -876,7 +876,7 @@ def test_loot_screen_drop_pack_item_to_ground():
     from gartok.guild import Guild
     import pygame
     u = Unit("player")
-    u._base_inventory = ["Torch", "Dagger"]
+    u._base_inventory = packed(["Torch", "Dagger"])
     g = Guild([u])
     ls = LootScreen.__new__(LootScreen)
     ls.guild = g
@@ -898,7 +898,7 @@ def test_loot_screen_drop_pack_item_to_ground():
     # 2. Click ground pile to drop it
     ls._click((310, 10))
     assert "Torch" in ls.pool
-    assert "Torch" not in u._base_inventory
+    assert not u.has_item("Torch")
     assert ls.pack_sel is None
 
 
@@ -940,7 +940,7 @@ def test_loot_screen_draw_with_pack_selection_hover():
     pygame.init()
     pygame.display.set_mode((1, 1))
     u = Unit("player")
-    u._base_inventory = ["Torch"]
+    u._base_inventory = packed(["Torch"])
     g = Guild([u])
     ls = LootScreen(Fonts(), g, [u], ["Axe"], lambda: None)
     surf = pygame.Surface((1200, 800))

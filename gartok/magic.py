@@ -64,7 +64,7 @@ def progress_study(unit):
     return None
 
 def _progress_spell(unit, spell):
-    if not unit.magic_source or f"Scroll of {spell.name}" not in unit._base_inventory:
+    if not unit.magic_source or not unit.has_item(f"Scroll of {spell.name}"):
         return None
     bonus = 2 if unit.race["name"] == "Kobold" and "blood" in spell.sources else 0
     dice_qty = (2 if "gnome_magic_excitement" in unit.talents["racial"]
@@ -78,7 +78,7 @@ def _progress_spell(unit, spell):
     return None
 
 def _progress_language(unit, language):
-    if f"Dictionary of {language}" not in unit._base_inventory:
+    if not unit.has_item(f"Dictionary of {language}"):
         return None
     unit.study_progress += max(0, data.roll(1, 20) + unit.mod_intelligence)
     if unit.study_progress >= points_to_learn(0):     # same threshold as a level-0 spell

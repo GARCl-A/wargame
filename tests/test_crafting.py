@@ -39,7 +39,7 @@ def test_crafting_completion():
 
     prog, is_done = u.progress_crafting()
     assert is_done
-    assert "Bear Trap" in u._base_inventory
+    assert u.has_item("Bear Trap")
     assert u.crafting_target is None
     assert u.crafting_progress == 0
 
@@ -49,11 +49,11 @@ def test_crafting_shift_consumes_materials_and_progresses():
     u = Unit("player")
     guild = Guild(roster=[u], node="city")
     u.recipes.append("Bear Trap")
-    u._base_inventory.append("Iron Bar")
+    u.give_to_pack("Iron Bar")
 
     notices, _ = guild.crafting_shift(u, "Bear Trap", hours=1)
     assert u.crafting_target == "Bear Trap"
-    assert "Iron Bar" not in u._base_inventory
+    assert not u.has_item("Iron Bar")
 
     saved = _unit_mod.roll
     _unit_mod.roll = lambda n, d: 9999

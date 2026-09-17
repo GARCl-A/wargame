@@ -47,7 +47,7 @@ def test_absorb_battle_carries_the_equipped_lantern_forward():
     campaign.absorb_battle(guild, squad, battle)
 
     assert member.equipped_offhand == data.LANTERN_ITEM
-    assert data.LANTERN_ITEM not in member._base_inventory   # equipped, not double-counted
+    assert not member.has_item(data.LANTERN_ITEM)   # equipped, not double-counted
 
 
 def test_absorb_battle_arena_win_pays_the_purse_not_loot():
@@ -334,7 +334,7 @@ def test_absorb_battle_carries_quiver_charges_forward():
     campaign.absorb_battle(guild, squad, battle)
 
     assert member.quiver_charges == 12
-    assert data.AMMO_ITEM in member._base_inventory
+    assert member.has_item(data.AMMO_ITEM)
 
 
 def test_absorb_battle_drops_empty_quiver():
@@ -353,7 +353,7 @@ def test_absorb_battle_drops_empty_quiver():
     campaign.absorb_battle(guild, squad, battle)
 
     assert member.quiver_charges == 0
-    assert data.AMMO_ITEM not in member._base_inventory
+    assert not member.has_item(data.AMMO_ITEM)
 
 
 def test_absorb_battle_rolls_over_to_spare_quiver():
@@ -372,8 +372,8 @@ def test_absorb_battle_rolls_over_to_spare_quiver():
 
     campaign.absorb_battle(guild, squad, battle)
 
-    assert data.AMMO_ITEM in member._base_inventory
-    assert member._base_inventory.count(data.AMMO_ITEM) == 1
+    assert member.has_item(data.AMMO_ITEM)
+    assert member.count_of(data.AMMO_ITEM) == 1
     assert member.quiver_charges == data.QUIVER_AMMO
 
 

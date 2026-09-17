@@ -4,31 +4,31 @@ pins it, same as a death save or the guard test)."""
 
 import random
 
-from tests.helpers import fixed_d20, Unit
+from tests.helpers import fixed_d20, Unit, packed
 from gartok import chest, data
 
 
 def test_a_clean_pick_consumes_the_chest_and_hands_over_gems():
     u = Unit("player")
     u.mod_dexterity = 0
-    u._base_inventory = [data.CHEST_ITEM]
+    u._base_inventory = packed([data.CHEST_ITEM])
     with fixed_d20(data.CHEST_DC):              # exactly clears the lock
         opened, gems = chest.try_open(u)
 
     assert opened and gems >= 2
-    assert data.CHEST_ITEM not in u._base_inventory
-    assert u._base_inventory.count(data.GEM_ITEM) == gems
+    assert not u.has_item(data.CHEST_ITEM)
+    assert u.count_of(data.GEM_ITEM) == gems
 
 
 def test_a_miss_costs_nothing_the_chest_stays_put():
     u = Unit("player")
     u.mod_dexterity = 0
-    u._base_inventory = [data.CHEST_ITEM]
+    u._base_inventory = packed([data.CHEST_ITEM])
     with fixed_d20(data.CHEST_DC - 1):           # one short
         opened, gems = chest.try_open(u)
 
     assert not opened and gems == 0
-    assert u._base_inventory == [data.CHEST_ITEM]   # untouched -- try again any time
+    assert u._base_inventory == packed([data.CHEST_ITEM])   # untouched -- try again any time
 
 
 def test_no_chest_in_the_pack_is_a_clean_no_op():
@@ -60,7 +60,7 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
-    u._base_inventory = [data.CHEST_ITEM]
+    u._base_inventory = packed([data.CHEST_ITEM])
     guild = _guild_of(u)
     gs = GearScreen(Fonts(), guild, lambda: None)
     surface = pygame.Surface((1600, 900))
@@ -75,8 +75,8 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
     with fixed_d20(data.CHEST_DC):
         gs._menu_click(open_hit.center)
 
-    assert data.CHEST_ITEM not in u._base_inventory
-    assert data.GEM_ITEM in u._base_inventory
+    assert not u.has_item(data.CHEST_ITEM)
+    assert u.has_item(data.GEM_ITEM)
     assert gs.notice and "picks the lock" in gs.notice
 
 
@@ -97,7 +97,7 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
-    u._base_inventory = [data.MISSION_CHEST_ITEM, data.CHEST_ITEM]
+    u._base_inventory = packed([data.MISSION_CHEST_ITEM, data.CHEST_ITEM])
     guild = _guild_of(u)
     gs = GearScreen(Fonts(), guild, lambda: None)
     surface = pygame.Surface((1600, 900))
@@ -110,9 +110,9 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     with fixed_d20(data.CHEST_DC):
         gs._menu_click(open_hit.center)
 
-    assert data.CHEST_ITEM not in u._base_inventory
-    assert data.MISSION_CHEST_ITEM in u._base_inventory   # untouched -- the sealed one stays sealed
-    assert data.GEM_ITEM in u._base_inventory
+    assert not u.has_item(data.CHEST_ITEM)
+    assert u.has_item(data.MISSION_CHEST_ITEM)   # untouched -- the sealed one stays sealed
+    assert u.has_item(data.GEM_ITEM)
     assert "picks the lock" in gs.notice and "trust mission" not in gs.notice
 
 

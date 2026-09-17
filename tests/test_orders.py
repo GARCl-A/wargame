@@ -4,7 +4,7 @@ queues every other kind for the caller to play (see gartok/orders.py)."""
 
 import random
 
-from tests.helpers import Unit
+from tests.helpers import packed, Unit
 from gartok import campaign, economy, orders, world
 from gartok.clock import Clock
 from gartok.group import Group
@@ -161,7 +161,7 @@ def test_forced_dt_also_runs_eat_now_pass_thats_what_makes_it_maintenance():
     just a short ADVANCE with no reason to exist."""
     random.seed(1)
     hungry = Unit("player")
-    hungry._base_inventory = ["Meat"]
+    hungry._base_inventory = packed(["Meat"])
     hungry.unfed_days = 2                    # hungry, but has food on hand
     g = Group([hungry], node="city")
     guild = _guild(g)
@@ -173,13 +173,13 @@ def test_forced_dt_also_runs_eat_now_pass_thats_what_makes_it_maintenance():
 def test_an_unforced_advance_does_not_run_eat_now_pass():
     random.seed(1)
     hungry = Unit("player")
-    hungry._base_inventory = ["Meat"]
+    hungry._base_inventory = packed(["Meat"])
     hungry.unfed_days = 2
     g = Group([hungry], node="city")
     g.order = orders.travel(g, "market")     # 1 h -- something to jump to
     guild = _guild(g)
     campaign.advance(guild)                  # dt=None: the ADVANCE button
-    assert hungry.unfed_days == 2 and hungry._base_inventory == ["Meat"]
+    assert hungry.unfed_days == 2 and hungry._base_inventory == packed(["Meat"])
 
 
 def test_forced_dt_still_resolves_an_order_that_completes_within_it():

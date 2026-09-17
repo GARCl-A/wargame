@@ -3,7 +3,7 @@
 import os
 import random
 
-from tests.helpers import Combatant, data, persist, recruit, Unit, _unit
+from tests.helpers import Combatant, data, persist, recruit, Unit, _unit, packed
 
 
 def test_unit_save_round_trip_keeps_rolled_values():
@@ -11,7 +11,7 @@ def test_unit_save_round_trip_keeps_rolled_values():
     from gartok.unit import ATTRIBUTES
     random.seed(7)
     u = Unit("player")
-    u._base_inventory = ["Rope", "Map"]
+    u._base_inventory = packed(["Rope", "Map"])
     v = Unit.from_save(persist.unit_to_dict(u))
     for f in ("name", "alignment", "age", "hp_max", "ac", "speed",
               "mental_defense", "languages", "_base_inventory", "gold",
@@ -25,11 +25,24 @@ def test_unit_save_round_trip_keeps_rolled_values():
 def test_locked_items_round_trip_through_save():
     from gartok import persist
     u = Unit("player")
-    u._base_inventory = ["Rope", "Rope", "Torch"]
+    u._base_inventory = packed(["Rope", "Rope", "Torch"])
     u.toggle_lock("Rope")
     v = Unit.from_save(persist.unit_to_dict(u))
     assert v.locked_items == {"Rope": 2}
     assert v.locked_of("Rope") == 2 and v.locked_of("Torch") == 0
+
+
+def test_old_flat_inventory_save_loads_as_stacks():
+    """A save from before quantity-stacks stored `"inventory"` as a flat
+    `list[str]` (repetition = stack). `from_save` still has to load one."""
+    from gartok import persist
+    u = Unit("player")
+    d = persist.unit_to_dict(u)
+    d["inventory"] = ["Rope", "Rope", "Map"]           # old-shape fixture
+    v = Unit.from_save(d)
+    assert v.count_of("Rope") == 2 and v.count_of("Map") == 1
+    assert v._base_inventory == [("Rope", 2), ("Map", 1)]
+    assert persist.unit_to_dict(v)["inventory"] == [("Rope", 2), ("Map", 1)]
 
 
 def test_missing_locked_items_key_loads_as_unlocked():
@@ -37,7 +50,7 @@ def test_missing_locked_items_key_loads_as_unlocked():
     missing key rather than erroring."""
     from gartok import persist
     u = Unit("player")
-    u._base_inventory = ["Rope"]
+    u._base_inventory = packed(["Rope"])
     d = persist.unit_to_dict(u)
     del d["locked_items"]
     v = Unit.from_save(d)
@@ -49,7 +62,7 @@ def test_weapon_is_an_item_hand_and_pack():
     start = u.equipped_weapon
     assert start in data.WEAPONS and Combatant(u).weapon_hand
     u.give_to_pack(u.take_from_hand())               # stow it
-    assert u.equipped_weapon is None and start in u._base_inventory
+    assert u.equipped_weapon is None and u.has_item(start)
     c = Combatant(u)
     assert c.unarmed and not c.weapon_hand           # fights unarmed next battle
     u.give_to_hand("Axe")                        # draw a different weapon
@@ -71,7 +84,7 @@ def test_equipping_two_handed_weapon_bumps_offhand_torch_to_pack():
     u = _unit()
     u.equipped_weapon, u.equipped_offhand = "Dagger", data.TORCH_ITEM
     u.give_to_hand("Light Crossbow")
-    assert u.equipped_offhand is None and data.TORCH_ITEM in u._base_inventory
+    assert u.equipped_offhand is None and u.has_item(data.TORCH_ITEM)
 
 
 def test_offhand_lantern_only_lights_while_equipped():
@@ -84,7 +97,7 @@ def test_offhand_lantern_only_lights_while_equipped():
     assert u.equipped_offhand == data.LANTERN_ITEM        # still assigned, just not lit
 
     u2 = _unit()
-    u2._base_inventory = [data.LANTERN_ITEM]               # a lantern left in the pack
+    u2._base_inventory = packed([data.LANTERN_ITEM])        # a lantern left in the pack
     assert Combatant(u2).light_radius == 0                # does not light on its own
 
 
@@ -92,7 +105,7 @@ def test_equipping_two_handed_weapon_bumps_offhand_lantern_to_pack():
     u = _unit()
     u.equipped_weapon, u.equipped_offhand = "Dagger", data.LANTERN_ITEM
     u.give_to_hand("Light Crossbow")
-    assert u.equipped_offhand is None and data.LANTERN_ITEM in u._base_inventory
+    assert u.equipped_offhand is None and u.has_item(data.LANTERN_ITEM)
 
 
 def test_equipped_weapon_survives_save():
@@ -105,7 +118,7 @@ def test_equipped_weapon_survives_save():
     v = Unit.from_save(persist.unit_to_dict(u))
     assert v.equipped_weapon == "Axe"
     assert v.equipped_offhand == data.TORCH_ITEM and Combatant(v).torch_hand
-    assert "Dagger" in v._base_inventory
+    assert v.has_item("Dagger")
 
 
 def test_save_slot_file_round_trip():

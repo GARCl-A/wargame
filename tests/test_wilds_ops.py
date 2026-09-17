@@ -6,7 +6,7 @@ Sistema 3 left open once a claim is finally the guild's own ground.
 
 import random
 
-from tests.helpers import economy, Unit, world
+from tests.helpers import economy, Unit, world, packed
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.group import Group
@@ -321,7 +321,7 @@ def test_the_full_wilds_claim_lifecycle_end_to_end():
     from gartok.wilds_claim_screen import WildsClaimScreen
 
     p = Unit("player")
-    p._base_inventory = ["Lumber"] * economy.WILDS_CLAIM_FENCE_LUMBER
+    p._base_inventory = packed(["Lumber"] * economy.WILDS_CLAIM_FENCE_LUMBER)
     g = Group([p], node=NODE)
     guild = Guild(None, groups=[g])
     app = _app(guild)
@@ -359,7 +359,7 @@ def test_the_full_wilds_claim_lifecycle_end_to_end():
     screen._start_garrison()
     assert guild.wilds_claim_stage == "SUSTAINING" and g.order.kind == "garrison"
     for _ in range(economy.WILDS_CLAIM_SUSTAIN_DAYS):
-        p._base_inventory.append("Meat")           # never starves mid-sustain
+        p.give_to_pack("Meat")                      # never starves mid-sustain
         guild.pass_time(24)
     assert guild.wilds_claim_stage == "ESTABLISHED" and guild.wilds_claim_owner == "guild"
 

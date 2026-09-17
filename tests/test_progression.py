@@ -4,7 +4,7 @@ import random
 
 from tests.helpers import (
     abilities, actions, Battle, Combatant, data, economy, persist, recruit, talents,
-    Unit, _combatant, _FixedRNG, _melee_battle, _unit,
+    Unit, _combatant, _FixedRNG, _melee_battle, _unit, packed,
 )
 
 
@@ -133,7 +133,7 @@ def test_negotiator_lifts_only_the_haggle_charisma():
 def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
     u = _unit(seed=5)
     u.work_hours = economy.LUMBER_XP_HOURS * 2
-    u._base_inventory = ["Rope", "Meat"]      # 2 kg cargo + a consumable
+    u._base_inventory = packed(["Rope", "Meat"])      # 2 kg cargo + a consumable
     u._derive_combat()
     load, base_normal = u.load, u.carry_normal
     assert u.choose_talent("work", "carrier")
@@ -141,11 +141,11 @@ def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
     assert u.carry_relief == 1.0                  # a full kg: the Rope covers it
     assert u.carry_normal == round(base_normal + 1.0, 1)
 
-    u._base_inventory = ["Chisel"]               # 0.3 kg of cargo -> only 0.3 relief
+    u._base_inventory = packed(["Chisel"])       # 0.3 kg of cargo -> only 0.3 relief
     u._derive_combat()
     assert u.carry_relief == round(data.item_weight("Chisel"), 1)
 
-    u._base_inventory = ["Meat", "Axe"]      # only food + a weapon -> no relief
+    u._base_inventory = packed(["Meat", "Axe"])      # only food + a weapon -> no relief
     u._derive_combat()
     assert u.carry_relief == 0.0 and u.carry_normal == base_normal
 
@@ -175,7 +175,7 @@ def test_talent_effects_resolve_by_channel_and_stat():
 def test_carrier_never_lifts_the_carry_max_ceiling():
     u = _unit(seed=5)
     u.work_hours = economy.LUMBER_XP_HOURS * 2
-    u._base_inventory = ["Rope"]
+    u._base_inventory = packed(["Rope"])
     u._derive_combat()
     ceiling = u.carry_max
     assert u.choose_talent("work", "carrier")
@@ -230,7 +230,7 @@ def test_sure_strike_and_deadeye_key_off_the_attack_attribute():
         for p in picks:
             assert u.choose_talent("combat", p)
         if ammo:
-            u._base_inventory.append("Quiver")
+            u.give_to_pack("Quiver")
         u.give_to_hand(weapon)
         c = Combatant(u)
         c.crossbow_loaded = True                  # measure the bolt, not the improvised swing
@@ -265,7 +265,7 @@ def test_long_reach_extends_ranged_and_thrown_not_melee():
     u.combat_xp = 10
     assert u.choose_talent("combat", "agile")
     assert u.choose_talent("combat", "long_reach")
-    u._base_inventory.append("Quiver")
+    u.give_to_pack("Quiver")
 
     u.give_to_hand("Light Crossbow")
     loaded = Combatant(u)
@@ -307,7 +307,7 @@ def test_tongue_slot_empties_when_the_talent_goes_away():
     u.give_to_tongue("Dagger")
     u.set_race("Orc")                            # not a Grippli any more
     assert not u.has_tongue and u.equipped_tongue is None
-    assert "Dagger" in u._base_inventory         # stowed, not lost
+    assert u.has_item("Dagger")                  # stowed, not lost
 
 
 def test_tongue_is_refused_to_non_grippli():

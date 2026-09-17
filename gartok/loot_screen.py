@@ -43,11 +43,24 @@ class LootScreen(ButtonsMixin, Screen):
         self._pile_scroll = 0
         self._pile_area = None
 
+    @staticmethod
+    def _ground_stacks(pool):
+        """`[(name, [indices])]` for the ground pile -- `loot.field_loot`
+        hands back a flat, unstacked `list[str]` (it isn't a Unit pack), so
+        this groups it the same way `dragselect._stacks` used to before
+        `Unit._base_inventory` started keeping real quantities."""
+        groups, order = {}, []
+        for i, name in enumerate(pool):
+            if name not in groups:
+                groups[name] = []
+                order.append(name)
+            groups[name].append(i)
+        return [(name, groups[name]) for name in order]
+
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
             if self._pile_area and self._pile_area.collidepoint(self.mouse):
-                from .dragselect import DragSelectMixin
-                n = len(DragSelectMixin._stacks(self.pool))
+                n = len(self._ground_stacks(self.pool))
                 self._pile_scroll = max(0, min(n - 1, self._pile_scroll - event.y))
                 return
             hit = next((m for r, m in self._pack_areas if r.collidepoint(self.mouse)), None)
@@ -67,8 +80,8 @@ class LootScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     @staticmethod
-    def _fits(member, name):
-        return member.load + data.item_weight(name) <= member.carry_max
+    def _fits(member, name, qty=1):
+        return member.load + data.item_weight(name) * qty <= member.carry_max
 
     def _give(self, member, name):
         member.give_to_pack(name)
@@ -88,9 +101,11 @@ class LootScreen(ButtonsMixin, Screen):
                 if self.pack_sel == (m, idx):
                     # Clicking selected item again drops it to ground
                     if idx < len(m._base_inventory):
-                        it = m.take_from_pack(idx)
-                        self.pool.append(it)
-                        self.notice = f"{m.name} dropped {it} to the ground."
+                        name, qty = m._base_inventory[idx]
+                        m.take_from_pack(idx, qty)
+                        self.pool.extend([name] * qty)
+                        label = name if qty == 1 else f"{name} ×{qty}"
+                        self.notice = f"{m.name} dropped {label} to the ground."
                     self.pack_sel = None
                 else:
                     self.pack_sel = (m, idx)
@@ -101,21 +116,22 @@ class LootScreen(ButtonsMixin, Screen):
         if self.pack_sel is not None:
             m, idx = self.pack_sel
             if idx < len(m._base_inventory):
-                it = m._base_inventory[idx]
+                name, qty = m._base_inventory[idx]
+                label = name if qty == 1 else f"{name} ×{qty}"
                 if self.pile_rect and self.pile_rect.collidepoint(px):
-                    dropped = m.take_from_pack(idx)
-                    self.pool.append(dropped)
-                    self.notice = f"{m.name} dropped {dropped} to the ground."
+                    m.take_from_pack(idx, qty)
+                    self.pool.extend([name] * qty)
+                    self.notice = f"{m.name} dropped {label} to the ground."
                     self.pack_sel = None
                     return
                 for rect, m2 in self.cards:
                     if rect.collidepoint(px) and m2 != m:
-                        if self._fits(m2, it):
-                            moved = m.take_from_pack(idx)
-                            self._give(m2, moved)
-                            self.notice = f"Moved {moved} from {m.name} to {m2.name}."
+                        if self._fits(m2, name, qty):
+                            m.take_from_pack(idx, qty)
+                            m2.give_to_pack(name, qty)
+                            self.notice = f"Moved {label} from {m.name} to {m2.name}."
                         else:
-                            self.notice = f"{m2.name} can't carry {it} (max load)."
+                            self.notice = f"{m2.name} can't carry {name} (max load)."
                         self.pack_sel = None
                         return
             self.pack_sel = None
@@ -181,7 +197,6 @@ class LootScreen(ButtonsMixin, Screen):
         self._draw_footer(screen)
 
     def _draw_pile(self, screen, rect):
-        from .dragselect import DragSelectMixin
         f = self.fonts
         self.pile_rect = rect
         pack_hov = self.pack_sel is not None and rect.collidepoint(self.mouse)
@@ -189,8 +204,8 @@ class LootScreen(ButtonsMixin, Screen):
               width=2 if pack_hov else 1, radius=RADIUS)
         x, w = rect.x + SP3, rect.w - 2 * SP3
         y = section(screen, "ON THE GROUND", x, rect.y + SP3, w, f)
-        
-        stacks = DragSelectMixin._stacks(self.pool)
+
+        stacks = self._ground_stacks(self.pool)
         if not stacks:
             text(screen, "(nothing)", f.body_sm, INK_FAINT, (x, y + 2))
             return
@@ -256,7 +271,8 @@ class LootScreen(ButtonsMixin, Screen):
         sm, sidx = self.pack_sel if has_pack_sel else (None, None)
         transfer_ok = False
         if has_pack_sel and m != sm and sidx < len(sm._base_inventory):
-            transfer_ok = self._fits(m, sm._base_inventory[sidx])
+            sname, sqty = sm._base_inventory[sidx]
+            transfer_ok = self._fits(m, sname, sqty)
 
         panel(screen, rect, fill=SURFACE_2,
               border=OK if ((drop_ok or transfer_ok) and hov) else DANGER if ((sel or (has_pack_sel and m != sm)) and hov) else LINE_SOFT,
@@ -281,7 +297,7 @@ class LootScreen(ButtonsMixin, Screen):
 
         y = section(screen, "PACK", rect.x + pad, y, rect.w - 2 * pad, f)
         from .dragselect import DragSelectMixin
-        stacks = DragSelectMixin._stacks(m._base_inventory)
+        stacks = DragSelectMixin._stacks(m._base_inventory)   # real stacks: [(name, idx, qty)]
         if not stacks:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
 
@@ -298,22 +314,20 @@ class LootScreen(ButtonsMixin, Screen):
             y += 14
 
         shown = stacks[scroll:scroll + visible_n]
-        for name, idxs in shown:
-            count = len(idxs)
-            idx = idxs[-1]
+        for name, idx, count in shown:
             r = pygame.Rect(rect.x + pad, y - 2, rect.w - 2 * pad, 20)
             ihov = r.collidepoint(self.mouse)
-            sel_this = self.pack_sel is not None and self.pack_sel[0] == m and self.pack_sel[1] in idxs
-            
+            sel_this = self.pack_sel == (m, idx)
+
             if sel_this or ihov:
                 panel(screen, r, fill=ACCENT if sel_this else SURFACE_3,
                       border=ACCENT if sel_this else LINE_SOFT, width=1, radius=4)
             label = name if count == 1 else f"{name}  ×{count}"
             text(screen, label, f.body_sm, ACCENT_INK if sel_this else INK if ihov else INK_DIM,
                  (r.x + 4, y))
-            text(screen, kg(data.item_weight(name)), f.mono_sm,
+            text(screen, kg(data.item_weight(name) * count), f.mono_sm,
                  ACCENT_INK if sel_this else INK_FAINT, (r.right - 4, y), right=True)
-            self.pack_rows.append((r, m, self.pack_sel[1] if sel_this else idx))
+            self.pack_rows.append((r, m, idx))
             y += row_h
 
         more_below = len(stacks) - scroll - len(shown)

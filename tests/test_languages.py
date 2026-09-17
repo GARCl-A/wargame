@@ -21,7 +21,7 @@ def test_linguist_starts_with_a_dictionary_of_a_foreign_language():
     u = Unit("player")
     u.set_occupation("Linguist")            # deterministic re-roll of the occupation's item
 
-    item = u._base_inventory[0]
+    item = u._base_inventory[0][0]
     assert item.startswith("Dictionary of ")
     lang = magic.language_for_dictionary(item)
     assert lang is not None
@@ -47,7 +47,7 @@ def _student(language="Elvish"):
     u.magic_source = None
     u.languages = ["Ankarin"]
     u.study_target = language
-    u._base_inventory.append(f"Dictionary of {language}")
+    u.give_to_pack(f"Dictionary of {language}")
     return u
 
 

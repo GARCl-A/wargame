@@ -5,6 +5,8 @@ Materials are consumed immediately.
 Progress requires rolling a 1d20+INT over hours.
 """
 
+from collections import Counter
+
 import pygame
 
 from . import data
@@ -41,13 +43,8 @@ class CraftingScreen(ButtonsMixin, Screen):
         recipe_data = data.CRAFTING_RECIPES.get(recipe)
         if not recipe_data:
             return False
-        inv = list(crafter._base_inventory)
-        for mat in recipe_data["materials"]:
-            if mat in inv:
-                inv.remove(mat)
-            else:
-                return False
-        return True
+        need = Counter(recipe_data["materials"])
+        return all(crafter.count_of(mat) >= qty for mat, qty in need.items())
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:

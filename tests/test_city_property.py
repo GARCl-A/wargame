@@ -7,7 +7,7 @@ same shape as `test_bank.py` (the screen) and `test_justice_integration.py` /
 
 import random
 
-from tests.helpers import economy, Unit, world
+from tests.helpers import economy, packed, Unit, world
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.city_property_screen import CityPropertyScreen, RepossessionScreen
@@ -101,7 +101,7 @@ def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
     random.seed(1)
     guild, p = _at_gate()
     guild.buy_city_property()
-    p._base_inventory = ["Chainmail"]              # 10.0 kg
+    p._base_inventory = packed(["Chainmail"])              # 10.0 kg
     s = _screen(guild, [p])
 
     s.sel = (p, 0)
@@ -339,7 +339,7 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
 
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 50)
-    p._base_inventory = ["Rope"]
+    p._base_inventory = packed(["Rope"])
     s = CityPropertyScreen(Fonts(), guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))
     s.mouse = (0, 0)

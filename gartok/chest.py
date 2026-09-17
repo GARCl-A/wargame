@@ -38,12 +38,12 @@ def try_open(unit, day=1):
     is consumed and replaced with the gems inside; on a miss nothing changes.
     Returns `(opened, gems)` -- `gems` is 0 on a miss. No-op, `(False, 0)`, if
     `unit` isn't carrying one."""
-    if data.CHEST_ITEM not in unit._base_inventory:
+    if not unit.has_item(data.CHEST_ITEM):
         return False, 0
     gems = roll_lock(unit, day=day)
     if gems is None:
         return False, 0
-    unit._base_inventory.remove(data.CHEST_ITEM)
-    for _ in range(gems):
-        unit._base_inventory.append(data.GEM_ITEM)
+    unit.remove_named(data.CHEST_ITEM)
+    if gems:
+        unit.give_to_pack(data.GEM_ITEM, gems)
     return True, gems

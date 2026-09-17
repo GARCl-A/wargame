@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import abilities, data, Unit, _unit
+from tests.helpers import abilities, data, Unit, _unit, packed
 
 
 def test_hunger_ramps_penalties_and_caps_hp():
@@ -32,7 +32,7 @@ def test_encumbrance_penalises_str_dex_and_speed():
     assert not u.encumbered
     unloaded_speed = u.speed
     exp_str, exp_dex = mod(u.strength - 2), mod(u.dexterity - 2)
-    u._base_inventory = ["Iron Bar"] * 20          # ~100 kg, well over carry_normal
+    u._base_inventory = packed(["Iron Bar"] * 20)  # ~100 kg, well over carry_normal
     u._derive_combat()
     assert u.encumbered
     assert u.mod_strength == exp_str and u.mod_dexterity == exp_dex
@@ -45,7 +45,7 @@ def test_encumbrance_does_not_shrink_carry_capacity():
     u._base_inventory = []
     u._derive_combat()
     cap_n, cap_m = u.carry_normal, u.carry_max
-    u._base_inventory = ["Iron Bar"] * 20
+    u._base_inventory = packed(["Iron Bar"] * 20)
     u._derive_combat()
     assert u.encumbered and u.carry_normal == cap_n and u.carry_max == cap_m
 
@@ -53,7 +53,7 @@ def test_encumbrance_does_not_shrink_carry_capacity():
 def test_dropping_weight_lifts_encumbrance():
     u = _unit(seed=5)
     u.equipped_weapon = None
-    u._base_inventory = ["Iron Bar"] * 20
+    u._base_inventory = packed(["Iron Bar"] * 20)
     u._derive_combat()
     assert u.encumbered
     u._base_inventory = []
@@ -64,7 +64,7 @@ def test_dropping_weight_lifts_encumbrance():
 def test_encumbrance_survives_a_save_round_trip():
     from gartok import persist
     u = _unit(seed=5)
-    u._base_inventory = ["Iron Bar"] * 20
+    u._base_inventory = packed(["Iron Bar"] * 20)
     u._derive_combat()
     assert u.encumbered
     u2 = Unit.from_save(persist.unit_to_dict(u))
@@ -73,11 +73,11 @@ def test_encumbrance_survives_a_save_round_trip():
 
 def test_eating_a_ration_resets_hunger():
     u = _unit(seed=1)
-    u._base_inventory = ["Potato", "Rope"]
+    u._base_inventory = packed(["Potato", "Rope"])
     u.unfed_days = 2
     assert u.consume_daily_food() == "ate"
-    assert u.unfed_days == 0 and "Potato" not in u._base_inventory
-    assert "Rope" in u._base_inventory
+    assert u.unfed_days == 0 and not u.has_item("Potato")
+    assert u.has_item("Rope")
 
 
 def test_autotroph_never_eats_or_starves():
@@ -101,12 +101,12 @@ def test_guild_pass_time_feeds_starves_and_buries():
     from gartok.guild import Guild
     from gartok.clock import Clock
     random.seed(3)
-    fed = Unit("player"); fed._base_inventory = ["Meat", "Meat"]
+    fed = Unit("player"); fed._base_inventory = packed(["Meat", "Meat"])
     fed.share_food = False                                  # keeps its stock to itself
     doomed = Unit("player"); doomed._base_inventory = []
     guild = Guild([fed, doomed], clock=Clock(6 * 3600))    # 06:00 day 1
     guild.pass_time(24)                                     # -> day 2
-    assert fed.unfed_days == 0 and any(it.startswith("Meat") for it in fed._base_inventory)
+    assert fed.unfed_days == 0 and any(n.startswith("Meat") for n, _ in fed._base_inventory)
     assert doomed.unfed_days == 1 and doomed in guild.roster
     for _ in range(data.STARVATION_DEATH_DAYS):
         guild.pass_time(24)
@@ -115,9 +115,9 @@ def test_guild_pass_time_feeds_starves_and_buries():
 
 def test_eat_now_only_bites_when_hungry_and_carrying_food():
     u = _unit(seed=1)
-    u._base_inventory = ["Meat"]
+    u._base_inventory = packed(["Meat"])
     assert u.eat_now() is False                       # saciado: no meal, food kept
-    assert u._base_inventory == ["Meat"]
+    assert u._base_inventory == packed(["Meat"])
     u.unfed_days = 2
     assert u.eat_now() is True
     assert u.unfed_days == 0 and u._base_inventory == []
@@ -129,7 +129,7 @@ def test_a_sharer_feeds_a_foodless_guild_mate_on_the_daily_meal():
     from gartok.guild import Guild
     from gartok.clock import Clock
     random.seed(3)
-    mule = Unit("player"); mule._base_inventory = ["Meat", "Meat", "Meat"]
+    mule = Unit("player"); mule._base_inventory = packed(["Meat", "Meat", "Meat"])
     weakling = Unit("player"); weakling._base_inventory = []
     guild = Guild([mule, weakling], clock=Clock(6 * 3600))
     guild.pass_time(24)                                  # one day crossed
@@ -143,7 +143,7 @@ def test_larder_is_scoped_to_the_group_not_the_whole_guild():
     from gartok.group import Group
     from gartok.clock import Clock
     random.seed(3)
-    mule = Unit("player"); mule._base_inventory = ["Meat", "Meat", "Meat"]
+    mule = Unit("player"); mule._base_inventory = packed(["Meat", "Meat", "Meat"])
     weakling = Unit("player"); weakling._base_inventory = []   # a DIFFERENT group
     guild = Guild(None, groups=[Group([mule], node="city"),
                                 Group([weakling], node="wilds")],
@@ -157,7 +157,7 @@ def test_a_private_ration_is_never_touched_by_a_hungry_mate():
     from gartok.guild import Guild
     from gartok.clock import Clock
     random.seed(3)
-    hoarder = Unit("player"); hoarder._base_inventory = ["Meat", "Meat"]
+    hoarder = Unit("player"); hoarder._base_inventory = packed(["Meat", "Meat"])
     hoarder.share_food = False
     beggar = Unit("player"); beggar._base_inventory = []
     guild = Guild([hoarder, beggar], clock=Clock(6 * 3600))
@@ -170,8 +170,8 @@ def test_everyone_eats_their_own_before_the_larder_is_raided():
     from gartok.guild import Guild
     from gartok.clock import Clock
     random.seed(3)
-    a = Unit("player"); a._base_inventory = ["Meat"]          # exactly one, shared
-    b = Unit("player"); b._base_inventory = ["Meat"]          # exactly one, shared
+    a = Unit("player"); a._base_inventory = packed(["Meat"])  # exactly one, shared
+    b = Unit("player"); b._base_inventory = packed(["Meat"])  # exactly one, shared
     guild = Guild([a, b], clock=Clock(6 * 3600))
     guild.pass_time(24)
     assert a.unfed_days == 0 and b.unfed_days == 0       # neither lost their meal
@@ -183,7 +183,7 @@ def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
     random.seed(3)
     u = Unit("player")
     u.unfed_days = 1
-    u._base_inventory = ["Meat"]
+    u._base_inventory = packed(["Meat"])
     u._derive_combat()
     guild = Guild([u], clock=Clock(10 * 3600))        # 10:00 day 1
     events, _ = guild.do_maintenance()                   # 1 h stop, no day crossed

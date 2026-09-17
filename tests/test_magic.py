@@ -190,7 +190,7 @@ def _student(spell_id="light_globe"):
     u = Unit("player")
     u.magic_source = "nature"
     u.study_target = spell_id
-    u._base_inventory.append(f"Scroll of {magic.SPELLS[spell_id].name}")
+    u.give_to_pack(f"Scroll of {magic.SPELLS[spell_id].name}")
     return u
 
 

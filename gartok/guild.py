@@ -80,6 +80,8 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
+from collections import Counter
+
 from . import data, economy, justice, magic, missions, progression, world
 from .clock import Clock
 from .group import Group
@@ -549,23 +551,44 @@ class Guild:
         return [u._base_inventory for u in mates
                 if u is not eater and u.share_food]
 
+    @staticmethod
+    def _age_food_name(name):
+        """One day of aging for a single food name -- `(new_name, rotted)`.
+        Anything without a `FOOD_LIFESPAN` entry passes through unchanged."""
+        base = name.split(" (")[0]
+        if base not in data.FOOD_LIFESPAN:
+            return name, False
+        age = int(name.split(" (")[1].replace("d)", "")) + 1 if " (" in name else 1
+        if age >= data.FOOD_LIFESPAN[base]:
+            return "Rotten Food", True
+        return f"{base} ({age}d)", False
+
     def _rot_food(self, inventory):
+        """Age every food entry a day in place. `inventory` is either a
+        Unit's pack (`list[(name,qty)]` -- a stack ages as one unit, since
+        aging changes the name and same-name is exactly what stacks
+        together) or the bank chest's flat `list[str]`; rotted portions
+        merge into any Rotten Food already held instead of duplicating it."""
         rotten = 0
+        if inventory and isinstance(inventory[0], tuple):
+            new_inv = []
+            for name, qty in inventory:
+                new_name, rotted = self._age_food_name(name)
+                if rotted:
+                    rotten += qty
+                existing = next((i for i, (n, _) in enumerate(new_inv) if n == new_name), None)
+                if existing is not None:
+                    new_inv[existing] = (new_name, new_inv[existing][1] + qty)
+                else:
+                    new_inv.append((new_name, qty))
+            inventory[:] = new_inv
+            return rotten
+
         new_inv = []
         for item in inventory:
-            base_item = item.split(" (")[0]
-            if base_item in data.FOOD_LIFESPAN:
-                if " (" in item:
-                    age = int(item.split(" (")[1].replace("d)", "")) + 1
-                else:
-                    age = 1
-                if age >= data.FOOD_LIFESPAN[base_item]:
-                    new_inv.append("Rotten Food")
-                    rotten += 1
-                else:
-                    new_inv.append(f"{base_item} ({age}d)")
-            else:
-                new_inv.append(item)
+            new_name, rotted = self._age_food_name(item)
+            rotten += rotted
+            new_inv.append(new_name)
         inventory[:] = new_inv
         return rotten
 
@@ -758,23 +781,15 @@ class Guild:
             if not recipe_data:
                 return [f"Unknown recipe {recipe}."], []
             
-            # Verify materials
-            inv = list(unit._base_inventory)
-            missing = False
-            for mat in recipe_data["materials"]:
-                if mat in inv:
-                    inv.remove(mat)
-                else:
-                    missing = True
-                    break
-            
-            if missing:
+            # Verify materials (a recipe may need more than one of the same kind)
+            need = Counter(recipe_data["materials"])
+            if any(unit.count_of(mat) < qty for mat, qty in need.items()):
                 return [f"{unit.name} can't craft {recipe} -- missing materials."], []
-                
+
             # Consume materials
-            for mat in recipe_data["materials"]:
-                unit._base_inventory.remove(mat)
-                
+            for mat, qty in need.items():
+                unit.remove_named(mat, qty)
+
             unit.crafting_target = recipe
             unit.crafting_progress = 0
 

@@ -8,7 +8,7 @@ objects are needed."""
 
 import random
 
-from tests.helpers import Unit, world
+from tests.helpers import packed, Unit, world
 from gartok import orders
 from gartok.app import App
 from gartok.group import Group
@@ -250,7 +250,7 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
     doomed._base_inventory = []
     doomed.share_food = False
     survivor = Unit("player")
-    survivor._base_inventory = ["Meat"] * 20
+    survivor._base_inventory = packed(["Meat"] * 20)
     g1 = Group([doomed], node="market")
     g2 = Group([survivor], node="market")
     guild = Guild(None, groups=[g1, g2])

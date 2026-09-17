@@ -58,6 +58,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.tab = economy.market_categories()[0][1]     # "weapons"
         self.qty = {}                        # kit tab: stock name -> quantity to buy
         self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
+        self._sel_qty = {}                   # (member, idx) -> how much of that pack stack is picked
         self.notice = None
         self.stock_rows = []                 # [(rect, name)]
         self.qty_hits = []                   # [(rect, name, delta)]
@@ -85,17 +86,26 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             return member.equipped_offhand
         if loc == "armor":
             return member.equipped_armor
-        return member._base_inventory[loc] if loc < len(member._base_inventory) else None
+        return member._base_inventory[loc][0] if loc < len(member._base_inventory) else None
 
-    @staticmethod
-    def _take(member, loc):
+    def _take(self, member, loc):
+        """Lift the pick at `loc` off `member` -- `(name, qty)`. A pack pick
+        takes only what `self._sel_qty` says is selected (the stepper's
+        partial-stack pick), not necessarily the whole stack; an equip slot
+        is always qty 1."""
         if loc == "hand":
-            return member.take_from_hand()
+            return member.take_from_hand(), 1
         if loc == "offhand":
-            return member.take_from_offhand()
+            return member.take_from_offhand(), 1
         if loc == "armor":
-            return member.take_from_armor()
-        return member.take_from_pack(loc)
+            return member.take_from_armor(), 1
+        if loc >= len(member._base_inventory):
+            return None, 0
+        held = member._base_inventory[loc][1]
+        qty = min(held, self._sel_qty.get((member, loc), held))
+        if qty <= 0:
+            return None, 0
+        return member.take_from_pack(loc, qty), qty
 
     def _name_of(self, pick):
         if pick[0] == "stock":
@@ -115,8 +125,24 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
     def _get_qty(self, pick):
         if pick[0] == "stock":
             return self._buy_qty(pick[1])
-        owner, name = pick
-        return len([p for p in self.sel if p[0] is owner and self._name_of(p) == name])
+        return min(self._held_qty(pick), self._sel_qty.get(pick, self._held_qty(pick)))
+
+    def _held_qty(self, pick):
+        """Full quantity of the pick's stack, ignoring any partial selection
+        -- what the stepper's ALL grabs."""
+        owner, loc = pick
+        if isinstance(loc, str):
+            return 1
+        return owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
+
+    def _select_one(self, src):
+        """Replace the current selection with just `src` (a plain click) --
+        a fresh pack pick starts at qty 1, matching a single click grabbing
+        one item; shift/ctrl and the stepper grow it from there."""
+        self.sel = [src] if src is not None else []
+        self._sel_qty = {}
+        if src is not None and src[0] != "stock" and not isinstance(src[1], str):
+            self._sel_qty[src] = 1
 
     def _fits(self, member, name):
         return member.load + data.item_weight(name) <= member.carry_max
@@ -184,31 +210,23 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             name = pick[1]
             self.qty[name] = max(1, self._buy_qty(name) + step)
             return
-            
-        owner, name = pick
-        all_locs = [i for i, n in enumerate(owner._base_inventory) if n == name]
-        sel_locs = [p[1] for p in self.sel if p[0] is owner and p[1] in all_locs]
-        if delta >= 999:
-            self.sel = [p for p in self.sel if not (p[0] is owner and p[1] in all_locs)]
-            self.sel.extend([(owner, l) for l in all_locs])
-            return
-        if delta > 0:
-            to_add = [l for l in all_locs if l not in sel_locs][:step]
-            self.sel.extend([(owner, l) for l in to_add])
+
+        held = self._held_qty(pick)
+        new_qty = held if delta >= 999 else max(0, min(held, self._sel_qty.get(pick, 0) + step))
+        if new_qty <= 0:
+            self._sel_qty.pop(pick, None)
+            self.sel = [p for p in self.sel if p != pick]
         else:
-            to_remove = sel_locs[-abs(step):]
-            self.sel = [p for p in self.sel if not (p[0] is owner and p[1] in to_remove)]
+            self._sel_qty[pick] = new_qty
+            if pick not in self.sel:
+                self.sel.append(pick)
 
     def _sell_all(self):
-        picks = []
-        for p in self.sel:
+        """Grow every currently-picked pack stack to its full held quantity
+        -- the stepper's own ALL, applied to the whole selection at once."""
+        for p in list(self.sel):
             if p[0] != "stock":
-                owner = p[0]
-                name = self._name_of(p)
-                for i, it in enumerate(owner._base_inventory):
-                    if it == name and (owner, i) not in picks:
-                        picks.append((owner, i))
-        self.sel = picks
+                self._bump_qty(p, 999)
         self._sell()
 
     def _drop(self, px, dragging, src):
@@ -264,11 +282,15 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL) \
             and (not self.sel or self.sel[0][0] != "stock")
         if multi:
-            group = self._expand_stack(src)
+            owner, loc = src
             if src in self.sel:
-                self.sel = [p for p in self.sel if p not in group]
+                self.sel = [p for p in self.sel if p != src]
+                self._sel_qty.pop(src, None)
             else:
-                self.sel += [p for p in group if p not in self.sel]
+                self.sel.append(src)
+                if not isinstance(loc, str):
+                    held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
+                    self._sel_qty[src] = held
             return
 
         if self.sel:
@@ -276,36 +298,41 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                 if rect.collidepoint(px):
                     self._drop_on(member)
                     return
-            self.sel = [src] if src is not None else []
+            self._select_one(src)
             return
-        self.sel = [src] if src is not None else []
+        self._select_one(src)
 
     # ------------------------------------------------------------------ #
     def _drop_on(self, member):
         picks, self.sel = self.sel, []
         picks = [p for p in picks if self._name_of(p) is not None]
         if not picks:
+            self._sel_qty = {}
             return
 
         if picks[0][0] == "stock":
+            self._sel_qty = {}
             self._buy(member, [name for _, name in picks])
             return
 
         picks = [p for p in picks if p[0] is not member]   # dropped back home: skip
         if not picks:
+            self._sel_qty = {}
             return
-        add = sum(data.item_weight(self._name_of(p)) for p in picks)
+        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
         if member.load + add > member.carry_max:
             self.notice = f"won't fit {member.name}'s load."
             self.sel = picks
             return
-        names, touched = self._collect(picks)
-        for name in names:
-            member.give_to_pack(name)
+        items, touched = self._collect(picks)      # _take reads self._sel_qty -- clear after
+        self._sel_qty = {}
+        for name, qty in items:
+            member.give_to_pack(name, qty)
         for u in touched:
             u._derive_combat()
         member._derive_combat()
-        self.notice = f"{len(names)} item(s) -> {member.name}."
+        moved = sum(qty for _, qty in items)
+        self.notice = f"{moved} item(s) -> {member.name}."
 
     def _settle_market(self):
         """Bankers deeds read the guild's lifetime market tallies straight off
@@ -361,18 +388,21 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                  if p[0] != "stock" and self._name_of(p) is not None]
         self.sel = []
         if not picks:
+            self._sel_qty = {}
             return
-        names, touched = self._collect(picks)
-        total = sum(economy.sell_price(n, self.deal) for n in names)
+        items, touched = self._collect(picks)      # _take reads self._sel_qty -- clear after
+        self._sel_qty = {}
+        total = sum(economy.sell_price(n, self.deal) * q for n, q in items)
         self.purse += total
-        for n in names:
+        for n, q in items:
             stock = self._stock_of(n)
             if stock is not None:
-                self.guild.market_stock[n] = stock + 1
+                self.guild.market_stock[n] = stock + q
             self.guild.items_sold_kinds.add(n)
         for u in touched:
             u._derive_combat()
-        self.notice = f"sold {len(names)} item(s) for {total}."
+        sold = sum(q for _, q in items)
+        self.notice = f"sold {sold} item(s) for {total}."
         self._settle_market()
 
     def _checkout(self):
@@ -599,9 +629,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         text(screen, str(q), f.mono, ACCENT if sel else INK,
              ((minus.right + plus.x) // 2, cy - 1), center=True)
         if pick[0] != "stock":
-            owner, name = pick
-            all_locs = [i for i, n in enumerate(owner._base_inventory) if n == name]
-            if len(all_locs) > 1:
+            if self._held_qty(pick) > 1:
                 all_btn = pygame.Rect(plus.right + 4, cy - bh // 2, 28, bh)
                 hov_all = all_btn.collidepoint(self.mouse)
                 panel(screen, all_btn, fill=SURFACE_3 if hov_all else SURFACE_1,
@@ -684,8 +712,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (rect.x + pad, y + 2))
             y += 14
         shown = stacks[scroll:scroll + visible_n]
-        for name, idxs in shown:
-            idx, count = idxs[-1], len(idxs)          # items in a stack are interchangeable
+        for name, idx, count in shown:
             r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
             self._draw_item_row(screen, r, m, idx, name, count=count)
             y += row_h
@@ -738,7 +765,7 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                      (r.right - SP2, r.y + 6), right=True)
                      
         if isinstance(loc, int):
-            self._draw_stepper(screen, (member, name), r)
+            self._draw_stepper(screen, (member, loc), r)
                      
         if base != price:
             faint = ACCENT_INK if sel else INK_DIM
@@ -770,32 +797,28 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         can_sell = bool(names) and not self._buying
         x = MARGIN
         if can_sell:
-            total = sum(economy.sell_price(n, self.deal) for n in names)
+            sell_picks = [p for p in self.sel if p[0] != "stock"]
+            sold_qty = sum(self._get_qty(p) for p in sell_picks)
+            total = sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
+                       for p in sell_picks)
             sr = pygame.Rect(x, y, 220, 36)
             hov = sr.collidepoint(self.mouse)
             panel(screen, sr, fill=DANGER if hov else SURFACE_3, border=DANGER,
                   width=1, radius=RADIUS)
-            text(screen, f"SELL ({len(names)}) FOR {total}", f.body_bd,
+            text(screen, f"SELL ({sold_qty}) FOR {total}", f.body_bd,
                  ACCENT_INK if hov else DANGER, sr.center, center=True)
             self.buttons.append(("sell", sr))
             x += 220 + SP2
 
-            all_sellable = []
-            for p in self.sel:
-                if p[0] != "stock":
-                    owner = p[0]
-                    name = self._name_of(p)
-                    for i, it in enumerate(owner._base_inventory):
-                        if it == name and (owner, i) not in all_sellable:
-                            all_sellable.append((owner, i))
-            if len(all_sellable) > len(names):
-                all_names = [self._name_of(p) for p in all_sellable]
-                all_total = sum(economy.sell_price(n, self.deal) for n in all_names)
+            full_qty = sum(self._held_qty(p) for p in sell_picks)
+            if full_qty > sold_qty:
+                all_total = sum(economy.sell_price(self._name_of(p), self.deal) * self._held_qty(p)
+                                for p in sell_picks)
                 sar = pygame.Rect(x, y, 220, 36)
                 hov_sa = sar.collidepoint(self.mouse)
                 panel(screen, sar, fill=DANGER if hov_sa else SURFACE_3, border=DANGER,
                       width=1, radius=RADIUS)
-                text(screen, f"SELL ALL ({len(all_sellable)}) FOR {all_total}", f.body_bd,
+                text(screen, f"SELL ALL ({full_qty}) FOR {all_total}", f.body_bd,
                      ACCENT_INK if hov_sa else DANGER, sar.center, center=True)
                 self.buttons.append(("sell_all", sar))
                 x += 220 + SP2

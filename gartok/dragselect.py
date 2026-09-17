@@ -58,45 +58,36 @@ class DragSelectMixin:
         narrow the selection to what's under the cursor."""
 
     @staticmethod
-    def _stacks(names):
-        """Group a pack's item names into `(name, [indices])`, in first-seen
-        order -- so a screen can show one row per name with a ×N count instead
-        of one row per identical item."""
-        groups = {}
-        order = []
-        for i, name in enumerate(names):
-            if name not in groups:
-                groups[name] = []
-                order.append(name)
-            groups[name].append(i)
-        return [(name, groups[name]) for name in order]
+    def _stacks(pack):
+        """`[(name, idx, qty)]` for each stack in `pack` (`Unit._base_inventory`
+        is `list[(name, qty)]`) -- `idx` is the stack's own position, the same
+        address `_item_at`/`_take` use below."""
+        return [(name, i, qty) for i, (name, qty) in enumerate(pack)]
 
     def _expand_stack(self, src):
-        """`src` plus every other pack index carrying the same item name for the
-        same owner -- so one shift/ctrl-click on a consolidated stack row (see
-        `_stacks`) grabs the whole stack, not just the one index behind it."""
-        owner, loc = src
-        if isinstance(loc, str):
-            return [src]
-        name = self._item_at(owner, loc)
-        if name is None:
-            return [src]
-        return [(owner, i) for i, n in enumerate(owner._base_inventory) if n == name]
+        """`src` alone -- a pack pick already addresses its whole stack (`idx`
+        is a stack position, not a physical item, now that the pack keeps real
+        quantities). Kept as a seam: callers that used to fan a pick out to
+        every matching physical index don't need to change shape."""
+        return [src]
 
     def _collect(self, picks):
+        """Pull every `(owner, loc)` pick off its owner -- `[(name, qty)]`
+        moved plus the owners touched. Pack rows come off highest index first
+        so an earlier removal doesn't shift the ones still to come."""
         by_owner = {}
         for owner, loc in picks:
             by_owner.setdefault(id(owner), (owner, []))[1].append(loc)
-        names, touched = [], []
+        items, touched = [], []
         for owner, locs in by_owner.values():
             touched.append(owner)
             ordered = [l for l in locs if isinstance(l, str)]
             ordered += sorted((l for l in locs if not isinstance(l, str)), reverse=True)
             for loc in ordered:
-                got = self._take(owner, loc)
-                if got is not None:
-                    names.append(got)
-        return names, touched
+                name, qty = self._take(owner, loc)
+                if name is not None:
+                    items.append((name, qty))
+        return items, touched
 
 
 class LoadoutMoveMixin:
@@ -121,22 +112,35 @@ class LoadoutMoveMixin:
             return unit.equipped_tongue
         if loc == "armor":
             return unit.equipped_armor
-        return unit._base_inventory[loc] if loc < len(unit._base_inventory) else None
+        return unit._base_inventory[loc][0] if loc < len(unit._base_inventory) else None
+
+    def _qty_at(self, unit, loc):
+        """How many a pick at `loc` represents -- 1 for an equip slot, the
+        whole stack's quantity for a pack pick."""
+        if isinstance(loc, str):
+            return 1 if self._item_at(unit, loc) is not None else 0
+        return unit._base_inventory[loc][1] if loc < len(unit._base_inventory) else 0
 
     def _carried_names(self):
         """Names of the items currently picked up (selected / being dragged)."""
         return [n for n in (self._item_at(*p) for p in self.selected) if n is not None]
 
     def _take(self, src, loc):
+        """Lift the pick at `loc` off `src` -- `(name, qty)`. A pack pick
+        always takes its whole stack (`idx` addresses the stack, not a
+        physical item); an equip slot is always qty 1."""
         if loc == "hand":
-            return src.take_from_hand()
+            return src.take_from_hand(), 1
         if loc == "offhand":
-            return src.take_from_offhand()
+            return src.take_from_offhand(), 1
         if loc == "tongue":
-            return src.take_from_tongue()
+            return src.take_from_tongue(), 1
         if loc == "armor":
-            return src.take_from_armor()
-        return src.take_from_pack(loc)
+            return src.take_from_armor(), 1
+        if loc >= len(src._base_inventory):
+            return None, 0
+        qty = src._base_inventory[loc][1]
+        return src.take_from_pack(loc, qty), qty
 
     @staticmethod
     def _fits_slot(dst, zone, name):
@@ -181,9 +185,9 @@ class LoadoutMoveMixin:
         # pack
         if all(p[0] is dst and not isinstance(p[1], str) for p in picks):
             return                                       # same pack: nothing to do
-        names, touched = self._collect(picks)
-        for name in names:
-            dst.give_to_pack(name)
+        items, touched = self._collect(picks)
+        for name, qty in items:
+            dst.give_to_pack(name, qty)
         for u in touched:
             u._derive_combat()
         dst._derive_combat()

@@ -85,7 +85,7 @@ def grant_meat(state):
 
     meat = state.meat
     for i in range(meat):
-        hunters[i % len(hunters)]._base_inventory.append(MEAT_ITEM)
+        hunters[i % len(hunters)].give_to_pack(MEAT_ITEM)
 
     who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} hunters"
     if meat:

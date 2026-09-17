@@ -22,7 +22,7 @@ def _guild_with_signer(node="city"):
 def test_accepting_the_trust_mission_hands_over_the_sealed_chest():
     guild, g, signer = _guild_with_signer()
     m = missions.accept(guild, signer, missions.TRUST_CHEST)
-    assert data.MISSION_CHEST_ITEM in signer._base_inventory
+    assert signer.has_item(data.MISSION_CHEST_ITEM)
     assert m.template_id == missions.TRUST_CHEST.id and not m.ambush_done
 
 
@@ -33,7 +33,7 @@ def test_pending_fortress_ambush_needs_an_active_mission_and_the_chest_in_hand()
     m = missions.accept(guild, signer, missions.TRUST_CHEST)
     assert missions.pending_fortress_ambush(guild, g) is m       # carrying it
 
-    signer._base_inventory.remove(data.MISSION_CHEST_ITEM)
+    signer.remove_named(data.MISSION_CHEST_ITEM)
     assert missions.pending_fortress_ambush(guild, g) is None    # handed off already
 
     signer.give_to_pack(data.MISSION_CHEST_ITEM)
@@ -114,8 +114,8 @@ def test_ledger_hold_exchanges_the_chest_for_a_letter():
     scr.buttons = [("exchange", _Rect())]
     scr._click((0, 0))
 
-    assert data.MISSION_CHEST_ITEM not in signer._base_inventory
-    assert data.LETTER_ITEM in signer._base_inventory
+    assert not signer.has_item(data.MISSION_CHEST_ITEM)
+    assert signer.has_item(data.LETTER_ITEM)
     assert scr.notice and "letter of receipt" in scr.notice
 
 
@@ -125,7 +125,7 @@ def test_turning_in_the_letter_closes_bankers_trust_once_the_economic_deeds_are_
                         "bankers_diverse_portfolio"]
     guild.reputation["bankers"] = 3
     m = missions.accept(guild, signer, missions.TRUST_CHEST)
-    signer._base_inventory.remove(data.MISSION_CHEST_ITEM)
+    signer.remove_named(data.MISSION_CHEST_ITEM)
     signer.give_to_pack(data.LETTER_ITEM)
 
     assert missions.can_turn_in(guild, m)
@@ -139,7 +139,7 @@ def test_turning_in_the_letter_closes_bankers_trust_once_the_economic_deeds_are_
 def test_turning_in_early_does_not_earn_the_deed_without_the_economic_three():
     guild, g, signer = _guild_with_signer()
     m = missions.accept(guild, signer, missions.TRUST_CHEST)
-    signer._base_inventory.remove(data.MISSION_CHEST_ITEM)
+    signer.remove_named(data.MISSION_CHEST_ITEM)
     signer.give_to_pack(data.LETTER_ITEM)
 
     earned = missions.turn_in(guild, m)
@@ -154,8 +154,8 @@ def test_opening_the_sealed_chest_early_fails_the_mission_and_marks_a_crime():
         opened, gems = missions.open_mission_chest(guild, signer)
 
     assert opened and gems >= 2
-    assert data.MISSION_CHEST_ITEM not in signer._base_inventory
-    assert signer._base_inventory.count(data.GEM_ITEM) == gems
+    assert not signer.has_item(data.MISSION_CHEST_ITEM)
+    assert signer.count_of(data.GEM_ITEM) == gems
     assert m.state == "failed"
     assert signer.crime == 1
 
@@ -168,5 +168,5 @@ def test_missing_the_lock_on_the_sealed_chest_costs_nothing():
         opened, gems = missions.open_mission_chest(guild, signer)
 
     assert not opened and gems == 0
-    assert data.MISSION_CHEST_ITEM in signer._base_inventory
+    assert signer.has_item(data.MISSION_CHEST_ITEM)
     assert m.state == "active" and signer.crime == 0

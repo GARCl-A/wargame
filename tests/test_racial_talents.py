@@ -42,7 +42,7 @@ def test_leshy_fruitful_talent_produces_fruit_at_dawn():
 
     g = Guild([leshy, human], name="Bloom Guild")
 
-    assert "Fruit" not in leshy._base_inventory
+    assert not leshy.has_item("Fruit")
     events, _ = g._daily_upkeep()
 
     assert any("blooms at dawn" in e for e in events)
@@ -55,7 +55,7 @@ def test_leshy_without_talent_does_not_produce_fruit():
     g = Guild([leshy], name="No Bloom")
     events, _ = g._daily_upkeep()
     assert not any("blooms at dawn" in e for e in events)
-    assert "Fruit" not in leshy._base_inventory
+    assert not leshy.has_item("Fruit")
 
 
 # --------------------------------------------------------------------------- #
@@ -136,7 +136,7 @@ def test_halfling_luck_resets_on_next_day():
 def test_halfling_luck_rerolls_chest_lockpick():
     halfling = _halfling()
     assert halfling.choose_talent("racial", "halfling_luck")
-    halfling._base_inventory.append(data.CHEST_ITEM)
+    halfling.give_to_pack(data.CHEST_ITEM)
 
     # First roll 2 (fails DC 15), reroll 18 (succeeds)
     with patch("gartok.chest.data.d20", side_effect=[2, 18]):

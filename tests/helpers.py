@@ -21,6 +21,20 @@ from gartok.unit import Unit
 from gartok.combatant import Combatant
 
 
+def packed(names):
+    """Group a flat, possibly-repeated item-name list into `[(name, qty)]`
+    stacks, first-seen order -- the shape `Unit._base_inventory` now uses.
+    Lets old-style test fixtures (`["Rope"]*3`) become `packed(["Rope"]*3)`
+    with a mechanical wrap instead of hand-authoring the pairs."""
+    order, counts = [], {}
+    for name in names:
+        if name not in counts:
+            order.append(name)
+            counts[name] = 0
+        counts[name] += 1
+    return [(name, counts[name]) for name in order]
+
+
 def _unit(**over):
     """A deterministic Unit for tests: seeded roll with overridden fields."""
     random.seed(over.pop("seed", 0))

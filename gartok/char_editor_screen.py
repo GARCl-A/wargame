@@ -194,7 +194,9 @@ class CharEditorScreen(Screen):
             else:
                 self._gear(u.give_to_offhand, data.TORCH_ITEM)
         elif kind == "unpack":
-            self._gear(u.take_from_pack, action[1])
+            idx = action[1]
+            if idx < len(u._base_inventory):
+                self._gear(u.take_from_pack, idx, u._base_inventory[idx][1])
         elif kind == "study":
             u.study_target = None if u.study_target == action[1] else action[1]
         elif kind == "load":
@@ -526,12 +528,13 @@ class CharEditorScreen(Screen):
         text(screen, f"PACK  ({len(u._base_inventory)})  ·  load "
              f"{u.load:g}/{u.carry_normal:g} kg", f.label, INFO, (x, y))
         y += 16
-        for idx, item in enumerate(list(u._base_inventory)):
+        for idx, (item, qty) in enumerate(list(u._base_inventory)):
             ir = pygame.Rect(x, y, w, 20)
             panel(screen, ir, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=3)
-            text(screen, ellipsize(item, f.body_sm, ir.w - SP2 - 78), f.body_sm, INK,
+            label = item if qty == 1 else f"{item} ×{qty}"
+            text(screen, ellipsize(label, f.body_sm, ir.w - SP2 - 78), f.body_sm, INK,
                  (ir.x + SP2, ir.y + 3))
-            text(screen, f"{data.item_weight(item):g} kg", f.mono_sm, INK_FAINT,
+            text(screen, f"{data.item_weight(item) * qty:g} kg", f.mono_sm, INK_FAINT,
                  (ir.right - 26, ir.y + 4), right=True)
             xr = pygame.Rect(ir.right - 20, ir.y + 2, 16, 16)
             h = xr.collidepoint(self.mouse)

@@ -102,7 +102,7 @@ class Unit:
         u.languages = list(d["languages"])              # keep the saved picks, don't re-sort
         u.occupation = data.occupation_by_name(d["occupation"])
         u._configure_occupation()
-        u._base_inventory = list(d["inventory"])
+        u._base_inventory = cls._pack_from_raw(d["inventory"])
         u.locked_items = dict(d.get("locked_items", {}))
         u.equipped_weapon = d.get("equipped_weapon", u.occupation["weapon"])
         u.equipped_offhand = d.get("equipped_offhand")
@@ -114,7 +114,7 @@ class Unit:
         u.unfed_days = d.get("unfed_days", 0)
         u.sick = d.get("sick", False)
         u.first_aid_charges = d.get("first_aid_charges", 0)
-        u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if data.AMMO_ITEM in u._base_inventory else 0)
+        u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if u.has_item(data.AMMO_ITEM) else 0)
         u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)
         u.last_daily_luck_day = d.get("last_daily_luck_day", 0)
         u.share_food = d.get("share_food", True)
@@ -177,12 +177,17 @@ class Unit:
         `larder` (guild-mates sharing food). Returns the name of the eaten food if one was found."""
         for pack in (self._base_inventory, *(larder or ())):
             # Prefer fresh food
-            food = next((it for it in pack if any(it.startswith(f) for f in data.FOOD_ITEMS) and not it.startswith("Rotten Food")), None)
-            if food is None:
-                food = next((it for it in pack if it.startswith("Rotten Food")), None)
-            if food is not None:
-                pack.remove(food)
-                return "Rotten Food" if food.startswith("Rotten Food") else food
+            idx = next((i for i, (n, _) in enumerate(pack)
+                        if any(n.startswith(f) for f in data.FOOD_ITEMS) and not n.startswith("Rotten Food")), None)
+            if idx is None:
+                idx = next((i for i, (n, _) in enumerate(pack) if n.startswith("Rotten Food")), None)
+            if idx is not None:
+                name, qty = pack[idx]
+                if qty > 1:
+                    pack[idx] = (name, qty - 1)
+                else:
+                    pack.pop(idx)
+                return "Rotten Food" if name.startswith("Rotten Food") else name
         return None
 
     def consume_daily_food(self, larder=None):
@@ -218,7 +223,8 @@ class Unit:
     @property
     def rations(self):
         """Meals sitting in this character's pack."""
-        return sum(1 for it in self._base_inventory if any(it.startswith(f) for f in data.FOOD_ITEMS))
+        return sum(qty for name, qty in self._base_inventory
+                   if any(name.startswith(f) for f in data.FOOD_ITEMS))
 
     @property
     def work_xp(self):
@@ -398,8 +404,8 @@ class Unit:
         buf = self.talent_bonus("carry_buffer")
         if not buf:
             return 0.0
-        cargo = sum(data.item_weight(it) for it in self._base_inventory
-                    if not self.is_weapon(it) and it not in data.CONSUMABLE_ITEMS)
+        cargo = sum(data.item_weight(name) * qty for name, qty in self._base_inventory
+                    if not self.is_weapon(name) and name not in data.CONSUMABLE_ITEMS)
         return round(min(buf, cargo), 1)
 
     def _apply_race(self):
@@ -467,7 +473,7 @@ class Unit:
                 foreign = [l for l in data.LANGUAGES if l not in self.languages]
                 if foreign:
                     self.item = f"Dictionary of {random.choice(foreign)}"
-            self._base_inventory = [self.item]
+            self._base_inventory = [(self.item, 1)]
             if self.item == data.FIRST_AID_ITEM:
                 self.first_aid_charges = data.FIRST_AID_CHARGES
             elif self.item == data.AMMO_ITEM:
@@ -593,7 +599,7 @@ class Unit:
         + armor + talents. Order matters: `_derive_carry` sets `encumbered`,
         which the attribute mods read, which everything after them reads."""
         if self.equipped_tongue and not self.has_tongue:   # lost the talent (race / drop): stow it
-            self._base_inventory.append(self.equipped_tongue)
+            self._pack_add(self.equipped_tongue)
             self.equipped_tongue = None
         self._derive_carry()
         self._derive_attribute_mods()
@@ -813,10 +819,10 @@ class Unit:
         if not self.is_weapon(name):
             return False
         if self.equipped_weapon:
-            self._base_inventory.append(self.equipped_weapon)
+            self._pack_add(self.equipped_weapon)
         self.equipped_weapon = name
         if data.WEAPONS[name]["hands"] >= 2 and self.equipped_offhand:
-            self._base_inventory.append(self.equipped_offhand)
+            self._pack_add(self.equipped_offhand)
             self.equipped_offhand = None
         return True
 
@@ -824,7 +830,7 @@ class Unit:
         if not self.fits_offhand(name):
             return False
         if self.equipped_offhand:
-            self._base_inventory.append(self.equipped_offhand)
+            self._pack_add(self.equipped_offhand)
         self.equipped_offhand = name
         return True
 
@@ -834,12 +840,25 @@ class Unit:
         if not self.fits_tongue(name):
             return False
         if self.equipped_tongue:
-            self._base_inventory.append(self.equipped_tongue)
+            self._pack_add(self.equipped_tongue)
         self.equipped_tongue = name
         return True
 
-    def give_to_pack(self, name):
-        self._base_inventory.append(name)
+    # ------------------------------------------------------------------ #
+    # the pack itself: `list[(name, qty)]` stacks, one row per distinct   #
+    # name (`_pack_add` merges into an existing row rather than ever      #
+    # appending a duplicate) -- so `idx` below addresses a stack, not a   #
+    # physical item.                                                     #
+    # ------------------------------------------------------------------ #
+    def _pack_add(self, name, qty=1):
+        for i, (n, q) in enumerate(self._base_inventory):
+            if n == name:
+                self._base_inventory[i] = (n, q + qty)
+                return
+        self._base_inventory.append((name, qty))
+
+    def give_to_pack(self, name, qty=1):
+        self._pack_add(name, qty)
         if name == data.FIRST_AID_ITEM:
             self.first_aid_charges = data.FIRST_AID_CHARGES
         elif name == data.AMMO_ITEM:
@@ -863,7 +882,7 @@ class Unit:
         if not self.fits_armor(name):
             return False
         if self.equipped_armor:
-            self._base_inventory.append(self.equipped_armor)
+            self._pack_add(self.equipped_armor)
         self.equipped_armor = name
         self._derive_combat()
         return True
@@ -873,30 +892,76 @@ class Unit:
         self._derive_combat()
         return name
 
-    def take_from_pack(self, idx):
-        val = self._base_inventory.pop(idx)
-        held = self._base_inventory.count(val)
-        if self.locked_items.get(val, 0) > held:
-            self.locked_items[val] = held
-            if not held:
-                del self.locked_items[val]
+    def _pack_take(self, idx, qty=1):
+        """Remove up to `qty` from the stack at `idx`, deleting the row once
+        it empties, and reconcile `locked_items` against what's left. Returns
+        `(name, removed)`; shared by `take_from_pack` (index) and
+        `remove_named` (name)."""
+        name, held = self._base_inventory[idx]
+        removed = min(qty, held)
+        if removed >= held:
+            self._base_inventory.pop(idx)
+        else:
+            self._base_inventory[idx] = (name, held - removed)
+        held_after = held - removed
+        if self.locked_items.get(name, 0) > held_after:
+            self.locked_items[name] = held_after
+            if not held_after:
+                del self.locked_items[name]
+        return name, removed
+
+    def take_from_pack(self, idx, qty=1):
+        name, _ = self._pack_take(idx, qty)
         self._derive_combat()
-        return val
+        return name
+
+    def remove_named(self, name, qty=1):
+        """Remove up to `qty` of `name` by name rather than index -- for
+        callers (missions, chests, the ledger, ...) that know what they want
+        gone but not where it sits. Returns how many were actually removed."""
+        idx = next((i for i, (n, _) in enumerate(self._base_inventory) if n == name), None)
+        if idx is None:
+            return 0
+        _, removed = self._pack_take(idx, qty)
+        return removed
+
+    def count_of(self, name):
+        """Total quantity of `name` held in the pack (0 if none)."""
+        return sum(q for n, q in self._base_inventory if n == name)
+
+    def has_item(self, name):
+        return self.count_of(name) > 0
 
     def locked_of(self, name):
         """How many of `name` in this pack are locked against distribute_load --
         clamped to what's actually held, so a lock never outlives its items."""
-        return min(self.locked_items.get(name, 0), self._base_inventory.count(name))
+        return min(self.locked_items.get(name, 0), self.count_of(name))
 
     def toggle_lock(self, name):
         """Lock the whole stack of `name`, or unlock it if already fully locked."""
-        held = self._base_inventory.count(name)
+        held = self.count_of(name)
         if held == 0:
             return
         if self.locked_of(name) >= held:
             del self.locked_items[name]
         else:
             self.locked_items[name] = held
+
+    @staticmethod
+    def _pack_from_raw(raw):
+        """Build `_base_inventory` from a save's `"inventory"` field, which
+        may be an old flat `list[str]` (repetition = stack) or the current
+        `list[[name, qty]]` -- tolerated permanently, no version branch, same
+        spirit as the rest of `from_save`'s `dict.get` defaulting."""
+        if not raw or isinstance(raw[0], str):
+            order, counts = [], {}
+            for name in raw:
+                if name not in counts:
+                    order.append(name)
+                    counts[name] = 0
+                counts[name] += 1
+            return [(name, counts[name]) for name in order]
+        return [tuple(entry) for entry in raw]
 
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
@@ -990,7 +1055,7 @@ class Unit:
     @property
     def load(self):
         """Weight of the equipped loadout: weapon hand + off hand + tongue + pack + armor."""
-        w = sum(data.item_weight(it) for it in self._base_inventory)
+        w = sum(data.item_weight(name) * qty for name, qty in self._base_inventory)
         if self.equipped_weapon:
             w += data.WEAPONS[self.equipped_weapon]["weight"]
         if self.equipped_tongue:
@@ -1002,17 +1067,27 @@ class Unit:
         return round(w, 1)
 
 
+def flatten_pack(unit):
+    """`unit`'s pack as a flat `list[str]`, one entry per physical item --
+    only for the battle boundary (`Combatant.inventory` stays flat; nothing
+    in a fight needs stacked display, just per-charge checks)."""
+    return [name for name, qty in unit._base_inventory for _ in range(qty)]
+
+
 def distribute_load(units):
     """Rebalance pack items across `units` by free carrying capacity, heaviest
     first -- locked items (see `Unit.locked_items`/`toggle_lock`) stay put on
-    their current owner instead of joining the pool."""
+    their current owner instead of joining the pool. Item granularity, not
+    whole-stack: a locked portion of a stack stays put, the rest still moves."""
     items = []
     for u in units:
-        seen = {}
         keep, move = [], []
-        for name in u._base_inventory:
-            seen[name] = seen.get(name, 0) + 1
-            (keep if seen[name] <= u.locked_of(name) else move).append(name)
+        for name, qty in u._base_inventory:
+            locked = u.locked_of(name)
+            if locked:
+                keep.append((name, locked))
+            if qty > locked:
+                move.extend([name] * (qty - locked))
         u._base_inventory[:] = keep
         items.extend(move)
         u._derive_combat()

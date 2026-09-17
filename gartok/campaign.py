@@ -63,28 +63,30 @@ def _carry_forward(member, combatant):
     else:
         member.equipped_offhand = None
         
+    # combatant.inventory stays the flat, per-charge battle-time list (see
+    # unit.flatten_pack); only the roster-side rebuild below deals in stacks.
     torch_spares = combatant.inventory.count(data.TORCH_ITEM)
     lantern_spares = combatant.inventory.count(data.LANTERN_ITEM)
     bear_traps = combatant.inventory.count("Bear Trap")
     alarm_traps = combatant.inventory.count("Alarm Trap")
-    member._base_inventory = (
-        [it for it in member._base_inventory
-         if it not in (data.TORCH_ITEM, data.LANTERN_ITEM, "Bear Trap", "Alarm Trap")]
-        + [data.TORCH_ITEM] * torch_spares
-        + [data.LANTERN_ITEM] * lantern_spares
-        + ["Bear Trap"] * bear_traps
-        + ["Alarm Trap"] * alarm_traps)
-    
+    member._base_inventory = [
+        (n, q) for n, q in member._base_inventory
+        if n not in (data.TORCH_ITEM, data.LANTERN_ITEM, "Bear Trap", "Alarm Trap")]
+    for name, qty in ((data.TORCH_ITEM, torch_spares), (data.LANTERN_ITEM, lantern_spares),
+                      ("Bear Trap", bear_traps), ("Alarm Trap", alarm_traps)):
+        if qty:
+            member.give_to_pack(name, qty)
+
     member.first_aid_charges = combatant.first_aid_charges
-    if member.first_aid_charges <= 0 and data.FIRST_AID_ITEM in member._base_inventory:
-        member._base_inventory.remove(data.FIRST_AID_ITEM)
-        if data.FIRST_AID_ITEM in member._base_inventory:
+    if member.first_aid_charges <= 0 and member.has_item(data.FIRST_AID_ITEM):
+        member.remove_named(data.FIRST_AID_ITEM)
+        if member.has_item(data.FIRST_AID_ITEM):
             member.first_aid_charges = data.FIRST_AID_CHARGES
 
     member.quiver_charges = combatant.ammo
-    if member.quiver_charges <= 0 and data.AMMO_ITEM in member._base_inventory:
-        member._base_inventory.remove(data.AMMO_ITEM)
-        if data.AMMO_ITEM in member._base_inventory:
+    if member.quiver_charges <= 0 and member.has_item(data.AMMO_ITEM):
+        member.remove_named(data.AMMO_ITEM)
+        if member.has_item(data.AMMO_ITEM):
             member.quiver_charges = data.QUIVER_AMMO
 
 

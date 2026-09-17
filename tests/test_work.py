@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import economy, persist, Unit, world, _unit
+from tests.helpers import economy, persist, Unit, world, _unit, packed
 
 
 def test_lumber_yard_is_a_work_town_one_hour_from_the_city():
@@ -43,7 +43,7 @@ def test_work_shift_crossing_midnight_runs_the_daily_meal():
     random.seed(5)
     u = Unit("player")
     u.gold = 0
-    u._base_inventory = ["Potato"]
+    u._base_inventory = packed(["Potato"])
     u._derive_combat()
     guild = Guild([u], clock=Clock(20 * 3600))        # 20:00 day 1
     guild.work_shift([u], 8)                          # -> 04:00 day 2, one meal
@@ -81,7 +81,7 @@ def test_lumber_level_counts_an_axe_carried_in_the_pack_too():
     u.equipped_weapon = "Dagger"
     u._base_inventory = []
     assert economy.lumber_level(u) == 0
-    u._base_inventory = ["Axe"]
+    u._base_inventory = packed(["Axe"])
     assert economy.lumber_level(u) == economy.LUMBER_LEVEL_OWN_AXE == 1
 
 

@@ -4,7 +4,7 @@ import random
 
 from tests.helpers import (
     abilities, actions, Battle, COLS, Combatant, data, fixed_d20, GroundObject,
-    Unit, _combatant, _melee_battle, _recruit, _unit,
+    Unit, _combatant, _melee_battle, _recruit, _unit, packed,
 )
 
 
@@ -79,7 +79,7 @@ def test_stowed_weapon_weighs_the_same_as_wielded():
     assert item_weight("Axe") == WEAPONS["Axe"]["weight"]
     u = _unit()
     u.equipped_weapon = None
-    u._base_inventory = ["Axe"]
+    u._base_inventory = packed(["Axe"])
     assert Combatant(u).load == round(WEAPONS["Axe"]["weight"], 1)
 
 
@@ -421,7 +421,7 @@ def test_attack_bonus_folds_in_the_to_hit_talent():
     u.choose_talent("combat", "sure_strike")      # +1 to hit on STR attacks
     u.give_to_hand("Axe")
     assert u.attack_bonus[0] == u.mod_strength + 1
-    u._base_inventory.append("Quiver")
+    u.give_to_pack("Quiver")
     u.give_to_hand("Light Crossbow")              # DEX attack -> Sure Strike doesn't apply
     assert u.attack_bonus[0] == u.mod_dexterity
 

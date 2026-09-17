@@ -17,6 +17,7 @@ and the next fight re-seeds a new Combatant from the character.
 
 from . import data, progression
 from .data import resolve_bonus, roll
+from .unit import flatten_pack
 
 AP_PER_TURN = 2
 
@@ -87,7 +88,7 @@ class Combatant:
                 self.torch_hand = free_off_hand
             else:
                 self.lantern_hand = free_off_hand
-        self.inventory = list(c._base_inventory)
+        self.inventory = flatten_pack(c)
         self.ammo = (getattr(c, "quiver_charges", data.QUIVER_AMMO)
                      if data.AMMO_ITEM in self.inventory else 0)
         # a crossbow holds one bolt at a time and starts the fight empty: spend an

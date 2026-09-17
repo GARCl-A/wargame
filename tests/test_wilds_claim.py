@@ -7,7 +7,7 @@ first node with a `garrison_job` actually set)."""
 
 import random
 
-from tests.helpers import economy, Unit, world
+from tests.helpers import economy, Unit, world, packed
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.group import Group
@@ -105,7 +105,7 @@ def test_sustaining_counts_down_only_while_actually_garrisoned():
 def test_sustaining_the_full_stretch_establishes_the_claim():
     random.seed(1)
     p = Unit("player")
-    p._base_inventory = ["Meat"] * (economy.WILDS_CLAIM_SUSTAIN_DAYS + 2)   # never starves mid-test
+    p._base_inventory = packed(["Meat"] * (economy.WILDS_CLAIM_SUSTAIN_DAYS + 2))   # never starves mid-test
     g = Group([p], node=NODE)
     guild = Guild(None, groups=[g])
     guild.wilds_claim_start_sustaining()
@@ -148,15 +148,15 @@ def test_screen_scout_advances_the_stage_and_spends_time():
 def test_screen_deposit_moves_all_carried_lumber_into_the_fence_bank():
     random.seed(1)
     a, b = Unit("player"), Unit("player")
-    a._base_inventory = ["Lumber", "Lumber", "Rope"]
-    b._base_inventory = ["Lumber"]
+    a._base_inventory = packed(["Lumber", "Lumber", "Rope"])
+    b._base_inventory = packed(["Lumber"])
     g = Group([a, b], node=NODE)
     guild = Guild(None, groups=[g])
     s = _screen(guild, g)
 
     s._deposit_lumber()
     assert guild.wilds_claim_fence_lumber == 3
-    assert a._base_inventory == ["Rope"] and b._base_inventory == []
+    assert a._base_inventory == packed(["Rope"]) and b._base_inventory == []
 
 
 def test_screen_build_fences_is_refused_below_the_threshold():
@@ -199,7 +199,7 @@ def test_screen_collect_lumber_respects_carry_capacity():
     p._derive_combat()
     base_load = p.load                          # equipped weapon/armor already counts toward it
     filler = max(0, int((p.carry_max - base_load - 4.0) // 2))   # leaves room for exactly 2 Lumber (2 kg each)
-    p._base_inventory = ["Rope"] * filler
+    p._base_inventory = packed(["Rope"] * filler)
     p._derive_combat()
     g = Group([p], node=NODE)
     guild = Guild(None, groups=[g])
@@ -207,7 +207,7 @@ def test_screen_collect_lumber_respects_carry_capacity():
     s = _screen(guild, g)
 
     s._collect_lumber()
-    assert p._base_inventory.count("Lumber") == 2
+    assert p.count_of("Lumber") == 2
     assert guild.garrison_stock[NODE] == ["Lumber"] * 3
 
 

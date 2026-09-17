@@ -39,14 +39,14 @@ class WildsClaimScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _party_lumber(self):
-        return sum(m._base_inventory.count("Lumber") for m in self.group.members)
+        return sum(m.count_of("Lumber") for m in self.group.members)
 
     def _deposit_lumber(self):
         total = 0
         for m in self.group.members:
-            n = m._base_inventory.count("Lumber")
+            n = m.count_of("Lumber")
             if n:
-                m._base_inventory = [it for it in m._base_inventory if it != "Lumber"]
+                m.remove_named("Lumber", n)
                 total += n
                 m._derive_combat()
         if total:
@@ -61,7 +61,7 @@ class WildsClaimScreen(ButtonsMixin, Screen):
         for m in self.group.members:
             while stock and m.load + data.item_weight("Lumber") <= m.carry_max:
                 stock.pop()
-                m._base_inventory.append("Lumber")
+                m.give_to_pack("Lumber")
                 m._derive_combat()
                 taken += 1
         self.notice = (f"collected {taken} Lumber." if taken

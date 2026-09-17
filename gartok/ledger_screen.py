@@ -30,7 +30,7 @@ class LedgerScreen(ButtonsMixin, Screen):
 
     def _carrier(self):
         return next((u for u in self.group.members
-                    if data.MISSION_CHEST_ITEM in u._base_inventory), None)
+                    if u.has_item(data.MISSION_CHEST_ITEM)), None)
 
     def _click(self, px):
         for key, rect in self.buttons:
@@ -39,7 +39,7 @@ class LedgerScreen(ButtonsMixin, Screen):
             if key == "exchange":
                 carrier = self._carrier()
                 if carrier is not None:
-                    carrier._base_inventory.remove(data.MISSION_CHEST_ITEM)
+                    carrier.remove_named(data.MISSION_CHEST_ITEM)
                     carrier.give_to_pack(data.LETTER_ITEM)
                     self.notice = (f"{carrier.name} hands over the sealed chest -- the "
                                    "outpost gives a letter of receipt in return.")

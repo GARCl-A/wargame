@@ -49,7 +49,7 @@ def test_equipping_armor_stows_the_old_piece():
     u.give_to_armor("Leather Jerkin")
     u.give_to_armor("Chainmail")
     assert u.equipped_armor == "Chainmail"
-    assert "Leather Jerkin" in u._base_inventory
+    assert u.has_item("Leather Jerkin")
 
 
 def test_armor_weighs_the_same_worn_or_stowed():
@@ -58,7 +58,8 @@ def test_armor_weighs_the_same_worn_or_stowed():
     u.give_to_pack("Chainmail")
     stowed = u.load
     assert stowed == base + data.ARMOR["Chainmail"]["weight"]
-    u.give_to_armor(u.take_from_pack(u._base_inventory.index("Chainmail")))
+    idx = next(i for i, (n, _) in enumerate(u._base_inventory) if n == "Chainmail")
+    u.give_to_armor(u.take_from_pack(idx))
     assert u.load == stowed
 
 

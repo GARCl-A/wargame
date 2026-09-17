@@ -108,7 +108,7 @@ def progress(guild, mission):
     if group is None:
         return 0
     item = template_of(mission).goal_item
-    return sum(u._base_inventory.count(item) for u in group.members)
+    return sum(u.count_of(item) for u in group.members)
 
 
 def can_turn_in(guild, mission):
@@ -128,9 +128,9 @@ def turn_in(guild, mission):
     group = _current_group(guild, mission)
     left = t.goal_qty
     for u in group.members:
-        while left > 0 and t.goal_item in u._base_inventory:
-            u._base_inventory.remove(t.goal_item)
-            left -= 1
+        if left <= 0:
+            break
+        left -= u.remove_named(t.goal_item, left)
     n = len(group.members)
     base, rem = divmod(t.reward, n)
     for i, u in enumerate(group.members):
@@ -153,14 +153,14 @@ def open_mission_chest(guild, unit):
     criminal (`Unit.crime`), so it can never become the `bankers_trust` deed.
     A miss costs nothing, same as every other chest. Returns `(opened, gems)`,
     `(False, 0)` if `unit` isn't carrying one."""
-    if data.MISSION_CHEST_ITEM not in unit._base_inventory:
+    if not unit.has_item(data.MISSION_CHEST_ITEM):
         return False, 0
     gems = chest.roll_lock(unit)
     if gems is None:
         return False, 0
-    unit._base_inventory.remove(data.MISSION_CHEST_ITEM)
-    for _ in range(gems):
-        unit._base_inventory.append(data.GEM_ITEM)
+    unit.remove_named(data.MISSION_CHEST_ITEM)
+    if gems:
+        unit.give_to_pack(data.GEM_ITEM, gems)
     mission = _active_trust_mission(guild)
     if mission is not None:
         mission.state = "failed"
@@ -177,7 +177,7 @@ def pending_fortress_ambush(guild, group):
     mission = _active_trust_mission(guild)
     if mission is None or mission.ambush_done:
         return None
-    if not any(data.MISSION_CHEST_ITEM in u._base_inventory for u in group.members):
+    if not any(u.has_item(data.MISSION_CHEST_ITEM) for u in group.members):
         return None
     return mission
 

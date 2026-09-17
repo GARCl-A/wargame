@@ -49,6 +49,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         self.party = party
         self.on_done = on_done
         self.sel = []                                # [(who, idx), ...] -- who is "bank" or a Unit
+        self._sel_qty = {}                           # (unit, idx) -> qty picked; bank picks are always 1
         self.notice = None
         self.chest_rows = []                         # [(rect, idx)]
         self.item_rows = []                          # [(rect, member, idx)]
@@ -73,18 +74,48 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
     def _name_of(self, pick):
         who, idx = pick
         items = self._items_of(who)
-        return items[idx] if 0 <= idx < len(items) else None
+        if not (0 <= idx < len(items)):
+            return None
+        return items[idx] if who == "bank" else items[idx][0]
+
+    def _held_qty(self, pick):
+        """Full stack quantity for a Unit pick -- meaningless for a bank pick
+        (the chest is still a flat, unstacked `list[str]`; see `_get_qty`)."""
+        who, idx = pick
+        items = self._items_of(who)
+        return items[idx][1] if 0 <= idx < len(items) else 0
 
     def _selected_names(self):
         return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
 
+    def _display_stacks(self, who):
+        """`[(name, idx, qty)]` rows to show for `who`. A Unit's pack already
+        keeps real quantities (one row per stack, `dragselect._stacks`); the
+        bank chest is still a flat, unstacked `list[str]` (Decision B), so its
+        rows are a physical-index group instead -- `idx` there is one
+        representative index among several equal picks, same as before this
+        migration."""
+        items = self._items_of(who)
+        if who != "bank":
+            return self._stacks(items)
+        groups, order = {}, []
+        for i, name in enumerate(items):
+            if name not in groups:
+                groups[name] = []
+                order.append(name)
+            groups[name].append(i)
+        return [(name, groups[name][-1], len(groups[name])) for name in order]
+
     def _get_qty(self, pick):
         who, _idx = pick
-        name = self._name_of(pick)
-        if name is None:
-            return 0
-        all_locs = [i for i, n in enumerate(self._items_of(who)) if n == name]
-        return len([p for p in self.sel if p[0] == who and p[1] in all_locs])
+        if who == "bank":
+            name = self._name_of(pick)
+            if name is None:
+                return 0
+            all_locs = [i for i, n in enumerate(self.guild.bank_items) if n == name]
+            return len([p for p in self.sel if p[0] == "bank" and p[1] in all_locs])
+        held = self._held_qty(pick)
+        return min(held, self._sel_qty.get(pick, held))
 
     @property
     def purse(self):
@@ -125,56 +156,77 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
             self.sel = [src]
 
     def _expand_stack(self, src):
-        """`src` plus every other index carrying the same item name for the same
-        owner -- one shift/ctrl-click on a stack row grabs the whole stack."""
+        """Bank picks: `src` plus every other physical index carrying the same
+        name (the chest is still flat/unstacked). Unit picks: `src` alone --
+        `idx` already addresses the whole stack; the caller grows its qty to
+        the full stack separately (see `_drop`)."""
         who, _idx = src
+        if who != "bank":
+            return [src]
         name = self._name_of(src)
         if name is None:
             return [src]
-        return [(who, i) for i, n in enumerate(self._items_of(who)) if n == name]
+        return [(who, i) for i, n in enumerate(self.guild.bank_items) if n == name]
 
     def _collect(self, picks):
         """Pull every `(who, idx)` pick off its owner -- highest index first so
         an earlier removal doesn't shift the ones still to come. Returns
-        `(names, touched)`, `touched` being the Unit owners to re-derive (the
-        chest isn't one)."""
+        `([(name, qty)], touched)`, `touched` being the Unit owners to
+        re-derive (the chest isn't one). A Unit pick takes whatever
+        `self._sel_qty` says is selected; a bank pick is always qty 1 (one
+        physical index)."""
         by_owner = {}
         for who, idx in picks:
             key = "bank" if who == "bank" else id(who)
             by_owner.setdefault(key, (who, []))[1].append(idx)
-        names, touched = [], []
+        items, touched = [], []
         for who, idxs in by_owner.values():
             for idx in sorted(idxs, reverse=True):
                 if who == "bank":
-                    names.append(self.guild.bank_items.pop(idx))
-                else:
-                    names.append(who.take_from_pack(idx))
+                    items.append((self.guild.bank_items.pop(idx), 1))
+                    continue
+                held = who._base_inventory[idx][1] if idx < len(who._base_inventory) else 0
+                qty = min(held, self._sel_qty.get((who, idx), held))
+                if qty > 0:
+                    items.append((who.take_from_pack(idx, qty), qty))
             if who != "bank":
                 touched.append(who)
-        return names, touched
+        return items, touched
 
     def _bump_qty(self, pick, delta):
         step = delta * (5 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1)
         who, _idx = pick
-        name = self._name_of(pick)
-        all_locs = [i for i, n in enumerate(self._items_of(who)) if n == name]
-        sel_locs = [p[1] for p in self.sel if p[0] == who and p[1] in all_locs]
-        if delta >= 999:
-            self.sel = [p for p in self.sel if not (p[0] == who and p[1] in all_locs)]
-            self.sel.extend([(who, l) for l in all_locs])
+        if who == "bank":
+            name = self._name_of(pick)
+            all_locs = [i for i, n in enumerate(self.guild.bank_items) if n == name]
+            sel_locs = [p[1] for p in self.sel if p[0] == "bank" and p[1] in all_locs]
+            if delta >= 999:
+                self.sel = [p for p in self.sel if not (p[0] == "bank" and p[1] in all_locs)]
+                self.sel.extend([("bank", l) for l in all_locs])
+                return
+            if delta > 0:
+                to_add = [l for l in all_locs if l not in sel_locs][:step]
+                self.sel.extend([("bank", l) for l in to_add])
+            else:
+                to_remove = sel_locs[-abs(step):]
+                self.sel = [p for p in self.sel if not (p[0] == "bank" and p[1] in to_remove)]
             return
-        if delta > 0:
-            to_add = [l for l in all_locs if l not in sel_locs][:step]
-            self.sel.extend([(who, l) for l in to_add])
+
+        held = self._held_qty(pick)
+        new_qty = held if delta >= 999 else max(0, min(held, self._sel_qty.get(pick, 0) + step))
+        if new_qty <= 0:
+            self._sel_qty.pop(pick, None)
+            self.sel = [p for p in self.sel if p != pick]
         else:
-            to_remove = sel_locs[-abs(step):]
-            self.sel = [p for p in self.sel if not (p[0] == who and p[1] in to_remove)]
+            self._sel_qty[pick] = new_qty
+            if pick not in self.sel:
+                self.sel.append(pick)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
             hit = next((w for r, w in self._pack_areas if r.collidepoint(self.mouse)), None)
             if hit is not None:
-                n = len(self._stacks(self._items_of(hit)))
+                n = len(self._display_stacks(hit))
                 key = "bank" if hit == "bank" else id(hit)
                 cur = self._pack_scroll.get(key, 0)
                 self._pack_scroll[key] = max(0, min(max(0, n - 1), cur - event.y))
@@ -195,6 +247,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         if dragging:
             self._resolve(px)
             self.sel = []
+            self._sel_qty = {}
             return
 
         for rect, pick, delta in self.qty_hits:
@@ -214,19 +267,36 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
 
         mods = pygame.key.get_mods()
         if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
-            group = self._expand_stack(src)
-            if src in self.sel:
-                self.sel = [p for p in self.sel if p not in group]
+            who, _idx = src
+            if who == "bank":
+                group = self._expand_stack(src)
+                if src in self.sel:
+                    self.sel = [p for p in self.sel if p not in group]
+                else:
+                    self.sel += [p for p in group if p not in self.sel]
+            elif src in self.sel:
+                self.sel = [p for p in self.sel if p != src]
+                self._sel_qty.pop(src, None)
             else:
-                self.sel += [p for p in group if p not in self.sel]
+                self.sel.append(src)
+                self._sel_qty[src] = self._held_qty(src)
             return
 
         if self.sel:
             if self._resolve(px):
                 return
-            self.sel = [src] if src is not None else []
+            self._select_one(src)
             return
+        self._select_one(src)
+
+    def _select_one(self, src):
+        """Replace the current selection with just `src` (a plain click) -- a
+        fresh Unit pack pick starts at qty 1; shift/ctrl and the stepper grow
+        it from there. Bank picks don't track a qty (the chest is flat)."""
         self.sel = [src] if src is not None else []
+        self._sel_qty = {}
+        if src is not None and src[0] != "bank":
+            self._sel_qty[src] = 1
 
     def _resolve(self, px):
         """Land the carried picks on whatever is under `px`. Returns True if the
@@ -280,40 +350,47 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         picks = [p for p in picks if p[0] != "bank"]         # already in the chest: no-op
         if not picks:
             self.sel = []
+            self._sel_qty = {}
             return
-        add = sum(data.item_weight(self._name_of(p)) for p in picks)
+        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
         if not self._chest_room(add):
             free = self.guild.bank_capacity - self.guild.bank_load
             self.notice = f"won't fit — {free:g} kg free in the chest."
             self.sel = picks
             return
-        names, touched = self._collect(picks)
-        self.guild.bank_items.extend(names)
+        items, touched = self._collect(picks)   # _collect reads self._sel_qty -- clear after
+        self._sel_qty = {}
+        for name, qty in items:
+            self.guild.bank_items.extend([name] * qty)
         for u in touched:
             u._derive_combat()
         self.sel = []
-        one = names[0] if len(names) == 1 else f"{len(names)} items"
+        total = sum(qty for _, qty in items)
+        one = items[0][0] if total == 1 else f"{total} items"
         self.notice = f"stashed {one}."
 
     def _drop_on_member(self, member, picks):
         picks = [p for p in picks if p[0] is not member]     # dropped back home: skip
         if not picks:
             self.sel = []
+            self._sel_qty = {}
             return
-        add = sum(data.item_weight(self._name_of(p)) for p in picks)
+        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
         if not self._fits(member, add):
             self.notice = f"won't fit {member.name}'s load."
             self.sel = picks
             return
         from_chest = all(p[0] == "bank" for p in picks)
-        names, touched = self._collect(picks)
-        for name in names:
-            member.give_to_pack(name)
+        items, touched = self._collect(picks)   # _collect reads self._sel_qty -- clear after
+        self._sel_qty = {}
+        for name, qty in items:
+            member.give_to_pack(name, qty)
         for u in touched:
             u._derive_combat()
         member._derive_combat()
         self.sel = []
-        one = names[0] if len(names) == 1 else f"{len(names)} items"
+        total = sum(qty for _, qty in items)
+        one = items[0][0] if total == 1 else f"{total} items"
         self.notice = (f"{member.name} took {one}." if from_chest
                        else f"{one} → {member.name}.")
 
@@ -456,7 +533,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         f = self.fonts
         pad = SP3
         names = self._selected_names()
-        add = sum(data.item_weight(n) for n in names)
+        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in self.sel)
         incoming = bool(names) and any(p[0] is not m for p in self.sel)
         take_ok = incoming and self._fits(m, add)
         hov = rect.collidepoint(self.mouse)
@@ -497,7 +574,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         row_h = 24 + SP1
         area = pygame.Rect(x, y, w, max(0, bottom - y))
         self._pack_areas.append((area, who))
-        stacks = self._stacks(items)
+        stacks = self._display_stacks(who)
         visible_n = max(1, (bottom - y) // row_h)
         key = "bank" if who == "bank" else id(who)
         scroll = max(0, min(self._pack_scroll.get(key, 0), max(0, len(stacks) - visible_n)))
@@ -507,8 +584,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
             text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (x, y + 2))
             y += 14
         shown = stacks[scroll:scroll + visible_n]
-        for name, idxs in shown:
-            idx, count = idxs[-1], len(idxs)          # items in a stack are interchangeable
+        for name, idx, count in shown:
             r = pygame.Rect(x, y, w, 24)
             self._draw_row(screen, r, who, idx, name, count, show_lock=show_lock)
             y += row_h
@@ -541,8 +617,7 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         bw, bh = 16, 18
         cy = r.centery
         cursor = r.right - SP2 - WT_COL
-        all_locs = [i for i, n in enumerate(self._items_of(who)) if n == name]
-        if len(all_locs) > 1:
+        if count > 1:
             all_btn = pygame.Rect(cursor - 28, cy - bh // 2, 28, bh)
             hov_all = all_btn.collidepoint(self.mouse)
             panel(screen, all_btn, fill=SURFACE_4 if hov_all else SURFACE_1,

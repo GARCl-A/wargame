@@ -259,7 +259,7 @@ def lumber_level(unit):
     axe, 1 once they own an Axe -- carried in the pack is enough, it does not
     have to be the weapon in hand. Gates work-XP the same way
     `progression.xp_award` gates combat XP -- see `work_xp_hours`."""
-    owns_axe = ("Axe" in unit._base_inventory or unit.equipped_weapon == "Axe"
+    owns_axe = (unit.has_item("Axe") or unit.equipped_weapon == "Axe"
                 or unit.equipped_tongue == "Axe")
     return LUMBER_LEVEL_OWN_AXE if owns_axe else 0
 

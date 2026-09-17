@@ -56,7 +56,17 @@ class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
         if who == "house":
             return (self.guild.property_city_items[idx]
                     if idx < len(self.guild.property_city_items) else None)
-        return who._base_inventory[idx] if idx < len(who._base_inventory) else None
+        return who._base_inventory[idx][0] if idx < len(who._base_inventory) else None
+
+    def _held_qty(self, pick):
+        """Full stack quantity for a Unit pack pick -- always 1 for a house
+        pick (the property store is still a flat, unstacked list, same as
+        the bank chest -- Decision B)."""
+        who, idx = pick
+        if who == "house":
+            return 1
+        items = who._base_inventory
+        return items[idx][1] if idx < len(items) else 0
 
     @property
     def purse(self):
@@ -69,11 +79,12 @@ class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
     def _from_house(self):
         return self.sel is not None and self.sel[0] == "house"
 
-    def _house_room(self, name):
-        return self.guild.property_city_load + data.item_weight(name) <= economy.CITY_PROPERTY_CAPACITY
+    def _house_room(self, name, qty=1):
+        return (self.guild.property_city_load + data.item_weight(name) * qty
+                <= economy.CITY_PROPERTY_CAPACITY)
 
-    def _fits(self, member, name):
-        return member.load + data.item_weight(name) <= member.carry_max
+    def _fits(self, member, name, qty=1):
+        return member.load + data.item_weight(name) * qty <= member.carry_max
 
     @property
     def _rep_ok(self):
@@ -163,14 +174,16 @@ class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
     def _deposit(self):
         name = self._name_of(self.sel)
         member = self.sel[0]
-        if not self._house_room(name):
+        qty = self._held_qty(self.sel)
+        if not self._house_room(name, qty):
             free = economy.CITY_PROPERTY_CAPACITY - self.guild.property_city_load
             self.notice = f"{name} won't fit -- {free:g} kg free at the property."
             return
-        member.take_from_pack(self.sel[1])
-        self.guild.property_city_items.append(name)
+        member.take_from_pack(self.sel[1], qty)
+        self.guild.property_city_items.extend([name] * qty)
         member._derive_combat()
-        self.notice = f"stashed {name}."
+        label = name if qty == 1 else f"{name} ×{qty}"
+        self.notice = f"stashed {label}."
 
     def _withdraw(self, member):
         name = self._name_of(self.sel)
@@ -185,14 +198,16 @@ class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
     def _hand_over(self, member):
         name = self._name_of(self.sel)
         src = self.sel[0]
-        if not self._fits(member, name):
+        qty = self._held_qty(self.sel)
+        if not self._fits(member, name, qty):
             self.notice = f"{name} won't fit {member.name}'s load."
             return
-        src.take_from_pack(self.sel[1])
-        member.give_to_pack(name)
+        src.take_from_pack(self.sel[1], qty)
+        member.give_to_pack(name, qty)
         src._derive_combat()
         member._derive_combat()
-        self.notice = f"{name} -> {member.name}."
+        label = name if qty == 1 else f"{name} ×{qty}"
+        self.notice = f"{label} -> {member.name}."
 
     def _leave(self):
         self.on_done()
@@ -359,7 +374,7 @@ class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
         pad = SP3
         name = self._name_of(self.sel)
         incoming = bool(name) and not (self.sel[0] is m)
-        take_ok = incoming and self._fits(m, name)
+        take_ok = incoming and self._fits(m, name, self._held_qty(self.sel))
         hov = rect.collidepoint(self.mouse)
         panel(screen, rect, fill=SURFACE_2,
               border=OK if (take_ok and hov) else DANGER if (incoming and hov and not take_ok)
@@ -383,15 +398,16 @@ class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
         if not m._base_inventory:
             text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
         shown = m._base_inventory[:PACK_ROWS_SHOWN]
-        for idx, item in enumerate(shown):
+        for idx, (item, qty) in enumerate(shown):
             r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
             sel = self.sel == (m, idx)
             ihov = not self.sel and r.collidepoint(self.mouse)
             panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
                   border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            text(screen, ellipsize(item, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
+            label = item if qty == 1 else f"{item}  ×{qty}"
+            text(screen, ellipsize(label, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
                  ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
-            text(screen, kg(data.item_weight(item)), f.mono_sm,
+            text(screen, kg(data.item_weight(item) * qty), f.mono_sm,
                  ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
             self.item_rows.append((r, m, idx))
             y += 24 + SP1

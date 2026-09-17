@@ -221,11 +221,10 @@ class PackColumnMixin:
 
     # ------------------------------------------------------------------ #
     def _draw_pack_rows(self, screen, rect, x, y, inner, unit, carried):
-        """One row per physical pack item (not stacked -- each index is its own
-        drag/select pick, same as before), scrolled to fit the column, with a
-        padlock toggle in front of each row. The lock is tracked per item name
-        (`Unit.locked_of`/`toggle_lock`): whichever physical copy shows locked
-        is arbitrary among identical items, but the count always matches."""
+        """One row per pack stack (`Unit._base_inventory` is `list[(name,
+        qty)]`) -- `idx` addresses the stack, same as `LoadoutMoveMixin`,
+        scrolled to fit the column, with a padlock toggle in front of each
+        row (`Unit.locked_of`/`toggle_lock`)."""
         f = self.fonts
         mouse = self.mouse
         items = unit._base_inventory
@@ -247,15 +246,10 @@ class PackColumnMixin:
             text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (x, y + 2))
             y += 14
 
-        seen = {}
-        for name in items[:scroll]:
-            seen[name] = seen.get(name, 0) + 1
-
         shown_end = min(len(items), scroll + visible_n)
         for idx in range(scroll, shown_end):
-            item = items[idx]
-            seen[item] = seen.get(item, 0) + 1
-            locked = seen[item] <= unit.locked_of(item)
+            name, qty = items[idx]
+            locked = unit.locked_of(name) > 0
 
             ir = pygame.Rect(x, y, inner, 28)
             isel = (unit, idx) in self.selected
@@ -267,13 +261,14 @@ class PackColumnMixin:
             lhov = lr.collidepoint(mouse)
             icons.icon(screen, "lock" if locked else "unlock", lr,
                        ACCENT if locked else (INK if lhov else INK_FAINT))
-            self._lock_hits.append((lr, unit, item))
+            self._lock_hits.append((lr, unit, name))
 
-            tag = self._item_tag(item)
-            wtxt = kg(data.item_weight(item))
+            tag = self._item_tag(name)
+            label = name if qty == 1 else f"{name}  ×{qty}"
+            wtxt = kg(data.item_weight(name) * qty)
             rtxt = (tag + "  ·  " + wtxt) if tag else wtxt
             name_x = ir.x + LOCK_W + SP1
-            text(screen, ellipsize(item, f.body, ir.right - name_x - f.mono_sm.size(rtxt)[0] - SP4),
+            text(screen, ellipsize(label, f.body, ir.right - name_x - f.mono_sm.size(rtxt)[0] - SP4),
                  f.body, ACCENT_INK if isel else INK, (name_x, ir.y + 6))
             text(screen, rtxt, f.mono_sm, ACCENT_INK if isel else INK_DIM,
                  (ir.right - SP2, ir.y + 7), right=True)
