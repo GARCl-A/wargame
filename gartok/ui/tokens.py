@@ -51,20 +51,29 @@ def mix(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
+_font_cache = None
+
+
 def fonts():
-    cond = "dejavusanscondensed,dejavusans,arial"
-    serif = "dejavuserif,georgia,serif"
-    return {
-        "micro":   pygame.font.SysFont(cond, T.F_MICRO),
-        "microb":  pygame.font.SysFont(cond, T.F_MICRO, bold=True),
-        "body_sm": pygame.font.SysFont(cond, T.F_BODY_SM),
-        "body":    pygame.font.SysFont(cond, T.F_BODY),
-        "bodyb":   pygame.font.SysFont(cond, T.F_BODY, bold=True),
-        "name":    pygame.font.SysFont(serif, T.F_NAME),
-        "nameb":   pygame.font.SysFont(serif, T.F_NAME, bold=True),
-        "titleb":  pygame.font.SysFont(serif, T.F_TITLE, bold=True),
-        "head":    pygame.font.SysFont(cond, T.F_HEAD, bold=True),
-        "big":     pygame.font.SysFont(cond, T.F_BIG, bold=True),
-        "ink":     pygame.font.SysFont(serif, T.F_BODY),
-        "inkb":    pygame.font.SysFont(serif, T.F_BODY, bold=True),
-    }
+    """Cached after the first call -- callers that don't hold onto their own
+    `self._F` (a modal mixin, a one-off block render) can call this every
+    frame without re-hitting `pygame.font.SysFont` each time."""
+    global _font_cache
+    if _font_cache is None:
+        cond = "dejavusanscondensed,dejavusans,arial"
+        serif = "dejavuserif,georgia,serif"
+        _font_cache = {
+            "micro":   pygame.font.SysFont(cond, T.F_MICRO),
+            "microb":  pygame.font.SysFont(cond, T.F_MICRO, bold=True),
+            "body_sm": pygame.font.SysFont(cond, T.F_BODY_SM),
+            "body":    pygame.font.SysFont(cond, T.F_BODY),
+            "bodyb":   pygame.font.SysFont(cond, T.F_BODY, bold=True),
+            "name":    pygame.font.SysFont(serif, T.F_NAME),
+            "nameb":   pygame.font.SysFont(serif, T.F_NAME, bold=True),
+            "titleb":  pygame.font.SysFont(serif, T.F_TITLE, bold=True),
+            "head":    pygame.font.SysFont(cond, T.F_HEAD, bold=True),
+            "big":     pygame.font.SysFont(cond, T.F_BIG, bold=True),
+            "ink":     pygame.font.SysFont(serif, T.F_BODY),
+            "inkb":    pygame.font.SysFont(serif, T.F_BODY, bold=True),
+        }
+    return _font_cache

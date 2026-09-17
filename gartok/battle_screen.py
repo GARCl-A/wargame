@@ -14,7 +14,6 @@ from .board import cells
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
-from .sheet import character_sheet
 from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
                     FLOOR_A, FLOOR_B, INFO, INK, INK_DIM, INK_FAINT, LIGHT_C,
                     LINE_SOFT, MOVE_HL, NEUTRAL_C, OBJ_C, OK,
@@ -23,6 +22,10 @@ from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
                     THROW_HL, TORCH_C, WALL_FILL, WALL_HI, WALL_LO, WARN,
                     BoardView, Stack, battle_layout, panel, pips, text, tracked,
                     wrap_lines)
+from .ui import primitives as ui_primitives
+from .ui.sheet_card import draw_sheet as draw_sheet_card
+from .ui.sheet_card import unit_to_ch
+from .ui.tokens import fonts as ui_fonts
 
 _WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
 
@@ -1044,13 +1047,13 @@ class BattleScreen(Screen):
         if not self.inspect_open:
             return
         s.gap(SP3)
-        body = s.row(4)
-        lines = wrap_lines(character_sheet(who), f.mono_sm, self._L["panel"].w - SP2)
-        y = body.y
-        for i, ln in enumerate(lines):
-            col = INK if i == 0 else INK_DIM
-            text(screen, ln, f.mono_sm if i else f.body_bd, col, (body.x, y))
-            y += 15 if i else 20
+        F = ui_fonts()
+        ch = unit_to_ch(who)
+        rect = pygame.Rect(s.x, s.y, self._L["panel"].w - SP2, 0)
+        h, tooltip = draw_sheet_card(screen, F, rect, ch, density="compact", mouse=self.mouse)
+        s.y += h
+        if tooltip:
+            ui_primitives.draw_tooltip(screen, F, tooltip, self.mouse)
 
     # ------------------------------------------------------------------ #
     # log                                                                #

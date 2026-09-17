@@ -1,25 +1,31 @@
-"""The full character sheet, drawn into a rect.
+"""The full character sheet, drawn as a modal over whichever screen opens it.
 
-`draw_sheet(screen, rect, unit, fonts)` renders everything the guild screen's
-gear cards leave out: the six attributes with their modifiers, the derived
-combat numbers, the actual to-hit and damage of the weapon in hand, carry,
-languages and the racial ability in full. Read-only -- it is shown as a modal
-over the guild screen (click a member to open, click anywhere to close).
+The actual rendering lives in `gartok.ui.sheet_card` (density="full") now --
+this module keeps the `SheetModalMixin` mixin's public API (`open_sheet`,
+`sheet_open`, `close_sheet_on_click`, `sheet_badge`, `draw_sheet_modal`)
+stable for its six still-legacy consumers (group_screen, guild_screen,
+level_screen, market_screen, reward_screen, squad_screen), plus a few pure
+helpers (`_to_hit`, `_weapon_lines`, `format_hp_breakdown_tooltip`) those
+same screens (and draft_screen, char_editor_screen, level_screen) still
+import directly for their own bespoke cards. Those helpers stay on the
+legacy `theme` palette/fonts since their callers haven't migrated yet.
 """
 
 import pygame
 
-from . import data
 from .combatant import Combatant
-from .theme import (ACCENT, DANGER, DEMO_HL, INFO, INK, INK_DIM, INK_FAINT,
-                    OK, SP1, SP2, SP3, SURFACE_1, SURFACE_2, WARN,
-                    chip, draw_tooltip, format_tooltip, panel, section,
-                    token_badge, text, wrap_lines)
-from .widgets import draw_veil
+from .theme import ACCENT, DANGER, INFO, INK, INK_DIM, OK, WARN, wrap_lines
+from .ui import primitives
+from .ui.sheet_card import draw_sheet as _draw_sheet_card
+from .ui.sheet_card import sheet_height, unit_to_ch
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 
-PANEL_W, PANEL_H = 560, 604
+PANEL_W = 620
+PANEL_H = sheet_height("full") + 96
 
 
+# ---------------------------------------------------------------- mixin
 class SheetModalMixin:
     """Lets a screen pop the full character sheet over itself. The sheet needs a
     `Combatant` view (to-hit, ammo, hand state), so a roster member is wrapped in
@@ -47,30 +53,52 @@ class SheetModalMixin:
         self._sheet_unit = None
         return True
 
-    def sheet_badge(self, screen, topright, fonts):
+    def sheet_badge(self, screen, topright, fonts=None):
         """Draw a small 'i' disc at `topright` (the card's inspect affordance) and
-        return its rect for the screen to hit-test."""
+        return its rect for the screen to hit-test. `fonts` is accepted for the
+        callers' existing call shape but unused -- this always draws in the
+        war-table palette regardless of the host screen's own font system."""
+        F = ui_fonts()
         r = pygame.Rect(0, 0, 20, 20)
         r.topright = topright
         hot = r.collidepoint(self.mouse)
-        pygame.draw.circle(screen, SURFACE_1, r.center, 9)
-        pygame.draw.circle(screen, INFO, r.center, 9, 1)
-        text(screen, "i", fonts.body_bd, ACCENT if hot else INFO, r.center, center=True)
+        pygame.draw.circle(screen, T.STEEL_HI, r.center, 9)
+        pygame.draw.circle(screen, T.BRASS if hot else T.STEEL_LINE, r.center, 9, 1)
+        primitives.text(screen, F["bodyb"], "i", r.center, T.BRASS if hot else T.TX_MUTED,
+                        center=True)
         return r
 
-    def draw_sheet_modal(self, screen, fonts):
+    def draw_sheet_modal(self, screen, fonts=None):
         if self._sheet_unit is None:
             return
-        w, h = screen.get_size()
-        r = pygame.Rect(0, 0, PANEL_W, PANEL_H)
-        r.center = (w // 2, h // 2)
-        draw_sheet(screen, r, Combatant(self._sheet_unit), fonts, self.mouse)
+        F = ui_fonts()
+        ch = unit_to_ch(Combatant(self._sheet_unit))
+        rect = primitives.modal_card(screen, (PANEL_W, PANEL_H), veil=True)
+        pad = T.S * 2
+        inner = pygame.Rect(rect.x + pad, rect.y + pad, rect.w - 2 * pad, 0)
+        _, tooltip = _draw_sheet_card(screen, F, inner, ch, density="full", mouse=self.mouse)
+        primitives.text(screen, F["micro"], "click anywhere to close",
+                        (rect.centerx, rect.bottom - 18), T.TX_FAINT, center=True)
+        if tooltip:
+            primitives.draw_tooltip(screen, F, tooltip, self.mouse)
 
 
-_ATTRS = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
-          ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma")]
+def draw_sheet(screen, rect, u, fonts=None, mouse=None):
+    """Legacy entry point -- draws the same modal content at an arbitrary
+    rect instead of through `SheetModalMixin`. Kept for direct callers
+    (tests included); `fonts` is unused, drawing is always war-table style."""
+    F = ui_fonts()
+    ch = unit_to_ch(u if isinstance(u, Combatant) else Combatant(u))
+    _, tooltip = _draw_sheet_card(screen, F, pygame.Rect(rect.x, rect.y, rect.w, 0),
+                                  ch, density="full", mouse=mouse)
+    if tooltip and mouse:
+        primitives.draw_tooltip(screen, F, tooltip, mouse)
 
 
+# ---------------------------------------------------------------- shared helpers
+# Still legacy-styled (theme fonts/colors) -- kept for guild_screen.py (`_weapon_
+# lines`/`_to_hit`) and char_editor_screen.py/draft_screen.py/level_screen.py
+# (`format_hp_breakdown_tooltip`), none of which are migrating in this pass.
 def _to_hit(u):
     """Base attack bonus and the attribute it comes from -- no target, no
     flanking, no conditions (those are situational and shown in battle). A
@@ -150,200 +178,3 @@ def format_hp_breakdown_tooltip(u, fonts, max_px=320):
 
     lines.append((f"Max HP: {b['final_max']}", fonts.body_bd, ACCENT))
     return lines
-
-
-def _titles(u):
-    """Earned personal titles shown on the sheet, most notable first."""
-    titles = []
-    if getattr(u, "arena_title", False):
-        titles.append("Champion of the Pit")
-    return titles
-
-
-def _status_note(u):
-    if u.dying:
-        return f"DYING {u.death_clock}/{data.DYING_TURNS}", DANGER
-    if u.stable:
-        return "STABLE (unconscious)", WARN
-    if u.broken:
-        return "BROKEN (repair: INT vs 15)", WARN
-    if u.fled:
-        return "FLED THE FIGHT", INFO
-    if u.dead:
-        return "DEAD", DANGER
-    if u.hunger_level:
-        return u.hunger_label.upper(), (DANGER if u.hunger_level >= 2 else WARN)
-    return None, None
-
-
-def draw_sheet(screen, rect, u, f, mouse=None):
-    draw_veil(screen)
-    panel(screen, rect, fill=SURFACE_2, border=ACCENT, width=2, radius=8)
-    pad = 16
-    x = rect.x + pad
-    w = rect.w - 2 * pad
-    y = rect.y + pad
-    tooltip = None
-
-    # --- header ---------------------------------------------------------- #
-    tok = (x + 14, y + 14)
-    token_badge(screen, tok, u, f, r=15)
-    text(screen, u.name, f.heading, INK, (tok[0] + 26, y))
-    text(screen, f"{u.race['name']}  ·  {u.occupation['name']}  ·  {u.alignment}",
-         f.body_sm, INK_DIM, (tok[0] + 26, y + 18))
-    text(screen, f"{u.size}  ·  {u.age} yrs  ·  combat N{u.combat_level}"
-         + (f"  ·  work N{u.work_level}" if u.work_xp or u.work_level else "")
-         + (f"  ·  takes {u.footprint}x{u.footprint}" if u.footprint > 1 else ""),
-         f.body_sm, INK_FAINT, (tok[0] + 26, y + 33))
-    header_h = 52
-    titles = _titles(u)
-    if titles:
-        text(screen, "  ·  ".join(titles), f.label, ACCENT, (tok[0] + 26, y + 48))
-        header_h += 14
-    note, ncol = _status_note(u)
-    if note:
-        text(screen, note, f.label, ncol, (rect.right - pad, y), right=True)
-    y += header_h
-
-    # --- derived combat chips ------------------------------------------- #
-    stats = (("HP", f"{max(u.hp, 0)}/{u.hp_max}" if u.hp != u.hp_max else u.hp_max, OK),
-             ("AC", u.ac, INFO), ("MD", u.mental_defense, DEMO_HL),
-             ("SPD", u.speed, INFO), ("INIT", f"{u.initiative_bonus():+}", WARN))
-    cg = SP1
-    cw = (w - (len(stats) - 1) * cg) // len(stats)
-    for i, (k, v, ac) in enumerate(stats):
-        cr = pygame.Rect(x + i * (cw + cg), y, cw, 44)
-        chip(screen, cr, k, v, f, accent=ac)
-        if mouse and cr.collidepoint(mouse):
-            if k == "HP":
-                tooltip = format_hp_breakdown_tooltip(u, f)
-            elif k in data.DERIVED_HELP:
-                t, d = data.DERIVED_HELP[k]
-                tooltip = format_tooltip(t, d, f)
-    y += 44 + SP3
-
-    # --- attributes ---------------------------------------------------- #
-    y = section(screen, "ATTRIBUTES", x, y, w, f)
-    aw = w // 6
-    for i, (k, name) in enumerate(_ATTRS):
-        val = getattr(u, name)
-        m = getattr(u, f"mod_{name}")
-        acx = x + i * aw + aw // 2
-        cell = pygame.Rect(x + i * aw + 1, y, aw - 2, 48)
-        pygame.draw.rect(screen, SURFACE_1, cell, border_radius=4)
-        text(screen, k, f.label, INK_FAINT, (acx, y + 5), center=True)
-        text(screen, f"{val}", f.num, INK, (acx, y + 20), center=True)
-        mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
-        text(screen, f"{m:+}", f.body_sm, mc, (acx, y + 38), center=True)
-        if mouse and cell.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
-            t, d = data.ATTRIBUTE_HELP[k]
-            tooltip = format_tooltip(t, d, f)
-    y += 48 + SP1
-    if u.hunger_level:
-        cap = ", max HP 1" if u.hunger_level >= 2 else ""
-        text(screen, f"hunger ({u.hunger_label}): {u.hunger_attribute_penalty} to every "
-             f"attribute{cap}", f.body_sm, DANGER, (x, y))
-        y += 14
-        
-    from .group import BASE_CAPACITY
-    cap = BASE_CAPACITY + u.mod_charisma + (u.racial_level // 2)
-    text(screen, f"leadership: can lead up to {cap} group members (3 + CHA + level/2)", f.body_sm, INFO, (x, y))
-    y += 14
-    
-    y += SP2
-
-    # --- weapon: to-hit + damage ------------------------------------- #
-    y = section(screen, "ATTACK WITH THE WEAPON IN HAND", x, y, w, f)
-    wname, dmg, reach = _weapon_lines(u)
-    bab, src = _to_hit(u)
-    text(screen, wname, f.body_bd, INK, (x, y))
-    y += 17
-    text(screen, f"to hit:  d20 {bab:+} ({src})   ·   crit 20, fumble 1",
-         f.mono_sm, INK_DIM, (x, y))
-    y += 15
-    text(screen, f"damage:  {dmg}   ·   {reach}", f.mono_sm, INK_DIM, (x, y))
-    y += 15
-    if u.has_tongue_weapon:
-        tn, tf = u.tongue_weapon["damage"]
-        tb = u.mod_strength + u.char.talent_bonus("melee_damage")
-        text(screen, f"tongue:  {u.tongue_weapon_name}  ·  {tn}d{tf}"
-             + (f" {tb:+} (STR)" if tb else "")
-             + f"   ·   melee, reach {u.tongue_reach}", f.mono_sm, INK_DIM, (x, y))
-        y += 15
-    if data.FIRST_AID_ITEM in u.inventory:
-        text(screen, f"first aid:  d20 {u.mod_wisdom:+} (WIS) vs 10   "
-             f"·   {u.first_aid_charges} charges", f.mono_sm, INFO, (x, y))
-        y += 15
-    y += SP2
-
-    # --- kit / carry ------------------------------------------------- #
-    y = section(screen, "GEAR", x, y, w, f)
-    held = " + ".join(p for p in ("weapon" if u.weapon_hand else "",
-                                  "torch" if u.torch_hand else "",
-                                  "lantern" if u.lantern_hand else "") if p) or "hands free"
-    text(screen, f"hands: {held}", f.body_sm, INK_DIM, (x, y))
-    y += 16
-    if u.has_tongue_weapon:
-        text(screen, f"tongue: {u.tongue_weapon_name}", f.body_sm, INK_DIM, (x, y))
-        y += 16
-    a = u.armor
-    if a:
-        arm = (f"{u.armor_name}  ·  +{a['ac']} AC"
-               + (f"  ·  max DES +{a['max_dex']}" if a["max_dex"] is not None else "")
-               + (f"  ·  -{a['speed']} speed" if a["speed"] else ""))
-    else:
-        arm = "(none)"
-    text(screen, f"armor: {arm}", f.body_sm, INK_DIM, (x, y))
-    y += 16
-    inv = ", ".join(u.inventory) if u.inventory else "(empty)"
-    for ln in wrap_lines([f"pack: {inv}"], f.body_sm, w):
-        text(screen, ln, f.body_sm, INK_DIM, (x, y))
-        y += 16
-    over_n = u.encumbered
-    over_m = u.load > u.carry_max
-    ccol = DANGER if over_m else WARN if over_n else OK
-    text(screen, f"load: {u.load:g} / normal {u.carry_normal:g} / high {u.carry_max:g}"
-         + (f" (carrier +{u.carry_relief:g})" if u.carry_relief else "")
-         + ("  OVERLOADED" if over_n and not over_m else
-            "  OVER HIGH LOAD" if over_m else ""),
-         f.mono_sm, ccol, (x, y))
-    y += 16
-    if u.encumbered:
-        text(screen, "overloaded: -2 FOR, -2 DES, -1 speed",
-             f.body_sm, WARN, (x, y))
-        y += 15
-    text(screen, f"copper: {u.gold}", f.mono_sm, ACCENT, (x, y))
-    y += SP3
-
-    # --- languages + ability --------------------------------------- #
-    y = section(screen, "LANGUAGES", x, y, w, f)
-    
-    # Add info hover
-    info_r = pygame.Rect(x + f.label.size("LANGUAGES")[0] + 6, y - 18, 16, 16)
-    pygame.draw.circle(screen, INK_FAINT, info_r.center, 7, 1)
-    text(screen, "?", f.label, INK_FAINT, info_r.center, center=True)
-    
-    text(screen, ", ".join(u.languages), f.body_sm, INK, (x, y))
-    
-    if mouse and info_r.collidepoint(mouse):
-        tooltip = "A shared language is required to Demoralize an enemy, and to Recruit new units."
-
-    y += 20
-
-    if getattr(u, 'recipes', None):
-        y = section(screen, "RECIPES", x, y, w, f)
-        text(screen, ", ".join(u.recipes), f.body_sm, INK, (x, y))
-        y += 20
-
-    y = section(screen, "RACIAL ABILITY", x, y, w, f)
-    text(screen, u.ability.name, f.body_bd, INFO, (x, y))
-    y += 17
-    for ln in wrap_lines([u.ability.effect], f.body_sm, w):
-        text(screen, ln, f.body_sm, INK_DIM, (x, y))
-        y += 15
-
-    text(screen, "click anywhere to close", f.body_sm, INK_FAINT,
-         (rect.centerx, rect.bottom - 18), center=True)
-
-    if tooltip and mouse:
-        draw_tooltip(screen, f.body_sm, tooltip, mouse)

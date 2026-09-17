@@ -90,6 +90,15 @@ def hline(surf, x1, x2, y, c=T.STEEL_LINE):
     pygame.draw.line(surf, c, (x1, y), (x2, y), 1)
 
 
+def ellipsize(s, font, max_px):
+    """`s` clipped with a trailing ellipsis so it renders within `max_px`."""
+    if max_px <= 0 or font.size(s)[0] <= max_px:
+        return s
+    while s and font.size(s + "…")[0] > max_px:
+        s = s[:-1]
+    return s + "…"
+
+
 def wrap(font, s, w):
     out, cur = [], ""
     for word in s.split():
@@ -137,6 +146,39 @@ def draw_button(surf, F, rect, label, sub=None, primary=False, danger=False,
         text(surf, F["body"], sub, (rect.centerx, rect.centery + 10),
              mix(fg, T.TABLE, .25) if primary else T.TX_FAINT, center=True)
     return rect.bottom + T.S
+
+
+def format_tooltip(title, description, F, max_px=260):
+    """A tooltip's content: an accent title line + wrapped muted body --
+    the shape `draw_tooltip` expects."""
+    lines = [(title, F["microb"], T.BRASS)]
+    for ln in wrap(F["body_sm"], description, max_px):
+        lines.append((ln, F["body_sm"], T.TX_MUTED))
+    return lines
+
+
+def draw_tooltip(surf, F, content, pos):
+    """Floating box near the mouse. `content` is a list of (text, font,
+    color) tuples (see `format_tooltip`), or a plain string wrapped to a
+    single muted style."""
+    if not content:
+        return
+    if isinstance(content, str):
+        content = [(ln, F["body_sm"], T.TX_MUTED) for ln in wrap(F["body_sm"], content, 260)]
+    if not content:
+        return
+    pad = T.S * 2
+    tw = max(fo.size(s)[0] for s, fo, _ in content) + 2 * pad
+    th = 2 * pad + sum(fo.get_height() + 2 for _, fo, _ in content)
+    W, H = surf.get_size()
+    bx = min(pos[0] + 16, W - tw - T.S)
+    by = min(pos[1] + 16, H - th - T.S)
+    rect = pygame.Rect(bx, by, tw, th)
+    panel(surf, rect)
+    y = rect.y + pad
+    for s, fo, c in content:
+        text(surf, fo, s, (rect.x + pad, y), c)
+        y += fo.get_height() + 2
 
 
 def scrollbar(surf, rect, scroll, max_scroll, content_h):

@@ -17,14 +17,18 @@ roll. `on_back` returns to the editor hub.
 
 import pygame
 
-from . import data, magic, npc_lib, persist, sheet, talents
+from . import data, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .screen import Screen
+from .ui.primitives import contained as ui_contained
+from .ui.sheet_card import draw_sheet as draw_sheet_card
+from .ui.sheet_card import unit_to_ch
+from .ui.tokens import fonts as ui_fonts
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4,
                     SP5, SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
                     draw_tooltip, ellipsize, format_tooltip, panel, section,
-                    set_pointer, text, token_badge, wrap_lines)
+                    set_pointer, text)
 from .unit import Unit
 
 _ATTR_ABBR = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
@@ -673,33 +677,21 @@ class CharEditorScreen(Screen):
         screen.set_clip(prev)
 
         # --- live sheet -------------------------------------------- #
+        # The read-only preview: same `gartok/ui` sheet component the sheet
+        # modal uses (density="full"), so this stops being a second, plain-
+        # text rendering of the same facts. The editable form stays its own
+        # bespoke left-column widgets -- only this preview panel changed.
         pr = pygame.Rect(rect.x, lib.bottom + SP3, rect.w,
                          rect.bottom - lib.bottom - SP3)
         panel(screen, pr, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        px = pr.x + SP3
-        pw = pr.w - 2 * SP3
-        py = pr.y + SP2
-        tok = (px + 12, py + 12)
-        token_badge(screen, tok, u, f, r=13)
-        text(screen, u.name, f.card_name, INK, (tok[0] + 24, py + 2))
-        py += 30
-        chips = ((f"HP {u.hp_max}", OK), (f"AC {u.ac}", INFO),
-                 (f"MD {u.mental_defense}", DANGER), (f"SPD {u.speed}", INFO))
-        cwc = (pw - 3 * SP1) // 4
-        for i, (s, c) in enumerate(chips):
-            cr = pygame.Rect(px + i * (cwc + SP1), py, cwc, 26)
-            panel(screen, cr, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
-            text(screen, s, f.mono_sm, c, cr.center, center=True)
-        py += 34
-        prev = screen.get_clip()
-        screen.set_clip(pr.inflate(-SP2, -SP2))
-        for ln in sheet.character_sheet(Combatant(u))[1:]:
-            for seg in wrap_lines([ln], f.body_sm, pw):
-                if py > pr.bottom - 14:
-                    break
-                text(screen, seg, f.body_sm, INK_DIM, (px, py))
-                py += 15
-        screen.set_clip(prev)
+        F = ui_fonts()
+        ch = unit_to_ch(Combatant(u))
+        inner = pygame.Rect(pr.x + SP3, pr.y + SP2, pr.w - 2 * SP3, 0)
+        with ui_contained(screen, pr.inflate(-SP1, -SP1)):
+            _, tooltip = draw_sheet_card(screen, F, inner, ch, density="full",
+                                         mouse=self.mouse)
+        if tooltip:
+            self.tooltip = tooltip
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen):
