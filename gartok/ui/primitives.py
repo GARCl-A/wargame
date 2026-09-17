@@ -6,7 +6,10 @@ helpers, the one button style the whole screen uses, the `panel`/`modal_card`/
 import contextlib
 
 import pygame
+from pygame import gfxdraw
 
+from .. import artwork
+from .. import theme as _theme
 from .tokens import T, mix
 
 
@@ -165,6 +168,112 @@ def tabs(surf, F, pos, items, active, mpos=(-1, -1), right=False):
             pygame.draw.line(surf, T.BRASS, (r.x, r.bottom - 2), (r.right, r.bottom - 2), 2)
         x += w
     return rects
+
+
+def smooth_circle(surf, color, center, radius, width=0):
+    """Anti-aliased circle -- replaces `pygame.draw.circle` where edges matter
+    (the unit token disc, mainly)."""
+    x, y = int(center[0]), int(center[1])
+    r = int(radius)
+    if width == 0:
+        gfxdraw.filled_circle(surf, x, y, r, color)
+        gfxdraw.aacircle(surf, x, y, r, color)
+    else:
+        pygame.draw.circle(surf, color, center, radius, width)
+        gfxdraw.aacircle(surf, x, y, r, color)
+        if width > 1:
+            gfxdraw.aacircle(surf, x, y, r - width + 1, color)
+
+
+TOKEN_INK = (15, 15, 20)               # ink for the race glyph / letter on a unit token
+
+
+def token_badge(surf, F, center, unit, *, color=None, r=14):
+    """The round unit token: a coloured disc carrying the unit's race
+    silhouette (`artwork.race_icon`), falling back to its board letter when
+    the race has no glyph. `unit` may also be a bare letter string.
+
+    `color` defaults to the guild's live banner colour (`theme.PLAYER_C`,
+    read off the module each call, not captured, so a colour picked after
+    this screen loads still applies) -- the one piece of theme.py state this
+    component still shares with the legacy screens instead of owning a
+    second copy of it."""
+    smooth_circle(surf, color or _theme.PLAYER_C, center, r)
+    race = getattr(unit, "race", None)
+    sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
+    if sil is not None:
+        surf.blit(sil, sil.get_rect(center=center))
+    else:
+        text(surf, F["bodyb"], str(getattr(unit, "token", unit)), center, TOKEN_INK, center=True)
+
+
+def tracked(surf, font, s, pos, color, spacing=1):
+    """`s` rendered with extra letter-spacing, for small caps labels."""
+    x, y = pos
+    for ch in s:
+        img = font.render(ch, True, color)
+        surf.blit(img, (x, y))
+        x += img.get_width() + spacing
+    return x
+
+
+def section(surf, F, label, x, y, w, *, color=None):
+    """A small tracked keyword with an underline; returns the y below it."""
+    tracked(surf, F["micro"], label.upper(), (x, y), color or T.BRASS)
+    ry = y + 14
+    hline(surf, x, x + w, ry)
+    return ry + T.S
+
+
+FOOTER_H = 52
+FOOTER_NOTICE_DY = 22          # a notice line sits this far above the row
+FOOTER_HINT = "Esc for the pause menu"
+LEFT_W, PRIMARY_W, SECONDARY_W = 140, 220, 180
+
+
+def _padded(item):
+    """`(key, label)` or `(key, label, enabled)` -> always the 3-tuple."""
+    return item if len(item) == 3 else (*item, True)
+
+
+def footer_bar(screen_obj, surf, F, *, back=None, secondary=None, primary=None,
+               notice=None, notice_color=None, hint=FOOTER_HINT, margin=None):
+    """The bottom action row most activity screens share: an optional back
+    button bottom-left, up to two confirm buttons stacked right-to-left
+    (`primary` rightmost and filled, `secondary` beside it), an optional
+    notice line above the row, and the pause hint. Each slot is `(key,
+    label)` or `(key, label, enabled)`; pass `hint=None` to a screen that
+    already draws its own. Draws via `screen_obj.add_button` -- the screen
+    owns how that lands on the surface (its own `ButtonsMixin` override,
+    drawing through this module's `draw_button`)."""
+    W, H = surf.get_size()
+    m = margin if margin is not None else T.S * 3
+    y = H - FOOTER_H
+
+    if notice:
+        text(surf, F["body_sm"], notice, (m, y - FOOTER_NOTICE_DY), notice_color or T.TX_MUTED)
+
+    hx = m
+    if back is not None:
+        key, label, enabled = _padded(back)
+        screen_obj.add_button(surf, pygame.Rect(m, y, LEFT_W, 36), key, label, enabled=enabled)
+        hx = m + LEFT_W + T.S * 3
+
+    rx = W - m
+    if primary is not None:
+        key, label, enabled = _padded(primary)
+        rect = pygame.Rect(rx - PRIMARY_W, y, PRIMARY_W, 36)
+        screen_obj.add_button(surf, rect, key, label, enabled=enabled, primary=True)
+        rx = rect.x - T.S * 3
+
+    if secondary is not None:
+        key, label, enabled = _padded(secondary)
+        rect = pygame.Rect(rx - SECONDARY_W, y, SECONDARY_W, 36)
+        screen_obj.add_button(surf, rect, key, label, enabled=enabled)
+        rx = rect.x - T.S * 3
+
+    if hint:
+        text(surf, F["micro"], hint, (hx, y + 12), T.TX_FAINT)
 
 
 def header(surf, F, rect, title, sub, tabitems, active, mpos=(-1, -1)):

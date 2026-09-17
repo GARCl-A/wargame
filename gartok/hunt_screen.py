@@ -16,11 +16,11 @@ import pygame
 
 from . import hunt
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, panel, section, text,
-                    token_badge, wrap_lines)
-from .widgets import ButtonsMixin, footer_bar
+from .ui.primitives import (draw_button, footer_bar, panel, section, text,
+                            token_badge, wrap)
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
+from .widgets import ButtonsMixin
 
 
 class HuntScreen(ButtonsMixin, Screen):
@@ -29,6 +29,7 @@ class HuntScreen(ButtonsMixin, Screen):
     def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None):
         super().__init__()
         self.fonts = fonts
+        self._F = ui_fonts()
         self.guild = guild
         self.state = state
         self.phase = phase                # "setup" | "interlude" | "done"
@@ -44,6 +45,19 @@ class HuntScreen(ButtonsMixin, Screen):
         self.buttons = []                 # [(key, rect)]
         if self.phase == "done":
             self._wrap_up()
+
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
+                   danger=False, font=None, sub=None):
+        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
+        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
+        `map_screen.MapScreen.add_button` for the precedent."""
+        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
+                   enabled=enabled, mpos=self.mouse, fnt=font)
+        hov = enabled and rect.collidepoint(self.mouse)
+        if enabled:
+            self.buttons.append((key, rect))
+            self._hot = self._hot or hov
+        return hov
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py) -- one card for all three phases; the risk
@@ -95,18 +109,19 @@ class HuntScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((17, 21, 18))
+        F = self._F
+        m = T.S * 3
+        screen.fill(T.TABLE)
         self.chips = []
         self._reset_buttons()
 
-        text(screen, "THE WILDS", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, F["titleb"], "THE WILDS", (m, m - 2), T.TX)
         clock = self.guild.clock
-        text(screen, f"{clock.label}   ·   {len(self.state.party)} in the party   ·   "
-             f"meat: 1 kg per {hunt.HUNT_MEAT_HOURS} h hunted", f.body, INK_DIM,
-             (MARGIN, MARGIN + 30))
+        text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   "
+             f"meat: 1 kg per {hunt.HUNT_MEAT_HOURS} h hunted",
+             (m, m + 30), T.TX_MUTED)
 
-        self._draw_party(screen, MARGIN + 72)
+        self._draw_party(screen, m + 72)
 
         body_top = screen.get_height() - 264
         if self.phase == "setup":
@@ -119,85 +134,87 @@ class HuntScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_party(self, screen, top):
-        f = self.fonts
+        F = self._F
+        m = T.S * 3
         party = self.state.party
         n = max(1, len(party))
-        gap = SP3
-        card_w = min(240, (screen.get_width() - 2 * MARGIN - (n - 1) * gap) // n)
+        gap = 12
+        card_w = min(240, (screen.get_width() - 2 * m - (n - 1) * gap) // n)
         card_h = 96
         for i, u in enumerate(party):
-            rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
-            panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-            pad = SP3
+            rect = pygame.Rect(m + i * (card_w + gap), top, card_w, card_h)
+            panel(screen, rect)
+            pad = 12
             tok = (rect.x + pad + 12, rect.y + pad + 12)
-            token_badge(screen, tok, u, f)
-            text(screen, u.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
-            text(screen, f"{u.race['name']}  ·  {u.occupation['name']}", f.body_sm,
-                 INK_DIM, (tok[0] + 24, rect.y + pad + 20))
+            token_badge(screen, F, tok, u)
+            text(screen, F["head"], u.name, (tok[0] + 24, rect.y + pad), T.TX)
+            text(screen, F["body_sm"], f"{u.race['name']}  ·  {u.occupation['name']}",
+                 (tok[0] + 24, rect.y + pad + 20), T.TX_MUTED)
             y = rect.y + pad + 46
-            text(screen, f"{u.rations} rations", f.mono_sm, OK, (rect.x + pad, y))
-            text(screen, f"{u.work_xp} work XP", f.mono_sm, INFO,
-                 (rect.right - pad, y), right=True)
+            text(screen, F["body_sm"], f"{u.rations} rations", (rect.x + pad, y), T.GREEN)
+            text(screen, F["body_sm"], f"{u.work_xp} work XP",
+                 (rect.right - pad, y), T.BRASS, right=True)
 
     def _draw_setup(self, screen, top):
-        f = self.fonts
-        w = screen.get_width() - 2 * MARGIN
-        top = section(screen, "HOW LONG", MARGIN, top, w, f)
-        gap = SP2
+        F = self._F
+        m = T.S * 3
+        w = screen.get_width() - 2 * m
+        top = section(screen, F, "HOW LONG", m, top, w)
+        gap = T.S
         opts = hunt.HUNT_SHIFT_HOURS
         cw = (w - (len(opts) - 1) * gap) // len(opts)
         for i, h in enumerate(opts):
-            r = pygame.Rect(MARGIN + i * (cw + gap), top, cw, 56)
+            r = pygame.Rect(m + i * (cw + gap), top, cw, 56)
             sel = h == self.hours
             hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=2 if sel else 1,
-                  radius=RADIUS)
-            text(screen, f"{h} h", f.body_bd, ACCENT if sel else INK,
-                 (r.x + SP2, r.y + 8))
-            text(screen, f"~{h // hunt.HUNT_MEAT_HOURS} kg meat", f.body_sm, INK_DIM,
-                 (r.x + SP2, r.y + 30))
+            panel(screen, r, hover=sel or hov, width=2 if sel else 1)
+            text(screen, F["bodyb"], f"{h} h", (r.x + T.S, r.y + 8), T.BRASS if sel else T.TX)
+            text(screen, F["body_sm"], f"~{h // hunt.HUNT_MEAT_HOURS} kg meat",
+                 (r.x + T.S, r.y + 30), T.TX_MUTED)
             self.chips.append((r, h))
         top += 66
         odds = round(hunt.AMBUSH_CHANCE_PER_HOUR * 100)
-        text(screen, f"{odds}% chance each hour that a pack finds you first -- "
+        text(screen, F["body_sm"], f"{odds}% chance each hour that a pack finds you first -- "
              f"a scaled fight, lethal, but the bodies are worth looting.",
-             f.body_sm, INK_FAINT, (MARGIN, top))
+             (m, top), T.TX_FAINT)
 
     def _draw_interlude(self, screen, top):
-        f = self.fonts
-        w = screen.get_width() - 2 * MARGIN
-        top = section(screen, "THE HUNT GOES ON", MARGIN, top, w, f)
-        text(screen, f"Pack driven off. {self.state.hours_left} h of daylight left, "
-             f"{self.state.meat} kg of meat so far.", f.body, INK_DIM, (MARGIN, top))
+        F = self._F
+        m = T.S * 3
+        w = screen.get_width() - 2 * m
+        top = section(screen, F, "THE HUNT GOES ON", m, top, w)
+        text(screen, F["body"], f"Pack driven off. {self.state.hours_left} h of daylight left, "
+             f"{self.state.meat} kg of meat so far.", (m, top), T.TX_MUTED)
         top += 24
         self._draw_events(screen, top)
 
     def _draw_done(self, screen, top):
-        f = self.fonts
-        w = screen.get_width() - 2 * MARGIN
-        top = section(screen, "BACK FROM THE WILDS", MARGIN, top, w, f)
+        F = self._F
+        m = T.S * 3
+        w = screen.get_width() - 2 * m
+        top = section(screen, F, "BACK FROM THE WILDS", m, top, w)
         for ln in self.result or []:
-            text(screen, ln, f.body_sm, OK if "meat" in ln else INFO, (MARGIN, top))
+            text(screen, F["body_sm"], ln, (m, top), T.GREEN if "meat" in ln else T.BRASS)
             top += 16
         top += 8
         self._draw_events(screen, top)
 
     def _draw_events(self, screen, top):
-        f = self.fonts
-        w = screen.get_width() - 2 * MARGIN
+        F = self._F
+        m = T.S * 3
+        w = screen.get_width() - 2 * m
         for ln in self.stretch_events:
-            for wln in wrap_lines([ln], f.body_sm, w):
-                col = DANGER if "starved" in ln or "did not eat" in ln else INK_FAINT
-                text(screen, wln, f.body_sm, col, (MARGIN, top))
+            for wln in wrap(F["body_sm"], ln, w):
+                col = T.BLOOD if "starved" in ln or "did not eat" in ln else T.TX_FAINT
+                text(screen, F["body_sm"], wln, (m, top), col)
                 top += 16
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
         if self.phase == "setup":
-            footer_bar(self, screen, primary=("confirm", "INTO THE WILDS"))
+            footer_bar(self, screen, self._F, primary=("confirm", "INTO THE WILDS"))
         elif self.phase == "interlude":
-            footer_bar(self, screen, back=("head_back", "HEAD BACK"),
+            footer_bar(self, screen, self._F, back=("head_back", "HEAD BACK"),
                       primary=("hunt_on", "KEEP HUNTING"))
         else:
-            footer_bar(self, screen, primary=("done", "CONTINUE"))
+            footer_bar(self, screen, self._F, primary=("done", "CONTINUE"))

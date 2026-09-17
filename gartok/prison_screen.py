@@ -13,11 +13,11 @@ import pygame
 from . import economy, recruit
 from .data import alignment_distance
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, panel, section,
-                    token_badge, text, tracked, wrap_lines)
-from .widgets import ButtonsMixin, footer_bar
+from .ui.primitives import (draw_button, footer_bar, panel, section, text,
+                            token_badge, tracked, wrap)
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
+from .widgets import ButtonsMixin
 
 CANDIDATES = 3
 
@@ -36,6 +36,7 @@ class PrisonScreen(ButtonsMixin, Screen):
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
         super().__init__()
         self.fonts = fonts
+        self._F = ui_fonts()
         self.guild = guild
         self.party = party
         self.node = node
@@ -52,6 +53,19 @@ class PrisonScreen(ButtonsMixin, Screen):
 
     def tutorial_key(self):
         return None
+
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
+                   danger=False, font=None, sub=None):
+        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
+        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
+        `map_screen.MapScreen.add_button` for the precedent."""
+        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
+                   enabled=enabled, mpos=self.mouse, fnt=font)
+        hov = enabled and rect.collidepoint(self.mouse)
+        if enabled:
+            self.buttons.append((key, rect))
+            self._hot = self._hot or hov
+        return hov
 
     def _eligible(self, cand):
         return [m for m in self.party
@@ -129,170 +143,175 @@ class PrisonScreen(ButtonsMixin, Screen):
         self.sel = None
 
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((20, 20, 22))
+        F = self._F
+        m = T.S * 3
+        screen.fill(T.TABLE)
         self.cand_cards = []
         self.party_cards = []
         self._reset_buttons()
 
-        text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
-        
-        top = MARGIN + 45
+        text(screen, F["titleb"], self.title, (m, m - 2), T.TX)
+
+        top = m + 45
         self._draw_recruits(screen, top)
         self._draw_footer(screen)
 
     def _draw_recruits(self, screen, top):
-        f = self.fonts
+        F = self._F
+        m = T.S * 3
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         if self.sel is not None:
             cand = self.candidates[self.sel]
             cost = recruit.bail_cost(cand)
-            sub, col = (f"paying {cost} cp bail for {cand.name}  ·  click who from the party speaks  ·  click outside to cancel", ACCENT)
+            sub, col = (f"paying {cost} cp bail for {cand.name}  ·  click who from the party speaks  ·  click outside to cancel", T.BRASS)
         else:
             wealth = _party_wealth(self.party)
-            sub, col = (f"party wealth: {wealth} cp  ·  size penalty -{recruit.size_penalty(len(self.guild.roster))}  ·  new faces in {days_left} day(s)", INK_DIM)
-        text(screen, sub, f.body, col, (MARGIN, top - 25))
+            sub, col = (f"party wealth: {wealth} cp  ·  size penalty -{recruit.size_penalty(len(self.guild.roster))}  ·  new faces in {days_left} day(s)", T.TX_MUTED)
+        text(screen, F["body"], sub, (m, top - 25), col)
 
         party_h = 120
-        gap = SP3
+        gap = 12
         cand_h = screen.get_height() - top - party_h - gap - 80
-        cw = (screen.get_width() - 2 * MARGIN - (CANDIDATES - 1) * gap) // CANDIDATES
+        cw = (screen.get_width() - 2 * m - (CANDIDATES - 1) * gap) // CANDIDATES
 
         if not self.candidates:
-            text(screen, "The cells are empty right now. Come back when the crowd changes.",
-                 f.body, INK_DIM, (MARGIN, top + 20))
+            text(screen, F["body"], "The cells are empty right now. Come back when the crowd changes.",
+                 (m, top + 20), T.TX_MUTED)
         for i, cand in enumerate(self.candidates):
-            rect = pygame.Rect(MARGIN + i * (cw + gap), top, cw, cand_h)
+            rect = pygame.Rect(m + i * (cw + gap), top, cw, cand_h)
             self._draw_candidate(screen, rect, i, cand)
             self.cand_cards.append((rect, i))
 
         py = top + cand_h + gap
-        self._draw_party(screen, pygame.Rect(MARGIN, py, screen.get_width() - 2 * MARGIN, party_h))
+        self._draw_party(screen, pygame.Rect(m, py, screen.get_width() - 2 * m, party_h))
 
     def _draw_candidate(self, screen, rect, i, cand):
-        f = self.fonts
-        pad = SP3
+        F = self._F
+        pad = 12
         last = self.last.get(cand.uid)
         picking = self.sel == i
         cost = recruit.bail_cost(cand)
 
         hovering = rect.collidepoint(self.mouse) and self.sel is None
-        border = ACCENT if (picking or hovering) else LINE_SOFT
-        panel(screen, rect, fill=SURFACE_2, border=border,
-              width=2 if border != LINE_SOFT else 1, radius=RADIUS)
+        active = picking or hovering
+        panel(screen, rect, hover=active, width=2 if active else 1)
 
         tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, cand, f)
-        for j, ln in enumerate(wrap_lines([cand.name], f.card_name, rect.w - 74)[:2]):
-            text(screen, ln, f.card_name, INK, (tok[0] + 24, rect.y + pad + j * 16))
+        token_badge(screen, F, tok, cand)
+        for j, ln in enumerate(wrap(F["head"], cand.name, rect.w - 74)[:2]):
+            text(screen, F["head"], ln, (tok[0] + 24, rect.y + pad + j * 16), T.TX)
 
         y = rect.y + pad + 44
-        text(screen, f"{cand.race['name']}  ·  {cand.occupation['name']}", f.body_sm, INK_DIM, (rect.x + pad, y))
+        text(screen, F["body_sm"], f"{cand.race['name']}  ·  {cand.occupation['name']}",
+             (rect.x + pad, y), T.TX_MUTED)
         y += 15
-        text(screen, f"BAIL: {cost} cp", f.body_bd, WARN, (rect.x + pad, y))
+        text(screen, F["bodyb"], f"BAIL: {cost} cp", (rect.x + pad, y), T.BRASS)
         y += 18
 
-        text(screen, f"HP {cand.hp_max}   AC {cand.ac}   Speed {cand.speed}   {cand.weapon_name or 'unarmed'}", f.mono_sm, INK_DIM, (rect.x + pad, y))
+        text(screen, F["body_sm"],
+             f"HP {cand.hp_max}   AC {cand.ac}   Speed {cand.speed}   {cand.weapon_name or 'unarmed'}",
+             (rect.x + pad, y), T.TX_MUTED)
         y += 18
-        text(screen, f"resistance: CHA {cand.mod_charisma:+}", f.body_sm, WARN, (rect.x + pad, y))
+        text(screen, F["body_sm"], f"resistance: CHA {cand.mod_charisma:+}", (rect.x + pad, y), T.BRASS)
         y += 15
-        text(screen, "speaks " + ", ".join(cand.languages), f.body_sm, INK_DIM, (rect.x + pad, y))
+        text(screen, F["body_sm"], "speaks " + ", ".join(cand.languages), (rect.x + pad, y), T.TX_MUTED)
         y += 18
 
-        y = section(screen, "ABILITY", rect.x + pad, y, rect.w - 2 * pad, f)
-        text(screen, cand.ability.name, f.body_bd, INFO, (rect.x + pad, y)); y += 15
-        for ln in wrap_lines([cand.ability.effect], f.body_sm, rect.w - 2 * pad)[:3]:
-            text(screen, ln, f.body_sm, INK_FAINT, (rect.x + pad, y)); y += 13
-        y += SP2
+        y = section(screen, F, "ABILITY", rect.x + pad, y, rect.w - 2 * pad)
+        text(screen, F["bodyb"], cand.ability.name, (rect.x + pad, y), T.BRASS); y += 15
+        for ln in wrap(F["body_sm"], cand.ability.effect, rect.w - 2 * pad)[:3]:
+            text(screen, F["body_sm"], ln, (rect.x + pad, y), T.TX_FAINT); y += 13
+        y += T.S
 
         if last is not None:
             y = self._draw_last(screen, rect, y, last)
 
         best = self._best(cand)
-        y = section(screen, "PITCH", rect.x + pad, y, rect.w - 2 * pad, f)
+        y = section(screen, F, "PITCH", rect.x + pad, y, rect.w - 2 * pad)
         if best is not None:
-            m, net = best
-            text(screen, f"{m.name}  ·  CHA check {net:+}", f.body_sm, OK, (rect.x + pad, y))
+            m2, net = best
+            text(screen, F["body_sm"], f"{m2.name}  ·  CHA check {net:+}", (rect.x + pad, y), T.GREEN)
             y += 15
-            text(screen, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})", f.body_sm, INK_FAINT, (rect.x + pad, y))
+            text(screen, F["body_sm"], f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})",
+                 (rect.x + pad, y), T.TX_FAINT)
         else:
             reason = recruit.pitch_block_reason(self.guild, self.party, cand, is_prison=True)
-            text(screen, reason or "cannot recruit", f.body_sm, DANGER, (rect.x + pad, y))
+            text(screen, F["body_sm"], reason or "cannot recruit", (rect.x + pad, y), T.BLOOD)
 
         mark = ("click to pay bail" if best is not None else "click to inspect") if self.sel is None else "click a party member"
-        text(screen, mark, f.label, INK_FAINT, (rect.x + pad, rect.bottom - 20))
+        text(screen, F["micro"], mark, (rect.x + pad, rect.bottom - 20), T.TX_FAINT)
 
     def _draw_last(self, screen, rect, y, last):
-        f = self.fonts
-        pad = SP3
+        F = self._F
+        pad = 12
         pitch, who = last
-        y = section(screen, "LAST ATTEMPT", rect.x + pad, y, rect.w - 2 * pad, f,
-                    color=OK if pitch.ok else DANGER)
-        text(screen, f"{who.name}: {pitch.recruiter_roll} + mods = {pitch.recruiter_total}",
-             f.mono_sm, INK_DIM, (rect.x + pad, y)); y += 13
-        text(screen, f"vs resistance {pitch.candidate_total} "
-             f"({pitch.candidate_roll} + CHA)", f.mono_sm, INK_DIM, (rect.x + pad, y))
+        y = section(screen, F, "LAST ATTEMPT", rect.x + pad, y, rect.w - 2 * pad,
+                    color=T.GREEN if pitch.ok else T.BLOOD)
+        text(screen, F["body_sm"], f"{who.name}: {pitch.recruiter_roll} + mods = {pitch.recruiter_total}",
+             (rect.x + pad, y), T.TX_MUTED); y += 13
+        text(screen, F["body_sm"], f"vs resistance {pitch.candidate_total} "
+             f"({pitch.candidate_roll} + CHA)", (rect.x + pad, y), T.TX_MUTED)
         y += 13
         for val, label in pitch.modifiers:
-            text(screen, f"{val:+}  {label}", f.body_sm, DANGER, (rect.x + pad, y))
+            text(screen, F["body_sm"], f"{val:+}  {label}", (rect.x + pad, y), T.BLOOD)
             y += 13
-        return y + SP1
+        return y + T.S // 2
 
     def _draw_party(self, screen, area):
-        f = self.fonts
-        tracked(screen, "YOUR PARTY", f.label, INFO, (area.x, area.y - 16))
-        panel(screen, area, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
+        F = self._F
+        tracked(screen, F["micro"], "YOUR PARTY", (area.x, area.y - 16), T.BRASS)
+        panel(screen, area)
         n = max(1, len(self.party))
-        gap = SP2
-        cw = (area.w - 2 * SP3 - (n - 1) * gap) // n
+        gap = T.S
+        cw = (area.w - 24 - (n - 1) * gap) // n
         for i, m in enumerate(self.party):
-            r = pygame.Rect(area.x + SP3 + i * (cw + gap), area.y + SP2, cw, area.h - 2 * SP2)
+            r = pygame.Rect(area.x + 12 + i * (cw + gap), area.y + T.S, cw, area.h - 2 * T.S)
             self._draw_party_card(screen, r, m)
             self.party_cards.append((r, m))
 
     def _draw_party_card(self, screen, r, m):
-        f = self.fonts
-        pad = SP2
+        F = self._F
+        pad = T.S
         cand = self.candidates[self.sel] if self.sel is not None else None
         free = recruit.slots_free(self.guild, m)
         state = None
         can = False
-        
+
         if cand is not None:
             cost = recruit.bail_cost(cand)
             if recruit.prison_barred(self.guild, cand, m):
-                state = ("TRIED", DANGER)
+                state = ("TRIED", T.BLOOD)
             elif not recruit.can_pitch(m, cand):
-                state = ("no language", DANGER)
+                state = ("no language", T.BLOOD)
             elif free <= 0:
-                state = ("FULL", DANGER)
+                state = ("FULL", T.BLOOD)
             elif _party_wealth(self.party) < cost:
-                state = ("CANT AFFORD", DANGER)
+                state = ("CANT AFFORD", T.BLOOD)
             else:
-                state = ("CAN SPEAK", OK)
+                state = ("CAN SPEAK", T.GREEN)
                 can = True
-                
+
         hov = r.collidepoint(self.mouse) and self.sel is not None
-        border = OK if (can and hov) else DANGER if (state and not can and hov) else LINE_SOFT
-        panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1, border=border,
-              width=2 if border != LINE_SOFT else 1, radius=4)
+        fill = T.STEEL_HI if hov else T.STEEL
+        border = T.GREEN if (can and hov) else T.BLOOD if (state and not can and hov) else T.STEEL_LINE
+        pygame.draw.rect(screen, fill, r)
+        pygame.draw.rect(screen, border, r, 2 if border != T.STEEL_LINE else 1)
 
         tok = (r.x + pad + 11, r.y + pad + 11)
-        token_badge(screen, tok, m, f, r=12)
-        text(screen, m.name, f.body_bd, INK, (tok[0] + 22, r.y + pad))
-        text(screen, f"CAR {m.mod_charisma:+}", f.mono_sm, WARN, (tok[0] + 22, r.y + pad + 16))
-        text(screen, ", ".join(m.languages), f.body_sm, INK_FAINT,
-             (r.x + pad, r.y + pad + 34))
-        
-        slots_col = DANGER if free <= 0 else INK_FAINT
+        token_badge(screen, F, tok, m, r=12)
+        text(screen, F["bodyb"], m.name, (tok[0] + 22, r.y + pad), T.TX)
+        text(screen, F["body_sm"], f"CAR {m.mod_charisma:+}", (tok[0] + 22, r.y + pad + 16), T.BRASS)
+        text(screen, F["body_sm"], ", ".join(m.languages), (r.x + pad, r.y + pad + 34), T.TX_FAINT)
+
+        slots_col = T.BLOOD if free <= 0 else T.TX_FAINT
         slots_text = f"{max(0, free)} slot(s) free"
-        slots_w = f.body_sm.size(slots_text)[0]
+        slots_w = F["body_sm"].size(slots_text)[0]
         slots_rect = pygame.Rect(r.x + pad, r.y + pad + 48, max(slots_w, 80), 16)
-        text(screen, slots_text, f.body_sm, slots_col, (slots_rect.x, slots_rect.y))
-        
+        text(screen, F["body_sm"], slots_text, (slots_rect.x, slots_rect.y), slots_col)
+
         if state is not None:
-            text(screen, state[0], f.label, state[1], (r.x + pad, r.bottom - 16))
-            
+            text(screen, F["micro"], state[0], (r.x + pad, r.bottom - 16), state[1])
+
         if slots_rect.collidepoint(self.mouse):
             cap = recruit.capacity(self.guild, m)
             used = recruit.slots_used(self.guild, m)
@@ -300,16 +319,16 @@ class PrisonScreen(ButtonsMixin, Screen):
             if m.mod_charisma != 0: calc_str += f" {m.mod_charisma:+} (CHA)"
             if m is self.guild.leader: calc_str += f" + {m.racial_level} (ldr)"
             calc_str += f" = {cap}  |  Used: {used}"
-            tw, th = f.body_sm.size(calc_str)
+            tw, th = F["body_sm"].size(calc_str)
             tt_rect = pygame.Rect(self.mouse[0] + 12, self.mouse[1] + 12, tw + 16, th + 8)
-            panel(screen, tt_rect, fill=SURFACE_1, border=LINE_SOFT, radius=2)
-            text(screen, calc_str, f.body_sm, INK, (tt_rect.x + 8, tt_rect.y + 4))
+            panel(screen, tt_rect)
+            text(screen, F["body_sm"], calc_str, (tt_rect.x + 8, tt_rect.y + 4), T.TX)
 
     def _draw_footer(self, screen):
-        col = INFO
+        col = T.BRASS
         if self.notice:
-            col = OK if ("signs" in self.notice or "Bail paid!" in self.notice) else INFO
+            col = T.GREEN if ("signs" in self.notice or "Bail paid!" in self.notice) else T.BRASS
             if "lost" in self.notice or "Not enough" in self.notice:
-                col = DANGER
-        footer_bar(self, screen, primary=("done", "LEAVE THE PRISON"),
+                col = T.BLOOD
+        footer_bar(self, screen, self._F, primary=("done", "LEAVE THE PRISON"),
                   notice=self.notice, notice_color=col)

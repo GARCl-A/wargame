@@ -9,9 +9,10 @@ import pygame
 
 from . import data
 from .screen import Screen
-from .theme import (INK, INK_DIM, INK_FAINT, LINE_SOFT, MARGIN, RADIUS, SP3,
-                    SURFACE_2, panel, text)
-from .widgets import ButtonsMixin, footer_bar
+from .ui.primitives import draw_button, footer_bar, panel, text
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
+from .widgets import ButtonsMixin
 
 CARD_W = 560
 
@@ -22,11 +23,25 @@ class LedgerScreen(ButtonsMixin, Screen):
     def __init__(self, fonts, guild, group, on_done):
         super().__init__()
         self.fonts = fonts
+        self._F = ui_fonts()
         self.guild = guild
         self.group = group
         self.on_done = on_done
         self.notice = None
         self.buttons = []              # [(key, rect)]
+
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
+                   danger=False, font=None, sub=None):
+        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
+        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
+        `map_screen.MapScreen.add_button` for the precedent."""
+        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
+                   enabled=enabled, mpos=self.mouse, fnt=font)
+        hov = enabled and rect.collidepoint(self.mouse)
+        if enabled:
+            self.buttons.append((key, rect))
+            self._hot = self._hot or hov
+        return hov
 
     def _carrier(self):
         return next((u for u in self.group.members
@@ -50,29 +65,30 @@ class LedgerScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((18, 19, 24))
+        F = self._F
+        m = T.S * 3
+        screen.fill(T.TABLE)
         self._reset_buttons()
 
-        text(screen, "LEDGER HOLD", f.title, INK, (MARGIN, MARGIN - 2))
-        text(screen, "\"State your business.\"", f.body, INK_DIM, (MARGIN, MARGIN + 30))
+        text(screen, F["titleb"], "LEDGER HOLD", (m, m - 2), T.TX)
+        text(screen, F["body"], "\"State your business.\"", (m, m + 30), T.TX_MUTED)
 
-        card = pygame.Rect(MARGIN, MARGIN + 70,
-                           min(CARD_W, screen.get_width() - 2 * MARGIN), 110)
-        panel(screen, card, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-        x, y, w = card.x + SP3, card.y + SP3, card.w - 2 * SP3
+        card = pygame.Rect(m, m + 70, min(CARD_W, screen.get_width() - 2 * m), 110)
+        panel(screen, card)
+        pad = 12
+        x, y, w = card.x + pad, card.y + pad, card.w - 2 * pad
         carrier = self._carrier()
 
         if carrier is not None:
-            text(screen, f"{carrier.name} carries the Bankers' sealed chest.",
-                 f.body_sm, INK_DIM, (x, y))
+            text(screen, F["body_sm"], f"{carrier.name} carries the Bankers' sealed chest.",
+                 (x, y), T.TX_MUTED)
             y += 30
             r = pygame.Rect(x, y, w, 36)
             self.add_button(screen, r, "exchange", "HAND OVER THE CHEST", primary=True)
         else:
-            text(screen, "Nothing to hand over here.", f.body_sm, INK_FAINT, (x, y))
+            text(screen, F["body_sm"], "Nothing to hand over here.", (x, y), T.TX_FAINT)
 
         self._draw_footer(screen)
 
     def _draw_footer(self, screen):
-        footer_bar(self, screen, primary=("done", "LEAVE LEDGER HOLD"), notice=self.notice)
+        footer_bar(self, screen, self._F, primary=("done", "LEAVE LEDGER HOLD"), notice=self.notice)
