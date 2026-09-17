@@ -644,6 +644,15 @@ class MapScreen(ButtonsMixin, Screen):
         F = self._F
         self._reset_buttons()
 
+        if self.selected not in self.guild.groups:
+            # Same repair `_confirm_merge` already does for the group it folds
+            # away -- a casualty elsewhere in the same tick (`Guild.remove_members`
+            # pruning a different group that just emptied out) can leave
+            # `selected` stale too, and draw_map has no fallback for a key
+            # that matches no group.
+            self.selected = next((g for g in self.guild.groups if not g.busy and not g.empty),
+                                 self.guild.groups[0])
+
         roster_w = max(ROSTER_MIN, min(ROSTER_MAX, round(W * ROSTER_FRAC)))
         inspector_w = max(INSPECTOR_MIN, min(INSPECTOR_MAX, round(W * INSPECTOR_FRAC)))
         cmd = pygame.Rect(0, 0, W, T.S * 9)

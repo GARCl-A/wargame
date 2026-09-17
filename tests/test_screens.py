@@ -379,6 +379,46 @@ def test_every_screen_draws_native_at_any_window_size():
             scene.draw(surf)
 
 
+def test_map_screen_heals_a_selected_group_pruned_mid_tick():
+    """`Guild.remove_members` (permadeath/starvation) can prune whichever
+    group it empties out -- not necessarily the one the map screen has
+    `selected` -- while that same `MapScreen` instance stays on screen across
+    frames (e.g. an ambush CTA pending on a *different* group). Draw used to
+    hand `selected.gid` straight to `draw_map`, which does a bare
+    `next(g for g in groups if g["key"] == selected)` with no fallback, so a
+    stale `selected` crashed with `StopIteration` the moment it drew again.
+    `draw()` now re-derives `selected` the same way `_confirm_merge` already
+    did for the group it folds away."""
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import world
+    from gartok.group import Group
+    from gartok.guild import Guild
+    from gartok.map_screen import MapScreen
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    from gartok.ui.tokens import fonts as ui_fonts
+    F = ui_fonts()
+    noop = lambda *a, **k: None
+
+    g1 = Group([Unit("player")], node=world.START_NODE)
+    g2 = Group([Unit("player")], node=world.START_NODE)
+    guild = Guild(None, groups=[g1, g2])
+
+    scr = MapScreen(F, guild, noop, noop, noop, noop)
+    scr.selected = g1
+
+    guild.remove_members(g1.members)   # empties and prunes g1, same as a casualty mid-tick
+    assert g1 not in guild.groups
+
+    surf = pygame.Surface((1280, 800))
+    scr.mouse = (640, 400)
+    scr.draw(surf)                     # used to raise StopIteration in draw_map
+
+    assert scr.selected is g2
+
+
 def test_guild_screen_member_detail_renders():
     """GuildScreen only draws the detail panel if a member is selected. This test
     ensures _draw_detail runs without crashing."""
