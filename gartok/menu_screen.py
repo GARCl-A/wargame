@@ -10,12 +10,13 @@ import pygame
 
 from . import persist
 from .screen import Screen
+from .theme import set_pointer
 from .ui.primitives import draw_button, panel, text
 from .ui.tokens import T
 
-MARGIN = 16
-SP3 = 12
-SP4 = 16
+MARGIN = T.S * 2
+SP3 = T.S * 3 // 2
+SP4 = T.S * 2
 
 
 class MenuScreen(Screen):
@@ -91,6 +92,8 @@ class MenuScreen(Screen):
             self.buttons.append(("editor", None, er))
 
         text(screen, F["body"], "[Esc] quit", (MARGIN, H - 18), T.TX_FAINT)
+
+        set_pointer(any(rect.collidepoint(mouse) for _, _, rect in self.buttons))
 
     def _draw_slot(self, screen, rect, s, mouse):
         F = self.F

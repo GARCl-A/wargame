@@ -10,6 +10,7 @@ way.
 import pygame
 
 from .screen import Screen
+from .theme import set_pointer
 from .ui.primitives import caps, draw_button, modal_card, text
 from .ui.tokens import T
 
@@ -76,3 +77,5 @@ class PauseScreen(Screen):
                         mpos=self.mouse)
             self._buttons.append((key, r))
             by += 40 + T.S
+
+        set_pointer(any(rect.collidepoint(self.mouse) for _, rect in self._buttons))

@@ -4,10 +4,12 @@ import pygame
 
 from .. import factions, missions
 from ..screen import Screen
-from .primitives import caps, draw_button, panel, text, wrap
+from ..theme import set_pointer
+from .primitives import caps, draw_button, hline, modal_card, text, wrap
 from .tokens import T
 
 CARD_W = 560
+FOOTER_H = T.S * 4 + 34   # gap + divider + gap + leave button
 
 
 class MissionOfferScreen(Screen):
@@ -110,74 +112,92 @@ class MissionOfferScreen(Screen):
             return
 
     def draw(self, screen):
-        F = self.fonts
+        card_w = min(CARD_W, screen.get_width() - 2 * T.S * 3)
+        w = card_w - 2 * T.S * 3
+        t = self._template
+
         screen.fill(T.TABLE)
         self.buttons.clear()
 
-        caps(screen, F["big"], self.title_text, (T.S * 3, T.S * 3), T.TX)
-        text(screen, F["body"], self.subtitle_text, (T.S * 3, T.S * 3 + 36), T.TX_MUTED)
+        rows = self._content_rows(screen, t, w)
+        content_h = sum(h for h, _ in rows)
+        card = modal_card(screen, (card_w, content_h + FOOTER_H + 2 * T.S * 3))
 
-        t = self._template
+        x, y = card.x + T.S * 3, card.y + T.S * 3
+        for h, draw_row in rows:
+            draw_row(x, y)
+            y += h
+
+        self._draw_leave_row(screen, card, y)
+
+    def _content_rows(self, screen, t, w):
+        """`(height, draw_row(x, y))` per line of card content -- the same
+        list both sums to the card's height and paints it, so the two can
+        never drift the way a hand-computed height formula would."""
+        F = self.fonts
+
+        def row(font, s, color, h, fn=caps):
+            return (h, lambda x, y: fn(screen, font, s, (x, y), color))
+
+        rows = [
+            row(F["big"], self.title_text, T.TX, 32),
+            row(F["body"], self.subtitle_text, T.TX_MUTED, 40, fn=text),
+        ]
+
         if t is None:
-            card = pygame.Rect(T.S * 3, T.S * 3 + 80,
-                               min(CARD_W, screen.get_width() - 2 * T.S * 3), 150)
-            panel(screen, card)
-            text(screen, F["body_sm"], "Nothing on offer here right now.", (card.x + T.S * 3, card.y + T.S * 3), T.TX_FAINT)
-            self._draw_footer(screen)
-            return
+            rows.append(row(F["body_sm"], "Nothing on offer here right now.", T.TX_FAINT, 36, fn=text))
+            return rows
+
+        rows.append(row(F["head"], t.name, T.TX, 26))
 
         m = self._mission
-        card_w = min(CARD_W, screen.get_width() - 2 * T.S * 3)
-        w = card_w - 2 * T.S * 3
-        lines = wrap(F["body_sm"], t.blurb, w) if m is None else []
-        desc_h = len(lines) * 18 if lines else 20
-        card_h = 20 + desc_h + 16 + 20 + 30 + 36 + 2 * T.S * 3 + 10
-        card = pygame.Rect(T.S * 3, T.S * 3 + 80, card_w, max(150, card_h))
-        panel(screen, card)
-        
-        x, y = card.x + T.S * 3, card.y + T.S * 3
-
-        caps(screen, F["head"], t.name, (x, y), T.TX)
-        y += 26
-        
         offered = self._offered
         if m is None:
-            for ln in lines:
-                text(screen, F["body_sm"], ln, (x, y), T.TX_MUTED)
-                y += 18
-            y += 16
-            
-            req_str = self.get_req_str(t)
-            text(screen, F["body_sm"], req_str, (x, y), T.BRASS)
-            y += 30
-            
-            r = pygame.Rect(x, y, w, 36)
+            for ln in wrap(F["body_sm"], t.blurb, w):
+                rows.append(row(F["body_sm"], ln, T.TX_MUTED, 18, fn=text))
+            rows.append((16, lambda x, y: None))
+            rows.append(row(F["body_sm"], self.get_req_str(t), T.BRASS, 30, fn=text))
+
             label = self.accept_label if offered else "ALREADY OUT WITH ANOTHER GROUP"
-            draw_button(screen, F, r, label, enabled=offered, primary=offered, mpos=self.mouse)
-            self.buttons.append(("accept", r))
+
+            def draw_accept(x, y):
+                r = pygame.Rect(x, y, w, 36)
+                draw_button(screen, F, r, label, enabled=offered, primary=offered, mpos=self.mouse)
+                self.buttons.append(("accept", r))
+            rows.append((36, draw_accept))
         else:
             progress = missions.progress(self.guild, m)
             ready = progress >= t.goal_qty
             days_left = m.deadline_day - self.guild.clock.day
-            
             status_str = self.get_status_str(t, progress, ready, days_left)
-            text(screen, F["body"], status_str, (x, y), T.GREEN if ready else T.TX_MUTED)
-            y += 30
-            
-            r = pygame.Rect(x, y, w, 36)
+            rows.append(row(F["body"], status_str, T.GREEN if ready else T.TX_MUTED, 30, fn=text))
+
             label = self.get_turn_in_label(t, progress, ready)
-            draw_button(screen, F, r, label, enabled=ready, primary=ready, mpos=self.mouse)
-            self.buttons.append(("turn_in", r))
 
-        self._draw_footer(screen)
+            def draw_turn_in(x, y):
+                r = pygame.Rect(x, y, w, 36)
+                draw_button(screen, F, r, label, enabled=ready, primary=ready, mpos=self.mouse)
+                self.buttons.append(("turn_in", r))
+            rows.append((36, draw_turn_in))
 
-    def _draw_footer(self, screen):
+        return rows
+
+    def _draw_leave_row(self, screen, card, y):
+        """Draws forward from `y` (the content rows' end) for exactly
+        `FOOTER_H` -- keeping the footer sized off the same rows that size
+        the card, instead of a second anchor from `card.bottom` that can
+        drift out of sync with a shorter card and overlap the last row."""
         F = self.fonts
-        
-        if self.notice:
-            notice_rect = pygame.Rect(T.S * 3, screen.get_height() - T.S * 6, screen.get_width() - 240 - T.S * 6, 36)
-            text(screen, F["body"], self.notice, (notice_rect.x, notice_rect.centery - 6), T.BRASS)
+        x = card.x + T.S * 3
 
-        r = pygame.Rect(screen.get_width() - 240 - T.S * 3, screen.get_height() - 36 - T.S * 3, 240, 36)
+        if self.notice:
+            text(screen, F["body_sm"], self.notice, (x, y + T.S), T.BRASS)
+
+        y += T.S * 2
+        hline(screen, x, card.right - T.S * 3, y)
+        y += T.S * 2
+        r = pygame.Rect(card.right - T.S * 3 - 220, y, 220, 34)
         draw_button(screen, F, r, self.leave_label, mpos=self.mouse)
         self.buttons.append(("done", r))
+
+        set_pointer(any(rect.collidepoint(self.mouse) for _, rect in self.buttons))

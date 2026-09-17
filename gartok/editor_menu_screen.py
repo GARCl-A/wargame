@@ -8,6 +8,7 @@ Reached from the main menu's EDITOR button. Two doors: the character creator
 import pygame
 
 from .screen import Screen
+from .theme import set_pointer
 from .ui.primitives import caps, draw_button, draw_card, text
 from .ui.tokens import T
 
@@ -71,6 +72,10 @@ class EditorMenuScreen(Screen):
         back = pygame.Rect(T.S * 4, H - T.S * 4 - 30, 120, 30)
         draw_button(screen, f, back, "BACK", ghost=True, mpos=mpos)
         self.buttons.append(("back", back))
+
+        hovering = (any(enabled and rect.collidepoint(mpos) for _, rect, enabled in self.cards)
+                   or any(rect.collidepoint(mpos) for _, rect in self.buttons))
+        set_pointer(hovering)
 
     def _card(self, screen, rect, key, title, blurb, enabled, mpos):
         hov = enabled and rect.collidepoint(mpos)

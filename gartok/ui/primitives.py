@@ -175,8 +175,10 @@ def header(surf, F, rect, title, sub, tabitems, active, mpos=(-1, -1)):
     the rect's right edge. Returns the tab hit rects."""
     pygame.draw.rect(surf, T.STEEL, rect)
     hline(surf, rect.x, rect.right, rect.bottom - 1)
+    back_rect = pygame.Rect(rect.x, rect.y, T.S * 6, rect.h)
+    arrow_col = T.BRASS if back_rect.collidepoint(mpos) else T.TX_MUTED
     cx = rect.x + T.S * 3
-    pygame.draw.lines(surf, T.TX_MUTED, False,
+    pygame.draw.lines(surf, arrow_col, False,
                       [(cx + 6, rect.centery - 7), (cx - 2, rect.centery),
                        (cx + 6, rect.centery + 7)], 2)
     text(surf, F["titleb"], title, (rect.x + T.S * 6, rect.y + T.S * 2), T.TX)

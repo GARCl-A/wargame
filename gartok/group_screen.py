@@ -441,7 +441,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
     # RAIL / BAGS / CARGO                                                 #
     # ------------------------------------------------------------------ #
     def _draw_rail(self, screen, F, rect):
-        members = [{"key": u.uid, "name": _short(u.name), "role": role_for(u.occupation),
+        members = [{"key": u.uid, "name": u.name, "role": role_for(u.occupation),
                     "kg": u.load, "cap": u.carry_normal} for u in self.group.members]
         pinned_keys = {u.uid for u in self.pinned}
         hits, max_scroll = loadout_panel.rail(screen, F, rect, members, pinned_keys,

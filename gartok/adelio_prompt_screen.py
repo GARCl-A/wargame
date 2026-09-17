@@ -3,6 +3,7 @@
 import pygame
 
 from .screen import Screen
+from .theme import set_pointer
 from .ui.primitives import caps, draw_button, modal_card, text
 from .ui.tokens import T
 
@@ -56,3 +57,5 @@ class AdelioPromptScreen(Screen):
         leave_r = pygame.Rect(card.right - T.S * 3 - bw, by, bw, bh)
         draw_button(screen, F, leave_r, "LEAVE HIM", mpos=self.mouse)
         self.buttons.append(("leave", leave_r))
+
+        set_pointer(any(rect.collidepoint(self.mouse) for _, rect in self.buttons))

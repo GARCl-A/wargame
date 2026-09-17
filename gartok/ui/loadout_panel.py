@@ -128,13 +128,15 @@ def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse):
                 pygame.draw.rect(surf, T.BRASS if drop_hot else T.STEEL_LINE, r, 1)
                 if pinned:
                     pygame.draw.rect(surf, T.BRASS, pygame.Rect(r.x, r.y, 3, r.h))
-                draw_role(surf, (r.x + T.S * 2, r.y + T.S * 2), ROLE_MARK.get(m["role"], "sword"), T.TX_MUTED)
-                text(surf, F["body"], m["name"], (r.x + T.S * 4, r.y + T.S - 2), T.TX if pinned else T.TX_MUTED)
-                free = m["cap"] - m["kg"]
-                caps(surf, F["micro"], f"{free:+.1f}", (r.right - T.S, r.y + T.S),
-                     T.BLOOD if free < 0 else T.GREEN if free > 4 else T.TX_MUTED, right=True)
-                ratio = (m["kg"] / m["cap"]) if m["cap"] else 0
-                load_bar(surf, pygame.Rect(r.x + T.S, r.y + T.S * 4, r.w - T.S * 2, 6), ratio, m["kg"] > m["cap"])
+                with contained(surf, r):
+                    draw_role(surf, (r.x + T.S * 2, r.y + T.S * 2), ROLE_MARK.get(m["role"], "sword"), T.TX_MUTED)
+                    text(surf, F["body"], m["name"], (r.x + T.S * 4, r.y + T.S - 2), T.TX if pinned else T.TX_MUTED)
+                    free = m["cap"] - m["kg"]
+                    bar_y = r.y + T.S * 4
+                    caps(surf, F["micro"], f"{free:+.1f}", (r.right - T.S, bar_y - 12),
+                         T.BLOOD if free < 0 else T.GREEN if free > 4 else T.TX_MUTED, right=True)
+                    ratio = (m["kg"] / m["cap"]) if m["cap"] else 0
+                    load_bar(surf, pygame.Rect(r.x + T.S, bar_y, r.w - T.S * 2, 6), ratio, m["kg"] > m["cap"])
             y = r.bottom + 4
         if max_scroll > 0:
             scrollbar(surf, area, scroll, max_scroll, content_h)
