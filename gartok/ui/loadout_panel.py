@@ -96,17 +96,55 @@ def pack_row(surf, F, rect, item, *, selected, mouse):
     return lock_r, dots_r
 
 
-def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse):
+def toolbar(surf, F, rect, content_x, views, active_view, metrics, action, mouse):
+    """The gear tab's own strip: the BAGS/CARGO view toggle, band-wide stat
+    readouts, and a trailing action button (distribute load). `views` is
+    `[(id, label)]`; `metrics` is `[(label, value, color)]`, laid out from
+    `content_x` rather than `rect.x` (the caller's content column starts
+    past the rail, not at the strip's own left edge); `action` is
+    `(key, label)`. Returns `{"view_hits": [(rect, id)], "action_rect",
+    "action_key"}`."""
+    pygame.draw.rect(surf, T.TABLE, rect)
+    hline(surf, rect.x, rect.right, rect.bottom - 1)
+
+    view_hits = []
+    for i, (view_id, label) in enumerate(views):
+        r = pygame.Rect(rect.x + T.S * 2 + i * T.S * 13, rect.y + T.S * 1, T.S * 12, T.S * 5)
+        draw_button(surf, F, r, label, ghost=(active_view != view_id), mpos=mouse)
+        view_hits.append((r, view_id))
+
+    x, y = content_x + T.S * 2, rect.y + T.S * 2
+    for label, value, color in metrics:
+        caps(surf, F["micro"], label, (x, y), T.TX_FAINT)
+        text(surf, F["head"], value, (x, y + 14), color)
+        x += T.S * 26
+
+    action_key, action_label = action
+    action_r = pygame.Rect(rect.right - T.S * 24, rect.y + T.S * 2, T.S * 22, rect.h - T.S * 4)
+    draw_button(surf, F, action_r, action_label, mpos=mouse)
+
+    return {"view_hits": view_hits, "action_rect": action_r, "action_key": action_key}
+
+
+def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse, band=None):
     """Every member as a compact row, always -- a rail row is both a pin
     toggle and, from the caller's own `zones`, a drop target whether or
     not that member's column is pinned open. `members` is `[{"key","name",
     "role","kg","cap"}]`; `carrying` highlights the hovered row as a valid
-    drop target while the caller is carrying something. Returns `(hits,
-    max_scroll)` -- `hits` is `[(rect, key)]`, scrolled rows included
-    (off-screen ones just won't be under the mouse)."""
+    drop target while the caller is carrying something. `band`, if given,
+    is `(label, note_text, note_color, note_font)` drawn in the header
+    strip already reserved for it: `label` top-left ('band · 4 of 6'),
+    `note_text` top-right (an overextension warning or 'free'). Returns
+    `(hits, max_scroll)` -- `hits` is `[(rect, key)]`, scrolled rows
+    included (off-screen ones just won't be under the mouse)."""
     pygame.draw.rect(surf, T.STEEL, rect)
     pygame.draw.line(surf, T.STEEL_LINE, (rect.right - 1, rect.y), (rect.right - 1, rect.bottom), 1)
     x, w = rect.x + T.S * 2, rect.w - T.S * 4
+
+    if band is not None:
+        label, note_text, note_color, note_font = band
+        caps(surf, F["micro"], label, (x, rect.y + T.S * 2), T.TX_FAINT)
+        caps(surf, F[note_font], note_text, (rect.right - T.S * 2, rect.y + T.S * 2), note_color, right=True)
 
     row_h = T.S * 7
     content_h = len(members) * (row_h + 4)

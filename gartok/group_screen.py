@@ -55,9 +55,9 @@ from .packbox import PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import set_pointer
-from .ui import loadout_panel
+from .ui import loadout_panel, quest_panel
 from .ui.inspector_panel import role_for
-from .ui.primitives import caps, draw_button, header, hline, text
+from .ui.primitives import draw_button, header, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -444,19 +444,11 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         members = [{"key": u.uid, "name": u.name, "role": role_for(u.occupation),
                     "kg": u.load, "cap": u.carry_normal} for u in self.group.members]
         pinned_keys = {u.uid for u in self.pinned}
-        hits, max_scroll = loadout_panel.rail(screen, F, rect, members, pinned_keys,
-                                              bool(self.selected), self._rail_scroll, self.mouse)
-
-        x = rect.x + T.S * 2
-        caps(screen, F["micro"], f"band  ·  {len(self.group.members)} of {self.group.capacity}",
-             (x, rect.y + T.S * 2), T.TX_FAINT)
         overext = self.group.overextension
-        if overext > 0:
-            caps(screen, F["microb"], f"(-{overext} mental def)", (rect.right - T.S * 2, rect.y + T.S * 2),
-                 T.BLOOD, right=True)
-        else:
-            caps(screen, F["micro"], "free", (rect.right - T.S * 2, rect.y + T.S * 2),
-                 T.TX_FAINT, right=True)
+        note = (f"(-{overext} mental def)", T.BLOOD, "microb") if overext > 0 else ("free", T.TX_FAINT, "micro")
+        band = (f"band  ·  {len(self.group.members)} of {self.group.capacity}", *note)
+        hits, max_scroll = loadout_panel.rail(screen, F, rect, members, pinned_keys,
+                                              bool(self.selected), self._rail_scroll, self.mouse, band=band)
 
         self._rail_rect = rect
         self._rail_max_scroll = max_scroll
@@ -544,36 +536,19 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         uids = {u.uid for u in self.group.members}
         active = [m for m in self.guild.missions if m.state == "active" and m.unit_uid in uids]
 
-        if not active:
-            text(screen, F["body"], "No active quests for this group.", area.center,
-                T.TX_FAINT, center=True)
-            return
-
-        y = area.y
+        quests = []
         for m in active:
             t = missions.template_of(m)
-            r = pygame.Rect(area.x, y, min(600, area.w), 80)
-            pygame.draw.rect(screen, T.STEEL, r)
-            pygame.draw.rect(screen, T.STEEL_LINE, r, 1)
-
-            text(screen, F["nameb"], t.name, (r.x + T.S * 3, r.y + T.S * 2), T.TX)
             unit = self._unit_by_uid.get(m.unit_uid)
-            uname = unit.name if unit else "Unknown"
-            text(screen, F["body_sm"], f"Accepted by {uname}", (r.x + T.S * 3, r.y + 40), T.TX_FAINT)
+            progress = (missions.progress(self.guild, m), t.goal_qty, t.goal_item) if t.goal_qty > 0 else None
+            quests.append({
+                "name": t.name,
+                "accepted_by": unit.name if unit else "Unknown",
+                "days_left": m.deadline_day - self.guild.clock.day,
+                "progress": progress,
+            })
 
-            days_left = m.deadline_day - self.guild.clock.day
-            dcol = T.BLOOD if days_left <= 1 else T.BRASS if days_left <= 3 else T.GREEN
-            text(screen, F["body"], f"{max(0, days_left)} day(s) left",
-                (r.right - T.S * 3, r.y + T.S * 2), dcol, right=True)
-
-            if t.goal_qty > 0:
-                prog = missions.progress(self.guild, m)
-                text(screen, F["body"], f"{prog} / {t.goal_qty} {t.goal_item}",
-                    (r.right - T.S * 3, r.y + 40), T.GREEN if prog >= t.goal_qty else T.TX, right=True)
-            else:
-                text(screen, F["body"], "Delivery", (r.right - T.S * 3, r.y + 40), T.TX, right=True)
-
-            y += r.h + T.S * 3
+        quest_panel.quest_list(screen, F, area, quests, empty_label="No active quests for this group.")
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
@@ -617,29 +592,17 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         self.buttons.append(("rename", rename_r))
 
         if self.tab == "gear":
-            pygame.draw.rect(screen, T.TABLE, bar)
-            hline(screen, bar.x, bar.right, bar.bottom - 1)
-
-            for i, (view_id, label) in enumerate((("bags", "BAGS"), ("cargo", "CARGO"))):
-                r = pygame.Rect(T.S * 2 + i * T.S * 15, bar.y + T.S * 1, T.S * 14, T.S * 5)
-                draw_button(screen, F, r, label, ghost=(self.view != view_id), mpos=self.mouse)
-                self.buttons.append((f"view_{view_id}", r))
-
-            x = mid.x + T.S * 2
-            y = bar.y + T.S * 2
             over = self.group.total_load > self.group.total_carry_normal
             short = self.group.rations_days <= 0
-            for lab, val, col in (
-                    ("band load", f"{self.group.total_load:.0f} / {self.group.total_carry_normal:.0f} kg",
-                     T.BLOOD if over else T.TX),
-                    ("rations", f"{self.group.rations_days} days", T.BLOOD if short else T.TX)):
-                caps(screen, F["micro"], lab, (x, y), T.TX_FAINT)
-                text(screen, F["head"], val, (x, y + 14), col)
-                x += T.S * 26
-
-            dist_r = pygame.Rect(bar.right - T.S * 24, bar.y + T.S * 2, T.S * 22, bar.h - T.S * 4)
-            draw_button(screen, F, dist_r, "distribute load", mpos=self.mouse)
-            self.buttons.append(("distribute", dist_r))
+            metrics = [
+                ("band load", f"{self.group.total_load:.0f} / {self.group.total_carry_normal:.0f} kg",
+                 T.BLOOD if over else T.TX),
+                ("rations", f"{self.group.rations_days} days", T.BLOOD if short else T.TX),
+            ]
+            res = loadout_panel.toolbar(screen, F, bar, mid.x, (("bags", "BAGS"), ("cargo", "CARGO")),
+                                        self.view, metrics, ("distribute", "distribute load"), self.mouse)
+            self.buttons.extend((f"view_{vid}", r) for r, vid in res["view_hits"])
+            self.buttons.append((res["action_key"], res["action_rect"]))
 
             self._draw_rail(screen, F, left)
 
@@ -650,7 +613,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         else:
             self._draw_quests(screen, F, pygame.Rect(T.S * 4, bar.top + T.S * 4, W - T.S * 8, H - bar.top - T.S * 12))
 
-        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 28, T.S * 4)
+        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 25, T.S * 4)
         draw_button(screen, F, done_r, "back to map", primary=True, mpos=self.mouse)
         self.buttons.append(("done", done_r))
         if self.notice:
