@@ -17,9 +17,10 @@ at once -- the group can't do two different things with itself simultaneously:
 import pygame
 
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, LINE_SOFT,
-                    MARGIN, RADIUS, SP2, SP3, SURFACE_2, SURFACE_3,
-                    panel, text, token_badge)
+from .theme import set_pointer, token_badge
+from .ui.primitives import draw_card, header, panel, text
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 
 
 class GuardScreen(Screen):
@@ -28,6 +29,7 @@ class GuardScreen(Screen):
     def __init__(self, fonts, guild, group, order, caught, on_prison, on_flee, on_fight):
         super().__init__()
         self.fonts = fonts
+        self._F = None
         self.guild = guild
         self.group = group
         self.order = order
@@ -36,6 +38,11 @@ class GuardScreen(Screen):
         self.on_flee = on_flee
         self.on_fight = on_fight
         self.buttons = []             # [(key, rect)]
+
+    def _ui_fonts(self):
+        if self._F is None:
+            self._F = ui_fonts()
+        return self._F
 
     def tutorial_key(self):
         return None
@@ -55,46 +62,45 @@ class GuardScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((24, 18, 18))
+        F = self._ui_fonts()
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
         self.buttons = []
 
-        text(screen, "THE GUARD", f.title, INK, (MARGIN, MARGIN - 2))
+        head = pygame.Rect(0, 0, W, T.S * 9)
         names = ", ".join(u.name for u in self.caught)
-        text(screen, f"{names} -- recognised on sight.", f.body, DANGER,
-             (MARGIN, MARGIN + 30))
+        sub = f"{names} -- recognised on sight."
+        header(screen, F, head, "THE GUARD", sub, (), None, mpos=self.mouse)
 
-        top = MARGIN + 80
+        top = head.bottom + T.S * 4
         for u in self.caught:
-            r = pygame.Rect(MARGIN, top, 420, 48)
-            panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-            tok = (r.x + SP3 + 12, r.y + 12)
-            token_badge(screen, tok, u, f)
-            text(screen, u.name, f.body_bd, INK, (tok[0] + 24, r.y + 6))
-            text(screen, f"crime: {u.crime}", f.body_sm, INK_DIM, (tok[0] + 24, r.y + 24))
-            top = r.bottom + SP2
+            r = pygame.Rect(T.S * 3, top, 420, 48)
+            panel(screen, r)
+            tok = (r.x + T.S * 2, r.y + 12)
+            token_badge(screen, tok, u, self.fonts)
+            text(screen, F["bodyb"], u.name, (tok[0] + 24, r.y + 6), T.TX)
+            text(screen, F["body_sm"], f"crime: {u.crime}", (tok[0] + 24, r.y + 24), T.TX_MUTED)
+            top = r.bottom + T.S * 2
 
-        top += SP2
-        w = min(560, screen.get_width() - 2 * MARGIN)
+        top += T.S * 2
+        w = min(560, W - 2 * T.S * 3)
 
-        top = self._option(screen, "prison", "ACCEPT ARREST",
+        top = self._option(screen, F, "prison", "ACCEPT ARREST",
                            "Crime clears to 0 -- time served in the City's cells.",
-                           top, w, INFO)
-        top = self._option(screen, "fight", "FIGHT THE PATROL",
+                           top, w)
+        top = self._option(screen, F, "fight", "FIGHT THE PATROL",
                            "Lethal. Living through it adds to the rap sheet, not clears it.",
-                           top, w, DANGER)
+                           top, w)
         if self.order.prev_node is not None:      # nowhere left to fall back to otherwise
-            top = self._option(screen, "flee", "RUN",
+            top = self._option(screen, F, "flee", "RUN",
                                "Fall back the way the group came.",
-                               top, w, ACCENT)
+                               top, w)
 
-    def _option(self, screen, key, label, sub, top, w, col):
-        f = self.fonts
-        r = pygame.Rect(MARGIN, top, w, 56)
+        set_pointer(any(r.collidepoint(self.mouse) for _, r in self.buttons))
+
+    def _option(self, screen, F, key, label, sub, top, w):
+        r = pygame.Rect(T.S * 3, top, w, 72)
         hov = r.collidepoint(self.mouse)
-        panel(screen, r, fill=SURFACE_3 if hov else SURFACE_2, border=col,
-              width=2 if hov else 1, radius=RADIUS)
-        text(screen, label, f.body_bd, col, (r.x + SP3, r.y + 8))
-        text(screen, sub, f.body_sm, INK_DIM, (r.x + SP3, r.y + 30))
+        draw_card(screen, F, r, label, subtitle=sub, hover=hov)
         self.buttons.append((key, r))
-        return r.bottom + SP2
+        return r.bottom + T.S * 2

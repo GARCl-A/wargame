@@ -14,17 +14,19 @@ import pygame
 
 from . import data, economy, orders
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INK, INK_DIM, INK_FAINT,
-                    MARGIN, OK, SP1, SP2, WARN, section, text, token_badge)
-from .widgets import ButtonsMixin, footer_bar
+from .theme import set_pointer, token_badge
+from .ui.primitives import caps, draw_button, header, hline, text
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 
 
-class WildsClaimScreen(ButtonsMixin, Screen):
+class WildsClaimScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep):
         super().__init__()
         self.fonts = fonts
+        self._F = None
         self.guild = guild
         self.group = group
         self.on_done = on_done
@@ -32,7 +34,11 @@ class WildsClaimScreen(ButtonsMixin, Screen):
         self.on_fight_sweep = on_fight_sweep
         self.notice = None
         self.buttons = []
-        self._hot = False
+
+    def _ui_fonts(self):
+        if self._F is None:
+            self._F = ui_fonts()
+        return self._F
 
     def tutorial_key(self):
         return None
@@ -109,16 +115,18 @@ class WildsClaimScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((18, 22, 18))
-        self._reset_buttons()
+        F = self._ui_fonts()
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
+        self.buttons = []
 
-        text(screen, "THE WILDS CLAIM", f.title, INK, (MARGIN, MARGIN - 2))
+        head = pygame.Rect(0, 0, W, T.S * 9)
         stage = self.guild.wilds_claim_stage
-        text(screen, f"stage: {stage.title()}", f.body_bd, ACCENT, (MARGIN, MARGIN + 30))
+        header(screen, F, head, "THE WILDS CLAIM", f"stage: {stage.title()}", (), None, mpos=self.mouse)
 
-        top = MARGIN + 70
-        panel_w = min(640, screen.get_width() - 2 * MARGIN)
+        top = head.bottom + T.S * 4
+        panel_w = min(640, W - 2 * T.S * 3)
+
         {
             "NONE": self._draw_scout,
             "SCOUTED": self._draw_clear,
@@ -127,130 +135,132 @@ class WildsClaimScreen(ButtonsMixin, Screen):
             "SWEPT": self._draw_garrison,
             "SUSTAINING": self._draw_sustaining,
             "ESTABLISHED": self._draw_established,
-        }[stage](screen, MARGIN, top, panel_w)
+        }[stage](screen, F, T.S * 3, top, panel_w)
 
-        self._draw_party(screen, panel_w)
-        self._draw_footer(screen)
+        self._draw_party(screen, F, panel_w, W, H)
+        self._draw_footer(screen, F, W, H)
 
-    def _draw_party(self, screen, panel_w):
-        f = self.fonts
-        x = MARGIN
-        y = screen.get_height() - 200
-        y = section(screen, f"HERE ({len(self.group.members)})", x, y, panel_w, f)
+        set_pointer(any(r.collidepoint(self.mouse) for _, r in self.buttons))
+
+    def _draw_party(self, screen, F, panel_w, W, H):
+        x = T.S * 3
+        y = H - T.S * 20
+        hline(screen, x, x + panel_w, y - T.S * 2)
+        caps(screen, F["microb"], f"HERE ({len(self.group.members)})", (x, y), T.TX_FAINT)
+        y += T.S * 3
         for m in self.group.members:
             tok = (x + 12, y + 10)
-            token_badge(screen, tok, m, f)
-            text(screen, m.name, f.body_sm, INK, (tok[0] + 20, y))
+            token_badge(screen, tok, m, self.fonts)
+            text(screen, F["body_sm"], m.name, (tok[0] + 20, y), T.TX)
             y += 22
 
-    def _draw_footer(self, screen):
-        footer_bar(self, screen, primary=("done", "LEAVE"), notice=self.notice,
-                  notice_color=ACCENT)
+    def _draw_footer(self, screen, F, W, H):
+        d = pygame.Rect(W - T.S * 3 - 240, H - T.S * 4 - 36, 240, 36)
+        draw_button(screen, F, d, "LEAVE", primary=False, mpos=self.mouse)
+        self.buttons.append(("done", d))
+
+        if self.notice:
+            img = F["body_sm"].render(self.notice, True, T.BRASS)
+            r = img.get_rect()
+            r.midright = (d.left - T.S * 3, d.centery)
+            screen.blit(img, r)
 
     # ------------------------------------------------------------------ #
     # per-stage panels                                                    #
     # ------------------------------------------------------------------ #
-    def _button(self, screen, key, label, top, w, *, enabled=True):
-        r = pygame.Rect(MARGIN, top, w, 40)
-        self.add_button(screen, r, key, label, enabled=enabled, primary=True)
-        return r.bottom + SP2
+    def _button(self, screen, F, key, label, top, w, enabled=True):
+        r = pygame.Rect(T.S * 3, top, w, 40)
+        draw_button(screen, F, r, label, primary=True, enabled=enabled, mpos=self.mouse)
+        if enabled:
+            self.buttons.append((key, r))
+        return r.bottom + T.S * 2
 
-    def _draw_scout(self, screen, x, y, w):
-        f = self.fonts
-        for ln in ("The land isn't scouted yet -- someone has to walk it before "
+    def _draw_scout(self, screen, F, x, y, w):
+        for ln in ("The land isn't scouted yet -- someone has to walk it before ",
                    "the guild can do anything else here.",
                    f"Costs {economy.WILDS_CLAIM_SCOUT_HOURS} h. No fight, no roll."):
-            text(screen, ln, f.body_sm, INK_DIM, (x, y))
+            text(screen, F["body_sm"], ln, (x, y), T.TX_MUTED)
             y += 17
-        y += SP2
-        self._button(screen, "scout", "SCOUT THE LAND", y, w)
+        y += T.S * 2
+        self._button(screen, F, "scout", "SCOUT THE LAND", y, w)
 
-    def _draw_clear(self, screen, x, y, w):
-        f = self.fonts
-        for ln in ("Scouted. Something already lives here -- clear it out before "
+    def _draw_clear(self, screen, F, x, y, w):
+        for ln in ("Scouted. Something already lives here -- clear it out before ",
                    "building anything.",
-                   f"A real fight: {economy.WILDS_CLAIM_CLEAR_SIZE} opponents, "
+                   f"A real fight: {economy.WILDS_CLAIM_CLEAR_SIZE} opponents, ",
                    f"level {economy.WILDS_CLAIM_CLEAR_LEVEL}."):
-            text(screen, ln, f.body_sm, INK_DIM, (x, y))
+            text(screen, F["body_sm"], ln, (x, y), T.TX_MUTED)
             y += 17
-        y += SP2
-        self._button(screen, "fight_clear", "CLEAR THE LAND", y, w)
+        y += T.S * 2
+        self._button(screen, F, "fight_clear", "CLEAR THE LAND", y, w)
 
-    def _draw_fence(self, screen, x, y, w):
-        f = self.fonts
+    def _draw_fence(self, screen, F, x, y, w):
         have = self.guild.wilds_claim_fence_lumber
         need = economy.WILDS_CLAIM_FENCE_LUMBER
         carried = self._party_lumber()
-        text(screen, "Cleared. Raise fences to hold the ground -- hauls Lumber "
-             "bought at the Market, no mechanical cover yet.", f.body_sm, INK_DIM, (x, y))
+        text(screen, F["body_sm"], "Cleared. Raise fences to hold the ground -- hauls Lumber "
+             "bought at the Market, no mechanical cover yet.", (x, y), T.TX_MUTED)
         y += 24
-        text(screen, f"Lumber banked: {have} / {need}", f.body_bd,
-             OK if have >= need else INK, (x, y))
+        text(screen, F["bodyb"], f"Lumber banked: {have} / {need}", (x, y), T.GREEN if have >= need else T.TX)
         y += 20
-        text(screen, f"{carried} Lumber carried here right now", f.body_sm, INK_FAINT, (x, y))
-        y += SP2 + 10
-        y = self._button(screen, "deposit", "DEPOSIT CARRIED LUMBER", y, w,
-                         enabled=carried > 0)
-        self._button(screen, "build", f"BUILD THE FENCES ({economy.WILDS_CLAIM_FENCE_HOURS} h)",
-                    y, w, enabled=have >= need)
+        text(screen, F["body_sm"], f"{carried} Lumber carried here right now", (x, y), T.TX_FAINT)
+        y += T.S * 2 + 10
+        y = self._button(screen, F, "deposit", "DEPOSIT CARRIED LUMBER", y, w, enabled=carried > 0)
+        self._button(screen, F, "build", f"BUILD THE FENCES ({economy.WILDS_CLAIM_FENCE_HOURS} h)", y, w, enabled=have >= need)
 
-    def _draw_sweep(self, screen, x, y, w):
-        f = self.fonts
-        for ln in ("Fenced. One more pass -- root out any nest or bandit camp "
+    def _draw_sweep(self, screen, F, x, y, w):
+        for ln in ("Fenced. One more pass -- root out any nest or bandit camp ",
                    "still close enough to matter.",
-                   f"A second fight: {economy.WILDS_CLAIM_SWEEP_SIZE} opponents, "
+                   f"A second fight: {economy.WILDS_CLAIM_SWEEP_SIZE} opponents, ",
                    f"level {economy.WILDS_CLAIM_SWEEP_LEVEL}."):
-            text(screen, ln, f.body_sm, INK_DIM, (x, y))
+            text(screen, F["body_sm"], ln, (x, y), T.TX_MUTED)
             y += 17
-        y += SP2
-        self._button(screen, "fight_sweep", "SWEEP THE REGION", y, w)
+        y += T.S * 2
+        self._button(screen, F, "fight_sweep", "SWEEP THE REGION", y, w)
 
-    def _draw_garrison(self, screen, x, y, w):
-        f = self.fonts
-        for ln in ("Swept clean. The claim only counts once someone holds it --"
+    def _draw_garrison(self, screen, F, x, y, w):
+        for ln in ("Swept clean. The claim only counts once someone holds it --",
                    " garrison this group here and sustain it.",
-                   f"{economy.WILDS_CLAIM_SUSTAIN_DAYS} days, uninterrupted. A "
+                   f"{economy.WILDS_CLAIM_SUSTAIN_DAYS} days, uninterrupted. A ",
                    "lost raid or pulling out early starts the count over."):
-            text(screen, ln, f.body_sm, INK_DIM, (x, y))
+            text(screen, F["body_sm"], ln, (x, y), T.TX_MUTED)
             y += 17
-        y += SP2
-        self._button(screen, "garrison", "GARRISON HERE", y, w)
+        y += T.S * 2
+        self._button(screen, F, "garrison", "GARRISON HERE", y, w)
 
-    def _draw_sustaining(self, screen, x, y, w):
-        f = self.fonts
+    def _draw_sustaining(self, screen, F, x, y, w):
         left = self.guild.wilds_claim_sustain_days_left
         garrisoned = self.guild._wilds_claim_garrisoned()
-        text(screen, f"Sustaining -- {left} day(s) left." if left is not None
-             else "Sustaining.", f.body_bd, WARN, (x, y))
+        text(screen, F["bodyb"], f"Sustaining -- {left} day(s) left." if left is not None else "Sustaining.", (x, y), T.BRASS)
         y += 22
         if not garrisoned:
-            text(screen, "Nobody is garrisoned here right now -- the countdown "
-                 "isn't moving.", f.body_sm, DANGER, (x, y))
+            text(screen, F["body_sm"], "Nobody is garrisoned here right now -- the countdown isn't moving.", (x, y), T.BLOOD)
             y += 20
-        y += SP1
+        y += T.S
         if self.group.order is not None and self.group.order.kind == "garrison":
-            self._button(screen, "leave_garrison", "STAND DOWN THE GARRISON", y, w)
+            self._button(screen, F, "leave_garrison", "STAND DOWN THE GARRISON", y, w)
 
-    def _draw_established(self, screen, x, y, w):
-        f = self.fonts
+    def _draw_established(self, screen, F, x, y, w):
         if self.guild.wilds_claim_owner == "seized":
-            for ln in ("SEIZED. Occupiers hold the claim right now -- the "
+            for ln in ("SEIZED. Occupiers hold the claim right now -- the ",
                        "structure still stands, it's just not the guild's to work.",
-                       "Travel a group here to fight for it back -- no need to "
+                       "Travel a group here to fight for it back -- no need to ",
                        "redo the campaign, only to retake the ground."):
-                text(screen, ln, f.body_sm, DANGER, (x, y))
+                text(screen, F["body_sm"], ln, (x, y), T.BLOOD)
                 y += 17
             return
-        text(screen, "Established. The land is the guild's -- the garrison "
-             "keeps working it on its own.", f.body_sm, OK, (x, y))
+        text(screen, F["body_sm"], "Established. The land is the guild's -- the garrison keeps working it on its own.", (x, y), T.GREEN)
         y += 24
         stock = self.guild.garrison_stock_at(self.group.node)
-        y = section(screen, f"BANKED HERE  ({len(stock)})", x, y, w, f)
+        hline(screen, x, x + w, y)
+        y += T.S
+        caps(screen, F["microb"], f"BANKED HERE  ({len(stock)})", (x, y), T.TX_FAINT)
+        y += T.S * 3
         if stock:
-            text(screen, f"{len(stock)} x Lumber", f.body, INK, (x, y))
+            text(screen, F["body"], f"{len(stock)} x Lumber", (x, y), T.TX)
             y += 20
         else:
-            text(screen, "(nothing banked yet)", f.body_sm, INK_FAINT, (x, y))
+            text(screen, F["body_sm"], "(nothing banked yet)", (x, y), T.TX_FAINT)
             y += 20
-        y += SP2
-        self._button(screen, "collect", "COLLECT LUMBER", y, w, enabled=bool(stock))
+        y += T.S * 2
+        self._button(screen, F, "collect", "COLLECT LUMBER", y, w, enabled=bool(stock))

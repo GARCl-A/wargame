@@ -629,7 +629,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             p["rect"], p["hits"] = res["rect"], res["hits"]
 
         self.draw_sheet_modal(screen, self.fonts)
-        set_pointer("hand" if self._hovering() else "arrow")
+        set_pointer(self._hovering())
 
     def _hovering(self):
         if self.menu:
