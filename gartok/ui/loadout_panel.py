@@ -283,6 +283,133 @@ def column(surf, F, rect, member, scroll, mouse):
             "dots_hits": dots_hits, "scroll": scroll}
 
 
+def shop_row(surf, F, rect, item, *, qty_sel, mouse):
+    """One row in an external container (the market's stock, a strongbox,
+    a loot pile): name, tag, weight, an optional price and an optional
+    "N left" stock count, a qty stepper once the stack (or the buyer's
+    wallet/stock) allows more than one, and a blocked reason in place of
+    the stepper when `blocked` says why this stack can't move at all right
+    now. `item` is `(name, tag, weight, held_qty, price_or_None,
+    stock_left_or_None, blocked_or_None)`. `qty_sel` is how many of this
+    stack are currently picked (0 if none). Returns `{"minus", "plus",
+    "all"}` -- any of the three may be `None` when `held_qty <= 1`."""
+    name, tag, weight, held, price, stock_left, blocked = item
+    sel = qty_sel > 0
+    ok = blocked is None
+    pygame.draw.rect(surf, mix(T.BRASS, T.STEEL, .85) if sel else T.TABLE, rect)
+    pygame.draw.rect(surf, T.BRASS if sel else T.STEEL_LINE, rect, 1)
+
+    name_x = rect.x + T.S
+    fg = T.TX_FAINT if not ok else (T.TX_MUTED if sel else T.TX)
+    text(surf, F["body"], name, (name_x, rect.centery - 13), fg)
+    caps(surf, F["micro"], tag, (name_x, rect.centery + 3), TAG_COLOR.get(tag, T.TX_FAINT))
+    if blocked:
+        caps(surf, F["micro"], blocked, (name_x + F["body"].size(name)[0] + T.S,
+             rect.centery - 11), T.BLOOD)
+
+    hits = {"minus": None, "plus": None, "all": None}
+    cursor = rect.right - T.S
+    if stock_left is not None:
+        caps(surf, F["micro"], f"{stock_left} left", (cursor, rect.centery + 3),
+             T.BLOOD if stock_left <= 0 else T.TX_FAINT, right=True)
+    if price is not None:
+        caps(surf, F["microb"], price, (cursor, rect.centery - 13),
+             T.BRASS if ok else T.TX_FAINT, right=True)
+    cursor -= T.S * 9
+
+    if held > 1:
+        bh = T.S * 2 + 2
+        if held > 2:
+            all_r = pygame.Rect(cursor - T.S * 4, rect.centery - bh // 2, T.S * 4, bh)
+            hov = all_r.collidepoint(mouse)
+            pygame.draw.rect(surf, T.STEEL_HI if hov else T.TABLE, all_r)
+            pygame.draw.rect(surf, T.BRASS if hov else T.STEEL_LINE, all_r, 1)
+            caps(surf, F["micro"], "all", all_r.center, T.BRASS if hov else T.TX_MUTED, center=True)
+            hits["all"] = all_r
+            cursor = all_r.x - T.S
+        plus = pygame.Rect(cursor - T.S * 3, rect.centery - bh // 2, T.S * 3, bh)
+        minus = pygame.Rect(plus.x - T.S * 5, rect.centery - bh // 2, T.S * 3, bh)
+        for r, glyph in ((minus, "-"), (plus, "+")):
+            hov = r.collidepoint(mouse)
+            pygame.draw.rect(surf, T.STEEL_HI if hov else T.TABLE, r)
+            pygame.draw.rect(surf, T.BRASS if hov else T.STEEL_LINE, r, 1)
+            caps(surf, F["microb"], glyph, r.center, T.TX if hov else T.TX_MUTED, center=True)
+        hits["minus"], hits["plus"] = minus, plus
+        if qty_sel:
+            caps(surf, F["microb"], str(qty_sel), ((minus.right + plus.x) // 2, rect.centery - 6),
+                 T.BRASS, center=True)
+        cursor = minus.x - T.S
+
+    caps(surf, F["micro"], f"{weight * max(held, 1):.1f} kg", (cursor, rect.centery + 3),
+         T.TX_FAINT, right=True)
+    return hits
+
+
+def container_panel(surf, F, rect, data, scroll, mouse):
+    """The external side of a transfer screen: market stock, a strongbox,
+    a loot pile, a property's storage -- one non-member inventory, no
+    equip slots. `data` is `{"label", "capacity": (used, total) | None,
+    "rows": [(key, name, tag, weight, qty, price, stock_left, blocked,
+    sel_qty)], "services": [(key, label, sub, enabled)] | ()}`. Returns
+    `{"row_hits": [(rect, key)], "row_controls": {key: {"minus","plus",
+    "all"}}, "service_hits": [(rect, key)], "scroll"}`."""
+    pygame.draw.rect(surf, T.STEEL, rect)
+    pygame.draw.line(surf, T.STEEL_LINE, (rect.right - 1, rect.y), (rect.right - 1, rect.bottom), 1)
+    x, w = rect.x + T.S * 2, rect.w - T.S * 4
+    y = rect.y + T.S * 2
+
+    caps(surf, F["microb"], data["label"], (x, y), T.BRASS)
+    y += T.S * 3
+    if data.get("capacity") is not None:
+        used, total = data["capacity"]
+        over = used > total
+        load_bar(surf, pygame.Rect(x, y, w, 8), (used / total) if total else 0, over)
+        caps(surf, F["micro"], f"{used:.1f} / {total:.0f} kg held here",
+             (x, y + T.S + 4), T.BLOOD if over else T.TX_FAINT)
+        y += T.S * 5
+
+    services = data.get("services") or ()
+    footer_h = (T.S * 9 * len(services) + T.S * 3) if services else 0
+    list_rect = pygame.Rect(x, y, w, rect.bottom - T.S * 2 - footer_h - y)
+
+    rows = data["rows"]
+    row_h = T.S * 6 + T.S
+    content_h = len(rows) * row_h
+    visible_n = max(1, list_rect.h // row_h)
+    max_scroll = max(0, len(rows) - visible_n)
+    scroll = max(0, min(scroll, max_scroll))
+
+    row_hits, row_controls = [], {}
+    with contained(surf, list_rect):
+        iy = list_rect.y
+        for key, name, tag, weight, qty, price, stock_left, blocked, sel_qty in rows[scroll:scroll + visible_n]:
+            r = pygame.Rect(x, iy, w, T.S * 6)
+            hits = shop_row(surf, F, r, (name, tag, weight, qty, price, stock_left, blocked),
+                            qty_sel=sel_qty, mouse=mouse)
+            row_hits.append((r, key))
+            row_controls[key] = hits
+            iy = r.bottom + T.S
+        if max_scroll > 0:
+            scrollbar(surf, list_rect, scroll, max_scroll, content_h)
+
+    if not rows:
+        text(surf, F["body_sm"], "(empty)", (x, list_rect.y + 2), T.TX_FAINT)
+
+    service_hits = []
+    if services:
+        sy = rect.bottom - footer_h + T.S
+        hline(surf, x, x + w, sy - T.S)
+        for key, label, sub, enabled in services:
+            r = pygame.Rect(x, sy, w, T.S * 7)
+            draw_button(surf, F, r, label, sub=sub, primary=enabled, ghost=not enabled, mpos=mouse)
+            if enabled:
+                service_hits.append((r, key))
+            sy = r.bottom + T.S * 2
+
+    return {"row_hits": row_hits, "row_controls": row_controls,
+            "service_hits": service_hits, "scroll": scroll}
+
+
 def cargo_table(surf, F, rect, rows, scroll, mouse):
     """Every stack across the whole band, one sortable table. `rows` is
     `[(key, name, tag, weight, qty, locked, sel, carrier_label)]` -- `key`

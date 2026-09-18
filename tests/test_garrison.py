@@ -250,7 +250,7 @@ def test_city_property_state_survives_a_save_round_trip():
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
-        assert back.property_city_unlocked and back.property_city_items == ["Rope"]
+        assert back.property_city_unlocked and back.property_city_items == [("Rope", 1)]
         assert back.property_city_missed_payments == 2
         assert back.property_city_tax_due_day == guild.property_city_tax_due_day
         assert back.bankers_debt == 15

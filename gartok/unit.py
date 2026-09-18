@@ -27,6 +27,49 @@ from .data import mod, roll
 ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
 
 
+def pack_from_raw(raw):
+    """Build a stacked `list[(name, qty)]` pack from a save field that may be
+    an old flat `list[str]` (repetition = stack) or the current `list[[name,
+    qty]]` -- tolerated permanently, no version branch, same spirit as the
+    rest of `from_save`'s `dict.get` defaulting. Shared by `Unit.from_save`
+    and any other saved pack shape that made the same flat -> stacked switch
+    later (`Guild.bank_items`/`property_city_items`)."""
+    if not raw or isinstance(raw[0], str):
+        order, counts = [], {}
+        for name in raw:
+            if name not in counts:
+                order.append(name)
+                counts[name] = 0
+            counts[name] += 1
+        return [(name, counts[name]) for name in order]
+    return [tuple(entry) for entry in raw]
+
+
+def stack_add(pack, name, qty=1):
+    """Add `qty` of `name` to a stacked `list[(name, qty)]` pack in place,
+    merging into an existing stack of the same name -- the shared-storage
+    half of `Unit._pack_add` (no per-item locking, no first-aid/quiver
+    refill side effects; those stay Unit-only)."""
+    for i, (n, q) in enumerate(pack):
+        if n == name:
+            pack[i] = (n, q + qty)
+            return
+    pack.append((name, qty))
+
+
+def stack_take(pack, idx, qty=1):
+    """Remove up to `qty` from the stack at `idx` in place, dropping the row
+    once it empties. Returns `(name, removed, remaining)`."""
+    name, held = pack[idx]
+    removed = min(qty, held)
+    remaining = held - removed
+    if remaining <= 0:
+        pack.pop(idx)
+    else:
+        pack[idx] = (name, remaining)
+    return name, removed, remaining
+
+
 class Unit:
     def __init__(self, team, name=None, race=None):
         self.team = team                     # "player" / "enemy" (vestigial: Combatant owns the real one)
@@ -102,7 +145,7 @@ class Unit:
         u.languages = list(d["languages"])              # keep the saved picks, don't re-sort
         u.occupation = data.occupation_by_name(d["occupation"])
         u._configure_occupation()
-        u._base_inventory = cls._pack_from_raw(d["inventory"])
+        u._base_inventory = pack_from_raw(d["inventory"])
         u.locked_items = dict(d.get("locked_items", {}))
         u.equipped_weapon = d.get("equipped_weapon", u.occupation["weapon"])
         u.equipped_offhand = d.get("equipped_offhand")
@@ -851,11 +894,7 @@ class Unit:
     # physical item.                                                     #
     # ------------------------------------------------------------------ #
     def _pack_add(self, name, qty=1):
-        for i, (n, q) in enumerate(self._base_inventory):
-            if n == name:
-                self._base_inventory[i] = (n, q + qty)
-                return
-        self._base_inventory.append((name, qty))
+        stack_add(self._base_inventory, name, qty)
 
     def give_to_pack(self, name, qty=1):
         self._pack_add(name, qty)
@@ -897,13 +936,7 @@ class Unit:
         it empties, and reconcile `locked_items` against what's left. Returns
         `(name, removed)`; shared by `take_from_pack` (index) and
         `remove_named` (name)."""
-        name, held = self._base_inventory[idx]
-        removed = min(qty, held)
-        if removed >= held:
-            self._base_inventory.pop(idx)
-        else:
-            self._base_inventory[idx] = (name, held - removed)
-        held_after = held - removed
+        name, removed, held_after = stack_take(self._base_inventory, idx, qty)
         if self.locked_items.get(name, 0) > held_after:
             self.locked_items[name] = held_after
             if not held_after:
@@ -962,22 +995,6 @@ class Unit:
             del self.locked_items[name]
         else:
             self.locked_items[name] = held
-
-    @staticmethod
-    def _pack_from_raw(raw):
-        """Build `_base_inventory` from a save's `"inventory"` field, which
-        may be an old flat `list[str]` (repetition = stack) or the current
-        `list[[name, qty]]` -- tolerated permanently, no version branch, same
-        spirit as the rest of `from_save`'s `dict.get` defaulting."""
-        if not raw or isinstance(raw[0], str):
-            order, counts = [], {}
-            for name in raw:
-                if name not in counts:
-                    order.append(name)
-                    counts[name] = 0
-                counts[name] += 1
-            return [(name, counts[name]) for name in order]
-        return [tuple(entry) for entry in raw]
 
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""

@@ -3,396 +3,307 @@
 The guild owns nothing as a body except this -- a chest at the bank in the City,
 rented from the Bankers for a flat fee (`economy.BANK_CHEST_PRICE`) and holding
 `guild.bank_capacity` kg. This screen rents the chest and moves gear between it
-and the visiting party's packs.
+and the visiting party's packs -- and, unlike before, lets a member equip
+straight out of either side: the hand/armor slots are drop zones here exactly
+like on the gear screen, not a separate trip.
 
-The visiting party's packs sit beside the chest. Only **pack** items move here --
-spares in and out of storage; wielding a weapon or wearing armor still happens on
-the gear screen. Stashing is free; the one cost is the strongbox rent, charged
-across the party (poorest first) -- so members keep their own coin and there is
-nothing to settle on the way out.
+Money is pooled for the visit (`self.purse`, snapshotted from the party's own
+coin at the door) rather than moved copper by copper -- renting the chest or
+buying the house just debits the pool. Leaving settles the pool back out
+proportional to what each member walked in with (`economy.settle_pooled_
+purse`), so nobody's relative wealth changes just from visiting, without the
+screen having to track whose copper paid for what.
 
-Interaction (same as the market): drag an item where it goes, or click to pick it
-up and click the destination. Shift/ctrl-click gathers several items -- from the
-chest, a pack, or both at once -- for one move; the per-stack stepper (`- N +` /
-`ALL`) does the same without a mouse-drag. A padlock on a pack item (not the
-chest -- it's shared storage) exempts it from DISTRIBUTE LOAD.
-- a party member's pack item -> drop on the CHEST to stash it (needs room under
-  `bank_capacity`), or on another member to hand it over;
-- a chest item -> drop on a member to take it into their pack (needs room under
-  their carry max);
-- drop on nothing / click away to cancel.
+Interaction: drag an item where it goes, or click to pick it up and click the
+destination (shift/ctrl gathers more first). The chest's own rows carry a
+`- N +` stepper for a partial move; a member's pack row always moves as a
+whole stack (split it on the group screen first if you want less).
 """
 
 import pygame
 
-from . import data, economy, icons
-from .dragselect import DragSelectMixin
-from .packbox import LOCK_W
+from . import data, economy
+from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, SURFACE_4, WARN, ellipsize, kg, panel,
-                    section, text, token_badge)
-from .widgets import ButtonsMixin, footer_bar
+from .theme import set_pointer
+from .ui import loadout_panel
+from .ui.inspector_panel import role_for
+from .ui.primitives import draw_button, header, text
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 
-CHEST_W = 340
-WT_COL = 60                          # reserved width for the trailing weight text
+RAIL_W = 230
+COL_MIN, COL_MAX = 300, 420
+CHEST_W = 360
 
 
-class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
+class BankScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, party, on_done):
         super().__init__()
-        self.fonts = fonts
+        self.fonts = fonts                    # legacy Fonts -- unused, kept for the ctor's existing shape
+        self._F = None
         self.guild = guild
         self.party = party
         self.on_done = on_done
-        self.sel = []                                # [(who, idx), ...] -- who is "bank" or a Unit
-        self._sel_qty = {}                           # (unit, idx) -> qty picked; bank picks are always 1
+        self._orig_gold = {m: m.gold for m in party}
+        self.purse = sum(self._orig_gold.values())
+        self.selected = []                    # [(owner, loc)] -- owner is "bank" or a Unit
+        self._sel_qty = {}                    # ("bank", idx) -> qty picked; member picks always move whole
+        self.pinned = list(party)             # columns shown, clamped to fit at draw time
         self.notice = None
-        self.chest_rows = []                         # [(rect, idx)]
-        self.item_rows = []                          # [(rect, member, idx)]
-        self.qty_hits = []                           # [(rect, pick, delta)]
-        self.lock_hits = []                          # [(rect, member, name)]
-        self.cards = []                              # [(rect, member)]
-        self.buttons = []                            # [(key, rect)]
-        self._pack_scroll = {}                       # "bank" | id(member) -> stacks scrolled past
-        self._pack_areas = []                        # [(rect, who)] -- wheel hit-testing
-        self._hot = False
+        self.buttons = []                     # [(key, rect)]
+        self.sources = []                     # [(rect, owner, loc)]
+        self.zones = []                       # [(rect, owner_or_"bank", zone)]
+        self._rail_hits = []
+        self._rail_rect = None
+        self._rail_scroll = 0
+        self._rail_max_scroll = 0
+        self._pack_scroll = {}                # id(unit) -> pack rows scrolled past
+        self._chest_scroll = 0
+        self._service_hits = []               # [(rect, key)]
+        self._unit_by_uid = {u.uid: u for u in party}
+        self.back_rect = None
 
-    # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py)                                          #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "bank"
 
+    def _ui_fonts(self):
+        if self._F is None:
+            self._F = ui_fonts()
+        return self._F
+
     # ------------------------------------------------------------------ #
-    def _items_of(self, who):
-        return self.guild.bank_items if who == "bank" else who._base_inventory
+    # LoadoutMoveMixin overrides: teach it the chest as a third kind of   #
+    # owner, and make pack/chest picks respect a partial-qty selection   #
+    # (equip-slot picks stay whole -- you can't equip half a sword)      #
+    # ------------------------------------------------------------------ #
+    def _item_at(self, owner, loc):
+        if owner == "bank":
+            items = self.guild.bank_items
+            return items[loc][0] if loc < len(items) else None
+        return super()._item_at(owner, loc)
 
-    def _name_of(self, pick):
-        who, idx = pick
-        items = self._items_of(who)
-        if not (0 <= idx < len(items)):
-            return None
-        return items[idx] if who == "bank" else items[idx][0]
+    def _qty_at(self, owner, loc):
+        if isinstance(loc, str):
+            return 1 if self._item_at(owner, loc) is not None else 0
+        items = self.guild.bank_items if owner == "bank" else owner._base_inventory
+        full = items[loc][1] if loc < len(items) else 0
+        return min(full, self._sel_qty.get((owner, loc), full))
 
-    def _held_qty(self, pick):
-        """Full stack quantity for a Unit pick -- meaningless for a bank pick
-        (the chest is still a flat, unstacked `list[str]`; see `_get_qty`)."""
-        who, idx = pick
-        items = self._items_of(who)
-        return items[idx][1] if 0 <= idx < len(items) else 0
+    def _take(self, owner, loc):
+        if isinstance(loc, str):
+            return super()._take(owner, loc)
+        qty = self._qty_at(owner, loc)
+        if owner == "bank":
+            return self.guild.take_from_bank(loc, qty)
+        return owner.take_from_pack(loc, qty), qty
 
-    def _selected_names(self):
-        return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
+    def _give_many(self, dst, zone):
+        """Mirrors `LoadoutMoveMixin._give_many`, with one difference: a
+        pick's owner (or the move's source) may be `"bank"`, which has no
+        `_derive_combat` to call -- guarded below instead of overridden
+        piecemeal, since the parent's version isn't split into reusable
+        pieces at that seam."""
+        if dst == "bank":
+            self._deposit(list(self.selected))
+            return
+        picks = [p for p in self.selected if self._item_at(*p) is not None]
+        self.selected = []
+        if not picks:
+            return
 
-    def _display_stacks(self, who):
-        """`[(name, idx, qty)]` rows to show for `who`. A Unit's pack already
-        keeps real quantities (one row per stack, `dragselect._stacks`); the
-        bank chest is still a flat, unstacked `list[str]` (Decision B), so its
-        rows are a physical-index group instead -- `idx` there is one
-        representative index among several equal picks, same as before this
-        migration."""
-        items = self._items_of(who)
-        if who != "bank":
-            return self._stacks(items)
-        groups, order = {}, []
-        for i, name in enumerate(items):
-            if name not in groups:
-                groups[name] = []
-                order.append(name)
-            groups[name].append(i)
-        return [(name, groups[name][-1], len(groups[name])) for name in order]
+        # taking out of the chest is the one direction this screen still
+        # hard-blocks over `carry_max` -- member <-> member stays the soft,
+        # penalty-only overload rule `LoadoutMoveMixin` already assumes
+        from_bank = any(owner == "bank" for owner, _ in picks)
+        if from_bank:
+            add = sum(data.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
+            if dst.load + add > dst.carry_max:
+                self.notice = f"won't fit {dst.name}'s load."
+                self.selected = picks
+                return
 
-    def _get_qty(self, pick):
-        who, _idx = pick
-        if who == "bank":
-            name = self._name_of(pick)
-            if name is None:
-                return 0
-            all_locs = [i for i, n in enumerate(self.guild.bank_items) if n == name]
-            return len([p for p in self.sel if p[0] == "bank" and p[1] in all_locs])
-        held = self._held_qty(pick)
-        return min(held, self._sel_qty.get(pick, held))
+        if zone in ("hand", "offhand", "tongue", "armor"):
+            fit = next((p for p in picks
+                       if self._fits_slot(dst, zone, self._item_at(*p))
+                       and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
+            if fit is None:
+                self.selected = picks
+                return
+            name = self._item_at(*fit)
+            src = fit[0]
+            self._take(*fit)
+            {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
+             "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
+            if src != "bank":
+                src._derive_combat()
+            dst._derive_combat()
+            return
 
-    @property
-    def purse(self):
-        """The visiting party's coin, live -- the only thing it ever spends here
-        is the strongbox rent. Stashing gear is free, so members keep their own
-        money; nothing is pooled and redivided on the way out."""
-        return sum(m.gold for m in self.party)
-
-    def _charge(self, amount):
-        economy.charge_evenly(self.party, amount)
-
-    def _chest_room(self, weight):
-        return self.guild.bank_load + weight <= self.guild.bank_capacity
-
-    def _fits(self, member, weight):
-        return member.load + weight <= member.carry_max
+        # pack
+        if all(p[0] is dst and not isinstance(p[1], str) for p in picks):
+            return
+        items, touched = self._collect(picks)
+        for name, qty in items:
+            dst.give_to_pack(name, qty)
+        for u in touched:
+            if u != "bank":
+                u._derive_combat()
+        dst._derive_combat()
 
     # ------------------------------------------------------------------ #
     # input                                                              #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):
-        for rect, _pick, _delta in self.qty_hits:
+        for rect, owner, loc in self.sources:
             if rect.collidepoint(px):
-                return None                  # a stepper press starts no drag / select
-        for rect, _member, _name in self.lock_hits:
+                return (owner, loc)
+        return None
+
+    def _zone_at(self, px):
+        for rect, owner, zone in self.zones:
             if rect.collidepoint(px):
-                return None                  # a padlock press starts no drag / select
-        for rect, idx in self.chest_rows:
-            if rect.collidepoint(px):
-                return ("bank", idx)
-        for rect, member, idx in self.item_rows:
-            if rect.collidepoint(px):
-                return (member, idx)
+                return (owner, zone)
         return None
 
     def _begin_drag(self, src):
-        if src not in self.sel:
-            self.sel = [src]
-
-    def _expand_stack(self, src):
-        """Bank picks: `src` plus every other physical index carrying the same
-        name (the chest is still flat/unstacked). Unit picks: `src` alone --
-        `idx` already addresses the whole stack; the caller grows its qty to
-        the full stack separately (see `_drop`)."""
-        who, _idx = src
-        if who != "bank":
-            return [src]
-        name = self._name_of(src)
-        if name is None:
-            return [src]
-        return [(who, i) for i, n in enumerate(self.guild.bank_items) if n == name]
-
-    def _collect(self, picks):
-        """Pull every `(who, idx)` pick off its owner -- highest index first so
-        an earlier removal doesn't shift the ones still to come. Returns
-        `([(name, qty)], touched)`, `touched` being the Unit owners to
-        re-derive (the chest isn't one). A Unit pick takes whatever
-        `self._sel_qty` says is selected; a bank pick is always qty 1 (one
-        physical index)."""
-        by_owner = {}
-        for who, idx in picks:
-            key = "bank" if who == "bank" else id(who)
-            by_owner.setdefault(key, (who, []))[1].append(idx)
-        items, touched = [], []
-        for who, idxs in by_owner.values():
-            for idx in sorted(idxs, reverse=True):
-                if who == "bank":
-                    items.append((self.guild.bank_items.pop(idx), 1))
-                    continue
-                held = who._base_inventory[idx][1] if idx < len(who._base_inventory) else 0
-                qty = min(held, self._sel_qty.get((who, idx), held))
-                if qty > 0:
-                    items.append((who.take_from_pack(idx, qty), qty))
-            if who != "bank":
-                touched.append(who)
-        return items, touched
-
-    def _bump_qty(self, pick, delta):
-        step = delta * (5 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1)
-        who, _idx = pick
-        if who == "bank":
-            name = self._name_of(pick)
-            all_locs = [i for i, n in enumerate(self.guild.bank_items) if n == name]
-            sel_locs = [p[1] for p in self.sel if p[0] == "bank" and p[1] in all_locs]
-            if delta >= 999:
-                self.sel = [p for p in self.sel if not (p[0] == "bank" and p[1] in all_locs)]
-                self.sel.extend([("bank", l) for l in all_locs])
-                return
-            if delta > 0:
-                to_add = [l for l in all_locs if l not in sel_locs][:step]
-                self.sel.extend([("bank", l) for l in to_add])
-            else:
-                to_remove = sel_locs[-abs(step):]
-                self.sel = [p for p in self.sel if not (p[0] == "bank" and p[1] in to_remove)]
-            return
-
-        held = self._held_qty(pick)
-        new_qty = held if delta >= 999 else max(0, min(held, self._sel_qty.get(pick, 0) + step))
-        if new_qty <= 0:
-            self._sel_qty.pop(pick, None)
-            self.sel = [p for p in self.sel if p != pick]
-        else:
-            self._sel_qty[pick] = new_qty
-            if pick not in self.sel:
-                self.sel.append(pick)
+        if src not in self.selected:
+            self.selected = [src]
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
-            hit = next((w for r, w in self._pack_areas if r.collidepoint(self.mouse)), None)
-            if hit is not None:
-                n = len(self._display_stacks(hit))
-                key = "bank" if hit == "bank" else id(hit)
-                cur = self._pack_scroll.get(key, 0)
-                self._pack_scroll[key] = max(0, min(max(0, n - 1), cur - event.y))
+            if self._rail_rect and self._rail_rect.collidepoint(self.mouse):
+                self._rail_scroll = max(0, min(self._rail_max_scroll,
+                                               self._rail_scroll - event.y * 40))
                 return
         super().handle_event(event)
 
     def _drop(self, px, dragging, src):
-        for key, rect in self.buttons:
-            if key in ("done", "rent", "buy_property") and rect.collidepoint(px):
-                if key == "done":
-                    self._leave()
-                elif key == "rent":
-                    self._rent()
-                elif key == "buy_property":
-                    self._buy_property()
-                return
-
         if dragging:
-            self._resolve(px)
-            self.sel = []
-            self._sel_qty = {}
+            hit = self._zone_at(px)
+            if hit is not None:
+                self._give_many(*hit)
+            self.selected, self._sel_qty = [], {}
             return
 
-        for rect, pick, delta in self.qty_hits:
+        for rect, key, delta in self._chest_steppers:
             if rect.collidepoint(px):
-                self._bump_qty(pick, delta)
+                self._bump_qty(key, delta)
                 return
 
-        for rect, member, name in self.lock_hits:
+        for rect, key in self._service_hits:
             if rect.collidepoint(px):
-                member.toggle_lock(name)
+                self._run_service(key)
                 return
 
         for key, rect in self.buttons:
-            if key == "distribute" and rect.collidepoint(px):
-                self._distribute_load()
+            if rect.collidepoint(px):
+                if key == "done":
+                    self._leave()
+                elif key == "distribute":
+                    self._distribute_load()
                 return
 
         mods = pygame.key.get_mods()
         if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
-            who, _idx = src
-            if who == "bank":
-                group = self._expand_stack(src)
-                if src in self.sel:
-                    self.sel = [p for p in self.sel if p not in group]
-                else:
-                    self.sel += [p for p in group if p not in self.sel]
-            elif src in self.sel:
-                self.sel = [p for p in self.sel if p != src]
+            if src in self.selected:
+                self.selected.remove(src)
                 self._sel_qty.pop(src, None)
             else:
-                self.sel.append(src)
-                self._sel_qty[src] = self._held_qty(src)
+                self.selected.append(src)
             return
 
-        if self.sel:
-            if self._resolve(px):
+        if self.selected:
+            hit = self._zone_at(px)
+            if hit is not None:
+                self._give_many(*hit)
+                self.selected, self._sel_qty = [], {}
                 return
-            self._select_one(src)
+            if src in self.selected:
+                self.selected, self._sel_qty = [], {}
+            elif src is not None:
+                self.selected, self._sel_qty = [src], {}
+            else:
+                self.selected, self._sel_qty = [], {}
             return
-        self._select_one(src)
 
-    def _select_one(self, src):
-        """Replace the current selection with just `src` (a plain click) -- a
-        fresh Unit pack pick starts at qty 1; shift/ctrl and the stepper grow
-        it from there. Bank picks don't track a qty (the chest is flat)."""
-        self.sel = [src] if src is not None else []
-        self._sel_qty = {}
-        if src is not None and src[0] != "bank":
-            self._sel_qty[src] = 1
-
-    def _resolve(self, px):
-        """Land the carried picks on whatever is under `px`. Returns True if the
-        release was spent (moved, or bounced off a full target)."""
-        picks = [p for p in self.sel if self._name_of(p) is not None]
-        if not picks:
-            return False
-
-        for rect, member in self.cards:
+        for rect, unit in self._rail_hits:
             if rect.collidepoint(px):
-                self._drop_on_member(member, picks)
-                return True
+                if unit in self.pinned:
+                    self.pinned.remove(unit)
+                else:
+                    self.pinned.append(unit)
+                return
 
-        for key, rect in self.buttons:
-            if key == "chest" and rect.collidepoint(px):
-                self._drop_on_chest(picks)
-                return True
-        return False
+        self.selected = [src] if src is not None else []
+
+    def _bump_qty(self, pick, delta):
+        step = delta * (5 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1)
+        full = self._item_full_qty(pick)
+        cur = self._sel_qty.get(pick, full)
+        new = full if delta >= 999 else max(0, min(full, cur + step))
+        if new <= 0:
+            self._sel_qty.pop(pick, None)
+            self.selected = [p for p in self.selected if p != pick]
+        else:
+            self._sel_qty[pick] = new
+            if pick not in self.selected:
+                self.selected.append(pick)
+
+    def _item_full_qty(self, pick):
+        owner, loc = pick
+        items = self.guild.bank_items if owner == "bank" else owner._base_inventory
+        return items[loc][1] if loc < len(items) else 0
 
     # ------------------------------------------------------------------ #
-    def _rent(self):
-        if self.guild.bank_unlocked:
-            return
-        if self.purse < economy.BANK_CHEST_PRICE:
-            self.notice = (f"the strongbox costs {economy.BANK_CHEST_PRICE} copper — "
-                           f"the party has {self.purse}.")
-            return
-        self._charge(economy.BANK_CHEST_PRICE)
-        self.guild.rent_bank_chest()
-        self.notice = (f"rented a strongbox — {self.guild.bank_capacity} kg of "
-                       "storage at the bank.")
+    # money + services                                                   #
+    # ------------------------------------------------------------------ #
+    def _run_service(self, key):
+        if key == "rent":
+            if self.purse < economy.BANK_CHEST_PRICE:
+                self.notice = (f"the strongbox costs {economy.BANK_CHEST_PRICE} copper -- "
+                               f"the party has {self.purse}.")
+                return
+            self.purse -= economy.BANK_CHEST_PRICE
+            self.guild.rent_bank_chest()
+            self.notice = (f"rented a strongbox -- {self.guild.bank_capacity} kg of "
+                           "storage at the bank.")
+        elif key == "buy_property":
+            if self.purse < economy.CITY_PROPERTY_PRICE:
+                self.notice = (f"the Bankers want {economy.CITY_PROPERTY_PRICE} copper for "
+                               f"the house -- the party has {self.purse}.")
+                return
+            self.purse -= economy.CITY_PROPERTY_PRICE
+            self.guild.buy_city_property()
+            self.notice = "bought a house in the City -- the Bankers' tax starts now."
 
-    def _buy_property(self):
-        if self.guild.property_city_unlocked or self.guild.bankers_services_blocked:
+    def _deposit(self, picks):
+        picks = [p for p in picks if p[0] != "bank" and self._item_at(*p) is not None]
+        if not picks:
+            self.selected, self._sel_qty = [], {}
             return
-        if self.guild.reputation.get("bankers", 0) < economy.CITY_PROPERTY_REP_GATE:
-            return
-        if self.purse < economy.CITY_PROPERTY_PRICE:
-            self.notice = (f"the Bankers want {economy.CITY_PROPERTY_PRICE} copper for the "
-                           f"house — the party has {self.purse}.")
-            return
-        self._charge(economy.CITY_PROPERTY_PRICE)
-        self.guild.buy_city_property()
-        self.notice = "bought a house in the City — the Bankers' tax starts now."
-
-    def _drop_on_chest(self, picks):
+        add = sum(data.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
         if not self.guild.bank_unlocked:
             self.notice = "rent a strongbox first."
-            self.sel = picks
+            self.selected = picks
             return
-        picks = [p for p in picks if p[0] != "bank"]         # already in the chest: no-op
-        if not picks:
-            self.sel = []
-            self._sel_qty = {}
-            return
-        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
-        if not self._chest_room(add):
+        if self.guild.bank_load + add > self.guild.bank_capacity:
             free = self.guild.bank_capacity - self.guild.bank_load
-            self.notice = f"won't fit — {free:g} kg free in the chest."
-            self.sel = picks
+            self.notice = f"won't fit -- {free:g} kg free in the chest."
+            self.selected = picks
             return
-        items, touched = self._collect(picks)   # _collect reads self._sel_qty -- clear after
+        items, touched = self._collect(picks)
         self._sel_qty = {}
         for name, qty in items:
-            self.guild.bank_items.extend([name] * qty)
+            self.guild.stash_in_bank(name, qty)
         for u in touched:
             u._derive_combat()
-        self.sel = []
-        total = sum(qty for _, qty in items)
+        total = sum(q for _, q in items)
         one = items[0][0] if total == 1 else f"{total} items"
         self.notice = f"stashed {one}."
-
-    def _drop_on_member(self, member, picks):
-        picks = [p for p in picks if p[0] is not member]     # dropped back home: skip
-        if not picks:
-            self.sel = []
-            self._sel_qty = {}
-            return
-        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
-        if not self._fits(member, add):
-            self.notice = f"won't fit {member.name}'s load."
-            self.sel = picks
-            return
-        from_chest = all(p[0] == "bank" for p in picks)
-        items, touched = self._collect(picks)   # _collect reads self._sel_qty -- clear after
-        self._sel_qty = {}
-        for name, qty in items:
-            member.give_to_pack(name, qty)
-        for u in touched:
-            u._derive_combat()
-        member._derive_combat()
-        self.sel = []
-        total = sum(qty for _, qty in items)
-        one = items[0][0] if total == 1 else f"{total} items"
-        self.notice = (f"{member.name} took {one}." if from_chest
-                       else f"{one} → {member.name}.")
 
     def _distribute_load(self):
         from . import unit as unit_module
@@ -402,254 +313,193 @@ class BankScreen(DragSelectMixin, ButtonsMixin, Screen):
         self.notice = "redistributed packs by carrying capacity."
 
     def _leave(self):
-        self.on_done()               # members kept their own coin -- nothing to settle
+        economy.settle_pooled_purse(self.party, self._orig_gold, self.purse)
+        self.on_done()
+
+    # ------------------------------------------------------------------ #
+    # adapters: real Unit -> the plain dicts loadout_panel draws          #
+    # ------------------------------------------------------------------ #
+    def _hand_note(self, unit):
+        name = unit.equipped_weapon
+        if not name or name not in data.WEAPONS:
+            return None
+        wd = data.WEAPONS[name]
+        hit_bonus, _ = unit.attack_bonus
+        dn, faces = wd["damage"]
+        return f"{hit_bonus:+} hit  ·  {dn}d{faces} dmg"
+
+    @staticmethod
+    def _armor_note(unit):
+        name = unit.equipped_armor
+        if not name or name not in data.ARMOR:
+            return None
+        ad = data.ARMOR[name]
+        return f"+{ad['ac']} AC"
+
+    def _item_tag(self, name):
+        if name in data.WEAPONS:
+            return "WEAPON"
+        if name in data.ARMOR:
+            return "ARMOR"
+        return ""
+
+    def _member_dict(self, unit, carried):
+        two_handed = bool(unit.equipped_weapon) and data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
+        selected_locs = {loc for owner, loc in self.selected if owner is unit}
+
+        def held(kind, name, note):
+            return {"name": name, "note": note, "sel": kind in selected_locs,
+                    "accepts": bool(carried) and any(self._fits_slot(unit, kind, n) for n in carried)}
+
+        member = {
+            "name": unit.name, "role": role_for(unit.occupation),
+            "pending_picks": bool(unit.pending_picks),
+            "kg": unit.load, "cap": unit.carry_normal,
+            "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
+            "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
+            "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
+            "pack": [(name, self._item_tag(name), data.item_weight(name), qty,
+                     unit.locked_of(name) > 0, idx in selected_locs)
+                    for idx, (name, qty) in enumerate(unit._base_inventory)],
+        }
+        if unit.has_tongue:
+            member["tongue"] = held("tongue", unit.equipped_tongue, None)
+        return member
+
+    def _chest_rows(self):
+        rows = []
+        sel_bank = {loc: self._qty_at("bank", loc) for owner, loc in self.selected if owner == "bank"}
+        for idx, (name, qty) in enumerate(self.guild.bank_items):
+            rows.append((idx, name, self._item_tag(name), data.item_weight(name), qty,
+                        None, None, None, sel_bank.get(idx, 0)))
+        return rows
+
+    # ------------------------------------------------------------------ #
+    def _draw_rail(self, screen, F, rect):
+        members = [{"key": u.uid, "name": u.name, "role": role_for(u.occupation),
+                    "kg": u.load, "cap": u.carry_normal} for u in self.party]
+        pinned_keys = {u.uid for u in self.pinned}
+        hits, max_scroll = loadout_panel.rail(screen, F, rect, members, pinned_keys,
+                                              bool(self.selected), self._rail_scroll, self.mouse)
+        self._rail_rect = rect
+        self._rail_max_scroll = max_scroll
+        self._rail_scroll = max(0, min(self._rail_scroll, max_scroll))
+        self._rail_hits = [(r, self._unit_by_uid[uid]) for r, uid in hits]
+        for r, u in self._rail_hits:
+            self.zones.append((r, u, "pack"))
+
+    def _draw_columns(self, screen, F, area):
+        gap = T.S * 2
+        shown = [u for u in self.pinned if u in self.party]
+        cap = max(1, (area.w + gap) // (COL_MIN + gap))
+        shown = shown[:cap]
+        n = max(1, len(shown))
+        col_w = min(COL_MAX, max(COL_MIN, (area.w - (n - 1) * gap) // n))
+        carried = self._carried_names()
+
+        for i, u in enumerate(shown):
+            r = pygame.Rect(area.x + i * (col_w + gap), area.y, col_w, area.h)
+            member = self._member_dict(u, carried)
+            res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
+            self._pack_scroll[id(u)] = res["scroll"]
+            for kind, slot_rect in res["slot_rects"].items():
+                if slot_rect is None:
+                    continue
+                self.zones.append((slot_rect, u, kind))
+                if member[kind]["name"]:
+                    self.sources.append((slot_rect, u, kind))
+            self.zones.append((res["pack_zone"], u, "pack"))
+            for pr, idx in res["pack_hits"]:
+                self.sources.append((pr, u, idx))
+
+        hidden = len(self.pinned) - len(shown)
+        if hidden > 0:
+            text(screen, F["body_sm"], f"+{hidden} pinned but hidden -- widen the window",
+                (area.x, area.bottom + 4), T.TX_FAINT)
+        if not shown:
+            text(screen, F["body"], "Pin a member on the left to see their gear.",
+                area.center, T.TX_FAINT, center=True)
+
+    def _draw_chest(self, screen, F, rect):
+        used, cap = self.guild.bank_load, self.guild.bank_capacity
+        services = []
+        if not self.guild.property_city_unlocked and not self.guild.property_city_squatting \
+                and self.guild.bankers_debt <= 0:
+            rep_ok = self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
+            can_buy = rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
+            sub = (f"{economy.CITY_PROPERTY_PRICE} c  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
+                  "standing with the Bankers")
+            services.append(("buy_property", "BUY THE HOUSE", sub, can_buy))
+        if not self.guild.bank_unlocked:
+            can_rent = self.purse >= economy.BANK_CHEST_PRICE
+            services.append(("rent", "RENT A STRONGBOX",
+                            f"{economy.BANK_CHEST_PRICE} c  ·  {economy.BANK_CHEST_CAPACITY} kg held in the City",
+                            can_rent))
+
+        data_ = {"label": "the strongbox",
+                "capacity": (used, cap) if self.guild.bank_unlocked else None,
+                "rows": self._chest_rows() if self.guild.bank_unlocked else [],
+                "services": services}
+        res = loadout_panel.container_panel(screen, F, rect, data_, self._chest_scroll, self.mouse)
+        self._chest_scroll = res["scroll"]
+        self._service_hits = res["service_hits"]
+        self._chest_steppers = []
+        for r, idx in res["row_hits"]:
+            self.sources.append((r, "bank", idx))
+        for idx, ctl in res["row_controls"].items():
+            if ctl["minus"]:
+                self._chest_steppers.append((ctl["minus"], ("bank", idx), -1))
+            if ctl["plus"]:
+                self._chest_steppers.append((ctl["plus"], ("bank", idx), 1))
+            if ctl["all"]:
+                self._chest_steppers.append((ctl["all"], ("bank", idx), 999))
+        if self.guild.bank_unlocked:
+            self.zones.append((rect, "bank", "chest"))
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((18, 19, 24))
-        self.chest_rows = []
-        self.item_rows = []
-        self.qty_hits = []
-        self.lock_hits = []
-        self.cards = []
-        self._pack_areas = []
-        self._reset_buttons()
+        F = self._ui_fonts()
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
+        self._unit_by_uid = {u.uid: u for u in self.party}
+        self.zones, self.sources, self.buttons = [], [], []
+        self._chest_steppers = []
 
-        text(screen, "THE BANK", f.title, INK, (MARGIN, MARGIN - 2))
-        text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
-             (screen.get_width() - MARGIN, MARGIN + 2), right=True)
+        head = pygame.Rect(0, 0, W, T.S * 9)
+        body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * 10)
+        chest_rect = pygame.Rect(0, body.y, CHEST_W, body.h)
+        rail_rect = pygame.Rect(chest_rect.right, body.y, RAIL_W, body.h)
+        cols = pygame.Rect(rail_rect.right, body.y, W - rail_rect.right, body.h)
 
-        names = self._selected_names()
-        if names:
-            one = names[0] if len(names) == 1 else f"{len(names)} items"
-            text(screen, f"moving {one}  ·  drop on the chest or a member  ·  "
-                 "click outside to cancel", f.body, ACCENT, (MARGIN, MARGIN + 30))
-        else:
-            text(screen, f"{len(self.party)} at the bank  ·  the Bankers rent one "
-                 "strongbox — a flat fee, no questions", f.body, INK_DIM,
-                 (MARGIN, MARGIN + 30))
+        header(screen, F, head, "The Bank",
+              "the Bankers rent one strongbox  ·  a flat fee, no questions", (), None,
+              mpos=self.mouse)
+        self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
+        text(screen, F["microb"], f"purse {self.purse} c",
+            (W - T.S * 3, T.S * 3), T.BRASS, right=True)
 
-        top = MARGIN + 62
-        chest = pygame.Rect(MARGIN, top, CHEST_W, screen.get_height() - top - 72)
-        self._draw_chest(screen, chest)
-        self._draw_party(screen, pygame.Rect(chest.right + MARGIN, top,
-                                             screen.get_width() - chest.right - 2 * MARGIN,
-                                             chest.h))
-        self._draw_footer(screen)
+        self._draw_chest(screen, F, chest_rect)
+        self._draw_rail(screen, F, rail_rect)
+        self._draw_columns(screen, F, cols.inflate(-T.S * 2, -T.S * 2))
 
-        if self._dragging and names:
-            gx, gy = self.mouse
-            label = names[0] if len(names) == 1 else f"{len(names)} items"
-            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
-            panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
-            text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
+        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 25, T.S * 4)
+        draw_button(screen, F, done_r, "leave the bank", primary=True, mpos=self.mouse)
+        self.buttons.append(("done", done_r))
+        if len(self.party) > 1:
+            dist_r = pygame.Rect(done_r.right + T.S * 2, H - T.S * 8, T.S * 22, T.S * 4)
+            draw_button(screen, F, dist_r, "distribute load", mpos=self.mouse)
+            self.buttons.append(("distribute", dist_r))
+        if self.notice:
+            text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
+        set_pointer(self._hovering())
 
-    # ------------------------------------------------------------------ #
-    def _draw_chest(self, screen, rect):
-        f = self.fonts
-        names = self._selected_names()
-        depositing = bool(names) and any(p[0] != "bank" for p in self.sel)
-        hov = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_2,
-              border=INFO if (depositing and hov) else LINE_SOFT,
-              width=2 if (depositing and hov) else 1, radius=RADIUS)
-        self.buttons.append(("chest", rect))
-
-        x, w = rect.x + SP3, rect.w - 2 * SP3
-        y = rect.y + SP3
-
-        if not self.guild.property_city_unlocked and not self.guild.property_city_squatting and self.guild.bankers_debt <= 0:
-            y = section(screen, "CITY PROPERTY", x, y, w, f)
-            for ln in ("The Bankers sell a house inside the walls for ",
-                       f"{economy.CITY_PROPERTY_PRICE} copper, taxed {economy.CITY_PROPERTY_TAX}",
-                       f"copper every {economy.CITY_PROPERTY_TAX_PERIOD_DAYS} days."):
-                text(screen, ln, f.body_sm, INK_DIM, (x, y))
-                y += 17
-
-            rep_ok = self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
-            if not rep_ok:
-                text(screen, f"needs {economy.CITY_PROPERTY_REP_GATE} reputation with the ",
-                     f.body_sm, WARN, (x, y))
-                y += 17
-                text(screen, f"Bankers (have {self.guild.reputation.get('bankers', 0)})",
-                     f.body_sm, WARN, (x, y))
-                y += 17
-            y += SP2
-            pr = pygame.Rect(x, y, w, 38)
-            can_buy = rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-            self.add_button(screen, pr, "buy_property",
-                            f"BUY THE HOUSE — {economy.CITY_PROPERTY_PRICE} COPPER",
-                            enabled=can_buy, primary=can_buy)
-            y += 60
-
-        y = section(screen, "THE STRONGBOX", x, y, w, f)
-
-        if not self.guild.bank_unlocked:
-            for ln in ("The guild has no strongbox yet.",
-                       f"The Bankers rent one for {economy.BANK_CHEST_PRICE} copper:",
-                       f"{economy.BANK_CHEST_CAPACITY} kg of storage, held safe in "
-                       "the City."):
-                text(screen, ln, f.body_sm, INK_DIM, (x, y))
-                y += 17
-            y += SP2
-            r = pygame.Rect(x, y, w, 38)
-            can = self.purse >= economy.BANK_CHEST_PRICE
-            self.add_button(screen, r, "rent",
-                            f"RENT A STRONGBOX — {economy.BANK_CHEST_PRICE} COPPER",
-                            enabled=can, primary=can)
-            return
-
-        # capacity bar
-        used, cap = self.guild.bank_load, self.guild.bank_capacity
-        over = used > cap
-        bar = pygame.Rect(x, y, w, 10)
-        panel(screen, bar, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
-        span = bar.w - 2
-        fillw = int(span * min(1.0, used / max(1, cap)))
-        if fillw > 0:
-            pygame.draw.rect(screen, DANGER if over else OK,
-                             (bar.x + 1, bar.y + 1, fillw, bar.h - 2), border_radius=3)
-        y += 15
-        text(screen, f"{kg(used)}  /  {kg(cap)}", f.mono_sm,
-             DANGER if over else INK_DIM, (x, y))
-        y += 18
-
-        y = self._draw_stack_list(screen, "bank", x, y, w, rect.bottom - SP3,
-                                  header=f"STASHED  ({len(self.guild.bank_items)})",
-                                  show_lock=False)
-
-    # ------------------------------------------------------------------ #
-    def _draw_party(self, screen, area):
-        n = max(1, len(self.party))
-        gap = SP3
-        card_w = min(300, (area.w - (n - 1) * gap) // n)
-        for i, m in enumerate(self.party):
-            rect = pygame.Rect(area.x + i * (card_w + gap), area.y, card_w, area.h)
-            self._draw_card(screen, rect, m)
-            self.cards.append((rect, m))
-
-    def _draw_card(self, screen, rect, m):
-        f = self.fonts
-        pad = SP3
-        names = self._selected_names()
-        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in self.sel)
-        incoming = bool(names) and any(p[0] is not m for p in self.sel)
-        take_ok = incoming and self._fits(m, add)
-        hov = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_2,
-              border=OK if (take_ok and hov) else DANGER if (incoming and hov and not take_ok)
-              else LINE_SOFT, width=2 if hov else 1, radius=RADIUS)
-
-        tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, m, f)
-        text(screen, m.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
-        text(screen, f"{m.race['name']}  ·  {m.occupation['name']}", f.body_sm,
-             INK_DIM, (tok[0] + 24, rect.y + pad + 20))
-
-        y = rect.y + pad + 48
-        over = m.load > m.carry_max
-        ccol = DANGER if over else WARN if m.encumbered else OK
-        text(screen, f"Load {kg(m.load)} / {kg(m.carry_normal)}", f.mono_sm, ccol,
-             (rect.x + pad, y))
-        y += 18
-
-        self._draw_stack_list(screen, m, rect.x + pad, y, rect.w - 2 * pad,
-                              rect.bottom - pad, header=f"PACK  ({len(m._base_inventory)})",
-                              show_lock=True)
-
-    # ------------------------------------------------------------------ #
-    def _draw_stack_list(self, screen, who, x, y, w, bottom, *, header, show_lock):
-        """Stacked, scrollable rows for `who`'s items (`who` is `"bank"` or a
-        Unit) -- the chest and every party pack are drawn through this one path
-        so the multi-select stepper, the wheel scroll and the padlock (pack
-        only) all behave the same everywhere."""
-        f = self.fonts
-        items = self._items_of(who)
-        y = section(screen, header, x, y, w, f)
-        if not items:
-            text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
-            return y + 22
-
-        row_h = 24 + SP1
-        area = pygame.Rect(x, y, w, max(0, bottom - y))
-        self._pack_areas.append((area, who))
-        stacks = self._display_stacks(who)
-        visible_n = max(1, (bottom - y) // row_h)
-        key = "bank" if who == "bank" else id(who)
-        scroll = max(0, min(self._pack_scroll.get(key, 0), max(0, len(stacks) - visible_n)))
-        self._pack_scroll[key] = scroll
-
-        if scroll:
-            text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (x, y + 2))
-            y += 14
-        shown = stacks[scroll:scroll + visible_n]
-        for name, idx, count in shown:
-            r = pygame.Rect(x, y, w, 24)
-            self._draw_row(screen, r, who, idx, name, count, show_lock=show_lock)
-            y += row_h
-        more_below = len(stacks) - scroll - len(shown)
-        if more_below > 0:
-            text(screen, f"v {more_below} more below", f.label, INK_FAINT, (x, y + 2))
-            y += 14
-        return y
-
-    def _draw_row(self, screen, r, who, idx, name, count, *, show_lock):
-        f = self.fonts
-        pick = (who, idx)
-        q = self._get_qty(pick)
-        sel = q > 0
-        hov = not self.sel and r.collidepoint(self.mouse)
-        panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
-              border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-        ink = ACCENT_INK if sel else INK
-
-        name_x = r.x + SP2
-        if show_lock:
-            locked = who.locked_of(name) >= count
-            lr = pygame.Rect(r.x + 2, r.y + 3, LOCK_W, 18)
-            lhov = lr.collidepoint(self.mouse)
-            icons.icon(screen, "lock" if locked else "unlock", lr,
-                       ACCENT_INK if sel else ACCENT if locked else (INK if lhov else INK_FAINT))
-            self.lock_hits.append((lr, who, name))
-            name_x += LOCK_W
-
-        bw, bh = 16, 18
-        cy = r.centery
-        cursor = r.right - SP2 - WT_COL
-        if count > 1:
-            all_btn = pygame.Rect(cursor - 28, cy - bh // 2, 28, bh)
-            hov_all = all_btn.collidepoint(self.mouse)
-            panel(screen, all_btn, fill=SURFACE_4 if hov_all else SURFACE_1,
-                  border=ACCENT if hov_all else LINE_SOFT, width=1, radius=3)
-            text(screen, "ALL", f.label, ACCENT if hov_all else INK_DIM, all_btn.center, center=True)
-            self.qty_hits.append((all_btn, pick, 999))
-            cursor = all_btn.x - 4
-
-        plus = pygame.Rect(cursor - bw, cy - bh // 2, bw, bh)
-        minus = pygame.Rect(plus.x - 26 - bw, cy - bh // 2, bw, bh)
-        for br, glyph, delta in ((minus, "-", -1), (plus, "+", +1)):
-            hov_b = br.collidepoint(self.mouse)
-            panel(screen, br, fill=SURFACE_4 if hov_b else SURFACE_1,
-                  border=ACCENT if hov_b else LINE_SOFT, width=1, radius=3)
-            text(screen, glyph, f.body_bd, ACCENT if hov_b else INK_DIM, br.center, center=True)
-            self.qty_hits.append((br, pick, delta))
-        if q:
-            text(screen, str(q), f.mono, ACCENT, ((minus.right + plus.x) // 2, cy - 1), center=True)
-
-        label = name if count == 1 else f"{name}  ×{count}"
-        text(screen, ellipsize(label, f.body_sm, minus.x - name_x - SP2), f.body_sm,
-             ACCENT_INK if sel else ink, (name_x, r.y + 5))
-        text(screen, kg(data.item_weight(name) * count), f.mono_sm,
-             ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
-
-        if who == "bank":
-            self.chest_rows.append((r, idx))
-        else:
-            self.item_rows.append((r, who, idx))
-
-    # ------------------------------------------------------------------ #
-    def _draw_footer(self, screen):
-        secondary = ("distribute", "DISTRIBUTE LOAD") if len(self.party) > 1 else None
-        footer_bar(self, screen, primary=("done", "LEAVE THE BANK"), secondary=secondary,
-                  notice=self.notice)
+    def _hovering(self):
+        if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
+            return True
+        if any(r.collidepoint(self.mouse) for _, r in self.buttons):
+            return True
+        if any(r.collidepoint(self.mouse) for r, _ in self._rail_hits):
+            return True
+        if any(r.collidepoint(self.mouse) for r, *_ in self._service_hits):
+            return True
+        return any(r.collidepoint(self.mouse) for r, *_ in self.sources)

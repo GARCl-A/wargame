@@ -38,7 +38,10 @@ def _screen(guild, party):
     s = CityPropertyScreen.__new__(CityPropertyScreen)
     s.guild = guild
     s.party = party
-    s.sel = None
+    s._orig_gold = {m: m.gold for m in party}
+    s.purse = sum(s._orig_gold.values())
+    s.selected = []
+    s._sel_qty = {}
     s.notice = None
     s.on_done = lambda: None
     return s
@@ -56,15 +59,18 @@ def _at_gate(gold=economy.CITY_PROPERTY_PRICE):
 # buying                                                                       #
 # --------------------------------------------------------------------------- #
 
-def test_buying_charges_the_party_and_starts_the_tax_clock():
+def test_buying_debits_the_pooled_purse_and_starts_the_tax_clock():
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 20)
     s = _screen(guild, [p])
 
-    s._buy()
+    s._run_service("buy")
     assert guild.property_city_unlocked
-    assert p.gold == 20
+    assert s.purse == 20 and p.gold == economy.CITY_PROPERTY_PRICE + 20   # not settled until leaving
     assert guild.property_city_tax_due_day == guild.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
+
+    s._leave()
+    assert p.gold == 20
 
 
 def test_buying_is_refused_below_the_reputation_gate():
@@ -74,8 +80,8 @@ def test_buying_is_refused_below_the_reputation_gate():
     guild = Guild([p], reputation={"bankers": economy.CITY_PROPERTY_REP_GATE - 1})
     s = _screen(guild, [p])
 
-    s._buy()
-    assert not guild.property_city_unlocked and p.gold == economy.CITY_PROPERTY_PRICE
+    s._run_service("buy")
+    assert not guild.property_city_unlocked and s.purse == economy.CITY_PROPERTY_PRICE
 
 
 def test_buying_is_refused_when_the_party_is_short():
@@ -83,7 +89,7 @@ def test_buying_is_refused_when_the_party_is_short():
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE - 1)
     s = _screen(guild, [p])
 
-    s._buy()
+    s._run_service("buy")
     assert not guild.property_city_unlocked and "copper" in s.notice
 
 
@@ -93,8 +99,8 @@ def test_buying_is_refused_while_bankers_debt_is_outstanding():
     guild.bankers_debt = 10
     s = _screen(guild, [p])
 
-    s._buy()
-    assert not guild.property_city_unlocked and p.gold == economy.CITY_PROPERTY_PRICE + 20
+    s._run_service("buy")
+    assert not guild.property_city_unlocked and s.purse == economy.CITY_PROPERTY_PRICE + 20
 
 
 def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
@@ -104,14 +110,13 @@ def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
     p._base_inventory = packed(["Chainmail"])              # 10.0 kg
     s = _screen(guild, [p])
 
-    s.sel = (p, 0)
-    s._deposit()
-    assert guild.property_city_items == ["Chainmail"] and p._base_inventory == []
+    s._deposit([(p, 0)])
+    assert guild.property_city_items == [("Chainmail", 1)] and p._base_inventory == []
 
     p.carry_max = 0.5
-    s.sel = ("house", 0)
-    s._withdraw(p)
-    assert guild.property_city_items == ["Chainmail"] and "fit" in s.notice
+    s.selected = [("house", 0)]
+    s._give_many(p, "pack")
+    assert guild.property_city_items == [("Chainmail", 1)] and "fit" in s.notice
 
 
 # --------------------------------------------------------------------------- #
@@ -187,9 +192,11 @@ def test_paying_off_the_debt_unblocks_bankers_services():
     guild.property_city_debt_since = guild.clock.day
     s = _screen(guild, [p])
 
-    s._pay_debt()
+    s._run_service("pay_debt")
     assert guild.bankers_debt == 0 and not guild.bankers_services_blocked
     assert guild.property_city_debt_since is None
+    assert s.purse == 1000 - 120
+    s._leave()
     assert p.gold == 1000 - 120
 
 
@@ -201,8 +208,8 @@ def test_paying_off_the_debt_never_overpays():
     guild.bankers_debt = 30
     s = _screen(guild, [p])
 
-    s._pay_debt()
-    assert guild.bankers_debt == 0 and p.gold == 1000 - 30
+    s._run_service("pay_debt")
+    assert guild.bankers_debt == 0 and s.purse == 1000 - 30
 
 
 def test_squatting_keeps_the_property_with_no_more_tax_due():
@@ -345,14 +352,15 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
     s.mouse = (0, 0)
 
     s.draw(surf)                                      # buy-offer state
-    buy = next(r for k, r in s.buttons if k == "buy")
+    buy = next(r for r, key in s._service_hits if key == "buy")
     s._drop(buy.center, False, None)
     assert guild.property_city_unlocked
 
     s.draw(surf)                                      # now the storage view
-    s.sel = (p, 0)
-    house = next(r for k, r in s.buttons if k == "house")
-    assert s._resolve(house.center) and guild.property_city_items == ["Rope"]
+    s.selected = [(p, 0)]
+    house_zone = next(r for r, owner, zone in s.zones if zone == "house")
+    s._drop(house_zone.center, True, (p, 0))
+    assert guild.property_city_items == [("Rope", 1)]
 
 
 def test_drawing_the_repossession_screen_and_choosing_squat():

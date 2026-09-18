@@ -311,3 +311,32 @@ def charge_richest_first(members, amount):
         left -= paid
         if left <= 0:
             break
+
+
+def settle_pooled_purse(members, orig_gold, remaining):
+    """A shopping/storage screen pools every member's coin into one number
+    for the visit (buying, selling, renting all just move that number, not
+    real coin between real pockets) -- this hands `remaining` back out when
+    the visit ends, proportional to what each member put in (`orig_gold`,
+    a member -> copper-at-entry map), so whoever had more still has more
+    without the screen having to track which copper was whose transaction
+    by transaction. Uses the largest-remainder method so the total handed
+    out always equals `remaining` exactly, down to the last copper."""
+    if not members:
+        return
+    total_orig = sum(orig_gold[m] for m in members)
+    if total_orig <= 0:                      # nobody had anything to be proportional to
+        base, rem = divmod(remaining, len(members))
+        for i, m in enumerate(members):
+            m.gold = base + (1 if i < rem else 0)
+        return
+    shares = []
+    for m in members:
+        exact = remaining * orig_gold[m] / total_orig
+        shares.append([m, int(exact), exact - int(exact)])
+    leftover = remaining - sum(s[1] for s in shares)
+    shares.sort(key=lambda s: s[2], reverse=True)
+    for i in range(leftover):
+        shares[i][1] += 1
+    for m, amt, _ in shares:
+        m.gold = amt

@@ -86,6 +86,7 @@ from . import data, economy, justice, magic, missions, progression, world
 from .clock import Clock
 from .group import Group
 from .tutorial import TutorialState
+from .unit import pack_from_raw, stack_add, stack_take
 
 # Fallbacks for a guild with no chosen identity (old saves, from before the
 # draft's naming/banner step existed). Plain data, not `theme`/`artwork`
@@ -126,7 +127,7 @@ class Guild:
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
         self.bank_capacity = bank_capacity    # kg the rented strongbox holds (0 = none rented)
-        self.bank_items = list(bank_items or [])   # item names stashed in the chest
+        self.bank_items = pack_from_raw(bank_items or [])   # [(name, qty), ...] stashed in the chest
         # live market stock (economy.STOCK) -- a name absent here restocks freely
         self.market_stock = dict(economy.STOCK) if market_stock is None else dict(market_stock)
         self.missions = list(missions or [])  # active/finished missions.Mission, see missions.py
@@ -148,7 +149,7 @@ class Guild:
         self.jailed = list(jailed or [])      # [(Unit, released_day), ...] -- see the docstring above
         # the City property -- see the docstring above and economy.CITY_PROPERTY_*
         self.property_city_unlocked = property_city_unlocked
-        self.property_city_items = list(property_city_items or [])
+        self.property_city_items = pack_from_raw(property_city_items or [])
         self.property_city_tax_due_day = property_city_tax_due_day   # clock.day the next tax is due, or None
         self.property_city_missed_payments = property_city_missed_payments
         self.property_city_squatting = property_city_squatting       # illegal occupier, after refusing repossession
@@ -330,19 +331,37 @@ class Guild:
     @property
     def bank_load(self):
         """Weight of everything stashed in the bank chest."""
-        return sum(data.item_weight(it) for it in self.bank_items)
+        return sum(data.item_weight(name) * qty for name, qty in self.bank_items)
 
     def rent_bank_chest(self):
         """Take up the Bankers' offer: the guild's first strongbox. The caller
         collects the fee first -- this only flips the capacity on."""
         self.bank_capacity = economy.BANK_CHEST_CAPACITY
 
+    def stash_in_bank(self, name, qty=1):
+        stack_add(self.bank_items, name, qty)
+
+    def take_from_bank(self, idx, qty=1):
+        """Remove up to `qty` from the chest stack at `idx`. Returns
+        `(name, removed)`."""
+        name, removed, _ = stack_take(self.bank_items, idx, qty)
+        return name, removed
+
     # ------------------------------------------------------------------ #
     # the City property (see the class docstring, economy.CITY_PROPERTY_*) #
     # ------------------------------------------------------------------ #
     @property
     def property_city_load(self):
-        return sum(data.item_weight(it) for it in self.property_city_items)
+        return sum(data.item_weight(name) * qty for name, qty in self.property_city_items)
+
+    def stash_in_property(self, name, qty=1):
+        stack_add(self.property_city_items, name, qty)
+
+    def take_from_property(self, idx, qty=1):
+        """Remove up to `qty` from the property stack at `idx`. Returns
+        `(name, removed)`."""
+        name, removed, _ = stack_take(self.property_city_items, idx, qty)
+        return name, removed
 
     @property
     def bankers_services_blocked(self):

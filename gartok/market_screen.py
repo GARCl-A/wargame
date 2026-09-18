@@ -3,7 +3,9 @@
 The shopping party pools its coin into one **common purse** for the visit (the
 guild has no treasury) and the members' packs sit side by side, so you can shift
 items and spend freely without per-character fiddling. On the way out the purse
-is split back evenly among the shoppers.
+is split back out proportional to what each shopper walked in with
+(`economy.settle_pooled_purse`, the same rule the bank/property screens use) --
+so nobody's relative wealth changes just from shopping together.
 
 The stock is split into **category tabs** -- WEAPONS / ARMOR / CONSUMABLES & KIT
 (`economy.market_categories`) -- each with a column layout tuned to what matters
@@ -46,7 +48,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.shoppers = shoppers
         self.node = node
         self.on_done = on_done
-        self.purse = sum(m.gold for m in shoppers)   # pooled for the visit
+        self._orig_gold = {m: m.gold for m in shoppers}   # snapshot, for the proportional settle on leaving
+        self.purse = sum(self._orig_gold.values())   # pooled for the visit
         # haggling: language + charisma + alignment (and talents) bend the prices;
         # the shopping group's leader speaks for it when they're eligible (see
         # economy._haggle_fraction). `self.deal` is a list of economy.PriceMod,
@@ -406,10 +409,11 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self._settle_market()
 
     def _checkout(self):
-        n = max(1, len(self.shoppers))
-        base, rem = divmod(self.purse, n)
-        for i, m in enumerate(self.shoppers):
-            m.gold = base + (1 if i < rem else 0)
+        """Settles the pooled purse back out proportional to what each
+        shopper walked in with (same rule the bank/property screens use) --
+        no longer an even split, so wealth doesn't quietly level out just
+        from shopping together."""
+        economy.settle_pooled_purse(self.shoppers, self._orig_gold, self.purse)
         self.on_done()
 
     # ------------------------------------------------------------------ #

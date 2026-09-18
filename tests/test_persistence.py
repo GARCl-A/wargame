@@ -148,7 +148,7 @@ def test_save_slot_file_round_trip():
         assert back.arena_challenge_day == 12
         assert back.roster[0].arena_title and "belt" in back.roster[0].bio
         assert back.clock.seconds == 30 * 3600 and back.node == "wilds"
-        assert back.bank_capacity == 10 and back.bank_items == ["Rope", "Sack"]
+        assert back.bank_capacity == 10 and back.bank_items == [("Rope", 1), ("Sack", 1)]
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
         assert back.roster[0].gold == 42

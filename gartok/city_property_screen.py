@@ -3,8 +3,10 @@
 [[gartok-property-two-paths]]'s "City" path -- the counterpart to a Wilds
 claim, subordinate to the Bankers rather than sovereign. `CityPropertyScreen`
 is the day-to-day screen (buy it, stash gear in it, pay off any debt) --
-almost the same shape as `bank_screen.BankScreen`'s strongbox, just with a
-recurring tax instead of a one-off fee. `RepossessionScreen` is the choice
+the same shape as `bank_screen.BankScreen`'s strongbox (equip slots live on
+every member column here too, and money is pooled for the visit the same
+way), just with a recurring tax instead of a one-off fee, and no equivalent
+of the strongbox's second "rent" step. `RepossessionScreen` is the choice
 forced once too many tax cycles are missed (`guild.property_city_repossession_due`):
 return the property (and owe the Bankers), or keep it and become an illegal
 occupier -- same three-way modal shape `justice_screen.GuardScreen` uses for
@@ -16,409 +18,493 @@ only later, if the guild squats and the guard actually comes -- `campaign.py`'s
 import pygame
 
 from . import data, economy
-from .dragselect import DragSelectMixin
+from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, ellipsize, kg, panel, section,
-                    text, token_badge, wrap_lines)
-from .widgets import ButtonsMixin, ModalScreen, footer_bar
+from .theme import (DANGER, INFO, INK, INK_DIM, MARGIN, SP2, SP3,
+                    SURFACE_2, SURFACE_3, panel, set_pointer, text, wrap_lines)
+from .ui import loadout_panel
+from .ui.inspector_panel import role_for
+from .ui.primitives import draw_button, header
+from .ui.primitives import text as ui_text
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
+from .widgets import ModalScreen
 
-HOUSE_W = 392
-PACK_ROWS_SHOWN = 10
+RAIL_W = 230
+COL_MIN, COL_MAX = 300, 420
+HOUSE_W = 360
 
 
-class CityPropertyScreen(DragSelectMixin, ButtonsMixin, Screen):
+class CityPropertyScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, party, on_done):
         super().__init__()
         self.fonts = fonts
+        self._F = None
         self.guild = guild
         self.party = party
         self.on_done = on_done
-        self.sel = None
+        self._orig_gold = {m: m.gold for m in party}
+        self.purse = sum(self._orig_gold.values())
+        self.selected = []
+        self._sel_qty = {}
+        self.pinned = list(party)
         self.notice = None
-        self.house_rows = []
-        self.item_rows = []
-        self.cards = []
         self.buttons = []
-        self._hot = False
+        self.sources = []
+        self.zones = []
+        self._rail_hits = []
+        self._rail_rect = None
+        self._rail_scroll = 0
+        self._rail_max_scroll = 0
+        self._pack_scroll = {}
+        self._house_scroll = 0
+        self._service_hits = []
+        self._unit_by_uid = {u.uid: u for u in party}
+        self.back_rect = None
 
     def tutorial_key(self):
         return None
 
+    def _ui_fonts(self):
+        if self._F is None:
+            self._F = ui_fonts()
+        return self._F
+
     # ------------------------------------------------------------------ #
-    def _name_of(self, pick):
-        if pick is None:
-            return None
-        who, idx = pick
-        if who == "house":
-            return (self.guild.property_city_items[idx]
-                    if idx < len(self.guild.property_city_items) else None)
-        return who._base_inventory[idx][0] if idx < len(who._base_inventory) else None
+    # LoadoutMoveMixin overrides -- see bank_screen.py's twin methods for  #
+    # why these exist (a "house" owner with no `_derive_combat`, and a     #
+    # stepper-adjustable partial qty for house/pack picks alike)          #
+    # ------------------------------------------------------------------ #
+    def _item_at(self, owner, loc):
+        if owner == "house":
+            items = self.guild.property_city_items
+            return items[loc][0] if loc < len(items) else None
+        return super()._item_at(owner, loc)
 
-    def _held_qty(self, pick):
-        """Full stack quantity for a Unit pack pick -- always 1 for a house
-        pick (the property store is still a flat, unstacked list, same as
-        the bank chest -- Decision B)."""
-        who, idx = pick
-        if who == "house":
-            return 1
-        items = who._base_inventory
-        return items[idx][1] if idx < len(items) else 0
+    def _qty_at(self, owner, loc):
+        if isinstance(loc, str):
+            return 1 if self._item_at(owner, loc) is not None else 0
+        items = self.guild.property_city_items if owner == "house" else owner._base_inventory
+        full = items[loc][1] if loc < len(items) else 0
+        return min(full, self._sel_qty.get((owner, loc), full))
 
-    @property
-    def purse(self):
-        return sum(m.gold for m in self.party)
+    def _take(self, owner, loc):
+        if isinstance(loc, str):
+            return super()._take(owner, loc)
+        qty = self._qty_at(owner, loc)
+        if owner == "house":
+            return self.guild.take_from_property(loc, qty)
+        return owner.take_from_pack(loc, qty), qty
 
-    def _charge(self, amount):
-        economy.charge_evenly(self.party, amount)
+    def _give_many(self, dst, zone):
+        if dst == "house":
+            self._deposit(list(self.selected))
+            return
+        picks = [p for p in self.selected if self._item_at(*p) is not None]
+        self.selected = []
+        if not picks:
+            return
 
-    @property
-    def _from_house(self):
-        return self.sel is not None and self.sel[0] == "house"
+        from_house = any(owner == "house" for owner, _ in picks)
+        if from_house:
+            add = sum(data.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
+            if dst.load + add > dst.carry_max:
+                self.notice = f"won't fit {dst.name}'s load."
+                self.selected = picks
+                return
 
-    def _house_room(self, name, qty=1):
-        return (self.guild.property_city_load + data.item_weight(name) * qty
-                <= economy.CITY_PROPERTY_CAPACITY)
+        if zone in ("hand", "offhand", "tongue", "armor"):
+            fit = next((p for p in picks
+                       if self._fits_slot(dst, zone, self._item_at(*p))
+                       and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
+            if fit is None:
+                self.selected = picks
+                return
+            name = self._item_at(*fit)
+            src = fit[0]
+            self._take(*fit)
+            {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
+             "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
+            if src != "house":
+                src._derive_combat()
+            dst._derive_combat()
+            return
 
-    def _fits(self, member, name, qty=1):
-        return member.load + data.item_weight(name) * qty <= member.carry_max
-
-    @property
-    def _rep_ok(self):
-        return self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
+        if all(p[0] is dst and not isinstance(p[1], str) for p in picks):
+            return
+        items, touched = self._collect(picks)
+        for name, qty in items:
+            dst.give_to_pack(name, qty)
+        for u in touched:
+            if u != "house":
+                u._derive_combat()
+        dst._derive_combat()
 
     # ------------------------------------------------------------------ #
     # input                                                              #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):
-        for rect, idx in self.house_rows:
+        for rect, owner, loc in self.sources:
             if rect.collidepoint(px):
-                return ("house", idx)
-        for rect, member, idx in self.item_rows:
+                return (owner, loc)
+        return None
+
+    def _zone_at(self, px):
+        for rect, owner, zone in self.zones:
             if rect.collidepoint(px):
-                return (member, idx)
+                return (owner, zone)
         return None
 
     def _begin_drag(self, src):
-        self.sel = src
+        if src not in self.selected:
+            self.selected = [src]
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            if self._rail_rect and self._rail_rect.collidepoint(self.mouse):
+                self._rail_scroll = max(0, min(self._rail_max_scroll,
+                                               self._rail_scroll - event.y * 40))
+                return
+        super().handle_event(event)
 
     def _drop(self, px, dragging, src):
-        for key, rect in self.buttons:
-            if key in ("done", "buy", "pay_debt") and rect.collidepoint(px):
-                {"done": self._leave, "buy": self._buy,
-                 "pay_debt": self._pay_debt}[key]()
-                return
-
         if dragging:
-            self._resolve(px)
-            self.sel = None
+            hit = self._zone_at(px)
+            if hit is not None:
+                self._give_many(*hit)
+            self.selected, self._sel_qty = [], {}
             return
 
-        if self.sel is not None:
-            if self._resolve(px):
-                self.sel = None
-                return
-            self.sel = None if src == self.sel else src
-            return
-        self.sel = src
-
-    def _resolve(self, px):
-        if self.sel is None or self._name_of(self.sel) is None:
-            return False
-        name = self._name_of(self.sel)
-
-        for rect, member in self.cards:
+        for rect, key, delta in self._house_steppers:
             if rect.collidepoint(px):
-                if self._from_house:
-                    self._withdraw(member)
-                elif self.sel[0] is not member:
-                    self._hand_over(member)
-                return True
+                self._bump_qty(key, delta)
+                return
+
+        for rect, key in self._service_hits:
+            if rect.collidepoint(px):
+                self._run_service(key)
+                return
 
         for key, rect in self.buttons:
-            if key == "house" and rect.collidepoint(px) and not self._from_house:
-                self._deposit()
-                return True
-        return False
+            if rect.collidepoint(px) and key == "done":
+                self._leave()
+                return
+
+        mods = pygame.key.get_mods()
+        if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+            if src in self.selected:
+                self.selected.remove(src)
+                self._sel_qty.pop(src, None)
+            else:
+                self.selected.append(src)
+            return
+
+        if self.selected:
+            hit = self._zone_at(px)
+            if hit is not None:
+                self._give_many(*hit)
+                self.selected, self._sel_qty = [], {}
+                return
+            if src in self.selected:
+                self.selected, self._sel_qty = [], {}
+            elif src is not None:
+                self.selected, self._sel_qty = [src], {}
+            else:
+                self.selected, self._sel_qty = [], {}
+            return
+
+        for rect, unit in self._rail_hits:
+            if rect.collidepoint(px):
+                if unit in self.pinned:
+                    self.pinned.remove(unit)
+                else:
+                    self.pinned.append(unit)
+                return
+
+        self.selected = [src] if src is not None else []
+
+    def _bump_qty(self, pick, delta):
+        step = delta * (5 if pygame.key.get_mods() & pygame.KMOD_SHIFT else 1)
+        owner, loc = pick
+        items = self.guild.property_city_items if owner == "house" else owner._base_inventory
+        full = items[loc][1] if loc < len(items) else 0
+        cur = self._sel_qty.get(pick, full)
+        new = full if delta >= 999 else max(0, min(full, cur + step))
+        if new <= 0:
+            self._sel_qty.pop(pick, None)
+            self.selected = [p for p in self.selected if p != pick]
+        else:
+            self._sel_qty[pick] = new
+            if pick not in self.selected:
+                self.selected.append(pick)
 
     # ------------------------------------------------------------------ #
-    def _buy(self):
-        if self.guild.property_city_unlocked or self.guild.bankers_services_blocked:
-            return
-        if not self._rep_ok:
-            return
-        if self.purse < economy.CITY_PROPERTY_PRICE:
-            self.notice = (f"the Bankers want {economy.CITY_PROPERTY_PRICE} copper for the "
-                           f"house -- the party has {self.purse}.")
-            return
-        self._charge(economy.CITY_PROPERTY_PRICE)
-        self.guild.buy_city_property()
-        self.notice = "bought a house in the City -- the Bankers' tax starts now."
-
-    def _pay_debt(self):
-        if self.guild.bankers_debt <= 0:
-            return
-        amount = min(self.purse, self.guild.bankers_debt)
-        if amount <= 0:
-            self.notice = "the party has no copper to pay with."
-            return
-        self._charge(amount)
-        self.guild.pay_bankers_debt(amount)
-        self.notice = (f"paid {amount} copper toward the debt."
-                       if self.guild.bankers_debt > 0
-                       else "debt cleared -- the Bankers deal with the guild again.")
-
-    def _deposit(self):
-        name = self._name_of(self.sel)
-        member = self.sel[0]
-        qty = self._held_qty(self.sel)
-        if not self._house_room(name, qty):
-            free = economy.CITY_PROPERTY_CAPACITY - self.guild.property_city_load
-            self.notice = f"{name} won't fit -- {free:g} kg free at the property."
-            return
-        member.take_from_pack(self.sel[1], qty)
-        self.guild.property_city_items.extend([name] * qty)
-        member._derive_combat()
-        label = name if qty == 1 else f"{name} ×{qty}"
-        self.notice = f"stashed {label}."
-
-    def _withdraw(self, member):
-        name = self._name_of(self.sel)
-        if not self._fits(member, name):
-            self.notice = f"{name} won't fit {member.name}'s load."
-            return
-        self.guild.property_city_items.pop(self.sel[1])
-        member.give_to_pack(name)
-        member._derive_combat()
-        self.notice = f"{member.name} took {name}."
-
-    def _hand_over(self, member):
-        name = self._name_of(self.sel)
-        src = self.sel[0]
-        qty = self._held_qty(self.sel)
-        if not self._fits(member, name, qty):
-            self.notice = f"{name} won't fit {member.name}'s load."
-            return
-        src.take_from_pack(self.sel[1], qty)
-        member.give_to_pack(name, qty)
-        src._derive_combat()
-        member._derive_combat()
-        label = name if qty == 1 else f"{name} ×{qty}"
-        self.notice = f"{label} -> {member.name}."
+    # money + services                                                   #
+    # ------------------------------------------------------------------ #
+    def _run_service(self, key):
+        if key == "buy":
+            rep_ok = self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
+            if not rep_ok or self.guild.bankers_services_blocked:
+                return
+            if self.purse < economy.CITY_PROPERTY_PRICE:
+                self.notice = (f"the Bankers want {economy.CITY_PROPERTY_PRICE} copper for "
+                               f"the house -- the party has {self.purse}.")
+                return
+            self.purse -= economy.CITY_PROPERTY_PRICE
+            self.guild.buy_city_property()
+            self.notice = "bought a house in the City -- the Bankers' tax starts now."
+        elif key == "pay_debt":
+            amount = min(self.purse, self.guild.bankers_debt)
+            if amount <= 0:
+                self.notice = "the party has no copper to pay with."
+                return
+            self.purse -= amount
+            self.guild.pay_bankers_debt(amount)
+            self.notice = (f"paid {amount} copper toward the debt." if self.guild.bankers_debt > 0
+                           else "debt cleared -- the Bankers deal with the guild again.")
 
     def _leave(self):
+        economy.settle_pooled_purse(self.party, self._orig_gold, self.purse)
         self.on_done()
+
+    def _deposit(self, picks):
+        picks = [p for p in picks if p[0] != "house" and self._item_at(*p) is not None]
+        if not picks:
+            self.selected, self._sel_qty = [], {}
+            return
+        add = sum(data.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
+        if not self.guild.property_city_unlocked:
+            self.notice = "buy the house first."
+            self.selected = picks
+            return
+        if self.guild.property_city_load + add > economy.CITY_PROPERTY_CAPACITY:
+            free = economy.CITY_PROPERTY_CAPACITY - self.guild.property_city_load
+            self.notice = f"won't fit -- {free:g} kg free at the property."
+            self.selected = picks
+            return
+        items, touched = self._collect(picks)
+        self._sel_qty = {}
+        for name, qty in items:
+            self.guild.stash_in_property(name, qty)
+        for u in touched:
+            u._derive_combat()
+        total = sum(q for _, q in items)
+        one = items[0][0] if total == 1 else f"{total} items"
+        self.notice = f"stashed {one}."
+
+    # ------------------------------------------------------------------ #
+    # adapters: real Unit -> the plain dicts loadout_panel draws          #
+    # ------------------------------------------------------------------ #
+    def _item_tag(self, name):
+        if name in data.WEAPONS:
+            return "WEAPON"
+        if name in data.ARMOR:
+            return "ARMOR"
+        return ""
+
+    def _hand_note(self, unit):
+        name = unit.equipped_weapon
+        if not name or name not in data.WEAPONS:
+            return None
+        hit_bonus, _ = unit.attack_bonus
+        dn, faces = data.WEAPONS[name]["damage"]
+        return f"{hit_bonus:+} hit  ·  {dn}d{faces} dmg"
+
+    @staticmethod
+    def _armor_note(unit):
+        name = unit.equipped_armor
+        if not name or name not in data.ARMOR:
+            return None
+        return f"+{data.ARMOR[name]['ac']} AC"
+
+    def _member_dict(self, unit, carried):
+        two_handed = bool(unit.equipped_weapon) and data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
+        selected_locs = {loc for owner, loc in self.selected if owner is unit}
+
+        def held(kind, name, note):
+            return {"name": name, "note": note, "sel": kind in selected_locs,
+                    "accepts": bool(carried) and any(self._fits_slot(unit, kind, n) for n in carried)}
+
+        member = {
+            "name": unit.name, "role": role_for(unit.occupation),
+            "pending_picks": bool(unit.pending_picks),
+            "kg": unit.load, "cap": unit.carry_normal,
+            "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
+            "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
+            "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
+            "pack": [(name, self._item_tag(name), data.item_weight(name), qty,
+                     unit.locked_of(name) > 0, idx in selected_locs)
+                    for idx, (name, qty) in enumerate(unit._base_inventory)],
+        }
+        if unit.has_tongue:
+            member["tongue"] = held("tongue", unit.equipped_tongue, None)
+        return member
+
+    def _house_rows(self):
+        rows = []
+        sel_house = {loc: self._qty_at("house", loc) for owner, loc in self.selected if owner == "house"}
+        for idx, (name, qty) in enumerate(self.guild.property_city_items):
+            rows.append((idx, name, self._item_tag(name), data.item_weight(name), qty,
+                        None, None, None, sel_house.get(idx, 0)))
+        return rows
+
+    # ------------------------------------------------------------------ #
+    def _draw_rail(self, screen, F, rect):
+        members = [{"key": u.uid, "name": u.name, "role": role_for(u.occupation),
+                    "kg": u.load, "cap": u.carry_normal} for u in self.party]
+        pinned_keys = {u.uid for u in self.pinned}
+        hits, max_scroll = loadout_panel.rail(screen, F, rect, members, pinned_keys,
+                                              bool(self.selected), self._rail_scroll, self.mouse)
+        self._rail_rect = rect
+        self._rail_max_scroll = max_scroll
+        self._rail_scroll = max(0, min(self._rail_scroll, max_scroll))
+        self._rail_hits = [(r, self._unit_by_uid[uid]) for r, uid in hits]
+        for r, u in self._rail_hits:
+            self.zones.append((r, u, "pack"))
+
+    def _draw_columns(self, screen, F, area):
+        gap = T.S * 2
+        shown = [u for u in self.pinned if u in self.party]
+        cap = max(1, (area.w + gap) // (COL_MIN + gap))
+        shown = shown[:cap]
+        n = max(1, len(shown))
+        col_w = min(COL_MAX, max(COL_MIN, (area.w - (n - 1) * gap) // n))
+        carried = self._carried_names()
+
+        for i, u in enumerate(shown):
+            r = pygame.Rect(area.x + i * (col_w + gap), area.y, col_w, area.h)
+            member = self._member_dict(u, carried)
+            res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
+            self._pack_scroll[id(u)] = res["scroll"]
+            for kind, slot_rect in res["slot_rects"].items():
+                if slot_rect is None:
+                    continue
+                self.zones.append((slot_rect, u, kind))
+                if member[kind]["name"]:
+                    self.sources.append((slot_rect, u, kind))
+            self.zones.append((res["pack_zone"], u, "pack"))
+            for pr, idx in res["pack_hits"]:
+                self.sources.append((pr, u, idx))
+
+        hidden = len(self.pinned) - len(shown)
+        if hidden > 0:
+            ui_text(screen, F["body_sm"], f"+{hidden} pinned but hidden -- widen the window",
+                (area.x, area.bottom + 4), T.TX_FAINT)
+        if not shown:
+            ui_text(screen, F["body"], "Pin a member on the left to see their gear.",
+                area.center, T.TX_FAINT, center=True)
+
+    def _draw_house(self, screen, F, rect):
+        x, w = rect.x + T.S * 2, rect.w - T.S * 4
+        y = rect.y + T.S * 2
+
+        if self.guild.bankers_debt > 0:
+            for ln in (f"owed to the Bankers: {self.guild.bankers_debt} copper",
+                      "their other services are shut until it's paid"):
+                ui_text(screen, F["body_sm"], ln, (x, y), T.BLOOD)
+                y += 16
+            y += T.S
+            can_pay = self.purse > 0
+            r = pygame.Rect(x, y, w, T.S * 4)
+            draw_button(screen, F, r, "PAY TOWARD THE DEBT", primary=can_pay,
+                       ghost=not can_pay, mpos=self.mouse)
+            if can_pay:
+                self._service_hits.append((r, "pay_debt"))
+            y = r.bottom + T.S * 2
+
+        if self.guild.property_city_squatting:
+            for ln in ("squatting -- no tax, but the guard raids this place",):
+                ui_text(screen, F["body_sm"], ln, (x, y), T.BLOOD)
+                y += 16
+            y += T.S
+        elif self.guild.property_city_unlocked:
+            due = self.guild.property_city_tax_due_day
+            ui_text(screen, F["body_sm"], f"next tax due day {due}: {economy.CITY_PROPERTY_TAX} c",
+                (x, y), T.TX_FAINT)
+            y += 16
+            if self.guild.property_city_missed_payments:
+                left = (economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+                       - self.guild.property_city_missed_payments)
+                ui_text(screen, F["body_sm"],
+                    f"{self.guild.property_city_missed_payments} cycle(s) missed -- "
+                    f"{max(0, left)} more before the Bankers act", (x, y), T.BRASS)
+                y += 16
+            y += T.S
+
+        services = []
+        if not self.guild.property_city_unlocked and not self.guild.property_city_squatting:
+            rep_ok = self.guild.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
+            can_buy = rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
+            sub = (f"{economy.CITY_PROPERTY_PRICE} c  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
+                  f"standing with the Bankers (have {self.guild.reputation.get('bankers', 0)})")
+            services.append(("buy", "BUY THE HOUSE", sub, can_buy))
+
+        panel_rect = pygame.Rect(rect.x, y, rect.w, rect.bottom - y)
+        data_ = {"label": "the house",
+                "capacity": (self.guild.property_city_load, economy.CITY_PROPERTY_CAPACITY)
+                           if self.guild.property_city_unlocked else None,
+                "rows": self._house_rows() if self.guild.property_city_unlocked else [],
+                "services": services}
+        res = loadout_panel.container_panel(screen, F, panel_rect, data_, self._house_scroll, self.mouse)
+        self._house_scroll = res["scroll"]
+        self._service_hits += res["service_hits"]
+        self._house_steppers = []
+        for r, idx in res["row_hits"]:
+            self.sources.append((r, "house", idx))
+        for idx, ctl in res["row_controls"].items():
+            if ctl["minus"]:
+                self._house_steppers.append((ctl["minus"], ("house", idx), -1))
+            if ctl["plus"]:
+                self._house_steppers.append((ctl["plus"], ("house", idx), 1))
+            if ctl["all"]:
+                self._house_steppers.append((ctl["all"], ("house", idx), 999))
+        if self.guild.property_city_unlocked:
+            self.zones.append((panel_rect, "house", "house"))
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((18, 19, 24))
-        self.house_rows = []
-        self.item_rows = []
-        self.cards = []
-        self._reset_buttons()
+        F = self._ui_fonts()
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
+        self._unit_by_uid = {u.uid: u for u in self.party}
+        self.zones, self.sources, self.buttons, self._service_hits = [], [], [], []
+        self._house_steppers = []
 
-        text(screen, "THE CITY PROPERTY", f.title, INK, (MARGIN, MARGIN - 2))
-        text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
-             (screen.get_width() - MARGIN, MARGIN + 2), right=True)
+        head = pygame.Rect(0, 0, W, T.S * 9)
+        body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * 10)
+        house_rect = pygame.Rect(0, body.y, HOUSE_W, body.h)
+        rail_rect = pygame.Rect(house_rect.right, body.y, RAIL_W, body.h)
+        cols = pygame.Rect(rail_rect.right, body.y, W - rail_rect.right, body.h)
 
-        name = self._name_of(self.sel)
-        if name:
-            where = "the house" if self._from_house else self.sel[0].name + "'s pack"
-            text(screen, f"moving {name} from {where}  ·  drop on the house or a "
-                 "member  ·  click outside to cancel", f.body, ACCENT,
-                 (MARGIN, MARGIN + 30))
-        else:
-            text(screen, "a house inside the walls, bought from the Bankers -- taxed "
-                 "on a cycle", f.body, INK_DIM, (MARGIN, MARGIN + 30))
+        header(screen, F, head, "The City Property",
+              "a house inside the walls, bought from the Bankers -- taxed on a cycle",
+              (), None, mpos=self.mouse)
+        self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
+        ui_text(screen, F["microb"], f"purse {self.purse} c", (W - T.S * 3, T.S * 3), T.BRASS, right=True)
 
-        top = MARGIN + 62
-        house = pygame.Rect(MARGIN, top, HOUSE_W, screen.get_height() - top - 72)
-        self._draw_house(screen, house)
-        self._draw_party(screen, pygame.Rect(house.right + MARGIN, top,
-                                             screen.get_width() - house.right - 2 * MARGIN,
-                                             house.h))
-        self._draw_footer(screen)
+        self._draw_house(screen, F, house_rect)
+        self._draw_rail(screen, F, rail_rect)
+        self._draw_columns(screen, F, cols.inflate(-T.S * 2, -T.S * 2))
 
-        if self._dragging and name:
-            gx, gy = self.mouse
-            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(name)[0] + 2 * SP2, 20)
-            panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
-            text(screen, name, f.body_sm, ACCENT_INK, gr.center, center=True)
+        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 28, T.S * 4)
+        draw_button(screen, F, done_r, "leave the property", primary=True, mpos=self.mouse)
+        self.buttons.append(("done", done_r))
+        if self.notice:
+            ui_text(screen, F["body_sm"], self.notice, (done_r.right + T.S * 2, H - T.S * 8 + 10), T.BRASS)
+        set_pointer(self._hovering())
 
-    # ------------------------------------------------------------------ #
-    def _draw_house(self, screen, rect):
-        f = self.fonts
-        carried = self._name_of(self.sel)
-        depositing = bool(carried) and not self._from_house
-        hov = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_2,
-              border=INFO if (depositing and hov) else LINE_SOFT,
-              width=2 if (depositing and hov) else 1, radius=RADIUS)
-        if self.guild.property_city_unlocked:
-            self.buttons.append(("house", rect))
-
-        x, w = rect.x + SP3, rect.w - 2 * SP3
-        y = section(screen, "THE HOUSE", x, rect.y + SP3, w, f)
-
-        if self.guild.bankers_debt > 0:
-            y = self._draw_debt(screen, x, y, w)
-
-        if not self.guild.property_city_unlocked:
-            y = self._draw_buy_offer(screen, x, y, w)
-            return
-
-        used, cap = self.guild.property_city_load, economy.CITY_PROPERTY_CAPACITY
-        over = used > cap
-        bar = pygame.Rect(x, y, w, 10)
-        panel(screen, bar, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
-        span = bar.w - 2
-        fillw = int(span * min(1.0, used / max(1, cap)))
-        if fillw > 0:
-            pygame.draw.rect(screen, DANGER if over else OK,
-                             (bar.x + 1, bar.y + 1, fillw, bar.h - 2), border_radius=3)
-        y += 15
-        text(screen, f"{kg(used)}  /  {kg(cap)}", f.mono_sm,
-             DANGER if over else INK_DIM, (x, y))
-        y += 18
-
-        if self.guild.property_city_squatting:
-            text(screen, "SQUATTING -- no tax, but the guard raids this place",
-                 f.body_sm, DANGER, (x, y))
-            y += 17
-        else:
-            due = self.guild.property_city_tax_due_day
-            text(screen, f"next tax due day {due}: {economy.CITY_PROPERTY_TAX} copper",
-                 f.body_sm, INK_FAINT, (x, y))
-            y += 17
-            if self.guild.property_city_missed_payments:
-                left = (economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
-                        - self.guild.property_city_missed_payments)
-                text(screen, f"{self.guild.property_city_missed_payments} cycle(s) missed -- "
-                     f"{max(0, left)} more before the Bankers act", f.body_sm, WARN, (x, y))
-                y += 17
-        y += 4
-
-        y = section(screen, f"STASHED  ({len(self.guild.property_city_items)})", x, y, w, f)
-        if not self.guild.property_city_items:
-            text(screen, "(empty)", f.body_sm, INK_FAINT, (x, y + 2))
-        for idx, item in enumerate(self.guild.property_city_items):
-            r = pygame.Rect(x, y, w, 28)
-            if r.bottom > rect.bottom - SP3:
-                text(screen, f"+{len(self.guild.property_city_items) - idx} more", f.label,
-                     INK_FAINT, (x, y + 4))
-                break
-            sel = self.sel == ("house", idx)
-            ihov = not self.sel and r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            text(screen, ellipsize(item, f.body, w - 70), f.body,
-                 ACCENT_INK if sel else INK, (r.x + SP2, r.y + 6))
-            text(screen, kg(data.item_weight(item)), f.mono_sm,
-                 ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 7), right=True)
-            self.house_rows.append((r, idx))
-            y += 28 + SP1
-
-    def _draw_debt(self, screen, x, y, w):
-        f = self.fonts
-        text(screen, f"owed to the Bankers: {self.guild.bankers_debt} copper -- their "
-             "other services are shut until it's paid", f.body_sm, DANGER, (x, y))
-        y += 20
-        r = pygame.Rect(x, y, w, 34)
-        can = self.purse > 0
-        self.add_button(screen, r, "pay_debt", "PAY TOWARD THE DEBT", enabled=can, primary=can)
-        return r.bottom + SP2
-
-    def _draw_buy_offer(self, screen, x, y, w):
-        f = self.fonts
-        if self.guild.property_city_squatting:
-            for ln in ("The guild squats a house it no longer owns.",
-                       "The guard can still come to clear it out."):
-                text(screen, ln, f.body_sm, DANGER, (x, y))
-                y += 17
-            return y
-        for ln in (f"The Bankers sell a house inside the walls for "
-                   f"{economy.CITY_PROPERTY_PRICE} copper,",
-                   f"taxed {economy.CITY_PROPERTY_TAX} copper every "
-                   f"{economy.CITY_PROPERTY_TAX_PERIOD_DAYS} days,",
-                   f"{economy.CITY_PROPERTY_CAPACITY} kg of storage inside the walls."):
-            text(screen, ln, f.body_sm, INK_DIM, (x, y))
-            y += 17
-        if not self._rep_ok:
-            text(screen, f"needs {economy.CITY_PROPERTY_REP_GATE} reputation with the "
-                 f"Bankers (have {self.guild.reputation.get('bankers', 0)})",
-                 f.body_sm, WARN, (x, y))
-            y += 17
-        y += SP2
-        r = pygame.Rect(x, y, w, 38)
-        can = self._rep_ok and not self.guild.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-        self.add_button(screen, r, "buy", f"BUY THE HOUSE -- {economy.CITY_PROPERTY_PRICE} COPPER",
-                        enabled=can, primary=can)
-        return r.bottom + SP2
-
-    # ------------------------------------------------------------------ #
-    def _draw_party(self, screen, area):
-        n = max(1, len(self.party))
-        gap = SP3
-        card_w = min(300, (area.w - (n - 1) * gap) // n)
-        for i, m in enumerate(self.party):
-            rect = pygame.Rect(area.x + i * (card_w + gap), area.y, card_w, area.h)
-            self._draw_card(screen, rect, m)
-            self.cards.append((rect, m))
-
-    def _draw_card(self, screen, rect, m):
-        f = self.fonts
-        pad = SP3
-        name = self._name_of(self.sel)
-        incoming = bool(name) and not (self.sel[0] is m)
-        take_ok = incoming and self._fits(m, name, self._held_qty(self.sel))
-        hov = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_2,
-              border=OK if (take_ok and hov) else DANGER if (incoming and hov and not take_ok)
-              else LINE_SOFT, width=2 if hov else 1, radius=RADIUS)
-
-        tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, m, f)
-        text(screen, m.name, f.card_name, INK, (tok[0] + 24, rect.y + pad))
-        text(screen, f"{m.race['name']}  ·  {m.occupation['name']}", f.body_sm,
-             INK_DIM, (tok[0] + 24, rect.y + pad + 20))
-
-        y = rect.y + pad + 48
-        over = m.load > m.carry_max
-        ccol = DANGER if over else WARN if m.encumbered else OK
-        text(screen, f"Load {kg(m.load)} / {kg(m.carry_normal)}", f.mono_sm, ccol,
-             (rect.x + pad, y))
-        y += 18
-
-        y = section(screen, f"PACK  ({len(m._base_inventory)})", rect.x + pad, y,
-                    rect.w - 2 * pad, f)
-        if not m._base_inventory:
-            text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-        shown = m._base_inventory[:PACK_ROWS_SHOWN]
-        for idx, (item, qty) in enumerate(shown):
-            r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
-            sel = self.sel == (m, idx)
-            ihov = not self.sel and r.collidepoint(self.mouse)
-            panel(screen, r, fill=ACCENT if sel else SURFACE_3 if ihov else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            label = item if qty == 1 else f"{item}  ×{qty}"
-            text(screen, ellipsize(label, f.body_sm, rect.w - 2 * pad - 60), f.body_sm,
-                 ACCENT_INK if sel else INK, (r.x + SP2, r.y + 5))
-            text(screen, kg(data.item_weight(item) * qty), f.mono_sm,
-                 ACCENT_INK if sel else INK_DIM, (r.right - SP2, r.y + 6), right=True)
-            self.item_rows.append((r, m, idx))
-            y += 24 + SP1
-        extra = len(m._base_inventory) - len(shown)
-        if extra > 0:
-            text(screen, f"+{extra} more", f.label, INK_FAINT,
-                 (rect.x + pad, y + 2))
-
-    # ------------------------------------------------------------------ #
-    def _draw_footer(self, screen):
-        footer_bar(self, screen, primary=("done", "LEAVE THE PROPERTY"), notice=self.notice)
+    def _hovering(self):
+        if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
+            return True
+        if any(r.collidepoint(self.mouse) for _, r in self.buttons):
+            return True
+        if any(r.collidepoint(self.mouse) for r, _ in self._rail_hits):
+            return True
+        if any(r.collidepoint(self.mouse) for r, *_ in self._service_hits):
+            return True
+        return any(r.collidepoint(self.mouse) for r, *_ in self.sources)
 
 
 class RepossessionScreen(ModalScreen, Screen):
@@ -429,7 +515,8 @@ class RepossessionScreen(ModalScreen, Screen):
     standing risk played out later, in `campaign.py`'s "eviction" pause).
     No `resume_to` -- there is no screen underneath to freeze, so the shared
     modal frame falls back to a flat backdrop (`draw_scene_behind`'s except
-    branch)."""
+    branch). Untouched by the container-transfer rework above -- a binary
+    choice modal, no gear moves here at all."""
 
     native = True
 
@@ -494,7 +581,7 @@ class RepossessionScreen(ModalScreen, Screen):
         r = pygame.Rect(card.x + SP3, top, card.w - 2 * SP3, 56)
         hov = r.collidepoint(self.mouse)
         panel(screen, r, fill=SURFACE_3 if hov else SURFACE_2, border=col,
-              width=2 if hov else 1, radius=RADIUS)
+              width=2 if hov else 1, radius=8)
         text(screen, label, f.body_bd, col, (r.x + SP3, r.y + 8))
         text(screen, sub, f.body_sm, INK_DIM, (r.x + SP3, r.y + 30))
         self.buttons.append((key, r))

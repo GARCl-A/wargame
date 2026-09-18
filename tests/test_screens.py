@@ -107,13 +107,14 @@ def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
         m.gold = 10
     ms = MarketScreen.__new__(MarketScreen)           # no draw in this test
     ms.shoppers = shoppers
+    ms._orig_gold = {m: m.gold for m in shoppers}     # all three walked in with 10
     ms.purse = sum(m.gold for m in shoppers)          # 30
     ms.on_done = lambda: None
     ms._checkout()
     assert sorted(m.gold for m in shoppers) == [10, 10, 10] and sum(m.gold for m in shoppers) == 30
     ms.purse = 31
     ms._checkout()
-    assert sorted(m.gold for m in shoppers) == [10, 10, 11]
+    assert sorted(m.gold for m in shoppers) == [10, 10, 11]   # equal shares -> still an even-ish split
 
 
 def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
