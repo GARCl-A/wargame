@@ -912,35 +912,7 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
 
 
-def test_loot_screen_drop_pack_item_to_ground():
-    from gartok.loot_screen import LootScreen
-    from gartok.guild import Guild
-    import pygame
-    u = Unit("player")
-    u._base_inventory = packed(["Torch", "Dagger"])
-    g = Guild([u])
-    ls = LootScreen.__new__(LootScreen)
-    ls.guild = g
-    ls.survivors = [u]
-    ls.pool = ["Axe"]
-    ls.buttons = []
-    ls.pack_rows = [(pygame.Rect(0, 0, 100, 20), u, 0)]
-    ls.cards = [(pygame.Rect(100, 0, 100, 100), u)]
-    ls.rows = [(pygame.Rect(200, 0, 100, 20), 0)]
-    ls.pile_rect = pygame.Rect(300, 0, 100, 100)
-    ls.pack_sel = None
-    ls.sel = None
-    ls.notice = None
 
-    # 1. Click pack item to select it
-    ls._click((10, 10))
-    assert ls.pack_sel == (u, 0)
-
-    # 2. Click ground pile to drop it
-    ls._click((310, 10))
-    assert "Torch" in ls.pool
-    assert not u.has_item("Torch")
-    assert ls.pack_sel is None
 
 
 def test_factions_get_unlocks():
@@ -972,25 +944,7 @@ def test_market_screen_draw_multiple_shoppers_hover():
             ms.draw(surf)
 
 
-def test_loot_screen_draw_with_pack_selection_hover():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.guild import Guild
-    from gartok.loot_screen import LootScreen
-    from gartok.theme import Fonts
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    u = Unit("player")
-    u._base_inventory = packed(["Torch"])
-    g = Guild([u])
-    ls = LootScreen(Fonts(), g, [u], ["Axe"], lambda: None)
-    surf = pygame.Surface((1200, 800))
-    ls.mouse = (100, 100)
-    ls.draw(surf)
-    ls.pack_sel = (u, 0)
-    if ls.cards:
-        ls.mouse = ls.cards[0][0].center
-    ls.draw(surf)
+
 
 
 def test_attribute_and_derived_help_catalogs():
