@@ -686,7 +686,7 @@ def test_gear_screen_distribute_load():
     gs = GearScreen.__new__(GearScreen)
     gs.guild = g
     gs.roster = g.roster
-    gs.managed = [u1, u2]
+    gs.pinned = [u1, u2]
     gs.notice = None
     gs._distribute_load()
     # Heaviest items should be shared across members
@@ -787,7 +787,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     gs.fonts = Fonts()
     gs.guild = g
     gs.roster = g.roster
-    gs.managed = [u]
+    gs.pinned = [u]
     gs.selected = []
     gs.notice = None
     gs.mouse = (5, 5)
@@ -798,15 +798,15 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     surf = pygame.Surface((800, 600))
 
     gs._open_menu((5, 5))
-    assert "study" in [kind for kind, _ in gs.menu["rows"]]
-    gs._draw_menu(surf, 800, 600)
+    assert "study" in [kind for kind, _label, _arg in gs.menu["rows"]]
+    gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
 
     gs._menu_click(study_row.center)
     assert u.study_target == "light_globe"
 
     gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
-    gs._draw_menu(surf, 800, 600)
+    gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
     gs._menu_click(study_row.center)
     assert u.study_target is None
@@ -829,14 +829,14 @@ def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
     gs.fonts = Fonts()
     gs.guild = g
     gs.roster = g.roster
-    gs.managed = [u]
+    gs.pinned = [u]
     gs.selected = []
     gs.notice = None
     gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
     gs.menu = None
 
     gs._open_menu((5, 5))
-    assert "study" not in [kind for kind, _ in gs.menu["rows"]]
+    assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
 
 
 def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
@@ -860,7 +860,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     gs.fonts = Fonts()
     gs.guild = g
     gs.roster = g.roster
-    gs.managed = [u]
+    gs.pinned = [u]
     gs.selected = []
     gs.notice = None
     gs.mouse = (5, 5)
@@ -871,15 +871,15 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     surf = pygame.Surface((800, 600))
 
     gs._open_menu((5, 5))
-    assert "study" in [kind for kind, _ in gs.menu["rows"]]
-    gs._draw_menu(surf, 800, 600)
+    assert "study" in [kind for kind, _label, _arg in gs.menu["rows"]]
+    gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
 
     gs._menu_click(study_row.center)
     assert u.study_target == "Elvish"
 
     gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
-    gs._draw_menu(surf, 800, 600)
+    gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
     gs._menu_click(study_row.center)
     assert u.study_target is None
@@ -902,14 +902,14 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     gs.fonts = Fonts()
     gs.guild = g
     gs.roster = g.roster
-    gs.managed = [u]
+    gs.pinned = [u]
     gs.selected = []
     gs.notice = None
     gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
     gs.menu = None
 
     gs._open_menu((5, 5))
-    assert "study" not in [kind for kind, _ in gs.menu["rows"]]
+    assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
 
 
 def test_loot_screen_drop_pack_item_to_ground():

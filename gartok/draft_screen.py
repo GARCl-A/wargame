@@ -19,13 +19,41 @@ import pygame
 from . import artwork, data
 from .combatant import Combatant
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, BANNER_COLORS, DANGER, DEMO_HL, INFO,
-                    INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT, MARGIN, OK,
-                    RADIUS, SP1, SP2, SP3, SP4, SURFACE_1, SURFACE_2,
-                    SURFACE_3, TOKEN_INK, WARN,
-                    Stack, chip, draw_tooltip, ellipsize, format_tooltip,
-                    panel, section, set_player_color, smooth_circle,
-                    token_badge, text, tracked, wrap_lines)
+from .theme import (
+    ACCENT,
+    ACCENT_INK,
+    BANNER_COLORS,
+    INFO,
+    INK,
+    INK_DIM,
+    INK_FAINT,
+    LINE,
+    LINE_SOFT,
+    MARGIN,
+    OK,
+    RADIUS,
+    SP1,
+    SP2,
+    SP3,
+    SP4,
+    SURFACE_1,
+    SURFACE_2,
+    SURFACE_3,
+    TOKEN_INK,
+    WARN,
+    draw_tooltip,
+    ellipsize,
+    format_tooltip,
+    panel,
+    set_player_color,
+    smooth_circle,
+    text,
+    token_badge,
+    tracked,
+)
+from .ui.sheet_card import draw_sheet, sheet_height, unit_to_ch
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 from .unit import Unit
 from .widgets import draw_button
 
@@ -203,8 +231,15 @@ class DraftScreen(Screen):
         self._draw_top_buttons(screen, mouse)
 
         rail_h = 92
-        avail_h = screen.get_height() - (MARGIN + 58) - rail_h - SP4 - 24
-        card_h = min(560, max(460, avail_h))
+        
+        # calculate actual_h for the cards so they perfectly stack with the rail
+        header_h = 16 + SP2
+        if self.edit_mode:
+            header_h += 2 * (28 + SP1) + SP1
+        sh = sheet_height("normal")
+        footer_h = (SP3 + 26 + SP3) if not self.edit_mode else SP3
+        card_h = SP3 + header_h + sh + footer_h
+        
         group_h = card_h + SP4 + rail_h
         slack = max(0, (screen.get_height() - 18) - (MARGIN + 58) - group_h)
         top = MARGIN + 58 + slack // 2
@@ -356,51 +391,43 @@ class DraftScreen(Screen):
     def _draw_card(self, screen, rect, unit, hover, mouse, leader_pick=False):
         f = self.fonts
         pad = SP3
-        preview = Combatant(unit)             # in-fight view of the candidate (ammo, kit, ...)
-        s = Stack(rect.x + pad, rect.y, rect.w - 2 * pad)
-
-        panel(screen, rect, fill=SURFACE_2,
-              border=ACCENT if hover else LINE_SOFT, width=2, radius=RADIUS)
-
-        # --- header ------------------------------------------------- #
-        head = pygame.Rect(rect.x, rect.y, rect.w, 50)
-        pygame.draw.rect(screen, SURFACE_3, head,
-                         border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
-        tok = (rect.x + pad + 13, rect.y + 25)
-        token_badge(screen, tok, unit, f, r=15)
-        name_x = tok[0] + 26
-        name_w = rect.right - pad - name_x
-        text(screen, ellipsize(unit.name, f.card_name, name_w), f.card_name, INK,
-             (name_x, rect.y + 7))
-        text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
-                                f.body_sm, name_w),
-             f.body_sm, INK_DIM, (name_x, rect.y + 27))
-        s.y = head.bottom + SP3
-
-        # --- tags + context --------------------------------------- #
-        tag_row = s.row(17)
-        tx = tag_row.x
+        
+        # Calculate dynamic height
+        header_h = 16 + SP2
+        if self.edit_mode:
+            header_h += 2 * (28 + SP1) + SP1
+            
+        sh = sheet_height("normal")
+        footer_h = (SP3 + 26 + SP3) if not self.edit_mode else SP3
+        
+        actual_h = pad + header_h + sh + footer_h
+        bg_rect = pygame.Rect(rect.x, rect.y, rect.w, max(rect.h, actual_h))
+        
+        # The background panel uses war-table palette to match sheet_card
+        pygame.draw.rect(screen, T.TABLE, bg_rect, border_radius=RADIUS)
+        pygame.draw.rect(screen, ACCENT if hover else T.STEEL_LINE, bg_rect, 2, border_radius=RADIUS)
+        
+        # --- floating archetypes ---
+        ty = bg_rect.y + pad
+        tx = bg_rect.x + pad
         for label, tcol, desc in _archetypes(unit):
             w = f.label.size(label)[0] + 12
-            pill = pygame.Rect(tx, tag_row.y, w, 16)
+            pill = pygame.Rect(tx, ty, w, 16)
             pygame.draw.rect(screen, SURFACE_1, pill, border_radius=4)
             pygame.draw.rect(screen, tcol, pill, 1, border_radius=4)
             text(screen, label, f.label, tcol, (pill.centerx, pill.centery - 1), center=True)
             if pill.collidepoint(mouse):
                 self.tooltip = desc
             tx += w + SP1
-        s.gap(SP3)
-        ctx = s.row(16)
-        text(screen, f"{unit.alignment}   ·   {unit.size}   ·   {unit.age} yrs",
-             f.body_sm, INK_DIM, (ctx.x, ctx.y))
-        s.gap(SP3)
+            
+        ty += 16 + SP2
 
-        # --- edit rows ------------------------------------------- #
+        # --- floating edit mode buttons ---
         if self.edit_mode:
             for field, lbl, val in (("race", "RACE", unit.race["name"]),
-                                    ("occupation", "OCCUPATION", unit.occupation["name"])):
-                br = s.row(28)
-                s.gap(SP1)
+                                    ("occupation", "OCCUP", unit.occupation["name"])):
+                br = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, 28)
+                ty += 28 + SP1
                 hov = br.collidepoint(mouse)
                 panel(screen, br, fill=SURFACE_3 if hov else SURFACE_1,
                       border=ACCENT if hov else LINE, width=1, radius=4)
@@ -408,98 +435,20 @@ class DraftScreen(Screen):
                 text(screen, "swap", f.label, ACCENT if hov else INK_DIM,
                      (br.right - SP2, br.y + 8), right=True)
                 self.edit_rects.append((br, unit, field))
-            s.gap(SP2)
+            ty += SP1
 
-        # --- stat chips ----------------------------------------- #
-        row = s.row(46)
-        cg = SP1
-        cw = (row.w - 3 * cg) // 4
-        for i, (k, v, ac) in enumerate((("HP", unit.hp_max, OK), ("AC", unit.ac, INFO),
-                                        ("MD", unit.mental_defense, DEMO_HL),
-                                        ("SPD", unit.speed, INFO))):
-            chip_r = pygame.Rect(row.x + i * (cw + cg), row.y, cw, 46)
-            chip(screen, chip_r, k, v, f, accent=ac)
-            if chip_r.collidepoint(mouse):
-                if k == "HP":
-                    from .sheet_panel import format_hp_breakdown_tooltip
-                    self.tooltip = format_hp_breakdown_tooltip(unit, f)
-                elif k in data.DERIVED_HELP:
-                    t, d = data.DERIVED_HELP[k]
-                    self.tooltip = format_tooltip(t, d, f)
-        s.gap(SP3)
-
-        # --- attributes (one compact row) --------------------- #
-        s.y = section(screen, "ATTRIBUTES", s.x, s.y, s.w, f)
-        arow = s.row(46)
-        aw = arow.w // 6
-        for i, (k, name) in enumerate((("STR", "strength"), ("DEX", "dexterity"),
-                                       ("CON", "constitution"), ("INT", "intelligence"),
-                                       ("WIS", "wisdom"), ("CHA", "charisma"))):
-            val = getattr(unit, name)
-            m = getattr(unit, f"mod_{name}")
-            acx = arow.x + i * aw + aw // 2
-            cell = pygame.Rect(arow.x + i * aw + 1, arow.y, aw - 2, 46)
-            pygame.draw.rect(screen, SURFACE_1, cell, border_radius=4)
-            text(screen, k, f.label, INK_FAINT, (acx, arow.y + 6), center=True)
-            text(screen, f"{val}", f.num, INK, (acx, arow.y + 22), center=True)
-            mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
-            text(screen, f"{m:+}", f.body_sm, mc, (acx, arow.y + 38), center=True)
-            if cell.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
-                t, d = data.ATTRIBUTE_HELP[k]
-                self.tooltip = format_tooltip(t, d, f)
-        s.gap(SP3)
-
-        # --- weapon ------------------------------------------- #
-        s.y = section(screen, "WEAPON", s.x, s.y, s.w, f)
-        n, faces = unit.weapon["damage"]
-        reach = f"range {unit.weapon['range']}" if unit.ranged else "melee"
-        hands = "2 hands" if unit.weapon["hands"] == 2 else "1 hand"
-        ammo = f"  ·  {preview.ammo} arrows" if preview.needs_ammo else ""
-        wrow = s.row(34)
-        text(screen, unit.weapon_name, f.body_bd, INK, (wrow.x, wrow.y))
-        text(screen, f"{n}d{faces}  ·  {reach}  ·  {hands}{ammo}", f.body_sm, INK_DIM,
-             (wrow.x, wrow.y + 17))
-        if unit.has_tongue and unit.equipped_tongue:
-            tn, tf = data.WEAPONS[unit.equipped_tongue]["damage"]
-            trow = s.row(20)
-            text(screen, f"tongue: {unit.equipped_tongue}  ·  {tn}d{tf}  ·  "
-                 f"reach {unit.tongue_reach}", f.body_sm, INK_FAINT, (trow.x, trow.y))
-        s.gap(SP2)
-
-        # --- languages -------------------------------------- #
-        s.y = section(screen, "LANGUAGES", s.x, s.y, s.w, f)
-        lang_rect = pygame.Rect(s.x, s.y, s.w, 18)
-        text(screen, ", ".join(unit.languages), f.body_sm, INK, (s.x, s.y))
-        if unit.ability.demoralize_ignores_language:
-            note = "Mimics voices: Demoralize needs no shared language."
-        elif unit.ability.extra_languages:
-            note = "Knows extra languages: can Demoralize a wider variety of targets."
-        else:
-            note = "Demoralize action requires a shared language with the target."
-        if lang_rect.collidepoint(mouse):
-            self.tooltip = note
-        s.gap(20)
-
-        # --- ability --------------------------------------- #
-        eff = wrap_lines([unit.ability.effect], f.body_sm, s.w - SP3) \
-            if not self.edit_mode else []
-        s.y = section(screen, "ABILITY", s.x, s.y + SP1, s.w, f)
-        hb = s.row(22 + len(eff) * 15 + SP2)
-        panel(screen, hb, fill=SURFACE_1, border=INFO, width=1, radius=4)
-        text(screen, unit.ability.name, f.body_bd, INFO, (hb.x + SP2, hb.y + 5))
-        for j, ln in enumerate(eff):
-            text(screen, ln, f.body_sm, INK_DIM, (hb.x + SP2, hb.y + 22 + j * 15))
-        s.gap(SP3)
-
-        # --- inventory one-liner --------------------------- #
-        inv = (", ".join(n if q == 1 else f"{n} ×{q}" for n, q in unit._base_inventory)
-               if unit._base_inventory else "(empty)")
-        text(screen, f"carries {inv}  ·  {unit.gold} copper  ·  load {unit.load:g}/{unit.carry_normal:g} kg",
-             f.body_sm, INK_FAINT, (s.x, s.y))
+        # --- the shared sheet component ---
+        sheet_rect = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, sh)
+        ch = unit_to_ch(Combatant(unit))
+        used_h, tip = draw_sheet(screen, ui_fonts(), sheet_rect, ch, density="normal", mouse=mouse)
+        if tip:
+            self.tooltip = tip
+            
+        ty += used_h + SP3
 
         # --- footer --------------------------------------- #
         if not self.edit_mode:
-            fr = pygame.Rect(rect.x + pad, rect.bottom - 36, rect.w - 2 * pad, 26)
+            fr = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, 26)
             panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
                   border=ACCENT if hover else LINE, width=1, radius=4)
             text(screen, "PICK" if hover else "click to pick",
@@ -539,7 +488,8 @@ class DraftScreen(Screen):
                 text(screen, f"slot {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)
 
     def _draw_top_buttons(self, screen, mouse):
-        r_edit = pygame.Rect(screen.get_width() - MARGIN - 96, MARGIN, 96, 30)
+        # Place buttons to the left of the global tutorial button (26px + SP2 gap)
+        r_edit = pygame.Rect(screen.get_width() - MARGIN - 26 - SP2 - 96, MARGIN, 96, 30)
         self.edit_btn_rect = r_edit
         draw_button(screen, r_edit, "EDITING" if self.edit_mode else "EDIT", self.fonts,
                    mouse, primary=self.edit_mode, font=self.fonts.label)

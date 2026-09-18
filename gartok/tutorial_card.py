@@ -16,8 +16,24 @@ a `tutorial_key()` override -- see `screen.py`.
 import pygame
 
 from . import i18n
-from .theme import (ACCENT, INK_DIM, INK_FAINT, RADIUS, SP1, SP2, SP3,
-                    SURFACE_2, blit_block, panel, set_pointer, text, wrap_lines)
+from .theme import (
+    ACCENT,
+    INK_DIM,
+    INK_FAINT,
+    LINE,
+    MARGIN,
+    RADIUS,
+    SP1,
+    SP2,
+    SP3,
+    SURFACE_2,
+    SURFACE_3,
+    blit_block,
+    panel,
+    set_pointer,
+    text,
+    wrap_lines,
+)
 
 CARD_W = 340
 BADGE_R = 10
@@ -81,13 +97,11 @@ def _draw_card(surface, fonts, key, anchor, mouse):
 
 def _draw_badge(surface, fonts, anchor, mouse):
     W, H = surface.get_size()
-    center = (W - BADGE_R - 16, BADGE_R + 14)
-    r = pygame.Rect(0, 0, 2 * BADGE_R + 8, 2 * BADGE_R + 8)
-    r.center = center
+    size = 26
+    r = pygame.Rect(W - size - MARGIN, MARGIN, size, size)
     hot = r.collidepoint(mouse)
-    pygame.draw.circle(surface, SURFACE_2, center, BADGE_R)
-    pygame.draw.circle(surface, ACCENT if hot else INK_DIM, center, BADGE_R, 1)
-    text(surface, "?", fonts.label, ACCENT if hot else INK_DIM, center, center=True)
+    panel(surface, r, fill=SURFACE_3 if hot else SURFACE_2, border=ACCENT if hot else LINE, radius=4, width=1)
+    text(surface, "?", fonts.label, ACCENT if hot else INK_DIM, r.center, center=True)
     if hot:
         set_pointer(True)
     return r

@@ -68,7 +68,7 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
 
     rect, unit, loc = next(s for s in gs.sources if s[1] is u and s[2] == 0)
     gs._open_menu(rect.center)
-    assert any(kind == "open" for kind, _arg in gs.menu["rows"])
+    assert any(kind == "open" for kind, _label, _arg in gs.menu["rows"])
     gs.draw(surface)                              # populates menu["hits"]
 
     open_hit = next(r for r, kind, _arg in gs.menu["hits"] if kind == "open")
