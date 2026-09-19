@@ -27,18 +27,23 @@ import pygame
 
 from . import data, economy, factions, icons
 from .dragselect import DragSelectMixin
-from .packbox import LOCK_W
+from .packbox import LOCK_W, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
                     SURFACE_2, SURFACE_3, SURFACE_4, WARN, ellipsize, kg,
                     panel, section, token_badge, text, tracked)
+from .ui import loadout_panel
+from .ui.tokens import T, mix
+from .ui.tokens import fonts as ui_fonts
+from .ui.inspector_panel import role_for
+from .ui.primitives import draw_button, caps, text as ui_text, hline
 
 STOCK_W = 392
 
 
-class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
+class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, shoppers, node, on_done):
@@ -63,6 +68,8 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
         self._sel_qty = {}                   # (member, idx) -> how much of that pack stack is picked
         self.notice = None
+        self._F = None
+        self.zones = []
         self.stock_rows = []                 # [(rect, name)]
         self.qty_hits = []                   # [(rect, name, delta)]
         self.lock_hits = []                  # [(rect, member, name)]
@@ -81,6 +88,65 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         return "market"
 
     # ------------------------------------------------------------------ #
+    def _ui_fonts(self):
+        if getattr(self, "_F", None) is None:
+            self._F = ui_fonts()
+        return self._F
+
+    def _hand_note(self, unit):
+        name = unit.equipped_weapon
+        if not name or name not in data.WEAPONS:
+            return None
+        wd = data.WEAPONS[name]
+        hit_bonus, _ = unit.attack_bonus
+        dn, faces = wd["damage"]
+        dmg = f"{dn}d{faces}"
+        if (wd["range"] == 0 or wd["thrown"]) and unit.mod_strength:
+            dmg += f" {unit.mod_strength:+}"
+        return f"{hit_bonus:+} hit  ·  {dmg} dmg"
+
+    @staticmethod
+    def _armor_note(unit):
+        name = unit.equipped_armor
+        if not name or name not in data.ARMOR:
+            return None
+        ad = data.ARMOR[name]
+        return f"+{ad['ac']} AC"
+
+    def _member_dict(self, unit, carried):
+        two_handed = bool(unit.equipped_weapon) and data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
+        selected_locs = {loc for u, loc in self.sel if u is unit and u != "stock"}
+
+        def held(kind, name, note):
+            return {"name": name, "note": note, "sel": kind in selected_locs,
+                    "accepts": bool(carried) and any(self._fits_slot(unit, kind, n) for n in carried)}
+
+        member = {
+            "name": unit.full_name, "role": role_for(unit.occupation),
+            "pending_picks": bool(unit.pending_picks),
+            "kg": unit.load, "cap": unit.carry_normal,
+            "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
+            "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
+            "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
+            "pack": [(name, self._item_tag(name), data.item_weight(name), qty,
+                     unit.locked_of(name) > 0, idx in selected_locs)
+                    for idx, (name, qty) in enumerate(unit._base_inventory)],
+        }
+        if unit.has_tongue:
+            member["tongue"] = held("tongue", unit.equipped_tongue, None)
+        return member
+
+    def _fits_slot(self, dst, zone, name):
+        if zone == "hand":
+            return dst.is_weapon(name)
+        if zone == "offhand":
+            return dst.fits_offhand(name)
+        if zone == "tongue":
+            return dst.fits_tongue(name)
+        if zone == "armor":
+            return dst.fits_armor(name)
+        return True
+
     @staticmethod
     def _item_at(member, loc):
         if loc == "hand":
@@ -232,14 +298,15 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                 self._bump_qty(p, 999)
         self._sell()
 
+
     def _drop(self, px, dragging, src):
-        if self.close_sheet_on_click():        # sheet modal up: any click just closes it
+        if self.close_sheet_on_click():
             return
 
         if dragging:
-            for rect, member in self.cards:
+            for rect, member, zone in self.zones:
                 if rect.collidepoint(px):
-                    self._drop_on(member)
+                    self._drop_on_zone(member, zone)
                     return
             for key, rect in self.buttons:
                 if key == "sell" and rect.collidepoint(px):
@@ -297,16 +364,16 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             return
 
         if self.sel:
-            for rect, member in self.cards:
+            for rect, member, zone in self.zones:
                 if rect.collidepoint(px):
-                    self._drop_on(member)
+                    self._drop_on_zone(member, zone)
                     return
             self._select_one(src)
             return
         self._select_one(src)
 
-    # ------------------------------------------------------------------ #
-    def _drop_on(self, member):
+
+    def _drop_on_zone(self, member, zone):
         picks, self.sel = self.sel, []
         picks = [p for p in picks if self._name_of(p) is not None]
         if not picks:
@@ -315,29 +382,54 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
 
         if picks[0][0] == "stock":
             self._sel_qty = {}
-            self._buy(member, [name for _, name in picks])
+            self._buy(member, [name for _, name in picks], zone)
             return
 
-        picks = [p for p in picks if p[0] is not member]   # dropped back home: skip
+        picks = [p for p in picks if not (p[0] is member and p[1] == zone)]
         if not picks:
             self._sel_qty = {}
             return
+
         add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
-        if member.load + add > member.carry_max:
+        if zone == "pack" and member.load + add > member.carry_max:
             self.notice = f"won't fit {member.name}'s load."
             self.sel = picks
             return
-        items, touched = self._collect(picks)      # _take reads self._sel_qty -- clear after
+
+        if zone in ("hand", "offhand", "tongue", "armor"):
+            fit = next((p for p in picks if self._fits_slot(member, zone, self._name_of(p))), None)
+            if fit is None:
+                self.sel = picks
+                self.notice = f"doesn't fit in {zone}."
+                return
+            picks = [fit]
+
+        items, touched = self._collect(picks)
         self._sel_qty = {}
         for name, qty in items:
-            member.give_to_pack(name, qty)
+            if zone == "hand":
+                member.give_to_hand(name)
+            elif zone == "offhand":
+                member.give_to_offhand(name)
+            elif zone == "tongue":
+                member.give_to_tongue(name)
+            elif zone == "armor":
+                member.give_to_armor(name)
+            else:
+                member.give_to_pack(name, qty)
+                
         for u in touched:
             u._derive_combat()
         member._derive_combat()
-        moved = sum(qty for _, qty in items)
-        self.notice = f"{moved} item(s) -> {member.name}."
+        
+        if zone == "pack":
+            moved = sum(qty for _, qty in items)
+            self.notice = f"{moved} item(s) -> {member.name}."
+        else:
+            self.notice = f"{items[0][0]} -> {member.name}'s {zone}."
 
     def _settle_market(self):
+
         """Bankers deeds read the guild's lifetime market tallies straight off
         `guild.total_spent`/`items_sold_kinds` (`factions.py`) -- fire this
         after any buy or sell that could have just crossed one, and append a
@@ -345,11 +437,42 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         for d in factions.settle(self.guild, factions.Event("market", node=self.node)):
             self.notice = (self.notice or "") + "  ·  " + factions.deed_notice(d)
 
-    def _buy(self, member, names):
-        """Buy each stock name (the kit tab's stepper quantity, else one), into
-        `member`'s pack -- stopping the moment the purse, the load or the
-        vendor's stock runs out."""
+
+    def _buy(self, member, names, zone="pack"):
+        if zone in ("hand", "offhand", "tongue", "armor"):
+            name = names[0]
+            if not self._fits_slot(member, zone, name):
+                self.notice = f"{name} won't fit {member.name}'s {zone}."
+                return
+            stock = self._stock_of(name)
+            if stock is not None and stock <= 0:
+                self.notice = f"no {name} in stock."
+                return
+            price = economy.buy_price(name, self.deal)
+            if self.purse < price:
+                self.notice = "out of copper."
+                return
+            self.purse -= price
+            self.guild.total_spent += price
+            if stock is not None:
+                self.guild.market_stock[name] = stock - 1
+                
+            if zone == "hand":
+                member.give_to_hand(name)
+            elif zone == "offhand":
+                member.give_to_offhand(name)
+            elif zone == "tongue":
+                member.give_to_tongue(name)
+            elif zone == "armor":
+                member.give_to_armor(name)
+            member._derive_combat()
+            self.qty.pop(name, None)
+            self.notice = f"{member.name} bought & equipped {name}."
+            self._settle_market()
+            return
+
         bought = 0
+
         wanted = sum(self._buy_qty(n) for n in names)
         stopped = None
         for name in names:
@@ -417,9 +540,11 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.on_done()
 
     # ------------------------------------------------------------------ #
+
     def draw(self, screen):
         f = self.fonts
-        screen.fill((18, 19, 24))
+        F = self._ui_fonts()
+        screen.fill(T.TABLE)
         self.tooltip = None
         self.stock_rows = []
         self.qty_hits = []
@@ -430,10 +555,12 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         self.buttons = []
         self.info_hits = []
         self._pack_areas = []
+        self.zones = []
 
-        text(screen, "MARKET", f.title, INK, (MARGIN, MARGIN - 2))
-        text(screen, f"common purse: {self.purse} copper", f.body_bd, ACCENT,
-             (screen.get_width() - MARGIN, MARGIN + 2), right=True)
+        ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
+        ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper", 
+             (screen.get_width() - MARGIN, MARGIN + 2), T.BRASS, right=True)
+             
         names = self._selected_names()
         if names:
             if self._buying:
@@ -446,25 +573,21 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                 one = names[0] if len(names) == 1 else f"{len(names)} items"
                 msg = (f"moving {one}  ·  drop on another member, or on SELL "
                        f"(+{sum(economy.sell_price(n, self.deal) for n in names)})")
-            text(screen, msg + "  ·  click outside to cancel", f.body, ACCENT,
-                 (MARGIN, MARGIN + 30))
+            ui_text(screen, F["body"], msg + "  ·  click outside to cancel", (MARGIN, MARGIN + 30), T.BRASS)
         else:
-            text(screen, f"{len(self.shoppers)} shopping  ·  {self._deal_note()}",
-                 f.body, INK_DIM, (MARGIN, MARGIN + 30))
+            ui_text(screen, F["body"], f"{len(self.shoppers)} shopping  ·  {self._deal_note()}", (MARGIN, MARGIN + 30), T.TX_FAINT)
 
         top = MARGIN + 62
         self._draw_tabs(screen, pygame.Rect(MARGIN, top, STOCK_W, 28))
         if len(self.shoppers) > 1:
             dl_btn = pygame.Rect(screen.get_width() - MARGIN - 160, top, 160, 28)
-            hov_dl = dl_btn.collidepoint(self.mouse)
-            panel(screen, dl_btn, fill=SURFACE_4 if hov_dl else SURFACE_2, border=LINE_SOFT,
-                  width=1, radius=4)
-            text(screen, "DISTRIBUTE LOAD", f.label, INK if hov_dl else INK_DIM, dl_btn.center, center=True)
+            draw_button(screen, F, dl_btn, "distribute load", mpos=self.mouse)
             self.buttons.append(("distribute", dl_btn))
+            
         body_top = top + 28 + SP2
-        stock = pygame.Rect(MARGIN, body_top, STOCK_W,
-                            screen.get_height() - body_top - 72)
+        stock = pygame.Rect(MARGIN, body_top, STOCK_W, screen.get_height() - body_top - 72)
         self._draw_stock(screen, stock)
+        
         self._draw_shoppers(screen, pygame.Rect(stock.right + MARGIN, body_top,
                                                 screen.get_width() - stock.right - 2 * MARGIN,
                                                 stock.h))
@@ -477,9 +600,19 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
                 label = names[0] if q == 1 else f"{names[0]} ×{q}"
             else:
                 label = names[0] if len(names) == 1 else f"{len(names)} items"
-            gr = pygame.Rect(gx + 12, gy + 6, f.body_sm.size(label)[0] + 2 * SP2, 20)
-            panel(screen, gr, fill=ACCENT, border=ACCENT_INK, width=1, radius=4)
-            text(screen, label, f.body_sm, ACCENT_INK, gr.center, center=True)
+            gr = pygame.Rect(gx + 12, gy + 6, F["body"].size(label)[0] + 2 * SP2, 20)
+            pygame.draw.rect(screen, mix(T.BRASS, T.STEEL, .85), gr)
+            pygame.draw.rect(screen, T.BRASS, gr, 1)
+            ui_text(screen, F["body"], label, gr.center, T.TX, center=True)
+            
+        for r, member, loc in self.item_rows:
+            if not self.sel and r.collidepoint(self.mouse):
+                name = self._item_at(member, loc)
+                if name:
+                    from .theme import format_tooltip
+                    t, d = data.item_tooltip(name)
+                    self.tooltip = format_tooltip(t, d, f)
+                break
 
         if getattr(self, "tooltip", None):
             from .theme import draw_tooltip
@@ -487,41 +620,38 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
 
         self.draw_sheet_modal(screen, f)
 
-
-    # ------------------------------------------------------------------ #
     def _draw_tabs(self, screen, rect):
-        f = self.fonts
+        F = self._ui_fonts()
         cats = economy.market_categories()
-        gap = SP1
+        gap = T.S
         w = (rect.w - (len(cats) - 1) * gap) // len(cats)
         for i, (label, key, _names) in enumerate(cats):
             r = pygame.Rect(rect.x + i * (w + gap), rect.y, w, rect.h)
             active = self.tab == key
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=SURFACE_3 if (active or hov) else SURFACE_1,
-                  border=ACCENT if active else LINE_SOFT, width=2 if active else 1,
-                  radius=RADIUS)
-            text(screen, label, f.label, ACCENT if active else INK_DIM,
-                 r.center, center=True)
+            draw_button(screen, F, r, label.upper(), ghost=not active, mpos=self.mouse)
             self.tab_hits.append((r, key))
 
     def _draw_stock(self, screen, rect):
-        f = self.fonts
-        panel(screen, rect, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-        x, w = rect.x + SP3, rect.w - 2 * SP3
+        F = self._ui_fonts()
+        pygame.draw.rect(screen, T.STEEL, rect)
+        pygame.draw.rect(screen, T.STEEL_LINE, rect, 1)
+        x, w = rect.x + T.S * 2, rect.w - T.S * 4
         names = next((c[2] for c in economy.market_categories() if c[1] == self.tab), [])
         kit = self.tab == "kit"
 
-        wt_x = rect.right - SP3                       # weight column: right edge
-        price_x = wt_x - 62                           # price cluster: right edge
-        tag_x = price_x - 44                          # kit tag: right edge
+        wt_x = rect.right - T.S * 2
+        price_x = wt_x - 62
+        tag_x = price_x - 44
 
-        y = section(screen, "FOR SALE", x, rect.y + SP3, w, f)
-        text(screen, "ITEM", f.label, INK_FAINT, (x, y))
+        caps(screen, F["micro"], "FOR SALE", (x, rect.y + T.S * 2), T.TX_FAINT)
+        hline(screen, x, rect.right - T.S * 2, rect.y + T.S * 4)
+        
+        y = rect.y + T.S * 5
+        caps(screen, F["micro"], "ITEM", (x, y), T.TX_FAINT)
         if kit:
-            text(screen, "QTY", f.label, INK_FAINT, (x + 152, y))
-        text(screen, "PRICE", f.label, INK_FAINT, (price_x, y), right=True)
-        text(screen, "WT", f.label, INK_FAINT, (wt_x, y), right=True)
+            caps(screen, F["micro"], "QTY", (x + 152, y), T.TX_FAINT)
+        caps(screen, F["micro"], "PRICE", (price_x, y), T.TX_FAINT, right=True)
+        caps(screen, F["micro"], "WT", (wt_x, y), T.TX_FAINT, right=True)
         y += 17
 
         row_h = 30 if kit else 34
@@ -535,61 +665,61 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             out = stock is not None and stock <= 0
             afford = self.purse >= price and not out
             fits = any(self._fits(m, name) for m in self.shoppers)
-            panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
-                  border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-            ink = ACCENT_INK if sel else INK if afford else INK_FAINT
-            faint = ACCENT_INK if sel else INK_DIM
+            
+            fill = mix(T.BRASS, T.STEEL, .85) if sel else T.STEEL_HI if hov else T.TABLE
+            pygame.draw.rect(screen, fill, r)
+            pygame.draw.rect(screen, T.BRASS if sel else T.STEEL_LINE, r, 1)
+
+            ink = T.TX if sel else T.TX if afford else T.TX_FAINT
+            faint = T.TX_MUTED if sel else T.TX_FAINT
 
             if sel:
-                main_color = ACCENT_INK
+                main_color = T.TX
             elif not afford:
-                main_color = INK_FAINT
+                main_color = T.TX_FAINT
             elif price < base:
-                main_color = OK
+                main_color = T.GREEN
             elif price > base:
-                main_color = DANGER
+                main_color = T.BLOOD
             else:
-                main_color = INK
+                main_color = T.TX
 
             spec = "" if kit else self._stock_spec(name)
             name_w = 138 if kit else 148
-            text(screen, ellipsize(name, f.body_sm, name_w), f.body_sm, ink,
-                 (r.x + SP2, r.y + 2 if spec else r.centery - 7))
+            ui_text(screen, F["body"], ellipsize(name, F["body"], name_w), (r.x + T.S, r.y + (4 if spec else r.centery - 8 - r.y)), ink)
             if spec:
-                text(screen, spec, f.mono_sm, faint, (r.x + SP2, r.y + 17))
+                ui_text(screen, F["micro"], spec, (r.x + T.S, r.y + 17), faint)
             if kit:
                 self._draw_stepper(screen, ("stock", name), r)
                 tag = self._kit_tag(name)
                 if tag:
-                    text(screen, tag, f.label, ACCENT_INK if sel else INFO,
-                         (tag_x, r.centery - 5), right=True)
+                    from .ui.loadout_panel import TAG_COLOR
+                    caps(screen, F["micro"], tag, (tag_x, r.centery - 5), TAG_COLOR.get(tag, T.TX_FAINT), right=True)
             if stock is not None:
-                stock_label = "OUT OF STOCK" if out else f"{stock} in stock"
-                text(screen, stock_label, f.label, ACCENT_INK if sel else DANGER if out else WARN,
-                     (tag_x, r.centery + 5), right=True)
+                stock_label = "OUT OF STOCK" if out else f"{stock} left"
+                caps(screen, F["micro"], stock_label, (tag_x, r.centery + 3), T.BLOOD if out else T.TX_MUTED, right=True)
 
-            wt = kg(data.item_weight(name))
-            text(screen, wt, f.mono_sm,
-                 ACCENT_INK if sel else INK_DIM if fits else DANGER,
-                 (wt_x, r.centery - 5), right=True)
-            prect = text(screen, str(price), f.mono,
-                         main_color,
-                         (price_x, r.centery - 7), right=True)
+            wt = f"{data.item_weight(name):.1f} kg"
+            caps(screen, F["micro"], wt, (wt_x, r.centery - 5), T.TX_FAINT if fits else T.BLOOD, right=True)
+            prect_w = F["body"].size(f"{price}c")[0]
+            ui_text(screen, F["body"], f"{price}c", (price_x, r.centery - 8), main_color, right=True)
+            
             if base != price:
-                br = text(screen, str(base), f.mono_sm, faint,
-                          (prect.x - SP2, r.centery - 5), right=True)
-                pygame.draw.line(screen, faint, (br.x - 1, br.centery),
-                                 (br.right + 1, br.centery), 1)
+                br_w = F["micro"].size(f"{base}c")[0]
+                caps(screen, F["micro"], f"{base}c", (price_x - prect_w - T.S, r.centery - 5), faint, right=True)
+                line_y = r.centery - 1
+                pygame.draw.line(screen, faint, (price_x - prect_w - T.S - br_w, line_y), (price_x - prect_w - T.S, line_y), 1)
 
             if hov:
                 from .theme import format_tooltip
                 t, d = data.item_tooltip(name)
-                self.tooltip = format_tooltip(t, d, f)
+                self.tooltip = format_tooltip(t, d, self.fonts)
 
             self.stock_rows.append((r, name))
-            y += row_h + SP1
+            y += row_h + T.S
 
     def _stock_spec(self, name):
+
         """The one-line stat blurb under a weapon / armor row."""
         if name in data.WEAPONS:
             wp = data.WEAPONS[name]
@@ -616,8 +746,9 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
             return "LIGHT"
         return ""
 
+
     def _draw_stepper(self, screen, pick, row):
-        f = self.fonts
+        F = self._ui_fonts()
         q = self._get_qty(pick)
         sel = pick in self.sel if pick[0] == "stock" else q > 0
         bw, bh = 16, 18
@@ -625,221 +756,68 @@ class MarketScreen(DragSelectMixin, SheetModalMixin, Screen):
         minus = pygame.Rect(row.x + 138, cy - bh // 2, bw, bh)
         plus = pygame.Rect(minus.right + 26, cy - bh // 2, bw, bh)
         for r, glyph, delta in ((minus, "-", -1), (plus, "+", +1)):
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, fill=SURFACE_3 if hov else SURFACE_1,
-                  border=ACCENT if hov else LINE_SOFT, width=1, radius=3)
-            text(screen, glyph, f.body_bd, ACCENT if hov else INK_DIM, r.center, center=True)
+            draw_button(screen, F, r, glyph, ghost=True, mpos=self.mouse)
             self.qty_hits.append((r, pick, delta))
-        text(screen, str(q), f.mono, ACCENT if sel else INK,
-             ((minus.right + plus.x) // 2, cy - 1), center=True)
+        
+        caps(screen, F["microb"], str(q), ((minus.right + plus.x) // 2, cy - 6), T.BRASS if sel else T.TX, center=True)
         if pick[0] != "stock":
             if self._held_qty(pick) > 1:
                 all_btn = pygame.Rect(plus.right + 4, cy - bh // 2, 28, bh)
-                hov_all = all_btn.collidepoint(self.mouse)
-                panel(screen, all_btn, fill=SURFACE_3 if hov_all else SURFACE_1,
-                      border=ACCENT if hov_all else LINE_SOFT, width=1, radius=3)
-                text(screen, "ALL", f.label, ACCENT if hov_all else INK_DIM, all_btn.center, center=True)
+                draw_button(screen, F, all_btn, "ALL", ghost=True, mpos=self.mouse)
                 self.qty_hits.append((all_btn, pick, 999))
 
     def _draw_shoppers(self, screen, area):
+        F = self._ui_fonts()
         n = max(1, len(self.shoppers))
-        gap = SP3
-        card_w = min(300, (area.w - (n - 1) * gap) // n)
+        gap = T.S * 2
+        card_w = min(420, max(300, (area.w - (n - 1) * gap) // n))
+        carried = self._selected_names()
+        
         for i, m in enumerate(self.shoppers):
-            rect = pygame.Rect(area.x + i * (card_w + gap), area.y, card_w, area.h)
-            self._draw_card(screen, rect, m)
-            self.cards.append((rect, m))
-
-    def _draw_card(self, screen, rect, m):
-        f = self.fonts
-        pad = SP3
-        names = self._selected_names()
-        add = (sum(data.item_weight(n) for n in names) if not self._buying
-               else data.item_weight(names[0]) * self._buy_qty(names[0]))
-        take_ok = bool(names) and m.load + add <= m.carry_max
-        owns_sel = any(p[0] is m for p in self.sel if p[0] != "stock")
-        hov = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_2,
-              border=OK if (take_ok and hov and not owns_sel) else
-              DANGER if (names and hov and not take_ok) else LINE_SOFT,
-              width=2 if hov else 1, radius=RADIUS)
-
-        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
-        self.info_hits.append((badge, m))
-
-        tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, m, f)
-        text(screen, ellipsize(m.name, f.card_name, badge.x - (tok[0] + 24) - SP1),
-             f.card_name, INK, (tok[0] + 24, rect.y + pad - 2))
-        text(screen, f"{m.race['name']}  ·  {m.occupation['name']}", f.body_sm,
-             INK_DIM, (tok[0] + 24, rect.y + pad + 18))
-
-        y = rect.y + pad + 48
-        over_norm = m.encumbered
-        over_max = m.load > m.carry_max
-        ccol = DANGER if over_max else WARN if over_norm else OK
-        carrier = f"  (carrier +{m.carry_relief:g})" if m.carry_relief else ""
-        text(screen, f"Load {kg(m.load)} / {kg(m.carry_normal)}{carrier}", f.mono_sm,
-             ccol, (rect.x + pad, y))
-        note = ("OVER HIGH LOAD  -2 STR/DEX, -1 speed" if over_max
-                else "overloaded  -2 STR/DEX, -1 speed" if over_norm else "")
-        if note:
-            y += 13
-            text(screen, note, f.label, ccol, (rect.x + pad, y))
-        y += 18
-
-        for loc, label in (("hand", "weapon"), ("offhand", "off hand"), ("armor", "body")):
-            held = self._item_at(m, loc)
-            if not held:
-                continue
-            r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
-            self._draw_item_row(screen, r, m, loc, held, tag=label.upper())
-            y += 24 + SP1
-
-        # Identical items stack into one row (×N) -- shift/ctrl-click grabs the
-        # whole stack. What does not fit in the card scrolls with the wheel.
-        y = section(screen, "PACK", rect.x + pad, y + SP1, rect.w - 2 * pad, f)
-        stacks = self._stacks(m._base_inventory)
-        if not stacks:
-            text(screen, "(empty)", f.body_sm, INK_FAINT, (rect.x + pad, y + 2))
-
-        row_h = 24 + SP1
-        max_bottom = rect.bottom - 26                 # leave room for the COPPER label
-        pack_area = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, max(0, max_bottom - y))
-        self._pack_areas.append((pack_area, m))
-        visible_n = max(1, (max_bottom - y) // row_h)
-        scroll = max(0, min(self._pack_scroll.get(id(m), 0),
-                            max(0, len(stacks) - visible_n)))
-        self._pack_scroll[id(m)] = scroll
-
-        if scroll:
-            text(screen, f"^ {scroll} more above", f.label, INK_FAINT, (rect.x + pad, y + 2))
-            y += 14
-        shown = stacks[scroll:scroll + visible_n]
-        for name, idx, count in shown:
-            r = pygame.Rect(rect.x + pad, y, rect.w - 2 * pad, 24)
-            self._draw_item_row(screen, r, m, idx, name, count=count)
-            y += row_h
-        more_below = len(stacks) - scroll - len(shown)
-        if more_below > 0:
-            text(screen, f"v {more_below} more below", f.label, INK_FAINT,
-                 (rect.x + pad, y + 2))
-            y += 14
-
-        tracked(screen, "COPPER (COMMON)", f.label, INFO, (rect.x + pad, rect.bottom - 22))
-
-    def _draw_item_row(self, screen, r, member, loc, name, tag="", count=1):
-        f = self.fonts
-        sel = (member, loc) in self.sel
-        hov = not self.sel and r.collidepoint(self.mouse)
-        panel(screen, r, fill=ACCENT if sel else SURFACE_3 if hov else SURFACE_1,
-              border=ACCENT if sel else LINE_SOFT, width=1, radius=4)
-        ink = ACCENT_INK if sel else INK
-        label = name if count == 1 else f"{name}  ×{count}"
-
-        name_x = r.x + SP2
-        if isinstance(loc, int):
-            lr = pygame.Rect(r.x + 2, r.y + 3, LOCK_W, 18)
-            locked = member.locked_of(name) >= count
-            lhov = lr.collidepoint(self.mouse)
-            icons.icon(screen, "lock" if locked else "unlock", lr,
-                       ACCENT_INK if sel else ACCENT if locked else (INK if lhov else INK_FAINT))
-            self.lock_hits.append((lr, member, name))
-            name_x += LOCK_W
-
-        text(screen, label, f.body_sm, ink, (name_x, r.y + 5))
-        
-        base = economy.sell_price(name)
-        price = economy.sell_price(name, self.deal)
-        
-        if sel:
-            main_color = ACCENT_INK
-        elif price > base:
-            main_color = OK
-        elif price < base:
-            main_color = DANGER
-        else:
-            main_color = INK_DIM
+            r = pygame.Rect(area.x + i * (card_w + gap), area.y, card_w, area.h)
+            member = self._member_dict(m, carried)
+            res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(m), 0), self.mouse)
+            self._pack_scroll[id(m)] = res["scroll"]
+            self.info_hits.append((res["sheet_rect"], m))
             
-        right = f"{price}c"
-        if tag:
-            right = tag + "  ·  " + right
+            for kind, slot_rect in res["slot_rects"].items():
+                if slot_rect is None:
+                    continue
+                self.zones.append((slot_rect, m, kind))
+                if member[kind]["name"]:
+                    self.item_rows.append((slot_rect, m, kind))
+                    
+            self.zones.append((res["pack_zone"], m, "pack"))
+            self._pack_areas.append((res["pack_area"], m))
             
-        prect = text(screen, right, f.mono_sm, main_color,
-                     (r.right - SP2, r.y + 6), right=True)
-                     
-        if isinstance(loc, int):
-            self._draw_stepper(screen, (member, loc), r)
-                     
-        if base != price:
-            faint = ACCENT_INK if sel else INK_DIM
-            br = text(screen, f"{base}c", f.mono_sm, faint,
-                      (prect.x - SP2, r.y + 7), right=True)
-            pygame.draw.line(screen, faint, (br.x - 1, br.centery),
-                             (br.right + 1, br.centery), 1)
-
-        if hov:
-            from .theme import format_tooltip
-            t, d = data.item_tooltip(name)
-            self.tooltip = format_tooltip(t, d, f)
-
-        self.item_rows.append((r, member, loc))
+            for pr, idx in res["pack_hits"]:
+                self.item_rows.append((pr, m, idx))
+            for lr, idx in res["lock_hits"]:
+                self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
 
     def _distribute_load(self):
+
         from . import unit as unit_module
         unit_module.distribute_load(self.shoppers)
         self.sel = []
         self.notice = "redistributed packs by carrying capacity."
 
+
     def _draw_footer(self, screen):
-        f = self.fonts
-        y = screen.get_height() - 52
-        if self.notice:
-            text(screen, self.notice, f.body_sm, INFO, (MARGIN, y - 22))
+        F = self._ui_fonts()
+        W, H = screen.get_size()
+        
+        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 25, T.S * 4)
+        draw_button(screen, F, done_r, "back to guild", primary=True, mpos=self.mouse)
+        self.buttons.append(("done", done_r))
 
         names = self._selected_names()
-        can_sell = bool(names) and not self._buying
-        x = MARGIN
-        if can_sell:
-            sell_picks = [p for p in self.sel if p[0] != "stock"]
-            sold_qty = sum(self._get_qty(p) for p in sell_picks)
-            total = sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
-                       for p in sell_picks)
-            sr = pygame.Rect(x, y, 220, 36)
-            hov = sr.collidepoint(self.mouse)
-            panel(screen, sr, fill=DANGER if hov else SURFACE_3, border=DANGER,
-                  width=1, radius=RADIUS)
-            text(screen, f"SELL ({sold_qty}) FOR {total}", f.body_bd,
-                 ACCENT_INK if hov else DANGER, sr.center, center=True)
-            self.buttons.append(("sell", sr))
-            x += 220 + SP2
+        if not self._buying and names:
+            sell_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
+            sell_r.center = (W // 2, H - T.S * 8 + T.S * 2)
+            total = sum(economy.sell_price(n, self.deal) for n in names)
+            draw_button(screen, F, sell_r, f"SELL FOR {total}c", mpos=self.mouse)
+            self.buttons.append(("sell", sell_r))
 
-            full_qty = sum(self._held_qty(p) for p in sell_picks)
-            if full_qty > sold_qty:
-                all_total = sum(economy.sell_price(self._name_of(p), self.deal) * self._held_qty(p)
-                                for p in sell_picks)
-                sar = pygame.Rect(x, y, 220, 36)
-                hov_sa = sar.collidepoint(self.mouse)
-                panel(screen, sar, fill=DANGER if hov_sa else SURFACE_3, border=DANGER,
-                      width=1, radius=RADIUS)
-                text(screen, f"SELL ALL ({full_qty}) FOR {all_total}", f.body_bd,
-                     ACCENT_INK if hov_sa else DANGER, sar.center, center=True)
-                self.buttons.append(("sell_all", sar))
-                x += 220 + SP2
-            
-        if len(self.shoppers) > 1:
-            distr = pygame.Rect(x, y, 240, 36)
-            hov_dist = distr.collidepoint(self.mouse)
-            panel(screen, distr, fill=SURFACE_4 if hov_dist else SURFACE_2, border=LINE_SOFT,
-                  width=1, radius=RADIUS)
-            text(screen, "DISTRIBUTE LOAD", f.body_bd, INK if hov_dist else INK_DIM,
-                 distr.center, center=True)
-            self.buttons.append(("distribute", distr))
-
-        done = pygame.Rect(screen.get_width() - MARGIN - 240, y, 240, 36)
-        hovd = done.collidepoint(self.mouse)
-        panel(screen, done, fill=ACCENT if hovd else SURFACE_3, border=ACCENT,
-              width=1, radius=RADIUS)
-        text(screen, "LEAVE THE MARKET", f.body_bd, ACCENT_INK if hovd else ACCENT,
-             done.center, center=True)
-        self.buttons.append(("done", done))
+        if self.notice:
+            ui_text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)

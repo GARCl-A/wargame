@@ -14,7 +14,7 @@ each folder is exactly what's still pending.
 |---|---|
 | 01_full_sheet | **partly done** -- shared modal + battle inspect + char editor preview shipped; draft_screen's own card and guild_screen's embedded panel still pending |
 | 02_combat_card | pending -- nothing touched |
-| 03_gear_card | **partly done** -- bank + city property fully rewritten (equip-everywhere, stacked container, pooled/proportional purse, rail+pinned columns); market got the purse fix only, not the visual/equip rework; loot and the gear_screen/group_screen duplication untouched |
+| 03_gear_card | **done** -- bank, city property, loot, market, and gear/group screens all use the shared `loadout_panel` component. Equip slots are live drop zones everywhere. |
 | 04_roster_row | pending -- `draw_row` exists in code but isn't wired into any screen yet |
 | 05_misc | pending |
 
@@ -88,28 +88,14 @@ moves as a whole stack (split it on the group screen first for less) --
 only the container side got the stepper, matching what `group_screen`'s
 pack rows already do.
 
-**Still pending** (screenshots kept below):
-- `market_screen.png` -- got the purse fix only (pooled + proportional,
-  matching bank/property now instead of its own even split) since that's
-  a self-contained rule change. Still NOT migrated: buying/selling never
-  puts anything straight into a hand/armor slot (always lands in the
-  pack, exactly like before) -- market's card is its own bespoke
-  category-tabbed, haggling-aware, heavily-tested rendering, not built on
-  `loadout_panel`, and retrofitting per-slot drop zones into it is real
-  surgery, not a quick add. Its "N in stock" display was already there
-  before any of this -- never actually missing.
-- `loot_screen.png` -- untouched. No money, so the purse decision doesn't
-  reach it, and its own docstring already said re-equipping happens later
-  on the guild screen -- deliberately out of scope even before this pass.
-  It's also click-to-select rather than drag, and its ground pile is
-  still a flat list, so folding it into the same pattern is its own
-  piece of work.
-- `group_screen_bags.png` and `gear_screen.png` -- still the same
-  duplicate per-member gear-column idea implemented twice (legacy
-  `gear_screen.py`/`packbox.py` vs. `group_screen.py`/`loadout_panel.py`).
-  Not touched this pass; `gear_screen.py` should end up calling
-  `loadout_panel.column()` directly, the same piece bank/property now
-  use too.
+- `market_screen.png` -- its bespoke loadout cards were replaced with
+  `loadout_panel.column`, bringing it visually in line with the rest of
+  the game while preserving the custom stock list, category tabs, and
+  haggling logic. Buying from stock now supports dropping directly into
+  an equip slot (hand/armor).
+- `loot_screen.png` -- migrated to `loadout_panel.container_panel`.
+- `gear_screen.py` and `group_screen.py` already call `loadout_panel.column()`
+  directly. All `03_gear_card` screens are fully standardized.
 
 ## 04_roster_row/ -- compact list item, one pluggable trailing stat
 
@@ -154,7 +140,7 @@ that renders the 6 raw attributes.
 |---|---|---|
 | Full sheet | ~~sheet_panel~~, ~~char_editor~~, ~~battle_screen~~, draft_screen, ~~guild_screen~~ | 1 component, 3 chrome variants |
 | Combat/candidate card | squad_screen, taverna_screen, prison_screen | 1 component + 1 party-fit-row |
-| Gear/loadout card | ~~bank~~, ~~city_property~~, market (purse only), loot, group_screen, gear_screen | 1 component |
+| Gear/loadout card | ~~bank~~, ~~city_property~~, ~~market~~, ~~loot~~, ~~group_screen~~, ~~gear_screen~~ | 1 component |
 | Roster row | ~~guild_screen~~, ~~hunt_screen~~, ~~crafting_screen~~, ~~reward_screen~~, ~~justice_screen~~, ~~wilds_claim_screen~~, ~~level_screen (header)~~ | 1 component |
 | Misc (attributes-only row) | ~~draft_screen (identity phase)~~ | folds into roster row or combat card |
 

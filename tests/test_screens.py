@@ -135,7 +135,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     ms.purse = unit_price * 100                       # plenty of coin and carry
     ms.sel = [("stock", "Meat")]
     ms.qty["Meat"] = 10
-    ms._drop_on(buyer)
+    ms._drop_on_zone(buyer, "pack")
     assert buyer.count_of("Meat") == 10
     assert ms.purse == unit_price * 90
     assert ms.qty.get("Meat", 1) == 1                 # the stepper resets after a buy
@@ -144,7 +144,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     ms.purse = unit_price * 3                         # only three affordable
     ms.sel = [("stock", "Meat")]
     ms.qty["Meat"] = 10
-    ms._drop_on(buyer)
+    ms._drop_on_zone(buyer, "pack")
     assert buyer.count_of("Meat") == 13
     assert ms.purse == 0 and "3 of 10" in ms.notice
 
