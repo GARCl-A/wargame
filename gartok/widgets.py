@@ -189,55 +189,6 @@ class ModalScreen(ButtonsMixin):
             self.on_button(key)
 
 
-# --------------------------------------------------------------------------- #
-# roster card                                                                  #
-# --------------------------------------------------------------------------- #
-
-def unit_card(surf, rect, unit, fonts, mouse, *, selected=False, disabled=False,
-             lines=(), subtitle=None):
-    """The compact roster card frame used on squad/guild/group/tavern screens:
-    an emphasised panel, the unit's token + name, an optional subtitle line
-    (race/occupation), then caller-supplied stat lines. `lines` is
-    `[(text, color)]`, drawn in `fonts.mono_sm`/`body_sm` below the header --
-    each screen keeps deciding *what* those lines say (HP/AC, hunger, price,
-    ...); this only collapses the frame + header that were redrawn per-screen.
-    Returns whether the mouse is over the card."""
-    hov = rect.collidepoint(mouse)
-    pad = SP3
-    panel(surf, rect, fill=SURFACE_1 if disabled else SURFACE_2,
-         border=DANGER if disabled else ACCENT if selected else (INFO if hov else LINE_SOFT),
-         width=2 if (selected or hov or disabled) else 1, radius=RADIUS)
-
-    tok = (rect.x + pad + 12, rect.y + pad + 12)
-    token_badge(surf, tok, unit, fonts)
-    text(surf, unit.name, fonts.card_name, INK, (tok[0] + 24, rect.y + pad))
-    y = rect.y + pad + 20
-
-    r_lvl = getattr(unit, "racial_level", None)
-    if r_lvl is not None:
-        chip_lbl = f"RACIAL LVL {r_lvl}"
-        cw = fonts.label.size(chip_lbl)[0] + 10
-        ch = 18
-        chip_r = pygame.Rect(tok[0] + 24, y, cw, ch)
-        panel(surf, chip_r, fill=SURFACE_1, border=ACCENT, radius=4, width=1)
-        text(surf, chip_lbl, fonts.label, ACCENT, chip_r.center, center=True)
-        sub_x = chip_r.right + SP1
-    else:
-        sub_x = tok[0] + 24
-
-    if subtitle:
-        max_w = rect.right - pad - sub_x
-        text(surf, ellipsize(subtitle, fonts.body_sm, max_w), fonts.body_sm, INK_DIM, (sub_x, y + 1))
-        y = rect.y + pad + 44
-    else:
-        y = rect.y + pad + 40
-
-    for line, color in lines:
-        text(surf, line, fonts.mono_sm, color, (rect.x + pad, y))
-        y += 17
-
-    return hov
-
 
 # --------------------------------------------------------------------------- #
 # scroll                                                                       #
