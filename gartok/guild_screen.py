@@ -30,8 +30,9 @@ whole maximized screen. Reached from the map (opening it passes no time).
 import pygame
 
 from . import artwork, data, factions
+from .combatant import Combatant
 from .screen import Screen
-from .sheet_panel import SheetModalMixin
+from .ui.sheet_card import draw_row, draw_sheet, unit_to_ch
 from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SP4, SP5,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
@@ -47,12 +48,13 @@ LIST_MIN, LIST_MAX = 264, 380         # roster column width clamps
 DET_MAX = 1120                        # detail panel width cap on very wide screens
 
 
-class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
+class GuildScreen(ButtonsMixin, Screen):
     native = True                        # app draws us straight to the window
 
     def __init__(self, fonts, guild, on_back, on_level=None, on_manage=None):
         super().__init__()
         self.fonts = fonts
+        self._F = None
         self.guild = guild
         self.roster = guild.roster
         self.battles_won = guild.battles_won
@@ -65,6 +67,12 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
         self.tab_hits = []                  # [(rect, key)]
         self.member_hits = []              # [(rect, unit)] -- list cards select the member
         self.buttons = []                  # [(key, rect)]
+
+    def _ui_fonts(self):
+        if self._F is None:
+            from .ui.tokens import fonts as ui_fonts
+            self._F = ui_fonts()
+        return self._F
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py) -- one id per tab, since that's the actual
@@ -91,9 +99,6 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
         super().handle_event(event)
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             px = event.pos
-            if self.close_sheet_on_click():
-                return
-            
             for key, rect in self.buttons:
                 if rect.collidepoint(px):
                     if key.startswith("roster_level:") and self.on_level:
@@ -116,8 +121,6 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
                         group = self.guild.group_of(self.member)
                         if group and len(group.members) > 1:
                             group.distribute_load()
-                    elif key == "sheet" and self.member is not None:
-                        self.open_sheet(self.member)
                     elif key == "back":
                         self.on_back()
                     return
@@ -180,7 +183,6 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
                 self._draw_detail(screen, det_rect, self.member)
 
         self._draw_footer(screen, W, H, pad)
-        self.draw_sheet_modal(screen, f)
         
         if getattr(self, "tooltip", None):
             draw_tooltip(screen, f.body_sm, self.tooltip, self.mouse)
@@ -199,71 +201,27 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
             r = pygame.Rect(rect.x, rect.y + i * (row_h + gap), rect.w, row_h)
             if r.bottom > rect.bottom + 2:
                 break
+            
             sel = unit is self.member
             hov = r.collidepoint(mouse)
             if hov and not sel:
                 self._hot = True
-            panel(screen, r,
-                  fill=SURFACE_3 if (sel or hov) else SURFACE_2,
-                  border=ACCENT if sel else LINE_SOFT,
-                  width=2 if sel else 1, radius=RADIUS)
-            if sel:
-                pygame.draw.rect(screen, ACCENT, (r.x, r.y + 4, 3, r.h - 8))
-
-            tok = (r.x + SP3 + 12, r.y + 24)
-            token_badge(screen, tok, unit, f)
-            nx = tok[0] + 24
-            name_w = r.right - nx - SP2
-            if unit is self.guild.leader:
-                text(screen, "GUILD LEADER", f.label, ACCENT, (r.right - SP3, r.y + 6), right=True)
-                name_w -= 96
-            elif self._is_group_leader(unit):
-                text(screen, "LEAD", f.label, INFO, (r.right - SP3, r.y + 6), right=True)
-                name_w -= 40
-            text(screen, ellipsize(unit.full_name, f.card_name, name_w),
-                 f.card_name, INK if sel else INK_DIM if not hov else INK,
-                 (nx, r.y + 6))
-            text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}",
-                              f.body_sm, r.right - nx - SP2),
-                 f.body_sm, INK_FAINT, (nx, r.y + 27))
-
-            over_norm = unit.encumbered
-            over_max = unit.load > unit.carry_max
-            ccol = DANGER if over_max else WARN if over_norm else INK_DIM
-            text(screen, f"HP {unit.hp_max}   AC {unit.ac}   ·   {kg(unit.load)}",
-                 f.mono_sm, ccol, (r.x + SP3, r.bottom - 20))
-            hx = r.right - SP3
-            if unit.hunger_level:
-                text(screen, "HUNGER", f.label,
-                     DANGER if unit.hunger_level >= 2 else WARN,
-                     (hx, r.bottom - 19), right=True)
-                hx -= f.label.size("HUNGER")[0] + SP2
+            
+            c = Combatant(unit)
+            ch = unit_to_ch(c)
+            tag = None
             if unit.pending_picks:
-                lbl = "LEVEL UP"
-                tw = f.label.size(lbl)[0]
-                bw, bh = tw + 18, 18
-                bx = hx - bw
-                by = r.bottom - 21
-                br = pygame.Rect(bx, by, bw, bh)
-                b_hov = br.collidepoint(mouse)
-                if b_hov:
-                    self._hot = True
-                panel(screen, br, fill=ACCENT if b_hov else SURFACE_1,
-                      border=ACCENT, width=1, radius=4)
-                pygame.draw.circle(screen, ACCENT_INK if b_hov else ACCENT,
-                                   (br.x + 6, br.centery), 3)
-                text(screen, lbl, f.label, ACCENT_INK if b_hov else ACCENT,
-                     (br.x + 12, br.y + 3))
-                self.buttons.append((f"roster_level:{unit.uid}", br))
+                tag = "LEVEL UP"
+            elif unit is self.guild.leader:
+                tag = "GUILD LEADER"
+            elif self._is_group_leader(unit):
+                tag = "GROUP LEADER"
 
+            draw_row(screen, self._ui_fonts(), r, ch, selected=sel, tag=tag)
+            
             self.member_hits.append((r, unit))
 
     # ------------------------------------------------------------------ #
-    def _chip(self, screen, r, label, val):
-        f = self.fonts
-        panel(screen, r, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
-        text(screen, label, f.label, INFO, (r.centerx, r.y + 8), center=True)
-        text(screen, str(val), f.num, INK, (r.centerx, r.y + 24), center=True)
 
     def _pill(self, screen, r, label, *, accent=False, dot=False):
         """A small labelled button with a hover fill. Feeds `self._hot` for the
@@ -281,12 +239,6 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
         if dot:
             pygame.draw.circle(screen, ink, (r.x + 9, r.centery), 3)
 
-    def _slot(self, screen, r, *, sel, accepts, drop):
-        panel(screen, r,
-              fill=ACCENT if sel else SURFACE_3 if (drop or accepts) else SURFACE_1,
-              border=ACCENT if (sel or drop) else INFO if accepts else LINE_SOFT,
-              width=1, radius=4)
-
     def _draw_detail(self, screen, rect, unit):
         f = self.fonts
         mouse = self.mouse
@@ -295,119 +247,55 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
         x = rect.x + pad
         inner = rect.w - 2 * pad
 
-        # --- header: identity + two real buttons (sheet / level) ------ #
-        head = pygame.Rect(rect.x, rect.y, rect.w, 60)
-        pygame.draw.rect(screen, SURFACE_2, head,
-                         border_top_left_radius=RADIUS, border_top_right_radius=RADIUS)
-        pygame.draw.line(screen, LINE_SOFT, (rect.x, head.bottom), (rect.right - 1, head.bottom))
-        tok = (rect.x + pad + 15, rect.y + 30)
-        token_badge(screen, tok, unit, f, r=16)
-        nx = tok[0] + 28
-        origin = self._recruited_by(unit)
-        sub = (f"{unit.race['name']}  ·  {unit.occupation['name']}"
-               + (f"  ·  recruited by {origin}" if origin else ""))
+        # Layout: sheet on the left, management card on the right
+        col_a = min(440, int(inner * 0.55))
+        bx = x + col_a + SP5
+        bw = rect.right - pad - bx
 
-        btn_w, btn_h = 96, 26
-        bx = rect.right - pad - btn_w
-        level_pend = bool(unit.pending_picks)
+        sheet_rect = pygame.Rect(x, rect.y + pad, col_a, rect.h - 2 * pad)
+        c = Combatant(unit)
+        ch = unit_to_ch(c)
+        _, tip = draw_sheet(screen, self._ui_fonts(), sheet_rect, ch, density="full", mouse=mouse)
+        if tip:
+            self.tooltip = tip
+
+        # --- right column: Guild Management --- #
+        a = rect.y + pad
+        a = section(screen, "GUILD MANAGEMENT", bx, a, bw, f)
+        
+        # Level up
         if self.on_level:
-            lb = pygame.Rect(bx, rect.y + 30 - btn_h // 2, btn_w, btn_h)
+            level_pend = bool(unit.pending_picks)
+            lb = pygame.Rect(bx, a, 168, 22)
             self._pill(screen, lb, "LEVEL UP" if level_pend else "LEVEL",
                        accent=level_pend, dot=level_pend)
             self.buttons.append(("level", lb))
-            if lb.collidepoint(self.mouse):
+            if lb.collidepoint(mouse):
                 self.tooltip = ("XP and leveling system:\n"
                                 "Characters earn XP in Combat, Work, or Racial tracks.\n"
                                 "When a track levels up, they earn a pick for that tree.\n"
                                 "Combat and Work XP both feed into Racial XP!")
-            bx -= btn_w + SP2
+            a += 32
 
-        text(screen, ellipsize(unit.full_name, f.card_name, bx - nx - SP2), f.card_name,
-             INK, (nx, rect.y + 10))
-        text(screen, ellipsize(sub, f.body_sm, bx - nx - SP2), f.body_sm,
-             INK_DIM, (nx, rect.y + 34))
-
-        # Two inner columns under the header: the read-out (chips, carry, copper,
-        # hunger) on the left, the gear slots -- the drop targets -- on the
-        # wider right.
-        top = head.bottom + SP4
-        col_a = min(440, int(inner * 0.42))
-        bx = x + col_a + SP5
-        bw = rect.right - pad - bx
-
-        # --- left column: stat chips ------------------------------- #
-        a = top
-        stats = (("HP", unit.hp_max), ("AC", unit.ac),
-                 ("MD", unit.mental_defense), ("SPD", unit.speed))
-        cw = (col_a - 3 * SP2) // 4
-        for i, (lbl, val) in enumerate(stats):
-            self._chip(screen, pygame.Rect(x + i * (cw + SP2), a, cw, 48), lbl, val)
-        a += 48 + SP4
-
-        # --- left column: carry bar ------------------------------- #
-        over_norm = unit.encumbered
-        over_max = unit.load > unit.carry_max
-        ccol = DANGER if over_max else WARN if over_norm else OK
-        carrier = f"  (carrier +{unit.carry_relief:g})" if unit.carry_relief else ""
-        tracked(screen, "LOAD", f.label, INFO, (x, a))
-        a += 15
-        bar = pygame.Rect(x, a, col_a, 12)
-        panel(screen, bar, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=4)
-        span = bar.w - 2
-        cap = max(1, unit.carry_max)
-        fillw = int(span * min(1.0, unit.load / cap))
-        if fillw > 0:
-            pygame.draw.rect(screen, ccol, (bar.x + 1, bar.y + 1, fillw, bar.h - 2), border_radius=3)
-        mkx = bar.x + 1 + int(span * min(1.0, unit.carry_normal / cap))
-        pygame.draw.line(screen, INK, (mkx, bar.y - 3), (mkx, bar.bottom + 3))
-        a += 18
-        text(screen, f"{kg(unit.load)}  ·  normal {kg(unit.carry_normal)}{carrier}  ·  "
-             f"high {kg(unit.carry_max)}", f.mono_sm, INK_DIM, (x, a))
-        a += 15
-        note = ("OVER HIGH LOAD  ·  -2 STR/DEX, -1 speed" if over_max
-                else "overloaded  ·  -2 STR/DEX, -1 speed" if over_norm else "")
-        if note:
-            text(screen, note, f.label, ccol, (x, a))
-        a += 18
-
-        # --- left column: copper / levels / hunger ---------------- #
-        xp = f"combat N{unit.combat_level} ({unit.combat_xp} XP)"
-        if unit.work_xp or unit.work_level:
-            xp += f"   ·   work N{unit.work_level}"
-        if unit.pending_picks:
-            xp += "   ·   talent pick ready"
-        text(screen, f"{unit.gold} copper", f.mono_sm, ACCENT, (x, a))
-        a += 16
-        text(screen, xp, f.mono_sm, INFO, (x, a))
-        a += 16
-        rtag = f"  ·  {unit.rations} rations" if unit.rations else "  ·  no rations"
-        if unit.ability.id == "autotroph":
-            text(screen, "hunger: autotroph (doesn't eat)", f.mono_sm, INK_DIM, (x, a))
-        elif unit.hunger_level:
-            text(screen, f"hunger: {unit.hunger_label}  ({unit.unfed_days}d unfed){rtag}",
-                 f.mono_sm, DANGER if unit.hunger_level >= 2 else WARN, (x, a))
-        else:
-            text(screen, f"hunger: fed{rtag}", f.mono_sm, OK, (x, a))
+        # Sharing Food
         if unit.ability.id != "autotroph":
-            a += 18
-            sf = pygame.Rect(x, a, 168, 22)
+            sf = pygame.Rect(bx, a, 168, 22)
             self._pill(screen, sf, "SHARING FOOD" if unit.share_food else "RATIONS PRIVATE",
                        dot=unit.share_food)
             self.buttons.append(("share_food", sf))
-            a += 26
+            a += 32
 
-        # --- left column: leadership (Group.leader / Guild.leader) - #
+        # Leadership
         group = self.guild.group_of(unit)
         is_group_leader = self._is_group_leader(unit)
         is_guild_leader = unit is self.guild.leader
         
-        a += 12
         from .group import BASE_CAPACITY
         cap = BASE_CAPACITY + unit.mod_charisma + (unit.racial_level // 2)
-        text(screen, f"leads up to {cap} members", f.mono_sm, INK_DIM, (x, a))
+        text(screen, f"leads up to {cap} members", f.mono_sm, INK_DIM, (bx, a))
         a += 18
         
-        gl = pygame.Rect(x, a, 168, 22)
+        gl = pygame.Rect(bx, a, 168, 22)
         self._pill(screen, gl, "GROUP LEADER" if is_group_leader else "MAKE GROUP LEADER",
                    accent=is_group_leader)
         if not is_group_leader and group is not None and len(group.members) > 1:
@@ -415,56 +303,13 @@ class GuildScreen(ButtonsMixin, SheetModalMixin, Screen):
 
         free_swap = self.guild.leader_swaps_used < 1
         a += 26
-        gl2 = pygame.Rect(x, a, 168, 22)
+        gl2 = pygame.Rect(bx, a, 168, 22)
         label = ("GUILD LEADER" if is_guild_leader
                  else "MAKE GUILD LEADER" if free_swap
                  else "no free change left")
         self._pill(screen, gl2, label, accent=is_guild_leader)
         if not is_guild_leader and free_swap:
             self.buttons.append(("guild_leader", gl2))
-
-        # --- right column: attributes & attacks -------------------- #
-        cy = top
-        cy = section(screen, "ATTRIBUTES", bx, cy, bw, f)
-        aw = min(bw // 6, 80)
-        for i, (k, name) in enumerate([("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"), ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma")]):
-            val = getattr(unit, name)
-            m = getattr(unit, f"mod_{name}")
-            acx = bx + i * aw + aw // 2
-            cell = pygame.Rect(bx + i * aw + 1, cy, aw - 2, 48)
-            pygame.draw.rect(screen, SURFACE_1, cell, border_radius=4)
-            text(screen, k, f.label, INK_FAINT, (acx, cy + 5), center=True)
-            text(screen, f"{val}", f.num, INK, (acx, cy + 20), center=True)
-            mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
-            text(screen, f"{m:+}", f.body_sm, mc, (acx, cy + 38), center=True)
-            if self.mouse and cell.collidepoint(self.mouse) and k in data.ATTRIBUTE_HELP:
-                t, d = data.ATTRIBUTE_HELP[k]
-                self.tooltip = format_tooltip(t, d, f)
-        cy += 48 + SP4
-        
-        from .sheet_panel import _weapon_lines, _to_hit
-        from .combatant import Combatant
-        c = Combatant(unit)
-        cy = section(screen, "ATTACK WITH THE WEAPON IN HAND", bx, cy, bw, f)
-        wname, dmg, reach = _weapon_lines(c)
-        bab, src = _to_hit(c)
-        text(screen, wname, f.body_bd, INK, (bx, cy))
-        cy += 17
-        text(screen, f"to hit:  d20 {bab:+} ({src})   ·   crit 20, fumble 1", f.mono_sm, INK_DIM, (bx, cy))
-        cy += 15
-        text(screen, f"damage:  {dmg}   ·   {reach}", f.mono_sm, INK_DIM, (bx, cy))
-        cy += 15 + SP4
-
-        cy = section(screen, "LANGUAGES", bx, cy, bw, f)
-        text(screen, ", ".join(unit.languages), f.body_sm, INK, (bx, cy))
-        cy += 24 + SP4
-        
-        cy = section(screen, "RACIAL ABILITY", bx, cy, bw, f)
-        text(screen, unit.ability.name, f.body_bd, INFO, (bx, cy))
-        cy += 17
-        for ln in wrap_lines([unit.ability.effect], f.body_sm, bw):
-            text(screen, ln, f.body_sm, INK_DIM, (bx, cy))
-            cy += 15
 
     def _item_tag(self, item):
         if item == data.AMMO_ITEM:

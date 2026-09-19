@@ -1333,8 +1333,8 @@ def test_guild_screen_level_up_observability():
     scr.mouse = (0, 0)
     scr.draw(surf)
 
-    # Roster button for level up exists
-    btn = next((r for k, r in scr.buttons if k == f"roster_level:{u1.uid}"), None)
+    # Management card button for level up exists
+    btn = next((r for k, r in scr.buttons if k == "level"), None)
     assert btn is not None
 
     # Clicking it triggers on_level
