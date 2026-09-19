@@ -15,7 +15,7 @@ import pygame
 from . import data, economy, orders
 from .screen import Screen
 from .theme import set_pointer, token_badge
-from .ui.primitives import caps, draw_button, header, hline, text
+from .ui.primitives import (caps, draw_button, header, hline, text, token_badge)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -143,16 +143,26 @@ class WildsClaimScreen(Screen):
         set_pointer(any(r.collidepoint(self.mouse) for _, r in self.buttons))
 
     def _draw_party(self, screen, F, panel_w, W, H):
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+        
         x = T.S * 3
         y = H - T.S * 20
         hline(screen, x, x + panel_w, y - T.S * 2)
         caps(screen, F["microb"], f"HERE ({len(self.group.members)})", (x, y), T.TX_FAINT)
         y += T.S * 3
-        for m in self.group.members:
-            tok = (x + 12, y + 10)
-            token_badge(screen, tok, m, self.fonts)
-            text(screen, F["body_sm"], m.name, (tok[0] + 20, y), T.TX)
-            y += 22
+        
+        # Two columns if needed, but since it's a fixed y=H-T.S*20, let's use columns to fit.
+        # But wait, y=H-320 means we have ~250px left (H - 320 to H - 70).
+        # We can fit 3 rows of 74px + gap vertically.
+        # I'll just use a 2-column grid.
+        col_w = (panel_w - T.S * 2) // 2
+        for i, m in enumerate(self.group.members):
+            col = i % 2
+            row_idx = i // 2
+            r = pygame.Rect(x + col * (col_w + T.S * 2), y + row_idx * (74 + T.S), col_w, 74)
+            c = Combatant(m)
+            draw_row(screen, F, r, unit_to_ch(c))
 
     def _draw_footer(self, screen, F, W, H):
         d = pygame.Rect(W - T.S * 3 - 240, H - T.S * 4 - 36, 240, 36)

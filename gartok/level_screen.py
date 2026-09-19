@@ -138,37 +138,24 @@ class LevelScreen(SheetModalMixin, Screen):
 
         # title + explainer
         text(screen, "PROGRESSION", f.title, INK, (pad, pad))
+        text(screen, "Level up: pick one talent in each track. Locked (grey) nodes need the previous node first.",
+             f.body_sm, INK_DIM, (pad, pad + 38))
 
-        exp_x = pad + f.title.size("PROGRESSION")[0] + SP5
-        exp_y = pad + 10
-        text(screen, "Earn Combat XP in battles and Work XP at properties. Both feed into Racial XP.", f.body_sm, INK_DIM, (exp_x, exp_y))
-        text(screen, "Leveling up a track grants a talent pick. Racial levels also grant extra hit dice.", f.body_sm, INK_DIM, (exp_x, exp_y + 16))
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+        from .ui.tokens import fonts as ui_fonts
 
-        iy = pad + 46
-        tok = (pad + 17, iy + 15)
-        token_badge(screen, tok, u, f, r=17)
-        text(screen, u.name, f.card_name, INK, (tok[0] + 30, iy))
-        name_w = f.card_name.size(u.name)[0]
-        badge = self.sheet_badge(screen, (tok[0] + 30 + name_w + 26, iy + 2), f)
+        self._hot = False
+        r = pygame.Rect(W - 400 - pad, pad, 400, 74)
+        c = Combatant(u)
+        draw_row(screen, ui_fonts(), r, unit_to_ch(c))
+        
         if not self.sheet_open:
-            self.info_hits.append((badge, u))
-            char_r = pygame.Rect(pad, iy, tok[0] + 30 + name_w + 28 - pad, 36)
-            self.buttons.append(("sheet", char_r))
-            if badge.collidepoint(self.mouse) or char_r.collidepoint(self.mouse):
+            self.buttons.append(("sheet", r))
+            if r.collidepoint(self.mouse):
                 self._hot = True
 
-        dice = len(u._level_hp_rolls)
-        sub = (f"{u.race['name']}  ·  {u.occupation['name']}  ·  "
-               f"racial level {u.racial_level}  ·  {1 + dice} hit "
-               f"{'die' if dice == 0 else 'dice'}  ·  HP {u.hp_max}")
-        sub_w, sub_h = f.body_sm.size(sub)
-        sub_r = pygame.Rect(tok[0] + 30, iy + 22, sub_w, sub_h)
-        sub_hot = not self.sheet_open and sub_r.collidepoint(self.mouse)
-        text(screen, sub, f.body_sm, INK if sub_hot else INK_DIM, (tok[0] + 30, iy + 22))
-        if sub_hot:
-            self._hp_hover = True
-
-        div = iy + 48
+        div = max(pad + 80, r.bottom + pad)
         pygame.draw.line(screen, LINE_SOFT, (pad, div), (W - pad, div))
 
         top = div + SP4

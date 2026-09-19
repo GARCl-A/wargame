@@ -383,11 +383,11 @@ def draw_sheet(surf, F, rect, ch, density="normal", editable=False, only=None, m
     return y - rect.y, (tip[-1] if tip else None)
 
 
-def draw_row(surf, F, rect, ch, selected=False, tag=None):
+def draw_row(surf, F, rect, ch, selected=False, tag=None, draw_trailing=None):
     """The list-row form: guild list / band rail. Fixed HP/AC/load
     trailing stat -- screens whose one extra fact isn't HP/AC/load (Hunt's
-    rations, Crafting's recipe count, ...) keep their own one-liner for now,
-    see `character_sheet_audit/README.md`."""
+    rations, Crafting's recipe count, ...) can pass a `draw_trailing(surf, rect, ch)`
+    callback to inject their own right-aligned data."""
     pygame.draw.rect(surf, T.STEEL_HI if selected else T.STEEL, rect)
     pygame.draw.rect(surf, T.BRASS if selected else T.STEEL_LINE, rect, 1)
     cx = rect.x + T.S * 3
@@ -395,12 +395,16 @@ def draw_row(surf, F, rect, ch, selected=False, tag=None):
     text(surf, F["name"], ch["name"], (rect.x + T.S * 6, rect.centery - 16), T.TX)
     caps(surf, F["micro"], f"{ch['race']} · {ch['occ']}",
          (rect.x + T.S * 6, rect.centery + 4), T.TX_FAINT)
-    cur, _mx = ch["hp"]
-    caps(surf, F["micro"], f"hp {cur}   ac {ch['ac']}   {ch['gear']['load'][0]:g} kg",
-         (rect.right - T.S * 2, rect.centery - 14), T.TX_MUTED, right=True)
-    if ch["status"]:
-        caps(surf, F["micro"], ch["status"][0], (rect.right - T.S * 2, rect.centery + 2),
-             T.BLOOD, right=True)
+    
+    if draw_trailing:
+        draw_trailing(surf, rect, ch)
+    else:
+        cur, _mx = ch["hp"]
+        caps(surf, F["micro"], f"hp {cur}   ac {ch['ac']}   {ch['gear']['load'][0]:g} kg",
+             (rect.right - T.S * 2, rect.centery - 14), T.TX_MUTED, right=True)
+        if ch["status"]:
+            caps(surf, F["micro"], ch["status"][0], (rect.right - T.S * 2, rect.centery + 2),
+                 T.BLOOD, right=True)
     if tag:
         label_w = F["micro"].size(f"{ch['race']} · {ch['occ']}".upper())[0]
         caps(surf, F["micro"], tag, (rect.x + T.S * 6 + label_w + T.S * 2, rect.centery + 4),

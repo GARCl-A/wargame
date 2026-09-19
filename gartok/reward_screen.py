@@ -58,6 +58,13 @@ class RewardScreen(SheetModalMixin, Screen):
             if rect.collidepoint(px) and key == "done" and self.paid_to is not None:
                 self.on_done()
                 return
+            if rect.collidepoint(px) and key.startswith("pay_") and self.paid_to is None:
+                name = key[4:]
+                for m in self.members:
+                    if m.name == name:
+                        m.gold += self.amount
+                        self.paid_to = m
+                        return
         if self.paid_to is not None:
             return
         for rect, member in self.cards:
@@ -99,12 +106,15 @@ class RewardScreen(SheetModalMixin, Screen):
             text(screen, F["body_sm"], self.note, (nr.x + T.S * 2, nr.y + 8), T.BRASS)
             top = nr.bottom + T.S * 2
 
-        n = max(1, len(self.members))
-        gap = T.S * 2
-        card_w = min(260, (W - 2 * T.S * 3 - (n - 1) * gap) // n)
-        card_h = 150
+        pad = T.S * 3
+        w = min(800, W - 2 * pad)
+        col_w = (w - T.S * 2) // 2
+
+        y = top
         for i, m in enumerate(self.members):
-            rect = pygame.Rect(T.S * 3 + i * (card_w + gap), top, card_w, card_h)
+            col = i % 2
+            row_idx = i // 2
+            rect = pygame.Rect(pad + col * (col_w + T.S * 2), y + row_idx * (74 + T.S), col_w, 74)
             self._draw_card(screen, F, rect, m)
             self.cards.append((rect, m))
 
@@ -116,33 +126,31 @@ class RewardScreen(SheetModalMixin, Screen):
     def _hovering(self):
         if any(r.collidepoint(self.mouse) for r, _ in self.info_hits): return True
         if any(r.collidepoint(self.mouse) for r, _ in self.cards) and self.paid_to is None: return True
-        if any(r.collidepoint(self.mouse) for k, r in self.buttons if k == "done") and self.paid_to is not None: return True
+        if any(r.collidepoint(self.mouse) for k, r in self.buttons): return True
         return False
 
     def _draw_card(self, screen, F, rect, m):
-        pad = T.S * 2
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+
         took = m is self.paid_to
         hov = rect.collidepoint(self.mouse) and self.paid_to is None
-        panel(screen, rect, hover=(took or hov))
 
-        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), self.fonts)
-        self.info_hits.append((badge, m))
+        def _trailing(surf, r, ch):
+            badge = self.sheet_badge(surf, (r.right - T.S * 2, r.y + T.S * 2), self.fonts)
+            self.info_hits.append((badge, m))
 
-        tok = (rect.x + pad + 12, rect.y + pad + 12)
-        token_badge(screen, tok, m, self.fonts)
-        text(screen, F["head"], m.name, (tok[0] + 24, rect.y + pad), T.TX)
-        text(screen, F["body_sm"], f"{m.race['name']}  ·  {m.occupation['name']}",
-             (tok[0] + 24, rect.y + pad + 20), T.TX_MUTED)
+            caps(surf, F["micro"], f"COPPER {m.gold}", (r.right - T.S * 4, r.centery - 10), T.BRASS if took else T.TX_MUTED, right=True)
 
-        y = rect.y + pad + 52
-        caps(screen, F["microb"], "COPPER", (rect.x + pad, y), T.BRASS)
-        text(screen, F["big"], str(m.gold), (rect.x + pad, y + 14), T.BRASS if took else T.TX)
-        if not took and self.paid_to is None:
-            text(screen, F["micro"], "click to hand over the purse",
-                 (rect.x + pad, rect.bottom - 22), T.TX_FAINT)
-        elif took:
-            text(screen, F["bodyb"], f"+{self.amount}",
-                 (rect.right - pad, y + 16), T.BRASS, right=True)
+            if not took and self.paid_to is None:
+                c = pygame.Rect(r.right - T.S * 4 - 100, r.centery, 100, 32)
+                draw_button(surf, F, c, "GIVE", primary=False, mpos=self.mouse)
+                self.buttons.append((f"pay_{m.name}", c))
+            elif took:
+                text(surf, F["bodyb"], f"+{self.amount}", (r.right - T.S * 4, r.centery + 10), T.BRASS, right=True)
+
+        c = Combatant(m)
+        draw_row(screen, F, rect, unit_to_ch(c), selected=(took or hov), draw_trailing=_trailing)
 
     def _draw_footer(self, screen, F, W, H):
         done = self.paid_to is not None

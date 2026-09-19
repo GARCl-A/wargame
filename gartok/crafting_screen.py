@@ -11,7 +11,7 @@ import pygame
 
 from . import data, economy
 from .screen import Screen
-from .ui.primitives import (draw_button, footer_bar, panel, section, text,
+from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
                             token_badge)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -103,35 +103,31 @@ class CraftingScreen(ButtonsMixin, Screen):
         self._draw_footer(screen)
 
     def _draw_roster(self, screen, area):
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+
         F = self._F
         panel(screen, area)
-        x = area.x + 12
-        w = area.w - 24
-        y = section(screen, F, "CRAFTERS", x, area.y + 12, w)
+        y = section(screen, F, "CRAFTERS", area.x + 12, area.y + 12, area.w - 24)
 
-        if not self.crafters:
-            text(screen, F["body_sm"], "No one in this group knows any recipes.",
-                 (x, y), T.TX_FAINT)
-            return
+        def _trailing(surf, r, ch):
+            u = ch["unit"]
+            caps(surf, F["micro"], f"{len(u.recipes)} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
+            if u.crafting_target:
+                caps(surf, F["micro"], "IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
 
-        for m in self.crafters:
-            r = pygame.Rect(x, y, w, 52)
+        for m in self.group.members:
+            if not m.recipes:
+                continue
+
+            r = pygame.Rect(area.x + 12, y, area.w - 24, 74)
             sel = m is self.selected_crafter
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, hover=sel or hov, width=2 if sel else 1)
-
-            tok = (r.x + T.S + 12, r.y + T.S + 12)
-            token_badge(screen, F, tok, m)
-            text(screen, F["body"], m.name, (tok[0] + 24, r.y + T.S), T.BRASS if sel else T.TX)
-            text(screen, F["body_sm"], f"{len(m.recipes)} recipes known",
-                 (tok[0] + 24, r.y + T.S + 18), T.BRASS if sel else T.TX_MUTED)
-
-            if m.crafting_target:
-                text(screen, F["micro"], "in progress", (r.right - T.S, r.y + T.S),
-                     T.BRASS, right=True)
+            
+            c = Combatant(m)
+            draw_row(screen, F, r, unit_to_ch(c), selected=sel, draw_trailing=_trailing)
 
             self.roster_rows.append((r, m))
-            y += 52 + T.S
+            y += 74 + T.S
 
     def _draw_crafting(self, screen, area):
         F = self._F

@@ -73,17 +73,22 @@ class GuardScreen(Screen):
         header(screen, F, head, "THE GUARD", sub, (), None, mpos=self.mouse)
 
         top = head.bottom + T.S * 4
+        
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+        
+        def _trailing(surf, r, ch):
+            u = ch["unit"]
+            caps(surf, F["micro"], f"CRIME: {u.crime}", (r.right - T.S * 2, r.centery), T.TX_MUTED, right=True)
+
+        w = min(560, W - 2 * T.S * 3)
         for u in self.caught:
-            r = pygame.Rect(T.S * 3, top, 420, 48)
-            panel(screen, r)
-            tok = (r.x + T.S * 2, r.y + 12)
-            token_badge(screen, tok, u, self.fonts)
-            text(screen, F["bodyb"], u.name, (tok[0] + 24, r.y + 6), T.TX)
-            text(screen, F["body_sm"], f"crime: {u.crime}", (tok[0] + 24, r.y + 24), T.TX_MUTED)
+            r = pygame.Rect(T.S * 3, top, w, 74)
+            c = Combatant(u)
+            draw_row(screen, F, r, unit_to_ch(c), draw_trailing=_trailing)
             top = r.bottom + T.S * 2
 
         top += T.S * 2
-        w = min(560, W - 2 * T.S * 3)
 
         top = self._option(screen, F, "prison", "ACCEPT ARREST",
                            "Crime clears to 0 -- time served in the City's cells.",

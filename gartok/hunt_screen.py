@@ -16,7 +16,7 @@ import pygame
 
 from . import hunt
 from .screen import Screen
-from .ui.primitives import (draw_button, footer_bar, panel, section, text,
+from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
                             token_badge, wrap)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -134,26 +134,27 @@ class HuntScreen(ButtonsMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_party(self, screen, top):
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+
         F = self._F
-        m = T.S * 3
+        pad = T.S * 3
+        w = screen.get_width() - 2 * pad
         party = self.state.party
-        n = max(1, len(party))
-        gap = 12
-        card_w = min(240, (screen.get_width() - 2 * m - (n - 1) * gap) // n)
-        card_h = 96
+        
+        col_w = (w - T.S * 2) // 2
+        
+        def _trailing(surf, r, ch):
+            u = ch["unit"]
+            caps(surf, F["micro"], f"{u.rations} RATIONS", (r.right - T.S * 2, r.centery - 10), T.GREEN, right=True)
+            caps(surf, F["micro"], f"{u.work_xp} WORK XP", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
+            
         for i, u in enumerate(party):
-            rect = pygame.Rect(m + i * (card_w + gap), top, card_w, card_h)
-            panel(screen, rect)
-            pad = 12
-            tok = (rect.x + pad + 12, rect.y + pad + 12)
-            token_badge(screen, F, tok, u)
-            text(screen, F["head"], u.name, (tok[0] + 24, rect.y + pad), T.TX)
-            text(screen, F["body_sm"], f"{u.race['name']}  ·  {u.occupation['name']}",
-                 (tok[0] + 24, rect.y + pad + 20), T.TX_MUTED)
-            y = rect.y + pad + 46
-            text(screen, F["body_sm"], f"{u.rations} rations", (rect.x + pad, y), T.GREEN)
-            text(screen, F["body_sm"], f"{u.work_xp} work XP",
-                 (rect.right - pad, y), T.BRASS, right=True)
+            col = i % 2
+            row_idx = i // 2
+            rect = pygame.Rect(pad + col * (col_w + T.S * 2), top + row_idx * (74 + T.S), col_w, 74)
+            c = Combatant(u)
+            draw_row(screen, F, rect, unit_to_ch(c), draw_trailing=_trailing)
 
     def _draw_setup(self, screen, top):
         F = self._F

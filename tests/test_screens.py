@@ -503,12 +503,11 @@ def test_level_screen_pops_the_sheet_modal():
     lvl.mouse = (0, 0)
     lvl.draw(surf)
 
-    assert len(lvl.info_hits) == 1
-    badge, hit_unit = lvl.info_hits[0]
-    assert hit_unit is u
+    sheet_btn = next((r for k, r in lvl.buttons if k == "sheet"), None)
+    assert sheet_btn is not None
 
-    # Inspect badge opens sheet
-    lvl._click(badge.center)
+    # Clicking the header row opens sheet
+    lvl._click(sheet_btn.center)
     assert lvl.sheet_open and lvl._sheet_unit is u
 
     # Draw modal while open
@@ -1141,29 +1140,6 @@ def test_sheet_panel_hp_breakdown_tooltip():
     hp_chip_pos = (rect.x + 30, rect.y + 16 + 52 + 20)
     sheet_panel.draw_sheet(surf, rect, Combatant(u), fonts, mouse=hp_chip_pos)
 
-
-def test_level_screen_hp_hover_tooltip():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok.level_screen import LevelScreen
-    from gartok.theme import Fonts
-    from tests.helpers import Unit
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-
-    u = Unit("player")
-    ls = LevelScreen(Fonts(), u, lambda: None)
-    surf = pygame.Surface((1280, 720))
-
-    # Hover over the subtitle where HP is located (scan y around 70-130)
-    found_hp_hover = False
-    for y in range(70, 130, 4):
-        ls.mouse = (120, y)
-        ls.draw(surf)
-        if getattr(ls, "_hp_hover", False):
-            found_hp_hover = True
-            break
-    assert found_hp_hover, "LevelScreen subtitle should trigger _hp_hover"
 
 
 def test_char_editor_screen_hp_tooltip():

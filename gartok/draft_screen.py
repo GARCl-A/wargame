@@ -344,36 +344,35 @@ class DraftScreen(Screen):
         tracked(screen, "WHO LEADS THE GUILD?", f.label, INK_FAINT, (cx, y))
         y += 18
         self.leader_rects = []
-        slot_h = 64
-        for i, unit in enumerate(self.picks):
-            r = pygame.Rect(cx, y + i * (slot_h + SP2), cw, slot_h)
-            sel = unit == self.leader_pick
-            hov = r.collidepoint(mouse)
-            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_2,
-                  border=ACCENT if sel else (LINE if hov else LINE_SOFT), width=2 if sel else 1, radius=8)
-            
-            dot = (r.x + SP3 + 12, r.centery)
-            token_badge(screen, dot, unit, f, r=18)
-            
-            name_x = dot[0] + 28
-            text(screen, ellipsize(unit.name, f.body_bd, 220), f.body_bd, ACCENT if sel else INK, (name_x, r.y + 10))
-            text(screen, ellipsize(f"{unit.race['name']}  ·  {unit.occupation['name']}", f.body_sm, 240), f.body_sm, INK_DIM, (name_x + 230, r.y + 11))
-            
-            attr_x = name_x
+        
+        from .combatant import Combatant
+        from .ui.sheet_card import draw_row, unit_to_ch
+        
+        F = ui_fonts()
+        def _trailing(surf, r, ch):
+            u = ch["unit"]
+            attr_x = r.right - 380
             for k, name in (("STR", "strength"), ("DEX", "dexterity"),
                             ("CON", "constitution"), ("INT", "intelligence"),
                             ("WIS", "wisdom"), ("CHA", "charisma")):
-                txt = f"{k} {getattr(unit, name)}"
+                txt = f"{k} {getattr(u, name)}"
                 tw = f.body_sm.size(txt)[0]
-                ar = pygame.Rect(attr_x, r.y + 36, tw, 16)
-                text(screen, txt, f.body_sm, INK_DIM, (attr_x, r.y + 36))
+                ar = pygame.Rect(attr_x, r.centery - 8, tw, 16)
+                text(surf, txt, f.body_sm, INK_DIM, (attr_x, r.centery - 8))
                 if ar.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
                     t, d = data.ATTRIBUTE_HELP[k]
                     self.tooltip = format_tooltip(t, d, f)
-                attr_x += tw + 12
-            
+                attr_x += tw + 20
+
+        for i, unit in enumerate(self.picks):
+            r = pygame.Rect(cx, y + i * (74 + SP2), cw, 74)
+            sel = unit == self.leader_pick
+            c = Combatant(unit)
+            draw_row(screen, F, r, unit_to_ch(c), selected=sel, draw_trailing=_trailing)
             self.leader_rects.append((r, unit))
-        y += 3 * (slot_h + SP2) + SP4
+            
+        rows_h = len(self.picks) * (74 + SP2) + SP4
+        y += rows_h
 
         # --- confirm --------------------------------- #
 

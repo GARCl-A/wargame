@@ -1,0 +1,163 @@
+# Character sheet audit — grouped by information tier
+
+21 screens, 5 groups. Two shared components shipped so far: the full
+sheet (`gartok/ui/sheet_card.py`, commit `56375f6`) and the gear/loadout
+side of `gartok/ui/loadout_panel.py` (`shop_row`/`container_panel`,
+wired into bank + city property). This file tracks what's done vs.
+what's still a screenshot waiting on its migration. Screenshots for
+anything already migrated are deleted as it lands -- what remains in
+each folder is exactly what's still pending.
+
+## Status at a glance
+
+| Group | Status |
+|---|---|
+| 01_full_sheet | **partly done** -- shared modal + battle inspect + char editor preview shipped; draft_screen's own card and guild_screen's embedded panel still pending |
+| 02_combat_card | pending -- nothing touched |
+| 03_gear_card | **partly done** -- bank + city property fully rewritten (equip-everywhere, stacked container, pooled/proportional purse, rail+pinned columns); market got the purse fix only, not the visual/equip rework; loot and the gear_screen/group_screen duplication untouched |
+| 04_roster_row | pending -- `draw_row` exists in code but isn't wired into any screen yet |
+| 05_misc | pending |
+
+## 01_full_sheet/ -- everything about the unit
+
+HP/AC/MD/SPD(/INIT), all 6 attributes, weapon to-hit + damage, gear/carry,
+languages, racial ability.
+
+**Done:**
+- The shared modal (`sheet_panel.SheetModalMixin`, popped open
+  identically from six screens -- group, guild, level, market, reward,
+  squad) and the two plain-text renderers (`battle_screen._draw_inspect`,
+  `char_editor_screen`'s live preview) all draw through `gartok.ui.
+  sheet_card.draw_sheet` now, in the war-table palette. `gartok/sheet.py`
+  (the old plain-text renderer) is gone.
+- `guild_screen.png` -- the left roster rows (`04_roster_row`) AND the 
+  permanently-embedded right-column detail panel were fully migrated to 
+  `sheet_card.draw_row` and `draw_sheet`.
+
+**Still pending** (screenshots kept below):
+- `draft_screen_gallery.png` -- `DraftScreen._draw_card`, a from-scratch
+  reimplementation (plus archetype tag pills) that never touched
+  `sheet_panel` at all. Not migrated: it interleaves `edit_mode` (swap
+  race/occupation inline) and per-chip tooltips the shared component
+  doesn't have a slot for yet.
+
+## 02_combat_card/ -- "can this unit fight or be recruited" snapshot
+
+HP/AC/MD/Speed + weapon one-liner + CHA-or-copper + languages/ability
+blurb + tags. `squad_screen.png` (arena squad picking), `taverna_screen.png`
+and `prison_screen.png` (recruit-pitch / bail candidates) all hand-roll
+this independently, and taverna's and prison's versions are close to a
+line-for-line duplicate of each other (same author, same shape, copy-pasted
+screen-to-screen rather than shared).
+
+`taverna_screen.png` and `prison_screen.png` also each carry a second,
+smaller pattern at the bottom -- the "YOUR PARTY" strip (CHA mod,
+languages, N slots free, a state tag). That strip is its own near-perfect
+duplicate between the two screens and is a good second, smaller
+component to extract alongside the candidate card itself.
+
+**Recommendation:** one shared candidate-card component (parameterized by
+which action it offers -- PICK / PITCH / PAY BAIL) and one shared
+party-fit-row component, cutting three bespoke implementations to one
+each. Blocked on the same gap that kept `draft_screen` out of this pass:
+no tooltip slot in the shared block painters yet for per-chip/per-attribute
+hover help (the modal keeps its tooltips only because `sheet_card.py`
+grew that support directly; the candidate card would need the same).
+
+## 03_gear_card/ -- inventory/loadout, no combat stats
+
+Load bar + equipped slots (hand/off/armor) + pack list. No HP/AC anywhere
+in this group -- it's a genuinely different concern from the two groups
+above.
+
+**Done:** `bank_screen.py` and `city_property_screen.py` are fully
+rewritten on `gartok/ui/loadout_panel.py`'s `rail`/`column` (the same
+pieces `group_screen.py` already used) plus two new shared pieces,
+`shop_row`/`container_panel`, for the external side (the strongbox / the
+house). Both screenshots are gone from this folder. What actually
+changed, beyond the visual rebuild: equip slots are live drop zones now
+(a weapon can land straight in a member's hand from the chest, the house,
+or another member's pack -- not pack-only like before), the chest/house
+stopped being a flat unstacked list (`Guild.bank_items`/
+`property_city_items` are real `[(name, qty)]` stacks now, with a `- N +`
+stepper on the container's own rows), and money is pooled for the visit
+and settled back out proportional to what each member walked in with
+(`economy.settle_pooled_purse`) instead of bank's old "charge whoever's
+poorest right now" or being untouched. A member's own pack still always
+moves as a whole stack (split it on the group screen first for less) --
+only the container side got the stepper, matching what `group_screen`'s
+pack rows already do.
+
+**Still pending** (screenshots kept below):
+- `market_screen.png` -- got the purse fix only (pooled + proportional,
+  matching bank/property now instead of its own even split) since that's
+  a self-contained rule change. Still NOT migrated: buying/selling never
+  puts anything straight into a hand/armor slot (always lands in the
+  pack, exactly like before) -- market's card is its own bespoke
+  category-tabbed, haggling-aware, heavily-tested rendering, not built on
+  `loadout_panel`, and retrofitting per-slot drop zones into it is real
+  surgery, not a quick add. Its "N in stock" display was already there
+  before any of this -- never actually missing.
+- `loot_screen.png` -- untouched. No money, so the purse decision doesn't
+  reach it, and its own docstring already said re-equipping happens later
+  on the guild screen -- deliberately out of scope even before this pass.
+  It's also click-to-select rather than drag, and its ground pile is
+  still a flat list, so folding it into the same pattern is its own
+  piece of work.
+- `group_screen_bags.png` and `gear_screen.png` -- still the same
+  duplicate per-member gear-column idea implemented twice (legacy
+  `gear_screen.py`/`packbox.py` vs. `group_screen.py`/`loadout_panel.py`).
+  Not touched this pass; `gear_screen.py` should end up calling
+  `loadout_panel.column()` directly, the same piece bank/property now
+  use too.
+
+## 04_roster_row/ -- compact list item, one pluggable trailing stat
+
+Token + name + race/occupation, plus exactly one extra fact the screen
+cares about: `hunt_screen.png` (rations, work XP), `crafting_screen.png`
+(recipe count / in-progress flag), `reward_screen.png` (copper),
+`justice_screen.png` (crime count), `wilds_claim_screen.png` (nothing
+extra at all -- just token + name). `level_screen.png`'s header strip is
+the same pattern too (name + token + HP), sitting above the unrelated
+talent-tree body that this audit doesn't otherwise touch.
+
+`gartok.ui.sheet_card.draw_row` exists in code (built alongside the rest
+of the component) and is now used by `guild_screen`'s list and the six
+other screens. It supports a `draw_trailing` callback that allows each
+screen to inject its own extra facts on the right side.
+
+**Done:**
+- `04_roster_row` is fully migrated. `hunt_screen`, `crafting_screen`,
+  `reward_screen`, `justice_screen`, `wilds_claim_screen`, and the
+  `level_screen` header all use `draw_row` now.
+- `hunt_screen` and `reward_screen` were converted from horizontal
+  cards to standard vertical lists. The *screen* (the hunting mechanic) obviously stays --
+  but its bespoke `_draw_party` card is one of the thinnest, least
+  justified custom renderers in the game. It shows less than the generic
+  roster row would need to anyway.
+
+## 05_misc/ -- doesn't cleanly fit either bucket
+
+`draft_screen_identity.png` -- the leader-pick row (token, name,
+race/occupation, all 6 raw attribute scores, no HP/AC/weapon at all).
+Used exactly once, nowhere else in the game shows attributes alone
+without at least HP/AC alongside them.
+
+**Done:** Migrated to use `draw_row` with a `draw_trailing` callback
+that renders the 6 raw attributes.
+
+---
+
+## Net effect once everything below collapses
+
+| Group | Screens hand-rolling it today | Target |
+|---|---|---|
+| Full sheet | ~~sheet_panel~~, ~~char_editor~~, ~~battle_screen~~, draft_screen, ~~guild_screen~~ | 1 component, 3 chrome variants |
+| Combat/candidate card | squad_screen, taverna_screen, prison_screen | 1 component + 1 party-fit-row |
+| Gear/loadout card | ~~bank~~, ~~city_property~~, market (purse only), loot, group_screen, gear_screen | 1 component |
+| Roster row | ~~guild_screen~~, ~~hunt_screen~~, ~~crafting_screen~~, ~~reward_screen~~, ~~justice_screen~~, ~~wilds_claim_screen~~, ~~level_screen (header)~~ | 1 component |
+| Misc (attributes-only row) | ~~draft_screen (identity phase)~~ | folds into roster row or combat card |
+
+Struck-through entries are done. The `char_editor_screen`'s *editable
+form* (left column) stays out of scope for all of this -- it's an editor,
+not a display, and doesn't need to share chrome with anything above.
