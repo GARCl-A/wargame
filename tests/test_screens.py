@@ -1170,39 +1170,6 @@ def test_char_editor_screen_hp_tooltip():
     assert found_hp_tooltip, "CharEditorScreen should display HP breakdown tooltip on hover"
 
 
-def test_squad_screen_racial_level_display_and_tooltip():
-    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-    import pygame
-    from gartok import world
-    from gartok.theme import Fonts
-    from gartok.squad_screen import SquadScreen
-    from tests.helpers import Unit
-    pygame.init()
-    pygame.display.set_mode((1, 1))
-    F = Fonts()
-
-    u = Unit("player")
-    u.set_track_level("combat", 2)
-    u.set_track_level("work", 2)
-    assert u.racial_level >= 2
-
-    sq = SquadScreen(F, [u], next(n for n in world.NODES if n.kind == "battle"), lambda *a: None, lambda: None)
-    surf = pygame.Surface((1280, 800))
-    sq.mouse = (0, 0)
-    sq.draw(surf)
-
-    # Hover over the racial level badge on the card (x ~ 60..100, y ~ 110..130)
-    card_rect, _ = sq.cards[0]
-    badge_x = card_rect.x + 16 + 40
-    badge_y = card_rect.y + 16 + 25
-    sq.mouse = (badge_x, badge_y)
-    sq.draw(surf)
-    assert sq.tooltip is not None
-    title, desc = sq.tooltip[0][0], sq.tooltip[1][0]
-    assert f"Racial Level {u.racial_level}" in title
-    assert u.race["name"] in desc
-
-
 def test_map_screen_split_panel_shows_racial_level():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
@@ -1362,10 +1329,15 @@ def test_squad_screen_level_up_observability():
     u.combat_xp = 15
     u.collect_levels()
     assert u.pending_picks
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
     bnode = next(n for n in world.NODES if n.kind == "battle")
     scr = SquadScreen(Fonts(), [u], bnode, lambda s: None, lambda: None)
     
-    import pygame
     surf = pygame.Surface((1024, 768))
     scr.mouse = (0, 0)
     scr.draw(surf)

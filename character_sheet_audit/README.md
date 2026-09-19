@@ -13,7 +13,7 @@ each folder is exactly what's still pending.
 | Group | Status |
 |---|---|
 | 01_full_sheet | **partly done** -- shared modal + battle inspect + char editor preview shipped; draft_screen's own card and guild_screen's embedded panel still pending |
-| 02_combat_card | pending -- nothing touched |
+| 02_combat_card | **done** -- squad, taverna, and prison screens all use `gartok/ui/combat_card.py`. |
 | 03_gear_card | **done** -- bank, city property, loot, market, and gear/group screens all use the shared `loadout_panel` component. Equip slots are live drop zones everywhere. |
 | 04_roster_row | pending -- `draw_row` exists in code but isn't wired into any screen yet |
 | 05_misc | pending |
@@ -56,13 +56,9 @@ languages, N slots free, a state tag). That strip is its own near-perfect
 duplicate between the two screens and is a good second, smaller
 component to extract alongside the candidate card itself.
 
-**Recommendation:** one shared candidate-card component (parameterized by
-which action it offers -- PICK / PITCH / PAY BAIL) and one shared
-party-fit-row component, cutting three bespoke implementations to one
-each. Blocked on the same gap that kept `draft_screen` out of this pass:
-no tooltip slot in the shared block painters yet for per-chip/per-attribute
-hover help (the modal keeps its tooltips only because `sheet_card.py`
-grew that support directly; the candidate card would need the same).
+**Done:**
+- `squad_screen.py`, `taverna_screen.py`, and `prison_screen.py` were fully refactored to use `gartok/ui/combat_card.py` (`draw_combat_card` and `draw_party_row`). The old bespoke components have been deleted.
+- The screenshots have been deleted.
 
 ## 03_gear_card/ -- inventory/loadout, no combat stats
 
@@ -139,7 +135,7 @@ that renders the 6 raw attributes.
 | Group | Screens hand-rolling it today | Target |
 |---|---|---|
 | Full sheet | ~~sheet_panel~~, ~~char_editor~~, ~~battle_screen~~, draft_screen, ~~guild_screen~~ | 1 component, 3 chrome variants |
-| Combat/candidate card | squad_screen, taverna_screen, prison_screen | 1 component + 1 party-fit-row |
+| Combat/candidate card | ~~squad_screen~~, ~~taverna_screen~~, ~~prison_screen~~ | 1 component + 1 party-fit-row |
 | Gear/loadout card | ~~bank~~, ~~city_property~~, ~~market~~, ~~loot~~, ~~group_screen~~, ~~gear_screen~~ | 1 component |
 | Roster row | ~~guild_screen~~, ~~hunt_screen~~, ~~crafting_screen~~, ~~reward_screen~~, ~~justice_screen~~, ~~wilds_claim_screen~~, ~~level_screen (header)~~ | 1 component |
 | Misc (attributes-only row) | ~~draft_screen (identity phase)~~ | folds into roster row or combat card |

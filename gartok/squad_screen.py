@@ -21,7 +21,9 @@ from .sheet_panel import SheetModalMixin
 from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
                     LINE_SOFT, MARGIN, OK, RADIUS, SP2, SP3, SURFACE_1,
                     SURFACE_3, WARN, draw_tooltip, format_tooltip, panel, text, tracked)
-from .widgets import ButtonsMixin, footer_bar, unit_card
+from .ui.combat_card import draw_combat_card
+from .ui.tokens import T
+from .widgets import ButtonsMixin, footer_bar
 
 
 class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
@@ -218,59 +220,64 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
 
     def _draw_card(self, screen, rect, unit):
         f = self.fonts
-        pad = SP3
         chosen = unit in self.picked
         off = unit in self.disabled
 
         n, faces = unit.weapon["damage"]
         arma = unit.weapon_name or "unarmed"
+        
+        ch = {
+            "name": unit.name,
+            "race": unit.race["name"],
+            "occ": unit.occupation["name"],
+            "hp": unit.hp_max,
+            "hp_max": unit.hp_max,
+            "ac": unit.ac,
+            "md": unit.mental_defense,
+            "spd": unit.speed,
+            "weapon": arma,
+            "dmg": f"{n}d{faces}"
+        }
+        
         lvl = f"C{unit.combat_level}"
         if unit.work_xp or unit.work_level:
             lvl += f"/W{unit.work_level}"
         lvl += f"/R{unit.racial_level}"
         if unit.pending_picks:
             lvl += " *"
-
-        lines = [
-            (f"HP {unit.hp_max}   AC {unit.ac}   MD {unit.mental_defense}   "
-             f"Speed {unit.speed}", INK_DIM),
-            (f"{arma}  {n}d{faces}", INK_DIM),
-            (f"{unit.gold} copper  ·  lvl {lvl}", ACCENT),
+            
+        extra = [
+            (None, f"{unit.gold} copper  ·  lvl {lvl}", T.BRASS)
         ]
         if unit.pending_picks:
-            lines.append(("TALENT PICK READY", ACCENT))
+            extra.append((None, "TALENT PICK READY", T.BRASS))
         if unit.hunger_level:
-            lines.append((f"HUNGER: {unit.hunger_label}",
-                          DANGER if unit.hunger_level >= 2 else WARN))
+            extra.append((None, f"HUNGER: {unit.hunger_label}", T.BLOOD if unit.hunger_level >= 2 else T.BRASS))
+            
         no_xp = self.unit_outlevels_bout(unit)
         if no_xp:
             max_lvl = arena.bout_max_combat_level(self.offer)
-            lines.append((f"NO COMBAT XP (enemy max Lv {max_lvl})", WARN))
-
-        unit_card(screen, rect, unit, f, self.mouse, selected=chosen, disabled=off,
-                 lines=lines, subtitle=f"{unit.race['name']}  ·  {unit.occupation['name']}")
-
-        chip_lbl = f"RACIAL LVL {unit.racial_level}"
-        cw = f.label.size(chip_lbl)[0] + 10
-        chip_r = pygame.Rect(rect.x + pad + 36, rect.y + pad + 20, cw, 18)
-        if not self.sheet_open and chip_r.collidepoint(self.mouse):
-            dice_cnt = 1 + len(unit._level_hp_rolls)
-            die_word = "hit die" if dice_cnt == 1 else "hit dice"
-            self.tooltip = format_tooltip(
-                f"Racial Level {unit.racial_level}",
-                f"{unit.race['name']} track · {dice_cnt} {die_word} ({unit.hp_max} HP) · unlocks racial talents. Feeds on Combat & Work levels ({unit.racial_xp} total).",
-                f
-            )
-
-        badge = self.sheet_badge(screen, (rect.right - pad, rect.y + pad), f)
-        self.info_hits.append((badge, unit))
+            extra.append((None, f"NO COMBAT XP (enemy max Lv {max_lvl})", T.BRASS))
 
         mark = ("UNFIT (hunger)" if off
                 else ("PICKED (NO XP)" if (chosen and no_xp) else "PICKED") if chosen
-                else "click to add")
-        text(screen, mark, f.label,
-             DANGER if off else WARN if (chosen and no_xp) else ACCENT if chosen else INK_FAINT,
-             (rect.x + pad, rect.bottom - 22))
+                else "CLICK TO ADD")
+                
+        state_msg = (mark, T.BLOOD if off else T.BRASS if (chosen and no_xp) else T.BRASS) if (off or chosen) else None
+        action_msg = None if (off or chosen) else mark
+
+        hov = rect.collidepoint(self.mouse)
+        tooltips, _ = draw_combat_card(screen, rect, ch, action=action_msg, hovered=hov, selected=chosen, disabled=off, state_msg=state_msg, extra_lines=extra)
+        
+        if not self.sheet_open:
+            for t_rect, t_text in tooltips:
+                if t_rect.collidepoint(self.mouse):
+                    self.tooltip = format_tooltip("Vitals", t_text, f)
+                    break
+        
+        # We need to render the info badge to open the sheet
+        badge = self.sheet_badge(screen, (rect.right - T.S * 3, rect.y + T.S * 3), f)
+        self.info_hits.append((badge, unit))
 
     def _draw_footer(self, screen):
         footer_bar(self, screen, back=("back", "BACK"),
