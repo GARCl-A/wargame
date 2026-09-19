@@ -73,12 +73,12 @@ picker, modelled on market/reward); the battle screen
   Movement records the walked path (`unit.path` / `unit.last_path`); hovering a
   reachable cell previews the route with step cost.
 - **`guild_screen`** — rebuilt master-detail (Sep 2026): a left column of
-  compact member cards selects `self.member`; a right panel shows that member's
-  loadout (stat chips + a carry bar in a left sub-column, MAOS/CORPO/MOCHILA
-  slots in a wider right sub-column). Cross-member transfer = drag/drop an item
-  onto another member's card (→ their pack); same-member = drop on the detail
-  slots. `native = True`. A footer **MANAGE GEAR** button (`on_manage`,
-  accent-bordered) opens the gear screen.
+  compact member cards (`sheet_card.draw_row`) selects `self.member`; a right
+  panel renders the member's full character sheet natively using 
+  `sheet_card.draw_sheet(density="full")` along with a separate **GUILD MANAGEMENT** 
+  interactive card (Level Up, Sharing Food, Leadership) alongside it.
+  `native = True`. A footer **MANAGE GEAR** button (`on_manage`, accent-bordered) 
+  opens the gear screen.
 
 - **`gear_screen.py` — Manage Gear** (Sep 2026, `GearScreen(DragSelectMixin,
   LoadoutMoveMixin, Screen)`): the bulk-loadout view the guild screen's
