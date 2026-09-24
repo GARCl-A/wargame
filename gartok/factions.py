@@ -85,6 +85,8 @@ _FACTIONS = [
     Faction("bankers", "The Bankers",
             "The coin-lenders of the city. They rent strongboxes, and -- for "
             "those who dare -- lend against the future."),
+    Faction("library", "The Library",
+            "Scholars and linguists. They trade in knowledge."),
 ]
 
 _DEEDS = [
@@ -157,6 +159,21 @@ _DEEDS = [
              e.kind == "mission" and e.tag == "trust"
              and {"bankers_good_for_business", "bankers_steady_customer",
                   "bankers_diverse_portfolio"} <= set(g.deeds_done))),
+    
+    # Library deeds
+    Deed("library_initiate", "library", "Library Initiate",
+         "Complete a task for the library.", rep=1,
+         check=lambda g, e: e.kind == "mission" and e.tag == "library"),
+    Deed("library_trusted", "library", "Trusted Scholar",
+         "Complete a second task for the library.", rep=1,
+         requires="library_initiate",
+         check=lambda g, e: e.kind == "mission" and e.tag == "library" and
+             sum(1 for m in g.missions if m.state == "done" and __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library") >= 2),
+    Deed("library_master", "library", "Master of Lore",
+         "Complete a third task for the library.", rep=1,
+         requires="library_trusted",
+         check=lambda g, e: e.kind == "mission" and e.tag == "library" and
+             sum(1 for m in g.missions if m.state == "done" and __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library") >= 3),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}
@@ -203,6 +220,23 @@ def get_unlocks(faction_id: str):
                 2,
                 "The Games (Stage 2)",
                 "Brawl, Capture the Flag, and The Ribbit Brothers bouts",
+            )
+        )
+    elif faction_id == "library":
+        unlocks.append(
+            Unlock(
+                "library",
+                1,
+                "Expanded Catalog",
+                "More language dictionaries become available to buy."
+            )
+        )
+        unlocks.append(
+            Unlock(
+                "library",
+                3,
+                "Full Catalog",
+                "The library opens its entire language catalog."
             )
         )
     return unlocks

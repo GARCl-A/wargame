@@ -95,7 +95,7 @@ class Node:
                  bank=False, tanner=False, jurisdiction=None,
                  unsafe=False, encounter_table=None, trust=False, ledger=False,
                  city_property=False, garrison_job=None, claim=False, forge=False,
-                 prison=False, apothecary=False):
+                 prison=False, apothecary=False, library=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -119,6 +119,7 @@ class Node:
         self.claim = claim                   # the Wilds claim campaign's node (wilds_claim_screen)
         self.forge = forge                   # town: crafting forge/workbench (crafting_screen)
         self.apothecary = apothecary         # town: brewing potions (crafting_screen)
+        self.library = library               # town: sells dictionaries and gives quests (library_screen)
 
     @property
     def is_battle(self):
@@ -217,6 +218,9 @@ NODES = [
          "A stretch of the Wilds the guild means to make its own -- if it can "
          "clear it, fence it, and hold it.", ErmosScenario,
          claim=True, garrison_job="lumber"),
+    Node("library", "The Library", "town", (0.12, 0.32),
+         "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
+         library=True, jurisdiction="the_city"),
 ]
 
 WILDS_TERRITORY_NODE = "wilds_territory"
@@ -227,6 +231,7 @@ EDGES = [
     ("city", "market", 1),
     ("city", "tavern", 1),
     ("city", "prison", 1),
+    ("city", "library", 1),
     ("city", "road", 4),
     ("arena", "road", 3),
     ("road", "wilds", 6),

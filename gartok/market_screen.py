@@ -63,7 +63,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         self.deal = economy.deal_mods(shoppers, getattr(node, "language", None),
                                       getattr(node, "alignment", None),
                                       leader=group.leader if group else None)
-        self.tab = economy.market_categories()[0][1]     # "weapons"
+        self.tab = self.get_categories()[0][1]     # "weapons"
         self.qty = {}                        # kit tab: stock name -> quantity to buy
         self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
         self._sel_qty = {}                   # (member, idx) -> how much of that pack stack is picked
@@ -86,6 +86,9 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "market"
+
+    def get_categories(self):
+        return economy.market_categories()
 
     # ------------------------------------------------------------------ #
     def _ui_fonts(self):
@@ -655,7 +658,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
     def _draw_tabs(self, screen, rect):
         F = self._ui_fonts()
-        cats = economy.market_categories()
+        cats = self.get_categories()
         gap = T.S
         w = (rect.w - (len(cats) - 1) * gap) // len(cats)
         for i, (label, key, _names) in enumerate(cats):
@@ -669,7 +672,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         pygame.draw.rect(screen, T.STEEL, rect)
         pygame.draw.rect(screen, T.STEEL_LINE, rect, 1)
         x, w = rect.x + T.S * 2, rect.w - T.S * 4
-        names = next((c[2] for c in economy.market_categories() if c[1] == self.tab), [])
+        names = next((c[2] for c in self.get_categories() if c[1] == self.tab), [])
         kit = self.tab == "kit"
 
         wt_x = rect.right - T.S * 2

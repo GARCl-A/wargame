@@ -70,7 +70,42 @@ TRUST_CHEST = MissionTemplate(
     tag="trust", starting_item=data.MISSION_CHEST_ITEM,
 )
 
-TEMPLATES = {TANNER_HIDES.id: TANNER_HIDES, TRUST_CHEST.id: TRUST_CHEST}
+APOTHECARY_MUSHROOMS = MissionTemplate(
+    "apothecary_mushrooms", "apothecary", "city", "Fifteen Red Mushrooms",
+    "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
+    goal_item="Red Mushroom", goal_qty=15, reward=150, deadline_days=10,
+    tag="apothecary",
+)
+
+LIBRARY_SCROLLS = MissionTemplate(
+    "library_scrolls", "library", "library", "Lost Knowledge",
+    "The scholars need 5 ancient scrolls to expand their archives.",
+    goal_item="Scroll", goal_qty=5, reward=100, deadline_days=10,
+    tag="library",
+)
+
+LIBRARY_DICTIONARY = MissionTemplate(
+    "library_dictionary", "library", "library", "Rare Dictionary",
+    "Find a rare dictionary out there in the world.",
+    goal_item="Dictionary", goal_qty=1, reward=200, deadline_days=15,
+    tag="library",
+)
+
+LIBRARY_ARTIFACT = MissionTemplate(
+    "library_artifact", "library", "library", "Mystic Gem",
+    "Retrieve a gemstone for the library's collection.",
+    goal_item=data.GEM_ITEM, goal_qty=1, reward=250, deadline_days=15,
+    tag="library",
+)
+
+TEMPLATES = {
+    TANNER_HIDES.id: TANNER_HIDES, 
+    TRUST_CHEST.id: TRUST_CHEST,
+    APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
+    LIBRARY_SCROLLS.id: LIBRARY_SCROLLS,
+    LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
+    LIBRARY_ARTIFACT.id: LIBRARY_ARTIFACT,
+}
 
 
 def offers_at(guild, node_id):

@@ -275,6 +275,8 @@ def lumber_pay(hours, level=0):
 
 
 def _base_price(name):
+    if name.startswith("Dictionary of "):
+        return 150
     return PRICES.get(name, max(1, round(data.item_weight(name) * 2)))
 
 

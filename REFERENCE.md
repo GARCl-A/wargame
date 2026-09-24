@@ -279,6 +279,16 @@ The coin-lenders of the city. They rent strongboxes, and -- for those who dare -
 | Diverse Portfolio | Sell 5 different kinds of goods to the market. | +1 | -- |
 | Earned Trust | Carry the Bankers' trust all the way to Ledger Hold and back. | +1 | -- |
 
+### The Library
+
+Scholars and linguists. They trade in knowledge.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| Library Initiate | Complete a task for the library. | +1 | -- |
+| Trusted Scholar | Complete a second task for the library. | +1 | library_initiate |
+| Master of Lore | Complete a third task for the library. | +1 | library_trusted |
+
 ## Constants
 
 The tunable knobs, from `data.py`, `economy.py` and `progression.py`.

@@ -550,8 +550,13 @@ class MapScreen(ButtonsMixin, Screen):
                                       f"{self.guild.bank_capacity} kg",
                               "color": T.TX_FAINT})
         else:
-            blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
-                          "color": T.TX_FAINT})
+            has_other_services = any([
+                here.tanner, here.trust, here.forge, here.apothecary, 
+                getattr(here, "library", False), here.city_property, here.claim
+            ])
+            if not has_other_services:
+                blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
+                              "color": T.TX_FAINT})
 
         # A node's flags aren't mutually exclusive (the City is both a bank and
         # a tanner) -- checked after the kind-dispatch chain above, not nested
@@ -568,7 +573,15 @@ class MapScreen(ButtonsMixin, Screen):
                           "gap_before": T.S * 2})
                           
         if here.apothecary:
-            blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY",
+            blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY (CRAFT)",
+                          "gap_before": T.S * 2})
+            blocks.append({"type": "button", "key": "apothecary_mission", "label": "VISIT THE APOTHECARY (JOBS)",
+                          "gap_before": T.S * 2})
+
+        if getattr(here, "library", False):
+            blocks.append({"type": "button", "key": "library", "label": "VISIT THE LIBRARY (SHOP)",
+                          "gap_before": T.S * 2})
+            blocks.append({"type": "button", "key": "library_mission", "label": "VISIT THE LIBRARY (JOBS)",
                           "gap_before": T.S * 2})
 
         has_property_business = (self.guild.property_city_unlocked or
