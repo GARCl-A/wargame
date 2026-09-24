@@ -152,9 +152,11 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Lumber | 2 kg | -- |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable |
+| Minor Healing Potion | 0.2 kg | consumable |
 | Musical Instrument | 2 kg | -- |
 | Potato | 1 kg | food, consumable |
 | Quiver | 1.5 kg | -- |
+| Red Mushroom | 0.1 kg | -- |
 | Rope | 2 kg | -- |
 | Rotten Food | 1 kg | food, consumable |
 | Sack | 0.3 kg | -- |
@@ -165,6 +167,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Shovel | 2 kg | -- |
 | Stone Brick | 3 kg | -- |
 | Torch | 0.5 kg | -- |
+| Vial | 0.1 kg | -- |
 
 ## Sizes
 
