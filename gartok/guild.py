@@ -641,13 +641,23 @@ class Guild:
             if u.ability.id == "innocent_face" and u.crime > 0 and self.clock.day > 0 and self.clock.day % 7 == 0:
                 u.crime -= 1
                 events.append(f"{u.name}'s criminal record fades by 1 (Innocent Face).")
+        # Units studying at the tavern pay for a room that includes a meal.
+        # Check their funds directly since the rent isn't deducted until _garrison_upkeep.
+        studying_fed = {
+            u for g in self.groups
+            if g.order and g.order.kind == "garrison" and g.order.job == "study"
+            and world.node(g.node).garrison_job == "study"
+            for u in g.members
+            if u.gold >= economy.TAVERN_STUDY_COST_PER_DAY
+        }
+
         # Everyone eats from their own pack first (a full pass), so a hungry mate
         # drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.
         ate_own = {u for u in self.roster
-                   if u.ability.id != "autotroph" and u._take_ration()}
+                   if u not in studying_fed and u.ability.id != "autotroph" and u._take_ration()}
         for u in self.roster:
-            if u in ate_own:
+            if u in studying_fed or u in ate_own:
                 u.unfed_days, outcome = 0, "ate"
             else:
                 outcome = u.consume_daily_food(self._shared_larder(u))

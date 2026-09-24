@@ -16,7 +16,7 @@ pack. `on_done` returns to the map (which autosaves).
 
 import pygame
 
-from . import economy, orders, recruit
+from . import economy, orders, recruit, magic
 from .data import alignment_distance
 from .screen import Screen
 from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
@@ -234,7 +234,13 @@ class TavernaScreen(ButtonsMixin, Screen):
                 studying_count += 1
                 text(screen, f"{m.name}", f.body_bd, INK, (area.x + SP3, y))
                 text(screen, f"studying {m.study_target}", f.body, ACCENT, (area.x + SP3 + 120, y))
-                text(screen, f"{m.study_progress} points", f.mono_sm, INK_DIM, (area.x + SP3 + 320, y))
+                
+                target_level = 0
+                if m.study_target in magic.SPELLS:
+                    target_level = magic.SPELLS[m.study_target].level
+                total_needed = magic.points_to_learn(target_level)
+                
+                text(screen, f"{m.study_progress} / {total_needed} points", f.mono_sm, INK_DIM, (area.x + SP3 + 320, y))
                 y += 24
 
         if studying_count == 0:
