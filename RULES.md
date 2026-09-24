@@ -159,8 +159,7 @@ lists only the current effect):
 - ~~**Strong Stomach** — migrated: can eat rotten food safely.~~
 - ~~**Primal Blood** → **Nature Magic** — migrated: Gnome starts initiated in
   nature magic with one random cantrip.~~
-- **Keen Hearing** — now `+3 initiative`; becomes *a bonus to hear/notice things*
-  once perception is a mechanic.
+- ~~**Keen Hearing** → **Innocent Face** — migrated: Halfling crime decays naturally.~~
 - ~~**Ancestral Blood** → **Blood Magic** — migrated: Kobold starts initiated in
   blood magic, +2 to spell study rolls.~~
 

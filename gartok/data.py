@@ -161,7 +161,7 @@ RACES = [
     (51,  "Goblin",         "O", (-1,  2,  1, -1,  0, -1), "pack_tactics",   "Goblin", 0.625,  6, "Small"),
     (54,  "Goliath",         "L", ( 2,  1,  0, -1, -1, -1), "strong_body",    "Jotun",     1.000, 10, "Medium"),
     (57,  "Grippli",        "P", (-1,  1,  0,  0,  1, -1), "amphibious",     "Sylvan", 1.500,  8, "Small"),
-    (60,  "Halfling",       "H", (-2,  2, -2,  0,  1,  1), "keen_hearing",   "Halfling",   1.500,  6, "Small"),
+    (60,  "Halfling",       "H", (-2,  2, -2,  0,  1,  1), "innocent_face",  "Halfling",   1.500,  6, "Small"),
     (64,  "Hobgoblin",      "B", ( 1,  1,  1, -1, -2,  0), "darkvision",     "Goblin", 0.625,  8, "Medium"),
     (74,  "Lizardfolk",  "Z", ( 1,  1,  0, -1,  0, -1), "climber",        "Draconic", 0.875, 10, "Medium"),
     (89,  "Human",         "M", ( 0,  0,  0,  0,  0,  0), "extra_language", "Ankarin",   1.000,  8, "Medium"),

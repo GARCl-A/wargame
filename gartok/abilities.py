@@ -119,8 +119,9 @@ _LIST = [
             "breathes water: never runs out of breath while submerged, so it can "
             "stay underwater indefinitely.",
             water_breathing=True),
-    Ability("keen_hearing", "Keen Hearing",
-            "+3 initiative.", initiative=3),
+    Ability("innocent_face", "Innocent Face",
+            "an unassuming face that guards tend to ignore: crime rating "
+            "naturally decays by 1 every 7 days."),
     Ability("climber", "Climber",
             "climbs any surface of DC 25 or lower with no check (still costs the action).",
             auto_climb_dc=25),

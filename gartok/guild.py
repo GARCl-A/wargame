@@ -638,6 +638,9 @@ class Guild:
             if u.has_talent("fruitful"):
                 u.give_to_pack("Fruit")
                 events.append(f"{u.name} blooms at dawn and yields a fresh Fruit.")
+            if u.ability.id == "innocent_face" and u.crime > 0 and self.clock.day > 0 and self.clock.day % 7 == 0:
+                u.crime -= 1
+                events.append(f"{u.name}'s criminal record fades by 1 (Innocent Face).")
         # Everyone eats from their own pack first (a full pass), so a hungry mate
         # drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.

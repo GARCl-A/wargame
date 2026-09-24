@@ -18,7 +18,7 @@ Attribute rolls are 3d6; the modifiers below are added after.
 | Goblin | -1 +2 +1 -1 +0 -1 | d6 | Small | Goblin | 0.625x | Pack Tactics |
 | Goliath | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
 | Grippli | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
-| Halfling | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Keen Hearing |
+| Halfling | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
 | Hobgoblin | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Darkvision |
 | Lizardfolk | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
 | Human | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
@@ -43,7 +43,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Pack Tactics | +2 [circumstance] to attack if an ally is adjacent to the target. |
 | Strong Body | for carry capacity (and only that), counts as a Large creature. |
 | Amphibious | breathes water: never runs out of breath while submerged, so it can stay underwater indefinitely. |
-| Keen Hearing | +3 initiative. |
+| Innocent Face | an unassuming face that guards tend to ignore: crime rating naturally decays by 1 every 7 days. |
 | Climber | climbs any surface of DC 25 or lower with no check (still costs the action). |
 | Extra Language | speaks a second random language: can Demoralize enemies that share either of the two. |
 | Mimic Sounds | can Demoralize with no shared language (mimics the target's voice) -- offence only; being demoralized still needs a common tongue. |
