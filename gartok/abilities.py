@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 from . import data
-from .data import d20
 
 
 @dataclass(frozen=True)
@@ -76,18 +75,8 @@ def _wolf_pack_tactics_mods(unit, target, flanking):
     return [(2 * flanking, "circumstance", "Pack Tactics")] if flanking else []
 
 
-def _ancestral_blood_mods(unit, target, flanking):
-    return [(2, "circumstance", "Ancestral Blood")] if target.size == "Large" else []
 
 
-def _primal_blood(battle, unit, target, bonus, ac, log):
-    nat = d20()
-    total = nat + bonus
-    hits = nat == 20 or total >= ac
-    log(f"  Primal Blood: rerolls d20({nat}) = {total} -> "
-        + ("hit." if hits else "misses again."))
-    if hits:
-        target.take_damage(unit.damage_roll(crit=nat == 20), log)
 
 
 def _ferocity(unit, log):
@@ -118,9 +107,8 @@ _LIST = [
             "immune to sleep effects.", sleep_immunity=True),
     Ability("strong_stomach", "Strong Stomach",
             "Can eat Rotten Food without getting sick."),
-    Ability("primal_blood", "Primal Blood",
-            "once per battle, rerolls a missed attack.",
-            on_attack_miss=_primal_blood),
+    Ability("nature_magic", "Nature Magic",
+            "innate nature magic: starts initiated and knowing one nature cantrip."),
     Ability("pack_tactics", "Pack Tactics",
             "+2 [circumstance] to attack if an ally is adjacent to the target.",
             attack_mods=_pack_tactics_mods),
@@ -144,9 +132,9 @@ _LIST = [
             "can Demoralize with no shared language (mimics the target's voice) "
             "-- offence only; being demoralized still needs a common tongue.",
             demoralize_ignores_language=True),
-    Ability("ancestral_blood", "Ancestral Blood",
-            "+2 [circumstance] to attack against Large targets.",
-            attack_mods=_ancestral_blood_mods),
+    Ability("blood_magic", "Blood Magic",
+            "ancestral blood magic: starts initiated in blood magic, "
+            "+2 to spell study rolls."),
     Ability("autotroph", "Autotroph",
             "photosynthesises: never needs to eat, immune to the hunger rules."),
     Ability("ferocity", "Ferocity",

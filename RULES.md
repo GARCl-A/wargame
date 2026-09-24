@@ -156,14 +156,13 @@ The design choices worth stating in prose:
 carry a stand-in combat bonus today so the ability is never inert; `REFERENCE.md`
 lists only the current effect):
 
-- **Strong Stomach** — now `+3 max HP`; becomes *can eat spoiled food safely*
-  once food quality is a mechanic.
-- **Primal Blood** — now *reroll one missed attack per battle*; becomes *starts
-  with one spell* once magic exists.
+- ~~**Strong Stomach** — migrated: can eat rotten food safely.~~
+- ~~**Primal Blood** → **Nature Magic** — migrated: Gnome starts initiated in
+  nature magic with one random cantrip.~~
 - **Keen Hearing** — now `+3 initiative`; becomes *a bonus to hear/notice things*
   once perception is a mechanic.
-- **Ancestral Blood** — now `+2 [circumstance] vs Large targets`; becomes *a
-  bonus to learn new spells* once magic exists.
+- ~~**Ancestral Blood** → **Blood Magic** — migrated: Kobold starts initiated in
+  blood magic, +2 to spell study rolls.~~
 
 ---
 

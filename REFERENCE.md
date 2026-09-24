@@ -14,7 +14,7 @@ Attribute rolls are 3d6; the modifiers below are added after.
 | Centaur | +1 -2 +0 +0 +2 -1 | d10 | Large | Elvish | 2.5x | Gallop |
 | Elf | -2 +2 -1 +1 +0 +0 | d8 | Medium | Elvish | 8.75x | Sleep Immunity |
 | Gnoll | +0 +0 +2 -1 +0 -1 | d8 | Medium | Orcish | 0.625x | Strong Stomach |
-| Gnome | -2 +1 -1 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Primal Blood |
+| Gnome | -2 +1 -1 +0 +1 +1 | d8 | Small | Gnomish | 6.25x | Nature Magic |
 | Goblin | -1 +2 +1 -1 +0 -1 | d6 | Small | Goblin | 0.625x | Pack Tactics |
 | Goliath | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
 | Grippli | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
@@ -23,7 +23,7 @@ Attribute rolls are 3d6; the modifiers below are added after.
 | Lizardfolk | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
 | Human | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
 | Kenku | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
-| Kobold | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Ancestral Blood |
+| Kobold | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Blood Magic |
 | Leshy | -1 +0 +1 -1 +1 +0 | d6 | Small | Verdant | 1x | Autotroph |
 | Orc | +2 +1 +1 -1 +0 -3 | d10 | Medium | Orcish | 0.625x | Ferocity |
 | Sprite | -2 +0 -2 +0 +2 +2 | d6 | Tiny | Gnomish | 1.5x | Flight |
@@ -39,7 +39,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Gallop | +3 m (2 squares) of speed. |
 | Sleep Immunity | immune to sleep effects. |
 | Strong Stomach | Can eat Rotten Food without getting sick. |
-| Primal Blood | once per battle, rerolls a missed attack. |
+| Nature Magic | innate nature magic: starts initiated and knowing one nature cantrip. |
 | Pack Tactics | +2 [circumstance] to attack if an ally is adjacent to the target. |
 | Strong Body | for carry capacity (and only that), counts as a Large creature. |
 | Amphibious | breathes water: never runs out of breath while submerged, so it can stay underwater indefinitely. |
@@ -47,7 +47,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Climber | climbs any surface of DC 25 or lower with no check (still costs the action). |
 | Extra Language | speaks a second random language: can Demoralize enemies that share either of the two. |
 | Mimic Sounds | can Demoralize with no shared language (mimics the target's voice) -- offence only; being demoralized still needs a common tongue. |
-| Ancestral Blood | +2 [circumstance] to attack against Large targets. |
+| Blood Magic | ancestral blood magic: starts initiated in blood magic, +2 to spell study rolls. |
 | Autotroph | photosynthesises: never needs to eat, immune to the hunger rules. |
 | Ferocity | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
