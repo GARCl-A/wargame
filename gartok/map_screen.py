@@ -573,9 +573,7 @@ class MapScreen(ButtonsMixin, Screen):
                           "gap_before": T.S * 2})
                           
         if here.apothecary:
-            blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY (CRAFT)",
-                          "gap_before": T.S * 2})
-            blocks.append({"type": "button", "key": "apothecary_mission", "label": "VISIT THE APOTHECARY (JOBS)",
+            blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY",
                           "gap_before": T.S * 2})
 
         if getattr(here, "library", False):

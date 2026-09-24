@@ -326,8 +326,6 @@ class App:
                 self._open_forge(group, node, None)
             elif order.kind == "apothecary":
                 self._open_apothecary(group, node, None)
-            elif order.kind == "apothecary_mission":
-                self._open_apothecary_mission(group, node, None)
             elif order.kind == "library":
                 self._open_library(list(group.members), node, None)
             elif order.kind == "guard":
@@ -452,16 +450,9 @@ class App:
                                     on_done=self._after_activity)
 
     def _open_apothecary(self, group, node, _offer):
-        from .crafting_screen import CraftingScreen
-        self.scene = CraftingScreen(self.fonts, self.guild, group,
-                                    on_done=self._after_activity,
-                                    title="THE APOTHECARY",
-                                    subtitle="brew potions and draughts  ·  needs recipes and materials")
-
-    def _open_apothecary_mission(self, group, node, _offer):
-        from .apothecary_mission_screen import ApothecaryMissionScreen
-        self.scene = ApothecaryMissionScreen(self.ui_fonts, self.guild, group,
-                                             on_done=self._after_activity)
+        from .apothecary_hub_screen import ApothecaryHubScreen
+        self.scene = ApothecaryHubScreen(self.fonts, self.guild, group,
+                                         on_done=self._after_activity)
 
     def _open_library(self, shoppers, node, _offer):
         from .library_screen import LibraryScreen
