@@ -54,6 +54,8 @@ class ApothecaryHubScreen(Screen):
         self.active_screen().mouse = self.mouse
         self.active_screen().draw(screen)
         
+        self._hot = getattr(self.active_screen(), '_hot', False)
+
         # Draw our tabs in the top right
         m = T.S * 3
         bw = 120

@@ -305,7 +305,7 @@ class App:
             elif order.kind == "market":
                 self._open_market_stalls(list(group.members), node, None)
             elif order.kind == "bank":
-                self._open_bank_vault(list(group.members), node, None)
+                self._open_bank_vault(group, node, None)
             elif order.kind == "property":
                 self._open_city_property(group, node)
             elif order.kind == "claim":
@@ -371,9 +371,9 @@ class App:
         self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
                                   on_done=self._after_activity)
 
-    def _open_bank_vault(self, party, node, _offer):
+    def _open_bank_vault(self, group, node, _offer):
         from .bank_hub_screen import BankHubScreen
-        self.scene = BankHubScreen(self.fonts, self.guild, party,
+        self.scene = BankHubScreen(self.fonts, self.guild, group,
                                    on_done=self._after_activity)
 
     def _open_city_property(self, group, node):

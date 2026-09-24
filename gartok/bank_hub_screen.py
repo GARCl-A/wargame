@@ -22,7 +22,7 @@ class BankHubScreen(Screen):
         self.on_done = on_done
         self.tab = "vault"
         
-        self.vault_screen = BankScreen(fonts, guild, group, on_done)
+        self.vault_screen = BankScreen(fonts, guild, list(group.members), on_done)
         self.jobs_screen = TrustScreen(self._F, guild, group, on_done)
         
         self.buttons = []
