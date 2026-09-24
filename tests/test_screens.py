@@ -302,7 +302,7 @@ def test_every_screen_draws_native_at_any_window_size():
         EditorMenuScreen(UI_F, noop, noop, on_scenario=noop),
         CharEditorScreen(F, noop),
         MapEditorScreen(F, noop),
-        DraftScreen(F, noop),
+        DraftScreen(UI_F, noop),
         MapScreen(F, guild, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
         BattleScreen(F, batt, noop),
@@ -972,11 +972,11 @@ def test_draft_screen_attribute_and_stat_hover_tooltips():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.draft_screen import DraftScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
-    ds = DraftScreen(Fonts(), lambda *args: None)
+    ds = DraftScreen(ui_fonts(), lambda *args: None)
     surf = pygame.Surface((1280, 720))
     ds.mouse = (0, 0)
     ds.draw(surf)

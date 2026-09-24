@@ -348,12 +348,3 @@ class LevelScreen(SheetModalMixin, Screen):
             if hov:
                 self._hot = True
 
-        bs = pygame.Rect(b.right + SP3, H - 52, 180, 36)
-        hov_s = not self.sheet_open and bs.collidepoint(self.mouse)
-        col_s = ACCENT_INK if hov_s else ACCENT
-        panel(screen, bs, fill=ACCENT if hov_s else SURFACE_3, border=ACCENT, width=1, radius=RADIUS)
-        text(screen, "CHARACTER SHEET", f.body_bd, col_s, bs.center, center=True)
-        if not self.sheet_open:
-            self.buttons.append(("sheet", bs))
-            if hov_s:
-                self._hot = True

@@ -274,7 +274,7 @@ class MapScreen(ButtonsMixin, Screen):
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
             self._cam.zoom_at(pygame.mouse.get_pos(), event.y)
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self._click(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button in (2, 3):
             if self._cam.rect.collidepoint(event.pos):
@@ -456,6 +456,8 @@ class MapScreen(ButtonsMixin, Screen):
             self.on_resolve_event()
         elif key == "cycle_idle":
             self._cycle_idle()
+        elif key == "recall_garrison":
+            self.selected.order = orders.idle()
         elif key == "maintain":
             self.on_advance(dt=1)
         elif key == "camp":
@@ -486,7 +488,10 @@ class MapScreen(ButtonsMixin, Screen):
                             "there is no escaping this fight.",
                     "color": T.TX_FAINT}]
         if g.busy:
-            return [{"type": "text", "text": f"Busy: {self._order_status(g)}", "color": T.BRASS}]
+            blocks = [{"type": "text", "text": f"Busy: {self._order_status(g)}", "color": T.BRASS}]
+            if g.order is not None and g.order.kind == "garrison":
+                blocks.append({"type": "button", "key": "recall_garrison", "label": "RECALL FROM GARRISON", "danger": True})
+            return blocks
 
         blocks = []
         if here.is_battle:
@@ -502,12 +507,8 @@ class MapScreen(ButtonsMixin, Screen):
             blocks.append({"type": "button", "key": "market", "label": "ENTER THE MARKET"})
         elif here.is_tavern:
             blocks.append({"type": "button", "key": "recruit", "label": "ENTER THE TAVERN"})
-            blocks.append({"type": "text", "text": "talk a stranger into signing with the guild",
-                          "color": T.TX_FAINT})
         elif here.is_prison:
             blocks.append({"type": "button", "key": "prison", "label": "VISIT THE PRISON"})
-            blocks.append({"type": "text", "text": "pay a criminal's bail for a chance to recruit them",
-                          "color": T.TX_FAINT})
         elif here.work:
             blocks.append({"type": "section", "label": "work a shift"})
             blocks.append({"type": "button_row", "height": 34,

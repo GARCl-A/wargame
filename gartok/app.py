@@ -140,7 +140,7 @@ class App:
         self.slot = slot
         self.guild = None
         self._draft_tutorial = TutorialState()
-        self.scene = DraftScreen(self.fonts, on_done=self._draft_done)
+        self.scene = DraftScreen(self.ui_fonts, on_done=self._draft_done)
 
     def _draft_done(self, picks, leader, name, banner_color, banner_icon):
         self.guild = Guild(picks, node=world.START_NODE, leader=leader,

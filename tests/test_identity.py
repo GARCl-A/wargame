@@ -80,7 +80,8 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
     pygame.init()
     screen = pygame.display.set_mode((1600, 900))
     random.seed(9)
-    fonts = Fonts()
+    from gartok.ui.tokens import fonts as ui_fonts
+    fonts = ui_fonts()
     result = {}
 
     def on_done(picks, leader, name, banner_color, banner_icon):

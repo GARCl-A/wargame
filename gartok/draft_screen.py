@@ -19,43 +19,25 @@ import pygame
 from . import artwork, data
 from .combatant import Combatant
 from .screen import Screen
-from .theme import (
-    ACCENT,
-    ACCENT_INK,
-    BANNER_COLORS,
-    INFO,
-    INK,
-    INK_DIM,
-    INK_FAINT,
-    LINE,
-    LINE_SOFT,
-    MARGIN,
-    OK,
-    RADIUS,
-    SP1,
-    SP2,
-    SP3,
-    SP4,
-    SURFACE_1,
-    SURFACE_2,
-    SURFACE_3,
-    TOKEN_INK,
-    WARN,
+from .theme import BANNER_COLORS, set_player_color
+from .ui.primitives import (
+    caps,
+    contained,
+    draw_button,
     draw_tooltip,
     ellipsize,
     format_tooltip,
+    modal_card,
     panel,
-    set_player_color,
     smooth_circle,
     text,
     token_badge,
     tracked,
+    TOKEN_INK,
 )
-from .ui.sheet_card import draw_sheet, sheet_height, unit_to_ch
+from .ui.sheet_card import draw_sheet, draw_row, sheet_height, unit_to_ch
 from .ui.tokens import T
-from .ui.tokens import fonts as ui_fonts
 from .unit import Unit
-from .widgets import draw_button
 
 TEAM_SIZE = 3
 DRAFT_ROUNDS = 3
@@ -83,25 +65,29 @@ def _archetypes(u):
             expected_dmg = count * ((sides + 1) / 2) + stat_mod
 
     if u.size == "Large":
-        tags.append(("LARGE", INFO, "Takes up more space on the grid; has higher base health."))
+        tags.append(("LARGE", T.TX_MUTED, "Takes up more space on the grid; has higher base health."))
     if u.hp_max >= 8:
-        tags.append(("TOUGH", OK, "High survivability from a massive health pool."))
+        tags.append(("TOUGH", T.GREEN, "High survivability from a massive health pool."))
     if u.carry_normal >= 35:
-        tags.append(("PACK MULE", OK, "Can carry the heaviest armor and equipment without slowing down."))
+        tags.append(("PACK MULE", T.GREEN, "Can carry the heaviest armor and equipment without slowing down."))
     if u.ranged:
-        tags.append(("RANGED", INFO, "Carries a ranged weapon to attack from distance."))
+        tags.append(("RANGED", T.TX_MUTED, "Carries a ranged weapon to attack from distance."))
     if u.speed >= 7:
-        tags.append(("FAST", OK, "Swift and agile, with high movement and evasion."))
+        tags.append(("FAST", T.GREEN, "Swift and agile, with high movement and evasion."))
     if expected_dmg >= 6:
-        tags.append(("DAMAGE DEALER", WARN, "Heavy hitter with very high expected damage output."))
+        tags.append(("DAMAGE DEALER", T.BRASS, "Heavy hitter with very high expected damage output."))
     if u.mod_dexterity >= 2:
-        tags.append(("NIMBLE", OK, "Highly dexterous. Superior accuracy with finesse weapons and high innate defense."))
+        tags.append(("NIMBLE", T.GREEN, "Highly dexterous. Superior accuracy with finesse weapons and high innate defense."))
+    if u.mod_intelligence >= 2:
+        tags.append(("GENIUS", T.GREEN, "Brilliant mind. Learns and crafts at high speeds, repairs automatons, and excels at magic."))
+    if u.mod_wisdom >= 2:
+        tags.append(("WISE", T.GREEN, "Level-headed. High combat initiative, strong mental defense, and a natural field medic."))
     if u.mod_charisma >= 2:
-        tags.append(("LEADER", WARN, "Highly charismatic. Excellent at recruiting, haggling, and leading."))
+        tags.append(("LEADER", T.BRASS, "Highly charismatic. Excellent at recruiting, haggling, and leading."))
     if getattr(u, 'magic_source', None) or getattr(u, 'spells_known', []):
-        tags.append(("MAGIC", INFO, "Initiated in magic. Can cast spells and read magical scrolls."))
+        tags.append(("MAGIC", T.TX_MUTED, "Initiated in magic. Can cast spells and read magical scrolls."))
     if u.ability.darkvision:
-        tags.append(("SEES IN DARK", INFO, "Can see in darkness without needing a light source."))
+        tags.append(("SEES IN DARK", T.TX_MUTED, "Can see in darkness without needing a light source."))
         
     return tags[:3]
 
@@ -111,7 +97,7 @@ class DraftScreen(Screen):
 
     def __init__(self, fonts, on_done):
         super().__init__()
-        self.fonts = fonts
+        self.F = fonts
         self.on_done = on_done
         self.picks = []
         self.phase = "pick"        # "pick" (rounds 1-3) | "identity" | "leader"
@@ -230,82 +216,79 @@ class DraftScreen(Screen):
     # drawing                                                            #
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((18, 19, 24))
+        F = self.F
+        screen.fill(T.TABLE)
         mouse = self.mouse
         self.tooltip = None
 
         if self.phase == "identity":
             self._draw_identity(screen)
             if getattr(self, "tooltip", None):
-                self._draw_tooltip(screen)
+                draw_tooltip(screen, F, self.tooltip, mouse)
             return
 
         round_no = len(self.picks) + 1
 
-        text(screen, "SQUAD DRAFT", f.title, INK, (MARGIN, MARGIN - 2))
+        text(screen, F["titleb"], "SQUAD DRAFT", (T.S * 4, T.S * 4 - 2), T.TX)
         if self.edit_mode:
             sub, col = ("EDIT MODE  ·  click 'swap' to change race / occupation  ·  "
-                        "EDITING goes back to picking", ACCENT)
+                        "EDITING goes back to picking", T.BRASS)
         else:
             sub, col = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
-                        f"·  squad {len(self.picks)}/{TEAM_SIZE}", INK_DIM)
-        text(screen, sub, f.body, col, (MARGIN, MARGIN + 30))
+                        f"·  squad {len(self.picks)}/{TEAM_SIZE}", T.TX_MUTED)
+        text(screen, F["body"], sub, (T.S * 4, T.S * 4 + 30), col)
         self._draw_top_buttons(screen, mouse)
 
         rail_h = 92
         
         # calculate actual_h for the cards so they perfectly stack with the rail
-        header_h = 16 + SP2
+        header_h = 16 + T.S * 2
         if self.edit_mode:
-            header_h += 2 * (28 + SP1) + SP1
+            header_h += 2 * (28 + T.S) + T.S
         sh = sheet_height("normal")
-        footer_h = (SP3 + 26 + SP3) if not self.edit_mode else SP3
-        card_h = SP3 + header_h + sh + footer_h
+        footer_h = (T.S * 3 + 26 + T.S * 3) if not self.edit_mode else T.S * 3
+        card_h = T.S * 3 + header_h + sh + footer_h
         
-        group_h = card_h + SP4 + rail_h
-        slack = max(0, (screen.get_height() - 18) - (MARGIN + 58) - group_h)
-        top = MARGIN + 58 + slack // 2
-        rail_y = top + card_h + SP4
-        gap = SP3
-        card_w = (screen.get_width() - 2 * MARGIN - (DRAFT_CHOICES - 1) * gap) // DRAFT_CHOICES
+        group_h = card_h + T.S * 4 + rail_h
+        slack = max(0, (screen.get_height() - 18) - (T.S * 4 + 58) - group_h)
+        top = T.S * 4 + 58 + slack // 2
+        rail_y = top + card_h + T.S * 4
+        gap = T.S * 3
+        card_w = (screen.get_width() - 2 * (T.S * 4) - (DRAFT_CHOICES - 1) * gap) // DRAFT_CHOICES
 
         self.card_rects = []
         self.edit_rects = []
         for i, unit in enumerate(self.candidates):
-            rect = pygame.Rect(MARGIN + i * (card_w + gap), top, card_w, card_h)
+            rect = pygame.Rect(T.S * 4 + i * (card_w + gap), top, card_w, card_h)
             self.card_rects.append((rect, unit))
             hover = rect.collidepoint(mouse) and not self.edit_mode
             self._draw_card(screen, rect, unit, hover, mouse)
 
-        self._draw_squad_rail(screen, MARGIN, rail_y, screen.get_width() - 2 * MARGIN, rail_h)
-        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
+        self._draw_squad_rail(screen, T.S * 4, rail_y, screen.get_width() - 2 * (T.S * 4), rail_h)
+        text(screen, F["body_sm"], "[Esc] quit", (T.S * 4, screen.get_height() - 18), T.TX_FAINT)
 
         if self.picker is not None:
             self._draw_picker(screen, mouse)
 
         if getattr(self, "tooltip", None):
-            self._draw_tooltip(screen)
-
-    def _draw_tooltip(self, screen):
-        draw_tooltip(screen, self.fonts.body_sm, self.tooltip, self.mouse)
+            draw_tooltip(screen, F, self.tooltip, mouse)
 
     # ------------------------------------------------------------------ #
     def _draw_identity(self, screen):
         """Name + banner (colour, then emblem), then FOUND THE GUILD. A form,
         not a card gallery -- its own layout, no `card_rects`/`_draw_card`."""
-        f = self.fonts
-        W, _ = screen.get_size()
+        F = self.F
+        W, H = screen.get_size()
         mouse = self.mouse
 
-        cw = min(560, W - 2 * MARGIN)
+        cw = min(560, W - 2 * (T.S * 4))
         cx = (W - cw) // 2
 
-        text(screen, "FOUND THE GUILD", f.title, ACCENT, (cx, MARGIN - 2))
-        text(screen, "Name your guild, pick a banner, and choose your leader.", f.body, INK_DIM,
-             (cx, MARGIN + 30))
+        text(screen, F["titleb"], "FOUND THE GUILD", (cx, T.S * 4 - 2), T.TX)
+        text(screen, F["body"], "Name your guild, pick a banner, and choose your leader.",
+             (cx, T.S * 4 + 30), T.TX_MUTED)
 
-        y = MARGIN + 74
+        y = T.S * 4 + 74
 
         # --- preview + name field ----------------------------------- #
         pv = (cx + 24, y + 28)
@@ -316,62 +299,55 @@ class DraftScreen(Screen):
 
         nx = cx + 64
         nw = cw - 64
-        tracked(screen, "GUILD NAME", f.label, INK_FAINT, (nx, y))
+        tracked(screen, F["microb"], "GUILD NAME", (nx, y), T.TX_FAINT)
         self.name_rect = pygame.Rect(nx, y + 16, nw, 40)
         hov = self.name_rect.collidepoint(mouse)
-        panel(screen, self.name_rect, fill=SURFACE_3 if (hov or self.editing_name) else SURFACE_2,
-              border=ACCENT if (hov or self.editing_name) else LINE, width=1, radius=RADIUS)
+        panel(screen, self.name_rect, hover=(hov or self.editing_name), width=2 if (hov or self.editing_name) else 1)
         shown = self.name_buf + "|" if self.editing_name else self.guild_name or "click to name your guild"
-        col = INK if (self.editing_name or self.guild_name) else INK_FAINT
-        text(screen, shown, f.body, col, (self.name_rect.x + SP3, self.name_rect.centery - 8))
-        y += 56 + SP3
+        col = T.TX if (self.editing_name or self.guild_name) else T.TX_FAINT
+        text(screen, F["body"], shown, (self.name_rect.x + T.S * 2, self.name_rect.centery - F["body"].get_height() // 2), col)
+        y += 56 + T.S * 3
 
         # --- banner colour: a curated palette, not a free picker --------- #
-        tracked(screen, "BANNER COLOUR", f.label, INK_FAINT, (cx, y))
+        tracked(screen, F["microb"], "BANNER COLOUR", (cx, y), T.TX_FAINT)
         y += 18
         self.color_rects = []
         sw = 40
         for i, (_, color) in enumerate(BANNER_COLORS):
-            r = pygame.Rect(cx + i * (sw + SP2), y, sw, sw)
+            r = pygame.Rect(cx + i * (sw + T.S * 2), y, sw, sw)
             sel = color == self.banner_color
             hov = r.collidepoint(mouse)
             smooth_circle(screen, color, r.center, sw // 2)
-            smooth_circle(screen, ACCENT if sel else (LINE if hov else LINE_SOFT),
+            smooth_circle(screen, T.BRASS if sel else (T.STEEL_LINE if hov else T.STEEL),
                           r.center, sw // 2, 3 if sel else 1)
             self.color_rects.append((r, color))
-        y += sw + SP3
+        y += sw + T.S * 3
 
         # --- banner emblem: a curated gallery, not a paint tool ---------- #
-        tracked(screen, "EMBLEM", f.label, INK_FAINT, (cx, y))
+        tracked(screen, F["microb"], "EMBLEM", (cx, y), T.TX_FAINT)
         y += 18
         self.icon_rects = []
         isz = 44
-        per_row = max(1, (cw + SP2) // (isz + SP2))
+        per_row = max(1, (cw + T.S * 2) // (isz + T.S * 2))
         for i, (_, slug, _label) in enumerate(artwork.BANNER_ICONS):
             col_i, row_i = i % per_row, i // per_row
-            r = pygame.Rect(cx + col_i * (isz + SP2), y + row_i * (isz + SP2), isz, isz)
+            r = pygame.Rect(cx + col_i * (isz + T.S * 2), y + row_i * (isz + T.S * 2), isz, isz)
             sel = slug == self.banner_icon
             hov = r.collidepoint(mouse)
-            panel(screen, r, fill=SURFACE_3 if (sel or hov) else SURFACE_1,
-                  border=ACCENT if sel else (LINE if hov else LINE_SOFT),
-                  width=2 if sel else 1, radius=8)
+            panel(screen, r, hover=(sel or hov), width=2 if sel else 1)
             smooth_circle(screen, self.banner_color, r.center, 14)
             art = artwork.banner_icon(slug, isz - 16, TOKEN_INK)
             if art is not None:
                 screen.blit(art, art.get_rect(center=r.center))
             self.icon_rects.append((r, slug))
         rows = (len(artwork.BANNER_ICONS) + per_row - 1) // per_row
-        y += rows * (isz + SP2) + SP3
+        y += rows * (isz + T.S * 2) + T.S * 3
 
         # --- guild leader ------------------------------------------ #
-        tracked(screen, "WHO LEADS THE GUILD?", f.label, INK_FAINT, (cx, y))
+        tracked(screen, F["microb"], "WHO LEADS THE GUILD?", (cx, y), T.TX_FAINT)
         y += 18
         self.leader_rects = []
         
-        from .combatant import Combatant
-        from .ui.sheet_card import draw_row, unit_to_ch
-        
-        F = ui_fonts()
         def _trailing(surf, r, ch):
             u = ch["unit"]
             attr_x = r.right - 380
@@ -379,150 +355,142 @@ class DraftScreen(Screen):
                             ("CON", "constitution"), ("INT", "intelligence"),
                             ("WIS", "wisdom"), ("CHA", "charisma")):
                 txt = f"{k} {getattr(u, name)}"
-                tw = f.body_sm.size(txt)[0]
-                ar = pygame.Rect(attr_x, r.centery - 8, tw, 16)
-                text(surf, txt, f.body_sm, INK_DIM, (attr_x, r.centery - 8))
+                tw = F["body_sm"].size(txt)[0]
+                ar = pygame.Rect(attr_x, r.centery - F["body_sm"].get_height()//2, tw, F["body_sm"].get_height())
+                text(surf, F["body_sm"], txt, (attr_x, r.centery - F["body_sm"].get_height()//2), T.TX_MUTED)
                 if ar.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
                     t, d = data.ATTRIBUTE_HELP[k]
-                    self.tooltip = format_tooltip(t, d, f)
+                    self.tooltip = format_tooltip(t, d, F)
                 attr_x += tw + 20
 
         for i, unit in enumerate(self.picks):
-            r = pygame.Rect(cx, y + i * (74 + SP2), cw, 74)
+            r = pygame.Rect(cx, y + i * (74 + T.S * 2), cw, 74)
             sel = unit == self.leader_pick
             c = Combatant(unit)
             draw_row(screen, F, r, unit_to_ch(c), selected=sel, draw_trailing=_trailing)
             self.leader_rects.append((r, unit))
             
-        rows_h = len(self.picks) * (74 + SP2) + SP4
+        rows_h = len(self.picks) * (74 + T.S * 2) + T.S * 4
         y += rows_h
 
         # --- confirm --------------------------------- #
-
-        self.continue_rect = pygame.Rect(cx, y, cw, 44)
-        hov = self.continue_rect.collidepoint(mouse)
+        self.continue_rect = pygame.Rect(cx + cw - 200, y, 200, 44)
         can_cont = self.leader_pick is not None
-        panel(screen, self.continue_rect, fill=ACCENT if hov and can_cont else SURFACE_3,
-              border=ACCENT if can_cont else LINE, width=1, radius=RADIUS)
-        text(screen, "FOUND THE GUILD", f.body_bd, (ACCENT_INK if hov else ACCENT) if can_cont else INK_DIM,
-             self.continue_rect.center, center=True)
+        draw_button(screen, F, self.continue_rect, "FOUND THE GUILD", primary=True, enabled=can_cont, mpos=mouse)
 
-        text(screen, "[Esc] quit", f.body_sm, INK_FAINT, (MARGIN, screen.get_height() - 18))
+        text(screen, F["body_sm"], "[Esc] quit", (T.S * 4, H - 18), T.TX_FAINT)
 
     # ------------------------------------------------------------------ #
     def _draw_card(self, screen, rect, unit, hover, mouse, leader_pick=False):
-        f = self.fonts
-        pad = SP3
+        F = self.F
+        pad = T.S * 3
         
         # Calculate dynamic height
-        header_h = 16 + SP2
+        header_h = 16 + T.S * 2
         if self.edit_mode:
-            header_h += 2 * (28 + SP1) + SP1
+            header_h += 2 * (28 + T.S) + T.S
             
         sh = sheet_height("normal")
-        footer_h = (SP3 + 26 + SP3) if not self.edit_mode else SP3
+        footer_h = (T.S * 3 + 26 + T.S * 3) if not self.edit_mode else T.S * 3
         
         actual_h = pad + header_h + sh + footer_h
         bg_rect = pygame.Rect(rect.x, rect.y, rect.w, max(rect.h, actual_h))
         
         # The background panel uses war-table palette to match sheet_card
-        pygame.draw.rect(screen, T.TABLE, bg_rect, border_radius=RADIUS)
-        pygame.draw.rect(screen, ACCENT if hover else T.STEEL_LINE, bg_rect, 2, border_radius=RADIUS)
+        panel(screen, bg_rect, hover=hover, width=2 if hover else 1)
         
         # --- floating archetypes ---
         ty = bg_rect.y + pad
         tx = bg_rect.x + pad
         for label, tcol, desc in _archetypes(unit):
-            w = f.label.size(label)[0] + 12
+            w = F["microb"].size(label)[0] + 12
             pill = pygame.Rect(tx, ty, w, 16)
-            pygame.draw.rect(screen, SURFACE_1, pill, border_radius=4)
+            pygame.draw.rect(screen, T.STEEL_HI, pill, border_radius=4)
             pygame.draw.rect(screen, tcol, pill, 1, border_radius=4)
-            text(screen, label, f.label, tcol, (pill.centerx, pill.centery - 1), center=True)
+            text(screen, F["microb"], label, pill.center, tcol, center=True)
             if pill.collidepoint(mouse):
                 self.tooltip = desc
-            tx += w + SP1
+            tx += w + T.S
             
-        ty += 16 + SP2
+        ty += 16 + T.S * 2
 
         # --- floating edit mode buttons ---
         if self.edit_mode:
             for field, lbl, val in (("race", "RACE", unit.race["name"]),
                                     ("occupation", "OCCUP", unit.occupation["name"])):
                 br = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, 28)
-                ty += 28 + SP1
+                ty += 28 + T.S
                 hov = br.collidepoint(mouse)
-                panel(screen, br, fill=SURFACE_3 if hov else SURFACE_1,
-                      border=ACCENT if hov else LINE, width=1, radius=4)
-                text(screen, f"{lbl}  {val}", f.body_sm, INK, (br.x + SP2, br.y + 7))
-                text(screen, "swap", f.label, ACCENT if hov else INK_DIM,
-                     (br.right - SP2, br.y + 8), right=True)
+                panel(screen, br, hover=hov)
+                text(screen, F["body_sm"], f"{lbl}  {val}", (br.x + T.S * 2, br.y + 7), T.TX)
+                text(screen, F["microb"], "SWAP", (br.right - T.S * 2, br.y + 8), T.BRASS if hov else T.TX_MUTED, right=True)
                 self.edit_rects.append((br, unit, field))
-            ty += SP1
+            ty += T.S
 
         # --- the shared sheet component ---
         sheet_rect = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, sh)
         ch = unit_to_ch(Combatant(unit))
-        used_h, tip = draw_sheet(screen, ui_fonts(), sheet_rect, ch, density="normal", mouse=mouse)
+        used_h, tip = draw_sheet(screen, F, sheet_rect, ch, density="normal", mouse=mouse)
         if tip:
             self.tooltip = tip
             
-        ty += used_h + SP3
+        ty += used_h + T.S * 3
 
         # --- footer --------------------------------------- #
         if not self.edit_mode:
             fr = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, 26)
-            panel(screen, fr, fill=ACCENT if hover else SURFACE_3,
-                  border=ACCENT if hover else LINE, width=1, radius=4)
-            text(screen, "PICK" if hover else "click to pick",
-                 f.label if hover else f.body_sm,
-                 ACCENT_INK if hover else INK_DIM, fr.center, center=True)
+            panel(screen, fr, hover=hover)
+            text(screen, F["microb"] if hover else F["body_sm"], "PICK" if hover else "click to pick",
+                 fr.center, T.BRASS if hover else T.TX_MUTED, center=True)
 
     # ------------------------------------------------------------------ #
     def _draw_squad_rail(self, screen, x, y, w, h):
-        f = self.fonts
-        tracked(screen, "YOUR SQUAD", f.label, INK_FAINT, (x, y))
+        F = self.F
+        tracked(screen, F["microb"], "YOUR SQUAD", (x, y), T.TX_FAINT)
         y += 16
-        slot_w = (w - 2 * SP2) // 3
+        slot_w = (w - 2 * (T.S * 2)) // 3
         for i in range(TEAM_SIZE):
-            r = pygame.Rect(x + i * (slot_w + SP2), y, slot_w, h - 16)
+            r = pygame.Rect(x + i * (slot_w + T.S * 2), y, slot_w, h - 16)
             if i < len(self.picks):
                 u = self.picks[i]
-                panel(screen, r, fill=SURFACE_2, border=OK, width=1)
-                dot = (r.x + SP3 + 9, r.centery)
-                token_badge(screen, dot, u, f, r=12)
-                text(screen, u.name, f.body_bd, INK, (dot[0] + 20, r.y + SP2))
-                text(screen, f"{u.race['name']}  ·  {u.occupation['name']}",
-                     f.body_sm, INK_DIM, (dot[0] + 20, r.y + SP2 + 18))
+                panel(screen, r)
+                pygame.draw.rect(screen, T.GREEN, r, 1) # border ok
+                dot = (r.x + T.S * 3 + 9, r.centery)
+                token_badge(screen, F, dot, u, r=12)
+                text(screen, F["bodyb"], u.name, (dot[0] + 20, r.y + T.S * 2), T.TX)
+                text(screen, F["body_sm"], f"{u.race['name']}  ·  {u.occupation['name']}",
+                     (dot[0] + 20, r.y + T.S * 2 + 18), T.TX_MUTED)
                 attr_x = dot[0] + 20
                 for k, name in (("STR", "strength"), ("DEX", "dexterity"),
                                 ("CON", "constitution"), ("INT", "intelligence"),
                                 ("WIS", "wisdom"), ("CHA", "charisma")):
                     txt = f"{k} {getattr(u, name)}"
-                    tw = f.body_sm.size(txt)[0]
-                    ar = pygame.Rect(attr_x, r.y + SP2 + 36, tw, 16)
-                    text(screen, txt, f.body_sm, INK_DIM, (attr_x, r.y + SP2 + 36))
+                    tw = F["body_sm"].size(txt)[0]
+                    ar = pygame.Rect(attr_x, r.y + T.S * 2 + 36, tw, 16)
+                    text(screen, F["body_sm"], txt, (attr_x, r.y + T.S * 2 + 36), T.TX_MUTED)
                     if ar.collidepoint(self.mouse) and k in data.ATTRIBUTE_HELP:
                         t, d = data.ATTRIBUTE_HELP[k]
-                        self.tooltip = format_tooltip(t, d, f)
+                        self.tooltip = format_tooltip(t, d, F)
                     attr_x += tw + 8
             else:
-                pygame.draw.rect(screen, LINE_SOFT, r, 1, border_radius=RADIUS)
-                text(screen, f"slot {i + 1}", f.body_sm, INK_FAINT, r.center, center=True)
+                pygame.draw.rect(screen, T.STEEL_LINE, r, 1)
+                text(screen, F["body_sm"], f"slot {i + 1}", r.center, T.TX_FAINT, center=True)
 
     def _draw_top_buttons(self, screen, mouse):
-        # Place buttons to the left of the global tutorial button (26px + SP2 gap)
-        r_edit = pygame.Rect(screen.get_width() - MARGIN - 26 - SP2 - 96, MARGIN, 96, 30)
+        # Place buttons to the left of the global tutorial button (26px + T.S*2 gap)
+        F = self.F
+        r_edit = pygame.Rect(screen.get_width() - (T.S * 4) - 26 - T.S * 2 - 96, T.S * 4, 96, 30)
         self.edit_btn_rect = r_edit
-        draw_button(screen, r_edit, "EDITING" if self.edit_mode else "EDIT", self.fonts,
-                   mouse, primary=self.edit_mode, font=self.fonts.label)
+        draw_button(screen, F, r_edit, "EDITING" if self.edit_mode else "EDIT",
+                    primary=self.edit_mode, mpos=mouse)
 
-        r_reroll = pygame.Rect(r_edit.left - SP2 - 96, MARGIN, 96, 30)
+        r_reroll = pygame.Rect(r_edit.left - T.S * 2 - 96, T.S * 4, 96, 30)
         self.reroll_btn_rect = r_reroll
-        draw_button(screen, r_reroll, "REROLL", self.fonts, mouse, font=self.fonts.label)
+        draw_button(screen, F, r_reroll, "REROLL", mpos=mouse)
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen, mouse):
-        f = self.fonts
+        F = self.F
         unit, field = self.picker
         if field == "race":
             options, current, title = data.RACE_NAMES, unit.race["name"], "Pick a race"
@@ -530,29 +498,24 @@ class DraftScreen(Screen):
             options, current, title = (data.OCCUPATION_NAMES, unit.occupation["name"],
                                        "Pick an occupation")
 
-        veil = pygame.Surface((screen.get_width(), screen.get_height()), pygame.SRCALPHA)
-        veil.fill((0, 0, 0, 190))
-        screen.blit(veil, (0, 0))
-
         cols = 3
         rows = (len(options) + cols - 1) // cols
-        cw, ch, pad = 220, 27, SP4
+        cw, ch, pad = 220, 27, T.S * 4
         pw = cols * cw + 2 * pad
-        ph = 52 + rows * ch + SP4
-        panel_r = pygame.Rect((screen.get_width() - pw) // 2, (screen.get_height() - ph) // 2, pw, ph)
-        panel(screen, panel_r, fill=SURFACE_2, border=ACCENT, width=2, radius=8)
-        text(screen, title, f.title, INK, (panel_r.x + pad, panel_r.y + 12))
+        ph = 52 + rows * ch + T.S * 4
+        
+        panel_r = modal_card(screen, (pw, ph), veil=True)
+        text(screen, F["titleb"], title, (panel_r.x + pad, panel_r.y + 12), T.TX)
 
         self.picker_rects = []
         for i, name in enumerate(options):
             c, rw = i % cols, i // cols
             it = pygame.Rect(panel_r.x + pad + c * cw, panel_r.y + 46 + rw * ch,
-                             cw - SP1, ch - SP1)
+                             cw - T.S, ch - T.S)
             sel = name == current
             hov = it.collidepoint(mouse)
-            panel(screen, it, fill=SURFACE_3 if (hov or sel) else SURFACE_1,
-                  border=ACCENT if sel else (LINE if hov else LINE_SOFT), width=1, radius=4)
-            text(screen, name, f.body_sm, ACCENT if sel else INK, (it.x + SP2, it.y + 4))
+            panel(screen, it, hover=(hov or sel))
+            text(screen, F["body_sm"], name, (it.x + T.S * 2, it.y + 4), T.BRASS if sel else T.TX)
             self.picker_rects.append((it, name))
-        text(screen, "click outside to cancel", f.body_sm, INK_FAINT,
-             (panel_r.x + pad, panel_r.bottom - 20))
+            
+        text(screen, F["body_sm"], "click outside to cancel", (panel_r.x + pad, panel_r.bottom - 20), T.TX_FAINT)

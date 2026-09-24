@@ -315,7 +315,7 @@ class Guild:
         """Nothing needs the player right now, but at least one group still
         has an order in flight -- keep the clock running on its own instead
         of waiting on a click."""
-        return not self.needs_orders and any(g.busy for g in self.groups)
+        return not self.needs_orders and any(g.busy and g.order.kind != "garrison" for g in self.groups)
 
     @property
     def arena_reputation(self):

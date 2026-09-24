@@ -148,8 +148,23 @@ class TavernaScreen(ButtonsMixin, Screen):
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
 
+        days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
+        if self.tab == "recruits":
+            if self.sel is not None:
+                cand = self.candidates[self.sel]
+                sub, col = (f"pitching {cand.name}  ·  click who from the party speaks  ·  "
+                            "click outside to cancel", ACCENT)
+            else:
+                sub, col = (f"guild of {len(self.guild.roster)}  ·  size penalty "
+                            f"-{recruit.size_penalty(len(self.guild.roster))}  ·  "
+                            f"new faces in {days_left} day(s)", INK_DIM)
+        else:
+            sub, col = ("rent a quiet room for the day  ·  anyone with a study target will make progress", INK_DIM)
+        
+        text(screen, sub, f.body, col, (MARGIN, MARGIN + 36))
+
         # Tabs
-        tab_y = MARGIN + 40
+        tab_y = MARGIN + 64
         tr_rect = pygame.Rect(MARGIN, tab_y, 120, 30)
         tr_hov = tr_rect.collidepoint(self.mouse)
         tr_on = self.tab == "recruits"
@@ -175,17 +190,6 @@ class TavernaScreen(ButtonsMixin, Screen):
 
     def _draw_recruits(self, screen, top):
         f = self.fonts
-        days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
-        if self.sel is not None:
-            cand = self.candidates[self.sel]
-            sub, col = (f"pitching {cand.name}  ·  click who from the party speaks  ·  "
-                        "click outside to cancel", ACCENT)
-        else:
-            sub, col = (f"guild of {len(self.guild.roster)}  ·  size penalty "
-                        f"-{recruit.size_penalty(len(self.guild.roster))}  ·  "
-                        f"new faces in {days_left} day(s)", INK_DIM)
-        text(screen, sub, f.body, col, (MARGIN, top - 25))
-
         party_h = 120
         gap = SP3
         cand_h = screen.get_height() - top - party_h - gap - 80
@@ -204,8 +208,6 @@ class TavernaScreen(ButtonsMixin, Screen):
 
     def _draw_rooms(self, screen, top):
         f = self.fonts
-        text(screen, "rent a quiet room for the day  ·  anyone with a study target will make progress",
-             f.body, INK_DIM, (MARGIN, top - 25))
 
         W, H = screen.get_width(), screen.get_height()
         area = pygame.Rect(MARGIN, top, W - 2 * MARGIN, H - top - 80)

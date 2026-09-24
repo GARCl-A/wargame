@@ -133,6 +133,7 @@ MARKET_STOCK = [
 STOCK = {
     "Leather Jerkin": 3, "Studded Leather": 3,
     "1sqm Hide": 0,
+    "Minor Healing Potion": 3, "Vial": 10,
 }
 
 

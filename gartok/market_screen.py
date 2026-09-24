@@ -40,7 +40,7 @@ from .ui.tokens import fonts as ui_fonts
 from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, caps, text as ui_text, hline
 
-STOCK_W = 392
+STOCK_W = 412
 
 
 class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
@@ -640,8 +640,8 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         kit = self.tab == "kit"
 
         wt_x = rect.right - T.S * 2
-        price_x = wt_x - 62
-        tag_x = price_x - 44
+        price_x = wt_x - 52
+        tag_x = x + 204
 
         caps(screen, F["micro"], "FOR SALE", (x, rect.y + T.S * 2), T.TX_FAINT)
         hline(screen, x, rect.right - T.S * 2, rect.y + T.S * 4)
@@ -694,10 +694,10 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 tag = self._kit_tag(name)
                 if tag:
                     from .ui.loadout_panel import TAG_COLOR
-                    caps(screen, F["micro"], tag, (tag_x, r.centery - 5), TAG_COLOR.get(tag, T.TX_FAINT), right=True)
+                    caps(screen, F["micro"], tag, (tag_x, r.centery - 5), TAG_COLOR.get(tag, T.TX_FAINT))
             if stock is not None:
-                stock_label = "OUT OF STOCK" if out else f"{stock} left"
-                caps(screen, F["micro"], stock_label, (tag_x, r.centery + 3), T.BLOOD if out else T.TX_MUTED, right=True)
+                stock_label = "SOLD OUT" if out else f"{stock} left"
+                caps(screen, F["micro"], stock_label, (tag_x, r.centery + 3), T.BLOOD if out else T.TX_MUTED)
 
             wt = f"{data.item_weight(name):.1f} kg"
             caps(screen, F["micro"], wt, (wt_x, r.centery - 5), T.TX_FAINT if fits else T.BLOOD, right=True)
