@@ -49,7 +49,7 @@ loadout. `native = True`. `on_back()` returns to the map.
 
 import pygame
 
-from . import chest, data, missions, world
+from . import chest, data, missions, world, magic
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
@@ -346,6 +346,10 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         return (len(self.selected) == 1 and isinstance(self.selected[0][1], int)
                 and self._qty_at(*self.selected[0]) > 1)
 
+    def _study_label(self, unit, target):
+        verb = "stop studying" if unit.study_target == target.id else "study"
+        return f"{verb} {target.name}"
+
     def _open_menu(self, anchor, picks=None):
         if picks is None:
             src = self._source_at(anchor)
@@ -367,6 +371,15 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             rows.append(("open", "OPEN THE CHEST", None))
         if len(picks) == 1 and self._item_at(*picks[0]) == "Minor Healing Potion":
             rows.append(("drink", "Drink", None))
+            
+        if len(picks) == 1:
+            unit, item = picks[0][0], self._item_at(*picks[0])
+            spell = magic.spell_for_scroll(item) if item else None
+            if spell and unit.magic_source and spell.id not in unit.spells_known:
+                rows.append(("study", self._study_label(unit, spell), spell))
+            lang = magic.language_for_dictionary(item) if item else None
+            if lang and lang.name not in unit.languages:
+                rows.append(("study", self._study_label(unit, lang), lang))
 
         # a member you'd only be handing their own pack items back to is a no-op
         owners = {id(p[0]) for p in picks}
@@ -396,6 +409,10 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             elif kind == "member":
                 self.selected = list(m["picks"])
                 self._give_many(self._unit_by_uid[arg], "pack")
+            elif kind == "study":
+                unit = m["picks"][0][0]
+                unit.study_target = None if unit.study_target == arg.id else arg.id
+                self.selected = []
             else:
                 self.selected = list(m["picks"])
                 self._give_many(None, "discard")
