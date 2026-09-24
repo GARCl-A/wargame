@@ -372,8 +372,9 @@ class App:
                                   on_done=self._after_activity)
 
     def _open_bank_vault(self, party, node, _offer):
-        self.scene = BankScreen(self.fonts, self.guild, party,
-                                on_done=self._after_activity)
+        from .bank_hub_screen import BankHubScreen
+        self.scene = BankHubScreen(self.fonts, self.guild, party,
+                                   on_done=self._after_activity)
 
     def _open_city_property(self, group, node):
         """`RepossessionScreen` pre-empts the normal property screen once too
@@ -435,10 +436,6 @@ class App:
     def _open_tanner_stall(self, group, node, _offer):
         self.scene = TannerScreen(self.ui_fonts, self.guild, group,
                                   on_done=self._after_activity)
-
-    def _open_trust_offer(self, group, node, _offer):
-        self.scene = TrustScreen(self.ui_fonts, self.guild, group,
-                                 on_done=self._after_activity)
 
     def _open_ledger_desk(self, group, node, _offer):
         self.scene = LedgerScreen(self.fonts, self.guild, group,

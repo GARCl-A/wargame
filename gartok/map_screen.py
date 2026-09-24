@@ -564,9 +564,6 @@ class MapScreen(ButtonsMixin, Screen):
         if here.tanner:
             blocks.append({"type": "button", "key": "tanner", "label": "VISIT THE TANNER",
                           "gap_before": T.S * 2})
-        if here.trust:
-            blocks.append({"type": "button", "key": "trust", "label": "VISIT THE BANKERS",
-                          "gap_before": T.S * 2})
 
         if here.forge:
             blocks.append({"type": "button", "key": "forge", "label": "VISIT THE FORGE",
