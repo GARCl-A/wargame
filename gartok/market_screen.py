@@ -274,18 +274,32 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
+            mods = pygame.key.get_mods()
+            is_shift = mods & pygame.KMOD_SHIFT
+            
+            hx = getattr(event, 'x', 0)
+            hy = getattr(event, 'y', 0)
+            
+            if hx != 0 or (is_shift and hy != 0):
+                scroll_amt = hx if hx != 0 else -hy
+                max_scroll = getattr(self, "_shoppers_max_scroll", 0)
+                if max_scroll > 0:
+                    cur = getattr(self, "_shoppers_scroll", 0)
+                    self._shoppers_scroll = max(0, min(max_scroll, cur + scroll_amt))
+                return
+
             hit = next((m for r, m in self._pack_areas if r.collidepoint(self.mouse)), None)
             if hit is not None:
                 n = len(self._stacks(hit._base_inventory))
                 cur = self._pack_scroll.get(id(hit), 0)
-                self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - event.y))
+                self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - hy))
                 return
             
             if getattr(self, "_shoppers_area", pygame.Rect(0,0,0,0)).collidepoint(self.mouse):
                 max_scroll = getattr(self, "_shoppers_max_scroll", 0)
                 if max_scroll > 0:
                     cur = getattr(self, "_shoppers_scroll", 0)
-                    self._shoppers_scroll = max(0, min(max_scroll, cur - event.y))
+                    self._shoppers_scroll = max(0, min(max_scroll, cur - hy))
                     return
 
         super().handle_event(event)

@@ -99,6 +99,8 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         self._cargo_rect = None
         self._cargo_scroll = 0
         self._cargo_max_scroll = 0
+        self._bags_scroll = 0
+        self._bags_max_scroll = 0
         self.editing_name = False
         self.name_buf = ""
         self._bulk_anchor = (0, 0)           # CARGO's "send to..." button center, set when it's drawn
@@ -163,14 +165,26 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             return
 
         if event.type == pygame.MOUSEWHEEL:
+            mods = pygame.key.get_mods()
+            is_shift = mods & pygame.KMOD_SHIFT
+            hx = getattr(event, 'x', 0)
+            hy = getattr(event, 'y', 0)
+            
+            if self.tab == "gear" and self.view == "bags":
+                if hx != 0 or (is_shift and hy != 0):
+                    scroll_amt = hx if hx != 0 else -hy
+                    if self._bags_max_scroll > 0:
+                        self._bags_scroll = max(0, min(self._bags_max_scroll, self._bags_scroll + scroll_amt))
+                    return
+
             if self.tab == "gear" and self._rail_rect and self._rail_rect.collidepoint(self.mouse):
                 self._rail_scroll = max(0, min(self._rail_max_scroll,
-                                               self._rail_scroll - event.y * 40))
+                                               self._rail_scroll - hy * 40))
                 return
             if (self.tab == "gear" and self.view == "cargo"
                     and self._cargo_rect and self._cargo_rect.collidepoint(self.mouse)):
                 self._cargo_scroll = max(0, min(self._cargo_max_scroll,
-                                                self._cargo_scroll - event.y * 40))
+                                                self._cargo_scroll - hy * 40))
                 return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.split_prompt:
@@ -528,7 +542,11 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         gap = T.S * 2
         shown = [u for u in self.pinned if u in self.group.members]
         cap = max(1, (area.w + gap) // (COL_MIN + gap))
-        shown = shown[:cap]
+        
+        self._bags_max_scroll = max(0, len(shown) - cap)
+        self._bags_scroll = max(0, min(self._bags_scroll, self._bags_max_scroll))
+        
+        shown = shown[self._bags_scroll : self._bags_scroll + cap]
         n = max(1, len(shown))
         col_w = min(COL_MAX, max(COL_MIN, (area.w - (n - 1) * gap) // n))
         carried = self._carried_names()
@@ -554,11 +572,18 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, u, idx))
 
+        if self._bags_max_scroll > 0:
+            hr = self._bags_max_scroll - self._bags_scroll
+            hl = self._bags_scroll
+            if hr > 0:
+                text(screen, F["body_sm"], f"{hr} more \u2192  (scroll)", (area.right - 8, area.bottom + 8), T.TX_FAINT, right=True)
+            if hl > 0:
+                text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
+
         hidden = len(self.pinned) - len(shown)
         if hidden > 0:
-            text(screen, F["body_sm"],
-                f"+{hidden} pinned but hidden -- widen the window or unpin someone",
-                (area.x, area.bottom + 4), T.TX_FAINT)
+            msg = f"+{hidden} pinned but hidden -- scroll horizontally or unpin someone"
+            text(screen, F["body_sm"], msg, (area.x, area.bottom + 24), T.TX_FAINT)
         if not shown:
             text(screen, F["body"], "Pin a member on the left to see their gear.",
                 area.center, T.TX_FAINT, center=True)

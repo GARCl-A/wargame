@@ -175,7 +175,12 @@ class LoadoutMoveMixin:
                 return
             name = self._item_at(*fit)
             src = fit[0]
-            self._take(*fit)
+            taken_name, qty = self._take(*fit)
+            
+            # Put the rest of the stack back if we took multiple
+            if qty > 1:
+                src.give_to_pack(taken_name, qty - 1)
+                
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
              "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
             src._derive_combat()
