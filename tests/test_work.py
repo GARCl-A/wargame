@@ -121,5 +121,5 @@ def test_hunting_is_a_level_3_job_that_outlasts_the_lumber_yard():
     state = hunt.HuntState(party=[u], node=world.node("wilds"),
                            hours_left=0, hours_hunted=10)
     before = u.work_hours
-    hunt.grant_meat(state)
+    hunt.grant_haul(state)
     assert u.work_hours == before + 10                  # level 3 job still teaches a level 2 worker

@@ -94,7 +94,8 @@ class Node:
                  lethal=True, arena=False, language=None, alignment=None, work=False,
                  bank=False, tanner=False, jurisdiction=None,
                  unsafe=False, encounter_table=None, trust=False, ledger=False,
-                 city_property=False, garrison_job=None, claim=False, forge=False, prison=False):
+                 city_property=False, garrison_job=None, claim=False, forge=False,
+                 prison=False, apothecary=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -117,6 +118,7 @@ class Node:
         self.garrison_job = garrison_job     # the job a "garrison" order can work here, or None
         self.claim = claim                   # the Wilds claim campaign's node (wilds_claim_screen)
         self.forge = forge                   # town: crafting forge/workbench (crafting_screen)
+        self.apothecary = apothecary         # town: brewing potions (crafting_screen)
 
     @property
     def is_battle(self):
@@ -185,7 +187,7 @@ NODES = [
     Node("city", "Ankareth", "town", (0.30, 0.50),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", bank=True, tanner=True, trust=True,
-         city_property=True, jurisdiction="the_city", forge=True),
+         city_property=True, jurisdiction="the_city", forge=True, apothecary=True),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",

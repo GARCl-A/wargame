@@ -100,12 +100,12 @@ PRICES = {
     "Brigandine": 400, "Plate Armor": 950,
     # kit
     TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
-    "Minor Healing Potion": 80,
+    "Minor Healing Potion": 80, "Vial": 10,
     "Rope": 4, "Sack": 2,
     # food (a day's meal each)
     "Meat": 5, "Potato": 3, "1L Beer": 4,
     # raw materials (gathered, not manufactured -- see STOCK below)
-    "1sqm Hide": 12,
+    "1sqm Hide": 12, "Red Mushroom": 10,
     # the Wilds claim's building material -- bought here, hauled out by hand
     "Lumber": LUMBER_PRICE,
     "Iron Bar": 15, "1kg Coal": 5,
@@ -120,7 +120,7 @@ MARKET_STOCK = [
     "Light Crossbow", "Shortbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
     "Meat", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
-    "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal",
+    "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
 ]
 
 # Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.

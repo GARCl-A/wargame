@@ -565,6 +565,10 @@ class MapScreen(ButtonsMixin, Screen):
         if here.forge:
             blocks.append({"type": "button", "key": "forge", "label": "VISIT THE FORGE",
                           "gap_before": T.S * 2})
+                          
+        if here.apothecary:
+            blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY",
+                          "gap_before": T.S * 2})
 
         has_property_business = (self.guild.property_city_unlocked or
                                  self.guild.property_city_squatting or

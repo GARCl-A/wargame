@@ -40,8 +40,9 @@ class HuntScreen(ButtonsMixin, Screen):
         self.on_tick = on_tick or guild.pass_time
         self.hours = hunt.HUNT_SHIFT_HOURS[1]   # default: the second option
         self.stretch_events = []          # daily-upkeep lines from the last stretch
-        self.result = None                # hunt.grant_meat lines, once wrapped up
+        self.result = None                # hunt.grant_haul lines, once wrapped up
         self.chips = []                   # [(rect, hours)]
+        self.target_chips = []            # [(rect, target_str)]
         self.buttons = []                 # [(key, rect)]
         if self.phase == "done":
             self._wrap_up()
@@ -71,7 +72,7 @@ class HuntScreen(ButtonsMixin, Screen):
         self.phase = "done"
         self.state.party = [u for u in self.state.party if u in self.guild.roster]
         if self.result is None:
-            self.result = hunt.grant_meat(self.state)
+            self.result = hunt.grant_haul(self.state)
 
     def _do_stretch(self):
         elapsed, ambushed = hunt.hunt_stretch(self.state)
@@ -106,6 +107,10 @@ class HuntScreen(ButtonsMixin, Screen):
                 if rect.collidepoint(px):
                     self.hours = h
                     return
+            for rect, t in self.target_chips:
+                if rect.collidepoint(px):
+                    self.state.target = t
+                    return
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
@@ -113,6 +118,7 @@ class HuntScreen(ButtonsMixin, Screen):
         m = T.S * 3
         screen.fill(T.TABLE)
         self.chips = []
+        self.target_chips = []
         self._reset_buttons()
 
         text(screen, F["titleb"], "THE WILDS", (m, m - 2), T.TX)
@@ -160,8 +166,29 @@ class HuntScreen(ButtonsMixin, Screen):
         F = self._F
         m = T.S * 3
         w = screen.get_width() - 2 * m
-        top = section(screen, F, "HOW LONG", m, top, w)
+        
+        # Target section
+        top = section(screen, F, "WHAT TO LOOK FOR", m, top, w)
         gap = T.S
+        tw = (w - gap) // 2
+        
+        rect_meat = pygame.Rect(m, top, tw, 56)
+        sel_meat = self.state.target == "meat"
+        panel(screen, rect_meat, hover=sel_meat or rect_meat.collidepoint(self.mouse), width=2 if sel_meat else 1)
+        text(screen, F["bodyb"], "HUNT FOR MEAT", (rect_meat.x + T.S, rect_meat.y + 8), T.BRASS if sel_meat else T.TX)
+        text(screen, F["body_sm"], "Guaranteed 1 kg per 2 hours", (rect_meat.x + T.S, rect_meat.y + 30), T.TX_FAINT)
+        self.target_chips.append((rect_meat, "meat"))
+        
+        rect_shrooms = pygame.Rect(m + tw + gap, top, tw, 56)
+        sel_shrooms = self.state.target == "shrooms"
+        panel(screen, rect_shrooms, hover=sel_shrooms or rect_shrooms.collidepoint(self.mouse), width=2 if sel_shrooms else 1)
+        text(screen, F["bodyb"], "FORAGE SHROOMS", (rect_shrooms.x + T.S, rect_shrooms.y + 8), T.BRASS if sel_shrooms else T.TX)
+        text(screen, F["body_sm"], "10% chance each hour", (rect_shrooms.x + T.S, rect_shrooms.y + 30), T.TX_FAINT)
+        self.target_chips.append((rect_shrooms, "shrooms"))
+        
+        top += 66
+        
+        top = section(screen, F, "HOW LONG", m, top, w)
         opts = hunt.HUNT_SHIFT_HOURS
         cw = (w - (len(opts) - 1) * gap) // len(opts)
         for i, h in enumerate(opts):
@@ -170,8 +197,12 @@ class HuntScreen(ButtonsMixin, Screen):
             hov = r.collidepoint(self.mouse)
             panel(screen, r, hover=sel or hov, width=2 if sel else 1)
             text(screen, F["bodyb"], f"{h} h", (r.x + T.S, r.y + 8), T.BRASS if sel else T.TX)
-            text(screen, F["body_sm"], f"~{h // hunt.HUNT_MEAT_HOURS} kg meat",
-                 (r.x + T.S, r.y + 30), T.TX_MUTED)
+            
+            if self.state.target == "meat":
+                sub = f"~{h // hunt.HUNT_MEAT_HOURS} kg meat"
+            else:
+                sub = "Red Mushrooms"
+            text(screen, F["body_sm"], sub, (r.x + T.S, r.y + 30), T.TX_MUTED)
             self.chips.append((r, h))
         top += 66
         odds = round(hunt.AMBUSH_CHANCE_PER_HOUR * 100)

@@ -33,7 +33,7 @@ def test_grant_meat_splits_the_haul_and_banks_the_hours():
         u._base_inventory = []
         u.work_hours = 0
     st = hunt.HuntState(party, None, hours_left=0, hours_hunted=9)
-    lines = hunt.grant_meat(st)
+    lines = hunt.grant_haul(st)
     total_meat = sum(u.count_of("Meat") for u in party)
     assert total_meat == 9 // hunt.HUNT_MEAT_HOURS            # 4 kg
     assert all(u.work_hours == 9 for u in party)              # both credited the hours
@@ -71,7 +71,7 @@ def test_a_won_ambush_lets_the_hunt_carry_on_from_where_it_stopped():
     assert (elapsed, ambushed) == (5, False)
     assert st.hours_hunted == 8 and st.hours_left == 0 and st.meat == 4
 
-    hunt.grant_meat(st)
+    hunt.grant_haul(st)
     assert sum(u.count_of("Meat") for u in party) == 4
     assert all(u.work_hours == 8 for u in party)              # the whole hunt, both stretches
 

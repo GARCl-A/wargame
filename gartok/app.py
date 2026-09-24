@@ -445,6 +445,13 @@ class App:
         self.scene = CraftingScreen(self.fonts, self.guild, group,
                                     on_done=self._after_activity)
 
+    def _open_apothecary(self, group, node, _offer):
+        from .crafting_screen import CraftingScreen
+        self.scene = CraftingScreen(self.fonts, self.guild, group,
+                                    on_done=self._after_activity,
+                                    title="THE APOTHECARY",
+                                    subtitle="brew potions and draughts  ·  needs recipes and materials")
+
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #
     # ------------------------------------------------------------------ #

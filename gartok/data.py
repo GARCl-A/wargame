@@ -314,7 +314,7 @@ CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit", "Minor Healing Potion"}
 
 ITEM_WEIGHTS = {
     TORCH_ITEM: TORCH_WEIGHT,
-    "Minor Healing Potion": 0.2,
+    "Minor Healing Potion": 0.2, "Red Mushroom": 0.1, "Vial": 0.1,
     "Meat": 1.0, "Potato": 1.0, "Fruit": 0.2, "1kg Coal": 1.0, "1L Beer": 1.0,
     "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
     "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
@@ -349,6 +349,7 @@ def item_weight(name):
 # --------------------------------------------------------------------------- #
 
 CRAFTING_RECIPES = {
+    "Minor Healing Potion": {"materials": ["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"], "complexity": 15},
     "Dwarf Axe": {"materials": ["Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 10},
     "Dwarf Shield": {"materials": ["Iron Bar", "Lumber", "1kg Coal"], "complexity": 10},
     "Dwarf Armor": {"materials": ["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 15},

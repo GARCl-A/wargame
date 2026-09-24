@@ -22,13 +22,16 @@ SIDE_W = 340
 class CraftingScreen(ButtonsMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, group, on_done):
+    def __init__(self, fonts, guild, group, on_done, title="THE FORGE", subtitle="forge weapons and armor  ·  needs recipes and materials"):
         super().__init__()
         self.fonts = fonts
         self._F = ui_fonts()
         self.guild = guild
         self.group = group
         self.on_done = on_done
+        self.title = title
+        self.subtitle = subtitle
+        
         # List members that have recipes
         self.crafters = [u for u in group.members if u.recipes]
         self.selected_crafter = self.crafters[0] if self.crafters else None
@@ -89,9 +92,8 @@ class CraftingScreen(ButtonsMixin, Screen):
         self._reset_buttons()
         self.roster_rows = []
 
-        text(screen, F["titleb"], "THE FORGE", (m, m - 2), T.TX)
-        text(screen, F["body"], "forge weapons and armor  ·  needs recipes and materials",
-             (m, m + 30), T.TX_MUTED)
+        text(screen, F["titleb"], self.title, (m, m - 2), T.TX)
+        text(screen, F["body"], self.subtitle, (m, m + 30), T.TX_MUTED)
 
         top = m + 62
         left_panel = pygame.Rect(m, top, SIDE_W, screen.get_height() - top - 72)
