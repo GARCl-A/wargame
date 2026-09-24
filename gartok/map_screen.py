@@ -581,8 +581,6 @@ class MapScreen(ButtonsMixin, Screen):
         if getattr(here, "library", False):
             blocks.append({"type": "button", "key": "library", "label": "VISIT THE LIBRARY (SHOP)",
                           "gap_before": T.S * 2})
-            blocks.append({"type": "button", "key": "library_mission", "label": "VISIT THE LIBRARY (JOBS)",
-                          "gap_before": T.S * 2})
 
         has_property_business = (self.guild.property_city_unlocked or
                                  self.guild.property_city_squatting or

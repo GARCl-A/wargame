@@ -25,3 +25,6 @@ class LibraryScreen(MarketScreen):
 
     def get_categories(self):
         return getattr(self, "_custom_categories", self._build_categories())
+
+    def tutorial_key(self):
+        return "library"

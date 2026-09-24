@@ -14,7 +14,7 @@ TUTORIALS = (
     "map",
     "guild.members", "guild.reputations",
     "squad", "battle", "loot", "reward",
-    "market", "taverna", "hunt", "bank", "gear", "level",
+    "market", "taverna", "hunt", "bank", "gear", "level", "library"
 )
 
 

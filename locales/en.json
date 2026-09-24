@@ -101,6 +101,13 @@
       "body": [
         "Combat and work level up on their own XP; a lit node means you have a pick to spend there. Click it to take it -- the racial track just tracks itself, driven by the other two."
       ]
+    },
+    "library": {
+      "title": "The Library Catalog",
+      "body": [
+        "The library sells dictionaries for you to learn new tongues.",
+        "The number of dictionaries available each day depends on the guild's reputation with the scholars."
+      ]
     }
   }
 }

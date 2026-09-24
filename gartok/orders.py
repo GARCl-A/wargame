@@ -54,7 +54,7 @@ from . import world
 AUTO_KINDS = frozenset({"travel", "work"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "trust", "ledger", "property", "claim", "forge", "apothecary",
-                               "apothecary_mission", "library", "library_mission"})
+                               "apothecary_mission", "library"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | {"idle"}
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds

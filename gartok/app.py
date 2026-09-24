@@ -330,8 +330,6 @@ class App:
                 self._open_apothecary_mission(group, node, None)
             elif order.kind == "library":
                 self._open_library(list(group.members), node, None)
-            elif order.kind == "library_mission":
-                self._open_library_mission(group, node, None)
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
@@ -469,11 +467,6 @@ class App:
         from .library_screen import LibraryScreen
         self.scene = LibraryScreen(self.fonts, self.guild, shoppers, node,
                                    on_done=self._after_activity)
-
-    def _open_library_mission(self, group, node, _offer):
-        from .library_mission_screen import LibraryMissionScreen
-        self.scene = LibraryMissionScreen(self.ui_fonts, self.guild, group,
-                                          on_done=self._after_activity)
 
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #
