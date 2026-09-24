@@ -66,21 +66,44 @@ _MAX_GUILD_NAME = 24
 def _archetypes(u):
     """Two or three quick read tags to help the pick."""
     tags = []
+    
+    # Calculate expected damage for DAMAGE DEALER tag
+    wep_name = u.equipped_weapon
+    if not wep_name:
+        count, sides = u.unarmed_damage
+        expected_dmg = count * ((sides + 1) / 2) + u.mod_strength
+    else:
+        wep = data.WEAPONS.get(wep_name)
+        if not wep:
+            count, sides = u.unarmed_damage
+            expected_dmg = count * ((sides + 1) / 2) + u.mod_strength
+        else:
+            count, sides = wep.get("damage", (1, 2))
+            stat_mod = u.mod_dexterity if wep.get("finesse") else u.mod_strength
+            expected_dmg = count * ((sides + 1) / 2) + stat_mod
+
     if u.size == "Large":
         tags.append(("LARGE", INFO, "Takes up more space on the grid; has higher base health."))
-    if u.dr or u.ac >= 12 or u.hp_max >= 9:
-        tags.append(("TOUGH", OK, "High survivability from HP, Damage Reduction, or Armor Class."))
+    if u.hp_max >= 8:
+        tags.append(("TOUGH", OK, "High survivability from a massive health pool."))
+    if u.carry_normal >= 35:
+        tags.append(("PACK MULE", OK, "Can carry the heaviest armor and equipment without slowing down."))
     if u.ranged:
         tags.append(("RANGED", INFO, "Carries a ranged weapon to attack from distance."))
     if u.speed >= 7:
         tags.append(("FAST", OK, "Swift and agile, with high movement and evasion."))
-    if u.mod_strength >= 2:
-        tags.append(("BRUTE", WARN, "Heavy hitter with high melee damage and carry capacity."))
-    if u.mod_charisma >= 1:
-        tags.append(("TAUNTER", WARN, "Charismatic. Effective at demoralizing enemies and recruiting."))
+    if expected_dmg >= 6:
+        tags.append(("DAMAGE DEALER", WARN, "Heavy hitter with very high expected damage output."))
+    if u.mod_dexterity >= 2:
+        tags.append(("NIMBLE", OK, "Highly dexterous. Superior accuracy with finesse weapons and high innate defense."))
+    if u.mod_charisma >= 2:
+        tags.append(("LEADER", WARN, "Highly charismatic. Excellent at recruiting, haggling, and leading."))
+    if getattr(u, 'magic_source', None) or getattr(u, 'spells_known', []):
+        tags.append(("MAGIC", INFO, "Initiated in magic. Can cast spells and read magical scrolls."))
     if u.ability.darkvision:
         tags.append(("SEES IN DARK", INFO, "Can see in darkness without needing a light source."))
-    return tags[:3] or [("BALANCED", INK_FAINT, "Balanced stats with no single specialization.")]
+        
+    return tags[:3]
 
 
 class DraftScreen(Screen):
