@@ -7,6 +7,7 @@ from .crafting_screen import CraftingScreen
 from .apothecary_mission_screen import ApothecaryMissionScreen
 from .ui.primitives import draw_button
 from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 
 
 class ApothecaryHubScreen(Screen):
@@ -15,6 +16,7 @@ class ApothecaryHubScreen(Screen):
     def __init__(self, fonts, guild, group, on_done):
         super().__init__()
         self.fonts = fonts
+        self._F = ui_fonts()
         self.guild = guild
         self.group = group
         self.on_done = on_done
@@ -23,7 +25,7 @@ class ApothecaryHubScreen(Screen):
         self.craft_screen = CraftingScreen(fonts, guild, group, on_done,
                                            title="THE APOTHECARY",
                                            subtitle="brew potions and draughts  ·  needs recipes and materials")
-        self.jobs_screen = ApothecaryMissionScreen(fonts, guild, group, on_done)
+        self.jobs_screen = ApothecaryMissionScreen(self._F, guild, group, on_done)
         
         self.buttons = []
 
@@ -55,7 +57,7 @@ class ApothecaryHubScreen(Screen):
         # Draw our tabs in the top right
         m = T.S * 3
         bw = 120
-        F = self.fonts
+        F = self._F
         
         # We start from the right edge
         self.buttons = []
