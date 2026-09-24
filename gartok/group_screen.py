@@ -141,6 +141,11 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         return None
 
     def _begin_drag(self, src):
+        mods = pygame.key.get_mods()
+        if mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+            if src not in self.selected:
+                self.selected.append(src)
+            return
         if src not in self.selected:
             self.selected = [src]
 
@@ -221,7 +226,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
                 return
 
         mods = pygame.key.get_mods()
-        if src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+        if not dragging and src is not None and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
             if src in self.selected:
                 self.selected.remove(src)
             else:
@@ -230,14 +235,15 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
 
         if self.selected:
             hit = self._zone_at(px)
-            if hit is not None:
+            if hit is not None and dragging:
                 self._give_many(*hit)
-            elif src in self.selected:
-                self.selected.remove(src)
-            elif src is not None:
-                self.selected = [src]
-            else:
-                self.selected = []
+            elif not dragging:
+                if src in self.selected:
+                    self.selected.remove(src)
+                elif src is not None:
+                    self.selected = [src]
+                else:
+                    self.selected = []
             return
 
         # nothing carried -- a plain click on a rail row toggles its pin

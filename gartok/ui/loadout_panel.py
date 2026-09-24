@@ -30,17 +30,13 @@ SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "
 
 
 def load_bar(surf, rect, ratio, over):
-    """The bar the loadout tracks all use: fill marks current/cap, the
-    thin tick at 72% marks the normal-carry threshold (past it the bar
-    turning brass, then blood past 100%, is the actual warning -- the
-    tick is just a fixed reference line, not itself a threshold check)."""
+    """The bar the loadout tracks all use: fill marks current/carry_normal.
+    Turns blood red if over carry_normal."""
     pygame.draw.rect(surf, T.TABLE, rect)
     pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
     w = int((rect.w - 2) * min(max(ratio, 0), 1.0))
-    col = T.BLOOD if over else T.GREEN if ratio < .7 else T.BRASS
+    col = T.BLOOD if over else T.GREEN
     pygame.draw.rect(surf, col, pygame.Rect(rect.x + 1, rect.y + 1, w, rect.h - 2))
-    mark = rect.x + int((rect.w - 2) * .72)
-    pygame.draw.line(surf, T.TX_FAINT, (mark, rect.y - 2), (mark, rect.bottom + 2), 1)
 
 
 def slot(surf, F, rect, kind, held, mouse):
@@ -215,7 +211,9 @@ def column(surf, F, rect, member, scroll, mouse):
         lbl = "● LEVEL UP"
         caps(surf, F["micro"], lbl, (edge, head.y + 6), T.BRASS, right=True)
         edge -= F["micro"].size(lbl)[0] + T.S
-    text(surf, F["nameb"], member["name"], (x + T.S * 3, head.y + T.S), T.TX)
+        
+    with contained(surf, pygame.Rect(x + T.S * 3, head.y, edge - (x + T.S * 3) - T.S, head.h)):
+        text(surf, F["nameb"], member["name"], (x + T.S * 3, head.y + T.S), T.TX)
 
     sheet_rect = pygame.Rect(head.right - T.S * 2 - 20, head.y + T.S + 2, 20, 20)
     draw_button(surf, F, sheet_rect, "?", ghost=True, mpos=mouse)
@@ -304,10 +302,11 @@ def shop_row(surf, F, rect, item, *, qty_sel, mouse):
 
     name_x = rect.x + T.S
     fg = T.TX_FAINT if not ok else (T.TX_MUTED if sel else T.TX)
-    text(surf, F["body"], name, (name_x, rect.centery - 13), fg)
+    label = name if held == 1 else f"{name}  ×{held}"
+    text(surf, F["body"], label, (name_x, rect.centery - 13), fg)
     caps(surf, F["micro"], tag, (name_x, rect.centery + 3), TAG_COLOR.get(tag, T.TX_FAINT))
     if blocked:
-        caps(surf, F["micro"], blocked, (name_x + F["body"].size(name)[0] + T.S,
+        caps(surf, F["micro"], blocked, (name_x + F["body"].size(label)[0] + T.S,
              rect.centery - 11), T.BLOOD)
 
     hits = {"minus": None, "plus": None, "all": None}

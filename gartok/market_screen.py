@@ -260,6 +260,15 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         return None
 
     def _begin_drag(self, src):
+        mods = pygame.key.get_mods()
+        if mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
+            if src not in self.sel and src[0] != "stock":
+                self.sel.append(src)
+                owner, loc = src
+                if not isinstance(loc, str):
+                    held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
+                    self._sel_qty[src] = held
+            return
         if src not in self.sel or src[0] == "stock":
             self.sel = [src]
 
@@ -271,6 +280,14 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 cur = self._pack_scroll.get(id(hit), 0)
                 self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - event.y))
                 return
+            
+            if getattr(self, "_shoppers_area", pygame.Rect(0,0,0,0)).collidepoint(self.mouse):
+                max_scroll = getattr(self, "_shoppers_max_scroll", 0)
+                if max_scroll > 0:
+                    cur = getattr(self, "_shoppers_scroll", 0)
+                    self._shoppers_scroll = max(0, min(max_scroll, cur - event.y))
+                    return
+
         super().handle_event(event)
 
     def _bump_qty(self, pick, delta):
@@ -348,7 +365,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
         self.notice = None
         mods = pygame.key.get_mods()
-        multi = src is not None and src[0] != "stock" \
+        multi = not dragging and src is not None and src[0] != "stock" \
             and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL) \
             and (not self.sel or self.sel[0][0] != "stock")
         if multi:
@@ -365,12 +382,14 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
         if self.sel:
             for rect, member, zone in self.zones:
-                if rect.collidepoint(px):
+                if dragging and rect.collidepoint(px):
                     self._drop_on_zone(member, zone)
                     return
-            self._select_one(src)
+            if not dragging:
+                self._select_one(src)
             return
-        self._select_one(src)
+        if not dragging:
+            self._select_one(src)
 
 
     def _drop_on_zone(self, member, zone):
@@ -559,7 +578,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
         ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
         ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper", 
-             (screen.get_width() - MARGIN, MARGIN + 2), T.BRASS, right=True)
+             (screen.get_width() - MARGIN - 40, MARGIN + 2), T.BRASS, right=True)
              
         names = self._selected_names()
         if names:
@@ -767,13 +786,22 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 self.qty_hits.append((all_btn, pick, 999))
 
     def _draw_shoppers(self, screen, area):
+        self._shoppers_area = area
         F = self._ui_fonts()
-        n = max(1, len(self.shoppers))
         gap = T.S * 2
-        card_w = min(420, max(300, (area.w - (n - 1) * gap) // n))
+        
+        cap = max(1, (area.w + gap) // (300 + gap))
+        n_shown = min(cap, len(self.shoppers))
+        card_w = min(420, max(300, (area.w - (n_shown - 1) * gap) // n_shown)) if n_shown > 0 else 300
+        
+        self._shoppers_max_scroll = max(0, len(self.shoppers) - cap)
+        cur = getattr(self, "_shoppers_scroll", 0)
+        self._shoppers_scroll = max(0, min(cur, self._shoppers_max_scroll))
+        
+        shown = self.shoppers[self._shoppers_scroll : self._shoppers_scroll + n_shown]
         carried = self._selected_names()
         
-        for i, m in enumerate(self.shoppers):
+        for i, m in enumerate(shown):
             r = pygame.Rect(area.x + i * (card_w + gap), area.y, card_w, area.h)
             member = self._member_dict(m, carried)
             res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(m), 0), self.mouse)
@@ -794,6 +822,15 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 self.item_rows.append((pr, m, idx))
             for lr, idx in res["lock_hits"]:
                 self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
+                
+        if self._shoppers_max_scroll > 0:
+            from .ui.primitives import text
+            hr = self._shoppers_max_scroll - self._shoppers_scroll
+            hl = self._shoppers_scroll
+            if hr > 0:
+                text(screen, F["body_sm"], f"{hr} more \u2192  (scroll)", (area.right - 8, area.bottom + 8), T.TX_FAINT, right=True)
+            if hl > 0:
+                text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
 
     def _distribute_load(self):
 

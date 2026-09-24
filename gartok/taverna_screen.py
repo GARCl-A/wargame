@@ -148,6 +148,7 @@ class TavernaScreen(ButtonsMixin, Screen):
 
         text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
 
+        is_tavern = self.title == "TAVERN"
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         if self.tab == "recruits":
             if self.sel is not None:
@@ -156,35 +157,39 @@ class TavernaScreen(ButtonsMixin, Screen):
                             "click outside to cancel", ACCENT)
             else:
                 sub, col = (f"guild of {len(self.guild.roster)}  ·  size penalty "
-                            f"-{recruit.size_penalty(len(self.guild.roster))}  ·  "
-                            f"new faces in {days_left} day(s)", INK_DIM)
+                            f"-{recruit.size_penalty(len(self.guild.roster))}", INK_DIM)
+                if is_tavern:
+                    sub += f"  ·  new faces in {days_left} day(s)"
         else:
             sub, col = ("rent a quiet room for the day  ·  anyone with a study target will make progress", INK_DIM)
         
         text(screen, sub, f.body, col, (MARGIN, MARGIN + 36))
 
-        # Tabs
-        tab_y = MARGIN + 64
-        tr_rect = pygame.Rect(MARGIN, tab_y, 120, 30)
-        tr_hov = tr_rect.collidepoint(self.mouse)
-        tr_on = self.tab == "recruits"
-        panel(screen, tr_rect, fill=SURFACE_3 if tr_on else (SURFACE_2 if tr_hov else SURFACE_1),
-              border=ACCENT if tr_on else LINE, width=2 if tr_on else 1, radius=4)
-        text(screen, "RECRUITS", f.label, ACCENT if tr_on else INK_DIM, tr_rect.center, center=True)
-        self.buttons.append(("tab_recruits", tr_rect))
-
-        room_rect = pygame.Rect(MARGIN + 130, tab_y, 120, 30)
-        rm_hov = room_rect.collidepoint(self.mouse)
-        rm_on = self.tab == "rooms"
-        panel(screen, room_rect, fill=SURFACE_3 if rm_on else (SURFACE_2 if rm_hov else SURFACE_1),
-              border=ACCENT if rm_on else LINE, width=2 if rm_on else 1, radius=4)
-        text(screen, "ROOMS", f.label, ACCENT if rm_on else INK_DIM, room_rect.center, center=True)
-        self.buttons.append(("tab_rooms", room_rect))
+        y = MARGIN + 64
+        if is_tavern:
+            # Tabs
+            tr_rect = pygame.Rect(MARGIN, y, 120, 30)
+            tr_hov = tr_rect.collidepoint(self.mouse)
+            tr_on = self.tab == "recruits"
+            panel(screen, tr_rect, fill=SURFACE_3 if tr_on else (SURFACE_2 if tr_hov else SURFACE_1),
+                  border=ACCENT if tr_on else LINE, width=2 if tr_on else 1, radius=4)
+            text(screen, "RECRUITS", f.label, ACCENT if tr_on else INK_DIM, tr_rect.center, center=True)
+            self.buttons.append(("tab_recruits", tr_rect))
+    
+            room_rect = pygame.Rect(MARGIN + 130, y, 120, 30)
+            rm_hov = room_rect.collidepoint(self.mouse)
+            rm_on = self.tab == "rooms"
+            panel(screen, room_rect, fill=SURFACE_3 if rm_on else (SURFACE_2 if rm_hov else SURFACE_1),
+                  border=ACCENT if rm_on else LINE, width=2 if rm_on else 1, radius=4)
+            text(screen, "ROOMS", f.label, ACCENT if rm_on else INK_DIM, room_rect.center, center=True)
+            self.buttons.append(("tab_rooms", room_rect))
+            
+            y += 45
 
         if self.tab == "recruits":
-            self._draw_recruits(screen, tab_y + 45)
+            self._draw_recruits(screen, y)
         elif self.tab == "rooms":
-            self._draw_rooms(screen, tab_y + 45)
+            self._draw_rooms(screen, y)
 
         self._draw_footer(screen)
 
@@ -366,5 +371,6 @@ class TavernaScreen(ButtonsMixin, Screen):
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
         col = OK if (self.notice and "signs" in self.notice) else INFO
-        footer_bar(self, screen, primary=("done", "LEAVE THE TAVERN"),
+        btn_label = "LEAVE THE TAVERN" if self.title == "TAVERN" else "DONE"
+        footer_bar(self, screen, primary=("done", btn_label),
                   notice=self.notice, notice_color=col)

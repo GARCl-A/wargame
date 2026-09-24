@@ -1132,6 +1132,6 @@ def distribute_load(units):
 
     items.sort(key=data.item_weight, reverse=True)
     for item in items:
-        best = max(units, key=lambda m: m.carry_max - m.load)
+        best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
         best.give_to_pack(item)
         best._derive_combat()

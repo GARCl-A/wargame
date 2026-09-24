@@ -137,17 +137,17 @@ class RewardScreen(SheetModalMixin, Screen):
         hov = rect.collidepoint(self.mouse) and self.paid_to is None
 
         def _trailing(surf, r, ch):
-            badge = self.sheet_badge(surf, (r.right - T.S * 2, r.y + T.S * 2), self.fonts)
+            badge = self.sheet_badge(surf, (r.right - T.S * 2, r.centery - 10), self.fonts)
             self.info_hits.append((badge, m))
 
-            caps(surf, F["micro"], f"COPPER {m.gold}", (r.right - T.S * 4, r.centery - 10), T.BRASS if took else T.TX_MUTED, right=True)
+            caps(surf, F["micro"], f"COPPER {m.gold}", (r.right - T.S * 6, r.centery - 10), T.BRASS if took else T.TX_MUTED, right=True)
 
             if not took and self.paid_to is None:
-                c = pygame.Rect(r.right - T.S * 4 - 100, r.centery, 100, 32)
+                c = pygame.Rect(r.right - T.S * 6 - 80, r.centery - 4, 80, 28)
                 draw_button(surf, F, c, "GIVE", primary=False, mpos=self.mouse)
                 self.buttons.append((f"pay_{m.name}", c))
             elif took:
-                text(surf, F["bodyb"], f"+{self.amount}", (r.right - T.S * 4, r.centery + 10), T.BRASS, right=True)
+                text(surf, F["bodyb"], f"+{self.amount}", (r.right - T.S * 6, r.centery + 10), T.BRASS, right=True)
 
         c = Combatant(m)
         draw_row(screen, F, rect, unit_to_ch(c), selected=(took or hov), draw_trailing=_trailing)

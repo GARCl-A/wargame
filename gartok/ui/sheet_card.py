@@ -141,13 +141,19 @@ def unit_to_ch(u):
     armor = (f"{u.armor_name}  ·  +{a['ac']} AC") if a else None
     pack = list(u.inventory)
 
+    pen = u.hunger_attribute_penalty
+    enc = -2 if getattr(u, "encumbered", False) else 0
+
+    def eff(name):
+        return getattr(u, name) + pen + (enc if name in ("strength", "dexterity") else 0)
+
     return {
         "name": u.name, "race": u.race["name"], "occ": u.occupation["name"],
         "align": u.alignment, "size": u.size, "age": u.age, "combat": f"N{u.combat_level}",
         "status": status, "tags": tags,
         "hp": (max(u.hp, 0), u.hp_max), "ac": u.ac, "md": u.mental_defense, "spd": u.speed,
         "init": f"{u.initiative_bonus():+}",
-        "attrs": [(k, getattr(u, name), getattr(u, f"mod_{name}")) for k, name in _ATTRS],
+        "attrs": [(k, eff(name), getattr(u, f"mod_{name}"), eff(name) < getattr(u, name)) for k, name in _ATTRS],
         "weapon": {"nm": wname, "hit": f"d20 {bab:+} ({src})", "dmg": dmg, "tags": reach,
                   "crit": "crit 20, fumble 1"},
         "tongue": tongue,
@@ -271,21 +277,23 @@ def _b_attributes(s, F, r, ch, d, ed, mouse, tip):
     n = len(ch["attrs"])
     if d == "compact":
         x = r.x
-        for nm, v, mod in ch["attrs"]:
+        for nm, v, mod, penalized in ch["attrs"]:
             caps(s, F["micro"], nm, (x, r.y + 2), T.TX_FAINT)
-            text(s, F["body"], f"{v}", (x + T.S * 3, r.y - 1), T.TX)
+            text(s, F["body"], f"{v}", (x + T.S * 3, r.y - 1), T.BLOOD if penalized else T.TX)
             caps(s, F["micro"], f"{mod:+d}", (x + T.S * 5 + 4, r.y + 2),
                  T.GREEN if mod > 0 else T.BLOOD if mod < 0 else T.TX_FAINT)
             x += T.S * 8
         return
     cw = (r.w - T.S * (n - 1)) // n
-    for i, (nm, v, mod) in enumerate(ch["attrs"]):
+    for i, (nm, v, mod, penalized) in enumerate(ch["attrs"]):
         c = pygame.Rect(r.x + i * (cw + T.S), r.y, cw, r.h)
-        _cell(s, F, c, nm, v, T.TX, small=(d == "normal"))
+        _cell(s, F, c, nm, v, T.BLOOD if penalized else T.TX, small=(d == "normal"))
         caps(s, F["micro"], f"{mod:+d}", (c.centerx, c.bottom - 14),
              T.GREEN if mod > 0 else T.BLOOD if mod < 0 else T.TX_FAINT, center=True)
         if mouse and c.collidepoint(mouse) and nm in data.ATTRIBUTE_HELP:
             t, desc = data.ATTRIBUTE_HELP[nm]
+            if penalized:
+                desc += "\n\n(reduced by encumbrance or hunger)"
             tip.append(_format_tip(t, desc, F))
 
 

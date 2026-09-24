@@ -324,6 +324,8 @@ class App:
                 self._open_ledger_desk(group, node, None)
             elif order.kind == "forge":
                 self._open_forge(group, node, None)
+            elif order.kind == "apothecary":
+                self._open_apothecary(group, node, None)
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
