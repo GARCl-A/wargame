@@ -673,7 +673,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         pygame.draw.rect(screen, T.STEEL_LINE, rect, 1)
         x, w = rect.x + T.S * 2, rect.w - T.S * 4
         names = next((c[2] for c in self.get_categories() if c[1] == self.tab), [])
-        kit = self.tab == "kit"
+        kit = self.tab not in ("weapons", "armor")
 
         wt_x = rect.right - T.S * 2
         price_x = wt_x - 52

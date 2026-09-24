@@ -77,10 +77,18 @@ APOTHECARY_MUSHROOMS = MissionTemplate(
     tag="apothecary",
 )
 
+LIBRARY_DICTIONARY = MissionTemplate(
+    "library_dictionary", "library", "city", "A New Translation",
+    "The library wants a dictionary to expand its archives. Any language will do.",
+    goal_item="Any Dictionary", goal_qty=1, reward=250, deadline_days=15,
+    tag="library",
+)
+
 TEMPLATES = {
     TANNER_HIDES.id: TANNER_HIDES, 
     TRUST_CHEST.id: TRUST_CHEST,
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
+    LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
 }
 
 
@@ -118,6 +126,8 @@ def progress(guild, mission):
     if group is None:
         return 0
     item = template_of(mission).goal_item
+    if item == "Any Dictionary":
+        return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ")) for u in group.members)
     return sum(u.count_of(item) for u in group.members)
 
 
@@ -140,7 +150,12 @@ def turn_in(guild, mission):
     for u in group.members:
         if left <= 0:
             break
-        left -= u.remove_named(t.goal_item, left)
+        if t.goal_item == "Any Dictionary":
+            for name, qty in list(u._base_inventory):
+                if name.startswith("Dictionary of ") and left > 0:
+                    left -= u.remove_named(name, min(left, qty))
+        else:
+            left -= u.remove_named(t.goal_item, left)
     n = len(group.members)
     base, rem = divmod(t.reward, n)
     for i, u in enumerate(group.members):

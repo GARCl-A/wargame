@@ -83,6 +83,7 @@ def _progress_language(unit, language):
     unit.study_progress += max(0, data.roll(1, 20) + unit.mod_intelligence)
     if unit.study_progress >= points_to_learn(0):     # same threshold as a level-0 spell
         unit.languages.append(language)
+        unit._sync_dictionary_recipes()
         unit.study_target = None
         unit.study_progress = 0
         return f"{unit.name} learns to speak {language}!"

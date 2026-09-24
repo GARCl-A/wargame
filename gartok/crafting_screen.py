@@ -56,12 +56,20 @@ class CraftingScreen(ButtonsMixin, Screen):
     def handle_escape(self):
         return False
 
-    def _has_materials(self, crafter, recipe):
+    def _get_missing_materials(self, crafter, recipe):
         recipe_data = data.CRAFTING_RECIPES.get(recipe)
         if not recipe_data:
-            return False
+            return []
         need = Counter(recipe_data["materials"])
-        return all(crafter.count_of(mat) >= qty for mat, qty in need.items())
+        missing = []
+        for mat, qty in need.items():
+            have = crafter.count_of(mat)
+            if have < qty:
+                missing.append(f"{qty - have}x {mat}")
+        return missing
+
+    def _has_materials(self, crafter, recipe):
+        return len(self._get_missing_materials(crafter, recipe)) == 0
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
@@ -163,11 +171,12 @@ class CraftingScreen(ButtonsMixin, Screen):
                 status_color = T.BRASS
                 status_text = f"IN PROGRESS: {m.crafting_progress}/{target_val} progress"
             else:
-                has_mat = self._has_materials(m, r_name)
+                missing = self._get_missing_materials(m, r_name)
+                has_mat = len(missing) == 0
                 status_color = T.GREEN if has_mat else T.BLOOD
                 status_text = f"Target Progress: {target_val} (Roll: 1d20 + {m.mod_intelligence})"
                 if not has_mat:
-                    status_text += " - MISSING MATERIALS"
+                    status_text += f" - MISSING: {', '.join(missing)}"
 
             text(screen, F["body_sm"], f"Materials: {materials_str}",
                  (r.x + T.S, r.y + T.S + 20), T.TX_MUTED)

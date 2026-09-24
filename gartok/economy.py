@@ -112,6 +112,7 @@ PRICES = {
     # a locked chest's contents (chest.py) -- found, not manufactured; sellable
     # like everything else, but never in MARKET_STOCK below (nothing to buy back)
     data.GEM_ITEM: 60,
+    "Paper": 5, "Ink": 15,
 }
 
 # What the market keeps in stock to buy (fixed list for now).

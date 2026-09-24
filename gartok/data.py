@@ -340,6 +340,8 @@ def item_weight(name):
         return ITEM_WEIGHTS.get("Scroll", 0.1)
     if name.startswith("Dictionary of "):
         return ITEM_WEIGHTS.get("Dictionary", 0.5)
+    if name == "Paper" or name == "Ink":
+        return 0.1
     return ITEM_WEIGHTS.get(name, 0.5)
 
 # --------------------------------------------------------------------------- #
@@ -356,6 +358,9 @@ CRAFTING_RECIPES = {
     "Bear Trap": {"materials": ["Iron Bar"], "complexity": 5},
     "Alarm Trap": {"materials": ["Iron Bar", "Rope"], "complexity": 5},
 }
+
+for _lang in LANGUAGES:
+    CRAFTING_RECIPES[f"Dictionary of {_lang}"] = {"materials": ["1sqm Hide", "Paper", "Ink"], "complexity": 25}
 
 
 # Prices, market stock and haggling live in `economy.py` (behaviour, not a

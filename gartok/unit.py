@@ -121,6 +121,7 @@ class Unit:
         self.token = self.race["token"]
 
         self._derive_combat()
+        self._sync_dictionary_recipes()
 
     @classmethod
     def from_save(cls, d):
@@ -190,7 +191,15 @@ class Unit:
             u._hp_roll = max(1, d["hp_max"] - mod(u.constitution) - u._ability.hp_max)
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
         u.hp = d.get("hp", u.hp_max)
+        u._sync_dictionary_recipes()
         return u
+
+    def _sync_dictionary_recipes(self):
+        """Ensures the unit knows the crafting recipe for a dictionary of any language they speak."""
+        for lang in self.languages:
+            recipe = f"Dictionary of {lang}"
+            if recipe not in self.recipes:
+                self.recipes.append(recipe)
 
     @property
     def ability(self):
