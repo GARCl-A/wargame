@@ -310,10 +310,11 @@ FOOD_LIFESPAN = {"Fruit": 1, "Meat": 2, "Potato": 7, "1L Beer": 30}
 
 # Items used up in play, not hauled cargo -- the Carrier talent's carry relief
 # skips these. Editable; grows as more consumables land.
-CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit"}
+CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit", "Minor Healing Potion"}
 
 ITEM_WEIGHTS = {
     TORCH_ITEM: TORCH_WEIGHT,
+    "Minor Healing Potion": 0.2,
     "Meat": 1.0, "Potato": 1.0, "Fruit": 0.2, "1kg Coal": 1.0, "1L Beer": 1.0,
     "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
     "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
@@ -557,6 +558,8 @@ def item_tooltip(name):
         desc.append(f"Restores HP or stabilizes a dying unit. Starts with {FIRST_AID_CHARGES} charges.")
     elif name == AMMO_ITEM:
         desc.append(f"Ammunition for ranged weapons. Holds {QUIVER_AMMO} arrows/bolts.")
+    elif name == "Minor Healing Potion":
+        desc.append("Restores 1d6 HP when consumed.")
     elif name == TORCH_ITEM:
         desc.append(f"Provides light in a {TORCH_RADIUS * 1.5:g}m radius. Can be dropped on the ground.")
     elif name in LIGHT_SOURCES:

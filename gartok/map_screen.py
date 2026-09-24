@@ -458,6 +458,8 @@ class MapScreen(ButtonsMixin, Screen):
             self._cycle_idle()
         elif key == "maintain":
             self.on_advance(dt=1)
+        elif key == "camp":
+            self.on_advance(dt=8)
         elif key == "manage_group":
             self.on_manage_group(self.selected)
         elif key.startswith("work:"):
@@ -627,11 +629,16 @@ class MapScreen(ButtonsMixin, Screen):
             # a forced stop moves the clock -- disabled while `_pending_event`
             # has it paused, so nothing can advance past an unresolved event
             paused = self._pending_event is not None
-            items.append({"type": "button", "key": "maintain", "label": "MAINTENANCE  ·  1 h",
+            items.append({"type": "button", "key": "maintain", "label": "REST  ·  1 h",
                          "gap_before": T.S * 2, "primary": urgent and not paused,
                          "danger": self.guild.rations == 0 and not paused,
                          "enabled": not paused,
-                         "height": T.S * 6 if urgent else T.S * 5})
+                         "height": T.S * 5})
+            items.append({"type": "button", "key": "camp", "label": "CAMP  ·  8 h",
+                         "gap_before": T.S, "primary": False,
+                         "danger": self.guild.rations == 0 and not paused,
+                         "enabled": not paused,
+                         "height": T.S * 5})
         key, label, danger, enabled = self._footer_cta()
         items.append({"type": "button", "key": key, "label": label, "gap_before": T.S * 2,
                      "primary": enabled, "danger": danger, "enabled": enabled})

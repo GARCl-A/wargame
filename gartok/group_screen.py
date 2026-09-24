@@ -345,6 +345,8 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         rows.append(("drop", "Drop", None))
         if len(picks) == 1 and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", "OPEN THE CHEST", None))
+        if len(picks) == 1 and self._item_at(*picks[0]) == "Minor Healing Potion":
+            rows.append(("drink", "Drink", None))
 
         # a member you'd only be handing their own pack items back to is a no-op
         owners = {id(p[0]) for p in picks}
@@ -368,6 +370,9 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             elif kind == "open":
                 unit, loc = m["picks"][0]
                 self._open_chest(unit, self._item_at(unit, loc))
+            elif kind == "drink":
+                unit, loc = m["picks"][0]
+                self._drink_potion(unit)
             elif kind == "member":
                 self.selected = list(m["picks"])
                 self._give_many(self._unit_by_uid[arg], "pack")
@@ -392,6 +397,17 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
                            f"spill out, but the trust mission is ruined. Crime: {unit.crime}.")
         else:
             self.notice = f"{unit.name} picks the lock -- {gems} {data.GEM_ITEM} inside."
+        self.selected = []
+
+    def _drink_potion(self, unit):
+        import random
+        if unit.hp >= unit.hp_max:
+            self.notice = f"{unit.name} is already at full health."
+        else:
+            unit.remove_named("Minor Healing Potion")
+            heal = random.randint(1, 6)
+            unit.hp = min(unit.hp_max, unit.hp + heal)
+            self.notice = f"{unit.name} drinks a Minor Healing Potion, recovering {heal} HP."
         self.selected = []
 
     # ------------------------------------------------------------------ #

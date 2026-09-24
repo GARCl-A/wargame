@@ -100,6 +100,7 @@ PRICES = {
     "Brigandine": 400, "Plate Armor": 950,
     # kit
     TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
+    "Minor Healing Potion": 80,
     "Rope": 4, "Sack": 2,
     # food (a day's meal each)
     "Meat": 5, "Potato": 3, "1L Beer": 4,

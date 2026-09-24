@@ -728,6 +728,52 @@ class FirstAid(Stabilize):
                 target.hp = min(target.hp, target.hp_max)
 
 
+class DrinkPotion(Action):
+    id, name, cost, target, aimed = "drink_potion", "Drink Potion", 1, "ally", True
+    desc = "Drink a Minor Healing Potion or feed it to an adjacent ally (heals 1d6 HP)."
+
+    def _targets(self, battle, actor):
+        # Can target self or adjacent ally, if missing HP.
+        return [u for u in battle.units
+                if u.team == actor.team and u.hp < u.hp_max and not getattr(u, "broken", False)
+                and battle.units_distance(actor, u) <= 1]
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.has_item("Minor Healing Potion"):
+            return False, "No Minor Healing Potion."
+        return True, ""
+
+    def available(self, battle, actor):
+        return actor.has_item("Minor Healing Potion") and actor.ap >= self.cost and bool(self._targets(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        return (actor.has_item("Minor Healing Potion") and actor.ap >= self.cost
+                and target is not None and target in self._targets(battle, actor))
+
+    def label(self, battle, actor):
+        n = actor.inventory.count("Minor Healing Potion")
+        return f"Drink Potion (1 pt, {n} in pack)"
+
+    def highlight_targets(self, battle, actor):
+        return self._targets(battle, actor)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        import random
+        actor.ap -= 1
+        actor.walking = False
+        actor.remove_named("Minor Healing Potion")
+        
+        heal = random.randint(1, 6)
+        target.hp = min(target.hp_max, target.hp + heal)
+        
+        verb = "drinks" if actor == target else f"feeds {target.name}"
+        battle.log(f"{actor.name} {verb} a Minor Healing Potion, recovering {heal} HP.")
+        battle.fx(target.pos, f"+{heal} HP", "ok")
+
+
 # --------------------------------------------------------------------------- #
 # Flee the battle                                                              #
 # --------------------------------------------------------------------------- #
@@ -1478,4 +1524,4 @@ SHARE_MAGIC = ShareMagicAction()
 # Panel buttons, in order. Move and Attack are the default board click.
 # Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
 PANEL_ACTIONS = [ATTACK, ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
-                 SWIM, STABILIZE, FIRST_AID, PICK_UP, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]
+                 SWIM, STABILIZE, FIRST_AID, DrinkPotion(), PICK_UP, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]

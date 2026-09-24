@@ -89,6 +89,11 @@ def _carry_forward(member, combatant):
         if member.has_item(data.AMMO_ITEM):
             member.quiver_charges = data.QUIVER_AMMO
 
+    if combatant.hp <= 0:
+        member.hp = 1
+    else:
+        member.hp = combatant.hp
+
 
 def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     """Fold `battle`'s result into `guild` (mutates it) and return a `BattleOutcome`.
