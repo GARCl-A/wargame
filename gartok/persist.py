@@ -56,6 +56,8 @@ def unit_to_dict(u):
         "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
         "sick": getattr(u, "sick", False),       # food poisoning
+        "medicine_attempted_today": getattr(u, "medicine_attempted_today", False),
+        "treated": getattr(u, "treated", False),
         "first_aid_charges": u.first_aid_charges,
         "quiver_charges": u.quiver_charges,
         "consecutive_rest_hours": u.consecutive_rest_hours,

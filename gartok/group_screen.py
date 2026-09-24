@@ -259,6 +259,8 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         elif key == "distribute":
             self.group.distribute_load()
             self.notice = "Redistributed packs by carrying capacity."
+        elif key == "treat_sickness":
+            self._treat_sickness()
         elif key == "rename":
             self.editing_name = True
             self.name_buf = self.group.name or ""
@@ -273,6 +275,49 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         elif key == "drop_selected":
             self._give_many(None, "discard")
             self.notice = "Thrown away."
+
+    def _can_treat_sickness(self):
+        sick_members = [u for u in self.group.members if u.sick and not getattr(u, "medicine_attempted_today", False) and not getattr(u, "treated", False)]
+        if not sick_members:
+            return False
+        
+        for s in sick_members:
+            healers = [u for u in self.group.members if u.first_aid_charges > 0 and u != s]
+            if healers:
+                return True
+        return False
+
+    def _treat_sickness(self):
+        sick_members = [u for u in self.group.members if u.sick and not getattr(u, "medicine_attempted_today", False) and not getattr(u, "treated", False)]
+        if not sick_members:
+            return
+        
+        target = sick_members[0]
+        healers = [u for u in self.group.members if u.first_aid_charges > 0 and u != target]
+        if not healers:
+            # If the only healer is the target, they can't treat themselves. But if there is another sick person, maybe we can treat them instead?
+            # Find any sick member who is NOT the only healer.
+            for s in sick_members:
+                healers = [u for u in self.group.members if u.first_aid_charges > 0 and u != s]
+                if healers:
+                    target = s
+                    break
+            if not healers:
+                self.notice = "No ally with a first-aid kit can treat this."
+                return
+
+        healer = max(healers, key=lambda u: u.mod_wisdom)
+        healer.first_aid_charges -= 1
+        target.medicine_attempted_today = True
+
+        nat = data.d20()
+        total = nat + healer.mod_wisdom
+        
+        if total >= data.FIRST_AID_DC:
+            target.treated = True
+            self.notice = f"{healer.name} successfully treated {target.name} (rolled {total})."
+        else:
+            self.notice = f"{healer.name} failed to treat {target.name} (rolled {total})."
 
     # ------------------------------------------------------------------ #
     # send-to / context menu                                             #
@@ -599,10 +644,14 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
                  T.BLOOD if over else T.TX),
                 ("rations", f"{self.group.rations_days} days", T.BLOOD if short else T.TX),
             ]
+            actions = [("distribute", "distribute load")]
+            if self._can_treat_sickness():
+                actions.append(("treat_sickness", "treat sickness"))
+
             res = loadout_panel.toolbar(screen, F, bar, mid.x, (("bags", "BAGS"), ("cargo", "CARGO")),
-                                        self.view, metrics, ("distribute", "distribute load"), self.mouse)
+                                        self.view, metrics, actions, self.mouse)
             self.buttons.extend((f"view_{vid}", r) for r, vid in res["view_hits"])
-            self.buttons.append((res["action_key"], res["action_rect"]))
+            self.buttons.extend((key, r) for key, r in res["action_hits"])
 
             self._draw_rail(screen, F, left)
 

@@ -100,6 +100,9 @@ class Unit:
         self.gold = roll(*economy.STARTING_WEALTH_DICE)   # copper coins -- lives on the character
         self.crime = 0                                  # rap sheet; the guard tests it at a jurisdiction node (justice.py)
         self.unfed_days = 0                            # consecutive days without a meal
+        self.sick = False                              # food poisoning
+        self.medicine_attempted_today = False          # if a medkit treatment was attempted today
+        self.treated = False                           # if a medkit treatment succeeded (cures after 8h rest)
         self.share_food = True                         # pools rations for hungry guild-mates
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
@@ -156,6 +159,8 @@ class Unit:
         u.crime = d.get("crime", 0)
         u.unfed_days = d.get("unfed_days", 0)
         u.sick = d.get("sick", False)
+        u.medicine_attempted_today = d.get("medicine_attempted_today", False)
+        u.treated = d.get("treated", False)
         u.first_aid_charges = d.get("first_aid_charges", 0)
         u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if u.has_item(data.AMMO_ITEM) else 0)
         u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)

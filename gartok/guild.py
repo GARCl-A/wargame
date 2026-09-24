@@ -542,9 +542,20 @@ class Guild:
                         while u.consecutive_rest_hours >= 8:
                             u.consecutive_rest_hours -= 8
                             if getattr(u, "sick", False):
-                                u.sick = False
-                                events.append(f"{u.name} rests and recovers from their sickness.")
-                                u._derive_combat()
+                                if getattr(u, "treated", False):
+                                    cured = True
+                                    events.append(f"{u.name} rests and recovers from their sickness (treated).")
+                                else:
+                                    cured = data.d20() <= 5
+                                    if cured:
+                                        events.append(f"{u.name} rests and recovers from their sickness naturally.")
+                                
+                                if cured:
+                                    u.sick = False
+                                    u.treated = False
+                                    u._derive_combat()
+                                else:
+                                    u.treated = False
                             
                             if u.hp < u.hp_max:
                                 heal = max(1, u.racial_level + u.mod_constitution)
@@ -623,6 +634,7 @@ class Guild:
             events.append(f"{total_rotten} portions of food rotted away.")
 
         for u in self.roster:
+            u.medicine_attempted_today = False
             if u.has_talent("fruitful"):
                 u.give_to_pack("Fruit")
                 events.append(f"{u.name} blooms at dawn and yields a fresh Fruit.")

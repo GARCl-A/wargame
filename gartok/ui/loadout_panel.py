@@ -96,14 +96,12 @@ def pack_row(surf, F, rect, item, *, selected, mouse):
     return lock_r, dots_r
 
 
-def toolbar(surf, F, rect, content_x, views, active_view, metrics, action, mouse):
+def toolbar(surf, F, rect, content_x, views, active_view, metrics, actions, mouse):
     """The gear tab's own strip: the BAGS/CARGO view toggle, band-wide stat
-    readouts, and a trailing action button (distribute load). `views` is
-    `[(id, label)]`; `metrics` is `[(label, value, color)]`, laid out from
-    `content_x` rather than `rect.x` (the caller's content column starts
-    past the rail, not at the strip's own left edge); `action` is
-    `(key, label)`. Returns `{"view_hits": [(rect, id)], "action_rect",
-    "action_key"}`."""
+    readouts, and trailing action buttons. `views` is `[(id, label)]`; `metrics`
+    is `[(label, value, color)]`, laid out from `content_x` rather than `rect.x`;
+    `actions` is `[(key, label)]`. Returns `{"view_hits": [(rect, id)],
+    "action_hits": [(key, rect)]}`."""
     pygame.draw.rect(surf, T.TABLE, rect)
     hline(surf, rect.x, rect.right, rect.bottom - 1)
 
@@ -119,11 +117,16 @@ def toolbar(surf, F, rect, content_x, views, active_view, metrics, action, mouse
         text(surf, F["head"], value, (x, y + 14), color)
         x += T.S * 26
 
-    action_key, action_label = action
-    action_r = pygame.Rect(rect.right - T.S * 24, rect.y + T.S * 2, T.S * 22, rect.h - T.S * 4)
-    draw_button(surf, F, action_r, action_label, mpos=mouse)
+    action_hits = []
+    ax = rect.right - T.S * 2
+    for action_key, action_label in reversed(actions):
+        w = F["body"].size(action_label)[0] + T.S * 4
+        ar = pygame.Rect(ax - w, rect.y + T.S * 2, w, rect.h - T.S * 4)
+        draw_button(surf, F, ar, action_label, mpos=mouse)
+        action_hits.append((action_key, ar))
+        ax = ar.left - T.S * 2
 
-    return {"view_hits": view_hits, "action_rect": action_r, "action_key": action_key}
+    return {"view_hits": view_hits, "action_hits": action_hits}
 
 
 def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse, band=None):
