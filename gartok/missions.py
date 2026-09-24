@@ -74,12 +74,11 @@ TEMPLATES = {TANNER_HIDES.id: TANNER_HIDES, TRUST_CHEST.id: TRUST_CHEST}
 
 
 def offers_at(guild, node_id):
-    """Templates offered at `node_id` the guild doesn't already have active --
-    a giver only ever has one job out at a time (done or failed, they'll hand
-    out another)."""
-    active_ids = {m.template_id for m in guild.missions if m.state == "active"}
+    """Templates offered at `node_id` the guild hasn't ever accepted --
+    these missions are one-offs (not repeatable)."""
+    seen_ids = {m.template_id for m in guild.missions}
     return [t for t in TEMPLATES.values()
-            if t.node == node_id and t.id not in active_ids]
+            if t.node == node_id and t.id not in seen_ids]
 
 
 def template_of(mission):

@@ -223,7 +223,10 @@ class SquadScreen(ButtonsMixin, SheetModalMixin, Screen):
         chosen = unit in self.picked
         off = unit in self.disabled
 
-        n, faces = unit.weapon["damage"]
+        if unit.weapon:
+            n, faces = unit.weapon["damage"]
+        else:
+            n, faces = unit.unarmed_damage
         arma = unit.weapon_name or "unarmed"
         
         ch = {

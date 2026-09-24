@@ -72,7 +72,7 @@ def test_turn_in_consumes_the_hides_and_splits_the_reward():
     assert sum(u.gold for u in hunters.members) == missions.TANNER_HIDES.reward
 
 
-def test_missed_deadline_fails_the_mission_and_a_giver_offers_again():
+def test_missed_deadline_fails_the_mission_and_it_is_not_offered_again():
     guild, hunters, home = _guild_with_two_groups()
     m = missions.accept(guild, hunters.members[0], missions.TANNER_HIDES)
     assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "city")}
@@ -84,7 +84,7 @@ def test_missed_deadline_fails_the_mission_and_a_giver_offers_again():
     guild.pass_time(24 * (missions.TANNER_HIDES.deadline_days + 1))
 
     assert m.state == "failed"
-    assert missions.TANNER_HIDES.id in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "city")}
 
 
 def test_signers_death_leaves_the_mission_unreachable():
