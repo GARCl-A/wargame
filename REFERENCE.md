@@ -108,7 +108,7 @@ Each occupation grants one starting weapon and one starting item.
 | Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Light Crossbow | Medium | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
 | Shortbow | Medium | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
-| Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | -- |
+| Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
 | Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 | Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
 | Large Hatchet | Large | 1d8 | melee | -- | -- | 1 | 2 kg | 20 |
@@ -123,7 +123,7 @@ Each occupation grants one starting weapon and one starting item.
 | Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
 | Large Light Crossbow | Large | 1d10 | 11 sq | -- | -- | 2 | 5 kg | 160 |
 | Large Shortbow | Large | 1d8 | 11 sq | -- | -- | 2 | 2 kg | 640 |
-| Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 16 |
+| Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
 | Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
 
 ## Armor
@@ -135,13 +135,13 @@ Each occupation grants one starting weapon and one starting item.
 | Chainmail | +3 | +2 | -- | 10 kg | 160 |
 | Brigandine | +4 | +1 | -1 sq | 18 kg | 400 |
 | Plate Armor | +5 | +0 | -2 sq | 28 kg | 950 |
-| Dwarf Armor | +5 | +0 | -1 sq | 25 kg | -- |
+| Dwarf Armor | +5 | +0 | -1 sq | 25 kg | 110 |
 
 ## Shields
 
 | Shield | AC | Weight | Price (cp) |
 |---|---|---|---|
-| Dwarf Shield | +2 | 3 kg | -- |
+| Dwarf Shield | +2 | 3 kg | 60 |
 
 ## Items
 

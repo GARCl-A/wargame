@@ -93,15 +93,17 @@ PRICES = {
     "Dagger": 8, "Hatchet": 10, "Axe": 35, "Light Hammer": 10,
     "Hammer": 35, "Club": 6, "Quarterstaff": 5, "Shortspear": 12,
     "Light Pick": 10, "Pick": 30, "Broadsword": 105, "Rapier": 65, "Light Crossbow": 80,
-    "Shortbow": 320,
+    "Shortbow": 320, "Dwarf Axe": 75,
     # armor (buy price climbs steeply with the AC it grants -- plate is a
     # long-run goal, several top-tier arena purses)
     "Leather Jerkin": 20, "Studded Leather": 55, "Chainmail": 160,
-    "Brigandine": 400, "Plate Armor": 950,
+    "Brigandine": 400, "Plate Armor": 950, "Dwarf Armor": 110,
+    # shields
+    "Dwarf Shield": 60,
     # kit
     TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
     "Minor Healing Potion": 80, "Vial": 10,
-    "Rope": 4, "Sack": 2,
+    "Rope": 4, "Sack": 2, "Bear Trap": 35, "Alarm Trap": 45,
     # food (a day's meal each)
     "Meat": 5, "Potato": 3, "1L Beer": 4,
     # raw materials (gathered, not manufactured -- see STOCK below)
@@ -119,10 +121,13 @@ PRICES = {
 MARKET_STOCK = [
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
     "Large Axe", "Large Hammer", "Large Broadsword", "Large Hatchet",
+    "Dwarf Axe", "Large Dwarf Axe",
     "Light Crossbow", "Shortbow", "Quiver",
-    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
+    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Dwarf Armor",
+    "Dwarf Shield",
     "Meat", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
+    "Bear Trap", "Alarm Trap",
 ]
 
 # Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.
@@ -154,7 +159,7 @@ _MARKET_TABS = (("WEAPONS", "weapons"), ("ARMOR", "armor"), ("CONSUMABLES & KIT"
 def _stock_category(name):
     if name in data.WEAPONS:
         return "weapons"
-    if name in data.ARMOR:
+    if name in data.ARMOR or name in data.SHIELDS:
         return "armor"
     return "kit"
 
