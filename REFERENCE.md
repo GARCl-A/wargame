@@ -96,34 +96,34 @@ Each occupation grants one starting weapon and one starting item.
 | Weapon | Size | Damage | Range | Finesse | Thrown | Hands | Weight | Price (cp) |
 |---|---|---|---|---|---|---|---|---|
 | Dagger | Medium | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
-| Hatchet | Medium | 1d6 | melee | -- | -- | 1 | 1 kg | 10 |
-| Axe | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
-| Light Hammer | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
-| Hammer | Medium | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
-| Club | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
-| Quarterstaff | Medium | 1d6 | melee | -- | -- | 1 | 2 kg | 5 |
-| Shortspear | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 12 |
-| Light Pick | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
-| Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
-| Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
-| Light Crossbow | Medium | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
-| Shortbow | Medium | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
-| Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
-| Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 | Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
+| Hatchet | Medium | 1d6 | melee | -- | -- | 1 | 1 kg | 10 |
 | Large Hatchet | Large | 1d8 | melee | -- | -- | 1 | 2 kg | 20 |
+| Axe | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
 | Large Axe | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
+| Light Hammer | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
 | Large Light Hammer | Large | 1d6 | melee | yes | -- | 1 | 2 kg | 20 |
+| Hammer | Medium | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
 | Large Hammer | Large | 1d10 | melee | -- | -- | 1 | 8 kg | 70 |
+| Club | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
 | Large Club | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 12 |
+| Quarterstaff | Medium | 1d6 | melee | -- | -- | 1 | 2 kg | 5 |
 | Large Quarterstaff | Large | 1d8 | melee | -- | -- | 1 | 4 kg | 10 |
+| Shortspear | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 12 |
 | Large Shortspear | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 24 |
+| Light Pick | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
 | Large Light Pick | Large | 1d6 | melee | yes | -- | 1 | 2 kg | 20 |
+| Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
 | Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 60 |
+| Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
+| Light Crossbow | Medium | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
 | Large Light Crossbow | Large | 1d10 | 11 sq | -- | -- | 2 | 5 kg | 160 |
+| Shortbow | Medium | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
 | Large Shortbow | Large | 1d8 | 11 sq | -- | -- | 2 | 2 kg | 640 |
+| Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
 | Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
+| Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 | Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
 
 ## Armor
@@ -153,31 +153,79 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | 1kg Coal | 1 kg | -- |
 | 1sqm Hide | 2 kg | -- |
 | Alarm Trap | 1 kg | -- |
+| Amethyst | 0.5 kg | -- |
 | Ancient Codex | 2 kg | -- |
+| Axe | 3 kg | -- |
 | Bear Trap | 3 kg | -- |
+| Brigandine | 18 kg | -- |
+| Broadsword | 4 kg | -- |
 | Bucket | 1 kg | -- |
+| Chainmail | 10 kg | -- |
 | Chains | 5 kg | -- |
 | Chisel | 0.3 kg | -- |
 | Cloak | 1 kg | -- |
+| Club | 1.5 kg | -- |
 | Compass | 0.2 kg | -- |
+| Dagger | 0.5 kg | -- |
 | Deck of Cards | 0.2 kg | -- |
 | Dictionary | 2 kg | -- |
+| Dictionary of Ankarin | 2 kg | -- |
+| Dictionary of Draconic | 2 kg | -- |
+| Dictionary of Dwarvish | 2 kg | -- |
+| Dictionary of Elvish | 2 kg | -- |
+| Dictionary of Gnomish | 2 kg | -- |
+| Dictionary of Goblin | 2 kg | -- |
+| Dictionary of Halfling | 2 kg | -- |
+| Dictionary of Jotun | 2 kg | -- |
+| Dictionary of Orcish | 2 kg | -- |
+| Dictionary of Sylvan | 2 kg | -- |
+| Dictionary of Verdant | 2 kg | -- |
+| Dwarf Armor | 25 kg | -- |
+| Dwarf Axe | 4 kg | -- |
+| Dwarf Shield | 3 kg | -- |
 | First Aid Kit | 0.8 kg | consumable |
 | Fruit | 0.2 kg | food, consumable |
 | Gemstones | 0.1 kg | -- |
+| Hammer | 4 kg | -- |
+| Hatchet | 1 kg | -- |
 | Holy Symbol | 0.5 kg | -- |
+| Ink | 0.1 kg | -- |
 | Iron Bar | 5 kg | -- |
 | Iron Shackles | 1 kg | -- |
 | Lantern | 1 kg | light 6 sq |
+| Large Axe | 6 kg | -- |
+| Large Broadsword | 8 kg | -- |
+| Large Club | 3 kg | -- |
+| Large Dagger | 1 kg | -- |
+| Large Dwarf Axe | 8 kg | -- |
+| Large Hammer | 8 kg | -- |
+| Large Hatchet | 2 kg | -- |
+| Large Light Crossbow | 5 kg | -- |
+| Large Light Hammer | 2 kg | -- |
+| Large Light Pick | 2 kg | -- |
+| Large Pick | 6 kg | -- |
+| Large Quarterstaff | 4 kg | -- |
+| Large Rapier | 2 kg | -- |
+| Large Shortbow | 2 kg | -- |
+| Large Shortspear | 3 kg | -- |
+| Leather Jerkin | 4 kg | -- |
 | Letter of Receipt | 0.1 kg | -- |
+| Light Crossbow | 2.5 kg | -- |
+| Light Hammer | 1 kg | -- |
+| Light Pick | 1 kg | -- |
 | Locked Chest | 8 kg | -- |
 | Lumber | 2 kg | -- |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable |
 | Minor Healing Potion | 0.2 kg | consumable |
 | Musical Instrument | 2 kg | -- |
+| Paper | 0.1 kg | -- |
+| Pick | 3 kg | -- |
+| Plate Armor | 28 kg | -- |
 | Potato | 1 kg | food, consumable |
+| Quarterstaff | 2 kg | -- |
 | Quiver | 1.5 kg | -- |
+| Rapier | 1 kg | -- |
 | Red Mushroom | 0.1 kg | -- |
 | Rope | 2 kg | -- |
 | Rotten Food | 1 kg | food, consumable |
@@ -185,9 +233,16 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Scales | 1 kg | -- |
 | Scissors | 0.2 kg | -- |
 | Scroll | 0.1 kg | -- |
+| Scroll of Floating Disk | 0.1 kg | -- |
+| Scroll of Light Globe | 0.1 kg | -- |
+| Scroll of Magic Missile | 0.1 kg | -- |
+| Scroll of Sleep | 0.1 kg | -- |
 | Sealed Chest | 8 kg | -- |
+| Shortbow | 1 kg | -- |
+| Shortspear | 1.5 kg | -- |
 | Shovel | 2 kg | -- |
 | Stone Brick | 3 kg | -- |
+| Studded Leather | 6 kg | -- |
 | Torch | 0.5 kg | -- |
 | Vial | 0.1 kg | -- |
 

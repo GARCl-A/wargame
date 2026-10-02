@@ -751,57 +751,57 @@
     "spell_id": "sleep"
   },
   "Dictionary of Ankarin": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Ankarin"
   },
   "Dictionary of Draconic": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Draconic"
   },
   "Dictionary of Dwarvish": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Dwarvish"
   },
   "Dictionary of Elvish": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Elvish"
   },
   "Dictionary of Gnomish": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Gnomish"
   },
   "Dictionary of Goblin": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Goblin"
   },
   "Dictionary of Halfling": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Halfling"
   },
   "Dictionary of Jotun": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Jotun"
   },
   "Dictionary of Orcish": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Orcish"
   },
   "Dictionary of Sylvan": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Sylvan"
   },
   "Dictionary of Verdant": {
-    "weight": 0.5,
+    "weight": 2.0,
     "price": 150,
     "language": "Verdant"
   }

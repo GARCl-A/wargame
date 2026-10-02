@@ -248,153 +248,45 @@ def race_by_name(name):
 #   reload = True if firing the weapon requires the Reload action to chamber.  #
 # --------------------------------------------------------------------------- #
 
-DAMAGE_STEPS = {
-    (1, 2): (1, 3),
-    (1, 3): (1, 4),
-    (1, 4): (1, 6),
-    (1, 6): (1, 8),
-    (1, 8): (1, 10),
-    (1, 10): (1, 12),
-    (1, 12): (2, 8),
-    (2, 6): (2, 8),
-    (2, 8): (3, 8),
-}
+from . import items
 
+DAMAGE_STEPS = items.DAMAGE_STEPS
+step_damage_die = items.step_damage_die
 
-def step_damage_die(dice):
-    return DAMAGE_STEPS.get(tuple(dice), (dice[0], dice[1] + 2))
-
-
-BASE_WEAPONS = {
-    "Dagger":         {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 6, "hands": 1, "weight": 0.5, "size": "Medium"},
-    "Hatchet":        {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
-    "Axe":            {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0, "size": "Medium"},
-    "Light Hammer":   {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
-    "Hammer":         {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0, "size": "Medium"},
-    "Club":           {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5, "size": "Medium"},
-    "Quarterstaff":   {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 2.0, "size": "Medium"},
-    "Shortspear":     {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5, "size": "Medium"},
-    "Light Pick":     {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
-    "Pick":           {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0, "size": "Medium"},
-    "Broadsword":     {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0, "size": "Medium"},
-    "Light Crossbow": {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5, "reload": True, "size": "Medium"},
-    "Shortbow":       {"damage": (1, 6), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 1.0, "reload": False, "size": "Medium"},
-    "Dwarf Axe":      {"damage": (1, 10), "range": 0, "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0, "size": "Medium"},
-    "Rapier":         {"damage": (1, 6), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
-}
-
-WEAPONS = dict(BASE_WEAPONS)
-for _w_name, _w_data in BASE_WEAPONS.items():
-    _large = dict(_w_data)
-    _large["damage"] = step_damage_die(_w_data["damage"])
-    _large["weight"] = round(_w_data["weight"] * 2, 1)
-    _large["size"] = "Large"
-    WEAPONS[f"Large {_w_name}"] = _large
-
-
-def weapon_size(name):
-    return WEAPONS.get(name, {}).get("size", "Medium")
-
+WEAPONS = items.weapons()
+weapon_size = items.weapon_size
 
 # --------------------------------------------------------------------------- #
-# Armor   (designed for the wargame)                                           #
-#   ac      = flat bonus to Armor Class                                        #
-#   max_dex = cap on the Dexterity mod that still counts to AC (None = no cap) #
-#   speed   = board squares shaved off movement (heavy armor is slow)          #
-#   weight  = kg, feeds the carry rule                                         #
-#   More AC costs more copper (see economy.py), caps Dexterity harder and      #
-#   weighs more; from +4 it also eats into movement.                           #
+# Armor & Shields                                                             #
 # --------------------------------------------------------------------------- #
 
-ARMOR = {
-    "Leather Jerkin":     {"ac": 1, "max_dex": None, "speed": 0, "weight": 4.0},
-    "Studded Leather":       {"ac": 2, "max_dex": 3,    "speed": 0, "weight": 6.0},
-    "Chainmail":      {"ac": 3, "max_dex": 2,    "speed": 0, "weight": 10.0},
-    "Brigandine":             {"ac": 4, "max_dex": 1,    "speed": 1, "weight": 18.0},
-    "Plate Armor": {"ac": 5, "max_dex": 0,    "speed": 2, "weight": 28.0},
-    "Dwarf Armor": {"ac": 5, "max_dex": 0,    "speed": 1, "weight": 25.0},
-}
+ARMOR = items.armor()
+SHIELDS = items.shields()
 
 # --------------------------------------------------------------------------- #
-# Shields   (offhand item granting AC)                                         #
-# --------------------------------------------------------------------------- #
-
-SHIELDS = {
-    "Dwarf Shield": {"ac": 2, "weight": 3.0},
-}
-
-
-# --------------------------------------------------------------------------- #
-# Carry: weight of the inventory-slot items (kg, invented).                    #
-# The Shepherd's sheep does NOT count here: it is a creature (see CREATURE_ITEMS). #
+# Carry & Food                                                                #
 # --------------------------------------------------------------------------- #
 
 TORCH_WEIGHT = 0.5
-TORCH_ITEM = "Torch"                     # a torch carried in the pack / between battles
+TORCH_ITEM = "Torch"
 
-# Pack items that count as a day's meal (see the hunger rule in unit.py / guild.py).
-FOOD_ITEMS = {"Meat", "Potato", "Fruit", "Rotten Food", "1L Beer"}
-STARVATION_DEATH_DAYS = 4                # missed meals in a row before a character dies
+FOOD_ITEMS = {item.name for item in items.food_items().values()}
+STARVATION_DEATH_DAYS = 4
 
-FOOD_LIFESPAN = {"Fruit": 1, "Meat": 2, "Potato": 7, "1L Beer": 30}
-
-# Items used up in play, not hauled cargo -- the Carrier talent's carry relief
-# skips these. Editable; grows as more consumables land.
+FOOD_LIFESPAN = {item.name: item.lifespan for item in items.food_items().values() if item.lifespan is not None}
 CONSUMABLE_ITEMS = FOOD_ITEMS | {"First Aid Kit", "Minor Healing Potion"}
 
-ITEM_WEIGHTS = {
-    TORCH_ITEM: TORCH_WEIGHT,
-    "Minor Healing Potion": 0.2, "Red Mushroom": 0.1, "Vial": 0.1,
-    "Meat": 1.0, "Potato": 1.0, "Fruit": 0.2, "1kg Coal": 1.0, "1L Beer": 1.0,
-    "Chisel": 0.3, "Scissors": 0.2, "Quiver": 1.5, "Rope": 2.0, "Iron Shackles": 1.0,
-    "Map": 0.1, "Sack": 0.3, "Stone Brick": 3.0, "1sqm Hide": 2.0, "Shovel": 2.0,
-    "Lumber": 2.0,   # a garrison's job output (economy.GARRISON_JOBS) -- see [[gartok-property-two-paths]]
-    "Chains": 5.0, "Scroll": 0.1, "Iron Bar": 5.0, "Lantern": 1.0, "Compass": 0.2,
-    "Deck of Cards": 0.2, "Cloak": 1.0, "Dictionary": 2.0, "First Aid Kit": 0.8, "Musical Instrument": 2.0,
-    "Scales": 1.0, "Holy Symbol": 0.5, "Bucket": 1.0,
-    "Rotten Food": 1.0,
-    "Bear Trap": 3.0, "Alarm Trap": 1.0,
-    CHEST_ITEM: 8.0, GEM_ITEM: 0.1, MISSION_CHEST_ITEM: 8.0, LETTER_ITEM: 0.1,
-    CODEX_ITEM: 2.0,
-}
-
-
-def item_weight(name):
-    """Weight of an item in the pack. Weapons and armor weigh the same stowed as worn."""
-    if name in WEAPONS:
-        return WEAPONS[name]["weight"]
-    if name in ARMOR:
-        return ARMOR[name]["weight"]
-    if name in SHIELDS:
-        return SHIELDS[name]["weight"]
-    if name.startswith("Scroll of "):
-        return ITEM_WEIGHTS.get("Scroll", 0.1)
-    if name.startswith("Dictionary of "):
-        return ITEM_WEIGHTS.get("Dictionary", 0.5)
-    if name == "Paper" or name == "Ink":
-        return 0.1
-    return ITEM_WEIGHTS.get(name, 0.5)
+ITEM_WEIGHTS = {item.name: item.weight for item in items.all_items().values()}
+item_weight = items.item_weight
 
 # --------------------------------------------------------------------------- #
 # Crafting Recipes                                                             #
-#   materials: items consumed to build the recipe                              #
-#   complexity: added to the materials' copper value to form the craft target  #
 # --------------------------------------------------------------------------- #
 
-CRAFTING_RECIPES = {
-    "Minor Healing Potion": {"materials": ["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"], "complexity": 15, "station": "apothecary", "level": 1},
-    "Dwarf Axe": {"materials": ["Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 10, "station": "forge", "level": 1},
-    "Dwarf Shield": {"materials": ["Iron Bar", "Lumber", "1kg Coal"], "complexity": 10, "station": "forge", "level": 1},
-    "Dwarf Armor": {"materials": ["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 15, "station": "forge", "level": 2},
-    "Bear Trap": {"materials": ["Iron Bar"], "complexity": 5, "station": "forge", "level": 1},
-    "Alarm Trap": {"materials": ["Iron Bar", "Rope"], "complexity": 5, "station": "forge", "level": 1},
-}
+CRAFTING_RECIPES = items.CRAFTING_RECIPES
+APOTHECARY_RECIPES = items.APOTHECARY_RECIPES
+BLACKSMITH_RECIPES = items.BLACKSMITH_RECIPES
 
-for _lang in LANGUAGES:
-    CRAFTING_RECIPES[f"Dictionary of {_lang}"] = {"materials": ["1sqm Hide", "Paper", "Ink"], "complexity": 25, "station": "scriptorium", "level": 2}
-
-APOTHECARY_RECIPES = ["Minor Healing Potion"]
-BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
 
 
 # Prices, market stock and haggling live in `economy.py` (behaviour, not a

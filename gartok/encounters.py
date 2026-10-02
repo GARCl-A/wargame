@@ -130,9 +130,15 @@ OLD_ROAD_TABLE = (
 )
 
 
+BANDIT_CHEST_DROP_CHANCE = 0.01  # 1% chance a bandit ambush pack carries a Locked Chest
+
+
 def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
                    level_weights=WILDS_LEVEL_WEIGHTS, rng=random):
     """A pack rolled off a locality's `EncounterEntry` table: one entry picked
     by weight decides the race pool every body in the pack is drawn from."""
     i = weighted_choice({i: e.weight for i, e in enumerate(table)}, rng)
-    return roll_pack(count_weights, level_weights, rng, race_pool=table[i].race_pool)
+    pack = roll_pack(count_weights, level_weights, rng, race_pool=table[i].race_pool)
+    if table[i].race_pool is None and pack and rng.random() < BANDIT_CHEST_DROP_CHANCE:
+        pack[0].give_to_pack(data.CHEST_ITEM)
+    return pack

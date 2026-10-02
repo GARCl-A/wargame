@@ -155,6 +155,9 @@ def test_crafting_shift_awards_work_xp():
 
 
 def test_crafting_screen_station_filtering():
+    import os, pygame
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    pygame.font.init()
     from gartok.group import Group
     from gartok.crafting_screen import CraftingScreen
 

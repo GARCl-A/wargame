@@ -88,34 +88,10 @@ WILDS_RAID_CHANCE = 0.2           # rolled once per campaign.advance() call whil
 WILDS_RAID_LEVEL = 3
 WILDS_RAID_SIZE = 3
 
-PRICES = {
-    # weapons
-    "Dagger": 8, "Hatchet": 10, "Axe": 35, "Light Hammer": 10,
-    "Hammer": 35, "Club": 6, "Quarterstaff": 5, "Shortspear": 12,
-    "Light Pick": 10, "Pick": 30, "Broadsword": 105, "Rapier": 65, "Light Crossbow": 80,
-    "Shortbow": 320, "Dwarf Axe": 75,
-    # armor (buy price climbs steeply with the AC it grants -- plate is a
-    # long-run goal, several top-tier arena purses)
-    "Leather Jerkin": 20, "Studded Leather": 55, "Chainmail": 160,
-    "Brigandine": 400, "Plate Armor": 950, "Dwarf Armor": 110,
-    # shields
-    "Dwarf Shield": 60,
-    # kit
-    TORCH_ITEM: 2, "Quiver": 25, "First Aid Kit": 40, "Lantern": 30,
-    "Minor Healing Potion": 80, "Vial": 10,
-    "Rope": 4, "Sack": 2, "Bear Trap": 35, "Alarm Trap": 45,
-    # food (a day's meal each)
-    "Meat": 5, "Fruit": 4, "Potato": 3, "1L Beer": 4,
-    # raw materials (gathered, not manufactured -- see STOCK below)
-    "1sqm Hide": 12, "Red Mushroom": 10,
-    # the Wilds claim's building material -- bought here, hauled out by hand
-    "Lumber": LUMBER_PRICE,
-    "Iron Bar": 15, "1kg Coal": 5,
-    # a locked chest's contents (chest.py) -- found, not manufactured; sellable
-    # like everything else, but never in MARKET_STOCK below (nothing to buy back)
-    data.GEM_ITEM: 60,
-    "Paper": 5, "Ink": 15,
-}
+from . import items
+
+PRICES = {item.name: item.price for item in items.all_items().values()}
+
 
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
@@ -286,18 +262,11 @@ def scroll_price(level):
 
 
 def _base_price(name):
-    if name.startswith("Dictionary of "):
-        return 150
-    if name.startswith("Scroll of "):
-        from . import magic
-        spell = magic.spell_for_scroll(name)
-        if spell:
-            return scroll_price(spell.level)
-    if name.startswith("Large "):
-        base = name[6:]
-        if base in PRICES:
-            return PRICES[base] * 2
-    return PRICES.get(name, max(1, round(data.item_weight(name) * 2)))
+    item = items.get(name)
+    if item is not None:
+        return item.price
+    return max(1, round(data.item_weight(name) * 2))
+
 
 
 def buy_price(name, mods=()):
