@@ -193,8 +193,7 @@ _LIST = [
            "your strong back: allow a Medium or Small ally to ride you.", race="Centaur",
            effects=(Effect("centaur_mount", 1),), icon="body/cavalry"),
     Talent("giant_grip", "racial", 1, "Giant's Grip",
-           "immense physical strength: wield weapons as if you were one size larger "
-           "(+1 damage step).", race="Goliath",
+           "immense physical strength: allows you to wield Large weapons.", race="Goliath",
            effects=(Effect("giant_grip", 1),), icon="action/muscle-up"),
     Talent("phalanx", "racial", 1, "Phalanx",
            "martial discipline: +1 AC if you are adjacent to at least one ally.", race="Hobgoblin",

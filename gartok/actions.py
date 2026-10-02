@@ -171,12 +171,12 @@ def _drop_cell(battle, target):
 
 def _pickable(unit, obj):
     """Anyone can pick up a torch if the off hand is free; relics and chests can
-    always be retrieved; a weapon only if the unit is unarmed."""
+    always be retrieved; a weapon only if the unit is unarmed and can wield it."""
     if obj.is_torch:
         return not unit.has_torch and not unit.has_lantern
     if getattr(obj, "is_relic", False) or getattr(obj, "is_chest", False):
         return True
-    return unit.unarmed
+    return unit.unarmed and unit.char.can_wield(obj.weapon_name)
 
 
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,

@@ -297,6 +297,8 @@ class Combatant:
 
     def equip_weapon(self, weapon_name):
         """Equips (or recovers) a weapon; drops whatever does not fit. Returns [dropped]."""
+        if not self.char.can_wield(weapon_name):
+            return []
         self.weapon_name = weapon_name
         self.weapon = data.WEAPONS[weapon_name]
         self.weapon_hand = True

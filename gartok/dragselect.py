@@ -145,7 +145,7 @@ class LoadoutMoveMixin:
     @staticmethod
     def _fits_slot(dst, zone, name):
         if zone == "hand":
-            return dst.is_weapon(name)
+            return dst.can_wield(name)
         if zone == "offhand":
             return dst.fits_offhand(name)
         if zone == "tongue":

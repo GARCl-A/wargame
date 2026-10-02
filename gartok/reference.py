@@ -70,10 +70,11 @@ def _weapons():
     for name, w in data.WEAPONS.items():
         rng = "melee" if w["range"] == 0 else f"{w['range']} sq"
         thrown = "--" if w["thrown"] == 0 else f"{w['thrown']} sq"
-        rows.append((name, _dice(*w["damage"]), rng,
+        price = economy._base_price(name) if (name in economy.PRICES or name.startswith("Large ")) else "--"
+        rows.append((name, w.get("size", "Medium"), _dice(*w["damage"]), rng,
                      "yes" if w["finesse"] else "--", thrown, w["hands"],
-                     f"{w['weight']:g} kg", economy.PRICES.get(name, "--")))
-    head = ("Weapon", "Damage", "Range", "Finesse", "Thrown", "Hands", "Weight",
+                     f"{w['weight']:g} kg", price))
+    head = ("Weapon", "Size", "Damage", "Range", "Finesse", "Thrown", "Hands", "Weight",
             "Price (cp)")
     return "## Weapons\n\n" + _table(head, rows)
 

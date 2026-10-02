@@ -93,23 +93,38 @@ Each occupation grants one starting weapon and one starting item.
 
 ## Weapons
 
-| Weapon | Damage | Range | Finesse | Thrown | Hands | Weight | Price (cp) |
-|---|---|---|---|---|---|---|---|
-| Dagger | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
-| Hatchet | 1d6 | melee | -- | -- | 1 | 1 kg | 10 |
-| Axe | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
-| Light Hammer | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
-| Hammer | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
-| Club | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
-| Quarterstaff | 1d6 | melee | -- | -- | 1 | 2 kg | 5 |
-| Shortspear | 1d6 | melee | -- | -- | 1 | 1.5 kg | 12 |
-| Light Pick | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
-| Pick | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
-| Broadsword | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
-| Light Crossbow | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
-| Shortbow | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
-| Dwarf Axe | 1d10 | melee | -- | -- | 1 | 4 kg | -- |
-| Rapier | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
+| Weapon | Size | Damage | Range | Finesse | Thrown | Hands | Weight | Price (cp) |
+|---|---|---|---|---|---|---|---|---|
+| Dagger | Medium | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
+| Hatchet | Medium | 1d6 | melee | -- | -- | 1 | 1 kg | 10 |
+| Axe | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
+| Light Hammer | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
+| Hammer | Medium | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
+| Club | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
+| Quarterstaff | Medium | 1d6 | melee | -- | -- | 1 | 2 kg | 5 |
+| Shortspear | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 12 |
+| Light Pick | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
+| Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
+| Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
+| Light Crossbow | Medium | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Shortbow | Medium | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
+| Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | -- |
+| Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
+| Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
+| Large Hatchet | Large | 1d8 | melee | -- | -- | 1 | 2 kg | 20 |
+| Large Axe | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
+| Large Light Hammer | Large | 1d6 | melee | yes | -- | 1 | 2 kg | 20 |
+| Large Hammer | Large | 1d10 | melee | -- | -- | 1 | 8 kg | 70 |
+| Large Club | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 12 |
+| Large Quarterstaff | Large | 1d8 | melee | -- | -- | 1 | 4 kg | 10 |
+| Large Shortspear | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 24 |
+| Large Light Pick | Large | 1d6 | melee | yes | -- | 1 | 2 kg | 20 |
+| Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 60 |
+| Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
+| Large Light Crossbow | Large | 1d10 | 11 sq | -- | -- | 2 | 5 kg | 160 |
+| Large Shortbow | Large | 1d8 | 11 sq | -- | -- | 2 | 2 kg | 640 |
+| Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 16 |
+| Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
 
 ## Armor
 
@@ -241,7 +256,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Swarm Logic | there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- | Goblin |
 | 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- | Automaton |
 | 1 | Mount | your strong back: allow a Medium or Small ally to ride you. | -- | Centaur |
-| 1 | Giant's Grip | immense physical strength: wield weapons as if you were one size larger (+1 damage step). | -- | Goliath |
+| 1 | Giant's Grip | immense physical strength: allows you to wield Large weapons. | -- | Goliath |
 | 1 | Phalanx | martial discipline: +1 AC if you are adjacent to at least one ally. | -- | Hobgoblin |
 | 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- | Lizardfolk |
 | 1 | Corpse Eater | brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- | Gnoll |

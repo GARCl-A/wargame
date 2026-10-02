@@ -864,16 +864,29 @@ class Unit:
     def fits_armor(name):
         return name in data.ARMOR
 
+    def can_wield(self, name):
+        """Checks if this unit can wield `name`. Large weapons require Large size
+        (e.g. Centaur) or the Giant's Grip talent (Goliath)."""
+        if not self.is_weapon(name):
+            return False
+        w = data.WEAPONS.get(name)
+        if not w:
+            return False
+        if w.get("size") == "Large":
+            return self.size == "Large" or self.has_talent("giant_grip")
+        return True
+
     def fits_tongue(self, name):
         """The Tongue slot takes one 1-handed weapon (it is a single extra limb),
-        and only if this character has the `tongue` talent."""
-        return (self.has_tongue and name in data.WEAPONS
+        and only if this character has the `tongue` talent and can wield it."""
+        return (self.has_tongue and self.can_wield(name)
                 and data.WEAPONS[name]["hands"] == 1)
 
     def give_to_hand(self, name):
         """Wield `name`; the weapon already held goes to the pack. A 2-handed
-        weapon also bumps whatever was in the off hand. No-op if not a weapon."""
-        if not self.is_weapon(name):
+        weapon also bumps whatever was in the off hand. No-op if not a weapon
+        or cannot be wielded due to size."""
+        if not self.can_wield(name):
             return False
         if self.equipped_weapon:
             self._pack_add(self.equipped_weapon)

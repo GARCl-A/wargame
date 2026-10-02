@@ -118,6 +118,7 @@ PRICES = {
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
+    "Large Axe", "Large Hammer", "Large Broadsword", "Large Hatchet",
     "Light Crossbow", "Shortbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
     "Meat", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
@@ -278,6 +279,10 @@ def lumber_pay(hours, level=0):
 def _base_price(name):
     if name.startswith("Dictionary of "):
         return 150
+    if name.startswith("Large "):
+        base = name[6:]
+        if base in PRICES:
+            return PRICES[base] * 2
     return PRICES.get(name, max(1, round(data.item_weight(name) * 2)))
 
 

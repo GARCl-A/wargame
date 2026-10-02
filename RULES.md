@@ -693,6 +693,11 @@ The full table (damage, range, finesse, thrown, hands, weight, price) is in
 the Dagger as a thrown weapon; the Light Crossbow is the one ranged weapon and it
 must be reloaded between shots.
 
+- **Weapon sizes:** Base weapons are **Medium**. **Large** variants have double
+  weight (`weight × 2`) and deal **+1 damage step** (`1d4 -> 1d6 -> 1d8 -> 1d10 -> 1d12 -> 2d8`).
+- **Wielding requirements:** Only **Large** creatures (e.g. Centaur) or characters
+  with the Goliath's **Giant's Grip** racial talent can equip and wield Large weapons.
+
 ---
 
 ## World systems 🟡

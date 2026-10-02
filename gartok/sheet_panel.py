@@ -120,11 +120,12 @@ def _weapon_lines(u):
     bonus = u.mod_strength if not u.ranged else 0
     dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
     hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
+    size_str = f"{u.weapon.get('size')} · " if u.weapon.get("size") and u.weapon.get("size") != "Medium" else ""
     if u.ranged:
-        reach = f"range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
+        reach = f"{size_str}range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
     else:
         thrown = f"  ·  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
-        reach = f"melee  ·  {hands}{thrown}"
+        reach = f"{size_str}melee  ·  {hands}{thrown}"
     return u.weapon_name, dmg, reach
 
 

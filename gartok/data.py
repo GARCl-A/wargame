@@ -248,23 +248,52 @@ def race_by_name(name):
 #   reload = True if firing the weapon requires the Reload action to chamber.  #
 # --------------------------------------------------------------------------- #
 
-WEAPONS = {
-    "Dagger":         {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 6, "hands": 1, "weight": 0.5},
-    "Hatchet":    {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.0},
-    "Axe":       {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
-    "Light Hammer":  {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
-    "Hammer":       {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
-    "Club":         {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
-    "Quarterstaff":        {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 2.0},
-    "Shortspear":   {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5},
-    "Light Pick": {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0},
-    "Pick":      {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0},
-    "Broadsword":    {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0},
-    "Light Crossbow":    {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5, "reload": True},
-    "Shortbow":      {"damage": (1, 6), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 1.0, "reload": False},
-    "Dwarf Axe":     {"damage": (1, 10), "range": 0, "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0},
-    "Rapier":        {"damage": (1, 6), "range": 0, "finesse": True, "thrown": 0, "hands": 1, "weight": 1.0},
+DAMAGE_STEPS = {
+    (1, 2): (1, 3),
+    (1, 3): (1, 4),
+    (1, 4): (1, 6),
+    (1, 6): (1, 8),
+    (1, 8): (1, 10),
+    (1, 10): (1, 12),
+    (1, 12): (2, 8),
+    (2, 6): (2, 8),
+    (2, 8): (3, 8),
 }
+
+
+def step_damage_die(dice):
+    return DAMAGE_STEPS.get(tuple(dice), (dice[0], dice[1] + 2))
+
+
+BASE_WEAPONS = {
+    "Dagger":         {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 6, "hands": 1, "weight": 0.5, "size": "Medium"},
+    "Hatchet":        {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
+    "Axe":            {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0, "size": "Medium"},
+    "Light Hammer":   {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
+    "Hammer":         {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0, "size": "Medium"},
+    "Club":           {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5, "size": "Medium"},
+    "Quarterstaff":   {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 2.0, "size": "Medium"},
+    "Shortspear":     {"damage": (1, 6), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 1.5, "size": "Medium"},
+    "Light Pick":     {"damage": (1, 4), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
+    "Pick":           {"damage": (1, 8), "range": 0,  "finesse": False, "thrown": 0, "hands": 1, "weight": 3.0, "size": "Medium"},
+    "Broadsword":     {"damage": (1, 12), "range": 0, "finesse": False, "thrown": 0, "hands": 2, "weight": 4.0, "size": "Medium"},
+    "Light Crossbow": {"damage": (1, 8), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 2.5, "reload": True, "size": "Medium"},
+    "Shortbow":       {"damage": (1, 6), "range": 11, "finesse": False, "thrown": 0, "hands": 2, "weight": 1.0, "reload": False, "size": "Medium"},
+    "Dwarf Axe":      {"damage": (1, 10), "range": 0, "finesse": False, "thrown": 0, "hands": 1, "weight": 4.0, "size": "Medium"},
+    "Rapier":         {"damage": (1, 6), "range": 0,  "finesse": True,  "thrown": 0, "hands": 1, "weight": 1.0, "size": "Medium"},
+}
+
+WEAPONS = dict(BASE_WEAPONS)
+for _w_name, _w_data in BASE_WEAPONS.items():
+    _large = dict(_w_data)
+    _large["damage"] = step_damage_die(_w_data["damage"])
+    _large["weight"] = round(_w_data["weight"] * 2, 1)
+    _large["size"] = "Large"
+    WEAPONS[f"Large {_w_name}"] = _large
+
+
+def weapon_size(name):
+    return WEAPONS.get(name, {}).get("size", "Medium")
 
 
 # --------------------------------------------------------------------------- #
