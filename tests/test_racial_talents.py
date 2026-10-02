@@ -255,3 +255,255 @@ def test_large_weapon_pickup_and_dragselect():
     c_goliath.weapon_hand = False
     assert _pickable(c_goliath, obj)
 
+
+# --------------------------------------------------------------------------- #
+# Additional Racial Talents Tests                                              #
+# --------------------------------------------------------------------------- #
+
+def _elf():
+    u = Unit("player", race=data.race_by_name("Elf"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _orc():
+    u = Unit("player", race=data.race_by_name("Orc"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _goblin():
+    u = Unit("player", race=data.race_by_name("Goblin"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _automaton():
+    u = Unit("player", race=data.race_by_name("Automaton"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _hobgoblin():
+    u = Unit("player", race=data.race_by_name("Hobgoblin"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _lizardfolk():
+    u = Unit("player", race=data.race_by_name("Lizardfolk"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _dwarf():
+    u = Unit("player", race=data.race_by_name("Dwarf"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _kobold():
+    u = Unit("player", race=data.race_by_name("Kobold"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _gnome():
+    u = Unit("player", race=data.race_by_name("Gnome"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def _kenku():
+    u = Unit("player", race=data.race_by_name("Kenku"))
+    u.set_track_level("racial", 5)
+    return u
+
+
+def test_elf_woodland_scout_halves_road_and_hunt_ambushes():
+    from gartok import campaign, hunt
+    elf = _elf()
+    assert elf.choose_talent("racial", "woodland_scout")
+    human = _human()
+
+    g_scout = Group([elf], node="road")
+    g_normal = Group([human], node="road")
+
+    with patch("gartok.campaign.random.random", return_value=0.25):
+        with patch("gartok.campaign.encounters.roll_encounter", return_value=["Goblin"]):
+            order_scout = campaign._road_ambush_catch(g_scout, ["road"])
+            order_normal = campaign._road_ambush_catch(g_normal, ["road"])
+            assert order_scout is None
+            assert order_normal is not None
+            assert order_normal.kind == "ambush"
+
+    class FakeRNG:
+        def random(self):
+            return 0.10
+
+    state_scout = hunt.HuntState([elf], None, 4)
+    _, amb_scout = hunt.hunt_stretch(state_scout, rng=FakeRNG())
+    assert amb_scout is False
+
+    state_normal = hunt.HuntState([human], None, 4)
+    _, amb_normal = hunt.hunt_stretch(state_normal, rng=FakeRNG())
+    assert amb_normal is True
+
+
+def test_orc_intimidating_presence_uses_strength_for_demoralize():
+    orc = _orc()
+    orc.set_base_attribute("strength", 16)
+    orc.set_base_attribute("charisma", 8)
+    orc.languages = ["Ankarin"]
+    target = _human()
+    target.languages = ["Ankarin"]
+
+    batt = Battle([orc], [target])
+    o_c, t_c = batt.player_units[0], batt.enemy_units[0]
+    o_c.pos, t_c.pos = (5, 5), (5, 6)
+
+    batt.log_lines = []
+    actions.DEMORALIZE.execute(batt, o_c, t_c)
+    assert any("(CHA)" in line for line in batt.log_lines)
+    assert not any("(STR)" in line for line in batt.log_lines)
+
+    assert orc.choose_talent("racial", "intimidating_presence")
+    batt.log_lines = []
+    actions.DEMORALIZE.execute(batt, o_c, t_c)
+    assert any("(STR)" in line for line in batt.log_lines)
+
+
+def test_goblin_swarm_logic_speeds_up_work_with_allied_goblins():
+    g1, g2, g3 = _goblin(), _goblin(), _goblin()
+    assert g1.choose_talent("racial", "swarm_logic")
+    assert g2.choose_talent("racial", "swarm_logic")
+    assert g3.choose_talent("racial", "swarm_logic")
+
+    guild = Guild([g1, g2, g3])
+    assert guild.work_speedup([g1]) == 1.0
+    assert round(guild.work_speedup([g1, g2]), 2) == 0.90
+    assert round(guild.work_speedup([g1, g2, g3]), 2) == 0.80
+
+
+def test_automaton_tireless_worker_provides_flat_work_speedup():
+    auto = _automaton()
+    assert auto.choose_talent("racial", "tireless_worker")
+    assert auto.talent_bonus("activity_speed") == 0.25
+
+    guild = Guild([auto])
+    assert guild.work_speedup([auto]) == 0.75
+
+
+def test_hobgoblin_phalanx_grants_ac_when_adjacent_to_ally():
+    hob = _hobgoblin()
+    assert hob.choose_talent("racial", "phalanx")
+    ally = _human()
+    enemy = _orc()
+
+    batt = Battle([hob, ally], [enemy])
+    h_c, a_c, e_c = batt.player_units[0], batt.player_units[1], batt.enemy_units[0]
+
+    h_c.pos, a_c.pos = (5, 5), (0, 0)
+    assert actions._phalanxed(batt, h_c) is False
+
+    a_c.pos = (5, 6)
+    assert actions._phalanxed(batt, h_c) is True
+
+    e_c.pos = (4, 5)
+    batt.log_lines = []
+    with patch("gartok.actions.d20", return_value=10):
+        actions.ATTACK.execute(batt, e_c, h_c)
+    assert any("[Phalanx]" in line for line in batt.log_lines)
+
+
+def test_lizardfolk_organic_harvester_boosts_meat_and_hide_loot():
+    from gartok import campaign
+    liz = _lizardfolk()
+    assert liz.choose_talent("racial", "organic_harvester")
+    guild = Guild([liz])
+
+    enemy = Unit("enemy", race=data.BEAST_POOL[0])
+    batt = Battle([liz], [enemy], lethal=True)
+    batt.winner = "player"
+    batt.enemy_units[0].hp = 0
+    batt.enemy_units[0].status = "dead"
+
+    with patch("gartok.loot.field_loot", return_value=["Meat"] * 5 + ["1sqm Hide"]):
+        with patch("gartok.campaign.random.random", return_value=0.10):
+            outcome = campaign.absorb_battle(guild, [liz], batt, node=None)
+            assert outcome.loot_pool.count("Meat") == 6
+            assert outcome.loot_pool.count("1sqm Hide") == 2
+
+
+def test_dwarf_crafting_unlocks_dwarven_equipment_recipes():
+    dwarf = _dwarf()
+    assert "Dwarf Axe" not in dwarf.recipes
+    assert "Dwarf Shield" not in dwarf.recipes
+    assert "Dwarf Armor" not in dwarf.recipes
+
+    assert dwarf.choose_talent("racial", "dwarf_crafting")
+    assert dwarf.has_talent("dwarf_crafting")
+
+    assert "Dwarf Axe" in dwarf.recipes
+    assert "Dwarf Shield" in dwarf.recipes
+    assert "Dwarf Armor" in dwarf.recipes
+
+
+def test_kobold_trapper_unlocks_trap_recipes():
+    kobold = _kobold()
+    assert "Bear Trap" not in kobold.recipes
+    assert "Alarm Trap" not in kobold.recipes
+
+    assert kobold.choose_talent("racial", "kobold_trapper")
+    assert kobold.has_talent("kobold_trapper")
+
+    assert "Bear Trap" in kobold.recipes
+    assert "Alarm Trap" in kobold.recipes
+
+
+def test_gnome_magic_excitement_doubles_progress_die_on_first_study_day():
+    from gartok import magic
+    gnome = _gnome()
+    assert gnome.choose_talent("racial", "gnome_magic_excitement")
+    gnome.magic_source = "nature"
+    gnome.gold = 100
+    gnome.give_to_pack("Scroll of Magic Missile")
+    gnome.study_target = "magic_missile"
+    gnome.study_progress = 0
+
+    rolls = []
+    def fake_roll(n, sides):
+        rolls.append((n, sides))
+        return 10
+
+    with patch("gartok.magic.data.roll", side_effect=fake_roll):
+        magic.progress_study(gnome)
+
+    assert len(rolls) == 1
+    assert rolls[0] == (2, 20)
+    assert gnome.study_progress > 0
+
+    with patch("gartok.magic.data.roll", side_effect=fake_roll):
+        magic.progress_study(gnome)
+
+    assert len(rolls) == 2
+    assert rolls[1] == (1, 20)
+
+
+def test_kenku_faith_initiate_initiates_or_grants_free_spell():
+    k1 = _kenku()
+    k1.magic_source = None
+    assert k1.choose_talent("racial", "kenku_faith_initiate")
+    assert k1.has_talent("kenku_faith_initiate")
+    assert k1.magic_source == "faith"
+    assert len(k1.spells_known) == 0
+
+    k2 = _kenku()
+    k2.magic_source = "faith"
+    k2.spells_known = ["light_globe"]
+    assert k2.choose_talent("racial", "kenku_faith_initiate")
+    assert k2.has_talent("kenku_faith_initiate")
+    assert k2.magic_source == "faith"
+    assert len(k2.spells_known) == 2
+    assert k2.spells_known[1] in ("magic_missile", "floating_disk")
+
