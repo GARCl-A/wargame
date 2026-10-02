@@ -57,7 +57,7 @@ the guild out entirely. Leaving to the main menu is Esc -> the pause menu
 
 import pygame
 
-from . import arena, artwork, economy, orders, world
+from . import arena, artwork, campaign, economy, orders, world
 from .screen import Screen
 from .theme import set_pointer
 from .ui.camera import MapCamera
@@ -154,9 +154,7 @@ class MapScreen(ButtonsMixin, Screen):
         self._hot = False
 
         self._F = ui_fonts()
-        self._nodes = {n.id: self._node_dict(n) for n in world.NODES}
-        self._region_r = {n.id: (WILDS_REGION_R if n.kind == "wilds" else DEFAULT_REGION_R)
-                          for n in world.NODES}
+        self._refresh_nodes()
         self._cam = MapCamera(self._nodes, min_zoom=280.0, max_zoom=2200.0, initial_zoom=650.0)
         self._pan = None                      # (anchor mouse pos, cam at anchor) while dragging
         self._split_target = None             # gid of the roster card expanded for SPLIT
@@ -166,6 +164,13 @@ class MapScreen(ButtonsMixin, Screen):
         self._merge_rects = []                # [(other_gid, rect)] -- MERGE buttons in that same card
         self._minimap_box = None
         self._minimap_params = (0.0, 0.0, 1.0)
+
+    def _refresh_nodes(self):
+        discovered = getattr(self.guild, "ancient_ruins_discovered", False)
+        self._nodes = {n.id: self._node_dict(n) for n in world.NODES
+                       if n.id != "ancient_ruins" or discovered}
+        self._region_r = {n.id: (WILDS_REGION_R if n.kind == "wilds" else DEFAULT_REGION_R)
+                          for n in world.NODES if n.id in self._nodes}
 
     # ------------------------------------------------------------------ #
     # adapters: real objects -> the plain dicts gartok.ui components draw #
@@ -466,6 +471,11 @@ class MapScreen(ButtonsMixin, Screen):
             self.on_manage_group(self.selected)
         elif key.startswith("work:"):
             self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1])))
+        elif key == "scout_ruins":
+            success, msg = campaign.scout_ancient_ruins(self.guild, self.selected)
+            self._refresh_nodes()
+            self.notices.append(msg)
+            self._maybe_auto_advance()
         elif key in orders.INTERACTIVE_KINDS:
             self._issue(orders.interactive(key))
 
@@ -617,6 +627,18 @@ class MapScreen(ButtonsMixin, Screen):
             blocks.append({"type": "text", "text": "hand over what you're carrying, if anything's owed",
                           "color": T.TX_FAINT})
 
+        if here.id == "road" and not getattr(self.guild, "ancient_ruins_discovered", False):
+            blocks.append({"type": "button", "key": "scout_ruins", "label": "SCOUT FOR RUINS (4 h)",
+                          "gap_before": T.S * 2})
+            blocks.append({"type": "text", "text": "Search the scrub for the lost stone trail (WIS vs DC 12)",
+                          "color": T.TX_FAINT})
+
+        if getattr(here, "dungeon", False):
+            blocks.append({"type": "button", "key": "ancient_ruins", "label": "ENTER THE ANCIENT RUINS",
+                          "primary": True, "gap_before": T.S * 2})
+            blocks.append({"type": "text", "text": "Delve into the sunken library chambers (Lethal tactical battle)",
+                          "color": T.TX_FAINT})
+
         return blocks
 
     def _maintenance_urgent(self):
@@ -682,12 +704,13 @@ class MapScreen(ButtonsMixin, Screen):
 
         groups = [self._group_dict(g) for g in self.guild.groups]
 
+        visible_edges = [(a, b, w) for a, b, w in world.EDGES if a in self._nodes and b in self._nodes]
         self._minimap_box, self._minimap_params = draw_map(
-            screen, F, mid, self._cam, self._nodes, world.EDGES, WASH, self._region_r,
+            screen, F, mid, self._cam, self._nodes, visible_edges, WASH, self._region_r,
             groups, self.selected.gid, self.mouse, icon_fn=_icon_fn)
 
         self.hits = [(node_hit_rect(self._cam.world_to_screen(n.pos)), n)
-                    for n in world.NODES]
+                    for n in world.NODES if n.id in self._nodes]
 
         clock = self.guild.clock
         cmd_hover, cmd_buttons = draw_command(

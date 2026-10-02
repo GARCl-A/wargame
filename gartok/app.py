@@ -328,6 +328,8 @@ class App:
                 self._open_apothecary(group, node, None)
             elif order.kind == "library":
                 self._open_library(group, node, None)
+            elif order.kind == "ancient_ruins":
+                self._enter_ancient_ruins(group, node)
             elif order.kind == "guard":
                 self._open_guard_check(group, order)
             elif order.kind == "ambush":
@@ -455,6 +457,17 @@ class App:
         from .library_hub_screen import LibraryHubScreen
         self.scene = LibraryHubScreen(self.fonts, self.guild, group, node,
                                       on_done=self._after_activity)
+
+    def _enter_ancient_ruins(self, group, node):
+        from .scenario import AncientRuinsScenario
+        squad = list(group.members)
+        scenario = AncientRuinsScenario()
+        battle = Battle(squad, scenario.enemies, scenario=scenario,
+                        daylight=False, lethal=True, clock_day=self.guild.clock.day)
+        self._battle_squad = squad
+        self._battle_node = node
+        self._arena_offer = None
+        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #

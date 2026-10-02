@@ -124,6 +124,7 @@ GEM_ITEM = "Gemstones"                   # what a chest holds; sellable, not sto
 # out. LETTER_ITEM is what Ledger Hold hands back once it's exchanged intact.
 MISSION_CHEST_ITEM = "Sealed Chest"
 LETTER_ITEM = "Letter of Receipt"
+CODEX_ITEM = "Ancient Codex"
 
 
 # --------------------------------------------------------------------------- #
@@ -325,6 +326,7 @@ ITEM_WEIGHTS = {
     "Rotten Food": 1.0,
     "Bear Trap": 3.0, "Alarm Trap": 1.0,
     CHEST_ITEM: 8.0, GEM_ITEM: 0.1, MISSION_CHEST_ITEM: 8.0, LETTER_ITEM: 0.1,
+    CODEX_ITEM: 2.0,
 }
 
 

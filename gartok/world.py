@@ -94,8 +94,8 @@ class Node:
                  lethal=True, arena=False, language=None, alignment=None, work=False,
                  bank=False, tanner=False, jurisdiction=None,
                  unsafe=False, encounter_table=None, trust=False, ledger=False,
-                 city_property=False, garrison_job=None, claim=False, forge=False,
-                 prison=False, apothecary=False, library=False):
+                  city_property=False, garrison_job=None, claim=False, forge=False,
+                  prison=False, apothecary=False, library=False, dungeon=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -120,6 +120,7 @@ class Node:
         self.forge = forge                   # town: crafting forge/workbench (crafting_screen)
         self.apothecary = apothecary         # town: brewing potions (crafting_screen)
         self.library = library               # town: sells dictionaries and gives quests (library_screen)
+        self.dungeon = dungeon               # town: tactical dungeon exploration
 
     @property
     def is_battle(self):
@@ -221,6 +222,9 @@ NODES = [
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
          library=True, jurisdiction="the_city"),
+    Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
+         "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
+         dungeon=True),
 ]
 
 WILDS_TERRITORY_NODE = "wilds_territory"
@@ -236,6 +240,7 @@ EDGES = [
     ("arena", "road", 3),
     ("road", "wilds", 6),
     ("road", "ledger_hold", 5),
+    ("road", "ancient_ruins", 2),
     ("wilds", "wilds_territory", 2),
 ]
 

@@ -267,6 +267,20 @@ def _should_flee(battle, unit):
 
 
 def take_turn(battle, unit):
+    if getattr(unit, "dormant", False):
+        enemies = [u for u in battle.units if u.alive and u.team != unit.team]
+        r = getattr(unit, "awareness_radius", 8)
+        close_visible = [e for e in enemies if battle.can_see_unit(unit, e) and battle.units_distance(unit, e) <= r]
+        alarm = getattr(battle, "alarm_triggered", False)
+        if close_visible or alarm or getattr(unit, "alerted", False):
+            unit.dormant = False
+            unit.alerted = True
+            battle.log(f"{unit.name} awakens and enters the fight!")
+        else:
+            unit.ap = 0
+            battle.end_turn()
+            return
+
     for _ in range(4):  # safety stop; a turn spends at most 2 points
         if unit.ap <= 0 or not unit.alive:
             break

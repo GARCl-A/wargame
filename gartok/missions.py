@@ -78,9 +78,17 @@ APOTHECARY_MUSHROOMS = MissionTemplate(
 )
 
 LIBRARY_DICTIONARY = MissionTemplate(
-    "library_dictionary", "library", "city", "A New Translation",
+    "library_dictionary", "library", "library", "A New Translation",
     "The library wants a dictionary to expand its archives. Any language will do.",
     goal_item="Any Dictionary", goal_qty=1, reward=250, deadline_days=15,
+    tag="library",
+)
+
+LIBRARY_ANCIENT_CODEX = MissionTemplate(
+    "library_ancient_codex", "library", "library", "The Lost Codex",
+    "Legends speak of an ancient subterranean library buried off the Old Road. "
+    "Delve into the forgotten ruins and retrieve the Ancient Codex.",
+    goal_item=data.CODEX_ITEM, goal_qty=1, reward=500, deadline_days=20,
     tag="library",
 )
 
@@ -89,6 +97,7 @@ TEMPLATES = {
     TRUST_CHEST.id: TRUST_CHEST,
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
+    LIBRARY_ANCIENT_CODEX.id: LIBRARY_ANCIENT_CODEX,
 }
 
 
@@ -96,8 +105,14 @@ def offers_at(guild, node_id):
     """Templates offered at `node_id` the guild hasn't ever accepted --
     these missions are one-offs (not repeatable)."""
     seen_ids = {m.template_id for m in guild.missions}
-    return [t for t in TEMPLATES.values()
-            if t.node == node_id and t.id not in seen_ids]
+    out = []
+    for t in TEMPLATES.values():
+        if t.node != node_id or t.id in seen_ids:
+            continue
+        if t.id == "library_ancient_codex" and "library_initiate" not in guild.deeds_done:
+            continue
+        out.append(t)
+    return out
 
 
 def template_of(mission):

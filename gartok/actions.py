@@ -170,10 +170,12 @@ def _drop_cell(battle, target):
 
 
 def _pickable(unit, obj):
-    """Anyone can pick up a torch if the off hand is free; a weapon only if
-    the unit is unarmed."""
+    """Anyone can pick up a torch if the off hand is free; relics and chests can
+    always be retrieved; a weapon only if the unit is unarmed."""
     if obj.is_torch:
         return not unit.has_torch and not unit.has_lantern
+    if getattr(obj, "is_relic", False) or getattr(obj, "is_chest", False):
+        return True
     return unit.unarmed
 
 
@@ -510,11 +512,17 @@ class PickUp(Action):
         return "Pick up / swap object (1 pt)"
 
     def _queue(self, battle, actor):
-        # unarmed prioritizes a weapon; otherwise the nearest
-        prefer = GroundObject.WEAPON if actor.unarmed else GroundObject.TORCH
+        def _score(o):
+            if getattr(o, "is_relic", False) or getattr(o, "is_chest", False):
+                return (0, chebyshev(o.pos, actor.pos))
+            if actor.unarmed and o.is_weapon:
+                return (1, chebyshev(o.pos, actor.pos))
+            if o.is_torch:
+                return (2, chebyshev(o.pos, actor.pos))
+            return (3, chebyshev(o.pos, actor.pos))
         return sorted(
             (o for o in battle.ground_in_reach(actor) if _pickable(actor, o)),
-            key=lambda o: (o.kind != prefer, chebyshev(o.pos, actor.pos)))
+            key=_score)
 
     def _drop_on_ground(self, battle, actor, kind, weapon_name=None):
         dest = actor.pos
@@ -538,16 +546,38 @@ class PickUp(Action):
         actor.ap -= 1
         actor.walking = False
 
-        # equip; whatever does not fit in two hands falls to the ground
         if obj.is_torch:
             dropped = actor.equip_torch()
             battle.log(f"{actor.name} picks up a torch (lights {data.TORCH_RADIUS} squares).")
+            for kind, weapon_name in dropped:
+                self._drop_on_ground(battle, actor, kind, weapon_name)
+        elif getattr(obj, "is_relic", False):
+            item_name = getattr(obj, "item_name", "Relic")
+            actor.inventory.append(item_name)
+            if not hasattr(actor, "picked_up_items"):
+                actor.picked_up_items = []
+            actor.picked_up_items.append(item_name)
+            battle.log(f"{actor.name} retrieves the {item_name}!")
+            battle.fx(actor.pos, f"Got {item_name}!", "crit")
+        elif getattr(obj, "is_chest", False):
+            contents = getattr(obj, "contents", [])
+            for it in contents:
+                if it.endswith("Gold"):
+                    amt = int(it.split()[0])
+                    actor.char.gold += amt
+                    battle.log(f"{actor.name} finds {amt} gold in the chest!")
+                else:
+                    actor.inventory.append(it)
+                    if not hasattr(actor, "picked_up_items"):
+                        actor.picked_up_items = []
+                    actor.picked_up_items.append(it)
+                    battle.log(f"{actor.name} recovers {it} from the chest!")
+            battle.fx(actor.pos, "Chest Opened!", "ok")
         else:
             dropped = actor.equip_weapon(obj.weapon_name)
             battle.log(f"{actor.name} picks up {obj.weapon_name} from the ground.")
-
-        for kind, weapon_name in dropped:
-            self._drop_on_ground(battle, actor, kind, weapon_name)
+            for kind, weapon_name in dropped:
+                self._drop_on_ground(battle, actor, kind, weapon_name)
 
 
 # --------------------------------------------------------------------------- #
@@ -789,6 +819,9 @@ class Flee(Action):
 
     @staticmethod
     def _at_edge(battle, actor):
+        escape_cells = getattr(battle, "escape_cells", None)
+        if escape_cells and any(c in escape_cells for c in battle.cells_of(actor)):
+            return True
         b = battle.board
         return any(x == 0 or x == b.cols - 1 or y == 0 or y == b.rows - 1
                    for x, y in battle.cells_of(actor))
@@ -1521,7 +1554,81 @@ class ShareMagicAction(Action):
 
 SHARE_MAGIC = ShareMagicAction()
 
+
+class Investigate(Action):
+    id, name, cost, target = "investigate", "Investigate", 1, "none"
+    desc = "Inspect nearby walls and surfaces for secret doors or hidden switches."
+
+    def _adjacent_secrets(self, battle, actor):
+        secrets = getattr(battle, "secret_walls", set())
+        return [p for p in secrets if chebyshev(actor.pos, p) <= 1]
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._adjacent_secrets(battle, actor))
+
+    def label(self, battle, actor):
+        return "Investigate secret (1 pt)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        secrets = self._adjacent_secrets(battle, actor)
+        for p in secrets:
+            battle.board.walls.discard(p)
+            battle.secret_walls.discard(p)
+            battle.log(f"{actor.name} inspects the wall and triggers a hidden lever! A secret door slides open at {p}.")
+            battle.fx(p, "Secret Opened!", "crit")
+
+
+class Disarm(Action):
+    id, name, cost, target = "disarm", "Disarm Trap", 1, "none"
+    desc = "Disarm an adjacent trap (d20 + DEX vs DC 12)."
+
+    def _adjacent_traps(self, battle, actor):
+        return [o for o in battle.ground if o.is_trap and chebyshev(actor.pos, o.pos) <= 1]
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._adjacent_traps(battle, actor))
+
+    def label(self, battle, actor):
+        return "Disarm trap (1 pt, DEX vs DC 12)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return
+        traps = self._adjacent_traps(battle, actor)
+        if not traps:
+            return
+        trap = traps[0]
+        actor.ap -= self.cost
+        actor.walking = False
+        nat = d20()
+        bonus = actor.mod_dexterity
+        total = nat + bonus
+        dc = 12
+        ok = total >= dc
+        battle.log(f"{actor.name} attempts to disarm {trap.trap_type}: d20({nat}) {bonus:+}(DEX) = {total} vs DC {dc} -> "
+                   + ("success!" if ok else "failed."))
+        if ok:
+            battle.ground.remove(trap)
+            trap_name = "Bear Trap" if "bear" in trap.trap_type.lower() else "Alarm Trap"
+            actor.inventory.append(trap_name)
+            if not hasattr(actor, "picked_up_items"):
+                actor.picked_up_items = []
+            actor.picked_up_items.append(trap_name)
+            battle.log(f"  {actor.name} disarms the {trap.trap_type} and recovers a {trap_name}!")
+            battle.fx(trap.pos, "Trap Disarmed!", "ok")
+        elif nat == 1 or total <= dc - 5:
+            battle.log(f"  Critical fumble! {actor.name} accidentally triggers the trap!")
+            battle.trigger_trap(actor, trap)
+
+
+INVESTIGATE = Investigate()
+DISARM = Disarm()
+
 # Panel buttons, in order. Move and Attack are the default board click.
 # Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
 PANEL_ACTIONS = [ATTACK, ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
-                 SWIM, STABILIZE, FIRST_AID, DrinkPotion(), PICK_UP, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]
+                 SWIM, STABILIZE, FIRST_AID, DrinkPotion(), PICK_UP, DISARM, INVESTIGATE, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]

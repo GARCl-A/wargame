@@ -114,7 +114,8 @@ class Guild:
                  property_city_squatting=False, bankers_debt=0,
                  property_city_debt_since=None, garrison_stock=None,
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
-                 wilds_claim_sustain_days_left=None, wilds_claim_owner=None):
+                 wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
+                 ancient_ruins_discovered=False):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -172,6 +173,7 @@ class Guild:
         # the guild so it saves and loads by slot, like everything else here;
         # the draft (before a Guild exists) keeps its own until `app._draft_done`
         # hands it in
+        self.ancient_ruins_discovered = ancient_ruins_discovered
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
 

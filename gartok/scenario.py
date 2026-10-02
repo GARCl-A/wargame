@@ -23,7 +23,7 @@ import random
 
 from .board import COLS, ROWS, Board, cells
 from .ground import Creature, GroundObject
-from . import data
+from . import data, encounters
 
 
 class Scenario:
@@ -289,3 +289,145 @@ class CustomFlagScenario(_FlagObjective, CustomScenario):
     is authored. The Games' boss bout fights here (`arena.boss_bout`); the map's
     `deploy_npc` places the Ribbit brothers, both sides race, the symmetric map
     is the fairness."""
+
+
+class AncientRuinsScenario(Scenario):
+    """The game's first true dungeon: Ruins of the Ancient Library.
+
+    A 30x18 continuous subterranean complex of 5 interconnected chambers:
+    - Chamber 1 (Guardian Room): Sentry constructs guarding the entrance hall.
+    - Chamber 2 (Trap Gauntlet): A corridor rigged with Bear Traps and an Alarm Trap.
+    - Chamber 3 & 4 (Secret Vault): Behind a concealed wall mechanism; contains an ancient chest with loot.
+    - Chamber 5 (Boss Sanctum): 'The Ancient Archivist' guarding the stone pedestal with the Ancient Codex.
+    """
+
+    ambient_light = False
+    outdoor = False
+    torch_count = 0
+
+    def __init__(self):
+        self._cols = 30
+        self._rows = 18
+        self._walls = self._build_walls()
+        self._torches = [(2, 4), (2, 12), (18, 1), (19, 8), (24, 8)]
+        self.secret_walls = {(14, 6)}
+        self.escape_cells = {(0, 7), (0, 8), (1, 7), (1, 8)}
+        self.enemies = self._build_enemies()
+
+    def _build_walls(self):
+        w = set()
+        cols, rows = self._cols, self._rows
+        # Outer boundary
+        for x in range(cols):
+            w.add((x, 0))
+            w.add((x, rows - 1))
+        for y in range(rows):
+            if y not in (7, 8):  # Entrance doorway at (0, 7) and (0, 8)
+                w.add((0, y))
+            w.add((cols - 1, y))
+
+        # Solid dead-space blocks
+        for x in range(1, 9):
+            for y in range(1, 3):
+                w.add((x, y))
+        for x in range(1, 9):
+            for y in range(15, rows - 1):
+                w.add((x, y))
+        for x in range(9, 16):
+            for y in range(11, rows - 1):
+                w.add((x, y))
+        for x in range(23, cols - 1):
+            for y in range(1, 6):
+                w.add((x, y))
+        for x in range(16, cols - 1):
+            for y in range(16, rows - 1):
+                w.add((x, y))
+
+        # Chamber 1 divider (between room 1 and corridor)
+        for y in (3, 4, 5, 6, 7, 10, 11, 12, 13, 14):
+            w.add((8, y))
+        # Pillars in Chamber 1
+        w.add((4, 5))
+        w.add((4, 11))
+
+        # Chamber 2 (Corridor) walls
+        for x in range(9, 15):
+            w.add((x, 6))  # Note: (14, 6) is the secret wall
+            w.add((x, 13))
+
+        # Vault (Chambers 3 & 4) walls
+        for y in range(1, 7):
+            w.add((13, y))
+            w.add((22, y))
+        for x in range(14, 23):
+            w.add((x, 6))
+
+        # Chamber 5 (Boss Sanctum) walls and pillars
+        for y in (6, 7, 8, 9, 10, 13, 14, 15):
+            w.add((15, y))
+        w.add((19, 8))
+        w.add((19, 13))
+        w.add((24, 8))
+        w.add((24, 13))
+
+        return w
+
+    def _make_board(self):
+        return Board(walls=self._walls, cols=self._cols, rows=self._rows)
+
+    def _build_enemies(self):
+        s1 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
+        s1.name = "Ruin Sentry"
+        s1.map_cell = (6, 6)
+
+        s2 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
+        s2.name = "Ruin Sentry"
+        s2.map_cell = (6, 9)
+
+        boss = encounters.build_enemy(3, race_pool=[data.race_by_name("Automaton")])
+        boss.name = "The Ancient Archivist"
+        boss.map_cell = (25, 11)
+        boss.dormant = True
+        boss.awareness_radius = 8
+        if "magic_missile" not in boss.spells_known:
+            boss.spells_known.append("magic_missile")
+
+        return [s1, s2, boss]
+
+    def _deploy_cells(self, u):
+        if u.team == "player":
+            return [(1, 7), (1, 8), (2, 7), (2, 8), (2, 6), (2, 9), (3, 7), (3, 8)]
+        cell = getattr(u, "map_cell", None)
+        if cell:
+            return [cell]
+        return [(25, 11), (6, 6), (6, 9)]
+
+    def build(self, battle):
+        super().build(battle)
+        battle.secret_walls = set(self.secret_walls)
+        battle.escape_cells = set(self.escape_cells)
+
+        for p in self._torches:
+            if p not in battle.board.walls:
+                battle.ground.append(GroundObject.torch(p))
+
+        battle.ground.append(GroundObject.trap((11, 8), "bear trap", "enemy"))
+        battle.ground.append(GroundObject.trap((13, 8), "alarm trap", "enemy"))
+
+        chest_loot = ["Scroll of Sleep", "Amethyst", "50 Gold"]
+        battle.ground.append(GroundObject.chest((18, 3), chest_loot))
+
+        battle.ground.append(GroundObject.relic((27, 11), data.CODEX_ITEM))
+
+    def win_check(self, battle):
+        players = list(battle.player_units)
+        standing = [u for u in players if u.alive]
+        fled = [u for u in players if u.fled]
+        has_codex = any(
+            data.CODEX_ITEM in getattr(u, "inventory", []) or 
+            data.CODEX_ITEM in getattr(u, "picked_up_items", []) 
+            for u in players
+        )
+        if not standing and fled and has_codex:
+            return "player"
+        return None

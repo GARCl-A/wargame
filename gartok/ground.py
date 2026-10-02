@@ -13,13 +13,18 @@ class GroundObject:
     WEAPON = "weapon"
     TORCH = "torch"
     TRAP = "trap"
+    RELIC = "relic"
+    CHEST = "chest"
 
-    def __init__(self, kind, pos, weapon_name=None, trap_type=None, trap_owner_team=None):
+    def __init__(self, kind, pos, weapon_name=None, trap_type=None, trap_owner_team=None,
+                 item_name=None, contents=None):
         self.kind = kind
         self.pos = pos
         self.weapon_name = weapon_name
         self.trap_type = trap_type
         self.trap_owner_team = trap_owner_team
+        self.item_name = item_name
+        self.contents = list(contents) if contents else []
 
     @classmethod
     def weapon(cls, pos, weapon_name):
@@ -33,6 +38,14 @@ class GroundObject:
     def trap(cls, pos, trap_type, trap_owner_team):
         return cls(cls.TRAP, pos, trap_type=trap_type, trap_owner_team=trap_owner_team)
 
+    @classmethod
+    def relic(cls, pos, item_name):
+        return cls(cls.RELIC, pos, item_name=item_name)
+
+    @classmethod
+    def chest(cls, pos, contents):
+        return cls(cls.CHEST, pos, contents=contents)
+
     @property
     def is_weapon(self):
         return self.kind == self.WEAPON
@@ -45,8 +58,16 @@ class GroundObject:
     def is_trap(self):
         return self.kind == self.TRAP
 
+    @property
+    def is_relic(self):
+        return self.kind == self.RELIC
+
+    @property
+    def is_chest(self):
+        return self.kind == self.CHEST
+
     def __repr__(self):
-        extra = f" {self.weapon_name}" if self.weapon_name else ""
+        extra = f" {self.weapon_name or self.item_name or self.contents}" if (self.weapon_name or self.item_name or self.contents) else ""
         return f"<GroundObject {self.kind}{extra} @ {self.pos}>"
 
 

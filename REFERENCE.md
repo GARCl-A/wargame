@@ -132,6 +132,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | 1kg Coal | 1 kg | -- |
 | 1sqm Hide | 2 kg | -- |
 | Alarm Trap | 1 kg | -- |
+| Ancient Codex | 2 kg | -- |
 | Bear Trap | 3 kg | -- |
 | Bucket | 1 kg | -- |
 | Chains | 5 kg | -- |

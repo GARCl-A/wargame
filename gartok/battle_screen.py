@@ -567,6 +567,18 @@ class BattleScreen(Screen):
                 continue
             if o.is_torch:
                 self._draw_torch(screen, o.pos)
+            elif getattr(o, "is_chest", False):
+                cx, cy = self._cell_rect(*o.pos).center
+                d = self.view.tile // 3
+                rect = pygame.Rect(cx - d, cy - d // 2, d * 2, d)
+                pygame.draw.rect(screen, (139, 90, 43), rect)
+                pygame.draw.rect(screen, (218, 165, 32), rect, 2)
+            elif getattr(o, "is_relic", False):
+                cx, cy = self._cell_rect(*o.pos).center
+                d = self.view.tile // 3
+                pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
+                pygame.draw.polygon(screen, (120, 200, 255), pts)
+                pygame.draw.polygon(screen, (255, 255, 255), pts, 2)
             else:
                 cx, cy = self._cell_rect(*o.pos).center
                 d = self.view.tile // 4

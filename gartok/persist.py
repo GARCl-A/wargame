@@ -134,6 +134,7 @@ def save_game(slot, guild):
         "wilds_claim_fence_lumber": guild.wilds_claim_fence_lumber,
         "wilds_claim_sustain_days_left": guild.wilds_claim_sustain_days_left,
         "wilds_claim_owner": guild.wilds_claim_owner,
+        "ancient_ruins_discovered": getattr(guild, "ancient_ruins_discovered", False),
         "market_stock": dict(guild.market_stock),
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
@@ -215,6 +216,7 @@ def load_game(slot):
                  leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
                  name=payload.get("name", ""), banner_color=payload.get("banner_color"),
                  banner_icon=payload.get("banner_icon"),
+                 ancient_ruins_discovered=payload.get("ancient_ruins_discovered", False),
                  tutorial=TutorialState(seen=payload.get("tutorial_seen", []),
                                        enabled=payload.get("tutorial_enabled", True)))
 

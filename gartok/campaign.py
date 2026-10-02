@@ -89,6 +89,9 @@ def _carry_forward(member, combatant):
         if member.has_item(data.AMMO_ITEM):
             member.quiver_charges = data.QUIVER_AMMO
 
+    for item in getattr(combatant, "picked_up_items", []):
+        member.give_to_pack(item)
+
     if combatant.hp <= 0:
         member.hp = 1
     else:
@@ -632,3 +635,23 @@ def _resume_arrival(guild, group, order):
              factions.settle(guild, factions.Event("travel", node=world.node(group.node)))]
     group.order = orders.idle()
     return events
+
+
+def scout_ancient_ruins(guild, group):
+    """Spend 4 hours searching the scrub off the Old Road for the lost library ruins.
+    Tests WIS mod vs DC 12. On success, discovers the Ancient Ruins."""
+    guild.clock.advance_hours(4)
+    scout = max(group.members, key=lambda u: u.mod_wisdom) if group.members else None
+    wis_mod = scout.mod_wisdom if scout else 0
+    nat = data.d20()
+    total = nat + wis_mod
+    dc = 12
+    if total >= dc:
+        guild.ancient_ruins_discovered = True
+        name = scout.name if scout else "The squad"
+        msg = f"{name} spots ancient stone markers half-buried in the scrub! The Ancient Ruins are discovered."
+        return True, msg
+    else:
+        name = scout.name if scout else "The squad"
+        msg = f"{name} spends 4 hours searching the brush, but finds no trace of the ruins (d20({nat}) {wis_mod:+}(WIS) = {total} vs DC {dc})."
+        return False, msg

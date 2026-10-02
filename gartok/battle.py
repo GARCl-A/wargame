@@ -459,8 +459,12 @@ class Battle:
             unit.moved = unit.speed # stop movement
         elif trap.trap_type == "alarm trap":
             self.log(f"  *RING RING RING* A loud alarm sounds! Everyone's attention is drawn to {unit.name}.")
-            # Give a temporary penalty or condition if needed, but for now just stops movement slightly and logs
             unit.moved += 1 # small movement penalty
+            self.alarm_triggered = True
+            for u in getattr(self, "units", []):
+                if u.team != unit.team:
+                    u.dormant = False
+                    u.alerted = True
 
     def _apply_submersion(self, unit):
         """Breath check at the top of a submerged unit's turn. It holds out

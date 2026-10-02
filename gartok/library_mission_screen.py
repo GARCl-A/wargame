@@ -26,8 +26,13 @@ class LibraryMissionScreen(MissionOfferScreen):
         return "LEAVE"
 
     def get_template(self):
-        return next((t for t in missions.TEMPLATES.values()
-                     if t.giver == self.GIVER and t.node == self.group.node), None)
+        for m in self.guild.missions:
+            if m.state == "active":
+                t = missions.TEMPLATES.get(m.template_id)
+                if t and t.giver == self.GIVER:
+                    return t
+        offers = missions.offers_at(self.guild, self.group.node)
+        return next((t for t in offers if t.giver == self.GIVER), None)
 
     def get_req_str(self, t):
         if t.goal_item == "Any Dictionary":
