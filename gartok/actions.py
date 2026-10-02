@@ -933,12 +933,20 @@ class Push(Action):
         target.walking = False
         battle.log(desc + f"  -> {target.name} is shoved to {dest}.")
         
+        was_up = target.alive
         trap = battle.ground_at(dest)
         if trap and trap.is_trap and trap.trap_owner_team != target.team:
             battle.trigger_trap(target, trap)
             
         if z_to < z_from:
             battle.apply_fall(target, z_from - z_to, battle.log)
+
+        if was_up and target.team != actor.team:
+            if not target.alive:
+                actor.credit_kill(target)
+            elif target.hp <= 0 and target.ferocity_downer is None:
+                target.ferocity_downer = actor
+
 
 
 class _VerticalStep(Action):

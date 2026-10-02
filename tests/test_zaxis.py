@@ -148,6 +148,19 @@ def test_push_into_a_pit_makes_the_target_fall():
     assert d.pos == (7, 5) and d.hp < hp    # shoved in, took the fall
 
 
+def test_push_into_a_pit_credits_kill_if_target_dies():
+    batt, a, d = _pit_battle(depth=4)
+    a.pos, d.pos = (5, 5), (6, 5)
+    batt.board.elevation = {(7, 5): -4}
+    d.hp = 1                                # fall damage (3d6) will easily down d
+    with fixed_d20(20):
+        actions.PUSH.execute(batt, a, d)
+    assert not d.alive
+    assert a.kills == 1
+    assert d.downed_by == a
+
+
+
 def test_flight_lets_a_unit_move_in_three_dimensions():
     batt, a, d = _pit_battle(depth=2)
     a.pos, d.pos = (5, 5), (9, 9)

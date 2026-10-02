@@ -215,7 +215,43 @@ def test_champion_title_goes_to_the_finisher():
     assert guild.arena_challenge_day == guild.clock.day + arena.CHALLENGE_CYCLE
 
 
+def test_champion_pushed_into_pit_awards_title_to_pusher():
+    from gartok import arena, campaign, world
+    from gartok.guild import Guild
+    from gartok.actions import Push
+    from tests.helpers import fixed_d20
+    random.seed(11)
+    winner, other = Unit("player"), Unit("player")
+    guild = Guild([winner, other], node="arena")
+    champ = arena.load_champion()
+    battle = Battle([winner, other], [champ, Unit("enemy")], lethal=False, arena=True)
+    winner_c = battle.player_units[0]
+    champ_c = next(c for c in battle.enemy_units if getattr(c, "arena_role", None) == "champion")
+    winner_c.pos = (5, 5)
+    champ_c.pos = (6, 5)
+    battle.board.walls = set()
+    battle.board.elevation = {(7, 5): -4}
+    champ_c.hp = 1
+    with fixed_d20(20):
+        Push().execute(battle, winner_c, champ_c)
+    assert not champ_c.alive
+    assert champ_c.downed_by == winner_c
+    battle.winner = "player"
+    for u in battle.player_units:
+        u.status = "up"
+    for e in battle.enemy_units:
+        e.status = "stable"
+    out = campaign.absorb_battle(guild, [winner, other], battle,
+                                 node=world.node("arena"), arena_offer=arena.champion_bout())
+    assert "arena_dethrone" in {d.id for d in out.deeds_earned}
+    assert winner.arena_title and not other.arena_title
+    assert guild.arena_challenge_day == guild.clock.day + arena.CHALLENGE_CYCLE
+    assert "lands the finishing blow and takes the Champion of the Pit" in out.arena_title_event
+
+
+
 def test_champion_title_stays_vacant_on_a_messy_finish():
+
     from gartok import arena, campaign, world
     from gartok.guild import Guild
     random.seed(12)

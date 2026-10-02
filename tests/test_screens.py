@@ -1115,7 +1115,68 @@ def test_market_screen_item_hover_tooltip():
     assert found_pack_tooltip, "MarketScreen pack items should set tooltip on hover"
 
 
+def test_market_screen_weapon_size_toggle():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.market_screen import MarketScreen
+    from gartok.theme import Fonts
+    from gartok.guild import Guild
+    from gartok.world import NODES
+    from tests.helpers import Unit
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    shopper = Unit("player")
+    guild = Guild([shopper])
+    node = next(n for n in NODES if n.kind == "market")
+    
+    ms = MarketScreen(Fonts(), guild, [shopper], node, lambda: None)
+    surf = pygame.Surface((1280, 720))
+    ms.mouse = (0, 0)
+    ms.draw(surf)
+
+    # Initial state: weapons tab, Medium by default
+    assert ms.tab == "weapons"
+    assert ms.weapon_size == "Medium"
+    assert ms._active_stock_name("Axe") == "Axe"
+    assert any(name == "Axe" for _, name in ms.stock_rows)
+    assert not any(name == "Large Axe" for _, name in ms.stock_rows)
+
+    # Size hits and header size hits were populated during draw
+    assert len(ms.header_size_hits) == 2
+    assert len(ms.size_hits) > 0
+
+    # Click row toggle 'L' for Axe
+    axe_l_hit = next(rect for rect, b, sz in ms.size_hits if b == "Axe" and sz == "Large")
+    ms._drop(axe_l_hit.center, False, None)
+    assert ms._active_stock_name("Axe") == "Large Axe"
+    assert ms._active_stock_name("Dagger") == "Dagger"  # other weapons stay Medium
+
+    # Selection updates automatically when size is toggled
+    ms.sel = [("stock", "Large Axe")]
+    axe_m_hit = next(rect for rect, b, sz in ms.size_hits if b == "Axe" and sz == "Medium")
+    ms._drop(axe_m_hit.center, False, None)
+    assert ms._active_stock_name("Axe") == "Axe"
+    assert ms.sel == [("stock", "Axe")]
+
+    # Header toggle to Large sets all weapons to Large
+    lrg_hdr = next(rect for rect, sz in ms.header_size_hits if sz == "Large")
+    ms._drop(lrg_hdr.center, False, None)
+    assert ms.weapon_size == "Large"
+    assert ms._active_stock_name("Axe") == "Large Axe"
+    assert ms._active_stock_name("Dagger") == "Large Dagger"
+    assert ms.sel == [("stock", "Large Axe")]
+
+    # Redraw with Large: stock_rows now lists "Large Axe", "Large Dagger", etc.
+    ms.draw(surf)
+    assert any(name == "Large Axe" for _, name in ms.stock_rows)
+    assert any(name == "Large Dagger" for _, name in ms.stock_rows)
+    assert not any(name == "Axe" for _, name in ms.stock_rows)
+
+
 def test_sheet_panel_hp_breakdown_tooltip():
+
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok import sheet_panel

@@ -64,6 +64,10 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                                       getattr(node, "alignment", None),
                                       leader=group.leader if group else None)
         self.tab = self.get_categories()[0][1]     # "weapons"
+        self.weapon_size = "Medium"
+        self._weapon_sizes = {}              # base_name -> "Medium" | "Large"
+        self.size_hits = []                  # [(rect, base_name, size)]
+        self.header_size_hits = []           # [(rect, size)]
         self.qty = {}                        # kit tab: stock name -> quantity to buy
         self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
         self._sel_qty = {}                   # (member, idx) -> how much of that pack stack is picked
@@ -80,6 +84,33 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         self.item_rows = []                  # [(rect, member, loc)]
         self.cards = []                      # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
+
+    def _stock_weapon_size(self, base_name):
+        return self._weapon_sizes.get(base_name, self.weapon_size)
+
+    def _active_stock_name(self, base_name):
+        if self.tab == "weapons" and not base_name.startswith("Large "):
+            if self._stock_weapon_size(base_name) == "Large":
+                large_name = f"Large {base_name}"
+                if items.get(large_name):
+                    return large_name
+        return base_name
+
+    def _set_weapon_size(self, base_name, size):
+        self._weapon_sizes[base_name] = size
+        med_name = base_name
+        lrg_name = f"Large {base_name}"
+        old_name = med_name if size == "Large" else lrg_name
+        new_name = lrg_name if size == "Large" else med_name
+        if ("stock", old_name) in self.sel:
+            self.sel = [("stock", new_name) if p == ("stock", old_name) else p for p in self.sel]
+
+    def _set_all_weapon_sizes(self, size):
+        self.weapon_size = size
+        cats = self.get_categories()
+        wpn_names = next((names for lbl, key, names in cats if key == "weapons"), [])
+        for b in wpn_names:
+            self._set_weapon_size(b, size)
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -255,6 +286,12 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         for rect, _member, _name in self.lock_hits:
             if rect.collidepoint(px):
                 return None                  # a padlock press starts no drag / select
+        for rect, _base_name, _size in self.size_hits:
+            if rect.collidepoint(px):
+                return None                  # a size toggle press starts no drag / select
+        for rect, _size in self.header_size_hits:
+            if rect.collidepoint(px):
+                return None                  # a header size toggle starts no drag / select
         for rect, name in self.stock_rows:
             if rect.collidepoint(px):
                 return ("stock", name)
@@ -357,6 +394,16 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         for rect, member, name in self.lock_hits:
             if rect.collidepoint(px):
                 member.toggle_lock(name)
+                return
+
+        for rect, base_name, size in self.size_hits:
+            if rect.collidepoint(px):
+                self._set_weapon_size(base_name, size)
+                return
+
+        for rect, size in self.header_size_hits:
+            if rect.collidepoint(px):
+                self._set_all_weapon_sizes(size)
                 return
 
         for key, rect in self.buttons:
@@ -586,6 +633,8 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         self.stock_rows = []
         self.qty_hits = []
         self.lock_hits = []
+        self.size_hits = []
+        self.header_size_hits = []
         self.tab_hits = []
         self.item_rows = []
         self.cards = []
@@ -681,18 +730,32 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         tag_x = x + 204
 
         caps(screen, F["micro"], "FOR SALE", (x, rect.y + T.S * 2), T.TX_FAINT)
+        if self.tab == "weapons":
+            tw, th = 46, 18
+            med_hdr_r = pygame.Rect(rect.right - T.S * 2 - tw * 2 - 2, rect.y + T.S, tw, th)
+            lrg_hdr_r = pygame.Rect(rect.right - T.S * 2 - tw, rect.y + T.S, tw, th)
+            all_lrg = all(self._stock_weapon_size(b) == "Large" for b in names) if names else False
+            all_med = all(self._stock_weapon_size(b) == "Medium" for b in names) if names else True
+            draw_button(screen, F, med_hdr_r, "MED", primary=all_med, ghost=not all_med, mpos=self.mouse)
+            draw_button(screen, F, lrg_hdr_r, "LRG", primary=all_lrg, ghost=not all_lrg, mpos=self.mouse)
+            self.header_size_hits.append((med_hdr_r, "Medium"))
+            self.header_size_hits.append((lrg_hdr_r, "Large"))
+
         hline(screen, x, rect.right - T.S * 2, rect.y + T.S * 4)
         
         y = rect.y + T.S * 5
         caps(screen, F["micro"], "ITEM", (x, y), T.TX_FAINT)
         if kit:
             caps(screen, F["micro"], "QTY", (x + 152, y), T.TX_FAINT)
+        elif self.tab == "weapons":
+            caps(screen, F["micro"], "SIZE", (x + 168, y), T.TX_FAINT)
         caps(screen, F["micro"], "PRICE", (price_x, y), T.TX_FAINT, right=True)
         caps(screen, F["micro"], "WT", (wt_x, y), T.TX_FAINT, right=True)
         y += 17
 
         row_h = 30 if kit else 34
-        for name in names:
+        for base_name in names:
+            name = self._active_stock_name(base_name)
             r = pygame.Rect(x, y, w, row_h)
             sel = ("stock", name) in self.sel
             hov = not self.sel and r.collidepoint(self.mouse)
@@ -722,10 +785,25 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 main_color = T.TX
 
             spec = "" if kit else self._stock_spec(name)
-            name_w = 138 if kit else 148
+            name_w = 138 if kit else (138 if self.tab == "weapons" else 148)
             ui_text(screen, F["body"], ellipsize(name, F["body"], name_w), (r.x + T.S, r.y + (4 if spec else r.centery - 8 - r.y)), ink)
             if spec:
                 ui_text(screen, F["micro"], spec, (r.x + T.S, r.y + 17), faint)
+
+            btn_m, btn_l = None, None
+            if self.tab == "weapons":
+                bw, bh = 20, 18
+                bx = r.x + 164
+                by = r.centery - bh // 2
+                btn_m = pygame.Rect(bx, by, bw, bh)
+                btn_l = pygame.Rect(bx + bw, by, bw, bh)
+                cur_sz = self._stock_weapon_size(base_name)
+                is_l = (cur_sz == "Large")
+                draw_button(screen, F, btn_m, "M", primary=not is_l, ghost=is_l, mpos=self.mouse)
+                draw_button(screen, F, btn_l, "L", primary=is_l, ghost=not is_l, mpos=self.mouse)
+                self.size_hits.append((btn_m, base_name, "Medium"))
+                self.size_hits.append((btn_l, base_name, "Large"))
+
             if kit:
                 self._draw_stepper(screen, ("stock", name), r)
                 tag = self._kit_tag(name)
@@ -753,6 +831,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 self.tooltip = format_tooltip(t, d, self.fonts)
 
             self.stock_rows.append((r, name))
+
             y += row_h + T.S
 
     def _stock_spec(self, name):

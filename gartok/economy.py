@@ -95,15 +95,13 @@ PRICES = {item.name: item.price for item in items.all_items().values()}
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
-    "Large Axe", "Large Hammer", "Large Broadsword", "Large Hatchet",
-    "Dwarf Axe", "Large Dwarf Axe",
-    "Light Crossbow", "Shortbow", "Quiver",
-    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Dwarf Armor",
-    "Dwarf Shield",
+    "Light Crossbow", "Shortbow",
+    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
     "Meat", "Fruit", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
-    "Bear Trap", "Alarm Trap",
+    "Quiver", "Bear Trap", "Alarm Trap",
 ]
+
 
 # Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.
 # A name listed here instead carries a live, finite count (`Guild.market_stock`,

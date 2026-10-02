@@ -99,3 +99,16 @@ def test_fruit_price_and_market_stock():
     assert economy.buy_price("Fruit", 0.0) == 4
     assert economy.sell_price("Fruit", 0.0) == 2
 
+
+def test_dwarf_items_not_in_market_stock():
+    # Dwarven weapons/armor/shield are crafted via the Dwarf racial talent and not sold in the market
+    for dwarf_item in ("Dwarf Axe", "Large Dwarf Axe", "Dwarf Armor", "Dwarf Shield"):
+        assert dwarf_item not in economy.MARKET_STOCK
+
+
+def test_market_stock_has_no_duplicate_large_weapon_rows():
+    # Large weapons are toggled when buying, not duplicated as separate stock rows
+    large_weapons = [item for item in economy.MARKET_STOCK if item.startswith("Large ")]
+    assert large_weapons == []
+
+
