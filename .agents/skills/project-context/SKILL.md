@@ -20,6 +20,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-ui-redesign.md` | Presentation layer: theme.py design system, 100% procedural rendering, Screen base class contract. |
 | `player-text-english.md` | Why everything is English, the sweep that made it so. |
 | `gartok-doc-generator.md` | REFERENCE.md generation, repo structure, drift test, RULES.md prose-only rule. |
+| `gartok-item-system.md` | **Item System & ItemInstance.** Single source of truth in items.py, ItemDef, rich ItemInstance, UI helpers, and SAVE_VERSION 17. |
 
 ### Systems (world / campaign)
 | File | What it covers |

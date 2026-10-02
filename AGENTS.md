@@ -56,6 +56,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `economy.py` | prices, stock, haggling, garrison/property constants |
 | `persist.py` | JSON save/load, SAVE_VERSION, tolerates missing keys |
 | `factions.py` | factions + one-shot deeds → reputation |
+| `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `app.py` | pygame shell: scene loop, screen wiring |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 
