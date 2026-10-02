@@ -26,6 +26,7 @@ exactly one consumer that reads it back:
     coin_gain         Guild.work_shift                 --
     activity_speed    Guild.work_shift                 --
     recruit_cha       recruit.convince                 --
+    craft_bonus       Unit.progress_crafting           --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -152,6 +153,18 @@ _LIST = [
     Talent("provisioner", "work", 2, "Provisioner",
            "+1 to haggling on food, shared language or not.", requires="negotiator",
            effects=(Effect("food_haggle", 1),), icon="action/trade"),
+
+    Talent("crafter", "work", 1, "Crafter",
+           "+1 to progress rolls when crafting items.",
+           effects=(Effect("craft_bonus", 1),), icon="action/crafting"),
+    Talent("apothecary", "work", 2, "Apothecary",
+           "learn a random apothecary recipe (or +1 brewing rolls if all known).",
+           requires="crafter",
+           effects=(), icon="action/pouring-chalice"),
+    Talent("blacksmith", "work", 2, "Blacksmith",
+           "learn a random forge recipe (or +1 forging rolls if all known).",
+           requires="crafter",
+           effects=(), icon="body/blacksmith"),
 
     # ================================================================== #
     # racial -- race-gated; the level is racial_level (sum of the other    #

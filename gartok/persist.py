@@ -71,6 +71,7 @@ def unit_to_dict(u):
         "recipes": list(u.recipes),
         "crafting_target": u.crafting_target,
         "crafting_progress": u.crafting_progress,
+        "craft_bonuses": dict(u.craft_bonuses),
         "magic_source": u.magic_source,          # nature / blood / faith, or None (see magic.py)
         "spells_known": list(u.spells_known),
         "study_target": u.study_target,          # spell id or language name being studied at the taverna, or None

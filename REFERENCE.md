@@ -242,6 +242,9 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Negotiator | +1 Charisma for market buy and sell checks. | -- |
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | negotiator |
 | 2 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |
+| 1 | Crafter | +1 to progress rolls when crafting items. | -- |
+| 2 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | crafter |
+| 2 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | crafter |
 
 ### Racial track
 

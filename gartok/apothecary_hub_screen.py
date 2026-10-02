@@ -24,7 +24,8 @@ class ApothecaryHubScreen(Screen):
         
         self.craft_screen = CraftingScreen(fonts, guild, group, on_done,
                                            title="THE APOTHECARY",
-                                           subtitle="brew potions and draughts  ·  needs recipes and materials")
+                                           subtitle="brew potions and draughts  ·  needs recipes and materials",
+                                           station="apothecary")
         self.jobs_screen = ApothecaryMissionScreen(self._F, guild, group, on_done)
         
         self.buttons = []

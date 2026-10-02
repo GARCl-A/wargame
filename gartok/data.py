@@ -382,16 +382,19 @@ def item_weight(name):
 # --------------------------------------------------------------------------- #
 
 CRAFTING_RECIPES = {
-    "Minor Healing Potion": {"materials": ["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"], "complexity": 15},
-    "Dwarf Axe": {"materials": ["Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 10},
-    "Dwarf Shield": {"materials": ["Iron Bar", "Lumber", "1kg Coal"], "complexity": 10},
-    "Dwarf Armor": {"materials": ["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 15},
-    "Bear Trap": {"materials": ["Iron Bar"], "complexity": 5},
-    "Alarm Trap": {"materials": ["Iron Bar", "Rope"], "complexity": 5},
+    "Minor Healing Potion": {"materials": ["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"], "complexity": 15, "station": "apothecary", "level": 1},
+    "Dwarf Axe": {"materials": ["Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 10, "station": "forge", "level": 1},
+    "Dwarf Shield": {"materials": ["Iron Bar", "Lumber", "1kg Coal"], "complexity": 10, "station": "forge", "level": 1},
+    "Dwarf Armor": {"materials": ["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"], "complexity": 15, "station": "forge", "level": 2},
+    "Bear Trap": {"materials": ["Iron Bar"], "complexity": 5, "station": "forge", "level": 1},
+    "Alarm Trap": {"materials": ["Iron Bar", "Rope"], "complexity": 5, "station": "forge", "level": 1},
 }
 
 for _lang in LANGUAGES:
-    CRAFTING_RECIPES[f"Dictionary of {_lang}"] = {"materials": ["1sqm Hide", "Paper", "Ink"], "complexity": 25}
+    CRAFTING_RECIPES[f"Dictionary of {_lang}"] = {"materials": ["1sqm Hide", "Paper", "Ink"], "complexity": 25, "station": "scriptorium", "level": 2}
+
+APOTHECARY_RECIPES = ["Minor Healing Potion"]
+BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
 
 
 # Prices, market stock and haggling live in `economy.py` (behaviour, not a

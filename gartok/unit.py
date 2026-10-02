@@ -86,6 +86,7 @@ class Unit:
         self.recipes = []
         self.crafting_target = None
         self.crafting_progress = 0
+        self.craft_bonuses = {}
         self._roll_attributes()
         if race is not None:                 # a specific body (e.g. encounters' race_pool draw)
             self.race = dict(race)
@@ -179,6 +180,7 @@ class Unit:
         u.recipes = list(d.get("recipes", []))
         u.crafting_target = d.get("crafting_target")
         u.crafting_progress = d.get("crafting_progress", 0)
+        u.craft_bonuses = dict(d.get("craft_bonuses", {}))
 
         u._auto_name = d["auto_name"]
         u.name = d["name"]
@@ -397,6 +399,18 @@ class Unit:
             for r in ["Bear Trap", "Alarm Trap"]:
                 if r not in self.recipes:
                     self.recipes.append(r)
+        elif talent_id == "apothecary":
+            unlearned = [r for r in data.APOTHECARY_RECIPES if r not in self.recipes]
+            if unlearned:
+                self.recipes.append(random.choice(unlearned))
+            else:
+                self.craft_bonuses["apothecary"] = self.craft_bonuses.get("apothecary", 0) + 1
+        elif talent_id == "blacksmith":
+            unlearned = [r for r in data.BLACKSMITH_RECIPES if r not in self.recipes]
+            if unlearned:
+                self.recipes.append(random.choice(unlearned))
+            else:
+                self.craft_bonuses["forge"] = self.craft_bonuses.get("forge", 0) + 1
                 
         self._apply_attributes()
         self._derive_combat()
@@ -644,6 +658,10 @@ class Unit:
                     doomed.add(tid)
                     grew = True
         self.talents[track] = [tid for tid in picked if tid not in doomed]
+        if "apothecary" in doomed:
+            self.craft_bonuses.pop("apothecary", None)
+        if "blacksmith" in doomed:
+            self.craft_bonuses.pop("forge", None)
         self._apply_attributes()
         self._derive_combat()
         return True
@@ -1033,7 +1051,9 @@ class Unit:
             target_val += economy.PRICES.get(mat, 10)
         target_val += recipe_data["complexity"]
 
-        prog = roll(1, 20) + self.mod_intelligence
+        station = recipe_data.get("station")
+        bonus = self.talent_bonus("craft_bonus") + self.craft_bonuses.get(station, 0)
+        prog = roll(1, 20) + self.mod_intelligence + bonus
         prog = max(1, prog)
         self.crafting_progress += prog
         

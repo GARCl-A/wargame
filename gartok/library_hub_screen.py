@@ -27,7 +27,8 @@ class LibraryHubScreen(Screen):
         self.shop_screen = LibraryScreen(fonts, guild, list(group.members), node, on_done)
         self.craft_screen = CraftingScreen(fonts, guild, group, on_done,
                                            title="THE LIBRARY (WRITE)",
-                                           subtitle="write dictionaries and translate texts  ·  needs recipes and materials")
+                                           subtitle="write dictionaries and translate texts  ·  needs recipes and materials",
+                                           station="scriptorium")
         self.jobs_screen = LibraryMissionScreen(self._F, guild, group, on_done)
         
         self.buttons = []

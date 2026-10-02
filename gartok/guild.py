@@ -841,6 +841,14 @@ class Guild:
 
         clock_hours = hours * self.work_speedup([unit])
         events, casualties = self.pass_time(clock_hours)
+
+        target_data = data.CRAFTING_RECIPES.get(unit.crafting_target or recipe, {})
+        recipe_level = target_data.get("level", 1)
+        old_work_lvl = unit.work_level
+        unit.work_hours += progression.work_xp_hours(hours, recipe_level, unit.work_level)
+        unit.collect_levels()
+        if unit.work_level > old_work_lvl:
+            events.append(f"{unit.name} reached work level {unit.work_level}!")
         
         progress_total = 0
         done = False

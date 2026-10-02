@@ -22,7 +22,9 @@ SIDE_W = 340
 class CraftingScreen(ButtonsMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, group, on_done, title="THE FORGE", subtitle="forge weapons and armor  ·  needs recipes and materials"):
+    def __init__(self, fonts, guild, group, on_done, title="THE FORGE",
+                 subtitle="forge weapons and armor  ·  needs recipes and materials",
+                 station="forge"):
         super().__init__()
         self.fonts = fonts
         self._F = ui_fonts()
@@ -31,9 +33,14 @@ class CraftingScreen(ButtonsMixin, Screen):
         self.on_done = on_done
         self.title = title
         self.subtitle = subtitle
+        self.station = station
         
-        # List members that have recipes
-        self.crafters = [u for u in group.members if u.recipes]
+        # List members that have recipes for this station
+        if self.station:
+            self.crafters = [u for u in group.members
+                             if any(data.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in u.recipes)]
+        else:
+            self.crafters = [u for u in group.members if u.recipes]
         self.selected_crafter = self.crafters[0] if self.crafters else None
 
         self.buttons = []         # [(key, rect)]
@@ -122,12 +129,14 @@ class CraftingScreen(ButtonsMixin, Screen):
 
         def _trailing(surf, r, ch):
             u = ch["unit"]
-            caps(surf, F["micro"], f"{len(u.recipes)} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
+            count = sum(1 for r in u.recipes if not self.station or data.CRAFTING_RECIPES.get(r, {}).get("station") == self.station)
+            caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
             if u.crafting_target:
                 caps(surf, F["micro"], "IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
 
         for m in self.group.members:
-            if not m.recipes:
+            has_recipes = any(data.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in m.recipes) if self.station else bool(m.recipes)
+            if not has_recipes:
                 continue
 
             r = pygame.Rect(area.x + 12, y, area.w - 24, 74)
@@ -155,6 +164,8 @@ class CraftingScreen(ButtonsMixin, Screen):
             r_data = data.CRAFTING_RECIPES.get(r_name)
             if not r_data:
                 continue
+            if self.station and r_data.get("station") != self.station:
+                continue
 
             is_active = m.crafting_target == r_name
             r = pygame.Rect(x, y, w, 110)
@@ -167,6 +178,11 @@ class CraftingScreen(ButtonsMixin, Screen):
 
             materials_str = ", ".join(r_data["materials"])
 
+            station = r_data.get("station")
+            bonus = m.talent_bonus("craft_bonus") + m.craft_bonuses.get(station, 0)
+            total_mod = m.mod_intelligence + bonus
+            mod_sign = f"+ {total_mod}" if total_mod >= 0 else f"- {abs(total_mod)}"
+
             if is_active:
                 status_color = T.BRASS
                 status_text = f"IN PROGRESS: {m.crafting_progress}/{target_val} progress"
@@ -174,7 +190,7 @@ class CraftingScreen(ButtonsMixin, Screen):
                 missing = self._get_missing_materials(m, r_name)
                 has_mat = len(missing) == 0
                 status_color = T.GREEN if has_mat else T.BLOOD
-                status_text = f"Target Progress: {target_val} (Roll: 1d20 + {m.mod_intelligence})"
+                status_text = f"Target Progress: {target_val} (Roll: 1d20 {mod_sign})"
                 if not has_mat:
                     status_text += f" - MISSING: {', '.join(missing)}"
 
@@ -206,4 +222,4 @@ class CraftingScreen(ButtonsMixin, Screen):
             text(screen, F["body_sm"], notice, (m, ny), T.BRASS)
             ny -= 20
 
-        footer_bar(self, screen, F, primary=("done", "LEAVE THE FORGE"))
+        footer_bar(self, screen, F, primary=("done", f"LEAVE {self.title}"))
