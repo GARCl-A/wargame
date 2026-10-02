@@ -107,6 +107,8 @@ def _items():
             tags.append("food")
         if items.is_consumable(item):
             tags.append("consumable")
+        if items.is_material(item):
+            tags.append("material")
         if name in data.LIGHT_SOURCES:
             tags.append(f"light {data.LIGHT_SOURCES[name]} sq")
         rows.append((name, f"{item.weight:g} kg", ", ".join(tags) or "--"))

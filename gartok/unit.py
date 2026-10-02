@@ -249,13 +249,60 @@ class Unit:
 
     def _take_ration(self, larder=None):
         """Eat one ration: this character's own pack first, then each pack in
-        `larder` (guild-mates sharing food). Returns the name of the eaten food if one was found."""
+        `larder` (guild-mates sharing food). Prioritizes oldest fresh food first
+        (highest days_old / age), tie-broken by cheapest (lowest price), then
+        original pack order. Falls back to Rotten Food if no fresh food exists.
+        Returns the name of the eaten food if one was found."""
         for pack in (self._base_inventory, *(larder or ())):
-            # Prefer fresh food
-            idx = next((i for i, (n, _) in enumerate(pack)
-                        if items.is_food(n.split(" (")[0]) and not n.startswith("Rotten Food")), None)
-            if idx is None:
-                idx = next((i for i, (n, _) in enumerate(pack) if n.startswith("Rotten Food")), None)
+            fresh_candidates = []
+            rotten_candidates = []
+            for i, entry in enumerate(pack):
+                if isinstance(entry, items.ItemInstance):
+                    is_food = entry.defn.food or items.is_food(entry.defn.id)
+                    is_rotten = entry.is_rotten() or entry.name.startswith("Rotten Food")
+                    days_old = entry.days_old
+                    price = entry.defn.price
+                elif isinstance(entry, (tuple, list)):
+                    raw_name = entry[0]
+                    base = raw_name.split(" (")[0]
+                    it = items.get(base)
+                    is_food = (it.food if it else False) or items.is_food(base)
+                    is_rotten = raw_name.startswith("Rotten Food")
+                    days_old = 0
+                    if " (" in raw_name and raw_name.endswith("d)"):
+                        try:
+                            days_old = int(raw_name.split(" (")[1][:-2])
+                        except ValueError:
+                            days_old = 0
+                    price = it.price if it else 0
+                else:
+                    raw_name = str(entry)
+                    base = raw_name.split(" (")[0]
+                    it = items.get(base)
+                    is_food = (it.food if it else False) or items.is_food(base)
+                    is_rotten = raw_name.startswith("Rotten Food")
+                    days_old = 0
+                    if " (" in raw_name and raw_name.endswith("d)"):
+                        try:
+                            days_old = int(raw_name.split(" (")[1][:-2])
+                        except ValueError:
+                            days_old = 0
+                    price = it.price if it else 0
+
+                if is_food and not is_rotten:
+                    # Sort key: (-days_old: oldest first, price: cheapest first, i: pack order)
+                    fresh_candidates.append((-days_old, price, i))
+                elif is_rotten:
+                    rotten_candidates.append(i)
+
+            if fresh_candidates:
+                fresh_candidates.sort()
+                idx = fresh_candidates[0][2]
+            elif rotten_candidates:
+                idx = rotten_candidates[0]
+            else:
+                idx = None
+
             if idx is not None:
                 entry = pack[idx]
                 if isinstance(entry, items.ItemInstance):

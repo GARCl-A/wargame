@@ -29,7 +29,7 @@ whole maximized screen. Reached from the map (opening it passes no time).
 
 import pygame
 
-from . import artwork, factions, items
+from . import artwork, factions, items, magic, progression
 from .combatant import Combatant
 from .screen import Screen
 from .ui.sheet_card import draw_row, draw_sheet, unit_to_ch
@@ -81,6 +81,16 @@ class GuildScreen(ButtonsMixin, Screen):
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return f"guild.{self.tab}"
+
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        pad = MARGIN if W < 1500 else SP5
+        return pygame.Rect(W - pad - 28, pad - 4, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        pad = MARGIN if W < 1500 else SP5
+        return (W - pad - 340, pad + 32, 340, "down")
 
     # ------------------------------------------------------------------ #
     def _is_group_leader(self, unit):
@@ -311,6 +321,153 @@ class GuildScreen(ButtonsMixin, Screen):
         if not is_guild_leader and free_swap:
             self.buttons.append(("guild_leader", gl2))
 
+        # --- Progression & XP --- #
+        a += 34
+        a = section(screen, "EXPERIENCE & PROGRESSION", bx, a, bw, f)
+        self._draw_progression_tracks(screen, bx, a, bw, unit, mouse)
+
+    def _draw_progression_tracks(self, screen, bx, a, bw, unit, mouse):
+        f = self.fonts
+
+        # 1. Combat Track
+        combat_top = a
+        into_c, span_c = progression.to_next(progression.COMBAT_XP_THRESHOLDS, unit.combat_xp)
+        xp_c_str = f"{into_c}/{span_c} XP" if span_c else "MAX"
+        tracked(screen, "COMBAT", f.label, INFO, (bx, a))
+        text(screen, f"LVL {unit.combat_level}  ({xp_c_str})", f.mono_sm, INK, (bx + bw, a - 1), right=True)
+        a += 16
+
+        bar_c = pygame.Rect(bx, a, bw, 7)
+        panel(screen, bar_c, fill=SURFACE_0, border=LINE_SOFT, width=1, radius=3)
+        if span_c:
+            fillw = int((bar_c.w - 2) * max(0, min(into_c, span_c)) / span_c)
+            if fillw > 0:
+                pygame.draw.rect(screen, ACCENT, (bar_c.x + 1, bar_c.y + 1, fillw, bar_c.h - 2), border_radius=2)
+        a += 11
+
+        combat_req = (f"Down standing enemies of Lv {unit.combat_level}+ (Arena, Wilds, Ambushes)."
+                      if unit.combat_level > 0
+                      else "Down standing enemies of Lv 0+ (Arena, Wilds, Ambushes).")
+        for line in wrap_lines([combat_req], f.body_sm, bw):
+            text(screen, line, f.body_sm, INK_DIM, (bx, a))
+            a += 15
+
+        c_rect = pygame.Rect(bx, combat_top, bw, a - combat_top)
+        if c_rect.collidepoint(mouse):
+            self.tooltip = (
+                f"Combat XP Rule:\n"
+                f"Downing an enemy grants (enemy level - {unit.combat_level}) + 1 XP.\n"
+                f"Enemies below Lv {unit.combat_level} grant 0 XP.\n"
+                f"Double XP is credited upon victorious battle completion."
+            )
+        a += 10
+
+        # 2. Work Track
+        work_top = a
+        into_w, span_w = progression.to_next(progression.WORK_XP_THRESHOLDS, unit.work_xp)
+        xp_w_str = f"{into_w}/{span_w} XP" if span_w else "MAX"
+        tracked(screen, "WORK", f.label, INFO, (bx, a))
+        text(screen, f"LVL {unit.work_level}  ({xp_w_str})", f.mono_sm, INK, (bx + bw, a - 1), right=True)
+        a += 16
+
+        bar_w = pygame.Rect(bx, a, bw, 7)
+        panel(screen, bar_w, fill=SURFACE_0, border=LINE_SOFT, width=1, radius=3)
+        if span_w:
+            fillw = int((bar_w.w - 2) * max(0, min(into_w, span_w)) / span_w)
+            if fillw > 0:
+                pygame.draw.rect(screen, ACCENT, (bar_w.x + 1, bar_w.y + 1, fillw, bar_w.h - 2), border_radius=2)
+        a += 11
+
+        jobs = progression.eligible_work_activities(unit.work_level, unit)
+        work_req = ("Execute: " + ", ".join(jobs)
+                    if jobs
+                    else f"No standard activities teach past Lv {unit.work_level} yet.")
+        for line in wrap_lines([work_req], f.body_sm, bw):
+            text(screen, line, f.body_sm, INK_DIM, (bx, a))
+            a += 15
+
+        w_rect = pygame.Rect(bx, work_top, bw, a - work_top)
+        if w_rect.collidepoint(mouse):
+            self.tooltip = (
+                f"Work XP Rule:\n"
+                f"1 mark banked per 16 hours of day-labour.\n"
+                f"Activity level must be >= worker level (Lv {unit.work_level}+) to teach.\n"
+                f"Outgrown tasks continue to pay wages but grant 0 XP."
+            )
+        a += 10
+
+        # 3. Racial Track
+        racial_top = a
+        into_r, span_r = progression.to_next(progression.RACIAL_XP_THRESHOLDS, unit.racial_xp)
+        xp_r_str = f"{into_r}/{span_r} lvls" if span_r else "MAX"
+        tracked(screen, "RACIAL", f.label, INFO, (bx, a))
+        text(screen, f"LVL {unit.racial_level}  ({xp_r_str})", f.mono_sm, INK, (bx + bw, a - 1), right=True)
+        a += 16
+
+        bar_r = pygame.Rect(bx, a, bw, 7)
+        panel(screen, bar_r, fill=SURFACE_0, border=LINE_SOFT, width=1, radius=3)
+        if span_r:
+            fillw = int((bar_r.w - 2) * max(0, min(into_r, span_r)) / span_r)
+            if fillw > 0:
+                pygame.draw.rect(screen, ACCENT, (bar_r.x + 1, bar_r.y + 1, fillw, bar_r.h - 2), border_radius=2)
+        a += 11
+
+        racial_req = f"Total track levels: {unit.racial_xp} (Combat {unit.combat_level} + Work {unit.work_level}). Grants +1 HD/lvl."
+        if unit.racial_level < 5:
+            racial_req += f" First racial talent at Lv 5 ({5 - unit.racial_level} to go)."
+        else:
+            racial_req += " Racial talent tree unlocked."
+        for line in wrap_lines([racial_req], f.body_sm, bw):
+            text(screen, line, f.body_sm, INK_DIM, (bx, a))
+            a += 15
+
+        r_rect = pygame.Rect(bx, racial_top, bw, a - racial_top)
+        if r_rect.collidepoint(mouse):
+            self.tooltip = (
+                f"Racial Track Rule:\n"
+                f"Racial XP is the sum of Combat Level ({unit.combat_level}) and Work Level ({unit.work_level}).\n"
+                f"Each racial level grants 1 additional Hit Die roll (+CON mod) on max HP.\n"
+                f"Racial talent picks unlock at Racial Level 5."
+            )
+        a += 10
+
+        # 4. Study Track
+        if unit.study_target:
+            study_top = a
+            total_needed = magic.points_to_learn(0)
+            target_name = unit.study_target
+            if unit.study_target in magic.SPELLS:
+                spell = magic.SPELLS[unit.study_target]
+                target_name = spell.name
+                total_needed = magic.points_to_learn(spell.level)
+
+            cur_pts = min(unit.study_progress, total_needed)
+            tracked(screen, "STUDY", f.label, INFO, (bx, a))
+            text(screen, f"{target_name}  ({cur_pts}/{total_needed} pts)", f.mono_sm, INK, (bx + bw, a - 1), right=True)
+            a += 16
+
+            bar_s = pygame.Rect(bx, a, bw, 7)
+            panel(screen, bar_s, fill=SURFACE_0, border=LINE_SOFT, width=1, radius=3)
+            if total_needed > 0:
+                fillw = int((bar_s.w - 2) * max(0, min(cur_pts, total_needed)) / total_needed)
+                if fillw > 0:
+                    pygame.draw.rect(screen, ACCENT, (bar_s.x + 1, bar_s.y + 1, fillw, bar_s.h - 2), border_radius=2)
+            a += 11
+
+            study_req = "Studying at taverna (rent rooms). Rolls daily progress toward mastery."
+            for line in wrap_lines([study_req], f.body_sm, bw):
+                text(screen, line, f.body_sm, INK_DIM, (bx, a))
+                a += 15
+
+            s_rect = pygame.Rect(bx, study_top, bw, a - study_top)
+            if s_rect.collidepoint(mouse):
+                self.tooltip = (
+                    f"Study Rule:\n"
+                    f"Target: {target_name}\n"
+                    f"Accumulated: {cur_pts} / {total_needed} points.\n"
+                    f"Rolls 1d20 + INT mod per day during 'Study' order at a Taverna."
+                )
+
     def _item_tag(self, item):
         return items.item_tag(item)
 
@@ -318,7 +475,8 @@ class GuildScreen(ButtonsMixin, Screen):
     def _draw_tabs(self, screen, W, pad):
         """Right-aligned pill strip on the title row: MEMBERS | REPUTATIONS."""
         f = self.fonts
-        x = W - pad
+        has_tutorial = self.tutorial_key() is not None
+        x = W - pad - (28 + SP2 if has_tutorial else 0)
         for key, lbl in reversed(TABS):
             w = f.body_bd.size(lbl)[0] + 2 * SP3
             r = pygame.Rect(x - w, pad - 4, w, 28)

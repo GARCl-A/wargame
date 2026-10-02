@@ -343,7 +343,8 @@ def take_turn(battle, unit):
                     unit.walking = False
                     continue
                 else:
-                    break # stuck
+                    battle.log(f"{unit.name} is cornered and turns to fight!")
+                    pass  # fall through to normal combat below
 
         body = _finish_off(battle, unit)
         if body is not None:                  # evil: put the downed enemy away

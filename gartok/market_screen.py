@@ -118,6 +118,14 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     def tutorial_key(self):
         return "market"
 
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        return pygame.Rect(W - MARGIN - 28, MARGIN - 4, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        return (W - MARGIN - 340, MARGIN + 32, 340, "down")
+
     def get_categories(self):
         return economy.market_categories()
 
@@ -644,8 +652,10 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         self.zones = []
 
         ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
+        has_tut = self.tutorial_key() is not None
+        purse_x = screen.get_width() - MARGIN - (28 + SP2 if has_tut else 0)
         ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper", 
-             (screen.get_width() - MARGIN - 40, MARGIN + 2), T.BRASS, right=True)
+             (purse_x, MARGIN + 2), T.BRASS, right=True)
              
         names = self._selected_names()
         if names:

@@ -149,9 +149,9 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 
 | Item | Weight | Notes |
 |---|---|---|
-| 1L Beer | 1 kg | food, consumable |
-| 1kg Coal | 1 kg | -- |
-| 1sqm Hide | 2 kg | -- |
+| 1L Beer | 1 kg | food, consumable, material |
+| 1kg Coal | 1 kg | material |
+| 1sqm Hide | 2 kg | material |
 | Alarm Trap | 1 kg | -- |
 | Amethyst | 0.5 kg | -- |
 | Ancient Codex | 2 kg | -- |
@@ -184,13 +184,13 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Dwarf Axe | 4 kg | -- |
 | Dwarf Shield | 3 kg | -- |
 | First Aid Kit | 0.8 kg | consumable |
-| Fruit | 0.2 kg | food, consumable |
+| Fruit | 0.2 kg | food, consumable, material |
 | Gemstones | 0.1 kg | -- |
 | Hammer | 4 kg | -- |
 | Hatchet | 1 kg | -- |
 | Holy Symbol | 0.5 kg | -- |
-| Ink | 0.1 kg | -- |
-| Iron Bar | 5 kg | -- |
+| Ink | 0.1 kg | material |
+| Iron Bar | 5 kg | material |
 | Iron Shackles | 1 kg | -- |
 | Lantern | 1 kg | light 6 sq |
 | Large Axe | 6 kg | -- |
@@ -214,20 +214,20 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Light Hammer | 1 kg | -- |
 | Light Pick | 1 kg | -- |
 | Locked Chest | 8 kg | -- |
-| Lumber | 2 kg | -- |
+| Lumber | 2 kg | material |
 | Map | 0.1 kg | -- |
 | Meat | 1 kg | food, consumable |
 | Minor Healing Potion | 0.2 kg | consumable |
 | Musical Instrument | 2 kg | -- |
-| Paper | 0.1 kg | -- |
+| Paper | 0.1 kg | material |
 | Pick | 3 kg | -- |
 | Plate Armor | 28 kg | -- |
 | Potato | 1 kg | food, consumable |
 | Quarterstaff | 2 kg | -- |
 | Quiver | 1.5 kg | -- |
 | Rapier | 1 kg | -- |
-| Red Mushroom | 0.1 kg | -- |
-| Rope | 2 kg | -- |
+| Red Mushroom | 0.1 kg | material |
+| Rope | 2 kg | material |
 | Rotten Food | 1 kg | food, consumable |
 | Sack | 0.3 kg | -- |
 | Scales | 1 kg | -- |
@@ -241,10 +241,10 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Shortbow | 1 kg | -- |
 | Shortspear | 1.5 kg | -- |
 | Shovel | 2 kg | -- |
-| Stone Brick | 3 kg | -- |
+| Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
 | Torch | 0.5 kg | -- |
-| Vial | 0.1 kg | -- |
+| Vial | 0.1 kg | material |
 
 ## Sizes
 

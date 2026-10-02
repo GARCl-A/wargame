@@ -232,3 +232,27 @@ def test_bandit_ambush_locked_chest_drop():
     assert not any(u.count_of(data.CHEST_ITEM) > 0 for u in pack)
 
 
+def test_material_flag_and_tags():
+    # Crafting materials
+    for name in ["Rope", "Iron Bar", "1sqm Hide", "1kg Coal", "Lumber", "Vial", "Red Mushroom", "Paper", "Ink", "Stone Brick"]:
+        item = items.get(name)
+        assert item is not None
+        assert item.material is True
+        assert items.is_material(name) is True
+        assert items.is_material(item) is True
+        assert items.item_tag(name) == "MATERIAL"
+        inst = items.create_instance(name)
+        assert inst.material is True
+
+    # Non-materials
+    for name in ["Meat", "Potato", "Dagger", "Torch"]:
+        item = items.get(name)
+        assert item is not None
+        assert item.material is False
+        assert items.is_material(name) is False
+
+    # Tooltip mentions crafting material
+    _, desc = items.item_tooltip("Rope")
+    assert "Crafting material" in desc
+
+

@@ -46,13 +46,28 @@ class Event:
     ...); `node` is where it happened, or None. The rest is per-kind payload --
     a deed check reads only the fields its own kind sets. A battle event
     carries `outcome` (a `campaign.BattleOutcome`); a mission event carries
-    `tag` (the `missions.MissionTemplate.tag` just turned in, e.g. "economic");
+    `tag` / `tags` (the `missions.MissionTemplate.tags` just turned in, e.g. ("economic", "apothecary"));
     other kinds add their own fields as deeds come to need them.
     """
     kind: str
     node: object = None
     outcome: object = None                    # kind == "battle"
     tag: str = None                           # kind == "mission"
+    tags: tuple[str, ...] = ()
+
+    def __post_init__(self):
+        tags_val = self.tags
+        tag_val = self.tag
+        if isinstance(tags_val, str):
+            tags_val = (tags_val,)
+            if not tag_val:
+                tag_val = tags_val[0]
+        elif not tags_val and tag_val:
+            tags_val = (tag_val,)
+        elif tags_val and not tag_val:
+            tag_val = tags_val[0]
+        object.__setattr__(self, "tags", tuple(tags_val) if tags_val else ())
+        object.__setattr__(self, "tag", tag_val)
 
 
 @dataclass(frozen=True)
@@ -139,7 +154,7 @@ _DEEDS = [
     # once there is something to spend that trust on (buying property).
     Deed("bankers_good_for_business", "bankers", "Good for Business",
          "Complete an economic job in the City.", rep=1,
-         check=lambda g, e: e.kind == "mission" and e.tag == "economic"),
+         check=lambda g, e: e.kind == "mission" and ("economic" in e.tags or e.tag == "economic")),
 
     Deed("bankers_steady_customer", "bankers", "Steady Customer",
          "Spend 1000 copper at the market.", rep=1,
@@ -156,19 +171,19 @@ _DEEDS = [
     Deed("bankers_trust", "bankers", "Earned Trust",
          "Carry the Bankers' trust all the way to Ledger Hold and back.", rep=1,
          check=lambda g, e: (
-             e.kind == "mission" and e.tag == "trust"
+             e.kind == "mission" and ("trust" in e.tags or e.tag == "trust")
              and {"bankers_good_for_business", "bankers_steady_customer",
                   "bankers_diverse_portfolio"} <= set(g.deeds_done))),
     
     # Library deeds
     Deed("library_initiate", "library", "Library Initiate",
          "Complete a task for the library.", rep=1,
-         check=lambda g, e: e.kind == "mission" and e.tag == "library"),
+         check=lambda g, e: e.kind == "mission" and ("library" in e.tags or e.tag == "library")),
     Deed("library_trusted", "library", "Trusted Scholar",
          "Complete a second task for the library.", rep=1,
          requires="library_initiate",
-         check=lambda g, e: e.kind == "mission" and e.tag == "library" and
-             sum(1 for m in g.missions if m.state == "done" and __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library") >= 2),
+         check=lambda g, e: e.kind == "mission" and ("library" in e.tags or e.tag == "library") and
+             sum(1 for m in g.missions if m.state == "done" and ("library" in getattr(__import__('gartok.missions', fromlist=['']).template_of(m), "tags", ()) or __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library")) >= 2),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

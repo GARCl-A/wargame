@@ -108,8 +108,12 @@ def test_halfling_luck_rerolls_missed_attack_in_combat():
     enemy.hp = 20
 
     batt = Battle([halfling], [enemy], clock_day=1)
+    batt.ambient_light = True
     h_c, e_c = batt.player_units[0], batt.enemy_units[0]
     h_c.pos, e_c.pos = (5, 5), (5, 6)
+    e_c._ac = 15
+    halfling.strength = 10
+    halfling.dexterity = 10
 
     # Force rolls: attack roll 2 (miss), reroll 19 (hit)
     with patch("gartok.actions.d20", side_effect=[2, 19, 4]):

@@ -91,7 +91,8 @@ class CraftingScreen(ButtonsMixin, Screen):
                     parts = key.split(":")
                     hours = int(parts[1])
                     recipe = parts[2]
-                    self.notices = self.guild.crafting_shift(self.selected_crafter, recipe, hours)
+                    result = self.guild.crafting_shift(self.selected_crafter, recipe, hours)
+                    self.notices = result[0] if isinstance(result, tuple) else result
                 return
 
         for rect, m in self.roster_rows:

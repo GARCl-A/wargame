@@ -653,6 +653,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             progress = (missions.progress(self.guild, m), t.goal_qty, t.goal_item) if t.goal_qty > 0 else None
             quests.append({
                 "name": t.name,
+                "tags": getattr(t, "tags", ()),
                 "accepted_by": unit.name if unit else "Unknown",
                 "days_left": m.deadline_day - self.guild.clock.day,
                 "progress": progress,
@@ -687,7 +688,8 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         subtitle = (f"{len(self.group.members)} / {self.group.capacity} members  ·  "
                    f"{node_name}  ·  {order_state}")
         tab_rects = header(screen, F, head, "" if self.editing_name else title,
-                          subtitle, ("gear", "quests"), self.tab, mpos=self.mouse)
+                          subtitle, ("gear", "quests"), self.tab, mpos=self.mouse,
+                          has_tutorial=self.tutorial_key() is not None)
         self.tab_hits = [(r, tab_id) for tab_id, r in tab_rects.items()]
         self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
 

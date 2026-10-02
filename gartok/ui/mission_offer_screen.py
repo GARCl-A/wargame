@@ -11,6 +11,17 @@ from .tokens import T
 CARD_W = 560
 FOOTER_H = T.S * 4 + 34   # gap + divider + gap + leave button
 
+TAG_COLOR = {
+    "economic": T.BRASS,
+    "trust": T.BRASS,
+    "bankers": T.BRASS_DIM,
+    "apothecary": T.GREEN,
+    "library": T.TX_MUTED,
+    "tanner": T.TX_MUTED,
+    "scholarly": T.TX_MUTED,
+    "ruins": T.BLOOD,
+}
+
 
 class MissionOfferScreen(Screen):
     native = True
@@ -150,6 +161,21 @@ class MissionOfferScreen(Screen):
 
         rows.append(row(F["head"], t.name, T.TX, 26))
 
+        tags = getattr(t, "tags", ()) or ((t.tag,) if getattr(t, "tag", None) else ())
+        if tags:
+            def draw_tags(x, y):
+                tx = x
+                for tag in tags:
+                    label = tag.upper()
+                    col = TAG_COLOR.get(tag.lower(), T.TX_MUTED)
+                    pw = F["microb"].size(label)[0] + 12
+                    pill = pygame.Rect(tx, y, pw, 16)
+                    pygame.draw.rect(screen, T.STEEL_HI, pill, border_radius=4)
+                    pygame.draw.rect(screen, col, pill, 1, border_radius=4)
+                    text(screen, F["microb"], label, pill.center, col, center=True)
+                    tx += pw + T.S
+            rows.append((24, draw_tags))
+
         m = self._mission
         offered = self._offered
         if m is None:
@@ -191,7 +217,10 @@ class MissionOfferScreen(Screen):
         x = card.x + T.S * 3
 
         if self.notice:
-            text(screen, F["body_sm"], self.notice, (x, y + T.S), T.BRASS)
+            notice_w = card.right - x - T.S * 3
+            for ln in wrap(F["body_sm"], self.notice, notice_w):
+                text(screen, F["body_sm"], ln, (x, y + T.S), T.BRASS)
+                y += 16
 
         y += T.S * 2
         hline(screen, x, card.right - T.S * 3, y)

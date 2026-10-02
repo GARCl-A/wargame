@@ -270,7 +270,7 @@ class MapScreen(ButtonsMixin, Screen):
 
     def _guild_label(self):
         pending = sum(1 for u in self.guild.roster if u.pending_picks)
-        return f"GUILD ({pending} LEVEL UP)" if pending else "GUILD / GEAR"
+        return f"GUILD ({pending} LEVEL UP)" if pending else "GUILD"
 
     # ------------------------------------------------------------------ #
     def update(self, dt):
@@ -628,9 +628,9 @@ class MapScreen(ButtonsMixin, Screen):
                           "color": T.TX_FAINT})
 
         if here.id == "road" and not getattr(self.guild, "ancient_ruins_discovered", False):
-            blocks.append({"type": "button", "key": "scout_ruins", "label": "SCOUT FOR RUINS (4 h)",
+            blocks.append({"type": "button", "key": "scout_ruins", "label": "EXPLORE THE AREA (4 h)",
                           "gap_before": T.S * 2})
-            blocks.append({"type": "text", "text": "Search the scrub for the lost stone trail (WIS vs DC 12)",
+            blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
                           "color": T.TX_FAINT})
 
         if getattr(here, "dungeon", False):

@@ -33,8 +33,23 @@ class MissionTemplate:
     goal_qty: int
     reward: int             # copper, split evenly across the current group
     deadline_days: int      # in-game days from acceptance to the deadline
-    tag: str                # topic a bankers.Deed can key off, e.g. "economic"
+    tags: tuple[str, ...] = ()
+    tag: str | None = None
     starting_item: str | None = None   # handed to the signer's pack the moment they accept
+
+    def __post_init__(self):
+        tags_val = self.tags
+        tag_val = self.tag
+        if isinstance(tags_val, str):
+            tags_val = (tags_val,)
+            if not tag_val:
+                tag_val = tags_val[0]
+        elif not tags_val and tag_val:
+            tags_val = (tag_val,)
+        elif tags_val and not tag_val:
+            tag_val = tags_val[0]
+        object.__setattr__(self, "tags", tuple(tags_val) if tags_val else ())
+        object.__setattr__(self, "tag", tag_val or (tags_val[0] if tags_val else ""))
 
 
 @dataclass
@@ -52,7 +67,7 @@ TANNER_HIDES = MissionTemplate(
     "The tanner wants 15 sqm of hide off anything with fur. The Wilds is "
     "thick with it, if you can bring down what's wearing it.",
     goal_item="1sqm Hide", goal_qty=15, reward=200, deadline_days=5,
-    tag="economic",
+    tags=("economic", "tanner"),
 )
 
 # The Bankers' trust mission: accepting hands over a sealed chest
@@ -67,21 +82,21 @@ TRUST_CHEST = MissionTemplate(
     "before they'll vouch for it: carry a sealed chest to their outpost at "
     "Ledger Hold, safe, and bring back their letter of receipt. Don't peek.",
     goal_item=data.LETTER_ITEM, goal_qty=1, reward=0, deadline_days=7,
-    tag="trust", starting_item=data.MISSION_CHEST_ITEM,
+    tags=("trust", "bankers"), starting_item=data.MISSION_CHEST_ITEM,
 )
 
 APOTHECARY_MUSHROOMS = MissionTemplate(
     "apothecary_mushrooms", "apothecary", "city", "Fifteen Red Mushrooms",
     "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
     goal_item="Red Mushroom", goal_qty=15, reward=150, deadline_days=10,
-    tag="apothecary",
+    tags=("economic", "apothecary"),
 )
 
 LIBRARY_DICTIONARY = MissionTemplate(
     "library_dictionary", "library", "library", "A New Translation",
     "The library wants a dictionary to expand its archives. Any language will do.",
     goal_item="Any Dictionary", goal_qty=1, reward=250, deadline_days=15,
-    tag="library",
+    tags=("library", "scholarly"),
 )
 
 LIBRARY_ANCIENT_CODEX = MissionTemplate(
@@ -89,7 +104,7 @@ LIBRARY_ANCIENT_CODEX = MissionTemplate(
     "Legends speak of an ancient subterranean library buried off the Old Road. "
     "Delve into the forgotten ruins and retrieve the Ancient Codex.",
     goal_item=data.CODEX_ITEM, goal_qty=1, reward=500, deadline_days=20,
-    tag="library",
+    tags=("library", "ruins"),
 )
 
 TEMPLATES = {
@@ -177,7 +192,7 @@ def turn_in(guild, mission):
         u.gold += base + (1 if i < rem else 0)
     mission.state = "done"
     return factions.settle(guild, factions.Event(
-        "mission", node=world.node(t.node), tag=t.tag))
+        "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
 
 
 def _active_trust_mission(guild):

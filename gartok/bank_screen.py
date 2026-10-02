@@ -70,6 +70,14 @@ class BankScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
     def tutorial_key(self):
         return "bank"
 
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        return pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        return (W - T.S * 3 - 340, T.S * 9 + T.S, 340, "down")
+
     def _ui_fonts(self):
         if self._F is None:
             self._F = ui_fonts()
@@ -472,8 +480,10 @@ class BankScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
               "the Bankers rent one strongbox  ·  a flat fee, no questions", (), None,
               mpos=self.mouse)
         self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
+        has_tut = self.tutorial_key() is not None
+        purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0)
         text(screen, F["microb"], f"purse {self.purse} c",
-            (W - T.S * 3, T.S * 3), T.BRASS, right=True)
+            (purse_x, T.S * 3), T.BRASS, right=True)
 
         self._draw_chest(screen, F, chest_rect)
         self._draw_rail(screen, F, rail_rect)

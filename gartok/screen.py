@@ -42,12 +42,22 @@ class Screen:
         return None
 
     def tutorial_anchor(self, size):
-        """Where that card (and its reopen `?` badge) sits: `(x, y, max_w, grow)`
-        -- `grow` is `"down"` (the card's body extends below `(x, y)`) or `"up"`
-        (it extends above). Only screens that override `tutorial_key` need to
-        override this; the default is top-right."""
+        """Where that card sits: `(x, y, max_w, grow)` -- `grow` is `"down"`
+        (the card's body extends below `(x, y)`) or `"up"` (it extends above).
+        Only screens that override `tutorial_key` need to override this; the
+        default is top-right."""
         W, H = size
         return (W - 340 - 24, 24, 340, "down")
+
+    def tutorial_badge_rect(self, size):
+        """Where the reopen `?` badge sits when the tutorial card is dismissed.
+        Default is top-right aligned with standard header margins:
+        `size_px` = 28, sitting at (W - 28 - MARGIN, MARGIN - 4).
+        Screens with tabs or header widgets can override this (or reserve space)
+        so the badge sits on the same line to the right of header elements."""
+        W, H = size
+        size_px = 28
+        return pygame.Rect(W - size_px - MARGIN, MARGIN - 4, size_px, size_px)
 
     def footer_anchor(self, size, *, offset=52, w=340, margin=None):
         """The shape most footer-only screens share: bottom-left, growing

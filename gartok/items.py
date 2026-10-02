@@ -5,7 +5,7 @@ All items are defined with strong types, Enums, and typed ItemDef instances.
 """
 
 from enum import StrEnum
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Optional, Any
 
 
@@ -67,6 +67,7 @@ class ItemDef:
     max_dex: Optional[int] = None
     speed_penalty: int = 0
     food: bool = False
+    material: bool = False
     lifespan: Optional[int] = None
     spell_id: Optional[str] = None
     language: Optional[str] = None
@@ -121,6 +122,14 @@ class ItemInstance:
     @property
     def weight(self) -> float:
         return round(self.defn.weight * self.qty, 2)
+
+    @property
+    def food(self) -> bool:
+        return self.defn.food
+
+    @property
+    def material(self) -> bool:
+        return self.defn.material or is_material(self.name)
 
     def is_rotten(self) -> bool:
         if self.defn.lifespan is None:
@@ -238,6 +247,8 @@ _LOOKUP: dict[str, ItemDef] = {}
 
 
 def _register(item: ItemDef, *aliases: str) -> ItemDef:
+    if (item.type == ItemType.MATERIAL or item.id == "rope") and not item.material:
+        item = replace(item, material=True)
     _REGISTRY[item.id] = item
     _LOOKUP[item.id] = item
     _LOOKUP[item.name.lower()] = item
@@ -429,6 +440,21 @@ def is_light_source(item_or_name: Any) -> bool:
     return item is not None and (item.type == ItemType.LIGHT or item.light_radius > 0)
 
 
+def is_material(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    if item is None:
+        return False
+    return item.material or item.type == ItemType.MATERIAL or is_crafting_material(item.name)
+
+
+def is_crafting_material(name: str) -> bool:
+    return name in crafting_materials()
+
+
+def crafting_materials() -> set[str]:
+    return {m for r in CRAFTING_RECIPES.values() for m in r.materials}
+
+
 
 
 def item_weight(item_or_name: Any) -> float:
@@ -602,6 +628,8 @@ def item_tag(item: str | ItemDef | None) -> str:
         return "CHEST"
     if it.name == MISSION_CHEST_ITEM:
         return "SEALED"
+    if is_material(it):
+        return "MATERIAL"
     return ""
 
 
@@ -646,6 +674,9 @@ def item_tooltip(name: str) -> tuple[str, str]:
         desc.append("A day's ration. Prevents starvation when resting.")
         if it.lifespan is not None:
             desc.append(f"Spoils in {it.lifespan} day(s).")
+
+    if is_material(it) and it.type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.SHIELD):
+        desc.append("Crafting material: used in workshop recipes.")
 
     wt = it.weight
     desc.append(f"Weight: {wt:g} kg.")

@@ -334,7 +334,13 @@ def test_every_screen_draws_native_at_any_window_size():
 
     from gartok.ledger_screen import LedgerScreen
     from gartok.trust_screen import TrustScreen
+    from gartok.tanner_screen import TannerScreen
+    from gartok.apothecary_mission_screen import ApothecaryMissionScreen
+    from gartok.library_mission_screen import LibraryMissionScreen
     scenes.append(TrustScreen(UI_F, guild, guild.groups[0], noop))          # nothing accepted yet
+    scenes.append(TannerScreen(UI_F, guild, guild.groups[0], noop))
+    scenes.append(ApothecaryMissionScreen(UI_F, guild, guild.groups[0], noop))
+    scenes.append(LibraryMissionScreen(UI_F, guild, guild.groups[0], noop))
     scenes.append(LedgerScreen(F, guild, guild.groups[0], noop))         # nothing to hand over
 
     from gartok import missions as _missions
@@ -439,6 +445,28 @@ def test_guild_screen_member_detail_renders():
     surf = pygame.Surface((1280, 800))
     scr.mouse = (0, 0)
     scr.draw(surf)
+
+    # Test with experienced unit
+    u2 = Unit("veteran")
+    u2.combat_xp = 12   # Combat Lv 2
+    u2.work_hours = 32  # Work Lv 1 (2 marks)
+    roster.append(u2)
+    scr.member = u2
+    scr.draw(surf)
+
+    # Find progression track coordinates and test tooltips
+    pad = 16
+    list_w = int(min(max(1280 * 0.24, 264), 380))
+    det_w = min(1120, 1280 - 2 * pad - list_w - 16)
+    inner = det_w - 2 * 16
+    col_a = min(440, int(inner * 0.55))
+    bx = pad + list_w + 16 + 16 + col_a + 24
+    
+    # Hover around progression tracks area
+    scr.mouse = (bx + 10, 350)
+    scr.draw(surf)
+    assert scr.tooltip is not None
+
 
 
 def test_squad_and_reward_screens_pop_the_sheet_modal():
@@ -1407,4 +1435,41 @@ def test_squad_screen_level_up_observability():
     scr.mouse = (0, 0)
     scr.draw(surf)
     # Renders without crashing and card lines include the talent line
+
+
+def test_guild_screen_study_track_rendered():
+    import pygame
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    from gartok.theme import Fonts
+    from gartok.unit import Unit
+    pygame.init()
+    surf = pygame.Surface((1280, 800))
+    u = Unit("player")
+    u.study_target = "magic_missile"
+    u.study_progress = 30
+    guild = Guild([u])
+    scr = GuildScreen(Fonts(), guild, on_back=lambda: None)
+    scr.mouse = (0, 0)
+    scr.draw(surf)
+
+    # Hover over study section to check tooltip
+    scr.mouse = (surf.get_width() - 200, 500)
+    scr.draw(surf)
+    assert scr.member == u
+
+
+def test_starvation_loot_screen_instantiation():
+    from gartok.loot_screen import LootScreen
+    from gartok.guild import Guild
+    from gartok.unit import Unit
+    from gartok.theme import Fonts
+    u1 = Unit("player")
+    u2 = Unit("player")
+    guild = Guild([u1, u2])
+    pool = ["Rations", "Dagger"]
+    ls = LootScreen(Fonts(), guild, guild.roster, pool, on_done=lambda: None)
+    assert ls.guild == guild
+    assert len(ls.survivors) == 2
+
 

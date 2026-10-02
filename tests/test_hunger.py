@@ -204,3 +204,43 @@ def test_hunger_survives_a_save_round_trip():
     v.unfed_days = 0
     v._derive_combat()
     assert v.hp_max == v._hp_roll + v.mod_constitution + v._ability.hp_max
+
+
+def test_food_consumption_priority_oldest_then_cheapest():
+    from gartok import items
+    u = Unit("player")
+    u.unfed_days = 1
+
+    # 1. Oldest food is eaten first
+    p_fresh = items.create_instance("Potato")
+    p_fresh.days_old = 0
+    p_old = items.create_instance("Potato")
+    p_old.days_old = 2
+    u._base_inventory = [p_fresh, p_old]
+
+    eaten = u._take_ration()
+    assert eaten == "Potato"
+    assert p_fresh in u._base_inventory
+    assert p_old not in u._base_inventory
+
+    # 2. Same age: cheapest food is eaten first (Potato price 3 vs Meat price 5)
+    u.unfed_days = 1
+    meat = items.create_instance("Meat")
+    meat.days_old = 0
+    potato = items.create_instance("Potato")
+    potato.days_old = 0
+    u._base_inventory = [meat, potato]
+
+    eaten = u._take_ration()
+    assert eaten == "Potato"
+    assert meat in u._base_inventory
+    assert potato not in u._base_inventory
+
+    # 3. Same age and same price: original inventory order tie-breaker
+    u.unfed_days = 1
+    p1 = items.create_instance("Potato")
+    p2 = items.create_instance("Potato")
+    u._base_inventory = [p1, p2]
+    eaten = u._take_ration()
+    assert len(u._base_inventory) == 1
+    assert u._base_inventory[0] is p2

@@ -273,7 +273,7 @@ class App:
                     pool += loot.carried_by(u)
                 if pool and self.guild.roster:
                     from .loot_screen import LootScreen
-                    self.scene = LootScreen(self.fonts, self.guild.roster, pool, on_done=self._after_activity)
+                    self.scene = LootScreen(self.fonts, self.guild, self.guild.roster, pool, on_done=self._after_activity)
                 else:
                     self._after_activity()
 

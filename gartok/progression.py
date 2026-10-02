@@ -88,3 +88,34 @@ def to_next(thresholds, xp):
         return 0, 0
     prev = thresholds[level - 1] if level else 0
     return xp - prev, thresholds[level] - prev
+
+
+def eligible_work_activities(worker_level, unit=None) -> list[str]:
+    """Return human-readable descriptions of work activities that grant work-XP
+    to a worker of `worker_level`."""
+    activities = []
+    # Lumber yard
+    if worker_level == 0:
+        activities.append("Lumber Yard (bare-handed or Axe)")
+    elif worker_level == 1:
+        if unit is not None:
+            from . import economy
+            has_axe = economy.lumber_level(unit) >= 1
+            if has_axe:
+                activities.append("Lumber Yard (with your Axe)")
+            else:
+                activities.append("Lumber Yard (requires owning an Axe)")
+        else:
+            activities.append("Lumber Yard (requires Axe)")
+
+    # Crafting
+    if worker_level <= 1:
+        activities.append("Crafting (Lv 1+ recipes)")
+    elif worker_level == 2:
+        activities.append("Crafting (Lv 2: Armor, Dictionaries)")
+
+    # Hunting in the Wilds
+    if worker_level <= 3:
+        activities.append("Hunting (Lv 3 in Wilds)")
+
+    return activities

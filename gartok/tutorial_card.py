@@ -21,11 +21,13 @@ from .theme import (
     INK_DIM,
     INK_FAINT,
     LINE,
+    LINE_SOFT,
     MARGIN,
     RADIUS,
     SP1,
     SP2,
     SP3,
+    SURFACE_1,
     SURFACE_2,
     SURFACE_3,
     blit_block,
@@ -50,7 +52,7 @@ def draw(surface, fonts, scene, state):
     anchor = scene.tutorial_anchor(surface.get_size())
     if state.should_show(key):
         return _draw_card(surface, fonts, key, anchor, scene.mouse), None
-    return None, _draw_badge(surface, fonts, anchor, scene.mouse)
+    return None, _draw_badge(surface, fonts, scene, scene.mouse)
 
 
 def _resolve(key):
@@ -95,13 +97,17 @@ def _draw_card(surface, fonts, key, anchor, mouse):
     return rect
 
 
-def _draw_badge(surface, fonts, anchor, mouse):
-    W, H = surface.get_size()
-    size = 26
-    r = pygame.Rect(W - size - MARGIN, MARGIN, size, size)
+def _draw_badge(surface, fonts, scene, mouse):
+    if hasattr(scene, "tutorial_badge_rect"):
+        r = scene.tutorial_badge_rect(surface.get_size())
+    else:
+        W, H = surface.get_size()
+        size = 28
+        r = pygame.Rect(W - size - MARGIN, MARGIN - 4, size, size)
     hot = r.collidepoint(mouse)
-    panel(surface, r, fill=SURFACE_3 if hot else SURFACE_2, border=ACCENT if hot else LINE, radius=4, width=1)
-    text(surface, "?", fonts.label, ACCENT if hot else INK_DIM, r.center, center=True)
+    panel(surface, r, fill=SURFACE_3 if hot else SURFACE_1,
+          border=ACCENT if hot else LINE_SOFT, radius=RADIUS, width=2 if hot else 1)
+    text(surface, "?", fonts.body_bd, ACCENT if hot else INK_DIM, r.center, center=True)
     if hot:
         set_pointer(True)
     return r

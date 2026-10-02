@@ -24,7 +24,7 @@ from .tokens import T, mix
 
 TAG_COLOR = {"": T.TX_FAINT, "WEAPON": T.TX_MUTED, "ARMOR": T.TX_MUTED,
              "AMMO": T.TX_FAINT, "HEAL": T.GREEN, "LIGHT": T.BRASS_DIM,
-             "FOOD": T.TX_FAINT, "CHEST": T.BRASS, "SEALED": T.BRASS}
+             "FOOD": T.TX_FAINT, "MATERIAL": T.BRASS_DIM, "CHEST": T.BRASS, "SEALED": T.BRASS}
 
 SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "armor": "armor"}
 

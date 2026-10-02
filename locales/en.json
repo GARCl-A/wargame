@@ -22,7 +22,7 @@
         "The guild is split into groups, each standing on its own spot on the map. Pick a group on the right, then click a place to send it there -- or use the panel for what's on offer where it already stands.",
         "Once every group has something to do, the clock runs itself: travel and work play out silently, and you're handed back the screen the moment something needs a decision."
       ],
-      "suggestion": "Check GUILD / GEAR, bottom left, to see who you're leading."
+      "suggestion": "Check GUILD, top right, to see who you're leading."
     },
     "guild": {
       "members": {

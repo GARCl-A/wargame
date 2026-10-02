@@ -137,3 +137,25 @@ def test_tongue_ai_still_closes_for_a_bigger_hand_weapon():
             guard += 1
             ai.take_turn(batt, batt.active)
         assert batt.winner is not None, f"seed {seed} never resolved ({guard} turns)"
+
+
+def test_cornered_fleeing_enemy_attacks_instead_of_freezing():
+    from gartok import ai
+    random.seed(42)
+    batt = Battle([Unit("player")], [Unit("enemy")], lethal=True)
+    a = batt.player_units[0]
+    e = batt.enemy_units[0]
+    e.alignment = "Chaotic and Neutral"
+    e.hp = 1
+    e.pos = (0, 0)
+    a.pos = (1, 0)
+    a.hp = a.hp_max = 40
+    a.dr = 0
+    e.ap = 2
+    batt.turn_idx = batt.order.index(e)
+    assert ai._should_flee(batt, e)
+    hp_before = a.hp
+    with fixed_d20(15):
+        ai.take_turn(batt, e)
+    assert a.hp < hp_before or e.ap == 0, "cornered enemy must attack, not freeze"
+

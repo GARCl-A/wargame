@@ -101,3 +101,76 @@ def test_market_stock_is_finite_for_scarce_items_and_unlimited_otherwise():
     guild = Guild([Unit("player")])
     assert guild.market_stock["1sqm Hide"] == 0
     assert economy.stock_of(guild.market_stock, "Meat") is None   # never scarce
+
+
+def test_apothecary_and_tanner_both_satisfy_bankers_good_for_business():
+    # Test Tanner turn-in earns the deed
+    guild1, hunters1, _ = _guild_with_two_groups()
+    signer1 = hunters1.members[0]
+    m1 = missions.accept(guild1, signer1, missions.TANNER_HIDES)
+    for _ in range(15):
+        signer1.give_to_pack("1sqm Hide")
+    earned1 = missions.turn_in(guild1, m1)
+    assert any(d.id == "bankers_good_for_business" for d in earned1)
+    assert "bankers_good_for_business" in guild1.deeds_done
+
+    # Test Apothecary turn-in also earns the deed
+    guild2, hunters2, _ = _guild_with_two_groups()
+    signer2 = hunters2.members[0]
+    m2 = missions.accept(guild2, signer2, missions.APOTHECARY_MUSHROOMS)
+    for _ in range(15):
+        signer2.give_to_pack("Red Mushroom")
+    earned2 = missions.turn_in(guild2, m2)
+    assert any(d.id == "bankers_good_for_business" for d in earned2)
+    assert "bankers_good_for_business" in guild2.deeds_done
+
+
+def test_mission_template_tags_and_tag_back_compat():
+    # Passed tags tuple
+    t1 = missions.MissionTemplate(
+        "t1", "giver", "city", "Test", "Blurb", "Item", 1, 10, 5,
+        tags=("economic", "tanner"),
+    )
+    assert t1.tags == ("economic", "tanner")
+    assert t1.tag == "economic"
+
+    # Passed single tag kwarg
+    t2 = missions.MissionTemplate(
+        "t2", "giver", "city", "Test", "Blurb", "Item", 1, 10, 5,
+        tag="economic",
+    )
+    assert t2.tags == ("economic",)
+    assert t2.tag == "economic"
+
+    # Passed positional string for tag/tags
+    t3 = missions.MissionTemplate(
+        "t3", "giver", "city", "Test", "Blurb", "Item", 1, 10, 5,
+        "economic",
+    )
+    assert t3.tags == ("economic",)
+    assert t3.tag == "economic"
+
+
+def test_quest_panel_draws_tags_pills():
+    import pygame
+    pygame.font.init()
+    from gartok.ui import quest_panel
+    from gartok.ui.tokens import fonts as ui_fonts
+    UI_F = ui_fonts()
+    surf = pygame.Surface((800, 600))
+    area = pygame.Rect(10, 10, 500, 400)
+    quests = [{
+        "name": "Fifteen Hides",
+        "tags": ("economic", "tanner"),
+        "accepted_by": "Adelio",
+        "days_left": 4,
+        "progress": (5, 15, "1sqm Hide"),
+    }, {
+        "name": "A Test of Trust",
+        "tags": ("trust", "bankers"),
+        "accepted_by": "Valdo",
+        "days_left": 2,
+        "progress": None,
+    }]
+    quest_panel.quest_list(surf, UI_F, area, quests)
+

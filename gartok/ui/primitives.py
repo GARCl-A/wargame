@@ -318,7 +318,7 @@ def footer_bar(screen_obj, surf, F, *, back=None, secondary=None, primary=None,
         text(surf, F["micro"], hint, (hx, y + 12), T.TX_FAINT)
 
 
-def header(surf, F, rect, title, sub, tabitems, active, mpos=(-1, -1)):
+def header(surf, F, rect, title, sub, tabitems, active, mpos=(-1, -1), has_tutorial=False):
     """The screen-title chrome every full-window screen opens with: a
     discreet back arrow (drawn only -- the caller wires the click, since
     "back" means different things to different screens), the title in the
@@ -334,5 +334,8 @@ def header(surf, F, rect, title, sub, tabitems, active, mpos=(-1, -1)):
                        (cx + 6, rect.centery + 7)], 2)
     text(surf, F["titleb"], title, (rect.x + T.S * 6, rect.y + T.S * 2), T.TX)
     caps(surf, F["micro"], sub, (rect.x + T.S * 6, rect.y + T.S * 2 + 30), T.TX_FAINT)
-    return tabs(surf, F, (rect.right - T.S * 3, rect.y + T.S * 2), tabitems, active,
+    right_x = rect.right - T.S * 3
+    if has_tutorial:
+        right_x -= (28 + T.S)
+    return tabs(surf, F, (right_x, rect.y + T.S * 2), tabitems, active,
                 mpos=mpos, right=True)

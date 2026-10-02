@@ -88,6 +88,16 @@ class LevelScreen(SheetModalMixin, Screen):
     def tutorial_key(self):
         return "level"
 
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        pad = MARGIN if W < 1500 else SP5
+        return pygame.Rect(W - pad - 28, pad + (74 - 28) // 2, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        pad = MARGIN if W < 1500 else SP5
+        return (W - pad - 340, pad + 84, 340, "down")
+
     def handle_escape(self):
         if self.sheet_open:
             self.close_sheet_on_click()
@@ -146,7 +156,9 @@ class LevelScreen(SheetModalMixin, Screen):
         from .ui.tokens import fonts as ui_fonts
 
         self._hot = False
-        r = pygame.Rect(W - 400 - pad, pad, 400, 74)
+        has_tut = self.tutorial_key() is not None
+        offset = 28 + SP2 if has_tut else 0
+        r = pygame.Rect(W - 400 - pad - offset, pad, 400, 74)
         c = Combatant(u)
         draw_row(screen, ui_fonts(), r, unit_to_ch(c))
         

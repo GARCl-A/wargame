@@ -209,3 +209,76 @@ def test_a_pre_tutorial_save_loads_as_unseen_and_enabled():
         assert loaded.tutorial.seen == set() and loaded.tutorial.enabled is True
     finally:
         persist.delete_slot(slot)
+
+
+def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild_screen import GuildScreen
+    from gartok.theme import MARGIN, SP2, Fonts
+    from gartok.guild import Guild
+
+    pygame.init()
+    g = Guild([Unit("Alice"), Unit("Bob")], node="city")
+    gs = GuildScreen(Fonts(), g, on_back=lambda: None)
+    W, H = 1280, 800
+    surf = pygame.Surface((W, H))
+    gs.draw(surf)
+
+    badge_rect = gs.tutorial_badge_rect((W, H))
+    assert badge_rect.width == 28 and badge_rect.height == 28
+
+    # Ensure tabs do not collide with tutorial badge
+    for rect, key in gs.tab_hits:
+        assert not rect.colliderect(badge_rect), f"Tab {key} collided with tutorial badge"
+        assert rect.top == badge_rect.top, f"Tab {key} top {rect.top} != badge top {badge_rect.top}"
+
+    # REPUTATIONS should be immediately to the left of the badge, separated by SP2
+    rep_rect = next(r for r, k in gs.tab_hits if k == "reputations")
+    assert rep_rect.right + SP2 == badge_rect.left
+
+
+def test_tutorial_badge_rect_queried_by_tutorial_card():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import tutorial_card
+    from gartok.screen import Screen
+    from gartok.theme import Fonts
+
+    class CustomScreen(Screen):
+        def tutorial_key(self):
+            return "map"
+
+        def tutorial_badge_rect(self, size):
+            return pygame.Rect(100, 200, 28, 28)
+
+    pygame.init()
+    surf = pygame.Surface((800, 600))
+    fonts = Fonts()
+    cs = CustomScreen()
+    st = TutorialState()
+    st.dismiss("map")
+
+    _, badge_rect = tutorial_card.draw(surf, fonts, cs, st)
+    assert badge_rect == pygame.Rect(100, 200, 28, 28)
+
+
+def test_header_reserves_space_when_has_tutorial_is_true():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.ui.primitives import header
+    from gartok.ui.tokens import fonts as ui_fonts, T
+
+    pygame.init()
+    F = ui_fonts()
+    surf = pygame.Surface((1000, 600))
+    head_rect = pygame.Rect(0, 0, 1000, 72)
+
+    tabs_normal = header(surf, F, head_rect, "Title", "Sub", ("gear", "quests"), "gear", has_tutorial=False)
+    tabs_tut = header(surf, F, head_rect, "Title", "Sub", ("gear", "quests"), "gear", has_tutorial=True)
+
+    # The rightmost tab with tutorial should be shifted left by 28 + T.S
+    assert tabs_tut["quests"].right == tabs_normal["quests"].right - (28 + T.S)
