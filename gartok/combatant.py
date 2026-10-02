@@ -15,7 +15,7 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import data, progression
+from . import data, items, progression
 from .data import resolve_bonus, roll
 from .unit import flatten_pack
 
@@ -76,14 +76,14 @@ class Combatant:
         self.initiative = 0           # set by Battle._roll_initiative
         self.weapon_hand = c.equipped_weapon is not None
         self.weapon_name = c.equipped_weapon
-        self.weapon = data.WEAPONS.get(c.equipped_weapon)
+        self.weapon = items.get(c.equipped_weapon)
         # the Tongue is a separate limb: its weapon rides alongside the hands
         self.tongue_weapon_name = c.equipped_tongue if c.has_tongue else None
-        self.tongue_weapon = data.WEAPONS.get(self.tongue_weapon_name)
+        self.tongue_weapon = items.get(self.tongue_weapon_name)
         self.torch_hand = False
         self.lantern_hand = False
         if c.equipped_offhand in (data.TORCH_ITEM, data.LANTERN_ITEM):
-            weapon_hands = self.weapon["hands"] if self.weapon_hand else 0
+            weapon_hands = self.weapon.hands if (self.weapon_hand and self.weapon) else 0
             free_off_hand = weapon_hands < 2         # a 2-handed weapon leaves no off hand
             if c.equipped_offhand == data.TORCH_ITEM:
                 self.torch_hand = free_off_hand
@@ -301,7 +301,7 @@ class Combatant:
         if not self.char.can_wield(weapon_name):
             return []
         self.weapon_name = weapon_name
-        self.weapon = data.WEAPONS[weapon_name]
+        self.weapon = items.get(weapon_name)
         self.weapon_hand = True
         dropped = []
         if self._hands_used() > 2:            # two-handed weapon + a torch/lantern in the other
@@ -314,17 +314,17 @@ class Combatant:
     # ------------------------------------------------------------------ #
     @property
     def load(self):
-        w = sum(data.item_weight(it) for it in self.inventory)
-        if self.weapon_hand:
-            w += self.weapon["weight"]
+        w = sum(items.item_weight(it) for it in self.inventory)
+        if self.weapon_hand and self.weapon:
+            w += self.weapon.weight
         if self.tongue_weapon:
-            w += self.tongue_weapon["weight"]
+            w += self.tongue_weapon.weight
         if self.torch_hand:
             w += data.TORCH_WEIGHT
         if self.lantern_hand:
-            w += data.ITEM_WEIGHTS[data.LANTERN_ITEM]
+            w += items.item_weight(data.LANTERN_ITEM)
         if self.armor:
-            w += self.armor.get("weight", 0)
+            w += self.armor.weight
         return round(w, 1)
 
     # ------------------------------------------------------------------ #

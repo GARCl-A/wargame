@@ -80,6 +80,7 @@ def test_friendly_trap_does_not_trigger():
 
 def test_dwarf_shield_ac():
     u = Unit("player")
+    u.strength = 14
     u.equipped_offhand = None
     u._derive_combat()
     base_ac = u.ac
@@ -93,6 +94,7 @@ def test_dwarf_shield_ac():
 
 def test_battle_screen_draws_traps():
     import pygame
+    pygame.font.init()
     from gartok.battle_screen import BattleScreen
     from gartok.theme import Fonts
     batt, actor, defender = _melee_battle()

@@ -317,6 +317,34 @@ def food_items() -> dict[str, ItemDef]:
     return {item.name: item for item in _REGISTRY.values() if item.food}
 
 
+def is_weapon(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    return item is not None and item.type == ItemType.WEAPON
+
+
+def is_armor(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    return item is not None and item.type == ItemType.ARMOR
+
+
+def is_shield(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    return item is not None and item.type == ItemType.SHIELD
+
+
+def is_food(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    return item is not None and item.food
+
+
+def is_consumable(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    if item is None:
+        return False
+    return item.food or item.type in (ItemType.CONSUMABLE, ItemType.POTION) or item.name in ("First Aid Kit", "Minor Healing Potion")
+
+
+
 def item_weight(item_or_name: Any) -> float:
     if isinstance(item_or_name, ItemInstance):
         return item_or_name.weight

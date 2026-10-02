@@ -21,7 +21,7 @@ spinning up a Combatant.
 import random
 import uuid
 
-from . import abilities, data, economy, magic, names, progression, talents
+from . import abilities, data, economy, items, magic, names, progression, talents
 from .data import mod, roll
 
 ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
@@ -400,13 +400,13 @@ class Unit:
                 if r not in self.recipes:
                     self.recipes.append(r)
         elif talent_id == "apothecary":
-            unlearned = [r for r in data.APOTHECARY_RECIPES if r not in self.recipes]
+            unlearned = [r for r in items.APOTHECARY_RECIPES if r not in self.recipes]
             if unlearned:
                 self.recipes.append(random.choice(unlearned))
             else:
                 self.craft_bonuses["apothecary"] = self.craft_bonuses.get("apothecary", 0) + 1
         elif talent_id == "blacksmith":
-            unlearned = [r for r in data.BLACKSMITH_RECIPES if r not in self.recipes]
+            unlearned = [r for r in items.BLACKSMITH_RECIPES if r not in self.recipes]
             if unlearned:
                 self.recipes.append(random.choice(unlearned))
             else:
@@ -842,12 +842,13 @@ class Unit:
         Charisma is individually easier to rattle."""
         armor = self.armor
         dex_ac = self.mod_dexterity
-        if armor is not None and armor["max_dex"] is not None:
-            dex_ac = min(dex_ac, armor["max_dex"])
-        self.ac_base = (10 + dex_ac + (armor["ac"] if armor else 0)
+        if armor is not None and armor.max_dex is not None:
+            dex_ac = min(dex_ac, armor.max_dex)
+        self.ac_base = (10 + dex_ac + (armor.ac if armor else 0)
                         + self.talent_bonus("ac"))
-        if self.equipped_offhand and self.equipped_offhand in data.SHIELDS:
-            self.ac_base += data.SHIELDS[self.equipped_offhand]["ac"]
+        if self.equipped_offhand and items.is_shield(self.equipped_offhand):
+            shield = items.get(self.equipped_offhand)
+            self.ac_base += shield.ac if shield else 0
         self.ac_natural = self._ability.ac_natural
         self.mental_defense_base = (10 + self.mod_wisdom
                                     + self.talent_bonus("mental_defense")
@@ -859,8 +860,8 @@ class Unit:
         self.speed = (data.squares(data.SIZES[self.size]["speed"])
                       + self._ability.speed + self.talent_bonus("speed"))
         armor = self.armor
-        if armor is not None and armor["speed"]:
-            self.speed = max(1, self.speed - armor["speed"])
+        if armor is not None and armor.speed_penalty:
+            self.speed = max(1, self.speed - armor.speed_penalty)
         if self.encumbered:
             self.speed = max(1, self.speed - 1)
 
@@ -872,33 +873,34 @@ class Unit:
     # ------------------------------------------------------------------ #
     @staticmethod
     def is_weapon(name):
-        return name in data.WEAPONS
+        return items.is_weapon(name)
 
     @staticmethod
     def fits_offhand(name):
-        return name == data.TORCH_ITEM or name in data.LIGHT_SOURCES or name in data.SHIELDS
+        return name == data.TORCH_ITEM or name in data.LIGHT_SOURCES or items.is_shield(name)
 
     @staticmethod
     def fits_armor(name):
-        return name in data.ARMOR
+        return items.is_armor(name)
 
     def can_wield(self, name):
         """Checks if this unit can wield `name`. Large weapons require Large size
         (e.g. Centaur) or the Giant's Grip talent (Goliath)."""
         if not self.is_weapon(name):
             return False
-        w = data.WEAPONS.get(name)
+        w = items.get(name)
         if not w:
             return False
-        if w.get("size") == "Large":
+        if w.size == "Large":
             return self.size == "Large" or self.has_talent("giant_grip")
         return True
 
     def fits_tongue(self, name):
         """The Tongue slot takes one 1-handed weapon (it is a single extra limb),
         and only if this character has the `tongue` talent and can wield it."""
+        w = items.get(name)
         return (self.has_tongue and self.can_wield(name)
-                and data.WEAPONS[name]["hands"] == 1)
+                and w is not None and w.hands == 1)
 
     def give_to_hand(self, name):
         """Wield `name`; the weapon already held goes to the pack. A 2-handed
@@ -909,7 +911,8 @@ class Unit:
         if self.equipped_weapon:
             self._pack_add(self.equipped_weapon)
         self.equipped_weapon = name
-        if data.WEAPONS[name]["hands"] >= 2 and self.equipped_offhand:
+        w = items.get(name)
+        if w and w.hands >= 2 and self.equipped_offhand:
             self._pack_add(self.equipped_offhand)
             self.equipped_offhand = None
         return True
@@ -1046,12 +1049,13 @@ class Unit:
         if not self.crafting_target:
             return 0, False
         target_val = 0
-        recipe_data = data.CRAFTING_RECIPES[self.crafting_target]
-        for mat in recipe_data["materials"]:
-            target_val += economy.PRICES.get(mat, 10)
-        target_val += recipe_data["complexity"]
+        recipe_data = items.CRAFTING_RECIPES[self.crafting_target]
+        for mat in recipe_data.materials:
+            mat_item = items.get(mat)
+            target_val += mat_item.price if mat_item else 10
+        target_val += recipe_data.complexity
 
-        station = recipe_data.get("station")
+        station = recipe_data.station
         bonus = self.talent_bonus("craft_bonus") + self.craft_bonuses.get(station, 0)
         prog = roll(1, 20) + self.mod_intelligence + bonus
         prog = max(1, prog)
@@ -1075,7 +1079,7 @@ class Unit:
 
     @property
     def weapon(self):
-        return data.WEAPONS.get(self.equipped_weapon)
+        return items.get(self.equipped_weapon)
 
     @property
     def armor_name(self):
@@ -1083,14 +1087,14 @@ class Unit:
 
     @property
     def armor(self):
-        """The worn armor's stat dict (`ac` / `max_dex` / `speed` / `weight`), or None."""
-        return data.ARMOR.get(self.equipped_armor)
+        """The worn armor's stat dict / ItemDef, or None."""
+        return items.get(self.equipped_armor)
 
     @property
     def ranged(self):
         """Wields a weapon that fires at range (the crossbow)."""
         w = self.weapon
-        return bool(w) and w["range"] > 0
+        return bool(w) and w.range > 0
 
     @property
     def has_tongue(self):
@@ -1113,9 +1117,9 @@ class Unit:
         w = self.weapon
         if w is None:
             base, stat, src = self.mod_strength, "str", "STR"
-        elif w["range"] > 0:
+        elif w.range > 0:
             base, stat, src = self.mod_dexterity, "dex", "DEX"
-        elif w["finesse"]:
+        elif w.finesse:
             base = max(self.mod_strength, self.mod_dexterity)
             stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
             src = "STR/DEX"
@@ -1135,15 +1139,15 @@ class Unit:
     @property
     def load(self):
         """Weight of the equipped loadout: weapon hand + off hand + tongue + pack + armor."""
-        w = sum(data.item_weight(name) * qty for name, qty in self._base_inventory)
+        w = sum(items.item_weight(name) * qty for name, qty in self._base_inventory)
         if self.equipped_weapon:
-            w += data.WEAPONS[self.equipped_weapon]["weight"]
+            w += items.item_weight(self.equipped_weapon)
         if self.equipped_tongue:
-            w += data.WEAPONS[self.equipped_tongue]["weight"]
-        if self.equipped_offhand == data.TORCH_ITEM:
-            w += data.TORCH_WEIGHT
+            w += items.item_weight(self.equipped_tongue)
+        if self.equipped_offhand:
+            w += items.item_weight(self.equipped_offhand)
         if self.armor:
-            w += self.armor.get("weight", 0)
+            w += self.armor.weight
         return round(w, 1)
 
 
