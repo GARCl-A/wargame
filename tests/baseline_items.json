@@ -1,0 +1,808 @@
+{
+  "Dagger": {
+    "weight": 0.5,
+    "price": 8,
+    "damage": [
+      1,
+      4
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 6,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Hatchet": {
+    "weight": 1.0,
+    "price": 10,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Axe": {
+    "weight": 3.0,
+    "price": 35,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Light Hammer": {
+    "weight": 1.0,
+    "price": 10,
+    "damage": [
+      1,
+      4
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Hammer": {
+    "weight": 4.0,
+    "price": 35,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Club": {
+    "weight": 1.5,
+    "price": 6,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Quarterstaff": {
+    "weight": 2.0,
+    "price": 5,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Shortspear": {
+    "weight": 1.5,
+    "price": 12,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Light Pick": {
+    "weight": 1.0,
+    "price": 10,
+    "damage": [
+      1,
+      4
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Pick": {
+    "weight": 3.0,
+    "price": 30,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Broadsword": {
+    "weight": 4.0,
+    "price": 105,
+    "damage": [
+      1,
+      12
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 2,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Light Crossbow": {
+    "weight": 2.5,
+    "price": 80,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 11,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 2,
+    "reload": true,
+    "size": "Medium"
+  },
+  "Shortbow": {
+    "weight": 1.0,
+    "price": 320,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 11,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 2,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Dwarf Axe": {
+    "weight": 4.0,
+    "price": 75,
+    "damage": [
+      1,
+      10
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Rapier": {
+    "weight": 1.0,
+    "price": 65,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Medium"
+  },
+  "Large Dagger": {
+    "weight": 1.0,
+    "price": 16,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 6,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Hatchet": {
+    "weight": 2.0,
+    "price": 20,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Axe": {
+    "weight": 6.0,
+    "price": 70,
+    "damage": [
+      1,
+      10
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Light Hammer": {
+    "weight": 2.0,
+    "price": 20,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Hammer": {
+    "weight": 8.0,
+    "price": 70,
+    "damage": [
+      1,
+      10
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Club": {
+    "weight": 3.0,
+    "price": 12,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Quarterstaff": {
+    "weight": 4.0,
+    "price": 10,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Shortspear": {
+    "weight": 3.0,
+    "price": 24,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Light Pick": {
+    "weight": 2.0,
+    "price": 20,
+    "damage": [
+      1,
+      6
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Pick": {
+    "weight": 6.0,
+    "price": 60,
+    "damage": [
+      1,
+      10
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Broadsword": {
+    "weight": 8.0,
+    "price": 210,
+    "damage": [
+      2,
+      8
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 2,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Light Crossbow": {
+    "weight": 5.0,
+    "price": 160,
+    "damage": [
+      1,
+      10
+    ],
+    "range": 11,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 2,
+    "reload": true,
+    "size": "Large"
+  },
+  "Large Shortbow": {
+    "weight": 2.0,
+    "price": 640,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 11,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 2,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Dwarf Axe": {
+    "weight": 8.0,
+    "price": 150,
+    "damage": [
+      1,
+      12
+    ],
+    "range": 0,
+    "finesse": false,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Large Rapier": {
+    "weight": 2.0,
+    "price": 130,
+    "damage": [
+      1,
+      8
+    ],
+    "range": 0,
+    "finesse": true,
+    "thrown": 0,
+    "hands": 1,
+    "reload": false,
+    "size": "Large"
+  },
+  "Leather Jerkin": {
+    "weight": 4.0,
+    "price": 20,
+    "ac": 1,
+    "max_dex": null,
+    "speed_penalty": 0
+  },
+  "Studded Leather": {
+    "weight": 6.0,
+    "price": 55,
+    "ac": 2,
+    "max_dex": 3,
+    "speed_penalty": 0
+  },
+  "Chainmail": {
+    "weight": 10.0,
+    "price": 160,
+    "ac": 3,
+    "max_dex": 2,
+    "speed_penalty": 0
+  },
+  "Brigandine": {
+    "weight": 18.0,
+    "price": 400,
+    "ac": 4,
+    "max_dex": 1,
+    "speed_penalty": 1
+  },
+  "Plate Armor": {
+    "weight": 28.0,
+    "price": 950,
+    "ac": 5,
+    "max_dex": 0,
+    "speed_penalty": 2
+  },
+  "Dwarf Armor": {
+    "weight": 25.0,
+    "price": 110,
+    "ac": 5,
+    "max_dex": 0,
+    "speed_penalty": 1
+  },
+  "Dwarf Shield": {
+    "weight": 3.0,
+    "price": 60,
+    "ac": 2
+  },
+  "Sealed Chest": {
+    "weight": 8.0,
+    "price": 16,
+    "food": false,
+    "lifespan": null
+  },
+  "Cloak": {
+    "weight": 1.0,
+    "price": 2,
+    "food": false,
+    "lifespan": null
+  },
+  "Dictionary": {
+    "weight": 2.0,
+    "price": 4,
+    "food": false,
+    "lifespan": null
+  },
+  "Minor Healing Potion": {
+    "weight": 0.2,
+    "price": 80,
+    "food": false,
+    "lifespan": null
+  },
+  "1sqm Hide": {
+    "weight": 2.0,
+    "price": 12,
+    "food": false,
+    "lifespan": null
+  },
+  "Red Mushroom": {
+    "weight": 0.1,
+    "price": 10,
+    "food": false,
+    "lifespan": null
+  },
+  "Ink": {
+    "weight": 0.1,
+    "price": 15,
+    "food": false,
+    "lifespan": null
+  },
+  "Bucket": {
+    "weight": 1.0,
+    "price": 2,
+    "food": false,
+    "lifespan": null
+  },
+  "First Aid Kit": {
+    "weight": 0.8,
+    "price": 40,
+    "food": false,
+    "lifespan": null
+  },
+  "Alarm Trap": {
+    "weight": 1.0,
+    "price": 45,
+    "food": false,
+    "lifespan": null
+  },
+  "Holy Symbol": {
+    "weight": 0.5,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Amethyst": {
+    "weight": 0.5,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Scissors": {
+    "weight": 0.2,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Ancient Codex": {
+    "weight": 2.0,
+    "price": 4,
+    "food": false,
+    "lifespan": null
+  },
+  "Rotten Food": {
+    "weight": 1.0,
+    "price": 2,
+    "food": true,
+    "lifespan": null
+  },
+  "Paper": {
+    "weight": 0.1,
+    "price": 5,
+    "food": false,
+    "lifespan": null
+  },
+  "Map": {
+    "weight": 0.1,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Musical Instrument": {
+    "weight": 2.0,
+    "price": 4,
+    "food": false,
+    "lifespan": null
+  },
+  "Rope": {
+    "weight": 2.0,
+    "price": 4,
+    "food": false,
+    "lifespan": null
+  },
+  "Meat": {
+    "weight": 1.0,
+    "price": 5,
+    "food": true,
+    "lifespan": 2
+  },
+  "Quiver": {
+    "weight": 1.5,
+    "price": 25,
+    "food": false,
+    "lifespan": null
+  },
+  "Locked Chest": {
+    "weight": 8.0,
+    "price": 16,
+    "food": false,
+    "lifespan": null
+  },
+  "Fruit": {
+    "weight": 0.2,
+    "price": 4,
+    "food": true,
+    "lifespan": 1
+  },
+  "Scroll": {
+    "weight": 0.1,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Shovel": {
+    "weight": 2.0,
+    "price": 4,
+    "food": false,
+    "lifespan": null
+  },
+  "Iron Bar": {
+    "weight": 5.0,
+    "price": 15,
+    "food": false,
+    "lifespan": null
+  },
+  "Scales": {
+    "weight": 1.0,
+    "price": 2,
+    "food": false,
+    "lifespan": null
+  },
+  "Sack": {
+    "weight": 0.3,
+    "price": 2,
+    "food": false,
+    "lifespan": null
+  },
+  "Chisel": {
+    "weight": 0.3,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Chains": {
+    "weight": 5.0,
+    "price": 10,
+    "food": false,
+    "lifespan": null
+  },
+  "Gemstones": {
+    "weight": 0.1,
+    "price": 60,
+    "food": false,
+    "lifespan": null
+  },
+  "Lumber": {
+    "weight": 2.0,
+    "price": 6,
+    "food": false,
+    "lifespan": null
+  },
+  "Vial": {
+    "weight": 0.1,
+    "price": 10,
+    "food": false,
+    "lifespan": null
+  },
+  "Letter of Receipt": {
+    "weight": 0.1,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Iron Shackles": {
+    "weight": 1.0,
+    "price": 2,
+    "food": false,
+    "lifespan": null
+  },
+  "Torch": {
+    "weight": 0.5,
+    "price": 2,
+    "food": false,
+    "lifespan": null
+  },
+  "1kg Coal": {
+    "weight": 1.0,
+    "price": 5,
+    "food": false,
+    "lifespan": null
+  },
+  "Compass": {
+    "weight": 0.2,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "Deck of Cards": {
+    "weight": 0.2,
+    "price": 1,
+    "food": false,
+    "lifespan": null
+  },
+  "1L Beer": {
+    "weight": 1.0,
+    "price": 4,
+    "food": true,
+    "lifespan": 30
+  },
+  "Stone Brick": {
+    "weight": 3.0,
+    "price": 6,
+    "food": false,
+    "lifespan": null
+  },
+  "Bear Trap": {
+    "weight": 3.0,
+    "price": 35,
+    "food": false,
+    "lifespan": null
+  },
+  "Lantern": {
+    "weight": 1.0,
+    "price": 30,
+    "food": false,
+    "lifespan": null
+  },
+  "Potato": {
+    "weight": 1.0,
+    "price": 3,
+    "food": true,
+    "lifespan": 7
+  },
+  "Scroll of Light Globe": {
+    "weight": 0.1,
+    "price": 180,
+    "spell_id": "light_globe"
+  },
+  "Scroll of Magic Missile": {
+    "weight": 0.1,
+    "price": 180,
+    "spell_id": "magic_missile"
+  },
+  "Scroll of Floating Disk": {
+    "weight": 0.1,
+    "price": 180,
+    "spell_id": "floating_disk"
+  },
+  "Scroll of Sleep": {
+    "weight": 0.1,
+    "price": 465,
+    "spell_id": "sleep"
+  },
+  "Dictionary of Ankarin": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Ankarin"
+  },
+  "Dictionary of Draconic": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Draconic"
+  },
+  "Dictionary of Dwarvish": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Dwarvish"
+  },
+  "Dictionary of Elvish": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Elvish"
+  },
+  "Dictionary of Gnomish": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Gnomish"
+  },
+  "Dictionary of Goblin": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Goblin"
+  },
+  "Dictionary of Halfling": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Halfling"
+  },
+  "Dictionary of Jotun": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Jotun"
+  },
+  "Dictionary of Orcish": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Orcish"
+  },
+  "Dictionary of Sylvan": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Sylvan"
+  },
+  "Dictionary of Verdant": {
+    "weight": 0.5,
+    "price": 150,
+    "language": "Verdant"
+  }
+}

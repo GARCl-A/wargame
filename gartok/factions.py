@@ -226,6 +226,14 @@ def get_unlocks(faction_id: str):
                 "More language dictionaries become available to buy."
             )
         )
+        unlocks.append(
+            Unlock(
+                "library",
+                2,
+                "Rare Manuscripts",
+                "The library unlocks rare language dictionaries and deeper archives."
+            )
+        )
     return unlocks
 
 

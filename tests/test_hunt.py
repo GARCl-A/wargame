@@ -122,3 +122,40 @@ def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
     assert scr.phase == "done"
     assert st.hours_hunted == 8 and party[0].count_of("Meat") == 4
     assert party[0].work_hours == 8                       # grant_meat banked the full hunt
+
+
+def test_forage_stretch_finds_shrooms_and_fruit():
+    from gartok import hunt
+
+    party = [Unit("player")]
+    st = hunt.HuntState(party, None, hours_left=2, target="shrooms")
+
+    class ForageRNG:
+        def __init__(self):
+            # Hour 1: shroom (<0.10), fruit (<0.15), no ambush (>=0.15)
+            # Hour 2: no shroom (>=0.10), fruit (<0.15), no ambush (>=0.15)
+            self.vals = [0.05, 0.05, 0.9, 0.5, 0.05, 0.9]
+
+        def random(self):
+            return self.vals.pop(0)
+
+    elapsed, ambushed = hunt.hunt_stretch(st, ForageRNG())
+    assert elapsed == 2
+    assert not ambushed
+    assert st.shrooms_found == 1
+    assert st.fruit_found == 2
+
+
+def test_grant_forage_distributes_both_shrooms_and_fruit():
+    from gartok import hunt
+
+    party = [Unit("player"), Unit("player")]
+    for u in party:
+        u._base_inventory = []
+    st = hunt.HuntState(party, None, hours_left=0, hours_hunted=4, target="shrooms", shrooms_found=2, fruit_found=2)
+    lines = hunt.grant_haul(st)
+
+    assert sum(u.count_of("Red Mushroom") for u in party) == 2
+    assert sum(u.count_of("Fruit") for u in party) == 2
+    assert any("Red Mushroom" in ln and "Fruit" in ln for ln in lines)
+

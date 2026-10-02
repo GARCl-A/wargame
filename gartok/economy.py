@@ -105,7 +105,7 @@ PRICES = {
     "Minor Healing Potion": 80, "Vial": 10,
     "Rope": 4, "Sack": 2, "Bear Trap": 35, "Alarm Trap": 45,
     # food (a day's meal each)
-    "Meat": 5, "Potato": 3, "1L Beer": 4,
+    "Meat": 5, "Fruit": 4, "Potato": 3, "1L Beer": 4,
     # raw materials (gathered, not manufactured -- see STOCK below)
     "1sqm Hide": 12, "Red Mushroom": 10,
     # the Wilds claim's building material -- bought here, hauled out by hand
@@ -125,7 +125,7 @@ MARKET_STOCK = [
     "Light Crossbow", "Shortbow", "Quiver",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Dwarf Armor",
     "Dwarf Shield",
-    "Meat", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
+    "Meat", "Fruit", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
     "Bear Trap", "Alarm Trap",
 ]

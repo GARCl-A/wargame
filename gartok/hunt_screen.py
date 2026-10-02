@@ -182,8 +182,8 @@ class HuntScreen(ButtonsMixin, Screen):
         rect_shrooms = pygame.Rect(m + tw + gap, top, tw, 56)
         sel_shrooms = self.state.target == "shrooms"
         panel(screen, rect_shrooms, hover=sel_shrooms or rect_shrooms.collidepoint(self.mouse), width=2 if sel_shrooms else 1)
-        text(screen, F["bodyb"], "FORAGE SHROOMS", (rect_shrooms.x + T.S, rect_shrooms.y + 8), T.BRASS if sel_shrooms else T.TX)
-        text(screen, F["body_sm"], "10% chance each hour", (rect_shrooms.x + T.S, rect_shrooms.y + 30), T.TX_FAINT)
+        text(screen, F["bodyb"], "FORAGE WILDS", (rect_shrooms.x + T.S, rect_shrooms.y + 8), T.BRASS if sel_shrooms else T.TX)
+        text(screen, F["body_sm"], "Mushrooms & fresh fruits", (rect_shrooms.x + T.S, rect_shrooms.y + 30), T.TX_FAINT)
         self.target_chips.append((rect_shrooms, "shrooms"))
         
         top += 66
@@ -201,7 +201,7 @@ class HuntScreen(ButtonsMixin, Screen):
             if self.state.target == "meat":
                 sub = f"~{h // hunt.HUNT_MEAT_HOURS} kg meat"
             else:
-                sub = "Red Mushrooms"
+                sub = "Mushrooms & Fruits"
             text(screen, F["body_sm"], sub, (r.x + T.S, r.y + 30), T.TX_MUTED)
             self.chips.append((r, h))
         top += 66

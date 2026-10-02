@@ -89,3 +89,13 @@ def test_scroll_pricing_scales_with_level():
     assert economy.scroll_price(1) == 465
     assert economy.buy_price("Scroll of Sleep", 0.0) == 465
     assert economy.sell_price("Scroll of Sleep", 0.0) == 232
+
+
+def test_fruit_price_and_market_stock():
+    # Fruit must be cheaper than Meat (5 cp) and more expensive than Potato (3 cp)
+    assert economy.PRICES["Fruit"] == 4
+    assert economy.PRICES["Potato"] < economy.PRICES["Fruit"] < economy.PRICES["Meat"]
+    assert "Fruit" in economy.MARKET_STOCK
+    assert economy.buy_price("Fruit", 0.0) == 4
+    assert economy.sell_price("Fruit", 0.0) == 2
+

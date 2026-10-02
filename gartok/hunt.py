@@ -38,6 +38,7 @@ class HuntState:
     fights: int = 0                # ambushes fought so far, for the tally line
     target: str = "meat"           # "meat" or "shrooms"
     shrooms_found: int = 0
+    fruit_found: int = 0
 
     @property
     def meat(self):
@@ -59,8 +60,11 @@ def hunt_stretch(state, rng=random):
         state.hours_left -= 1
         state.hours_hunted += 1
         elapsed += 1
-        if state.target == "shrooms" and rng.random() < 0.10:
-            state.shrooms_found += 1
+        if state.target == "shrooms":
+            if rng.random() < 0.10:
+                state.shrooms_found += 1
+            if rng.random() < 0.15:
+                state.fruit_found += 1
         if rng.random() < chance:
             return elapsed, True
     return elapsed, False
@@ -103,12 +107,22 @@ def grant_haul(state):
                          f"hunted -- not enough for a kill).")
     else:
         shrooms = state.shrooms_found
+        fruit = getattr(state, "fruit_found", 0)
         for i in range(shrooms):
             hunters[i % len(hunters)].give_to_pack("Red Mushroom")
+        for i in range(fruit):
+            hunters[(i + shrooms) % len(hunters)].give_to_pack("Fruit")
 
         who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} foragers"
+        items_found = []
         if shrooms:
-            lines.append(f"{who} bring back {shrooms} Red Mushroom(s) "
+            items_found.append(f"{shrooms} Red Mushroom(s)")
+        if fruit:
+            items_found.append(f"{fruit} Fruit(s)")
+
+        if items_found:
+            found_str = " and ".join(items_found)
+            lines.append(f"{who} bring back {found_str} "
                          f"({state.hours_hunted} h foraged).")
         else:
             lines.append(f"{who} come back empty-handed ({state.hours_hunted} h "

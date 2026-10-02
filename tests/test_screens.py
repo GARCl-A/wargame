@@ -922,6 +922,10 @@ def test_factions_get_unlocks():
     arena_unlocks = factions.get_unlocks("arena")
     assert any("The Games" in u.title for u in arena_unlocks)
 
+    library_unlocks = factions.get_unlocks("library")
+    assert any(u.title == "Expanded Catalog" and u.rep_required == 1 for u in library_unlocks)
+    assert any(u.title == "Rare Manuscripts" and u.rep_required == 2 for u in library_unlocks)
+
 
 def test_market_screen_draw_multiple_shoppers_hover():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
