@@ -16,15 +16,14 @@ from .scenario import own_half
 from .screen import Screen
 from .theme import (ACCENT, ACCENT_INK, ATK_HL, BG, DANGER, DEMO_HL, ENEMY_C,
                     FLOOR_A, FLOOR_B, INFO, INK, INK_DIM, INK_FAINT, LIGHT_C,
-                    LINE_SOFT, MOVE_HL, NEUTRAL_C, OBJ_C, OK,
+                    LINE, LINE_SOFT, MOVE_HL, NEUTRAL_C, OBJ_C, OK,
                     PATH_DONE, PATH_PREV, PLAYER_C, RADIUS, SP1, SP2, SP3,
                     SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
                     THROW_HL, TORCH_C, WALL_FILL, WALL_HI, WALL_LO, WARN,
                     BoardView, Stack, battle_layout, panel, pips, text, tracked,
                     wrap_lines)
 from .ui import primitives as ui_primitives
-from .ui.sheet_card import draw_sheet as draw_sheet_card
-from .ui.sheet_card import unit_to_ch
+from .ui.sheet_card import draw_sheet as draw_sheet_card, sheet_height, unit_to_ch
 from .ui.tokens import fonts as ui_fonts
 
 _WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
@@ -58,6 +57,11 @@ class BattleScreen(Screen):
         self.show_magic_menu = False
         self.show_blocked_actions = False
         self.view_squad = False
+        self.action_tab = "combat"            # "combat" | "utility"
+        self.actions_scroll = 0
+        self._actions_scroll_rect = None
+        self._actions_max_scroll = 0
+        self._hotkey_actions = []
         self.buttons = []
         self.log_scroll = 0                   # lines scrolled up from the live bottom
         self._log_len_seen = 0
@@ -75,6 +79,10 @@ class BattleScreen(Screen):
             if event.key == pygame.K_SPACE and self._is_player_turn():
                 self.aim_action = None
                 self.battle.end_turn()
+            elif event.key == pygame.K_TAB and self._is_player_turn():
+                self.action_tab = "utility" if self.action_tab == "combat" else "combat"
+                self.actions_scroll = 0
+                self.aim_action = None
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
             elif event.key == pygame.K_a and self._is_player_turn():
@@ -82,8 +90,12 @@ class BattleScreen(Screen):
             elif pygame.K_1 <= event.key <= pygame.K_9:
                 self._hotkey_action(event.key - pygame.K_1)
         elif event.type == pygame.MOUSEWHEEL:
+            act_rect = getattr(self, "_actions_scroll_rect", None)
             log_rect = getattr(self, "_L", None) and self._L.get("log")
-            if log_rect and log_rect.collidepoint(self.mouse):
+            if act_rect and act_rect.collidepoint(self.mouse):
+                max_s = getattr(self, "_actions_max_scroll", 0)
+                self.actions_scroll = max(0, min(max_s, self.actions_scroll - event.y * 34))
+            elif log_rect and log_rect.collidepoint(self.mouse):
                 self.log_scroll = max(0, self.log_scroll + event.y)
             else:
                 self.view.zoom(pygame.mouse.get_pos(), event.y)
@@ -210,6 +222,14 @@ class BattleScreen(Screen):
                     self.aim_action = None
                 elif key == "toggle_blocked":
                     self.show_blocked_actions = not self.show_blocked_actions
+                elif key == "tab_combat":
+                    self.action_tab = "combat"
+                    self.actions_scroll = 0
+                    self.aim_action = None
+                elif key == "tab_utility":
+                    self.action_tab = "utility"
+                    self.actions_scroll = 0
+                    self.aim_action = None
                 elif key == "export_state":
                     self._export_state()
                 else:
@@ -312,11 +332,9 @@ class BattleScreen(Screen):
         self._after_player_action()
 
     def _hotkey_action(self, idx):
-        """Number-key shortcut for the `idx`-th button currently on the action
-        panel (built fresh by `_draw_actions` every frame, same order as shown)."""
-        panel_actions = [key for key, _ in self.buttons if not isinstance(key, str)]
-        if idx < len(panel_actions):
-            self._action_click(panel_actions[idx])
+        """Number-key shortcut for the `idx`-th action currently on the active tab."""
+        if idx < len(self._hotkey_actions):
+            self._action_click(self._hotkey_actions[idx])
 
     def _action_click(self, action):
         b = self.battle
@@ -932,10 +950,36 @@ class BattleScreen(Screen):
             self._draw_victory_card(screen, s)
             s.gap(SP3)
 
+        top_end_y = s.y
         self.buttons = []
-        self._draw_actions(screen, s)
-        s.gap(SP3)
-        self._draw_inspect(screen, s)
+
+        insp = self.inspect
+        if insp and insp.team == "enemy" and not self._enemy_visible(insp):
+            insp = None
+        if insp and (insp.dead or insp.fled):
+            insp = None
+        who = insp or (b.active if b.winner is None else None)
+
+        inspect_h = 0
+        if who is not None:
+            inspect_h = 24
+            if who is insp and self._armed is insp:
+                inspect_h += 20
+            if self.inspect_open:
+                inspect_h += sheet_height("compact") + SP2
+
+        inspect_top = pr.bottom - inspect_h
+        actions_top = top_end_y
+        actions_bottom = inspect_top - (SP2 if inspect_h else 0)
+        actions_h = max(40, actions_bottom - actions_top)
+        actions_rect = pygame.Rect(pr.x, actions_top, pr.w, actions_h)
+
+        if b.winner is None:
+            self._draw_actions(screen, actions_rect)
+
+        if who is not None:
+            inspect_rect = pygame.Rect(pr.x, inspect_top, pr.w, inspect_h)
+            self._draw_inspect(screen, inspect_rect, who, insp)
 
     def _draw_victory_card(self, screen, s):
         f = self.fonts
@@ -1036,13 +1080,14 @@ class BattleScreen(Screen):
             msg, col = "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
         text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))
 
-    def _draw_actions(self, screen, s):
+    def _draw_actions(self, screen, area_rect):
         f = self.fonts
         b = self.battle
         my_turn = b.winner is None and self._is_player_turn()
         act = b.active
 
         if getattr(self, "height_prompt", None) is not None:
+            s = Stack(area_rect.x, area_rect.y, area_rect.w)
             r_title = s.row(26)
             text(screen, "DISK ALTITUDE:", f.body_bd, ACCENT, (r_title.x, r_title.y))
             s.gap(SP1)
@@ -1057,78 +1102,163 @@ class BattleScreen(Screen):
             text(screen, "Cancel", f.body_sm, INK_DIM, r_c.center, center=True)
             self.buttons.append(("prompt_cancel", r_c))
             return
-        
+
         if getattr(self, "show_magic_menu", False):
-            r = s.row(34)
-            s.gap(SP1)
-            panel(screen, r, fill=SURFACE_1, border=LINE_SOFT, width=1)
-            text(screen, "Back", f.body_bd, INK, r.center, center=True)
-            self.buttons.append(("magic_back", r))
-            
-            for sp_id in act.char.spells_known:
+            btn_back = pygame.Rect(area_rect.x, area_rect.y, area_rect.w, 30)
+            panel(screen, btn_back, fill=SURFACE_1, border=LINE_SOFT, width=1)
+            text(screen, "< Back to Actions", f.body_bd, INK, btn_back.center, center=True)
+            self.buttons.append(("magic_back", btn_back))
+
+            scroll_y = btn_back.bottom + SP1
+            scroll_h = max(20, area_rect.bottom - scroll_y)
+            scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, scroll_h)
+            self._actions_scroll_rect = scroll_rect
+
+            spells = act.char.spells_known
+            total_content_h = len(spells) * (34 + SP1)
+            max_scroll = max(0, total_content_h - scroll_h)
+            self._actions_max_scroll = max_scroll
+            self.actions_scroll = max(0, min(self.actions_scroll, max_scroll))
+
+            old_clip = screen.get_clip()
+            screen.set_clip(scroll_rect)
+
+            btn_w = scroll_rect.w - (6 if max_scroll > 0 else 0)
+            curr_y = scroll_rect.y - self.actions_scroll
+
+            for sp_id in spells:
                 action = actions.CastSpellAction(sp_id)
                 enabled = my_turn and action.available(b, act)
                 armed = getattr(self.aim_action, "id", None) == action.id
-                
-                r = s.row(34)
-                s.gap(SP1)
-                fill = ACCENT if armed else SURFACE_2 if enabled else SURFACE_1
-                panel(screen, r, fill=fill, border=ACCENT if armed else LINE_SOFT, width=1)
-                ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
-                
-                ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
-                label = action.name if not armed else f"{action.name}: target"
-                text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
-                
-                if action.cost:
-                    cx = r.right - SP3
-                    text(screen, str(action.cost), self.fonts.mono_sm, ink, (cx, r.centery - 6), right=True)
-                    pygame.draw.circle(screen, ink, (cx - 16, r.centery), 3)
-                self.buttons.append((action, r))
+
+                r = pygame.Rect(scroll_rect.x, curr_y, btn_w, 34)
+                curr_y += 34 + SP1
+
+                if r.bottom > scroll_rect.top and r.top < scroll_rect.bottom:
+                    fill = ACCENT if armed else SURFACE_2 if enabled else SURFACE_1
+                    panel(screen, r, fill=fill, border=ACCENT if armed else LINE_SOFT, width=1)
+                    ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
+
+                    ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
+                    label = action.name if not armed else f"{action.name}: target"
+                    text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
+
+                    if action.cost:
+                        cx = r.right - SP3
+                        text(screen, str(action.cost), self.fonts.mono_sm, ink, (cx, r.centery - 6), right=True)
+                        pygame.draw.circle(screen, ink, (cx - 16, r.centery), 3)
+                    self.buttons.append((action, r))
+
+            screen.set_clip(old_clip)
+
+            if max_scroll > 0:
+                bar_track = pygame.Rect(scroll_rect.right - 4, scroll_rect.y, 4, scroll_rect.h)
+                pygame.draw.rect(screen, SURFACE_1, bar_track, border_radius=2)
+                thumb_h = max(16, int(scroll_rect.h * (scroll_rect.h / total_content_h)))
+                thumb_y = scroll_rect.y + int((scroll_rect.h - thumb_h) * (self.actions_scroll / max_scroll))
+                pygame.draw.rect(screen, LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
             return
 
-        # Climb/Drop/Swim only make sense at specific cells -- hide them elsewhere.
+        # Normal view: Tab header + Action list
+        tab_h = 26
+        btn_w = (area_rect.w - 38) // 2
+        btn_combat = pygame.Rect(area_rect.x, area_rect.y, btn_w, tab_h)
+        btn_utility = pygame.Rect(btn_combat.right + 4, area_rect.y, btn_w, tab_h)
+        btn_blocked = pygame.Rect(area_rect.right - 30, area_rect.y, 30, tab_h)
+
+        is_c = self.action_tab == "combat"
+        hov_c = btn_combat.collidepoint(self.mouse)
+        panel(screen, btn_combat, fill=SURFACE_3 if is_c else SURFACE_2 if hov_c else SURFACE_1,
+              border=ACCENT if is_c else LINE_SOFT, width=1)
+        text(screen, "COMBAT", f.body_bd, ACCENT if is_c else INK if hov_c else INK_DIM,
+             btn_combat.center, center=True)
+        self.buttons.append(("tab_combat", btn_combat))
+
+        is_u = self.action_tab == "utility"
+        hov_u = btn_utility.collidepoint(self.mouse)
+        panel(screen, btn_utility, fill=SURFACE_3 if is_u else SURFACE_2 if hov_u else SURFACE_1,
+              border=ACCENT if is_u else LINE_SOFT, width=1)
+        text(screen, "UTILITY", f.body_bd, ACCENT if is_u else INK if hov_u else INK_DIM,
+             btn_utility.center, center=True)
+        self.buttons.append(("tab_utility", btn_utility))
+
+        panel(screen, btn_blocked, fill=SURFACE_2 if self.show_blocked_actions else SURFACE_1,
+              border=LINE_SOFT, width=1)
+        text(screen, "(o)" if self.show_blocked_actions else "(-)", f.mono_sm, INK,
+             btn_blocked.center, center=True)
+        self.buttons.append(("toggle_blocked", btn_blocked))
+
+        # Filter items for active tab
+        tab_actions = actions.COMBAT_ACTIONS if self.action_tab == "combat" else actions.UTILITY_ACTIONS
         contextual = (actions.CLIMB, actions.DROP, actions.SWIM)
 
-        r = s.row(34)
-        s.gap(SP1)
-        tr = pygame.Rect(r.right - 34, r.y, 34, 34)
-        mr = pygame.Rect(r.x, r.y, r.w - 40, 34)
-        
-        t_fill = SURFACE_2 if self.show_blocked_actions else SURFACE_1
-        panel(screen, tr, fill=t_fill, border=LINE_SOFT, width=1)
-        text(screen, "(o)" if self.show_blocked_actions else "(-)", f.mono_sm, INK, tr.center, center=True)
-        self.buttons.append(("toggle_blocked", tr))
+        visible_items = []
+        if self.action_tab == "combat" and act.char.spells_known:
+            visible_items.append(("spell_menu", None, True, ""))
 
-        if act.char.spells_known:
-            enabled = my_turn
-            fill = SURFACE_2 if enabled else SURFACE_1
-            panel(screen, mr, fill=fill, border=LINE_SOFT, width=1)
-            ink = INK if enabled else INK_FAINT
-            text(screen, "Cast Spell", f.body_bd, ink, mr.center, center=True)
-            self.buttons.append(("magic_menu", mr))
-
-        hotkey_i = 0
-        for action in actions.PANEL_ACTIONS:
+        for action in tab_actions:
             applies, reason = action.applicable(b, act)
-            
             if action in contextual and not (my_turn and action.available(b, act)):
                 continue
-                
             if not applies and not self.show_blocked_actions:
                 continue
+            visible_items.append(("action", action, applies, reason))
 
+        # Layout scroll container
+        item_h = 34
+        item_gap = SP1
+        scroll_y = area_rect.y + tab_h + SP1
+        scroll_h = max(20, area_rect.bottom - scroll_y)
+        scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, scroll_h)
+        self._actions_scroll_rect = scroll_rect
+
+        total_content_h = len(visible_items) * (item_h + item_gap)
+        max_scroll = max(0, total_content_h - scroll_h)
+        self._actions_max_scroll = max_scroll
+        self.actions_scroll = max(0, min(self.actions_scroll, max_scroll))
+
+        old_clip = screen.get_clip()
+        screen.set_clip(scroll_rect)
+
+        action_bw = scroll_rect.w - (6 if max_scroll > 0 else 0)
+        curr_y = scroll_rect.y - self.actions_scroll
+        hotkey_i = 0
+        self._hotkey_actions = []
+
+        for item in visible_items:
+            kind = item[0]
+            r = pygame.Rect(scroll_rect.x, curr_y, action_bw, item_h)
+            curr_y += item_h + item_gap
+
+            if kind == "spell_menu":
+                if r.bottom > scroll_rect.top and r.top < scroll_rect.bottom:
+                    enabled = my_turn
+                    fill = SURFACE_2 if enabled else SURFACE_1
+                    panel(screen, r, fill=fill, border=LINE_SOFT, width=1)
+                    ink = INK if enabled else INK_FAINT
+                    text(screen, "Cast Spell", f.body_bd, ink, r.center, center=True)
+                    self.buttons.append(("magic_menu", r))
+                continue
+
+            action, applies, reason = item[1], item[2], item[3]
             enabled = applies and (my_turn if action is actions.END else (
                 my_turn and action.available(b, act)))
             armed = action.aimed and self.aim_action is action
-            r = s.row(34)
-            s.gap(SP1)
+
+            hotkey_num = None
+            if hotkey_i < 9:
+                hotkey_i += 1
+                hotkey_num = hotkey_i
+                self._hotkey_actions.append(action)
+
+            if r.bottom <= scroll_rect.top or r.top >= scroll_rect.bottom:
+                continue
+
             arm_c = DEMO_HL if action is actions.DEMORALIZE else \
                 THROW_HL if action is actions.THROW else \
                 ATK_HL if action in (actions.ATTACK_TONGUE, actions.ATTACK) else ACCENT
             fill = arm_c if armed else SURFACE_2 if enabled else SURFACE_1
-            panel(screen, r, fill=fill,
-                  border=arm_c if armed else LINE_SOFT, width=1)
+            panel(screen, r, fill=fill, border=arm_c if armed else LINE_SOFT, width=1)
             ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
 
             ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
@@ -1137,32 +1267,29 @@ class BattleScreen(Screen):
             label = action.name if not armed else f"{action.name}: click the target"
             if not applies:
                 label += f" ({reason})"
-            if hotkey_i < 9:                    # 1-9 hotkeys, in panel order
-                label = f"[{hotkey_i + 1}] {label}"
-            hotkey_i += 1
+            if hotkey_num is not None:
+                label = f"[{hotkey_num}] {label}"
             text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
 
             if action.cost:
                 cx = r.right - SP3
-                # draw action.cost yellow circles
                 for i in range(action.cost):
                     pygame.draw.circle(screen, ACCENT, (cx - i * 14, r.centery), 4)
+
             self.buttons.append((action, r))
 
-    def _draw_inspect(self, screen, s):
-        f = self.fonts
-        b = self.battle
-        insp = self.inspect
-        if insp and insp.team == "enemy" and not self._enemy_visible(insp):
-            insp = None
-        if insp and (insp.dead or insp.fled):
-            insp = None
-        who = insp or (b.active if b.winner is None else None)
-        if who is None:
-            return
+        screen.set_clip(old_clip)
 
-        s.gap(SP2)
-        head = s.row(20)
+        if max_scroll > 0:
+            bar_track = pygame.Rect(scroll_rect.right - 4, scroll_rect.y, 4, scroll_rect.h)
+            pygame.draw.rect(screen, SURFACE_1, bar_track, border_radius=2)
+            thumb_h = max(16, int(scroll_rect.h * (scroll_rect.h / total_content_h)))
+            thumb_y = scroll_rect.y + int((scroll_rect.h - thumb_h) * (self.actions_scroll / max_scroll))
+            pygame.draw.rect(screen, LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
+
+    def _draw_inspect(self, screen, rect, who, insp):
+        f = self.fonts
+        head = pygame.Rect(rect.x, rect.y, rect.w, 20)
         caret = "v" if self.inspect_open else ">"
         label = "INSPECT" if who is insp else "ACTIVE UNIT"
         tracked(screen, f"{caret}  {label}", f.label, INFO, (head.x, head.y + 3))
@@ -1172,19 +1299,19 @@ class BattleScreen(Screen):
         pygame.draw.line(screen, LINE_SOFT, (head.x, head.bottom + 2),
                          (head.right, head.bottom + 2))
 
+        cur_y = head.bottom + 4
         if who is insp and self._armed is insp:
-            s.gap(SP1)
-            hint = s.row(16)
+            hint = pygame.Rect(rect.x, cur_y, rect.w, 16)
             text(screen, "click again to attack", f.body_sm, DANGER, (hint.x, hint.y))
+            cur_y += 20
 
         if not self.inspect_open:
             return
-        s.gap(SP3)
+
         F = ui_fonts()
         ch = unit_to_ch(who)
-        rect = pygame.Rect(s.x, s.y, self._L["panel"].w - SP2, 0)
-        h, tooltip = draw_sheet_card(screen, F, rect, ch, density="compact", mouse=self.mouse)
-        s.y += h
+        card_rect = pygame.Rect(rect.x, cur_y, rect.w - SP2, 0)
+        h, tooltip = draw_sheet_card(screen, F, card_rect, ch, density="compact", mouse=self.mouse)
         if tooltip:
             ui_primitives.draw_tooltip(screen, F, tooltip, self.mouse)
 

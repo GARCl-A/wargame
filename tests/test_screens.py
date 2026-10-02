@@ -1473,3 +1473,104 @@ def test_starvation_loot_screen_instantiation():
     assert len(ls.survivors) == 2
 
 
+def test_battle_screen_tabs_and_hotkeys():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.battle import Battle
+    from gartok.battle_screen import BattleScreen
+    from gartok.theme import Fonts
+    from gartok import actions
+    pygame.init()
+    surf = pygame.display.set_mode((1280, 800))
+
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr.draw(surf)
+
+    # 1. Starts in combat tab
+    assert scr.action_tab == "combat"
+    assert actions.ATTACK in scr._hotkey_actions
+    assert actions.DEFEND in scr._hotkey_actions
+
+    # Hotkey [5] or Defend is directly accessible
+    defend_idx = scr._hotkey_actions.index(actions.DEFEND)
+    assert defend_idx < 9
+
+    # 2. Pressing TAB switches to utility tab
+    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_TAB))
+    assert scr.action_tab == "utility"
+    scr.draw(surf)
+    assert actions.FIRST_AID in scr._hotkey_actions
+
+    # 3. Pressing TAB again switches back to combat
+    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_TAB))
+    assert scr.action_tab == "combat"
+
+
+def test_battle_screen_actions_wheel_scroll():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.battle import Battle
+    from gartok.battle_screen import BattleScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    surf = pygame.display.set_mode((1280, 720))
+
+    batt = Battle([Unit("player")], [Unit("enemy")])
+    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr.show_blocked_actions = True
+    scr.draw(surf)
+
+    assert scr._actions_scroll_rect is not None
+    assert scr._actions_max_scroll > 0
+
+    # Scroll down over the actions area
+    scr.mouse = scr._actions_scroll_rect.center
+    scr.handle_event(pygame.event.Event(pygame.MOUSEWHEEL, y=-2, x=0))
+    assert scr.actions_scroll > 0
+
+    # Draw again and verify clamping
+    scr.draw(surf)
+    assert scr.actions_scroll <= scr._actions_max_scroll
+
+
+def test_battle_screen_16_9_monitor_no_overflow():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.battle import Battle
+    from gartok.battle_screen import BattleScreen
+    from gartok.theme import Fonts, MARGIN
+    pygame.init()
+
+    resolutions = [
+        (1280, 720),    # 720p 16:9
+        (1366, 768),    # Common laptop 16:9
+        (1600, 900),    # 900p 16:9
+        (1920, 1080),   # 1080p 16:9
+    ]
+
+    for w, h in resolutions:
+        surf = pygame.Surface((w, h))
+        batt = Battle([Unit("player")], [Unit("enemy")])
+        scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+        scr.show_blocked_actions = True    # maximize number of buttons shown
+        scr.inspect_open = True            # full compact inspect card open
+        scr.draw(surf)
+
+        panel_r = scr._L["panel"]
+        assert panel_r.bottom <= h - MARGIN
+
+        # Check all registered buttons are strictly on-screen
+        for key, rect in scr.buttons:
+            assert rect.top >= 0, f"Button {key} top {rect.top} above window in {w}x{h}"
+            assert rect.bottom <= h, f"Button {key} bottom {rect.bottom} below window {h} in {w}x{h}"
+
+        # Switch to utility tab and verify no overflow there either
+        scr.action_tab = "utility"
+        scr.draw(surf)
+        for key, rect in scr.buttons:
+            assert rect.top >= 0, f"Utility button {key} top {rect.top} above window in {w}x{h}"
+            assert rect.bottom <= h, f"Utility button {key} bottom {rect.bottom} below window {h} in {w}x{h}"
+
+
+

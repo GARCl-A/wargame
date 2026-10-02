@@ -1645,8 +1645,38 @@ class Disarm(Action):
 
 INVESTIGATE = Investigate()
 DISARM = Disarm()
+DRINK_POTION = DrinkPotion()
 
-# Panel buttons, in order. Move and Attack are the default board click.
-# Note: CAST_SPELL is handled dynamically by the UI, so it's not directly in PANEL_ACTIONS.
-PANEL_ACTIONS = [ATTACK, ATTACK_TONGUE, RELOAD, THROW, DEMORALIZE, PUSH, CLIMB, DROP, JUMP,
-                 SWIM, STABILIZE, FIRST_AID, DrinkPotion(), PICK_UP, DISARM, INVESTIGATE, SHARE_MAGIC, DEFEND, EAT_CORPSE, MOUNT, DISMOUNT, WAKE_UP, FLEE, END]
+# Panel actions split into clear combat and utility categories for the UI.
+COMBAT_ACTIONS = [
+    ATTACK,
+    THROW,
+    DEMORALIZE,
+    PUSH,
+    DEFEND,
+    RELOAD,
+    ATTACK_TONGUE,
+    FLEE,
+    END,
+]
+
+UTILITY_ACTIONS = [
+    FIRST_AID,
+    STABILIZE,
+    DRINK_POTION,
+    PICK_UP,
+    DISARM,
+    INVESTIGATE,
+    JUMP,
+    CLIMB,
+    DROP,
+    SWIM,
+    SHARE_MAGIC,
+    EAT_CORPSE,
+    MOUNT,
+    DISMOUNT,
+    WAKE_UP,
+]
+
+PANEL_ACTIONS = COMBAT_ACTIONS + UTILITY_ACTIONS
+

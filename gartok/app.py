@@ -85,7 +85,7 @@ class App:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("GARTOK Tactical")
-        self.window = pygame.display.set_mode((WIN_W, WIN_H), pygame.RESIZABLE)
+        self.window = pygame.display.set_mode((WIN_W, WIN_H), pygame.RESIZABLE | pygame.WINDOWMAXIMIZED)
         self.clock = pygame.time.Clock()
         self.fonts = Fonts()
         self.ui_fonts = ui_fonts()   # gartok/ui screens draw from this, never from Fonts()
