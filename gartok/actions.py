@@ -927,8 +927,9 @@ class Push(Action):
             battle.log(desc + f"  -> {target.name} is shoved against something and can't move.")
             return
         z_from = battle.elevation(target)
-        z_to = battle.board.elevation_at(dest)
+        z_to = battle.elevation_at(dest, target)
         target.pos = dest
+        target.z = z_to
         target.walking = False
         battle.log(desc + f"  -> {target.name} is shoved to {dest}.")
         
@@ -990,12 +991,13 @@ class Climb(_VerticalStep):
         actor.ap -= 1
         actor.walking = False
         z_from = battle.elevation(actor)
-        z_to = battle.board.elevation_at(target)
+        z_to = battle.elevation_at(target, actor)
         low_cell = target if z_to < z_from else actor.pos
         dc = battle.board.surface_dc(low_cell)
         way = "down" if z_to < z_from else "up"
         if actor.auto_climb(dc):
             actor.pos = target
+            actor.z = z_to
             battle.log(f"{actor.name} climbs {way} (Climber -- no check).")
             return
         nat = d20()
@@ -1004,6 +1006,7 @@ class Climb(_VerticalStep):
                 f"= {total} vs DC {dc}")
         if nat == 20 or total >= dc:
             actor.pos = target
+            actor.z = z_to
             battle.log(f"{desc}  -> {'up and over' if way == 'up' else 'down'}.")
         else:
             battle.log(desc + "  -> slips, stays put.")
@@ -1028,8 +1031,9 @@ class DropIn(_VerticalStep):
         actor.ap -= 1
         actor.walking = False
         z_from = battle.elevation(actor)
-        z_to = battle.board.elevation_at(target)
+        z_to = battle.elevation_at(target, actor)
         actor.pos = target
+        actor.z = z_to
         battle.log(f"{actor.name} drops into the pit at {target}.")
         battle.apply_fall(actor, z_from - z_to, battle.log)
 
@@ -1080,8 +1084,9 @@ class Jump(Action):
                 break
             landing = cell
         z_from = battle.elevation(actor)
-        z_to = battle.board.elevation_at(landing)
+        z_to = battle.elevation_at(landing, actor)
         actor.pos = landing
+        actor.z = z_to
         battle.log(f"{actor.name} jumps: d20({nat}) {actor.mod_strength:+}(STR) = "
                    f"{total} -> {total // JUMP_DIVISOR} squares, lands at {landing}.")
         if z_to < z_from:
@@ -1495,12 +1500,16 @@ class LightGlobeAction(_PlacedSpellAction):
 class FloatingDiskAction(_PlacedSpellAction):
     spell_id = "floating_disk"
 
-    def execute(self, battle, actor, target=None):
+    def execute(self, battle, actor, target=None, elevation=None):
         if not self.can(battle, actor, target):
             return
+        if elevation is None:
+            elevation = battle.elevation(actor)
+        elevation = int(elevation)
         actor.ap -= self.cost
-        battle.log(f"{actor.name} casts {self.spell.name}.")
-        battle.ground.append(GroundObject("floating_disk", target))
+        battle.log(f"{actor.name} casts {self.spell.name} at height {elevation}.")
+        battle.ground.append(GroundObject.disk(target, elevation=elevation))
+        battle.clear_pf_cache()
 
 
 _SPELL_ACTIONS = {

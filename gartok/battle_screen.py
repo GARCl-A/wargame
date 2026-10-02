@@ -54,6 +54,7 @@ class BattleScreen(Screen):
         self._armed = None                    # enemy a repeat click on it will now attack
         self.enemy_timer = 0
         self.aim_action = None
+        self.height_prompt = None
         self.show_magic_menu = False
         self.show_blocked_actions = False
         self.view_squad = False
@@ -102,6 +103,9 @@ class BattleScreen(Screen):
         """Esc cancels an armed aimed action (Demoralize, Throw, ...) instead
         of falling through to the pause menu -- the same gesture players
         reach for first in any tactics game."""
+        if getattr(self, "height_prompt", None) is not None:
+            self.height_prompt = None
+            return True
         if self.aim_action is not None:
             self.aim_action = None
             return True
@@ -153,10 +157,46 @@ class BattleScreen(Screen):
     def tutorial_key(self):
         return "battle"
 
+    def _disk_height_options(self, actor, tile):
+        b = self.battle
+        caster_z = b.elevation(actor)
+        pit_z = b.board.elevation_at(tile)
+        raw = {0, caster_z, pit_z}
+        sorted_z = sorted(raw, reverse=True)
+        opts = []
+        for z in sorted_z:
+            tags = []
+            if z == 0:
+                tags.append("Ground")
+            if z == caster_z:
+                tags.append("Caster")
+            if z == pit_z and pit_z != 0:
+                tags.append("Pit floor")
+            tag_str = f" ({'/'.join(tags)})" if tags else ""
+            opts.append((z, f"z={z}{tag_str}"))
+        return opts
+
     def _click(self, px):
         b = self.battle
         if b.winner is not None:
             self.on_battle_end(b)
+            return
+
+        if getattr(self, "height_prompt", None) is not None:
+            for key, rect in self.buttons:
+                if rect.collidepoint(px):
+                    if key == "prompt_cancel":
+                        self.height_prompt = None
+                        return
+                    elif isinstance(key, tuple) and key[0] == "prompt_height":
+                        z = key[1]
+                        prompt = self.height_prompt
+                        self.height_prompt = None
+                        prompt["action"].execute(b, b.active, prompt["tile"], elevation=z)
+                        self.aim_action = None
+                        self._after_player_action()
+                        return
+            self.height_prompt = None
             return
         for key, rect in self.buttons:
             if rect.collidepoint(px):
@@ -206,7 +246,16 @@ class BattleScreen(Screen):
 
         if self.aim_action is not None and self.aim_action.target == "cell":
             if self.aim_action.can(b, actor, tile):
-                self.aim_action.execute(b, actor, tile)
+                if getattr(self.aim_action, "spell_id", None) == "floating_disk":
+                    opts = self._disk_height_options(actor, tile)
+                    if len(opts) > 1:
+                        self.height_prompt = {"action": self.aim_action, "tile": tile, "options": opts}
+                        return
+                    else:
+                        elev = opts[0][0] if opts else 0
+                        self.aim_action.execute(b, actor, tile, elevation=elev)
+                else:
+                    self.aim_action.execute(b, actor, tile)
                 self.aim_action = None
                 self._after_player_action()
             return
@@ -620,12 +669,27 @@ class BattleScreen(Screen):
                 pygame.draw.polygon(screen, (255, 255, 255), pts, 2)
             elif getattr(o, "is_trap", False):
                 self._draw_trap(screen, o)
+            elif getattr(o, "is_disk", False):
+                self._draw_floating_disk(screen, o)
             else:
                 cx, cy = self._cell_rect(*o.pos).center
                 d = self.view.tile // 4
                 pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
                 pygame.draw.polygon(screen, OBJ_C, pts)
                 pygame.draw.polygon(screen, (25, 22, 12), pts, 2)
+
+    def _draw_floating_disk(self, screen, disk):
+        r = self._cell_rect(*disk.pos)
+        cx, cy = r.center
+        w = max(16, int(r.w * 0.75))
+        h = max(10, int(r.h * 0.45))
+        glow_surf = pygame.Surface((w + 8, h + 8), pygame.SRCALPHA)
+        pygame.draw.ellipse(glow_surf, (80, 220, 240, 80), (0, 0, w + 8, h + 8))
+        pygame.draw.ellipse(glow_surf, (30, 160, 200, 180), (4, 4, w, h))
+        pygame.draw.ellipse(glow_surf, (180, 245, 255, 220), (4, 4, w, h), 2)
+        screen.blit(glow_surf, (cx - (w + 8) // 2, cy - (h + 8) // 2))
+        z_str = f"z={disk.elevation}"
+        text(screen, z_str, self.fonts.mono_sm, (180, 245, 255), (cx, cy - 2), center=True)
 
     # ------------------------------------------------------------------ #
     # capture the flag                                                   #
@@ -977,6 +1041,22 @@ class BattleScreen(Screen):
         b = self.battle
         my_turn = b.winner is None and self._is_player_turn()
         act = b.active
+
+        if getattr(self, "height_prompt", None) is not None:
+            r_title = s.row(26)
+            text(screen, "DISK ALTITUDE:", f.body_bd, ACCENT, (r_title.x, r_title.y))
+            s.gap(SP1)
+            for z, lbl in self.height_prompt["options"]:
+                r = s.row(32)
+                s.gap(SP1)
+                panel(screen, r, fill=SURFACE_2, border=ACCENT, width=1)
+                text(screen, lbl, f.body_bd, INK, r.center, center=True)
+                self.buttons.append((("prompt_height", z), r))
+            r_c = s.row(28)
+            panel(screen, r_c, fill=SURFACE_1, border=LINE_SOFT, width=1)
+            text(screen, "Cancel", f.body_sm, INK_DIM, r_c.center, center=True)
+            self.buttons.append(("prompt_cancel", r_c))
+            return
         
         if getattr(self, "show_magic_menu", False):
             r = s.row(34)

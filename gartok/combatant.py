@@ -67,6 +67,7 @@ class Combatant:
         c = self.char
         self.hp = c.hp_max
         self.pos = (0, 0)
+        self.z = None                 # floor elevation standing on (None = query board)
         self.status = "up"            # up | dying | stable | broken | fled | dead
         self.death_clock = 0          # dying: own turns elapsed; save on DYING_TURNS
         self.nonlethal = False        # set by Battle for a non-lethal fight: 0 HP -> knocked out

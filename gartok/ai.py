@@ -397,7 +397,7 @@ def take_turn(battle, unit):
                                if fd.can(battle, unit, c)),
                               key=lambda c: grid_distance(c, target.pos), default=None)
                     if adj:
-                        fd.execute(battle, unit, adj)
+                        fd.execute(battle, unit, adj, elevation=battle.elevation(unit))
                         continue
             
             # try to climb / drop / swim toward the target so the fight doesn't

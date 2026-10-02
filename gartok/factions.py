@@ -226,14 +226,6 @@ def get_unlocks(faction_id: str):
                 "More language dictionaries become available to buy."
             )
         )
-        unlocks.append(
-            Unlock(
-                "library",
-                3,
-                "Full Catalog",
-                "The library opens its entire language catalog."
-            )
-        )
     return unlocks
 
 

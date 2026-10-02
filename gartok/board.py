@@ -192,7 +192,7 @@ class Board:
         """A flooded pit cell -- impassable to a walk, needs a Swim, drowns you."""
         return tuple(pos) in self.deep_water
 
-    def path_cost(self, path, diags=0):
+    def path_cost(self, path, diags=0, platforms=None, z_start=None):
         """(total cost, diagonals taken) of walking `path` = [c0, c1, ...],
         folding the +1 surcharge for entering a difficult-terrain cell. Mirrors
         `_dijkstra`'s accounting so `Battle.move_unit` charges a walk exactly
@@ -201,7 +201,8 @@ class Board:
         diff = self.difficult
         for a, b in zip(path, path[1:]):
             step, diags = _step_cost(a, b, diags)
-            if b in diff:
+            has_disk = bool(platforms and z_start in platforms.get(b, ()))
+            if b in diff and not has_disk:
                 step += 1
             cost += step
         return cost, diags
@@ -292,17 +293,20 @@ class Board:
     # pathfinding (8 directions; diagonals alternate cost 1, 2, 1, 2 ...) #
     # ------------------------------------------------------------------ #
     def _dijkstra(self, start, blocked, footprint, diags=0, budget=None, goal=None,
-                  vertical=False):
+                  vertical=False, platforms=None, z_start=None):
         """Dijkstra over ``(anchor, diagonal parity)`` under the diagonal
         alternation rule (see `path_cost`). Returns ``(dist, prev)``:
         ``dist`` maps every anchor reachable within `budget` to its least cost;
         ``prev`` holds back-pointers for a least-cost route to each. `diags` is
         how many diagonals were already spent on the move before `start`.
         `vertical` (a flier / climber) lets a step change floor height; otherwise
-        a change in elevation is a wall -- you climb or jump across it, not walk."""
+        a change in elevation is a wall -- you climb or jump across it, not walk.
+        `platforms` is a dict {pos: {elevation, ...}} of elevated surfaces (Floating Disks).
+        `z_start` specifies the starting floor height (defaults to elevation_at(start))."""
         walls = self.walls
         flat = self._flat or vertical
-        z_start = 0 if flat else self.elevation_at(start)
+        if z_start is None:
+            z_start = 0 if flat else self.elevation_at(start)
         elev = self.elevation
         neigh = self._neigh_d
         difficult = self.difficult
@@ -336,10 +340,13 @@ class Board:
                 else:
                     step = 1
                     ncd = cd
-                if not flat and elev.get(nb, 0) != z_start:
+
+                nb_elev = elev.get(nb, 0)
+                has_disk_at_z = bool(platforms and z_start in platforms.get(nb, ()))
+                if not flat and nb_elev != z_start and not has_disk_at_z:
                     continue                 # a drop / rise -- can't just walk it
-                if difficult and nb in difficult and not vertical:
-                    step += 1                # difficult terrain: one extra square
+                if difficult and nb in difficult and not vertical and not has_disk_at_z:
+                    step += 1                # difficult terrain: one extra square (unless on a disk)
 
                 nc = cost + step
                 if budget is not None and nc > budget:
@@ -364,7 +371,8 @@ class Board:
         return path
 
     def reachable(self, start, budget, blocked=frozenset(), footprint=1,
-                  passable=frozenset(), diags=0, vertical=False, field=None):
+                  passable=frozenset(), diags=0, vertical=False, field=None,
+                  platforms=None, z_start=None):
         """Anchors -> {anchor: cost} within `budget`. A `footprint`x`footprint`
         shape only lands where it fits whole (inside the grid, not touching
         `blocked`). Cells in `passable` (e.g. allies) can be crossed but not ended
@@ -374,7 +382,8 @@ class Board:
         the budget only filters it, so a scan without a budget serves any budget."""
         dist = (field[0] if field is not None
                 else self._dijkstra(start, blocked, footprint, diags, budget,
-                                    vertical=vertical)[0])
+                                    vertical=vertical, platforms=platforms,
+                                    z_start=z_start)[0])
         dist = {p: c for p, c in dist.items() if c <= budget and p != start}
         if passable:
             dist = {p: c for p, c in dist.items()
@@ -382,7 +391,7 @@ class Board:
         return dist
 
     def path_to(self, start, goal, blocked=frozenset(), footprint=1, diags=0,
-                vertical=False, field=None):
+                vertical=False, field=None, platforms=None, z_start=None):
         """Least-cost anchor path ``[start, ..., goal]``. Returns ``[]`` if `goal`
         cannot be reached. Allies are not passed in `blocked` here: a path may
         cross an ally's cell, it just cannot end on one (the caller only ever asks
@@ -391,14 +400,16 @@ class Board:
             return [start]
         prev = (field[1] if field is not None
                 else self._dijkstra(start, blocked, footprint, diags, goal=goal,
-                                    vertical=vertical)[1])
+                                    vertical=vertical, platforms=platforms,
+                                    z_start=z_start)[1])
         if goal not in prev:
             return []
         return self._trace(prev, goal)
 
     def path_step_toward(self, start, goal, budget, blocked=frozenset(),
                          footprint=1, target_cells=None, passable=frozenset(),
-                         diags=0, vertical=False, field=None, reach=1):
+                         diags=0, vertical=False, field=None, reach=1,
+                         platforms=None, z_start=None):
         """Anchor as far as `budget` (in movement cost) from `start` along the
         least-cost route to within `reach` cells of `target_cells` (by default the
         `goal` cell) -- `reach=1` is footprint-adjacent; a longer-reach attacker
@@ -413,7 +424,8 @@ class Board:
         target_cells = target_cells or [goal]
         dist, prev = (field if field is not None
                       else self._dijkstra(start, blocked, footprint, diags,
-                                          vertical=vertical))
+                                          vertical=vertical, platforms=platforms,
+                                          z_start=z_start))
 
         def touch(p):
             return cells_distance(cells(p, footprint), target_cells)

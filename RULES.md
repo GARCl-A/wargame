@@ -276,8 +276,13 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   - **Sleep** (level 1) — ranged (6 cells), `d20 + INT` vs the target's
     Mental Defense; a hit applies `Sleeping` (`−2 status` to AC). A race with
     the **Sleep Immunity** ability (the Elf) is never affected.
-  - **Light Globe** / **Floating Disk** (level 0) — drop a ground object at a
-    cell in range (6 cells): a light source, or a rideable/carryable disk.
+  - **Light Globe** (level 0) — drop a light source ground object at a cell in range (6 cells).
+  - **Floating Disk** (level 0) — conjures a magical floating platform at a cell
+    in range (6 cells) at a chosen altitude (e.g. ground level z=0). Bridges
+    pits and deep water, allowing units walking at the disk's elevation to cross
+    cleanly (ignoring drops and water). Units at the bottom of a pit can walk
+    underneath it. Currently 1 unit per cell (full 3D multi-tier occupancy
+    reserved for future system work).
   - **Share Magic** — a Sprite Nature Initiate's own action: spends a point
     to teach a random ally one of its known spells for the rest of the
     battle.
@@ -297,6 +302,10 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   chest uses for "open") — offered once the character has a `magic_source`
   and doesn't already know the spell, and toggles off the same way. The
   sandbox character editor has the identical control for authored NPCs.
+- **Scroll scarcity by design**: Spells are intentionally rare and valuable.
+  `Scroll of <Spell>` items are not sold in standard market shops. Instead,
+  they are scarce rewards earned through dungeon exploration (such as Ancient
+  Ruins chests), rare locked chests, or high-stakes mission rewards.
 
 ### Learning a language 🟡
 

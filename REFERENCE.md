@@ -137,6 +137,12 @@ Each occupation grants one starting weapon and one starting item.
 | Plate Armor | +5 | +0 | -2 sq | 28 kg | 950 |
 | Dwarf Armor | +5 | +0 | -1 sq | 25 kg | -- |
 
+## Shields
+
+| Shield | AC | Weight | Price (cp) |
+|---|---|---|---|
+| Dwarf Shield | +2 | 3 kg | -- |
+
 ## Items
 
 Pack items and their weights. Weapons and armor weigh the same stowed as worn.

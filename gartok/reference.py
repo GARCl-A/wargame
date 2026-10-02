@@ -90,6 +90,15 @@ def _armor():
     return "## Armor\n\n" + _table(head, rows)
 
 
+def _shields():
+    rows = []
+    for name, s in data.SHIELDS.items():
+        rows.append((name, f"+{s['ac']}", f"{s['weight']:g} kg",
+                     economy.PRICES.get(name, "--")))
+    head = ("Shield", "AC", "Weight", "Price (cp)")
+    return "## Shields\n\n" + _table(head, rows)
+
+
 def _items():
     rows = []
     for name, wt in sorted(data.ITEM_WEIGHTS.items()):
@@ -183,8 +192,8 @@ def _constants():
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _abilities, _occupations, _weapons, _armor, _items, _sizes,
-             _alignments, _talent_trees, _factions, _constants)
+_SECTIONS = (_races, _abilities, _occupations, _weapons, _armor, _shields, _items,
+             _sizes, _alignments, _talent_trees, _factions, _constants)
 
 
 def build():

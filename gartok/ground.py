@@ -15,9 +15,10 @@ class GroundObject:
     TRAP = "trap"
     RELIC = "relic"
     CHEST = "chest"
+    DISK = "floating_disk"
 
     def __init__(self, kind, pos, weapon_name=None, trap_type=None, trap_owner_team=None,
-                 item_name=None, contents=None):
+                 item_name=None, contents=None, elevation=0):
         self.kind = kind
         self.pos = pos
         self.weapon_name = weapon_name
@@ -25,6 +26,7 @@ class GroundObject:
         self.trap_owner_team = trap_owner_team
         self.item_name = item_name
         self.contents = list(contents) if contents else []
+        self.elevation = int(elevation)
 
     @classmethod
     def weapon(cls, pos, weapon_name):
@@ -46,6 +48,10 @@ class GroundObject:
     def chest(cls, pos, contents):
         return cls(cls.CHEST, pos, contents=contents)
 
+    @classmethod
+    def disk(cls, pos, elevation=0):
+        return cls(cls.DISK, pos, elevation=elevation)
+
     @property
     def is_weapon(self):
         return self.kind == self.WEAPON
@@ -65,6 +71,10 @@ class GroundObject:
     @property
     def is_chest(self):
         return self.kind == self.CHEST
+
+    @property
+    def is_disk(self):
+        return self.kind == self.DISK
 
     def __repr__(self):
         extra = f" {self.weapon_name or self.item_name or self.contents}" if (self.weapon_name or self.item_name or self.contents) else ""

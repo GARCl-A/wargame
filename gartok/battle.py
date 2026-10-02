@@ -65,6 +65,8 @@ class Battle:
         self.flags = {"player": None, "enemy": None} if is_ctf else None
         self.flag_carrier = {"player": None, "enemy": None} if is_ctf else None
         self.scenario.build(self)            # board + deployment + scatter
+        for u in self.units:
+            u.z = self.board.elevation_at(u.pos)
         self.round_no = 1
         self.winner = None
         self._mopup_open = False              # enemies down, allies still bleeding out
@@ -175,9 +177,34 @@ class Battle:
     def cells_of(self, unit, pos=None):
         return cells(pos or unit.pos, unit.footprint)
 
+    def _platforms(self):
+        """Map of cell pos -> set of platform heights from floating disks."""
+        res = {}
+        for o in self.ground:
+            if getattr(o, "is_disk", False):
+                res.setdefault(o.pos, set()).add(getattr(o, "elevation", 0))
+        return res
+
+    def elevation_at(self, pos, unit=None):
+        """Elevation at cell `pos`, considering platforms and unit height."""
+        platforms = self._platforms().get(pos, set())
+        if unit is not None and getattr(unit, "z", None) in platforms:
+            return unit.z
+        if platforms:
+            return max(platforms)
+        return self.board.elevation_at(pos)
+
     def elevation(self, unit, pos=None):
         """The floor height the unit stands on (its anchor cell)."""
-        return self.board.elevation_at(pos or unit.pos)
+        if isinstance(unit, tuple):
+            pos, unit = unit, None
+        target_pos = pos or (unit.pos if unit else None)
+        if target_pos is None:
+            return 0
+        platforms = self._platforms().get(target_pos, set())
+        if unit is not None and getattr(unit, "z", None) in platforms:
+            return unit.z
+        return self.board.elevation_at(target_pos)
 
     def unit_at(self, pos, include_downed=False):
         """The unit standing at `pos` -- a live occupant always wins over a downed
@@ -260,6 +287,9 @@ class Battle:
         no Move action is open -- a fresh walk starts the 1, 2, 1, 2 ... over)."""
         return unit.diag_steps if unit.walking else 0
 
+    def clear_pf_cache(self):
+        self._pf_cache.clear()
+
     def _pf_field(self, start, footprint, diags, vertical, blocked):
         """A full-board Dijkstra scan ``(dist, prev)`` from `start`, memoised for
         this turn. `reachable` / `path_to` / `path_step_toward` each ask for the
@@ -271,18 +301,26 @@ class Battle:
         The cache holds only plain int/tuple dicts (no unit or board references,
         nothing to keep alive for the GC) and is cleared at the top of every turn
         in `_advance_turn`, so it never holds more than a handful of entries."""
-        key = (start, footprint, diags % 2, vertical, blocked)  # blocked (a frozenset) is part of the key
+        platforms = self._platforms()
+        unit = self.unit_at(start)
+        z_start = self.elevation(unit, start) if not vertical else 0
+        plat_key = tuple(sorted((k, tuple(sorted(v))) for k, v in platforms.items()))
+        key = (start, footprint, diags % 2, vertical, blocked, plat_key, z_start)
         field = self._pf_cache.get(key)
         if field is None:
             field = self.board._dijkstra(start, blocked, footprint, diags,
-                                         vertical=vertical)
+                                         vertical=vertical, platforms=platforms, z_start=z_start)
             self._pf_cache[key] = field
         return field
 
     def _impassable_water(self, unit):
         """Deep water a normal walk cannot cross -- you Swim it. A flier sails
-        over; everyone else routes around."""
-        return frozenset() if unit.flies else frozenset(self.board.deep_water)
+        over; everyone else routes around. A floating disk at unit height bridges it."""
+        if unit.flies:
+            return frozenset()
+        u_z = self.elevation(unit)
+        disks_at_z = {o.pos for o in self.ground if getattr(o, "is_disk", False) and getattr(o, "elevation", 0) == u_z}
+        return frozenset(self.board.deep_water - disks_at_z)
 
     def reachable(self, unit, budget=None):
         """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
@@ -351,14 +389,23 @@ class Battle:
             self.log(f"{unit.name} moves (1 action point).")
             
         segment = self.path_to(unit, dest) or [unit.pos, dest]
+        platforms = self._platforms()
+        current_z = self.elevation(unit)
         
         for step in segment[1:]:
-            step_cost, unit.diag_steps = self.board.path_cost([unit.pos, step], unit.diag_steps)
+            step_cost, unit.diag_steps = self.board.path_cost([unit.pos, step], unit.diag_steps,
+                                                              platforms=platforms, z_start=current_z)
             unit.moved += step_cost
             unit.path.append(step)
             unit.pos = step
+            if current_z in platforms.get(step, set()):
+                unit.z = current_z
+            else:
+                unit.z = self.board.elevation_at(step)
+            current_z = unit.z
             if getattr(unit, "rider", None):
                 unit.rider.pos = step
+                unit.rider.z = unit.z
                 
             trap = self.ground_at(step)
             if trap and trap.is_trap and trap.trap_owner_team != unit.team:
