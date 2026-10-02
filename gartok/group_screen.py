@@ -49,7 +49,7 @@ loadout. `native = True`. `on_back()` returns to the map.
 
 import pygame
 
-from . import chest, data, missions, world, magic
+from . import chest, data, items, missions, world, magic
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
@@ -483,27 +483,28 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
     # ------------------------------------------------------------------ #
     def _hand_note(self, unit):
         name = unit.equipped_weapon
-        if not name or name not in data.WEAPONS:
+        w = items.get(name)
+        if not name or not items.is_weapon(w):
             return None
-        wd = data.WEAPONS[name]
         hit_bonus, _ = unit.attack_bonus
-        dn, faces = wd["damage"]
+        dn, faces = w.damage
         dmg = f"{dn}d{faces}"
-        if (wd["range"] == 0 or wd["thrown"]) and unit.mod_strength:
+        if (w.range == 0 or w.thrown) and unit.mod_strength:
             dmg += f" {unit.mod_strength:+}"
-        return f"{hit_bonus:+} hit  ·  {dmg} dmg  ·  {wd.get('weight', 0)}kg"
+        return f"{hit_bonus:+} hit  ·  {dmg} dmg  ·  {w.weight}kg"
 
     @staticmethod
     def _armor_note(unit):
         name = unit.equipped_armor
-        if not name or name not in data.ARMOR:
+        a = items.get(name)
+        if not name or not items.is_armor(a):
             return None
-        ad = data.ARMOR[name]
-        dex = f"max dex {ad['max_dex']}" if ad["max_dex"] is not None else "no limit"
-        return f"+{ad['ac']} AC · {dex} · {ad.get('weight', 0)}kg"
+        dex = f"max dex {a.max_dex}" if a.max_dex is not None else "no limit"
+        return f"+{a.ac} AC · {dex} · {a.weight}kg"
 
     def _member_dict(self, unit, carried):
-        two_handed = bool(unit.equipped_weapon) and data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
+        w = items.get(unit.equipped_weapon)
+        two_handed = bool(w) and w.hands >= 2
         selected_locs = {loc for u, loc in self.selected if u is unit}
 
         def held(kind, name, note):
@@ -517,7 +518,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, self._item_tag(name), data.item_weight(name), qty,
+            "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
@@ -530,8 +531,8 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         for u in self.group.members:
             for idx, (name, qty) in enumerate(u._base_inventory):
                 rows.append((u, idx, name, qty))
-        rows.sort(key=lambda t: -data.item_weight(t[2]) * t[3])
-        return [((u.uid, idx), name, self._item_tag(name), data.item_weight(name), qty,
+        rows.sort(key=lambda t: -items.item_weight(t[2]) * t[3])
+        return [((u.uid, idx), name, self._item_tag(name), items.item_weight(name), qty,
                 u.locked_of(name) > 0, (u, idx) in self.selected, _short(u.name))
                for u, idx, name, qty in rows]
 
@@ -608,7 +609,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
     def _draw_cargo(self, screen, F, rect):
         rows = self._cargo_rows()
         sel_count = sum(1 for u, idx in self.selected if isinstance(idx, int))
-        sel_kg = sum(data.item_weight(u._base_inventory[idx][0]) * u._base_inventory[idx][1]
+        sel_kg = sum(items.item_weight(u._base_inventory[idx][0]) * u._base_inventory[idx][1]
                     for u, idx in self.selected
                     if isinstance(idx, int) and idx < len(u._base_inventory))
 

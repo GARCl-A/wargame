@@ -26,7 +26,7 @@ contract (no lock toggling, no per-column wheel scroll on a shopping visit).
 
 import pygame
 
-from . import data, items
+from . import items
 
 LOCK_W = 18                          # padlock hit-box width, left of the item name -- market_screen.py still draws its own row by hand and reuses this
 
@@ -56,26 +56,6 @@ class PackColumnMixin:
 
     @staticmethod
     def _item_tag(item):
-        it = items.get(item)
-        if it is None:
-            return ""
-        if it.type == items.ItemType.WEAPON:
-            return "WEAPON"
-        if it.type == items.ItemType.ARMOR:
-            return "ARMOR"
-        if it.type == items.ItemType.SHIELD:
-            return "SHIELD"
-        if item == data.AMMO_ITEM:
-            return "AMMO"
-        if item == data.FIRST_AID_ITEM:
-            return "HEAL"
-        if item == data.TORCH_ITEM or item in data.LIGHT_SOURCES:
-            return "LIGHT"
-        if it.food:
-            return "FOOD"
-        if item == data.CHEST_ITEM:
-            return "CHEST"
-        if item == data.MISSION_CHEST_ITEM:
-            return "SEALED"
-        return ""
+        return items.item_tag(item)
+
 

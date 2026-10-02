@@ -16,6 +16,7 @@ and haggling *behaviour* lives here.
 
 from . import constants
 from . import data
+from . import items
 
 TORCH_ITEM = data.TORCH_ITEM
 
@@ -88,8 +89,6 @@ WILDS_RAID_CHANCE = 0.2           # rolled once per campaign.advance() call whil
 WILDS_RAID_LEVEL = 3
 WILDS_RAID_SIZE = 3
 
-from . import items
-
 PRICES = {item.name: item.price for item in items.all_items().values()}
 
 
@@ -133,9 +132,9 @@ _MARKET_TABS = (("WEAPONS", "weapons"), ("ARMOR", "armor"), ("CONSUMABLES & KIT"
 
 
 def _stock_category(name):
-    if name in data.WEAPONS:
+    if items.is_weapon(name):
         return "weapons"
-    if name in data.ARMOR or name in data.SHIELDS:
+    if items.is_armor(name) or items.is_shield(name):
         return "armor"
     return "kit"
 
@@ -265,7 +264,7 @@ def _base_price(name):
     item = items.get(name)
     if item is not None:
         return item.price
-    return max(1, round(data.item_weight(name) * 2))
+    return max(1, round(items.item_weight(name) * 2))
 
 
 

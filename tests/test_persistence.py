@@ -42,7 +42,7 @@ def test_old_flat_inventory_save_loads_as_stacks():
     v = Unit.from_save(d)
     assert v.count_of("Rope") == 2 and v.count_of("Map") == 1
     assert v._base_inventory == [("Rope", 2), ("Map", 1)]
-    assert persist.unit_to_dict(v)["inventory"] == [("Rope", 2), ("Map", 1)]
+    assert persist.unit_to_dict(v)["inventory"] == [{"id": "rope", "name": "Rope", "qty": 2}, {"id": "map", "name": "Map", "qty": 1}]
 
 
 def test_missing_locked_items_key_loads_as_unlocked():

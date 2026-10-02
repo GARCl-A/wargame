@@ -29,7 +29,7 @@ whole maximized screen. Reached from the map (opening it passes no time).
 
 import pygame
 
-from . import artwork, data, factions
+from . import artwork, factions, items
 from .combatant import Combatant
 from .screen import Screen
 from .ui.sheet_card import draw_row, draw_sheet, unit_to_ch
@@ -312,15 +312,7 @@ class GuildScreen(ButtonsMixin, Screen):
             self.buttons.append(("guild_leader", gl2))
 
     def _item_tag(self, item):
-        if item == data.AMMO_ITEM:
-            return "AMMO"
-        if item == data.FIRST_AID_ITEM:
-            return "HEAL"
-        if item == data.TORCH_ITEM or item in data.LIGHT_SOURCES:
-            return "LIGHT"
-        if item in data.FOOD_ITEMS:
-            return "FOOD"
-        return ""
+        return items.item_tag(item)
 
     # ------------------------------------------------------------------ #
     def _draw_tabs(self, screen, W, pad):

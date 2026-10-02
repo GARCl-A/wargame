@@ -28,39 +28,55 @@ ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom",
 
 
 def pack_from_raw(raw):
-    """Build a stacked `list[(name, qty)]` pack from a save field that may be
-    an old flat `list[str]` (repetition = stack) or the current `list[[name,
-    qty]]` -- tolerated permanently, no version branch, same spirit as the
-    rest of `from_save`'s `dict.get` defaulting. Shared by `Unit.from_save`
-    and any other saved pack shape that made the same flat -> stacked switch
-    later (`Guild.bank_items`/`property_city_items`)."""
-    if not raw or isinstance(raw[0], str):
+    """Build a stacked list of ItemInstance from a save field that may be
+    an old flat list[str], a list[[name, qty]], a list[dict], or list[ItemInstance]."""
+    if not raw:
+        return []
+    if isinstance(raw[0], str):
         order, counts = [], {}
         for name in raw:
             if name not in counts:
                 order.append(name)
                 counts[name] = 0
             counts[name] += 1
-        return [(name, counts[name]) for name in order]
-    return [tuple(entry) for entry in raw]
+        return [items.create_instance(name, qty=counts[name]) for name in order]
+    return [items.ItemInstance.from_raw(entry) for entry in raw]
 
 
-def stack_add(pack, name, qty=1):
-    """Add `qty` of `name` to a stacked `list[(name, qty)]` pack in place,
-    merging into an existing stack of the same name -- the shared-storage
-    half of `Unit._pack_add` (no per-item locking, no first-aid/quiver
-    refill side effects; those stay Unit-only)."""
-    for i, (n, q) in enumerate(pack):
-        if n == name:
-            pack[i] = (n, q + qty)
-            return
-    pack.append((name, qty))
+def stack_add(pack, name, qty=1, charges=None, days_old=0):
+    """Add `qty` of `name` (str or ItemInstance) to a stacked pack in place,
+    merging into an existing stack of the same name and state."""
+    if isinstance(name, items.ItemInstance):
+        inst = name
+    else:
+        inst = items.create_instance(name, qty=qty, charges=charges, days_old=days_old)
+    for i, it in enumerate(pack):
+        if isinstance(it, items.ItemInstance):
+            if it.id == inst.id and it.days_old == inst.days_old and it.charges == inst.charges:
+                it.qty += inst.qty
+                return
+        elif isinstance(it, tuple):
+            if it[0] == inst.name:
+                pack[i] = (it[0], it[1] + inst.qty)
+                return
+    pack.append(inst)
 
 
 def stack_take(pack, idx, qty=1):
     """Remove up to `qty` from the stack at `idx` in place, dropping the row
     once it empties. Returns `(name, removed, remaining)`."""
-    name, held = pack[idx]
+    entry = pack[idx]
+    if isinstance(entry, items.ItemInstance):
+        name = entry.name
+        removed = min(qty, entry.qty)
+        entry.qty -= removed
+        if entry.qty <= 0:
+            pack.pop(idx)
+            remaining = 0
+        else:
+            remaining = entry.qty
+        return name, removed, remaining
+    name, held = entry
     removed = min(qty, held)
     remaining = held - removed
     if remaining <= 0:
@@ -237,15 +253,23 @@ class Unit:
         for pack in (self._base_inventory, *(larder or ())):
             # Prefer fresh food
             idx = next((i for i, (n, _) in enumerate(pack)
-                        if any(n.startswith(f) for f in data.FOOD_ITEMS) and not n.startswith("Rotten Food")), None)
+                        if items.is_food(n.split(" (")[0]) and not n.startswith("Rotten Food")), None)
             if idx is None:
                 idx = next((i for i, (n, _) in enumerate(pack) if n.startswith("Rotten Food")), None)
             if idx is not None:
-                name, qty = pack[idx]
-                if qty > 1:
-                    pack[idx] = (name, qty - 1)
+                entry = pack[idx]
+                if isinstance(entry, items.ItemInstance):
+                    name = entry.name
+                    if entry.qty > 1:
+                        entry.qty -= 1
+                    else:
+                        pack.pop(idx)
                 else:
-                    pack.pop(idx)
+                    name, qty = entry
+                    if qty > 1:
+                        pack[idx] = (name, qty - 1)
+                    else:
+                        pack.pop(idx)
                 return "Rotten Food" if name.startswith("Rotten Food") else name
         return None
 
@@ -283,7 +307,7 @@ class Unit:
     def rations(self):
         """Meals sitting in this character's pack."""
         return sum(qty for name, qty in self._base_inventory
-                   if any(name.startswith(f) for f in data.FOOD_ITEMS))
+                   if items.is_food(name.split(" (")[0]))
 
     @property
     def work_xp(self):
@@ -366,7 +390,7 @@ class Unit:
         if n:
             yield economy.PriceMod(
                 round(economy.CHA_DEAL_STEP * n, 3), "Provisioner",
-                applies=lambda item, side: side == "buy" and item in data.FOOD_ITEMS)
+                applies=lambda item, side: side == "buy" and items.is_food(item))
 
     def choose_talent(self, track, talent_id):
         """Spend a pick in `track` on `talent_id`. Returns True if it took."""
@@ -475,8 +499,8 @@ class Unit:
         buf = self.talent_bonus("carry_buffer")
         if not buf:
             return 0.0
-        cargo = sum(data.item_weight(name) * qty for name, qty in self._base_inventory
-                    if not self.is_weapon(name) and name not in data.CONSUMABLE_ITEMS)
+        cargo = sum(items.item_weight(name) * qty for name, qty in self._base_inventory
+                    if not self.is_weapon(name) and not items.is_consumable(name))
         return round(min(buf, cargo), 1)
 
     def _apply_race(self):
@@ -544,7 +568,7 @@ class Unit:
                 foreign = [l for l in data.LANGUAGES if l not in self.languages]
                 if foreign:
                     self.item = f"Dictionary of {random.choice(foreign)}"
-            self._base_inventory = [(self.item, 1)]
+            self._base_inventory = [items.create_instance(self.item, 1)]
             if self.item == data.FIRST_AID_ITEM:
                 self.first_aid_charges = data.FIRST_AID_CHARGES
             elif self.item == data.AMMO_ITEM:
@@ -877,7 +901,8 @@ class Unit:
 
     @staticmethod
     def fits_offhand(name):
-        return name == data.TORCH_ITEM or name in data.LIGHT_SOURCES or items.is_shield(name)
+        return items.is_shield(name) or items.is_light_source(name)
+
 
     @staticmethod
     def fits_armor(name):
@@ -941,14 +966,15 @@ class Unit:
     # appending a duplicate) -- so `idx` below addresses a stack, not a   #
     # physical item.                                                     #
     # ------------------------------------------------------------------ #
-    def _pack_add(self, name, qty=1):
-        stack_add(self._base_inventory, name, qty)
+    def _pack_add(self, name, qty=1, charges=None, days_old=0):
+        stack_add(self._base_inventory, name, qty, charges=charges, days_old=days_old)
 
-    def give_to_pack(self, name, qty=1):
-        self._pack_add(name, qty)
-        if name == data.FIRST_AID_ITEM:
+    def give_to_pack(self, name, qty=1, charges=None, days_old=0):
+        self._pack_add(name, qty, charges=charges, days_old=days_old)
+        item_name = name.name if isinstance(name, items.ItemInstance) else name
+        if item_name == data.FIRST_AID_ITEM:
             self.first_aid_charges = data.FIRST_AID_CHARGES
-        elif name == data.AMMO_ITEM:
+        elif item_name == data.AMMO_ITEM:
             self.quiver_charges = data.QUIVER_AMMO
 
     def take_from_hand(self):
@@ -1005,7 +1031,16 @@ class Unit:
         how it's grouped. No-op (`False`) unless `0 < qty < held` -- moving
         the whole stack isn't a split, and `_pack_add` would just merge a
         same-named stack of qty 0 straight back in."""
-        name, held = self._base_inventory[idx]
+        entry = self._base_inventory[idx]
+        if isinstance(entry, items.ItemInstance):
+            if not (0 < qty < entry.qty):
+                return False
+            entry.qty -= qty
+            split_inst = entry.copy()
+            split_inst.qty = qty
+            self._base_inventory.insert(idx + 1, split_inst)
+            return True
+        name, held = entry
         if not (0 < qty < held):
             return False
         self._base_inventory[idx] = (name, held - qty)
@@ -1033,6 +1068,15 @@ class Unit:
         """How many of `name` in this pack are locked against distribute_load --
         clamped to what's actually held, so a lock never outlives its items."""
         return min(self.locked_items.get(name, 0), self.count_of(name))
+
+    @property
+    def inventory(self):
+        """Flat / active view of the character's pack items as ItemInstances."""
+        return self._base_inventory
+
+    @inventory.setter
+    def inventory(self, val):
+        self._base_inventory = pack_from_raw(val)
 
     def toggle_lock(self, name):
         """Lock the whole stack of `name`, or unlock it if already fully locked."""
@@ -1163,21 +1207,33 @@ def distribute_load(units):
     first -- locked items (see `Unit.locked_items`/`toggle_lock`) stay put on
     their current owner instead of joining the pool. Item granularity, not
     whole-stack: a locked portion of a stack stays put, the rest still moves."""
-    items = []
+    pool = []
     for u in units:
         keep, move = [], []
-        for name, qty in u._base_inventory:
+        for it in u._base_inventory:
+            name, qty = it[0], it[1]
             locked = u.locked_of(name)
             if locked:
-                keep.append((name, locked))
+                if isinstance(it, items.ItemInstance):
+                    locked_inst = it.copy()
+                    locked_inst.qty = locked
+                    keep.append(locked_inst)
+                else:
+                    keep.append((name, locked))
             if qty > locked:
-                move.extend([name] * (qty - locked))
+                if isinstance(it, items.ItemInstance):
+                    for _ in range(qty - locked):
+                        c = it.copy()
+                        c.qty = 1
+                        move.append(c)
+                else:
+                    move.extend([name] * (qty - locked))
         u._base_inventory[:] = keep
-        items.extend(move)
+        pool.extend(move)
         u._derive_combat()
 
-    items.sort(key=data.item_weight, reverse=True)
-    for item in items:
+    pool.sort(key=items.item_weight, reverse=True)
+    for item in pool:
         best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
         best.give_to_pack(item)
         best._derive_combat()

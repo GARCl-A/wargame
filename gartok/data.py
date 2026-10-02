@@ -11,6 +11,7 @@ design-prose doc; `python -m gartok.reference` turns these tables into
 """
 
 import random
+from . import items
 
 # --------------------------------------------------------------------------- #
 # Dice                                                                         #
@@ -110,21 +111,21 @@ BREATH_BASE = 4            # rounds a unit can stay underwater = this + its Cons
 # Ammo and improvised weapon                                                   #
 # --------------------------------------------------------------------------- #
 
-AMMO_ITEM = "Quiver"                     # inventory item that feeds a ranged weapon
-FIRST_AID_ITEM = "First Aid Kit"
+AMMO_ITEM = items.AMMO_ITEM                     # inventory item that feeds a ranged weapon
+FIRST_AID_ITEM = items.FIRST_AID_ITEM
 
 # A locked chest: pick the lock (chest.py) for the gems inside, or hand it in
 # whole. Failure costs nothing -- try again -- so it is never removed on a miss.
-CHEST_ITEM = "Locked Chest"
-GEM_ITEM = "Gemstones"                   # what a chest holds; sellable, not stocked to buy back
+CHEST_ITEM = items.CHEST_ITEM
+GEM_ITEM = items.GEM_ITEM                   # what a chest holds; sellable, not stocked to buy back
 
 # The Bankers' trust mission (missions.py): a sealed chest that is NOT
 # data.CHEST_ITEM on purpose -- opening this one early (chest.py's same roll)
 # fails the mission and marks the opener a criminal instead of quietly paying
 # out. LETTER_ITEM is what Ledger Hold hands back once it's exchanged intact.
-MISSION_CHEST_ITEM = "Sealed Chest"
-LETTER_ITEM = "Letter of Receipt"
-CODEX_ITEM = "Ancient Codex"
+MISSION_CHEST_ITEM = items.MISSION_CHEST_ITEM
+LETTER_ITEM = items.LETTER_ITEM
+CODEX_ITEM = items.CODEX_ITEM
 
 
 # --------------------------------------------------------------------------- #
@@ -136,7 +137,8 @@ DARKVISION = squares(18)          # ability "darkvision": sees 18 m in the dark
 DEMORALIZE_RANGE = squares(18)    # Demoralize action: 18 m, needs mutual sight + shared language
 TORCH_RADIUS = squares(6)         # torch: lights a 6 m radius (held or dropped)
 
-LANTERN_ITEM = "Lantern"          # an off-hand light source, like a torch but bigger and heavier
+LANTERN_ITEM = items.LANTERN_ITEM          # an off-hand light source, like a torch but bigger and heavier
+
 
 # Off-hand light sources beyond the torch -> lit radius in squares. Only lights
 # while equipped in the off hand (see combatant.light_radius), same as a torch.
@@ -462,47 +464,5 @@ DERIVED_HELP = {
     ),
 }
 
-def item_tooltip(name):
-    """Returns (title, description) for an item's tooltip."""
-    desc = []
-    
-    if name in WEAPONS:
-        wp = WEAPONS[name]
-        n, faces = wp["damage"]
-        hands = "Two-handed" if wp["hands"] >= 2 else "One-handed"
-        reach = f"{wp['range'] * 1.5:g}m range" if wp["range"] else "Melee"
-        desc.append(f"Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.")
-        if wp["finesse"]:
-            desc.append("Finesse: Uses Dexterity for attack rolls if it is higher than Strength.")
-        if wp["thrown"]:
-            desc.append(f"Thrown: Can be thrown up to {wp['thrown'] * 1.5:g}m.")
-    elif name in ARMOR:
-        ar = ARMOR[name]
-        desc.append(f"Armor: +{ar['ac']} Armor Class.")
-        if ar["max_dex"] is not None:
-            desc.append(f"Maximum Dexterity bonus to AC is capped at +{ar['max_dex']}.")
-        if ar["speed"]:
-            desc.append(f"Heavy: Reduces movement speed by {ar['speed']} cells.")
-    elif name in SHIELDS:
-        sh = SHIELDS[name]
-        desc.append(f"Shield: +{sh['ac']} Armor Class when equipped in the off-hand.")
-    elif name == FIRST_AID_ITEM:
-        desc.append(f"Restores HP or stabilizes a dying unit. Starts with {FIRST_AID_CHARGES} charges.")
-    elif name == AMMO_ITEM:
-        desc.append(f"Ammunition for ranged weapons. Holds {QUIVER_AMMO} arrows/bolts.")
-    elif name == "Minor Healing Potion":
-        desc.append("Restores 1d6 HP when consumed.")
-    elif name == TORCH_ITEM:
-        desc.append(f"Provides light in a {TORCH_RADIUS * 1.5:g}m radius. Can be dropped on the ground.")
-    elif name in LIGHT_SOURCES:
-        r = LIGHT_SOURCES[name]
-        desc.append(f"Provides light in a {r * 1.5:g}m radius when equipped in the off-hand.")
-    elif name in FOOD_ITEMS:
-        desc.append("A day's ration. Prevents starvation when resting.")
-        if name in FOOD_LIFESPAN:
-            desc.append(f"Spoils in {FOOD_LIFESPAN[name]} day(s).")
-    
-    wt = item_weight(name)
-    desc.append(f"Weight: {wt:g} kg.")
-    
-    return name, " ".join(desc)
+item_tooltip = items.item_tooltip
+

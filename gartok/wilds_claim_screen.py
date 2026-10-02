@@ -12,7 +12,7 @@ same idiom `bank_screen`/`city_property_screen` use for a flat action.
 
 import pygame
 
-from . import data, economy, orders
+from . import data, economy, items, orders
 from .screen import Screen
 from .theme import set_pointer, token_badge
 from .ui.primitives import (caps, draw_button, header, hline, text, token_badge)
@@ -65,7 +65,7 @@ class WildsClaimScreen(Screen):
         stock = self.guild.garrison_stock.setdefault(self.group.node, [])
         taken = 0
         for m in self.group.members:
-            while stock and m.load + data.item_weight("Lumber") <= m.carry_max:
+            while stock and m.load + items.item_weight("Lumber") <= m.carry_max:
                 stock.pop()
                 m.give_to_pack("Lumber")
                 m._derive_combat()

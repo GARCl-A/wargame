@@ -16,7 +16,7 @@ run's one free way to change your mind).
 
 import pygame
 
-from . import artwork, data
+from . import artwork, data, items
 from .combatant import Combatant
 from .screen import Screen
 from .theme import BANNER_COLORS, set_player_color
@@ -55,13 +55,13 @@ def _archetypes(u):
         count, sides = u.unarmed_damage
         expected_dmg = count * ((sides + 1) / 2) + u.mod_strength
     else:
-        wep = data.WEAPONS.get(wep_name)
+        wep = items.get(wep_name)
         if not wep:
             count, sides = u.unarmed_damage
             expected_dmg = count * ((sides + 1) / 2) + u.mod_strength
         else:
-            count, sides = wep.get("damage", (1, 2))
-            stat_mod = u.mod_dexterity if wep.get("finesse") else u.mod_strength
+            count, sides = wep.damage or (1, 2)
+            stat_mod = u.mod_dexterity if wep.finesse else u.mod_strength
             expected_dmg = count * ((sides + 1) / 2) + stat_mod
 
     if u.size == "Large":

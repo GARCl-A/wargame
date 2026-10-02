@@ -102,16 +102,20 @@ class ItemInstance:
     charges: Optional[int] = None
     days_old: int = 0
     qty: int = 1
+    _name: Optional[str] = None
 
     @property
     def defn(self) -> ItemDef:
         item = get(self.id)
         if item is None:
-            raise ValueError(f"Unknown item {self.id}")
+            name = self._name or self.id.title()
+            return ItemDef(id=self.id, name=name, type=ItemType.MISC, weight=0.5)
         return item
 
     @property
     def name(self) -> str:
+        if self._name:
+            return self._name
         return self.defn.name
 
     @property
@@ -128,8 +132,84 @@ class ItemInstance:
             id=self.id,
             charges=self.charges,
             days_old=self.days_old,
-            qty=self.qty
+            qty=self.qty,
+            _name=self._name,
         )
+
+    def to_dict(self) -> dict:
+        d = {"id": self.id, "name": self.name, "qty": self.qty}
+        if self.charges is not None:
+            d["charges"] = self.charges
+        if self.days_old:
+            d["days_old"] = self.days_old
+        return d
+
+    @classmethod
+    def from_raw(cls, raw: Any) -> "ItemInstance":
+        if isinstance(raw, ItemInstance):
+            return raw.copy()
+        if isinstance(raw, str):
+            return create_instance(raw, 1)
+        if isinstance(raw, (tuple, list)) and len(raw) == 2 and isinstance(raw[1], int):
+            return create_instance(raw[0], qty=raw[1])
+        if isinstance(raw, dict):
+            key = raw.get("id") or raw.get("name")
+            qty = raw.get("qty", 1)
+            charges = raw.get("charges")
+            days_old = raw.get("days_old", 0)
+            name_override = raw.get("name") if raw.get("id") else None
+            inst = create_instance(key, qty=qty, days_old=days_old, charges=charges)
+            if name_override and inst.name != name_override:
+                inst._name = name_override
+            return inst
+        raise ValueError(f"Cannot create ItemInstance from {raw!r}")
+
+    def __getitem__(self, idx: int) -> Any:
+        if idx == 0:
+            return self.name
+        elif idx == 1:
+            return self.qty
+        raise IndexError(idx)
+
+    def __len__(self) -> int:
+        return 2
+
+    def __iter__(self):
+        yield self.name
+        yield self.qty
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, str):
+            return self.name == other or self.id == other
+        if isinstance(other, (tuple, list)) and len(other) == 2:
+            return (self.name, self.qty) == (other[0], other[1])
+        if isinstance(other, ItemInstance):
+            return (self.id, self.qty, self.charges, self.days_old) == (other.id, other.qty, other.charges, other.days_old)
+        if isinstance(other, dict):
+            return self.to_dict() == other
+        return False
+
+    def __lt__(self, other: Any) -> bool:
+        if isinstance(other, ItemInstance):
+            return self.name < other.name
+        if isinstance(other, (tuple, list)) and len(other) == 2:
+            return (self.name, self.qty) < tuple(other)
+        if isinstance(other, str):
+            return self.name < other
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((self.id, self.charges, self.days_old, self.qty, self._name))
+
+    def __repr__(self) -> str:
+        extra = []
+        if self.charges is not None:
+            extra.append(f"charges={self.charges}")
+        if self.days_old:
+            extra.append(f"days_old={self.days_old}")
+        ext_str = f", {', '.join(extra)}" if extra else ""
+        return f"ItemInstance({self.name!r}, qty={self.qty}{ext_str})"
+
 
 
 DAMAGE_STEPS = {
@@ -344,6 +424,12 @@ def is_consumable(item_or_name: Any) -> bool:
     return item.food or item.type in (ItemType.CONSUMABLE, ItemType.POTION) or item.name in ("First Aid Kit", "Minor Healing Potion")
 
 
+def is_light_source(item_or_name: Any) -> bool:
+    item = item_or_name if isinstance(item_or_name, ItemDef) else get(getattr(item_or_name, "id", item_or_name))
+    return item is not None and (item.type == ItemType.LIGHT or item.light_radius > 0)
+
+
+
 
 def item_weight(item_or_name: Any) -> float:
     if isinstance(item_or_name, ItemInstance):
@@ -384,9 +470,15 @@ def sell_price(item_or_name: Any, markup: float = 0.0) -> int:
 def create_instance(key: str, qty: int = 1, days_old: int = 0, charges: Optional[int] = None) -> ItemInstance:
     item = get(key)
     if item is None:
-        raise ValueError(f"Unknown item: {key}")
-    c = charges if charges is not None else item.max_charges
-    return ItemInstance(id=item.id, charges=c, days_old=days_old, qty=qty)
+        item_id = str(key).lower().replace(" ", "_")
+        c = charges
+        name_override = str(key)
+    else:
+        item_id = item.id
+        c = charges if charges is not None else item.max_charges
+        name_override = None
+    return ItemInstance(id=item_id, charges=c, days_old=days_old, qty=qty, _name=name_override)
+
 
 
 # --------------------------------------------------------------------------- #
@@ -468,4 +560,95 @@ for _lang in _LANGUAGES:
 
 APOTHECARY_RECIPES = ["Minor Healing Potion"]
 BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
+
+# --------------------------------------------------------------------------- #
+# Standard Item Constants                                                     #
+# --------------------------------------------------------------------------- #
+
+TORCH_ITEM = "Torch"
+LANTERN_ITEM = "Lantern"
+AMMO_ITEM = "Quiver"
+FIRST_AID_ITEM = "First Aid Kit"
+CHEST_ITEM = "Locked Chest"
+GEM_ITEM = "Gemstones"
+MISSION_CHEST_ITEM = "Sealed Chest"
+LETTER_ITEM = "Letter of Receipt"
+CODEX_ITEM = "Ancient Codex"
+
+
+def item_tag(item: str | ItemDef | None) -> str:
+    """Returns a short category pill tag (WEAPON, ARMOR, SHIELD, AMMO, HEAL, LIGHT, FOOD, CHEST, SEALED, etc.)
+    used across inventory screens."""
+    if not item:
+        return ""
+    it = get(item) if not isinstance(item, ItemDef) else item
+    if it is None:
+        return ""
+    if it.type == ItemType.WEAPON:
+        return "WEAPON"
+    if it.type == ItemType.ARMOR:
+        return "ARMOR"
+    if it.type == ItemType.SHIELD:
+        return "SHIELD"
+    if it.id == "quiver" or it.name == AMMO_ITEM:
+        return "AMMO"
+    if it.id == "first_aid_kit" or it.name == FIRST_AID_ITEM:
+        return "HEAL"
+    if it.type == ItemType.LIGHT or it.light_radius > 0:
+        return "LIGHT"
+    if it.food:
+        return "FOOD"
+    if it.name == CHEST_ITEM:
+        return "CHEST"
+    if it.name == MISSION_CHEST_ITEM:
+        return "SEALED"
+    return ""
+
+
+def item_tooltip(name: str) -> tuple[str, str]:
+    """Returns (title, description) for an item's tooltip."""
+    it = get(name)
+    if it is None:
+        return name, ""
+
+    desc = []
+    if it.type == ItemType.WEAPON:
+        n, faces = it.damage or (1, 4)
+        hands = "Two-handed" if it.hands >= 2 else "One-handed"
+        reach = f"{it.range * 1.5:g}m range" if it.range else "Melee"
+        desc.append(f"Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.")
+        if it.finesse:
+            desc.append("Finesse: Uses Dexterity for attack rolls if it is higher than Strength.")
+        if it.thrown:
+            desc.append(f"Thrown: Can be thrown up to {it.thrown * 1.5:g}m.")
+    elif it.type == ItemType.ARMOR:
+        desc.append(f"Armor: +{it.ac} Armor Class.")
+        if it.max_dex is not None:
+            desc.append(f"Maximum Dexterity bonus to AC is capped at +{it.max_dex}.")
+        if it.speed:
+            desc.append(f"Heavy: Reduces movement speed by {it.speed} cells.")
+    elif it.type == ItemType.SHIELD:
+        desc.append(f"Shield: +{it.ac} Armor Class when equipped in the off-hand.")
+    elif it.name == FIRST_AID_ITEM or it.id == "first_aid_kit":
+        charges = it.max_charges or 10
+        desc.append(f"Restores HP or stabilizes a dying unit. Starts with {charges} charges.")
+    elif it.name == AMMO_ITEM or it.id == "quiver":
+        ammo = it.max_charges or 20
+        desc.append(f"Ammunition for ranged weapons. Holds {ammo} arrows/bolts.")
+    elif it.name == "Minor Healing Potion" or it.id == "minor_healing_potion":
+        desc.append("Restores 1d6 HP when consumed.")
+    elif it.name == TORCH_ITEM or it.id == "torch":
+        r = it.light_radius or 4
+        desc.append(f"Provides light in a {r * 1.5:g}m radius. Can be dropped on the ground.")
+    elif it.type == ItemType.LIGHT or it.light_radius > 0:
+        desc.append(f"Provides light in a {it.light_radius * 1.5:g}m radius when equipped in the off-hand.")
+    elif it.food:
+        desc.append("A day's ration. Prevents starvation when resting.")
+        if it.lifespan is not None:
+            desc.append(f"Spoils in {it.lifespan} day(s).")
+
+    wt = it.weight
+    desc.append(f"Weight: {wt:g} kg.")
+    return it.name, " ".join(desc)
+
 

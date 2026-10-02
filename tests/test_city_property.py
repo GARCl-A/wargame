@@ -241,6 +241,8 @@ def test_ignored_debt_eventually_reaches_the_guard():
 # --------------------------------------------------------------------------- #
 
 def test_app_opens_repossession_screen_once_it_is_due():
+    import pygame
+    pygame.font.init()
     random.seed(1)
     p = Unit("player")
     g = Group([p], node="city")

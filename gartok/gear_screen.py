@@ -26,7 +26,7 @@ so the next battle re-seeds every `Combatant` from the new loadout.
 
 import pygame
 
-from . import chest, data, magic, missions
+from . import chest, data, items, magic, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
@@ -275,26 +275,27 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     # ------------------------------------------------------------------ #
     def _hand_note(self, unit):
         name = unit.equipped_weapon
-        if not name or name not in data.WEAPONS:
+        w = items.get(name)
+        if not name or not items.is_weapon(w):
             return None
-        wd = data.WEAPONS[name]
         hit_bonus, _ = unit.attack_bonus
-        dn, faces = wd["damage"]
+        dn, faces = w.damage
         dmg = f"{dn}d{faces}"
-        if (wd["range"] == 0 or wd["thrown"]) and unit.mod_strength:
+        if (w.range == 0 or w.thrown) and unit.mod_strength:
             dmg += f" {unit.mod_strength:+}"
         return f"{hit_bonus:+} hit  ·  {dmg} dmg"
 
     @staticmethod
     def _armor_note(unit):
         name = unit.equipped_armor
-        if not name or name not in data.ARMOR:
+        a = items.get(name)
+        if not name or not items.is_armor(a):
             return None
-        ad = data.ARMOR[name]
-        return f"+{ad['ac']} AC"
+        return f"+{a.ac} AC"
 
     def _member_dict(self, unit, carried):
-        two_handed = bool(unit.equipped_weapon) and data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
+        w = items.get(unit.equipped_weapon)
+        two_handed = bool(w) and w.hands >= 2
         selected_locs = {loc for u, loc in self.selected if u is unit}
 
         def held(kind, name, note):
@@ -308,7 +309,7 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, self._item_tag(name), data.item_weight(name), qty,
+            "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }

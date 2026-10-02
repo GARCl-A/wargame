@@ -25,7 +25,7 @@ shopper's items for one move.
 
 import pygame
 
-from . import data, economy, factions, icons
+from . import economy, factions, icons, items
 from .dragselect import DragSelectMixin
 from .packbox import LOCK_W, PackColumnMixin
 from .screen import Screen
@@ -98,26 +98,27 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
     def _hand_note(self, unit):
         name = unit.equipped_weapon
-        if not name or name not in data.WEAPONS:
+        w = items.get(name)
+        if not name or not items.is_weapon(w):
             return None
-        wd = data.WEAPONS[name]
         hit_bonus, _ = unit.attack_bonus
-        dn, faces = wd["damage"]
+        dn, faces = w.damage
         dmg = f"{dn}d{faces}"
-        if (wd["range"] == 0 or wd["thrown"]) and unit.mod_strength:
+        if (w.range == 0 or w.thrown) and unit.mod_strength:
             dmg += f" {unit.mod_strength:+}"
         return f"{hit_bonus:+} hit  ·  {dmg} dmg"
 
     @staticmethod
     def _armor_note(unit):
         name = unit.equipped_armor
-        if not name or name not in data.ARMOR:
+        a = items.get(name)
+        if not name or not items.is_armor(a):
             return None
-        ad = data.ARMOR[name]
-        return f"+{ad['ac']} AC"
+        return f"+{a.ac} AC"
 
     def _member_dict(self, unit, carried):
-        two_handed = bool(unit.equipped_weapon) and data.WEAPONS[unit.equipped_weapon]["hands"] >= 2
+        w = items.get(unit.equipped_weapon)
+        two_handed = bool(w) and w.hands >= 2
         selected_locs = {loc for u, loc in self.sel if u is unit and u != "stock"}
 
         def held(kind, name, note):
@@ -131,7 +132,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, self._item_tag(name), data.item_weight(name), qty,
+            "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
@@ -217,7 +218,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             self._sel_qty[src] = 1
 
     def _fits(self, member, name):
-        return member.load + data.item_weight(name) <= member.carry_max
+        return member.load + items.item_weight(name) <= member.carry_max
 
     def _stock_of(self, name):
         """Units of `name` left to buy, or None if unlimited -- also None with
@@ -229,7 +230,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         """One-line summary of how the party's haggling moved the prices."""
         lang = getattr(self.node, "language", None)
         general = economy.deal_value(self.deal, None, "buy")
-        food = economy.deal_value(self.deal, next(iter(data.FOOD_ITEMS)), "buy")
+        food = economy.deal_value(self.deal, next(iter(items.food_items())), "buy")
         food_tag = (f"  ·  food -{round(food * 100)}%"
                     if round(food, 3) != round(general, 3) else "")
         if not lang:
@@ -426,7 +427,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             self._sel_qty = {}
             return
 
-        add = sum(data.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
+        add = sum(items.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
         if zone == "pack" and member.load + add > member.carry_max:
             self.notice = f"won't fit {member.name}'s load."
             self.sel = picks
@@ -440,9 +441,9 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 return
             picks = [fit]
 
-        items, touched = self._collect(picks)
+        collected, touched = self._collect(picks)
         self._sel_qty = {}
-        for name, qty in items:
+        for name, qty in collected:
             if zone == "hand":
                 member.give_to_hand(name)
             elif zone == "offhand":
@@ -459,10 +460,10 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         member._derive_combat()
         
         if zone == "pack":
-            moved = sum(qty for _, qty in items)
+            moved = sum(qty for _, qty in collected)
             self.notice = f"{moved} item(s) -> {member.name}."
         else:
-            self.notice = f"{items[0][0]} -> {member.name}'s {zone}."
+            self.notice = f"{collected[0][0]} -> {member.name}'s {zone}."
 
     def _settle_market(self):
 
@@ -552,18 +553,18 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         if not picks:
             self._sel_qty = {}
             return
-        items, touched = self._collect(picks)      # _take reads self._sel_qty -- clear after
+        collected, touched = self._collect(picks)      # _take reads self._sel_qty -- clear after
         self._sel_qty = {}
-        total = sum(economy.sell_price(n, self.deal) * q for n, q in items)
+        total = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
         self.purse += total
-        for n, q in items:
+        for n, q in collected:
             stock = self._stock_of(n)
             if stock is not None:
                 self.guild.market_stock[n] = stock + q
             self.guild.items_sold_kinds.add(n)
         for u in touched:
             u._derive_combat()
-        sold = sum(q for _, q in items)
+        sold = sum(q for _, q in collected)
         self.notice = f"sold {sold} item(s) for {total}."
         self._settle_market()
 
@@ -646,7 +647,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 name = self._item_at(member, loc)
                 if name:
                     from .theme import format_tooltip
-                    t, d = data.item_tooltip(name)
+                    t, d = items.item_tooltip(name)
                     self.tooltip = format_tooltip(t, d, f)
                 break
 
@@ -735,7 +736,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 stock_label = "SOLD OUT" if out else f"{stock} left"
                 caps(screen, F["micro"], stock_label, (tag_x, r.centery + 3), T.BLOOD if out else T.TX_MUTED)
 
-            wt = f"{data.item_weight(name):.1f} kg"
+            wt = f"{items.item_weight(name):.1f} kg"
             caps(screen, F["micro"], wt, (wt_x, r.centery - 5), T.TX_FAINT if fits else T.BLOOD, right=True)
             prect_w = F["body"].size(f"{price}c")[0]
             ui_text(screen, F["body"], f"{price}c", (price_x, r.centery - 8), main_color, right=True)
@@ -748,39 +749,31 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
             if hov:
                 from .theme import format_tooltip
-                t, d = data.item_tooltip(name)
+                t, d = items.item_tooltip(name)
                 self.tooltip = format_tooltip(t, d, self.fonts)
 
             self.stock_rows.append((r, name))
             y += row_h + T.S
 
     def _stock_spec(self, name):
-
         """The one-line stat blurb under a weapon / armor row."""
-        if name in data.WEAPONS:
-            wp = data.WEAPONS[name]
-            n, faces = wp["damage"]
-            hands = "2h" if wp["hands"] >= 2 else "1h"
-            rng = f"  ·  {wp['range'] * 3 // 2}m" if wp["range"] else ""
+        w = items.get(name)
+        if not w:
+            return ""
+        if w.type == items.ItemType.WEAPON:
+            n, faces = w.damage
+            hands = "2h" if w.hands >= 2 else "1h"
+            rng = f"  ·  {w.range * 3 // 2}m" if w.range else ""
             return f"{n}d{faces}  ·  {hands}{rng}"
-        if name in data.ARMOR:
-            ar = data.ARMOR[name]
-            cap = "no dex cap" if ar["max_dex"] is None else f"dex cap {ar['max_dex']}"
-            spd = f"  ·  -{ar['speed']} spd" if ar["speed"] else ""
-            return f"+{ar['ac']} AC  ·  {cap}{spd}"
+        if w.type == items.ItemType.ARMOR:
+            cap = "no dex cap" if w.max_dex is None else f"dex cap {w.max_dex}"
+            spd = f"  ·  -{w.speed_penalty} spd" if w.speed_penalty else ""
+            return f"+{w.ac} AC  ·  {cap}{spd}"
         return ""
 
     @staticmethod
     def _kit_tag(name):
-        if name in data.FOOD_ITEMS:
-            return "FOOD"
-        if name == data.FIRST_AID_ITEM:
-            return "HEAL"
-        if name == data.AMMO_ITEM:
-            return "AMMO"
-        if name == data.TORCH_ITEM or name in data.LIGHT_SOURCES:
-            return "LIGHT"
-        return ""
+        return items.item_tag(name)
 
 
     def _draw_stepper(self, screen, pick, row):

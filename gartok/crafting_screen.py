@@ -9,7 +9,7 @@ from collections import Counter
 
 import pygame
 
-from . import data, economy
+from . import data, economy, items
 from .screen import Screen
 from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
                             token_badge)
@@ -38,7 +38,7 @@ class CraftingScreen(ButtonsMixin, Screen):
         # List members that have recipes for this station
         if self.station:
             self.crafters = [u for u in group.members
-                             if any(data.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in u.recipes)]
+                             if any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in u.recipes)]
         else:
             self.crafters = [u for u in group.members if u.recipes]
         self.selected_crafter = self.crafters[0] if self.crafters else None
@@ -64,7 +64,7 @@ class CraftingScreen(ButtonsMixin, Screen):
         return False
 
     def _get_missing_materials(self, crafter, recipe):
-        recipe_data = data.CRAFTING_RECIPES.get(recipe)
+        recipe_data = items.CRAFTING_RECIPES.get(recipe)
         if not recipe_data:
             return []
         need = Counter(recipe_data["materials"])
@@ -129,13 +129,13 @@ class CraftingScreen(ButtonsMixin, Screen):
 
         def _trailing(surf, r, ch):
             u = ch["unit"]
-            count = sum(1 for r in u.recipes if not self.station or data.CRAFTING_RECIPES.get(r, {}).get("station") == self.station)
+            count = sum(1 for r in u.recipes if not self.station or items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station)
             caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
             if u.crafting_target:
                 caps(surf, F["micro"], "IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
 
         for m in self.group.members:
-            has_recipes = any(data.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in m.recipes) if self.station else bool(m.recipes)
+            has_recipes = any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in m.recipes) if self.station else bool(m.recipes)
             if not has_recipes:
                 continue
 
@@ -161,7 +161,7 @@ class CraftingScreen(ButtonsMixin, Screen):
         m = self.selected_crafter
 
         for r_name in m.recipes:
-            r_data = data.CRAFTING_RECIPES.get(r_name)
+            r_data = items.CRAFTING_RECIPES.get(r_name)
             if not r_data:
                 continue
             if self.station and r_data.get("station") != self.station:

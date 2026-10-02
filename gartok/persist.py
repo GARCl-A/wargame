@@ -18,7 +18,7 @@ import json
 import os
 import time
 
-from . import missions
+from . import items, missions
 from .clock import Clock
 from .group import Group
 from .guild import Guild
@@ -35,11 +35,27 @@ else:
 
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 16                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 17                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
     return os.path.join(SAVE_DIR, f"slot_{slot}.json")
+
+
+def _serialize_pack(pack):
+    res = []
+    for it in pack:
+        if hasattr(it, "to_dict"):
+            res.append(it.to_dict())
+        elif isinstance(it, str):
+            res.append(items.create_instance(it, qty=1).to_dict())
+        elif isinstance(it, (tuple, list)) and len(it) == 2:
+            res.append(items.create_instance(it[0], qty=it[1]).to_dict())
+        elif isinstance(it, dict):
+            res.append(it)
+        else:
+            res.append({"id": str(it).lower(), "name": str(it), "qty": 1})
+    return res
 
 
 def unit_to_dict(u):
@@ -90,7 +106,7 @@ def unit_to_dict(u):
         "equipped_offhand": u.equipped_offhand,  # off hand: a torch, or None
         "equipped_tongue": u.equipped_tongue,    # Grippli Tongue slot: a 1-handed weapon, or None
         "equipped_armor": u.equipped_armor,      # body slot: armor name, or None
-        "inventory": list(u._base_inventory),    # the pack: spare items, weapons included
+        "inventory": _serialize_pack(u._base_inventory),    # the pack: spare items, weapons included
         "locked_items": dict(u.locked_items),    # item name -> count exempt from distribute_load
     }
 
@@ -122,9 +138,10 @@ def save_game(slot, guild):
         "arena_challenge_day": guild.arena_challenge_day,
         "clock_seconds": guild.clock.seconds,
         "bank_capacity": guild.bank_capacity,
-        "bank_items": list(guild.bank_items),
+        "bank_items": _serialize_pack(guild.bank_items),
         "property_city_unlocked": guild.property_city_unlocked,
-        "property_city_items": list(guild.property_city_items),
+        "property_city_items": _serialize_pack(guild.property_city_items),
+
         "property_city_tax_due_day": guild.property_city_tax_due_day,
         "property_city_missed_payments": guild.property_city_missed_payments,
         "property_city_squatting": guild.property_city_squatting,

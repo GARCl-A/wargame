@@ -17,7 +17,7 @@ roll. `on_back` returns to the editor hub.
 
 import pygame
 
-from . import data, magic, npc_lib, persist, talents
+from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .screen import Screen
 from .ui.primitives import contained as ui_contained
@@ -34,9 +34,7 @@ from .unit import Unit
 _ATTR_ABBR = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
               ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma")]
 
-_ITEM_CATALOG = sorted(set(data.WEAPONS) | set(data.ARMOR) | set(data.ITEM_WEIGHTS)
-                       | set(data.FOOD_ITEMS)
-                       | {data.TORCH_ITEM, data.AMMO_ITEM, data.FIRST_AID_ITEM})
+_ITEM_CATALOG = sorted(items.all_items().keys())
 
 _MAX_NAME = 28
 _MAX_BIO = 240
@@ -162,10 +160,10 @@ class CharEditorScreen(Screen):
             _, pk = action
             opts = {"race": data.RACE_NAMES, "occupation": data.OCCUPATION_NAMES,
                     "alignment": [a for _, a in data.ALIGNMENTS],
-                    "weapon": ["(unarmed)"] + list(data.WEAPONS),
-                    "tongue": ["(empty)"] + [n for n, w in data.WEAPONS.items()
-                                             if w["hands"] == 1],
-                    "armor": ["(none)"] + list(data.ARMOR),
+                    "weapon": ["(unarmed)"] + list(items.weapons()),
+                    "tongue": ["(empty)"] + [n for n, w in items.weapons().items()
+                                             if w.hands == 1],
+                    "armor": ["(none)"] + list(items.armor()),
                     "additem": _ITEM_CATALOG}[pk]
             cur = {"race": u.race["name"], "occupation": u.occupation["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,
@@ -538,7 +536,7 @@ class CharEditorScreen(Screen):
             label = item if qty == 1 else f"{item} ×{qty}"
             text(screen, ellipsize(label, f.body_sm, ir.w - SP2 - 78), f.body_sm, INK,
                  (ir.x + SP2, ir.y + 3))
-            text(screen, f"{data.item_weight(item) * qty:g} kg", f.mono_sm, INK_FAINT,
+            text(screen, f"{items.item_weight(item) * qty:g} kg", f.mono_sm, INK_FAINT,
                  (ir.right - 26, ir.y + 4), right=True)
             xr = pygame.Rect(ir.right - 20, ir.y + 2, 16, 16)
             h = xr.collidepoint(self.mouse)

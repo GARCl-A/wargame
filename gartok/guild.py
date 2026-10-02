@@ -82,7 +82,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 
 from collections import Counter
 
-from . import data, economy, justice, magic, missions, progression, world
+from . import data, economy, items, justice, magic, missions, progression, world
 from .clock import Clock
 from .group import Group
 from .tutorial import TutorialState
@@ -333,7 +333,7 @@ class Guild:
     @property
     def bank_load(self):
         """Weight of everything stashed in the bank chest."""
-        return sum(data.item_weight(name) * qty for name, qty in self.bank_items)
+        return sum(items.item_weight(name) * qty for name, qty in self.bank_items)
 
     def rent_bank_chest(self):
         """Take up the Bankers' offer: the guild's first strongbox. The caller
@@ -354,7 +354,7 @@ class Guild:
     # ------------------------------------------------------------------ #
     @property
     def property_city_load(self):
-        return sum(data.item_weight(name) * qty for name, qty in self.property_city_items)
+        return sum(items.item_weight(name) * qty for name, qty in self.property_city_items)
 
     def stash_in_property(self, name, qty=1):
         stack_add(self.property_city_items, name, qty)
@@ -586,12 +586,13 @@ class Guild:
     @staticmethod
     def _age_food_name(name):
         """One day of aging for a single food name -- `(new_name, rotted)`.
-        Anything without a `FOOD_LIFESPAN` entry passes through unchanged."""
+        Anything without a `lifespan` entry passes through unchanged."""
         base = name.split(" (")[0]
-        if base not in data.FOOD_LIFESPAN:
+        it = items.get(base)
+        if it is None or it.lifespan is None:
             return name, False
         age = int(name.split(" (")[1].replace("d)", "")) + 1 if " (" in name else 1
-        if age >= data.FOOD_LIFESPAN[base]:
+        if age >= it.lifespan:
             return "Rotten Food", True
         return f"{base} ({age}d)", False
 
@@ -602,9 +603,21 @@ class Guild:
         together) or the bank chest's flat `list[str]`; rotted portions
         merge into any Rotten Food already held instead of duplicating it."""
         rotten = 0
-        if inventory and isinstance(inventory[0], tuple):
-            new_inv = []
-            for name, qty in inventory:
+        new_inv = []
+        for it in inventory:
+            if isinstance(it, items.ItemInstance):
+                if it.defn.food and it.defn.lifespan is not None:
+                    it.days_old += 1
+                    if it.is_rotten():
+                        rotten += it.qty
+                        rotten_inst = items.create_instance("Rotten Food", qty=it.qty)
+                        new_inv.append(rotten_inst)
+                    else:
+                        new_inv.append(it)
+                else:
+                    new_inv.append(it)
+            elif isinstance(it, tuple):
+                name, qty = it
                 new_name, rotted = self._age_food_name(name)
                 if rotted:
                     rotten += qty
@@ -613,16 +626,13 @@ class Guild:
                     new_inv[existing] = (new_name, new_inv[existing][1] + qty)
                 else:
                     new_inv.append((new_name, qty))
-            inventory[:] = new_inv
-            return rotten
-
-        new_inv = []
-        for item in inventory:
-            new_name, rotted = self._age_food_name(item)
-            rotten += rotted
-            new_inv.append(new_name)
+            else:
+                new_name, rotted = self._age_food_name(it)
+                rotten += rotted
+                new_inv.append(new_name)
         inventory[:] = new_inv
         return rotten
+
 
     def _daily_upkeep(self):
         events, casualties, ate = [], [], []
@@ -823,7 +833,7 @@ class Guild:
         advances the campaign clock through `pass_time` and rolls progress."""
         hours = int(hours)
         if unit.crafting_target != recipe:
-            recipe_data = data.CRAFTING_RECIPES.get(recipe)
+            recipe_data = items.CRAFTING_RECIPES.get(recipe)
             if not recipe_data:
                 return [f"Unknown recipe {recipe}."], []
             
@@ -842,7 +852,7 @@ class Guild:
         clock_hours = hours * self.work_speedup([unit])
         events, casualties = self.pass_time(clock_hours)
 
-        target_data = data.CRAFTING_RECIPES.get(unit.crafting_target or recipe, {})
+        target_data = items.CRAFTING_RECIPES.get(unit.crafting_target or recipe, {})
         recipe_level = target_data.get("level", 1)
         old_work_lvl = unit.work_level
         unit.work_hours += progression.work_xp_hours(hours, recipe_level, unit.work_level)

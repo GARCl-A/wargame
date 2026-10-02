@@ -14,7 +14,7 @@ of quietly paying out (see `missions.open_mission_chest`, which reuses
 `roll_lock` below for the same odds but not the same consequences).
 """
 
-from . import data
+from . import data, items
 
 GEM_YIELD_DICE = (1, 4)   # gems inside, rolled once per successful open: 1d4 + 1 (2..5)
 
@@ -34,16 +34,17 @@ def roll_lock(unit, day=1):
 
 
 def try_open(unit, day=1):
-    """Attempt to pick one `data.CHEST_ITEM` in `unit`'s pack. On success it
+    """Attempt to pick one `items.CHEST_ITEM` in `unit`'s pack. On success it
     is consumed and replaced with the gems inside; on a miss nothing changes.
     Returns `(opened, gems)` -- `gems` is 0 on a miss. No-op, `(False, 0)`, if
     `unit` isn't carrying one."""
-    if not unit.has_item(data.CHEST_ITEM):
+    if not unit.has_item(items.CHEST_ITEM):
         return False, 0
     gems = roll_lock(unit, day=day)
     if gems is None:
         return False, 0
-    unit.remove_named(data.CHEST_ITEM)
+    unit.remove_named(items.CHEST_ITEM)
     if gems:
-        unit.give_to_pack(data.GEM_ITEM, gems)
+        unit.give_to_pack(items.GEM_ITEM, gems)
     return True, gems
+

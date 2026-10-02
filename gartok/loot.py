@@ -17,21 +17,21 @@ material is a data change in `data.py`, not a new branch here.
 
 import random
 
-from . import data
+from . import items
 
 
 def carried_by(u):
     """Item names a downed/defeated combatant still has: the weapon in hand, a
     lit torch or lantern, and everything in the pack."""
-    items = []
+    carried = []
     if getattr(u, "weapon_hand", False) and getattr(u, "weapon_name", None):
-        items.append(u.weapon_name)
+        carried.append(u.weapon_name)
     if getattr(u, "torch_hand", False):
-        items.append(data.TORCH_ITEM)
+        carried.append(items.TORCH_ITEM)
     if getattr(u, "lantern_hand", False):
-        items.append(data.LANTERN_ITEM)
-    items += list(getattr(u, "inventory", []))
-    return items
+        carried.append(items.LANTERN_ITEM)
+    carried += list(getattr(u, "inventory", []))
+    return carried
 
 
 def field_loot(battle, fallen_combatants, rng=random):
@@ -52,10 +52,11 @@ def field_loot(battle, fallen_combatants, rng=random):
         if obj.is_weapon and obj.weapon_name:
             pool.append(obj.weapon_name)
         elif obj.is_torch:
-            pool.append(data.TORCH_ITEM)
+            pool.append(items.TORCH_ITEM)
         elif obj.is_trap:
             if obj.trap_type == "bear trap":
                 pool.append("Bear Trap")
             elif obj.trap_type == "alarm trap":
                 pool.append("Alarm Trap")
     return sorted(pool)
+

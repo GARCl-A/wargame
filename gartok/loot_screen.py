@@ -9,7 +9,7 @@ you finish is left behind.
 
 import pygame
 
-from . import data
+from . import items
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
@@ -69,8 +69,8 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     def _qty_at(self, owner, loc):
         if isinstance(loc, str):
             return 1 if self._item_at(owner, loc) is not None else 0
-        items = self.pool if owner == "pool" else owner._base_inventory
-        full = items[loc][1] if loc < len(items) else 0
+        inv = self.pool if owner == "pool" else owner._base_inventory
+        full = inv[loc][1] if loc < len(inv) else 0
         return min(full, self._sel_qty.get((owner, loc), full))
 
     def _take(self, owner, loc):
@@ -87,8 +87,8 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         return owner.take_from_pack(loc, qty), qty
         
     def _deposit(self, picks):
-        items, touched = self._collect(picks)
-        for name, qty in items:
+        collected, touched = self._collect(picks)
+        for name, qty in collected:
             idx = next((i for i, (n, q) in enumerate(self.pool) if n == name), None)
             if idx is not None:
                 self.pool[idx] = (name, self.pool[idx][1] + qty)
@@ -109,7 +109,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
 
         from_pool = any(owner == "pool" for owner, _ in picks)
         if from_pool:
-            add = sum(data.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
+            add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
             if dst.load + add > dst.carry_max:
                 self.notice = f"won't fit {dst.name}'s load."
                 self.selected = picks
@@ -135,8 +135,8 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         # pack
         if all(p[0] is dst and not isinstance(p[1], str) for p in picks):
             return
-        items, touched = self._collect(picks)
-        for name, qty in items:
+        collected, touched = self._collect(picks)
+        for name, qty in collected:
             dst.give_to_pack(name, qty)
         for u in touched:
             if u != "pool":
@@ -261,7 +261,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
                             key=lambda m: m.carry_max - m.load, reverse=True)
             taken = False
             for m in takers:
-                if m.load + data.item_weight(name) <= m.carry_max:
+                if m.load + items.item_weight(name) <= m.carry_max:
                     m.give_to_pack(name)
                     m._derive_combat()
                     taken = True
@@ -327,7 +327,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         rows_data = []
         for i, (name, qty) in enumerate(self.pool):
             tag = self._item_tag(name)
-            wt = data.item_weight(name)
+            wt = items.item_weight(name)
             sel = ("pool", i) in self.selected
             sq = self._sel_qty.get(("pool", i), qty) if sel else 0
             rows_data.append((i, name, tag, wt, qty, None, None, None, sq))
@@ -372,7 +372,8 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
             sel = (u, kind) in self.selected
             return {"name": name, "note": self._item_tag(name), "accepts": True, "sel": sel}
 
-        two_handed = bool(u.equipped_weapon) and data.WEAPONS[u.equipped_weapon]["hands"] >= 2
+        w = items.get(u.equipped_weapon)
+        two_handed = bool(w) and w.hands >= 2
         member = {
             "key": u.uid,
             "name": u.name + (" (Stabilized)" if getattr(u, "hp", 1) <= 0 else ""),
@@ -392,7 +393,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         for i, (name, qty) in enumerate(u._base_inventory):
             sel = (u, i) in self.selected
             locked = name in getattr(u, "locked_items", set())
-            member["pack"].append((name, self._item_tag(name), data.item_weight(name), qty, locked, sel))
+            member["pack"].append((name, self._item_tag(name), items.item_weight(name), qty, locked, sel))
 
         res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
         

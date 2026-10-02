@@ -16,7 +16,7 @@ hand and points here for the numbers.
 import sys
 from pathlib import Path
 
-from . import abilities, data, economy, factions, hunt, progression, talents, world
+from . import abilities, data, economy, factions, hunt, items, progression, talents, world
 
 REFERENCE_PATH = Path(__file__).resolve().parent.parent / "REFERENCE.md"
 
@@ -67,13 +67,13 @@ def _occupations():
 
 def _weapons():
     rows = []
-    for name, w in data.WEAPONS.items():
-        rng = "melee" if w["range"] == 0 else f"{w['range']} sq"
-        thrown = "--" if w["thrown"] == 0 else f"{w['thrown']} sq"
+    for name, w in items.weapons().items():
+        rng = "melee" if w.range == 0 else f"{w.range} sq"
+        thrown = "--" if w.thrown == 0 else f"{w.thrown} sq"
         price = economy._base_price(name) if (name in economy.PRICES or name.startswith("Large ")) else "--"
-        rows.append((name, w.get("size", "Medium"), _dice(*w["damage"]), rng,
-                     "yes" if w["finesse"] else "--", thrown, w["hands"],
-                     f"{w['weight']:g} kg", price))
+        rows.append((name, w.size or "Medium", _dice(*w.damage), rng,
+                     "yes" if w.finesse else "--", thrown, w.hands,
+                     f"{w.weight:g} kg", price))
     head = ("Weapon", "Size", "Damage", "Range", "Finesse", "Thrown", "Hands", "Weight",
             "Price (cp)")
     return "## Weapons\n\n" + _table(head, rows)
@@ -81,10 +81,10 @@ def _weapons():
 
 def _armor():
     rows = []
-    for name, a in data.ARMOR.items():
-        cap = "--" if a["max_dex"] is None else f"+{a['max_dex']}"
-        spd = "--" if a["speed"] == 0 else f"-{a['speed']} sq"
-        rows.append((name, f"+{a['ac']}", cap, spd, f"{a['weight']:g} kg",
+    for name, a in items.armor().items():
+        cap = "--" if a.max_dex is None else f"+{a.max_dex}"
+        spd = "--" if a.speed_penalty == 0 else f"-{a.speed_penalty} sq"
+        rows.append((name, f"+{a.ac}", cap, spd, f"{a.weight:g} kg",
                      economy.PRICES.get(name, "--")))
     head = ("Armor", "AC", "Max DEX to AC", "Speed", "Weight", "Price (cp)")
     return "## Armor\n\n" + _table(head, rows)
@@ -92,8 +92,8 @@ def _armor():
 
 def _shields():
     rows = []
-    for name, s in data.SHIELDS.items():
-        rows.append((name, f"+{s['ac']}", f"{s['weight']:g} kg",
+    for name, s in items.shields().items():
+        rows.append((name, f"+{s.ac}", f"{s.weight:g} kg",
                      economy.PRICES.get(name, "--")))
     head = ("Shield", "AC", "Weight", "Price (cp)")
     return "## Shields\n\n" + _table(head, rows)
@@ -101,15 +101,15 @@ def _shields():
 
 def _items():
     rows = []
-    for name, wt in sorted(data.ITEM_WEIGHTS.items()):
+    for name, item in sorted(items.all_items().items()):
         tags = []
-        if name in data.FOOD_ITEMS:
+        if item.food:
             tags.append("food")
-        if name in data.CONSUMABLE_ITEMS:
+        if items.is_consumable(item):
             tags.append("consumable")
         if name in data.LIGHT_SOURCES:
             tags.append(f"light {data.LIGHT_SOURCES[name]} sq")
-        rows.append((name, f"{wt:g} kg", ", ".join(tags) or "--"))
+        rows.append((name, f"{item.weight:g} kg", ", ".join(tags) or "--"))
     return "## Items\n\nPack items and their weights. Weapons and armor weigh " \
            "the same stowed as worn.\n\n" + _table(("Item", "Weight", "Notes"), rows)
 
