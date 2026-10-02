@@ -317,7 +317,8 @@ class Attack(Action):
         if actor.ranged:
             if actor.weapon.get("reload"):
                 actor.crossbow_loaded = False               # spent -- needs a Reload before the next shot
-            battle.log(f"{actor.name} shoots ({actor.ammo} bolt(s) in the quiver).")
+            ammo_kind = "bolt(s)" if actor.weapon.get("reload") else "arrow(s)"
+            battle.log(f"{actor.name} shoots ({actor.ammo} {ammo_kind} in the quiver).")
         _strike(battle, actor, target)
 
 

@@ -276,9 +276,18 @@ def lumber_pay(hours, level=0):
     return wage * (int(hours) // LUMBER_BLOCK_HOURS)
 
 
+def scroll_price(level):
+    return 180 * (level + 1) + 105 * level
+
+
 def _base_price(name):
     if name.startswith("Dictionary of "):
         return 150
+    if name.startswith("Scroll of "):
+        from . import magic
+        spell = magic.spell_for_scroll(name)
+        if spell:
+            return scroll_price(spell.level)
     if name.startswith("Large "):
         base = name[6:]
         if base in PRICES:

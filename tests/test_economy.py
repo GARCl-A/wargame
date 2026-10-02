@@ -75,3 +75,17 @@ def test_leader_who_cannot_speak_the_vendors_tongue_does_not_block_the_pitch():
     speaker.alignment = "Lawful and Neutral"; speaker._derive_combat()
     deal = economy.market_deal([leader, speaker], "Ankarin", "Lawful and Neutral", leader=leader)
     assert deal > 0                              # falls back to the eligible speaker
+
+
+def test_scroll_pricing_scales_with_level():
+    # Formula: 180 * (level + 1) + 105 * level
+    # Level 0 (e.g. Magic Missile, Light Globe): 180 cp
+    assert economy.scroll_price(0) == 180
+    assert economy.buy_price("Scroll of Magic Missile", 0.0) == 180
+    assert economy.sell_price("Scroll of Magic Missile", 0.0) == 90
+    assert economy.buy_price("Scroll of Light Globe", 0.0) == 180
+
+    # Level 1 (e.g. Sleep): 180 * 2 + 105 * 1 = 465 cp
+    assert economy.scroll_price(1) == 465
+    assert economy.buy_price("Scroll of Sleep", 0.0) == 465
+    assert economy.sell_price("Scroll of Sleep", 0.0) == 232

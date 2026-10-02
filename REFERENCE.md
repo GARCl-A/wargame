@@ -306,7 +306,6 @@ Scholars and linguists. They trade in knowledge.
 |---|---|---|---|
 | Library Initiate | Complete a task for the library. | +1 | -- |
 | Trusted Scholar | Complete a second task for the library. | +1 | library_initiate |
-| Master of Lore | Complete a third task for the library. | +1 | library_trusted |
 
 ## Constants
 

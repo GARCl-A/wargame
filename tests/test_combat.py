@@ -368,6 +368,35 @@ def test_crossbow_reload_cycle():
     assert not actions.RELOAD.can(batt, a) and a.improvised and a.attack_range == 1
 
 
+def test_ranged_attack_log_differentiates_bolts_and_arrows():
+    batt, a, d = _melee_battle()
+    batt.board.walls = set()
+    batt.ground = [GroundObject.torch((5, 5))]
+    a.torch_hand = False
+    for u in batt.units:
+        u._ability = abilities.get("none")
+
+    # Crossbow uses bolts
+    a.equip_weapon("Light Crossbow")
+    a.ammo = 5
+    a.crossbow_loaded = True
+    a.pos, d.pos = (2, 5), (6, 5)
+    a.ap = 2
+    batt.log_lines.clear()
+    actions.ATTACK.execute(batt, a, d)
+    assert any("shoots (5 bolt(s) in the quiver)" in line for line in batt.log_lines)
+
+    # Shortbow uses arrows
+    a.equip_weapon("Shortbow")
+    a.ammo = 4
+    a.pos, d.pos = (2, 5), (6, 5)
+    a.ap = 2
+    batt.log_lines.clear()
+    actions.ATTACK.execute(batt, a, d)
+    assert any("shoots (4 arrow(s) in the quiver)" in line for line in batt.log_lines)
+
+
+
 def test_tongue_lash_strikes_at_reach_two_with_the_tongue_weapon():
     batt, a, d = _melee_battle()
     batt.board.walls = set()

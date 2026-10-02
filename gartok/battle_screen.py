@@ -561,6 +561,45 @@ class BattleScreen(Screen):
         pygame.draw.circle(screen, TORCH_C, (cx, cy - 2), 6)
         pygame.draw.circle(screen, LIGHT_C, (cx, cy - 4), 3)
 
+    def _draw_trap(self, screen, o):
+        cx, cy = self._cell_rect(*o.pos).center
+        d = max(6, self.view.tile // 3)
+        ttype = (getattr(o, "trap_type", "") or "").lower()
+
+        if "bear" in ttype:
+            # Bear Trap: Circular steel base with serrated jaws
+            pygame.draw.circle(screen, (70, 70, 75), (cx, cy), d)
+            pygame.draw.circle(screen, (35, 35, 40), (cx, cy), d, 2)
+            pygame.draw.circle(screen, (130, 60, 50), (cx, cy), max(2, d // 3))
+            pygame.draw.circle(screen, (40, 20, 20), (cx, cy), max(2, d // 3), 1)
+            teeth_w = max(3, d // 2)
+            for dx in (-d * 2 // 3, 0, d * 2 // 3 - teeth_w):
+                spike_top = [(cx + dx, cy - d // 2), (cx + dx + teeth_w // 2, cy - 1), (cx + dx + teeth_w, cy - d // 2)]
+                pygame.draw.polygon(screen, (200, 205, 215), spike_top)
+                pygame.draw.polygon(screen, (35, 35, 40), spike_top, 1)
+                spike_bot = [(cx + dx, cy + d // 2), (cx + dx + teeth_w // 2, cy + 1), (cx + dx + teeth_w, cy + d // 2)]
+                pygame.draw.polygon(screen, (200, 205, 215), spike_bot)
+                pygame.draw.polygon(screen, (35, 35, 40), spike_bot, 1)
+        elif "alarm" in ttype:
+            # Alarm Trap: Tripwire across wooden pegs with a brass bell
+            w = d + 2
+            pygame.draw.line(screen, (90, 60, 35), (cx - w, cy - d // 2), (cx - w, cy + d // 2), 3)
+            pygame.draw.line(screen, (90, 60, 35), (cx + w, cy - d // 2), (cx + w, cy + d // 2), 3)
+            pygame.draw.line(screen, (210, 210, 220), (cx - w, cy - 2), (cx + w, cy - 2), 1)
+            bell_pts = [
+                (cx - d // 2, cy + d // 2),
+                (cx + d // 2, cy + d // 2),
+                (cx + d // 4, cy - 2),
+                (cx - d // 4, cy - 2),
+            ]
+            pygame.draw.polygon(screen, (220, 175, 45), bell_pts)
+            pygame.draw.polygon(screen, (50, 40, 15), bell_pts, 1)
+            pygame.draw.circle(screen, (60, 50, 20), (cx, cy + d // 2 + 1), max(2, d // 5))
+        else:
+            pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
+            pygame.draw.polygon(screen, (160, 50, 40), pts)
+            pygame.draw.polygon(screen, (25, 22, 12), pts, 2)
+
     def _draw_ground(self, screen):
         for o in self.battle.ground:
             if o.pos not in self._visible:
@@ -579,6 +618,8 @@ class BattleScreen(Screen):
                 pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
                 pygame.draw.polygon(screen, (120, 200, 255), pts)
                 pygame.draw.polygon(screen, (255, 255, 255), pts, 2)
+            elif getattr(o, "is_trap", False):
+                self._draw_trap(screen, o)
             else:
                 cx, cy = self._cell_rect(*o.pos).center
                 d = self.view.tile // 4

@@ -169,11 +169,6 @@ _DEEDS = [
          requires="library_initiate",
          check=lambda g, e: e.kind == "mission" and e.tag == "library" and
              sum(1 for m in g.missions if m.state == "done" and __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library") >= 2),
-    Deed("library_master", "library", "Master of Lore",
-         "Complete a third task for the library.", rep=1,
-         requires="library_trusted",
-         check=lambda g, e: e.kind == "mission" and e.tag == "library" and
-             sum(1 for m in g.missions if m.state == "done" and __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library") >= 3),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

@@ -73,3 +73,18 @@ def test_library_dictionary_mission_flow():
     assert u.gold == 250
     assert "library_initiate" in g.deeds_done
     assert g.reputation["library"] == 1
+
+
+def test_map_screen_library_button_label():
+    from gartok.map_screen import MapScreen
+    from gartok.theme import Fonts
+    u = Unit("player")
+    g = Guild([u])
+    grp = Group(list(g.roster), "library")
+    g.active_group = grp
+    ms = MapScreen(Fonts(), g, lambda: None, lambda: None, lambda: None, lambda g: None)
+    blocks = ms._inspector_content(grp, world.node("library"))
+    btn = next((b for b in blocks if b.get("key") == "library"), None)
+    assert btn is not None
+    assert btn["label"] == "VISIT THE LIBRARY"
+
