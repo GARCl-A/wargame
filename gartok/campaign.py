@@ -155,6 +155,19 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
                     extra = math.ceil(count * 0.2)
                     outcome.loot_pool.extend([it] * extra)
 
+        # Award currency from any unopened chests remaining on the battlefield
+        for obj in battle.ground:
+            if getattr(obj, "is_chest", False) and survivors:
+                for it in getattr(obj, "contents", []):
+                    amt = loot.parse_currency(it)
+                    if amt:
+                        share = amt // len(survivors)
+                        rem = amt % len(survivors)
+                        for s in survivors:
+                            s.gold += share
+                        if rem:
+                            survivors[0].gold += rem
+
     outcome.deeds_earned = factions.settle(
         guild, factions.Event("battle", node=node, outcome=outcome))
 

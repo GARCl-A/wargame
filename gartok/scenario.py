@@ -414,7 +414,7 @@ class AncientRuinsScenario(Scenario):
         battle.ground.append(GroundObject.trap((11, 8), "bear trap", "enemy"))
         battle.ground.append(GroundObject.trap((13, 8), "alarm trap", "enemy"))
 
-        chest_loot = ["Scroll of Sleep", "Amethyst", "50 Gold"]
+        chest_loot = ["Scroll of Sleep", "Amethyst", "50 Copper"]
         battle.ground.append(GroundObject.chest((18, 3), chest_loot))
 
         battle.ground.append(GroundObject.relic((27, 11), data.CODEX_ITEM))

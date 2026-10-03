@@ -549,15 +549,18 @@ class BattleScreen(Screen):
         cell = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
 
         if self.aim_action is not None:
-            if self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
+            if self.aim_action in (actions.STABILIZE, actions.FIRST_AID, actions.DRINK_POTION,
+                                   actions.MOUNT, actions.WAKE_UP):
                 color = OK
-            elif self.aim_action is actions.DEMORALIZE:
+            elif self.aim_action in (actions.DEMORALIZE, actions.EAT_CORPSE):
                 color = DEMO_HL
             elif self.aim_action in (actions.ATTACK, actions.ATTACK_TONGUE):
                 color = ATK_HL
             elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP,
-                                     actions.SWIM):
+                                     actions.SWIM, actions.DISMOUNT, actions.PUSH):
                 color = MOVE_HL
+            elif getattr(self.aim_action, "spell_id", None) is not None:
+                color = ACCENT
             else:
                 color = THROW_HL
             cell.fill((*color, 46))
@@ -1054,31 +1057,66 @@ class BattleScreen(Screen):
             vd = vision.vision_desc(act) if not self.view_squad else "vision: whole squad  [L]"
             text(screen, vd, f.mono_sm, INK_FAINT, (card.x + SP3, base))
 
+    def _hint_message(self):
+        if not self._is_player_turn():
+            return None, None
+        spell_id = getattr(self.aim_action, "spell_id", None)
+        if self.aim_action is actions.ATTACK:
+            return "click a highlighted enemy to Attack (Flank: ally on opposite side grants +2 to hit)", ATK_HL
+        elif self.aim_action is actions.DEMORALIZE:
+            return "click a purple enemy to Demoralize", DEMO_HL
+        elif self.aim_action is actions.ATTACK_TONGUE:
+            return "click an enemy in tongue range", ATK_HL
+        elif self.aim_action is actions.THROW:
+            return "click an enemy in the orange range", THROW_HL
+        elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
+            return "click an adjacent downed ally (green)", OK
+        elif self.aim_action is actions.DRINK_POTION:
+            return "click self or damaged ally to drink potion", OK
+        elif self.aim_action is actions.MOUNT:
+            return "click an adjacent allied Centaur to mount", OK
+        elif self.aim_action is actions.DISMOUNT:
+            return "click an adjacent free cell to dismount", MOVE_HL
+        elif self.aim_action is actions.WAKE_UP:
+            return "click an adjacent sleeping ally to wake them", OK
+        elif self.aim_action is actions.EAT_CORPSE:
+            return "click an adjacent dead enemy corpse to devour", DEMO_HL
+        elif self.aim_action is actions.PUSH:
+            return "click an adjacent unit to push", MOVE_HL
+        elif self.aim_action is actions.CLIMB:
+            return "click an adjacent ledge cell to climb", MOVE_HL
+        elif self.aim_action is actions.DROP:
+            return "click a cell below to drop down", MOVE_HL
+        elif self.aim_action is actions.JUMP:
+            return "click a cell to jump over a pit", MOVE_HL
+        elif self.aim_action is actions.SWIM:
+            return "click an adjacent water cell to swim", MOVE_HL
+        elif spell_id == "sleep":
+            return "click enemy within 6 cells to cast Sleep", ACCENT
+        elif spell_id == "magic_missile":
+            return "click enemy within 6 cells to cast Magic Missile", ACCENT
+        elif spell_id == "light_globe":
+            return "click empty cell within 6 cells to conjure Light Globe", ACCENT
+        elif spell_id == "floating_disk":
+            return "click empty cell within 6 cells to summon Floating Disk", ACCENT
+        elif spell_id is not None:
+            return f"click target within range to cast {self.aim_action.name}", ACCENT
+        elif actions.FLEE.available(self.battle, self.battle.active):
+            return "at the map edge: you can Flee the fight", OK
+        elif self.battle.mopping_up:
+            return ("enemies down  ·  stabilize the downed or space "
+                    "to let the counter run"), WARN
+        elif self.battle.is_ctf:
+            return ("grab the enemy flag and bring it home to win  ·  "
+                    "guard your own, and whoever's carrying it"), INFO
+        else:
+            return "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
+
     def _draw_hint(self, screen, s):
         row = s.row(16)
-        if not self._is_player_turn():
-            return
-        if self.aim_action is actions.ATTACK:
-            msg, col = "click a highlighted enemy to Attack (Flank: ally on opposite side grants +2 to hit)", ATK_HL
-        elif self.aim_action is actions.DEMORALIZE:
-            msg, col = "click a purple enemy to Demoralize", DEMO_HL
-        elif self.aim_action is actions.ATTACK_TONGUE:
-            msg, col = "click an enemy in tongue range", ATK_HL
-        elif self.aim_action is actions.THROW:
-            msg, col = "click an enemy in the orange range", THROW_HL
-        elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
-            msg, col = "click an adjacent downed ally (green)", OK
-        elif actions.FLEE.available(self.battle, self.battle.active):
-            msg, col = "at the map edge: you can Flee the fight", OK
-        elif self.battle.mopping_up:
-            msg, col = ("enemies down  ·  stabilize the downed or space "
-                        "to let the counter run"), WARN
-        elif self.battle.is_ctf:
-            msg, col = ("grab the enemy flag and bring it home to win  ·  "
-                       "guard your own, and whoever's carrying it"), INFO
-        else:
-            msg, col = "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
-        text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))
+        msg, col = self._hint_message()
+        if msg is not None:
+            text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))
 
     def _draw_actions(self, screen, area_rect):
         f = self.fonts

@@ -159,3 +159,38 @@ def test_cornered_fleeing_enemy_attacks_instead_of_freezing():
         ai.take_turn(batt, e)
     assert a.hp < hp_before or e.ap == 0, "cornered enemy must attack, not freeze"
 
+
+def test_ai_drinks_potion_when_at_or_below_half_hp():
+    from gartok import ai
+    batt = Battle([Unit("player")], [Unit("enemy")], lethal=True)
+    p = batt.player_units[0]
+    e = batt.enemy_units[0]
+    e.inventory.append("Minor Healing Potion")
+    e.hp_max = 20
+    e.hp = 10
+    e.ap = 2
+    p.pos = (10, 10)
+    e.pos = (0, 0)
+    batt.turn_idx = batt.order.index(e)
+    ai.take_turn(batt, e)
+    assert "Minor Healing Potion" not in e.inventory
+    assert e.hp > 10
+
+
+def test_ai_does_not_drink_potion_when_above_half_hp():
+    from gartok import ai
+    batt = Battle([Unit("player")], [Unit("enemy")], lethal=True)
+    p = batt.player_units[0]
+    e = batt.enemy_units[0]
+    e.inventory.append("Minor Healing Potion")
+    e.hp_max = 20
+    e.hp = 11
+    e.ap = 2
+    p.pos = (10, 10)
+    e.pos = (0, 0)
+    batt.turn_idx = batt.order.index(e)
+    ai.take_turn(batt, e)
+    assert "Minor Healing Potion" in e.inventory
+    assert e.hp == 11
+
+

@@ -20,6 +20,23 @@ import random
 from . import items
 
 
+def parse_currency(it):
+    """If `it` represents a currency award, returns the copper amount (int), else None."""
+    if isinstance(it, tuple) and len(it) == 2:
+        if isinstance(it[0], (int, float)) and str(it[1]).lower() in ("copper", "gold", "coin", "coins"):
+            return int(it[0])
+        if str(it[0]).lower() in ("copper", "gold", "coin", "coins"):
+            try:
+                return int(it[1])
+            except (ValueError, TypeError):
+                pass
+    elif isinstance(it, str):
+        parts = it.split()
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].lower() in ("copper", "gold", "coin", "coins"):
+            return int(parts[0])
+    return None
+
+
 def carried_by(u):
     """Item names a downed/defeated combatant still has: the weapon in hand, a
     lit torch or lantern, and everything in the pack."""
@@ -58,5 +75,9 @@ def field_loot(battle, fallen_combatants, rng=random):
                 pool.append("Bear Trap")
             elif obj.trap_type == "alarm trap":
                 pool.append("Alarm Trap")
+        elif getattr(obj, "is_chest", False):
+            for it in getattr(obj, "contents", []):
+                if parse_currency(it) is None:
+                    pool.append(it)
     return sorted(pool)
 

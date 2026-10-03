@@ -142,9 +142,11 @@ def test_pickup_chest_and_codex():
     actor.pos = (18, 3)
     pu = PickUp()
     assert pu.available(battle, actor)
+    gold_before = actor.char.gold
     pu.execute(battle, actor)
     assert "Scroll of Sleep" in actor.inventory
     assert "Amethyst" in actor.inventory
+    assert actor.char.gold == gold_before + 50
     assert not any(o.pos == (18, 3) and o.is_chest for o in battle.ground)
 
     # Pick up Codex at (27, 11)
@@ -155,6 +157,18 @@ def test_pickup_chest_and_codex():
     assert data.CODEX_ITEM in actor.inventory
     assert data.CODEX_ITEM in actor.picked_up_items
     assert not any(o.pos == (27, 11) and o.is_relic for o in battle.ground)
+
+
+def test_unopened_chest_currency_absorbed_on_victory():
+    from gartok.campaign import absorb_battle
+    scenario = AncientRuinsScenario()
+    u = Unit("player")
+    u.gold = 10
+    guild = Guild([u], node="ancient_ruins")
+    battle = Battle([u], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
+    battle.winner = "player"
+    absorb_battle(guild, [u], battle, node=world.node("ancient_ruins"))
+    assert u.gold == 60
 
 
 def test_boss_dormancy_and_alarm_awakening():
@@ -244,3 +258,15 @@ def test_library_quest_two_turn_in_and_trusted_deed():
     # Verify library_trusted deed was banked
     assert "library_trusted" in guild.deeds_done
     assert guild.reputation.get("library", 0) >= 1
+
+
+def test_parse_currency():
+    from gartok.loot import parse_currency
+    assert parse_currency("50 Copper") == 50
+    assert parse_currency("100 Gold") == 100
+    assert parse_currency(("copper", 25)) == 25
+    assert parse_currency((30, "coins")) == 30
+    assert parse_currency("Scroll of Sleep") is None
+    assert parse_currency("Amethyst") is None
+    assert parse_currency(None) is None
+

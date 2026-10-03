@@ -561,12 +561,13 @@ class PickUp(Action):
             battle.log(f"{actor.name} retrieves the {item_name}!")
             battle.fx(actor.pos, f"Got {item_name}!", "crit")
         elif getattr(obj, "is_chest", False):
+            from . import loot
             contents = getattr(obj, "contents", [])
             for it in contents:
-                if it.endswith("Gold"):
-                    amt = int(it.split()[0])
+                amt = loot.parse_currency(it)
+                if amt:
                     actor.char.gold += amt
-                    battle.log(f"{actor.name} finds {amt} gold in the chest!")
+                    battle.log(f"{actor.name} finds {amt} copper in the chest!")
                 else:
                     actor.inventory.append(it)
                     if not hasattr(actor, "picked_up_items"):
@@ -769,21 +770,27 @@ class DrinkPotion(Action):
                 if u.team == actor.team and u.hp < u.hp_max and not getattr(u, "broken", False)
                 and battle.units_distance(actor, u) <= 1]
 
+    def _has_potion(self, actor):
+        if hasattr(actor, "inventory") and "Minor Healing Potion" in actor.inventory:
+            return True
+        return actor.has_item("Minor Healing Potion")
+
     @classmethod
     def applicable(cls, battle, actor):
-        if not actor.has_item("Minor Healing Potion"):
+        has = (hasattr(actor, "inventory") and "Minor Healing Potion" in actor.inventory) or actor.has_item("Minor Healing Potion")
+        if not has:
             return False, "No Minor Healing Potion."
         return True, ""
 
     def available(self, battle, actor):
-        return actor.has_item("Minor Healing Potion") and actor.ap >= self.cost and bool(self._targets(battle, actor))
+        return self._has_potion(actor) and actor.ap >= self.cost and bool(self._targets(battle, actor))
 
     def can(self, battle, actor, target=None):
-        return (actor.has_item("Minor Healing Potion") and actor.ap >= self.cost
+        return (self._has_potion(actor) and actor.ap >= self.cost
                 and target is not None and target in self._targets(battle, actor))
 
     def label(self, battle, actor):
-        n = actor.inventory.count("Minor Healing Potion")
+        n = actor.inventory.count("Minor Healing Potion") if hasattr(actor, "inventory") else actor.count_of("Minor Healing Potion")
         return f"Drink Potion (1 pt, {n} in pack)"
 
     def highlight_targets(self, battle, actor):
@@ -796,6 +803,8 @@ class DrinkPotion(Action):
         actor.ap -= 1
         actor.walking = False
         actor.remove_named("Minor Healing Potion")
+        if hasattr(actor, "inventory") and isinstance(actor.inventory, list) and "Minor Healing Potion" in actor.inventory:
+            actor.inventory.remove("Minor Healing Potion")
         
         heal = random.randint(1, 6)
         target.hp = min(target.hp_max, target.hp + heal)

@@ -194,9 +194,8 @@ game:
 - **Skills / attribute checks**: presumably `d20 + mod` vs a difficulty.
 - **Magic**: no caster class appears in the generator; "Primal Blood", "Holy
   Symbol" and "Scroll" hinted it existed. A first system now does (see
-  "Magic" below) — three spells, a racial-talent path to a magic source, and
-  a slow study-at-the-tavern path to learn more. Still early: only three
-  spells exist.
+  "Magic" below) — four spells, a racial-talent path to a magic source, and
+  a slow study-at-the-tavern path to learn more. Four spells exist today.
 - **Weapons and equipment**: damage, weight, price are set; **armor and shields
   are not** — the wargame designed a five-tier armor table 🟡.
 - **The effect of the racial abilities** (§7).
@@ -262,7 +261,7 @@ State on `unit.py` (`magic_source`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
-`conditions.py`. A first foothold, not a full system — three spells today.
+`conditions.py`. A first foothold, not a full system — four spells today.
 
 - **Sources.** `magic_source` (`nature` / `blood` / `faith`) gates which
   spells a character can ever learn. It comes from a race (Gnome starts
@@ -302,10 +301,12 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   chest uses for "open") — offered once the character has a `magic_source`
   and doesn't already know the spell, and toggles off the same way. The
   sandbox character editor has the identical control for authored NPCs.
-- **Scroll scarcity by design**: Spells are intentionally rare and valuable.
-  `Scroll of <Spell>` items are not sold in standard market shops. Instead,
-  they are scarce rewards earned through dungeon exploration (such as Ancient
-  Ruins chests), rare locked chests, or high-stakes mission rewards.
+- **Scroll scarcity by design**: Spells are intentionally rare and strictly
+  limited. `Scroll of <Spell>` items are not sold in shops. Today there are only
+  two ways to obtain a scroll: starting with one at character creation (when an
+  occupation rolls "Scroll", granting a random level 0 nature spell) or delving
+  into the sunken vaults of the Ancient Ruins (which hides the rare Scroll of
+  Sleep).
 
 ### Learning a language 🟡
 

@@ -193,6 +193,14 @@ def _try_mount(battle, unit):
     return True
 
 
+def _try_drink_potion(battle, unit):
+    if unit.hp <= unit.hp_max * 0.5:
+        if actions.DRINK_POTION.can(battle, unit, unit):
+            actions.DRINK_POTION.execute(battle, unit, unit)
+            return True
+    return False
+
+
 def _ally_to_help(battle, unit):
     """A downed ally this unit wants to stabilize -- only if it is of good
     bent (it will spend the action to save a friend before fighting)."""
@@ -293,6 +301,9 @@ def take_turn(battle, unit):
             if targets:
                 actions.WAKE_UP.execute(battle, unit, targets[0])
                 continue
+
+        if _try_drink_potion(battle, unit):
+            continue
 
         ally = _ally_to_help(battle, unit)
         if ally is not None:                  # good: save the friend first
