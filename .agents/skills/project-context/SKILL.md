@@ -48,6 +48,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-arena-champion-title.md` | "Champion of the Pit": per-character title, arena-only Demoralize perks, title-defense cycle. |
 | `gartok-arena-ribbit-brothers-boss.md` | Games capstone: 3 authored Grippli + 3 goons, CTF on an authored map. |
 | `gartok-wilds-hunting.md` | The Wilds activity node: Hunt for meat with per-hour ambush risk; encounters.py scaled-enemy core. |
+| `gartok-autowin.md` | **Auto-Win & Anti-Grind.** Monte Carlo simulation, 100% win / 0 casualties / 0 consumables gate, pre-battle ambush resolution on map & hunt. |
 | `gartok-balance-sim.md` | balance_sim.py + economy_sim.py: AI tournaments ranking races/occupations/combos. |
 
 ### Tools
