@@ -1,5 +1,6 @@
 """Tests for high-identity racial talents: Leshy Fruitful, Human Cosmopolitan,
-and Halfling Luck, including the daily ability framework.
+and Halfling Luck, including the daily ability framework, and the Halfling
+racial ability Innocent Face (crime natural decay).
 """
 
 from unittest.mock import patch
@@ -511,3 +512,53 @@ def test_kenku_faith_initiate_initiates_or_grants_free_spell():
     assert len(k2.spells_known) == 2
     assert k2.spells_known[1] in ("magic_missile", "floating_disk")
 
+
+# --------------------------------------------------------------------------- #
+# Halfling: Innocent Face (racial ABILITY, not talent) -- crime decay          #
+# --------------------------------------------------------------------------- #
+
+def _halfling_with_crime(crime):
+    """A Halfling with the Innocent Face racial ability and a non-zero crime."""
+    u = Unit("player", race=data.race_by_name("Halfling"))
+    u.crime = crime
+    u.give_to_pack("1L Beer", qty=30)
+    return u
+
+
+def test_halfling_innocent_face_decays_crime_by_1_on_seventh_day():
+    """Innocent Face: crime drops by 1 on each day that is a multiple of 7."""
+    u = _halfling_with_crime(3)
+    guild = Guild([u])
+
+    for _ in range(7):
+        guild.pass_time(24)
+    assert u.crime == 2
+
+
+def test_halfling_innocent_face_does_not_decay_before_7_days():
+    u = _halfling_with_crime(2)
+    guild = Guild([u])
+
+    for _ in range(5):
+        guild.pass_time(24)
+    assert u.crime == 2
+
+
+def test_halfling_innocent_face_crime_never_goes_below_zero():
+    u = _halfling_with_crime(1)
+    guild = Guild([u])
+
+    for _ in range(14):
+        guild.pass_time(24)
+    assert u.crime == 0
+
+
+def test_non_halfling_crime_does_not_decay_naturally():
+    u = Unit("player", race=data.race_by_name("Human"))
+    u.crime = 3
+    u.give_to_pack("1L Beer", qty=30)
+    guild = Guild([u])
+
+    for _ in range(7):
+        guild.pass_time(24)
+    assert u.crime == 3

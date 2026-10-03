@@ -417,3 +417,33 @@ def test_app_runs_the_raid_battle_and_resolves_it_through_battle_end():
 
     assert app._pause_order is None and guild.property_city_squatting
     assert g.order.kind == "idle"
+
+
+# --------------------------------------------------------------------------- #
+# bankers_services_blocked gates property purchase at the bank                #
+# --------------------------------------------------------------------------- #
+
+def test_bankers_debt_blocks_buying_the_property():
+    """After a repossession the guild owes a debt; that flag must prevent
+    re-buying the property at the bank screen."""
+    from gartok.bank_screen import BankScreen
+    from gartok.theme import Fonts
+    import pygame
+
+    p = Unit("player")
+    p.gold = economy.CITY_PROPERTY_PRICE + 100
+    g = Group([p], node="city")
+    guild = Guild(None, groups=[g],
+                  reputation={"bankers": economy.CITY_PROPERTY_REP_GATE})
+    guild.bankers_debt = 50
+    assert guild.bankers_services_blocked
+
+    s = BankScreen(Fonts(), guild, [p], on_done=lambda: None)
+    surf = pygame.Surface((1280, 800))
+    s.mouse = (0, 0)
+    s.draw(surf)
+
+    assert not guild.property_city_unlocked
+    buy_hit = next((key for r, key in s._service_hits if key == "buy_property"), None)
+    assert buy_hit is None
+

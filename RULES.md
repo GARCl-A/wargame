@@ -200,8 +200,10 @@ game:
   are not** — the wargame designed a five-tier armor table 🟡.
 - **The effect of the racial abilities** (§7).
 - **Death**: the wargame defines falling / stabilizing / permadeath (Combat
-  section). Survivors return at full HP; there are no persistent wounds, fatigue
-  or rest along the clock — yet.
+  section). HP is **persistent**: a survivor's current HP carries forward into
+  the next battle exactly as it was. There are no rest mechanics — wounds heal
+  only through natural recovery (not yet built), so a character who took a
+  beating stays beaten. Fatigue along the clock is also not yet built.
 
 ---
 
@@ -997,8 +999,6 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
   while `bank_load + weight ≤ bank_capacity`, out of it while it fits the taker's
   carry max. Wielding/wearing still happens on the gear screen.
 - The chest lives at the bank — gear in it is **only reachable from the City**.
-- Lending against the future (and collecting on it) is the Bankers' other trade,
-  not yet built.
 
 ### Missions 🟡
 
