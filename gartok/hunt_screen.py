@@ -21,10 +21,9 @@ from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
                             token_badge, wrap)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-from .widgets import ButtonsMixin
 
 
-class HuntScreen(ButtonsMixin, Screen):
+class HuntScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None, on_autowin=None):
@@ -48,14 +47,17 @@ class HuntScreen(ButtonsMixin, Screen):
         self.chips = []                   # [(rect, hours)]
         self.target_chips = []            # [(rect, target_str)]
         self.buttons = []                 # [(key, rect)]
+        self._hot = False
         if self.phase == "done":
             self._wrap_up()
 
+    def _reset_buttons(self):
+        self.buttons = []
+        self._hot = False
+
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
                    danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
-        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
-        `map_screen.MapScreen.add_button` for the precedent."""
+        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
         draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
                    enabled=enabled, mpos=self.mouse, fnt=font)
         hov = enabled and rect.collidepoint(self.mouse)

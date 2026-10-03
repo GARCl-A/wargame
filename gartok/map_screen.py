@@ -69,7 +69,6 @@ from .ui.primitives import draw_button
 from .ui.roster_panel import draw_roster
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-from .widgets import ButtonsMixin
 
 # fractions of window width, clamped -- same "proportional with a floor/
 # ceiling" shape as ui.map_panel.draw_minimap's own sizing, so the side
@@ -129,7 +128,7 @@ def _race_tag(u):
     return f"{u.race.get('name', '')} · R-Lvl {u.racial_level}"
 
 
-class MapScreen(ButtonsMixin, Screen):
+class MapScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
@@ -318,14 +317,18 @@ class MapScreen(ButtonsMixin, Screen):
         return None
 
     # ------------------------------------------------------------------ #
+    def _reset_buttons(self):
+        self.buttons = []
+        self._hot = False
+
+    def buttons_hit(self, pos):
+        for key, rect in self.buttons:
+            if rect.collidepoint(pos):
+                return key
+        return None
+
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
                    danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button` (its disabled rendering
-        included) and keeps `ButtonsMixin`'s own hit-registration bookkeeping
-        (`self.buttons`/`self._hot`) -- this screen is fully on the `ui`
-        component set now, whose steel/paper tokens are already this screen's
-        own palette, so it no longer needs `widgets.draw_button`'s
-        recolouring hooks to get there."""
         draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
                    enabled=enabled, mpos=self.mouse, fnt=font)
         hov = enabled and rect.collidepoint(self.mouse)

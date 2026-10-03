@@ -12,12 +12,10 @@ from .screen import Screen
 from .ui.primitives import draw_button, footer_bar, panel, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-from .widgets import ButtonsMixin
-
 CARD_W = 560
 
 
-class LedgerScreen(ButtonsMixin, Screen):
+class LedgerScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_done):
@@ -29,12 +27,15 @@ class LedgerScreen(ButtonsMixin, Screen):
         self.on_done = on_done
         self.notice = None
         self.buttons = []              # [(key, rect)]
+        self._hot = False
+
+    def _reset_buttons(self):
+        self.buttons = []
+        self._hot = False
 
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
                    danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
-        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
-        `map_screen.MapScreen.add_button` for the precedent."""
+        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
         draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
                    enabled=enabled, mpos=self.mouse, fnt=font)
         hov = enabled and rect.collidepoint(self.mouse)

@@ -1293,40 +1293,43 @@ def test_footer_bar_hint_offsets_when_back_button_present():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from unittest.mock import patch
-    from gartok.theme import Fonts, MARGIN, SP3
-    from gartok.widgets import ButtonsMixin, footer_bar, LEFT_W, FOOTER_HINT
+    from gartok.ui.tokens import T
+    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.ui.primitives import footer_bar, LEFT_W, FOOTER_HINT
 
     pygame.init()
     pygame.display.set_mode((1, 1))
+    F = ui_fonts()
 
-    class Dummy(ButtonsMixin):
+    class Dummy:
         def __init__(self):
-            super().__init__()
-            self.fonts = Fonts()
-            self.mouse = (0, 0)
             self.buttons = []
             self._hot = False
 
+        def add_button(self, surf, rect, key, label, *, enabled=True, primary=False, danger=False):
+            self.buttons.append((key, rect))
+
     surf = pygame.Surface((800, 600))
+    margin = T.S * 3
 
     # Without back button: hint starts at left margin
     screen_no_back = Dummy()
-    with patch("gartok.widgets.text") as mock_text:
-        footer_bar(screen_no_back, surf, primary=("ok", "OK"))
-        hint_calls = [c for c in mock_text.call_args_list if c.args[1] == FOOTER_HINT]
+    with patch("gartok.ui.primitives.text") as mock_text:
+        footer_bar(screen_no_back, surf, F, primary=("ok", "OK"))
+        hint_calls = [c for c in mock_text.call_args_list if c.args[2] == FOOTER_HINT]
         assert len(hint_calls) == 1
-        assert hint_calls[0].args[4][0] == MARGIN
+        assert hint_calls[0].args[3][0] == margin
 
     # With back button: hint starts after the back button
     screen_with_back = Dummy()
-    with patch("gartok.widgets.text") as mock_text:
-        footer_bar(screen_with_back, surf, back=("back", "BACK"), primary=("ok", "OK"))
-        hint_calls = [c for c in mock_text.call_args_list if c.args[1] == FOOTER_HINT]
+    with patch("gartok.ui.primitives.text") as mock_text:
+        footer_bar(screen_with_back, surf, F, back=("back", "BACK"), primary=("ok", "OK"))
+        hint_calls = [c for c in mock_text.call_args_list if c.args[2] == FOOTER_HINT]
         assert len(hint_calls) == 1
-        assert hint_calls[0].args[4][0] == MARGIN + LEFT_W + SP3
+        assert hint_calls[0].args[3][0] == margin + LEFT_W + T.S * 3
         # Ensure back button is registered and does not collide with hint
         back_btn = next(r for k, r in screen_with_back.buttons if k == "back")
-        assert back_btn.right < hint_calls[0].args[4][0]
+        assert back_btn.right < hint_calls[0].args[3][0]
 
 
 def test_battle_screen_victory_card_with_stabilized():

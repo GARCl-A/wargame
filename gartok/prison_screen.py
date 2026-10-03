@@ -18,7 +18,6 @@ from .ui.primitives import (draw_button, footer_bar, panel, section, text,
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 from .ui.combat_card import draw_combat_card, draw_party_row
-from .widgets import ButtonsMixin
 
 CANDIDATES = 3
 
@@ -31,7 +30,7 @@ def _charge_party(party, amount):
     economy.charge_richest_first(party, amount)
 
 
-class PrisonScreen(ButtonsMixin, Screen):
+class PrisonScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
@@ -52,14 +51,16 @@ class PrisonScreen(ButtonsMixin, Screen):
         self.buttons = []
         self._hot = False
 
+    def _reset_buttons(self):
+        self.buttons = []
+        self._hot = False
+
     def tutorial_key(self):
         return None
 
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
                    danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
-        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
-        `map_screen.MapScreen.add_button` for the precedent."""
+        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
         draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
                    enabled=enabled, mpos=self.mouse, fnt=font)
         hov = enabled and rect.collidepoint(self.mouse)

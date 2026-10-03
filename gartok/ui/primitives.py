@@ -287,8 +287,8 @@ def footer_bar(screen_obj, surf, F, *, back=None, secondary=None, primary=None,
     notice line above the row, and the pause hint. Each slot is `(key,
     label)` or `(key, label, enabled)`; pass `hint=None` to a screen that
     already draws its own. Draws via `screen_obj.add_button` -- the screen
-    owns how that lands on the surface (its own `ButtonsMixin` override,
-    drawing through this module's `draw_button`)."""
+    owns how that lands on the surface (drawing through this module's
+    `draw_button`)."""
     W, H = surf.get_size()
     m = margin if margin is not None else T.S * 3
     y = H - FOOTER_H

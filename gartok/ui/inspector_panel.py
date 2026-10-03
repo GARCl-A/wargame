@@ -10,7 +10,7 @@ orders, or a real screen's dozen node-kind actions), so this component
 doesn't grow a case per screen that uses it.
 
 `button`, when given, replaces the built-in button drawing -- a real
-screen with its own hit-testing/registration (e.g. `ButtonsMixin.add_button`)
+screen with its own hit-testing/registration (e.g. `screen.add_button`)
 passes its own callable instead of the presentation-only default.
 """
 

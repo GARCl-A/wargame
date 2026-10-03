@@ -15,11 +15,10 @@ from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
                             token_badge)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-from .widgets import ButtonsMixin
 
 SIDE_W = 340
 
-class CraftingScreen(ButtonsMixin, Screen):
+class CraftingScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_done, title="THE FORGE",
@@ -44,14 +43,17 @@ class CraftingScreen(ButtonsMixin, Screen):
         self.selected_crafter = self.crafters[0] if self.crafters else None
 
         self.buttons = []         # [(key, rect)]
+        self._hot = False
         self.roster_rows = []     # [(rect, member)]
         self.notices = []
 
+    def _reset_buttons(self):
+        self.buttons = []
+        self._hot = False
+
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
                    danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button`, keeping `ButtonsMixin`'s
-        own hit-registration bookkeeping (`self.buttons`/`self._hot`) -- see
-        `map_screen.MapScreen.add_button` for the precedent."""
+        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
         draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
                    enabled=enabled, mpos=self.mouse, fnt=font)
         hov = enabled and rect.collidepoint(self.mouse)
