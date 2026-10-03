@@ -1573,4 +1573,41 @@ def test_battle_screen_16_9_monitor_no_overflow():
             assert rect.bottom <= h, f"Utility button {key} bottom {rect.bottom} below window {h} in {w}x{h}"
 
 
+def test_alert_screen_dismissal_methods():
+    import pygame
+    from gartok.alert_screen import AlertScreen
+    from gartok.theme import Fonts
+    pygame.init()
+    surf = pygame.Surface((1280, 800))
+    F = Fonts()
+
+    done_count = 0
+    def on_done():
+        nonlocal done_count
+        done_count += 1
+
+    # 1. Test clicking OK button
+    alert = AlertScreen(F, None, "CRITICAL WARNING", ["A hero fell in battle."], on_done, is_danger=True)
+    alert.draw(surf)
+    ok_btn = next(r for k, r in alert.buttons if k == "ok")
+    ev_click = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": ok_btn.center})
+    alert.handle_event(ev_click)
+    assert done_count == 1
+
+    # 2. Test Enter key
+    ev_enter = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RETURN})
+    alert.handle_event(ev_enter)
+    assert done_count == 2
+
+    # 3. Test Space key
+    ev_space = pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_SPACE})
+    alert.handle_event(ev_space)
+    assert done_count == 3
+
+    # 4. Test Escape handling
+    alert.handle_escape()
+    assert done_count == 4
+
+
+
 

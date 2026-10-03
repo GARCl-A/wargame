@@ -28,7 +28,6 @@ from .ui.primitives import draw_button, header
 from .ui.primitives import text as ui_text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-from .widgets import ModalScreen
 
 RAIL_W = 230
 COL_MIN, COL_MAX = 300, 420
@@ -506,26 +505,25 @@ class CityPropertyScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         return any(r.collidepoint(self.mouse) for r, *_ in self.sources)
 
 
-class RepossessionScreen(ModalScreen, Screen):
+class RepossessionScreen(Screen):
     """Forced open instead of `CityPropertyScreen` once
     `guild.property_city_repossession_due` -- the Bankers want their house
     back, or their tax paid; there is no third option here (unlike
     `justice_screen.GuardScreen`'s FIGHT, squatting is not a fight, it's a
     standing risk played out later, in `campaign.py`'s "eviction" pause).
-    No `resume_to` -- there is no screen underneath to freeze, so the shared
-    modal frame falls back to a flat backdrop (`draw_scene_behind`'s except
-    branch). Untouched by the container-transfer rework above -- a binary
-    choice modal, no gear moves here at all."""
+    Modernized to the `gartok/ui/` design system using `modal_card`."""
 
     native = True
 
     def __init__(self, fonts, guild, on_return, on_squat):
         super().__init__()
         self.fonts = fonts
+        self._F = fonts if (isinstance(fonts, dict) and "body" in fonts) else ui_fonts()
         self.guild = guild
         self.on_return = on_return
         self.on_squat = on_squat
         self.buttons = []
+        self._hot = False
 
     def tutorial_key(self):
         return None
@@ -536,52 +534,76 @@ class RepossessionScreen(ModalScreen, Screen):
         elif key == "squat":
             self.on_squat()
 
-    def _lines(self, w):
-        f = self.fonts
-        missed = self.guild.property_city_missed_payments
-        owed = missed * economy.CITY_PROPERTY_TAX
-        warn = wrap_lines([(f"{missed} tax cycles missed -- {owed} copper behind. "
-                           "The Bankers want the house back, or the debt paid.")],
-                          f.body, w)
-        return owed, warn
+    def _click(self, pos):
+        for key, rect in self.buttons:
+            if rect.collidepoint(pos):
+                self.on_button(key)
+                return
 
     def card_rect(self, size):
         W, H = size
-        f = self.fonts
-        w = min(560, W - 2 * MARGIN) + 2 * SP3
-        _, warn = self._lines(w - 2 * SP3)
-        h = (SP3 + f.title.get_height() + SP2 + len(warn) * (f.body.get_height() + 2)
-             + SP2 + 56 + SP2 + 56 + SP3)
-        r = pygame.Rect(0, 0, w, h)
+        w = min(580, W - 48)
+        box_h = 280
+        r = pygame.Rect(0, 0, w, box_h)
         r.center = (W // 2, H // 2)
         return r
 
-    def draw_body(self, screen, card):
-        f = self.fonts
-        text(screen, "THE BANKERS", f.title, INK, (card.x + SP3, card.y + SP3))
-        owed, warn = self._lines(card.w - 2 * SP3)
-        y = card.y + SP3 + f.title.get_height() + SP2
-        for ln in warn:
-            text(screen, ln, f.body, DANGER, (card.x + SP3, y))
-            y += f.body.get_height() + 2
-        y += SP2
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._click(event.pos)
 
-        y = self._option(screen, card, "return", "RETURN THE PROPERTY",
-                         f"Hand it back. The guild owes {owed} copper -- the "
-                         "Bankers' other services are shut until it's paid.",
-                         y, INFO)
-        self._option(screen, card, "squat", "REFUSE -- SQUAT",
-                     "Keep the house without paying. No more tax, but the guard "
-                     "will come to clear it out, sooner or later.",
-                     y, DANGER)
+    def draw(self, screen):
+        F = self._F
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
+        self.buttons.clear()
+        self._hot = False
 
-    def _option(self, screen, card, key, label, sub, top, col):
-        f = self.fonts
-        r = pygame.Rect(card.x + SP3, top, card.w - 2 * SP3, 56)
-        hov = r.collidepoint(self.mouse)
-        panel(screen, r, fill=SURFACE_3 if hov else SURFACE_2, border=col,
-              width=2 if hov else 1, radius=8)
-        text(screen, label, f.body_bd, col, (r.x + SP3, r.y + 8))
-        text(screen, sub, f.body_sm, INK_DIM, (r.x + SP3, r.y + 30))
-        self.buttons.append((key, r))
-        return r.bottom + SP2
+        missed = self.guild.property_city_missed_payments
+        owed = missed * economy.CITY_PROPERTY_TAX
+        warn_msg = (f"{missed} tax cycles missed -- {owed} copper behind. "
+                    "The Bankers want the house back, or the debt paid.")
+
+        box_w = min(580, W - 48)
+        inner_w = box_w - 48
+        from .ui.primitives import wrap, modal_card, text as p_text, caps as p_caps, hline
+        lines = wrap(F["body"], warn_msg, inner_w)
+        box_h = 24 + 18 + 28 + 14 + len(lines) * 24 + 18 + 58 + 12 + 58 + 20
+
+        card = modal_card(screen, (box_w, box_h), veil=True)
+        pygame.draw.rect(screen, T.BLOOD, card, 2, border_radius=4)
+
+        cx = card.x + 24
+        cy = card.y + 20
+        p_caps(screen, F["microb"], "TAX DEFAULT NOTICE", (cx, cy), T.BLOOD)
+        cy += 18
+        p_text(screen, F["head"], "THE BANKERS — REPOSSESSION DUE", (cx, cy), T.TX)
+        cy += 30
+        hline(screen, card.x + 20, card.right - 20, cy)
+        cy += 14
+
+        for ln in lines:
+            p_text(screen, F["body"], ln, (cx, cy), T.BLOOD)
+            cy += 24
+        cy += 14
+
+        # Option 1: Return property
+        r1 = pygame.Rect(cx, cy, inner_w, 58)
+        hov1 = r1.collidepoint(self.mouse)
+        if hov1: self._hot = True
+        pygame.draw.rect(screen, T.STEEL if hov1 else T.TABLE, r1, border_radius=4)
+        pygame.draw.rect(screen, T.BRASS if hov1 else T.STEEL_LINE, r1, 2 if hov1 else 1, border_radius=4)
+        p_text(screen, F["bodyb"], "RETURN THE PROPERTY", (r1.x + 14, r1.y + 10), T.TX)
+        p_text(screen, F["body_sm"], f"Hand it back. The guild owes {owed} copper -- Bankers shut until paid.", (r1.x + 14, r1.y + 32), T.TX_MUTED)
+        self.buttons.append(("return", r1))
+
+        # Option 2: Squat
+        cy = r1.bottom + 12
+        r2 = pygame.Rect(cx, cy, inner_w, 58)
+        hov2 = r2.collidepoint(self.mouse)
+        if hov2: self._hot = True
+        pygame.draw.rect(screen, T.STEEL if hov2 else T.TABLE, r2, border_radius=4)
+        pygame.draw.rect(screen, T.BLOOD if hov2 else T.STEEL_LINE, r2, 2 if hov2 else 1, border_radius=4)
+        p_text(screen, F["bodyb"], "REFUSE -- SQUAT", (r2.x + 14, r2.y + 10), T.BLOOD)
+        p_text(screen, F["body_sm"], "Keep the house without paying. The City Guard will come to clear it out.", (r2.x + 14, r2.y + 32), T.TX_MUTED)
+        self.buttons.append(("squat", r2))
