@@ -389,6 +389,24 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   `stable`. See below.
 - **Flee** (1 point, ends the turn) = leave combat by the map edge. See below.
 - **Climb / Push / Jump / Drop In** (1 point) = the Z-axis moves. See below.
+- **Drink Potion** (1 point) = drinks a potion (such as a `Minor Healing Potion`)
+  from the pack, recovering **`1d4 + 1` HP** immediately (capped at max HP).
+  Consumes the item. The AI drinks when wounded to $\le 50\%$ HP.
+- **Investigate** (1 point) = inspects adjacent wall segments for hidden doors,
+  sliding panels or concealed mechanisms, revealing and opening them on discovery.
+- **Disarm** (1 point) = attempts to disarm an adjacent trap (`Bear Trap` or
+  `Alarm Trap`): rolls `d20 + Dexterity mod` vs **DC 12**. Success safely removes
+  the trap and recovers the item into the inventory; a natural 1, or failing by 5
+  or more, accidentally triggers the trap on the character.
+- **Mount / Dismount** (1 point) = a Small or Medium character rides on the back
+  of an adjacent allied Centaur (unlocked via the Centaur's `Mount` talent),
+  sharing the mount's positioning and speed. Dismounting spends 1 point to step
+  onto an adjacent free cell.
+- **Eat Corpse** (1 point) = a Gnoll with the `Corpse Eater` talent feasts on an
+  adjacent dead body: satiates hunger for the day and inflicts an immediate AoE
+  Demoralize test on all enemy witnesses within line of sight.
+- **Wake Up** (1 point) = rouses an adjacent `Sleeping` ally, immediately ending
+  the condition.
 
 ### Typed bonuses — the core rule
 
@@ -702,6 +720,24 @@ moral axis:
 - **Pathfinding to flee:** when an AI unit breaks and runs, it moves toward the
   nearest map edge turn by turn before executing the Flee action.
 
+### Auto-Win (Monte Carlo Stomp Simulation) 🟡
+
+Rule in `gartok/autowin.py`, integrated into map ambush CTAs and the Wilds hunt.
+Evaluates whether a battle is an overwhelming stomp that can be resolved
+immediately without manual combat grind.
+
+- **Eligibility Criteria (all must hold across simulated headless runs):**
+  1. **100% win rate** across all iterations.
+  2. **Zero player casualties** (every squad member remains standing and alive).
+  3. **Zero consumables used** (no ammo fired from quivers, no potions drunk, no
+     first aid charges used).
+- **Trade-off when accepted:**
+  - **0 combat XP** awarded from kills (the encounter was too lopsided to learn from).
+  - Squad members take the **average simulated damage** (rounded) sustained during
+    the runs, reducing their persistent HP.
+  - Field loot, time passage, and victory events resolve identically to a manually
+    won battle.
+
 ### Weapons table 🟡
 
 The full table (damage, range, finesse, thrown, hands, weight, price) is in
@@ -844,12 +880,14 @@ copper instead of walking into the wilds and dying.
 - **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
   or 16 h — which issues a work order; ADVANCE resolves it: passes the time (can
   cross midnight and trigger the day's meal) and pays each worker.
-- **Pay:** `economy.LUMBER_WAGE` = **3 copper per whole 4-hour block**; a partial
-  hour does not count. A full 16 h day = **12 copper** per head, straight into
-  each one's purse.
+- **Pay:** `economy.LUMBER_WAGE` = **3 copper per whole 4-hour block** bare-handed
+  (work level 0); or `economy.LUMBER_WAGE_OWN_AXE` = **4 copper per 4-hour block**
+  if the worker owns an **Axe** in their pack or hand (work level 1). A partial
+  hour does not count. A full 16 h day = **12 copper** (or **16 copper** with an Axe)
+  per head, straight into each one's purse.
 - **Work XP:** `Unit.work_hours` accumulates the hours; `Unit.work_xp` =
-  `work_hours // 16` — **one mark per 16 h worked**. It feeds the work level and
-  the work talent tree.
+  `work_hours // 16` — **one mark per 16 h worked**. Carrying your own Axe elevates
+  the work level to 1, gating work-XP progression accordingly (`progression.xp_award`).
 - **No wood:** the axe is borrowed and the tree is not yours; you take only the
   wage for the hours, no item.
 - **Deliberately meagre.** 0.75 copper/h. A full day feeds you (a Potato is 3c)
@@ -880,6 +918,20 @@ abandoned craft doesn't get them back.
   or is pushed onto it triggers it (`Battle.trigger_trap`) — a Bear Trap
   damages and stops the mover, an Alarm Trap only stops it — and the trap is
   removed from the board.
+
+### The Apothecary: brewing and foraging 🟡
+
+`apothecary_hub_screen.py`, at the City (`Node.apothecary = True`). Integrates
+potion brewing, jobs, and supplies.
+
+- **Brewing:** Members who have learned alchemical recipes (via the `Apothecary`
+  work talent) can brew remedies at the Apothecary station. Brewing a **Minor Healing
+  Potion** requires `1L Beer`, `2x Red Mushroom`, `Fruit`, and a `Vial` (complexity 15,
+  rolling `1d20 + INT mod` per hour worked).
+- **Foraging Reagents:** Reagents such as `Red Mushroom` can be foraged in the
+  Wilds during expeditions or hunts, as well as purchased in limited stock at the
+  market.
+- **Jobs:** Offers contracts to fetch rare reagents (`apothecary_mushrooms`).
 
 ### The Wilds: hunting 🟡
 
@@ -980,7 +1032,7 @@ stage 2 bouts): **Bloodsport** (win a stage 2 bout), **Flag Runner** (capture en
 flag), **Untouchable** (capture flag without KOs), and **The Ribbit Brothers** (beat
 the 3 Grippli boss team). Each bout is defined in `arena.py` and assembled in `matchup.build`.
 
-**Faction #2 — The Bankers (`bankers`).** The coin-lenders of the City. Four deeds
+**Faction #2 — The Bankers (`bankers`).** The coin-keepers of the City. Four deeds
 measure the guild's standing:
 - **Good for Business:** complete an economic job in the City.
 - **Steady Customer:** spend 1,000 copper at the market.
@@ -994,15 +1046,28 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
   `bank_screen` for the chosen party (the market's party-picker path).
 - The chest is **guild state** (`guild.bank_capacity` kg, `guild.bank_items`) —
   the guild owns nothing else as a body. `bank_capacity == 0` = not rented.
-- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**50 copper**), split
+- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**100 copper**), split
   across the visiting party (poorest first, shortfall rolling onto whoever still
-  has coin), and grants `economy.BANK_CHEST_CAPACITY` (**10 kg**) of storage.
+  has coin), and grants `economy.BANK_CHEST_CAPACITY` (**30 kg**) of storage.
   Stashing itself is free, so members keep their own money — nothing is pooled or
   redivided. One tier for now; the field is shaped for a later, bigger box.
 - **Stashing** moves **pack** items only, in either direction: into the chest
   while `bank_load + weight ≤ bank_capacity`, out of it while it fits the taker's
   carry max. Wielding/wearing still happens on the gear screen.
 - The chest lives at the bank — gear in it is **only reachable from the City**.
+
+**Faction #3 — The Library (`library`).** Scholars and linguists situated just
+outside the City walls (`Node.library = True`). Two deeds measure standing:
+- **Library Initiate:** complete a scholarly task for the library (`library_dictionary` mission).
+- **Trusted Scholar:** complete a second task for the library (retrieving the lost codex
+  from the Ancient Ruins, `library_ancient_codex`).
+
+Standing with the Library expands the world's scholarly resources:
+- **Dictionary market:** The library sells language dictionaries; the stock of different
+  tongues available each day scales directly with reputation (`count = 1 + rep`).
+- **The Scriptorium (Crafting):** Members who speak a language automatically know the
+  recipe to craft its `Dictionary of <Language>` (consuming `1sqm Hide`, `Paper`, and `Ink`)
+  at the Library's scriptorium station.
 
 ### Missions 🟡
 
@@ -1021,6 +1086,8 @@ instance of a given template can be active guild-wide at a time
   pays 200 copper, 5 days. Hides only drop from Wilds beasts, not from hours
   hunted; a finite market stock (`economy.STOCK`, `Guild.market_stock`) keeps
   the hide from just being bought instead of hunted.
+- **The Apothecary** (`apothecary_mission_screen.py`, at the City): wants 15×
+  `Red Mushroom` gathered from the Wilds, pays 150 copper, 10 days.
 - **The Bankers' trust mission** (`trust_screen.py` at the City,
   `ledger_screen.py` at Ledger Hold): hands the signer a sealed chest
   (`data.MISSION_CHEST_ITEM`) instead of asking for a gathered item; the
@@ -1028,6 +1095,12 @@ instance of a given template can be active guild-wide at a time
   carried back. Opening the sealed chest early — mistaking it for an
   ordinary locked one, see Crime below — fails the mission and marks the
   opener a criminal instead of paying out.
+- **The Library** (`library_mission_screen.py`, at the Library):
+  - **A New Translation:** wants 1× `Dictionary of <Language>` (any tongue) to
+    expand the archives, pays 250 copper, 15 days.
+  - **The Lost Codex:** unlocked after `library_initiate` is completed; asks the
+    guild to delve into the sunken vaults of the Ancient Ruins off the Old Road
+    and retrieve the `Ancient Codex`, paying 500 copper, 20 days.
 
 ### Property and holdings 🟡
 
@@ -1072,6 +1145,27 @@ shipped start to finish (buy/claim, use, lose, recover):
   (the City property has none), no mechanical battle-map cover from fences
   (a checklist step only, no combat-terrain hookup), no per-unit job choice
   inside a garrison.
+
+### Dungeons and the Ancient Ruins 🟡
+
+Dungeons are enclosed subterranean complexes (`world.Node.dungeon = True`),
+distinct from open-air wilderness or arena battlefields:
+
+- **Discovery:** Hidden sites (such as the `ancient_ruins` node) are not visible
+  on the map by default. A group passing through connected country (the Old Road)
+  can spend hours scouting to discover the entrance (`campaign.scout_ancient_ruins`),
+  revealing the node and travel routes permanently.
+- **Environment:** Dungeons are plunged in ambient darkness (`ambient_light = False`),
+  requiring light sources (lanterns, carried torches, or dropped light globes) or
+  Darkvision to navigate.
+- **Exploration & Traps:** Unlike static combat boards, dungeon scenarios feature
+  interconnected chambers, corridors rigged with mechanical traps (Bear Traps,
+  Alarm Traps) disarmable via `Disarm`, and concealed doors that can be revealed
+  with `Investigate`.
+- **Relics & Bosses:** Delving into deep dungeon vaults houses unique narrative
+  relics (e.g. the `Ancient Codex` for the Library faction) and ancient boss
+  guardians (`The Ancient Archivist`), offering high-tier loot including rare spell
+  scrolls (`Scroll of Sleep`).
 
 ### Crime and justice 🟡
 

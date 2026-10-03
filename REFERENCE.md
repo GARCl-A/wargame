@@ -350,7 +350,7 @@ The staked bouts in the cellars under the city. Win, and be known.
 
 ### The Bankers
 
-The coin-lenders of the city. They rent strongboxes, and -- for those who dare -- lend against the future.
+The coin-keepers of the city. They rent strongboxes and trade in property.
 
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|

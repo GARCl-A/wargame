@@ -174,3 +174,24 @@ def test_quest_panel_draws_tags_pills():
     }]
     quest_panel.quest_list(surf, UI_F, area, quests)
 
+
+def test_completed_mission_shows_completed_label():
+    import pygame
+    from gartok.tanner_screen import TannerScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    guild, hunters, _home = _guild_with_two_groups()
+    signer = hunters.members[0]
+    m = missions.accept(guild, signer, missions.TANNER_HIDES)
+    for _ in range(15):
+        signer.give_to_pack("1sqm Hide")
+    missions.turn_in(guild, m)
+    assert m.state == "done"
+
+    hunters.node = "city"
+    screen = TannerScreen(ui_fonts(), guild, hunters, None)
+    assert screen._completed
+    assert not screen._offered
+    surf = pygame.Surface((800, 600))
+    screen.draw(surf)
+
+

@@ -93,6 +93,14 @@ class MissionOfferScreen(Screen):
                      if m.template_id == t.id and m.state == "active"), None)
 
     @property
+    def _completed(self):
+        t = self._template
+        if t is None:
+            return False
+        return any(m.template_id == t.id and m.state in ("done", "failed")
+                   for m in self.guild.missions)
+
+    @property
     def _mission(self):
         """The active job, but only if the group standing here right now is
         the one sharing it (its signer is one of `self.group.members`)."""
@@ -184,7 +192,12 @@ class MissionOfferScreen(Screen):
             rows.append((16, lambda x, y: None))
             rows.append(row(F["body_sm"], self.get_req_str(t), T.BRASS, 30, fn=text))
 
-            label = self.accept_label if offered else "ALREADY OUT WITH ANOTHER GROUP"
+            if self._completed:
+                label = "JOB COMPLETED"
+            elif offered:
+                label = self.accept_label
+            else:
+                label = "ALREADY OUT WITH ANOTHER GROUP"
 
             def draw_accept(x, y):
                 r = pygame.Rect(x, y, w, 36)
