@@ -53,6 +53,25 @@ The generator kept only the names; every effect below was designed for the warga
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 
+## Squad archetypes
+
+Functional squad roles for candidate generation and commission tokens at the draft.
+
+| Archetype | Role & Qualification | Incompatible With |
+|---|---|---|
+| LEADER | Highly charismatic (+2 mod). Critical for recruiting in taverns, bargaining, and guild morale. | — |
+| PACK MULE | Can carry 35+ kg. Hauls heavy armor, tools, and spoils without encumbrance penalties. | MAGIC, SEES IN DARK |
+| TOUGH | Massive health pool (8+ max HP). Durable frontline combatant with strong survivability. | — |
+| DAMAGE DEALER | Heavy hitter (6+ expected damage). Deals punishing strikes in melee or at range. | — |
+| NIMBLE | Superior dexterity (+2 mod). High evasion, accuracy with finesse weapons, and natural defense. | — |
+| RANGED | Equipped with bow, sling, or crossbow. Engages hostile targets from safe standoff distance. | — |
+| GENIUS | Brilliant intellect (+2 mod). Accelerated crafting, manual reading, and arcane research. | — |
+| WISE | Perceptive mind (+2 mod). High combat initiative, mental defense, and skilled field medicine. | — |
+| FAST | Exceptional speed (7+ cells). Moves rapidly across grid encounters and controls positioning. | MAGIC, SEES IN DARK |
+| LARGE | Large creature (2x2 footprint). High base hit die, expanded battlefield reach, and physical weight. | MAGIC, SEES IN DARK |
+| SEES IN DARK | Racial Darkvision. Operates and fights unhindered in deep darkness without needing torches. | FAST, LARGE, MAGIC, PACK MULE |
+| MAGIC | Arcane or natural initiate. Starts with a magic source or known spells and can read scrolls. | FAST, LARGE, PACK MULE, SEES IN DARK |
+
 ## Occupations
 
 Each occupation grants one starting weapon and one starting item.

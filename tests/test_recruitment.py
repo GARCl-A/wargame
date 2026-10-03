@@ -244,3 +244,31 @@ def test_pitch_block_reasons():
     recruit.prison_bar(g3, cand_prison, r6)
     assert recruit.pitch_block_reason(g3, [r6], cand_prison, is_prison=True) == "everyone already tried this week"
 
+
+def test_taverna_screen_renders_archetype_badges():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.guild import Guild
+    from gartok.taverna_screen import TavernaScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.unit import Unit
+
+    pygame.init()
+    surf = pygame.display.set_mode((1024, 768))
+    F = ui_fonts()
+
+    g = Guild([Unit("player")])
+    c1 = Unit("player")
+    c1.mod_charisma = 3
+    c2 = Unit("player")
+
+    scr = TavernaScreen(F, g, g.roster, None, lambda *a: None, candidates=[c1, c2])
+    scr.draw(surf)
+    card = scr.cand_cards[0][0]
+
+    scr.mouse = (card.x + 16, card.y + 78)           # over the first badge pill
+    scr.draw(surf)
+    assert any("LEADER" in str(tip) for _, tip in scr._tooltips)
+
+

@@ -46,6 +46,28 @@ The generator's exact order:
 6. The character starts at **Level 0, XP 1000**. 🟢 *(the meaning of that
    progression did not survive — see §9 and the Progression section.)*
 
+### The squad draft & commission tokens 🟡
+
+A new campaign begins at the **Draft** (`DraftScreen`):
+- The squad draft lasts **3 rounds**, picking 1 recruit from 3 candidates each round to form the starting squad of 3.
+- To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
+- Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) for that round's candidate pool:
+  - **LEADER**: Charisma mod $\ge +2$. Essential for tavern recruitment and haggling.
+  - **PACK MULE**: Normal carry $\ge 35\text{ kg}$. Hauls heavy armor, tools, and spoils without encumbrance.
+  - **TOUGH**: Max HP $\ge 8$. Durable frontline combatant.
+  - **DAMAGE DEALER**: Expected damage $\ge 6.0$. Heavy physical hitter in melee or at range.
+  - **NIMBLE**: Dexterity mod $\ge +2$. High evasion, natural defense, and finesse accuracy.
+  - **RANGED**: Starts equipped with a ranged weapon (bow, sling, or crossbow).
+  - **GENIUS**: Intelligence mod $\ge +2$. Fast crafting, manual reading, and research.
+  - **WISE**: Wisdom mod $\ge +2$. High initiative, mental defense, and skilled field medicine.
+  - **FAST**: Speed $\ge 7\text{ cells}$. High grid mobility.
+  - **LARGE**: Large size ($2\times 2$ footprint). Heavy reach, natural hit die, and carry capacity.
+  - **SEES IN DARK**: Racial Darkvision. Fights unhindered in darkness without torches.
+  - **MAGIC**: Arcane or nature initiate with known spells.
+- **Incompatible combinations** (e.g. `PACK MULE` + `SEES IN DARK`, `MAGIC` + `PACK MULE`, `FAST` + `SEES IN DARK`, `LARGE` + `MAGIC`) are prohibited by the commission desk.
+- Commissioned candidates highlight their guaranteed tags with a star (`★`) and brass border.
+- Once the three picks are locked, the draft moves into **Identity** (Guild Name, Banner Color, and Banner Icon), followed by picking the guild's **Leader** (`Guild.leader`).
+
 ---
 
 ## 3. Derived values 🟢

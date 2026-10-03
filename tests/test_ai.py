@@ -194,3 +194,29 @@ def test_ai_does_not_drink_potion_when_above_half_hp():
     assert e.hp == 11
 
 
+def test_good_ai_uses_first_aid_when_medkit_available():
+    from gartok import ai
+    batt = Battle([Unit("player")], [Unit("enemy"), Unit("enemy")], lethal=True)
+    p = batt.player_units[0]
+    e1, e2 = batt.enemy_units
+    e1.alignment = "Neutral and Good"
+    e2.alignment = "Neutral and Good"
+    e1.char.first_aid_charges = 3
+    e1.first_aid_charges = 3
+    e1.pos = (5, 5)
+    e2.pos = (5, 6)
+    p.pos = (15, 15)
+
+    e2.go_down(batt.log)
+    assert e2.dying
+
+    e1.ap = 2
+    batt.turn_idx = batt.order.index(e1)
+    with fixed_d20(15):
+        ai.take_turn(batt, e1)
+
+    assert e1.first_aid_charges == 2
+    assert e2.stable
+
+
+

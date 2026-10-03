@@ -47,6 +47,9 @@ class T:
     F_BIG     = 28   # clock reading / critical number
 
 
+ARCHETYPE_COLORS = {"brass": T.BRASS, "green": T.GREEN, "muted": T.TX_MUTED}
+
+
 def mix(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
@@ -60,6 +63,8 @@ def fonts():
     frame without re-hitting `pygame.font.SysFont` each time."""
     global _font_cache
     if _font_cache is None:
+        if not pygame.font.get_init():
+            pygame.font.init()
         cond = "dejavusanscondensed,dejavusans,arial"
         serif = "dejavuserif,georgia,serif"
         _font_cache = {

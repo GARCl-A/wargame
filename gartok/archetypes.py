@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from typing import Callable
 
 from . import items
-from .ui.tokens import T
 from .unit import Unit
 
 
@@ -17,9 +16,9 @@ from .unit import Unit
 class Archetype:
     key: str
     label: str
-    color: tuple
     desc: str
     predicate: Callable[[Unit], bool]
+    style: str = "brass"
 
 
 def expected_damage(u: Unit) -> float:
@@ -41,84 +40,84 @@ ARCHETYPES = {
     "LEADER": Archetype(
         key="LEADER",
         label="LEADER",
-        color=T.BRASS,
+        style="brass",
         desc="Highly charismatic (+2 mod). Critical for recruiting in taverns, bargaining, and guild morale.",
         predicate=lambda u: u.mod_charisma >= 2,
     ),
     "PACK MULE": Archetype(
         key="PACK MULE",
         label="PACK MULE",
-        color=T.GREEN,
+        style="green",
         desc="Can carry 35+ kg. Hauls heavy armor, tools, and spoils without encumbrance penalties.",
         predicate=lambda u: u.carry_normal >= 35,
     ),
     "TOUGH": Archetype(
         key="TOUGH",
         label="TOUGH",
-        color=T.GREEN,
+        style="green",
         desc="Massive health pool (8+ max HP). Durable frontline combatant with strong survivability.",
         predicate=lambda u: u.hp_max >= 8,
     ),
     "DAMAGE DEALER": Archetype(
         key="DAMAGE DEALER",
         label="DAMAGE DEALER",
-        color=T.BRASS,
+        style="brass",
         desc="Heavy hitter (6+ expected damage). Deals punishing strikes in melee or at range.",
         predicate=lambda u: expected_damage(u) >= 6,
     ),
     "NIMBLE": Archetype(
         key="NIMBLE",
         label="NIMBLE",
-        color=T.GREEN,
+        style="green",
         desc="Superior dexterity (+2 mod). High evasion, accuracy with finesse weapons, and natural defense.",
         predicate=lambda u: u.mod_dexterity >= 2,
     ),
     "RANGED": Archetype(
         key="RANGED",
         label="RANGED",
-        color=T.TX_MUTED,
+        style="muted",
         desc="Equipped with bow, sling, or crossbow. Engages hostile targets from safe standoff distance.",
         predicate=lambda u: bool(u.ranged),
     ),
     "GENIUS": Archetype(
         key="GENIUS",
         label="GENIUS",
-        color=T.GREEN,
+        style="green",
         desc="Brilliant intellect (+2 mod). Accelerated crafting, manual reading, and arcane research.",
         predicate=lambda u: u.mod_intelligence >= 2,
     ),
     "WISE": Archetype(
         key="WISE",
         label="WISE",
-        color=T.GREEN,
+        style="green",
         desc="Perceptive mind (+2 mod). High combat initiative, mental defense, and skilled field medicine.",
         predicate=lambda u: u.mod_wisdom >= 2,
     ),
     "FAST": Archetype(
         key="FAST",
         label="FAST",
-        color=T.GREEN,
+        style="green",
         desc="Exceptional speed (7+ cells). Moves rapidly across grid encounters and controls positioning.",
         predicate=lambda u: u.speed >= 7,
     ),
     "LARGE": Archetype(
         key="LARGE",
         label="LARGE",
-        color=T.TX_MUTED,
+        style="muted",
         desc="Large creature (2x2 footprint). High base hit die, expanded battlefield reach, and physical weight.",
         predicate=lambda u: u.size == "Large",
     ),
     "SEES IN DARK": Archetype(
         key="SEES IN DARK",
         label="SEES IN DARK",
-        color=T.TX_MUTED,
+        style="muted",
         desc="Racial Darkvision. Operates and fights unhindered in deep darkness without needing torches.",
         predicate=lambda u: bool(u.ability.darkvision),
     ),
     "MAGIC": Archetype(
         key="MAGIC",
         label="MAGIC",
-        color=T.TX_MUTED,
+        style="muted",
         desc="Arcane or natural initiate. Starts with a magic source or known spells and can read scrolls.",
         predicate=lambda u: bool(getattr(u, "magic_source", None) or getattr(u, "spells_known", [])),
     ),
@@ -136,11 +135,11 @@ INCOMPATIBLE_PAIRS = {
 
 
 def unit_archetypes(u: Unit):
-    """Returns list of (label, color, desc) for all matching archetypes on this unit."""
+    """Returns list of (label, style, desc) for all matching archetypes on this unit."""
     matched = []
     for key, arc in ARCHETYPES.items():
         if arc.predicate(u):
-            matched.append((arc.label, arc.color, arc.desc))
+            matched.append((arc.label, arc.style, arc.desc))
     return matched
 
 

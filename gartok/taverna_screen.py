@@ -20,9 +20,10 @@ Modernized to the `gartok/ui/` design system.
 import pygame
 
 from . import economy, orders, recruit, magic, data
+from .archetypes import unit_archetypes
 from .data import alignment_distance
 from .screen import Screen
-from .ui.tokens import T, mix, fonts as ui_fonts
+from .ui.tokens import ARCHETYPE_COLORS, T, mix, fonts as ui_fonts
 from .ui.primitives import (header, footer_bar, text, caps, draw_button,
                             panel, hline, token_badge, draw_tooltip,
                             format_tooltip, modal_card, FOOTER_H)
@@ -316,7 +317,7 @@ class TavernaScreen(Screen):
                  (left_rect.x + 16, left_rect.y + 40), T.TX_FAINT)
         else:
             cy = left_rect.y + 36
-            card_h = 112
+            card_h = 124
             for i, cand in enumerate(self.candidates):
                 cr = pygame.Rect(left_rect.x + 12, cy, left_w - 24, card_h)
                 self.cand_cards.append((cr, i))
@@ -337,9 +338,23 @@ class TavernaScreen(Screen):
                 tx = cr.x + 58
                 text(screen, F["bodyb"], cand.name, (tx, cr.y + 10), T.TX)
                 caps(screen, F["micro"], f"{cand.race['name']} · {cand.occupation['name']}",
-                     (tx, cr.y + 30), T.TX_MUTED)
+                     (tx, cr.y + 28), T.TX_MUTED)
                 text(screen, F["body_sm"], f"Resists CHA {cand.mod_charisma:+} · Speaks {', '.join(cand.languages)}",
-                     (cr.x + 12, cr.y + 58), T.TX_FAINT)
+                     (cr.x + 12, cr.y + 48), T.TX_FAINT)
+
+                # Archetype badges
+                tags = unit_archetypes(cand)
+                tag_x = cr.x + 12
+                for label, style, desc in tags[:3]:
+                    tcol = ARCHETYPE_COLORS.get(style, T.TX_MUTED)
+                    tw = F["microb"].size(label)[0] + 10
+                    pill = pygame.Rect(tag_x, cr.y + 70, tw, 16)
+                    pygame.draw.rect(screen, T.STEEL_HI, pill, border_radius=3)
+                    pygame.draw.rect(screen, tcol, pill, 1, border_radius=3)
+                    text(screen, F["microb"], label, pill.center, tcol, center=True)
+                    if pill.collidepoint(self.mouse):
+                        self._tooltips.append((pill, format_tooltip(label, desc, F)))
+                    tag_x += tw + 6
 
                 # Best pitch or blocked status
                 best = self._best(cand)
@@ -360,7 +375,7 @@ class TavernaScreen(Screen):
                 b_col = T.BRASS if sel else T.TX_MUTED
                 caps(screen, F["microb"], badge_label, (cr.right - 12, cr.bottom - 18), b_col, right=True)
 
-                cy += card_h + 10
+                cy += card_h + 8
 
         # Right panel: dossier & recruiter selection
         right_x = left_rect.right + 16
@@ -391,7 +406,26 @@ class TavernaScreen(Screen):
         text(screen, F["bodyb"], vit_str, (cx, cy), T.TX)
         cy += 24
         text(screen, F["body_sm"], f"Racial Ability: {cand.ability.name} — {cand.ability.effect}", (cx, cy), T.TX_MUTED)
-        cy += 32
+        cy += 24
+
+        # Candidate archetypes in dossier
+        tags = unit_archetypes(cand)
+        if tags:
+            caps(screen, F["micro"], "ARCHETYPES:", (cx, cy + 3), T.TX_MUTED)
+            atx = cx + 84
+            for label, style, desc in tags:
+                tcol = ARCHETYPE_COLORS.get(style, T.TX_MUTED)
+                tw = F["microb"].size(label)[0] + 12
+                pill = pygame.Rect(atx, cy, tw, 18)
+                pygame.draw.rect(screen, T.STEEL_HI, pill, border_radius=3)
+                pygame.draw.rect(screen, tcol, pill, 1, border_radius=3)
+                text(screen, F["microb"], label, pill.center, tcol, center=True)
+                if pill.collidepoint(self.mouse):
+                    self._tooltips.append((pill, format_tooltip(label, desc, F)))
+                atx += tw + 6
+            cy += 26
+        else:
+            cy += 6
 
         hline(screen, right_rect.x + 20, right_rect.right - 20, cy)
         cy += 14

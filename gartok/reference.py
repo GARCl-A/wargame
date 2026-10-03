@@ -16,7 +16,7 @@ hand and points here for the numbers.
 import sys
 from pathlib import Path
 
-from . import abilities, data, economy, factions, hunt, items, progression, talents, world
+from . import abilities, archetypes, data, economy, factions, hunt, items, progression, talents, world
 
 REFERENCE_PATH = Path(__file__).resolve().parent.parent / "REFERENCE.md"
 
@@ -57,6 +57,22 @@ def _abilities():
     return "## Racial abilities\n\nThe generator kept only the names; every " \
            "effect below was designed for the wargame.\n\n" \
            + _table(("Ability", "Effect"), rows)
+
+
+def _archetypes():
+    rows = []
+    for arc in archetypes.ARCHETYPES.values():
+        incomp = []
+        for a, b in archetypes.INCOMPATIBLE_PAIRS:
+            if a == arc.key:
+                incomp.append(b)
+            elif b == arc.key:
+                incomp.append(a)
+        incomp_str = ", ".join(sorted(incomp)) if incomp else "—"
+        rows.append((arc.label, arc.desc, incomp_str))
+    head = ("Archetype", "Role & Qualification", "Incompatible With")
+    return "## Squad archetypes\n\nFunctional squad roles for candidate generation " \
+           "and commission tokens at the draft.\n\n" + _table(head, rows)
 
 
 def _occupations():
@@ -194,7 +210,7 @@ def _constants():
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _abilities, _occupations, _weapons, _armor, _shields, _items,
+_SECTIONS = (_races, _abilities, _archetypes, _occupations, _weapons, _armor, _shields, _items,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

@@ -207,7 +207,8 @@ def _ally_to_help(battle, unit):
     if _axes(unit)[1] <= 0:
         return None
     # Prefer an adjacent one if possible
-    adj = next((a for a in battle.units if actions.STABILIZE.can(battle, unit, a)), None)
+    adj = next((a for a in battle.units
+                if actions.FIRST_AID.can(battle, unit, a) or actions.STABILIZE.can(battle, unit, a)), None)
     if adj:
         return adj
     # Else nearest downed ally (not dead)
@@ -307,7 +308,10 @@ def take_turn(battle, unit):
 
         ally = _ally_to_help(battle, unit)
         if ally is not None:                  # good: save the friend first
-            if actions.STABILIZE.can(battle, unit, ally):
+            if actions.FIRST_AID.can(battle, unit, ally):
+                actions.FIRST_AID.execute(battle, unit, ally)
+                continue
+            elif actions.STABILIZE.can(battle, unit, ally):
                 actions.STABILIZE.execute(battle, unit, ally)
                 continue
             else:

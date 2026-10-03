@@ -43,7 +43,7 @@ from .ui.primitives import (
     TOKEN_INK,
 )
 from .ui.sheet_card import draw_sheet, draw_row, sheet_height, unit_to_ch
-from .ui.tokens import T, mix
+from .ui.tokens import ARCHETYPE_COLORS, T, mix
 from .unit import Unit
 
 TEAM_SIZE = 3
@@ -334,7 +334,8 @@ class DraftScreen(Screen):
                 pygame.draw.rect(screen, T.STEEL_LINE, r, 1)
 
             mark = "[✓] " if selected else "[ ] "
-            lbl_col = T.BRASS if selected else (arc.color if can_toggle else T.TX_FAINT)
+            arc_col = ARCHETYPE_COLORS.get(arc.style, T.TX_MUTED)
+            lbl_col = T.BRASS if selected else (arc_col if can_toggle else T.TX_FAINT)
             caps(screen, F["microb"], mark + arc.label, (r.x + 10, r.y + 8), lbl_col)
 
             if not compatible and not selected:
@@ -391,7 +392,8 @@ class DraftScreen(Screen):
         tags = unit_archetypes(unit)
         tags.sort(key=lambda t: 0 if t[0] in self.commissioned_labels else 1)
 
-        for label, tcol, desc in tags[:3]:
+        for label, style, desc in tags[:3]:
+            tcol = ARCHETYPE_COLORS.get(style, T.TX_MUTED)
             is_comm = label in self.commissioned_labels
             display_label = f"★ {label}" if is_comm else label
             w = F["microb"].size(display_label)[0] + 12
