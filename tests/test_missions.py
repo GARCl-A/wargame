@@ -195,3 +195,41 @@ def test_completed_mission_shows_completed_label():
     screen.draw(surf)
 
 
+def test_mission_offer_screen_containment_and_notice():
+    import pygame
+    from gartok.library_mission_screen import LibraryMissionScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    guild, scholars, _home = _guild_with_two_groups()
+    scholars.node = "library"
+    done_called = False
+
+    def on_done():
+        nonlocal done_called
+        done_called = True
+
+    screen = LibraryMissionScreen(ui_fonts(), guild, scholars, on_done)
+    surf = pygame.Surface((1280, 720))
+
+    # 1. Draw fresh offer and verify all button bounds
+    screen.draw(surf)
+    accept_btn = next((r for k, r in screen.buttons if k == "accept"), None)
+    leave_btn = next((r for k, r in screen.buttons if k == "done"), None)
+    assert accept_btn is not None
+    assert leave_btn is not None
+    assert accept_btn.bottom < leave_btn.top
+
+    # 2. Set notice (reproducing user's screenshot where notice pushed footer out)
+    screen.notice = "paid out 250 copper, split across the group. · DEED · Library Initiate +1 reputation with The Library"
+    screen.draw(surf)
+
+    leave_btn_after = next((r for k, r in screen.buttons if k == "done"), None)
+    assert leave_btn_after is not None
+    # All buttons must be well within the screen surface and leave button must have clearance from bottom
+    for _k, r in screen.buttons:
+        assert r.top >= 0 and r.bottom <= 720, f"Button {_k} rect {r} out of bounds"
+
+    # 3. Test handle_escape
+    assert screen.handle_escape() is True
+    assert done_called is True
+

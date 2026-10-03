@@ -21,7 +21,7 @@
     ]
   },
   "level_hp_rolls": [
-    1
+    3
   ],
   "base_attributes": {
     "strength": 10,
@@ -33,8 +33,8 @@
   },
   "age_base": 41,
   "age": 62,
-  "hp_roll": 2,
-  "hp_override": 5,
+  "hp_roll": 4,
+  "hp_override": null,
   "hp_max": 5,
   "languages": [
     "Halfling",

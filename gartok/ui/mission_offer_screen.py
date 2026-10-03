@@ -5,11 +5,11 @@ import pygame
 from .. import factions, missions
 from ..screen import Screen
 from ..theme import set_pointer
-from .primitives import caps, draw_button, hline, modal_card, text, wrap
-from .tokens import T
+from .primitives import caps, contained, draw_button, hline, modal_card, text, wrap
+from .tokens import T, mix
+from .tokens import fonts as ui_fonts
 
 CARD_W = 560
-FOOTER_H = T.S * 4 + 34   # gap + divider + gap + leave button
 
 TAG_COLOR = {
     "economic": T.BRASS,
@@ -36,9 +36,7 @@ class MissionOfferScreen(Screen):
         self.buttons = []              # [(key, rect)]
         self._hot = False
 
-    # ------------------------------------------------------------------ #
     # Subclasses must implement these properties and methods:
-    # ------------------------------------------------------------------ #
     @property
     def title_text(self):
         raise NotImplementedError
@@ -70,7 +68,6 @@ class MissionOfferScreen(Screen):
     def get_success_notice(self, reward):
         raise NotImplementedError
 
-    # ------------------------------------------------------------------ #
     @property
     def _template(self):
         return self.get_template()
@@ -109,6 +106,10 @@ class MissionOfferScreen(Screen):
             return None
         return m if any(u.uid == m.unit_uid for u in self.group.members) else None
 
+    def handle_escape(self):
+        self.on_done()
+        return True
+
     def _click(self, px):
         for key, rect in self.buttons:
             if not rect.collidepoint(px):
@@ -117,6 +118,7 @@ class MissionOfferScreen(Screen):
                 t = self._template
                 if t is not None and self._offered:
                     missions.accept(self.guild, self.group.leader, t)
+                    self.notice = None
             elif key == "turn_in":
                 m = self._mission
                 if m is not None and missions.can_turn_in(self.guild, m):
@@ -131,115 +133,162 @@ class MissionOfferScreen(Screen):
             return
 
     def draw(self, screen):
-        card_w = min(CARD_W, screen.get_width() - 2 * T.S * 3)
-        w = card_w - 2 * T.S * 3
-        t = self._template
-
+        F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
         screen.fill(T.TABLE)
         self.buttons.clear()
 
-        rows = self._content_rows(screen, t, w)
-        content_h = sum(h for h, _ in rows)
-        card = modal_card(screen, (card_w, content_h + FOOTER_H + 2 * T.S * 3))
+        card_w = min(CARD_W, screen.get_width() - 2 * T.S * 3)
+        pad = T.S * 3
+        inner_w = card_w - 2 * pad
 
-        x, y = card.x + T.S * 3, card.y + T.S * 3
-        for h, draw_row in rows:
-            draw_row(x, y)
-            y += h
-
-        self._draw_leave_row(screen, card, y)
-
-    def _content_rows(self, screen, t, w):
-        """`(height, draw_row(x, y))` per line of card content -- the same
-        list both sums to the card's height and paints it, so the two can
-        never drift the way a hand-computed height formula would."""
-        F = self.fonts
-
-        def row(font, s, color, h, fn=caps):
-            return (h, lambda x, y: fn(screen, font, s, (x, y), color))
-
-        rows = [
-            row(F["big"], self.title_text, T.TX, 32),
-            row(F["body"], self.subtitle_text, T.TX_MUTED, 40, fn=text),
-        ]
-
-        if t is None:
-            rows.append(row(F["body_sm"], "Nothing on offer here right now.", T.TX_FAINT, 36, fn=text))
-            return rows
-
-        rows.append(row(F["head"], t.name, T.TX, 26))
-
-        tags = getattr(t, "tags", ()) or ((t.tag,) if getattr(t, "tag", None) else ())
-        if tags:
-            def draw_tags(x, y):
-                tx = x
-                for tag in tags:
-                    label = tag.upper()
-                    col = TAG_COLOR.get(tag.lower(), T.TX_MUTED)
-                    pw = F["microb"].size(label)[0] + 12
-                    pill = pygame.Rect(tx, y, pw, 16)
-                    pygame.draw.rect(screen, T.STEEL_HI, pill, border_radius=4)
-                    pygame.draw.rect(screen, col, pill, 1, border_radius=4)
-                    text(screen, F["microb"], label, pill.center, col, center=True)
-                    tx += pw + T.S
-            rows.append((24, draw_tags))
-
+        t = self._template
         m = self._mission
         offered = self._offered
-        if m is None:
-            for ln in wrap(F["body_sm"], t.blurb, w):
-                rows.append(row(F["body_sm"], ln, T.TX_MUTED, 18, fn=text))
-            rows.append((16, lambda x, y: None))
-            rows.append(row(F["body_sm"], self.get_req_str(t), T.BRASS, 30, fn=text))
 
-            if self._completed:
-                label = "JOB COMPLETED"
-            elif offered:
-                label = self.accept_label
-            else:
-                label = "ALREADY OUT WITH ANOTHER GROUP"
+        subtitle_lines = wrap(F["body"], self.subtitle_text, inner_w) if self.subtitle_text else []
+        header_h = 30 + (len(subtitle_lines) * 22 if subtitle_lines else 0)
 
-            def draw_accept(x, y):
-                r = pygame.Rect(x, y, w, 36)
-                draw_button(screen, F, r, label, enabled=offered, primary=offered, mpos=self.mouse)
-                self.buttons.append(("accept", r))
-            rows.append((36, draw_accept))
+        qpad = T.S * 2
+        qw = inner_w - 2 * qpad
+
+        if t is None:
+            quest_card_h = 70
         else:
-            progress = missions.progress(self.guild, m)
-            ready = progress >= t.goal_qty
-            days_left = m.deadline_day - self.guild.clock.day
-            status_str = self.get_status_str(t, progress, ready, days_left)
-            rows.append(row(F["body"], status_str, T.GREEN if ready else T.TX_MUTED, 30, fn=text))
+            tags = getattr(t, "tags", ()) or ((t.tag,) if getattr(t, "tag", None) else ())
+            title_h = 24
+            tags_h = 22 if tags else 0
 
-            label = self.get_turn_in_label(t, progress, ready)
+            blurb_lines = wrap(F["body_sm"], t.blurb, qw) if getattr(t, "blurb", None) else []
+            blurb_h = len(blurb_lines) * 18
 
-            def draw_turn_in(x, y):
-                r = pygame.Rect(x, y, w, 36)
-                draw_button(screen, F, r, label, enabled=ready, primary=ready, mpos=self.mouse)
-                self.buttons.append(("turn_in", r))
-            rows.append((36, draw_turn_in))
+            if m is None:
+                req_str = self.get_req_str(t)
+                req_lines = wrap(F["body_sm"], req_str, qw)
+                req_h = len(req_lines) * 20
+                detail_h = req_h
+            else:
+                progress = missions.progress(self.guild, m)
+                ready = progress >= t.goal_qty
+                days_left = m.deadline_day - self.guild.clock.day
+                status_str = self.get_status_str(t, progress, ready, days_left)
+                status_lines = wrap(F["body"], status_str, qw)
+                detail_h = len(status_lines) * 24
 
-        return rows
+            btn_h = 36
+            quest_card_h = (qpad + title_h +
+                            (tags_h + 8 if tags else 0) +
+                            (blurb_h + 12 if blurb_lines else 0) +
+                            detail_h + 16 + btn_h + qpad)
 
-    def _draw_leave_row(self, screen, card, y):
-        """Draws forward from `y` (the content rows' end) for exactly
-        `FOOTER_H` -- keeping the footer sized off the same rows that size
-        the card, instead of a second anchor from `card.bottom` that can
-        drift out of sync with a shorter card and overlap the last row."""
-        F = self.fonts
-        x = card.x + T.S * 3
-
+        notice_lines = []
+        notice_h = 0
         if self.notice:
-            notice_w = card.right - x - T.S * 3
-            for ln in wrap(F["body_sm"], self.notice, notice_w):
-                text(screen, F["body_sm"], ln, (x, y + T.S), T.BRASS)
-                y += 16
+            notice_lines = wrap(F["body_sm"], self.notice, inner_w - 24)
+            notice_h = 10 + len(notice_lines) * 18 + 10
 
-        y += T.S * 2
-        hline(screen, x, card.right - T.S * 3, y)
-        y += T.S * 2
-        r = pygame.Rect(card.right - T.S * 3 - 220, y, 220, 34)
-        draw_button(screen, F, r, self.leave_label, mpos=self.mouse)
-        self.buttons.append(("done", r))
+        footer_btn_h = 34
+        footer_h = T.S * 2 + 1 + T.S * 2 + footer_btn_h
 
-        set_pointer(any(rect.collidepoint(self.mouse) for _, rect in self.buttons))
+        card_h = pad + header_h + T.S * 2 + quest_card_h
+        if self.notice:
+            card_h += T.S * 2 + notice_h
+        card_h += footer_h + pad
+
+        card = modal_card(screen, (card_w, card_h))
+
+        with contained(screen, card):
+            cx = card.x + pad
+            cy = card.y + pad
+
+            caps(screen, F["head"], self.title_text, (cx, cy), T.TX)
+            cy += 30
+            for ln in subtitle_lines:
+                text(screen, F["body"], ln, (cx, cy), T.TX_MUTED)
+                cy += 22
+
+            cy += T.S * 2
+
+            quest_rect = pygame.Rect(cx, cy, inner_w, quest_card_h)
+            pygame.draw.rect(screen, T.STEEL_HI, quest_rect, border_radius=4)
+            pygame.draw.rect(screen, T.STEEL_LINE, quest_rect, 1, border_radius=4)
+
+            with contained(screen, quest_rect):
+                if t is None:
+                    text(screen, F["body_sm"], "Nothing on offer here right now.",
+                         quest_rect.center, T.TX_FAINT, center=True)
+                else:
+                    qx = quest_rect.x + qpad
+                    qy = quest_rect.y + qpad
+
+                    caps(screen, F["head"], t.name, (qx, qy), T.TX)
+                    qy += 24
+
+                    if tags:
+                        qy += 4
+                        tx = qx
+                        for tag in tags:
+                            label = tag.upper()
+                            col = TAG_COLOR.get(tag.lower(), T.TX_MUTED)
+                            pw = F["microb"].size(label)[0] + 12
+                            pill = pygame.Rect(tx, qy, pw, 18)
+                            pygame.draw.rect(screen, T.TABLE, pill, border_radius=4)
+                            pygame.draw.rect(screen, col, pill, 1, border_radius=4)
+                            text(screen, F["microb"], label, pill.center, col, center=True)
+                            tx += pw + T.S
+                        qy += 22 + 4
+
+                    if blurb_lines:
+                        for ln in blurb_lines:
+                            text(screen, F["body_sm"], ln, (qx, qy), T.TX_MUTED)
+                            qy += 18
+                        qy += 12
+
+                    if m is None:
+                        for ln in req_lines:
+                            text(screen, F["body_sm"], ln, (qx, qy), T.BRASS)
+                            qy += 20
+
+                        if self._completed:
+                            label = "JOB COMPLETED"
+                        elif offered:
+                            label = self.accept_label
+                        else:
+                            label = "ALREADY OUT WITH ANOTHER GROUP"
+
+                        btn_r = pygame.Rect(qx, quest_rect.bottom - qpad - btn_h, qw, btn_h)
+                        draw_button(screen, F, btn_r, label, enabled=offered, primary=offered, mpos=self.mouse)
+                        self.buttons.append(("accept", btn_r))
+                    else:
+                        for ln in status_lines:
+                            text(screen, F["body"], ln, (qx, qy), T.GREEN if ready else T.TX_MUTED)
+                            qy += 24
+
+                        label = self.get_turn_in_label(t, progress, ready)
+                        btn_r = pygame.Rect(qx, quest_rect.bottom - qpad - btn_h, qw, btn_h)
+                        draw_button(screen, F, btn_r, label, enabled=ready, primary=ready, mpos=self.mouse)
+                        self.buttons.append(("turn_in", btn_r))
+
+            cy = quest_rect.bottom
+
+            if self.notice:
+                cy += T.S * 2
+                r_notice = pygame.Rect(cx, cy, inner_w, notice_h)
+                pygame.draw.rect(screen, mix(T.BRASS, T.TABLE, 0.90), r_notice, border_radius=4)
+                pygame.draw.rect(screen, mix(T.BRASS, T.STEEL_LINE, 0.4), r_notice, 1, border_radius=4)
+                with contained(screen, r_notice):
+                    ny = r_notice.y + 10
+                    for ln in notice_lines:
+                        text(screen, F["body_sm"], ln, (r_notice.x + 12, ny), T.BRASS)
+                        ny += 18
+                cy = r_notice.bottom
+
+            cy += T.S * 2
+            hline(screen, cx, card.right - pad, cy)
+
+            bw = 180
+            btn_leave = pygame.Rect(card.right - pad - bw, card.bottom - pad - footer_btn_h, bw, footer_btn_h)
+            draw_button(screen, F, btn_leave, self.leave_label, mpos=self.mouse)
+            self.buttons.append(("done", btn_leave))
+
+        self._hot = any(rect.collidepoint(self.mouse) for _, rect in self.buttons)
+        set_pointer(self._hot)
