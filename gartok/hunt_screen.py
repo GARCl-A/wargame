@@ -80,7 +80,8 @@ class HuntScreen(ButtonsMixin, Screen):
 
     def _do_stretch(self):
         elapsed, ambushed = hunt.hunt_stretch(self.state)
-        self.stretch_events = self.on_tick(elapsed)
+        res = self.on_tick(elapsed)
+        self.stretch_events = res[0] if isinstance(res, tuple) else (res or [])
         self.state.party = [u for u in self.state.party if u in self.guild.roster]
         if self.guild.empty or not self.state.party:
             self._wrap_up()

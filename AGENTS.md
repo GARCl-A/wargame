@@ -73,7 +73,7 @@ Screens follow `screen.Screen` base; `native = True` means full-window layout.
 - **`widgets.py`/`theme.py` are legacy** — the app's original bespoke ramp.
   They still back untouched screens; don't add new usage. When a screen gets
   touched non-trivially, migrate it onto `gartok/ui/` instead of extending
-  the old system. Migrated so far: `menu_screen.py`, `map_screen.py`.
+  the old system. Migrated so far: `menu_screen.py`, `map_screen.py`, `guild_screen.py`, `squad_screen.py`.
 - A `ui/` component never reads module globals or hardcodes screen
   coordinates/fixed pixel widths for panel sizing — it takes its rect/data as
   parameters and sizes/lays out relative to those (proportional-with-clamp
