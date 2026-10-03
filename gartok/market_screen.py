@@ -499,14 +499,18 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         collected, touched = self._collect(picks)
         self._sel_qty = {}
         for name, qty in collected:
-            if zone == "hand":
-                member.give_to_hand(name)
-            elif zone == "offhand":
-                member.give_to_offhand(name)
-            elif zone == "tongue":
-                member.give_to_tongue(name)
-            elif zone == "armor":
-                member.give_to_armor(name)
+            if zone in ("hand", "offhand", "tongue", "armor"):
+                src_unit = fit[0]
+                if qty > 1:
+                    src_unit.give_to_pack(name, qty - 1)
+                if zone == "hand":
+                    member.give_to_hand(name)
+                elif zone == "offhand":
+                    member.give_to_offhand(name)
+                elif zone == "tongue":
+                    member.give_to_tongue(name)
+                elif zone == "armor":
+                    member.give_to_armor(name)
             else:
                 member.give_to_pack(name, qty)
                 

@@ -134,7 +134,16 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
                 return
             name = self._item_at(*fit)
             src = fit[0]
-            self._take(*fit)
+            taken_name, qty = self._take(*fit)
+            if qty > 1:
+                if src == "pool":
+                    idx = next((i for i, (n, q) in enumerate(self.pool) if n == taken_name), None)
+                    if idx is not None:
+                        self.pool[idx] = (taken_name, self.pool[idx][1] + (qty - 1))
+                    else:
+                        self.pool.append((taken_name, qty - 1))
+                else:
+                    src.give_to_pack(taken_name, qty - 1)
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
              "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
             if src != "pool":

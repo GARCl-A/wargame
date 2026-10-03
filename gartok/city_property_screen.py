@@ -123,7 +123,12 @@ class CityPropertyScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                 return
             name = self._item_at(*fit)
             src = fit[0]
-            self._take(*fit)
+            taken_name, qty = self._take(*fit)
+            if qty > 1:
+                if src == "house":
+                    self.guild.stash_in_property(taken_name, qty - 1)
+                else:
+                    src.give_to_pack(taken_name, qty - 1)
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
              "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
             if src != "house":

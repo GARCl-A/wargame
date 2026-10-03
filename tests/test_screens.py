@@ -1612,5 +1612,94 @@ def test_alert_screen_dismissal_methods():
     assert done_count == 4
 
 
+def test_market_screen_equipping_stack_preserves_remainder():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.market_screen import MarketScreen
+    from gartok.theme import Fonts
+    from gartok import items, world
+    pygame.init()
+
+    mnode = next(n for n in world.NODES if n.kind == "market")
+    shopper = Unit("player")
+    shopper.equipped_offhand = None
+    shopper._base_inventory = [items.create_instance("Torch", qty=5)]
+
+    ms = MarketScreen(Fonts(), None, [shopper], mnode, lambda: None)
+    ms.sel = [(shopper, 0)]
+    ms._drop_on_zone(shopper, "offhand")
+
+    assert shopper.equipped_offhand == "Torch"
+    assert len(shopper._base_inventory) == 1
+    assert shopper._base_inventory[0].qty == 4
+
+
+def test_loot_screen_equipping_stack_preserves_remainder():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.loot_screen import LootScreen
+    from gartok.theme import Fonts
+    from types import SimpleNamespace
+    pygame.init()
+
+    u = Unit("player")
+    u.equipped_offhand = None
+    guild = SimpleNamespace(roster=[u])
+    pool = ["Torch"] * 5
+
+    ls = LootScreen(Fonts(), guild, [u], pool, lambda: None)
+    ls.selected = [("pool", 0)]
+    ls._give_many(u, "offhand")
+
+    assert u.equipped_offhand == "Torch"
+    assert ls.pool == [("Torch", 4)]
+
+
+def test_bank_screen_equipping_stack_preserves_remainder():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.bank_screen import BankScreen
+    from gartok.theme import Fonts
+    from gartok.guild import Guild
+    pygame.init()
+
+    u = Unit("player")
+    u.equipped_offhand = None
+    guild = Guild([u])
+    guild.stash_in_bank("Torch", 5)
+
+    bs = BankScreen(Fonts(), guild, [u], lambda: None)
+    bs.selected = [("bank", 0)]
+    bs._give_many(u, "offhand")
+
+    assert u.equipped_offhand == "Torch"
+    assert len(guild.bank_items) == 1
+    assert guild.bank_items[0][1] == 4
+
+
+def test_city_property_screen_equipping_stack_preserves_remainder():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.city_property_screen import CityPropertyScreen
+    from gartok.theme import Fonts
+    from gartok.guild import Guild
+    pygame.init()
+
+    u = Unit("player")
+    u.equipped_offhand = None
+    guild = Guild([u])
+    guild.property_city_unlocked = True
+    guild.stash_in_property("Torch", 5)
+
+    cps = CityPropertyScreen(Fonts(), guild, [u], lambda: None)
+    cps.selected = [("house", 0)]
+    cps._give_many(u, "offhand")
+
+    assert u.equipped_offhand == "Torch"
+    assert len(guild.property_city_items) == 1
+    assert guild.property_city_items[0][1] == 4
+
+
+
 
 
