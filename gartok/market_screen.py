@@ -30,17 +30,15 @@ from .dragselect import DragSelectMixin
 from .packbox import LOCK_W, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, SURFACE_4, WARN, ellipsize, kg,
-                    panel, section, token_badge, text, tracked)
 from .ui import loadout_panel
 from .ui.tokens import T, mix
 from .ui.tokens import fonts as ui_fonts
 from .ui.inspector_panel import role_for
-from .ui.primitives import draw_button, caps, text as ui_text, hline
+from .ui.primitives import (draw_button, caps, text as ui_text, hline, ellipsize,
+                            format_tooltip, draw_tooltip)
 
 STOCK_W = 412
+MARGIN = T.S * 2
 
 
 class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
@@ -638,7 +636,6 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     # ------------------------------------------------------------------ #
 
     def draw(self, screen):
-        f = self.fonts
         F = self._ui_fonts()
         screen.fill(T.TABLE)
         self.tooltip = None
@@ -657,7 +654,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
         ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
         has_tut = self.tutorial_key() is not None
-        purse_x = screen.get_width() - MARGIN - (28 + SP2 if has_tut else 0)
+        purse_x = screen.get_width() - MARGIN - (28 + T.S if has_tut else 0)
         ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper", 
              (purse_x, MARGIN + 2), T.BRASS, right=True)
              
@@ -684,7 +681,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             draw_button(screen, F, dl_btn, "distribute load", mpos=self.mouse)
             self.buttons.append(("distribute", dl_btn))
             
-        body_top = top + 28 + SP2
+        body_top = top + 28 + T.S
         stock = pygame.Rect(MARGIN, body_top, STOCK_W, screen.get_height() - body_top - 72)
         self._draw_stock(screen, stock)
         
@@ -700,7 +697,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 label = names[0] if q == 1 else f"{names[0]} ×{q}"
             else:
                 label = names[0] if len(names) == 1 else f"{len(names)} items"
-            gr = pygame.Rect(gx + 12, gy + 6, F["body"].size(label)[0] + 2 * SP2, 20)
+            gr = pygame.Rect(gx + 12, gy + 6, F["body"].size(label)[0] + 2 * T.S, 20)
             pygame.draw.rect(screen, mix(T.BRASS, T.STEEL, .85), gr)
             pygame.draw.rect(screen, T.BRASS, gr, 1)
             ui_text(screen, F["body"], label, gr.center, T.TX, center=True)
@@ -709,16 +706,14 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             if not self.sel and r.collidepoint(self.mouse):
                 name = self._item_at(member, loc)
                 if name:
-                    from .theme import format_tooltip
                     t, d = items.item_tooltip(name)
-                    self.tooltip = format_tooltip(t, d, f)
+                    self.tooltip = format_tooltip(t, d, F)
                 break
 
         if getattr(self, "tooltip", None):
-            from .theme import draw_tooltip
-            draw_tooltip(screen, f.body_sm, self.tooltip, self.mouse)
+            draw_tooltip(screen, F, self.tooltip, self.mouse)
 
-        self.draw_sheet_modal(screen, f)
+        self.draw_sheet_modal(screen)
 
     def _draw_tabs(self, screen, rect):
         F = self._ui_fonts()
@@ -840,9 +835,8 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 pygame.draw.line(screen, faint, (price_x - prect_w - T.S - br_w, line_y), (price_x - prect_w - T.S, line_y), 1)
 
             if hov:
-                from .theme import format_tooltip
                 t, d = items.item_tooltip(name)
-                self.tooltip = format_tooltip(t, d, self.fonts)
+                self.tooltip = format_tooltip(t, d, F)
 
             self.stock_rows.append((r, name))
 
