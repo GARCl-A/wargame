@@ -199,11 +199,12 @@ game:
 - **Weapons and equipment**: damage, weight, price are set; **armor and shields
   are not** — the wargame designed a five-tier armor table 🟡.
 - **The effect of the racial abilities** (§7).
-- **Death**: the wargame defines falling / stabilizing / permadeath (Combat
+- **Death & Healing**: the wargame defines falling / stabilizing / permadeath (Combat
   section). HP is **persistent**: a survivor's current HP carries forward into
-  the next battle exactly as it was. There are no rest mechanics — wounds heal
-  only through natural recovery (not yet built), so a character who took a
-  beating stays beaten. Fatigue along the clock is also not yet built.
+  the next battle. Wounds heal via **natural rest**: every 8 hours of continuous,
+  uninterrupted rest (an idle group, not traveling or working) heals
+  $\max(1, \text{racial\_level} \times \text{CON mod})$ HP, provided the character is
+  well-fed (`unfed_days == 0`). A character who is hungry or starving cannot heal.
 
 ---
 
@@ -276,7 +277,10 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
     fumbles with no effect.
   - **Sleep** (level 1) — ranged (6 cells), `d20 + INT` vs the target's
     Mental Defense; a hit applies `Sleeping` (`−2 status` to AC). A race with
-    the **Sleep Immunity** ability (the Elf) is never affected.
+    the **Sleep Immunity** ability (the Elf) is never affected. The condition lasts
+    at most $\max(1, 10 - \text{CON mod} - \text{WIS mod})$ rounds, ticking down
+    at the end of each skipped turn. Sleep ends early if the target takes any damage
+    or an adjacent ally spends 1 AP on `Wake Up`.
   - **Light Globe** (level 0) — drop a light source ground object at a cell in range (6 cells).
   - **Floating Disk** (level 0) — conjures a magical floating platform at a cell
     in range (6 cells) at a chosen altitude (e.g. ground level z=0). Bridges

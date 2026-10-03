@@ -129,6 +129,44 @@ def test_elf_is_immune_to_sleep():
     assert not d.has_condition("sleeping")
 
 
+def test_sleep_duration_formula_and_expiration():
+    from gartok.conditions import Sleeping
+    batt, a, d = _melee_battle()
+    _caster(a, ["sleep"])
+    a.ap = 2
+    spell = actions.CastSpellAction("sleep")
+
+    expected_duration = max(1, 10 - d.mod_constitution - d.mod_wisdom)
+    with fixed_d20(20):
+        spell.execute(batt, a, d)
+    assert d.has_condition("sleeping")
+    cond = next(c for c in d.conditions if c.id == "sleeping")
+    assert cond.duration == expected_duration
+
+    # If duration is set to 1, taking a skipped turn should decrement and wake the target
+    cond.duration = 1
+    # Turn execution in battle:
+    # 1. start_turn
+    d.start_turn(batt.log)
+    assert d.has_condition("sleeping")
+    # 2. skipped turn -> end_turn
+    d.end_turn(batt.log)
+    assert not d.has_condition("sleeping")
+
+
+def test_sleep_wakes_on_damage():
+    batt, a, d = _melee_battle()
+    _caster(a, ["sleep"])
+    with fixed_d20(20):
+        actions.CastSpellAction("sleep").execute(batt, a, d)
+    assert d.has_condition("sleeping")
+
+    # Taking damage immediately wakes the sleeper
+    d.take_damage(1, batt.log)
+    assert not d.has_condition("sleeping")
+
+
+
 # --------------------------------------------------------------------------- #
 # ShareMagicAction (Sprite Initiate)                                          #
 # --------------------------------------------------------------------------- #

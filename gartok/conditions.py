@@ -60,5 +60,16 @@ class Demoralized(Condition):
 class Sleeping(Condition):
     id = "sleeping"
 
+    def __init__(self, duration=None):
+        self.duration = duration
+
     def ac_mods(self):
         return [(-2, "status", "Sleeping")]  # -2 AC while sleeping
+
+    def on_turn_end(self, unit, log):
+        if self.duration is not None:
+            self.duration -= 1
+            if self.duration <= 0:
+                log(f"{unit.name} stirs and wakes up.")
+                return True
+        return False

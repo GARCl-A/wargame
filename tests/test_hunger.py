@@ -244,3 +244,81 @@ def test_food_consumption_priority_oldest_then_cheapest():
     eaten = u._take_ration()
     assert len(u._base_inventory) == 1
     assert u._base_inventory[0] is p2
+
+
+# --------------------------------------------------------------------------- #
+# Natural rest healing                                                        #
+# --------------------------------------------------------------------------- #
+
+def test_natural_rest_healing_heals_when_idle_and_well_fed():
+    from gartok.guild import Guild
+    from gartok.group import Group
+    u = Unit("player")
+    u.set_track_level("racial", 2)
+    u.hp_max = 20
+    u.hp = 5
+    u.unfed_days = 0
+    expected_heal = max(1, u.racial_level * u.mod_constitution)
+
+    g = Group([u])
+    guild = Guild(None, groups=[g])
+
+    # 8 hours of rest while idle
+    events, _ = guild.pass_time(8)
+    assert u.hp == 5 + expected_heal
+    assert any(f"rests and recovers {expected_heal} HP" in e for e in events)
+
+
+def test_natural_rest_healing_does_not_heal_when_hungry():
+    from gartok.guild import Guild
+    from gartok.group import Group
+    u = Unit("player")
+    u.hp_max = 20
+    u.hp = 5
+    u.unfed_days = 1  # hungry
+
+    g = Group([u])
+    guild = Guild(None, groups=[g])
+
+    # 8 hours of rest
+    events, _ = guild.pass_time(8)
+    assert u.hp == 5
+    assert not any("rests and recovers" in e for e in events)
+
+
+def test_natural_rest_healing_does_not_heal_when_group_busy():
+    from gartok.guild import Guild
+    from gartok.group import Group
+    from gartok import orders
+    u = Unit("player")
+    u.hp_max = 20
+    u.hp = 5
+    u.unfed_days = 0
+
+    g = Group([u], node="city")
+    g.order = orders.travel(g, "market")
+    assert g.busy
+    guild = Guild(None, groups=[g])
+
+    # 8 hours with busy order
+    events, _ = guild.pass_time(8)
+    assert u.hp == 5
+    assert not any("rests and recovers" in e for e in events)
+
+
+def test_natural_rest_healing_caps_at_hp_max():
+    from gartok.guild import Guild
+    from gartok.group import Group
+    u = Unit("player")
+    u.set_track_level("racial", 3)
+    u.hp_max = 10
+    u.hp = 9
+    u.unfed_days = 0
+
+    g = Group([u])
+    guild = Guild(None, groups=[g])
+
+    guild.pass_time(8)
+    assert u.hp == 10
+    assert u.consecutive_rest_hours == 0
+

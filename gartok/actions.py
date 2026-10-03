@@ -1483,8 +1483,9 @@ class SleepAction(SpellAction):
         if atk == 1:
             battle.log(desc + " -> Critical miss!")
         elif atk == 20 or hit_score >= md:
-            target.add_condition(Sleeping())
-            battle.log(desc + (" -> CRITICAL HIT!" if atk == 20 else " -> lands.") + f" {target.name} falls asleep!")
+            duration = max(1, 10 - target.mod_constitution - target.mod_wisdom)
+            target.add_condition(Sleeping(duration=duration))
+            battle.log(desc + (" -> CRITICAL HIT!" if atk == 20 else " -> lands.") + f" {target.name} falls asleep ({duration} rds)!")
         else:
             battle.log(desc + " -> resisted.")
 

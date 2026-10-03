@@ -559,8 +559,8 @@ class Guild:
                                 else:
                                     u.treated = False
                             
-                            if u.hp < u.hp_max:
-                                heal = max(1, u.racial_level + u.mod_constitution)
+                            if u.hp < u.hp_max and u.unfed_days == 0:
+                                heal = max(1, u.racial_level * u.mod_constitution)
                                 u.hp = min(u.hp_max, u.hp + heal)
                                 events.append(f"{u.name} rests and recovers {heal} HP.")
                                 
