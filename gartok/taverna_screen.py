@@ -1,4 +1,4 @@
-"""Taverna: talk a stranger into joining the guild.
+"""Taverna: talk a stranger into joining the guild, or rent quiet rooms to study.
 
 The strangers drinking here are the guild's weekly pool (`recruit.refresh_pool`
 -- same faces every visit until seven days pass, then a fresh set). Pick one,
@@ -10,40 +10,40 @@ Win and they sign on (bound to the recruiter via `recruited_by`, and out of the
 pool). Lose and that recruiter is barred from pitching that same stranger until
 the pool turns over -- another member can still try.
 
-No money changes hands: a signing bonus would just land in the recruit's own
-pack. `on_done` returns to the map (which autosaves).
+The study tab lets the party rent rooms for the garrison job "study". Any member
+with a study target (scroll or dictionary carried by the party) accumulates
+daily progress toward learning new spells or languages.
+
+Modernized to the `gartok/ui/` design system.
 """
 
 import pygame
 
-from . import economy, orders, recruit, magic
+from . import economy, orders, recruit, magic, data
 from .data import alignment_distance
 from .screen import Screen
-from .theme import (ACCENT, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SURFACE_1,
-                    SURFACE_2, SURFACE_3, WARN, panel, section,
-                    token_badge, text, tracked, wrap_lines)
-from .ui.tokens import T
-from .ui.combat_card import draw_combat_card, draw_party_row
-from .widgets import ButtonsMixin, footer_bar
-
-CANDIDATES = 3          # layout width; the live pool may hold fewer after a hire
+from .ui.tokens import T, mix, fonts as ui_fonts
+from .ui.primitives import (header, footer_bar, text, caps, draw_button,
+                            panel, hline, token_badge, draw_tooltip,
+                            format_tooltip, modal_card, FOOTER_H)
 
 
-class TavernaScreen(ButtonsMixin, Screen):
+class TavernaScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None):
         super().__init__()
         self.fonts = fonts
+        self._F = fonts if (isinstance(fonts, dict) and "body" in fonts) else ui_fonts()
         self.guild = guild
-        self.party = party
+        self.party = list(party)
         self.group = group                    # backing Group, for the rooms/study order (None if not applicable)
         self.node = node
         self.on_done = on_done
         self.candidates = list(candidates) if candidates is not None else recruit.refresh_pool(guild)
         self.title = title or "TAVERN"
-        self.sel = None                       # index of the stranger being pitched, or None
+        self.sel = 0 if self.candidates else None # index of selected candidate
+        self.selected_recruiter = self.party[0] if self.party else None
         self.last = {}                         # candidate uid -> (recruit.Pitch, member) of the last try
         self.notice = None
         self.cand_cards = []                 # [(rect, index)]
@@ -51,12 +51,30 @@ class TavernaScreen(ButtonsMixin, Screen):
         self.buttons = []                   # [(key, rect)]
         self._hot = False
         self.tab = "recruits"               # "recruits" or "rooms"
+        self.study_modal_member = None      # Unit for whom we are picking a study target
+        self.modal_buttons = []             # [(key, rect, action_arg)]
+        self._tooltips = []                 # [(rect, text)]
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "taverna"
+
+    def handle_escape(self):
+        if self.study_modal_member is not None:
+            self.study_modal_member = None
+            return True
+        self.on_done()
+        return True
+
+    # ------------------------------------------------------------------ #
+    def add_button(self, surf, rect, key, label, enabled=True, primary=False, danger=False):
+        self.buttons.append((key, rect))
+        if rect.collidepoint(self.mouse):
+            self._hot = True
+        return draw_button(surf, self._F, rect, label, primary=primary, enabled=enabled,
+                           danger=danger, mpos=self.mouse)
 
     # ------------------------------------------------------------------ #
     def _eligible(self, cand):
@@ -81,41 +99,80 @@ class TavernaScreen(ButtonsMixin, Screen):
         return max(opts, key=lambda t: t[1]) if opts else None
 
     # ------------------------------------------------------------------ #
-    def _click(self, px):
-        for key, rect in self.buttons:
-            if rect.collidepoint(px):
-                if key == "done":
-                    self.on_done()
-                elif key == "tab_recruits":
-                    self.tab = "recruits"
-                    self.sel = None
-                elif key == "tab_rooms":
-                    self.tab = "rooms"
-                    self.sel = None
-                elif key == "rent_study" and self.group is not None:
-                    self.group.order = orders.garrison("study")
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            px = event.pos
+
+            # If study modal is open, modal intercepts all clicks
+            if self.study_modal_member is not None:
+                for key, rect, arg in self.modal_buttons:
+                    if rect.collidepoint(px):
+                        if key == "set_target":
+                            self.study_modal_member.study_target = arg["id"]
+                            self.study_modal_member.study_progress = 0
+                            self.notice = f"{self.study_modal_member.name} begins studying {arg['name']}."
+                            self.study_modal_member = None
+                        elif key == "clear_target":
+                            self.study_modal_member.study_target = None
+                            self.study_modal_member.study_progress = 0
+                            self.notice = f"{self.study_modal_member.name} stopped studying."
+                            self.study_modal_member = None
+                        elif key == "cancel":
+                            self.study_modal_member = None
+                        return
+                # Clicking anywhere outside closes the modal
+                self.study_modal_member = None
                 return
 
-        if self.tab == "recruits":
-            if self.sel is None:
+            # Check general buttons
+            for key, rect in self.buttons:
+                if rect.collidepoint(px):
+                    if key == "done":
+                        self.on_done()
+                    elif key == "tab_recruits":
+                        self.tab = "recruits"
+                    elif key == "tab_rooms":
+                        self.tab = "rooms"
+                    elif key == "rent_study" and self.group is not None:
+                        self.group.order = orders.garrison("study")
+                        self.notice = "Party rented quiet rooms and begins studying daily."
+                    elif key == "cancel_study" and self.group is not None:
+                        self.group.order = None
+                        self.notice = "Study order cancelled. Party is now idle."
+                    elif key == "convince" and self.selected_recruiter is not None:
+                        self._pitch(self.selected_recruiter)
+                    elif key.startswith("choose_target_"):
+                        idx = int(key.split("_")[-1])
+                        self.study_modal_member = self.party[idx]
+                    elif key.startswith("stop_study_"):
+                        idx = int(key.split("_")[-1])
+                        m = self.party[idx]
+                        m.study_target = None
+                        m.study_progress = 0
+                        self.notice = f"{m.name} stopped studying."
+                    return
+
+            # Candidate card click in recruit tab
+            if self.tab == "recruits":
                 for rect, i in self.cand_cards:
                     if rect.collidepoint(px):
                         self.sel = i
                         self.notice = None
+                        cand = self.candidates[i]
+                        best = self._best(cand)
+                        if best is not None and not (self.selected_recruiter and self.selected_recruiter in self._eligible(cand)):
+                            self.selected_recruiter = best[0]
                         return
-                return
 
-            for rect, member in self.party_cards:
-                if rect.collidepoint(px):
-                    self._pitch(member)
-                    return
-            for rect, i in self.cand_cards:        # click another stranger: switch the pitch
-                if rect.collidepoint(px):
-                    self.sel = i
-                    return
-            self.sel = None                       # clicked nowhere useful: cancel
+                for rect, member in self.party_cards:
+                    if rect.collidepoint(px):
+                        self.selected_recruiter = member
+                        return
 
+    # ------------------------------------------------------------------ #
     def _pitch(self, member):
+        if self.sel is None or self.sel >= len(self.candidates):
+            return
         cand = self.candidates[self.sel]
         if not recruit.can_pitch(member, cand):
             self.notice = f"{member.name} and {cand.name} share no language."
@@ -130,253 +187,450 @@ class TavernaScreen(ButtonsMixin, Screen):
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
-            if cand in self.candidates:            # enlist() may already have removed it,
-                self.candidates.remove(cand)       # when self.candidates IS guild.taverna_pool
-            self.notice = f"{cand.name} signs with the guild (recruited by {member.name})."
+            if cand in self.candidates:
+                self.candidates.remove(cand)
+            self.notice = f"{cand.name} signs with the guild (recruited by {member.name})!"
+            if self.candidates:
+                self.sel = min(self.sel, len(self.candidates) - 1)
+            else:
+                self.sel = None
         else:
             recruit.bar(self.guild, cand, member)
             self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
-        self.sel = None
+
+    # ------------------------------------------------------------------ #
+    def _available_study_options(self, student):
+        """Finds all scrolls and dictionaries carried by any member in the party/group
+        that `student` can study."""
+        options = []
+        seen = set()
+        members = self.group.members if self.group is not None else self.party
+        for m in members:
+            for item in m.inventory:
+                spell = magic.spell_for_scroll(item)
+                if spell and student.magic_source and spell.id not in student.spells_known:
+                    if spell.id not in seen:
+                        seen.add(spell.id)
+                        pts = magic.points_to_learn(spell.level)
+                        options.append({
+                            "kind": "spell",
+                            "id": spell.id,
+                            "name": f"Scroll of {spell.name}",
+                            "holder": m.name,
+                            "level": spell.level,
+                            "desc": f"Spell Lvl {spell.level} ({spell.sources}) · {pts} pts to master · carried by {m.name}"
+                        })
+                lang = magic.language_for_dictionary(item)
+                if lang and lang.name not in student.languages:
+                    if lang.name not in seen:
+                        seen.add(lang.name)
+                        pts = magic.points_to_learn(0)
+                        options.append({
+                            "kind": "lang",
+                            "id": lang.name,
+                            "name": f"Dictionary of {lang.name}",
+                            "holder": m.name,
+                            "level": 0,
+                            "desc": f"Language · {pts} pts to learn · carried by {m.name}"
+                        })
+        return options
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
-        screen.fill((18, 19, 24))
-        self.cand_cards = []
-        self.party_cards = []
-        self._reset_buttons()
+        F = self._F
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
+        self.buttons.clear()
+        self.cand_cards.clear()
+        self.party_cards.clear()
+        self._tooltips.clear()
+        self._hot = False
 
-        text(screen, self.title, f.title, INK, (MARGIN, MARGIN - 2))
-
-        is_tavern = self.title == "TAVERN"
+        is_tavern = (self.title == "TAVERN")
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
+
         if self.tab == "recruits":
-            if self.sel is not None:
-                cand = self.candidates[self.sel]
-                sub, col = (f"pitching {cand.name}  ·  click who from the party speaks  ·  "
-                            "click outside to cancel", ACCENT)
-            else:
-                sub, col = (f"guild of {len(self.guild.roster)}  ·  size penalty "
-                            f"-{recruit.size_penalty(len(self.guild.roster))}", INK_DIM)
-                if is_tavern:
-                    sub += f"  ·  new faces in {days_left} day(s)"
+            sub = f"Guild size {len(self.guild.roster)} · crowd penalty -{recruit.size_penalty(len(self.guild.roster))}"
+            if is_tavern:
+                sub += f" · new faces in {days_left} day(s)"
         else:
-            sub, col = ("rent a quiet room for the day  ·  anyone with a study target will make progress", INK_DIM)
-        
-        text(screen, sub, f.body, col, (MARGIN, MARGIN + 36))
+            sub = "Rent a quiet room for the day · anyone with a study target will make daily progress"
 
-        y = MARGIN + 64
-        if is_tavern:
-            # Tabs
-            tr_rect = pygame.Rect(MARGIN, y, 120, 30)
-            tr_hov = tr_rect.collidepoint(self.mouse)
-            tr_on = self.tab == "recruits"
-            panel(screen, tr_rect, fill=SURFACE_3 if tr_on else (SURFACE_2 if tr_hov else SURFACE_1),
-                  border=ACCENT if tr_on else LINE, width=2 if tr_on else 1, radius=4)
-            text(screen, "RECRUITS", f.label, ACCENT if tr_on else INK_DIM, tr_rect.center, center=True)
-            self.buttons.append(("tab_recruits", tr_rect))
-    
-            room_rect = pygame.Rect(MARGIN + 130, y, 120, 30)
-            rm_hov = room_rect.collidepoint(self.mouse)
-            rm_on = self.tab == "rooms"
-            panel(screen, room_rect, fill=SURFACE_3 if rm_on else (SURFACE_2 if rm_hov else SURFACE_1),
-                  border=ACCENT if rm_on else LINE, width=2 if rm_on else 1, radius=4)
-            text(screen, "ROOMS", f.label, ACCENT if rm_on else INK_DIM, room_rect.center, center=True)
-            self.buttons.append(("tab_rooms", room_rect))
-            
-            y += 45
+        tabs_list = ["RECRUIT", "STUDY"] if is_tavern else []
+        active_tab_label = "RECRUIT" if self.tab == "recruits" else "STUDY"
+        header_rect = pygame.Rect(0, 0, W, 72)
+        tab_hits = header(screen, F, header_rect, self.title if not is_tavern else "THE TAVERN",
+                          sub, tabs_list, active_tab_label, mpos=self.mouse, has_tutorial=True)
+
+        for tab_name, r in tab_hits.items():
+            if tab_name == "RECRUIT" and self.tab != "recruits":
+                self.buttons.append(("tab_recruits", r))
+            elif tab_name == "STUDY" and self.tab != "rooms":
+                self.buttons.append(("tab_rooms", r))
+
+        content_top = 88
+        content_bottom = H - FOOTER_H - 12
+        content_h = content_bottom - content_top
 
         if self.tab == "recruits":
-            self._draw_recruits(screen, y)
+            self._draw_recruits_master_detail(screen, content_top, content_h)
         elif self.tab == "rooms":
-            self._draw_rooms(screen, y)
+            self._draw_study_hub(screen, content_top, content_h)
 
-        self._draw_footer(screen)
+        # Study target modal if active
+        if self.study_modal_member is not None:
+            self._draw_study_modal(screen)
 
-    def _draw_recruits(self, screen, top):
-        f = self.fonts
-        party_h = 120
-        gap = SP3
-        cand_h = screen.get_height() - top - party_h - gap - 80
-        cw = (screen.get_width() - 2 * MARGIN - (CANDIDATES - 1) * gap) // CANDIDATES
+        # Footer
+        self._draw_footer(screen, F)
 
-        if not self.candidates:
-            text(screen, "No one looking for work right now. Come back when the crowd changes.",
-                 f.body, INK_DIM, (MARGIN, top + 20))
-        for i, cand in enumerate(self.candidates):
-            rect = pygame.Rect(MARGIN + i * (cw + gap), top, cw, cand_h)
-            self._draw_candidate(screen, rect, i, cand)
-            self.cand_cards.append((rect, i))
-
-        py = top + cand_h + gap
-        self._draw_party(screen, pygame.Rect(MARGIN, py, screen.get_width() - 2 * MARGIN, party_h))
-
-    def _draw_rooms(self, screen, top):
-        f = self.fonts
-
-        W, H = screen.get_width(), screen.get_height()
-        area = pygame.Rect(MARGIN, top, W - 2 * MARGIN, H - top - 80)
-        panel(screen, area, fill=SURFACE_1, border=LINE, radius=RADIUS)
-
-        cost = economy.TAVERN_STUDY_COST_PER_DAY
-        total_cost = len(self.party) * cost
-
-        y = area.y + SP3
-        text(screen, f"cost: {cost} copper per member / day (total: {total_cost} copper)", f.body, INK, (area.x + SP3, y))
-        y += 30
-
-        text(screen, "STUDY TARGETS:", f.label, INFO, (area.x + SP3, y))
-        y += 20
-
-        studying_count = 0
-        for m in self.party:
-            if m.study_target:
-                studying_count += 1
-                text(screen, f"{m.name}", f.body_bd, INK, (area.x + SP3, y))
-                text(screen, f"studying {m.study_target}", f.body, ACCENT, (area.x + SP3 + 120, y))
-                
-                target_level = 0
-                if m.study_target in magic.SPELLS:
-                    target_level = magic.SPELLS[m.study_target].level
-                total_needed = magic.points_to_learn(target_level)
-                
-                text(screen, f"{m.study_progress} / {total_needed} points", f.mono_sm, INK_DIM, (area.x + SP3 + 320, y))
-                y += 24
-
-        if studying_count == 0:
-            text(screen, "no one has a study target set (select a scroll or dictionary in the character sheet)",
-                 f.body, INK_FAINT, (area.x + SP3, y))
-            y += 24
-
-        y += SP3
-        if self.group is None:
-            text(screen, "this party isn't garrisoned here -- no rooms to rent.",
-                 f.body, INK_FAINT, (area.x + SP3, y))
-            return
-
-        btn_rect = pygame.Rect(area.x + SP3, y, 200, 36)
-        is_studying = (self.group.order is not None and self.group.order.kind == "garrison"
-                       and self.group.order.job == "study")
-
-        if is_studying:
-            panel(screen, btn_rect, fill=SURFACE_3, border=OK, width=2, radius=RADIUS)
-            text(screen, "STUDYING", f.body_bd, OK, btn_rect.center, center=True)
-        else:
-            self.add_button(screen, btn_rect, "rent_study", "RENT ROOMS (STUDY)")
-
-    # ------------------------------------------------------------------ #
-    def _draw_candidate(self, screen, rect, i, cand):
-        f = self.fonts
-        last = self.last.get(cand.uid)
-        picking = self.sel == i
-        hov = rect.collidepoint(self.mouse) and self.sel is None
-        
-        ch = {
-            "name": cand.name,
-            "race": cand.race["name"],
-            "occ": cand.occupation["name"],
-            "hp": cand.hp_max,
-            "hp_max": cand.hp_max,
-            "ac": cand.ac,
-            "spd": cand.speed,
-            "weapon": cand.weapon_name or "unarmed",
-            "dmg": ""
-        }
-        
-        extra = [
-            ("RESISTANCE", f"CHA {cand.mod_charisma:+}", T.BRASS),
-            ("SPEAKS", ", ".join(cand.languages), T.TX_MUTED),
-            ("ABILITY", cand.ability.name, T.TX),
-        ]
-        
-        for ln in wrap_lines([cand.ability.effect], f.body_sm, rect.w - T.S * 6)[:3]:
-            extra.append((None, ln, T.TX_FAINT))
-            
-        if last is not None:
-            pitch, who = last
-            extra.append(("LAST ATTEMPT", f"{who.name}: {pitch.recruiter_roll} + mods = {pitch.recruiter_total}", T.GREEN if pitch.ok else T.BLOOD))
-            extra.append((None, f"vs resistance {pitch.candidate_total} ({pitch.candidate_roll} + CHA)", T.TX_MUTED))
-            for val, label in pitch.modifiers:
-                extra.append((None, f"{val:+}  {label}", T.BLOOD))
-                
-        best = self._best(cand)
-        if best is not None:
-            m, net = best
-            extra.append(("PITCH", f"{m.name}  ·  CHA check {net:+}", T.GREEN))
-            extra.append((None, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})", T.TX_FAINT))
-        else:
-            reason = recruit.pitch_block_reason(self.guild, self.party, cand)
-            extra.append(("PITCH", reason or "cannot recruit", T.BLOOD))
-            
-        mark = ("CLICK TO PITCH" if best is not None else "CLICK TO INSPECT") if self.sel is None else "CLICK A PARTY MEMBER"
-        
-        tooltips, _ = draw_combat_card(screen, rect, ch, action=mark, hovered=hov, selected=picking, extra_lines=extra)
-        
-        # Tooltip for attributes
-        for t_rect, t_text in tooltips:
+        # Draw any hovering tooltip
+        for t_rect, t_text in self._tooltips:
             if t_rect.collidepoint(self.mouse):
-                tw, th = f.body_sm.size(t_text)
-                tt_rect = pygame.Rect(self.mouse[0] + 12, self.mouse[1] + 12, tw + 16, th + 8)
-                panel(screen, tt_rect, fill=SURFACE_1, border=LINE_SOFT, radius=2)
-                text(screen, t_text, f.body_sm, INK, (tt_rect.x + 8, tt_rect.y + 4))
+                draw_tooltip(screen, F, t_text, self.mouse)
                 break
 
     # ------------------------------------------------------------------ #
-    def _draw_party(self, screen, area):
-        f = self.fonts
-        tracked(screen, "YOUR PARTY", f.label, INFO, (area.x, area.y - 16))
-        panel(screen, area, fill=SURFACE_2, border=LINE_SOFT, radius=RADIUS)
-        n = max(1, len(self.party))
-        gap = SP2
-        cw = (area.w - 2 * SP3 - (n - 1) * gap) // n
-        for i, m in enumerate(self.party):
-            r = pygame.Rect(area.x + SP3 + i * (cw + gap), area.y + SP2, cw, area.h - 2 * SP2)
-            self._draw_party_card(screen, r, m)
-            self.party_cards.append((r, m))
+    def _draw_recruits_master_detail(self, screen, top, height):
+        F = self._F
+        W, H = screen.get_size()
+        pad = T.S * 3
 
-    def _draw_party_card(self, screen, r, m):
-        f = self.fonts
-        cand = self.candidates[self.sel] if self.sel is not None else None
-        free = recruit.slots_free(self.guild, m)
-        state = None
-        
-        if cand is not None:
+        # Left panel: candidate list
+        left_w = 420
+        left_rect = pygame.Rect(pad, top, left_w, height)
+        panel(screen, left_rect)
+        caps(screen, F["micro"], f"CANDIDATES IN THE TAVERN ({len(self.candidates)})",
+             (left_rect.x + 16, left_rect.y + 12), T.TX_MUTED)
+
+        if not self.candidates:
+            text(screen, F["body_sm"], "No one looking for work right now.\nCome back when the crowd changes.",
+                 (left_rect.x + 16, left_rect.y + 40), T.TX_FAINT)
+        else:
+            cy = left_rect.y + 36
+            card_h = 112
+            for i, cand in enumerate(self.candidates):
+                cr = pygame.Rect(left_rect.x + 12, cy, left_w - 24, card_h)
+                self.cand_cards.append((cr, i))
+                sel = (i == self.sel)
+                hov = cr.collidepoint(self.mouse)
+                if hov:
+                    self._hot = True
+
+                bg = mix(T.BRASS, T.TABLE, 0.9) if sel else T.STEEL if hov else T.TABLE
+                border = T.BRASS if sel else T.STEEL_HI if hov else T.STEEL_LINE
+                pygame.draw.rect(screen, bg, cr, border_radius=4)
+                pygame.draw.rect(screen, border, cr, 2 if sel else 1, border_radius=4)
+
+                # Candidate token
+                tok_c = (cr.x + 28, cr.y + 36)
+                token_badge(screen, F, tok_c, cand, r=18)
+
+                tx = cr.x + 58
+                text(screen, F["bodyb"], cand.name, (tx, cr.y + 10), T.TX)
+                caps(screen, F["micro"], f"{cand.race['name']} · {cand.occupation['name']}",
+                     (tx, cr.y + 30), T.TX_MUTED)
+                text(screen, F["body_sm"], f"Resists CHA {cand.mod_charisma:+} · Speaks {', '.join(cand.languages)}",
+                     (cr.x + 12, cr.y + 58), T.TX_FAINT)
+
+                # Best pitch or blocked status
+                best = self._best(cand)
+                if cand.uid in self.last:
+                    pitch, who = self.last[cand.uid]
+                    st_col = T.GREEN if pitch.ok else T.BLOOD
+                    st_label = "ENLISTED" if pitch.ok else "REJECTED THIS WEEK"
+                elif best is not None:
+                    st_label = f"PITCH OPEN ({best[0].name})"
+                    st_col = T.GREEN
+                else:
+                    st_label = "CANNOT PITCH"
+                    st_col = T.BLOOD
+
+                caps(screen, F["microb"], st_label, (cr.x + 12, cr.bottom - 18), st_col)
+
+                badge_label = "SELECTED" if sel else "INSPECT"
+                b_col = T.BRASS if sel else T.TX_MUTED
+                caps(screen, F["microb"], badge_label, (cr.right - 12, cr.bottom - 18), b_col, right=True)
+
+                cy += card_h + 10
+
+        # Right panel: dossier & recruiter selection
+        right_x = left_rect.right + 16
+        right_w = W - pad - right_x
+        right_rect = pygame.Rect(right_x, top, right_w, height)
+        panel(screen, right_rect)
+
+        if self.sel is None or self.sel >= len(self.candidates):
+            text(screen, F["body"], "Select a candidate from the left to view their dossier and make a pitch.",
+                 (right_rect.x + 24, right_rect.y + 24), T.TX_FAINT)
+            return
+
+        cand = self.candidates[self.sel]
+        caps(screen, F["micro"], "SELECTED CANDIDATE DOSSIER", (right_rect.x + 20, right_rect.y + 12), T.TX_MUTED)
+
+        # Candidate banner
+        cx = right_rect.x + 20
+        cy = right_rect.y + 36
+        token_badge(screen, F, (cx + 30, cy + 30), cand, r=28)
+
+        tx = cx + 72
+        text(screen, F["head"], cand.name, (tx, cy), T.TX)
+        caps(screen, F["micro"], f"{cand.race['name'].upper()} · {cand.occupation['name'].upper()} · ALIGNMENT: {cand.alignment.upper()}",
+             (tx, cy + 28), T.BRASS)
+
+        cy += 70
+        vit_str = f"HP {cand.hp_max}   AC {cand.ac}   Speed {cand.speed} squares   Attack: {cand.weapon_name or 'Unarmed'}"
+        text(screen, F["bodyb"], vit_str, (cx, cy), T.TX)
+        cy += 24
+        text(screen, F["body_sm"], f"Racial Ability: {cand.ability.name} — {cand.ability.effect}", (cx, cy), T.TX_MUTED)
+        cy += 32
+
+        hline(screen, right_rect.x + 20, right_rect.right - 20, cy)
+        cy += 14
+
+        # Recruiter list
+        caps(screen, F["micro"], "SELECT WHO MAKES THE PITCH (GUILD RECRUITER):", (cx, cy), T.TX_MUTED)
+        cy += 20
+
+        rw = right_w - 40
+        for m in self.party:
+            mr = pygame.Rect(cx, cy, rw, 56)
+            self.party_cards.append((mr, m))
+            is_recruiter = (self.selected_recruiter == m)
+            m_hov = mr.collidepoint(self.mouse)
+            if m_hov:
+                self._hot = True
+
+            rbg = mix(T.BRASS, T.TABLE, 0.9) if is_recruiter else T.STEEL if m_hov else T.TABLE
+            rborder = T.BRASS if is_recruiter else T.STEEL_HI if m_hov else T.STEEL_LINE
+            pygame.draw.rect(screen, rbg, mr, border_radius=4)
+            pygame.draw.rect(screen, rborder, mr, 2 if is_recruiter else 1, border_radius=4)
+
+            # Recruiter token
+            token_badge(screen, F, (mr.x + 26, mr.centery), m, r=16)
+
+            rtx = mr.x + 52
+            text(screen, F["bodyb"], m.name, (rtx, mr.y + 8), T.TX)
+
+            free_slots = recruit.slots_free(self.guild, m)
+            slot_col = T.BLOOD if free_slots <= 0 else T.TX_MUTED
+            caps(screen, F["micro"], f"CHA {m.mod_charisma:+} · Speaks: {', '.join(m.languages)}",
+                 (rtx, mr.y + 30), T.TX_MUTED)
+
+            # Eligibility / Odds
             if recruit.barred(self.guild, cand, m):
-                state = ("TRIED", T.BLOOD)
+                cond_text, cond_col = "ALREADY TRIED THIS WEEK", T.BLOOD
             elif not recruit.can_pitch(m, cand):
-                state = ("NO LANGUAGE", T.BLOOD)
-            elif free <= 0:
-                state = ("FULL", T.BLOOD)
+                cond_text, cond_col = "NO SHARED LANGUAGE", T.BLOOD
+            elif free_slots <= 0:
+                cond_text, cond_col = "FULL CAPACITY (0 SLOTS)", T.BLOOD
             else:
-                state = ("CAN SPEAK", T.GREEN)
-                
-        hov = r.collidepoint(self.mouse) and self.sel is not None
-        
-        ch = {
-            "name": m.name,
-            "cha": m.mod_charisma,
-            "langs": m.languages,
-            "free": free
-        }
-        
-        draw_party_row(screen, r, ch, state=state, hovered=hov)
-        
-        if r.collidepoint(self.mouse):
-            cap = recruit.capacity(self.guild, m)
-            used = recruit.slots_used(self.guild, m)
-            calc_str = "Cap: 1 (base)"
-            if m.mod_charisma != 0: calc_str += f" {m.mod_charisma:+} (CHA)"
-            if m is self.guild.leader: calc_str += f" + {m.racial_level} (ldr)"
-            calc_str += f" = {cap}  |  Used: {used}"
-            
-            tw, th = f.body_sm.size(calc_str)
-            tt_rect = pygame.Rect(self.mouse[0] + 12, self.mouse[1] + 12, tw + 16, th + 8)
-            panel(screen, tt_rect, fill=SURFACE_1, border=LINE_SOFT, radius=2)
-            text(screen, calc_str, f.body_sm, INK, (tt_rect.x + 8, tt_rect.y + 4))
+                raw_dist = alignment_distance(m.alignment, cand.alignment)
+                dist = max(0, raw_dist - int(m.talent_bonus("align_distance_reduction")))
+                pen = recruit.size_penalty(len(self.guild.roster))
+                net = m.mod_charisma - recruit.ALIGNMENT_PENALTY * dist - pen + m.talent_bonus("recruit_cha")
+                cond_text = f"PITCH: 1d20{net:+} vs 1d20{cand.mod_charisma:+}"
+                cond_col = T.GREEN
+
+            caps(screen, F["microb"], cond_text, (mr.right - 14, mr.centery - 6), cond_col, right=True)
+            cy += 64
+
+        # Action Pitch Button
+        can_pitch = False
+        if self.selected_recruiter is not None:
+            can_pitch = (recruit.can_pitch(self.selected_recruiter, cand)
+                         and not recruit.barred(self.guild, cand, self.selected_recruiter)
+                         and recruit.slots_free(self.guild, self.selected_recruiter) > 0)
+
+        cy += 8
+        btn_rect = pygame.Rect(cx, cy, rw, 42)
+        btn_label = "CONVINCE TO JOIN GUILD (ROLL CHARISMA)"
+        if self.selected_recruiter is not None and not can_pitch:
+            if recruit.barred(self.guild, cand, self.selected_recruiter):
+                btn_label = "RECRUITER CANNOT PITCH (ALREADY TRIED)"
+            elif not recruit.can_pitch(self.selected_recruiter, cand):
+                btn_label = "RECRUITER CANNOT PITCH (NO COMMON LANGUAGE)"
+            elif recruit.slots_free(self.guild, self.selected_recruiter) <= 0:
+                btn_label = "RECRUITER CANNOT PITCH (MAX FOLLOWERS)"
+
+        self.add_button(screen, btn_rect, "convince", btn_label, primary=True, enabled=can_pitch)
 
     # ------------------------------------------------------------------ #
-    def _draw_footer(self, screen):
-        col = OK if (self.notice and "signs" in self.notice) else INFO
+    def _draw_study_hub(self, screen, top, height):
+        F = self._F
+        W, H = screen.get_size()
+        pad = T.S * 3
+
+        area = pygame.Rect(pad, top, W - 2 * pad, height)
+        panel(screen, area)
+
+        # Header area: Garrison order status and room cost
+        cost = economy.TAVERN_STUDY_COST_PER_DAY
+        total_cost = len(self.party) * cost
+
+        caps(screen, F["micro"], "ROOMS & STUDY GARRISON", (area.x + 20, area.y + 14), T.TX_MUTED)
+
+        cx = area.x + 20
+        cy = area.y + 36
+        text(screen, F["bodyb"], f"Daily Study Rent: {cost} copper per member ({total_cost} copper total per day)", (cx, cy), T.TX)
+        text(screen, F["body_sm"], "Each member with a study target rolls daily progress using their Intelligence modifier.",
+             (cx, cy + 22), T.TX_MUTED)
+
+        # Rent button / Status
+        btn_w = 260
+        btn_r = pygame.Rect(area.right - 20 - btn_w, area.y + 28, btn_w, 38)
+        if self.group is None:
+            caps(screen, F["micro"], "PARTY NOT GARRISONED HERE", (btn_r.right, btn_r.centery - 6), T.TX_FAINT, right=True)
+        else:
+            is_studying = (self.group.order is not None and self.group.order.kind == "garrison"
+                           and self.group.order.job == "study")
+            if is_studying:
+                caps(screen, F["microb"], "CURRENTLY STUDYING", (btn_r.x - 16, btn_r.centery - 6), T.GREEN, right=True)
+                self.add_button(screen, btn_r, "cancel_study", "CANCEL STUDY ORDER", primary=False)
+            else:
+                self.add_button(screen, btn_r, "rent_study", "RENT ROOMS (STUDY)", primary=True)
+
+        cy += 60
+        hline(screen, area.x + 20, area.right - 20, cy)
+        cy += 16
+
+        # Party roster study cards
+        caps(screen, F["micro"], "PARTY MEMBERS STUDY ROSTER", (cx, cy), T.TX_MUTED)
+        cy += 20
+
+        rw = area.w - 40
+        card_h = 76
+        for i, m in enumerate(self.party):
+            mr = pygame.Rect(cx, cy, rw, card_h)
+            hov = mr.collidepoint(self.mouse)
+            if hov:
+                self._hot = True
+
+            pygame.draw.rect(screen, T.STEEL if hov else T.TABLE, mr, border_radius=4)
+            pygame.draw.rect(screen, T.STEEL_HI if hov else T.STEEL_LINE, mr, 1, border_radius=4)
+
+            # Character token
+            token_badge(screen, F, (mr.x + 28, mr.centery), m, r=20)
+
+            # Left stats
+            tx = mr.x + 60
+            text(screen, F["bodyb"], m.name, (tx, mr.y + 12), T.TX)
+            caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · INT {m.mod_intelligence:+} · {m.gold} copper",
+                 (tx, mr.y + 36), T.TX_MUTED)
+
+            # Middle: Study target progress
+            mid_x = mr.x + 340
+            if m.study_target:
+                if m.study_target in magic.SPELLS:
+                    spell = magic.SPELLS[m.study_target]
+                    t_name = f"Scroll of {spell.name}"
+                    needed = magic.points_to_learn(spell.level)
+                else:
+                    t_name = f"Dictionary of {m.study_target}"
+                    needed = magic.points_to_learn(0)
+
+                caps(screen, F["micro"], f"STUDYING: {t_name.upper()}", (mid_x, mr.y + 14), T.BRASS)
+
+                # Progress bar
+                bw = 180
+                bar_r = pygame.Rect(mid_x, mr.y + 36, bw, 8)
+                pygame.draw.rect(screen, T.TABLE, bar_r)
+                pygame.draw.rect(screen, T.STEEL_LINE, bar_r, 1)
+
+                frac = min(1.0, max(0.0, m.study_progress / max(1, needed)))
+                if frac > 0:
+                    fill_r = pygame.Rect(bar_r.x, bar_r.y, round(bw * frac), 8)
+                    pygame.draw.rect(screen, T.BRASS, fill_r)
+
+                text(screen, F["micro"], f"{m.study_progress} / {needed} pts", (bar_r.right + 12, mr.y + 32), T.TX_MUTED)
+
+                # Buttons
+                btn_w = 110
+                r_btn = pygame.Rect(mr.right - btn_w - 12, mr.y + 20, btn_w, 36)
+                self.add_button(screen, r_btn, f"choose_target_{i}", "CHANGE")
+
+                r_stop = pygame.Rect(mr.right - btn_w * 2 - 20, mr.y + 20, btn_w, 36)
+                self.add_button(screen, r_stop, f"stop_study_{i}", "STOP")
+            else:
+                caps(screen, F["micro"], "NO STUDY TARGET SET", (mid_x, mr.y + 16), T.TX_MUTED)
+                text(screen, F["body_sm"], "Idle during study hours (earns no progress)", (mid_x, mr.y + 36), T.TX_FAINT)
+
+                btn_w = 140
+                r_btn = pygame.Rect(mr.right - btn_w - 12, mr.y + 20, btn_w, 36)
+                self.add_button(screen, r_btn, f"choose_target_{i}", "SET TARGET")
+
+            cy += card_h + 10
+
+    # ------------------------------------------------------------------ #
+    def _draw_study_modal(self, screen):
+        F = self._F
+        W, H = screen.get_size()
+        student = self.study_modal_member
+        self.modal_buttons.clear()
+
+        # Dim backdrop
+        backdrop = pygame.Surface((W, H), pygame.SRCALPHA)
+        backdrop.fill((0, 0, 0, 160))
+        screen.blit(backdrop, (0, 0))
+
+        # Modal dialog card
+        dialog_w, dialog_h = 640, 480
+        dialog = pygame.Rect((W - dialog_w) // 2, (H - dialog_h) // 2, dialog_w, dialog_h)
+        panel(screen, dialog)
+        pygame.draw.rect(screen, T.BRASS, dialog, 1, border_radius=4)
+
+        cx = dialog.x + 24
+        cy = dialog.y + 20
+        caps(screen, F["micro"], "STUDY MATERIAL SELECTION", (cx, cy), T.BRASS)
+        cy += 20
+        text(screen, F["head"], f"Study for {student.name}", (cx, cy), T.TX)
+        cy += 28
+        text(screen, F["body_sm"], "Select any scroll or dictionary carried by the party to begin daily study.", (cx, cy), T.TX_MUTED)
+        cy += 32
+        hline(screen, dialog.x + 20, dialog.right - 20, cy)
+        cy += 16
+
+        options = self._available_study_options(student)
+        if not options:
+            text(screen, F["body"], "No eligible scrolls or dictionaries carried by the party.", (cx, cy + 20), T.TX)
+            text(screen, F["body_sm"],
+                 "• Scrolls require magical affinity to study.\n• Dictionaries teach foreign languages.\n• Buy dictionaries at the Library or scrolls in the market.",
+                 (cx, cy + 50), T.TX_FAINT)
+        else:
+            rw = dialog_w - 48
+            for opt in options[:4]:
+                opt_r = pygame.Rect(cx, cy, rw, 56)
+                hov = opt_r.collidepoint(self.mouse)
+                if hov:
+                    self._hot = True
+
+                pygame.draw.rect(screen, T.STEEL if hov else T.TABLE, opt_r, border_radius=4)
+                pygame.draw.rect(screen, T.BRASS if hov else T.STEEL_LINE, opt_r, 1, border_radius=4)
+
+                text(screen, F["bodyb"], opt["name"], (opt_r.x + 14, opt_r.y + 10), T.TX)
+                text(screen, F["body_sm"], opt["desc"], (opt_r.x + 14, opt_r.y + 30), T.TX_MUTED)
+
+                btn_w = 90
+                action_r = pygame.Rect(opt_r.right - btn_w - 10, opt_r.y + 12, btn_w, 32)
+                draw_button(screen, F, action_r, "SELECT", primary=hov, mpos=self.mouse)
+                self.modal_buttons.append(("set_target", opt_r, opt))
+
+                cy += 64
+
+        # Modal bottom buttons
+        by = dialog.bottom - 52
+        if student.study_target:
+            clear_r = pygame.Rect(cx, by, 180, 36)
+            draw_button(screen, F, clear_r, "STOP STUDYING", danger=True, mpos=self.mouse)
+            self.modal_buttons.append(("clear_target", clear_r, None))
+
+        cancel_r = pygame.Rect(dialog.right - 24 - 120, by, 120, 36)
+        draw_button(screen, F, cancel_r, "CANCEL", mpos=self.mouse)
+        self.modal_buttons.append(("cancel", cancel_r, None))
+
+    # ------------------------------------------------------------------ #
+    def _draw_footer(self, screen, F):
+        col = T.GREEN if (self.notice and ("signs" in self.notice or "begins" in self.notice)) else T.TX_MUTED
         btn_label = "LEAVE THE TAVERN" if self.title == "TAVERN" else "DONE"
-        footer_bar(self, screen, primary=("done", btn_label),
-                  notice=self.notice, notice_color=col)
+        footer_bar(self, screen, F, primary=("done", btn_label),
+                   notice=self.notice, notice_color=col)

@@ -117,3 +117,25 @@ def test_progress_study_ignores_a_target_that_is_neither_spell_nor_language():
     assert event is None
     assert u.study_progress == 0
     assert u.gold == 1000 - 15         # the room is still rented either way
+
+
+def test_studying_a_language_with_shared_party_dictionary():
+    import random
+    random.seed(1)
+    student = Unit("player")
+    student.magic_source = None
+    student.languages = ["Ankarin"]
+    student.study_target = "Elvish"
+    student.gold = 1000
+
+    companion = Unit("player")
+    companion.give_to_pack("Dictionary of Elvish")
+
+    g = Group([student, companion], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study")
+
+    guild.pass_time(24)
+
+    assert student.study_progress > 0
+    assert student.gold == 1000 - 15

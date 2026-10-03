@@ -435,7 +435,7 @@ class Guild:
 
             if g.order.job == "study":
                 for u in g.members:
-                    event = magic.progress_study(u)
+                    event = magic.progress_study(u, group=g)
                     if event:
                         events.append(event)
                 continue

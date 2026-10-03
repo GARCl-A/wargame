@@ -23,18 +23,25 @@ class Language:
     id: str
     name: str
 
+def _item_str(item):
+    if item is None:
+        return ""
+    return getattr(item, "name", str(item))
+
 def spell_for_scroll(item_name):
     """The Spell a `Scroll of <Name>` item names, or None (not a scroll, or
     no spell matches)."""
-    return next((s for s in SPELLS.values() if item_name == f"Scroll of {s.name}"), None)
+    name = _item_str(item_name)
+    return next((s for s in SPELLS.values() if name == f"Scroll of {s.name}"), None)
 
 def language_for_dictionary(item_name):
     """The Language a `Dictionary of <Name>` item names, or None (not a
     dictionary, or the name isn't a language in the world)."""
-    if not item_name or not item_name.startswith("Dictionary of "):
+    name = _item_str(item_name)
+    if not name or not name.startswith("Dictionary of "):
         return None
-    name = item_name[len("Dictionary of "):]
-    return Language(name, name) if name in data.LANGUAGES else None
+    lang_name = name[len("Dictionary of "):]
+    return Language(lang_name, lang_name) if lang_name in data.LANGUAGES else None
 
 def study_difficulty(level):
     """The DC to learn something at this level. Daily rolls check against this
@@ -46,7 +53,14 @@ def points_to_learn(level):
     weeks = level + 1
     return study_difficulty(level) * (weeks * 7)
 
-def progress_study(unit):
+def _has_study_item(unit, item_name, group=None):
+    if unit.has_item(item_name):
+        return True
+    if group is not None and any(m.has_item(item_name) for m in group.members):
+        return True
+    return False
+
+def progress_study(unit, group=None):
     """One day of `unit` studying at a tavern's "study" garrison job: charge
     the daily rent, then roll progress toward `study_target` -- a spell id
     (needs `magic_source` and a `Scroll of <Spell>`) or a language name (needs
@@ -58,13 +72,13 @@ def progress_study(unit):
     unit.gold -= economy.TAVERN_STUDY_COST_PER_DAY
     spell = SPELLS.get(unit.study_target)
     if spell is not None:
-        return _progress_spell(unit, spell)
+        return _progress_spell(unit, spell, group=group)
     if unit.study_target in data.LANGUAGES:
-        return _progress_language(unit, unit.study_target)
+        return _progress_language(unit, unit.study_target, group=group)
     return None
 
-def _progress_spell(unit, spell):
-    if not unit.magic_source or not unit.has_item(f"Scroll of {spell.name}"):
+def _progress_spell(unit, spell, group=None):
+    if not unit.magic_source or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):
         return None
     bonus = 2 if unit.race["name"] == "Kobold" and "blood" in spell.sources else 0
     dice_qty = (2 if "gnome_magic_excitement" in unit.talents["racial"]
@@ -77,8 +91,8 @@ def _progress_spell(unit, spell):
         return f"{unit.name} masters the spell {spell.name}!"
     return None
 
-def _progress_language(unit, language):
-    if not unit.has_item(f"Dictionary of {language}"):
+def _progress_language(unit, language, group=None):
+    if not _has_study_item(unit, f"Dictionary of {language}", group=group):
         return None
     unit.study_progress += max(0, data.roll(1, 20) + unit.mod_intelligence)
     if unit.study_progress >= points_to_learn(0):     # same threshold as a level-0 spell
