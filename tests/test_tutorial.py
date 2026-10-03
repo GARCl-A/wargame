@@ -303,19 +303,13 @@ def test_draft_screen_buttons_clear_tutorial_badge():
     assert badge_rect.right == W - T.S * 4
     assert badge_rect.top == T.S * 4
 
-    # Buttons should be aligned on the same top line and height as the tutorial badge
-    assert ds.edit_btn_rect.top == badge_rect.top
-    assert ds.reroll_btn_rect.top == badge_rect.top
-    assert ds.edit_btn_rect.height == badge_rect.height
-    assert ds.reroll_btn_rect.height == badge_rect.height
+    # Commission button should be aligned on the same top line and height as the tutorial badge
+    assert ds.commission_btn_rect.top == badge_rect.top
+    assert ds.commission_btn_rect.height == badge_rect.height
 
-    # EDIT button should be immediately to the left of the badge, separated by T.S
-    assert ds.edit_btn_rect.right + T.S == badge_rect.left
-    # REROLL button should be to the left of EDIT, separated by T.S
-    assert ds.reroll_btn_rect.right + T.S == ds.edit_btn_rect.left
-
-    assert not ds.edit_btn_rect.colliderect(badge_rect)
-    assert not ds.reroll_btn_rect.colliderect(badge_rect)
+    # Commission button should be immediately to the left of the badge, separated by T.S
+    assert ds.commission_btn_rect.right + T.S == badge_rect.left
+    assert not ds.commission_btn_rect.colliderect(badge_rect)
 
 
 def test_all_tutorial_screens_have_aligned_badge_rect():

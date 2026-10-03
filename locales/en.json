@@ -4,8 +4,8 @@
       "pick": {
         "title": "Building your guild",
         "body": [
-          "Each candidate is a random GARTOK character: a race, an occupation, and a roll of 3d6 down the line for every attribute. Pick three -- there's no reroll and no redo once you lock one in.",
-          "The EDIT button lets you swap a candidate's race or occupation before you pick, if none of the three rolled feel right."
+          "Each candidate is a random GARTOK character: a race, an occupation, and a roll of 3d6 down the line for every attribute.",
+          "You have 3 Commission Tokens for the entire draft. Spend them to guarantee essential archetypes (Leaders, Pack Mules, Heavy Hitters) when the raw rolls don't fit your plans."
         ]
       },
       "identity": {
