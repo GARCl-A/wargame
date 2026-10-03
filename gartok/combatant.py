@@ -65,7 +65,8 @@ class Combatant:
 
     def reset_battle_state(self):
         c = self.char
-        self.hp = c.hp_max
+        cur_hp = getattr(c, "hp", c.hp_max)
+        self.hp = min(c.hp_max, max(1, cur_hp))
         self.pos = (0, 0)
         self.z = None                 # floor elevation standing on (None = query board)
         self.status = "up"            # up | dying | stable | broken | fled | dead

@@ -14,7 +14,8 @@ just drives one stretch at a time and shows what happened.
 
 import pygame
 
-from . import hunt
+from . import autowin, hunt
+from .scenario import Scenario
 from .screen import Screen
 from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
                             token_badge, wrap)
@@ -26,15 +27,18 @@ from .widgets import ButtonsMixin
 class HuntScreen(ButtonsMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None):
+    def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None, on_autowin=None):
         super().__init__()
         self.fonts = fonts
         self._F = ui_fonts()
         self.guild = guild
         self.state = state
-        self.phase = phase                # "setup" | "interlude" | "done"
+        self.phase = phase                # "setup" | "interlude" | "ambush" | "done"
         self.on_ambush = on_ambush
         self.on_done = on_done
+        self.on_autowin = on_autowin
+        self.ambush_pack = None
+        self.autowin_estimator = autowin.AutoWinEstimator()
         # `app` passes the real tick (`_hunt_tick`, via `campaign.advance`,
         # keeps other groups synced); the `pass_time` fallback is test-only.
         self.on_tick = on_tick or guild.pass_time
@@ -83,7 +87,13 @@ class HuntScreen(ButtonsMixin, Screen):
             return
         if ambushed:
             self.state.fights += 1
-            self.on_ambush(self.state, hunt.wilds_pack())
+            self.ambush_pack = hunt.wilds_pack()
+            self.phase = "ambush"
+            scen = self.state.node.scenario() if self.state.node.scenario else Scenario()
+            self.autowin_estimator.request(self.state.party, self.ambush_pack,
+                                           scenario=scen,
+                                           daylight=self.guild.clock.is_daylight,
+                                           lethal=self.state.node.lethal)
         else:
             self._wrap_up()
 
@@ -99,6 +109,11 @@ class HuntScreen(ButtonsMixin, Screen):
                 self._do_stretch()
             elif key == "head_back":
                 self._wrap_up()
+            elif key == "fight_ambush":
+                self.on_ambush(self.state, self.ambush_pack)
+            elif key == "autowin_ambush":
+                if self.on_autowin and self.autowin_estimator.result:
+                    self.on_autowin(self.state, self.ambush_pack, self.autowin_estimator.result)
             elif key == "done":
                 self.on_done()
             return
@@ -134,6 +149,8 @@ class HuntScreen(ButtonsMixin, Screen):
             self._draw_setup(screen, body_top)
         elif self.phase == "interlude":
             self._draw_interlude(screen, body_top)
+        elif self.phase == "ambush":
+            self._draw_ambush(screen, body_top)
         else:
             self._draw_done(screen, body_top)
         self._draw_footer(screen)
@@ -231,6 +248,21 @@ class HuntScreen(ButtonsMixin, Screen):
         top += 8
         self._draw_events(screen, top)
 
+    def _draw_ambush(self, screen, top):
+        F = self._F
+        m = T.S * 3
+        w = screen.get_width() - 2 * m
+        top = section(screen, F, "AMBUSH IN THE WILDS!", m, top, w)
+        n = len(self.ambush_pack or [])
+        enemies_desc = ", ".join(u.name for u in (self.ambush_pack or []))
+        text(screen, F["bodyb"], f"A pack of {n} hostile{'s' if n > 1 else ''} intercepted the party!", (m, top), T.BLOOD)
+        top += 24
+        text(screen, F["body"], f"Enemies: {enemies_desc}", (m, top), T.TX)
+        top += 24
+        text(screen, F["body_sm"], "A lethal fight -- victory leaves the field to loot.", (m, top), T.TX_MUTED)
+        top += 24
+        self._draw_events(screen, top)
+
     def _draw_events(self, screen, top):
         F = self._F
         m = T.S * 3
@@ -248,5 +280,13 @@ class HuntScreen(ButtonsMixin, Screen):
         elif self.phase == "interlude":
             footer_bar(self, screen, self._F, back=("head_back", "HEAD BACK"),
                       primary=("hunt_on", "KEEP HUNTING"))
+        elif self.phase == "ambush":
+            sec = None
+            if self.autowin_estimator.result and self.autowin_estimator.result.eligible:
+                sec = ("autowin_ambush", "AUTO-WIN (100% - NO XP)")
+            n = len(self.ambush_pack or [])
+            footer_bar(self, screen, self._F, secondary=sec,
+                       primary=("fight_ambush", f"FIGHT ({n})"),
+                       danger=True)
         else:
             footer_bar(self, screen, self._F, primary=("done", "CONTINUE"))

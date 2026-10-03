@@ -191,7 +191,8 @@ class App:
                                on_advance=self._advance,
                                on_manage_group=self._open_group,
                                pending_event=self._pending_event,
-                               on_resolve_event=self._resolve_pending_event)
+                               on_resolve_event=self._resolve_pending_event,
+                               on_autowin=self._resolve_ambush_autowin)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -506,6 +507,33 @@ class App:
         self._pending_event = None
         self._start_ambush_battle(group, order)
 
+    def _resolve_ambush_autowin(self, group, order, autowin_result):
+        self._pending_event = None
+        for u in group.members:
+            avg_dmg = autowin_result.avg_damage.get(u.uid, 0.0)
+            u.hp = max(1, u.hp - round(avg_dmg))
+
+        node = world.node(group.node)
+        scenario = node.scenario() if node.scenario else Scenario()
+        battle = Battle(list(group.members), list(order.pack), scenario=scenario,
+                        daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
+                        clock_day=self.guild.clock.day)
+        for c in battle.enemy_units:
+            c.hp = 0
+            c.status = "dead"
+        for c, u in zip(battle.player_units, group.members):
+            c.status = "up"
+            c.hp = u.hp
+            c.combat_xp_earned = 0
+        battle.winner = "player"
+        battle.round_no = max(1, round(autowin_result.avg_rounds))
+
+        self._battle_squad = list(group.members)
+        self._battle_node = node
+        self._arena_offer = None
+        self._pause_order, self._pause_group = order, group
+        self._battle_end(battle)
+
     def _start_ambush_battle(self, group, order):
         self._start_forced_battle(group, order, list(order.pack))
 
@@ -558,7 +586,8 @@ class App:
         self._hunt = hunt.HuntState(list(party), node, hours_left=0)
         self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="setup",
                                 on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
-                                on_tick=self._hunt_tick)
+                                on_tick=self._hunt_tick,
+                                on_autowin=self._resolve_hunt_autowin)
 
     def _hunt_tick(self, hours):
         """A hunt stretch spends hours outside the map's tick/orders loop --
@@ -581,12 +610,37 @@ class App:
                         clock_day=self.guild.clock.day)
         self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
 
+    def _resolve_hunt_autowin(self, state, pack, autowin_result):
+        for u in state.party:
+            avg_dmg = autowin_result.avg_damage.get(u.uid, 0.0)
+            u.hp = max(1, u.hp - round(avg_dmg))
+
+        battle = Battle(state.party, pack, scenario=state.node.scenario(),
+                        daylight=self.guild.clock.is_daylight,
+                        lethal=state.node.lethal, arena=False,
+                        clock_day=self.guild.clock.day)
+        for c in battle.enemy_units:
+            c.hp = 0
+            c.status = "dead"
+        for c, u in zip(battle.player_units, state.party):
+            c.status = "up"
+            c.hp = u.hp
+            c.combat_xp_earned = 0
+        battle.winner = "player"
+        battle.round_no = max(1, round(autowin_result.avg_rounds))
+
+        self._battle_squad = list(state.party)
+        self._battle_node = state.node
+        self._arena_offer = None
+        self._battle_end(battle)
+
     def _resume_hunt(self):
         """Back from a won ambush with daylight still to spend."""
         self._save()
         self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="interlude",
                                 on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
-                                on_tick=self._hunt_tick)
+                                on_tick=self._hunt_tick,
+                                on_autowin=self._resolve_hunt_autowin)
 
     def _finish_hunt(self):
         """The hunt is over (dark, driven off, or the party is spent) -- the

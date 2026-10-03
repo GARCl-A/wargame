@@ -57,7 +57,8 @@ the guild out entirely. Leaving to the main menu is Esc -> the pause menu
 
 import pygame
 
-from . import arena, artwork, campaign, economy, orders, world
+from . import arena, artwork, autowin, campaign, economy, orders, world
+from .scenario import Scenario
 from .screen import Screen
 from .theme import set_pointer
 from .ui.camera import MapCamera
@@ -132,7 +133,7 @@ class MapScreen(ButtonsMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
-                pending_event=None, on_resolve_event=None):
+                pending_event=None, on_resolve_event=None, on_autowin=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -142,6 +143,16 @@ class MapScreen(ButtonsMixin, Screen):
         self.on_manage_group = on_manage_group
         self._pending_event = pending_event    # (Group, Order) an ambush paused here -- see app._resolve_pending_event
         self.on_resolve_event = on_resolve_event
+        self.on_autowin = on_autowin
+        self.autowin_estimator = autowin.AutoWinEstimator()
+        if self._pending_event is not None:
+            g, o = self._pending_event
+            node = world.node(g.node)
+            scen = node.scenario() if node.scenario else Scenario()
+            self.autowin_estimator.request(list(g.members), list(o.pack),
+                                           scenario=scen,
+                                           daylight=self.guild.clock.is_daylight,
+                                           lethal=True)
         # point at whichever group actually needs the player -- an ambushed
         # one outranks a merely idle one, since it's the one blocking the clock
         self.selected = (pending_event[0] if pending_event is not None else
@@ -459,6 +470,9 @@ class MapScreen(ButtonsMixin, Screen):
             self.on_guild()
         elif key == "resolve_event":
             self.on_resolve_event()
+        elif key == "autowin_ambush":
+            if self.on_autowin and self.autowin_estimator.result and self._pending_event is not None:
+                self.on_autowin(self._pending_event[0], self._pending_event[1], self.autowin_estimator.result)
         elif key == "cycle_idle":
             self._cycle_idle()
         elif key == "recall_garrison":
@@ -492,11 +506,16 @@ class MapScreen(ButtonsMixin, Screen):
     def _inspector_content(self, g, here):
         if self._group_blocked(g):
             n = len(self._pending_event[1].pack)
-            return [{"type": "text", "text": "Ambushed on the road!", "color": T.BLOOD},
-                    {"type": "text",
-                    "text": f"{n} enem{'y' if n == 1 else 'ies'} block the path -- "
-                            "there is no escaping this fight.",
-                    "color": T.TX_FAINT}]
+            blocks = [{"type": "text", "text": "Ambushed on the road!", "color": T.BLOOD},
+                      {"type": "text",
+                      "text": f"{n} enem{'y' if n == 1 else 'ies'} block the path -- "
+                              "there is no escaping this fight.",
+                      "color": T.TX_FAINT}]
+            if self.autowin_estimator.result and self.autowin_estimator.result.eligible:
+                blocks.append({"type": "section", "label": "swift resolution"})
+                blocks.append({"type": "button", "key": "autowin_ambush",
+                               "label": "AUTO-WIN (100% - NO XP)", "primary": True})
+            return blocks
         if g.busy:
             blocks = [{"type": "text", "text": f"Busy: {self._order_status(g)}", "color": T.BRASS}]
             if g.order is not None and g.order.kind == "garrison":
