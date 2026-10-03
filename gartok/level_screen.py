@@ -11,19 +11,20 @@ handled on XP gain, so nothing to do here but spend picks. `on_back` returns to
 the guild.
 
 Renders at the real window resolution (`native = True`), like the guild screen.
+Modernized to the `gartok/ui/` design system.
 """
 
 import math
-
 import pygame
 
 from . import artwork, progression, talents
+from .combatant import Combatant
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, INFO, INK, INK_DIM, INK_FAINT, LINE, LINE_SOFT,
-                    MARGIN, OK, RADIUS, SP2, SP3, SP4, SP5, SURFACE_0,
-                    SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4, panel,
-                    set_pointer, text, token_badge, tracked, wrap_lines)
 from .sheet_panel import SheetModalMixin
+from .ui.sheet_card import draw_row, unit_to_ch
+from .ui.tokens import T, mix, fonts as ui_fonts
+from .ui.primitives import (footer_bar, text, caps, panel, draw_button,
+                            draw_tooltip, wrap, hline)
 
 _TRACK_XP = {"combat": progression.COMBAT_XP_THRESHOLDS,
              "work": progression.WORK_XP_THRESHOLDS,
@@ -74,6 +75,7 @@ class LevelScreen(SheetModalMixin, Screen):
     def __init__(self, fonts, unit, on_back, on_change=None):
         super().__init__()
         self.fonts = fonts
+        self._F = fonts if (isinstance(fonts, dict) and "body" in fonts) else ui_fonts()
         self.unit = unit
         self.on_back = on_back
         self.on_change = on_change            # called after a pick lands (autosave)
@@ -81,6 +83,7 @@ class LevelScreen(SheetModalMixin, Screen):
         self.buttons = []                   # [(key, rect)]
         self._hot = False                   # cursor is over something clickable
         self._hover = None                  # (track, talent) under the cursor
+        self.info_hits = []
 
     # ------------------------------------------------------------------ #
     # soft tutorial (screen.py)                                          #
@@ -90,12 +93,12 @@ class LevelScreen(SheetModalMixin, Screen):
 
     def tutorial_badge_rect(self, size):
         W, H = size
-        pad = MARGIN if W < 1500 else SP5
+        pad = T.S * 3 if W < 1500 else T.S * 5
         return pygame.Rect(W - pad - 28, pad + (74 - 28) // 2, 28, 28)
 
     def tutorial_anchor(self, size):
         W, H = size
-        pad = MARGIN if W < 1500 else SP5
+        pad = T.S * 3 if W < 1500 else T.S * 5
         return (W - pad - 340, pad + 84, 340, "down")
 
     def handle_escape(self):
@@ -103,6 +106,20 @@ class LevelScreen(SheetModalMixin, Screen):
             self.close_sheet_on_click()
             return True
         return False
+
+    def handle_event(self, event):
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.handle_escape()
+            return
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._click(event.pos)
+
+    def add_button(self, surf, rect, key, label, enabled=True, primary=False, danger=False):
+        self.buttons.append((key, rect))
+        if rect.collidepoint(self.mouse):
+            self._hot = True
+        return draw_button(surf, self._F, rect, label, primary=primary, enabled=enabled,
+                           danger=danger, mpos=self.mouse)
 
     def _click(self, px):
         if self.close_sheet_on_click():
@@ -135,108 +152,106 @@ class LevelScreen(SheetModalMixin, Screen):
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        f = self.fonts
+        F = self._F
         u = self.unit
         W, H = screen.get_size()
-        screen.fill(SURFACE_0)
+        screen.fill(T.TABLE)
         self.node_hits = []
         self.buttons = []
         self.info_hits = []
         self._hover = None
         self._hp_hover = False
-        pad = MARGIN if W < 1500 else SP5
+        self._hot = False
+        pad = T.S * 3 if W < 1500 else T.S * 5
 
         # title + explainer
-        text(screen, "PROGRESSION", f.title, INK, (pad, pad))
-        text(screen, "Level up: pick one talent in each track. Locked (grey) nodes need the previous node first.",
-             f.body_sm, INK_DIM, (pad, pad + 38))
+        text(screen, F["titleb"], "PROGRESSION", (pad, pad), T.TX)
+        text(screen, F["body_sm"],
+             "Level up: pick one talent in each track. Locked (grey) nodes need the previous node first.",
+             (pad, pad + 38), T.TX_MUTED)
 
-        from .combatant import Combatant
-        from .ui.sheet_card import draw_row, unit_to_ch
-        from .ui.tokens import fonts as ui_fonts
-
-        self._hot = False
+        # Character card row in top right
         has_tut = self.tutorial_key() is not None
-        offset = 28 + SP2 if has_tut else 0
+        offset = 28 + T.S * 2 if has_tut else 0
         r = pygame.Rect(W - 400 - pad - offset, pad, 400, 74)
         c = Combatant(u)
-        draw_row(screen, ui_fonts(), r, unit_to_ch(c))
-        
+        draw_row(screen, F, r, unit_to_ch(c))
+
         if not self.sheet_open:
             self.buttons.append(("sheet", r))
             if r.collidepoint(self.mouse):
                 self._hot = True
 
         div = max(pad + 80, r.bottom + pad)
-        pygame.draw.line(screen, LINE_SOFT, (pad, div), (W - pad, div))
+        hline(screen, pad, W - pad, div)
 
-        top = div + SP4
-        gap = SP4
+        top = div + T.S * 4
+        gap = T.S * 3
         col_w = min(480, (W - 2 * pad - 2 * gap) // 3)
-        self._hot = False
+
         for i, track in enumerate(talents.TRACKS):
             x = pad + i * (col_w + gap)
             self._draw_track(screen, track, x, top, col_w, H - top - 68)
 
         self._draw_tooltip(screen)
-        self._draw_footer(screen, W, H, pad)
-        self.draw_sheet_modal(screen, f)
-        set_pointer(self._hot)
+        self._draw_footer(screen, F, pad)
+        self.draw_sheet_modal(screen, F)
 
     # ------------------------------------------------------------------ #
     def _draw_track(self, screen, track, x, y, w, h):
-        f = self.fonts
+        F = self._F
         u = self.unit
-        panel(screen, pygame.Rect(x, y, w, h), fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        ix = x + SP4
-        iw = w - 2 * SP4
-        cy = y + SP4
+        panel(screen, pygame.Rect(x, y, w, h))
+        ix = x + T.S * 3
+        iw = w - 2 * T.S * 3
+        cy = y + T.S * 3
 
         level = u.track_level[track]
         picks = u.picks_available(track)
-        tracked(screen, _TRACK_LABEL[track], f.label, INFO, (ix, cy))
-        text(screen, f"LEVEL {level}", f.body_bd, INK, (ix + iw, cy - 2), right=True)
-        cy += 20
+        caps(screen, F["microb"], _TRACK_LABEL[track], (ix, cy), T.BRASS)
+        caps(screen, F["bodyb"], f"LEVEL {level}", (ix + iw, cy - 2), T.TX, right=True)
+        cy += 22
 
         xp = {"combat": u.combat_xp, "work": u.work_xp, "racial": u.racial_xp}[track]
         into, span = progression.to_next(_TRACK_XP[track], xp)
         bar = pygame.Rect(ix, cy, iw, 10)
-        panel(screen, bar, fill=SURFACE_0, border=LINE_SOFT, width=1, radius=4)
+        pygame.draw.rect(screen, T.TABLE, bar, border_radius=3)
+        pygame.draw.rect(screen, T.STEEL_LINE, bar, 1, border_radius=3)
+
         if span:
             fillw = int((bar.w - 2) * into / span)
             if fillw:
-                pygame.draw.rect(screen, ACCENT, (bar.x + 1, bar.y + 1, fillw, bar.h - 2),
-                                 border_radius=3)
-            unit = "levels" if track == "racial" else "XP"
-            label = f"{into} / {span} {unit} to level {level + 1}"
+                pygame.draw.rect(screen, T.BRASS, (bar.x + 1, bar.y + 1, fillw, bar.h - 2),
+                                 border_radius=2)
+            unit_lbl = "levels" if track == "racial" else "XP"
+            label = f"{into} / {span} {unit_lbl} to level {level + 1}"
         else:
             label = "top of the track"
         cy += 16
-        text(screen, label, f.mono_sm, INK_DIM, (ix, cy))
-        cy += 18
-        if picks:
-            text(screen, f"{picks} pick{'s' if picks > 1 else ''} to spend "
-                 "— choose a lit node", f.body_sm, ACCENT, (ix, cy))
-        elif track == "racial" and u.racial_level < 5:
-            text(screen, "first racial talent unlocks at racial level 5",
-                 f.mono_sm, INK_DIM, (ix, cy))
+        text(screen, F["micro"], label, (ix, cy), T.TX_MUTED)
         cy += 18
 
-        ty = cy + SP2
-        self._draw_tree(screen, track, ix, ty, iw, y + h - SP4 - ty)
+        if picks:
+            text(screen, F["body_sm"], f"{picks} pick{'s' if picks > 1 else ''} to spend "
+                 "— choose a lit node", (ix, cy), T.BRASS)
+        elif track == "racial" and u.racial_level < 5:
+            text(screen, F["micro"], "first racial talent unlocks at racial level 5",
+                 (ix, cy), T.TX_FAINT)
+        cy += 18
+
+        ty = cy + T.S * 2
+        self._draw_tree(screen, track, ix, ty, iw, y + h - T.S * 3 - ty)
 
     def _draw_tree(self, screen, track, x, y, w, h):
         nodes = (talents.racial_tree(self.unit.race["name"]) if track == "racial"
                  else talents.TREE[track])
         if not nodes:
-            text(screen, "no racial talents for this lineage yet",
-                 self.fonts.body_sm, INK_FAINT, (x, y + 4))
+            text(screen, self._F["body_sm"], "no racial talents for this lineage yet",
+                 (x, y + 4), T.TX_FAINT)
             return
         pos, span, depths = _tree_layout(track, self.unit.race["name"])
         unit_w = w / span
         pitch = min(h / depths, 128)
-        # sit the tree high in the panel -- the empty room below reads as
-        # "the branch keeps going", which is the point
         top = y + max(0.0, (h - pitch * depths) * 0.32)
         node = int(max(34, min(54, unit_w * 0.6, pitch * 0.5)))
 
@@ -245,7 +260,7 @@ class LevelScreen(SheetModalMixin, Screen):
             return (round(x + unit_w * (col + 0.5)),
                     round(top + pitch * (depth + 0.5)))
 
-        # connectors first, so the nodes sit on top of them
+        # Connectors first
         for t in nodes:
             if not t.requires:
                 continue
@@ -254,7 +269,7 @@ class LevelScreen(SheetModalMixin, Screen):
             py += node // 2 + 2
             qy -= node // 2 + 2
             st = self._node_state(track, t)
-            col = OK if st == "taken" else ACCENT if st == "open" else LINE
+            col = T.GREEN if st == "taken" else T.BRASS if st == "open" else T.STEEL_LINE
             midy = (py + qy) // 2
             pygame.draw.lines(screen, col, False,
                               [(px, py), (px, midy), (qx, midy), (qx, qy)],
@@ -264,39 +279,41 @@ class LevelScreen(SheetModalMixin, Screen):
             self._draw_node(screen, track, t, *xy(t.id), node, is_root=not t.requires)
 
     def _draw_node(self, screen, track, t, cx, cy, s, *, is_root):
-        f = self.fonts
+        F = self._F
         state = self._node_state(track, t)
         rs = s + 6 if is_root else s
         rect = pygame.Rect(0, 0, rs, rs)
         rect.center = (cx, cy)
         hov = rect.collidepoint(self.mouse)
 
-        fill = {"taken": SURFACE_2, "open": SURFACE_3 if hov else SURFACE_2,
-                "locked": SURFACE_1}[state]
-        edge = {"taken": OK, "open": ACCENT, "locked": LINE_SOFT}[state]
+        fill = T.STEEL_HI if (state == "open" and hov) else T.STEEL if state in ("taken", "open") else mix(T.TABLE, T.STEEL, 0.4)
+        edge = T.GREEN if state == "taken" else T.BRASS if state == "open" else T.STEEL_LINE
+
         if state == "open":
             k = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 380)
-            pygame.draw.rect(screen, _lerp(SURFACE_1, ACCENT, 0.25 + 0.55 * k),
-                             rect.inflate(10, 10), 2, border_radius=RADIUS + 3)
-        panel(screen, rect, fill=fill, border=edge,
-              width=2 if state != "locked" else 1, radius=RADIUS)
+            glow = mix(T.TABLE, T.BRASS, 0.25 + 0.55 * k)
+            pygame.draw.rect(screen, glow, rect.inflate(8, 8), 2, border_radius=6)
 
-        iconcol = {"taken": OK, "open": ACCENT, "locked": INK_FAINT}[state]
+        pygame.draw.rect(screen, fill, rect, border_radius=4)
+        pygame.draw.rect(screen, edge, rect, 2 if state != "locked" else 1, border_radius=4)
+
+        iconcol = T.GREEN if state == "taken" else T.BRASS if state == "open" else T.TX_FAINT
         img = (artwork.icon(*t.icon.split("/"), int(rs * 0.62), color=iconcol)
                if t.icon else None)
         if img is not None:
             screen.blit(img, img.get_rect(center=rect.center))
         else:
-            text(screen, t.name[:1], f.card_name, iconcol, rect.center, center=True)
+            text(screen, F["head"], t.name[:1], rect.center, iconcol, center=True)
 
-        # tier badge -- how deep the branch runs, dimmed with the tile
-        pygame.draw.circle(screen, SURFACE_3 if state == "locked" else SURFACE_4,
-                           rect.topleft, 8)
-        text(screen, str(t.tier), f.label,
-             INK_FAINT if state == "locked" else INK_DIM, rect.topleft, center=True)
+        # Tier badge
+        badge_bg = T.STEEL_LINE if state == "locked" else T.STEEL_HI
+        pygame.draw.circle(screen, badge_bg, rect.topleft, 8)
+        text(screen, F["micro"], str(t.tier), rect.topleft,
+             T.TX_FAINT if state == "locked" else T.TX_MUTED, center=True)
+
         if state == "taken":
-            pygame.draw.circle(screen, OK, rect.topright, 8)
-            _check(screen, rect.right, rect.top, SURFACE_0)
+            pygame.draw.circle(screen, T.GREEN, rect.topright, 8)
+            _check(screen, rect.right, rect.top, T.TABLE)
 
         if state == "open" and not self.sheet_open:
             self.node_hits.append((rect, track, t.id))
@@ -306,57 +323,29 @@ class LevelScreen(SheetModalMixin, Screen):
                 self._hot = True
 
     def _draw_tooltip(self, screen):
-        if self.sheet_open:
+        if self.sheet_open or not self._hover:
             return
-        f = self.fonts
-        if getattr(self, "_hp_hover", False):
-            from .sheet_panel import format_hp_breakdown_tooltip
-            from .theme import draw_tooltip
-            lines = format_hp_breakdown_tooltip(self.unit, f)
-            draw_tooltip(screen, f.body_sm, lines, self.mouse)
-            return
-        if not self._hover:
-            return
+        F = self._F
         track, t = self._hover
         state = self._node_state(track, t)
+
         if state == "taken":
-            status, scol = "Taken", OK
+            status, scol = "Taken", T.GREEN
         elif state == "open":
-            status, scol = "Available — click to take", ACCENT
+            status, scol = "Available — click to take", T.BRASS
         elif t.requires and t.requires not in self.unit.talents[track]:
-            status, scol = f"Requires {talents.get(t.requires).name}", INK_FAINT
+            req = talents.get(t.requires)
+            status, scol = f"Requires {req.name if req else t.requires}", T.TX_FAINT
         else:
-            status, scol = "Needs a level-up pick in this track", INK_FAINT
+            status, scol = "Needs a level-up pick in this track", T.TX_FAINT
 
-        lines = ([(t.name, f.body_bd, INK)]
-                 + [(ln, f.body_sm, INK_DIM)
-                    for ln in wrap_lines(t.effect.split("\n"), f.body_sm, 240)]
-                 + [(status, f.label, scol)])
-        tw = max(fo.size(s)[0] for s, fo, _ in lines) + 2 * SP3
-        th = 2 * SP3 + sum(fo.get_height() + 2 for _, fo, _ in lines)
-        W, H = screen.get_size()
-        bx = min(self.mouse[0] + 16, W - tw - SP2)
-        by = min(self.mouse[1] + 16, H - th - SP2)
-        panel(screen, pygame.Rect(bx, by, tw, th), fill=SURFACE_2, border=LINE,
-              width=1, radius=RADIUS)
-        yy = by + SP3
-        for s, fo, c in lines:
-            text(screen, s, fo, c, (bx + SP3, yy))
-            yy += fo.get_height() + 2
+        lines = [(t.name, F["bodyb"], T.TX)]
+        for ln in t.effect.split("\n"):
+            for sub in wrap(F["body_sm"], ln, 260):
+                lines.append((sub, F["body_sm"], T.TX_MUTED))
+        lines.append((status, F["microb"], scol))
 
-    def _draw_footer(self, screen, W, H, pad):
-        f = self.fonts
-        b = pygame.Rect(pad, H - 52, 150, 36)
-        hov = not self.sheet_open and b.collidepoint(self.mouse)
-        col = INK if hov else INK_DIM
-        panel(screen, b, fill=SURFACE_3 if hov else SURFACE_2, border=LINE_SOFT,
-              width=1, radius=RADIUS)
-        cx, cy = b.x + SP4, b.centery
-        pygame.draw.lines(screen, col, False,
-                          [(cx + 3, cy - 4), (cx - 2, cy), (cx + 3, cy + 4)], 2)
-        text(screen, "BACK", f.body_bd, col, (cx + 14, cy - 7))
-        if not self.sheet_open:
-            self.buttons.append(("back", b))
-            if hov:
-                self._hot = True
+        draw_tooltip(screen, F, lines, self.mouse)
 
+    def _draw_footer(self, screen, F, pad):
+        footer_bar(self, screen, F, back=("back", "BACK"), margin=pad)
