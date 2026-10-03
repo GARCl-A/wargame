@@ -73,6 +73,16 @@ class HuntScreen(Screen):
     def tutorial_key(self):
         return "hunt"
 
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        m = T.S * 3
+        return pygame.Rect(W - m - 28, m - 4, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        m = T.S * 3
+        return (W - m - 340, m + 32, 340, "down")
+
     # ------------------------------------------------------------------ #
     def _wrap_up(self):
         self.phase = "done"

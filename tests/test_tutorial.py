@@ -282,3 +282,66 @@ def test_header_reserves_space_when_has_tutorial_is_true():
 
     # The rightmost tab with tutorial should be shifted left by 28 + T.S
     assert tabs_tut["quests"].right == tabs_normal["quests"].right - (28 + T.S)
+
+
+def test_draft_screen_buttons_clear_tutorial_badge():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.draft_screen import DraftScreen
+    from gartok.ui.tokens import fonts as ui_fonts, T
+
+    pygame.init()
+    F = ui_fonts()
+    ds = DraftScreen(F, lambda *args: None)
+    W, H = 1280, 800
+    surf = pygame.Surface((W, H))
+    ds.draw(surf)
+
+    badge_rect = ds.tutorial_badge_rect((W, H))
+    assert badge_rect.width == 28 and badge_rect.height == 28
+    assert badge_rect.right == W - T.S * 4
+    assert badge_rect.top == T.S * 4
+
+    # Buttons should be aligned on the same top line and height as the tutorial badge
+    assert ds.edit_btn_rect.top == badge_rect.top
+    assert ds.reroll_btn_rect.top == badge_rect.top
+    assert ds.edit_btn_rect.height == badge_rect.height
+    assert ds.reroll_btn_rect.height == badge_rect.height
+
+    # EDIT button should be immediately to the left of the badge, separated by T.S
+    assert ds.edit_btn_rect.right + T.S == badge_rect.left
+    # REROLL button should be to the left of EDIT, separated by T.S
+    assert ds.reroll_btn_rect.right + T.S == ds.edit_btn_rect.left
+
+    assert not ds.edit_btn_rect.colliderect(badge_rect)
+    assert not ds.reroll_btn_rect.colliderect(badge_rect)
+
+
+def test_all_tutorial_screens_have_aligned_badge_rect():
+    import pygame
+    from gartok.taverna_screen import TavernaScreen
+    from gartok.reward_screen import RewardScreen
+    from gartok.gear_screen import GearScreen
+    from gartok.loot_screen import LootScreen
+    from gartok.hunt_screen import HuntScreen
+    from gartok.squad_screen import SquadScreen
+    from gartok.ui.tokens import T
+
+    W, H = 1280, 800
+    tav = TavernaScreen.__new__(TavernaScreen)
+    rew = RewardScreen.__new__(RewardScreen)
+    gear = GearScreen.__new__(GearScreen)
+    loot = LootScreen.__new__(LootScreen)
+    hunt = HuntScreen.__new__(HuntScreen)
+    squad = SquadScreen.__new__(SquadScreen)
+
+    assert tav.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
+    assert rew.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
+    assert gear.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
+    assert loot.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 4 - 28, T.S * 4, 28, 28)
+    assert hunt.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 3 - 4, 28, 28)
+    assert squad.tutorial_badge_rect((W, H)) == pygame.Rect(W - 16 - 28, 16 - 4, 28, 28)
+    assert squad.tutorial_badge_rect((1600, 900)) == pygame.Rect(1600 - 24 - 28, 24 - 4, 28, 28)
+
+

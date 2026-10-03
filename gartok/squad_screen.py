@@ -131,6 +131,16 @@ class SquadScreen(SheetModalMixin, Screen):
     def tutorial_key(self):
         return "squad"
 
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        pad = 16 if W < 1500 else 24
+        return pygame.Rect(W - pad - 28, pad - 4, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        pad = 16 if W < 1500 else 24
+        return (W - pad - 340, pad + 32, 340, "down")
+
     # ------------------------------------------------------------------ #
     def handle_event(self, event):
         super().handle_event(event)

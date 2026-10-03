@@ -104,6 +104,7 @@ class DraftScreen(Screen):
         self.edit_mode = False
         self.picker = None
         self.edit_btn_rect = None
+        self.reroll_btn_rect = None
         self.card_rects = []
         self.edit_rects = []
         self.picker_rects = []
@@ -188,6 +189,16 @@ class DraftScreen(Screen):
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return {"pick": "draft.pick", "identity": "draft.identity"}.get(self.phase)
+
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        pad = T.S * 4
+        return pygame.Rect(W - pad - 28, pad, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        pad = T.S * 4
+        return (W - pad - 340, pad + 36, 340, "down")
 
     def _click_identity(self, px):
         if self.editing_name:                 # a click anywhere commits the field being typed
@@ -477,14 +488,18 @@ class DraftScreen(Screen):
                 text(screen, F["body_sm"], f"slot {i + 1}", r.center, T.TX_FAINT, center=True)
 
     def _draw_top_buttons(self, screen, mouse):
-        # Place buttons to the left of the global tutorial button (26px + T.S*2 gap)
         F = self.F
-        r_edit = pygame.Rect(screen.get_width() - (T.S * 4) - 26 - T.S * 2 - 96, T.S * 4, 96, 30)
+        W = screen.get_width()
+        pad = T.S * 4
+        has_tut = self.tutorial_key() is not None
+        offset = (28 + T.S) if has_tut else 0
+
+        r_edit = pygame.Rect(W - pad - offset - 96, pad, 96, 28)
         self.edit_btn_rect = r_edit
         draw_button(screen, F, r_edit, "EDITING" if self.edit_mode else "EDIT",
                     primary=self.edit_mode, mpos=mouse)
 
-        r_reroll = pygame.Rect(r_edit.left - T.S * 2 - 96, T.S * 4, 96, 30)
+        r_reroll = pygame.Rect(r_edit.left - T.S - 96, pad, 96, 28)
         self.reroll_btn_rect = r_reroll
         draw_button(screen, F, r_reroll, "REROLL", mpos=mouse)
 

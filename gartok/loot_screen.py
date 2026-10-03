@@ -52,6 +52,16 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     def tutorial_key(self):
         return "loot"
 
+    def tutorial_badge_rect(self, size):
+        W, H = size
+        pad = T.S * 4
+        return pygame.Rect(W - pad - 28, pad, 28, 28)
+
+    def tutorial_anchor(self, size):
+        W, H = size
+        pad = T.S * 4
+        return (W - pad - 340, pad + 36, 340, "down")
+
     def _ui_fonts(self):
         if self._F is None:
             self._F = ui_fonts()
