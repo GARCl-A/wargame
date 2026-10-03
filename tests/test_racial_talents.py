@@ -471,6 +471,7 @@ def test_gnome_magic_excitement_doubles_progress_die_on_first_study_day():
     gnome = _gnome()
     assert gnome.choose_talent("racial", "gnome_magic_excitement")
     gnome.magic_source = "nature"
+    gnome.spells_known.clear()
     gnome.gold = 100
     gnome.give_to_pack("Scroll of Magic Missile")
     gnome.study_target = "magic_missile"

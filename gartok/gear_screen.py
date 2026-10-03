@@ -224,7 +224,7 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         if len(picks) == 1:
             unit, item = picks[0][0], self._item_at(*picks[0])
             spell = magic.spell_for_scroll(item) if item else None
-            if spell and unit.magic_source and spell.id not in unit.spells_known:
+            if spell and magic.can_study_spell(unit, spell):
                 rows.append(("study", self._study_label(unit, spell), spell))
             lang = magic.language_for_dictionary(item) if item else None
             if lang and lang.name not in unit.languages:

@@ -36,7 +36,7 @@ class LibraryMissionScreen(MissionOfferScreen):
 
     def get_req_str(self, t):
         if t.goal_item == "Any Dictionary":
-            return f"goal: {t.goal_qty}x Dictionary (Any Language)  ·  pay: {t.reward} copper  ·  deadline: {t.deadline_days} days"
+            return f"goal: {t.goal_qty}x Dictionary (Unarchived Tongue)  ·  pay: {t.reward} copper  ·  deadline: {t.deadline_days} days"
         return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {t.reward} copper  ·  deadline: {t.deadline_days} days"
 
     def get_status_str(self, t, progress, ready, days_left):

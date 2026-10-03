@@ -329,3 +329,24 @@ def test_magic_state_survives_a_save_round_trip():
         assert back_u.study_progress == 42
     finally:
         persist.delete_slot(slot)
+
+
+def test_can_study_spell_requires_matching_affinity_and_unlearned():
+    u = Unit("player")
+    u.magic_source = None
+    missile = magic.SPELLS["magic_missile"]
+
+    # Non-magic user cannot study
+    assert not magic.can_study_spell(u, missile)
+
+    # Magic user with mismatched source cannot study
+    u.magic_source = "astral"
+    assert not magic.can_study_spell(u, missile)
+
+    # Matching source can study
+    u.magic_source = "nature"
+    assert magic.can_study_spell(u, missile)
+
+    # Already known spell cannot be studied again
+    u.spells_known.append("magic_missile")
+    assert not magic.can_study_spell(u, missile)

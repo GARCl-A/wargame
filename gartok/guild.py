@@ -438,6 +438,9 @@ class Guild:
                     event = magic.progress_study(u, group=g)
                     if event:
                         events.append(event)
+                if not any(u.study_target for u in g.members):
+                    g.order = None
+                    events.append(f"{node.name}: studies are over -- rooms released.")
                 continue
 
             item = economy.GARRISON_JOBS.get(g.order.job)

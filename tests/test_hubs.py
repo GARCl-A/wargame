@@ -75,6 +75,30 @@ def test_library_dictionary_mission_flow():
     assert g.reputation["library"] == 1
 
 
+def test_library_shop_locked_before_rep_and_rejects_stocked_dictionaries():
+    from gartok import missions
+    from gartok.library_screen import library_stock_dictionaries
+    u = Unit("player")
+    g = Guild([u])
+    group = Group(list(g.roster), "library")
+    # Rep == 0: shop has no dictionaries
+    assert library_stock_dictionaries(g) == []
+
+    # Rep == 1: shop sells 1 dictionary
+    g.reputation["library"] = 1
+    stocked = library_stock_dictionaries(g)
+    assert len(stocked) == 1
+    stocked_dict = stocked[0]
+
+    # Accepting mission and having the stocked dictionary does NOT count
+    template = missions.LIBRARY_DICTIONARY
+    m = missions.accept(g, u, template)
+    u.give_to_pack(stocked_dict)
+    assert missions.progress(g, m) == 0
+    assert not missions.can_turn_in(g, m)
+
+
+
 def test_map_screen_library_button_label():
     from gartok.map_screen import MapScreen
     from gartok.theme import Fonts
@@ -99,7 +123,7 @@ def test_taverna_hub_screen_flow():
     u1 = Unit("player")
     u1.name = "Garrick"
     u1.languages = ["Ankarin"]
-    u1.magic_source = "sorcery"
+    u1.magic_source = "nature"
     u1.spells_known = []
 
     u2 = Unit("player")
@@ -135,6 +159,11 @@ def test_taverna_hub_screen_flow():
     assert rent_btn is not None
     ev = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": rent_btn.center})
     screen.handle_event(ev)
+    assert group.order is None                      # nobody has a target yet
+    u2.study_target = "Dwarvish"
+    screen.draw(surf)
+    rent_btn = next(r for key, r in screen.buttons if key == "rent_study")
+    screen.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": rent_btn.center}))
     assert group.order is not None
     assert group.order.kind == "garrison" and group.order.job == "study"
 

@@ -132,7 +132,8 @@ class MapScreen(Screen):
     native = True
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
-                pending_event=None, on_resolve_event=None, on_autowin=None):
+                pending_event=None, on_resolve_event=None, on_autowin=None,
+                on_visit_tavern=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -143,6 +144,7 @@ class MapScreen(Screen):
         self._pending_event = pending_event    # (Group, Order) an ambush paused here -- see app._resolve_pending_event
         self.on_resolve_event = on_resolve_event
         self.on_autowin = on_autowin
+        self.on_visit_tavern = on_visit_tavern
         self.autowin_estimator = autowin.AutoWinEstimator()
         if self._pending_event is not None:
             g, o = self._pending_event
@@ -478,6 +480,9 @@ class MapScreen(Screen):
                 self.on_autowin(self._pending_event[0], self._pending_event[1], self.autowin_estimator.result)
         elif key == "cycle_idle":
             self._cycle_idle()
+        elif key == "visit_tavern":
+            if self.on_visit_tavern:
+                self.on_visit_tavern(self.selected)
         elif key == "recall_garrison":
             self.selected.order = orders.idle()
         elif key == "maintain":
@@ -522,6 +527,8 @@ class MapScreen(Screen):
         if g.busy:
             blocks = [{"type": "text", "text": f"Busy: {self._order_status(g)}", "color": T.BRASS}]
             if g.order is not None and g.order.kind == "garrison":
+                if here.is_tavern:
+                    blocks.append({"type": "button", "key": "visit_tavern", "label": "ENTER THE TAVERN", "primary": True})
                 blocks.append({"type": "button", "key": "recall_garrison", "label": "RECALL FROM GARRISON", "danger": True})
             return blocks
 

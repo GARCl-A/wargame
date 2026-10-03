@@ -94,7 +94,7 @@ APOTHECARY_MUSHROOMS = MissionTemplate(
 
 LIBRARY_DICTIONARY = MissionTemplate(
     "library_dictionary", "library", "library", "A New Translation",
-    "The library wants a dictionary to expand its archives. Any language will do.",
+    "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted.",
     goal_item="Any Dictionary", goal_qty=1, reward=250, deadline_days=15,
     tags=("library", "scholarly"),
 )
@@ -157,7 +157,9 @@ def progress(guild, mission):
         return 0
     item = template_of(mission).goal_item
     if item == "Any Dictionary":
-        return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ")) for u in group.members)
+        from .library_screen import library_stock_dictionaries
+        stock = set(library_stock_dictionaries(guild))
+        return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ") and name not in stock) for u in group.members)
     return sum(u.count_of(item) for u in group.members)
 
 
@@ -181,8 +183,10 @@ def turn_in(guild, mission):
         if left <= 0:
             break
         if t.goal_item == "Any Dictionary":
+            from .library_screen import library_stock_dictionaries
+            stock = set(library_stock_dictionaries(guild))
             for name, qty in list(u._base_inventory):
-                if name.startswith("Dictionary of ") and left > 0:
+                if name.startswith("Dictionary of ") and name not in stock and left > 0:
                     left -= u.remove_named(name, min(left, qty))
         else:
             left -= u.remove_named(t.goal_item, left)

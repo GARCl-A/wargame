@@ -139,3 +139,17 @@ def test_studying_a_language_with_shared_party_dictionary():
 
     assert student.study_progress > 0
     assert student.gold == 1000 - 15
+
+
+def test_idle_member_pays_no_rent_and_order_ends_when_nobody_studies():
+    u = Unit("player")
+    u.study_target = None
+    u.gold = 1000
+    g = Group([u], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study")
+
+    guild.pass_time(24)
+
+    assert u.gold == 1000
+    assert g.order is None

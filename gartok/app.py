@@ -192,7 +192,8 @@ class App:
                                on_manage_group=self._open_group,
                                pending_event=self._pending_event,
                                on_resolve_event=self._resolve_pending_event,
-                               on_autowin=self._resolve_ambush_autowin)
+                               on_autowin=self._resolve_ambush_autowin,
+                               on_visit_tavern=self._visit_tavern)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -656,6 +657,10 @@ class App:
             self._campaign_over()
         else:
             self._after_activity()
+
+    def _visit_tavern(self, group):
+        self._pending = []
+        self._open_taverna(list(group.members), world.node(group.node), None, group=group)
 
     def _open_taverna(self, party, node, _offer, group=None):
         self.scene = TavernaScreen(self.fonts, self.guild, party, node,

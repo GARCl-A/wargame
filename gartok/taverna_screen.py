@@ -143,8 +143,11 @@ class TavernaScreen(Screen):
                     elif key == "tab_rooms":
                         self.tab = "rooms"
                     elif key == "rent_study" and self.group is not None:
-                        self.group.order = orders.garrison("study")
-                        self.notice = "Party rented quiet rooms and begins studying daily."
+                        if not any(m.study_target for m in self.party):
+                            self.notice = "Set a study target for someone before renting rooms."
+                        else:
+                            self.group.order = orders.garrison("study")
+                            self.notice = "Party rented quiet rooms and begins studying daily."
                     elif key == "cancel_study" and self.group is not None:
                         self.group.order = None
                         self.notice = "Study order cancelled. Party is now idle."
@@ -217,7 +220,7 @@ class TavernaScreen(Screen):
         for m in members:
             for item in m.inventory:
                 spell = magic.spell_for_scroll(item)
-                if spell and student.magic_source and spell.id not in student.spells_known:
+                if spell and magic.can_study_spell(student, spell):
                     if spell.id not in seen:
                         seen.add(spell.id)
                         pts = magic.points_to_learn(spell.level)
@@ -508,14 +511,15 @@ class TavernaScreen(Screen):
 
         # Header area: Garrison order status and room cost
         cost = economy.TAVERN_STUDY_COST_PER_DAY
-        total_cost = len(self.party) * cost
+        studiers = sum(1 for m in self.party if m.study_target)
+        total_cost = studiers * cost
 
         caps(screen, F["micro"], "ROOMS & STUDY GARRISON", (area.x + 20, area.y + 14), T.TX_MUTED)
 
         cx = area.x + 20
         cy = area.y + 36
-        text(screen, F["bodyb"], f"Daily Study Rent: {cost} copper per member ({total_cost} copper total per day)", (cx, cy), T.TX)
-        text(screen, F["body_sm"], "Each member with a study target rolls daily progress using their Intelligence modifier.",
+        text(screen, F["bodyb"], f"Daily Study Rent: {cost} copper per studying member ({total_cost} copper per day now)", (cx, cy), T.TX)
+        text(screen, F["body_sm"], "Only members with a study target pay rent and roll daily progress (Intelligence modifier).",
              (cx, cy + 22), T.TX_MUTED)
 
         # Rent button / Status
@@ -557,7 +561,8 @@ class TavernaScreen(Screen):
             # Left stats
             tx = mr.x + 60
             text(screen, F["bodyb"], m.name, (tx, mr.y + 12), T.TX)
-            caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · INT {m.mod_intelligence:+} · {m.gold} copper",
+            magic_tag = f"Magic: {m.magic_source.capitalize()}" if m.magic_source else "No Magic Affinity"
+            caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · INT {m.mod_intelligence:+} · {magic_tag} · {m.gold} copper",
                  (tx, mr.y + 36), T.TX_MUTED)
 
             # Middle: Study target progress
@@ -634,9 +639,12 @@ class TavernaScreen(Screen):
 
         options = self._available_study_options(student)
         if not options:
-            text(screen, F["body"], "No eligible scrolls or dictionaries carried by the party.", (cx, cy + 20), T.TX)
+            if not student.magic_source:
+                text(screen, F["body"], f"{student.name} has no magical affinity and carries no unlearned dictionaries.", (cx, cy + 20), T.TX)
+            else:
+                text(screen, F["body"], "No eligible scrolls or dictionaries carried by the party.", (cx, cy + 20), T.TX)
             text(screen, F["body_sm"],
-                 "• Scrolls require magical affinity to study.\n• Dictionaries teach foreign languages.\n• Buy dictionaries at the Library or scrolls in the market.",
+                 "• Scrolls require matching magical affinity to study.\n• Dictionaries teach foreign languages.\n• Buy paper & ink to write dictionaries at the Library or find scrolls in ruins.",
                  (cx, cy + 50), T.TX_FAINT)
         else:
             rw = dialog_w - 48

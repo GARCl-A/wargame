@@ -67,6 +67,8 @@ def progress_study(unit, group=None):
     a `Dictionary of <Language>`), whichever `study_target` names. Returns an
     event string worth telling the player about, or None for a quiet day (no
     target set, no matching item, not initiated -- rent still comes due)."""
+    if not unit.study_target:
+        return None
     if unit.gold < economy.TAVERN_STUDY_COST_PER_DAY:
         return f"{unit.name} could not afford the rent to study."
     unit.gold -= economy.TAVERN_STUDY_COST_PER_DAY
@@ -77,8 +79,16 @@ def progress_study(unit, group=None):
         return _progress_language(unit, unit.study_target, group=group)
     return None
 
+def can_study_spell(unit, spell):
+    """True if `unit` has an affinity matching `spell.sources` and has not already mastered it."""
+    if not unit.magic_source or unit.magic_source not in spell.sources:
+        return False
+    if spell.id in unit.spells_known:
+        return False
+    return True
+
 def _progress_spell(unit, spell, group=None):
-    if not unit.magic_source or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):
+    if not can_study_spell(unit, spell) or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):
         return None
     bonus = 2 if unit.race["name"] == "Kobold" and "blood" in spell.sources else 0
     dice_qty = (2 if "gnome_magic_excitement" in unit.talents["racial"]
