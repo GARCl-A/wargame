@@ -279,7 +279,8 @@ def _padded(item):
 
 
 def footer_bar(screen_obj, surf, F, *, back=None, secondary=None, primary=None,
-               notice=None, notice_color=None, hint=FOOTER_HINT, margin=None):
+               notice=None, notice_color=None, hint=FOOTER_HINT, margin=None,
+               danger=False):
     """The bottom action row most activity screens share: an optional back
     button bottom-left, up to two confirm buttons stacked right-to-left
     (`primary` rightmost and filled, `secondary` beside it), an optional
@@ -305,7 +306,7 @@ def footer_bar(screen_obj, surf, F, *, back=None, secondary=None, primary=None,
     if primary is not None:
         key, label, enabled = _padded(primary)
         rect = pygame.Rect(rx - PRIMARY_W, y, PRIMARY_W, 36)
-        screen_obj.add_button(surf, rect, key, label, enabled=enabled, primary=True)
+        screen_obj.add_button(surf, rect, key, label, enabled=enabled, primary=True, danger=danger)
         rx = rect.x - T.S * 3
 
     if secondary is not None:

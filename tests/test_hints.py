@@ -1,8 +1,9 @@
 import sys
+from unittest.mock import MagicMock
+
 try:
     import pygame
 except ImportError:
-    from unittest.mock import MagicMock
     mock_pg = MagicMock()
     mock_pg.Surface.side_effect = lambda size, *a, **kw: MagicMock(get_size=lambda: size)
     sys.modules["pygame"] = mock_pg

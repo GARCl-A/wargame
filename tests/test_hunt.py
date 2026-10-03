@@ -111,7 +111,11 @@ def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
     try:
         scr.hours = 8
         scr._do_stretch()                                # setup -> a pack after 3 h
-        assert fired == [3] and scr.phase == "setup" and st.fights == 1
+        assert scr.phase == "ambush" and st.fights == 1
+        surf = pygame.Surface((1280, 800))
+        scr.draw(surf)
+        scr._click(next(r.center for k, r in scr.buttons if k == "fight_ambush"))
+        assert fired == [3]
 
         st.hours_left = 5                                 # app rebuilds the screen at interlude
         scr.phase = "interlude"
