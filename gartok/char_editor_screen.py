@@ -20,41 +20,19 @@ import pygame
 from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .screen import Screen
-from .theme import (
-    ACCENT,
-    ACCENT_INK,
-    DANGER,
-    INFO,
-    INK,
-    INK_DIM,
-    INK_FAINT,
-    LINE,
-    LINE_SOFT,
-    MARGIN,
-    OK,
-    RADIUS,
-    SP1,
-    SP2,
-    SP3,
-    SP4,
-    SP5,
-    SURFACE_0,
-    SURFACE_1,
-    SURFACE_2,
-    SURFACE_3,
-    SURFACE_4,
+from .ui.primitives import contained as ui_contained
+from .ui.primitives import (
+    draw_button,
     draw_tooltip,
     ellipsize,
     format_tooltip,
-    panel,
     section,
+    set_pointer,
     text,
 )
-from .ui.primitives import contained as ui_contained
-from .ui.primitives import set_pointer
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import hp_tooltip, unit_to_ch
-from .ui.tokens import fonts as ui_fonts
+from .ui.tokens import T
 from .unit import Unit
 
 _ATTR_ABBR = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
@@ -71,7 +49,7 @@ class CharEditorScreen(Screen):
 
     def __init__(self, fonts, on_back):
         super().__init__()
-        self.fonts = fonts
+        self.F = fonts
         self.on_back = on_back
         self.hits = []                        # [(rect, action)] rebuilt each frame
         self.picker = None                    # (kind, [options], current) or None
@@ -107,7 +85,7 @@ class CharEditorScreen(Screen):
     def _save(self):
         self.slug = npc_lib.save_npc(self.unit, self.slug)
         self._refresh_library()
-        self.notice = (f"saved  ·  npcs/{self.slug}.json", OK)
+        self.notice = (f"saved  ·  npcs/{self.slug}.json", T.GREEN)
 
     def _duplicate(self):
         """Clone the current character into a fresh, unsaved copy -- new identity,
@@ -118,7 +96,7 @@ class CharEditorScreen(Screen):
         clone = Unit.from_save(d)
         clone.set_name(f"{self.unit.name} (copy)")
         self._load_unit(clone, slug=None)
-        self.notice = ("duplicated  ·  unsaved copy — SAVE writes a new file", OK)
+        self.notice = ("duplicated  ·  unsaved copy — SAVE writes a new file", T.GREEN)
 
     def _start_edit(self, field):
         self.edit_field = field
@@ -276,29 +254,31 @@ class CharEditorScreen(Screen):
             self.hits.append((rect, action))
 
     def _btn(self, screen, rect, label, *, on=False, danger=False, font=None):
-        hot = rect.collidepoint(self.mouse)
-        edge = DANGER if danger else ACCENT
-        panel(screen, rect, fill=edge if on else (SURFACE_3 if hot else SURFACE_2),
-              border=edge if (on or hot) else LINE_SOFT, width=1, radius=4)
-        col = ACCENT_INK if on else (DANGER if danger else (ACCENT if hot else INK_DIM))
-        text(screen, label, font or self.fonts.label, col, rect.center, center=True)
+        draw_button(screen, self.F, rect, label, primary=on, danger=danger and on,
+                    mpos=self.mouse, fnt=font)
+
+    @staticmethod
+    def _box(screen, rect, *, fill, border=T.STEEL_LINE, width=1):
+        pygame.draw.rect(screen, fill, rect)
+        if border and width:
+            pygame.draw.rect(screen, border, rect, width)
 
     def draw(self, screen):
-        f = self.fonts
+        F = self.F
         W, H = screen.get_size()
-        screen.fill(SURFACE_0)
+        screen.fill(T.TABLE)
         self.hits = []
         self.tooltip = None
         self._clip = None
-        pad = MARGIN if W < 1500 else SP5
+        pad = T.S * 2 if W < 1500 else T.S * 3
 
-        text(screen, "CHARACTER CREATOR", f.title, INK, (pad, pad - 2))
+        text(screen, F["titleb"], "CHARACTER CREATOR", (pad, pad - 2), T.TX)
         sub = (f"editing  {self.slug}" if self.slug else "unsaved  ·  a fresh roll")
         if self.notice:
             sub, scol = self.notice[0], self.notice[1]
         else:
-            scol = INK_DIM
-        text(screen, sub, f.body_sm, scol, (pad, pad + 28))
+            scol = T.TX_MUTED
+        text(screen, F["body_sm"], sub, (pad, pad + 28), scol)
 
         narrow = W < 980
         bw, bh = (78, 28) if narrow else (104, 30)
@@ -308,12 +288,12 @@ class CharEditorScreen(Screen):
                                    ("randomize", "RANDOMIZE", False)):
             r = pygame.Rect(bx, pad, bw, bh)
             self._btn(screen, r, label, danger=danger,
-                      font=f.label if narrow else f.body_bd)
+                      font=F["micro"] if narrow else F["bodyb"])
             self._hit(r, (key,))
-            bx -= bw + SP2
+            bx -= bw + T.S
 
         top = pad + 52
-        gap = SP4
+        gap = T.S * 2
         left_w = max(430, min(int((W - 2 * pad - gap) * 0.58),
                               W - 2 * pad - gap - 300))
         left = pygame.Rect(pad, top, left_w, H - top - pad)
@@ -327,17 +307,17 @@ class CharEditorScreen(Screen):
             self._draw_picker(screen)
 
         if getattr(self, "tooltip", None):
-            draw_tooltip(screen, f.body_sm, self.tooltip, self.mouse)
+            draw_tooltip(screen, F, self.tooltip, self.mouse)
 
         set_pointer(any(r.collidepoint(self.mouse) for r, _ in self.hits)
                     or bool(self.picker))
 
     # ------------------------------------------------------------------ #
     def _draw_form(self, screen, rect):
-        f = self.fonts
+        F = self.F
         u = self.unit
-        panel(screen, rect, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        inner = rect.inflate(-2 * SP3, -2 * SP2)
+        self._box(screen, rect, fill=T.STEEL, border=T.STEEL_LINE)
+        inner = rect.inflate(-2 * T.S * 2, -2 * T.S)
         prev = screen.get_clip()
         screen.set_clip(inner)
         self._clip = inner
@@ -347,182 +327,171 @@ class CharEditorScreen(Screen):
         y0 = y
 
         # --- identity --------------------------------------------------- #
-        y = section(screen, "IDENTITY", x, y, w, f)
-        half = (w - SP2) // 2
-        third = (w - 2 * SP2) // 3            # the three track columns (progression + talents)
+        y = section(screen, F, "IDENTITY", x, y, w)
+        half = (w - T.S) // 2
+        third = (w - 2 * T.S) // 3            # the three track columns (progression + talents)
         self._edit_row(screen, pygame.Rect(x, y, w, 26), "NAME", "name",
                        "" if u._auto_name else u.name)
-        y += 26 + SP1
+        y += 26 + T.S // 2
         for i, (pk, lbl, val) in enumerate((("race", "RACE", u.race["name"]),
                                             ("occupation", "OCC", u.occupation["name"]))):
-            self._pick_row(screen, pygame.Rect(x + i * (half + SP2), y, half, 26),
+            self._pick_row(screen, pygame.Rect(x + i * (half + T.S), y, half, 26),
                            lbl, val, ("picker", pk))
-        y += 26 + SP1
+        y += 26 + T.S // 2
         self._pick_row(screen, pygame.Rect(x, y, half, 26), "ALIGN", u.alignment,
                        ("picker", "alignment"))
         mult = u.race["age_mult"]
-        self._edit_row(screen, pygame.Rect(x + half + SP2, y, half, 26), "AGE", "age",
+        self._edit_row(screen, pygame.Rect(x + half + T.S, y, half, 26), "AGE", "age",
                        f"{u.age}  ({round(u.age / mult)} at x1)")
-        y += 26 + SP1
-        text(screen, f"{u.race['size']}  ·  token {u.race['token']}  ·  "
-             f"ability: {u.ability.name}", f.body_sm, INK_FAINT, (x, y + 2))
+        y += 26 + T.S // 2
+        text(screen, F["body_sm"], f"{u.race['size']}  ·  token {u.race['token']}  ·  " f"ability: {u.ability.name}",
+             (x, y + 2), T.TX_FAINT)
         y += 20
         self._edit_row(screen, pygame.Rect(x, y, w, 26), "BIO", "bio", u.bio)
-        y += 26 + SP1
+        y += 26 + T.S // 2
 
         # --- attributes ----------------------------------------------- #
-        y = section(screen, "ATTRIBUTES  (3d6 score, 3..18)", x, y + SP1, w, f)
-        cg = SP1
+        y = section(screen, F, "ATTRIBUTES  (3d6 score, 3..18)", x, y + T.S // 2, w)
+        cg = T.S // 2
         cw = (w - 5 * cg) // 6
         ch, bh = 80, 16
         for i, (abbr, name) in enumerate(_ATTR_ABBR):
             cx = x + i * (cw + cg)
             cell = pygame.Rect(cx, y, cw, ch)
-            panel(screen, cell, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
-            text(screen, abbr, f.label, INK_FAINT, (cell.centerx, cell.y + 11), center=True)
+            self._box(screen, cell, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+            text(screen, F["micro"], abbr, (cell.centerx, cell.y + 11), T.TX_FAINT, center=True)
             base = u.base_attributes[name]
-            text(screen, str(base), f.num, INK, (cell.centerx, cell.y + 31), center=True)
+            text(screen, F["head"], str(base), (cell.centerx, cell.y + 31), T.TX, center=True)
             m = getattr(u, f"mod_{name}")
-            mc = OK if m > 0 else DANGER if m < 0 else INK_FAINT
+            mc = T.GREEN if m > 0 else T.BLOOD if m < 0 else T.TX_FAINT
             fin = getattr(u, name)
-            text(screen, f"{fin} ({m:+})", f.mono_sm, mc,
-                 (cell.centerx, cell.y + 50), center=True)
+            text(screen, F["micro"], f"{fin} ({m:+})",
+                 (cell.centerx, cell.y + 50), mc, center=True)
             dn = pygame.Rect(cell.x + 2, cell.bottom - bh - 2, cw // 2 - 3, bh)
             up = pygame.Rect(cell.centerx + 1, cell.bottom - bh - 2, cw // 2 - 3, bh)
             for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
                 h = br.collidepoint(self.mouse)
-                panel(screen, br, fill=SURFACE_4 if h else SURFACE_1,
-                      border=LINE_SOFT, width=0, radius=3)
-                text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM,
-                     br.center, center=True)
+                self._box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+                text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
                 self._hit(br, ("attr", name, sign))
             if cell.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse):
                 if abbr in data.ATTRIBUTE_HELP:
                     t, d = data.ATTRIBUTE_HELP[abbr]
-                    self.tooltip = format_tooltip(t, d, f)
-        y += ch + SP2
+                    self.tooltip = format_tooltip(t, d, F)
+        y += ch + T.S
 
         # --- progression -------------------------------------------- #
         # RACIAL: sandbox pins the racial level straight; the AUTO tag on the
         # line below drops it back to derived (combat + work on a scale).
-        y = section(screen, "PROGRESSION", x, y, w, f)
+        y = section(screen, F, "PROGRESSION", x, y, w)
         for i, track in enumerate(talents.TRACKS):
-            lr = pygame.Rect(x + i * (third + SP2), y, third, 26)
-            panel(screen, lr, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
+            lr = pygame.Rect(x + i * (third + T.S), y, third, 26)
+            self._box(screen, lr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
             lvl = u.track_level[track]
             pin = track == "racial" and u._racial_override is not None
-            text(screen, f"{track.upper()}  N{lvl}", f.body_sm,
-                 ACCENT if pin else INK, (lr.x + SP2, lr.y + 6))
+            text(screen, F["body_sm"], f"{track.upper()}  N{lvl}",
+                 (lr.x + T.S, lr.y + 6), T.BRASS if pin else T.TX)
             picks = u.picks_available(track)
             if picks:
-                text(screen, f"+{picks}", f.label, ACCENT, (lr.right - 52, lr.y + 8))
+                text(screen, F["micro"], f"+{picks}", (lr.right - 52, lr.y + 8), T.BRASS)
             dn = pygame.Rect(lr.right - 40, lr.y + 3, 18, 20)
             up = pygame.Rect(lr.right - 20, lr.y + 3, 18, 20)
             for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
                 h = br.collidepoint(self.mouse)
-                panel(screen, br, fill=SURFACE_4 if h else SURFACE_1, border=LINE_SOFT,
-                      width=0, radius=3)
-                text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM, br.center, center=True)
+                self._box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+                text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
                 self._hit(br, ("level", track, sign))
-        y += 26 + SP1
+        y += 26 + T.S // 2
 
         # HP: the steppers pin an override, AUTO clears it (see Unit.set_hp).
         hr = pygame.Rect(x, y, half, 26)
-        panel(screen, hr, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
+        self._box(screen, hr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
         pinned = u._hp_override is not None
-        text(screen, f"HP  {u.hp_max}", f.body_sm, ACCENT if pinned else INK,
-             (hr.x + SP2, hr.y + 6))
+        text(screen, F["body_sm"], f"HP  {u.hp_max}",
+             (hr.x + T.S, hr.y + 6), T.BRASS if pinned else T.TX)
         if pinned:
             rs = pygame.Rect(hr.right - 78, hr.y + 4, 34, 18)
             rh = rs.collidepoint(self.mouse)
-            panel(screen, rs, fill=SURFACE_4 if rh else SURFACE_1, border=LINE_SOFT,
-                  width=0, radius=3)
-            text(screen, "auto", f.label, ACCENT if rh else INK_DIM, rs.center, center=True)
+            self._box(screen, rs, fill=T.STEEL_HI if rh else T.STEEL, border=T.STEEL_LINE, width=0)
+            text(screen, F["micro"], "auto", rs.center, T.BRASS if rh else T.TX_MUTED, center=True)
             self._hit(rs, ("hp_auto",))
         dn = pygame.Rect(hr.right - 40, hr.y + 3, 18, 20)
         up = pygame.Rect(hr.right - 20, hr.y + 3, 18, 20)
         for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
             h = br.collidepoint(self.mouse)
-            panel(screen, br, fill=SURFACE_4 if h else SURFACE_1, border=LINE_SOFT,
-                  width=0, radius=3)
-            text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM, br.center, center=True)
+            self._box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+            text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
             self._hit(br, ("hp", sign))
         if hr.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse) and not (pinned and rs.collidepoint(self.mouse)):
-            self.tooltip = hp_tooltip(u, ui_fonts())
-        y += 26 + SP1
+            self.tooltip = hp_tooltip(u, F)
+        y += 26 + T.S // 2
 
         dice = len(u._level_hp_rolls)
         lo, hi = self._hp_bounds(u)
         rl_pinned = u._racial_override is not None
         head = f"racial level {u.racial_level}"
-        text(screen, head, f.body_sm, ACCENT if rl_pinned else INK_FAINT, (x, y + 2))
-        hx = x + f.body_sm.size(head)[0] + SP1
+        text(screen, F["body_sm"], head, (x, y + 2), T.BRASS if rl_pinned else T.TX_FAINT)
+        hx = x + F["body_sm"].size(head)[0] + T.S // 2
         if rl_pinned:
             ar = pygame.Rect(hx, y, 34, 15)
             ah = ar.collidepoint(self.mouse)
-            panel(screen, ar, fill=SURFACE_4 if ah else SURFACE_1, border=LINE_SOFT,
-                  width=0, radius=3)
-            text(screen, "auto", f.label, ACCENT if ah else INK_DIM, ar.center, center=True)
+            self._box(screen, ar, fill=T.STEEL_HI if ah else T.STEEL, border=T.STEEL_LINE, width=0)
+            text(screen, F["micro"], "auto", ar.center, T.BRASS if ah else T.TX_MUTED, center=True)
             self._hit(ar, ("racial_auto",))
-            hx = ar.right + SP1
-        text(screen, f"·  {1 + dice} hit {'die' if dice == 0 else 'dice'} "
-             f"(d{u.race['hd']})  ·  HP rolls {lo}-{hi}"
-             + ("  ·  HP pinned" if pinned else ""),
-             f.body_sm, INK_FAINT, (hx, y + 2))
+            hx = ar.right + T.S // 2
+        text(screen, F["body_sm"], f"·  {1 + dice} hit {'die' if dice == 0 else 'dice'} " f"(d{u.race['hd']})  ·  HP rolls {lo}-{hi}" + ("  ·  HP pinned" if pinned else ""),
+             (hx, y + 2), T.TX_FAINT)
         y += 20
 
         # --- talents ----------------------------------------------- #
-        y = section(screen, "TALENTS", x, y + SP1, w, f)
+        y = section(screen, F, "TALENTS", x, y + T.S // 2, w)
         ty0 = y
         col_bottom = y
         for i, track in enumerate(talents.TRACKS):
-            colx = x + i * (third + SP2)
-            text(screen, track.upper(), f.label, INFO, (colx, ty0))
+            colx = x + i * (third + T.S)
+            text(screen, F["micro"], track.upper(), (colx, ty0), T.TX_MUTED)
             ty = ty0 + 16
             nodes = (talents.racial_tree(u.race["name"]) if track == "racial"
                      else talents.TREE[track])
             if not nodes:
-                text(screen, "— none for this race yet", f.label, INK_FAINT,
-                     (colx, ty + 2))
+                text(screen, F["micro"], "— none for this race yet", (colx, ty + 2), T.TX_FAINT)
             for t in nodes:
                 taken = t.id in u.talents[track]
                 blocked = t.requires and t.requires not in u.talents[track]
                 openp = not taken and not blocked and u.picks_available(track) > 0
-                indent = SP3 if t.requires else 0
+                indent = T.S * 2 if t.requires else 0
                 tr = pygame.Rect(colx + indent, ty, third - indent, 18)
-                edge = OK if taken else ACCENT if openp else LINE_SOFT
-                panel(screen, tr, fill=SURFACE_2 if (taken or openp) else SURFACE_1,
-                      border=edge, width=1, radius=3)
-                tc = OK if taken else ACCENT if openp else INK_FAINT
-                text(screen, ellipsize(t.name, f.label, tr.w - 2 * SP1), f.label, tc,
-                     (tr.x + SP1, tr.y + 4))
+                edge = T.GREEN if taken else T.BRASS if openp else T.STEEL_LINE
+                self._box(screen, tr, fill=T.TABLE if (taken or openp) else T.STEEL, border=edge, width=1)
+                tc = T.GREEN if taken else T.BRASS if openp else T.TX_FAINT
+                text(screen, F["micro"], ellipsize(t.name, F["micro"], tr.w - 2 * T.S // 2),
+                     (tr.x + T.S // 2, tr.y + 4), tc)
                 if taken or openp:
                     self._hit(tr, ("talent", track, t.id))
                 ty += 20
             col_bottom = max(col_bottom, ty)
-        y = col_bottom + SP2
+        y = col_bottom + T.S
 
         # --- languages ------------------------------------------- #
-        y = section(screen, "LANGUAGES", x, y, w, f)
+        y = section(screen, F, "LANGUAGES", x, y, w)
         cx, cy = x, y
         for lang in data.LANGUAGES:
             on = lang in u.languages
-            cwid = f.body_sm.size(lang)[0] + SP3
+            cwid = F["body_sm"].size(lang)[0] + T.S * 2
             if cx + cwid > x + w:
                 cx, cy = x, cy + 22
             lr = pygame.Rect(cx, cy, cwid, 18)
-            panel(screen, lr, fill=SURFACE_3 if on else SURFACE_1,
-                  border=ACCENT if on else LINE_SOFT, width=1, radius=3)
-            text(screen, lang, f.body_sm, INK if on else INK_FAINT, (lr.x + SP1, lr.y + 3))
+            self._box(screen, lr, fill=T.STEEL_HI if on else T.STEEL, border=T.BRASS if on else T.STEEL_LINE, width=1)
+            text(screen, F["body_sm"], lang, (lr.x + T.S // 2, lr.y + 3), T.TX if on else T.TX_FAINT)
             self._hit(lr, ("lang", lang))
-            cx += cwid + SP1
-        y = cy + 18 + SP2
+            cx += cwid + T.S // 2
+        y = cy + 18 + T.S
 
         # --- purse + gear -------------------------------------- #
-        y = section(screen, "PURSE + GEAR", x, y, w, f)
+        y = section(screen, F, "PURSE + GEAR", x, y, w)
         gr = pygame.Rect(x, y, w, 24)
-        panel(screen, gr, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
-        text(screen, f"{u.gold} copper", f.body_sm, ACCENT, (gr.x + SP2, gr.y + 5))
+        self._box(screen, gr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+        text(screen, F["body_sm"], f"{u.gold} copper", (gr.x + T.S, gr.y + 5), T.BRASS)
         bxx = gr.right - 4
         for step, glyph in ((10, "+10"), (1, "+1"), (-1, "−1"), (-10, "−10")):
             sw = 34
@@ -530,42 +499,42 @@ class CharEditorScreen(Screen):
             self._btn(screen, sr, glyph)
             self._hit(sr, ("gold", step))
             bxx -= sw
-        y += 24 + SP1
+        y += 24 + T.S // 2
 
         wr = pygame.Rect(x, y, w, 24)
         self._pick_row(screen, wr, "WEAPON", u.equipped_weapon or "(unarmed)",
                        ("picker", "weapon"))
-        y += 24 + SP1
+        y += 24 + T.S // 2
         if u.has_tongue:
             tr2 = pygame.Rect(x, y, w, 24)
             self._pick_row(screen, tr2, "TONGUE", u.equipped_tongue or "(empty)",
                            ("picker", "tongue"))
-            y += 24 + SP1
+            y += 24 + T.S // 2
         arr = pygame.Rect(x, y, w, 24)
         self._pick_row(screen, arr, "ARMOR", u.equipped_armor or "(none)",
                        ("picker", "armor"))
-        y += 24 + SP1
+        y += 24 + T.S // 2
         tr = pygame.Rect(x, y, w, 22)
         torch_on = u.equipped_offhand == data.TORCH_ITEM
         self._btn(screen, tr, ("OFF HAND: TORCH" if torch_on else "OFF HAND: EMPTY"),
                   on=torch_on)
         self._hit(tr, ("torch",))
-        y += 22 + SP2
+        y += 22 + T.S
 
-        text(screen, f"PACK  ({len(u._base_inventory)})  ·  load "
-             f"{u.load:g}/{u.carry_normal:g} kg", f.label, INFO, (x, y))
+        text(screen, F["micro"], f"PACK  ({len(u._base_inventory)})  ·  load " f"{u.load:g}/{u.carry_normal:g} kg",
+             (x, y), T.TX_MUTED)
         y += 16
         for idx, (item, qty) in enumerate(list(u._base_inventory)):
             ir = pygame.Rect(x, y, w, 20)
-            panel(screen, ir, fill=SURFACE_1, border=LINE_SOFT, width=1, radius=3)
+            self._box(screen, ir, fill=T.STEEL, border=T.STEEL_LINE, width=1)
             label = item if qty == 1 else f"{item} ×{qty}"
-            text(screen, ellipsize(label, f.body_sm, ir.w - SP2 - 78), f.body_sm, INK,
-                 (ir.x + SP2, ir.y + 3))
-            text(screen, f"{items.item_weight(item) * qty:g} kg", f.mono_sm, INK_FAINT,
-                 (ir.right - 26, ir.y + 4), right=True)
+            text(screen, F["body_sm"], ellipsize(label, F["body_sm"], ir.w - T.S - 78),
+                 (ir.x + T.S, ir.y + 3), T.TX)
+            text(screen, F["micro"], f"{items.item_weight(item) * qty:g} kg",
+                 (ir.right - 26, ir.y + 4), T.TX_FAINT, right=True)
             xr = pygame.Rect(ir.right - 20, ir.y + 2, 16, 16)
             h = xr.collidepoint(self.mouse)
-            text(screen, "×", f.body_bd, DANGER if h else INK_DIM, xr.center, center=True)
+            text(screen, F["bodyb"], "×", xr.center, T.BLOOD if h else T.TX_MUTED, center=True)
             self._hit(xr, ("unpack", idx))
             target = None
             if item.startswith("Scroll of ") and u.magic_source:
@@ -580,15 +549,15 @@ class CharEditorScreen(Screen):
                 studying = u.study_target == target.id
                 sr = pygame.Rect(xr.left - 48, ir.y + 2, 44, 16)
                 sh = sr.collidepoint(self.mouse)
-                s_col = ACCENT if studying else (OK if sh else INK_DIM)
-                panel(screen, sr, fill=SURFACE_3 if sh else SURFACE_2, border=s_col, width=1, radius=3)
-                text(screen, "study", f.label, s_col, sr.center, center=True)
+                s_col = T.BRASS if studying else (T.GREEN if sh else T.TX_MUTED)
+                self._box(screen, sr, fill=T.STEEL_HI if sh else T.TABLE, border=s_col, width=1)
+                text(screen, F["micro"], "study", sr.center, s_col, center=True)
                 self._hit(sr, ("study", target.id))
             y += 22
         addr = pygame.Rect(x, y, 120, 20)
         self._btn(screen, addr, "+ ADD ITEM")
         self._hit(addr, ("picker", "additem"))
-        y += 20 + SP4
+        y += 20 + T.S * 2
 
         content_h = y - y0                      # y0 already carries the -scroll offset
         self._scroll_max = max(0, content_h - inner.h)
@@ -598,45 +567,43 @@ class CharEditorScreen(Screen):
             track_h = inner.h
             kh = max(24, int(track_h * inner.h / content_h))
             ky = inner.y + int((track_h - kh) * self.scroll / self._scroll_max)
-            pygame.draw.rect(screen, SURFACE_4,
+            pygame.draw.rect(screen, T.STEEL_HI,
                              (rect.right - 5, ky, 3, kh), border_radius=2)
 
     def _pick_row(self, screen, rect, label, value, action):
-        f = self.fonts
+        F = self.F
         hot = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_3 if hot else SURFACE_2,
-              border=ACCENT if hot else LINE, width=1, radius=4)
-        text(screen, label, f.label, INK_FAINT, (rect.x + SP2, rect.centery - 5))
-        vx = rect.x + SP2 + f.label.size(label)[0] + SP2
-        vw = rect.right - SP2 - f.body_sm.size("▾")[0] - SP1 - vx
-        text(screen, ellipsize(str(value), f.body_sm, vw), f.body_sm, INK,
-             (vx, rect.centery - 6))
-        text(screen, "▾", f.body_sm, ACCENT if hot else INK_FAINT,
-             (rect.right - SP2, rect.centery - 7), right=True)
+        self._box(screen, rect, fill=T.STEEL_HI if hot else T.TABLE, border=T.BRASS if hot else T.STEEL_LINE, width=1)
+        text(screen, F["micro"], label, (rect.x + T.S, rect.centery - 5), T.TX_FAINT)
+        vx = rect.x + T.S + F["micro"].size(label)[0] + T.S
+        vw = rect.right - T.S - F["body_sm"].size("▾")[0] - T.S // 2 - vx
+        text(screen, F["body_sm"], ellipsize(str(value), F["body_sm"], vw),
+             (vx, rect.centery - 6), T.TX)
+        text(screen, F["body_sm"], "▾",
+             (rect.right - T.S, rect.centery - 7), T.BRASS if hot else T.TX_FAINT, right=True)
         self._hit(rect, action)
 
     def _edit_row(self, screen, rect, label, field, value):
         """A click-to-type row (name / age). `value` is what shows when idle; the
         typed buffer, with a caret, shows while `field` is being edited."""
-        f = self.fonts
+        F = self.F
         editing = self.edit_field == field
         hot = rect.collidepoint(self.mouse)
-        panel(screen, rect, fill=SURFACE_3 if (hot or editing) else SURFACE_2,
-              border=ACCENT if (hot or editing) else LINE, width=1, radius=4)
-        text(screen, label, f.label, INK_FAINT, (rect.x + SP2, rect.centery - 5))
-        vx = rect.x + SP2 + f.label.size(label)[0] + SP2
-        edit_w = 0 if editing else f.label.size("edit")[0] + SP2
-        vw = rect.right - SP2 - edit_w - vx
+        self._box(screen, rect, fill=T.STEEL_HI if (hot or editing) else T.TABLE, border=T.BRASS if (hot or editing) else T.STEEL_LINE, width=1)
+        text(screen, F["micro"], label, (rect.x + T.S, rect.centery - 5), T.TX_FAINT)
+        vx = rect.x + T.S + F["micro"].size(label)[0] + T.S
+        edit_w = 0 if editing else F["micro"].size("edit")[0] + T.S
+        vw = rect.right - T.S - edit_w - vx
         if editing:
             shown = self.edit_buf + "|"
-            while len(shown) > 1 and f.body_sm.size(shown)[0] > vw:
+            while len(shown) > 1 and F["body_sm"].size(shown)[0] > vw:
                 shown = shown[1:]                 # keep the caret end in view
         else:
-            shown = ellipsize(str(value) or "(auto)", f.body_sm, vw)
-        text(screen, shown, f.body_sm, INK, (vx, rect.centery - 6))
+            shown = ellipsize(str(value) or "(auto)", F["body_sm"], vw)
+        text(screen, F["body_sm"], shown, (vx, rect.centery - 6), T.TX)
         if not editing:
-            text(screen, "edit", f.label, ACCENT if hot else INK_FAINT,
-                 (rect.right - SP2, rect.centery - 5), right=True)
+            text(screen, F["micro"], "edit",
+                 (rect.right - T.S, rect.centery - 5), T.BRASS if hot else T.TX_FAINT, right=True)
         self._hit(rect, (field,))
 
     @staticmethod
@@ -653,39 +620,36 @@ class CharEditorScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_side(self, screen, rect):
-        f = self.fonts
+        F = self.F
         u = self.unit
         lib_h = min(int(rect.h * 0.42), 40 + 30 * (len(self.library) + 1))
         lib = pygame.Rect(rect.x, rect.y, rect.w, max(120, lib_h))
-        panel(screen, lib, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        text(screen, "NPC LIBRARY", f.label, INFO, (lib.x + SP3, lib.y + SP2))
-        text(screen, "npcs/", f.mono_sm, INK_FAINT, (lib.right - SP3, lib.y + SP2),
-             right=True)
+        self._box(screen, lib, fill=T.STEEL, border=T.STEEL_LINE)
+        text(screen, F["micro"], "NPC LIBRARY", (lib.x + T.S * 2, lib.y + T.S), T.TX_MUTED)
+        text(screen, F["micro"], "npcs/", (lib.right - T.S * 2, lib.y + T.S), T.TX_FAINT, right=True)
         ly = lib.y + 24
         if not self.library:
-            text(screen, "no saved characters yet — SAVE writes one here",
-                 f.body_sm, INK_FAINT, (lib.x + SP3, ly + 2))
+            text(screen, F["body_sm"], "no saved characters yet — SAVE writes one here",
+                 (lib.x + T.S * 2, ly + 2), T.TX_FAINT)
         prev = screen.get_clip()
-        screen.set_clip(lib.inflate(-SP2, -SP2))
+        screen.set_clip(lib.inflate(-T.S, -T.S))
         for row in self.library:
             if ly > lib.bottom - 20:
                 break
-            rr = pygame.Rect(lib.x + SP2, ly, lib.w - 2 * SP2, 26)
+            rr = pygame.Rect(lib.x + T.S, ly, lib.w - 2 * T.S, 26)
             cur = row["slug"] == self.slug
             hot = rr.collidepoint(self.mouse)
-            panel(screen, rr, fill=SURFACE_3 if (hot or cur) else SURFACE_2,
-                  border=ACCENT if cur else (LINE if hot else LINE_SOFT),
-                  width=1, radius=4)
+            self._box(screen, rr, fill=T.STEEL_HI if (hot or cur) else T.TABLE, border=T.BRASS if cur else (T.STEEL_LINE if hot else T.STEEL_LINE), width=1)
             name_w = int(rr.w * 0.46)
-            text(screen, ellipsize(row["name"], f.body_sm, name_w), f.body_sm, INK,
-                 (rr.x + SP2, rr.y + 5))
+            text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], name_w),
+                 (rr.x + T.S, rr.y + 5), T.TX)
             meta = f"{row['race']} · {row['occupation']}"
-            text(screen, ellipsize(meta, f.mono_sm, rr.w - name_w - 52), f.mono_sm,
-                 INK_FAINT, (rr.right - 44, rr.y + 6), right=True)
+            text(screen, F["micro"], ellipsize(meta, F["micro"], rr.w - name_w - 52),
+                 (rr.right - 44, rr.y + 6), T.TX_FAINT, right=True)
             if self.confirm_delete == row["slug"]:
                 yb = pygame.Rect(rr.right - 40, rr.y + 3, 18, 20)
                 nb = pygame.Rect(rr.right - 20, rr.y + 3, 18, 20)
-                self._btn(screen, yb, "y", danger=True)
+                self._btn(screen, yb, "y", on=True, danger=True)
                 self._btn(screen, nb, "n")
                 self._hit(yb, ("delete", row["slug"]))
                 self._hit(nb, ("delete_no",))
@@ -693,8 +657,7 @@ class CharEditorScreen(Screen):
                 self._hit(rr, ("load", row["slug"]))
                 xb = pygame.Rect(rr.right - 20, rr.y + 3, 18, 20)
                 h = xb.collidepoint(self.mouse)
-                text(screen, "×", f.body_bd, DANGER if h else INK_FAINT, xb.center,
-                     center=True)
+                text(screen, F["bodyb"], "×", xb.center, T.BLOOD if h else T.TX_FAINT, center=True)
                 self._hit(xb, ("ask_delete", row["slug"]))
             ly += 28
         screen.set_clip(prev)
@@ -704,13 +667,12 @@ class CharEditorScreen(Screen):
         # modal uses (density="full"), so this stops being a second, plain-
         # text rendering of the same facts. The editable form stays its own
         # bespoke left-column widgets -- only this preview panel changed.
-        pr = pygame.Rect(rect.x, lib.bottom + SP3, rect.w,
-                         rect.bottom - lib.bottom - SP3)
-        panel(screen, pr, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        F = ui_fonts()
+        pr = pygame.Rect(rect.x, lib.bottom + T.S * 2, rect.w,
+                         rect.bottom - lib.bottom - T.S * 2)
+        self._box(screen, pr, fill=T.STEEL, border=T.STEEL_LINE)
         ch = unit_to_ch(Combatant(u))
-        inner = pygame.Rect(pr.x + SP3, pr.y + SP2, pr.w - 2 * SP3, 0)
-        with ui_contained(screen, pr.inflate(-SP1, -SP1)):
+        inner = pygame.Rect(pr.x + T.S * 2, pr.y + T.S, pr.w - 2 * T.S * 2, 0)
+        with ui_contained(screen, pr.inflate(-T.S // 2, -T.S // 2)):
             _, tooltip = draw_sheet_card(screen, F, inner, ch, density="full",
                                          mouse=self.mouse)
         if tooltip:
@@ -718,26 +680,26 @@ class CharEditorScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen):
-        f = self.fonts
+        F = self.F
         kind, options, current = self.picker
         veil = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
         veil.fill((0, 0, 0, 190))
         screen.blit(veil, (0, 0))
 
         W, H = screen.get_size()
-        ch, pad = 26, SP4
+        ch, pad = 26, T.S * 2
         cols = 3 if len(options) > 8 else 1
         # keep the panel inside the window on any screen size
-        cw = min(230, (min(W - 2 * MARGIN, 780) - 2 * pad) // cols)
+        cw = min(230, (min(W - 2 * T.S * 2, 780) - 2 * pad) // cols)
         rows = (len(options) + cols - 1) // cols
         pw = cols * cw + 2 * pad
-        ph = min(H - 2 * MARGIN, 52 + rows * ch + SP4)
+        ph = min(H - 2 * T.S * 2, 52 + rows * ch + T.S * 2)
         panel_r = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
-        panel(screen, panel_r, fill=SURFACE_2, border=ACCENT, width=2, radius=8)
+        self._box(screen, panel_r, fill=T.TABLE, border=T.BRASS, width=2)
         noun = {"additem": "an item", "occupation": "an occupation",
                 "alignment": "an alignment", "armor": "armor",
                 "tongue": "a tongue weapon"}.get(kind, f"a {kind}")
-        text(screen, f"pick {noun}", f.title, INK, (panel_r.x + pad, panel_r.y + 12))
+        text(screen, F["titleb"], f"pick {noun}", (panel_r.x + pad, panel_r.y + 12), T.TX)
 
         prev = screen.get_clip()
         screen.set_clip(panel_r.inflate(-2, -2))
@@ -745,16 +707,15 @@ class CharEditorScreen(Screen):
         for i, name in enumerate(options):
             c, rw = i % cols, i // cols
             it = pygame.Rect(panel_r.x + pad + c * cw, panel_r.y + 46 + rw * ch,
-                             cw - SP1, ch - SP1)
-            if it.bottom > panel_r.bottom - SP3:
+                             cw - T.S // 2, ch - T.S // 2)
+            if it.bottom > panel_r.bottom - T.S * 2:
                 continue
             sel = name == current
             hov = it.collidepoint(self.mouse)
-            panel(screen, it, fill=SURFACE_3 if (hov or sel) else SURFACE_1,
-                  border=ACCENT if sel else (LINE if hov else LINE_SOFT), width=1, radius=4)
-            text(screen, ellipsize(str(name), f.body_sm, it.w - 2 * SP2), f.body_sm,
-                 ACCENT if sel else INK, (it.x + SP2, it.y + 4))
+            self._box(screen, it, fill=T.STEEL_HI if (hov or sel) else T.STEEL, border=T.BRASS if sel else (T.STEEL_LINE if hov else T.STEEL_LINE), width=1)
+            text(screen, F["body_sm"], ellipsize(str(name), F["body_sm"], it.w - 2 * T.S),
+                 (it.x + T.S, it.y + 4), T.BRASS if sel else T.TX)
             self.picker_hits.append((it, name))
         screen.set_clip(prev)
-        text(screen, "click outside to cancel", f.body_sm, INK_FAINT,
-             (panel_r.x + pad, panel_r.bottom - 20))
+        text(screen, F["body_sm"], "click outside to cancel",
+             (panel_r.x + pad, panel_r.bottom - 20), T.TX_FAINT)

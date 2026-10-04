@@ -301,8 +301,8 @@ def test_every_screen_draws_native_at_any_window_size():
     scenes = [
         MenuScreen(UI_F, noop, noop, noop, on_editor=noop),
         EditorMenuScreen(UI_F, noop, noop, on_scenario=noop),
-        CharEditorScreen(F, noop),
-        MapEditorScreen(F, noop),
+        CharEditorScreen(UI_F, noop),
+        MapEditorScreen(UI_F, noop),
         DraftScreen(UI_F, noop),
         MapScreen(F, guild, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
@@ -661,11 +661,11 @@ def SKIP_test_group_pack_list_scrolls_instead_of_hiding_items_past_the_first_scr
 def test_char_editor_duplicate_forks_an_unsaved_copy():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.char_editor_screen import CharEditorScreen
     pygame.init()
     pygame.display.set_mode((1, 1))
-    scr = CharEditorScreen(Fonts(), lambda: None)
+    scr = CharEditorScreen(ui_fonts(), lambda: None)
     scr.unit.set_name("Ribit")
     scr.unit.set_race("Grippli")
     scr.unit.set_track_level("combat", 2)
@@ -693,6 +693,7 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
     pygame.init()
     pygame.display.set_mode((1, 1))
     F = Fonts()
+    from gartok.ui.tokens import fonts as ui_fonts
 
     u = Unit("player")
     u.set_race("Grippli")
@@ -703,7 +704,7 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
 
     surf = pygame.Surface((1600, 1000))
     for scr in (GearScreen(F, Guild([u]), lambda: None),
-                CharEditorScreen(F, lambda: None)):
+                CharEditorScreen(ui_fonts(), lambda: None)):
         if isinstance(scr, CharEditorScreen):
             scr._load_unit(u)
         scr.mouse = (0, 0)
@@ -1157,11 +1158,11 @@ def test_char_editor_attribute_hover_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.char_editor_screen import CharEditorScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
-    ed = CharEditorScreen(Fonts(), lambda: None)
+    ed = CharEditorScreen(ui_fonts(), lambda: None)
     surf = pygame.Surface((1280, 720))
     ed.mouse = (0, 0)
     ed.draw(surf)
@@ -1324,13 +1325,13 @@ def test_char_editor_screen_hp_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.char_editor_screen import CharEditorScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from tests.helpers import Unit
     pygame.init()
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
-    cs = CharEditorScreen(Fonts(), lambda: None)
+    cs = CharEditorScreen(ui_fonts(), lambda: None)
     cs.unit = u
     surf = pygame.Surface((1280, 720))
 

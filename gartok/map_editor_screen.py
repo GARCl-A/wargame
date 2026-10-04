@@ -26,33 +26,6 @@ import pygame
 from . import data, map_lib, npc_lib
 from .board import COLS, ROWS, Board, grid_distance
 from .screen import Screen
-from .theme import (
-    ACCENT,
-    ACCENT_INK,
-    DANGER,
-    INK,
-    INK_DIM,
-    INK_FAINT,
-    LINE,
-    LINE_SOFT,
-    MARGIN,
-    OK,
-    RADIUS,
-    SP1,
-    SP2,
-    SP3,
-    SP4,
-    SP5,
-    SURFACE_0,
-    SURFACE_1,
-    SURFACE_2,
-    SURFACE_3,
-    WARN,
-    ellipsize,
-    panel,
-    section,
-    text,
-)
 from .ui.board_style import (
     ENEMY_C,
     FLOOR_A,
@@ -63,7 +36,15 @@ from .ui.board_style import (
     WALL_FILL,
     WALL_HI,
 )
-from .ui.primitives import set_pointer
+from .ui.primitives import (
+    caps,
+    draw_button,
+    ellipsize,
+    section,
+    set_pointer,
+    text,
+)
+from .ui.tokens import T
 
 _MAX_NAME = 28
 
@@ -89,7 +70,7 @@ class MapEditorScreen(Screen):
 
     def __init__(self, fonts, on_back):
         super().__init__()
-        self.fonts = fonts
+        self.F = fonts
         self.on_back = on_back
         self.hits = []                        # [(rect, action)] rebuilt each frame
         self.tool = "wall"
@@ -153,9 +134,9 @@ class MapEditorScreen(Screen):
         self.slug = map_lib.save_map(self._to_dict(), self.slug)
         self._refresh_library()
         if self._sealed():
-            self.notice = ("saved -- but walls seal the two sides off", WARN)
+            self.notice = ("saved -- but walls seal the two sides off", T.BRASS)
         else:
-            self.notice = (f"saved  ·  maps/{self.slug}.json", OK)
+            self.notice = (f"saved  ·  maps/{self.slug}.json", T.GREEN)
 
     # ------------------------------------------------------------------ #
     def _sealed(self):
@@ -265,7 +246,7 @@ class MapEditorScreen(Screen):
                         self.npc_at.pop(cell, None)
                     elif not self.npc_rows:
                         self.notice = ("no NPCs yet -- build one in the character creator",
-                                       WARN)
+                                       T.BRASS)
                     else:
                         self.picking = cell
                     return
@@ -275,7 +256,7 @@ class MapEditorScreen(Screen):
                     elif cell in self.elev:
                         self.ropes.symmetric_difference_update({cell})
                     else:
-                        self.notice = ("rope needs a pit cell under it", WARN)
+                        self.notice = ("rope needs a pit cell under it", T.BRASS)
                     return
                 self.painting = "del" if event.button == 3 else "add"
                 self._apply(cell, self.painting)
@@ -361,39 +342,35 @@ class MapEditorScreen(Screen):
     # drawing                                                            #
     # ------------------------------------------------------------------ #
     def _btn(self, screen, rect, label, *, on=False, danger=False, font=None):
-        hot = rect.collidepoint(self.mouse)
-        edge = DANGER if danger else ACCENT
-        panel(screen, rect, fill=edge if on else (SURFACE_3 if hot else SURFACE_2),
-              border=edge if (on or hot) else LINE_SOFT, width=1, radius=4)
-        col = ACCENT_INK if on else (DANGER if danger else (ACCENT if hot else INK_DIM))
-        text(screen, label, font or self.fonts.label, col, rect.center, center=True)
+        draw_button(screen, self.F, rect, label, primary=on, danger=danger and on,
+                    mpos=self.mouse, fnt=font)
 
     def draw(self, screen):
-        f = self.fonts
+        F = self.F
         W, H = screen.get_size()
-        screen.fill(SURFACE_0)
+        screen.fill(T.TABLE)
         self.hits = []
-        pad = MARGIN if W < 1500 else SP5
+        pad = T.S * 2 if W < 1500 else T.S * 3
 
-        text(screen, "SCENARIO CREATOR", f.title, INK, (pad, pad - 2))
+        text(screen, F["titleb"], "SCENARIO CREATOR", (pad, pad - 2), T.TX)
         if self.notice:
             sub, scol = self.notice
         else:
             sub = f"editing  {self.slug}" if self.slug else "unsaved  ·  a blank board"
-            scol = INK_DIM
-        text(screen, sub, f.body_sm, scol, (pad, pad + 28))
+            scol = T.TX_MUTED
+        text(screen, F["body_sm"], sub, (pad, pad + 28), scol)
 
         narrow = W < 980
         bw, bh = (84, 28) if narrow else (108, 30)
         bx = W - pad - bw
         for key, label in (("back", "BACK"), ("save", "SAVE"), ("new", "NEW")):
             r = pygame.Rect(bx, pad, bw, bh)
-            self._btn(screen, r, label, font=f.label if narrow else f.body_bd)
+            self._btn(screen, r, label, font=F["microb"] if narrow else F["bodyb"])
             self.hits.append((r, (key,)))
-            bx -= bw + SP2
+            bx -= bw + T.S
 
         top = pad + 52
-        gap = SP4
+        gap = T.S * 2
         rcw = max(220, min(280, int(W * 0.30)))
         left_w = W - 2 * pad - rcw - gap
         self._draw_grid(screen, pygame.Rect(pad, top, left_w, H - top - pad))
@@ -451,19 +428,19 @@ class MapEditorScreen(Screen):
 
         for (cx, cy), slug in self.npc_at.items():   # the NPC's initial on its cell
             initial = (self._npc_name(slug).strip() or "?")[0].upper()
-            text(screen, initial, self.fonts.body_bd, INK,
-                 (gx + cx * cell + cell // 2, gy + cy * cell + cell // 2), center=True)
+            text(screen, self.F["bodyb"], initial,
+                 (gx + cx * cell + cell // 2, gy + cy * cell + cell // 2), T.TX, center=True)
 
         for cx in range(cols + 1):
             x = gx + cx * cell
-            pygame.draw.line(screen, LINE_SOFT, (x, gy), (x, gy + gh))
+            pygame.draw.line(screen, T.STEEL_LINE, (x, gy), (x, gy + gh))
         for cy in range(rows + 1):
             y = gy + cy * cell
-            pygame.draw.line(screen, LINE_SOFT, (gx, y), (gx + gw, y))
+            pygame.draw.line(screen, T.STEEL_LINE, (gx, y), (gx + gw, y))
 
         for (cx, cy), z in self.elev.items():        # depth number in the pit
-            text(screen, str(-z), self.fonts.body_sm, INK_DIM,
-                 (gx + cx * cell + cell // 2, gy + cy * cell + cell // 2), center=True)
+            text(screen, self.F["body_sm"], str(-z),
+                 (gx + cx * cell + cell // 2, gy + cy * cell + cell // 2), T.TX_MUTED, center=True)
         for cx, cy in self.ropes:                    # rope hanging over the edge
             rx = gx + cx * cell + cell // 2
             pygame.draw.line(screen, _ROPE_C, (rx, gy + cy * cell + 2),
@@ -481,12 +458,12 @@ class MapEditorScreen(Screen):
             screen.blit(glow, (gx + tx * cell, gy + ty * cell))
             pygame.draw.circle(screen, TORCH_C, c, max(2, cell // 6))
 
-        pygame.draw.rect(screen, LINE, (gx, gy, gw, gh), 1)
+        pygame.draw.rect(screen, T.STEEL_LINE, (gx, gy, gw, gh), 1)
 
         hov = self._cell_at(self.mouse)
         if hov is not None:
             hr = pygame.Rect(gx + hov[0] * cell, gy + hov[1] * cell, cell, cell)
-            col = DANGER if self.tool == "erase" else _LAYER_C.get(self.tool, ACCENT)
+            col = T.BLOOD if self.tool == "erase" else _LAYER_C.get(self.tool, T.BRASS)
             pygame.draw.rect(screen, col, hr, 2)
 
         size = f"{cols}x{rows}"
@@ -504,10 +481,10 @@ class MapEditorScreen(Screen):
             lightnote = ("lit throughout" if lit
                          else f"dark outside torchlight  ·  {len(self.torches)} torch(es)")
             hint = f"{size}  ·  left-drag paints, right-drag erases  ·  " + lightnote
-        text(screen, hint, self.fonts.body_sm, INK_FAINT, (gx, gy + gh + SP2))
+        text(screen, self.F["body_sm"], hint, (gx, gy + gh + T.S), T.TX_FAINT)
         if self._sealed():
-            text(screen, "walls seal the two sides off -- no path across",
-                 self.fonts.body_sm, WARN, (gx, gy + gh + SP2 + 16))
+            text(screen, self.F["body_sm"], "walls seal the two sides off -- no path across",
+                 (gx, gy + gh + T.S + 16), T.BRASS)
 
     def _sync_dark(self):
         """Recompute `self._dark` -- cells beyond every torch's reach, walls
@@ -530,64 +507,55 @@ class MapEditorScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_panel(self, screen, rect):
-        f = self.fonts
-        panel(screen, rect, fill=SURFACE_1, border=LINE_SOFT, radius=RADIUS)
-        x = rect.x + SP3
-        w = rect.w - 2 * SP3
-        y = rect.y + SP3
+        F = self.F
+        pygame.draw.rect(screen, T.STEEL, rect)
+        pygame.draw.rect(screen, T.STEEL_LINE, rect, 1)
+        pad = T.S * 2
+        x = rect.x + pad
+        w = rect.w - 2 * pad
+        y = rect.y + pad
 
-        y = section(screen, "TOOLS", x, y, w, f)
+        y = section(screen, F, "TOOLS", x, y, w)
         for key, label in _TOOLS:
             r = pygame.Rect(x, y, w, 26)
             on = self.tool == key
-            self._btn(screen, r, label, on=on, danger=(key == "erase" and on))
+            self._btn(screen, r, label, on=on, danger=(key == "erase"))
             swatch = pygame.Rect(r.right - 20, r.centery - 6, 12, 12)
             if key in _LAYER_C:
                 pygame.draw.rect(screen, _LAYER_C[key], swatch, border_radius=2)
             self.hits.append((r, ("tool", key)))
-            y += 26 + SP1
-        y += SP1
+            y += 26 + T.S // 2
+        y += T.S // 2
 
         if self.tool in ("pit", "rope"):
             r = pygame.Rect(x, y, w, 24)
-            panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
-            text(screen, f"PIT DEPTH  {self.pit_depth}", f.label, INK,
-                 (r.x + SP2, r.centery - 5))
-            for lbl, d, side in (("-", -1, r.right - 46), ("+", 1, r.right - 24)):
-                b = pygame.Rect(side, r.y + 3, 18, 18)
-                self._btn(screen, b, lbl, font=f.body_bd)
-                self.hits.append((b, ("depth", d)))
-            y += 24 + SP1
+            self._stepper(screen, r, f"PIT DEPTH  {self.pit_depth}", "depth")
+            y += 24 + T.S // 2
 
         r = pygame.Rect(x, y, w, 24)
         self._btn(screen, r, "CLEAR")
         self.hits.append((r, ("clear",)))
-        y += 24 + SP3
+        y += 24 + pad
 
-        y = section(screen, "SETTINGS", x, y, w, f)
+        y = section(screen, F, "SETTINGS", x, y, w)
         nr = pygame.Rect(x, y, w, 26)
         editing = self.edit_name
-        hot = nr.collidepoint(self.mouse)
-        panel(screen, nr, fill=SURFACE_3 if (hot or editing) else SURFACE_2,
-              border=ACCENT if (hot or editing) else LINE, width=1, radius=4)
-        text(screen, "NAME", f.label, INK_FAINT, (nr.x + SP2, nr.centery - 5))
-        vx = nr.x + SP2 + f.label.size("NAME")[0] + SP2
+        hot = nr.collidepoint(self.mouse) or editing
+        pygame.draw.rect(screen, T.STEEL_HI if hot else T.TABLE, nr)
+        pygame.draw.rect(screen, T.BRASS if hot else T.STEEL_LINE, nr, 1)
+        caps(screen, F["micro"], "NAME", (nr.x + T.S, nr.centery - 5), T.TX_FAINT)
+        vx = nr.x + T.S + F["micro"].size("NAME")[0] + T.S
         shown = (self.name_buf + "|") if editing else self.name
-        text(screen, ellipsize(shown, f.body_sm, nr.right - SP2 - vx), f.body_sm,
-             INK, (vx, nr.centery - 6))
+        text(screen, F["body_sm"], ellipsize(shown, F["body_sm"], nr.right - T.S - vx),
+             (vx, nr.centery - 6), T.TX)
         self.hits.append((nr, ("name",)))
-        y += 26 + SP1
+        y += 26 + T.S // 2
 
         for axis, lbl, val in (("w", "WIDTH", self.cols), ("h", "HEIGHT", self.rows)):
             r = pygame.Rect(x, y, w, 24)
-            panel(screen, r, fill=SURFACE_2, border=LINE_SOFT, width=1, radius=4)
-            text(screen, f"{lbl}  {val}", f.label, INK, (r.x + SP2, r.centery - 5))
-            for sym, d, side in (("-", -1, r.right - 46), ("+", 1, r.right - 24)):
-                b = pygame.Rect(side, r.y + 3, 18, 18)
-                self._btn(screen, b, sym, font=f.body_bd)
-                self.hits.append((b, ("size", (axis, d))))
-            y += 24 + SP1
-        y += SP1
+            self._stepper(screen, r, f"{lbl}  {val}", "size", axis)
+            y += 24 + T.S // 2
+        y += T.S // 2
 
         for key, label, val, note in (
                 ("ambient", "AMBIENT LIGHT",
@@ -597,85 +565,95 @@ class MapEditorScreen(Screen):
             self._btn(screen, r, label + ("   ·  forced" if note else ""),
                       on=bool(val))
             self.hits.append((r, (key,)))
-            y += 24 + SP1
-        y += SP2
+            y += 24 + T.S // 2
+        y += T.S
 
-        y = section(screen, "MAP LIBRARY", x, y, w, f)
-        text(screen, "maps/", f.mono_sm, INK_FAINT, (rect.right - SP3, y - 20),
-             right=True)
+        y = section(screen, F, "MAP LIBRARY", x, y, w)
+        text(screen, F["micro"], "maps/", (rect.right - pad, y - 20), T.TX_FAINT, right=True)
         if not self.library:
-            text(screen, "no saved maps yet — SAVE writes one here", f.body_sm,
-                 INK_FAINT, (x, y + 2))
+            text(screen, F["body_sm"], "no saved maps yet — SAVE writes one here",
+                 (x, y + 2), T.TX_FAINT)
         prev = screen.get_clip()
-        screen.set_clip(rect.inflate(-SP2, -SP2))
+        screen.set_clip(rect.inflate(-T.S, -T.S))
         for row in self.library:
             if y > rect.bottom - 24:
                 break
             rr = pygame.Rect(x, y, w, 26)
             cur = row["slug"] == self.slug
             hot = rr.collidepoint(self.mouse)
-            panel(screen, rr, fill=SURFACE_3 if (hot or cur) else SURFACE_2,
-                  border=ACCENT if cur else (LINE if hot else LINE_SOFT),
-                  width=1, radius=4)
-            text(screen, ellipsize(row["name"], f.body_sm, int(rr.w * 0.6)),
-                 f.body_sm, INK, (rr.x + SP2, rr.y + 5))
+            pygame.draw.rect(screen, T.STEEL_HI if (hot or cur) else T.TABLE, rr)
+            pygame.draw.rect(screen, T.BRASS if cur else T.STEEL_LINE, rr, 1)
+            text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], int(rr.w * 0.6)),
+                 (rr.x + T.S, rr.y + 5), T.TX)
             meta = ("field" if row["outdoor"] else "indoor") + f" · {row['walls']}w"
             if self.confirm_delete == row["slug"]:
                 yb = pygame.Rect(rr.right - 40, rr.y + 3, 18, 20)
                 nb = pygame.Rect(rr.right - 20, rr.y + 3, 18, 20)
-                self._btn(screen, yb, "y", danger=True)
+                self._btn(screen, yb, "y", on=True, danger=True)
                 self._btn(screen, nb, "n")
                 self.hits.append((yb, ("delete", row["slug"])))
                 self.hits.append((nb, ("delete_no",)))
             else:
-                text(screen, meta, f.mono_sm, INK_FAINT,
-                     (rr.right - 26, rr.y + 6), right=True)
+                text(screen, F["micro"], meta, (rr.right - 26, rr.y + 6), T.TX_FAINT,
+                     right=True)
                 self.hits.append((rr, ("load", row["slug"])))
                 xb = pygame.Rect(rr.right - 20, rr.y + 3, 18, 20)
                 h = xb.collidepoint(self.mouse)
-                text(screen, "×", f.body_bd, DANGER if h else INK_FAINT,
-                     xb.center, center=True)
+                text(screen, F["bodyb"], "×", xb.center, T.BLOOD if h else T.TX_FAINT,
+                     center=True)
                 self.hits.append((xb, ("ask_delete", row["slug"])))
             y += 28
         screen.set_clip(prev)
+
+    def _stepper(self, screen, r, label, kind, axis=None):
+        """A labelled row with a [-] [+] pair on its right edge."""
+        pygame.draw.rect(screen, T.TABLE, r)
+        pygame.draw.rect(screen, T.STEEL_LINE, r, 1)
+        caps(screen, self.F["micro"], label, (r.x + T.S, r.centery - 5), T.TX)
+        for sym, d, side in (("-", -1, r.right - 46), ("+", 1, r.right - 24)):
+            b = pygame.Rect(side, r.y + 3, 18, 18)
+            self._btn(screen, b, sym, font=self.F["bodyb"])
+            self.hits.append((b, (kind, d if axis is None else (axis, d))))
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen):
         """Modal list of NPC-library characters -- pick one to stand on
         `self.picking`. Click a row to assign, anywhere else to cancel."""
-        f = self.fonts
+        F = self.F
         W, H = screen.get_size()
         veil = pygame.Surface((W, H), pygame.SRCALPHA)
         veil.fill((0, 0, 0, 190))
         screen.blit(veil, (0, 0))
 
         rows = self.npc_rows
-        rh, pad = 30, SP4
-        pw = min(W - 2 * MARGIN, 420)
-        ph = min(H - 2 * MARGIN, 56 + rh * len(rows) + SP3)
+        rh, pad = 30, T.S * 2
+        margin = T.S * 2
+        pw = min(W - 2 * margin, 420)
+        ph = min(H - 2 * margin, 56 + rh * len(rows) + T.S * 2)
         box = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
-        panel(screen, box, fill=SURFACE_2, border=_NPC_C, width=2, radius=8)
+        pygame.draw.rect(screen, T.STEEL, box)
+        pygame.draw.rect(screen, _NPC_C, box, 2)
         cx, cy = self.picking
-        text(screen, f"NPC for cell {cx},{cy}", f.title, INK, (box.x + pad, box.y + 12))
+        text(screen, F["titleb"], f"NPC for cell {cx},{cy}", (box.x + pad, box.y + 12), T.TX)
 
         prev = screen.get_clip()
         screen.set_clip(box.inflate(-2, -2))
         self.picker_hits = []
         cur = self.npc_at.get(self.picking)
         for i, row in enumerate(rows):
-            rr = pygame.Rect(box.x + pad, box.y + 46 + i * rh, pw - 2 * pad, rh - SP1)
-            if rr.bottom > box.bottom - SP3:
+            rr = pygame.Rect(box.x + pad, box.y + 46 + i * rh, pw - 2 * pad, rh - T.S // 2)
+            if rr.bottom > box.bottom - T.S * 2:
                 continue
             sel = row["slug"] == cur
             hov = rr.collidepoint(self.mouse)
-            panel(screen, rr, fill=SURFACE_3 if (hov or sel) else SURFACE_1,
-                  border=_NPC_C if sel else (LINE if hov else LINE_SOFT), width=1, radius=4)
-            text(screen, ellipsize(row["name"], f.body_sm, int(rr.w * 0.5)), f.body_sm,
-                 _NPC_C if sel else INK, (rr.x + SP2, rr.centery - 6))
+            pygame.draw.rect(screen, T.STEEL_HI if (hov or sel) else T.TABLE, rr)
+            pygame.draw.rect(screen, _NPC_C if sel else T.STEEL_LINE, rr, 1)
+            text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], int(rr.w * 0.5)),
+                 (rr.x + T.S, rr.centery - 6), _NPC_C if sel else T.TX)
             meta = f"{row['race']} · {row['occupation']}"
-            text(screen, ellipsize(meta, f.mono_sm, int(rr.w * 0.45)), f.mono_sm,
-                 INK_FAINT, (rr.right - SP2, rr.centery - 5), right=True)
+            text(screen, F["micro"], ellipsize(meta, F["micro"], int(rr.w * 0.45)),
+                 (rr.right - T.S, rr.centery - 5), T.TX_FAINT, right=True)
             self.picker_hits.append((rr, row["slug"]))
         screen.set_clip(prev)
-        text(screen, "click outside to cancel", f.body_sm, INK_FAINT,
-             (box.x + pad, box.bottom - 20))
+        text(screen, F["body_sm"], "click outside to cancel",
+             (box.x + pad, box.bottom - 20), T.TX_FAINT)

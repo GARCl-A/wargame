@@ -132,10 +132,10 @@ class App:
                                       on_back=self._start_menu)
 
     def _open_char_editor(self):
-        self.scene = CharEditorScreen(self.fonts, on_back=self._start_editor)
+        self.scene = CharEditorScreen(self.ui_fonts, on_back=self._start_editor)
 
     def _open_map_editor(self):
-        self.scene = MapEditorScreen(self.fonts, on_back=self._start_editor)
+        self.scene = MapEditorScreen(self.ui_fonts, on_back=self._start_editor)
 
     def _new_game(self, slot):
         self.slot = slot
