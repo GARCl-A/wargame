@@ -1070,7 +1070,6 @@ def test_goblin_portraits():
     assert p.get_size() == (24, 24)
 
 
-
 def test_draft_screen_attribute_and_stat_hover_tooltips():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
