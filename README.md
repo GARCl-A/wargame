@@ -33,6 +33,9 @@ pip install -r requirements.txt
 python main.py
 ```
 
+Dev tools (pytest, ruff) live apart from the game's own requirements:
+`pip install -r requirements-dev.txt`.
+
 Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
 (200 headless AI-vs-AI battles). `python -m gartok.reference` regenerates
 [`REFERENCE.md`](REFERENCE.md).
@@ -213,7 +216,7 @@ gartok/
   menu_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
   gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
-  bank_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
+  bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / wilds_claim_screen.py / justice_screen.py
   alert_screen.py / adelio_prompt_screen.py
   bank_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py (tabbed hubs

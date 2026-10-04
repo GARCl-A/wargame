@@ -219,7 +219,11 @@ class App:
     def _open_guild(self):
         self.scene = GuildScreen(self.fonts, self.guild,
                                  on_back=self._start_map, on_level=self._open_level,
-                                 on_manage=self._open_gear)
+                                 on_manage=self._open_gear, on_bank=self._open_vault_view)
+
+    def _open_vault_view(self):
+        from .bank_view_screen import BankViewScreen
+        self.scene = BankViewScreen(self.fonts, self.guild, on_done=self._open_guild)
 
     def _open_gear(self):
         self.scene = GearScreen(self.fonts, self.guild, on_back=self._open_guild)

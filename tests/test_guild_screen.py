@@ -1,4 +1,5 @@
 import sys
+
 try:
     import pygame
 except ImportError:
@@ -35,9 +36,10 @@ except ImportError:
 
 
 from unittest.mock import MagicMock
+
 from gartok.guild import Guild
-from gartok.unit import Unit
 from gartok.guild_screen import GuildScreen
+from gartok.unit import Unit
 
 
 def test_guild_screen_initialization_and_smart_pick():
@@ -134,3 +136,140 @@ def test_guild_screen_reputations_scrolling():
     assert gs._rep_scroll == 0
 
 
+
+
+def _two_band_guild():
+    from gartok.group import Group
+    from gartok.orders import Order
+    a, b, c = Unit("player"), Unit("player"), Unit("player")
+    idle = Group([a, b], node="city", leader=a)
+    busy = Group([c], node="iron_mine", leader=c)
+    busy.order = Order(kind="work", hours=8)
+    return Guild([a, b, c], groups=[idle, busy]), a, b, c
+
+
+def _draw(gs, size=(1920, 1080)):
+    pygame.font.init()
+    gs.draw(pygame.Surface(size))
+
+
+def test_guild_screen_filters_split_bands_by_order_and_alert():
+    g, a, b, c = _two_band_guild()
+    b.unfed_days = 3
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+
+    def shown():
+        _draw(gs)
+        return {u.uid for _, u in gs.member_hits}
+
+    gs.filter_mode = "idle"
+    assert shown() == {a.uid, b.uid}
+    gs.filter_mode = "busy"
+    assert shown() == {c.uid}
+    gs.filter_mode = "alerts"
+    assert shown() == {b.uid}
+
+
+def test_guild_screen_collapsing_a_band_hides_its_members():
+    g, a, b, c = _two_band_guild()
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    _draw(gs)
+    first_rect, gid = gs.accordion_hits[0]
+    before = len(gs.member_hits)
+    gs._click(first_rect.center)
+    _draw(gs)
+    assert gid in gs.collapsed_groups
+    assert len(gs.member_hits) == before - 2
+
+
+def test_guild_screen_vault_button_is_view_only_and_needs_a_chest():
+    g, a, _, _ = _two_band_guild()
+    opened = []
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None, on_bank=lambda: opened.append(1))
+    _draw(gs)
+    assert not any(k == "vault" for k, _ in gs.buttons)
+
+    g.bank_capacity = 20
+    _draw(gs)
+    gs.member = next(u for u in g.roster if g.group_of(u).node != "city")   # works from anywhere
+    _draw(gs)
+    vault = next(r for k, r in gs.buttons if k == "vault")
+    gs._click(vault.center)
+    assert opened == [1]
+
+
+def test_guild_screen_distribute_needs_a_band_of_two():
+    g, a, b, c = _two_band_guild()
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    gs.member = c
+    _draw(gs)
+    assert not any(k == "distribute" for k, _ in gs.buttons)
+    gs.member = a
+    _draw(gs)
+    assert any(k == "distribute" for k, _ in gs.buttons)
+
+
+def test_guild_screen_has_no_dead_view_map_button():
+    g, *_ = _two_band_guild()
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    _draw(gs)
+    assert not any(k == "view_map" for k, _ in gs.buttons)
+
+
+def test_guild_screen_renders_at_small_window_and_scrolls_detail():
+    g, *_ = _two_band_guild()
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    _draw(gs, (1024, 600))
+    assert gs._detail_max_scroll > 0
+    gs.mouse = (900, 300)
+    gs.handle_event(MagicMock(type=pygame.MOUSEWHEEL, y=-1))
+    assert gs._detail_scroll > 0
+
+
+def test_bank_view_screen_lists_stash_without_any_move_button():
+    from gartok.bank_view_screen import BankViewScreen
+    g, *_ = _two_band_guild()
+    g.bank_capacity = 30
+    g.bank_items = [("Rope", 2), ("Torch", 1)]
+    done = []
+    scr = BankViewScreen(MagicMock(), g, on_done=lambda: done.append(1))
+    pygame.font.init()
+    scr.draw(pygame.Surface((1280, 720)))
+    assert [k for k, _ in scr.buttons] == ["done"]
+    scr._click(scr.buttons[0][1].center)
+    assert done == [1]
+
+
+def test_stat_breakdowns_sum_to_the_stat_they_explain():
+    from gartok.combatant import Combatant
+    for _ in range(40):
+        u = Unit("player")
+        c = Combatant(u)
+        assert sum(v for _, v in u.ac_breakdown()) == c.ac
+        assert sum(v for _, v in u.md_breakdown()) == c.mental_defense
+        assert sum(v for _, v in u.speed_breakdown()) == c.speed
+        assert sum(v for _, v in u.initiative_breakdown()) == c.initiative_bonus()
+
+
+def test_stat_breakdown_names_armor_and_overload():
+    u = Unit("player")
+    u.equipped_armor = "Chainmail"
+    u._derive_combat()
+    assert any("Chainmail" in label for label, _ in u.ac_breakdown())
+    u._base_inventory = [("Iron Bar", 99)]
+    u._derive_combat()
+    assert u.encumbered
+    assert ("overloaded", -1) in u.speed_breakdown()
+
+
+def test_guild_screen_stat_tooltips_show_the_calculation():
+    g, a, *_ = _two_band_guild()
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    gs.member = a
+    seen = set()
+    for x in range(480, 1200, 10):
+        gs.mouse = (x, 300)
+        _draw(gs)
+        if isinstance(gs.tooltip, list):
+            seen.add(gs.tooltip[0][0])
+    assert {"hit points (hp)", "ARMOR CLASS", "MENTAL DEFENSE", "SPEED (SQUARES)", "INITIATIVE"} <= seen

@@ -47,6 +47,9 @@ screen non-trivially, move it onto this kit.
 | `roster_panel.py` | the ROSTER zone: one card per group, events timeline |
 | `inspector_panel.py` | the INSPECTOR zone: selected band, status, available orders |
 | `quest_panel.py` | active-mission cards with deadline and progress |
+| `guild_roster.py` | the guild roster: filter pills, band accordions, member cards with status pills |
+| `member_panel.py` | the guild member sheet, one `draw_*` per block (vitals, weapon, load, tracks, roles) |
+| `reputation_panel.py` | faction cards (deeds, unlocks) in as many columns as fit |
 | `combat_card.py` | unit cards for recruit / squad lists and party rows |
 | `sheet_card.py` | the character sheet at three densities |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |

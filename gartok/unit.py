@@ -906,6 +906,54 @@ class Unit:
             return f"{expr} -> min floor: 1 max"
         return f"{expr} = {b['final_max']} max"
 
+    def _breakdown(self, terms, actual):
+        """`terms` without zero entries, plus a closing "minimum" term when a
+        floor made the plain sum differ from `actual`."""
+        out = [(label, v) for label, v in terms if v or label == "base"]
+        gap = actual - sum(v for _, v in out)
+        if gap:
+            out.append(("minimum", gap))
+        return out
+
+    def ac_breakdown(self):
+        """Where `ac` comes from, as `[(label, value)]` summing to it."""
+        armor = self.armor
+        dex = self.mod_dexterity
+        capped = armor is not None and armor.max_dex is not None and dex > armor.max_dex
+        if capped:
+            dex = armor.max_dex
+        shield = items.get(self.equipped_offhand) if (
+            self.equipped_offhand and items.is_shield(self.equipped_offhand)) else None
+        return self._breakdown([
+            ("base", 10), ("DEX (armor cap)" if capped else "DEX", dex),
+            (self.armor_name if armor else "armor", armor.ac if armor else 0),
+            (shield.name if shield else "shield", shield.ac if shield else 0),
+            ("talents", self.talent_bonus("ac")), (f"{self._ability.name} (natural)", self._ability.ac_natural),
+        ], self.ac)
+
+    def md_breakdown(self):
+        """Where `mental_defense` comes from, as `[(label, value)]`."""
+        return self._breakdown([
+            ("base", 10), ("WIS", self.mod_wisdom), ("talents", self.talent_bonus("mental_defense")),
+            ("group overextended", -self.group_overextension),
+        ], self.mental_defense)
+
+    def speed_breakdown(self):
+        """Where `speed` (squares per turn) comes from, as `[(label, value)]`."""
+        armor = self.armor
+        return self._breakdown([
+            (f"{self.size} base", data.squares(data.SIZES[self.size]["speed"])),
+            (self._ability.name, self._ability.speed), ("talents", self.talent_bonus("speed")),
+            (f"{self.armor_name} (drag)" if armor else "armor", -(armor.speed_penalty if armor else 0)),
+            ("overloaded", -1 if self.encumbered else 0),
+        ], self.speed)
+
+    def initiative_breakdown(self):
+        """Where `Combatant.initiative_bonus()` comes from, as `[(label, value)]`."""
+        terms = [("WIS", self.mod_wisdom), (self._ability.name, self._ability.initiative),
+                 ("talents", self.talent_bonus("initiative"))]
+        return self._breakdown(terms, sum(v for _, v in terms))
+
     def _derive_ac(self):
         """AC base (10 + Dex + worn armor; armor caps how much Dex still counts)
         and Mental Defense (10 + Wis, the Demoralize target). The racial natural
