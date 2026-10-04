@@ -290,9 +290,11 @@ docs/plans/         design plans not yet built (campaign AI roadmap)
   `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the
   roster in `campaign.absorb_battle`.
 - **New faction or deed** (objective / reputation): a `Faction` or a `Deed` in
-  `factions.py`. `Deed.check(guild, node, outcome)` runs in `factions.settle`,
-  called by `campaign.absorb_battle` — today only post-battle; another trigger
-  (post-market, post-travel) needs one more `settle` call at that event.
+  `factions.py`. `Deed.check(guild, event)` runs in `factions.settle(guild,
+  Event(kind, ...))`, which already fires after a battle (`campaign.absorb_battle`),
+  arriving on a node, a market buy/sell and a mission turn-in. A new trigger
+  (hunt, work shift, crafting, recruit, study) is one more `settle` call at
+  that event, plus a field on `Event` if the check needs one.
 - **New light source**: `vision.unit_light` / `ground_light`.
 - **New tutorial card** (a screen or a tab/phase of one): an id in
   `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
