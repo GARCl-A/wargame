@@ -164,7 +164,7 @@ The design choices worth stating in prose:
   who shares either tongue. This is the Human's edge in market haggling too.
 - **Mimic Sounds** (Kenku) — may Demoralize with no shared language (offense
   only); does **not** help haggling.
-- **Autotroph** (Leshy) — photosynthesises: never eats, immune to the hunger
+- **Autotroph** (Treefolk) — photosynthesises: never eats, immune to the hunger
   rules.
 - **Flight** (Sprite) — moves freely in three dimensions (up and down pits with
   no check, ignores terrain) and never takes falling damage. No numeric bonus.
@@ -255,7 +255,7 @@ track** earns no XP of its own — its "XP" is the sum of the other track levels
 (`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
 dice scale with every racial level (L1+), the **first racial talent pick unlocks
 only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
-(e.g., `Tongue` for Grippli, `Fruitful` for Leshy, `Cosmopolitan` for Human,
+(e.g., `Tongue` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling).
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
@@ -859,7 +859,7 @@ meal).
   only ones who could actually hand over food) with `share_food` on
   (`Unit.share_food`, toggled on the member panel of the guild screen). Two
   passes so nobody loses their own meal to a mate earlier in roster order. A
-  guild-mate in a different group is out of reach. The Autotroph (Leshy) never
+  guild-mate in a different group is out of reach. The Autotroph (Treefolk) never
   enters this.
 - **Maintenance** (a button on the map -- `campaign.advance(guild, dt=1)`, a
   forced tick): every group stops 1 h where it stands; passes the time (which
@@ -877,7 +877,7 @@ meal).
 
   > The death trigger is `data.STARVATION_DEATH_DAYS = 4`.
 
-- **Autotroph (Leshy):** photosynthesises — never eats, never starves.
+- **Autotroph (Treefolk):** photosynthesises — never eats, never starves.
 - Food is **for sale at the market** (`Meat` 5c, `Potato` 3c).
 - Eating/dying **re-derives** the character's attributes, so the sheet, the guild
   cards and the next battle already show the right numbers. If the whole guild

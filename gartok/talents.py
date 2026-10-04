@@ -176,7 +176,7 @@ _LIST = [
            effects=(Effect("melee_reach", 1),), icon="action/swallow"),
     Talent("fruitful", "racial", 1, "Fruitful",
            "your leafy body blooms at dawn: produce 1 fresh fruit each day to "
-           "nourish yourself or your companions.", race="Leshy",
+           "nourish yourself or your companions.", race="Treefolk",
            effects=(Effect("fruitful", 1),), icon="action/fruiting"),
     Talent("cosmopolitan", "racial", 1, "Cosmopolitan",
            "at home among strangers: reduces alignment distance penalties by 1 "

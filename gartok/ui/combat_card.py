@@ -28,15 +28,19 @@ def draw_combat_card(s, rect, ch, action="PICK", hovered=False, selected=False, 
     tok_r = T.S * 4
     tok_c = (rect.x + pad + tok_r, rect.y + pad + tok_r)
     
-    # Token -- guild colour so the dark silhouette is legible
-    tok_fill = _theme.PLAYER_C if not disabled else T.STEEL_LINE
-    pygame.draw.circle(s, tok_fill, tok_c, tok_r)
-    pygame.draw.circle(s, border, tok_c, tok_r, 1)
-    sil = artwork.race_icon(ch.get("race", ""), round(tok_r * 1.6), TOKEN_INK)
-    if sil is not None:
-        s.blit(sil, sil.get_rect(center=tok_c))
+    port = artwork.portrait(ch.get("race", ""), ch.get("portrait_id"), tok_r * 2)
+    if port is not None:
+        s.blit(port, port.get_rect(center=tok_c))
     else:
-        text(s, F["nameb"], ch["name"][0], tok_c, TOKEN_INK, center=True)
+        # Token -- guild colour so the dark silhouette is legible
+        tok_fill = _theme.PLAYER_C if not disabled else T.STEEL_LINE
+        pygame.draw.circle(s, tok_fill, tok_c, tok_r)
+        pygame.draw.circle(s, border, tok_c, tok_r, 1)
+        sil = artwork.race_icon(ch.get("race", ""), round(tok_r * 1.6), TOKEN_INK)
+        if sil is not None:
+            s.blit(sil, sil.get_rect(center=tok_c))
+        else:
+            text(s, F["nameb"], ch["name"][0], tok_c, TOKEN_INK, center=True)
     
     tx = tok_c[0] + tok_r + T.S * 3
     text(s, F["nameb"], ch["name"], (tx, rect.y + pad), T.TX if not disabled else T.TX_FAINT)
@@ -103,14 +107,18 @@ def draw_party_row(s, rect, ch, state=None, hovered=False):
     tok_r = T.S * 2
     tok_c = (rect.x + pad + tok_r, rect.y + pad + tok_r)
     
-    # Token -- guild colour so the dark silhouette is legible
-    pygame.draw.circle(s, _theme.PLAYER_C, tok_c, tok_r)
-    pygame.draw.circle(s, border, tok_c, tok_r, 1)
-    sil = artwork.race_icon(ch.get("race", ""), round(tok_r * 1.6), TOKEN_INK)
-    if sil is not None:
-        s.blit(sil, sil.get_rect(center=tok_c))
+    port = artwork.portrait(ch.get("race", ""), ch.get("portrait_id"), tok_r * 2)
+    if port is not None:
+        s.blit(port, port.get_rect(center=tok_c))
     else:
-        text(s, F["micro"], ch["name"][0], tok_c, TOKEN_INK, center=True)
+        # Token -- guild colour so the dark silhouette is legible
+        pygame.draw.circle(s, _theme.PLAYER_C, tok_c, tok_r)
+        pygame.draw.circle(s, border, tok_c, tok_r, 1)
+        sil = artwork.race_icon(ch.get("race", ""), round(tok_r * 1.6), TOKEN_INK)
+        if sil is not None:
+            s.blit(sil, sil.get_rect(center=tok_c))
+        else:
+            text(s, F["micro"], ch["name"][0], tok_c, TOKEN_INK, center=True)
     
     text(s, F["bodyb"], ch["name"], (tok_c[0] + tok_r + T.S * 2, rect.y + pad), T.TX)
     caps(s, F["micro"], f"CAR {ch['cha']:+}", (tok_c[0] + tok_r + T.S * 2, rect.y + pad + 20), T.BRASS)

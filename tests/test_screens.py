@@ -994,10 +994,54 @@ def test_leshy_icon_asset():
     from gartok import artwork
     import pygame
     assert artwork.RACE_ICON["Leshy"] == "sprout"
-    surf = artwork.race_icon("Leshy", 24)
+    assert artwork.RACE_ICON["Treefolk"] == "sprout"
+    surf = artwork.race_icon("Treefolk", 24)
     assert surf is not None
     assert isinstance(surf, pygame.Surface)
     assert surf.get_size() == (24, 24)
+
+
+def test_treefolk_race_and_portraits():
+    from gartok import artwork, data, persist, unit
+    import pygame
+    # 1. Race definition
+    tf = data.race_by_name("Treefolk")
+    assert tf is not None
+    assert tf["name"] == "Treefolk"
+    assert tf["size"] == "Medium"
+    assert tf["hd"] == 6
+    assert tf["language"] == "Verdant"
+    assert tf["ability"] == "autotroph"
+
+    # Backward compatibility alias
+    leshy_alias = data.race_by_name("Leshy")
+    assert leshy_alias is not None
+    assert leshy_alias["name"] == "Treefolk"
+
+    # 2. Portrait loader
+    port = artwork.portrait("Treefolk", 0, 48)
+    assert port is not None
+    assert isinstance(port, pygame.Surface)
+    assert port.get_size() == (48, 48)
+
+    # All 10 portraits load correctly
+    for idx in range(10):
+        p = artwork.portrait("Treefolk", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # Fallback when no portraits exist
+    assert artwork.portrait("Automaton", 0, 32) is None
+
+    # 3. Unit and persistence round-trip
+    u = unit.Unit("player", race=tf)
+    assert hasattr(u, "portrait_id")
+    assert isinstance(u.portrait_id, int)
+    saved = persist.unit_to_dict(u)
+    assert "portrait_id" in saved
+    restored = unit.Unit.from_save(saved)
+    assert restored.portrait_id == u.portrait_id
+    assert restored.race["name"] == "Treefolk"
 
 
 def test_draft_screen_attribute_and_stat_hover_tooltips():

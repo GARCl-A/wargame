@@ -20,12 +20,13 @@ import pygame
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _ICONS = os.path.join(_HERE, "assets", "icons")
+_PORTRAITS = os.path.join(_HERE, "assets", "portraits")
 
 _WHITE = (255, 255, 255)
 
 
 # Race -> head silhouette in assets/icons/head/. A few races have no exact glyph
-# (Centaur, Leshy, Sprite) and borrow the nearest read. Keep every value pointing
+# (Centaur, Treefolk, Sprite) and borrow the nearest read. Keep every value pointing
 # at a file that exists -- `icon()` falls back to None (caller draws the letter)
 # if one goes missing, but a typo here would silently blank every token.
 RACE_ICON = {
@@ -45,6 +46,7 @@ RACE_ICON = {
     "Kenku":      "kenku-head",
     "Kobold":     "horned-reptile",
     "Leshy":      "sprout",
+    "Treefolk":   "sprout",
     "Orc":        "orc-head",
     "Sprite":     "air-man",
     "Wolf":       "wolf-head",
@@ -78,6 +80,40 @@ def icon(category, name, px, color=_WHITE):
 def race_icon(race_name, px, color=_WHITE):
     """The head silhouette for a race, or None if the race isn't mapped."""
     return icon("head", RACE_ICON.get(race_name), px, color)
+
+
+@functools.lru_cache(maxsize=256)
+def portrait(race_name, portrait_id, px):
+    """Circular medallion portrait for a unit, scaled to `(px, px)`.
+    Returns None if the race has no portrait assets (caller falls back to `race_icon`)."""
+    if not race_name:
+        return None
+    r_clean = str(race_name).lower().strip()
+    if r_clean == "leshy":
+        r_clean = "treefolk"
+    folder = os.path.join(_PORTRAITS, r_clean)
+    if not os.path.isdir(folder):
+        return None
+    try:
+        files = [f for f in sorted(os.listdir(folder)) if f.lower().endswith(".png")]
+    except OSError:
+        return None
+    if not files:
+        return None
+    idx = (abs(portrait_id) if portrait_id is not None else 0) % len(files)
+    path = os.path.join(folder, files[idx])
+    px = max(1, int(px))
+    try:
+        surf = pygame.image.load(path)
+        if surf.get_size() != (px, px):
+            surf = pygame.transform.smoothscale(surf, (px, px))
+        try:
+            surf = surf.convert_alpha()
+        except pygame.error:
+            pass
+        return surf
+    except Exception:
+        return None
 
 
 # A small curated gallery for the guild's banner emblem (see draft_screen.py's

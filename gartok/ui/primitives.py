@@ -231,17 +231,16 @@ TOKEN_INK = (15, 15, 20)               # ink for the race glyph / letter on a un
 
 
 def token_badge(surf, F, center, unit, *, color=None, r=14):
-    """The round unit token: a coloured disc carrying the unit's race
-    silhouette (`artwork.race_icon`), falling back to its board letter when
-    the race has no glyph. `unit` may also be a bare letter string.
-
-    `color` defaults to the guild's live banner colour (`theme.PLAYER_C`,
-    read off the module each call, not captured, so a colour picked after
-    this screen loads still applies) -- the one piece of theme.py state this
-    component still shares with the legacy screens instead of owning a
-    second copy of it."""
-    smooth_circle(surf, color or _theme.PLAYER_C, center, r)
+    """The round unit token: a circular portrait medallion (`artwork.portrait`),
+    falling back to a coloured disc carrying the race silhouette (`artwork.race_icon`),
+    or its board letter when the race has no glyph."""
     race = getattr(unit, "race", None)
+    pid = getattr(unit, "portrait_id", None)
+    port = artwork.portrait(race["name"] if race else None, pid, r * 2) if race else None
+    if port is not None:
+        surf.blit(port, port.get_rect(center=center))
+        return
+    smooth_circle(surf, color or _theme.PLAYER_C, center, r)
     sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
     if sil is not None:
         surf.blit(sil, sil.get_rect(center=center))

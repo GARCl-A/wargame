@@ -136,6 +136,7 @@ class Unit:
         self._auto_name = name is None
         self.name = name or names.random_name()
         self.token = self.race["token"]
+        self.portrait_id = int(self.uid[:8], 16)
 
         self._derive_combat()
         self._sync_dictionary_recipes()
@@ -202,6 +203,7 @@ class Unit:
         u.name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
+        u.portrait_id = d.get("portrait_id", abs(hash(u.uid)) % 1000)
         u._hp_roll = d.get("hp_roll")
         u._hp_override = d.get("hp_override")            # creator-set HP max, or None
         u._racial_override = d.get("racial_override")    # creator-pinned racial level, or None

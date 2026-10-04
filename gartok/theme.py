@@ -441,16 +441,16 @@ def smooth_circle(surf, color, center, radius, width=0):
 
 
 def token_badge(surf, center, unit, fonts, *, color=None, r=14):
-    """The round unit token: a coloured disc carrying the unit's race silhouette
-    (`artwork.race_icon`), falling back to its board letter when the race has no
-    glyph. Used on every roster card (draft / guild / squad / loot / market /
-    reward / sheet). `unit` may also be a bare letter string.
-
-    `color` defaults to the live `PLAYER_C` (read here, not captured as a
-    default-argument value, so `set_player_color` takes effect on every
-    caller that doesn't pass its own colour -- which is all of them today)."""
-    smooth_circle(surf, color or PLAYER_C, center, r)
+    """The round unit token: a circular portrait medallion (`artwork.portrait`),
+    falling back to a coloured disc carrying the race silhouette (`artwork.race_icon`),
+    or its board letter when the race has no glyph."""
     race = getattr(unit, "race", None)
+    pid = getattr(unit, "portrait_id", None)
+    port = artwork.portrait(race["name"] if race else None, pid, r * 2) if race else None
+    if port is not None:
+        surf.blit(port, port.get_rect(center=center))
+        return
+    smooth_circle(surf, color or PLAYER_C, center, r)
     sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
     if sil is not None:
         surf.blit(sil, sil.get_rect(center=center))

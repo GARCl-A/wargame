@@ -24,7 +24,7 @@ Attribute rolls are 3d6; the modifiers below are added after.
 | Human | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
 | Kenku | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
 | Kobold | -2 +1 +0 +1 -1 +1 | d6 | Small | Draconic | 2.5x | Blood Magic |
-| Leshy | -1 +0 +1 -1 +1 +0 | d6 | Small | Verdant | 1x | Autotroph |
+| Treefolk | -1 +0 +1 -1 +1 +0 | d6 | Medium | Verdant | 1x | Autotroph |
 | Orc | +2 +1 +1 -1 +0 -3 | d10 | Medium | Orcish | 0.625x | Ferocity |
 | Sprite | -2 +0 -2 +0 +2 +2 | d6 | Tiny | Gnomish | 1.5x | Flight |
 
@@ -331,7 +331,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | Tier | Talent | Effect | Requires | Race |
 |---|---|---|---|---|
 | 1 | Tongue | your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- | Grippli |
-| 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- | Leshy |
+| 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- | Treefolk |
 | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- | Human |
 | 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- | Halfling |
 | 1 | Woodland Scout | the forest whispers its secrets to you: greatly reduces the chance of the group suffering an ambush in the wilds or on the road. | -- | Elf |

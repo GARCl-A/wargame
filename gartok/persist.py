@@ -65,6 +65,7 @@ def unit_to_dict(u):
         "recruited_by": u.recruited_by,          # uid of the member who recruited this one, or None
         "name": u.name,
         "auto_name": u._auto_name,
+        "portrait_id": getattr(u, "portrait_id", None),
         "race": u.race["name"],
         "occupation": u.occupation["name"],
         "alignment": u.alignment,

@@ -170,7 +170,7 @@ RACES = [
     (89,  "Human",         "M", ( 0,  0,  0,  0,  0,  0), "extra_language", "Ankarin",   1.000,  8, "Medium"),
     (92,  "Kenku",          "K", (-3,  1, -1,  0,  1,  2), "mimic_sounds",   "Sylvan", 1.000,  6, "Medium"),
     (95,  "Kobold",         "D", (-2,  1,  0,  1, -1,  1), "blood_magic",    "Draconic", 2.500,  6, "Small"),
-    (96,  "Leshy",          "Y", (-1,  0,  1, -1,  1,  0), "autotroph",      "Verdant",    1.000,  6, "Small"),
+    (96,  "Treefolk",        "Y", (-1,  0,  1, -1,  1,  0), "autotroph",      "Verdant",    1.000,  6, "Medium"),
     (99,  "Orc",            "R", ( 2,  1,  1, -1,  0, -3), "ferocity",       "Orcish",   0.625, 10, "Medium"),
     (100, "Sprite",         "S", (-2,  0, -2,  0,  2,  2), "flight",         "Gnomish",   1.500,  6, "Tiny"),
 ]
@@ -234,6 +234,8 @@ def roll_race():
 
 
 def race_by_name(name):
+    if name == "Leshy":
+        name = "Treefolk"
     for race in _RACES:
         if race["name"] == name:
             return dict(race)
