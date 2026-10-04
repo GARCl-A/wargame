@@ -229,14 +229,15 @@ gartok/
 main.py             entry point
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
-balance_sim.py      the balance tournament (race / occupation / combo rankings)
-economy_sim.py      the trade counterpart (net copper by race / occupation)
+scripts/            balance_sim.py (race / occupation / combo rankings), economy_sim.py
+                    (net copper by race / occupation), unit_stats.py (creation-stat
+                    spread), crafting_cost.py
+docs/plans/         design plans not yet built (campaign AI roadmap)
 ```
 
-> Rendering is procedural, with one exception: `artwork.py` loads the SVGs under
-> `gartok/assets/icons/` (game-icons.net) — today only the race silhouettes on
-> the unit token and the talent-node icons. `gartok/assets/dungeon/` +
-> `tileset.py` are orphaned, kept on disk in case props (barrels, chests) return.
+> Rendering is procedural, with two asset-backed exceptions: `artwork.py` loads
+> the SVG silhouettes under `gartok/assets/icons/` (game-icons.net) and the race
+> medallion portraits under `gartok/assets/portraits/`.
 
 ### How to add a system
 

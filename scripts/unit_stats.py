@@ -1,8 +1,15 @@
-import sys
+"""Creation-stat baseline: roll many fresh player Units and print the spread of
+HP, speed, average weapon damage, carry capacity and CHA mod.
+
+Run it before and after touching Unit creation, races or the 3d6 roll -- it
+shows how the raw baseline moved. Usage: python scripts/unit_stats.py
+"""
+
 import os
 import statistics
+import sys
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from gartok.unit import Unit
 from gartok import data

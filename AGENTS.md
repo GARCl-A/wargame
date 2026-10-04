@@ -64,6 +64,9 @@ Screens follow `screen.Screen` base; `native = True` means full-window layout.
 
 ## UI conventions
 
+**Before any UI work, read `gartok/ui/README.md`** — the design rules
+(palette, colour semantics, 8px grid, fonts) and the component catalog.
+
 - **`gartok/ui/` is the single source of truth for screen presentation.**
   Every new screen or non-trivial screen change builds on that component set:
   data-driven `draw_x(surf, F, rect, ...data, mpos)` functions that take plain
