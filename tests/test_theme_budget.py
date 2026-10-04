@@ -15,13 +15,7 @@ import pytest
 
 PKG = Path(__file__).resolve().parent.parent / "gartok"
 
-# Why it still imports theme -- the battle screen draws its chrome (panel(), text(),
-# the surface ramp, the SP spacing scale) with the legacy helpers; the board's
-# palette/camera (`ui/board_style.py`), the banner colour (`ui/banner.py`) and
-# the font bundle (`ui/tokens.LegacyFonts`) are already off theme.
-STILL_ON_THEME = {
-    "battle_screen.py",
-}
+STILL_ON_THEME = set()
 
 
 def _imports_theme(path):

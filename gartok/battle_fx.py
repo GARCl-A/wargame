@@ -97,8 +97,8 @@ class BattleFX:
         screen.set_clip(clip_rect)
         for fl in self._floaters:
             a = max(0, min(255, int(fl["alpha"])))
-            img = fonts.num.render(fl["text"], True, fl["color"])
-            sh = fonts.num.render(fl["text"], True, (12, 12, 16))
+            img = fonts["head"].render(fl["text"], True, fl["color"])
+            sh = fonts["head"].render(fl["text"], True, (12, 12, 16))
             img.set_alpha(a)
             sh.set_alpha(a // 2)
             rect = img.get_rect(center=(int(fl["x"]), int(fl["y"])))

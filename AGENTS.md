@@ -86,13 +86,12 @@ crafting and mission board in tabs. The full module list is in `README.md`.
   screen itself adapts its model into that shape, the component stays
   reusable across screens.
 - **`theme.py` is legacy** — the app's original bespoke ramp (`widgets.py` has
-  been fully eliminated). Don't add new usage. When a screen gets touched
-  non-trivially, migrate it onto `gartok/ui/` instead of extending the old system.
-  Buttons, layouts and modals are on `gartok/ui/`; the board's palette and
-  camera are `ui/board_style.py`, the banner colour is `ui/banner.py`, and what
-  still imports `theme` is `battle_screen.py`, which draws its chrome with its
-  `panel()`/`text()`/surface ramp. `tests/test_theme_budget.py` lists it (`STILL_ON_THEME`) and
-  fails on a new importer — and on an entry that migrated, so take it off the list.
+  been fully eliminated). No module under `gartok/` imports it any more; only
+  tests still do (for the old `Fonts`, `SP*`, `MARGIN`), and the screens that
+  take a legacy `fonts` constructor argument. Don't add new usage — build on
+  `gartok/ui/`: the board's palette and camera are `ui/board_style.py`, the
+  banner colour is `ui/banner.py`. `tests/test_theme_budget.py` fails on any
+  new importer.
 - A `ui/` component never reads module globals or hardcodes screen
   coordinates/fixed pixel widths for panel sizing — it takes its rect/data as
   parameters and sizes/lays out relative to those (proportional-with-clamp

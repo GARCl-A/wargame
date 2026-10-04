@@ -4,11 +4,10 @@ The war-table kit: "steel desk + paper map". Chrome is dark steel, the world is
 paper laid on the table, and brass / blood / green are the only things that
 glow. Read this before adding or changing anything that draws.
 
-`gartok/theme.py` is the legacy look. Don't add new usage; when you touch a
-screen non-trivially, move it onto this kit. `tests/test_theme_budget.py` lists
-the modules still on `theme` and fails on a new one; when you finish moving a
-module, take it off that list. (`set_pointer` lives in `primitives.py` now; the old `Fonts` bundle is
-`tokens.LegacyFonts`, still handed to every screen's constructor.)
+`gartok/theme.py` is the legacy look and nothing under `gartok/` imports it any
+more. Don't add new usage; `tests/test_theme_budget.py` fails on a new importer.
+(`set_pointer` lives in `primitives.py`; the old `Fonts` bundle is
+`tokens.LegacyFonts`, still handed to the screens that haven't taken `ui_fonts`.)
 
 ## Rules
 
@@ -43,7 +42,7 @@ module, take it off that list. (`set_pointer` lives in `primitives.py` now; the 
 | Module | What it is |
 |---|---|
 | `tokens.py` | `T` palette / spacing / font sizes, `fonts()`, `mix()` |
-| `primitives.py` | `panel`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar` |
+| `primitives.py` | `panel`, `box`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar`, `Stack` (vertical cursor), `pips` |
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
 | `board_style.py` | the battle board's palette, `battle_layout`, `BoardView` (pan/zoom camera) |
 | `camera.py` | `MapCamera`: pan / zoom around a screen-space centre |

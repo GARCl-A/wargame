@@ -19,6 +19,7 @@ def _app(guild):
     app = App.__new__(App)
     app.scene = None
     app.fonts = None
+    app.ui_fonts = None
     app.guild = guild
     app._battle_squad = []
     app._battle_node = None

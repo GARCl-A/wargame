@@ -20,8 +20,8 @@ import pygame
 from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .screen import Screen
-from .ui.primitives import contained as ui_contained
 from .ui.primitives import (
+    box,
     draw_button,
     draw_tooltip,
     ellipsize,
@@ -30,6 +30,7 @@ from .ui.primitives import (
     set_pointer,
     text,
 )
+from .ui.primitives import contained as ui_contained
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import hp_tooltip, unit_to_ch
 from .ui.tokens import T
@@ -257,12 +258,6 @@ class CharEditorScreen(Screen):
         draw_button(screen, self.F, rect, label, primary=on, danger=danger and on,
                     mpos=self.mouse, fnt=font)
 
-    @staticmethod
-    def _box(screen, rect, *, fill, border=T.STEEL_LINE, width=1):
-        pygame.draw.rect(screen, fill, rect)
-        if border and width:
-            pygame.draw.rect(screen, border, rect, width)
-
     def draw(self, screen):
         F = self.F
         W, H = screen.get_size()
@@ -316,7 +311,7 @@ class CharEditorScreen(Screen):
     def _draw_form(self, screen, rect):
         F = self.F
         u = self.unit
-        self._box(screen, rect, fill=T.STEEL, border=T.STEEL_LINE)
+        box(screen, rect, fill=T.STEEL, border=T.STEEL_LINE)
         inner = rect.inflate(-2 * T.S * 2, -2 * T.S)
         prev = screen.get_clip()
         screen.set_clip(inner)
@@ -358,7 +353,7 @@ class CharEditorScreen(Screen):
         for i, (abbr, name) in enumerate(_ATTR_ABBR):
             cx = x + i * (cw + cg)
             cell = pygame.Rect(cx, y, cw, ch)
-            self._box(screen, cell, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+            box(screen, cell, fill=T.TABLE, border=T.STEEL_LINE, width=1)
             text(screen, F["micro"], abbr, (cell.centerx, cell.y + 11), T.TX_FAINT, center=True)
             base = u.base_attributes[name]
             text(screen, F["head"], str(base), (cell.centerx, cell.y + 31), T.TX, center=True)
@@ -371,7 +366,7 @@ class CharEditorScreen(Screen):
             up = pygame.Rect(cell.centerx + 1, cell.bottom - bh - 2, cw // 2 - 3, bh)
             for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
                 h = br.collidepoint(self.mouse)
-                self._box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+                box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
                 text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
                 self._hit(br, ("attr", name, sign))
             if cell.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse):
@@ -386,7 +381,7 @@ class CharEditorScreen(Screen):
         y = section(screen, F, "PROGRESSION", x, y, w)
         for i, track in enumerate(talents.TRACKS):
             lr = pygame.Rect(x + i * (third + T.S), y, third, 26)
-            self._box(screen, lr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+            box(screen, lr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
             lvl = u.track_level[track]
             pin = track == "racial" and u._racial_override is not None
             text(screen, F["body_sm"], f"{track.upper()}  N{lvl}",
@@ -398,28 +393,28 @@ class CharEditorScreen(Screen):
             up = pygame.Rect(lr.right - 20, lr.y + 3, 18, 20)
             for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
                 h = br.collidepoint(self.mouse)
-                self._box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+                box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
                 text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
                 self._hit(br, ("level", track, sign))
         y += 26 + T.S // 2
 
         # HP: the steppers pin an override, AUTO clears it (see Unit.set_hp).
         hr = pygame.Rect(x, y, half, 26)
-        self._box(screen, hr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+        box(screen, hr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
         pinned = u._hp_override is not None
         text(screen, F["body_sm"], f"HP  {u.hp_max}",
              (hr.x + T.S, hr.y + 6), T.BRASS if pinned else T.TX)
         if pinned:
             rs = pygame.Rect(hr.right - 78, hr.y + 4, 34, 18)
             rh = rs.collidepoint(self.mouse)
-            self._box(screen, rs, fill=T.STEEL_HI if rh else T.STEEL, border=T.STEEL_LINE, width=0)
+            box(screen, rs, fill=T.STEEL_HI if rh else T.STEEL, border=T.STEEL_LINE, width=0)
             text(screen, F["micro"], "auto", rs.center, T.BRASS if rh else T.TX_MUTED, center=True)
             self._hit(rs, ("hp_auto",))
         dn = pygame.Rect(hr.right - 40, hr.y + 3, 18, 20)
         up = pygame.Rect(hr.right - 20, hr.y + 3, 18, 20)
         for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
             h = br.collidepoint(self.mouse)
-            self._box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+            box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
             text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
             self._hit(br, ("hp", sign))
         if hr.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse) and not (pinned and rs.collidepoint(self.mouse)):
@@ -435,7 +430,7 @@ class CharEditorScreen(Screen):
         if rl_pinned:
             ar = pygame.Rect(hx, y, 34, 15)
             ah = ar.collidepoint(self.mouse)
-            self._box(screen, ar, fill=T.STEEL_HI if ah else T.STEEL, border=T.STEEL_LINE, width=0)
+            box(screen, ar, fill=T.STEEL_HI if ah else T.STEEL, border=T.STEEL_LINE, width=0)
             text(screen, F["micro"], "auto", ar.center, T.BRASS if ah else T.TX_MUTED, center=True)
             self._hit(ar, ("racial_auto",))
             hx = ar.right + T.S // 2
@@ -462,7 +457,7 @@ class CharEditorScreen(Screen):
                 indent = T.S * 2 if t.requires else 0
                 tr = pygame.Rect(colx + indent, ty, third - indent, 18)
                 edge = T.GREEN if taken else T.BRASS if openp else T.STEEL_LINE
-                self._box(screen, tr, fill=T.TABLE if (taken or openp) else T.STEEL, border=edge, width=1)
+                box(screen, tr, fill=T.TABLE if (taken or openp) else T.STEEL, border=edge, width=1)
                 tc = T.GREEN if taken else T.BRASS if openp else T.TX_FAINT
                 text(screen, F["micro"], ellipsize(t.name, F["micro"], tr.w - 2 * T.S // 2),
                      (tr.x + T.S // 2, tr.y + 4), tc)
@@ -481,7 +476,7 @@ class CharEditorScreen(Screen):
             if cx + cwid > x + w:
                 cx, cy = x, cy + 22
             lr = pygame.Rect(cx, cy, cwid, 18)
-            self._box(screen, lr, fill=T.STEEL_HI if on else T.STEEL, border=T.BRASS if on else T.STEEL_LINE, width=1)
+            box(screen, lr, fill=T.STEEL_HI if on else T.STEEL, border=T.BRASS if on else T.STEEL_LINE, width=1)
             text(screen, F["body_sm"], lang, (lr.x + T.S // 2, lr.y + 3), T.TX if on else T.TX_FAINT)
             self._hit(lr, ("lang", lang))
             cx += cwid + T.S // 2
@@ -490,7 +485,7 @@ class CharEditorScreen(Screen):
         # --- purse + gear -------------------------------------- #
         y = section(screen, F, "PURSE + GEAR", x, y, w)
         gr = pygame.Rect(x, y, w, 24)
-        self._box(screen, gr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+        box(screen, gr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
         text(screen, F["body_sm"], f"{u.gold} copper", (gr.x + T.S, gr.y + 5), T.BRASS)
         bxx = gr.right - 4
         for step, glyph in ((10, "+10"), (1, "+1"), (-1, "−1"), (-10, "−10")):
@@ -526,7 +521,7 @@ class CharEditorScreen(Screen):
         y += 16
         for idx, (item, qty) in enumerate(list(u._base_inventory)):
             ir = pygame.Rect(x, y, w, 20)
-            self._box(screen, ir, fill=T.STEEL, border=T.STEEL_LINE, width=1)
+            box(screen, ir, fill=T.STEEL, border=T.STEEL_LINE, width=1)
             label = item if qty == 1 else f"{item} ×{qty}"
             text(screen, F["body_sm"], ellipsize(label, F["body_sm"], ir.w - T.S - 78),
                  (ir.x + T.S, ir.y + 3), T.TX)
@@ -550,7 +545,7 @@ class CharEditorScreen(Screen):
                 sr = pygame.Rect(xr.left - 48, ir.y + 2, 44, 16)
                 sh = sr.collidepoint(self.mouse)
                 s_col = T.BRASS if studying else (T.GREEN if sh else T.TX_MUTED)
-                self._box(screen, sr, fill=T.STEEL_HI if sh else T.TABLE, border=s_col, width=1)
+                box(screen, sr, fill=T.STEEL_HI if sh else T.TABLE, border=s_col, width=1)
                 text(screen, F["micro"], "study", sr.center, s_col, center=True)
                 self._hit(sr, ("study", target.id))
             y += 22
@@ -573,7 +568,7 @@ class CharEditorScreen(Screen):
     def _pick_row(self, screen, rect, label, value, action):
         F = self.F
         hot = rect.collidepoint(self.mouse)
-        self._box(screen, rect, fill=T.STEEL_HI if hot else T.TABLE, border=T.BRASS if hot else T.STEEL_LINE, width=1)
+        box(screen, rect, fill=T.STEEL_HI if hot else T.TABLE, border=T.BRASS if hot else T.STEEL_LINE, width=1)
         text(screen, F["micro"], label, (rect.x + T.S, rect.centery - 5), T.TX_FAINT)
         vx = rect.x + T.S + F["micro"].size(label)[0] + T.S
         vw = rect.right - T.S - F["body_sm"].size("▾")[0] - T.S // 2 - vx
@@ -589,7 +584,7 @@ class CharEditorScreen(Screen):
         F = self.F
         editing = self.edit_field == field
         hot = rect.collidepoint(self.mouse)
-        self._box(screen, rect, fill=T.STEEL_HI if (hot or editing) else T.TABLE, border=T.BRASS if (hot or editing) else T.STEEL_LINE, width=1)
+        box(screen, rect, fill=T.STEEL_HI if (hot or editing) else T.TABLE, border=T.BRASS if (hot or editing) else T.STEEL_LINE, width=1)
         text(screen, F["micro"], label, (rect.x + T.S, rect.centery - 5), T.TX_FAINT)
         vx = rect.x + T.S + F["micro"].size(label)[0] + T.S
         edit_w = 0 if editing else F["micro"].size("edit")[0] + T.S
@@ -624,7 +619,7 @@ class CharEditorScreen(Screen):
         u = self.unit
         lib_h = min(int(rect.h * 0.42), 40 + 30 * (len(self.library) + 1))
         lib = pygame.Rect(rect.x, rect.y, rect.w, max(120, lib_h))
-        self._box(screen, lib, fill=T.STEEL, border=T.STEEL_LINE)
+        box(screen, lib, fill=T.STEEL, border=T.STEEL_LINE)
         text(screen, F["micro"], "NPC LIBRARY", (lib.x + T.S * 2, lib.y + T.S), T.TX_MUTED)
         text(screen, F["micro"], "npcs/", (lib.right - T.S * 2, lib.y + T.S), T.TX_FAINT, right=True)
         ly = lib.y + 24
@@ -639,7 +634,7 @@ class CharEditorScreen(Screen):
             rr = pygame.Rect(lib.x + T.S, ly, lib.w - 2 * T.S, 26)
             cur = row["slug"] == self.slug
             hot = rr.collidepoint(self.mouse)
-            self._box(screen, rr, fill=T.STEEL_HI if (hot or cur) else T.TABLE, border=T.BRASS if cur else (T.STEEL_LINE if hot else T.STEEL_LINE), width=1)
+            box(screen, rr, fill=T.STEEL_HI if (hot or cur) else T.TABLE, border=T.BRASS if cur else (T.STEEL_LINE if hot else T.STEEL_LINE), width=1)
             name_w = int(rr.w * 0.46)
             text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], name_w),
                  (rr.x + T.S, rr.y + 5), T.TX)
@@ -669,7 +664,7 @@ class CharEditorScreen(Screen):
         # bespoke left-column widgets -- only this preview panel changed.
         pr = pygame.Rect(rect.x, lib.bottom + T.S * 2, rect.w,
                          rect.bottom - lib.bottom - T.S * 2)
-        self._box(screen, pr, fill=T.STEEL, border=T.STEEL_LINE)
+        box(screen, pr, fill=T.STEEL, border=T.STEEL_LINE)
         ch = unit_to_ch(Combatant(u))
         inner = pygame.Rect(pr.x + T.S * 2, pr.y + T.S, pr.w - 2 * T.S * 2, 0)
         with ui_contained(screen, pr.inflate(-T.S // 2, -T.S // 2)):
@@ -695,7 +690,7 @@ class CharEditorScreen(Screen):
         pw = cols * cw + 2 * pad
         ph = min(H - 2 * T.S * 2, 52 + rows * ch + T.S * 2)
         panel_r = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
-        self._box(screen, panel_r, fill=T.TABLE, border=T.BRASS, width=2)
+        box(screen, panel_r, fill=T.TABLE, border=T.BRASS, width=2)
         noun = {"additem": "an item", "occupation": "an occupation",
                 "alignment": "an alignment", "armor": "armor",
                 "tongue": "a tongue weapon"}.get(kind, f"a {kind}")
@@ -712,7 +707,7 @@ class CharEditorScreen(Screen):
                 continue
             sel = name == current
             hov = it.collidepoint(self.mouse)
-            self._box(screen, it, fill=T.STEEL_HI if (hov or sel) else T.STEEL, border=T.BRASS if sel else (T.STEEL_LINE if hov else T.STEEL_LINE), width=1)
+            box(screen, it, fill=T.STEEL_HI if (hov or sel) else T.STEEL, border=T.BRASS if sel else (T.STEEL_LINE if hov else T.STEEL_LINE), width=1)
             text(screen, F["body_sm"], ellipsize(str(name), F["body_sm"], it.w - 2 * T.S),
                  (it.x + T.S, it.y + 4), T.BRASS if sel else T.TX)
             self.picker_hits.append((it, name))

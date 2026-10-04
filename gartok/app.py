@@ -440,7 +440,7 @@ class App:
         battle = Battle(list(group.members), pack, scenario=node.scenario(),
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     def _open_tanner_stall(self, group, node, _offer):
         self.scene = TannerScreen(self.ui_fonts, self.guild, group,
@@ -474,7 +474,7 @@ class App:
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None
-        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #
@@ -583,7 +583,7 @@ class App:
         battle = Battle(list(group.members), enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     # ------------------------------------------------------------------ #
     # hunting the wilds -- an activity that can spring a fight            #
@@ -614,7 +614,7 @@ class App:
                         daylight=self.guild.clock.is_daylight,
                         lethal=state.node.lethal, arena=False,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     def _resolve_hunt_autowin(self, state, pack, autowin_result):
         for u in state.party:
@@ -687,7 +687,7 @@ class App:
         battle = Battle(squad, enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena, clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     def _start_title_defense(self, node):
         """A due title challenge: the champion alone against one scaled newcomer."""
@@ -700,7 +700,7 @@ class App:
         battle = Battle([champ], enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=False, arena=True,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.fonts, battle, on_battle_end=self._battle_end)
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     def _battle_end(self, battle):
         hunt_state = self._hunt

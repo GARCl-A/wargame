@@ -47,6 +47,41 @@ def panel(surf, rect, hover=False, width=1):
     pygame.draw.rect(surf, border, rect, width)
 
 
+def box(surf, rect, fill, border=T.STEEL_LINE, width=1):
+    """A flat filled rect with an optional outline -- for chips, rows and cards
+    whose fill the caller picks (`panel` only toggles hover)."""
+    pygame.draw.rect(surf, fill, rect)
+    if border and width:
+        pygame.draw.rect(surf, border, rect, width)
+
+
+class Stack:
+    """A vertical cursor: `gap(n)` then `row(h)` walks a column downward."""
+
+    def __init__(self, x, y, w):
+        self.x, self.y, self.w = x, y, w
+
+    def gap(self, dy):
+        self.y += dy
+
+    def row(self, h):
+        r = pygame.Rect(self.x, self.y, self.w, h)
+        self.y += h
+        return r
+
+
+def pips(surf, center, count, total, *, r=6, gap=6):
+    """A row of `total` dots, `count` filled, centred on `center`."""
+    span = total * (2 * r) + (total - 1) * gap
+    x = center[0] - span // 2 + r
+    for i in range(total):
+        on = i < count
+        col = T.BRASS if on else T.STEEL_HI
+        gfxdraw.filled_circle(surf, x, center[1], r, col)
+        gfxdraw.aacircle(surf, x, center[1], r, col if on else T.STEEL_LINE)
+        x += 2 * r + gap
+
+
 def modal_card(surf, size, veil=False):
     """Centers a `panel` of `size` on `surf`; with `veil` dims everything
     behind it first. Returns the card Rect for the caller to place content in."""

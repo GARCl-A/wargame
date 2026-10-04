@@ -14,7 +14,7 @@ def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -22,7 +22,7 @@ def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(battle_screen_mod, "DEBUG_EXPORT_DIR", str(tmp_path))
 
     batt = Battle([Unit("player")], [Unit("enemy")])
-    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr = BattleScreen(ui_fonts(), batt, lambda *a, **k: None)
     scr._export_state()
 
     files = list(tmp_path.iterdir())
@@ -40,14 +40,14 @@ def test_battle_log_wheel_scroll_over_the_log_panel():
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     surf = pygame.display.set_mode((1280, 800))
 
     batt = Battle([Unit("player")], [Unit("enemy")])
     for i in range(80):
         batt.log(f"line {i}")
-    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr = BattleScreen(ui_fonts(), batt, lambda *a, **k: None)
     scr.draw(surf)                            # populates self._L
 
     log_rect = scr._L["log"]
@@ -306,8 +306,8 @@ def test_every_screen_draws_native_at_any_window_size():
         DraftScreen(UI_F, noop),
         MapScreen(F, guild, noop, noop, noop, noop),
         SquadScreen(F, roster, bnode, noop, noop),
-        BattleScreen(F, batt, noop),
-        BattleScreen(F, ctf_batt, noop),                  # capture the flag: setup + pennants
+        BattleScreen(UI_F, batt, noop),
+        BattleScreen(UI_F, ctf_batt, noop),                  # capture the flag: setup + pennants
         LootScreen(F, guild, list(roster[:3]), ["Axe", "Rope"], noop),
         RewardScreen(F, guild, list(roster[:3]), 120, noop),
         MarketScreen(F, guild, list(roster[:3]), mnode, noop),
@@ -1422,7 +1422,7 @@ def test_battle_screen_victory_card_with_stabilized():
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.unit import Unit
     pygame.init()
     surf = pygame.Surface((1024, 768))
@@ -1430,7 +1430,7 @@ def test_battle_screen_victory_card_with_stabilized():
     batt.winner = "player"
     batt.player_units[0].status = "up"
     batt.player_units[1].status = "stable"
-    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr = BattleScreen(ui_fonts(), batt, lambda *a, **k: None)
     scr.draw(surf)
 
 
@@ -1567,14 +1567,14 @@ def test_battle_screen_tabs_and_hotkeys():
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok import actions
     pygame.init()
     surf = pygame.display.set_mode((1280, 800))
 
     batt = Battle([Unit("player")], [Unit("enemy")])
     batt.turn_idx = next(i for i, u in enumerate(batt.order) if u.team == "player")
-    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr = BattleScreen(ui_fonts(), batt, lambda *a, **k: None)
     scr.draw(surf)
 
     # 1. Starts in combat tab
@@ -1602,12 +1602,12 @@ def test_battle_screen_actions_wheel_scroll():
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     surf = pygame.display.set_mode((1280, 720))
 
     batt = Battle([Unit("player")], [Unit("enemy")])
-    scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+    scr = BattleScreen(ui_fonts(), batt, lambda *a, **k: None)
     scr.show_blocked_actions = True
     scr.draw(surf)
 
@@ -1629,7 +1629,8 @@ def test_battle_screen_16_9_monitor_no_overflow():
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import Fonts, MARGIN
+    from gartok.theme import MARGIN
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
 
     resolutions = [
@@ -1642,7 +1643,7 @@ def test_battle_screen_16_9_monitor_no_overflow():
     for w, h in resolutions:
         surf = pygame.Surface((w, h))
         batt = Battle([Unit("player")], [Unit("enemy")])
-        scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
+        scr = BattleScreen(ui_fonts(), batt, lambda *a, **k: None)
         scr.show_blocked_actions = True    # maximize number of buttons shown
         scr.inspect_open = True            # full compact inspect card open
         scr.draw(surf)

@@ -14,31 +14,6 @@ from .board import cells
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
-from .theme import (
-    ACCENT,
-    ACCENT_INK,
-    BG,
-    INFO,
-    INK,
-    INK_DIM,
-    LINE,
-    LINE_SOFT,
-    RADIUS,
-    SP1,
-    SP2,
-    SP3,
-    SURFACE_0,
-    SURFACE_1,
-    SURFACE_2,
-    SURFACE_3,
-    SURFACE_4,
-    Stack,
-    panel,
-    pips,
-    text,
-    tracked,
-    wrap_lines,
-)
 from .ui import primitives as ui_primitives
 from .ui.board_style import (
     ATK_HL,
@@ -65,11 +40,13 @@ from .ui.board_style import (
     BoardView,
     battle_layout,
 )
+from .ui.primitives import Stack, box, pips, text, tracked, wrap
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import sheet_height, unit_to_ch
-from .ui.tokens import fonts as ui_fonts
+from .ui.tokens import T
 
 _WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
+_WALL_RADIUS = 6
 
 ENEMY_DELAY = 450  # ms between AI actions
 
@@ -84,7 +61,7 @@ class BattleScreen(Screen):
 
     def __init__(self, fonts, battle, on_battle_end):
         super().__init__()
-        self.fonts = fonts
+        self.F = fonts
         self.battle = battle
         self.on_battle_end = on_battle_end
         self.lighting = LightRenderer()
@@ -413,7 +390,7 @@ class BattleScreen(Screen):
     # drawing                                                            #
     # ------------------------------------------------------------------ #
     def draw(self, screen):
-        screen.fill(BG)
+        screen.fill(T.TABLE)
         self._L = battle_layout(screen.get_size())
         self.view.cols, self.view.rows = self.battle.board.cols, self.battle.board.rows
         self.view.fit(self._L["board"])
@@ -435,7 +412,7 @@ class BattleScreen(Screen):
             self._draw_flag_setup(screen)
         if self.battle.awaiting_trap:
             self._draw_trap_setup(screen)
-        self.fx.draw(screen, self.fonts, self.view.rect)
+        self.fx.draw(screen, self.F, self.view.rect)
         screen.set_clip(clip)
 
         self._draw_initiative(screen)
@@ -457,9 +434,9 @@ class BattleScreen(Screen):
         
         desc = getattr(hovered_action, "desc", "") if hovered_action else ""
         if desc:
-            lines = wrap_lines(desc, self.fonts.body_sm, 200 - SP2 * 2)
+            lines = wrap(self.F["body_sm"], desc, 200 - T.S * 2)
             tt_w = 200
-            tt_h = SP1 * 2 + len(lines) * 16
+            tt_h = T.S // 2 * 2 + len(lines) * 16
             tt_rect = pygame.Rect(0, 0, tt_w, tt_h)
             
             btn_rect = next(r for a, r in self.buttons if a == hovered_action)
@@ -467,10 +444,10 @@ class BattleScreen(Screen):
             if tt_rect.top < 0:
                 tt_rect.topleft = (btn_rect.left, btn_rect.bottom + 4)
                 
-            panel(screen, tt_rect, fill=SURFACE_3, border=LINE_SOFT)
-            y = tt_rect.y + SP1
+            box(screen, tt_rect, fill=T.STEEL_HI, border=T.STEEL_LINE)
+            y = tt_rect.y + T.S // 2
             for ln in lines:
-                text(screen, ln, self.fonts.body_sm, INK, (tt_rect.x + SP2, y))
+                text(screen, self.F["body_sm"], ln, (tt_rect.x + T.S, y), T.TX)
                 y += 16
 
     def _cell_rect(self, cx, cy):
@@ -505,7 +482,7 @@ class BattleScreen(Screen):
             screen.fill(WALL_LO, r)
             screen.fill(tuple(int(v * (1 - 0.5 * k)) for v in WALL_LO),
                         r.inflate(-tile // 4, -tile // 4))
-            text(screen, str(-z), self.fonts.mono_sm, INK_FAINT, r.center, center=True)
+            text(screen, self.F["micro"], str(-z), r.center, INK_FAINT, center=True)
 
         for cx, cy in board.water:                     # deep over a pit, a shallow puddle otherwise
             if not vis(cx, cy):
@@ -525,16 +502,16 @@ class BattleScreen(Screen):
 
         for cx in range(board.cols + 1):
             x = round(vr.x + (cx - view.cam[0]) * tile)
-            pygame.draw.line(screen, LINE_SOFT, (x, vr.top), (x, vr.bottom))
+            pygame.draw.line(screen, T.STEEL_LINE, (x, vr.top), (x, vr.bottom))
         for cy in range(board.rows + 1):
             y = round(vr.y + (cy - view.cam[1]) * tile)
-            pygame.draw.line(screen, LINE_SOFT, (vr.left, y), (vr.right, y))
+            pygame.draw.line(screen, T.STEEL_LINE, (vr.left, y), (vr.right, y))
 
         # drop shadow: a dark block offset down-right, painted before the walls
         # so each block covers its neighbours' shadows -> only the exposed south
         # and east faces cast onto the floor, and the grid reads as 2.5D
         shadow = pygame.Surface((tile, tile), pygame.SRCALPHA)
-        pygame.draw.rect(shadow, (0, 0, 0, 110), shadow.get_rect(), border_radius=RADIUS)
+        pygame.draw.rect(shadow, (0, 0, 0, 110), shadow.get_rect(), border_radius=_WALL_RADIUS)
         for wx, wy in walls:
             if vis(wx, wy):
                 r = view.cell_rect(wx, wy)
@@ -550,7 +527,7 @@ class BattleScreen(Screen):
         open_s = (wx, wy + 1) not in walls
         open_w = (wx - 1, wy) not in walls
         open_e = (wx + 1, wy) not in walls
-        rad = lambda a, b: RADIUS if a and b else 0
+        rad = lambda a, b: _WALL_RADIUS if a and b else 0
         kw = dict(border_top_left_radius=rad(open_n, open_w),
                   border_top_right_radius=rad(open_n, open_e),
                   border_bottom_left_radius=rad(open_s, open_w),
@@ -603,7 +580,7 @@ class BattleScreen(Screen):
                                      actions.SWIM, actions.DISMOUNT, actions.PUSH):
                 color = MOVE_HL
             elif getattr(self.aim_action, "spell_id", None) is not None:
-                color = ACCENT
+                color = T.BRASS
             else:
                 color = THROW_HL
             cell.fill((*color, 46))
@@ -656,9 +633,9 @@ class BattleScreen(Screen):
                 if cost is not None:
                     badge = pygame.Rect(0, 0, 18, 15)
                     badge.center = (end[0], end[1] - 15)
-                    panel(screen, badge, fill=PATH_PREV, border=None, radius=4)
-                    text(screen, str(cost), self.fonts.mono_sm, (20, 18, 8),
-                         badge.center, center=True)
+                    box(screen, badge, fill=PATH_PREV, border=None)
+                    text(screen, self.F["micro"], str(cost),
+                         badge.center, (20, 18, 8), center=True)
 
     # ------------------------------------------------------------------ #
     # scene props                                                        #
@@ -753,7 +730,7 @@ class BattleScreen(Screen):
         pygame.draw.ellipse(glow_surf, (180, 245, 255, 220), (4, 4, w, h), 2)
         screen.blit(glow_surf, (cx - (w + 8) // 2, cy - (h + 8) // 2))
         z_str = f"z={disk.elevation}"
-        text(screen, z_str, self.fonts.mono_sm, (180, 245, 255), (cx, cy - 2), center=True)
+        text(screen, self.F["micro"], z_str, (cx, cy - 2), (180, 245, 255), center=True)
 
     # ------------------------------------------------------------------ #
     # capture the flag                                                   #
@@ -761,11 +738,11 @@ class BattleScreen(Screen):
     def _draw_pennant(self, screen, pos, color):
         r = self._cell_rect(*pos)
         pole = (r.x + r.w // 3, r.bottom - 5)
-        pygame.draw.line(screen, INK, (pole[0], r.y + 5), pole, 3)
+        pygame.draw.line(screen, T.TX, (pole[0], r.y + 5), pole, 3)
         flag = [(pole[0], r.y + 5), (pole[0] + r.w // 2, r.y + 12),
                 (pole[0], r.y + 19)]
         pygame.draw.polygon(screen, color, flag)
-        pygame.draw.polygon(screen, INK, flag, 1)
+        pygame.draw.polygon(screen, T.TX, flag, 1)
 
     def _draw_flags(self, screen):
         for team in self.battle.flags:
@@ -780,7 +757,7 @@ class BattleScreen(Screen):
             self._draw_pennant(screen, pos, PLAYER_C if team == "player" else ENEMY_C)
 
     def _draw_flag_setup(self, screen):
-        f = self.fonts
+        F = self.F
         board = self.battle.board
         tint = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
         tint.fill((*PLAYER_C, 32))
@@ -793,12 +770,12 @@ class BattleScreen(Screen):
         if hover is not None and self.battle.can_plant_flag(hover):
             pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
         banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
-        panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
-        text(screen, "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
-             f.body_bd, INK, banner.center, center=True)
+        box(screen, banner, fill=T.TABLE, border=PLAYER_C, width=1)
+        text(screen, F["bodyb"], "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
+             banner.center, T.TX, center=True)
 
     def _draw_trap_setup(self, screen):
-        f = self.fonts
+        F = self.F
         board = self.battle.board
         trapper = self.battle.awaiting_trap
 
@@ -817,28 +794,28 @@ class BattleScreen(Screen):
             pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
             
         banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
-        panel(screen, banner, fill=SURFACE_2, border=PLAYER_C, width=1)
+        box(screen, banner, fill=T.TABLE, border=PLAYER_C, width=1)
         trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
-        text(screen, f"TRAP PLACEMENT  ·  {trapper.name} is placing a {trap_type}",
-             f.body_bd, INK, banner.center, center=True)
+        text(screen, F["bodyb"], f"TRAP PLACEMENT  ·  {trapper.name} is placing a {trap_type}",
+             banner.center, T.TX, center=True)
 
     def _draw_creatures(self, screen):
-        f = self.fonts
+        F = self.F
         for cr in self.battle.creatures:
             if cr.pos not in self._visible:
                 continue
             r = self._cell_rect(*cr.pos)
             pygame.draw.circle(screen, NEUTRAL_C, r.center, r.w // 2 - 6)
-            text(screen, cr.token, f.body_bd, (25, 25, 25), r.center, center=True)
+            text(screen, F["bodyb"], cr.token, r.center, (25, 25, 25), center=True)
 
     def _draw_body(self, screen, u, r):
         """A downed unit: dying (with its death counter) or stable, on the ground."""
-        f = self.fonts
+        F = self.F
         center = r.center
         rad = r.w // 2 - 6
         base = PLAYER_C if u.team == "player" else ENEMY_C
         pygame.draw.circle(screen, tuple(c // 3 + 12 for c in base), center, rad)
-        ring = DANGER if u.dying else INK_DIM
+        ring = DANGER if u.dying else T.TX_MUTED
         pygame.draw.circle(screen, ring, center, rad, 2)
         d = rad // 2
         pygame.draw.line(screen, ring, (center[0] - d, center[1] - d),
@@ -848,21 +825,21 @@ class BattleScreen(Screen):
         if u.dying:
             badge = pygame.Rect(0, 0, 20, 15)
             badge.center = (r.centerx, r.y + 8)
-            panel(screen, badge, fill=DANGER, border=None, radius=4)
-            text(screen, f"{u.death_clock}/{data.DYING_TURNS}", f.mono_sm, (20, 18, 8),
-                 badge.center, center=True)
+            box(screen, badge, fill=DANGER, border=None)
+            text(screen, F["micro"], f"{u.death_clock}/{data.DYING_TURNS}",
+                 badge.center, (20, 18, 8), center=True)
         elif u.broken:
             badge = pygame.Rect(0, 0, 34, 15)
             badge.center = (r.centerx, r.y + 8)
-            panel(screen, badge, fill=WARN, border=None, radius=4)
-            text(screen, "BRKN", f.mono_sm, (20, 18, 8), badge.center, center=True)
+            box(screen, badge, fill=WARN, border=None)
+            text(screen, F["micro"], "BRKN", badge.center, (20, 18, 8), center=True)
         if self.inspect is u:
             armed = self._armed is u
-            pygame.draw.rect(screen, DANGER if armed else INK, r,
+            pygame.draw.rect(screen, DANGER if armed else T.TX, r,
                              2 if armed else 1, border_radius=4)
 
     def _draw_units(self, screen):
-        f = self.fonts
+        F = self.F
         b = self.battle
         for u in b.units:
             if u.dead or u.fled:
@@ -879,14 +856,14 @@ class BattleScreen(Screen):
             rad = r.w // 2
             base = PLAYER_C if u.team == "player" else ENEMY_C
             if u is b.active and b.winner is None:
-                pygame.draw.circle(screen, ACCENT, center, rad - 1)
+                pygame.draw.circle(screen, T.BRASS, center, rad - 1)
             pygame.draw.circle(screen, base, center, rad - 5)
             pygame.draw.circle(screen, (*base, 60), center, rad - 5, 1)
             if u.has_torch:
                 pygame.draw.circle(screen, TORCH_C, center, rad - 3, 2)
                 pygame.draw.circle(screen, LIGHT_C, (r.right - 8, r.y + 8), 4)
             if u.defending:
-                pygame.draw.circle(screen, INK, center, rad - 5, 2)
+                pygame.draw.circle(screen, T.TX, center, rad - 5, 2)
             if getattr(u, "ferocity_pending", False):
                 pygame.draw.circle(screen, DANGER, center, rad - 3, 2)
             if u.demoralized:
@@ -899,7 +876,7 @@ class BattleScreen(Screen):
                 if sil is not None:
                     screen.blit(sil, sil.get_rect(center=center))
                 else:
-                    text(screen, u.token, f.body_bd, (15, 15, 20), center, center=True)
+                    text(screen, F["bodyb"], u.token, center, (15, 15, 20), center=True)
 
             frac = max(0, u.hp) / u.hp_max
             bar = pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4)
@@ -911,60 +888,57 @@ class BattleScreen(Screen):
                 if flag_team is not None:
                     badge = pygame.Rect(0, 0, 34, 15)
                     badge.center = (r.centerx, r.y + 8)
-                    panel(screen, badge, fill=PLAYER_C if flag_team == "player" else ENEMY_C,
-                          border=None, radius=4)
-                    text(screen, "FLAG", f.mono_sm, (15, 15, 20), badge.center, center=True)
+                    box(screen, badge, fill=PLAYER_C if flag_team == "player" else ENEMY_C, border=None)
+                    text(screen, F["micro"], "FLAG", badge.center, (15, 15, 20), center=True)
             if self.inspect is u:
                 armed = self._armed is u
-                pygame.draw.rect(screen, DANGER if armed else INK, r,
+                pygame.draw.rect(screen, DANGER if armed else T.TX, r,
                                  2 if armed else 1, border_radius=4)
 
     # ------------------------------------------------------------------ #
     # initiative strip                                                   #
     # ------------------------------------------------------------------ #
     def _draw_initiative(self, screen):
-        f = self.fonts
+        F = self.F
         b = self.battle
         strip = self._L["init"]
-        panel(screen, strip, fill=SURFACE_1)
-        tracked(screen, "INITIATIVE", f.label, INK_FAINT, (strip.x + SP2, strip.y + SP1))
+        box(screen, strip, fill=T.STEEL)
+        tracked(screen, F["micro"], "INITIATIVE", (strip.x + T.S, strip.y + T.S // 2), INK_FAINT)
 
         living = [u for u in b.order if u.alive or u.dying]
         n = max(1, len(living))
-        avail = max(1, strip.w - 92 - SP2)
+        avail = max(1, strip.w - 92 - T.S)
         cw = max(24, min(112, avail // n))
         x = strip.x + 88
         y = strip.y + 6
         for u in living:
-            r = pygame.Rect(x, y, cw - SP1, strip.h - 12)
+            r = pygame.Rect(x, y, cw - T.S // 2, strip.h - 12)
             is_active = u is b.active and b.winner is None
             known = u.team == "player" or self._enemy_visible(u)
-            fill = SURFACE_3 if is_active else SURFACE_2
-            panel(screen, r, fill=fill,
-                  border=ACCENT if is_active else LINE_SOFT,
-                  width=2 if is_active else 1, radius=4)
+            fill = T.STEEL_HI if is_active else T.TABLE
+            box(screen, r, fill=fill, border=T.BRASS if is_active else T.STEEL_LINE, width=2 if is_active else 1)
             tcol = PLAYER_C if u.team == "player" else ENEMY_C
             dot = (r.x + 12, r.centery - 3)
             port = artwork.portrait(u.race["name"], getattr(u, "portrait_id", None), 16) if known else None
             if port is not None:
                 screen.blit(port, port.get_rect(center=dot))
             else:
-                pygame.draw.circle(screen, tcol if known else SURFACE_4, dot, 8)
+                pygame.draw.circle(screen, tcol if known else T.STEEL_HI, dot, 8)
                 sil = artwork.race_icon(u.race["name"], 13, (12, 12, 16)) if known else None
                 if sil is not None:
                     screen.blit(sil, sil.get_rect(center=dot))
                 else:
-                    text(screen, u.token if known else "?", f.mono_sm, (12, 12, 16),
-                         dot, center=True)
+                    text(screen, F["micro"], u.token if known else "?",
+                         dot, (12, 12, 16), center=True)
             nm = (u.name.split()[0] if known else "Enemy")
-            col = INK if is_active else INK_DIM
+            col = T.TX if is_active else T.TX_MUTED
             clip = screen.get_clip()
             screen.set_clip(r.inflate(-6, -6))
-            text(screen, nm, f.body_sm, col, (r.x + 26, r.y + 4))
+            text(screen, F["body_sm"], nm, (r.x + 26, r.y + 4), col)
             screen.set_clip(clip)
             if u.dying:
-                text(screen, f"dying {u.death_clock}/{data.DYING_TURNS}", f.mono_sm,
-                     DANGER, (r.x + 8, r.bottom - 14))
+                text(screen, F["micro"], f"dying {u.death_clock}/{data.DYING_TURNS}",
+                     (r.x + 8, r.bottom - 14), DANGER)
             elif known:
                 frac = max(0, u.hp) / u.hp_max
                 hb = pygame.Rect(r.x + 8, r.bottom - 9, r.w - 16, 4)
@@ -977,7 +951,7 @@ class BattleScreen(Screen):
     # panel                                                              #
     # ------------------------------------------------------------------ #
     def _draw_panel(self, screen):
-        f = self.fonts
+        F = self.F
         b = self.battle
         pr = self._L["panel"]
         s = Stack(pr.x, pr.y, pr.w)
@@ -986,23 +960,22 @@ class BattleScreen(Screen):
         head = s.row(30)
         title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up
                  else f"Round {b.round_no}")
-        text(screen, title, f.title, ACCENT if b.winner else WARN if b.mopping_up else INK,
-             (head.x, head.y - 4))
+        text(screen, F["titleb"], title,
+             (head.x, head.y - 4), T.BRASS if b.winner else WARN if b.mopping_up else T.TX)
         vision_active = self._is_player_turn() and not self.view_squad
         vtxt = "ACTIVE" if vision_active else "SQUAD"
-        text(screen, f"vision {vtxt}  [L]", f.body_sm,
-             ACCENT if vision_active else INK_DIM,
-             (head.right, head.y + 4), right=True)
-        s.gap(SP3)
+        text(screen, F["body_sm"], f"vision {vtxt}  [L]",
+             (head.right, head.y + 4), T.BRASS if vision_active else T.TX_MUTED, right=True)
+        s.gap(T.S * 2)
 
         if b.winner is None:
             self._draw_turn_card(screen, s)
-            s.gap(SP3)
+            s.gap(T.S * 2)
             self._draw_hint(screen, s)
-            s.gap(SP3)
+            s.gap(T.S * 2)
         else:
             self._draw_victory_card(screen, s)
-            s.gap(SP3)
+            s.gap(T.S * 2)
 
         top_end_y = s.y
         self.buttons = []
@@ -1020,11 +993,11 @@ class BattleScreen(Screen):
             if who is insp and self._armed is insp:
                 inspect_h += 20
             if self.inspect_open:
-                inspect_h += sheet_height("compact") + SP2
+                inspect_h += sheet_height("compact") + T.S
 
         inspect_top = pr.bottom - inspect_h
         actions_top = top_end_y
-        actions_bottom = inspect_top - (SP2 if inspect_h else 0)
+        actions_bottom = inspect_top - (T.S if inspect_h else 0)
         actions_h = max(40, actions_bottom - actions_top)
         actions_rect = pygame.Rect(pr.x, actions_top, pr.w, actions_h)
 
@@ -1036,15 +1009,14 @@ class BattleScreen(Screen):
             self._draw_inspect(screen, inspect_rect, who, insp)
 
     def _draw_victory_card(self, screen, s):
-        f = self.fonts
+        F = self.F
         b = self.battle
         card = s.row(84)
         won = b.winner == "player"
-        panel(screen, card, fill=SURFACE_2,
-              border=ACCENT if won else DANGER, width=1)
+        box(screen, card, fill=T.TABLE, border=T.BRASS if won else DANGER, width=1)
 
         title = "VICTORY" if won else "DEFEAT"
-        text(screen, title, f.heading, ACCENT if won else DANGER, (card.x + SP3, card.y + 6))
+        text(screen, F["head"], title, (card.x + T.S * 2, card.y + 6), T.BRASS if won else DANGER)
 
         stabilized = [u for u in b.player_units if u.status in ("stable", "broken")]
         fallen = [u for u in b.player_units if u.status == "dead"]
@@ -1052,32 +1024,34 @@ class BattleScreen(Screen):
         if stabilized and fallen:
             s_names = ", ".join(u.name for u in stabilized)
             f_names = ", ".join(u.name for u in fallen)
-            text(screen, f"Stabilized: {s_names}", f.body_sm, OK, (card.x + SP3, card.y + 26))
-            text(screen, f"Fallen: {f_names}", f.body_sm, DANGER, (card.x + SP3, card.y + 44))
+            text(screen, F["body_sm"], f"Stabilized: {s_names}", (card.x + T.S * 2, card.y + 26), OK)
+            text(screen, F["body_sm"], f"Fallen: {f_names}", (card.x + T.S * 2, card.y + 44), DANGER)
         elif stabilized:
             names = ", ".join(u.name for u in stabilized)
-            text(screen, f"Stabilized: {names} (unconscious)", f.body_sm, OK, (card.x + SP3, card.y + 30))
+            text(screen, F["body_sm"], f"Stabilized: {names} (unconscious)",
+                 (card.x + T.S * 2, card.y + 30), OK)
         elif fallen:
             names = ", ".join(u.name for u in fallen)
-            text(screen, f"Fallen: {names}", f.body_sm, DANGER, (card.x + SP3, card.y + 30))
+            text(screen, F["body_sm"], f"Fallen: {names}", (card.x + T.S * 2, card.y + 30), DANGER)
         else:
-            text(screen, "All squad members survived standing.", f.body_sm, INK_DIM, (card.x + SP3, card.y + 30))
+            text(screen, F["body_sm"], "All squad members survived standing.",
+                 (card.x + T.S * 2, card.y + 30), T.TX_MUTED)
 
-        text(screen, "Click anywhere to continue", f.label, INK_FAINT, (card.x + SP3, card.y + 64))
+        text(screen, F["micro"], "Click anywhere to continue",
+             (card.x + T.S * 2, card.y + 64), INK_FAINT)
 
     def _draw_turn_card(self, screen, s):
-        f = self.fonts
+        F = self.F
         b = self.battle
         act = b.active
         card = s.row(74)
         mine = act.team == "player"
-        panel(screen, card, fill=SURFACE_2,
-              border=PLAYER_C if mine else ENEMY_C, width=1)
+        box(screen, card, fill=T.TABLE, border=PLAYER_C if mine else ENEMY_C, width=1)
 
-        dot = (card.x + SP3 + 11, card.y + 21)
+        dot = (card.x + T.S * 2 + 11, card.y + 21)
         pygame.draw.circle(screen, PLAYER_C if mine else ENEMY_C, dot, 13)
-        text(screen, act.token, f.body_bd, (15, 15, 20), dot, center=True)
-        text(screen, act.name, f.heading, INK, (dot[0] + 24, card.y + 7))
+        text(screen, F["bodyb"], act.token, dot, (15, 15, 20), center=True)
+        text(screen, F["head"], act.name, (dot[0] + 24, card.y + 7), T.TX)
         marks = "  ".join(x for x in (
             "defending" if act.defending else "",
             "demoralized" if act.demoralized else "") if x)
@@ -1086,27 +1060,27 @@ class BattleScreen(Screen):
             f"   kit {act.first_aid_charges}x" if act.first_aid_charges else "",
             f"   {marks}" if marks else "",
         ))
-        text(screen, f"HP {max(act.hp,0)}/{act.hp_max}   AC {act.ac}   MD {act.mental_defense}" + extra,
-             f.mono_sm, INK_DIM, (dot[0] + 24, card.y + 28))
+        text(screen, F["micro"], f"HP {max(act.hp,0)}/{act.hp_max}   AC {act.ac}   MD {act.mental_defense}" + extra,
+             (dot[0] + 24, card.y + 28), T.TX_MUTED)
 
         # AP pips (label above, pips below), right-aligned
-        px = card.right - SP3 - 19
-        text(screen, "ACTION", f.label, INK_FAINT, (px + 4, card.y + 8), center=True)
+        px = card.right - T.S * 2 - 19
+        text(screen, F["micro"], "ACTION", (px + 4, card.y + 8), INK_FAINT, center=True)
         pips(screen, (px, card.y + 30), act.ap, 2, r=7, gap=8)
 
         base = card.y + 50
         if act.walking:
-            text(screen, f"walk {act.moved}/{act.speed}", f.mono_sm,
-                 INK_DIM, (card.x + SP3, base))
-            track = pygame.Rect(card.x + SP3 + 116, base + 4, card.right - card.x - SP3 - 128, 5)
-            pygame.draw.rect(screen, SURFACE_4, track, border_radius=2)
+            text(screen, F["micro"], f"walk {act.moved}/{act.speed}",
+                 (card.x + T.S * 2, base), T.TX_MUTED)
+            track = pygame.Rect(card.x + T.S * 2 + 116, base + 4, card.right - card.x - T.S * 2 - 128, 5)
+            pygame.draw.rect(screen, T.STEEL_HI, track, border_radius=2)
             frac = min(1.0, act.moved / max(1, act.speed))
             pygame.draw.rect(screen, MOVE_HL,
                              pygame.Rect(track.x, track.y, int(track.w * frac), track.h),
                              border_radius=2)
         elif mine:
             vd = vision.vision_desc(act) if not self.view_squad else "vision: whole squad  [L]"
-            text(screen, vd, f.mono_sm, INK_FAINT, (card.x + SP3, base))
+            text(screen, F["micro"], vd, (card.x + T.S * 2, base), INK_FAINT)
 
     def _hint_message(self):
         if not self._is_player_turn():
@@ -1143,15 +1117,15 @@ class BattleScreen(Screen):
         elif self.aim_action is actions.SWIM:
             return "click an adjacent water cell to swim", MOVE_HL
         elif spell_id == "sleep":
-            return "click enemy within 6 cells to cast Sleep", ACCENT
+            return "click enemy within 6 cells to cast Sleep", T.BRASS
         elif spell_id == "magic_missile":
-            return "click enemy within 6 cells to cast Magic Missile", ACCENT
+            return "click enemy within 6 cells to cast Magic Missile", T.BRASS
         elif spell_id == "light_globe":
-            return "click empty cell within 6 cells to conjure Light Globe", ACCENT
+            return "click empty cell within 6 cells to conjure Light Globe", T.BRASS
         elif spell_id == "floating_disk":
-            return "click empty cell within 6 cells to summon Floating Disk", ACCENT
+            return "click empty cell within 6 cells to summon Floating Disk", T.BRASS
         elif spell_id is not None:
-            return f"click target within range to cast {self.aim_action.name}", ACCENT
+            return f"click target within range to cast {self.aim_action.name}", T.BRASS
         elif actions.FLEE.available(self.battle, self.battle.active):
             return "at the map edge: you can Flee the fight", OK
         elif self.battle.mopping_up:
@@ -1159,18 +1133,18 @@ class BattleScreen(Screen):
                     "to let the counter run"), WARN
         elif self.battle.is_ctf:
             return ("grab the enemy flag and bring it home to win  ·  "
-                    "guard your own, and whoever's carrying it"), INFO
+                    "guard your own, and whoever's carrying it"), T.TX_MUTED
         else:
-            return "green square: move  ·  enemy: attack  ·  space: end", INK_DIM
+            return "green square: move  ·  enemy: attack  ·  space: end", T.TX_MUTED
 
     def _draw_hint(self, screen, s):
         row = s.row(16)
         msg, col = self._hint_message()
         if msg is not None:
-            text(screen, msg, self.fonts.body_sm, col, (row.x, row.y))
+            text(screen, self.F["body_sm"], msg, (row.x, row.y), col)
 
     def _draw_actions(self, screen, area_rect):
-        f = self.fonts
+        F = self.F
         b = self.battle
         my_turn = b.winner is None and self._is_player_turn()
         act = b.active
@@ -1178,33 +1152,33 @@ class BattleScreen(Screen):
         if getattr(self, "height_prompt", None) is not None:
             s = Stack(area_rect.x, area_rect.y, area_rect.w)
             r_title = s.row(26)
-            text(screen, "DISK ALTITUDE:", f.body_bd, ACCENT, (r_title.x, r_title.y))
-            s.gap(SP1)
+            text(screen, F["bodyb"], "DISK ALTITUDE:", (r_title.x, r_title.y), T.BRASS)
+            s.gap(T.S // 2)
             for z, lbl in self.height_prompt["options"]:
                 r = s.row(32)
-                s.gap(SP1)
-                panel(screen, r, fill=SURFACE_2, border=ACCENT, width=1)
-                text(screen, lbl, f.body_bd, INK, r.center, center=True)
+                s.gap(T.S // 2)
+                box(screen, r, fill=T.TABLE, border=T.BRASS, width=1)
+                text(screen, F["bodyb"], lbl, r.center, T.TX, center=True)
                 self.buttons.append((("prompt_height", z), r))
             r_c = s.row(28)
-            panel(screen, r_c, fill=SURFACE_1, border=LINE_SOFT, width=1)
-            text(screen, "Cancel", f.body_sm, INK_DIM, r_c.center, center=True)
+            box(screen, r_c, fill=T.STEEL, border=T.STEEL_LINE, width=1)
+            text(screen, F["body_sm"], "Cancel", r_c.center, T.TX_MUTED, center=True)
             self.buttons.append(("prompt_cancel", r_c))
             return
 
         if getattr(self, "show_magic_menu", False):
             btn_back = pygame.Rect(area_rect.x, area_rect.y, area_rect.w, 30)
-            panel(screen, btn_back, fill=SURFACE_1, border=LINE_SOFT, width=1)
-            text(screen, "< Back to Actions", f.body_bd, INK, btn_back.center, center=True)
+            box(screen, btn_back, fill=T.STEEL, border=T.STEEL_LINE, width=1)
+            text(screen, F["bodyb"], "< Back to Actions", btn_back.center, T.TX, center=True)
             self.buttons.append(("magic_back", btn_back))
 
-            scroll_y = btn_back.bottom + SP1
+            scroll_y = btn_back.bottom + T.S // 2
             scroll_h = max(20, area_rect.bottom - scroll_y)
             scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, scroll_h)
             self._actions_scroll_rect = scroll_rect
 
             spells = act.char.spells_known
-            total_content_h = len(spells) * (34 + SP1)
+            total_content_h = len(spells) * (34 + T.S // 2)
             max_scroll = max(0, total_content_h - scroll_h)
             self._actions_max_scroll = max_scroll
             self.actions_scroll = max(0, min(self.actions_scroll, max_scroll))
@@ -1221,20 +1195,21 @@ class BattleScreen(Screen):
                 armed = getattr(self.aim_action, "id", None) == action.id
 
                 r = pygame.Rect(scroll_rect.x, curr_y, btn_w, 34)
-                curr_y += 34 + SP1
+                curr_y += 34 + T.S // 2
 
                 if r.bottom > scroll_rect.top and r.top < scroll_rect.bottom:
-                    fill = ACCENT if armed else SURFACE_2 if enabled else SURFACE_1
-                    panel(screen, r, fill=fill, border=ACCENT if armed else LINE_SOFT, width=1)
-                    ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
+                    fill = T.BRASS if armed else T.TABLE if enabled else T.STEEL
+                    box(screen, r, fill=fill, border=T.BRASS if armed else T.STEEL_LINE, width=1)
+                    ink = T.TABLE if armed else T.TX if enabled else INK_FAINT
 
-                    ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
+                    ibox = pygame.Rect(r.x + T.S, r.y + 5, 24, 24)
                     label = action.name if not armed else f"{action.name}: target"
-                    text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
+                    text(screen, F["bodyb"], label, (ibox.right + T.S, r.y + 9), ink)
 
                     if action.cost:
-                        cx = r.right - SP3
-                        text(screen, str(action.cost), self.fonts.mono_sm, ink, (cx, r.centery - 6), right=True)
+                        cx = r.right - T.S * 2
+                        text(screen, F["micro"], str(action.cost),
+                             (cx, r.centery - 6), ink, right=True)
                         pygame.draw.circle(screen, ink, (cx - 16, r.centery), 3)
                     self.buttons.append((action, r))
 
@@ -1242,10 +1217,10 @@ class BattleScreen(Screen):
 
             if max_scroll > 0:
                 bar_track = pygame.Rect(scroll_rect.right - 4, scroll_rect.y, 4, scroll_rect.h)
-                pygame.draw.rect(screen, SURFACE_1, bar_track, border_radius=2)
+                pygame.draw.rect(screen, T.STEEL, bar_track, border_radius=2)
                 thumb_h = max(16, int(scroll_rect.h * (scroll_rect.h / total_content_h)))
                 thumb_y = scroll_rect.y + int((scroll_rect.h - thumb_h) * (self.actions_scroll / max_scroll))
-                pygame.draw.rect(screen, LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
+                pygame.draw.rect(screen, T.STEEL_LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
             return
 
         # Normal view: Tab header + Action list
@@ -1257,24 +1232,21 @@ class BattleScreen(Screen):
 
         is_c = self.action_tab == "combat"
         hov_c = btn_combat.collidepoint(self.mouse)
-        panel(screen, btn_combat, fill=SURFACE_3 if is_c else SURFACE_2 if hov_c else SURFACE_1,
-              border=ACCENT if is_c else LINE_SOFT, width=1)
-        text(screen, "COMBAT", f.body_bd, ACCENT if is_c else INK if hov_c else INK_DIM,
-             btn_combat.center, center=True)
+        box(screen, btn_combat, fill=T.STEEL_HI if is_c else T.TABLE if hov_c else T.STEEL, border=T.BRASS if is_c else T.STEEL_LINE, width=1)
+        text(screen, F["bodyb"], "COMBAT",
+             btn_combat.center, T.BRASS if is_c else T.TX if hov_c else T.TX_MUTED, center=True)
         self.buttons.append(("tab_combat", btn_combat))
 
         is_u = self.action_tab == "utility"
         hov_u = btn_utility.collidepoint(self.mouse)
-        panel(screen, btn_utility, fill=SURFACE_3 if is_u else SURFACE_2 if hov_u else SURFACE_1,
-              border=ACCENT if is_u else LINE_SOFT, width=1)
-        text(screen, "UTILITY", f.body_bd, ACCENT if is_u else INK if hov_u else INK_DIM,
-             btn_utility.center, center=True)
+        box(screen, btn_utility, fill=T.STEEL_HI if is_u else T.TABLE if hov_u else T.STEEL, border=T.BRASS if is_u else T.STEEL_LINE, width=1)
+        text(screen, F["bodyb"], "UTILITY",
+             btn_utility.center, T.BRASS if is_u else T.TX if hov_u else T.TX_MUTED, center=True)
         self.buttons.append(("tab_utility", btn_utility))
 
-        panel(screen, btn_blocked, fill=SURFACE_2 if self.show_blocked_actions else SURFACE_1,
-              border=LINE_SOFT, width=1)
-        text(screen, "(o)" if self.show_blocked_actions else "(-)", f.mono_sm, INK,
-             btn_blocked.center, center=True)
+        box(screen, btn_blocked, fill=T.TABLE if self.show_blocked_actions else T.STEEL, border=T.STEEL_LINE, width=1)
+        text(screen, F["micro"], "(o)" if self.show_blocked_actions else "(-)",
+             btn_blocked.center, T.TX, center=True)
         self.buttons.append(("toggle_blocked", btn_blocked))
 
         # Filter items for active tab
@@ -1295,8 +1267,8 @@ class BattleScreen(Screen):
 
         # Layout scroll container
         item_h = 34
-        item_gap = SP1
-        scroll_y = area_rect.y + tab_h + SP1
+        item_gap = T.S // 2
+        scroll_y = area_rect.y + tab_h + T.S // 2
         scroll_h = max(20, area_rect.bottom - scroll_y)
         scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, scroll_h)
         self._actions_scroll_rect = scroll_rect
@@ -1322,10 +1294,10 @@ class BattleScreen(Screen):
             if kind == "spell_menu":
                 if r.bottom > scroll_rect.top and r.top < scroll_rect.bottom:
                     enabled = my_turn
-                    fill = SURFACE_2 if enabled else SURFACE_1
-                    panel(screen, r, fill=fill, border=LINE_SOFT, width=1)
-                    ink = INK if enabled else INK_FAINT
-                    text(screen, "Cast Spell", f.body_bd, ink, r.center, center=True)
+                    fill = T.TABLE if enabled else T.STEEL
+                    box(screen, r, fill=fill, border=T.STEEL_LINE, width=1)
+                    ink = T.TX if enabled else INK_FAINT
+                    text(screen, F["bodyb"], "Cast Spell", r.center, ink, center=True)
                     self.buttons.append(("magic_menu", r))
                 continue
 
@@ -1345,12 +1317,12 @@ class BattleScreen(Screen):
 
             arm_c = DEMO_HL if action is actions.DEMORALIZE else \
                 THROW_HL if action is actions.THROW else \
-                ATK_HL if action in (actions.ATTACK_TONGUE, actions.ATTACK) else ACCENT
-            fill = arm_c if armed else SURFACE_2 if enabled else SURFACE_1
-            panel(screen, r, fill=fill, border=arm_c if armed else LINE_SOFT, width=1)
-            ink = ACCENT_INK if armed else INK if enabled else INK_FAINT
+                ATK_HL if action in (actions.ATTACK_TONGUE, actions.ATTACK) else T.BRASS
+            fill = arm_c if armed else T.TABLE if enabled else T.STEEL
+            box(screen, r, fill=fill, border=arm_c if armed else T.STEEL_LINE, width=1)
+            ink = T.TABLE if armed else T.TX if enabled else INK_FAINT
 
-            ibox = pygame.Rect(r.x + SP2, r.y + 5, 24, 24)
+            ibox = pygame.Rect(r.x + T.S, r.y + 5, 24, 24)
             icons.icon(screen, action.id, ibox, ink)
 
             label = action.name if not armed else f"{action.name}: click the target"
@@ -1358,12 +1330,12 @@ class BattleScreen(Screen):
                 label += f" ({reason})"
             if hotkey_num is not None:
                 label = f"[{hotkey_num}] {label}"
-            text(screen, label, f.body_bd, ink, (ibox.right + SP2, r.y + 9))
+            text(screen, F["bodyb"], label, (ibox.right + T.S, r.y + 9), ink)
 
             if action.cost:
-                cx = r.right - SP3
+                cx = r.right - T.S * 2
                 for i in range(action.cost):
-                    pygame.draw.circle(screen, ACCENT, (cx - i * 14, r.centery), 4)
+                    pygame.draw.circle(screen, T.BRASS, (cx - i * 14, r.centery), 4)
 
             self.buttons.append((action, r))
 
@@ -1371,35 +1343,33 @@ class BattleScreen(Screen):
 
         if max_scroll > 0:
             bar_track = pygame.Rect(scroll_rect.right - 4, scroll_rect.y, 4, scroll_rect.h)
-            pygame.draw.rect(screen, SURFACE_1, bar_track, border_radius=2)
+            pygame.draw.rect(screen, T.STEEL, bar_track, border_radius=2)
             thumb_h = max(16, int(scroll_rect.h * (scroll_rect.h / total_content_h)))
             thumb_y = scroll_rect.y + int((scroll_rect.h - thumb_h) * (self.actions_scroll / max_scroll))
-            pygame.draw.rect(screen, LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
+            pygame.draw.rect(screen, T.STEEL_LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
 
     def _draw_inspect(self, screen, rect, who, insp):
-        f = self.fonts
+        F = self.F
         head = pygame.Rect(rect.x, rect.y, rect.w, 20)
         caret = "v" if self.inspect_open else ">"
         label = "INSPECT" if who is insp else "ACTIVE UNIT"
-        tracked(screen, f"{caret}  {label}", f.label, INFO, (head.x, head.y + 3))
-        text(screen, "click a unit", f.body_sm, INK_FAINT,
-             (head.right, head.y + 3), right=True)
+        tracked(screen, F["micro"], f"{caret}  {label}", (head.x, head.y + 3), T.TX_MUTED)
+        text(screen, F["body_sm"], "click a unit", (head.right, head.y + 3), INK_FAINT, right=True)
         self.buttons.append(("inspect_toggle", head))
-        pygame.draw.line(screen, LINE_SOFT, (head.x, head.bottom + 2),
+        pygame.draw.line(screen, T.STEEL_LINE, (head.x, head.bottom + 2),
                          (head.right, head.bottom + 2))
 
         cur_y = head.bottom + 4
         if who is insp and self._armed is insp:
             hint = pygame.Rect(rect.x, cur_y, rect.w, 16)
-            text(screen, "click again to attack", f.body_sm, DANGER, (hint.x, hint.y))
+            text(screen, F["body_sm"], "click again to attack", (hint.x, hint.y), DANGER)
             cur_y += 20
 
         if not self.inspect_open:
             return
 
-        F = ui_fonts()
         ch = unit_to_ch(who)
-        card_rect = pygame.Rect(rect.x, cur_y, rect.w - SP2, 0)
+        card_rect = pygame.Rect(rect.x, cur_y, rect.w - T.S, 0)
         h, tooltip = draw_sheet_card(screen, F, card_rect, ch, density="compact", mouse=self.mouse)
         if tooltip:
             ui_primitives.draw_tooltip(screen, F, tooltip, self.mouse)
@@ -1423,18 +1393,18 @@ class BattleScreen(Screen):
         for needles, col in self._LOG_RULES:
             if any(nd in line for nd in needles):
                 return col
-        return INK_DIM
+        return T.TX_MUTED
 
     def _draw_log(self, screen):
-        f = self.fonts
+        F = self.F
         well = self._L["log"]
-        panel(screen, well, fill=SURFACE_0, border=LINE_SOFT)
-        tracked(screen, "LOG", f.label, INK_FAINT, (well.x + SP2, well.y + SP1))
+        box(screen, well, fill=T.TABLE, border=T.STEEL_LINE)
+        tracked(screen, F["micro"], "LOG", (well.x + T.S, well.y + T.S // 2), INK_FAINT)
 
         export_r = pygame.Rect(0, well.y + 1, 62, 16)
-        export_r.right = well.right - SP2
-        panel(screen, export_r, fill=SURFACE_1, border=LINE_SOFT, width=1)
-        text(screen, "export", f.label, INK_FAINT, export_r.center, center=True)
+        export_r.right = well.right - T.S
+        box(screen, export_r, fill=T.STEEL, border=T.STEEL_LINE, width=1)
+        text(screen, F["micro"], "export", export_r.center, INK_FAINT, center=True)
         self.buttons.append(("export_state", export_r))
 
         rows = max(1, (well.h - 24) // 17)
@@ -1454,12 +1424,12 @@ class BattleScreen(Screen):
         y = well.y + 22
         for i, ln in enumerate(lines):
             last = self.log_scroll == 0 and i == len(lines) - 1
-            col = INK if last else self._log_color(ln)
-            text(screen, ln[:180], f.mono_sm, col, (well.x + SP3, y))
+            col = T.TX if last else self._log_color(ln)
+            text(screen, F["micro"], ln[:180], (well.x + T.S * 2, y), col)
             y += 17
         if self.log_scroll > 0:
-            text(screen, f"v {self.log_scroll} more below (scroll to follow)", f.label,
-                 INK_FAINT, (well.right - SP2, well.bottom - SP1), right=True, bottom=True)
+            text(screen, F["micro"], f"v {self.log_scroll} more below (scroll to follow)",
+                 (well.right - T.S, well.bottom - T.S // 2 - 14), INK_FAINT, right=True)
 
     def _export_state(self):
         """Dump the battle to a JSON snapshot so a player who hits a weird bug
@@ -1509,12 +1479,12 @@ class BattleScreen(Screen):
         b.log(f"State exported to {os.path.relpath(path)}")
 
     def _draw_winner(self, screen):
-        f = self.fonts
+        F = self.F
         b = self.battle
         txt = "You won" if b.winner == "player" else "The AI won"
-        box = pygame.Rect(0, 0, 360, 92)
-        box.center = self.view.rect.center
-        panel(screen, box, fill=SURFACE_2, border=ACCENT, width=2, radius=RADIUS)
-        text(screen, txt, f.title, INK, (box.centerx, box.y + 30), center=True)
-        text(screen, "click to continue", f.body, INK_DIM,
-             (box.centerx, box.y + 62), center=True)
+        card = pygame.Rect(0, 0, 360, 92)
+        card.center = self.view.rect.center
+        box(screen, card, fill=T.TABLE, border=T.BRASS, width=2)
+        text(screen, F["titleb"], txt, (card.centerx, card.y + 30), T.TX, center=True)
+        text(screen, F["body"], "click to continue",
+             (card.centerx, card.y + 62), T.TX_MUTED, center=True)
