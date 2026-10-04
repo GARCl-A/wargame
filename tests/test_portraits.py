@@ -131,5 +131,34 @@ def test_gnome_portraits():
     assert p_gn.get_size() == (24, 24)
 
 
+def test_dwarf_portraits():
+    # 9 curated Dwarf portraits
+    for idx in range(9):
+        p = artwork.portrait("Dwarf", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    dw = unit.Unit("player", race=data.race_by_name("Dwarf"))
+    assert hasattr(dw, "portrait_id")
+    p_dw = artwork.portrait(dw.race["name"], dw.portrait_id, 24)
+    assert p_dw is not None
+    assert p_dw.get_size() == (24, 24)
+
+
+def test_centaur_portraits():
+    # 12 complete Centaur portraits
+    for idx in range(12):
+        p = artwork.portrait("Centaur", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    cn = unit.Unit("player", race=data.race_by_name("Centaur"))
+    assert hasattr(cn, "portrait_id")
+    p_cn = artwork.portrait(cn.race["name"], cn.portrait_id, 24)
+    assert p_cn is not None
+    assert p_cn.get_size() == (24, 24)
+
+
+
 
 
