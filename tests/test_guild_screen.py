@@ -272,7 +272,7 @@ def test_guild_screen_stat_tooltips_show_the_calculation():
         _draw(gs)
         if isinstance(gs.tooltip, list):
             seen.add(gs.tooltip[0][0])
-    assert {"hit points (hp)", "ARMOR CLASS", "MENTAL DEFENSE", "SPEED (SQUARES)", "INITIATIVE"} <= seen
+    assert {"HIT POINTS (HP)", "ARMOR CLASS", "MENTAL DEFENSE", "SPEED (SQUARES)", "INITIATIVE"} <= seen
 
 
 def test_guild_tab_reports_slots_notices_and_holdings():

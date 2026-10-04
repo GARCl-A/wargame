@@ -73,16 +73,13 @@ def sheet_height(density, only=None):
 
 # ---------------------------------------------------------------- adapter
 def _to_hit(u):
-    """Mirrors `sheet_panel._to_hit` -- kept as its own small copy here
-    (rather than imported) so this module never imports the legacy
-    `sheet_panel`, which itself will come to depend on this one."""
+    """Base attack bonus and its attribute; a ranged weapon with no ammo is a STR melee."""
     if u.improvised:
         return u.mod_strength, "STR"
     return u.attack_bonus
 
 
 def _weapon_line(u):
-    """Mirrors `sheet_panel._weapon_lines`, trimmed to what the card needs."""
     if u.unarmed:
         n, faces = u.unarmed_damage
         return "unarmed", f"{n}d{faces} {u.mod_strength:+} (STR)", "melee"
@@ -167,24 +164,46 @@ def unit_to_ch(u):
     }
 
 
-def _hp_tooltip(u, F):
+def hp_tooltip(u, F, max_px=320):
+    """How the unit's max HP is built: hit dice, rolls, CON, talents, floors."""
     b = u.hp_breakdown()
-    lines = [("hit points (hp)", F["microb"], T.BRASS)]
     dice_cnt = b["hit_dice"]
-    lines.append((f"base die 1d{b['hd']} x {dice_cnt}, dice sum {b['dice_sum']}",
-                  F["body_sm"], T.TX_MUTED))
+    die_word = "Hit Die" if dice_cnt == 1 else "Hit Dice"
+    lines = [("HIT POINTS (HP)", F["microb"], T.BRASS),
+             (f"Base die: 1d{b['hd']} ({dice_cnt} {die_word})", F["body_sm"], T.TX)]
+
+    rolls = " · ".join([f"Base (L0): {b['base_roll']}"]
+                       + [f"L{lvl}: {r}" for lvl, r in enumerate(b["level_rolls"], start=1)])
+    for ln in wrap(F["body_sm"], f"Rolls: {rolls}", max_px):
+        lines.append((ln, F["body_sm"], T.TX_MUTED))
+    lines.append((f"Dice sum: {b['dice_sum']}", F["body_sm"], T.TX_MUTED))
+
+    lines.append(("Bonuses:", F["microb"], T.BRASS))
     con_col = T.GREEN if b["con_total"] > 0 else T.BLOOD if b["con_total"] < 0 else T.TX_MUTED
-    lines.append((f"CON {b['con_mod']:+} x {dice_cnt} HD = {b['con_total']:+}",
+    lines.append((f"• CON mod: {b['con_mod']:+} × {dice_cnt} HD = {b['con_total']:+}",
                   F["body_sm"], con_col))
     if b["talent_total"]:
-        lines.append((f"Hardy talent: +{b['talent_total']}", F["body_sm"], T.GREEN))
+        lines.append((f"• Hardy talent: +{b['talent_per_hd']} × {dice_cnt} HD = +{b['talent_total']}",
+                      F["body_sm"], T.GREEN))
     if b["ability_bonus"]:
-        lines.append((f"{b['ability_name']}: +{b['ability_bonus']}", F["body_sm"], T.GREEN))
+        lines.append((f"• {b['ability_name']}: +{b['ability_bonus']}", F["body_sm"], T.GREEN))
+
+    parts = [f"{b['dice_sum']} (dice)",
+             f"+ {b['con_total']} (CON)" if b["con_total"] >= 0 else f"- {abs(b['con_total'])} (CON)"]
+    if b["talent_total"]:
+        parts.append(f"+ {b['talent_total']} (talents)")
+    if b["ability_bonus"]:
+        parts.append(f"+ {b['ability_bonus']} (ability)")
+    for ln in wrap(F["body_sm"], f"Calc: {' '.join(parts)} = {b['raw_total']}", max_px):
+        lines.append((ln, F["body_sm"], T.TX))
+
     if b["override"] is not None:
-        lines.append((f"manual override: {b['override']}", F["body_sm"], T.BRASS))
+        lines.append((f"Manual override: {b['override']}", F["body_sm"], T.BRASS))
     if b["starving"]:
-        lines.append(("starving: capped at 1 HP", F["body_sm"], T.BLOOD))
-    lines.append((f"max HP: {b['final_max']}", F["bodyb"], T.BRASS))
+        lines.append(("Starving: capped at 1 HP", F["body_sm"], T.BLOOD))
+    elif b["min_floor"]:
+        lines.append(("Minimum HP floor: 1", F["body_sm"], T.BRASS))
+    lines.append((f"Max HP: {b['final_max']}", F["bodyb"], T.BRASS))
     return lines
 
 
@@ -263,7 +282,7 @@ def _b_vitals(s, F, r, ch, d, ed, mouse, tip):
         _cell(s, F, c, k, vals[k], _hp_color(cur, mx) if k == "hp" else T.TX)
         if mouse and c.collidepoint(mouse):
             if k == "hp":
-                tip.append(_hp_tooltip(ch["unit"], F))
+                tip.append(hp_tooltip(ch["unit"], F))
             elif k.upper() in data.DERIVED_HELP:
                 t, desc = data.DERIVED_HELP[k.upper()]
                 tip.append(_format_tip(t, desc, F))

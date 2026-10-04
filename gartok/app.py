@@ -924,7 +924,7 @@ class App:
             self.window.fill(T.TABLE)
             self.scene.draw(self.window)          # every scene draws at real window size
             self._tutorial_card_rect, self._tutorial_badge_rect = tutorial_card.draw(
-                self.window, self.fonts, self.scene, self.tutorial)
+                self.window, self.ui_fonts, self.scene, self.tutorial)
             self._tutorial_rect_scene = self.scene
             pygame.display.flip()
         pygame.quit()

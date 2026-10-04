@@ -90,7 +90,7 @@ crafting and mission board in tabs. The full module list is in `README.md`.
   non-trivially, migrate it onto `gartok/ui/` instead of extending the old system.
   Buttons, layouts and modals are on `gartok/ui/`; the board's palette and
   camera are `ui/board_style.py`, the banner colour is `ui/banner.py`, and what
-  still imports `theme` is five screens/panels that draw their chrome with its
+  still imports `theme` is three screens that draw their chrome with its
   `panel()`/`text()`/surface ramp. `tests/test_theme_budget.py` lists them (`STILL_ON_THEME`) and
   fails on a new importer — and on an entry that migrated, so take it off the list.
 - A `ui/` component never reads module globals or hardcodes screen

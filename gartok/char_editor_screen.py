@@ -53,7 +53,7 @@ from .theme import (
 from .ui.primitives import contained as ui_contained
 from .ui.primitives import set_pointer
 from .ui.sheet_card import draw_sheet as draw_sheet_card
-from .ui.sheet_card import unit_to_ch
+from .ui.sheet_card import hp_tooltip, unit_to_ch
 from .ui.tokens import fonts as ui_fonts
 from .unit import Unit
 
@@ -448,8 +448,7 @@ class CharEditorScreen(Screen):
             text(screen, glyph, f.body_sm, ACCENT if h else INK_DIM, br.center, center=True)
             self._hit(br, ("hp", sign))
         if hr.collidepoint(self.mouse) and not dn.collidepoint(self.mouse) and not up.collidepoint(self.mouse) and not (pinned and rs.collidepoint(self.mouse)):
-            from .sheet_panel import format_hp_breakdown_tooltip
-            self.tooltip = format_hp_breakdown_tooltip(u, f)
+            self.tooltip = hp_tooltip(u, ui_fonts())
         y += 26 + SP1
 
         dice = len(u._level_hp_rolls)

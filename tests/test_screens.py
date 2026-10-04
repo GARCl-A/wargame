@@ -1293,6 +1293,8 @@ def test_sheet_panel_hp_breakdown_tooltip():
     from gartok import sheet_panel
     from gartok.combatant import Combatant
     from gartok.theme import Fonts
+    from gartok.ui.sheet_card import hp_tooltip
+    from gartok.ui.tokens import fonts as ui_fonts
     from tests.helpers import Unit
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -1303,7 +1305,7 @@ def test_sheet_panel_hp_breakdown_tooltip():
     u.recalculate_hp()
 
     fonts = Fonts()
-    lines = sheet_panel.format_hp_breakdown_tooltip(u, fonts)
+    lines = hp_tooltip(u, ui_fonts())
     assert any("HIT POINTS (HP)" in text for text, _, _ in lines)
     assert any("Base (L0): 7" in text for text, _, _ in lines)
     assert any("L1: 6" in text for text, _, _ in lines)

@@ -1,20 +1,13 @@
 """The full character sheet, drawn as a modal over whichever screen opens it.
 
-The actual rendering lives in `gartok.ui.sheet_card` (density="full") now --
-this module keeps the `SheetModalMixin` mixin's public API (`open_sheet`,
-`sheet_open`, `close_sheet_on_click`, `sheet_badge`, `draw_sheet_modal`)
-stable for its six still-legacy consumers (group_screen, guild_screen,
-level_screen, market_screen, reward_screen, squad_screen), plus a few pure
-helpers (`_to_hit`, `_weapon_lines`, `format_hp_breakdown_tooltip`) those
-same screens (and draft_screen, char_editor_screen, level_screen) still
-import directly for their own bespoke cards. Those helpers stay on the
-legacy `theme` palette/fonts since their callers haven't migrated yet.
+The rendering lives in `gartok.ui.sheet_card` (density="full"); this module is
+the `SheetModalMixin` a screen mixes in to open it (`open_sheet`, `sheet_open`,
+`close_sheet_on_click`, `sheet_badge`, `draw_sheet_modal`).
 """
 
 import pygame
 
 from .combatant import Combatant
-from .theme import ACCENT, DANGER, INFO, INK, INK_DIM, OK, WARN, wrap_lines
 from .ui import primitives
 from .ui.sheet_card import draw_sheet as _draw_sheet_card
 from .ui.sheet_card import sheet_height, unit_to_ch
@@ -93,89 +86,3 @@ def draw_sheet(screen, rect, u, fonts=None, mouse=None):
                                   ch, density="full", mouse=mouse)
     if tooltip and mouse:
         primitives.draw_tooltip(screen, F, tooltip, mouse)
-
-
-# ---------------------------------------------------------------- shared helpers
-# Still legacy-styled (theme fonts/colors) -- kept for guild_screen.py (`_weapon_
-# lines`/`_to_hit`) and char_editor_screen.py/draft_screen.py/level_screen.py
-# (`format_hp_breakdown_tooltip`), none of which are migrating in this pass.
-def _to_hit(u):
-    """Base attack bonus and the attribute it comes from -- no target, no
-    flanking, no conditions (those are situational and shown in battle). A
-    ranged weapon swung with no ammo left is a Strength melee attack."""
-    if u.improvised:
-        return u.mod_strength, "STR"
-    return u.attack_bonus
-
-
-def _weapon_lines(u):
-    if u.unarmed:
-        n, faces = u.unarmed_damage
-        dmg = f"{n}d{faces} {u.mod_strength:+} (STR)"
-        return "unarmed", dmg, "melee"
-    n, faces = (u.unarmed_damage if u.improvised else u.weapon["damage"])
-    if u.improvised:
-        return (f"{u.weapon_name} (no arrow -> improvised)",
-                f"{n}d{faces} {u.mod_strength:+} (STR)", "melee")
-    bonus = u.mod_strength if not u.ranged else 0
-    dmg = f"{n}d{faces}" + (f" {bonus:+} (STR)" if bonus else "")
-    hands = "2 hands" if u.weapon["hands"] == 2 else "1 hand"
-    size_str = f"{u.weapon.get('size')} · " if u.weapon.get("size") and u.weapon.get("size") != "Medium" else ""
-    if u.ranged:
-        reach = f"{size_str}range {u.weapon['range']}  ·  {u.ammo} arrows  ·  {hands}"
-    else:
-        thrown = f"  ·  thrown {u.weapon['thrown']}" if u.weapon["thrown"] else ""
-        reach = f"{size_str}melee  ·  {hands}{thrown}"
-    return u.weapon_name, dmg, reach
-
-
-def format_hp_breakdown_tooltip(u, fonts, max_px=320):
-    """Formats a structured tooltip detailing how the unit's max HP is calculated."""
-    b = u.hp_breakdown()
-    lines = [("HIT POINTS (HP)", fonts.label, ACCENT)]
-
-    hd = b["hd"]
-    dice_cnt = b["hit_dice"]
-    die_word = "Hit Die" if dice_cnt == 1 else "Hit Dice"
-    lines.append((f"Base die: 1d{hd} ({dice_cnt} {die_word})", fonts.body_sm, INK))
-
-    roll_items = [f"Base (L0): {b['base_roll']}"]
-    for lvl, r in enumerate(b["level_rolls"], start=1):
-        roll_items.append(f"L{lvl}: {r}")
-    rolls_line = " · ".join(roll_items)
-    for ln in wrap_lines([f"Rolls: {rolls_line}"], fonts.mono_sm, max_px):
-        lines.append((ln, fonts.mono_sm, INK_DIM))
-    lines.append((f"Dice sum: {b['dice_sum']}", fonts.mono_sm, INK_DIM))
-
-    lines.append(("Bonuses:", fonts.label, INFO))
-    con_sign = f"{b['con_mod']:+}"
-    con_col = OK if b["con_total"] > 0 else (DANGER if b["con_total"] < 0 else INK_DIM)
-    lines.append((f"• CON mod: {con_sign} × {dice_cnt} HD = {b['con_total']:+}", fonts.mono_sm, con_col))
-
-    if b["talent_total"]:
-        lines.append((f"• Hardy talent: +{b['talent_per_hd']} × {dice_cnt} HD = +{b['talent_total']}", fonts.mono_sm, OK))
-    if b["ability_bonus"]:
-        lines.append((f"• {b['ability_name']}: +{b['ability_bonus']}", fonts.mono_sm, OK))
-
-    parts = [f"{b['dice_sum']} (dice)"]
-    if b["con_total"] >= 0:
-        parts.append(f"+ {b['con_total']} (CON)")
-    else:
-        parts.append(f"- {abs(b['con_total'])} (CON)")
-    if b["talent_total"]:
-        parts.append(f"+ {b['talent_total']} (talents)")
-    if b["ability_bonus"]:
-        parts.append(f"+ {b['ability_bonus']} (ability)")
-    calc_eq = f"Calc: {' '.join(parts)} = {b['raw_total']}"
-    for ln in wrap_lines([calc_eq], fonts.mono_sm, max_px):
-        lines.append((ln, fonts.mono_sm, INK))
-
-    if b["override"] is not None:
-        lines.append((f"Manual override: {b['override']}", fonts.body_sm, WARN))
-    if b["starving"]:
-        lines.append(("Starving: capped at 1 HP", fonts.body_sm, DANGER))
-    elif b["min_floor"]:
-        lines.append(("Minimum HP floor: 1", fonts.body_sm, WARN))
-
-    lines.append((f"Max HP: {b['final_max']}", fonts.body_bd, ACCENT))
-    return lines

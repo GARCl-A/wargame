@@ -46,3 +46,32 @@ def test_automaton_portraits():
     assert p_auto is not None
     assert p_auto.get_size() == (24, 24)
 
+
+def test_human_portraits():
+    # 12 complete Human portraits
+    for idx in range(12):
+        p = artwork.portrait("Human", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    hum = unit.Unit("player", race=data.race_by_name("Human"))
+    assert hasattr(hum, "portrait_id")
+    p_hum = artwork.portrait(hum.race["name"], hum.portrait_id, 24)
+    assert p_hum is not None
+    assert p_hum.get_size() == (24, 24)
+
+
+def test_elf_portraits():
+    # 12 complete Elf portraits
+    for idx in range(12):
+        p = artwork.portrait("Elf", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    elf = unit.Unit("player", race=data.race_by_name("Elf"))
+    assert hasattr(elf, "portrait_id")
+    p_elf = artwork.portrait(elf.race["name"], elf.portrait_id, 24)
+    assert p_elf is not None
+    assert p_elf.get_size() == (24, 24)
+
+

@@ -2,8 +2,8 @@
 that screen's copy (`locales/en.json` under `tutorial.<id>`, via `i18n.t`) and
 a `?` badge that reopens it once dismissed.
 
-Modelled on `sheet_panel.SheetModalMixin` -- the repo's idiom for drawing over
-a live screen -- but deliberately weaker: no veil, and only a click landing
+Modelled on `sheet_panel.SheetModalMixin` (drawing over a live screen), but
+deliberately weaker: no veil, and only a click landing
 inside the card or the badge is ever swallowed. Everything else falls through
 to the screen underneath, which is what makes it "soft": it explains, it never
 blocks.
@@ -16,32 +16,15 @@ a `tutorial_key()` override -- see `screen.py`.
 import pygame
 
 from . import i18n
-from .theme import (
-    ACCENT,
-    INK_DIM,
-    INK_FAINT,
-    LINE_SOFT,
-    MARGIN,
-    RADIUS,
-    SP1,
-    SP2,
-    SP3,
-    SURFACE_1,
-    SURFACE_2,
-    SURFACE_3,
-    blit_block,
-    panel,
-    text,
-    wrap_lines,
-)
-from .ui.primitives import set_pointer
+from .ui.primitives import panel, set_pointer, text, wrap
+from .ui.tokens import T
 
 CARD_W = 340
 BADGE_R = 10
 _LH = 15
 
 
-def draw(surface, fonts, scene, state):
+def draw(surface, F, scene, state):
     """Called once a frame, right after `scene.draw(surface)`. Returns
     `(card_rect, badge_rect)` -- either may be None -- for `app.run` to
     hit-test a click against before forwarding it to the scene."""
@@ -50,8 +33,8 @@ def draw(surface, fonts, scene, state):
         return None, None
     anchor = scene.tutorial_anchor(surface.get_size())
     if state.should_show(key):
-        return _draw_card(surface, fonts, key, anchor, scene.mouse), None
-    return None, _draw_badge(surface, fonts, scene, scene.mouse)
+        return _draw_card(surface, F, key, anchor, scene.mouse), None
+    return None, _draw_badge(surface, F, scene, scene.mouse)
 
 
 def _resolve(key):
@@ -64,49 +47,51 @@ def _resolve(key):
     return title, body, suggestion
 
 
-def _draw_card(surface, fonts, key, anchor, mouse):
+def _draw_card(surface, F, key, anchor, mouse):
     x, y, w, grow = anchor
     w = min(w, CARD_W)
     title, body, suggestion = _resolve(key)
-    inner_w = w - 2 * SP3
-    body_lines = wrap_lines(body, fonts.body_sm, inner_w)
-    sugg_lines = wrap_lines([suggestion], fonts.body_sm, inner_w) if suggestion else []
+    pad = T.S * 2
+    inner_w = w - 2 * pad
+    body_lines = [ln for para in body for ln in wrap(F["body_sm"], para, inner_w)]
+    sugg_lines = wrap(F["body_sm"], suggestion, inner_w) if suggestion else []
 
     title_h = 20
-    body_h = len(body_lines) * _LH
-    sugg_h = (SP2 + len(sugg_lines) * _LH) if sugg_lines else 0
-    hint_h = SP2 + 14
-    h = SP3 + title_h + body_h + sugg_h + hint_h + SP2
+    sugg_h = (T.S + len(sugg_lines) * _LH) if sugg_lines else 0
+    h = pad + title_h + len(body_lines) * _LH + sugg_h + T.S + 14 + T.S
 
     rect = pygame.Rect(x, y if grow == "down" else y - h, w, h)
-    panel(surface, rect, fill=SURFACE_2, border=ACCENT, width=1, radius=RADIUS)
+    panel(surface, rect, hover=True)
 
-    ty = rect.y + SP2
-    text(surface, title, fonts.body_bd, ACCENT, (rect.x + SP3, ty))
+    ty = rect.y + T.S
+    text(surface, F["bodyb"], title, (rect.x + pad, ty), T.BRASS)
     ty += title_h
-    ty = blit_block(surface, body_lines, rect.x + SP3, ty, fonts.body_sm, INK_DIM, lh=_LH)
+    for ln in body_lines:
+        text(surface, F["body_sm"], ln, (rect.x + pad, ty), T.TX_MUTED)
+        ty += _LH
     if sugg_lines:
-        ty += SP2
-        blit_block(surface, sugg_lines, rect.x + SP3, ty, fonts.body_sm, ACCENT, lh=_LH)
+        ty += T.S
+        for ln in sugg_lines:
+            text(surface, F["body_sm"], ln, (rect.x + pad, ty), T.BRASS)
+            ty += _LH
 
-    text(surface, "click to dismiss", fonts.label, INK_FAINT,
-         (rect.right - SP2, rect.bottom - SP1), right=True, bottom=True)
+    text(surface, F["micro"], "click to dismiss",
+         (rect.right - T.S, rect.bottom - T.S - 12), T.TX_FAINT, right=True)
     if rect.collidepoint(mouse):        # only ever raise the hand cursor here --
         set_pointer(True)               # never lower it, that's the scene's own call
     return rect
 
 
-def _draw_badge(surface, fonts, scene, mouse):
+def _draw_badge(surface, F, scene, mouse):
     if hasattr(scene, "tutorial_badge_rect"):
         r = scene.tutorial_badge_rect(surface.get_size())
     else:
-        W, H = surface.get_size()
+        W, _ = surface.get_size()
         size = 28
-        r = pygame.Rect(W - size - MARGIN, MARGIN - 4, size, size)
+        r = pygame.Rect(W - size - T.S * 2, T.S * 2 - 4, size, size)
     hot = r.collidepoint(mouse)
-    panel(surface, r, fill=SURFACE_3 if hot else SURFACE_1,
-          border=ACCENT if hot else LINE_SOFT, radius=RADIUS, width=2 if hot else 1)
-    text(surface, "?", fonts.body_bd, ACCENT if hot else INK_DIM, r.center, center=True)
+    panel(surface, r, hover=hot, width=2 if hot else 1)
+    text(surface, F["bodyb"], "?", r.center, T.BRASS if hot else T.TX_MUTED, center=True)
     if hot:
         set_pointer(True)
     return r

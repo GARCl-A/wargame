@@ -46,7 +46,7 @@ def test_stale_tutorial_rect_never_swallows_a_click_after_a_scene_swap():
     app.window.fill((0, 0, 0))
     draft.draw(app.window)
     app._tutorial_card_rect, app._tutorial_badge_rect = tutorial_card.draw(
-        app.window, app.fonts, draft, app.tutorial)
+        app.window, app.ui_fonts, draft, app.tutorial)
     app._tutorial_rect_scene = draft
     stale_rect = app._tutorial_card_rect
     assert stale_rect is not None
@@ -250,7 +250,7 @@ def test_tutorial_badge_rect_queried_by_tutorial_card():
 
     from gartok import tutorial_card
     from gartok.screen import Screen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
 
     class CustomScreen(Screen):
         def tutorial_key(self):
@@ -261,12 +261,11 @@ def test_tutorial_badge_rect_queried_by_tutorial_card():
 
     pygame.init()
     surf = pygame.Surface((800, 600))
-    fonts = Fonts()
     cs = CustomScreen()
     st = TutorialState()
     st.dismiss("map")
 
-    _, badge_rect = tutorial_card.draw(surf, fonts, cs, st)
+    _, badge_rect = tutorial_card.draw(surf, ui_fonts(), cs, st)
     assert badge_rect == pygame.Rect(100, 200, 28, 28)
 
 

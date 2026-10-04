@@ -27,7 +27,7 @@ from .ui.primitives import (
     tabs,
     text,
 )
-from .ui.sheet_card import _hp_tooltip, unit_to_ch
+from .ui.sheet_card import hp_tooltip, unit_to_ch
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -363,7 +363,7 @@ class GuildScreen(Screen):
             "task": "Idle" if grp is None or _is_idle(grp) else grp.order.kind.title(),
         })
         run(member_panel.draw_vitals, {
-            "hp": ch["hp"], "hp_tip": _hp_tooltip(unit, F),
+            "hp": ch["hp"], "hp_tip": hp_tooltip(unit, F),
             "stats": [("AC", ch["ac"], member_panel.format_breakdown(
                            F, "ARMOR CLASS", unit.ac_breakdown(), c.ac)),
                       ("MD", ch["md"], member_panel.format_breakdown(

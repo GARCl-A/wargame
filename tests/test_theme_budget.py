@@ -15,13 +15,12 @@ import pytest
 
 PKG = Path(__file__).resolve().parent.parent / "gartok"
 
-# Why each still imports theme -- all five draw their chrome (panel(), text(),
+# Why each still imports theme -- all three draw their chrome (panel(), text(),
 # the surface ramp, the SP spacing scale) with the legacy helpers; the board's
 # palette/camera (`ui/board_style.py`), the banner colour (`ui/banner.py`) and
 # the font bundle (`ui/tokens.LegacyFonts`) are already off theme.
 STILL_ON_THEME = {
     "battle_screen.py", "char_editor_screen.py", "map_editor_screen.py",
-    "sheet_panel.py", "tutorial_card.py",
 }
 
 
