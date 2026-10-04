@@ -94,7 +94,13 @@ def portrait(race_name, portrait_id, px):
         r_clean = "treefolk"
     folder = os.path.join(_PORTRAITS, r_clean)
     if not os.path.isdir(folder):
-        return None
+        alt = r_clean.replace(" ", "_") if " " in r_clean else r_clean.replace("_", " ")
+        alt_folder = os.path.join(_PORTRAITS, alt)
+        if os.path.isdir(alt_folder):
+            folder = alt_folder
+        else:
+            return None
+
     def _sort_key(f):
         stem, _ = os.path.splitext(f)
         return (0, int(stem)) if stem.isdigit() else (1, stem)

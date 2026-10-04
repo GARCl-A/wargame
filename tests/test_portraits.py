@@ -229,6 +229,28 @@ def test_goliath_portraits():
     assert p_gl.get_size() == (24, 24)
 
 
+def test_creature_portraits():
+    # 4 Wolf portraits
+    for idx in range(4):
+        p = artwork.portrait("Wolf", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # 4 Skeleton portraits
+    for idx in range(4):
+        p = artwork.portrait("Skeleton", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # 4 Giant Spider portraits
+    for idx in range(4):
+        p = artwork.portrait("Giant Spider", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+        p_under = artwork.portrait("giant_spider", idx, 32)
+        assert p_under is not None
+
+
 
 
 
