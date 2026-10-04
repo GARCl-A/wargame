@@ -75,3 +75,32 @@ def test_elf_portraits():
     assert p_elf.get_size() == (24, 24)
 
 
+def test_kobold_portraits():
+    # 11 curated Kobold portraits
+    for idx in range(11):
+        p = artwork.portrait("Kobold", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    kb = unit.Unit("player", race=data.race_by_name("Kobold"))
+    assert hasattr(kb, "portrait_id")
+    p_kb = artwork.portrait(kb.race["name"], kb.portrait_id, 24)
+    assert p_kb is not None
+    assert p_kb.get_size() == (24, 24)
+
+
+def test_lizardfolk_portraits():
+    # 9 curated Lizardfolk portraits
+    for idx in range(9):
+        p = artwork.portrait("Lizardfolk", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    lz = unit.Unit("player", race=data.race_by_name("Lizardfolk"))
+    assert hasattr(lz, "portrait_id")
+    p_lz = artwork.portrait(lz.race["name"], lz.portrait_id, 24)
+    assert p_lz is not None
+    assert p_lz.get_size() == (24, 24)
+
+
+
