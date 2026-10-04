@@ -36,7 +36,7 @@ When the two disagree, `REFERENCE.md` wins.
 
 | Module | Role |
 |---|---|
-| `unit.py` | persistent character (stats, loadout, progression, hunger) |
+| `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, pack, stack helpers) |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant |
 | `actions.py` | every combat action is an `Action` subclass |
@@ -51,7 +51,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `world.py` | Node graph, edges in hours, route Dijkstra |
 | `orders.py` | Order dataclass; AUTO / INTERACTIVE / garrison / forced kinds |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
-| `guild.py` | Guild state: groups, roster, clock, daily upkeep; owns `bank` + `house` |
+| `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat) |
 | `group.py` | Group = physical subset of the guild (members, node, order) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
@@ -88,9 +88,10 @@ crafting and mission board in tabs. The full module list is in `README.md`.
 - **`theme.py` is legacy** — the app's original bespoke ramp (`widgets.py` has
   been fully eliminated). Don't add new usage. When a screen gets touched
   non-trivially, migrate it onto `gartok/ui/` instead of extending the old system.
-  Buttons, layouts and modals are on `gartok/ui/`; what still imports `theme` is
-  the board renderer's palette, the banner-colour state, and a handful of
-  screens/panels. `tests/test_theme_budget.py` lists them (`STILL_ON_THEME`) and
+  Buttons, layouts and modals are on `gartok/ui/`; the board's palette and
+  camera are `ui/board_style.py`, the banner colour is `ui/banner.py`, and what
+  still imports `theme` is five screens/panels that draw their chrome with its
+  `panel()`/`text()`/surface ramp. `tests/test_theme_budget.py` lists them (`STILL_ON_THEME`) and
   fails on a new importer — and on an entry that migrated, so take it off the list.
 - A `ui/` component never reads module globals or hardcodes screen
   coordinates/fixed pixel widths for panel sizing — it takes its rect/data as

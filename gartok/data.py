@@ -188,6 +188,7 @@ def _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
 _RACES = [_race_dict(*row) for row in RACES]
 
 # Every language in the world = the racial languages (no description in the generator).
+ATTRIBUTES = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"]
 LANGUAGES = sorted({r["language"] for r in _RACES})
 
 # --------------------------------------------------------------------------- #

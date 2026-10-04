@@ -2,7 +2,7 @@
 
 import random
 
-import gartok.unit as _unit_mod
+import gartok.unit_loadout as _unit_mod
 from gartok import data
 from gartok.guild import Guild
 from gartok.unit import Unit

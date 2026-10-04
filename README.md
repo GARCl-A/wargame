@@ -101,7 +101,7 @@ World systems, outside combat:
   `guild.py`, `group.py`, `persist.py`).
 - **Identity**: the guild's name and banner (colour + emblem), picked at the
   draft — cosmetic, recolours every unit token for the run
-  (`theme.set_player_color`, `Guild.banner_color`/`banner_icon`).
+  (`ui.banner.set_player_color`, `Guild.banner_color`/`banner_icon`).
 - **Leadership**: the guild has one leader ("who am I", chosen at the draft);
   every group has its own (who speaks for it, freely swappable); a group's
   leader caps how many members it can hold before cohesion costs Mental
@@ -168,7 +168,8 @@ gartok/
   scenario.py       builds a battle's map: terrain, deployment, torches; win_check seam
   encounters.py     enemy packs scaled to a target mean level
   matchup.py        (node, arena Bout) -> the opponents + the scenario for one fight
-  unit.py           Unit = the persistent character (race/occupation/attributes/hunger/loadout/talents)
+  unit.py           Unit = the persistent character (init, save/load, generation), built from mixins:
+                    unit_hunger / unit_levels / unit_edit / unit_derive / unit_loadout
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai.py             enemy squad AI (over actions.py); alignment tempers the edges
@@ -186,7 +187,8 @@ gartok/
   # world + campaign
   world.py          the map graph: nodes, edges (hours), route (Dijkstra), Bout (arena offers)
   clock.py          the campaign clock (seconds), day/night
-  guild.py          the guild = shared state (bank, house, reputation, taverna pool) + every group
+  guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
+                    guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
   holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat)
   group.py          Group = a physical subset of the guild: its own node + squad + order
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
@@ -228,8 +230,8 @@ gartok/
   # shared presentation
   ui/               the war-table component kit -- the source of truth for screen
                     presentation (rules + catalog in ui/README.md)
-  theme.py          LEGACY design ramp (SP spacing, palette, Stack, token_badge);
-                    being migrated screen by screen onto ui/
+  theme.py          LEGACY design ramp (SP spacing, surface palette, panel/text/Stack);
+                    five screens left on it, migrating screen by screen onto ui/
   icons.py          vector action icons (pygame.draw) -- no asset file
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
                     portraits under assets/portraits/
