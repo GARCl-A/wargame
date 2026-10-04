@@ -31,3 +31,18 @@ def test_orc_portraits():
     p_orc = artwork.portrait(orc.race["name"], orc.portrait_id, 24)
     assert p_orc is not None
     assert p_orc.get_size() == (24, 24)
+
+
+def test_automaton_portraits():
+    # 10 curated Automaton portraits
+    for idx in range(10):
+        p = artwork.portrait("Automaton", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    auto = unit.Unit("player", race=data.race_by_name("Automaton"))
+    assert hasattr(auto, "portrait_id")
+    p_auto = artwork.portrait(auto.race["name"], auto.portrait_id, 24)
+    assert p_auto is not None
+    assert p_auto.get_size() == (24, 24)
+
