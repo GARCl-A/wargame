@@ -1044,6 +1044,33 @@ def test_treefolk_race_and_portraits():
     assert restored.race["name"] == "Treefolk"
 
 
+def test_goblin_portraits():
+    from gartok import artwork, data, persist, unit
+    import pygame
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+
+    # 1. Loader returns scaled surface
+    port = artwork.portrait("Goblin", 0, 48)
+    assert port is not None
+    assert isinstance(port, pygame.Surface)
+    assert port.get_size() == (48, 48)
+
+    # 2. All 7 curated portraits load correctly
+    for idx in range(7):
+        p = artwork.portrait("Goblin", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # 3. Unit integration
+    goblin_race = data.race_by_name("Goblin")
+    u = unit.Unit("player", race=goblin_race)
+    assert hasattr(u, "portrait_id")
+    p = artwork.portrait(u.race["name"], u.portrait_id, 24)
+    assert p is not None
+    assert p.get_size() == (24, 24)
+
+
+
 def test_draft_screen_attribute_and_stat_hover_tooltips():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame

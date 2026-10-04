@@ -94,8 +94,12 @@ def portrait(race_name, portrait_id, px):
     folder = os.path.join(_PORTRAITS, r_clean)
     if not os.path.isdir(folder):
         return None
+    def _sort_key(f):
+        stem, _ = os.path.splitext(f)
+        return (0, int(stem)) if stem.isdigit() else (1, stem)
+
     try:
-        files = [f for f in sorted(os.listdir(folder)) if f.lower().endswith(".png")]
+        files = [f for f in sorted(os.listdir(folder), key=_sort_key) if f.lower().endswith(".png")]
     except OSError:
         return None
     if not files:
