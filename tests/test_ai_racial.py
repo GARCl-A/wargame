@@ -1,9 +1,8 @@
 ﻿"""AI racial talent behaviors: Corpse Eater (Gnoll) and Centaur Mount."""
 
-from unittest.mock import patch
 
 from gartok import ai
-from tests.helpers import Battle, Unit, data
+from tests.helpers import Battle, Unit, data, patch_action_d20
 
 
 def _gnoll():
@@ -44,7 +43,7 @@ def test_gnoll_ai_eats_adjacent_dead_enemy():
     p_c.status = "dead"
     gnoll.unfed_days = 3
 
-    with patch("gartok.actions.d20", return_value=15):
+    with patch_action_d20(return_value=15):
         ai.take_turn(batt, g_c)
 
     assert any("devours" in line for line in batt.log_lines)
@@ -62,7 +61,7 @@ def test_gnoll_ai_does_not_eat_without_talent():
     g_c.pos, p_c.pos = (5, 5), (5, 6)
     p_c.status = "dead"
 
-    with patch("gartok.actions.d20", return_value=15):
+    with patch_action_d20(return_value=15):
         ai.take_turn(batt, g_c)
 
     assert not any("devours" in line for line in batt.log_lines)
@@ -77,7 +76,7 @@ def test_gnoll_ai_does_not_eat_a_corpse_that_is_not_adjacent():
     g_c.pos, p_c.pos = (1, 1), (8, 8)
     p_c.status = "dead"
 
-    with patch("gartok.actions.d20", return_value=15):
+    with patch_action_d20(return_value=15):
         ai.take_turn(batt, g_c)
 
     assert not any("devours" in line for line in batt.log_lines)
@@ -99,7 +98,7 @@ def test_ai_rider_mounts_adjacent_centaur_ally():
     r_c.pos = (5, 6)
     batt.player_units[0].pos = (1, 1)
 
-    with patch("gartok.actions.d20", return_value=10):
+    with patch_action_d20(return_value=10):
         ai.take_turn(batt, r_c)
 
     assert r_c.mounted_on is c_c
@@ -118,7 +117,7 @@ def test_ai_does_not_mount_without_centaur_talent():
     m_c.pos, r_c.pos = (5, 5), (5, 6)
     batt.player_units[0].pos = (1, 1)
 
-    with patch("gartok.actions.d20", return_value=10):
+    with patch_action_d20(return_value=10):
         ai.take_turn(batt, r_c)
 
     assert r_c.mounted_on is None

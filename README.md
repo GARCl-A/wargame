@@ -79,7 +79,7 @@ reconstructed ruleset in [`RULES.md`](RULES.md):
 - **d20 combat**: initiative `d20 + WIS mod`; attack `d20 + mods` vs AC; damage =
   weapon die + STR mod (melee); crit on 20, fumble on 1.
 - **Action points** (2/turn) and **typed bonuses** (`data.resolve_bonus`).
-- **Actions** (`gartok/actions.py`): Walk, Attack, Defend, Throw, Pick Up,
+- **Actions** (`gartok/actions/`): Walk, Attack, Defend, Throw, Pick Up,
   Demoralize, Stabilize, First Aid, Flee, plus the Z-axis moves Climb / Push /
   Jump / Drop In.
 - **Falling / stabilizing / death** (dying → stable | dead), permadeath.
@@ -161,7 +161,8 @@ gartok/
   reference.py      walks the registries -> REFERENCE.md (the data dictionary)
   abilities.py      racial abilities: each one's numeric passive and/or hook
   conditions.py     a combatant's temporary states (Defending, Demoralized, ...)
-  actions.py        combat actions (cost, target, can/execute) + the PANEL_ACTIONS registry
+  actions/          combat actions (cost, target, can/execute): base, combat, movement, support, spells;
+                    the PANEL_ACTIONS registry lives in __init__.py
   board.py          grid, walls, elevation, pathfinding (Dijkstra), line of sight
   vision.py         light + what each character sees (screen vision)
   ground.py         ground objects (GroundObject) and neutral creatures (Creature)
@@ -172,7 +173,7 @@ gartok/
                     unit_hunger / unit_levels / unit_edit / unit_derive / unit_loadout
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
-  ai.py             enemy squad AI (over actions.py); alignment tempers the edges
+  ai.py             enemy squad AI (over actions/); alignment tempers the edges
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
@@ -181,7 +182,7 @@ gartok/
   progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
   talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
   magic.py          spell registry (level, sources) + study-difficulty math -- casting
-                    lives in actions.py's CastSpellAction, learned via the taverna's
+                    lives in actions/spells.py CastSpellAction, learned via the taverna's
                     "study" garrison job (guild.py), AI use in ai.py
 
   # world + campaign
@@ -263,7 +264,7 @@ docs/plans/         design plans not yet built (campaign AI roadmap)
 
 ### How to add a system
 
-- **New action** (e.g. Grapple): an `Action` class in `actions.py` and an entry
+- **New action** (e.g. Grapple): an `Action` class in the fitting `actions/` module and an entry
   in `PANEL_ACTIONS`. The UI and the AI see it for free.
 - **New combat state** (e.g. poison, prone, blind): a `Condition` class in
   `conditions.py`; whoever applies it calls `combatant.add_condition(...)`.
