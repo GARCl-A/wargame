@@ -1558,6 +1558,7 @@ def test_battle_screen_tabs_and_hotkeys():
     surf = pygame.display.set_mode((1280, 800))
 
     batt = Battle([Unit("player")], [Unit("enemy")])
+    batt.turn_idx = next(i for i, u in enumerate(batt.order) if u.team == "player")
     scr = BattleScreen(Fonts(), batt, lambda *a, **k: None)
     scr.draw(surf)
 
