@@ -19,10 +19,11 @@ Added circular engraved medallion portraits to the game, established the portrai
   - Backwards-compatibility alias added in `data.race_by_name("Leshy") -> Treefolk`.
 - **Directory Structure:**
   - `gartok/assets/portraits/<race_lower>/<id>.png`.
-  - Adding a new race is purely dropping clean PNG files into a folder matching the lower-cased race name.
+  - Adding a new race is purely dropping clean PNG files into a folder matching the lower-cased race name (e.g. `treefolk/` with 10 medallions, `goblin/` with 7 curated medallions).
 - **Loader & Fallback (`artwork.portrait`):**
   - Cached via `@functools.lru_cache(maxsize=256)`.
   - Automatically scales to `(px, px)` using `pygame.transform.smoothscale`.
+  - Uses natural numeric key sorting so indices >= 10 sequence after single digits.
   - Maps `portrait_id % len(files)`.
   - Returns `None` if no portraits exist for a race, enabling seamless fallback across all screens to the existing SVG silhouettes (`artwork.race_icon`).
 - **PRNG Protection in `Unit`:**
