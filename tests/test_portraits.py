@@ -201,6 +201,36 @@ def test_sprite_portraits():
     assert p_sp.get_size() == (24, 24)
 
 
+def test_kenku_portraits():
+    # 8 curated Kenku portraits
+    for idx in range(8):
+        p = artwork.portrait("Kenku", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    kk = unit.Unit("player", race=data.race_by_name("Kenku"))
+    assert hasattr(kk, "portrait_id")
+    p_kk = artwork.portrait(kk.race["name"], kk.portrait_id, 24)
+    assert p_kk is not None
+    assert p_kk.get_size() == (24, 24)
+
+
+def test_goliath_portraits():
+    # 8 curated Goliath portraits
+    for idx in range(8):
+        p = artwork.portrait("Goliath", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    gl = unit.Unit("player", race=data.race_by_name("Goliath"))
+    assert hasattr(gl, "portrait_id")
+    p_gl = artwork.portrait(gl.race["name"], gl.portrait_id, 24)
+    assert p_gl is not None
+    assert p_gl.get_size() == (24, 24)
+
+
+
+
 
 
 

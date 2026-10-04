@@ -1045,7 +1045,7 @@ def test_treefolk_race_and_portraits():
         assert p.get_size() == (32, 32)
 
     # Fallback when no portraits exist
-    assert artwork.portrait("Goliath", 0, 32) is None
+    assert artwork.portrait("Wolf", 0, 32) is None
 
     # 3. Unit and persistence round-trip
     u = unit.Unit("player", race=tf)
