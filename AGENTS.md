@@ -53,12 +53,13 @@ When the two disagree, `REFERENCE.md` wins.
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
 | `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat) |
-| `group.py` | Group = physical subset of the guild (members, node, order) |
+| `group.py` | Group = physical subset of the guild (members, node, order); `BASE_SLOTS` / fame → how many groups the guild may run |
+| `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
 | `persist.py` | JSON save/load, SAVE_VERSION, tolerates missing keys |
 | `factions.py` | factions + one-shot deeds → reputation |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
-| `app.py` | pygame shell: scene loop, screen wiring |
+| `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS`, a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 | `archetypes.py` | recruit archetype catalog + candidate generation |
 | `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |

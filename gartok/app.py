@@ -35,6 +35,8 @@ lays itself out from `screen.get_size()`. `START_SIZE` is just the
 opening window size.
 """
 
+from typing import ClassVar
+
 import pygame
 
 from . import (
@@ -292,6 +294,53 @@ class App:
 
         nxt()
 
+    def _land_on_map_paused(self, group, order):
+        # No more "AMBUSH! [FIGHT]" popup -- land back on the map with this
+        # group paused (already idle, see campaign._arrival_pause) and let
+        # MapScreen's own red CTA start the fight when the player is ready.
+        # `_start_map` resets `self._pending`, so the rest of this tick's
+        # queue (rare, but possible) is stashed around the call instead of
+        # getting silently dropped.
+        self._pending_event = (group, order)
+        rest = self._pending
+        self._start_map()
+        self._pending = rest
+
+    # order.kind -> opener(self, group, node, order); a new activity is one line.
+    _ACTIVITY_OPENERS: ClassVar[dict] = {
+        "arena": lambda s, g, n, o: s._open_arena(g, n),
+        "market": lambda s, g, n, o: s._open_market_stalls(list(g.members), n, None),
+        "bank": lambda s, g, n, o: s._open_bank_vault(g, n, None),
+        "property": lambda s, g, n, o: s._open_city_property(g, n),
+        "claim": lambda s, g, n, o: s._open_wilds_claim(g, n),
+        "recruit": lambda s, g, n, o: s._open_taverna(list(g.members), n, None, group=g),
+        "prison": lambda s, g, n, o: s._open_prison(list(g.members), n, None),
+        "hunt": lambda s, g, n, o: s._open_hunt_ground(list(g.members), n, None),
+        "tanner": lambda s, g, n, o: s._open_tanner_stall(g, n, None),
+        "trust": lambda s, g, n, o: s._open_trust_offer(g, n, None),
+        "ledger": lambda s, g, n, o: s._open_ledger_desk(g, n, None),
+        "forge": lambda s, g, n, o: s._open_forge(g, n, None),
+        "apothecary": lambda s, g, n, o: s._open_apothecary(g, n, None),
+        "library": lambda s, g, n, o: s._open_library(g, n, None),
+        "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
+        "guard": lambda s, g, n, o: s._open_guard_check(g, o),
+        "ambush": lambda s, g, n, o: s._land_on_map_paused(g, o),
+        "eviction": lambda s, g, n, o: s._start_property_raid(g, o),
+        "wilds_raid": lambda s, g, n, o: s._start_wilds_raid(g, o),
+        "wilds_seizure": lambda s, g, n, o: s._start_wilds_seizure(g, o),
+        "wilds_retake": lambda s, g, n, o: s._start_wilds_retake(g, o),
+    }
+
+    # forced-fight order.kind -> campaign.resolve_*(guild, group, order, outcome);
+    # anything else is a road ambush.
+    _FORCED_FIGHT_RESOLVERS: ClassVar[dict] = {
+        "guard": campaign.resolve_guard_fight_aftermath,
+        "eviction": campaign.resolve_property_raid,
+        "wilds_raid": campaign.resolve_wilds_raid,
+        "wilds_seizure": campaign.resolve_wilds_seizure,
+        "wilds_retake": campaign.resolve_wilds_claim_retake,
+    }
+
     def _after_activity(self):
         """Continue draining the last tick's pending orders, or return to the
         map once there are none left. Every activity screen's on_done/on_back
@@ -306,57 +355,9 @@ class App:
                 # self._pending. Skip it -- no one left to open a screen for.
                 continue
             node = world.node(group.node)
-            if order.kind == "arena":
-                self._open_arena(group, node)
-            elif order.kind == "market":
-                self._open_market_stalls(list(group.members), node, None)
-            elif order.kind == "bank":
-                self._open_bank_vault(group, node, None)
-            elif order.kind == "property":
-                self._open_city_property(group, node)
-            elif order.kind == "claim":
-                self._open_wilds_claim(group, node)
-            elif order.kind == "recruit":
-                self._open_taverna(list(group.members), node, None, group=group)
-            elif order.kind == "prison":
-                self._open_prison(list(group.members), node, None)
-            elif order.kind == "hunt":
-                self._open_hunt_ground(list(group.members), node, None)
-            elif order.kind == "tanner":
-                self._open_tanner_stall(group, node, None)
-            elif order.kind == "trust":
-                self._open_trust_offer(group, node, None)
-            elif order.kind == "ledger":
-                self._open_ledger_desk(group, node, None)
-            elif order.kind == "forge":
-                self._open_forge(group, node, None)
-            elif order.kind == "apothecary":
-                self._open_apothecary(group, node, None)
-            elif order.kind == "library":
-                self._open_library(group, node, None)
-            elif order.kind == "ancient_ruins":
-                self._enter_ancient_ruins(group, node)
-            elif order.kind == "guard":
-                self._open_guard_check(group, order)
-            elif order.kind == "ambush":
-                # No more "AMBUSH! [FIGHT]" popup -- land back on the map with
-                # this group paused (already idle, see campaign._arrival_pause)
-                # and let MapScreen's own red CTA start the fight when the
-                # player is ready. `_start_map` resets `self._pending`, so the
-                # rest of this tick's queue (rare, but possible) is stashed
-                # around the call instead of getting silently dropped.
-                self._pending_event = (group, order)
-                rest = self._pending
-                self._start_map()
-                self._pending = rest
-            elif order.kind == "eviction":
-                self._start_property_raid(group, order)
-            elif order.kind == "wilds_raid":
-                self._start_wilds_raid(group, order)
-            elif order.kind == "wilds_seizure":
-                self._start_wilds_seizure(group, order)
-            elif order.kind == "wilds_retake":
-                self._start_wilds_retake(group, order)
+            handler = self._ACTIVITY_OPENERS.get(order.kind)
+            if handler:
+                handler(self, group, node, order)
             return
         self._start_map()
 
@@ -740,21 +741,9 @@ class App:
         def do_next_step():
             if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
                 self._pause_order = self._pause_group = None
-                if pause_order.kind == "guard":
-                    self._map_notices += campaign.resolve_guard_fight_aftermath(
-                        self.guild, pause_group, pause_order, outcome)
-                elif pause_order.kind == "eviction":
-                    self._map_notices += campaign.resolve_property_raid(
-                        self.guild, pause_group, pause_order, outcome)
-                elif pause_order.kind == "wilds_raid":
-                    self._map_notices += campaign.resolve_wilds_raid(
-                        self.guild, pause_group, pause_order, outcome)
-                elif pause_order.kind == "wilds_seizure":
-                    self._map_notices += campaign.resolve_wilds_seizure(
-                        self.guild, pause_group, pause_order, outcome)
-                elif pause_order.kind == "wilds_retake":
-                    self._map_notices += campaign.resolve_wilds_claim_retake(
-                        self.guild, pause_group, pause_order, outcome)
+                resolver = self._FORCED_FIGHT_RESOLVERS.get(pause_order.kind)
+                if resolver:
+                    self._map_notices += resolver(self.guild, pause_group, pause_order, outcome)
                 else:
                     self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)
                 if outcome.loot_pool and outcome.survivors:

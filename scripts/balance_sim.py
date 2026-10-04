@@ -7,18 +7,23 @@ still get to fire. Attributes / alignment / starting gold are re-rolled for ever
 clone, so what is being measured is the archetype (race mods + ability + the
 occupation's weapon/item), averaged over the 3d6 noise.
 
-Fighters are level 0 with no talents -- this is the raw creation-stat baseline,
-the thing to balance before progression piles on top.
+Fighters are level 0 with no talents by default -- the raw creation-stat baseline.
+`--level N` raises combat and work to N, `--racial N` pins the racial level (hit
+dice + racial pick, which unlocks at 5); talents are then picked at random from
+the trees, and a TALENTS section ranks each one by how much better than its
+race + occupation predicts the units holding it did.
 
 One random sweep feeds all three questions at once: a battle between a
 `(race, occ)` and a `(race', occ')` squad is simultaneously a race-vs-race and an
 occupation-vs-occupation result, so the race / occupation / combo Elo pools all
 come out of the same games.
 
-    python balance_sim.py                          # 20k battles, race/occ ranking, ~1 min
-    python balance_sim.py --battles 60000          # tighter combo numbers too
-    python balance_sim.py --scenario arena         # dark cluttered pit
-    python balance_sim.py --scenario the-pit       # a hand-authored map (walls + a pit)
+    python scripts/balance_sim.py                          # 20k battles, race/occ ranking, ~1 min
+    python scripts/balance_sim.py --battles 60000          # tighter combo numbers too
+    python scripts/balance_sim.py --racial 5               # level-0 fighters + a racial talent
+    python scripts/balance_sim.py --level 5                # combat 5 / work 5 (racial 5 derived)
+    python scripts/balance_sim.py --scenario arena         # dark cluttered pit
+    python scripts/balance_sim.py --scenario the-pit       # a hand-authored map (walls + a pit)
 
 Writes a text report + JSON + CSVs under sim_results/ and prints the report.
 """
@@ -31,12 +36,16 @@ import json
 import math
 import os
 import random
+import sys
 import time
 from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timezone
+from typing import NamedTuple
 
-from gartok import ai, data, map_lib
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from gartok import ai, data, items, map_lib, talents
 from gartok.battle import Battle
 from gartok.scenario import ArenaScenario, CustomScenario, ErmosScenario
 from gartok.unit import Unit
@@ -53,13 +62,65 @@ GUARD = 600                # per-battle turn-cap; a real 3v3 ends in ~15 rounds
 # --------------------------------------------------------------------------- #
 # one battle                                                                  #
 # --------------------------------------------------------------------------- #
-def _squad(combo, team, size):
+def spend_picks(u):
+    """Random talent picks that respect each tree, until the unit has none left."""
+    for track in talents.TRACKS:
+        tree = (talents.TREE[track] if track in talents.XP_TRACKS
+                else talents.racial_tree(u.race["name"]))
+        while u.picks_available(track) > 0:
+            picked = u.talents[track]
+            options = [t.id for t in tree if t.id not in picked
+                       and (t.requires is None or t.requires in picked)]
+            if not options:
+                break
+            u.choose_talent(track, random.choice(options))
+
+
+class Build(NamedTuple):
+    """How far a fighter is levelled and kitted out. `gear`: `starting` (the
+    occupation's own weapon only), `best` (highest damage die + best armor and
+    shield the unit can use) or `random` (a random usable weapon, armor, shield)."""
+    combat: int = 0
+    work: int = 0
+    racial: int | None = None
+    gear: str = "starting"
+
+
+def give_gear(u, mode):
+    """Kit `u` out from the whole catalog (crossbows excluded: no quiver here).
+    Runs after talents, so Giant's Grip opens the Large weapons."""
+    if mode == "starting":
+        return
+    best = mode == "best"
+    pool = [w for w in items.weapons().values() if not w.reload and u.can_wield(w.name)]
+    weapon = max(pool, key=lambda w: (w.damage[0] * (w.damage[1] + 1) / 2, w.price)) if best else random.choice(pool)
+    u.give_to_hand(weapon.name)
+    shields = [i for i in items.all_items().values() if items.is_shield(i.name)]
+    if weapon.hands == 1 and shields and (best or random.random() < 0.5):
+        u.give_to_offhand(random.choice(shields).name)
+    armors = list(items.armor().values())
+    if best:
+        u.give_to_armor(max(armors, key=lambda a: a.ac).name)
+    elif random.random() < 2 / 3:
+        u.give_to_armor(random.choice(armors).name)
+
+
+def _squad(combo, team, size, build):
     race, occ = combo
+    combat, work, racial, gear = build
     squad = []
     for _ in range(size):
         u = Unit(team)
         u.set_race(race)
         u.set_occupation(occ)
+        if combat:
+            u.set_track_level("combat", combat)
+        if work:
+            u.set_track_level("work", work)
+        if racial is not None:
+            u.set_track_level("racial", racial)
+        spend_picks(u)
+        give_gear(u, gear)
         squad.append(u)
     return squad
 
@@ -74,33 +135,35 @@ def _scenario(name):
     return CustomScenario(map_lib.load_map(name))
 
 
-def run_battle(combo_a, combo_b, seed, size, scenario_name, daylight):
+def run_battle(combo_a, combo_b, seed, size, scenario_name, daylight, levels=None):
     """Play combo_a (player side) vs combo_b (enemy side). Returns
-    ('A' | 'B' | 'draw', rounds)."""
+    ('A' | 'B' | 'draw', rounds, talents_a, talents_b) -- the talent ids each
+    unit of a side ended up with."""
     random.seed(seed)
-    a = _squad(combo_a, "player", size)
-    b = _squad(combo_b, "enemy", size)
+    levels = levels or Build()
+    a = _squad(combo_a, "player", size, levels)
+    b = _squad(combo_b, "enemy", size, levels)
+    tal_a = [tuple(t for tr in talents.TRACKS for t in u.talents[tr]) for u in a]
+    tal_b = [tuple(t for tr in talents.TRACKS for t in u.talents[tr]) for u in b]
     battle = Battle(a, b, scenario=_scenario(scenario_name), daylight=daylight)
     guard = 0
     while battle.winner is None and guard < GUARD:
         guard += 1
         ai.take_turn(battle, battle.active)
-    if battle.winner == "player":
-        return "A", battle.round_no
-    if battle.winner == "enemy":
-        return "B", battle.round_no
-    return "draw", battle.round_no
+    result = {"player": "A", "enemy": "B"}.get(battle.winner, "draw")
+    return result, battle.round_no, tal_a, tal_b
 
 
 # --------------------------------------------------------------------------- #
 # worker: a slice of the matchup list                                         #
 # --------------------------------------------------------------------------- #
 def _work(chunk):
-    size, scenario_name, daylight, jobs = chunk
+    size, scenario_name, daylight, levels, jobs = chunk
     out = []
     for combo_a, combo_b, seed in jobs:
-        result, rounds = run_battle(combo_a, combo_b, seed, size, scenario_name, daylight)
-        out.append((combo_a, combo_b, result, rounds))
+        result, rounds, tal_a, tal_b = run_battle(
+            combo_a, combo_b, seed, size, scenario_name, daylight, levels)
+        out.append((combo_a, combo_b, result, rounds, tal_a, tal_b))
     return out
 
 
@@ -164,7 +227,7 @@ def aggregate(results):
     rounds = []
     side = Counter()               # did the player (side A) or enemy (side B) win
 
-    for combo_a, combo_b, result, r in results:
+    for combo_a, combo_b, result, r, _tal_a, _tal_b in results:
         rounds.append(r)
         ra, oa = combo_a
         rb, ob = combo_b
@@ -214,6 +277,36 @@ def aggregate(results):
     }
 
 
+def talent_effects(results, agg):
+    """Per talent: how much better (score) its holders did than their race +
+    occupation alone predict. Unit-slot attribution -- each holder is credited
+    with its squad's result -- so teammates' talents are noise that averages out;
+    the SE ignores that within-battle correlation, so read it as a floor."""
+    overall = sum(t.score * t.n for t in agg["combo"].values()) / \
+              sum(t.n for t in agg["combo"].values())
+    race_mean = {r: agg["race"][r].score for r in RACES}
+    occ_mean = {o: agg["occ"][o].score for o in OCCUPATIONS}
+    samples = defaultdict(list)
+    slots = 0
+    for combo_a, combo_b, result, _r, tal_a, tal_b in results:
+        sa = {"A": 1.0, "B": 0.0, "draw": 0.5}[result]
+        for (race, occ), score, squad in ((combo_a, sa, tal_a), (combo_b, 1.0 - sa, tal_b)):
+            expected = race_mean[race] + occ_mean[occ] - overall
+            for tals in squad:
+                slots += 1
+                for tid in tals:
+                    if talents.get(tid).track != "racial":     # see run_racial_ab
+                        samples[tid].append(score - expected)
+    out = {}
+    for tid, xs in samples.items():
+        n = len(xs)
+        mean = sum(xs) / n
+        var = sum((x - mean) ** 2 for x in xs) / (n - 1) if n > 1 else 0.0
+        out[tid] = {"n": n, "holders": n / slots, "delta": mean,
+                    "se": math.sqrt(var / n)}
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # report                                                                      #
 # --------------------------------------------------------------------------- #
@@ -223,7 +316,7 @@ def _bar(x, lo=0.30, hi=0.70, width=20):
     return "#" * fill + "." * (width - fill)
 
 
-def build_report(agg, cfg):
+def build_report(agg, cfg, tal_fx=None):
     combo_elo = elo(agg["combo_games"])
     race_elo = elo(agg["race_games"])
     occ_elo = elo(agg["occ_games"])
@@ -242,8 +335,11 @@ def build_report(agg, cfg):
     p(f"draws       : {draws} ({draws/n:.1%})   (turn-cap {GUARD} or mutual wipe)")
     p(f"side bias   : side-A (player/left) won {agg['side']['A']/n:.1%} of decisive-or-not battles")
     p("")
+    c, w, rac, gear = cfg["levels"]
     p("Method: homogeneous squad vs homogeneous squad, fresh 3d6 rolls per clone,")
-    p("level 0, no talents. Elo from the same games, three ways (K-passes 24>16>10>6).")
+    p(f"combat L{c}, work L{w}, racial {'derived' if rac is None else f'pinned {rac}'}"
+      f"{', random talent picks' if (c or w or rac) else ', no talents'}. "
+      f" gear={gear}. Elo from the same games, three ways (K-passes 24>16>10>6).")
     p("'score' counts a draw as half. Win% is decisive wins / games.")
 
     def table(title, ratings, tally, keys, note=""):
@@ -309,6 +405,26 @@ def build_report(agg, cfg):
     for c, dv in resid[:12]:
         p(f"  {c[0]+' '+c[1]:<24}{dv:+.3f}   (combo {agg['combo'][c].score:.3f})")
 
+    if tal_fx:
+        p("")
+        p("-" * 78)
+        p("TALENTS  (holder score minus race+occupation prediction; + = the talent helps)")
+        p("random picks; unit-slot attribution, SE is a floor; |z| < 2 is noise")
+        p("a branch's tier-2 nodes carry their root's pull; racial talents are not")
+        p("ranked here (the race's own mean already contains them) -- use --racial-ab")
+        p("-" * 78)
+        for track in talents.XP_TRACKS:
+            rows = [(tid, fx) for tid, fx in tal_fx.items() if talents.get(tid).track == track]
+            if not rows:
+                continue
+            p(f"{track.upper()}:")
+            p(f"  {'talent':<24}{'race':<12}{'holders':>8}{'delta':>8}{'+/-SE':>8}{'z':>6}")
+            for tid, fx in sorted(rows, key=lambda r: r[1]["delta"], reverse=True):
+                t = talents.get(tid)
+                z = fx["delta"] / fx["se"] if fx["se"] else 0.0
+                p(f"  {t.name:<24}{(t.race or ''):<12}{fx['holders']:>8.1%}"
+                  f"{fx['delta']:>+8.3f}{fx['se']:>8.3f}{z:>6.1f}")
+
     p("")
     p("=" * 78)
     return "\n".join(L), {
@@ -332,12 +448,88 @@ def make_jobs(battles, seed):
     return jobs
 
 
+def _ab_battle(job):
+    """One racial A/B fight: two squads of the same race and occupation, both with
+    the racial level pinned (same hit dice), one holding its racial talent and the
+    other with it dropped. Returns (race, talent_side_score)."""
+    race, occ, seed, size, scenario_name, daylight, levels, swap = job
+    random.seed(seed)
+    with_t = _squad((race, occ), "enemy" if swap else "player", size, levels)
+    without = _squad((race, occ), "player" if swap else "enemy", size, levels)
+    for u in without:
+        for tid in list(u.talents["racial"]):
+            u.drop_talent("racial", tid)
+        if u.equipped_weapon and not u.can_wield(u.equipped_weapon):   # Giant's Grip's Large weapon
+            u.equipped_weapon = None
+            give_gear(u, levels.gear)
+    a, b = (without, with_t) if swap else (with_t, without)
+    battle = Battle(a, b, scenario=_scenario(scenario_name), daylight=daylight)
+    guard = 0
+    while battle.winner is None and guard < GUARD:
+        guard += 1
+        ai.take_turn(battle, battle.active)
+    if battle.winner is None:
+        return race, 0.5
+    talent_side = "enemy" if swap else "player"
+    return race, 1.0 if battle.winner == talent_side else 0.0
+
+
+def racial_ab(args, levels):
+    """`--racial-ab N`: for every race, N mirror fights, talent vs the same squad
+    without it. This is the clean read on a racial talent -- the unit-slot method
+    can't isolate it, since every member of a race holds the same single node."""
+    levels = levels._replace(racial=5 if levels.racial is None else levels.racial)
+    rng = random.Random(args.seed)
+    jobs = [(race, rng.choice(OCCUPATIONS), rng.randrange(2**31), args.team_size,
+             args.scenario, args.daylight, levels, i % 2)
+            for race in (args.race or RACES) for i in range(args.racial_ab)]
+    print(f"racial A/B: {len(jobs)} mirror fights on {args.workers} workers ...")
+    scores = defaultdict(list)
+    with ProcessPoolExecutor(max_workers=args.workers) as ex:
+        for race, sc in ex.map(_ab_battle, jobs, chunksize=64):
+            scores[race].append(sc)
+    L = ["=" * 78, "GARTOK RACIAL TALENT A/B", "=" * 78,
+         (f"{args.racial_ab} mirror fights per race, {args.team_size}v{args.team_size}, "
+          f"scenario={args.scenario}, combat L{levels[0]}, work L{levels[1]}, racial {levels[2]}, "
+          f"gear={levels.gear}"),
+         "talent squad vs the identical squad with the racial node dropped (same hit dice);",
+         "score = talent side's, draws half; 0.500 = the talent changes nothing in combat", "",
+         f"{'':3}{'talent':<24}{'race':<12}{'score':>8}{'+/-SE':>8}{'z':>6}{'games':>8}"]
+    rows = []
+    for race, xs in scores.items():
+        n = len(xs)
+        mean = sum(xs) / n
+        se = math.sqrt(sum((x - mean) ** 2 for x in xs) / (n - 1) / n)
+        node = next((t for t in talents.racial_tree(race)), None)
+        rows.append((mean, se, n, race, node.name if node else "(no node)"))
+    for i, (mean, se, n, race, name) in enumerate(sorted(rows, reverse=True), 1):
+        L.append(f"{i:<3}{name:<24}{race:<12}{mean:>8.3f}{se:>8.3f}{(mean - 0.5) / se:>6.1f}{n:>8}")
+    L.append("=" * 78)
+    report = "\n".join(L)
+    print(report)
+    os.makedirs(args.out_dir, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = os.path.join(args.out_dir, f"balance-racial-ab-{args.scenario}-{stamp}.txt")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(report + "\n")
+    print(f"\nreport  -> {path}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--battles", type=int, default=20000,
                     help="20k: solid race/occ ranking in ~1 min. 60k: tight combos too.")
     ap.add_argument("--team-size", type=int, default=3)
+    ap.add_argument("--level", type=int, default=0,
+                    help="combat AND work level for every fighter (talents picked at random)")
+    ap.add_argument("--gear", choices=("starting", "best", "random"), default="starting",
+                    help="starting = the occupation's weapon; best / random draw weapon, "
+                         "armor and shield from the whole catalog")
+    ap.add_argument("--combat-level", type=int, default=None)
+    ap.add_argument("--work-level", type=int, default=None)
+    ap.add_argument("--racial", type=int, default=None,
+                    help="pin the racial level (hit dice + racial pick at 5); default derived")
     ap.add_argument("--scenario", default="ermos",
                     help="ermos | arena | a map slug from map_lib (e.g. the-pit)")
     ap.add_argument("--daylight", type=lambda s: s.lower() != "false", default=True,
@@ -347,13 +539,23 @@ def main():
     ap.add_argument("--min-combo-games", type=int, default=0,
                     help="0 = auto (max(30, battles/#combos * 0.6))")
     ap.add_argument("--out-dir", default="sim_results")
+    ap.add_argument("--race", action="append", help="--racial-ab: only this race (repeatable)")
+    ap.add_argument("--racial-ab", type=int, default=0, metavar="N",
+                    help="instead of the tournament: N mirror fights per race, the "
+                         "racial talent vs the same squad without it")
     args = ap.parse_args()
 
     if args.min_combo_games == 0:
         args.min_combo_games = max(30, round(args.battles * 2 / len(COMBOS) * 0.6))
 
+    levels = Build(args.level if args.combat_level is None else args.combat_level,
+                   args.level if args.work_level is None else args.work_level,
+                   args.racial, args.gear)
+    if args.racial_ab:
+        racial_ab(args, levels)
+        return
     cfg = {
-        "battles": args.battles, "team_size": args.team_size,
+        "levels": levels, "battles": args.battles, "team_size": args.team_size,
         "scenario": args.scenario, "daylight": args.daylight,
         "min_combo_games": args.min_combo_games, "seed": args.seed,
     }
@@ -363,7 +565,7 @@ def main():
 
     n_chunks = args.workers * 8
     size = math.ceil(len(jobs) / n_chunks)
-    chunks = [(args.team_size, args.scenario, args.daylight, jobs[i:i + size])
+    chunks = [(args.team_size, args.scenario, args.daylight, levels, jobs[i:i + size])
               for i in range(0, len(jobs), size)]
 
     t0 = time.time()
@@ -381,12 +583,16 @@ def main():
     print(f"done in {time.time()-t0:.0f}s")
 
     agg = aggregate(results)
-    report, elos = build_report(agg, cfg)
+    leveled = any(levels[:2]) or levels[2] or levels.gear != "starting"
+    tal_fx = talent_effects(results, agg) if leveled else None
+    report, elos = build_report(agg, cfg, tal_fx)
     print("\n" + report)
 
     os.makedirs(args.out_dir, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    tag = f"{args.scenario}{'-night' if not args.daylight else ''}-{args.battles}-{stamp}"
+    lvl = (f"-L{levels[0]}.{levels[1]}" + ("" if levels[2] is None else f"r{levels[2]}")
+           + ("" if levels.gear == "starting" else f"-{levels.gear}")) if leveled else ""
+    tag = f"{args.scenario}{'-night' if not args.daylight else ''}{lvl}-{args.battles}-{stamp}"
 
     rep_path = os.path.join(args.out_dir, f"balance-{tag}.txt")
     with open(rep_path, "w", encoding="utf-8") as f:
@@ -396,6 +602,7 @@ def main():
         json.dump({
             "config": cfg,
             "elo": elos,
+            "talents": tal_fx or {},
             "race": {r: vars_of(agg["race"][r]) for r in RACES},
             "occ": {o: vars_of(agg["occ"][o]) for o in OCCUPATIONS},
             "combo": {f"{r}|{o}": vars_of(agg["combo"][(r, o)]) for r, o in COMBOS},

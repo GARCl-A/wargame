@@ -16,14 +16,18 @@ skips the daily meal. Three modes let you see that lever from three angles:
                       loses the least (autotroph = 0, high-CHA polyglots less).
   --mode production   the occupation makes its starting item once a day and sells
                       it; you also have to eat. Net = sale revenue - food cost.
+  --mode work         the character works the lumber yard (`economy.lumber_pay`:
+                      their own Axe pays more, Piecework adds coin, Brisk Hands and
+                      Tireless Worker fit more shifts into the day) and eats.
   --mode arbitrage    vendors get a fixed per-item price multiplier (+/- --spread,
                       NOT a live-game mechanic -- flagged as a sim assumption), so
                       buy-here-sell-there can turn a profit. CHA / languages /
                       alignment widen every window.
 
-    python economy_sim.py                       # production, 20000 traders
-    python economy_sim.py --mode arbitrage --traders 40000
-    python economy_sim.py --mode bleed
+    python scripts/economy_sim.py                       # production, 20000 traders
+    python scripts/economy_sim.py --mode arbitrage --traders 40000
+    python scripts/economy_sim.py --mode bleed
+    python scripts/economy_sim.py --mode work --level 5 --racial 5   # talents in play
 
 Writes sim_results/economy-<mode>-*.{txt,json,csv}.
 """
@@ -37,10 +41,15 @@ import math
 import os
 import random
 import statistics
+import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from gartok import data, economy
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from balance_sim import spend_picks
+
+from gartok import data, economy, talents
 from gartok.unit import Unit
 
 RACES = list(data.RACE_NAMES)
@@ -71,9 +80,6 @@ PRODUCE = {o["name"]: o["item"] for o in map(data.occupation_by_name, OCCUPATION
 # don't change, and the trader never goes hungry here), so each vendor bakes  #
 # a full buy/sell price table for the trader once, up front.                  #
 # --------------------------------------------------------------------------- #
-_BASE = {g: economy._base_price(g) for g in TRADE_GOODS}
-
-
 class Vendor:
     def __init__(self, rng, *, arbitrage, spread, stock_cap):
         self.language = rng.choice(data.LANGUAGES)
@@ -95,16 +101,14 @@ class Vendor:
                 self.stock[g] = min(c, self.stock[g] + max(1, math.ceil(c * frac)))
 
     def price_for(self, trader):
-        """Bake this trader's buy/sell tables. `deal` = the real `economy` haggle
-        fraction (CHA + shared language + alignment distance), clamped."""
+        """Bake this trader's buy/sell tables from the live `economy.buy_price` /
+        `sell_price` (CHA + shared language + alignment distance + talent mods,
+        item-scoped ones included), scaled by this vendor's per-item multiplier."""
         mods = economy.deal_mods([trader], self.language, self.alignment)
-        db = economy.deal_value(mods, None, "buy")
-        ds = economy.deal_value(mods, None, "sell")
-        self.deal = db
+        self.deal = economy.deal_value(mods, None, "buy")
         for g in TRADE_GOODS:
-            bm = _BASE[g] * self.mult[g]
-            self.buy[g] = max(1, round(bm * (1 - db)))
-            self.sell[g] = max(1, round(bm * (economy.SELL_FACTOR + 0.4 * ds)))
+            self.buy[g] = max(1, round(economy.buy_price(g, mods) * self.mult[g]))
+            self.sell[g] = max(1, round(economy.sell_price(g, mods) * self.mult[g]))
 
 
 # --------------------------------------------------------------------------- #
@@ -140,6 +144,14 @@ def run_trader(combo, seed, cfg):
     t = Unit("trader")
     t.set_race(race)
     t.set_occupation(occ)
+    combat, work, racial = cfg["levels"]
+    if combat:
+        t.set_track_level("combat", combat)
+    if work:
+        t.set_track_level("work", work)
+    if racial is not None:
+        t.set_track_level("racial", racial)
+    spend_picks(t)
     t.gold = cfg["start_gold"] or t.gold           # 0 => keep the rolled 5d10
     start = t.gold
 
@@ -150,8 +162,20 @@ def run_trader(combo, seed, cfg):
         v.price_for(t)
 
     food_spent = revenue = arb_profit = 0
+    wage_per_day = 0
+    if cfg["mode"] == "work":
+        # Brisk Hands & co. shave clock time off a shift, so more nominal hours fit
+        # in the day's work budget; pay is by whole 4 h blocks of nominal hours.
+        speed = min(0.9, t.talent_bonus("activity_speed"))
+        hours = int(cfg["work_budget"] / (1 - speed))
+        pay = economy.lumber_pay(hours, economy.lumber_level(t))
+        wage_per_day = round(pay * (1 + t.talent_bonus("coin_gain")))
     for _ in range(cfg["days"]):
         produced = defaultdict(int)
+
+        if wage_per_day:
+            t.gold += wage_per_day
+            revenue += wage_per_day
 
         if cfg["mode"] == "production" and occ in PRODUCE:
             produced[PRODUCE[occ]] += cfg["produce_qty"]
@@ -200,6 +224,7 @@ def run_trader(combo, seed, cfg):
         "food_spent": food_spent,
         "revenue": revenue,
         "arb_profit": arb_profit,
+        "talents": tuple(x for tr in talents.TRACKS for x in t.talents[tr]),
     }
 
 
@@ -257,7 +282,22 @@ def _table(lines, title, accs, keys, days, note=""):
           f"{a.free/a.n:>5.0%} {a.n:>7}")
 
 
-def build_report(race_acc, occ_acc, combo_acc, cfg):
+def talent_effects(rows, race_acc, occ_acc):
+    """Per talent: mean net copper of its holders minus what their race + occupation
+    alone predict (in copper over the run). `rows` = [(race, occ, result)]."""
+    overall = statistics.mean(x for a in race_acc.values() for x in a.deltas)
+    samples = defaultdict(list)
+    for race, occ, r in rows:
+        expected = race_acc[race].mean + occ_acc[occ].mean - overall
+        for tid in r["talents"]:
+            if talents.get(tid).track != "racial":     # a race's mean already contains its node
+                samples[tid].append(r["delta"] - expected)
+    return {tid: {"n": len(xs), "holders": len(xs) / len(rows), "delta": statistics.mean(xs),
+                  "se": statistics.pstdev(xs) / math.sqrt(len(xs)) if len(xs) > 1 else 0.0}
+            for tid, xs in samples.items()}
+
+
+def build_report(race_acc, occ_acc, combo_acc, cfg, tal_fx=None):
     L = []
     p = L.append
     d = cfg["days"]
@@ -271,6 +311,12 @@ def build_report(race_acc, occ_acc, combo_acc, cfg):
     if cfg["mode"] == "arbitrage":
         p(f"price spread: +/-{cfg['spread']:.0%} per vendor per item "
           f"(SIM ASSUMPTION -- not in the live game)   trades/day cap: {cfg['trades_per_day']}")
+    if cfg["mode"] == "work":
+        p(f"work       : {cfg['work_budget']} clock-hours/day at the lumber yard (live `economy.lumber_pay`)")
+    c, w, rac = cfg["levels"]
+    if c or w or rac:
+        p(f"levels     : combat L{c}, work L{w}, racial "
+          f"{'derived' if rac is None else f'pinned {rac}'}, random talent picks")
     if cfg["mode"] == "production":
         p("production : 1x the occupation's table item per day, sold to the best vendor")
     all_d = [x for a in race_acc.values() for x in a.deltas]
@@ -299,6 +345,22 @@ def build_report(race_acc, occ_acc, combo_acc, cfg):
     for c in by[-15:][::-1]:
         a = combo_acc[c]
         p(f"  {c[0]+' '+c[1]:<26}{a.mean:>8.0f}/15d   {a.mean/d:>6.1f}/day   n={a.n}")
+    if tal_fx:
+        p("")
+        p("-" * 82)
+        p("TALENTS  (holder net copper minus race+occupation prediction, over the run)")
+        p("combat/work only: a racial node's effect shows in its race's row above")
+        p("-" * 82)
+        for track in talents.XP_TRACKS:
+            rows = [(tid, fx) for tid, fx in tal_fx.items() if talents.get(tid).track == track]
+            if not rows:
+                continue
+            p(f"{track.upper()}:")
+            p(f"  {'talent':<24}{'race':<12}{'holders':>8}{'delta cp':>10}{'+/-SE':>8}")
+            for tid, fx in sorted(rows, key=lambda r: r[1]["delta"], reverse=True):
+                t = talents.get(tid)
+                p(f"  {t.name:<24}{(t.race or ''):<12}{fx['holders']:>8.1%}"
+                  f"{fx['delta']:>+10.1f}{fx['se']:>8.1f}")
     p("")
     p("=" * 82)
     return "\n".join(L)
@@ -310,7 +372,7 @@ def build_report(race_acc, occ_acc, combo_acc, cfg):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--mode", choices=("production", "arbitrage", "bleed"),
+    ap.add_argument("--mode", choices=("production", "arbitrage", "bleed", "work"),
                     default="production")
     ap.add_argument("--traders", type=int, default=20000)
     ap.add_argument("--days", type=int, default=15)
@@ -322,6 +384,12 @@ def main():
     ap.add_argument("--trades-per-day", type=int, default=20)
     ap.add_argument("--max-lot", type=int, default=10)
     ap.add_argument("--produce-qty", type=int, default=1)
+    ap.add_argument("--work-budget", type=int, default=8,
+                    help="work mode: clock hours of lumber-yard work per day")
+    ap.add_argument("--level", type=int, default=0,
+                    help="combat AND work level for every trader (talents picked at random)")
+    ap.add_argument("--racial", type=int, default=None,
+                    help="pin the racial level (a racial pick unlocks at 5)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out-dir", default="sim_results")
     args = ap.parse_args()
@@ -331,7 +399,8 @@ def main():
         "vendors": args.vendors, "start_gold": args.start_gold, "spread": args.spread,
         "stock_cap": args.stock_cap, "replenish": args.replenish,
         "trades_per_day": args.trades_per_day, "max_lot": args.max_lot,
-        "produce_qty": args.produce_qty,
+        "produce_qty": args.produce_qty, "work_budget": args.work_budget,
+        "levels": (args.level, args.level, args.racial),
         "min_combo": max(20, round(args.traders / len(RACES) / len(OCCUPATIONS) * 0.5)),
     }
 
@@ -339,6 +408,7 @@ def main():
     race_acc = defaultdict(Acc)
     occ_acc = defaultdict(Acc)
     combo_acc = defaultdict(Acc)
+    rows = []
 
     for i in range(args.traders):
         combo = (rng.choice(RACES), rng.choice(OCCUPATIONS))
@@ -346,15 +416,19 @@ def main():
         race_acc[combo[0]].add(r)
         occ_acc[combo[1]].add(r)
         combo_acc[combo].add(r)
+        rows.append((combo[0], combo[1], r))
         if (i + 1) % 5000 == 0:
             print(f"  {i+1}/{args.traders}", flush=True)
 
-    report = build_report(race_acc, occ_acc, combo_acc, cfg)
+    leveled = bool(args.level or args.racial)
+    tal_fx = talent_effects(rows, race_acc, occ_acc) if leveled else None
+    report = build_report(race_acc, occ_acc, combo_acc, cfg, tal_fx)
     print("\n" + report)
 
     os.makedirs(args.out_dir, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    tag = f"{args.mode}-{args.traders}-{stamp}"
+    lvl = f"-L{args.level}" + ("" if args.racial is None else f"r{args.racial}") if leveled else ""
+    tag = f"{args.mode}{lvl}-{args.traders}-{stamp}"
     with open(os.path.join(args.out_dir, f"economy-{tag}.txt"), "w", encoding="utf-8") as f:
         f.write(report + "\n")
 

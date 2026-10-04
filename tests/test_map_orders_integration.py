@@ -271,3 +271,10 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
         app_mod.MarketScreen = orig
     assert not guild.empty and doomed not in guild.roster    # partial wipe, not a full one
     assert opened == ["market"]                              # only the survivor's order surfaced
+
+
+def test_every_order_kind_that_reaches_the_app_has_an_opener():
+    from gartok import orders
+    forced = {"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake"}
+    assert (orders.INTERACTIVE_KINDS | forced) <= set(App._ACTIVITY_OPENERS)
+    assert set(App._FORCED_FIGHT_RESOLVERS) <= forced

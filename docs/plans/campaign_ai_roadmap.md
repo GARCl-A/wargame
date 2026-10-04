@@ -14,8 +14,8 @@ The goal of this AI is not just to play, but to:
 ## 2. Technical Feasibility & Engine Advantages
 
 GARTOK is uniquely suited for AI training and fast simulation due to key architectural decisions:
-- **Headless Core by Design:** The core game logic ([battle.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/battle.py), [campaign.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/campaign.py), [guild.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/guild.py), [orders.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/orders.py), [progression.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/progression.py)) is pure Python with **zero** `pygame` dependencies.
-- **Blazing Fast Simulation:** While a human playthrough takes hours, a headless simulation of an entire 30-day campaign (with combat auto-resolved by [ai.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/ai.py)) executes in **~1 to 3 seconds** on CPU.
+- **Headless Core by Design:** The core game logic ([battle.py](../../gartok/battle.py), [campaign.py](../../gartok/campaign.py), [guild.py](../../gartok/guild.py), [orders.py](../../gartok/orders.py), [progression.py](../../gartok/progression.py)) is pure Python with **zero** `pygame` dependencies.
+- **Blazing Fast Simulation:** While a human playthrough takes hours, a headless simulation of an entire 30-day campaign (with combat auto-resolved by [ai.py](../../gartok/ai.py)) executes in **~1 to 3 seconds** on CPU.
 - **Deterministic & Seedable:** Simulations can be seeded (`random.seed`) for exact reproducibility.
 
 ---
@@ -45,7 +45,7 @@ When evaluating fitness and observing agent behaviors, the following rule intera
    - *Rule:* Hit Dice and base HP scale with Racial Level, which is `combat_level + work_level`.
    - *Exploit:* Gaining Work XP via safe day-labour (Lumber Yard with an Axe to hit Lv 1, then Hunting) allows units to accumulate high HP before risking permadeath in combat.
 4. **Market Churning & Untouchable CTF (Reputation Deeds):**
-   - *Rule:* Reputation is earned through one-shot deeds ([factions.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/factions.py)).
+   - *Rule:* Reputation is earned through one-shot deeds ([factions.py](../../gartok/factions.py)).
    - *Exploit:* Buying and immediately reselling 5 cheap items fulfills "Diverse Portfolio"; deploying an unarmored, high-movement runner in CTF achieves the "Untouchable" deed (+1 rep with no kills).
 
 ---
@@ -75,8 +75,8 @@ At each map node or day transition:
 1. Evaluate potential orders (`Order.march`, `Order.work`, `Order.arena`, `Order.rest`).
 2. Score each option:
    $$\text{Utility}(\text{Option}) = f(\text{Game State}, \text{Genome})$$
-3. Pick the highest utility action and dispatch it via [orders.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/orders.py).
-4. Run combat automatically with [ai.py](file:///c:/Users/lucas/Documents/Projects/wargame/gartok/ai.py).
+3. Pick the highest utility action and dispatch it via [orders.py](../../gartok/orders.py).
+4. Run combat automatically with [ai.py](../../gartok/ai.py).
 
 ### C. The Fitness Function
 ```python
@@ -94,7 +94,7 @@ fitness = (
 ## 6. Implementation Roadmap
 
 ### Phase 1: Headless Campaign Runner (~1 - 2 hours)
-- Create `sim_campaign.py` (analogous to [sim_test.py](file:///c:/Users/lucas/Documents/Projects/wargame/sim_test.py)).
+- Create `sim_campaign.py` (analogous to [sim_test.py](../../sim_test.py)).
 - Initialize a `Guild`, assign basic orders, call `campaign.advance()`, and simulate 30 campaign days in a simple loop without GUI.
 
 ### Phase 2: Campaign Agent & Genotype Evaluator (~2 - 3 hours)

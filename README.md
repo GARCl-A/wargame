@@ -190,7 +190,10 @@ gartok/
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
   holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat)
-  group.py          Group = a physical subset of the guild: its own node + squad + order
+  group.py          Group = a physical subset of the guild: its own node + squad + order;
+                    fame buys group slots (`BASE_SLOTS`, `group_slots`)
+  cohesion.py       the daily sweep over overextended groups: the weakest member may walk
+                    (7-day notice, loot by alignment)
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
   missions.py       paid, deadlined jobs from a named giver (the Tanner, the Bankers'
@@ -246,9 +249,11 @@ gartok/
 main.py             entry point
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
-scripts/            balance_sim.py (race / occupation / combo rankings), economy_sim.py
-                    (net copper by race / occupation), unit_stats.py (creation-stat
-                    spread), crafting_cost.py
+scripts/            balance_sim.py (race / occupation / combo rankings; --level / --racial
+                    add random talent picks and a per-talent ranking), economy_sim.py
+                    (net copper by race / occupation / talent; modes bleed, production,
+                    work, arbitrage), ai_usage.py (which actions the combat AI takes, and
+                    what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py
 docs/plans/         design plans not yet built (campaign AI roadmap)
 ```
 
@@ -274,10 +279,12 @@ docs/plans/         design plans not yet built (campaign AI roadmap)
   that reacts to it (consumers ask `obj.kind` / `obj.is_weapon`).
 - **New battle scenario** (prebuilt map, deployment zones, lighting): a `Scenario`
   subclass with `build(battle)` in `scenario.py`; point a `world.Node` at it. A
-  non-elimination objective goes through `Scenario.win_check` (the seam exists;
-  nothing overrides it yet).
+  non-elimination objective goes through `Scenario.win_check` (capture-the-flag
+  `_FlagObjective` and `AncientRuinsScenario` already override it).
 - **New place on the map**: a `Node` in `world.NODES` + edges in `world.EDGES`
-  (cost in hours). `app` turns the node's `kind` into the activity.
+  (cost in hours). An order's `kind` becomes its screen through one line in
+  `app.App._ACTIVITY_OPENERS`; a forced fight's aftermath is one line in
+  `_FORCED_FIGHT_RESOLVERS`.
 - **New world system** (outside combat): the routine that passes time in
   `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the
   roster in `campaign.absorb_battle`.
