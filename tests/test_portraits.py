@@ -159,6 +159,49 @@ def test_centaur_portraits():
     assert p_cn.get_size() == (24, 24)
 
 
+def test_gnoll_portraits():
+    # 11 curated Gnoll portraits
+    for idx in range(11):
+        p = artwork.portrait("Gnoll", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    gn = unit.Unit("player", race=data.race_by_name("Gnoll"))
+    assert hasattr(gn, "portrait_id")
+    p_gn = artwork.portrait(gn.race["name"], gn.portrait_id, 24)
+    assert p_gn is not None
+    assert p_gn.get_size() == (24, 24)
+
+
+def test_grippli_portraits():
+    # 11 curated Grippli portraits
+    for idx in range(11):
+        p = artwork.portrait("Grippli", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    gr = unit.Unit("player", race=data.race_by_name("Grippli"))
+    assert hasattr(gr, "portrait_id")
+    p_gr = artwork.portrait(gr.race["name"], gr.portrait_id, 24)
+    assert p_gr is not None
+    assert p_gr.get_size() == (24, 24)
+
+
+def test_sprite_portraits():
+    # 11 curated Sprite portraits
+    for idx in range(11):
+        p = artwork.portrait("Sprite", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    sp = unit.Unit("player", race=data.race_by_name("Sprite"))
+    assert hasattr(sp, "portrait_id")
+    p_sp = artwork.portrait(sp.race["name"], sp.portrait_id, 24)
+    assert p_sp is not None
+    assert p_sp.get_size() == (24, 24)
+
+
+
 
 
 

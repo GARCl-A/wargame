@@ -19,7 +19,7 @@ Added circular engraved medallion portraits to the game, established the portrai
   - Backwards-compatibility alias added in `data.race_by_name("Leshy") -> Treefolk`.
 - **Directory Structure:**
   - `gartok/assets/portraits/<race_lower>/<id>.png`.
-  - Adding a new race is purely dropping clean PNG files into a folder matching the lower-cased race name (e.g. `treefolk/` with 10 medallions, `goblin/` with 7 curated medallions, `hobgoblin/` with 9 curated medallions, `orc/` with 12 complete medallions, `automaton/` with 10 curated medallions, `human/` with 12 complete medallions, `elf/` with 12 complete medallions, `kobold/` with 11 curated medallions, `lizardfolk/` with 9 curated medallions, `halfling/` with 12 complete medallions, `gnome/` with 12 complete medallions, `dwarf/` with 9 curated medallions, `centaur/` with 12 complete medallions).
+  - Adding a new race is purely dropping clean PNG files into a folder matching the lower-cased race name (e.g. `treefolk/` with 10 medallions, `goblin/` with 7 curated medallions, `hobgoblin/` with 9 curated medallions, `orc/` with 12 complete medallions, `automaton/` with 10 curated medallions, `human/` with 12 complete medallions, `elf/` with 12 complete medallions, `kobold/` with 11 curated medallions, `lizardfolk/` with 9 curated medallions, `halfling/` with 12 complete medallions, `gnome/` with 12 complete medallions, `dwarf/` with 9 curated medallions, `centaur/` with 12 complete medallions, `gnoll/` with 11 curated medallions, `grippli/` with 11 curated medallions, `sprite/` with 11 curated medallions).
 - **Loader & Fallback (`artwork.portrait`):**
   - Cached via `@functools.lru_cache(maxsize=256)`.
   - Automatically scales to `(px, px)` using `pygame.transform.smoothscale`.
