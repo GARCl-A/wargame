@@ -82,3 +82,39 @@ def fonts():
             "inkb":    pygame.font.SysFont(serif, T.F_BODY, bold=True),
         }
     return _font_cache
+
+
+_SANS = "segoeui,calibri,arial"
+_MONO = "consolas,dejavusansmono,couriernew"
+
+
+class LegacyFonts:
+    """The old font bundle (`fonts.body`, `fonts.num`, ...) that `app` still hands
+    to every screen's constructor. Only the screens still on `theme` read it;
+    built once after `pygame.init()`. New code uses `fonts()` above."""
+
+    def __init__(self):
+        S = lambda name, size, bold=False: pygame.font.SysFont(name, size, bold=bold)
+
+        # weighted sans: identity, headings, labels, running text
+        self.title    = S(_SANS, 28, bold=True)
+        self.heading  = S(_SANS, 16, bold=True)
+        self.label    = S(_SANS, 12, bold=True)
+        self.body     = S(_SANS, 15)
+        self.body_sm  = S(_SANS, 13)
+        self.body_bd  = S(_SANS, 15, bold=True)
+
+        # monospace: numbers, dice math, the log
+        self.num_lg   = S(_MONO, 28, bold=True)
+        self.num      = S(_MONO, 20, bold=True)
+        self.mono     = S(_MONO, 13)
+        self.mono_sm  = S(_MONO, 12)
+
+        # --- back-compat aliases used by sheet.py and older call sites --- #
+        self.font      = self.body
+        self.big       = self.title
+        self.small     = self.body_sm
+        self.tiny      = S(_SANS, 12)
+        self.kw        = self.label
+        self.card_name = S(_SANS, 18, bold=True)
+        self.card_val  = self.num

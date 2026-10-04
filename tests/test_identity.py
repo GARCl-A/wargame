@@ -1,7 +1,7 @@
 """Guild identity: name + banner (colour, emblem), picked at the draft.
 
 Purely cosmetic (see RULES.md and gartok/guild.py's "identity" paragraph) --
-`theme.set_player_color` recolours every unit token via `token_badge`.
+`banner.set_player_color` recolours every unit token via `token_badge`.
 """
 
 import os
@@ -10,8 +10,10 @@ import random
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 import pygame
 
-from gartok import artwork, theme
+from gartok import artwork
 from gartok.guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON, Guild
+from gartok.ui import banner, primitives
+from gartok.ui.tokens import fonts
 from tests.helpers import Unit
 
 
@@ -43,14 +45,13 @@ def test_set_player_color_changes_token_badges_default_fill():
     surf = pygame.display.set_mode((64, 64))
     try:
         u = Unit("player")
-        fonts = theme.Fonts()
-        theme.set_player_color((196, 90, 90))
+        banner.set_player_color((196, 90, 90))
         surf.fill((0, 0, 0))
-        theme.token_badge(surf, (32, 32), u, fonts, r=10)
+        primitives.token_badge(surf, fonts(), (32, 32), u, r=10)
         corner = surf.get_at((32 - 9, 32))[:3]   # edge of the disc, clear of any glyph
         assert corner != (94, 156, 214)          # not the original default
     finally:
-        theme.set_player_color((94, 156, 214))     # don't leak into other tests
+        banner.set_player_color(banner.DEFAULT_COLOR)     # don't leak into other tests
 
 
 def test_leadership_survives_a_save_round_trip_with_identity():
@@ -105,7 +106,7 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
     chosen_color = ds.color_rects[2][1]
     ds._click(ds.color_rects[2][0].center)
     assert ds.banner_color == chosen_color
-    assert theme.PLAYER_C == chosen_color        # live preview actually applied
+    assert banner.player_color() == chosen_color        # live preview actually applied
 
     chosen_icon = ds.icon_rects[3][1]
     ds._click(ds.icon_rects[3][0].center)
@@ -122,4 +123,4 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
     assert result["name"] == "Sable Wolves"
     assert result["banner_color"] == chosen_color
     assert result["banner_icon"] == chosen_icon
-    theme.set_player_color((94, 156, 214))          # don't leak into other tests
+    banner.set_player_color(banner.DEFAULT_COLOR)          # don't leak into other tests

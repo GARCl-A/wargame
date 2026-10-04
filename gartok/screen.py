@@ -13,7 +13,9 @@ whatever `self.scene` is, and sets `scene.mouse` before each frame.
 
 import pygame
 
-from .theme import MARGIN, SP2
+from .ui.tokens import T
+
+MARGIN = T.S * 2
 
 
 class Screen:
@@ -63,12 +65,12 @@ class Screen:
         """The shape most footer-only screens share: bottom-left, growing
         upward, clear of a footer row `offset` px tall (each screen's own
         `_draw_footer` already fixes that number -- pass it here instead of
-        re-deriving the rect by hand). `margin` defaults to the theme's own
+        re-deriving the rect by hand). `margin` defaults to the module's
         `MARGIN`; screens with a width-dependent pad (`guild_screen.py`'s
         `pad = MARGIN if w < 1500 else SP5` pattern) pass their own."""
         W, H = size
         m = margin if margin is not None else MARGIN
-        return (m, H - offset - SP2, min(w, W - 2 * m), "up")
+        return (m, H - offset - T.S, min(w, W - 2 * m), "up")
 
     def _click(self, pos):
         """Left click at canvas-space `pos`. Screens rebuild their hit lists in

@@ -9,7 +9,7 @@ import random
 
 import pygame
 
-from .theme import DANGER, INK_FAINT, OK, WARN
+from .ui.board_style import DANGER, INK_FAINT, OK, WARN
 
 # `battle.fx` hands back a semantic kind, not a colour -- combat state stays
 # presentation-agnostic, this is the one place that maps kind -> colour.

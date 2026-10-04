@@ -7,7 +7,8 @@ glow. Read this before adding or changing anything that draws.
 `gartok/theme.py` is the legacy look. Don't add new usage; when you touch a
 screen non-trivially, move it onto this kit. `tests/test_theme_budget.py` lists
 the modules still on `theme` and fails on a new one; when you finish moving a
-module, take it off that list. (`set_pointer` lives in `primitives.py` now.)
+module, take it off that list. (`set_pointer` lives in `primitives.py` now; the old `Fonts` bundle is
+`tokens.LegacyFonts`, still handed to every screen's constructor.)
 
 ## Rules
 
@@ -43,6 +44,8 @@ module, take it off that list. (`set_pointer` lives in `primitives.py` now.)
 |---|---|
 | `tokens.py` | `T` palette / spacing / font sizes, `fonts()`, `mix()` |
 | `primitives.py` | `panel`, `modal_card`, `draw_card`, `draw_button`, `text` / `caps` / `wrap` / `ellipsize`, `tabs`, `scrollbar`, `draw_tooltip`, `token_badge`, `section`, `header`, `footer_bar` |
+| `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
+| `board_style.py` | the battle board's palette, `battle_layout`, `BoardView` (pan/zoom camera) |
 | `camera.py` | `MapCamera`: pan / zoom around a screen-space centre |
 | `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns |
 | `command_bar.py` | the COMMAND zone: clock, alerts, headline stats |

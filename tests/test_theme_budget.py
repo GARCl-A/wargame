@@ -15,16 +15,13 @@ import pytest
 
 PKG = Path(__file__).resolve().parent.parent / "gartok"
 
-# Why each still imports theme -- migrate the "screen" ones first:
+# Why each still imports theme -- all five draw their chrome (panel(), text(),
+# the surface ramp, the SP spacing scale) with the legacy helpers; the board's
+# palette/camera (`ui/board_style.py`), the banner colour (`ui/banner.py`) and
+# the font bundle (`ui/tokens.LegacyFonts`) are already off theme.
 STILL_ON_THEME = {
-    # the board renderer's palette (floor, walls, highlights, token colours):
-    # no `ui/` equivalent yet -- needs a board-palette home before theme can go
-    "battle_screen.py", "battle_fx.py", "lighting.py",
-    # the player/banner colour is runtime state `theme.set_player_color` mutates
-    "app.py", "draft_screen.py", "ui/primitives.py", "ui/combat_card.py",
-    # screens/panels still drawn with theme's spacing ramp, panel() and text()
-    "screen.py", "sheet_panel.py", "tutorial_card.py",
-    "char_editor_screen.py", "map_editor_screen.py",
+    "battle_screen.py", "char_editor_screen.py", "map_editor_screen.py",
+    "sheet_panel.py", "tutorial_card.py",
 }
 
 

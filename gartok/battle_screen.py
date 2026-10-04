@@ -17,27 +17,12 @@ from .screen import Screen
 from .theme import (
     ACCENT,
     ACCENT_INK,
-    ATK_HL,
     BG,
-    DANGER,
-    DEMO_HL,
-    ENEMY_C,
-    FLOOR_A,
-    FLOOR_B,
     INFO,
     INK,
     INK_DIM,
-    INK_FAINT,
-    LIGHT_C,
     LINE,
     LINE_SOFT,
-    MOVE_HL,
-    NEUTRAL_C,
-    OBJ_C,
-    OK,
-    PATH_DONE,
-    PATH_PREV,
-    PLAYER_C,
     RADIUS,
     SP1,
     SP2,
@@ -47,15 +32,7 @@ from .theme import (
     SURFACE_2,
     SURFACE_3,
     SURFACE_4,
-    THROW_HL,
-    TORCH_C,
-    WALL_FILL,
-    WALL_HI,
-    WALL_LO,
-    WARN,
-    BoardView,
     Stack,
-    battle_layout,
     panel,
     pips,
     text,
@@ -63,6 +40,31 @@ from .theme import (
     wrap_lines,
 )
 from .ui import primitives as ui_primitives
+from .ui.board_style import (
+    ATK_HL,
+    DANGER,
+    DEMO_HL,
+    ENEMY_C,
+    FLOOR_A,
+    FLOOR_B,
+    INK_FAINT,
+    LIGHT_C,
+    MOVE_HL,
+    NEUTRAL_C,
+    OBJ_C,
+    OK,
+    PATH_DONE,
+    PATH_PREV,
+    PLAYER_C,
+    THROW_HL,
+    TORCH_C,
+    WALL_FILL,
+    WALL_HI,
+    WALL_LO,
+    WARN,
+    BoardView,
+    battle_layout,
+)
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import sheet_height, unit_to_ch
 from .ui.tokens import fonts as ui_fonts
@@ -76,8 +78,8 @@ DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "deb
 
 class BattleScreen(Screen):
     # Native: draws straight to the real window and lays itself out from its
-    # size each frame (theme.battle_layout). The board sits in a pan/zoom camera
-    # (theme.BoardView), so a hand-authored map of any size is playable.
+    # size each frame (board_style.battle_layout). The board sits in a pan/zoom camera
+    # (board_style.BoardView), so a hand-authored map of any size is playable.
     native = True
 
     def __init__(self, fonts, battle, on_battle_end):

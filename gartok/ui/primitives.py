@@ -9,7 +9,7 @@ import pygame
 from pygame import gfxdraw
 
 from .. import artwork
-from .. import theme as _theme
+from . import banner
 from .tokens import T, mix
 
 
@@ -250,7 +250,7 @@ def token_badge(surf, F, center, unit, *, color=None, r=14):
     if port is not None:
         surf.blit(port, port.get_rect(center=center))
         return
-    smooth_circle(surf, color or _theme.PLAYER_C, center, r)
+    smooth_circle(surf, color or banner.player_color(), center, r)
     sil = artwork.race_icon(race["name"], round(r * 1.6), TOKEN_INK) if race else None
     if sil is not None:
         surf.blit(sil, sil.get_rect(center=center))

@@ -26,7 +26,7 @@ from .archetypes import (
 )
 from .combatant import Combatant
 from .screen import Screen
-from .theme import BANNER_COLORS, set_player_color
+from .ui.banner import BANNER_COLORS, set_player_color
 from .ui.primitives import (
     TOKEN_INK,
     caps,

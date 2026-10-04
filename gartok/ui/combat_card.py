@@ -1,7 +1,7 @@
 import pygame
 
 from .. import artwork
-from .. import theme as _theme
+from . import banner
 from .primitives import TOKEN_INK, caps, text
 from .tokens import T, fonts, mix
 
@@ -35,7 +35,7 @@ def draw_combat_card(s, rect, ch, action="PICK", hovered=False, selected=False, 
         s.blit(port, port.get_rect(center=tok_c))
     else:
         # Token -- guild colour so the dark silhouette is legible
-        tok_fill = _theme.PLAYER_C if not disabled else T.STEEL_LINE
+        tok_fill = banner.player_color() if not disabled else T.STEEL_LINE
         pygame.draw.circle(s, tok_fill, tok_c, tok_r)
         pygame.draw.circle(s, border, tok_c, tok_r, 1)
         sil = artwork.race_icon(ch.get("race", ""), round(tok_r * 1.6), TOKEN_INK)
@@ -114,7 +114,7 @@ def draw_party_row(s, rect, ch, state=None, hovered=False):
         s.blit(port, port.get_rect(center=tok_c))
     else:
         # Token -- guild colour so the dark silhouette is legible
-        pygame.draw.circle(s, _theme.PLAYER_C, tok_c, tok_r)
+        pygame.draw.circle(s, banner.player_color(), tok_c, tok_r)
         pygame.draw.circle(s, border, tok_c, tok_r, 1)
         sil = artwork.race_icon(ch.get("race", ""), round(tok_r * 1.6), TOKEN_INK)
         if sil is not None:

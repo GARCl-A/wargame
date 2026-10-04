@@ -76,7 +76,7 @@ def test_daylight_fog_dims_cells_outside_los():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.lighting import LightRenderer
-    from gartok.theme import BoardView
+    from gartok.ui.board_style import BoardView
     pygame.init()
     surf = pygame.display.set_mode((640, 480))
 

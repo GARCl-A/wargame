@@ -10,7 +10,7 @@ import random
 import pygame
 
 from . import vision
-from .theme import NIGHT
+from .ui.board_style import NIGHT
 
 
 class LightRenderer:

@@ -31,8 +31,8 @@ battle. Permadeath: a member who does not survive is dropped; a full wipe ends
 the campaign.
 
 Every scene is `native`: it draws straight to the real (resizable) window and
-lays itself out from `screen.get_size()`. `WIN_W x WIN_H` (theme.py) is just the
-opening window size and the battle screen's fixed board canvas.
+lays itself out from `screen.get_size()`. `START_SIZE` is just the
+opening window size.
 """
 
 import pygame
@@ -73,20 +73,23 @@ from .scenario import Scenario
 from .squad_screen import SquadScreen
 from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
-from .theme import BG, WIN_H, WIN_W, Fonts, set_player_color
 from .tutorial import TutorialState
+from .ui.banner import set_player_color
+from .ui.tokens import LegacyFonts, T
 from .ui.tokens import fonts as ui_fonts
 from .wilds_claim_screen import WildsClaimScreen
+
+START_SIZE = (1212, 832)
 
 
 class App:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("GARTOK Tactical")
-        self.window = pygame.display.set_mode((WIN_W, WIN_H), pygame.RESIZABLE | pygame.WINDOWMAXIMIZED)
+        self.window = pygame.display.set_mode(START_SIZE, pygame.RESIZABLE | pygame.WINDOWMAXIMIZED)
         self.clock = pygame.time.Clock()
-        self.fonts = Fonts()
-        self.ui_fonts = ui_fonts()   # gartok/ui screens draw from this, never from Fonts()
+        self.fonts = LegacyFonts()
+        self.ui_fonts = ui_fonts()   # gartok/ui screens draw from this, never from LegacyFonts()
 
         self.slot = None
         self.guild = None
@@ -918,7 +921,7 @@ class App:
                     self.scene.handle_event(event)
 
             self.scene.update(dt)
-            self.window.fill(BG)
+            self.window.fill(T.TABLE)
             self.scene.draw(self.window)          # every scene draws at real window size
             self._tutorial_card_rect, self._tutorial_badge_rect = tutorial_card.draw(
                 self.window, self.fonts, self.scene, self.tutorial)
