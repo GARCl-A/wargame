@@ -4,8 +4,16 @@ import pygame
 
 from .. import factions, missions
 from ..screen import Screen
-from ..theme import set_pointer
-from .primitives import caps, contained, draw_button, hline, modal_card, text, wrap
+from .primitives import (
+    caps,
+    contained,
+    draw_button,
+    hline,
+    modal_card,
+    set_pointer,
+    text,
+    wrap,
+)
 from .tokens import T, mix
 from .tokens import fonts as ui_fonts
 

@@ -31,10 +31,10 @@ from .theme import (
     SURFACE_3,
     blit_block,
     panel,
-    set_pointer,
     text,
     wrap_lines,
 )
+from .ui.primitives import set_pointer
 
 CARD_W = 340
 BADGE_R = 10

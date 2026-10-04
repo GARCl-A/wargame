@@ -15,7 +15,6 @@ from . import artwork, factions, magic, progression, talents, world
 from .combatant import Combatant
 from .group import BASE_CAPACITY
 from .screen import Screen
-from .theme import set_pointer
 from .ui import guild_roster, member_panel, reputation_panel
 from .ui.primitives import (
     contained,
@@ -23,6 +22,7 @@ from .ui.primitives import (
     draw_tooltip,
     panel,
     scrollbar,
+    set_pointer,
     smooth_circle,
     tabs,
     text,
@@ -560,8 +560,8 @@ class GuildScreen(Screen):
         button("back", "BACK TO MAP", T.S * 24, primary=True)
         if self.on_manage:
             button("manage", "MANAGE GEAR", T.S * 20, tip="Equip and swap gear between members")
-        has_chest = self.guild.bank_capacity > 0 and self.on_bank is not None
+        has_chest = self.guild.bank.open and self.on_bank is not None
         button("vault", "VIEW CITY VAULT", T.S * 22, enabled=has_chest,
-               tip=(f"See what the strongbox holds ({self.guild.bank_load:g}/{self.guild.bank_capacity:g} kg). "
+               tip=(f"See what the strongbox holds ({self.guild.bank.load:g}/{self.guild.bank.capacity:g} kg). "
                     "Moving gear needs a group at the bank." if has_chest
                     else "No strongbox yet -- rent one at the bank in the City."))

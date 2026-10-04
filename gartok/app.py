@@ -386,7 +386,7 @@ class App:
         """`RepossessionScreen` pre-empts the normal property screen once too
         many tax cycles are missed -- same shape as `_open_arena` checking
         `arena.defense_due` before the normal squad picker."""
-        if self.guild.property_city_repossession_due:
+        if self.guild.house.repossession_due:
             self.scene = RepossessionScreen(self.fonts, self.guild,
                                             on_return=self._resolve_repossession_return,
                                             on_squat=self._resolve_repossession_squat)
@@ -401,7 +401,7 @@ class App:
         self._after_activity()
 
     def _resolve_repossession_squat(self):
-        self.guild.squat_city_property()
+        self.guild.house.squat()
         self._map_notices.append("The guild keeps the house without paying -- the guard "
                                  "won't like that.")
         self._after_activity()

@@ -14,8 +14,7 @@ import pygame
 
 from . import economy, items, orders
 from .screen import Screen
-from .theme import set_pointer
-from .ui.primitives import caps, draw_button, header, hline, text
+from .ui.primitives import caps, draw_button, header, hline, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

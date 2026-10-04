@@ -13,6 +13,16 @@ from .. import theme as _theme
 from .tokens import T, mix
 
 
+def set_pointer(hot):
+    """Hand cursor while `hot` (hovering something clickable), arrow otherwise.
+    A no-op if the platform/driver can't make system cursors (e.g. headless)."""
+    try:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND if hot
+                                else pygame.SYSTEM_CURSOR_ARROW)
+    except pygame.error:
+        pass
+
+
 @contextlib.contextmanager
 def contained(surf, rect):
     """Clips drawing to `rect` for the scope of the `with` block, then

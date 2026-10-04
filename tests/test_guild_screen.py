@@ -39,7 +39,7 @@ from unittest.mock import MagicMock
 
 from gartok.guild import Guild
 from gartok.guild_screen import GuildScreen
-from gartok.unit import Unit
+from gartok.unit import Unit, pack_from_raw
 
 
 def test_guild_screen_initialization_and_smart_pick():
@@ -189,7 +189,7 @@ def test_guild_screen_vault_button_is_view_only_and_needs_a_chest():
     _draw(gs)
     assert not any(k == "vault" for k, _ in gs.buttons)
 
-    g.bank_capacity = 20
+    g.bank.capacity = 20
     _draw(gs)
     gs.member = next(u for u in g.roster if g.group_of(u).node != "city")   # works from anywhere
     _draw(gs)
@@ -229,8 +229,8 @@ def test_guild_screen_renders_at_small_window_and_scrolls_detail():
 def test_bank_view_screen_lists_stash_without_any_move_button():
     from gartok.bank_view_screen import BankViewScreen
     g, *_ = _two_band_guild()
-    g.bank_capacity = 30
-    g.bank_items = [("Rope", 2), ("Torch", 1)]
+    g.bank.capacity = 30
+    g.bank.items = pack_from_raw([("Rope", 2), ("Torch", 1)])
     done = []
     scr = BankViewScreen(MagicMock(), g, on_done=lambda: done.append(1))
     pygame.font.init()

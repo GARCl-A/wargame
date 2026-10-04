@@ -60,12 +60,11 @@ import pygame
 from . import arena, artwork, autowin, campaign, economy, orders, world
 from .scenario import Scenario
 from .screen import Screen
-from .theme import set_pointer
 from .ui.camera import MapCamera
 from .ui.command_bar import draw_command
 from .ui.inspector_panel import draw_inspector, role_for
 from .ui.map_panel import draw_map, node_hit_rect
-from .ui.primitives import draw_button
+from .ui.primitives import draw_button, set_pointer
 from .ui.roster_panel import draw_roster
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -583,10 +582,10 @@ class MapScreen(Screen):
                 blocks.append({"type": "text", "text": note, "color": T.TX_FAINT})
         elif here.bank:
             blocks.append({"type": "button", "key": "bank", "label": "VISIT THE BANK"})
-            if self.guild.bank_unlocked:
+            if self.guild.bank.open:
                 blocks.append({"type": "text",
-                              "text": f"strongbox: {self.guild.bank_load:g} / "
-                                      f"{self.guild.bank_capacity} kg",
+                              "text": f"strongbox: {self.guild.bank.load:g} / "
+                                      f"{self.guild.bank.capacity} kg",
                               "color": T.TX_FAINT})
         else:
             has_other_services = any([
@@ -616,18 +615,18 @@ class MapScreen(Screen):
             blocks.append({"type": "button", "key": "library", "label": "VISIT THE LIBRARY",
                           "gap_before": T.S * 2})
 
-        has_property_business = (self.guild.property_city_unlocked or
-                                 self.guild.property_city_squatting or
+        has_property_business = (self.guild.house.owned or
+                                 self.guild.house.squatting or
                                  self.guild.bankers_debt > 0)
         if here.city_property and has_property_business:
             blocks.append({"type": "button", "key": "property", "label": "VISIT THE PROPERTY",
                           "gap_before": T.S * 2})
-            if self.guild.property_city_repossession_due:
+            if self.guild.house.repossession_due:
                 note, col = "the Bankers want the house back, or the tax paid", T.BLOOD
-            elif self.guild.property_city_squatting:
+            elif self.guild.house.squatting:
                 note, col = "squatting -- the guard can still come to clear it out", T.BRASS
-            elif self.guild.property_city_unlocked:
-                note = (f"house: {self.guild.property_city_load:g} / "
+            elif self.guild.house.owned:
+                note = (f"house: {self.guild.house.stash.load:g} / "
                        f"{economy.CITY_PROPERTY_CAPACITY} kg")
                 col = T.TX_FAINT
             else:

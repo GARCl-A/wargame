@@ -59,9 +59,9 @@ from .theme import (
     ellipsize,
     panel,
     section,
-    set_pointer,
     text,
 )
+from .ui.primitives import set_pointer
 
 _MAX_NAME = 28
 

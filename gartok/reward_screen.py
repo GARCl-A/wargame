@@ -11,8 +11,7 @@ import pygame
 from . import factions
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
-from .theme import set_pointer
-from .ui.primitives import caps, draw_button, header, panel, text
+from .ui.primitives import caps, draw_button, header, panel, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

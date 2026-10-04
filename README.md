@@ -186,7 +186,8 @@ gartok/
   # world + campaign
   world.py          the map graph: nodes, edges (hours), route (Dijkstra), Bout (arena offers)
   clock.py          the campaign clock (seconds), day/night
-  guild.py          the guild = shared state (bank, reputation, taverna pool) + every group
+  guild.py          the guild = shared state (bank, house, reputation, taverna pool) + every group
+  holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat)
   group.py          Group = a physical subset of the guild: its own node + squad + order
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
@@ -236,6 +237,7 @@ gartok/
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions
   dragselect.py     shared press/drag/drop plumbing for the item screens
   packbox.py        shared drag bookkeeping for the gear and group screens
+  stash_screen.py   shared body of the bank / city-property screens (move gear party <-> Stash)
   sheet_panel.py    the full drawn character sheet (guild-screen modal)
   tutorial_card.py  draws the current screen's tutorial card + its `?` badge
 

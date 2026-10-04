@@ -30,10 +30,9 @@ from . import chest, data, items, magic, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
-from .theme import set_pointer
 from .ui import loadout_panel
 from .ui.inspector_panel import role_for
-from .ui.primitives import draw_button, header, text
+from .ui.primitives import draw_button, header, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

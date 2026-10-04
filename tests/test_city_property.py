@@ -65,9 +65,9 @@ def test_buying_debits_the_pooled_purse_and_starts_the_tax_clock():
     s = _screen(guild, [p])
 
     s._run_service("buy")
-    assert guild.property_city_unlocked
+    assert guild.house.owned
     assert s.purse == 20 and p.gold == economy.CITY_PROPERTY_PRICE + 20   # not settled until leaving
-    assert guild.property_city_tax_due_day == guild.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
+    assert guild.house.tax_due_day == guild.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
 
     s._leave()
     assert p.gold == 20
@@ -81,7 +81,7 @@ def test_buying_is_refused_below_the_reputation_gate():
     s = _screen(guild, [p])
 
     s._run_service("buy")
-    assert not guild.property_city_unlocked and s.purse == economy.CITY_PROPERTY_PRICE
+    assert not guild.house.owned and s.purse == economy.CITY_PROPERTY_PRICE
 
 
 def test_buying_is_refused_when_the_party_is_short():
@@ -90,7 +90,7 @@ def test_buying_is_refused_when_the_party_is_short():
     s = _screen(guild, [p])
 
     s._run_service("buy")
-    assert not guild.property_city_unlocked and "copper" in s.notice
+    assert not guild.house.owned and "copper" in s.notice
 
 
 def test_buying_is_refused_while_bankers_debt_is_outstanding():
@@ -100,7 +100,7 @@ def test_buying_is_refused_while_bankers_debt_is_outstanding():
     s = _screen(guild, [p])
 
     s._run_service("buy")
-    assert not guild.property_city_unlocked and s.purse == economy.CITY_PROPERTY_PRICE + 20
+    assert not guild.house.owned and s.purse == economy.CITY_PROPERTY_PRICE + 20
 
 
 def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
@@ -111,12 +111,12 @@ def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
     s = _screen(guild, [p])
 
     s._deposit([(p, 0)])
-    assert guild.property_city_items == [("Chainmail", 1)] and p._base_inventory == []
+    assert guild.house.stash.items == [("Chainmail", 1)] and p._base_inventory == []
 
     p.carry_max = 0.5
     s.selected = [("house", 0)]
     s._give_many(p, "pack")
-    assert guild.property_city_items == [("Chainmail", 1)] and "fit" in s.notice
+    assert guild.house.stash.items == [("Chainmail", 1)] and "fit" in s.notice
 
 
 # --------------------------------------------------------------------------- #
@@ -129,13 +129,13 @@ def test_the_tax_is_charged_automatically_when_it_falls_due():
     p.gold = 1000
     guild = Guild([p])
     guild.buy_city_property()
-    due = guild.property_city_tax_due_day
+    due = guild.house.tax_due_day
 
     guild.pass_time((due - guild.clock.day) * 24)
     assert guild.clock.day >= due
     assert p.gold == 1000 - economy.CITY_PROPERTY_TAX
-    assert guild.property_city_missed_payments == 0
-    assert guild.property_city_tax_due_day == due + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
+    assert guild.house.missed_payments == 0
+    assert guild.house.tax_due_day == due + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
 
 
 def test_a_missed_cycle_is_tallied_instead_of_going_into_debt():
@@ -144,11 +144,11 @@ def test_a_missed_cycle_is_tallied_instead_of_going_into_debt():
     p.gold = 0
     guild = Guild([p])
     guild.buy_city_property()
-    due = guild.property_city_tax_due_day
+    due = guild.house.tax_due_day
 
     guild.pass_time((due - guild.clock.day) * 24)
-    assert p.gold == 0 and guild.property_city_missed_payments == 1
-    assert not guild.property_city_repossession_due
+    assert p.gold == 0 and guild.house.missed_payments == 1
+    assert not guild.house.repossession_due
 
 
 def test_enough_missed_cycles_trip_the_repossession_offer():
@@ -159,10 +159,10 @@ def test_enough_missed_cycles_trip_the_repossession_offer():
     guild.buy_city_property()
 
     for _ in range(economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT):
-        due = guild.property_city_tax_due_day
+        due = guild.house.tax_due_day
         guild.pass_time((due - guild.clock.day) * 24)
-    assert guild.property_city_missed_payments == economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
-    assert guild.property_city_repossession_due
+    assert guild.house.missed_payments == economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    assert guild.house.repossession_due
 
 
 # --------------------------------------------------------------------------- #
@@ -174,13 +174,13 @@ def test_returning_the_property_banks_debt_and_blocks_bankers_services():
     p = Unit("player")
     guild = Guild([p])
     guild.buy_city_property()
-    guild.property_city_missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
 
     guild.repossess_city_property()
-    assert not guild.property_city_unlocked
+    assert not guild.house.owned
     assert guild.bankers_debt == economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT * economy.CITY_PROPERTY_TAX
     assert guild.bankers_services_blocked
-    assert guild.property_city_debt_since == guild.clock.day
+    assert guild.bankers_debt_since == guild.clock.day
 
 
 def test_paying_off_the_debt_unblocks_bankers_services():
@@ -189,12 +189,12 @@ def test_paying_off_the_debt_unblocks_bankers_services():
     p.gold = 1000
     guild = Guild([p])
     guild.bankers_debt = 120
-    guild.property_city_debt_since = guild.clock.day
+    guild.bankers_debt_since = guild.clock.day
     s = _screen(guild, [p])
 
     s._run_service("pay_debt")
     assert guild.bankers_debt == 0 and not guild.bankers_services_blocked
-    assert guild.property_city_debt_since is None
+    assert guild.bankers_debt_since is None
     assert s.purse == 1000 - 120
     s._leave()
     assert p.gold == 1000 - 120
@@ -217,11 +217,11 @@ def test_squatting_keeps_the_property_with_no_more_tax_due():
     p = Unit("player")
     guild = Guild([p])
     guild.buy_city_property()
-    guild.property_city_missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
 
-    guild.squat_city_property()
-    assert guild.property_city_unlocked and guild.property_city_squatting
-    assert guild.property_city_tax_due_day is None
+    guild.house.squat()
+    assert guild.house.owned and guild.house.squatting
+    assert guild.house.tax_due_day is None
     assert guild.bankers_debt == 0
 
 
@@ -230,7 +230,7 @@ def test_ignored_debt_eventually_reaches_the_guard():
     p = Unit("player")
     guild = Guild([p], leader=p)
     guild.bankers_debt = 40
-    guild.property_city_debt_since = guild.clock.day
+    guild.bankers_debt_since = guild.clock.day
 
     guild.pass_time(economy.CITY_PROPERTY_DEBT_GRACE_DAYS * 24)
     assert p.crime == 1
@@ -248,14 +248,14 @@ def test_app_opens_repossession_screen_once_it_is_due():
     g = Group([p], node="city")
     guild = Guild(None, groups=[g])
     guild.buy_city_property()
-    guild.property_city_missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
     app = _app(guild)
 
     app._open_city_property(g, world.node("city"))
     assert isinstance(app.scene, RepossessionScreen)
 
     app.scene.on_return()
-    assert not guild.property_city_unlocked and guild.bankers_debt > 0
+    assert not guild.house.owned and guild.bankers_debt > 0
     assert isinstance(app.scene, CityPropertyScreen) or app._pending == []
 
 
@@ -288,7 +288,7 @@ def test_squatting_can_pause_an_arrival_on_an_eviction_raid():
         g = Group([p], node="market")
         guild = Guild(None, groups=[g])
         guild.buy_city_property()
-        guild.squat_city_property()
+        guild.house.squat()
         g.order = orders.travel(g, "city")
         result = campaign.advance(guild)
     finally:
@@ -320,17 +320,17 @@ def test_winning_the_raid_keeps_the_squat_losing_ends_it_for_good():
     g = Group([p], node="city")
     guild = Guild(None, groups=[g])
     guild.buy_city_property()
-    guild.squat_city_property()
+    guild.house.squat()
     order = orders.Order("eviction", pack=(Unit("enemy"),))
 
     won = campaign.BattleOutcome(won=True, survivors=[p], fallen=[])
     events = campaign.resolve_property_raid(guild, g, order, won)
-    assert guild.property_city_squatting and guild.property_city_unlocked
+    assert guild.house.squatting and guild.house.owned
     assert any("drive off" in e for e in events)
 
     lost = campaign.BattleOutcome(won=False, survivors=[p], fallen=[])
     events = campaign.resolve_property_raid(guild, g, order, lost)
-    assert not guild.property_city_squatting and not guild.property_city_unlocked
+    assert not guild.house.squatting and not guild.house.owned
     assert any("gone for good" in e for e in events)
 
 
@@ -357,13 +357,13 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
     s.draw(surf)                                      # buy-offer state
     buy = next(r for r, key in s._service_hits if key == "buy")
     s._drop(buy.center, False, None)
-    assert guild.property_city_unlocked
+    assert guild.house.owned
 
     s.draw(surf)                                      # now the storage view
     s.selected = [(p, 0)]
     house_zone = next(r for r, owner, zone in s.zones if zone == "house")
     s._drop(house_zone.center, True, (p, 0))
-    assert guild.property_city_items == [("Rope", 1)]
+    assert guild.house.stash.items == [("Rope", 1)]
 
 
 def test_drawing_the_repossession_screen_and_choosing_squat():
@@ -379,7 +379,7 @@ def test_drawing_the_repossession_screen_and_choosing_squat():
     p = Unit("player")
     guild = Guild([p])
     guild.buy_city_property()
-    guild.property_city_missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
+    guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
 
     chosen = []
     s = RepossessionScreen(Fonts(), guild, on_return=lambda: chosen.append("return"),
@@ -400,7 +400,7 @@ def test_app_runs_the_raid_battle_and_resolves_it_through_battle_end():
         g = Group([p], node="market")
         guild = Guild(None, groups=[g])
         guild.buy_city_property()
-        guild.squat_city_property()
+        guild.house.squat()
         app = _app(guild)
         g.order = orders.travel(g, "city")
         app._advance()
@@ -417,7 +417,7 @@ def test_app_runs_the_raid_battle_and_resolves_it_through_battle_end():
     app._battle_node = world.node("city")
     app._battle_end(battle)
 
-    assert app._pause_order is None and guild.property_city_squatting
+    assert app._pause_order is None and guild.house.squatting
     assert g.order.kind == "idle"
 
 
@@ -446,7 +446,7 @@ def test_bankers_debt_blocks_buying_the_property():
     s.mouse = (0, 0)
     s.draw(surf)
 
-    assert not guild.property_city_unlocked
+    assert not guild.house.owned
     buy_hit = next((key for r, key in s._service_hits if key == "buy_property"), None)
     assert buy_hit is None
 

@@ -51,7 +51,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `world.py` | Node graph, edges in hours, route Dijkstra |
 | `orders.py` | Order dataclass; AUTO / INTERACTIVE / garrison / forced kinds |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
-| `guild.py` | Guild state: groups, roster, clock, properties, daily upkeep |
+| `guild.py` | Guild state: groups, roster, clock, daily upkeep; owns `bank` + `house` |
+| `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat) |
 | `group.py` | Group = physical subset of the guild (members, node, order) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
 | `persist.py` | JSON save/load, SAVE_VERSION, tolerates missing keys |
@@ -87,7 +88,10 @@ crafting and mission board in tabs. The full module list is in `README.md`.
 - **`theme.py` is legacy** — the app's original bespoke ramp (`widgets.py` has
   been fully eliminated). Don't add new usage. When a screen gets touched
   non-trivially, migrate it onto `gartok/ui/` instead of extending the old system.
-  All screens now use `gartok/ui/` for buttons, layouts, and modals.
+  Buttons, layouts and modals are on `gartok/ui/`; what still imports `theme` is
+  the board renderer's palette, the banner-colour state, and a handful of
+  screens/panels. `tests/test_theme_budget.py` lists them (`STILL_ON_THEME`) and
+  fails on a new importer — and on an entry that migrated, so take it off the list.
 - A `ui/` component never reads module globals or hardcodes screen
   coordinates/fixed pixel widths for panel sizing — it takes its rect/data as
   parameters and sizes/lays out relative to those (proportional-with-clamp

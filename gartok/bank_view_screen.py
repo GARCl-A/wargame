@@ -5,7 +5,6 @@ import pygame
 
 from . import items
 from .screen import Screen
-from .theme import set_pointer
 from .ui.primitives import (
     caps,
     contained,
@@ -15,6 +14,7 @@ from .ui.primitives import (
     hline,
     panel,
     scrollbar,
+    set_pointer,
     text,
 )
 from .ui.tokens import T
@@ -73,13 +73,13 @@ class BankViewScreen(Screen):
              (m, m + 30), T.TX_FAINT)
 
         avail = H - (m + T.S * 7) - T.S * 9
-        rows_h = max(1, len(self.guild.bank_items)) * ROW_H
+        rows_h = max(1, len(self.guild.bank.items)) * ROW_H
         card = pygame.Rect(0, m + T.S * 7, min(CARD_MAX_W, W - 2 * m), min(avail, T.S * 11 + rows_h))
         card.centerx = W // 2
         panel(screen, card)
 
-        stash = list(self.guild.bank_items)
-        load, cap = self.guild.bank_load, self.guild.bank_capacity
+        stash = list(self.guild.bank.items)
+        load, cap = self.guild.bank.load, self.guild.bank.capacity
         x, w = card.x + T.S * 2, card.w - T.S * 4
         y = card.y + T.S * 2
         caps(screen, F["microb"], f"Stored {load:g} / {cap:g} kg", (x, y), T.TX)

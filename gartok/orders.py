@@ -30,7 +30,7 @@ and none is in `INTERACTIVE_KINDS` -- `campaign.advance` creates one itself,
 on top of whatever the group was actually doing, the moment it catches
 someone at a jurisdiction node (`justice.py`, "guard"), a pack finds it at an
 unsafe one (`world.Node.unsafe`, "ambush"), the guard comes to clear a
-squatted City property (`guild.property_city_squatting`, "eviction"), a
+squatted City property (`guild.house.squatting`, "eviction"), a
 raider band tests a Wilds claim mid-`"SUSTAINING"`
 (`guild.wilds_claim_stage`, "wilds_raid"), the same once `"ESTABLISHED"`
 against a garrison ("wilds_seizure" -- Sistema 4), or a group arrives at a

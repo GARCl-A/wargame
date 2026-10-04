@@ -48,10 +48,10 @@ from .theme import (
     format_tooltip,
     panel,
     section,
-    set_pointer,
     text,
 )
 from .ui.primitives import contained as ui_contained
+from .ui.primitives import set_pointer
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import unit_to_ch
 from .ui.tokens import fonts as ui_fonts

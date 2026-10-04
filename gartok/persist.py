@@ -23,6 +23,7 @@ from . import items, missions
 from .clock import Clock
 from .group import Group
 from .guild import Guild
+from .holdings import CityProperty, Stash
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
 
@@ -137,16 +138,15 @@ def save_game(slot, guild):
         "deeds_done": list(guild.deeds_done),
         "arena_challenge_day": guild.arena_challenge_day,
         "clock_seconds": guild.clock.seconds,
-        "bank_capacity": guild.bank_capacity,
-        "bank_items": _serialize_pack(guild.bank_items),
-        "property_city_unlocked": guild.property_city_unlocked,
-        "property_city_items": _serialize_pack(guild.property_city_items),
-
-        "property_city_tax_due_day": guild.property_city_tax_due_day,
-        "property_city_missed_payments": guild.property_city_missed_payments,
-        "property_city_squatting": guild.property_city_squatting,
+        "bank_capacity": guild.bank.capacity,
+        "bank_items": _serialize_pack(guild.bank.items),
+        "property_city_unlocked": guild.house.owned,
+        "property_city_items": _serialize_pack(guild.house.stash.items),
+        "property_city_tax_due_day": guild.house.tax_due_day,
+        "property_city_missed_payments": guild.house.missed_payments,
+        "property_city_squatting": guild.house.squatting,
         "bankers_debt": guild.bankers_debt,
-        "property_city_debt_since": guild.property_city_debt_since,
+        "property_city_debt_since": guild.bankers_debt_since,
         "garrison_stock": {node_id: list(items) for node_id, items in guild.garrison_stock.items()},
         "wilds_claim_stage": guild.wilds_claim_stage,
         "wilds_claim_fence_lumber": guild.wilds_claim_fence_lumber,
@@ -205,15 +205,14 @@ def load_game(slot):
                  deeds_done=payload.get("deeds_done", []),
                  arena_challenge_day=payload.get("arena_challenge_day"),
                  clock=Clock(payload.get("clock_seconds", 0)),
-                 bank_capacity=payload.get("bank_capacity", 0),
-                 bank_items=payload.get("bank_items", []),
-                 property_city_unlocked=payload.get("property_city_unlocked", False),
-                 property_city_items=payload.get("property_city_items", []),
-                 property_city_tax_due_day=payload.get("property_city_tax_due_day"),
-                 property_city_missed_payments=payload.get("property_city_missed_payments", 0),
-                 property_city_squatting=payload.get("property_city_squatting", False),
+                 bank=Stash(payload.get("bank_capacity", 0), payload.get("bank_items", [])),
+                 house=CityProperty(owned=payload.get("property_city_unlocked", False),
+                                    contents=payload.get("property_city_items", []),
+                                    tax_due_day=payload.get("property_city_tax_due_day"),
+                                    missed_payments=payload.get("property_city_missed_payments", 0),
+                                    squatting=payload.get("property_city_squatting", False)),
                  bankers_debt=payload.get("bankers_debt", 0),
-                 property_city_debt_since=payload.get("property_city_debt_since"),
+                 bankers_debt_since=payload.get("property_city_debt_since"),
                  garrison_stock=payload.get("garrison_stock"),
                  wilds_claim_stage=payload.get("wilds_claim_stage", "NONE"),
                  wilds_claim_fence_lumber=payload.get("wilds_claim_fence_lumber", 0),

@@ -13,9 +13,8 @@ from . import items
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
-from .theme import set_pointer
 from .ui import loadout_panel
-from .ui.primitives import text
+from .ui.primitives import set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

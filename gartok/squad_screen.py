@@ -21,7 +21,6 @@ from . import arena
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
-from .theme import set_pointer
 from .ui.combat_card import draw_combat_card
 from .ui.primitives import (
     contained,
@@ -31,6 +30,7 @@ from .ui.primitives import (
     format_tooltip,
     panel,
     scrollbar,
+    set_pointer,
     text,
     tracked,
 )

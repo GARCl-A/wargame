@@ -3,8 +3,7 @@
 import pygame
 
 from .screen import Screen
-from .theme import set_pointer
-from .ui.primitives import caps, draw_button, modal_card, text
+from .ui.primitives import caps, draw_button, modal_card, set_pointer, text
 from .ui.tokens import T
 
 

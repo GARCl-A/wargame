@@ -1066,15 +1066,15 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
 
 - The `city` node carries `bank=True`; **VISIT THE BANK** on the map opens
   `bank_screen` for the chosen party (the market's party-picker path).
-- The chest is **guild state** (`guild.bank_capacity` kg, `guild.bank_items`) —
-  the guild owns nothing else as a body. `bank_capacity == 0` = not rented.
+- The chest is **guild state** (`guild.bank`, a `holdings.Stash`) —
+  the guild owns nothing else as a body but the City house. `bank.capacity == 0` = not rented.
 - **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**100 copper**), split
   across the visiting party (poorest first, shortfall rolling onto whoever still
   has coin), and grants `economy.BANK_CHEST_CAPACITY` (**30 kg**) of storage.
   Stashing itself is free, so members keep their own money — nothing is pooled or
   redivided. One tier for now; the field is shaped for a later, bigger box.
 - **Stashing** moves **pack** items only, in either direction: into the chest
-  while `bank_load + weight ≤ bank_capacity`, out of it while it fits the taker's
+  while `bank.load + weight ≤ bank.capacity`, out of it while it fits the taker's
   carry max. Wielding/wearing still happens on the gear screen.
 - The chest lives at the bank — gear in it is **only reachable from the City**.
 
@@ -1140,7 +1140,7 @@ shipped start to finish (buy/claim, use, lose, recover):
   unpaid cycles force a choice (`RepossessionScreen`): **return** the
   property (and owe the Bankers a debt that blocks their other services until
   paid, escalating to the guard after `CITY_PROPERTY_DEBT_GRACE_DAYS` = 14
-  days), or **squat** — keep it tax-free but illegal, and the guard
+  days), or **squat** — keep it tax-free (no further charges, none missed) but illegal, and the guard
   periodically raids it (a new `"eviction"` order, same shape as a `"guard"`
   or `"ambush"` pause).
 - **The Wilds Claim** (`wilds_claim_screen.py`, the `wilds_territory` node,

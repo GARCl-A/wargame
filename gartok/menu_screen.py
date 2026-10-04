@@ -10,8 +10,7 @@ import pygame
 
 from . import persist
 from .screen import Screen
-from .theme import set_pointer
-from .ui.primitives import draw_button, panel, text
+from .ui.primitives import draw_button, panel, set_pointer, text
 from .ui.tokens import T
 
 MARGIN = T.S * 2

@@ -243,18 +243,18 @@ def test_city_property_state_survives_a_save_round_trip():
     p = Unit("player")
     guild = Guild([p])
     guild.buy_city_property()
-    guild.property_city_items = ["Rope"]
-    guild.property_city_missed_payments = 2
+    guild.house.stash.items = ["Rope"]
+    guild.house.missed_payments = 2
     guild.bankers_debt = 15
-    guild.property_city_debt_since = guild.clock.day
+    guild.bankers_debt_since = guild.clock.day
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
-        assert back.property_city_unlocked and back.property_city_items == [("Rope", 1)]
-        assert back.property_city_missed_payments == 2
-        assert back.property_city_tax_due_day == guild.property_city_tax_due_day
+        assert back.house.owned and back.house.stash.items == [("Rope", 1)]
+        assert back.house.missed_payments == 2
+        assert back.house.tax_due_day == guild.house.tax_due_day
         assert back.bankers_debt == 15
-        assert back.property_city_debt_since == guild.property_city_debt_since
+        assert back.bankers_debt_since == guild.bankers_debt_since
     finally:
         persist.delete_slot(slot)
 
@@ -269,11 +269,11 @@ def test_a_squatting_property_survives_a_save_round_trip():
     random.seed(1)
     guild = Guild([Unit("player")])
     guild.buy_city_property()
-    guild.squat_city_property()
+    guild.house.squat()
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
-        assert back.property_city_unlocked and back.property_city_squatting
-        assert back.property_city_tax_due_day is None
+        assert back.house.owned and back.house.squatting
+        assert back.house.tax_due_day is None
     finally:
         persist.delete_slot(slot)

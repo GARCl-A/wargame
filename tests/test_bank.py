@@ -6,6 +6,7 @@ import random
 
 from gartok.bank_screen import BankScreen
 from gartok.guild import Guild
+from gartok.holdings import Stash
 from tests.helpers import Unit, economy, packed
 
 
@@ -30,7 +31,7 @@ def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
     s = BankScreen(None, guild, party, on_done=lambda: None)
 
     s._run_service("rent")
-    assert guild.bank_unlocked and guild.bank_capacity == economy.BANK_CHEST_CAPACITY
+    assert guild.bank.open and guild.bank.capacity == economy.BANK_CHEST_CAPACITY
     assert s.purse == 120 - economy.BANK_CHEST_PRICE
     assert [m.gold for m in party] == [60, 60]        # not settled until _leave
 
@@ -52,32 +53,32 @@ def test_deposit_is_capped_by_the_chest():
     random.seed(3)
     p = Unit("player")
     p._base_inventory = packed(["Chainmail", "Rope"])        # 10.0 kg + 2.0 kg
-    guild = Guild([p], bank_capacity=10)
+    guild = Guild([p], bank=Stash(10))
     s = _screen(guild, [p])
 
     s._deposit([(p, 0)])              # Chainmail -- exactly fills the chest
-    assert guild.bank_items == [("Chainmail", 1)] and p._base_inventory == packed(["Rope"])
+    assert guild.bank.items == [("Chainmail", 1)] and p._base_inventory == packed(["Rope"])
 
     s._deposit([(p, 0)])              # Rope -- no room left
-    assert guild.bank_items == [("Chainmail", 1)] and "fit" in s.notice
+    assert guild.bank.items == [("Chainmail", 1)] and "fit" in s.notice
 
 
 def test_withdraw_is_capped_by_the_members_load():
     random.seed(4)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank_capacity=30, bank_items=[("Rope", 1)])
+    guild = Guild([p], bank=Stash(30, [("Rope", 1)]))
     s = _screen(guild, [p])
 
     p.carry_max = 0.5                                 # can't take on even a rope
     s.selected = [("bank", 0)]
     s._give_many(p, "pack")
-    assert guild.bank_items == [("Rope", 1)] and "fit" in s.notice
+    assert guild.bank.items == [("Rope", 1)] and "fit" in s.notice
 
     p.carry_max = 999
     s.selected = [("bank", 0)]
     s._give_many(p, "pack")
-    assert guild.bank_items == [] and p._base_inventory == packed(["Rope"])
+    assert guild.bank.items == [] and p._base_inventory == packed(["Rope"])
 
 
 def test_equip_straight_out_of_the_chest():
@@ -87,35 +88,35 @@ def test_equip_straight_out_of_the_chest():
     random.seed(2)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank_capacity=30, bank_items=[("Dagger", 1)])
+    guild = Guild([p], bank=Stash(30, [("Dagger", 1)]))
     s = _screen(guild, [p])
 
     s.selected = [("bank", 0)]
     s._give_many(p, "hand")
-    assert p.equipped_weapon == "Dagger" and guild.bank_items == []
+    assert p.equipped_weapon == "Dagger" and guild.bank.items == []
 
 
 def test_stashing_an_equipped_weapon_unequips_it():
     random.seed(11)
     p = Unit("player")
     p.give_to_hand("Dagger")
-    guild = Guild([p], bank_capacity=30)
+    guild = Guild([p], bank=Stash(30))
     s = _screen(guild, [p])
 
     s._deposit([(p, "hand")])
-    assert p.equipped_weapon is None and guild.bank_items == [("Dagger", 1)]
+    assert p.equipped_weapon is None and guild.bank.items == [("Dagger", 1)]
 
 
 def test_multi_select_stashes_several_stacks_in_one_move():
     random.seed(6)
     p = Unit("player")
     p._base_inventory = packed(["Rope", "Rope", "Torch"])     # merges to [("Rope", 2), ("Torch", 1)]
-    guild = Guild([p], bank_capacity=30)
+    guild = Guild([p], bank=Stash(30))
     s = _screen(guild, [p])
 
     picks = [(p, i) for i in range(len(p._base_inventory))]
     s._deposit(picks)
-    assert sorted(guild.bank_items) == [("Rope", 2), ("Torch", 1)]
+    assert sorted(guild.bank.items) == [("Rope", 2), ("Torch", 1)]
     assert p._base_inventory == []
     assert "3 items" in s.notice          # 2 stacks, 3 copies total (2 rope + 1 torch)
 
@@ -126,12 +127,12 @@ def test_multi_select_deposit_is_all_or_nothing():
     random.seed(7)
     p = Unit("player")
     p._base_inventory = packed(["Chainmail", "Rope"])        # 10.0 kg + 2.0 kg -- 12 kg total
-    guild = Guild([p], bank_capacity=10)
+    guild = Guild([p], bank=Stash(10))
     s = _screen(guild, [p])
 
     picks = [(p, 0), (p, 1)]
     s._deposit(picks)
-    assert guild.bank_items == [] and p._base_inventory == packed(["Chainmail", "Rope"])
+    assert guild.bank.items == [] and p._base_inventory == packed(["Chainmail", "Rope"])
     assert "fit" in s.notice
     assert s.selected == picks
 
@@ -143,13 +144,13 @@ def test_partial_qty_deposit_via_the_chest_stepper():
     random.seed(12)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank_capacity=30, bank_items=[("Rope", 3)])
+    guild = Guild([p], bank=Stash(30, [("Rope", 3)]))
     s = _screen(guild, [p])
 
     s.selected = [("bank", 0)]
     s._sel_qty[("bank", 0)] = 2
     s._give_many(p, "pack")
-    assert guild.bank_items == [("Rope", 1)] and p._base_inventory == [("Rope", 2)]
+    assert guild.bank.items == [("Rope", 1)] and p._base_inventory == [("Rope", 2)]
 
 
 def test_locked_item_stays_selectable_but_distribute_load_leaves_it():
@@ -193,10 +194,10 @@ def test_clicking_rent_then_a_pack_item_onto_the_chest_stashes_it():
     s.draw(surf)
     rent_r = next(r for r, key in s._service_hits if key == "rent")
     s._drop(rent_r.center, False, None)
-    assert guild.bank_unlocked
+    assert guild.bank.open
 
     s.draw(surf)                                      # chest is now the stash view
     s.selected = [(p, 0)]
-    chest_zone = next(r for r, owner, zone in s.zones if zone == "chest")
+    chest_zone = next(r for r, owner, zone in s.zones if zone == "bank")
     s._drop(chest_zone.center, True, (p, 0))
-    assert guild.bank_items == [("Rope", 1)]
+    assert guild.bank.items == [("Rope", 1)]

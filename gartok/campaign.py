@@ -333,7 +333,7 @@ def _arrival_pause(guild, group, prev_node, resume_path):
     order -- the guard (`justice.py`, jurisdiction) first, then a road ambush
     (`encounters.py`, an unsafe node), then the trust mission's fortress
     ambush (`missions.py`, mission-conditional, not a node property at all),
-    then a raid on a squatted City property (`guild.property_city_squatting`),
+    then a raid on a squatted City property (`guild.house.squatting`),
     then a fight to retake a seized Wilds claim (`guild.wilds_claim_owner`) --
     and returns the `Order` to pause on, or None to let the caller proceed
     exactly as it would without any of them. The first two never both fire
@@ -418,14 +418,14 @@ CITY_RAID_SIZE = 3
 
 def _property_raid_catch(guild, group, resume_path):
     """The City guard coming to clear a squatted property
-    (`guild.property_city_squatting`, set by `guild.squat_city_property` after
+    (`guild.house.squatting`, set by `guild.house.squat` after
     the guild refuses a repossession offer): gated on `node.city_property` the
     same way `_fortress_ambush_catch` gates on `node.ledger`, plus the squat
     state itself, then rolls `CITY_RAID_CHANCE` once per arrival like
     `_road_ambush_catch` does for an unsafe node. Unlike a road ambush, losing
     this fight has a further consequence (`resolve_property_raid` ends the
     squat for good) -- see [[gartok-property-two-paths]]."""
-    if not (guild.property_city_squatting and world.node(group.node).city_property):
+    if not (guild.house.squatting and world.node(group.node).city_property):
         return None
     if random.random() >= CITY_RAID_CHANCE:
         return None
@@ -588,9 +588,7 @@ def resolve_property_raid(guild, group, order, outcome):
         events.insert(0, "The guild's fighters drive off the guard patrol -- the "
                       "property stays, for now.")
     else:
-        guild.property_city_squatting = False
-        guild.property_city_unlocked = False
-        guild.property_city_items = []
+        guild.house.abandon()
         events.insert(0, "The City guard finally clears the squatted property -- it's gone for good.")
     return events
 

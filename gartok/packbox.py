@@ -19,9 +19,9 @@ per-frame lists, append to `self._pack_areas` as they draw each column (see
 `GearScreen._draw_columns`), and route a click through `self._lock_at(px)`
 before treating it as an item pick (see `GearScreen._source_at`/`_drop`).
 
-`bank_screen.py`/`city_property_screen.py` don't mix this in -- they keep
-their own smaller `_item_tag` copy since they don't need the rest of this
-contract (no lock toggling, no per-column wheel scroll on a shopping visit).
+`stash_screen.py` (the bank and the house) doesn't mix this in -- it keeps
+its own smaller `_item_tag` since it doesn't need the rest of this contract
+(no lock toggling, no per-column wheel scroll on a shopping visit).
 """
 
 import pygame

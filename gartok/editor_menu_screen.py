@@ -8,8 +8,7 @@ Reached from the main menu's EDITOR button. Two doors: the character creator
 import pygame
 
 from .screen import Screen
-from .theme import set_pointer
-from .ui.primitives import caps, draw_button, draw_card, text
+from .ui.primitives import caps, draw_button, draw_card, set_pointer, text
 from .ui.tokens import T
 
 

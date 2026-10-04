@@ -5,6 +5,7 @@ import random
 
 from tests.helpers import data, economy, Unit, packed
 from gartok.guild import Guild
+from gartok.holdings import Stash
 
 
 def test_battle_export_state_writes_a_json_snapshot(tmp_path, monkeypatch):
@@ -322,8 +323,7 @@ def test_every_screen_draws_native_at_any_window_size():
         BankScreen(F, guild, list(roster[:3]), noop),          # locked: no chest yet
     ]
 
-    stocked = Guild(list(roster), node=world.START_NODE, bank_capacity=10,
-                    bank_items=["Rope", "Dagger"])
+    stocked = Guild(list(roster), node=world.START_NODE, bank=Stash(10, ["Rope", "Dagger"]))
     scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
     scenes.append(PauseScreen(UI_F, scenes[2], noop, noop, noop))
 
@@ -1738,15 +1738,15 @@ def test_bank_screen_equipping_stack_preserves_remainder():
     u = Unit("player")
     u.equipped_offhand = None
     guild = Guild([u])
-    guild.stash_in_bank("Torch", 5)
+    guild.bank.put("Torch", 5)
 
     bs = BankScreen(Fonts(), guild, [u], lambda: None)
     bs.selected = [("bank", 0)]
     bs._give_many(u, "offhand")
 
     assert u.equipped_offhand == "Torch"
-    assert len(guild.bank_items) == 1
-    assert guild.bank_items[0][1] == 4
+    assert len(guild.bank.items) == 1
+    assert guild.bank.items[0][1] == 4
 
 
 def test_city_property_screen_equipping_stack_preserves_remainder():
@@ -1760,16 +1760,16 @@ def test_city_property_screen_equipping_stack_preserves_remainder():
     u = Unit("player")
     u.equipped_offhand = None
     guild = Guild([u])
-    guild.property_city_unlocked = True
-    guild.stash_in_property("Torch", 5)
+    guild.house.owned = True
+    guild.house.stash.put("Torch", 5)
 
     cps = CityPropertyScreen(Fonts(), guild, [u], lambda: None)
     cps.selected = [("house", 0)]
     cps._give_many(u, "offhand")
 
     assert u.equipped_offhand == "Torch"
-    assert len(guild.property_city_items) == 1
-    assert guild.property_city_items[0][1] == 4
+    assert len(guild.house.stash.items) == 1
+    assert guild.house.stash.items[0][1] == 4
 
 
 

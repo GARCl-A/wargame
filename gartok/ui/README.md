@@ -5,7 +5,9 @@ paper laid on the table, and brass / blood / green are the only things that
 glow. Read this before adding or changing anything that draws.
 
 `gartok/theme.py` is the legacy look. Don't add new usage; when you touch a
-screen non-trivially, move it onto this kit.
+screen non-trivially, move it onto this kit. `tests/test_theme_budget.py` lists
+the modules still on `theme` and fails on a new one; when you finish moving a
+module, take it off that list. (`set_pointer` lives in `primitives.py` now.)
 
 ## Rules
 

@@ -26,21 +26,18 @@ The guild also has a chosen **identity** -- `name`, `banner_color`, `banner_icon
 in the game renders in it. A guild from before this existed falls back to
 `DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON` below.
 
-The one thing the guild owns as a body is the **bank chest** -- a strongbox
-rented from the Bankers in the City (`bank_capacity` kg, `bank_items` the names
-stashed). `bank_capacity == 0` means no chest yet; `bank_screen` rents it and
-moves gear in and out.
-
-The guild may also own a **City property** -- a house bought from the Bankers
-(`property_city_unlocked`, `property_city_items`; see [[gartok-property-two-paths]]
-and `city_property_screen.py`), taxed on a cycle (`_city_property_upkeep`,
-called from `_daily_upkeep` below). Missing enough cycles
-(`property_city_missed_payments`) offers a choice next visit: return it
+What the guild owns as a body lives in `holdings.py`: the **bank chest**
+(`bank`, a `Stash` rented from the Bankers in the City -- capacity 0 means no
+chest yet; `bank_screen` rents it and moves gear in and out) and the **City
+property** (`house`, a `CityProperty` bought from the Bankers; see
+[[gartok-property-two-paths]] and `city_property_screen.py`), taxed on a cycle
+(`_city_property_upkeep`, called from `_daily_upkeep` below). Missing enough
+cycles (`house.missed_payments`) offers a choice next visit: return it
 (`repossess_city_property`, banking `bankers_debt`) or squat
-(`squat_city_property`, drawing periodic guard raids -- `campaign.py`'s
-"eviction" pause). Outstanding debt escalates to the guard the same way an
-ignored rap sheet does (`justice.py`) once `CITY_PROPERTY_DEBT_GRACE_DAYS`
-passes with nothing paid.
+(`house.squat`, drawing periodic guard raids -- `campaign.py`'s "eviction"
+pause). Outstanding debt escalates to the guard the same way an ignored rap
+sheet does (`justice.py`) once `CITY_PROPERTY_DEBT_GRACE_DAYS` passes with
+nothing paid.
 
 A **garrison** is a `Group` parked on a standing `"garrison"` order
 (`orders.py`) instead of asking for fresh ones -- `_garrison_upkeep` (also
@@ -85,8 +82,8 @@ from collections import Counter
 from . import data, economy, items, justice, magic, missions, progression, world
 from .clock import Clock
 from .group import Group
+from .holdings import CityProperty, Stash
 from .tutorial import TutorialState
-from .unit import pack_from_raw, stack_add, stack_take
 
 # Fallbacks for a guild with no chosen identity (old saves, from before the
 # draft's naming/banner step existed). Plain data, not `theme`/`artwork`
@@ -103,16 +100,14 @@ class Guild:
     def __init__(self, roster, battles_won=0, reputation=None, deeds_done=None,
                  arena_challenge_day=None, clock=None, node=None,
                  taverna_week=None, taverna_pool=None, taverna_blocked=None,
-                 bank_capacity=0, bank_items=None, groups=None,
+                 bank=None, groups=None,
                  leader=None, leader_swaps_used=0,
                  name="", banner_color=None, banner_icon=None, tutorial=None,
                  market_stock=None, missions=None,
                  total_spent=0, items_sold_kinds=None, jailed=None,
                  prison_week=None, prison_pool=None, prison_blocked=None,
-                 property_city_unlocked=False, property_city_items=None,
-                 property_city_tax_due_day=None, property_city_missed_payments=0,
-                 property_city_squatting=False, bankers_debt=0,
-                 property_city_debt_since=None, garrison_stock=None,
+                 house=None, bankers_debt=0,
+                 bankers_debt_since=None, garrison_stock=None,
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  ancient_ruins_discovered=False):
@@ -127,8 +122,7 @@ class Guild:
         self.deeds_done = list(deeds_done or [])   # ids of completed factions.Deed
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
-        self.bank_capacity = bank_capacity    # kg the rented strongbox holds (0 = none rented)
-        self.bank_items = pack_from_raw(bank_items or [])   # [(name, qty), ...] stashed in the chest
+        self.bank = bank if bank is not None else Stash()   # the rented strongbox; capacity 0 = none rented
         # live market stock (economy.STOCK) -- a name absent here restocks freely
         self.market_stock = dict(economy.STOCK) if market_stock is None else dict(market_stock)
         self.missions = list(missions or [])  # active/finished missions.Mission, see missions.py
@@ -149,13 +143,9 @@ class Guild:
         
         self.jailed = list(jailed or [])      # [(Unit, released_day), ...] -- see the docstring above
         # the City property -- see the docstring above and economy.CITY_PROPERTY_*
-        self.property_city_unlocked = property_city_unlocked
-        self.property_city_items = pack_from_raw(property_city_items or [])
-        self.property_city_tax_due_day = property_city_tax_due_day   # clock.day the next tax is due, or None
-        self.property_city_missed_payments = property_city_missed_payments
-        self.property_city_squatting = property_city_squatting       # illegal occupier, after refusing repossession
-        self.bankers_debt = bankers_debt                              # copper owed after a repossession
-        self.property_city_debt_since = property_city_debt_since     # clock.day the debt started (grace window)
+        self.house = house if house is not None else CityProperty()
+        self.bankers_debt = bankers_debt                 # copper owed after a repossession
+        self.bankers_debt_since = bankers_debt_since     # clock.day the debt started (grace window)
         # a garrisoned group's job output, keyed by the node it's parked on --
         # generic across any future property (economy.GARRISON_JOBS, world.Node.garrison_job)
         self.garrison_stock = {k: list(v) for k, v in (garrison_stock or {}).items()}
@@ -325,45 +315,10 @@ class Guild:
         tiers on. Rises only when an arena `factions.Deed` is completed."""
         return self.reputation.get("arena", 0)
 
-    @property
-    def bank_unlocked(self):
-        """True once the guild has rented a strongbox from the Bankers."""
-        return self.bank_capacity > 0
-
-    @property
-    def bank_load(self):
-        """Weight of everything stashed in the bank chest."""
-        return sum(items.item_weight(name) * qty for name, qty in self.bank_items)
-
     def rent_bank_chest(self):
         """Take up the Bankers' offer: the guild's first strongbox. The caller
         collects the fee first -- this only flips the capacity on."""
-        self.bank_capacity = economy.BANK_CHEST_CAPACITY
-
-    def stash_in_bank(self, name, qty=1):
-        stack_add(self.bank_items, name, qty)
-
-    def take_from_bank(self, idx, qty=1):
-        """Remove up to `qty` from the chest stack at `idx`. Returns
-        `(name, removed)`."""
-        name, removed, _ = stack_take(self.bank_items, idx, qty)
-        return name, removed
-
-    # ------------------------------------------------------------------ #
-    # the City property (see the class docstring, economy.CITY_PROPERTY_*) #
-    # ------------------------------------------------------------------ #
-    @property
-    def property_city_load(self):
-        return sum(items.item_weight(name) * qty for name, qty in self.property_city_items)
-
-    def stash_in_property(self, name, qty=1):
-        stack_add(self.property_city_items, name, qty)
-
-    def take_from_property(self, idx, qty=1):
-        """Remove up to `qty` from the property stack at `idx`. Returns
-        `(name, removed)`."""
-        name, removed, _ = stack_take(self.property_city_items, idx, qty)
-        return name, removed
+        self.bank.capacity = economy.BANK_CHEST_CAPACITY
 
     @property
     def bankers_services_blocked(self):
@@ -372,45 +327,13 @@ class Guild:
         return self.bankers_debt > 0
 
     def buy_city_property(self):
-        """Take up the Bankers' offer on a house. The caller collects the
-        price first -- this only flips ownership on and starts the tax clock."""
-        self.property_city_unlocked = True
-        self.property_city_missed_payments = 0
-        self.property_city_tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
-
-    @property
-    def property_city_repossession_due(self):
-        """True once missed cycles hit the limit -- `app` shows the choice
-        screen instead of the normal property screen on the next visit."""
-        return (self.property_city_unlocked
-                and self.property_city_missed_payments >= economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT)
+        self.house.buy(self.clock.day)
 
     def repossess_city_property(self):
         """ACCEPT: hand the property back, bank the missed rent as debt owed
         to the Bankers -- their services stay shut until it's paid."""
-        owed = self.property_city_missed_payments * economy.CITY_PROPERTY_TAX
-        self.property_city_unlocked = False
-        self.property_city_items = []
-        self.property_city_missed_payments = 0
-        self.property_city_tax_due_day = None
-        self.bankers_debt += owed
-        self.property_city_debt_since = self.clock.day
-
-    def squat_city_property(self):
-        """REFUSE: the guild keeps the house as an illegal occupier -- no more
-        tax to pay, but the guard now raids it periodically
-        (`campaign._property_raid_catch`) until it wins or the guild gives up
-        (`abandon_city_squat`)."""
-        self.property_city_squatting = True
-        self.property_city_missed_payments = 0
-        self.property_city_tax_due_day = None
-
-    def abandon_city_squat(self):
-        """Give up a squat before the guard forces the issue -- the property
-        is simply gone, no debt (nothing was ever paid back on it)."""
-        self.property_city_squatting = False
-        self.property_city_unlocked = False
-        self.property_city_items = []
+        self.bankers_debt += self.house.repossess()
+        self.bankers_debt_since = self.clock.day
 
     # ------------------------------------------------------------------ #
     # the garrison: a Group parked on a "garrison" order, working a job    #
@@ -509,7 +432,7 @@ class Guild:
         paid = min(amount, self.bankers_debt)
         self.bankers_debt -= paid
         if self.bankers_debt == 0:
-            self.property_city_debt_since = None
+            self.bankers_debt_since = None
         return paid
 
     @property
@@ -603,7 +526,7 @@ class Guild:
         """Age every food entry a day in place. `inventory` is either a
         Unit's pack (`list[(name,qty)]` -- a stack ages as one unit, since
         aging changes the name and same-name is exactly what stacks
-        together) or the bank chest's flat `list[str]`; rotted portions
+        together) or a `Stash`'s items; rotted portions
         merge into any Rotten Food already held instead of duplicating it."""
         rotten = 0
         new_inv = []
@@ -640,11 +563,12 @@ class Guild:
     def _daily_upkeep(self):
         events, casualties, ate = [], [], []
         
-        # 1) rot food in everyone's inventory (and the bank chest)
+        # 1) rot food in everyone's inventory, the bank chest and the house
         total_rotten = 0
         for u in self.roster:
             total_rotten += self._rot_food(u._base_inventory)
-        total_rotten += self._rot_food(self.bank_items)
+        total_rotten += self._rot_food(self.bank.items)
+        total_rotten += self._rot_food(self.house.stash.items)
         if total_rotten:
             events.append(f"{total_rotten} portions of food rotted away.")
 
@@ -710,17 +634,18 @@ class Guild:
         deadbeat guild eventually gets caught the normal way, not a bespoke
         one. No-op with no property and no debt (the common case)."""
         events = []
-        if self.property_city_unlocked and self.clock.day >= (self.property_city_tax_due_day or 0):
-            self.property_city_tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
+        house = self.house
+        if house.owned and not house.squatting and self.clock.day >= (house.tax_due_day or 0):
+            house.tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
             if self.gold >= economy.CITY_PROPERTY_TAX:
                 self._charge_roster(economy.CITY_PROPERTY_TAX)
                 events.append(f"The Bankers collect {economy.CITY_PROPERTY_TAX} copper in property tax.")
             else:
-                self.property_city_missed_payments += 1
+                house.missed_payments += 1
                 events.append("The guild can't cover the property tax -- the Bankers note it.")
-        if self.bankers_debt > 0 and self.property_city_debt_since is not None:
-            if self.clock.day - self.property_city_debt_since >= economy.CITY_PROPERTY_DEBT_GRACE_DAYS:
-                self.property_city_debt_since = self.clock.day     # resets the grace window
+        if self.bankers_debt > 0 and self.bankers_debt_since is not None:
+            if self.clock.day - self.bankers_debt_since >= economy.CITY_PROPERTY_DEBT_GRACE_DAYS:
+                self.bankers_debt_since = self.clock.day     # resets the grace window
                 if self.leader is not None:
                     self.leader.crime += 1
                     events.append(f"{self.leader.name}'s unpaid debt to the Bankers "
