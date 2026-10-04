@@ -22,6 +22,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-doc-generator.md` | REFERENCE.md generation, repo structure, drift test, RULES.md prose-only rule. |
 | `gartok-item-system.md` | **Item System & ItemInstance.** Single source of truth in items.py, ItemDef, rich ItemInstance, UI helpers, and SAVE_VERSION 17. |
 | `gartok-portraits-and-treefolk.md` | **Portraits System & Treefolk.** OSR medallion asset pipeline, artwork.portrait loader, Leshy->Treefolk rename/Medium size, deterministic portrait_id. |
+| `gartok-guild-hub-redesign.md` | **The Guild Hub Redesign.** Central command UI, multi-band accordion roster, tactical profile grid, 3-zone encumbrance, and contextual actions. |
 
 ### Systems (world / campaign)
 | File | What it covers |
