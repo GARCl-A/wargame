@@ -21,6 +21,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `player-text-english.md` | Why everything is English, the sweep that made it so. |
 | `gartok-doc-generator.md` | REFERENCE.md generation, repo structure, drift test, RULES.md prose-only rule. |
 | `gartok-item-system.md` | **Item System & ItemInstance.** Single source of truth in items.py, ItemDef, rich ItemInstance, UI helpers, and SAVE_VERSION 17. |
+| `gartok-portraits-and-treefolk.md` | **Portraits System & Treefolk.** OSR medallion asset pipeline, artwork.portrait loader, Leshy->Treefolk rename/Medium size, deterministic portrait_id. |
 
 ### Systems (world / campaign)
 | File | What it covers |
