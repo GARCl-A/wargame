@@ -11,6 +11,8 @@ metadata:
 The presentation layer of GARTOK Tactical ([[gartok-tactical-project]]) was
 rebuilt off the MVP look in Sep 2026 and now runs on a design system.
 
+> **SUPERSEDED (2026-10-04):** `theme.py` no longer exists; the kit is `gartok/ui/` (see `gartok-theme-exit-and-mixins.md`). Read the below as history.
+
 ## Current state
 
 - **`theme.py` is the design system** — one source of truth for looks:

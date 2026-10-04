@@ -17,7 +17,8 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-tactical-project.md` | **Start here for deep architecture.** Module-by-module breakdown, design premises, combat rules summary, recruitment, progression, armor, encumbrance, test suite shape. |
 | `gartok-open-world-vision.md` | The north star: megalomaniac open-world guild manager, specialised groups, base-building, interdependent activities. Sandbox, no win condition. |
 | `gartok-guild-group-screens-split.md` | `GuildScreen` handles macro state (roster, rep, leadership), `GroupScreen` handles tactical state (gear, inventory drag/drop, quests). |
-| `gartok-ui-redesign.md` | Presentation layer: theme.py design system, 100% procedural rendering, Screen base class contract. |
+| `gartok-ui-redesign.md` | (History; theme.py was deleted 2026-10-04.) Presentation layer, 100% procedural rendering, Screen base class contract. |
+| `gartok-theme-exit-and-mixins.md` | **Oct 2026 refactor arc.** unit.py/guild.py split into mixins; theme.py deleted, `gartok/ui/` is the only presentation layer (board_style, banner, ui_fonts). |
 | `player-text-english.md` | Why everything is English, the sweep that made it so. |
 | `gartok-doc-generator.md` | REFERENCE.md generation, repo structure, drift test, RULES.md prose-only rule. |
 | `gartok-item-system.md` | **Item System & ItemInstance.** Single source of truth in items.py, ItemDef, rich ItemInstance, UI helpers, and SAVE_VERSION 17. |
