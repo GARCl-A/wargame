@@ -59,8 +59,19 @@ When the two disagree, `REFERENCE.md` wins.
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `app.py` | pygame shell: scene loop, screen wiring |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
+| `archetypes.py` | recruit archetype catalog + candidate generation |
+| `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |
+| `justice.py` | crime per character, City jurisdiction, patrols, prison |
+| `arena.py` | Champion of the Pit title and its defense cycle |
+| `magic.py` | spell registry + study-difficulty math (casting is in actions.py) |
+| `encounters.py` | enemy packs scaled to a target mean level |
+| `progression.py` | XP curves + combat-XP rule |
+| `autowin.py` | auto-resolve a battle via Monte Carlo estimate |
+| `ui/` | war-table component kit; see `ui/README.md` |
 
 Screens follow `screen.Screen` base; `native = True` means full-window layout.
+Every `*_screen.py` is one screen; `*_hub_screen.py` wraps a city NPC's shop,
+crafting and mission board in tabs. The full module list is in `README.md`.
 
 ## UI conventions
 

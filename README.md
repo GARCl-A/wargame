@@ -169,6 +169,10 @@ gartok/
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai.py             enemy squad AI (over actions.py); alignment tempers the edges
+  items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
+  archetypes.py     recruit archetype catalog, candidate generation, commission constraints
+  names.py          procedural personal names for every generated Unit
+  autowin.py        auto-resolve a battle: background Monte Carlo estimate
   loot.py           gathers the field loot after a lethal win
   progression.py    XP curves + the combat-XP rule (pure data, no gartok imports)
   talents.py        the talent trees: one per XP track, Effect(channel, amount, stat)
@@ -210,17 +214,25 @@ gartok/
   gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
-  city_property_screen.py / wilds_claim_screen.py / justice_screen.py / interactions_screen.py
+  city_property_screen.py / wilds_claim_screen.py / justice_screen.py
   alert_screen.py / adelio_prompt_screen.py
+  bank_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py (tabbed hubs
+  wrapping a shop/strongbox, crafting and a mission board)
+  library_screen.py / library_mission_screen.py / apothecary_mission_screen.py
   pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
 
   # shared presentation
-  theme.py          the design system: spacing scale (SP), palette, two font families,
-                    widgets (panel, chip, section, pips, Stack, token_badge)
+  ui/               the war-table component kit -- the source of truth for screen
+                    presentation (rules + catalog in ui/README.md)
+  theme.py          LEGACY design ramp (SP spacing, palette, Stack, token_badge);
+                    being migrated screen by screen onto ui/
   icons.py          vector action icons (pygame.draw) -- no asset file
-  artwork.py        loads/tints/caches the SVGs under assets/icons/ (race silhouettes on the token)
+  artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
+                    portraits under assets/portraits/
   lighting.py       LightRenderer: the darkness layer + radial light holes
-  sheet.py          formats a Unit into text lines (battle-inspect panel)
+  battle_fx.py      combat juice: floating numbers, hit/lunge reactions
+  dragselect.py     shared press/drag/drop plumbing for the item screens
+  packbox.py        shared drag bookkeeping for the gear and group screens
   sheet_panel.py    the full drawn character sheet (guild-screen modal)
   tutorial_card.py  draws the current screen's tutorial card + its `?` badge
 
