@@ -64,13 +64,6 @@ class DragSelectMixin:
         address `_item_at`/`_take` use below."""
         return [(name, i, qty) for i, (name, qty) in enumerate(pack)]
 
-    def _expand_stack(self, src):
-        """`src` alone -- a pack pick already addresses its whole stack (`idx`
-        is a stack position, not a physical item, now that the pack keeps real
-        quantities). Kept as a seam: callers that used to fan a pick out to
-        every matching physical index don't need to change shape."""
-        return [src]
-
     def _collect(self, picks):
         """Pull every `(owner, loc)` pick off its owner -- `[(name, qty)]`
         moved plus the owners touched. Pack rows come off highest index first

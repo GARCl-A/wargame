@@ -251,20 +251,6 @@ def text(surf, s, font, color, pos, *, right=False, center=False, bottom=False):
     surf.blit(img, rect)
     return rect
 
-def outlined_text(surf, s, font, color, pos, *, outline, px=2, center=False):
-    """`text()` with a solid outline -- legible straight over a photo texture
-    (the world map's parchment) where a flat fill can't guarantee contrast,
-    without needing a background panel behind the text."""
-    dark = font.render(s, True, outline)
-    rect = dark.get_rect(center=pos) if center else dark.get_rect(topleft=pos)
-    for dx in (-px, 0, px):
-        for dy in (-px, 0, px):
-            if dx or dy:
-                surf.blit(dark, rect.move(dx, dy))
-    img = font.render(s, True, color)
-    surf.blit(img, img.get_rect(center=pos) if center else pos)
-    return rect
-
 def format_tooltip(title, description, fonts, max_px=260):
     """Formats a structured tooltip with an accent title and wrapped body lines."""
     lines = [(title, fonts.label, ACCENT)]
@@ -366,22 +352,6 @@ class Stack:
     def row(self, h):
         r = pygame.Rect(self.x, self.y, self.w, h)
         self.y += h
-        return r
-
-    def text_block(self, surf, s, font, color=(210, 210, 210), *, gap=0, lh=None):
-        """Draws text (wrapping automatically) and advances y by the total height + gap.
-        Returns the bounding rect of the drawn text block."""
-        if not s:
-            r = pygame.Rect(self.x, self.y, self.w, 0)
-            self.y += gap
-            return r
-        lines = wrap_lines(s, font, self.w)
-        line_height = lh if lh is not None else font.get_linesize()
-        h = len(lines) * line_height
-        r = pygame.Rect(self.x, self.y, self.w, h)
-        for i, ln in enumerate(lines):
-            surf.blit(font.render(ln, True, color), (self.x, self.y + i * line_height))
-        self.y += h + gap
         return r
 
     def panel(self, surf, h, fill=(40, 44, 52), border=(68, 75, 89), radius=4, width=1):

@@ -23,9 +23,6 @@ class Clock:
         self.seconds = int(seconds)
 
     # advancing -------------------------------------------------------- #
-    def advance_seconds(self, s):
-        self.seconds += int(s)
-
     def advance_hours(self, h):
         self.seconds += int(round(h * SECONDS_PER_HOUR))
 

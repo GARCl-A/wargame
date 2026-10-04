@@ -387,10 +387,6 @@ def all_items() -> dict[str, ItemDef]:
     return {item.name: item for item in _REGISTRY.values()}
 
 
-def all_by_id() -> dict[str, ItemDef]:
-    """-> dict of all canonical items keyed by id slug."""
-    return dict(_REGISTRY)
-
 
 def weapons() -> dict[str, ItemDef]:
     return {item.name: item for item in _REGISTRY.values() if item.type == ItemType.WEAPON}

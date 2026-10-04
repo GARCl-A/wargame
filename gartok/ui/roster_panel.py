@@ -31,13 +31,6 @@ def hp_color(v):
     return T.BLOOD
 
 
-def draw_party_pips(surf, party, pos, size=6, gap=4):
-    x, y = pos
-    for _, _, hp in party:
-        pygame.draw.rect(surf, hp_color(hp), pygame.Rect(x, y, size, size))
-        x += size + gap
-    return x
-
 
 def draw_roster(surf, F, rect, groups, events, selected, split_target=None,
                 split_picks=frozenset(), mpos=(-1, -1)):

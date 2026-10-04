@@ -54,11 +54,6 @@ def language():
     return _lang
 
 
-def available_languages():
-    if not os.path.isdir(LOCALES_DIR):
-        return []
-    return sorted(f[:-len(".json")] for f in os.listdir(LOCALES_DIR) if f.endswith(".json"))
-
 
 def has(key):
     """Whether `key` resolves to a real authored value (current language, or

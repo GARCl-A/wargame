@@ -38,9 +38,6 @@ def _check(surf, cx, cy, col):
                       [(cx - 4, cy), (cx - 1, cy + 4), (cx + 5, cy - 5)], 2)
 
 
-def _lerp(a, b, t):
-    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
-
 
 def _tree_layout(track, race=None):
     """Map every node of a track to (column, depth). Column is in leaf units: a

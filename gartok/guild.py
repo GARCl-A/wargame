@@ -783,25 +783,6 @@ class Guild:
         events += self._pay_shift(workers, hours, clock_hours)
         return events, casualties
 
-    def work_property(self, clock_hours, max_charges, work_minutes):
-        """Work a city property (forge / tanner / ledger) for `max_charges` or
-        until the clock jumps `clock_hours`, whichever hits first. Returns a
-        tuple (finished_charges: int, events, casualties). This deliberately
-        advances the campaign clock through `pass_time` (a long shift can cross
-        midnight and trigger the daily upkeep)."""
-        if max_charges <= 0:
-            return 0, [], []
-        shift_minutes = clock_hours * 60
-        charges = min(max_charges, shift_minutes // work_minutes)
-        events, casualties = self.pass_time(clock_hours)
-        return charges, events, casualties
-
-    def work_wilds_claim(self, clock_hours):
-        """Work on the Wilds claim for `clock_hours`. Advances the campaign clock
-        through `pass_time`. Returns `(events, casualties)`."""
-        events, casualties = self.pass_time(clock_hours)
-        return events, casualties
-
     def _pay_shift(self, workers, hours, clock_hours):
         """Pay + bank work-XP for a completed shift -- no clock advance, the
         caller already ran `pass_time`. `hours` is the nominal shift length
