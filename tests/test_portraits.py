@@ -103,4 +103,33 @@ def test_lizardfolk_portraits():
     assert p_lz.get_size() == (24, 24)
 
 
+def test_halfling_portraits():
+    # 12 complete Halfling portraits
+    for idx in range(12):
+        p = artwork.portrait("Halfling", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    hf = unit.Unit("player", race=data.race_by_name("Halfling"))
+    assert hasattr(hf, "portrait_id")
+    p_hf = artwork.portrait(hf.race["name"], hf.portrait_id, 24)
+    assert p_hf is not None
+    assert p_hf.get_size() == (24, 24)
+
+
+def test_gnome_portraits():
+    # 12 complete Gnome portraits
+    for idx in range(12):
+        p = artwork.portrait("Gnome", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    gn = unit.Unit("player", race=data.race_by_name("Gnome"))
+    assert hasattr(gn, "portrait_id")
+    p_gn = artwork.portrait(gn.race["name"], gn.portrait_id, 24)
+    assert p_gn is not None
+    assert p_gn.get_size() == (24, 24)
+
+
+
 
