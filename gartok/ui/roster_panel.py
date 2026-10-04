@@ -38,10 +38,11 @@ def draw_roster(surf, F, rect, groups, events, selected, split_target=None,
     "needs_orders" (bool), "detail" (one-line status text), "rations_label",
     "party": [(name, role, hp_frac)],
     "roster_members": [(member_id, name, tag)],
-    "mates": [(other_key, other_name)]}` (`tag` is an optional short label
-    next to the name, e.g. race/level -- pass "" for none; `mates` is who
-    that band could MERGE with, shown alongside SPLIT once its own card is
-    expanded -- empty for none). `events` items: `(group_key, start, end,
+    "mates": [(other_key, other_name)], "split_blocked" (optional)}` (`tag` is an
+    optional short label next to the name, e.g. race/level -- pass "" for none;
+    `mates` is who that band could MERGE with, shown alongside SPLIT once its
+    own card is expanded -- empty for none; `split_blocked` is a label that
+    replaces "confirm split" on a disabled button). `events` items: `(group_key, start, end,
     label, color)`. `split_picks` is the set of `member_id`s currently
     toggled to leave, for whichever group's card is expanded (`split_target`).
 
@@ -125,9 +126,13 @@ def draw_roster(surf, F, rect, groups, events, selected, split_target=None,
                     split_member_rects.append((member_id, box))
                     sy += SPLIT_ROW_H
 
-                split_confirm_rect = pygame.Rect(cx, sy + 4, card.w - 2 * T.S, 24)
-                draw_button(surf, F, split_confirm_rect, "confirm split", ghost=True, mpos=mpos)
-                sy = split_confirm_rect.bottom
+                btn = pygame.Rect(cx, sy + 4, card.w - 2 * T.S, 24)
+                if g.get("split_blocked"):
+                    draw_button(surf, F, btn, g["split_blocked"], ghost=True, enabled=False, mpos=mpos)
+                else:
+                    split_confirm_rect = btn
+                    draw_button(surf, F, btn, "confirm split", ghost=True, mpos=mpos)
+                sy = btn.bottom
 
                 if mates:
                     sy += 8

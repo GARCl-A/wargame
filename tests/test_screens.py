@@ -362,6 +362,19 @@ def test_every_screen_draws_native_at_any_window_size():
     scenes.append(rep_tab)
 
     from gartok.group import Group
+    guild_tab = GuildScreen(F, guild, noop, noop)
+    guild_tab.tab = "guild"                           # fame, slots, groups, holdings
+    scenes.append(guild_tab)
+
+    fraying = Guild(list(roster), node=world.START_NODE)       # one overextended group, no spare slot
+    fraying.groups.append(Group([Unit("player")], node=world.START_NODE))
+    fraying.leaving[roster[1].uid] = fraying.clock.day + 3
+    fraying.house.owned, fraying.house.squatting = True, True
+    fraying.wilds_claim_stage, fraying.wilds_claim_owner = "ESTABLISHED", "seized"
+    fraying.bank.capacity = 10
+    fraying_tab = GuildScreen(F, fraying, noop, noop)
+    fraying_tab.tab = "guild"
+    scenes.append(fraying_tab)
     apart = Guild(None, groups=[Group(list(roster[:2]), node=world.START_NODE),
                                 Group(list(roster[2:]), node="market")])
     scenes.append(MapScreen(F, apart, noop, noop, noop, noop))
@@ -1031,7 +1044,7 @@ def test_treefolk_race_and_portraits():
         assert p.get_size() == (32, 32)
 
     # Fallback when no portraits exist
-    assert artwork.portrait("Automaton", 0, 32) is None
+    assert artwork.portrait("Centaur", 0, 32) is None
 
     # 3. Unit and persistence round-trip
     u = unit.Unit("player", race=tf)

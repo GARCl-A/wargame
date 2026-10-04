@@ -43,6 +43,7 @@ def test_mission_follows_its_signer_into_a_new_group_after_a_split():
 
     # the signer splits off alone into a brand new group -- the old `hunters`
     # Group object no longer holds them (and may not even still exist).
+    guild.reputation["arena"] = 3                      # fame for a third group slot
     solo = guild.split_group(hunters, [signer])
     signer_gold_before = signer.gold
     other_hunter_gold_before = other_hunter.gold

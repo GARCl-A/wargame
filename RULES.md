@@ -839,6 +839,43 @@ different questions:
   so growth is a tree fed mostly by the leader, not a free action for anyone
   on the roster.
 
+### Fame and group slots 🟡
+
+The player controls **the guild**; groups are the guild's operating bodies, and
+the guild only has so many of them (`Guild.group_slots`).
+
+- **Fame** (`Guild.fame`) is the plain sum of every faction's reputation —
+  deeds are one-shot and finite, so it is a measure of how widely the guild is
+  known, never a grind. **Slots** = `BASE_SLOTS` (2) + `fame // FAME_PER_SLOT`
+  (3). Fantasy: the better known the guild, the more people will work for it
+  separately under one name.
+- **Every group takes a slot** — the garrison holding a base, the band cutting
+  lumber, the people studying at the tavern. `Guild.split_group` refuses with
+  no slot free. Merging frees one. A save with more groups than slots is kept
+  as is (it just can't split further); a freed prisoner always gets a place.
+- Fame sets **how many** groups; the group leader's Charisma still sets **how
+  big** each can be (`Group.capacity`).
+
+**Cohesion** (`cohesion.py`, run once a day from `Guild._daily_upkeep`). A group
+past its capacity is overextended (the Mental Defense penalty stays as the
+visible warning), and each day the world rolls **1d20 against the Mental
+Defense of its weakest member** — group leader and guild leader exempt. A roll
+at or above it and that member walks:
+
+- a free slot: they leave the group and become a solo group on the spot;
+- no free slot: they give **notice** (`NOTICE_DAYS`, 7). The notice is cancelled
+  the moment it stops making sense (the group is no longer overextended, or
+  they were made a leader) and resolved as a split the moment a slot opens.
+  When it lapses they **leave the guild**, taking by alignment (lawfulness):
+  Lawful — only what they wear and wield; Neutral — that plus the pack, but not
+  the gold; Chaotic — everything. What they leave behind goes to the group's
+  leader.
+- A group in transit or on an order that holds its members (`Group.locked`) is
+  not tested until it can actually split.
+
+Recruitment refuses a pitch whose new member would overextend the sponsor's group
+while the guild has no free slot to split them into.
+
 Recruitment pitches (`recruit.py`) already let the player pick who does the
 talking — the leader doesn't override that choice, it only fills in where no
 choice was being made (the market's "whoever has the best Charisma" auto-pick).

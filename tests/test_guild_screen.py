@@ -273,3 +273,42 @@ def test_guild_screen_stat_tooltips_show_the_calculation():
         if isinstance(gs.tooltip, list):
             seen.add(gs.tooltip[0][0])
     assert {"hit points (hp)", "ARMOR CLASS", "MENTAL DEFENSE", "SPEED (SQUARES)", "INITIATIVE"} <= seen
+
+
+def test_guild_tab_reports_slots_notices_and_holdings():
+    from gartok.group import BASE_CAPACITY, Group
+    members = [Unit("player") for _ in range(BASE_CAPACITY + 4)]
+    g = Guild(None, groups=[Group(members, node="city"), Group([Unit("player")], node="city")])
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    gs.tab = "guild"
+    assert gs.tutorial_key() == "guild.overview"
+
+    rows = gs._group_rows()
+    assert [r["size"] for r in rows] == [len(members), 1]
+    assert rows[0]["over"] == len(members) - rows[0]["capacity"] > 0 and rows[0]["note"] == ""
+
+    assert [tone for _, tone in gs._notices()] == ["warn"]     # over capacity, no one has given notice yet
+
+    leaver = g.groups[0].members[1]
+    g.leaving[leaver.uid] = g.clock.day + 4
+    assert "leaves the guild in 4 days" in gs._group_rows()[0]["note"]
+    notices = gs._notices()
+    assert [tone for _, tone in notices] == ["bad"]            # the notice replaces the generic warning
+    assert leaver.name in notices[0][0] and "4 days" in notices[0][0]
+
+    holdings = {h["name"]: h for h in gs._holdings()}
+    assert holdings["City house"]["status"] == "NOT OWNED"
+    assert holdings["The Claim"]["status"] == "NOT CLAIMED"
+    g.house.owned = True
+    g.wilds_claim_stage, g.wilds_claim_owner = "ESTABLISHED", "guild"
+    holdings = {h["name"]: h for h in gs._holdings()}
+    assert holdings["City house"]["status"] == "OWNED"
+    assert holdings["The Claim"]["status"] == "UNGUARDED" and holdings["The Claim"]["tone"] == "warn"
+
+
+def test_every_guild_tab_has_a_registered_tutorial_card():
+    from gartok.tutorial import TUTORIALS
+    gs = GuildScreen.__new__(GuildScreen)
+    for tab in ("members", "guild", "reputations"):
+        gs.tab = tab
+        assert gs.tutorial_key() in TUTORIALS

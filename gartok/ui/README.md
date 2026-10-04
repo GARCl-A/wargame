@@ -51,6 +51,7 @@ module, take it off that list. (`set_pointer` lives in `primitives.py` now.)
 | `quest_panel.py` | active-mission cards with deadline and progress |
 | `guild_roster.py` | the guild roster: filter pills, band accordions, member cards with status pills |
 | `member_panel.py` | the guild member sheet, one `draw_*` per block (vitals, weapon, load, tracks, roles) |
+| `guild_panel.py` | the guild overview: fame, group slots, each group's task and warnings, holdings |
 | `reputation_panel.py` | faction cards (deeds, unlocks) in as many columns as fit |
 | `combat_card.py` | unit cards for recruit / squad lists and party rows |
 | `sheet_card.py` | the character sheet at three densities |

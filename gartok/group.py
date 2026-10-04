@@ -26,6 +26,8 @@ all (death, or peeled into a different group by a split).
 from uuid import uuid4
 
 BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overextension`
+BASE_SLOTS = 2      # groups an unknown guild may run: one to study, one in the field
+FAME_PER_SLOT = 3   # total reputation that buys the guild one more group
 
 
 class Group:

@@ -33,6 +33,13 @@
         ],
         "suggestion": "Check the REPUTATIONS tab, top right, to see what you're actually playing for."
       },
+      "overview": {
+        "title": "How far the guild reaches",
+        "body": [
+          "The better known the guild, the more groups it can run at once -- every garrison, work crew and study circle takes one slot. Deeds raise fame; nothing lowers it.",
+          "A group bigger than its leader can hold starts to fray: each day the weakest member may walk. With a free slot they strike out alone; without one they give notice, then leave."
+        ]
+      },
       "reputations": {
         "title": "What you're playing for",
         "body": [

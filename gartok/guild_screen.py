@@ -15,7 +15,7 @@ from . import artwork, factions, magic, progression, talents, world
 from .combatant import Combatant
 from .group import BASE_CAPACITY
 from .screen import Screen
-from .ui import guild_roster, member_panel, reputation_panel
+from .ui import guild_panel, guild_roster, member_panel, reputation_panel
 from .ui.primitives import (
     contained,
     draw_button,
@@ -31,7 +31,7 @@ from .ui.sheet_card import _hp_tooltip, unit_to_ch
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
-TABS = (("members", "MEMBERS"), ("reputations", "REPUTATIONS"))
+TABS = (("members", "MEMBERS"), ("guild", "GUILD"), ("reputations", "REPUTATIONS"))
 FILTERS = (
     ("all", "ALL", "Every member of every group"),
     ("idle", "IDLE", "Groups waiting for orders"),
@@ -93,6 +93,8 @@ class GuildScreen(Screen):
         self.tooltip = None
         self._rep_scroll = 0
         self._rep_max_scroll = 0
+        self._guild_scroll = 0
+        self._guild_max_scroll = 0
         self._roster_scroll = 0
         self._roster_max_scroll = 0
         self._detail_scroll = 0
@@ -109,7 +111,7 @@ class GuildScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
-        return f"guild.{self.tab}"
+        return "guild.overview" if self.tab == "guild" else f"guild.{self.tab}"
 
     def tutorial_badge_rect(self, size):
         W, _ = size
@@ -142,6 +144,8 @@ class GuildScreen(Screen):
             delta = -event.y * SCROLL_STEP
             if self.tab == "reputations":
                 self._scroll_by("_rep_scroll", "_rep_max_scroll", delta)
+            elif self.tab == "guild":
+                self._scroll_by("_guild_scroll", "_guild_max_scroll", delta)
             elif self.mouse[0] < self._roster_right:
                 self._scroll_by("_roster_scroll", "_roster_max_scroll", delta)
             else:
@@ -216,9 +220,10 @@ class GuildScreen(Screen):
         self._draw_header(screen, F, W, pad, pending)
 
         top, bottom = pad + 76, H - FOOTER_H - T.S * 2
-        if self.tab == "reputations":
+        if self.tab in ("reputations", "guild"):
             self._roster_right = 0
-            self._draw_reputations(screen, F, pygame.Rect(pad, top, W - 2 * pad, bottom - top))
+            body = pygame.Rect(pad, top, W - 2 * pad, bottom - top)
+            (self._draw_reputations if self.tab == "reputations" else self._draw_guild)(screen, F, body)
         else:
             list_w = int(min(max(W * 0.22, LIST_MIN), LIST_MAX))
             list_rect = pygame.Rect(pad, top, list_w, bottom - top)
@@ -524,6 +529,98 @@ class GuildScreen(Screen):
                            "text": "Studying at the taverna: daily progress toward mastery.",
                            "tip": f"Rolls 1d20 + INT per day on a Study order. {cur}/{need} points."})
         return tracks
+
+    # ------------------------------------------------------------------ #
+    def _group_task(self, grp):
+        if _is_idle(grp):
+            return "Idle"
+        order = grp.order
+        if order.kind == "garrison":
+            job = getattr(order, "job", None)
+            return f"Garrison ({job})" if job else "Garrison"
+        return order.kind.title()
+
+    def _notice_days(self):
+        """`{uid: days left}` for everyone who has given notice."""
+        day = self.guild.clock.day
+        return {uid: max(0, due - day) for uid, due in self.guild.leaving.items()}
+
+    @staticmethod
+    def _days(n):
+        return f"{n} day{'s' if n != 1 else ''}"
+
+    def _group_rows(self):
+        left = self._notice_days()
+        notice = {}
+        for u in self.roster:
+            if u.uid in left:
+                notice[self.guild.group_of(u).gid] = (
+                    f"NOTICE: {u.name} leaves the guild in {self._days(left[u.uid])}")
+        return [{"name": g.display_name, "where": _node_label(g.node), "task": self._group_task(g),
+                 "size": len(g.members), "capacity": g.capacity, "over": g.overextension,
+                 "note": notice.get(g.gid, "")} for g in self.guild.groups]
+
+    def _notices(self):
+        """Banners for the top of the GUILD tab: whoever is about to walk out
+        (bad), then any overextended group nobody has given notice from yet (warn)."""
+        left = self._notice_days()
+        out = [(f"{u.name} has given notice and leaves the guild in {self._days(left[u.uid])} -- "
+                + f"{self.guild.group_of(u).display_name} is over capacity with no free slot.", "bad")
+               for u in self.roster if u.uid in left]
+        warned = {self.guild.group_of(u) for u in self.roster if u.uid in left}
+        if not self.guild.free_slots:
+            out += [(f"{g.display_name} is over capacity and the guild has no free slot: "
+                     + "its weakest member may give notice any day.", "warn")
+                    for g in self.guild.groups if g.overextension and g not in warned]
+        return out
+
+    def _holdings(self):
+        guild, house = self.guild, self.guild.house
+        out = []
+        if not house.owned:
+            out.append(("City house", "NOT OWNED", "muted", "Buy one from the Bankers in the City."))
+        elif house.squatting:
+            out.append(("City house", "SQUATTED", "bad", "Unpaid tax: the guard raids it."))
+        elif house.missed_payments:
+            out.append(("City house", "BEHIND ON TAX", "warn",
+                        f"{house.missed_payments} missed payment{'s' if house.missed_payments != 1 else ''}."))
+        else:
+            out.append(("City house", "OWNED", "good", "Tax paid up."))
+
+        stage = guild.wilds_claim_stage
+        held = any(g.node == world.WILDS_TERRITORY_NODE and g.order is not None
+                   and g.order.kind == "garrison" and not g.empty for g in guild.groups)
+        if stage == "NONE":
+            out.append(("The Claim", "NOT CLAIMED", "muted", "Scout it from the Wilds to start."))
+        elif stage == "ESTABLISHED" and guild.wilds_claim_owner == "seized":
+            out.append(("The Claim", "SEIZED", "bad", "Travel there and beat the occupiers to retake it."))
+        elif stage == "ESTABLISHED":
+            out.append(("The Claim", "HELD" if held else "UNGUARDED", "good" if held else "warn",
+                        "A garrison stands on the land." if held
+                        else "An unguarded claim can be seized without a fight."))
+        else:
+            left = guild.wilds_claim_sustain_days_left
+            detail = (f"{left} days to hold it" if stage == "SUSTAINING" and left is not None
+                      else "Claim campaign in progress.")
+            out.append(("The Claim", stage.title(), "warn", detail))
+
+        bank = guild.bank
+        out.append(("Strongbox", "RENTED" if bank.open else "NONE", "good" if bank.open else "muted",
+                    f"{bank.load:g}/{bank.capacity:g} kg used" if bank.open
+                    else "Rent one at the bank in the City."))
+        return [{"name": n, "status": st, "tone": tone, "detail": d} for n, st, tone, d in out]
+
+    def _draw_guild(self, screen, F, rect):
+        guild = self.guild
+        data = {
+            "fame": guild.fame, "fame_next": guild.fame_to_next_slot,
+            "slots": (len(guild.groups), guild.group_slots),
+            "factions": [(f.name, guild.reputation.get(f.id, 0)) for f in factions.FACTIONS.values()],
+            "notices": self._notices(), "groups": self._group_rows(), "bases": self._holdings(),
+        }
+        info = guild_panel.draw_guild(screen, F, rect, data, self._guild_scroll, self.mouse)
+        self._guild_max_scroll = max(0, info["content_h"] - info["view_h"])
+        self._guild_scroll = min(self._guild_scroll, self._guild_max_scroll)
 
     # ------------------------------------------------------------------ #
     def _draw_reputations(self, screen, F, rect):

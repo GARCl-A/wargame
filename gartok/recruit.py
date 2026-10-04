@@ -210,7 +210,7 @@ def pitch_block_reason(guild, party, candidate, is_prison=False):
     is_barred = prison_barred if is_prison else barred
     eligible = [m for m in party
                 if can_pitch(m, candidate) and not is_barred(guild, candidate, m)
-                and slots_free(guild, m) > 0]
+                and slots_free(guild, m) > 0 and guild.can_absorb(guild.group_of(m))]
     if eligible:
         return None
     if not party:
@@ -234,6 +234,9 @@ def pitch_block_reason(guild, party, candidate, is_prison=False):
     has_party_slots = any(slots_free(guild, m) > 0 for m in party)
     if not has_party_slots:
         return "no sponsor slots free in party"
+
+    if not any(guild.can_absorb(guild.group_of(m)) for m in party):
+        return "the group is full and the guild has no free group slot"
 
     return "speakers have no sponsor slots free"
 

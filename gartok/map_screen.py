@@ -249,7 +249,8 @@ class MapScreen(Screen):
                 "rations_label": f"RATIONS: {sum(u.rations for u in g.members)}",
                 "party": [(u.name, role_for(u.occupation), _hp_frac(u), u.race.get("name", "")) for u in g.members],
                 "roster_members": [(u.uid, u.name, _race_tag(u)) for u in g.members],
-                "mates": self._mates_for(g)}
+                "mates": self._mates_for(g),
+                "split_blocked": "" if self.guild.free_slots else "no free group slot"}
 
     def _events(self):
         clock = self.guild.clock

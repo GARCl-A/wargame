@@ -35,7 +35,7 @@ else:
 
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 NUM_SLOTS = 3
-SAVE_VERSION = 17                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 18                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def slot_path(slot):
@@ -159,6 +159,7 @@ def save_game(slot, guild):
         "missions": [missions.mission_to_dict(m) for m in guild.missions],
         "leader": guild.leader.uid if guild.leader else None,
         "leader_swaps_used": guild.leader_swaps_used,
+        "leaving": dict(guild.leaving),
         "name": guild.name,
         "banner_color": list(guild.banner_color),
         "banner_icon": guild.banner_icon,
@@ -231,6 +232,7 @@ def load_game(slot):
                  jailed=[(Unit.from_save(d["unit"]), d["released_day"])
                          for d in payload.get("jailed", [])],
                  leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
+                 leaving=payload.get("leaving"),
                  name=payload.get("name", ""), banner_color=payload.get("banner_color"),
                  banner_icon=payload.get("banner_icon"),
                  ancient_ruins_discovered=payload.get("ancient_ruins_discovered", False),

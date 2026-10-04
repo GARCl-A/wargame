@@ -79,9 +79,19 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 
 from collections import Counter
 
-from . import data, economy, items, justice, magic, missions, progression, world
+from . import (
+    cohesion,
+    data,
+    economy,
+    items,
+    justice,
+    magic,
+    missions,
+    progression,
+    world,
+)
 from .clock import Clock
-from .group import Group
+from .group import BASE_SLOTS, FAME_PER_SLOT, Group
 from .holdings import CityProperty, Stash
 from .tutorial import TutorialState
 
@@ -110,7 +120,7 @@ class Guild:
                  bankers_debt_since=None, garrison_stock=None,
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
-                 ancient_ruins_discovered=False):
+                 ancient_ruins_discovered=False, leaving=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
         # every existing test call site) -- the guild leader, if given, also
@@ -154,6 +164,7 @@ class Guild:
         self.wilds_claim_fence_lumber = wilds_claim_fence_lumber
         self.wilds_claim_sustain_days_left = wilds_claim_sustain_days_left   # only meaningful while SUSTAINING
         self.wilds_claim_owner = wilds_claim_owner   # None before ESTABLISHED, else "guild" | "seized" (Sistema 4)
+        self.leaving = dict(leaving or {})    # {uid: day the notice lapses} -- see cohesion.py
         self.leader = leader                  # the guild's "who am I" -- None resolves below
         self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change
         self.name = name or ""                # chosen at the draft; "" shows as "The Guild"
@@ -236,6 +247,33 @@ class Guild:
                     u.group_overextension = n
                     u._derive_combat()
 
+    # ------------------------------------------------------------------ #
+    # fame -> how many groups the guild can run at once                   #
+    # ------------------------------------------------------------------ #
+    @property
+    def fame(self):
+        """How widely known the guild is: every faction's reputation, summed."""
+        return sum(max(0, r) for r in self.reputation.values())
+
+    @property
+    def group_slots(self):
+        return BASE_SLOTS + self.fame // FAME_PER_SLOT
+
+    @property
+    def free_slots(self):
+        return max(0, self.group_slots - len(self.groups))
+
+    @property
+    def fame_to_next_slot(self):
+        return FAME_PER_SLOT - self.fame % FAME_PER_SLOT
+
+    def can_absorb(self, group):
+        """True if one more member in `group` would not leave it overextended
+        with nowhere to split them to."""
+        if group is None:
+            return True
+        return len(group.members) < group.capacity or self.free_slots > 0
+
     def add_member(self, unit, group):
         group.members.append(unit)
         self._sync_leadership()
@@ -268,6 +306,8 @@ class Guild:
             raise ValueError("split needs a non-empty, proper subset of the group")
         if group.locked:
             raise ValueError("can't split a group with an order in flight")
+        if not self.free_slots:
+            raise ValueError("no free group slot -- the guild is not famous enough to run another")
         group.members = [u for u in group.members if u not in peel]
         new_group = Group(peel, node=group.node, name=name)
         self.groups.append(new_group)
@@ -620,6 +660,7 @@ class Guild:
         events += self._city_property_upkeep()
         events += self._garrison_upkeep()
         events += self._wilds_claim_sustain_tick()
+        events += cohesion.daily(self)
         return events, casualties
 
     def _charge_roster(self, amount):
