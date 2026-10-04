@@ -45,7 +45,7 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
 
     def __init__(self, fonts, guild, on_back):
         super().__init__()
-        self.fonts = fonts                   # legacy theme.Fonts -- unused, kept for the ctor's existing shape
+        self.fonts = fonts                 
         self._F = None
         self.guild = guild
         self.roster = guild.roster

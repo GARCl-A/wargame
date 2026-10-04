@@ -75,7 +75,7 @@ from .tanner_screen import TannerScreen
 from .taverna_screen import TavernaScreen
 from .tutorial import TutorialState
 from .ui.banner import set_player_color
-from .ui.tokens import LegacyFonts, T
+from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 from .wilds_claim_screen import WildsClaimScreen
 
@@ -88,8 +88,7 @@ class App:
         pygame.display.set_caption("GARTOK Tactical")
         self.window = pygame.display.set_mode(START_SIZE, pygame.RESIZABLE | pygame.WINDOWMAXIMIZED)
         self.clock = pygame.time.Clock()
-        self.fonts = LegacyFonts()
-        self.ui_fonts = ui_fonts()   # gartok/ui screens draw from this, never from LegacyFonts()
+        self.ui_fonts = ui_fonts()
 
         self.slot = None
         self.guild = None
@@ -186,7 +185,7 @@ class App:
             return
         self._map_notices += arena.sync(self.guild)
         self._save()
-        self.scene = MapScreen(self.fonts, self.guild,
+        self.scene = MapScreen(self.ui_fonts, self.guild,
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over,
                                on_advance=self._advance,
@@ -218,22 +217,22 @@ class App:
         self._start_menu()
 
     def _open_guild(self):
-        self.scene = GuildScreen(self.fonts, self.guild,
+        self.scene = GuildScreen(self.ui_fonts, self.guild,
                                  on_back=self._start_map, on_level=self._open_level,
                                  on_manage=self._open_gear, on_bank=self._open_vault_view)
 
     def _open_vault_view(self):
         from .bank_view_screen import BankViewScreen
-        self.scene = BankViewScreen(self.fonts, self.guild, on_done=self._open_guild)
+        self.scene = BankViewScreen(self.ui_fonts, self.guild, on_done=self._open_guild)
 
     def _open_gear(self):
-        self.scene = GearScreen(self.fonts, self.guild, on_back=self._open_guild)
+        self.scene = GearScreen(self.ui_fonts, self.guild, on_back=self._open_guild)
         
     def _open_group(self, group):
         from .group_screen import GroupScreen
-        self.scene = GroupScreen(self.fonts, self.guild, group, on_back=self._start_map)
+        self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=self._start_map)
     def _open_level(self, unit):
-        self.scene = LevelScreen(self.fonts, unit,
+        self.scene = LevelScreen(self.ui_fonts, unit,
                                  on_back=self._open_guild, on_change=self._save)
 
     # ------------------------------------------------------------------ #
@@ -280,14 +279,14 @@ class App:
                     pool += loot.carried_by(u)
                 if pool and self.guild.roster:
                     from .loot_screen import LootScreen
-                    self.scene = LootScreen(self.fonts, self.guild, self.guild.roster, pool, on_done=self._after_activity)
+                    self.scene = LootScreen(self.ui_fonts, self.guild, self.guild.roster, pool, on_done=self._after_activity)
                 else:
                     self._after_activity()
 
             def show_death_alert():
                 from .alert_screen import AlertScreen
                 msgs = [f"{u.name} starved to death." for u in all_casualties]
-                self.scene = AlertScreen(self.fonts, self.scene, "DEATH ALERT", msgs, on_done=show_starvation_loot, is_danger=True)
+                self.scene = AlertScreen(self.ui_fonts, self.scene, "DEATH ALERT", msgs, on_done=show_starvation_loot, is_danger=True)
 
             nxt = show_death_alert
 
@@ -371,18 +370,18 @@ class App:
         else:                                   # champion beaten: the Games are open
             offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]
         disabled = {u for u in group.members if u.incapacitated}
-        self.scene = SquadScreen(self.fonts, group.members, node,
+        self.scene = SquadScreen(self.ui_fonts, group.members, node,
                                  on_confirm=self._start_battle, on_back=self._after_activity,
                                  arena_offers=offers, disabled=disabled,
                                  confirm_label="STAKE AND FIGHT")
 
     def _open_market_stalls(self, shoppers, node, _offer):
-        self.scene = MarketScreen(self.fonts, self.guild, shoppers, node,
+        self.scene = MarketScreen(self.ui_fonts, self.guild, shoppers, node,
                                   on_done=self._after_activity)
 
     def _open_bank_vault(self, group, node, _offer):
         from .bank_hub_screen import BankHubScreen
-        self.scene = BankHubScreen(self.fonts, self.guild, group,
+        self.scene = BankHubScreen(self.ui_fonts, self.guild, group,
                                    on_done=self._after_activity)
 
     def _open_city_property(self, group, node):
@@ -390,11 +389,11 @@ class App:
         many tax cycles are missed -- same shape as `_open_arena` checking
         `arena.defense_due` before the normal squad picker."""
         if self.guild.house.repossession_due:
-            self.scene = RepossessionScreen(self.fonts, self.guild,
+            self.scene = RepossessionScreen(self.ui_fonts, self.guild,
                                             on_return=self._resolve_repossession_return,
                                             on_squat=self._resolve_repossession_squat)
             return
-        self.scene = CityPropertyScreen(self.fonts, self.guild, list(group.members),
+        self.scene = CityPropertyScreen(self.ui_fonts, self.guild, list(group.members),
                                         on_done=self._after_activity)
 
     def _resolve_repossession_return(self):
@@ -413,7 +412,7 @@ class App:
     # the Wilds claim (world.Node.claim, wilds_claim_screen.py)           #
     # ------------------------------------------------------------------ #
     def _open_wilds_claim(self, group, node):
-        self.scene = WildsClaimScreen(self.fonts, self.guild, group,
+        self.scene = WildsClaimScreen(self.ui_fonts, self.guild, group,
                                       on_done=self._after_activity,
                                       on_fight_clear=self._start_claim_clear_battle,
                                       on_fight_sweep=self._start_claim_sweep_battle)
@@ -447,22 +446,22 @@ class App:
                                   on_done=self._after_activity)
 
     def _open_ledger_desk(self, group, node, _offer):
-        self.scene = LedgerScreen(self.fonts, self.guild, group,
+        self.scene = LedgerScreen(self.ui_fonts, self.guild, group,
                                  on_done=self._after_activity)
 
     def _open_forge(self, group, node, _offer):
         from .crafting_screen import CraftingScreen
-        self.scene = CraftingScreen(self.fonts, self.guild, group,
+        self.scene = CraftingScreen(self.ui_fonts, self.guild, group,
                                     on_done=self._after_activity)
 
     def _open_apothecary(self, group, node, _offer):
         from .apothecary_hub_screen import ApothecaryHubScreen
-        self.scene = ApothecaryHubScreen(self.fonts, self.guild, group,
+        self.scene = ApothecaryHubScreen(self.ui_fonts, self.guild, group,
                                          on_done=self._after_activity)
 
     def _open_library(self, group, node, _offer):
         from .library_hub_screen import LibraryHubScreen
-        self.scene = LibraryHubScreen(self.fonts, self.guild, group, node,
+        self.scene = LibraryHubScreen(self.ui_fonts, self.guild, group, node,
                                       on_done=self._after_activity)
 
     def _enter_ancient_ruins(self, group, node):
@@ -481,7 +480,7 @@ class App:
     # ------------------------------------------------------------------ #
     def _open_guard_check(self, group, order):
         caught = [u for u in group.members if u.uid in order.caught]
-        self.scene = GuardScreen(self.fonts, self.guild, group, order, caught,
+        self.scene = GuardScreen(self.ui_fonts, self.guild, group, order, caught,
                                  on_prison=self._resolve_guard_prison,
                                  on_flee=self._resolve_guard_flee,
                                  on_fight=self._start_guard_battle)
@@ -590,7 +589,7 @@ class App:
     # ------------------------------------------------------------------ #
     def _open_hunt_ground(self, party, node, _offer):
         self._hunt = hunt.HuntState(list(party), node, hours_left=0)
-        self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="setup",
+        self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="setup",
                                 on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
                                 on_tick=self._hunt_tick,
                                 on_autowin=self._resolve_hunt_autowin)
@@ -643,7 +642,7 @@ class App:
     def _resume_hunt(self):
         """Back from a won ambush with daylight still to spend."""
         self._save()
-        self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="interlude",
+        self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="interlude",
                                 on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
                                 on_tick=self._hunt_tick,
                                 on_autowin=self._resolve_hunt_autowin)
@@ -652,7 +651,7 @@ class App:
         """The hunt is over (dark, driven off, or the party is spent) -- the
         screen banks the haul on entering its wrap-up phase."""
         self._save()
-        self.scene = HuntScreen(self.fonts, self.guild, self._hunt, phase="done",
+        self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="done",
                                 on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
                                 on_tick=self._hunt_tick)
 
@@ -668,12 +667,12 @@ class App:
         self._open_taverna(list(group.members), world.node(group.node), None, group=group)
 
     def _open_taverna(self, party, node, _offer, group=None):
-        self.scene = TavernaScreen(self.fonts, self.guild, party, node,
+        self.scene = TavernaScreen(self.ui_fonts, self.guild, party, node,
                                    on_done=self._after_activity, group=group)
 
     def _open_prison(self, party, node, _offer):
         from .prison_screen import PrisonScreen
-        self.scene = PrisonScreen(self.fonts, self.guild, party, node,
+        self.scene = PrisonScreen(self.ui_fonts, self.guild, party, node,
                                   on_done=self._after_activity)
 
     def _start_battle(self, squad, node, offer=None):
@@ -760,7 +759,7 @@ class App:
                     self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)
                 if outcome.loot_pool and outcome.survivors:
                     self._save()
-                    self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                    self.scene = LootScreen(self.ui_fonts, self.guild, outcome.survivors,
                                             outcome.loot_pool, on_done=self._after_activity)
                     return
                 self._after_activity()
@@ -773,7 +772,7 @@ class App:
                 nxt = self._resume_hunt if resume else self._finish_hunt
                 if outcome.loot_pool and outcome.survivors:
                     self._save()
-                    self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                    self.scene = LootScreen(self.ui_fonts, self.guild, outcome.survivors,
                                             outcome.loot_pool, on_done=nxt)
                     return
                 nxt()
@@ -781,7 +780,7 @@ class App:
 
             if outcome.arena_reward is not None:  # arena bout won: hand out the purse
                 self._save()
-                self.scene = RewardScreen(self.fonts, self.guild, outcome.survivors,
+                self.scene = RewardScreen(self.ui_fonts, self.guild, outcome.survivors,
                                           outcome.arena_reward, on_done=after_arena_reward,
                                           deeds=outcome.deeds_earned, note=note)
                 return
@@ -791,7 +790,7 @@ class App:
 
             if outcome.loot_pool and outcome.survivors:
                 self._save()
-                self.scene = LootScreen(self.fonts, self.guild, outcome.survivors,
+                self.scene = LootScreen(self.ui_fonts, self.guild, outcome.survivors,
                                         outcome.loot_pool, on_done=self._after_activity)
                 return
             self._after_activity()
@@ -814,7 +813,7 @@ class App:
                 return
             title, msgs, is_danger = alerts[idx]
             from .alert_screen import AlertScreen
-            self.scene = AlertScreen(self.fonts, self.scene, title, msgs,
+            self.scene = AlertScreen(self.ui_fonts, self.scene, title, msgs,
                                      on_done=lambda: run_alert(idx + 1),
                                      is_danger=is_danger)
 
@@ -832,7 +831,7 @@ class App:
             adelio.arena_title = False
             adelio.arena_role = None
             adelio.side = "player"
-            self.scene = TavernaScreen(self.fonts, self.guild, survivors, node,
+            self.scene = TavernaScreen(self.ui_fonts, self.guild, survivors, node,
                                        on_done=self._after_activity,
                                        candidates=[adelio], title="RECRUIT ADELIO")
         self.scene = AdelioPromptScreen(self.ui_fonts, on_recruit=do_recruit, on_leave=self._after_activity)

@@ -9,7 +9,7 @@ modal, eliminating the slot-machine reroll loop while maintaining tabletop emerg
 `on_done(picks, leader, name, banner_color, banner_icon)` -- the "identity"
 phase (name + banner, purely cosmetic -- see `Guild.name`/`banner_color`/
 `banner_icon` in `guild.py`) recolours every unit token live via
-`theme.set_player_color` as the player picks, so the leader-pick cards that
+`ui.banner.set_player_color` as the player picks, so the leader-pick cards that
 follow already show it. The leader step itself ("who am I") is `Guild.leader`
 -- see that module for what the choice does downstream (haggling, and the
 run's one free way to change your mind).

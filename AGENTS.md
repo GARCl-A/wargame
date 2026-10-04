@@ -85,13 +85,9 @@ crafting and mission board in tabs. The full module list is in `README.md`.
   dicts/tuples, never real domain objects (`Group`, `Node`, `Unit`) — the
   screen itself adapts its model into that shape, the component stays
   reusable across screens.
-- **`theme.py` is legacy** — the app's original bespoke ramp (`widgets.py` has
-  been fully eliminated). No module under `gartok/` imports it any more; only
-  tests still do (for the old `Fonts`, `SP*`, `MARGIN`), and the screens that
-  take a legacy `fonts` constructor argument. Don't add new usage — build on
-  `gartok/ui/`: the board's palette and camera are `ui/board_style.py`, the
-  banner colour is `ui/banner.py`. `tests/test_theme_budget.py` fails on any
-  new importer.
+- The old `theme.py` ramp is gone; the board's palette and camera are
+  `ui/board_style.py`, the banner colour is `ui/banner.py`. Screens take
+  the `tokens.fonts()` dict as their constructor argument.
 - A `ui/` component never reads module globals or hardcodes screen
   coordinates/fixed pixel widths for panel sizing — it takes its rect/data as
   parameters and sizes/lays out relative to those (proportional-with-clamp

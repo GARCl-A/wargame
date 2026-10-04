@@ -221,11 +221,12 @@ def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
 
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
-    from gartok.theme import SP2, Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.ui.tokens import T
 
     pygame.init()
     g = Guild([Unit("Alice"), Unit("Bob")], node="city")
-    gs = GuildScreen(Fonts(), g, on_back=lambda: None)
+    gs = GuildScreen(ui_fonts(), g, on_back=lambda: None)
     W, H = 1280, 800
     surf = pygame.Surface((W, H))
     gs.draw(surf)
@@ -238,9 +239,9 @@ def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
         assert not rect.colliderect(badge_rect), f"Tab {key} collided with tutorial badge"
         assert rect.top == badge_rect.top, f"Tab {key} top {rect.top} != badge top {badge_rect.top}"
 
-    # REPUTATIONS should be immediately to the left of the badge, separated by SP2
+    # REPUTATIONS should be immediately to the left of the badge, separated by T.S
     rep_rect = next(r for r, k in gs.tab_hits if k == "reputations")
-    assert rep_rect.right + SP2 == badge_rect.left
+    assert rep_rect.right + T.S == badge_rect.left
 
 
 def test_tutorial_badge_rect_queried_by_tutorial_card():

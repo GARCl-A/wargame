@@ -155,14 +155,14 @@ def test_market_pack_scrolls_and_the_sheet_badge_opens_the_full_sheet():
     import pygame
     from gartok import world
     from gartok.market_screen import MarketScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     random.seed(3)
     mnode = next(n for n in world.NODES if n.kind == "market")
     shopper = Unit("player")
     shopper._base_inventory = packed([f"Trinket{i}" for i in range(30)])   # distinct: forces overflow
-    ms = MarketScreen(Fonts(), None, [shopper], mnode, lambda: None)
+    ms = MarketScreen(ui_fonts(), None, [shopper], mnode, lambda: None)
     ms.mouse = (0, 0)
     surf = pygame.Surface((1600, 1000))
     ms.draw(surf)
@@ -255,10 +255,10 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok import world
     from gartok.guild import Guild
     from gartok.battle import Battle
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
-    F = Fonts()
+    F = ui_fonts()
 
     random.seed(0)
     roster = [Unit("player") for _ in range(5)]
@@ -446,13 +446,13 @@ def test_guild_screen_member_detail_renders():
     import pygame
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
     roster = [Unit("player")]
     guild = Guild(roster)
-    scr = GuildScreen(Fonts(), guild, lambda *args: None, lambda: None)
+    scr = GuildScreen(ui_fonts(), guild, lambda *args: None, lambda: None)
     scr.member = roster[0]
     
     surf = pygame.Surface((1280, 800))
@@ -489,12 +489,12 @@ def test_squad_and_reward_screens_pop_the_sheet_modal():
     import pygame
     from gartok import world
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.squad_screen import SquadScreen
     from gartok.reward_screen import RewardScreen
     pygame.init()
     pygame.display.set_mode((1, 1))
-    F = Fonts()
+    F = ui_fonts()
 
     random.seed(1)
     roster = [Unit("player") for _ in range(3)]
@@ -529,11 +529,11 @@ def test_level_screen_pops_the_sheet_modal():
     escape key closes it; and footer button also opens it."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.level_screen import LevelScreen
     pygame.init()
     pygame.display.set_mode((1, 1))
-    F = Fonts()
+    F = ui_fonts()
 
     random.seed(1)
     u = Unit("player")
@@ -639,13 +639,13 @@ def SKIP_test_group_pack_list_scrolls_instead_of_hiding_items_past_the_first_scr
     import pygame
     from gartok.guild import Guild
     from gartok.group_screen import GroupScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     a = Unit("player")
     a._base_inventory = [f"Scroll{i}" for i in range(40)]      # 40 distinct items: no stacking
     g = Guild([a])
-    scr = GroupScreen(Fonts(), g, g.groups[0], on_back=lambda: None)
+    scr = GroupScreen(ui_fonts(), g, g.groups[0], on_back=lambda: None)
     scr.mouse = (0, 0)
     surf = pygame.Surface((1600, 1000))
     scr.draw(surf)
@@ -685,14 +685,14 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.gear_screen import GearScreen
     from gartok.sheet_panel import draw_sheet
     from gartok.combatant import Combatant
     pygame.init()
     pygame.display.set_mode((1, 1))
-    F = Fonts()
+    F = ui_fonts()
     from gartok.ui.tokens import fonts as ui_fonts
 
     u = Unit("player")
@@ -744,7 +744,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     from gartok import data
     from gartok.gear_screen import GearScreen
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -757,7 +757,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     u1._base_inventory = packed(["Rope"])
     u2._base_inventory = []
     g = Guild([u1, u2])
-    gs = GearScreen(Fonts(), g, lambda: None)
+    gs = GearScreen(ui_fonts(), g, lambda: None)
     surf = pygame.Surface((1600, 900))
     gs.mouse = (0, 0)
     gs.draw(surf)
@@ -783,14 +783,14 @@ def test_group_screen_wheel_scroll_reveals_items_below_the_fold():
     import pygame
     from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
     u._base_inventory = packed([f"Rope{i}" for i in range(40)])   # 40 distinct stacks: no merging, far more than one column can show
     g = Guild([u])
-    gs = GroupScreen(Fonts(), g, g.groups[0], lambda: None)
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
     surf = pygame.Surface((1280, 720))
     gs.mouse = (0, 0)
     gs.draw(surf)
@@ -816,7 +816,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     import pygame
     from gartok.gear_screen import GearScreen
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -825,7 +825,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
-    gs.fonts = Fonts()
+    gs.fonts = ui_fonts()
     gs.guild = g
     gs.roster = g.roster
     gs.pinned = [u]
@@ -866,8 +866,8 @@ def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
-    from gartok.theme import Fonts
-    gs.fonts = Fonts()
+    from gartok.ui.tokens import fonts as ui_fonts
+    gs.fonts = ui_fonts()
     gs.guild = g
     gs.roster = g.roster
     gs.pinned = [u]
@@ -888,7 +888,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     import pygame
     from gartok.gear_screen import GearScreen
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -898,7 +898,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
-    gs.fonts = Fonts()
+    gs.fonts = ui_fonts()
     gs.guild = g
     gs.roster = g.roster
     gs.pinned = [u]
@@ -931,7 +931,7 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     import pygame
     from gartok.gear_screen import GearScreen
     from gartok.guild import Guild
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -940,7 +940,7 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
     gs = GearScreen.__new__(GearScreen)
-    gs.fonts = Fonts()
+    gs.fonts = ui_fonts()
     gs.guild = g
     gs.roster = g.roster
     gs.pinned = [u]
@@ -974,12 +974,12 @@ def test_market_screen_draw_multiple_shoppers_hover():
     import pygame
     from gartok import world
     from gartok.market_screen import MarketScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     mnode = next(n for n in world.NODES if n.kind == "market")
     shoppers = [Unit("player"), Unit("player")]
-    ms = MarketScreen(Fonts(), None, shoppers, mnode, lambda: None)
+    ms = MarketScreen(ui_fonts(), None, shoppers, mnode, lambda: None)
     surf = pygame.Surface((1200, 800))
     ms.mouse = (surf.get_width() - 50, 80)
     ms.draw(surf)
@@ -1129,13 +1129,13 @@ def test_sheet_panel_attribute_hover_tooltip():
     import pygame
     from gartok import sheet_panel
     from gartok.combatant import Combatant
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
     c = Combatant(u)
-    fonts = Fonts()
+    fonts = ui_fonts()
     surf = pygame.Surface((1280, 720))
     rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
 
@@ -1188,7 +1188,7 @@ def test_market_screen_item_hover_tooltip():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.market_screen import MarketScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
     from gartok.world import NODES
     from tests.helpers import Unit
@@ -1201,7 +1201,7 @@ def test_market_screen_item_hover_tooltip():
     node = next(n for n in NODES if n.kind == "market")
     guild.market_stock = {"Dagger": 5, "Meat": 10}
     
-    ms = MarketScreen(Fonts(), guild, [shopper], node, lambda: None)
+    ms = MarketScreen(ui_fonts(), guild, [shopper], node, lambda: None)
     surf = pygame.Surface((1280, 720))
     ms.mouse = (0, 0)
     ms.draw(surf)
@@ -1232,7 +1232,7 @@ def test_market_screen_weapon_size_toggle():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.market_screen import MarketScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
     from gartok.world import NODES
     from tests.helpers import Unit
@@ -1243,7 +1243,7 @@ def test_market_screen_weapon_size_toggle():
     guild = Guild([shopper])
     node = next(n for n in NODES if n.kind == "market")
     
-    ms = MarketScreen(Fonts(), guild, [shopper], node, lambda: None)
+    ms = MarketScreen(ui_fonts(), guild, [shopper], node, lambda: None)
     surf = pygame.Surface((1280, 720))
     ms.mouse = (0, 0)
     ms.draw(surf)
@@ -1293,7 +1293,6 @@ def test_sheet_panel_hp_breakdown_tooltip():
     import pygame
     from gartok import sheet_panel
     from gartok.combatant import Combatant
-    from gartok.theme import Fonts
     from gartok.ui.sheet_card import hp_tooltip
     from gartok.ui.tokens import fonts as ui_fonts
     from tests.helpers import Unit
@@ -1305,7 +1304,7 @@ def test_sheet_panel_hp_breakdown_tooltip():
     u._level_hp_rolls = [6, 8]
     u.recalculate_hp()
 
-    fonts = Fonts()
+    fonts = ui_fonts()
     lines = hp_tooltip(u, ui_fonts())
     assert any("HIT POINTS (HP)" in text for text, _, _ in lines)
     assert any("Base (L0): 7" in text for text, _, _ in lines)
@@ -1355,12 +1354,12 @@ def test_map_screen_split_panel_shows_racial_level():
     from gartok import world
     from gartok.guild import Guild
     from gartok.group import Group
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.map_screen import MapScreen
     from tests.helpers import Unit
     pygame.init()
     pygame.display.set_mode((1, 1))
-    F = Fonts()
+    F = ui_fonts()
 
     u1, u2 = Unit("player"), Unit("player")
     u1.set_track_level("combat", 3)
@@ -1438,7 +1437,7 @@ def test_guild_screen_level_up_observability():
     import pygame
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.unit import Unit
     pygame.init()
     surf = pygame.Surface((1280, 800))
@@ -1450,7 +1449,7 @@ def test_guild_screen_level_up_observability():
 
     guild = Guild([u0, u1])
     level_called = []
-    scr = GuildScreen(Fonts(), guild, on_back=lambda: None, on_level=lambda u: level_called.append(u))
+    scr = GuildScreen(ui_fonts(), guild, on_back=lambda: None, on_level=lambda u: level_called.append(u))
 
     # Smart selection: picked u1 because u1 has pending picks
     assert scr.member == u1
@@ -1472,7 +1471,7 @@ def test_map_screen_level_up_observability():
     import pygame
     from gartok.guild import Guild
     from gartok.map_screen import MapScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.unit import Unit
     pygame.init()
     surf = pygame.Surface((1280, 800))
@@ -1481,7 +1480,7 @@ def test_map_screen_level_up_observability():
     u.collect_levels()
     guild = Guild([u], node="city")
 
-    scr = MapScreen(Fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
+    scr = MapScreen(ui_fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
                     on_advance=lambda *a, **k: None, on_manage_group=lambda g: None)
     scr.mouse = (0, 0)
     scr.draw(surf)
@@ -1491,7 +1490,7 @@ def test_map_screen_level_up_observability():
 
     # a guild with nobody pending a level-up gets the plain, narrower label
     plain_guild = Guild([Unit("player")], node="city")
-    plain_scr = MapScreen(Fonts(), plain_guild, on_guild=lambda: None, on_wipe=lambda: None,
+    plain_scr = MapScreen(ui_fonts(), plain_guild, on_guild=lambda: None, on_wipe=lambda: None,
                           on_advance=lambda *a, **k: None, on_manage_group=lambda g: None)
     plain_scr.mouse = (0, 0)
     plain_scr.draw(surf)
@@ -1505,7 +1504,7 @@ def test_map_screen_level_up_observability():
 def test_squad_screen_level_up_observability():
     from gartok import world
     from gartok.squad_screen import SquadScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.unit import Unit
     u = Unit("player")
     u.combat_xp = 15
@@ -1518,7 +1517,7 @@ def test_squad_screen_level_up_observability():
     pygame.display.set_mode((1, 1))
 
     bnode = next(n for n in world.NODES if n.kind == "battle")
-    scr = SquadScreen(Fonts(), [u], bnode, lambda s: None, lambda: None)
+    scr = SquadScreen(ui_fonts(), [u], bnode, lambda s: None, lambda: None)
     
     surf = pygame.Surface((1024, 768))
     scr.mouse = (0, 0)
@@ -1530,7 +1529,7 @@ def test_guild_screen_study_track_rendered():
     import pygame
     from gartok.guild import Guild
     from gartok.guild_screen import GuildScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.unit import Unit
     pygame.init()
     surf = pygame.Surface((1280, 800))
@@ -1538,7 +1537,7 @@ def test_guild_screen_study_track_rendered():
     u.study_target = "magic_missile"
     u.study_progress = 30
     guild = Guild([u])
-    scr = GuildScreen(Fonts(), guild, on_back=lambda: None)
+    scr = GuildScreen(ui_fonts(), guild, on_back=lambda: None)
     scr.mouse = (0, 0)
     scr.draw(surf)
 
@@ -1552,12 +1551,12 @@ def test_starvation_loot_screen_instantiation():
     from gartok.loot_screen import LootScreen
     from gartok.guild import Guild
     from gartok.unit import Unit
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     u1 = Unit("player")
     u2 = Unit("player")
     guild = Guild([u1, u2])
     pool = ["Rations", "Dagger"]
-    ls = LootScreen(Fonts(), guild, guild.roster, pool, on_done=lambda: None)
+    ls = LootScreen(ui_fonts(), guild, guild.roster, pool, on_done=lambda: None)
     assert ls.guild == guild
     assert len(ls.survivors) == 2
 
@@ -1629,7 +1628,7 @@ def test_battle_screen_16_9_monitor_no_overflow():
     import pygame
     from gartok.battle import Battle
     from gartok.battle_screen import BattleScreen
-    from gartok.theme import MARGIN
+    from gartok.ui.tokens import T
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
 
@@ -1649,7 +1648,7 @@ def test_battle_screen_16_9_monitor_no_overflow():
         scr.draw(surf)
 
         panel_r = scr._L["panel"]
-        assert panel_r.bottom <= h - MARGIN
+        assert panel_r.bottom <= h - T.S * 2
 
         # Check all registered buttons are strictly on-screen
         for key, rect in scr.buttons:
@@ -1667,10 +1666,10 @@ def test_battle_screen_16_9_monitor_no_overflow():
 def test_alert_screen_dismissal_methods():
     import pygame
     from gartok.alert_screen import AlertScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     surf = pygame.Surface((1280, 800))
-    F = Fonts()
+    F = ui_fonts()
 
     done_count = 0
     def on_done():
@@ -1704,7 +1703,7 @@ def test_market_screen_equipping_stack_preserves_remainder():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.market_screen import MarketScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok import items, world
     pygame.init()
 
@@ -1713,7 +1712,7 @@ def test_market_screen_equipping_stack_preserves_remainder():
     shopper.equipped_offhand = None
     shopper._base_inventory = [items.create_instance("Torch", qty=5)]
 
-    ms = MarketScreen(Fonts(), None, [shopper], mnode, lambda: None)
+    ms = MarketScreen(ui_fonts(), None, [shopper], mnode, lambda: None)
     ms.sel = [(shopper, 0)]
     ms._drop_on_zone(shopper, "offhand")
 
@@ -1726,7 +1725,7 @@ def test_loot_screen_equipping_stack_preserves_remainder():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.loot_screen import LootScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from types import SimpleNamespace
     pygame.init()
 
@@ -1735,7 +1734,7 @@ def test_loot_screen_equipping_stack_preserves_remainder():
     guild = SimpleNamespace(roster=[u])
     pool = ["Torch"] * 5
 
-    ls = LootScreen(Fonts(), guild, [u], pool, lambda: None)
+    ls = LootScreen(ui_fonts(), guild, [u], pool, lambda: None)
     ls.selected = [("pool", 0)]
     ls._give_many(u, "offhand")
 
@@ -1747,7 +1746,7 @@ def test_bank_screen_equipping_stack_preserves_remainder():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.bank_screen import BankScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
     pygame.init()
 
@@ -1756,7 +1755,7 @@ def test_bank_screen_equipping_stack_preserves_remainder():
     guild = Guild([u])
     guild.bank.put("Torch", 5)
 
-    bs = BankScreen(Fonts(), guild, [u], lambda: None)
+    bs = BankScreen(ui_fonts(), guild, [u], lambda: None)
     bs.selected = [("bank", 0)]
     bs._give_many(u, "offhand")
 
@@ -1769,7 +1768,7 @@ def test_city_property_screen_equipping_stack_preserves_remainder():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok.city_property_screen import CityPropertyScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
     pygame.init()
 
@@ -1779,7 +1778,7 @@ def test_city_property_screen_equipping_stack_preserves_remainder():
     guild.house.owned = True
     guild.house.stash.put("Torch", 5)
 
-    cps = CityPropertyScreen(Fonts(), guild, [u], lambda: None)
+    cps = CityPropertyScreen(ui_fonts(), guild, [u], lambda: None)
     cps.selected = [("house", 0)]
     cps._give_many(u, "offhand")
 

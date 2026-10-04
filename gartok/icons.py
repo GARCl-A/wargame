@@ -2,7 +2,7 @@
 
 `icon(surf, name, rect, color)` renders a line-art glyph fitted to `rect`. Used
 for the action buttons and small status marks, so they scale with the layout and
-stay theme-coloured.
+stay palette-coloured.
 """
 
 import pygame

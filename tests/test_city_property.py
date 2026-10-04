@@ -344,14 +344,14 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
 
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 50)
     p._base_inventory = packed(["Rope"])
-    s = CityPropertyScreen(Fonts(), guild, [p], on_done=lambda: None)
+    s = CityPropertyScreen(ui_fonts(), guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))
     s.mouse = (0, 0)
 
@@ -372,7 +372,7 @@ def test_drawing_the_repossession_screen_and_choosing_squat():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
 
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -383,7 +383,7 @@ def test_drawing_the_repossession_screen_and_choosing_squat():
     guild.house.missed_payments = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT
 
     chosen = []
-    s = RepossessionScreen(Fonts(), guild, on_return=lambda: chosen.append("return"),
+    s = RepossessionScreen(ui_fonts(), guild, on_return=lambda: chosen.append("return"),
                           on_squat=lambda: chosen.append("squat"))
     s.mouse = (0, 0)
     surf = pygame.Surface((1280, 800))
@@ -432,7 +432,7 @@ def test_bankers_debt_blocks_buying_the_property():
     import pygame
 
     from gartok.bank_screen import BankScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
 
     p = Unit("player")
     p.gold = economy.CITY_PROPERTY_PRICE + 100
@@ -442,7 +442,7 @@ def test_bankers_debt_blocks_buying_the_property():
     guild.bankers_debt = 50
     assert guild.bankers_services_blocked
 
-    s = BankScreen(Fonts(), guild, [p], on_done=lambda: None)
+    s = BankScreen(ui_fonts(), guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))
     s.mouse = (0, 0)
     s.draw(surf)

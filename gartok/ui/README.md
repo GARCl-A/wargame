@@ -4,10 +4,8 @@ The war-table kit: "steel desk + paper map". Chrome is dark steel, the world is
 paper laid on the table, and brass / blood / green are the only things that
 glow. Read this before adding or changing anything that draws.
 
-`gartok/theme.py` is the legacy look and nothing under `gartok/` imports it any
-more. Don't add new usage; `tests/test_theme_budget.py` fails on a new importer.
-(`set_pointer` lives in `primitives.py`; the old `Fonts` bundle is
-`tokens.LegacyFonts`, still handed to the screens that haven't taken `ui_fonts`.)
+Every screen is built on this kit; the old `theme.py` ramp and its `Fonts`
+bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 
 ## Rules
 

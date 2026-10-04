@@ -292,7 +292,7 @@ def test_screen_shows_seized_state_with_no_collect_button():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
 
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.wilds_claim_screen import WildsClaimScreen
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -301,7 +301,7 @@ def test_screen_shows_seized_state_with_no_collect_button():
     guild, g, p = _established_guild(garrisoned=False)
     guild.wilds_claim_owner = "seized"
     guild.garrison_stock[NODE] = ["Lumber"]
-    s = WildsClaimScreen(Fonts(), guild, g, on_done=lambda: None,
+    s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
                          on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
     s.mouse = (0, 0)
     surf = pygame.Surface((1280, 800))

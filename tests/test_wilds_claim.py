@@ -396,7 +396,7 @@ def test_drawing_every_stage_does_not_crash():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
 
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -416,7 +416,7 @@ def test_drawing_every_stage_does_not_crash():
             g.order = orders.idle()
         else:
             g.order = None
-        s = WildsClaimScreen(Fonts(), guild, g, on_done=lambda: None,
+        s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
                              on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
         s.mouse = (0, 0)
         s.draw(surf)                            # must not raise for any stage
@@ -427,7 +427,7 @@ def test_drawing_and_clicking_scout_through_pygame():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
 
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
 
@@ -435,7 +435,7 @@ def test_drawing_and_clicking_scout_through_pygame():
     p = Unit("player")
     g = Group([p], node=NODE)
     guild = Guild(None, groups=[g])
-    s = WildsClaimScreen(Fonts(), guild, g, on_done=lambda: None,
+    s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
                          on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
     surf = pygame.Surface((1280, 800))
     s.mouse = (0, 0)

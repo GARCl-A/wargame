@@ -111,7 +111,7 @@ def _alert_icon_fn(surf, icon_key, rect, color):
 def _party_icon_fn(surf, item, center):
     """`inspector_panel.draw_inspector`'s `party_icon` hook -- the same race
     silhouette as the unit's own token elsewhere (guild/squad/loot/...),
-    tinted light instead of `theme.TOKEN_INK` since this sits on dark
+    tinted light instead of `primitives.TOKEN_INK` since this sits on dark
     steel, not a bright token disc."""
     race_name = item[3] if len(item) > 3 else ""
     img = artwork.race_icon(race_name, 20, T.TX) if race_name else None

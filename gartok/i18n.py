@@ -65,7 +65,7 @@ def has(key):
 
 def t(key, **fmt):
     """A string, or a list of strings (paragraphs) for keys authored as a JSON
-    array -- callers that expect prose (e.g. `theme.wrap_lines`) already take a
+    array -- callers that expect prose (e.g. `primitives.wrap`) already take a
     list of lines, so a multi-paragraph value needs no special-casing."""
     value = _catalog(_lang).get(key)
     if value is None and _lang != DEFAULT_LANG:

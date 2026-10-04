@@ -56,14 +56,14 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
     pygame.init()
     pygame.display.set_mode((1, 1))
     from gartok.gear_screen import GearScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
 
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
     u._base_inventory = packed([data.CHEST_ITEM])
     guild = _guild_of(u)
-    gs = GearScreen(Fonts(), guild, lambda: None)
+    gs = GearScreen(ui_fonts(), guild, lambda: None)
     surface = pygame.Surface((1600, 900))
     gs.draw(surface)                              # populates self.sources
 
@@ -94,14 +94,14 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     pygame.init()
     pygame.display.set_mode((1, 1))
     from gartok.gear_screen import GearScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
 
     random.seed(1)
     u = Unit("player")
     u.mod_dexterity = 0
     u._base_inventory = packed([data.MISSION_CHEST_ITEM, data.CHEST_ITEM])
     guild = _guild_of(u)
-    gs = GearScreen(Fonts(), guild, lambda: None)
+    gs = GearScreen(ui_fonts(), guild, lambda: None)
     surface = pygame.Surface((1600, 900))
     gs.draw(surface)
 

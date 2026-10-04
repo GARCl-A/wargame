@@ -1,6 +1,6 @@
 """Icon art loaded from `assets/icons/` (game-icons.net silhouettes).
 
-The rest of the render path is procedural (see `theme.py` / `icons.py`); this is
+The rest of the render path is procedural (see `icons.py`); this is
 the one module that pulls image files in. It exists because a real drawn
 silhouette -- a goblin head, an orc head -- reads better on a unit token than a
 single letter ever did.
@@ -9,8 +9,9 @@ Everything is cached by `(category, name, px, color)`, so a screen redraw is a
 dict hit, not a decode. SVGs are rasterised once at the size asked for.
 
     from . import artwork
-    surf = artwork.icon("head", "goblin-head", 24, color=theme.TOKEN_INK)
-    surf = artwork.race_icon("Goblin", 24, color=theme.TOKEN_INK)   # by race name
+    from .ui import primitives
+    surf = artwork.icon("head", "goblin-head", 24, color=primitives.TOKEN_INK)
+    surf = artwork.race_icon("Goblin", 24, color=primitives.TOKEN_INK)   # by race name
 """
 
 import functools

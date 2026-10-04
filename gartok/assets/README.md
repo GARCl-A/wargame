@@ -12,7 +12,7 @@ assets/
 
 `gartok/artwork.py` loads these on demand, rasterises each SVG once at the size
 asked for, tints it, and caches by `(category, name, px, colour)`. Right now only
-`head/` is wired up: `theme.token_badge` draws the unit's **race silhouette** on
+`head/` is wired up: `ui.primitives.token_badge` draws the unit's **race silhouette** on
 the team-coloured disc (`artwork.RACE_ICON` maps race name -> file), falling back
 to the board letter when a race has no glyph.
 

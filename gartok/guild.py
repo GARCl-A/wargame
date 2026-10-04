@@ -91,7 +91,7 @@ from .holdings import CityProperty, Stash
 from .tutorial import TutorialState
 
 # Fallbacks for a guild with no chosen identity (old saves, from before the
-# draft's naming/banner step existed). Plain data, not `theme`/`artwork`
+# draft's naming/banner step existed). Plain data, not `artwork`
 # imports -- this module stays pygame-free; the presentation layer resolves
 # these slugs/colours (`ui.banner.BANNER_COLORS`, `artwork.BANNER_ICONS`).
 DEFAULT_BANNER_COLOR = (94, 156, 214)   # same value as ui.banner.DEFAULT_COLOR

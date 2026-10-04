@@ -416,11 +416,11 @@ def test_squad_screen_renders_arena_no_xp_notice():
     import pygame
 
     from gartok.squad_screen import SquadScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
 
     pygame.init()
     surf = pygame.Surface((1024, 768))
-    fonts = Fonts()
+    fonts = ui_fonts()
 
     rookie = Unit("player", name="Rookie")
     vet = Unit("player", name="Veteran")

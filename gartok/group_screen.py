@@ -2,7 +2,7 @@
 same band.
 
 Ported from the `screen_prototypes/group_screen.py` v6 mock onto the real
-`gartok.ui` component set instead of the legacy `PackColumnMixin`/`theme.py`
+`gartok.ui` component set instead of the legacy `PackColumnMixin`
 drawing layer `GearScreen` still uses, and wired back onto the same
 drag/click plumbing the gear-management screens share (`DragSelectMixin` /
 `LoadoutMoveMixin`, `gartok/dragselect.py`) -- the mock's own click-only
@@ -73,7 +73,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
 
     def __init__(self, fonts, guild, group, on_back):
         super().__init__()
-        self.fonts = fonts                   # legacy theme.Fonts -- only the sheet modal reads this
+        self.fonts = fonts                 
         self.guild = guild
         self.group = group
         self.on_back = on_back

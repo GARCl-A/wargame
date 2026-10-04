@@ -2,14 +2,14 @@ import pygame
 
 from gartok.guild import Guild
 from gartok.loot_screen import LootScreen
-from gartok.ui.tokens import fonts as Fonts
+from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
 
 def test_loot_screen_interactions():
     pygame.init()
     surf = pygame.Surface((1280, 800))
-    F = Fonts()
+    F = ui_fonts()
 
     u = Unit("player")
     # Equip and pack

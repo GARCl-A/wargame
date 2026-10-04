@@ -230,8 +230,6 @@ gartok/
   # shared presentation
   ui/               the war-table component kit -- the source of truth for screen
                     presentation (rules + catalog in ui/README.md)
-  theme.py          LEGACY design ramp (SP spacing, surface palette, panel/text/Stack);
-                    five screens left on it, migrating screen by screen onto ui/
   icons.py          vector action icons (pygame.draw) -- no asset file
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
                     portraits under assets/portraits/

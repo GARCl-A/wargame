@@ -5,14 +5,14 @@ from gartok.apothecary_hub_screen import ApothecaryHubScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.library_hub_screen import LibraryHubScreen
-from gartok.ui.tokens import fonts as Fonts
+from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
 
 
 def test_apothecary_hub_screen_loads():
     pygame.init()
     surf = pygame.Surface((1280, 800))
-    F = Fonts()
+    F = ui_fonts()
 
     u = Unit("player")
     g = Guild([u])
@@ -30,7 +30,7 @@ def test_apothecary_hub_screen_loads():
 def test_library_hub_screen_loads():
     pygame.init()
     surf = pygame.Surface((1280, 800))
-    F = Fonts()
+    F = ui_fonts()
 
     u = Unit("player")
     g = Guild([u])
@@ -102,12 +102,12 @@ def test_library_shop_locked_before_rep_and_rejects_stocked_dictionaries():
 
 def test_map_screen_library_button_label():
     from gartok.map_screen import MapScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     u = Unit("player")
     g = Guild([u])
     grp = Group(list(g.roster), "library")
     g.active_group = grp
-    ms = MapScreen(Fonts(), g, lambda: None, lambda: None, lambda: None, lambda g: None)
+    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda g: None)
     blocks = ms._inspector_content(grp, world.node("library"))
     btn = next((b for b in blocks if b.get("key") == "library"), None)
     assert btn is not None
@@ -118,7 +118,7 @@ def test_taverna_hub_screen_flow():
     from gartok.taverna_screen import TavernaScreen
     pygame.init()
     surf = pygame.Surface((1280, 800))
-    F = Fonts()
+    F = ui_fonts()
 
     u1 = Unit("player")
     u1.name = "Garrick"

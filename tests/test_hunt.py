@@ -86,7 +86,7 @@ def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
     from gartok.clock import Clock
     from gartok.guild import Guild
     from gartok.hunt_screen import HuntScreen
-    from gartok.theme import Fonts
+    from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     random.seed(0)
@@ -97,7 +97,7 @@ def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
     guild = Guild(list(party), node="wilds", clock=Clock(6 * 3600))
     st = hunt.HuntState(list(party), world.node("wilds"), hours_left=0)
     fired = []
-    scr = HuntScreen(Fonts(), guild, st, phase="setup",
+    scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
                      on_ambush=lambda s, pack: fired.append(s.hours_hunted),
                      on_done=lambda: fired.append("done"))
 
