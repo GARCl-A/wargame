@@ -18,7 +18,7 @@ import pygame
 
 from .screen import Screen
 from .theme import set_pointer
-from .ui.primitives import draw_card, header
+from .ui.primitives import caps, draw_card, header
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
