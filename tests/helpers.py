@@ -9,17 +9,18 @@ deliberate re-exports.
 
 import contextlib
 import random
+from unittest.mock import MagicMock, patch
 
 from gartok import abilities, actions, data, economy, persist, recruit, talents, world
 from gartok import battle as _battle_mod
-from gartok.board import COLS, ROWS, Board, grid_distance
 from gartok.battle import Battle
-from gartok.scenario import CustomScenario, ErmosScenario
+from gartok.board import COLS, ROWS, Board, grid_distance
+from gartok.combatant import Combatant
 from gartok.conditions import Defending, Demoralized
 from gartok.data import SIZES, resolve_bonus, squares
 from gartok.ground import GroundObject
+from gartok.scenario import CustomScenario, ErmosScenario
 from gartok.unit import Unit
-from gartok.combatant import Combatant
 
 
 def packed(names):
@@ -77,14 +78,30 @@ class _FixedRNG:
         return self.vals.pop(0)
 
 
+def _action_mods():
+    return [m for m in vars(actions).values()
+            if getattr(m, "__package__", None) == "gartok.actions" and hasattr(m, "d20")]
+
+
+@contextlib.contextmanager
+def patch_action_d20(**kwargs):
+    """`patch(..., d20)` for every `gartok.actions` submodule that rolls it, all
+    sharing one mock so a `side_effect` sequence spans actions."""
+    mock = MagicMock(**kwargs)
+    with contextlib.ExitStack() as stack:
+        for m in _action_mods():
+            stack.enter_context(patch.object(m, "d20", mock))
+        yield mock
+
+
 @contextlib.contextmanager
 def fixed_d20(value):
     """Pin every `d20()` roll to `value` for the block -- death saves, attack
     rolls, checks, initiative. Patches the name in each module that bound it
-    (`actions`, `battle`) plus the source (`data`), so a test asserts on the
-    check outcome instead of a magic seed. Use nested blocks for a sequence
+    (each `actions` submodule that rolls it, `battle`) plus the source
+    (`data`), so a test asserts on the check outcome instead of a magic seed. Use nested blocks for a sequence
     (fail then succeed)."""
-    mods = (actions, _battle_mod, data)
+    mods = (*_action_mods(), _battle_mod, data)
     saved = [m.d20 for m in mods]
     for m in mods:
         m.d20 = lambda: value

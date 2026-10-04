@@ -260,7 +260,7 @@ def _games_win(tier, *, kos=0, won=True):
     guild.deeds_done = ["arena_first_blood", "arena_lone_wolf", "arena_dethrone"]
     guild.reputation = {"arena": 3}
     squad = [Unit("player")]
-    guild.roster = list(squad)
+    guild.groups[0].members = list(squad)
     battle = Battle(squad, [Unit("enemy")], lethal=False, arena=True)
     battle.winner = "player" if won else "enemy"
     for u in battle.player_units:

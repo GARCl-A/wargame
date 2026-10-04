@@ -15,6 +15,7 @@ from tests.helpers import (
     _FixedRNG,
     data,
     economy,
+    patch_action_d20,
     persist,
     recruit,
 )
@@ -126,7 +127,7 @@ def test_halfling_luck_rerolls_missed_attack_in_combat():
     halfling.dexterity = 10
 
     # Force rolls: attack roll 2 (miss), reroll 19 (hit)
-    with patch("gartok.actions.d20", side_effect=[2, 19, 4]):
+    with patch_action_d20(side_effect=[2, 19, 4]):
         actions.ATTACK.execute(batt, h_c, e_c)
 
     assert any("Halfling Luck" in line for line in batt.log_lines)
@@ -134,7 +135,7 @@ def test_halfling_luck_rerolls_missed_attack_in_combat():
 
     # Second attack on same day does NOT get a reroll
     batt.log_lines.clear()
-    with patch("gartok.actions.d20", return_value=2):
+    with patch_action_d20(return_value=2):
         actions.ATTACK.execute(batt, h_c, e_c)
     assert not any("Halfling Luck" in line for line in batt.log_lines)
 
@@ -425,7 +426,7 @@ def test_hobgoblin_phalanx_grants_ac_when_adjacent_to_ally():
 
     e_c.pos = (4, 5)
     batt.log_lines = []
-    with patch("gartok.actions.d20", return_value=10):
+    with patch_action_d20(return_value=10):
         actions.ATTACK.execute(batt, e_c, h_c)
     assert any("[Phalanx]" in line for line in batt.log_lines)
 

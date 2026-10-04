@@ -128,21 +128,6 @@ def test_merge_groups_refuses_different_nodes_or_an_order_in_flight():
         pass
 
 
-def test_roster_assignment_shim_requires_exactly_one_group():
-    random.seed(1)
-    solo = Guild([Unit("player")], node="city")
-    solo.roster = [Unit("player"), Unit("player")]     # single-group shim: fine
-    assert len(solo.roster) == 2
-
-    multi = Guild(None, groups=[Group([Unit("player")], node="city"),
-                                Group([Unit("player")], node="wilds")])
-    try:
-        multi.roster = [Unit("player")]
-        assert False, "expected NotImplementedError"
-    except NotImplementedError:
-        pass
-
-
 def test_group_total_load_sums_every_members_load():
     a, b = _bare(), _bare()
     a._base_inventory = packed(["Stone Brick"])        # 3.0 kg

@@ -39,7 +39,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, pack, stack helpers) |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant |
-| `actions.py` | every combat action is an `Action` subclass |
+| `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells`, registry in `__init__.py` |
 | `abilities.py` | `Ability` frozen-dataclass registry (passives + hooks) |
 | `talents.py` | talent-tree registry mirroring abilities.py |
 | `conditions.py` | `Condition` subclasses (Defending, Demoralized) |
@@ -47,7 +47,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `vision.py` | free fns over battle: light, can_see, visible_cells |
 | `ground.py` | GroundObject (weapon, torch) + Creature (neutral body) |
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |
-| `ai.py` | heuristic over actions.py; alignment tempers behaviour |
+| `ai.py` | heuristic over actions/; alignment tempers behaviour |
 | `world.py` | Node graph, edges in hours, route Dijkstra |
 | `orders.py` | Order dataclass; AUTO / INTERACTIVE / garrison / forced kinds |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
@@ -65,7 +65,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
 | `arena.py` | Champion of the Pit title and its defense cycle |
-| `magic.py` | spell registry + study-difficulty math (casting is in actions.py) |
+| `magic.py` | spell registry + study-difficulty math (casting is in actions/spells.py) |
 | `encounters.py` | enemy packs scaled to a target mean level |
 | `progression.py` | XP curves + combat-XP rule |
 | `autowin.py` | auto-resolve a battle via Monte Carlo estimate |
