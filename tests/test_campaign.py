@@ -76,7 +76,7 @@ _ENTRY_TIER = world.Bout("Rookie pit", entry=4, purse=15, enemies=1, rep=0)
 def _arena_bout(guild, n=1, tier=None, node_id="arena", win=True):
     from gartok import campaign, world
     squad = [Unit("player") for _ in range(n)]
-    guild.roster = list(squad)
+    guild.groups[0].members = list(squad)
     battle = Battle(squad, [Unit("enemy") for _ in range(n)], lethal=False)
     battle.winner = "player" if win else "enemy"
     for u in battle.player_units:

@@ -148,7 +148,7 @@ def test_save_slot_file_round_trip():
         assert back.deeds_done == ["arena_first_blood"]
         assert back.arena_challenge_day == 12
         assert back.roster[0].arena_title and "belt" in back.roster[0].bio
-        assert back.clock.seconds == 30 * 3600 and back.node == "wilds"
+        assert back.clock.seconds == 30 * 3600 and back.groups[0].node == "wilds"
         assert back.bank.capacity == 10 and back.bank.items == [("Rope", 1), ("Sack", 1)]
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
@@ -198,7 +198,7 @@ def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
     try:
         guild = persist.load_game(slot)
         assert len(guild.groups) == 1
-        assert guild.node == "wilds"
+        assert guild.groups[0].node == "wilds"
         assert len(guild.roster) == 1
     finally:
         persist.delete_slot(slot)

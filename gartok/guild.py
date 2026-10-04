@@ -177,28 +177,6 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
     def roster(self):
         return [u for g in self.groups for u in g.members]
 
-    @roster.setter
-    def roster(self, units):
-        """Single-group convenience: valid only with exactly one group
-        (replaces its whole membership wholesale) -- every real mutation
-        should go through `add_member`/`remove_members` instead, which stay
-        correct once a second group exists."""
-        if len(self.groups) != 1:
-            raise NotImplementedError(
-                "guild.roster assignment needs exactly one group; "
-                "use add_member/remove_members instead")
-        self.groups[0].members = list(units)
-
-    @property
-    def node(self):
-        """Single-group convenience over the first group's position. Ambiguous
-        (and unused) once a second group exists -- read `group.node` instead."""
-        return self.groups[0].node
-
-    @node.setter
-    def node(self, value):
-        self.groups[0].node = value
-
     def group_of(self, unit):
         """The `Group` holding `unit`, or None if it isn't on the roster."""
         for g in self.groups:

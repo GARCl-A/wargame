@@ -1,3 +1,4 @@
+import random
 import sys
 
 try:
@@ -277,6 +278,7 @@ def test_guild_screen_stat_tooltips_show_the_calculation():
 
 def test_guild_tab_reports_slots_notices_and_holdings():
     from gartok.group import BASE_CAPACITY, Group
+    random.seed(1)
     members = [Unit("player") for _ in range(BASE_CAPACITY + 4)]
     g = Guild(None, groups=[Group(members, node="city"), Group([Unit("player")], node="city")])
     gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
