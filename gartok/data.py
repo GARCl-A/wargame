@@ -11,6 +11,7 @@ design-prose doc; `python -m gartok.reference` turns these tables into
 """
 
 import random
+
 from . import items
 
 # --------------------------------------------------------------------------- #

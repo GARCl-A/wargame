@@ -16,6 +16,7 @@ battle and battle state lives on a throwaway `Combatant` wrapper, never on the
 
 import json
 import os
+import sys
 import time
 
 from . import items, missions
@@ -24,8 +25,6 @@ from .group import Group
 from .guild import Guild
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
-
-import sys
 
 # Se estiver rodando como um executável do PyInstaller, sys.frozen será True.
 if getattr(sys, "frozen", False):

@@ -413,8 +413,9 @@ def test_squad_screen_shows_no_xp_warning_for_higher_level_units():
 
 def test_squad_screen_renders_arena_no_xp_notice():
     import pygame
-    from gartok.theme import Fonts
+
     from gartok.squad_screen import SquadScreen
+    from gartok.theme import Fonts
 
     pygame.init()
     surf = pygame.Surface((1024, 768))

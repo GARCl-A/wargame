@@ -17,8 +17,15 @@ import pygame
 from . import autowin, hunt
 from .scenario import Scenario
 from .screen import Screen
-from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
-                            token_badge, wrap)
+from .ui.primitives import (
+    caps,
+    draw_button,
+    footer_bar,
+    panel,
+    section,
+    text,
+    wrap,
+)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

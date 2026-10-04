@@ -23,11 +23,23 @@ when groups are travelling, working, or approaching an activity independently
 of one another -- see `orders.py` for what an order is.
 """
 
-import random
 import math
+import random
 from dataclasses import dataclass, field
 
-from . import arena, constants, data, economy, encounters, factions, justice, loot, missions, orders, world
+from . import (
+    arena,
+    constants,
+    data,
+    economy,
+    encounters,
+    factions,
+    justice,
+    loot,
+    missions,
+    orders,
+    world,
+)
 
 
 @dataclass

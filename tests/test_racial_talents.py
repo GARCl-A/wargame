@@ -4,11 +4,20 @@ racial ability Innocent Face (crime natural decay).
 """
 
 from unittest.mock import patch
-from tests.helpers import (Battle, Combatant, Unit, _FixedRNG, data,
-                           economy, persist, recruit, talents)
+
 from gartok import actions, chest
-from gartok.guild import Guild
 from gartok.group import Group
+from gartok.guild import Guild
+from tests.helpers import (
+    Battle,
+    Combatant,
+    Unit,
+    _FixedRNG,
+    data,
+    economy,
+    persist,
+    recruit,
+)
 
 
 def _leshy():
@@ -238,9 +247,9 @@ def test_large_weapon_combat_and_load():
 
 
 def test_large_weapon_pickup_and_dragselect():
+    from gartok.actions import _pickable
     from gartok.dragselect import LoadoutMoveMixin
     from gartok.ground import GroundObject
-    from gartok.actions import _pickable
 
     human = _human()
     centaur = _centaur()

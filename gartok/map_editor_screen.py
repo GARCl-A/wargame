@@ -26,11 +26,42 @@ import pygame
 from . import data, map_lib, npc_lib
 from .board import COLS, ROWS, Board, grid_distance
 from .screen import Screen
-from .theme import (ACCENT, ACCENT_INK, DANGER, ENEMY_C, FLOOR_A, FLOOR_B, INK,
-                    INK_DIM, INK_FAINT, LINE, LINE_SOFT, MARGIN, NIGHT, OK,
-                    PLAYER_C, RADIUS, SP1, SP2, SP3, SP4, SP5, SURFACE_0,
-                    SURFACE_1, SURFACE_2, SURFACE_3, TORCH_C, WALL_FILL,
-                    WALL_HI, WARN, ellipsize, panel, section, set_pointer, text)
+from .theme import (
+    ACCENT,
+    ACCENT_INK,
+    DANGER,
+    ENEMY_C,
+    FLOOR_A,
+    FLOOR_B,
+    INK,
+    INK_DIM,
+    INK_FAINT,
+    LINE,
+    LINE_SOFT,
+    MARGIN,
+    NIGHT,
+    OK,
+    PLAYER_C,
+    RADIUS,
+    SP1,
+    SP2,
+    SP3,
+    SP4,
+    SP5,
+    SURFACE_0,
+    SURFACE_1,
+    SURFACE_2,
+    SURFACE_3,
+    TORCH_C,
+    WALL_FILL,
+    WALL_HI,
+    WARN,
+    ellipsize,
+    panel,
+    section,
+    set_pointer,
+    text,
+)
 
 _MAX_NAME = 28
 

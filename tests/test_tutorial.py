@@ -35,6 +35,7 @@ def test_stale_tutorial_rect_never_swallows_a_click_after_a_scene_swap():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok import tutorial_card
     from gartok.app import App
 
@@ -96,16 +97,18 @@ def test_every_simple_screen_reports_its_registered_id():
     """Screens whose `tutorial_key` is a flat constant (no tab/phase to read),
     checked without running their real `__init__` (bare `__new__` -- these
     methods touch no instance state)."""
-    import gartok.bank_screen as bank_screen
-    import gartok.battle_screen as battle_screen
-    import gartok.gear_screen as gear_screen
-    import gartok.hunt_screen as hunt_screen
-    import gartok.level_screen as level_screen
-    import gartok.loot_screen as loot_screen
-    import gartok.market_screen as market_screen
-    import gartok.reward_screen as reward_screen
-    import gartok.squad_screen as squad_screen
-    import gartok.taverna_screen as taverna_screen
+    from gartok import (
+        bank_screen,
+        battle_screen,
+        gear_screen,
+        hunt_screen,
+        level_screen,
+        loot_screen,
+        market_screen,
+        reward_screen,
+        squad_screen,
+        taverna_screen,
+    )
 
     cases = [
         (squad_screen.SquadScreen, "squad"),
@@ -215,9 +218,10 @@ def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.guild_screen import GuildScreen
-    from gartok.theme import MARGIN, SP2, Fonts
+
     from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+    from gartok.theme import SP2, Fonts
 
     pygame.init()
     g = Guild([Unit("Alice"), Unit("Bob")], node="city")
@@ -243,6 +247,7 @@ def test_tutorial_badge_rect_queried_by_tutorial_card():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok import tutorial_card
     from gartok.screen import Screen
     from gartok.theme import Fonts
@@ -269,8 +274,10 @@ def test_header_reserves_space_when_has_tutorial_is_true():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.ui.primitives import header
-    from gartok.ui.tokens import fonts as ui_fonts, T
+    from gartok.ui.tokens import T
+    from gartok.ui.tokens import fonts as ui_fonts
 
     pygame.init()
     F = ui_fonts()
@@ -288,8 +295,10 @@ def test_draft_screen_buttons_clear_tutorial_badge():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.draft_screen import DraftScreen
-    from gartok.ui.tokens import fonts as ui_fonts, T
+    from gartok.ui.tokens import T
+    from gartok.ui.tokens import fonts as ui_fonts
 
     pygame.init()
     F = ui_fonts()
@@ -314,12 +323,13 @@ def test_draft_screen_buttons_clear_tutorial_badge():
 
 def test_all_tutorial_screens_have_aligned_badge_rect():
     import pygame
-    from gartok.taverna_screen import TavernaScreen
-    from gartok.reward_screen import RewardScreen
+
     from gartok.gear_screen import GearScreen
-    from gartok.loot_screen import LootScreen
     from gartok.hunt_screen import HuntScreen
+    from gartok.loot_screen import LootScreen
+    from gartok.reward_screen import RewardScreen
     from gartok.squad_screen import SquadScreen
+    from gartok.taverna_screen import TavernaScreen
     from gartok.ui.tokens import T
 
     W, H = 1280, 800

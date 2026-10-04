@@ -4,11 +4,11 @@ queues every other kind for the caller to play (see gartok/orders.py)."""
 
 import random
 
-from tests.helpers import packed, Unit
 from gartok import campaign, economy, orders, world
 from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Unit, packed
 
 
 def _guild(*groups, **kw):

@@ -3,10 +3,10 @@ and the patrol a fight against the guard scales up."""
 
 import random
 
-from tests.helpers import fixed_d20, Unit
 from gartok import justice
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Unit, fixed_d20
 
 
 def test_a_clean_record_never_gets_caught():

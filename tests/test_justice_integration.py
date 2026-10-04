@@ -14,11 +14,11 @@ discarding it -- see the regression test below.
 
 import random
 
-from tests.helpers import fixed_d20, Battle, Unit, world
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Battle, Unit, fixed_d20, world
 
 
 def _app(guild):

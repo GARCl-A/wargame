@@ -207,7 +207,7 @@ def run_trader(combo, seed, cfg):
 # aggregation + report                                                        #
 # --------------------------------------------------------------------------- #
 class Acc:
-    __slots__ = ("deltas", "cha", "langs", "auto", "food", "free", "rev")
+    __slots__ = ("auto", "cha", "deltas", "food", "free", "langs", "rev")
 
     def __init__(self):
         self.deltas, self.cha, self.langs, self.food, self.rev = [], [], [], [], []
@@ -272,7 +272,7 @@ def build_report(race_acc, occ_acc, combo_acc, cfg):
         p(f"price spread: +/-{cfg['spread']:.0%} per vendor per item "
           f"(SIM ASSUMPTION -- not in the live game)   trades/day cap: {cfg['trades_per_day']}")
     if cfg["mode"] == "production":
-        p(f"production : 1x the occupation's table item per day, sold to the best vendor")
+        p("production : 1x the occupation's table item per day, sold to the best vendor")
     all_d = [x for a in race_acc.values() for x in a.deltas]
     p(f"overall   : net/15d mean {statistics.mean(all_d):.0f}  median "
       f"{statistics.median(all_d):.0f}  (min {min(all_d)}  max {max(all_d)})")
@@ -281,8 +281,8 @@ def build_report(race_acc, occ_acc, combo_acc, cfg):
     p("free-eat = share of traders that never paid for food (autotroph, or a")
     p("butcher/farmer eating their own stock).")
 
-    _table(L, f"RACES  (occupation randomised out)", race_acc, RACES, d)
-    _table(L, f"OCCUPATIONS  (race randomised out)", occ_acc, OCCUPATIONS, d)
+    _table(L, "RACES  (occupation randomised out)", race_acc, RACES, d)
+    _table(L, "OCCUPATIONS  (race randomised out)", occ_acc, OCCUPATIONS, d)
 
     solid = [c for c in combo_acc if combo_acc[c].n >= cfg["min_combo"]]
     by = sorted(solid, key=lambda c: combo_acc[c].mean, reverse=True)

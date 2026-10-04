@@ -3,7 +3,7 @@
 import os
 import random
 
-from tests.helpers import Combatant, data, persist, recruit, Unit, _unit, packed
+from tests.helpers import Combatant, Unit, _unit, data, packed, persist, recruit
 
 
 def test_unit_save_round_trip_keeps_rolled_values():
@@ -123,8 +123,8 @@ def test_equipped_weapon_survives_save():
 
 def test_save_slot_file_round_trip():
     from gartok import missions, persist
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     slot = persist.NUM_SLOTS - 1
     if os.path.exists(persist.slot_path(slot)):
         return                                        # never clobber a real save

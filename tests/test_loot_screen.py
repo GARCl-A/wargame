@@ -1,9 +1,10 @@
-import pytest
 import pygame
-from gartok.loot_screen import LootScreen
-from gartok.unit import Unit
+
 from gartok.guild import Guild
+from gartok.loot_screen import LootScreen
 from gartok.ui.tokens import fonts as Fonts
+from gartok.unit import Unit
+
 
 def test_loot_screen_interactions():
     pygame.init()

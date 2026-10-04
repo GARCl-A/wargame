@@ -2,8 +2,8 @@
 
 import pygame
 
-from .screen import Screen
 from .bank_screen import BankScreen
+from .screen import Screen
 from .trust_screen import TrustScreen
 from .ui.primitives import draw_button
 from .ui.tokens import T

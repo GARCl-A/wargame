@@ -17,7 +17,7 @@ run's one free way to change your mind).
 
 import pygame
 
-from . import artwork, data, items
+from . import artwork, data
 from .archetypes import (
     ARCHETYPES,
     generate_candidate,
@@ -28,8 +28,8 @@ from .combatant import Combatant
 from .screen import Screen
 from .theme import BANNER_COLORS, set_player_color
 from .ui.primitives import (
+    TOKEN_INK,
     caps,
-    contained,
     draw_button,
     draw_tooltip,
     ellipsize,
@@ -40,9 +40,8 @@ from .ui.primitives import (
     text,
     token_badge,
     tracked,
-    TOKEN_INK,
 )
-from .ui.sheet_card import draw_sheet, draw_row, sheet_height, unit_to_ch
+from .ui.sheet_card import draw_row, draw_sheet, sheet_height, unit_to_ch
 from .ui.tokens import ARCHETYPE_COLORS, T, mix
 from .unit import Unit
 

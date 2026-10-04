@@ -17,8 +17,8 @@ at once -- the group can't do two different things with itself simultaneously:
 import pygame
 
 from .screen import Screen
-from .theme import set_pointer, token_badge
-from .ui.primitives import draw_card, header, panel, text
+from .theme import set_pointer
+from .ui.primitives import draw_card, header
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

@@ -4,8 +4,8 @@ pins it, same as a death save or the guard test)."""
 
 import random
 
-from tests.helpers import fixed_d20, Unit, packed
 from gartok import chest, data
+from tests.helpers import Unit, fixed_d20, packed
 
 
 def test_a_clean_pick_consumes_the_chest_and_hands_over_gems():
@@ -50,6 +50,7 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
     only appears when the single thing picked is a chest, and clicking it
     rolls `chest.try_open` in place rather than moving the item anywhere."""
     import os
+
     import pygame
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     pygame.init()
@@ -87,6 +88,7 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     (e.g. via the sandbox editor) would always resolve as the sealed one,
     even when the player opened the ordinary Locked Chest."""
     import os
+
     import pygame
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     pygame.init()

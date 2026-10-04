@@ -3,7 +3,13 @@
 import random
 
 from tests.helpers import (
-    abilities, Battle, CustomScenario, fixed_d20, Unit, _melee_battle, _recruit,
+    Battle,
+    CustomScenario,
+    Unit,
+    _melee_battle,
+    _recruit,
+    abilities,
+    fixed_d20,
 )
 
 

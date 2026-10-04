@@ -12,10 +12,10 @@ same idiom `bank_screen`/`city_property_screen` use for a flat action.
 
 import pygame
 
-from . import data, economy, items, orders
+from . import economy, items, orders
 from .screen import Screen
-from .theme import set_pointer, token_badge
-from .ui.primitives import (caps, draw_button, header, hline, text, token_badge)
+from .theme import set_pointer
+from .ui.primitives import caps, draw_button, header, hline, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

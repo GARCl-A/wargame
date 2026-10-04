@@ -3,10 +3,22 @@
 import random
 
 from tests.helpers import (
-    abilities, actions, Battle, Combatant, data, economy, persist, recruit, talents,
-    Unit, _combatant, _FixedRNG, _melee_battle, _unit, packed,
+    Battle,
+    Combatant,
+    Unit,
+    _combatant,
+    _FixedRNG,
+    _melee_battle,
+    _unit,
+    abilities,
+    actions,
+    data,
+    economy,
+    packed,
+    persist,
+    recruit,
+    talents,
 )
-
 
 # --------------------------------------------------------------------------- #
 # combat XP                                                                    #
@@ -450,8 +462,8 @@ def _work_ready(*picks):
 
 
 def test_piecework_lifts_pay_and_brisk_hands_is_individual():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(3)
     plain = _work_ready()
     rich = _work_ready("carrier", "piecework")

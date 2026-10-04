@@ -3,8 +3,20 @@
 import random
 
 from tests.helpers import (
-    abilities, actions, Battle, COLS, Combatant, data, fixed_d20, GroundObject,
-    Unit, _combatant, _melee_battle, _recruit, _unit, packed,
+    COLS,
+    Battle,
+    Combatant,
+    GroundObject,
+    Unit,
+    _combatant,
+    _melee_battle,
+    _recruit,
+    _unit,
+    abilities,
+    actions,
+    data,
+    fixed_d20,
+    packed,
 )
 
 
@@ -84,7 +96,7 @@ def test_stowed_weapon_weighs_the_same_as_wielded():
 
 
 def test_load_sums_weapon_torch_and_items():
-    from gartok.data import WEAPONS, TORCH_WEIGHT, item_weight
+    from gartok.data import TORCH_WEIGHT, WEAPONS, item_weight
     u = _combatant()
     u.equip_weapon("Axe")
     u.torch_hand = True

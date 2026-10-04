@@ -6,11 +6,10 @@ language branch, and the item's weight/pricing fallback.
 
 import random
 
-from tests.helpers import data, Unit
 from gartok import magic, orders
 from gartok.group import Group
 from gartok.guild import Guild
-
+from tests.helpers import Unit, data
 
 # --------------------------------------------------------------------------- #
 # the Linguist's starting item                                                #

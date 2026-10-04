@@ -16,7 +16,17 @@ hand and points here for the numbers.
 import sys
 from pathlib import Path
 
-from . import abilities, archetypes, data, economy, factions, hunt, items, progression, talents, world
+from . import (
+    abilities,
+    archetypes,
+    data,
+    economy,
+    factions,
+    hunt,
+    items,
+    progression,
+    talents,
+)
 
 REFERENCE_PATH = Path(__file__).resolve().parent.parent / "REFERENCE.md"
 

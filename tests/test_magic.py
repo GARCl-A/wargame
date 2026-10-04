@@ -12,10 +12,10 @@ dataclass field abilities.Ability never defined).
 
 import random
 
-from tests.helpers import Battle, Unit, _melee_battle, fixed_d20
 from gartok import actions, ai, data, magic, orders, persist
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Battle, Unit, _melee_battle, fixed_d20
 
 
 def _caster(a, spell_ids):
@@ -130,7 +130,6 @@ def test_elf_is_immune_to_sleep():
 
 
 def test_sleep_duration_formula_and_expiration():
-    from gartok.conditions import Sleeping
     batt, a, d = _melee_battle()
     _caster(a, ["sleep"])
     a.ap = 2

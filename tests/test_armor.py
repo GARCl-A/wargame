@@ -1,6 +1,6 @@
 """Worn armor: AC, the Dexterity cap, the speed hit, the weight."""
 
-from tests.helpers import Combatant, data, economy, Unit, _unit
+from tests.helpers import Combatant, Unit, _unit, data, economy
 
 
 def _bare_human(strength=20, **over):

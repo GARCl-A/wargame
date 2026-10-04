@@ -6,11 +6,11 @@ Sistema 3 left open once a claim is finally the guild's own ground.
 
 import random
 
-from tests.helpers import economy, Unit, world, packed
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Unit, economy, packed, world
 
 NODE = world.WILDS_TERRITORY_NODE
 
@@ -290,6 +290,7 @@ def test_screen_shows_seized_state_with_no_collect_button():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.theme import Fonts
     from gartok.wilds_claim_screen import WildsClaimScreen
     pygame.init()

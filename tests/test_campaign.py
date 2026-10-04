@@ -3,8 +3,7 @@
 import random
 from dataclasses import replace
 
-from tests.helpers import abilities, actions, Battle, CustomScenario, data, Unit, world
-
+from tests.helpers import Battle, CustomScenario, Unit, abilities, actions, data, world
 
 # --------------------------------------------------------------------------- #
 # Campaign: folding a battle back into the guild                                #
@@ -217,8 +216,8 @@ def test_champion_title_goes_to_the_finisher():
 
 def test_champion_pushed_into_pit_awards_title_to_pusher():
     from gartok import arena, campaign, world
-    from gartok.guild import Guild
     from gartok.actions import Push
+    from gartok.guild import Guild
     from tests.helpers import fixed_d20
     random.seed(11)
     winner, other = Unit("player"), Unit("player")
@@ -290,8 +289,8 @@ def test_title_defense_won_keeps_the_title_and_renews_the_cycle():
 
 def test_title_defense_is_due_and_forfeits_when_missed():
     from gartok import arena
+    from gartok.clock import SECONDS_PER_DAY, Clock
     from gartok.guild import Guild
-    from gartok.clock import Clock, SECONDS_PER_DAY
     champ = Unit("player")
     champ.arena_title = True
     guild = Guild([champ], node="city")
@@ -330,9 +329,8 @@ def test_arena_title_only_bites_inside_the_arena():
 
 
 def test_arena_entry_is_staked_per_fighter():
-    from gartok import arena
+    from gartok import arena, world
     from gartok.squad_screen import SquadScreen
-    from gartok import world
     
     roster = [Unit("player") for _ in range(3)]
     for u in roster:

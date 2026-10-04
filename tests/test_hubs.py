@@ -1,12 +1,13 @@
-import pytest
 import pygame
-from gartok.library_hub_screen import LibraryHubScreen
-from gartok.apothecary_hub_screen import ApothecaryHubScreen
-from gartok.unit import Unit
-from gartok.guild import Guild
-from gartok.group import Group
-from gartok.ui.tokens import fonts as Fonts
+
 from gartok import world
+from gartok.apothecary_hub_screen import ApothecaryHubScreen
+from gartok.group import Group
+from gartok.guild import Guild
+from gartok.library_hub_screen import LibraryHubScreen
+from gartok.ui.tokens import fonts as Fonts
+from gartok.unit import Unit
+
 
 def test_apothecary_hub_screen_loads():
     pygame.init()
@@ -115,7 +116,6 @@ def test_map_screen_library_button_label():
 
 def test_taverna_hub_screen_flow():
     from gartok.taverna_screen import TavernaScreen
-    from gartok import orders
     pygame.init()
     surf = pygame.Surface((1280, 800))
     F = Fonts()

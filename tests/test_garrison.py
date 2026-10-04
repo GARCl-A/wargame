@@ -9,10 +9,10 @@ than waiting on Sistema 3's Wilds territory node to exist."""
 
 import random
 
-from tests.helpers import economy, Unit, world
 from gartok import campaign, orders
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Unit, economy, world
 
 
 def _job_node(node_id="market", job="lumber"):

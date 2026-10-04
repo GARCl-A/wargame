@@ -19,14 +19,25 @@ Modernized to the `gartok/ui/` design system.
 
 import pygame
 
-from . import economy, orders, recruit, magic, data
+from . import economy, magic, orders, recruit
 from .archetypes import unit_archetypes
 from .data import alignment_distance
 from .screen import Screen
-from .ui.tokens import ARCHETYPE_COLORS, T, mix, fonts as ui_fonts
-from .ui.primitives import (header, footer_bar, text, caps, draw_button,
-                            panel, hline, token_badge, draw_tooltip,
-                            format_tooltip, modal_card, FOOTER_H)
+from .ui.primitives import (
+    FOOTER_H,
+    caps,
+    draw_button,
+    draw_tooltip,
+    footer_bar,
+    format_tooltip,
+    header,
+    hline,
+    panel,
+    text,
+    token_badge,
+)
+from .ui.tokens import ARCHETYPE_COLORS, T, mix
+from .ui.tokens import fonts as ui_fonts
 
 
 class TavernaScreen(Screen):

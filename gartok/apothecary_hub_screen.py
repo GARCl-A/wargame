@@ -2,9 +2,9 @@
 
 import pygame
 
-from .screen import Screen
-from .crafting_screen import CraftingScreen
 from .apothecary_mission_screen import ApothecaryMissionScreen
+from .crafting_screen import CraftingScreen
+from .screen import Screen
 from .ui.primitives import draw_button
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts

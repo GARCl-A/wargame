@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from tests.helpers import Battle, Combatant, Unit, data
-from gartok import actions, ai
+from gartok import ai
+from tests.helpers import Battle, Unit, data
 
 
 def _gnoll():

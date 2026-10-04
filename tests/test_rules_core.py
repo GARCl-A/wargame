@@ -3,10 +3,15 @@
 import random
 
 from tests.helpers import (
-    abilities, actions, Battle, Defending, Demoralized, resolve_bonus, Unit,
+    Battle,
+    Defending,
+    Demoralized,
+    Unit,
     _combatant,
+    abilities,
+    actions,
+    resolve_bonus,
 )
-
 
 # --------------------------------------------------------------------------- #
 # resolve_bonus                                                                #

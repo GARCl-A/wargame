@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import abilities, actions, Battle, data, fixed_d20, Unit
+from tests.helpers import Battle, Unit, abilities, actions, data, fixed_d20
 
 
 def _set_stats(combatant, **scores):

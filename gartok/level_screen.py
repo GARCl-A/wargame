@@ -15,16 +15,26 @@ Modernized to the `gartok/ui/` design system.
 """
 
 import math
+
 import pygame
 
 from . import artwork, progression, talents
 from .combatant import Combatant
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
+from .ui.primitives import (
+    caps,
+    draw_button,
+    draw_tooltip,
+    footer_bar,
+    hline,
+    panel,
+    text,
+    wrap,
+)
 from .ui.sheet_card import draw_row, unit_to_ch
-from .ui.tokens import T, mix, fonts as ui_fonts
-from .ui.primitives import (footer_bar, text, caps, panel, draw_button,
-                            draw_tooltip, wrap, hline)
+from .ui.tokens import T, mix
+from .ui.tokens import fonts as ui_fonts
 
 _TRACK_XP = {"combat": progression.COMBAT_XP_THRESHOLDS,
              "work": progression.WORK_XP_THRESHOLDS,

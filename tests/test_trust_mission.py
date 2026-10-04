@@ -5,10 +5,10 @@ closes the arc's 4th deed once the three economic ones are already banked."""
 
 import random
 
-from tests.helpers import Battle, Unit, world
-from gartok import campaign, chest, data, factions, missions, orders
+from gartok import campaign, data, missions, orders
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Battle, Unit, world
 
 
 def _guild_with_signer(node="city"):

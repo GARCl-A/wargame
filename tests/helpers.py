@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 """Shared test fixtures: deterministic Unit/Combatant builders, the battle
 scaffolds used across more than one domain file, and `fixed_d20`.
 

@@ -25,17 +25,24 @@ shopper's items for one move.
 
 import pygame
 
-from . import economy, factions, icons, items
+from . import economy, factions, items
 from .dragselect import DragSelectMixin
-from .packbox import LOCK_W, PackColumnMixin
+from .packbox import PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel
+from .ui.inspector_panel import role_for
+from .ui.primitives import (
+    caps,
+    draw_button,
+    draw_tooltip,
+    ellipsize,
+    format_tooltip,
+    hline,
+)
+from .ui.primitives import text as ui_text
 from .ui.tokens import T, mix
 from .ui.tokens import fonts as ui_fonts
-from .ui.inspector_panel import role_for
-from .ui.primitives import (draw_button, caps, text as ui_text, hline, ellipsize,
-                            format_tooltip, draw_tooltip)
 
 STOCK_W = 412
 MARGIN = T.S * 2

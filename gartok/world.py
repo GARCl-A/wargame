@@ -82,7 +82,9 @@ FORTRESS_AMBUSH_MAP_SLUG = "ledger-hold-ambush"
 
 
 def fortress_scenario():
-    from . import map_lib   # lazy: map_lib -> npc_lib -> persist pulls in half the package,
+    from . import (
+        map_lib,  # lazy: map_lib -> npc_lib -> persist pulls in half the package,
+    )
                              # which would cycle straight back to world.py at import time
     if os.path.exists(map_lib.map_path(FORTRESS_AMBUSH_MAP_SLUG)):
         return CustomScenario(map_lib.load_map(FORTRESS_AMBUSH_MAP_SLUG))

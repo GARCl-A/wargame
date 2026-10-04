@@ -1,10 +1,11 @@
 """Test crafting progression and resolution."""
 
 import random
+
 import gartok.unit as _unit_mod
-from gartok.unit import Unit
-from gartok.guild import Guild
 from gartok import data
+from gartok.guild import Guild
+from gartok.unit import Unit
 
 
 def test_crafting_requires_recipe():
@@ -155,11 +156,13 @@ def test_crafting_shift_awards_work_xp():
 
 
 def test_crafting_screen_station_filtering():
-    import os, pygame
+    import os
+
+    import pygame
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     pygame.font.init()
-    from gartok.group import Group
     from gartok.crafting_screen import CraftingScreen
+    from gartok.group import Group
 
     u1 = Unit("player")
     u1.recipes.append("Minor Healing Potion")

@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import data, economy, Unit, _unit
+from tests.helpers import Unit, _unit, data, economy
 
 
 def test_alignment_distance_axes():
@@ -40,8 +40,8 @@ def test_charisma_and_alignment_bend_the_price_but_resale_stays_a_loss():
 
 
 def test_market_deal_picks_the_best_speaker():
-    from gartok.market_screen import MarketScreen
     from gartok import world
+    from gartok.market_screen import MarketScreen
     random.seed(1)
     loud = Unit("player"); loud.languages = ["Ankarin"]; loud.charisma = 17
     loud.alignment = "Lawful and Neutral"; loud._derive_combat()

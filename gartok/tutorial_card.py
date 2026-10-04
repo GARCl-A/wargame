@@ -20,7 +20,6 @@ from .theme import (
     ACCENT,
     INK_DIM,
     INK_FAINT,
-    LINE,
     LINE_SOFT,
     MARGIN,
     RADIUS,

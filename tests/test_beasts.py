@@ -4,7 +4,15 @@ carrying loot."""
 
 import random
 
-from tests.helpers import Battle, Unit, _recruit, abilities, actions, data, resolve_bonus
+from tests.helpers import (
+    Battle,
+    Unit,
+    _recruit,
+    abilities,
+    actions,
+    data,
+    resolve_bonus,
+)
 
 
 def _wolf(rng=random):

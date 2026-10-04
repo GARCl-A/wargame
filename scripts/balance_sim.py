@@ -125,7 +125,7 @@ def elo(games, *, k_passes=(24, 16, 10, 6), base=1500.0):
 # aggregation                                                                 #
 # --------------------------------------------------------------------------- #
 class Tally:
-    __slots__ = ("w", "l", "d")
+    __slots__ = ("d", "l", "w")
 
     def __init__(self):
         self.w = self.l = self.d = 0

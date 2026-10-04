@@ -1,7 +1,9 @@
 import os
+
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-import pygame
 from unittest.mock import MagicMock
+
+import pygame
 
 from gartok import arena, world
 from gartok.squad_screen import SquadScreen

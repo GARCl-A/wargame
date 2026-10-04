@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import abilities, data, Unit, _unit, packed
+from tests.helpers import Unit, _unit, abilities, data, packed
 
 
 def test_hunger_ramps_penalties_and_caps_hp():
@@ -98,8 +98,8 @@ def test_starving_without_food_eventually_kills():
 
 
 def test_guild_pass_time_feeds_starves_and_buries():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(3)
     fed = Unit("player"); fed._base_inventory = packed(["Meat", "Meat"])
     fed.share_food = False                                  # keeps its stock to itself
@@ -126,8 +126,8 @@ def test_eat_now_only_bites_when_hungry_and_carrying_food():
 
 
 def test_a_sharer_feeds_a_foodless_guild_mate_on_the_daily_meal():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(3)
     mule = Unit("player"); mule._base_inventory = packed(["Meat", "Meat", "Meat"])
     weakling = Unit("player"); weakling._base_inventory = []
@@ -139,9 +139,9 @@ def test_a_sharer_feeds_a_foodless_guild_mate_on_the_daily_meal():
 
 
 def test_larder_is_scoped_to_the_group_not_the_whole_guild():
-    from gartok.guild import Guild
-    from gartok.group import Group
     from gartok.clock import Clock
+    from gartok.group import Group
+    from gartok.guild import Guild
     random.seed(3)
     mule = Unit("player"); mule._base_inventory = packed(["Meat", "Meat", "Meat"])
     weakling = Unit("player"); weakling._base_inventory = []   # a DIFFERENT group
@@ -154,8 +154,8 @@ def test_larder_is_scoped_to_the_group_not_the_whole_guild():
 
 
 def test_a_private_ration_is_never_touched_by_a_hungry_mate():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(3)
     hoarder = Unit("player"); hoarder._base_inventory = packed(["Meat", "Meat"])
     hoarder.share_food = False
@@ -167,8 +167,8 @@ def test_a_private_ration_is_never_touched_by_a_hungry_mate():
 
 
 def test_everyone_eats_their_own_before_the_larder_is_raided():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(3)
     a = Unit("player"); a._base_inventory = packed(["Meat"])  # exactly one, shared
     b = Unit("player"); b._base_inventory = packed(["Meat"])  # exactly one, shared
@@ -178,8 +178,8 @@ def test_everyone_eats_their_own_before_the_larder_is_raided():
 
 
 def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(3)
     u = Unit("player")
     u.unfed_days = 1
@@ -251,8 +251,8 @@ def test_food_consumption_priority_oldest_then_cheapest():
 # --------------------------------------------------------------------------- #
 
 def test_natural_rest_healing_heals_when_idle_and_well_fed():
-    from gartok.guild import Guild
     from gartok.group import Group
+    from gartok.guild import Guild
     u = Unit("player")
     u.set_track_level("racial", 2)
     u.hp_max = 20
@@ -270,8 +270,8 @@ def test_natural_rest_healing_heals_when_idle_and_well_fed():
 
 
 def test_natural_rest_healing_does_not_heal_when_hungry():
-    from gartok.guild import Guild
     from gartok.group import Group
+    from gartok.guild import Guild
     u = Unit("player")
     u.hp_max = 20
     u.hp = 5
@@ -287,9 +287,9 @@ def test_natural_rest_healing_does_not_heal_when_hungry():
 
 
 def test_natural_rest_healing_does_not_heal_when_group_busy():
-    from gartok.guild import Guild
-    from gartok.group import Group
     from gartok import orders
+    from gartok.group import Group
+    from gartok.guild import Guild
     u = Unit("player")
     u.hp_max = 20
     u.hp = 5
@@ -307,8 +307,8 @@ def test_natural_rest_healing_does_not_heal_when_group_busy():
 
 
 def test_natural_rest_healing_caps_at_hp_max():
-    from gartok.guild import Guild
     from gartok.group import Group
+    from gartok.guild import Guild
     u = Unit("player")
     u.set_track_level("racial", 3)
     u.hp_max = 10

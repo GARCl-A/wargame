@@ -7,7 +7,7 @@ stay theme-coloured.
 
 import pygame
 
-__all__ = ["icon", "NAMES"]
+__all__ = ["NAMES", "icon"]
 
 
 def _box(rect, pad=0.18):

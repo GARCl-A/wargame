@@ -7,12 +7,12 @@ first node with a `garrison_job` actually set)."""
 
 import random
 
-from tests.helpers import economy, Unit, world, packed
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.wilds_claim_screen import WildsClaimScreen
+from tests.helpers import Unit, economy, packed, world
 
 NODE = world.WILDS_TERRITORY_NODE
 
@@ -394,6 +394,7 @@ def test_drawing_every_stage_does_not_crash():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.theme import Fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -424,6 +425,7 @@ def test_drawing_and_clicking_scout_through_pygame():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.theme import Fonts
     pygame.init()
     pygame.display.set_mode((1, 1))

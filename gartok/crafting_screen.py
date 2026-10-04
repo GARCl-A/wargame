@@ -9,10 +9,16 @@ from collections import Counter
 
 import pygame
 
-from . import data, economy, items
+from . import economy, items
 from .screen import Screen
-from .ui.primitives import (caps, draw_button, footer_bar, panel, section, text,
-                            token_badge)
+from .ui.primitives import (
+    caps,
+    draw_button,
+    footer_bar,
+    panel,
+    section,
+    text,
+)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

@@ -3,10 +3,10 @@ true across the guild. See gartok/group.py + the Guild.roster/node shims."""
 
 import random
 
-from tests.helpers import Unit, packed
 from gartok import data
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Unit, packed
 
 _HUMAN = data.race_by_name("Human")
 

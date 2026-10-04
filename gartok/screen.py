@@ -39,7 +39,7 @@ class Screen:
         one teachable moment (a tab, a phase) reads its own state here -- see
         `GuildScreen.tutorial_key` switching on `self.tab`. The default is None:
         most screens (the menu, the editors, ...) never get one."""
-        return None
+        return
 
     def tutorial_anchor(self, size):
         """Where that card sits: `(x, y, max_w, grow)` -- `grow` is `"down"`

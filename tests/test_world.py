@@ -3,9 +3,15 @@
 import random
 
 from tests.helpers import (
-    abilities, Battle, Board, COLS, CustomScenario, ErmosScenario, ROWS, Unit,
+    COLS,
+    ROWS,
+    Battle,
+    Board,
+    CustomScenario,
+    ErmosScenario,
+    Unit,
+    abilities,
 )
-
 
 # --------------------------------------------------------------------------- #
 # scenarios and the world map                                                  #

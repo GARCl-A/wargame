@@ -7,12 +7,12 @@ same shape as `test_bank.py` (the screen) and `test_justice_integration.py` /
 
 import random
 
-from tests.helpers import economy, packed, Unit, world
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.city_property_screen import CityPropertyScreen, RepossessionScreen
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Unit, economy, packed, world
 
 
 def _app(guild):
@@ -342,6 +342,7 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.theme import Fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -369,6 +370,7 @@ def test_drawing_the_repossession_screen_and_choosing_squat():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.theme import Fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -426,9 +428,10 @@ def test_app_runs_the_raid_battle_and_resolves_it_through_battle_end():
 def test_bankers_debt_blocks_buying_the_property():
     """After a repossession the guild owes a debt; that flag must prevent
     re-buying the property at the bank screen."""
+    import pygame
+
     from gartok.bank_screen import BankScreen
     from gartok.theme import Fonts
-    import pygame
 
     p = Unit("player")
     p.gold = economy.CITY_PROPERTY_PRICE + 100

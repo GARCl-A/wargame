@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import economy, persist, Unit, world, _unit, packed
+from tests.helpers import Unit, _unit, economy, packed, persist, world
 
 
 def test_lumber_yard_is_a_work_town_one_hour_from_the_city():
@@ -21,8 +21,8 @@ def test_lumber_pay_is_by_the_whole_block():
 
 
 def test_work_shift_pays_every_worker_and_banks_the_hours():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(4)
     a, b = Unit("player"), Unit("player")
     a.gold = b.gold = 0
@@ -38,8 +38,8 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
 
 
 def test_work_shift_crossing_midnight_runs_the_daily_meal():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(5)
     u = Unit("player")
     u.gold = 0
@@ -94,8 +94,8 @@ def test_outgrown_lumber_yard_pays_but_teaches_nothing():
     """A work-level-1 worker gets zero work-XP from the bare-handed job (level
     0 < their level 1) but full pay -- and full XP again once they bring their
     own Axe, which lifts the job to level 1."""
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(4)
     u = Unit("player")
     u.gold = 0

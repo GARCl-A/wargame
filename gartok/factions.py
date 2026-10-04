@@ -27,8 +27,8 @@ it also gets `guild`, so a "visited every node" or "banked 1000 copper" deed
 reads campaign state straight off that.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,7 @@ class Deed:
     blurb: str
     rep: int                                  # reputation banked on completion
     check: Callable                           # (guild, event) -> bool
-    requires: Optional[str] = None            # deed id that must be done first
+    requires: str | None = None            # deed id that must be done first
 
 
 def _arena_win(event):

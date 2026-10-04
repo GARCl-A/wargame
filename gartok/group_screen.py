@@ -49,7 +49,7 @@ loadout. `native = True`. `on_back()` returns to the map.
 
 import pygame
 
-from . import chest, data, items, missions, world, magic
+from . import chest, data, items, magic, missions, world
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen

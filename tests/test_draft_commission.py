@@ -1,15 +1,18 @@
 """Tests for the Recruit Commission with Label Tokens system in DraftScreen and archetypes.py."""
 
 import os
+
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 import pygame
-import pytest
 
 from gartok import archetypes
-from gartok.draft_screen import DraftScreen, COMMISSION_TOKENS, DRAFT_CHOICES, DRAFT_ROUNDS
+from gartok.draft_screen import (
+    COMMISSION_TOKENS,
+    DRAFT_CHOICES,
+    DraftScreen,
+)
 from gartok.ui.tokens import fonts as ui_fonts
-from gartok.unit import Unit
 
 
 def test_archetype_catalog_completeness():

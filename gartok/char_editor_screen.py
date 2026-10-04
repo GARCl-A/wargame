@@ -20,15 +20,41 @@ import pygame
 from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
 from .screen import Screen
+from .theme import (
+    ACCENT,
+    ACCENT_INK,
+    DANGER,
+    INFO,
+    INK,
+    INK_DIM,
+    INK_FAINT,
+    LINE,
+    LINE_SOFT,
+    MARGIN,
+    OK,
+    RADIUS,
+    SP1,
+    SP2,
+    SP3,
+    SP4,
+    SP5,
+    SURFACE_0,
+    SURFACE_1,
+    SURFACE_2,
+    SURFACE_3,
+    SURFACE_4,
+    draw_tooltip,
+    ellipsize,
+    format_tooltip,
+    panel,
+    section,
+    set_pointer,
+    text,
+)
 from .ui.primitives import contained as ui_contained
 from .ui.sheet_card import draw_sheet as draw_sheet_card
 from .ui.sheet_card import unit_to_ch
 from .ui.tokens import fonts as ui_fonts
-from .theme import (ACCENT, ACCENT_INK, DANGER, INFO, INK, INK_DIM, INK_FAINT,
-                    LINE, LINE_SOFT, MARGIN, OK, RADIUS, SP1, SP2, SP3, SP4,
-                    SP5, SURFACE_0, SURFACE_1, SURFACE_2, SURFACE_3, SURFACE_4,
-                    draw_tooltip, ellipsize, format_tooltip, panel, section,
-                    set_pointer, text)
 from .unit import Unit
 
 _ATTR_ABBR = [("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),

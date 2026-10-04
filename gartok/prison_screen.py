@@ -13,11 +13,17 @@ import pygame
 from . import economy, recruit
 from .data import alignment_distance
 from .screen import Screen
-from .ui.primitives import (draw_button, footer_bar, panel, section, text,
-                            token_badge, tracked, wrap)
+from .ui.combat_card import draw_combat_card, draw_party_row
+from .ui.primitives import (
+    draw_button,
+    footer_bar,
+    panel,
+    text,
+    tracked,
+    wrap,
+)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-from .ui.combat_card import draw_combat_card, draw_party_row
 
 CANDIDATES = 3
 

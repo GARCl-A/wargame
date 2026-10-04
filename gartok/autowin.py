@@ -14,10 +14,9 @@ Trade-off when accepted:
 - Field loot, clock advancement, and guild victory count are preserved.
 """
 
-from dataclasses import dataclass, field
 import threading
 import time
-from typing import Dict, List, Optional
+from dataclasses import dataclass, field
 
 from . import ai, data
 from .battle import Battle
@@ -30,7 +29,7 @@ class AutoWinResult:
     eligible: bool = False
     iterations: int = 0
     win_rate: float = 0.0
-    avg_damage: Dict[str, float] = field(default_factory=dict)
+    avg_damage: dict[str, float] = field(default_factory=dict)
     avg_rounds: float = 0.0
 
 
@@ -41,7 +40,7 @@ def simulate_matchup(squad, enemies, scenario=None, daylight=True, lethal=True,
         return AutoWinResult(eligible=False)
 
     t0 = time.monotonic()
-    total_damage: Dict[str, float] = {u.uid: 0.0 for u in squad}
+    total_damage: dict[str, float] = {u.uid: 0.0 for u in squad}
     total_rounds = 0
     successful_runs = 0
 
@@ -109,7 +108,7 @@ class AutoWinEstimator:
     """Threaded background runner for pre-battle screens."""
 
     def __init__(self):
-        self.result: Optional[AutoWinResult] = None
+        self.result: AutoWinResult | None = None
         self.computing: bool = False
         self._token: int = 0
         self._lock = threading.Lock()

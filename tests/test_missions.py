@@ -4,9 +4,9 @@ and the market's finite stock on a few items (economy.STOCK)."""
 
 import random
 
-from tests.helpers import economy, Unit
 from gartok import missions
 from gartok.guild import Guild
+from tests.helpers import Unit, economy
 
 
 def _guild_with_two_groups():
@@ -177,6 +177,7 @@ def test_quest_panel_draws_tags_pills():
 
 def test_completed_mission_shows_completed_label():
     import pygame
+
     from gartok.tanner_screen import TannerScreen
     from gartok.ui.tokens import fonts as ui_fonts
     guild, hunters, _home = _guild_with_two_groups()
@@ -197,6 +198,7 @@ def test_completed_mission_shows_completed_label():
 
 def test_mission_offer_screen_containment_and_notice():
     import pygame
+
     from gartok.library_mission_screen import LibraryMissionScreen
     from gartok.ui.tokens import fonts as ui_fonts
 

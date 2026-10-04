@@ -14,9 +14,11 @@ Validates:
 
 import json
 import os
+
 import pytest
+
 from gartok import items
-from gartok.items import ItemType, ItemRarity, WeaponSize, CraftingStation, ItemInstance
+from gartok.items import CraftingStation, WeaponSize
 
 
 def load_baseline():
@@ -194,7 +196,7 @@ def test_item_instance_charges_tracking():
 
 
 def test_bandit_ambush_locked_chest_drop():
-    from gartok import encounters, data
+    from gartok import data, encounters
 
     class BanditDropRNG:
         def __init__(self, table_idx=1, count=2, level=0, drop_roll=0.005):

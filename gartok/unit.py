@@ -818,8 +818,7 @@ class Unit:
                            + (con * hit_dice) 
                            + self._ability.hp_max 
                            + self.talent_bonus("hp_per_hd") * hit_dice)
-            if self.hp_max < 1:
-                self.hp_max = 1
+            self.hp_max = max(self.hp_max, 1)
         if self.hunger_level >= 2:
             self.hp_max = 1
         if old_max is not None and old_hp is not None:

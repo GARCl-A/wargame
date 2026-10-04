@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import abilities, Battle, Board, grid_distance, ROWS, Unit
+from tests.helpers import ROWS, Battle, Board, Unit, abilities, grid_distance
 
 
 def test_los_blocked_by_wall():

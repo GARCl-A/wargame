@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from . import data, economy
 
+
 @dataclass(frozen=True)
 class Spell:
     id: str

@@ -21,9 +21,9 @@ torch scatter). A concrete location on the world map picks a subclass:
 
 import random
 
+from . import data, encounters
 from .board import COLS, ROWS, Board, cells
 from .ground import Creature, GroundObject
-from . import data, encounters
 
 
 class Scenario:
@@ -71,7 +71,7 @@ class Scenario:
         rule (a side loses when every member is down). `battle._check_winner`
         consults this first, every turn. The base scenario has no objective
         beyond wiping the other side, so it always returns None."""
-        return None
+        return
 
     # ------------------------------------------------------------------ #
     def _spawn_cells(self, team):
@@ -139,7 +139,7 @@ def own_half(team, cols=COLS):
     """The columns a side may keep its flag in: the player's is the left half of
     the board, the enemy's the right."""
     mid = cols // 2
-    return range(0, mid) if team == "player" else range(mid, cols)
+    return range(mid) if team == "player" else range(mid, cols)
 
 
 class _FlagObjective:

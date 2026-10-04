@@ -20,8 +20,9 @@ import pygame
 from . import economy, items
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .screen import Screen
-from .theme import (DANGER, INFO, INK, INK_DIM, MARGIN, SP2, SP3,
-                    SURFACE_2, SURFACE_3, panel, set_pointer, text, wrap_lines)
+from .theme import (
+    set_pointer,
+)
 from .ui import loadout_panel
 from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, header
@@ -571,7 +572,9 @@ class RepossessionScreen(Screen):
 
         box_w = min(580, W - 48)
         inner_w = box_w - 48
-        from .ui.primitives import wrap, modal_card, text as p_text, caps as p_caps, hline
+        from .ui.primitives import caps as p_caps
+        from .ui.primitives import hline, modal_card, wrap
+        from .ui.primitives import text as p_text
         lines = wrap(F["body"], warn_msg, inner_w)
         box_h = 24 + 18 + 28 + 14 + len(lines) * 24 + 18 + 58 + 12 + 58 + 20
 

@@ -15,7 +15,7 @@ from .packbox import PackColumnMixin
 from .screen import Screen
 from .theme import set_pointer
 from .ui import loadout_panel
-from .ui.primitives import header, text
+from .ui.primitives import text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 

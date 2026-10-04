@@ -14,9 +14,7 @@ Only the raw generator tables and game constants stay in `data.py`; the pricing
 and haggling *behaviour* lives here.
 """
 
-from . import constants
-from . import data
-from . import items
+from . import constants, data, items
 
 TORCH_ITEM = data.TORCH_ITEM
 

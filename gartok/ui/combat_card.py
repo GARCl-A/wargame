@@ -1,8 +1,10 @@
 import pygame
+
 from .. import artwork
 from .. import theme as _theme
-from .tokens import T, mix, fonts
-from .primitives import text, caps, TOKEN_INK
+from .primitives import TOKEN_INK, caps, text
+from .tokens import T, fonts, mix
+
 
 def draw_combat_card(s, rect, ch, action="PICK", hovered=False, selected=False, disabled=False, state_msg=None, extra_lines=None):
     """

@@ -16,8 +16,8 @@ English too. RULES.md is the design-prose doc and may lag the wording; the
 generated REFERENCE.md is the authoritative catalog.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional
 
 from . import data
 
@@ -38,7 +38,7 @@ class Ability:
     darkvision: int = 0               # range in squares; 0 = no darkvision
     extra_languages: int = 0
     demoralize_ignores_language: bool = False
-    carry_size: Optional[str] = None  # size used for carry capacity only (overrides the real size)
+    carry_size: str | None = None  # size used for carry capacity only (overrides the real size)
     breaks_when_downed: bool = False  # 0 HP -> "broken" (no death clock), not "dying"
     flies: bool = False               # moves freely in 3D (ignores pits) and takes no fall damage
     climb_speed: bool = False         # moves up/down pit walls as normal movement (seam, unused)
@@ -48,11 +48,11 @@ class Ability:
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
-    attack_mods: Optional[Callable] = None     # (unit, target, flanking) -> list[mod]
-    feint: Optional[Callable] = None           # (unit, target) -> list[mod]   (once per battle)
-    on_attack_miss: Optional[Callable] = None  # (battle, unit, target, bonus, ac, log)  (once per battle)
-    on_downed: Optional[Callable] = None       # (unit, log) -> bool (True = survived)   (once per battle)
-    on_turn_start: Optional[Callable] = None   # (unit, log)
+    attack_mods: Callable | None = None     # (unit, target, flanking) -> list[mod]
+    feint: Callable | None = None           # (unit, target) -> list[mod]   (once per battle)
+    on_attack_miss: Callable | None = None  # (battle, unit, target, bonus, ac, log)  (once per battle)
+    on_downed: Callable | None = None       # (unit, log) -> bool (True = survived)   (once per battle)
+    on_turn_start: Callable | None = None   # (unit, log)
 
     @property
     def desc(self):

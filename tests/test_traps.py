@@ -1,12 +1,10 @@
 """Test trap mechanics in battle: trigger on movement, trigger on push, shield AC."""
 
-import random
 
-from tests.helpers import _melee_battle, fixed_d20
-from gartok.battle import Battle
-from gartok.unit import Unit
-from gartok.ground import GroundObject
 from gartok.actions import Push
+from gartok.ground import GroundObject
+from gartok.unit import Unit
+from tests.helpers import _melee_battle, fixed_d20
 
 
 def test_bear_trap_trigger_on_movement():

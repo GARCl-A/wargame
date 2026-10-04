@@ -6,8 +6,9 @@ Modernized to the `gartok/ui/` design system using `modal_card`.
 import pygame
 
 from .screen import Screen
-from .ui.tokens import T, fonts as ui_fonts
-from .ui.primitives import modal_card, text, caps, draw_button, hline, wrap
+from .ui.primitives import caps, draw_button, hline, modal_card, text, wrap
+from .ui.tokens import T
+from .ui.tokens import fonts as ui_fonts
 
 
 class AlertScreen(Screen):

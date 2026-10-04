@@ -1,6 +1,7 @@
 """The Library shop: buy dictionaries."""
 
 import random
+
 from . import data
 from .market_screen import MarketScreen
 

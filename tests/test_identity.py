@@ -10,9 +10,9 @@ import random
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 import pygame
 
-from tests.helpers import Unit
 from gartok import artwork, theme
 from gartok.guild import DEFAULT_BANNER_COLOR, DEFAULT_BANNER_ICON, Guild
+from tests.helpers import Unit
 
 
 def test_guild_falls_back_to_the_default_identity_when_none_is_given():
@@ -74,7 +74,6 @@ def test_leadership_survives_a_save_round_trip_with_identity():
 
 
 def test_draft_screen_identity_phase_collects_name_and_banner():
-    from gartok.theme import Fonts
     from gartok.draft_screen import DraftScreen
 
     pygame.init()

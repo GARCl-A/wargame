@@ -4,8 +4,12 @@ import random
 
 from gartok import arena, matchup, world
 from gartok.guild import Guild
-from gartok.scenario import (ArenaScenario, CustomFlagScenario, CustomScenario,
-                             FlagScenario)
+from gartok.scenario import (
+    ArenaScenario,
+    CustomFlagScenario,
+    CustomScenario,
+    FlagScenario,
+)
 from tests.helpers import Unit
 
 

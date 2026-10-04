@@ -280,10 +280,10 @@ class Combatant:
         """A lantern bumped out of the off hand goes back in the pack, not the
         ground -- it is not a torch stuck in dirt, and never appears as loot."""
         if not self.lantern_hand:
-            return None
+            return
         self.lantern_hand = False
         self.inventory.append(data.LANTERN_ITEM)
-        return None
+        return
 
     def disarm(self):
         """Empties the weapon hand (thrown: the action already handles the ground object)."""

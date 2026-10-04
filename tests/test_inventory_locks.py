@@ -2,9 +2,10 @@
 
 import random
 
-from tests.helpers import Unit, packed
-from gartok import data, unit as unit_module
+from gartok import data
+from gartok import unit as unit_module
 from gartok.group import Group
+from tests.helpers import Unit, packed
 
 _HUMAN = data.race_by_name("Human")
 

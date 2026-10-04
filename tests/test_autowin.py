@@ -1,7 +1,8 @@
 """Tests for the Auto-Win Monte Carlo simulation and eligibility criteria."""
 
 import time
-from gartok import autowin, campaign, data, encounters, items, world
+
+from gartok import autowin, campaign, data, world
 from gartok.battle import Battle
 from gartok.guild import Guild
 from gartok.scenario import Scenario
@@ -131,7 +132,7 @@ def test_autowin_hunt_screen_flow():
     from unittest.mock import MagicMock
     if "pygame" not in sys.modules:
         try:
-            import pygame
+            pass
         except Exception:
             sys.modules["pygame"] = MagicMock()
             sys.modules["pygame.base"] = MagicMock()

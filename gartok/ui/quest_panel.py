@@ -10,7 +10,6 @@ import pygame
 from .primitives import text
 from .tokens import T
 
-
 TAG_COLOR = {
     "economic": T.BRASS,
     "trust": T.BRASS,

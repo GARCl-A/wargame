@@ -11,8 +11,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from gartok.unit import Unit
 from gartok import data
+from gartok.unit import Unit
+
 
 def avg_damage(unit):
     wep_name = unit.equipped_weapon

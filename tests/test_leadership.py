@@ -5,9 +5,9 @@ See RULES.md's "Leadership" section and gartok/group.py / gartok/guild.py.
 
 import random
 
-from tests.helpers import Unit, _unit
 from gartok.group import BASE_CAPACITY, Group
 from gartok.guild import Guild
+from tests.helpers import Unit, _unit
 
 
 def _cha(seed, cha):

@@ -8,12 +8,12 @@ objects are needed."""
 
 import random
 
-from tests.helpers import packed, Unit, world
 from gartok import orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen
+from tests.helpers import Unit, packed, world
 
 
 def _app(guild):

@@ -5,8 +5,8 @@ provides constraint-aware candidate generation so players can spend commission
 tokens to guarantee functional squad roles without endless rerolling.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from . import items
 from .unit import Unit

@@ -3,7 +3,7 @@ and the Amphibious rework."""
 
 import random
 
-from tests.helpers import abilities, actions, Battle, fixed_d20, Unit
+from tests.helpers import Battle, Unit, abilities, actions, fixed_d20
 
 
 def _set_stats(combatant, **scores):

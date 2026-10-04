@@ -1,9 +1,9 @@
 import sys
-sys.path.append('c:/dev/wargame')
-from gartok import battle, unit, campaign, guild, combatant, actions
 
+sys.path.append('c:/dev/wargame')
 # Mock the RNG to always succeed
-from gartok import data
+from gartok import actions, battle, campaign, data, guild, unit
+
 data.d20 = lambda: 20
 
 # Create guild and units
@@ -11,6 +11,7 @@ g = guild.Guild(roster=[])
 u1 = unit.Unit("player", name="Healer")
 u2 = unit.Unit("player", name="DyingGuy")
 from gartok import group
+
 grp = group.Group([])
 g.groups = [grp]
 g.add_member(u1, grp)

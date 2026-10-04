@@ -1,8 +1,8 @@
 """Tests for the Floating Disk spell and 3D elevation traversal."""
 
-from tests.helpers import Battle, Unit, data, actions
-from gartok.ground import GroundObject
 from gartok import ai
+from gartok.ground import GroundObject
+from tests.helpers import Battle, Unit, actions, data
 
 
 def _caster():

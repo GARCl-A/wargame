@@ -10,13 +10,13 @@ roster and a rematch could reuse the same picks.
 """
 
 from . import data, vision
-from .board import COLS, ROWS, cells, chebyshev, cells_distance
+from .board import COLS, ROWS, cells, cells_distance, chebyshev
 from .combatant import Combatant
 from .data import d20
 from .ground import GroundObject
 from .scenario import ArenaScenario, own_half
 
-__all__ = ["Battle", "COLS", "ROWS", "chebyshev"]
+__all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
 
 
 class Battle:

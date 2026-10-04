@@ -23,8 +23,17 @@ from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .theme import set_pointer
 from .ui.combat_card import draw_combat_card
-from .ui.primitives import (contained, draw_button, draw_tooltip, footer_bar,
-                            format_tooltip, panel, scrollbar, text, tracked)
+from .ui.primitives import (
+    contained,
+    draw_button,
+    draw_tooltip,
+    footer_bar,
+    format_tooltip,
+    panel,
+    scrollbar,
+    text,
+    tracked,
+)
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -230,8 +239,7 @@ class SquadScreen(SheetModalMixin, Screen):
         card_h = min(232, max(210, (avail_h - (rows - 1) * gap) // max(1, rows)))
         total_grid_h = rows * card_h + (rows - 1) * gap
         self._max_scroll = max(0, total_grid_h - avail_h)
-        if self._scroll > self._max_scroll:
-            self._scroll = self._max_scroll
+        self._scroll = min(self._scroll, self._max_scroll)
 
         x0 = (W - (cols * card_w + (cols - 1) * gap)) // 2
         grid_rect = pygame.Rect(pad, top, W - 2 * pad, avail_h)

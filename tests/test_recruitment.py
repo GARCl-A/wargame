@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import recruit, _FixedRNG, _person
+from tests.helpers import _FixedRNG, _person, recruit
 
 
 def test_recruit_needs_a_shared_language():
@@ -23,8 +23,8 @@ def test_recruit_is_a_charisma_contest_and_ties_go_to_the_stranger():
 
 
 def test_taverna_pool_is_stable_within_the_week_then_refreshes():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(1)
     g = Guild([_person(1)], clock=Clock())
     first = list(recruit.refresh_pool(g))
@@ -36,8 +36,8 @@ def test_taverna_pool_is_stable_within_the_week_then_refreshes():
 
 
 def test_failed_pitch_bars_that_recruiter_only():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     g = Guild([], clock=Clock())
     r1, r2, cand = _person(1), _person(3), _person(2)
     recruit.bar(g, cand, r1)
@@ -47,8 +47,8 @@ def test_failed_pitch_bars_that_recruiter_only():
 
 
 def test_enlist_pulls_the_recruit_out_of_the_pool():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     random.seed(2)
     g = Guild([_person(1)], clock=Clock())
     pool = recruit.refresh_pool(g)
@@ -61,8 +61,8 @@ def test_taverna_screen_pitch_does_not_double_pop_the_shared_pool():
     """Regression: TavernaScreen(candidates=None) hands out the live
     guild.taverna_pool -- the same list `recruit.enlist` already trims on a
     win. Popping self.sel again on top of that used to raise IndexError."""
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     from gartok.taverna_screen import TavernaScreen
 
     random.seed(4)
@@ -174,8 +174,8 @@ def test_bail_cost():
 
 
 def test_prison_pool_management():
-    from gartok.guild import Guild
     from gartok.clock import Clock
+    from gartok.guild import Guild
     g = Guild([_person(1)], clock=Clock())
     first = list(recruit.refresh_prison_pool(g))
     assert recruit.refresh_prison_pool(g) is g.prison_pool and g.prison_pool == first
@@ -249,6 +249,7 @@ def test_taverna_screen_renders_archetype_badges():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
+
     from gartok.guild import Guild
     from gartok.taverna_screen import TavernaScreen
     from gartok.ui.tokens import fonts as ui_fonts

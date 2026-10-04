@@ -4,9 +4,9 @@ Replaces fragmented item tables across data.py and economy.py.
 All items are defined with strong types, Enums, and typed ItemDef instances.
 """
 
+from dataclasses import dataclass, replace
 from enum import StrEnum
-from dataclasses import dataclass, field, replace
-from typing import Optional, Any
+from typing import Any
 
 
 class ItemType(StrEnum):
@@ -56,22 +56,22 @@ class ItemDef:
     rarity: ItemRarity = ItemRarity.COMMON
     weight: float = 0.5
     price: int = 0
-    size: Optional[WeaponSize] = None
-    damage: Optional[tuple[int, int]] = None
+    size: WeaponSize | None = None
+    damage: tuple[int, int] | None = None
     range: int = 0
     finesse: bool = False
     thrown: int = 0
     hands: int = 1
     reload: bool = False
     ac: int = 0
-    max_dex: Optional[int] = None
+    max_dex: int | None = None
     speed_penalty: int = 0
     food: bool = False
     material: bool = False
-    lifespan: Optional[int] = None
-    spell_id: Optional[str] = None
-    language: Optional[str] = None
-    max_charges: Optional[int] = None
+    lifespan: int | None = None
+    spell_id: str | None = None
+    language: str | None = None
+    max_charges: int | None = None
     light_radius: int = 0
 
     @property
@@ -100,10 +100,10 @@ class ItemDef:
 @dataclass
 class ItemInstance:
     id: str
-    charges: Optional[int] = None
+    charges: int | None = None
     days_old: int = 0
     qty: int = 1
-    _name: Optional[str] = None
+    _name: str | None = None
 
     @property
     def defn(self) -> ItemDef:
@@ -187,7 +187,7 @@ class ItemInstance:
         yield self.name
         yield self.qty
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, str):
             return self.name == other or self.id == other
         if isinstance(other, (tuple, list)) and len(other) == 2:
@@ -372,7 +372,7 @@ _register(ItemDef(id="ancient_codex", name="Ancient Codex", type=ItemType.QUEST,
 # Public API                                                                  #
 # --------------------------------------------------------------------------- #
 
-def get(key: str) -> Optional[ItemDef]:
+def get(key: str) -> ItemDef | None:
     """Flexible lookup by slug id, display name, or alias."""
     if not isinstance(key, str):
         return None
@@ -489,7 +489,7 @@ def sell_price(item_or_name: Any, markup: float = 0.0) -> int:
     return max(1, round(item.price * 0.5 * (1.0 + markup)))
 
 
-def create_instance(key: str, qty: int = 1, days_old: int = 0, charges: Optional[int] = None) -> ItemInstance:
+def create_instance(key: str, qty: int = 1, days_old: int = 0, charges: int | None = None) -> ItemInstance:
     item = get(key)
     if item is None:
         item_id = str(key).lower().replace(" ", "_")

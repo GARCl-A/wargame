@@ -4,9 +4,9 @@ and the pooled/proportional purse the visit settles back out on the way out."""
 import os
 import random
 
-from tests.helpers import economy, packed, Unit
 from gartok.bank_screen import BankScreen
 from gartok.guild import Guild
+from tests.helpers import Unit, economy, packed
 
 
 def _screen(guild, party):

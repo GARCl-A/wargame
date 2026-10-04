@@ -3,8 +3,16 @@
 import random
 
 from tests.helpers import (
-    abilities, actions, Battle, Combatant, SIZES, squares, Unit, _melee_battle,
-    _recruit, _unit,
+    SIZES,
+    Battle,
+    Combatant,
+    Unit,
+    _melee_battle,
+    _recruit,
+    _unit,
+    abilities,
+    actions,
+    squares,
 )
 
 

@@ -7,11 +7,11 @@ is a tuning knob, not something worth making tests fight over."""
 
 import random
 
-from tests.helpers import Battle, Unit, world
 from gartok import campaign, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
+from tests.helpers import Battle, Unit, world
 
 
 def _app(guild):
@@ -149,7 +149,6 @@ def test_fleeing_a_guard_catch_back_onto_an_unsafe_node_can_ambush():
     as any other, not a free pass. Regression: this used to skip straight to
     a re-catch-or-idle check that never looked at `unsafe` at all."""
     from tests.helpers import fixed_d20
-    from gartok import justice
 
     random.seed(1)
     culprit = Unit("player")
