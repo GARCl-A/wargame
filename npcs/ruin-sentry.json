@@ -16,14 +16,15 @@
   "quiver_charges": 0,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
-  "hp": 4,
+  "hp": 54,
   "share_food": true,
-  "combat_xp": 10,
-  "work_hours": 0,
+  "combat_xp": 136,
+  "work_hours": 320,
   "bio": "Ancient automaton construct bound to guard the library entrance.",
   "arena_title": false,
   "recipes": [
-    "Dictionary of Ankarin"
+    "Dictionary of Ankarin",
+    "Dictionary of Draconic"
   ],
   "crafting_target": null,
   "crafting_progress": 0,
@@ -35,42 +36,58 @@
   "talents": {
     "combat": [
       "alert",
-      "iron_will"
+      "iron_will",
+      "tough",
+      "hardy",
+      "bulwark",
+      "strong",
+      "sure_strike",
+      "heavy_hand"
     ],
-    "work": [],
-    "racial": []
+    "work": [
+      "carrier",
+      "piecework",
+      "brisk_hands",
+      "steady_pace"
+    ],
+    "racial": [
+      "tireless_worker"
+    ]
   },
   "level_hp_rolls": [
-    4
+    4,
+    6,
+    5,
+    6,
+    7,
+    3
   ],
   "base_attributes": {
-    "strength": 13,
-    "dexterity": 13,
-    "constitution": 9,
-    "intelligence": 10,
-    "wisdom": 11,
-    "charisma": 8
+    "strength": 16,
+    "dexterity": 8,
+    "constitution": 13,
+    "intelligence": 6,
+    "wisdom": 10,
+    "charisma": 7
   },
   "age_base": 60,
   "age": 60,
   "hp_roll": 2,
   "hp_override": null,
-  "racial_override": null,
-  "hp_max": 4,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": 6,
+  "hp_max": 54,
   "languages": [
-    "Ankarin"
+    "Ankarin",
+    "Draconic"
   ],
-  "equipped_weapon": "Club",
-  "equipped_offhand": null,
+  "equipped_weapon": "Axe",
+  "equipped_offhand": "Torch",
   "equipped_tongue": null,
-  "equipped_armor": null,
-  "inventory": [
-    {
-      "id": "lantern",
-      "name": "Lantern",
-      "qty": 1
-    }
-  ],
+  "equipped_armor": "Brigandine",
+  "inventory": [],
   "locked_items": {},
   "dormant": false,
   "awareness_radius": 0,

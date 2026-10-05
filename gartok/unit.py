@@ -122,7 +122,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.race = data.race_by_name(d["race"])
         u._configure_race()
         u.age = d.get("age", u.age)                     # creator-set age wins; older saves fall back to the derived one
-        u.languages = list(d["languages"])              # keep the saved picks, don't re-sort
+        u.languages = [l for l in d["languages"] if l]   # keep the saved picks, don't re-sort; drop blanks
         u.occupation = data.occupation_by_name(d["occupation"])
         if u.race["kind"] == "beast":
             u._apply_beast()
@@ -182,6 +182,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
 
     def _sync_dictionary_recipes(self):
         """Ensures the unit knows the crafting recipe for a dictionary of any language they speak."""
+        self.recipes = [r for r in self.recipes if r != "Dictionary of "]
         for lang in self.languages:
             recipe = f"Dictionary of {lang}"
             if recipe not in self.recipes:
@@ -224,7 +225,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self._ability = abilities.get(self.ability_id)
         self.size = self.race["size"]
         self.footprint = data.SIZES[self.size]["footprint"]   # squares per side (Large = 2 -> 2x2)
-        self.languages = [self.race["language"]]
+        self.languages = [self.race["language"]] if self.race["language"] else []   # the dead speak none
         for _ in range(self._ability.extra_languages):
             extras = [i for i in data.LANGUAGES if i not in self.languages]
             if extras:

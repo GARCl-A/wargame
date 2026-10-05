@@ -63,7 +63,7 @@ def test_dungeon_scenario_setup():
     assert any(o.is_relic and o.pos == (27, 11) and o.item_name == data.CODEX_ITEM for o in battle.ground)
 
     # Check enemies: 2 sentries and 1 boss
-    assert len(battle.enemy_units) == 3
+    assert len(battle.enemy_units) == 5
     boss = next(e for e in battle.enemy_units if "Archivist" in e.name)
     assert boss.dormant
 
@@ -273,3 +273,12 @@ def test_parse_currency():
     assert parse_currency("Amethyst") is None
     assert parse_currency(None) is None
 
+
+def test_sanctum_spiders_come_from_the_maps_npc_deploy():
+    scenario = AncientRuinsScenario()
+    spiders = [e for e in scenario.enemies if e.race["name"] == "Giant Spider"]
+    assert [s.map_cell for s in spiders] == [(24, 6), (27, 6)]
+    battle = Battle([Unit("player")], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
+    placed = [e for e in battle.enemy_units if e.race["name"] == "Giant Spider"]
+    assert {s.pos for s in placed} == {(24, 6), (27, 6)}
+    assert all(s.dormant and s.has_talent("spin_web") and s.footprint == 1 for s in placed)

@@ -2,6 +2,7 @@
 
 import random
 
+from gartok import persist
 from tests.helpers import COLS, Battle, CustomScenario, Unit, _unit
 
 
@@ -230,7 +231,7 @@ def test_ancient_ruins_map_and_npcs_in_library():
 
     sc = AncientRuinsScenario()
     assert sc._cols == 30 and sc._rows == 18
-    assert len(sc.enemies) == 3
+    assert len(sc.enemies) == 5
     boss = next(e for e in sc.enemies if "Archivist" in e.name)
     assert boss.dormant
     assert boss.awareness_radius == 8
@@ -376,3 +377,41 @@ def test_custom_scenario_spawns_chests_and_relics_and_pickup():
     assert data.CODEX_ITEM in getattr(p, "picked_up_items", [])
     assert not any(o.is_relic for o in batt.ground)
 
+
+def test_sandbox_magic_source_and_spells():
+    u = Unit("player")
+    u.set_spell_known("sleep", True)
+    assert u.spells_known == []                 # no affinity, nothing to teach
+    u.set_magic_source("faith")
+    u.set_spell_known("sleep", True)
+    u.set_spell_known("magic_missile", True)
+    assert u.spells_known == ["sleep", "magic_missile"]
+    u.set_spell_known("sleep", False)
+    assert u.spells_known == ["magic_missile"]
+    u.set_magic_source(None)
+    assert u.magic_source is None and u.spells_known == []
+    u.set_magic_source("faith")
+    u.set_spell_known("sleep", True)
+    assert Unit.from_save(persist.unit_to_dict(u)).spells_known == ["sleep"]
+    u.study_target = "light_globe"
+    u.set_magic_source("faith")
+    assert u.study_target == "light_globe"      # same source: a study in flight stays
+
+
+def test_a_skeleton_speaks_no_language_and_no_blank_dictionary_recipe():
+    from gartok import data
+    u = Unit("enemy", race=data.race_by_name("Skeleton"))
+    assert "" not in u.languages
+    assert "Dictionary of " not in u.recipes
+    back = Unit.from_save({**persist.unit_to_dict(u), "languages": ["", "Draconic"]})
+    assert back.languages == ["Draconic"]
+
+
+def test_sheet_hides_the_magic_block_until_initiated():
+    from gartok.combatant import Combatant
+    from gartok.ui.sheet_card import sheet_height, unit_to_ch
+    u = Unit("player")
+    plain = sheet_height("normal", ch=unit_to_ch(Combatant(u)))
+    u.set_magic_source("faith")
+    assert sheet_height("normal", ch=unit_to_ch(Combatant(u))) > plain
+    assert sheet_height("normal") == sheet_height("normal", ch=unit_to_ch(Combatant(u)))

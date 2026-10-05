@@ -19,6 +19,8 @@ SPELLS = {
     "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
 }
 
+SOURCES = ("nature", "blood", "faith")
+
 @dataclass(frozen=True)
 class Language:
     id: str

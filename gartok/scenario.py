@@ -343,7 +343,7 @@ class AncientRuinsScenario(Scenario):
         self.escape_cells = {tuple(c) for c in m.get("escape_cells", [[0, 7], [0, 8], [1, 7], [1, 8]])}
         self._player_deploy = [tuple(c) for c in m.get("deploy_player",
             [(1, 7), (1, 8), (2, 7), (2, 8), (2, 6), (2, 9), (3, 7), (3, 8)])]
-        self.enemies = self._build_enemies()
+        self.enemies = map_lib.npc_units(m)
 
     def _build_walls(self):
         w = set()
@@ -405,35 +405,6 @@ class AncientRuinsScenario(Scenario):
 
     def _make_board(self):
         return Board(walls=self._walls, cols=self._cols, rows=self._rows)
-
-    def _build_enemies(self):
-        from . import npc_lib
-        try:
-            s1 = npc_lib.load_npc("ruin-sentry")
-        except OSError:
-            s1 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
-            s1.name = "Ruin Sentry"
-        s1.map_cell = (6, 6)
-
-        try:
-            s2 = npc_lib.load_npc("ruin-sentry")
-        except OSError:
-            s2 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
-            s2.name = "Ruin Sentry"
-        s2.map_cell = (6, 9)
-
-        try:
-            boss = npc_lib.load_npc("the-ancient-archivist")
-        except OSError:
-            boss = encounters.build_enemy(3, race_pool=[data.race_by_name("Automaton")])
-            boss.name = "The Ancient Archivist"
-            if "magic_missile" not in boss.spells_known:
-                boss.spells_known.append("magic_missile")
-        boss.map_cell = (25, 11)
-        boss.dormant = True
-        boss.awareness_radius = getattr(boss, "awareness_radius", 0) or 8
-
-        return [s1, s2, boss]
 
     def _deploy_cells(self, u):
         if u.team == "player":

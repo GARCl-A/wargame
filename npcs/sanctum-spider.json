@@ -1,0 +1,88 @@
+{
+  "uid": "1b857eecede84a488b854dee5e182462",
+  "recruited_by": null,
+  "name": "Sanctum Spider",
+  "auto_name": false,
+  "portrait_id": 461733612,
+  "race": "Giant Spider",
+  "occupation": "Wild Beast",
+  "alignment": "Chaotic and Neutral",
+  "crime": 0,
+  "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "first_aid_charges": 0,
+  "quiver_charges": 0,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 35,
+  "share_food": true,
+  "combat_xp": 36,
+  "work_hours": 672,
+  "bio": "Nests in the Archivist's sanctum and webs the approach to the codex.",
+  "arena_title": false,
+  "recipes": [
+    "Bear Trap"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
+  "talents": {
+    "combat": [
+      "alert",
+      "tough",
+      "strong",
+      "agile"
+    ],
+    "work": [
+      "carrier",
+      "negotiator",
+      "crafter",
+      "blacksmith",
+      "brisk_hands",
+      "provisioner"
+    ],
+    "racial": [
+      "spin_web"
+    ]
+  },
+  "level_hp_rolls": [
+    2,
+    4,
+    3,
+    4,
+    4
+  ],
+  "base_attributes": {
+    "strength": 11,
+    "dexterity": 12,
+    "constitution": 13,
+    "intelligence": 14,
+    "wisdom": 6,
+    "charisma": 14
+  },
+  "age_base": 34,
+  "age": 7,
+  "hp_roll": 6,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "hp_max": 35,
+  "languages": [],
+  "equipped_weapon": null,
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_armor": null,
+  "inventory": [],
+  "locked_items": {},
+  "dormant": true,
+  "awareness_radius": 8,
+  "npc_slug": "sanctum-spider"
+}

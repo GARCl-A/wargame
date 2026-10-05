@@ -5,7 +5,7 @@ Mixed into `unit.Unit`. Each setter keeps the model whole (re-applies
 attributes, re-derives combat) and round-trips through `persist.unit_to_dict`.
 """
 
-from . import constants, data, economy, names, progression, talents
+from . import constants, data, economy, magic, names, progression, talents
 
 
 class EditMixin:
@@ -82,6 +82,34 @@ class EditMixin:
             self.languages.append(name)
         elif not on and name in self.languages and len(self.languages) > 1:
             self.languages.remove(name)
+
+    def set_magic_source(self, source):
+        """Initiate the unit into a source (`nature` / `blood` / `faith`) or
+        pass `None` to strip the affinity. Spells the new source can't cast
+        are forgotten, and a study in flight is dropped."""
+        if source is not None and source not in magic.SOURCES:
+            return
+        if source == self.magic_source:
+            return
+        self.magic_source = source
+        self.spells_known = [sid for sid in self.spells_known
+                             if source and source in magic.SPELLS[sid].sources]
+        self.study_target = None
+        self.study_progress = 0
+
+    def set_spell_known(self, spell_id, on):
+        """Teach / forget a spell outright. Teaching needs an affinity the spell
+        accepts; a mastered spell is no longer a study target."""
+        spell = magic.SPELLS.get(spell_id)
+        if spell is None:
+            return
+        if not on:
+            if spell_id in self.spells_known:
+                self.spells_known.remove(spell_id)
+        elif spell_id not in self.spells_known and self.magic_source in spell.sources:
+            self.spells_known.append(spell_id)
+            if self.study_target == spell_id:
+                self.study_target, self.study_progress = None, 0
 
     def set_gold(self, copper):
         self.gold = max(0, int(copper))

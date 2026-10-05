@@ -34,18 +34,18 @@ own).
 
 import pygame
 
-from .. import data
+from .. import data, magic
 from .primitives import caps, contained, ellipsize, section, text, token_badge, wrap
 from .tokens import T
 
 # ---------------------------------------------------------------- order
 ORDER = ["identity", "status", "vitals", "attributes", "weapon", "gear",
-         "languages", "ability"]
+         "languages", "magic", "ability"]
 
 BLOCKS = {
     "compact": ["identity", "status", "vitals", "attributes", "weapon", "gear"],
     "normal":  ["identity", "status", "vitals", "attributes", "weapon", "gear",
-                "languages", "ability"],
+                "languages", "magic", "ability"],
     "full":    ORDER,
 }
 
@@ -55,17 +55,24 @@ H = {
                     attributes=T.S * 4, weapon=T.S * 6, gear=T.S * 5),
     "normal":  dict(identity=T.S * 6, status=T.S * 3, vitals=T.S * 8,
                     attributes=T.S * 8, weapon=T.S * 8, gear=T.S * 6,
-                    languages=T.S * 5, ability=T.S * 9),
+                    languages=T.S * 5, magic=T.S * 5, ability=T.S * 9),
     "full":    dict(identity=T.S * 8, status=T.S * 3, vitals=T.S * 10,
                     attributes=T.S * 10, weapon=T.S * 9, gear=T.S * 14,
-                    languages=T.S * 5, ability=T.S * 9),
+                    languages=T.S * 5, magic=T.S * 5, ability=T.S * 9),
 }
 
 GAP = {"compact": T.S, "normal": T.S * 2, "full": T.S * 2}
 
 
-def sheet_height(density, only=None):
-    blocks = [b for b in BLOCKS[density] if only is None or b in only]
+def _blocks(density, only, ch):
+    """The blocks to draw; with `ch` given, the magic block is skipped for
+    someone with no magic source."""
+    return [b for b in BLOCKS[density] if (only is None or b in only)
+            and not (b == "magic" and ch is not None and not ch["magic"][0])]
+
+
+def sheet_height(density, only=None, ch=None):
+    blocks = _blocks(density, only, ch)
     if not blocks:
         return 0
     return sum(H[density][b] for b in blocks) + GAP[density] * (len(blocks) - 1)
@@ -161,6 +168,7 @@ def unit_to_ch(u):
                 "load": (u.load, u.carry_normal, u.carry_max), "copper": u.gold},
         "langs": list(u.languages),
         "recipes": list(getattr(u, "recipes", []) or []),
+        "magic": (u.magic_source, [magic.SPELLS[s].name for s in u.spells_known if s in magic.SPELLS]),
         "ability": (u.ability.name, u.ability.effect),
         "unit": u,                    # kept for tooltip lookups (hp_breakdown, etc.)
     }
@@ -375,6 +383,14 @@ def _b_languages(s, F, r, ch, d, ed, mouse, tip):
         text(s, F["body_sm"], ", ".join(ch["recipes"]), (r.x + T.S * 9, y - 1), T.TX_MUTED)
 
 
+def _b_magic(s, F, r, ch, d, ed, mouse, tip):
+    source, spells = ch["magic"]
+    y = section(s, F, "magic", r.x, r.y, r.w)
+    caps(s, F["micro"], f"{source} initiate", (r.x, y), T.BRASS)
+    text(s, F["body_sm"], ellipsize(", ".join(spells) or "no spells known", F["body_sm"], r.w - T.S * 11),
+         (r.x + T.S * 11, y - 1), T.TX_MUTED)
+
+
 def _b_ability(s, F, r, ch, d, ed, mouse, tip):
     nm, desc = ch["ability"]
     y = section(s, F, "racial ability", r.x, r.y, r.w)
@@ -392,7 +408,7 @@ def _b_ability(s, F, r, ch, d, ed, mouse, tip):
 
 _PAINT = {"identity": _b_identity, "status": _b_status, "vitals": _b_vitals,
          "attributes": _b_attributes, "weapon": _b_weapon, "gear": _b_gear,
-         "languages": _b_languages, "ability": _b_ability}
+         "languages": _b_languages, "magic": _b_magic, "ability": _b_ability}
 
 
 # ---------------------------------------------------------------- api
@@ -401,9 +417,9 @@ def draw_sheet(surf, F, rect, ch, density="normal", editable=False, only=None, m
     so a height mismatch crops instead of spilling. Returns `(height
     consumed, tooltip)` -- `tooltip` is `None` or a `format_tooltip`-shaped
     list the caller passes straight to `draw_tooltip`."""
-    blocks = [b for b in BLOCKS[density] if only is None or b in only]
+    blocks = _blocks(density, only, ch)
     tip = []
-    with contained(surf, pygame.Rect(rect.x, rect.y, rect.w, max(rect.h, sheet_height(density, only) + 4))):
+    with contained(surf, pygame.Rect(rect.x, rect.y, rect.w, max(rect.h, sheet_height(density, only, ch) + 4))):
         y = rect.y
         for i, b in enumerate(blocks):
             h = H[density][b]

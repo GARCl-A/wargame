@@ -176,11 +176,13 @@ class CharEditorScreen(Screen):
                     "tongue": ["(empty)"] + [n for n, w in items.weapons().items()
                                              if w.hands == 1],
                     "armor": ["(none)"] + list(items.armor()),
-                    "additem": _ITEM_CATALOG}[pk]
+                    "additem": _ITEM_CATALOG,
+                    "magic": ["(none)"] + [s.capitalize() for s in magic.SOURCES]}[pk]
             cur = {"race": u.race["name"], "occupation": u.occupation["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,
                    "tongue": u.equipped_tongue, "armor": u.equipped_armor,
-                   "additem": None}[pk]
+                   "additem": None,
+                   "magic": u.magic_source.capitalize() if u.magic_source else "(none)"}[pk]
             self.picker = (pk, opts, cur)
         elif kind == "attr":
             _, name, delta = action
@@ -213,6 +215,8 @@ class CharEditorScreen(Screen):
             idx = action[1]
             if idx < len(u._base_inventory):
                 self._gear(u.take_from_pack, idx, u._base_inventory[idx][1])
+        elif kind == "spell":
+            u.set_spell_known(action[1], action[1] not in u.spells_known)
         elif kind == "study":
             u.study_target = None if u.study_target == action[1] else action[1]
         elif kind == "load":
@@ -249,6 +253,8 @@ class CharEditorScreen(Screen):
             elif pk == "armor":
                 u.take_from_armor() if name == "(none)" else u.give_to_armor(name)
                 u._derive_combat()
+            elif pk == "magic":
+                u.set_magic_source(None if name == "(none)" else name.lower())
             elif pk == "additem":
                 u.give_to_pack(name)
                 u._derive_combat()
@@ -491,6 +497,35 @@ class CharEditorScreen(Screen):
             cx += cwid + T.S // 2
         y = cy + 18 + T.S
 
+        # --- magic ------------------------------------------------ #
+        y = section(screen, F, "MAGIC", x, y, w)
+        self._pick_row(screen, pygame.Rect(x, y, w, 26), "SOURCE",
+                       (u.magic_source or "none").capitalize(),
+                       ("picker", "magic"))
+        y += 26 + T.S // 2
+        if u.magic_source:
+            cx, cy = x, y
+            for spell in magic.SPELLS.values():
+                if u.magic_source not in spell.sources:
+                    continue
+                on = spell.id in u.spells_known
+                label = f"{spell.name}  L{spell.level}"
+                cwid = F["body_sm"].size(label)[0] + T.S * 2
+                if cx + cwid > x + w:
+                    cx, cy = x, cy + 22
+                sr = pygame.Rect(cx, cy, cwid, 18)
+                box(screen, sr, fill=T.STEEL_HI if on else T.STEEL,
+                    border=T.BRASS if on else T.STEEL_LINE, width=1)
+                text(screen, F["body_sm"], label, (sr.x + T.S // 2, sr.y + 3),
+                     T.TX if on else T.TX_FAINT)
+                self._hit(sr, ("spell", spell.id))
+                cx += cwid + T.S // 2
+            y = cy + 18 + T.S
+        else:
+            text(screen, F["micro"], "no affinity — pick a source to teach spells",
+                 (x, y), T.TX_FAINT)
+            y += 16 + T.S
+
         # --- purse + gear -------------------------------------- #
         y = section(screen, F, "PURSE + GEAR", x, y, w)
         gr = pygame.Rect(x, y, w, 24)
@@ -699,7 +734,7 @@ class CharEditorScreen(Screen):
         box(screen, pr, fill=T.STEEL, border=T.STEEL_LINE)
         ch = unit_to_ch(Combatant(u))
         self._sheet_rect = pr
-        self._sheet_max = max(0, sheet_height("full") + T.S * 2 - pr.h)
+        self._sheet_max = max(0, sheet_height("full", ch=ch) + T.S * 2 - pr.h)
         self.sheet_scroll = min(self.sheet_scroll, self._sheet_max)
         inner = pygame.Rect(pr.x + T.S * 2, pr.y + T.S - self.sheet_scroll, pr.w - 2 * T.S * 2, 0)
         with ui_contained(screen, pr.inflate(-T.S // 2, -T.S // 2)):
@@ -729,7 +764,7 @@ class CharEditorScreen(Screen):
         box(screen, panel_r, fill=T.TABLE, border=T.BRASS, width=2)
         noun = {"additem": "an item", "occupation": "an occupation",
                 "alignment": "an alignment", "armor": "armor",
-                "tongue": "a tongue weapon"}.get(kind, f"a {kind}")
+                "tongue": "a tongue weapon", "magic": "a magic source"}.get(kind, f"a {kind}")
         text(screen, F["titleb"], f"pick {noun}", (panel_r.x + pad, panel_r.y + 12), T.TX)
 
         prev = screen.get_clip()
