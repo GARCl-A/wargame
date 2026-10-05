@@ -654,6 +654,8 @@ class BattleScreen(Screen):
             vd = vision.vision_desc(act) if not self.view_squad else "vision: whole squad  [L]"
             card_data = {
                 "name": act.name,
+                "race": act.race["name"],
+                "portrait_id": act.portrait_id,
                 "token": act.token,
                 "mine": act.team == "player",
                 "stats": stats,

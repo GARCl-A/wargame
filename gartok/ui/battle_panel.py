@@ -13,7 +13,8 @@ Data shapes::
                   "active": bool, "race": str, "portrait_id": str | None,
                   "token": str, "hp_frac": float, "dying": str | None}
 
-    turn_card = {"name": str, "token": str, "mine": bool, "stats": str,
+    turn_card = {"name": str, "race": str, "portrait_id": str | None, "token": str,
+                 "mine": bool, "stats": str,
                  "ap": int, "ap_max": int,
                  "walk": (moved, speed) | None, "note": str | None}
 
@@ -39,7 +40,7 @@ from .board_style import (
     WARN,
     aim_color,
 )
-from .primitives import TOKEN_INK, box, pips, scrollbar, text, tracked, wrap
+from .primitives import box, pips, scrollbar, text, tracked, wrap
 from .tokens import T
 
 TITLE_H = 30
@@ -105,8 +106,7 @@ def draw_turn_card(surf, F, card, data):
     box(surf, card, fill=T.TABLE, border=tcol, width=1)
 
     dot = (card.x + T.S * 2 + 11, card.y + 21)
-    pygame.draw.circle(surf, tcol, dot, 13)
-    text(surf, F["bodyb"], data["token"], dot, TOKEN_INK, center=True)
+    draw_face(surf, F, dot, 13, data, fallback_color=tcol)
     text(surf, F["head"], data["name"], (dot[0] + 24, card.y + 7), T.TX)
     text(surf, F["micro"], data["stats"], (dot[0] + 24, card.y + 28), T.TX_MUTED)
 
