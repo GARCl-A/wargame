@@ -63,8 +63,14 @@ enemy; a plain `Unit("enemy")` → enemy then npc; player → player zone; edge
 columns as the tail fallback. Lit map → no torch scatter; dark with none placed
 stays dark.
 
-**First consumer wired (Sep 2026):** the arena title bout. `arena.champion_bout()`
-carries `map="the-pit"`; `app._start_battle` builds `CustomScenario(map_lib.load_map(
-offer["map"]))` when an offer has a `map` key, else `node.scenario()` as before.
-`maps/the-pit.json` (Z-axis pit) is now live in the game. A **plain world node**
-pointing at a custom map still isn't a thing — that + `use NPC x` come later.
+**Dungeon props & tools (added Oct 2026):**
+- `CONTAINER` tool (`chest`): clicking a cell opens an interactive modal listing current loot with `×` remove and `+ ADD ITEM` (scrollable `_ITEM_CATALOG` picker). Serializes to `chests: [[x, y, [item1, item2]], ...]`. `CustomScenario` spawns `GroundObject.chest`.
+- `ITEM` tool (`relic` / ground item): clicking a cell opens item picker from `_ITEM_CATALOG` to drop an item on the ground (e.g. `Ancient Codex`). Serializes to `relics: [[x, y, item_name], ...]`. `CustomScenario` spawns `GroundObject.relic`, pickable in battle via `PickUpAction`.
+- `SECRET WALL` tool: paints walls that serialize to `secret_walls: [[x, y], ...]`. Rendered with a distinct brass border and `S` in the editor, revealed by `Investigate` in battle.
+- `ESCAPE` tool: paints escape cells that serialize to `escape_cells: [[x, y], ...]`, marked with `ESC`.
+- `TRAP` tool: click toggles Bear Trap / Alarm Trap, right-click removes. Serializes to `traps: [[x, y, type], ...]`. `CustomScenario` spawns `GroundObject.trap`.
+- 14 tools organized in a 2-column grid in `MapEditorScreen`.
+
+**Consumers wired:**
+- `arena.champion_bout()` carries `map="the-pit"`.
+- `AncientRuinsScenario` (Dungeon) loads directly from `maps/ancient-ruins.json` and `npcs/` templates (`ruin-sentry` and `the-ancient-archivist`).
