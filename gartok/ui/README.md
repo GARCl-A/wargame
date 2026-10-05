@@ -56,6 +56,9 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `combat_card.py` | unit cards for recruit / squad lists and party rows |
 | `sheet_card.py` | the character sheet at three densities |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
+| `market_panel.py` | the market's vendor shelf: category tabs, stock list and drag ghost |
+| `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
+| `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
 | `mission_offer_screen.py` | base class for city NPC screens with one active job |
 
 ## Adding to the kit

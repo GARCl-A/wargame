@@ -15,6 +15,8 @@ import math
 
 import pygame
 
+from .tokens import T
+
 # --- colours --------------------------------------------------------------- #
 PLAYER_C  = (94, 156, 214)
 ENEMY_C   = (214, 103, 92)
@@ -42,6 +44,43 @@ THROW_HL  = WARN
 DEMO_HL   = (176, 116, 208)
 PATH_PREV = (245, 232, 150)
 PATH_DONE = (108, 138, 112)
+
+# terrain and props
+WATER_C      = (74, 128, 174)
+ROPE_C       = (198, 160, 104)
+WALL_SHADOW  = (0, 0, 0, 110)
+PROP_EDGE    = (25, 22, 12)
+BADGE_INK    = (20, 18, 8)              # text on a filled badge (cost, death clock)
+HP_TRACK     = (30, 30, 36)
+CREATURE_INK = (25, 25, 25)
+TORCH_BASE   = (58, 52, 46)
+CHEST_WOOD   = (139, 90, 43)
+CHEST_TRIM   = (218, 165, 32)
+RELIC_C      = (120, 200, 255)
+RELIC_RIM    = (255, 255, 255)
+DISK_HALO    = (80, 220, 240, 80)
+DISK_CORE    = (30, 160, 200, 180)
+DISK_RIM     = (180, 245, 255)
+TRAP_C       = (160, 50, 40)
+TRAP_STEEL   = (70, 70, 75)
+TRAP_IRON    = (35, 35, 40)
+TRAP_PLATE   = (130, 60, 50)
+TRAP_PLATE_D = (40, 20, 20)
+TRAP_TEETH   = (200, 205, 215)
+TRAP_PEG     = (90, 60, 35)
+TRAP_WIRE    = (210, 210, 220)
+TRAP_BELL    = (220, 175, 45)
+TRAP_BELL_D  = (50, 40, 15)
+TRAP_CLAPPER = (60, 50, 20)
+LOG_HURT     = (206, 150, 140)
+
+
+def aim_color(kind):
+    """The highlight for an aimed action of `kind` ("heal", "demo", "attack",
+    "move", "spell", "throw") -- shared by the board overlay and the armed
+    action button so both read as the same intent."""
+    return {"heal": OK, "demo": DEMO_HL, "attack": ATK_HL, "move": MOVE_HL,
+            "spell": T.BRASS, "throw": THROW_HL}.get(kind, T.BRASS)
 
 # --- layout ---------------------------------------------------------------- #
 TILE = 48                             # default board zoom; the view picks its own tile size to fit

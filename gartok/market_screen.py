@@ -30,18 +30,11 @@ from .dragselect import DragSelectMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
-from .ui import loadout_panel
+from .ui import loadout_panel, market_panel
 from .ui.inspector_panel import role_for
-from .ui.primitives import (
-    caps,
-    draw_button,
-    draw_tooltip,
-    ellipsize,
-    format_tooltip,
-    hline,
-)
+from .ui.primitives import draw_button, draw_tooltip, format_tooltip
 from .ui.primitives import text as ui_text
-from .ui.tokens import T, mix
+from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 STOCK_W = 412
@@ -646,208 +639,117 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         F = self._ui_fonts()
         screen.fill(T.TABLE)
         self.tooltip = None
-        self.stock_rows = []
-        self.qty_hits = []
         self.lock_hits = []
-        self.size_hits = []
-        self.header_size_hits = []
-        self.tab_hits = []
         self.item_rows = []
         self.cards = []
         self.buttons = []
         self.info_hits = []
         self._pack_areas = []
         self.zones = []
+        W, H = screen.get_size()
 
         ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
         has_tut = self.tutorial_key() is not None
-        purse_x = screen.get_width() - MARGIN - (28 + T.S if has_tut else 0)
-        ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper", 
-             (purse_x, MARGIN + 2), T.BRASS, right=True)
-             
-        names = self._selected_names()
-        if names:
-            if self._buying:
-                name = names[0]
-                q = self._buy_qty(name)
-                one = name if q == 1 else f"{name} ×{q}"
-                msg = (f"buy {one} ({economy.buy_price(name, self.deal) * q})"
-                       "  ·  drop on a member")
-            else:
-                one = names[0] if len(names) == 1 else f"{len(names)} items"
-                msg = (f"moving {one}  ·  drop on another member, or on SELL "
-                       f"(+{sum(economy.sell_price(n, self.deal) for n in names)})")
-            ui_text(screen, F["body"], msg + "  ·  click outside to cancel", (MARGIN, MARGIN + 30), T.BRASS)
-        else:
-            ui_text(screen, F["body"], f"{len(self.shoppers)} shopping  ·  {self._deal_note()}", (MARGIN, MARGIN + 30), T.TX_FAINT)
+        purse_x = W - MARGIN - (28 + T.S if has_tut else 0)
+        ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper",
+                (purse_x, MARGIN + 2), T.BRASS, right=True)
+        msg, col = self._status_line()
+        ui_text(screen, F["body"], msg, (MARGIN, MARGIN + 30), col)
 
         top = MARGIN + 62
-        self._draw_tabs(screen, pygame.Rect(MARGIN, top, STOCK_W, 28))
+        cats = [(label, key) for label, key, _names in self.get_categories()]
+        self.tab_hits = market_panel.category_tabs(
+            screen, F, pygame.Rect(MARGIN, top, STOCK_W, 28), cats, self.tab, self.mouse)
         if len(self.shoppers) > 1:
-            dl_btn = pygame.Rect(screen.get_width() - MARGIN - 160, top, 160, 28)
+            dl_btn = pygame.Rect(W - MARGIN - 160, top, 160, 28)
             draw_button(screen, F, dl_btn, "distribute load", mpos=self.mouse)
             self.buttons.append(("distribute", dl_btn))
-            
+
         body_top = top + 28 + T.S
-        stock = pygame.Rect(MARGIN, body_top, STOCK_W, screen.get_height() - body_top - 72)
-        self._draw_stock(screen, stock)
-        
+        stock = pygame.Rect(MARGIN, body_top, STOCK_W, H - body_top - 72)
+        hits = market_panel.stock_list(screen, F, stock, self._stock_data(), self.mouse)
+        self.stock_rows = hits["rows"]
+        self.qty_hits = [(r, ("stock", name), delta) for r, name, delta in hits["qty_hits"]]
+        self.size_hits = hits["size_hits"]
+        self.header_size_hits = hits["header_size_hits"]
+        if hits["hovered"]:
+            self.tooltip = self._item_tooltip(hits["hovered"], F)
+
         self._draw_shoppers(screen, pygame.Rect(stock.right + MARGIN, body_top,
-                                                screen.get_width() - stock.right - 2 * MARGIN,
-                                                stock.h))
+                                                W - stock.right - 2 * MARGIN, stock.h))
         self._draw_footer(screen)
 
+        names = self._selected_names()
         if self._dragging and names:
-            gx, gy = self.mouse
-            if self._buying:
-                q = self._buy_qty(names[0])
-                label = names[0] if q == 1 else f"{names[0]} ×{q}"
-            else:
-                label = names[0] if len(names) == 1 else f"{len(names)} items"
-            gr = pygame.Rect(gx + 12, gy + 6, F["body"].size(label)[0] + 2 * T.S, 20)
-            pygame.draw.rect(screen, mix(T.BRASS, T.STEEL, .85), gr)
-            pygame.draw.rect(screen, T.BRASS, gr, 1)
-            ui_text(screen, F["body"], label, gr.center, T.TX, center=True)
-            
-        for r, member, loc in self.item_rows:
-            if not self.sel and r.collidepoint(self.mouse):
-                name = self._item_at(member, loc)
-                if name:
-                    t, d = items.item_tooltip(name)
-                    self.tooltip = format_tooltip(t, d, F)
-                break
+            market_panel.drag_ghost(screen, F, self._pick_label(names), self.mouse)
 
-        if getattr(self, "tooltip", None):
+        if not self.sel:
+            for r, member, loc in self.item_rows:
+                if r.collidepoint(self.mouse):
+                    name = self._item_at(member, loc)
+                    if name:
+                        self.tooltip = self._item_tooltip(name, F)
+                    break
+
+        if self.tooltip:
             draw_tooltip(screen, F, self.tooltip, self.mouse)
 
         self.draw_sheet_modal(screen)
 
-    def _draw_tabs(self, screen, rect):
-        F = self._ui_fonts()
-        cats = self.get_categories()
-        gap = T.S
-        w = (rect.w - (len(cats) - 1) * gap) // len(cats)
-        for i, (label, key, _names) in enumerate(cats):
-            r = pygame.Rect(rect.x + i * (w + gap), rect.y, w, rect.h)
-            active = self.tab == key
-            draw_button(screen, F, r, label.upper(), ghost=not active, mpos=self.mouse)
-            self.tab_hits.append((r, key))
+    @staticmethod
+    def _item_tooltip(name, F):
+        return format_tooltip(*items.item_tooltip(name), F)
 
-    def _draw_stock(self, screen, rect):
-        F = self._ui_fonts()
-        pygame.draw.rect(screen, T.STEEL, rect)
-        pygame.draw.rect(screen, T.STEEL_LINE, rect, 1)
-        x, w = rect.x + T.S * 2, rect.w - T.S * 4
+    def _pick_label(self, names):
+        if self._buying:
+            q = self._buy_qty(names[0])
+            return names[0] if q == 1 else f"{names[0]} ×{q}"
+        return names[0] if len(names) == 1 else f"{len(names)} items"
+
+    def _status_line(self):
+        """The line under the title: what the current pick will do, or the
+        party and its haggling when nothing is picked up."""
+        names = self._selected_names()
+        if not names:
+            return f"{len(self.shoppers)} shopping  ·  {self._deal_note()}", T.TX_FAINT
+        if self._buying:
+            name = names[0]
+            q = self._buy_qty(name)
+            msg = (f"buy {self._pick_label(names)} ({economy.buy_price(name, self.deal) * q})"
+                   "  ·  drop on a member")
+        else:
+            msg = (f"moving {self._pick_label(names)}  ·  drop on another member, or on SELL "
+                   f"(+{sum(economy.sell_price(n, self.deal) for n in names)})")
+        return msg + "  ·  click outside to cancel", T.BRASS
+
+    def _stock_data(self):
+        """The current tab's shelf in `market_panel.stock_list`'s shape."""
         names = next((c[2] for c in self.get_categories() if c[1] == self.tab), [])
-        kit = self.tab not in ("weapons", "armor")
-
-        wt_x = rect.right - T.S * 2
-        price_x = wt_x - 52
-        tag_x = x + 204
-
-        caps(screen, F["micro"], "FOR SALE", (x, rect.y + T.S * 2), T.TX_FAINT)
-        if self.tab == "weapons":
-            tw, th = 46, 18
-            med_hdr_r = pygame.Rect(rect.right - T.S * 2 - tw * 2 - 2, rect.y + T.S, tw, th)
-            lrg_hdr_r = pygame.Rect(rect.right - T.S * 2 - tw, rect.y + T.S, tw, th)
-            all_lrg = all(self._stock_weapon_size(b) == "Large" for b in names) if names else False
-            all_med = all(self._stock_weapon_size(b) == "Medium" for b in names) if names else True
-            draw_button(screen, F, med_hdr_r, "MED", primary=all_med, ghost=not all_med, mpos=self.mouse)
-            draw_button(screen, F, lrg_hdr_r, "LRG", primary=all_lrg, ghost=not all_lrg, mpos=self.mouse)
-            self.header_size_hits.append((med_hdr_r, "Medium"))
-            self.header_size_hits.append((lrg_hdr_r, "Large"))
-
-        hline(screen, x, rect.right - T.S * 2, rect.y + T.S * 4)
-        
-        y = rect.y + T.S * 5
-        caps(screen, F["micro"], "ITEM", (x, y), T.TX_FAINT)
-        if kit:
-            caps(screen, F["micro"], "QTY", (x + 152, y), T.TX_FAINT)
-        elif self.tab == "weapons":
-            caps(screen, F["micro"], "SIZE", (x + 168, y), T.TX_FAINT)
-        caps(screen, F["micro"], "PRICE", (price_x, y), T.TX_FAINT, right=True)
-        caps(screen, F["micro"], "WT", (wt_x, y), T.TX_FAINT, right=True)
-        y += 17
-
-        row_h = 30 if kit else 34
+        kind = self.tab if self.tab in ("weapons", "armor") else "kit"
+        rows = []
         for base_name in names:
             name = self._active_stock_name(base_name)
-            r = pygame.Rect(x, y, w, row_h)
-            sel = ("stock", name) in self.sel
-            hov = not self.sel and r.collidepoint(self.mouse)
-            base = economy.buy_price(name)
             price = economy.buy_price(name, self.deal)
             stock = self._stock_of(name)
-            out = stock is not None and stock <= 0
-            afford = self.purse >= price and not out
-            fits = any(self._fits(m, name) for m in self.shoppers)
-            
-            fill = mix(T.BRASS, T.STEEL, .85) if sel else T.STEEL_HI if hov else T.TABLE
-            pygame.draw.rect(screen, fill, r)
-            pygame.draw.rect(screen, T.BRASS if sel else T.STEEL_LINE, r, 1)
-
-            ink = T.TX if sel else T.TX if afford else T.TX_FAINT
-            faint = T.TX_MUTED if sel else T.TX_FAINT
-
-            if sel:
-                main_color = T.TX
-            elif not afford:
-                main_color = T.TX_FAINT
-            elif price < base:
-                main_color = T.GREEN
-            elif price > base:
-                main_color = T.BLOOD
-            else:
-                main_color = T.TX
-
-            spec = "" if kit else self._stock_spec(name)
-            name_w = 138 if kit else (138 if self.tab == "weapons" else 148)
-            ui_text(screen, F["body"], ellipsize(name, F["body"], name_w), (r.x + T.S, r.y + (4 if spec else r.centery - 8 - r.y)), ink)
-            if spec:
-                ui_text(screen, F["micro"], spec, (r.x + T.S, r.y + 17), faint)
-
-            btn_m, btn_l = None, None
-            if self.tab == "weapons":
-                bw, bh = 20, 18
-                bx = r.x + 164
-                by = r.centery - bh // 2
-                btn_m = pygame.Rect(bx, by, bw, bh)
-                btn_l = pygame.Rect(bx + bw, by, bw, bh)
-                cur_sz = self._stock_weapon_size(base_name)
-                is_l = (cur_sz == "Large")
-                draw_button(screen, F, btn_m, "M", primary=not is_l, ghost=is_l, mpos=self.mouse)
-                draw_button(screen, F, btn_l, "L", primary=is_l, ghost=not is_l, mpos=self.mouse)
-                self.size_hits.append((btn_m, base_name, "Medium"))
-                self.size_hits.append((btn_l, base_name, "Large"))
-
-            if kit:
-                self._draw_stepper(screen, ("stock", name), r)
-                tag = self._kit_tag(name)
-                if tag:
-                    from .ui.loadout_panel import TAG_COLOR
-                    caps(screen, F["micro"], tag, (tag_x, r.centery - 5), TAG_COLOR.get(tag, T.TX_FAINT))
-            if stock is not None:
-                stock_label = "SOLD OUT" if out else f"{stock} left"
-                caps(screen, F["micro"], stock_label, (tag_x, r.centery + 3), T.BLOOD if out else T.TX_MUTED)
-
-            wt = f"{items.item_weight(name):.1f} kg"
-            caps(screen, F["micro"], wt, (wt_x, r.centery - 5), T.TX_FAINT if fits else T.BLOOD, right=True)
-            prect_w = F["body"].size(f"{price}c")[0]
-            ui_text(screen, F["body"], f"{price}c", (price_x, r.centery - 8), main_color, right=True)
-            
-            if base != price:
-                br_w = F["micro"].size(f"{base}c")[0]
-                caps(screen, F["micro"], f"{base}c", (price_x - prect_w - T.S, r.centery - 5), faint, right=True)
-                line_y = r.centery - 1
-                pygame.draw.line(screen, faint, (price_x - prect_w - T.S - br_w, line_y), (price_x - prect_w - T.S, line_y), 1)
-
-            if hov:
-                t, d = items.item_tooltip(name)
-                self.tooltip = format_tooltip(t, d, F)
-
-            self.stock_rows.append((r, name))
-
-            y += row_h + T.S
+            sold_out = stock is not None and stock <= 0
+            rows.append({
+                "name": name, "base_name": base_name,
+                "spec": "" if kind == "kit" else self._stock_spec(name),
+                "price": price, "base_price": economy.buy_price(name),
+                "weight": items.item_weight(name),
+                "stock": stock,
+                "afford": self.purse >= price and not sold_out,
+                "fits": any(self._fits(m, name) for m in self.shoppers),
+                "sel": ("stock", name) in self.sel,
+                "tag": self._kit_tag(name) if kind == "kit" else "",
+                "qty": self._buy_qty(name),
+                "size": self._stock_weapon_size(base_name) if kind == "weapons" else None,
+            })
+        all_size = None
+        if kind == "weapons":
+            sizes = {self._stock_weapon_size(b) for b in names} or {"Medium"}
+            all_size = sizes.pop() if len(sizes) == 1 else None
+        return {"kind": kind, "all_size": all_size, "hover": not self.sel, "rows": rows}
 
     def _stock_spec(self, name):
         """The one-line stat blurb under a weapon / armor row."""
@@ -868,26 +770,6 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     @staticmethod
     def _kit_tag(name):
         return items.item_tag(name)
-
-
-    def _draw_stepper(self, screen, pick, row):
-        F = self._ui_fonts()
-        q = self._get_qty(pick)
-        sel = pick in self.sel if pick[0] == "stock" else q > 0
-        bw, bh = 16, 18
-        cy = row.centery
-        minus = pygame.Rect(row.x + 138, cy - bh // 2, bw, bh)
-        plus = pygame.Rect(minus.right + 26, cy - bh // 2, bw, bh)
-        for r, glyph, delta in ((minus, "-", -1), (plus, "+", +1)):
-            draw_button(screen, F, r, glyph, ghost=True, mpos=self.mouse)
-            self.qty_hits.append((r, pick, delta))
-        
-        caps(screen, F["microb"], str(q), ((minus.right + plus.x) // 2, cy - 6), T.BRASS if sel else T.TX, center=True)
-        if pick[0] != "stock":
-            if self._held_qty(pick) > 1:
-                all_btn = pygame.Rect(plus.right + 4, cy - bh // 2, 28, bh)
-                draw_button(screen, F, all_btn, "ALL", ghost=True, mpos=self.mouse)
-                self.qty_hits.append((all_btn, pick, 999))
 
     def _draw_shoppers(self, screen, area):
         self._shoppers_area = area
@@ -928,13 +810,12 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                 self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
                 
         if self._shoppers_max_scroll > 0:
-            from .ui.primitives import text
             hr = self._shoppers_max_scroll - self._shoppers_scroll
             hl = self._shoppers_scroll
             if hr > 0:
-                text(screen, F["body_sm"], f"{hr} more \u2192  (scroll)", (area.right - 8, area.bottom + 8), T.TX_FAINT, right=True)
+                ui_text(screen, F["body_sm"], f"{hr} more \u2192  (scroll)", (area.right - 8, area.bottom + 8), T.TX_FAINT, right=True)
             if hl > 0:
-                text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
+                ui_text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
 
     def _distribute_load(self):
 

@@ -1,6 +1,7 @@
 """Battle screen: the tactical grid, the initiative strip, the action panel and
-the log. Drawing only -- rules live in `battle` / `actions` / `vision`; combat
-juice (floaters, hit reactions) lives in `battle_fx`."""
+the log. Drawing delegates to `board_render` (playfield) and `battle_panel`
+(chrome); rules live in `battle` / `actions` / `vision`; combat juice
+(floaters, hit reactions) lives in `battle_fx`."""
 
 import json
 import os
@@ -8,45 +9,16 @@ import time
 
 import pygame
 
-from . import actions, ai, artwork, data, icons, vision
+from . import actions, ai, data, vision
 from .battle_fx import BattleFX
 from .board import cells
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
-from .ui import primitives as ui_primitives
-from .ui.board_style import (
-    ATK_HL,
-    DANGER,
-    DEMO_HL,
-    ENEMY_C,
-    FLOOR_A,
-    FLOOR_B,
-    INK_FAINT,
-    LIGHT_C,
-    MOVE_HL,
-    NEUTRAL_C,
-    OBJ_C,
-    OK,
-    PATH_DONE,
-    PATH_PREV,
-    PLAYER_C,
-    THROW_HL,
-    TORCH_C,
-    WALL_FILL,
-    WALL_HI,
-    WALL_LO,
-    WARN,
-    BoardView,
-    battle_layout,
-)
-from .ui.primitives import Stack, box, pips, text, tracked, wrap
-from .ui.sheet_card import draw_sheet as draw_sheet_card
-from .ui.sheet_card import sheet_height, unit_to_ch
+from .ui import battle_panel, board_render, board_style, primitives as ui_primitives
+from .ui.board_style import BoardView, battle_layout
+from .ui.sheet_card import draw_sheet as draw_sheet_card, sheet_height, unit_to_ch
 from .ui.tokens import T
-
-_WATER_C = (74, 128, 174)              # a flooded cell (blue), matches the editor
-_WALL_RADIUS = 6
 
 ENEMY_DELAY = 450  # ms between AI actions
 
@@ -54,9 +26,6 @@ DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "deb
 
 
 class BattleScreen(Screen):
-    # Native: draws straight to the real window and lays itself out from its
-    # size each frame (board_style.battle_layout). The board sits in a pan/zoom camera
-    # (board_style.BoardView), so a hand-authored map of any size is playable.
     native = True
 
     def __init__(self, fonts, battle, on_battle_end):
@@ -132,9 +101,6 @@ class BattleScreen(Screen):
             self.view.pan_px(event.pos[0] - ax, event.pos[1] - ay)
 
     def handle_escape(self):
-        """Esc cancels an armed aimed action (Demoralize, Throw, ...) instead
-        of falling through to the pause menu -- the same gesture players
-        reach for first in any tactics game."""
         if getattr(self, "height_prompt", None) is not None:
             self.height_prompt = None
             return True
@@ -147,7 +113,6 @@ class BattleScreen(Screen):
         b = self.battle
         self.fx.advance(dt)
         self.fx.detect(b, self.view.tile, self._unit_rect, self._cell_rect)
-        # keep the acting unit in frame on a board too big to fit the viewport
         if (b.winner is None and self._pan is None and self.view.rect.w > 2
                 and self._centered_on is not b.active):
             self._centered_on = b.active
@@ -155,7 +120,7 @@ class BattleScreen(Screen):
                 self.view.center_on(b.active.pos)
         if b.winner is not None:
             return
-        if b.awaiting_flag or b.awaiting_trap:       # plant the flag/traps before anyone acts
+        if b.awaiting_flag or b.awaiting_trap:
             return
         if b.active.team == "enemy":
             self.enemy_timer += dt
@@ -181,11 +146,6 @@ class BattleScreen(Screen):
     def _tile_at_px(self, px):
         return self.view.cell_at(px)
 
-    # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py) -- the log is the one region `_click` never
-    # tests (only `self.buttons` and board tiles are hit-tested), so it's the
-    # one spot on this screen a card can sit without ever blocking a click
-    # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "battle"
 
@@ -301,9 +261,6 @@ class BattleScreen(Screen):
             return
 
         if self.aim_action is not None:
-            # `unit_at` returns whichever unit sits on the tile first; when a
-            # standing unit shares the cell with a downed one (bodies do not
-            # occupy), pick the unit on the tile the action can actually target.
             if clicked is None or not self.aim_action.can(b, actor, clicked):
                 clicked = next((u for u in b.units
                                 if tile in b.cells_of(u)
@@ -316,7 +273,6 @@ class BattleScreen(Screen):
 
         if clicked is not None and clicked.team == "enemy":
             if self._armed is not clicked:
-                # first click on this target: just look it over, don't swing yet
                 self._armed = clicked
                 return
             if actions.ATTACK.can(b, actor, clicked):
@@ -341,8 +297,6 @@ class BattleScreen(Screen):
         return None
 
     def _confirm_armed_attack(self):
-        """The 'A' hotkey: attacks whatever is currently armed (see `_click`) --
-        the same confirm step a second click on the target would do."""
         b = self.battle
         target = self._armed
         if target is None or not actions.ATTACK.can(b, b.active, target):
@@ -352,7 +306,6 @@ class BattleScreen(Screen):
         self._after_player_action()
 
     def _hotkey_action(self, idx):
-        """Number-key shortcut for the `idx`-th action currently on the active tab."""
         if idx < len(self._hotkey_actions):
             self._action_click(self._hotkey_actions[idx])
 
@@ -377,7 +330,7 @@ class BattleScreen(Screen):
 
     def _after_player_action(self):
         b = self.battle
-        if b.is_ctf:                          # pick up a flag / plant it home right away
+        if b.is_ctf:
             b.check_objective()
         if b.winner is not None or b.active.team != "player":
             return
@@ -385,6 +338,93 @@ class BattleScreen(Screen):
         if act.ap < 1 and not b.reachable(act):
             self.aim_action = None
             b.end_turn()
+
+    def _hovered_anchor(self):
+        if not self._is_player_turn() or self.aim_action is not None:
+            return None
+        tile = self._tile_at_px(self.mouse)
+        if tile is None:
+            return None
+        return self._anchor_of_click(self.battle.active, tile)
+
+    @staticmethod
+    def _aim_kind(action):
+        if action in (actions.STABILIZE, actions.FIRST_AID, actions.DRINK_POTION,
+                      actions.MOUNT, actions.WAKE_UP):
+            return "heal"
+        if action in (actions.DEMORALIZE, actions.EAT_CORPSE):
+            return "demo"
+        if action in (actions.ATTACK, actions.ATTACK_TONGUE):
+            return "attack"
+        if action in (actions.CLIMB, actions.DROP, actions.JUMP,
+                      actions.SWIM, actions.DISMOUNT, actions.PUSH):
+            return "move"
+        if getattr(action, "spell_id", None) is not None:
+            return "spell"
+        return "throw"
+
+    def _hint_message(self):
+        if not self._is_player_turn():
+            return None, None
+        spell_id = getattr(self.aim_action, "spell_id", None)
+        if self.aim_action is actions.ATTACK:
+            return "click a highlighted enemy to Attack (Flank: ally on opposite side grants +2 to hit)", board_style.ATK_HL
+        elif self.aim_action is actions.DEMORALIZE:
+            return "click a purple enemy to Demoralize", board_style.DEMO_HL
+        elif self.aim_action is actions.ATTACK_TONGUE:
+            return "click an enemy in tongue range", board_style.ATK_HL
+        elif self.aim_action is actions.THROW:
+            return "click an enemy in the orange range", board_style.THROW_HL
+        elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
+            return "click an adjacent downed ally (green)", board_style.OK
+        elif self.aim_action is actions.DRINK_POTION:
+            return "click self or damaged ally to drink potion", board_style.OK
+        elif self.aim_action is actions.MOUNT:
+            return "click an adjacent allied Centaur to mount", board_style.OK
+        elif self.aim_action is actions.DISMOUNT:
+            return "click an adjacent free cell to dismount", board_style.MOVE_HL
+        elif self.aim_action is actions.WAKE_UP:
+            return "click an adjacent sleeping ally to wake them", board_style.OK
+        elif self.aim_action is actions.EAT_CORPSE:
+            return "click an adjacent dead enemy corpse to devour", board_style.DEMO_HL
+        elif self.aim_action is actions.PUSH:
+            return "click an adjacent unit to push", board_style.MOVE_HL
+        elif self.aim_action is actions.CLIMB:
+            return "click an adjacent ledge cell to climb", board_style.MOVE_HL
+        elif self.aim_action is actions.DROP:
+            return "click a cell below to drop down", board_style.MOVE_HL
+        elif self.aim_action is actions.JUMP:
+            return "click a cell to jump over a pit", board_style.MOVE_HL
+        elif self.aim_action is actions.SWIM:
+            return "click an adjacent water cell to swim", board_style.MOVE_HL
+        elif spell_id == "sleep":
+            return "click enemy within 6 cells to cast Sleep", T.BRASS
+        elif spell_id == "magic_missile":
+            return "click enemy within 6 cells to cast Magic Missile", T.BRASS
+        elif spell_id == "light_globe":
+            return "click empty cell within 6 cells to conjure Light Globe", T.BRASS
+        elif spell_id == "floating_disk":
+            return "click empty cell within 6 cells to summon Floating Disk", T.BRASS
+        elif spell_id is not None:
+            return f"click target within range to cast {self.aim_action.name}", T.BRASS
+        elif actions.FLEE.available(self.battle, self.battle.active):
+            return "at the map edge: you can Flee the fight", board_style.OK
+        elif self.battle.mopping_up:
+            return ("enemies down  ·  stabilize the downed or space "
+                    "to let the counter run"), board_style.WARN
+        elif self.battle.is_ctf:
+            return ("grab the enemy flag and bring it home to win  ·  "
+                    "guard your own, and whoever's carrying it"), T.TX_MUTED
+        else:
+            return "green square: move  ·  enemy: attack  ·  space: end", T.TX_MUTED
+
+    def _cell_rect(self, cx, cy):
+        return self.view.cell_rect(cx, cy)
+
+    def _unit_rect(self, u):
+        r = self.view.cell_rect(*u.pos)
+        t = self.view.tile
+        return pygame.Rect(r.x, r.y, t * u.footprint, t * u.footprint)
 
     # ------------------------------------------------------------------ #
     # drawing                                                            #
@@ -407,7 +447,7 @@ class BattleScreen(Screen):
         self._draw_units(screen)
         if self.battle.is_ctf:
             self._draw_flags(screen)
-        self._draw_tactical(screen)              # overlay: above the fog
+        self._draw_tactical(screen)
         if self.battle.awaiting_flag:
             self._draw_flag_setup(screen)
         if self.battle.awaiting_trap:
@@ -423,423 +463,39 @@ class BattleScreen(Screen):
         else:
             self._draw_tooltips(screen)
 
-    def _draw_tooltips(self, screen):
-        from . import actions
-        mpos = pygame.mouse.get_pos()
-        hovered_action = None
-        for action, rect in self.buttons:
-            if isinstance(action, actions.Action) and rect.collidepoint(mpos):
-                hovered_action = action
-                break
-        
-        desc = getattr(hovered_action, "desc", "") if hovered_action else ""
-        if desc:
-            lines = wrap(self.F["body_sm"], desc, 200 - T.S * 2)
-            tt_w = 200
-            tt_h = T.S // 2 * 2 + len(lines) * 16
-            tt_rect = pygame.Rect(0, 0, tt_w, tt_h)
-            
-            btn_rect = next(r for a, r in self.buttons if a == hovered_action)
-            tt_rect.bottomleft = (btn_rect.left, btn_rect.top - 4)
-            if tt_rect.top < 0:
-                tt_rect.topleft = (btn_rect.left, btn_rect.bottom + 4)
-                
-            box(screen, tt_rect, fill=T.STEEL_HI, border=T.STEEL_LINE)
-            y = tt_rect.y + T.S // 2
-            for ln in lines:
-                text(screen, self.F["body_sm"], ln, (tt_rect.x + T.S, y), T.TX)
-                y += 16
-
-    def _cell_rect(self, cx, cy):
-        return self.view.cell_rect(cx, cy)
-
-    def _unit_rect(self, u):
-        r = self.view.cell_rect(*u.pos)
-        t = self.view.tile
-        return pygame.Rect(r.x, r.y, t * u.footprint, t * u.footprint)
-
     def _draw_grid(self, screen):
-        """A flat tactical board drawn from the design system -- a quiet checker
-        for the floor, raised stone blocks for the walls (corners rounded only
-        where a wall face is exposed, so clusters read as one mass)."""
-        board = self.battle.board
-        walls = board.walls
-        view = self.view
-        vr = view.rect
-        tile = view.tile
-        vis = lambda cx, cy: view.cell_rect(cx, cy).colliderect(vr)
-        for cy in range(board.rows):
-            for cx in range(board.cols):
-                if vis(cx, cy):
-                    tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
-                    screen.fill(tone, view.cell_rect(cx, cy))
-
-        for (cx, cy), z in board.elevation.items():   # a pit: sunken, darker the deeper
-            if not vis(cx, cy):
-                continue
-            r = view.cell_rect(cx, cy)
-            k = min(1.0, -z / 6)
-            screen.fill(WALL_LO, r)
-            screen.fill(tuple(int(v * (1 - 0.5 * k)) for v in WALL_LO),
-                        r.inflate(-tile // 4, -tile // 4))
-            text(screen, self.F["micro"], str(-z), r.center, INK_FAINT, center=True)
-
-        for cx, cy in board.water:                     # deep over a pit, a shallow puddle otherwise
-            if not vis(cx, cy):
-                continue
-            deep = board.elevation.get((cx, cy), 0) < 0
-            wl = pygame.Surface((tile, tile), pygame.SRCALPHA)
-            wl.fill((*_WATER_C, 150 if deep else 92))
-            screen.blit(wl, view.cell_rect(cx, cy))
-
-        for cx, cy in board.ropes:
-            if not vis(cx, cy):
-                continue
-            r = view.cell_rect(cx, cy)
-            pygame.draw.line(screen, (198, 160, 104),
-                             (r.centerx, r.top + 3), (r.centerx, r.bottom - 3),
-                             max(2, tile // 12))
-
-        for cx in range(board.cols + 1):
-            x = round(vr.x + (cx - view.cam[0]) * tile)
-            pygame.draw.line(screen, T.STEEL_LINE, (x, vr.top), (x, vr.bottom))
-        for cy in range(board.rows + 1):
-            y = round(vr.y + (cy - view.cam[1]) * tile)
-            pygame.draw.line(screen, T.STEEL_LINE, (vr.left, y), (vr.right, y))
-
-        # drop shadow: a dark block offset down-right, painted before the walls
-        # so each block covers its neighbours' shadows -> only the exposed south
-        # and east faces cast onto the floor, and the grid reads as 2.5D
-        shadow = pygame.Surface((tile, tile), pygame.SRCALPHA)
-        pygame.draw.rect(shadow, (0, 0, 0, 110), shadow.get_rect(), border_radius=_WALL_RADIUS)
-        for wx, wy in walls:
-            if vis(wx, wy):
-                r = view.cell_rect(wx, wy)
-                screen.blit(shadow, (r.x + 5, r.y + 5))
-
-        for wx, wy in walls:
-            if vis(wx, wy):
-                self._draw_wall_block(screen, wx, wy, walls)
-
-    def _draw_wall_block(self, screen, wx, wy, walls):
-        r = self._cell_rect(wx, wy).inflate(-2, -2)
-        open_n = (wx, wy - 1) not in walls
-        open_s = (wx, wy + 1) not in walls
-        open_w = (wx - 1, wy) not in walls
-        open_e = (wx + 1, wy) not in walls
-        rad = lambda a, b: _WALL_RADIUS if a and b else 0
-        kw = dict(border_top_left_radius=rad(open_n, open_w),
-                  border_top_right_radius=rad(open_n, open_e),
-                  border_bottom_left_radius=rad(open_s, open_w),
-                  border_bottom_right_radius=rad(open_s, open_e))
-        pygame.draw.rect(screen, WALL_FILL, r, **kw)
-        # lower half a touch darker -> a hint of volume
-        lower = pygame.Rect(r.x, r.centery, r.w, r.h - r.h // 2)
-        sh = pygame.Surface(lower.size, pygame.SRCALPHA)
-        sh.fill((*WALL_LO, 55))
-        screen.blit(sh, lower.topleft)
-        pygame.draw.rect(screen, WALL_LO, r, 1, **kw)
-        if open_n:                                   # exposed top face -> bevel
-            cap = pygame.Rect(r.x + 3, r.y + 3, r.w - 6, 4)
-            pygame.draw.rect(screen, WALL_HI, cap, border_radius=2)
-
-    # ------------------------------------------------------------------ #
-    # tactical overlay                                                   #
-    # ------------------------------------------------------------------ #
-    def _hovered_anchor(self):
-        if not self._is_player_turn() or self.aim_action is not None:
-            return None
-        tile = self._tile_at_px(self.mouse)
-        if tile is None:
-            return None
-        return self._anchor_of_click(self.battle.active, tile)
-
-    def _path_points(self, cells_, footprint):
-        off = self.view.tile * footprint // 2
-        return [(self.view.cell_rect(cx, cy).x + off,
-                 self.view.cell_rect(cx, cy).y + off) for cx, cy in cells_]
-
-    def _draw_tactical(self, screen):
-        b = self.battle
-        if not self._is_player_turn():
-            return
-        actor = b.active
-
-        board = b.board
-        cell = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
-
-        if self.aim_action is not None:
-            if self.aim_action in (actions.STABILIZE, actions.FIRST_AID, actions.DRINK_POTION,
-                                   actions.MOUNT, actions.WAKE_UP):
-                color = OK
-            elif self.aim_action in (actions.DEMORALIZE, actions.EAT_CORPSE):
-                color = DEMO_HL
-            elif self.aim_action in (actions.ATTACK, actions.ATTACK_TONGUE):
-                color = ATK_HL
-            elif self.aim_action in (actions.CLIMB, actions.DROP, actions.JUMP,
-                                     actions.SWIM, actions.DISMOUNT, actions.PUSH):
-                color = MOVE_HL
-            elif getattr(self.aim_action, "spell_id", None) is not None:
-                color = T.BRASS
-            else:
-                color = THROW_HL
-            cell.fill((*color, 46))
-            for pos in self.aim_action.highlight_cells(b, actor):
-                if 0 <= pos[0] < board.cols and 0 <= pos[1] < board.rows:
-                    screen.blit(cell, self._cell_rect(*pos))
-            for u in self.aim_action.highlight_targets(b, actor):
-                if u.team == actor.team or self._enemy_visible(u):
-                    pygame.draw.rect(screen, color, self._unit_rect(u), 3, border_radius=4)
-            return
-
-        # reachable footprint tint + border
-        reach_cells = b.reachable_cells(actor)
-        cell.fill((*MOVE_HL, 40))
-        for pos in reach_cells:
-            screen.blit(cell, self._cell_rect(*pos))
-        for pos in reach_cells:
-            r = self._cell_rect(*pos)
-            for (dx, dy), seg in (((1, 0), (r.right, r.top, r.right, r.bottom)),
-                                  ((-1, 0), (r.left, r.top, r.left, r.bottom)),
-                                  ((0, 1), (r.left, r.bottom, r.right, r.bottom)),
-                                  ((0, -1), (r.left, r.top, r.right, r.top))):
-                if (pos[0] + dx, pos[1] + dy) not in reach_cells:
-                    pygame.draw.line(screen, (*MOVE_HL, 210), seg[:2], seg[2:], 2)
-
-        for u in b.units:
-            if u.alive and u.team == "enemy" and (actions.ATTACK.can(b, actor, u)
-                                                  or actions.ATTACK_TONGUE.can(b, actor, u)):
-                pygame.draw.rect(screen, ATK_HL, self._unit_rect(u), 3, border_radius=4)
-
-        # walked-this-turn trail
-        if len(actor.path) >= 2:
-            pts = self._path_points(actor.path, actor.footprint)
-            pygame.draw.lines(screen, PATH_DONE, False, pts, 2)
-            for p in pts[1:]:
-                pygame.draw.circle(screen, PATH_DONE, p, 2)
-
-        # planned route under the cursor
-        anchor = self._hovered_anchor()
-        if anchor is not None and anchor != actor.pos:
-            route = b.path_to(actor, anchor)
-            if len(route) >= 2:
-                pts = self._path_points(route, actor.footprint)
-                pygame.draw.lines(screen, PATH_PREV, False, pts, 3)
-                for p in pts[1:-1]:
-                    pygame.draw.circle(screen, PATH_PREV, p, 3)
-                end = pts[-1]
-                pygame.draw.circle(screen, PATH_PREV, end, 8, 2)
-                cost = b.reachable(actor).get(anchor)
-                if cost is not None:
-                    badge = pygame.Rect(0, 0, 18, 15)
-                    badge.center = (end[0], end[1] - 15)
-                    box(screen, badge, fill=PATH_PREV, border=None)
-                    text(screen, self.F["micro"], str(cost),
-                         badge.center, (20, 18, 8), center=True)
-
-    # ------------------------------------------------------------------ #
-    # scene props                                                        #
-    # ------------------------------------------------------------------ #
-    def _draw_torch(self, screen, pos):
-        t = self.view.tile
-        cx, cy = self._cell_rect(*pos).center
-        glow = pygame.Surface((t * 2, t * 2), pygame.SRCALPHA)
-        for rad, a in ((t * 3 // 4, 22), (t // 2, 34), (t // 4, 60)):
-            pygame.draw.circle(glow, (*TORCH_C, a), (t, t), rad)
-        screen.blit(glow, (cx - t, cy - t))
-        pygame.draw.circle(screen, (58, 52, 46), (cx, cy + 4), 5)
-        pygame.draw.circle(screen, TORCH_C, (cx, cy - 2), 6)
-        pygame.draw.circle(screen, LIGHT_C, (cx, cy - 4), 3)
-
-    def _draw_trap(self, screen, o):
-        cx, cy = self._cell_rect(*o.pos).center
-        d = max(6, self.view.tile // 3)
-        ttype = (getattr(o, "trap_type", "") or "").lower()
-
-        if "bear" in ttype:
-            # Bear Trap: Circular steel base with serrated jaws
-            pygame.draw.circle(screen, (70, 70, 75), (cx, cy), d)
-            pygame.draw.circle(screen, (35, 35, 40), (cx, cy), d, 2)
-            pygame.draw.circle(screen, (130, 60, 50), (cx, cy), max(2, d // 3))
-            pygame.draw.circle(screen, (40, 20, 20), (cx, cy), max(2, d // 3), 1)
-            teeth_w = max(3, d // 2)
-            for dx in (-d * 2 // 3, 0, d * 2 // 3 - teeth_w):
-                spike_top = [(cx + dx, cy - d // 2), (cx + dx + teeth_w // 2, cy - 1), (cx + dx + teeth_w, cy - d // 2)]
-                pygame.draw.polygon(screen, (200, 205, 215), spike_top)
-                pygame.draw.polygon(screen, (35, 35, 40), spike_top, 1)
-                spike_bot = [(cx + dx, cy + d // 2), (cx + dx + teeth_w // 2, cy + 1), (cx + dx + teeth_w, cy + d // 2)]
-                pygame.draw.polygon(screen, (200, 205, 215), spike_bot)
-                pygame.draw.polygon(screen, (35, 35, 40), spike_bot, 1)
-        elif "alarm" in ttype:
-            # Alarm Trap: Tripwire across wooden pegs with a brass bell
-            w = d + 2
-            pygame.draw.line(screen, (90, 60, 35), (cx - w, cy - d // 2), (cx - w, cy + d // 2), 3)
-            pygame.draw.line(screen, (90, 60, 35), (cx + w, cy - d // 2), (cx + w, cy + d // 2), 3)
-            pygame.draw.line(screen, (210, 210, 220), (cx - w, cy - 2), (cx + w, cy - 2), 1)
-            bell_pts = [
-                (cx - d // 2, cy + d // 2),
-                (cx + d // 2, cy + d // 2),
-                (cx + d // 4, cy - 2),
-                (cx - d // 4, cy - 2),
-            ]
-            pygame.draw.polygon(screen, (220, 175, 45), bell_pts)
-            pygame.draw.polygon(screen, (50, 40, 15), bell_pts, 1)
-            pygame.draw.circle(screen, (60, 50, 20), (cx, cy + d // 2 + 1), max(2, d // 5))
-        else:
-            pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
-            pygame.draw.polygon(screen, (160, 50, 40), pts)
-            pygame.draw.polygon(screen, (25, 22, 12), pts, 2)
+        b = self.battle.board
+        terrain = {
+            "cols": b.cols, "rows": b.rows, "walls": b.walls,
+            "elevation": b.elevation, "water": getattr(b, "water", set()),
+            "ropes": getattr(b, "ropes", set()),
+        }
+        board_render.draw_terrain(screen, self.F, self.view, terrain)
 
     def _draw_ground(self, screen):
+        props = []
         for o in self.battle.ground:
             if o.pos not in self._visible:
                 continue
-            if o.is_torch:
-                self._draw_torch(screen, o.pos)
-            elif getattr(o, "is_chest", False):
-                cx, cy = self._cell_rect(*o.pos).center
-                d = self.view.tile // 3
-                rect = pygame.Rect(cx - d, cy - d // 2, d * 2, d)
-                pygame.draw.rect(screen, (139, 90, 43), rect)
-                pygame.draw.rect(screen, (218, 165, 32), rect, 2)
-            elif getattr(o, "is_relic", False):
-                cx, cy = self._cell_rect(*o.pos).center
-                d = self.view.tile // 3
-                pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
-                pygame.draw.polygon(screen, (120, 200, 255), pts)
-                pygame.draw.polygon(screen, (255, 255, 255), pts, 2)
-            elif getattr(o, "is_trap", False):
-                self._draw_trap(screen, o)
-            elif getattr(o, "is_disk", False):
-                self._draw_floating_disk(screen, o)
-            else:
-                cx, cy = self._cell_rect(*o.pos).center
-                d = self.view.tile // 4
-                pts = [(cx, cy - d), (cx + d, cy), (cx, cy + d), (cx - d, cy)]
-                pygame.draw.polygon(screen, OBJ_C, pts)
-                pygame.draw.polygon(screen, (25, 22, 12), pts, 2)
-
-    def _draw_floating_disk(self, screen, disk):
-        r = self._cell_rect(*disk.pos)
-        cx, cy = r.center
-        w = max(16, int(r.w * 0.75))
-        h = max(10, int(r.h * 0.45))
-        glow_surf = pygame.Surface((w + 8, h + 8), pygame.SRCALPHA)
-        pygame.draw.ellipse(glow_surf, (80, 220, 240, 80), (0, 0, w + 8, h + 8))
-        pygame.draw.ellipse(glow_surf, (30, 160, 200, 180), (4, 4, w, h))
-        pygame.draw.ellipse(glow_surf, (180, 245, 255, 220), (4, 4, w, h), 2)
-        screen.blit(glow_surf, (cx - (w + 8) // 2, cy - (h + 8) // 2))
-        z_str = f"z={disk.elevation}"
-        text(screen, self.F["micro"], z_str, (cx, cy - 2), (180, 245, 255), center=True)
-
-    # ------------------------------------------------------------------ #
-    # capture the flag                                                   #
-    # ------------------------------------------------------------------ #
-    def _draw_pennant(self, screen, pos, color):
-        r = self._cell_rect(*pos)
-        pole = (r.x + r.w // 3, r.bottom - 5)
-        pygame.draw.line(screen, T.TX, (pole[0], r.y + 5), pole, 3)
-        flag = [(pole[0], r.y + 5), (pole[0] + r.w // 2, r.y + 12),
-                (pole[0], r.y + 19)]
-        pygame.draw.polygon(screen, color, flag)
-        pygame.draw.polygon(screen, T.TX, flag, 1)
-
-    def _draw_flags(self, screen):
-        for team in self.battle.flags:
-            pos = self.battle.flag_pos(team)      # home, dropped, or riding its carrier
-            if pos is None:
-                continue
-            # your own flag you always know; the enemy's you have to find --
-            # it stays hidden until a cell you can see falls on it (even while
-            # someone is running it -- you have to spot the runner).
-            if team == "enemy" and pos not in self._visible:
-                continue
-            self._draw_pennant(screen, pos, PLAYER_C if team == "player" else ENEMY_C)
-
-    def _draw_flag_setup(self, screen):
-        F = self.F
-        board = self.battle.board
-        tint = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
-        tint.fill((*PLAYER_C, 32))
-        hover = self._tile_at_px(self.mouse)
-        for x in own_half("player", board.cols):
-            for y in range(board.rows):
-                if (x, y) in board.walls:
-                    continue
-                screen.blit(tint, self._cell_rect(x, y))
-        if hover is not None and self.battle.can_plant_flag(hover):
-            pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
-        banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
-        box(screen, banner, fill=T.TABLE, border=PLAYER_C, width=1)
-        text(screen, F["bodyb"], "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag",
-             banner.center, T.TX, center=True)
-
-    def _draw_trap_setup(self, screen):
-        F = self.F
-        board = self.battle.board
-        trapper = self.battle.awaiting_trap
-
-        tint = pygame.Surface((self.view.tile, self.view.tile), pygame.SRCALPHA)
-        tint.fill((*PLAYER_C, 32))
-        hover = self._tile_at_px(self.mouse)
-
-        candidates = [p for c in self.battle.cells_of(trapper) for p in board.neighbors(c)
-                      if board.in_bounds(p)]
-
-        for p in candidates:
-            if self.battle.can_plant_trap(trapper, p):
-                screen.blit(tint, self._cell_rect(*p))
-
-        if hover is not None and self.battle.can_plant_trap(trapper, hover):
-            pygame.draw.rect(screen, PLAYER_C, self._cell_rect(*hover), 2, border_radius=4)
-            
-        banner = pygame.Rect(self.view.rect.x, self.view.rect.y, self.view.rect.w, 30)
-        box(screen, banner, fill=T.TABLE, border=PLAYER_C, width=1)
-        trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
-        text(screen, F["bodyb"], f"TRAP PLACEMENT  ·  {trapper.name} is placing a {trap_type}",
-             banner.center, T.TX, center=True)
+            kind = ("torch" if o.is_torch else
+                    "chest" if getattr(o, "is_chest", False) else
+                    "relic" if getattr(o, "is_relic", False) else
+                    "trap" if getattr(o, "is_trap", False) else
+                    "disk" if getattr(o, "is_disk", False) else "item")
+            props.append({
+                "kind": kind,
+                "pos": o.pos,
+                "trap_type": getattr(o, "trap_type", ""),
+                "elevation": getattr(o, "elevation", 0),
+            })
+        board_render.draw_props(screen, self.F, self.view, props)
 
     def _draw_creatures(self, screen):
-        F = self.F
         for cr in self.battle.creatures:
-            if cr.pos not in self._visible:
-                continue
-            r = self._cell_rect(*cr.pos)
-            pygame.draw.circle(screen, NEUTRAL_C, r.center, r.w // 2 - 6)
-            text(screen, F["bodyb"], cr.token, r.center, (25, 25, 25), center=True)
-
-    def _draw_body(self, screen, u, r):
-        """A downed unit: dying (with its death counter) or stable, on the ground."""
-        F = self.F
-        center = r.center
-        rad = r.w // 2 - 6
-        base = PLAYER_C if u.team == "player" else ENEMY_C
-        pygame.draw.circle(screen, tuple(c // 3 + 12 for c in base), center, rad)
-        ring = DANGER if u.dying else T.TX_MUTED
-        pygame.draw.circle(screen, ring, center, rad, 2)
-        d = rad // 2
-        pygame.draw.line(screen, ring, (center[0] - d, center[1] - d),
-                         (center[0] + d, center[1] + d), 2)
-        pygame.draw.line(screen, ring, (center[0] - d, center[1] + d),
-                         (center[0] + d, center[1] - d), 2)
-        if u.dying:
-            badge = pygame.Rect(0, 0, 20, 15)
-            badge.center = (r.centerx, r.y + 8)
-            box(screen, badge, fill=DANGER, border=None)
-            text(screen, F["micro"], f"{u.death_clock}/{data.DYING_TURNS}",
-                 badge.center, (20, 18, 8), center=True)
-        elif u.broken:
-            badge = pygame.Rect(0, 0, 34, 15)
-            badge.center = (r.centerx, r.y + 8)
-            box(screen, badge, fill=WARN, border=None)
-            text(screen, F["micro"], "BRKN", badge.center, (20, 18, 8), center=True)
-        if self.inspect is u:
-            armed = self._armed is u
-            pygame.draw.rect(screen, DANGER if armed else T.TX, r,
-                             2 if armed else 1, border_radius=4)
+            if cr.pos in self._visible:
+                board_render.draw_creature(screen, self.F, self._cell_rect(*cr.pos), cr.token)
 
     def _draw_units(self, screen):
-        F = self.F
         b = self.battle
         for u in b.units:
             if u.dead or u.fled:
@@ -849,135 +505,180 @@ class BattleScreen(Screen):
                              and actions.ATTACK.can(b, b.active, u)):
                 continue
             r = self.fx.rect_for(u, self._unit_rect(u))
-            if u.downed:
-                self._draw_body(screen, u, r)
+            focus = "armed" if (self.inspect is u and self._armed is u) else ("inspect" if self.inspect is u else None)
+            flag = next((t for t, c in b.flag_carrier.items() if c is u), None) if b.is_ctf else None
+            tok = {
+                "team": u.team,
+                "active": u is b.active and b.winner is None,
+                "race": u.race["name"],
+                "portrait_id": getattr(u, "portrait_id", None),
+                "token": u.token,
+                "hp_frac": max(0, u.hp) / u.hp_max,
+                "torch": u.has_torch,
+                "defending": u.defending,
+                "ferocity": getattr(u, "ferocity_pending", False),
+                "demoralized": u.demoralized,
+                "flag": flag,
+                "focus": focus,
+                "downed": u.downed,
+                "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
+                "broken": u.broken,
+            }
+            board_render.draw_unit(screen, self.F, r, tok)
+
+    def _draw_pennant(self, screen, pos, color):
+        board_render.draw_pennant(screen, self._cell_rect(*pos), color)
+
+    def _draw_flags(self, screen):
+        for team in self.battle.flags:
+            pos = self.battle.flag_pos(team)
+            if pos is None:
                 continue
-            center = r.center
-            rad = r.w // 2
-            base = PLAYER_C if u.team == "player" else ENEMY_C
-            if u is b.active and b.winner is None:
-                pygame.draw.circle(screen, T.BRASS, center, rad - 1)
-            pygame.draw.circle(screen, base, center, rad - 5)
-            pygame.draw.circle(screen, (*base, 60), center, rad - 5, 1)
-            if u.has_torch:
-                pygame.draw.circle(screen, TORCH_C, center, rad - 3, 2)
-                pygame.draw.circle(screen, LIGHT_C, (r.right - 8, r.y + 8), 4)
-            if u.defending:
-                pygame.draw.circle(screen, T.TX, center, rad - 5, 2)
-            if getattr(u, "ferocity_pending", False):
-                pygame.draw.circle(screen, DANGER, center, rad - 3, 2)
-            if u.demoralized:
-                pygame.draw.circle(screen, DEMO_HL, (r.x + 8, r.y + 8), 4)
-            port = artwork.portrait(u.race["name"], getattr(u, "portrait_id", None), (rad - 5) * 2)
-            if port is not None:
-                screen.blit(port, port.get_rect(center=center))
-            else:
-                sil = artwork.race_icon(u.race["name"], round(rad * 1.5), (15, 15, 20))
-                if sil is not None:
-                    screen.blit(sil, sil.get_rect(center=center))
-                else:
-                    text(screen, F["bodyb"], u.token, center, (15, 15, 20), center=True)
+            if team == "enemy" and pos not in self._visible:
+                continue
+            self._draw_pennant(screen, pos, board_render.team_color(team))
 
-            frac = max(0, u.hp) / u.hp_max
-            bar = pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4)
-            pygame.draw.rect(screen, (30, 30, 36), bar)
-            pygame.draw.rect(screen, OK if frac > 0.4 else WARN if frac > 0.15 else DANGER,
-                             pygame.Rect(bar.x, bar.y, int(bar.w * frac), bar.h))
-            if b.is_ctf:
-                flag_team = next((t for t, c in b.flag_carrier.items() if c is u), None)
-                if flag_team is not None:
-                    badge = pygame.Rect(0, 0, 34, 15)
-                    badge.center = (r.centerx, r.y + 8)
-                    box(screen, badge, fill=PLAYER_C if flag_team == "player" else ENEMY_C, border=None)
-                    text(screen, F["micro"], "FLAG", badge.center, (15, 15, 20), center=True)
-            if self.inspect is u:
-                armed = self._armed is u
-                pygame.draw.rect(screen, DANGER if armed else T.TX, r,
-                                 2 if armed else 1, border_radius=4)
+    def _draw_flag_setup(self, screen):
+        board = self.battle.board
+        valid = [
+            (x, y) for x in own_half("player", board.cols)
+            for y in range(board.rows) if (x, y) not in board.walls
+        ]
+        hover = self._tile_at_px(self.mouse)
+        if hover is not None and not self.battle.can_plant_flag(hover):
+            hover = None
+        banner = "CAPTURE THE FLAG  ·  click a cell in your half to plant your flag"
+        board_render.draw_placement(screen, self.F, self.view, valid, hover, banner)
 
-    # ------------------------------------------------------------------ #
-    # initiative strip                                                   #
-    # ------------------------------------------------------------------ #
-    def _draw_initiative(self, screen):
-        F = self.F
+    def _draw_trap_setup(self, screen):
+        board = self.battle.board
+        trapper = self.battle.awaiting_trap
+        candidates = [
+            p for c in self.battle.cells_of(trapper) for p in board.neighbors(c)
+            if board.in_bounds(p) and self.battle.can_plant_trap(trapper, p)
+        ]
+        hover = self._tile_at_px(self.mouse)
+        if hover is not None and not self.battle.can_plant_trap(trapper, hover):
+            hover = None
+        trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
+        banner = f"TRAP PLACEMENT  ·  {trapper.name} is placing a {trap_type}"
+        board_render.draw_placement(screen, self.F, self.view, candidates, hover, banner)
+
+    def _draw_tactical(self, screen):
         b = self.battle
-        strip = self._L["init"]
-        box(screen, strip, fill=T.STEEL)
-        tracked(screen, F["micro"], "INITIATIVE", (strip.x + T.S, strip.y + T.S // 2), INK_FAINT)
+        if not self._is_player_turn():
+            return
+        actor = b.active
 
-        living = [u for u in b.order if u.alive or u.dying]
-        n = max(1, len(living))
-        avail = max(1, strip.w - 92 - T.S)
-        cw = max(24, min(112, avail // n))
-        x = strip.x + 88
-        y = strip.y + 6
-        for u in living:
-            r = pygame.Rect(x, y, cw - T.S // 2, strip.h - 12)
-            is_active = u is b.active and b.winner is None
+        if self.aim_action is not None:
+            kind = self._aim_kind(self.aim_action)
+            color = board_style.aim_color(kind)
+            highlight_cells = [
+                pos for pos in self.aim_action.highlight_cells(b, actor)
+                if 0 <= pos[0] < b.board.cols and 0 <= pos[1] < b.board.rows
+            ]
+            board_render.tint_cells(screen, self.view, highlight_cells, color, 46)
+            target_rects = [
+                self._unit_rect(u) for u in self.aim_action.highlight_targets(b, actor)
+                if u.team == actor.team or self._enemy_visible(u)
+            ]
+            board_render.draw_rings(screen, target_rects, color)
+            return
+
+        reach_cells = b.reachable_cells(actor)
+        board_render.draw_reach(screen, self.view, reach_cells)
+
+        atk_rects = [
+            self._unit_rect(u) for u in b.units
+            if u.alive and u.team == "enemy" and (actions.ATTACK.can(b, actor, u)
+                                                  or actions.ATTACK_TONGUE.can(b, actor, u))
+        ]
+        board_render.draw_rings(screen, atk_rects, board_style.ATK_HL)
+
+        if len(actor.path) >= 2:
+            pts = board_render.path_points(self.view, actor.path, actor.footprint)
+            board_render.draw_trail(screen, pts)
+
+        anchor = self._hovered_anchor()
+        if anchor is not None and anchor != actor.pos:
+            route = b.path_to(actor, anchor)
+            if len(route) >= 2:
+                pts = board_render.path_points(self.view, route, actor.footprint)
+                cost = b.reachable(actor).get(anchor)
+                board_render.draw_route(screen, self.F, pts, cost)
+
+    def _draw_initiative(self, screen):
+        b = self.battle
+        entries = []
+        for u in b.order:
+            if not (u.alive or u.dying):
+                continue
             known = u.team == "player" or self._enemy_visible(u)
-            fill = T.STEEL_HI if is_active else T.TABLE
-            box(screen, r, fill=fill, border=T.BRASS if is_active else T.STEEL_LINE, width=2 if is_active else 1)
-            tcol = PLAYER_C if u.team == "player" else ENEMY_C
-            dot = (r.x + 12, r.centery - 3)
-            port = artwork.portrait(u.race["name"], getattr(u, "portrait_id", None), 16) if known else None
-            if port is not None:
-                screen.blit(port, port.get_rect(center=dot))
-            else:
-                pygame.draw.circle(screen, tcol if known else T.STEEL_HI, dot, 8)
-                sil = artwork.race_icon(u.race["name"], 13, (12, 12, 16)) if known else None
-                if sil is not None:
-                    screen.blit(sil, sil.get_rect(center=dot))
-                else:
-                    text(screen, F["micro"], u.token if known else "?",
-                         dot, (12, 12, 16), center=True)
-            nm = (u.name.split()[0] if known else "Enemy")
-            col = T.TX if is_active else T.TX_MUTED
-            clip = screen.get_clip()
-            screen.set_clip(r.inflate(-6, -6))
-            text(screen, F["body_sm"], nm, (r.x + 26, r.y + 4), col)
-            screen.set_clip(clip)
-            if u.dying:
-                text(screen, F["micro"], f"dying {u.death_clock}/{data.DYING_TURNS}",
-                     (r.x + 8, r.bottom - 14), DANGER)
-            elif known:
-                frac = max(0, u.hp) / u.hp_max
-                hb = pygame.Rect(r.x + 8, r.bottom - 9, r.w - 16, 4)
-                pygame.draw.rect(screen, (30, 30, 36), hb)
-                pygame.draw.rect(screen, OK if frac > 0.4 else WARN if frac > 0.15 else DANGER,
-                                 pygame.Rect(hb.x, hb.y, int(hb.w * frac), hb.h))
-            x += cw
+            entries.append({
+                "name": u.name.split()[0] if known else "Enemy",
+                "team": u.team,
+                "known": known,
+                "active": u is b.active and b.winner is None,
+                "race": u.race["name"],
+                "portrait_id": getattr(u, "portrait_id", None),
+                "token": u.token if known else "?",
+                "hp_frac": max(0, u.hp) / u.hp_max,
+                "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
+            })
+        battle_panel.draw_initiative(screen, self.F, self._L["init"], entries)
 
-    # ------------------------------------------------------------------ #
-    # panel                                                              #
-    # ------------------------------------------------------------------ #
     def _draw_panel(self, screen):
-        F = self.F
         b = self.battle
         pr = self._L["panel"]
-        s = Stack(pr.x, pr.y, pr.w)
+        F = self.F
 
-        # --- header ------------------------------------------------- #
-        head = s.row(30)
-        title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up
-                 else f"Round {b.round_no}")
-        text(screen, F["titleb"], title,
-             (head.x, head.y - 4), T.BRASS if b.winner else WARN if b.mopping_up else T.TX)
+        title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up else f"Round {b.round_no}")
+        state = "victory" if b.winner else "mopping" if b.mopping_up else None
         vision_active = self._is_player_turn() and not self.view_squad
-        vtxt = "ACTIVE" if vision_active else "SQUAD"
-        text(screen, F["body_sm"], f"vision {vtxt}  [L]",
-             (head.right, head.y + 4), T.BRASS if vision_active else T.TX_MUTED, right=True)
-        s.gap(T.S * 2)
+        head_r = pygame.Rect(pr.x, pr.y, pr.w, battle_panel.TITLE_H)
+        battle_panel.draw_title(screen, F, head_r, title, state, vision_active)
 
+        cur_y = head_r.bottom + T.S * 2
         if b.winner is None:
-            self._draw_turn_card(screen, s)
-            s.gap(T.S * 2)
-            self._draw_hint(screen, s)
-            s.gap(T.S * 2)
-        else:
-            self._draw_victory_card(screen, s)
-            s.gap(T.S * 2)
+            act = b.active
+            card_r = pygame.Rect(pr.x, cur_y, pr.w, battle_panel.TURN_CARD_H)
+            marks = "  ".join(x for x in (
+                "defending" if act.defending else "",
+                "demoralized" if act.demoralized else "") if x)
+            extra = "".join((
+                f"   arrows {act.ammo}" if act.needs_ammo else "",
+                f"   kit {act.first_aid_charges}x" if act.first_aid_charges else "",
+                f"   {marks}" if marks else "",
+            ))
+            stats = f"HP {max(act.hp, 0)}/{act.hp_max}   AC {act.ac}   MD {act.mental_defense}" + extra
+            vd = vision.vision_desc(act) if not self.view_squad else "vision: whole squad  [L]"
+            card_data = {
+                "name": act.name,
+                "token": act.token,
+                "mine": act.team == "player",
+                "stats": stats,
+                "ap": act.ap,
+                "ap_max": 2,
+                "walk": (act.moved, act.speed) if act.walking else None,
+                "note": None if act.walking or act.team != "player" else vd,
+            }
+            battle_panel.draw_turn_card(screen, F, card_r, card_data)
+            cur_y = card_r.bottom + T.S * 2
 
-        top_end_y = s.y
+            hint_r = pygame.Rect(pr.x, cur_y, pr.w, battle_panel.HINT_H)
+            msg, col = self._hint_message()
+            battle_panel.draw_hint(screen, F, hint_r, msg, col)
+            cur_y = hint_r.bottom + T.S * 2
+        else:
+            card_r = pygame.Rect(pr.x, cur_y, pr.w, battle_panel.VICTORY_CARD_H)
+            vdata = {
+                "won": b.winner == "player",
+                "stabilized": [u.name for u in b.player_units if u.status in ("stable", "broken")],
+                "fallen": [u.name for u in b.player_units if u.status == "dead"],
+            }
+            battle_panel.draw_victory_card(screen, F, card_r, vdata)
+            cur_y = card_r.bottom + T.S * 2
+
         self.buttons = []
 
         insp = self.inspect
@@ -989,17 +690,13 @@ class BattleScreen(Screen):
 
         inspect_h = 0
         if who is not None:
-            inspect_h = 24
-            if who is insp and self._armed is insp:
-                inspect_h += 20
-            if self.inspect_open:
-                inspect_h += sheet_height("compact") + T.S
+            inspect_h = battle_panel.inspect_height(
+                self.inspect_open, who is insp and self._armed is insp, sheet_height("compact")
+            )
 
         inspect_top = pr.bottom - inspect_h
-        actions_top = top_end_y
-        actions_bottom = inspect_top - (T.S if inspect_h else 0)
-        actions_h = max(40, actions_bottom - actions_top)
-        actions_rect = pygame.Rect(pr.x, actions_top, pr.w, actions_h)
+        actions_h = max(40, inspect_top - (T.S if inspect_h else 0) - cur_y)
+        actions_rect = pygame.Rect(pr.x, cur_y, pr.w, actions_h)
 
         if b.winner is None:
             self._draw_actions(screen, actions_rect)
@@ -1008,141 +705,6 @@ class BattleScreen(Screen):
             inspect_rect = pygame.Rect(pr.x, inspect_top, pr.w, inspect_h)
             self._draw_inspect(screen, inspect_rect, who, insp)
 
-    def _draw_victory_card(self, screen, s):
-        F = self.F
-        b = self.battle
-        card = s.row(84)
-        won = b.winner == "player"
-        box(screen, card, fill=T.TABLE, border=T.BRASS if won else DANGER, width=1)
-
-        title = "VICTORY" if won else "DEFEAT"
-        text(screen, F["head"], title, (card.x + T.S * 2, card.y + 6), T.BRASS if won else DANGER)
-
-        stabilized = [u for u in b.player_units if u.status in ("stable", "broken")]
-        fallen = [u for u in b.player_units if u.status == "dead"]
-
-        if stabilized and fallen:
-            s_names = ", ".join(u.name for u in stabilized)
-            f_names = ", ".join(u.name for u in fallen)
-            text(screen, F["body_sm"], f"Stabilized: {s_names}", (card.x + T.S * 2, card.y + 26), OK)
-            text(screen, F["body_sm"], f"Fallen: {f_names}", (card.x + T.S * 2, card.y + 44), DANGER)
-        elif stabilized:
-            names = ", ".join(u.name for u in stabilized)
-            text(screen, F["body_sm"], f"Stabilized: {names} (unconscious)",
-                 (card.x + T.S * 2, card.y + 30), OK)
-        elif fallen:
-            names = ", ".join(u.name for u in fallen)
-            text(screen, F["body_sm"], f"Fallen: {names}", (card.x + T.S * 2, card.y + 30), DANGER)
-        else:
-            text(screen, F["body_sm"], "All squad members survived standing.",
-                 (card.x + T.S * 2, card.y + 30), T.TX_MUTED)
-
-        text(screen, F["micro"], "Click anywhere to continue",
-             (card.x + T.S * 2, card.y + 64), INK_FAINT)
-
-    def _draw_turn_card(self, screen, s):
-        F = self.F
-        b = self.battle
-        act = b.active
-        card = s.row(74)
-        mine = act.team == "player"
-        box(screen, card, fill=T.TABLE, border=PLAYER_C if mine else ENEMY_C, width=1)
-
-        dot = (card.x + T.S * 2 + 11, card.y + 21)
-        pygame.draw.circle(screen, PLAYER_C if mine else ENEMY_C, dot, 13)
-        text(screen, F["bodyb"], act.token, dot, (15, 15, 20), center=True)
-        text(screen, F["head"], act.name, (dot[0] + 24, card.y + 7), T.TX)
-        marks = "  ".join(x for x in (
-            "defending" if act.defending else "",
-            "demoralized" if act.demoralized else "") if x)
-        extra = "".join((
-            f"   arrows {act.ammo}" if act.needs_ammo else "",
-            f"   kit {act.first_aid_charges}x" if act.first_aid_charges else "",
-            f"   {marks}" if marks else "",
-        ))
-        text(screen, F["micro"], f"HP {max(act.hp,0)}/{act.hp_max}   AC {act.ac}   MD {act.mental_defense}" + extra,
-             (dot[0] + 24, card.y + 28), T.TX_MUTED)
-
-        # AP pips (label above, pips below), right-aligned
-        px = card.right - T.S * 2 - 19
-        text(screen, F["micro"], "ACTION", (px + 4, card.y + 8), INK_FAINT, center=True)
-        pips(screen, (px, card.y + 30), act.ap, 2, r=7, gap=8)
-
-        base = card.y + 50
-        if act.walking:
-            text(screen, F["micro"], f"walk {act.moved}/{act.speed}",
-                 (card.x + T.S * 2, base), T.TX_MUTED)
-            track = pygame.Rect(card.x + T.S * 2 + 116, base + 4, card.right - card.x - T.S * 2 - 128, 5)
-            pygame.draw.rect(screen, T.STEEL_HI, track, border_radius=2)
-            frac = min(1.0, act.moved / max(1, act.speed))
-            pygame.draw.rect(screen, MOVE_HL,
-                             pygame.Rect(track.x, track.y, int(track.w * frac), track.h),
-                             border_radius=2)
-        elif mine:
-            vd = vision.vision_desc(act) if not self.view_squad else "vision: whole squad  [L]"
-            text(screen, F["micro"], vd, (card.x + T.S * 2, base), INK_FAINT)
-
-    def _hint_message(self):
-        if not self._is_player_turn():
-            return None, None
-        spell_id = getattr(self.aim_action, "spell_id", None)
-        if self.aim_action is actions.ATTACK:
-            return "click a highlighted enemy to Attack (Flank: ally on opposite side grants +2 to hit)", ATK_HL
-        elif self.aim_action is actions.DEMORALIZE:
-            return "click a purple enemy to Demoralize", DEMO_HL
-        elif self.aim_action is actions.ATTACK_TONGUE:
-            return "click an enemy in tongue range", ATK_HL
-        elif self.aim_action is actions.THROW:
-            return "click an enemy in the orange range", THROW_HL
-        elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
-            return "click an adjacent downed ally (green)", OK
-        elif self.aim_action is actions.DRINK_POTION:
-            return "click self or damaged ally to drink potion", OK
-        elif self.aim_action is actions.MOUNT:
-            return "click an adjacent allied Centaur to mount", OK
-        elif self.aim_action is actions.DISMOUNT:
-            return "click an adjacent free cell to dismount", MOVE_HL
-        elif self.aim_action is actions.WAKE_UP:
-            return "click an adjacent sleeping ally to wake them", OK
-        elif self.aim_action is actions.EAT_CORPSE:
-            return "click an adjacent dead enemy corpse to devour", DEMO_HL
-        elif self.aim_action is actions.PUSH:
-            return "click an adjacent unit to push", MOVE_HL
-        elif self.aim_action is actions.CLIMB:
-            return "click an adjacent ledge cell to climb", MOVE_HL
-        elif self.aim_action is actions.DROP:
-            return "click a cell below to drop down", MOVE_HL
-        elif self.aim_action is actions.JUMP:
-            return "click a cell to jump over a pit", MOVE_HL
-        elif self.aim_action is actions.SWIM:
-            return "click an adjacent water cell to swim", MOVE_HL
-        elif spell_id == "sleep":
-            return "click enemy within 6 cells to cast Sleep", T.BRASS
-        elif spell_id == "magic_missile":
-            return "click enemy within 6 cells to cast Magic Missile", T.BRASS
-        elif spell_id == "light_globe":
-            return "click empty cell within 6 cells to conjure Light Globe", T.BRASS
-        elif spell_id == "floating_disk":
-            return "click empty cell within 6 cells to summon Floating Disk", T.BRASS
-        elif spell_id is not None:
-            return f"click target within range to cast {self.aim_action.name}", T.BRASS
-        elif actions.FLEE.available(self.battle, self.battle.active):
-            return "at the map edge: you can Flee the fight", OK
-        elif self.battle.mopping_up:
-            return ("enemies down  ·  stabilize the downed or space "
-                    "to let the counter run"), WARN
-        elif self.battle.is_ctf:
-            return ("grab the enemy flag and bring it home to win  ·  "
-                    "guard your own, and whoever's carrying it"), T.TX_MUTED
-        else:
-            return "green square: move  ·  enemy: attack  ·  space: end", T.TX_MUTED
-
-    def _draw_hint(self, screen, s):
-        row = s.row(16)
-        msg, col = self._hint_message()
-        if msg is not None:
-            text(screen, self.F["body_sm"], msg, (row.x, row.y), col)
-
     def _draw_actions(self, screen, area_rect):
         F = self.F
         b = self.battle
@@ -1150,112 +712,68 @@ class BattleScreen(Screen):
         act = b.active
 
         if getattr(self, "height_prompt", None) is not None:
-            s = Stack(area_rect.x, area_rect.y, area_rect.w)
-            r_title = s.row(26)
-            text(screen, F["bodyb"], "DISK ALTITUDE:", (r_title.x, r_title.y), T.BRASS)
-            s.gap(T.S // 2)
-            for z, lbl in self.height_prompt["options"]:
-                r = s.row(32)
-                s.gap(T.S // 2)
-                box(screen, r, fill=T.TABLE, border=T.BRASS, width=1)
-                text(screen, F["bodyb"], lbl, r.center, T.TX, center=True)
-                self.buttons.append((("prompt_height", z), r))
-            r_c = s.row(28)
-            box(screen, r_c, fill=T.STEEL, border=T.STEEL_LINE, width=1)
-            text(screen, F["body_sm"], "Cancel", r_c.center, T.TX_MUTED, center=True)
-            self.buttons.append(("prompt_cancel", r_c))
+            self.buttons.extend(
+                battle_panel.draw_height_prompt(screen, F, area_rect, self.height_prompt["options"])
+            )
             return
 
         if getattr(self, "show_magic_menu", False):
-            btn_back = pygame.Rect(area_rect.x, area_rect.y, area_rect.w, 30)
-            box(screen, btn_back, fill=T.STEEL, border=T.STEEL_LINE, width=1)
-            text(screen, F["bodyb"], "< Back to Actions", btn_back.center, T.TX, center=True)
+            btn_back = pygame.Rect(area_rect.x, area_rect.y, area_rect.w, battle_panel.BACK_H)
+            battle_panel.draw_back_bar(screen, F, btn_back, "< Back to Actions")
             self.buttons.append(("magic_back", btn_back))
 
             scroll_y = btn_back.bottom + T.S // 2
-            scroll_h = max(20, area_rect.bottom - scroll_y)
-            scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, scroll_h)
+            scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, max(20, area_rect.bottom - scroll_y))
             self._actions_scroll_rect = scroll_rect
 
-            spells = act.char.spells_known
-            total_content_h = len(spells) * (34 + T.S // 2)
-            max_scroll = max(0, total_content_h - scroll_h)
-            self._actions_max_scroll = max_scroll
-            self.actions_scroll = max(0, min(self.actions_scroll, max_scroll))
-
-            old_clip = screen.get_clip()
-            screen.set_clip(scroll_rect)
-
-            btn_w = scroll_rect.w - (6 if max_scroll > 0 else 0)
-            curr_y = scroll_rect.y - self.actions_scroll
-
-            for sp_id in spells:
+            items_data = []
+            for sp_id in act.char.spells_known:
                 action = actions.CastSpellAction(sp_id)
                 enabled = my_turn and action.available(b, act)
                 armed = getattr(self.aim_action, "id", None) == action.id
+                label = action.name if not armed else f"{action.name}: target"
+                items_data.append({
+                    "key": action,
+                    "label": label,
+                    "enabled": enabled,
+                    "armed": armed,
+                    "icon": None,
+                    "cost": action.cost,
+                    "cost_style": "count",
+                    "aim": "spell",
+                    "center": False,
+                })
 
-                r = pygame.Rect(scroll_rect.x, curr_y, btn_w, 34)
-                curr_y += 34 + T.S // 2
-
-                if r.bottom > scroll_rect.top and r.top < scroll_rect.bottom:
-                    fill = T.BRASS if armed else T.TABLE if enabled else T.STEEL
-                    box(screen, r, fill=fill, border=T.BRASS if armed else T.STEEL_LINE, width=1)
-                    ink = T.TABLE if armed else T.TX if enabled else INK_FAINT
-
-                    ibox = pygame.Rect(r.x + T.S, r.y + 5, 24, 24)
-                    label = action.name if not armed else f"{action.name}: target"
-                    text(screen, F["bodyb"], label, (ibox.right + T.S, r.y + 9), ink)
-
-                    if action.cost:
-                        cx = r.right - T.S * 2
-                        text(screen, F["micro"], str(action.cost),
-                             (cx, r.centery - 6), ink, right=True)
-                        pygame.draw.circle(screen, ink, (cx - 16, r.centery), 3)
-                    self.buttons.append((action, r))
-
-            screen.set_clip(old_clip)
-
-            if max_scroll > 0:
-                bar_track = pygame.Rect(scroll_rect.right - 4, scroll_rect.y, 4, scroll_rect.h)
-                pygame.draw.rect(screen, T.STEEL, bar_track, border_radius=2)
-                thumb_h = max(16, int(scroll_rect.h * (scroll_rect.h / total_content_h)))
-                thumb_y = scroll_rect.y + int((scroll_rect.h - thumb_h) * (self.actions_scroll / max_scroll))
-                pygame.draw.rect(screen, T.STEEL_LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
+            res = battle_panel.draw_action_list(screen, F, scroll_rect, items_data, self.actions_scroll)
+            self.actions_scroll = res["scroll"]
+            self._actions_max_scroll = res["max_scroll"]
+            self.buttons.extend(res["buttons"])
             return
 
-        # Normal view: Tab header + Action list
-        tab_h = 26
-        btn_w = (area_rect.w - 38) // 2
-        btn_combat = pygame.Rect(area_rect.x, area_rect.y, btn_w, tab_h)
-        btn_utility = pygame.Rect(btn_combat.right + 4, area_rect.y, btn_w, tab_h)
-        btn_blocked = pygame.Rect(area_rect.right - 30, area_rect.y, 30, tab_h)
+        tab_r = pygame.Rect(area_rect.x, area_rect.y, area_rect.w, battle_panel.TAB_H)
+        self.buttons.extend(
+            battle_panel.draw_action_tabs(screen, F, tab_r, self.action_tab, self.show_blocked_actions, self.mouse)
+        )
 
-        is_c = self.action_tab == "combat"
-        hov_c = btn_combat.collidepoint(self.mouse)
-        box(screen, btn_combat, fill=T.STEEL_HI if is_c else T.TABLE if hov_c else T.STEEL, border=T.BRASS if is_c else T.STEEL_LINE, width=1)
-        text(screen, F["bodyb"], "COMBAT",
-             btn_combat.center, T.BRASS if is_c else T.TX if hov_c else T.TX_MUTED, center=True)
-        self.buttons.append(("tab_combat", btn_combat))
-
-        is_u = self.action_tab == "utility"
-        hov_u = btn_utility.collidepoint(self.mouse)
-        box(screen, btn_utility, fill=T.STEEL_HI if is_u else T.TABLE if hov_u else T.STEEL, border=T.BRASS if is_u else T.STEEL_LINE, width=1)
-        text(screen, F["bodyb"], "UTILITY",
-             btn_utility.center, T.BRASS if is_u else T.TX if hov_u else T.TX_MUTED, center=True)
-        self.buttons.append(("tab_utility", btn_utility))
-
-        box(screen, btn_blocked, fill=T.TABLE if self.show_blocked_actions else T.STEEL, border=T.STEEL_LINE, width=1)
-        text(screen, F["micro"], "(o)" if self.show_blocked_actions else "(-)",
-             btn_blocked.center, T.TX, center=True)
-        self.buttons.append(("toggle_blocked", btn_blocked))
-
-        # Filter items for active tab
         tab_actions = actions.COMBAT_ACTIONS if self.action_tab == "combat" else actions.UTILITY_ACTIONS
         contextual = (actions.CLIMB, actions.DROP, actions.SWIM)
 
         visible_items = []
         if self.action_tab == "combat" and act.char.spells_known:
-            visible_items.append(("spell_menu", None, True, ""))
+            visible_items.append({
+                "key": "magic_menu",
+                "label": "Cast Spell",
+                "enabled": my_turn,
+                "armed": False,
+                "icon": None,
+                "cost": 0,
+                "cost_style": "pips",
+                "aim": None,
+                "center": True,
+            })
+
+        hotkey_i = 0
+        self._hotkey_actions = []
 
         for action in tab_actions:
             applies, reason = action.applicable(b, act)
@@ -1263,47 +781,8 @@ class BattleScreen(Screen):
                 continue
             if not applies and not self.show_blocked_actions:
                 continue
-            visible_items.append(("action", action, applies, reason))
 
-        # Layout scroll container
-        item_h = 34
-        item_gap = T.S // 2
-        scroll_y = area_rect.y + tab_h + T.S // 2
-        scroll_h = max(20, area_rect.bottom - scroll_y)
-        scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, scroll_h)
-        self._actions_scroll_rect = scroll_rect
-
-        total_content_h = len(visible_items) * (item_h + item_gap)
-        max_scroll = max(0, total_content_h - scroll_h)
-        self._actions_max_scroll = max_scroll
-        self.actions_scroll = max(0, min(self.actions_scroll, max_scroll))
-
-        old_clip = screen.get_clip()
-        screen.set_clip(scroll_rect)
-
-        action_bw = scroll_rect.w - (6 if max_scroll > 0 else 0)
-        curr_y = scroll_rect.y - self.actions_scroll
-        hotkey_i = 0
-        self._hotkey_actions = []
-
-        for item in visible_items:
-            kind = item[0]
-            r = pygame.Rect(scroll_rect.x, curr_y, action_bw, item_h)
-            curr_y += item_h + item_gap
-
-            if kind == "spell_menu":
-                if r.bottom > scroll_rect.top and r.top < scroll_rect.bottom:
-                    enabled = my_turn
-                    fill = T.TABLE if enabled else T.STEEL
-                    box(screen, r, fill=fill, border=T.STEEL_LINE, width=1)
-                    ink = T.TX if enabled else INK_FAINT
-                    text(screen, F["bodyb"], "Cast Spell", r.center, ink, center=True)
-                    self.buttons.append(("magic_menu", r))
-                continue
-
-            action, applies, reason = item[1], item[2], item[3]
-            enabled = applies and (my_turn if action is actions.END else (
-                my_turn and action.available(b, act)))
+            enabled = applies and (my_turn if action is actions.END else (my_turn and action.available(b, act)))
             armed = action.aimed and self.aim_action is action
 
             hotkey_num = None
@@ -1312,58 +791,39 @@ class BattleScreen(Screen):
                 hotkey_num = hotkey_i
                 self._hotkey_actions.append(action)
 
-            if r.bottom <= scroll_rect.top or r.top >= scroll_rect.bottom:
-                continue
-
-            arm_c = DEMO_HL if action is actions.DEMORALIZE else \
-                THROW_HL if action is actions.THROW else \
-                ATK_HL if action in (actions.ATTACK_TONGUE, actions.ATTACK) else T.BRASS
-            fill = arm_c if armed else T.TABLE if enabled else T.STEEL
-            box(screen, r, fill=fill, border=arm_c if armed else T.STEEL_LINE, width=1)
-            ink = T.TABLE if armed else T.TX if enabled else INK_FAINT
-
-            ibox = pygame.Rect(r.x + T.S, r.y + 5, 24, 24)
-            icons.icon(screen, action.id, ibox, ink)
-
             label = action.name if not armed else f"{action.name}: click the target"
             if not applies:
                 label += f" ({reason})"
             if hotkey_num is not None:
                 label = f"[{hotkey_num}] {label}"
-            text(screen, F["bodyb"], label, (ibox.right + T.S, r.y + 9), ink)
 
-            if action.cost:
-                cx = r.right - T.S * 2
-                for i in range(action.cost):
-                    pygame.draw.circle(screen, T.BRASS, (cx - i * 14, r.centery), 4)
+            visible_items.append({
+                "key": action,
+                "label": label,
+                "enabled": enabled,
+                "armed": armed,
+                "icon": action.id,
+                "cost": action.cost,
+                "cost_style": "pips",
+                "aim": self._aim_kind(action),
+                "center": False,
+            })
 
-            self.buttons.append((action, r))
+        scroll_y = area_rect.y + battle_panel.TAB_H + T.S // 2
+        scroll_rect = pygame.Rect(area_rect.x, scroll_y, area_rect.w, max(20, area_rect.bottom - scroll_y))
+        self._actions_scroll_rect = scroll_rect
 
-        screen.set_clip(old_clip)
-
-        if max_scroll > 0:
-            bar_track = pygame.Rect(scroll_rect.right - 4, scroll_rect.y, 4, scroll_rect.h)
-            pygame.draw.rect(screen, T.STEEL, bar_track, border_radius=2)
-            thumb_h = max(16, int(scroll_rect.h * (scroll_rect.h / total_content_h)))
-            thumb_y = scroll_rect.y + int((scroll_rect.h - thumb_h) * (self.actions_scroll / max_scroll))
-            pygame.draw.rect(screen, T.STEEL_LINE, pygame.Rect(scroll_rect.right - 4, thumb_y, 4, thumb_h), border_radius=2)
+        res = battle_panel.draw_action_list(screen, F, scroll_rect, visible_items, self.actions_scroll)
+        self.actions_scroll = res["scroll"]
+        self._actions_max_scroll = res["max_scroll"]
+        self.buttons.extend(res["buttons"])
 
     def _draw_inspect(self, screen, rect, who, insp):
         F = self.F
-        head = pygame.Rect(rect.x, rect.y, rect.w, 20)
-        caret = "v" if self.inspect_open else ">"
+        armed = who is insp and self._armed is insp
         label = "INSPECT" if who is insp else "ACTIVE UNIT"
-        tracked(screen, F["micro"], f"{caret}  {label}", (head.x, head.y + 3), T.TX_MUTED)
-        text(screen, F["body_sm"], "click a unit", (head.right, head.y + 3), INK_FAINT, right=True)
+        head, cur_y = battle_panel.draw_inspect_header(screen, F, rect, label, self.inspect_open, armed)
         self.buttons.append(("inspect_toggle", head))
-        pygame.draw.line(screen, T.STEEL_LINE, (head.x, head.bottom + 2),
-                         (head.right, head.bottom + 2))
-
-        cur_y = head.bottom + 4
-        if who is insp and self._armed is insp:
-            hint = pygame.Rect(rect.x, cur_y, rect.w, 16)
-            text(screen, F["body_sm"], "click again to attack", (hint.x, hint.y), DANGER)
-            cur_y += 20
 
         if not self.inspect_open:
             return
@@ -1374,46 +834,19 @@ class BattleScreen(Screen):
         if tooltip:
             ui_primitives.draw_tooltip(screen, F, tooltip, self.mouse)
 
-    # ------------------------------------------------------------------ #
-    # log                                                                #
-    # ------------------------------------------------------------------ #
-    _LOG_RULES = (
-        (("---", "***", "Round"), INK_FAINT),
-        (("CRITICAL HIT",), WARN),
-        (("DEAD", "dies.", "goes down, dying", "coup de grace", "Victory:",
-          "*** Victory", "doesn't survive"), DANGER),
-        (("is dying", "BROKEN", "ferocity runs out"), WARN),
-        (("takes", "damage"), (206, 150, 140)),
-        (("-> misses", "no effect", "critical miss", "misses again", "-> fail"), INK_FAINT),
-        (("-> hit", "-> lands", "regenerates", "recovers", "recompo", "stabiliz",
-          "survives", "-> success", "repaired", "back online"), OK),
-    )
-
     def _log_color(self, line):
-        for needles, col in self._LOG_RULES:
-            if any(nd in line for nd in needles):
-                return col
-        return T.TX_MUTED
+        return battle_panel.log_color(line)
 
     def _draw_log(self, screen):
         F = self.F
         well = self._L["log"]
-        box(screen, well, fill=T.TABLE, border=T.STEEL_LINE)
-        tracked(screen, F["micro"], "LOG", (well.x + T.S, well.y + T.S // 2), INK_FAINT)
-
-        export_r = pygame.Rect(0, well.y + 1, 62, 16)
-        export_r.right = well.right - T.S
-        box(screen, export_r, fill=T.STEEL, border=T.STEEL_LINE, width=1)
-        text(screen, F["micro"], "export", export_r.center, INK_FAINT, center=True)
-        self.buttons.append(("export_state", export_r))
-
-        rows = max(1, (well.h - 24) // 17)
-
         all_lines = self.battle.log_lines
         total = len(all_lines)
+        rows = battle_panel.log_rows(well)
+
         added = max(0, total - self._log_len_seen)
         if self.log_scroll > 0:
-            self.log_scroll += added         # keep the same old lines in view as new ones arrive
+            self.log_scroll += added
         self._log_len_seen = total
         max_scroll = max(0, total - rows)
         self.log_scroll = min(self.log_scroll, max_scroll)
@@ -1421,20 +854,29 @@ class BattleScreen(Screen):
         end = total - self.log_scroll
         start = max(0, end - rows)
         lines = all_lines[start:end]
-        y = well.y + 22
-        for i, ln in enumerate(lines):
-            last = self.log_scroll == 0 and i == len(lines) - 1
-            col = T.TX if last else self._log_color(ln)
-            text(screen, F["micro"], ln[:180], (well.x + T.S * 2, y), col)
-            y += 17
-        if self.log_scroll > 0:
-            text(screen, F["micro"], f"v {self.log_scroll} more below (scroll to follow)",
-                 (well.right - T.S, well.bottom - T.S // 2 - 14), INK_FAINT, right=True)
+
+        export_r = battle_panel.draw_log(screen, F, well, lines, self.log_scroll)
+        self.buttons.append(("export_state", export_r))
+
+    def _draw_tooltips(self, screen):
+        mpos = pygame.mouse.get_pos()
+        hovered_action = None
+        btn_rect = None
+        for action, rect in self.buttons:
+            if isinstance(action, actions.Action) and rect.collidepoint(mpos):
+                hovered_action = action
+                btn_rect = rect
+                break
+
+        desc = getattr(hovered_action, "desc", "") if hovered_action else ""
+        if desc and btn_rect:
+            battle_panel.draw_action_tip(screen, self.F, btn_rect, desc)
+
+    def _draw_winner(self, screen):
+        txt = "You won" if self.battle.winner == "player" else "The AI won"
+        battle_panel.draw_winner(screen, self.F, self.view.rect.center, txt)
 
     def _export_state(self):
-        """Dump the battle to a JSON snapshot so a player who hits a weird bug
-        mid-fight can hand over the state that produced it, instead of trying
-        to describe it after the fact."""
         b = self.battle
         os.makedirs(DEBUG_EXPORT_DIR, exist_ok=True)
         path = os.path.join(DEBUG_EXPORT_DIR, f"battle_{int(time.time())}.json")
@@ -1477,14 +919,3 @@ class BattleScreen(Screen):
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(snapshot, fh, indent=2, default=str)
         b.log(f"State exported to {os.path.relpath(path)}")
-
-    def _draw_winner(self, screen):
-        F = self.F
-        b = self.battle
-        txt = "You won" if b.winner == "player" else "The AI won"
-        card = pygame.Rect(0, 0, 360, 92)
-        card.center = self.view.rect.center
-        box(screen, card, fill=T.TABLE, border=T.BRASS, width=2)
-        text(screen, F["titleb"], txt, (card.centerx, card.y + 30), T.TX, center=True)
-        text(screen, F["body"], "click to continue",
-             (card.centerx, card.y + 62), T.TX_MUTED, center=True)
