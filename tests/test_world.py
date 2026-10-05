@@ -159,6 +159,7 @@ def test_field_loot_gathers_the_dead_and_the_ground():
     from gartok.ground import GroundObject
     random.seed(4)
     squad = [Unit("player")]
+    squad[0].gold = 0
     enemies = [Unit("enemy"), Unit("enemy")]
     batt = Battle(squad, enemies)
     for e in batt.enemy_units:                        # freeze known kit
@@ -288,3 +289,19 @@ def test_arena_torches_scatter_across_the_whole_floor():
         b = Battle([Unit("player")], [Unit("enemy")], scenario=ArenaScenario())
         xs.update(o.pos[0] for o in b.ground if o.is_torch)
     assert any(x < 5 for x in xs) and any(x > 10 for x in xs)   # not just a centre band
+
+
+def test_a_fallen_allys_purse_is_loot_but_an_enemys_is_not():
+    from gartok import items, loot
+    random.seed(4)
+    ally, foe = Unit("player"), Unit("enemy")
+    ally.gold, foe.gold = 130, 90
+    batt = Battle([ally], [foe])
+    batt.enemy_units[0].inventory = []
+    batt.enemy_units[0].weapon_hand = batt.enemy_units[0].torch_hand = False
+    dead = batt.player_units[0]
+    dead.weapon_hand, dead.inventory = False, []
+    batt.ground = []
+
+    pool = loot.field_loot(batt, [dead])
+    assert pool.count(items.COIN_ITEM) == 130

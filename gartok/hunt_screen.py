@@ -155,8 +155,9 @@ class HuntScreen(Screen):
 
         text(screen, F["titleb"], "THE WILDS", (m, m - 2), T.TX)
         clock = self.guild.clock
-        yields = (f"meat: 1 kg per {hunt.HUNT_MEAT_HOURS} h hunted" if self.state.target == "meat"
-                  else "forage: mushrooms and fruit as you go")
+        y = hunt.party_yield(len(self.state.party))
+        yields = (f"meat: {y / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party" if self.state.target == "meat"
+                  else f"forage: {y:.2f}x the usual finds for the party")
         text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   {yields}",
              (m, m + 30), T.TX_MUTED)
 
@@ -234,7 +235,7 @@ class HuntScreen(Screen):
             text(screen, F["bodyb"], f"{h} h", (r.x + T.S, r.y + 8), T.BRASS if sel else T.TX)
             
             if self.state.target == "meat":
-                sub = f"~{h // hunt.HUNT_MEAT_HOURS} kg meat"
+                sub = f"~{int(h * hunt.party_yield(len(self.state.party)) // hunt.HUNT_MEAT_HOURS)} kg meat"
             else:
                 sub = "Mushrooms & Fruits"
             text(screen, F["body_sm"], sub, (r.x + T.S, r.y + 30), T.TX_MUTED)

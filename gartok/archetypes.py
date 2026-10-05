@@ -1,6 +1,7 @@
 """Archetype catalog, candidate generation, and commission constraints for recruitment.
 
-Defines the 12 core squad archetypes (LEADER, PACK MULE, TOUGH, etc.) and
+Defines the 7 squad archetypes -- roles a draft candidate can fill (LEADER, STRONG,
+TOUGH, etc.), never a racial trait that would just pick a race -- and
 provides constraint-aware candidate generation so players can spend commission
 tokens to guarantee functional squad roles without endless rerolling.
 """
@@ -8,7 +9,6 @@ tokens to guarantee functional squad roles without endless rerolling.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import items
 from .unit import Unit
 
 
@@ -21,21 +21,6 @@ class Archetype:
     style: str = "brass"
 
 
-def expected_damage(u: Unit) -> float:
-    """Expected damage output for a unit based on equipped weapon and stats."""
-    wep_name = u.equipped_weapon
-    if not wep_name:
-        count, sides = u.unarmed_damage
-        return count * ((sides + 1) / 2) + u.mod_strength
-    wep = items.get(wep_name)
-    if not wep:
-        count, sides = u.unarmed_damage
-        return count * ((sides + 1) / 2) + u.mod_strength
-    count, sides = wep.damage or (1, 2)
-    stat_mod = u.mod_dexterity if wep.finesse else u.mod_strength
-    return count * ((sides + 1) / 2) + stat_mod
-
-
 ARCHETYPES = {
     "LEADER": Archetype(
         key="LEADER",
@@ -44,12 +29,12 @@ ARCHETYPES = {
         desc="Highly charismatic (+2 mod). Critical for recruiting in taverns, bargaining, and guild morale.",
         predicate=lambda u: u.mod_charisma >= 2,
     ),
-    "PACK MULE": Archetype(
-        key="PACK MULE",
-        label="PACK MULE",
+    "STRONG": Archetype(
+        key="STRONG",
+        label="STRONG",
         style="green",
-        desc="Can carry 35+ kg. Hauls heavy armor, tools, and spoils without encumbrance penalties.",
-        predicate=lambda u: u.carry_normal >= 35,
+        desc="Powerful build (+2 Strength mod). Hits hard in melee and hauls heavy armor, tools, and spoils.",
+        predicate=lambda u: u.mod_strength >= 2,
     ),
     "TOUGH": Archetype(
         key="TOUGH",
@@ -57,13 +42,6 @@ ARCHETYPES = {
         style="green",
         desc="Massive health pool (8+ max HP). Durable frontline combatant with strong survivability.",
         predicate=lambda u: u.hp_max >= 8,
-    ),
-    "DAMAGE DEALER": Archetype(
-        key="DAMAGE DEALER",
-        label="DAMAGE DEALER",
-        style="brass",
-        desc="Heavy hitter (6+ expected damage). Deals punishing strikes in melee or at range.",
-        predicate=lambda u: expected_damage(u) >= 6,
     ),
     "NIMBLE": Archetype(
         key="NIMBLE",
@@ -93,45 +71,9 @@ ARCHETYPES = {
         desc="Perceptive mind (+2 mod). High combat initiative, mental defense, and skilled field medicine.",
         predicate=lambda u: u.mod_wisdom >= 2,
     ),
-    "FAST": Archetype(
-        key="FAST",
-        label="FAST",
-        style="green",
-        desc="Exceptional speed (7+ cells). Moves rapidly across grid encounters and controls positioning.",
-        predicate=lambda u: u.speed >= 7,
-    ),
-    "LARGE": Archetype(
-        key="LARGE",
-        label="LARGE",
-        style="muted",
-        desc="Large creature (2x2 footprint). High base hit die, expanded battlefield reach, and physical weight.",
-        predicate=lambda u: u.size == "Large",
-    ),
-    "SEES IN DARK": Archetype(
-        key="SEES IN DARK",
-        label="SEES IN DARK",
-        style="muted",
-        desc="Racial Darkvision. Operates and fights unhindered in deep darkness without needing torches.",
-        predicate=lambda u: bool(u.ability.darkvision),
-    ),
-    "MAGIC": Archetype(
-        key="MAGIC",
-        label="MAGIC",
-        style="muted",
-        desc="Arcane or natural initiate. Starts with a magic source or known spells and can read scrolls.",
-        predicate=lambda u: bool(getattr(u, "magic_source", None) or getattr(u, "spells_known", [])),
-    ),
 }
 
-INCOMPATIBLE_PAIRS = {
-    ("PACK MULE", "SEES IN DARK"),
-    ("MAGIC", "PACK MULE"),
-    ("FAST", "SEES IN DARK"),
-    ("FAST", "MAGIC"),
-    ("LARGE", "SEES IN DARK"),
-    ("LARGE", "MAGIC"),
-    ("MAGIC", "SEES IN DARK"),
-}
+INCOMPATIBLE_PAIRS: set[tuple[str, str]] = set()      # none today; kept so a future pair is one line
 
 
 def unit_archetypes(u: Unit):

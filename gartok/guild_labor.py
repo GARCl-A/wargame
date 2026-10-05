@@ -35,7 +35,7 @@ class LaborMixin:
         hours = int(hours)
         crew = [u for u in workers if u in self.roster]
         clock_hours = hours * self.work_speedup(crew)
-        events, casualties = self.pass_time(clock_hours)
+        events, casualties = self.pass_time(clock_hours, busy=crew)
         events += self._pay_shift(workers, hours, clock_hours)
         return events, casualties
 
@@ -90,7 +90,7 @@ class LaborMixin:
             unit.crafting_progress = 0
 
         clock_hours = hours * self.work_speedup([unit])
-        events, casualties = self.pass_time(clock_hours)
+        events, casualties = self.pass_time(clock_hours, busy=[unit])
 
         target_data = items.CRAFTING_RECIPES.get(unit.crafting_target or recipe, {})
         recipe_level = target_data.get("level", 1)

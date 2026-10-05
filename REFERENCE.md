@@ -60,17 +60,12 @@ Functional squad roles for candidate generation and commission tokens at the dra
 | Archetype | Role & Qualification | Incompatible With |
 |---|---|---|
 | LEADER | Highly charismatic (+2 mod). Critical for recruiting in taverns, bargaining, and guild morale. | — |
-| PACK MULE | Can carry 35+ kg. Hauls heavy armor, tools, and spoils without encumbrance penalties. | MAGIC, SEES IN DARK |
+| STRONG | Powerful build (+2 Strength mod). Hits hard in melee and hauls heavy armor, tools, and spoils. | — |
 | TOUGH | Massive health pool (8+ max HP). Durable frontline combatant with strong survivability. | — |
-| DAMAGE DEALER | Heavy hitter (6+ expected damage). Deals punishing strikes in melee or at range. | — |
 | NIMBLE | Superior dexterity (+2 mod). High evasion, accuracy with finesse weapons, and natural defense. | — |
 | RANGED | Equipped with bow, sling, or crossbow. Engages hostile targets from safe standoff distance. | — |
 | GENIUS | Brilliant intellect (+2 mod). Accelerated crafting, manual reading, and arcane research. | — |
 | WISE | Perceptive mind (+2 mod). High combat initiative, mental defense, and skilled field medicine. | — |
-| FAST | Exceptional speed (7+ cells). Moves rapidly across grid encounters and controls positioning. | MAGIC, SEES IN DARK |
-| LARGE | Large creature (2x2 footprint). High base hit die, expanded battlefield reach, and physical weight. | MAGIC, SEES IN DARK |
-| SEES IN DARK | Racial Darkvision. Operates and fights unhindered in deep darkness without needing torches. | FAST, LARGE, MAGIC, PACK MULE |
-| MAGIC | Arcane or natural initiate. Starts with a magic source or known spells and can read scrolls. | FAST, LARGE, PACK MULE, SEES IN DARK |
 
 ## Occupations
 
@@ -185,6 +180,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Cloak | 1 kg | -- |
 | Club | 1.5 kg | -- |
 | Compass | 0.2 kg | -- |
+| Copper Coin | 0.005 kg | -- |
 | Dagger | 0.5 kg | -- |
 | Deck of Cards | 0.2 kg | -- |
 | Dictionary | 2 kg | -- |
@@ -320,6 +316,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Carrier | carry up to 1 kg more gear before you stagger (not food or weapons). | -- |
 | 2 | Piecework | +20% coin from work that pays in coin. | carrier |
 | 2 | Brisk Hands | work finishes 10% faster -- you keep the time. | carrier |
+| 3 | Steady Pace | work counts as rest: you recover HP while you work, as if resting. | brisk_hands |
 | 1 | Negotiator | +1 Charisma for market buy and sell checks. | -- |
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | negotiator |
 | 2 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |

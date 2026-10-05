@@ -25,8 +25,8 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
     from gartok.guild import Guild
     random.seed(4)
     a, b = Unit("player"), Unit("player")
+    a._base_inventory, b._base_inventory = [], []
     a.gold = b.gold = 0
-    a._base_inventory = b._base_inventory = []
     for u in (a, b):
         u._derive_combat()
     guild = Guild([a, b], clock=Clock(6 * 3600))      # 06:00 day 1
@@ -123,3 +123,75 @@ def test_hunting_is_a_level_3_job_that_outlasts_the_lumber_yard():
     before = u.work_hours
     hunt.grant_haul(state)
     assert u.work_hours == before + 10                  # level 3 job still teaches a level 2 worker
+
+
+# --------------------------------------------------------------------------- #
+# Steady Pace: work counts as rest                                             #
+# --------------------------------------------------------------------------- #
+
+def _hurt_crew(with_talent):
+    from gartok import orders
+    from gartok.group import Group
+    from gartok.guild import Guild
+    random.seed(3)                                  # a unit with enough HP to be hurt
+    u = Unit("player")
+    u.hp = u.hp_max - 1
+    assert 0 < u.hp < u.hp_max
+    if with_talent:
+        u.talents["work"] += ["carrier", "brisk_hands", "steady_pace"]
+    g = Group([u], node="lumber_yard")
+    guild = Guild(None, groups=[g])
+    return guild, g, u, orders
+
+
+def test_steady_pace_heals_a_working_group_like_rest():
+    guild, g, u, orders = _hurt_crew(True)
+    g.order = orders.garrison("lumber")
+    guild.pass_time(8)
+    assert u.hp == u.hp_max
+
+
+def test_without_steady_pace_working_never_heals():
+    guild, g, u, orders = _hurt_crew(False)
+    g.order = orders.garrison("lumber")
+    guild.pass_time(16)
+    assert u.hp == u.hp_max - 1
+
+
+def test_steady_pace_does_not_heal_a_travelling_group():
+    guild, g, u, orders = _hurt_crew(True)
+    g.order = orders.Order("travel", eta=16, remaining=16, dest="road", path=())
+    guild.pass_time(16)
+    assert u.hp == u.hp_max - 1
+
+
+def test_steady_pace_sits_below_brisk_hands():
+    from gartok import talents
+    t = talents.TALENTS["steady_pace"]
+    assert (t.track, t.tier, t.requires) == ("work", 3, "brisk_hands")
+
+
+def test_a_hunting_party_does_not_rest_while_it_hunts():
+    """The hunt spends hours with the group's own order consumed; those hours still count as exertion."""
+    from gartok import campaign
+    guild, g, u, _ = _hurt_crew(False)
+    g.order = None
+    campaign.advance(guild, dt=8, busy=[u])
+    assert u.hp == u.hp_max - 1
+
+    campaign.advance(guild, dt=8)                     # the same hours idle in town do heal
+    assert u.hp == u.hp_max
+
+
+def test_steady_pace_lets_a_hunter_recover_on_the_trail():
+    from gartok import campaign
+    guild, g, u, _ = _hurt_crew(True)
+    g.order = None
+    campaign.advance(guild, dt=8, busy=[u])
+    assert u.hp == u.hp_max
+
+
+def test_a_crafting_shift_is_not_rest():
+    guild, g, u, _ = _hurt_crew(False)
+    guild.pass_time(8, busy=[u])
+    assert u.hp == u.hp_max - 1

@@ -51,7 +51,7 @@ import pygame
 
 from . import chest, data, items, magic, missions, world
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
-from .packbox import PackColumnMixin
+from .packbox import PackColumnMixin, SplitStackMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel, quest_panel
@@ -68,7 +68,7 @@ def _short(name):
     return name.split()[0][:10]
 
 
-class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
+class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_back):
@@ -82,7 +82,6 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         self.pinned = list(self.group.members)        # columns shown in BAGS, clamped to fit at draw time
         self.selected = []                   # [(unit, loc), ...]: loc is "hand"/"offhand"/"tongue"/"armor" or a pack index
         self.menu = None                     # send-to/context menu, see `_open_menu`
-        self.split_prompt = None             # {"unit","idx","name","held","amount"} while picking a split qty
         self.notice = None                   # last action's result, shown in the footer
         self.zones = []                     # [(rect, unit, "hand"|"offhand"|"tongue"|"armor"|"pack")]
         self.sources = []                  # [(rect, unit, loc)]
@@ -337,10 +336,6 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
     # ------------------------------------------------------------------ #
     # send-to / context menu                                             #
     # ------------------------------------------------------------------ #
-    def _can_split(self):
-        return (len(self.selected) == 1 and isinstance(self.selected[0][1], int)
-                and self._qty_at(*self.selected[0]) > 1)
-
     def _study_label(self, unit, target):
         verb = "stop studying" if unit.study_target == target.id else "study"
         return f"{verb} {target.name}"
@@ -445,34 +440,6 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
     # ------------------------------------------------------------------ #
     # split stack                                                        #
     # ------------------------------------------------------------------ #
-    def _open_split_prompt(self):
-        if not self._can_split():
-            self.menu = None
-            return
-        unit, idx = self.selected[0]
-        name, held = unit._base_inventory[idx]
-        self.split_prompt = {"unit": unit, "idx": idx, "name": name, "held": held,
-                             "amount": max(1, held // 2)}
-        self.menu = None
-
-    def _split_prompt_click(self, px):
-        p = self.split_prompt
-        if p is None or not p.get("rect") or not p["rect"].collidepoint(px):
-            self.split_prompt = None
-            return
-        for r, key in p["hits"]:
-            if r.collidepoint(px):
-                if key == "minus":
-                    p["amount"] = max(1, p["amount"] - 1)
-                elif key == "plus":
-                    p["amount"] = min(p["held"] - 1, p["amount"] + 1)
-                elif key == "confirm":
-                    p["unit"].split_pack(p["idx"], p["amount"])
-                    self.notice = f"Split {p['amount']} {p['name']} into its own stack."
-                    self.selected = []
-                    self.split_prompt = None
-                return
-
     # ------------------------------------------------------------------ #
     # adapters: real Unit/Group -> the plain dicts loadout_panel draws    #
     # ------------------------------------------------------------------ #
@@ -734,10 +701,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
             res = loadout_panel.send_menu(screen, F, self.menu["anchor"], self.menu["rows"], self.mouse)
             self.menu["rect"], self.menu["hits"] = res["rect"], res["hits"]
         if self.split_prompt:
-            p = self.split_prompt
-            res = loadout_panel.split_prompt(screen, F, (W // 2, H // 2), p["name"], p["amount"],
-                                             p["held"], self.mouse)
-            p["rect"], p["hits"] = res["rect"], res["hits"]
+            self._draw_split_prompt(screen, F)
 
         self.draw_sheet_modal(screen, self.fonts)
         set_pointer(self._hovering())
@@ -746,7 +710,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
         if self.menu:
             return any(r.collidepoint(self.mouse) for r, *_ in self.menu.get("hits", ()))
         if self.split_prompt:
-            return any(r.collidepoint(self.mouse) for r, _ in self.split_prompt.get("hits", ()))
+            return self._split_hovering()
         if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
             return True
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):

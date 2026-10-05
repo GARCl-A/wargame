@@ -5,7 +5,7 @@ Mixed into `guild.Guild`. `pass_time` is the only path that moves the clock
 by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 """
 
-from . import cohesion, data, economy, items, justice, missions, world
+from . import cohesion, data, economy, items, justice, missions, orders, world
 
 
 class UpkeepMixin:
@@ -21,11 +21,15 @@ class UpkeepMixin:
     # ------------------------------------------------------------------ #
     # time + daily upkeep                                                #
     # ------------------------------------------------------------------ #
-    def pass_time(self, hours):
+    def pass_time(self, hours, busy=()):
         """Advance the campaign clock and run daily upkeep for every day it
         crosses. Returns a list of events (missed meals, deaths) for the caller
         to show. This is the only path that moves the clock by hours -- battle
-        time (`clock.advance_rounds`) is seconds and skips upkeep."""
+        time (`clock.advance_rounds`) is seconds and skips upkeep.
+
+        `busy` are units doing something that spends the hours without a group
+        order carrying it (a hunt, a crafting shift, scouting the claim): they
+        do not rest meanwhile, same as a group on an order."""
         start_day = self.clock.day
         self.clock.advance_hours(hours)
         events = []
@@ -35,41 +39,44 @@ class UpkeepMixin:
             events += e
             all_casualties += c
         
-        # Passive healing: every 8h of continuous rest (not busy) heals the unit
+        # Passive healing: every 8h of continuous rest (not busy) heals the unit.
+        # Steady Pace lets a group that is working where it stands rest on the job.
         for g in self.groups:
-            if not g.busy:
-                for u in g.members:
-                    if u.hp < u.hp_max or getattr(u, "sick", False):
-                        u.consecutive_rest_hours += hours
-                        while u.consecutive_rest_hours >= 8:
-                            u.consecutive_rest_hours -= 8
-                            if getattr(u, "sick", False):
-                                if getattr(u, "treated", False):
-                                    cured = True
-                                    events.append(f"{u.name} rests and recovers from their sickness (treated).")
-                                else:
-                                    cured = data.d20() <= 5
-                                    if cured:
-                                        events.append(f"{u.name} rests and recovers from their sickness naturally.")
-                                
-                                if cured:
-                                    u.sick = False
-                                    u.treated = False
-                                    u._derive_combat()
-                                else:
-                                    u.treated = False
-                            
-                            if u.hp < u.hp_max and u.unfed_days == 0:
-                                heal = max(1, u.racial_level * u.mod_constitution)
-                                u.hp = min(u.hp_max, u.hp + heal)
-                                events.append(f"{u.name} rests and recovers {heal} HP.")
-                                
-                            if u.hp == u.hp_max and not getattr(u, "sick", False):
-                                u.consecutive_rest_hours = 0
-                                break
-            else:
-                for u in g.members:
+            working = g.busy and g.order.kind in orders.WORK_KINDS
+            for u in g.members:
+                on_the_job = working or u in busy
+                if (g.busy or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
                     u.consecutive_rest_hours = 0
+                    continue
+                if not (u.hp < u.hp_max or getattr(u, "sick", False)):
+                    continue
+                u.consecutive_rest_hours += hours
+                while u.consecutive_rest_hours >= 8:
+                    u.consecutive_rest_hours -= 8
+                    if getattr(u, "sick", False):
+                        if getattr(u, "treated", False):
+                            cured = True
+                            events.append(f"{u.name} rests and recovers from their sickness (treated).")
+                        else:
+                            cured = data.d20() <= 5
+                            if cured:
+                                events.append(f"{u.name} rests and recovers from their sickness naturally.")
+
+                        if cured:
+                            u.sick = False
+                            u.treated = False
+                            u._derive_combat()
+                        else:
+                            u.treated = False
+
+                    if u.hp < u.hp_max and u.unfed_days == 0:
+                        heal = max(1, u.racial_level * u.mod_constitution)
+                        u.hp = min(u.hp_max, u.hp + heal)
+                        events.append(f"{u.name} rests and recovers {heal} HP.")
+
+                    if u.hp == u.hp_max and not getattr(u, "sick", False):
+                        u.consecutive_rest_hours = 0
+                        break
 
         return events, all_casualties
 

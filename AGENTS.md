@@ -28,7 +28,7 @@ When the two disagree, `REFERENCE.md` wins.
   better. Systems land bit by bit.
 - **Disposable early squad.** Early mortality is very high; starters are meant
   to be lost.
-- **No guild treasury.** Money lives on the character.
+- **No guild treasury.** Money lives on the character -- as `Copper Coin` items in the pack (it weighs, splits and moves like any item).
 - **Vision is per-character.** The map is always dark; on your turn you see
   what the active unit sees.
 - **Adventure out-earns day labour.** In Gartok the risk pays: lumber is only a
@@ -39,7 +39,7 @@ When the two disagree, `REFERENCE.md` wins.
 
 | Module | Role |
 |---|---|
-| `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, pack, stack helpers) |
+| `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, pack, stack helpers; `Unit.gold` is the Copper Coin stack in the pack, 200 = 1 kg) |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant |
 | `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells`, registry in `__init__.py` |

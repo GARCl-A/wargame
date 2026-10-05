@@ -22,7 +22,11 @@ from dataclasses import dataclass
 from . import encounters, progression
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
-HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat
+HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0
+# Marginal yield of the 1st, 2nd, ... hunter: a crew of 3 is worth 1.0 (what the
+# hunt was tuned around), and each hand after that adds less until a 7th adds
+# the last bit. Applies to meat and to the forage rolls alike.
+HUNT_PARTY_YIELD = (0.5, 0.3, 0.2, 0.2, 0.15, 0.1, 0.05)
 HUNT_SHIFT_HOURS = (4, 8, 12, 16)   # lengths offered, like the lumber yard
 MEAT_ITEM = "Meat"
 HUNT_LEVEL = 3                   # the wilds' job level: real risk, so it keeps
@@ -34,7 +38,8 @@ class HuntState:
     party: list                    # the hunters (roster Units); trimmed to survivors after a fight
     node: object                   # the world node the hunt is at
     hours_left: int                # daylight still to spend
-    hours_hunted: int = 0          # hours actually spent (drives the meat haul + work XP)
+    hours_hunted: int = 0          # hours actually spent (drives work XP)
+    yield_hours: float = 0.0       # hours weighted by the party's yield (drives the meat haul)
     fights: int = 0                # ambushes fought so far, for the tally line
     target: str = "meat"           # "meat" or "shrooms"
     shrooms_found: int = 0
@@ -43,8 +48,13 @@ class HuntState:
     @property
     def meat(self):
         if self.target == "meat":
-            return self.hours_hunted // HUNT_MEAT_HOURS
+            return int(self.yield_hours // HUNT_MEAT_HOURS)
         return 0
+
+
+def party_yield(size):
+    """Total yield of `size` hunters, 1.0 being a crew of three (see `HUNT_PARTY_YIELD`)."""
+    return sum(HUNT_PARTY_YIELD[:max(0, size)])
 
 
 def hunt_stretch(state, rng=random):
@@ -56,14 +66,16 @@ def hunt_stretch(state, rng=random):
     if any(u.has_talent("woodland_scout") for u in state.party):
         chance /= 2.0
 
+    yield_now = party_yield(len(state.party))
     while state.hours_left > 0:
         state.hours_left -= 1
         state.hours_hunted += 1
+        state.yield_hours += yield_now
         elapsed += 1
         if state.target == "shrooms":
-            if rng.random() < 0.10:
+            if rng.random() < 0.10 * yield_now:
                 state.shrooms_found += 1
-            if rng.random() < 0.15:
+            if rng.random() < 0.15 * yield_now:
                 state.fruit_found += 1
         if rng.random() < chance:
             return elapsed, True

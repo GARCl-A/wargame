@@ -56,6 +56,7 @@ INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | {"idle"}
+WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds
 

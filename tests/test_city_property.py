@@ -351,7 +351,9 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
 
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 50)
+    purse = p.gold
     p._base_inventory = packed(["Rope"])
+    p.gold = purse
     s = CityPropertyScreen(ui_fonts(), guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))
     s.mouse = (0, 0)

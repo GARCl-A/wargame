@@ -59,3 +59,53 @@ class PackColumnMixin:
         return items.item_tag(item)
 
 
+class SplitStackMixin:
+    """The "split stack" quantity picker, shared by the gear and group screens:
+    peel part of a pack stack (a purse of coins, a bundle of rations) into its own
+    stack so that part can be moved or locked on its own. Needs `self.selected`,
+    `self.menu`, `self.notice` and `DragSelectMixin._qty_at` from the host."""
+
+    split_prompt = None              # {"unit","idx","name","held","amount"} while picking a quantity
+
+    def _can_split(self):
+        return (len(self.selected) == 1 and isinstance(self.selected[0][1], int)
+                and self._qty_at(*self.selected[0]) > 1)
+
+    def _open_split_prompt(self):
+        if not self._can_split():
+            self.menu = None
+            return
+        unit, idx = self.selected[0]
+        name, held = unit._base_inventory[idx]
+        self.split_prompt = {"unit": unit, "idx": idx, "name": name, "held": held,
+                             "amount": max(1, held // 2)}
+        self.menu = None
+
+    def _split_prompt_click(self, px):
+        p = self.split_prompt
+        if p is None or not p.get("rect") or not p["rect"].collidepoint(px):
+            self.split_prompt = None
+            return
+        for r, key in p["hits"]:
+            if r.collidepoint(px):
+                if key == "minus":
+                    p["amount"] = max(1, p["amount"] - 1)
+                elif key == "plus":
+                    p["amount"] = min(p["held"] - 1, p["amount"] + 1)
+                elif key == "confirm":
+                    p["unit"].split_pack(p["idx"], p["amount"])
+                    self.notice = f"Split {p['amount']} {p['name']} into its own stack."
+                    self.selected = []
+                    self.split_prompt = None
+                return
+
+    def _draw_split_prompt(self, screen, F):
+        from .ui import loadout_panel
+        p = self.split_prompt
+        W, H = screen.get_size()
+        res = loadout_panel.split_prompt(screen, F, (W // 2, H // 2), p["name"], p["amount"],
+                                         p["held"], self.mouse)
+        p["rect"], p["hits"] = res["rect"], res["hits"]
+
+    def _split_hovering(self):
+        return any(r.collidepoint(self.mouse) for r, _ in self.split_prompt.get("hits", ()))

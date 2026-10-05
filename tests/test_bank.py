@@ -184,8 +184,8 @@ def test_clicking_rent_then_a_pack_item_onto_the_chest_stashes_it():
 
     random.seed(5)
     p = Unit("player")
-    p.gold = 200
     p._base_inventory = packed(["Rope"])
+    p.gold = 200
     guild = Guild([p])
     s = BankScreen(None, guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))

@@ -42,7 +42,9 @@ The generator's exact order:
    racial ability and age band.
 3. Roll **occupation** (d100) → set the starting weapon and one starting item.
 4. Roll **alignment** (d100).
-5. Roll **starting gold**: **5d10 copper coins**.
+5. Roll **starting gold**: **5d10 copper coins**, carried as a stack of
+   `Copper Coin` items in the pack (200 coins weigh 1 kg; `Unit.gold` is their
+   count). Beasts carry none.
 6. The character starts at **Level 0, XP 1000**. 🟢 *(the meaning of that
    progression did not survive — see §9 and the Progression section.)*
 
@@ -53,18 +55,13 @@ A new campaign begins at the **Draft** (`DraftScreen`):
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
 - Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) for that round's candidate pool:
   - **LEADER**: Charisma mod $\ge +2$. Essential for tavern recruitment and haggling.
-  - **PACK MULE**: Normal carry $\ge 35\text{ kg}$. Hauls heavy armor, tools, and spoils without encumbrance.
+  - **STRONG**: Strength mod $\ge +2$. Hits hard in melee and hauls heavy armor, tools, and spoils.
   - **TOUGH**: Max HP $\ge 8$. Durable frontline combatant.
-  - **DAMAGE DEALER**: Expected damage $\ge 6.0$. Heavy physical hitter in melee or at range.
   - **NIMBLE**: Dexterity mod $\ge +2$. High evasion, natural defense, and finesse accuracy.
   - **RANGED**: Starts equipped with a ranged weapon (bow, sling, or crossbow).
   - **GENIUS**: Intelligence mod $\ge +2$. Fast crafting, manual reading, and research.
   - **WISE**: Wisdom mod $\ge +2$. High initiative, mental defense, and skilled field medicine.
-  - **FAST**: Speed $\ge 7\text{ cells}$. High grid mobility.
-  - **LARGE**: Large size ($2\times 2$ footprint). Heavy reach, natural hit die, and carry capacity.
-  - **SEES IN DARK**: Racial Darkvision. Fights unhindered in darkness without torches.
-  - **MAGIC**: Arcane or nature initiate with known spells.
-- **Incompatible combinations** (e.g. `PACK MULE` + `SEES IN DARK`, `MAGIC` + `PACK MULE`, `FAST` + `SEES IN DARK`, `LARGE` + `MAGIC`) are prohibited by the commission desk.
+- An archetype is a **role**, never a racial trait that would just pick a race: FAST, LARGE and SEES IN DARK were dropped for that reason (only Centaur, or Dwarf/Hobgoblin, ever matched). MAGIC went for the same reason (only Kobold and Gnome start as casters). Each remaining label needs at least 3 races to cover half its candidates, and each attribute has one label at most (Pack Mule and Damage Dealer were both just Strength, so they became STRONG). `tests/test_draft_commission.py` checks the races.
 - Commissioned candidates highlight their guaranteed tags with a star (`★`) and brass border.
 - Once the three picks are locked, the draft moves into **Identity** (Guild Name, Banner Color, and Banner Icon), followed by picking the guild's **Leader** (`Guild.leader`).
 
@@ -1001,8 +998,12 @@ The `wilds` node (`kind = "wilds"`). Its first activity is **Hunt**: `hunt.py` +
 with a per-hour **ambush** chance (`hunt.AMBUSH_CHANCE_PER_HOUR`). An ambush drops
 the party into a **lethal** fight against a scaled pack (`encounters.roll_pack`,
 mean level 0–4). Win it → field loot, and if daylight is left you may keep
-hunting. Meat accrues at 1 kg per 2 hours, split among the surviving hunters at
-the end; the hours bank **work** XP.
+hunting. Meat accrues at 1 kg per 2 hours **at a party yield of 1.0**, split among
+the surviving hunters at the end; the hours bank **work** XP. Every hunter adds to
+the yield with diminishing returns (`hunt.HUNT_PARTY_YIELD`: 0.5, 0.3, 0.2, 0.2,
+0.15, 0.1, 0.05 -- a crew of three is 1.0, a seventh hand is the last that helps),
+and the same factor scales the forage odds. The yield follows the survivors, so
+losing a hunter to an ambush lowers it for the rest of the trip.
 
 ### Market and haggling 🟡
 

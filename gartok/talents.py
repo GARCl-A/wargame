@@ -26,6 +26,7 @@ exactly one consumer that reads it back:
     food_haggle       Unit.price_mods (economy)        --
     coin_gain         Guild.work_shift                 --
     activity_speed    Guild.work_shift                 --
+    work_rest         Guild.pass_time (passive heal)   --
     recruit_cha       recruit.convince                 --
     craft_bonus       Unit.progress_crafting           --
 
@@ -147,6 +148,11 @@ _LIST = [
     Talent("brisk_hands", "work", 2, "Brisk Hands",
            "work finishes 10% faster -- you keep the time.", requires="carrier",
            effects=(Effect("activity_speed", ACTIVITY_SPEEDUP),), icon="action/sprint"),
+
+    Talent("steady_pace", "work", 3, "Steady Pace",
+           "work counts as rest: you recover HP while you work, as if resting.",
+           requires="brisk_hands",
+           effects=(Effect("work_rest", 1),), icon="body/knee-bandage"),
 
     Talent("negotiator", "work", 1, "Negotiator",
            "+1 Charisma for market buy and sell checks.",

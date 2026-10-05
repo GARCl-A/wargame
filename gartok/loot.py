@@ -1,8 +1,9 @@
 """What the party can carry off after a won fight.
 
 The loot pool is everything left on the battlefield once the enemies are down:
-the gear each defeated enemy still had on them, the gear of any of the party's
-own dead (their body is right there), and loose objects on the ground -- weapons
+the gear each defeated enemy still had on them, everything the party's own dead
+carried -- purse included, the coins being items too (their body is right there;
+an enemy's purse is not looted) -- and loose objects on the ground -- weapons
 that were dropped or thrown, torches. `LootScreen` lets the survivors take what
 fits under `carry_max`; the rest is left behind.
 
@@ -62,6 +63,8 @@ def field_loot(battle, fallen_combatants, rng=random):
             continue                      # ran off the map with their kit
         pool += carried_by(u)
         char = getattr(u, "char", None)
+        if char is not None and u in fallen_combatants:
+            pool += [items.COIN_ITEM] * char.gold
         drop = char.race.get("drop_item") if char is not None else None
         if drop and rng.random() < char.race.get("drop_chance", 0.0):
             pool.append(drop)

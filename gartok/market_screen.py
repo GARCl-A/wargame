@@ -168,7 +168,8 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
             "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
-                    for idx, (name, qty) in enumerate(unit._base_inventory)],
+                    for idx, (name, qty) in enumerate(unit._base_inventory)
+                    if name != items.COIN_ITEM],         # the purse is pooled for the visit
         }
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)

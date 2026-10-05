@@ -10,7 +10,7 @@ leave the guild taking what their alignment lets them. See RULES.md, "Fame and
 group slots".
 """
 
-from . import data
+from . import data, items
 
 NOTICE_DAYS = 7
 
@@ -35,7 +35,8 @@ def depart(guild, unit):
     if law not in ("Lawful", "Chaotic"):
         law = "Neutral"
     left_gold = 0 if law == "Chaotic" else unit.gold
-    left_items = list(unit._base_inventory) if law == "Lawful" else []
+    left_items = ([e for e in unit._base_inventory if e[0] != items.COIN_ITEM]   # the purse is `left_gold`
+                  if law == "Lawful" else [])
     leader = group.leader if group is not None else None
     if leader is not None and leader is not unit:
         for entry in left_items:

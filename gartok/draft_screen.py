@@ -3,7 +3,7 @@ then naming the guild and picking its banner, then choosing which of the
 three leads it.
 
 Players have 3 Commission Tokens across the entire squad draft to tailor candidates
-into essential archetypes (Leaders, Pack Mules, Heavy Hitters, etc.) via a dedicated
+into essential archetypes (Leaders, Strong, Tough, etc.) via a dedicated
 modal, eliminating the slot-machine reroll loop while maintaining tabletop emergent variety.
 
 `on_done(picks, leader, name, banner_color, banner_icon)` -- the "identity"

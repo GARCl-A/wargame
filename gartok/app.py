@@ -617,7 +617,7 @@ class App:
         sync with it, and anything that comes due for another group mid-hunt
         is queued in `_pending` (drained by `_after_activity` once the hunt
         wraps up) instead of silently lost."""
-        result = campaign.advance(self.guild, dt=hours)
+        result = campaign.advance(self.guild, dt=hours, busy=self._hunt.party)
         self._pending += result.pending
         return result.events
 

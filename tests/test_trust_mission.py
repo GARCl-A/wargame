@@ -148,6 +148,7 @@ def test_turning_in_early_does_not_earn_the_deed_without_the_economic_three():
 
 def test_opening_the_sealed_chest_early_fails_the_mission_and_marks_a_crime():
     guild, g, signer = _guild_with_signer()
+    signer.set_base_attribute("dexterity", 14)          # the chest and purse weigh the signer down
     m = missions.accept(guild, signer, missions.TRUST_CHEST)
     from tests.helpers import fixed_d20
     with fixed_d20(data.CHEST_DC):

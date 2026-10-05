@@ -241,7 +241,7 @@ class TickResult:
     hungry: list = field(default_factory=list)     # characters who are starving
 
 
-def advance(guild, dt=None):
+def advance(guild, dt=None, busy=()):
     """Jump the world forward, running daily upkeep for every day crossed, then
     resolving whichever group(s) reached their order in that span.
     `travel`/`work` orders resolve silently here; every other kind comes back
@@ -273,7 +273,7 @@ def advance(guild, dt=None):
             return TickResult(hungry=[u for u in guild.roster if u.hunger_level > 0])
         dt = min(g.order.remaining for g in active)
 
-    events, casualties = guild.pass_time(dt)
+    events, casualties = guild.pass_time(dt, busy=busy)
     if forced:
         events += guild.eat_now_pass()
     

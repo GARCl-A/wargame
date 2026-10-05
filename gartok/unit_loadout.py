@@ -251,6 +251,21 @@ class LoadoutMixin:
         return min(self.locked_items.get(name, 0), self.count_of(name))
 
     @property
+    def gold(self):
+        """Copper coins carried: the size of the "Copper Coin" stacks in the pack,
+        so money is an ordinary item -- it weighs, splits and moves like one."""
+        return self.count_of(items.COIN_ITEM)
+
+    @gold.setter
+    def gold(self, amount):
+        amount = max(0, int(amount))
+        held = self.gold
+        if amount > held:
+            self.give_to_pack(items.COIN_ITEM, amount - held)
+        while held > amount:                      # a split purse spans several stacks
+            held -= self.remove_named(items.COIN_ITEM, held - amount)
+
+    @property
     def inventory(self):
         """Flat / active view of the character's pack items as ItemInstances."""
         return self._base_inventory
@@ -298,7 +313,8 @@ def flatten_pack(unit):
     """`unit`'s pack as a flat `list[str]`, one entry per physical item --
     only for the battle boundary (`Combatant.inventory` stays flat; nothing
     in a fight needs stacked display, just per-charge checks)."""
-    return [name for name, qty in unit._base_inventory for _ in range(qty)]
+    return [name for name, qty in unit._base_inventory
+            if name != items.COIN_ITEM for _ in range(qty)]
 
 
 def distribute_load(units):
@@ -311,7 +327,7 @@ def distribute_load(units):
         keep, move = [], []
         for it in u._base_inventory:
             name, qty = it[0], it[1]
-            locked = u.locked_of(name)
+            locked = qty if name == items.COIN_ITEM else u.locked_of(name)     # a purse stays with its owner
             if locked:
                 if isinstance(it, items.ItemInstance):
                     locked_inst = it.copy()

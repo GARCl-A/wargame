@@ -21,19 +21,19 @@ Estimated from the descriptions, not the code; "verify" = check before committin
 ## 3. Talents
 
 - [x] Constitution talent under Hardy: Recovery, heal 1 HP after combat (ease 4 · impact 2)
-- [ ] Work talent, level 3: work counts as rest, heals HP while working (ease 3 · impact 3)
+- [x] Work talent, level 3 (Steady Pace, under Brisk Hands): work counts as rest (ease 3 · impact 3)
 
 ## 4. Economy and world activities
 
 - [x] Verify tavern study cost is actually charged (ease 4 · impact 4) — students paid, but a broke group sat there forever; now released when nobody can pay, and non-students no longer get a free room meal
-- [ ] Hunt/forage cost should scale with party size like the lumberyard (ease 3 · impact 3) — re-run economy_sim.py
+- [x] Hunt/forage yield scales with party size, diminishing returns (3 hunters = 1.0, saturates at 7) (ease 3 · impact 3)
 - [x] No way to leave The Wilds once inside (ease 3 · impact 4) — the hunt setup screen had no back button; added LEAVE
-- [ ] Spending commission on "Pack Mule" forces the Goliath to return (ease 3 · impact 3) — fix the side effect, not the item
+- [x] Pack Mule commission no longer forces a Goliath: Pack Mule and Damage Dealer merged into one strength label, STRONG; FAST, LARGE, SEES IN DARK and MAGIC removed (ease 3 · impact 3)
 
 ## 5. Inventory and group management
 
 - [x] "Manage gear" limited to the selected group (ease 3 · impact 4) — closes item transfers between groups in different places
-- [ ] Coins as a manageable inventory item (ease 2 · impact 3) — money lives on the character; save/weight/transfer impact
+- [x] Coins as a real inventory item: Copper Coin stack, 200 per kg, split and move in the gear screens (ease 2 · impact 3)
 
 ## Suggested order
 

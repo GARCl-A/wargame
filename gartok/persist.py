@@ -85,7 +85,6 @@ def unit_to_dict(u):
         "race": u.race["name"],
         "occupation": u.occupation["name"],
         "alignment": u.alignment,
-        "gold": u.gold,                          # copper coins carried by the member
         "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
         "sick": getattr(u, "sick", False),       # food poisoning

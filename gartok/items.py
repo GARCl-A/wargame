@@ -345,6 +345,7 @@ _register(ItemDef(id="paper", name="Paper", type=ItemType.MATERIAL, rarity=ItemR
 _register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=15))
 _register(ItemDef(id="bear_trap", name="Bear Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=3.0, price=35))
 _register(ItemDef(id="alarm_trap", name="Alarm Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=1.0, price=45))
+_register(ItemDef(id="copper_coin", name="Copper Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=1))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
 _register(ItemDef(id="sack", name="Sack", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=0.3, price=2))
 _register(ItemDef(id="bucket", name="Bucket", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=1.0, price=2))
@@ -588,6 +589,7 @@ BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
 # --------------------------------------------------------------------------- #
 
 TORCH_ITEM = "Torch"
+COIN_ITEM = "Copper Coin"      # `Unit.gold` is the count of these in the pack; 200 weigh 1 kg
 LANTERN_ITEM = "Lantern"
 AMMO_ITEM = "Quiver"
 FIRST_AID_ITEM = "First Aid Kit"
