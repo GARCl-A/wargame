@@ -97,7 +97,7 @@ UNARMED_ATTACK = {
 # Falling, stabilizing and death  (designed for the wargame)                   #
 # --------------------------------------------------------------------------- #
 
-DYING_TURNS = 3              # dying unit rolls its death save on its 3rd own turn
+DYING_TURNS = 4              # dying unit rolls its death save on its 4th own turn (each hit on it adds one)
 DEATH_SAVE_MIN = 11         # d20 >= this survives (11-20 = 50%)
 FIRST_AID_DC = 10          # first-aid kit: d20 + mod Wisdom vs this
 AUTOMATON_REPAIR_DC = 15   # repairing a "broken" automaton: d20 + mod Intelligence vs this

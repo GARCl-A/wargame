@@ -108,6 +108,7 @@ def _carry_forward(member, combatant):
         member.hp = 1
     else:
         member.hp = combatant.hp
+    member.hp = min(member.hp_max, member.hp + member.talent_bonus("post_combat_heal"))
 
 
 def absorb_battle(guild, squad, battle, node=None, arena_offer=None):

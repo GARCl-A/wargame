@@ -6,8 +6,9 @@ palette, not a free picker -- named like a heraldry tincture list, distinct
 enough from the enemy red to stay readable.
 
 `set_player_color` is called once when a guild is created or loaded (`app.py`),
-not per frame. It deliberately does not touch the battle board's player/enemy
-colour-coding (`board_style`): that is a readability cue, not an identity.
+not per frame. The battle board keeps its fixed player/enemy colours
+(`board_style`) for the token disc and cells; the banner colour only rings the
+player's tokens there.
 """
 
 BANNER_COLORS = [

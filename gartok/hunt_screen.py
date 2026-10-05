@@ -153,8 +153,9 @@ class HuntScreen(Screen):
 
         text(screen, F["titleb"], "THE WILDS", (m, m - 2), T.TX)
         clock = self.guild.clock
-        text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   "
-             f"meat: 1 kg per {hunt.HUNT_MEAT_HOURS} h hunted",
+        yields = (f"meat: 1 kg per {hunt.HUNT_MEAT_HOURS} h hunted" if self.state.target == "meat"
+                  else "forage: mushrooms and fruit as you go")
+        text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   {yields}",
              (m, m + 30), T.TX_MUTED)
 
         self._draw_party(screen, m + 72)
@@ -247,8 +248,13 @@ class HuntScreen(Screen):
         m = T.S * 3
         w = screen.get_width() - 2 * m
         top = section(screen, F, "THE HUNT GOES ON", m, top, w)
+        if self.state.target == "meat":
+            tally = f"{self.state.meat} kg of meat so far."
+        else:
+            tally = (f"{self.state.shrooms_found} mushroom(s) and "
+                     f"{self.state.fruit_found} fruit(s) so far.")
         text(screen, F["body"], f"Pack driven off. {self.state.hours_left} h of daylight left, "
-             f"{self.state.meat} kg of meat so far.", (m, top), T.TX_MUTED)
+             f"{tally}", (m, top), T.TX_MUTED)
         top += 24
         self._draw_events(screen, top)
 
@@ -258,7 +264,7 @@ class HuntScreen(Screen):
         w = screen.get_width() - 2 * m
         top = section(screen, F, "BACK FROM THE WILDS", m, top, w)
         for ln in self.result or []:
-            text(screen, F["body_sm"], ln, (m, top), T.GREEN if "meat" in ln else T.BRASS)
+            text(screen, F["body_sm"], ln, (m, top), T.GREEN if ("meat" in ln or "bring back" in ln) else T.BRASS)
             top += 16
         top += 8
         self._draw_events(screen, top)

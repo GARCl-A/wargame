@@ -161,7 +161,7 @@ class UpkeepMixin:
             if g.order and g.order.kind == "garrison" and g.order.job == "study"
             and world.node(g.node).garrison_job == "study"
             for u in g.members
-            if u.gold >= economy.TAVERN_STUDY_COST_PER_DAY
+            if u.study_target and u.gold >= economy.TAVERN_STUDY_COST_PER_DAY
         }
 
         # Everyone eats from their own pack first (a full pass), so a hungry mate

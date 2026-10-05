@@ -173,21 +173,22 @@ def test_downed_enters_dying_not_dead():
     assert d.hp == 0 and d.death_clock == 0
 
 
-def test_death_save_survives_on_third_turn():
+def test_death_save_survives_on_last_turn():
     batt, a, d = _melee_battle()
     d.go_down(batt.log)
     with fixed_d20(data.DEATH_SAVE_MIN):              # exactly clears the save
-        batt._resolve_dying_turn(d); assert d.dying and d.death_clock == 1
-        batt._resolve_dying_turn(d); assert d.dying and d.death_clock == 2
-        batt._resolve_dying_turn(d); assert d.stable and d.survived
+        batt.tick_dying(d); assert d.dying and d.death_clock == 1
+        batt.tick_dying(d); assert d.dying and d.death_clock == 2
+        batt.tick_dying(d); assert d.dying and d.death_clock == 3
+        batt.tick_dying(d); assert d.stable and d.survived
 
 
 def test_death_save_can_kill():
     batt, a, d = _melee_battle()
     d.go_down(batt.log)
     with fixed_d20(data.DEATH_SAVE_MIN - 1):          # one short -> dies
-        for _ in range(3):
-            batt._resolve_dying_turn(d)
+        for _ in range(data.DYING_TURNS):
+            batt.tick_dying(d)
     assert d.dead and not d.survived
 
 
@@ -306,7 +307,7 @@ def test_win_waits_for_dying_allies_to_resolve():
     assert batt._mopup_open
     with fixed_d20(data.DEATH_SAVE_MIN):              # the dying ally pulls through
         for _ in range(data.DYING_TURNS):
-            batt._resolve_dying_turn(a)
+            batt.tick_dying(a)
     assert a.stable
     assert batt._check_winner() == "player"
 
@@ -567,3 +568,39 @@ def test_stabilized_ally_logged_on_victory():
     assert batt._check_winner() == "player"
     assert any("was stabilized and survived unconscious" in line for line in batt.log_lines)
 
+
+# --------------------------------------------------------------------------- #
+# dying: a 4-turn clock, blows tick it                                         #
+# --------------------------------------------------------------------------- #
+
+def test_the_death_clock_runs_four_turns():
+    assert data.DYING_TURNS == 4
+
+
+def test_a_hit_on_a_dying_unit_ticks_its_clock_instead_of_killing_it():
+    batt, a, d = _melee_battle()
+    d.go_down(batt.log)
+    a.ap = 2
+    with fixed_d20(20):
+        actions.ATTACK.execute(batt, a, d)
+    assert d.dying and d.death_clock == 1
+
+
+def test_enough_blows_on_a_dying_unit_force_its_death_save():
+    batt, a, d = _melee_battle()
+    d.go_down(batt.log)
+    with fixed_d20(data.DEATH_SAVE_MIN - 1):          # the save is failed
+        for _ in range(data.DYING_TURNS):
+            a.ap = 2
+            actions.ATTACK.execute(batt, a, d)
+    assert d.dead
+
+
+def test_good_ai_does_not_walk_to_an_already_stable_ally():
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    mate = _recruit(batt)
+    mate.pos = (2, 2)
+    mate.status = "stable"
+    a.alignment = "Lawful and Good"
+    assert ai._ally_to_help(batt, a) is None

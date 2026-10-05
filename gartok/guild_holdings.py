@@ -57,6 +57,10 @@ class HoldingsMixin:
                 if not any(u.study_target for u in g.members):
                     g.order = None
                     events.append(f"{node.name}: studies are over -- rooms released.")
+                elif not any(u.study_target and u.gold >= economy.TAVERN_STUDY_COST_PER_DAY
+                             for u in g.members):
+                    g.order = None
+                    events.append(f"{node.name}: no one can pay for another night -- rooms released.")
                 continue
 
             item = economy.GARRISON_JOBS.get(g.order.job)

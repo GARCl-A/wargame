@@ -16,6 +16,7 @@ exactly one consumer that reads it back:
     melee_reach       Combatant.attack_range           --
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
+    post_combat_heal  campaign._carry_forward          --
     ac                Unit._derive_ac                  --
     mental_defense    Unit._derive_ac                  --
     initiative        Combatant.initiative_bonus       --
@@ -119,6 +120,9 @@ _LIST = [
     Talent("hardy", "combat", 2, "Hardy",
            "+1 max HP for every Hit Die you have.", requires="tough",
            effects=(Effect("hp_per_hd", 1),), icon="body/heart-inside"),
+    Talent("recovery", "combat", 3, "Recovery",
+           "heal 1 HP after every fight you survive.", requires="hardy",
+           effects=(Effect("post_combat_heal", 1),), icon="body/arm-bandage"),
     Talent("bulwark", "combat", 2, "Bulwark", "+1 AC.", requires="tough",
            effects=(Effect("ac", 1),), icon="body/surrounded-shield"),
 

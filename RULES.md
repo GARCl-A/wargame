@@ -495,9 +495,10 @@ victory, is not an AI target, does not block or occupy a path.
 counts **its own turns** on the initiative. On those turns it does nothing but
 run the clock.
 
-**Death clock.** On the unit's **3rd turn** down: a **death save** — roll `d20`,
+**Death clock.** On the unit's **4th turn** down: a **death save** — roll `d20`,
 **11–20 lives** (50%). Fail → `dead`. Pass → `stable`. The clock fires once, on
-the 3rd turn; every time a unit goes from `up`/`stable` to `dying` it restarts.
+the 4th tick; every time a unit goes from `up`/`stable` to `dying` it restarts.
+Each **hit that lands on a dying body** counts as one more tick (see below).
 
 **Stabilize (ally, empty hands).** 1-point action; an adjacent `dying` ally.
 Triggers **one extra death save on the spot** (`d20`, 11–20). Success → `stable`.
@@ -513,7 +514,8 @@ has 10 charges and is **persistent** — once empty, it is discarded, and a new 
 must be purchased from the Market.
 
 **Coup de grace.** A normal attack (melee or ranged) may target a downed body:
-- `dying` target → the hit **kills instantly** (`dead`), no damage roll;
+- `dying` target → no damage roll; the hit **ticks the death clock once**, so
+  finishing someone off takes several blows (the 4th tick is the death save);
 - `stable` target → the hit deals normal damage, the unit **returns to `dying`**
   and the clock restarts.
 
@@ -732,8 +734,8 @@ Action in `actions.py` (the `Flee` class). For **both sides** — player and AI.
 **AI behaviour by alignment** — alignment tempers the AI's edges, mostly on the
 moral axis:
 
-- **Evil:** delivers the **coup de grace** to an adjacent downed enemy (kills the
-  `dying` on the spot, denies the player a stabilize) before fighting on. Only in
+- **Evil:** delivers the **coup de grace** to an adjacent downed enemy (hammers
+  the `dying` clock, spending its actions to deny the player a stabilize) before fighting on. Only in
   a **lethal** fight — in the arena it just knocks out.
 - **Good:** **stabilizes** an adjacent downed ally before anything else and, when
   it flees, drags the wounded along.

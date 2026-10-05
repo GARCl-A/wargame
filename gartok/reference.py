@@ -190,8 +190,8 @@ def _factions():
 
 def _constants():
     rows = [
-        ("Death save", f"d20 >= {data.DEATH_SAVE_MIN}, on the {data.DYING_TURNS}rd "
-         "turn while dying"),
+        ("Death save", f"d20 >= {data.DEATH_SAVE_MIN}, on turn "
+         f"{data.DYING_TURNS} while dying (each hit on the body is one more turn)"),
         ("First-aid DC", f"d20 + WIS mod vs {data.FIRST_AID_DC}"),
         ("Automaton repair DC", f"d20 + INT mod vs {data.AUTOMATON_REPAIR_DC}"),
         ("First-aid kit charges", data.FIRST_AID_CHARGES),

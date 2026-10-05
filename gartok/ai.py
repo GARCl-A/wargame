@@ -159,7 +159,7 @@ def _recover_torch(battle, unit):
 
 
 def _finish_off(battle, unit):
-    """A downed enemy body this unit could hit right now -- dying (an instakill)
+    """A downed enemy body this unit could hit right now -- dying (each blow ticks its death clock)
     before merely stable, nearest first. Only when the fight is lethal and the
     unit is of evil bent."""
     if not battle.lethal or _axes(unit)[1] >= 0:
@@ -211,8 +211,9 @@ def _ally_to_help(battle, unit):
                 if actions.FIRST_AID.can(battle, unit, a) or actions.STABILIZE.can(battle, unit, a)), None)
     if adj:
         return adj
-    # Else nearest downed ally (not dead)
-    bodies = sorted((u for u in battle.units if u.team == unit.team and u.downed and not u.dead),
+    # Else nearest ally still savable -- a stable one is already saved, and
+    # walking to it would leave a good unit idling beside it instead of fighting
+    bodies = sorted((u for u in battle.units if u.team == unit.team and (u.dying or u.broken)),
                     key=lambda u: battle.units_distance(unit, u))
     return bodies[0] if bodies else None
 

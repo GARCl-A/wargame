@@ -317,6 +317,7 @@ class SquadScreen(SheetModalMixin, Screen):
         ch = {
             "name": unit.name,
             "race": unit.race["name"],
+            "portrait_id": unit.portrait_id,
             "occ": unit.occupation["name"],
             "hp": unit.hp_max,
             "hp_max": unit.hp_max,

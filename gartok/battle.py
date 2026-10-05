@@ -565,7 +565,7 @@ class Battle:
         unit.death_clock = 0
         self.log(f"{unit.name} is back online (1 HP).")
 
-    def _resolve_dying_turn(self, unit):
+    def tick_dying(self, unit):
         """The dying unit's turn: tick the counter, roll the death save on the DYING_TURNS-th."""
         unit.death_clock += 1
         if unit.death_clock >= data.DYING_TURNS:
@@ -609,7 +609,7 @@ class Battle:
                 self.log(f"--- Round {self.round_no} ---")
             u = self.active
             if u.status == "dying":
-                self._resolve_dying_turn(u)
+                self.tick_dying(u)
                 if self._check_winner():
                     self.log(f"*** Victory: {self.winner} ***")
                     return

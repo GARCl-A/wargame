@@ -510,7 +510,7 @@ class MapScreen(Screen):
         """The activities on offer in the wilds -- (button key, label, one-liner).
         Just Hunt for now; foraging and the like slot in here later."""
         return [("hunt", "GO HUNTING",
-                 "spend the day for meat  ·  a pack may find you first")]
+                 "spend the day hunting or foraging  ·  a pack may find you first")]
 
     def _inspector_content(self, g, here):
         if self._group_blocked(g):

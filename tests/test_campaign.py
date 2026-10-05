@@ -445,3 +445,37 @@ def test_absorb_battle_tracks_leveled_up_survivors():
     out = campaign.absorb_battle(guild, [u], battle)
     assert u.combat_level == 2
     assert out.leveled_up == [u]
+
+
+def _recovery_fight(with_talent, hp_left):
+    from gartok import campaign
+    from gartok.guild import Guild
+    random.seed(2)
+    member = Unit("player")
+    if with_talent:
+        member.talents["combat"] += ["tough", "hardy", "recovery"]
+    squad = [member]
+    guild = Guild(list(squad))
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    battle.round_no = 1
+    battle.player_units[0].status = "up"
+    battle.player_units[0].hp = hp_left
+    campaign.absorb_battle(guild, squad, battle)
+    return member
+
+
+def test_recovery_heals_one_hp_after_a_fight():
+    assert _recovery_fight(True, 1).hp == 2
+    assert _recovery_fight(False, 1).hp == 1
+
+
+def test_recovery_never_overheals():
+    m = _recovery_fight(True, Unit("player").hp_max)
+    assert m.hp == m.hp_max
+
+
+def test_recovery_sits_below_hardy():
+    from gartok import talents
+    t = talents.TALENTS["recovery"]
+    assert (t.track, t.tier, t.requires) == ("combat", 3, "hardy")

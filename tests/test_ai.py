@@ -62,11 +62,13 @@ def test_evil_ai_gives_a_downed_enemy_the_coup_de_grace():
     d.alignment = "Chaotic and Evil"
     a.go_down(batt.log)                              # the player is dying, adjacent to d
     assert a.dying
+    mate = _recruit(batt)                            # keeps the fight going
+    mate.pos = (0, 0)
     d.ap = 2
     batt.turn_idx = batt.order.index(d)
-    with fixed_d20(20):                              # the finishing blow connects
+    with fixed_d20(20):                              # every blow connects
         ai.take_turn(batt, d)
-    assert a.dead
+    assert a.dying and a.death_clock >= 2            # two actions, two ticks -- not an instant kill
 
 
 def test_neutral_ai_ignores_a_downed_enemy():

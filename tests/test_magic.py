@@ -349,3 +349,46 @@ def test_can_study_spell_requires_matching_affinity_and_unlearned():
     # Already known spell cannot be studied again
     u.spells_known.append("magic_missile")
     assert not magic.can_study_spell(u, missile)
+
+
+def test_a_group_that_cannot_pay_another_night_loses_its_rooms():
+    u = _student()
+    u.gold = 15
+    g = Group([u], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study")
+
+    guild.pass_time(24)
+
+    assert u.gold == 0                    # paid the one night it could
+    assert g.order is None                # and is out on the street, not squatting for free
+
+
+def test_studying_group_keeps_its_rooms_while_someone_can_pay():
+    u = _student()
+    u.gold = 1000
+    g = Group([u], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study")
+
+    guild.pass_time(24)
+
+    assert g.order is not None
+
+
+def test_a_member_not_studying_pays_nothing_and_eats_their_own_ration():
+    student = _student()
+    student.gold = 1000
+    idler = Unit("player")
+    idler.gold = 100
+    idler.give_to_pack("Potato")
+    g = Group([student, idler], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study")
+    rations_before = idler.count_of("Potato")
+
+    guild.pass_time(24)
+
+    assert idler.gold == 100
+    assert student.gold == 1000 - 15
+    assert idler.count_of("Potato") < rations_before

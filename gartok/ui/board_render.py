@@ -26,6 +26,7 @@ Data shapes::
 import pygame
 
 from .. import artwork
+from . import banner
 from .board_style import (
     BADGE_INK,
     CHEST_TRIM,
@@ -81,6 +82,11 @@ WALL_RADIUS = 6
 
 def team_color(team):
     return PLAYER_C if team == "player" else ENEMY_C
+
+
+def ring_color(team):
+    """The ring around a token: the guild's banner colour for the player, red for the enemy."""
+    return banner.player_color() if team == "player" else ENEMY_C
 
 
 def hp_color(frac):
@@ -327,6 +333,7 @@ def _standing(surf, F, r, tok):
     if tok.get("demoralized"):
         pygame.draw.circle(surf, DEMO_HL, (r.x + 8, r.y + 8), 4)
     _face(surf, F, center, rad - 5, round(rad * 1.5), tok)
+    pygame.draw.circle(surf, ring_color(tok["team"]), center, rad - 4, 3)
     hp_bar(surf, pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4), tok["hp_frac"])
     if tok.get("flag"):
         _badge(surf, F, (r.centerx, r.y + 8), 34, "FLAG", team_color(tok["flag"]))

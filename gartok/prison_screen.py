@@ -204,6 +204,7 @@ class PrisonScreen(Screen):
         ch = {
             "name": cand.name,
             "race": cand.race["name"],
+            "portrait_id": cand.portrait_id,
             "occ": cand.occupation["name"],
             "hp": cand.hp_max,
             "hp_max": cand.hp_max,
@@ -286,6 +287,8 @@ class PrisonScreen(Screen):
         
         ch = {
             "name": m.name,
+            "race": m.race["name"],
+            "portrait_id": m.portrait_id,
             "cha": m.mod_charisma,
             "langs": m.languages,
             "free": free

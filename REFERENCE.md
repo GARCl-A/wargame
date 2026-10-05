@@ -307,6 +307,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 3 | Fleet | +1 square of Speed. | deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | tough |
+| 3 | Recovery | heal 1 HP after every fight you survive. | hardy |
 | 2 | Bulwark | +1 AC. | tough |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | alert |
@@ -393,7 +394,7 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 
 | Knob | Value |
 |---|---|
-| Death save | d20 >= 11, on the 3rd turn while dying |
+| Death save | d20 >= 11, on turn 4 while dying (each hit on the body is one more turn) |
 | First-aid DC | d20 + WIS mod vs 10 |
 | Automaton repair DC | d20 + INT mod vs 15 |
 | First-aid kit charges | 10 |

@@ -180,8 +180,8 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     if crit or total >= ac:
         battle.fx(target.pos, fx_text, "ok" if not crit else "crit")
         if target.dying:
-            battle.log(desc + "  -> coup de grace: DEAD.")
-            target.status = "dead"
+            battle.log(desc + "  -> a blow on the fallen.")
+            battle.tick_dying(target)       # the hit counts as one more turn on the clock
             return "crit" if crit else "hit"
         battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> hit."))
         was_up = target.alive

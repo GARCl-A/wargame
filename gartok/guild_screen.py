@@ -264,7 +264,8 @@ class GuildScreen(Screen):
             badges.append(("GROUP LEADER", T.TX_FAINT))
         return {
             "key": unit.uid, "name": unit.name, "selected": selected, "badges": badges,
-            "sub": f"{unit.race['name']} · Lv {unit.combat_level}",
+            "sub": (f"{unit.race['name']} · Lv {unit.racial_level}"
+                    f"  (C{unit.combat_level} W{unit.work_level})"),
             "hp": (max(0, unit.hp), unit.hp_max), "load": (unit.load, unit.carry_normal),
             "token": _token_of(unit),
         }
