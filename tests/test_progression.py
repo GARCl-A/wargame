@@ -471,7 +471,7 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
 
     # mixed crew: pay is per-worker; the guild leaves when the SLOWEST is done
     guild = Guild([plain, rich, quick], clock=Clock(6 * 3600))
-    base = economy.lumber_pay(16)                 # 12 copper
+    base = economy.lumber_pay(16)                 # 4 copper
     guild.work_shift([plain, rich, quick], 16)
     assert plain.gold == base
     assert rich.gold == round(base * 1.20)        # Piecework: +20%

@@ -63,7 +63,7 @@ BOSS_MAP = "capture-the-flag-the-gamers"
 
 def scrapper_bout():
     """An introductory fight in the Pit."""
-    return world.Bout("The Pit: Scrapper", entry=5, purse=20, enemies=3, level=0, rep=0)
+    return world.Bout("The Pit: Scrapper", entry=3, purse=11, enemies=3, level=0, rep=0)
 
 
 def champion_bout():

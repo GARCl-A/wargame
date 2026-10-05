@@ -7,7 +7,7 @@ Tune these after playtesting to balance the game.
 # Economy
 BANK_CHEST_PRICE = 100
 BANK_CHEST_CAPACITY = 30
-LUMBER_WAGE = 3
+LUMBER_WAGE = 1
 WILDS_CLAIM_SCOUT_HOURS = 2
 WILDS_CLAIM_FENCE_HOURS = 8
 

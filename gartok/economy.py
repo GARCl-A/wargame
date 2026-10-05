@@ -26,10 +26,10 @@ CHA_DEAL_STEP = 0.04                    # deal fraction per point of haggle Char
 # The lumber yard outside the walls: day-labour for anyone who is broke. You
 # borrow the foreman's axe and fell trees on land that is not yours, so you keep
 # no wood -- just a flat wage for the hours. Kept deliberately meagre: a full
-# 16 h day feeds you and leaves a little over, while a won arena bout or a wilds
-# haul pays several times better. It is a floor, not a living.
+# 16 h day buys the cheapest meal (a Potato) plus 1 copper, while a won arena
+# bout or a wilds haul pays better. It is a floor, not a living.
 LUMBER_WAGE = constants.LUMBER_WAGE                         # copper earned per whole block worked
-LUMBER_WAGE_OWN_AXE = 4                 # ...more, once you swing your own Axe (see lumber_level)
+LUMBER_AXE_RATIO = (4, 3)               # your own Axe (see lumber_level) pays 4/3 of the wage, floored
 LUMBER_BLOCK_HOURS = 4                  # ...one block is four hours at the yard
 LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mark
 LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
@@ -248,8 +248,11 @@ def lumber_pay(hours, level=0):
     """Wage for `hours` at the lumber yard, paid by the whole block, leftover
     hours unpaid. Your own Axe (`level` >= LUMBER_LEVEL_OWN_AXE) cuts faster,
     for a better wage."""
-    wage = LUMBER_WAGE_OWN_AXE if level >= LUMBER_LEVEL_OWN_AXE else LUMBER_WAGE
-    return wage * (int(hours) // LUMBER_BLOCK_HOURS)
+    pay = LUMBER_WAGE * (int(hours) // LUMBER_BLOCK_HOURS)
+    if level >= LUMBER_LEVEL_OWN_AXE:
+        num, den = LUMBER_AXE_RATIO
+        pay = pay * num // den
+    return pay
 
 
 def scroll_price(level):

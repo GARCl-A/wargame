@@ -558,11 +558,11 @@ class MapScreen(Screen):
             for u in g.members:
                 level = economy.lumber_level(u)
                 own_axe = level >= economy.LUMBER_LEVEL_OWN_AXE
-                wage = economy.LUMBER_WAGE_OWN_AXE if own_axe else economy.LUMBER_WAGE
+                day = economy.lumber_pay(WORK_HOURS[-1], level)
                 status = "own Axe" if own_axe else "foreman's axe"
                 blocks.append({"type": "text",
-                              "text": f"{u.name}: {status} -- {wage}c / "
-                                      f"{economy.LUMBER_BLOCK_HOURS}h block",
+                              "text": f"{u.name}: {status} -- {day}c / "
+                                      f"{WORK_HOURS[-1]}h shift",
                               "color": T.GREEN if own_axe else T.TX_FAINT})
             need_axe = [u for u in g.members if u.work_level > 0 and economy.lumber_level(u) == 0]
             capped = [u for u in g.members if economy.lumber_level(u) >= economy.LUMBER_LEVEL_OWN_AXE

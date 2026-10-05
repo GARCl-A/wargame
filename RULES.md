@@ -939,11 +939,11 @@ copper instead of walking into the wilds and dying.
 - **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
   or 16 h — which issues a work order; ADVANCE resolves it: passes the time (can
   cross midnight and trigger the day's meal) and pays each worker.
-- **Pay:** `economy.LUMBER_WAGE` = **3 copper per whole 4-hour block** bare-handed
-  (work level 0); or `economy.LUMBER_WAGE_OWN_AXE` = **4 copper per 4-hour block**
-  if the worker owns an **Axe** in their pack or hand (work level 1). A partial
-  hour does not count. A full 16 h day = **12 copper** (or **16 copper** with an Axe)
-  per head, straight into each one's purse.
+- **Pay:** `economy.LUMBER_WAGE` = **1 copper per whole 4-hour block** bare-handed
+  (work level 0); with an **Axe** in their pack or hand (work level 1) the pay is
+  `LUMBER_AXE_RATIO` = **4/3** of that, floored. A partial hour does not count.
+  A full 16 h day = **4 copper** (or **5 copper** with an Axe) per head, straight
+  into each one's purse -- the cheapest meal (a 3 cp Potato) plus 1 copper.
 - **Work XP:** `Unit.work_hours` accumulates the hours; `Unit.work_xp` =
   `work_hours // 16` — **one mark per 16 h worked**. Carrying your own Axe elevates
   the work level to 1, gating work-XP progression accordingly (`progression.xp_award`).

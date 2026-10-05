@@ -206,8 +206,8 @@ def _constants():
          f"{economy.STARTING_WEALTH_DICE[1]} copper"),
         ("Resale factor", f"{economy.SELL_FACTOR:g} of buy price"),
         ("Lumber wage", f"{economy.LUMBER_WAGE} cp per {economy.LUMBER_BLOCK_HOURS} h "
-         f"(level 0, bare-handed); {economy.LUMBER_WAGE_OWN_AXE} cp with your own Axe "
-         f"(level {economy.LUMBER_LEVEL_OWN_AXE})"),
+         f"(level 0, bare-handed); {economy.LUMBER_AXE_RATIO[0]}/{economy.LUMBER_AXE_RATIO[1]} of that "
+         f"with your own Axe (level {economy.LUMBER_LEVEL_OWN_AXE}), floored"),
         ("Hunting job level", hunt.HUNT_LEVEL),
         ("Bank strongbox", f"{economy.BANK_CHEST_PRICE} cp to rent, holds "
          f"{economy.BANK_CHEST_CAPACITY} kg"),

@@ -15,9 +15,9 @@ def test_lumber_yard_is_a_work_town_one_hour_from_the_city():
 def test_lumber_pay_is_by_the_whole_block():
     assert economy.lumber_pay(0) == 0
     assert economy.lumber_pay(3) == 0                 # short of a block: nothing
-    assert economy.lumber_pay(4) == 3
-    assert economy.lumber_pay(15) == 9                # three blocks, 3 h unpaid
-    assert economy.lumber_pay(16) == 12               # a full day
+    assert economy.lumber_pay(4) == 1
+    assert economy.lumber_pay(15) == 3                # three blocks, 3 h unpaid
+    assert economy.lumber_pay(16) == 4                # a full day
 
 
 def test_work_shift_pays_every_worker_and_banks_the_hours():
@@ -31,7 +31,7 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
         u._derive_combat()
     guild = Guild([a, b], clock=Clock(6 * 3600))      # 06:00 day 1
     events, _ = guild.work_shift([a, b], 16)
-    assert a.gold == 12 and b.gold == 12
+    assert a.gold == 4 and b.gold == 4
     assert a.work_hours == 16 and b.work_hours == 16
     assert guild.clock.hour_of_day == 22 and guild.clock.day == 1
     assert any("Lumber yard" in e for e in events)
@@ -48,7 +48,7 @@ def test_work_shift_crossing_midnight_runs_the_daily_meal():
     guild = Guild([u], clock=Clock(20 * 3600))        # 20:00 day 1
     guild.work_shift([u], 8)                          # -> 04:00 day 2, one meal
     assert guild.clock.day == 2
-    assert u.gold == 6 and u.rations == 0 and u.unfed_days == 0
+    assert u.gold == 2 and u.rations == 0 and u.unfed_days == 0
 
 
 def test_work_xp_is_one_mark_per_16_hours_and_survives_a_save():
@@ -86,8 +86,8 @@ def test_lumber_level_counts_an_axe_carried_in_the_pack_too():
 
 
 def test_own_axe_pays_a_better_wage():
-    assert economy.lumber_pay(16, level=0) == 12
-    assert economy.lumber_pay(16, level=1) == 16
+    assert economy.lumber_pay(16, level=0) == 4
+    assert economy.lumber_pay(16, level=1) == 5
 
 
 def test_outgrown_lumber_yard_pays_but_teaches_nothing():
@@ -105,12 +105,12 @@ def test_outgrown_lumber_yard_pays_but_teaches_nothing():
     before = u.work_hours
     guild = Guild([u], clock=Clock(6 * 3600))
     guild.work_shift([u], 16)
-    assert u.gold == 12 and u.work_hours == before      # paid, but no XP: outgrown
+    assert u.gold == 4 and u.work_hours == before      # paid, but no XP: outgrown
 
     u.gold = 0
     u.give_to_hand("Axe")
     guild.work_shift([u], 16)
-    assert u.gold == 16                                 # the better, own-Axe wage
+    assert u.gold == 5                                  # the better, own-Axe wage
     assert u.work_hours == before + 16                  # level 1 job teaches a level 1 worker
 
 
