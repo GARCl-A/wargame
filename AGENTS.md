@@ -31,6 +31,9 @@ When the two disagree, `REFERENCE.md` wins.
 - **No guild treasury.** Money lives on the character.
 - **Vision is per-character.** The map is always dark; on your turn you see
   what the active unit sees.
+- **Adventure out-earns day labour.** In Gartok the risk pays: lumber is only a
+  survival floor (16 h = cheapest meal + 1 cp), the arena and the wilds pay
+  more. Re-run `scripts/economy_sim.py` after touching wages, purses or loot.
 
 ## Architecture — one concern per module
 
@@ -69,6 +72,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `encounters.py` | enemy packs scaled to a target mean level |
 | `progression.py` | XP curves + combat-XP rule |
 | `autowin.py` | auto-resolve a battle via Monte Carlo estimate |
+| `tutorial.py` / `tutorial_card.py` | tutorial state + the modal card per screen (`ui/intro_card.py`); copy in `locales/en.json` |
 | `ui/` | war-table component kit; see `ui/README.md` |
 
 Screens follow `screen.Screen` base; `native = True` means full-window layout.
@@ -94,6 +98,10 @@ crafting and mission board in tabs. The full module list is in `README.md`.
   parameters and sizes/lays out relative to those (proportional-with-clamp
   for anything window-size-dependent, like `map_panel.draw_minimap` already
   does), so the same component holds up at any window size.
+
+A new screen gets a tutorial card too: a `tutorial_key()` on the screen and a
+`tutorial.<id>` block in `locales/en.json` that teaches how to use it (see the
+recipe in `README.md`).
 
 ## Deep context
 
