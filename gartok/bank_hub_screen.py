@@ -25,7 +25,7 @@ class BankHubScreen(Screen):
         self.tab = "vault"
         
         self.vault_screen = BankScreen(fonts, guild, list(group.members), on_done)
-        self.vault_screen.header_reserve = 2 * (TAB_W + T.S)
+        self.vault_screen.header_reserve = 2 * (TAB_W + T.S) + T.S * 2
         self.jobs_screen = TrustScreen(self._F, guild, group, on_done)
         
         self.buttons = []

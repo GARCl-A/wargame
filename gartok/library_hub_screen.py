@@ -31,7 +31,7 @@ class LibraryHubScreen(Screen):
                                            title="THE LIBRARY (WRITE)",
                                            subtitle="write dictionaries and translate texts  ·  needs recipes and materials",
                                            station="scriptorium")
-        self.shop_screen.header_reserve = 3 * (TAB_W + T.S)
+        self.shop_screen.header_reserve = 3 * (TAB_W + T.S) + T.S * 2
         self.jobs_screen = LibraryMissionScreen(self._F, guild, group, on_done)
         
         self.buttons = []
