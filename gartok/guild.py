@@ -162,7 +162,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.name = name or ""                # chosen at the draft; "" shows as "The Guild"
         self.banner_color = tuple(banner_color) if banner_color else DEFAULT_BANNER_COLOR
         self.banner_icon = banner_icon or DEFAULT_BANNER_ICON
-        # the soft tutorial's dismissed/enabled state (tutorial.py) -- carried on
+        # the tutorial's dismissed/enabled state (tutorial.py) -- carried on
         # the guild so it saves and loads by slot, like everything else here;
         # the draft (before a Guild exists) keeps its own until `app._draft_done`
         # hands it in

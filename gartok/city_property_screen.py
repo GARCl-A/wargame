@@ -35,7 +35,7 @@ class CityPropertyScreen(StashScreen):
     WHERE = "at the property"
 
     def tutorial_key(self):
-        return None
+        return "property"
 
     def _stash(self):
         return self.guild.house.stash

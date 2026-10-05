@@ -55,10 +55,11 @@ _MAX_GUILD_NAME = 24
 class DraftScreen(Screen):
     native = True
 
-    def __init__(self, fonts, on_done):
+    def __init__(self, fonts, on_done, tutorial=None):
         super().__init__()
         self.F = fonts
         self.on_done = on_done
+        self.tutorial = tutorial
         self.picks = []
         self.phase = "pick"        # "pick" (rounds 1-3) | "identity"
         self.tokens = COMMISSION_TOKENS
@@ -179,20 +180,18 @@ class DraftScreen(Screen):
             return
 
     # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py) -- one id per phase                      #
+    # tutorial (screen.py) -- one id per phase                           #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
+        if (self.phase == "pick" and not self.picks
+                and self.tutorial is not None and "draft.intro" not in self.tutorial.seen):
+            return "draft.intro"
         return {"pick": "draft.pick", "identity": "draft.identity"}.get(self.phase)
 
     def tutorial_badge_rect(self, size):
         W, H = size
         pad = T.S * 4
         return pygame.Rect(W - pad - 28, pad, 28, 28)
-
-    def tutorial_anchor(self, size):
-        W, H = size
-        pad = T.S * 4
-        return (W - pad - 340, pad + 36, 340, "down")
 
     def _click_identity(self, px):
         if self.editing_name:

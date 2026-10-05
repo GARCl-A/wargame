@@ -47,6 +47,7 @@ class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
     CLOSED_NOTICE = ""      # shown when depositing into a stash the guild doesn't hold yet
     WHERE = ""              # "in the chest" -- completes "won't fit -- N kg free ..."
     CAN_DISTRIBUTE = False
+    header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
 
     def __init__(self, fonts, guild, party, on_done):
         super().__init__()
@@ -469,7 +470,7 @@ class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         header(screen, F, head, self.TITLE, self.SUBTITLE, (), None, mpos=self.mouse)
         self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
         has_tut = self.tutorial_key() is not None
-        purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0)
+        purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0) - self.header_reserve
         text(screen, F["microb"], f"purse {self.purse} c", (purse_x, T.S * 3), T.BRASS, right=True)
 
         self._draw_stash(screen, F, stash_rect)

@@ -163,6 +163,7 @@ class MapScreen(Screen):
         self.hits = []                        # [(rect, node)]
         self.buttons = []                     # [(key, rect)]
         self._hot = False
+        self._help_rect = None
 
         self._F = ui_fonts()
         self._refresh_nodes()
@@ -312,11 +313,11 @@ class MapScreen(Screen):
         return False
 
     def tutorial_key(self):
-        # COMMAND already draws its own "?" affordance top-right -- the
-        # global soft-tutorial badge (app.py/tutorial_card.py) would land
-        # in that same corner and the two would overlap, so this screen
-        # opts out of the shared system instead of doubling up.
-        return None
+        return "map"
+
+    def tutorial_badge_rect(self, size):
+        """The COMMAND bar's own "?" doubles as the reopen badge."""
+        return self._help_rect or super().tutorial_badge_rect(size)
 
     # ------------------------------------------------------------------ #
     def _reset_buttons(self):
@@ -747,6 +748,7 @@ class MapScreen(Screen):
             self._messages(), self._metrics(), self.mouse, guild_label=self._guild_label(),
             icon_fn=_alert_icon_fn)
         self.buttons.append(("guild", cmd_buttons["guild"]))
+        self._help_rect = cmd_buttons["help"]
 
         (self._roster_rects, self._split_member_rects,
          self._split_confirm_rect, self._merge_rects) = draw_roster(

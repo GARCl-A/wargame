@@ -27,6 +27,9 @@ SIDE_W = 340
 class CraftingScreen(Screen):
     native = True
 
+    def tutorial_key(self):
+        return "craft"
+
     def __init__(self, fonts, guild, group, on_done, title="THE FORGE",
                  subtitle="forge weapons and armor  ·  needs recipes and materials",
                  station="forge"):

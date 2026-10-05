@@ -43,6 +43,7 @@ MARGIN = T.S * 2
 
 class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     native = True
+    header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
 
     def __init__(self, fonts, guild, shoppers, node, on_done):
         super().__init__()
@@ -111,7 +112,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             self._set_weapon_size(b, size)
 
     # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py)                                          #
+    # tutorial (screen.py)                                               #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "market"
@@ -119,10 +120,6 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     def tutorial_badge_rect(self, size):
         W, H = size
         return pygame.Rect(W - MARGIN - 28, MARGIN - 4, 28, 28)
-
-    def tutorial_anchor(self, size):
-        W, H = size
-        return (W - MARGIN - 340, MARGIN + 32, 340, "down")
 
     def get_categories(self):
         return economy.market_categories()
@@ -650,7 +647,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
 
         ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
         has_tut = self.tutorial_key() is not None
-        purse_x = W - MARGIN - (28 + T.S if has_tut else 0)
+        purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
         ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper",
                 (purse_x, MARGIN + 2), T.BRASS, right=True)
         msg, col = self._status_line()

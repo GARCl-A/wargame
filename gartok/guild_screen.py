@@ -118,11 +118,6 @@ class GuildScreen(Screen):
         pad = 16 if W < 1500 else 24
         return pygame.Rect(W - pad - 28, pad - 4, 28, 28)
 
-    def tutorial_anchor(self, size):
-        W, _ = size
-        pad = 16 if W < 1500 else 24
-        return (W - pad - 340, pad + 32, 340, "down")
-
     # ------------------------------------------------------------------ #
     def _is_group_leader(self, unit):
         group = self.guild.group_of(unit)

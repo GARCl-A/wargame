@@ -66,7 +66,7 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         self.back_rect = None
 
     # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py)                                          #
+    # tutorial (screen.py)                                               #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "gear"
@@ -74,10 +74,6 @@ class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     def tutorial_badge_rect(self, size):
         W, H = size
         return pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
-
-    def tutorial_anchor(self, size):
-        W, H = size
-        return (W - T.S * 3 - 340, T.S * 9 + T.S, 340, "down")
 
     def _ui_fonts(self):
         if getattr(self, "_F", None) is None:

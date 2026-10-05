@@ -93,7 +93,7 @@ class LevelScreen(SheetModalMixin, Screen):
         self.info_hits = []
 
     # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py)                                          #
+    # tutorial (screen.py)                                               #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "level"
@@ -102,11 +102,6 @@ class LevelScreen(SheetModalMixin, Screen):
         W, H = size
         pad = T.S * 3 if W < 1500 else T.S * 5
         return pygame.Rect(W - pad - 28, pad + (74 - 28) // 2, 28, 28)
-
-    def tutorial_anchor(self, size):
-        W, H = size
-        pad = T.S * 3 if W < 1500 else T.S * 5
-        return (W - pad - 340, pad + 84, 340, "down")
 
     def handle_escape(self):
         if self.sheet_open:

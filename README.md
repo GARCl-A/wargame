@@ -137,12 +137,15 @@ World systems, outside combat:
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,
   `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
   map editor sets the grid size and paints walls / pits / water / torches / zones.
-- **Onboarding**: a soft, non-blocking tutorial (`tutorial.py`/`tutorial_card.py`)
-  covering every screen of a first playthrough (draft, map, each guild-screen
-  tab, squad, battle, loot, reward, market, taverna, the wilds, the bank, gear,
-  progression) — the first time a screen (or tab, or draft phase) matters, a
-  small card explains it, some pointing at where to look next, dismissed with
-  one click and reopenable from its `?` badge; per-slot, toggled and reset
+- **Onboarding**: a modal, once-per-slot tutorial (`tutorial.py`/`tutorial_card.py`)
+  teaching how to play and how to use each screen (draft, map with the clock and
+  hunger, each guild-screen tab, group gear, squad, battle, loot, reward, market,
+  taverna, the wilds, the bank, paid jobs, the forge, the house, the claim, the
+  guard, the prison, progression) — the first time a screen (or tab, or draft phase) matters, a
+  centred card over a dimmed screen explains it, some pointing at where to look
+  next, dismissed with a click or Enter/Space (input is swallowed while it is up
+  and just after, so closing it never presses what lies beneath) and reopenable
+  from its `?` badge; per-slot, toggled and reset
   from the pause menu. Its copy is the first thing routed through `i18n.py`, a
   small dotted-key catalog reader (`locales/en.json`) meant to grow into the
   game's general translation layer, not a tutorial-only shim.
@@ -215,7 +218,7 @@ gartok/
 
   # onboarding + translation (i18n.py is project-wide; tutorial is its first consumer)
   i18n.py           dotted-key string catalogs (locales/*.json), language fallback
-  tutorial.py       the soft tutorial's ids + TutorialState (seen/enabled, pygame-free)
+  tutorial.py       the tutorial's ids + TutorialState (seen/enabled, pygame-free)
 
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
@@ -299,8 +302,8 @@ docs/plans/         design plans not yet built (campaign AI roadmap)
 - **New tutorial card** (a screen or a tab/phase of one): an id in
   `tutorial.TUTORIALS`, a `title`/`body`/optional `suggestion` block under
   `tutorial.<id>` in `locales/en.json`, and a `tutorial_key()` override on the
-  screen (`tutorial_anchor()` too, if the default top-left placement would
-  collide with something clickable). `app.py`'s draw/click hooks pick it up for
+  screen (and `tutorial_badge_rect()` if the default top-right `?` would
+  collide with something clickable). `app.py`'s draw/input hooks pick it up for
   free — see `screen.py`'s two defaults for the contract.
 - **New translated string anywhere else**: a key under its own namespace in
   `locales/en.json`, read with `i18n.t(key)` — `tutorial.*` is the only

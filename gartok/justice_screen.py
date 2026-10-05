@@ -44,7 +44,7 @@ class GuardScreen(Screen):
         return self._F
 
     def tutorial_key(self):
-        return None
+        return "guard"
 
     # ------------------------------------------------------------------ #
     def _click(self, px):

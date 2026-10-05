@@ -9,6 +9,8 @@ from .ui.primitives import draw_button
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
+TAB_W = 120
+
 
 class ApothecaryHubScreen(Screen):
     native = True
@@ -29,6 +31,9 @@ class ApothecaryHubScreen(Screen):
         self.jobs_screen = ApothecaryMissionScreen(self._F, guild, group, on_done)
         
         self.buttons = []
+
+    def tutorial_key(self):
+        return self.active_screen().tutorial_key()
 
     def active_screen(self):
         return self.craft_screen if self.tab == "craft" else self.jobs_screen
@@ -59,12 +64,12 @@ class ApothecaryHubScreen(Screen):
 
         # Draw our tabs in the top right
         m = T.S * 3
-        bw = 120
+        bw = TAB_W
         F = self._F
         
         # We start from the right edge
         self.buttons = []
-        x = screen.get_width() - m - bw
+        x = screen.get_width() - m - bw - T.S * 5      # room for the tutorial `?` badge
         
         # Jobs tab
         r_jobs = pygame.Rect(x, m, bw, 32)

@@ -1,11 +1,22 @@
 {
   "tutorial": {
+    "default_button": "Got it",
     "draft": {
+      "intro": {
+        "title": "Welcome to Gartok",
+        "button": "Begin",
+        "body": [
+          "Gartok is a familiar medieval-fantasy world: many races, magic, ruins, nobles with gold to spend.",
+          "The economy has tipped. Delving into ruins, catacombs and wild forests for creatures, artefacts and magic items pays far better than honest work -- so everyone who can hold a weapon is out there, risking their neck.",
+          "Adventurers band together in guilds, and the big ones grow into something closer to companies: armed, skilled, ruling whole forests as territory. You are founding one, with a little coin and three recruits -- picked next."
+        ]
+      },
       "pick": {
         "title": "Building your guild",
         "body": [
-          "Each candidate is a random GARTOK character: a race, an occupation, and a roll of 3d6 down the line for every attribute.",
-          "You have 3 Commission Tokens for the entire draft. Spend them to guarantee essential archetypes (Leaders, Pack Mules, Heavy Hitters) when the raw rolls don't fit your plans."
+          "Each candidate is a random GARTOK character: a race, an occupation, and a 3d6 roll for every attribute. The card shows what matters at a glance: HP, AC (how hard they are to hit), MD (mental defense), speed, the starting weapon, languages and the racial ability.",
+          "Click a card to keep that character. You keep one per round, three in all, and the rest are discarded. Expect to lose some of them: an early squad is meant to be spent.",
+          "You also have 3 Commission Tokens for the whole draft. Spend one to guarantee an archetype (Leader, Pack Mule, Heavy Hitter) when the raw rolls don't fit your plans."
         ]
       },
       "identity": {
@@ -19,17 +30,20 @@
     "map": {
       "title": "Running the guild",
       "body": [
-        "The guild is split into groups, each standing on its own spot on the map. Pick a group on the right, then click a place to send it there -- or use the panel for what's on offer where it already stands.",
-        "Once every group has something to do, the clock runs itself: travel and work play out silently, and you're handed back the screen the moment something needs a decision."
+        "The guild is split into groups. The list on the left shows them: click one to select it, then click a place on the map to send it there. The panel on the right shows what that group can do where it stands -- shop, fight, work, recruit, hunt. GUILD, top right, opens your roster.",
+        "There is no advance button. Once every group has an order the clock runs by itself, and stops when a group is free again or something needs a decision (an ambush, a shop, a fight). REST passes 1 hour and CAMP 8 hours.",
+        "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes (3 cp) and Meat (5 cp) are sold at the Market, and you can hunt Meat in the wilds.",
+        "Copper lives on each character -- there is no shared treasury. Death is permanent, and the run ends only if the whole guild is wiped out."
       ],
-      "suggestion": "Check GUILD, top right, to see who you're leading."
+      "suggestion": "Good first stops: the Market for food, the Arena to train at low risk, the Lumber Yard if you go broke."
     },
     "guild": {
       "members": {
         "title": "Your roster",
         "body": [
-          "Pick a member on the left to see their loadout on the right. Drag gear onto a HAND / OFF HAND / BODY / PACK slot, or click an item then click where it goes.",
-          "Each group has its own leader, and the guild itself has one -- shown here, chosen back at the draft."
+          "Members are grouped by band on the left. Click one to see their sheet and loadout on the right: HP, AC, speed and the weight they carry. Past the normal load a character is encumbered -- weaker and slower.",
+          "Drag gear onto a HAND / OFF HAND / BODY / PACK slot, or click an item and then click where it goes. Each member has a share-food toggle that lets group-mates eat from their pack.",
+          "Each group has its own leader, and the guild has one too -- shown here, chosen at the draft. The leader haggles for the group."
         ],
         "suggestion": "Check the REPUTATIONS tab, top right, to see what you're actually playing for."
       },
@@ -43,7 +57,7 @@
       "reputations": {
         "title": "What you're playing for",
         "body": [
-          "There's no score to chase and no fight you must win. Standing with a faction only moves when you pull off one of its deeds -- a one-shot achievement, not a grind.",
+          "There's no score to chase and no fight you must win. Standing with a faction only moves when you pull off one of its deeds -- a one-shot achievement, not a grind. Each faction card lists its deeds and what they unlock.",
           "The arena (The Pits) is the first faction open to you: stake a bout, win a title, work through its own sub-campaign."
         ]
       }
@@ -51,20 +65,23 @@
     "squad": {
       "title": "Picking who goes",
       "body": [
-        "Click a card to add or drop someone from the outing -- from 1 up to the cap shown at the top. For a staked arena bout, pick a tier first: the entry fee comes out of the whole squad's pooled copper."
+        "Click a card to add or drop a member from the outing, from 1 up to the cap shown at the top. Anyone too weak from hunger to fight is greyed out.",
+        "In the arena, pick a stake tier first: the entry fee comes out of the squad's pooled copper, a win pays the purse, a loss forfeits the stake, and nobody dies. Anywhere else the fight is lethal."
       ]
     },
     "battle": {
       "title": "Fighting it out",
       "body": [
-        "2 action points a turn: spend them on walking, attacking or a panel action (Throw, Demoralize, First Aid, ...) -- Space ends the turn.",
-        "You only see what the active character's own light reaches; L flips between their sight and the whole squad's. Down isn't dead yet -- Stabilize or First Aid before it is."
+        "Each character gets 2 action points a turn and every action costs 1, except ending the turn (Space). Click a green cell to walk -- up to your speed, and you can split it across clicks -- or click an enemy with a red outline to attack. The panel holds the rest: Defend, Throw, Pick Up, Demoralize, Stabilize, First Aid, Flee, Climb, Push, Jump, Drop In.",
+        "An attack rolls a d20 plus modifiers against the target's AC; a 20 is a crit, a 1 a fumble. Click any unit to inspect its sheet.",
+        "The map is dark: you only see what the active character's light and senses reach. L switches between their sight and the whole squad's. At 0 HP a character is down, not dead -- Stabilize or First Aid them before they bleed out. You win by putting the enemy team down; a few fights have another goal, like capturing a flag."
       ]
     },
     "loot": {
       "title": "Splitting the spoils",
       "body": [
-        "Click an item on the ground, then click a survivor to drop it in their pack -- only if it fits their carry limit. \"take what fits\" grabs everything it can in one pass; whatever's left when you go stays on the field."
+        "Click an item on the ground, then click a survivor to drop it in their pack -- only if it fits their carry limit. \"Take what fits\" grabs everything it can in one pass; whatever is left when you go stays on the field.",
+        "Your own dead are on the field too: their gear can be recovered the same way."
       ]
     },
     "reward": {
@@ -76,25 +93,31 @@
     "market": {
       "title": "Buying and selling",
       "body": [
-        "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out."
+        "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out.",
+        "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half.",
+        "Potatoes (3 cp) and Meat (5 cp) feed one character for a day."
       ]
     },
     "taverna": {
       "title": "Recruiting",
       "body": [
-        "Pick a stranger, then pick who from the party makes the pitch -- their Charisma against the stranger's, no money involved. Lose and that member can't try that same stranger again until the pool turns over next week."
+        "Pick a stranger, then pick who from the party makes the pitch -- their Charisma against the stranger's, no money involved. Lose and that member can't try that same stranger again until the pool turns over next week.",
+        "Each member can only sponsor so many recruits, set by Charisma; the guild leader's own level adds on top.",
+        "The tavern is also where members study spells over several days, if their race gives them a magic source."
       ]
     },
     "hunt": {
       "title": "Hunting the wilds",
       "body": [
-        "Pick a shift length and head out for meat -- every hour risks an ambush, a real fight, but the bodies are worth looting. Win it and you can keep hunting or call it a day with whatever you've banked."
+        "Pick a shift length and head out. Every 2 hours earns 1 kg of Meat, and every hour risks an ambush: a real fight, but the bodies are worth looting -- wolves drop Hide, which the market and the Tanner buy.",
+        "Win an ambush and you can keep hunting or call it a day with whatever you've banked. Meat feeds the guild (1 kg is one meal) or sells at the Market. FORAGE WILDS looks for Red Mushrooms and fruit instead."
       ]
     },
     "bank": {
       "title": "The strongbox",
       "body": [
-        "Rent a chest once, then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out."
+        "Rent a chest once (100 cp, holds 30 kg), then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out.",
+        "Money is pooled for the visit and settles back out when you leave, so nobody's relative wealth changes just from walking in."
       ]
     },
     "gear": {
@@ -106,7 +129,8 @@
     "level": {
       "title": "Spending picks",
       "body": [
-        "Combat and work level up on their own XP; a lit node means you have a pick to spend there. Click it to take it -- the racial track just tracks itself, driven by the other two."
+        "Each character has XP tracks -- combat, work and a racial one -- and each has its own talent tree. A lit node means you have a pick to spend there: click it to take it.",
+        "Combat XP goes to whoever lands the blow that downs a foe, and only for foes at or above their own level. Work XP comes from hours worked, and a job you have outgrown stops teaching you."
       ]
     },
     "library": {
@@ -114,6 +138,68 @@
       "body": [
         "The library sells dictionaries for you to learn new tongues.",
         "The number of dictionaries available each day depends on the guild's reputation with the scholars."
+      ]
+    },
+    "group": {
+      "title": "Managing a group's gear",
+      "body": [
+        "The strip on the left lists every member; click one to open their column. Drag items between HAND / OFF HAND / BODY / PACK slots and between members -- or click an item and then click where it goes. Shift or ctrl gathers several first.",
+        "The QUESTS tab, top right, lists the jobs this group carries, with their deadlines and progress."
+      ]
+    },
+    "missions": {
+      "title": "Paid jobs",
+      "body": [
+        "A giver offers one job at a time: bring an item or finish a task before the deadline and they pay copper. The reward is split evenly across the group when you hand it in, and missing the deadline fails the job.",
+        "The group's leader signs for it, and the job then follows that character, not the group. Check progress in the QUESTS tab of the group screen (MANAGE GEAR & QUESTS on the map)."
+      ]
+    },
+    "trust": {
+      "title": "A test of trust",
+      "body": [
+        "The Bankers hand over a sealed chest and ask you to carry it to Ledger Hold. Don't lose it, and don't open it.",
+        "At Ledger Hold you swap the chest for a letter of receipt; bring the letter back here to finish the job."
+      ]
+    },
+    "ledger": {
+      "title": "Ledger Hold",
+      "body": [
+        "If someone in the group is carrying the sealed chest, hand it over here for a letter of receipt. If nobody has it, there is nothing to hand over.",
+        "Take the letter back to the Bankers in the City to finish the job."
+      ]
+    },
+    "craft": {
+      "title": "Crafting",
+      "body": [
+        "Only recipes a member of the party has learned appear. Pick one and the materials are consumed at once; progress is a d20 + INT roll over hours of work."
+      ]
+    },
+    "property": {
+      "title": "The City house",
+      "body": [
+        "Buy a house from the Bankers (1000 cp, once). It holds gear like the strongbox does, but costs a 40 cp tax every 7 days.",
+        "Miss too many payments and the Bankers repossess it: return it and owe them, or keep it as a squatter and risk the guard coming for you."
+      ]
+    },
+    "claim": {
+      "title": "Claiming the wilds",
+      "body": [
+        "A claim goes through six stages: scout the land (2 hours), clear the creatures living there (a fight), fence it (10 Lumber, 8 hours), sweep out a nearby bandit camp or nest (a fight), then hold it with a garrison for 10 days. After that it is established.",
+        "Once established, garrisoned members gather Lumber for you each day -- but raids can still contest the claim."
+      ]
+    },
+    "guard": {
+      "title": "The guard has caught up",
+      "body": [
+        "The City guard has caught members who have a rap sheet. You choose for the whole group at once.",
+        "Accept arrest and serve the time, fight the patrol (lethal), or run -- running can get the group caught again or ambushed on the way."
+      ]
+    },
+    "prison": {
+      "title": "The prison",
+      "body": [
+        "These strangers are jailed for minor crimes. Pay a bail to try recruiting one: pick who makes the pitch, Charisma against Charisma, and the bail gives them a +2 gratitude bonus.",
+        "If the pitch fails they walk free and keep your money."
       ]
     }
   }

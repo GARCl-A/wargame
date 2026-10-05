@@ -33,10 +33,6 @@ class BankScreen(StashScreen):
         W, H = size
         return pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
 
-    def tutorial_anchor(self, size):
-        W, H = size
-        return (W - T.S * 3 - 340, T.S * 9 + T.S, 340, "down")
-
     def _stash(self):
         return self.guild.bank
 

@@ -1,4 +1,4 @@
-"""The soft tutorial: TutorialState's dismiss/reopen/reset rules, the i18n
+"""The tutorial: TutorialState's dismiss/reopen/reset rules, the i18n
 catalog backing every id a screen can hand back, and save/load round-tripping
 the seen/enabled state by slot."""
 
@@ -56,31 +56,26 @@ def test_stale_tutorial_rect_never_swallows_a_click_after_a_scene_swap():
     assert app._tutorial_click(ev) is False
 
 
-def test_footer_anchor_clears_a_footer_of_the_given_height():
-    from gartok.screen import Screen
-    s = Screen()
-    size = (1600, 950)
-    x, y, w, grow = s.footer_anchor(size, offset=52)
-    assert grow == "up" and w > 0
-    assert y <= 950 - 52          # never dips into the footer band it was told to clear
-    x2, y2, w2, grow2 = s.footer_anchor(size, offset=44, margin=24, w=300)
-    assert (x2, w2) == (24, 300) and y2 > y      # a shorter footer sits lower
-
-
 def test_draft_screen_reports_one_id_per_phase():
     from gartok.draft_screen import DraftScreen
     ds = DraftScreen.__new__(DraftScreen)
+    ds.picks = []
+    ds.tutorial = TutorialState(seen={"draft.intro"})
     for phase, expected in (("pick", "draft.pick"), ("identity", "draft.identity")):
         ds.phase = phase
         assert ds.tutorial_key() == expected and expected in TUTORIALS
 
 
-def test_map_screen_opts_out_of_the_shared_tutorial_badge():
-    """MapScreen draws its own "?" affordance in COMMAND (top-right) -- the
-    global soft-tutorial badge (app.py/tutorial_card.py) lands in that same
-    corner, so this screen returns None instead of doubling up."""
+def test_map_screen_reports_its_card_and_reuses_the_command_bar_help_button():
+    """The COMMAND bar already draws a "?" top-right, so the map's reopen badge
+    sits exactly on it instead of in a second corner."""
+    import pygame
+
     from gartok.map_screen import MapScreen
-    assert MapScreen.tutorial_key(MapScreen.__new__(MapScreen)) is None
+    ms = MapScreen.__new__(MapScreen)
+    ms._help_rect = pygame.Rect(1100, 20, 32, 32)
+    assert ms.tutorial_key() == "map" and "map" in TUTORIALS
+    assert ms.tutorial_badge_rect((1212, 832)) == ms._help_rect
 
 
 def test_guild_screen_key_follows_the_active_tab():
@@ -102,12 +97,21 @@ def test_every_simple_screen_reports_its_registered_id():
         battle_screen,
         gear_screen,
         hunt_screen,
+        city_property_screen,
+        crafting_screen,
+        group_screen,
+        justice_screen,
+        ledger_screen,
         level_screen,
         loot_screen,
         market_screen,
+        prison_screen,
         reward_screen,
         squad_screen,
         taverna_screen,
+        tanner_screen,
+        trust_screen,
+        wilds_claim_screen,
     )
 
     cases = [
@@ -121,39 +125,19 @@ def test_every_simple_screen_reports_its_registered_id():
         (bank_screen.BankScreen, "bank"),
         (gear_screen.GearScreen, "gear"),
         (level_screen.LevelScreen, "level"),
+        (group_screen.GroupScreen, "group"),
+        (tanner_screen.TannerScreen, "missions"),
+        (trust_screen.TrustScreen, "trust"),
+        (ledger_screen.LedgerScreen, "ledger"),
+        (crafting_screen.CraftingScreen, "craft"),
+        (city_property_screen.CityPropertyScreen, "property"),
+        (wilds_claim_screen.WildsClaimScreen, "claim"),
+        (justice_screen.GuardScreen, "guard"),
+        (prison_screen.PrisonScreen, "prison"),
     ]
     for cls, expected in cases:
         assert cls.tutorial_key(cls.__new__(cls)) == expected, cls.__name__
         assert expected in TUTORIALS, cls.__name__
-
-
-def test_every_anchor_returns_a_valid_grow_direction():
-    """`tutorial_anchor` must hand back `(x, y, w, grow)` with grow in
-    {"up", "down"} -- `app.py`'s `tutorial_card.draw` trusts this blindly."""
-    from gartok.battle_screen import BattleScreen
-    from gartok.draft_screen import DraftScreen
-    from gartok.guild_screen import GuildScreen
-    from gartok.map_screen import MapScreen
-
-    size = (1600, 950)
-    bs = BattleScreen.__new__(BattleScreen)
-    gs = GuildScreen.__new__(GuildScreen)
-    ms = MapScreen.__new__(MapScreen)
-    ds = DraftScreen.__new__(DraftScreen)
-
-    for scene in (bs, ms):
-        x, y, w, grow = scene.tutorial_anchor(size)
-        assert grow in ("up", "down") and w > 0
-
-    for tab in ("members", "reputations"):
-        gs.tab = tab
-        x, y, w, grow = gs.tutorial_anchor(size)
-        assert grow in ("up", "down") and w > 0
-
-    for phase in ("pick", "identity"):
-        ds.phase = phase
-        x, y, w, grow = ds.tutorial_anchor(size)
-        assert grow in ("up", "down") and w > 0
 
 
 def test_should_show_tracks_seen_enabled_and_a_forced_reopen():
@@ -349,3 +333,96 @@ def test_all_tutorial_screens_have_aligned_badge_rect():
     assert squad.tutorial_badge_rect((1600, 900)) == pygame.Rect(1600 - 24 - 28, 24 - 4, 28, 28)
 
 
+def test_draft_opens_on_the_intro_card_once():
+    from gartok.draft_screen import DraftScreen
+    ds = DraftScreen.__new__(DraftScreen)
+    ds.phase, ds.picks, ds.tutorial = "pick", [], TutorialState()
+    assert ds.tutorial_key() == "draft.intro"
+    ds.tutorial.dismiss("draft.intro")
+    assert ds.tutorial_key() == "draft.pick"
+    ds.tutorial.reset()
+    ds.picks = ["a"]                                  # mid-draft: a reset never re-pops the intro
+    assert ds.tutorial_key() == "draft.pick"
+
+
+def _hero_app():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok import tutorial_card
+    from gartok.app import App
+
+    app = App()
+    app._new_game(0)
+    app.scene.mouse = (-1, -1)
+    app.window.fill((0, 0, 0))
+    app.scene.draw(app.window)
+    app._tutorial_card_rect, app._tutorial_badge_rect = tutorial_card.draw(
+        app.window, app.ui_fonts, app.scene, app.tutorial)
+    app._tutorial_rect_scene = app.scene
+    return app, pygame
+
+
+def test_intro_card_swallows_everything_and_a_click_dismisses_it():
+    app, pygame = _hero_app()
+    assert app.scene.tutorial_key() == "draft.intro"
+    down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(5, 5))   # outside the card
+    key = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)
+    assert app._tutorial_swallow(key) is True
+    assert "draft.intro" not in app.tutorial.seen
+    assert app._tutorial_swallow(down) is True
+    assert "draft.intro" in app.tutorial.seen
+
+
+def test_closing_a_card_never_reaches_the_screen_underneath():
+    app, pygame = _hero_app()
+    down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(5, 5))
+    up = pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(5, 5))
+    app._tutorial_swallow(down)
+    assert app._tutorial_swallow(up) is True                  # the dismissing press's release
+    assert app._tutorial_swallow(down) is True                # a quick second click: debounced
+    app._tutorial_block_until = 0
+    assert app._tutorial_swallow(down) is True                # the next card (draft.pick) is up
+    app.tutorial.seen.add("draft.pick")
+    app._tutorial_block_until = 0
+    assert app._tutorial_swallow(down) is False               # no card left: clicks flow again
+
+
+def test_intro_card_dismisses_on_enter_and_lets_escape_through():
+    app, pygame = _hero_app()
+    esc = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)
+    assert app._tutorial_swallow(esc) is True                 # swallowed here, but `run` handles Esc first
+    enter = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)
+    assert app._tutorial_swallow(enter) is True
+    assert "draft.intro" in app.tutorial.seen
+
+
+def test_hubs_show_the_card_of_the_tab_they_are_on():
+    from gartok.apothecary_hub_screen import ApothecaryHubScreen
+    from gartok.bank_hub_screen import BankHubScreen
+    from gartok.library_hub_screen import LibraryHubScreen
+
+    class _Tab:
+        def __init__(self, key):
+            self.key = key
+
+        def tutorial_key(self):
+            return self.key
+
+    for cls in (BankHubScreen, LibraryHubScreen, ApothecaryHubScreen):
+        hub = cls.__new__(cls)
+        hub.active_screen = lambda: _Tab("bank")
+        assert hub.tutorial_key() == "bank"
+
+
+def test_no_registered_card_is_orphaned():
+    """Every id must be returned by some screen -- the map's card once sat
+    registered and never showed. `guild.*` and `draft.*` ids are picked per tab/phase
+    and covered by their own tests."""
+    import pathlib
+    files = [p for p in pathlib.Path("gartok").rglob("*.py") if p.name != "tutorial.py"]
+    src = "".join(p.read_text(encoding="utf-8") for p in files)
+    for tid in TUTORIALS:
+        if not tid.startswith(("guild.", "draft.")):
+            assert f'return "{tid}"' in src, tid

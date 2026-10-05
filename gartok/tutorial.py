@@ -1,4 +1,4 @@
-"""The soft tutorial: state only -- no pygame here, so `guild.py` can hold one
+"""The tutorial: state only -- no pygame here, so `guild.py` can hold one
 without breaking its "stays pygame-free" promise (see its module docstring).
 
 An id names one card's worth of copy under `tutorial.<id>.*` in
@@ -10,13 +10,13 @@ any) the player forced back open with a screen's `?` badge.
 """
 
 TUTORIALS = (
-    "draft.pick", "draft.identity",
+    "draft.intro", "draft.pick", "draft.identity",
     "map",
     "guild.members", "guild.overview", "guild.reputations",
     "squad", "battle", "loot", "reward",
-    "market", "taverna", "hunt", "bank", "gear", "level", "library"
+    "market", "taverna", "hunt", "bank", "gear", "level", "library",
+    "group", "missions", "trust", "ledger", "craft", "property", "claim", "guard", "prison"
 )
-
 
 class TutorialState:
     def __init__(self, seen=None, enabled=True):

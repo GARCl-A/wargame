@@ -82,6 +82,7 @@ from .ui.tokens import fonts as ui_fonts
 from .wilds_claim_screen import WildsClaimScreen
 
 START_SIZE = (1212, 832)
+TUTORIAL_DEBOUNCE_MS = 300      # clicks swallowed right after a tutorial card closes
 
 
 class App:
@@ -104,15 +105,17 @@ class App:
         self._map_notices = []               # lines for the next MapScreen (title forfeit, ...)
         self._pending = []                   # [(Group, Order)] left to resolve from the last tick
         self._pending_event = None           # (Group, Order) an ambush paused mid-map -- MapScreen's own CTA resolves it
-        self._draft_tutorial = TutorialState()   # the soft tutorial, before a Guild exists to hold it
+        self._draft_tutorial = TutorialState()   # the tutorial, before a Guild exists to hold it
         self._tutorial_card_rect = None
         self._tutorial_badge_rect = None
         self._tutorial_rect_scene = None     # which scene those rects were drawn for
+        self._tutorial_block_until = 0       # ms: swallow clicks right after a dismissal
+        self._tutorial_swallow_up = False    # the release that closes the dismissing press
         self._start_menu()
 
     @property
     def tutorial(self):
-        """The soft tutorial's state: the guild's own once there is one (so it
+        """The tutorial's state: the guild's own once there is one (so it
         saves/loads by slot), `_draft_tutorial` before that (draft.py has no
         guild yet to hold it on)."""
         return self.guild.tutorial if self.guild is not None else self._draft_tutorial
@@ -142,7 +145,8 @@ class App:
         self.slot = slot
         self.guild = None
         self._draft_tutorial = TutorialState()
-        self.scene = DraftScreen(self.ui_fonts, on_done=self._draft_done)
+        self.scene = DraftScreen(self.ui_fonts, on_done=self._draft_done,
+                                 tutorial=self._draft_tutorial)
 
     def _draft_done(self, picks, leader, name, banner_color, banner_icon):
         self.guild = Guild(picks, node=world.START_NODE, leader=leader,
@@ -866,7 +870,7 @@ class App:
 
     # ------------------------------------------------------------------ #
     def _tutorial_click(self, event):
-        """True if this click was spent on the tutorial card/badge instead of
+        """True if this click was spent on the tutorial `?` badge instead of
         reaching the scene -- checked against LAST frame's rects (`run`
         computes this frame's only after events are handled; the one-frame lag
         is invisible at 60 fps). `_tutorial_rect_scene` guards against a scene
@@ -882,13 +886,41 @@ class App:
         key = self.scene.tutorial_key()
         if key is None:
             return False
-        if self._tutorial_card_rect and self._tutorial_card_rect.collidepoint(event.pos):
-            self.tutorial.dismiss(key)
-            return True
         if self._tutorial_badge_rect and self._tutorial_badge_rect.collidepoint(event.pos):
             self.tutorial.reopen(key)
+            self._debounce_tutorial_click()
             return True
         return False
+
+    def _debounce_tutorial_click(self):
+        self._tutorial_block_until = pygame.time.get_ticks() + TUTORIAL_DEBOUNCE_MS
+        self._tutorial_swallow_up = True
+
+    def _tutorial_swallow(self, event):
+        """True if `event` must not reach the scene: a click or key while a
+        tutorial card is up (it is dismissed by a click or Enter/Space),
+        and any click inside the debounce window after a dismissal -- plus the
+        release of the dismissing press -- so closing a card never also presses
+        whatever was underneath it. Esc is left to `run`."""
+        mouse = (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEWHEEL)
+        if event.type == pygame.MOUSEBUTTONUP and self._tutorial_swallow_up:
+            self._tutorial_swallow_up = False
+            return True
+        if event.type in mouse and pygame.time.get_ticks() < self._tutorial_block_until:
+            return True
+        key = self.scene.tutorial_key()
+        if (key is None or self._tutorial_rect_scene is not self.scene
+                or not self.tutorial.should_show(key)):
+            return False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.tutorial.dismiss(key)
+            self._debounce_tutorial_click()
+            return True
+        if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER,
+                                                          pygame.K_SPACE):
+            self.tutorial.dismiss(key)
+            return True
+        return event.type in mouse or event.type == pygame.KEYDOWN
 
     def run(self):
         self._running = True
@@ -903,6 +935,8 @@ class App:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     if not self.scene.handle_escape():
                         self._toggle_pause()
+                elif self._tutorial_swallow(event):
+                    pass
                 elif self._tutorial_click(event):
                     pass
                 else:

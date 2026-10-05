@@ -62,7 +62,7 @@ class PrisonScreen(Screen):
         self._hot = False
 
     def tutorial_key(self):
-        return None
+        return "prison"
 
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
                    danger=False, font=None, sub=None):

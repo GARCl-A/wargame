@@ -19,6 +19,9 @@ CARD_W = 560
 class LedgerScreen(Screen):
     native = True
 
+    def tutorial_key(self):
+        return "ledger"
+
     def __init__(self, fonts, guild, group, on_done):
         super().__init__()
         self.fonts = fonts

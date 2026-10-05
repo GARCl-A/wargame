@@ -107,11 +107,7 @@ class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModal
 
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
-        # GEAR/QUESTS live top-right here (matching the v6 mock's header),
-        # the same corner `tutorial_card._draw_badge` always draws its
-        # reopen badge in regardless of any per-screen anchor -- opts out
-        # for the same reason `MapScreen.tutorial_key` does.
-        return None
+        return "group"
 
     def _ui_fonts(self):
         if self._F is None:

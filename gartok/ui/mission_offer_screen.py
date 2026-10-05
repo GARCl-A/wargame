@@ -114,6 +114,9 @@ class MissionOfferScreen(Screen):
             return None
         return m if any(u.uid == m.unit_uid for u in self.group.members) else None
 
+    def tutorial_key(self):
+        return "missions"
+
     def handle_escape(self):
         self.on_done()
         return True

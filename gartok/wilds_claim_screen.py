@@ -40,7 +40,7 @@ class WildsClaimScreen(Screen):
         return self._F
 
     def tutorial_key(self):
-        return None
+        return "claim"
 
     # ------------------------------------------------------------------ #
     def _party_lumber(self):

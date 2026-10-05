@@ -18,6 +18,9 @@ from .ui.mission_offer_screen import MissionOfferScreen
 class TrustScreen(MissionOfferScreen):
     TEMPLATE = missions.TRUST_CHEST
 
+    def tutorial_key(self):
+        return "trust"
+
     @property
     def title_text(self):
         return "THE BANKERS"

@@ -10,6 +10,8 @@ from .ui.primitives import draw_button
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
+TAB_W = 120
+
 
 class LibraryHubScreen(Screen):
     native = True
@@ -29,9 +31,13 @@ class LibraryHubScreen(Screen):
                                            title="THE LIBRARY (WRITE)",
                                            subtitle="write dictionaries and translate texts  ·  needs recipes and materials",
                                            station="scriptorium")
+        self.shop_screen.header_reserve = 3 * (TAB_W + T.S)
         self.jobs_screen = LibraryMissionScreen(self._F, guild, group, on_done)
         
         self.buttons = []
+
+    def tutorial_key(self):
+        return self.active_screen().tutorial_key()
 
     def active_screen(self):
         if self.tab == "shop":
@@ -66,11 +72,11 @@ class LibraryHubScreen(Screen):
 
         # Draw our tabs in the top right
         m = T.S * 3
-        bw = 120
+        bw = TAB_W
         F = self._F
         
         self.buttons = []
-        x = screen.get_width() - m - bw
+        x = screen.get_width() - m - bw - T.S * 5      # room for the tutorial `?` badge
         
         # Jobs tab
         r_jobs = pygame.Rect(x, m, bw, 32)

@@ -74,7 +74,7 @@ class HuntScreen(Screen):
         return hov
 
     # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py) -- one card for all three phases; the risk
+    # tutorial (screen.py) -- one card for all three phases; the risk
     # and the payoff are the same story throughout                       #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
@@ -84,11 +84,6 @@ class HuntScreen(Screen):
         W, H = size
         m = T.S * 3
         return pygame.Rect(W - m - 28, m - 4, 28, 28)
-
-    def tutorial_anchor(self, size):
-        W, H = size
-        m = T.S * 3
-        return (W - m - 340, m + 32, 340, "down")
 
     # ------------------------------------------------------------------ #
     def _wrap_up(self):

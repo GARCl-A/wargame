@@ -135,7 +135,7 @@ class SquadScreen(SheetModalMixin, Screen):
         return unit.combat_level > arena.bout_max_combat_level(self.offer)
 
     # ------------------------------------------------------------------ #
-    # soft tutorial (screen.py)                                          #
+    # tutorial (screen.py)                                               #
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "squad"
@@ -144,11 +144,6 @@ class SquadScreen(SheetModalMixin, Screen):
         W, H = size
         pad = 16 if W < 1500 else 24
         return pygame.Rect(W - pad - 28, pad - 4, 28, 28)
-
-    def tutorial_anchor(self, size):
-        W, H = size
-        pad = 16 if W < 1500 else 24
-        return (W - pad - 340, pad + 32, 340, "down")
 
     # ------------------------------------------------------------------ #
     def handle_event(self, event):
