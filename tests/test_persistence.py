@@ -126,8 +126,8 @@ def test_save_slot_file_round_trip():
     from gartok import missions, persist
     from gartok.clock import Clock
     from gartok.guild import Guild
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return                                        # never clobber a real save
     random.seed(8)
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
@@ -162,7 +162,7 @@ def test_save_slot_file_round_trip():
         assert back.missions[0].unit_uid == m.unit_uid
         assert back.missions[0].deadline_day == m.deadline_day
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
@@ -171,8 +171,8 @@ def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
     import json
 
     from gartok import persist
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return                                        # never clobber a real save
     random.seed(8)
     old_payload = {
@@ -192,8 +192,8 @@ def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
         "taverna_pool": None,
         "taverna_blocked": [],
     }
-    os.makedirs(persist.SAVE_DIR, exist_ok=True)
-    with open(persist.slot_path(slot), "w", encoding="utf-8") as fh:
+    os.makedirs(persist.world_dir(slot), exist_ok=True)
+    with open(persist.save_path(slot), "w", encoding="utf-8") as fh:
         json.dump(old_payload, fh)
     try:
         guild = persist.load_game(slot)
@@ -201,14 +201,14 @@ def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
         assert guild.groups[0].node == "wilds"
         assert len(guild.roster) == 1
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_leadership_survives_a_save_round_trip():
     from gartok import persist
     from gartok.guild import Guild
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return                                        # never clobber a real save
     random.seed(11)
     a, b, c = Unit("player"), Unit("player"), Unit("player")
@@ -226,7 +226,7 @@ def test_leadership_survives_a_save_round_trip():
         assert back.group_of(back_a).leader.uid == a.uid       # the split-off group: its own leader
         assert back.group_of(back_b).leader.uid == b.uid       # the original group kept its own leader
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_uid_is_stable_across_a_save_round_trip():
@@ -249,8 +249,8 @@ def test_recruited_by_survives_a_save_round_trip():
 def test_crime_and_jailed_survive_a_save_round_trip():
     from gartok import justice
     from gartok.guild import Guild
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return                                        # never clobber a real save
     random.seed(4)
     free, culprit = Unit("player"), Unit("player")
@@ -268,7 +268,7 @@ def test_crime_and_jailed_survive_a_save_round_trip():
         assert back_u.uid == culprit.uid and back_u.crime == 0
         assert back_day == guild.jailed[0][1]
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_mission_ambush_done_survives_a_dict_round_trip():
@@ -295,3 +295,76 @@ def test_from_save_backfills_quiver_charges_for_old_saves():
     del d["quiver_charges"]
     v = Unit.from_save(d)
     assert v.quiver_charges == data.QUIVER_AMMO
+
+
+# --------------------------------------------------------------------------- #
+# worlds: current + autosaves + manual saves                                  #
+# --------------------------------------------------------------------------- #
+
+def _world_guild(name="Iron Fists"):
+    from gartok.guild import Guild
+    guild = Guild([Unit("player")], node="city", name=name)
+    return guild
+
+
+def test_a_world_keeps_current_plus_every_snapshot_kind():
+    world = persist.new_world_id()
+    guild = _world_guild()
+    persist.save_game(world, guild)
+    persist.save_game(world, guild, kind="auto", label="before the wolves")
+    persist.save_game(world, guild, kind="manual", label="safe point")
+
+    rows = persist.list_saves(world)
+    assert {r["kind"] for r in rows} == {"current", "auto", "manual"}
+    assert {r["label"] for r in rows if r["kind"] != "current"} == {"before the wolves", "safe point"}
+    assert all(r["name"] == "Iron Fists" and r["saved_at"] for r in rows)
+    assert [r["saved_at"] for r in rows] == sorted((r["saved_at"] for r in rows), reverse=True)
+
+
+def test_only_the_newest_autosaves_are_kept_and_manual_ones_never_pruned():
+    world = persist.new_world_id()
+    guild = _world_guild()
+    persist.save_game(world, guild, kind="manual", label="mine")
+    for i in range(persist.AUTOSAVES_KEPT + 3):
+        persist.save_game(world, guild, kind="auto", label=f"fight {i}")
+
+    autos = [r for r in persist.list_saves(world) if r["kind"] == "auto"]
+    assert len(autos) == persist.AUTOSAVES_KEPT
+    assert {r["label"] for r in autos} == {f"fight {i}" for i in range(3, persist.AUTOSAVES_KEPT + 3)}
+    assert any(r["kind"] == "manual" for r in persist.list_saves(world))
+
+
+def test_a_snapshot_loads_the_guild_as_it_was():
+    world = persist.new_world_id()
+    guild = _world_guild()
+    guild.battles_won = 2
+    snap = persist.save_game(world, guild, kind="auto", label="x")
+    guild.battles_won = 9
+    persist.save_game(world, guild)
+
+    assert persist.load_game(world).battles_won == 9
+    assert persist.load_game(world, snap).battles_won == 2
+
+
+def test_list_worlds_groups_saves_by_guild_newest_first():
+    a, b = persist.new_world_id(), persist.new_world_id()
+    persist.save_game(a, _world_guild("Alpha"))
+    persist.save_game(b, _world_guild("Beta"))
+    persist.save_game(b, _world_guild("Beta"), kind="auto", label="x")
+
+    rows = persist.list_worlds()
+    assert {r["name"] for r in rows} == {"Alpha", "Beta"}
+    assert next(r for r in rows if r["name"] == "Beta")["saves"] == 2
+    assert persist.list_worlds()[0]["saved_at"] >= persist.list_worlds()[-1]["saved_at"]
+
+
+def test_delete_save_never_touches_current_and_delete_world_removes_everything():
+    world = persist.new_world_id()
+    snap = persist.save_game(world, _world_guild(), kind="manual", label="m")
+    persist.save_game(world, _world_guild())
+    persist.delete_save(world, persist.CURRENT)
+    assert {r["id"] for r in persist.list_saves(world)} == {persist.CURRENT, snap}
+    persist.delete_save(world, snap)
+    assert [r["id"] for r in persist.list_saves(world)] == [persist.CURRENT]
+    persist.delete_world(world)
+    assert persist.list_saves(world) == [] and persist.list_worlds() == []

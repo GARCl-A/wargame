@@ -1,7 +1,7 @@
 """GARTOK Tactical shell: window, main loop and screen switching.
 
-The screens do the work: `MenuScreen` (save slots), `DraftScreen` (building the
-starting guild), `MapScreen` (the hub -- give groups orders and advance the
+The screens do the work: `MenuScreen` (guilds and their saves), `DraftScreen`
+(building the starting guild), `MapScreen` (the hub -- give groups orders and advance the
 world), `GuildScreen` (roster + gear), `SquadScreen` (who fights), `BattleScreen`
 (the fight) and `LootScreen` (split the spoils). Each exposes `handle_event`,
 `update(dt)`, `draw(surface)` and reads `self.mouse` (canvas-space cursor).
@@ -71,6 +71,7 @@ from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
 from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
+from .saves_screen import SavesScreen
 from .scenario import Scenario
 from .squad_screen import SquadScreen
 from .tanner_screen import TannerScreen
@@ -93,7 +94,7 @@ class App:
         self.clock = pygame.time.Clock()
         self.ui_fonts = ui_fonts()
 
-        self.slot = None
+        self.world = None                    # persist world id: the save folder of the running campaign
         self.guild = None
         self._battle_squad = []              # roster units sent to the current battle
         self._battle_node = None             # world node the current battle is at
@@ -123,11 +124,16 @@ class App:
     # ------------------------------------------------------------------ #
     # campaign flow                                                      #
     # ------------------------------------------------------------------ #
-    def _start_menu(self):
+    def _start_menu(self, notice=None):
         self.scene = MenuScreen(self.ui_fonts, on_new=self._new_game,
                                 on_continue=self._continue_game,
-                                on_delete=persist.delete_slot,
-                                on_editor=self._start_editor)
+                                on_saves=self._open_saves,
+                                on_delete=persist.delete_world,
+                                on_editor=self._start_editor, notice=notice)
+
+    def _open_saves(self, world_id):
+        self.scene = SavesScreen(self.ui_fonts, world_id, on_load=self._continue_game,
+                                 on_back=self._start_menu)
 
     def _start_editor(self):
         self.scene = EditorMenuScreen(self.ui_fonts,
@@ -141,23 +147,26 @@ class App:
     def _open_map_editor(self):
         self.scene = MapEditorScreen(self.ui_fonts, on_back=self._start_editor)
 
-    def _new_game(self, slot):
-        self.slot = slot
+    def _new_game(self):
+        self.world = None                    # minted in `_draft_done`, once there is a guild to name it
         self.guild = None
         self._draft_tutorial = TutorialState()
         self.scene = DraftScreen(self.ui_fonts, on_done=self._draft_done,
                                  tutorial=self._draft_tutorial)
 
     def _draft_done(self, picks, leader, name, banner_color, banner_icon):
+        self.world = persist.new_world_id()
         self.guild = Guild(picks, node=world.START_NODE, leader=leader,
                            name=name, banner_color=banner_color, banner_icon=banner_icon,
                            tutorial=self._draft_tutorial)
         set_player_color(self.guild.banner_color)
         self._start_map()
 
-    def _continue_game(self, slot):
-        self.slot = slot
-        self.guild = persist.load_game(slot)
+    def _continue_game(self, world_id, save_id=persist.CURRENT):
+        self.world = world_id
+        self.guild = persist.load_game(world_id, save_id)
+        if save_id != persist.CURRENT:
+            self._save()                     # the snapshot becomes the live state
         set_player_color(self.guild.banner_color)
         valid = {n.id for n in world.NODES}
         for g in self.guild.groups:            # a stale/removed node id: drop back to the start
@@ -166,7 +175,7 @@ class App:
         self._start_map()
 
     def _save(self):
-        persist.save_game(self.slot, self.guild)
+        persist.save_game(self.world, self.guild)
 
     def _start_map(self):
         """Land on the map -- unless every group already has an order and
@@ -218,9 +227,10 @@ class App:
         return events
 
     def _campaign_over(self):
-        """Roster gone (a wipe, or the last member starved on the road)."""
-        persist.delete_slot(self.slot)
-        self._start_menu()
+        """Roster gone (a wipe, or the last member starved on the road). The
+        world stays: its last `current` and autosaves are still loadable."""
+        self.guild = self.world = None
+        self._start_menu(notice="The guild was wiped out. Load an earlier save to try again.")
 
     def _open_guild(self):
         self.scene = GuildScreen(self.ui_fonts, self.guild,
@@ -444,7 +454,7 @@ class App:
         battle = Battle(list(group.members), pack, scenario=node.scenario(),
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+        self._enter_battle(battle, node)
 
     def _open_tanner_stall(self, group, node, _offer):
         self.scene = TannerScreen(self.ui_fonts, self.guild, group,
@@ -478,7 +488,7 @@ class App:
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None
-        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+        self._enter_battle(battle, node)
 
     # ------------------------------------------------------------------ #
     # the guard: a jurisdiction node just caught someone (justice.py)     #
@@ -519,6 +529,7 @@ class App:
 
     def _resolve_ambush_autowin(self, group, order, autowin_result):
         self._pending_event = None
+        self._autosave(f"Before a fight at {world.node(group.node).name}: {len(order.pack)} foes (auto-resolved)")
         for u in group.members:
             avg_dmg = autowin_result.avg_damage.get(u.uid, 0.0)
             u.hp = max(1, u.hp - round(avg_dmg))
@@ -587,7 +598,7 @@ class App:
         battle = Battle(list(group.members), enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+        self._enter_battle(battle, node)
 
     # ------------------------------------------------------------------ #
     # hunting the wilds -- an activity that can spring a fight            #
@@ -618,9 +629,10 @@ class App:
                         daylight=self.guild.clock.is_daylight,
                         lethal=state.node.lethal, arena=False,
                         clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+        self._enter_battle(battle, state.node)
 
     def _resolve_hunt_autowin(self, state, pack, autowin_result):
+        self._autosave(f"Before a fight at {state.node.name}: {len(pack)} foes (auto-resolved)")
         for u in state.party:
             avg_dmg = autowin_result.avg_damage.get(u.uid, 0.0)
             u.hp = max(1, u.hp - round(avg_dmg))
@@ -691,7 +703,7 @@ class App:
         battle = Battle(squad, enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena, clock_day=self.guild.clock.day)
-        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+        self._enter_battle(battle, node)
 
     def _start_title_defense(self, node):
         """A due title challenge: the champion alone against one scaled newcomer."""
@@ -704,7 +716,19 @@ class App:
         battle = Battle([champ], enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=False, arena=True,
                         clock_day=self.guild.clock.day)
+        self._enter_battle(battle, node)
+
+    def _enter_battle(self, battle, node):
+        """Every fight starts here: snapshot the world first, so a bad one can be undone."""
+        self._autosave_before(battle, node)
         self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+
+    def _autosave_before(self, battle, node):
+        foes = len(battle.enemy_units)
+        self._autosave(f"Before a fight at {node.name}: {foes} foe{'s' if foes != 1 else ''}")
+
+    def _autosave(self, label):
+        persist.save_game(self.world, self.guild, kind="auto", label=label)
 
     def _battle_end(self, battle):
         hunt_state = self._hunt
@@ -844,7 +868,12 @@ class App:
                                      on_quit=self._quit,
                                      tutorial=self.tutorial,
                                      on_tutorial_toggle=self._toggle_tutorial,
-                                     on_tutorial_reset=self._reset_tutorial)
+                                     on_tutorial_reset=self._reset_tutorial,
+                                     on_save_as=self._save_as,
+                                     can_save=self.guild is not None)
+
+    def _save_as(self, name):
+        persist.save_game(self.world, self.guild, kind="manual", label=name)
 
     def _resume_from_pause(self):
         if isinstance(self.scene, PauseScreen):

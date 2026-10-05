@@ -308,8 +308,8 @@ def test_studying_without_the_scroll_makes_no_progress():
 def test_magic_state_survives_a_save_round_trip():
     import os
 
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return
     random.seed(1)
     u = Unit("player")
@@ -327,7 +327,7 @@ def test_magic_state_survives_a_save_round_trip():
         assert back_u.study_target == "magic_missile"
         assert back_u.study_progress == 42
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_can_study_spell_requires_matching_affinity_and_unlearned():

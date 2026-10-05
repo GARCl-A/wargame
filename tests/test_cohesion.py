@@ -263,8 +263,8 @@ def test_the_daily_upkeep_runs_the_cohesion_test(monkeypatch):
 
 
 def test_notices_survive_a_save_round_trip():
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return                                        # never clobber a real save
     guild, _group, m = _full_guild(wis=[12, 6, 12, 12])
     cohesion.daily(guild, ALWAYS_FAILS)
@@ -273,7 +273,7 @@ def test_notices_survive_a_save_round_trip():
         back = persist.load_game(slot)
         assert back.leaving == {m[2].uid: guild.leaving[m[2].uid]}
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_an_old_save_without_notices_loads_clean():

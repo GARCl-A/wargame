@@ -15,7 +15,7 @@ Estimated from the descriptions, not the code; "verify" = check before committin
 ## 2. Combat
 
 - [x] Dying: clock is 4 turns; a hit on a dying body ticks the clock once instead of killing it (ease 4 · impact 4)
-- [ ] Pre-combat backup save: each slot = current state + state before the last combat (ease 3 · impact 5) — persist.py + load UI
+- [x] Worlds with many saves: autosave before every fight (last 10), named manual saves, wipe keeps the world (ease 3 · impact 5)
 - [ ] Auto battler with priority programming, Siralim-style (ease 1 · impact 5) — its own arc, own branch; needs UI + AI + tests
 
 ## 3. Talents

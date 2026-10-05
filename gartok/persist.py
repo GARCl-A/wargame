@@ -1,5 +1,10 @@
-"""Save slots: each slot is one JSON file under `saves/`; the game autosaves to
-the active slot after the draft, after every battle and after every manage step.
+"""Worlds and saves: each world (one guild's campaign) is a folder under `saves/`.
+`current.json` is the live state -- rewritten after the draft, every battle and
+every manage step -- next to the snapshots that let a player go back in time:
+`auto_<ts>.json` (taken right before each fight, the last `AUTOSAVES_KEPT` are
+kept) and `manual_<ts>.json` (named by the player, never pruned). Loading any
+snapshot makes it the new `current`; the others stay on the list. A wipe does
+not delete the world.
 
 The player roster is saved as **groups** (`gartok/group.py`): each group's own
 member list, map node and leader (a uid, resolved back to a `Unit` after its
@@ -16,8 +21,10 @@ battle and battle state lives on a throwaway `Combatant` wrapper, never on the
 
 import json
 import os
+import shutil
 import sys
 import time
+import uuid
 
 from . import items, missions
 from .clock import Clock
@@ -34,12 +41,21 @@ else:
     _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
-NUM_SLOTS = 3
+CURRENT = "current"
+AUTOSAVES_KEPT = 10
 SAVE_VERSION = 18                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
-def slot_path(slot):
-    return os.path.join(SAVE_DIR, f"slot_{slot}.json")
+def new_world_id():
+    return uuid.uuid4().hex[:8]
+
+
+def world_dir(world):
+    return os.path.join(SAVE_DIR, str(world))
+
+
+def save_path(world, save_id=CURRENT):
+    return os.path.join(world_dir(world), f"{save_id}.json")
 
 
 def _serialize_pack(pack):
@@ -129,10 +145,12 @@ def group_from_dict(d):
                  leader=leader)
 
 
-def save_game(slot, guild):
-    os.makedirs(SAVE_DIR, exist_ok=True)
-    payload = {
+def _payload(guild, kind, label):
+    return {
         "save_version": SAVE_VERSION,
+        "save_kind": kind,
+        "save_label": label,
+        "day": guild.clock.day,
         "battles_won": guild.battles_won,
         "reputation": dict(guild.reputation),
         "deeds_done": list(guild.deeds_done),
@@ -179,17 +197,35 @@ def save_game(slot, guild):
         "tutorial_seen": sorted(guild.tutorial.seen),
         "tutorial_enabled": guild.tutorial.enabled,
     }
-    tmp = slot_path(slot) + ".tmp"
+
+
+def save_game(world, guild, kind="current", label=""):
+    """Write `guild` into `world`'s folder and return the save id. `kind` is
+    "current" (the live file, overwritten), "auto" or "manual" (a new snapshot)."""
+    os.makedirs(world_dir(world), exist_ok=True)
+    save_id = CURRENT if kind == "current" else f"{kind}_{time.time_ns()}"
+    path = save_path(world, save_id)
+    tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=2)
-    os.replace(tmp, slot_path(slot))            # atomic: never leave a half-written slot
+        json.dump(_payload(guild, kind, label), fh, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)                       # atomic: never leave a half-written save
+    if kind == "auto":
+        _prune_autosaves(world)
+    return save_id
 
 
-def load_game(slot):
+def _prune_autosaves(world):
+    autos = sorted(f for f in os.listdir(world_dir(world))
+                   if f.startswith("auto_") and f.endswith(".json"))
+    for name in autos[:-AUTOSAVES_KEPT]:
+        os.remove(os.path.join(world_dir(world), name))
+
+
+def load_game(world, save_id=CURRENT):
     """-> Guild (groups + campaign meta). Missing keys default (old saves); a
     save from before the groups layer (`"roster"`/`"node"`, no `"groups"`) is
     rebuilt as a single group holding the whole old roster at the old node."""
-    with open(slot_path(slot), encoding="utf-8") as fh:
+    with open(save_path(world, save_id), encoding="utf-8") as fh:
         payload = json.load(fh)
     if "groups" in payload:
         groups = [group_from_dict(d) for d in payload["groups"]]
@@ -240,26 +276,58 @@ def load_game(slot):
                                        enabled=payload.get("tutorial_enabled", True)))
 
 
-def delete_slot(slot):
+def delete_world(world):
+    shutil.rmtree(world_dir(world), ignore_errors=True)
+
+
+def delete_save(world, save_id):
+    if save_id == CURRENT:
+        return
     try:
-        os.remove(slot_path(slot))
+        os.remove(save_path(world, save_id))
     except FileNotFoundError:
         pass
 
 
-def slot_summaries():
-    """One dict per slot for the menu: {index, empty[, squad, battles_won, saved_at]}."""
-    out = []
-    for i in range(NUM_SLOTS):
-        try:
-            with open(slot_path(i), encoding="utf-8") as fh:
-                payload = json.load(fh)
-            out.append({
-                "index": i, "empty": False,
-                "squad": payload.get("squad", []),
-                "battles_won": payload.get("battles_won", 0),
-                "saved_at": payload.get("saved_at", 0),
-            })
-        except (FileNotFoundError, json.JSONDecodeError, KeyError):
-            out.append({"index": i, "empty": True})
-    return out
+def _summary(world, save_id):
+    """Menu row for one save file, or None if it is missing/unreadable."""
+    try:
+        with open(save_path(world, save_id), encoding="utf-8") as fh:
+            payload = json.load(fh)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return {
+        "world": world, "id": save_id,
+        "kind": payload.get("save_kind", "current"),
+        "label": payload.get("save_label", ""),
+        "name": payload.get("name", ""),
+        "squad": payload.get("squad", []),
+        "battles_won": payload.get("battles_won", 0),
+        "day": payload.get("day"),
+        "saved_at": payload.get("saved_at", 0),
+    }
+
+
+def list_saves(world):
+    """Every save of `world`, newest first -- `current` included."""
+    try:
+        names = os.listdir(world_dir(world))
+    except FileNotFoundError:
+        return []
+    rows = [_summary(world, n[:-5]) for n in names if n.endswith(".json")]
+    return sorted((r for r in rows if r), key=lambda r: r["saved_at"], reverse=True)
+
+
+def list_worlds():
+    """One row per world with a live save (the menu's guild list), most recently
+    played first: {world, name, squad, battles_won, saved_at, saves}."""
+    try:
+        worlds = [d for d in os.listdir(SAVE_DIR) if os.path.isdir(world_dir(d))]
+    except FileNotFoundError:
+        return []
+    rows = []
+    for w in worlds:
+        cur = _summary(w, CURRENT)
+        if cur:
+            rows.append({**cur, "saves": sum(f.endswith(".json") for f in os.listdir(world_dir(w)))})
+    return sorted(rows, key=lambda r: r["saved_at"], reverse=True)

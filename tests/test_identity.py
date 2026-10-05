@@ -58,8 +58,8 @@ def test_leadership_survives_a_save_round_trip_with_identity():
     """Sibling of test_persistence.py's leadership round-trip, but for the
     name/banner fields added alongside it."""
     from gartok import persist
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return                                    # never clobber a real save
     random.seed(12)
     guild = Guild([Unit("player")], node="city", name="Sable Wolves",
@@ -71,7 +71,7 @@ def test_leadership_survives_a_save_round_trip_with_identity():
         assert back.banner_color == (150, 112, 196)
         assert back.banner_icon == "wolf-howl"
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_draft_screen_identity_phase_collects_name_and_banner():

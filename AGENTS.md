@@ -59,7 +59,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `group.py` | Group = physical subset of the guild (members, node, order); `BASE_SLOTS` / fame → how many groups the guild may run |
 | `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
-| `persist.py` | JSON save/load, SAVE_VERSION, tolerates missing keys |
+| `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, tolerates missing keys |
+| `menu_screen.py` / `saves_screen.py` | guild list at launch → every save of a guild, with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS`, a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |

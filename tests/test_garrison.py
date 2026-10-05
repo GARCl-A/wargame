@@ -215,8 +215,8 @@ def test_garrison_stock_survives_a_save_round_trip():
     import os
 
     from gartok import persist
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return
     random.seed(1)
     guild = Guild([Unit("player")])
@@ -226,7 +226,7 @@ def test_garrison_stock_survives_a_save_round_trip():
         back = persist.load_game(slot)
         assert back.garrison_stock_at("market") == ["Lumber", "Lumber"]
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_city_property_state_survives_a_save_round_trip():
@@ -236,8 +236,8 @@ def test_city_property_state_survives_a_save_round_trip():
     import os
 
     from gartok import persist
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return
     random.seed(1)
     p = Unit("player")
@@ -256,15 +256,15 @@ def test_city_property_state_survives_a_save_round_trip():
         assert back.bankers_debt == 15
         assert back.bankers_debt_since == guild.bankers_debt_since
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_a_squatting_property_survives_a_save_round_trip():
     import os
 
     from gartok import persist
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return
     random.seed(1)
     guild = Guild([Unit("player")])
@@ -276,4 +276,4 @@ def test_a_squatting_property_survives_a_save_round_trip():
         assert back.house.owned and back.house.squatting
         assert back.house.tax_due_day is None
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)

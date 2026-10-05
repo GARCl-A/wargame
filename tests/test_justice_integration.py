@@ -23,6 +23,7 @@ from tests.helpers import Battle, Unit, fixed_d20, world
 
 def _app(guild):
     app = App.__new__(App)
+    app.world = "testworld"
     app.scene = None
     app.fonts = None
     app.ui_fonts = None

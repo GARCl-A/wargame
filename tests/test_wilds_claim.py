@@ -19,6 +19,7 @@ NODE = world.WILDS_TERRITORY_NODE
 
 def _app(guild):
     app = App.__new__(App)
+    app.world = "testworld"
     app.scene = None
     app.fonts = None
     app.ui_fonts = None
@@ -454,8 +455,8 @@ def test_wilds_claim_state_survives_a_save_round_trip():
     import os
 
     from gartok import persist
-    slot = persist.NUM_SLOTS - 1
-    if os.path.exists(persist.slot_path(slot)):
+    slot = "testworld"
+    if os.path.exists(persist.save_path(slot)):
         return
     random.seed(1)
     guild = Guild([Unit("player")])
@@ -468,4 +469,4 @@ def test_wilds_claim_state_survives_a_save_round_trip():
         assert back.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS
         assert back.wilds_claim_fence_lumber == 4
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)

@@ -40,7 +40,7 @@ def test_stale_tutorial_rect_never_swallows_a_click_after_a_scene_swap():
     from gartok.app import App
 
     app = App()
-    app._new_game(0)                              # DraftScreen, phase "pick"
+    app._new_game()                              # DraftScreen, phase "pick"
     draft = app.scene
     draft.mouse = (-1, -1)
     app.window.fill((0, 0, 0))
@@ -175,7 +175,7 @@ def test_save_round_trips_tutorial_state_by_slot():
         assert loaded.tutorial.seen == {"draft.pick", "map"}
         assert loaded.tutorial.enabled is False
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_a_pre_tutorial_save_loads_as_unseen_and_enabled():
@@ -183,7 +183,7 @@ def test_a_pre_tutorial_save_loads_as_unseen_and_enabled():
     random.seed(12)
     guild = persist.Guild([Unit("player")], node="city")
     persist.save_game(slot, guild)
-    path = persist.slot_path(slot)
+    path = persist.save_path(slot)
     import json
     with open(path, encoding="utf-8") as fh:
         payload = json.load(fh)
@@ -195,7 +195,7 @@ def test_a_pre_tutorial_save_loads_as_unseen_and_enabled():
         loaded = persist.load_game(slot)
         assert loaded.tutorial.seen == set() and loaded.tutorial.enabled is True
     finally:
-        persist.delete_slot(slot)
+        persist.delete_world(slot)
 
 
 def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
@@ -354,7 +354,7 @@ def _hero_app():
     from gartok.app import App
 
     app = App()
-    app._new_game(0)
+    app._new_game()
     app.scene.mouse = (-1, -1)
     app.window.fill((0, 0, 0))
     app.scene.draw(app.window)

@@ -299,7 +299,7 @@ def test_every_screen_draws_native_at_any_window_size():
     UI_F = ui_fonts()
 
     scenes = [
-        MenuScreen(UI_F, noop, noop, noop, on_editor=noop),
+        MenuScreen(UI_F, noop, noop, noop, noop, on_editor=noop),
         EditorMenuScreen(UI_F, noop, noop, on_scenario=noop),
         CharEditorScreen(UI_F, noop),
         MapEditorScreen(UI_F, noop),
