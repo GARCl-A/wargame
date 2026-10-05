@@ -599,7 +599,7 @@ class MapScreen(Screen):
                               "color": T.TX_FAINT})
         else:
             has_other_services = any([
-                here.tanner, here.trust, here.forge, here.apothecary, 
+                here.tanner, here.trust, here.forge, here.apothecary, here.stable,
                 getattr(here, "library", False), here.city_property, here.claim
             ])
             if not has_other_services:
@@ -619,6 +619,10 @@ class MapScreen(Screen):
                           
         if here.apothecary:
             blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY",
+                          "gap_before": T.S * 2})
+
+        if here.stable:
+            blocks.append({"type": "button", "key": "stable", "label": "VISIT THE STABLES",
                           "gap_before": T.S * 2})
 
         if getattr(here, "library", False):

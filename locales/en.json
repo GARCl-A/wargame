@@ -204,6 +204,14 @@
         "These strangers are jailed for minor crimes. Pay a bail to try recruiting one: pick a prisoner, then who makes the pitch -- the same screen as the tavern. It's Charisma against Charisma, and the bail gives them a +2 gratitude bonus.",
         "If the pitch fails they walk free and keep your money."
       ]
+    },
+    "stable": {
+      "title": "The stables",
+      "body": [
+        "Animals belong to the group, and the tack they wear decides their job: a Pack Saddle lets one carry cargo on its back, a Harness lets it pull the group's wagon. Fit tack here, or drag a saddle onto the animal on the gear screen.",
+        "A wagon (150 cp) holds up to 80 kg that never goes into a fight, and everyone eats from it on the road. It weighs 40 kg itself, so harnessed animals have to draw that too -- with none, the box is shut.",
+        "Animals eat a ration a day from what the group carries and starve after three unfed days. If the whole group dies, the animals and the wagon go with it; if anyone gets away, they stay."
+      ]
     }
   }
 }

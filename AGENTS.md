@@ -55,7 +55,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `orders.py` | Order dataclass; AUTO / INTERACTIVE / garrison / forced kinds |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
 | `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
-| `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat) |
+| `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat, oven) |
+| `wagon.py` | a Group's wagon + draft animals: cargo room from the animals, eaten from by the group, lost with it (`stables_screen.py` buys it) |
 | `group.py` | Group = physical subset of the guild (members, node, order); `BASE_SLOTS` / fame → how many groups the guild may run |
 | `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |

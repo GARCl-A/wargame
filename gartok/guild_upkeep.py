@@ -15,8 +15,8 @@ class UpkeepMixin:
 
     @property
     def rations(self):
-        """Meals in the packs across the whole roster."""
-        return sum(u.rations for u in self.roster)
+        """Meals in the packs across the whole roster, and on the wagons and animals."""
+        return sum(u.rations for u in self.roster) + sum(g.carried_rations for g in self.groups)
 
     # ------------------------------------------------------------------ #
     # time + daily upkeep                                                #
@@ -86,11 +86,13 @@ class UpkeepMixin:
         """The packs `eater` may draw a ration from -- every group-mate
         (physically together, so the only ones who could actually hand over
         food) whose `share_food` is on. Own pack is handled first by the unit
-        itself."""
+        itself. What the group itself carries (wagon, animals) is always open."""
         group = self.group_of(eater)
         mates = group.members if group is not None else self.roster
-        return [u._base_inventory for u in mates
-                if u is not eater and u.share_food]
+        larder = [u._base_inventory for u in mates if u is not eater and u.share_food]
+        if group is not None:
+            larder += group.food_stores()
+        return larder
 
     @staticmethod
     def _age_food_name(name):
@@ -152,6 +154,9 @@ class UpkeepMixin:
             total_rotten += self._rot_food(u._base_inventory)
         total_rotten += self._rot_food(self.bank.items)
         total_rotten += self._rot_food(self.house.stash.items)
+        for g in self.groups:
+            for pack in g.food_stores():
+                total_rotten += self._rot_food(pack)
         if total_rotten:
             events.append(f"{total_rotten} portions of food rotted away.")
 
@@ -196,6 +201,8 @@ class UpkeepMixin:
             events.append(f"{who} ({self.rations} rations left).")
         if casualties:
             self.remove_members(casualties)
+        for g in self.groups:
+            events += g.feed_animals()
         for m in missions.expire_overdue(self):
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
         for u in justice.release_due(self):

@@ -54,7 +54,7 @@ from . import world
 AUTO_KINDS = frozenset({"travel", "work"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
-                               "library", "ancient_ruins"})
+                               "library", "ancient_ruins", "stable"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | {"idle"}
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 

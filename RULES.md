@@ -1230,7 +1230,7 @@ shipped start to finish (buy/claim, use, lose, recover):
   the City once `guild.reputation["bankers"] ≥ economy.CITY_PROPERTY_REP_GATE`
   (4) — the Bankers' trust mission (see Missions) is the gate's real
   prerequisite. `economy.CITY_PROPERTY_PRICE` = **1000 copper**, one-time,
-  for `economy.CITY_PROPERTY_CAPACITY` (**20 kg**) of shared storage, plus a
+  for `economy.CITY_PROPERTY_CAPACITY` (**200 kg**) of shared storage, plus a
   recurring tax (`economy.CITY_PROPERTY_TAX` = **40 copper** every
   `CITY_PROPERTY_TAX_PERIOD_DAYS` = **7** days, charged automatically by
   `Guild._city_property_upkeep`). `CITY_PROPERTY_MISSED_PAYMENTS_LIMIT` (3)

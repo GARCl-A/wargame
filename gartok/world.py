@@ -97,7 +97,7 @@ class Node:
                  bank=False, tanner=False, jurisdiction=None,
                  unsafe=False, encounter_table=None, trust=False, ledger=False,
                   city_property=False, garrison_job=None, claim=False, forge=False,
-                  prison=False, apothecary=False, library=False, dungeon=False):
+                  prison=False, apothecary=False, library=False, dungeon=False, stable=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -123,6 +123,7 @@ class Node:
         self.apothecary = apothecary         # town: brewing potions (crafting_screen)
         self.library = library               # town: sells dictionaries and gives quests (library_screen)
         self.dungeon = dungeon               # town: tactical dungeon exploration
+        self.stable = stable                 # town: wagons and draft animals (stables_screen)
 
     @property
     def is_battle(self):
@@ -224,6 +225,9 @@ NODES = [
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
          library=True, jurisdiction="the_city"),
+    Node("farm", "The Farm", "town", (0.30, 0.84),
+         "A farmstead beyond the walls. For now it keeps the stables: wagons and the animals that pull them.",
+         stable=True),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
          dungeon=True),
@@ -238,6 +242,7 @@ EDGES = [
     ("city", "tavern", 1),
     ("city", "prison", 1),
     ("city", "library", 1),
+    ("city", "farm", 2),
     ("city", "road", 4),
     ("arena", "road", 3),
     ("road", "wilds", 6),

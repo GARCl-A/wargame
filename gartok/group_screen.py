@@ -50,6 +50,8 @@ loadout. `native = True`. `on_back()` returns to the map.
 import pygame
 
 from . import chest, data, items, magic, missions, world
+from .animals import Animal
+from .wagon import Wagon
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin, SplitStackMixin
 from .screen import Screen
@@ -88,7 +90,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         self._dots_hits = []              # [(rect, unit, loc)] -- the "..." button, opens the menu directly
         self.tab_hits = []              # [(rect, tab_id)]
         self.buttons = []                  # [(key, rect)]
-        self._unit_by_uid = {u.uid: u for u in self.group.members}
+        self._unit_by_uid = self._owners_by_uid()
         self._rail_hits = []              # [(rect, unit)] -- also the drop targets `_zone_at` reuses
         self.back_rect = None                # header's back arrow -- decorative in the mock, wired here
         self._rail_rect = None
@@ -107,6 +109,66 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
     # ------------------------------------------------------------------ #
     def tutorial_key(self):
         return "group"
+
+    def _owners(self):
+        """Everything here that holds a pack: the members, the animals, the wagon."""
+        return [*self.group.members, *self.group.animals, *([self.group.wagon] if self.group.wagon else [])]
+
+    def _owners_by_uid(self):
+        return {o.uid: o for o in self._owners()}
+
+    @staticmethod
+    def _is_store(owner):
+        """The group's own storage (an animal's back, the wagon) -- not a person."""
+        return isinstance(owner, (Animal, Wagon))
+
+    def _item_at(self, owner, loc):
+        if loc == "tack":
+            return owner.tack
+        return super()._item_at(owner, loc)
+
+    def _take(self, src, loc):
+        if loc == "tack":
+            return src.take_tack(), 1
+        return super()._take(src, loc)
+
+    def _give_many(self, dst, zone):
+        """An animal's back and the wagon have a hard room limit, unlike a
+        member's soft overload; an animal's tack slot takes a saddle or harness."""
+        if isinstance(dst, Animal) and zone == "tack":
+            self._fit_tack(dst)
+            return
+        if self._is_store(dst) and zone == "pack":
+            picks = [p for p in self.selected if p[0] is not dst and self._item_at(*p) is not None]
+            add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in picks)
+            if not dst.stash.fits(add):
+                self.notice = self._no_room_note(dst)
+                return
+        super()._give_many(dst, zone)
+
+    @staticmethod
+    def _no_room_note(store):
+        if store.stash.capacity <= 0:
+            return ("the wagon has no animal harnessed to pull it." if isinstance(store, Wagon)
+                    else f"the {store.species} wears no pack saddle.")
+        return f"won't fit -- {store.stash.free:g} kg free on the {store.name.lower()}."
+
+    def _fit_tack(self, animal):
+        """Put the first picked saddle or harness on `animal`; whatever it wore
+        goes back into the pack the new one came from."""
+        pick = next((p for p in self.selected if animal.can_wear(self._item_at(*p))), None)
+        if pick is None:
+            return
+        src, loc = pick
+        name, qty = self._take(src, loc)
+        if qty > 1:
+            src.give_to_pack(name, qty - 1)
+        old = animal.take_tack()
+        animal.give_to_tack(name)
+        if old:
+            src.give_to_pack(old)
+        self.selected = [p for p in self.selected if p != pick]
+        self.notice = f"the {animal.species} now wears the {name}."
 
     def _ui_fonts(self):
         if self._F is None:
@@ -381,12 +443,13 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         if self._can_split():
             rows.append(("split", "Split stack", None))
         rows.append(("drop", "Drop", None))
-        if len(picks) == 1 and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
+        solo_member = len(picks) == 1 and not self._is_store(picks[0][0])
+        if solo_member and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", "OPEN THE CHEST", None))
-        if len(picks) == 1 and self._item_at(*picks[0]) == "Minor Healing Potion":
+        if solo_member and self._item_at(*picks[0]) == "Minor Healing Potion":
             rows.append(("drink", "Drink", None))
             
-        if len(picks) == 1:
+        if solo_member:
             unit, item = picks[0][0], self._item_at(*picks[0])
             spell = magic.spell_for_scroll(item) if item else None
             if spell and magic.can_study_spell(unit, spell):
@@ -398,7 +461,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         # a member you'd only be handing their own pack items back to is a no-op
         owners = {id(p[0]) for p in picks}
         lift = len(owners) > 1 or any(isinstance(p[1], str) for p in picks)
-        dests = [u for u in self.group.members if lift or id(u) not in owners]
+        dests = [u for u in self._owners() if lift or id(u) not in owners]
         rows += [("member", f"to {u.name}", u.uid) for u in dests]
 
         self.menu = {"anchor": anchor, "rows": rows, "picks": list(picks)}
@@ -517,7 +580,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
 
     def _cargo_rows(self):
         rows = []
-        for u in self.group.members:
+        for u in self._owners():
             for idx, (name, qty) in enumerate(u._base_inventory):
                 rows.append((u, idx, name, qty))
         rows.sort(key=lambda t: -items.item_weight(t[2]) * t[3])
@@ -545,9 +608,29 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         for r, u in self._rail_hits:
             self.zones.append((r, u, "pack"))
 
+    def _store_dict(self, store, carried):
+        """A column for the wagon or an animal: no sheet, no hands, just a pack
+        (and, for an animal, the tack slot)."""
+        selected = {loc for o, loc in self.selected if o is store}
+        member = {"role": "wagon", "pending_picks": False, "no_sheet": True,
+                  "kg": store.load, "cap": store.carry_normal,
+                  "pack": [(name, store.pack_tag(name), items.item_weight(name), qty, False, idx in selected)
+                           for idx, (name, qty) in enumerate(store._base_inventory)]}
+        if isinstance(store, Animal):
+            member["name"] = f"{store.species}  ·  {store.role or 'no tack'}"
+            member["tack"] = {"name": store.tack, "note": store.role,
+                              "sel": "tack" in selected,
+                              "accepts": any(store.can_wear(n) for n in carried)}
+        else:
+            riders = " + ".join(a.species for a in store.draft) or "no animals"
+            member["name"] = f"Wagon  ·  {riders}"
+        return member
+
     def _draw_bags(self, screen, F, area):
         gap = T.S * 2
-        shown = [u for u in self.pinned if u in self.group.members]
+        members = [u for u in self.pinned if u in self.group.members]
+        stores = [*self.group.animals, *([self.group.wagon] if self.group.wagon else [])]
+        shown = members + stores
         cap = max(1, (area.w + gap) // (COL_MIN + gap))
         
         self._bags_max_scroll = max(0, len(shown) - cap)
@@ -560,10 +643,11 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
 
         for i, u in enumerate(shown):
             r = pygame.Rect(area.x + i * (col_w + gap), area.y, col_w, area.h)
-            member = self._member_dict(u, carried)
+            member = self._store_dict(u, carried) if self._is_store(u) else self._member_dict(u, carried)
             res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
             self._pack_scroll[id(u)] = res["scroll"]
-            self.sheet_hits.append((res["sheet_rect"], u))
+            if not self._is_store(u):
+                self.sheet_hits.append((res["sheet_rect"], u))
             for kind, slot_rect in res["slot_rects"].items():
                 if slot_rect is None:
                     continue
@@ -587,7 +671,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             if hl > 0:
                 text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
 
-        hidden = len(self.pinned) - len(shown)
+        hidden = len(members) - len([u for u in shown if not self._is_store(u)])
         if hidden > 0:
             msg = f"+{hidden} pinned but hidden -- scroll horizontally or unpin someone"
             text(screen, F["body_sm"], msg, (area.x, area.bottom + 24), T.TX_FAINT)
@@ -655,7 +739,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         F = self._ui_fonts()
         W, H = screen.get_size()
         screen.fill(T.TABLE)
-        self._unit_by_uid = {u.uid: u for u in self.group.members}
+        self._unit_by_uid = self._owners_by_uid()
         self.zones = []
         self.sources = []
         self._dots_hits = []

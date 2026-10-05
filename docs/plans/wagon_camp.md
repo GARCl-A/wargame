@@ -55,6 +55,27 @@ cannot carry it.
      `wilds_claim_campfire`.
 2. **Wagon with capacity only:** group-owned card, draft-animal slot, carry
    limit, eating from it, loss rule. No effect on travel time.
+   **Step 2 status: implemented, uncommitted at the time of writing.** Animal and
+   wagon are separate; tack decides what an animal does.
+   - `animals.py`: `Animal` is owned by the `Group` (max 4). Its role comes from
+     its tack: a **Pack Saddle** lets it carry cargo on its back (Donkey 30 kg,
+     Ox 50 kg), a **Harness** lets it pull the wagon (Donkey draws 80 kg, Ox 160).
+     No tack = it only eats. A riding saddle is the next entry in `animals.TACK`
+     once mounts exist (not built, no item yet).
+   - `wagon.py`: `Wagon` (150 cp, 40 kg itself, holds 80 kg, 2 hitch slots) owns no
+     animals. Cargo room = min(80, draw of the group's harnessed animals - 40).
+     Transport is derived, not stored.
+   - Both are pack owners the gear screen treats like a member's pack (drag, send-to,
+     cargo view); an animal also has a saddle/harness slot. Their room is a hard
+     limit. Neither goes into a fight.
+   - Everyone eats from the wagon and the animals' loads; each animal eats a ration
+     a day (own load, then the group's stores, then any member's pack) and starves
+     after 3 unfed days. Lost with the group, kept if anyone survives.
+   - Bought at **The Farm** (a new node, 2 h from the City, `Node.stable`): wagon,
+     animals, tack fitted to a chosen animal; selling returns half.
+   - Capacity positioning (see the balance note below): chest 100 cp / 30 kg static
+     and safe; wagon mobile but at risk with upkeep. **The house is still 20 kg and
+     needs a retune (proposed 150-200 kg) -- pending the user's OK.**
 3. **Speed-based travel.** Last, because it rebalances every route and the
    economy (re-run `scripts/economy_sim.py`).
 

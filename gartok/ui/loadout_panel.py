@@ -24,7 +24,7 @@ from .tokens import T, mix
 
 TAG_COLOR = {"": T.TX_FAINT, "WEAPON": T.TX_MUTED, "ARMOR": T.TX_MUTED,
              "AMMO": T.TX_FAINT, "HEAL": T.GREEN, "LIGHT": T.BRASS_DIM,
-             "FOOD": T.TX_FAINT, "MATERIAL": T.BRASS_DIM, "CHEST": T.BRASS, "SEALED": T.BRASS}
+             "FOOD": T.TX_FAINT, "TACK": T.TX_MUTED, "MATERIAL": T.BRASS_DIM, "CHEST": T.BRASS, "SEALED": T.BRASS}
 
 TAG_SEP = " · "      # between a row's tags (and before a charge count)
 
@@ -47,7 +47,8 @@ def tag_pill(surf, F, tag, pos, max_x=None):
             x += font.size(TAG_SEP)[0]
 
 
-SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "armor": "armor"}
+SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "armor": "armor",
+               "tack": "saddle / harness"}
 
 
 def load_bar(surf, rect, ratio, over):
@@ -237,7 +238,8 @@ def column(surf, F, rect, member, scroll, mouse):
         text(surf, F["nameb"], member["name"], (x + T.S * 3, head.y + T.S), T.TX)
 
     sheet_rect = pygame.Rect(head.right - T.S * 2 - 20, head.y + T.S + 2, 20, 20)
-    draw_button(surf, F, sheet_rect, "?", ghost=True, mpos=mouse)
+    if not member.get("no_sheet"):
+        draw_button(surf, F, sheet_rect, "?", ghost=True, mpos=mouse)
 
     load_bar(surf, pygame.Rect(x, head.y + T.S * 5, w, 8),
              (member["kg"] / member["cap"]) if member["cap"] else 0, over)
@@ -249,7 +251,7 @@ def column(surf, F, rect, member, scroll, mouse):
 
     y = head.bottom + T.S * 4
     slot_rects = {}
-    for kind in ("hand", "offhand", "tongue", "armor"):
+    for kind in ("hand", "offhand", "tongue", "armor", "tack"):
         held = member.get(kind, "skip")
         if held == "skip":
             continue

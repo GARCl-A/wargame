@@ -19,7 +19,7 @@ import pygame
 from .primitives import caps, draw_button, hline, text, wrap
 from .tokens import T
 
-ROLE_MARK = {"vanguard": "shield", "archer": "bow", "hand": "sword", "healer": "cross"}
+ROLE_MARK = {"vanguard": "shield", "archer": "bow", "hand": "sword", "healer": "cross", "wagon": "wagon"}
 
 _HEAL_OCC = {"Priest", "Herbalist", "Physician", "Healer"}
 _GUARD_OCC = {"Guard", "Soldier", "Mercenary", "Watchman"}
@@ -50,6 +50,10 @@ def draw_role(surf, p, kind, c):
     elif kind == "bow":
         pygame.draw.arc(surf, c, pygame.Rect(x - 5, y - 6, 10, 12), -1.2, 1.2, 1)
         pygame.draw.line(surf, c, (x + 3, y - 5), (x + 3, y + 5), 1)
+    elif kind == "wagon":
+        pygame.draw.rect(surf, c, pygame.Rect(x - 5, y - 4, 10, 6), 1)
+        pygame.draw.circle(surf, c, (x - 3, y + 4), 2, 1)
+        pygame.draw.circle(surf, c, (x + 3, y + 4), 2, 1)
     elif kind == "cross":
         pygame.draw.line(surf, c, (x, y - 5), (x, y + 5), 2)
         pygame.draw.line(surf, c, (x - 4, y - 1), (x + 4, y - 1), 2)

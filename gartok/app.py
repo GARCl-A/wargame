@@ -337,6 +337,7 @@ class App:
         "forge": lambda s, g, n, o: s._open_forge(g, n, None),
         "apothecary": lambda s, g, n, o: s._open_apothecary(g, n, None),
         "library": lambda s, g, n, o: s._open_library(g, n, None),
+        "stable": lambda s, g, n, o: s._open_stables(g),
         "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
         "guard": lambda s, g, n, o: s._open_guard_check(g, o),
         "ambush": lambda s, g, n, o: s._land_on_map_paused(g, o),
@@ -486,6 +487,10 @@ class App:
         from .apothecary_hub_screen import ApothecaryHubScreen
         self.scene = ApothecaryHubScreen(self.ui_fonts, self.guild, group,
                                          on_done=self._after_activity)
+
+    def _open_stables(self, group):
+        from .stables_screen import StablesScreen
+        self.scene = StablesScreen(self.ui_fonts, self.guild, group, on_done=self._after_activity)
 
     def _open_library(self, group, node, _offer):
         from .library_hub_screen import LibraryHubScreen

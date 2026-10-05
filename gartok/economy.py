@@ -49,7 +49,7 @@ BANK_CHEST_CAPACITY = constants.BANK_CHEST_CAPACITY                # kg the stro
 # carried before anyone had actually played it.
 CITY_PROPERTY_REP_GATE = 4                    # guild.reputation["bankers"] needed to buy
 CITY_PROPERTY_PRICE = 1000                     # copper, one-time purchase
-CITY_PROPERTY_CAPACITY = 20                   # kg the property can store (a house beats a chest)
+CITY_PROPERTY_CAPACITY = 200                  # kg the property can store (a house beats a chest)
 CITY_PROPERTY_TAX = 40                        # copper, charged every CITY_PROPERTY_TAX_PERIOD_DAYS
 CITY_PROPERTY_TAX_PERIOD_DAYS = 7
 CITY_PROPERTY_MISSED_PAYMENTS_LIMIT = 3       # this many unpaid cycles -> the Bankers come to collect

@@ -204,6 +204,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Fruit | 0.2 kg | food, consumable, material |
 | Gemstones | 0.1 kg | -- |
 | Hammer | 4 kg | -- |
+| Harness | 4 kg | -- |
 | Hatchet | 1 kg | -- |
 | Holy Symbol | 0.5 kg | -- |
 | Ink | 0.1 kg | material |
@@ -237,6 +238,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Meat | 1 kg | food, consumable, material |
 | Minor Healing Potion | 0.2 kg | consumable |
 | Musical Instrument | 2 kg | -- |
+| Pack Saddle | 5 kg | -- |
 | Paper | 0.1 kg | material |
 | Pick | 3 kg | -- |
 | Plate Armor | 28 kg | -- |

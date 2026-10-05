@@ -74,6 +74,26 @@ def stack_take(pack, idx, qty=1):
     return name, removed, remaining
 
 
+def split_stack(pack, idx, qty):
+    """Peel `qty` off the stack at `idx` into its own stack right after it.
+    False (and nothing changes) unless `0 < qty < held`."""
+    entry = pack[idx]
+    if isinstance(entry, items.ItemInstance):
+        if not (0 < qty < entry.qty):
+            return False
+        entry.qty -= qty
+        split_inst = entry.copy()
+        split_inst.qty = qty
+        pack.insert(idx + 1, split_inst)
+        return True
+    name, held = entry
+    if not (0 < qty < held):
+        return False
+    pack[idx] = (name, held - qty)
+    pack.insert(idx + 1, (name, qty))
+    return True
+
+
 class LoadoutMixin:
     # ------------------------------------------------------------------ #
     # roster management: shuffling items between the two hands and the   #
@@ -259,21 +279,7 @@ class LoadoutMixin:
         how it's grouped. No-op (`False`) unless `0 < qty < held` -- moving
         the whole stack isn't a split, and `_pack_add` would just merge a
         same-named stack of qty 0 straight back in."""
-        entry = self._base_inventory[idx]
-        if isinstance(entry, items.ItemInstance):
-            if not (0 < qty < entry.qty):
-                return False
-            entry.qty -= qty
-            split_inst = entry.copy()
-            split_inst.qty = qty
-            self._base_inventory.insert(idx + 1, split_inst)
-            return True
-        name, held = entry
-        if not (0 < qty < held):
-            return False
-        self._base_inventory[idx] = (name, held - qty)
-        self._base_inventory.insert(idx + 1, (name, qty))
-        return True
+        return split_stack(self._base_inventory, idx, qty)
 
     def remove_named(self, name, qty=1):
         """Remove up to `qty` of `name` by name rather than index -- for

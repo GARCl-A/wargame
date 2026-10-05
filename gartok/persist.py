@@ -28,11 +28,13 @@ import uuid
 
 from . import items, missions
 from .clock import Clock
+from .animals import Animal
 from .group import Group
 from .guild import Guild
 from .holdings import CityProperty, Stash
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
+from .wagon import WAGON_HP, Wagon
 
 # Se estiver rodando como um executável do PyInstaller, sys.frozen será True.
 if getattr(sys, "frozen", False):
@@ -130,6 +132,14 @@ def unit_to_dict(u):
     }
 
 
+def wagon_to_dict(w):
+    return {"hp": w.hp, "contents": _serialize_pack(w.stash.items)}
+
+
+def wagon_from_dict(d):
+    return Wagon(d.get("hp", WAGON_HP), d.get("contents", []))
+
+
 def group_to_dict(g):
     return {
         "gid": g.gid,
@@ -137,14 +147,17 @@ def group_to_dict(g):
         "node": g.node,
         "leader": g.leader.uid if g.leader else None,
         "members": [unit_to_dict(u) for u in g.members],
+        "wagon": wagon_to_dict(g.wagon) if g.wagon else None,
+        "animals": [a.to_dict(_serialize_pack) for a in g.animals],
     }
 
 
 def group_from_dict(d):
     members = [Unit.from_save(m) for m in d["members"]]
     leader = next((u for u in members if u.uid == d.get("leader")), None)
+    wagon = wagon_from_dict(d["wagon"]) if d.get("wagon") else None
     return Group(members, node=d.get("node"), name=d.get("name"), gid=d.get("gid"),
-                 leader=leader)
+                 leader=leader, wagon=wagon, animals=[Animal.from_dict(a) for a in d.get("animals", [])])
 
 
 def _payload(guild, kind, label):

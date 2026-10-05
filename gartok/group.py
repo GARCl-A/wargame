@@ -25,23 +25,73 @@ all (death, or peeled into a different group by a split).
 
 from uuid import uuid4
 
+from . import items
+from .animals import STARVE_DAYS
+from .unit_hunger import take_ration
+
 BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overextension`
 BASE_SLOTS = 2      # groups an unknown guild may run: one to study, one in the field
 FAME_PER_SLOT = 3   # total reputation that buys the guild one more group
 
 
+def _food_in(pack):
+    return sum(qty for name, qty in pack if items.is_food(name.split(" (")[0]))
+
+
 class Group:
-    def __init__(self, members, node=None, name=None, gid=None, leader=None):
+    def __init__(self, members, node=None, name=None, gid=None, leader=None, wagon=None, animals=None):
         self.gid = gid or uuid4().hex     # stable id: save refs, map selection
         self.members = list(members)      # list[Unit]
         self.node = node                  # world node id
         self.name = name                  # optional label ("Water Team"), or None
         self.order = None                 # in-flight Order, or None (idle) -- later
         self.leader = leader              # Unit; None resolves via ensure_leader below
+        self.animals = list(animals or [])  # animals.Animal -- lost with the group
+        self.wagon = wagon                # wagon.Wagon or None -- lost with the group
         self.ensure_leader()
 
     def __len__(self):
         return len(self.members)
+
+    @property
+    def wagon(self):
+        return self._wagon
+
+    @wagon.setter
+    def wagon(self, wagon):
+        self._wagon = wagon
+        if wagon is not None:
+            wagon._group = self
+
+    @property
+    def carried_rations(self):
+        """Meals on the wagon and on the animals' backs."""
+        return sum(_food_in(pack) for pack in self.food_stores())
+
+    def food_stores(self):
+        """Packs of food that belong to the group itself rather than a member:
+        the wagon's cargo, then each animal's load."""
+        return [*([self.wagon.stash.items] if self.wagon else []), *(a.stash.items for a in self.animals)]
+
+    def feed_animals(self):
+        """One day's feeding: each animal eats from its own load, then the rest of
+        the group's stores, then any member's pack. They starve and die after
+        `animals.STARVE_DAYS` unfed days. Returns the log lines."""
+        events = []
+        for animal in list(self.animals):
+            own = animal.stash.items
+            packs = [own, *(p for p in self.food_stores() if p is not own),
+                     *(u._base_inventory for u in self.members)]
+            if any(take_ration(pack) is not None for pack in packs):     # stops at the first meal found
+                animal.unfed_days = 0
+                continue
+            animal.unfed_days += 1
+            if animal.unfed_days >= STARVE_DAYS:
+                self.animals.remove(animal)
+                events.append(f"A {animal.species} starved to death.")
+            else:
+                events.append(f"A {animal.species} went hungry.")
+        return events
 
     @property
     def display_name(self):
@@ -136,7 +186,7 @@ class Group:
     def rations(self):
         """Meals sitting in the group's packs -- the shared larder every
         member here can draw from (see `Guild._shared_larder`)."""
-        return sum(u.rations for u in self.members)
+        return sum(u.rations for u in self.members) + self.carried_rations
 
     @property
     def rations_days(self):
