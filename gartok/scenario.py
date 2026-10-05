@@ -240,6 +240,11 @@ class CustomScenario(Scenario):
                            if len(e) >= 3}
         self._ropes = [tuple(c) for c in data.get("ropes", [])]
         self._water = [tuple(c) for c in data.get("water", [])]
+        self._traps = [tuple(c) for c in data.get("traps", []) if len(c) >= 3]
+        self._relics = [list(c) for c in data.get("relics", []) if len(c) >= 3]
+        self._chests = [list(c) for c in data.get("chests", []) if len(c) >= 3]
+        self.secret_walls = {tuple(c) for c in data.get("secret_walls", [])}
+        self.escape_cells = {tuple(c) for c in data.get("escape_cells", [])}
         self._zones = {"player": [tuple(c) for c in data.get("deploy_player", [])],
                        "enemy": [tuple(c) for c in data.get("deploy_enemy", [])],
                        "npc": [(e[0], e[1]) for e in data.get("deploy_npc", [])]}
@@ -247,6 +252,20 @@ class CustomScenario(Scenario):
     def _make_board(self):
         return Board(walls=self._walls, elevation=self._elevation, ropes=self._ropes,
                      water=self._water, cols=self._cols, rows=self._rows)
+
+    def build(self, battle):
+        super().build(battle)
+        battle.secret_walls = set(getattr(self, "secret_walls", set()))
+        battle.escape_cells = set(getattr(self, "escape_cells", set()))
+        for tr in getattr(self, "_traps", []):
+            if len(tr) >= 3 and battle.board.in_bounds((tr[0], tr[1])):
+                battle.ground.append(GroundObject.trap((tr[0], tr[1]), str(tr[2]).lower(), "enemy"))
+        for rel in getattr(self, "_relics", []):
+            if len(rel) >= 3 and battle.board.in_bounds((rel[0], rel[1])):
+                battle.ground.append(GroundObject.relic((rel[0], rel[1]), rel[2]))
+        for ch in getattr(self, "_chests", []):
+            if len(ch) >= 3 and battle.board.in_bounds((ch[0], ch[1])):
+                battle.ground.append(GroundObject.chest((ch[0], ch[1]), list(ch[2])))
 
     @staticmethod
     def _is_npc(u):
@@ -306,12 +325,24 @@ class AncientRuinsScenario(Scenario):
     torch_count = 0
 
     def __init__(self):
-        self._cols = 30
-        self._rows = 18
-        self._walls = self._build_walls()
-        self._torches = [(2, 4), (2, 12), (18, 1), (19, 8), (24, 8)]
-        self.secret_walls = {(14, 6)}
-        self.escape_cells = {(0, 7), (0, 8), (1, 7), (1, 8)}
+        from . import map_lib
+        try:
+            m = map_lib.load_map("ancient-ruins")
+        except OSError:
+            m = {}
+        self._cols = int(m.get("cols", 30))
+        self._rows = int(m.get("rows", 18))
+        self.ambient_light = m.get("ambient_light", False)
+        self.outdoor = m.get("outdoor", False)
+        self._walls = [tuple(c) for c in m.get("walls")] if "walls" in m else self._build_walls()
+        self._torches = [tuple(c) for c in m.get("torches", [(2, 4), (2, 12), (18, 1), (19, 8), (24, 8)])]
+        self._traps = [list(c) for c in m.get("traps", [[11, 8, "bear trap"], [13, 8, "alarm trap"]])]
+        self._chests = [list(c) for c in m.get("chests", [[18, 3, ["Scroll of Sleep", "Amethyst", "50 Copper"]]])]
+        self._relics = [list(c) for c in m.get("relics", [[27, 11, data.CODEX_ITEM]])]
+        self.secret_walls = {tuple(c) for c in m.get("secret_walls", [[14, 6]])}
+        self.escape_cells = {tuple(c) for c in m.get("escape_cells", [[0, 7], [0, 8], [1, 7], [1, 8]])}
+        self._player_deploy = [tuple(c) for c in m.get("deploy_player",
+            [(1, 7), (1, 8), (2, 7), (2, 8), (2, 6), (2, 9), (3, 7), (3, 8)])]
         self.enemies = self._build_enemies()
 
     def _build_walls(self):
@@ -334,7 +365,7 @@ class AncientRuinsScenario(Scenario):
             for y in range(15, rows - 1):
                 w.add((x, y))
         for x in range(9, 16):
-            for y in range(11, rows - 1):
+            for y in range(14, rows - 1):
                 w.add((x, y))
         for x in range(23, cols - 1):
             for y in range(1, 6):
@@ -376,27 +407,37 @@ class AncientRuinsScenario(Scenario):
         return Board(walls=self._walls, cols=self._cols, rows=self._rows)
 
     def _build_enemies(self):
-        s1 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
-        s1.name = "Ruin Sentry"
+        from . import npc_lib
+        try:
+            s1 = npc_lib.load_npc("ruin-sentry")
+        except OSError:
+            s1 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
+            s1.name = "Ruin Sentry"
         s1.map_cell = (6, 6)
 
-        s2 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
-        s2.name = "Ruin Sentry"
+        try:
+            s2 = npc_lib.load_npc("ruin-sentry")
+        except OSError:
+            s2 = encounters.build_enemy(1, race_pool=[data.race_by_name("Automaton")])
+            s2.name = "Ruin Sentry"
         s2.map_cell = (6, 9)
 
-        boss = encounters.build_enemy(3, race_pool=[data.race_by_name("Automaton")])
-        boss.name = "The Ancient Archivist"
+        try:
+            boss = npc_lib.load_npc("the-ancient-archivist")
+        except OSError:
+            boss = encounters.build_enemy(3, race_pool=[data.race_by_name("Automaton")])
+            boss.name = "The Ancient Archivist"
+            if "magic_missile" not in boss.spells_known:
+                boss.spells_known.append("magic_missile")
         boss.map_cell = (25, 11)
         boss.dormant = True
-        boss.awareness_radius = 8
-        if "magic_missile" not in boss.spells_known:
-            boss.spells_known.append("magic_missile")
+        boss.awareness_radius = getattr(boss, "awareness_radius", 0) or 8
 
         return [s1, s2, boss]
 
     def _deploy_cells(self, u):
         if u.team == "player":
-            return [(1, 7), (1, 8), (2, 7), (2, 8), (2, 6), (2, 9), (3, 7), (3, 8)]
+            return self._player_deploy
         cell = getattr(u, "map_cell", None)
         if cell:
             return [cell]
@@ -411,13 +452,18 @@ class AncientRuinsScenario(Scenario):
             if p not in battle.board.walls:
                 battle.ground.append(GroundObject.torch(p))
 
-        battle.ground.append(GroundObject.trap((11, 8), "bear trap", "enemy"))
-        battle.ground.append(GroundObject.trap((13, 8), "alarm trap", "enemy"))
+        for tr in self._traps:
+            pos = (tr[0], tr[1])
+            ttype = str(tr[2]).lower()
+            battle.ground.append(GroundObject.trap(pos, ttype, "enemy"))
 
-        chest_loot = ["Scroll of Sleep", "Amethyst", "50 Copper"]
-        battle.ground.append(GroundObject.chest((18, 3), chest_loot))
+        for ch in self._chests:
+            if len(ch) >= 3 and battle.board.in_bounds((ch[0], ch[1])):
+                battle.ground.append(GroundObject.chest((ch[0], ch[1]), list(ch[2])))
 
-        battle.ground.append(GroundObject.relic((27, 11), data.CODEX_ITEM))
+        for rel in self._relics:
+            if len(rel) >= 3 and battle.board.in_bounds((rel[0], rel[1])):
+                battle.ground.append(GroundObject.relic((rel[0], rel[1]), rel[2]))
 
     def win_check(self, battle):
         players = list(battle.player_units)

@@ -24,8 +24,9 @@ from .npc_lib import load_npc, slugify
 
 MAP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "maps")
 
-_CELL_KEYS = ("walls", "torches", "deploy_player", "deploy_enemy", "deploy_npc",
-              "elevation", "ropes", "water")
+_CELL_KEYS = ("walls", "secret_walls", "torches", "deploy_player", "deploy_enemy",
+              "deploy_npc", "elevation", "ropes", "water", "traps", "escape_cells",
+              "chests", "relics")
 
 
 def new_map(name="Untitled", cols=COLS, rows=ROWS):
@@ -52,13 +53,17 @@ def save_map(data, slug=None):
                "outdoor": bool(data.get("outdoor")),
                "map_slug": slug}
     for key in _CELL_KEYS:
-        payload[key] = sorted([list(c) for c in data.get(key, [])])
+        val = data.get(key, [])
+        if key == "chests":
+            payload[key] = sorted([[c[0], c[1], list(c[2])] for c in val if len(c) >= 3])
+        else:
+            payload[key] = sorted([list(c) for c in val])
     text = json.dumps(payload, ensure_ascii=False, indent=2)
     text = re.sub(r"\[\s+(-?\d+),\s+(-?\d+)\s+\]", r"[\1, \2]", text)          # [x, y]
     text = re.sub(r"\[\s+(-?\d+),\s+(-?\d+),\s+(-?\d+)\s+\]",
                   r"[\1, \2, \3]", text)                                        # [x, y, z]
     text = re.sub(r'\[\s+(-?\d+),\s+(-?\d+),\s+("(?:[^"\\]|\\.)*")\s+\]',
-                  r"[\1, \2, \3]", text)                                        # [x, y, "slug"]
+                  r"[\1, \2, \3]", text)                                        # [x, y, "slug" / "trap" / "item"]
     tmp = map_path(slug) + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(text)

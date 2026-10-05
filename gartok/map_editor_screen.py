@@ -23,7 +23,7 @@ from collections import deque
 
 import pygame
 
-from . import data, map_lib, npc_lib
+from . import data, items, map_lib, npc_lib
 from .board import COLS, ROWS, Board, grid_distance
 from .screen import Screen
 from .ui.board_style import (
@@ -52,17 +52,33 @@ _NPC_C = (168, 124, 214)                  # named-NPC deploy zone (violet)
 _PIT_C = (58, 56, 74)                     # a pit cell (recessed dark)
 _ROPE_C = (198, 160, 104)                 # a rope over the pit edge (tan)
 _WATER_C = (74, 128, 174)                 # a flooded cell (blue)
+_TRAP_C = (205, 115, 65)                 # trap marker (rust orange)
+_SECRET_WALL_C = (195, 175, 100)          # secret wall (brass tone)
+_ESCAPE_C = (50, 170, 160)                # escape zone (cyan/teal)
+_CHEST_C = (165, 110, 55)                 # container/chest (wood)
+_RELIC_C = (185, 95, 205)                 # ground item / relic (magenta)
 
 _MAX_DEPTH = 6
 _MIN_SIZE, _MAX_SIZE = 8, 48              # grid dimensions the editor allows
 
-_TOOLS = [("wall", "WALL"), ("torch", "TORCH"), ("pit", "PIT"), ("water", "WATER"),
-          ("rope", "ROPE"), ("player", "PLAYER START"), ("enemy", "ENEMY START"),
-          ("npc", "NPC START"), ("erase", "ERASE")]
+_TOOLS = [("wall", "WALL"), ("secret_wall", "SECRET WALL"),
+          ("torch", "TORCH"), ("trap", "TRAP"),
+          ("chest", "CONTAINER"), ("item", "ITEM"),
+          ("pit", "PIT"), ("water", "WATER"),
+          ("rope", "ROPE"), ("escape", "ESCAPE"),
+          ("player", "PLAYER"), ("enemy", "ENEMY"),
+          ("npc", "NPC"), ("erase", "ERASE")]
 
-_LAYER_C = {"wall": WALL_HI, "torch": TORCH_C, "pit": (120, 116, 150),
-            "water": _WATER_C, "rope": _ROPE_C,
+_LAYER_C = {"wall": WALL_HI, "secret_wall": _SECRET_WALL_C,
+            "torch": TORCH_C, "trap": _TRAP_C, "chest": _CHEST_C,
+            "item": _RELIC_C, "pit": (120, 116, 150),
+            "water": _WATER_C, "rope": _ROPE_C, "escape": _ESCAPE_C,
             "player": PLAYER_C, "enemy": ENEMY_C, "npc": _NPC_C}
+
+_ITEM_CATALOG = sorted(set(
+    list(items.all_items().keys()) +
+    [data.CODEX_ITEM, "50 Copper", "100 Copper", "Scroll of Sleep", "Scroll of Light", "Amethyst"]
+))
 
 
 class MapEditorScreen(Screen):
@@ -82,8 +98,10 @@ class MapEditorScreen(Screen):
         self.confirm_delete = None            # slug awaiting a delete confirm
         self.library = []
         self.npc_rows = []                    # npc_lib.list_npcs() for the picker
-        self.picking = None                   # cell awaiting an NPC choice, or None
+        self.picking = None                   # (kind, cell) or None
         self.picker_hits = []
+        self.picker_scroll = 0
+        self._picker_box = pygame.Rect(0, 0, 0, 0)
         self._grid = (0, 0, 0)                # (x, y, cell) written each frame
         self._light_sig = None                # (walls, torches) the dark set was built for
         self._dark = frozenset()              # cells no torch reaches, when the map is dark
@@ -96,6 +114,8 @@ class MapEditorScreen(Screen):
         self.cols = int(m.get("cols") or COLS)
         self.rows = int(m.get("rows") or ROWS)
         self.walls = cs("walls")
+        self.secret_walls = cs("secret_walls")
+        self.walls.update(self.secret_walls)
         self.torches = cs("torches")
         self.zone_p = cs("deploy_player")
         self.zone_e = cs("deploy_enemy")
@@ -103,11 +123,16 @@ class MapEditorScreen(Screen):
         self.ropes = cs("ropes")
         self.water = cs("water")
         self.npc_at = {(e[0], e[1]): e[2] for e in m.get("deploy_npc", []) if len(e) >= 3}
+        self.traps = {(e[0], e[1]): e[2] for e in m.get("traps", []) if len(e) >= 3}
+        self.escape_cells = cs("escape_cells")
+        self.chests = {(e[0], e[1]): list(e[2]) for e in m.get("chests", []) if len(e) >= 3}
+        self.relics = {(e[0], e[1]): e[2] for e in m.get("relics", []) if len(e) >= 3}
         self.ambient = bool(m.get("ambient_light"))
         self.outdoor = bool(m.get("outdoor"))
         self.slug = slug
         self.edit_name = False
         self.picking = None
+        self.picker_scroll = 0
         self.confirm_delete = None
         self.notice = None
         self._refresh_library()
@@ -122,11 +147,17 @@ class MapEditorScreen(Screen):
     def _to_dict(self):
         srt = lambda s: sorted([list(c) for c in s])
         return {"name": self.name, "cols": self.cols, "rows": self.rows,
-                "walls": srt(self.walls), "torches": srt(self.torches),
+                "walls": srt(self.walls),
+                "secret_walls": srt(self.secret_walls),
+                "torches": srt(self.torches),
                 "deploy_player": srt(self.zone_p), "deploy_enemy": srt(self.zone_e),
                 "deploy_npc": sorted([x, y, slug] for (x, y), slug in self.npc_at.items()),
                 "elevation": sorted([x, y, z] for (x, y), z in self.elev.items()),
                 "ropes": srt(self.ropes), "water": srt(self.water),
+                "traps": sorted([x, y, t] for (x, y), t in self.traps.items()),
+                "escape_cells": srt(self.escape_cells),
+                "chests": sorted([x, y, list(itms)] for (x, y), itms in self.chests.items()),
+                "relics": sorted([x, y, r] for (x, y), r in self.relics.items()),
                 "ambient_light": self.ambient and not self.outdoor,
                 "outdoor": self.outdoor}
 
@@ -148,7 +179,7 @@ class MapEditorScreen(Screen):
         starts = {c for c in (self.zone_p or {(0, y) for y in range(self.rows)})
                   if c not in walls}
         goals = {c for c in (enemy or {(self.cols - 1, y) for y in range(self.rows)})
-                 if c not in walls}
+                  if c not in walls}
         if not starts or not goals:
             return True
         seen = set(starts)
@@ -180,27 +211,37 @@ class MapEditorScreen(Screen):
     def _clamp_to_grid(self):
         """After a resize: drop everything that fell outside the new bounds."""
         inb = lambda c: 0 <= c[0] < self.cols and 0 <= c[1] < self.rows
-        for s in (self.walls, self.torches, self.zone_p, self.zone_e,
-                  self.ropes, self.water):
+        for s in (self.walls, self.secret_walls, self.torches, self.zone_p, self.zone_e,
+                  self.ropes, self.water, self.escape_cells):
             s.difference_update({c for c in s if not inb(c)})
         self.elev = {c: z for c, z in self.elev.items() if inb(c)}
         self.npc_at = {c: v for c, v in self.npc_at.items() if inb(c)}
+        self.traps = {c: v for c, v in self.traps.items() if inb(c)}
+        self.chests = {c: v for c, v in self.chests.items() if inb(c)}
+        self.relics = {c: v for c, v in self.relics.items() if inb(c)}
         self._light_sig = None
 
     def _apply(self, cell, mode):
         had_rope = cell in self.ropes
         had_water = cell in self.water
         had_elev = self.elev.get(cell)
-        for s in (self.walls, self.torches, self.zone_p, self.zone_e,
-                  self.ropes, self.water):
+        for s in (self.walls, self.secret_walls, self.torches, self.zone_p, self.zone_e,
+                  self.ropes, self.water, self.escape_cells):
             s.discard(cell)                    # surface layers are mutually exclusive
         self.npc_at.pop(cell, None)
         self.elev.pop(cell, None)
+        self.traps.pop(cell, None)
+        self.chests.pop(cell, None)
+        self.relics.pop(cell, None)
         if mode != "add":
             return
-        if self.tool in ("wall", "torch", "player", "enemy"):
+        if self.tool in ("wall", "torch", "player", "enemy", "escape"):
             {"wall": self.walls, "torch": self.torches,
-             "player": self.zone_p, "enemy": self.zone_e}[self.tool].add(cell)
+             "player": self.zone_p, "enemy": self.zone_e,
+             "escape": self.escape_cells}[self.tool].add(cell)
+        elif self.tool == "secret_wall":
+            self.walls.add(cell)
+            self.secret_walls.add(cell)
         elif self.tool == "pit":
             self.elev[cell] = -self.pit_depth
             if had_rope:
@@ -228,8 +269,15 @@ class MapEditorScreen(Screen):
             return
 
         if self.picking is not None:
+            if event.type == pygame.MOUSEWHEEL:
+                self.picker_scroll = max(0, self.picker_scroll - event.y * 30)
+                return
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
+                if event.button == 4:
+                    self.picker_scroll = max(0, self.picker_scroll - 30)
+                elif event.button == 5:
+                    self.picker_scroll += 30
+                elif event.button == 1:
                     self._picker_click(event.pos)
                 else:
                     self.picking = None
@@ -248,7 +296,48 @@ class MapEditorScreen(Screen):
                         self.notice = ("no NPCs yet -- build one in the character creator",
                                        T.BRASS)
                     else:
-                        self.picking = cell
+                        self.picking = ("npc", cell)
+                        self.picker_scroll = 0
+                    return
+                if self.tool == "chest":          # click to manage container items
+                    if event.button == 3:
+                        self.chests.pop(cell, None)
+                    else:
+                        if cell not in self.chests:
+                            self.chests[cell] = []
+                        for s in (self.walls, self.secret_walls, self.torches, self.zone_p,
+                                  self.zone_e, self.ropes, self.water, self.escape_cells):
+                            s.discard(cell)
+                        self.npc_at.pop(cell, None)
+                        self.relics.pop(cell, None)
+                        self.picking = ("chest", cell)
+                        self.picker_scroll = 0
+                    return
+                if self.tool == "item":           # click to select ground relic/item
+                    if event.button == 3:
+                        self.relics.pop(cell, None)
+                    else:
+                        for s in (self.walls, self.secret_walls, self.torches, self.zone_p,
+                                  self.zone_e, self.ropes, self.water, self.escape_cells):
+                            s.discard(cell)
+                        self.npc_at.pop(cell, None)
+                        self.chests.pop(cell, None)
+                        self.picking = ("item", cell)
+                        self.picker_scroll = 0
+                    return
+                if self.tool == "trap":           # click to place/toggle, not a drag
+                    if event.button == 3:
+                        self.traps.pop(cell, None)
+                    else:
+                        cur = self.traps.get(cell)
+                        self.traps[cell] = "alarm trap" if cur == "bear trap" else "bear trap"
+                        for s in (self.walls, self.secret_walls, self.torches, self.zone_p,
+                                  self.zone_e, self.ropes, self.water, self.escape_cells):
+                            s.discard(cell)
+                        self.npc_at.pop(cell, None)
+                        self.elev.pop(cell, None)
+                        self.chests.pop(cell, None)
+                        self.relics.pop(cell, None)
                     return
                 if self.tool == "rope":           # toggle on a pit cell, not a drag
                     if event.button == 3:
@@ -277,12 +366,41 @@ class MapEditorScreen(Screen):
         self.edit_name = False
 
     def _picker_click(self, px):
-        for rect, slug in self.picker_hits:
+        if not self._picker_box.collidepoint(px):
+            self.picking = None
+            return
+        if isinstance(self.picking, tuple) and len(self.picking) == 2 and isinstance(self.picking[0], int):
+            kind, cell = "npc", self.picking
+        else:
+            kind, cell = self.picking[0], self.picking[1]
+
+        for rect, action in self.picker_hits:
             if rect.collidepoint(px):
-                self.npc_at[self.picking] = slug
-                self.picking = None
+                act_type = action[0]
+                if act_type == "set_npc":
+                    self.npc_at[cell] = action[1]
+                    self.picking = None
+                elif act_type == "set_relic":
+                    self.relics[cell] = action[1]
+                    self.picking = None
+                elif act_type == "open_chest_add":
+                    self.picking = ("chest_add", cell)
+                    self.picker_scroll = 0
+                elif act_type == "chest_remove_item":
+                    idx = action[1]
+                    cur = self.chests.setdefault(cell, [])
+                    if 0 <= idx < len(cur):
+                        cur.pop(idx)
+                elif act_type == "chest_add_item":
+                    self.chests.setdefault(cell, []).append(action[1])
+                    self.picking = ("chest", cell)
+                    self.picker_scroll = 0
+                elif act_type == "chest_back":
+                    self.picking = ("chest", cell)
+                    self.picker_scroll = 0
+                elif act_type == "close":
+                    self.picking = None
                 return
-        self.picking = None                   # clicked outside -> cancel
 
     def _click(self, px):
         if self.edit_name:
@@ -311,9 +429,10 @@ class MapEditorScreen(Screen):
         elif kind == "outdoor":
             self.outdoor = not self.outdoor
         elif kind == "clear":
-            self.walls, self.torches = set(), set()
+            self.walls, self.secret_walls, self.torches = set(), set(), set()
             self.zone_p, self.zone_e, self.npc_at = set(), set(), {}
-            self.elev, self.ropes, self.water = {}, set(), set()
+            self.elev, self.ropes, self.water, self.escape_cells = {}, set(), set(), set()
+            self.traps, self.chests, self.relics = {}, {}, {}
             self._light_sig = None
             self.notice = None
         elif kind == "depth":
@@ -445,11 +564,24 @@ class MapEditorScreen(Screen):
             rx = gx + cx * cell + cell // 2
             pygame.draw.line(screen, _ROPE_C, (rx, gy + cy * cell + 2),
                              (rx, gy + (cy + 1) * cell - 2), max(2, cell // 9))
+        for cx, cy in self.escape_cells:
+            r = pygame.Rect(gx + cx * cell, gy + cy * cell, cell, cell)
+            el = pygame.Surface((cell, cell), pygame.SRCALPHA)
+            el.fill((*_ESCAPE_C, 80))
+            screen.blit(el, (gx + cx * cell, gy + cy * cell))
+            pygame.draw.rect(screen, _ESCAPE_C, r, 2)
+            fnt = self.F["microb"] if cell < 24 else self.F["body_sm"]
+            text(screen, fnt, "ESC", r.center, _ESCAPE_C, center=True)
 
         for wx, wy in self.walls:
             r = pygame.Rect(gx + wx * cell + 1, gy + wy * cell + 1, cell - 2, cell - 2)
             pygame.draw.rect(screen, WALL_FILL, r, border_radius=3)
-            pygame.draw.rect(screen, WALL_HI, r, 1, border_radius=3)
+            if (wx, wy) in self.secret_walls:
+                pygame.draw.rect(screen, _SECRET_WALL_C, r, 2, border_radius=3)
+                fnt = self.F["microb"] if cell < 22 else self.F["bodyb"]
+                text(screen, fnt, "S", r.center, _SECRET_WALL_C, center=True)
+            else:
+                pygame.draw.rect(screen, WALL_HI, r, 1, border_radius=3)
 
         for tx, ty in self.torches:
             c = (gx + tx * cell + cell // 2, gy + ty * cell + cell // 2)
@@ -457,6 +589,32 @@ class MapEditorScreen(Screen):
             pygame.draw.circle(glow, (*TORCH_C, 70), (cell // 2, cell // 2), cell // 2)
             screen.blit(glow, (gx + tx * cell, gy + ty * cell))
             pygame.draw.circle(screen, TORCH_C, c, max(2, cell // 6))
+
+        for (cx, cy), itms in self.chests.items():
+            r = pygame.Rect(gx + cx * cell + 2, gy + cy * cell + 2, cell - 4, cell - 4)
+            pygame.draw.rect(screen, _CHEST_C, r, border_radius=3)
+            pygame.draw.rect(screen, (220, 180, 100), r, 1, border_radius=3)
+            fnt = self.F["microb"] if cell < 22 else self.F["bodyb"]
+            lbl = f"{len(itms)}" if len(itms) > 0 else "C"
+            text(screen, fnt, lbl, r.center, (255, 250, 230), center=True)
+
+        for (cx, cy), item_name in self.relics.items():
+            r = pygame.Rect(gx + cx * cell, gy + cy * cell, cell, cell)
+            pts = [(r.centerx, r.y + 2), (r.right - 3, r.centery),
+                   (r.centerx, r.bottom - 3), (r.x + 3, r.centery)]
+            pygame.draw.polygon(screen, _RELIC_C, pts)
+            pygame.draw.polygon(screen, T.STEEL_LINE, pts, 1)
+            fnt = self.F["microb"] if cell < 22 else self.F["bodyb"]
+            text(screen, fnt, "I", r.center, T.TX, center=True)
+
+        for (cx, cy), ttype in self.traps.items():
+            r = pygame.Rect(gx + cx * cell, gy + cy * cell, cell, cell)
+            col = (205, 90, 60) if "alarm" in str(ttype).lower() else (145, 140, 135)
+            pygame.draw.circle(screen, col, r.center, max(3, cell // 3))
+            pygame.draw.circle(screen, T.STEEL_LINE, r.center, max(3, cell // 3), 1)
+            initial = "A" if "alarm" in str(ttype).lower() else "B"
+            fnt = self.F["microb"] if cell < 22 else self.F["bodyb"]
+            text(screen, fnt, initial, r.center, T.TX, center=True)
 
         pygame.draw.rect(screen, T.STEEL_LINE, (gx, gy, gw, gh), 1)
 
@@ -469,6 +627,16 @@ class MapEditorScreen(Screen):
         size = f"{cols}x{rows}"
         if self.tool == "npc":
             hint = f"{size}  ·  click a cell to pick an NPC  ·  right-click clears"
+        elif self.tool == "trap":
+            hint = f"{size}  ·  click to toggle Bear Trap (B) / Alarm Trap (A)  ·  right-click clears"
+        elif self.tool == "chest":
+            hint = f"{size}  ·  click to manage container loot  ·  right-click removes"
+        elif self.tool == "item":
+            hint = f"{size}  ·  click to place an item or relic  ·  right-click removes"
+        elif self.tool == "secret_wall":
+            hint = f"{size}  ·  left-drag paints secret walls  ·  right-drag erases (revealed by Investigate)"
+        elif self.tool == "escape":
+            hint = f"{size}  ·  left-drag paints escape zone (retreat/win area)  ·  right-drag erases"
         elif self.tool == "pit":
             hint = (f"{size}  ·  left-drag digs pits {self.pit_depth} deep  ·  "
                     "right-drag fills  ·  DEPTH sets how deep")
@@ -481,6 +649,19 @@ class MapEditorScreen(Screen):
             lightnote = ("lit throughout" if lit
                          else f"dark outside torchlight  ·  {len(self.torches)} torch(es)")
             hint = f"{size}  ·  left-drag paints, right-drag erases  ·  " + lightnote
+
+        if hov is not None:
+            if hov in self.chests:
+                itms = self.chests[hov]
+                loot_str = ", ".join(itms) if itms else "empty"
+                hint += f"  ·  chest @ {hov}: [{loot_str}]"
+            elif hov in self.relics:
+                hint += f"  ·  item @ {hov}: {self.relics[hov]}"
+            elif hov in self.traps:
+                hint += f"  ·  trap @ {hov}: {self.traps[hov]}"
+            elif hov in self.npc_at:
+                hint += f"  ·  NPC @ {hov}: {self._npc_name(self.npc_at[hov])}"
+
         text(screen, self.F["body_sm"], hint, (gx, gy + gh + T.S), T.TX_FAINT)
         if self._sealed():
             text(screen, self.F["body_sm"], "walls seal the two sides off -- no path across",
@@ -503,7 +684,7 @@ class MapEditorScreen(Screen):
                             and board.los_clear(t, p):
                         reached.add(p)
         self._dark = frozenset((cx, cy) for cy in range(self.rows)
-                               for cx in range(self.cols) if (cx, cy) not in reached)
+                                for cx in range(self.cols) if (cx, cy) not in reached)
 
     # ------------------------------------------------------------------ #
     def _draw_panel(self, screen, rect):
@@ -516,16 +697,21 @@ class MapEditorScreen(Screen):
         y = rect.y + pad
 
         y = section(screen, F, "TOOLS", x, y, w)
-        for key, label in _TOOLS:
-            r = pygame.Rect(x, y, w, 26)
+        col_w = (w - T.S) // 2
+        rh = 24
+        for i, (key, label) in enumerate(_TOOLS):
+            col = i // 7
+            row = i % 7
+            bx = x + col * (col_w + T.S)
+            by = y + row * (rh + 4)
+            r = pygame.Rect(bx, by, col_w, rh)
             on = self.tool == key
-            self._btn(screen, r, label, on=on, danger=(key == "erase"))
-            swatch = pygame.Rect(r.right - 20, r.centery - 6, 12, 12)
+            self._btn(screen, r, label, on=on, danger=(key == "erase"), font=F["microb"])
+            swatch = pygame.Rect(r.right - 14, r.centery - 4, 8, 8)
             if key in _LAYER_C:
                 pygame.draw.rect(screen, _LAYER_C[key], swatch, border_radius=2)
             self.hits.append((r, ("tool", key)))
-            y += 26 + T.S // 2
-        y += T.S // 2
+        y += 7 * (rh + 4) + T.S // 2
 
         if self.tool in ("pit", "rope"):
             r = pygame.Rect(x, y, w, 24)
@@ -563,7 +749,7 @@ class MapEditorScreen(Screen):
                 ("outdoor", "OUTDOOR (follows daylight)", self.outdoor, False)):
             r = pygame.Rect(x, y, w, 24)
             self._btn(screen, r, label + ("   ·  forced" if note else ""),
-                      on=bool(val))
+                       on=bool(val))
             self.hits.append((r, (key,)))
             y += 24 + T.S // 2
         y += T.S
@@ -617,43 +803,168 @@ class MapEditorScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_picker(self, screen):
-        """Modal list of NPC-library characters -- pick one to stand on
-        `self.picking`. Click a row to assign, anywhere else to cancel."""
+        """Modal manager for NPCs, ground items/relics, and containers/chests."""
         F = self.F
         W, H = screen.get_size()
         veil = pygame.Surface((W, H), pygame.SRCALPHA)
         veil.fill((0, 0, 0, 190))
         screen.blit(veil, (0, 0))
 
-        rows = self.npc_rows
-        rh, pad = 30, T.S * 2
-        margin = T.S * 2
-        pw = min(W - 2 * margin, 420)
-        ph = min(H - 2 * margin, 56 + rh * len(rows) + T.S * 2)
-        box = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
-        pygame.draw.rect(screen, T.STEEL, box)
-        pygame.draw.rect(screen, _NPC_C, box, 2)
-        cx, cy = self.picking
-        text(screen, F["titleb"], f"NPC for cell {cx},{cy}", (box.x + pad, box.y + 12), T.TX)
+        if isinstance(self.picking, tuple) and len(self.picking) == 2 and isinstance(self.picking[0], int):
+            kind, cell = "npc", self.picking
+        else:
+            kind, cell = self.picking[0], self.picking[1]
 
-        prev = screen.get_clip()
-        screen.set_clip(box.inflate(-2, -2))
+        cx, cy = cell
         self.picker_hits = []
-        cur = self.npc_at.get(self.picking)
-        for i, row in enumerate(rows):
-            rr = pygame.Rect(box.x + pad, box.y + 46 + i * rh, pw - 2 * pad, rh - T.S // 2)
-            if rr.bottom > box.bottom - T.S * 2:
-                continue
-            sel = row["slug"] == cur
-            hov = rr.collidepoint(self.mouse)
-            pygame.draw.rect(screen, T.STEEL_HI if (hov or sel) else T.TABLE, rr)
-            pygame.draw.rect(screen, _NPC_C if sel else T.STEEL_LINE, rr, 1)
-            text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], int(rr.w * 0.5)),
-                 (rr.x + T.S, rr.centery - 6), _NPC_C if sel else T.TX)
-            meta = f"{row['race']} · {row['occupation']}"
-            text(screen, F["micro"], ellipsize(meta, F["micro"], int(rr.w * 0.45)),
-                 (rr.right - T.S, rr.centery - 5), T.TX_FAINT, right=True)
-            self.picker_hits.append((rr, row["slug"]))
-        screen.set_clip(prev)
-        text(screen, F["body_sm"], "click outside to cancel",
-             (box.x + pad, box.bottom - 20), T.TX_FAINT)
+        pad = T.S * 2
+        margin = T.S * 2
+        pw = min(W - 2 * margin, 460)
+        ph = min(H - 2 * margin, 460)
+        box = pygame.Rect((W - pw) // 2, (H - ph) // 2, pw, ph)
+        self._picker_box = box
+
+        pygame.draw.rect(screen, T.STEEL, box)
+        border_c = _LAYER_C.get(kind, T.BRASS)
+        pygame.draw.rect(screen, border_c, box, 2)
+
+        list_top = box.y + 54
+        list_h = box.h - 54 - 46
+        list_rect = pygame.Rect(box.x + pad, list_top, pw - 2 * pad, list_h)
+        btn_y = box.bottom - 38
+
+        if kind == "npc":
+            text(screen, F["titleb"], f"NPC for cell {cx},{cy}", (box.x + pad, box.y + 12), T.TX)
+            text(screen, F["micro"], "Select an NPC from the library to stand here",
+                 (box.x + pad, box.y + 34), T.TX_FAINT)
+            rows = self.npc_rows
+            rh = 30
+            total_h = len(rows) * rh
+            max_scroll = max(0, total_h - list_h)
+            self.picker_scroll = max(0, min(self.picker_scroll, max_scroll))
+
+            prev = screen.get_clip()
+            screen.set_clip(list_rect)
+            cur = self.npc_at.get(cell)
+            for i, row in enumerate(rows):
+                ry = list_top + i * rh - self.picker_scroll
+                if ry + rh < list_top or ry > list_top + list_h:
+                    continue
+                rr = pygame.Rect(list_rect.x, ry, list_rect.w, rh - 4)
+                sel = row["slug"] == cur
+                hov = rr.collidepoint(self.mouse)
+                pygame.draw.rect(screen, T.STEEL_HI if (hov or sel) else T.TABLE, rr)
+                pygame.draw.rect(screen, _NPC_C if sel else T.STEEL_LINE, rr, 1)
+                text(screen, F["body_sm"], ellipsize(row["name"], F["body_sm"], int(rr.w * 0.5)),
+                     (rr.x + T.S, rr.centery - 6), _NPC_C if sel else T.TX)
+                meta = f"{row['race']} · {row['occupation']}"
+                text(screen, F["micro"], ellipsize(meta, F["micro"], int(rr.w * 0.45)),
+                     (rr.right - T.S, rr.centery - 5), T.TX_FAINT, right=True)
+                self.picker_hits.append((rr, ("set_npc", row["slug"])))
+            screen.set_clip(prev)
+
+            cb = pygame.Rect(box.right - pad - 80, btn_y, 80, 26)
+            self._btn(screen, cb, "CANCEL", font=F["microb"])
+            self.picker_hits.append((cb, ("close", None)))
+
+        elif kind == "item":
+            text(screen, F["titleb"], f"Item for cell {cx},{cy}", (box.x + pad, box.y + 12), T.TX)
+            text(screen, F["micro"], "Pick an item or relic to sit on the ground",
+                 (box.x + pad, box.y + 34), T.TX_FAINT)
+            rows = _ITEM_CATALOG
+            rh = 28
+            total_h = len(rows) * rh
+            max_scroll = max(0, total_h - list_h)
+            self.picker_scroll = max(0, min(self.picker_scroll, max_scroll))
+
+            prev = screen.get_clip()
+            screen.set_clip(list_rect)
+            cur = self.relics.get(cell)
+            for i, itm in enumerate(rows):
+                ry = list_top + i * rh - self.picker_scroll
+                if ry + rh < list_top or ry > list_top + list_h:
+                    continue
+                rr = pygame.Rect(list_rect.x, ry, list_rect.w, rh - 4)
+                sel = itm == cur
+                hov = rr.collidepoint(self.mouse)
+                pygame.draw.rect(screen, T.STEEL_HI if (hov or sel) else T.TABLE, rr)
+                pygame.draw.rect(screen, _RELIC_C if sel else T.STEEL_LINE, rr, 1)
+                text(screen, F["body_sm"], ellipsize(itm, F["body_sm"], int(rr.w * 0.8)),
+                     (rr.x + T.S, rr.centery - 6), _RELIC_C if sel else T.TX)
+                self.picker_hits.append((rr, ("set_relic", itm)))
+            screen.set_clip(prev)
+
+            cb = pygame.Rect(box.right - pad - 80, btn_y, 80, 26)
+            self._btn(screen, cb, "CANCEL", font=F["microb"])
+            self.picker_hits.append((cb, ("close", None)))
+
+        elif kind == "chest":
+            items_list = self.chests.setdefault(cell, [])
+            text(screen, F["titleb"], f"Container at {cx},{cy}", (box.x + pad, box.y + 12), T.TX)
+            sub = f"{len(items_list)} item(s) inside this container"
+            text(screen, F["micro"], sub, (box.x + pad, box.y + 34), T.TX_FAINT)
+
+            prev = screen.get_clip()
+            screen.set_clip(list_rect)
+            if not items_list:
+                text(screen, F["body_sm"], "This chest is currently empty.",
+                     (list_rect.x + T.S, list_top + 16), T.TX_MUTED)
+                text(screen, F["micro"], "Click [+ ADD ITEM] below to add loot.",
+                     (list_rect.x + T.S, list_top + 40), T.TX_FAINT)
+            else:
+                rh = 30
+                total_h = len(items_list) * rh
+                max_scroll = max(0, total_h - list_h)
+                self.picker_scroll = max(0, min(self.picker_scroll, max_scroll))
+
+                for i, itm in enumerate(items_list):
+                    ry = list_top + i * rh - self.picker_scroll
+                    if ry + rh < list_top or ry > list_top + list_h:
+                        continue
+                    rr = pygame.Rect(list_rect.x, ry, list_rect.w, rh - 4)
+                    pygame.draw.rect(screen, T.TABLE, rr)
+                    pygame.draw.rect(screen, T.STEEL_LINE, rr, 1)
+                    text(screen, F["body_sm"], ellipsize(str(itm), F["body_sm"], int(rr.w - 40)),
+                         (rr.x + T.S, rr.centery - 6), T.TX)
+                    xb = pygame.Rect(rr.right - 26, rr.y + 3, 20, 20)
+                    h = xb.collidepoint(self.mouse)
+                    text(screen, F["bodyb"], "×", xb.center, T.BLOOD if h else T.TX_FAINT, center=True)
+                    self.picker_hits.append((xb, ("chest_remove_item", i)))
+            screen.set_clip(prev)
+
+            ab = pygame.Rect(box.x + pad, btn_y, 110, 26)
+            self._btn(screen, ab, "+ ADD ITEM", font=F["microb"])
+            self.picker_hits.append((ab, ("open_chest_add", None)))
+
+            db = pygame.Rect(box.right - pad - 80, btn_y, 80, 26)
+            self._btn(screen, db, "DONE", on=True, font=F["microb"])
+            self.picker_hits.append((db, ("close", None)))
+
+        elif kind == "chest_add":
+            text(screen, F["titleb"], f"Add Item to Container {cx},{cy}", (box.x + pad, box.y + 12), T.TX)
+            text(screen, F["micro"], "Click an item from the catalog to place inside",
+                 (box.x + pad, box.y + 34), T.TX_FAINT)
+            rows = _ITEM_CATALOG
+            rh = 28
+            total_h = len(rows) * rh
+            max_scroll = max(0, total_h - list_h)
+            self.picker_scroll = max(0, min(self.picker_scroll, max_scroll))
+
+            prev = screen.get_clip()
+            screen.set_clip(list_rect)
+            for i, itm in enumerate(rows):
+                ry = list_top + i * rh - self.picker_scroll
+                if ry + rh < list_top or ry > list_top + list_h:
+                    continue
+                rr = pygame.Rect(list_rect.x, ry, list_rect.w, rh - 4)
+                hov = rr.collidepoint(self.mouse)
+                pygame.draw.rect(screen, T.STEEL_HI if hov else T.TABLE, rr)
+                pygame.draw.rect(screen, _CHEST_C if hov else T.STEEL_LINE, rr, 1)
+                text(screen, F["body_sm"], ellipsize(itm, F["body_sm"], int(rr.w * 0.8)),
+                     (rr.x + T.S, rr.centery - 6), _CHEST_C if hov else T.TX)
+                self.picker_hits.append((rr, ("chest_add_item", itm)))
+            screen.set_clip(prev)
+
+            bb = pygame.Rect(box.x + pad, btn_y, 80, 26)
+            self._btn(screen, bb, "< BACK", font=F["microb"])
+            self.picker_hits.append((bb, ("chest_back", None)))

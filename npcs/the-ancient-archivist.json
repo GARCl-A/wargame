@@ -1,0 +1,87 @@
+{
+  "uid": "7941627f0ec848da97f5a455df61a553",
+  "recruited_by": null,
+  "name": "The Ancient Archivist",
+  "auto_name": false,
+  "portrait_id": 2034328191,
+  "race": "Automaton",
+  "occupation": "Scribe",
+  "alignment": "Lawful and Evil",
+  "crime": 0,
+  "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "first_aid_charges": 0,
+  "quiver_charges": 0,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 28,
+  "share_food": true,
+  "combat_xp": 10,
+  "work_hours": 320,
+  "bio": "Keeper of the lost library codex. Slumbers on its stone pedestal until intruders disturb its sanctum.",
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Ankarin"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [
+    "magic_missile"
+  ],
+  "study_target": null,
+  "study_progress": 0,
+  "talents": {
+    "combat": [
+      "tough",
+      "hardy"
+    ],
+    "work": [
+      "negotiator",
+      "provisioner",
+      "fixer",
+      "carrier"
+    ],
+    "racial": []
+  },
+  "level_hp_rolls": [
+    6,
+    1,
+    5
+  ],
+  "base_attributes": {
+    "strength": 5,
+    "dexterity": 4,
+    "constitution": 12,
+    "intelligence": 8,
+    "wisdom": 11,
+    "charisma": 5
+  },
+  "age_base": 27,
+  "age": 27,
+  "hp_roll": 8,
+  "hp_override": null,
+  "racial_override": null,
+  "hp_max": 28,
+  "languages": [
+    "Ankarin"
+  ],
+  "equipped_weapon": "Dagger",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_armor": null,
+  "inventory": [
+    {
+      "id": "scroll_of_floating_disk",
+      "name": "Scroll of Floating Disk",
+      "qty": 1
+    }
+  ],
+  "locked_items": {},
+  "dormant": true,
+  "awareness_radius": 8,
+  "npc_slug": "the-ancient-archivist"
+}

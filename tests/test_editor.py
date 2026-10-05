@@ -161,3 +161,218 @@ def test_npc_library_round_trips_a_hand_built_character():
     finally:
         shutil.rmtree(npc_lib.NPC_DIR, ignore_errors=True)
         npc_lib.NPC_DIR = old
+
+
+def test_map_library_round_trips_traps_and_custom_scenario_spawns_them():
+    import shutil
+    import tempfile
+
+    from gartok import map_lib
+    old, map_lib.MAP_DIR = map_lib.MAP_DIR, tempfile.mkdtemp()
+    try:
+        m = map_lib.new_map("Trap Gauntlet")
+        m["traps"] = [[5, 4, "bear trap"], [6, 4, "alarm trap"]]
+        slug = map_lib.save_map(m)
+        back = map_lib.load_map(slug)
+        assert back["traps"] == [[5, 4, "bear trap"], [6, 4, "alarm trap"]]
+
+        batt = Battle([Unit("player")], [Unit("enemy")],
+                      scenario=CustomScenario(back))
+        traps = [o for o in batt.ground if o.is_trap]
+        assert len(traps) == 2
+        assert any(o.trap_type == "bear trap" and o.pos == (5, 4) for o in traps)
+        assert any(o.trap_type == "alarm trap" and o.pos == (6, 4) for o in traps)
+    finally:
+        shutil.rmtree(map_lib.MAP_DIR, ignore_errors=True)
+        map_lib.MAP_DIR = old
+
+
+def test_map_editor_trap_tool():
+    import pygame
+    from gartok.map_editor_screen import MapEditorScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    ed = MapEditorScreen(ui_fonts(), lambda: None)
+    ed.tool = "trap"
+
+    # Fake cell click at (4, 4)
+    # Event button 1: place bear trap
+    ev1 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 1})
+    ed._cell_at = lambda p: (4, 4)
+    ed.handle_event(ev1)
+    assert ed.traps.get((4, 4)) == "bear trap"
+
+    # Click again: toggle to alarm trap
+    ed.handle_event(ev1)
+    assert ed.traps.get((4, 4)) == "alarm trap"
+
+    # Event button 3: right click clears
+    ev3 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 3})
+    ed.handle_event(ev3)
+    assert (4, 4) not in ed.traps
+
+    # Add back and verify _to_dict
+    ed.handle_event(ev1)
+    d = ed._to_dict()
+    assert d["traps"] == [[4, 4, "bear trap"]]
+
+
+def test_ancient_ruins_map_and_npcs_in_library():
+    from gartok import map_lib, npc_lib
+    from gartok.scenario import AncientRuinsScenario
+
+    npc_slugs = [r["slug"] for r in npc_lib.list_npcs()]
+    assert "ruin-sentry" in npc_slugs
+    assert "the-ancient-archivist" in npc_slugs
+
+    map_slugs = [r["slug"] for r in map_lib.list_maps()]
+    assert "ancient-ruins" in map_slugs
+
+    sc = AncientRuinsScenario()
+    assert sc._cols == 30 and sc._rows == 18
+    assert len(sc.enemies) == 3
+    boss = next(e for e in sc.enemies if "Archivist" in e.name)
+    assert boss.dormant
+    assert boss.awareness_radius == 8
+
+
+def test_map_editor_secret_wall_and_escape_tools():
+    import pygame
+    from gartok.map_editor_screen import MapEditorScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    ed = MapEditorScreen(ui_fonts(), lambda: None)
+    ed._cell_at = lambda p: (5, 5)
+
+    # Paint secret wall
+    ed.tool = "secret_wall"
+    ev1 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 1})
+    ed.handle_event(ev1)
+    assert (5, 5) in ed.walls
+    assert (5, 5) in ed.secret_walls
+
+    # Erase secret wall
+    ev3 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 3})
+    ed.handle_event(ev3)
+    assert (5, 5) not in ed.walls
+    assert (5, 5) not in ed.secret_walls
+
+    # Paint escape zone
+    ed.tool = "escape"
+    ed.handle_event(ev1)
+    assert (5, 5) in ed.escape_cells
+    assert ed._to_dict()["escape_cells"] == [[5, 5]]
+
+    # Erase escape zone
+    ed.handle_event(ev3)
+    assert (5, 5) not in ed.escape_cells
+
+
+def test_map_editor_container_and_item_tools():
+    import pygame
+    from gartok.map_editor_screen import MapEditorScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    ed = MapEditorScreen(ui_fonts(), lambda: None)
+    ed._cell_at = lambda p: (7, 3)
+
+    # Click with chest tool: creates chest and opens ("chest", (7, 3)) modal
+    ed.tool = "chest"
+    ev1 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 1})
+    ed.handle_event(ev1)
+    assert (7, 3) in ed.chests
+    assert ed.picking == ("chest", (7, 3))
+
+    # Add item to chest: simulate button click to open add picker
+    ed._picker_box = pygame.Rect(0, 0, 800, 600)
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("open_chest_add", None))]
+    ed._picker_click((20, 20))
+    assert ed.picking == ("chest_add", (7, 3))
+
+    # Select item to add
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("chest_add_item", "Scroll of Sleep"))]
+    ed._picker_click((20, 20))
+    assert ed.chests[(7, 3)] == ["Scroll of Sleep"]
+    assert ed.picking == ("chest", (7, 3))
+
+    # Add a second item
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("open_chest_add", None))]
+    ed._picker_click((20, 20))
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("chest_add_item", "Amethyst"))]
+    ed._picker_click((20, 20))
+    assert ed.chests[(7, 3)] == ["Scroll of Sleep", "Amethyst"]
+
+    # Remove the first item
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("chest_remove_item", 0))]
+    ed._picker_click((20, 20))
+    assert ed.chests[(7, 3)] == ["Amethyst"]
+
+    # Close modal
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("close", None))]
+    ed._picker_click((20, 20))
+    assert ed.picking is None
+
+    # Serialization contains chest
+    d = ed._to_dict()
+    assert d["chests"] == [[7, 3, ["Amethyst"]]]
+
+    # Right-click removes chest
+    ev3 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 3})
+    ed.handle_event(ev3)
+    assert (7, 3) not in ed.chests
+
+    # Test item tool: click cell (8, 4)
+    ed._cell_at = lambda p: (8, 4)
+    ed.tool = "item"
+    ed.handle_event(ev1)
+    assert ed.picking == ("item", (8, 4))
+
+    # Pick item
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("set_relic", "Ancient Codex"))]
+    ed._picker_click((20, 20))
+    assert ed.relics.get((8, 4)) == "Ancient Codex"
+    assert ed.picking is None
+    assert ed._to_dict()["relics"] == [[8, 4, "Ancient Codex"]]
+
+    # Right-click clears relic
+    ed.handle_event(ev3)
+    assert (8, 4) not in ed.relics
+
+
+def test_custom_scenario_spawns_chests_and_relics_and_pickup():
+    from gartok import data, map_lib
+    from gartok.actions.support import PickUp
+
+    m = map_lib.new_map("Treasure Room")
+    m["deploy_player"] = [[2, 2]]
+    m["deploy_enemy"] = [[10, 10]]
+    m["chests"] = [[2, 3, ["50 Copper", "Scroll of Sleep"]]]
+    m["relics"] = [[3, 2, data.CODEX_ITEM]]
+    m["secret_walls"] = [[5, 5]]
+    m["escape_cells"] = [[1, 1]]
+
+    batt = Battle([Unit("player")], [Unit("enemy")], scenario=CustomScenario(m))
+    assert (5, 5) in batt.secret_walls
+    assert (1, 1) in batt.escape_cells
+
+    chests = [o for o in batt.ground if o.is_chest]
+    assert len(chests) == 1
+    assert chests[0].pos == (2, 3)
+    assert chests[0].contents == ["50 Copper", "Scroll of Sleep"]
+
+    relics = [o for o in batt.ground if o.is_relic]
+    assert len(relics) == 1
+    assert relics[0].pos == (3, 2)
+    assert relics[0].item_name == data.CODEX_ITEM
+
+    # Test pickup of relic
+    p = batt.player_units[0]
+    p.pos = (3, 3)
+    p.ap = 2
+    act = PickUp()
+    assert act.available(batt, p)
+    act.execute(batt, p)
+    assert data.CODEX_ITEM in p.inventory
+    assert data.CODEX_ITEM in getattr(p, "picked_up_items", [])
+    assert not any(o.is_relic for o in batt.ground)
+

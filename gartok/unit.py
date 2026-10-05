@@ -161,6 +161,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         u._hp_roll = d.get("hp_roll")
         u._hp_override = d.get("hp_override")            # creator-set HP max, or None
         u._racial_override = d.get("racial_override")    # creator-pinned racial level, or None
+        u.dormant = d.get("dormant", False)
+        u.awareness_radius = d.get("awareness_radius", 0)
         if u._hp_roll is None:                           # pre-hunger save: back it out of hp_max
             u._hp_roll = max(1, d["hp_max"] - mod(u.constitution) - u._ability.hp_max)
         u._derive_combat()                               # rebuilds hp_max from _hp_roll

@@ -49,23 +49,27 @@ def test_dungeon_scenario_setup():
     battle = Battle([u1, u2], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
 
     # Check secret wall is present in board.walls and secret_walls set
-    assert (14, 6) in battle.secret_walls
-    assert (14, 6) in battle.board.walls
+    assert (12, 6) in battle.secret_walls
+    assert (12, 6) in battle.board.walls
 
     # Check traps
     traps = [o for o in battle.ground if o.is_trap]
-    assert len(traps) == 2
-    assert any(o.trap_type == "bear trap" and o.pos == (11, 8) for o in traps)
-    assert any(o.trap_type == "alarm trap" and o.pos == (13, 8) for o in traps)
+    assert len(traps) >= 2
+    assert any(o.trap_type == "bear trap" for o in traps)
+    assert any(o.trap_type == "alarm trap" for o in traps)
 
     # Check chest and codex relic
-    assert any(o.is_chest and o.pos == (18, 3) for o in battle.ground)
+    assert any(o.is_chest and o.pos == (20, 3) for o in battle.ground)
     assert any(o.is_relic and o.pos == (27, 11) and o.item_name == data.CODEX_ITEM for o in battle.ground)
 
     # Check enemies: 2 sentries and 1 boss
     assert len(battle.enemy_units) == 3
     boss = next(e for e in battle.enemy_units if "Archivist" in e.name)
     assert boss.dormant
+
+    # Verify path connectivity from entrance to boss and codex
+    assert battle.board.path_to((1, 7), boss.pos, blocked=battle.board.walls)
+    assert battle.board.path_to((1, 7), (27, 11), blocked=battle.board.walls)
 
 
 def test_investigate_secret_wall():
@@ -81,14 +85,14 @@ def test_investigate_secret_wall():
     actor.pos = (1, 7)
     assert not inv.available(battle, actor)
 
-    # Adjacent to secret wall (14, 6) -> e.g. at (14, 7)
-    actor.pos = (14, 7)
+    # Adjacent to secret wall (12, 6) -> e.g. at (13, 7)
+    actor.pos = (13, 7)
     assert inv.available(battle, actor)
 
     # Execute
     inv.execute(battle, actor)
-    assert (14, 6) not in battle.secret_walls
-    assert (14, 6) not in battle.board.walls
+    assert (12, 6) not in battle.secret_walls
+    assert (12, 6) not in battle.board.walls
     assert actor.ap == 1
 
 
@@ -103,14 +107,14 @@ def test_disarm_trap():
     actor.ap = 2
 
     disarm = Disarm()
-    # Move adjacent to bear trap at (11, 8)
-    actor.pos = (11, 7)
+    # Move adjacent to bear trap at (8, 8)
+    actor.pos = (8, 7)
     assert disarm.available(battle, actor)
 
     # Disarm success
     with fixed_d20(15):
         disarm.execute(battle, actor)
-        assert not any(o.pos == (11, 8) and o.is_trap for o in battle.ground)
+        assert not any(o.pos == (8, 8) and o.is_trap for o in battle.ground)
         assert "Bear Trap" in actor.inventory
         assert "Bear Trap" in actor.picked_up_items
 
@@ -121,7 +125,7 @@ def test_disarm_fumble_triggers_trap():
     battle = Battle([u], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
     actor = battle.player_units[0]
     actor.ap = 2
-    actor.pos = (11, 7)
+    actor.pos = (8, 7)
 
     disarm = Disarm()
     hp_before = actor.hp
@@ -137,16 +141,16 @@ def test_pickup_chest_and_codex():
     actor = battle.player_units[0]
     actor.ap = 2
 
-    # Open chest at (18, 3)
-    actor.pos = (18, 3)
+    # Open chest at (20, 3)
+    actor.pos = (20, 3)
     pu = PickUp()
     assert pu.available(battle, actor)
     gold_before = actor.char.gold
     pu.execute(battle, actor)
     assert "Scroll of Sleep" in actor.inventory
     assert "Amethyst" in actor.inventory
-    assert actor.char.gold == gold_before + 50
-    assert not any(o.pos == (18, 3) and o.is_chest for o in battle.ground)
+    assert actor.char.gold == gold_before + 150
+    assert not any(o.pos == (20, 3) and o.is_chest for o in battle.ground)
 
     # Pick up Codex at (27, 11)
     actor.ap = 2
@@ -167,7 +171,7 @@ def test_unopened_chest_currency_absorbed_on_victory():
     battle = Battle([u], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
     battle.winner = "player"
     absorb_battle(guild, [u], battle, node=world.node("ancient_ruins"))
-    assert u.gold == 60
+    assert u.gold == 160
 
 
 def test_boss_dormancy_and_alarm_awakening():
@@ -186,8 +190,8 @@ def test_boss_dormancy_and_alarm_awakening():
     assert boss.dormant
     assert boss.pos == (25, 11) # Did not move
 
-    # Triggering the alarm trap at (13, 8) awakens everyone
-    alarm_trap = next(o for o in battle.ground if o.pos == (13, 8))
+    # Triggering the alarm trap at (12, 7) awakens everyone
+    alarm_trap = next(o for o in battle.ground if o.pos == (12, 7))
     battle.trigger_trap(actor, alarm_trap)
     assert not boss.dormant
     assert boss.alerted

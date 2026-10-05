@@ -1,0 +1,78 @@
+{
+  "uid": "80d56452492c4118be0ecb364f4ac028",
+  "recruited_by": null,
+  "name": "Ruin Sentry",
+  "auto_name": false,
+  "portrait_id": 2161468498,
+  "race": "Automaton",
+  "occupation": "Guard",
+  "alignment": "Chaotic and Good",
+  "crime": 0,
+  "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "first_aid_charges": 0,
+  "quiver_charges": 0,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 4,
+  "share_food": true,
+  "combat_xp": 10,
+  "work_hours": 0,
+  "bio": "Ancient automaton construct bound to guard the library entrance.",
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Ankarin"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
+  "talents": {
+    "combat": [
+      "alert",
+      "iron_will"
+    ],
+    "work": [],
+    "racial": []
+  },
+  "level_hp_rolls": [
+    4
+  ],
+  "base_attributes": {
+    "strength": 13,
+    "dexterity": 13,
+    "constitution": 9,
+    "intelligence": 10,
+    "wisdom": 11,
+    "charisma": 8
+  },
+  "age_base": 60,
+  "age": 60,
+  "hp_roll": 2,
+  "hp_override": null,
+  "racial_override": null,
+  "hp_max": 4,
+  "languages": [
+    "Ankarin"
+  ],
+  "equipped_weapon": "Club",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_armor": null,
+  "inventory": [
+    {
+      "id": "lantern",
+      "name": "Lantern",
+      "qty": 1
+    }
+  ],
+  "locked_items": {},
+  "dormant": false,
+  "awareness_radius": 0,
+  "npc_slug": "ruin-sentry"
+}

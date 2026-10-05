@@ -124,6 +124,8 @@ def unit_to_dict(u):
         "equipped_armor": u.equipped_armor,      # body slot: armor name, or None
         "inventory": _serialize_pack(u._base_inventory),    # the pack: spare items, weapons included
         "locked_items": dict(u.locked_items),    # item name -> count exempt from distribute_load
+        "dormant": getattr(u, "dormant", False),
+        "awareness_radius": getattr(u, "awareness_radius", 0),
     }
 
 
