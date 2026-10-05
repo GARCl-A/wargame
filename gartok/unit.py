@@ -35,14 +35,17 @@ from .unit_loadout import (  # noqa: F401 -- re-exported
     stack_add,
     stack_take,
 )
+from .unit_poison import PoisonMixin
 
 
-class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin):
+class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin, PoisonMixin):
     def __init__(self, team, name=None, race=None):
         self.team = team                     # "player" / "enemy" (vestigial: Combatant owns the real one)
         self.uid = uuid.uuid4().hex          # stable identity: survives save/load, outlives the name
         self.recruited_by = None             # uid of the guild member who recruited this one, or None
         self.talents = {t: [] for t in talents.TRACKS}   # picked talent ids per XP track
+        self.poisons = {}                    # poison id -> {"level", "hours", "dc"} (see unit_poison.py)
+        self.antidote_cooldown = 0           # hours until another Antidote may be used
         self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
         self.first_aid_charges = 0
         self.quiver_charges = 0
@@ -107,6 +110,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         u.uid = d.get("uid") or uuid.uuid4().hex     # back-fill: pre-uid saves get one now
         u.recruited_by = d.get("recruited_by")
         u.talents = {t: list(d.get("talents", {}).get(t, [])) for t in talents.TRACKS}
+        u.poisons = {pid: dict(st) for pid, st in d.get("poisons", {}).items()}
+        u.antidote_cooldown = d.get("antidote_cooldown", 0)
         u._level_hp_rolls = list(d.get("level_hp_rolls", []))
         u.base_attributes = dict(d["base_attributes"])
         for a in ATTRIBUTES:
@@ -199,7 +204,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         """Each attribute score = raw 3d6 roll + racial mod + talent bonus.
         Rebuilt from scratch so it is safe to re-run when a talent is picked."""
         for a, m in zip(ATTRIBUTES, self.race["mods"]):
-            setattr(self, a, self.base_attributes[a] + m + self.talent_bonus("attr", a))
+            setattr(self, a, self.base_attributes[a] + m + self.talent_bonus("attr", a)
+                    - self.poison_penalty(a))
         if getattr(self, "sick", False):
             self.constitution -= 4
             self.strength -= 2

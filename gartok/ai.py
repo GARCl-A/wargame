@@ -16,7 +16,7 @@ the morality axis mostly:
 """
 
 from . import actions, data
-from .board import grid_distance
+from .board import cells, grid_distance
 
 
 def _avg_die(nf):
@@ -178,6 +178,27 @@ def _eat_corpse(battle, unit):
     if not bodies:
         return False
     actions.EAT_CORPSE.execute(battle, unit, bodies[0])
+    return True
+
+
+def _spin_web(battle, unit, target):
+    """Giant Spider: when the prey is still a few steps off, string a web between
+    them instead of walking into the open -- at most one standing web near it."""
+    if not actions.SPIN_WEB.available(battle, unit):
+        return False
+    here = battle.units_distance(unit, target)
+    if not 2 <= here <= 7:
+        return False
+    if any(o.is_trap and o.trap_type == "web" and o.trap_owner_team == unit.team
+           and grid_distance(o.pos, target.pos) <= 3 for o in battle.ground):
+        return False
+    anchor = min(actions.SPIN_WEB.highlight_cells(battle, unit),
+                 key=lambda a: min(grid_distance(c, target.pos)
+                                   for c in cells(a, unit.footprint)), default=None)
+    if anchor is None or min(grid_distance(c, target.pos)
+                             for c in cells(anchor, unit.footprint)) >= here:
+        return False
+    actions.SPIN_WEB.execute(battle, unit, anchor)
     return True
 
 
@@ -395,6 +416,9 @@ def take_turn(battle, unit):
         atk = _pick_attack(battle, unit, target)
         if atk is not None:
             atk.execute(battle, unit, target)
+            continue
+
+        if _spin_web(battle, unit, target):
             continue
 
         if not target.demoralized and actions.DEMORALIZE.can(battle, unit, target):

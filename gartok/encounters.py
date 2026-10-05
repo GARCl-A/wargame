@@ -116,7 +116,7 @@ class EncounterEntry:
 # `None`, not `tuple(data.RACE_POOL)`, so it stays weighted by rarity instead
 # of flattening every race to an equal ~5.5% (`data.roll_race()`'s thresholds).
 WILDS_TABLE = (
-    EncounterEntry(70, tuple(data.BEAST_POOL)),
+    EncounterEntry(70, tuple(data.WILD_POOL)),
     EncounterEntry(30, None),
 )
 
@@ -126,7 +126,7 @@ WILDS_TABLE = (
 # out. Same weights as WILDS_TABLE, just inverted and off a different node.
 OLD_ROAD_TABLE = (
     EncounterEntry(70, None),
-    EncounterEntry(30, tuple(data.BEAST_POOL)),
+    EncounterEntry(30, tuple(data.WILD_POOL)),
 )
 
 

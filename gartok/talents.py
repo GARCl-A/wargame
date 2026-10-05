@@ -16,6 +16,8 @@ exactly one consumer that reads it back:
     melee_reach       Combatant.attack_range           --
     unarmed_dice      Unit._derive_combat (+N dice)    --
     size_up           Unit._derive_size (+N sizes)     --
+    unarmed_finesse   Unit.attack_bonus / Combatant    --
+    spin_web          actions.SpinWeb                  --
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     post_combat_heal  campaign._carry_forward          --
@@ -249,6 +251,32 @@ _LIST = [
     Talent("rending_bite", "racial", 1, "Rending Bite",
            "jaws that tear: roll one extra die on your unarmed attack.", race="Wolf",
            effects=(Effect("unarmed_dice", 1),), icon="action/eating"),
+    Talent("elder_skeleton", "racial", 1, "Elder Skeleton",
+           "centuries of unlife sharpen the mind and the voice: +4 Intelligence and "
+           "+4 Charisma.", race="Skeleton",
+           effects=(Effect("attr", 4, "intelligence"), Effect("attr", 4, "charisma")),
+           icon="hat/crowned-skull"),
+    Talent("skeleton_faith_initiate", "racial", 1, "Faith Initiate",
+           "a vow that outlasted death: you become initiated in faith magic. If already "
+           "initiated, gain a free spell.", race="Skeleton",
+           effects=(), icon="action/prayer"),
+    Talent("deft_bones", "racial", 1, "Deft Bones",
+           "light, quick bones: your unarmed attacks hit with the better of Strength "
+           "or Dexterity.", race="Skeleton",
+           effects=(Effect("unarmed_finesse", 1),), icon="action/sprint"),
+    Talent("giant_growth", "racial", 1, "Giant Growth",
+           "you swell past your kin: your size goes up one step (Medium to Large, 2x2).",
+           race="Giant Spider",
+           effects=(Effect("size_up", 1),), icon="body/cavalry"),
+    Talent("titanic_growth", "racial", 2, "Titanic Growth",
+           "a second growth spurt: your size goes up another step (Large to Huge, 3x3).",
+           requires="giant_growth", race="Giant Spider",
+           effects=(Effect("size_up", 1),), icon="body/cavalry"),
+    Talent("spin_web", "racial", 1, "Spin Web",
+           "spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): "
+           "the first foe to touch it is stuck, unable to walk through its next turn.",
+           race="Giant Spider",
+           effects=(Effect("spin_web", 1),), icon="action/hive-mind"),
     Talent("dire_growth", "racial", 1, "Dire Growth",
            "you grow past your kin: your size goes up one step (a Wolf becomes Large).", race="Wolf",
            effects=(Effect("size_up", 1),), icon="body/cavalry"),

@@ -334,6 +334,8 @@ _register(ItemDef(id="lantern", name="Lantern", type=ItemType.LIGHT, rarity=Item
 _register(ItemDef(id="first_aid_kit", name="First Aid Kit", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=0.8, price=40, max_charges=10))
 _register(ItemDef(id="quiver", name="Quiver", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=1.5, price=25, max_charges=20))
 _register(ItemDef(id="minor_healing_potion", name="Minor Healing Potion", type=ItemType.POTION, rarity=ItemRarity.COMMON, weight=0.2, price=80))
+_register(ItemDef(id="venom_gland", name="Venom Gland", type=ItemType.MATERIAL, rarity=ItemRarity.UNCOMMON, weight=0.2, price=25))
+_register(ItemDef(id="antidote", name="Antidote", type=ItemType.POTION, rarity=ItemRarity.UNCOMMON, weight=0.2, price=60))
 _register(ItemDef(id="vial", name="Vial", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
 _register(ItemDef(id="1sqm_hide", name="1sqm Hide", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=2.0, price=12), "hide")
 _register(ItemDef(id="red_mushroom", name="Red Mushroom", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
@@ -535,6 +537,13 @@ CRAFTING_RECIPES: dict[str, CraftingRecipe] = {
         station=CraftingStation.APOTHECARY,
         level=1,
     ),
+    "Antidote": CraftingRecipe(
+        target="Antidote",
+        materials=["Venom Gland", "Vial"],
+        complexity=15,
+        station=CraftingStation.APOTHECARY,
+        level=1,
+    ),
     "Dwarf Axe": CraftingRecipe(
         target="Dwarf Axe",
         materials=["Iron Bar", "1sqm Hide", "1kg Coal"],
@@ -581,7 +590,7 @@ for _lang in _LANGUAGES:
         level=2,
     )
 
-APOTHECARY_RECIPES = ["Minor Healing Potion"]
+APOTHECARY_RECIPES = ["Minor Healing Potion", "Antidote"]
 BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
 
 # --------------------------------------------------------------------------- #
@@ -593,6 +602,8 @@ COIN_ITEM = "Copper Coin"      # `Unit.gold` is the count of these in the pack; 
 LANTERN_ITEM = "Lantern"
 AMMO_ITEM = "Quiver"
 FIRST_AID_ITEM = "First Aid Kit"
+ANTIDOTE_ITEM = "Antidote"
+VENOM_GLAND_ITEM = "Venom Gland"
 CHEST_ITEM = "Locked Chest"
 GEM_ITEM = "Gemstones"
 MISSION_CHEST_ITEM = "Sealed Chest"

@@ -105,7 +105,7 @@ class LevelingMixin:
         self.talents[track].append(talent_id)
         
         # Hooks for specific racial talents
-        if talent_id == "kenku_faith_initiate":
+        if talent_id in ("kenku_faith_initiate", "skeleton_faith_initiate"):
             if not self.magic_source:
                 self.magic_source = "faith"
             elif self.magic_source == "faith":

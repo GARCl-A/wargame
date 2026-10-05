@@ -206,6 +206,18 @@ def _bite(surf, rect, c):
     pygame.draw.polygon(surf, c, [(x + s * 0.4, y + s * 0.7), (x + s * 0.6, y + s * 0.4), (x + s * 0.8, y + s * 0.7)], w)
 
 
+def _web(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    cx, cy = x + s / 2, y + s / 2
+    tips = [(x + s * fx, y + s * fy) for fx, fy in
+            ((0, 0.5), (0.15, 0.15), (0.5, 0), (0.85, 0.15), (1, 0.5), (0.85, 0.85), (0.5, 1), (0.15, 0.85))]
+    for t in tips:
+        pygame.draw.line(surf, c, (cx, cy), t, w)
+    ring = [(cx + (t[0] - cx) * 0.55, cy + (t[1] - cy) * 0.55) for t in tips]
+    pygame.draw.polygon(surf, c, ring, w)
+
+
 def _lock(surf, rect, c):
     x, y, s = _box(rect)
     w = _lw(s)
@@ -226,7 +238,7 @@ def _unlock(surf, rect, c):
 
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
-    "demoralize": _shout, "eat_corpse": _bite,
+    "demoralize": _shout, "eat_corpse": _bite, "spin_web": _web,
     "pickup": _hand, "defend": _shield, "end": _hourglass, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,

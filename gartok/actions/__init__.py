@@ -64,6 +64,7 @@ from .support import (
     Investigate,
     Mount,
     PickUp,
+    SpinWeb,
     Stabilize,
     WakeUp,
 )
@@ -89,6 +90,7 @@ JUMP = Jump()
 SWIM = Swim()
 FLEE = Flee()
 EAT_CORPSE = EatCorpse()
+SPIN_WEB = SpinWeb()
 MOUNT = Mount()
 DISMOUNT = Dismount()
 WAKE_UP = WakeUp()
@@ -124,6 +126,7 @@ UTILITY_ACTIONS = [
     SWIM,
     SHARE_MAGIC,
     EAT_CORPSE,
+    SPIN_WEB,
     MOUNT,
     DISMOUNT,
     WAKE_UP,

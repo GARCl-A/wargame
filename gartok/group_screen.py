@@ -275,6 +275,8 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             self.notice = "Redistributed packs by carrying capacity."
         elif key == "treat_sickness":
             self._treat_sickness()
+        elif key == "treat_poison":
+            self._treat_poison()
         elif key == "rename":
             self.editing_name = True
             self.name_buf = self.group.name or ""
@@ -289,6 +291,28 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         elif key == "drop_selected":
             self._give_many(None, "discard")
             self.notice = "Thrown away."
+
+    def _poison_cases(self):
+        """`(patient, giver)` pairs: a poisoned member who may take an Antidote now,
+        and the member of the group (the patient first) holding one."""
+        out = []
+        for u in self.group.members:
+            if u.can_take_antidote:
+                giver = u.antidote_giver([m for m in self.group.members if m is not u])
+                if giver:
+                    out.append((u, giver))
+        return out
+
+    def _can_treat_poison(self):
+        return bool(self._poison_cases())
+
+    def _treat_poison(self):
+        cases = self._poison_cases()
+        if not cases:
+            return
+        patient, giver = cases[0]
+        giver.remove_named(items.ANTIDOTE_ITEM)
+        _, self.notice = patient.apply_antidote()
 
     def _can_treat_sickness(self):
         sick_members = [u for u in self.group.members if u.sick and not getattr(u, "medicine_attempted_today", False) and not getattr(u, "treated", False)]
@@ -676,6 +700,8 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             actions = [("distribute", "distribute load")]
             if self._can_treat_sickness():
                 actions.append(("treat_sickness", "treat sickness"))
+            if self._can_treat_poison():
+                actions.append(("treat_poison", "use antidote"))
 
             res = loadout_panel.toolbar(screen, F, bar, mid.x, (("bags", "BAGS"), ("cargo", "CARGO")),
                                         self.view, metrics, actions, self.mouse)

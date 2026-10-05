@@ -73,13 +73,14 @@ def resolve_bonus(mods):
 #   Centaur only exceeds 9 m because of the Gallop ability.                    #
 # --------------------------------------------------------------------------- #
 
-SIZE_ORDER = ("Tiny", "Small", "Medium", "Large")
+SIZE_ORDER = ("Tiny", "Small", "Medium", "Large", "Huge")
 
 SIZES = {
     "Tiny": {"speed": 4.5, "carry": 0.5, "footprint": 1},
     "Small":  {"speed": 6.0, "carry": 1.0, "footprint": 1},
     "Medium":    {"speed": 9.0, "carry": 1.0, "footprint": 1},
     "Large":   {"speed": 9.0, "carry": 2.0, "footprint": 2},
+    "Huge":    {"speed": 9.0, "carry": 4.0, "footprint": 3},
 }
 
 
@@ -92,6 +93,7 @@ UNARMED_ATTACK = {
     "Small":  (1, 2),
     "Medium":    (1, 3),
     "Large":   (1, 4),
+    "Huge":    (1, 6),
 }
 
 
@@ -153,7 +155,8 @@ LIGHT_SOURCES = {
 # --------------------------------------------------------------------------- #
 # Races   (threshold = upper bound on a d100 roll)                             #
 # mods: Str Dex Con Int Wis Cha ; token = board letter (one per race)          #
-# The mechanical effect of each ability lives in abilities.py.                 #
+# The mechanical effect of each ability lives in abilities.py. A race's        #
+# `ability` is one id, or a tuple of ids when it has several (Skeleton).       #
 # --------------------------------------------------------------------------- #
 
 RACES = [
@@ -207,6 +210,7 @@ LANGUAGES = sorted({r["language"] for r in _RACES})
 BEASTS = [
     # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance  speed (m)
     (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  1.000,      10.5),
+    (100, "Giant Spider", "x", ( 1,  2,  1, -4,  1, -4), ("climber", "spider_venom"), "", 0.200,  8, "Medium", "Venom Gland", 0.5, None),
 ]
 
 def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
@@ -217,11 +221,25 @@ def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
 
 _BEASTS = [_beast_dict(*row) for row in BEASTS]
 
+# Undead are not animals: they keep a job (an occupation, its weapon and item),
+# but like a beast they are never rolled as a player race -- authored in the
+# creator or placed by hand (the ruins).
+UNDEAD = [
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability                                language  age    hd  size
+    (100, "Skeleton", "s", ( 0,  2,  4, -4, -2, -4), ("darkvision", "sleep_immunity"), "", 5.000,  8, "Medium"),
+]
+_UNDEAD = [_race_dict(*row, kind="undead") for row in UNDEAD]
+
 # Public pools for anything that needs to draw an arbitrary body from one
 # (`encounters.EncounterEntry.race_pool`) -- `roll_race` stays the one path
 # that rolls a fresh *player* race (humanoid, weighted by `RACES`' thresholds).
 RACE_POOL = _RACES
 BEAST_POOL = _BEASTS
+
+# What the Wilds and the Old Road actually roll. The Giant Spider and the
+# Skeleton are placed by hand, not drawn from a locality's table.
+WILD_BEASTS = ("Wolf",)
+WILD_POOL = [r for r in _BEASTS if r["name"] in WILD_BEASTS]
 
 BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
 
@@ -229,7 +247,8 @@ BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
 _RACE_THRESHOLDS = [row[0] for row in RACES]
 RACE_NAMES = [r["name"] for r in _RACES]
 BEAST_NAMES = [r["name"] for r in _BEASTS]
-ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES        # what the creator offers; RACE_NAMES stays the playable set
+UNDEAD_NAMES = [r["name"] for r in _UNDEAD]
+ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES + UNDEAD_NAMES        # what the creator offers; RACE_NAMES stays the playable set
 
 
 def roll_race():
@@ -243,7 +262,7 @@ def roll_race():
 def race_by_name(name):
     if name == "Leshy":
         name = "Treefolk"
-    for race in _RACES + _BEASTS:
+    for race in _RACES + _BEASTS + _UNDEAD:
         if race["name"] == name:
             return dict(race)
     return None

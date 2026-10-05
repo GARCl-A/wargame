@@ -3,7 +3,7 @@
 import random
 
 import gartok.unit_loadout as _unit_mod
-from gartok import data
+from gartok import data, items
 from gartok.guild import Guild
 from gartok.unit import Unit
 
@@ -100,16 +100,17 @@ def test_apothecary_talent_learns_potion_and_mastery():
     u = Unit("player")
     u.set_track_level("work", 2)
     assert u.choose_talent("work", "crafter")
-    assert "Minor Healing Potion" not in u.recipes
+    assert not any(r in u.recipes for r in items.APOTHECARY_RECIPES)
 
     assert u.choose_talent("work", "apothecary")
-    assert "Minor Healing Potion" in u.recipes
+    learned = [r for r in items.APOTHECARY_RECIPES if r in u.recipes]
+    assert len(learned) == 1
     assert u.craft_bonuses.get("apothecary", 0) == 0
 
     # Another unit that already knows all apothecary recipes
     u2 = Unit("player")
     u2.set_track_level("work", 2)
-    u2.recipes.append("Minor Healing Potion")
+    u2.recipes.extend(items.APOTHECARY_RECIPES)
     assert u2.choose_talent("work", "crafter")
     assert u2.choose_talent("work", "apothecary")
     assert u2.craft_bonuses.get("apothecary") == 1

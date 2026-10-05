@@ -34,6 +34,8 @@ class UpkeepMixin:
         self.clock.advance_hours(hours)
         events = []
         all_casualties = []
+        for u in self.roster:
+            events += u.tick_poison(hours)
         for _ in range(self.clock.day - start_day):
             e, c = self._daily_upkeep()
             events += e

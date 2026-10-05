@@ -204,6 +204,15 @@ class Combatant:
         self.death_clock = 0
         log(f"  {self.name} goes down, dying ({data.DYING_TURNS} turns to the death save).")
 
+    def check_collapse(self, log):
+        """A physical attribute (Str / Dex / Con) at zero drops a standing unit to
+        the ground, dying -- checked when the battle starts and whenever poison
+        takes another point."""
+        gone = self.char.zeroed_attribute
+        if gone and self.alive:
+            log(f"  {self.name}'s {gone.capitalize()} is gone -- collapses.")
+            self.go_down(log)
+
     # ------------------------------------------------------------------ #
     # conditions                                                         #
     # ------------------------------------------------------------------ #
@@ -420,6 +429,9 @@ class Combatant:
         elif thrown:
             mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
             hit_stat = "dex"
+        elif (self.unarmed or self.improvised) and self.char.talent_bonus("unarmed_finesse"):
+            mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
+            hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         elif self.unarmed or self.improvised:
             mods = [(self.mod_strength, None, "STR")]
             hit_stat = "str"

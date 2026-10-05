@@ -2,6 +2,7 @@
 
 import random
 
+from .. import poisons
 from ..board import cells
 
 
@@ -163,6 +164,25 @@ def _pickable(unit, obj):
     return unit.unarmed and unit.char.can_wield(obj.weapon_name)
 
 
+def _envenom(battle, attacker, target):
+    """A venomous attacker's hit that hurt a standing target: Constitution save or
+    one more stack of the venom (it lasts past the fight -- see unit_poison.py)."""
+    pid = attacker.ability.venom
+    if not pid or not target.alive:
+        return
+    poison = poisons.get(pid)
+    dc = poisons.save_dc(poison, attacker.char)
+    ok, nat, total = target.char.poison_save(dc)
+    roll = f"CON d20({nat}) {target.char.mod_constitution:+} = {total} vs DC {dc}"
+    if ok:
+        battle.log(f"  {target.name} shakes off the {poison.name} ({roll}).")
+        return
+    level = target.char.add_poison(pid, dc)
+    battle.log(f"  {target.name} is poisoned: {poison.name} {level} "
+               f"(-{level * poison.per_stack} {poison.attribute.capitalize()}) ({roll}).")
+    target.check_collapse(battle.log)
+
+
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None):
     total = nat + bonus
@@ -192,6 +212,8 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
                 attacker.credit_kill(target)
             elif target.hp <= 0 and target.ferocity_downer is None:
                 target.ferocity_downer = attacker
+        if not thrown and target.team != attacker.team:
+            _envenom(battle, attacker, target)
         return "crit" if crit else "hit"
     battle.log(desc + "  -> misses.")
     battle.fx(target.pos, fx_text, "faint")

@@ -3,7 +3,7 @@
 import random
 
 from .. import data
-from ..board import chebyshev
+from ..board import cells, chebyshev
 from ..conditions import Demoralized
 from ..data import d20
 from ..ground import GroundObject
@@ -312,6 +312,61 @@ class EatCorpse(Action):
                     battle.log(f"    {u.name} (MD {md}) resists the horror.")
 
 
+class SpinWeb(Action):
+    id, name, cost, target, aimed = "spin_web", "Spin Web", 1, "cell", True
+    desc = "Spin a web trap beside you, as wide as your own body."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.char.has_talent("spin_web"):
+            return False, "Missing 'spin_web' talent."
+        return True, ""
+
+    def _legal(self, battle, actor, anchor):
+        """The web's footprint (the spider's own size) must sit wholly on open
+        ground right up against the spider -- no walls, bodies, deep water or
+        anything already lying there."""
+        area = cells(anchor, actor.footprint)
+        mine = battle.cells_of(actor)
+        if not all(battle.board.in_bounds(c) for c in area):
+            return False
+        blocked = battle.board.walls | battle.occupied() | battle.creature_cells()
+        if blocked.intersection(area):
+            return False
+        if any(battle.board.is_deep_water(c) or battle.ground_at(c) for c in area):
+            return False
+        return min(chebyshev(a, m) for a in area for m in mine) <= 1
+
+    def available(self, battle, actor):
+        return (super().available(battle, actor)
+                and getattr(actor, "mounted_on", None) is None
+                and bool(self.highlight_cells(battle, actor)))
+
+    def can(self, battle, actor, target=None):
+        return (super().available(battle, actor) and target is not None
+                and self._legal(battle, actor, target))
+
+    def highlight_cells(self, battle, actor):
+        reach = actor.footprint + 1
+        x0, y0 = actor.pos
+        return [(x, y) for x in range(x0 - reach, x0 + reach + 1)
+                for y in range(y0 - reach, y0 + reach + 1)
+                if self._legal(battle, actor, (x, y))]
+
+    def highlight_targets(self, battle, actor):
+        return []
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        battle.plant_web(actor, target)
+        n = actor.footprint
+        battle.log(f"{actor.name} spins a {n}x{n} web.")
+        battle.fx(target, "Web!", "ok")
+
+
 class Mount(Action):
     id, name, cost, target, aimed = "mount", "Mount", 1, "ally", True
     desc = "Mount an allied centaur."
@@ -507,7 +562,11 @@ class Disarm(Action):
         ok = total >= dc
         battle.log(f"{actor.name} attempts to disarm {trap.trap_type}: d20({nat}) {bonus:+}(DEX) = {total} vs DC {dc} -> "
                    + ("success!" if ok else "failed."))
-        if ok:
+        if ok and trap.trap_type == "web":
+            battle.remove_web(trap)
+            battle.log(f"  {actor.name} tears the web down.")
+            battle.fx(trap.pos, "Web Cleared!", "ok")
+        elif ok:
             battle.ground.remove(trap)
             trap_name = "Bear Trap" if "bear" in trap.trap_type.lower() else "Alarm Trap"
             actor.inventory.append(trap_name)

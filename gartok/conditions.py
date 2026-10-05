@@ -57,6 +57,27 @@ class Demoralized(Condition):
         return True
 
 
+class Entangled(Condition):
+    """Stuck in a web: -2 AC and no walking, through the victim's next whole turn
+    (battle.reachable reads it). Caught mid-turn, it survives that turn's end."""
+    id = "entangled"
+
+    def __init__(self):
+        self.held = False
+
+    def ac_mods(self):
+        return [(-2, "status", "Entangled")]
+
+    def on_turn_start(self, unit, log):
+        self.held = True
+        return False
+
+    def on_turn_end(self, unit, log):
+        if self.held:
+            log(f"{unit.name} tears free of the web.")
+        return self.held
+
+
 class Sleeping(Condition):
     id = "sleeping"
 

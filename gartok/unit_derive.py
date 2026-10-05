@@ -316,7 +316,11 @@ class DerivationMixin:
         or condition mods -- those are situational and need the Combatant. Empty
         hands hit with Strength (the unarmed attack)."""
         w = self.weapon
-        if w is None:
+        if w is None and self.talent_bonus("unarmed_finesse"):
+            base = max(self.mod_strength, self.mod_dexterity)
+            stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
+            src = "STR/DEX"
+        elif w is None:
             base, stat, src = self.mod_strength, "str", "STR"
         elif w.range > 0:
             base, stat, src = self.mod_dexterity, "dex", "DEX"

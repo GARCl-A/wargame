@@ -16,8 +16,9 @@ English too. RULES.md is the design-prose doc and may lag the wording; the
 generated REFERENCE.md is the authoritative catalog.
 """
 
+import functools
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 from . import data
 
@@ -45,6 +46,7 @@ class Ability:
     auto_climb_dc: int = 0            # climbs any surface of this DC or lower with no check
     water_breathing: bool = False    # never runs out of breath while submerged
     sleep_immunity: bool = False      # the Sleep spell (magic.py) never affects this unit
+    venom: str | None = None          # poison id (poisons.py): a bite that hurts forces a Constitution save
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -146,6 +148,11 @@ _LIST = [
             "flies: moves freely in three dimensions (up and down pits with no "
             "check, ignores terrain) and never takes falling damage.",
             flies=True),
+    Ability("spider_venom", "Spider Venom",
+            "a bite that draws blood forces a Constitution save (DC 11 + the spider's "
+            "racial level) or the victim is poisoned: Giant Spider Venom, one stack "
+            "more per failed save, each eating a point of Dexterity.",
+            venom="giant_spider_venom"),
     Ability("wolf_pack_tactics", "Pack Tactics",
             "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
             "ally already on the target, not just the first.",
@@ -157,5 +164,46 @@ ABILITIES = {a.id: a for a in _LIST}
 _NONE = Ability("none", "No ability", "no effect.")
 
 
-def get(ability_id):
-    return ABILITIES.get(ability_id, _NONE)
+_SUMMED = ("hp_max", "speed", "ac_natural", "damage_reduction", "initiative",
+           "melee_damage", "extra_languages")
+_WIDEST = ("darkvision", "auto_climb_dc")
+
+
+def _chain(hooks, merge):
+    hooks = [h for h in hooks if h]
+    if not hooks:
+        return None
+    return lambda *args: merge(h(*args) for h in hooks)
+
+
+@functools.cache
+def _combined(ids):
+    """Several abilities folded into one: numbers add (darkvision and climb DC
+    take the widest), flags OR, and each hook runs every part's version."""
+    parts = [ABILITIES[i] for i in ids]
+    merged = {}
+    for f in fields(Ability):
+        vals = [getattr(p, f.name) for p in parts]
+        if f.name in _SUMMED:
+            merged[f.name] = sum(vals)
+        elif f.name in _WIDEST:
+            merged[f.name] = max(vals)
+        elif f.name in ("carry_size", "venom"):
+            merged[f.name] = next((v for v in vals if v), None)
+        elif isinstance(vals[0], bool):
+            merged[f.name] = any(vals)
+    merged["attack_mods"] = _chain([p.attack_mods for p in parts],
+                                   lambda rs: [m for r in rs for m in r])
+    merged["feint"] = _chain([p.feint for p in parts], lambda rs: [m for r in rs for m in r])
+    merged["on_attack_miss"] = _chain([p.on_attack_miss for p in parts], list)
+    merged["on_downed"] = _chain([p.on_downed for p in parts], any)
+    merged["on_turn_start"] = _chain([p.on_turn_start for p in parts], list)
+    return Ability("+".join(ids), ", ".join(p.name for p in parts),
+                   " ".join(f"{p.name}: {p.effect}" for p in parts), **merged)
+
+
+def get(spec):
+    """An ability by id, or a tuple of ids merged into one (a race with several)."""
+    if isinstance(spec, str):
+        return ABILITIES.get(spec, _NONE)
+    return _combined(tuple(spec))

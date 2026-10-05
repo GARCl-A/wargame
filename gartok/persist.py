@@ -115,6 +115,8 @@ def unit_to_dict(u):
         "age": u.age,                            # shown age -- editable in the creator, else age_base x age_mult
         "hp_roll": u._hp_roll,                   # 1dHD, rolled once at creation
         "hp_override": u._hp_override,           # creator-set HP max that wins over the formula, or None
+        "poisons": {pid: dict(st) for pid, st in u.poisons.items()},   # active poison stacks (unit_poison.py)
+        "antidote_cooldown": u.antidote_cooldown,    # hours until the next Antidote may be used
         "natural_armor": u.natural_armor,        # flat AC the body itself gives (creator-set), 0 by default
         "racial_override": u._racial_override,   # creator-pinned racial level (hit dice + racial picks), or None
         "hp_max": u.hp_max,                      # kept for pre-hunger saves / at-a-glance

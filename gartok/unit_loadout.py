@@ -98,7 +98,7 @@ class LoadoutMixin:
         if not w:
             return False
         if w.size == "Large":
-            return self.size == "Large" or self.has_talent("giant_grip")
+            return self.size in ("Large", "Huge") or self.has_talent("giant_grip")
         return True
 
     def fits_tongue(self, name):

@@ -71,6 +71,7 @@ from .board_style import (
     WALL_HI,
     WALL_LO,
     WALL_SHADOW,
+    WEB_C,
     WARN,
     WATER_C,
 )
@@ -232,9 +233,23 @@ def _torch(surf, t, center):
     pygame.draw.circle(surf, LIGHT_C, (cx, cy - 4), 3)
 
 
+def _web(surf, center, d):
+    cx, cy = center
+    r = d * 3 // 2
+    spokes = [(cx + dx * r // 2, cy + dy * r // 2)
+              for dx, dy in ((2, 0), (1, 1), (0, 2), (-1, 1), (-2, 0), (-1, -1), (0, -2), (1, -1))]
+    for p in spokes:
+        pygame.draw.line(surf, WEB_C, center, p, 1)
+    for k in (2, 3):
+        ring = [(cx + (p[0] - cx) * k // 4, cy + (p[1] - cy) * k // 4) for p in spokes]
+        pygame.draw.polygon(surf, WEB_C, ring, 1)
+
+
 def _trap(surf, center, d, ttype):
     cx, cy = center
-    if "bear" in ttype:
+    if "web" in ttype:
+        _web(surf, center, d)
+    elif "bear" in ttype:
         pygame.draw.circle(surf, TRAP_STEEL, (cx, cy), d)
         pygame.draw.circle(surf, TRAP_IRON, (cx, cy), d, 2)
         pygame.draw.circle(surf, TRAP_PLATE, (cx, cy), max(2, d // 3))

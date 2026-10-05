@@ -101,7 +101,14 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 no occupation, they fight with their own body, and the creator can pick them
 like any race (the Wolf is the first). A race may set its own **speed** in
 meters; unset, it is the size's (the Wolf walks 10.5 m / 7 cells). Switching a
-character to a beast keeps its pack.
+character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** is a beast too. The **Skeleton** is
+`kind = "undead"` (the `data.UNDEAD` table): not an animal, so it keeps a job — an
+occupation with its weapon and item. Neither rolls in a locality's encounter table
+(`data.WILD_POOL` is wolves only); they are authored in the creator or placed by hand.
+
+A race's `ability` may be a **list** of ids, merged into one (`abilities.get`
+folds numbers, flags and hooks together): the Skeleton has *Darkvision* and
+*Sleep Immunity*.
 
 Languages in the world are just the racial languages — names only, no
 description survived: Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin,
@@ -118,6 +125,7 @@ languages they rolled — see "Learning a language" below.
 | Small | 6.0 m (4 sq) | 1.0 | 1 cell |
 | Medium | 9.0 m (6 sq) | 1.0 | 1 cell |
 | Large | 9.0 m (6 sq) | 2.0 | **2×2 = 4 cells** |
+| Huge | 9.0 m (6 sq) | 4.0 | **3×3 = 9 cells** |
 
 In the wargame **1 cell = 1.5 m**. 🟡
 
@@ -125,8 +133,9 @@ In the wargame **1 cell = 1.5 m**. 🟡
   as a **Medium** one (9 m / 6 cells). If a Large creature moves further, it is
   from an **ability** — the **Centaur** reaches 12 m (8 cells) only because of
   **Gallop** (+3 m), not because it is large.
-- A talent can raise size one step (`size_up`, capped at Large): the Wolf's
-  *Dire Growth* makes it Large, with the 2×2 footprint and the Large unarmed die.
+- A talent can raise size one step (`size_up`, capped at Huge): the Wolf's
+  *Dire Growth* makes it Large (2×2, Large unarmed die); the Giant Spider has two
+  growth talents, Medium → Large → **Huge** (3×3, unarmed 1d6).
 - **Large creatures occupy 2×2 cells.** The stored position is the **anchor**
   (top-left); the footprint is the 4 cells from there. It applies to everything:
   collision and pathfinding (only lands where all 4 cells fit and are free),
@@ -427,6 +436,12 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   `Alarm Trap`): rolls `d20 + Dexterity mod` vs **DC 12**. Success safely removes
   the trap and recovers the item into the inventory; a natural 1, or failing by 5
   or more, accidentally triggers the trap on the character.
+- **Spin Web** (1 point, Giant Spider's `Spin Web` talent) = places a **web
+  trap** beside the spider, as wide as its own body (1×1, 2×2 or 3×3), on open
+  ground. The first foe to touch any cell springs the whole web: it is
+  **Entangled** — −2 AC and no walking for the rest of that turn and all of its
+  next one. The spider's own side walks through it freely; Disarm clears a web
+  (no item to recover). The AI spins one when its prey is still a few steps off.
 - **Mount / Dismount** (1 point) = a Small or Medium character rides on the back
   of an adjacent allied Centaur (unlocked via the Centaur's `Mount` talent),
   sharing the mount's positioning and speed. Dismounting spends 1 point to step
@@ -535,6 +550,12 @@ grace to an adjacent `dying` enemy before fighting on; **Good** stabilizes an
 adjacent downed ally before anything else. Otherwise a body is not a target.
 The AI **pathfinds** to reach a downed ally (stopping adjacent to stabilize) or
 navigates toward the nearest map edge when it decides to flee.
+
+**A physical attribute at zero.** Whenever a character's Strength, Dexterity or
+Constitution score reaches **0** (poison, sickness, a harsh race mod on a low roll),
+they fall to the ground **dying** — checked when a battle starts and whenever poison
+takes another point (`Combatant.check_collapse`). Hunger and encumbrance penalties
+act on the modifiers and do not count.
 
 ### Ammo and improvised weapon 🟡
 
@@ -986,6 +1007,30 @@ abandoned craft doesn't get them back.
   or is pushed onto it triggers it (`Battle.trigger_trap`) — a Bear Trap
   damages and stops the mover, an Alarm Trap only stops it — and the trap is
   removed from the board.
+
+### Poison 🟡
+
+`gartok/poisons.py` (a registry like `abilities.py`) + `unit_poison.py`. The first
+toxin is **Giant Spider Venom**, delivered by the Giant Spider's *Spider Venom*
+ability (`Ability.venom`):
+
+- **A bite that hurts a standing foe** forces a **Constitution save**: `d20 + CON
+  mod` vs **DC 11 + the spider's racial level**. A failure adds one **stack**; each
+  stack costs **1 Dexterity** (no cap — see "A physical attribute at zero"). A body
+  already on the ground is not poisoned again.
+- **It outlives the fight.** The state (`Unit.poisons`: level, hours left, DC) is
+  saved with the character. Every **24 h** of world time (`Guild.pass_time`) one stack
+  wears off and the clock restarts; a fresh bite also resets it to 24 h. A 3-stack
+  poison left alone lasts 72 h.
+- **Antidote** (Apothecary: *Venom Gland* + *Vial*; the gland drops from the Giant
+  Spider at **50 %**, and the recipe is learned like Minor Healing Potion). Used
+  **outside combat** from the group screen (*use antidote*), by anyone's pack in the
+  group: the poisoned character rolls another Constitution save vs the poison's DC.
+  **Success** sheds one stack now (restarting the clock for the next), so a single
+  stack clears on the spot instead of waiting 24 h. **Failure** burns the dose. Either
+  way, **one Antidote per character per 24 h** (`Unit.antidote_cooldown`).
+- No racial immunities yet. The poisoned-oil weapon coating is future work, on the
+  same registry.
 
 ### The Apothecary: brewing and foraging 🟡
 

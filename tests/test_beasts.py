@@ -15,8 +15,8 @@ from tests.helpers import (
 )
 
 
-def _wolf(rng=random):
-    return Unit("enemy", race=rng.choice(data.BEAST_POOL))
+def _wolf():
+    return Unit("enemy", race=data.race_by_name("Wolf"))
 
 
 def test_a_beast_has_no_occupation_and_fights_unarmed():
@@ -262,3 +262,206 @@ def test_turning_a_unit_into_a_beast_keeps_its_pack_and_stows_held_gear():
     names = [n for n, _ in u._base_inventory]
     assert "Torch" in names and held in names
     assert sum(q for _, q in u._base_inventory) >= before
+
+
+def test_skeleton_and_giant_spider_are_creator_races_but_never_wild_encounters():
+    from gartok import encounters
+    for name, kind in (("Skeleton", "undead"), ("Giant Spider", "beast")):
+        assert name in data.ALL_RACE_NAMES and name not in data.RACE_NAMES
+        assert data.race_by_name(name)["kind"] == kind
+    assert {r["name"] for r in data.WILD_POOL} == {"Wolf"}
+    rng = random.Random(3)
+    seen = {u.race["name"] for _ in range(60)
+            for u in encounters.roll_encounter(encounters.WILDS_TABLE, rng=rng)
+            if u.race["kind"] == "beast"}
+    assert seen == {"Wolf"}
+
+
+def _skeleton():
+    return Unit("enemy", race=data.race_by_name("Skeleton"))
+
+
+def _spider(*picks):
+    random.seed(13)
+    sp = Unit("enemy", race=data.race_by_name("Giant Spider"))
+    sp.set_track_level("racial", 10)
+    for p in picks:
+        assert sp.choose_talent("racial", p)
+    return sp
+
+
+def test_a_race_can_carry_a_list_of_abilities_merged_into_one():
+    from gartok import abilities
+    both = abilities.get(("darkvision", "sleep_immunity"))
+    assert both.darkvision == data.DARKVISION and both.sleep_immunity
+    assert both.id == "darkvision+sleep_immunity"
+    solo = abilities.get("wolf_pack_tactics")
+    merged = abilities.get(("wolf_pack_tactics", "climber"))
+    assert merged.melee_damage == solo.melee_damage and merged.auto_climb_dc == 25
+    assert merged.attack_mods is solo.attack_mods or merged.attack_mods(None, None, 2) == solo.attack_mods(None, None, 2)
+
+
+def test_skeleton_has_its_sheet_and_both_abilities():
+    s = _skeleton()
+    assert data.race_by_name("Skeleton")["mods"] == (0, 2, 4, -4, -2, -4)
+    assert (s.size, s.footprint, s.race["hd"], data.squares(s.race["speed"])) == ("Medium", 1, 8, 6)
+    assert s.ability.darkvision and s.ability.sleep_immunity and s.dr == 0
+
+
+def test_elder_skeleton_adds_four_int_and_four_cha():
+    s = _skeleton()
+    s.set_track_level("racial", 6)
+    int0, cha0 = s.intelligence, s.charisma
+    assert s.choose_talent("racial", "elder_skeleton")
+    assert (s.intelligence, s.charisma) == (int0 + 4, cha0 + 4)
+
+
+def test_skeleton_faith_initiate_opens_faith_magic():
+    s = _skeleton()
+    s.set_track_level("racial", 6)
+    assert s.magic_source is None
+    assert s.choose_talent("racial", "skeleton_faith_initiate")
+    assert s.magic_source == "faith"
+
+
+def test_deft_bones_lets_unarmed_attacks_hit_with_dexterity():
+    s = _skeleton()
+    s.take_from_hand()
+    s.set_track_level("racial", 6)
+    s.set_base_attribute("strength", 3)
+    s.set_base_attribute("dexterity", 18)
+    before = s.attack_bonus[0]
+    s.choose_talent("racial", "deft_bones")
+    after, src = s.attack_bonus
+    assert after > before and src == "STR/DEX" and after == s.mod_dexterity
+    batt = Battle([Unit("player")], [s])
+    mods = batt.enemy_units[0].attack_mods(batt.player_units[0])
+    assert (s.mod_dexterity, None, "STR/DEX") in mods
+
+
+def test_giant_spider_is_medium_and_grows_twice_to_a_3x3_body():
+    from gartok import persist
+    sp = _spider()
+    assert data.race_by_name("Giant Spider")["mods"] == (1, 2, 1, -4, 1, -4)
+    assert (sp.size, sp.footprint) == ("Medium", 1) and sp.ability.auto_climb_dc == 25
+    assert not sp.choose_talent("racial", "titanic_growth")          # needs the first growth
+    sp.choose_talent("racial", "giant_growth")
+    assert (sp.size, sp.footprint, sp.unarmed_damage) == ("Large", 2, (1, 4))
+    sp.choose_talent("racial", "titanic_growth")
+    assert (sp.size, sp.footprint, sp.unarmed_damage) == ("Huge", 3, (1, 6))
+    back = Unit.from_save(persist.unit_to_dict(sp))
+    assert back.size == "Huge" and back.footprint == 3
+    batt = Battle([Unit("player")], [sp])
+    assert len(batt.cells_of(batt.enemy_units[0])) == 9
+
+
+def _web_battle(*picks):
+    sp = _spider("spin_web", *picks)
+    victim = Unit("player")
+    batt = Battle([victim], [sp])
+    web_user, prey = batt.enemy_units[0], batt.player_units[0]
+    web_user.pos, prey.pos = (5, 5), (12, 5)
+    web_user.ap = 2
+    batt.board.walls.clear()
+    batt.ground[:] = [o for o in batt.ground if not o.is_torch]
+    return batt, web_user, prey
+
+
+def test_spin_web_needs_the_talent_and_a_clear_spot_beside_the_spider():
+    sp = _spider()
+    batt = Battle([Unit("player")], [sp])
+    web_user = batt.enemy_units[0]
+    web_user.pos = (5, 5)
+    assert not actions.SPIN_WEB.applicable(batt, web_user)[0]
+    batt, web_user, _ = _web_battle()
+    assert actions.SPIN_WEB.available(batt, web_user)
+    assert actions.SPIN_WEB.can(batt, web_user, (6, 5))
+    assert not actions.SPIN_WEB.can(batt, web_user, (5, 5))           # on the spider itself
+    assert not actions.SPIN_WEB.can(batt, web_user, (9, 5))           # not beside it
+    batt.board.walls.add((6, 6))
+    assert not actions.SPIN_WEB.can(batt, web_user, (6, 6))           # a wall
+
+
+def test_a_web_is_as_wide_as_the_spider():
+    for picks, side in (((), 1), (("giant_growth",), 2), (("giant_growth", "titanic_growth"), 3)):
+        batt, web_user, _ = _web_battle(*picks)
+        anchor = (5 + side, 5)
+        assert actions.SPIN_WEB.can(batt, web_user, anchor)
+        actions.SPIN_WEB.execute(batt, web_user, anchor)
+        webs = [o for o in batt.ground if o.trap_type == "web"]
+        assert len(webs) == side * side and web_user.ap == 1
+        assert len({o.trap_group for o in webs}) == 1
+
+
+def test_a_foe_touching_any_cell_is_stuck_and_the_whole_web_goes():
+    batt, web_user, prey = _web_battle("giant_growth")
+    actions.SPIN_WEB.execute(batt, web_user, (7, 5))
+    prey.pos = (9, 5)
+    prey.ap = 2
+    batt.move_unit(prey, (8, 5))
+    assert prey.has_condition("entangled")
+    assert not [o for o in batt.ground if o.trap_type == "web"]
+    assert batt.reachable(prey) == {}
+    prey.end_turn(batt.log)
+    assert prey.has_condition("entangled")                  # caught mid-turn: still held next turn
+    prey.start_turn(batt.log)
+    assert batt.reachable(prey) == {}
+    prey.end_turn(batt.log)
+    assert not prey.has_condition("entangled")
+
+
+def test_the_spiders_own_side_walks_through_its_web():
+    batt, web_user, _ = _web_battle()
+    ally = _recruit(batt, "enemy")
+    ally.pos = (8, 5)
+    actions.SPIN_WEB.execute(batt, web_user, (6, 5))
+    ally.ap = 2
+    ally.pos = (7, 5)
+    batt.move_unit(ally, (6, 5))
+    assert not ally.has_condition("entangled")
+    assert len([o for o in batt.ground if o.trap_type == "web"]) == 1
+
+
+def test_disarming_a_web_clears_it_without_a_trap_item(monkeypatch):
+    batt, web_user, prey = _web_battle()
+    actions.SPIN_WEB.execute(batt, web_user, (6, 5))
+    prey.pos = (7, 5)
+    prey.ap = 1
+    from gartok.actions import support
+    monkeypatch.setattr(support, "d20", lambda: 20)
+    carried = list(prey.inventory)
+    actions.DISARM.execute(batt, prey)
+    assert not [o for o in batt.ground if o.trap_type == "web"]
+    assert prey.inventory == carried
+
+
+def test_the_ai_spider_strings_a_web_when_the_prey_is_still_far():
+    from gartok import ai
+    batt, web_user, prey = _web_battle()
+    ai.take_turn(batt, web_user)
+    assert any(o.trap_type == "web" for o in batt.ground)
+
+
+def test_a_skeleton_has_a_job_but_a_spider_does_not():
+    random.seed(21)
+    sk = _skeleton()
+    assert sk.occupation["name"] != data.BEAST_OCCUPATION["name"]
+    assert sk.occupation["name"] in data.OCCUPATION_NAMES
+    assert sk.equipped_weapon == sk.occupation["weapon"]
+    sp = Unit("enemy", race=data.race_by_name("Giant Spider"))
+    assert sp.occupation["name"] == data.BEAST_OCCUPATION["name"] and sp.equipped_weapon is None
+    sk.set_occupation("Guard")
+    assert sk.occupation["name"] == "Guard"
+
+
+def test_a_skeleton_keeps_its_job_through_a_save_and_a_race_swap():
+    from gartok import persist
+    random.seed(22)
+    sk = _skeleton()
+    sk.set_occupation("Guard")
+    back = Unit.from_save(persist.unit_to_dict(sk))
+    assert back.race["name"] == "Skeleton" and back.occupation["name"] == "Guard"
+    wolf = Unit("player", race=data.race_by_name("Human"))
+    wolf.set_race("Giant Spider")
+    wolf.set_race("Skeleton")
+    assert wolf.occupation["name"] in data.OCCUPATION_NAMES

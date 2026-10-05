@@ -18,12 +18,13 @@ class GroundObject:
     DISK = "floating_disk"
 
     def __init__(self, kind, pos, weapon_name=None, trap_type=None, trap_owner_team=None,
-                 item_name=None, contents=None, elevation=0):
+                 item_name=None, contents=None, elevation=0, trap_group=None):
         self.kind = kind
         self.pos = pos
         self.weapon_name = weapon_name
         self.trap_type = trap_type
         self.trap_owner_team = trap_owner_team
+        self.trap_group = trap_group        # cells of one big trap (a web) share this and spring together
         self.item_name = item_name
         self.contents = list(contents) if contents else []
         self.elevation = int(elevation)
@@ -37,8 +38,9 @@ class GroundObject:
         return cls(cls.TORCH, pos)
 
     @classmethod
-    def trap(cls, pos, trap_type, trap_owner_team):
-        return cls(cls.TRAP, pos, trap_type=trap_type, trap_owner_team=trap_owner_team)
+    def trap(cls, pos, trap_type, trap_owner_team, group=None):
+        return cls(cls.TRAP, pos, trap_type=trap_type, trap_owner_team=trap_owner_team,
+                   trap_group=group)
 
     @classmethod
     def relic(cls, pos, item_name):

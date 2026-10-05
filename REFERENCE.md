@@ -51,6 +51,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Autotroph | photosynthesises: never needs to eat, immune to the hunger rules. |
 | Ferocity | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
+| Spider Venom | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
 | Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 
 ## Squad archetypes
@@ -169,6 +170,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Alarm Trap | 1 kg | -- |
 | Amethyst | 0.5 kg | -- |
 | Ancient Codex | 2 kg | -- |
+| Antidote | 0.2 kg | consumable |
 | Axe | 3 kg | -- |
 | Bear Trap | 3 kg | -- |
 | Brigandine | 18 kg | -- |
@@ -259,6 +261,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
 | Torch | 0.5 kg | -- |
+| Venom Gland | 0.2 kg | material |
 | Vial | 0.1 kg | material |
 
 ## Sizes
@@ -271,6 +274,7 @@ Base speed does not change with size; a Large creature moves like a Medium one.
 | Small | 6 m (4 sq) | x1 | 1x1 | 1d2 |
 | Medium | 9 m (6 sq) | x1 | 1x1 | 1d3 |
 | Large | 9 m (6 sq) | x2 | 2x2 | 1d4 |
+| Huge | 9 m (6 sq) | x4 | 3x3 | 1d6 |
 
 ## Alignments
 
@@ -347,6 +351,12 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- | Dwarf |
 | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- | Kobold |
 | 1 | Rending Bite | jaws that tear: roll one extra die on your unarmed attack. | -- | Wolf |
+| 1 | Elder Skeleton | centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- | Skeleton |
+| 1 | Faith Initiate | a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- | Skeleton |
+| 1 | Deft Bones | light, quick bones: your unarmed attacks hit with the better of Strength or Dexterity. | -- | Skeleton |
+| 1 | Giant Growth | you swell past your kin: your size goes up one step (Medium to Large, 2x2). | -- | Giant Spider |
+| 2 | Titanic Growth | a second growth spurt: your size goes up another step (Large to Huge, 3x3). | giant_growth | Giant Spider |
+| 1 | Spin Web | spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn. | -- | Giant Spider |
 | 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- | Wolf |
 
 ## Factions and deeds

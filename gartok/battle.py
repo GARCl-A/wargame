@@ -12,6 +12,7 @@ roster and a rematch could reuse the same picks.
 from . import data, vision
 from .board import COLS, ROWS, cells, cells_distance, chebyshev
 from .combatant import Combatant
+from .conditions import Entangled
 from .data import d20
 from .ground import GroundObject
 from .scenario import ArenaScenario, own_half
@@ -78,6 +79,8 @@ class Battle:
             if "Bear Trap" in u.inventory or "Alarm Trap" in u.inventory
         ]
         
+        for u in self.units:
+            u.check_collapse(self.log)
         self._roll_initiative()
         self.log("--- Round 1 ---")
         self._announce_turn()
@@ -325,6 +328,8 @@ class Battle:
     def reachable(self, unit, budget=None):
         """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
         along a route alternate 1, 2, 1, 2 ... (`board.path_cost`)."""
+        if unit.has_condition("entangled"):
+            return {}
         if budget is None:
             if unit.walking:
                 budget = unit.speed - unit.moved
@@ -407,8 +412,9 @@ class Battle:
                 unit.rider.pos = step
                 unit.rider.z = unit.z
                 
-            trap = self.ground_at(step)
-            if trap and trap.is_trap and trap.trap_owner_team != unit.team:
+            trap = next((o for o in map(self.ground_at, self.cells_of(unit))
+                         if o and o.is_trap and o.trap_owner_team != unit.team), None)
+            if trap:
                 self.trigger_trap(unit, trap)
                 if not unit.alive:
                     break
@@ -495,6 +501,19 @@ class Battle:
         log(f"{unit.name} falls {drop} levels -> {dmg} damage ({drop - 1}d6).")
         unit.take_damage(dmg, log)
 
+    def plant_web(self, spider, anchor):
+        """A web as wide as the spider (1x1, 2x2 or 3x3) with its top-left at
+        `anchor`: one trap cell each, all sharing a group so they spring together."""
+        group = 1 + max((o.trap_group or 0 for o in self.ground), default=0)
+        for c in cells(anchor, spider.footprint):
+            self.ground.append(GroundObject.trap(c, "web", spider.team, group=group))
+
+    def remove_web(self, trap):
+        """Take down every cell of the web `trap` belongs to."""
+        self.ground[:] = [o for o in self.ground
+                          if o is not trap and (trap.trap_group is None
+                                                or o.trap_group != trap.trap_group)]
+
     def trigger_trap(self, unit, trap):
         from . import data
         self.ground.remove(trap)
@@ -504,6 +523,11 @@ class Battle:
             self.log(f"  *SNAP* {unit.name} takes {dmg} damage and is stopped.")
             unit.take_damage(dmg, self.log)
             unit.moved = unit.speed # stop movement
+        elif trap.trap_type == "web":
+            self.remove_web(trap)
+            self.log(f"  *THWIP* {unit.name} is stuck fast in the web!")
+            unit.add_condition(Entangled())
+            unit.moved = unit.speed
         elif trap.trap_type == "alarm trap":
             self.log(f"  *RING RING RING* A loud alarm sounds! Everyone's attention is drawn to {unit.name}.")
             unit.moved += 1 # small movement penalty
