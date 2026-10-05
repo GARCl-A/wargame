@@ -1,93 +1,84 @@
-# Wagon, speed-based travel, camp cooking and jerky
+# Wagon, animals and travel — what is left
 
-Agreed design (2026-10-05). **Nothing here is implemented yet.** It exists to
-fix one problem: a Claim garrison needs 10 days of food, and a group of 6–8
-cannot carry it.
+The original problem: a Claim garrison needs 10 days of food and a group of 6–8
+cannot carry that much. Cooking and jerky (house oven, Claim campfire), the
+group's animals and wagon, tack, The Farm and the storage rebalance are built;
+read the code for how they work (`animals.py`, `wagon.py`, `stables_screen.py`,
+`Group.animals` / `Group.wagon`; tests in `test_wagon.py`, `test_stables.py`,
+`test_cooking.py`). This file only tracks what is not done.
 
-## Design
+## Design constraints to keep
 
-### Wagon and draft animals
-- The wagon belongs to a **Group**, not the guild. Someone buys it.
-- It is a card in Manage Gear, built like a character: HP, speed, inventory,
-  carry capacity. Its **equipment slot holds the draft animal**.
-- The draft animal is its own card. It can be dragged from the left tab into the
-  wagon's slot, and the two stay linked.
-- **Carry limit** = min(wagon capacity, sum of the draft animals' capacity).
-  The wagon and its load both weigh.
-- Draft animals **must eat** too.
-- **Wagon contents never go into combat.** Group members eat from it as if it
-  were a member with `share_food` on.
-- **Loss:** if every member of the group dies, the wagon is lost with them. If
-  anyone survives the fight (including by fleeing), the wagon is still there.
+- **Animal and wagon stay separate.** The animal is its own entity (it may be
+  ridden and go to combat later); tack decides its role; the wagon is just a box.
+  Transport (capacity, speed) is derived, never stored.
+- **Storage must trade capacity for something.** Personal pack: free, goes to
+  combat. Chest: 100 cp, 30 kg, static and safe. House: 1000 cp + tax, 200 kg,
+  static and safe, has the oven. Wagon: mobile but lost with the group, needs
+  animals that eat, and (below) slows the trip. Pack animals sit between pack
+  and wagon. Revisit these numbers once travel speed exists.
 
-### Travel speed
-- Today `world.route` sums fixed hours per edge, independent of the group.
-- Change: each edge gets a **distance**, in units of what a person walking
-  covers. Time = distance / group speed.
-- **Group speed = the slowest member.** If everyone rides the wagon, it is the
-  draft animals' speed.
+## Next: speed-based travel (step 3)
 
-### Camp cooking
-- Cooking is a craft activity, like forge, writing and potions: ingredients plus
-  time.
-- **At the house:** buy an oven from the Bankers to unlock it.
-- **At the Claim:** a "make campfire" button. Needs firewood in the pack; takes
-  1 hour and a test. Unlocks cooking there.
-- **Jerky** = Meat + Salt, lifespan **20 days** (Meat 2, Potato 7).
-- **Salt** is sold in the market only; no loot, no gathering.
+- Edges get a **distance** (unit = what one person walking covers); time =
+  distance / group speed. Today `world.route` sums fixed hours per edge,
+  independent of the group.
+- **Group speed = the slowest member.** An animal pulling a wagon does not make
+  the walkers faster; if everyone rides the wagon, the draft animals' speed is
+  the group's speed (`Wagon.speed` already gives the slowest harnessed animal).
+- This is the real cost of a wagon (the Ox moves 6 m, a person 9 m), so it
+  rebalances every route and the economy: re-run `scripts/economy_sim.py` and
+  the balance sim afterwards.
+- Open: can the wagon carry passengers? How many, and do they stop being
+  members of the "walking" speed calculation?
+- Open: do pack animals (Pack Saddle) set a speed floor for the group too, or
+  only draft animals? Today nothing uses animal speed.
 
-## Build order
+## Open design: more than one wagon
 
-1. **Salt, jerky and the cooking activity** (house oven, Claim campfire). This
-   alone makes the 10-day garrison possible, without a wagon.
-   **Status: implemented, uncommitted at the time of writing.** What was built:
-   - Items `Salt` (0.5 kg, 3 cp, market stock) and `Jerky` (0.5 kg, 8 cp, 20 days).
-   - `CraftingRecipe.yield_qty`; Jerky = Meat + Meat + Salt -> 2 Jerky at the new
-     `COOKING` station. `Unit.known_recipes` adds `items.COMMON_RECIPES`, so
-     nobody needs to learn it.
-   - House: `CityProperty.oven`, bought for `economy.OVEN_PRICE` (150 cp) on the
-     house screen, which then offers COOK; lost with the house.
-   - Claim: `Guild.wilds_claim_campfire`. After SWEPT, BUILD A CAMPFIRE burns 1
-     **Lumber** (reused as firewood, no new item), 1 h, WIS check DC 8 by the best
-     member; the fuel is spent even on a failure. Then COOK appears. Stays lit.
-   - Both kitchens open `CraftingScreen(station="cooking")` and return to where
-     they were opened from. Saves carry `property_city_oven` and
-     `wilds_claim_campfire`.
-2. **Wagon with capacity only:** group-owned card, draft-animal slot, carry
-   limit, eating from it, loss rule. No effect on travel time.
-   **Step 2 status: implemented, uncommitted at the time of writing.** Animal and
-   wagon are separate; tack decides what an animal does.
-   - `animals.py`: `Animal` is owned by the `Group` (max 4). Its role comes from
-     its tack: a **Pack Saddle** lets it carry cargo on its back (Donkey 30 kg,
-     Ox 50 kg), a **Harness** lets it pull the wagon (Donkey draws 80 kg, Ox 160).
-     No tack = it only eats. A riding saddle is the next entry in `animals.TACK`
-     once mounts exist (not built, no item yet).
-   - `wagon.py`: `Wagon` (150 cp, 40 kg itself, holds 80 kg, 2 hitch slots) owns no
-     animals. Cargo room = min(80, draw of the group's harnessed animals - 40).
-     Transport is derived, not stored.
-   - Both are pack owners the gear screen treats like a member's pack (drag, send-to,
-     cargo view); an animal also has a saddle/harness slot. Their room is a hard
-     limit. Neither goes into a fight.
-   - Everyone eats from the wagon and the animals' loads; each animal eats a ration
-     a day (own load, then the group's stores, then any member's pack) and starves
-     after 3 unfed days. Lost with the group, kept if anyone survives.
-   - Bought at **The Farm** (a new node, 2 h from the City, `Node.stable`): wagon,
-     animals, tack fitted to a chosen animal; selling returns half.
-   - Capacity positioning (see the balance note below): chest 100 cp / 30 kg static
-     and safe; wagon mobile but at risk with upkeep. **The house is still 20 kg and
-     needs a retune (proposed 150-200 kg) -- pending the user's OK.**
-3. **Speed-based travel.** Last, because it rebalances every route and the
-   economy (re-run `scripts/economy_sim.py`).
+Today a group has **at most one wagon**, so the Harness needs no target: every
+harnessed animal (up to `HITCH_SLOTS`) pulls the one wagon. The stables only
+offer to buy a wagon when the group has none.
 
-## Open questions
-- Does the draft animal's food come from the wagon's cargo, or does it graze?
-- Wagon and animal prices, carry capacities, weights, HP and speeds.
-- Is wagon-riding an explicit toggle per member, or implied by "everyone fits"?
-- How does the wagon show on the map and in saves (persistence shape)?
+To allow several, in this order:
+1. `Group.wagons` instead of `Group.wagon`; keep the single-wagon API working
+   for saves.
+2. A harnessed animal records **which wagon it pulls** (a reference by wagon id),
+   and `Wagon.draft` counts only the animals assigned to it. Unassigned
+   harnessed animals pull nothing.
+3. UI: the gear screen needs a way to assign an animal to a wagon (drag the
+   animal onto the wagon column, or a picker on the animal's column); the
+   stables assign the animal at purchase.
+4. A cap on wagons per group, and what a convoy does to group speed (slowest
+   draft team?) and to the animal limit (`animals.MAX_ANIMALS`, now 4).
 
-## Notes for implementation
-- Food ageing already exists: `ItemInstance.days_old` vs `ItemDef.lifespan`.
-- Garrison jobs live in `economy.GARRISON_JOBS`; cooking at the Claim could be
-  a job there or a stage of the Claim screen.
-- A new craft activity needs the end-to-end set: logic, UI, AI where it applies,
-  tests (`AGENTS.md`, Feature Implementation Rules), and a tutorial card entry.
+## Open design: merging and splitting groups with animals / wagons
+
+- **Merge two groups that both have a wagon** is refused today
+  (`Guild.merge_groups`). Needs a rule once multiple wagons exist: keep both,
+  or ask which one comes along and put the other one's cargo somewhere.
+- **Merge that would exceed the animal limit** is refused, with no way to choose
+  which animals stay behind.
+- **Split**: the wagon and all animals stay with the original group. There is no
+  way to hand the wagon or some animals to the new group. Decide whether split
+  should let the player pick, and what happens to a wagon left with a group that
+  cannot pull it.
+- **A wagon or animal left behind** (group leaves a node, order interrupted)
+  is not modelled: they always travel with the group.
+
+## Later
+
+- **Riding saddle and mounts.** Add `Riding Saddle` to `animals.TACK` (role
+  "mount") only when a mounted unit exists: how a rider and animal are paired,
+  that the pair goes into combat, speed while mounted, the animal's HP and
+  stats in a fight. No item exists yet on purpose.
+- **Animal cards.** Animals are columns in the gear screen with a tack slot; the
+  idea of dragging an animal card onto a wagon's slot depends on the multi-wagon
+  link above.
+- **Wagon and animal HP** are stored but unused: road ambushes, damage, healing
+  or resting animals, what a fled combat does to a wagon.
+- **The Farm** only holds the stables for now; the user plans to rework it.
+- **Campfire** never goes out and uses a single Lumber; cooking has no upkeep.
+  Revisit if garrison cooking turns out too cheap or too fiddly (80 meals for 8
+  people over 10 days is about 40 batches).
+- **Distribute load** ignores animals and the wagon.

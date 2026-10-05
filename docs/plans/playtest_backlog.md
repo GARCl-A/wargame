@@ -4,17 +4,18 @@ From the 25-item playtest review (2026-10-05). Resolved items are left out:
 7 prison like the tavern, 9 HP cur/max, 13 quiver ammo, 15 (no action — mutual
 sight stays), 16/17 study split and dictionary, 18 wolf meat, 19 zoom/scroll,
 20 arrow-key movement, 21 sentinels racial 5, 22 amethyst price, 23 bank house
-purchase, 24 distribute load with coins, and the Claim garrison *bug* (clock
-and re-entry; commit e96e0d5).
+purchase, 24 distribute load with coins, and the Claim garrison bug (clock
+and re-entry).
 
 Scope notes are from the original review text. Ease/impact are estimates, not
 checked against the code.
 
 ## Design arc in progress
 
-- **25. Garrison of 10 days at the Claim — food side.** The bug is fixed; what
-  is left is that no food lasts 10 days (Meat 2 days, Potato 7) and a group of
-  6–8 cannot carry that much. The agreed answer is [wagon_camp.md](wagon_camp.md).
+- **25. Garrison of 10 days at the Claim.** The bug is fixed and the food problem
+  has an answer (jerky, campfire, wagon, animals). What remains is in
+  [wagon_camp.md](wagon_camp.md): speed-based travel, several wagons, merging and
+  splitting groups with animals, mounts.
 
 ## Medium
 
