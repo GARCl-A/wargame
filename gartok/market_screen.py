@@ -168,8 +168,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
             "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
-                    for idx, (name, qty) in enumerate(unit._base_inventory)
-                    if name != items.COIN_ITEM],         # the purse is pooled for the visit
+                    for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)
@@ -803,9 +802,11 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             self._pack_areas.append((res["pack_area"], m))
             
             for pr, idx in res["pack_hits"]:
-                self.item_rows.append((pr, m, idx))
+                if m._base_inventory[idx][0] != items.COIN_ITEM:   # the purse is pooled: shown, not movable
+                    self.item_rows.append((pr, m, idx))
             for lr, idx in res["lock_hits"]:
-                self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
+                if m._base_inventory[idx][0] != items.COIN_ITEM:
+                    self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
                 
         if self._shoppers_max_scroll > 0:
             hr = self._shoppers_max_scroll - self._shoppers_scroll

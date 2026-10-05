@@ -369,8 +369,7 @@ class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
             "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
-                    for idx, (name, qty) in enumerate(unit._base_inventory)
-                    if name != items.COIN_ITEM],         # the purse is pooled for the visit
+                    for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)
@@ -420,7 +419,8 @@ class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
                     self.sources.append((slot_rect, u, kind))
             self.zones.append((res["pack_zone"], u, "pack"))
             for pr, idx in res["pack_hits"]:
-                self.sources.append((pr, u, idx))
+                if u._base_inventory[idx][0] != items.COIN_ITEM:   # the purse is pooled: shown, not movable
+                    self.sources.append((pr, u, idx))
 
         hidden = len(self.pinned) - len(shown)
         if hidden > 0:

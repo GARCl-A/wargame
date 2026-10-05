@@ -990,6 +990,49 @@ def test_market_screen_draw_multiple_shoppers_hover():
 
 
 
+def _pack_rows_of(rows, unit):
+    return {unit._base_inventory[loc][0] for _, m, loc in rows if m is unit and isinstance(loc, int)}
+
+
+def test_market_lists_the_coin_stack_but_only_real_items_are_pickable():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import items, world
+    from gartok.market_screen import MarketScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    mnode = next(n for n in world.NODES if n.kind == "market")
+    u = Unit("player")
+    u.gold = 50
+    u.give_to_pack("Torch")
+    u.give_to_pack("Rope")
+    ms = MarketScreen(ui_fonts(), None, [u], mnode, lambda: None)
+    assert any(name == items.COIN_ITEM for name, *_ in ms._member_dict(u, [])["pack"])
+    ms.draw(pygame.Surface((1400, 900)))
+    assert _pack_rows_of(ms.item_rows, u) >= {"Torch", "Rope"}
+    assert items.COIN_ITEM not in _pack_rows_of(ms.item_rows, u)
+    assert items.COIN_ITEM not in {name for _, _, name in ms.lock_hits}
+
+
+def test_stash_screen_lists_the_coin_stack_but_only_real_items_are_pickable():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok import items
+    from gartok.bank_screen import BankScreen
+    from gartok.guild import Guild
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    u = Unit("player")
+    u.gold = 50
+    u.give_to_pack("Torch")
+    u.give_to_pack("Rope")
+    s = BankScreen(ui_fonts(), Guild([u]), [u], on_done=lambda: None)
+    assert any(name == items.COIN_ITEM for name, *_ in s._member_dict(u, [])["pack"])
+    s.draw(pygame.Surface((1400, 900)))
+    assert _pack_rows_of([(r, o, loc) for r, o, loc in s.sources], u) >= {"Torch", "Rope"}
+    assert items.COIN_ITEM not in _pack_rows_of(s.sources, u)
 
 
 def test_attribute_and_derived_help_catalogs():

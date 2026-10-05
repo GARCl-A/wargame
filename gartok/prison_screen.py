@@ -119,6 +119,9 @@ class PrisonScreen(Screen):
         self.sel = None
 
     def _pitch(self, member):
+        if self.sel is None or not (0 <= self.sel < len(self.candidates)):
+            self.sel = None
+            return
         cand = self.candidates[self.sel]
         if not recruit.can_pitch(member, cand):
             self.notice = f"{member.name} and {cand.name} share no language."
@@ -143,7 +146,8 @@ class PrisonScreen(Screen):
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
-            self.candidates.pop(self.sel)
+            if cand in self.candidates:
+                self.candidates.remove(cand)
             self.notice = f"Bail paid! {cand.name} signs with the guild (recruited by {member.name})."
         else:
             recruit.prison_bar(self.guild, cand, member)
@@ -168,11 +172,12 @@ class PrisonScreen(Screen):
         F = self._F
         m = T.S * 3
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
-        if self.sel is not None:
+        if self.sel is not None and 0 <= self.sel < len(self.candidates):
             cand = self.candidates[self.sel]
             cost = recruit.bail_cost(cand)
             sub, col = (f"paying {cost} cp bail for {cand.name}  ·  click who from the party speaks  ·  click outside to cancel", T.BRASS)
         else:
+            self.sel = None
             wealth = _party_wealth(self.party)
             sub, col = (f"party wealth: {wealth} cp  ·  size penalty -{recruit.size_penalty(len(self.guild.roster))}  ·  new faces in {days_left} day(s)", T.TX_MUTED)
         text(screen, F["body"], sub, (m, top - 25), col)
@@ -266,7 +271,7 @@ class PrisonScreen(Screen):
 
     def _draw_party_card(self, screen, r, m):
         F = self._F
-        cand = self.candidates[self.sel] if self.sel is not None else None
+        cand = self.candidates[self.sel] if (self.sel is not None and 0 <= self.sel < len(self.candidates)) else None
         free = recruit.slots_free(self.guild, m)
         state = None
         

@@ -273,3 +273,65 @@ def test_taverna_screen_renders_archetype_badges():
     assert any("LEADER" in str(tip) for _, tip in scr._tooltips)
 
 
+def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok.guild import Guild
+    from gartok.prison_screen import PrisonScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    from gartok.unit import Unit
+
+    pygame.init()
+    surf = pygame.display.set_mode((1024, 768))
+    F = ui_fonts()
+
+    recruiter = Unit("player")
+    recruiter.gold = 500
+    recruiter.mod_charisma = 5
+    recruiter.languages = ["Common"]
+    g = Guild([recruiter])
+    recruit.refresh_prison_pool(g)
+    assert len(g.prison_pool) >= 2
+
+    # Test selecting the LAST candidate in the pool (e.g. index PRISON_SIZE - 1)
+    scr = PrisonScreen(F, g, g.roster, None, lambda *a: None)
+    scr.draw(surf)
+    last_idx = len(scr.candidates) - 1
+    scr.sel = last_idx
+    target_cand = scr.candidates[last_idx]
+    target_cand.languages = ["Common"]
+
+    # Force convince to succeed
+    monkeypatch.setattr(recruit, "convince", lambda *a, **kw: recruit.Pitch(True, 15, 10, 5, 2, []))
+
+    scr._pitch(recruiter)
+
+    assert target_cand in g.roster
+    assert target_cand not in g.prison_pool
+    assert target_cand not in scr.candidates
+    assert scr.sel is None
+    # Verify screen still draws safely without error
+    scr.draw(surf)
+
+    # Calling pitch with sel=None or out of bounds is safe
+    scr._pitch(recruiter)
+    assert scr.sel is None
+
+    # Test failed pitch
+    scr.sel = 0
+    remaining_cand = scr.candidates[0]
+    remaining_cand.languages = ["Common"]
+    gold_before = recruiter.gold
+    monkeypatch.setattr(recruit, "convince", lambda *a, **kw: recruit.Pitch(False, 5, 12, -7, 2, []))
+    scr._pitch(recruiter)
+    assert recruit.prison_barred(g, remaining_cand, recruiter)
+    assert recruiter.gold < gold_before
+    assert remaining_cand not in g.roster
+    assert remaining_cand in scr.candidates
+    assert scr.sel is None
+    scr.draw(surf)
+
+
+
