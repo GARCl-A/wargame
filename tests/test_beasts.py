@@ -465,3 +465,19 @@ def test_a_skeleton_keeps_its_job_through_a_save_and_a_race_swap():
     wolf.set_race("Giant Spider")
     wolf.set_race("Skeleton")
     assert wolf.occupation["name"] in data.OCCUPATION_NAMES
+
+
+def test_a_wolf_also_drops_meat_beside_its_hide():
+    from gartok import loot
+
+    class AlwaysDrop:
+        def random(self):
+            return 0.0
+
+    batt = Battle([Unit("player")], [_wolf()])
+    pool = loot.field_loot(batt, [], rng=AlwaysDrop())
+    assert pool.count("Meat") == 2 and pool.count("1sqm Hide") == 1
+
+
+def test_a_beast_without_a_second_drop_adds_nothing_extra():
+    assert not any(r["also_drops"] for r in data.BEAST_POOL if r["name"] != "Wolf")

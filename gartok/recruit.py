@@ -204,12 +204,11 @@ def prison_bar(guild, candidate, recruiter):
         guild.prison_blocked.append([candidate.uid, recruiter.uid])
 
 
-def pitch_block_reason(guild, party, candidate, is_prison=False):
+def pitch_block_reason(guild, party, candidate):
     """Why no one in `party` can pitch `candidate`.
     Returns None if at least one member is eligible, or a reason string."""
-    is_barred = prison_barred if is_prison else barred
     eligible = [m for m in party
-                if can_pitch(m, candidate) and not is_barred(guild, candidate, m)
+                if can_pitch(m, candidate) and not barred(guild, candidate, m)
                 and slots_free(guild, m) > 0 and guild.can_absorb(guild.group_of(m))]
     if eligible:
         return None
@@ -220,8 +219,8 @@ def pitch_block_reason(guild, party, candidate, is_prison=False):
     if not speakers:
         return "no one in the party can speak with them"
 
-    barred_speakers = [m for m in speakers if is_barred(guild, candidate, m)]
-    unbarred_speakers = [m for m in speakers if not is_barred(guild, candidate, m)]
+    barred_speakers = [m for m in speakers if barred(guild, candidate, m)]
+    unbarred_speakers = [m for m in speakers if not barred(guild, candidate, m)]
 
     if not unbarred_speakers:
         if len(speakers) == len(party):

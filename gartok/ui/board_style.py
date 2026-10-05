@@ -85,7 +85,9 @@ def aim_color(kind):
 
 # --- layout ---------------------------------------------------------------- #
 TILE = 48                             # default board zoom; the view picks its own tile size to fit
-MIN_TILE, MAX_TILE = 18, 56           # zoom range of the camera
+MIN_TILE, MAX_TILE = 14, 160          # zoom range of the camera
+ZOOM_STEP = 1.15                      # tile size multiplier per wheel notch
+OVERSCROLL = 0.5                      # fraction of the viewport the camera may pan past the board edge
 MARGIN = 16
 GAP = 12
 INIT_H = 46                           # initiative strip above the grid
@@ -114,7 +116,8 @@ class BoardView:
     """Maps the board grid onto a pan/zoom pixel viewport. `fit` lays the whole
     board into a rect at a tile size that fills it (clamped to the zoom range);
     the wheel zooms around the cursor and a drag pans a board bigger than the
-    view. All board<->screen conversion goes through `cell_rect` / `cell_at`."""
+    view, up to `OVERSCROLL` of a viewport past its edge. All board<->screen
+    conversion goes through `cell_rect` / `cell_at`."""
 
     def __init__(self, cols, rows):
         self.cols, self.rows = cols, rows
@@ -136,7 +139,8 @@ class BoardView:
             if span <= view:
                 self.cam[i] = -(view - span) / 2 / self.tile     # centre a small board
             else:
-                self.cam[i] = max(0.0, min(self.cam[i], (span - view) / self.tile))
+                slack = view * OVERSCROLL / self.tile
+                self.cam[i] = max(-slack, min(self.cam[i], (span - view) / self.tile + slack))
 
     def cell_rect(self, cx, cy):
         x = self.rect.x + (cx - self.cam[0]) * self.tile
@@ -161,7 +165,10 @@ class BoardView:
 
     def zoom(self, px, steps):
         anchor = self.cell_at(px, clamp=True)
-        new = max(MIN_TILE, min(MAX_TILE, self.tile + steps * 4))
+        new = round(self.tile * ZOOM_STEP ** steps)
+        if new == self.tile:
+            new += 1 if steps > 0 else -1
+        new = max(MIN_TILE, min(MAX_TILE, new))
         if new == self.tile:
             return
         self._user_zoom = True

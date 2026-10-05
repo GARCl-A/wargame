@@ -236,14 +236,6 @@ def test_pitch_block_reasons():
     # r5_speaker is barred; r3 is unbarred but has 0 slots
     assert recruit.pitch_block_reason(g2, [r3, r5_speaker], cand_elfico) == "speakers already tried or have no room"
 
-    # 8. Prison barred check
-    cand_prison = _person(10, lang="Comum")
-    r6 = _person(11, lang="Comum", cha=1)
-    g3 = Guild([r6])
-    assert recruit.pitch_block_reason(g3, [r6], cand_prison, is_prison=True) is None
-    recruit.prison_bar(g3, cand_prison, r6)
-    assert recruit.pitch_block_reason(g3, [r6], cand_prison, is_prison=True) == "everyone already tried this week"
-
 
 def test_taverna_screen_renders_archetype_badges():
     import os
@@ -311,11 +303,12 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     assert target_cand in g.roster
     assert target_cand not in g.prison_pool
     assert target_cand not in scr.candidates
-    assert scr.sel is None
+    assert scr.sel == len(scr.candidates) - 1            # the selection follows the shrunken list
     # Verify screen still draws safely without error
     scr.draw(surf)
 
     # Calling pitch with sel=None or out of bounds is safe
+    scr.sel = None
     scr._pitch(recruiter)
     assert scr.sel is None
 
@@ -330,8 +323,87 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     assert recruiter.gold < gold_before
     assert remaining_cand not in g.roster
     assert remaining_cand in scr.candidates
-    assert scr.sel is None
+    assert scr.sel == 0                                   # still looking at them after the failed pitch
     scr.draw(surf)
 
 
 
+
+
+def _prison(party_gold=500):
+    from gartok.unit import Unit
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok.guild import Guild
+    from gartok.prison_screen import PrisonScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    recruiter = Unit("player")
+    recruiter.gold = party_gold
+    recruiter.mod_charisma = 5
+    recruiter.languages = ["Common"]
+    g = Guild([recruiter])
+    scr = PrisonScreen(ui_fonts(), g, g.roster, None, lambda *a: None)
+    scr.candidates[0].languages = ["Common"]
+    return scr, g, recruiter
+
+
+def test_the_prison_is_the_taverna_screen_with_a_bail_and_a_bonus():
+    from gartok.taverna_screen import TavernaScreen
+    scr, g, recruiter = _prison()
+    cand = scr.candidates[0]
+    assert isinstance(scr, TavernaScreen)
+    assert scr._bail(cand) == recruit.bail_cost(cand)
+    base = (recruiter.mod_charisma - recruit.size_penalty(len(g.roster))
+            + recruiter.talent_bonus("recruit_cha"))
+    assert scr._net(recruiter, cand) >= base - recruit.ALIGNMENT_PENALTY * 4 + 2
+
+
+def test_a_prison_pitch_without_the_bail_money_rolls_nothing(monkeypatch):
+    scr, g, recruiter = _prison(party_gold=0)
+    rolled = []
+    monkeypatch.setattr(recruit, "convince", lambda *a, **kw: rolled.append(1))
+    scr.sel = 0
+    scr._pitch(recruiter)
+    assert not rolled and "Not enough coin" in scr.notice
+
+
+def test_a_prison_pitch_charges_the_bail_and_adds_the_bonus(monkeypatch):
+    scr, g, recruiter = _prison()
+    cand = scr.candidates[0]
+    cost = recruit.bail_cost(cand)
+    seen = {}
+
+    def fake(*a, **kw):
+        seen.update(kw)
+        return recruit.Pitch(True, 15, 10, 5, 2, [])
+
+    monkeypatch.setattr(recruit, "convince", fake)
+    scr.sel = 0
+    before = recruiter.gold
+    scr._pitch(recruiter)
+    assert before - recruiter.gold == cost
+    assert (2, "paid bail") in seen["extra_mods"]
+    assert cand in g.roster
+
+
+def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
+    from gartok.unit import Unit
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    from gartok.guild import Guild
+    from gartok.taverna_screen import TavernaScreen
+    recruiter = Unit("player")
+    recruiter.gold = 50
+    recruiter.languages = ["Common"]
+    g = Guild([recruiter])
+    cand = Unit("player")
+    cand.languages = ["Common"]
+    scr = TavernaScreen(None, g, g.roster, None, lambda *a: None, candidates=[cand])
+    seen = {}
+    monkeypatch.setattr(recruit, "convince",
+                        lambda *a, **kw: seen.update(kw) or recruit.Pitch(False, 5, 12, -7, 2, []))
+    scr._pitch(recruiter)
+    assert recruiter.gold == 50 and seen["extra_mods"] == []

@@ -72,7 +72,7 @@
     "battle": {
       "title": "Fighting it out",
       "body": [
-        "Each character gets 2 action points a turn and every action costs 1, except ending the turn (Space). Click a green cell to walk -- up to your speed, and you can split it across clicks -- or click an enemy with a red outline to attack. The panel holds the rest: Defend, Throw, Pick Up, Demoralize, Stabilize, First Aid, Flee, Climb, Push, Jump, Drop In.",
+        "Each character gets 2 action points a turn and every action costs 1, except ending the turn (Space). Click a green cell to walk -- up to your speed, and you can split it across clicks -- or step with the arrow keys (press two together for a diagonal). The wheel zooms, a right-drag pans, and you can scroll a little past the map's edge. Click an enemy with a red outline to attack. The panel holds the rest: Defend, Throw, Pick Up, Demoralize, Stabilize, First Aid, Flee, Climb, Push, Jump, Drop In.",
         "An attack rolls a d20 plus modifiers against the target's AC; a 20 is a crit, a 1 a fumble. Click any unit to inspect its sheet.",
         "The map is dark: you only see what the active character's light and senses reach. L switches between their sight and the whole squad's. At 0 HP a character is down, not dead -- Stabilize or First Aid them before they bleed out. You win by putting the enemy team down; a few fights have another goal, like capturing a flag."
       ]
@@ -109,7 +109,7 @@
     "hunt": {
       "title": "Hunting the wilds",
       "body": [
-        "Pick a shift length and head out. Every 2 hours earns 1 kg of Meat, and every hour risks an ambush: a real fight, but the bodies are worth looting -- wolves drop Hide, which the market and the Tanner buy.",
+        "Pick a shift length and head out. Every 2 hours earns 1 kg of Meat, and every hour risks an ambush: a real fight, but the bodies are worth looting -- wolves drop Hide, which the market and the Tanner buy, and a couple of kilos of Meat.",
         "Win an ambush and you can keep hunting or call it a day with whatever you've banked. Meat feeds the guild (1 kg is one meal) or sells at the Market. FORAGE WILDS looks for Red Mushrooms and fruit instead."
       ]
     },
@@ -198,7 +198,7 @@
     "prison": {
       "title": "The prison",
       "body": [
-        "These strangers are jailed for minor crimes. Pay a bail to try recruiting one: pick who makes the pitch, Charisma against Charisma, and the bail gives them a +2 gratitude bonus.",
+        "These strangers are jailed for minor crimes. Pay a bail to try recruiting one: pick a prisoner, then who makes the pitch -- the same screen as the tavern. It's Charisma against Charisma, and the bail gives them a +2 gratitude bonus.",
         "If the pitch fails they walk free and keep your money."
       ]
     }

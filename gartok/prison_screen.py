@@ -1,324 +1,43 @@
 """Prison: pay a minor criminal's bail and try to recruit them.
 
-The strangers here are the guild's weekly `prison_pool`. Pick one, then pick
-the party member who makes the pitch. Unlike the taverna, you must pay their
-bail (in copper) to even attempt the pitch. The payment gives a +2 bonus to
-the Charisma contest, representing their gratitude.
-
-If the pitch fails, they walk free and take your money with them.
+The taverna's screen, with one difference: the strangers here are the guild's
+weekly `prison_pool`, and their bail (in copper) is paid before the pitch is even
+rolled. The payment gives a +2 bonus to the Charisma contest, representing their
+gratitude. If the pitch fails they walk free and take the money with them.
 """
 
-import pygame
+from . import recruit
+from .taverna_screen import TavernaScreen
 
-from . import economy, recruit
-from .data import alignment_distance
-from .screen import Screen
-from .ui.combat_card import draw_combat_card, draw_party_row
-from .ui.primitives import (
-    draw_button,
-    footer_bar,
-    panel,
-    text,
-    tracked,
-    wrap,
-)
-from .ui.tokens import T
-from .ui.tokens import fonts as ui_fonts
-
-CANDIDATES = 3
+BAIL_BONUS = (2, "paid bail")
 
 
-def _party_wealth(party):
-    return sum(m.gold for m in party)
-
-
-def _charge_party(party, amount):
-    economy.charge_richest_first(party, amount)
-
-
-class PrisonScreen(Screen):
-    native = True
+class PrisonScreen(TavernaScreen):
+    LIST_LABEL = "PRISONERS IN THE CELLS"
+    EMPTY_LIST = "The cells are empty right now.\nCome back when the crowd changes."
+    REJECTED_LABEL = "WALKED FREE THIS WEEK"
+    PITCH_BONUS = (BAIL_BONUS,)
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
-        super().__init__()
-        self.fonts = fonts
-        self._F = ui_fonts()
-        self.guild = guild
-        self.party = party
-        self.node = node
-        self.on_done = on_done
-        self.candidates = list(candidates) if candidates is not None else recruit.refresh_prison_pool(guild)
-        self.title = title or "CITY PRISON"
-        self.sel = None
-        self.last = {}
-        self.notice = None
-        self.cand_cards = []
-        self.party_cards = []
-        self.buttons = []
-        self._hot = False
-
-    def _reset_buttons(self):
-        self.buttons = []
-        self._hot = False
+        pool = list(candidates) if candidates is not None else recruit.refresh_prison_pool(guild)
+        super().__init__(fonts, guild, party, node, on_done, candidates=pool,
+                         title=title or "CITY PRISON")
 
     def tutorial_key(self):
         return "prison"
 
-    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
-                   danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
-        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
-                   enabled=enabled, mpos=self.mouse, fnt=font)
-        hov = enabled and rect.collidepoint(self.mouse)
-        if enabled:
-            self.buttons.append((key, rect))
-            self._hot = self._hot or hov
-        return hov
+    def _leave_label(self):
+        return "LEAVE THE PRISON"
 
-    def _eligible(self, cand):
-        return [m for m in self.party
-                if recruit.can_pitch(m, cand) and not recruit.prison_barred(self.guild, cand, m)
-                and recruit.slots_free(self.guild, m) > 0]
+    def _barred(self, cand, member):
+        return recruit.prison_barred(self.guild, cand, member)
 
-    def _best(self, cand):
-        pen = recruit.size_penalty(len(self.guild.roster))
-        def _dist(m):
-            raw = alignment_distance(m.alignment, cand.alignment)
-            return max(0, raw - int(m.talent_bonus("align_distance_reduction")))
-        opts = [(m, m.mod_charisma
-                 - recruit.ALIGNMENT_PENALTY * _dist(m)
-                 - pen
-                 + m.talent_bonus("recruit_cha")
-                 + 2)  # +2 from bail
-                for m in self._eligible(cand)]
-        return max(opts, key=lambda t: t[1]) if opts else None
+    def _bar(self, cand, member):
+        recruit.prison_bar(self.guild, cand, member)
 
-    def _click(self, px):
-        for key, rect in self.buttons:
-            if rect.collidepoint(px):
-                if key == "done":
-                    self.on_done()
-                return
+    def _bail(self, cand):
+        return recruit.bail_cost(cand)
 
-        if self.sel is None:
-            for rect, i in self.cand_cards:
-                if rect.collidepoint(px):
-                    self.sel = i
-                    self.notice = None
-                    return
-            return
-
-        for rect, member in self.party_cards:
-            if rect.collidepoint(px):
-                self._pitch(member)
-                return
-        for rect, i in self.cand_cards:
-            if rect.collidepoint(px):
-                self.sel = i
-                return
-        self.sel = None
-
-    def _pitch(self, member):
-        if self.sel is None or not (0 <= self.sel < len(self.candidates)):
-            self.sel = None
-            return
-        cand = self.candidates[self.sel]
-        if not recruit.can_pitch(member, cand):
-            self.notice = f"{member.name} and {cand.name} share no language."
-            return
-        if recruit.prison_barred(self.guild, cand, member):
-            self.notice = f"{member.name} already tried {cand.name} this week."
-            return
-        if recruit.slots_free(self.guild, member) <= 0:
-            self.notice = f"{member.name} has no room to sponsor anyone else."
-            return
-        
-        cost = recruit.bail_cost(cand)
-        if _party_wealth(self.party) < cost:
-            self.notice = f"Not enough coin to pay {cand.name}'s bail ({cost} cp)."
-            return
-
-        # Pay bail
-        _charge_party(self.party, cost)
-        
-        pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
-                                 extra_mods=[(2, "paid bail")])
-        self.last[cand.uid] = (pitch, member)
-        if pitch.ok:
-            recruit.enlist(self.guild, cand, member)
-            if cand in self.candidates:
-                self.candidates.remove(cand)
-            self.notice = f"Bail paid! {cand.name} signs with the guild (recruited by {member.name})."
-        else:
-            recruit.prison_bar(self.guild, cand, member)
-            self.notice = f"Bail paid, but {cand.name} walks away free. You lost {cost} cp."
-        self.sel = None
-
-    def draw(self, screen):
-        F = self._F
-        m = T.S * 3
-        screen.fill(T.TABLE)
-        self.cand_cards = []
-        self.party_cards = []
-        self._reset_buttons()
-
-        text(screen, F["titleb"], self.title, (m, m - 2), T.TX)
-
-        top = m + 45
-        self._draw_recruits(screen, top)
-        self._draw_footer(screen)
-
-    def _draw_recruits(self, screen, top):
-        F = self._F
-        m = T.S * 3
+    def _sub_extra(self):
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
-        if self.sel is not None and 0 <= self.sel < len(self.candidates):
-            cand = self.candidates[self.sel]
-            cost = recruit.bail_cost(cand)
-            sub, col = (f"paying {cost} cp bail for {cand.name}  ·  click who from the party speaks  ·  click outside to cancel", T.BRASS)
-        else:
-            self.sel = None
-            wealth = _party_wealth(self.party)
-            sub, col = (f"party wealth: {wealth} cp  ·  size penalty -{recruit.size_penalty(len(self.guild.roster))}  ·  new faces in {days_left} day(s)", T.TX_MUTED)
-        text(screen, F["body"], sub, (m, top - 25), col)
-
-        party_h = 120
-        gap = 12
-        cand_h = screen.get_height() - top - party_h - gap - 80
-        cw = (screen.get_width() - 2 * m - (CANDIDATES - 1) * gap) // CANDIDATES
-
-        if not self.candidates:
-            text(screen, F["body"], "The cells are empty right now. Come back when the crowd changes.",
-                 (m, top + 20), T.TX_MUTED)
-        for i, cand in enumerate(self.candidates):
-            rect = pygame.Rect(m + i * (cw + gap), top, cw, cand_h)
-            self._draw_candidate(screen, rect, i, cand)
-            self.cand_cards.append((rect, i))
-
-        py = top + cand_h + gap
-        self._draw_party(screen, pygame.Rect(m, py, screen.get_width() - 2 * m, party_h))
-
-    def _draw_candidate(self, screen, rect, i, cand):
-        F = self._F
-        last = self.last.get(cand.uid)
-        picking = self.sel == i
-        cost = recruit.bail_cost(cand)
-
-        hov = rect.collidepoint(self.mouse) and self.sel is None
-        
-        ch = {
-            "name": cand.name,
-            "race": cand.race["name"],
-            "portrait_id": cand.portrait_id,
-            "occ": cand.occupation["name"],
-            "hp": cand.hp_max,
-            "hp_max": cand.hp_max,
-            "ac": cand.ac,
-            "spd": cand.speed,
-            "weapon": cand.weapon_name or "unarmed",
-            "dmg": ""
-        }
-        
-        extra = [
-            (None, f"BAIL: {cost} cp", T.BRASS),
-            ("RESISTANCE", f"CHA {cand.mod_charisma:+}", T.BRASS),
-            ("SPEAKS", ", ".join(cand.languages), T.TX_MUTED),
-            ("ABILITY", cand.ability.name, T.TX),
-        ]
-        
-        for ln in wrap(F["body_sm"], cand.ability.effect, rect.w - T.S * 6)[:3]:
-            extra.append((None, ln, T.TX_FAINT))
-            
-        if last is not None:
-            pitch, who = last
-            extra.append(("LAST ATTEMPT", f"{who.name}: {pitch.recruiter_roll} + mods = {pitch.recruiter_total}", T.GREEN if pitch.ok else T.BLOOD))
-            extra.append((None, f"vs resistance {pitch.candidate_total} ({pitch.candidate_roll} + CHA)", T.TX_MUTED))
-            for val, label in pitch.modifiers:
-                extra.append((None, f"{val:+}  {label}", T.BLOOD))
-                
-        best = self._best(cand)
-        if best is not None:
-            m2, net = best
-            extra.append(("PITCH", f"{m2.name}  ·  CHA check {net:+}", T.GREEN))
-            extra.append((None, f"(1d20{net:+} must beat 1d20 {cand.mod_charisma:+})", T.TX_FAINT))
-        else:
-            reason = recruit.pitch_block_reason(self.guild, self.party, cand, is_prison=True)
-            extra.append(("PITCH", reason or "cannot recruit", T.BLOOD))
-            
-        mark = ("CLICK TO PAY BAIL" if best is not None else "CLICK TO INSPECT") if self.sel is None else "CLICK A PARTY MEMBER"
-        
-        tooltips, _ = draw_combat_card(screen, rect, ch, action=mark, hovered=hov, selected=picking, extra_lines=extra)
-        
-        for t_rect, t_text in tooltips:
-            if t_rect.collidepoint(self.mouse):
-                tw, th = F["body_sm"].size(t_text)
-                tt_rect = pygame.Rect(self.mouse[0] + 12, self.mouse[1] + 12, tw + 16, th + 8)
-                panel(screen, tt_rect)
-                text(screen, F["body_sm"], t_text, (tt_rect.x + 8, tt_rect.y + 4), T.TX)
-                break
-
-    def _draw_party(self, screen, area):
-        F = self._F
-        tracked(screen, F["micro"], "YOUR PARTY", (area.x, area.y - 16), T.BRASS)
-        panel(screen, area)
-        n = max(1, len(self.party))
-        gap = T.S
-        cw = (area.w - 24 - (n - 1) * gap) // n
-        for i, m in enumerate(self.party):
-            r = pygame.Rect(area.x + 12 + i * (cw + gap), area.y + T.S, cw, area.h - 2 * T.S)
-            self._draw_party_card(screen, r, m)
-            self.party_cards.append((r, m))
-
-    def _draw_party_card(self, screen, r, m):
-        F = self._F
-        cand = self.candidates[self.sel] if (self.sel is not None and 0 <= self.sel < len(self.candidates)) else None
-        free = recruit.slots_free(self.guild, m)
-        state = None
-        
-        if cand is not None:
-            cost = recruit.bail_cost(cand)
-            if recruit.prison_barred(self.guild, cand, m):
-                state = ("TRIED", T.BLOOD)
-            elif not recruit.can_pitch(m, cand):
-                state = ("NO LANGUAGE", T.BLOOD)
-            elif free <= 0:
-                state = ("FULL", T.BLOOD)
-            elif _party_wealth(self.party) < cost:
-                state = ("CANT AFFORD", T.BLOOD)
-            else:
-                state = ("CAN SPEAK", T.GREEN)
-                
-        hov = r.collidepoint(self.mouse) and self.sel is not None
-        
-        ch = {
-            "name": m.name,
-            "race": m.race["name"],
-            "portrait_id": m.portrait_id,
-            "cha": m.mod_charisma,
-            "langs": m.languages,
-            "free": free
-        }
-        
-        draw_party_row(screen, r, ch, state=state, hovered=hov)
-        
-        if r.collidepoint(self.mouse):
-            cap = recruit.capacity(self.guild, m)
-            used = recruit.slots_used(self.guild, m)
-            calc_str = "Cap: 1 (base)"
-            if m.mod_charisma != 0: calc_str += f" {m.mod_charisma:+} (CHA)"
-            if m is self.guild.leader: calc_str += f" + {m.racial_level} (ldr)"
-            calc_str += f" = {cap}  |  Used: {used}"
-            
-            tw, th = F["body_sm"].size(calc_str)
-            tt_rect = pygame.Rect(self.mouse[0] + 12, self.mouse[1] + 12, tw + 16, th + 8)
-            panel(screen, tt_rect)
-            text(screen, F["body_sm"], calc_str, (tt_rect.x + 8, tt_rect.y + 4), T.TX)
-
-    def _draw_footer(self, screen):
-        col = T.BRASS
-        if self.notice:
-            col = T.GREEN if ("signs" in self.notice or "Bail paid!" in self.notice) else T.BRASS
-            if "lost" in self.notice or "Not enough" in self.notice:
-                col = T.BLOOD
-        footer_bar(self, screen, self._F, primary=("done", "LEAVE THE PRISON"),
-                  notice=self.notice, notice_color=col)
+        return f" · party holds {self._wealth()} cp · new faces in {days_left} day(s)"

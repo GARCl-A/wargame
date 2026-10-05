@@ -22,6 +22,11 @@ from .ui.tokens import T
 
 ENEMY_DELAY = 450  # ms between AI actions
 
+ARROW_STEPS = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0),
+               pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
+CHORD_MS = 70             # arrows pressed within this window combine into one (diagonal) step
+
+
 DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "debug_exports")
 
 
@@ -36,6 +41,8 @@ class BattleScreen(Screen):
         self.lighting = LightRenderer()
         self.view = BoardView(battle.board.cols, battle.board.rows)
         self._pan = None                      # (mouse, cam) anchor while dragging the board
+        self._chord = set()                   # arrow keys pressed in the current chord window
+        self._chord_ms = 0
         self._centered_on = None              # unit the camera last snapped to
         self.inspect = None
         self.inspect_open = True
@@ -72,6 +79,9 @@ class BattleScreen(Screen):
                 self.action_tab = "utility" if self.action_tab == "combat" else "combat"
                 self.actions_scroll = 0
                 self.aim_action = None
+            elif event.key in ARROW_STEPS and self._is_player_turn():
+                self._chord.add(event.key)
+                self._chord_ms = CHORD_MS
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
             elif event.key == pygame.K_a and self._is_player_turn():
@@ -112,6 +122,10 @@ class BattleScreen(Screen):
     def update(self, dt):
         b = self.battle
         self.fx.advance(dt)
+        if self._chord:
+            self._chord_ms -= dt
+            if self._chord_ms <= 0:
+                self._step_with_arrows()
         self.fx.detect(b, self.view.tile, self._unit_rect, self._cell_rect)
         if (b.winner is None and self._pan is None and self.view.rect.w > 2
                 and self._centered_on is not b.active):
@@ -285,6 +299,22 @@ class BattleScreen(Screen):
             if dest is not None:
                 actions.MOVE.execute(b, actor, dest)
                 self._after_player_action()
+
+    def _step_with_arrows(self):
+        """One step in the direction the arrows of the chord add up to: two
+        perpendicular arrows pressed together make a diagonal, opposite ones cancel."""
+        keys, self._chord = self._chord, set()
+        dx = sum(ARROW_STEPS[k][0] for k in keys)
+        dy = sum(ARROW_STEPS[k][1] for k in keys)
+        b = self.battle
+        if ((dx, dy) == (0, 0) or not self._is_player_turn() or self.aim_action is not None
+                or b.awaiting_flag or b.awaiting_trap):
+            return
+        actor = b.active
+        dest = (actor.pos[0] + dx, actor.pos[1] + dy)
+        if dest in b.reachable(actor):
+            actions.MOVE.execute(b, actor, dest)
+            self._after_player_action()
 
     def _anchor_of_click(self, unit, tile):
         reach = self.battle.reachable(unit)

@@ -363,7 +363,7 @@ _register(ItemDef(id="cloak", name="Cloak", type=ItemType.TOOL, rarity=ItemRarit
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="iron_shackles", name="Iron Shackles", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=1.0, price=2))
 _register(ItemDef(id="map", name="Map", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
-_register(ItemDef(id="amethyst", name="Amethyst", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.5, price=1))
+_register(ItemDef(id="amethyst", name="Amethyst", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.5, price=120))
 _register(ItemDef(id="gemstones", name="Gemstones", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
 _register(ItemDef(id="locked_chest", name="Locked Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="sealed_chest", name="Sealed Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))

@@ -534,7 +534,7 @@
   },
   "Amethyst": {
     "weight": 0.5,
-    "price": 1,
+    "price": 120,
     "food": false,
     "lifespan": null
   },

@@ -41,7 +41,15 @@ from .ui.tokens import fonts as ui_fonts
 
 
 class TavernaScreen(Screen):
+    """The recruiting screen; `PrisonScreen` is the same screen with a bail to pay
+    first, so everything that differs is a hook or a label here."""
+
     native = True
+
+    LIST_LABEL = "CANDIDATES IN THE TAVERN"
+    EMPTY_LIST = "No one looking for work right now.\nCome back when the crowd changes."
+    REJECTED_LABEL = "REJECTED THIS WEEK"
+    PITCH_BONUS = ()                      # (value, label) mods added to every pitch roll
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None):
         super().__init__()
@@ -93,25 +101,45 @@ class TavernaScreen(Screen):
                            danger=danger, mpos=self.mouse)
 
     # ------------------------------------------------------------------ #
+    def _barred(self, cand, member):
+        return recruit.barred(self.guild, cand, member)
+
+    def _bar(self, cand, member):
+        recruit.bar(self.guild, cand, member)
+
+    def _bail(self, cand):
+        """Copper that must be paid before a pitch is even rolled."""
+        return 0
+
+    def _leave_label(self):
+        return "LEAVE THE TAVERN" if self.title == "TAVERN" else "DONE"
+
+    def _sub_extra(self):
+        """Text appended to the recruit tab's subtitle."""
+        return ""
+
+    def _wealth(self):
+        return sum(m.gold for m in self.party)
+
     def _eligible(self, cand):
         """Party members who could still pitch `cand` (share a tongue, not yet
         barred for failing on them this week, and still have room to sponsor
         someone new)."""
         return [m for m in self.party
-                if recruit.can_pitch(m, cand) and not recruit.barred(self.guild, cand, m)
+                if recruit.can_pitch(m, cand) and not self._barred(cand, m)
                 and recruit.slots_free(self.guild, m) > 0]
+
+    def _net(self, m, cand):
+        """The pitch's net Charisma modifier for `m` against `cand`."""
+        raw = alignment_distance(m.alignment, cand.alignment)
+        dist = max(0, raw - int(m.talent_bonus("align_distance_reduction")))
+        return (m.mod_charisma - recruit.ALIGNMENT_PENALTY * dist
+                - recruit.size_penalty(len(self.guild.roster))
+                + m.talent_bonus("recruit_cha") + sum(v for v, _ in self.PITCH_BONUS))
 
     def _best(self, cand):
         """(member, net modifier) for the strongest pitch still open, or None."""
-        pen = recruit.size_penalty(len(self.guild.roster))
-        def _dist(m):
-            raw = alignment_distance(m.alignment, cand.alignment)
-            return max(0, raw - int(m.talent_bonus("align_distance_reduction")))
-        opts = [(m, m.mod_charisma
-                 - recruit.ALIGNMENT_PENALTY * _dist(m)
-                 - pen
-                 + m.talent_bonus("recruit_cha"))
-                for m in self._eligible(cand)]
+        opts = [(m, self._net(m, cand)) for m in self._eligible(cand)]
         return max(opts, key=lambda t: t[1]) if opts else None
 
     # ------------------------------------------------------------------ #
@@ -193,26 +221,37 @@ class TavernaScreen(Screen):
         if not recruit.can_pitch(member, cand):
             self.notice = f"{member.name} and {cand.name} share no language."
             return
-        if recruit.barred(self.guild, cand, member):
+        if self._barred(cand, member):
             self.notice = f"{member.name} already tried {cand.name} this week."
             return
         if recruit.slots_free(self.guild, member) <= 0:
             self.notice = f"{member.name} has no room to sponsor anyone else."
             return
-        pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day)
+        cost = self._bail(cand)
+        if cost and self._wealth() < cost:
+            self.notice = f"Not enough coin to pay {cand.name}'s bail ({cost} cp)."
+            return
+        if cost:
+            economy.charge_richest_first(self.party, cost)
+        pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
+                                 extra_mods=list(self.PITCH_BONUS))
         self.last[cand.uid] = (pitch, member)
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
             if cand in self.candidates:
                 self.candidates.remove(cand)
-            self.notice = f"{cand.name} signs with the guild (recruited by {member.name})!"
+            paid = "Bail paid! " if cost else ""
+            self.notice = f"{paid}{cand.name} signs with the guild (recruited by {member.name})!"
             if self.candidates:
                 self.sel = min(self.sel, len(self.candidates) - 1)
             else:
                 self.sel = None
         else:
-            recruit.bar(self.guild, cand, member)
-            self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
+            self._bar(cand, member)
+            if cost:
+                self.notice = f"Bail paid, but {cand.name} walks away free. You lost {cost} cp."
+            else:
+                self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
 
     # ------------------------------------------------------------------ #
     def _available_study_options(self, student):
@@ -269,6 +308,7 @@ class TavernaScreen(Screen):
             sub = f"Guild size {len(self.guild.roster)} · crowd penalty -{recruit.size_penalty(len(self.guild.roster))}"
             if is_tavern:
                 sub += f" · new faces in {days_left} day(s)"
+            sub += self._sub_extra()
         else:
             sub = "Rent a quiet room for the day · anyone with a study target will make daily progress"
 
@@ -316,11 +356,11 @@ class TavernaScreen(Screen):
         left_w = 420
         left_rect = pygame.Rect(pad, top, left_w, height)
         panel(screen, left_rect)
-        caps(screen, F["micro"], f"CANDIDATES IN THE TAVERN ({len(self.candidates)})",
+        caps(screen, F["micro"], f"{self.LIST_LABEL} ({len(self.candidates)})",
              (left_rect.x + 16, left_rect.y + 12), T.TX_MUTED)
 
         if not self.candidates:
-            text(screen, F["body_sm"], "No one looking for work right now.\nCome back when the crowd changes.",
+            text(screen, F["body_sm"], self.EMPTY_LIST,
                  (left_rect.x + 16, left_rect.y + 40), T.TX_FAINT)
         else:
             cy = left_rect.y + 36
@@ -348,6 +388,10 @@ class TavernaScreen(Screen):
                      (tx, cr.y + 28), T.TX_MUTED)
                 text(screen, F["body_sm"], f"Resists CHA {cand.mod_charisma:+} · Speaks {', '.join(cand.languages)}",
                      (cr.x + 12, cr.y + 48), T.TX_FAINT)
+                bail = self._bail(cand)
+                if bail:
+                    caps(screen, F["microb"], f"BAIL {bail} cp", (cr.right - 12, cr.y + 12),
+                         T.BRASS, right=True)
 
                 # Archetype badges
                 tags = unit_archetypes(cand)
@@ -368,7 +412,7 @@ class TavernaScreen(Screen):
                 if cand.uid in self.last:
                     pitch, who = self.last[cand.uid]
                     st_col = T.GREEN if pitch.ok else T.BLOOD
-                    st_label = "ENLISTED" if pitch.ok else "REJECTED THIS WEEK"
+                    st_label = "ENLISTED" if pitch.ok else self.REJECTED_LABEL
                 elif best is not None:
                     st_label = f"PITCH OPEN ({best[0].name})"
                     st_col = T.GREEN
@@ -412,6 +456,11 @@ class TavernaScreen(Screen):
         vit_str = f"HP {cand.hp_max}   AC {cand.ac}   Speed {cand.speed} squares   Attack: {cand.weapon_name or 'Unarmed'}"
         text(screen, F["bodyb"], vit_str, (cx, cy), T.TX)
         cy += 24
+        bail = self._bail(cand)
+        if bail:
+            text(screen, F["bodyb"], f"Bail: {bail} cp  ·  party holds {self._wealth()} cp", (cx, cy),
+                 T.BRASS if self._wealth() >= bail else T.BLOOD)
+            cy += 24
         text(screen, F["body_sm"], f"Racial Ability: {cand.ability.name} — {cand.ability.effect}", (cx, cy), T.TX_MUTED)
         cy += 24
 
@@ -467,18 +516,14 @@ class TavernaScreen(Screen):
                  (rtx, mr.y + 30), T.TX_MUTED)
 
             # Eligibility / Odds
-            if recruit.barred(self.guild, cand, m):
+            if self._barred(cand, m):
                 cond_text, cond_col = "ALREADY TRIED THIS WEEK", T.BLOOD
             elif not recruit.can_pitch(m, cand):
                 cond_text, cond_col = "NO SHARED LANGUAGE", T.BLOOD
             elif free_slots <= 0:
                 cond_text, cond_col = "FULL CAPACITY (0 SLOTS)", T.BLOOD
             else:
-                raw_dist = alignment_distance(m.alignment, cand.alignment)
-                dist = max(0, raw_dist - int(m.talent_bonus("align_distance_reduction")))
-                pen = recruit.size_penalty(len(self.guild.roster))
-                net = m.mod_charisma - recruit.ALIGNMENT_PENALTY * dist - pen + m.talent_bonus("recruit_cha")
-                cond_text = f"PITCH: 1d20{net:+} vs 1d20{cand.mod_charisma:+}"
+                cond_text = f"PITCH: 1d20{self._net(m, cand):+} vs 1d20{cand.mod_charisma:+}"
                 cond_col = T.GREEN
 
             caps(screen, F["microb"], cond_text, (mr.right - 14, mr.centery - 6), cond_col, right=True)
@@ -488,14 +533,18 @@ class TavernaScreen(Screen):
         can_pitch = False
         if self.selected_recruiter is not None:
             can_pitch = (recruit.can_pitch(self.selected_recruiter, cand)
-                         and not recruit.barred(self.guild, cand, self.selected_recruiter)
+                         and not self._barred(cand, self.selected_recruiter)
                          and recruit.slots_free(self.guild, self.selected_recruiter) > 0)
 
         cy += 8
         btn_rect = pygame.Rect(cx, cy, rw, 42)
-        btn_label = "CONVINCE TO JOIN GUILD (ROLL CHARISMA)"
-        if self.selected_recruiter is not None and not can_pitch:
-            if recruit.barred(self.guild, cand, self.selected_recruiter):
+        bail = self._bail(cand)
+        btn_label = (f"PAY {bail} CP BAIL AND CONVINCE (ROLL CHARISMA)" if bail
+                     else "CONVINCE TO JOIN GUILD (ROLL CHARISMA)")
+        if bail and can_pitch and self._wealth() < bail:
+            can_pitch, btn_label = False, f"CANNOT AFFORD THE {bail} CP BAIL"
+        elif self.selected_recruiter is not None and not can_pitch:
+            if self._barred(cand, self.selected_recruiter):
                 btn_label = "RECRUITER CANNOT PITCH (ALREADY TRIED)"
             elif not recruit.can_pitch(self.selected_recruiter, cand):
                 btn_label = "RECRUITER CANNOT PITCH (NO COMMON LANGUAGE)"
@@ -685,6 +734,8 @@ class TavernaScreen(Screen):
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen, F):
         col = T.GREEN if (self.notice and ("signs" in self.notice or "begins" in self.notice)) else T.TX_MUTED
-        btn_label = "LEAVE THE TAVERN" if self.title == "TAVERN" else "DONE"
+        if self.notice and ("lost" in self.notice or "Not enough" in self.notice):
+            col = T.BLOOD
+        btn_label = self._leave_label()
         footer_bar(self, screen, F, primary=("done", btn_label),
                    notice=self.notice, notice_color=col)
