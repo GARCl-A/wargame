@@ -470,3 +470,50 @@ def test_wilds_claim_state_survives_a_save_round_trip():
         assert back.wilds_claim_fence_lumber == 4
     finally:
         persist.delete_world(slot)
+
+
+# --------------------------------------------------------------------------- #
+# a garrisoned group is still reachable from the map                          #
+# --------------------------------------------------------------------------- #
+
+def _garrisoned_map():
+    from gartok.map_screen import MapScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    p = Unit("player")
+    g = Group([p], node=NODE)
+    guild = Guild(None, groups=[g])
+    guild.wilds_claim_start_sustaining()
+    g.order = orders.garrison("lumber")
+    calls = []
+    ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None,
+                   lambda dt=None: calls.append(("advance", dt)), lambda grp: None,
+                   on_visit_claim=lambda grp: calls.append(("claim", grp)))
+    ms.selected = g
+    return ms, g, calls
+
+
+def test_a_garrisoned_group_can_reopen_the_claim_screen():
+    ms, g, calls = _garrisoned_map()
+    keys = [b.get("key") for b in ms._inspector_content(g, world.node(NODE))]
+    assert "visit_claim" in keys
+    ms._handle_button("visit_claim")
+    assert calls == [("claim", g)]
+    assert g.order.kind == "garrison"           # looking never cancels the garrison
+
+
+def test_a_garrisoned_group_can_pass_time_from_the_map():
+    ms, g, calls = _garrisoned_map()
+    keys = [b.get("key") for b in ms._inspector_bottom(g)]
+    assert {"maintain", "camp", "wait_day"} <= set(keys)
+    assert "manage_group" not in keys
+    ms._handle_button("wait_day")
+    assert calls == [("advance", 24)]
+
+
+def test_waiting_on_the_map_counts_the_sustain_days_down():
+    random.seed(1)
+    ms, g, _ = _garrisoned_map()
+    g.members[0]._base_inventory = packed(["Meat"] * 4)
+    ms.guild.pass_time(24)
+    assert ms.guild.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS - 1

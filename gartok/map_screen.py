@@ -132,7 +132,7 @@ class MapScreen(Screen):
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
                 pending_event=None, on_resolve_event=None, on_autowin=None,
-                on_visit_tavern=None):
+                on_visit_tavern=None, on_visit_claim=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -144,6 +144,7 @@ class MapScreen(Screen):
         self.on_resolve_event = on_resolve_event
         self.on_autowin = on_autowin
         self.on_visit_tavern = on_visit_tavern
+        self.on_visit_claim = on_visit_claim
         self.autowin_estimator = autowin.AutoWinEstimator()
         if self._pending_event is not None:
             g, o = self._pending_event
@@ -486,8 +487,13 @@ class MapScreen(Screen):
                 self.on_visit_tavern(self.selected)
         elif key == "recall_garrison":
             self.selected.order = orders.idle()
+        elif key == "visit_claim":
+            if self.on_visit_claim:
+                self.on_visit_claim(self.selected)
         elif key == "maintain":
             self.on_advance(dt=1)
+        elif key == "wait_day":
+            self.on_advance(dt=24)
         elif key == "camp":
             self.on_advance(dt=8)
         elif key == "manage_group":
@@ -530,6 +536,8 @@ class MapScreen(Screen):
             if g.order is not None and g.order.kind == "garrison":
                 if here.is_tavern:
                     blocks.append({"type": "button", "key": "visit_tavern", "label": "ENTER THE TAVERN", "primary": True})
+                if here.claim:
+                    blocks.append({"type": "button", "key": "visit_claim", "label": "THE WILDS CLAIM", "primary": True})
                 blocks.append({"type": "button", "key": "recall_garrison", "label": "RECALL FROM GARRISON", "danger": True})
             return blocks
 
@@ -686,8 +694,10 @@ class MapScreen(Screen):
         next" pointer, not about `g` specifically, so it's always appended
         regardless."""
         items = []
+        garrisoned = g.order is not None and g.order.kind == "garrison"
         if not (g.busy or self._group_blocked(g)):
             items.append({"type": "button", "key": "manage_group", "label": "MANAGE GEAR & QUESTS"})
+        if (garrisoned or not g.busy) and not self._group_blocked(g):
             urgent = self._maintenance_urgent()
             # a forced stop moves the clock -- disabled while `_pending_event`
             # has it paused, so nothing can advance past an unresolved event
@@ -702,6 +712,9 @@ class MapScreen(Screen):
                          "danger": self.guild.rations == 0 and not paused,
                          "enabled": not paused,
                          "height": T.S * 5})
+            if garrisoned:
+                items.append({"type": "button", "key": "wait_day", "label": "WAIT  ·  24 h",
+                             "gap_before": T.S, "enabled": not paused, "height": T.S * 5})
         key, label, danger, enabled = self._footer_cta()
         items.append({"type": "button", "key": key, "label": label, "gap_before": T.S * 2,
                      "primary": enabled, "danger": danger, "enabled": enabled})
