@@ -60,8 +60,8 @@ def test_bear_trap_trigger_on_push():
     assert not any(g.pos == push_dest and g.is_trap for g in batt.ground)
 
 
-def test_friendly_trap_does_not_trigger():
-    """A unit walking onto its own team's trap should not trigger it."""
+def test_traps_are_neutral_and_spring_on_whoever_steps_on_them():
+    """Whoever planted it, a trap hurts the first unit to step on it."""
     batt, actor, defender = _melee_battle()
     trap_pos = (actor.pos[0] + 1, actor.pos[1] - 1)
     defender.pos = (0, 0)
@@ -71,9 +71,8 @@ def test_friendly_trap_does_not_trigger():
     actor.ap = 2
     batt.move_unit(actor, trap_pos)
 
-    assert actor.hp == hp_before, "friendly trap should not trigger"
-    assert any(g.pos == trap_pos and g.is_trap for g in batt.ground), \
-        "friendly trap should stay on the board"
+    assert actor.hp < hp_before, "a trap springs whatever team planted it"
+    assert not any(g.pos == trap_pos and g.is_trap for g in batt.ground)
 
 
 def test_dwarf_shield_ac():

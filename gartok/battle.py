@@ -413,7 +413,7 @@ class Battle:
                 unit.rider.z = unit.z
                 
             trap = next((o for o in map(self.ground_at, self.cells_of(unit))
-                         if o and o.is_trap and o.trap_owner_team != unit.team), None)
+                         if o and self.springs(o, unit)), None)
             if trap:
                 self.trigger_trap(unit, trap)
                 if not unit.alive:
@@ -514,6 +514,13 @@ class Battle:
                           if o is not trap and (trap.trap_group is None
                                                 or o.trap_group != trap.trap_group)]
 
+    @staticmethod
+    def springs(trap, unit):
+        """Traps are neutral -- whoever steps on one, springs it -- except a web,
+        which its own spinner's side walks through."""
+        return trap.is_trap and not (trap.trap_type == "web"
+                                     and trap.trap_owner_team == unit.team)
+
     def trigger_trap(self, unit, trap):
         from . import data
         self.ground.remove(trap)
@@ -533,9 +540,8 @@ class Battle:
             unit.moved += 1 # small movement penalty
             self.alarm_triggered = True
             for u in getattr(self, "units", []):
-                if u.team != unit.team:
-                    u.dormant = False
-                    u.alerted = True
+                u.dormant = False
+                u.alerted = True
 
     def _apply_submersion(self, unit):
         """Breath check at the top of a submerged unit's turn. It holds out

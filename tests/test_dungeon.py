@@ -282,3 +282,10 @@ def test_sanctum_spiders_come_from_the_maps_npc_deploy():
     placed = [e for e in battle.enemy_units if e.race["name"] == "Giant Spider"]
     assert {s.pos for s in placed} == {(24, 6), (27, 6)}
     assert all(s.dormant and s.has_talent("spin_web") and s.footprint == 1 for s in placed)
+
+
+def test_no_alarm_trap_sits_on_the_first_steps_of_the_deploy_zone():
+    scenario = AncientRuinsScenario()
+    battle = Battle([Unit("player")], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
+    alarms = [o.pos for o in battle.ground if o.is_trap and o.trap_type == "alarm trap"]
+    assert alarms and all(x >= 9 for x, _ in alarms)

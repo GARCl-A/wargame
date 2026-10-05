@@ -477,7 +477,7 @@ class Push(Action):
         
         was_up = target.alive
         trap = battle.ground_at(dest)
-        if trap and trap.is_trap and trap.trap_owner_team != target.team:
+        if trap and battle.springs(trap, target):
             battle.trigger_trap(target, trap)
             
         if z_to < z_from:

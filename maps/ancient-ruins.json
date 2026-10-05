@@ -281,8 +281,8 @@
   "ropes": [],
   "water": [],
   "traps": [
-    [4, 7, "alarm trap"],
-    [4, 8, "alarm trap"],
+    [10, 8, "alarm trap"],
+    [11, 11, "alarm trap"],
     [8, 8, "bear trap"],
     [8, 9, "bear trap"],
     [12, 7, "alarm trap"],

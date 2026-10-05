@@ -1003,10 +1003,12 @@ abandoned craft doesn't get them back.
   through a real battlefield mechanic, not just carried: at the start of a
   battle a carrier is queued (`Battle.trap_setup_queue`/`awaiting_trap`) to
   click a tile and plant it (`GroundObject.trap`, consuming the item), the
-  same click-to-place idiom the CTF flag uses. Once down, an enemy who walks
-  or is pushed onto it triggers it (`Battle.trigger_trap`) — a Bear Trap
-  damages and stops the mover, an Alarm Trap only stops it — and the trap is
-  removed from the board.
+  same click-to-place idiom the CTF flag uses. Once down, a trap is neutral:
+  whoever walks or is pushed onto it triggers it, whichever side planted it
+  (`Battle.springs` / `Battle.trigger_trap`) — a Bear Trap damages and stops the
+  mover, an Alarm Trap stops it and wakes every dormant unit on the board — and
+  the trap is removed. The one exception is a web: the spider's own side walks
+  through it.
 
 ### Poison 🟡
 
