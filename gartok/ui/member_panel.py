@@ -128,12 +128,13 @@ def draw_gear(surf, F, x, y, w, d, mpos):
     _box(surf, box, mpos)
     half = w // 2
     pad = T.S * 1.5
-    for col, (label, val, note) in enumerate([("HANDS", d["hands"], ""), ("ARMOR", d["armor"], d["armor_note"])]):
+    for col, (label, val, note) in enumerate([("HANDS", d.get("hands") or "None", ""), ("ARMOR", d.get("armor") or "None", d.get("armor_note") or "")]):
         cx = int(box.x + pad + col * half)
         caps(surf, F["micro"], label, (cx, box.y + T.S - 2), T.TX_FAINT)
         vr = text(surf, F["body"], ellipsize(val, F["body"], half - T.S * 3), (cx, box.y + T.S + 12), T.TX)
         if note:
-            text(surf, F["body_sm"], ellipsize(note, F["body_sm"], cx + half - T.S * 2 - vr.right - T.S),
+            max_note_w = max(0, cx + half - T.S * 2 - vr.right - T.S)
+            text(surf, F["body_sm"], ellipsize(note, F["body_sm"], max_note_w),
                  (vr.right + T.S, box.y + T.S + 13), T.TX_MUTED)
     n, ok = d["rations"]
     caps(surf, F["micro"], "COINS", (box.x + pad, box.y + T.S * 6 - 2), T.TX_FAINT)

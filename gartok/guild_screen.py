@@ -394,7 +394,7 @@ class GuildScreen(Screen):
         if not offhand:
             offhand = "Torch" if getattr(c, "torch_hand", False) else (
                 "Lantern" if getattr(c, "lantern_hand", False) else None)
-        weapon = c.weapon_name
+        weapon = c.weapon_name or "Unarmed"
         load, norm, mx = unit.load, unit.carry_normal, unit.carry_max
         if load > mx:
             state = ("IMMOBILE", T.BLOOD)

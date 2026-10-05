@@ -1787,6 +1787,28 @@ def test_city_property_screen_equipping_stack_preserves_remainder():
     assert guild.house.stash.items[0][1] == 4
 
 
+def test_primitives_text_and_ellipsize_none_resilience():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.ui.primitives import ellipsize, text, caps
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    surf = pygame.Surface((100, 100))
+    f = ui_fonts()["body"]
+
+    assert ellipsize(None, f, 100) == ""
+    assert ellipsize("", f, 100) == ""
+    assert ellipsize("hello", f, 0) == ""
+    assert ellipsize("hello", f, -5) == ""
+    assert ellipsize("hello world", f, 30).endswith("…")
+
+    r = text(surf, f, None, (0, 0), (255, 255, 255))
+    assert r.width == 0
+    rc = caps(surf, f, None, (0, 0), (255, 255, 255))
+    assert rc.width == 0
+
+
+
 
 
 

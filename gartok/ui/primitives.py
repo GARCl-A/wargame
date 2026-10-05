@@ -115,6 +115,10 @@ def draw_card(surf, F, rect, title, subtitle=None, hover=False, enabled=True, lo
 
 
 def text(surf, font, s, pos, color, right=False, center=False):
+    if s is None:
+        s = ""
+    elif not isinstance(s, str):
+        s = str(s)
     img = font.render(s, True, color)
     r = img.get_rect()
     if right:
@@ -128,7 +132,7 @@ def text(surf, font, s, pos, color, right=False, center=False):
 
 
 def caps(surf, font, s, pos, color, **kw):
-    return text(surf, font, s.upper(), pos, color, **kw)
+    return text(surf, font, (s or "").upper(), pos, color, **kw)
 
 
 def hline(surf, x1, x2, y, c=T.STEEL_LINE):
@@ -137,11 +141,14 @@ def hline(surf, x1, x2, y, c=T.STEEL_LINE):
 
 def ellipsize(s, font, max_px):
     """`s` clipped with a trailing ellipsis so it renders within `max_px`."""
-    if max_px <= 0 or font.size(s)[0] <= max_px:
+    if not s or max_px <= 0:
+        return ""
+    s = str(s)
+    if font.size(s)[0] <= max_px:
         return s
     while s and font.size(s + "…")[0] > max_px:
         s = s[:-1]
-    return s + "…"
+    return s + "…" if s else ""
 
 
 def wrap(font, s, w):

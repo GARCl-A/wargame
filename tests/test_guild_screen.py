@@ -314,3 +314,16 @@ def test_every_guild_tab_has_a_registered_tutorial_card():
     for tab in ("members", "guild", "reputations"):
         gs.tab = tab
         assert gs.tutorial_key() in TUTORIALS
+
+
+def test_guild_screen_draw_unarmed_unarmored_member():
+    u = Unit("player")
+    u.equipped_weapon = None
+    u.equipped_armor = None
+    u.equipped_offhand = None
+    g = Guild([u])
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    if hasattr(pygame, "font") and hasattr(pygame.font, "init"):
+        pygame.font.init()
+    surf = pygame.Surface((1280, 800))
+    gs.draw(surf)
