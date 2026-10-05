@@ -346,6 +346,8 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Nature Initiate | fey magic: you become initiated in nature magic and gain the Share Magic action. | -- | Sprite |
 | 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- | Dwarf |
 | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- | Kobold |
+| 1 | Rending Bite | jaws that tear: roll one extra die on your unarmed attack. | -- | Wolf |
+| 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- | Wolf |
 
 ## Factions and deeds
 
@@ -407,6 +409,6 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Lumber wage | 1 cp per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
 | Hunting job level | 3 |
 | Bank strongbox | 100 cp to rent, holds 30 kg |
-| Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105 |
-| Work XP thresholds | 2, 6, 12, 20, 30, 42 |
-| Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14 |
+| Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105, 136, 171, 210 |
+| Work XP thresholds | 2, 6, 12, 20, 30, 42, 56, 72, 90, 110 |
+| Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 |

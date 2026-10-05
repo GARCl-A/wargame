@@ -10,8 +10,8 @@ fits under `carry_max`; the rest is left behind.
 Read off the *battle* combatants, never the roster: a weapon a unit threw is on
 `battle.ground`, not on the combatant, so nothing is counted twice.
 
-A beast (`Unit.race["kind"] == "beast"`, see `data.BEAST_POOL`) never carries
-gear -- it drops its own trophy material instead, straight off the race dict
+A rolled beast (`Unit.race["kind"] == "beast"`, see `data.BEAST_POOL`) never
+carries gear -- it drops its own trophy material instead, straight off the race dict
 (`drop_item`/`drop_chance`, e.g. the Wolf's `data.BEASTS` row): a new species'
 material is a data change in `data.py`, not a new branch here.
 """

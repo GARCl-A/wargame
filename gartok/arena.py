@@ -25,7 +25,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 
 import random
 
-from . import encounters, npc_lib, progression, world
+from . import constants, encounters, npc_lib, world
 
 CHAMPION_SLUG = "adelio-small-knife"
 
@@ -180,8 +180,8 @@ def bout_max_combat_level(bout):
         # level 1 -- he never levels, so this doesn't need to track him live.
         return 1
     if bout.stage2 or bout.defense:
-        return len(progression.COMBAT_XP_THRESHOLDS)
-    return min(len(progression.COMBAT_XP_THRESHOLDS), 2 * bout.level)
+        return constants.ENEMY_COMBAT_CAP
+    return min(constants.ENEMY_COMBAT_CAP, 2 * bout.level)
 
 
 def build_challenger(mean_level):

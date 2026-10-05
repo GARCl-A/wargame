@@ -14,6 +14,8 @@ exactly one consumer that reads it back:
     to_hit            Unit.attack_bonus / Combatant     "strength" | "dexterity"
     melee_damage      Combatant.damage_roll            --
     melee_reach       Combatant.attack_range           --
+    unarmed_dice      Unit._derive_combat (+N dice)    --
+    size_up           Unit._derive_size (+N sizes)     --
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     post_combat_heal  campaign._carry_forward          --
@@ -244,6 +246,12 @@ _LIST = [
     Talent("kobold_trapper", "racial", 1, "Trapper",
            "cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them.", race="Kobold",
            effects=(), icon="body/sinking-trap"),
+    Talent("rending_bite", "racial", 1, "Rending Bite",
+           "jaws that tear: roll one extra die on your unarmed attack.", race="Wolf",
+           effects=(Effect("unarmed_dice", 1),), icon="action/eating"),
+    Talent("dire_growth", "racial", 1, "Dire Growth",
+           "you grow past your kin: your size goes up one step (a Wolf becomes Large).", race="Wolf",
+           effects=(Effect("size_up", 1),), icon="body/cavalry"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

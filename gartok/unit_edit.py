@@ -5,7 +5,7 @@ Mixed into `unit.Unit`. Each setter keeps the model whole (re-applies
 attributes, re-derives combat) and round-trips through `persist.unit_to_dict`.
 """
 
-from . import data, economy, names, progression, talents
+from . import constants, data, economy, names, progression, talents
 
 
 class EditMixin:
@@ -18,9 +18,25 @@ class EditMixin:
         offered = {t.id for t in talents.racial_tree(name)}
         self.talents["racial"] = [tid for tid in self.talents["racial"] if tid in offered]
         self._configure_race()
+        if self.race["kind"] == "beast":
+            self._become_beast()
+        elif self.occupation["name"] == data.BEAST_OCCUPATION["name"]:
+            self._apply_occupation()          # leaving a beast body: it needs a real job again
         self._after_edit()
 
+    def _become_beast(self):
+        """A beast fights with its own body but keeps what it carries: held gear
+        is stowed in the pack first (a pack wolf, a cart horse down the road)."""
+        for held in (self.take_from_hand(), self.take_from_offhand(), self.take_from_armor()):
+            if held:
+                self._pack_add(held)
+        pack, locked = self._base_inventory, self.locked_items
+        self._apply_beast()
+        self._base_inventory, self.locked_items = pack, locked
+
     def set_occupation(self, name):
+        if self.race["kind"] == "beast":
+            return                            # a beast has no job -- it fights with its own body
         self.occupation = data.occupation_by_name(name)
         self._configure_occupation()
         self._after_edit()
@@ -69,6 +85,12 @@ class EditMixin:
 
     def set_gold(self, copper):
         self.gold = max(0, int(copper))
+
+    def set_natural_armor(self, value):
+        """Flat AC the body gives, 0..`constants.NATURAL_ARMOR_MAX`. Stacks with
+        worn armor and ignores its Dex cap and drag."""
+        self.natural_armor = max(0, min(constants.NATURAL_ARMOR_MAX, int(value)))
+        self._derive_combat()
 
     def set_hp(self, value):
         """Pin the HP max to `value` (>= 1), or pass `None` to drop back to the

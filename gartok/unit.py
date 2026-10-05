@@ -79,6 +79,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         self.arena_title = False                       # holds the arena's "Champion of the Pit" (see arena.py)
         self._hp_roll = None                          # 1dHD, rolled once in _derive_combat
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
+        self.natural_armor = 0                         # flat AC from the body itself (sandbox-set; see _derive_ac)
         self._racial_override = None                   # sandbox: a pinned racial level (hit dice + racial picks), else derived
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
@@ -118,7 +119,10 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         u.age = d.get("age", u.age)                     # creator-set age wins; older saves fall back to the derived one
         u.languages = list(d["languages"])              # keep the saved picks, don't re-sort
         u.occupation = data.occupation_by_name(d["occupation"])
-        u._configure_occupation()
+        if u.race["kind"] == "beast":
+            u._apply_beast()
+        else:
+            u._configure_occupation()
         u._base_inventory = pack_from_raw(d["inventory"])
         u.locked_items = dict(d.get("locked_items", {}))
         u.equipped_weapon = d.get("equipped_weapon", u.occupation["weapon"])
@@ -160,6 +164,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         u.portrait_id = int(u.uid[:8], 16) if pid is None else pid
         u._hp_roll = d.get("hp_roll")
         u._hp_override = d.get("hp_override")            # creator-set HP max, or None
+        u.natural_armor = d.get("natural_armor", 0)
         u._racial_override = d.get("racial_override")    # creator-pinned racial level, or None
         u.dormant = d.get("dormant", False)
         u.awareness_radius = d.get("awareness_radius", 0)

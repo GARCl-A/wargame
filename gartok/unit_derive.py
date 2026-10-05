@@ -32,13 +32,23 @@ class DerivationMixin:
         if self.equipped_tongue and not self.has_tongue:   # lost the talent (race / drop): stow it
             self._pack_add(self.equipped_tongue)
             self.equipped_tongue = None
+        self._derive_size()
         self._derive_carry()
         self._derive_attribute_mods()
         self._derive_hp()
         self._derive_ac()
         self._derive_speed()
-        self.unarmed_damage = data.UNARMED_ATTACK.get(self.size, (1, 2))   # die by size
+        n, faces = data.UNARMED_ATTACK.get(self.size, (1, 2))              # die by size
+        self.unarmed_damage = (n + self.talent_bonus("unarmed_dice"), faces)
         self.dr = self._ability.damage_reduction
+
+    def _derive_size(self):
+        """The race's size, stepped up by talents (capped at Large); the board
+        footprint follows it."""
+        order = data.SIZE_ORDER
+        step = order.index(self.race["size"]) + self.talent_bonus("size_up")
+        self.size = order[min(step, len(order) - 1)]
+        self.footprint = data.SIZES[self.size]["footprint"]
 
     def _derive_carry(self):
         """Carry thresholds (kg) and the `encumbered` flag. A normal person
@@ -200,6 +210,7 @@ class DerivationMixin:
             (self.armor_name if armor else "armor", armor.ac if armor else 0),
             (shield.name if shield else "shield", shield.ac if shield else 0),
             ("talents", self.talent_bonus("ac")), (f"{self._ability.name} (natural)", self._ability.ac_natural),
+            ("natural armor", self.natural_armor),
         ], self.ac)
 
     def md_breakdown(self):
@@ -213,7 +224,7 @@ class DerivationMixin:
         """Where `speed` (squares per turn) comes from, as `[(label, value)]`."""
         armor = self.armor
         return self._breakdown([
-            (f"{self.size} base", data.squares(data.SIZES[self.size]["speed"])),
+            (f"{self.race['name']} base", data.squares(self.race["speed"])),
             (self._ability.name, self._ability.speed), ("talents", self.talent_bonus("speed")),
             (f"{self.armor_name} (drag)" if armor else "armor", -(armor.speed_penalty if armor else 0)),
             ("overloaded", -1 if self.encumbered else 0),
@@ -241,15 +252,16 @@ class DerivationMixin:
         if self.equipped_offhand and items.is_shield(self.equipped_offhand):
             shield = items.get(self.equipped_offhand)
             self.ac_base += shield.ac if shield else 0
-        self.ac_natural = self._ability.ac_natural
+        self.ac_natural = self._ability.ac_natural + self.natural_armor
         self.mental_defense_base = (10 + self.mod_wisdom
                                     + self.talent_bonus("mental_defense")
                                     - self.group_overextension)
 
     def _derive_speed(self):
-        """Speed in squares: size base + ability + talents, minus heavy-armor
-        drag, minus one more while overloaded. Floored at 1."""
-        self.speed = (data.squares(data.SIZES[self.size]["speed"])
+        """Speed in squares: race base (the size's unless the race sets its own)
+        + ability + talents, minus heavy-armor drag, minus one more while
+        overloaded. Floored at 1."""
+        self.speed = (data.squares(self.race["speed"])
                       + self._ability.speed + self.talent_bonus("speed"))
         armor = self.armor
         if armor is not None and armor.speed_penalty:

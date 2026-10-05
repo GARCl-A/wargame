@@ -24,8 +24,14 @@ CITY_RAID_LEVEL = 4
 
 # Progression (XP Thresholds)
 # Combat level thresholds (Level 1, 2, 3...)
-COMBAT_XP_THRESHOLDS = (3, 10, 21, 36, 55, 78, 105)
+COMBAT_XP_THRESHOLDS = (3, 10, 21, 36, 55, 78, 105, 136, 171, 210)
 # Work marks thresholds (Level 1, 2, 3...)
-WORK_XP_THRESHOLDS = (2, 6, 12, 20, 30, 42)
+WORK_XP_THRESHOLDS = (2, 6, 12, 20, 30, 42, 56, 72, 90, 110)
 # Racial level thresholds (combat + work level)
-RACIAL_XP_THRESHOLDS = (2, 4, 6, 8, 10, 12, 14)
+RACIAL_XP_THRESHOLDS = (2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+# Highest combat / work level an enemy pack is pitched at (encounters.py, arena.py):
+# the XP tables above run past it so the creator can pin NPCs higher
+ENEMY_COMBAT_CAP = 7
+ENEMY_WORK_CAP = 6
+# Natural armor: a flat AC bonus a creature is born with (no Dex cap, no drag)
+NATURAL_ARMOR_MAX = 5

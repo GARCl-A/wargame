@@ -113,3 +113,152 @@ def test_a_defeated_beast_never_drops_below_its_own_chance():
     batt = Battle([Unit("player")], [_wolf(), _wolf()])
     pool = loot.field_loot(batt, [], rng=NeverDrop())
     assert data.BEAST_POOL[0]["drop_item"] not in pool
+
+
+def test_a_beast_is_a_named_race_the_creator_can_pick():
+    assert "Wolf" in data.BEAST_NAMES
+    assert "Wolf" in data.ALL_RACE_NAMES
+    assert "Wolf" not in data.RACE_NAMES                       # still never rolled as a player race
+    assert data.race_by_name("Wolf")["kind"] == "beast"
+
+
+def test_a_wolf_survives_a_save_round_trip():
+    from gartok import persist
+    random.seed(5)
+    w = _wolf()
+    back = Unit.from_save(persist.unit_to_dict(w))
+    assert back.race["name"] == "Wolf"
+    assert back.occupation["name"] == data.BEAST_OCCUPATION["name"]
+    assert back.equipped_weapon is None
+    assert back.ability.id == "wolf_pack_tactics"
+    assert back.hp_max == w.hp_max
+
+
+def test_creator_can_turn_a_unit_into_a_wolf_and_back():
+    random.seed(6)
+    u = Unit("player", race=data.race_by_name("Human"))
+    u.set_race("Wolf")
+    assert u.race["kind"] == "beast" and u.token == "w"
+    assert u.equipped_weapon is None and u.equipped_armor is None
+    u.set_occupation("Farmer")                                 # a beast keeps no job
+    assert u.occupation["name"] == data.BEAST_OCCUPATION["name"]
+    u.set_race("Human")
+    assert u.race["kind"] == "humanoid"
+    assert u.occupation["name"] != data.BEAST_OCCUPATION["name"]
+
+
+def test_a_race_walks_at_its_own_speed_else_its_sizes():
+    assert data.race_by_name("Wolf")["speed"] == 10.5
+    assert _wolf().speed == data.squares(10.5) == 7
+    human = Unit("player", race=data.race_by_name("Human"))
+    assert human.race["speed"] == data.SIZES["Medium"]["speed"]
+    assert human.speed == data.squares(9.0)
+
+
+def _grown_wolf():
+    random.seed(8)
+    w = _wolf()
+    w.set_track_level("racial", 6)
+    return w
+
+
+def test_rending_bite_adds_a_die_to_the_unarmed_attack():
+    w = _grown_wolf()
+    assert w.unarmed_damage == (1, 3)
+    assert w.choose_talent("racial", "rending_bite")
+    assert w.unarmed_damage == (2, 3)
+
+
+def test_dire_growth_makes_a_wolf_large_and_stacks_with_the_bite():
+    w = _grown_wolf()
+    assert (w.size, w.footprint) == ("Medium", 1)
+    assert w.choose_talent("racial", "dire_growth")
+    assert (w.size, w.footprint) == ("Large", 2)
+    assert w.unarmed_damage == (1, 4)                      # the Large unarmed die
+    w.set_track_level("racial", 7)
+    w.choose_talent("racial", "rending_bite")
+    assert w.unarmed_damage == (2, 4)
+    assert w.speed == data.squares(10.5)                  # Large does not slow it
+
+
+def test_wolf_talents_are_wolf_only_and_survive_a_save():
+    from gartok import persist, talents
+    assert {t.id for t in talents.racial_tree("Wolf")} >= {"rending_bite", "dire_growth"}
+    assert not {"rending_bite", "dire_growth"} & {t.id for t in talents.racial_tree("Human")}
+    w = _grown_wolf()
+    w.choose_talent("racial", "dire_growth")
+    back = Unit.from_save(persist.unit_to_dict(w))
+    assert back.size == "Large" and back.footprint == 2
+
+
+def test_a_grown_wolf_takes_a_2x2_footprint_in_battle():
+    w = _grown_wolf()
+    w.choose_talent("racial", "dire_growth")
+    batt = Battle([Unit("player")], [w])
+    assert batt.enemy_units[0].footprint == 2
+
+
+def test_the_creator_can_pin_racial_level_up_to_ten():
+    w = _wolf()
+    w.set_track_level("racial", 10)
+    assert w.racial_level == 10
+    assert w.picks_available("racial") == 6
+    w.set_track_level("racial", 99)
+    assert w.racial_level == 10
+
+
+def test_natural_armor_is_flat_ac_that_ignores_armor_rules():
+    from gartok import constants
+    random.seed(9)
+    u = Unit("player", race=data.race_by_name("Human"))
+    u.give_to_armor(next(iter(data.ARMOR)))
+    base_ac, base_speed = u.ac, u.speed
+    u.set_natural_armor(3)
+    assert u.ac == base_ac + 3
+    assert u.speed == base_speed                              # no drag
+    assert dict(u.ac_breakdown())["natural armor"] == 3
+    u.set_natural_armor(99)
+    assert u.natural_armor == constants.NATURAL_ARMOR_MAX == 5
+    u.set_natural_armor(-4)
+    assert u.natural_armor == 0
+
+
+def test_natural_armor_counts_in_battle_and_survives_a_save():
+    from gartok import persist
+    random.seed(10)
+    w = _wolf()
+    plain = Battle([Unit("player")], [w]).enemy_units[0].ac
+    w.set_natural_armor(4)
+    assert Battle([Unit("player")], [w]).enemy_units[0].ac == plain + 4
+    back = Unit.from_save(persist.unit_to_dict(w))
+    assert back.natural_armor == 4 and back.ac == w.ac
+
+
+def test_the_creator_can_pin_combat_and_work_up_to_ten_without_moving_enemy_caps():
+    from gartok import encounters
+    u = _wolf()
+    u.set_track_level("combat", 10)
+    u.set_track_level("work", 10)
+    assert (u.combat_level, u.work_level) == (10, 10)
+    u.set_track_level("combat", 99)
+    assert u.combat_level == 10
+    assert u.racial_level == 10                       # (10 + 10) lands on the top racial level
+    assert (encounters._COMBAT_CAP, encounters._WORK_CAP) == (7, 6)
+    for lvl in range(0, 7):
+        rng = random.Random(lvl)
+        built = encounters.build_enemy(lvl, rng)
+        assert built.combat_level <= 7 and built.work_level <= 6
+
+
+def test_turning_a_unit_into_a_beast_keeps_its_pack_and_stows_held_gear():
+    random.seed(11)
+    u = Unit("player", race=data.race_by_name("Human"))
+    u.give_to_pack("Torch")
+    u.give_to_hand(next(iter(data.WEAPONS)))
+    held = u.equipped_weapon
+    before = sum(q for _, q in u._base_inventory)
+    u.set_race("Wolf")
+    assert u.equipped_weapon is None and u.equipped_armor is None
+    names = [n for n, _ in u._base_inventory]
+    assert "Torch" in names and held in names
+    assert sum(q for _, q in u._base_inventory) >= before

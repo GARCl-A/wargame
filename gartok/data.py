@@ -73,6 +73,8 @@ def resolve_bonus(mods):
 #   Centaur only exceeds 9 m because of the Gallop ability.                    #
 # --------------------------------------------------------------------------- #
 
+SIZE_ORDER = ("Tiny", "Small", "Medium", "Large")
+
 SIZES = {
     "Tiny": {"speed": 4.5, "carry": 0.5, "footprint": 1},
     "Small":  {"speed": 6.0, "carry": 1.0, "footprint": 1},
@@ -177,11 +179,12 @@ RACES = [
 ]
 
 def _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
-               kind="humanoid", drop_item=None, drop_chance=0.0):
+               kind="humanoid", drop_item=None, drop_chance=0.0, speed=None):
     return {
         "name": name, "token": token, "mods": mods, "ability": ability,
         "language": language, "age_mult": age, "hd": hd, "size": size, "kind": kind,
         "drop_item": drop_item, "drop_chance": drop_chance,
+        "speed": SIZES[size]["speed"] if speed is None else speed,   # meters; the size's unless the race sets its own
     }
 
 
@@ -202,14 +205,14 @@ LANGUAGES = sorted({r["language"] for r in _RACES})
 # --------------------------------------------------------------------------- #
 
 BEASTS = [
-    # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance
-    (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  1.000),
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance  speed (m)
+    (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  1.000,      10.5),
 ]
 
 def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
-                drop_item, drop_chance):
+                drop_item, drop_chance, speed=None):
     return _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
-                      kind="beast", drop_item=drop_item, drop_chance=drop_chance)
+                      kind="beast", drop_item=drop_item, drop_chance=drop_chance, speed=speed)
 
 
 _BEASTS = [_beast_dict(*row) for row in BEASTS]
@@ -225,6 +228,8 @@ BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
 
 _RACE_THRESHOLDS = [row[0] for row in RACES]
 RACE_NAMES = [r["name"] for r in _RACES]
+BEAST_NAMES = [r["name"] for r in _BEASTS]
+ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES        # what the creator offers; RACE_NAMES stays the playable set
 
 
 def roll_race():
@@ -238,7 +243,7 @@ def roll_race():
 def race_by_name(name):
     if name == "Leshy":
         name = "Treefolk"
-    for race in _RACES:
+    for race in _RACES + _BEASTS:
         if race["name"] == name:
             return dict(race)
     return None
@@ -383,6 +388,8 @@ def roll_occupation():
 
 
 def occupation_by_name(name):
+    if name == BEAST_OCCUPATION["name"]:
+        return dict(BEAST_OCCUPATION)
     for occupation in _OCCUPATIONS:
         if occupation["name"] == name:
             return dict(occupation)

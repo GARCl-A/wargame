@@ -24,7 +24,7 @@ and level keep coming from the same weights regardless of who shows up.
 import random
 from dataclasses import dataclass
 
-from . import data, progression, talents
+from . import constants, data, talents
 from .unit import Unit
 
 # The Wilds: a pack is 1..6 bodies, most often 3, tapering faster on the high
@@ -37,8 +37,8 @@ WILDS_LEVEL_WEIGHTS = {0: 40, 1: 25, 2: 18, 3: 12, 4: 5}
 # common draw and level 6 the rare one. Weights, retune freely.
 ARENA_LEVEL_WEIGHTS = {1: 30, 2: 24, 3: 18, 4: 13, 5: 9, 6: 6}
 
-_COMBAT_CAP = len(progression.COMBAT_XP_THRESHOLDS)
-_WORK_CAP = len(progression.WORK_XP_THRESHOLDS)
+_COMBAT_CAP = constants.ENEMY_COMBAT_CAP
+_WORK_CAP = constants.ENEMY_WORK_CAP
 
 
 def weighted_choice(weights, rng=random):

@@ -32,7 +32,7 @@ from .ui.primitives import (
 )
 from .ui.primitives import contained as ui_contained
 from .ui.sheet_card import draw_sheet as draw_sheet_card
-from .ui.sheet_card import hp_tooltip, unit_to_ch
+from .ui.sheet_card import hp_tooltip, sheet_height, unit_to_ch
 from .ui.tokens import T
 from .unit import Unit
 
@@ -62,6 +62,10 @@ class CharEditorScreen(Screen):
         self.scroll = 0
         self._scroll_max = 0
         self._form_rect = None
+        self._lib_rect = None                 # the NPC library / live sheet panels scroll on their own
+        self._sheet_rect = None
+        self.lib_scroll = self.sheet_scroll = 0
+        self._lib_max = self._sheet_max = 0
         self._clip = None
         self.slug = None                      # library file this maps to, or None (unsaved)
         self.library = []
@@ -72,7 +76,7 @@ class CharEditorScreen(Screen):
         self.unit = unit
         self.slug = slug
         self.edit_field = None
-        self.scroll = 0
+        self.scroll = self.sheet_scroll = 0
         self.confirm_delete = None
         self._refresh_library()
 
@@ -130,10 +134,13 @@ class CharEditorScreen(Screen):
                          else event.unicode.isprintable()):
                 self.edit_buf += event.unicode
             return
-        if event.type == pygame.MOUSEWHEEL and self._form_rect \
-                and self._form_rect.collidepoint(self.mouse):
-            self.scroll = max(0, min(self._scroll_max, self.scroll - event.y * 44))
-            return
+        if event.type == pygame.MOUSEWHEEL:
+            for rect, attr, top in ((self._form_rect, "scroll", self._scroll_max),
+                                    (self._lib_rect, "lib_scroll", self._lib_max),
+                                    (self._sheet_rect, "sheet_scroll", self._sheet_max)):
+                if rect and rect.collidepoint(self.mouse):
+                    setattr(self, attr, max(0, min(top, getattr(self, attr) - event.y * 44)))
+                    return
         super().handle_event(event)
 
     def _click(self, px):
@@ -163,7 +170,7 @@ class CharEditorScreen(Screen):
             self._start_edit(kind)
         elif kind == "picker":
             _, pk = action
-            opts = {"race": data.RACE_NAMES, "occupation": data.OCCUPATION_NAMES,
+            opts = {"race": data.ALL_RACE_NAMES, "occupation": data.OCCUPATION_NAMES,
                     "alignment": [a for _, a in data.ALIGNMENTS],
                     "weapon": ["(unarmed)"] + list(items.weapons()),
                     "tongue": ["(empty)"] + [n for n, w in items.weapons().items()
@@ -181,6 +188,8 @@ class CharEditorScreen(Screen):
         elif kind == "level":
             _, track, delta = action
             u.set_track_level(track, u.track_level[track] + delta)
+        elif kind == "natarmor":
+            u.set_natural_armor(u.natural_armor + action[1])
         elif kind == "gold":
             u.set_gold(u.gold + action[1])
         elif kind == "hp":
@@ -339,7 +348,7 @@ class CharEditorScreen(Screen):
         self._edit_row(screen, pygame.Rect(x + half + T.S, y, half, 26), "AGE", "age",
                        f"{u.age}  ({round(u.age / mult)} at x1)")
         y += 26 + T.S // 2
-        text(screen, F["body_sm"], f"{u.race['size']}  ·  token {u.race['token']}  ·  " f"ability: {u.ability.name}",
+        text(screen, F["body_sm"], f"{u.size}  ·  token {u.race['token']}  ·  " f"ability: {u.ability.name}",
              (x, y + 2), T.TX_FAINT)
         y += 20
         self._edit_row(screen, pygame.Rect(x, y, w, 26), "BIO", "bio", u.bio)
@@ -509,6 +518,20 @@ class CharEditorScreen(Screen):
         self._pick_row(screen, arr, "ARMOR", u.equipped_armor or "(none)",
                        ("picker", "armor"))
         y += 24 + T.S // 2
+        nr = pygame.Rect(x, y, w, 24)
+        box(screen, nr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
+        text(screen, F["micro"], "NATURAL ARMOR", (nr.x + T.S, nr.centery - 5), T.TX_FAINT)
+        text(screen, F["body_sm"], f"+{u.natural_armor}" if u.natural_armor else "none",
+             (nr.x + T.S + F["micro"].size("NATURAL ARMOR")[0] + T.S, nr.centery - 6),
+             T.BRASS if u.natural_armor else T.TX)
+        dn = pygame.Rect(nr.right - 40, nr.y + 2, 18, 20)
+        up = pygame.Rect(nr.right - 20, nr.y + 2, 18, 20)
+        for br, sign, glyph in ((dn, -1, "−"), (up, +1, "+")):
+            h = br.collidepoint(self.mouse)
+            box(screen, br, fill=T.STEEL_HI if h else T.STEEL, border=T.STEEL_LINE, width=0)
+            text(screen, F["body_sm"], glyph, br.center, T.BRASS if h else T.TX_MUTED, center=True)
+            self._hit(br, ("natarmor", sign))
+        y += 24 + T.S // 2
         tr = pygame.Rect(x, y, w, 22)
         torch_on = u.equipped_offhand == data.TORCH_ITEM
         self._btn(screen, tr, ("OFF HAND: TORCH" if torch_on else "OFF HAND: EMPTY"),
@@ -565,6 +588,13 @@ class CharEditorScreen(Screen):
             pygame.draw.rect(screen, T.STEEL_HI,
                              (rect.right - 5, ky, 3, kh), border_radius=2)
 
+    def _scrollbar(self, screen, rect, top, pos, view_h):
+        if not top:
+            return
+        kh = max(24, int(view_h * view_h / (view_h + top)))
+        ky = rect.y + int((view_h - kh) * pos / top)
+        pygame.draw.rect(screen, T.STEEL_HI, (rect.right - 5, ky, 3, kh), border_radius=2)
+
     def _pick_row(self, screen, rect, label, value, action):
         F = self.F
         hot = rect.collidepoint(self.mouse)
@@ -617,20 +647,21 @@ class CharEditorScreen(Screen):
     def _draw_side(self, screen, rect):
         F = self.F
         u = self.unit
-        lib_h = min(int(rect.h * 0.42), 40 + 30 * (len(self.library) + 1))
+        lib_h = min(int(rect.h * 0.30), 40 + 30 * (len(self.library) + 1))
         lib = pygame.Rect(rect.x, rect.y, rect.w, max(120, lib_h))
+        self._lib_rect = lib
+        self._lib_max = max(0, 24 + 28 * len(self.library) + T.S - lib.h)
+        self.lib_scroll = min(self.lib_scroll, self._lib_max)
         box(screen, lib, fill=T.STEEL, border=T.STEEL_LINE)
         text(screen, F["micro"], "NPC LIBRARY", (lib.x + T.S * 2, lib.y + T.S), T.TX_MUTED)
         text(screen, F["micro"], "npcs/", (lib.right - T.S * 2, lib.y + T.S), T.TX_FAINT, right=True)
-        ly = lib.y + 24
+        ly = lib.y + 24 - self.lib_scroll
         if not self.library:
             text(screen, F["body_sm"], "no saved characters yet — SAVE writes one here",
                  (lib.x + T.S * 2, ly + 2), T.TX_FAINT)
         prev = screen.get_clip()
-        screen.set_clip(lib.inflate(-T.S, -T.S))
+        screen.set_clip(pygame.Rect(lib.x, lib.y + 22, lib.w, lib.h - 22 - T.S // 2))
         for row in self.library:
-            if ly > lib.bottom - 20:
-                break
             rr = pygame.Rect(lib.x + T.S, ly, lib.w - 2 * T.S, 26)
             cur = row["slug"] == self.slug
             hot = rr.collidepoint(self.mouse)
@@ -656,6 +687,7 @@ class CharEditorScreen(Screen):
                 self._hit(xb, ("ask_delete", row["slug"]))
             ly += 28
         screen.set_clip(prev)
+        self._scrollbar(screen, lib, self._lib_max, self.lib_scroll, lib.h)
 
         # --- live sheet -------------------------------------------- #
         # The read-only preview: same `gartok/ui` sheet component the sheet
@@ -666,10 +698,14 @@ class CharEditorScreen(Screen):
                          rect.bottom - lib.bottom - T.S * 2)
         box(screen, pr, fill=T.STEEL, border=T.STEEL_LINE)
         ch = unit_to_ch(Combatant(u))
-        inner = pygame.Rect(pr.x + T.S * 2, pr.y + T.S, pr.w - 2 * T.S * 2, 0)
+        self._sheet_rect = pr
+        self._sheet_max = max(0, sheet_height("full") + T.S * 2 - pr.h)
+        self.sheet_scroll = min(self.sheet_scroll, self._sheet_max)
+        inner = pygame.Rect(pr.x + T.S * 2, pr.y + T.S - self.sheet_scroll, pr.w - 2 * T.S * 2, 0)
         with ui_contained(screen, pr.inflate(-T.S // 2, -T.S // 2)):
             _, tooltip = draw_sheet_card(screen, F, inner, ch, density="full",
                                          mouse=self.mouse)
+        self._scrollbar(screen, pr, self._sheet_max, self.sheet_scroll, pr.h)
         if tooltip:
             self.tooltip = tooltip
 

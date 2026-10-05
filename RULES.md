@@ -71,13 +71,13 @@ A new campaign begins at the **Draft** (`DraftScreen`):
 
 | Derived | Formula | Note |
 |---|---|---|
-| **AC** (Armor Class) | `10 + Dexterity mod` | unarmored (worn armor: 🟡, see below) |
+| **AC** (Armor Class) | `10 + Dexterity mod` | unarmored (worn armor: 🟡, see below). **Natural armor** (0–5, set in the creator) adds flat on top: no Dex cap, no speed drag |
 | **Mental Defense** 🟡 | `10 + Wisdom mod` | the target number for Demoralize |
 | **HP** | `1d(hit die) + Constitution mod` | minimum 1 |
 | **Age** | `d100 × racial multiplier` | see `REFERENCE.md` |
 | **Carry capacity (normal)** | `max(1, round((STR mod × 4 + 15) × carry mult.))` | 🟡 reworked for the wargame |
 | **Carry capacity (high)** | `max(2, round((STR mod × 6 + 35) × carry mult.))` | 🟡 |
-| **Unarmed attack** 🟡 | die by size (Tiny/Small 1d2 · Medium 1d3 · Large 1d4) | everyone has one; STR mod adds to the damage |
+| **Unarmed attack** 🟡 | die by size (Tiny/Small 1d2 · Medium 1d3 · Large 1d4) | everyone has one; STR mod adds to the damage; the `unarmed_dice` talent channel adds dice (Wolf *Rending Bite*: 1d3 → 2d3) |
 
 > Generator quirk: HP used `randrange(1, hit_die)`, i.e. it rolled **1 to
 > (die−1)**. The wargame uses the full die (1 to die), the presumed design intent.
@@ -96,6 +96,12 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 
 **The full table is in [`REFERENCE.md`](REFERENCE.md)** (§ Races). The ability
 *names* are 🟢; **what each one does is 🟡** — see §7.
+
+**Beasts** are a second kind of race (`kind = "beast"`, the `data.BEASTS` table):
+no occupation, they fight with their own body, and the creator can pick them
+like any race (the Wolf is the first). A race may set its own **speed** in
+meters; unset, it is the size's (the Wolf walks 10.5 m / 7 cells). Switching a
+character to a beast keeps its pack.
 
 Languages in the world are just the racial languages — names only, no
 description survived: Ankarin, Draconic, Dwarvish, Elvish, Gnomish, Goblin,
@@ -119,6 +125,8 @@ In the wargame **1 cell = 1.5 m**. 🟡
   as a **Medium** one (9 m / 6 cells). If a Large creature moves further, it is
   from an **ability** — the **Centaur** reaches 12 m (8 cells) only because of
   **Gallop** (+3 m), not because it is large.
+- A talent can raise size one step (`size_up`, capped at Large): the Wolf's
+  *Dire Growth* makes it Large, with the 2×2 footprint and the Large unarmed die.
 - **Large creatures occupy 2×2 cells.** The stored position is the **anchor**
   (top-left); the footprint is the 4 cells from there. It applies to everything:
   collision and pathfinding (only lands where all 4 cells fit and are free),
@@ -253,7 +261,9 @@ track** earns no XP of its own — its "XP" is the sum of the other track levels
 dice scale with every racial level (L1+), the **first racial talent pick unlocks
 only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
 (e.g., `Tongue` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
-`Halfling Luck` for Halfling).
+`Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf).
+All three tables run to level 10 so the creator can pin NPCs that high, but
+generated enemies stay capped at combat 7 / work 6 (`constants.ENEMY_*_CAP`).
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
