@@ -209,6 +209,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Ink | 0.1 kg | material |
 | Iron Bar | 5 kg | material |
 | Iron Shackles | 1 kg | -- |
+| Jerky | 0.5 kg | food, consumable |
 | Lantern | 1 kg | light 6 sq |
 | Large Axe | 6 kg | -- |
 | Large Broadsword | 8 kg | -- |
@@ -233,7 +234,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Locked Chest | 8 kg | -- |
 | Lumber | 2 kg | material |
 | Map | 0.1 kg | -- |
-| Meat | 1 kg | food, consumable |
+| Meat | 1 kg | food, consumable, material |
 | Minor Healing Potion | 0.2 kg | consumable |
 | Musical Instrument | 2 kg | -- |
 | Paper | 0.1 kg | material |
@@ -247,6 +248,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Rope | 2 kg | material |
 | Rotten Food | 1 kg | food, consumable |
 | Sack | 0.3 kg | -- |
+| Salt | 0.5 kg | material |
 | Scales | 1 kg | -- |
 | Scissors | 0.2 kg | -- |
 | Scroll | 0.1 kg | -- |

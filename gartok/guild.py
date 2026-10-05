@@ -112,6 +112,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  bankers_debt_since=None, garrison_stock=None,
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
+                 wilds_claim_campfire=False,
                  ancient_ruins_discovered=False, leaving=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, old saves,
@@ -156,6 +157,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.wilds_claim_fence_lumber = wilds_claim_fence_lumber
         self.wilds_claim_sustain_days_left = wilds_claim_sustain_days_left   # only meaningful while SUSTAINING
         self.wilds_claim_owner = wilds_claim_owner   # None before ESTABLISHED, else "guild" | "seized" (Sistema 4)
+        self.wilds_claim_campfire = wilds_claim_campfire   # a fire is built at the claim: cooking is unlocked there
         self.leaving = dict(leaving or {})    # {uid: day the notice lapses} -- see cohesion.py
         self.leader = leader                  # the guild's "who am I" -- None resolves below
         self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change

@@ -22,6 +22,10 @@ class HoldingsMixin:
     def buy_city_property(self):
         self.house.buy(self.clock.day)
 
+    def buy_oven(self):
+        """The caller collects `economy.OVEN_PRICE` first."""
+        self.house.oven = True
+
     def repossess_city_property(self):
         """ACCEPT: hand the property back, bank the missed rent as debt owed
         to the Bankers -- their services stay shut until it's paid."""

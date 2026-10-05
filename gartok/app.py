@@ -410,7 +410,10 @@ class App:
                                             on_squat=self._resolve_repossession_squat)
             return
         self.scene = CityPropertyScreen(self.ui_fonts, self.guild, list(group.members),
-                                        on_done=self._after_activity)
+                                        on_done=self._after_activity,
+                                        on_cook=lambda: self._open_kitchen(
+                                            group, "THE HOUSE KITCHEN",
+                                            lambda: self._open_city_property(group, node)))
 
     def _resolve_repossession_return(self):
         self.guild.repossess_city_property()
@@ -427,9 +430,18 @@ class App:
     # ------------------------------------------------------------------ #
     # the Wilds claim (world.Node.claim, wilds_claim_screen.py)           #
     # ------------------------------------------------------------------ #
+    def _open_kitchen(self, group, title, on_back):
+        from .crafting_screen import CraftingScreen
+        self.scene = CraftingScreen(self.ui_fonts, self.guild, group, on_done=on_back,
+                                    title=title, station="cooking",
+                                    subtitle="cook what the pack carries  ·  everyone knows the basics")
+
     def _open_wilds_claim(self, group, node):
         self.scene = WildsClaimScreen(self.ui_fonts, self.guild, group,
                                       on_done=self._after_activity,
+                                      on_cook=lambda: self._open_kitchen(
+                                          group, "THE CLAIM KITCHEN",
+                                          lambda: self._open_wilds_claim(group, node)),
                                       on_fight_clear=self._start_claim_clear_battle,
                                       on_fight_sweep=self._start_claim_sweep_battle)
 

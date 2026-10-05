@@ -50,12 +50,13 @@ class CityProperty:
     guard clears it (`abandon`)."""
 
     def __init__(self, owned=False, contents=None, tax_due_day=None,
-                 missed_payments=0, squatting=False):
+                 missed_payments=0, squatting=False, oven=False):
         self.owned = owned
         self.stash = Stash(economy.CITY_PROPERTY_CAPACITY, contents)
         self.tax_due_day = tax_due_day          # clock.day the next tax is due, or None
         self.missed_payments = missed_payments
         self.squatting = squatting              # illegal occupier, after refusing repossession
+        self.oven = oven                        # bought from the Bankers: unlocks cooking at the house
 
     @property
     def repossession_due(self):
@@ -72,6 +73,7 @@ class CityProperty:
         """Hand the property back. Returns the missed rent now owed to the Bankers."""
         owed = self.missed_payments * economy.CITY_PROPERTY_TAX
         self.owned = False
+        self.oven = False
         self.stash.items = []
         self.missed_payments = 0
         self.tax_due_day = None
@@ -86,4 +88,5 @@ class CityProperty:
         """The property is simply gone (guild gave up, or the guard cleared it) -- no debt."""
         self.squatting = False
         self.owned = False
+        self.oven = False
         self.stash.items = []

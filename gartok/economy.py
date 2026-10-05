@@ -64,6 +64,11 @@ CITY_PROPERTY_DEBT_GRACE_DAYS = 14            # days of ignored debt before the 
 GARRISON_JOBS = {"lumber": "Lumber", "study": None}           # order.job -> the item name it produces (None if it produces no items, e.g. study)
 GARRISON_YIELD_PER_MEMBER_PER_DAY = 1          # units of that item, per garrisoned member, per day
 
+OVEN_PRICE = 150                  # copper, bought from the Bankers once the house is the guild's
+CAMPFIRE_HOURS = 1                # time to build a fire at the claim
+CAMPFIRE_FUEL = "Lumber"          # one unit burns per attempt, lit or not
+CAMPFIRE_DC = 8                   # 1d20 + WIS mod, best of the group
+
 TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 
 LUMBER_PRICE = 6   # copper, market buy price -- the guild has to import its own building material,
@@ -95,7 +100,7 @@ MARKET_STOCK = [
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
     "Light Crossbow", "Shortbow",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
-    "Meat", "Fruit", "Potato", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
+    "Meat", "Fruit", "Potato", "Salt", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
     "Quiver", "Bear Trap", "Alarm Trap",
 ]

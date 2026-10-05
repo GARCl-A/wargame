@@ -236,7 +236,7 @@ def test_bandit_ambush_locked_chest_drop():
 
 def test_material_flag_and_tags():
     # Crafting materials
-    for name in ["Rope", "Iron Bar", "1sqm Hide", "1kg Coal", "Lumber", "Vial", "Red Mushroom", "Paper", "Ink", "Stone Brick"]:
+    for name in ["Rope", "Iron Bar", "1sqm Hide", "1kg Coal", "Lumber", "Vial", "Red Mushroom", "Paper", "Ink", "Stone Brick", "Salt"]:
         item = items.get(name)
         assert item is not None
         assert item.material is True
@@ -247,7 +247,7 @@ def test_material_flag_and_tags():
         assert inst.material is True
 
     # Non-materials
-    for name in ["Meat", "Potato", "Dagger", "Torch"]:
+    for name in ["Potato", "Jerky", "Dagger", "Torch"]:
         item = items.get(name)
         assert item is not None
         assert item.material is False
@@ -258,3 +258,13 @@ def test_material_flag_and_tags():
     assert "Crafting material" in desc
 
 
+
+
+def test_food_used_in_a_recipe_carries_both_tags():
+    assert items.item_tags("Meat") == ["FOOD", "MATERIAL"]
+    assert items.item_tag("Meat") == "FOOD · MATERIAL"
+    assert items.item_tags("Fruit") == ["FOOD", "MATERIAL"]
+    assert items.item_tags("Potato") == ["FOOD"]
+    assert items.item_tags("Rope") == ["MATERIAL"]
+    assert items.item_tags("Dagger") == ["WEAPON"]
+    assert items.item_tags("Nothing At All") == [] and items.item_tag(None) == ""

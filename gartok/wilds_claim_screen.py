@@ -22,7 +22,7 @@ from .ui.tokens import fonts as ui_fonts
 class WildsClaimScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep):
+    def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep, on_cook=None):
         super().__init__()
         self.fonts = fonts
         self._F = None
@@ -31,6 +31,7 @@ class WildsClaimScreen(Screen):
         self.on_done = on_done
         self.on_fight_clear = on_fight_clear
         self.on_fight_sweep = on_fight_sweep
+        self.on_cook = on_cook
         self.notice = None
         self.buttons = []
 
@@ -87,6 +88,8 @@ class WildsClaimScreen(Screen):
                 "garrison": self._start_garrison,
                 "leave_garrison": self._leave_garrison,
                 "collect": self._collect_lumber,
+                "campfire": self._light_campfire,
+                "cook": self.on_cook,
             }[key]()
             return
 
@@ -101,6 +104,12 @@ class WildsClaimScreen(Screen):
         events, cas = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS, busy=self.group.members)
         self.guild.wilds_claim_build_fences()
         self.notice = "  ".join(["the fences go up -- time to sweep the region."] + events)
+
+    def _light_campfire(self):
+        lit, events, _ = self.guild.wilds_claim_light_campfire(self.group.members)
+        self.notice = "  ".join(events)
+        for m in self.group.members:
+            m._derive_combat()
 
     def _start_garrison(self):
         self.group.order = orders.garrison("lumber")
@@ -135,6 +144,8 @@ class WildsClaimScreen(Screen):
             "SUSTAINING": self._draw_sustaining,
             "ESTABLISHED": self._draw_established,
         }[stage](screen, F, T.S * 3, top, panel_w)
+        if stage in ("SWEPT", "SUSTAINING", "ESTABLISHED") and self.guild.wilds_claim_owner != "seized":
+            self._draw_camp(screen, F, T.S * 3, panel_w, H)
 
         self._draw_party(screen, F, panel_w, W, H)
         self._draw_footer(screen, F, W, H)
@@ -248,6 +259,22 @@ class WildsClaimScreen(Screen):
         y += T.S
         if self.group.order is not None and self.group.order.kind == "garrison":
             self._button(screen, F, "leave_garrison", "STAND DOWN THE GARRISON", y, w)
+
+    def _draw_camp(self, screen, F, x, w, H):
+        """The hearth, anchored just above the party strip so it never collides
+        with the stage panel's variable height."""
+        y = H - T.S * 37
+        hline(screen, x, x + w, y - T.S * 2)
+        caps(screen, F["microb"], "THE HEARTH", (x, y - T.S), T.TX_FAINT)
+        y += T.S * 2
+        if self.guild.wilds_claim_can_cook and self.on_cook:
+            self._button(screen, F, "cook", "COOK", y, w)
+            return
+        fuel = economy.CAMPFIRE_FUEL
+        have = sum(m.count_of(fuel) for m in self.group.members)
+        text(screen, F["body_sm"], f"No fire yet -- burns 1 {fuel}, {economy.CAMPFIRE_HOURS} h, "
+             f"a WIS check (DC {economy.CAMPFIRE_DC}).  {have} {fuel} carried here.", (x, y), T.TX_MUTED)
+        self._button(screen, F, "campfire", "BUILD A CAMPFIRE", y + 22, w, enabled=have > 0)
 
     def _draw_established(self, screen, F, x, y, w):
         if self.guild.wilds_claim_owner == "seized":

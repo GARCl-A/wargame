@@ -46,9 +46,9 @@ class CraftingScreen(Screen):
         # List members that have recipes for this station
         if self.station:
             self.crafters = [u for u in group.members
-                             if any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in u.recipes)]
+                             if any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in u.known_recipes)]
         else:
-            self.crafters = [u for u in group.members if u.recipes]
+            self.crafters = [u for u in group.members if u.known_recipes]
         self.selected_crafter = self.crafters[0] if self.crafters else None
 
         self.buttons = []         # [(key, rect)]
@@ -141,13 +141,13 @@ class CraftingScreen(Screen):
 
         def _trailing(surf, r, ch):
             u = ch["unit"]
-            count = sum(1 for r in u.recipes if not self.station or items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station)
+            count = sum(1 for r in u.known_recipes if not self.station or items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station)
             caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
             if u.crafting_target:
                 caps(surf, F["micro"], "IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
 
         for m in self.group.members:
-            has_recipes = any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in m.recipes) if self.station else bool(m.recipes)
+            has_recipes = any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in m.known_recipes) if self.station else bool(m.known_recipes)
             if not has_recipes:
                 continue
 
@@ -172,7 +172,7 @@ class CraftingScreen(Screen):
 
         m = self.selected_crafter
 
-        for r_name in m.recipes:
+        for r_name in m.known_recipes:
             r_data = items.CRAFTING_RECIPES.get(r_name)
             if not r_data:
                 continue
@@ -185,6 +185,8 @@ class CraftingScreen(Screen):
             panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
 
             text(screen, F["bodyb"], r_name, (r.x + T.S, r.y + T.S), T.TX)
+            if r_data.yield_qty > 1:
+                caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
 
             target_val = sum(economy.PRICES.get(mat, 10) for mat in r_data["materials"]) + r_data["complexity"]
 

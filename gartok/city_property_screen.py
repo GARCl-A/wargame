@@ -34,6 +34,10 @@ class CityPropertyScreen(StashScreen):
     CLOSED_NOTICE = "buy the house first."
     WHERE = "at the property"
 
+    def __init__(self, fonts, guild, party, on_done, on_cook=None):
+        super().__init__(fonts, guild, party, on_done)
+        self.on_cook = on_cook
+
     def tutorial_key(self):
         return "property"
 
@@ -45,6 +49,11 @@ class CityPropertyScreen(StashScreen):
 
     def _services(self):
         g = self.guild
+        if g.house.owned and not g.house.oven:
+            return [("oven", "BUY AN OVEN", f"{economy.OVEN_PRICE} c  ·  unlocks cooking at the house",
+                     self.purse >= economy.OVEN_PRICE)]
+        if g.house.owned and self.on_cook:
+            return [("cook", "COOK", "turn Meat and Salt into Jerky, which keeps for 20 days", True)]
         if g.house.owned or g.house.squatting:
             return []
         rep_ok = g.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
@@ -65,6 +74,15 @@ class CityPropertyScreen(StashScreen):
             self.purse -= economy.CITY_PROPERTY_PRICE
             self.guild.buy_city_property()
             self.notice = "bought a house in the City -- the Bankers' tax starts now."
+        elif key == "oven":
+            if self.purse < economy.OVEN_PRICE:
+                self.notice = f"an oven costs {economy.OVEN_PRICE} copper -- the party has {self.purse}."
+                return
+            self.purse -= economy.OVEN_PRICE
+            self.guild.buy_oven()
+            self.notice = "the oven is installed -- the house can cook now."
+        elif key == "cook":
+            self.on_cook()
         elif key == "pay_debt":
             amount = min(self.purse, self.guild.bankers_debt)
             if amount <= 0:

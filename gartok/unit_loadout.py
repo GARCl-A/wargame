@@ -331,6 +331,10 @@ class LoadoutMixin:
         else:
             self.locked_items[name] = held
 
+    @property
+    def known_recipes(self):
+        return self.recipes + [r for r in items.COMMON_RECIPES if r not in self.recipes]
+
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
         if not self.crafting_target:
@@ -350,7 +354,7 @@ class LoadoutMixin:
         
         is_done = self.crafting_progress >= target_val
         if is_done:
-            self.give_to_pack(self.crafting_target)
+            self.give_to_pack(self.crafting_target, recipe_data.yield_qty)
             self.crafting_target = None
             self.crafting_progress = 0
         return prog, is_done

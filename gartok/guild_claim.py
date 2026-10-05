@@ -4,7 +4,7 @@ Mixed into `guild.Guild`; see `economy.WILDS_CLAIM_*` and
 `wilds_claim_screen.WildsClaimScreen`.
 """
 
-from . import economy, world
+from . import data, economy, world
 
 # The Wilds claim's own stage machine (see economy.WILDS_CLAIM_*).
 WILDS_CLAIM_STAGES = ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED")
@@ -33,6 +33,25 @@ class WildsClaimMixin:
     def wilds_claim_start_sustaining(self):
         self.wilds_claim_stage = "SUSTAINING"
         self.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
+
+    @property
+    def wilds_claim_can_cook(self):
+        return self.wilds_claim_campfire and self.wilds_claim_owner != "seized"
+
+    def wilds_claim_light_campfire(self, crew):
+        """Build a fire at the claim: one unit of fuel from someone's pack, an hour
+        of the clock, and a WIS check by the best of `crew`. The fuel is gone
+        whether or not the fire catches. Returns `(lit, events, casualties)`."""
+        fuel = next((u for u in crew if u.count_of(economy.CAMPFIRE_FUEL)), None)
+        if fuel is None:
+            return False, [f"nobody has {economy.CAMPFIRE_FUEL} to burn."], []
+        fuel.remove_named(economy.CAMPFIRE_FUEL)
+        events, casualties = self.pass_time(economy.CAMPFIRE_HOURS, busy=crew)
+        best = max(crew, key=lambda u: u.mod_wisdom)
+        if data.roll(1, 20) + best.mod_wisdom >= economy.CAMPFIRE_DC:
+            self.wilds_claim_campfire = True
+            return True, ["the fire catches -- the claim has a hearth now."] + events, casualties
+        return False, ["the wood won't catch -- the fuel is wasted."] + events, casualties
 
     def _wilds_claim_garrisoned(self):
         """True while some living group is actually parked, garrisoning, at

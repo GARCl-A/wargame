@@ -46,6 +46,7 @@ class CraftingStation(StrEnum):
     FORGE = "forge"
     APOTHECARY = "apothecary"
     SCRIPTORIUM = "scriptorium"
+    COOKING = "cooking"
 
 
 @dataclass(frozen=True)
@@ -310,6 +311,8 @@ _register(ItemDef(id="meat", name="Meat", type=ItemType.FOOD, rarity=ItemRarity.
 _register(ItemDef(id="fruit", name="Fruit", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.2, price=4, food=True, lifespan=1))
 _register(ItemDef(id="potato", name="Potato", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=3, food=True, lifespan=7))
 _register(ItemDef(id="1l_beer", name="1L Beer", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=4, food=True, lifespan=30), "beer")
+_register(ItemDef(id="salt", name="Salt", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.5, price=3))
+_register(ItemDef(id="jerky", name="Jerky", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.5, price=8, food=True, lifespan=20))
 _register(ItemDef(id="rotten_food", name="Rotten Food", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=2, food=True, lifespan=None))
 
 # Scrolls
@@ -535,6 +538,7 @@ class CraftingRecipe:
     complexity: int
     station: CraftingStation
     level: int = 1
+    yield_qty: int = 1
 
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
@@ -608,6 +612,17 @@ for _lang in _LANGUAGES:
         level=2,
     )
 
+CRAFTING_RECIPES["Jerky"] = CraftingRecipe(
+    target="Jerky",
+    materials=["Meat", "Meat", "Salt"],
+    complexity=5,
+    station=CraftingStation.COOKING,
+    level=1,
+    yield_qty=2,
+)
+
+COMMON_RECIPES = ["Jerky"]            # known by everyone, no talent or teacher needed
+
 APOTHECARY_RECIPES = ["Minor Healing Potion", "Antidote"]
 BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
 
@@ -630,13 +645,30 @@ CODEX_ITEM = "Ancient Codex"
 
 
 def item_tag(item: str | ItemDef | None) -> str:
-    """Returns a short category pill tag (WEAPON, ARMOR, SHIELD, AMMO, HEAL, LIGHT, FOOD, CHEST, SEALED, etc.)
-    used across inventory screens."""
+    """The category pill used across inventory screens: every tag the item
+    has, joined by " · " (`FOOD · MATERIAL`). Empty when it has none."""
+    return TAG_SEP.join(item_tags(item))
+
+
+TAG_SEP = " · "
+
+
+def item_tags(item: str | ItemDef | None) -> list[str]:
+    """Category tags, the item's main kind first (WEAPON, ARMOR, SHIELD, AMMO,
+    HEAL, LIGHT, FOOD, CHEST, SEALED), then MATERIAL when a recipe uses it too."""
     if not item:
-        return ""
+        return []
     it = get(item) if not isinstance(item, ItemDef) else item
     if it is None:
-        return ""
+        return []
+    main = _main_tag(it)
+    tags = [main] if main else []
+    if main != "MATERIAL" and is_material(it) and it.type not in (ItemType.WEAPON, ItemType.ARMOR, ItemType.SHIELD):
+        tags.append("MATERIAL")
+    return tags
+
+
+def _main_tag(it: ItemDef) -> str:
     if it.type == ItemType.WEAPON:
         return "WEAPON"
     if it.type == ItemType.ARMOR:

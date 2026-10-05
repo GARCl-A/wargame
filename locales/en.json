@@ -171,21 +171,24 @@
     "craft": {
       "title": "Crafting",
       "body": [
-        "Only recipes a member of the party has learned appear. Pick one and the materials are consumed at once; progress is a d20 + INT roll over hours of work."
+        "Only recipes a member of the party has learned appear. Pick one and the materials are consumed at once; progress is a d20 + INT roll over hours of work.",
+        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2."
       ]
     },
     "property": {
       "title": "The City house",
       "body": [
         "Buy a house from the Bankers (1000 cp, once). It holds gear like the strongbox does, but costs a 40 cp tax every 7 days.",
-        "Miss too many payments and the Bankers repossess it: return it and owe them, or keep it as a squatter and risk the guard coming for you."
+        "Miss too many payments and the Bankers repossess it: return it and owe them, or keep it as a squatter and risk the guard coming for you.",
+        "Once the house is yours you can buy an oven (150 cp) to cook there."
       ]
     },
     "claim": {
       "title": "Claiming the wilds",
       "body": [
         "A claim goes through six stages: scout the land (2 hours), clear the creatures living there (a fight), fence it (10 Lumber, 8 hours), sweep out a nearby bandit camp or nest (a fight), then hold it with a garrison for 10 days. After that it is established.",
-        "Once established, garrisoned members gather Lumber for you each day -- but raids can still contest the claim."
+        "Once established, garrisoned members gather Lumber for you each day -- but raids can still contest the claim.",
+        "Once the land is swept you can build a campfire (1 Lumber, 1 hour, a WIS check) and cook there. Jerky is how a garrison eats for 10 days."
       ]
     },
     "guard": {
