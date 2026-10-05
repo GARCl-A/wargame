@@ -192,8 +192,8 @@ class GuildScreen(Screen):
             group.distribute_load()
         elif key == "vault" and self.on_bank:
             self.on_bank()
-        elif key == "manage" and self.on_manage:
-            self.on_manage()
+        elif key == "manage" and self.on_manage and group is not None:
+            self.on_manage(group)
         elif key == "back":
             self.on_back()
 
@@ -652,7 +652,8 @@ class GuildScreen(Screen):
 
         button("back", "BACK TO MAP", T.S * 24, primary=True)
         if self.on_manage:
-            button("manage", "MANAGE GEAR", T.S * 20, tip="Equip and swap gear between members")
+            button("manage", "MANAGE GEAR", T.S * 20, enabled=self.guild.group_of(self.member) is not None,
+                   tip="Equip and swap gear between the members of the selected group")
         has_chest = self.guild.bank.open and self.on_bank is not None
         button("vault", "VIEW CITY VAULT", T.S * 22, enabled=has_chest,
                tip=(f"See what the strongbox holds ({self.guild.bank.load:g}/{self.guild.bank.capacity:g} kg). "

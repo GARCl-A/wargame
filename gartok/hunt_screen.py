@@ -4,7 +4,7 @@ Reached from the map's Wilds node through the party picker (`SquadScreen`). The
 screen runs in three phases, rebuilt by `app` around any ambush battle since a
 fight destroys the screen:
 
-- "setup"     -- pick a shift length, CONFIRM to head out (first stretch);
+- "setup"     -- pick a shift length, CONFIRM to head out (first stretch) or LEAVE;
 - "interlude" -- back from a won ambush with daylight left: KEEP HUNTING or HEAD BACK;
 - "done"      -- the wrap-up: the haul is banked (`hunt.grant_meat`), CONTINUE to the map.
 
@@ -122,6 +122,8 @@ class HuntScreen(Screen):
                 self._do_stretch()
             elif key == "hunt_on":
                 self._do_stretch()
+            elif key == "leave":
+                self.on_done()
             elif key == "head_back":
                 self._wrap_up()
             elif key == "fight_ambush":
@@ -297,7 +299,8 @@ class HuntScreen(Screen):
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen):
         if self.phase == "setup":
-            footer_bar(self, screen, self._F, primary=("confirm", "INTO THE WILDS"))
+            footer_bar(self, screen, self._F, back=("leave", "LEAVE"),
+                       primary=("confirm", "INTO THE WILDS"))
         elif self.phase == "interlude":
             footer_bar(self, screen, self._F, back=("head_back", "HEAD BACK"),
                       primary=("hunt_on", "KEEP HUNTING"))

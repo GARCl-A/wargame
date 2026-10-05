@@ -163,3 +163,27 @@ def test_grant_forage_distributes_both_shrooms_and_fruit():
     assert sum(u.count_of("Fruit") for u in party) == 2
     assert any("Red Mushroom" in ln and "Fruit" in ln for ln in lines)
 
+
+
+def test_the_setup_screen_can_be_left_without_spending_time():
+    import pygame
+
+    from gartok import hunt, world
+    from gartok.guild import Guild
+    from gartok.hunt_screen import HuntScreen
+    from gartok.unit import Unit
+
+    guild = Guild([Unit("player")])
+    state = hunt.HuntState(list(guild.roster), world.node("wilds"), hours_left=0)
+    left = []
+    screen = HuntScreen(None, guild, state, phase="setup", on_ambush=lambda *a: None,
+                        on_done=lambda: left.append(True))
+    screen.draw(pygame.Surface((1280, 720)))
+    clock_before = guild.clock.seconds
+
+    rect = dict(screen.buttons)["leave"]
+    screen._click(rect.center)
+
+    assert left == [True]
+    assert guild.clock.seconds == clock_before
+    assert state.hours_hunted == 0

@@ -327,3 +327,27 @@ def test_guild_screen_draw_unarmed_unarmored_member():
         pygame.font.init()
     surf = pygame.Surface((1280, 800))
     gs.draw(surf)
+
+
+def test_manage_gear_opens_for_the_selected_members_group_only():
+    a, b = Unit("player"), Unit("player")
+    g = Guild([a, b])
+    g.split_group(g.groups[0], [b])
+    opened = []
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None, on_manage=opened.append)
+    gs.member = a
+    gs.buttons = [("manage", MagicMock(collidepoint=lambda pos: True))]
+    gs._press("manage")
+    assert opened == [g.group_of(a)]
+
+
+def test_gear_screen_scoped_to_a_group_lists_only_its_members():
+    from gartok.gear_screen import GearScreen
+    from gartok.group import Group
+    a, b = Unit("player"), Unit("player")
+    ga, gb = Group([a], node="city"), Group([b], node="road")
+    g = Guild(None, groups=[ga, gb])
+    gs = GearScreen(MagicMock(), g, on_back=lambda: None, group=ga)
+    assert list(gs.roster) == [a]
+    assert gs.pinned == [a]
+    assert list(GearScreen(MagicMock(), g, on_back=lambda: None).roster) == [a, b]

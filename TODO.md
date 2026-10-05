@@ -9,7 +9,7 @@ Estimated from the descriptions, not the code; "verify" = check before committin
 - [x] Racial level shows Lv0 on a Lv1 character (ease 5 · impact 2) — roster showed only the combat level; now "Lv <racial> (C# W#)"
 - [x] Prison shows letters instead of portraits (ease 4 · impact 2) — also fixed the same gap in the arena squad screen
 - [x] Guild-colour ring around tokens in combat (ease 4 · impact 5)
-- [ ] Portrait id stored on the Unit, same face on every screen (ease 3 · impact 4) — `Unit.portrait_id` already exists; audit the screens that still don't pass it
+- [x] Portrait id stored on the Unit, same face on every screen (ease 3 · impact 4) — screens now pass it; old saves derive it from the uid instead of hash()
 - [ ] Improve the found-the-guild screen (ease 2 · impact 3) — scope is vague, define what's wrong first
 
 ## 2. Combat
@@ -27,12 +27,12 @@ Estimated from the descriptions, not the code; "verify" = check before committin
 
 - [x] Verify tavern study cost is actually charged (ease 4 · impact 4) — students paid, but a broke group sat there forever; now released when nobody can pay, and non-students no longer get a free room meal
 - [ ] Hunt/forage cost should scale with party size like the lumberyard (ease 3 · impact 3) — re-run economy_sim.py
-- [ ] No way to leave The Wilds once inside (ease 3 · impact 4) — verify: UI-only or order/route logic
+- [x] No way to leave The Wilds once inside (ease 3 · impact 4) — the hunt setup screen had no back button; added LEAVE
 - [ ] Spending commission on "Pack Mule" forces the Goliath to return (ease 3 · impact 3) — fix the side effect, not the item
 
 ## 5. Inventory and group management
 
-- [ ] "Manage gear" limited to the selected group (ease 3 · impact 4) — closes item transfers between groups in different places
+- [x] "Manage gear" limited to the selected group (ease 3 · impact 4) — closes item transfers between groups in different places
 - [ ] Coins as a manageable inventory item (ease 2 · impact 3) — money lives on the character; save/weight/transfer impact
 
 ## Suggested order

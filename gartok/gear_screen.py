@@ -1,8 +1,8 @@
-"""Manage Gear: shuffle the roster's loadouts side by side.
+"""Manage Gear: shuffle one group's loadouts side by side.
 
 The guild screen is a master-detail view -- good for reading one member, poor for
 the job you do most between outings: moving gear across several members at once.
-This screen fixes that. Every roster member gets a row on the left rail; pin one
+This screen fixes that. Every member of the group gets a row on the left rail; pin one
 (click it with nothing carried) to open its full column -- HANDS / OFF / (TONGUE)
 / BODY / PACK -- and every column, plus the rail row itself, is both a source and
 a drop target. Move items by:
@@ -17,8 +17,9 @@ a drop target. Move items by:
 
 Built on `gartok.ui.loadout_panel`'s `rail`/`column`/`send_menu`, the same pieces
 `group_screen.py` uses for a single group's members -- this is that same "band
-of members, pick who's open" view, just scoped to the whole roster instead of
-one group. It edits the same persistent `equipped_weapon` / `equipped_offhand` /
+of members, pick who's open" view, reached from the guild screen for the selected
+member's group, so gear never changes hands between bands standing in different
+places. It edits the same persistent `equipped_weapon` / `equipped_offhand` /
 `equipped_armor` / `_base_inventory` the guild screen does (`LoadoutMoveMixin`),
 so the next battle re-seeds every `Combatant` from the new loadout.
 `native = True`. `on_back()` returns to the guild screen.
@@ -43,12 +44,12 @@ COL_MIN, COL_MAX = 300, 420
 class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_back):
+    def __init__(self, fonts, guild, on_back, group=None):
         super().__init__()
         self.fonts = fonts                 
         self._F = None
         self.guild = guild
-        self.roster = guild.roster
+        self.roster = group.members if group is not None else guild.roster
         self.on_back = on_back
         self.pinned = list(self.roster)      # members shown as full columns, clamped to fit at draw time
         self.selected = []                   # [(unit, loc), ...]: loc is "hand"|"offhand"|"tongue"|"armor" or a pack index

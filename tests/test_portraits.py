@@ -257,3 +257,41 @@ def test_creature_portraits():
 
 
 
+
+
+def test_portrait_id_survives_a_save_round_trip():
+    u = unit.Unit("player")
+    v = unit.Unit.from_save(persist.unit_to_dict(u))
+    assert v.portrait_id == u.portrait_id
+
+
+def test_a_save_without_portrait_id_derives_it_from_the_uid_not_hash():
+    u = unit.Unit("player")
+    d = persist.unit_to_dict(u)
+    del d["portrait_id"]
+    v = unit.Unit.from_save(d)
+    assert v.portrait_id == u.portrait_id == int(u.uid[:8], 16)
+
+
+def test_squad_and_prison_cards_carry_the_units_portrait():
+    from unittest.mock import patch
+
+    from gartok import world
+    from gartok.guild import Guild
+    from gartok.prison_screen import PrisonScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    pygame.init()
+    u = unit.Unit("player")
+    guild = Guild([u], node="prison")
+    screen = PrisonScreen(ui_fonts(), guild, [u], world.node("prison"), on_done=lambda: None)
+    seen = []
+    real = artwork.portrait
+
+    def spy(race, pid, px):
+        seen.append(pid)
+        return real(race, pid, px)
+
+    with patch.object(artwork, "portrait", spy):
+        screen.draw(pygame.Surface((1280, 800)))
+    assert u.portrait_id in seen

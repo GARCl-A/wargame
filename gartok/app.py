@@ -231,8 +231,8 @@ class App:
         from .bank_view_screen import BankViewScreen
         self.scene = BankViewScreen(self.ui_fonts, self.guild, on_done=self._open_guild)
 
-    def _open_gear(self):
-        self.scene = GearScreen(self.ui_fonts, self.guild, on_back=self._open_guild)
+    def _open_gear(self, group):
+        self.scene = GearScreen(self.ui_fonts, self.guild, on_back=self._open_guild, group=group)
         
     def _open_group(self, group):
         from .group_screen import GroupScreen

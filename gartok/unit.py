@@ -154,7 +154,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin)
         u.name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
-        u.portrait_id = d.get("portrait_id", abs(hash(u.uid)) % 1000)
+        pid = d.get("portrait_id")                       # old saves: derive it like __init__ -- hash() changes per run
+        u.portrait_id = int(u.uid[:8], 16) if pid is None else pid
         u._hp_roll = d.get("hp_roll")
         u._hp_override = d.get("hp_override")            # creator-set HP max, or None
         u._racial_override = d.get("racial_override")    # creator-pinned racial level, or None
