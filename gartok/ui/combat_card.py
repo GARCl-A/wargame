@@ -54,15 +54,16 @@ def draw_combat_card(s, rect, ch, action="PICK", hovered=False, selected=False, 
     caps(s, F["micro"], "COMBAT", (rect.x + pad, y), T.TX_FAINT)
     y += 18
     
-    vit_str = f"HP {ch['hp']}   AC {ch['ac']}   Speed {ch['spd']}"
+    hp_str = f"{ch['hp']}/{ch['hp_max']}" if "hp_max" in ch else f"{ch['hp']}"
+    vit_str = f"HP {hp_str}   AC {ch['ac']}   Speed {ch['spd']}"
     if "md" in ch:
-        vit_str = f"HP {ch['hp']}   AC {ch['ac']}   MD {ch['md']}   Speed {ch['spd']}"
+        vit_str = f"HP {hp_str}   AC {ch['ac']}   MD {ch['md']}   Speed {ch['spd']}"
         
     t_surf = F["bodyb"].render(vit_str, True, T.TX)
     t_rect = t_surf.get_rect(topleft=(rect.x + pad, y))
     s.blit(t_surf, t_rect)
     # The whole vitals line is a tooltip zone
-    tooltips.append((t_rect, f"HP: {ch.get('hp_max', ch['hp'])} max, AC: {ch['ac']} armor class, Speed: {ch['spd']} squares"))
+    tooltips.append((t_rect, f"HP: {ch['hp']} now of {ch.get('hp_max', ch['hp'])} max, AC: {ch['ac']} armor class, Speed: {ch['spd']} squares"))
     
     y += 24
     

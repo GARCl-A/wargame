@@ -425,7 +425,10 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
                 self._give_many(self._unit_by_uid[arg], "pack")
             elif kind == "study":
                 unit = m["picks"][0][0]
-                unit.study_target = None if unit.study_target == arg.id else arg.id
+                if unit.study_target == arg.id:
+                    magic.end_study(unit)
+                else:
+                    magic.begin_study(unit, arg.id, self.group.members)
                 self.selected = []
             else:
                 self.selected = list(m["picks"])
@@ -504,7 +507,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
+            "pack": [(name, unit.pack_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
@@ -518,7 +521,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             for idx, (name, qty) in enumerate(u._base_inventory):
                 rows.append((u, idx, name, qty))
         rows.sort(key=lambda t: -items.item_weight(t[2]) * t[3])
-        return [((u.uid, idx), name, self._item_tag(name), items.item_weight(name), qty,
+        return [((u.uid, idx), name, u.pack_tag(name), items.item_weight(name), qty,
                 u.locked_of(name) > 0, (u, idx) in self.selected, _short(u.name))
                for u, idx, name, qty in rows]
 

@@ -492,6 +492,24 @@ def sell_price(item_or_name: Any, markup: float = 0.0) -> int:
     return max(1, round(item.price * 0.5 * (1.0 + markup)))
 
 
+class ChargedName(str):
+    """An item name that remembers the charges of the stack it was lifted from, so
+    moving a half-empty quiver between packs, stashes and shops does not refill it.
+    Equal to, and hashed like, the plain name; `stack_add` is what reads `.charges`."""
+
+    def __new__(cls, name, charges):
+        s = super().__new__(cls, name)
+        s.charges = charges
+        return s
+
+
+def stack_name(entry) -> str:
+    """The name of a pack stack, tagged with its charges when it has any."""
+    if isinstance(entry, ItemInstance) and entry.charges is not None:
+        return ChargedName(entry.name, entry.charges)
+    return entry[0]
+
+
 def create_instance(key: str, qty: int = 1, days_old: int = 0, charges: int | None = None) -> ItemInstance:
     item = get(key)
     if item is None:

@@ -406,7 +406,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         for i, (name, qty) in enumerate(u._base_inventory):
             sel = (u, i) in self.selected
             locked = name in getattr(u, "locked_items", set())
-            member["pack"].append((name, self._item_tag(name), items.item_weight(name), qty, locked, sel))
+            member["pack"].append((name, u.pack_tag(name), items.item_weight(name), qty, locked, sel))
 
         res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
         

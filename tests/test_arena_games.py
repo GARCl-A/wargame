@@ -3,7 +3,7 @@ the flag-seeking AI and the three second-stage deeds."""
 
 import random
 
-from gartok import ai, arena, campaign, encounters, factions, world
+from gartok import actions, ai, arena, campaign, encounters, factions, world
 from gartok.battle import COLS, Battle
 from gartok.guild import Guild
 from gartok.scenario import FlagScenario, own_half
@@ -433,3 +433,19 @@ def test_squad_screen_renders_arena_no_xp_notice():
     scr.picked = [rookie, vet]
     scr.draw(surf)
 
+
+
+def test_the_champion_title_demoralizes_in_a_ctf_bout_without_a_shared_language():
+    from unittest.mock import patch
+    b = _ctf_battle()
+    b.ambient_light = True
+    champ, foe = b.player_units[0], b.enemy_units[0]
+    champ.char.arena_title = True
+    champ.char.languages = ["Common"]
+    foe.char.languages = ["Orc"]
+    champ.pos, foe.pos = (5, 5), (6, 5)
+    champ.ap = 2
+    assert actions.DEMORALIZE.can(b, champ, foe)
+    with patch("gartok.actions.combat.d20", return_value=20):
+        actions.DEMORALIZE.execute(b, champ, foe)
+    assert foe.demoralized

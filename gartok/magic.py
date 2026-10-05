@@ -63,6 +63,46 @@ def _has_study_item(unit, item_name, group=None):
         return True
     return False
 
+def study_item_name(target_id):
+    """The pack item a study target is read from: a scroll for a spell id, a
+    dictionary for a language."""
+    spell = SPELLS.get(target_id)
+    return f"Scroll of {spell.name}" if spell is not None else f"Dictionary of {target_id}"
+
+
+def begin_study(unit, target_id, mates=()):
+    """Set `unit` studying `target_id`. The study item is pulled into the student's
+    own pack -- one copy peeled off a mate's stack if they don't hold it -- and
+    locked there so redistributing the load doesn't carry it off. Returns the
+    mate it came from, or None."""
+    unit.study_target = target_id
+    unit.study_progress = 0
+    name = study_item_name(target_id)
+    donor = None
+    if not unit.has_item(name):
+        donor = next((m for m in mates if m is not unit and m.has_item(name)), None)
+        if donor is not None:
+            donor.remove_named(name)
+            donor._derive_combat()
+            unit.give_to_pack(name)
+    if unit.has_item(name) and unit.locked_of(name) < 1:
+        unit.locked_items[name] = 1
+    return donor
+
+
+def end_study(unit):
+    """Stop `unit` studying: clear the target and progress, and release the lock
+    `begin_study` put on the study item."""
+    if unit.study_target:
+        name = study_item_name(unit.study_target)
+        if unit.locked_of(name) > 1:
+            unit.locked_items[name] -= 1
+        else:
+            unit.locked_items.pop(name, None)
+    unit.study_target = None
+    unit.study_progress = 0
+
+
 def progress_study(unit, group=None):
     """One day of `unit` studying at a tavern's "study" garrison job: charge
     the daily rent, then roll progress toward `study_target` -- a spell id
@@ -99,8 +139,7 @@ def _progress_spell(unit, spell, group=None):
     unit.study_progress += max(0, data.roll(dice_qty, 20) + unit.mod_intelligence + bonus)
     if unit.study_progress >= points_to_learn(spell.level):
         unit.spells_known.append(spell.id)
-        unit.study_target = None
-        unit.study_progress = 0
+        end_study(unit)
         return f"{unit.name} masters the spell {spell.name}!"
     return None
 
@@ -111,7 +150,6 @@ def _progress_language(unit, language, group=None):
     if unit.study_progress >= points_to_learn(0):     # same threshold as a level-0 spell
         unit.languages.append(language)
         unit._sync_dictionary_recipes()
-        unit.study_target = None
-        unit.study_progress = 0
+        end_study(unit)
         return f"{unit.name} learns to speak {language}!"
     return None

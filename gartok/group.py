@@ -108,11 +108,11 @@ class Group:
         easier to rattle."""
         return max(0, len(self.members) - self.capacity)
 
-    def distribute_load(self):
+    def distribute_load(self, share_coins=True):
         """Rebalances the members' unlocked pack items by free carrying capacity --
         see `unit.distribute_load`."""
         from . import unit
-        unit.distribute_load(self.members)
+        unit.distribute_load(self.members, share_coins)
 
     # ------------------------------------------------------------------ #
     # logistics: the band's answer to "can we move" / "are we fed" --   #

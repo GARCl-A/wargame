@@ -41,7 +41,7 @@ STOCK_W = 412
 MARGIN = T.S * 2
 
 
-class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
+class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     native = True
     header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
 
@@ -166,7 +166,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
+            "pack": [(name, unit.pack_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
@@ -193,7 +193,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
             return member.equipped_offhand
         if loc == "armor":
             return member.equipped_armor
-        return member._base_inventory[loc][0] if loc < len(member._base_inventory) else None
+        return items.stack_name(member._base_inventory[loc]) if loc < len(member._base_inventory) else None
 
     def _take(self, member, loc):
         """Lift the pick at `loc` off `member` -- `(name, qty)`. A pack pick
@@ -218,6 +218,10 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         if pick[0] == "stock":
             return pick[1]
         return self._item_at(*pick)
+
+    def _sell_total(self):
+        return sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
+                   for p in self.sel if p[0] != "stock" and self._name_of(p) is not None)
 
     def _selected_names(self):
         return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
@@ -622,12 +626,14 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         self.notice = f"sold {sold} item(s) for {total}."
         self._settle_market()
 
+    def _purse_members(self):
+        return self.shoppers
+
     def _checkout(self):
         """Settles the pooled purse back out proportional to what each
         shopper walked in with (same rule the bank/property screens use) --
         no longer an even split, so wealth doesn't quietly level out just
         from shopping together."""
-        economy.settle_pooled_purse(self.shoppers, self._orig_gold, self.purse)
         self.on_done()
 
     # ------------------------------------------------------------------ #
@@ -716,7 +722,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
                    "  ·  drop on a member")
         else:
             msg = (f"moving {self._pick_label(names)}  ·  drop on another member, or on SELL "
-                   f"(+{sum(economy.sell_price(n, self.deal) for n in names)})")
+                   f"(+{self._sell_total()})")
         return msg + "  ·  click outside to cancel", T.BRASS
 
     def _stock_data(self):
@@ -819,7 +825,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     def _distribute_load(self):
 
         from . import unit as unit_module
-        unit_module.distribute_load(self.shoppers)
+        unit_module.distribute_load(self.shoppers, share_coins=False)
         self.sel = []
         self.notice = "redistributed packs by carrying capacity."
 
@@ -836,8 +842,7 @@ class MarketScreen(PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
         if not self._buying and names:
             sell_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
             sell_r.center = (W // 2, H - T.S * 8 + T.S * 2)
-            total = sum(economy.sell_price(n, self.deal) for n in names)
-            draw_button(screen, F, sell_r, f"SELL FOR {total}c", mpos=self.mouse)
+            draw_button(screen, F, sell_r, f"SELL FOR {self._sell_total()}c", mpos=self.mouse)
             self.buttons.append(("sell", sell_r))
 
         if self.notice:

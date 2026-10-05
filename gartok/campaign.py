@@ -82,24 +82,20 @@ def _carry_forward(member, combatant):
     bear_traps = combatant.inventory.count("Bear Trap")
     alarm_traps = combatant.inventory.count("Alarm Trap")
     member._base_inventory = [
-        (n, q) for n, q in member._base_inventory
-        if n not in (data.TORCH_ITEM, data.LANTERN_ITEM, "Bear Trap", "Alarm Trap")]
+        it for it in member._base_inventory
+        if it[0] not in (data.TORCH_ITEM, data.LANTERN_ITEM, "Bear Trap", "Alarm Trap")]
     for name, qty in ((data.TORCH_ITEM, torch_spares), (data.LANTERN_ITEM, lantern_spares),
                       ("Bear Trap", bear_traps), ("Alarm Trap", alarm_traps)):
         if qty:
             member.give_to_pack(name, qty)
 
     member.first_aid_charges = combatant.first_aid_charges
-    if member.first_aid_charges <= 0 and member.has_item(data.FIRST_AID_ITEM):
+    if member.first_aid_charges <= 0:
         member.remove_named(data.FIRST_AID_ITEM)
-        if member.has_item(data.FIRST_AID_ITEM):
-            member.first_aid_charges = data.FIRST_AID_CHARGES
 
     member.quiver_charges = combatant.ammo
-    if member.quiver_charges <= 0 and member.has_item(data.AMMO_ITEM):
+    if member.quiver_charges <= 0:
         member.remove_named(data.AMMO_ITEM)
-        if member.has_item(data.AMMO_ITEM):
-            member.quiver_charges = data.QUIVER_AMMO
 
     for item in getattr(combatant, "picked_up_items", []):
         member.give_to_pack(item)

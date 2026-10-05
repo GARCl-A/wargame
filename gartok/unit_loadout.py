@@ -10,6 +10,9 @@ from . import data, items
 from .data import roll
 
 
+COIN_HANDFUL = 10          # coins moved per step when spreading a purse (0.05 kg)
+
+
 def pack_from_raw(raw):
     """Build a stacked list of ItemInstance from a save field that may be
     an old flat list[str], a list[[name, qty]], a list[dict], or list[ItemInstance]."""
@@ -32,6 +35,8 @@ def stack_add(pack, name, qty=1, charges=None, days_old=0):
     if isinstance(name, items.ItemInstance):
         inst = name
     else:
+        if charges is None:
+            charges = getattr(name, "charges", None)
         inst = items.create_instance(name, qty=qty, charges=charges, days_old=days_old)
     for i, it in enumerate(pack):
         if isinstance(it, items.ItemInstance):
@@ -50,7 +55,7 @@ def stack_take(pack, idx, qty=1):
     once it empties. Returns `(name, removed, remaining)`."""
     entry = pack[idx]
     if isinstance(entry, items.ItemInstance):
-        name = entry.name
+        name = items.stack_name(entry)
         removed = min(qty, entry.qty)
         entry.qty -= removed
         if entry.qty <= 0:
@@ -152,11 +157,53 @@ class LoadoutMixin:
 
     def give_to_pack(self, name, qty=1, charges=None, days_old=0):
         self._pack_add(name, qty, charges=charges, days_old=days_old)
-        item_name = name.name if isinstance(name, items.ItemInstance) else name
-        if item_name == data.FIRST_AID_ITEM:
-            self.first_aid_charges = data.FIRST_AID_CHARGES
-        elif item_name == data.AMMO_ITEM:
-            self.quiver_charges = data.QUIVER_AMMO
+
+    def _charges_of(self, item_name):
+        inst = next((it for it in self._base_inventory
+                     if isinstance(it, items.ItemInstance) and it.name == item_name), None)
+        if inst is None:
+            return 0
+        return items.get(item_name).max_charges if inst.charges is None else inst.charges
+
+    def _set_charges_of(self, item_name, value):
+        """Write `value` to one copy of `item_name`, peeling it off its stack first so
+        its siblings keep their own charges. No-op with none carried."""
+        idx = next((i for i, it in enumerate(self._base_inventory)
+                    if isinstance(it, items.ItemInstance) and it.name == item_name), None)
+        if idx is None:
+            return
+        inst = self._base_inventory[idx]
+        if inst.qty > 1:
+            inst.qty -= 1
+            inst = inst.copy()
+            inst.qty = 1
+            self._base_inventory.insert(idx, inst)
+        inst.charges = max(0, int(value))
+
+    @property
+    def quiver_charges(self):
+        return self._charges_of(data.AMMO_ITEM)
+
+    @quiver_charges.setter
+    def quiver_charges(self, value):
+        self._set_charges_of(data.AMMO_ITEM, value)
+
+    @property
+    def first_aid_charges(self):
+        return self._charges_of(data.FIRST_AID_ITEM)
+
+    @first_aid_charges.setter
+    def first_aid_charges(self, value):
+        self._set_charges_of(data.FIRST_AID_ITEM, value)
+
+    def pack_tag(self, name):
+        """The pill under a pack row's name; a quiver or kit also shows what is left in it."""
+        tag = items.item_tag(name)
+        if name == data.AMMO_ITEM:
+            return f"{tag} · {self.quiver_charges}/{data.QUIVER_AMMO}"
+        if name == data.FIRST_AID_ITEM:
+            return f"{tag} · {self.first_aid_charges}/{data.FIRST_AID_CHARGES}"
+        return tag
 
     def take_from_hand(self):
         name, self.equipped_weapon = self.equipped_weapon, None
@@ -317,17 +364,25 @@ def flatten_pack(unit):
             if name != items.COIN_ITEM for _ in range(qty)]
 
 
-def distribute_load(units):
+def distribute_load(units, share_coins=True):
     """Rebalance pack items across `units` by free carrying capacity, heaviest
     first -- locked items (see `Unit.locked_items`/`toggle_lock`) stay put on
     their current owner instead of joining the pool. Item granularity, not
-    whole-stack: a locked portion of a stack stays put, the rest still moves."""
+    whole-stack: a locked portion of a stack stays put, the rest still moves.
+    With `share_coins`, unlocked coins are poured out in small handfuls onto
+    whoever is lightest, since they weigh too; without it every purse stays
+    with its owner."""
     pool = []
+    coins = 0
     for u in units:
         keep, move = [], []
         for it in u._base_inventory:
             name, qty = it[0], it[1]
-            locked = qty if name == items.COIN_ITEM else u.locked_of(name)     # a purse stays with its owner
+            locked = u.locked_of(name)
+            if name == items.COIN_ITEM and share_coins:
+                coins += qty - locked
+            elif name == items.COIN_ITEM:
+                locked = qty
             if locked:
                 if isinstance(it, items.ItemInstance):
                     locked_inst = it.copy()
@@ -335,7 +390,7 @@ def distribute_load(units):
                     keep.append(locked_inst)
                 else:
                     keep.append((name, locked))
-            if qty > locked:
+            if qty > locked and not (name == items.COIN_ITEM and share_coins):
                 if isinstance(it, items.ItemInstance):
                     for _ in range(qty - locked):
                         c = it.copy()
@@ -352,3 +407,10 @@ def distribute_load(units):
         best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
         best.give_to_pack(item)
         best._derive_combat()
+
+    while coins:
+        handful = min(coins, COIN_HANDFUL)
+        best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
+        best.give_to_pack(items.COIN_ITEM, handful)
+        best._derive_combat()
+        coins -= handful

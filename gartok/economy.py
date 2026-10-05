@@ -276,8 +276,13 @@ def buy_price(name, mods=()):
 def sell_price(name, mods=()):
     """What the market pays for `name` -- kept a fraction of the buy price, so
     resale is a loss even after a good haggle (`deal` up to `DEAL_MAX` = 0.25
-    keeps the two factors 0.15 apart)."""
-    return max(1, round(_base_price(name) * (SELL_FACTOR + 0.4 * deal_value(mods, name, "sell"))))
+    keeps the two factors 0.15 apart). A charged item (a quiver) sells for the
+    share of its charges still left."""
+    price = _base_price(name) * (SELL_FACTOR + 0.4 * deal_value(mods, name, "sell"))
+    item, charges = items.get(name), getattr(name, "charges", None)
+    if item is not None and item.max_charges and charges is not None:
+        price *= min(charges, item.max_charges) / item.max_charges
+    return max(1, round(price))
 
 
 # ------------------------------------------------------------------ #
@@ -331,3 +336,22 @@ def settle_pooled_purse(members, orig_gold, remaining):
         shares[i][1] += 1
     for m, amt, _ in shares:
         m.gold = amt
+
+
+class PooledPurse:
+    """A screen's common purse that writes through to the members on every change,
+    so leaving by any door (Esc, the pause menu, a hub tab) never skips the debit.
+    The host sets `_orig_gold` (member -> copper at entry) before the first `purse`
+    assignment and names its members in `_purse_members`."""
+
+    _purse = 0
+
+    @property
+    def purse(self):
+        return self._purse
+
+    @purse.setter
+    def purse(self, amount):
+        self._purse = amount
+        if hasattr(self, "_orig_gold"):
+            settle_pooled_purse(self._purse_members(), self._orig_gold, amount)

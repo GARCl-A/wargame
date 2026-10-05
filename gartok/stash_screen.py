@@ -36,7 +36,7 @@ COL_MIN, COL_MAX = 300, 420
 STASH_W = 360
 
 
-class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
+class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     OWNER = ""              # pick-owner key for the stash: "bank" / "house"
@@ -321,11 +321,13 @@ class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
         from . import unit as unit_module
         if len(self.party) <= 1:
             return
-        unit_module.distribute_load(self.party)
+        unit_module.distribute_load(self.party, share_coins=False)
         self.notice = "redistributed packs by carrying capacity."
 
+    def _purse_members(self):
+        return self.party
+
     def _leave(self):
-        economy.settle_pooled_purse(self.party, self._orig_gold, self.purse)
         self.on_done()
 
     # ------------------------------------------------------------------ #
@@ -367,7 +369,7 @@ class StashScreen(DragSelectMixin, LoadoutMoveMixin, Screen):
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, self._item_tag(name), items.item_weight(name), qty,
+            "pack": [(name, unit.pack_tag(name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }

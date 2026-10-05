@@ -5,7 +5,7 @@ import random
 
 import pygame
 
-from gartok import items, persist
+from gartok import items, persist, unit_loadout
 from gartok.gear_screen import GearScreen
 from gartok.group import Group
 from gartok.guild import Guild
@@ -61,11 +61,40 @@ def test_coins_stay_out_of_the_battle_inventory():
     assert flatten_pack(u) == ["Rope"]
 
 
-def test_distribute_load_leaves_each_purse_with_its_owner():
-    rich, poor = _bare(400), _bare(0)
-    rich.give_to_pack("Rope", 3)
+def _ratio(u):
+    return u.load / max(1.0, u.carry_normal)
+
+
+def _balanced(a, b):
+    """No handful moved from one to the other would even them up further (`load`
+    is rounded to 0.1 kg, so allow that much slack on top of the handful)."""
+    slack = (unit_loadout.COIN_HANDFUL / 200 + 0.1) / min(a.carry_normal, b.carry_normal)
+    return abs(_ratio(a) - _ratio(b)) <= slack + 1e-9
+
+
+def test_distribute_load_spreads_coins_by_free_capacity():
+    rich, poor = _bare(4001), _bare(0)
     distribute_load([rich, poor])
-    assert rich.gold == 400 and poor.gold == 0
+    assert rich.gold + poor.gold == 4001
+    assert _balanced(rich, poor)
+
+
+def test_distribute_load_offsets_a_pinned_load_with_coins_on_the_other_side():
+    laden, light = _bare(0), _bare(0)
+    laden.give_to_pack("Rope", 6)
+    laden.toggle_lock("Rope")
+    light.gold = 4000
+    distribute_load([laden, light])
+    assert laden.count_of("Rope") == 6
+    assert laden.gold + light.gold == 4000
+    assert _balanced(laden, light) or laden.gold == 0
+
+
+def test_distribute_load_keeps_a_locked_purse_with_its_owner():
+    rich, poor = _bare(400), _bare(100)
+    rich.toggle_lock(items.COIN_ITEM)
+    distribute_load([rich, poor])
+    assert rich.gold >= 400 and rich.gold + poor.gold == 500
 
 
 def test_purse_survives_a_save_round_trip_inside_the_pack():

@@ -68,7 +68,7 @@ def test_buying_debits_the_pooled_purse_and_starts_the_tax_clock():
 
     s._run_service("buy")
     assert guild.house.owned
-    assert s.purse == 20 and p.gold == economy.CITY_PROPERTY_PRICE + 20   # not settled until leaving
+    assert s.purse == 20 and p.gold == 20                                 # debited at once
     assert guild.house.tax_due_day == guild.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
 
     s._leave()
@@ -454,3 +454,10 @@ def test_bankers_debt_blocks_buying_the_property():
     buy_hit = next((key for r, key in s._service_hits if key == "buy_property"), None)
     assert buy_hit is None
 
+
+
+def test_buying_the_house_debits_the_party_without_leaving_the_screen():
+    guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 40)
+    s = _screen(guild, [p])
+    s._run_service("buy")
+    assert guild.house.owned and p.gold == 40

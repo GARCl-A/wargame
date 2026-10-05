@@ -47,8 +47,6 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.poisons = {}                    # poison id -> {"level", "hours", "dc"} (see unit_poison.py)
         self.antidote_cooldown = 0           # hours until another Antidote may be used
         self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
-        self.first_aid_charges = 0
-        self.quiver_charges = 0
         self.magic_source = None
         self.spells_known = []
         self.study_target = None
@@ -142,8 +140,10 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.sick = d.get("sick", False)
         u.medicine_attempted_today = d.get("medicine_attempted_today", False)
         u.treated = d.get("treated", False)
-        u.first_aid_charges = d.get("first_aid_charges", 0)
-        u.quiver_charges = d.get("quiver_charges", data.QUIVER_AMMO if u.has_item(data.AMMO_ITEM) else 0)
+        if "first_aid_charges" in d:                     # older saves kept the charges on the character
+            u.first_aid_charges = d["first_aid_charges"]
+        if "quiver_charges" in d:
+            u.quiver_charges = d["quiver_charges"]
         u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)
         u.last_daily_luck_day = d.get("last_daily_luck_day", 0)
         u.share_food = d.get("share_food", True)
@@ -281,10 +281,6 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
                 if foreign:
                     self.item = f"Dictionary of {random.choice(foreign)}"
             self._base_inventory = [items.create_instance(self.item, 1)]
-            if self.item == data.FIRST_AID_ITEM:
-                self.first_aid_charges = data.FIRST_AID_CHARGES
-            elif self.item == data.AMMO_ITEM:
-                self.quiver_charges = data.QUIVER_AMMO
 
     @property
     def title(self):

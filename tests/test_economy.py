@@ -112,3 +112,44 @@ def test_market_stock_has_no_duplicate_large_weapon_rows():
     assert large_weapons == []
 
 
+
+
+def test_a_used_quiver_sells_for_the_share_of_its_charges_left():
+    from gartok import items
+    full = economy.sell_price("Quiver")
+    half = economy.sell_price(items.ChargedName("Quiver", items.get("Quiver").max_charges // 2))
+    assert half == max(1, round(full / 2))
+    assert economy.sell_price(items.ChargedName("Quiver", 0)) == 1
+    assert economy.sell_price(items.ChargedName("Quiver", 99)) == full
+
+
+def test_selling_a_used_quiver_at_the_market_pays_pro_rata():
+    from gartok import items
+    from gartok.guild import Guild
+    from gartok.market_screen import MarketScreen
+    u = Unit("player")
+    u._base_inventory = []
+    u.give_to_pack("Quiver")
+    u.quiver_charges = 5
+    s = MarketScreen.__new__(MarketScreen)
+    s.guild, s.shoppers, s.deal = Guild([u]), [u], []
+    s._orig_gold = {u: 0}
+    s.purse = 0
+    s.sel, s._sel_qty, s.notice = [(u, 0)], {}, None
+    s.qty = {}
+    s._settle_market = lambda: None
+    s._sell()
+    assert s.purse == economy.sell_price(items.ChargedName("Quiver", 5))
+    assert 1 <= s.purse < economy.sell_price("Quiver")
+
+
+def test_the_sell_total_multiplies_by_the_quantity_picked():
+    from gartok.guild import Guild
+    from gartok.market_screen import MarketScreen
+    u = Unit("player")
+    u._base_inventory = []
+    u.give_to_pack("Rope", 3)
+    s = MarketScreen.__new__(MarketScreen)
+    s.guild, s.shoppers, s.deal = Guild([u]), [u], []
+    s.sel, s._sel_qty = [(u, 0)], {}
+    assert s._sell_total() == economy.sell_price("Rope") * 3

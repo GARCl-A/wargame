@@ -152,3 +152,62 @@ def test_idle_member_pays_no_rent_and_order_ends_when_nobody_studies():
 
     assert u.gold == 1000
     assert g.order is None
+
+
+def test_beginning_a_study_pulls_one_dictionary_into_the_students_pack():
+    student, companion = Unit("player"), Unit("player")
+    companion.give_to_pack("Dictionary of Elvish", 2)
+
+    donor = magic.begin_study(student, "Elvish", [student, companion])
+
+    assert donor is companion
+    assert student.study_target == "Elvish" and student.study_progress == 0
+    assert student.count_of("Dictionary of Elvish") == 1
+    assert companion.count_of("Dictionary of Elvish") == 1            # peeled off the stack
+    assert student.locked_of("Dictionary of Elvish") == 1
+
+
+def test_a_scroll_the_student_already_holds_stays_put():
+    student, companion = Unit("player"), Unit("player")
+    spell = magic.SPELLS["sleep"]
+    student.give_to_pack(f"Scroll of {spell.name}")
+    companion.give_to_pack(f"Scroll of {spell.name}")
+
+    assert magic.begin_study(student, spell.id, [student, companion]) is None
+    assert student.count_of(f"Scroll of {spell.name}") == 1
+    assert companion.count_of(f"Scroll of {spell.name}") == 1
+
+
+def test_distribute_load_leaves_the_study_item_with_the_student():
+    from gartok.unit import distribute_load
+    student, companion = Unit("player"), Unit("player")
+    companion.give_to_pack("Dictionary of Elvish")
+    magic.begin_study(student, "Elvish", [student, companion])
+    distribute_load([student, companion])
+    assert student.count_of("Dictionary of Elvish") == 1
+
+
+def test_ending_a_study_releases_the_lock_on_the_study_item():
+    from gartok.unit import distribute_load
+    student, companion = Unit("player"), Unit("player")
+    companion.give_to_pack("Dictionary of Elvish")
+    magic.begin_study(student, "Elvish", [student, companion])
+    magic.end_study(student)
+    assert student.study_target is None and student.study_progress == 0
+    assert student.locked_of("Dictionary of Elvish") == 0
+    distribute_load([student, companion])                       # free to move again
+    assert student.count_of("Dictionary of Elvish") + companion.count_of("Dictionary of Elvish") == 1
+
+
+def test_mastering_a_language_releases_the_lock_too():
+    random.seed(4)
+    student, companion = Unit("player"), Unit("player")
+    student.magic_source = None
+    student.languages = ["Ankarin"]
+    student.gold = 1000
+    companion.give_to_pack("Dictionary of Elvish")
+    magic.begin_study(student, "Elvish", [student, companion])
+    student.study_progress = magic.points_to_learn(0)
+    magic.progress_study(student)
+    assert "Elvish" in student.languages
+    assert student.locked_of("Dictionary of Elvish") == 0

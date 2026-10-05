@@ -84,7 +84,7 @@ def pack_row(surf, F, rect, item, *, selected, mouse):
 
     label = name if qty == 1 else f"{name}  ×{qty}"
     text(surf, F["body"], label, (name_x, rect.centery - 13), T.TX_FAINT if locked else T.TX)
-    caps(surf, F["micro"], tag, (name_x, rect.centery + 3), TAG_COLOR.get(tag, T.TX_FAINT))
+    caps(surf, F["micro"], tag, (name_x, rect.centery + 3), TAG_COLOR.get(tag.split(" · ")[0], T.TX_FAINT))
 
     total = weight * qty
     caps(surf, F["micro"], f"{total:.1f} kg", (rect.right - T.S * 7, rect.centery + 2),
@@ -304,7 +304,7 @@ def shop_row(surf, F, rect, item, *, qty_sel, mouse):
     fg = T.TX_FAINT if not ok else (T.TX_MUTED if sel else T.TX)
     label = name if held == 1 else f"{name}  ×{held}"
     text(surf, F["body"], label, (name_x, rect.centery - 13), fg)
-    caps(surf, F["micro"], tag, (name_x, rect.centery + 3), TAG_COLOR.get(tag, T.TX_FAINT))
+    caps(surf, F["micro"], tag, (name_x, rect.centery + 3), TAG_COLOR.get(tag.split(" · ")[0], T.TX_FAINT))
     if blocked:
         caps(surf, F["micro"], blocked, (name_x + F["body"].size(label)[0] + T.S,
              rect.centery - 11), T.BLOOD)
@@ -479,7 +479,7 @@ def _cargo_row(surf, F, r, name, tag, weight, qty, locked, sel, carrier, mouse):
     label = name if qty == 1 else f"{name}  ×{qty}"
     text(surf, F["body"], label, (name_x, r.centery - 8), T.TX)
     caps(surf, F["micro"], tag, (name_x + F["body"].size(label)[0] + T.S,
-         r.centery - 5), TAG_COLOR.get(tag, T.TX_FAINT))
+         r.centery - 5), TAG_COLOR.get(tag.split(" · ")[0], T.TX_FAINT))
 
     total = weight * qty
     text(surf, F["bodyb"] if total >= 10 else F["body"], f"{total:.1f} kg",

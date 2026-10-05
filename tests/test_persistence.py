@@ -283,18 +283,23 @@ def test_quiver_charges_survive_save_round_trip():
     u.give_to_pack(data.AMMO_ITEM)
     u.quiver_charges = 14
     d = persist.unit_to_dict(u)
-    assert d["quiver_charges"] == 14
+    assert "quiver_charges" not in d                  # the charges ride on the item
     v = Unit.from_save(d)
     assert v.quiver_charges == 14
 
 
-def test_from_save_backfills_quiver_charges_for_old_saves():
+def test_from_save_reads_the_legacy_character_level_quiver_charges():
     u = _unit()
     u.give_to_pack(data.AMMO_ITEM)
     d = persist.unit_to_dict(u)
-    del d["quiver_charges"]
-    v = Unit.from_save(d)
-    assert v.quiver_charges == data.QUIVER_AMMO
+    d["quiver_charges"] = 7
+    assert Unit.from_save(d).quiver_charges == 7
+
+
+def test_from_save_gives_an_old_save_a_full_quiver():
+    u = _unit()
+    u.give_to_pack(data.AMMO_ITEM)
+    assert Unit.from_save(persist.unit_to_dict(u)).quiver_charges == data.QUIVER_AMMO
 
 
 # --------------------------------------------------------------------------- #

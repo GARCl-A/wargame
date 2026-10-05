@@ -124,13 +124,11 @@ class TavernaScreen(Screen):
                 for key, rect, arg in self.modal_buttons:
                     if rect.collidepoint(px):
                         if key == "set_target":
-                            self.study_modal_member.study_target = arg["id"]
-                            self.study_modal_member.study_progress = 0
+                            magic.begin_study(self.study_modal_member, arg["id"], self.party)
                             self.notice = f"{self.study_modal_member.name} begins studying {arg['name']}."
                             self.study_modal_member = None
                         elif key == "clear_target":
-                            self.study_modal_member.study_target = None
-                            self.study_modal_member.study_progress = 0
+                            magic.end_study(self.study_modal_member)
                             self.notice = f"{self.study_modal_member.name} stopped studying."
                             self.study_modal_member = None
                         elif key == "cancel":
@@ -166,8 +164,7 @@ class TavernaScreen(Screen):
                     elif key.startswith("stop_study_"):
                         idx = int(key.split("_")[-1])
                         m = self.party[idx]
-                        m.study_target = None
-                        m.study_progress = 0
+                        magic.end_study(m)
                         self.notice = f"{m.name} stopped studying."
                     return
 

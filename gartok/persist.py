@@ -90,8 +90,6 @@ def unit_to_dict(u):
         "sick": getattr(u, "sick", False),       # food poisoning
         "medicine_attempted_today": getattr(u, "medicine_attempted_today", False),
         "treated": getattr(u, "treated", False),
-        "first_aid_charges": u.first_aid_charges,
-        "quiver_charges": u.quiver_charges,
         "consecutive_rest_hours": u.consecutive_rest_hours,
         "last_daily_luck_day": getattr(u, "last_daily_luck_day", 0),
         "hp": getattr(u, "hp", u.hp_max),

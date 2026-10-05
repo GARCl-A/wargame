@@ -49,7 +49,7 @@ def depart(guild, unit):
     if leader is not None and leader is not unit and left_items:
         leader._derive_combat()
         if group in guild.groups:
-            group.distribute_load()
+            group.distribute_load(share_coins=False)
     took = {"Lawful": "only what they wear and wield",
             "Neutral": "their gear and pack, but no coin",
             "Chaotic": "everything they could carry"}[law]

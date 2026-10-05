@@ -406,7 +406,7 @@ def test_ranged_attack_log_differentiates_bolts_and_arrows():
     a.ap = 2
     batt.log_lines.clear()
     actions.ATTACK.execute(batt, a, d)
-    assert any("shoots (4 arrow(s) in the quiver)" in line for line in batt.log_lines)
+    assert any("shoots (3 arrow(s) left in the quiver)" in line for line in batt.log_lines)
 
 
 
@@ -604,3 +604,69 @@ def test_good_ai_does_not_walk_to_an_already_stable_ally():
     mate.status = "stable"
     a.alignment = "Lawful and Good"
     assert ai._ally_to_help(batt, a) is None
+
+
+def test_a_bow_spends_an_arrow_per_shot_and_goes_improvised_when_dry():
+    batt, a, d = _melee_battle()
+    batt.board.walls = set()
+    a.equip_weapon("Shortbow"); a.ammo = 2
+    a.pos, d.pos = (2, 5), (6, 5)
+    a.torch_hand = False
+    for u in batt.units:
+        u._ability = abilities.get("none")
+    batt.ground = [GroundObject.torch((4, 5))]
+    a.ap = 3
+    actions.ATTACK.execute(batt, a, d)
+    assert a.ammo == 1
+    actions.ATTACK.execute(batt, a, d)
+    assert a.ammo == 0 and a.improvised and not a.ranged
+
+
+def test_a_pack_row_shows_what_is_left_in_the_quiver():
+    u = _unit()
+    u.give_to_pack("Quiver")
+    u.quiver_charges = 14
+    assert u.pack_tag("Quiver").endswith(f"14/{data.QUIVER_AMMO}")
+    assert "·" not in u.pack_tag("Rope")
+
+
+def test_a_half_empty_quiver_keeps_its_charges_when_it_changes_hands():
+    giver, taker = _unit(), _unit()
+    giver._base_inventory, taker._base_inventory = [], []
+    giver.give_to_pack("Quiver")
+    giver.quiver_charges = 9
+    name = giver.take_from_pack(0)
+    taker.give_to_pack(name)
+    assert taker.quiver_charges == 9 and giver.quiver_charges == 0
+
+
+def test_a_bought_quiver_is_full_even_beside_a_used_one():
+    u = _unit()
+    u._base_inventory = []
+    u.give_to_pack("Quiver")
+    u.quiver_charges = 4
+    u.give_to_pack("Quiver")
+    assert u.count_of("Quiver") == 2
+    assert u.quiver_charges == 4                      # the used one is still the one in use
+    u.remove_named("Quiver")
+    assert u.quiver_charges == data.QUIVER_AMMO
+
+
+def test_spending_one_quiver_of_a_stack_leaves_its_sibling_full():
+    u = _unit()
+    u._base_inventory = []
+    u.give_to_pack("Quiver", 2)
+    u.quiver_charges = 3
+    assert sorted(it.charges for it in u._base_inventory) == [3, data.QUIVER_AMMO]
+
+
+def test_a_stashed_quiver_comes_back_as_used_as_it_went_in():
+    from gartok.holdings import Stash
+    u, stash = _unit(), Stash(capacity=50)
+    u._base_inventory = []
+    u.give_to_pack("Quiver")
+    u.quiver_charges = 6
+    stash.put(u.take_from_pack(0))
+    name, _ = stash.take(0)
+    u.give_to_pack(name)
+    assert u.quiver_charges == 6

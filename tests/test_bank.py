@@ -33,7 +33,7 @@ def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
     s._run_service("rent")
     assert guild.bank.open and guild.bank.capacity == economy.BANK_CHEST_CAPACITY
     assert s.purse == 120 - economy.BANK_CHEST_PRICE
-    assert [m.gold for m in party] == [60, 60]        # not settled until _leave
+    assert sum(m.gold for m in party) == s.purse      # debited at once, not only on _leave
 
 
 def test_leaving_settles_the_purse_proportional_to_what_each_member_brought():
