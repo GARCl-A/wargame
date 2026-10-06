@@ -111,20 +111,22 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         return "group"
 
     def _owners(self):
-        """Everything here that holds a pack: the members, the animals, the wagon."""
-        return [*self.group.members, *self.group.animals, *([self.group.wagon] if self.group.wagon else [])]
+        """Everything here that holds a pack: the members, the animals, the wagons."""
+        return [*self.group.members, *self.group.herd, *self.group.wagons]
 
     def _owners_by_uid(self):
         return {o.uid: o for o in self._owners()}
 
     @staticmethod
     def _is_store(owner):
-        """The group's own storage (an animal's back, the wagon) -- not a person."""
+        """The group's own storage (an animal's back, a wagon) -- not a person."""
         return isinstance(owner, (Animal, Wagon))
 
     def _item_at(self, owner, loc):
         if loc == "tack":
             return owner.tack
+        if loc == "hitch":                  # an animal picked up by its header: not an item
+            return None
         return super()._item_at(owner, loc)
 
     def _take(self, src, loc):
@@ -135,6 +137,9 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
     def _give_many(self, dst, zone):
         """An animal's back and the wagon have a hard room limit, unlike a
         member's soft overload; an animal's tack slot takes a saddle or harness."""
+        if zone == "hitch":
+            self._hitch_picked(dst)
+            return
         if isinstance(dst, Animal) and zone == "tack":
             self._fit_tack(dst)
             return
@@ -149,9 +154,22 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
     @staticmethod
     def _no_room_note(store):
         if store.stash.capacity <= 0:
-            return ("the wagon has no animal harnessed to pull it." if isinstance(store, Wagon)
+            return (f"the {store.kind.lower()} has no animal hitched to pull it." if isinstance(store, Wagon)
                     else f"the {store.species} wears no pack saddle.")
         return f"won't fit -- {store.stash.free:g} kg free on the {store.name.lower()}."
+
+    def _hitch_picked(self, wagon):
+        """Drop an animal picked up by its header onto a wagon's header."""
+        animal = next((o for o, loc in self.selected if loc == "hitch"), None)
+        self.selected = []
+        if animal is None:
+            return
+        if self.group.pulling(animal) is wagon:
+            self.notice = f"the {animal.species} already pulls the {wagon.kind.lower()}."
+        elif self.group.hitch(animal, wagon, swap=True):
+            self.notice = f"the {animal.species} now pulls the {wagon.kind.lower()}."
+        else:
+            self.notice = f"the {animal.species} needs a Harness to pull anything."
 
     def _fit_tack(self, animal):
         """Put the first picked saddle or harness on `animal`; whatever it wore
@@ -165,6 +183,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             src.give_to_pack(name, qty - 1)
         old = animal.take_tack()
         animal.give_to_tack(name)
+        self.group.hitch_idle()
         if old:
             src.give_to_pack(old)
         self.selected = [p for p in self.selected if p != pick]
@@ -617,19 +636,22 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
                   "pack": [(name, store.pack_tag(name), items.item_weight(name), qty, False, idx in selected)
                            for idx, (name, qty) in enumerate(store._base_inventory)]}
         if isinstance(store, Animal):
-            member["name"] = f"{store.species}  ·  {store.role or 'no tack'}"
+            pulled = self.group.pulling(store)
+            job = (f"pulls {pulled.kind.lower()}" if pulled else "unhitched" if store.role == "draft"
+                   else store.role or "no tack")
+            member["name"] = f"{store.species}  ·  {job}"
             member["tack"] = {"name": store.tack, "note": store.role,
                               "sel": "tack" in selected,
                               "accepts": any(store.can_wear(n) for n in carried)}
         else:
             riders = " + ".join(a.species for a in store.draft) or "no animals"
-            member["name"] = f"Wagon  ·  {riders}"
+            member["name"] = f"{store.kind}  ·  {riders}"
         return member
 
     def _draw_bags(self, screen, F, area):
         gap = T.S * 2
         members = [u for u in self.pinned if u in self.group.members]
-        stores = [*self.group.animals, *([self.group.wagon] if self.group.wagon else [])]
+        stores = [*self.group.herd, *self.group.wagons]
         shown = members + stores
         cap = max(1, (area.w + gap) // (COL_MIN + gap))
         
@@ -648,6 +670,10 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
             self._pack_scroll[id(u)] = res["scroll"]
             if not self._is_store(u):
                 self.sheet_hits.append((res["sheet_rect"], u))
+            if isinstance(u, Wagon):
+                self.zones.append((res["head_rect"], u, "hitch"))
+            elif isinstance(u, Animal) and u.role == "draft":
+                self.sources.append((res["head_rect"], u, "hitch"))
             for kind, slot_rect in res["slot_rects"].items():
                 if slot_rect is None:
                     continue

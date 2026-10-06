@@ -857,10 +857,20 @@ different questions:
   one *group* can comfortably be — it does nothing to stop the roster itself
   from splitting into any number of small groups instead.
 - **A cap on the herd.** `Group.herd_capacity` = 3 + the leader's Wisdom modifier
-  (minimum 1); each animal costs its `herd_weight`. It gates buying animals and
-  merging groups. If a leader change leaves the herd over it, the group gets a
-  7-day notice and then loses one animal (untacked first), again every 7 days
-  until it fits.
+  (minimum 1); each animal costs its `herd_weight`. It gates buying animals,
+  merging groups and splitting one (the new group's leader must be able to
+  control the animals that go with it). If a leader change leaves the herd over
+  it, the group gets a 7-day notice and then loses one animal (untacked first),
+  again every 7 days until it fits.
+- **Animals and wagons.** A group keeps animals (Donkey, Ox, Horse: creatures
+  with fixed attributes whose Strength sets what they carry) and wagons (a cart
+  for two people's worth of load, a carriage for six). The tack an animal wears
+  decides its job: a Pack Saddle carries cargo on its back, a Harness lets it
+  pull. A harnessed animal is hitched to one wagon (the stables' HITCH button, or
+  dragging its header onto the wagon's on the gear screen; dropping on a full
+  wagon swaps the two animals), and a wagon holds no more than the animals
+  hitched to it can draw, up to its box. Cargo on animals and wagons never goes
+  into a fight, everyone eats from it, and it is lost with the group.
 - **A hard wall on the roster itself.** `recruit.capacity(guild, unit)`
   = `BASE_RECRUIT_CAPACITY` (1) + the unit's own Charisma modifier — how many
   people *that specific member* can personally sponsor into the guild

@@ -212,7 +212,14 @@ BEASTS = [
     # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance  speed (m)  also_drops
     (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  1.000,      10.5, (("Meat", 1.0, 2),)),
     (100, "Giant Spider", "x", ( 1,  2,  1, -4,  1, -4), ("climber", "spider_venom"), "", 0.200,  8, "Medium", "Venom Gland", 0.5, None),
+    (100, "Donkey", "d", ( 2,  0,  1, -4,  0, -3), "",                "", 0.500,  8, "Large", None, 0.0, 6.0),
+    (100, "Ox",     "o", ( 3,  0,  2, -4,  0, -3), "beast_of_burden", "", 0.500, 10, "Large", None, 0.0, 6.0),
+    (100, "Horse",  "h", ( 5,  1,  1, -4,  0, -3), "",                "", 0.600,  8, "Large", None, 0.0, 12.0),
 ]
+
+# Bought at the Farm and kept by a group (`animals.py`): beast rows like the
+# Wolf, but never met in the wild, so they stay out of `BEAST_POOL`.
+LIVESTOCK = ("Donkey", "Ox", "Horse")
 
 def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
                 drop_item, drop_chance, speed=None, also_drops=()):
@@ -236,7 +243,7 @@ _UNDEAD = [_race_dict(*row, kind="undead") for row in UNDEAD]
 # (`encounters.EncounterEntry.race_pool`) -- `roll_race` stays the one path
 # that rolls a fresh *player* race (humanoid, weighted by `RACES`' thresholds).
 RACE_POOL = _RACES
-BEAST_POOL = _BEASTS
+BEAST_POOL = [r for r in _BEASTS if r["name"] not in LIVESTOCK]
 
 # What the Wilds and the Old Road actually roll. The Giant Spider and the
 # Skeleton are placed by hand, not drawn from a locality's table.

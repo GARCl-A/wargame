@@ -8,6 +8,15 @@ from . import data, items
 from .data import ATTRIBUTES, mod, roll
 
 
+def carry_thresholds(score, size, ability):
+    """(normal, max) kg a body of this Strength `score` and `size` carries: the
+    one formula for characters and for the group's animals. An ability may raise
+    the size bracket (`carry_size`) or scale the result (`carry_mult`)."""
+    cm = data.SIZES[ability.carry_size or size]["carry"] * ability.carry_mult
+    str_carry = mod(score)
+    return max(1, round((str_carry * 4 + 15) * cm)), max(2, round((str_carry * 6 + 35) * cm))
+
+
 class DerivationMixin:
 
     def _carry_relief(self):
@@ -59,10 +68,7 @@ class DerivationMixin:
         and nowhere else (the Goliath carries as Large). The Carrier talent
         widens only the stagger threshold, never `load` or the `carry_max` ceiling."""
         pen = self.hunger_attribute_penalty
-        cm = data.SIZES[self._ability.carry_size or self.size]["carry"]
-        str_carry = mod(self.strength + pen)
-        base_normal = max(1, round((str_carry * 4 + 15) * cm))
-        self.carry_max = max(2, round((str_carry * 6 + 35) * cm))
+        base_normal, self.carry_max = carry_thresholds(self.strength + pen, self.size, self._ability)
         self.carry_relief = self._carry_relief()
         self.carry_normal = round(base_normal + self.carry_relief, 1)
         self.encumbered = self.load > self.carry_normal

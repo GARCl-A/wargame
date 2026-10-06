@@ -45,7 +45,7 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
-SAVE_VERSION = 18                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 19                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def new_world_id():
@@ -133,11 +133,11 @@ def unit_to_dict(u):
 
 
 def wagon_to_dict(w):
-    return {"hp": w.hp, "contents": _serialize_pack(w.stash.items)}
+    return {"uid": w.uid, "kind": w.kind, "hp": w.hp, "contents": _serialize_pack(w.stash.items)}
 
 
 def wagon_from_dict(d):
-    return Wagon(d.get("hp", WAGON_HP), d.get("contents", []))
+    return Wagon(d.get("kind", "Cart"), d.get("hp", WAGON_HP), d.get("contents", []), d.get("uid"))
 
 
 def group_to_dict(g):
@@ -147,8 +147,8 @@ def group_to_dict(g):
         "node": g.node,
         "leader": g.leader.uid if g.leader else None,
         "members": [unit_to_dict(u) for u in g.members],
-        "wagon": wagon_to_dict(g.wagon) if g.wagon else None,
-        "animals": [a.to_dict(_serialize_pack) for a in g.animals],
+        "wagons": [wagon_to_dict(w) for w in g.wagons],
+        "herd": [a.to_dict(_serialize_pack) for a in g.herd],
         "herd_notice": g.herd_notice,
     }
 
@@ -156,10 +156,14 @@ def group_to_dict(g):
 def group_from_dict(d):
     members = [Unit.from_save(m) for m in d["members"]]
     leader = next((u for u in members if u.uid == d.get("leader")), None)
-    wagon = wagon_from_dict(d["wagon"]) if d.get("wagon") else None
+    wagons = [wagon_from_dict(w) for w in d.get("wagons", [d["wagon"]] if d.get("wagon") else [])]
+    herd_dicts = d.get("herd", d.get("animals", []))
+    herd = [Animal.from_dict(a) for a in herd_dicts]
     group = Group(members, node=d.get("node"), name=d.get("name"), gid=d.get("gid"),
-                  leader=leader, wagon=wagon, animals=[Animal.from_dict(a) for a in d.get("animals", [])])
+                  leader=leader, wagons=wagons, herd=herd)
     group.herd_notice = d.get("herd_notice")
+    if any("hitch" not in a for a in herd_dicts):     # saved before the Harness linked to one wagon
+        group.hitch_idle()
     return group
 
 

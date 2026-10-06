@@ -6,11 +6,11 @@ import os
 
 import pytest
 
-from gartok import items, persist
-from gartok.animals import HARNESS, PACK_SADDLE, SPECIES, STARVE_DAYS, Animal
+from gartok import abilities, data, items, persist
+from gartok.animals import HARNESS, PACK_SADDLE, STARVE_DAYS, Animal
 from gartok.group import HERD_BASE, Group
 from gartok.guild import Guild
-from gartok.wagon import HITCH_SLOTS, WAGON_CAPACITY, WAGON_WEIGHT, Wagon
+from gartok.wagon import VEHICLES, Wagon
 from tests.helpers import Unit, packed
 
 
@@ -25,8 +25,9 @@ def _group(*animals, wagon=None, cargo=(), members=1, food=()):
     units = [Unit("player") for _ in range(members)]
     for u in units:
         u._base_inventory = packed(list(food))
-    w = Wagon() if wagon else None
-    g = Group(units, node="city", wagon=w, animals=list(animals))
+    w = Wagon(wagon if isinstance(wagon, str) else "Cart") if wagon else None
+    g = Group(units, node="city", wagons=[w] if w else [], herd=list(animals))
+    g.hitch_idle()
     if w is not None:
         for name in cargo:
             w.stash.put(name)
@@ -39,13 +40,13 @@ def _group(*animals, wagon=None, cargo=(), members=1, food=()):
 
 def test_an_animal_without_tack_does_nothing():
     a = _animal()
-    assert a.role is None and a.carry_room == 0 and a.pull == 0
+    assert a.role is None and a.capacity == 0 and a.pull == 0
 
 
 def test_a_pack_saddle_lets_it_carry_and_a_harness_lets_it_pull():
     pack, draft = _animal(tack=PACK_SADDLE), _animal(tack=HARNESS)
-    assert pack.role == "pack" and pack.carry_room == SPECIES["Donkey"]["carry"] and pack.pull == 0
-    assert draft.role == "draft" and draft.pull == SPECIES["Donkey"]["pull"] and draft.carry_room == 0
+    assert pack.role == "pack" and pack.capacity == pack.back_load == 30 and pack.pull == 0
+    assert draft.role == "draft" and draft.pull == draft.draw == 90 and draft.capacity == 0
 
 
 def test_only_a_saddle_or_harness_can_be_worn():
@@ -61,7 +62,7 @@ def test_an_unsaddled_animal_cannot_be_loaded():
     a = _animal()
     assert not a.stash.fits(1)
     a.give_to_tack(PACK_SADDLE)
-    assert a.stash.fits(SPECIES["Donkey"]["carry"])
+    assert a.stash.fits(30)
 
 
 # --------------------------------------------------------------------------- #
@@ -70,37 +71,41 @@ def test_an_unsaddled_animal_cannot_be_loaded():
 
 def test_a_wagon_with_nothing_harnessed_holds_nothing():
     _, g = _group(_animal(), _animal(tack=PACK_SADDLE), wagon=True)
-    assert g.wagon.capacity == 0 and g.wagon.speed is None
+    assert g.wagons[0].capacity == 0 and g.wagons[0].speed is None
 
 
-def test_capacity_is_what_the_harnessed_animals_draw_minus_the_wagon_itself():
-    donkey = SPECIES["Donkey"]["pull"]
-    _, g = _group(_animal(tack=HARNESS), wagon=True)
-    assert g.wagon.capacity == donkey - WAGON_WEIGHT
-    _, g = _group(_animal(tack=HARNESS), _animal(tack=HARNESS), wagon=True)
-    assert g.wagon.capacity == min(WAGON_CAPACITY, 2 * donkey - WAGON_WEIGHT)
+def test_a_cart_holds_what_its_animal_draws_up_to_the_box():
+    for species, room in (("Donkey", 90), ("Horse", 120), ("Ox", 180)):
+        _, g = _group(_animal(species, HARNESS), wagon=True)
+        assert g.wagons[0].capacity == room
 
 
-def test_capacity_never_exceeds_what_the_box_holds():
-    _, g = _group(_animal("Ox", HARNESS), _animal("Ox", HARNESS), wagon=True)
-    assert g.wagon.capacity == WAGON_CAPACITY
+def test_a_carriage_adds_up_what_its_animals_draw_up_to_the_box():
+    _, g = _group(_animal("Donkey", HARNESS), _animal("Donkey", HARNESS), wagon="Carriage")
+    assert g.wagons[0].capacity == 180
+    _, g = _group(*[_animal("Ox", HARNESS) for _ in range(3)], wagon="Carriage")
+    assert g.wagons[0].capacity == VEHICLES["Carriage"].capacity == 540
 
 
-def test_only_a_few_animals_fit_the_hitch():
-    _, g = _group(*[_animal("Ox", HARNESS) for _ in range(HITCH_SLOTS + 1)], wagon=True)
-    assert len(g.wagon.draft) == HITCH_SLOTS
+def test_the_hitch_has_as_many_slots_as_the_vehicle():
+    _, g = _group(*[_animal("Ox", HARNESS) for _ in range(4)], wagon=True)
+    assert len(g.wagons[0].draft) == VEHICLES["Cart"].slots == 1 and g.wagons[0].free_slots == 0
+    _, g = _group(*[_animal("Ox", HARNESS) for _ in range(4)], wagon="Carriage")
+    assert len(g.wagons[0].draft) == VEHICLES["Carriage"].slots == 3
 
 
 def test_speed_is_the_slowest_animal_pulling():
-    _, g = _group(_animal("Donkey", HARNESS), _animal("Ox", HARNESS), wagon=True)
-    assert g.wagon.speed == SPECIES["Ox"]["speed"]
+    _, g = _group(_animal("Horse", HARNESS), wagon=True)
+    assert g.wagons[0].speed == 12.0
+    _, g = _group(_animal("Horse", HARNESS), _animal("Donkey", HARNESS), wagon="Carriage")
+    assert g.wagons[0].speed == 6.0
 
 
 def test_taking_the_harness_off_shrinks_the_cargo_room():
-    _, g = _group(_animal(tack=HARNESS), _animal(tack=HARNESS), wagon=True)
-    before = g.wagon.capacity
-    g.animals[0].take_tack()
-    assert g.wagon.capacity < before
+    _, g = _group(_animal(tack=HARNESS), _animal(tack=HARNESS), wagon="Carriage")
+    before = g.wagons[0].capacity
+    g.herd[0].take_tack()
+    assert g.wagons[0].capacity < before
 
 
 # --------------------------------------------------------------------------- #
@@ -111,7 +116,7 @@ def test_members_eat_from_the_wagon_without_share_food():
     guild, g = _group(wagon=True, cargo=["Potato", "Potato"])
     g.members[0].share_food = False
     guild.pass_time(24)
-    assert g.members[0].unfed_days == 0 and g.wagon.rations == 1
+    assert g.members[0].unfed_days == 0 and g.wagons[0].rations == 1
 
 
 def test_members_eat_from_an_animals_load():
@@ -124,8 +129,8 @@ def test_members_eat_from_an_animals_load():
 def test_each_animal_eats_one_ration_a_day_from_the_wagon_first():
     guild, g = _group(_animal(), _animal(), wagon=True, cargo=["Potato"] * 4)
     guild.pass_time(24)
-    assert g.wagon.rations == 1                       # the member and both animals ate
-    assert all(a.unfed_days == 0 for a in g.animals)
+    assert g.wagons[0].rations == 1                       # the member and both animals ate
+    assert all(a.unfed_days == 0 for a in g.herd)
 
 
 def test_an_animal_with_no_food_anywhere_goes_hungry_then_starves():
@@ -133,16 +138,16 @@ def test_an_animal_with_no_food_anywhere_goes_hungry_then_starves():
     g.members[0]._base_inventory = []
     for day in range(1, STARVE_DAYS):
         assert any("went hungry" in e for e in g.feed_animals())
-        assert g.animals[0].unfed_days == day
+        assert g.herd[0].unfed_days == day
     assert any("starved" in e for e in g.feed_animals())
-    assert g.animals == []
+    assert g.herd == []
 
 
 def test_a_meal_resets_an_animals_hunger():
     _, g = _group(_animal(), food=["Potato"])
-    g.animals[0].unfed_days = 2
+    g.herd[0].unfed_days = 2
     g.feed_animals()
-    assert g.animals[0].unfed_days == 0 and g.members[0].count_of("Potato") == 0
+    assert g.herd[0].unfed_days == 0 and g.members[0].count_of("Potato") == 0
 
 
 def test_food_carried_by_the_group_rots_like_any_other():
@@ -171,25 +176,24 @@ def test_a_wiped_group_takes_its_wagon_and_animals_with_it():
 def test_a_group_that_loses_members_but_not_all_keeps_them():
     guild, g = _group(_animal(), wagon=True, members=2)
     guild.remove_members([g.members[0]])
-    assert g in guild.groups and g.wagon is not None and len(g.animals) == 1
+    assert g in guild.groups and g.wagons and len(g.herd) == 1
 
 
 def test_merging_brings_the_wagon_and_animals_along():
     a = Group([Unit("player")], node="city")
-    b = Group([Unit("player")], node="city", wagon=Wagon(), animals=[_animal("Ox")])
+    b = Group([Unit("player")], node="city", wagons=[Wagon()], herd=[_animal("Ox")])
     guild = Guild(None, groups=[a, b])
     guild.merge_groups(a, b)
-    assert a.wagon is not None and [x.species for x in a.animals] == ["Ox"]
-    assert a.wagon.draft == [] and a.wagon._group is a
+    assert a.wagons and [x.species for x in a.herd] == ["Ox"]
+    assert a.wagons[0].draft == [] and a.wagons[0]._group is a and not b.wagons
 
 
-def test_two_wagons_cannot_merge():
-    a = Group([Unit("player")], node="city", wagon=Wagon())
-    b = Group([Unit("player")], node="city", wagon=Wagon())
+def test_merging_two_wagons_gives_the_group_both():
+    a = Group([Unit("player")], node="city", wagons=[Wagon()])
+    b = Group([Unit("player")], node="city", wagons=[Wagon("Carriage")])
     guild = Guild(None, groups=[a, b])
-    with pytest.raises(ValueError):
-        guild.merge_groups(a, b)
-    assert len(guild.groups) == 2
+    guild.merge_groups(a, b)
+    assert [w.kind for w in a.wagons] == ["Cart", "Carriage"] and all(w._group is a for w in a.wagons)
 
 
 def _herder(wis):
@@ -206,9 +210,9 @@ def test_herd_capacity_is_the_base_plus_the_leaders_wisdom_modifier():
 
 
 def test_every_animal_costs_its_herd_weight_against_the_capacity():
-    g = Group([_herder(0)], animals=[_animal() for _ in range(HERD_BASE - 1)])
+    g = Group([_herder(0)], herd=[_animal() for _ in range(HERD_BASE - 1)])
     assert g.herd_load == HERD_BASE - 1 and g.can_take(_animal())
-    g.animals.append(_animal())
+    g.herd.append(_animal())
     assert not g.can_take(_animal())
 
 
@@ -216,7 +220,7 @@ def _overgrown(extra_cargo=()):
     pets = [_animal(tack=HARNESS), _animal(cargo=extra_cargo), _animal()]
     pets.append(_animal(tack=PACK_SADDLE, cargo=("Rope",)))
     leader = _herder(-2)
-    guild = Guild(None, groups=[Group([leader], node="city", animals=pets)])
+    guild = Guild(None, groups=[Group([leader], node="city", herd=pets)])
     return guild, guild.groups[0], leader
 
 
@@ -225,10 +229,10 @@ def test_an_overgrown_herd_gets_a_notice_and_then_loses_an_animal():
     guild, g, leader = _overgrown()
     assert g.herd_load > g.herd_capacity
     assert "days before one strays" in cohesion.daily(guild)[0]
-    assert g.herd_notice == guild.clock.day + cohesion.NOTICE_DAYS and len(g.animals) == 4
+    assert g.herd_notice == guild.clock.day + cohesion.NOTICE_DAYS and len(g.herd) == 4
     guild.clock.advance_hours(24 * cohesion.NOTICE_DAYS)
     events = cohesion.daily(guild)
-    assert "strays off" in events[0] and len(g.animals) == 3
+    assert "strays off" in events[0] and len(g.herd) == 3
     assert g.herd_notice == guild.clock.day + cohesion.NOTICE_DAYS
 
 
@@ -236,9 +240,9 @@ def test_a_straying_animal_is_an_untacked_one_and_leaves_its_load_behind():
     from gartok import cohesion
     guild, g, leader = _overgrown(extra_cargo=("Rope",))
     cohesion.stray(g)
-    assert [a.tack for a in g.animals] == [HARNESS, None, PACK_SADDLE]
+    assert [a.tack for a in g.herd] == [HARNESS, None, PACK_SADDLE]
     cohesion.stray(g)
-    assert [a.tack for a in g.animals] == [HARNESS, PACK_SADDLE]
+    assert [a.tack for a in g.herd] == [HARNESS, PACK_SADDLE]
     assert leader.count_of("Rope") == 1
 
 
@@ -246,7 +250,7 @@ def test_the_notice_drops_when_the_herd_is_back_within_control():
     from gartok import cohesion
     guild, g, leader = _overgrown()
     cohesion.daily(guild)
-    g.animals.clear()
+    g.herd.clear()
     cohesion.daily(guild)
     assert g.herd_notice is None
 
@@ -258,8 +262,8 @@ def test_the_herd_notice_survives_a_save(tmp_path):
 
 
 def test_merging_cannot_exceed_the_leaders_herd_capacity():
-    a = Group([_herder(0)], node="city", animals=[_animal() for _ in range(HERD_BASE)])
-    b = Group([Unit("player")], node="city", animals=[_animal()])
+    a = Group([_herder(0)], node="city", herd=[_animal() for _ in range(HERD_BASE)])
+    b = Group([Unit("player")], node="city", herd=[_animal()])
     guild = Guild(None, groups=[a, b])
     with pytest.raises(ValueError):
         guild.merge_groups(a, b)
@@ -267,19 +271,19 @@ def test_merging_cannot_exceed_the_leaders_herd_capacity():
 
 
 def test_a_wiser_leader_lets_a_merge_through():
-    a = Group([_herder(1)], node="city", animals=[_animal() for _ in range(HERD_BASE)])
-    b = Group([Unit("player")], node="city", animals=[_animal()])
+    a = Group([_herder(1)], node="city", herd=[_animal() for _ in range(HERD_BASE)])
+    b = Group([Unit("player")], node="city", herd=[_animal()])
     guild = Guild(None, groups=[a, b])
     guild.merge_groups(a, b)
-    assert len(a.animals) == HERD_BASE + 1
+    assert len(a.herd) == HERD_BASE + 1
 
 
 def test_splitting_leaves_the_wagon_and_animals_with_the_original_group():
     a, b = Unit("player"), Unit("player")
-    g = Group([a, b], node="city", wagon=Wagon(), animals=[_animal()])
+    g = Group([a, b], node="city", wagons=[Wagon()], herd=[_animal()])
     guild = Guild(None, groups=[g])
     new = guild.split_group(g, [b])
-    assert g.wagon is not None and g.animals and new.wagon is None and not new.animals
+    assert g.wagons and g.herd and not new.wagons and not new.herd
 
 
 # --------------------------------------------------------------------------- #
@@ -292,17 +296,18 @@ def test_animals_and_the_wagon_survive_a_save_round_trip():
         return
     donkey, ox = _animal("Donkey", HARNESS), _animal("Ox", PACK_SADDLE, cargo=["Rope"])
     donkey.unfed_days = 1
-    guild = Guild(None, groups=[Group([Unit("player")], node="city", wagon=Wagon(), animals=[donkey, ox])])
-    guild.groups[0].wagon.stash.put("Potato")
+    guild = Guild(None, groups=[Group([Unit("player")], node="city", wagons=[Wagon()], herd=[donkey, ox])])
+    guild.groups[0].wagons[0].stash.put("Potato")
+    guild.groups[0].hitch_idle()
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot).groups[0]
-        assert [(a.species, a.tack, a.unfed_days) for a in back.animals] == [
+        assert [(a.species, a.tack, a.unfed_days) for a in back.herd] == [
             ("Donkey", HARNESS, 1), ("Ox", PACK_SADDLE, 0)]
-        assert back.animals[1].stash.items[0].name == "Rope"
-        assert back.animals[0].uid == donkey.uid
-        assert [n for n, _ in back.wagon.stash.items] == ["Potato"]
-        assert back.wagon.draft == [back.animals[0]]
+        assert back.herd[1].stash.items[0].name == "Rope"
+        assert back.herd[0].uid == donkey.uid
+        assert [n for n, _ in back.wagons[0].stash.items] == ["Potato"]
+        assert back.wagons[0].draft == [back.herd[0]]
     finally:
         persist.delete_world(slot)
 
@@ -315,7 +320,7 @@ def test_a_group_without_either_still_loads():
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot).groups[0]
-        assert back.wagon is None and back.animals == []
+        assert back.wagons == [] and back.herd == []
     finally:
         persist.delete_world(slot)
 
@@ -342,89 +347,356 @@ def _draw(scr):
 def test_a_member_item_can_be_dragged_into_the_wagon():
     scr, g = _gear(_animal(tack=HARNESS), wagon=True, carried=["Rope", "Map"])
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.wagon, "pack")
-    assert g.members[0]._base_inventory == packed(["Map"]) and g.wagon.stash.items[0].name == "Rope"
+    scr._give_many(g.wagons[0], "pack")
+    assert g.members[0]._base_inventory == packed(["Map"]) and g.wagons[0].stash.items[0].name == "Rope"
 
 
 def test_the_wagon_refuses_more_than_it_can_carry():
-    scr, g = _gear(_animal(tack=HARNESS), wagon=True, carried=["Iron Bar"] * 9)    # 45 kg vs 40 free
+    scr, g = _gear(_animal(tack=HARNESS), wagon=True, carried=["Iron Bar"] * 19)   # 95 kg vs 90 free
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.wagon, "pack")
-    assert g.wagon.stash.items == [] and g.members[0].count_of("Iron Bar") == 9
+    scr._give_many(g.wagons[0], "pack")
+    assert g.wagons[0].stash.items == [] and g.members[0].count_of("Iron Bar") == 19
     assert "won't fit" in scr.notice and scr.selected
 
 
 def test_an_unharnessed_wagon_says_why_it_is_shut():
     scr, g = _gear(_animal(tack=PACK_SADDLE), wagon=True, carried=["Rope"])
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.wagon, "pack")
-    assert g.wagon.stash.items == [] and "harnessed" in scr.notice
+    scr._give_many(g.wagons[0], "pack")
+    assert g.wagons[0].stash.items == [] and "hitched" in scr.notice
 
 
 def test_an_unsaddled_animal_says_why_it_takes_nothing():
     scr, g = _gear(_animal(), carried=["Rope"])
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.animals[0], "pack")
-    assert g.animals[0].stash.items == [] and "pack saddle" in scr.notice
+    scr._give_many(g.herd[0], "pack")
+    assert g.herd[0].stash.items == [] and "pack saddle" in scr.notice
 
 
 def test_a_saddled_animal_takes_cargo_up_to_its_limit():
     scr, g = _gear(_animal(tack=PACK_SADDLE), carried=["Rope", "Iron Bar"])
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.animals[0], "pack")
-    assert g.animals[0].stash.items[0].name == "Rope"
+    scr._give_many(g.herd[0], "pack")
+    assert g.herd[0].stash.items[0].name == "Rope"
 
 
 def test_cargo_comes_out_of_the_wagon_into_a_member_pack():
     scr, g = _gear(_animal(tack=HARNESS), wagon=True, cargo=["Rope"])
-    scr.selected = [(g.wagon, 0)]
+    scr.selected = [(g.wagons[0], 0)]
     scr._give_many(g.members[1], "pack")
-    assert g.wagon.stash.items == [] and g.members[1].count_of("Rope") == 1
+    assert g.wagons[0].stash.items == [] and g.members[1].count_of("Rope") == 1
 
 
 def test_dropping_a_saddle_on_an_animal_fits_it_and_returns_what_it_wore():
     scr, g = _gear(_animal(tack=HARNESS), carried=[PACK_SADDLE])
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.animals[0], "tack")
-    assert g.animals[0].tack == PACK_SADDLE
+    scr._give_many(g.herd[0], "tack")
+    assert g.herd[0].tack == PACK_SADDLE
     assert g.members[0].count_of(HARNESS) == 1 and g.members[0].count_of(PACK_SADDLE) == 0
 
 
 def test_an_animal_refuses_things_that_are_not_tack():
     scr, g = _gear(_animal(), carried=["Rope"])
     scr.selected = [(g.members[0], 0)]
-    scr._give_many(g.animals[0], "tack")
-    assert g.animals[0].tack is None and g.members[0].count_of("Rope") == 1
+    scr._give_many(g.herd[0], "tack")
+    assert g.herd[0].tack is None and g.members[0].count_of("Rope") == 1
 
 
 def test_tack_can_be_taken_off_by_dragging_it_to_a_pack():
     scr, g = _gear(_animal(tack=PACK_SADDLE))
-    scr.selected = [(g.animals[0], "tack")]
+    scr.selected = [(g.herd[0], "tack")]
     scr._give_many(g.members[0], "pack")
-    assert g.animals[0].tack is None and g.members[0].count_of(PACK_SADDLE) == 1
+    assert g.herd[0].tack is None and g.members[0].count_of(PACK_SADDLE) == 1
 
 
 def test_the_gear_screen_draws_animal_and_wagon_columns_and_their_cargo_rows():
     scr, g = _gear(_animal(tack=PACK_SADDLE, cargo=["Rope"]), wagon=True, cargo=["Rope"])
     _draw(scr)
     owners = {id(o) for _, o, zone in scr.zones if zone == "pack"}
-    assert id(g.wagon) in owners and id(g.animals[0]) in owners
-    assert any(o is g.animals[0] and zone == "tack" for _, o, zone in scr.zones)
+    assert id(g.wagons[0]) in owners and id(g.herd[0]) in owners
+    assert any(o is g.herd[0] and zone == "tack" for _, o, zone in scr.zones)
     scr.view = "cargo"
     _draw(scr)
-    assert any(o is g.wagon for _, o, _loc in scr.sources)
-    assert any(o is g.animals[0] for _, o, _loc in scr.sources)
+    assert any(o is g.wagons[0] for _, o, _loc in scr.sources)
+    assert any(o is g.herd[0] for _, o, _loc in scr.sources)
 
 
 def test_the_send_to_menu_offers_the_stores_but_no_member_only_actions_on_their_cargo():
     scr, g = _gear(_animal(tack=PACK_SADDLE), wagon=True, carried=["Rope"], cargo=["Minor Healing Potion"])
     scr._open_menu((10, 10), picks=[(g.members[0], 0)])
     labels = [r[1] for r in scr.menu["rows"]]
-    assert "to Wagon" in labels and "to Donkey" in labels
-    scr._open_menu((10, 10), picks=[(g.wagon, 0)])
+    assert "to Cart" in labels and "to Donkey" in labels
+    scr._open_menu((10, 10), picks=[(g.wagons[0], 0)])
     assert not any(r[0] == "drink" for r in scr.menu["rows"])
 
 
 def test_a_stack_in_the_wagon_can_be_split():
     _, g = _gear(_animal(tack=HARNESS), wagon=True, cargo=["Rope", "Rope", "Rope"])
-    assert g.wagon.split_pack(0, 1) and [it.qty for it in g.wagon.stash.items] == [2, 1]
+    assert g.wagons[0].split_pack(0, 1) and [it.qty for it in g.wagons[0].stash.items] == [2, 1]
+
+
+# --------------------------------------------------------------------------- #
+# the creature sheet                                                          #
+# --------------------------------------------------------------------------- #
+
+def test_animals_are_beast_races_that_the_wild_never_rolls():
+    for name in data.LIVESTOCK:
+        assert data.race_by_name(name)["kind"] == "beast" and name in data.ALL_RACE_NAMES
+        assert name not in {r["name"] for r in data.BEAST_POOL}
+
+
+def test_shop_animals_have_fixed_attributes():
+    assert [_animal(n).strength for n in data.LIVESTOCK] == [13, 14, 16]
+    assert _animal("Ox").attributes == _animal("Ox").attributes
+
+
+def test_loads_come_from_strength_in_units_of_30_kg():
+    assert [(a.back_load, a.draw) for a in map(_animal, data.LIVESTOCK)] == [(30, 90), (90, 180), (60, 120)]
+
+
+def test_only_the_ox_has_beast_of_burden():
+    assert abilities.get(data.race_by_name("Ox")["ability"]).carry_mult == 2.0
+    assert {n for n in data.LIVESTOCK if _animal(n).ability.carry_mult != 1.0} == {"Ox"}
+
+
+def test_beast_of_burden_multiplies_when_combined_with_another_ability():
+    assert abilities.get(("beast_of_burden", "strong_body")).carry_mult == 2.0
+
+
+def test_an_animal_has_hit_points_from_its_hit_die_and_constitution():
+    assert [_animal(n).hp for n in data.LIVESTOCK] == [6, 7, 6]
+    assert _animal("Ox", tack=HARNESS).hp_max == 7
+
+
+def test_animals_and_wagons_share_the_creature_base():
+    from gartok.creature import Creature
+    assert isinstance(_animal(), Creature) and isinstance(Wagon(), Creature)
+    assert Wagon().uid != Wagon().uid
+
+
+def test_a_wagon_is_an_object_with_a_d8():
+    from gartok.wagon import WAGON_HD
+    assert WAGON_HD == 8 and Wagon().hp == 5
+
+
+def test_group_wagons_know_their_group():
+    g = Group([Unit("player")], node="city")
+    w = Wagon()
+    g.add_wagon(w)
+    assert g.wagons == [w] and w._group is g
+    g.remove_wagon(w)
+    assert g.wagons == [] and w._group is None
+
+
+def test_several_wagons_survive_a_save():
+    g = Group([Unit("player")], node="city", wagons=[Wagon(), Wagon()], herd=[_animal()])
+    back = persist.group_from_dict(persist.group_to_dict(g))
+    assert [w.uid for w in back.wagons] == [w.uid for w in g.wagons] and len(back.herd) == 1
+
+
+def test_a_save_from_before_the_herd_rename_still_loads():
+    d = persist.group_to_dict(Group([Unit("player")], node="city", wagons=[Wagon()], herd=[_animal()]))
+    d["wagon"], d["animals"] = d.pop("wagons")[0], d.pop("herd")
+    back = persist.group_from_dict(d)
+    assert len(back.wagons) == 1 and [a.species for a in back.herd] == ["Donkey"]
+
+
+# --------------------------------------------------------------------------- #
+# vehicles, the hitch, several wagons                                         #
+# --------------------------------------------------------------------------- #
+
+def _fleet(*kinds, pets=()):
+    g = Group([Unit("player"), Unit("player")], node="city", wagons=[Wagon(k) for k in kinds], herd=list(pets))
+    g.hitch_idle()
+    return Guild(None, groups=[g]), g
+
+
+def test_every_vehicle_is_a_d8_object_with_its_own_box_and_price():
+    assert {v.slots for v in VEHICLES.values()} == {1, 3}
+    assert VEHICLES["Cart"].capacity == 180 and VEHICLES["Carriage"].capacity == 540
+    assert Wagon("Carriage").price == VEHICLES["Carriage"].price and Wagon("Carriage").name == "Carriage"
+
+
+def test_the_harness_pulls_only_the_wagon_it_is_hitched_to():
+    d1, d2 = _animal("Donkey", HARNESS), _animal("Ox", HARNESS)
+    _, g = _fleet("Cart", "Cart", pets=[d1, d2])
+    first, second = g.wagons
+    assert first.draft == [d1] and second.draft == [d2]
+    assert (first.capacity, second.capacity) == (90, 180)
+
+
+def test_a_harnessed_animal_with_no_free_wagon_pulls_nothing():
+    spare = _animal("Ox", HARNESS)
+    _, g = _fleet("Cart", pets=[_animal("Ox", HARNESS), spare])
+    assert g.pulling(spare) is None
+
+
+def test_hitching_by_hand_moves_an_animal_between_wagons():
+    d = _animal("Donkey", HARNESS)
+    _, g = _fleet("Cart", "Cart", pets=[d])
+    first, second = g.wagons
+    assert g.pulling(d) is first
+    g.next_hitch(d)
+    assert g.pulling(d) is second
+    g.next_hitch(d)
+    assert g.pulling(d) is None
+    g.next_hitch(d)
+    assert g.pulling(d) is first
+
+
+def test_hitching_refuses_a_full_wagon_and_a_bare_animal():
+    pulled, other = _animal("Donkey", HARNESS), _animal("Donkey", HARNESS)
+    _, g = _fleet("Cart", "Cart", pets=[pulled, other])
+    first, second = g.wagons
+    assert not g.hitch(other, first) and g.hitch(other, second)
+    assert not g.hitch(_animal(), first)
+
+
+def test_removing_a_wagon_unhitches_its_animals_and_taking_tack_off_does_too():
+    d = _animal("Donkey", HARNESS)
+    _, g = _fleet("Cart", pets=[d])
+    g.remove_wagon(g.wagons[0])
+    assert d.hitch is None
+    _, g = _fleet("Cart", pets=[_animal("Donkey", HARNESS)])
+    g.herd[0].take_tack()
+    assert g.herd[0].hitch is None and g.wagons[0].draft == []
+
+
+def test_a_new_harness_hitches_to_the_first_wagon_with_room():
+    d = _animal()
+    _, g = _fleet("Cart", pets=[d])
+    d.give_to_tack(HARNESS)
+    g.hitch_idle()
+    assert g.wagons[0].draft == [d]
+
+
+def test_the_hitch_and_the_vehicle_type_survive_a_save():
+    d = _animal("Ox", HARNESS)
+    _, g = _fleet("Cart", "Carriage", pets=[d])
+    g.hitch(d, g.wagons[1])
+    back = persist.group_from_dict(persist.group_to_dict(g))
+    assert [w.kind for w in back.wagons] == ["Cart", "Carriage"]
+    assert back.pulling(back.herd[0]) is back.wagons[1] and back.wagons[1].capacity == 180
+
+
+def test_a_save_from_before_the_hitch_still_pulls():
+    _, g = _fleet("Cart", pets=[_animal("Ox", HARNESS)])
+    d = persist.group_to_dict(g)
+    for a in d["herd"]:
+        del a["hitch"]
+    for w in d["wagons"]:
+        del w["kind"]
+    back = persist.group_from_dict(d)
+    assert back.wagons[0].kind == "Cart" and back.wagons[0].draft == back.herd
+
+
+def test_merging_keeps_each_animal_on_its_own_wagon():
+    a = Group([Unit("player")], node="city", wagons=[Wagon()], herd=[_animal("Donkey", HARNESS)])
+    b = Group([Unit("player")], node="city", wagons=[Wagon()], herd=[_animal("Ox", HARNESS)])
+    a.hitch_idle()
+    b.hitch_idle()
+    Guild(None, groups=[a, b]).merge_groups(a, b)
+    assert [w.capacity for w in a.wagons] == [90, 180]
+
+
+def test_a_split_can_hand_over_a_wagon_and_its_animals():
+    d, spare = _animal("Donkey", HARNESS), _animal()
+    guild, g = _fleet("Cart", "Cart", pets=[d, spare])
+    first = g.wagons[0]
+    new = guild.split_group(g, [g.members[0]], wagons=[first], herd=[d])
+    assert new.wagons == [first] and new.herd == [d] and new.pulling(d) is first
+    assert len(g.wagons) == 1 and g.herd == [spare] and g.wagons[0]._group is g
+
+
+def test_an_animal_split_away_from_its_wagon_is_unhitched():
+    d = _animal("Donkey", HARNESS)
+    guild, g = _fleet("Cart", pets=[d])
+    new = guild.split_group(g, [g.members[0]], herd=[d])
+    assert new.herd == [d] and d.hitch is None and g.wagons[0].draft == []
+
+
+def test_a_split_takes_only_what_is_picked_and_cannot_outgrow_the_new_herd():
+    pets = [_animal() for _ in range(HERD_BASE + 1)]
+    guild, g = _fleet("Cart", pets=pets)
+    for u in g.members:
+        u.mod_wisdom = 0
+    with pytest.raises(ValueError):
+        guild.split_group(g, [g.members[0]], herd=pets)
+    assert len(g.herd) == HERD_BASE + 1 and len(guild.groups) == 1
+    new = guild.split_group(g, [g.members[0]])
+    assert not new.wagons and not new.herd and len(g.wagons) == 1
+
+
+# --------------------------------------------------------------------------- #
+# hitching by swap and by dragging on the gear screen                         #
+# --------------------------------------------------------------------------- #
+
+def test_hitching_onto_a_full_wagon_swaps_the_two_animals():
+    a, b = _animal("Donkey", HARNESS), _animal("Ox", HARNESS)
+    _, g = _fleet("Cart", "Cart", pets=[a, b])
+    first, second = g.wagons
+    assert g.pulling(a) is first and g.pulling(b) is second
+    assert g.hitch(a, second, swap=True)
+    assert g.pulling(a) is second and g.pulling(b) is first
+
+
+def test_dragging_to_a_full_wagon_from_no_wagon_bumps_one_animal_out():
+    a, b = _animal("Donkey", HARNESS), _animal("Ox", HARNESS)
+    _, g = _fleet("Cart", pets=[a, b])
+    assert g.pulling(a) is g.wagons[0] and g.pulling(b) is None
+    assert g.hitch(b, g.wagons[0], swap=True)
+    assert g.pulling(b) is g.wagons[0] and g.pulling(a) is None
+
+
+def test_an_animal_without_a_harness_cannot_be_hitched_or_swapped_in():
+    bare = _animal()
+    _, g = _fleet("Cart", pets=[_animal("Ox", HARNESS), bare])
+    assert not g.hitch(bare, g.wagons[0], swap=True) and bare.hitch is None
+
+
+def _drag(scr, src, dst):
+    import pygame
+    scr.pinned = []                       # leave room for every animal and wagon column
+    _draw(scr)
+    a = next(r for r, o, loc in scr.sources if o is src and loc == "hitch")
+    b = next(r for r, o, zone in scr.zones if o is dst and zone == "hitch")
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=a.center))
+    scr.handle_event(pygame.event.Event(pygame.MOUSEMOTION, pos=b.center, rel=(0, 0), buttons=(1, 0, 0)))
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=b.center))
+
+
+def test_dragging_an_animal_header_onto_a_wagon_header_hitches_it():
+    d = _animal("Donkey", HARNESS)
+    scr, g = _gear(d, wagon=True)
+    g.add_wagon(Wagon("Carriage"))
+    g.hitch(d, g.wagons[1])
+    _drag(scr, d, g.wagons[0])
+    assert g.pulling(d) is g.wagons[0] and "pulls the cart" in scr.notice
+
+
+def test_dragging_swaps_when_the_wagon_is_full():
+    a, b = _animal("Donkey", HARNESS), _animal("Ox", HARNESS)
+    scr, g = _gear(a, b, wagon=True)
+    g.add_wagon(Wagon())
+    g.hitch(b, g.wagons[1])
+    assert g.pulling(a) is g.wagons[0]
+    _drag(scr, a, g.wagons[1])
+    assert g.pulling(a) is g.wagons[1] and g.pulling(b) is g.wagons[0]
+
+
+def test_only_harnessed_animals_can_be_picked_up_by_the_header_and_cargo_still_drops_in_the_wagon():
+    pack = _animal(tack=PACK_SADDLE)
+    scr, g = _gear(pack, _animal(tack=HARNESS), wagon=True, carried=["Rope"])
+    _draw(scr)
+    assert not any(o is pack and loc == "hitch" for _, o, loc in scr.sources)
+    scr.selected = [(g.members[0], 0)]
+    scr._give_many(g.wagons[0], "pack")
+    assert g.wagons[0].stash.items[0].name == "Rope"
+
+
+def test_the_animal_header_says_what_it_pulls():
+    d = _animal("Donkey", HARNESS)
+    scr, g = _gear(d, wagon=True)
+    assert scr._store_dict(d, [])["name"].endswith("pulls cart")
+    d.hitch = None
+    assert scr._store_dict(d, [])["name"].endswith("unhitched")

@@ -250,7 +250,9 @@ class MapScreen(Screen):
                 "detail": self._order_status(g),
                 "rations_label": f"RATIONS: {sum(u.rations for u in g.members)}",
                 "party": [(u.name, role_for(u.occupation), _hp_frac(u), u.race.get("name", "")) for u in g.members],
-                "roster_members": [(u.uid, u.name, _race_tag(u)) for u in g.members],
+                "roster_members": [*((u.uid, u.name, _race_tag(u)) for u in g.members),
+                                   *((w.uid, w.kind, "WAGON") for w in g.wagons),
+                                   *((a.uid, a.species, "ANIMAL") for a in g.herd)],
                 "mates": self._mates_for(g),
                 "split_blocked": "" if self.guild.free_slots else "no free group slot"}
 
@@ -412,7 +414,9 @@ class MapScreen(Screen):
             return
         chosen = [u for u in g.members if u.uid in self.split_picks]
         try:
-            self.selected = self.guild.split_group(g, chosen)
+            self.selected = self.guild.split_group(
+                g, chosen, wagons=[w for w in g.wagons if w.uid in self.split_picks],
+                herd=[a for a in g.herd if a.uid in self.split_picks])
         except ValueError:
             return
         self._split_target = None

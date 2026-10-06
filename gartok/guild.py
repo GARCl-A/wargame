@@ -263,7 +263,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                     self.groups.remove(g)
         self._sync_leadership()
 
-    def split_group(self, group, members, *, name=None):
+    def split_group(self, group, members, *, name=None, wagons=(), herd=()):
         """Peel `members` (a subset of `group.members`) off into a brand new
         `Group` at the same node -- physically valid because they haven't gone
         anywhere yet. `group` keeps whoever is left; it is pruned if that leaves
@@ -272,7 +272,9 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         split) or to peel off a group mid-order (its members aren't all in one
         place right now conceptually until the order resolves) -- except a
         standing `"garrison"` order (`Group.locked`), which never resolves by
-        design and doesn't move anyone."""
+        design and doesn't move anyone. `wagons` and `herd` (a subset of the
+        group's own) go with the new group; a moved animal stays hitched only if
+        its wagon came too."""
         peel = [u for u in group.members if u in set(members)]
         if not peel or len(peel) == len(group.members):
             raise ValueError("split needs a non-empty, proper subset of the group")
@@ -280,8 +282,22 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
             raise ValueError("can't split a group with an order in flight")
         if not self.free_slots:
             raise ValueError("no free group slot -- the guild is not famous enough to run another")
-        group.members = [u for u in group.members if u not in peel]
         new_group = Group(peel, node=group.node, name=name)
+        moved_herd = [a for a in group.herd if a in herd]
+        if sum(a.herd_weight for a in moved_herd) > new_group.herd_capacity:
+            raise ValueError(f"the herd would outgrow what {new_group.leader.name} can control "
+                             f"({new_group.herd_capacity})")
+        group.members = [u for u in group.members if u not in peel]
+        for wagon in [w for w in group.wagons if w in wagons]:
+            group.wagons.remove(wagon)
+            new_group.add_wagon(wagon)
+        for animal in moved_herd:
+            group.herd.remove(animal)
+            new_group.herd.append(animal)
+            if new_group.pulling(animal) is None:
+                animal.hitch = None
+        group.hitch_idle()
+        new_group.hitch_idle()
         self.groups.append(new_group)
         self._sync_leadership()
         return new_group
@@ -296,12 +312,13 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
             raise ValueError("can only merge groups standing on the same node")
         if a.locked or b.locked:
             raise ValueError("can't merge a group with an order in flight")
-        if a.wagon and b.wagon:
-            raise ValueError("both groups have a wagon -- only one can come along")
         if a.herd_load + b.herd_load > a.herd_capacity:
             raise ValueError(f"the herd would outgrow what {a.leader.name} can control ({a.herd_capacity})")
-        a.wagon = a.wagon or b.wagon
-        a.animals += b.animals
+        for wagon in list(b.wagons):
+            b.remove_wagon(wagon)
+            a.add_wagon(wagon)
+        a.herd += b.herd
+        a.hitch_idle()
         a.members += b.members
         self.groups.remove(b)
         self._sync_leadership()

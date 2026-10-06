@@ -194,7 +194,9 @@ gartok/
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
   holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat, oven)
-  wagon.py          a Group's wagon and draft animals (cargo room, feeding); bought at stables_screen.py
+  creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
+  animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
+  wagon.py          a Group's wagons (cart, carriage) and the draft animals hitched to them (cargo room, feeding); bought at stables_screen.py
   group.py          Group = a physical subset of the guild: its own node + squad + order;
                     fame buys group slots (`BASE_SLOTS`, `group_slots`)
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk

@@ -17,6 +17,7 @@ generated REFERENCE.md is the authoritative catalog.
 """
 
 import functools
+import math
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 
@@ -40,6 +41,7 @@ class Ability:
     extra_languages: int = 0
     demoralize_ignores_language: bool = False
     carry_size: str | None = None  # size used for carry capacity only (overrides the real size)
+    carry_mult: float = 1.0
     breaks_when_downed: bool = False  # 0 HP -> "broken" (no death clock), not "dying"
     flies: bool = False               # moves freely in 3D (ignores pits) and takes no fall damage
     climb_speed: bool = False         # moves up/down pit walls as normal movement (seam, unused)
@@ -117,6 +119,9 @@ _LIST = [
     Ability("strong_body", "Strong Body",
             "for carry capacity (and only that), counts as a Large creature.",
             carry_size="Large"),
+    Ability("beast_of_burden", "Beast of Burden",
+            "carries and draws twice what its size and Strength allow.",
+            carry_mult=2.0),
     Ability("amphibious", "Amphibious",
             "breathes water: never runs out of breath while submerged, so it can "
             "stay underwater indefinitely.",
@@ -188,6 +193,8 @@ def _combined(ids):
             merged[f.name] = sum(vals)
         elif f.name in _WIDEST:
             merged[f.name] = max(vals)
+        elif f.name == "carry_mult":
+            merged[f.name] = math.prod(vals)
         elif f.name in ("carry_size", "venom"):
             merged[f.name] = next((v for v in vals if v), None)
         elif isinstance(vals[0], bool):

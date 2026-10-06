@@ -214,7 +214,7 @@ def column(surf, F, rect, member, scroll, mouse):
     this column belongs to (it built `member` from one), so it zips these
     straight onto its own `sources`/`zones`/`sheet_hits` without any key
     lookup:
-      {"sheet_rect", "slot_rects": {kind: rect_or_None}, "pack_zone",
+      {"sheet_rect", "head_rect", "slot_rects": {kind: rect_or_None}, "pack_zone",
        "pack_area", "pack_hits": [(rect, idx)], "lock_hits": [(rect, idx)],
        "dots_hits": [(rect, idx)], "scroll"}
     """
@@ -273,7 +273,7 @@ def column(surf, F, rect, member, scroll, mouse):
     pack_hits, lock_hits, dots_hits = [], [], []
     if not items:
         text(surf, F["body_sm"], "carrying nothing", (x, y + 4), T.TX_FAINT)
-        return {"sheet_rect": sheet_rect, "slot_rects": slot_rects, "pack_zone": pack_zone,
+        return {"sheet_rect": sheet_rect, "head_rect": head, "slot_rects": slot_rects, "pack_zone": pack_zone,
                 "pack_area": pack_area, "pack_hits": pack_hits, "lock_hits": lock_hits,
                 "dots_hits": dots_hits, "scroll": 0}
 
@@ -302,7 +302,7 @@ def column(surf, F, rect, member, scroll, mouse):
         if max_pack_scroll > 0:
             scrollbar(surf, list_rect, scroll, max_pack_scroll, content_h)
 
-    return {"sheet_rect": sheet_rect, "slot_rects": slot_rects, "pack_zone": pack_zone,
+    return {"sheet_rect": sheet_rect, "head_rect": head, "slot_rects": slot_rects, "pack_zone": pack_zone,
             "pack_area": pack_area, "pack_hits": pack_hits, "lock_hits": lock_hits,
             "dots_hits": dots_hits, "scroll": scroll}
 

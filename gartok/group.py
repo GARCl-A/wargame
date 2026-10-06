@@ -40,47 +40,91 @@ def _food_in(pack):
 
 
 class Group:
-    def __init__(self, members, node=None, name=None, gid=None, leader=None, wagon=None, animals=None):
+    def __init__(self, members, node=None, name=None, gid=None, leader=None, wagons=None, herd=None):
         self.gid = gid or uuid4().hex     # stable id: save refs, map selection
         self.members = list(members)      # list[Unit]
         self.node = node                  # world node id
         self.name = name                  # optional label ("Water Team"), or None
         self.order = None                 # in-flight Order, or None (idle) -- later
         self.leader = leader              # Unit; None resolves via ensure_leader below
-        self.animals = list(animals or [])  # animals.Animal -- lost with the group
-        self.wagon = wagon                # wagon.Wagon or None -- lost with the group
+        self.herd = list(herd or [])      # animals.Animal -- lost with the group
+        self.wagons = []                  # wagon.Wagon -- lost with the group
+        for wagon in wagons or []:
+            self.add_wagon(wagon)
         self.herd_notice = None           # day an overextended herd starts to stray -- see cohesion.py
         self.ensure_leader()
 
     def __len__(self):
         return len(self.members)
 
-    @property
-    def wagon(self):
-        return self._wagon
+    def add_wagon(self, wagon):
+        self.wagons.append(wagon)
+        wagon._group = self
 
-    @wagon.setter
-    def wagon(self, wagon):
-        self._wagon = wagon
-        if wagon is not None:
-            wagon._group = self
+    def remove_wagon(self, wagon):
+        self.wagons.remove(wagon)
+        wagon._group = None
+        for animal in self.herd:
+            if animal.hitch == wagon.uid:
+                animal.hitch = None
+
+    def pulling(self, animal):
+        """The wagon of this group `animal` is hitched to, or None."""
+        return next((w for w in self.wagons if w.uid == animal.hitch and animal.role == "draft"), None)
+
+    def hitch(self, animal, wagon, *, swap=False):
+        """Harness `animal` to `wagon` (None unhitches). False if the animal wears no
+        Harness, the wagon is not this group's, or its slots are full -- unless
+        `swap`, when a full wagon gives up one animal, which takes the place `animal`
+        leaves (its old wagon, or none)."""
+        if wagon is None:
+            animal.hitch = None
+            return True
+        if animal.role != "draft" or wagon not in self.wagons:
+            return False
+        old = self.pulling(animal)
+        if old is not wagon and not wagon.free_slots:
+            if not swap:
+                return False
+            wagon.draft[0].hitch = old.uid if old else None
+        animal.hitch = wagon.uid
+        return True
+
+    def hitch_idle(self):
+        """Every harnessed animal pulling nothing takes the first wagon with a
+        free slot."""
+        for animal in self.herd:
+            if animal.role == "draft" and self.pulling(animal) is None:
+                wagon = next((w for w in self.wagons if w.free_slots), None)
+                if wagon is not None:
+                    animal.hitch = wagon.uid
+
+    def next_hitch(self, animal):
+        """Cycle `animal`: the next wagon with room, then unhitched, then round."""
+        current = self.pulling(animal)
+        order = [*self.wagons, None]
+        start = order.index(current) + 1 if current in order else 0
+        for wagon in order[start:] + order[:start]:
+            if wagon is not current and (wagon is None or wagon.free_slots):
+                self.hitch(animal, wagon)
+                return
 
     @property
     def carried_rations(self):
-        """Meals on the wagon and on the animals' backs."""
+        """Meals on the wagons and on the animals' backs."""
         return sum(_food_in(pack) for pack in self.food_stores())
 
     def food_stores(self):
         """Packs of food that belong to the group itself rather than a member:
-        the wagon's cargo, then each animal's load."""
-        return [*([self.wagon.stash.items] if self.wagon else []), *(a.stash.items for a in self.animals)]
+        the wagons' cargo, then each animal's load."""
+        return [*(w.stash.items for w in self.wagons), *(a.stash.items for a in self.herd)]
 
     def feed_animals(self):
         """One day's feeding: each animal eats from its own load, then the rest of
         the group's stores, then any member's pack. They starve and die after
         `animals.STARVE_DAYS` unfed days. Returns the log lines."""
         events = []
-        for animal in list(self.animals):
+        for animal in list(self.herd):
             own = animal.stash.items
             packs = [own, *(p for p in self.food_stores() if p is not own),
                      *(u._base_inventory for u in self.members)]
@@ -89,7 +133,7 @@ class Group:
                 continue
             animal.unfed_days += 1
             if animal.unfed_days >= STARVE_DAYS:
-                self.animals.remove(animal)
+                self.herd.remove(animal)
                 events.append(f"A {animal.species} starved to death.")
             else:
                 events.append(f"A {animal.species} went hungry.")
@@ -162,7 +206,7 @@ class Group:
 
     @property
     def herd_load(self):
-        return sum(a.herd_weight for a in self.animals)
+        return sum(a.herd_weight for a in self.herd)
 
     def can_take(self, animal):
         return self.herd_load + animal.herd_weight <= self.herd_capacity

@@ -11,47 +11,41 @@ do from the wagon, and the animals eat from the group's food, wagon first.
 
 from uuid import uuid4
 
-from . import items
-from .holdings import Stash
-from .unit_loadout import split_stack, stack_add
+from . import abilities, data
+from .creature import Creature
+from .unit_derive import carry_thresholds
 
-SPECIES = {                # carry: kg on its back · pull: kg it draws · speed: meters per move, like a race's
-    "Donkey": {"hp": 14, "speed": 7.5, "carry": 30, "pull": 80, "price": 60, "herd_weight": 1},
-    "Ox": {"hp": 24, "speed": 6.0, "carry": 50, "pull": 160, "price": 150, "herd_weight": 1},
-}
+PRICE = {"Donkey": 180, "Ox": 300, "Horse": 480}
+HERD_WEIGHT = {"Donkey": 1, "Ox": 1, "Horse": 1}     # what each costs against `Group.herd_capacity`
+AVERAGE_SCORE = 11                                    # a shop animal is not rolled: 3d6 averages 10.5, rounded up
+LOAD_UNIT = 30                                        # kg: what a chest holds, and the step every capacity moves in
 PACK_SADDLE = "Pack Saddle"
 HARNESS = "Harness"
 TACK = {PACK_SADDLE: "pack", HARNESS: "draft"}      # tack item -> the role it gives
 STARVE_DAYS = 3
 
 
-class _Pack(Stash):
-    """The animal's load: its room follows the saddle it wears."""
-
-    def __init__(self, animal, contents=None):
-        self._animal = animal
-        super().__init__(0, contents)
-
-    @property
-    def capacity(self):
-        return self._animal.carry_room
-
-    @capacity.setter
-    def capacity(self, _value):
-        pass
+def _to_units(kg):
+    return max(LOAD_UNIT, round(kg / LOAD_UNIT) * LOAD_UNIT)
 
 
-class Animal:
-    def __init__(self, species, hp=None, unfed_days=0, tack=None, contents=None, uid=None):
-        self.uid = uid or uuid4().hex
+class Animal(Creature):
+    """A creature sheet from the race table (`data.BEASTS`) with fixed
+    attributes. Its Strength sets the two loads it can take: `back_load` with a
+    Pack Saddle, `draw` pulling a wagon with a Harness."""
+
+    def __init__(self, species, hp=None, unfed_days=0, tack=None, contents=None, uid=None, hitch=None):
         self.species = species
-        self.hp = SPECIES[species]["hp"] if hp is None else hp
+        self.race = data.race_by_name(species)
+        self.ability = abilities.get(self.race["ability"])
+        self.attributes = {a: AVERAGE_SCORE + m for a, m in zip(data.ATTRIBUTES, self.race["mods"])}
+        self.size = self.race["size"]
+        self.hp_max = max(1, (self.race["hd"] + 2) // 2 + data.mod(self.attributes["constitution"]))
+        super().__init__(uid or uuid4().hex, self.hp_max if hp is None else hp, contents)
         self.unfed_days = unfed_days
         self.tack = tack
-        self.stash = _Pack(self, contents)
+        self.hitch = hitch              # uid of the wagon it pulls (needs a Harness), or None
 
-    # An animal is a pack owner like a Unit: the gear screen moves items in and
-    # out of it through these.
     @property
     def name(self):
         return self.species
@@ -59,66 +53,45 @@ class Animal:
     full_name = name
 
     @property
-    def _base_inventory(self):
-        return self.stash.items
+    def strength(self):
+        return self.attributes["strength"]
 
     @property
-    def load(self):
-        return self.stash.load
+    def _loads(self):
+        return carry_thresholds(self.strength, self.size, self.ability)
 
     @property
-    def carry_normal(self):
-        return self.carry_room
+    def back_load(self):
+        return _to_units(self._loads[0])
 
-    carry_max = carry_normal
+    @property
+    def draw(self):
+        return _to_units(self._loads[1])
 
-    def give_to_pack(self, name, qty=1, charges=None, days_old=0):
-        stack_add(self.stash.items, name, qty, charges=charges, days_old=days_old)
-
-    def take_from_pack(self, idx, qty=1):
-        name, _ = self.stash.take(idx, qty)
-        return name
-
-    def split_pack(self, idx, qty):
-        return split_stack(self.stash.items, idx, qty)
-
-    def locked_of(self, name):
-        return 0
-
-    def toggle_lock(self, name):
-        pass
-
-    def pack_tag(self, name):
-        return items.item_tag(name)
-
-    def _derive_combat(self):
-        pass
-
-    # ------------------------------------------------------------------ #
     @property
     def role(self):
         """"pack", "draft", or None for an animal with no tack."""
         return TACK.get(self.tack)
 
     @property
-    def carry_room(self):
-        return SPECIES[self.species]["carry"] if self.role == "pack" else 0
+    def capacity(self):
+        return self.back_load if self.role == "pack" else 0
 
     @property
     def pull(self):
-        return SPECIES[self.species]["pull"] if self.role == "draft" else 0
+        return self.draw if self.role == "draft" else 0
 
     @property
     def speed(self):
-        return SPECIES[self.species]["speed"]
+        return self.race["speed"]
 
     @property
     def price(self):
-        return SPECIES[self.species]["price"]
+        return PRICE[self.species]
 
     @property
     def herd_weight(self):
-        return SPECIES[self.species]["herd_weight"]
+        return HERD_WEIGHT[self.species]
 
     @staticmethod
     def can_wear(name):
@@ -126,17 +99,18 @@ class Animal:
 
     def give_to_tack(self, name):
         self.tack = name
+        self.hitch = None
 
     def take_tack(self):
-        name, self.tack = self.tack, None
+        name, self.tack, self.hitch = self.tack, None, None
         return name
 
     def to_dict(self, serialize_pack):
         return {"uid": self.uid, "species": self.species, "hp": self.hp,
-                "unfed_days": self.unfed_days, "tack": self.tack,
+                "unfed_days": self.unfed_days, "tack": self.tack, "hitch": self.hitch,
                 "contents": serialize_pack(self.stash.items)}
 
     @classmethod
     def from_dict(cls, d):
         return cls(d["species"], d.get("hp"), d.get("unfed_days", 0), d.get("tack"),
-                   d.get("contents", []), d.get("uid"))
+                   d.get("contents", []), d.get("uid"), d.get("hitch"))

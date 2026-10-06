@@ -1,95 +1,68 @@
-"""A group's wagon.
+"""A group's wagons.
 
-The wagon belongs to a `Group` (`Group.wagon`), travels with it and is lost with
+A wagon belongs to a `Group` (`Group.wagons`), travels with it and is lost with
 it: if every member dies the group is gone, and so is the wagon; if anyone
 survives, even by fleeing, it is still there. Its cargo never goes into a fight.
 
-The wagon does not own its animals. The group's animals wearing a Harness
-(`animals.HARNESS`) pull it, up to `HITCH_SLOTS` of them; with none, it is a box
-that cannot move. Cargo room is the smaller of what the box holds and what the
-animals draw once the wagon's own weight is taken off. Members eat from the cargo
-like a `share_food` mate.
+A wagon is a `Vehicle` type -- a cart for two people and their packs, a carriage
+for six -- with its own box, hitch slots and price. It does not own its animals:
+an animal wearing a Harness (`animals.HARNESS`) is hitched to one wagon of the
+group (`Animal.hitch`, see `Group.hitch`), up to the type's slots; with none
+hitched it is a box that cannot move. Cargo room is the smaller of what the box
+holds and what its own animals draw. Members eat from the cargo like a
+`share_food` mate.
 """
 
+from dataclasses import dataclass
+from uuid import uuid4
+
 from . import items
-from .holdings import Stash
-from .unit_loadout import split_stack, stack_add
+from .creature import Creature
 
-WAGON_PRICE = 150
-WAGON_WEIGHT = 40          # kg of the wagon itself -- the animals draw this too
-WAGON_CAPACITY = 80        # kg the box holds, whatever the animals could pull
-WAGON_HP = 30
-HITCH_SLOTS = 2
+WAGON_HD = 8               # every vehicle is an object with a d8
+WAGON_HP = (WAGON_HD + 2) // 2
 
 
-class _Hold(Stash):
-    """The cargo box: its capacity follows the animals pulling the wagon."""
-
-    def __init__(self, wagon, contents=None):
-        self._wagon = wagon
-        super().__init__(0, contents)
-
-    @property
-    def capacity(self):
-        return self._wagon.capacity
-
-    @capacity.setter
-    def capacity(self, _value):
-        pass
+@dataclass(frozen=True)
+class Vehicle:
+    name: str
+    capacity: int          # the box; the animals may draw less
+    slots: int
+    price: int
 
 
-class Wagon:
-    def __init__(self, hp=WAGON_HP, contents=None):
-        self.hp = hp
-        self.stash = _Hold(self, contents)
-        self._group = None         # set by `Group.wagon`; where the pulling animals are found
+VEHICLES = {v.name: v for v in (
+    Vehicle("Cart", 180, 1, 150),
+    Vehicle("Carriage", 540, 3, 600),
+)}
 
-    # The wagon is a pack owner like a Unit: the gear screen moves items in and
-    # out through these, the same way it does for a member's pack.
-    name = full_name = "Wagon"
-    uid = "wagon"
+
+class Wagon(Creature):
+    def __init__(self, kind="Cart", hp=WAGON_HP, contents=None, uid=None):
+        super().__init__(uid or uuid4().hex, hp, contents)
+        self.kind = kind
+        self.vehicle = VEHICLES[kind]
+        self._group = None         # set by `Group.add_wagon`; where the pulling animals are found
 
     @property
-    def _base_inventory(self):
-        return self.stash.items
+    def name(self):
+        return self.kind
+
+    full_name = name
 
     @property
-    def load(self):
-        return self.stash.load
-
-    @property
-    def carry_normal(self):
-        return self.capacity
-
-    carry_max = carry_normal
-
-    def give_to_pack(self, name, qty=1, charges=None, days_old=0):
-        stack_add(self.stash.items, name, qty, charges=charges, days_old=days_old)
-
-    def take_from_pack(self, idx, qty=1):
-        name, _ = self.stash.take(idx, qty)
-        return name
-
-    def split_pack(self, idx, qty):
-        return split_stack(self.stash.items, idx, qty)
-
-    def locked_of(self, name):
-        return 0
-
-    def toggle_lock(self, name):
-        pass
-
-    def pack_tag(self, name):
-        return items.item_tag(name)
-
-    def _derive_combat(self):
-        pass
+    def price(self):
+        return self.vehicle.price
 
     @property
     def draft(self):
-        """The animals pulling it right now."""
-        animals = self._group.animals if self._group is not None else []
-        return [a for a in animals if a.role == "draft"][:HITCH_SLOTS]
+        """The animals hitched to it right now."""
+        animals = self._group.herd if self._group is not None else []
+        return [a for a in animals if a.role == "draft" and a.hitch == self.uid]
+
+    @property
+    def free_slots(self):
+        return self.vehicle.slots - len(self.draft)
 
     @property
     def haul(self):
@@ -97,8 +70,9 @@ class Wagon:
 
     @property
     def capacity(self):
-        """kg of cargo it can take right now; 0 with nothing to pull it."""
-        return max(0, min(WAGON_CAPACITY, self.haul - WAGON_WEIGHT))
+        """kg of cargo it can take right now: the box, or what its animals draw
+        if that is less; 0 with nothing to pull it."""
+        return min(self.vehicle.capacity, self.haul)
 
     @property
     def speed(self):

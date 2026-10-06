@@ -107,8 +107,8 @@ def _roll_groups(guild, d20):
 def stray(group):
     """An animal wanders off, leaving its tack and load with the group's leader.
     Untacked animals go first, then the latest bought."""
-    animal = min(reversed(group.animals), key=lambda a: a.tack is not None)
-    group.animals.remove(animal)
+    animal = min(reversed(group.herd), key=lambda a: a.tack is not None)
+    group.herd.remove(animal)
     keeper = group.leader or group.members[0]
     if animal.tack:
         keeper.give_to_pack(animal.take_tack())

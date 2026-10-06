@@ -42,6 +42,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Nature Magic | innate nature magic: starts initiated and knowing one nature cantrip. |
 | Pack Tactics | +2 [circumstance] to attack if an ally is adjacent to the target. |
 | Strong Body | for carry capacity (and only that), counts as a Large creature. |
+| Beast of Burden | carries and draws twice what its size and Strength allow. |
 | Amphibious | breathes water: never runs out of breath while submerged, so it can stay underwater indefinitely. |
 | Innocent Face | an unassuming face that guards tend to ignore: crime rating naturally decays by 1 every 7 days. |
 | Climber | climbs any surface of DC 25 or lower with no check (still costs the action). |
