@@ -26,6 +26,47 @@ class HoldingsMixin:
         """The caller collects `economy.OVEN_PRICE` first."""
         self.house.oven = True
 
+    def buy_garage_tier(self):
+        """The caller collects `economy.GARAGE_PRICE` first."""
+        self.house.garage.tier += 1
+
+    def park_wagon(self, group, wagon):
+        """Move one of `group`'s wagons into the house garage; False if there is no room."""
+        garage = self.house.garage
+        if wagon not in group.wagons or garage.wagon_room <= 0:
+            return False
+        group.remove_wagon(wagon)
+        garage.wagons.append(wagon)
+        return True
+
+    def park_animal(self, group, animal):
+        garage = self.house.garage
+        if animal not in group.herd or garage.animal_room <= 0:
+            return False
+        group.herd.remove(animal)
+        animal.hitch = None
+        garage.herd.append(animal)
+        return True
+
+    def take_wagon(self, group, wagon):
+        garage = self.house.garage
+        if wagon not in garage.wagons:
+            return False
+        garage.wagons.remove(wagon)
+        group.add_wagon(wagon)
+        group.hitch_idle()
+        return True
+
+    def take_animal(self, group, animal):
+        """False if the group cannot control another animal (`Group.can_take`)."""
+        garage = self.house.garage
+        if animal not in garage.herd or not group.can_take(animal):
+            return False
+        garage.herd.remove(animal)
+        group.herd.append(animal)
+        group.hitch_idle()
+        return True
+
     def repossess_city_property(self):
         """ACCEPT: hand the property back, bank the missed rent as debt owed
         to the Bankers -- their services stay shut until it's paid."""

@@ -8,7 +8,7 @@ that is specific to the house: ownership, the tax cycle, repossession and
 squatting. Money and the guard stay with the caller (`Guild`, `campaign`).
 """
 
-from . import economy, items
+from . import animals, economy, items
 from .unit import pack_from_raw, stack_add, stack_take
 
 
@@ -44,19 +44,55 @@ class Stash:
         return name, removed
 
 
+class Garage:
+    """Where a house keeps wagons and animals out of the group's hands: each tier
+    holds one wagon and one animal. Safe, nothing to roll. Cargo stays in its
+    wagon; the animals eat from the house stash and the garaged wagons' cargo,
+    and do not count against a group's `herd_capacity`."""
+
+    def __init__(self, tier=0, wagons=None, herd=None):
+        self.tier = tier
+        self.wagons = list(wagons or [])
+        self.herd = list(herd or [])
+
+    @property
+    def open(self):
+        return self.tier > 0
+
+    @property
+    def wagon_room(self):
+        return self.tier - len(self.wagons)
+
+    @property
+    def animal_room(self):
+        return self.tier - len(self.herd)
+
+    def feed(self, stash):
+        def packs_for(animal):
+            own = animal.stash.items
+            return [own, stash.items, *(w.stash.items for w in self.wagons)]
+
+        return animals.feed_herd(self.herd, packs_for)
+
+    def clear(self):
+        self.tier = 0
+        self.wagons, self.herd = [], []
+
+
 class CityProperty:
     """The house the Bankers sell in the City, taxed on a cycle. A squatter
     keeps `owned` set -- the guild still holds the keys, illegally -- until the
     guard clears it (`abandon`)."""
 
     def __init__(self, owned=False, contents=None, tax_due_day=None,
-                 missed_payments=0, squatting=False, oven=False):
+                 missed_payments=0, squatting=False, oven=False, garage=None):
         self.owned = owned
         self.stash = Stash(economy.CITY_PROPERTY_CAPACITY, contents)
         self.tax_due_day = tax_due_day          # clock.day the next tax is due, or None
         self.missed_payments = missed_payments
         self.squatting = squatting              # illegal occupier, after refusing repossession
         self.oven = oven                        # bought from the Bankers: unlocks cooking at the house
+        self.garage = garage or Garage()
 
     @property
     def repossession_due(self):
@@ -74,6 +110,7 @@ class CityProperty:
         owed = self.missed_payments * economy.CITY_PROPERTY_TAX
         self.owned = False
         self.oven = False
+        self.garage.clear()
         self.stash.items = []
         self.missed_payments = 0
         self.tax_due_day = None
@@ -89,4 +126,5 @@ class CityProperty:
         self.squatting = False
         self.owned = False
         self.oven = False
+        self.garage.clear()
         self.stash.items = []

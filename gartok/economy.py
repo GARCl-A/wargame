@@ -65,6 +65,7 @@ GARRISON_JOBS = {"lumber": "Lumber", "study": None}           # order.job -> the
 GARRISON_YIELD_PER_MEMBER_PER_DAY = 1          # units of that item, per garrisoned member, per day
 
 OVEN_PRICE = 150                  # copper, bought from the Bankers once the house is the guild's
+GARAGE_PRICE = 690                # copper per tier, flat: 150 to build + 3 cp/kg for the 180 kg a Cart and an Ox open
 CAMPFIRE_HOURS = 1                # time to build a fire at the claim
 CAMPFIRE_FUEL = "Lumber"          # one unit burns per attempt, lit or not
 CAMPFIRE_DC = 8                   # 1d20 + WIS mod, best of the group

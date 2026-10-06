@@ -34,9 +34,10 @@ class CityPropertyScreen(StashScreen):
     CLOSED_NOTICE = "buy the house first."
     WHERE = "at the property"
 
-    def __init__(self, fonts, guild, party, on_done, on_cook=None):
+    def __init__(self, fonts, guild, party, on_done, on_cook=None, on_garage=None):
         super().__init__(fonts, guild, party, on_done)
         self.on_cook = on_cook
+        self.on_garage = on_garage
 
     def tutorial_key(self):
         return "property"
@@ -49,12 +50,20 @@ class CityPropertyScreen(StashScreen):
 
     def _services(self):
         g = self.guild
-        if g.house.owned and not g.house.oven:
-            return [("oven", "BUY AN OVEN", f"{economy.OVEN_PRICE} c  ·  unlocks cooking at the house",
-                     self.purse >= economy.OVEN_PRICE)]
-        if g.house.owned and self.on_cook:
-            return [("cook", "COOK", "turn Meat and Salt into Jerky, which keeps for 20 days", True)]
-        if g.house.owned or g.house.squatting:
+        if g.house.owned:
+            rows = []
+            if not g.house.oven:
+                rows.append(("oven", "BUY AN OVEN", f"{economy.OVEN_PRICE} c  ·  unlocks cooking at the house",
+                             self.purse >= economy.OVEN_PRICE))
+            elif self.on_cook:
+                rows.append(("cook", "COOK", "turn Meat and Salt into Jerky, which keeps for 20 days", True))
+            if self.on_garage:
+                garage = g.house.garage
+                sub = (f"{len(garage.wagons)} / {garage.tier} wagons  ·  {len(garage.herd)} / {garage.tier} animals"
+                       if garage.open else f"{economy.GARAGE_PRICE} c  ·  keeps a wagon and an animal at the house")
+                rows.append(("garage", "GARAGE", sub, True))
+            return rows
+        if g.house.squatting:
             return []
         rep_ok = g.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
         can_buy = rep_ok and not g.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
@@ -83,6 +92,8 @@ class CityPropertyScreen(StashScreen):
             self.notice = "the oven is installed -- the house can cook now."
         elif key == "cook":
             self.on_cook()
+        elif key == "garage":
+            self.on_garage()
         elif key == "pay_debt":
             amount = min(self.purse, self.guild.bankers_debt)
             if amount <= 0:

@@ -414,7 +414,13 @@ class App:
                                         on_done=self._after_activity,
                                         on_cook=lambda: self._open_kitchen(
                                             group, "THE HOUSE KITCHEN",
-                                            lambda: self._open_city_property(group, node)))
+                                            lambda: self._open_city_property(group, node)),
+                                        on_garage=lambda: self._open_garage(group, node))
+
+    def _open_garage(self, group, node):
+        from .garage_screen import GarageScreen
+        self.scene = GarageScreen(self.ui_fonts, self.guild, group,
+                                  on_done=lambda: self._open_city_property(group, node))
 
     def _resolve_repossession_return(self):
         self.guild.repossess_city_property()

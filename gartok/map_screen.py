@@ -249,7 +249,7 @@ class MapScreen(Screen):
                 "state_label": label,
                 "state_color": color,
                 "detail": self._order_status(g),
-                "rations_label": f"RATIONS: {sum(u.rations for u in g.members)}",
+                "rations_label": f"RATIONS: {g.rations}",
                 "party": [(u.name, role_for(u.occupation), _hp_frac(u), u.race.get("name", "")) for u in g.members],
                 "roster_members": [*((u.uid, u.name, _race_tag(u)) for u in g.members),
                                    *((w.uid, w.kind, "WAGON") for w in g.wagons),

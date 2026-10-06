@@ -30,7 +30,12 @@ cannot carry that much. Built so far (read the code for how it works; tests in
   or what its animals draw) less the cargo already aboard; `Wagon.capacity` is what the passengers
   leave for cargo, so people and cargo share one budget. Whoever does not fit walks; riders drop
   out of `Group.speed`, the animals' pace stands in. The gear screen's wagon column says how many ride.
-- Saves: `SAVE_VERSION` 19, old `wagon` / `animals` keys and unhitched saves still load.
+- The house garage (4a): `holdings.Garage` on `CityProperty.garage`, bought by the bay at
+  `economy.GARAGE_PRICE` (690 cp, flat) from `garage_screen.py` (the GARAGE button on the house screen).
+  `Guild.park_wagon` / `park_animal` / `take_wagon` / `take_animal`; the cargo stays in the wagon, parked
+  animals eat daily from the house stash and the parked wagons' cargo (`animals.feed_herd`, shared with
+  `Group.feed_animals`) and do not count against `herd_capacity`; losing the house loses the garage.
+- Saves: `SAVE_VERSION` 20, old `wagon` / `animals` keys and unhitched saves still load.
 
 **Scale premise.** The game is meant to get big (guilds with many groups, many
 animals, several wagons). These subsystems must be shaped for that now, not
@@ -51,6 +56,8 @@ exercises a small part of it.
 ## Still to build
 
 ### 4. Parking (the garage) and the wagon left outside
+4a (the house garage) is built, see above; 4b and 4c remain. The full design:
+
 A wagon is in one of three states: **with the group** (travels, same risk as the group),
 **in a garage** or **left outside**. Wagons never enter a battle map.
 
@@ -92,7 +99,7 @@ A wagon is in one of three states: **with the group** (travels, same risk as the
   play shows what it should do; the flight chance becomes a per-species field in `data.BEASTS`
   when 4b is built.
 
-Build order: 4a the house garage (buy, park, take out, animals eat from the store), 4b the guard
+Build order: 4a the house garage (done), 4b the guard
 selector with its risk percentage and tutorial card (Ruins, Wilds hunt), 4c the Claim's open
 garage with the daily roll. Each ships with its screen, tests and a `SAVE_VERSION` bump.
 

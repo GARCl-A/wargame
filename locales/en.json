@@ -178,9 +178,17 @@
     "property": {
       "title": "The City house",
       "body": [
-        "Buy a house from the Bankers (1000 cp, once). It holds gear like the strongbox does, but costs a 40 cp tax every 7 days.",
+        "Buy a house from the Bankers (1440 cp, once). It holds 600 kg of gear like the strongbox does, but costs a 30 cp tax every 7 days.",
         "Miss too many payments and the Bankers repossess it: return it and owe them, or keep it as a squatter and risk the guard coming for you.",
-        "Once the house is yours you can buy an oven (150 cp) to cook there."
+        "Once the house is yours you can buy an oven (150 cp) to cook there, and a garage for your wagons and animals."
+      ]
+    },
+    "garage": {
+      "title": "The garage",
+      "body": [
+        "Each bay (690 cp) keeps one wagon and one animal safe at the house, with nothing to roll. Park what the group does not need on the road; take it out again when it does.",
+        "Animals in the garage eat from the house stash and from the cargo of the wagons parked beside them, and do not count against your herd limit. If the food runs out they starve like any other animal.",
+        "A wagon keeps its cargo while parked. Lose the house and you lose what is in the garage."
       ]
     },
     "claim": {

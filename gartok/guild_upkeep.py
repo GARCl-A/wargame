@@ -203,6 +203,7 @@ class UpkeepMixin:
             self.remove_members(casualties)
         for g in self.groups:
             events += g.feed_animals()
+        events += self.house.garage.feed(self.house.stash)
         for m in missions.expire_overdue(self):
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
         for u in justice.release_due(self):

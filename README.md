@@ -193,7 +193,7 @@ gartok/
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
-  holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat, oven)
+  holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals)
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
   wagon.py          a Group's wagons (cart, carriage) and the draft animals hitched to them (passengers and cargo by weight, feeding); bought at stables_screen.py
@@ -230,7 +230,7 @@ gartok/
   gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
-  city_property_screen.py / wilds_claim_screen.py / justice_screen.py
+  city_property_screen.py / garage_screen.py / wilds_claim_screen.py / justice_screen.py
   alert_screen.py / adelio_prompt_screen.py
   bank_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py (tabbed hubs
   wrapping a shop/strongbox, crafting and a mission board)

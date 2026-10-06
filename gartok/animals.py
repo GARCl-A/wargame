@@ -14,6 +14,7 @@ from uuid import uuid4
 from . import abilities, data
 from .creature import Creature
 from .unit_derive import carry_thresholds
+from .unit_hunger import take_ration
 
 PRICE = {"Donkey": 180, "Ox": 300, "Horse": 480}
 HERD_WEIGHT = {"Donkey": 1, "Ox": 1, "Horse": 1}     # what each costs against `Group.herd_capacity`
@@ -23,6 +24,23 @@ PACK_SADDLE = "Pack Saddle"
 HARNESS = "Harness"
 TACK = {PACK_SADDLE: "pack", HARNESS: "draft"}      # tack item -> the role it gives
 STARVE_DAYS = 3
+
+
+def feed_herd(herd, packs_for):
+    """One day's feeding: each animal eats the first meal in `packs_for(animal)`.
+    The unfed starve and are removed from `herd` after `STARVE_DAYS`. Returns the log lines."""
+    events = []
+    for animal in list(herd):
+        if any(take_ration(pack) is not None for pack in packs_for(animal)):     # stops at the first meal found
+            animal.unfed_days = 0
+            continue
+        animal.unfed_days += 1
+        if animal.unfed_days >= STARVE_DAYS:
+            herd.remove(animal)
+            events.append(f"A {animal.species} starved to death.")
+        else:
+            events.append(f"A {animal.species} went hungry.")
+    return events
 
 
 def _to_units(kg):

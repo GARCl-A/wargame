@@ -31,7 +31,7 @@ from .clock import Clock
 from .animals import Animal
 from .group import Group
 from .guild import Guild
-from .holdings import CityProperty, Stash
+from .holdings import CityProperty, Garage, Stash
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
 from .wagon import WAGON_HP, Wagon
@@ -45,7 +45,7 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
-SAVE_VERSION = 19                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 20                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def new_world_id():
@@ -140,6 +140,12 @@ def wagon_from_dict(d):
     return Wagon(d.get("kind", "Cart"), d.get("hp", WAGON_HP), d.get("contents", []), d.get("uid"))
 
 
+def garage_from_dict(d):
+    d = d or {}
+    return Garage(d.get("tier", 0), [wagon_from_dict(w) for w in d.get("wagons", [])],
+                  [Animal.from_dict(a) for a in d.get("herd", [])])
+
+
 def group_to_dict(g):
     return {
         "gid": g.gid,
@@ -186,6 +192,9 @@ def _payload(guild, kind, label):
         "property_city_missed_payments": guild.house.missed_payments,
         "property_city_squatting": guild.house.squatting,
         "property_city_oven": guild.house.oven,
+        "property_city_garage": {"tier": guild.house.garage.tier,
+                                 "wagons": [wagon_to_dict(w) for w in guild.house.garage.wagons],
+                                 "herd": [a.to_dict(_serialize_pack) for a in guild.house.garage.herd]},
         "bankers_debt": guild.bankers_debt,
         "property_city_debt_since": guild.bankers_debt_since,
         "garrison_stock": {node_id: list(items) for node_id, items in guild.garrison_stock.items()},
@@ -272,7 +281,8 @@ def load_game(world, save_id=CURRENT):
                                     tax_due_day=payload.get("property_city_tax_due_day"),
                                     missed_payments=payload.get("property_city_missed_payments", 0),
                                     squatting=payload.get("property_city_squatting", False),
-                                    oven=payload.get("property_city_oven", False)),
+                                    oven=payload.get("property_city_oven", False),
+                                    garage=garage_from_dict(payload.get("property_city_garage"))),
                  bankers_debt=payload.get("bankers_debt", 0),
                  bankers_debt_since=payload.get("property_city_debt_since"),
                  garrison_stock=payload.get("garrison_stock"),
