@@ -40,6 +40,7 @@ class Ability:
     darkvision: int = 0               # range in squares; 0 = no darkvision
     extra_languages: int = 0
     demoralize_ignores_language: bool = False
+    demoralize_vs_weaker: int = 0     # Demoralize bonus against a target with a lower STR modifier
     carry_size: str | None = None  # size used for carry capacity only (overrides the real size)
     carry_mult: float = 1.0
     breaks_when_downed: bool = False  # 0 HP -> "broken" (no death clock), not "dying"
@@ -98,6 +99,9 @@ def _ferocity(unit, log):
 # --------------------------------------------------------------------------- #
 
 _LIST = [
+    Ability("browbeat", "Browbeat",
+            "+2 to Demoralize against a target with a lower Strength modifier.",
+            demoralize_vs_weaker=2),
     Ability("darkvision", "Darkvision",
             f"sees {data.DARKVISION} squares in the dark as if it were lit.",
             darkvision=data.DARKVISION),
@@ -170,7 +174,7 @@ _NONE = Ability("none", "No ability", "no effect.")
 
 
 _SUMMED = ("hp_max", "speed", "ac_natural", "damage_reduction", "initiative",
-           "melee_damage", "extra_languages")
+           "melee_damage", "extra_languages", "demoralize_vs_weaker")
 _WIDEST = ("darkvision", "auto_climb_dc")
 
 

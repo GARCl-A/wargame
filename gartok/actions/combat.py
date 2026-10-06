@@ -325,6 +325,9 @@ class Demoralize(Action):
         titled = battle.arena and getattr(actor, "arena_title", False)
         if titled and _shared_language(actor, target):
             mods.append((1, "circumstance", "Champion of the Pit"))
+        browbeat = actor.ability.demoralize_vs_weaker
+        if browbeat and actor.mod_strength > target.mod_strength:
+            mods.append((browbeat, "circumstance", "Browbeat"))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
 

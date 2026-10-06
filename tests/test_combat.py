@@ -670,3 +670,31 @@ def test_a_stashed_quiver_comes_back_as_used_as_it_went_in():
     name, _ = stash.take(0)
     u.give_to_pack(name)
     assert u.quiver_charges == 6
+
+
+def _browbeat_duel(att_str, def_str):
+    batt, a, d = _melee_battle()
+    a._ability = abilities.get("browbeat")
+    a.languages = d.languages = ["Elvish"]
+    a.torch_hand = True
+    a.ap = 2
+    a.mod_strength, d.mod_strength = att_str, def_str
+    logs = []
+    batt.log = logs.append
+    with fixed_d20(10):
+        actions.DEMORALIZE.execute(batt, a, d)
+    return " ".join(logs)
+
+
+def test_browbeat_adds_two_against_a_weaker_target():
+    assert "+2(Browbeat [circumstance])" in _browbeat_duel(2, 0)
+
+
+def test_browbeat_is_silent_against_an_equal_or_stronger_target():
+    assert "Browbeat" not in _browbeat_duel(1, 1)
+    assert "Browbeat" not in _browbeat_duel(0, 2)
+
+
+def test_hobgoblin_has_browbeat_and_dwarf_keeps_darkvision():
+    assert data.race_by_name("Hobgoblin")["ability"] == "browbeat"
+    assert data.race_by_name("Dwarf")["ability"] == "darkvision"

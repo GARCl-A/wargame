@@ -19,7 +19,7 @@ Attribute rolls are 3d6; the modifiers below are added after.
 | Goliath | +2 +1 +0 -1 -1 -1 | d10 | Medium | Jotun | 1x | Strong Body |
 | Grippli | -1 +1 +0 +0 +1 -1 | d8 | Small | Sylvan | 1.5x | Amphibious |
 | Halfling | -2 +2 -2 +0 +1 +1 | d6 | Small | Halfling | 1.5x | Innocent Face |
-| Hobgoblin | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Darkvision |
+| Hobgoblin | +1 +1 +1 -1 -2 +0 | d8 | Medium | Goblin | 0.625x | Browbeat |
 | Lizardfolk | +1 +1 +0 -1 +0 -1 | d10 | Medium | Draconic | 0.875x | Climber |
 | Human | +0 +0 +0 +0 +0 +0 | d8 | Medium | Ankarin | 1x | Extra Language |
 | Kenku | -3 +1 -1 +0 +1 +2 | d6 | Medium | Sylvan | 1x | Mimic Sounds |
@@ -34,6 +34,7 @@ The generator kept only the names; every effect below was designed for the warga
 
 | Ability | Effect |
 |---|---|
+| Browbeat | +2 to Demoralize against a target with a lower Strength modifier. |
 | Darkvision | sees 12 squares in the dark as if it were lit. |
 | Inorganic Body | at 0 HP goes BROKEN instead of dying (no death save) until an ally repairs it (Stabilize: INT vs DC 15). |
 | Gallop | +3 m (2 squares) of speed. |
