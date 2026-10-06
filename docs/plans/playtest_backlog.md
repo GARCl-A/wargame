@@ -14,8 +14,9 @@ checked against the code.
 
 - **25. Garrison of 10 days at the Claim.** The bug is fixed and the food problem
   has an answer (jerky, campfire, wagon, animals). What remains is in
-  [wagon_camp.md](wagon_camp.md): parking and breaking,
-  camp upkeep, mounts.
+  [wagon_camp.md](wagon_camp.md): the house and Claim garages, the guard selector
+  for the Ruins and the Wilds hunt (design settled, not built), then camp upkeep and
+  the Farm hub; broken wagons and mounts come later.
 
 ## Medium
 

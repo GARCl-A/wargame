@@ -42,7 +42,7 @@ exercises a small part of it.
 - **Storage must trade capacity for something.** Personal pack: free, goes to
   combat. Chest: static and safe. House: static and safe, has the oven. Wagon:
   mobile, lost with the group, needs animals that eat, and sets the trip's pace.
-  Pack animals sit between pack and wagon. Travel speed exists now, so revisit the numbers.
+  Pack animals sit between pack and wagon.
 - **Tack decides an animal's role** (Pack Saddle carries, Harness pulls, a riding
   saddle later). The wagon is a box; transport (capacity, speed) is derived.
 - Animals do not fight yet, but they have full creature sheets. **Wagons never enter a
@@ -50,42 +50,72 @@ exercises a small part of it.
 
 ## Still to build
 
-### 4. Parking, breaking and repair
-- A wagon is never left in the open (the Old Road). It **stays only where a group
-  could garrison**: the house, the Claim.
-- With a garrison in a safe place it is safe. With **nobody to defend it** in a
-  dangerous place it is an inanimate object: it **loses** any fight that comes. The
-  wagon is lost and **everything inside becomes the enemy's loot**, the same as a
-  group wiped out in a fight: that loot is gone.
-- **The wagon cannot die: it breaks**, the same rule as the Automaton's Inorganic
-  Body (0 HP = broken, no death clock). A broken wagon **stays in the group**: it
-  does not move, adds nothing to speed and cannot carry cargo. It is repaired like
-  an Automaton (Stabilize, INT vs DC 15) but outside of combat.
-- **A broken wagon leaves exactly two options:** stop and repair it, or abandon it.
-  Travelling with it broken *is* abandoning it, so there is no third way. Before
-  abandoning one, its cargo can still be unloaded into packs.
-- **An order that leaves a wagon behind** (a hunt, a fight, a garrison elsewhere) is not
-  modelled: wagons always travel with the group today. This step decides it: the wagon is
-  parked (only where it may stay) or it goes along; parking is what makes leaving it legal.
+### 4. Parking (the garage) and the wagon left outside
+A wagon is in one of three states: **with the group** (travels, same risk as the group),
+**in a garage** or **left outside**. Wagons never enter a battle map.
+
+- **Garage** = stored *inside* a holding, like a garrisoned unit: safe, nothing to roll.
+  - **House:** a garage is bought like the oven. The first tier holds **one wagon and one animal**;
+    each upgrade adds one more of each. **690 cp per tier** (150 construction, the oven's price,
+    plus 3 cp/kg for the 180 kg a Cart with an Ox opens); it is meant to be expensive. The cargo
+    stays in the wagon: the garage does not add to the house's 600 kg.
+  - **The Claim:** an *open* garage the moment its garrison opens (the 10 days to hold), with no
+    limit on wagons or animals. Attacked with defenders: they fight normally. Attacked with
+    nobody defending: the wagon is lost. A wagon may be parked there and the garrison emptied,
+    but with nobody in it the wagon is alone: **one roll per day**, the flight chance of its
+    most flighty animal, and a hit loses everything. The longer it sits alone the worse it gets.
+    The wagon should only stay while someone is there.
+  - A garaged wagon's food feeds the garrison (the original problem), and garaged animals eat
+    from the **whole garage's store** (the house stash; the garrison's food), not only the wagon's.
+  - Garaged animals do not count against `Group.herd_capacity`.
+- **Left outside**: the group enters a dangerous place and the wagon waits in the node: the Ancient
+  Ruins, and a hunt in the Wilds. (Arena, Library, Prison, Market: the wagon waits at the door,
+  no risk.)
+  - Going in opens the **squad selector**: who enters or hunts, who stays outside minding the
+    wagon. **Any one member is a guard**, even a lone level-0. The first time it opens, a tutorial
+    card says someone has to mind the wagon.
+  - The selector shows the **X% chance of losing the wagon** if nobody stays.
+  - **Unguarded**, one roll when the party comes back out: the node's random-encounter chance
+    (the Ruins use the Old Road's 35%, `ROAD_AMBUSH_CHANCE`) plus the animal's flight chance
+    (Donkey 5%, Horse 10%, Ox 15%). On a hit **everything is gone** (wagon, cargo, animals); the
+    game does not say what happened, only that it is no longer there when the party returns.
+    The Wilds are not `unsafe`, so a hunt carries only the animal's flight chance.
+  - **Guarded**: exposed only to the node's own encounter chance; the Ruins have no random
+    encounter for now, so a guarded wagon there is safe.
+- The guards are **not split off**: they remain in the same group doing the same activity
+  (the incursion, the hunt), only divided between those who go in and those who mind the wagon.
+- A parked wagon belongs to its holding (the house garage, the Claim), not to a group: a wagon
+  with nobody around has no group to belong to. Taking it out hands it to the group present.
+- A broken wagon, repair and abandon are in *Later*: nothing damages a wagon yet.
+- Left for later, on purpose: who leads a garrison and how large it may be (the leader decides
+  the herd and the group size there); the garage's per-tier price stays flat at 690 cp until
+  play shows what it should do; the flight chance becomes a per-species field in `data.BEASTS`
+  when 4b is built.
+
+Build order: 4a the house garage (buy, park, take out, animals eat from the store), 4b the guard
+selector with its risk percentage and tutorial card (Ruins, Wilds hunt), 4c the Claim's open
+garage with the daily roll. Each ships with its screen, tests and a `SAVE_VERSION` bump.
 
 ### 5. Camp and the Farm
 - **Campfire** never goes out and uses a single Lumber; cooking has no upkeep. Revisit if
   garrison cooking is too cheap or too fiddly (80 meals for 8 people over 10 days is about
   40 batches). Do it once wagons carry the food, so the numbers are real.
 - **The Farm** only holds the stables for now; rework it as the animals and wagons hub
-  once parking exists (a wagon waits there too).
+  once parking exists.
 
-### Prices and capacities
-The accepted placeholder table (units of 30 kg), all applied; retune from play feel, the
-Horse's 480 cp and the mobility premium are the first suspects. Donkey 180, Ox 300, Horse 480,
-Cart 150, Carriage 600, Chest 90 cp / 30 kg, House 1440 cp / 600 kg / tax 30 per week, Pack
-Saddle 60, Harness 30.
+### Prices and capacities (applied)
+Donkey 180, Ox 300, Horse 480, Cart 150, Carriage 600, Chest 90 cp / 30 kg, House 1440 cp /
+600 kg / tax 30 per week, Pack Saddle 60, Harness 30: about 3 cp per kg over 12 weeks, units of
+30 kg. A cart (with a Donkey and Harness, 360 cp) clears the Shortbow + Quiver (345 cp); early
+squads start with about 27 cp, so a cart is a mid-game buy and a house a late one. Retune from
+play feel; the Horse's 480 cp and the mobility premium are the first suspects.
 
-Everything is priced at about 3 cp per kg over 12 weeks (house bare = 6 × 80 kg people + 60
-hides = 600 kg; the chest must cost less than the tanner's 200 cp reward for 15 hides). A cart
-clears the Shortbow + Quiver (345 cp): Cart 150 + Donkey 180 + Harness 30 = 360. `economy_sim.py`
-gives the same report before and after (it never buys these): early squads start with about 27 cp,
-so a cart is a mid-game purchase and a house a late one.
+### Later: broken wagons
+- A wagon cannot die: at 0 HP it **breaks** (the Automaton's Inorganic Body rule). It stays in the
+  group, does not move, adds nothing to speed and carries no cargo. It is repaired like an
+  Automaton (Stabilize, INT vs DC 15) out of combat, costing Lumber and crafting time, or
+  abandoned (travelling with it broken *is* abandoning it); cargo can be unloaded into packs first.
+- Needs something that damages wagons: a wagon on a battle map or wear in travel. Not built.
 
 ### Later: wild animals and mounts (separate arc, keep in mind)
 - **Wild Donkey / Ox / Horse** are not rolled anywhere; their racial modifiers (+2 / +3 /
