@@ -348,6 +348,11 @@ class DerivationMixin:
         return self.mental_defense_base
 
     @property
+    def ride_weight(self):
+        """What a wagon carries them as: their body (by size) and everything they carry."""
+        return data.SIZES[self.size]["kg"] + self.load
+
+    @property
     def load(self):
         """Weight of the equipped loadout: weapon hand + off hand + tongue + pack + armor."""
         w = sum(items.item_weight(name) * qty for name, qty in self._base_inventory)

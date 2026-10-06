@@ -78,12 +78,12 @@ def resolve_bonus(mods):
 
 SIZE_ORDER = ("Tiny", "Small", "Medium", "Large", "Huge")
 
-SIZES = {
-    "Tiny": {"speed": 4.5, "carry": 0.5, "footprint": 1},
-    "Small":  {"speed": 6.0, "carry": 1.0, "footprint": 1},
-    "Medium":    {"speed": 9.0, "carry": 1.0, "footprint": 1},
-    "Large":   {"speed": 9.0, "carry": 2.0, "footprint": 2},
-    "Huge":    {"speed": 9.0, "carry": 4.0, "footprint": 3},
+SIZES = {       # kg: the body alone, what a wagon carries a passenger as (60 for a Medium)
+    "Tiny": {"speed": 4.5, "carry": 0.5, "footprint": 1, "kg": 15},
+    "Small":  {"speed": 6.0, "carry": 1.0, "footprint": 1, "kg": 30},
+    "Medium":    {"speed": 9.0, "carry": 1.0, "footprint": 1, "kg": 60},
+    "Large":   {"speed": 9.0, "carry": 2.0, "footprint": 2, "kg": 120},
+    "Huge":    {"speed": 9.0, "carry": 4.0, "footprint": 3, "kg": 240},
 }
 
 

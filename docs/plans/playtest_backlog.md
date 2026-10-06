@@ -14,7 +14,7 @@ checked against the code.
 
 - **25. Garrison of 10 days at the Claim.** The bug is fixed and the food problem
   has an answer (jerky, campfire, wagon, animals). What remains is in
-  [wagon_camp.md](wagon_camp.md): passengers by weight, parking and breaking,
+  [wagon_camp.md](wagon_camp.md): parking and breaking,
   camp upkeep, mounts.
 
 ## Medium

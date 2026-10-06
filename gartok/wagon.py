@@ -8,9 +8,9 @@ A wagon is a `Vehicle` type -- a cart for two people and their packs, a carriage
 for six -- with its own box, hitch slots and price. It does not own its animals:
 an animal wearing a Harness (`animals.HARNESS`) is hitched to one wagon of the
 group (`Animal.hitch`, see `Group.hitch`), up to the type's slots; with none
-hitched it is a box that cannot move. Cargo room is the smaller of what the box
-holds and what its own animals draw. Members eat from the cargo like a
-`share_food` mate.
+hitched it is a box that cannot move. Its budget is the smaller of what the box
+holds and what its own animals draw; passengers (`Group.boarding`, by weight) and
+cargo share it. Members eat from the cargo like a `share_food` mate.
 """
 
 from dataclasses import dataclass
@@ -69,10 +69,25 @@ class Wagon(Creature):
         return sum(a.pull for a in self.draft)
 
     @property
-    def capacity(self):
-        """kg of cargo it can take right now: the box, or what its animals draw
-        if that is less; 0 with nothing to pull it."""
+    def budget(self):
+        """kg it can carry in all, passengers and cargo alike: the box, or what its
+        animals draw if that is less; 0 with nothing to pull it."""
         return min(self.vehicle.capacity, self.haul)
+
+    @property
+    def passengers(self):
+        """The members riding it right now -- see `Group.boarding`."""
+        return self._group.boarding()[self.uid] if self._group is not None else []
+
+    @property
+    def passenger_weight(self):
+        return sum(u.ride_weight for u in self.passengers)
+
+    @property
+    def capacity(self):
+        """kg of cargo it can take right now: what is left of the budget once its
+        passengers, and everything they carry, are aboard."""
+        return max(0, self.budget - self.passenger_weight)
 
     @property
     def speed(self):

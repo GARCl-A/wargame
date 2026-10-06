@@ -77,7 +77,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import economy
+from . import cohesion, economy
 from .clock import Clock
 from .group import BASE_SLOTS, FAME_PER_SLOT, Group
 from .guild_claim import (
@@ -202,6 +202,14 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.leader = unit
         self.leader_swaps_used += 1
 
+    def set_group_leader(self, group, unit):
+        """`Group.set_leader` plus what a new leader changes at once: a herd they
+        cannot control starts its notice now. Returns the events."""
+        group.set_leader(unit)
+        events = cohesion.herd_notices(self)
+        self._sync_leadership()
+        return events
+
     def _sync_leadership(self):
         """Re-run after anything that can change who leads what: auto-succeeds
         the guild leader (by Charisma) if they're no longer on the roster,
@@ -210,8 +218,9 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         (`Unit._derive_ac` reads `unit.group_overextension`)."""
         if self.roster and self.leader not in self.roster:
             self.leader = max(self.roster, key=lambda u: u.mod_charisma)
-        for g in self.groups:
-            g.ensure_leader()
+        changed = [g.ensure_leader() for g in self.groups]     # every group, so no short-circuit
+        if any(changed):
+            cohesion.herd_notices(self)
         for g in self.groups:
             n = g.overextension
             for u in g.members:

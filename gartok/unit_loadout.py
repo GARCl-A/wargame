@@ -374,17 +374,19 @@ def flatten_pack(unit):
             if name != items.COIN_ITEM for _ in range(qty)]
 
 
-def distribute_load(units, share_coins=True):
+def distribute_load(units, share_coins=True, creatures=()):
     """Rebalance pack items across `units` by free carrying capacity, heaviest
     first -- locked items (see `Unit.locked_items`/`toggle_lock`) stay put on
     their current owner instead of joining the pool. Item granularity, not
     whole-stack: a locked portion of a stack stays put, the rest still moves.
     With `share_coins`, unlocked coins are poured out in small handfuls onto
     whoever is lightest, since they weigh too; without it every purse stays
-    with its owner."""
+    with its owner. `creatures` (a group's animals and wagons) share the load
+    too, the ones with room to carry; coins stay on people."""
+    bearers = [*units, *(c for c in creatures if c.capacity > 0)]
     pool = []
     coins = 0
-    for u in units:
+    for u in bearers:
         keep, move = [], []
         for it in u._base_inventory:
             name, qty = it[0], it[1]
@@ -414,7 +416,7 @@ def distribute_load(units, share_coins=True):
 
     pool.sort(key=items.item_weight, reverse=True)
     for item in pool:
-        best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
+        best = min(bearers, key=lambda m: m.load / max(1.0, m.carry_normal))
         best.give_to_pack(item)
         best._derive_combat()
 

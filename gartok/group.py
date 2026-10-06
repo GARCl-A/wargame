@@ -176,9 +176,12 @@ class Group:
     def ensure_leader(self):
         """Auto-succession: if the current leader isn't a member any more (died,
         never set, split off elsewhere), the highest-Charisma member left takes
-        over. A no-op otherwise -- this never overrides a deliberate choice."""
+        over, and returns True; otherwise a no-op that returns False -- this never
+        overrides a deliberate choice."""
         if self.members and self.leader not in self.members:
             self.leader = max(self.members, key=lambda u: u.mod_charisma)
+            return True
+        return False
 
     def set_leader(self, unit):
         """Hand leadership to `unit` -- free, any time, as long as they're
@@ -212,12 +215,33 @@ class Group:
     def can_take(self, animal):
         return self.herd_load + animal.herd_weight <= self.herd_capacity
 
+    def boarding(self):
+        """Who rides which wagon, `{wagon uid: [unit]}`. A wagon seats people by
+        weight: each one counts as their body plus everything they carry, against
+        what the wagon draws less its own cargo. The slowest are seated first, onto
+        the wagon with the most room left; whoever does not fit walks."""
+        room = {w.uid: w.budget - w.stash.load for w in self.wagons}
+        seats = {w.uid: [] for w in self.wagons}
+        for unit in sorted(self.members, key=lambda u: u.speed):
+            weight = unit.ride_weight
+            uid = max(room, key=room.get, default=None)
+            if uid is not None and room[uid] >= weight:
+                seats[uid].append(unit)
+                room[uid] -= weight
+        return seats
+
+    @property
+    def riders(self):
+        return [u for seated in self.boarding().values() for u in seated]
+
     @property
     def speed(self):
-        """Meters the group covers in one move: the slowest member (their combat
-        speed, armor and load included) or animal, harnessed or not."""
-        return min([u.speed * METERS_PER_SQUARE for u in self.members] + [a.speed for a in self.herd],
-                   default=0)
+        """Meters the group covers in one move: the slowest walker (their combat
+        speed, armor and load included) or animal, harnessed or not. Whoever rides
+        a wagon goes at the pace of the animals pulling it."""
+        riding = self.riders
+        return min([u.speed * METERS_PER_SQUARE for u in self.members if u not in riding]
+                   + [a.speed for a in self.herd], default=0)
 
     @property
     def overextension(self):
@@ -228,10 +252,10 @@ class Group:
         return max(0, len(self.members) - self.capacity)
 
     def distribute_load(self, share_coins=True):
-        """Rebalances the members' unlocked pack items by free carrying capacity --
-        see `unit.distribute_load`."""
+        """Rebalances the unlocked pack items of the members, the pack animals and
+        the wagons by free carrying capacity -- see `unit.distribute_load`."""
         from . import unit
-        unit.distribute_load(self.members, share_coins)
+        unit.distribute_load(self.members, share_coins, creatures=[*self.herd, *self.wagons])
 
     # ------------------------------------------------------------------ #
     # logistics: the band's answer to "can we move" / "are we fed" --   #

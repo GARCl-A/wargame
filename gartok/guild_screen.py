@@ -185,7 +185,7 @@ class GuildScreen(Screen):
         elif key == "share_food" and m is not None:
             m.share_food = not m.share_food
         elif key == "group_leader" and group:
-            group.set_leader(m)
+            self.guild.set_group_leader(group, m)
         elif key == "guild_leader" and m is not None:
             self.guild.set_leader(m)
         elif key == "distribute" and group and len(group.members) > 1:
@@ -568,6 +568,10 @@ class GuildScreen(Screen):
             out += [(f"{g.display_name} is over capacity and the guild has no free slot: "
                      + "its weakest member may give notice any day.", "warn")
                     for g in self.guild.groups if g.overextension and g not in warned]
+        day = self.guild.clock.day
+        out += [(f"{g.display_name} cannot control its herd: an animal strays in "
+                 + f"{self._days(max(0, g.herd_notice - day))}.", "warn")
+                for g in self.guild.groups if g.herd_notice is not None]
         return out
 
     def _holdings(self):

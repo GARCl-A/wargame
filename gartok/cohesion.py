@@ -117,17 +117,25 @@ def stray(group):
     return f"A {animal.species} strays off: {group.display_name} cannot control that big a herd."
 
 
-def _herds(guild):
+def herd_notices(guild):
+    """Start (or drop) each group's herd notice without waiting for the daily
+    sweep -- a new leader may control fewer animals. Returns the events."""
     events = []
-    today = guild.clock.day
     for group in guild.groups:
         if group.herd_load <= group.herd_capacity:
             group.herd_notice = None
         elif group.herd_notice is None:
-            group.herd_notice = today + NOTICE_DAYS
+            group.herd_notice = guild.clock.day + NOTICE_DAYS
             events.append(f"{group.display_name} has more animals than it can control: "
                           f"{NOTICE_DAYS} days before one strays.")
-        elif today >= group.herd_notice:
+    return events
+
+
+def _herds(guild):
+    events = herd_notices(guild)
+    today = guild.clock.day
+    for group in guild.groups:
+        if group.herd_notice is not None and today >= group.herd_notice:
             events.append(stray(group))
             group.herd_notice = today + NOTICE_DAYS if group.herd_load > group.herd_capacity else None
     return events

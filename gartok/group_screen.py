@@ -644,8 +644,9 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
                               "sel": "tack" in selected,
                               "accepts": any(store.can_wear(n) for n in carried)}
         else:
-            riders = " + ".join(a.species for a in store.draft) or "no animals"
-            member["name"] = f"{store.kind}  ·  {riders}"
+            drawn_by = " + ".join(a.species for a in store.draft) or "no animals"
+            aboard = f"  ·  {len(store.passengers)} riding" if store.passengers else ""
+            member["name"] = f"{store.kind}  ·  {drawn_by}{aboard}"
         return member
 
     def _draw_bags(self, screen, F, area):

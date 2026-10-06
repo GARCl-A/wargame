@@ -13,7 +13,7 @@ cannot carry that much. Built so far (read the code for how it works; tests in
   600 cp), d8 hit die, several per group in `Group.wagons`. A Harness animal is hitched to
   one wagon (`Animal.hitch`, `Group.hitch` (`swap=True`) / `hitch_idle` / `next_hitch`;
   drag the animal's header onto the wagon's on the gear screen, or the stables' HITCH
-  button; dropping on a full wagon swaps); cargo room = min(box, what its animals draw). Merge gives both wagons; `Guild.split_group(...,
+  button; dropping on a full wagon swaps); budget = min(box, what its animals draw). Merge gives both wagons; `Guild.split_group(...,
   wagons=, herd=)` hands wagons and animals over (the map's split card lists them).
 - Herd capacity: `Group.herd_capacity` = `HERD_BASE` 3 + the leader's Wisdom modifier;
   gates buying, merging and splitting; an overgrown herd gets a 7-day notice
@@ -22,6 +22,14 @@ cannot carry that much. Built so far (read the code for how it works; tests in
   `world.hours(distance, Group.speed)`, `Group.speed` being the slowest member (combat speed,
   armor and load included) or animal, shown on the gear screen. The economy and balance sims
   never travel, so they were not affected.
+- Load: `Group.distribute_load` fills the pack animals and the wagons too (those with room;
+  coins stay on people). A herd over `herd_capacity` after a leader change (swap through
+  `Guild.set_group_leader`, or death) starts its 7-day notice at once (`cohesion.herd_notices`).
+- Passengers, by weight: `Group.boarding()` seats the members in the wagons, slowest first, each
+  counting as `data.SIZES[size]["kg"]` plus everything they carry, against `Wagon.budget` (the box
+  or what its animals draw) less the cargo already aboard; `Wagon.capacity` is what the passengers
+  leave for cargo, so people and cargo share one budget. Whoever does not fit walks; riders drop
+  out of `Group.speed`, the animals' pace stands in. The gear screen's wagon column says how many ride.
 - Saves: `SAVE_VERSION` 19, old `wagon` / `animals` keys and unhitched saves still load.
 
 **Scale premise.** The game is meant to get big (guilds with many groups, many
@@ -33,7 +41,7 @@ exercises a small part of it.
 
 - **Storage must trade capacity for something.** Personal pack: free, goes to
   combat. Chest: static and safe. House: static and safe, has the oven. Wagon:
-  mobile, lost with the group, needs animals that eat, and (below) slows the trip.
+  mobile, lost with the group, needs animals that eat, and sets the trip's pace.
   Pack animals sit between pack and wagon. Travel speed exists now, so revisit the numbers.
 - **Tack decides an animal's role** (Pack Saddle carries, Harness pulls, a riding
   saddle later). The wagon is a box; transport (capacity, speed) is derived.
@@ -42,41 +50,7 @@ exercises a small part of it.
 
 ## Still to build
 
-### 4. Load and herd loose ends
-Small, no new rules; clears the ground before passengers share the same carry budget.
-- **Distribute load** ignores animals and wagons: it should fill pack animals and the
-  wagon's room too, not only the members' packs (`Group.distribute_load`, `unit.distribute_load`).
-- **Herd over capacity on a leader change** (swap, death), not only on a merge: re-check
-  `herd_capacity` there and start the same 7-day notice (`cohesion._herds`) instead of
-  waiting for the next sweep to notice.
-
-### 5. Passengers, by weight
-- Travel speed is built (above); once people ride, their own speed drops out of `Group.speed`
-  and the wagon's pace (`Wagon.speed`, its slowest hitched animal) stands in for them.
-- A wagon seats people by **weight, not seat count**. A passenger is cargo: the
-  wagon carries the person **and everything they carry**. The pack stays on the
-  passenger (it is still theirs and they can still eat from it); the wagon's cargo
-  room, its passengers and its draft limit are one budget.
-- **Boarding is automatic when everyone fits.** When not everyone fits, it loads
-  the group from the slowest to the fastest until the weight limit is reached;
-  whoever is left walks. The group's speed is then the slowest of the walkers and
-  the draft animals (the passengers' own speed drops out).
-- **Body weight and the typical pack scale with size**, multiplied together, from a
-  Medium at 60 kg body + 20 kg pack:
-
-  | Size | Body | Pack | Person + gear |
-  |---|---|---|---|
-  | Tiny | 15 | 5 | 20 |
-  | Small | 30 | 10 | 40 |
-  | Medium | 60 | 20 | **80** |
-  | Large | 120 | 40 | 160 |
-  | Huge | 240 | 80 | 320 |
-
-  Needs a `kg` per size next to `data.SIZES`. Note `SIZES["carry"]` today does not match
-  (Small carries as a Medium, 1.0); the pack column is only the sizing heuristic for
-  vehicles, not a carry rule.
-
-### 6. Parking, breaking and repair
+### 4. Parking, breaking and repair
 - A wagon is never left in the open (the Old Road). It **stays only where a group
   could garrison**: the house, the Claim.
 - With a garrison in a safe place it is safe. With **nobody to defend it** in a
@@ -94,32 +68,24 @@ Small, no new rules; clears the ground before passengers share the same carry bu
   modelled: wagons always travel with the group today. This step decides it: the wagon is
   parked (only where it may stay) or it goes along; parking is what makes leaving it legal.
 
-### 7. Camp and the Farm
+### 5. Camp and the Farm
 - **Campfire** never goes out and uses a single Lumber; cooking has no upkeep. Revisit if
   garrison cooking is too cheap or too fiddly (80 meals for 8 people over 10 days is about
   40 batches). Do it once wagons carry the food, so the numbers are real.
 - **The Farm** only holds the stables for now; rework it as the animals and wagons hub
   once parking exists (a wagon waits there too).
 
-### Prices and capacities not applied yet
-The accepted placeholder table (units of 30 kg; retune from play feel, the Horse's 480 cp
-and the mobility premium are the first suspects). Applied: Donkey 180, Ox 300, Horse 480,
-Cart 150, Carriage 600. **Still the old numbers:**
+### Prices and capacities
+The accepted placeholder table (units of 30 kg), all applied; retune from play feel, the
+Horse's 480 cp and the mobility premium are the first suspects. Donkey 180, Ox 300, Horse 480,
+Cart 150, Carriage 600, Chest 90 cp / 30 kg, House 1440 cp / 600 kg / tax 30 per week, Pack
+Saddle 60, Harness 30.
 
-| Item | Today | Target |
-|---|---|---|
-| Chest | 100 cp, 30 kg | **90 cp**, 30 kg |
-| House | 1000 cp, 200 kg, tax 40/wk | **1440 cp, 600 kg**, tax 30/wk |
-| Pack Saddle | 40 cp | **60 cp** (Harness is already 30) |
-
-How the targets are derived: the chest is anchored on the tanner's 200 cp reward (15 hides
-= 30 kg must cost less); everything is priced at about 3 cp per kg over 12 weeks (house
-bare = 6 × 80 kg people + 60 hides = 600 kg). A cart must clear the Shortbow + Quiver
-(345 cp): Cart 150 + Donkey 180 + Harness 30 = 360. Pack Saddle 60 keeps a pack animal
-well above the chest's cost per kg. After applying, **re-run `scripts/economy_sim.py`**:
-early squads start with about 27 cp, so a cart is a mid-game purchase and a house a late
-one. The house should out-hold the biggest carriage (6 people + gear) and cost more than
-1000 cp.
+Everything is priced at about 3 cp per kg over 12 weeks (house bare = 6 × 80 kg people + 60
+hides = 600 kg; the chest must cost less than the tanner's 200 cp reward for 15 hides). A cart
+clears the Shortbow + Quiver (345 cp): Cart 150 + Donkey 180 + Harness 30 = 360. `economy_sim.py`
+gives the same report before and after (it never buys these): early squads start with about 27 cp,
+so a cart is a mid-game purchase and a house a late one.
 
 ### Later: wild animals and mounts (separate arc, keep in mind)
 - **Wild Donkey / Ox / Horse** are not rolled anywhere; their racial modifiers (+2 / +3 /
