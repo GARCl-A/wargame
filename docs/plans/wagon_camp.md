@@ -1,10 +1,18 @@
-# Wagon, animals and travel — what is left
+# Wagons, animals and camp — to do
 
-The original problem: a Claim garrison needs 10 days of food and a group of 6–8
-cannot carry that much. Built so far (read the code for how it works; tests in
-`test_wagon.py`, `test_stables.py`, `test_cooking.py`):
+The original problem (a Claim garrison needs 10 days of food and a group of 6–8 cannot carry
+that much) is solved: everything under **Built** is done. Only the **To do** list at the end is open.
+Read the code for how it works; tests in `test_wagon.py`, `test_stables.py`, `test_garage.py`,
+`test_claim_garage.py`, `test_wagon_watch.py`, `test_cooking.py`, `test_crafting.py`.
 
-- Cooking and jerky (house oven, Claim campfire).
+## Built
+
+- Cooking and jerky (house oven, bought once; Claim campfire). Jerky: 2 Meat + Salt -> 2 Jerky, 20 days.
+  A cooking shift is a batch: it rolls once an hour, starts the next batch from the same pack with the
+  leftover progress, and ends early when the materials run out (`Guild.crafting_shift`); the clock and
+  the work XP count only the hours worked. The campfire costs one Lumber, one hour and a WIS check to
+  light, burns free while a garrison stands at the claim and goes out in the daily sweep the day nobody
+  does (`_campfire_tick`). The Farm is not the player's: it only sells animals, wagons and tack.
 - Animals as creatures: `creature.Creature` base; Donkey / Ox / Horse are `data.BEASTS`
   rows (`data.LIVESTOCK`, outside `BEAST_POOL`) with fixed attributes, loads from Strength
   rounded to 30 kg, Beast of Burden on the Ox; kept in `Group.herd`, bought at the Farm
@@ -64,43 +72,28 @@ exercises a small part of it.
 - Animals do not fight yet, but they have full creature sheets. **Wagons never enter a
   battle map**: when combat starts, passengers get off and fight like anyone else.
 
-## Still to build
-
-### 5. Camp and the Farm (built)
-- **The Farm is not the player's**: it only sells animals, wagons and tack. Parking is the house
-  garage and the Claim garage, so there is no hub to build there.
-- **Campfire**: costs one Lumber, one hour and a WIS check to light, then burns free while a garrison
-  stands at the claim and goes out in the daily sweep the day nobody does (`_campfire_tick`). The
-  cost of cooking is the ingredients (Jerky: 2 Meat + Salt -> 2 Jerky, 80 Meat and 40 Salt for 8
-  people over 10 days), and the labour below.
-- **Batch cooking** (`Guild.crafting_shift`): a shift of N hours rolls once an hour, each finished
-  batch starts the next from the same pack with the leftover progress carried over, and the shift
-  ends early when the materials run out (the clock only advances for the hours worked). The last batch
-  keeps its partial progress. Work XP banks per hour actually worked. The house oven is bought once
-  and works always.
-
-### Later: garrisons
-- Who leads a garrison and how large it may be (the leader decides the herd and the group size
-  there). The Claim garage's flight chance and the house garage's flat 690 cp per tier stay as they
-  are until play shows what they should do.
-
-### Prices and capacities (applied)
+## Prices and capacities (applied)
 Donkey 180, Ox 300, Horse 480, Cart 150, Carriage 600, Chest 90 cp / 30 kg, House 1440 cp /
 600 kg / tax 30 per week, Pack Saddle 60, Harness 30: about 3 cp per kg over 12 weeks, units of
 30 kg. A cart (with a Donkey and Harness, 360 cp) clears the Shortbow + Quiver (345 cp); early
 squads start with about 27 cp, so a cart is a mid-game buy and a house a late one. Retune from
 play feel; the Horse's 480 cp and the mobility premium are the first suspects.
 
-### Later: broken wagons
-- A wagon cannot die: at 0 HP it **breaks** (the Automaton's Inorganic Body rule). It stays in the
-  group, does not move, adds nothing to speed and carries no cargo. It is repaired like an
-  Automaton (Stabilize, INT vs DC 15) out of combat, costing Lumber and crafting time, or
-  abandoned (travelling with it broken *is* abandoning it); cargo can be unloaded into packs first.
-- Needs something that damages wagons: a wagon on a battle map or wear in travel. Not built.
+## To do
 
-### Later: wild animals and mounts (separate arc, keep in mind)
-- **Wild Donkey / Ox / Horse** are not rolled anywhere; their racial modifiers (+2 / +3 /
-  +5) only matter if one ever is (a Horse at 3d6 +5 could reach 23, so revisit then).
-- Riding is a later arc, done after this one. A riding saddle enters `animals.TACK`
-  then; the rider and animal pair goes into combat. Nothing is built, but the creature
-  abstraction should not make it harder.
+Nothing here blocks anything; each item waits for a reason to build it.
+
+- [ ] **Broken wagons.** A wagon cannot die: at 0 HP it breaks (the Automaton's Inorganic Body rule).
+  It stays in the group, does not move, adds nothing to speed and carries no cargo. Repaired like an
+  Automaton (Stabilize, INT vs DC 15) out of combat, costing Lumber and crafting time, or abandoned
+  (travelling with it broken is abandoning it); cargo can be unloaded into packs first. Needs
+  something that damages wagons first: wear in travel, or a wagon on a battle map.
+- [ ] **Garrison leader and size.** Who leads a garrison and how large it may be (the leader decides
+  the herd and the group size there).
+- [ ] **Garage tuning.** The house garage's flat 690 cp per tier and the Claim garage's flight chance
+  stay as they are until play shows what they should do.
+- [ ] **Price retune from play.** The Horse's 480 cp and the mobility premium are the first suspects.
+- [ ] **Wild Donkey / Ox / Horse.** Not rolled anywhere; their racial modifiers (+2 / +3 / +5) only
+  matter if one ever is (a Horse at 3d6 +5 could reach 23, so revisit then).
+- [ ] **Riding and mounts** (separate arc). A riding saddle enters `animals.TACK`; the rider and animal
+  pair goes into combat. The creature abstraction should not make it harder.

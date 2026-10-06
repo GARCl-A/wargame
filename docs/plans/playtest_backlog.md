@@ -12,11 +12,10 @@ checked against the code.
 
 ## Design arc in progress
 
-- **25. Garrison of 10 days at the Claim.** The bug is fixed and the food problem
-  has an answer (jerky, campfire, wagon, animals). What remains is in
-  [wagon_camp.md](wagon_camp.md): the house and Claim garages, the guard selector
-  for the Ruins and the Wilds hunt (design settled, not built), then camp upkeep and
-  the Farm hub; broken wagons and mounts come later.
+- **25. Garrison of 10 days at the Claim.** Done: the bug is fixed and the food problem is
+  solved (jerky, campfire, wagons, animals, the house and Claim garages, the guard selector).
+  What is left is the to-do list in [wagon_camp.md](wagon_camp.md): broken wagons, garrison
+  leader and size, tuning, mounts.
 
 ## Medium
 
