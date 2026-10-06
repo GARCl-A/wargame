@@ -256,7 +256,11 @@ late one.
 1. **Creature abstraction** (animal and wagon as a kind of unit, stats, bought into
    `Group.herd` / `Group.wagons`): everything else sits on it.
 2. **Vehicle types and several wagons**: cart / carriage, `Group.wagons`, the Harness link, split and merge.
-3. **Travel from distance and speed**, with animals counted in the slowest.
+3. **Travel from distance and speed**, with animals counted in the slowest. Big step
+   (edges, every hour-based number, `economy_sim.py`), so slice it:
+   a. `Group.speed` only: slowest of the members and the animals, shown on the group
+      screen. No route or clock change.
+   b. Edges become distance and travel time uses `Group.speed`; re-run the sims.
 4. **Passengers by weight**, with the numbers above and body weight by size.
 5. **Parking wagons** at the house and Claim, and wagon breaking and repair.
 
