@@ -9,7 +9,7 @@ from collections import Counter
 
 import pygame
 
-from . import economy, items
+from . import items
 from .screen import Screen
 from .ui.primitives import (
     caps,
@@ -188,7 +188,7 @@ class CraftingScreen(Screen):
             if r_data.yield_qty > 1:
                 caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
 
-            target_val = sum(economy.PRICES.get(mat, 10) for mat in r_data["materials"]) + r_data["complexity"]
+            target_val = m.crafting_goal(r_name)
 
             materials_str = ", ".join(r_data["materials"])
 

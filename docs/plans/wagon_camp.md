@@ -30,18 +30,22 @@ cannot carry that much. Built so far (read the code for how it works; tests in
   or what its animals draw) less the cargo already aboard; `Wagon.capacity` is what the passengers
   leave for cargo, so people and cargo share one budget. Whoever does not fit walks; riders drop
   out of `Group.speed`, the animals' pace stands in. The gear screen's wagon column says how many ride.
-- The house garage (4a): `holdings.Garage` on `CityProperty.garage`, bought by the bay at
-  `economy.GARAGE_PRICE` (690 cp, flat) from `garage_screen.py` (the GARAGE button on the house screen).
-  `Guild.park_wagon` / `park_animal` / `take_wagon` / `take_animal`; the cargo stays in the wagon, parked
-  animals eat daily from the house stash and the parked wagons' cargo (`animals.feed_herd`, shared with
-  `Group.feed_animals`) and do not count against `herd_capacity`; losing the house loses the garage.
-- The wagon left outside (4b): a group with a wagon entering the Ancient Ruins or hunting in the Wilds
-  opens `watch_screen.WatchScreen` (the squad selector, with its tutorial card): click a member to leave
-  them minding the wagon; they stay in the group, only the others delve or hunt. Unguarded, `app` rolls
-  once when the party is back out (`wagon_watch.leave_outside`): `Node.wagon_risk` (Ruins
-  `ROAD_AMBUSH_CHANCE`, Wilds 0) plus the flightiest animal's `flight` (`data.BEASTS`: Donkey 5%, Horse 10%,
-  Ox 15%); a hit loses wagons, cargo and herd, with no notice. Guarded is always safe for now. Nothing new
-  is persisted, so no save bump.
+- Parking (4): a wagon is with the group, in a garage or left outside; wagons never enter a battle map.
+  - The house garage (`holdings.Garage` on `CityProperty.garage`, `garage_screen.py`, bought by the bay at
+    `economy.GARAGE_PRICE` 690 cp, flat): one wagon and one animal per tier; `Guild.park_wagon` /
+    `park_animal` / `take_wagon` / `take_animal`. The cargo stays in the wagon, parked animals eat
+    daily from the house stash and the parked wagons' cargo (`animals.feed_herd`) and do not count
+    against `herd_capacity`; losing the house loses the garage.
+  - The Claim garage (`Guild.claim_garage`, `guild_claim.py`): open from the day the garrison opens
+    (SUSTAINING) with no limit. A garrisoned claim is safe and a raid is a normal fight. With
+    nobody garrisoned there is one silent roll a day, the flightiest animal's chance (a wagon with no
+    animal never loses), and a hit clears everything. A seized claim keeps what was parked. Parked
+    food feeds the garrison and animals eat from the garrison's food; parked food rots like any other.
+  - A wagon left outside (`wagon_watch.py`, `watch_screen.py`): entering the Ancient Ruins or hunting
+    in the Wilds opens the squad selector, where any one member minding the wagon makes it safe.
+    Unguarded, one roll when the party is back out: `Node.wagon_risk` (Ruins 35%, Wilds 0) plus the
+    flightiest animal's `flight` (Donkey 5%, Horse 10%, Ox 15%); a hit loses wagons, cargo and herd,
+    with no notice. The Arena, Library, Prison and Market have no risk.
 - Saves: `SAVE_VERSION` 21, old `wagon` / `animals` keys and unhitched saves still load.
 
 **Scale premise.** The game is meant to get big (guilds with many groups, many
@@ -62,61 +66,23 @@ exercises a small part of it.
 
 ## Still to build
 
-### 4. Parking (the garage) and the wagon left outside
-4a (the house garage), 4b (the wagon left outside) and 4c (the Claim garage) are built. The full design:
+### 5. Camp and the Farm (built)
+- **The Farm is not the player's**: it only sells animals, wagons and tack. Parking is the house
+  garage and the Claim garage, so there is no hub to build there.
+- **Campfire**: costs one Lumber, one hour and a WIS check to light, then burns free while a garrison
+  stands at the claim and goes out in the daily sweep the day nobody does (`_campfire_tick`). The
+  cost of cooking is the ingredients (Jerky: 2 Meat + Salt -> 2 Jerky, 80 Meat and 40 Salt for 8
+  people over 10 days), and the labour below.
+- **Batch cooking** (`Guild.crafting_shift`): a shift of N hours rolls once an hour, each finished
+  batch starts the next from the same pack with the leftover progress carried over, and the shift
+  ends early when the materials run out (the clock only advances for the hours worked). The last batch
+  keeps its partial progress. Work XP banks per hour actually worked. The house oven is bought once
+  and works always.
 
-A wagon is in one of three states: **with the group** (travels, same risk as the group),
-**in a garage** or **left outside**. Wagons never enter a battle map.
-
-- **Garage** = stored *inside* a holding, like a garrisoned unit: safe, nothing to roll.
-  - **House:** a garage is bought like the oven. The first tier holds **one wagon and one animal**;
-    each upgrade adds one more of each. **690 cp per tier** (150 construction, the oven's price,
-    plus 3 cp/kg for the 180 kg a Cart with an Ox opens); it is meant to be expensive. The cargo
-    stays in the wagon: the garage does not add to the house's 600 kg.
-  - **The Claim:** an *open* garage the moment its garrison opens (the 10 days to hold), with no
-    limit on wagons or animals. Attacked with defenders: they fight normally. Attacked with
-    nobody defending: the wagon is lost. A wagon may be parked there and the garrison emptied,
-    but with nobody in it the wagon is alone: **one roll per day**, the flight chance of its
-    most flighty animal, and a hit loses everything. The longer it sits alone the worse it gets.
-    The wagon should only stay while someone is there.
-  - A garaged wagon's food feeds the garrison (the original problem), and garaged animals eat
-    from the **whole garage's store** (the house stash; the garrison's food), not only the wagon's.
-  - Garaged animals do not count against `Group.herd_capacity`.
-- **Left outside**: the group enters a dangerous place and the wagon waits in the node: the Ancient
-  Ruins, and a hunt in the Wilds. (Arena, Library, Prison, Market: the wagon waits at the door,
-  no risk.)
-  - Going in opens the **squad selector**: who enters or hunts, who stays outside minding the
-    wagon. **Any one member is a guard**, even a lone level-0. The first time it opens, a tutorial
-    card says someone has to mind the wagon.
-  - The selector shows the **X% chance of losing the wagon** if nobody stays.
-  - **Unguarded**, one roll when the party comes back out: the node's random-encounter chance
-    (the Ruins use the Old Road's 35%, `ROAD_AMBUSH_CHANCE`) plus the animal's flight chance
-    (Donkey 5%, Horse 10%, Ox 15%). On a hit **everything is gone** (wagon, cargo, animals); the
-    game does not say what happened, only that it is no longer there when the party returns.
-    The Wilds are not `unsafe`, so a hunt carries only the animal's flight chance.
-  - **Guarded**: exposed only to the node's own encounter chance; the Ruins have no random
-    encounter for now, so a guarded wagon there is safe.
-- The guards are **not split off**: they remain in the same group doing the same activity
-  (the incursion, the hunt), only divided between those who go in and those who mind the wagon.
-- A parked wagon belongs to its holding (the house garage, the Claim), not to a group: a wagon
-  with nobody around has no group to belong to. Taking it out hands it to the group present.
-- A broken wagon, repair and abandon are in *Later*: nothing damages a wagon yet.
-- Left for later, on purpose: who leads a garrison and how large it may be (the leader decides
-  the herd and the group size there); the garage's per-tier price stays flat at 690 cp until
-  play shows what it should do; the flight chance is a per-species field in `data.BEASTS` (done in 4b).
-
-Build order: 4a the house garage (done), 4b the guard
-selector with its risk percentage and tutorial card (Ruins, Wilds hunt; done), 4c the Claim's open
-garage with the daily roll (done: `Guild.claim_garage`, `guild_claim.py`; a seized claim takes what is parked;
-parked food rots and feeds the garrison; a wagon with no animal has nothing to bolt, so it never rolls a hit;
-the roll is silent like 4b's; `SAVE_VERSION` 21). Each ships with its screen, tests and a `SAVE_VERSION` bump.
-
-### 5. Camp and the Farm
-- **Campfire** never goes out and uses a single Lumber; cooking has no upkeep. Revisit if
-  garrison cooking is too cheap or too fiddly (80 meals for 8 people over 10 days is about
-  40 batches). Do it once wagons carry the food, so the numbers are real.
-- **The Farm** only holds the stables for now; rework it as the animals and wagons hub
-  once parking exists.
+### Later: garrisons
+- Who leads a garrison and how large it may be (the leader decides the herd and the group size
+  there). The Claim garage's flight chance and the house garage's flat 690 cp per tier stay as they
+  are until play shows what they should do.
 
 ### Prices and capacities (applied)
 Donkey 180, Ox 300, Horse 480, Cart 150, Carriage 600, Chest 90 cp / 30 kg, House 1440 cp /

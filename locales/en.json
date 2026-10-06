@@ -117,7 +117,7 @@
       "title": "The strongbox",
       "body": [
         "Rent a chest once (100 cp, holds 30 kg), then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out.",
-        "Money is pooled for the visit and settles back out when you leave, so nobody's relative wealth changes just from walking in."
+        "Coins are items like any other: the rent comes out of everyone's purse in proportion to what they carry, and a stack of coins can be stored in the chest or handed to a member from its ⋮ menu."
       ]
     },
     "gear": {
@@ -172,7 +172,7 @@
       "title": "Crafting",
       "body": [
         "Only recipes a member of the party has learned appear. Pick one and the materials are consumed at once; progress is a d20 + INT roll over hours of work.",
-        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2."
+        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2. Work as many hours as you like: each hour rolls toward a batch, leftover progress carries into the next one, and the shift ends early when the materials run out. The campfire at the claim stays lit while a garrison is there, and goes out the day nobody is."
       ]
     },
     "property": {

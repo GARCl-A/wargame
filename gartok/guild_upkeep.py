@@ -214,6 +214,7 @@ class UpkeepMixin:
         events += self._garrison_upkeep()
         events += self._wilds_claim_sustain_tick()
         self._claim_garage_tick()
+        self._campfire_tick()
         events += cohesion.daily(self)
         return events, casualties
 

@@ -281,8 +281,8 @@ class WildsClaimScreen(Screen):
             return
         fuel = economy.CAMPFIRE_FUEL
         have = sum(m.count_of(fuel) for m in self.group.members)
-        text(screen, F["body_sm"], f"No fire yet -- burns 1 {fuel}, {economy.CAMPFIRE_HOURS} h, "
-             f"a WIS check (DC {economy.CAMPFIRE_DC}).  {have} {fuel} carried here.", (x, y), T.TX_MUTED)
+        text(screen, F["body_sm"], f"No fire -- burns 1 {fuel}, {economy.CAMPFIRE_HOURS} h, a WIS check (DC {economy.CAMPFIRE_DC}); "
+             f"it stays lit while a garrison is here.  {have} {fuel} carried.", (x, y), T.TX_MUTED)
         self._button(screen, F, "campfire", "BUILD A CAMPFIRE", y + 22, w, enabled=have > 0)
 
     def _draw_established(self, screen, F, x, y, w):

@@ -341,17 +341,22 @@ class LoadoutMixin:
     def known_recipes(self):
         return self.recipes + [r for r in items.COMMON_RECIPES if r not in self.recipes]
 
+    @staticmethod
+    def crafting_goal(recipe):
+        """The progress one batch of `recipe` takes."""
+        recipe_data = items.CRAFTING_RECIPES[recipe]
+        total = recipe_data.complexity
+        for mat in recipe_data.materials:
+            mat_item = items.get(mat)
+            total += mat_item.price if mat_item else 10
+        return total
+
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
         if not self.crafting_target:
             return 0, False
-        target_val = 0
+        target_val = self.crafting_goal(self.crafting_target)
         recipe_data = items.CRAFTING_RECIPES[self.crafting_target]
-        for mat in recipe_data.materials:
-            mat_item = items.get(mat)
-            target_val += mat_item.price if mat_item else 10
-        target_val += recipe_data.complexity
-
         station = recipe_data.station
         bonus = self.talent_bonus("craft_bonus") + self.craft_bonuses.get(station, 0)
         prog = roll(1, 20) + self.mod_intelligence + bonus

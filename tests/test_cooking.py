@@ -227,3 +227,58 @@ def test_oven_and_campfire_survive_a_save_round_trip():
         assert back.house.oven and back.wilds_claim_campfire
     finally:
         persist.delete_world(slot)
+
+
+# --------------------------------------------------------------------------- #
+# batch cooking and the campfire going out                                    #
+# --------------------------------------------------------------------------- #
+
+def _batch_cook(monkeypatch, batches, hours, roll=10):
+    monkeypatch.setattr("gartok.unit_loadout.roll", lambda n, sides: roll)
+    u = Unit("player")
+    u._base_inventory = packed(["Meat", "Meat", "Salt"] * batches)
+    guild = Guild([u])
+    t0 = guild.clock.seconds
+    events, _ = guild.crafting_shift(u, "Jerky", hours)
+    hourly = max(1, roll + u.mod_intelligence + u.talent_bonus("craft_bonus") + u.craft_bonuses.get("cooking", 0))
+    return guild, u, events, hourly, (guild.clock.seconds - t0) / 3600
+
+
+def test_one_shift_cooks_several_batches_and_the_last_keeps_its_progress(monkeypatch):
+    goal = Unit.crafting_goal("Jerky")
+    _, u, _, hourly, _ = _batch_cook(monkeypatch, 5, 8)
+    assert hourly * 8 >= goal and hourly * 8 < goal * 5, "pick a roll that finishes some but not all"
+    made = (hourly * 8) // goal
+    assert u.count_of("Jerky") == 2 * made
+    assert u.crafting_target == "Jerky" and u.crafting_progress == hourly * 8 - made * goal
+
+
+def test_a_batch_shift_stops_when_the_materials_run_out(monkeypatch):
+    goal = Unit.crafting_goal("Jerky")
+    _, u, events, hourly, spent = _batch_cook(monkeypatch, 2, 40)
+    assert u.count_of("Jerky") == 4 and u.crafting_target is None and u.crafting_progress == 0
+    assert spent < 40 and spent == -(-2 * goal // hourly)
+    assert any("out of materials" in e and "x4" in e for e in events)
+
+
+def test_a_batch_shift_banks_work_xp_only_for_the_hours_worked(monkeypatch):
+    _, u, _, _, spent = _batch_cook(monkeypatch, 1, 40)
+    assert u.work_hours == spent
+
+
+def test_the_campfire_burns_while_garrisoned_and_dies_the_day_nobody_is_there():
+    guild, g, _ = _claim()
+    guild.wilds_claim_campfire = True
+    g.order = orders.garrison("lumber")
+    guild._campfire_tick()
+    assert guild.wilds_claim_campfire
+    g.order = None
+    guild._campfire_tick()
+    assert not guild.wilds_claim_campfire and not guild.wilds_claim_can_cook
+
+
+def test_the_daily_sweep_puts_the_fire_out_without_a_garrison():
+    guild, _, _ = _claim()
+    guild.wilds_claim_campfire = True
+    guild.pass_time(24)
+    assert not guild.wilds_claim_campfire

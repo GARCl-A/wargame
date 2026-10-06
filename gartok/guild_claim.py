@@ -81,6 +81,11 @@ class WildsClaimMixin:
             return self.claim_garage.feed()
         return self.claim_garage.feed(*garrison.food_stores(), *(u._base_inventory for u in garrison.members))
 
+    def _campfire_tick(self):
+        """The fire burns for free while a garrison stands at the claim and dies the day nobody does."""
+        if self.wilds_claim_campfire and self.claim_garrison() is None:
+            self.wilds_claim_campfire = False
+
     def _claim_garage_tick(self):
         """Once a day, with nobody at the claim: one roll for what is parked there, the
         flightiest animal's chance, and a hit loses all of it silently. Left long

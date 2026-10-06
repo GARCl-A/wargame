@@ -73,45 +73,51 @@ class LaborMixin:
         advances the campaign clock through `pass_time` and rolls progress."""
         hours = int(hours)
         if unit.crafting_target != recipe:
-            recipe_data = items.CRAFTING_RECIPES.get(recipe)
-            if not recipe_data:
+            if recipe not in items.CRAFTING_RECIPES:
                 return [f"Unknown recipe {recipe}."], []
-            
-            # Verify materials (a recipe may need more than one of the same kind)
-            need = Counter(recipe_data["materials"])
-            if any(unit.count_of(mat) < qty for mat, qty in need.items()):
+            if not self._start_batch(unit, recipe):
                 return [f"{unit.name} can't craft {recipe} -- missing materials."], []
 
-            # Consume materials
-            for mat, qty in need.items():
-                unit.remove_named(mat, qty)
+        recipe_data = items.CRAFTING_RECIPES[recipe]
+        progress_total = made = worked = 0
+        for _ in range(hours):
+            before = unit.crafting_progress
+            p, done = unit.progress_crafting()
+            worked += 1
+            progress_total += p
+            if not done:
+                continue
+            made += 1
+            overflow = before + p - unit.crafting_goal(recipe)
+            if not self._start_batch(unit, recipe, overflow):
+                break
 
-            unit.crafting_target = recipe
-            unit.crafting_progress = 0
-
-        clock_hours = hours * self.work_speedup([unit])
+        clock_hours = worked * self.work_speedup([unit])
         events, casualties = self.pass_time(clock_hours, busy=[unit])
 
-        target_data = items.CRAFTING_RECIPES.get(unit.crafting_target or recipe, {})
-        recipe_level = target_data.get("level", 1)
         old_work_lvl = unit.work_level
-        unit.work_hours += progression.work_xp_hours(hours, recipe_level, unit.work_level)
+        unit.work_hours += progression.work_xp_hours(worked, recipe_data.get("level", 1), unit.work_level)
         unit.collect_levels()
         if unit.work_level > old_work_lvl:
             events.append(f"{unit.name} reached work level {unit.work_level}!")
-        
-        progress_total = 0
-        done = False
-        # One roll per hour
-        for _ in range(hours):
-            p, done = unit.progress_crafting()
-            progress_total += p
-            if done:
-                break
-                
-        if done:
-            events.append(f"{unit.name} finished crafting: {recipe}!")
+
+        if made:
+            total = made * recipe_data.yield_qty
+            more = f" -- out of materials after {worked}h" if worked < hours and not unit.crafting_target else ""
+            events.append(f"{unit.name} finished crafting: {recipe}"
+                          f"{f' x{total}' if total > 1 else ''}!{more}")
         else:
-            events.append(f"{unit.name} worked on {recipe} for {hours}h (+{progress_total} progress).")
-            
+            events.append(f"{unit.name} worked on {recipe} for {worked}h (+{progress_total} progress).")
         return events, casualties
+
+    def _start_batch(self, unit, recipe, progress=0):
+        """Take one batch's materials from `unit`'s pack and begin it with `progress` carried
+        over from the last batch. False, with the pack untouched, when it is missing any."""
+        need = Counter(items.CRAFTING_RECIPES[recipe]["materials"])
+        if any(unit.count_of(mat) < qty for mat, qty in need.items()):
+            return False
+        for mat, qty in need.items():
+            unit.remove_named(mat, qty)
+        unit.crafting_target = recipe
+        unit.crafting_progress = progress
+        return True
