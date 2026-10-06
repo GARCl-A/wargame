@@ -42,7 +42,7 @@ cannot carry that much. Built so far (read the code for how it works; tests in
   `ROAD_AMBUSH_CHANCE`, Wilds 0) plus the flightiest animal's `flight` (`data.BEASTS`: Donkey 5%, Horse 10%,
   Ox 15%); a hit loses wagons, cargo and herd, with no notice. Guarded is always safe for now. Nothing new
   is persisted, so no save bump.
-- Saves: `SAVE_VERSION` 20, old `wagon` / `animals` keys and unhitched saves still load.
+- Saves: `SAVE_VERSION` 21, old `wagon` / `animals` keys and unhitched saves still load.
 
 **Scale premise.** The game is meant to get big (guilds with many groups, many
 animals, several wagons). These subsystems must be shaped for that now, not
@@ -63,7 +63,7 @@ exercises a small part of it.
 ## Still to build
 
 ### 4. Parking (the garage) and the wagon left outside
-4a (the house garage) and 4b (the wagon left outside) are built, see above; 4c remains. The full design:
+4a (the house garage), 4b (the wagon left outside) and 4c (the Claim garage) are built. The full design:
 
 A wagon is in one of three states: **with the group** (travels, same risk as the group),
 **in a garage** or **left outside**. Wagons never enter a battle map.
@@ -107,7 +107,9 @@ A wagon is in one of three states: **with the group** (travels, same risk as the
 
 Build order: 4a the house garage (done), 4b the guard
 selector with its risk percentage and tutorial card (Ruins, Wilds hunt; done), 4c the Claim's open
-garage with the daily roll. Each ships with its screen, tests and a `SAVE_VERSION` bump.
+garage with the daily roll (done: `Guild.claim_garage`, `guild_claim.py`; a seized claim takes what is parked;
+parked food rots and feeds the garrison; a wagon with no animal has nothing to bolt, so it never rolls a hit;
+the roll is silent like 4b's; `SAVE_VERSION` 21). Each ships with its screen, tests and a `SAVE_VERSION` bump.
 
 ### 5. Camp and the Farm
 - **Campfire** never goes out and uses a single Lumber; cooking has no upkeep. Revisit if

@@ -92,6 +92,8 @@ class UpkeepMixin:
         larder = [u._base_inventory for u in mates if u is not eater and u.share_food]
         if group is not None:
             larder += group.food_stores()
+            if group is self.claim_garrison():
+                larder += self.claim_garage.food_stores()
         return larder
 
     @staticmethod
@@ -154,9 +156,8 @@ class UpkeepMixin:
             total_rotten += self._rot_food(u._base_inventory)
         total_rotten += self._rot_food(self.bank.items)
         total_rotten += self._rot_food(self.house.stash.items)
-        for g in self.groups:
-            for pack in g.food_stores():
-                total_rotten += self._rot_food(pack)
+        for pack in [p for g in self.groups for p in g.food_stores()] + self._garaged_food():
+            total_rotten += self._rot_food(pack)
         if total_rotten:
             events.append(f"{total_rotten} portions of food rotted away.")
 
@@ -203,7 +204,8 @@ class UpkeepMixin:
             self.remove_members(casualties)
         for g in self.groups:
             events += g.feed_animals()
-        events += self.house.garage.feed(self.house.stash)
+        events += self.house.garage.feed(self.house.stash.items)
+        events += self._claim_garage_feed()
         for m in missions.expire_overdue(self):
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
         for u in justice.release_due(self):
@@ -211,6 +213,7 @@ class UpkeepMixin:
         events += self._city_property_upkeep()
         events += self._garrison_upkeep()
         events += self._wilds_claim_sustain_tick()
+        self._claim_garage_tick()
         events += cohesion.daily(self)
         return events, casualties
 

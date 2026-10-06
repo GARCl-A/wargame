@@ -15,6 +15,7 @@ def needs_watch(group):
 
 
 def flight_chance(group):
+    """`group` is anything with a `herd`: a Group, or a garage."""
     return max((a.race["flight"] for a in group.herd), default=0.0)
 
 

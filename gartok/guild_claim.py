@@ -4,7 +4,9 @@ Mixed into `guild.Guild`; see `economy.WILDS_CLAIM_*` and
 `wilds_claim_screen.WildsClaimScreen`.
 """
 
-from . import data, economy, world
+import random
+
+from . import data, economy, wagon_watch, world
 
 # The Wilds claim's own stage machine (see economy.WILDS_CLAIM_*).
 WILDS_CLAIM_STAGES = ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED")
@@ -53,12 +55,41 @@ class WildsClaimMixin:
             return True, ["the fire catches -- the claim has a hearth now."] + events, casualties
         return False, ["the wood won't catch -- the fuel is wasted."] + events, casualties
 
-    def _wilds_claim_garrisoned(self):
-        """True while some living group is actually parked, garrisoning, at
-        the claim node right now."""
-        return any(g.order is not None and g.order.kind == "garrison"
-                   and g.node == world.WILDS_TERRITORY_NODE and not g.empty
-                   for g in self.groups)
+    def claim_garrison(self):
+        """The living group parked, garrisoning, at the claim node right now, or None."""
+        return next((g for g in self.groups
+                     if g.order is not None and g.order.kind == "garrison"
+                     and g.node == world.WILDS_TERRITORY_NODE and not g.empty), None)
+
+    @property
+    def claim_garage_open(self):
+        """Open the moment the garrison opens (the 10 days to hold), until it is seized."""
+        return self.wilds_claim_stage in ("SUSTAINING", "ESTABLISHED") and self.wilds_claim_owner != "seized"
+
+    def wilds_claim_seize(self):
+        """The occupiers take the ground, and whatever was parked there."""
+        self.wilds_claim_owner = "seized"
+        self.claim_garage.clear()
+
+    def _garaged_food(self):
+        return self.house.garage.food_stores() + self.claim_garage.food_stores()
+
+    def _claim_garage_feed(self):
+        """The garrison's food, and the animals' own load, feed what is parked at the claim."""
+        garrison = self.claim_garrison()
+        if garrison is None:
+            return self.claim_garage.feed()
+        return self.claim_garage.feed(*garrison.food_stores(), *(u._base_inventory for u in garrison.members))
+
+    def _claim_garage_tick(self):
+        """Once a day, with nobody at the claim: one roll for what is parked there, the
+        flightiest animal's chance, and a hit loses all of it silently. Left long
+        enough, it always goes. A wagon with no animal has nothing to bolt."""
+        garage = self.claim_garage
+        if garage.empty or self.claim_garrison() is not None:
+            return
+        if random.random() < wagon_watch.flight_chance(garage):
+            garage.clear()
 
     def _wilds_claim_sustain_tick(self):
         """Once a day, while `SUSTAINING`: the countdown only advances for a
@@ -69,7 +100,7 @@ class WildsClaimMixin:
         the same effect -- sustaining only counts while someone is there."""
         if self.wilds_claim_stage != "SUSTAINING":
             return []
-        if not self._wilds_claim_garrisoned():
+        if self.claim_garrison() is None:
             if self.wilds_claim_sustain_days_left != economy.WILDS_CLAIM_SUSTAIN_DAYS:
                 self.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
                 return ["The Wilds claim sits unguarded -- sustaining it starts over."]

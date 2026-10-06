@@ -8,6 +8,8 @@ that is specific to the house: ownership, the tax cycle, repossession and
 squatting. Money and the guard stay with the caller (`Guild`, `campaign`).
 """
 
+import math
+
 from . import animals, economy, items
 from .unit import pack_from_raw, stack_add, stack_take
 
@@ -45,32 +47,44 @@ class Stash:
 
 
 class Garage:
-    """Where a house keeps wagons and animals out of the group's hands: each tier
-    holds one wagon and one animal. Safe, nothing to roll. Cargo stays in its
-    wagon; the animals eat from the house stash and the garaged wagons' cargo,
-    and do not count against a group's `herd_capacity`."""
+    """Where a holding keeps wagons and animals out of the group's hands. The house
+    garage holds one wagon and one animal per tier, safe, nothing to roll. The Claim's
+    is `unlimited`: it is open the moment its garrison is, and only safe while someone
+    is there (`guild_claim.py`). Cargo stays in its wagon; the animals eat from the
+    holding's food and the garaged wagons' cargo, and do not count against a group's
+    `herd_capacity`."""
 
-    def __init__(self, tier=0, wagons=None, herd=None):
+    def __init__(self, tier=0, wagons=None, herd=None, unlimited=False):
         self.tier = tier
+        self.unlimited = unlimited
         self.wagons = list(wagons or [])
         self.herd = list(herd or [])
 
     @property
     def open(self):
-        return self.tier > 0
+        return self.unlimited or self.tier > 0
 
     @property
     def wagon_room(self):
-        return self.tier - len(self.wagons)
+        return math.inf if self.unlimited else self.tier - len(self.wagons)
 
     @property
     def animal_room(self):
-        return self.tier - len(self.herd)
+        return math.inf if self.unlimited else self.tier - len(self.herd)
 
-    def feed(self, stash):
+    @property
+    def empty(self):
+        return not self.wagons and not self.herd
+
+    def food_stores(self):
+        return [*(w.stash.items for w in self.wagons), *(a.stash.items for a in self.herd)]
+
+    def feed(self, *packs):
+        """One day's feeding: each animal's own load, then `packs` (lists of items), then
+        the wagons' cargo. Returns the log lines."""
         def packs_for(animal):
             own = animal.stash.items
-            return [own, stash.items, *(w.stash.items for w in self.wagons)]
+            return [own, *packs, *(w.stash.items for w in self.wagons)]
 
         return animals.feed_herd(self.herd, packs_for)
 

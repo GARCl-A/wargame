@@ -22,7 +22,7 @@ from .ui.tokens import fonts as ui_fonts
 class WildsClaimScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep, on_cook=None):
+    def __init__(self, fonts, guild, group, on_done, on_fight_clear, on_fight_sweep, on_cook=None, on_garage=None):
         super().__init__()
         self.fonts = fonts
         self._F = None
@@ -32,6 +32,7 @@ class WildsClaimScreen(Screen):
         self.on_fight_clear = on_fight_clear
         self.on_fight_sweep = on_fight_sweep
         self.on_cook = on_cook
+        self.on_garage = on_garage
         self.notice = None
         self.buttons = []
 
@@ -90,23 +91,24 @@ class WildsClaimScreen(Screen):
                 "collect": self._collect_lumber,
                 "campfire": self._light_campfire,
                 "cook": self.on_cook,
+                "garage": self.on_garage,
             }[key]()
             return
 
     def _scout(self):
-        events, cas = self.guild.pass_time(economy.WILDS_CLAIM_SCOUT_HOURS, busy=self.group.members)
+        events, _ = self.guild.pass_time(economy.WILDS_CLAIM_SCOUT_HOURS, busy=self.group.members)
         self.guild.wilds_claim_scout()
         self.notice = "  ".join(["the land is scouted -- ready to clear."] + events)
 
     def _build_fences(self):
         if self.guild.wilds_claim_fence_lumber < economy.WILDS_CLAIM_FENCE_LUMBER:
             return
-        events, cas = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS, busy=self.group.members)
+        events, _ = self.guild.pass_time(economy.WILDS_CLAIM_FENCE_HOURS, busy=self.group.members)
         self.guild.wilds_claim_build_fences()
         self.notice = "  ".join(["the fences go up -- time to sweep the region."] + events)
 
     def _light_campfire(self):
-        lit, events, _ = self.guild.wilds_claim_light_campfire(self.group.members)
+        _, events, _ = self.guild.wilds_claim_light_campfire(self.group.members)
         self.notice = "  ".join(events)
         for m in self.group.members:
             m._derive_combat()
@@ -160,6 +162,13 @@ class WildsClaimScreen(Screen):
         y = H - T.S * 20
         hline(screen, x, x + panel_w, y - T.S * 2)
         caps(screen, F["microb"], f"HERE ({len(self.group.members)})", (x, y), T.TX_FAINT)
+        if self.on_garage and self.guild.claim_garage_open:
+            garage = self.guild.claim_garage
+            r = pygame.Rect(x + panel_w - 260, y - T.S, 260, 28)
+            w, a = len(garage.wagons), len(garage.herd)
+            draw_button(screen, F, r, f"GARAGE  ·  {w} wagon{'s' * (w != 1)}, {a} animal{'s' * (a != 1)}",
+                        mpos=self.mouse)
+            self.buttons.append(("garage", r))
         y += T.S * 3
         
         # Two columns if needed, but since it's a fixed y=H-T.S*20, let's use columns to fit.
@@ -250,7 +259,7 @@ class WildsClaimScreen(Screen):
 
     def _draw_sustaining(self, screen, F, x, y, w):
         left = self.guild.wilds_claim_sustain_days_left
-        garrisoned = self.guild._wilds_claim_garrisoned()
+        garrisoned = self.guild.claim_garrison() is not None
         text(screen, F["bodyb"], f"Sustaining -- {left} day(s) left." if left is not None else "Sustaining.", (x, y), T.BRASS)
         y += 22
         if not garrisoned:

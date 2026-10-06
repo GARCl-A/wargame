@@ -27,8 +27,8 @@ import time
 import uuid
 
 from . import items, missions
-from .clock import Clock
 from .animals import Animal
+from .clock import Clock
 from .group import Group
 from .guild import Guild
 from .holdings import CityProperty, Garage, Stash
@@ -45,7 +45,7 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
-SAVE_VERSION = 20                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 21                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def new_world_id():
@@ -140,10 +140,16 @@ def wagon_from_dict(d):
     return Wagon(d.get("kind", "Cart"), d.get("hp", WAGON_HP), d.get("contents", []), d.get("uid"))
 
 
-def garage_from_dict(d):
+def garage_from_dict(d, unlimited=False):
     d = d or {}
     return Garage(d.get("tier", 0), [wagon_from_dict(w) for w in d.get("wagons", [])],
-                  [Animal.from_dict(a) for a in d.get("herd", [])])
+                  [Animal.from_dict(a) for a in d.get("herd", [])], unlimited=unlimited)
+
+
+def garage_to_dict(garage):
+    return {"tier": garage.tier,
+            "wagons": [wagon_to_dict(w) for w in garage.wagons],
+            "herd": [a.to_dict(_serialize_pack) for a in garage.herd]}
 
 
 def group_to_dict(g):
@@ -192,9 +198,8 @@ def _payload(guild, kind, label):
         "property_city_missed_payments": guild.house.missed_payments,
         "property_city_squatting": guild.house.squatting,
         "property_city_oven": guild.house.oven,
-        "property_city_garage": {"tier": guild.house.garage.tier,
-                                 "wagons": [wagon_to_dict(w) for w in guild.house.garage.wagons],
-                                 "herd": [a.to_dict(_serialize_pack) for a in guild.house.garage.herd]},
+        "property_city_garage": garage_to_dict(guild.house.garage),
+        "wilds_claim_garage": garage_to_dict(guild.claim_garage),
         "bankers_debt": guild.bankers_debt,
         "property_city_debt_since": guild.bankers_debt_since,
         "garrison_stock": {node_id: list(items) for node_id, items in guild.garrison_stock.items()},
@@ -291,6 +296,7 @@ def load_game(world, save_id=CURRENT):
                  wilds_claim_sustain_days_left=payload.get("wilds_claim_sustain_days_left"),
                  wilds_claim_owner=payload.get("wilds_claim_owner"),
                  wilds_claim_campfire=payload.get("wilds_claim_campfire", False),
+                 claim_garage=garage_from_dict(payload.get("wilds_claim_garage"), unlimited=True),
                  market_stock=payload.get("market_stock"),
                  total_spent=payload.get("total_spent", 0),
                  items_sold_kinds=payload.get("items_sold_kinds", []),

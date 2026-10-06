@@ -487,7 +487,7 @@ def _wilds_claim_seizure_check(guild):
                      and g.order.kind == "garrison" and g.node == world.WILDS_TERRITORY_NODE),
                     None)
     if garrison is None:
-        guild.wilds_claim_owner = "seized"
+        guild.wilds_claim_seize()
         return (["The Wilds claim sits unguarded -- it's seized without a fight."], [])
     job = garrison.order.job
     pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
@@ -620,7 +620,7 @@ def resolve_wilds_seizure(guild, group, order, outcome):
         if not group.empty:
             group.order = orders.garrison(order.job)
         return ["The garrison drives off the raiders and holds the claim."]
-    guild.wilds_claim_owner = "seized"
+    guild.wilds_claim_seize()
     if not group.empty:
         group.order = orders.idle()
     return ["The garrison falls -- the Wilds claim is seized."]

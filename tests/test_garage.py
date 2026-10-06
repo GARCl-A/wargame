@@ -116,7 +116,7 @@ def test_garaged_animals_eat_from_the_house_stash_each_day():
     donkey = Animal("Donkey")
     guild.house.garage.herd.append(donkey)
     guild.house.stash.put("Potato", 2)
-    assert guild.house.garage.feed(guild.house.stash) == []
+    assert guild.house.garage.feed(guild.house.stash.items) == []
     assert guild.house.stash.items[0][1] == 1 and donkey.unfed_days == 0
 
 
@@ -127,7 +127,7 @@ def test_garaged_animals_also_eat_from_a_parked_wagons_cargo():
     guild.park_wagon(g, wagon)
     donkey = Animal("Donkey")
     guild.house.garage.herd.append(donkey)
-    guild.house.garage.feed(guild.house.stash)
+    guild.house.garage.feed(guild.house.stash.items)
     assert wagon.rations == 0 and donkey.unfed_days == 0
 
 
@@ -135,8 +135,8 @@ def test_garaged_animals_starve_when_the_house_has_no_food():
     guild, _g, _ = _setup(wagons=0, animals=0)
     guild.house.garage.herd.append(Animal("Donkey"))
     for _ in range(STARVE_DAYS - 1):
-        assert any("went hungry" in e for e in guild.house.garage.feed(guild.house.stash))
-    assert any("starved" in e for e in guild.house.garage.feed(guild.house.stash))
+        assert any("went hungry" in e for e in guild.house.garage.feed(guild.house.stash.items))
+    assert any("starved" in e for e in guild.house.garage.feed(guild.house.stash.items))
     assert guild.house.garage.herd == []
 
 

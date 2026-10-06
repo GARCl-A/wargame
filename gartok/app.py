@@ -454,8 +454,14 @@ class App:
                                       on_cook=lambda: self._open_kitchen(
                                           group, "THE CLAIM KITCHEN",
                                           lambda: self._open_wilds_claim(group, node)),
+                                      on_garage=lambda: self._open_claim_garage(group, node),
                                       on_fight_clear=self._start_claim_clear_battle,
                                       on_fight_sweep=self._start_claim_sweep_battle)
+
+    def _open_claim_garage(self, group, node):
+        from .garage_screen import GarageScreen
+        self.scene = GarageScreen(self.ui_fonts, self.guild, group, claim=True,
+                                  on_done=lambda: self._open_wilds_claim(group, node))
 
     def _start_claim_clear_battle(self, group):
         self._start_claim_battle(group, "CLEARED", economy.WILDS_CLAIM_CLEAR_LEVEL,
