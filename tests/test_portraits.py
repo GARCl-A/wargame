@@ -251,6 +251,27 @@ def test_creature_portraits():
         assert p_under is not None
 
 
+def test_livestock_portraits():
+    # 4 Horse portraits
+    for idx in range(4):
+        p = artwork.portrait("Horse", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # 4 Donkey portraits
+    for idx in range(4):
+        p = artwork.portrait("Donkey", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # 4 Ox portraits
+    for idx in range(4):
+        p = artwork.portrait("Ox", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+
+
 
 
 
