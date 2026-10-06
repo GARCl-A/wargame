@@ -315,49 +315,37 @@ def charge_richest_first(members, amount):
             break
 
 
-def settle_pooled_purse(members, orig_gold, remaining):
-    """A shopping/storage screen pools every member's coin into one number
-    for the visit (buying, selling, renting all just move that number, not
-    real coin between real pockets) -- this hands `remaining` back out when
-    the visit ends, proportional to what each member put in (`orig_gold`,
-    a member -> copper-at-entry map), so whoever had more still has more
-    without the screen having to track which copper was whose transaction
-    by transaction. Uses the largest-remainder method so the total handed
-    out always equals `remaining` exactly, down to the last copper."""
-    if not members:
+def spread_coin(members, delta):
+    """Move `delta` copper (negative = paid out, positive = received) across
+    `members`' real Copper Coin stacks, in proportion to what each carries --
+    an even split when nobody carries any. Largest-remainder, so the total
+    moved is exactly `delta` (a payment is capped at what the party holds)."""
+    if not members or not delta:
         return
-    total_orig = sum(orig_gold[m] for m in members)
-    if total_orig <= 0:                      # nobody had anything to be proportional to
-        base, rem = divmod(remaining, len(members))
-        for i, m in enumerate(members):
-            m.gold = base + (1 if i < rem else 0)
-        return
-    shares = []
-    for m in members:
-        exact = remaining * orig_gold[m] / total_orig
-        shares.append([m, int(exact), exact - int(exact)])
-    leftover = remaining - sum(s[1] for s in shares)
-    shares.sort(key=lambda s: s[2], reverse=True)
-    for i in range(leftover):
-        shares[i][1] += 1
-    for m, amt, _ in shares:
-        m.gold = amt
+    held = [m.gold for m in members]
+    total = sum(held)
+    amount = abs(delta) if delta > 0 else min(-delta, total)
+    weights = held if total > 0 else [1] * len(members)
+    exact = [amount * w / sum(weights) for w in weights]
+    shares = [int(e) for e in exact]
+    by_remainder = sorted(range(len(members)), key=lambda i: exact[i] - shares[i], reverse=True)
+    for i in by_remainder[:amount - sum(shares)]:
+        shares[i] += 1
+    for m, share in zip(members, shares):
+        m.gold += share if delta > 0 else -share
 
 
-class PooledPurse:
-    """A screen's common purse that writes through to the members on every change,
-    so leaving by any door (Esc, the pause menu, a hub tab) never skips the debit.
-    The host sets `_orig_gold` (member -> copper at entry) before the first `purse`
-    assignment and names its members in `_purse_members`."""
-
-    _purse = 0
+class PartyPurse:
+    """A shopping/storage screen's common purse: the live sum of its members'
+    coin. Reading it adds up their real `Copper Coin` stacks, and assigning
+    to it pays or credits the difference across them (`spread_coin`), so the
+    money is always items in packs -- there is nothing to settle when the
+    visit ends. The host names its members in `_purse_members`."""
 
     @property
     def purse(self):
-        return self._purse
+        return sum(m.gold for m in self._purse_members())
 
     @purse.setter
     def purse(self, amount):
-        self._purse = amount
-        if hasattr(self, "_orig_gold"):
-            settle_pooled_purse(self._purse_members(), self._orig_gold, amount)
+        spread_coin(self._purse_members(), amount - self.purse)

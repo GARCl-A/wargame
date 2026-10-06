@@ -29,7 +29,7 @@ import pygame
 
 from . import chest, data, items, magic, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
-from .packbox import PackColumnMixin, SplitStackMixin
+from .packbox import ItemMenuMixin, PackColumnMixin, SplitStackMixin
 from .screen import Screen
 from .ui import loadout_panel
 from .ui.inspector_panel import role_for
@@ -41,7 +41,7 @@ RAIL_W = 230
 COL_MIN, COL_MAX = 300, 420
 
 
-class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
+class GearScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, on_back, group=None):
@@ -92,12 +92,6 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
                 return (unit, loc)
         return None
 
-    def _dots_at(self, px):
-        for rect, unit, loc in getattr(self, "_dots_hits", []):
-            if rect.collidepoint(px):
-                return (unit, loc)
-        return None
-
     def _zone_at(self, px):
         for rect, unit, zone in self.zones:
             if rect.collidepoint(px):
@@ -117,14 +111,9 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.split_prompt:
             self._split_prompt_click(event.pos)
             return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.menu:
-            self._menu_click(event.pos)
-            return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-            self._open_menu(event.pos)
+        if self._menu_event(event):
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.menu = None
             self.split_prompt = None
         super().handle_event(event)
 
@@ -142,7 +131,7 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
 
         dots_hit = self._dots_at(px)
         if dots_hit is not None:
-            self._open_menu(px, picks=[dots_hit])
+            self._open_menu(px, self._menu_picks_for(dots_hit))
             return
 
         for key, rect in self.buttons:
@@ -200,17 +189,13 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
     def _study_label(self, unit, target):
         return "stop studying" if unit.study_target == target.id else f"study {target.name}"
 
-    def _open_menu(self, anchor, picks=None):
-        if picks is None:
-            src = self._source_at(anchor)
-            if src is None:
-                self.menu = None
-                return
-            picks = self.selected if src in self.selected else [src]
+    def _menu_picks_for(self, pick):
+        return self.selected if pick in self.selected else [pick]
+
+    def _menu_rows(self, picks):
         picks = [p for p in picks if self._item_at(*p) is not None]
         if not picks:
-            self.menu = None
-            return
+            return []
         self.selected = list(picks)
 
         # a member you'd only be handing their own pack items back to is a no-op
@@ -232,38 +217,25 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
             if lang and lang.name not in unit.languages:
                 rows.append(("study", self._study_label(unit, lang), lang))
 
-        self.menu = {"anchor": anchor, "rows": rows, "picks": list(picks)}
+        return rows
 
-    def _menu_click(self, px):
-        m = self.menu
-        self.menu = None
-        if m is None or not m.get("rect") or not m["rect"].collidepoint(px):
-            return
-        for r, kind, arg in m["hits"]:
-            if not r.collidepoint(px):
-                continue
-            if kind == "split":
-                self.selected = list(m["picks"])
-                self._open_split_prompt()
-            elif kind == "open":
-                unit, loc = m["picks"][0]
-                self._open_chest(unit, self._item_at(unit, loc))
-            elif kind == "study":
-                unit = m["picks"][0][0]
-                if unit.study_target == arg.id:
-                    magic.end_study(unit)
-                else:
-                    magic.begin_study(unit, arg.id, self.roster)
-                self.selected = []
+    def _menu_run(self, picks, kind, arg):
+        if kind == "split":
+            self.selected = list(picks)
+            self._open_split_prompt()
+        elif kind == "open":
+            unit, loc = picks[0]
+            self._open_chest(unit, self._item_at(unit, loc))
+        elif kind == "study":
+            unit = picks[0][0]
+            if unit.study_target == arg.id:
+                magic.end_study(unit)
             else:
-                self.selected = list(m["picks"])
-                self._give_many(arg, "pack" if kind == "member" else "discard")
-            return
-
-    def _draw_menu(self, screen):
-        F = self._ui_fonts()
-        res = loadout_panel.send_menu(screen, F, self.menu["anchor"], self.menu["rows"], self.mouse)
-        self.menu["rect"], self.menu["hits"] = res["rect"], res["hits"]
+                magic.begin_study(unit, arg.id, self.roster)
+            self.selected = []
+        else:
+            self.selected = list(picks)
+            self._give_many(arg, "pack" if kind == "member" else "discard")
 
     def _open_chest(self, unit, item):
         """Pick the lock right where the chest sits -- no move, no drop, just
@@ -430,8 +402,7 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
         if self.notice:
             text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
 
-        if self.menu is not None:
-            self._draw_menu(screen)
+        self._draw_menu(screen)
         if self.split_prompt:
             self._draw_split_prompt(screen, F)
 
@@ -441,7 +412,7 @@ class GearScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveM
         if self.split_prompt:
             return self._split_hovering()
         if self.menu:
-            return any(r.collidepoint(self.mouse) for r, *_ in self.menu.get("hits", ()))
+            return self._menu_hovering()
         if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
             return True
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):

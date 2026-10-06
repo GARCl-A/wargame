@@ -3,7 +3,7 @@
 import os
 import random
 
-from tests.helpers import data, economy, Unit, packed
+from tests.helpers import Unit, click_menu, data, economy, packed
 from gartok.guild import Guild
 from gartok.holdings import Stash
 
@@ -108,8 +108,7 @@ def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
         m.gold = 10
     ms = MarketScreen.__new__(MarketScreen)           # no draw in this test
     ms.shoppers = shoppers
-    ms._orig_gold = {m: m.gold for m in shoppers}     # all three walked in with 10
-    ms.purse = sum(m.gold for m in shoppers)          # 30
+    assert ms.purse == 30
     ms.on_done = lambda: None
     ms._checkout()
     assert sorted(m.gold for m in shoppers) == [10, 10, 10] and sum(m.gold for m in shoppers) == 30
@@ -843,13 +842,13 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
 
-    gs._menu_click(study_row.center)
+    click_menu(gs, study_row.center)
     assert u.study_target == "light_globe"
 
     gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
     gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
-    gs._menu_click(study_row.center)
+    click_menu(gs, study_row.center)
     assert u.study_target is None
 
 
@@ -916,13 +915,13 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
 
-    gs._menu_click(study_row.center)
+    click_menu(gs, study_row.center)
     assert u.study_target == "Elvish"
 
     gs._open_menu((5, 5))                    # re-open: still offered, now toggles off
     gs._draw_menu(surf)
     study_row = next(r for r, kind, _ in gs.menu["hits"] if kind == "study")
-    gs._menu_click(study_row.center)
+    click_menu(gs, study_row.center)
     assert u.study_target is None
 
 
@@ -994,7 +993,7 @@ def _pack_rows_of(rows, unit):
     return {unit._base_inventory[loc][0] for _, m, loc in rows if m is unit and isinstance(loc, int)}
 
 
-def test_market_lists_the_coin_stack_but_only_real_items_are_pickable():
+def test_market_lists_the_coin_stack_and_it_is_pickable_like_any_item():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok import items, world
@@ -1011,11 +1010,11 @@ def test_market_lists_the_coin_stack_but_only_real_items_are_pickable():
     assert any(name == items.COIN_ITEM for name, *_ in ms._member_dict(u, [])["pack"])
     ms.draw(pygame.Surface((1400, 900)))
     assert _pack_rows_of(ms.item_rows, u) >= {"Torch", "Rope"}
-    assert items.COIN_ITEM not in _pack_rows_of(ms.item_rows, u)
-    assert items.COIN_ITEM not in {name for _, _, name in ms.lock_hits}
+    assert items.COIN_ITEM in _pack_rows_of(ms.item_rows, u)
+    assert items.COIN_ITEM in {name for _, _, name in ms.lock_hits}
 
 
-def test_stash_screen_lists_the_coin_stack_but_only_real_items_are_pickable():
+def test_stash_screen_lists_the_coin_stack_and_it_is_pickable_like_any_item():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok import items
@@ -1032,7 +1031,7 @@ def test_stash_screen_lists_the_coin_stack_but_only_real_items_are_pickable():
     assert any(name == items.COIN_ITEM for name, *_ in s._member_dict(u, [])["pack"])
     s.draw(pygame.Surface((1400, 900)))
     assert _pack_rows_of([(r, o, loc) for r, o, loc in s.sources], u) >= {"Torch", "Rope"}
-    assert items.COIN_ITEM not in _pack_rows_of(s.sources, u)
+    assert items.COIN_ITEM in _pack_rows_of(s.sources, u)
 
 
 def test_attribute_and_derived_help_catalogs():

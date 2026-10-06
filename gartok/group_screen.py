@@ -53,7 +53,7 @@ from . import chest, data, items, magic, missions, world
 from .animals import Animal
 from .wagon import Wagon
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
-from .packbox import PackColumnMixin, SplitStackMixin
+from .packbox import ItemMenuMixin, PackColumnMixin, SplitStackMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel, quest_panel
@@ -70,7 +70,7 @@ def _short(name):
     return name.split()[0][:10]
 
 
-class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
+class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_back):
@@ -205,12 +205,6 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
                 return (unit, loc)
         return None
 
-    def _dots_at(self, px):
-        for rect, unit, loc in self._dots_hits:
-            if rect.collidepoint(px):
-                return (unit, loc)
-        return None
-
     def _zone_at(self, px):
         for rect, unit, zone in self.zones:
             if rect.collidepoint(px):
@@ -265,8 +259,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.split_prompt:
             self._split_prompt_click(event.pos)
             return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.menu:
-            self._menu_click(event.pos)
+        if self._menu_event(event):
             return
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if self.close_sheet_on_click():
@@ -275,11 +268,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
                 if rect.collidepoint(event.pos):
                     self.open_sheet(unit)
                     return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-            self._open_menu(event.pos)
-            return
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.menu = None
             self.split_prompt = None
         super().handle_event(event)
 
@@ -301,7 +290,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
 
         dots_hit = self._dots_at(px)
         if dots_hit is not None:
-            self._open_menu(px, picks=[dots_hit])
+            self._open_menu(px, self._menu_picks_for(dots_hit))
             return
 
         for rect, tab_id in self.tab_hits:
@@ -445,17 +434,13 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         verb = "stop studying" if unit.study_target == target.id else "study"
         return f"{verb} {target.name}"
 
-    def _open_menu(self, anchor, picks=None):
-        if picks is None:
-            src = self._source_at(anchor)
-            if src is None:
-                self.menu = None
-                return
-            picks = self.selected if src in self.selected else [src]
+    def _menu_picks_for(self, pick):
+        return self.selected if pick in self.selected else [pick]
+
+    def _menu_rows(self, picks):
         picks = [p for p in picks if self._item_at(*p) is not None]
         if not picks:
-            self.menu = None
-            return
+            return []
         self.selected = list(picks)
 
         rows = []
@@ -483,39 +468,30 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         dests = [u for u in self._owners() if lift or id(u) not in owners]
         rows += [("member", f"to {u.name}", u.uid) for u in dests]
 
-        self.menu = {"anchor": anchor, "rows": rows, "picks": list(picks)}
+        return rows
 
-    def _menu_click(self, px):
-        m = self.menu
-        self.menu = None
-        if m is None or not m.get("rect") or not m["rect"].collidepoint(px):
-            return
-        for r, kind, arg in m["hits"]:
-            if not r.collidepoint(px):
-                continue
-            if kind == "split":
-                self.selected = list(m["picks"])
-                self._open_split_prompt()
-            elif kind == "open":
-                unit, loc = m["picks"][0]
-                self._open_chest(unit, self._item_at(unit, loc))
-            elif kind == "drink":
-                unit, loc = m["picks"][0]
-                self._drink_potion(unit)
-            elif kind == "member":
-                self.selected = list(m["picks"])
-                self._give_many(self._unit_by_uid[arg], "pack")
-            elif kind == "study":
-                unit = m["picks"][0][0]
-                if unit.study_target == arg.id:
-                    magic.end_study(unit)
-                else:
-                    magic.begin_study(unit, arg.id, self.group.members)
-                self.selected = []
+    def _menu_run(self, picks, kind, arg):
+        if kind == "split":
+            self.selected = list(picks)
+            self._open_split_prompt()
+        elif kind == "open":
+            unit, loc = picks[0]
+            self._open_chest(unit, self._item_at(unit, loc))
+        elif kind == "drink":
+            self._drink_potion(picks[0][0])
+        elif kind == "member":
+            self.selected = list(picks)
+            self._give_many(self._unit_by_uid[arg], "pack")
+        elif kind == "study":
+            unit = picks[0][0]
+            if unit.study_target == arg.id:
+                magic.end_study(unit)
             else:
-                self.selected = list(m["picks"])
-                self._give_many(None, "discard")
-            return
+                magic.begin_study(unit, arg.id, self.group.members)
+            self.selected = []
+        else:
+            self.selected = list(picks)
+            self._give_many(None, "discard")
 
     def _open_chest(self, unit, item):
         """Pick the lock right where the chest sits -- no move, no drop, just
@@ -838,9 +814,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
         if self.notice:
             text(screen, F["body_sm"], self.notice, (done_r.right + T.S * 2, done_r.centery - 6), T.BRASS)
 
-        if self.menu:
-            res = loadout_panel.send_menu(screen, F, self.menu["anchor"], self.menu["rows"], self.mouse)
-            self.menu["rect"], self.menu["hits"] = res["rect"], res["hits"]
+        self._draw_menu(screen)
         if self.split_prompt:
             self._draw_split_prompt(screen, F)
 
@@ -849,7 +823,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
 
     def _hovering(self):
         if self.menu:
-            return any(r.collidepoint(self.mouse) for r, *_ in self.menu.get("hits", ()))
+            return self._menu_hovering()
         if self.split_prompt:
             return self._split_hovering()
         if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):

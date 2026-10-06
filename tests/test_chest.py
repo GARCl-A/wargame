@@ -5,7 +5,7 @@ pins it, same as a death save or the guard test)."""
 import random
 
 from gartok import chest, data
-from tests.helpers import Unit, fixed_d20, packed
+from tests.helpers import Unit, click_menu, fixed_d20, packed
 
 
 def test_a_clean_pick_consumes_the_chest_and_hands_over_gems():
@@ -74,7 +74,7 @@ def test_gear_screen_right_click_offers_to_open_a_chest_and_resolves_it():
 
     open_hit = next(r for r, kind, _arg in gs.menu["hits"] if kind == "open")
     with fixed_d20(data.CHEST_DC):
-        gs._menu_click(open_hit.center)
+        click_menu(gs, open_hit.center)
 
     assert not u.has_item(data.CHEST_ITEM)
     assert u.has_item(data.GEM_ITEM)
@@ -110,7 +110,7 @@ def test_opening_the_regular_chest_ignores_a_sealed_one_in_the_same_pack():
     gs.draw(surface)
     open_hit = next(r for r, kind, _arg in gs.menu["hits"] if kind == "open")
     with fixed_d20(data.CHEST_DC):
-        gs._menu_click(open_hit.center)
+        click_menu(gs, open_hit.center)
 
     assert not u.has_item(data.CHEST_ITEM)
     assert u.has_item(data.MISSION_CHEST_ITEM)   # untouched -- the sealed one stays sealed

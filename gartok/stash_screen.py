@@ -8,12 +8,14 @@ member columns and the pooled purse are all here.
 Interaction: drag an item where it goes, or click to pick it up and click the
 destination (shift/ctrl gathers more first). The stash's own rows carry a
 `- N +` stepper for a partial move; a member's pack row always moves as a
-whole stack (split it on the group screen first if you want less).
+whole stack (split it on the group screen first if you want less). The row's
+⋮ button (or a right-click) opens a menu to send that stack to the stash or
+another pinned member.
 
-Money is pooled for the visit (`self.purse`, snapshotted from the party's own
-coin at the door) rather than moved copper by copper. Leaving settles the pool
-back out proportional to what each member walked in with (`economy.
-settle_pooled_purse`), so nobody's relative wealth changes just from visiting.
+`self.purse` is the party's real Copper Coin stacks added up (`economy.
+PartyPurse`): a rent or a debt payment comes out of the members in proportion
+to what each carries, and coins move between members and the stash like any
+other item.
 
 A subclass sets the class attributes below and implements `_stash`, `_open`,
 `_services` and `_run_service`. The stash is a third kind of pick owner next
@@ -24,6 +26,7 @@ import pygame
 
 from . import economy, items
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
+from .packbox import ItemMenuMixin
 from .screen import Screen
 from .ui import loadout_panel
 from .ui.inspector_panel import role_for
@@ -36,7 +39,7 @@ COL_MIN, COL_MAX = 300, 420
 STASH_W = 360
 
 
-class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen):
+class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     OWNER = ""              # pick-owner key for the stash: "bank" / "house"
@@ -56,8 +59,6 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
         self.guild = guild
         self.party = party
         self.on_done = on_done
-        self._orig_gold = {m: m.gold for m in party}
-        self.purse = sum(self._orig_gold.values())
         self.selected = []                    # [(owner, loc)] -- owner is OWNER or a Unit
         self._sel_qty = {}                    # (owner, idx) -> qty picked; member picks always move whole
         self.pinned = list(party)             # columns shown, clamped to fit at draw time
@@ -73,6 +74,7 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
         self._stash_scroll = 0
         self._service_hits = []               # [(rect, key)]
         self._stash_steppers = []             # [(rect, pick, delta)]
+        self._dots_hits = []                  # [(rect, unit, idx)] -- the pack row's menu button
         self._unit_by_uid = {u.uid: u for u in party}
         self.back_rect = None
 
@@ -192,6 +194,8 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
     # input                                                              #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):
+        if self._dots_at(px) is not None:
+            return None
         for rect, owner, loc in self.sources:
             if rect.collidepoint(px):
                 return (owner, loc)
@@ -208,6 +212,8 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
             self.selected = [src]
 
     def handle_event(self, event):
+        if self._menu_event(event):
+            return
         if event.type == pygame.MOUSEWHEEL:
             if self._rail_rect and self._rail_rect.collidepoint(self.mouse):
                 self._rail_scroll = max(0, min(self._rail_max_scroll,
@@ -221,6 +227,11 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
             if hit is not None:
                 self._give_many(*hit)
             self.selected, self._sel_qty = [], {}
+            return
+
+        pick = self._dots_at(px)
+        if pick is not None:
+            self._open_menu(px, self._menu_picks_for(pick))
             return
 
         for rect, key, delta in self._stash_steppers:
@@ -316,6 +327,26 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
         total = sum(q for _, q in collected)
         one = collected[0][0] if total == 1 else f"{total} items"
         self.notice = f"stashed {one}."
+
+    def _menu_picks_for(self, pick):
+        return self.selected if pick in self.selected else [pick]
+
+    def _menu_rows(self, picks):
+        picks = [p for p in picks if self._item_at(*p) is not None]
+        if not picks:
+            return []
+        self.selected = list(picks)
+        owners = {id(p[0]) for p in picks}
+        lift = len(owners) > 1 or any(isinstance(p[1], str) or p[0] == self.OWNER for p in picks)
+        rows = [("member", f"to {u.name}", u) for u in self.pinned if lift or id(u) not in owners]
+        if any(p[0] != self.OWNER for p in picks):
+            rows.insert(0, ("stash", f"to {self.LABEL}", self.OWNER))
+        return rows
+
+    def _menu_run(self, picks, kind, arg):
+        self.selected = list(picks)
+        self._give_many(arg, "pack" if kind == "member" else self.OWNER)
+        self.selected, self._sel_qty = [], {}
 
     def _distribute_load(self):
         from . import unit as unit_module
@@ -421,8 +452,9 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
                     self.sources.append((slot_rect, u, kind))
             self.zones.append((res["pack_zone"], u, "pack"))
             for pr, idx in res["pack_hits"]:
-                if u._base_inventory[idx][0] != items.COIN_ITEM:   # the purse is pooled: shown, not movable
-                    self.sources.append((pr, u, idx))
+                self.sources.append((pr, u, idx))
+            for dr, idx in res["dots_hits"]:
+                self._dots_hits.append((dr, u, idx))
 
         hidden = len(self.pinned) - len(shown)
         if hidden > 0:
@@ -463,6 +495,7 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
         self._unit_by_uid = {u.uid: u for u in self.party}
         self.zones, self.sources, self.buttons, self._service_hits = [], [], [], []
         self._stash_steppers = []
+        self._dots_hits = []
 
         head = pygame.Rect(0, 0, W, T.S * 9)
         body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * 10)
@@ -489,9 +522,14 @@ class StashScreen(economy.PooledPurse, DragSelectMixin, LoadoutMoveMixin, Screen
             self.buttons.append(("distribute", dist_r))
         if self.notice:
             text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
+        self._draw_menu(screen)
         set_pointer(self._hovering())
 
     def _hovering(self):
+        if self.menu is not None:
+            return self._menu_hovering()
+        if any(r.collidepoint(self.mouse) for r, *_ in self._dots_hits):
+            return True
         if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
             return True
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):

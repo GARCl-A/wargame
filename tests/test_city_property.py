@@ -40,8 +40,6 @@ def _screen(guild, party):
     s = CityPropertyScreen.__new__(CityPropertyScreen)
     s.guild = guild
     s.party = party
-    s._orig_gold = {m: m.gold for m in party}
-    s.purse = sum(s._orig_gold.values())
     s.selected = []
     s._sel_qty = {}
     s.notice = None

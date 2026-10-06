@@ -1,11 +1,11 @@
 """Market: buy and sell gear for copper.
 
-The shopping party pools its coin into one **common purse** for the visit (the
-guild has no treasury) and the members' packs sit side by side, so you can shift
-items and spend freely without per-character fiddling. On the way out the purse
-is split back out proportional to what each shopper walked in with
-(`economy.settle_pooled_purse`, the same rule the bank/property screens use) --
-so nobody's relative wealth changes just from shopping together.
+The shopping party's coin counts as one **common purse** (the guild has no
+treasury) and the members' packs sit side by side, so you can shift items and
+spend freely without per-character fiddling. The purse is just the members' real
+Copper Coin stacks added up: a purchase is paid out of them in proportion to what
+each carries, and a sale pays the coin straight into the seller's own pack.
+Coins move between members like any other item.
 
 The stock is split into **category tabs** -- WEAPONS / ARMOR / CONSUMABLES & KIT
 (`economy.market_categories`) -- each with a column layout tuned to what matters
@@ -27,12 +27,12 @@ import pygame
 
 from . import economy, factions, items
 from .dragselect import DragSelectMixin
-from .packbox import PackColumnMixin
+from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel, market_panel
 from .ui.inspector_panel import role_for
-from .ui.primitives import draw_button, draw_tooltip, format_tooltip
+from .ui.primitives import draw_button, draw_tooltip, format_tooltip, set_pointer
 from .ui.primitives import text as ui_text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -41,7 +41,7 @@ STOCK_W = 412
 MARGIN = T.S * 2
 
 
-class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
+class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     native = True
     header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
 
@@ -52,8 +52,6 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
         self.shoppers = shoppers
         self.node = node
         self.on_done = on_done
-        self._orig_gold = {m: m.gold for m in shoppers}   # snapshot, for the proportional settle on leaving
-        self.purse = sum(self._orig_gold.values())   # pooled for the visit
         # haggling: language + charisma + alignment (and talents) bend the prices;
         # the shopping group's leader speaks for it when they're eligible (see
         # economy._haggle_fraction). `self.deal` is a list of economy.PriceMod,
@@ -76,6 +74,7 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
         self.stock_rows = []                 # [(rect, name)]
         self.qty_hits = []                   # [(rect, name, delta)]
         self.lock_hits = []                  # [(rect, member, name)]
+        self._dots_hits = []                 # [(rect, member, idx)] -- the pack row's menu button
         self.info_hits = []                  # [(rect, member)] -- the card's 'i' disc opens the sheet
         self._pack_scroll = {}               # id(member) -> stacks scrolled past in the pack list
         self._pack_areas = []                # [(rect, member)] -- pack list rects, for wheel hit-testing
@@ -221,7 +220,8 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
 
     def _sell_total(self):
         return sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
-                   for p in self.sel if p[0] != "stock" and self._name_of(p) is not None)
+                   for p in self.sel
+                   if p[0] != "stock" and self._name_of(p) not in (None, items.COIN_ITEM))
 
     def _selected_names(self):
         return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
@@ -287,6 +287,8 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
     # (the press/drag machinery lives in DragSelectMixin)                #
     # ------------------------------------------------------------------ #
     def _source_at(self, px):
+        if self._dots_at(px) is not None:
+            return None                      # a menu button press starts no drag / select
         for rect, _name, _delta in self.qty_hits:
             if rect.collidepoint(px):
                 return None                  # a stepper press starts no drag / select
@@ -321,6 +323,8 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
             self.sel = [src]
 
     def handle_event(self, event):
+        if self._menu_event(event):
+            return
         if event.type == pygame.MOUSEWHEEL:
             mods = pygame.key.get_mods()
             is_shift = mods & pygame.KMOD_SHIFT
@@ -369,6 +373,47 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
             if pick not in self.sel:
                 self.sel.append(pick)
 
+    def _menu_picks_for(self, pick):
+        if pick[0] == "stock":
+            return []
+        if pick in self.sel and len(self.sel) > 1:
+            return [p for p in self.sel if p[0] != "stock"]
+        return [pick]
+
+    def _menu_rows(self, picks):
+        picks = [p for p in picks if not isinstance(p[1], str) and p[1] < len(p[0]._base_inventory)]
+        if not picks:
+            return []
+        owners = {id(p[0]) for p in picks}
+        dests = [("member", f"to {m.name}", m) for m in self.shoppers
+                 if len(owners) > 1 or id(m) not in owners]
+        if len(picks) > 1:
+            total = sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
+                        for p in picks if self._name_of(p) != items.COIN_ITEM)
+            sell = [("sell_sel", f"sell selected  (+{total}c)", None)] if total else []
+            return sell + dests
+        member, loc = picks[0]
+        name, qty = member._base_inventory[loc]
+        if name == items.COIN_ITEM:
+            return dests
+        each = economy.sell_price(name, self.deal)
+        rows = [("sell", f"sell all x{qty}  (+{each * qty}c)" if qty > 1 else f"sell  (+{each}c)", qty)]
+        if qty > 1:
+            rows.insert(0, ("sell", f"sell 1  (+{each}c)", 1))
+        return rows + dests
+
+    def _menu_run(self, picks, kind, arg):
+        self.sel = list(picks)
+        if kind == "sell":
+            self._sel_qty = {picks[0]: arg}
+        elif len(picks) == 1:
+            self._sel_qty = {picks[0]: self._held_qty(picks[0])}
+        if kind in ("sell", "sell_sel"):
+            self._sell()
+        else:
+            self._drop_on_zone(arg, "pack")
+            self._sel_qty = {}
+
     def _sell_all(self):
         """Grow every currently-picked pack stack to its full held quantity
         -- the stepper's own ALL, applied to the whole selection at once."""
@@ -397,6 +442,11 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
             if rect.collidepoint(px):
                 self._bump_qty(pick, delta)
                 return
+
+        pick = self._dots_at(px)
+        if pick is not None:
+            self._open_menu(px, self._menu_picks_for(pick))
+            return
 
         for rect, member, name in self.lock_hits:
             if rect.collidepoint(px):
@@ -606,23 +656,28 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
 
     def _sell(self):
         picks = [p for p in self.sel
-                 if p[0] != "stock" and self._name_of(p) is not None]
+                 if p[0] != "stock" and self._name_of(p) not in (None, items.COIN_ITEM)]
         self.sel = []
         if not picks:
             self._sel_qty = {}
             return
-        collected, touched = self._collect(picks)      # _take reads self._sel_qty -- clear after
+        by_owner = {}
+        for p in picks:
+            by_owner.setdefault(id(p[0]), (p[0], []))[1].append(p)
+        total = sold = 0
+        for owner, owner_picks in by_owner.values():
+            collected, _ = self._collect(owner_picks)  # _take reads self._sel_qty -- clear after
+            proceeds = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
+            owner.gold += proceeds
+            total += proceeds
+            sold += sum(q for _, q in collected)
+            for n, q in collected:
+                stock = self._stock_of(n)
+                if stock is not None:
+                    self.guild.market_stock[n] = stock + q
+                self.guild.items_sold_kinds.add(n)
+            owner._derive_combat()
         self._sel_qty = {}
-        total = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
-        self.purse += total
-        for n, q in collected:
-            stock = self._stock_of(n)
-            if stock is not None:
-                self.guild.market_stock[n] = stock + q
-            self.guild.items_sold_kinds.add(n)
-        for u in touched:
-            u._derive_combat()
-        sold = sum(q for _, q in collected)
         self.notice = f"sold {sold} item(s) for {total}."
         self._settle_market()
 
@@ -630,10 +685,6 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
         return self.shoppers
 
     def _checkout(self):
-        """Settles the pooled purse back out proportional to what each
-        shopper walked in with (same rule the bank/property screens use) --
-        no longer an even split, so wealth doesn't quietly level out just
-        from shopping together."""
         self.on_done()
 
     # ------------------------------------------------------------------ #
@@ -643,6 +694,7 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
         screen.fill(T.TABLE)
         self.tooltip = None
         self.lock_hits = []
+        self._dots_hits = []
         self.item_rows = []
         self.cards = []
         self.buttons = []
@@ -694,10 +746,21 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
                         self.tooltip = self._item_tooltip(name, F)
                     break
 
-        if self.tooltip:
+        if self.tooltip and self.menu is None:
             draw_tooltip(screen, F, self.tooltip, self.mouse)
 
+        self._draw_menu(screen)
         self.draw_sheet_modal(screen)
+        set_pointer(self._hovering())
+
+    def _hovering(self):
+        if self.menu is not None:
+            return self._menu_hovering()
+        if any(r.collidepoint(self.mouse) for _, r in self.buttons):
+            return True
+        hot = (self.tab_hits, self.qty_hits, self.size_hits, self.header_size_hits, self._dots_hits,
+               self.lock_hits, self.info_hits, self.item_rows, self.stock_rows)
+        return any(h[0].collidepoint(self.mouse) for group in hot for h in group)
 
     @staticmethod
     def _item_tooltip(name, F):
@@ -808,11 +871,11 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
             self._pack_areas.append((res["pack_area"], m))
             
             for pr, idx in res["pack_hits"]:
-                if m._base_inventory[idx][0] != items.COIN_ITEM:   # the purse is pooled: shown, not movable
-                    self.item_rows.append((pr, m, idx))
+                self.item_rows.append((pr, m, idx))
             for lr, idx in res["lock_hits"]:
-                if m._base_inventory[idx][0] != items.COIN_ITEM:
-                    self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
+                self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
+            for dr, idx in res["dots_hits"]:
+                self._dots_hits.append((dr, m, idx))
                 
         if self._shoppers_max_scroll > 0:
             hr = self._shoppers_max_scroll - self._shoppers_scroll
@@ -839,7 +902,7 @@ class MarketScreen(economy.PooledPurse, PackColumnMixin, DragSelectMixin, SheetM
         self.buttons.append(("done", done_r))
 
         names = self._selected_names()
-        if not self._buying and names:
+        if not self._buying and any(n != items.COIN_ITEM for n in names):
             sell_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
             sell_r.center = (W // 2, H - T.S * 8 + T.S * 2)
             draw_button(screen, F, sell_r, f"SELL FOR {self._sell_total()}c", mpos=self.mouse)

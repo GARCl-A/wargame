@@ -123,3 +123,9 @@ def walker(team="player"):
     u = Unit(team)
     u.speed = 6
     return u
+
+
+def click_menu(screen, pos):
+    """A left press at `pos` on a screen with an open item menu."""
+    import pygame
+    screen.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))

@@ -133,7 +133,6 @@ def test_selling_a_used_quiver_at_the_market_pays_pro_rata():
     u.quiver_charges = 5
     s = MarketScreen.__new__(MarketScreen)
     s.guild, s.shoppers, s.deal = Guild([u]), [u], []
-    s._orig_gold = {u: 0}
     s.purse = 0
     s.sel, s._sel_qty, s.notice = [(u, 0)], {}, None
     s.qty = {}

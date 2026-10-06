@@ -109,3 +109,68 @@ class SplitStackMixin:
 
     def _split_hovering(self):
         return any(r.collidepoint(self.mouse) for r, _ in self.split_prompt.get("hits", ()))
+
+
+class ItemMenuMixin:
+    """The popup behind a pack row's ⋮ button (and right-click): the host says
+    what the rows are and what each does, this owns opening, drawing,
+    hit-testing and dismissing. A pick is `(owner, loc)`; the menu acts on a
+    list of them.
+
+    Host contract: `_ui_fonts()`, `self.mouse`, `_source_at(px)`, a
+    `self._dots_hits = [(rect, owner, loc)]` it refills each frame,
+    `_menu_rows(picks)` -> `[(kind, label, arg)]` (empty = no menu) and
+    `_menu_run(picks, kind, arg)`. `_menu_picks_for(pick)` is what the menu acts
+    on when opened from that row (just the row by default; a host with a
+    selection widens it). Call `_menu_event(event)`
+    in `handle_event` (after any modal prompt), `_dots_at(px)` before a click
+    counts as a selection, `_open_menu(px, self._menu_picks_for(pick))` on a dots hit, and
+    `_draw_menu(screen)` while drawing."""
+
+    menu = None
+    _dots_hits = ()
+
+    def _dots_at(self, px):
+        return next(((owner, loc) for r, owner, loc in self._dots_hits
+                     if r.collidepoint(px)), None)
+
+    def _menu_picks_for(self, pick):
+        return [pick]
+
+    def _menu_picks_at(self, px):
+        src = self._source_at(px)
+        return self._menu_picks_for(src) if src is not None else []
+
+    def _open_menu(self, anchor, picks=None):
+        if picks is None:
+            picks = self._menu_picks_at(anchor)
+        rows = self._menu_rows(picks) if picks else []
+        self.menu = {"anchor": anchor, "rows": rows, "picks": list(picks)} if rows else None
+
+    def _menu_event(self, event):
+        """True when the event was the menu's (a pick, a dismiss, a right-click)."""
+        if event.type != pygame.MOUSEBUTTONDOWN:
+            return False
+        if self.menu is not None and event.button == 1:
+            m, self.menu = self.menu, None
+            hit = next(((kind, arg) for r, kind, arg in m.get("hits", ())
+                        if r.collidepoint(event.pos)), None)
+            if hit:
+                self._menu_run(m["picks"], *hit)
+            return True
+        if event.button == 3:
+            self._open_menu(event.pos)
+            return True
+        self.menu = None
+        return False
+
+    def _draw_menu(self, screen):
+        from .ui import loadout_panel
+        if self.menu is not None:
+            res = loadout_panel.send_menu(screen, self._ui_fonts(), self.menu["anchor"],
+                                          self.menu["rows"], self.mouse)
+            self.menu["rect"], self.menu["hits"] = res["rect"], res["hits"]
+
+    def _menu_hovering(self):
+        return self.menu is not None and any(
+            r.collidepoint(self.mouse) for r, *_ in self.menu.get("hits", ()))
