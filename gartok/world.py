@@ -99,7 +99,8 @@ class Node:
                  bank=False, tanner=False, jurisdiction=None,
                  unsafe=False, encounter_table=None, trust=False, ledger=False,
                   city_property=False, garrison_job=None, claim=False, forge=False,
-                  prison=False, apothecary=False, library=False, dungeon=False, stable=False):
+                  prison=False, apothecary=False, library=False, dungeon=False, stable=False,
+                  wagon_risk=0.0):
         self.id = id
         self.name = name
         self.kind = kind
@@ -126,6 +127,7 @@ class Node:
         self.library = library               # town: sells dictionaries and gives quests (library_screen)
         self.dungeon = dungeon               # town: tactical dungeon exploration
         self.stable = stable                 # town: wagons and draft animals (stables_screen)
+        self.wagon_risk = wagon_risk         # chance a wagon left unguarded here is lost (wagon_watch.py)
 
     @property
     def is_battle(self):
@@ -232,7 +234,7 @@ NODES = [
          stable=True),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
-         dungeon=True),
+         dungeon=True, wagon_risk=ROAD_AMBUSH_CHANCE),
 ]
 
 WILDS_TERRITORY_NODE = "wilds_territory"

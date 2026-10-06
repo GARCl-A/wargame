@@ -35,6 +35,13 @@ cannot carry that much. Built so far (read the code for how it works; tests in
   `Guild.park_wagon` / `park_animal` / `take_wagon` / `take_animal`; the cargo stays in the wagon, parked
   animals eat daily from the house stash and the parked wagons' cargo (`animals.feed_herd`, shared with
   `Group.feed_animals`) and do not count against `herd_capacity`; losing the house loses the garage.
+- The wagon left outside (4b): a group with a wagon entering the Ancient Ruins or hunting in the Wilds
+  opens `watch_screen.WatchScreen` (the squad selector, with its tutorial card): click a member to leave
+  them minding the wagon; they stay in the group, only the others delve or hunt. Unguarded, `app` rolls
+  once when the party is back out (`wagon_watch.leave_outside`): `Node.wagon_risk` (Ruins
+  `ROAD_AMBUSH_CHANCE`, Wilds 0) plus the flightiest animal's `flight` (`data.BEASTS`: Donkey 5%, Horse 10%,
+  Ox 15%); a hit loses wagons, cargo and herd, with no notice. Guarded is always safe for now. Nothing new
+  is persisted, so no save bump.
 - Saves: `SAVE_VERSION` 20, old `wagon` / `animals` keys and unhitched saves still load.
 
 **Scale premise.** The game is meant to get big (guilds with many groups, many
@@ -56,7 +63,7 @@ exercises a small part of it.
 ## Still to build
 
 ### 4. Parking (the garage) and the wagon left outside
-4a (the house garage) is built, see above; 4b and 4c remain. The full design:
+4a (the house garage) and 4b (the wagon left outside) are built, see above; 4c remains. The full design:
 
 A wagon is in one of three states: **with the group** (travels, same risk as the group),
 **in a garage** or **left outside**. Wagons never enter a battle map.
@@ -96,11 +103,10 @@ A wagon is in one of three states: **with the group** (travels, same risk as the
 - A broken wagon, repair and abandon are in *Later*: nothing damages a wagon yet.
 - Left for later, on purpose: who leads a garrison and how large it may be (the leader decides
   the herd and the group size there); the garage's per-tier price stays flat at 690 cp until
-  play shows what it should do; the flight chance becomes a per-species field in `data.BEASTS`
-  when 4b is built.
+  play shows what it should do; the flight chance is a per-species field in `data.BEASTS` (done in 4b).
 
 Build order: 4a the house garage (done), 4b the guard
-selector with its risk percentage and tutorial card (Ruins, Wilds hunt), 4c the Claim's open
+selector with its risk percentage and tutorial card (Ruins, Wilds hunt; done), 4c the Claim's open
 garage with the daily roll. Each ships with its screen, tests and a `SAVE_VERSION` bump.
 
 ### 5. Camp and the Farm

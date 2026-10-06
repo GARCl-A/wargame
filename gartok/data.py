@@ -185,12 +185,13 @@ RACES = [
 ]
 
 def _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
-               kind="humanoid", drop_item=None, drop_chance=0.0, speed=None, also_drops=()):
+               kind="humanoid", drop_item=None, drop_chance=0.0, speed=None, also_drops=(), flight=0.0):
     return {
         "name": name, "token": token, "mods": mods, "ability": ability,
         "language": language, "age_mult": age, "hd": hd, "size": size, "kind": kind,
         "drop_item": drop_item, "drop_chance": drop_chance,
         "also_drops": also_drops,                      # [(item, chance, qty)] beyond the trophy
+        "flight": flight,                              # livestock: chance per roll it bolts when left unminded
         "speed": SIZES[size]["speed"] if speed is None else speed,   # meters; the size's unless the race sets its own
     }
 
@@ -212,12 +213,12 @@ LANGUAGES = sorted({r["language"] for r in _RACES})
 # --------------------------------------------------------------------------- #
 
 BEASTS = [
-    # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance  speed (m)  also_drops
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance  speed (m)  also_drops  flight
     (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  1.000,      10.5, (("Meat", 1.0, 2),)),
     (100, "Giant Spider", "x", ( 1,  2,  1, -4,  1, -4), ("climber", "spider_venom"), "", 0.200,  8, "Medium", "Venom Gland", 0.5, None),
-    (100, "Donkey", "d", ( 2,  0,  1, -4,  0, -3), "",                "", 0.500,  8, "Large", None, 0.0, 6.0),
-    (100, "Ox",     "o", ( 3,  0,  2, -4,  0, -3), "beast_of_burden", "", 0.500, 10, "Large", None, 0.0, 6.0),
-    (100, "Horse",  "h", ( 5,  1,  1, -4,  0, -3), "",                "", 0.600,  8, "Large", None, 0.0, 12.0),
+    (100, "Donkey", "d", ( 2,  0,  1, -4,  0, -3), "",                "", 0.500,  8, "Large", None, 0.0, 6.0, (), 0.05),
+    (100, "Ox",     "o", ( 3,  0,  2, -4,  0, -3), "beast_of_burden", "", 0.500, 10, "Large", None, 0.0, 6.0, (), 0.15),
+    (100, "Horse",  "h", ( 5,  1,  1, -4,  0, -3), "",                "", 0.600,  8, "Large", None, 0.0, 12.0, (), 0.10),
 ]
 
 # Bought at the Farm and kept by a group (`animals.py`): beast rows like the
@@ -225,10 +226,10 @@ BEASTS = [
 LIVESTOCK = ("Donkey", "Ox", "Horse")
 
 def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
-                drop_item, drop_chance, speed=None, also_drops=()):
+                drop_item, drop_chance, speed=None, also_drops=(), flight=0.0):
     return _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
                       kind="beast", drop_item=drop_item, drop_chance=drop_chance, speed=speed,
-                      also_drops=also_drops)
+                      also_drops=also_drops, flight=flight)
 
 
 _BEASTS = [_beast_dict(*row) for row in BEASTS]

@@ -230,7 +230,7 @@ gartok/
   gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
-  city_property_screen.py / garage_screen.py / wilds_claim_screen.py / justice_screen.py
+  city_property_screen.py / garage_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
   alert_screen.py / adelio_prompt_screen.py
   bank_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py (tabbed hubs
   wrapping a shop/strongbox, crafting and a mission board)

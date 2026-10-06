@@ -49,6 +49,7 @@ from . import (
     matchup,
     persist,
     tutorial_card,
+    wagon_watch,
     world,
 )
 from .battle import Battle
@@ -80,6 +81,7 @@ from .tutorial import TutorialState
 from .ui.banner import set_player_color
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .watch_screen import WatchScreen
 from .wilds_claim_screen import WildsClaimScreen
 
 START_SIZE = (1212, 832)
@@ -87,6 +89,8 @@ TUTORIAL_DEBOUNCE_MS = 300      # clicks swallowed right after a tutorial card c
 
 
 class App:
+    _left_outside = None    # (group, node, guarded): a wagon waiting outside the node the party entered
+
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("GARTOK Tactical")
@@ -165,6 +169,7 @@ class App:
     def _continue_game(self, world_id, save_id=persist.CURRENT):
         self.world = world_id
         self.guild = persist.load_game(world_id, save_id)
+        self._left_outside = None
         if save_id != persist.CURRENT:
             self._save()                     # the snapshot becomes the live state
         set_player_color(self.guild.banner_color)
@@ -330,7 +335,7 @@ class App:
         "claim": lambda s, g, n, o: s._open_wilds_claim(g, n),
         "recruit": lambda s, g, n, o: s._open_taverna(list(g.members), n, None, group=g),
         "prison": lambda s, g, n, o: s._open_prison(list(g.members), n, None),
-        "hunt": lambda s, g, n, o: s._open_hunt_ground(list(g.members), n, None),
+        "hunt": lambda s, g, n, o: s._open_hunt_ground(list(g.members), n, None, group=g),
         "tanner": lambda s, g, n, o: s._open_tanner_stall(g, n, None),
         "trust": lambda s, g, n, o: s._open_trust_offer(g, n, None),
         "ledger": lambda s, g, n, o: s._open_ledger_desk(g, n, None),
@@ -504,8 +509,16 @@ class App:
                                       on_done=self._after_activity)
 
     def _enter_ancient_ruins(self, group, node):
+        if wagon_watch.needs_watch(group):
+            self.scene = WatchScreen(self.ui_fonts, group, node, "ENTER THE RUINS",
+                                     on_confirm=lambda party, guarded: self._delve(group, node, party, guarded),
+                                     on_back=self._after_activity)
+        else:
+            self._delve(group, node, list(group.members), True)
+
+    def _delve(self, group, node, squad, guarded):
         from .scenario import AncientRuinsScenario
-        squad = list(group.members)
+        self._leave_outside(group, node, guarded)
         scenario = AncientRuinsScenario()
         battle = Battle(squad, scenario.enemies, scenario=scenario,
                         daylight=False, lethal=True, clock_day=self.guild.clock.day)
@@ -627,7 +640,16 @@ class App:
     # ------------------------------------------------------------------ #
     # hunting the wilds -- an activity that can spring a fight            #
     # ------------------------------------------------------------------ #
-    def _open_hunt_ground(self, party, node, _offer):
+    def _open_hunt_ground(self, party, node, _offer, group=None):
+        if group is not None and wagon_watch.needs_watch(group):
+            self.scene = WatchScreen(self.ui_fonts, group, node, "GO HUNTING",
+                                     on_confirm=lambda hunters, guarded: self._begin_hunt(hunters, node, group, guarded),
+                                     on_back=self._after_activity)
+        else:
+            self._begin_hunt(party, node, group, True)
+
+    def _begin_hunt(self, party, node, group, guarded):
+        self._leave_outside(group, node, guarded)
         self._hunt = hunt.HuntState(list(party), node, hours_left=0)
         self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="setup",
                                 on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
@@ -698,6 +720,7 @@ class App:
 
     def _end_hunt(self):
         self._hunt = None
+        self._back_from_outside()
         if self.guild.empty:
             self._campaign_over()
         else:
@@ -749,6 +772,15 @@ class App:
                         clock_day=self.guild.clock.day)
         self._enter_battle(battle, node)
 
+    def _leave_outside(self, group, node, guarded):
+        self._left_outside = (group, node, guarded) if group is not None and wagon_watch.needs_watch(group) else None
+
+    def _back_from_outside(self):
+        """The party is out again: roll for the wagon it left at the door. Silent on purpose."""
+        left, self._left_outside = self._left_outside, None
+        if left is not None:
+            wagon_watch.leave_outside(*left)
+
     def _enter_battle(self, battle, node):
         """Every fight starts here: snapshot the world first, so a bad one can be undone."""
         self._autosave_before(battle, node)
@@ -773,8 +805,11 @@ class App:
         self._battle_node = None
         self._arena_offer = None
         note = outcome.arena_title_event
+        if hunt_state is None:
+            self._back_from_outside()
 
         if outcome.campaign_over:             # full wipe: campaign over
+            self._left_outside = None
             self._hunt = None
             self._pause_order = self._pause_group = None
             self._campaign_over()
@@ -995,9 +1030,7 @@ class App:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     if not self.scene.handle_escape():
                         self._toggle_pause()
-                elif self._tutorial_swallow(event):
-                    pass
-                elif self._tutorial_click(event):
+                elif self._tutorial_swallow(event) or self._tutorial_click(event):
                     pass
                 else:
                     self.scene.handle_event(event)

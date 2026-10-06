@@ -191,6 +191,14 @@
         "A wagon keeps its cargo while parked. Lose the house and you lose what is in the garage."
       ]
     },
+    "watch": {
+      "title": "Someone has to mind the wagon",
+      "body": [
+        "The wagon cannot follow you into the Ancient Ruins, and it is no use on a hunt. Click a member to leave them outside with it; everyone else goes in. One guard is enough, even a lone level 0.",
+        "Left alone, it may be gone when you come back out: the place itself can take it (the Ruins, 35%) and the animals may bolt (Donkey 5%, Horse 10%, Ox 15%). Cargo and animals go with it, and nobody tells you what happened.",
+        "The guards stay in the group. They just do not take part in the delve or the hunt."
+      ]
+    },
     "claim": {
       "title": "Claiming the wilds",
       "body": [

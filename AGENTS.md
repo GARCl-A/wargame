@@ -57,7 +57,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat, oven), `Garage` (wagons and animals kept at the house; `garage_screen.py`) |
 | `creature.py` / `animals.py` | what a Group keeps besides people: `Creature` is the shared pack owner (HP, load); `Animal` is a livestock race from `data.BEASTS` (Donkey, Ox, Horse) with fixed attributes, loads from Strength; kept in `Group.herd` |
-| `wagon.py` | a Group's wagons (`Group.wagons`; `Vehicle` types Cart / Carriage) + the draft animals hitched to each (`Animal.hitch`, `Group.hitch`): cargo and passengers (by weight) share what those animals draw, eaten from by the group, lost with it (`stables_screen.py` buys it) |
+| `wagon.py` | a Group's wagons (`Group.wagons`; `Vehicle` types Cart / Carriage; `wagon_watch.py` / `watch_screen.py`: the wagon left outside the Ruins or a hunt) + the draft animals hitched to each (`Animal.hitch`, `Group.hitch`): cargo and passengers (by weight) share what those animals draw, eaten from by the group, lost with it (`stables_screen.py` buys it) |
 | `group.py` | Group = physical subset of the guild (members, node, order); `BASE_SLOTS` / fame → how many groups the guild may run |
 | `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
