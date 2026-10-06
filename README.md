@@ -189,7 +189,7 @@ gartok/
                     "study" garrison job (guild.py), AI use in ai.py
 
   # world + campaign
-  world.py          the map graph: nodes, edges (hours), route (Dijkstra), Bout (arena offers)
+  world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour

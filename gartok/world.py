@@ -1,8 +1,9 @@
 """The world map: a small graph of places the guild's groups travel between.
 
-Nodes are places; edges carry a travel cost in whole hours. Each `Group`
-(`gartok/group.py`) sits on one node; ordering it elsewhere (`orders.travel`)
-uses `route` (Dijkstra over `EDGES`) to price the trip in hours, and
+Nodes are places; edges carry a distance, in the hours a person walking at
+`WALK_SPEED` covers. Each `Group` (`gartok/group.py`) sits on one node; ordering
+it elsewhere (`orders.travel`) uses `route` (Dijkstra over `EDGES`) to find the
+shortest way, `hours` turns a distance into time at the group's speed, and
 `campaign.advance` is what actually moves it there and advances the clock.
 `MapScreen` draws the graph; `app` turns the node a group's order resolves at
 into the activity screen there.
@@ -71,6 +72,7 @@ from dataclasses import dataclass
 from . import encounters
 from .scenario import ArenaScenario, CustomScenario, ErmosScenario
 
+WALK_SPEED = 9.0           # meters per move of the walker one distance unit is measured by
 ROAD_AMBUSH_CHANCE = 0.35   # per travel-leg arrival at an `unsafe` node, not per hour (unlike hunt.py)
 
 # The trust mission's fortress ambush battlefield -- painted in the map editor
@@ -265,13 +267,18 @@ def node(id):
     return _BY_ID[id]
 
 
+def hours(distance, speed):
+    """Time to cover `distance` at `speed` (meters per move)."""
+    return distance * WALK_SPEED / max(speed, 1)
+
+
 def neighbors(id):
-    """[(node_id, hours), ...] directly connected to `id`."""
+    """[(node_id, distance), ...] directly connected to `id`."""
     return _ADJ[id]
 
 
 def route(src, dst):
-    """Cheapest path as ([node ids incl. both ends], total_hours).
+    """Shortest path as ([node ids incl. both ends], total distance).
 
     ([src], 0) when src == dst; (None, inf) when unreachable.
     """

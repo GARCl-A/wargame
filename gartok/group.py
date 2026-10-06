@@ -27,6 +27,7 @@ from uuid import uuid4
 
 from . import items
 from .animals import STARVE_DAYS
+from .data import METERS_PER_SQUARE
 from .unit_hunger import take_ration
 
 BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overextension`
@@ -210,6 +211,13 @@ class Group:
 
     def can_take(self, animal):
         return self.herd_load + animal.herd_weight <= self.herd_capacity
+
+    @property
+    def speed(self):
+        """Meters the group covers in one move: the slowest member (their combat
+        speed, armor and load included) or animal, harnessed or not."""
+        return min([u.speed * METERS_PER_SQUARE for u in self.members] + [a.speed for a in self.herd],
+                   default=0)
 
     @property
     def overextension(self):

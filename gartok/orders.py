@@ -90,21 +90,22 @@ def travel(group, dest):
     stops at each waypoint of the cheapest route before continuing, rather than
     jumping straight from here to `dest`. See `campaign.advance`, which chains
     `next_leg` orders together as each one resolves."""
-    full_path, hours = world.route(group.node, dest)
-    if hours == float("inf"):
+    full_path, distance = world.route(group.node, dest)
+    if distance == float("inf"):
         raise ValueError(f"no route from {group.node!r} to {dest!r}")
     if len(full_path) < 2:                      # already there
         return Order("travel", eta=0, remaining=0, dest=dest)
-    return next_leg(group.node, full_path[1:])
+    return next_leg(group.node, full_path[1:], group.speed)
 
 
-def next_leg(src, remaining_path):
-    """The order for the single next edge (`src` -> `remaining_path[0]`),
-    carrying whatever waypoints still follow it. `campaign.advance` calls this
-    again each time a leg resolves, so the group visibly stops at every
-    waypoint of a multi-hop route instead of jumping straight to the end."""
+def next_leg(src, remaining_path, speed):
+    """The order for the single next edge (`src` -> `remaining_path[0]`) at the
+    group's `speed`, carrying whatever waypoints still follow it.
+    `campaign.advance` calls this again each time a leg resolves, so the group
+    visibly stops at every waypoint of a multi-hop route instead of jumping
+    straight to the end."""
     nxt = remaining_path[0]
-    hours = next(w for v, w in world.neighbors(src) if v == nxt)
+    hours = world.hours(next(w for v, w in world.neighbors(src) if v == nxt), speed)
     return Order("travel", eta=hours, remaining=hours, dest=nxt,
                 path=tuple(remaining_path[1:]))
 

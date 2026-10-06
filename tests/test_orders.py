@@ -8,7 +8,7 @@ from gartok import campaign, economy, orders, world
 from gartok.clock import Clock
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Unit, packed
+from tests.helpers import Unit, packed, walker
 
 
 def _guild(*groups, **kw):
@@ -18,16 +18,16 @@ def _guild(*groups, **kw):
 
 def test_advance_is_a_noop_with_nothing_in_flight():
     random.seed(1)
-    guild = _guild(Group([Unit("player")], node="city"))
+    guild = _guild(Group([walker()], node="city"))
     result = campaign.advance(guild)
     assert result.events == [] and result.pending == [] and not result.wiped
 
 
 def test_idle_groups_never_block_the_jump():
     random.seed(1)
-    idle_g = Group([Unit("player")], node="city")
+    idle_g = Group([walker()], node="city")
     idle_g.order = orders.idle()
-    mover = Group([Unit("player")], node="city")
+    mover = Group([walker()], node="city")
     mover.order = orders.travel(mover, "market")
     guild = _guild(idle_g, mover)
     campaign.advance(guild)
@@ -36,13 +36,13 @@ def test_idle_groups_never_block_the_jump():
 
 def test_advance_jumps_to_the_soonest_completion_and_leaves_the_rest_ticking():
     random.seed(1)
-    quick = Group([Unit("player")], node="city")     # city<->market: 1 h
-    slow = Group([Unit("player")], node="city")       # city<->arena: 2 h
+    quick = Group([walker()], node="city")     # city<->market: 1 h
+    slow = Group([walker()], node="city")       # city<->arena: 2 h
     quick.order = orders.travel(quick, "market")
     slow.order = orders.travel(slow, "arena")
     guild = _guild(quick, slow)
 
-    result = campaign.advance(guild)                 # dt = 1 h: only `quick` completes
+    campaign.advance(guild)                 # dt = 1 h: only `quick` completes
     assert quick.node == "market" and quick.order is None
     assert slow.node == "city" and slow.order is not None
     assert slow.order.remaining == 1
@@ -53,8 +53,8 @@ def test_advance_jumps_to_the_soonest_completion_and_leaves_the_rest_ticking():
 
 def test_simultaneous_completions_all_resolve_in_one_advance():
     random.seed(1)
-    a = Group([Unit("player")], node="city")
-    b = Group([Unit("player")], node="city")
+    a = Group([walker()], node="city")
+    b = Group([walker()], node="city")
     a.order = orders.travel(a, "market")
     b.order = orders.travel(b, "market")
     guild = _guild(a, b)
@@ -74,7 +74,7 @@ def test_multi_hop_travel_stops_at_each_waypoint_instead_of_jumping_to_the_end()
     random.seed(1)
     orig_chance, world.ROAD_AMBUSH_CHANCE = world.ROAD_AMBUSH_CHANCE, 0.0
     try:
-        g = Group([Unit("player")], node="city")
+        g = Group([walker()], node="city")
         g.order = orders.travel(g, "wilds")
         assert g.order.dest == "road" and g.order.path == ("wilds",)
         assert g.order.remaining == 4 and g.order.final_dest == "wilds"
@@ -93,7 +93,7 @@ def test_multi_hop_travel_stops_at_each_waypoint_instead_of_jumping_to_the_end()
 
 def test_travel_to_an_unreachable_node_raises():
     random.seed(1)
-    g = Group([Unit("player")], node="city")
+    g = Group([walker()], node="city")
     try:
         orders.travel(g, "nowhere")             # not a node in the graph -- no route
         assert False, "expected ValueError"
@@ -103,7 +103,7 @@ def test_travel_to_an_unreachable_node_raises():
 
 def test_interactive_order_surfaces_in_pending_and_leaves_the_group_idle():
     random.seed(1)
-    g = Group([Unit("player")], node="market")
+    g = Group([walker()], node="market")
     g.order = orders.interactive("market")
     guild = _guild(g)
     result = campaign.advance(guild)
@@ -131,7 +131,7 @@ def test_work_order_pays_without_double_advancing_the_clock():
 
 def test_group_busy_treats_none_and_explicit_idle_the_same():
     random.seed(1)
-    g = Group([Unit("player")], node="city")
+    g = Group([walker()], node="city")
     assert not g.busy                                  # order is None
     g.order = orders.idle()
     assert not g.busy                                  # explicit idle order
@@ -144,7 +144,7 @@ def test_forced_dt_keeps_an_in_flight_orders_eta_synced_with_the_clock():
     soonest completion -- an order that ISN'T due yet must still lose exactly
     that many hours, so it can't drift out of sync with the shared clock."""
     random.seed(1)
-    g = Group([Unit("player")], node="city")
+    g = Group([walker()], node="city")
     g.order = orders.travel(g, "arena")                # city<->arena: 2 h
     guild = _guild(g)
     result = campaign.advance(guild, dt=1)              # forced 1 h stop, not the ETA
@@ -184,7 +184,7 @@ def test_an_unforced_advance_does_not_run_eat_now_pass():
 
 def test_forced_dt_still_resolves_an_order_that_completes_within_it():
     random.seed(1)
-    g = Group([Unit("player")], node="city")
+    g = Group([walker()], node="city")
     g.order = orders.travel(g, "market")                # 1 h -- shorter than the forced stop
     guild = _guild(g)
     campaign.advance(guild, dt=3)
@@ -202,3 +202,22 @@ def test_a_tick_that_starves_the_guild_out_reports_wiped_and_resolves_nothing():
     result = campaign.advance(guild)
     assert result.wiped and guild.empty
     assert not result.pending                          # never got to resolving the order
+
+
+def test_travel_time_is_distance_over_the_groups_speed():
+    fast, slow = Group([walker()], node="city"), Group([walker()], node="city")
+    slow.members[0].speed = 3
+    assert orders.travel(fast, "arena").eta == 2 and orders.travel(slow, "arena").eta == 4
+
+
+def test_a_slow_animal_sets_the_pace_of_the_whole_group():
+    from gartok.animals import Animal
+    g = Group([walker()], node="city", herd=[Animal("Donkey")])
+    assert g.speed == 6.0 and orders.travel(g, "market").eta == 1.5
+
+
+def test_every_leg_of_a_route_is_timed_at_the_groups_speed():
+    g = Group([walker()], node="city")
+    g.members[0].speed = 3
+    leg = orders.travel(g, "road")
+    assert leg.eta == 8 and orders.next_leg("road", ["wilds"], g.speed).eta == 12

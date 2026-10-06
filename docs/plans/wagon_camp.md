@@ -18,6 +18,10 @@ cannot carry that much. Built so far (read the code for how it works; tests in
 - Herd capacity: `Group.herd_capacity` = `HERD_BASE` 3 + the leader's Wisdom modifier;
   gates buying, merging and splitting; an overgrown herd gets a 7-day notice
   (`cohesion._herds`) before an untacked animal strays.
+- Travel: `world.EDGES` are distances (one unit = an hour of a 9 m walker); a leg takes
+  `world.hours(distance, Group.speed)`, `Group.speed` being the slowest member (combat speed,
+  armor and load included) or animal, shown on the gear screen. The economy and balance sims
+  never travel, so they were not affected.
 - Saves: `SAVE_VERSION` 19, old `wagon` / `animals` keys and unhitched saves still load.
 
 **Scale premise.** The game is meant to get big (guilds with many groups, many
@@ -30,7 +34,7 @@ exercises a small part of it.
 - **Storage must trade capacity for something.** Personal pack: free, goes to
   combat. Chest: static and safe. House: static and safe, has the oven. Wagon:
   mobile, lost with the group, needs animals that eat, and (below) slows the trip.
-  Pack animals sit between pack and wagon. Revisit the numbers once travel speed exists.
+  Pack animals sit between pack and wagon. Travel speed exists now, so revisit the numbers.
 - **Tack decides an animal's role** (Pack Saddle carries, Harness pulls, a riding
   saddle later). The wagon is a box; transport (capacity, speed) is derived.
 - Animals do not fight yet, but they have full creature sheets. **Wagons never enter a
@@ -38,22 +42,17 @@ exercises a small part of it.
 
 ## Still to build
 
-### 3. Travel time from distance and speed
-- Edges stop being hours and become **distance**. One unit = what a person
-  walking at 9 m covers in an hour, so today's numbers carry over unchanged.
-- The group has a **speed**; time = distance × 9 / speed (in meters per move).
-- **Group speed = the slowest of everyone travelling**, using each character's
-  real combat speed (`Unit.speed`: race, armor drag, load, hunger). Animals that
-  travel with the group are counted too, harnessed or not. No exceptions: a
-  group of armored dwarves is slow, and the answer is a mount or a wagon.
-- Anyone riding in a wagon is not walking, so their own speed drops out; the
-  wagon moves at its draft animals' speed (`Wagon.speed`, the slowest hitched animal).
-- Slice it: **3a** `Group.speed` only (slowest of members and animals), shown on the
-  group screen, no route or clock change; **3b** edges become distance, travel time uses
-  `Group.speed`, re-run `scripts/economy_sim.py` and the balance sim (every route and
-  wage-per-hour changes).
+### 4. Load and herd loose ends
+Small, no new rules; clears the ground before passengers share the same carry budget.
+- **Distribute load** ignores animals and wagons: it should fill pack animals and the
+  wagon's room too, not only the members' packs (`Group.distribute_load`, `unit.distribute_load`).
+- **Herd over capacity on a leader change** (swap, death), not only on a merge: re-check
+  `herd_capacity` there and start the same 7-day notice (`cohesion._herds`) instead of
+  waiting for the next sweep to notice.
 
-### 4. Passengers, by weight
+### 5. Passengers, by weight
+- Travel speed is built (above); once people ride, their own speed drops out of `Group.speed`
+  and the wagon's pace (`Wagon.speed`, its slowest hitched animal) stands in for them.
 - A wagon seats people by **weight, not seat count**. A passenger is cargo: the
   wagon carries the person **and everything they carry**. The pack stays on the
   passenger (it is still theirs and they can still eat from it); the wagon's cargo
@@ -77,7 +76,7 @@ exercises a small part of it.
   (Small carries as a Medium, 1.0); the pack column is only the sizing heuristic for
   vehicles, not a carry rule.
 
-### 5. Parking, breaking and repair
+### 6. Parking, breaking and repair
 - A wagon is never left in the open (the Old Road). It **stays only where a group
   could garrison**: the house, the Claim.
 - With a garrison in a safe place it is safe. With **nobody to defend it** in a
@@ -91,6 +90,16 @@ exercises a small part of it.
 - **A broken wagon leaves exactly two options:** stop and repair it, or abandon it.
   Travelling with it broken *is* abandoning it, so there is no third way. Before
   abandoning one, its cargo can still be unloaded into packs.
+- **An order that leaves a wagon behind** (a hunt, a fight, a garrison elsewhere) is not
+  modelled: wagons always travel with the group today. This step decides it: the wagon is
+  parked (only where it may stay) or it goes along; parking is what makes leaving it legal.
+
+### 7. Camp and the Farm
+- **Campfire** never goes out and uses a single Lumber; cooking has no upkeep. Revisit if
+  garrison cooking is too cheap or too fiddly (80 meals for 8 people over 10 days is about
+  40 batches). Do it once wagons carry the food, so the numbers are real.
+- **The Farm** only holds the stables for now; rework it as the animals and wagons hub
+  once parking exists (a wagon waits there too).
 
 ### Prices and capacities not applied yet
 The accepted placeholder table (units of 30 kg; retune from play feel, the Horse's 480 cp
@@ -112,21 +121,9 @@ early squads start with about 27 cp, so a cart is a mid-game purchase and a hous
 one. The house should out-hold the biggest carriage (6 people + gear) and cost more than
 1000 cp.
 
-### Mounts (separate arc, keep in mind)
+### Later: wild animals and mounts (separate arc, keep in mind)
+- **Wild Donkey / Ox / Horse** are not rolled anywhere; their racial modifiers (+2 / +3 /
+  +5) only matter if one ever is (a Horse at 3d6 +5 could reach 23, so revisit then).
 - Riding is a later arc, done after this one. A riding saddle enters `animals.TACK`
   then; the rider and animal pair goes into combat. Nothing is built, but the creature
   abstraction should not make it harder.
-
-## Not built (loose ends)
-
-- **The Farm** only holds the stables for now; to be reworked.
-- **Campfire** never goes out and uses a single Lumber; cooking has no upkeep.
-  Revisit if garrison cooking is too cheap or too fiddly (80 meals for 8 people
-  over 10 days is about 40 batches).
-- **Distribute load** ignores animals and the wagons.
-- **A group's order that leaves a wagon behind** is not modelled; wagons always
-  travel with the group today.
-- A herd also goes over capacity when the leader changes (swap, death), not only on a
-  merge.
-- **Wild Donkey / Ox / Horse** are not rolled anywhere; their racial modifiers (+2 / +3 /
-  +5) only matter if one ever is (a Horse at 3d6 +5 could reach 23, so revisit then).

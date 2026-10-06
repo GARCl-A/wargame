@@ -809,6 +809,7 @@ class GroupScreen(SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMove
                 ("band load", f"{self.group.total_load:.0f} / {self.group.total_carry_normal:.0f} kg",
                  T.BLOOD if over else T.TX),
                 ("rations", f"{self.group.rations_days} days", T.BLOOD if short else T.TX),
+                ("speed", f"{self.group.speed:g} m", T.TX),
             ]
             actions = [("distribute", "distribute load")]
             if self._can_treat_sickness():

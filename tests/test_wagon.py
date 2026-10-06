@@ -226,7 +226,7 @@ def _overgrown(extra_cargo=()):
 
 def test_an_overgrown_herd_gets_a_notice_and_then_loses_an_animal():
     from gartok import cohesion
-    guild, g, leader = _overgrown()
+    guild, g, _leader = _overgrown()
     assert g.herd_load > g.herd_capacity
     assert "days before one strays" in cohesion.daily(guild)[0]
     assert g.herd_notice == guild.clock.day + cohesion.NOTICE_DAYS and len(g.herd) == 4
@@ -238,7 +238,7 @@ def test_an_overgrown_herd_gets_a_notice_and_then_loses_an_animal():
 
 def test_a_straying_animal_is_an_untacked_one_and_leaves_its_load_behind():
     from gartok import cohesion
-    guild, g, leader = _overgrown(extra_cargo=("Rope",))
+    _guild, g, leader = _overgrown(extra_cargo=("Rope",))
     cohesion.stray(g)
     assert [a.tack for a in g.herd] == [HARNESS, None, PACK_SADDLE]
     cohesion.stray(g)
@@ -248,7 +248,7 @@ def test_a_straying_animal_is_an_untacked_one_and_leaves_its_load_behind():
 
 def test_the_notice_drops_when_the_herd_is_back_within_control():
     from gartok import cohesion
-    guild, g, leader = _overgrown()
+    guild, g, _leader = _overgrown()
     cohesion.daily(guild)
     g.herd.clear()
     cohesion.daily(guild)
@@ -256,7 +256,7 @@ def test_the_notice_drops_when_the_herd_is_back_within_control():
 
 
 def test_the_herd_notice_survives_a_save(tmp_path):
-    guild, g, _ = _overgrown()
+    _guild, g, _ = _overgrown()
     g.herd_notice = 12
     assert persist.group_from_dict(persist.group_to_dict(g)).herd_notice == 12
 
@@ -696,7 +696,27 @@ def test_only_harnessed_animals_can_be_picked_up_by_the_header_and_cargo_still_d
 
 def test_the_animal_header_says_what_it_pulls():
     d = _animal("Donkey", HARNESS)
-    scr, g = _gear(d, wagon=True)
+    scr, _g = _gear(d, wagon=True)
     assert scr._store_dict(d, [])["name"].endswith("pulls cart")
     d.hitch = None
     assert scr._store_dict(d, [])["name"].endswith("unhitched")
+
+
+def test_group_speed_is_the_slowest_of_members_and_animals():
+    a, b = Unit("player"), Unit("player")
+    g = Group([a, b], node="city")
+    walk = min(a.speed, b.speed) * 1.5
+    assert g.speed == walk
+    g.herd.append(_animal("Donkey"))
+    assert g.speed == min(walk, 6.0)
+    g.herd.append(_animal("Horse"))
+    assert g.speed == min(walk, 6.0)
+
+
+def test_a_loaded_down_member_slows_the_group():
+    a = Unit("player")
+    g = Group([a], node="city")
+    free = g.speed
+    a._base_inventory.append(("Iron Bar", 60))
+    a._derive_combat()
+    assert a.encumbered and g.speed < free

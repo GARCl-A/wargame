@@ -116,3 +116,10 @@ def _person(seed, *, lang="Comum", align="Neutral and Neutral", cha=0):
     u = _unit(seed=seed, languages=[lang], alignment=align)
     u.mod_charisma = cha
     return u
+
+
+def walker(team="player"):
+    """A unit pinned to the 9 m walk one travel distance unit is measured by."""
+    u = Unit(team)
+    u.speed = 6
+    return u

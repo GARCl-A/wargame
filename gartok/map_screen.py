@@ -243,6 +243,7 @@ class MapScreen(Screen):
                 "lead": g.leader.name if g.leader is not None else "",
                 "at": g.node,
                 "busy": g.busy,
+                "pace": world.hours(1, g.speed),
                 "needs_orders": self._is_idle(g),
                 "alert": blocked,
                 "state_label": label,

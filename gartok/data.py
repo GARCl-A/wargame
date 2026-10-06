@@ -30,13 +30,16 @@ def mod(score):
     return (score - 10) // 2
 
 
+METERS_PER_SQUARE = 1.5
+
+
 def squares(meters):
     """Meters -> board squares (1 square = 1.5 m, d20 standard). Minimum 1.
 
     Used both for movement (`speed`) and for ranges; every constant below rounds
     to the same value whether you floor or round, so one function covers both.
     """
-    return max(1, round(meters / 1.5))
+    return max(1, round(meters / METERS_PER_SQUARE))
 
 
 # --------------------------------------------------------------------------- #

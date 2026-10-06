@@ -302,7 +302,7 @@ def advance(guild, dt=None, busy=()):
                 g.order = None
                 pending.append((g, pause))
                 continue
-            g.order = orders.next_leg(order.dest, list(order.path))
+            g.order = orders.next_leg(order.dest, list(order.path), g.speed)
             continue
         g.order = None                         # resolved -- the group goes idle
         if order.kind == "travel":
@@ -649,7 +649,7 @@ def _resume_arrival(guild, group, order):
     if group.empty:
         return []
     if order.resume_path:
-        group.order = orders.next_leg(group.node, list(order.resume_path))
+        group.order = orders.next_leg(group.node, list(order.resume_path), group.speed)
         return []
     events = [factions.deed_notice(d) for d in
              factions.settle(guild, factions.Event("travel", node=world.node(group.node)))]

@@ -13,7 +13,7 @@ from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen
-from tests.helpers import Unit, packed, world
+from tests.helpers import Unit, packed, walker, world
 
 
 def _app(guild):
@@ -39,7 +39,7 @@ def _app(guild):
 
 def test_a_travel_order_resolves_silently_and_returns_to_the_map():
     random.seed(1)
-    g = Group([Unit("player")], node="city")
+    g = Group([walker()], node="city")
     guild = Guild(None, groups=[g])
     app = _app(guild)
     g.order = orders.travel(g, "market")
@@ -75,7 +75,7 @@ def test_advance_chases_a_multi_hop_travel_through_every_waypoint_in_one_call():
     random.seed(1)
     orig_chance, world.ROAD_AMBUSH_CHANCE = world.ROAD_AMBUSH_CHANCE, 0.0
     try:
-        g = Group([Unit("player")], node="city")
+        g = Group([walker()], node="city")
         guild = Guild(None, groups=[g])
         app = _app(guild)
         g.order = orders.travel(g, "wilds")
@@ -92,8 +92,8 @@ def test_advance_stops_chasing_as_soon_as_any_group_goes_idle():
     goes idle -- the chase must stop right there instead of also plowing
     through `mover`'s first waypoint on the same click."""
     random.seed(1)
-    mover = Group([Unit("player")], node="city")
-    quick = Group([Unit("player")], node="city")
+    mover = Group([walker()], node="city")
+    quick = Group([walker()], node="city")
     guild = Guild(None, groups=[mover, quick])
     app = _app(guild)
     mover.order = orders.travel(mover, "wilds")
@@ -108,7 +108,7 @@ def test_a_lone_group_auto_advances_without_a_click():
     order is set, MapScreen fires `on_advance` itself instead of waiting on
     the ADVANCE button."""
     random.seed(1)
-    g = Group([Unit("player")], node="city")
+    g = Group([walker()], node="city")
     guild = Guild(None, groups=[g])
     scr = MapScreen.__new__(MapScreen)
     scr.guild = guild
@@ -122,8 +122,8 @@ def test_a_lone_group_auto_advances_without_a_click():
 
 def test_a_second_group_does_not_auto_advance():
     random.seed(1)
-    a = Group([Unit("player")], node="city")
-    b = Group([Unit("player")], node="city")
+    a = Group([walker()], node="city")
+    b = Group([walker()], node="city")
     guild = Guild(None, groups=[a, b])
     scr = MapScreen.__new__(MapScreen)
     scr.guild = guild
@@ -165,8 +165,8 @@ def test_hunt_stretch_keeps_another_groups_work_order_in_lockstep_with_the_clock
     got it to `HuntScreen` in the first place."""
     import gartok.app as app_mod
     random.seed(1)
-    lumber = Group([Unit("player")], node="lumber_yard")
-    hunters = Group([Unit("player")], node="wilds")
+    lumber = Group([walker()], node="lumber_yard")
+    hunters = Group([walker()], node="wilds")
     guild = Guild(None, groups=[lumber, hunters])
     app = _app(guild)
     lumber.order = orders.work(guild, lumber, 8)          # 8 h shift, no speedup -> remaining 8

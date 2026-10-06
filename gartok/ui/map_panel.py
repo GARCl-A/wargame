@@ -165,7 +165,7 @@ def group_point(g, w2s, nodes):
 
 
 def _hover_route(nodes, edges, start, hover_node):
-    """Cheapest path (Dijkstra over hour-weighted edges) from `start` to
+    """Cheapest path (Dijkstra over distance-weighted edges) from `start` to
     `hover_node`, as a set of `frozenset({a, b})` edge pairs plus its
     total cost -- used to highlight the route a click would send a group
     down before it's actually sent."""
@@ -257,6 +257,7 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
     hover_path_edges = set()
     hover_node = None
     hover_cost = 0
+    pace = g_sel.get("pace", 1)
     if not g_sel["busy"] and isinstance(g_sel["at"], str) and inner.collidepoint(mpos):
         for k, n in nodes.items():
             cx, cy = w2s(n["pos"])
@@ -289,7 +290,7 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
     # 6. hover tooltip
     if hover_node and hover_node != g_sel["at"] and hover_path_edges:
         hx, hy = w2s(nodes[hover_node]["pos"])
-        tt = F["bodyb"].render(f"  Travel {int(hover_cost)} h  ", True, T.PAPER)
+        tt = F["bodyb"].render(f"  Travel {round(hover_cost * pace)} h  ", True, T.PAPER)
         ttr = tt.get_rect(midbottom=(hx, hy - 20))
         if ttr.right > inner.right:
             ttr.right = inner.right - 4
