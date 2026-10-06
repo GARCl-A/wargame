@@ -16,13 +16,12 @@ from .holdings import Stash
 from .unit_loadout import split_stack, stack_add
 
 SPECIES = {                # carry: kg on its back · pull: kg it draws · speed: meters per move, like a race's
-    "Donkey": {"hp": 14, "speed": 7.5, "carry": 30, "pull": 80, "price": 60},
-    "Ox": {"hp": 24, "speed": 6.0, "carry": 50, "pull": 160, "price": 150},
+    "Donkey": {"hp": 14, "speed": 7.5, "carry": 30, "pull": 80, "price": 60, "herd_weight": 1},
+    "Ox": {"hp": 24, "speed": 6.0, "carry": 50, "pull": 160, "price": 150, "herd_weight": 1},
 }
 PACK_SADDLE = "Pack Saddle"
 HARNESS = "Harness"
 TACK = {PACK_SADDLE: "pack", HARNESS: "draft"}      # tack item -> the role it gives
-MAX_ANIMALS = 4
 STARVE_DAYS = 3
 
 
@@ -116,6 +115,10 @@ class Animal:
     @property
     def price(self):
         return SPECIES[self.species]["price"]
+
+    @property
+    def herd_weight(self):
+        return SPECIES[self.species]["herd_weight"]
 
     @staticmethod
     def can_wear(name):

@@ -3,16 +3,17 @@
 import pygame
 
 from gartok import animals, economy, items, orders, wagon, world
-from gartok.group import Group
+from gartok.group import HERD_BASE, Group
 from gartok.guild import Guild
 from gartok.stables_screen import StablesScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from tests.helpers import Unit
 
 
-def _stables(coins, w=None, pets=()):
+def _stables(coins, w=None, pets=(), wis=0):
     a, b = Unit("player"), Unit("player")
     a.gold, b.gold = coins, 0
+    a.mod_wisdom = b.mod_wisdom = wis
     g = Group([a, b], node="farm", wagon=w, animals=list(pets))
     guild = Guild(None, groups=[g])
     return StablesScreen(ui_fonts(), guild, g, lambda: None), g, a
@@ -54,11 +55,18 @@ def test_an_animal_is_bought_with_no_tack_and_no_wagon_needed():
     assert a.gold == 1000 - animals.SPECIES["Donkey"]["price"]
 
 
-def test_the_group_cannot_keep_more_animals_than_the_limit():
-    scr, g, a = _stables(10_000, pets=[animals.Animal("Donkey") for _ in range(animals.MAX_ANIMALS)])
+def test_the_group_cannot_keep_a_herd_beyond_its_leaders_control():
+    scr, g, a = _stables(10_000, pets=[animals.Animal("Donkey") for _ in range(HERD_BASE)])
     assert not any(k.startswith("buy:") for k in _keys(scr))
     scr._click("buy:Ox")
-    assert len(g.animals) == animals.MAX_ANIMALS and a.gold == 10_000
+    assert len(g.animals) == HERD_BASE and a.gold == 10_000
+
+
+def test_a_wise_leader_can_buy_more_animals():
+    scr, g, _ = _stables(10_000, pets=[animals.Animal("Donkey") for _ in range(HERD_BASE)], wis=2)
+    assert "buy:Ox" in _keys(scr)
+    scr._click("buy:Ox")
+    assert len(g.animals) == HERD_BASE + 1
 
 
 def test_tack_is_bought_onto_the_animal_and_decides_its_role():

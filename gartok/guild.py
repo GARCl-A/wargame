@@ -78,7 +78,6 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 """
 
 from . import economy
-from .animals import MAX_ANIMALS
 from .clock import Clock
 from .group import BASE_SLOTS, FAME_PER_SLOT, Group
 from .guild_claim import (
@@ -299,8 +298,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
             raise ValueError("can't merge a group with an order in flight")
         if a.wagon and b.wagon:
             raise ValueError("both groups have a wagon -- only one can come along")
-        if len(a.animals) + len(b.animals) > MAX_ANIMALS:
-            raise ValueError(f"a group can keep at most {MAX_ANIMALS} animals")
+        if a.herd_load + b.herd_load > a.herd_capacity:
+            raise ValueError(f"the herd would outgrow what {a.leader.name} can control ({a.herd_capacity})")
         a.wagon = a.wagon or b.wagon
         a.animals += b.animals
         a.members += b.members

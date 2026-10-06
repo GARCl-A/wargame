@@ -7,8 +7,8 @@ import os
 import pytest
 
 from gartok import items, persist
-from gartok.animals import HARNESS, MAX_ANIMALS, PACK_SADDLE, SPECIES, STARVE_DAYS, Animal
-from gartok.group import Group
+from gartok.animals import HARNESS, PACK_SADDLE, SPECIES, STARVE_DAYS, Animal
+from gartok.group import HERD_BASE, Group
 from gartok.guild import Guild
 from gartok.wagon import HITCH_SLOTS, WAGON_CAPACITY, WAGON_WEIGHT, Wagon
 from tests.helpers import Unit, packed
@@ -192,12 +192,86 @@ def test_two_wagons_cannot_merge():
     assert len(guild.groups) == 2
 
 
-def test_merging_cannot_exceed_the_animal_limit():
-    a = Group([Unit("player")], node="city", animals=[_animal() for _ in range(MAX_ANIMALS)])
+def _herder(wis):
+    u = Unit("player")
+    u.mod_wisdom = wis
+    return u
+
+
+def test_herd_capacity_is_the_base_plus_the_leaders_wisdom_modifier():
+    assert Group([_herder(0)]).herd_capacity == HERD_BASE
+    assert Group([_herder(2)]).herd_capacity == HERD_BASE + 2
+    assert Group([_herder(-3)]).herd_capacity == 1
+    assert Group([_herder(-9)]).herd_capacity == 1
+
+
+def test_every_animal_costs_its_herd_weight_against_the_capacity():
+    g = Group([_herder(0)], animals=[_animal() for _ in range(HERD_BASE - 1)])
+    assert g.herd_load == HERD_BASE - 1 and g.can_take(_animal())
+    g.animals.append(_animal())
+    assert not g.can_take(_animal())
+
+
+def _overgrown(extra_cargo=()):
+    pets = [_animal(tack=HARNESS), _animal(cargo=extra_cargo), _animal()]
+    pets.append(_animal(tack=PACK_SADDLE, cargo=("Rope",)))
+    leader = _herder(-2)
+    guild = Guild(None, groups=[Group([leader], node="city", animals=pets)])
+    return guild, guild.groups[0], leader
+
+
+def test_an_overgrown_herd_gets_a_notice_and_then_loses_an_animal():
+    from gartok import cohesion
+    guild, g, leader = _overgrown()
+    assert g.herd_load > g.herd_capacity
+    assert "days before one strays" in cohesion.daily(guild)[0]
+    assert g.herd_notice == guild.clock.day + cohesion.NOTICE_DAYS and len(g.animals) == 4
+    guild.clock.advance_hours(24 * cohesion.NOTICE_DAYS)
+    events = cohesion.daily(guild)
+    assert "strays off" in events[0] and len(g.animals) == 3
+    assert g.herd_notice == guild.clock.day + cohesion.NOTICE_DAYS
+
+
+def test_a_straying_animal_is_an_untacked_one_and_leaves_its_load_behind():
+    from gartok import cohesion
+    guild, g, leader = _overgrown(extra_cargo=("Rope",))
+    cohesion.stray(g)
+    assert [a.tack for a in g.animals] == [HARNESS, None, PACK_SADDLE]
+    cohesion.stray(g)
+    assert [a.tack for a in g.animals] == [HARNESS, PACK_SADDLE]
+    assert leader.count_of("Rope") == 1
+
+
+def test_the_notice_drops_when_the_herd_is_back_within_control():
+    from gartok import cohesion
+    guild, g, leader = _overgrown()
+    cohesion.daily(guild)
+    g.animals.clear()
+    cohesion.daily(guild)
+    assert g.herd_notice is None
+
+
+def test_the_herd_notice_survives_a_save(tmp_path):
+    guild, g, _ = _overgrown()
+    g.herd_notice = 12
+    assert persist.group_from_dict(persist.group_to_dict(g)).herd_notice == 12
+
+
+def test_merging_cannot_exceed_the_leaders_herd_capacity():
+    a = Group([_herder(0)], node="city", animals=[_animal() for _ in range(HERD_BASE)])
     b = Group([Unit("player")], node="city", animals=[_animal()])
     guild = Guild(None, groups=[a, b])
     with pytest.raises(ValueError):
         guild.merge_groups(a, b)
+    assert len(guild.groups) == 2
+
+
+def test_a_wiser_leader_lets_a_merge_through():
+    a = Group([_herder(1)], node="city", animals=[_animal() for _ in range(HERD_BASE)])
+    b = Group([Unit("player")], node="city", animals=[_animal()])
+    guild = Guild(None, groups=[a, b])
+    guild.merge_groups(a, b)
+    assert len(a.animals) == HERD_BASE + 1
 
 
 def test_splitting_leaves_the_wagon_and_animals_with_the_original_group():

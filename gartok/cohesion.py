@@ -8,6 +8,10 @@ slot (`Guild.free_slots`) they just split off alone; without one they give
 notice (`Guild.leaving`, uid -> the day it lapses) and, if nothing changes,
 leave the guild taking what their alignment lets them. See RULES.md, "Fame and
 group slots".
+
+A herd past its leader's control (`Group.herd_load` over `herd_capacity`) works
+the same way, with one 7-day notice per group: when it lapses and the herd is
+still too big, one animal strays off and the notice restarts.
 """
 
 from . import data, items
@@ -100,7 +104,36 @@ def _roll_groups(guild, d20):
     return events
 
 
+def stray(group):
+    """An animal wanders off, leaving its tack and load with the group's leader.
+    Untacked animals go first, then the latest bought."""
+    animal = min(reversed(group.animals), key=lambda a: a.tack is not None)
+    group.animals.remove(animal)
+    keeper = group.leader or group.members[0]
+    if animal.tack:
+        keeper.give_to_pack(animal.take_tack())
+    for name, qty in animal.stash.items:
+        keeper.give_to_pack(name, qty)
+    return f"A {animal.species} strays off: {group.display_name} cannot control that big a herd."
+
+
+def _herds(guild):
+    events = []
+    today = guild.clock.day
+    for group in guild.groups:
+        if group.herd_load <= group.herd_capacity:
+            group.herd_notice = None
+        elif group.herd_notice is None:
+            group.herd_notice = today + NOTICE_DAYS
+            events.append(f"{group.display_name} has more animals than it can control: "
+                          f"{NOTICE_DAYS} days before one strays.")
+        elif today >= group.herd_notice:
+            events.append(stray(group))
+            group.herd_notice = today + NOTICE_DAYS if group.herd_load > group.herd_capacity else None
+    return events
+
+
 def daily(guild, d20=data.d20):
     """One day of cohesion: settle standing notices, then test every group
     still overextended. Returns the events to show."""
-    return _resolve_notices(guild) + _roll_groups(guild, d20)
+    return _resolve_notices(guild) + _roll_groups(guild, d20) + _herds(guild)

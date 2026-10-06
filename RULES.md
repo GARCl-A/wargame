@@ -856,6 +856,11 @@ different questions:
   (Demoralize, and any future check against Mental Defense). This caps how big
   one *group* can comfortably be — it does nothing to stop the roster itself
   from splitting into any number of small groups instead.
+- **A cap on the herd.** `Group.herd_capacity` = 3 + the leader's Wisdom modifier
+  (minimum 1); each animal costs its `herd_weight`. It gates buying animals and
+  merging groups. If a leader change leaves the herd over it, the group gets a
+  7-day notice and then loses one animal (untacked first), again every 7 days
+  until it fits.
 - **A hard wall on the roster itself.** `recruit.capacity(guild, unit)`
   = `BASE_RECRUIT_CAPACITY` (1) + the unit's own Charisma modifier — how many
   people *that specific member* can personally sponsor into the guild

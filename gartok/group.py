@@ -30,6 +30,7 @@ from .animals import STARVE_DAYS
 from .unit_hunger import take_ration
 
 BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overextension`
+HERD_BASE = 3       # + the leader's Wisdom modifier -- see `herd_capacity`
 BASE_SLOTS = 2      # groups an unknown guild may run: one to study, one in the field
 FAME_PER_SLOT = 3   # total reputation that buys the guild one more group
 
@@ -48,6 +49,7 @@ class Group:
         self.leader = leader              # Unit; None resolves via ensure_leader below
         self.animals = list(animals or [])  # animals.Animal -- lost with the group
         self.wagon = wagon                # wagon.Wagon or None -- lost with the group
+        self.herd_notice = None           # day an overextended herd starts to stray -- see cohesion.py
         self.ensure_leader()
 
     def __len__(self):
@@ -149,6 +151,21 @@ class Group:
         if not self.leader:
             return BASE_CAPACITY
         return BASE_CAPACITY + self.leader.mod_charisma + (self.leader.racial_level // 2)
+
+    @property
+    def herd_capacity(self):
+        """How much herd the leader can control -- `HERD_BASE` + their Wisdom
+        modifier. Each animal costs its species' `herd_weight`."""
+        if not self.leader:
+            return HERD_BASE
+        return max(1, HERD_BASE + self.leader.mod_wisdom)
+
+    @property
+    def herd_load(self):
+        return sum(a.herd_weight for a in self.animals)
+
+    def can_take(self, animal):
+        return self.herd_load + animal.herd_weight <= self.herd_capacity
 
     @property
     def overextension(self):

@@ -92,10 +92,11 @@ class StablesScreen(Screen):
             {"sell": self._sell_animal, "fit": lambda a: self._fit(a, tack), "unfit": self._unfit}[kind](animal)
 
     def _buy_animal(self, species):
-        if len(self.group.animals) >= animals.MAX_ANIMALS:
-            self.notice = f"a group can keep at most {animals.MAX_ANIMALS} animals."
-        elif self._pay(animals.SPECIES[species]["price"], f"a {species}"):
-            self.group.animals.append(animals.Animal(species))
+        animal = animals.Animal(species)
+        if not self.group.can_take(animal):
+            self.notice = f"{self._keeper.name} can control a herd of {self.group.herd_capacity} at most."
+        elif self._pay(animal.price, f"a {species}"):
+            self.group.animals.append(animal)
             self.notice = f"a {species} joins the group."
 
     def _fit(self, animal, tack):
@@ -175,7 +176,7 @@ class StablesScreen(Screen):
 
     def _draw_animals(self, screen, x, y, w):
         F, g = self._F, self.group
-        y = section(screen, F, f"ANIMALS  ({len(g.animals)} / {animals.MAX_ANIMALS})", x, y, w)
+        y = section(screen, F, f"ANIMALS  (herd {g.herd_load} / {g.herd_capacity})", x, y, w)
         for i, a in enumerate(g.animals):
             role = {"pack": "carries cargo", "draft": "pulls the wagon"}.get(a.role, "no tack")
             note = f"{role}  ·  speed {a.speed:g} m  ·  HP {a.hp}"
@@ -201,7 +202,7 @@ class StablesScreen(Screen):
             y += 24
         y += T.S
         for species, spec in animals.SPECIES.items():
-            can = len(g.animals) < animals.MAX_ANIMALS and self.wealth >= spec["price"]
+            can = g.can_take(animals.Animal(species)) and self.wealth >= spec["price"]
             self.add_button(screen, pygame.Rect(x, y, w, 40), f"buy:{species}",
                             f"BUY A {species.upper()}  ·  {spec['price']} c", enabled=can, primary=can,
                             sub=(f"carries {spec['carry']} kg  ·  draws {spec['pull']} kg  ·  speed {spec['speed']:g} m"
