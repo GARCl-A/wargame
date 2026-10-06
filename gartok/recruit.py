@@ -204,12 +204,22 @@ def prison_bar(guild, candidate, recruiter):
         guild.prison_blocked.append([candidate.uid, recruiter.uid])
 
 
-def pitch_block_reason(guild, party, candidate):
+def overflow_warning(guild, recruiter):
+    """Text warning that a recruit would overextend `recruiter`'s group, or None.
+    The pitch is still allowed: `cohesion` sheds the weakest member of an
+    overextended group."""
+    if guild.can_absorb(guild.group_of(recruiter)):
+        return None
+    return "Their group is full and the guild has no free group slot: someone may walk out."
+
+
+def pitch_block_reason(guild, party, candidate, is_barred=barred):
     """Why no one in `party` can pitch `candidate`.
-    Returns None if at least one member is eligible, or a reason string."""
+    Returns None if at least one member is eligible, or a reason string.
+    `is_barred(guild, candidate, member)` picks the pool's weekly block list."""
     eligible = [m for m in party
-                if can_pitch(m, candidate) and not barred(guild, candidate, m)
-                and slots_free(guild, m) > 0 and guild.can_absorb(guild.group_of(m))]
+                if can_pitch(m, candidate) and not is_barred(guild, candidate, m)
+                and slots_free(guild, m) > 0]
     if eligible:
         return None
     if not party:
@@ -219,8 +229,8 @@ def pitch_block_reason(guild, party, candidate):
     if not speakers:
         return "no one in the party can speak with them"
 
-    barred_speakers = [m for m in speakers if barred(guild, candidate, m)]
-    unbarred_speakers = [m for m in speakers if not barred(guild, candidate, m)]
+    barred_speakers = [m for m in speakers if is_barred(guild, candidate, m)]
+    unbarred_speakers = [m for m in speakers if not is_barred(guild, candidate, m)]
 
     if not unbarred_speakers:
         if len(speakers) == len(party):
@@ -233,9 +243,6 @@ def pitch_block_reason(guild, party, candidate):
     has_party_slots = any(slots_free(guild, m) > 0 for m in party)
     if not has_party_slots:
         return "no sponsor slots free in party"
-
-    if not any(guild.can_absorb(guild.group_of(m)) for m in party):
-        return "the group is full and the guild has no free group slot"
 
     return "speakers have no sponsor slots free"
 

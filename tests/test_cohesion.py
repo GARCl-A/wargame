@@ -280,12 +280,11 @@ def test_an_old_save_without_notices_loads_clean():
     assert Guild([_unit(1)], node="city").leaving == {}
 
 
-def test_recruiting_into_a_full_group_with_no_slot_is_refused():
+def test_recruiting_into_a_full_group_with_no_slot_is_allowed_with_a_warning():
     guild, group, m = _full_guild(extra=0)
     assert len(group.members) == group.capacity and guild.free_slots == 0
-    assert not guild.can_absorb(group)
     cand = _unit(1)                                   # same seed as the sponsor: shares a language
-    assert "group slot" in recruit.pitch_block_reason(guild, [m[0]], cand)
-    _fame(guild, 1)
-    assert guild.can_absorb(group)
     assert recruit.pitch_block_reason(guild, [m[0]], cand) is None
+    assert "group is full" in recruit.overflow_warning(guild, m[0])
+    _fame(guild, 1)
+    assert recruit.overflow_warning(guild, m[0]) is None

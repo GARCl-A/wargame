@@ -407,3 +407,38 @@ def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
                         lambda *a, **kw: seen.update(kw) or recruit.Pitch(False, 5, 12, -7, 2, []))
     scr._pitch(recruiter)
     assert recruiter.gold == 50 and seen["extra_mods"] == []
+
+
+def _taverna(guild, cand, monkeypatch):
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok.taverna_screen import TavernaScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    pygame.init()
+    surf = pygame.display.set_mode((1024, 768))
+    scr = TavernaScreen(ui_fonts(), guild, guild.roster, None, lambda *a: None, candidates=[cand])
+    scr.sel = 0
+    scr.selected_recruiter = guild.roster[0]
+    drawn = []
+    import gartok.taverna_screen as mod
+    real = mod.text
+    monkeypatch.setattr(mod, "text", lambda s, f, t, *a, **k: (drawn.append(t), real(s, f, t, *a, **k))[1])
+    scr.draw(surf)
+    return drawn
+
+
+def test_taverna_says_why_nobody_can_pitch(monkeypatch):
+    from gartok.guild import Guild
+    r = _person(1, lang="Comum")
+    cand = _person(2, lang="Orque")
+    assert "No one in the party can speak with them" in _taverna(Guild([r]), cand, monkeypatch)
+
+
+def test_taverna_warns_when_the_recruit_overflows_the_group(monkeypatch):
+    from tests.test_cohesion import _full_guild, _unit
+    guild, _group, _m = _full_guild(extra=0)
+    drawn = _taverna(guild, _unit(1), monkeypatch)
+    assert any("group is full" in str(t) for t in drawn)

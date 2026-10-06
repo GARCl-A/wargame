@@ -68,10 +68,5 @@ while building them:
 
 ## Loose ends from finished work
 
-- `recruit.pitch_block_reason` has no production caller (tests only). The taverna's
-  `_eligible` does not check `guild.can_absorb`, which that function does — either a
-  forgotten rule (recruiting into a full group) or dead logic.
-- Arrow-key chords add 70 ms of input latency (`battle_screen.CHORD_MS`).
-- Prison selection went from 2 clicks to 3 steps; Esc leaves the prison.
 - Gear, Group, Market and Stash share the ⋮ menu through `packbox.ItemMenuMixin`; a fifth
   screen with pack rows should use it rather than grow its own popup.

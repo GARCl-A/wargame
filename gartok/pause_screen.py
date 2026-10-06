@@ -11,6 +11,7 @@ so `app` draws it the same way.
 
 import pygame
 
+from . import settings
 from .screen import Screen
 from .ui.primitives import caps, draw_button, modal_card, panel, set_pointer, text
 from .ui.tokens import T
@@ -65,6 +66,9 @@ class PauseScreen(Screen):
                 if key == "save_as":
                     self.naming, self.saved_note = True, None
                     return
+                if key.startswith("set_"):
+                    settings.cycle(key[4:])
+                    return
                 {"resume": self.on_resume,
                  "menu": self.on_menu,
                  "quit": self.on_quit,
@@ -82,7 +86,8 @@ class PauseScreen(Screen):
         else:
             screen.fill(T.TABLE)
 
-        tutorial_rows = (2 if self.tutorial is not None else 0) + (1 if self.on_save_as else 0)
+        tutorial_rows = ((2 if self.tutorial is not None else 0) + (1 if self.on_save_as else 0)
+                         + len(settings.SPEC))
         card = modal_card(screen, (320, 250 + tutorial_rows * 48), veil=True)
 
         f = self.fonts
@@ -100,6 +105,7 @@ class PauseScreen(Screen):
             on = self.tutorial.enabled
             rows.append(("tutorial_toggle", f"TUTORIALS: {'ON' if on else 'OFF'}", False, False))
             rows.append(("tutorial_reset", "RESET TUTORIALS", False, False))
+        rows += [(f"set_{k}", settings.label(k), False, False) for k in settings.SPEC]
 
         if self.naming:
             box = pygame.Rect(card.x + T.S * 3, card.y + 78, card.w - 2 * T.S * 3, 40)

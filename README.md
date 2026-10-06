@@ -216,6 +216,7 @@ gartok/
                     bail-and-pitch alternative
   hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
+  settings.py       player preferences (settings.json), listed in the pause menu
   npc_lib.py        the NPC library (git-tracked npcs/*.json, outside the saves)
   map_lib.py        the map library (git-tracked maps/*.json) + npc_units
 

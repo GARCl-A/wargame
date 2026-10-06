@@ -16,3 +16,4 @@ debug_exports/
 .claude/settings.local.json
 localnote.txt
 scratch/
+/settings.json

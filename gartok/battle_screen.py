@@ -9,7 +9,7 @@ import time
 
 import pygame
 
-from . import actions, ai, data, vision
+from . import actions, ai, data, settings, vision
 from .battle_fx import BattleFX
 from .board import cells
 from .lighting import LightRenderer
@@ -24,7 +24,6 @@ ENEMY_DELAY = 450  # ms between AI actions
 
 ARROW_STEPS = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0),
                pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
-CHORD_MS = 70             # arrows pressed within this window combine into one (diagonal) step
 
 
 DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "debug_exports")
@@ -81,7 +80,7 @@ class BattleScreen(Screen):
                 self.aim_action = None
             elif event.key in ARROW_STEPS and self._is_player_turn():
                 self._chord.add(event.key)
-                self._chord_ms = CHORD_MS
+                self._chord_ms = settings.get("chord_ms")
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
             elif event.key == pygame.K_a and self._is_player_turn():

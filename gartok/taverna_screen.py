@@ -553,6 +553,15 @@ class TavernaScreen(Screen):
 
         self.add_button(screen, btn_rect, "convince", btn_label, primary=True, enabled=can_pitch)
 
+        hint = hint_col = None
+        if not self._eligible(cand):
+            hint, hint_col = recruit.pitch_block_reason(
+                self.guild, self.party, cand, lambda g, c, m: self._barred(c, m)), T.BLOOD
+        elif can_pitch:
+            hint, hint_col = recruit.overflow_warning(self.guild, self.selected_recruiter), T.BRASS
+        if hint:
+            text(screen, F["body_sm"], hint[0].upper() + hint[1:], (btn_rect.x, btn_rect.bottom + 8), hint_col)
+
     # ------------------------------------------------------------------ #
     def _draw_study_hub(self, screen, top, height):
         F = self._F
