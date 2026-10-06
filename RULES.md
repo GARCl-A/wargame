@@ -412,6 +412,10 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   - The pathfinding is Dijkstra over `(cell, diagonal parity)`.
 - **Defend** (1 point) = **+1 circumstance bonus** to AC until the start of your
   next turn.
+- **Delay** (0 points) = drop to the end of the initiative order, for good (the
+  new order carries into later rounds). Only before spending any point or
+  walking, and only while a standing unit acts after you; the turn you resume
+  is the same one (full points, no second start-of-turn effects).
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**
   (for now only the **Dagger**, range 9 m = 6 cells). See below.
 - **Lash** (1 point) = the Grippli's **Tongue** attack — the 1-handed weapon in

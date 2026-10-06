@@ -297,6 +297,20 @@ def _should_flee(battle, unit):
     return hurt and outmatched
 
 
+def _should_delay(battle, unit):
+    """A melee unit that cannot reach anyone this turn waits for an ally that is
+    already in the fight, so it arrives after the line has formed. Never a flag
+    runner (it has somewhere to be)."""
+    if unit.ranged or getattr(unit, "ctf_runner", False) or not actions.DELAY.available(battle, unit):
+        return False
+    foes = [u for u in battle.units if u.alive and u.team != unit.team]
+    if not foes or any(battle.units_distance(unit, f) <= unit.speed + 1 for f in foes):
+        return False
+    after = battle.order[battle.turn_idx + 1:]
+    return any(u.alive and u.team == unit.team
+               and any(battle.units_distance(u, f) <= 1 for f in foes) for u in after)
+
+
 def take_turn(battle, unit):
     if getattr(unit, "dormant", False):
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
@@ -311,6 +325,10 @@ def take_turn(battle, unit):
             unit.ap = 0
             battle.end_turn()
             return
+
+    if _should_delay(battle, unit):
+        actions.DELAY.execute(battle, unit)
+        return
 
     for _ in range(4):  # safety stop; a turn spends at most 2 points
         if unit.ap <= 0 or not unit.alive:

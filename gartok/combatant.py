@@ -75,6 +75,7 @@ class Combatant:
         self.ferocity_pending = False # Orc downed this turn, falls at end_turn
         self.rounds_submerged = 0     # turns spent underwater in deep water (breath / drowning)
         self.initiative = 0           # set by Battle._roll_initiative
+        self.delayed = False          # waiting at the end of the order; its turn resumes, not restarts
         self.weapon_hand = c.equipped_weapon is not None
         self.weapon_name = c.equipped_weapon
         self.weapon = items.get(c.equipped_weapon)

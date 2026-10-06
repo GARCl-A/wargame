@@ -57,6 +57,7 @@ from .spells import (  # noqa: F401
 from .support import (
     Disarm,
     Dismount,
+    Delay,
     DrinkPotion,
     EatCorpse,
     EndTurn,
@@ -94,6 +95,7 @@ SPIN_WEB = SpinWeb()
 MOUNT = Mount()
 DISMOUNT = Dismount()
 WAKE_UP = WakeUp()
+DELAY = Delay()
 END = EndTurn()
 SHARE_MAGIC = ShareMagicAction()
 INVESTIGATE = Investigate()
@@ -110,6 +112,7 @@ COMBAT_ACTIONS = [
     RELOAD,
     ATTACK_TONGUE,
     FLEE,
+    DELAY,
     END,
 ]
 

@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 from . import data, vision
 from .board import COLS, ROWS, cells, cells_distance, chebyshev
-from .combatant import Combatant
+from .combatant import AP_PER_TURN, Combatant
 from .conditions import Entangled
 from .data import d20
 from .ground import GroundObject
@@ -627,6 +627,20 @@ class Battle:
         self.active.end_turn(self.log)       # demoralized expires at the end of the sufferer's turn
         self._advance_turn()
 
+    def can_delay(self, unit):
+        """Only the active unit, before it spends anything, and only while someone
+        standing still acts after it (otherwise there is nothing to wait for)."""
+        return (self.winner is None and unit is self.active and not unit.delayed
+                and unit.ap >= AP_PER_TURN and not unit.moved and not unit.walking
+                and any(u.alive for u in self.order[self.turn_idx + 1:]))
+
+    def delay_turn(self, unit):
+        self.order.append(self.order.pop(self.turn_idx))
+        unit.delayed = True
+        self.log(f"{unit.name} holds back and waits.")
+        self.turn_idx -= 1                   # _advance_turn steps onto whoever slid into this slot
+        self._advance_turn()
+
     def _advance_turn(self):
         """Advance to the next standing unit. A dying unit gets a turn on the way
         (its death counter ticks / it rolls the save); stable and dead are skipped."""
@@ -639,6 +653,7 @@ class Battle:
                 self.log(f"--- Round {self.round_no} ---")
             u = self.active
             if u.status == "dying":
+                u.delayed = False            # downed while waiting: a revived turn starts fresh
                 self.tick_dying(u)
                 if self._check_winner():
                     self.log(f"*** Victory: {self.winner} ***")
@@ -649,12 +664,15 @@ class Battle:
         if self._check_winner():
             self.log(f"*** Victory: {self.winner} ***")
             return
-        self.active.start_turn(self.log)
-        self._apply_submersion(self.active)
+        if self.active.delayed:
+            self.active.delayed = False      # the turn it began before waiting: no second start_turn
+        else:
+            self.active.start_turn(self.log)
+            self._apply_submersion(self.active)
         if self._check_winner():
             self.log(f"*** Victory: {self.winner} ***")
             return
-            
+
         if self.active.has_condition("sleeping"):
             self.log(f"{self.active.name} is fast asleep... (turn skipped).")
             self.end_turn()

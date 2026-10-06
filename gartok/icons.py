@@ -239,7 +239,7 @@ def _unlock(surf, rect, c):
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
     "demoralize": _shout, "eat_corpse": _bite, "spin_web": _web,
-    "pickup": _hand, "defend": _shield, "end": _hourglass, "restart": _restart,
+    "pickup": _hand, "defend": _shield, "end": _hourglass, "delay": _restart, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,
     "lock": _lock, "unlock": _unlock,

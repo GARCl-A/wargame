@@ -506,6 +506,21 @@ class EndTurn(Action):
         battle.end_turn()
 
 
+class Delay(Action):
+    id, name, cost, target = "delay", "Delay", 0, "none"
+    desc = "Drop to the end of the initiative order. Only before you spend any points."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if battle.can_delay(actor):
+            return True, ""
+        return False, "act first / nobody after you"
+
+    def execute(self, battle, actor, target=None):
+        if self.available(battle, actor):
+            battle.delay_turn(actor)
+
+
 class Investigate(Action):
     id, name, cost, target = "investigate", "Investigate", 1, "none"
     desc = "Inspect nearby walls and surfaces for secret doors or hidden switches."
