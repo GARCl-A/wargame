@@ -1180,7 +1180,7 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
   `bank_screen` for the chosen party (the market's party-picker path).
 - The chest is **guild state** (`guild.bank`, a `holdings.Stash`) —
   the guild owns nothing else as a body but the City house. `bank.capacity == 0` = not rented.
-- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**100 copper**), split
+- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**90 copper**), split
   across the visiting party (poorest first, shortfall rolling onto whoever still
   has coin), and grants `economy.BANK_CHEST_CAPACITY` (**30 kg**) of storage.
   Stashing itself is free, so members keep their own money — nothing is pooled or
@@ -1244,9 +1244,9 @@ shipped start to finish (buy/claim, use, lose, recover):
 - **City Property** (`city_property_screen.py`). Bought from the Bankers at
   the City once `guild.reputation["bankers"] ≥ economy.CITY_PROPERTY_REP_GATE`
   (4) — the Bankers' trust mission (see Missions) is the gate's real
-  prerequisite. `economy.CITY_PROPERTY_PRICE` = **1000 copper**, one-time,
-  for `economy.CITY_PROPERTY_CAPACITY` (**200 kg**) of shared storage, plus a
-  recurring tax (`economy.CITY_PROPERTY_TAX` = **40 copper** every
+  prerequisite. `economy.CITY_PROPERTY_PRICE` = **1440 copper**, one-time,
+  for `economy.CITY_PROPERTY_CAPACITY` (**600 kg**) of shared storage, plus a
+  recurring tax (`economy.CITY_PROPERTY_TAX` = **30 copper** every
   `CITY_PROPERTY_TAX_PERIOD_DAYS` = **7** days, charged automatically by
   `Guild._city_property_upkeep`). `CITY_PROPERTY_MISSED_PAYMENTS_LIMIT` (3)
   unpaid cycles force a choice (`RepossessionScreen`): **return** the

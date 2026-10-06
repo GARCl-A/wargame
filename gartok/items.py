@@ -352,7 +352,7 @@ _register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarit
 _register(ItemDef(id="bear_trap", name="Bear Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=3.0, price=35))
 _register(ItemDef(id="alarm_trap", name="Alarm Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=1.0, price=45))
 _register(ItemDef(id="copper_coin", name="Copper Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=1))
-_register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=5.0, price=40))
+_register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=5.0, price=60))
 _register(ItemDef(id="harness", name="Harness", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=4.0, price=30))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
 _register(ItemDef(id="sack", name="Sack", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=0.3, price=2))

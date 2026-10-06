@@ -423,7 +423,7 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Resale factor | 0.5 of buy price |
 | Lumber wage | 1 cp per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
 | Hunting job level | 3 |
-| Bank strongbox | 100 cp to rent, holds 30 kg |
+| Bank strongbox | 90 cp to rent, holds 30 kg |
 | Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105, 136, 171, 210 |
 | Work XP thresholds | 2, 6, 12, 20, 30, 42, 56, 72, 90, 110 |
 | Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 |
