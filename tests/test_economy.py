@@ -134,7 +134,7 @@ def test_selling_a_used_quiver_at_the_market_pays_pro_rata():
     s = MarketScreen.__new__(MarketScreen)
     s.guild, s.shoppers, s.deal = Guild([u]), [u], []
     s.purse = 0
-    s.sel, s._sel_qty, s.notice = [(u, 0)], {}, None
+    s.selected, s._sel_qty, s.notice = [(u, 0)], {}, None
     s.qty = {}
     s._settle_market = lambda: None
     s._sell()
@@ -150,5 +150,5 @@ def test_the_sell_total_multiplies_by_the_quantity_picked():
     u.give_to_pack("Rope", 3)
     s = MarketScreen.__new__(MarketScreen)
     s.guild, s.shoppers, s.deal = Guild([u]), [u], []
-    s.sel, s._sel_qty = [(u, 0)], {}
+    s.selected, s._sel_qty = [(u, 0)], {}
     assert s._sell_total() == economy.sell_price("Rope") * 3

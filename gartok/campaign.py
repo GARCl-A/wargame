@@ -246,15 +246,15 @@ def advance(guild, dt=None, busy=()):
     again. A group with no order, or an idle one, never blocks the jump and is
     left alone.
 
-    `dt=None` (the default -- the ADVANCE button) jumps to the **soonest**
-    order completion across every group with one in flight; no-op if nothing
-    is. A caller may instead force a specific `dt` (hours) -- the map's
-    MAINTENANCE stop -- so every in-flight order's `remaining` stays in
-    lockstep with the shared clock even when nothing is due yet (an order that
+    `dt=None` (the default) jumps to the **soonest** order completion across
+    every group with one in flight; no-op if nothing is. A caller may instead
+    force a specific `dt` (hours) -- the map's ADVANCE when every group is
+    garrisoned, or a hunt's hours -- so every in-flight order's `remaining` stays
+    in lockstep with the shared clock even when nothing is due yet (an order that
     happens to complete within a forced `dt` still resolves normally); a forced
     stop also runs `Guild.eat_now_pass` (anyone still hungry eats right now,
-    without waiting for the next daily meal) -- that's what makes it a
-    *maintenance* stop rather than just a short jump.
+    without waiting for the next daily meal). Resting is not this: it is a
+    group's `rest` order, so the other groups are not frozen by it.
 
     A `"garrison"` order (`orders.py`) is excluded from `active` on purpose --
     it has no `eta`/`remaining` countdown to chase (it never completes; its
@@ -316,6 +316,8 @@ def advance(guild, dt=None, busy=()):
                 events.append(factions.deed_notice(d))
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta)
+        elif order.kind == "rest":
+            events += guild.eat_now_pass(g.members)
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
     claim_events, claim_pending = _wilds_claim_attack_check(guild)

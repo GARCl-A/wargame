@@ -7,6 +7,13 @@ by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 
 from . import cohesion, data, economy, items, justice, missions, orders, world
 
+HOURS_PER_HEAL = 8
+
+
+def rest_heal(unit):
+    """HP one full stretch of rest (`HOURS_PER_HEAL` hours) gives back."""
+    return max(1, unit.racial_level * unit.mod_constitution)
+
 
 class UpkeepMixin:
     @property
@@ -45,16 +52,17 @@ class UpkeepMixin:
         # Steady Pace lets a group that is working where it stands rest on the job.
         for g in self.groups:
             working = g.busy and g.order.kind in orders.WORK_KINDS
+            resting = g.busy and g.order.kind == "rest"
             for u in g.members:
                 on_the_job = working or u in busy
-                if (g.busy or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
+                if ((g.busy and not resting) or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
                     u.consecutive_rest_hours = 0
                     continue
                 if not (u.hp < u.hp_max or getattr(u, "sick", False)):
                     continue
                 u.consecutive_rest_hours += hours
-                while u.consecutive_rest_hours >= 8:
-                    u.consecutive_rest_hours -= 8
+                while u.consecutive_rest_hours >= HOURS_PER_HEAL:
+                    u.consecutive_rest_hours -= HOURS_PER_HEAL
                     if getattr(u, "sick", False):
                         if getattr(u, "treated", False):
                             cured = True
@@ -72,7 +80,7 @@ class UpkeepMixin:
                             u.treated = False
 
                     if u.hp < u.hp_max and u.unfed_days == 0:
-                        heal = max(1, u.racial_level * u.mod_constitution)
+                        heal = rest_heal(u)
                         u.hp = min(u.hp_max, u.hp + heal)
                         events.append(f"{u.name} rests and recovers {heal} HP.")
 
@@ -182,13 +190,7 @@ class UpkeepMixin:
         # Everyone eats from their own pack first (a full pass), so a hungry mate
         # drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.
-        ate_own = {u for u in self.roster
-                   if u not in studying_fed and u.ability.id != "autotroph" and u._take_ration()}
-        for u in self.roster:
-            if u in studying_fed or u in ate_own:
-                u.unfed_days, outcome = 0, "ate"
-            else:
-                outcome = u.consume_daily_food(self._shared_larder(u))
+        for u, outcome in self._meal_pass(self.roster, self._shared_larder, studying_fed).items():
             if outcome == "dead":
                 casualties.append(u)
                 events.append(f"{u.name} starved to death.")
@@ -196,7 +198,6 @@ class UpkeepMixin:
                 events.append(f"{u.name} did not eat today: {u.hunger_label}.")
             elif outcome == "ate" and u.ability.id != "autotroph":
                 ate.append(u)
-            u._derive_combat()                 # refresh mods / hp_max for the new hunger
         if ate:
             who = "1 member ate" if len(ate) == 1 else f"{len(ate)} members ate"
             events.append(f"{who} ({self.rations} rations left).")
@@ -218,29 +219,44 @@ class UpkeepMixin:
         events += cohesion.daily(self)
         return events, casualties
 
-    def eat_now_pass(self):
-        """Anyone still hungry eats right now -- own pack, then the group
-        larder -- without waiting for the next daily meal. No clock advance
-        (the caller runs `pass_time` itself, or is mid-tick already)."""
-        fed = [u for u in self.roster if u.eat_now()]          # own packs first
-        for u in self.roster:
-            if u.hunger_level and u not in fed and u.eat_now(self._shared_larder(u)):
+    @staticmethod
+    def _meal_pass(units, larder_of, free=()):
+        """One day's meal for `units`: everyone eats from their own pack first (a
+        full pass), so a hungry mate drawing on the larder next can't take a
+        ration its owner still needs; only then does the still-unfed hit
+        `larder_of(unit)` / the hunger step. `free` are fed without a ration.
+        Returns `{unit: "ate" | "hungry" | "dead"}`. Touches only the units and
+        packs it is handed, so `rest.py` runs it on copies to plan a rest."""
+        ate_own = {u for u in units
+                   if u not in free and u.ability.id != "autotroph" and u._take_ration()}
+        outcomes = {}
+        for u in units:
+            if u in free or u in ate_own:
+                u.unfed_days, outcomes[u] = 0, "ate"
+            else:
+                outcomes[u] = u.consume_daily_food(larder_of(u))
+            u._derive_combat()                 # refresh mods / hp_max for the new hunger
+        return outcomes
+
+    @staticmethod
+    def _eat_now(units, larder_of):
+        """The hungry among `units` eat right now (own pack first); returns who."""
+        fed = [u for u in units if u.eat_now()]
+        for u in units:
+            if u.hunger_level and u not in fed and u.eat_now(larder_of(u)):
                 fed.append(u)
         for u in fed:
             u._derive_combat()
+        return fed
+
+    def eat_now_pass(self, members=None):
+        """Anyone still hungry eats right now -- own pack, then the group
+        larder -- without waiting for the next daily meal. No clock advance
+        (the caller runs `pass_time` itself, or is mid-tick already).
+        `members` narrows it to one group (a rest order's); the default is
+        everyone."""
+        fed = self._eat_now(self.roster if members is None else list(members), self._shared_larder)
         if not fed:
             return []
         names = ", ".join(u.name for u in fed)
         return [f"Stopped to eat: {names} ({self.rations} rations left)."]
-
-    def do_maintenance(self, hours=1):
-        """A camp stop: the guild takes `hours` to see to itself. Advances the
-        clock (so a stop that crosses midnight still runs the daily meal) and
-        then lets anyone still hungry eat from their pack right now. Returns the
-        events to show. Eating is the only chore today; rest / gear repair hang
-        off here later."""
-        events, casualties = self.pass_time(hours)
-        events += self.eat_now_pass()
-        if not events:
-            events.append("A quiet stop. No one needed to eat.")
-        return events, casualties

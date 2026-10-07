@@ -1,8 +1,8 @@
 """Orders: what a Group is currently doing, and how long it takes.
 
-An order is issued once (`travel`/`work`/`interactive`) and then ticked down by
-`campaign.advance` until it completes. `travel` and `work` resolve silently
-(auto) -- the group just arrives, or gets paid. Every other kind (`market`,
+An order is issued once (`travel`/`work`/`rest`/`interactive`) and then ticked down by
+`campaign.advance` until it completes. `travel`, `work` and `rest` resolve silently
+(auto) -- the group just arrives, gets paid, or has rested (and sits down to eat). Every other kind (`market`,
 `bank`, `recruit`, `hunt`, `arena`, `tanner`) is interactive: the order only
 covers *getting to* the activity, then `campaign.advance` hands the group back
 as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
@@ -51,7 +51,7 @@ from dataclasses import dataclass
 
 from . import world
 
-AUTO_KINDS = frozenset({"travel", "work"})
+AUTO_KINDS = frozenset({"travel", "work", "rest"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable"})
@@ -116,6 +116,15 @@ def work(guild, group, hours):
     `Guild.work_speedup`."""
     clock_hours = hours * guild.work_speedup(group.members)
     return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours)
+
+
+def rest(hours):
+    """Order a group to rest where it stands for `hours`. Unlike a forced clock
+    jump it is one group's business: the others keep their own orders, and the
+    clock runs through `campaign.advance` like for any order. The group counts
+    as resting (`Guild.pass_time`) -- it heals -- instead of busy. `rest.py`
+    says how long a stretch is worth, for the "until full" row."""
+    return Order("rest", eta=hours, remaining=hours, hours=hours)
 
 
 def interactive(kind, hours=APPROACH_HOURS):

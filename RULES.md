@@ -933,7 +933,7 @@ choice was being made (the market's "whoever has the best Charisma" auto-pick).
 
 State on `unit.py` (`unfed_days`, `hunger_*` properties); the daily routine in
 `Guild.pass_time` / `Guild._daily_upkeep`, run when the guild **travels** or
-takes a **maintenance stop** (battle time is in seconds and does not count a
+takes a **rest** (battle time is in seconds and does not count a
 meal).
 
 - **Every character eats once a day.** For each map day crossed, a character
@@ -947,11 +947,21 @@ meal).
   passes so nobody loses their own meal to a mate earlier in roster order. A
   guild-mate in a different group is out of reach. The Autotroph (Treefolk) never
   enters this.
-- **Maintenance** (a button on the map -- `campaign.advance(guild, dt=1)`, a
-  forced tick): every group stops 1 h where it stands; passes the time (which
-  can cross midnight and trigger the daily meal) and then **anyone still
-  hungry eats now** (`Guild.eat_now_pass`) — own pack, then the group's shared
-  larder.
+- **Rest** (the REST button on the map -- `orders.rest`, one group's order
+  like travel or work): the selected group first **eats if it is hungry**
+  (`Guild.eat_now_pass`, own pack then the shared larder), then rests 1 h, 8 h
+  or **until full**; the other groups keep their own orders and the clock runs
+  through them. A rest that crosses midnight still has its daily meal, and the
+  hungry eat again when it ends. *Until full* is HP only (not sickness): the time
+  the slowest hurt member needs, **cut short so the group keeps a day of
+  rations** (a fresh ration for everyone's next meal -- far from food, an empty
+  larder is worse than a wound). It is planned when the order is issued
+  (`gartok/rest.py`, a simulation of the real meal, rot and heal rules on
+  copies) and refused with a reason when nobody is hurt, someone is poisoned,
+  someone is hungry with nothing to eat, or the group is already on its last
+  day of rations. STOP RESTING cancels it and keeps the hours rested. A
+  garrison does not rest; with every group garrisoned the map's ADVANCE
+  passes 24 h for the whole world.
 - **No food anywhere in reach:** the days-unfed counter rises.
 
   | Days unfed | Condition | Effect |

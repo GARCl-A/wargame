@@ -266,8 +266,8 @@ class App:
         multi-leg travel order stopping at a waypoint) don't need a fresh
         click, so this loops through them and only stops once a group
         actually goes idle (needs a new order) or comes back `pending` (needs
-        its screen played). A forced `dt` (MAINTENANCE) is one deliberate
-        jump, no chasing. Auto orders (travel/work) already happened by the
+        its screen played). A forced `dt` (the map's world-wide ADVANCE) is one deliberate
+        jump, no chasing. Auto orders (travel/work/rest) already happened by the
         time this returns; anything else comes back as `self._pending` for
         `_after_activity`."""
         chase = dt is None

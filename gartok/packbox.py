@@ -60,26 +60,38 @@ class PackColumnMixin:
 
 
 class SplitStackMixin:
-    """The "split stack" quantity picker, shared by the gear and group screens:
-    peel part of a pack stack (a purse of coins, a bundle of rations) into its own
-    stack so that part can be moved or locked on its own. Needs `self.selected`,
-    `self.menu`, `self.notice` and `DragSelectMixin._qty_at` from the host."""
+    """The "split stack" quantity picker: peel part of a pack stack (a purse of
+    coins, a bundle of rations) into its own stack so that part can be moved,
+    sold or locked on its own. Needs `self.selected`, `self.menu` and
+    `self.notice` from the host; `ItemMenuMixin` pulls it into every screen
+    that has the ⋮ menu."""
 
     split_prompt = None              # {"unit","idx","name","held","amount"} while picking a quantity
 
-    def _can_split(self):
-        return (len(self.selected) == 1 and isinstance(self.selected[0][1], int)
-                and self._qty_at(*self.selected[0]) > 1)
+    @staticmethod
+    def _splittable(pick):
+        """`(unit, idx)` when `pick` is a pack stack of two or more that a Unit
+        owns -- a stash row is moved with its own stepper, an equip slot holds one."""
+        owner, loc = pick
+        if not isinstance(loc, int) or not hasattr(owner, "split_pack"):
+            return None
+        inv = owner._base_inventory
+        return (owner, loc) if loc < len(inv) and inv[loc][1] > 1 else None
 
-    def _open_split_prompt(self):
-        if not self._can_split():
-            self.menu = None
+    def _can_split(self):
+        return len(self.selected) == 1 and self._splittable(self.selected[0]) is not None
+
+    def _open_split_prompt(self, picks=None):
+        picks = self.selected if picks is None else picks
+        target = self._splittable(picks[0]) if len(picks) == 1 else None
+        self.menu = None
+        if target is None:
             return
-        unit, idx = self.selected[0]
+        unit, idx = target
         name, held = unit._base_inventory[idx]
+        self.selected = [target]
         self.split_prompt = {"unit": unit, "idx": idx, "name": name, "held": held,
                              "amount": max(1, held // 2)}
-        self.menu = None
 
     def _split_prompt_click(self, px):
         p = self.split_prompt
@@ -96,6 +108,8 @@ class SplitStackMixin:
                     p["unit"].split_pack(p["idx"], p["amount"])
                     self.notice = f"Split {p['amount']} {p['name']} into its own stack."
                     self.selected = []
+                    if hasattr(self, "_sel_qty"):
+                        self._sel_qty = {}
                     self.split_prompt = None
                 return
 
@@ -103,27 +117,30 @@ class SplitStackMixin:
         from .ui import loadout_panel
         p = self.split_prompt
         W, H = screen.get_size()
-        res = loadout_panel.split_prompt(screen, F, (W // 2, H // 2), p["name"], p["amount"],
-                                         p["held"], self.mouse)
+        res = loadout_panel.quantity_prompt(screen, F, (W // 2, H // 2), f"split {p['name']}",
+                                            p["amount"], p["held"], "SPLIT INTO TWO STACKS",
+                                            self.mouse)
         p["rect"], p["hits"] = res["rect"], res["hits"]
 
     def _split_hovering(self):
         return any(r.collidepoint(self.mouse) for r, _ in self.split_prompt.get("hits", ()))
 
 
-class ItemMenuMixin:
+class ItemMenuMixin(SplitStackMixin):
     """The popup behind a pack row's ⋮ button (and right-click): the host says
     what the rows are and what each does, this owns opening, drawing,
-    hit-testing and dismissing. A pick is `(owner, loc)`; the menu acts on a
+    hit-testing and dismissing -- and the "split stack" row and its quantity
+    prompt, so every host gets them. A pick is `(owner, loc)`; the menu acts on a
     list of them.
 
-    Host contract: `_ui_fonts()`, `self.mouse`, `_source_at(px)`, a
+    Host contract: `_ui_fonts()`, `self.mouse`, `self.selected`, `self.notice`,
+    `_source_at(px)`, a
     `self._dots_hits = [(rect, owner, loc)]` it refills each frame,
     `_menu_rows(picks)` -> `[(kind, label, arg)]` (empty = no menu) and
     `_menu_run(picks, kind, arg)`. `_menu_picks_for(pick)` is what the menu acts
     on when opened from that row (just the row by default; a host with a
     selection widens it). Call `_menu_event(event)`
-    in `handle_event` (after any modal prompt), `_dots_at(px)` before a click
+    in `handle_event` (first -- it owns the split prompt's clicks), `_dots_at(px)` before a click
     counts as a selection, `_open_menu(px, self._menu_picks_for(pick))` on a dots hit, and
     `_draw_menu(screen)` while drawing."""
 
@@ -145,17 +162,26 @@ class ItemMenuMixin:
         if picks is None:
             picks = self._menu_picks_at(anchor)
         rows = self._menu_rows(picks) if picks else []
+        if rows and len(picks) == 1 and self._splittable(picks[0]):
+            rows = [("split", "split stack", None)] + [r for r in rows if r[0] != "split"]
         self.menu = {"anchor": anchor, "rows": rows, "picks": list(picks)} if rows else None
 
     def _menu_event(self, event):
         """True when the event was the menu's (a pick, a dismiss, a right-click)."""
         if event.type != pygame.MOUSEBUTTONDOWN:
             return False
+        if self.split_prompt is not None:
+            if event.button == 1:
+                self._split_prompt_click(event.pos)
+                return True
+            self.split_prompt = None
         if self.menu is not None and event.button == 1:
             m, self.menu = self.menu, None
             hit = next(((kind, arg) for r, kind, arg in m.get("hits", ())
                         if r.collidepoint(event.pos)), None)
-            if hit:
+            if hit and hit[0] == "split":
+                self._open_split_prompt(m["picks"])
+            elif hit:
                 self._menu_run(m["picks"], *hit)
             return True
         if event.button == 3:
@@ -170,7 +196,11 @@ class ItemMenuMixin:
             res = loadout_panel.send_menu(screen, self._ui_fonts(), self.menu["anchor"],
                                           self.menu["rows"], self.mouse)
             self.menu["rect"], self.menu["hits"] = res["rect"], res["hits"]
+        if self.split_prompt is not None:
+            self._draw_split_prompt(screen, self._ui_fonts())
 
     def _menu_hovering(self):
+        if self.split_prompt is not None:
+            return self._split_hovering()
         return self.menu is not None and any(
             r.collidepoint(self.mouse) for r, *_ in self.menu.get("hits", ()))

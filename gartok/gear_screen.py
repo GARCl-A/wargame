@@ -29,7 +29,7 @@ import pygame
 
 from . import chest, data, items, magic, missions
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
-from .packbox import ItemMenuMixin, PackColumnMixin, SplitStackMixin
+from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .ui import loadout_panel
 from .ui.inspector_panel import role_for
@@ -41,7 +41,7 @@ RAIL_W = 230
 COL_MIN, COL_MAX = 300, 420
 
 
-class GearScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
+class GearScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, on_back, group=None):
@@ -108,13 +108,8 @@ class GearScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixi
                 self._rail_scroll = max(0, min(self._rail_max_scroll,
                                                self._rail_scroll - event.y * 40))
                 return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.split_prompt:
-            self._split_prompt_click(event.pos)
-            return
         if self._menu_event(event):
             return
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            self.split_prompt = None
         super().handle_event(event)
 
     def _drop(self, px, dragging, src):
@@ -203,8 +198,6 @@ class GearScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixi
         lift = len(owners) > 1 or any(isinstance(p[1], str) for p in picks)
         dests = [u for u in self.pinned if lift or id(u) not in owners]
         rows = [("member", f"to {u.name}", u) for u in dests] + [("discard", "throw away", None)]
-        if len(picks) == 1 and isinstance(picks[0][1], int) and self._qty_at(*picks[0]) > 1:
-            rows.insert(0, ("split", "split stack", None))
 
         if len(picks) == 1 and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", "OPEN THE CHEST", None))
@@ -220,10 +213,7 @@ class GearScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixi
         return rows
 
     def _menu_run(self, picks, kind, arg):
-        if kind == "split":
-            self.selected = list(picks)
-            self._open_split_prompt()
-        elif kind == "open":
+        if kind == "open":
             unit, loc = picks[0]
             self._open_chest(unit, self._item_at(unit, loc))
         elif kind == "study":
@@ -403,8 +393,6 @@ class GearScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixi
             text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
 
         self._draw_menu(screen)
-        if self.split_prompt:
-            self._draw_split_prompt(screen, F)
 
         set_pointer(self._hovering())
 

@@ -53,7 +53,7 @@ from . import chest, data, items, magic, missions, world
 from .animals import Animal
 from .wagon import Wagon
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
-from .packbox import ItemMenuMixin, PackColumnMixin, SplitStackMixin
+from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel, quest_panel
@@ -70,7 +70,7 @@ def _short(name):
     return name.split()[0][:10]
 
 
-class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
+class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True
 
     def __init__(self, fonts, guild, group, on_back):
@@ -256,9 +256,6 @@ class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMix
                                                 self._cargo_scroll - hy * 40))
                 return
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.split_prompt:
-            self._split_prompt_click(event.pos)
-            return
         if self._menu_event(event):
             return
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -268,8 +265,6 @@ class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMix
                 if rect.collidepoint(event.pos):
                     self.open_sheet(unit)
                     return
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            self.split_prompt = None
         super().handle_event(event)
 
     def _drop(self, px, dragging, src):
@@ -443,10 +438,7 @@ class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMix
             return []
         self.selected = list(picks)
 
-        rows = []
-        if self._can_split():
-            rows.append(("split", "Split stack", None))
-        rows.append(("drop", "Drop", None))
+        rows = [("drop", "Drop", None)]
         solo_member = len(picks) == 1 and not self._is_store(picks[0][0])
         if solo_member and self._item_at(*picks[0]) in (data.CHEST_ITEM, data.MISSION_CHEST_ITEM):
             rows.append(("open", "OPEN THE CHEST", None))
@@ -471,10 +463,7 @@ class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMix
         return rows
 
     def _menu_run(self, picks, kind, arg):
-        if kind == "split":
-            self.selected = list(picks)
-            self._open_split_prompt()
-        elif kind == "open":
+        if kind == "open":
             unit, loc = picks[0]
             self._open_chest(unit, self._item_at(unit, loc))
         elif kind == "drink":
@@ -815,8 +804,6 @@ class GroupScreen(ItemMenuMixin, SplitStackMixin, PackColumnMixin, DragSelectMix
             text(screen, F["body_sm"], self.notice, (done_r.right + T.S * 2, done_r.centery - 6), T.BRASS)
 
         self._draw_menu(screen)
-        if self.split_prompt:
-            self._draw_split_prompt(screen, F)
 
         self.draw_sheet_modal(screen, self.fonts)
         set_pointer(self._hovering())

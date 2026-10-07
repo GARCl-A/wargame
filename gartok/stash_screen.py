@@ -8,7 +8,7 @@ member columns and the pooled purse are all here.
 Interaction: drag an item where it goes, or click to pick it up and click the
 destination (shift/ctrl gathers more first). The stash's own rows carry a
 `- N +` stepper for a partial move; a member's pack row always moves as a
-whole stack (split it on the group screen first if you want less). The row's
+whole stack (its ⋮ menu has "split stack" to peel off part first). The row's
 ⋮ button (or a right-click) opens a menu to send that stack to the stash or
 another pinned member.
 
@@ -526,7 +526,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         set_pointer(self._hovering())
 
     def _hovering(self):
-        if self.menu is not None:
+        if self.menu is not None or self.split_prompt is not None:
             return self._menu_hovering()
         if any(r.collidepoint(self.mouse) for r, *_ in self._dots_hits):
             return True

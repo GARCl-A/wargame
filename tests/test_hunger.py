@@ -177,7 +177,7 @@ def test_everyone_eats_their_own_before_the_larder_is_raided():
     assert a.unfed_days == 0 and b.unfed_days == 0       # neither lost their meal
 
 
-def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
+def test_eat_now_pass_feeds_the_hungry_without_waiting_for_the_day():
     from gartok.clock import Clock
     from gartok.guild import Guild
     random.seed(3)
@@ -186,8 +186,8 @@ def test_do_maintenance_feeds_the_hungry_without_waiting_for_the_day():
     u._base_inventory = packed(["Meat"])
     u._derive_combat()
     guild = Guild([u], clock=Clock(10 * 3600))        # 10:00 day 1
-    events, _ = guild.do_maintenance()                   # 1 h stop, no day crossed
-    assert guild.clock.day == 1 and guild.clock.hour_of_day == 11
+    events = guild.eat_now_pass()
+    assert guild.clock.day == 1 and guild.clock.hour_of_day == 10     # no time passes
     assert u.unfed_days == 0 and u.rations == 0
     assert any("eat" in e for e in events)
 

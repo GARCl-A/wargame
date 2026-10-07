@@ -10,23 +10,19 @@ it here and, if it changed a design premise, record it in `AGENTS.md` or the doc
 
 ## Medium
 
-- **Medic / rest until full.** Camps of 8 h are tedious. Either a medic NPC that speeds
-  healing, or a "rest until full" button that costs X days and X food, shown up front. Rest
-  healing is deterministic, so the cost is computable.
+- **Medic.** A medic NPC that speeds healing; the answer to rest healing being slow (1 HP per
+  8 h at CON mod 0). Separate from rest until full. Probably a city NPC hub tab (shop,
+  crafting, missions are already tabs) charging money; may overlap with the specialised
+  shops item below. Decide first how it relates to the existing healer occupations and the
+  medkit sickness treatment on the Group screen.
 - **Combat info modal.** Hide part of it by default and rework it: it carries information
   that should not be there and lacks some that would help. Define what goes in and out first.
-- **Split stack in the Market and Stash menus.** The ⋮ menu moves a whole stack there; a
-  partial move (30 of 200 coins) still means splitting on the Gear or Group screen first.
-  `SplitStackMixin` already does it for those two; the Market uses `sel`, not `selected`.
 
 ## Larger
 
 - **Market cash and specialised shops.** The market needs a finite purse so items cannot be
   sold forever. That implies splitting the single general market into shops (forge, tanner,
   market, like the library already is) with different stock, which creates arbitrage.
-- **Bank currency exchange.** 100 copper to 1 gold; relevant now that coins weigh (200 coins
-  = 1 kg). Coins are items and move like any other, so this is a stack-for-stack swap at the
-  bank, plus a Gold Coin item.
 - **Found-the-guild screen.** Scope is vague; define what is wrong first.
 - **Use for the characters' starting items.**
 
@@ -68,5 +64,9 @@ while building them:
 
 ## Loose ends from finished work
 
-- Gear, Group, Market and Stash share the ⋮ menu through `packbox.ItemMenuMixin`; a fifth
-  screen with pack rows should use it rather than grow its own popup.
+- Gear, Group, Market and Stash share the ⋮ menu (and its "split stack" row and quantity
+  prompt) through `packbox.ItemMenuMixin`; a fifth screen with pack rows should use it
+  rather than grow its own popup.
+- Orders are not saved (`persist.group_to_dict` has no order): a loaded game finds every
+  group idle, a rest in flight included. Fine while saves happen on the map, but a rest
+  with another group idle is lost on load.

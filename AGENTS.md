@@ -52,7 +52,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |
 | `ai.py` | heuristic over actions/; alignment tempers behaviour |
 | `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)` |
-| `orders.py` | Order dataclass; AUTO / INTERACTIVE / garrison / forced kinds |
+| `orders.py` | Order dataclass; AUTO (travel / work / rest) / INTERACTIVE / garrison / forced kinds |
+| `rest.py` | what a rest order costs and how long "until full" lasts (simulation on copies, keeps a day of rations) |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
 | `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat, oven), `Garage` (wagons and animals kept at the house, or at the Claim with no limit; `garage_screen.py`) |

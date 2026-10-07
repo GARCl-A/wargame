@@ -50,6 +50,11 @@ def _idx(u, name):
     return next(i for i, (n, _) in enumerate(u._base_inventory) if n == name)
 
 
+def _row(s, i):
+    """The i-th menu row's hit, not counting the split row every stack of 2+ gets first."""
+    return [h for h in s.menu["hits"] if h[1] != "split"][i]
+
+
 def _count(u, name):
     return sum(q for n, q in u._base_inventory if n == name)
 
@@ -62,9 +67,9 @@ def test_market_dots_open_a_sell_menu_and_sell_one():
     u = _unit(("Rope", 3))
     s, surf = _market(u)
     _click(s, surf, _dots_of(s, u, "Rope").center)
-    labels = [lbl for _, lbl, _ in s.menu["rows"]]
+    labels = [lbl for _, k, lbl in [(0, r[0], r[1]) for r in s.menu["rows"]] if k != "split"]
     assert labels[0].startswith("sell 1") and labels[1].startswith("sell all x3")
-    _click(s, surf, s.menu["hits"][0][0].center)
+    _click(s, surf, _row(s, 0)[0].center)
     assert s.menu is None
     assert _count(u, "Rope") == 2 and u.gold == economy.sell_price("Rope")
 
@@ -73,7 +78,7 @@ def test_market_menu_sell_all_empties_the_stack():
     u = _unit(("Rope", 3))
     s, surf = _market(u)
     _click(s, surf, _dots_of(s, u, "Rope").center)
-    _click(s, surf, s.menu["hits"][1][0].center)
+    _click(s, surf, _row(s, 1)[0].center)
     assert _count(u, "Rope") == 0 and u.gold == economy.sell_price("Rope") * 3
 
 
@@ -81,7 +86,7 @@ def test_a_sale_pays_the_seller_not_the_whole_party():
     seller, other = _unit(("Rope", 1), gold=10), _unit(gold=90)
     s, surf = _market(seller, other)
     _click(s, surf, _dots_of(s, seller, "Rope").center)
-    _click(s, surf, s.menu["hits"][0][0].center)
+    _click(s, surf, _row(s, 0)[0].center)
     assert seller.gold == 10 + economy.sell_price("Rope") and other.gold == 90
 
 
@@ -89,15 +94,15 @@ def test_the_coin_stack_has_a_menu_that_moves_it_but_never_sells_it():
     a, b = _unit(gold=50), _unit()
     s, surf = _market(a, b)
     _click(s, surf, _dots_of(s, a, items.COIN_ITEM).center)
-    assert [kind for _, kind, _ in s.menu["hits"]] == ["member"]
-    _click(s, surf, s.menu["hits"][0][0].center)
+    assert [kind for _, kind, _ in s.menu["hits"]] == ["split", "member"]
+    _click(s, surf, _row(s, 0)[0].center)
     assert a.gold == 0 and b.gold == 50
 
 
 def test_selling_a_selection_that_holds_coins_skips_the_coins():
     u = _unit(("Rope", 1), gold=30)
     s, surf = _market(u)
-    s.sel = [(u, _idx(u, items.COIN_ITEM)), (u, _idx(u, "Rope"))]
+    s.selected = [(u, _idx(u, items.COIN_ITEM)), (u, _idx(u, "Rope"))]
     s._sell()
     assert u.gold == 30 + economy.sell_price("Rope")
 
@@ -140,13 +145,13 @@ def test_stash_menu_sends_a_stack_to_the_chest_or_a_pinned_member():
     assert [lbl for _, lbl, _ in s.menu["rows"]] == [f"to {s.LABEL}", f"to {b.name}"]
 
     s.draw(surf)
-    _click(s, surf, s.menu["hits"][1][0].center)
+    _click(s, surf, _row(s, 1)[0].center)
     assert _count(b, "Rope") == 1 and _count(a, "Rope") == 0
 
     pick = next((o, i) for _, o, i in s._dots_hits if o is b and b._base_inventory[i][0] == "Rope")
     s._open_menu((100, 100), [pick])
     s.draw(surf)
-    _click(s, surf, s.menu["hits"][0][0].center)
+    _click(s, surf, _row(s, 0)[0].center)
     assert s.guild.bank.items == [("Rope", 1)]
 
 
@@ -160,7 +165,7 @@ def test_stash_coins_move_like_any_item_and_the_rent_comes_out_of_the_packs():
     s._open_menu((100, 100), [pick])
     s.draw(surf)
     before = a.gold + b.gold
-    _click(s, surf, s.menu["hits"][0][0].center)
+    _click(s, surf, next(h for h in s.menu["hits"] if h[1] == "stash")[0].center)
     assert any(n == items.COIN_ITEM for n, _ in s.guild.bank.items)
     assert a.gold + b.gold + sum(q for n, q in s.guild.bank.items if n == items.COIN_ITEM) == before
 
@@ -184,12 +189,12 @@ def test_market_menu_acts_on_the_whole_selection_when_the_row_is_in_it():
     a, b = _unit(("Rope", 2), ("Torch", 1)), _unit()
     s, surf = _market(a, b)
     rope, torch = (a, _idx(a, "Rope")), (a, _idx(a, "Torch"))
-    s.sel, s._sel_qty = [rope, torch], {rope: 2, torch: 1}
+    s.selected, s._sel_qty = [rope, torch], {rope: 2, torch: 1}
     s.draw(surf)
     _click(s, surf, _dots_of(s, a, "Rope").center)
-    labels = [lbl for _, lbl, _ in s.menu["rows"]]
+    labels = [lbl for _, k, lbl in [(0, r[0], r[1]) for r in s.menu["rows"]] if k != "split"]
     assert labels[0].startswith("sell selected") and labels[1] == f"to {b.name}"
-    _click(s, surf, s.menu["hits"][0][0].center)
+    _click(s, surf, _row(s, 0)[0].center)
     assert _count(a, "Rope") == 0 and _count(a, "Torch") == 0
     assert a.gold == economy.sell_price("Rope") * 2 + economy.sell_price("Torch")
 
@@ -198,7 +203,7 @@ def test_market_menu_sends_the_whole_selection_to_another_member():
     a, b = _unit(("Rope", 1), ("Torch", 1)), _unit()
     s, surf = _market(a, b)
     rope, torch = (a, _idx(a, "Rope")), (a, _idx(a, "Torch"))
-    s.sel, s._sel_qty = [rope, torch], {rope: 1, torch: 1}
+    s.selected, s._sel_qty = [rope, torch], {rope: 1, torch: 1}
     s.draw(surf)
     _click(s, surf, _dots_of(s, a, "Torch").center)
     _click(s, surf, next(r for r, k, arg in s.menu["hits"] if k == "member"
@@ -209,7 +214,64 @@ def test_market_menu_sends_the_whole_selection_to_another_member():
 def test_market_menu_on_an_unselected_row_ignores_the_selection():
     a = _unit(("Rope", 1), ("Torch", 1))
     s, surf = _market(a)
-    s.sel, s._sel_qty = [(a, _idx(a, "Torch"))], {}
+    s.selected, s._sel_qty = [(a, _idx(a, "Torch"))], {}
     s.draw(surf)
     _click(s, surf, _dots_of(s, a, "Rope").center)
     assert s.menu["rows"][0][0] == "sell"
+
+
+def _split_via_menu(s, surf, u, name, amount):
+    _click(s, surf, _dots_of(s, u, name).center)
+    rows = [kind for _, kind, _ in s.menu["hits"]]
+    assert rows[0] == "split"
+    _click(s, surf, s.menu["hits"][0][0].center)
+    assert s.split_prompt is not None and s.menu is None
+    s.split_prompt["amount"] = amount
+    s.draw(surf)
+    confirm = next(r for r, key in s.split_prompt["hits"] if key == "confirm")
+    _click(s, surf, confirm.center)
+    assert s.split_prompt is None
+
+
+def test_market_menu_splits_a_stack_and_sells_only_the_peeled_part():
+    u = _unit(("Rope", 5))
+    s, surf = _market(u)
+    _split_via_menu(s, surf, u, "Rope", 2)
+    assert sorted(q for n, q in u._base_inventory if n == "Rope") == [2, 3]
+    each = economy.sell_price("Rope")
+    s.selected, s._sel_qty = [(u, _idx(u, "Rope"))], {}
+    peeled = next(i for i, (n, q) in enumerate(u._base_inventory) if n == "Rope" and q == 2)
+    s.selected, s._sel_qty = [(u, peeled)], {(u, peeled): 2}
+    before = u.gold
+    s._sell()
+    assert u.gold == before + 2 * each and _count(u, "Rope") == 3
+
+
+def test_a_single_item_or_a_coinless_equip_slot_has_no_split_row():
+    u = _unit(("Rope", 1))
+    s, surf = _market(u)
+    _click(s, surf, _dots_of(s, u, "Rope").center)
+    assert all(kind != "split" for _, kind, _ in s.menu["hits"])
+
+
+def test_stash_menu_splits_a_pack_stack_before_depositing_part_of_it():
+    random.seed(4)
+    a, b = _unit(("Rope", 4), gold=200), _unit(gold=200)
+    s, surf = _bank([a, b])
+    s._run_service("rent")
+    s.draw(surf)
+    _split_via_menu(s, surf, a, "Rope", 1)
+    assert sorted(q for n, q in a._base_inventory if n == "Rope") == [1, 3]
+    s.selected = [(a, next(i for i, (n, q) in enumerate(a._base_inventory) if n == "Rope" and q == 1))]
+    s._give_many(s.OWNER, "pack")
+    assert s.guild.bank.items == [("Rope", 1)] and _count(a, "Rope") == 3
+
+
+def test_the_split_prompt_is_dismissed_by_a_click_outside_it():
+    u = _unit(("Rope", 5))
+    s, surf = _market(u)
+    _click(s, surf, _dots_of(s, u, "Rope").center)
+    _click(s, surf, s.menu["hits"][0][0].center)
+    s.draw(surf)
+    _click(s, surf, (2, 2))
+    assert s.split_prompt is None and _count(u, "Rope") == 5

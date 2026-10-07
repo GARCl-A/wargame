@@ -201,7 +201,7 @@ def test_a_forced_maintenance_stop_does_not_disturb_a_garrison_order():
         guild = Guild(None, groups=[g])
         g.order = orders.garrison("lumber")
 
-        campaign.advance(guild, dt=1)               # the MAINTENANCE button's forced 1h stop
+        campaign.advance(guild, dt=1)               # a forced stop (a hunt's hours)
         assert g.order.kind == "garrison"
     finally:
         node.garrison_job = orig

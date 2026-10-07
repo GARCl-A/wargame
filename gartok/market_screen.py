@@ -66,7 +66,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         self.size_hits = []                  # [(rect, base_name, size)]
         self.header_size_hits = []           # [(rect, size)]
         self.qty = {}                        # kit tab: stock name -> quantity to buy
-        self.sel = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
+        self.selected = []                         # [("stock", name) | (member, "hand"|"offhand"|"armor"|idx), ...]
         self._sel_qty = {}                   # (member, idx) -> how much of that pack stack is picked
         self.notice = None
         self._F = None
@@ -100,8 +100,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         lrg_name = f"Large {base_name}"
         old_name = med_name if size == "Large" else lrg_name
         new_name = lrg_name if size == "Large" else med_name
-        if ("stock", old_name) in self.sel:
-            self.sel = [("stock", new_name) if p == ("stock", old_name) else p for p in self.sel]
+        if ("stock", old_name) in self.selected:
+            self.selected = [("stock", new_name) if p == ("stock", old_name) else p for p in self.selected]
 
     def _set_all_weapon_sizes(self, size):
         self.weapon_size = size
@@ -152,7 +152,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
     def _member_dict(self, unit, carried):
         w = items.get(unit.equipped_weapon)
         two_handed = bool(w) and w.hands >= 2
-        selected_locs = {loc for u, loc in self.sel if u is unit and u != "stock"}
+        selected_locs = {loc for u, loc in self.selected if u is unit and u != "stock"}
 
         def held(kind, name, note):
             return {"name": name, "note": note, "sel": kind in selected_locs,
@@ -220,15 +220,15 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
     def _sell_total(self):
         return sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
-                   for p in self.sel
+                   for p in self.selected
                    if p[0] != "stock" and self._name_of(p) not in (None, items.COIN_ITEM))
 
     def _selected_names(self):
-        return [n for n in (self._name_of(p) for p in self.sel) if n is not None]
+        return [n for n in (self._name_of(p) for p in self.selected) if n is not None]
 
     @property
     def _buying(self):
-        return bool(self.sel) and self.sel[0][0] == "stock"
+        return bool(self.selected) and self.selected[0][0] == "stock"
 
     def _buy_qty(self, name):
         return max(1, self.qty.get(name, 1))
@@ -250,7 +250,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         """Replace the current selection with just `src` (a plain click) --
         a fresh pack pick starts at qty 1, matching a single click grabbing
         one item; shift/ctrl and the stepper grow it from there."""
-        self.sel = [src] if src is not None else []
+        self.selected = [src] if src is not None else []
         self._sel_qty = {}
         if src is not None and src[0] != "stock" and not isinstance(src[1], str):
             self._sel_qty[src] = 1
@@ -312,15 +312,15 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
     def _begin_drag(self, src):
         mods = pygame.key.get_mods()
         if mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL):
-            if src not in self.sel and src[0] != "stock":
-                self.sel.append(src)
+            if src not in self.selected and src[0] != "stock":
+                self.selected.append(src)
                 owner, loc = src
                 if not isinstance(loc, str):
                     held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
                     self._sel_qty[src] = held
             return
-        if src not in self.sel or src[0] == "stock":
-            self.sel = [src]
+        if src not in self.selected or src[0] == "stock":
+            self.selected = [src]
 
     def handle_event(self, event):
         if self._menu_event(event):
@@ -367,17 +367,17 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         new_qty = held if delta >= 999 else max(0, min(held, self._sel_qty.get(pick, 0) + step))
         if new_qty <= 0:
             self._sel_qty.pop(pick, None)
-            self.sel = [p for p in self.sel if p != pick]
+            self.selected = [p for p in self.selected if p != pick]
         else:
             self._sel_qty[pick] = new_qty
-            if pick not in self.sel:
-                self.sel.append(pick)
+            if pick not in self.selected:
+                self.selected.append(pick)
 
     def _menu_picks_for(self, pick):
         if pick[0] == "stock":
             return []
-        if pick in self.sel and len(self.sel) > 1:
-            return [p for p in self.sel if p[0] != "stock"]
+        if pick in self.selected and len(self.selected) > 1:
+            return [p for p in self.selected if p[0] != "stock"]
         return [pick]
 
     def _menu_rows(self, picks):
@@ -403,7 +403,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         return rows + dests
 
     def _menu_run(self, picks, kind, arg):
-        self.sel = list(picks)
+        self.selected = list(picks)
         if kind == "sell":
             self._sel_qty = {picks[0]: arg}
         elif len(picks) == 1:
@@ -417,7 +417,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
     def _sell_all(self):
         """Grow every currently-picked pack stack to its full held quantity
         -- the stepper's own ALL, applied to the whole selection at once."""
-        for p in list(self.sel):
+        for p in list(self.selected):
             if p[0] != "stock":
                 self._bump_qty(p, 999)
         self._sell()
@@ -477,7 +477,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
         for rect, key in self.tab_hits:
             if rect.collidepoint(px):
-                self.tab, self.sel, self.notice = key, [], None
+                self.tab, self.selected, self.notice = key, [], None
                 return
 
         for rect, member in self.info_hits:
@@ -489,20 +489,20 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         mods = pygame.key.get_mods()
         multi = not dragging and src is not None and src[0] != "stock" \
             and mods & (pygame.KMOD_SHIFT | pygame.KMOD_CTRL) \
-            and (not self.sel or self.sel[0][0] != "stock")
+            and (not self.selected or self.selected[0][0] != "stock")
         if multi:
             owner, loc = src
-            if src in self.sel:
-                self.sel = [p for p in self.sel if p != src]
+            if src in self.selected:
+                self.selected = [p for p in self.selected if p != src]
                 self._sel_qty.pop(src, None)
             else:
-                self.sel.append(src)
+                self.selected.append(src)
                 if not isinstance(loc, str):
                     held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
                     self._sel_qty[src] = held
             return
 
-        if self.sel:
+        if self.selected:
             for rect, member, zone in self.zones:
                 if dragging and rect.collidepoint(px):
                     self._drop_on_zone(member, zone)
@@ -515,7 +515,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
 
     def _drop_on_zone(self, member, zone):
-        picks, self.sel = self.sel, []
+        picks, self.selected = self.selected, []
         picks = [p for p in picks if self._name_of(p) is not None]
         if not picks:
             self._sel_qty = {}
@@ -534,13 +534,13 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         add = sum(items.item_weight(self._name_of(p)) * self._get_qty(p) for p in picks)
         if zone == "pack" and member.load + add > member.carry_max:
             self.notice = f"won't fit {member.name}'s load."
-            self.sel = picks
+            self.selected = picks
             return
 
         if zone in ("hand", "offhand", "tongue", "armor"):
             fit = next((p for p in picks if self._fits_slot(member, zone, self._name_of(p))), None)
             if fit is None:
-                self.sel = picks
+                self.selected = picks
                 self.notice = f"doesn't fit in {zone}."
                 return
             picks = [fit]
@@ -655,9 +655,9 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             self._settle_market()
 
     def _sell(self):
-        picks = [p for p in self.sel
+        picks = [p for p in self.selected
                  if p[0] != "stock" and self._name_of(p) not in (None, items.COIN_ITEM)]
-        self.sel = []
+        self.selected = []
         if not picks:
             self._sel_qty = {}
             return
@@ -738,7 +738,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         if self._dragging and names:
             market_panel.drag_ghost(screen, F, self._pick_label(names), self.mouse)
 
-        if not self.sel:
+        if not self.selected:
             for r, member, loc in self.item_rows:
                 if r.collidepoint(self.mouse):
                     name = self._item_at(member, loc)
@@ -754,7 +754,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         set_pointer(self._hovering())
 
     def _hovering(self):
-        if self.menu is not None:
+        if self.menu is not None or self.split_prompt is not None:
             return self._menu_hovering()
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):
             return True
@@ -806,7 +806,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 "stock": stock,
                 "afford": self.purse >= price and not sold_out,
                 "fits": any(self._fits(m, name) for m in self.shoppers),
-                "sel": ("stock", name) in self.sel,
+                "sel": ("stock", name) in self.selected,
                 "tag": self._kit_tag(name) if kind == "kit" else "",
                 "qty": self._buy_qty(name),
                 "size": self._stock_weapon_size(base_name) if kind == "weapons" else None,
@@ -815,7 +815,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         if kind == "weapons":
             sizes = {self._stock_weapon_size(b) for b in names} or {"Medium"}
             all_size = sizes.pop() if len(sizes) == 1 else None
-        return {"kind": kind, "all_size": all_size, "hover": not self.sel, "rows": rows}
+        return {"kind": kind, "all_size": all_size, "hover": not self.selected, "rows": rows}
 
     def _stock_spec(self, name):
         """The one-line stat blurb under a weapon / armor row."""
@@ -889,7 +889,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
         from . import unit as unit_module
         unit_module.distribute_load(self.shoppers, share_coins=False)
-        self.sel = []
+        self.selected = []
         self.notice = "redistributed packs by carrying capacity."
 
 

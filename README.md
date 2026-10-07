@@ -18,7 +18,7 @@ group is left idle, the clock runs on its own (`campaign.advance`), resolving
 travel and work silently and handing you the rest to actually play. For a
 battle you pick a **squad** (1–3 members), drop onto a grid, and win by
 putting the enemy team down. Time only passes while the clock is running or on
-a MAINTENANCE stop (day/night, hunger); death is permanent; a total wipe ends
+a group resting (day/night, hunger); death is permanent; a total wipe ends
 the run. Saved by slot.
 
 Progress toward the game's goal is **reputation with factions**, earned by

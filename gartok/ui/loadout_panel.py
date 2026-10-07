@@ -559,8 +559,9 @@ def send_menu(surf, F, anchor, rows, mouse):
     return {"rect": rect, "hits": hits}
 
 
-def split_prompt(surf, F, center, name, amount, held, mouse):
-    """The split-stack quantity picker. Returns `{"rect", "hits":
+def quantity_prompt(surf, F, center, title, amount, total, confirm, mouse):
+    """A plain "pick a quantity" box: `- amount / total +` and one confirm
+    button. Bounds are the host's; this only draws. Returns `{"rect", "hits":
     [(rect, "minus"|"plus"|"confirm")]}`."""
     w, h = 260, 110
     rect = pygame.Rect(0, 0, w, h)
@@ -569,15 +570,15 @@ def split_prompt(surf, F, center, name, amount, held, mouse):
     pygame.draw.rect(surf, T.STEEL_HI, rect)
     pygame.draw.rect(surf, T.BRASS, rect, 1)
 
-    caps(surf, F["microb"], f"split {name}", (rect.centerx, rect.y + T.S * 2), T.TX, center=True)
+    caps(surf, F["microb"], title, (rect.centerx, rect.y + T.S * 2), T.TX, center=True)
 
     minus_r = pygame.Rect(rect.x + T.S * 3, rect.y + T.S * 5, 28, 28)
     plus_r = pygame.Rect(rect.right - T.S * 3 - 28, rect.y + T.S * 5, 28, 28)
     draw_button(surf, F, minus_r, "-", ghost=True, mpos=mouse)
     draw_button(surf, F, plus_r, "+", ghost=True, mpos=mouse)
-    text(surf, F["bodyb"], f"{amount} / {held}", rect.center, T.TX, center=True)
+    text(surf, F["bodyb"], f"{amount} / {total}", rect.center, T.TX, center=True)
 
     confirm_r = pygame.Rect(rect.x + T.S * 2, rect.bottom - T.S * 5, rect.w - T.S * 4, T.S * 4)
-    draw_button(surf, F, confirm_r, "SPLIT INTO TWO STACKS", primary=True, mpos=mouse)
+    draw_button(surf, F, confirm_r, confirm, primary=True, mpos=mouse)
 
     return {"rect": rect, "hits": [(minus_r, "minus"), (plus_r, "plus"), (confirm_r, "confirm")]}

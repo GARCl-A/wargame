@@ -502,12 +502,14 @@ def test_a_garrisoned_group_can_reopen_the_claim_screen():
     assert g.order.kind == "garrison"           # looking never cancels the garrison
 
 
-def test_a_garrisoned_group_can_pass_time_from_the_map():
+def test_with_every_group_garrisoned_the_cta_advances_the_whole_world():
     ms, g, calls = _garrisoned_map()
-    keys = [b.get("key") for b in ms._inspector_bottom(g)]
-    assert {"maintain", "camp", "wait_day"} <= set(keys)
-    assert "manage_group" not in keys
-    ms._handle_button("wait_day")
+    items = ms._inspector_bottom(g)
+    keys = [b.get("key") for b in items]
+    assert "manage_group" not in keys and "rest_menu" not in keys     # a garrison is recalled, not rested
+    cta = next(b for b in items if b.get("key") == "advance_world")
+    assert "WHOLE WORLD" in cta["label"] and cta["enabled"]
+    ms._handle_button("advance_world")
     assert calls == [("advance", 24)]
 
 

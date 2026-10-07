@@ -133,7 +133,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     unit_price = economy.buy_price("Meat")
 
     ms.purse = unit_price * 100                       # plenty of coin and carry
-    ms.sel = [("stock", "Meat")]
+    ms.selected = [("stock", "Meat")]
     ms.qty["Meat"] = 10
     ms._drop_on_zone(buyer, "pack")
     assert buyer.count_of("Meat") == 10
@@ -142,7 +142,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
 
     buyer.carry_max = 10_000                          # _buy re-derived it; keep load out
     ms.purse = unit_price * 3                         # only three affordable
-    ms.sel = [("stock", "Meat")]
+    ms.selected = [("stock", "Meat")]
     ms.qty["Meat"] = 10
     ms._drop_on_zone(buyer, "pack")
     assert buyer.count_of("Meat") == 13
@@ -1308,11 +1308,11 @@ def test_market_screen_weapon_size_toggle():
     assert ms._active_stock_name("Dagger") == "Dagger"  # other weapons stay Medium
 
     # Selection updates automatically when size is toggled
-    ms.sel = [("stock", "Large Axe")]
+    ms.selected = [("stock", "Large Axe")]
     axe_m_hit = next(rect for rect, b, sz in ms.size_hits if b == "Axe" and sz == "Medium")
     ms._drop(axe_m_hit.center, False, None)
     assert ms._active_stock_name("Axe") == "Axe"
-    assert ms.sel == [("stock", "Axe")]
+    assert ms.selected == [("stock", "Axe")]
 
     # Header toggle to Large sets all weapons to Large
     lrg_hdr = next(rect for rect, sz in ms.header_size_hits if sz == "Large")
@@ -1320,7 +1320,7 @@ def test_market_screen_weapon_size_toggle():
     assert ms.weapon_size == "Large"
     assert ms._active_stock_name("Axe") == "Large Axe"
     assert ms._active_stock_name("Dagger") == "Large Dagger"
-    assert ms.sel == [("stock", "Large Axe")]
+    assert ms.selected == [("stock", "Large Axe")]
 
     # Redraw with Large: stock_rows now lists "Large Axe", "Large Dagger", etc.
     ms.draw(surf)
@@ -1755,7 +1755,7 @@ def test_market_screen_equipping_stack_preserves_remainder():
     shopper._base_inventory = [items.create_instance("Torch", qty=5)]
 
     ms = MarketScreen(ui_fonts(), None, [shopper], mnode, lambda: None)
-    ms.sel = [(shopper, 0)]
+    ms.selected = [(shopper, 0)]
     ms._drop_on_zone(shopper, "offhand")
 
     assert shopper.equipped_offhand == "Torch"

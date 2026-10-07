@@ -31,7 +31,7 @@
       "title": "Running the guild",
       "body": [
         "The guild is split into groups. The list on the left shows them: click one to select it, then click a place on the map to send it there. The panel on the right shows what that group can do where it stands -- shop, fight, work, recruit, hunt. GUILD, top right, opens your roster.",
-        "There is no advance button. Once every group has an order the clock runs by itself, and stops when a group is free again or something needs a decision (an ambush, a shop, a fight). REST passes 1 hour and CAMP 8 hours.",
+        "There is no advance button. Once every group has an order the clock runs by itself, and stops when a group is free again or something needs a decision (an ambush, a shop, a fight). REST sends the selected group to rest for 1 hour, 8 hours or until its wounds are healed (it always keeps a day of rations); the other groups carry on meanwhile. With every group garrisoned, ADVANCE passes a day for the whole world.",
         "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes (3 cp) and Meat (5 cp) are sold at the Market, and you can hunt Meat in the wilds.",
         "Copper lives on each character -- there is no shared treasury. Death is permanent, and the run ends only if the whole guild is wiped out."
       ],

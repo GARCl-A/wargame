@@ -18,9 +18,11 @@ hands any other kind back to `app` to play its screen. There is no manual
 "advance" button: the moment every group has an order (none idle), the
 clock starts chasing on its own and only stops once a group goes idle
 again or something needs the player's screen -- see `_maybe_auto_advance`
-and `Guild.can_auto_advance`. **MAINTENANCE** forces a short 1 h stop
-instead (still through the same tick, so an order in flight stays in sync
-with the clock).
+and `Guild.can_auto_advance`. **REST** is one group's order too
+(`orders.rest`, 1 h / 8 h / until full -- `rest.py` prices each row), so the
+other groups carry on meanwhile; the one time the map passes the clock by
+itself is the CTA's ADVANCE, when every group is garrisoned and nothing is
+in flight to chase.
 
 A group with no order may **SPLIT** (peel some of its members into a new
 group, via its own roster card) or **MERGE** (fold a co-located idle group
@@ -28,7 +30,7 @@ into it, from the INSPECTOR) -- both physical, both instant, neither costs
 time.
 
 A fixed CTA row (`_footer_cta`) always sits at the bottom of INSPECTOR, right
-below MANAGE GEAR/MAINTENANCE -- same slot whether it's live or not, so
+below MANAGE GEAR/REST -- same slot whether it's live or not, so
 nothing ever pops a new zone in and shoves the map/roster around. Red +
 enabled while `pending_event` (an ambush `app` paused the clock on -- see
 `app._resolve_pending_event`) is waiting to be fought; otherwise it steps
@@ -40,8 +42,8 @@ until the CTA is clicked.
 
 The clock itself is paused at the exact instant `pending_event` happened --
 every other band can still be freely inspected, split, merged and given
-orders (those just won't start moving yet), but MAINTENANCE is disabled
-while it's set, so nothing can force the clock past an unresolved event.
+orders (those just won't start moving yet), but REST is disabled
+while it's set, so nothing can run the clock past an unresolved event.
 That's what keeps `app._advance` from ever running a second time before
 the CTA is clicked, which would otherwise risk clobbering whatever else
 was still pending from the same tick.
@@ -57,7 +59,7 @@ the guild out entirely. Leaving to the main menu is Esc -> the pause menu
 
 import pygame
 
-from . import arena, artwork, autowin, campaign, economy, orders, world
+from . import arena, artwork, autowin, campaign, economy, orders, rest, world
 from .scenario import Scenario
 from .screen import Screen
 from .ui.camera import MapCamera
@@ -75,6 +77,7 @@ from .ui.tokens import fonts as ui_fonts
 ROSTER_FRAC, ROSTER_MIN, ROSTER_MAX = 0.22, 260, 360
 INSPECTOR_FRAC, INSPECTOR_MIN, INSPECTOR_MAX = 0.26, 320, 440
 WORK_HOURS = (4, 8, 12, 16)
+ADVANCE_HOURS = 24                      # the CTA's world-wide wait, once every group is garrisoned
 
 KIND_TERRAIN = {"town": "town", "market": "town", "tavern": "town",
                 "battle": "rock", "prison": "rock", "wilds": "green"}
@@ -170,6 +173,7 @@ class MapScreen(Screen):
         self._refresh_nodes()
         self._cam = MapCamera(self._nodes, min_zoom=280.0, max_zoom=2200.0, initial_zoom=650.0)
         self._pan = None                      # (anchor mouse pos, cam at anchor) while dragging
+        self._rest_open = False               # the REST button's 1 h / 8 h / until full rows are showing
         self._split_target = None             # gid of the roster card expanded for SPLIT
         self._roster_rects = []
         self._split_member_rects = []
@@ -226,6 +230,8 @@ class MapScreen(Screen):
             return f"→ {dest_name} ({o.remaining:g} h)"
         if o.kind == "work":
             return f"working ({o.remaining:g} h left)"
+        if o.kind == "rest":
+            return f"resting ({rest.format_hours(o.remaining)} left)"
         return f"heading to {o.kind} ({o.remaining:g} h)"
 
     def _mates_for(self, g):
@@ -355,11 +361,32 @@ class MapScreen(Screen):
 
     def _select(self, group):
         self.selected = group
+        self._rest_open = False
 
     def _issue(self, order):
+        self._rest_open = False
         if not self.selected.busy and not self._group_blocked(self.selected):
             self.selected.order = order
             self._maybe_auto_advance()
+
+    def _rest_plans(self, g):
+        """`[(key, label, plan)]` for the REST rows of group `g`."""
+        return [("rest:1", "1 h", rest.fixed(self.guild, 1)),
+                ("rest:8", "8 h", rest.fixed(self.guild, 8)),
+                ("rest:full", "UNTIL FULL", rest.until_full(self.guild, g))]
+
+    def _start_rest(self, which):
+        """Sit the selected group down to eat, then rest: a 1 h / 8 h / until
+        full order, planned from the state it is in right now."""
+        g = self.selected
+        if g.busy or self._group_blocked(g):
+            return
+        plan = (rest.until_full(self.guild, g) if which == "full"
+                else rest.fixed(self.guild, float(which)))
+        if not plan.available:
+            return
+        self.notices += self.guild.eat_now_pass(g.members)
+        self._issue(orders.rest(plan.hours))
 
     def _go(self, target):
         if (self.selected.busy or self._group_blocked(self.selected)
@@ -402,6 +429,8 @@ class MapScreen(Screen):
             n = len(self._pending_event[1].pack)
             return ("resolve_event", f"AMBUSHED -- FIGHT ({n})", True, True)
         idle = self._idle_groups()
+        if not idle and self._everyone_garrisoned():
+            return ("advance_world", f"ADVANCE {ADVANCE_HOURS} h  ·  WHOLE WORLD", False, True)
         enabled = any(gi is not self.selected for gi in idle)
         label = f"NEXT BAND -- {len(idle)} WAITING" if len(idle) > 1 else "NEXT BAND"
         return ("cycle_idle", label, False, enabled)
@@ -495,12 +524,14 @@ class MapScreen(Screen):
         elif key == "visit_claim":
             if self.on_visit_claim:
                 self.on_visit_claim(self.selected)
-        elif key == "maintain":
-            self.on_advance(dt=1)
-        elif key == "wait_day":
-            self.on_advance(dt=24)
-        elif key == "camp":
-            self.on_advance(dt=8)
+        elif key == "rest_menu":
+            self._rest_open = not self._rest_open
+        elif key.startswith("rest:"):
+            self._start_rest(key.split(":")[1])
+        elif key == "stop_rest":
+            self.selected.order = orders.idle()
+        elif key == "advance_world":
+            self.on_advance(dt=ADVANCE_HOURS)
         elif key == "manage_group":
             self.on_manage_group(self.selected)
         elif key.startswith("work:"):
@@ -538,6 +569,9 @@ class MapScreen(Screen):
             return blocks
         if g.busy:
             blocks = [{"type": "text", "text": f"Busy: {self._order_status(g)}", "color": T.BRASS}]
+            if g.order is not None and g.order.kind == "rest":
+                blocks.append({"type": "button", "key": "stop_rest", "label": "STOP RESTING",
+                               "danger": True})
             if g.order is not None and g.order.kind == "garrison":
                 if here.is_tavern:
                     blocks.append({"type": "button", "key": "visit_tavern", "label": "ENTER THE TAVERN", "primary": True})
@@ -688,42 +722,50 @@ class MapScreen(Screen):
 
         return blocks
 
-    def _maintenance_urgent(self):
-        """Mirrors the old footer's own rule: a stop only helps if a hungry
-        member can actually reach a ration -- their own pack, or a
-        group-mate's shared larder."""
-        hungry = self.guild.hungry
+    @staticmethod
+    def _rest_row(key, label, plan):
+        """One REST row: what it takes and what it costs, or why it is off."""
+        if not plan.available:
+            return {"type": "button", "key": key, "label": label, "sub": plan.reason,
+                    "enabled": False, "gap_before": 4}
+        meals = "no meal" if plan.meals == 0 else f"{plan.meals} meal{'s' * (plan.meals != 1)} each"
+        if key != "rest:full":
+            return {"type": "button", "key": key, "label": f"{label}  ·  {meals}", "gap_before": 4}
+        who = f"{plan.worst[0]} {plan.worst[1]}/{plan.worst[2]}"
+        head = "UNTIL RATIONS HIT THE FLOOR" if plan.capped else label
+        return {"type": "button", "key": key, "gap_before": 4,
+                "label": f"{head}  ·  {rest.format_hours(plan.hours)}",
+                "sub": f"{meals}  ·  {who}"}
+
+    def _rest_urgent(self, g):
+        """A stop only helps if a hungry member can actually reach a ration --
+        their own pack, or a group-mate's shared larder."""
+        hungry = [u for u in g.members if u.hunger_level > 0]
         reachable = any(u.rations for u in hungry) or any(
-            u.share_food and u.rations for u in self.guild.roster)
+            u.share_food and u.rations for u in g.members)
         return bool(hungry) and reachable
 
+    def _everyone_garrisoned(self):
+        groups = [g for g in self.guild.groups if not g.empty]
+        return bool(groups) and all(g.order is not None and g.order.kind == "garrison"
+                                    for g in groups)
+
     def _inspector_bottom(self, g):
-        """MANAGE GEAR/MAINTENANCE only apply to a band that's actually here
-        to act on them; the CTA (`_footer_cta`) is the map's own "what's
-        next" pointer, not about `g` specifically, so it's always appended
-        regardless."""
+        """MANAGE GEAR/REST only apply to a band that's actually here to act on
+        them; the CTA (`_footer_cta`) is the map's own "what's next" pointer,
+        not about `g` specifically, so it's always appended regardless."""
         items = []
-        garrisoned = g.order is not None and g.order.kind == "garrison"
         if not (g.busy or self._group_blocked(g)):
             items.append({"type": "button", "key": "manage_group", "label": "MANAGE GEAR & QUESTS"})
-        if (garrisoned or not g.busy) and not self._group_blocked(g):
-            urgent = self._maintenance_urgent()
-            # a forced stop moves the clock -- disabled while `_pending_event`
-            # has it paused, so nothing can advance past an unresolved event
+            # nothing may move the clock past an unresolved event
             paused = self._pending_event is not None
-            items.append({"type": "button", "key": "maintain", "label": "REST  ·  1 h",
-                         "gap_before": T.S * 2, "primary": urgent and not paused,
-                         "danger": self.guild.rations == 0 and not paused,
-                         "enabled": not paused,
-                         "height": T.S * 5})
-            items.append({"type": "button", "key": "camp", "label": "CAMP  ·  8 h",
-                         "gap_before": T.S, "primary": False,
-                         "danger": self.guild.rations == 0 and not paused,
-                         "enabled": not paused,
-                         "height": T.S * 5})
-            if garrisoned:
-                items.append({"type": "button", "key": "wait_day", "label": "WAIT  ·  24 h",
-                             "gap_before": T.S, "enabled": not paused, "height": T.S * 5})
+            starving = g.rations == 0 and not paused
+            items.append({"type": "button", "key": "rest_menu",
+                          "label": "REST  ▴" if self._rest_open else "REST  ▾",
+                          "gap_before": T.S * 2, "primary": self._rest_urgent(g) and not paused,
+                          "danger": starving, "enabled": not paused, "height": T.S * 5})
+            if self._rest_open and not paused:
+                items += [self._rest_row(k, label, plan) for k, label, plan in self._rest_plans(g)]
         key, label, danger, enabled = self._footer_cta()
         items.append({"type": "button", "key": key, "label": label, "gap_before": T.S * 2,
                      "primary": enabled, "danger": danger, "enabled": enabled})
