@@ -36,7 +36,11 @@ class UpkeepMixin:
 
         `busy` are units doing something that spends the hours without a group
         order carrying it (a hunt, a crafting shift, scouting the claim): they
-        do not rest meanwhile, same as a group on an order."""
+        do not rest meanwhile, same as a group on an order.
+
+        The `(hours, busy=()) -> (events, casualties)` shape is a contract: the
+        app's `_tick_outside_map` stands in for this call on screens that spend
+        an hour (`repair_wagon`), and a test pins the two together."""
         start_day = self.clock.day
         self.clock.advance_hours(hours)
         events = []

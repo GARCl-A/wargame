@@ -483,9 +483,9 @@ def test_animals_and_wagons_share_the_creature_base():
     assert Wagon().uid != Wagon().uid
 
 
-def test_a_wagon_is_an_object_with_a_d8():
-    from gartok.wagon import WAGON_HD
-    assert WAGON_HD == 8 and Wagon().hp == 5
+def test_a_vehicle_is_hit_dice_of_d8_with_no_constitution():
+    assert (VEHICLES["Cart"].hd, VEHICLES["Carriage"].hd) == (1, 3)
+    assert (Wagon("Cart").hp, Wagon("Carriage").hp) == (5, 13)
 
 
 def test_group_wagons_know_their_group():

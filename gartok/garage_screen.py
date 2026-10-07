@@ -11,6 +11,7 @@ no limit, and is only safe while a garrison stands there.
 import pygame
 
 from . import economy, wagon_watch
+from . import wagon as wagon_mod
 from .constants import fmt_money
 from .screen import Screen
 from .ui.primitives import draw_button, footer_bar, panel, section, text
@@ -24,8 +25,9 @@ class GarageScreen(Screen):
     def tutorial_key(self):
         return "garage"
 
-    def __init__(self, fonts, guild, group, on_done, claim=False):
+    def __init__(self, fonts, guild, group, on_done, claim=False, on_tick=None):
         super().__init__()
+        self.on_tick = on_tick
         self.claim = claim
         self.fonts = fonts
         self._F = ui_fonts()
@@ -67,6 +69,12 @@ class GarageScreen(Screen):
             economy.charge_richest_first(g.members, economy.GARAGE_PRICE)
             guild.buy_garage_tier()
             self.notice = "a new bay: room for one more wagon and one more animal."
+        elif kind in ("repair_garaged", "repair_group"):
+            wagon = (garage.wagons if kind == "repair_garaged" else g.wagons)[int(arg)]
+            ok, events, _ = guild.repair_wagon(g.members, wagon, self.on_tick)
+            if ok and wagon in g.wagons:
+                g.hitch_idle()
+            self.notice = "  ".join(events)
         elif kind == "park_wagon":
             wagon = g.wagons[int(arg)]
             if guild.park_wagon(g, wagon, garage):
@@ -148,19 +156,33 @@ class GarageScreen(Screen):
     def _held(self, n):
         return str(n) if self.claim else f"{n} / {self.garage.tier}"
 
+    @staticmethod
+    def _condition(wagon):
+        return "BROKEN" if wagon.broken else f"HP {wagon.hp}/{wagon.hp_max}"
+
+    def _repair_button(self, screen, x, y, key, wagon):
+        if not wagon.needs_repair:
+            return
+        have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in self.group.members)
+        self.add_button(screen, pygame.Rect(x, y, 150, 28), key,
+                        f"REPAIR  ·  {wagon.repair_cost} {wagon_mod.REPAIR_ITEM}",
+                        enabled=have >= wagon.repair_cost)
+
     def _draw_wagons(self, screen, x, y, w):
         F, g, garage = self._F, self.group, self.garage
         y = section(screen, F, f"WAGONS  (garage {self._held(len(garage.wagons))})", x, y, w)
         for i, wagon in enumerate(garage.wagons):
-            text(screen, F["bodyb"], f"{wagon.kind}  ·  in the garage  ·  cargo {wagon.stash.load:g} kg",
-                 (x, y + 4), T.TX)
+            text(screen, F["bodyb"], f"{wagon.kind}  ·  in the garage  ·  {self._condition(wagon)}  ·  "
+                 f"cargo {wagon.stash.load:g} kg", (x, y + 4), T.BLOOD if wagon.broken else T.TX)
             self.add_button(screen, pygame.Rect(x + w - 150, y, 150, 28), f"take_wagon:{i}", "TAKE OUT")
+            self._repair_button(screen, x + w - 310, y, f"repair_garaged:{i}", wagon)
             y += 36
         for i, wagon in enumerate(g.wagons):
-            text(screen, F["bodyb"], f"{wagon.kind}  ·  with the group  ·  cargo {wagon.stash.load:g} kg",
-                 (x, y + 4), T.TX_MUTED)
+            text(screen, F["bodyb"], f"{wagon.kind}  ·  with the group  ·  {self._condition(wagon)}  ·  "
+                 f"cargo {wagon.stash.load:g} kg", (x, y + 4), T.BLOOD if wagon.broken else T.TX_MUTED)
             self.add_button(screen, pygame.Rect(x + w - 150, y, 150, 28), f"park_wagon:{i}", "PARK",
                             enabled=garage.wagon_room > 0)
+            self._repair_button(screen, x + w - 310, y, f"repair_group:{i}", wagon)
             y += 36
         if not garage.wagons and not g.wagons:
             text(screen, F["body_sm"], "No wagons.", (x, y), T.TX_FAINT)

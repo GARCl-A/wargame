@@ -875,6 +875,19 @@ different questions:
   wagon swaps the two animals), and a wagon holds no more than the animals
   hitched to it can draw, up to its box. Cargo on animals and wagons never goes
   into a fight, everyone eats from it, and it is lost with the group.
+- **Broken wagons.** A vehicle has Hit Dice of d8 and no Constitution at all: a
+  cart is 1 HD (5 HP), a carriage 3 HD (13 HP), the mean of the dice, never
+  rolled. Every 100 units of map distance a group travels costs each of its
+  wagons 1 HP. A wagon cannot die: at 0 HP it *breaks* (like an Automaton) and
+  stays with the group, drawing nothing and carrying nothing; its animals are
+  freed but stay in the herd. REPAIR (the wagon's column on the Group screen,
+  or the garage) costs 1 Lumber per Hit Die and 1 hour, and the member with the
+  best Intelligence modifier rolls d20 + INT against DC 15; a success mends
+  half its maximum HP (rounded up), and it works on a wagon that is only hurt.
+  A miss still spends the Lumber and the hour. A broken wagon in a garage
+  keeps its bay and can be mended there. Setting out with a broken wagon
+  abandons it: the group is asked first, and may unload the cargo into the packs
+  on the loot screen; whatever is left goes with the wagon.
 - **A hard wall on the roster itself.** `recruit.capacity(guild, unit)`
   = `BASE_RECRUIT_CAPACITY` (1) + the unit's own Charisma modifier — how many
   people *that specific member* can personally sponsor into the guild

@@ -47,6 +47,7 @@ from . import (
     hunt,
     justice,
     matchup,
+    orders,
     persist,
     tutorial_card,
     wagon_watch,
@@ -234,10 +235,55 @@ class App:
                                on_resolve_event=self._resolve_pending_event,
                                on_autowin=self._resolve_ambush_autowin,
                                on_visit_tavern=self._visit_tavern,
-                               on_visit_claim=self._visit_claim)
+                               on_visit_claim=self._visit_claim,
+                               on_abandon=self._abandon_broken)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
+
+    def _abandon_broken(self, group, dest):
+        """The group means to travel with a broken wagon: that leaves it behind. Ask about
+        each one in turn (cargo first, if the player wants to unload it); the trip goes
+        ahead only once none is left."""
+        if world.route(group.node, dest)[1] == float("inf"):
+            self._map_notices.append(f"There is no way from here to {world.node(dest).name}.")
+            self._start_map()
+            return
+        wagon = next((w for w in group.wagons if w.broken), None)
+        if wagon is None:
+            group.order = orders.travel(group, dest)
+            self._start_map()
+            return
+
+        def leave():
+            self.guild.abandon_wagon(group, wagon)
+            self._map_notices.append(f"{group.display_name} leaves its broken {wagon.kind.lower()} behind.")
+            self._abandon_broken(group, dest)
+
+        def manage():
+            from .loot_screen import LootScreen
+            pool = [name for name, qty in wagon.stash.items for _ in range(qty)]
+            scene = LootScreen(self.ui_fonts, self.guild, group.members, pool, on_done=lambda: None)
+
+            def back():
+                left = dict(scene.pool)
+                kept = []
+                for inst in wagon.stash.items:
+                    keep = min(inst.qty, left.get(inst.name, 0))
+                    left[inst.name] = left.get(inst.name, 0) - keep
+                    if keep:
+                        part = inst.copy()
+                        part.qty = keep
+                        kept.append(part)
+                wagon.stash.items[:] = kept
+                self._abandon_broken(group, dest)
+
+            scene.on_done = back
+            self.scene = scene
+
+        from .abandon_screen import AbandonScreen
+        self.scene = AbandonScreen(self.ui_fonts, wagon, on_manage=manage, on_leave=leave,
+                                   on_stay=self._start_map)
 
     def _wait_out_the_sentence(self):
         """Every group emptied out into `guild.jailed` -- nothing to show on
@@ -276,7 +322,8 @@ class App:
         if group.fight_due:
             return
         from .group_screen import GroupScreen
-        self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=self._start_map)
+        self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=self._after_activity,
+                                 on_tick=self._tick_outside_map)
     def _open_level(self, unit):
         self.scene = LevelScreen(self.ui_fonts, unit,
                                  on_back=self._open_guild, on_change=self._save)
@@ -313,30 +360,46 @@ class App:
                 break
         self._pending = list(result.pending)
 
-        nxt = self._after_activity
+        self._report_casualties(all_casualties, self._after_activity)
 
-        # hunger has no popup of its own any more -- COMMAND's own alert icon
-        # (map_screen._messages) already covers it every frame the map is up
-        if all_casualties:
+    def _report_casualties(self, casualties, nxt):
+        """Whoever starved in the last stretch of clock: a death alert, then the loot
+        screen for what they carried, then `nxt`. No popup for hunger itself --
+        COMMAND's alert icon (map_screen._messages) covers it every frame the map is up."""
+        if casualties:
             def show_starvation_loot():
                 from . import loot
                 pool = []
-                for u in all_casualties:
+                for u in casualties:
                     pool += loot.carried_by(u)
                 if pool and self.guild.roster:
                     from .loot_screen import LootScreen
-                    self.scene = LootScreen(self.ui_fonts, self.guild, self.guild.roster, pool, on_done=self._after_activity)
+                    self.scene = LootScreen(self.ui_fonts, self.guild, self.guild.roster, pool, on_done=nxt)
                 else:
-                    self._after_activity()
+                    nxt()
 
             def show_death_alert():
                 from .alert_screen import AlertScreen
-                msgs = [f"{u.name} starved to death." for u in all_casualties]
+                msgs = [f"{u.name} starved to death." for u in casualties]
                 self.scene = AlertScreen(self.ui_fonts, self.scene, "DEATH ALERT", msgs, on_done=show_starvation_loot, is_danger=True)
 
-            nxt = show_death_alert
+            show_death_alert()
+        else:
+            nxt()
 
-        nxt()
+    def _tick_outside_map(self, hours, busy=()):
+        """An hour a screen spends away from the tick/orders loop (a wagon repair): run
+        it through `campaign.advance` like `_hunt_tick`, so the other groups' orders stay
+        in lockstep with the clock and whatever falls due is queued for `_after_activity`.
+        Returns `(events, casualties)`, the shape of `Guild.pass_time` -- the contract
+        `Guild.repair_wagon`'s `tick` relies on; the dead are also reported once the
+        screen is left."""
+        result = campaign.advance(self.guild, dt=hours, busy=busy)
+        self._pending += result.pending
+        self._screen_dead = (*self._screen_dead, *result.casualties)
+        if result.wiped:
+            self._campaign_over()
+        return result.events, result.casualties
 
     def _land_on_map_paused(self, group, order):
         # No more "AMBUSH! [FIGHT]" popup -- land back on the map with this
@@ -351,6 +414,8 @@ class App:
         self._pending = rest
 
     # order.kind -> opener(self, group, node, order); a new activity is one line.
+    _screen_dead: ClassVar[tuple] = ()     # starved during a screen's hour, until the screen is left
+
     _ACTIVITY_OPENERS: ClassVar[dict] = {
         "arena": lambda s, g, n, o: s._open_arena(g, n),
         "market": lambda s, g, n, o: s._open_market_stalls(list(g.members), n, None),
@@ -390,6 +455,10 @@ class App:
         """Continue draining the last tick's pending orders, or return to the
         map once there are none left. Every activity screen's on_done/on_back
         routes here instead of straight back to the map."""
+        if self._screen_dead:
+            dead, self._screen_dead = self._screen_dead, ()
+            self._report_casualties(dead, self._after_activity)
+            return
         while self._pending:
             group, order = self._pending.pop(0)
             if group.empty:
@@ -448,7 +517,7 @@ class App:
 
     def _open_garage(self, group, node):
         from .garage_screen import GarageScreen
-        self.scene = GarageScreen(self.ui_fonts, self.guild, group,
+        self.scene = GarageScreen(self.ui_fonts, self.guild, group, on_tick=self._tick_outside_map,
                                   on_done=lambda: self._open_city_property(group, node))
 
     def _resolve_repossession_return(self):
@@ -484,7 +553,7 @@ class App:
 
     def _open_claim_garage(self, group, node):
         from .garage_screen import GarageScreen
-        self.scene = GarageScreen(self.ui_fonts, self.guild, group, claim=True,
+        self.scene = GarageScreen(self.ui_fonts, self.guild, group, claim=True, on_tick=self._tick_outside_map,
                                   on_done=lambda: self._open_wilds_claim(group, node))
 
     def _start_claim_clear_battle(self, group):

@@ -133,10 +133,11 @@ def _race_tag(u):
 
 class MapScreen(Screen):
     native = True
+    on_abandon = None
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
                 pending_event=None, on_resolve_event=None, on_autowin=None,
-                on_visit_tavern=None, on_visit_claim=None):
+                on_visit_tavern=None, on_visit_claim=None, on_abandon=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -147,6 +148,7 @@ class MapScreen(Screen):
         self._pending_event = pending_event    # (Group, Order) an ambush paused here -- see app._resolve_pending_event
         self.on_resolve_event = on_resolve_event
         self.on_autowin = on_autowin
+        self.on_abandon = on_abandon
         self.on_visit_tavern = on_visit_tavern
         self.on_visit_claim = on_visit_claim
         self.autowin_estimator = autowin.AutoWinEstimator()
@@ -392,6 +394,9 @@ class MapScreen(Screen):
     def _go(self, target):
         if (self.selected.busy or self._group_blocked(self.selected)
                 or target.id == self.selected.node):
+            return
+        if self.on_abandon is not None and any(w.broken for w in self.selected.wagons):
+            self.on_abandon(self.selected, target.id)
             return
         try:
             self.selected.order = orders.travel(self.selected, target.id)

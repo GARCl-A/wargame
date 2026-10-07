@@ -4,7 +4,8 @@ Bankers' debt and the garrison's stockpile.
 Mixed into `guild.Guild`; the stores themselves live in `holdings.py`.
 """
 
-from . import economy, magic, world
+from . import data, economy, magic, world
+from . import wagon as wagons
 from .constants import fmt_money
 
 
@@ -39,6 +40,41 @@ class HoldingsMixin:
             return False
         group.remove_wagon(wagon)
         garage.wagons.append(wagon)
+        return True
+
+    def repair_wagon(self, crew, wagon, tick=None):
+        """Mend `wagon` where the group stands: the Lumber out of someone's pack, an hour
+        of the clock and an INT check by the best of `crew`. The Lumber and the hour are
+        spent whether or not it holds. `tick(hours, busy=...)` runs the hour (default
+        `pass_time`; the app passes one that keeps the other groups' orders in step).
+        Returns `(ok, events, casualties)`; whoever starved meanwhile is in both."""
+        name = wagon.kind.lower()
+        if not wagon.needs_repair:
+            return False, [f"the {name} needs no repair."], []
+        cost = wagon.repair_cost
+        holders = [u for u in crew if u.count_of(wagons.REPAIR_ITEM)]
+        if sum(u.count_of(wagons.REPAIR_ITEM) for u in holders) < cost:
+            return False, [f"it takes {cost} {wagons.REPAIR_ITEM} to mend the {name}."], []
+        left = cost
+        for u in holders:
+            left -= u.remove_named(wagons.REPAIR_ITEM, left)
+        events, casualties = (tick or self.pass_time)(wagons.REPAIR_HOURS, busy=crew)
+        events = [*events, *(f"{u.name} starved to death." for u in casualties)]
+        smith = wagons.repairer(crew)
+        total = data.d20() + smith.mod_intelligence
+        if total < wagons.REPAIR_DC:
+            miss = (f"{smith.name} fails to mend the {name} ({total} vs DC {wagons.REPAIR_DC}) "
+                    f"-- the {wagons.REPAIR_ITEM} is wasted.")
+            return False, [miss, *events], casualties
+        gained = wagon.repair()
+        return True, [f"{smith.name} mends the {name}: +{gained} HP ({wagon.hp}/{wagon.hp_max}).", *events], casualties
+
+    def abandon_wagon(self, group, wagon):
+        """Leave a wagon behind for good, cargo and all (the caller let the player unload
+        it first). Its animals stay in the group."""
+        if wagon not in group.wagons:
+            return False
+        group.remove_wagon(wagon)
         return True
 
     def park_animal(self, group, animal, garage=None):

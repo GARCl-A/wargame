@@ -216,7 +216,10 @@ def column(surf, F, rect, member, scroll, mouse):
     lookup:
       {"sheet_rect", "head_rect", "slot_rects": {kind: rect_or_None}, "pack_zone",
        "pack_area", "pack_hits": [(rect, idx)], "lock_hits": [(rect, idx)],
-       "dots_hits": [(rect, idx)], "scroll"}
+       "dots_hits": [(rect, idx)], "scroll", "action_rect"}
+    `member` may also carry `status: {"text", "danger"}` (a line under the header) and
+    `action: {"label", "enabled"}` (one button row; its rect comes back as
+    `action_rect`, None without an action).
     """
     pygame.draw.rect(surf, T.STEEL, rect)
     pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
@@ -250,6 +253,16 @@ def column(surf, F, rect, member, scroll, mouse):
              (head.right - T.S * 2, head.y + T.S * 7 + 2), T.BLOOD, right=True)
 
     y = head.bottom + T.S * 4
+    status = member.get("status")
+    if status:
+        caps(surf, F["microb"], status["text"], (x, y - T.S), T.BLOOD if status.get("danger") else T.TX_MUTED)
+        y += T.S * 3
+    action_rect = None
+    if member.get("action"):
+        act = member["action"]
+        action_rect = pygame.Rect(x, y, w, T.S * 5)
+        draw_button(surf, F, action_rect, act["label"], enabled=act.get("enabled", True), mpos=mouse)
+        y = action_rect.bottom + T.S * 3
     slot_rects = {}
     for kind in ("hand", "offhand", "tongue", "armor", "tack"):
         held = member.get(kind, "skip")
@@ -275,7 +288,7 @@ def column(surf, F, rect, member, scroll, mouse):
         text(surf, F["body_sm"], "carrying nothing", (x, y + 4), T.TX_FAINT)
         return {"sheet_rect": sheet_rect, "head_rect": head, "slot_rects": slot_rects, "pack_zone": pack_zone,
                 "pack_area": pack_area, "pack_hits": pack_hits, "lock_hits": lock_hits,
-                "dots_hits": dots_hits, "scroll": 0}
+                "dots_hits": dots_hits, "scroll": 0, "action_rect": action_rect}
 
     # `scroll` is an item-index offset (rows scrolled past), not pixels --
     # it's `PackColumnMixin`'s own wheel handler that owns this value
@@ -304,7 +317,7 @@ def column(surf, F, rect, member, scroll, mouse):
 
     return {"sheet_rect": sheet_rect, "head_rect": head, "slot_rects": slot_rects, "pack_zone": pack_zone,
             "pack_area": pack_area, "pack_hits": pack_hits, "lock_hits": lock_hits,
-            "dots_hits": dots_hits, "scroll": scroll}
+            "dots_hits": dots_hits, "scroll": scroll, "action_rect": action_rect}
 
 
 def shop_row(surf, F, rect, item, *, qty_sel, mouse):

@@ -45,19 +45,7 @@ while building them:
   the wagon is a box and transport is derived.
 - Wagons never enter a battle map: when combat starts, passengers get off and fight.
 
-- **Broken wagons.** A wagon cannot die: at 0 HP it breaks (the Automaton's Inorganic Body
-  rule). It stays in the group, does not move, adds nothing to speed and carries no cargo.
-  Repaired like an Automaton (Stabilize, INT vs DC 15) out of combat, costing Lumber and
-  crafting time, or abandoned (travelling with it broken is abandoning it); cargo can be
-  unloaded into packs first. Needs something that damages wagons first: wear in travel, or a
-  wagon on a battle map.
 - **Garrison leader and size.** Who leads a garrison and how large it may be (the leader
   decides the herd and the group size there).
-- **Garage tuning.** The house garage's flat 690 cp per tier and the Claim garage's flight
-  chance stay as they are until play shows what they should do.
-- **Price retune from play.** The Horse's 480 cp and the mobility premium are the first
-  suspects.
-- **Wild Donkey / Ox / Horse.** Not rolled anywhere; their racial modifiers (+2 / +3 / +5)
-  only matter if one ever is (a Horse at 3d6 +5 could reach 23, so revisit then).
 - **Riding and mounts** (separate arc). A riding saddle enters `animals.TACK`; the rider and
   animal pair goes into combat. The creature abstraction should not make it harder.

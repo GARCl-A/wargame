@@ -291,6 +291,7 @@ def advance(guild, dt=None, busy=()):
             # queue the next edge, rather than resolving the whole route at once
             prev = g.node
             g.node = order.dest
+            events += _wear_wagons(g, prev, order.dest)
             pause = _arrival_pause(guild, g, prev, order.path)
             if pause is not None:
                 # NOT g.order = pause: same convention as an interactive order
@@ -308,6 +309,7 @@ def advance(guild, dt=None, busy=()):
         if order.kind == "travel":
             prev = g.node
             g.node = order.dest
+            events += _wear_wagons(g, prev, order.dest)
             pause = _arrival_pause(guild, g, prev, ())
             if pause is not None:
                 pending.append((g, pause))
@@ -327,6 +329,12 @@ def advance(guild, dt=None, busy=()):
         if order.kind in orders.FORCED_KINDS:
             g.pending = order
     return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties, hungry=hungry)
+
+
+def _wear_wagons(group, src, dest):
+    """A leg walked: the road takes its toll on the group's wagons."""
+    distance = next((w for v, w in world.neighbors(src) if v == dest), 0)
+    return group.wear_wagons(distance)
 
 
 def _arrival_pause(guild, group, prev_node, resume_path):

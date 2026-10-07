@@ -50,6 +50,7 @@ loadout. `native = True`. `on_back()` returns to the map.
 import pygame
 
 from . import chest, data, items, magic, missions, world
+from . import wagon as wagon_mod
 from .animals import Animal
 from .wagon import Wagon
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
@@ -73,12 +74,13 @@ def _short(name):
 class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, group, on_back):
+    def __init__(self, fonts, guild, group, on_back, on_tick=None):
         super().__init__()
         self.fonts = fonts                 
         self.guild = guild
         self.group = group
         self.on_back = on_back
+        self.on_tick = on_tick
         self.tab = "gear"
         self.view = "bags"
         self.pinned = list(self.group.members)        # columns shown in BAGS, clamped to fit at draw time
@@ -332,9 +334,20 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
 
         self.selected = [src] if src is not None else []
 
+    def _repair_wagon(self, uid):
+        wagon = next((w for w in self.group.wagons if w.uid == uid), None)
+        if wagon is None:
+            return
+        ok, events, _ = self.guild.repair_wagon(self.group.members, wagon, self.on_tick)
+        if ok:
+            self.group.hitch_idle()
+        self.notice = "  ".join(events)
+
     def _handle_button(self, key):
         if key == "done":
             self.on_back()
+        elif key.startswith("repair:"):
+            self._repair_wagon(key.partition(":")[2])
         elif key == "distribute":
             self.group.distribute_load()
             self.notice = "Redistributed packs by carrying capacity."
@@ -611,7 +624,14 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         else:
             drawn_by = " + ".join(a.species for a in store.draft) or "no animals"
             aboard = f"  ·  {len(store.passengers)} riding" if store.passengers else ""
-            member["name"] = f"{store.kind}  ·  {drawn_by}{aboard}"
+            member["name"] = f"{store.kind}  ·  {'broken' if store.broken else drawn_by}{aboard}"
+            member["status"] = {"text": f"HP {store.hp} / {store.hp_max}" + ("  ·  BROKEN" if store.broken else ""),
+                                "danger": store.broken}
+            if store.needs_repair:
+                have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in self.group.members)
+                member["action"] = {"label": (f"REPAIR  ·  {store.repair_cost} {wagon_mod.REPAIR_ITEM}"
+                                              f"  ·  {wagon_mod.REPAIR_HOURS} h"),
+                                    "enabled": have >= store.repair_cost}
         return member
 
     def _draw_bags(self, screen, F, area):
@@ -638,6 +658,8 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                 self.sheet_hits.append((res["sheet_rect"], u))
             if isinstance(u, Wagon):
                 self.zones.append((res["head_rect"], u, "hitch"))
+                if res["action_rect"] is not None and member["action"]["enabled"]:
+                    self.buttons.append((f"repair:{u.uid}", res["action_rect"]))
             elif isinstance(u, Animal) and u.role == "draft":
                 self.sources.append((res["head_rect"], u, "hitch"))
             for kind, slot_rect in res["slot_rects"].items():

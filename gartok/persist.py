@@ -41,7 +41,7 @@ from .holdings import CityProperty, Garage, Stash
 from .orders import Order
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
-from .wagon import WAGON_HP, Wagon
+from .wagon import VEHICLES, Wagon
 
 # Se estiver rodando como um executável do PyInstaller, sys.frozen será True.
 if getattr(sys, "frozen", False):
@@ -140,11 +140,17 @@ def unit_to_dict(u):
 
 
 def wagon_to_dict(w):
-    return {"uid": w.uid, "kind": w.kind, "hp": w.hp, "contents": _serialize_pack(w.stash.items)}
+    return {"uid": w.uid, "kind": w.kind, "hp": w.hp, "travelled": w.travelled,
+            "contents": _serialize_pack(w.stash.items)}
 
 
 def wagon_from_dict(d):
-    return Wagon(d.get("kind", "Cart"), d.get("hp", WAGON_HP), d.get("contents", []), d.get("uid"))
+    kind = d.get("kind", "Cart")
+    # every wagon saved before Hit Dice had a flat 5 HP, which a Carriage now outgrows
+    hp = d.get("hp")
+    if hp is not None and "travelled" not in d:
+        hp = max(hp, VEHICLES[kind].hp_max)
+    return Wagon(kind, hp, d.get("contents", []), d.get("uid"), d.get("travelled", 0.0))
 
 
 def garage_from_dict(d, unlimited=False):

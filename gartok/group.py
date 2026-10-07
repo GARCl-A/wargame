@@ -71,7 +71,20 @@ class Group:
 
     def pulling(self, animal):
         """The wagon of this group `animal` is hitched to, or None."""
-        return next((w for w in self.wagons if w.uid == animal.hitch and animal.role == "draft"), None)
+        return next((w for w in self.wagons
+                     if w.uid == animal.hitch and animal.role == "draft" and not w.broken), None)
+
+    def wear_wagons(self, distance):
+        """The road wears every wagon (`Wagon.wear`); one that breaks lets its animals go
+        -- they stay in the herd. Returns the log lines."""
+        events = []
+        for wagon in self.wagons:
+            if wagon.wear(distance) and wagon.broken:
+                for animal in self.herd:
+                    if animal.hitch == wagon.uid:
+                        animal.hitch = None
+                events.append(f"the {wagon.kind.lower()} of {self.display_name} breaks down on the road.")
+        return events
 
     def hitch(self, animal, wagon, *, swap=False):
         """Harness `animal` to `wagon` (None unhitches). False if the animal wears no

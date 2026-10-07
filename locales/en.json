@@ -229,7 +229,8 @@
       "body": [
         "Animals belong to the group, and the tack they wear decides their job: a Pack Saddle lets one carry cargo on its back, a Harness lets it pull the group's wagon. Fit tack here, or drag a saddle onto the animal on the gear screen.",
         "A cart ($150) holds up to 180 kg and a carriage ($600) up to 540 kg; that cargo never goes into a fight, and everyone eats from it on the road. Each animal wearing a Harness is hitched to one wagon (the HITCH button here, or drag the animal's header onto the wagon's on the gear screen), and the wagon holds no more than its animals can draw -- with none, the box is shut.",
-        "Animals eat a ration a day from what the group carries and starve after three unfed days. If the whole group dies, the animals and the wagon go with it; if anyone gets away, they stay."
+        "Animals eat a ration a day from what the group carries and starve after three unfed days. If the whole group dies, the animals and the wagon go with it; if anyone gets away, they stay.",
+        "The road wears a wagon down, 1 HP every 100 units travelled. At 0 HP it breaks: it stops pulling and carrying until you REPAIR it on the group screen (Lumber and an hour; the group's best INT rolls against DC 15), and setting out with it broken means leaving it behind."
       ]
     }
   }
