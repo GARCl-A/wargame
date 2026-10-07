@@ -64,7 +64,7 @@ FOOD = sorted(data.FOOD_ITEMS)                       # {"Meat", "Potato"}
 TRADE_GOODS = sorted(
     {o["item"] for o in map(data.occupation_by_name, OCCUPATIONS)
      if o["item"] not in data.CREATURE_ITEMS}
-    | set(FOOD) | {"Torch", "Rope", "Sack"}
+    | set(FOOD) | {"Torch", "Rope"}
 )
 
 # What each occupation produces per day in --mode production (its table item).

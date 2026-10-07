@@ -42,7 +42,7 @@ def test_ambient_light_sees_without_a_torch():
     batt.ground = []                                  # nothing emitting light
     for u in batt.units:                              # no light source, no darkvision
         u.weapon_hand = u.torch_hand = False
-        u.inventory, u._ability = ["Sack"], abilities.get("none")
+        u.inventory, u._ability = ["Rope"], abilities.get("none")
     p, e = batt.units
     p.pos, e.pos = (2, 2), (12, 9)
     assert batt.can_see(p, (8, 2)) is True            # daylight: a torch would be needed in the arena

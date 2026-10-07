@@ -622,13 +622,7 @@
     "food": false,
     "lifespan": null
   },
-  "Scales": {
-    "weight": 1.0,
-    "price": 2,
-    "food": false,
-    "lifespan": null
-  },
-  "Sack": {
+  "Pliers": {
     "weight": 0.3,
     "price": 2,
     "food": false,
@@ -667,12 +661,6 @@
   "Letter of Receipt": {
     "weight": 0.1,
     "price": 1,
-    "food": false,
-    "lifespan": null
-  },
-  "Iron Shackles": {
-    "weight": 1.0,
-    "price": 2,
     "food": false,
     "lifespan": null
   },

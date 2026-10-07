@@ -151,7 +151,7 @@ def test_dark_map_only_sees_own_cell():
     batt.ground = []                                  # no torches on the ground
     for u in batt.units:                              # no light source, no darkvision
         u.weapon_hand = u.torch_hand = False
-        u.inventory, u._ability = ["Sack"], abilities.get("none")
+        u.inventory, u._ability = ["Rope"], abilities.get("none")
     p, e = batt.units
     p.pos, e.pos = (2, 2), (12, 9)
     assert batt.can_see(p, p.pos) is True

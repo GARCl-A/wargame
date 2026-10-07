@@ -48,16 +48,15 @@ it here and, if it changed a design premise, record it in `AGENTS.md` or the doc
 Each occupation starts with one item (`data.OCCUPATIONS`) and about half the recruits got
 one with no use at all. Rule: every occupation's item is useful and **unique to it**, as
 an occupation is only a weapon and an item. Items that already work: Meat, Potato, Quiver,
-1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, First Aid Kit, Lantern, Scroll, Dictionary.
+1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, First Aid Kit, Lantern, Scroll, Dictionary,
+Salt, Ink, Rope, Bear Trap. Amethyst is only a store of value, and Rotten Food is the
+Slave's on purpose (eating it makes you sick).
 The rest each need a mechanic, or a swap to an item that has one:
 
-- **Duplicates to split.** Hunter and Mercenary both carry Rope; Merchant and Messenger
-  both carry Sack; Jailer (Iron Shackles) and Slave (Chains) are the same thing. Each pair
-  needs different items, simple or cheap is fine.
-- **Goldsmith's Scales.** Swap for a jeweller's tool, to sit ready for jewellery crafting.
 - **Crafting tools.** Crafting consumes everything today. Let a recipe also require a tool
   that is not consumed (a cart needs wood, nails and a saw). Gives Chisel, Scissors, Shovel,
-  the Goldsmith's tool and the Hunter/Mercenary fix a job. Shapes the future wagon recipe.
+  and the Goldsmith's Pliers a job (and jewellery crafting, when it exists). Shapes the
+  future wagon recipe.
 - **Prisoners.** Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Claim construction: oven.** Built at the Claim with time and Stone Brick; like the
@@ -66,7 +65,11 @@ The rest each need a mechanic, or a swap to an item that has one:
 - **Animals in combat.** The Shepherd's Sheep only stands still on the board today.
   Controllable and AI-driven animals share the *Riding and mounts* arc below.
 - **Inventory containers.** Decide whether the inventory should be split into containers
-  at all. If yes, Sack gets its role; if not, Merchant and Messenger need other items.
+  at all. Sack and Iron Shackles were removed from the catalogue; bring a container back
+  when this is decided.
+- **Signal Horn** (new item, not a starting item: too strong). A combat action that warns
+  allies, for example extra movement or drawing attention. Talks to the Alarm Trap and the
+  Alert talent. Needs the action, AI support and tests.
 - **Cloak.** Equipped in the armour slot, +1 to the guard test (`justice.guard_test`) for
   a character with crime. No effect on a clean record.
 - **Map.** Finds treasures and secret zones. Waits for those systems.

@@ -81,15 +81,15 @@ Each occupation grants one starting weapon and one starting item.
 | Craftsman | Light Hammer | Chisel |
 | Barber | Dagger | Scissors |
 | Crossbowman | Light Crossbow | Quiver |
-| Hunter | Shortspear | Rope |
-| Jailer | Club | Iron Shackles |
+| Hunter | Shortspear | Bear Trap |
+| Jailer | Club | Chains |
 | Cartographer | Dagger | Map |
 | Brewer | Dagger | 1L Beer |
-| Merchant | Dagger | Sack |
+| Merchant | Dagger | Amethyst |
 | Builder | Hammer | Stone Brick |
 | Tanner | Dagger | 1sqm Hide |
 | Gravedigger | Light Pick | Shovel |
-| Slave | Club | Chains |
+| Slave | Club | Rotten Food |
 | Scribe | Dagger | Scroll |
 | Blacksmith | Hammer | Iron Bar |
 | Guard | Club | Lantern |
@@ -99,11 +99,11 @@ Each occupation grants one starting weapon and one starting item.
 | Woodcutter | Axe | Lumber |
 | Linguist | Dagger | Dictionary |
 | Physician | Dagger | First Aid Kit |
-| Messenger | Quarterstaff | Sack |
+| Messenger | Quarterstaff | Ink |
 | Mercenary | Axe | Rope |
 | Miner | Pick | 1kg Coal |
 | Musician | Dagger | Musical Instrument |
-| Goldsmith | Dagger | Scales |
+| Goldsmith | Dagger | Pliers |
 | Priest | Quarterstaff | Holy Symbol |
 | Shepherd | Quarterstaff | Sheep |
 | Innkeeper | Dagger | Salt |
@@ -212,7 +212,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Holy Symbol | 0.5 kg | -- |
 | Ink | 0.1 kg | material |
 | Iron Bar | 5 kg | material |
-| Iron Shackles | 1 kg | -- |
 | Jerky | 0.5 kg | food, consumable |
 | Lantern | 1 kg | light 6 sq |
 | Large Axe | 6 kg | -- |
@@ -245,6 +244,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Paper | 0.1 kg | material |
 | Pick | 3 kg | -- |
 | Plate Armor | 28 kg | -- |
+| Pliers | 0.3 kg | -- |
 | Potato | 1 kg | food, consumable |
 | Quarterstaff | 2 kg | -- |
 | Quiver | 1.5 kg | -- |
@@ -252,9 +252,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Red Mushroom | 0.1 kg | material |
 | Rope | 2 kg | material |
 | Rotten Food | 1 kg | food, consumable |
-| Sack | 0.3 kg | -- |
 | Salt | 0.5 kg | material |
-| Scales | 1 kg | -- |
 | Scissors | 0.2 kg | -- |
 | Scroll | 0.1 kg | -- |
 | Scroll of Floating Disk | 0.1 kg | -- |
