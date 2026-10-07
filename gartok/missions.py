@@ -193,7 +193,7 @@ def turn_in(guild, mission):
     n = len(group.members)
     base, rem = divmod(t.reward, n)
     for i, u in enumerate(group.members):
-        u.gold += base + (1 if i < rem else 0)
+        u.money += base + (1 if i < rem else 0)
     mission.state = "done"
     return factions.settle(guild, factions.Event(
         "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))

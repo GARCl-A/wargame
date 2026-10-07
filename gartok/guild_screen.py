@@ -408,7 +408,7 @@ class GuildScreen(Screen):
             "armor": unit.armor_name if unit.armor else "None",
             "armor_note": (f"+{unit.armor['ac']} AC" + (f"  -{unit.armor.speed_penalty} SPD"
                                                        if unit.armor.speed_penalty else "")) if unit.armor else "",
-            "coins": unit.gold,
+            "coins": unit.money,
             "rations": (unit.rations, unit.ability.id == "autotroph"),
             "load": (load, norm, mx), "load_state": state,
         }

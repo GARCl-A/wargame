@@ -7,6 +7,7 @@ this particular group (see `missions.py`'s module docstring).
 """
 
 from . import missions
+from .constants import fmt_money
 from .ui.mission_offer_screen import MissionOfferScreen
 
 
@@ -34,7 +35,7 @@ class TannerScreen(MissionOfferScreen):
                      if t.giver == self.GIVER and t.node == self.group.node), None)
 
     def get_req_str(self, t):
-        return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {t.reward} copper  ·  deadline: {t.deadline_days} days"
+        return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {fmt_money(t.reward)}  ·  deadline: {t.deadline_days} days"
 
     def get_status_str(self, t, progress, ready, days_left):
         return f"{progress} / {t.goal_qty} {t.goal_item}  ·  {days_left} day(s) left"
@@ -43,4 +44,4 @@ class TannerScreen(MissionOfferScreen):
         return "TURN IN" if ready else f"NEED {t.goal_qty - progress} MORE"
 
     def get_success_notice(self, reward):
-        return f"paid out {reward} copper, split across the group."
+        return f"paid out {fmt_money(reward)}, split across the group."

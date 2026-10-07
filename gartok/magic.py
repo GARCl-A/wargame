@@ -112,9 +112,9 @@ def progress_study(unit, group=None):
     target set, no matching item, not initiated -- rent still comes due)."""
     if not unit.study_target:
         return None
-    if unit.gold < economy.TAVERN_STUDY_COST_PER_DAY:
+    if unit.money < economy.TAVERN_STUDY_COST_PER_DAY:
         return f"{unit.name} could not afford the rent to study."
-    unit.gold -= economy.TAVERN_STUDY_COST_PER_DAY
+    unit.money -= economy.TAVERN_STUDY_COST_PER_DAY
     spell = SPELLS.get(unit.study_target)
     if spell is not None:
         return _progress_spell(unit, spell, group=group)

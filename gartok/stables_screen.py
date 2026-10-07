@@ -10,6 +10,7 @@ the group's leader.
 import pygame
 
 from . import animals, data, economy, items, wagon
+from .constants import fmt_money
 from .screen import Screen
 from .ui.primitives import draw_button, ellipsize, footer_bar, panel, section, text
 from .ui.tokens import T
@@ -46,7 +47,7 @@ class StablesScreen(Screen):
 
     @property
     def wealth(self):
-        return sum(m.gold for m in self.group.members)
+        return sum(m.money for m in self.group.members)
 
     @property
     def _keeper(self):
@@ -54,13 +55,13 @@ class StablesScreen(Screen):
 
     def _pay(self, price, what):
         if self.wealth < price:
-            self.notice = f"{what} costs {price} copper -- the party has {self.wealth}."
+            self.notice = f"{what} costs {fmt_money(price)} -- the party has {fmt_money(self.wealth)}."
             return False
         economy.charge_richest_first(self.group.members, price)
         return True
 
     def _receive(self, amount):
-        self._keeper.gold += amount
+        self._keeper.money += amount
 
     # ------------------------------------------------------------------ #
     def handle_event(self, event):
@@ -149,7 +150,7 @@ class StablesScreen(Screen):
         text(screen, F["titleb"], "THE STABLES", (m, m - 2), T.TX)
         text(screen, F["body"], "animals, wagons and tack  ·  they belong to the group that buys them",
              (m, m + 30), T.TX_MUTED)
-        text(screen, F["bodyb"], f"party holds {self.wealth} cp", (screen.get_width() - m, m + 4), T.BRASS, right=True)
+        text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (screen.get_width() - m, m + 4), T.BRASS, right=True)
 
         top = m + 62
         area = pygame.Rect(m, top, min(760, screen.get_width() - 2 * m), screen.get_height() - top - 80)
@@ -178,7 +179,7 @@ class StablesScreen(Screen):
                 text(screen, F["body_sm"], "Nothing is pulling it -- the cargo box is shut.", (x, y + 38), T.BLOOD)
             if not w_.stash.items:
                 self.add_button(screen, pygame.Rect(x + w - 190, y, 190, 28), f"sell_wagon:{i}",
-                                f"SELL  ·  {_resale(w_.price)} c")
+                                f"SELL  ·  {fmt_money(_resale(w_.price))}")
             y += 62
         if not g.wagons:
             text(screen, F["body_sm"], "Cargo that never goes into a fight and feeds the group on the road. "
@@ -188,7 +189,7 @@ class StablesScreen(Screen):
         for n, vehicle in enumerate(wagon.VEHICLES.values()):
             can = self.wealth >= vehicle.price
             self.add_button(screen, pygame.Rect(x + n * (half + T.S), y, half, 40), f"buy_wagon:{vehicle.name}",
-                            f"BUY A {vehicle.name.upper()}  ·  {vehicle.price} c", enabled=can, primary=can,
+                            f"BUY A {vehicle.name.upper()}  ·  {fmt_money(vehicle.price)}", enabled=can, primary=can,
                             sub=f"holds {vehicle.capacity} kg  ·  {vehicle.slots} animal(s) to pull")
         return y + 46
 
@@ -202,7 +203,7 @@ class StablesScreen(Screen):
                 note = f"unfed {a.unfed_days} day(s)  ·  " + note
             text(screen, F["bodyb"], a.species, (x, y + 4), T.TX)
             bx = x + w - 130
-            self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"sell:{i}", f"SELL · {_resale(a.price)} c")
+            self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"sell:{i}", f"SELL · {fmt_money(_resale(a.price))}")
             if a.tack:
                 bx -= 138
                 self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"unfit:{i}", "TAKE TACK OFF")
@@ -216,7 +217,7 @@ class StablesScreen(Screen):
                     price = _tack_price(tack)
                     bx -= 138
                     self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"fit:{i}:{tack}",
-                                    f"{tack.upper()} · {price} c", enabled=self.wealth >= price)
+                                    f"{tack.upper()} · {fmt_money(price)}", enabled=self.wealth >= price)
             text(screen, F["body_sm"], ellipsize(note, F["body_sm"], bx - (x + 80) - T.S),
                  (x + 80, y + 6), T.BLOOD if a.unfed_days else T.TX_MUTED)
             y += 36
@@ -228,7 +229,7 @@ class StablesScreen(Screen):
             sample = animals.Animal(species)
             can = g.can_take(sample) and self.wealth >= sample.price
             self.add_button(screen, pygame.Rect(x, y, w, 40), f"buy:{species}",
-                            f"BUY A {species.upper()}  ·  {sample.price} c", enabled=can, primary=can,
+                            f"BUY A {species.upper()}  ·  {fmt_money(sample.price)}", enabled=can, primary=can,
                             sub=(f"carries {sample.back_load} kg  ·  draws {sample.draw} kg  ·  speed {sample.speed:g} m"
                                  "  ·  eats a ration a day"))
             y += 46

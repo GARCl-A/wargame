@@ -79,20 +79,20 @@ def test_leader_who_cannot_speak_the_vendors_tongue_does_not_block_the_pitch():
 
 def test_scroll_pricing_scales_with_level():
     # Formula: 180 * (level + 1) + 105 * level
-    # Level 0 (e.g. Magic Missile, Light Globe): 180 cp
+    # Level 0 (e.g. Magic Missile, Light Globe): $180
     assert economy.scroll_price(0) == 180
     assert economy.buy_price("Scroll of Magic Missile", 0.0) == 180
     assert economy.sell_price("Scroll of Magic Missile", 0.0) == 90
     assert economy.buy_price("Scroll of Light Globe", 0.0) == 180
 
-    # Level 1 (e.g. Sleep): 180 * 2 + 105 * 1 = 465 cp
+    # Level 1 (e.g. Sleep): 180 * 2 + 105 * 1 = $465
     assert economy.scroll_price(1) == 465
     assert economy.buy_price("Scroll of Sleep", 0.0) == 465
     assert economy.sell_price("Scroll of Sleep", 0.0) == 232
 
 
 def test_fruit_price_and_market_stock():
-    # Fruit must be cheaper than Meat (5 cp) and more expensive than Potato (3 cp)
+    # Fruit must be cheaper than Meat ($5) and more expensive than Potato ($3)
     assert economy.PRICES["Fruit"] == 4
     assert economy.PRICES["Potato"] < economy.PRICES["Fruit"] < economy.PRICES["Meat"]
     assert "Fruit" in economy.MARKET_STOCK

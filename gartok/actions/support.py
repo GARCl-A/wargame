@@ -5,6 +5,7 @@ import random
 from .. import data
 from ..board import cells, chebyshev
 from ..conditions import Demoralized
+from ..constants import fmt_money
 from ..data import d20
 from ..ground import GroundObject
 from .base import Action, _cell_free, _pickable
@@ -78,8 +79,8 @@ class PickUp(Action):
             for it in contents:
                 amt = loot.parse_currency(it)
                 if amt:
-                    actor.char.gold += amt
-                    battle.log(f"{actor.name} finds {amt} copper in the chest!")
+                    actor.char.money += amt
+                    battle.log(f"{actor.name} finds {fmt_money(amt)} in the chest!")
                 else:
                     actor.inventory.append(it)
                     if not hasattr(actor, "picked_up_items"):

@@ -28,18 +28,18 @@ When the two disagree, `REFERENCE.md` wins.
   better. Systems land bit by bit.
 - **Disposable early squad.** Early mortality is very high; starters are meant
   to be lost.
-- **No guild treasury.** Money lives on the character -- as `Copper Coin` items in the pack (it weighs, splits and moves like any item).
+- **No guild treasury.** Money lives on the character -- as `Copper Coin` ($1) and `Gold Coin` ($100) items in the pack (they weigh, split and move like any item). `Unit.money` is their sum in `$`; paying spends copper first, then breaks gold and returns change. Gold only exists through the bank exchange (`economy.buy_gold` / `sell_gold`, $1 fee per coin each way); loot, wages and rewards are copper.
 - **Vision is per-character.** The map is always dark; on your turn you see
   what the active unit sees.
 - **Adventure out-earns day labour.** In Gartok the risk pays: lumber is only a
-  survival floor (16 h = cheapest meal + 1 cp), the arena and the wilds pay
+  survival floor (16 h = cheapest meal + $1), the arena and the wilds pay
   more. Re-run `scripts/economy_sim.py` after touching wages, purses or loot.
 
 ## Architecture — one concern per module
 
 | Module | Role |
 |---|---|
-| `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, pack, stack helpers; `Unit.gold` is the Copper Coin stack in the pack, 200 = 1 kg) |
+| `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, pack, stack helpers; `Unit.money` is the coins in the pack, 200 coins = 1 kg) |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant |
 | `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells`, registry in `__init__.py` |

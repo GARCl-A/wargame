@@ -52,12 +52,12 @@ def test_repossess_returns_the_owed_rent_and_empties_the_house():
 
 def test_a_squatter_is_not_taxed():
     p = Unit("player")
-    p.gold = 1000
+    p.money = 1000
     guild = Guild([p])
     guild.buy_city_property()
     guild.house.squat()
     guild.pass_time(economy.CITY_PROPERTY_TAX_PERIOD_DAYS * 24 * 2)
-    assert p.gold == 1000 and guild.house.missed_payments == 0
+    assert p.money == 1000 and guild.house.missed_payments == 0
 
 
 def test_food_rots_in_the_bank_and_in_the_house():

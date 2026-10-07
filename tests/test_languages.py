@@ -53,7 +53,7 @@ def _student(language="Elvish"):
 def test_studying_a_language_needs_no_magic_source():
     random.seed(1)
     u = _student()
-    u.gold = 1000
+    u.money = 1000
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -66,14 +66,14 @@ def test_studying_a_language_needs_no_magic_source():
         data.roll = saved
 
     assert u.study_progress == 10 + u.mod_intelligence
-    assert u.gold == 1000 - 15                    # economy.TAVERN_STUDY_COST_PER_DAY
+    assert u.money == 1000 - 15                    # economy.TAVERN_STUDY_COST_PER_DAY
     assert "Elvish" not in u.languages             # not enough points yet
 
 
 def test_studying_masters_the_language_once_enough_points_are_banked():
     random.seed(1)
     u = _student()
-    u.gold = 1000
+    u.money = 1000
     u.study_progress = magic.points_to_learn(0) - 1
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
@@ -95,7 +95,7 @@ def test_studying_a_language_without_the_dictionary_makes_no_progress():
     random.seed(1)
     u = _student()
     u._base_inventory.clear()          # dictionary lost/sold
-    u.gold = 1000
+    u.money = 1000
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -103,19 +103,19 @@ def test_studying_a_language_without_the_dictionary_makes_no_progress():
     guild.pass_time(24)
 
     assert u.study_progress == 0
-    assert u.gold == 1000 - 15         # the room is still rented either way
+    assert u.money == 1000 - 15         # the room is still rented either way
 
 
 def test_progress_study_ignores_a_target_that_is_neither_spell_nor_language():
     u = Unit("player")
     u.study_target = "not-a-real-spell-or-language"
-    u.gold = 1000
+    u.money = 1000
 
     event = magic.progress_study(u)
 
     assert event is None
     assert u.study_progress == 0
-    assert u.gold == 1000 - 15         # the room is still rented either way
+    assert u.money == 1000 - 15         # the room is still rented either way
 
 
 def test_studying_a_language_with_shared_party_dictionary():
@@ -125,7 +125,7 @@ def test_studying_a_language_with_shared_party_dictionary():
     student.magic_source = None
     student.languages = ["Ankarin"]
     student.study_target = "Elvish"
-    student.gold = 1000
+    student.money = 1000
 
     companion = Unit("player")
     companion.give_to_pack("Dictionary of Elvish")
@@ -137,20 +137,20 @@ def test_studying_a_language_with_shared_party_dictionary():
     guild.pass_time(24)
 
     assert student.study_progress > 0
-    assert student.gold == 1000 - 15
+    assert student.money == 1000 - 15
 
 
 def test_idle_member_pays_no_rent_and_order_ends_when_nobody_studies():
     u = Unit("player")
     u.study_target = None
-    u.gold = 1000
+    u.money = 1000
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
 
     guild.pass_time(24)
 
-    assert u.gold == 1000
+    assert u.money == 1000
     assert g.order is None
 
 
@@ -204,7 +204,7 @@ def test_mastering_a_language_releases_the_lock_too():
     student, companion = Unit("player"), Unit("player")
     student.magic_source = None
     student.languages = ["Ankarin"]
-    student.gold = 1000
+    student.money = 1000
     companion.give_to_pack("Dictionary of Elvish")
     magic.begin_study(student, "Elvish", [student, companion])
     student.study_progress = magic.points_to_learn(0)

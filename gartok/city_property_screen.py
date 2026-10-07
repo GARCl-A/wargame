@@ -17,6 +17,7 @@ and the guard actually comes -- `campaign.py`'s "eviction" pause).
 import pygame
 
 from . import economy
+from .constants import fmt_money
 from .screen import Screen
 from .stash_screen import StashScreen
 from .ui.primitives import draw_button
@@ -53,21 +54,21 @@ class CityPropertyScreen(StashScreen):
         if g.house.owned:
             rows = []
             if not g.house.oven:
-                rows.append(("oven", "BUY AN OVEN", f"{economy.OVEN_PRICE} c  ·  unlocks cooking at the house",
+                rows.append(("oven", "BUY AN OVEN", f"{fmt_money(economy.OVEN_PRICE)}  ·  unlocks cooking at the house",
                              self.purse >= economy.OVEN_PRICE))
             elif self.on_cook:
                 rows.append(("cook", "COOK", "turn Meat and Salt into Jerky, which keeps for 20 days", True))
             if self.on_garage:
                 garage = g.house.garage
                 sub = (f"{len(garage.wagons)} / {garage.tier} wagons  ·  {len(garage.herd)} / {garage.tier} animals"
-                       if garage.open else f"{economy.GARAGE_PRICE} c  ·  keeps a wagon and an animal at the house")
+                       if garage.open else f"{fmt_money(economy.GARAGE_PRICE)}  ·  keeps a wagon and an animal at the house")
                 rows.append(("garage", "GARAGE", sub, True))
             return rows
         if g.house.squatting:
             return []
         rep_ok = g.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
         can_buy = rep_ok and not g.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
-        sub = (f"{economy.CITY_PROPERTY_PRICE} c  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
+        sub = (f"{fmt_money(economy.CITY_PROPERTY_PRICE)}  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
               f"standing with the Bankers (have {g.reputation.get('bankers', 0)})")
         return [("buy", "BUY THE HOUSE", sub, can_buy)]
 
@@ -77,15 +78,15 @@ class CityPropertyScreen(StashScreen):
             if not rep_ok or self.guild.bankers_services_blocked:
                 return
             if self.purse < economy.CITY_PROPERTY_PRICE:
-                self.notice = (f"the Bankers want {economy.CITY_PROPERTY_PRICE} copper for "
-                               f"the house -- the party has {self.purse}.")
+                self.notice = (f"the Bankers want {fmt_money(economy.CITY_PROPERTY_PRICE)} for "
+                               f"the house -- the party has {fmt_money(self.purse)}.")
                 return
             self.purse -= economy.CITY_PROPERTY_PRICE
             self.guild.buy_city_property()
             self.notice = "bought a house in the City -- the Bankers' tax starts now."
         elif key == "oven":
             if self.purse < economy.OVEN_PRICE:
-                self.notice = f"an oven costs {economy.OVEN_PRICE} copper -- the party has {self.purse}."
+                self.notice = f"an oven costs {fmt_money(economy.OVEN_PRICE)} -- the party has {fmt_money(self.purse)}."
                 return
             self.purse -= economy.OVEN_PRICE
             self.guild.buy_oven()
@@ -97,17 +98,17 @@ class CityPropertyScreen(StashScreen):
         elif key == "pay_debt":
             amount = min(self.purse, self.guild.bankers_debt)
             if amount <= 0:
-                self.notice = "the party has no copper to pay with."
+                self.notice = "the party has no money to pay with."
                 return
             self.purse -= amount
             self.guild.pay_bankers_debt(amount)
-            self.notice = (f"paid {amount} copper toward the debt." if self.guild.bankers_debt > 0
+            self.notice = (f"paid {fmt_money(amount)} toward the debt." if self.guild.bankers_debt > 0
                            else "debt cleared -- the Bankers deal with the guild again.")
 
     def _draw_status(self, screen, F, x, y, w):
         g, house = self.guild, self.guild.house
         if g.bankers_debt > 0:
-            for ln in (f"owed to the Bankers: {g.bankers_debt} copper",
+            for ln in (f"owed to the Bankers: {fmt_money(g.bankers_debt)}",
                       "their other services are shut until it's paid"):
                 ui_text(screen, F["body_sm"], ln, (x, y), T.BLOOD)
                 y += 16
@@ -126,7 +127,7 @@ class CityPropertyScreen(StashScreen):
             y += 16 + T.S
         elif house.owned:
             ui_text(screen, F["body_sm"],
-                f"next tax due day {house.tax_due_day}: {economy.CITY_PROPERTY_TAX} c",
+                f"next tax due day {house.tax_due_day}: {fmt_money(economy.CITY_PROPERTY_TAX)}",
                 (x, y), T.TX_FAINT)
             y += 16
             if house.missed_payments:
@@ -195,7 +196,7 @@ class RepossessionScreen(Screen):
 
         missed = self.guild.house.missed_payments
         owed = missed * economy.CITY_PROPERTY_TAX
-        warn_msg = (f"{missed} tax cycles missed -- {owed} copper behind. "
+        warn_msg = (f"{missed} tax cycles missed -- {fmt_money(owed)} behind. "
                     "The Bankers want the house back, or the debt paid.")
 
         box_w = min(580, W - 48)
@@ -230,7 +231,7 @@ class RepossessionScreen(Screen):
         pygame.draw.rect(screen, T.STEEL if hov1 else T.TABLE, r1, border_radius=4)
         pygame.draw.rect(screen, T.BRASS if hov1 else T.STEEL_LINE, r1, 2 if hov1 else 1, border_radius=4)
         p_text(screen, F["bodyb"], "RETURN THE PROPERTY", (r1.x + 14, r1.y + 10), T.TX)
-        p_text(screen, F["body_sm"], f"Hand it back. The guild owes {owed} copper -- Bankers shut until paid.", (r1.x + 14, r1.y + 32), T.TX_MUTED)
+        p_text(screen, F["body_sm"], f"Hand it back. The guild owes {fmt_money(owed)} -- Bankers shut until paid.", (r1.x + 14, r1.y + 32), T.TX_MUTED)
         self.buttons.append(("return", r1))
 
         # Option 2: Squat

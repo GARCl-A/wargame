@@ -18,7 +18,7 @@ from tests.helpers import Unit
 
 def _setup(coins=0, bays=1, wagons=1, animals=1, wise=0):
     u = Unit("player")
-    u.gold = coins
+    u.money = coins
     u.mod_wisdom = wise
     g = Group([u], node="city", wagons=[Wagon() for _ in range(wagons)],
               herd=[Animal("Donkey") for _ in range(animals)])
@@ -46,7 +46,7 @@ def test_a_bay_costs_the_flat_price_and_adds_room_for_one_of_each():
     scr._click("bay")
     garage = guild.house.garage
     assert garage.tier == 1 and garage.wagon_room == 1 and garage.animal_room == 1
-    assert u.gold == 4
+    assert u.money == 4
 
 
 def test_a_bay_is_refused_when_the_party_cannot_pay():
@@ -54,7 +54,7 @@ def test_a_bay_is_refused_when_the_party_cannot_pay():
     scr = _screen(guild, g)
     assert "bay" not in _keys(scr)
     scr._click("bay")
-    assert guild.house.garage.tier == 0 and u.gold == economy.GARAGE_PRICE - 1
+    assert guild.house.garage.tier == 0 and u.money == economy.GARAGE_PRICE - 1
 
 
 def test_parking_moves_the_wagon_and_the_animal_out_of_the_group_and_keeps_the_cargo():

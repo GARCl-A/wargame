@@ -45,16 +45,16 @@ def test_mission_follows_its_signer_into_a_new_group_after_a_split():
     # Group object no longer holds them (and may not even still exist).
     guild.reputation["arena"] = 3                      # fame for a third group slot
     solo = guild.split_group(hunters, [signer])
-    signer_gold_before = signer.gold
-    other_hunter_gold_before = other_hunter.gold
+    signer_gold_before = signer.money
+    other_hunter_gold_before = other_hunter.money
     for _ in range(15):
         signer.give_to_pack("1sqm Hide")
 
     assert missions.progress(guild, m) == 15          # still resolves via the unit
     missions.turn_in(guild, m)
     assert m.state == "done"
-    assert signer.gold == signer_gold_before + missions.TANNER_HIDES.reward  # solo: whole reward
-    assert other_hunter.gold == other_hunter_gold_before  # left behind, untouched
+    assert signer.money == signer_gold_before + missions.TANNER_HIDES.reward  # solo: whole reward
+    assert other_hunter.money == other_hunter_gold_before  # left behind, untouched
 
 
 def test_turn_in_consumes_the_hides_and_splits_the_reward():
@@ -64,13 +64,13 @@ def test_turn_in_consumes_the_hides_and_splits_the_reward():
     for _ in range(15):
         signer.give_to_pack("1sqm Hide")
     for u in hunters.members:
-        u.gold = 0
+        u.money = 0
 
     missions.turn_in(guild, m)
 
     assert m.state == "done"
     assert signer._base_inventory.count("1sqm Hide") == 0
-    assert sum(u.gold for u in hunters.members) == missions.TANNER_HIDES.reward
+    assert sum(u.money for u in hunters.members) == missions.TANNER_HIDES.reward
 
 
 def test_missed_deadline_fails_the_mission_and_it_is_not_offered_again():

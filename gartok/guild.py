@@ -361,9 +361,9 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         return self.reputation.get("arena", 0)
 
     @property
-    def gold(self):
-        """Total copper across the roster (the guild has no purse of its own)."""
-        return sum(u.gold for u in self.roster)
+    def money(self):
+        """Total $ across the roster (the guild has no purse of its own)."""
+        return sum(u.money for u in self.roster)
 
     def record_victory(self):
         self.battles_won += 1

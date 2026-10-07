@@ -50,7 +50,7 @@ def _screen(guild, party):
 def _at_gate(gold=economy.CITY_PROPERTY_PRICE):
     """A single-member guild past the reputation gate, with `gold` to spend."""
     p = Unit("player")
-    p.gold = gold
+    p.money = gold
     guild = Guild([p], reputation={"bankers": economy.CITY_PROPERTY_REP_GATE})
     return guild, p
 
@@ -66,17 +66,17 @@ def test_buying_debits_the_pooled_purse_and_starts_the_tax_clock():
 
     s._run_service("buy")
     assert guild.house.owned
-    assert s.purse == 20 and p.gold == 20                                 # debited at once
+    assert s.purse == 20 and p.money == 20                                 # debited at once
     assert guild.house.tax_due_day == guild.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
 
     s._leave()
-    assert p.gold == 20
+    assert p.money == 20
 
 
 def test_buying_is_refused_below_the_reputation_gate():
     random.seed(1)
     p = Unit("player")
-    p.gold = economy.CITY_PROPERTY_PRICE
+    p.money = economy.CITY_PROPERTY_PRICE
     guild = Guild([p], reputation={"bankers": economy.CITY_PROPERTY_REP_GATE - 1})
     s = _screen(guild, [p])
 
@@ -90,7 +90,7 @@ def test_buying_is_refused_when_the_party_is_short():
     s = _screen(guild, [p])
 
     s._run_service("buy")
-    assert not guild.house.owned and "copper" in s.notice
+    assert not guild.house.owned and "$" in s.notice
 
 
 def test_buying_is_refused_while_bankers_debt_is_outstanding():
@@ -126,14 +126,14 @@ def test_deposit_is_capped_by_the_property_and_withdraw_by_the_members_load():
 def test_the_tax_is_charged_automatically_when_it_falls_due():
     random.seed(1)
     p = Unit("player")
-    p.gold = 1000
+    p.money = 1000
     guild = Guild([p])
     guild.buy_city_property()
     due = guild.house.tax_due_day
 
     guild.pass_time((due - guild.clock.day) * 24)
     assert guild.clock.day >= due
-    assert p.gold == 1000 - economy.CITY_PROPERTY_TAX
+    assert p.money == 1000 - economy.CITY_PROPERTY_TAX
     assert guild.house.missed_payments == 0
     assert guild.house.tax_due_day == due + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
 
@@ -141,20 +141,20 @@ def test_the_tax_is_charged_automatically_when_it_falls_due():
 def test_a_missed_cycle_is_tallied_instead_of_going_into_debt():
     random.seed(1)
     p = Unit("player")
-    p.gold = 0
+    p.money = 0
     guild = Guild([p])
     guild.buy_city_property()
     due = guild.house.tax_due_day
 
     guild.pass_time((due - guild.clock.day) * 24)
-    assert p.gold == 0 and guild.house.missed_payments == 1
+    assert p.money == 0 and guild.house.missed_payments == 1
     assert not guild.house.repossession_due
 
 
 def test_enough_missed_cycles_trip_the_repossession_offer():
     random.seed(1)
     p = Unit("player")
-    p.gold = 0
+    p.money = 0
     guild = Guild([p])
     guild.buy_city_property()
 
@@ -186,7 +186,7 @@ def test_returning_the_property_banks_debt_and_blocks_bankers_services():
 def test_paying_off_the_debt_unblocks_bankers_services():
     random.seed(1)
     p = Unit("player")
-    p.gold = 1000
+    p.money = 1000
     guild = Guild([p])
     guild.bankers_debt = 120
     guild.bankers_debt_since = guild.clock.day
@@ -197,13 +197,13 @@ def test_paying_off_the_debt_unblocks_bankers_services():
     assert guild.bankers_debt_since is None
     assert s.purse == 1000 - 120
     s._leave()
-    assert p.gold == 1000 - 120
+    assert p.money == 1000 - 120
 
 
 def test_paying_off_the_debt_never_overpays():
     random.seed(1)
     p = Unit("player")
-    p.gold = 1000
+    p.money = 1000
     guild = Guild([p])
     guild.bankers_debt = 30
     s = _screen(guild, [p])
@@ -349,9 +349,9 @@ def test_drawing_and_clicking_buy_then_stashing_an_item():
 
     random.seed(1)
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 50)
-    purse = p.gold
+    purse = p.money
     p._base_inventory = packed(["Rope"])
-    p.gold = purse
+    p.money = purse
     s = CityPropertyScreen(ui_fonts(), guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))
     s.mouse = (0, 0)
@@ -436,7 +436,7 @@ def test_bankers_debt_blocks_buying_the_property():
     from gartok.ui.tokens import fonts as ui_fonts
 
     p = Unit("player")
-    p.gold = economy.CITY_PROPERTY_PRICE + 100
+    p.money = economy.CITY_PROPERTY_PRICE + 100
     g = Group([p], node="city")
     guild = Guild(None, groups=[g],
                   reputation={"bankers": economy.CITY_PROPERTY_REP_GATE})
@@ -458,4 +458,4 @@ def test_buying_the_house_debits_the_party_without_leaving_the_screen():
     guild, p = _at_gate(gold=economy.CITY_PROPERTY_PRICE + 40)
     s = _screen(guild, [p])
     s._run_service("buy")
-    assert guild.house.owned and p.gold == 40
+    assert guild.house.owned and p.money == 40

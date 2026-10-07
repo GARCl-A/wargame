@@ -334,7 +334,7 @@ def test_arena_entry_is_staked_per_fighter():
     
     roster = [Unit("player") for _ in range(3)]
     for u in roster:
-        u.gold = 50
+        u.money = 50
     iron = arena.scrapper_bout()
     
     scr = SquadScreen(None, roster, world.node("arena"), on_confirm=lambda *a: None,
@@ -349,7 +349,7 @@ def test_arena_entry_is_staked_per_fighter():
     from gartok import economy
     # the app bills that whole stake off the squad, richest first
     economy.charge_richest_first(roster, iron.entry * 3)
-    assert sum(u.gold for u in roster) == 150 - iron.entry * 3
+    assert sum(u.money for u in roster) == 150 - iron.entry * 3
 
 
 def test_absorb_battle_carries_quiver_charges_forward():

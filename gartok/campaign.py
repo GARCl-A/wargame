@@ -173,9 +173,9 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
                         share = amt // len(survivors)
                         rem = amt % len(survivors)
                         for s in survivors:
-                            s.gold += share
+                            s.money += share
                         if rem:
-                            survivors[0].gold += rem
+                            survivors[0].money += rem
 
     outcome.deeds_earned = factions.settle(
         guild, factions.Event("battle", node=node, outcome=outcome))

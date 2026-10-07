@@ -64,7 +64,8 @@ def field_loot(battle, fallen_combatants, rng=random):
         pool += carried_by(u)
         char = getattr(u, "char", None)
         if char is not None and u in fallen_combatants:
-            pool += [items.COIN_ITEM] * char.gold
+            for coin in items.COIN_VALUE:
+                pool += [coin] * char.count_of(coin)
         if char is not None:
             drop = char.race.get("drop_item")
             if drop and rng.random() < char.race.get("drop_chance", 0.0):

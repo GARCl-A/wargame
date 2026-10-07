@@ -30,6 +30,8 @@ reads campaign state straight off that.
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from .constants import fmt_money
+
 
 @dataclass(frozen=True)
 class Faction:
@@ -219,7 +221,7 @@ def get_unlocks(faction_id: str):
                 "bankers",
                 economy.CITY_PROPERTY_REP_GATE,
                 "City Property",
-                f"Buy a house in the City ({economy.CITY_PROPERTY_PRICE} cp, {economy.CITY_PROPERTY_CAPACITY} kg storage)",
+                f"Buy a house in the City ({fmt_money(economy.CITY_PROPERTY_PRICE)}, {economy.CITY_PROPERTY_CAPACITY} kg storage)",
             )
         )
     elif faction_id == "arena":

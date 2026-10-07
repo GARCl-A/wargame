@@ -17,6 +17,7 @@ that explains itself, else None. Data is plain dicts / tuples:
 
 import pygame
 
+from ..constants import fmt_money
 from .primitives import (
     caps,
     draw_button,
@@ -138,7 +139,7 @@ def draw_gear(surf, F, x, y, w, d, mpos):
                  (vr.right + T.S, box.y + T.S + 13), T.TX_MUTED)
     n, ok = d["rations"]
     caps(surf, F["micro"], "COINS", (box.x + pad, box.y + T.S * 6 - 2), T.TX_FAINT)
-    text(surf, F["body"], f"{d['coins']} copper", (box.x + pad, box.y + T.S * 6 + 12), T.BRASS)
+    text(surf, F["body"], fmt_money(d['coins']), (box.x + pad, box.y + T.S * 6 + 12), T.BRASS)
     caps(surf, F["micro"], "RATIONS", (box.x + pad + half, box.y + T.S * 6 - 2), T.TX_FAINT)
     text(surf, F["body"], f"{n} in pack", (box.x + pad + half, box.y + T.S * 6 + 12),
          T.GREEN if n > 0 else (T.TX_MUTED if ok else T.BLOOD))

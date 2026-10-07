@@ -60,6 +60,7 @@ the guild out entirely. Leaving to the main menu is Esc -> the pause menu
 import pygame
 
 from . import arena, artwork, autowin, campaign, economy, orders, rest, world
+from .constants import fmt_money
 from .scenario import Scenario
 from .screen import Screen
 from .ui.camera import MapCamera
@@ -288,7 +289,7 @@ class MapScreen(Screen):
     def _metrics(self):
         return [("members", str(len(self.guild))),
                ("rations", str(self.guild.rations)),
-               ("gold", str(self.guild.gold)),
+               ("money", fmt_money(self.guild.money)),
                ("reputation", str(self.guild.arena_reputation))]
 
     def _guild_label(self):
@@ -587,7 +588,7 @@ class MapScreen(Screen):
                     "BET AT THE ARENA" if here.arena else "ATTACK")
             blocks.append({"type": "button", "key": "arena", "label": label, "primary": True})
             note = ("1v1 for the Champion of the Pit -- no stake, no backup" if defense
-                   else "non-lethal · stake copper, win the purse" if here.arena
+                   else "non-lethal · stake money, win the purse" if here.arena
                    else "lethal combat · loot the bodies")
             blocks.append({"type": "text", "text": note, "color": T.BRASS if defense else T.TX_FAINT})
         elif here.is_market:
@@ -601,7 +602,7 @@ class MapScreen(Screen):
             blocks.append({"type": "button_row", "height": 34,
                           "items": [{"key": f"work:{h}", "label": f"{h} h"} for h in WORK_HOURS]})
             blocks.append({"type": "text",
-                          "text": "trade hours of the day for copper  ·  pays little, but it's sure",
+                          "text": "trade hours of the day for money  ·  pays little, but it's sure",
                           "color": T.TX_FAINT})
             for u in g.members:
                 level = economy.lumber_level(u)
@@ -609,7 +610,7 @@ class MapScreen(Screen):
                 day = economy.lumber_pay(WORK_HOURS[-1], level)
                 status = "own Axe" if own_axe else "foreman's axe"
                 blocks.append({"type": "text",
-                              "text": f"{u.name}: {status} -- {day}c / "
+                              "text": f"{u.name}: {status} -- {fmt_money(day)} / "
                                       f"{WORK_HOURS[-1]}h shift",
                               "color": T.GREEN if own_axe else T.TX_FAINT})
             need_axe = [u for u in g.members if u.work_level > 0 and economy.lumber_level(u) == 0]
@@ -683,7 +684,7 @@ class MapScreen(Screen):
                        f"{economy.CITY_PROPERTY_CAPACITY} kg")
                 col = T.TX_FAINT
             else:
-                note, col = f"owes the Bankers {self.guild.bankers_debt} copper", T.BLOOD
+                note, col = f"owes the Bankers {fmt_money(self.guild.bankers_debt)}", T.BLOOD
             blocks.append({"type": "text", "text": note, "color": col})
 
         if here.claim:

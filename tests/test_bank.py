@@ -26,27 +26,27 @@ def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
     random.seed(1)
     party = [Unit("player") for _ in range(2)]
     for m in party:
-        m.gold = 60
+        m.money = 60
     guild = Guild(list(party))
     s = BankScreen(None, guild, party, on_done=lambda: None)
 
     s._run_service("rent")
     assert guild.bank.open and guild.bank.capacity == economy.BANK_CHEST_CAPACITY
     assert s.purse == 120 - economy.BANK_CHEST_PRICE
-    assert sum(m.gold for m in party) == s.purse      # debited at once, not only on _leave
+    assert sum(m.money for m in party) == s.purse      # debited at once, not only on _leave
 
 
 def test_leaving_settles_the_purse_proportional_to_what_each_member_brought():
     random.seed(9)
     rich, broke = Unit("player"), Unit("player")
-    rich.gold, broke.gold = 90, 30
+    rich.money, broke.money = 90, 30
     guild = Guild([rich, broke])
     s = BankScreen(None, guild, [rich, broke], on_done=lambda: None)
 
     s.purse -= 40                     # simulate 40 copper spent during the visit
     s._leave()
-    assert rich.gold + broke.gold == 80
-    assert rich.gold == 3 * broke.gold      # 90:30 == 3:1, preserved exactly
+    assert rich.money + broke.money == 80
+    assert rich.money == 3 * broke.money      # 90:30 == 3:1, preserved exactly
 
 
 def test_deposit_is_capped_by_the_chest():
@@ -185,7 +185,7 @@ def test_clicking_rent_then_a_pack_item_onto_the_chest_stashes_it():
     random.seed(5)
     p = Unit("player")
     p._base_inventory = packed(["Rope"])
-    p.gold = 200
+    p.money = 200
     guild = Guild([p])
     s = BankScreen(None, guild, [p], on_done=lambda: None)
     surf = pygame.Surface((1280, 800))

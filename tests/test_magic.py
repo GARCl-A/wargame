@@ -234,7 +234,7 @@ def _student(spell_id="light_globe"):
 def test_studying_accumulates_progress_toward_the_spell():
     random.seed(1)
     u = _student()
-    u.gold = 1000
+    u.money = 1000
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -247,14 +247,14 @@ def test_studying_accumulates_progress_toward_the_spell():
         data.roll = saved
 
     assert u.study_progress == 10 + u.mod_intelligence
-    assert u.gold == 1000 - 15                    # economy.TAVERN_STUDY_COST_PER_DAY
+    assert u.money == 1000 - 15                    # economy.TAVERN_STUDY_COST_PER_DAY
     assert "light_globe" not in u.spells_known     # not enough points yet
 
 
 def test_studying_masters_the_spell_once_enough_points_are_banked():
     random.seed(1)
     u = _student()
-    u.gold = 1000
+    u.money = 1000
     u.study_progress = magic.points_to_learn(magic.SPELLS["light_globe"].level) - 1
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
@@ -275,7 +275,7 @@ def test_studying_masters_the_spell_once_enough_points_are_banked():
 def test_studying_without_gold_makes_no_progress():
     random.seed(1)
     u = _student()
-    u.gold = 0
+    u.money = 0
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -283,14 +283,14 @@ def test_studying_without_gold_makes_no_progress():
     guild.pass_time(24)
 
     assert u.study_progress == 0
-    assert u.gold == 0
+    assert u.money == 0
 
 
 def test_studying_without_the_scroll_makes_no_progress():
     random.seed(1)
     u = _student()
     u._base_inventory.clear()          # scroll consumed/sold/never bought
-    u.gold = 1000
+    u.money = 1000
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -298,7 +298,7 @@ def test_studying_without_the_scroll_makes_no_progress():
     guild.pass_time(24)
 
     assert u.study_progress == 0
-    assert u.gold == 1000 - 15         # the room is still rented either way
+    assert u.money == 1000 - 15         # the room is still rented either way
 
 
 # --------------------------------------------------------------------------- #
@@ -353,20 +353,20 @@ def test_can_study_spell_requires_matching_affinity_and_unlearned():
 
 def test_a_group_that_cannot_pay_another_night_loses_its_rooms():
     u = _student()
-    u.gold = 15
+    u.money = 15
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
 
     guild.pass_time(24)
 
-    assert u.gold == 0                    # paid the one night it could
+    assert u.money == 0                    # paid the one night it could
     assert g.order is None                # and is out on the street, not squatting for free
 
 
 def test_studying_group_keeps_its_rooms_while_someone_can_pay():
     u = _student()
-    u.gold = 1000
+    u.money = 1000
     g = Group([u], node="tavern")
     guild = Guild(None, groups=[g])
     g.order = orders.garrison("study")
@@ -378,9 +378,9 @@ def test_studying_group_keeps_its_rooms_while_someone_can_pay():
 
 def test_a_member_not_studying_pays_nothing_and_eats_their_own_ration():
     student = _student()
-    student.gold = 1000
+    student.money = 1000
     idler = Unit("player")
-    idler.gold = 100
+    idler.money = 100
     idler.give_to_pack("Potato")
     g = Group([student, idler], node="tavern")
     guild = Guild(None, groups=[g])
@@ -389,6 +389,6 @@ def test_a_member_not_studying_pays_nothing_and_eats_their_own_ration():
 
     guild.pass_time(24)
 
-    assert idler.gold == 100
-    assert student.gold == 1000 - 15
+    assert idler.money == 100
+    assert student.money == 1000 - 15
     assert idler.count_of("Potato") < rations_before

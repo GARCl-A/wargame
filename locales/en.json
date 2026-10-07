@@ -32,7 +32,7 @@
       "body": [
         "The guild is split into groups. The list on the left shows them: click one to select it, then click a place on the map to send it there. The panel on the right shows what that group can do where it stands -- shop, fight, work, recruit, hunt. GUILD, top right, opens your roster.",
         "There is no advance button. Once every group has an order the clock runs by itself, and stops when a group is free again or something needs a decision (an ambush, a shop, a fight). REST sends the selected group to rest for 1 hour, 8 hours or until its wounds are healed (it always keeps a day of rations); the other groups carry on meanwhile. With every group garrisoned, ADVANCE passes a day for the whole world.",
-        "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes (3 cp) and Meat (5 cp) are sold at the Market, and you can hunt Meat in the wilds.",
+        "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes ($3) and Meat ($5) are sold at the Market, and you can hunt Meat in the wilds.",
         "Copper lives on each character -- there is no shared treasury. Death is permanent, and the run ends only if the whole guild is wiped out."
       ],
       "suggestion": "Good first stops: the Market for food, the Arena to train at low risk, the Lumber Yard if you go broke."
@@ -66,7 +66,7 @@
       "title": "Picking who goes",
       "body": [
         "Click a card to add or drop a member from the outing, from 1 up to the cap shown at the top. Anyone too weak from hunger to fight is greyed out.",
-        "In the arena, pick a stake tier first: the entry fee comes out of the squad's pooled copper, a win pays the purse, a loss forfeits the stake, and nobody dies. Anywhere else the fight is lethal."
+        "In the arena, pick a stake tier first: the entry fee comes out of the squad's pooled money, a win pays the purse, a loss forfeits the stake, and nobody dies. Anywhere else the fight is lethal."
       ]
     },
     "battle": {
@@ -87,7 +87,7 @@
     "reward": {
       "title": "The purse",
       "body": [
-        "The stake's winnings are copper, and they land whole on whoever you click -- the guild keeps no shared treasury, so pick who pockets it."
+        "The stake's winnings are money, and they land whole on whoever you click -- the guild keeps no shared treasury, so pick who pockets it."
       ]
     },
     "market": {
@@ -95,7 +95,7 @@
       "body": [
         "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out.",
         "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half.",
-        "Potatoes (3 cp) and Meat (5 cp) feed one character for a day."
+        "Potatoes ($3) and Meat ($5) feed one character for a day."
       ]
     },
     "taverna": {
@@ -116,8 +116,9 @@
     "bank": {
       "title": "The strongbox",
       "body": [
-        "Rent a chest once (100 cp, holds 30 kg), then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out.",
-        "Coins are items like any other: the rent comes out of everyone's purse in proportion to what they carry, and a stack of coins can be stored in the chest or handed to a member from its ⋮ menu."
+        "Rent a chest once ($90, holds 30 kg), then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out.",
+        "Coins are items like any other: the rent comes out of everyone's purse in proportion to what they carry, and a stack of coins can be stored in the chest or handed to a member from its ⋮ menu.",
+        "Money is $: a Copper Coin is $1, a Gold Coin $100 and just as light. This is the only place to mint or melt gold -- open a coin stack's ⋮ menu (or right-click it), pick how many, and pay $1 per coin each way. Shops spend your copper first and break a gold coin only when they must, giving the change back."
       ]
     },
     "gear": {
@@ -150,7 +151,7 @@
     "missions": {
       "title": "Paid jobs",
       "body": [
-        "A giver offers one job at a time: bring an item or finish a task before the deadline and they pay copper. The reward is split evenly across the group when you hand it in, and missing the deadline fails the job.",
+        "A giver offers one job at a time: bring an item or finish a task before the deadline and they pay money. The reward is split evenly across the group when you hand it in, and missing the deadline fails the job.",
         "The group's leader signs for it, and the job then follows that character, not the group. Check progress in the QUESTS tab of the group screen (MANAGE GEAR & QUESTS on the map)."
       ]
     },
@@ -178,15 +179,15 @@
     "property": {
       "title": "The City house",
       "body": [
-        "Buy a house from the Bankers (1440 cp, once). It holds 600 kg of gear like the strongbox does, but costs a 30 cp tax every 7 days.",
+        "Buy a house from the Bankers ($1,440, once). It holds 600 kg of gear like the strongbox does, but costs a $30 tax every 7 days.",
         "Miss too many payments and the Bankers repossess it: return it and owe them, or keep it as a squatter and risk the guard coming for you.",
-        "Once the house is yours you can buy an oven (150 cp) to cook there, and a garage for your wagons and animals."
+        "Once the house is yours you can buy an oven ($150) to cook there, and a garage for your wagons and animals."
       ]
     },
     "garage": {
       "title": "The garage",
       "body": [
-        "Each bay (690 cp) keeps one wagon and one animal safe at the house, with nothing to roll. Park what the group does not need on the road; take it out again when it does.",
+        "Each bay ($690) keeps one wagon and one animal safe at the house, with nothing to roll. Park what the group does not need on the road; take it out again when it does.",
         "Animals in the garage eat from the house stash and from the cargo of the wagons parked beside them, and do not count against your herd limit. If the food runs out they starve like any other animal.",
         "A wagon keeps its cargo while parked. Lose the house and you lose what is in the garage.",
         "The Claim has one too, with no limit, from the day its garrison opens. Only a garrison keeps it safe: with nobody there, the animals may bolt each day and take everything with them."
@@ -227,7 +228,7 @@
       "title": "The stables",
       "body": [
         "Animals belong to the group, and the tack they wear decides their job: a Pack Saddle lets one carry cargo on its back, a Harness lets it pull the group's wagon. Fit tack here, or drag a saddle onto the animal on the gear screen.",
-        "A cart (150 cp) holds up to 180 kg and a carriage (600 cp) up to 540 kg; that cargo never goes into a fight, and everyone eats from it on the road. Each animal wearing a Harness is hitched to one wagon (the HITCH button here, or drag the animal's header onto the wagon's on the gear screen), and the wagon holds no more than its animals can draw -- with none, the box is shut.",
+        "A cart ($150) holds up to 180 kg and a carriage ($600) up to 540 kg; that cargo never goes into a fight, and everyone eats from it on the road. Each animal wearing a Harness is hitched to one wagon (the HITCH button here, or drag the animal's header onto the wagon's on the gear screen), and the wagon holds no more than its animals can draw -- with none, the box is shut.",
         "Animals eat a ration a day from what the group carries and starve after three unfed days. If the whole group dies, the animals and the wagon go with it; if anyone gets away, they stay."
       ]
     }

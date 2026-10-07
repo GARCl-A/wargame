@@ -26,12 +26,12 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
     random.seed(4)
     a, b = Unit("player"), Unit("player")
     a._base_inventory, b._base_inventory = [], []
-    a.gold = b.gold = 0
+    a.money = b.money = 0
     for u in (a, b):
         u._derive_combat()
     guild = Guild([a, b], clock=Clock(6 * 3600))      # 06:00 day 1
     events, _ = guild.work_shift([a, b], 16)
-    assert a.gold == 4 and b.gold == 4
+    assert a.money == 4 and b.money == 4
     assert a.work_hours == 16 and b.work_hours == 16
     assert guild.clock.hour_of_day == 22 and guild.clock.day == 1
     assert any("Lumber yard" in e for e in events)
@@ -42,13 +42,13 @@ def test_work_shift_crossing_midnight_runs_the_daily_meal():
     from gartok.guild import Guild
     random.seed(5)
     u = Unit("player")
-    u.gold = 0
+    u.money = 0
     u._base_inventory = packed(["Potato"])
     u._derive_combat()
     guild = Guild([u], clock=Clock(20 * 3600))        # 20:00 day 1
     guild.work_shift([u], 8)                          # -> 04:00 day 2, one meal
     assert guild.clock.day == 2
-    assert u.gold == 2 and u.rations == 0 and u.unfed_days == 0
+    assert u.money == 2 and u.rations == 0 and u.unfed_days == 0
 
 
 def test_work_xp_is_one_mark_per_16_hours_and_survives_a_save():
@@ -98,19 +98,19 @@ def test_outgrown_lumber_yard_pays_but_teaches_nothing():
     from gartok.guild import Guild
     random.seed(4)
     u = Unit("player")
-    u.gold = 0
+    u.money = 0
     u.work_hours = economy.LUMBER_XP_HOURS * 2          # work_xp 2 -> work level 1
     u._base_inventory = []
     u._derive_combat()
     before = u.work_hours
     guild = Guild([u], clock=Clock(6 * 3600))
     guild.work_shift([u], 16)
-    assert u.gold == 4 and u.work_hours == before      # paid, but no XP: outgrown
+    assert u.money == 4 and u.work_hours == before      # paid, but no XP: outgrown
 
-    u.gold = 0
+    u.money = 0
     u.give_to_hand("Axe")
     guild.work_shift([u], 16)
-    assert u.gold == 5                                  # the better, own-Axe wage
+    assert u.money == 5                                  # the better, own-Axe wage
     assert u.work_hours == before + 16                  # level 1 job teaches a level 1 worker
 
 

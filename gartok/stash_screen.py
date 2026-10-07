@@ -25,6 +25,7 @@ to a `Unit`: the string `OWNER`.
 import pygame
 
 from . import economy, items
+from .constants import fmt_money
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin
 from .screen import Screen
@@ -507,7 +508,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
         has_tut = self.tutorial_key() is not None
         purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0) - self.header_reserve
-        text(screen, F["microb"], f"purse {self.purse} c", (purse_x, T.S * 3), T.BRASS, right=True)
+        text(screen, F["microb"], f"purse {fmt_money(self.purse)}", (purse_x, T.S * 3), T.BRASS, right=True)
 
         self._draw_stash(screen, F, stash_rect)
         self._draw_rail(screen, F, rail_rect)

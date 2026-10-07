@@ -35,3 +35,8 @@ ENEMY_COMBAT_CAP = 7
 ENEMY_WORK_CAP = 6
 # Natural armor: a flat AC bonus a creature is born with (no Dex cap, no drag)
 NATURAL_ARMOR_MAX = 5
+
+
+def fmt_money(amount):
+    """An amount of $ for display: `$1,250`."""
+    return f"${amount:,}"

@@ -76,7 +76,7 @@ def test_a_garrison_fed_on_jerky_holds_the_full_sustain():
 
 def _house_screen(coins, owned=True, oven=False, on_cook=lambda: None):
     p = Unit("player")
-    p.gold = coins
+    p.money = coins
     guild = Guild([p])
     guild.house.owned = owned
     guild.house.oven = oven

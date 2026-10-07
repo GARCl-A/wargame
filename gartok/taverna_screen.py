@@ -21,6 +21,7 @@ import pygame
 
 from . import economy, magic, orders, recruit
 from .archetypes import unit_archetypes
+from .constants import fmt_money
 from .data import alignment_distance
 from .screen import Screen
 from .ui.primitives import (
@@ -119,7 +120,7 @@ class TavernaScreen(Screen):
         return ""
 
     def _wealth(self):
-        return sum(m.gold for m in self.party)
+        return sum(m.money for m in self.party)
 
     def _eligible(self, cand):
         """Party members who could still pitch `cand` (share a tongue, not yet
@@ -229,7 +230,7 @@ class TavernaScreen(Screen):
             return
         cost = self._bail(cand)
         if cost and self._wealth() < cost:
-            self.notice = f"Not enough coin to pay {cand.name}'s bail ({cost} cp)."
+            self.notice = f"Not enough coin to pay {cand.name}'s bail ({fmt_money(cost)})."
             return
         if cost:
             economy.charge_richest_first(self.party, cost)
@@ -249,7 +250,7 @@ class TavernaScreen(Screen):
         else:
             self._bar(cand, member)
             if cost:
-                self.notice = f"Bail paid, but {cand.name} walks away free. You lost {cost} cp."
+                self.notice = f"Bail paid, but {cand.name} walks away free. You lost {fmt_money(cost)}."
             else:
                 self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
 
@@ -390,7 +391,7 @@ class TavernaScreen(Screen):
                      (cr.x + 12, cr.y + 48), T.TX_FAINT)
                 bail = self._bail(cand)
                 if bail:
-                    caps(screen, F["microb"], f"BAIL {bail} cp", (cr.right - 12, cr.y + 12),
+                    caps(screen, F["microb"], f"BAIL {fmt_money(bail)}", (cr.right - 12, cr.y + 12),
                          T.BRASS, right=True)
 
                 # Archetype badges
@@ -458,7 +459,7 @@ class TavernaScreen(Screen):
         cy += 24
         bail = self._bail(cand)
         if bail:
-            text(screen, F["bodyb"], f"Bail: {bail} cp  ·  party holds {self._wealth()} cp", (cx, cy),
+            text(screen, F["bodyb"], f"Bail: {fmt_money(bail)}  ·  party holds {fmt_money(self._wealth())}", (cx, cy),
                  T.BRASS if self._wealth() >= bail else T.BLOOD)
             cy += 24
         text(screen, F["body_sm"], f"Racial Ability: {cand.ability.name} — {cand.ability.effect}", (cx, cy), T.TX_MUTED)
@@ -580,7 +581,7 @@ class TavernaScreen(Screen):
 
         cx = area.x + 20
         cy = area.y + 36
-        text(screen, F["bodyb"], f"Daily Study Rent: {cost} copper per studying member ({total_cost} copper per day now)", (cx, cy), T.TX)
+        text(screen, F["bodyb"], f"Daily Study Rent: {fmt_money(cost)} per studying member ({fmt_money(total_cost)} per day now)", (cx, cy), T.TX)
         text(screen, F["body_sm"], "Only members with a study target pay rent and roll daily progress (Intelligence modifier).",
              (cx, cy + 22), T.TX_MUTED)
 
@@ -624,7 +625,7 @@ class TavernaScreen(Screen):
             tx = mr.x + 60
             text(screen, F["bodyb"], m.name, (tx, mr.y + 12), T.TX)
             magic_tag = f"Magic: {m.magic_source.capitalize()}" if m.magic_source else "No Magic Affinity"
-            caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · INT {m.mod_intelligence:+} · {magic_tag} · {m.gold} copper",
+            caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · INT {m.mod_intelligence:+} · {magic_tag} · {fmt_money(m.money)}",
                  (tx, mr.y + 36), T.TX_MUTED)
 
             # Middle: Study target progress

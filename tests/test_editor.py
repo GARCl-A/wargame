@@ -106,8 +106,8 @@ def test_sandbox_attribute_edits_clamp_to_a_3d6_score():
     assert u.base_attributes["strength"] == 18
     u.set_base_attribute("strength", 1)
     assert u.base_attributes["strength"] == 3
-    u.set_gold(-5)
-    assert u.gold == 0
+    u.set_money(-5)
+    assert u.money == 0
     u.set_language("Elvish", True)
     assert "Elvish" in u.languages
     while len(u.languages) > 1:

@@ -110,7 +110,7 @@ Each occupation grants one starting weapon and one starting item.
 
 ## Weapons
 
-| Weapon | Size | Damage | Range | Finesse | Thrown | Hands | Weight | Price (cp) |
+| Weapon | Size | Damage | Range | Finesse | Thrown | Hands | Weight | Price ($) |
 |---|---|---|---|---|---|---|---|---|
 | Dagger | Medium | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
 | Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
@@ -145,7 +145,7 @@ Each occupation grants one starting weapon and one starting item.
 
 ## Armor
 
-| Armor | AC | Max DEX to AC | Speed | Weight | Price (cp) |
+| Armor | AC | Max DEX to AC | Speed | Weight | Price ($) |
 |---|---|---|---|---|---|
 | Leather Jerkin | +1 | -- | -- | 4 kg | 20 |
 | Studded Leather | +2 | +3 | -- | 6 kg | 55 |
@@ -156,7 +156,7 @@ Each occupation grants one starting weapon and one starting item.
 
 ## Shields
 
-| Shield | AC | Weight | Price (cp) |
+| Shield | AC | Weight | Price ($) |
 |---|---|---|---|
 | Dwarf Shield | +2 | 3 kg | 60 |
 
@@ -205,6 +205,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | First Aid Kit | 0.8 kg | consumable |
 | Fruit | 0.2 kg | food, consumable, material |
 | Gemstones | 0.1 kg | -- |
+| Gold Coin | 0.005 kg | -- |
 | Hammer | 4 kg | -- |
 | Harness | 4 kg | -- |
 | Hatchet | 1 kg | -- |
@@ -420,11 +421,11 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Demoralize range | 12 sq |
 | Torch radius | 4 sq |
 | Lantern radius | 6 sq |
-| Starting wealth | 5d10 copper |
+| Starting wealth | 5d10 $ |
 | Resale factor | 0.5 of buy price |
-| Lumber wage | 1 cp per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
+| Lumber wage | $1 per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
 | Hunting job level | 3 |
-| Bank strongbox | 90 cp to rent, holds 30 kg |
+| Bank strongbox | $90 to rent, holds 30 kg |
 | Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105, 136, 171, 210 |
 | Work XP thresholds | 2, 6, 12, 20, 30, 42, 56, 72, 90, 110 |
 | Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 |

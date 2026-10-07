@@ -19,6 +19,7 @@ import pygame
 
 from . import data, items, magic, npc_lib, persist, talents
 from .combatant import Combatant
+from .constants import fmt_money
 from .screen import Screen
 from .ui.primitives import (
     box,
@@ -193,7 +194,7 @@ class CharEditorScreen(Screen):
         elif kind == "natarmor":
             u.set_natural_armor(u.natural_armor + action[1])
         elif kind == "gold":
-            u.set_gold(u.gold + action[1])
+            u.set_money(u.money + action[1])
         elif kind == "hp":
             u.set_hp(u.hp_max + action[1])
         elif kind == "hp_auto":
@@ -530,7 +531,7 @@ class CharEditorScreen(Screen):
         y = section(screen, F, "PURSE + GEAR", x, y, w)
         gr = pygame.Rect(x, y, w, 24)
         box(screen, gr, fill=T.TABLE, border=T.STEEL_LINE, width=1)
-        text(screen, F["body_sm"], f"{u.gold} copper", (gr.x + T.S, gr.y + 5), T.BRASS)
+        text(screen, F["body_sm"], fmt_money(u.money), (gr.x + T.S, gr.y + 5), T.BRASS)
         bxx = gr.right - 4
         for step, glyph in ((10, "+10"), (1, "+1"), (-1, "−1"), (-10, "−10")):
             sw = 34

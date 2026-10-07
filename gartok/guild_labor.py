@@ -7,6 +7,7 @@ since it advances the clock itself.
 from collections import Counter
 
 from . import economy, items, progression
+from .constants import fmt_money
 
 
 class LaborMixin:
@@ -52,7 +53,7 @@ class LaborMixin:
             level = economy.lumber_level(u)
             pay = economy.lumber_pay(hours, level)
             gain = round(pay * (1 + u.talent_bonus("coin_gain")))
-            u.gold += gain
+            u.money += gain
             u.work_hours += progression.work_xp_hours(hours, level, u.work_level)
             u.collect_levels()                 # more work marks can lift the mean level
             paid.append(gain)
@@ -60,8 +61,8 @@ class LaborMixin:
                 events.append(f"{u.name} reached work level {u.work_level}!")
         if earners:
             names = ", ".join(u.name for u in earners)
-            wage = (f"+{paid[0]} copper each" if len(set(paid)) == 1
-                    else f"+{sum(paid)} copper total")
+            wage = (f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1
+                    else f"+{fmt_money(sum(paid))} total")
             note = f"Lumber yard: {names} worked {hours} h ({wage})."
             if clock_hours < hours:
                 note += f"  Brisk Hands: crew done in {clock_hours:g} h."

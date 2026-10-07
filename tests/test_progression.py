@@ -452,7 +452,7 @@ def test_tree_layout_places_every_node_below_its_parent():
 def _work_ready(*picks):
     """A fresh Unit at work level 2 with the given work talents spent."""
     u = Unit("player")
-    u.gold = 0
+    u.money = 0
     u._base_inventory = []
     u.work_hours = economy.LUMBER_XP_HOURS * 6    # work_xp 6 -> work level 2 -> 2 picks
     u._derive_combat()
@@ -473,9 +473,9 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
     guild = Guild([plain, rich, quick], clock=Clock(6 * 3600))
     base = economy.lumber_pay(16)                 # 4 copper
     guild.work_shift([plain, rich, quick], 16)
-    assert plain.gold == base
-    assert rich.gold == round(base * 1.20)        # Piecework: +20%
-    assert quick.gold == base                     # speed does not touch the pay
+    assert plain.money == base
+    assert rich.money == round(base * 1.20)        # Piecework: +20%
+    assert quick.money == base                     # speed does not touch the pay
     assert all(u.work_hours == economy.LUMBER_XP_HOURS * 6
                for u in (plain, rich, quick))     # already work level 2: this job teaches nothing
     assert guild.clock.seconds == 6 * 3600 + 16 * 3600    # plain drags: full 16 h

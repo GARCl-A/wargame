@@ -1,7 +1,8 @@
 """Money and the market  (designed for the wargame).
 
-Currency is copper coins. Coins live on the character -- the guild has no
-treasury (see [[gartok-tactical-project]]). `PRICES` is the shop's buy price;
+Money is `$`: a Copper Coin is $1, a Gold Coin $100 (minted only at the bank,
+for a fee). Coins live on the character -- the guild has no treasury (see
+[[gartok-tactical-project]]). `PRICES` is the shop's buy price;
 you sell back at `SELL_FACTOR` of it, always a loss.
 
 Haggling: a shopper who speaks the vendor's tongue can bend the price.
@@ -295,21 +296,66 @@ def sell_price(name, mods=()):
 # charging a group for a purchase: the two orderings every screen /   #
 # upkeep step that splits a cost across several purses ends up using  #
 # ------------------------------------------------------------------ #
+GOLD_FEE = 1                     # $ the bank keeps per Gold Coin, minted or melted
+
+
+def gold_price(n):
+    """Copper the bank takes to mint `n` Gold Coins."""
+    return n * (items.COIN_VALUE[items.GOLD_ITEM] + GOLD_FEE)
+
+
+def gold_payout(n):
+    """Copper the bank gives back for `n` Gold Coins."""
+    return n * (items.COIN_VALUE[items.GOLD_ITEM] - GOLD_FEE)
+
+
+def max_gold_buyable(holder):
+    return holder.count_of(items.COIN_ITEM) // gold_price(1)
+
+
+def max_gold_sellable(holder):
+    """Gold Coins `holder` can melt: all it has, or for a weight-capped stash
+    only as many as the heavier copper that comes back still fits."""
+    n = holder.count_of(items.GOLD_ITEM)
+    if hasattr(holder, "free"):
+        extra = items.item_weight(items.COIN_ITEM) * gold_payout(1) - items.item_weight(items.GOLD_ITEM)
+        n = min(n, int(holder.free // extra))
+    return max(0, n)
+
+
+def buy_gold(holder, n):
+    """Mint `n` Gold Coins out of `holder`'s copper at the bank. True if done."""
+    if not 0 < n <= max_gold_buyable(holder):
+        return False
+    holder.remove_named(items.COIN_ITEM, gold_price(n))
+    holder.give_to_pack(items.GOLD_ITEM, n)
+    return True
+
+
+def sell_gold(holder, n):
+    """Melt `n` of `holder`'s Gold Coins back into copper. True if done."""
+    if not 0 < n <= max_gold_sellable(holder):
+        return False
+    holder.remove_named(items.GOLD_ITEM, n)
+    holder.give_to_pack(items.COIN_ITEM, gold_payout(n))
+    return True
+
+
 def charge_evenly(members, amount):
     """Take `amount` copper off `members` as evenly as the coins allow --
     poorest first, the shortfall rolling onto whoever still has money."""
-    for i, m in enumerate(sorted(members, key=lambda u: u.gold)):
-        share = min(m.gold, -(-amount // (len(members) - i)))
-        m.gold -= share
+    for i, m in enumerate(sorted(members, key=lambda u: u.money)):
+        share = min(m.money, -(-amount // (len(members) - i)))
+        m.money -= share
         amount -= share
 
 
 def charge_richest_first(members, amount):
     """Take `amount` copper off `members`, richest first."""
     left = amount
-    for m in sorted(members, key=lambda u: u.gold, reverse=True):
-        paid = min(m.gold, left)
-        m.gold -= paid
+    for m in sorted(members, key=lambda u: u.money, reverse=True):
+        paid = min(m.money, left)
+        m.money -= paid
         left -= paid
         if left <= 0:
             break
@@ -322,7 +368,7 @@ def spread_coin(members, delta):
     moved is exactly `delta` (a payment is capped at what the party holds)."""
     if not members or not delta:
         return
-    held = [m.gold for m in members]
+    held = [m.money for m in members]
     total = sum(held)
     amount = abs(delta) if delta > 0 else min(-delta, total)
     weights = held if total > 0 else [1] * len(members)
@@ -332,7 +378,7 @@ def spread_coin(members, delta):
     for i in by_remainder[:amount - sum(shares)]:
         shares[i] += 1
     for m, share in zip(members, shares):
-        m.gold += share if delta > 0 else -share
+        m.money += share if delta > 0 else -share
 
 
 class PartyPurse:
@@ -344,7 +390,7 @@ class PartyPurse:
 
     @property
     def purse(self):
-        return sum(m.gold for m in self._purse_members())
+        return sum(m.money for m in self._purse_members())
 
     @purse.setter
     def purse(self, amount):

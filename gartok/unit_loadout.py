@@ -284,12 +284,17 @@ class LoadoutMixin:
     def remove_named(self, name, qty=1):
         """Remove up to `qty` of `name` by name rather than index -- for
         callers (missions, chests, the ledger, ...) that know what they want
-        gone but not where it sits. Returns how many were actually removed."""
-        idx = next((i for i, (n, _) in enumerate(self._base_inventory) if n == name), None)
-        if idx is None:
-            return 0
-        _, removed = self._pack_take(idx, qty)
-        return removed
+        gone but not where it sits, across every stack of it (a split purse is
+        several). Returns how many were actually removed."""
+        left, idx = qty, 0
+        while left and idx < len(self._base_inventory):
+            if self._base_inventory[idx][0] != name:
+                idx += 1
+                continue
+            rows = len(self._base_inventory)
+            left -= self._pack_take(idx, left)[1]
+            idx += len(self._base_inventory) == rows      # an emptied row shifts the next one into `idx`
+        return qty - left
 
     def count_of(self, name):
         """Total quantity of `name` held in the pack (0 if none)."""
@@ -304,19 +309,28 @@ class LoadoutMixin:
         return min(self.locked_items.get(name, 0), self.count_of(name))
 
     @property
-    def gold(self):
-        """Copper coins carried: the size of the "Copper Coin" stacks in the pack,
-        so money is an ordinary item -- it weighs, splits and moves like one."""
-        return self.count_of(items.COIN_ITEM)
+    def money(self):
+        """What the pack's coins add up to in $: copper plus 100 per Gold Coin.
+        Money is ordinary items -- it weighs, splits and moves like any."""
+        return sum(self.count_of(n) * v for n, v in items.COIN_VALUE.items())
 
-    @gold.setter
-    def gold(self, amount):
+    @money.setter
+    def money(self, amount):
+        """Raising it mints copper. Lowering it spends copper first, then breaks
+        just enough Gold Coins and gives the change back in copper, no fee."""
         amount = max(0, int(amount))
-        held = self.gold
+        held = self.money
         if amount > held:
             self.give_to_pack(items.COIN_ITEM, amount - held)
-        while held > amount:                      # a split purse spans several stacks
-            held -= self.remove_named(items.COIN_ITEM, held - amount)
+            return
+        owed = held - amount
+        owed -= self.remove_named(items.COIN_ITEM, owed)
+        if owed:
+            golds = -(-owed // items.COIN_VALUE[items.GOLD_ITEM])
+            self.remove_named(items.GOLD_ITEM, golds)
+            change = golds * items.COIN_VALUE[items.GOLD_ITEM] - owed
+            if change:
+                self.give_to_pack(items.COIN_ITEM, change)
 
     @property
     def inventory(self):
@@ -376,7 +390,7 @@ def flatten_pack(unit):
     only for the battle boundary (`Combatant.inventory` stays flat; nothing
     in a fight needs stacked display, just per-charge checks)."""
     return [name for name, qty in unit._base_inventory
-            if name != items.COIN_ITEM for _ in range(qty)]
+            if not items.is_coin(name) for _ in range(qty)]
 
 
 def distribute_load(units, share_coins=True, creatures=()):
@@ -390,15 +404,15 @@ def distribute_load(units, share_coins=True, creatures=()):
     too, the ones with room to carry; coins stay on people."""
     bearers = [*units, *(c for c in creatures if c.capacity > 0)]
     pool = []
-    coins = 0
+    coins = {}
     for u in bearers:
         keep, move = [], []
         for it in u._base_inventory:
             name, qty = it[0], it[1]
             locked = u.locked_of(name)
-            if name == items.COIN_ITEM and share_coins:
-                coins += qty - locked
-            elif name == items.COIN_ITEM:
+            if items.is_coin(name) and share_coins:
+                coins[name] = coins.get(name, 0) + qty - locked
+            elif items.is_coin(name):
                 locked = qty
             if locked:
                 if isinstance(it, items.ItemInstance):
@@ -407,7 +421,7 @@ def distribute_load(units, share_coins=True, creatures=()):
                     keep.append(locked_inst)
                 else:
                     keep.append((name, locked))
-            if qty > locked and not (name == items.COIN_ITEM and share_coins):
+            if qty > locked and not (items.is_coin(name) and share_coins):
                 if isinstance(it, items.ItemInstance):
                     for _ in range(qty - locked):
                         c = it.copy()
@@ -425,9 +439,10 @@ def distribute_load(units, share_coins=True, creatures=()):
         best.give_to_pack(item)
         best._derive_combat()
 
-    while coins:
-        handful = min(coins, COIN_HANDFUL)
-        best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
-        best.give_to_pack(items.COIN_ITEM, handful)
-        best._derive_combat()
-        coins -= handful
+    for coin, left in coins.items():
+        while left:
+            handful = min(left, COIN_HANDFUL)
+            best = min(units, key=lambda m: m.load / max(1.0, m.carry_normal))
+            best.give_to_pack(coin, handful)
+            best._derive_combat()
+            left -= handful

@@ -159,7 +159,7 @@ def test_field_loot_gathers_the_dead_and_the_ground():
     from gartok.ground import GroundObject
     random.seed(4)
     squad = [Unit("player")]
-    squad[0].gold = 0
+    squad[0].money = 0
     enemies = [Unit("enemy"), Unit("enemy")]
     batt = Battle(squad, enemies)
     for e in batt.enemy_units:                        # freeze known kit
@@ -209,8 +209,8 @@ def test_guild_gold_is_the_sum_of_the_roster():
     from gartok.guild import Guild
     roster = [Unit("player") for _ in range(3)]
     for m, g in zip(roster, (5, 12, 3)):
-        m.gold = g
-    assert Guild(roster).gold == 20
+        m.money = g
+    assert Guild(roster).money == 20
 
 
 def test_clock_tracks_day_and_daylight():
@@ -295,7 +295,7 @@ def test_a_fallen_allys_purse_is_loot_but_an_enemys_is_not():
     from gartok import items, loot
     random.seed(4)
     ally, foe = Unit("player"), Unit("enemy")
-    ally.gold, foe.gold = 130, 90
+    ally.money, foe.money = 130, 90
     batt = Battle([ally], [foe])
     batt.enemy_units[0].inventory = []
     batt.enemy_units[0].weapon_hand = batt.enemy_units[0].torch_hand = False

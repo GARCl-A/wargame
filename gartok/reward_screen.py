@@ -9,6 +9,7 @@ line (the Champion of the Pit title changing hands). `on_done` returns to the ma
 import pygame
 
 from . import factions
+from .constants import fmt_money
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui.primitives import caps, draw_button, header, panel, set_pointer, text
@@ -65,14 +66,14 @@ class RewardScreen(SheetModalMixin, Screen):
                 name = key[4:]
                 for m in self.members:
                     if m.name == name:
-                        m.gold += self.amount
+                        m.money += self.amount
                         self.paid_to = m
                         return
         if self.paid_to is not None:
             return
         for rect, member in self.cards:
             if rect.collidepoint(px):
-                member.gold += self.amount
+                member.money += self.amount
                 self.paid_to = member
                 return
 
@@ -87,9 +88,9 @@ class RewardScreen(SheetModalMixin, Screen):
 
         head = pygame.Rect(0, 0, W, T.S * 9)
         if self.paid_to is None:
-            sub = f"{self.amount} copper  ·  click who pockets the purse"
+            sub = f"{fmt_money(self.amount)}  ·  click who pockets the purse"
         else:
-            sub = f"{self.paid_to.name} pockets {self.amount} copper (now on {self.paid_to.gold})"
+            sub = f"{self.paid_to.name} pockets {fmt_money(self.amount)} (now on {fmt_money(self.paid_to.money)})"
 
         header(screen, F, head, "ARENA PURSE", sub, (), None, mpos=self.mouse)
 
@@ -143,7 +144,7 @@ class RewardScreen(SheetModalMixin, Screen):
             badge = self.sheet_badge(surf, (r.right - T.S * 2, r.centery - 10), self.fonts)
             self.info_hits.append((badge, m))
 
-            caps(surf, F["micro"], f"COPPER {m.gold}", (r.right - T.S * 6, r.centery - 10), T.BRASS if took else T.TX_MUTED, right=True)
+            caps(surf, F["micro"], fmt_money(m.money), (r.right - T.S * 6, r.centery - 10), T.BRASS if took else T.TX_MUTED, right=True)
 
             if not took and self.paid_to is None:
                 c = pygame.Rect(r.right - T.S * 6 - 80, r.centery - 4, 80, 28)

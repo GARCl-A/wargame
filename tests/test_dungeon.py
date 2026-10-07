@@ -145,11 +145,11 @@ def test_pickup_chest_and_codex():
     actor.pos = (20, 3)
     pu = PickUp()
     assert pu.available(battle, actor)
-    gold_before = actor.char.gold
+    gold_before = actor.char.money
     pu.execute(battle, actor)
     assert "Scroll of Sleep" in actor.inventory
     assert "Amethyst" in actor.inventory
-    assert actor.char.gold == gold_before + 150
+    assert actor.char.money == gold_before + 150
     assert not any(o.pos == (20, 3) and o.is_chest for o in battle.ground)
 
     # Pick up Codex at (27, 11)
@@ -166,12 +166,12 @@ def test_unopened_chest_currency_absorbed_on_victory():
     from gartok.campaign import absorb_battle
     scenario = AncientRuinsScenario()
     u = Unit("player")
-    u.gold = 10
+    u.money = 10
     guild = Guild([u], node="ancient_ruins")
     battle = Battle([u], scenario.enemies, scenario=scenario, daylight=False, lethal=True)
     battle.winner = "player"
     absorb_battle(guild, [u], battle, node=world.node("ancient_ruins"))
-    assert u.gold == 160
+    assert u.money == 160
 
 
 def test_boss_dormancy_and_alarm_awakening():
@@ -252,10 +252,10 @@ def test_library_quest_two_turn_in_and_trusted_deed():
     assert missions.can_turn_in(guild, m2)
 
     # Turn in
-    copper_before = u.gold
+    copper_before = u.money
     earned = missions.turn_in(guild, m2)
     assert m2.state == "done"
-    assert u.gold == copper_before + t2.reward
+    assert u.money == copper_before + t2.reward
     assert not u.has_item(data.CODEX_ITEM) # Turned in
 
     # Verify library_trusted deed was banked

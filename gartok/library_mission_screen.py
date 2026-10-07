@@ -3,6 +3,7 @@
 """
 
 from . import missions
+from .constants import fmt_money
 from .ui.mission_offer_screen import MissionOfferScreen
 
 
@@ -36,8 +37,8 @@ class LibraryMissionScreen(MissionOfferScreen):
 
     def get_req_str(self, t):
         if t.goal_item == "Any Dictionary":
-            return f"goal: {t.goal_qty}x Dictionary (Unarchived Tongue)  ·  pay: {t.reward} copper  ·  deadline: {t.deadline_days} days"
-        return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {t.reward} copper  ·  deadline: {t.deadline_days} days"
+            return f"goal: {t.goal_qty}x Dictionary (Unarchived Tongue)  ·  pay: {fmt_money(t.reward)}  ·  deadline: {t.deadline_days} days"
+        return f"goal: {t.goal_qty}x {t.goal_item}  ·  pay: {fmt_money(t.reward)}  ·  deadline: {t.deadline_days} days"
 
     def get_status_str(self, t, progress, ready, days_left):
         item_label = "Dictionary" if t.goal_item == "Any Dictionary" else t.goal_item
@@ -47,4 +48,4 @@ class LibraryMissionScreen(MissionOfferScreen):
         return "TURN IN" if ready else f"NEED {t.goal_qty - progress} MORE"
 
     def get_success_notice(self, reward):
-        return f"paid out {reward} copper, split across the group."
+        return f"paid out {fmt_money(reward)}, split across the group."

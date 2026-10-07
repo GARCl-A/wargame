@@ -5,6 +5,7 @@ Mixed into `guild.Guild`; the stores themselves live in `holdings.py`.
 """
 
 from . import economy, magic, world
+from .constants import fmt_money
 
 
 class HoldingsMixin:
@@ -103,7 +104,7 @@ class HoldingsMixin:
                 if not any(u.study_target for u in g.members):
                     g.order = None
                     events.append(f"{node.name}: studies are over -- rooms released.")
-                elif not any(u.study_target and u.gold >= economy.TAVERN_STUDY_COST_PER_DAY
+                elif not any(u.study_target and u.money >= economy.TAVERN_STUDY_COST_PER_DAY
                              for u in g.members):
                     g.order = None
                     events.append(f"{node.name}: no one can pay for another night -- rooms released.")
@@ -141,9 +142,9 @@ class HoldingsMixin:
         house = self.house
         if house.owned and not house.squatting and self.clock.day >= (house.tax_due_day or 0):
             house.tax_due_day = self.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
-            if self.gold >= economy.CITY_PROPERTY_TAX:
+            if self.money >= economy.CITY_PROPERTY_TAX:
                 self._charge_roster(economy.CITY_PROPERTY_TAX)
-                events.append(f"The Bankers collect {economy.CITY_PROPERTY_TAX} copper in property tax.")
+                events.append(f"The Bankers collect {fmt_money(economy.CITY_PROPERTY_TAX)} in property tax.")
             else:
                 house.missed_payments += 1
                 events.append("The guild can't cover the property tax -- the Bankers note it.")

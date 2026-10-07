@@ -1,4 +1,4 @@
-"""Market: buy and sell gear for copper.
+"""Market: buy and sell gear for money.
 
 The shopping party's coin counts as one **common purse** (the guild has no
 treasury) and the members' packs sit side by side, so you can shift items and
@@ -26,6 +26,7 @@ shopper's items for one move.
 import pygame
 
 from . import economy, factions, items
+from .constants import fmt_money
 from .dragselect import DragSelectMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
@@ -218,10 +219,14 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             return pick[1]
         return self._item_at(*pick)
 
+    def _goods(self, picks):
+        """The picks that are pack items a shop would buy -- not stock rows, not coins."""
+        return [p for p in picks if p[0] != "stock"
+                and self._name_of(p) is not None and not items.is_coin(self._name_of(p))]
+
     def _sell_total(self):
         return sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
-                   for p in self.selected
-                   if p[0] != "stock" and self._name_of(p) not in (None, items.COIN_ITEM))
+                   for p in self._goods(self.selected))
 
     def _selected_names(self):
         return [n for n in (self._name_of(p) for p in self.selected) if n is not None]
@@ -389,17 +394,17 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                  if len(owners) > 1 or id(m) not in owners]
         if len(picks) > 1:
             total = sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
-                        for p in picks if self._name_of(p) != items.COIN_ITEM)
-            sell = [("sell_sel", f"sell selected  (+{total}c)", None)] if total else []
+                        for p in self._goods(picks))
+            sell = [("sell_sel", f"sell selected  (+{fmt_money(total)})", None)] if total else []
             return sell + dests
         member, loc = picks[0]
         name, qty = member._base_inventory[loc]
-        if name == items.COIN_ITEM:
+        if items.is_coin(name):
             return dests
         each = economy.sell_price(name, self.deal)
-        rows = [("sell", f"sell all x{qty}  (+{each * qty}c)" if qty > 1 else f"sell  (+{each}c)", qty)]
+        rows = [("sell", f"sell all x{qty}  (+{fmt_money(each * qty)})" if qty > 1 else f"sell  (+{fmt_money(each)})", qty)]
         if qty > 1:
-            rows.insert(0, ("sell", f"sell 1  (+{each}c)", 1))
+            rows.insert(0, ("sell", f"sell 1  (+{fmt_money(each)})", 1))
         return rows + dests
 
     def _menu_run(self, picks, kind, arg):
@@ -595,7 +600,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 return
             price = economy.buy_price(name, self.deal)
             if self.purse < price:
-                self.notice = "out of copper."
+                self.notice = "out of money."
                 return
             self.purse -= price
             self.guild.total_spent += price
@@ -628,7 +633,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                     break
                 price = economy.buy_price(name, self.deal)
                 if self.purse < price:
-                    stopped = "out of copper"
+                    stopped = "out of money"
                     break
                 if not self._fits(member, name):
                     stopped = f"{name} won't fit {member.name}'s load"
@@ -655,8 +660,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             self._settle_market()
 
     def _sell(self):
-        picks = [p for p in self.selected
-                 if p[0] != "stock" and self._name_of(p) not in (None, items.COIN_ITEM)]
+        picks = self._goods(self.selected)
         self.selected = []
         if not picks:
             self._sel_qty = {}
@@ -668,7 +672,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         for owner, owner_picks in by_owner.values():
             collected, _ = self._collect(owner_picks)  # _take reads self._sel_qty -- clear after
             proceeds = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
-            owner.gold += proceeds
+            owner.money += proceeds
             total += proceeds
             sold += sum(q for _, q in collected)
             for n, q in collected:
@@ -706,7 +710,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
         has_tut = self.tutorial_key() is not None
         purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
-        ui_text(screen, F["body_sm"], f"common purse: {self.purse} copper",
+        ui_text(screen, F["body_sm"], f"common purse: {fmt_money(self.purse)}",
                 (purse_x, MARGIN + 2), T.BRASS, right=True)
         msg, col = self._status_line()
         ui_text(screen, F["body"], msg, (MARGIN, MARGIN + 30), col)
@@ -902,10 +906,10 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         self.buttons.append(("done", done_r))
 
         names = self._selected_names()
-        if not self._buying and any(n != items.COIN_ITEM for n in names):
+        if not self._buying and any(not items.is_coin(n) for n in names):
             sell_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
             sell_r.center = (W // 2, H - T.S * 8 + T.S * 2)
-            draw_button(screen, F, sell_r, f"SELL FOR {self._sell_total()}c", mpos=self.mouse)
+            draw_button(screen, F, sell_r, f"SELL FOR {fmt_money(self._sell_total())}", mpos=self.mouse)
             self.buttons.append(("sell", sell_r))
 
         if self.notice:

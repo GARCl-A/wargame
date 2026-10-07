@@ -18,6 +18,7 @@ Migrated fully onto `gartok.ui`: data-driven drawing via `gartok.ui.primitives`,
 import pygame
 
 from . import arena
+from .constants import fmt_money
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
@@ -106,7 +107,7 @@ class SquadScreen(SheetModalMixin, Screen):
 
     @property
     def picked_gold(self):
-        return sum(u.gold for u in self.picked)
+        return sum(u.money for u in self.picked)
 
     @property
     def entry_cost(self):
@@ -279,7 +280,7 @@ class SquadScreen(SheetModalMixin, Screen):
             from .arena import bout_level_range
             lvl = bout_level_range(off, self.picked)
             text(screen, F["body_sm"],
-                 f"entry {off.entry}/head  ·  purse {off.purse}  ·  {off.player_cap} opponent(s)  ·  {lvl}",
+                 f"entry {fmt_money(off.entry)}/head  ·  purse {fmt_money(off.purse)}  ·  {off.player_cap} opponent(s)  ·  {lvl}",
                  (r.x + T.S, r.y + 28), T.TX_MUTED)
             self.tiers.append((r, i))
         top += 66
@@ -290,7 +291,7 @@ class SquadScreen(SheetModalMixin, Screen):
         can_pay = gold >= cost
         cost_col = T.GREEN if can_pay else T.BLOOD
         text(screen, F["body_sm"],
-             f"entry: {off.entry} x {len(self.picked)} fighter(s) = {cost} copper  ·  squad's combined purse: {gold} copper",
+             f"entry: {fmt_money(off.entry)} x {len(self.picked)} fighter(s) = {fmt_money(cost)}  ·  squad's combined purse: {fmt_money(gold)}",
              (pad, top), cost_col)
         top += 20
 
@@ -336,7 +337,7 @@ class SquadScreen(SheetModalMixin, Screen):
             lvl += " *"
 
         extra = [
-            (None, f"{unit.gold} copper  ·  lvl {lvl}", T.BRASS)
+            (None, f"{fmt_money(unit.money)}  ·  lvl {lvl}", T.BRASS)
         ]
         if unit.pending_picks:
             extra.append((None, "TALENT PICK READY", T.BRASS))

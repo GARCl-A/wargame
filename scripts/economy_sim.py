@@ -130,8 +130,8 @@ def _eat(trader, vendors, produced):
     if best is None:
         return 0                                    # nothing to buy; goes hungry (unmodelled)
     v, f, p = best
-    if trader.gold >= p:
-        trader.gold -= p
+    if trader.money >= p:
+        trader.money -= p
         v.stock[f] -= 1
         return p
     return 0
@@ -152,8 +152,8 @@ def run_trader(combo, seed, cfg):
     if racial is not None:
         t.set_track_level("racial", racial)
     spend_picks(t)
-    t.gold = cfg["start_gold"] or t.gold           # 0 => keep the rolled 5d10
-    start = t.gold
+    t.money = cfg["start_gold"] or t.money           # 0 => keep the rolled 5d10
+    start = t.money
 
     vendors = [Vendor(rng, arbitrage=cfg["mode"] == "arbitrage",
                       spread=cfg["spread"], stock_cap=cfg["stock_cap"])
@@ -174,7 +174,7 @@ def run_trader(combo, seed, cfg):
         produced = defaultdict(int)
 
         if wage_per_day:
-            t.gold += wage_per_day
+            t.money += wage_per_day
             revenue += wage_per_day
 
         if cfg["mode"] == "production" and occ in PRODUCE:
@@ -195,11 +195,11 @@ def run_trader(combo, seed, cfg):
                 if best is None:
                     break
                 margin, lo, hi, item, bp = best
-                qty = min(lo.stock[item], t.gold // bp, cfg["max_lot"])
+                qty = min(lo.stock[item], t.money // bp, cfg["max_lot"])
                 if qty <= 0:
                     break
                 lo.stock[item] -= qty
-                t.gold += qty * (hi.sell[item] - bp)
+                t.money += qty * (hi.sell[item] - bp)
                 arb_profit += qty * margin
 
         # sell the day's production to the best-paying vendor
@@ -207,7 +207,7 @@ def run_trader(combo, seed, cfg):
             if qty <= 0 or item in FOOD:
                 continue
             got = qty * max(v.sell[item] for v in vendors)
-            t.gold += got
+            t.money += got
             revenue += got
             produced[item] = 0
 
@@ -216,7 +216,7 @@ def run_trader(combo, seed, cfg):
             v.replenish(cfg["replenish"])
 
     return {
-        "delta": t.gold - start,
+        "delta": t.money - start,
         "start": start,
         "cha_mod": data.mod(t.charisma),
         "langs": len(t.languages),

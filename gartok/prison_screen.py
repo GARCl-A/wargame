@@ -7,6 +7,7 @@ gratitude. If the pitch fails they walk free and take the money with them.
 """
 
 from . import recruit
+from .constants import fmt_money
 from .taverna_screen import TavernaScreen
 
 BAIL_BONUS = (2, "paid bail")
@@ -40,4 +41,4 @@ class PrisonScreen(TavernaScreen):
 
     def _sub_extra(self):
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
-        return f" · party holds {self._wealth()} cp · new faces in {days_left} day(s)"
+        return f" · party holds {fmt_money(self._wealth())} · new faces in {days_left} day(s)"

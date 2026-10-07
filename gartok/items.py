@@ -352,6 +352,7 @@ _register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarit
 _register(ItemDef(id="bear_trap", name="Bear Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=3.0, price=35))
 _register(ItemDef(id="alarm_trap", name="Alarm Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=1.0, price=45))
 _register(ItemDef(id="copper_coin", name="Copper Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=1))
+_register(ItemDef(id="gold_coin", name="Gold Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=100))
 _register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=5.0, price=60))
 _register(ItemDef(id="harness", name="Harness", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=4.0, price=30))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
@@ -634,7 +635,9 @@ BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
 # --------------------------------------------------------------------------- #
 
 TORCH_ITEM = "Torch"
-COIN_ITEM = "Copper Coin"      # `Unit.gold` is the count of these in the pack; 200 weigh 1 kg
+COIN_ITEM = "Copper Coin"      # 1 $; 200 weigh 1 kg
+GOLD_ITEM = "Gold Coin"        # 100 $, only ever minted at the bank
+COIN_VALUE = {COIN_ITEM: 1, GOLD_ITEM: 100}
 LANTERN_ITEM = "Lantern"
 AMMO_ITEM = "Quiver"
 FIRST_AID_ITEM = "First Aid Kit"
@@ -645,6 +648,11 @@ GEM_ITEM = "Gemstones"
 MISSION_CHEST_ITEM = "Sealed Chest"
 LETTER_ITEM = "Letter of Receipt"
 CODEX_ITEM = "Ancient Codex"
+
+
+def is_coin(name) -> bool:
+    """A Copper or Gold Coin: money, not merchandise -- it never sells or sorts as gear."""
+    return isinstance(name, str) and name in COIN_VALUE
 
 
 def item_tag(item: str | ItemDef | None) -> str:

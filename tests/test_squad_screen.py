@@ -17,9 +17,9 @@ def test_squad_screen_init_and_properties():
     u0 = Unit("player", name="Unit0")
     u1 = Unit("player", name="Unit1")
     u2 = Unit("player", name="Unit2")
-    u0.gold = 50
-    u1.gold = 10
-    u2.gold = 5
+    u0.money = 50
+    u1.money = 10
+    u2.money = 5
 
     # Disabled unit (e.g. starving)
     scr = SquadScreen(None, [u0, u1, u2], world.node("arena"),
@@ -36,9 +36,9 @@ def test_squad_screen_arena_tiers_and_trimmed_pick():
     u0 = Unit("player", name="Unit0")
     u1 = Unit("player", name="Unit1")
     u2 = Unit("player", name="Unit2")
-    u0.gold = 100
-    u1.gold = 100
-    u2.gold = 100
+    u0.money = 100
+    u1.money = 100
+    u2.money = 100
 
     scr = SquadScreen(None, [u0, u1, u2], world.node("arena"),
                       on_confirm=lambda *a: None, on_back=lambda: None,
@@ -66,7 +66,7 @@ def test_squad_screen_arena_tiers_and_trimmed_pick():
 
 def test_squad_screen_draw_and_callbacks():
     u = Unit("player", name="Unit0")
-    u.gold = 50
+    u.money = 50
     confirmed = []
     backed = []
 

@@ -15,7 +15,7 @@ def test_unit_save_round_trip_keeps_rolled_values():
     u._base_inventory = packed(["Rope", "Map"])
     v = Unit.from_save(persist.unit_to_dict(u))
     for f in ("name", "alignment", "age", "hp_max", "ac", "speed",
-              "mental_defense", "languages", "_base_inventory", "gold",
+              "mental_defense", "languages", "_base_inventory", "money",
               "quiver_charges", "first_aid_charges"):
         assert getattr(v, f) == getattr(u, f), f
     assert v.race["name"] == u.race["name"]
@@ -134,7 +134,7 @@ def test_save_slot_file_round_trip():
                   reputation={"arena": 3}, deeds_done=["arena_first_blood"],
                   arena_challenge_day=12, clock=Clock(30 * 3600), node="wilds",
                   bank=Stash(10, ["Rope", "Sack"]))
-    guild.roster[0].gold = 42
+    guild.roster[0].money = 42
     guild.roster[0].arena_title = True
     guild.roster[0].bio = "kept the belt through a lean winter"
     pool = recruit.refresh_pool(guild)
@@ -152,7 +152,7 @@ def test_save_slot_file_round_trip():
         assert back.bank.capacity == 10 and back.bank.items == [("Rope", 1), ("Sack", 1)]
         assert [u.name for u in back.roster] == [u.name for u in guild.roster]
         assert [u.hp_max for u in back.roster] == [u.hp_max for u in guild.roster]
-        assert back.roster[0].gold == 42
+        assert back.roster[0].money == 42
         assert back.taverna_week == guild.taverna_week
         assert [u.uid for u in back.taverna_pool] == [u.uid for u in pool]
         assert back.taverna_blocked == [[pool[0].uid, guild.roster[0].uid]]

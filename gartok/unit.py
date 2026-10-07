@@ -67,7 +67,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
             self._apply_occupation()
         self.alignment = data.roll_alignment()
         purse = roll(*economy.STARTING_WEALTH_DICE)       # copper coins -- lives on the character, as a pack item
-        self.gold = 0 if self.race["kind"] == "beast" else purse
+        self.money = 0 if self.race["kind"] == "beast" else purse
         self.crime = 0                                  # rap sheet; the guard tests it at a jurisdiction node (justice.py)
         self.unfed_days = 0                            # consecutive days without a meal
         self.sick = False                              # food poisoning
@@ -134,7 +134,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.equipped_tongue = d.get("equipped_tongue")
         u.alignment = d["alignment"]
         if "gold" in d:                                  # pre-coin-item saves kept the purse as a number
-            u.gold = d["gold"]
+            u.money = d["gold"]
         u.crime = d.get("crime", 0)
         u.unfed_days = d.get("unfed_days", 0)
         u.sick = d.get("sick", False)

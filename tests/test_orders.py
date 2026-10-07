@@ -116,14 +116,14 @@ def test_interactive_order_surfaces_in_pending_and_leaves_the_group_idle():
 def test_work_order_pays_without_double_advancing_the_clock():
     random.seed(1)
     a, b = Unit("player"), Unit("player")
-    start_a, start_b = a.gold, b.gold
+    start_a, start_b = a.money, b.money
     g = Group([a, b], node="lumber_yard")
     guild = _guild(g, clock=Clock(0))
     g.order = orders.work(guild, g, 8)
     result = campaign.advance(guild)
     assert guild.clock.seconds == 8 * 3600            # advanced exactly once, not twice
     pay = economy.lumber_pay(8)
-    assert a.gold == start_a + pay and b.gold == start_b + pay
+    assert a.money == start_a + pay and b.money == start_b + pay
     assert a.work_hours == 8 and b.work_hours == 8
     assert any("Lumber yard" in e for e in result.events)
     assert g.order is None

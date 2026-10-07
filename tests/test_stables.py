@@ -12,7 +12,7 @@ from tests.helpers import Unit
 
 def _stables(coins, w=None, pets=(), wis=0):
     a, b = Unit("player"), Unit("player")
-    a.gold, b.gold = coins, 0
+    a.money, b.money = coins, 0
     a.mod_wisdom = b.mod_wisdom = wis
     g = Group([a, b], node="farm", wagons=[w] if w else [], herd=list(pets))
     guild = Guild(None, groups=[g])
@@ -38,7 +38,7 @@ def test_buying_the_wagon_takes_the_coin_and_gives_the_group_a_wagon():
     scr, g, a = _stables(wagon.VEHICLES["Cart"].price + 7)
     assert "buy_wagon:Cart" in _keys(scr)
     scr._click("buy_wagon:Cart")
-    assert len(g.wagons) == 1 and a.gold == 7 and g.wagons[0]._group is g
+    assert len(g.wagons) == 1 and a.money == 7 and g.wagons[0]._group is g
 
 
 def test_the_wagon_is_refused_when_the_party_cannot_pay():
@@ -52,14 +52,14 @@ def test_an_animal_is_bought_with_no_tack_and_no_wagon_needed():
     scr, g, a = _stables(1000)
     scr._click("buy:Donkey")
     assert [x.species for x in g.herd] == ["Donkey"] and g.herd[0].tack is None
-    assert a.gold == 1000 - animals.PRICE["Donkey"]
+    assert a.money == 1000 - animals.PRICE["Donkey"]
 
 
 def test_the_group_cannot_keep_a_herd_beyond_its_leaders_control():
     scr, g, a = _stables(10_000, pets=[animals.Animal("Donkey") for _ in range(HERD_BASE)])
     assert not any(k.startswith("buy:") for k in _keys(scr))
     scr._click("buy:Ox")
-    assert len(g.herd) == HERD_BASE and a.gold == 10_000
+    assert len(g.herd) == HERD_BASE and a.money == 10_000
 
 
 def test_a_wise_leader_can_buy_more_animals():
@@ -72,14 +72,14 @@ def test_a_wise_leader_can_buy_more_animals():
 def test_tack_is_bought_onto_the_animal_and_decides_its_role():
     scr, g, a = _stables(1000, pets=[animals.Animal("Donkey")])
     scr._click(f"fit:0:{animals.HARNESS}")
-    assert g.herd[0].role == "draft" and a.gold == 1000 - items.get(animals.HARNESS).price
+    assert g.herd[0].role == "draft" and a.money == 1000 - items.get(animals.HARNESS).price
     assert not any(k.startswith("fit:") for k in _keys(scr))
 
 
 def test_an_animal_wears_only_one_set_of_tack():
     scr, g, a = _stables(1000, pets=[animals.Animal("Donkey", tack=animals.PACK_SADDLE)])
     scr._click(f"fit:0:{animals.HARNESS}")
-    assert g.herd[0].tack == animals.PACK_SADDLE and a.gold == 1000
+    assert g.herd[0].tack == animals.PACK_SADDLE and a.money == 1000
 
 
 def test_tack_that_cannot_be_afforded_is_not_offered():
@@ -106,10 +106,10 @@ def test_a_loaded_animal_has_to_be_unloaded_before_it_is_sold_or_unfitted():
 
 def test_selling_an_animal_pays_the_resale_and_keeps_the_tack():
     scr, g, _ = _stables(0, pets=[animals.Animal("Ox", tack=animals.HARNESS)])
-    before = g.leader.gold
+    before = g.leader.money
     scr._click("sell:0")
     assert g.herd == []
-    assert g.leader.gold - before == int(animals.PRICE["Ox"] * economy.SELL_FACTOR)
+    assert g.leader.money - before == int(animals.PRICE["Ox"] * economy.SELL_FACTOR)
     assert g.leader.count_of(animals.HARNESS) == 1
 
 
@@ -139,7 +139,7 @@ def test_a_carriage_is_bought_beside_a_cart():
     assert {"buy_wagon:Cart", "buy_wagon:Carriage"} <= _keys(scr)
     scr._click("buy_wagon:Carriage")
     assert [w.kind for w in g.wagons] == ["Cart", "Carriage"]
-    assert a.gold == 10_000 - wagon.VEHICLES["Carriage"].price
+    assert a.money == 10_000 - wagon.VEHICLES["Carriage"].price
 
 
 def test_a_new_wagon_takes_the_idle_harnessed_animal():
@@ -167,11 +167,11 @@ def test_selling_a_wagon_pays_its_own_price_and_frees_its_animals():
     g.hitch_idle()
     scr._click("sell_wagon:0")
     assert g.wagons == [] and pet.hitch is None
-    assert g.leader.gold == int(wagon.VEHICLES["Carriage"].price * economy.SELL_FACTOR)
+    assert g.leader.money == int(wagon.VEHICLES["Carriage"].price * economy.SELL_FACTOR)
 
 
 def test_every_species_is_for_sale_with_its_loads():
     scr, _, a = _stables(10_000)
     assert {f"buy:{s}" for s in data.LIVESTOCK} <= _keys(scr)
     scr._click("buy:Horse")
-    assert scr.group.herd[0].species == "Horse" and a.gold == 10_000 - animals.PRICE["Horse"]
+    assert scr.group.herd[0].species == "Horse" and a.money == 10_000 - animals.PRICE["Horse"]

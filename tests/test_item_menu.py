@@ -26,7 +26,7 @@ def _unit(*stacks, gold=0):
     u._base_inventory = []
     for name, qty in stacks:
         u.give_to_pack(name, qty)
-    u.gold = gold
+    u.money = gold
     return u
 
 
@@ -71,7 +71,7 @@ def test_market_dots_open_a_sell_menu_and_sell_one():
     assert labels[0].startswith("sell 1") and labels[1].startswith("sell all x3")
     _click(s, surf, _row(s, 0)[0].center)
     assert s.menu is None
-    assert _count(u, "Rope") == 2 and u.gold == economy.sell_price("Rope")
+    assert _count(u, "Rope") == 2 and u.money == economy.sell_price("Rope")
 
 
 def test_market_menu_sell_all_empties_the_stack():
@@ -79,7 +79,7 @@ def test_market_menu_sell_all_empties_the_stack():
     s, surf = _market(u)
     _click(s, surf, _dots_of(s, u, "Rope").center)
     _click(s, surf, _row(s, 1)[0].center)
-    assert _count(u, "Rope") == 0 and u.gold == economy.sell_price("Rope") * 3
+    assert _count(u, "Rope") == 0 and u.money == economy.sell_price("Rope") * 3
 
 
 def test_a_sale_pays_the_seller_not_the_whole_party():
@@ -87,7 +87,7 @@ def test_a_sale_pays_the_seller_not_the_whole_party():
     s, surf = _market(seller, other)
     _click(s, surf, _dots_of(s, seller, "Rope").center)
     _click(s, surf, _row(s, 0)[0].center)
-    assert seller.gold == 10 + economy.sell_price("Rope") and other.gold == 90
+    assert seller.money == 10 + economy.sell_price("Rope") and other.money == 90
 
 
 def test_the_coin_stack_has_a_menu_that_moves_it_but_never_sells_it():
@@ -96,7 +96,7 @@ def test_the_coin_stack_has_a_menu_that_moves_it_but_never_sells_it():
     _click(s, surf, _dots_of(s, a, items.COIN_ITEM).center)
     assert [kind for _, kind, _ in s.menu["hits"]] == ["split", "member"]
     _click(s, surf, _row(s, 0)[0].center)
-    assert a.gold == 0 and b.gold == 50
+    assert a.money == 0 and b.money == 50
 
 
 def test_selling_a_selection_that_holds_coins_skips_the_coins():
@@ -104,7 +104,7 @@ def test_selling_a_selection_that_holds_coins_skips_the_coins():
     s, surf = _market(u)
     s.selected = [(u, _idx(u, items.COIN_ITEM)), (u, _idx(u, "Rope"))]
     s._sell()
-    assert u.gold == 30 + economy.sell_price("Rope")
+    assert u.money == 30 + economy.sell_price("Rope")
 
 
 def test_clicking_elsewhere_dismisses_the_menu_without_selling():
@@ -121,7 +121,7 @@ def test_buying_is_paid_out_of_real_coin_in_proportion_to_what_each_carries():
     s, _ = _market(rich, poor)
     assert s.purse == 400
     s.purse -= 40
-    assert (rich.gold, poor.gold) == (270, 90)
+    assert (rich.money, poor.money) == (270, 90)
     assert s.purse == 360
 
 
@@ -159,15 +159,15 @@ def test_stash_coins_move_like_any_item_and_the_rent_comes_out_of_the_packs():
     a, b = _unit(gold=300), _unit(gold=300)
     s, surf = _bank([a, b])
     s._run_service("rent")
-    assert a.gold + b.gold == 600 - economy.BANK_CHEST_PRICE
+    assert a.money + b.money == 600 - economy.BANK_CHEST_PRICE
     s.draw(surf)
     pick = next((o, i) for _, o, i in s._dots_hits if o is a and a._base_inventory[i][0] == items.COIN_ITEM)
     s._open_menu((100, 100), [pick])
     s.draw(surf)
-    before = a.gold + b.gold
+    before = a.money + b.money
     _click(s, surf, next(h for h in s.menu["hits"] if h[1] == "stash")[0].center)
     assert any(n == items.COIN_ITEM for n, _ in s.guild.bank.items)
-    assert a.gold + b.gold + sum(q for n, q in s.guild.bank.items if n == items.COIN_ITEM) == before
+    assert a.money + b.money + sum(q for n, q in s.guild.bank.items if n == items.COIN_ITEM) == before
 
 
 def test_stash_menu_is_empty_for_nothing_pickable():
@@ -178,11 +178,11 @@ def test_stash_menu_is_empty_for_nothing_pickable():
 def test_spread_coin_is_exact_and_capped_at_what_the_party_holds():
     a, b, c = _unit(gold=7), _unit(gold=5), _unit(gold=1)
     economy.spread_coin([a, b, c], -6)
-    assert a.gold + b.gold + c.gold == 7
+    assert a.money + b.money + c.money == 7
     economy.spread_coin([a, b, c], -100)
-    assert a.gold + b.gold + c.gold == 0
+    assert a.money + b.money + c.money == 0
     economy.spread_coin([a, b, c], 10)
-    assert a.gold + b.gold + c.gold == 10
+    assert a.money + b.money + c.money == 10
 
 
 def test_market_menu_acts_on_the_whole_selection_when_the_row_is_in_it():
@@ -196,7 +196,7 @@ def test_market_menu_acts_on_the_whole_selection_when_the_row_is_in_it():
     assert labels[0].startswith("sell selected") and labels[1] == f"to {b.name}"
     _click(s, surf, _row(s, 0)[0].center)
     assert _count(a, "Rope") == 0 and _count(a, "Torch") == 0
-    assert a.gold == economy.sell_price("Rope") * 2 + economy.sell_price("Torch")
+    assert a.money == economy.sell_price("Rope") * 2 + economy.sell_price("Torch")
 
 
 def test_market_menu_sends_the_whole_selection_to_another_member():
@@ -242,9 +242,9 @@ def test_market_menu_splits_a_stack_and_sells_only_the_peeled_part():
     s.selected, s._sel_qty = [(u, _idx(u, "Rope"))], {}
     peeled = next(i for i, (n, q) in enumerate(u._base_inventory) if n == "Rope" and q == 2)
     s.selected, s._sel_qty = [(u, peeled)], {(u, peeled): 2}
-    before = u.gold
+    before = u.money
     s._sell()
-    assert u.gold == before + 2 * each and _count(u, "Rope") == 3
+    assert u.money == before + 2 * each and _count(u, "Rope") == 3
 
 
 def test_a_single_item_or_a_coinless_equip_slot_has_no_split_row():

@@ -101,7 +101,7 @@ def _weapons():
                      "yes" if w.finesse else "--", thrown, w.hands,
                      f"{w.weight:g} kg", price))
     head = ("Weapon", "Size", "Damage", "Range", "Finesse", "Thrown", "Hands", "Weight",
-            "Price (cp)")
+            "Price ($)")
     return "## Weapons\n\n" + _table(head, rows)
 
 
@@ -112,7 +112,7 @@ def _armor():
         spd = "--" if a.speed_penalty == 0 else f"-{a.speed_penalty} sq"
         rows.append((name, f"+{a.ac}", cap, spd, f"{a.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Armor", "AC", "Max DEX to AC", "Speed", "Weight", "Price (cp)")
+    head = ("Armor", "AC", "Max DEX to AC", "Speed", "Weight", "Price ($)")
     return "## Armor\n\n" + _table(head, rows)
 
 
@@ -121,7 +121,7 @@ def _shields():
     for name, s in items.shields().items():
         rows.append((name, f"+{s.ac}", f"{s.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Shield", "AC", "Weight", "Price (cp)")
+    head = ("Shield", "AC", "Weight", "Price ($)")
     return "## Shields\n\n" + _table(head, rows)
 
 
@@ -203,13 +203,13 @@ def _constants():
         ("Torch radius", f"{data.TORCH_RADIUS} sq"),
         ("Lantern radius", f"{data.LIGHT_SOURCES['Lantern']} sq"),
         ("Starting wealth", f"{economy.STARTING_WEALTH_DICE[0]}d"
-         f"{economy.STARTING_WEALTH_DICE[1]} copper"),
+         f"{economy.STARTING_WEALTH_DICE[1]} $"),
         ("Resale factor", f"{economy.SELL_FACTOR:g} of buy price"),
-        ("Lumber wage", f"{economy.LUMBER_WAGE} cp per {economy.LUMBER_BLOCK_HOURS} h "
+        ("Lumber wage", f"${economy.LUMBER_WAGE} per {economy.LUMBER_BLOCK_HOURS} h "
          f"(level 0, bare-handed); {economy.LUMBER_AXE_RATIO[0]}/{economy.LUMBER_AXE_RATIO[1]} of that "
          f"with your own Axe (level {economy.LUMBER_LEVEL_OWN_AXE}), floored"),
         ("Hunting job level", hunt.HUNT_LEVEL),
-        ("Bank strongbox", f"{economy.BANK_CHEST_PRICE} cp to rent, holds "
+        ("Bank strongbox", f"${economy.BANK_CHEST_PRICE} to rent, holds "
          f"{economy.BANK_CHEST_CAPACITY} kg"),
         ("Combat XP thresholds", ", ".join(map(str, progression.COMBAT_XP_THRESHOLDS))),
         ("Work XP thresholds", ", ".join(map(str, progression.WORK_XP_THRESHOLDS))),

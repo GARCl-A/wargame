@@ -67,11 +67,11 @@ def test_library_dictionary_mission_flow():
     assert missions.progress(g, m) == 1
     assert missions.can_turn_in(g, m)
 
-    u.gold = 0
+    u.money = 0
     earned_deeds = missions.turn_in(g, m)
     assert m.state == "done"
     assert not u.has_item("Dictionary of Elvish")
-    assert u.gold == 250
+    assert u.money == 250
     assert "library_initiate" in g.deeds_done
     assert g.reputation["library"] == 1
 

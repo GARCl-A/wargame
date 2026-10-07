@@ -203,12 +203,12 @@ def _loaded_leaver(alignment):
     guild, group, m = _full_guild(extra=2, wis=[12, 6, 12, 12])
     leaver = m[2]
     leaver.alignment = alignment
-    leaver.gold = 100
+    leaver.money = 100
     leaver.give_to_pack("Rope")
     leaver.equipped_weapon = "Dagger"
     cohesion.daily(guild, ALWAYS_FAILS)
     assert leaver.uid in guild.leaving
-    leader_gold = group.leader.gold
+    leader_gold = group.leader.money
     leader_rope = sum(u.count_of("Rope") for u in group.members if u is not leaver)
     return guild, group, leaver, leader_gold, leader_rope
 
@@ -223,7 +223,7 @@ def test_when_the_notice_lapses_they_leave_the_guild():
 def test_a_lawful_leaver_takes_only_what_they_wear_and_wield():
     guild, group, leaver, gold, rope = _loaded_leaver("Lawful and Good")
     _lapse(guild)
-    assert group.leader.gold == gold + 100
+    assert group.leader.money == gold + 100
     assert sum(u.count_of("Rope") for u in group.members) == rope + 1   # spread by distribute_load
     assert leaver.equipped_weapon == "Dagger"            # went out the door with them
 
@@ -231,7 +231,7 @@ def test_a_lawful_leaver_takes_only_what_they_wear_and_wield():
 def test_a_neutral_leaver_keeps_the_pack_but_leaves_the_gold():
     guild, group, leaver, gold, rope = _loaded_leaver("Neutral and Evil")
     _lapse(guild)
-    assert group.leader.gold == gold + 100
+    assert group.leader.money == gold + 100
     assert sum(u.count_of("Rope") for u in group.members) == rope
     assert leaver.count_of("Rope") == 1
 
@@ -239,9 +239,16 @@ def test_a_neutral_leaver_keeps_the_pack_but_leaves_the_gold():
 def test_a_chaotic_leaver_takes_everything():
     guild, group, leaver, gold, rope = _loaded_leaver("Chaotic and Neutral")
     _lapse(guild)
-    assert group.leader.gold == gold
+    assert group.leader.money == gold
     assert sum(u.count_of("Rope") for u in group.members) == rope
-    assert leaver.gold == 100
+    assert leaver.money == 100
+
+
+def test_a_neutral_leaver_leaves_gold_coins_as_gold():
+    guild, group, leaver, *_ = _loaded_leaver("Neutral and Evil")
+    leaver.give_to_pack("Gold Coin", 2)
+    _lapse(guild)
+    assert group.leader.count_of("Gold Coin") == 2
 
 
 @pytest.mark.parametrize("name,law", [("Lawful and Evil", "Lawful"), ("Neutral and Good", "Neutral"),

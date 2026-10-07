@@ -280,7 +280,7 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     F = ui_fonts()
 
     recruiter = Unit("player")
-    recruiter.gold = 500
+    recruiter.money = 500
     recruiter.mod_charisma = 5
     recruiter.languages = ["Common"]
     g = Guild([recruiter])
@@ -316,11 +316,11 @@ def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):
     scr.sel = 0
     remaining_cand = scr.candidates[0]
     remaining_cand.languages = ["Common"]
-    gold_before = recruiter.gold
+    gold_before = recruiter.money
     monkeypatch.setattr(recruit, "convince", lambda *a, **kw: recruit.Pitch(False, 5, 12, -7, 2, []))
     scr._pitch(recruiter)
     assert recruit.prison_barred(g, remaining_cand, recruiter)
-    assert recruiter.gold < gold_before
+    assert recruiter.money < gold_before
     assert remaining_cand not in g.roster
     assert remaining_cand in scr.candidates
     assert scr.sel == 0                                   # still looking at them after the failed pitch
@@ -341,7 +341,7 @@ def _prison(party_gold=500):
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     recruiter = Unit("player")
-    recruiter.gold = party_gold
+    recruiter.money = party_gold
     recruiter.mod_charisma = 5
     recruiter.languages = ["Common"]
     g = Guild([recruiter])
@@ -382,9 +382,9 @@ def test_a_prison_pitch_charges_the_bail_and_adds_the_bonus(monkeypatch):
 
     monkeypatch.setattr(recruit, "convince", fake)
     scr.sel = 0
-    before = recruiter.gold
+    before = recruiter.money
     scr._pitch(recruiter)
-    assert before - recruiter.gold == cost
+    assert before - recruiter.money == cost
     assert (2, "paid bail") in seen["extra_mods"]
     assert cand in g.roster
 
@@ -396,7 +396,7 @@ def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
     from gartok.guild import Guild
     from gartok.taverna_screen import TavernaScreen
     recruiter = Unit("player")
-    recruiter.gold = 50
+    recruiter.money = 50
     recruiter.languages = ["Common"]
     g = Guild([recruiter])
     cand = Unit("player")
@@ -406,7 +406,7 @@ def test_the_taverna_pitch_is_free_and_adds_no_bonus(monkeypatch):
     monkeypatch.setattr(recruit, "convince",
                         lambda *a, **kw: seen.update(kw) or recruit.Pitch(False, 5, 12, -7, 2, []))
     scr._pitch(recruiter)
-    assert recruiter.gold == 50 and seen["extra_mods"] == []
+    assert recruiter.money == 50 and seen["extra_mods"] == []
 
 
 def _taverna(guild, cand, monkeypatch):

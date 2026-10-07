@@ -111,8 +111,8 @@ class EditMixin:
             if self.study_target == spell_id:
                 self.study_target, self.study_progress = None, 0
 
-    def set_gold(self, copper):
-        self.gold = max(0, int(copper))
+    def set_money(self, copper):
+        self.money = max(0, int(copper))
 
     def set_natural_armor(self, value):
         """Flat AC the body gives, 0..`constants.NATURAL_ARMOR_MAX`. Stacks with

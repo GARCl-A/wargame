@@ -105,16 +105,16 @@ def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
     random.seed(1)
     shoppers = [Unit("player") for _ in range(3)]
     for m in shoppers:
-        m.gold = 10
+        m.money = 10
     ms = MarketScreen.__new__(MarketScreen)           # no draw in this test
     ms.shoppers = shoppers
     assert ms.purse == 30
     ms.on_done = lambda: None
     ms._checkout()
-    assert sorted(m.gold for m in shoppers) == [10, 10, 10] and sum(m.gold for m in shoppers) == 30
+    assert sorted(m.money for m in shoppers) == [10, 10, 10] and sum(m.money for m in shoppers) == 30
     ms.purse = 31
     ms._checkout()
-    assert sorted(m.gold for m in shoppers) == [10, 10, 11]   # equal shares -> still an even-ish split
+    assert sorted(m.money for m in shoppers) == [10, 10, 11]   # equal shares -> still an even-ish split
 
 
 def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
@@ -1003,7 +1003,7 @@ def test_market_lists_the_coin_stack_and_it_is_pickable_like_any_item():
     pygame.display.set_mode((1, 1))
     mnode = next(n for n in world.NODES if n.kind == "market")
     u = Unit("player")
-    u.gold = 50
+    u.money = 50
     u.give_to_pack("Torch")
     u.give_to_pack("Rope")
     ms = MarketScreen(ui_fonts(), None, [u], mnode, lambda: None)
@@ -1024,7 +1024,7 @@ def test_stash_screen_lists_the_coin_stack_and_it_is_pickable_like_any_item():
     pygame.init()
     pygame.display.set_mode((1, 1))
     u = Unit("player")
-    u.gold = 50
+    u.money = 50
     u.give_to_pack("Torch")
     u.give_to_pack("Rope")
     s = BankScreen(ui_fonts(), Guild([u]), [u], on_done=lambda: None)

@@ -28,6 +28,7 @@ draws the vendor's side.
 
 import pygame
 
+from ..constants import fmt_money
 from .loadout_panel import TAG_COLOR
 from .primitives import caps, draw_button, ellipsize, hline, text
 from .tokens import T, mix
@@ -156,12 +157,12 @@ def _stock_row(surf, F, r, row, kit, weapons, name_w, price_x, wt_x, hov, mpos, 
 
     caps(surf, F["micro"], f"{row['weight']:.1f} kg", (wt_x, r.centery - 5),
          T.TX_FAINT if row["fits"] else T.BLOOD, right=True)
-    price_w = F["body"].size(f"{price}c")[0]
-    text(surf, F["body"], f"{price}c", (price_x, r.centery - 8), price_col, right=True)
+    price_w = F["body"].size(fmt_money(price))[0]
+    text(surf, F["body"], fmt_money(price), (price_x, r.centery - 8), price_col, right=True)
     if base != price:
         was_x = price_x - price_w - T.S
-        was_w = F["micro"].size(f"{base}c")[0]
-        caps(surf, F["micro"], f"{base}c", (was_x, r.centery - 5), faint, right=True)
+        was_w = F["micro"].size(fmt_money(base))[0]
+        caps(surf, F["micro"], fmt_money(base), (was_x, r.centery - 5), faint, right=True)
         pygame.draw.line(surf, faint, (was_x - was_w, r.centery - 1), (was_x, r.centery - 1), 1)
 
 

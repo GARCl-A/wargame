@@ -38,21 +38,22 @@ def depart(guild, unit):
     law = lawfulness(unit.alignment)
     if law not in ("Lawful", "Chaotic"):
         law = "Neutral"
-    left_gold = 0 if law == "Chaotic" else unit.gold
-    left_items = ([e for e in unit._base_inventory if e[0] != items.COIN_ITEM]   # the purse is `left_gold`
+    left_coins = [] if law == "Chaotic" else [e for e in unit._base_inventory if items.is_coin(e[0])]
+    left_items = ([e for e in unit._base_inventory if not items.is_coin(e[0])]
                   if law == "Lawful" else [])
     leader = group.leader if group is not None else None
     if leader is not None and leader is not unit:
+        for name, qty in left_coins:
+            leader.give_to_pack(name, qty)
         for entry in left_items:
             if isinstance(entry, tuple):
                 leader._pack_add(*entry)
             else:
                 leader._pack_add(entry)
-        leader.gold += left_gold
     guild.remove_members([unit])
-    if leader is not None and leader is not unit and left_items:
+    if leader is not None and leader is not unit and (left_items or left_coins):
         leader._derive_combat()
-        if group in guild.groups:
+        if left_items and group in guild.groups:
             group.distribute_load(share_coins=False)
     took = {"Lawful": "only what they wear and wield",
             "Neutral": "their gear and pack, but no coin",

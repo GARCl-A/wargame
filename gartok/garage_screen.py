@@ -11,6 +11,7 @@ no limit, and is only safe while a garrison stands there.
 import pygame
 
 from . import economy, wagon_watch
+from .constants import fmt_money
 from .screen import Screen
 from .ui.primitives import draw_button, footer_bar, panel, section, text
 from .ui.tokens import T
@@ -44,7 +45,7 @@ class GarageScreen(Screen):
 
     @property
     def wealth(self):
-        return sum(m.gold for m in self.group.members)
+        return sum(m.money for m in self.group.members)
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
@@ -61,7 +62,7 @@ class GarageScreen(Screen):
             self.on_done()
         elif kind == "bay":
             if self.wealth < economy.GARAGE_PRICE:
-                self.notice = f"a bay costs {economy.GARAGE_PRICE} copper -- the party has {self.wealth}."
+                self.notice = f"a bay costs {fmt_money(economy.GARAGE_PRICE)} -- the party has {fmt_money(self.wealth)}."
                 return
             economy.charge_richest_first(g.members, economy.GARAGE_PRICE)
             guild.buy_garage_tier()
@@ -108,7 +109,7 @@ class GarageScreen(Screen):
         sub = ("wagons and animals kept at the claim  ·  safe only while a garrison stands here, fed from its food"
                if self.claim else "wagons and animals kept at the house  ·  safe, and fed from the house stash")
         text(screen, F["body"], sub, (m, m + 30), T.TX_MUTED)
-        text(screen, F["bodyb"], f"party holds {self.wealth} cp", (screen.get_width() - m, m + 4), T.BRASS, right=True)
+        text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (screen.get_width() - m, m + 4), T.BRASS, right=True)
 
         top = m + 62
         area = pygame.Rect(m, top, min(760, screen.get_width() - 2 * m), screen.get_height() - top - 80)
@@ -140,7 +141,7 @@ class GarageScreen(Screen):
             y += 24
         can = self.wealth >= economy.GARAGE_PRICE
         label = "BUILD A GARAGE" if not garage.open else "ADD A BAY"
-        self.add_button(screen, pygame.Rect(x, y, w, 40), "bay", f"{label}  ·  {economy.GARAGE_PRICE} c",
+        self.add_button(screen, pygame.Rect(x, y, w, 40), "bay", f"{label}  ·  {fmt_money(economy.GARAGE_PRICE)}",
                         enabled=can, primary=can, sub="one more wagon and one more animal")
         return y + 46
 

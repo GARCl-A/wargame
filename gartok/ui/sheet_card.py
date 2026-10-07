@@ -35,6 +35,7 @@ own).
 import pygame
 
 from .. import data, magic
+from ..constants import fmt_money
 from .primitives import caps, contained, ellipsize, section, text, token_badge, wrap
 from .tokens import T
 
@@ -165,7 +166,7 @@ def unit_to_ch(u):
                   "crit": "crit 20, fumble 1"},
         "tongue": tongue,
         "gear": {"hands": held, "armor": armor, "pack": pack,
-                "load": (u.load, u.carry_normal, u.carry_max), "copper": u.gold},
+                "load": (u.load, u.carry_normal, u.carry_max), "copper": u.money},
         "langs": list(u.languages),
         "recipes": list(getattr(u, "recipes", []) or []),
         "magic": (u.magic_source, [magic.SPELLS[s].name for s in u.spells_known if s in magic.SPELLS]),
@@ -371,7 +372,7 @@ def _b_gear(s, F, r, ch, d, ed, mouse, tip):
         pygame.draw.line(s, T.TX_FAINT, (mark, bar.y - 2), (mark, bar.bottom + 2), 1)
     caps(s, F["micro"], f"load {cur:g} kg  ·  normal {norm:g}  ·  high {high:g}",
          (r.x, bar.bottom + 4), T.BLOOD if over else T.TX_FAINT)
-    caps(s, F["micro"], f"{g['copper']} c", (r.right, bar.bottom + 4), T.BRASS, right=True)
+    caps(s, F["micro"], fmt_money(g['copper']), (r.right, bar.bottom + 4), T.BRASS, right=True)
 
 
 def _b_languages(s, F, r, ch, d, ed, mouse, tip):

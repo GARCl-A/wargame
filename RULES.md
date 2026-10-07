@@ -42,8 +42,8 @@ The generator's exact order:
    racial ability and age band.
 3. Roll **occupation** (d100) → set the starting weapon and one starting item.
 4. Roll **alignment** (d100).
-5. Roll **starting gold**: **5d10 copper coins**, carried as a stack of
-   `Copper Coin` items in the pack (200 coins weigh 1 kg; `Unit.gold` is their
+5. Roll **starting money**: **$5d10 in copper coins**, carried as a stack of
+   `Copper Coin` items in the pack (200 coins weigh 1 kg; `Unit.money` is their
    count). Beasts carry none.
 6. The character starts at **Level 0, XP 1000**. 🟢 *(the meaning of that
    progression did not survive — see §9 and the Progression section.)*
@@ -334,7 +334,7 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   `orders.garrison("study")` order — the same engine the garrison jobs use,
   see Property below). Each day the order holds, a member with a
   `study_target` set and the matching `Scroll of <Spell>` in their pack pays
-  `economy.TAVERN_STUDY_COST_PER_DAY` (15 copper) and rolls `1d20 + INT mod`
+  `economy.TAVERN_STUDY_COST_PER_DAY` ($15) and rolls `1d20 + INT mod`
   toward `magic.points_to_learn(spell)` — `(15 + level) × (level + 1) × 7`
   points, so a level-0 spell needs 105 (roughly a week of daily rolls) and
   Sleep (level 1) needs 224. No gold, no scroll, or no `magic_source` yet all
@@ -998,18 +998,18 @@ copper instead of walking into the wilds and dying.
 - **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
   or 16 h — which issues a work order; ADVANCE resolves it: passes the time (can
   cross midnight and trigger the day's meal) and pays each worker.
-- **Pay:** `economy.LUMBER_WAGE` = **1 copper per whole 4-hour block** bare-handed
+- **Pay:** `economy.LUMBER_WAGE` = **$1 per whole 4-hour block** bare-handed
   (work level 0); with an **Axe** in their pack or hand (work level 1) the pay is
   `LUMBER_AXE_RATIO` = **4/3** of that, floored. A partial hour does not count.
-  A full 16 h day = **4 copper** (or **5 copper** with an Axe) per head, straight
-  into each one's purse -- the cheapest meal (a 3 cp Potato) plus 1 copper.
+  A full 16 h day = **$4** (or **$5** with an Axe) per head, straight
+  into each one's purse -- the cheapest meal (a $3 Potato) plus $1.
 - **Work XP:** `Unit.work_hours` accumulates the hours; `Unit.work_xp` =
   `work_hours // 16` — **one mark per 16 h worked**. Carrying your own Axe elevates
   the work level to 1, gating work-XP progression accordingly (`progression.xp_award`).
 - **No wood:** the axe is borrowed and the tree is not yours; you take only the
   wage for the hours, no item.
-- **Deliberately meagre.** 0.75 copper/h. A full day feeds you (a Potato is 3c)
-  and leaves ~9 over; rebuilding a minimal kit (~30 copper) takes ~3 days. An
+- **Deliberately meagre.** $0.75/h. A full day feeds you (a Potato is $3)
+  and leaves ~9 over; rebuilding a minimal kit (~$30) takes ~3 days. An
   arena purse or a wilds haul pays several times faster — the yard is a safety
   net, not a career.
 - A character **incapacitated by hunger can work** (it is not combat) — that is
@@ -1137,7 +1137,7 @@ can still try.
 - **The Prison** (`prison_screen.py`, at the City's `prison` node): a second,
   separate weekly pool (`recruit.refresh_prison_pool`) of minor criminals.
   Unlike the Tavern, you must pay `recruit.bail_cost` — `(sum of the six
-  attributes × (racial level + 1)) + 20` copper — before you can even pitch;
+  attributes × (racial level + 1)) + 20` $ — before you can even pitch;
   the payment adds a **+2** bonus to the Charisma contest (their gratitude).
   Lose the pitch and the bail is gone too — they walk free with your money.
 
@@ -1183,7 +1183,7 @@ the 3 Grippli boss team). Each bout is defined in `arena.py` and assembled in `m
 **Faction #2 — The Bankers (`bankers`).** The coin-keepers of the City. Four deeds
 measure the guild's standing:
 - **Good for Business:** complete an economic job in the City.
-- **Steady Customer:** spend 1,000 copper at the market.
+- **Steady Customer:** spend $1,000 at the market.
 - **Diverse Portfolio:** sell 5 different kinds of goods to the market.
 - **Earned Trust:** carry the Bankers' sealed chest intact to Ledger Hold and
   return their receipt (`bankers_trust_chest` mission).
@@ -1194,7 +1194,14 @@ What they sell today is the guild's **first shared property**: a **strongbox** a
   `bank_screen` for the chosen party (the market's party-picker path).
 - The chest is **guild state** (`guild.bank`, a `holdings.Stash`) —
   the guild owns nothing else as a body but the City house. `bank.capacity == 0` = not rented.
-- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**90 copper**), split
+- **Gold exchange.** Money is `$`: a Copper Coin is $1, a Gold Coin $100 (same
+  0.005 kg, never sold at a shop). Gold exists only through the bank: a coin stack's
+  menu — on a member's pack or in the chest — offers to mint or melt, with a quantity
+  picker in gold units. Minting N gold costs `100N + N` copper, melting returns
+  `100N - N` (`economy.GOLD_FEE` = $1 per coin each way). Paying in a shop spends
+  copper first, then breaks gold and gives the change back in copper, no fee.
+  Loot, wages and rewards stay in copper.
+- **Renting** costs a flat `economy.BANK_CHEST_PRICE` (**$90**), split
   across the visiting party (poorest first, shortfall rolling onto whoever still
   has coin), and grants `economy.BANK_CHEST_CAPACITY` (**30 kg**) of storage.
   Stashing itself is free, so members keep their own money — nothing is pooled or
@@ -1231,11 +1238,11 @@ instance of a given template can be active guild-wide at a time
   resolve the signer's *current* group (`guild.group_of`) and count that
   whole group's packs, the same trick the shared food larder uses.
 - **The Tanner** (`tanner_screen.py`, at the City): wants 15× `1sqm Hide`,
-  pays 200 copper, 5 days. Hides only drop from Wilds beasts, not from hours
+  pays $200, 5 days. Hides only drop from Wilds beasts, not from hours
   hunted; a finite market stock (`economy.STOCK`, `Guild.market_stock`) keeps
   the hide from just being bought instead of hunted.
 - **The Apothecary** (`apothecary_mission_screen.py`, at the City): wants 15×
-  `Red Mushroom` gathered from the Wilds, pays 150 copper, 10 days.
+  `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`trust_screen.py` at the City,
   `ledger_screen.py` at Ledger Hold): hands the signer a sealed chest
   (`data.MISSION_CHEST_ITEM`) instead of asking for a gathered item; the
@@ -1245,10 +1252,10 @@ instance of a given template can be active guild-wide at a time
   opener a criminal instead of paying out.
 - **The Library** (`library_mission_screen.py`, at the Library):
   - **A New Translation:** wants 1× `Dictionary of <Language>` (any tongue) to
-    expand the archives, pays 250 copper, 15 days.
+    expand the archives, pays $250, 15 days.
   - **The Lost Codex:** unlocked after `library_initiate` is completed; asks the
     guild to delve into the sunken vaults of the Ancient Ruins off the Old Road
-    and retrieve the `Ancient Codex`, paying 500 copper, 20 days.
+    and retrieve the `Ancient Codex`, paying $500, 20 days.
 
 ### Property and holdings 🟡
 
@@ -1258,9 +1265,9 @@ shipped start to finish (buy/claim, use, lose, recover):
 - **City Property** (`city_property_screen.py`). Bought from the Bankers at
   the City once `guild.reputation["bankers"] ≥ economy.CITY_PROPERTY_REP_GATE`
   (4) — the Bankers' trust mission (see Missions) is the gate's real
-  prerequisite. `economy.CITY_PROPERTY_PRICE` = **1440 copper**, one-time,
+  prerequisite. `economy.CITY_PROPERTY_PRICE` = **$1,440**, one-time,
   for `economy.CITY_PROPERTY_CAPACITY` (**600 kg**) of shared storage, plus a
-  recurring tax (`economy.CITY_PROPERTY_TAX` = **30 copper** every
+  recurring tax (`economy.CITY_PROPERTY_TAX` = **$30** every
   `CITY_PROPERTY_TAX_PERIOD_DAYS` = **7** days, charged automatically by
   `Guild._city_property_upkeep`). `CITY_PROPERTY_MISSED_PAYMENTS_LIMIT` (3)
   unpaid cycles force a choice (`RepossessionScreen`): **return** the

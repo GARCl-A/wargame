@@ -56,6 +56,7 @@ from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
 from .city_property_screen import CityPropertyScreen, RepossessionScreen
+from .constants import fmt_money
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
 from .gear_screen import GearScreen
@@ -430,7 +431,7 @@ class App:
     def _resolve_repossession_return(self):
         self.guild.repossess_city_property()
         self._map_notices.append("The property is returned to the Bankers -- the guild "
-                                 f"now owes {self.guild.bankers_debt} copper.")
+                                 f"now owes {fmt_money(self.guild.bankers_debt)}.")
         self._after_activity()
 
     def _resolve_repossession_squat(self):

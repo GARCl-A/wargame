@@ -45,6 +45,20 @@ class Stash:
         name, removed, _ = stack_take(self.items, idx, qty)
         return name, removed
 
+    # the coin-handling half of a Unit's pack interface, so money moves the same
+    def count_of(self, name):
+        return sum(q for n, q in self.items if n == name)
+
+    def give_to_pack(self, name, qty=1):
+        self.put(name, qty)
+
+    def remove_named(self, name, qty=1):
+        left = qty
+        for idx in range(len(self.items) - 1, -1, -1):
+            if left and self.items[idx][0] == name:
+                left -= self.take(idx, left)[1]
+        return qty - left
+
 
 class Garage:
     """Where a holding keeps wagons and animals out of the group's hands. The house
