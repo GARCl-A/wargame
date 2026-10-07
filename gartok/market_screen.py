@@ -19,7 +19,9 @@ shopper's items for one move.
   the stepper's quantity in one drop); needs purse >= price and room under the
   carry max;
 - a shopper's item -> drop on another shopper to hand it over, or on the SELL bar
-  to sell it back (at `economy.sell_price`, always a loss);
+  to sell it back (at `economy.sell_price`, always a loss) -- the market pays out of
+  its own cash (`Guild.market_cash`): what you spend goes in, what you sell comes
+  out, a day refills it, and a sale above what it holds is refused;
 - drop on nothing / click away to cancel.
 """
 
@@ -268,6 +270,16 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         no `guild` (a few tests build a bare screen with no campaign behind it)."""
         guild = getattr(self, "guild", None)
         return economy.stock_of(guild.market_stock, name) if guild else None
+
+    def _cash(self):
+        """What the market can still pay out today, or None with no `guild`."""
+        guild, node = getattr(self, "guild", None), getattr(self, "node", None)
+        return guild.market_cash_at(node.id) if guild and node else None
+
+    def _till(self, delta):
+        guild, node = getattr(self, "guild", None), getattr(self, "node", None)
+        if guild and node:
+            guild.move_market_cash(node.id, delta)
 
     def _deal_note(self):
         """One-line summary of how the party's haggling moved the prices."""
@@ -603,10 +615,11 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 self.notice = "out of money."
                 return
             self.purse -= price
+            self._till(price)
             self.guild.total_spent += price
             if stock is not None:
                 self.guild.market_stock[name] = stock - 1
-                
+
             if zone == "hand":
                 member.give_to_hand(name)
             elif zone == "offhand":
@@ -639,6 +652,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                     stopped = f"{name} won't fit {member.name}'s load"
                     break
                 self.purse -= price
+                self._till(price)
                 self.guild.total_spent += price
                 member.give_to_pack(name)
                 if stock is not None:
@@ -661,6 +675,10 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
     def _sell(self):
         picks = self._goods(self.selected)
+        cash = self._cash()
+        if picks and cash is not None and self._sell_total() > cash:
+            self.notice = f"the market only has {fmt_money(cash)} to pay with  ·  sell less."
+            return
         self.selected = []
         if not picks:
             self._sel_qty = {}
@@ -682,6 +700,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 self.guild.items_sold_kinds.add(n)
             owner._derive_combat()
         self._sel_qty = {}
+        self._till(-total)
         self.notice = f"sold {sold} item(s) for {total}."
         self._settle_market()
 
@@ -712,6 +731,10 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
         ui_text(screen, F["body_sm"], f"common purse: {fmt_money(self.purse)}",
                 (purse_x, MARGIN + 2), T.BRASS, right=True)
+        cash = self._cash()
+        if cash is not None:
+            ui_text(screen, F["body_sm"], f"market can pay: {fmt_money(cash)}",
+                    (purse_x, MARGIN + 24), T.TX_FAINT, right=True)
         msg, col = self._status_line()
         ui_text(screen, F["body"], msg, (MARGIN, MARGIN + 30), col)
 

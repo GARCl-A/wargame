@@ -217,6 +217,9 @@ class UpkeepMixin:
             events.append(f"{u.name} finishes their time and is released in the City.")
         events += self._city_property_upkeep()
         events += self._garrison_upkeep()
+        for n in world.NODES:
+            if n.is_market:
+                self.market_cash[n.id] = economy.regen_market_cash(self.market_cash_at(n.id))
         events += self._wilds_claim_sustain_tick()
         self._claim_garage_tick()
         self._campfire_tick()

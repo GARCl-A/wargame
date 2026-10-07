@@ -1125,6 +1125,10 @@ Neutral**).
 - Applied: `buy = base × (1 − deal)`, `sell = base × (0.5 + 0.4 × deal)`. The
   `deal` cap keeps sell **below** buy, so you cannot make money buying and
   reselling.
+- **The market's cash is finite** (`Guild.market_cash`, per market node). It opens at
+  **$100**, takes in whatever the guild spends, pays out what the guild sells and refills
+  **$25 a day** up to **$500** (spending can push it past the cap; the refill never takes
+  anything away). A sale worth more than the market holds is refused whole.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
 

@@ -122,6 +122,16 @@ STOCK = {
 }
 
 
+MARKET_CASH_START = 100    # $ a market holds the first time the guild meets it
+MARKET_CASH_CAP = 500      # the daily refill stops here; the player's own spending can push past it
+MARKET_CASH_REGEN = 25     # $ a market earns back each day
+
+
+def regen_market_cash(cash):
+    """One day of refill: up to the cap, never taking anything away."""
+    return max(cash, min(MARKET_CASH_CAP, cash + MARKET_CASH_REGEN))
+
+
 def stock_of(market_stock, name):
     """Units of `name` left to buy, or None if it isn't stock-limited (an
     unlimited item -- everything not in `STOCK`)."""

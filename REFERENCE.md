@@ -106,7 +106,7 @@ Each occupation grants one starting weapon and one starting item.
 | Goldsmith | Dagger | Scales |
 | Priest | Quarterstaff | Holy Symbol |
 | Shepherd | Quarterstaff | Sheep |
-| Innkeeper | Dagger | Bucket |
+| Innkeeper | Dagger | Salt |
 
 ## Weapons
 

@@ -398,7 +398,7 @@ OCCUPATIONS = [
     (88,  "Goldsmith",     "Dagger",         "Scales"),
     (91,  "Priest",       "Quarterstaff",        "Holy Symbol"),
     (96,  "Shepherd",      "Quarterstaff",        "Sheep"),
-    (100, "Innkeeper",  "Dagger",         "Bucket"),
+    (100, "Innkeeper",  "Dagger",         "Salt"),
 ]
 
 
