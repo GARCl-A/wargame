@@ -171,6 +171,7 @@ class App:
         self.world = world_id
         self.guild = persist.load_game(world_id, save_id)
         self._left_outside = None
+        self._pending_event = None
         if save_id != persist.CURRENT:
             self._save()                     # the snapshot becomes the live state
         set_player_color(self.guild.banner_color)
@@ -178,10 +179,28 @@ class App:
         for g in self.guild.groups:            # a stale/removed node id: drop back to the start
             if g.node not in valid:
                 g.node = world.START_NODE
-        self._start_map()
+        self._resume_pending()
+
+    def _resume_pending(self):
+        """A save taken with a forced fight due (an ambush on the map, a guard
+        catch, a raid) picks it back up through the same dispatch a fresh tick
+        uses -- `_after_activity` drains `_pending`."""
+        self._pending = [(g, g.pending) for g in self.guild.groups
+                         if g.fight_due and not g.empty]
+        if self._pending:
+            self._after_activity()
+        else:
+            self._start_map()
 
     def _save(self):
         persist.save_game(self.world, self.guild)
+
+    def _can_save(self):
+        """Never mid-battle or mid-hunt: neither lives in the save, so a snapshot
+        taken inside one would load as if the fight had never happened."""
+        scene = self.scene.resume_to if isinstance(self.scene, PauseScreen) else self.scene
+        return (self.guild is not None and self._hunt is None
+                and not isinstance(scene, BattleScreen))
 
     def _start_map(self):
         """Land on the map -- unless every group already has an order and
@@ -249,9 +268,13 @@ class App:
         self.scene = BankViewScreen(self.ui_fonts, self.guild, on_done=self._open_guild)
 
     def _open_gear(self, group):
+        if group.fight_due:
+            return
         self.scene = GearScreen(self.ui_fonts, self.guild, on_back=self._open_guild, group=group)
-        
+
     def _open_group(self, group):
+        if group.fight_due:
+            return
         from .group_screen import GroupScreen
         self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=self._start_map)
     def _open_level(self, unit):
@@ -811,6 +834,8 @@ class App:
         self._battle_squad = []
         self._battle_node = None
         self._arena_offer = None
+        if pause_group is not None:           # the fight is over: a save from here on must not replay it
+            pause_group.pending = None
         note = outcome.arena_title_event
         if hunt_state is None:
             self._back_from_outside()
@@ -943,7 +968,7 @@ class App:
                                      on_tutorial_toggle=self._toggle_tutorial,
                                      on_tutorial_reset=self._reset_tutorial,
                                      on_save_as=self._save_as,
-                                     can_save=self.guild is not None)
+                                     can_save=self._can_save())
 
     def _save_as(self, name):
         persist.save_game(self.world, self.guild, kind="manual", label=name)
@@ -953,7 +978,7 @@ class App:
             self.scene = self.scene.resume_to
 
     def _pause_to_menu(self):
-        if self.guild is not None:
+        if self._can_save():
             self._save()
         self._start_menu()
 

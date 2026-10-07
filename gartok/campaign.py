@@ -323,6 +323,9 @@ def advance(guild, dt=None, busy=()):
     claim_events, claim_pending = _wilds_claim_attack_check(guild)
     events += claim_events
     pending += claim_pending
+    for g, order in pending:
+        if order.kind in orders.FORCED_KINDS:
+            g.pending = order
     return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties, hungry=hungry)
 
 
@@ -543,6 +546,7 @@ def resolve_guard_flee(guild, group, order):
     -- `app._resolve_guard_flee` re-queues it through the normal dispatch), or
     None if the group is simply idle now. `([], None)` if called with nothing
     left to flee to."""
+    group.pending = None
     if order.prev_node is None:
         return [], None
     caught = [u for u in group.members if u.uid in order.caught]
@@ -552,6 +556,8 @@ def resolve_guard_flee(guild, group, order):
     pause = _arrival_pause(guild, group, None, ())
     if pause is not None:
         group.order = None            # same "not busy" convention as advance()
+        if pause.kind in orders.FORCED_KINDS:
+            group.pending = pause
         return events, pause
     group.order = orders.idle()
     return events, None
@@ -601,6 +607,7 @@ def resolve_wilds_raid(guild, group, order, outcome):
     resets the sustain countdown (`Guild.wilds_claim_start_sustaining`'s
     value) and leaves survivors idle -- same "no partial punishment" shape
     `resolve_property_raid` uses for a lost City squat."""
+    group.pending = None
     if group.empty:
         return []
     if outcome.won:
@@ -618,6 +625,7 @@ def resolve_wilds_seizure(guild, group, order, outcome):
     (`guild.wilds_claim_owner = "seized"`) -- unlike `resolve_wilds_raid`,
     there is no "try again from here", the structure stands but someone else
     holds it until a retake (`resolve_wilds_claim_retake`)."""
+    group.pending = None
     if outcome.won:
         if not group.empty:
             group.order = orders.garrison(order.job)
@@ -648,6 +656,7 @@ def _resume_arrival(guild, group, order):
     of a multi-leg route if any is owed, or idle -- firing the "arrived"
     travel deed-settle event that was withheld while it was unresolved (skip
     it entirely on a guard "flee", which never really arrived)."""
+    group.pending = None
     if group.empty:
         return []
     if order.resume_path:

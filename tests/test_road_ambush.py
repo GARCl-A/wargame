@@ -8,31 +8,9 @@ is a tuning knob, not something worth making tests fight over."""
 import random
 
 from gartok import campaign, orders
-from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
-from tests.helpers import Battle, Unit, world
-
-
-def _app(guild):
-    app = App.__new__(App)
-    app.world = "testworld"
-    app.scene = None
-    app.fonts = None
-    app.ui_fonts = None
-    app.guild = guild
-    app._battle_squad = []
-    app._battle_node = None
-    app._arena_offer = None
-    app._hunt = None
-    app._pause_order = None
-    app._pause_group = None
-    app._claim_stage_pending = None
-    app._map_notices = []
-    app._pending = []
-    app._pending_event = None
-    app._save = lambda: None
-    return app
+from tests.helpers import Battle, Unit, make_app, world
 
 
 def _forced_chance(value):
@@ -184,7 +162,7 @@ def test_app_lands_on_the_map_with_the_ambush_pending_then_resolves_it_on_click(
         a, b = Unit("player"), Unit("player")
         g = Group([a, b], node="city")
         guild = Guild(None, groups=[g])
-        app = _app(guild)
+        app = make_app(guild)
         g.order = orders.travel(g, "road")
         app._advance()
     finally:

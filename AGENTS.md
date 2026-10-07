@@ -59,10 +59,10 @@ When the two disagree, `REFERENCE.md` wins.
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage), `CityProperty` (house, tax, squat, oven), `Garage` (wagons and animals kept at the house, or at the Claim with no limit; `garage_screen.py`) |
 | `creature.py` / `animals.py` | what a Group keeps besides people: `Creature` is the shared pack owner (HP, load); `Animal` is a livestock race from `data.BEASTS` (Donkey, Ox, Horse) with fixed attributes, loads from Strength; kept in `Group.herd` |
 | `wagon.py` | a Group's wagons (`Group.wagons`; `Vehicle` types Cart / Carriage; `wagon_watch.py` / `watch_screen.py`: the wagon left outside the Ruins or a hunt) + the draft animals hitched to each (`Animal.hitch`, `Group.hitch`): cargo and passengers (by weight) share what those animals draw, eaten from by the group, lost with it (`stables_screen.py` buys it) |
-| `group.py` | Group = physical subset of the guild (members, node, order); `BASE_SLOTS` / fame → how many groups the guild may run |
+| `group.py` | Group = physical subset of the guild (members, node, order, `pending`); `BASE_SLOTS` / fame → how many groups the guild may run. `pending` is a forced order (ambush, guard, raid) that came due and awaits its fight: `order` is already None (so `advance` ignores the group) but `locked` is true — no split, merge, leader swap or kit change until it resolves |
 | `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
-| `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, tolerates missing keys |
+| `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, tolerates missing keys. Saves each group's `order` and `pending` fight (enemy pack included); never a battle or hunt in progress (`App._can_save`) |
 | `settings.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, the pause menu lists them |
 | `menu_screen.py` / `saves_screen.py` | guild list at launch → every save of a guild, with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |
@@ -103,6 +103,10 @@ crafting and mission board in tabs. The full module list is in `README.md`.
   parameters and sizes/lays out relative to those (proportional-with-clamp
   for anything window-size-dependent, like `map_panel.draw_minimap` already
   does), so the same component holds up at any window size.
+
+A screen with pack rows takes the ⋮ item menu (split stack + quantity prompt)
+from `packbox.ItemMenuMixin` — Gear, Group, Market and Stash already do; a new
+one reuses it instead of growing its own popup.
 
 A new screen gets a tutorial card too: a `tutorial_key()` on the screen and a
 `tutorial.<id>` block in `locales/en.json` that teaches how to use it (see the

@@ -129,3 +129,27 @@ def click_menu(screen, pos):
     """A left press at `pos` on a screen with an open item menu."""
     import pygame
     screen.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
+
+
+def make_app(guild):
+    """A bare `App` around `guild`, with just the state the tick/battle flow reads and no window."""
+    from gartok.app import App
+
+    app = App.__new__(App)
+    app.world = "testworld"
+    app.scene = None
+    app.fonts = None
+    app.ui_fonts = None
+    app.guild = guild
+    app._battle_squad = []
+    app._battle_node = None
+    app._arena_offer = None
+    app._hunt = None
+    app._pause_order = None
+    app._pause_group = None
+    app._claim_stage_pending = None
+    app._map_notices = []
+    app._pending = []
+    app._pending_event = None
+    app._save = lambda: None
+    return app

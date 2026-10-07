@@ -61,12 +61,3 @@ while building them:
   only matter if one ever is (a Horse at 3d6 +5 could reach 23, so revisit then).
 - **Riding and mounts** (separate arc). A riding saddle enters `animals.TACK`; the rider and
   animal pair goes into combat. The creature abstraction should not make it harder.
-
-## Loose ends from finished work
-
-- Gear, Group, Market and Stash share the ⋮ menu (and its "split stack" row and quantity
-  prompt) through `packbox.ItemMenuMixin`; a fifth screen with pack rows should use it
-  rather than grow its own popup.
-- Orders are not saved (`persist.group_to_dict` has no order): a loaded game finds every
-  group idle, a rest in flight included. Fine while saves happen on the map, but a rest
-  with another group idle is lost on load.

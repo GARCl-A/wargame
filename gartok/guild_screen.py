@@ -39,6 +39,7 @@ FILTERS = (
     ("alerts", "ALERTS", "Members who are hungry or have a level-up waiting"),
 )
 LIST_MIN, LIST_MAX = 300, 420
+FIGHT_DUE_TIP = "A fight is about to start -- this group can't change until it is over"
 SCROLL_STEP = 36
 FOOTER_H = 52
 
@@ -119,6 +120,11 @@ class GuildScreen(Screen):
         return pygame.Rect(W - pad - 28, pad - 4, 28, 28)
 
     # ------------------------------------------------------------------ #
+    def _fight_due(self, unit):
+        """The unit's group has a forced fight waiting: nothing about it may change."""
+        group = self.guild.group_of(unit) if unit is not None else None
+        return group is not None and group.fight_due
+
     def _is_group_leader(self, unit):
         group = self.guild.group_of(unit)
         return group is not None and group.leader is unit
@@ -465,11 +471,13 @@ class GuildScreen(Screen):
                          "badge": ("CURRENT", T.GREEN), "action": None,
                          "tip": "Group size capacity is 3 + CHA modifier + half racial level"})
         else:
-            can = grp is not None and len(grp.members) > 1
+            fight_due = self._fight_due(unit)
+            can = grp is not None and len(grp.members) > 1 and not fight_due
             rows.append({"key": "group_leader", "title": "Group leader", "badge": None,
                          "sub": f"Would hold up to {cap} members",
                          "action": ("MAKE GROUP LEADER", can, False),
-                         "tip": f"Make this member the leader of {band}"})
+                         "tip": (FIGHT_DUE_TIP if fight_due
+                                 else f"Make this member the leader of {band}")})
         can_share = unit.ability.id != "autotroph"
         if not can_share:
             sub = "Does not eat or carry rations"
@@ -481,11 +489,13 @@ class GuildScreen(Screen):
                      "action": ("STOP SHARING" if unit.share_food else "SHARE RATIONS", can_share, False),
                      "tip": "Pool rations so a hungry bandmate is fed first, or keep them private"})
         size = len(grp.members) if grp else 1
+        fight_due = self._fight_due(unit)
         rows.append({"key": "distribute", "title": "Pack load", "badge": None,
                      "sub": (f"Even out pack items across {size} members" if size > 1
                              else "Needs two or more members in the group"),
-                     "action": ("DISTRIBUTE", size > 1, False),
-                     "tip": "Rebalances unlocked pack items by free carrying capacity"})
+                     "action": ("DISTRIBUTE", size > 1 and not fight_due, False),
+                     "tip": (FIGHT_DUE_TIP if fight_due
+                             else "Rebalances unlocked pack items by free carrying capacity")})
         return rows
 
     def _tracks(self, unit):
@@ -656,8 +666,11 @@ class GuildScreen(Screen):
 
         button("back", "BACK TO MAP", T.S * 24, primary=True)
         if self.on_manage:
-            button("manage", "MANAGE GEAR", T.S * 20, enabled=self.guild.group_of(self.member) is not None,
-                   tip="Equip and swap gear between the members of the selected group")
+            fight_due = self._fight_due(self.member)
+            button("manage", "MANAGE GEAR", T.S * 20,
+                   enabled=self.guild.group_of(self.member) is not None and not fight_due,
+                   tip=(FIGHT_DUE_TIP if fight_due
+                        else "Equip and swap gear between the members of the selected group"))
         has_chest = self.guild.bank.open and self.on_bank is not None
         button("vault", "VIEW CITY VAULT", T.S * 22, enabled=has_chest,
                tip=(f"See what the strongbox holds ({self.guild.bank.load:g}/{self.guild.bank.capacity:g} kg). "

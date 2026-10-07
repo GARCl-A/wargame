@@ -17,6 +17,11 @@ one group holding the whole old roster; a save from before leadership existed
 (`Guild._sync_leadership`/`Group.ensure_leader`). Enemies are rolled fresh each
 battle and battle state lives on a throwaway `Combatant` wrapper, never on the
 `Unit`, so disk never sees it -- a saved unit is always "full HP, standing".
+
+A group's `order` (travel, rest, garrison...) and its `pending` forced order
+(an ambush that came due, enemy pack included) are saved too, so a load picks
+the world back up where it stood; a save without them loads every group idle.
+Nothing mid-battle or mid-hunt is ever saved (`App._can_save`).
 """
 
 import json
@@ -25,6 +30,7 @@ import shutil
 import sys
 import time
 import uuid
+from dataclasses import fields
 
 from . import items, missions
 from .animals import Animal
@@ -32,6 +38,7 @@ from .clock import Clock
 from .group import Group
 from .guild import Guild
 from .holdings import CityProperty, Garage, Stash
+from .orders import Order
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
 from .wagon import WAGON_HP, Wagon
@@ -45,7 +52,7 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
-SAVE_VERSION = 21                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 22                # bumped when the payload shape changes; `from_save` still tolerates missing keys
 
 
 def new_world_id():
@@ -152,11 +159,33 @@ def garage_to_dict(garage):
             "herd": [a.to_dict(_serialize_pack) for a in garage.herd]}
 
 
+_ORDER_SEQUENCES = ("path", "caught", "resume_path")
+
+
+def order_to_dict(order):
+    d = {f.name: getattr(order, f.name) for f in fields(order)}
+    for key in _ORDER_SEQUENCES:
+        d[key] = list(d[key])
+    d["pack"] = [unit_to_dict(u) for u in order.pack]
+    return d
+
+
+def order_from_dict(d):
+    kwargs = {f.name: d[f.name] for f in fields(Order) if f.name in d}
+    for key in _ORDER_SEQUENCES:
+        if key in kwargs:
+            kwargs[key] = tuple(kwargs[key])
+    kwargs["pack"] = tuple(Unit.from_save(u) for u in d.get("pack", []))
+    return Order(**kwargs)
+
+
 def group_to_dict(g):
     return {
         "gid": g.gid,
         "name": g.name,
         "node": g.node,
+        "order": order_to_dict(g.order) if g.order is not None else None,
+        "pending": order_to_dict(g.pending) if g.pending is not None else None,
         "leader": g.leader.uid if g.leader else None,
         "members": [unit_to_dict(u) for u in g.members],
         "wagons": [wagon_to_dict(w) for w in g.wagons],
@@ -174,6 +203,10 @@ def group_from_dict(d):
     group = Group(members, node=d.get("node"), name=d.get("name"), gid=d.get("gid"),
                   leader=leader, wagons=wagons, herd=herd)
     group.herd_notice = d.get("herd_notice")
+    if d.get("order"):
+        group.order = order_from_dict(d["order"])
+    if d.get("pending"):
+        group.pending = order_from_dict(d["pending"])
     if any("hitch" not in a for a in herd_dicts):     # saved before the Harness linked to one wagon
         group.hitch_idle()
     return group

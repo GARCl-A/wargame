@@ -46,6 +46,7 @@ class Group:
         self.node = node                  # world node id
         self.name = name                  # optional label ("Water Team"), or None
         self.order = None                 # in-flight Order, or None (idle) -- later
+        self.pending = None               # a forced Order (orders.FORCED_KINDS) that came due and awaits its fight
         self.leader = leader              # Unit; None resolves via ensure_leader below
         self.herd = list(herd or [])      # animals.Animal -- lost with the group
         self.wagons = []                  # wagon.Wagon -- lost with the group
@@ -149,12 +150,23 @@ class Group:
         return self.order is not None and self.order.kind != "idle"
 
     @property
+    def fight_due(self):
+        """A forced order came due and is waiting for its fight (`pending`)."""
+        return self.pending is not None
+
+    @property
     def locked(self):
         """True while an order actually blocks splitting this group or merging
         another into it -- same as `busy` except a standing `"garrison"` order
         doesn't count: those members aren't going anywhere, so peeling some
         off or folding another group in is still physically fine. See
-        `Guild.split_group`/`merge_groups`, [[gartok-property-two-paths]]."""
+        `Guild.split_group`/`merge_groups`, [[gartok-property-two-paths]].
+
+        A forced order waiting in `pending` locks too, though `order` is already
+        None by then (so `busy` and `advance` leave the group alone): the squad
+        is about to fight and must stay as it is."""
+        if self.fight_due:
+            return True
         return self.order is not None and self.order.kind not in ("idle", "garrison")
 
     def has_talent(self, talent_id):
@@ -179,6 +191,8 @@ class Group:
         elsewhere makes no sense)."""
         if unit not in self.members:
             raise ValueError("leader must be a member of the group")
+        if self.fight_due:
+            raise ValueError("can't change leaders with a fight about to start")
         self.leader = unit
 
     @property
