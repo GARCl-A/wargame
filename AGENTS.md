@@ -18,7 +18,8 @@ When the two disagree, `REFERENCE.md` wins.
   *why*. Cut anything that restates what the code already says.
 - **Tests:** `python -m pytest tests/` — the hard gate. `sim_test.py` is a
   secondary check for combat/AI changes.
-- A teammate works on `main` in parallel — branch for anything non-trivial.
+- Work and commit straight on `main`; no feature branches unless the user asks for one.
+  A teammate works on `main` in parallel, so `git pull` before committing.
 
 ## Design premises (durable)
 
