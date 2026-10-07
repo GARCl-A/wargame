@@ -41,7 +41,25 @@ it here and, if it changed a design premise, record it in `AGENTS.md` or the doc
 - **Specialised shops.** Split the single general market into shops (forge, tanner, market,
   like the library already is) with different stock, which creates arbitrage. The market's
   finite cash is built (`Guild.market_cash`, keyed by node id), so each shop gets its own.
-- **Found-the-guild screen.** Scope is vague; define what is wrong first.
+- **Found-the-guild screen** (`draft_screen.py`). Founding the guild should be the
+  heaviest choice of the run: squad members die, the guild does not, and the player *is*
+  the guild. Today it is a colour, an icon and a leader pick, and the screen looks
+  off-pattern. Redesign in two phases around a founding charter:
+  - **Before the picks:** pick a *vocation* from a curated list of 5-8. It biases the
+    candidates' race, age, occupation and tendency; it never locks the pool. Pick the
+    *oath* (separate from the vocation): a short list, each with a mechanical effect,
+    built on `cohesion.py` and `factions.py`. An oath cannot be broken, but it can be
+    changed. Name and banner may also go here.
+  - **Draft:** a pool of 9 candidates, pick 3 (replaces 3 rounds of 1 of 3). The 3
+    Commission Tokens stay, now spent to reroll one of the 9 before choosing.
+  - **After the picks:** choose the guild leader.
+  - **Presentation:** a richer composed banner (more shapes, colours and patterns), a
+    live preview of the guild as choices are made, and an opening scene: a founding
+    charter that writes itself line by line as the player decides, signed at the end
+    with the banner and the oath, and kept as the first entry of the guild's chronicle.
+  - Open: the vocation list and each one's bias; the oath list, effects and the cost of
+    changing one; whether Commission Tokens still shape archetypes or only reroll; AI
+    and tests for the new generation bias.
 
 ## Starting items
 
@@ -70,13 +88,10 @@ The rest each need a mechanic, or a swap to an item that has one:
 - **Signal Horn** (new item, not a starting item: too strong). A combat action that warns
   allies, for example extra movement or drawing attention. Talks to the Alarm Trap and the
   Alert talent. Needs the action, AI support and tests.
-- **Cloak.** Equipped in the armour slot, +1 to the guard test (`justice.guard_test`) for
-  a character with crime. No effect on a clean record.
 - **Map.** Finds treasures and secret zones. Waits for those systems.
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
-- **Musical Instrument.** A "perform" work at the tavern, next to the lumber yard.
 - **Holy Symbol.** Required, together with everything else, to start in faith magic.
 
 ## Big / structural
