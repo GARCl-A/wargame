@@ -53,6 +53,14 @@ Polish:
 - **Craft with the group's shared inventory.** Inside a crafting screen the group's packs
   count as one pool for ingredient requirements, so items need not be moved onto one
   character first. A locked item (padlock) can never be used in any craft.
+- **Founding draft: 9 pick 3.** `draft_screen.py` offers a pool of 9 candidates and the
+  player picks 3, replacing 3 rounds of 1 of 3. The 3 Commission Tokens work as they do
+  today: spent to call the archetypes missing from the pool, here rerolling one of the 9.
+  Then choose the guild leader from the 3. Independent of vocation and oath. Needs the
+  generation, the UI and tests.
+- **Founding screen on the `ui/` kit.** The draft screen is off-pattern; rebuild it with the
+  `gartok/ui/` components (data-driven `draw_x`, 8px grid, palette) and keep its tutorial
+  card. Do it together with the 9-pick-3 draft so the layout is built once.
 - **Animal sheet in the Guild.** Show the Ox (any `Animal`) with a character-sheet card
   like a unit's.
 - **Medic, quick treatment (B1).** A tab in the Apothecary hub: the answer to rest healing
@@ -165,21 +173,23 @@ building them:
 
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
-  the guild. Today it is a colour, an icon and a leader pick, and the screen looks
-  off-pattern. The draft step is defined (below); the rest waits for design.
-  - **Next, ready to size (Medium):** draft a pool of 9 candidates and pick 3, replacing 3
-    rounds of 1 of 3. The 3 Commission Tokens stay, now spent to reroll one of the 9 before
-    choosing. Then choose the guild leader from the 3. Independent of vocation and oath.
-  - **Vocation:** a curated list of 5-8 that biases the candidates' race, age, occupation
-    and tendency; it never locks the pool. Open: the list and each one's bias.
-  - **Oath** (separate from the vocation): a short list, each with a mechanical effect,
-    built on `cohesion.py` and `factions.py`. It cannot be broken, but it can be changed.
-    Open: the list, the effects and the cost of changing one.
-  - **Presentation:** a richer composed banner, a live preview of the guild as choices are
-    made, and an opening scene: a founding charter that writes itself line by line, signed
-    with the banner and the oath, kept as the first entry of the guild's chronicle.
-  - Open: whether Commission Tokens still shape archetypes or only reroll; AI and tests for
-    the new generation bias.
+  the guild. The draft (9 pick 3) and the screen fix are in Ready > Medium; what is left
+  waits for design.
+  - **Vocation:** a curated list of 5-8 that biases only the candidate pool, mostly the
+    **races and occupations** drawn (age and tendency may follow). It has no effect after the
+    draft and never locks the pool. Open: the list and each one's bias.
+  - **Oath** (separate from the vocation): *what binds the members together, and how a
+    stranger would tell someone belongs to the guild* (a creed, a mark, a code). It cannot be
+    broken, but it can be changed. It has a mechanical side in two places: **cohesion**
+    (`cohesion.py`, how members stay or leave) and a **combat/world rule** (something the
+    guild will or will not do, trading a lock for a bonus). Not economy or per-faction
+    reputation. Open: the list, the exact effects, how the guild is recognised in the world
+    (does an NPC react to it?), and the cost of changing one.
+  - **Presentation, after the screen fix:** a live preview of the guild as choices are made,
+    a richer composed banner, and an opening scene: a founding charter that writes itself
+    line by line, signed with the banner and the oath, kept as the first entry of the
+    guild's chronicle.
+  - Open: AI and tests for the vocation bias.
 
 ## Starting items waiting on another system
 
