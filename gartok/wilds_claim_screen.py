@@ -268,6 +268,8 @@ class WildsClaimScreen(Screen):
         y += T.S
         if self.group.order is not None and self.group.order.kind == "garrison":
             self._button(screen, F, "leave_garrison", "STAND DOWN THE GARRISON", y, w)
+        elif not garrisoned:
+            self._button(screen, F, "garrison", "GARRISON HERE", y, w)
 
     def _draw_camp(self, screen, F, x, w, H):
         """The hearth, anchored just above the party strip so it never collides

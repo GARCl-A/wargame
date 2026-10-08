@@ -447,6 +447,35 @@ def test_drawing_and_clicking_scout_through_pygame():
     assert guild.wilds_claim_stage == "SCOUTED"
 
 
+def test_standing_down_mid_sustain_leaves_a_button_to_garrison_again():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    random.seed(1)
+    g = Group([Unit("player")], node=NODE)
+    guild = Guild(None, groups=[g])
+    guild.wilds_claim_stage = "SUSTAINING"
+    guild.wilds_claim_sustain_days_left = 4
+    g.order = orders.garrison("lumber")
+    s = WildsClaimScreen(ui_fonts(), guild, g, on_done=lambda: None,
+                         on_fight_clear=lambda g: None, on_fight_sweep=lambda g: None)
+    s.mouse = (0, 0)
+    surf = pygame.Surface((1280, 800))
+
+    s.draw(surf)
+    s._click(next(r for k, r in s.buttons if k == "leave_garrison").center)
+    s.draw(surf)
+    s._click(next(r for k, r in s.buttons if k == "garrison").center)
+
+    assert g.order.kind == "garrison"
+    assert guild.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS
+
+
 # --------------------------------------------------------------------------- #
 # save round trip                                                             #
 # --------------------------------------------------------------------------- #
