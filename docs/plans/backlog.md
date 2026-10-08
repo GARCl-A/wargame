@@ -38,9 +38,33 @@ it here and, if it changed a design premise, record it in `AGENTS.md` or the doc
 
 ## Larger
 
-- **Specialised shops.** Split the single general market into shops (forge, tanner, market,
-  like the library already is) with different stock, which creates arbitrage. The market's
+- **Specialised shops.** Split the single general market into shops, each its own node
+  with a walking distance between them, so the player has to go around. The market's
   finite cash is built (`Guild.market_cash`, keyed by node id), so each shop gets its own.
+  The production chain (lumberjack -> carpenter, smith) and restocking tied to the world
+  are a later arc; this task is the structure with a fixed restock.
+  - **Shops:** Smith, Apothecary and Tanner are new nodes outside the city (today `forge`,
+    `apothecary` and `tanner` are flags on `city`). The Smith and the Apothecary take their
+    crafting with them, as tabs. Farm (today only the stables), Tavern, Lumber Yard (a shop
+    *and* a work node) and Market already exist. Rough split: Smith = weapons, shields,
+    metal armour, Iron Bar, Coal; Tanner = leather armour, Cloak, Hide, Quiver; Apothecary =
+    potions, Vial, First Aid Kit; Farm = raw food and Salt; Tavern = Beer and Jerky (the only
+    ready-made food today); Lumber Yard = Lumber; Market = the rest (Torch, Lantern, traps).
+  - **Prices and stock:** one base price everywhere. Every item is finite in every shop. A
+    shop buys any item at 50% and puts it on its shelf to resell at 100%. Each item has a
+    target count per shop and the shop walks back to it a little each day.
+  - **To do first:** define the stock target per item and per shop (and the daily refill
+    rate). Since every shop resells everything, the targets are what makes each one
+    specialised.
+  - The Library joins the same rule (stock target, finite cash, buys anything at 50%) and
+    keeps its other tabs.
+  - Every shop may end up holding anything the player sells; the stock targets are what
+    keeps each one specialised.
+  - Open: AI and tests.
+- **Adjust the map node distances.** The new shop nodes (Smith, Apothecary, Tanner) need
+  a walking distance from Ankareth, and the existing ones (Market and Library 1 h, Farm
+  2 h) should be reviewed together with them, since the distance is the cost of going
+  around between shops.
 - **Found-the-guild screen** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
   the guild. Today it is a colour, an icon and a leader pick, and the screen looks
@@ -115,3 +139,36 @@ while building them:
 
 - **Riding and mounts** (separate arc). A riding saddle enters `animals.TACK`; the rider and
   animal pair goes into combat. The creature abstraction should not make it harder.
+
+
+-------------
+
+Anotações manuais pra serem colocadas na estrutura do resto do backlog depois
+
+Na tela de gerenciar grupo, aparece na carroça quantos estão "riding" nela, mas n da pra ver quem.
+
+Se eu tiro tudo de dentro do carrinho ele ta aparecendo na marcação de peso dele 0/3kg, ta beeem confusa essa visualização.
+
+O "until full" nao deveria mostrar "3 comidas cada" deveria mostrar o custo total de comida
+
+Quando um grupo entra numa tela de craft, o inventario pode ser visto como compartilhado no requisito dos ingredientes pra evitar eu ter q colocar os itens no inventario do mesmo cara. Dito isos, se o item tiver com o cadeadinho, ele nao pode ser usado em craft algum.
+
+Em um sustaining da "The claim" se eu iniciar a guarnição, depois tirar o pessoal, o menu fica travado sem eu poder fazer nada. Da um check ate no save que eu to usando agora que ele ta nesse estado de travado. Nomeei ele como "The Claim Travada"
+
+Carroça nao aparece como inventario no market e deveria.
+
+Na prioridade de mostrar o por que o cara não pode recrutar alguem, a informação mais importante é que ele tem 0 slots de recrutamento disponíveis.
+
+tem que colocar musical instrument pra vender no mercado.
+
+na fazenda, se eu abrir o menu do the stables, no meu save "The Claim Travada" a carga ta exibindo um ponto flutuante de 32.199999...
+
+na guild, seria bom eu ver o ox com o card de ficha dele la, igual um player
+
+pra apostar na arena, vale combinar a bolsa do grupo, nao so de quem ta indo lutar. 
+
+performar na taverna parece nao dar xp de work corretamente.
+
+eu posso ficar dando delay indefinidamente. o certo seria somente 1 elay por rodada.
+
+Reestruturar o backlog pra deixar mais organizado. "pronto pra fazer" que seriam as tarefas já bem estruturadas e ai categorizar elas por tamanho: pequena, média, grande, épico. E "precisa de mais informação pra catalogar"
