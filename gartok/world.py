@@ -73,7 +73,7 @@ from . import encounters
 from .scenario import ArenaScenario, CustomScenario, ErmosScenario
 
 WALK_SPEED = 9.0           # meters per move of the walker one distance unit is measured by
-ROAD_AMBUSH_CHANCE = 0.35   # per travel-leg arrival at an `unsafe` node, not per hour (unlike hunt.py)
+ROAD_AMBUSH_CHANCE = 0.2    # per travel-leg arrival at an `unsafe` node, not per hour (unlike hunt.py)
 
 # The trust mission's fortress ambush battlefield -- painted in the map editor
 # once it exists (map_editor_screen.py); checking the file directly (rather

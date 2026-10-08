@@ -336,7 +336,7 @@ def _kenku():
 
 
 def test_elf_woodland_scout_halves_road_and_hunt_ambushes():
-    from gartok import campaign, hunt
+    from gartok import campaign, hunt, world
     elf = _elf()
     assert elf.choose_talent("racial", "woodland_scout")
     human = _human()
@@ -344,7 +344,7 @@ def test_elf_woodland_scout_halves_road_and_hunt_ambushes():
     g_scout = Group([elf], node="road")
     g_normal = Group([human], node="road")
 
-    with patch("gartok.campaign.random.random", return_value=0.25):
+    with patch("gartok.campaign.random.random", return_value=world.ROAD_AMBUSH_CHANCE * 0.75):
         with patch("gartok.campaign.encounters.roll_encounter", return_value=["Goblin"]):
             order_scout = campaign._road_ambush_catch(g_scout, ["road"])
             order_normal = campaign._road_ambush_catch(g_normal, ["road"])

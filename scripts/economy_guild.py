@@ -20,6 +20,8 @@ A policy is a class with `step(sim)`; each step spends time. Policies:
             and the strongbox in turn, hunts from mean level 2
   greedy    Scrapper and the Wilds from day one, buys food only when the packs are empty
   maxev     each cycle picks the activity with the best expected copper per day
+  human     balanced, playing by thresholds measured from recorded play (--profile)
+  rush      the recorded line: Axes, the Champion at level 0, one hunt for a Hide, the Dictionary mission
   crafter   a specialist guild that buys inputs, crafts and sells at the market (the
             experiment for the restock limiter; needs `--recipes`)
 
@@ -31,6 +33,7 @@ A policy is a class with `step(sim)`; each step spends time. Policies:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import random
 import statistics
@@ -38,6 +41,7 @@ import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from types import SimpleNamespace
+from typing import ClassVar
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
@@ -57,6 +61,7 @@ from gartok import (
     hunt,
     items,
     matchup,
+    missions,
     orders,
     recruit,
     rest,
@@ -1115,6 +1120,178 @@ class Claimer(Balanced):
         return True
 
 
+class Human(Balanced):
+    """`balanced`, but every decision threshold is the one measured from recorded play
+    (`scripts/play_analysis.py --out`, loaded with `--profile`): the cash held when the Axe was
+    bought, the days of food shopped at and up to, the HP and level before a bout or a hunt, the
+    day the yard was left. A threshold the recordings never showed keeps `balanced`'s rule."""
+    name = "human"
+    profile: ClassVar[dict] = {}
+
+    @classmethod
+    def load(cls, path):
+        with open(path, encoding="utf-8") as f:
+            cls.profile = json.load(f)
+
+    def want(self, key, default):
+        return self.profile.get(key, default)
+
+    @staticmethod
+    def hp_frac(sim):
+        return statistics.mean(max(0, u.hp) / u.hp_max for u in sim.members)
+
+    def upkeep(self, sim):
+        sim.keep_fed(self.want("food_low_days", FOOD_LOW_DAYS),
+                     self.want("food_target_days", FOOD_TARGET_DAYS))
+        self.buy_axes(sim)
+        if sim.badly_hurt:
+            sim.heal()
+
+    def buy_axes(self, sim):
+        axe = items.get(MILESTONE_WEAPON).price
+        lacking = [u for u in sim.members if economy.lumber_level(u) == 0]
+        if not lacking or sim.food_days < self.want("axe_food_days", AXE_BUFFER_DAYS):
+            return
+        if sim.money / len(sim.members) < self.want("axe_cash_per_member", axe):
+            return
+        with sim.market() as shop:
+            for u in lacking:
+                if sim.money < axe:
+                    break
+                shop.buy(u, MILESTONE_WEAPON)
+
+    def level_up_bout(self, sim, spare):
+        if (sim.min_combat >= 1 or self.hp_frac(sim) < self.want("bout_min_hp", 1.0)
+                or sim.money < self.stake(sim)
+                or sim.money / len(sim.members) < self.want("bout_cash_per_member", 0)):
+            return False
+        sim.bout()
+        return True
+
+    def ready(self, sim):
+        return (sim.mean_combat >= self.want("hunt_min_level", 2)
+                and self.hp_frac(sim) >= self.want("hunt_min_hp", 1.0)
+                and sim.food_days >= 3 and sim.money >= self.buffer(sim))
+
+    def step(self, sim):
+        if sim.elapsed < self.want("yard_leave_day", 0) - 1:
+            self.upkeep(sim)
+            self.lumber_day(sim)
+            return
+        super().step(sim)
+
+
+class Rush(Human):
+    """The line two recorded runs took to the day-30 milestone in 11-14 days: sell the starting
+    kit and buy Axes, work the yard until the Champion's stake is in hand (level does not
+    matter), beat him, wear armor, hunt the Wilds once for a Hide, buy Paper and Ink at the
+    Library, craft the Dictionary the Library's one-off mission wants, and only then the rest of
+    the gear and the strongbox. Thresholds come from `--profile` like `human`'s."""
+    name = "rush"
+    HIDE = "1sqm Hide"
+    DICTIONARY = "Dictionary of Ankarin"
+    HUNT_HOURS = 6
+    CRAFT_CHUNK = 4
+    CRAFT_CHUNKS = 8
+
+    def __init__(self):
+        self.opened = False
+        self.dictionary_done = False
+        self.mission = None
+
+    def open(self, sim):
+        """Day 0: the starting kit that is not food goes to the market, then Axes."""
+        for u in sim.members:
+            for name, qty in u._base_inventory:
+                if not items.is_coin(name) and not items.is_food(name):
+                    sim.sellable[name] += qty
+        with sim.market() as shop:
+            shop.sell_loot()
+        self.buy_axes(sim)
+
+    def buffer(self, sim):
+        return self.BUFFER_DAYS * len(sim.members) * cheapest_food_price()
+
+    def gear(self, sim):
+        if self.dictionary_done:
+            return super().gear(sim)
+        wants = [u for u in sim.members
+                 if not _owns_at_least(u, MILESTONE_ARMOR, getattr(u, "equipped_armor", None) or "")]
+        price = items.get(MILESTONE_ARMOR).price
+        wants = [u for u in wants if sim.money >= self.buffer(sim) + price]
+        if not wants:
+            return
+        with sim.market() as shop:
+            for u in wants:
+                if sim.money >= self.buffer(sim) + price:
+                    shop.buy(u, MILESTONE_ARMOR, zone="armor")
+
+    def has_hide(self, sim):
+        return any(u.count_of(self.HIDE) for u in sim.members)
+
+    def hunt_ready(self, sim):
+        return (sim.mean_combat >= self.want("hunt_min_level", 0)
+                and self.hp_frac(sim) >= self.want("hunt_min_hp", 0.9)
+                and sim.food_days >= 2 and sim.money >= self.buffer(sim))
+
+    def dictionary_cost(self):
+        return sum(items.get(n).price for n in economy.LIBRARY_SUPPLIES)
+
+    def make_dictionary(self, sim):
+        """Paper and Ink at the Library, the Hide to the crafter, accept the mission, craft, hand in."""
+        guild = sim.guild
+        crafter = max(sim.members, key=lambda u: u.mod_intelligence)
+        holder = next(u for u in sim.members if u.count_of(self.HIDE))
+        sim.goto("library")
+        shop = MarketScreen(None, guild, sim.members, world.node("library"), lambda: None)
+        for name in economy.LIBRARY_SUPPLIES:
+            if not crafter.count_of(name):
+                shop.qty[name] = 1
+                shop.selected = [("stock", name)]
+                shop._buy(crafter, [name])
+        if holder is not crafter:
+            holder.remove_named(self.HIDE, 1)
+            crafter.give_to_pack(self.HIDE)
+        if self.mission is None:
+            self.mission = missions.accept(guild, crafter, missions.LIBRARY_DICTIONARY)
+        mission = self.mission
+        for _ in range(self.CRAFT_CHUNKS):
+            guild.crafting_shift(crafter, self.DICTIONARY, self.CRAFT_CHUNK)
+            if crafter.count_of(self.DICTIONARY):
+                break
+        if missions.can_turn_in(guild, mission):
+            missions.turn_in(guild, mission)
+            self.dictionary_done = True
+        sim.snap()
+
+    def step(self, sim):
+        if not self.opened:
+            self.opened = True
+            self.open(sim)
+        self.upkeep(sim)
+        if not sim.champion_beaten:
+            stake = act.BOUTS["champion"]().entry * len(sim.members)
+            if sim.money >= stake and sim.bout("champion") is not None:
+                sim.heal()
+                return
+        elif not self.has_hide(sim):
+            self.gear(sim)
+        if sim.champion_beaten and not self.dictionary_done:
+            if not self.has_hide(sim):
+                if self.hunt_ready(sim):
+                    sim.hunt(self.HUNT_HOURS)
+                    sim.sellable[self.HIDE] = 0
+                    sim.heal()
+                    return
+            elif sim.money >= self.buffer(sim) + self.dictionary_cost():
+                self.make_dictionary(sim)
+                return
+        if self.dictionary_done:
+            Balanced.step(self, sim)
+            return
+        self.lumber_day(sim)
+
+
 class Greedy(Policy):
     name = "greedy"
 
@@ -1225,7 +1402,7 @@ class Crafter(Policy):
                 break
 
 
-POLICIES = {cls.name: cls for cls in (Lumber, Cautious, Balanced, Games, Climber, Claimer, Grower, Greedy, MaxEV, Crafter)}
+POLICIES = {cls.name: cls for cls in (Lumber, Cautious, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
 
 
 # --------------------------------------------------------------------------- #
@@ -1503,6 +1680,8 @@ def main():
                     help=f"the Medic's price as a share of the potions (backlog: {act.MEDIC_PRICE_FACTOR})")
     ap.add_argument("--capital", type=int, default=0,
                     help="extra copper at the start, for a guild past its first week")
+    ap.add_argument("--profile", default=None, metavar="JSON",
+                    help="thresholds measured from recorded play (play_analysis.py --out) for the human policy")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--restock-sweep", default=None, metavar="inf,TARGET:PER_DAY,...",
                     help="run the first policy under each shelf setting and compare")
@@ -1516,6 +1695,8 @@ def main():
                     help="what-if: override an item's price, e.g. \"Studded Leather=40\"")
     args = ap.parse_args()
     apply_overrides(args.set, args.price)
+    if args.profile:
+        Human.load(args.profile)
     if args.medic_factor is not None:
         act.MEDIC_PRICE_FACTOR = args.medic_factor
     marks = tuple(d for d in (7, 30) if d <= args.days) or (args.days,)

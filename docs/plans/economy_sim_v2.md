@@ -84,7 +84,7 @@ Two things it accounts for that the first version did not:
 
 - **The walk.** The Wilds are about 12 hours from the City each way (the real route at the
   squads' real speed, averaged over random squads). Per-day figures use the whole cycle: hunt +
-  walk there and back + the approach hour. The Old Road's ambush (35% per pass) is layer 2's.
+  walk there and back + the approach hour. The Old Road's ambush (20% per pass) is layer 2's.
 - **Healing.** An arena squad that rests heals `rest_heal` per 8 h; the table prices bouts per
   day from that (3 HP/day at rest at level 0, 5 at level 3), not from a flat assumption.
 
@@ -110,6 +110,7 @@ Policies (a class with `step(sim)`; each step spends time):
 | `crafter` | the best crafter buys inputs, works a forge shift, sells the product (the restock experiment) |
 | `games` | `balanced`, but its risky day is the arena's ladder: the champion first (it opens the Games), then the Games bout with the best expected purse, only if the stake and 3 days of food are covered |
 | `claimer` | `balanced`, but its risky day is the Wilds claim: it sets aside the trip's food and the fences' Lumber first, then scouts, clears, fences, sweeps and garrisons the Claim, fighting the raids |
+| `rush` | the line two recorded runs took: sell the starting kit for Axes, the Champion at level 0 once the stake is in hand, armor, one Wilds hunt for a Hide, Paper and Ink at the Library, craft the Dictionary the Library's one-off mission wants, then the rest of the gear and the strongbox (thresholds from `--profile`, like `human`) |
 
 Knobs: `--level`, `--size`, `--skill`, `--capital N` (a guild past its first week), `--assets
 house,Donkey,Cart` (what it must keep), `--restock TARGET:PER_DAY` (finite shelves), `--medic`
@@ -349,6 +350,19 @@ The sim also had a bias (a library squad's first slot never got the XP); slots a
 per fight. Starting from level 3 with $250, `lumber` alone meets the milestone in 98% of guilds
 (day 18) because the talents and the Axe are in; the Wilds still wipe 88%.
 
+**18. The recorded line (`rush`).** Two of your own runs reached the day-30 milestone gear on
+days 11 and 14. `rush` plays that line on the sim (40 guilds, level 0, Old Road ambush at 20%):
+the milestone is met by day 30 in **40%** of guilds at 80% skill (first on day 14) and **35%** at
+95% (day 15), against 0% for `lumber` and `balanced`; the report's smaller library gives 25%. The
+Champion falls in over 90% of guilds, and the Dictionary mission ($250 for $55 of Paper and Ink,
+once) is what pays for the armor and the strongbox. A level-0 squad is wiped in 30% of guilds at
+80% skill and 5% at 95%: a lost road ambush or a lost Wilds fight. The ambush chance was lowered
+from 35% to 20% (`world.ROAD_AMBUSH_CHANCE`, a placeholder nobody had measured; the road is a
+barrier to the Wilds, not a main danger) after the first run of this finding gave 32% / 42% at
+35%; findings 4 and 11 below were measured at 35%. Two sim biases it fixes: policies now sell
+the starting kit on day 0, and the Champion is tried at the stake, not at combat 2. The report's
+sustain table now lists `rush`, `games`, `climber` and `human` too.
+
 ## Decisions made without asking
 
 Everything below was a call I made from how the game and the backlog are going. Each could have
@@ -474,7 +488,7 @@ What is still open after your answers, in rough order of how much they change th
    for a skilled level-3 squad, and the campfire / oven do not heal either.
 5. **Upkeep.** A house costs a lumberjack's whole wage and a Donkey a third more. Intended as
    "assets need an adventuring income", or should the first assets be reachable on day labour?
-6. **How lethal should the Wilds be?** See the answer above. Is the Old Road's 35% ambush per
+6. **How lethal should the Wilds be?** See the answer above. Is the Old Road's ambush (now 20%) per
    pass right, given it fires on every walk to and from the Wilds? Both set how rich a good player
    gets and how often a squad dies.
 7. **The Games' stake.** A $30 stake per fighter ($90 for three) is more than a lumber squad keeps

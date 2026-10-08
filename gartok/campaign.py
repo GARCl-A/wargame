@@ -38,6 +38,7 @@ from . import (
     loot,
     missions,
     orders,
+    recorder,
     world,
 )
 
@@ -238,6 +239,16 @@ class TickResult:
 
 
 def advance(guild, dt=None, busy=()):
+    """`_advance`, with the play recorder told which orders a person gave before it and
+    which the engine made during it."""
+    recorder.orders_issued(guild)
+    try:
+        return _advance(guild, dt, busy)
+    finally:
+        recorder.orders_settled(guild)
+
+
+def _advance(guild, dt=None, busy=()):
     """Jump the world forward, running daily upkeep for every day crossed, then
     resolving whichever group(s) reached their order in that span.
     `travel`/`work` orders resolve silently here; every other kind comes back

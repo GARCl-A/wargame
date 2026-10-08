@@ -4,7 +4,7 @@ Bankers' debt and the garrison's stockpile.
 Mixed into `guild.Guild`; the stores themselves live in `holdings.py`.
 """
 
-from . import data, economy, magic, world
+from . import data, economy, magic, recorder, world
 from . import wagon as wagons
 from .constants import fmt_money
 
@@ -14,6 +14,7 @@ class HoldingsMixin:
         """Take up the Bankers' offer: the guild's first strongbox. The caller
         collects the fee first -- this only flips the capacity on."""
         self.bank.capacity = economy.BANK_CHEST_CAPACITY
+        recorder.emit("asset", what="bank_chest")
 
     @property
     def bankers_services_blocked(self):
@@ -23,14 +24,17 @@ class HoldingsMixin:
 
     def buy_city_property(self):
         self.house.buy(self.clock.day)
+        recorder.emit("asset", what="house")
 
     def buy_oven(self):
         """The caller collects `economy.OVEN_PRICE` first."""
         self.house.oven = True
+        recorder.emit("asset", what="oven")
 
     def buy_garage_tier(self):
         """The caller collects `economy.GARAGE_PRICE` first."""
         self.house.garage.tier += 1
+        recorder.emit("asset", what="garage")
 
     def park_wagon(self, group, wagon, garage=None):
         """Move one of `group`'s wagons into a garage (the house's unless given); False if

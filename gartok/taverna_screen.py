@@ -22,7 +22,7 @@ Modernized to the `gartok/ui/` design system.
 
 import pygame
 
-from . import economy, magic, orders, recruit
+from . import economy, magic, orders, recorder, recruit
 from .archetypes import unit_archetypes
 from .constants import fmt_money
 from .data import alignment_distance
@@ -264,6 +264,7 @@ class TavernaScreen(Screen):
         pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
                                  extra_mods=list(self.PITCH_BONUS))
         self.last[cand.uid] = (pitch, member)
+        recorder.emit("recruit", pitcher=member.name, candidate=cand.name, bail=cost, ok=bool(pitch.ok))
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
             if cand in self.candidates:

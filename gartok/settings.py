@@ -14,6 +14,7 @@ PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
 
 SPEC = {
     "chord_ms": ("ARROW CHORD", (0, 20, 40, 70, 100), 40),
+    "record_play": ("PLAY RECORDER", ("OFF", "ON"), "OFF"),
 }
 
 _values = None

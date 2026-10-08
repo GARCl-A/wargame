@@ -49,6 +49,8 @@ from . import (
     matchup,
     orders,
     persist,
+    recorder,
+    settings,
     tutorial_card,
     wagon_watch,
     world,
@@ -132,6 +134,7 @@ class App:
     # campaign flow                                                      #
     # ------------------------------------------------------------------ #
     def _start_menu(self, notice=None):
+        recorder.detach()
         self.scene = MenuScreen(self.ui_fonts, on_new=self._new_game,
                                 on_continue=self._continue_game,
                                 on_saves=self._open_saves,
@@ -167,6 +170,7 @@ class App:
                            name=name, banner_color=banner_color, banner_icon=banner_icon,
                            tutorial=self._draft_tutorial)
         set_player_color(self.guild.banner_color)
+        self._record_play()
         self._start_map()
 
     def _continue_game(self, world_id, save_id=persist.CURRENT):
@@ -180,6 +184,7 @@ class App:
             return
         self.world = world_id
         self.guild = guild
+        self._record_play()
         self._left_outside = None
         self._pending_event = None
         if save_id != persist.CURRENT:
@@ -201,6 +206,11 @@ class App:
             self._after_activity()
         else:
             self._start_map()
+
+    def _record_play(self):
+        """Attach the play recorder to the guild just entered, if the player turned it on."""
+        if settings.get("record_play") == "ON":
+            recorder.attach(persist.world_dir(self.world), self.guild)
 
     def _save(self):
         persist.save_game(self.world, self.guild)
@@ -893,6 +903,7 @@ class App:
     def _enter_battle(self, battle, node):
         """Every fight starts here: snapshot the world first, so a bad one can be undone."""
         self._autosave_before(battle, node)
+        recorder.before_fight(self._battle_squad)
         self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     def _autosave_before(self, battle, node):
@@ -907,9 +918,22 @@ class App:
         pause_order, pause_group = self._pause_order, self._pause_group
         was_champion_bout = bool(self._arena_offer and getattr(self._arena_offer, "champion", False))
         battle_node = self._battle_node
+        offer = self._arena_offer
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
                                          node=self._battle_node,
-                                         arena_offer=self._arena_offer)
+                                         arena_offer=offer)
+        node_id = getattr(battle_node, "id", None)
+        if pause_order is not None:
+            fight_kind = pause_order.kind
+        elif hunt_state is not None:
+            fight_kind = "hunt"
+        else:
+            fight_kind = offer.name if offer else node_id
+        recorder.emit("fight", node=node_id, kind=fight_kind,
+                      won=outcome.won, squad=outcome.squad_size, deaths=len(outcome.fallen),
+                      foes=len(battle.enemy_units), xp=sum(outcome.xp_awards.values()),
+                      level=round(sum(u.combat_level for u in self.guild.roster)
+                                  / max(1, len(self.guild.roster)), 2))
         self._battle_squad = []
         self._battle_node = None
         self._arena_offer = None

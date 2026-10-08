@@ -19,7 +19,7 @@ is what a place wants, authored, not rolled.
 
 from dataclasses import dataclass
 
-from . import chest, data, factions, world
+from . import chest, data, factions, recorder, world
 
 
 @dataclass(frozen=True)
@@ -138,6 +138,7 @@ def accept(guild, unit, template):
     m = Mission(template.id, unit.uid, guild.clock.day,
                guild.clock.day + template.deadline_days)
     guild.missions.append(m)
+    recorder.emit("mission", what="accept", id=template.id, reward=template.reward, deadline=template.deadline_days)
     if template.starting_item:
         unit.give_to_pack(template.starting_item)
     return m
@@ -195,6 +196,7 @@ def turn_in(guild, mission):
     for i, u in enumerate(group.members):
         u.money += base + (1 if i < rem else 0)
     mission.state = "done"
+    recorder.emit("mission", what="turn_in", id=t.id, reward=t.reward)
     return factions.settle(guild, factions.Event(
         "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
 

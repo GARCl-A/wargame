@@ -27,7 +27,7 @@ shopper's items for one move.
 
 import pygame
 
-from . import economy, factions, items, store_column
+from . import economy, factions, items, recorder, store_column
 from .constants import fmt_money
 from .dragselect import DragSelectMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
@@ -592,6 +592,9 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         else:
             self.notice = f"{collected[0][0]} -> {member.name}'s {zone}."
 
+    def _node_id(self):
+        return getattr(getattr(self, "node", None), "id", None)
+
     def _settle_market(self):
 
         """Bankers deeds read the guild's lifetime market tallies straight off
@@ -632,11 +635,13 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 member.give_to_armor(name)
             member._derive_combat()
             self.qty.pop(name, None)
+            recorder.emit("buy", node=self._node_id(), item=name, qty=1, price=price, zone=zone)
             self.notice = f"{member.name} bought & equipped {name}."
             self._settle_market()
             return
 
         bought = 0
+        paid = {}
 
         wanted = sum(self._buy_qty(n) for n in names)
         stopped = None
@@ -660,9 +665,13 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 if stock is not None:
                     self.guild.market_stock[name] = stock - 1
                 bought += 1
+                paid[name] = paid.get(name, 0) + 1
             if stopped:
                 break
         member._derive_combat()
+        for name, qty in paid.items():
+            recorder.emit("buy", node=self._node_id(), item=name, qty=qty,
+                          price=economy.buy_price(name, self.deal), zone=zone)
         for name in names:
             self.qty.pop(name, None)             # reset the steppers after a buy
         what = names[0] if len(names) == 1 else "items"
@@ -697,6 +706,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             total += proceeds
             sold += sum(q for _, q in collected)
             for n, q in collected:
+                recorder.emit("sell", node=self._node_id(), item=n, qty=q,
+                              price=economy.sell_price(n, self.deal))
                 stock = self._stock_of(n)
                 if stock is not None:
                     self.guild.market_stock[n] = stock + q

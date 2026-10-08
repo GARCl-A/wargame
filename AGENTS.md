@@ -66,6 +66,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
 | `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, no migration: a save of an older shape does not load (`from_save` reads every key). Saves each group's `order` and `pending` fight (enemy pack included); never a battle or hunt in progress (`App._can_save`) |
+| `recorder.py` | opt-in play log (`record_play` setting): one JSONL row per day, order, market buy/sell, fight, talent, asset and recruit pitch, in `saves/<world>/play.jsonl`; a no-op while detached. `scripts/play_analysis.py` reads it into the sim's day table and the thresholds of the `human` policy |
 | `settings.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, the pause menu lists them |
 | `menu_screen.py` / `saves_screen.py` | guild list at launch → every save of a guild, with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |

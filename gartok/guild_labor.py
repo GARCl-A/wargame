@@ -6,7 +6,7 @@ since it advances the clock itself.
 
 from collections import Counter
 
-from . import economy, items
+from . import economy, items, recorder
 from .constants import fmt_money
 
 
@@ -118,6 +118,7 @@ class LaborMixin:
         events, casualties = self.pass_time(clock_hours, busy=[unit])
 
         events += unit.bank_work(worked, recipe_data.level)
+        recorder.emit("craft", unit=unit.name, recipe=recipe, hours=worked, made=made * recipe_data.yield_qty)
 
         if made:
             total = made * recipe_data.yield_qty

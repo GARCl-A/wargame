@@ -6,7 +6,7 @@ Mixed into `unit.Unit`. The mean of the track levels grants hit dice; see
 
 import random
 
-from . import economy, items, magic, progression, talents
+from . import economy, items, magic, progression, recorder, talents
 from .data import mod, roll
 
 
@@ -122,6 +122,7 @@ class LevelingMixin:
                 or (t.requires and t.requires not in self.talents[track])):
             return False
         self.talents[track].append(talent_id)
+        recorder.emit("talent", unit=self.name, track=track, talent=talent_id)
         
         # Hooks for specific racial talents
         if talent_id in ("kenku_faith_initiate", "skeleton_faith_initiate"):

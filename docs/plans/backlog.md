@@ -32,9 +32,12 @@ Polish:
 
 ## Medium
 
-- **Craft with the group's shared inventory.** Inside a crafting screen the group's packs
-  count as one pool for ingredient requirements, so items need not be moved onto one
-  character first. A locked item (padlock) can never be used in any craft.
+- **Craft with the group's shared inventory.** The crafting screen only sees the crafter's own
+  pack today, so the materials sitting on the rest of the group are invisible and the recipe
+  reads as impossible. Inside a crafting screen the group's packs count as one pool, both in
+  what the screen shows (materials owned, what is missing) and in what the craft consumes, so
+  items need not be moved onto one character first. A locked item (padlock) can never be used
+  in any craft.
 - **Founding draft: 9 pick 3.** `draft_screen.py` offers a pool of 9 candidates and the
   player picks 3, replacing 3 rounds of 1 of 3. The 3 Commission Tokens work as they do
   today: spent to call the archetypes missing from the pool, here rerolling one of the 9.
@@ -93,24 +96,34 @@ Polish:
   (and `autowin`) stop needing a `--skill` knob. Start from what the AI does badly in the
   Games (objective play in capture the flag, focus fire, using the terrain), re-run
   `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
-- **Play recorder for the economy sim.** The sim's policies are my guesses at how a person
-  plays; the arc ends by recording the real thing. An opt-in setting (`settings.json`) makes
-  the game append events to a JSONL file beside the guild's saves, never inside a save:
-  - each day: money of every character, combat / work levels, HP, rations in the group;
-  - each order given (group, kind, destination, hours) and each market buy or sell (item,
-    quantity, price), bank and house purchases, recruiting pitches and their result;
-  - each fight's outcome (kind, won, deaths, XP) and each talent picked.
-  Then play **three 30-day runs** and use them to: (1) print the same day-by-day table the sim
-  prints (activity, levels, net worth); (2) extract the decision thresholds (money held when an
-  Axe was bought, days of food when you shopped, level and HP before a bout, the day you left
-  the yard); (3) add a `human` policy to `scripts/economy_guild.py` that uses them and compare
-  it with `lumber`, `balanced`, `climber`. Three runs show the variation; one would only be a
-  story. Open questions before building: where the hooks go (orders are issued from several
-  screens, so the cleanest seam may be `campaign.advance` plus the screens' `_buy` / `_sell`),
-  and that the sim's fights come from a library, so replayed fights use a 0.9-0.95 skill.
-  Needs the setting, the hooks, the analysis script and tests. Findings it should settle are in
+- **Play three 30-day runs for the economy sim.** The recorder is built (`gartok/recorder.py`,
+  setting `PLAY RECORDER` in the pause menu, log at `saves/<world>/play.jsonl`; hooks in
+  `campaign.advance`, `Guild.pass_time`, the market, stables, tavern, bank/house, talents and
+  `App._battle_end`), and so are the analysis (`scripts/play_analysis.py`) and the `human` policy
+  (`economy_guild.py --policies human --profile`). What is left is the play: turn the recorder
+  on, play three 30-day runs from a fresh guild, then
+  `python scripts/play_analysis.py run1.jsonl run2.jsonl run3.jsonl --out sim_results/human_profile.json`
+  and compare `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
-  ladder (yard, Scrapper, Games, Wilds) is how people really climb.
+  ladder (yard, Scrapper, Games, Wilds) is how people really climb. First recorded run (2026-10-08):
+  the milestone gear (Axe each, Studded Leather or better each, strongbox) in **14 days**, against
+  the sim's day 49-80 and 0% at day 30. It sold the starting kit on day 0 to buy Axes (the sim never
+  sells starting items), beat the Champion on day 11 at combat level ~0.4 (a $120 purse for a
+  $60 stake) and turned in the library's Dictionary mission on day 13 (Paper $10 + Ink $45 bought,
+  $250 paid: +$195 in a few hours). The two Wilds hunts (level ~0.7, no deaths) paid no coin at
+  the time. Skill near 100%, not 80%. The Dictionary needs 1sqm Hide, so the trip to the Wilds was the prerequisite; it was crafted once (the mission pays once). Known gaps: the other shops
+  (Smith, Apothecary, Tanner) do not log purchases yet; HP before a fight is the squad's at the
+  battle's start; replayed library fights use a 0.9-0.95 skill.
+- **Sim policies that find the opportunities themselves.** Every policy in `economy_guild.py` is
+  a hand-written line (`rush` is the player's own, recorded). The recorded runs found things the
+  earlier policies never tried: selling the starting kit on day 0, the Champion at the stake and
+  not at combat 2, a one-off mission whose material is a Wilds trip away. Rebuild `maxev` (or a new
+  planner) so it enumerates what is on offer (one-off missions and what each needs, bouts whose
+  stake is covered, kit worth selling, gear that lifts the yard's wage), prices each in copper and
+  days, and picks the order. Success is that it re-discovers the `rush` line unprompted and finds
+  any line the recordings missed; `rush` stays as the reference. Then retire the guessed
+  policies that it beats. Needs the planner, the offers listing (the missions, bouts and kit
+  hooks the policies reach by hand today) and tests.
 - **Crafting in parallel.** Crafting spends the whole guild's clock today
   (`Guild.crafting_shift`: one crafter at a time, everyone waits). Instead the player
   allocates a character to craft: they split off the group into their own Group on a craft
@@ -176,6 +189,12 @@ building them:
 ---
 
 # Needs more information
+
+- **Adelio is too easy (Champion of the Pit).** A combat-0 squad beats the Champion bout (stake
+  $20 each, purse $120), and the first recorded run did it at level ~0.4 with no trouble. The bout
+  was meant as a gate to the Games, but at $60 of stake for $120 it is also the best money in the
+  first ten days. Decide whether to rebalance him (levels, HP, the goons) or the stake/purse, and
+  re-run `economy_activities.py`: the sim's policies only try the champion from mean combat 2.
 
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*

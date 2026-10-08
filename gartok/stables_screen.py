@@ -9,7 +9,7 @@ the group's leader.
 
 import pygame
 
-from . import animals, data, economy, items, wagon
+from . import animals, data, economy, items, recorder, wagon
 from .constants import fmt_money
 from .screen import Screen
 from .ui.primitives import draw_button, ellipsize, footer_bar, panel, section, text
@@ -106,6 +106,7 @@ class StablesScreen(Screen):
             self.notice = f"{self._keeper.name} can control a herd of {self.group.herd_capacity} at most."
         elif self._pay(animal.price, f"a {species}"):
             self.group.herd.append(animal)
+            recorder.emit("animal", what="buy", species=species, price=animal.price)
             self.notice = f"a {species} joins the group."
 
     def _fit(self, animal, tack):
@@ -129,6 +130,7 @@ class StablesScreen(Screen):
             self._keeper.give_to_pack(animal.take_tack())
         self.group.herd.remove(animal)
         self._receive(_resale(animal.price))
+        recorder.emit("animal", what="sell", species=animal.species, price=_resale(animal.price))
         self.notice = f"sold the {animal.species}."
 
     # ------------------------------------------------------------------ #

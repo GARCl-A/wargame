@@ -5,7 +5,7 @@ Mixed into `guild.Guild`. `pass_time` is the only path that moves the clock
 by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 """
 
-from . import cohesion, data, economy, items, justice, missions, orders, world
+from . import cohesion, data, economy, items, justice, missions, orders, recorder, world
 
 HOURS_PER_HEAL = 8
 
@@ -92,6 +92,7 @@ class UpkeepMixin:
                         u.consecutive_rest_hours = 0
                         break
 
+        recorder.day_tick(self)
         return events, all_casualties
 
     def _shared_larder(self, eater):
