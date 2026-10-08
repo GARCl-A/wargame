@@ -549,7 +549,7 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         if not name or not items.is_armor(a):
             return None
         dex = f"max dex {a.max_dex}" if a.max_dex is not None else "no limit"
-        return f"+{a.ac} AC · {dex} · {a.weight}kg"
+        return f"{items.armor_note(a)} · {dex} · {a.weight}kg"
 
     def _member_dict(self, unit, carried):
         w = items.get(unit.equipped_weapon)

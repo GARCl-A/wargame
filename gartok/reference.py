@@ -110,9 +110,10 @@ def _armor():
     for name, a in items.armor().items():
         cap = "--" if a.max_dex is None else f"+{a.max_dex}"
         spd = "--" if a.speed_penalty == 0 else f"-{a.speed_penalty} sq"
-        rows.append((name, f"+{a.ac}", cap, spd, f"{a.weight:g} kg",
+        guard = f"+{a.guard_bonus}" if a.guard_bonus else "--"
+        rows.append((name, f"+{a.ac}", cap, spd, guard, f"{a.weight:g} kg",
                      economy.PRICES.get(name, "--")))
-    head = ("Armor", "AC", "Max DEX to AC", "Speed", "Weight", "Price ($)")
+    head = ("Armor", "AC", "Max DEX to AC", "Speed", "Guard test", "Weight", "Price ($)")
     return "## Armor\n\n" + _table(head, rows)
 
 

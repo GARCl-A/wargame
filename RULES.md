@@ -1347,7 +1347,8 @@ it can catch up with a character wherever the City's authority reaches
 
 - **The catch.** `campaign.advance` tests every member of a group arriving at
   a jurisdiction node: `d20 + crime ≥ 11` (`justice.GUARD_CHECK_MIN`) — a
-  clean record (`crime == 0`) can never roll high enough to be caught. Anyone
+  clean record (`crime == 0`) can never roll high enough to be caught. A worn
+  **Cloak** (armour slot, +0 AC) takes 1 off the roll. Anyone
   caught pauses the whole group on a `"guard"` order for
   `justice_screen.GuardScreen`, decided once for everyone caught together:
   - **Accept arrest** — `prison_days = crime × constants.PRISON_DAYS_PER_CRIME`

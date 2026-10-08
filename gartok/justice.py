@@ -33,7 +33,7 @@ can't do two different things with itself at once:
 
 import random
 
-from . import constants, data, encounters, world
+from . import constants, data, encounters, items, world
 from .group import Group
 
 GUARD_CHECK_MIN = 11        # d20 + crime >= this: same 50%-base idiom as data.DEATH_SAVE_MIN
@@ -44,11 +44,16 @@ PATROL_SIZE = constants.PATROL_SIZE             # guards fielded against a caugh
 
 def guard_test(unit):
     """True if the guard catches `unit` right now. A clean record never
-    rolls -- `crime == 0` can't reach `GUARD_CHECK_MIN` off a d20 alone. Uses
+    rolls -- `crime == 0` can't reach `GUARD_CHECK_MIN` off a d20 alone. A worn
+    disguise (`ItemDef.guard_bonus`, the Cloak) lowers the roll. Uses
     `data.d20()` straight (like every other check in the game) rather than an
     injected rng, so `tests.helpers.fixed_d20` pins it the same way it does a
     death save."""
-    return unit.crime > 0 and data.d20() + unit.crime >= GUARD_CHECK_MIN
+    if unit.crime <= 0:
+        return False
+    worn = items.get(unit.equipped_armor)
+    disguise = worn.guard_bonus if worn else 0
+    return data.d20() + unit.crime - disguise >= GUARD_CHECK_MIN
 
 
 def catch(group):

@@ -25,6 +25,33 @@ def test_the_guard_test_climbs_a_flat_line_with_crime():
         assert not justice.guard_test(u)
 
 
+def test_a_worn_cloak_lowers_the_guard_roll_by_one():
+    u = Unit("player")
+    u.crime = 1
+    u.give_to_armor("Cloak")
+    with fixed_d20(10):                     # 10 + 1 - 1 < GUARD_CHECK_MIN
+        assert not justice.guard_test(u)
+    with fixed_d20(11):
+        assert justice.guard_test(u)
+
+
+def test_a_cloak_in_the_pack_does_nothing():
+    u = Unit("player")
+    u.crime = 1
+    u._pack_add("Cloak")
+    with fixed_d20(10):
+        assert justice.guard_test(u)
+
+
+def test_the_cloak_gives_no_ac_and_takes_the_armor_slot():
+    u = Unit("player")
+    base = u.ac
+    u.give_to_armor("Cloak")
+    assert u.ac == base and u.equipped_armor == "Cloak"
+    u.give_to_armor("Leather Jerkin")
+    assert u.count_of("Cloak") == 1
+
+
 def test_catch_only_tests_members_with_crime():
     clean, dirty = Unit("player"), Unit("player")
     clean.crime, dirty.crime = 0, 5

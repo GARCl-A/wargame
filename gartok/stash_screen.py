@@ -380,7 +380,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         a = items.get(name)
         if not name or not items.is_armor(a):
             return None
-        return f"+{a.ac} AC"
+        return items.armor_note(a)
 
     def _item_tag(self, name):
         return items.item_tag(name)

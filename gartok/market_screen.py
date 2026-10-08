@@ -150,7 +150,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         a = items.get(name)
         if not name or not items.is_armor(a):
             return None
-        return f"+{a.ac} AC"
+        return items.armor_note(a)
 
     def _member_dict(self, unit, carried):
         w = items.get(unit.equipped_weapon)

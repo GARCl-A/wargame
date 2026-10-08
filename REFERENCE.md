@@ -145,14 +145,15 @@ Each occupation grants one starting weapon and one starting item.
 
 ## Armor
 
-| Armor | AC | Max DEX to AC | Speed | Weight | Price ($) |
-|---|---|---|---|---|---|
-| Leather Jerkin | +1 | -- | -- | 4 kg | 20 |
-| Studded Leather | +2 | +3 | -- | 6 kg | 55 |
-| Chainmail | +3 | +2 | -- | 10 kg | 160 |
-| Brigandine | +4 | +1 | -1 sq | 18 kg | 400 |
-| Plate Armor | +5 | +0 | -2 sq | 28 kg | 950 |
-| Dwarf Armor | +5 | +0 | -1 sq | 25 kg | 110 |
+| Armor | AC | Max DEX to AC | Speed | Guard test | Weight | Price ($) |
+|---|---|---|---|---|---|---|
+| Leather Jerkin | +1 | -- | -- | -- | 4 kg | 20 |
+| Studded Leather | +2 | +3 | -- | -- | 6 kg | 55 |
+| Chainmail | +3 | +2 | -- | -- | 10 kg | 160 |
+| Brigandine | +4 | +1 | -1 sq | -- | 18 kg | 400 |
+| Plate Armor | +5 | +0 | -2 sq | -- | 28 kg | 950 |
+| Dwarf Armor | +5 | +0 | -1 sq | -- | 25 kg | 110 |
+| Cloak | +0 | -- | -- | +1 | 1 kg | 2 |
 
 ## Shields
 

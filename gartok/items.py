@@ -68,6 +68,7 @@ class ItemDef:
     ac: int = 0
     max_dex: int | None = None
     speed_penalty: int = 0
+    guard_bonus: int = 0
     food: bool = False
     material: bool = False
     lifespan: int | None = None
@@ -365,7 +366,7 @@ _register(ItemDef(id="compass", name="Compass", type=ItemType.TOOL, rarity=ItemR
 _register(ItemDef(id="deck_of_cards", name="Deck of Cards", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.2, price=1))
 _register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
 _register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.5, price=1))
-_register(ItemDef(id="cloak", name="Cloak", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=1.0, price=2))
+_register(ItemDef(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1))
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="map", name="Map", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
 _register(ItemDef(id="amethyst", name="Amethyst", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.5, price=120))
@@ -703,6 +704,12 @@ def _main_tag(it: ItemDef) -> str:
     return ""
 
 
+def armor_note(it: ItemDef) -> str:
+    """The armor slot's one-line summary: AC, plus the guard-test bonus if any."""
+    note = f"+{it.ac} AC"
+    return f"{note} · +{it.guard_bonus} guard" if it.guard_bonus else note
+
+
 def item_tooltip(name: str) -> tuple[str, str]:
     """Returns (title, description) for an item's tooltip."""
     it = get(name)
@@ -725,6 +732,8 @@ def item_tooltip(name: str) -> tuple[str, str]:
             desc.append(f"Maximum Dexterity bonus to AC is capped at +{it.max_dex}.")
         if it.speed:
             desc.append(f"Heavy: Reduces movement speed by {it.speed} cells.")
+        if it.guard_bonus:
+            desc.append(f"Disguise: +{it.guard_bonus} to the guard test for a character with a record.")
     elif it.type == ItemType.SHIELD:
         desc.append(f"Shield: +{it.ac} Armor Class when equipped in the off-hand.")
     elif it.name == FIRST_AID_ITEM or it.id == "first_aid_kit":

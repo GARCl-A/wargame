@@ -101,7 +101,7 @@ PRICES = {item.name: item.price for item in items.all_items().values()}
 MARKET_STOCK = [
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
     "Light Crossbow", "Shortbow",
-    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor",
+    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Cloak",
     "Meat", "Fruit", "Potato", "Salt", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
     "Quiver", "Bear Trap", "Alarm Trap",
