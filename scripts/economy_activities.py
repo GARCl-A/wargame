@@ -9,8 +9,10 @@ Each activity has a role and a level band (`ROLES`); only rows inside the band f
 squad's level are judged:
 
   floor        lumber: a squad eats and keeps FLOOR_MARGIN copper a day, whatever its skill
-  leveling     the Scrapper bout: not a money job, it lifts a squad to combat level 1
+  leveling     the Scrapper bout, then the Games (brawl, capture the flag): not money jobs, they
+               lift a squad to combat level 1 and then up the ladder; the Wilds pay little XP
   income       the Wilds: out-earns the floor once the squad is level 2-3
+  one-off      the champion bout and the Ribbit Brothers: a gate and a capstone, shown not judged
   side income  the tavern stage
 
 The AI plays the squad badly next to a person, so a fight's win rate is a parameter:
@@ -24,6 +26,7 @@ the AI's own is shown first, then `--skills` for a player who wins that share.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import random
 import statistics
@@ -32,24 +35,52 @@ from dataclasses import dataclass, field
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from gartok import ai, arena, data, economy, encounters, hunt, items, loot, progression
+from gartok import (
+    ai,
+    arena,
+    data,
+    economy,
+    hunt,
+    items,
+    loot,
+    matchup,
+    orders,
+    progression,
+    world,
+)
 from gartok.battle import Battle
-from gartok.scenario import ArenaScenario, ErmosScenario
+from gartok.guild import Guild
+from gartok.guild_upkeep import HOURS_PER_HEAL, rest_heal
+from gartok.scenario import ErmosScenario
 from gartok.unit import Unit
 
 WORK_DAY_HOURS = 16          # the longest shift the yard and the hunt offer
 FLOOR_MARGIN = 1             # copper a member keeps after eating, doing the floor job
-REST_HP_PER_DAY = 3          # natural healing at CON mod 0: 1 HP per 8 h (backlog, Medic B1)
 TURN_GUARD = 600
 SECONDS_PER_HOUR = 3600
 ROUND_SECONDS = 6
+MEDIC_POTION_HP = 3.5        # HP one Minor Healing Potion restores (backlog B1)
+MEDIC_PRICE_FACTOR = 0.7     # the Medic sells the potions it uses at this share of the catalogue price
 
 # activity -> (role, lowest level, highest level) the squad is meant to do it at
 ROLES = {
     "Lumber yard": ("floor", 0, 1),
     "Tavern show": ("side income", 0, 1),
     "Arena: Scrapper": ("leveling", 0, 0),
+    "Arena: Challenge the Champion": ("one-off", 1, 4),
+    "Arena: Brawl": ("leveling", 2, 5),
+    "Arena: Capture the Flag": ("leveling", 2, 5),
+    "Arena: The Ribbit Brothers": ("one-off", 3, 6),
     "Wilds hunt": ("income", 2, 4),
+}
+
+# the staked bouts, in the order the arena unlocks them; the boss needs six on the field
+BOUTS = {
+    "arena": arena.scrapper_bout,
+    "champion": arena.champion_bout,
+    "brawl": arena.brawl_bout,
+    "ctf": arena.ctf_bout,
+    "boss": arena.boss_bout,
 }
 
 
@@ -58,14 +89,44 @@ def cheapest_meal():
 
 
 def make_squad(size, level, team="player"):
+    """`level` is one number for both tracks, or `(combat, work)`. The racial level (hit dice)
+    is the two tracks added up, so a squad that only fights is not as tough as one that also works."""
+    combat, work = level if isinstance(level, tuple) else (level, level)
     squad = []
     for _ in range(size):
         u = Unit(team)
-        if level:
-            u.set_track_level("combat", level)
-            u.set_track_level("work", level)
+        if combat:
+            u.set_track_level("combat", combat)
+        if work:
+            u.set_track_level("work", work)
         squad.append(u)
     return squad
+
+
+def medic_cost(damage):
+    """Copper the Medic (backlog B1) charges to bring a member back from `damage` HP lost:
+    the potions it would take, at a discount. Not built yet: the numbers are the backlog's."""
+    return math.ceil(damage / MEDIC_POTION_HP) * items.get("Minor Healing Potion").price * MEDIC_PRICE_FACTOR
+
+
+def rest_hp_per_day(squad):
+    """HP a resting squad heals in a day (`rest_heal` every `HOURS_PER_HEAL` h, per member).
+    A squad that works all day heals only in its sleep, one stretch in three: layer 2 shows it."""
+    return statistics.mean(rest_heal(u) for u in squad) * 24 / HOURS_PER_HEAL
+
+
+def trip_hours(size, level, node_id, samples=12):
+    """Hours the real order engine takes to walk a squad from the City to `node_id`, averaged
+    over random squads (speed depends on the members and what they carry). Leaves the global
+    random state as it found it, so a seeded run is not disturbed."""
+    state = random.getstate()
+    try:
+        speeds = [Guild(make_squad(size, level), node="city").groups[0].speed
+                  for _ in range(samples)]
+    finally:
+        random.setstate(state)
+    distance = world.route("city", node_id)[1]
+    return statistics.mean(world.hours(distance, speed) for speed in speeds)
 
 
 def play(squad, enemies, scenario, lethal):
@@ -115,6 +176,7 @@ class Row:
     death_rate: float = 0.0            # fraction of members lost per run
     damage: float = 0.0                # average HP lost per member per run
     runs_per_day: float = 1.0          # how many times a day the squad can really do it
+    trip_hours: float = 0.0            # one way from the City, walked there and back each run
     note: str = ""
     samples: list = field(default_factory=list)
 
@@ -149,16 +211,38 @@ def tavern_row(squad, shift=WORK_DAY_HOURS):
                note=f"per performer; {len(singers)}/{len(squad)} own an instrument")
 
 
-def arena_row(size, level, trials, bout=None, skill=None, samples=None):
-    """The staked Pit bout. Non-lethal, so the cost of losing is the stake and the HP.
-    `skill` replaces the AI's measured win rate with a player win probability."""
+def tavern_table(shift=WORK_DAY_HOURS):
+    """A day on the tavern's stage replaces a day at the yard (one body, one place), so the show
+    only earns its keep from the Charisma at which its tips beat the wage. -> text."""
+    yard, yard_axe = economy.lumber_pay(shift, 0), economy.lumber_pay(shift, economy.LUMBER_LEVEL_OWN_AXE)
+    lines = [f"== the tavern against the yard, {shift} h a day (one or the other, never both)",
+             f"   yard ${yard} ({yard_axe} with an Axe of your own); a show needs a Musical Instrument",
+             f"{'CHA mod':>8}{'tips/day':>10}  beats the yard?"]
+    first = None
+    for cha in range(-2, 6):
+        tips = economy.perform_expected(shift, cha)
+        beats = "with an Axe" if tips > yard_axe else ("without an Axe" if tips > yard else "no")
+        if first is None and tips > yard_axe:
+            first = cha
+        lines.append(f"{cha:>+8}{tips:>10.1f}  {beats}")
+    lines.append(f"   the stage out-earns even an Axe-armed lumberjack from CHA {first:+d}"
+                 if first is not None else "   the stage never out-earns the yard in this range")
+    return "\n".join(lines)
+
+
+def arena_row(size, level, trials, bout=None, skill=None, samples=None, medic=False):
+    """A staked arena bout (the Pit's Scrapper, the champion, the Games). Non-lethal, so the
+    cost of losing is the stake and the HP. `skill` replaces the AI's measured win rate with a
+    player win probability. With a `medic` the bouts a day are not capped by healing: each
+    member's damage is paid for in potions instead."""
     bout = bout or arena.scrapper_bout()
     if samples is None:
         samples = []
         for _ in range(trials):
             squad = make_squad(size, level)
-            foes = [encounters.build_enemy(bout.level) for _ in range(bout.enemies)]
-            b = play(squad, foes, ArenaScenario(), lethal=False)
+            foes, scenario = matchup.build(world.node("arena"), bout, squad_size=size,
+                                           guild=Guild(squad, node="city"))
+            b = play(squad, foes, scenario, lethal=False)
             dmg = statistics.mean(max(0, u.hp_max - c.hp) for c, u in zip(b.player_units, squad))
             xp = statistics.mean(c.combat_xp_earned for c in b.player_units)
             samples.append((b.winner == "player", b.round_no, dmg, xp))
@@ -170,14 +254,38 @@ def arena_row(size, level, trials, bout=None, skill=None, samples=None):
     damage = mean(x[2] for x in samples) if skill is None else mean(x[2] for x in won)
     xp = p * mean(x[3] for x in won) + (1 - p) * mean(x[3] for x in lost)
     break_even = bout.entry * size / bout.purse
+    squad = make_squad(size, level)
+    trip = trip_hours(size, level, "arena")
+    heal_cap = rest_hp_per_day(squad) / damage if damage else 1.0
+    cycle_cap = 24 / (2 * trip + orders.APPROACH_HOURS)
+    cure = medic_cost(damage) if medic else 0.0
+    cap = (f"a {trip:.0f} h walk each way; the Medic mends {damage:.0f} HP for ${cure:.1f} a member"
+           if medic else
+           f"capped by healing ({rest_hp_per_day(squad):.0f} HP/day at rest) and a {trip:.0f} h walk each way")
     return Row(f"Arena: {bout.name.split(': ')[-1]}",
                mean(x[1] for x in samples) * ROUND_SECONDS / SECONDS_PER_HOUR,
-               income=p * bout.purse / size - bout.entry, combat_xp=xp, stake=bout.entry,
+               income=p * bout.purse / size - bout.entry - cure, combat_xp=xp, stake=bout.entry,
                win_rate=p, damage=damage,
-               runs_per_day=REST_HP_PER_DAY / damage if damage else 1.0, samples=samples,
+               runs_per_day=cycle_cap if medic else min(heal_cap, cycle_cap), trip_hours=trip,
+               samples=samples,
                note=(f"purse {bout.purse} split {size} ways, entry {bout.entry} each: break-even "
-                     f"at {break_even * 100:.0f}% wins (AI wins {ai_rate * 100:.0f}%); "
-                     f"bouts/day are capped by healing ({REST_HP_PER_DAY} HP/day)"))
+                     f"at {break_even * 100:.0f}% wins (AI wins {ai_rate * 100:.0f}%); bouts/day are {cap}"))
+
+
+def arena_rows(size, level, trials, skills, medic=False, keys=None):
+    """Every bout the Pit and the Games offer (or just `keys`): `{key: {None: AI row, skill: row,
+    ...}}`. The boss (six a side) is played by a squad of six, whatever `size` is."""
+    out = {}
+    for key, make in BOUTS.items():
+        if keys is not None and key not in keys:
+            continue
+        n = arena.BOSS_SQUAD if key == "boss" else size
+        ai_row = arena_row(n, level, trials, bout=make(), medic=medic)
+        out[key] = {None: ai_row}
+        for skill in skills:
+            out[key][skill] = arena_row(n, level, trials, bout=make(), skill=skill,
+                                        samples=ai_row.samples, medic=medic)
+    return out
 
 
 def _hunt_live(size, level, trials, shift):
@@ -241,6 +349,7 @@ def _hunt_skilled(size, level, trials, shift, skill, fights, rng):
 
 def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None):
     """A full-day hunt: meat by the hour, an ambush every ~7 h, loot off the winners."""
+    trip = trip_hours(size, level, "wilds")
     if skill is None:
         fights, meat, hours_used = _hunt_live(size, level, trials, shift)
         loot_total = sum(f[1] for f in fights)
@@ -255,9 +364,12 @@ def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None
         win = skill
         ai_rate = sum(f[0] for f in fights) / len(fights) if fights else 0
         note = f"meat is food, not copper; the AI wins {ai_rate * 100:.0f}% of these ambushes"
+    note += (f"; a {trip:.0f} h walk each way (the Old Road's {world.ROAD_AMBUSH_CHANCE * 100:.0f}% "
+             "ambush per pass is layer 2's)")
     hunted = hours_used / trials
     marks = work_marks(hunted, hunt.HUNT_LEVEL, level)
-    return Row("Wilds hunt", hunted, income=loot_total / trials / size,
+    return Row("Wilds hunt", hunted, income=loot_total / trials / size, trip_hours=trip,
+               runs_per_day=24 / (hunted + 2 * trip + orders.APPROACH_HOURS),
                combat_xp=xp_total / trials / size, work_marks=marks,
                food_kg=meat / trials / size, win_rate=win,
                death_rate=dead_total / trials / size, samples=fights, note=note)
@@ -316,6 +428,25 @@ def report(rows, meal, size, level, label=""):
     return "\n".join(lines), all(ok for _, ok in checks)
 
 
+def build_tables(level, size, trials, skills, medic=False):
+    """The layer-1 tables for a squad: `[(skill, label, rows)]`, the AI's own win rate first
+    (`skill` None), then one per player skill; and the cheapest meal they are judged against.
+    The Games are shown from level 1, where a squad can first reach the champion."""
+    probe = make_squad(size, level)
+    fixed = [r for r in (lumber_row(probe), tavern_row(probe)) if r]
+    bouts = arena_rows(size, level, trials, skills, medic=medic)
+    hunt_ai = hunt_row(size, level, trials)
+    suffix = ", with a Medic" if medic else ""
+    tables = [(None, "the AI plays the squad" + suffix,
+               fixed + [b[None] for b in bouts.values()] + [hunt_ai])]
+    for skill in skills:
+        fights = [b[skill] for b in bouts.values()]
+        fights.append(hunt_row(size, level, trials, skill=skill, samples=hunt_ai.samples))
+        tables.append((skill, f"the player wins {skill * 100:.0f}% of fights" + suffix,
+                       fixed + fights))
+    return cheapest_meal(), tables
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -327,27 +458,20 @@ def main():
                     help="player win probabilities shown beside the AI's own")
     ap.add_argument("--judge", type=float, default=0.8,
                     help="the skill the verdict and the exit code use")
+    ap.add_argument("--medic", action="store_true",
+                    help="bouts are healed by the Medic (backlog B1), paid in potions, not by resting")
+    ap.add_argument("--medic-factor", type=float, default=None, metavar="F",
+                    help=f"the Medic's price as a share of the potions (backlog: {MEDIC_PRICE_FACTOR})")
     args = ap.parse_args()
     random.seed(args.seed)
+    if args.medic_factor is not None:
+        globals()["MEDIC_PRICE_FACTOR"] = args.medic_factor
 
-    probe = make_squad(args.squad, args.level)
-    fixed = [r for r in (lumber_row(probe), tavern_row(probe)) if r]
-    arena_ai = arena_row(args.squad, args.level, args.trials)
-    hunt_ai = hunt_row(args.squad, args.level, args.trials)
-    meal = cheapest_meal()
-
+    meal, tables = build_tables(args.level, args.squad, args.trials,
+                                [float(x) for x in args.skills.split(",")], medic=args.medic)
     verdict = True
-    for skill in [None, *[float(x) for x in args.skills.split(",")]]:
-        if skill is None:
-            fights = [arena_ai, hunt_ai]
-            label = "the AI plays the squad"
-        else:
-            fights = [arena_row(args.squad, args.level, args.trials, skill=skill,
-                                samples=arena_ai.samples),
-                      hunt_row(args.squad, args.level, args.trials, skill=skill,
-                               samples=hunt_ai.samples)]
-            label = f"the player wins {skill * 100:.0f}% of fights"
-        text, ok = report(fixed + fights, meal, args.squad, args.level, label)
+    for skill, label, rows in tables:
+        text, ok = report(rows, meal, args.squad, args.level, label)
         print(text + "\n")
         if skill == args.judge:
             verdict = ok

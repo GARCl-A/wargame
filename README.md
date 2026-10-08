@@ -258,9 +258,12 @@ main.py             entry point
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)
 scripts/            balance_sim.py (race / occupation / combo rankings; --level / --racial
-                    add random talent picks and a per-talent ranking), economy_sim.py
-                    (net copper by race / occupation / talent; modes bleed, production,
-                    work, arbitrage), ai_usage.py (which actions the combat AI takes, and
+                    add random talent picks and a per-talent ranking), economy_activities.py
+                    (what each activity pays in copper and XP, and the floor check),
+                    economy_guild.py (a whole guild living days under a policy, with the
+                    race / occupation ranking and the restock sweep), economy_exploits.py
+                    (money-from-nothing loops, recipe barriers, dominance), economy_report.py
+                    (all of them in one report, with verdicts), ai_usage.py (which actions the combat AI takes, and
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py
 docs/plans/         design plans not yet built (campaign AI roadmap)
 ```

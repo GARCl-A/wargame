@@ -34,7 +34,9 @@ When the two disagree, `REFERENCE.md` wins.
   what the active unit sees.
 - **Adventure out-earns day labour.** In Gartok the risk pays: lumber is only a
   survival floor (16 h = cheapest meal + $1), the arena and the wilds pay
-  more. Re-run `scripts/economy_sim.py` after touching wages, purses or loot.
+  more. Re-run `scripts/economy_report.py` (verdicts, exploits, what each activity pays,
+  a guild living 30 days, the ranking; its parts are `economy_activities.py`,
+  `economy_guild.py` and `economy_exploits.py`) after touching wages, purses, prices or loot.
 
 ## Architecture — one concern per module
 

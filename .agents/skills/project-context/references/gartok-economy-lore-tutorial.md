@@ -72,8 +72,8 @@ teach how to play (hunger, the clock, permadeath, first steps) and how to use ea
 
 **How to apply:** a new screen needs a `tutorial_key()` and a `tutorial.<id>` block in
 `locales/en.json`; keep the badge clear of the screen's own top-right controls. Re-run
-`scripts/economy_sim.py --mode work` and the income comparison after any change to
-`LUMBER_WAGE`, arena purses or loot values; the numbers above are the reference.
+`scripts/economy_report.py` (see [[gartok-economy-sim-v2]]) after any change to
+`LUMBER_WAGE`, arena purses or loot values; the numbers above are the 2026-10 reference.
 Related: [[gartok-open-world-vision]], [[gartok-balance-sim]], [[gartok-wilds-hunting]].
 
 ## Left open

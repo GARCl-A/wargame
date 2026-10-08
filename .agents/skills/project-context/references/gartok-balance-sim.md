@@ -147,7 +147,10 @@ citable-figure need shows up — explicitly deprioritized by the user on
 `balance_sim.py`'s battle loop (seed the RNG per battle index within an arm),
 not a rewrite.
 
-## `economy_sim.py` — the world-first counterpart (2026-09-09)
+## `economy_sim.py` — the world-first counterpart (2026-09-09; deleted 2026-10, see [[gartok-economy-sim-v2]])
+
+History: the script no longer exists. `scripts/economy_report.py` replaced it, on the real engine
+instead of an invented town. The findings below still stand (race and attributes barely matter).
 
 Same shape as balance_sim: sample `(race, occ)`, run one trader through `--days`
 (default 15) in a town of `--vendors` (default 4) with daily-replenishing stock,

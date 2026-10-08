@@ -53,7 +53,8 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-arena-ribbit-brothers-boss.md` | Games capstone: 3 authored Grippli + 3 goons, CTF on an authored map. |
 | `gartok-wilds-hunting.md` | The Wilds activity node: Hunt for meat with per-hour ambush risk; encounters.py scaled-enemy core. |
 | `gartok-autowin.md` | **Auto-Win & Anti-Grind.** Monte Carlo simulation, 100% win / 0 casualties / 0 consumables gate, pre-battle ambush resolution on map & hunt. |
-| `gartok-balance-sim.md` | balance_sim.py + economy_sim.py: AI tournaments ranking races/occupations/combos. |
+| `gartok-balance-sim.md` | balance_sim.py: AI tournaments ranking races/occupations/combos (its old `economy_sim.py` half was replaced, see the next row). |
+| `gartok-economy-sim-v2.md` | **Economy sim v2** (scripts/economy_*.py): per-activity table, whole-guild sim on the real engine, exploit detector, Medic / Games / Claim, the day-30 milestone. |
 
 ### Tools
 | File | What it covers |

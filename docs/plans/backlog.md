@@ -78,28 +78,46 @@ Polish:
   - **To define while building:** which field sits behind which success margin, how the
     check scales with the target's level, whether knowledge outlasts the fight (a creature
     met before). Needs the action, AI support and tests.
-- **Economy sim rewrite.** `scripts/economy_sim.py` models a trader against its own
-  `Vendor` class, so it never sees what changed the economy: the market's finite cash
-  (`Guild.market_cash`: $100 to start, +$25/day up to $500), coins as items (`$`, gold, the
-  bank exchange), the Medic and upkeep that drain money (house tax, garrison, wagon wear,
-  animal feed, group rest), and a squad pooling one market. Drive the real `Guild`, market
-  and daily upkeep instead of a parallel model. Question it answers: **does a guild sustain
-  itself, and is the risk x time x reward of each activity right?** Runs at levels 1, 3 and
-  5, over 7 and 30 days. Reports:
-  - $/hour per activity (lumber, arena, Wilds, trade, missions, tavern...) with the risk of
-    loss or death next to it;
-  - ranking by attribute, occupation and race;
-  - exploit detector: profitable loops (buy 100% / sell 50% between shops, the gold
-    exchange, market cash) and any activity that dominates the rest;
-  - guild sustain curve: daily balance after house, garrison, wagon and rations, and the
-    expected money after X days.
-  Until it lands, a change to wages, purses or loot is checked by hand.
 - **Crafting tools.** Crafting consumes everything today. Let a recipe also require a tool
   that is not consumed (a cart needs wood, nails and a saw). Gives Chisel, Scissors, Shovel
   and the Goldsmith's Pliers a job (and jewellery crafting, when it exists). Shapes the
   future wagon recipe.
 - **Prisoners.** Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
+- **Combat AI plays far below a person.** Every economy number depends on how often the
+  squad wins, and a person wins far more than `ai.py` does: measured in the economy report
+  (layer 1 prints the AI's own win rate beside the skilled ones), the AI wins the Scrapper
+  95%, the champion bout 75%, a Games brawl 43%, capture the flag 37%, a Wilds ambush at
+  level 3 61% and the Ribbit Brothers 7%. A person wins the Pit's bouts "almost always".
+  Goal: AI win rates close to a competent player's on those benchmark fights, so the sim
+  (and `autowin`) stop needing a `--skill` knob. Start from what the AI does badly in the
+  Games (objective play in capture the flag, focus fire, using the terrain), re-run
+  `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
+- **Play recorder for the economy sim.** The sim's policies are my guesses at how a person
+  plays; the arc ends by recording the real thing. An opt-in setting (`settings.json`) makes
+  the game append events to a JSONL file beside the guild's saves, never inside a save:
+  - each day: money of every character, combat / work levels, HP, rations in the group;
+  - each order given (group, kind, destination, hours) and each market buy or sell (item,
+    quantity, price), bank and house purchases, recruiting pitches and their result;
+  - each fight's outcome (kind, won, deaths, XP) and each talent picked.
+  Then play **three 30-day runs** and use them to: (1) print the same day-by-day table the sim
+  prints (activity, levels, net worth); (2) extract the decision thresholds (money held when an
+  Axe was bought, days of food when you shopped, level and HP before a bout, the day you left
+  the yard); (3) add a `human` policy to `scripts/economy_guild.py` that uses them and compare
+  it with `lumber`, `balanced`, `climber`. Three runs show the variation; one would only be a
+  story. Open questions before building: where the hooks go (orders are issued from several
+  screens, so the cleanest seam may be `campaign.advance` plus the screens' `_buy` / `_sell`),
+  and that the sim's fights come from a library, so replayed fights use a 0.9-0.95 skill.
+  Needs the setting, the hooks, the analysis script and tests. Findings it should settle are in
+  [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
+  ladder (yard, Scrapper, Games, Wilds) is how people really climb.
+- **Crafting in parallel.** Crafting spends the whole guild's clock today
+  (`Guild.crafting_shift`: one crafter at a time, everyone waits). Instead the player
+  allocates a character to craft: they split off the group into their own Group on a craft
+  order, work at the station while the others do something else, and rejoin by hand (the
+  same shape as the Medic's hospital stay, B2, and it competes for the same group slots).
+  The economy sim's `crafter` policy then becomes one member crafting while the rest work
+  the yard. Needs the order kind, saves, UI and tests.
 - **Specialised shops.** Split the single general market into shops, each its own node
   with a walking distance between them, so the player has to go around. The market's
   finite cash is built (`Guild.market_cash`, keyed by node id), so each shop gets its own.
@@ -118,11 +136,19 @@ Polish:
     resells everything, the targets are what makes each one specialised.
   - The Library joins the same rule (stock target, finite cash, buys anything at 50%) and
     keeps its other tabs.
+  - **The till belongs to the shop, not to the node's kind.** `Guild._daily_upkeep` refills
+    cash only for nodes with `kind == "market"`, so the Library's till (a `town` with a
+    shop tab) never refills and a Tavern (recruiting, work and a shop in one node) would not
+    either. A node with several functions needs a `shop` function that owns the till, its
+    refill and its stock; the economy sim's route scan reads the same list.
   - **Node distances:** the new nodes need a walking distance from Ankareth, and the
     existing ones (Market and Library 1 h, Farm 2 h) should be reviewed together with them,
     since the distance is the cost of going around between shops.
   - **First step:** define the stock target per item and per shop, and the daily refill
-    rate. Open: AI and tests.
+    rate. A first estimate from the economy sim's restock sweep
+    ([economy_sim_v2.md](economy_sim_v2.md), finding 6): a shelf of about 10 refilling 3 a
+    day keeps a crafting specialist at about 2x a lumberjack's wage; below 4 with 1 a day
+    makes crafting for sale pointless. Open: AI and tests.
 
 ## Epic
 
