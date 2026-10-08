@@ -861,3 +861,19 @@ def test_several_wagons_seat_the_group_between_them():
     g.hitch_idle()
     seated = g.boarding()
     assert sorted(len(v) for v in seated.values()) == [1, 2] and set(g.riders) == {a, b, c}
+
+
+def test_a_wagon_never_holds_more_hp_than_its_vehicle_allows():
+    assert Wagon("Cart", hp=30).hp == VEHICLES["Cart"].hp_max
+    assert persist.wagon_from_dict({"kind": "Cart", "hp": 30, "travelled": 16.0}).hp == VEHICLES["Cart"].hp_max
+    assert Wagon("Cart", hp=2).hp == 2
+
+
+def test_wagon_capacity_carries_no_float_noise(monkeypatch):
+    g = Group([_unit()], node="city")
+    g.add_wagon(Wagon("Cart"))
+    ox = Animal("Ox", tack=HARNESS)
+    g.herd.append(ox)
+    ox.hitch = g.wagons[0].uid
+    monkeypatch.setattr(Wagon, "passenger_weight", property(lambda self: 63.0 + 40.3 + 75.0))
+    assert g.wagons[0].capacity == 1.7

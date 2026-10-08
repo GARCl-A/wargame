@@ -62,7 +62,7 @@ def repairer(crew):
 class Wagon(Creature):
     def __init__(self, kind="Cart", hp=None, contents=None, uid=None, travelled=0.0):
         vehicle = VEHICLES[kind]
-        super().__init__(uid or uuid4().hex, vehicle.hp_max if hp is None else hp, contents)
+        super().__init__(uid or uuid4().hex, vehicle.hp_max if hp is None else min(hp, vehicle.hp_max), contents)
         self.kind = kind
         self.vehicle = vehicle
         self.travelled = travelled     # map distance since it last lost a point
@@ -152,7 +152,7 @@ class Wagon(Creature):
     def capacity(self):
         """kg of cargo it can take right now: what is left of the budget once its
         passengers, and everything they carry, are aboard."""
-        return max(0, self.budget - self.passenger_weight)
+        return max(0, round(self.budget - self.passenger_weight, 1))
 
     @property
     def speed(self):

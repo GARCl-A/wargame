@@ -170,11 +170,12 @@ class StablesScreen(Screen):
         y = section(screen, F, "WAGONS", x, y, w)
         for i, w_ in enumerate(g.wagons):
             pulled = " + ".join(a.species for a in w_.draft) or "nothing hitched"
-            text(screen, F["bodyb"], f"{self._wagon_label(w_).capitalize()}  ·  cargo {w_.stash.load:g} / {w_.capacity} kg"
+            text(screen, F["bodyb"], f"{self._wagon_label(w_).capitalize()}  ·  cargo {w_.stash.load:g} / {w_.capacity:g} kg"
                  f"  ·  pulled by {pulled}", (x, y), T.TX)
             speed = f"{w_.speed:g} m" if w_.speed else "--"
-            text(screen, F["body_sm"], f"HP {w_.hp}  ·  speed {speed}  ·  {w_.rations} meals aboard  ·  "
-                 f"box {w_.vehicle.capacity} kg, {w_.vehicle.slots} to hitch", (x, y + 20), T.TX_MUTED)
+            riders = f"{w_.passenger_weight:g} kg of riders  ·  " if w_.passengers else ""
+            text(screen, F["body_sm"], f"HP {w_.hp}  ·  speed {speed}  ·  {w_.rations} meals aboard  ·  {riders}"
+                 f"carries up to {w_.budget:g} kg, {w_.vehicle.slots} to hitch", (x, y + 20), T.TX_MUTED)
             if not w_.draft:
                 text(screen, F["body_sm"], "Nothing is pulling it -- the cargo box is shut.", (x, y + 38), T.BLOOD)
             if not w_.stash.items:

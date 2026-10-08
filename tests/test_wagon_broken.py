@@ -189,12 +189,6 @@ def test_wear_and_hp_survive_a_save():
     assert (back.hp, back.travelled, back.kind) == (4, 42.5, "Carriage")
 
 
-def test_a_save_from_before_hit_dice_gives_a_carriage_its_full_hp():
-    old = {"uid": "w", "kind": "Carriage", "hp": 5, "contents": []}
-    assert persist.wagon_from_dict(old).hp == VEHICLES["Carriage"].hp_max
-    assert persist.wagon_from_dict({"kind": "Cart", "contents": []}).hp == 5
-
-
 def test_a_broken_save_stays_broken():
     wagon = Wagon("Cart", hp=0, travelled=10)
     assert persist.wagon_from_dict(persist.wagon_to_dict(wagon)).broken

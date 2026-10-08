@@ -609,8 +609,11 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         """A column for the wagon or an animal: no sheet, no hands, just a pack
         (and, for an animal, the tack slot)."""
         selected = {loc for o, loc in self.selected if o is store}
+        kg, cap = store.load, store.carry_normal
+        if isinstance(store, Wagon):
+            kg, cap = kg + store.passenger_weight, store.budget
         member = {"role": "wagon", "pending_picks": False, "no_sheet": True,
-                  "kg": store.load, "cap": store.carry_normal,
+                  "kg": kg, "cap": cap,
                   "pack": [(name, store.pack_tag(name), items.item_weight(name), qty, False, idx in selected)
                            for idx, (name, qty) in enumerate(store._base_inventory)]}
         if isinstance(store, Animal):
@@ -625,7 +628,8 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             drawn_by = " + ".join(a.species for a in store.draft) or "no animals"
             aboard = f"  ·  {len(store.passengers)} riding" if store.passengers else ""
             member["name"] = f"{store.kind}  ·  {'broken' if store.broken else drawn_by}{aboard}"
-            member["status"] = {"text": f"HP {store.hp} / {store.hp_max}" + ("  ·  BROKEN" if store.broken else ""),
+            riders = f"  ·  riders {store.passenger_weight:.1f} kg" if store.passengers else ""
+            member["status"] = {"text": f"HP {store.hp} / {store.hp_max}{riders}" + ("  ·  BROKEN" if store.broken else ""),
                                 "danger": store.broken}
             if store.needs_repair:
                 have = sum(u.count_of(wagon_mod.REPAIR_ITEM) for u in self.group.members)
