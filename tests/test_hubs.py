@@ -217,3 +217,37 @@ def test_taverna_hub_screen_flow():
         convince_btn = next((r for key, r in screen.buttons if key == "convince"), None)
         assert convince_btn is not None
 
+
+
+def test_taverna_perform_tab_plays_a_show():
+    from gartok.taverna_screen import TavernaScreen
+    from tests.helpers import fixed_d20
+    pygame.init()
+    surf = pygame.Surface((1280, 800))
+    bard, mute = Unit("player"), Unit("player")
+    bard.set_base_attribute("charisma", 18)
+    bard._base_inventory = [("Musical Instrument", 1)]
+    bard.money = mute.money = 0
+    g = Guild([bard, mute])
+    group = Group(list(g.roster), "city")
+    screen = TavernaScreen(ui_fonts(), g, list(group.members), "city", lambda: None, group=group)
+    screen.mouse = (100, 100)
+    screen.draw(surf)
+
+    def click(key):
+        r = next(r for k, r in screen.buttons if k == key)
+        screen.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"button": 1, "pos": r.center}))
+        screen.draw(surf)
+
+    click("tab_perform")
+    assert screen.tab == "perform"
+    click("perf_hours_2")
+    assert screen.perform_hours == 2
+    assert not any(k == "perf_toggle_1" for k, _ in screen.buttons)       # no instrument, no toggle
+    click("perf_toggle_0")                                                # bench the bard
+    assert not screen._performers()
+    click("perf_toggle_0")
+    with fixed_d20(20):
+        click("perform_go")
+    assert bard.money == 2 * ((20 + bard.mod_charisma - 16) // 2) > 0 and mute.money == 0
+    assert "Tavern stage" in screen.notice

@@ -263,7 +263,7 @@ def test_a_batch_shift_stops_when_the_materials_run_out(monkeypatch):
 
 def test_a_batch_shift_banks_work_xp_only_for_the_hours_worked(monkeypatch):
     _, u, _, _, spent = _batch_cook(monkeypatch, 1, 40)
-    assert u.work_hours == spent
+    assert u.work_hours == spent * 2                   # a level 1 recipe for a level 0 cook: x2
 
 
 def test_the_campfire_burns_while_garrisoned_and_dies_the_day_nobody_is_there():

@@ -1016,9 +1016,12 @@ copper instead of walking into the wilds and dying.
   `LUMBER_AXE_RATIO` = **4/3** of that, floored. A partial hour does not count.
   A full 16 h day = **$4** (or **$5** with an Axe) per head, straight
   into each one's purse -- the cheapest meal (a $3 Potato) plus $1.
-- **Work XP:** `Unit.work_hours` accumulates the hours; `Unit.work_xp` =
-  `work_hours // 16` — **one mark per 16 h worked**. Carrying your own Axe elevates
-  the work level to 1, gating work-XP progression accordingly (`progression.xp_award`).
+- **Work XP:** `Unit.work_hours` banks hours (leftovers are kept, nothing is
+  lost); `Unit.work_xp` = `work_hours // 16` — one mark per 16 banked hours.
+  Each hour is worth `(activity level - work level) + 1` banked hours, and
+  nothing once the activity is below your level, the same rule as combat XP
+  (`progression.work_xp_hours`). The yard is level 0, level 1 with your own Axe;
+  crafting is the recipe's `level` (1 or 2), the tavern stage 1, the wilds hunt 3.
 - **No wood:** the axe is borrowed and the tree is not yours; you take only the
   wage for the hours, no item.
 - **Deliberately meagre.** $0.75/h. A full day feeds you (a Potato is $3)
@@ -1027,6 +1030,23 @@ copper instead of walking into the wilds and dying.
   net, not a career.
 - A character **incapacitated by hunger can work** (it is not combat) — that is
   exactly who needs it most.
+
+### The tavern stage: busking for tips 🟡
+
+The PERFORM tab of the Tavern (`taverna_screen.py`). Rule in
+`Guild.perform_shift` / `economy.perform_pay`; unlike the yard it resolves
+right now (clock advanced through `pass_time`), no order.
+
+- **Who plays:** anyone with a **Musical Instrument** in the pack (the Musician's
+  starting item); the rest of the party sits out. Show length: 1, 2 or 4 h.
+- **Pay is a test:** each hour on stage rolls `d20 + CHA mod` per performer, and
+  the crowd tips **one coin per 2 points over 16** (`PERFORM_TIP_BASE` /
+  `PERFORM_TIP_STEP`). Averaged over the d20: **~$0.30/h at +1** (the yard with
+  an Axe pays $0.31/h), ~$0.45/h at +2, ~$0.20/h at 0, ~$0.10/h at -1. The
+  `coin_gain` talent applies. Placeholder numbers, to tune once played;
+  `economy.perform_expected` gives the average.
+- **Work XP:** banks like any shift, as a level 1 activity (x2 for a level 0
+  worker, x1 at level 1, nothing after).
 
 ### The Forge: crafting 🟡
 

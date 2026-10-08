@@ -36,6 +36,35 @@ LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mar
 LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
 LUMBER_LEVEL_OWN_AXE = 1                # the yard's ceiling once you bring your own Axe
 
+# The tavern stage: bring a Musical Instrument and play for the crowd. Each hour
+# is a Charisma test (`d20 + CHA mod`) tipped one coin per PERFORM_TIP_STEP over
+# PERFORM_TIP_BASE -- calibrated so +1 earns what the lumber yard pays with an
+# Axe and +2 beats it. Placeholders until played.
+PERFORM_ITEM = "Musical Instrument"
+PERFORM_SHIFT_HOURS = (1, 2, 4)         # show lengths the tavern offers
+PERFORM_LEVEL = 1                       # activity level: work-XP stops once you outgrow it
+PERFORM_TIP_BASE = 16
+PERFORM_TIP_STEP = 2
+
+
+def can_perform(unit):
+    return unit.has_item(PERFORM_ITEM)
+
+
+def _tips(roll, cha_mod):
+    return max(0, (roll + cha_mod - PERFORM_TIP_BASE) // PERFORM_TIP_STEP)
+
+
+def perform_pay(hours, cha_mod):
+    """Copper tipped for `hours` on the stage: one Charisma test per hour."""
+    return sum(_tips(data.d20(), cha_mod) for _ in range(int(hours)))
+
+
+def perform_expected(hours, cha_mod):
+    """The average of `perform_pay`, for the UI and the balance sims."""
+    return int(hours) * sum(_tips(r, cha_mod) for r in range(1, 21)) / 20
+
+
 # The Bankers rent the guild its first shared property: a strongbox at the bank
 # in the City. A flat fee for the right to it, no reputation gate. One tier for
 # now -- `BANK_CHEST_CAPACITY` is a value a later, pricier tier can raise.
@@ -101,7 +130,7 @@ PRICES = {item.name: item.price for item in items.all_items().values()}
 MARKET_STOCK = [
     "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
     "Light Crossbow", "Shortbow",
-    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Cloak",
+    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Cloak", "Musical Instrument",
     "Meat", "Fruit", "Potato", "Salt", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
     "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
     "Quiver", "Bear Trap", "Alarm Trap",

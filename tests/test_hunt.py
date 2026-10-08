@@ -36,7 +36,7 @@ def test_grant_meat_splits_the_haul_and_banks_the_hours():
     lines = hunt.grant_haul(st)
     total_meat = sum(u.count_of("Meat") for u in party)
     assert total_meat == 9 // hunt.HUNT_MEAT_HOURS            # 4 kg
-    assert all(u.work_hours == 9 for u in party)              # both credited the hours
+    assert all(u.work_hours == 9 * 4 for u in party)          # both credited, a level 3 job for level 0: x4
     assert any("meat" in ln for ln in lines)
 
 
@@ -73,7 +73,7 @@ def test_a_won_ambush_lets_the_hunt_carry_on_from_where_it_stopped():
 
     hunt.grant_haul(st)
     assert sum(u.count_of("Meat") for u in party) == 4
-    assert all(u.work_hours == 8 for u in party)              # the whole hunt, both stretches
+    assert all(u.work_hours == 8 * 4 for u in party)          # the whole hunt, both stretches, x4
 
 
 def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
@@ -126,7 +126,7 @@ def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
 
     assert scr.phase == "done"
     assert st.hours_hunted == 8 and party[0].count_of("Meat") == 4
-    assert party[0].work_hours == 8                       # grant_meat banked the full hunt
+    assert party[0].work_hours == 8 * 4                   # grant_meat banked the full hunt, x4
 
 
 def test_forage_stretch_finds_shrooms_and_fruit():

@@ -610,3 +610,13 @@ def test_eligible_work_activities():
     jobs_4 = progression.eligible_work_activities(4, u)
     assert jobs_4 == []
 
+
+
+def test_work_xp_hours_scale_like_combat_xp():
+    from gartok import progression
+    assert progression.work_xp_hours(4, 1, 0) == 4 * 2      # (1 - 0) + 1
+    assert progression.work_xp_hours(4, 3, 0) == 4 * 4
+    assert progression.work_xp_hours(4, 2, 2) == 4          # at your level: x1
+    assert progression.work_xp_hours(4, 1, 2) == 0          # outgrown: nothing
+    for act, worker in ((0, 0), (3, 1), (1, 2)):
+        assert progression.work_xp_hours(1, act, worker) == progression.xp_award(worker, act)

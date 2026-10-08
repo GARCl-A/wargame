@@ -155,7 +155,7 @@ def test_crafting_shift_awards_work_xp():
     t0 = guild.clock.seconds
     guild.crafting_shift(u, "Minor Healing Potion", hours=16)
     spent = (guild.clock.seconds - t0) / 3600
-    assert u.work_hours == spent and 0 < spent <= 16
+    assert u.work_hours == spent * 2 and 0 < spent <= 16     # level 1 recipe, level 0 worker: x2
 
 
 def test_crafting_screen_station_filtering():

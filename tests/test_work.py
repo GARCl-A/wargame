@@ -2,7 +2,7 @@
 
 import random
 
-from tests.helpers import Unit, _unit, economy, packed, persist, world
+from tests.helpers import Unit, _unit, economy, fixed_d20, packed, persist, world
 
 
 def test_lumber_yard_is_a_work_town_one_hour_from_the_city():
@@ -122,7 +122,7 @@ def test_hunting_is_a_level_3_job_that_outlasts_the_lumber_yard():
                            hours_left=0, hours_hunted=10)
     before = u.work_hours
     hunt.grant_haul(state)
-    assert u.work_hours == before + 10                  # level 3 job still teaches a level 2 worker
+    assert u.work_hours == before + 10 * 2              # level 3 job still teaches a level 2 worker, x2
 
 
 # --------------------------------------------------------------------------- #
@@ -195,3 +195,79 @@ def test_a_crafting_shift_is_not_rest():
     guild, g, u, _ = _hurt_crew(False)
     guild.pass_time(8, busy=[u])
     assert u.hp == u.hp_max - 1
+
+
+def _performer(cha, instrument=True):
+    u = Unit("player")
+    u.set_base_attribute("charisma", cha)
+    u._base_inventory = packed(["Musical Instrument"] if instrument else [])
+    u.money = 0
+    u._derive_combat()
+    return u
+
+
+def test_perform_pay_is_a_charisma_test_each_hour():
+    with fixed_d20(20):
+        assert economy.perform_pay(4, 2) == 4 * 3        # (20 + 2 - 16) // 2 per hour
+        assert economy.perform_pay(1, 0) == 2
+    with fixed_d20(10):
+        assert economy.perform_pay(4, 2) == 0            # a flop draws nothing
+    with fixed_d20(1):
+        assert economy.perform_pay(4, -3) == 0           # never negative
+
+
+def test_perform_expected_is_the_average_of_the_d20():
+    ys = [economy.perform_expected(1, m) for m in range(-1, 5)]
+    assert ys == sorted(ys)                              # more Charisma never pays less
+    axe = economy.lumber_pay(16, level=1) / 16           # the lumber yard with an Axe, $/h
+    assert economy.perform_expected(16, 2) > economy.lumber_pay(16, level=1)
+    assert abs(economy.perform_expected(1, 1) - axe) < 0.05      # +1 is the Axe's wage
+
+
+def _performer(cha, instrument=True):
+    u = Unit("player")
+    u.set_base_attribute("charisma", cha)
+    u._base_inventory = packed(["Musical Instrument"] if instrument else [])
+    u.money = 0
+    u._derive_combat()
+    return u
+
+
+def test_perform_shift_tips_each_player_by_their_own_charisma():
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    random.seed(6)
+    star, dud = _performer(18), _performer(1)
+    assert star.mod_charisma > 0 >= dud.mod_charisma
+    guild = Guild([star, dud], clock=Clock(18 * 3600))
+    with fixed_d20(18):
+        events, _ = guild.perform_shift([star, dud], 4)
+    assert star.money == 4 * ((18 + star.mod_charisma - 16) // 2) > 0
+    assert dud.money == 4 * max(0, (18 + dud.mod_charisma - 16) // 2)
+    assert star.work_hours == 4 * 2 and dud.work_hours == 4 * 2    # level 1 job, level 0 worker: x2
+    assert guild.clock.hour_of_day == 22
+    assert any("Tavern stage" in e and "+8 work h" in e for e in events)    # x2 for a level 0 worker
+
+
+def test_perform_shift_needs_an_instrument():
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    mute = _performer(16, instrument=False)
+    guild = Guild([mute], clock=Clock(18 * 3600))
+    events, _ = guild.perform_shift([mute], 4)
+    assert mute.money == 0 and guild.clock.hour_of_day == 18
+    assert events == ["Nobody here has an instrument to play."]
+
+
+def test_only_those_with_an_instrument_play():
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    bard, mute = _performer(18), _performer(18, instrument=False)
+    guild = Guild([bard, mute], clock=Clock(18 * 3600))
+    with fixed_d20(20):
+        guild.perform_shift([bard, mute], 2)
+    assert bard.money > 0 and mute.money == 0 and mute.work_hours == 0
+
+
+def test_the_market_sells_the_musical_instrument():
+    assert economy.PERFORM_ITEM in economy.MARKET_STOCK and economy.PERFORM_ITEM in economy.PRICES

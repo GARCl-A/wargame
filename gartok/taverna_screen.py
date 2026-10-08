@@ -10,6 +10,9 @@ Win and they sign on (bound to the recruiter via `recruited_by`, and out of the
 pool). Lose and that recruiter is barred from pitching that same stranger until
 the pool turns over -- another member can still try.
 
+The perform tab puts anyone carrying a Musical Instrument on the stage for a few
+hours: each hour on stage is a Charisma test the crowd tips on (`economy.perform_pay`).
+
 The study tab lets the party rent rooms for the garrison job "study". Any member
 with a study target (scroll or dictionary carried by the party) accumulates
 daily progress toward learning new spells or languages.
@@ -71,7 +74,9 @@ class TavernaScreen(Screen):
         self.party_cards = []                # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
         self._hot = False
-        self.tab = "recruits"               # "recruits" or "rooms"
+        self.tab = "recruits"               # "recruits", "rooms" or "perform"
+        self.perform_hours = economy.PERFORM_SHIFT_HOURS[-1]
+        self.perform_off = set()            # members who sit the show out (default: everyone plays)
         self.study_modal_member = None      # Unit for whom we are picking a study target
         self.modal_buttons = []             # [(key, rect, action_arg)]
         self._tooltips = []                 # [(rect, text)]
@@ -176,6 +181,15 @@ class TavernaScreen(Screen):
                         self.tab = "recruits"
                     elif key == "tab_rooms":
                         self.tab = "rooms"
+                    elif key == "tab_perform":
+                        self.tab = "perform"
+                    elif key.startswith("perf_hours_"):
+                        self.perform_hours = int(key.split("_")[-1])
+                    elif key.startswith("perf_toggle_"):
+                        m = self.party[int(key.split("_")[-1])]
+                        self.perform_off ^= {m}
+                    elif key == "perform_go":
+                        self._perform()
                     elif key == "rent_study" and self.group is not None:
                         if not any(m.study_target for m in self.party):
                             self.notice = "Set a study target for someone before renting rooms."
@@ -213,6 +227,19 @@ class TavernaScreen(Screen):
                     if rect.collidepoint(px):
                         self.selected_recruiter = member
                         return
+
+    # ------------------------------------------------------------------ #
+    def _performers(self):
+        return [m for m in self.party if m in self.guild.roster and economy.can_perform(m)
+                and m not in self.perform_off]
+
+    def _perform(self):
+        crew = self._performers()
+        if not crew:
+            self.notice = "Pick someone with a Musical Instrument to play."
+            return
+        events, _ = self.guild.perform_shift(crew, self.perform_hours)
+        self.notice = "  ".join(events)
 
     # ------------------------------------------------------------------ #
     def _pitch(self, member):
@@ -310,11 +337,13 @@ class TavernaScreen(Screen):
             if is_tavern:
                 sub += f" · new faces in {days_left} day(s)"
             sub += self._sub_extra()
+        elif self.tab == "perform":
+            sub = "Play the stage with a Musical Instrument · every hour is a Charisma test"
         else:
             sub = "Rent a quiet room for the day · anyone with a study target will make daily progress"
 
-        tabs_list = ["RECRUIT", "STUDY"] if is_tavern else []
-        active_tab_label = "RECRUIT" if self.tab == "recruits" else "STUDY"
+        tabs_list = ["RECRUIT", "STUDY", "PERFORM"] if is_tavern else []
+        active_tab_label = {"recruits": "RECRUIT", "rooms": "STUDY", "perform": "PERFORM"}[self.tab]
         header_rect = pygame.Rect(0, 0, W, 72)
         tab_hits = header(screen, F, header_rect, self.title if not is_tavern else "THE TAVERN",
                           sub, tabs_list, active_tab_label, mpos=self.mouse, has_tutorial=True)
@@ -324,6 +353,8 @@ class TavernaScreen(Screen):
                 self.buttons.append(("tab_recruits", r))
             elif tab_name == "STUDY" and self.tab != "rooms":
                 self.buttons.append(("tab_rooms", r))
+            elif tab_name == "PERFORM" and self.tab != "perform":
+                self.buttons.append(("tab_perform", r))
 
         content_top = 88
         content_bottom = H - FOOTER_H - 12
@@ -333,6 +364,8 @@ class TavernaScreen(Screen):
             self._draw_recruits_master_detail(screen, content_top, content_h)
         elif self.tab == "rooms":
             self._draw_study_hub(screen, content_top, content_h)
+        elif self.tab == "perform":
+            self._draw_perform(screen, content_top, content_h)
 
         # Study target modal if active
         if self.study_modal_member is not None:
@@ -670,6 +703,68 @@ class TavernaScreen(Screen):
                 self.add_button(screen, r_btn, f"choose_target_{i}", "SET TARGET")
 
             cy += card_h + 10
+
+    # ------------------------------------------------------------------ #
+    def _draw_perform(self, screen, top, height):
+        F = self._F
+        W, H = screen.get_size()
+        pad = T.S * 3
+        area = pygame.Rect(pad, top, W - 2 * pad, height)
+        panel(screen, area)
+
+        caps(screen, F["micro"], "THE STAGE", (area.x + 20, area.y + 14), T.TX_MUTED)
+        cx, cy = area.x + 20, area.y + 36
+        text(screen, F["bodyb"],
+             f"Every hour on stage is a Charisma test (d20 + modifier): beat {economy.PERFORM_TIP_BASE} and the crowd tips.",
+             (cx, cy), T.TX)
+        text(screen, F["body_sm"],
+             f"Needs a {economy.PERFORM_ITEM} in the pack. Every {economy.PERFORM_TIP_STEP} points over {economy.PERFORM_TIP_BASE} is one more coin.",
+             (cx, cy + 22), T.TX_MUTED)
+        cy += 56
+
+        caps(screen, F["micro"], "SHOW LENGTH", (cx, cy + 10), T.TX_MUTED)
+        bx = cx + 110
+        for h in economy.PERFORM_SHIFT_HOURS:
+            self.add_button(screen, pygame.Rect(bx, cy, 72, 32), f"perf_hours_{h}", f"{h} H",
+                            primary=h == self.perform_hours, enabled=h != self.perform_hours)
+            bx += 80
+        crew = self._performers()
+        go_r = pygame.Rect(area.right - 20 - 260, cy - 4, 260, 38)
+        self.add_button(screen, go_r, "perform_go", f"PLAY {self.perform_hours} H", primary=True,
+                        enabled=bool(crew))
+        cy += 48
+        hline(screen, area.x + 20, area.right - 20, cy)
+        cy += 16
+
+        caps(screen, F["micro"], "PERFORMERS", (cx, cy), T.TX_MUTED)
+        cy += 20
+        rw, card_h = area.w - 40, 64
+        for i, m in enumerate(self.party):
+            mr = pygame.Rect(cx, cy, rw, card_h)
+            has = economy.can_perform(m)
+            on = has and m not in self.perform_off
+            hov = mr.collidepoint(self.mouse)
+            if has:
+                self.buttons.append((f"perf_toggle_{i}", mr))
+                if hov:
+                    self._hot = True
+            bg = mix(T.BRASS, T.TABLE, 0.9) if on else T.STEEL if hov and has else T.TABLE
+            pygame.draw.rect(screen, bg, mr, border_radius=4)
+            pygame.draw.rect(screen, T.BRASS if on else T.STEEL_LINE, mr, 2 if on else 1, border_radius=4)
+            token_badge(screen, F, (mr.x + 28, mr.centery), m, r=18)
+            tx = mr.x + 60
+            text(screen, F["bodyb"], m.name, (tx, mr.y + 10), T.TX)
+            caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · CHA {m.mod_charisma:+}",
+                 (tx, mr.y + 36), T.TX_MUTED)
+            if not has:
+                caps(screen, F["microb"], f"NO {economy.PERFORM_ITEM.upper()}", (mr.right - 14, mr.centery - 6),
+                     T.TX_FAINT, right=True)
+            else:
+                tips = economy.perform_expected(self.perform_hours, m.mod_charisma)
+                label = f"TIPS ~{fmt_money(round(tips, 1))} AVG" if on else "SITTING OUT"
+                col = (T.GREEN if tips else T.TX_MUTED) if on else T.TX_FAINT
+                caps(screen, F["microb"], label, (mr.right - 14, mr.centery - 6), col, right=True)
+            cy += card_h + 8
 
     # ------------------------------------------------------------------ #
     def _draw_study_modal(self, screen):

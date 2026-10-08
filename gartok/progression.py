@@ -9,7 +9,8 @@ experience (combat, work) has its own level, and its own talent tree in
   above, worth `(their level - your level) + 1` (`xp_award`). Below your level
   is worth nothing -- a veteran mopping up fresh recruits does not level.
 - **Work XP** is hours worked, banked in 16 h marks (`Unit.work_xp`) -- but
-  gated exactly like combat XP: an activity below your work level teaches you
+  scaled exactly like combat XP: an hour is worth `(activity - your work level)
+  + 1` banked hours, and an activity below your work level teaches you
   nothing (`work_xp_hours`). The lumber yard is level 0 bare-handed, level 1
   once you own an Axe -- carried is enough (`economy.lumber_level`); hunting the wilds is level 3
   (`hunt.HUNT_LEVEL`), risk buying a longer runway before it too caps out.
@@ -72,12 +73,12 @@ def xp_award(attacker_level, victim_level):
 
 
 def work_xp_hours(hours, activity_level, worker_level):
-    """Hours of a work shift that actually bank toward work-XP: the same "no
-    free lunch" gate as `xp_award`, applied to a job instead of a kill -- full
-    credit for an activity at or above your own work level, none once you have
-    outgrown it (so a lumber yard you can already do in your sleep stops
-    teaching you anything, even though it still pays)."""
-    return hours if activity_level >= worker_level else 0
+    """Hours of a work shift that bank toward work-XP, the same rule as
+    `xp_award` applied to a job instead of a kill: a multiplier of
+    `(activity - worker) + 1` for an activity at or above your own work level,
+    none once you have outgrown it (a lumber yard you can already do in your
+    sleep stops teaching you anything, even though it still pays)."""
+    return hours * (activity_level - worker_level + 1) if activity_level >= worker_level else 0
 
 
 def to_next(thresholds, xp):
@@ -107,6 +108,10 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
                 activities.append("Lumber Yard (requires owning an Axe)")
         else:
             activities.append("Lumber Yard (requires Axe)")
+
+    # Tavern stage
+    if worker_level <= 1:
+        activities.append("Tavern stage (with a Musical Instrument)")
 
     # Crafting
     if worker_level <= 1:

@@ -49,16 +49,8 @@ class LaborMixin:
         paid = []
         events = []
         for u in earners:
-            old_work_lvl = u.work_level
             level = economy.lumber_level(u)
-            pay = economy.lumber_pay(hours, level)
-            gain = round(pay * (1 + u.talent_bonus("coin_gain")))
-            u.money += gain
-            u.work_hours += progression.work_xp_hours(hours, level, u.work_level)
-            u.collect_levels()                 # more work marks can lift the mean level
-            paid.append(gain)
-            if u.work_level > old_work_lvl:
-                events.append(f"{u.name} reached work level {u.work_level}!")
+            paid.append(self._pay_worker(u, economy.lumber_pay(hours, level), hours, level, events))
         if earners:
             names = ", ".join(u.name for u in earners)
             wage = (f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1
@@ -68,6 +60,39 @@ class LaborMixin:
                 note += f"  Brisk Hands: crew done in {clock_hours:g} h."
             events.append(note)
         return events
+
+    def _pay_worker(self, u, pay, hours, activity_level, events):
+        """Pay `u` (coin_gain applies), bank the work-XP and note a level-up.
+        Returns the copper actually paid."""
+        old_work_lvl = u.work_level
+        gain = round(pay * (1 + u.talent_bonus("coin_gain")))
+        u.money += gain
+        u.work_hours += progression.work_xp_hours(hours, activity_level, u.work_level)
+        u.collect_levels()                     # more work marks can lift the mean level
+        if u.work_level > old_work_lvl:
+            events.append(f"{u.name} reached work level {u.work_level}!")
+        return gain
+
+    def perform_shift(self, performers, hours):
+        """A show on the tavern stage, done right now: the clock runs through
+        `pass_time`, then each performer is tipped by their own Charisma
+        (an hourly Charisma test, `economy.perform_pay`). Anyone without an instrument sits it out."""
+        hours = int(hours)
+        crew = [u for u in performers if u in self.roster and economy.can_perform(u)]
+        if not crew:
+            return ["Nobody here has an instrument to play."], []
+        clock_hours = hours * self.work_speedup(crew)
+        events, casualties = self.pass_time(clock_hours, busy=crew)
+        shows = []
+        for u in (u for u in crew if u in self.roster):     # a long show can starve one
+            before = u.work_hours
+            pay = economy.perform_pay(hours, u.mod_charisma)
+            gain = self._pay_worker(u, pay, hours, economy.PERFORM_LEVEL, events)
+            shows.append((u, gain, u.work_hours - before))
+        if shows:
+            tips = ", ".join(f"{u.name} {fmt_money(g)}, +{xp} work h" for u, g, xp in shows)
+            events.append(f"Tavern stage: played {hours} h ({tips}).")
+        return events, casualties
 
     def crafting_shift(self, unit, recipe, hours):
         """A stint at the forge/workbench, done right now:
