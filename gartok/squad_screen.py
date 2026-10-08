@@ -107,7 +107,8 @@ class SquadScreen(SheetModalMixin, Screen):
 
     @property
     def picked_gold(self):
-        return sum(u.money for u in self.picked)
+        """The stake comes out of the whole group's pockets, not only the fighters'."""
+        return sum(u.money for u in self.roster)
 
     @property
     def entry_cost(self):
@@ -291,7 +292,7 @@ class SquadScreen(SheetModalMixin, Screen):
         can_pay = gold >= cost
         cost_col = T.GREEN if can_pay else T.BLOOD
         text(screen, F["body_sm"],
-             f"entry: {fmt_money(off.entry)} x {len(self.picked)} fighter(s) = {fmt_money(cost)}  ·  squad's combined purse: {fmt_money(gold)}",
+             f"entry: {fmt_money(off.entry)} x {len(self.picked)} fighter(s) = {fmt_money(cost)}  ·  group's combined purse: {fmt_money(gold)}",
              (pad, top), cost_col)
         top += 20
 

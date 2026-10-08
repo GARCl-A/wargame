@@ -27,7 +27,7 @@ shopper's items for one move.
 
 import pygame
 
-from . import economy, factions, items
+from . import economy, factions, items, store_column
 from .constants import fmt_money
 from .dragselect import DragSelectMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
@@ -60,6 +60,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         # economy._haggle_fraction). `self.deal` is a list of economy.PriceMod,
         # fed straight to buy/sell_price.
         group = guild.group_of(shoppers[0]) if guild and shoppers else None
+        self.group = group
+        self.stores = [*group.herd, *group.wagons] if group else []     # wagons and animals shop along
         self.deal = economy.deal_mods(shoppers, getattr(node, "language", None),
                                       getattr(node, "alignment", None),
                                       leader=group.leader if group else None)
@@ -402,7 +404,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         if not picks:
             return []
         owners = {id(p[0]) for p in picks}
-        dests = [("member", f"to {m.name}", m) for m in self.shoppers
+        dests = [("member", f"to {m.name}", m) for m in (*self.shoppers, *self.stores)
                  if len(owners) > 1 or id(m) not in owners]
         if len(picks) > 1:
             total = sum(economy.sell_price(self._name_of(p), self.deal) * self._get_qty(p)
@@ -690,7 +692,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         for owner, owner_picks in by_owner.values():
             collected, _ = self._collect(owner_picks)  # _take reads self._sel_qty -- clear after
             proceeds = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
-            owner.money += proceeds
+            payee = owner if hasattr(owner, "money") else self.shoppers[0]    # a wagon or animal has no purse
+            payee.money += proceeds
             total += proceeds
             sold += sum(q for _, q in collected)
             for n, q in collected:
@@ -832,7 +835,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 "weight": items.item_weight(name),
                 "stock": stock,
                 "afford": self.purse >= price and not sold_out,
-                "fits": any(self._fits(m, name) for m in self.shoppers),
+                "fits": any(self._fits(m, name) for m in (*self.shoppers, *self.stores)),
                 "sel": ("stock", name) in self.selected,
                 "tag": self._kit_tag(name) if kind == "kit" else "",
                 "qty": self._buy_qty(name),
@@ -868,42 +871,50 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         self._shoppers_area = area
         F = self._ui_fonts()
         gap = T.S * 2
-        
+        columns = [*self.shoppers, *self.stores]
+
         cap = max(1, (area.w + gap) // (300 + gap))
-        n_shown = min(cap, len(self.shoppers))
+        n_shown = min(cap, len(columns))
         card_w = min(420, max(300, (area.w - (n_shown - 1) * gap) // n_shown)) if n_shown > 0 else 300
-        
-        self._shoppers_max_scroll = max(0, len(self.shoppers) - cap)
+
+        self._shoppers_max_scroll = max(0, len(columns) - cap)
         cur = getattr(self, "_shoppers_scroll", 0)
         self._shoppers_scroll = max(0, min(cur, self._shoppers_max_scroll))
-        
-        shown = self.shoppers[self._shoppers_scroll : self._shoppers_scroll + n_shown]
+
+        shown = columns[self._shoppers_scroll : self._shoppers_scroll + n_shown]
         carried = self._selected_names()
-        
+
         for i, m in enumerate(shown):
             r = pygame.Rect(area.x + i * (card_w + gap), area.y, card_w, area.h)
-            member = self._member_dict(m, carried)
+            store = store_column.is_store(m)
+            if store:
+                picked = {loc for o, loc in self.selected if o is m}
+                member = store_column.store_dict(self.group, m, picked, carried)
+            else:
+                member = self._member_dict(m, carried)
             res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(m), 0), self.mouse)
             self._pack_scroll[id(m)] = res["scroll"]
-            self.info_hits.append((res["sheet_rect"], m))
-            
+            if not store:
+                self.info_hits.append((res["sheet_rect"], m))
+
             for kind, slot_rect in res["slot_rects"].items():
-                if slot_rect is None:
+                if slot_rect is None or store:
                     continue
                 self.zones.append((slot_rect, m, kind))
                 if member[kind]["name"]:
                     self.item_rows.append((slot_rect, m, kind))
-                    
+
             self.zones.append((res["pack_zone"], m, "pack"))
             self._pack_areas.append((res["pack_area"], m))
-            
+
             for pr, idx in res["pack_hits"]:
                 self.item_rows.append((pr, m, idx))
-            for lr, idx in res["lock_hits"]:
-                self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
+            if not store:
+                for lr, idx in res["lock_hits"]:
+                    self.lock_hits.append((lr, m, m._base_inventory[idx][0]))
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, m, idx))
-                
+
         if self._shoppers_max_scroll > 0:
             hr = self._shoppers_max_scroll - self._shoppers_scroll
             hl = self._shoppers_scroll

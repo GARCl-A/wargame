@@ -105,6 +105,7 @@ class App:
         self._battle_squad = []              # roster units sent to the current battle
         self._battle_node = None             # world node the current battle is at
         self._arena_offer = None             # world.Bout for the current arena fight, or None
+        self._arena_purse = None             # who pays an arena stake: the whole group
         self._hunt = None                    # live hunt.HuntState -- carried across ambush battles
         self._pause_order = None             # in-flight "guard"/"ambush" Order -- carried across a forced battle
         self._pause_group = None             # the Group that order belongs to
@@ -493,6 +494,7 @@ class App:
         else:                                   # champion beaten: the Games are open
             offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]
         disabled = {u for u in group.members if u.incapacitated}
+        self._arena_purse = group.members
         self.scene = SquadScreen(self.ui_fonts, group.members, node,
                                  on_confirm=self._start_battle, on_back=self._after_activity,
                                  arena_offers=offers, disabled=disabled,
@@ -858,7 +860,7 @@ class App:
         self._battle_node = node
         self._arena_offer = offer
         if offer:
-            economy.charge_richest_first(squad, offer.entry * len(squad))
+            economy.charge_richest_first(self._arena_purse or squad, offer.entry * len(squad))
         enemies, scenario = matchup.build(node, offer, squad_size=len(squad),
                                           guild=self.guild)
         battle = Battle(squad, enemies, scenario=scenario,

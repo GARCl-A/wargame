@@ -37,11 +37,6 @@ Polish:
   list them.
 - **Recruit blocked reason.** When a character cannot recruit, lead with the most
   important reason: 0 recruitment slots available.
-- **Musical Instrument for sale.** Add it to the market stock.
-- **Wagon in the Market's inventory.** The wagon should show up as an inventory in the
-  Market, like the other containers.
-- **Arena bets use the group purse.** Betting should combine the whole group's money, not
-  only the fighters'.
 - **Tolerant `from_save` for new optional keys.** `Unit.from_save` and `persist.load_game`
   read every key strictly. Add one defaults table next to `unit_to_dict` / `_payload` and
   have `from_save` read `{**DEFAULTS, **data}`, so a new optional field gets a default

@@ -860,3 +860,51 @@ def test_wagon_capacity_carries_no_float_noise(monkeypatch):
     ox.hitch = g.wagons[0].uid
     monkeypatch.setattr(Wagon, "passenger_weight", property(lambda self: 63.0 + 40.3 + 75.0))
     assert g.wagons[0].capacity == 1.7
+
+
+# --------------------------------------------------------------------------- #
+# the Market shows the group's wagon and animals as more packs                #
+# --------------------------------------------------------------------------- #
+
+def _market(*animals, **kw):
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok import world
+    from gartok.market_screen import MarketScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    guild, g = _group(*animals, **kw)
+    node = next(n for n in world.NODES if n.kind == "market")
+    scr = MarketScreen(ui_fonts(), guild, list(g.members), node, lambda: None)
+    scr.draw(pygame.Surface((1800, 900)))
+    return scr, g
+
+
+def test_the_market_shows_the_wagon_and_the_herd_beside_the_shoppers():
+    scr, g = _market(_animal("Ox", HARNESS), wagon=True)
+    assert scr.stores == [*g.herd, *g.wagons]
+    assert any(o is g.wagons[0] for _, o in scr._pack_areas)
+
+
+def test_a_purchase_can_be_dropped_on_the_wagon_and_stops_at_its_room():
+    scr, g = _market(_animal("Ox", HARNESS), wagon=True)
+    wagon, buyer = g.wagons[0], g.members[0]
+    buyer.money = 100
+    scr._buy(wagon, ["Torch"])
+    assert [i.name for i in wagon.stash.items] == ["Torch"]
+    assert buyer.money < 100
+    bare, g2 = _market(wagon=True)                                  # no animal hitched: no room
+    g2.members[0].money = 100
+    bare._buy(g2.wagons[0], ["Torch"])
+    assert not g2.wagons[0].stash.items and g2.members[0].money == 100
+
+
+def test_selling_from_the_wagon_pays_the_shopper():
+    scr, g = _market(_animal("Ox", HARNESS), wagon=True, cargo=["Torch"])
+    wagon, seller = g.wagons[0], g.members[0]
+    seller.money = 0
+    scr.selected = [(wagon, 0)]
+    scr._sell()
+    assert not wagon.stash.items and seller.money > 0

@@ -27,7 +27,7 @@ def test_squad_screen_init_and_properties():
                       max_pick=2, disabled={u2})
     assert u2 not in scr.picked
     assert len(scr.picked) == 2
-    assert scr.picked_gold == 60
+    assert scr.picked_gold == 65         # the whole group's purse, not only the picked
     assert scr.ok
     assert scr.tutorial_key() == "squad"
 
@@ -110,3 +110,17 @@ def test_squad_screen_scrolling():
     evt_dn = MagicMock(type=pygame.KEYDOWN, key=pygame.K_DOWN)
     scr.handle_event(evt_dn)
     assert scr._scroll == 36
+
+
+def test_arena_stake_draws_on_the_whole_group_purse():
+    from gartok import economy
+
+    fighter, bench = Unit("player"), Unit("player")
+    fighter.money, bench.money = 0, 100
+    bout = arena.scrapper_bout()
+    scr = SquadScreen(None, [fighter, bench], world.node("arena"),
+                      on_confirm=lambda *a: None, on_back=lambda: None, arena_offers=[bout])
+    scr.picked = [fighter]
+    assert scr.ok and scr.picked_gold == 100
+    economy.charge_richest_first([fighter, bench], bout.entry)
+    assert fighter.money == 0 and bench.money == 100 - bout.entry
