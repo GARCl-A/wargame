@@ -117,7 +117,7 @@ class LaborMixin:
         clock_hours = worked * self.work_speedup([unit])
         events, casualties = self.pass_time(clock_hours, busy=[unit])
 
-        events += unit.bank_work(worked, recipe_data.get("level", 1))
+        events += unit.bank_work(worked, recipe_data.level)
 
         if made:
             total = made * recipe_data.yield_qty

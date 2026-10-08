@@ -325,12 +325,7 @@ class LoadoutMixin:
     @staticmethod
     def crafting_goal(recipe):
         """The progress one batch of `recipe` takes."""
-        recipe_data = items.CRAFTING_RECIPES[recipe]
-        total = recipe_data.complexity
-        for mat in recipe_data.materials:
-            mat_item = items.get(mat)
-            total += mat_item.price if mat_item else 10
-        return total
+        return items.recipe_goal(items.CRAFTING_RECIPES[recipe])
 
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""

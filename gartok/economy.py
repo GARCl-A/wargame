@@ -102,7 +102,7 @@ CAMPFIRE_DC = 8                   # 1d20 + WIS mod, best of the group
 
 TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 
-LUMBER_PRICE = 6   # copper, market buy price -- the guild has to import its own building material,
+LUMBER_PRICE = 7   # copper, market buy price -- the guild has to import its own building material,
                     # nothing gathers it for free until the claim below is ESTABLISHED (see GARRISON_JOBS)
 
 # The Wilds claim campaign ([[gartok-property-two-paths]]'s "Wilds" path):
@@ -149,6 +149,14 @@ STOCK = {
     "1sqm Hide": 0,
     "Minor Healing Potion": 3, "Vial": 10,
 }
+
+
+LIBRARY_SUPPLIES = ("Paper", "Ink")          # the Library shop sells these without a count
+
+
+def freely_buyable(name):
+    """True if the shops sell `name` without a finite count: as many as you like, any day."""
+    return (name in MARKET_STOCK and name not in STOCK) or name in LIBRARY_SUPPLIES
 
 
 MARKET_CASH_START = 100    # $ a market holds the first time the guild meets it

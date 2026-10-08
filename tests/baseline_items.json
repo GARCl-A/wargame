@@ -504,7 +504,7 @@
   },
   "Ink": {
     "weight": 0.1,
-    "price": 15,
+    "price": 45,
     "food": false,
     "lifespan": null
   },
@@ -558,7 +558,7 @@
   },
   "Paper": {
     "weight": 0.1,
-    "price": 5,
+    "price": 10,
     "food": false,
     "lifespan": null
   },
@@ -648,7 +648,7 @@
   },
   "Lumber": {
     "weight": 2.0,
-    "price": 6,
+    "price": 7,
     "food": false,
     "lifespan": null
   },

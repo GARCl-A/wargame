@@ -9,7 +9,7 @@ from collections import Counter
 
 import pygame
 
-from . import items
+from . import items, progression
 from .screen import Screen
 from .ui.primitives import (
     caps,
@@ -185,6 +185,10 @@ class CraftingScreen(Screen):
             panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
 
             text(screen, F["bodyb"], r_name, (r.x + T.S, r.y + T.S), T.TX)
+            xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
+            xp_note = f"x{xp_mult} work XP" if xp_mult else "no work XP"
+            caps(screen, F["micro"], f"LEVEL {r_data.level}  ·  {xp_note}",
+                 (r.x + T.S + F["bodyb"].size(r_name)[0] + T.S, r.y + T.S + 4), T.BRASS)
             if r_data.yield_qty > 1:
                 caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
 

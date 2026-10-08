@@ -155,7 +155,8 @@ def test_crafting_shift_awards_work_xp():
     t0 = guild.clock.seconds
     guild.crafting_shift(u, "Minor Healing Potion", hours=16)
     spent = (guild.clock.seconds - t0) / 3600
-    assert u.work_hours == spent * 2 and 0 < spent <= 16     # level 1 recipe, level 0 worker: x2
+    level = items.CRAFTING_RECIPES["Minor Healing Potion"].level
+    assert u.work_hours == spent * (level + 1) and 0 < spent <= 16    # a level 0 worker gains x(level + 1)
 
 
 def test_crafting_screen_station_filtering():
@@ -184,3 +185,24 @@ def test_crafting_screen_station_filtering():
     forge_screen = CraftingScreen(None, guild, group, on_done=lambda: None, station="forge")
     assert u2 in forge_screen.crafters
     assert u1 not in forge_screen.crafters
+
+
+def test_the_forge_card_shows_each_recipes_level_and_what_it_teaches(monkeypatch):
+    import pygame
+
+    import gartok.crafting_screen as mod
+    pygame.init()
+    u = Unit("player")
+    u.recipes.append("Bear Trap")
+    guild = Guild(roster=[u], node="city")
+    shown, real_caps = [], mod.caps
+
+    def recording_caps(surf, font, s, pos, color, **kw):
+        shown.append(s)
+        return real_caps(surf, font, s, pos, color, **kw)
+
+    monkeypatch.setattr(mod, "caps", recording_caps)
+    mod.CraftingScreen(None, guild, guild.group_of(u), on_done=lambda: None,
+                       station="forge").draw(pygame.Surface((1280, 720)))
+    level = items.CRAFTING_RECIPES["Bear Trap"].level
+    assert any(f"LEVEL {level}" in s and f"x{level + 1} work XP" in s for s in shown)

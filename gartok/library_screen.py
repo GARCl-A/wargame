@@ -2,7 +2,7 @@
 
 import random
 
-from . import data
+from . import data, economy
 from .market_screen import MarketScreen
 
 
@@ -28,7 +28,7 @@ class LibraryScreen(MarketScreen):
 
     def _build_categories(self):
         dictionaries = library_stock_dictionaries(self._guild_ref)
-        cats = [("SUPPLIES", "supplies", ["Paper", "Ink"])]
+        cats = [("SUPPLIES", "supplies", list(economy.LIBRARY_SUPPLIES))]
         if dictionaries:
             cats.append(("DICTIONARIES", "dictionaries", dictionaries))
         return cats

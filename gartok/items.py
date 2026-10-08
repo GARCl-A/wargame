@@ -340,12 +340,12 @@ _register(ItemDef(id="antidote", name="Antidote", type=ItemType.POTION, rarity=I
 _register(ItemDef(id="vial", name="Vial", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
 _register(ItemDef(id="1sqm_hide", name="1sqm Hide", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=2.0, price=12), "hide")
 _register(ItemDef(id="red_mushroom", name="Red Mushroom", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
-_register(ItemDef(id="lumber", name="Lumber", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=2.0, price=6))
+_register(ItemDef(id="lumber", name="Lumber", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=2.0, price=7))
 _register(ItemDef(id="iron_bar", name="Iron Bar", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=5.0, price=15))
 _register(ItemDef(id="1kg_coal", name="1kg Coal", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=1.0, price=5), "coal")
 _register(ItemDef(id="stone_brick", name="Stone Brick", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=3.0, price=6))
-_register(ItemDef(id="paper", name="Paper", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=5))
-_register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=15))
+_register(ItemDef(id="paper", name="Paper", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
+_register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=45))
 _register(ItemDef(id="bear_trap", name="Bear Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=3.0, price=35))
 _register(ItemDef(id="alarm_trap", name="Alarm Trap", type=ItemType.TRAP, rarity=ItemRarity.COMMON, weight=1.0, price=45))
 _register(ItemDef(id="copper_coin", name="Copper Coin", type=ItemType.MISC, rarity=ItemRarity.COMMON, weight=0.005, price=1))
@@ -536,8 +536,13 @@ class CraftingRecipe:
     materials: list[str]
     complexity: int
     station: CraftingStation
-    level: int = 1
     yield_qty: int = 1
+
+    @property
+    def level(self) -> int:
+        """Worked out from the recipe's difficulty, never set by hand (see `craft_level`)."""
+        from .craft_level import level_of
+        return level_of(self)
 
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
@@ -550,55 +555,57 @@ class CraftingRecipe:
 
 
 
+def recipe_goal(recipe: CraftingRecipe) -> int:
+    """The progress one batch of `recipe` takes: its complexity plus what its materials cost."""
+    total = recipe.complexity
+    for mat in recipe.materials:
+        mat_item = get(mat)
+        total += mat_item.price if mat_item else 10
+    return total
+
+
 CRAFTING_RECIPES: dict[str, CraftingRecipe] = {
     "Minor Healing Potion": CraftingRecipe(
         target="Minor Healing Potion",
         materials=["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"],
         complexity=15,
         station=CraftingStation.APOTHECARY,
-        level=1,
     ),
     "Antidote": CraftingRecipe(
         target="Antidote",
         materials=["Venom Gland", "Vial"],
         complexity=15,
         station=CraftingStation.APOTHECARY,
-        level=1,
     ),
     "Dwarf Axe": CraftingRecipe(
         target="Dwarf Axe",
         materials=["Iron Bar", "1sqm Hide", "1kg Coal"],
         complexity=10,
         station=CraftingStation.FORGE,
-        level=1,
     ),
     "Dwarf Shield": CraftingRecipe(
         target="Dwarf Shield",
         materials=["Iron Bar", "Lumber", "1kg Coal"],
         complexity=10,
         station=CraftingStation.FORGE,
-        level=1,
     ),
     "Dwarf Armor": CraftingRecipe(
         target="Dwarf Armor",
         materials=["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"],
         complexity=15,
         station=CraftingStation.FORGE,
-        level=2,
     ),
     "Bear Trap": CraftingRecipe(
         target="Bear Trap",
         materials=["Iron Bar"],
         complexity=5,
         station=CraftingStation.FORGE,
-        level=1,
     ),
     "Alarm Trap": CraftingRecipe(
         target="Alarm Trap",
         materials=["Iron Bar", "Rope"],
         complexity=5,
         station=CraftingStation.FORGE,
-        level=1,
     ),
 }
 
@@ -608,7 +615,6 @@ for _lang in _LANGUAGES:
         materials=["1sqm Hide", "Paper", "Ink"],
         complexity=25,
         station=CraftingStation.SCRIPTORIUM,
-        level=2,
     )
 
 CRAFTING_RECIPES["Jerky"] = CraftingRecipe(
@@ -616,7 +622,6 @@ CRAFTING_RECIPES["Jerky"] = CraftingRecipe(
     materials=["Meat", "Meat", "Salt"],
     complexity=5,
     station=CraftingStation.COOKING,
-    level=1,
     yield_qty=2,
 )
 
