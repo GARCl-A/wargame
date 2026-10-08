@@ -413,7 +413,7 @@ and neutral creatures in `gartok/ground.py`, map assembly in
 - **Defend** (1 point) = **+1 circumstance bonus** to AC until the start of your
   next turn.
 - **Delay** (0 points) = drop to the end of the initiative order, for good (the
-  new order carries into later rounds). Only before spending any point or
+  new order carries into later rounds). Once per round. Only before spending any point or
   walking, and only while a standing unit acts after you; the turn you resume
   is the same one (full points, no second start-of-turn effects).
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**

@@ -76,6 +76,7 @@ class Combatant:
         self.rounds_submerged = 0     # turns spent underwater in deep water (breath / drowning)
         self.initiative = 0           # set by Battle._roll_initiative
         self.delayed = False          # waiting at the end of the order; its turn resumes, not restarts
+        self.delay_round = 0          # round of its last Delay: one per round (rounds start at 1)
         self.weapon_hand = c.equipped_weapon is not None
         self.weapon_name = c.equipped_weapon
         self.weapon = items.get(c.equipped_weapon)

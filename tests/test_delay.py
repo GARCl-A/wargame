@@ -65,6 +65,37 @@ def test_delayed_unit_cannot_delay_again_on_its_resumed_turn():
     assert not actions.DELAY.available(batt, a)
 
 
+def test_delay_is_once_per_round():
+    batt, a, b, e = _trio()
+    actions.DELAY.execute(batt, a)
+    actions.DELAY.execute(batt, b)
+    actions.DELAY.execute(batt, e)                       # the order is back to a, b, e
+    assert batt.order == [a, b, e] and batt.active is a and batt.round_no == 1
+    ok, why = actions.DELAY.applicable(batt, a)
+    assert not ok and why == "already delayed this round"
+    batt.end_turn()
+    assert not actions.DELAY.available(batt, b)          # b delayed this round too
+
+
+def test_delay_is_back_in_the_next_round():
+    batt, a, b, e = _trio()
+    actions.DELAY.execute(batt, a)
+    for _ in range(3):
+        batt.end_turn()
+    assert batt.round_no == 2 and batt.active is b
+    assert actions.DELAY.available(batt, b)
+    actions.DELAY.execute(batt, b)
+    assert batt.order == [e, a, b] and batt.active is e
+
+
+def test_ai_does_not_delay_twice_in_a_round():
+    batt, a, b, e = _trio()
+    a.pos, b.pos, e.pos = (1, 1), (11, 5), (12, 5)
+    a.delay_round = batt.round_no
+    ai.take_turn(batt, a)
+    assert batt.order == [a, b, e]
+
+
 def test_delay_keeps_the_new_order_next_round():
     batt, a, b, e = _trio()
     actions.DELAY.execute(batt, a)

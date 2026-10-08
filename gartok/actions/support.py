@@ -509,13 +509,12 @@ class EndTurn(Action):
 
 class Delay(Action):
     id, name, cost, target = "delay", "Delay", 0, "none"
-    desc = "Drop to the end of the initiative order. Only before you spend any points."
+    desc = "Drop to the end of the initiative order, once per round. Only before you spend any points."
 
     @classmethod
     def applicable(cls, battle, actor):
-        if battle.can_delay(actor):
-            return True, ""
-        return False, "act first / nobody after you"
+        why = battle.delay_block(actor)
+        return not why, why
 
     def execute(self, battle, actor, target=None):
         if self.available(battle, actor):

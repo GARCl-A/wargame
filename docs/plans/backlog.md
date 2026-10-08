@@ -22,10 +22,6 @@ Two parts:
 
 ## Small
 
-Bugs:
-
-- **Delay is unlimited.** A unit can delay indefinitely; allow one delay per round.
-
 Polish:
 
 - **Tolerant `from_save` for new optional keys.** `Unit.from_save` and `persist.load_game`

@@ -627,16 +627,25 @@ class Battle:
         self.active.end_turn(self.log)       # demoralized expires at the end of the sufferer's turn
         self._advance_turn()
 
-    def can_delay(self, unit):
-        """Only the active unit, before it spends anything, and only while someone
-        standing still acts after it (otherwise there is nothing to wait for)."""
-        return (self.winner is None and unit is self.active and not unit.delayed
+    def delay_block(self, unit):
+        """Why `unit` cannot delay now, or "" when it can: only the active unit, once per
+        round, before it spends anything, and only while someone standing still acts
+        after it (otherwise there is nothing to wait for)."""
+        if unit is self.active and unit.delay_round == self.round_no:
+            return "already delayed this round"
+        if (self.winner is None and unit is self.active and not unit.delayed
                 and unit.ap >= AP_PER_TURN and not unit.moved and not unit.walking
-                and any(u.alive for u in self.order[self.turn_idx + 1:]))
+                and any(u.alive for u in self.order[self.turn_idx + 1:])):
+            return ""
+        return "act first / nobody after you"
+
+    def can_delay(self, unit):
+        return not self.delay_block(unit)
 
     def delay_turn(self, unit):
         self.order.append(self.order.pop(self.turn_idx))
         unit.delayed = True
+        unit.delay_round = self.round_no
         self.log(f"{unit.name} holds back and waits.")
         self.turn_idx -= 1                   # _advance_turn steps onto whoever slid into this slot
         self._advance_turn()
