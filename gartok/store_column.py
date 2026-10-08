@@ -37,7 +37,8 @@ def store_dict(group, store, selected, carried):
         drawn_by = " + ".join(a.species for a in store.draft) or "no animals"
         aboard = f"  ·  {len(store.passengers)} riding" if store.passengers else ""
         member["name"] = f"{store.kind}  ·  {'broken' if store.broken else drawn_by}{aboard}"
-        riders = f"  ·  riders {store.passenger_weight:.1f} kg" if store.passengers else ""
+        riders = (f"  ·  riding: {', '.join(u.name for u in store.passengers)} ({store.passenger_weight:.1f} kg)"
+                  if store.passengers else "")
         member["status"] = {"text": f"HP {store.hp} / {store.hp_max}{riders}" + ("  ·  BROKEN" if store.broken else ""),
                             "danger": store.broken}
         if store.needs_repair:

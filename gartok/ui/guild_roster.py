@@ -2,7 +2,8 @@
 accordion of member cards.
 
 Data in, rects out. `bands` items: `{"key", "name", "where" (node label),
-"task" (order label), "collapsed", "members": [...]}`; each member is
+"task" (order label), "collapsed", "members": [...], optional "count" (people, when
+`members` also holds animals)}`; each member is
 `{"key", "name", "sub" (race / level line), "badges": [(label, color)],
 "hp": (cur, max), "load": (cur, normal), "selected", "token"}` where `token`
 is anything `primitives.token_badge` can read (race / portrait_id / token).
@@ -101,7 +102,7 @@ def draw_guild_roster(surf, F, rect, bands, filters, active_filter, scroll, foot
             _arrow(surf, hr, band["collapsed"], T.TX_MUTED)
             where = f"{band['where']} · {band['task']}".upper()
             wr = caps(surf, F["micro"], where, (hr.right - T.S, hr.centery - 6), T.TX_FAINT, right=True)
-            title = f"{band['name']} ({len(band['members'])})"
+            title = f"{band['name']} ({band.get('count', len(band['members']))})"
             text(surf, F["bodyb"], ellipsize(title, F["bodyb"], wr.x - hr.x - T.S * 5 - T.S),
                  (hr.x + T.S * 4, hr.y + T.S - 2), T.TX)
             hits["bands"].append((hr.clip(view), band["key"]))

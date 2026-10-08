@@ -729,12 +729,13 @@ class MapScreen(Screen):
         return blocks
 
     @staticmethod
-    def _rest_row(key, label, plan):
-        """One REST row: what it takes and what it costs, or why it is off."""
+    def _rest_row(key, label, plan, eaters=1):
+        """One REST row: what it takes and what it costs (`eaters` mouths), or why it is off."""
         if not plan.available:
             return {"type": "button", "key": key, "label": label, "sub": plan.reason,
                     "enabled": False, "gap_before": 4}
-        meals = "no meal" if plan.meals == 0 else f"{plan.meals} meal{'s' * (plan.meals != 1)} each"
+        rations = plan.meals * eaters
+        meals = "no meal" if rations == 0 else f"{rations} meal{'s' * (rations != 1)} in all"
         if key != "rest:full":
             return {"type": "button", "key": key, "label": f"{label}  ·  {meals}", "gap_before": 4}
         who = f"{plan.worst[0]} {plan.worst[1]}/{plan.worst[2]}"
@@ -771,7 +772,7 @@ class MapScreen(Screen):
                           "gap_before": T.S * 2, "primary": self._rest_urgent(g) and not paused,
                           "danger": starving, "enabled": not paused, "height": T.S * 5})
             if self._rest_open and not paused:
-                items += [self._rest_row(k, label, plan) for k, label, plan in self._rest_plans(g)]
+                items += [self._rest_row(k, label, plan, len(g.members)) for k, label, plan in self._rest_plans(g)]
         key, label, danger, enabled = self._footer_cta()
         items.append({"type": "button", "key": key, "label": label, "gap_before": T.S * 2,
                      "primary": enabled, "danger": danger, "enabled": enabled})

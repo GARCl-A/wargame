@@ -246,14 +246,14 @@ class TavernaScreen(Screen):
         if self.sel is None or self.sel >= len(self.candidates):
             return
         cand = self.candidates[self.sel]
+        if recruit.slots_free(self.guild, member) <= 0:
+            self.notice = f"{member.name} has no recruitment slots available."
+            return
         if not recruit.can_pitch(member, cand):
             self.notice = f"{member.name} and {cand.name} share no language."
             return
         if self._barred(cand, member):
             self.notice = f"{member.name} already tried {cand.name} this week."
-            return
-        if recruit.slots_free(self.guild, member) <= 0:
-            self.notice = f"{member.name} has no room to sponsor anyone else."
             return
         cost = self._bail(cand)
         if cost and self._wealth() < cost:
@@ -550,12 +550,12 @@ class TavernaScreen(Screen):
                  (rtx, mr.y + 30), T.TX_MUTED)
 
             # Eligibility / Odds
-            if self._barred(cand, m):
+            if free_slots <= 0:
+                cond_text, cond_col = "NO RECRUITMENT SLOTS (0)", T.BLOOD
+            elif self._barred(cand, m):
                 cond_text, cond_col = "ALREADY TRIED THIS WEEK", T.BLOOD
             elif not recruit.can_pitch(m, cand):
                 cond_text, cond_col = "NO SHARED LANGUAGE", T.BLOOD
-            elif free_slots <= 0:
-                cond_text, cond_col = "FULL CAPACITY (0 SLOTS)", T.BLOOD
             else:
                 cond_text = f"PITCH: 1d20{self._net(m, cand):+} vs 1d20{cand.mod_charisma:+}"
                 cond_col = T.GREEN
@@ -578,12 +578,12 @@ class TavernaScreen(Screen):
         if bail and can_pitch and self._wealth() < bail:
             can_pitch, btn_label = False, f"CANNOT AFFORD THE {bail} CP BAIL"
         elif self.selected_recruiter is not None and not can_pitch:
-            if self._barred(cand, self.selected_recruiter):
+            if recruit.slots_free(self.guild, self.selected_recruiter) <= 0:
+                btn_label = "RECRUITER CANNOT PITCH (NO RECRUITMENT SLOTS)"
+            elif self._barred(cand, self.selected_recruiter):
                 btn_label = "RECRUITER CANNOT PITCH (ALREADY TRIED)"
             elif not recruit.can_pitch(self.selected_recruiter, cand):
                 btn_label = "RECRUITER CANNOT PITCH (NO COMMON LANGUAGE)"
-            elif recruit.slots_free(self.guild, self.selected_recruiter) <= 0:
-                btn_label = "RECRUITER CANNOT PITCH (MAX FOLLOWERS)"
 
         self.add_button(screen, btn_rect, "convince", btn_label, primary=True, enabled=can_pitch)
 

@@ -214,14 +214,14 @@ def test_pitch_block_reasons():
     g.add_member(r2, g.groups[0])
     assert recruit.pitch_block_reason(g, [r1, r2], cand_comum) == "all speakers already tried this week"
 
-    # 5. No sponsor slots free in entire party
+    # 5. No recruitment slots in the whole party (leads, whatever else is wrong)
     cand_elfico = _person(5, lang="Elfico")
     r3 = _person(6, lang="Elfico", cha=0)  # cap=1
     g2 = Guild([r3])
     dummy = _person(7)
     recruit.enlist(g2, dummy, r3)          # r3 slots_free == 0
     assert recruit.slots_free(g2, r3) == 0
-    assert recruit.pitch_block_reason(g2, [r3], cand_elfico) == "no sponsor slots free in party"
+    assert recruit.pitch_block_reason(g2, [r3], cand_elfico) == "no recruitment slots available"
 
     # 6. Speakers have no slots, but another party member has slots (who doesn't speak the tongue)
     r4_open = _person(8, lang="Comum", cha=2)  # has slots, doesn't speak Elfico
@@ -442,3 +442,12 @@ def test_taverna_warns_when_the_recruit_overflows_the_group(monkeypatch):
     guild, _group, _m = _full_guild(extra=0)
     drawn = _taverna(guild, _unit(1), monkeypatch)
     assert any("group is full" in str(t) for t in drawn)
+
+
+def test_no_slots_is_the_first_reason_even_when_the_language_is_missing_too():
+    from gartok.guild import Guild
+    r = _person(1, lang="Comum", cha=0)
+    g = Guild([r])
+    recruit.enlist(g, _person(2), r)
+    stranger = _person(3, lang="Orque")
+    assert recruit.pitch_block_reason(g, [r], stranger) == "no recruitment slots available"

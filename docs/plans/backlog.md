@@ -31,12 +31,6 @@ Bugs:
 
 Polish:
 
-- **"Until full" shows the wrong thing.** The rest preview says "3 meals each"; it should
-  show the total food cost.
-- **Who is "riding".** The group screen shows how many are riding in a wagon but not who;
-  list them.
-- **Recruit blocked reason.** When a character cannot recruit, lead with the most
-  important reason: 0 recruitment slots available.
 - **Tolerant `from_save` for new optional keys.** `Unit.from_save` and `persist.load_game`
   read every key strictly. Add one defaults table next to `unit_to_dict` / `_payload` and
   have `from_save` read `{**DEFAULTS, **data}`, so a new optional field gets a default
@@ -56,8 +50,6 @@ Polish:
 - **Founding screen on the `ui/` kit.** The draft screen is off-pattern; rebuild it with the
   `gartok/ui/` components (data-driven `draw_x`, 8px grid, palette) and keep its tutorial
   card. Do it together with the 9-pick-3 draft so the layout is built once.
-- **Animal sheet in the Guild.** Show the Ox (any `Animal`) with a character-sheet card
-  like a unit's.
 - **Medic, quick treatment (B1).** A tab in the Apothecary hub: the answer to rest healing
   being slow (1 HP per 8 h at CON mod 0). A hospital that treats with healing potions and
   antidotes at a discount, priced as the *expected* potions and antidotes needed to leave

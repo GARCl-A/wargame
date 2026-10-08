@@ -327,3 +327,11 @@ def test_the_map_draws_with_the_rest_menu_open():
     ms._handle_button("rest_menu")
     ms.mouse = (0, 0)
     ms.draw(pygame.Surface((1400, 900)))
+
+
+def test_the_rest_row_prices_the_whole_group_not_one_mouth():
+    from gartok.map_screen import MapScreen
+    plan = rest.RestPlan(hours=24, meals=3)
+    assert "6 meals in all" in MapScreen._rest_row("rest:8", "8 h", plan, eaters=2)["label"]
+    assert "3 meals in all" in MapScreen._rest_row("rest:8", "8 h", plan)["label"]
+    assert "no meal" in MapScreen._rest_row("rest:1", "1 h", rest.RestPlan(hours=1), eaters=4)["label"]

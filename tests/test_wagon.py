@@ -908,3 +908,80 @@ def test_selling_from_the_wagon_pays_the_shopper():
     scr.selected = [(wagon, 0)]
     scr._sell()
     assert not wagon.stash.items and seller.money > 0
+
+
+def test_the_wagon_column_names_who_is_riding():
+    from gartok import store_column
+    slow, other = _rider(6), _rider(7)
+    slow.name, other.name = "Ana", "Bo"
+    g = _coach(slow, other, pets=(("Ox", HARNESS), ("Ox", HARNESS)))
+    status = store_column.store_dict(g, g.wagons[0], set(), [])["status"]["text"]
+    assert "riding: Ana, Bo" in status
+    walker = _coach(_rider(6, "Huge"))
+    assert "riding" not in store_column.store_dict(walker, walker.wagons[0], set(), [])["status"]["text"]
+
+
+# --------------------------------------------------------------------------- #
+# the Guild screen shows an animal like a member                              #
+# --------------------------------------------------------------------------- #
+
+def _guild_screen(*animals, **kw):
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+
+    from gartok.guild_screen import GuildScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    guild, g = _group(*animals, **kw)
+    scr = GuildScreen(ui_fonts(), guild, on_back=lambda: None, on_manage=lambda grp: None)
+    scr.draw(pygame.Surface((1700, 950)))
+    return scr, g
+
+
+def test_the_guild_roster_lists_the_herd_and_its_sheet_opens():
+    import pygame
+    ox = _animal("Ox", HARNESS)
+    scr, g = _guild_screen(ox, wagon=True)
+    hit = next(r for r, o in scr.member_hits if o is ox)
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=hit.center))
+    assert scr.member is ox
+    surf = pygame.Surface((1700, 950))
+    scr.draw(surf)
+    assert scr.member is ox                          # the draw keeps an animal selected
+
+
+def test_an_animal_selected_in_the_guild_ignores_member_only_buttons():
+    ox = _animal("Ox")
+    scr, g = _guild_screen(ox)
+    scr.member = ox
+    for key in ("level", "share_food", "group_leader", "guild_leader"):
+        scr._press(key)
+    assert g.leader is not ox
+
+
+def test_a_hungry_animal_is_an_alert_and_wears_the_badge():
+    ox = _animal("Ox")
+    scr, g = _guild_screen(ox)
+    ox.unfed_days = 1
+    scr.filter_mode = "alerts"
+    bands = scr._roster_bands()
+    assert [m["name"] for m in bands[0]["members"]] == ["Ox"]
+    assert ("HUNGRY",) == tuple(b[0] for b in bands[0]["members"][0]["badges"])
+
+
+def test_the_band_header_counts_people_not_animals():
+    scr, _g = _guild_screen(_animal("Ox"), _animal("Donkey"))
+    band = scr._roster_bands()[0]
+    assert band["count"] == 1 and len(band["members"]) == 3
+
+
+def test_the_animal_sheet_scrolls_when_the_window_is_short():
+    import pygame
+    ox = _animal("Ox", HARNESS)
+    scr, _g = _guild_screen(ox, wagon=True)
+    scr.member = ox
+    scr.draw(pygame.Surface((1700, 950)))
+    assert scr._detail_max_scroll == 0
+    scr.draw(pygame.Surface((1700, 420)))
+    assert scr._detail_max_scroll > 0

@@ -11,8 +11,10 @@ from types import SimpleNamespace
 
 import pygame
 
-from . import artwork, factions, magic, progression, talents, world
+from . import artwork, data, factions, magic, progression, talents, world
+from .animals import STARVE_DAYS, Animal
 from .combatant import Combatant
+from .constants import fmt_money
 from .group import BASE_CAPACITY
 from .screen import Screen
 from .ui import guild_panel, guild_roster, member_panel, reputation_panel
@@ -36,8 +38,10 @@ FILTERS = (
     ("all", "ALL", "Every member of every group"),
     ("idle", "IDLE", "Groups waiting for orders"),
     ("busy", "BUSY", "Groups travelling, working or studying"),
-    ("alerts", "ALERTS", "Members who are hungry or have a level-up waiting"),
+    ("alerts", "ALERTS", "Members and animals that are hungry, or have a level-up waiting"),
 )
+ATTRIBUTE_LABELS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
+                    ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma"))
 LIST_MIN, LIST_MAX = 300, 420
 FIGHT_DUE_TIP = "A fight is about to start -- this group can't change until it is over"
 SCROLL_STEP = 36
@@ -56,6 +60,10 @@ def _node_label(node_id):
 def _token_of(unit):
     return SimpleNamespace(race=unit.race, portrait_id=getattr(unit, "portrait_id", None),
                            token=getattr(unit, "token", "?"))
+
+
+def _animal_token(animal):
+    return SimpleNamespace(race=animal.race, portrait_id=None, token=animal.race.get("token", "?"))
 
 
 def _is_idle(group):
@@ -120,9 +128,18 @@ class GuildScreen(Screen):
         return pygame.Rect(W - pad - 28, pad - 4, 28, 28)
 
     # ------------------------------------------------------------------ #
+    def _group_of(self, member):
+        """The group holding a member -- or an animal of its herd."""
+        if isinstance(member, Animal):
+            return next((g for g in self.guild.groups if member in g.herd), None)
+        return self.guild.group_of(member) if member is not None else None
+
+    def _everyone(self):
+        return [*self.roster, *(a for g in self.guild.groups for a in g.herd)]
+
     def _fight_due(self, unit):
         """The unit's group has a forced fight waiting: nothing about it may change."""
-        group = self.guild.group_of(unit) if unit is not None else None
+        group = self._group_of(unit)
         return group is not None and group.fight_due
 
     def _is_group_leader(self, unit):
@@ -185,7 +202,9 @@ class GuildScreen(Screen):
 
     def _press(self, key):
         m = self.member
-        group = self.guild.group_of(m) if m is not None else None
+        group = self._group_of(m)
+        if isinstance(m, Animal) and key in ("level", "share_food", "group_leader", "guild_leader"):
+            return
         if key == "level" and self.on_level and m is not None:
             self.on_level(m)
         elif key == "share_food" and m is not None:
@@ -214,7 +233,7 @@ class GuildScreen(Screen):
         self.tooltip = None
 
         pending = [u for u in self.roster if u.pending_picks]
-        if self.member not in self.roster:
+        if self.member not in self._everyone():
             self.member = pending[0] if pending else (self.roster[0] if self.roster else None)
 
         pad = 16 if W < 1500 else 24
@@ -231,7 +250,9 @@ class GuildScreen(Screen):
             det_rect = pygame.Rect(pad + list_w + 16, top, W - 2 * pad - list_w - 16, bottom - top)
             self._roster_right = list_rect.right + 8
             self._draw_roster(screen, F, list_rect)
-            if self.member is not None:
+            if isinstance(self.member, Animal):
+                self._draw_animal_detail(screen, F, det_rect, self.member)
+            elif self.member is not None:
                 self._draw_detail(screen, F, det_rect, self.member)
 
         self._draw_footer(screen, F, W, H, pad)
@@ -276,17 +297,30 @@ class GuildScreen(Screen):
             "token": _token_of(unit),
         }
 
+    def _animal_data(self, animal, grp, selected):
+        badges = [("HUNGRY", T.BLOOD)] if animal.unfed_days else []
+        pulled = grp.pulling(animal)
+        job = f"pulls {pulled.kind.lower()}" if pulled else animal.role or "no tack"
+        return {
+            "key": animal.uid, "name": animal.species, "selected": selected, "badges": badges,
+            "sub": f"{animal.species} · {job}",
+            "hp": (max(0, animal.hp), animal.hp_max), "load": (animal.load, animal.carry_normal),
+            "token": _animal_token(animal),
+        }
+
     def _roster_bands(self):
         bands = []
         for grp in self.guild.groups:
             members = [m for m in grp.members if self._passes_filter(grp, m)]
-            if not members and self.filter_mode != "all":
+            herd = [a for a in grp.herd if self._passes_filter(grp, a)]
+            if not (members or herd) and self.filter_mode != "all":
                 continue
             bands.append({
                 "key": grp.gid, "name": grp.display_name, "where": _node_label(grp.node),
                 "task": "Idle" if _is_idle(grp) else grp.order.kind.title(),
-                "collapsed": grp.gid in self.collapsed_groups,
-                "members": [self._member_data(m, m is self.member) for m in members],
+                "collapsed": grp.gid in self.collapsed_groups, "count": len(members),
+                "members": [self._member_data(m, m is self.member) for m in members]
+                           + [self._animal_data(a, grp, a is self.member) for a in herd],
             })
         return bands
 
@@ -297,7 +331,7 @@ class GuildScreen(Screen):
         if mode == "busy":
             return not _is_idle(grp)
         if mode == "alerts":
-            return _needs_attention(unit)
+            return bool(unit.unfed_days) if isinstance(unit, Animal) else _needs_attention(unit)
         return True
 
     def _draw_roster(self, screen, F, rect):
@@ -310,7 +344,7 @@ class GuildScreen(Screen):
         self.filter_hits = hits["filters"]
         by_gid = {g.gid: g for g in self.guild.groups}
         self.accordion_hits = [(r, k) for r, k in hits["bands"] if k in by_gid]
-        by_uid = {u.uid: u for u in self.roster}
+        by_uid = {u.uid: u for u in self._everyone()}
         self.member_hits = [(r, by_uid[k]) for r, k in hits["members"]]
         self._roster_max_scroll = max(0, hits["content_h"] - hits["view_h"])
         self._roster_scroll = min(self._roster_scroll, self._roster_max_scroll)
@@ -349,6 +383,68 @@ class GuildScreen(Screen):
         if tip:
             self.tooltip = tip
         self._hot = self._hot or any(r.collidepoint(mouse) for _, r in self.buttons)
+
+    def _draw_animal_detail(self, screen, F, rect, animal):
+        panel(screen, rect)
+        inner = rect.inflate(-2 * T.S * 2, -2 * T.S * 2)
+        mp = self.mouse if inner.collidepoint(self.mouse) else (-1, -1)
+        grp = self._group_of(animal)
+        pulled = grp.pulling(animal) if grp else None
+        tips = []
+        x, w, y0 = inner.x, inner.w, inner.y - self._detail_scroll
+        y = y0
+
+        def run(fn, *args):
+            nonlocal y
+            y, t = fn(screen, F, x, y, w, *args, mp)
+            tips.append(t)
+
+        owner = grp.display_name if grp else "no group"
+        with contained(screen, inner):
+            self._draw_animal_blocks(run, animal, grp, pulled, owner)
+        self._detail_max_scroll = max(0, y - y0 - inner.h)
+        self._detail_scroll = min(self._detail_scroll, self._detail_max_scroll)
+        if self._detail_max_scroll:
+            scrollbar(screen, pygame.Rect(inner.x, inner.y, inner.w + T.S * 3, inner.h), self._detail_scroll,
+                      self._detail_max_scroll, inner.h + self._detail_max_scroll)
+        tip = next((t for t in tips if t), None)
+        if tip:
+            self.tooltip = tip
+
+    def _draw_animal_blocks(self, run, animal, grp, pulled, owner):
+        run(member_panel.draw_identity, {
+            "name": animal.species, "token": _animal_token(animal),
+            "sub": f"{animal.size} animal · kept by {owner}",
+            "where": _node_label(grp.node) if grp else "Camp",
+            "task": "Idle" if grp is None or _is_idle(grp) else grp.order.kind.title(),
+        })
+        run(member_panel.draw_vitals, {
+            "hp": (max(0, animal.hp), animal.hp_max),
+            "hp_tip": f"{animal.hp} of {animal.hp_max} hit points",
+            "stats": [("SPD", f"{animal.speed:g} m", "Meters it covers in one move"),
+                      ("SIZE", animal.size, "Body size: decides how much it can carry")],
+            "attrs": [(label, animal.attributes[name], data.mod(animal.attributes[name]), False)
+                      for label, name in ATTRIBUTE_LABELS],
+        })
+        if animal.race["ability"]:
+            run(member_panel.draw_ability, {"ability": (animal.ability.name, animal.ability.effect)})
+        run(member_panel.draw_animal_work, self._animal_work_rows(animal, pulled))
+
+    @staticmethod
+    def _animal_work_rows(animal, pulled):
+        if animal.role == "pack":
+            role = f"carries up to {animal.capacity:g} kg on its back"
+        elif animal.role == "draft":
+            hitched = f" -- hitched to the {pulled.kind.lower()}" if pulled else " -- not hitched"
+            role = f"pulls up to {animal.pull:g} kg{hitched}"
+        else:
+            role = (f"idle: a Pack Saddle lets it carry {animal.back_load:g} kg, "
+                    f"a Harness lets it pull {animal.draw:g} kg")
+        fed = ((f"hungry {animal.unfed_days} day(s) -- starves at {STARVE_DAYS}", T.BLOOD) if animal.unfed_days
+               else ("fed", T.GREEN))
+        return [("TACK", animal.tack or "none", T.TX), ("ROLE", role, T.TX_MUTED),
+                ("LOAD", f"{animal.load:g} / {animal.carry_normal:g} kg", T.TX_MUTED),
+                ("FEED", *fed), ("VALUE", fmt_money(animal.price), T.TX_MUTED)]
 
     def _draw_left(self, screen, F, x, y, w, unit, c, ch, grp, mp):
         tips = []
@@ -668,7 +764,7 @@ class GuildScreen(Screen):
         if self.on_manage:
             fight_due = self._fight_due(self.member)
             button("manage", "MANAGE GEAR", T.S * 20,
-                   enabled=self.guild.group_of(self.member) is not None and not fight_due,
+                   enabled=self._group_of(self.member) is not None and not fight_due,
                    tip=(FIGHT_DUE_TIP if fight_due
                         else "Equip and swap gear between the members of the selected group"))
         has_chest = self.guild.bank.open and self.on_bank is not None

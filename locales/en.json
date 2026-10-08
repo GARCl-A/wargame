@@ -43,6 +43,7 @@
         "body": [
           "Members are grouped by band on the left. Click one to see their sheet and loadout on the right: HP, AC, speed and the weight they carry. Past the normal load a character is encumbered -- weaker and slower.",
           "Drag gear onto a HAND / OFF HAND / BODY / PACK slot, or click an item and then click where it goes. Each member has a share-food toggle that lets group-mates eat from their pack.",
+          "A group's animals sit under its members in the same list. Click one for its sheet: attributes, trait, tack, load and whether it is fed.",
           "Each group has its own leader, and the guild has one too -- shown here, chosen at the draft. The leader haggles for the group."
         ],
         "suggestion": "Check the REPUTATIONS tab, top right, to see what you're actually playing for."

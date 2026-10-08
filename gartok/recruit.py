@@ -224,6 +224,8 @@ def pitch_block_reason(guild, party, candidate, is_barred=barred):
         return None
     if not party:
         return "party is empty"
+    if not any(slots_free(guild, m) > 0 for m in party):
+        return "no recruitment slots available"
 
     speakers = [m for m in party if can_pitch(m, candidate)]
     if not speakers:
@@ -239,10 +241,6 @@ def pitch_block_reason(guild, party, candidate, is_barred=barred):
 
     if barred_speakers and unbarred_speakers:
         return "speakers already tried or have no room"
-
-    has_party_slots = any(slots_free(guild, m) > 0 for m in party)
-    if not has_party_slots:
-        return "no sponsor slots free in party"
 
     return "speakers have no sponsor slots free"
 

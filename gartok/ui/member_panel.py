@@ -8,7 +8,8 @@ that explains itself, else None. Data is plain dicts / tuples:
 - `vitals`: `{"hp": (cur, max), "hp_tip", "stats": [(label, value, tip)], "attrs": [(label, value, mod, penalised)]}`
 - `weapon`: `{"name", "tags", "chips": [(label, value, tip)]}`
 - `gear`: `{"hands", "armor", "armor_note", "coins", "rations": (n, ok), "load": (cur, normal, max), "load_state": (text, color)}`
-- `ability`: `(name, description)`
+- `ability`: `{"ability": (name, description), "langs": [...]}`; no `langs` key, no Languages row
+- `animal_work`: `[(label, value, color)]`
 - `tracks`: `[{"label", "value", "frac" (0-1 or None), "text", "tip"}]`
 - `talents`: `[(name, tip)]`
 - `record`: `[(text, color, font_key)]`
@@ -180,9 +181,21 @@ def draw_ability(surf, F, x, y, w, d, mpos):
         text(surf, F["body_sm"], ln, (box.x + T.S * 1.5, ty), T.TX_MUTED)
         ty += 16
     y = box.bottom + T.S
+    if "langs" not in d:
+        return y, None
     caps(surf, F["micro"], "Languages", (x, y + 1), T.TX_FAINT)
     text(surf, F["body_sm"], ", ".join(d["langs"]) or "none", (x + T.S * 10, y), T.TX_MUTED)
     return y + T.S * 3, None
+
+
+def draw_animal_work(surf, F, x, y, w, rows, mpos):
+    """What an animal does for its group: `rows` is `[(label, value, color)]`."""
+    y = section(surf, F, "Work", x, y, w)
+    for label, value, col in rows:
+        caps(surf, F["micro"], label, (x, y + 1), T.TX_FAINT)
+        text(surf, F["body_sm"], ellipsize(value, F["body_sm"], w - T.S * 12), (x + T.S * 12, y), col)
+        y += 20
+    return y + T.S, None
 
 
 def draw_tracks(surf, F, x, y, w, tracks, mpos):
