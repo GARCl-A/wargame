@@ -19,7 +19,7 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 import random
 from dataclasses import dataclass
 
-from . import encounters, progression
+from . import encounters
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0
@@ -99,11 +99,7 @@ def grant_haul(state):
         return ["Nobody made it back with the haul."]
 
     for u in hunters:
-        old_work_lvl = u.work_level
-        u.work_hours += progression.work_xp_hours(state.hours_hunted, HUNT_LEVEL, u.work_level)
-        u.collect_levels()
-        if u.work_level > old_work_lvl:
-            lines.append(f"{u.name} reached work level {u.work_level}!")
+        lines += u.bank_work(state.hours_hunted, HUNT_LEVEL)
 
     if state.target == "meat":
         meat = state.meat

@@ -6,7 +6,7 @@ since it advances the clock itself.
 
 from collections import Counter
 
-from . import economy, items, progression
+from . import economy, items
 from .constants import fmt_money
 
 
@@ -62,15 +62,11 @@ class LaborMixin:
         return events
 
     def _pay_worker(self, u, pay, hours, activity_level, events):
-        """Pay `u` (coin_gain applies), bank the work-XP and note a level-up.
+        """Pay `u` (coin_gain applies) and bank the work-XP, noting it in `events`.
         Returns the copper actually paid."""
-        old_work_lvl = u.work_level
         gain = round(pay * (1 + u.talent_bonus("coin_gain")))
         u.money += gain
-        u.work_hours += progression.work_xp_hours(hours, activity_level, u.work_level)
-        u.collect_levels()                     # more work marks can lift the mean level
-        if u.work_level > old_work_lvl:
-            events.append(f"{u.name} reached work level {u.work_level}!")
+        events += u.bank_work(hours, activity_level)
         return gain
 
     def perform_shift(self, performers, hours):
@@ -84,14 +80,14 @@ class LaborMixin:
         clock_hours = hours * self.work_speedup(crew)
         events, casualties = self.pass_time(clock_hours, busy=crew)
         shows = []
+        xp_lines = []
         for u in (u for u in crew if u in self.roster):     # a long show can starve one
-            before = u.work_hours
             pay = economy.perform_pay(hours, u.mod_charisma)
-            gain = self._pay_worker(u, pay, hours, economy.PERFORM_LEVEL, events)
-            shows.append((u, gain, u.work_hours - before))
+            shows.append((u, self._pay_worker(u, pay, hours, economy.PERFORM_LEVEL, xp_lines)))
         if shows:
-            tips = ", ".join(f"{u.name} {fmt_money(g)}, +{xp} work h" for u, g, xp in shows)
+            tips = ", ".join(f"{u.name} {fmt_money(g)}" for u, g in shows)
             events.append(f"Tavern stage: played {hours} h ({tips}).")
+            events += xp_lines
         return events, casualties
 
     def crafting_shift(self, unit, recipe, hours):
@@ -121,11 +117,7 @@ class LaborMixin:
         clock_hours = worked * self.work_speedup([unit])
         events, casualties = self.pass_time(clock_hours, busy=[unit])
 
-        old_work_lvl = unit.work_level
-        unit.work_hours += progression.work_xp_hours(worked, recipe_data.get("level", 1), unit.work_level)
-        unit.collect_levels()
-        if unit.work_level > old_work_lvl:
-            events.append(f"{unit.name} reached work level {unit.work_level}!")
+        events += unit.bank_work(worked, recipe_data.get("level", 1))
 
         if made:
             total = made * recipe_data.yield_qty

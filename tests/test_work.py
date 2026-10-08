@@ -246,7 +246,8 @@ def test_perform_shift_tips_each_player_by_their_own_charisma():
     assert dud.money == 4 * max(0, (18 + dud.mod_charisma - 16) // 2)
     assert star.work_hours == 4 * 2 and dud.work_hours == 4 * 2    # level 1 job, level 0 worker: x2
     assert guild.clock.hour_of_day == 22
-    assert any("Tavern stage" in e and "+8 work h" in e for e in events)    # x2 for a level 0 worker
+    assert any("Tavern stage" in e for e in events)
+    assert f"{star.name}: +8 work h (8/32 h to work level 1)." in events    # x2 for a level 0 worker
 
 
 def test_perform_shift_needs_an_instrument():
@@ -271,3 +272,32 @@ def test_only_those_with_an_instrument_play():
 
 def test_the_market_sells_the_musical_instrument():
     assert economy.PERFORM_ITEM in economy.MARKET_STOCK and economy.PERFORM_ITEM in economy.PRICES
+
+
+def test_a_job_below_the_workers_level_says_it_teaches_nothing():
+    u = Unit("player")
+    u.work_hours = economy.LUMBER_XP_HOURS * 2          # work level 1
+    before = u.work_hours
+    assert u.bank_work(8, 0) == [f"{u.name}: no work XP -- this job is below work level 1."]
+    assert u.work_hours == before
+
+
+def test_work_xp_note_shows_progress_and_the_level_up():
+    u = Unit("player")
+    assert u.bank_work(6, 0) == [f"{u.name}: +6 work h (6/32 h to work level 1)."]
+    lines = u.bank_work(26, 0)                           # 32 h in all: two marks, level 1
+    assert u.work_level == 1
+    assert lines[-1] == f"{u.name} reached work level 1!"
+    assert lines[0].startswith(f"{u.name}: +26 work h (") and "to work level 2" in lines[0]
+
+
+def test_every_activity_reports_the_work_xp_it_banked():
+    from gartok import hunt
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    u = Unit("player")
+    guild = Guild([u], clock=Clock(6 * 3600))
+    events, _ = guild.work_shift([u], 4)
+    assert f"{u.name}: +4 work h (4/32 h to work level 1)." in events       # level 0 job, level 0 worker: x1
+    lines = hunt.grant_haul(hunt.HuntState(party=[u], node=world.node("wilds"), hours_left=0, hours_hunted=2))
+    assert f"{u.name}: +8 work h (12/32 h to work level 1)." in lines       # level 3 job: x4

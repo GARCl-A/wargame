@@ -17,6 +17,25 @@ class LevelingMixin:
         day-labour at the lumber yard. Feeds the work level / talent tree."""
         return self.work_hours // economy.LUMBER_XP_HOURS
 
+    def bank_work(self, hours, activity_level):
+        """Bank a job's hours toward work XP and say what it earned: the lines to show,
+        a level-up included. A job below the worker's level earns nothing, and says so."""
+        banked = progression.work_xp_hours(hours, activity_level, self.work_level)
+        old_level = self.work_level
+        self.work_hours += banked
+        self.collect_levels()
+        if not banked:
+            lines = [f"{self.name}: no work XP -- this job is below work level {self.work_level}."]
+        else:
+            marks, span = progression.to_next(progression.WORK_XP_THRESHOLDS, self.work_xp)
+            into_h = marks * economy.LUMBER_XP_HOURS + self.work_hours % economy.LUMBER_XP_HOURS
+            span_h = span * economy.LUMBER_XP_HOURS
+            togo = f"{into_h}/{span_h} h to work level {self.work_level + 1}" if span else "work level maxed"
+            lines = [f"{self.name}: +{banked} work h ({togo})."]
+        if self.work_level > old_level:
+            lines.append(f"{self.name} reached work level {self.work_level}!")
+        return lines
+
     # ------------------------------------------------------------------ #
     # leveling: one level per XP track, its own talent tree; the mean of #
     # the track levels grants hit dice. See progression.py / talents.py. #

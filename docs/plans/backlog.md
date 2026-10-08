@@ -25,9 +25,6 @@ Two parts:
 Bugs:
 
 - **Delay is unlimited.** A unit can delay indefinitely; allow one delay per round.
-- **Tavern performance gives wrong work XP.** Performing at the tavern does not seem to
-  grant work XP correctly (the stage and the level multiplier landed in `6298cba`); check
-  the amount against the work-XP rule.
 
 Polish:
 
