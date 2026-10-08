@@ -4,6 +4,7 @@ from gartok.guild import Guild
 from gartok.loot_screen import LootScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
+from tests.helpers import packed
 
 
 def test_loot_screen_interactions():
@@ -14,7 +15,7 @@ def test_loot_screen_interactions():
     u = Unit("player")
     # Equip and pack
     u.equipped_weapon = "Dagger"
-    u._base_inventory = [("Torch", 1), ("Rope", 2)]
+    u._base_inventory = packed(["Torch", "Rope", "Rope"])
     g = Guild([u])
     
     # Mock pool with 2 axes to show plus/minus buttons

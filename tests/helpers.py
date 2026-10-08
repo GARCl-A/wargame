@@ -11,7 +11,7 @@ import contextlib
 import random
 from unittest.mock import MagicMock, patch
 
-from gartok import abilities, actions, data, economy, persist, recruit, talents, world
+from gartok import abilities, actions, data, economy, items, persist, recruit, talents, world
 from gartok import battle as _battle_mod
 from gartok.battle import Battle
 from gartok.board import COLS, ROWS, Board, grid_distance
@@ -24,17 +24,15 @@ from gartok.unit import Unit
 
 
 def packed(names):
-    """Group a flat, possibly-repeated item-name list into `[(name, qty)]`
-    stacks, first-seen order -- the shape `Unit._base_inventory` now uses.
-    Lets old-style test fixtures (`["Rope"]*3`) become `packed(["Rope"]*3)`
-    with a mechanical wrap instead of hand-authoring the pairs."""
+    """Group a flat, possibly-repeated item-name list into `ItemInstance`
+    stacks, first-seen order -- the shape `Unit._base_inventory` uses."""
     order, counts = [], {}
     for name in names:
         if name not in counts:
             order.append(name)
             counts[name] = 0
         counts[name] += 1
-    return [(name, counts[name]) for name in order]
+    return [items.create_instance(name, qty=counts[name]) for name in order]
 
 
 def _unit(**over):

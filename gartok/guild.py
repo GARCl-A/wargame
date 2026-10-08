@@ -90,8 +90,8 @@ from .guild_upkeep import UpkeepMixin
 from .holdings import CityProperty, Garage, Stash
 from .tutorial import TutorialState
 
-# Fallbacks for a guild with no chosen identity (old saves, from before the
-# draft's naming/banner step existed). Plain data, not `artwork`
+# Fallbacks for a guild with no chosen identity (the draft's naming/banner
+# step not taken). Plain data, not `artwork`
 # imports -- this module stays pygame-free; the presentation layer resolves
 # these slugs/colours (`ui.banner.BANNER_COLORS`, `artwork.BANNER_ICONS`).
 DEFAULT_BANNER_COLOR = (94, 156, 214)   # same value as ui.banner.DEFAULT_COLOR
@@ -115,8 +115,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_campfire=False, claim_garage=None,
                  ancient_ruins_discovered=False, leaving=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
-        # else `roster`/`node` build the one starting group (draft, old saves,
-        # every existing test call site) -- the guild leader, if given, also
+        # else `roster`/`node` build the one starting group (draft, every
+        # existing test call site) -- the guild leader, if given, also
         # leads that first group (the draft's founding leader is naturally in
         # charge of the one group there is to lead).
         self.groups = groups if groups is not None else [Group(roster, node=node, leader=leader)]

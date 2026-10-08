@@ -169,8 +169,16 @@ class App:
         self._start_map()
 
     def _continue_game(self, world_id, save_id=persist.CURRENT):
+        try:
+            guild = persist.load_game(world_id, save_id)
+        except persist.SaveVersionError as e:
+            from .alert_screen import AlertScreen
+            back = self.scene
+            self.scene = AlertScreen(self.ui_fonts, back, "CANNOT LOAD SAVE", [str(e)],
+                                     on_done=lambda: setattr(self, "scene", back), is_danger=True)
+            return
         self.world = world_id
-        self.guild = persist.load_game(world_id, save_id)
+        self.guild = guild
         self._left_outside = None
         self._pending_event = None
         if save_id != persist.CURRENT:

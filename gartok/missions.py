@@ -261,5 +261,4 @@ def mission_to_dict(m):
 
 def mission_from_dict(d):
     return Mission(d["template_id"], d["unit_uid"], d["accepted_day"],
-                   d["deadline_day"], d.get("state", "active"),
-                   d.get("ambush_done", False))
+                   d["deadline_day"], d["state"], d["ambush_done"])

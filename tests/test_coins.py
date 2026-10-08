@@ -107,13 +107,6 @@ def test_purse_survives_a_save_round_trip_inside_the_pack():
     assert v.money == 321 and v.count_of("Rope") == 1
 
 
-def test_a_pre_coin_item_save_carries_its_gold_number_in():
-    u = _bare(0)
-    d = persist.unit_to_dict(u)
-    d["gold"] = 77
-    assert Unit.from_save(d).money == 77
-
-
 def test_a_beast_carries_no_purse():
     from gartok import data
     beast = Unit("enemy", race=data.BEAST_POOL[0])

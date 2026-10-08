@@ -7,6 +7,7 @@ from gartok.guild import Guild
 from gartok.library_hub_screen import LibraryHubScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from gartok.unit import Unit
+from tests.helpers import packed
 
 
 def test_apothecary_hub_screen_loads():
@@ -226,7 +227,7 @@ def test_taverna_perform_tab_plays_a_show():
     surf = pygame.Surface((1280, 800))
     bard, mute = Unit("player"), Unit("player")
     bard.set_base_attribute("charisma", 18)
-    bard._base_inventory = [("Musical Instrument", 1)]
+    bard._base_inventory = packed(["Musical Instrument"])
     bard.money = mute.money = 0
     g = Guild([bard, mute])
     group = Group(list(g.roster), "city")

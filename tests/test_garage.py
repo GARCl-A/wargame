@@ -210,10 +210,6 @@ def test_the_garage_survives_a_save_round_trip():
         persist.delete_world(slot)
 
 
-def test_an_old_save_without_a_garage_loads_empty():
-    assert not persist.garage_from_dict(None).open
-
-
 def test_a_groups_ration_count_includes_what_its_wagon_carries():
     _guild, g, u = _setup(animals=0)
     u._base_inventory = []

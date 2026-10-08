@@ -3,16 +3,33 @@
   "recruited_by": null,
   "name": "Peep",
   "auto_name": false,
+  "portrait_id": 3795917579,
   "race": "Grippli",
   "occupation": "Crossbowman",
   "alignment": "Chaotic and Neutral",
-  "gold": 30,
+  "crime": 0,
   "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 23,
   "share_food": true,
   "combat_xp": 78,
   "work_hours": 96,
   "bio": "The runt, and the deadliest at range. Sits chin-deep in the water channels -- he breathes it fine -- and picks off anyone wading across while his brothers hold the bank.",
   "arena_title": false,
+  "recipes": [
+    "Dictionary of Sylvan"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
   "talents": {
     "combat": [
       "agile",
@@ -48,6 +65,9 @@
   "age": 19,
   "hp_roll": 4,
   "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
   "racial_override": null,
   "hp_max": 23,
   "languages": [
@@ -58,7 +78,20 @@
   "equipped_tongue": "Dagger",
   "equipped_armor": "Leather Jerkin",
   "inventory": [
-    "Quiver"
+    {
+      "id": "quiver",
+      "name": "Quiver",
+      "qty": 1,
+      "charges": 20
+    },
+    {
+      "id": "copper_coin",
+      "name": "Copper Coin",
+      "qty": 30
+    }
   ],
+  "locked_items": {},
+  "dormant": false,
+  "awareness_radius": 0,
   "npc_slug": "peep"
 }

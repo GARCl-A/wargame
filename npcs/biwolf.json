@@ -12,8 +12,6 @@
   "sick": false,
   "medicine_attempted_today": false,
   "treated": false,
-  "first_aid_charges": 0,
-  "quiver_charges": 0,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
   "hp": 90,
@@ -24,7 +22,6 @@
   "arena_title": false,
   "recipes": [
     "Dictionary of Dwarvish",
-    "Dictionary of ",
     "Minor Healing Potion",
     "Bear Trap",
     "Alarm Trap"
@@ -87,12 +84,12 @@
   "age": 12,
   "hp_roll": 8,
   "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
   "natural_armor": 3,
   "racial_override": 10,
   "hp_max": 90,
-  "languages": [
-    ""
-  ],
+  "languages": [],
   "equipped_weapon": null,
   "equipped_offhand": null,
   "equipped_tongue": null,

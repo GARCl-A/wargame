@@ -178,26 +178,6 @@ def test_save_round_trips_tutorial_state_by_slot():
         persist.delete_world(slot)
 
 
-def test_a_pre_tutorial_save_loads_as_unseen_and_enabled():
-    slot = 98
-    random.seed(12)
-    guild = persist.Guild([Unit("player")], node="city")
-    persist.save_game(slot, guild)
-    path = persist.save_path(slot)
-    import json
-    with open(path, encoding="utf-8") as fh:
-        payload = json.load(fh)
-    del payload["tutorial_seen"]
-    del payload["tutorial_enabled"]
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh)
-    try:
-        loaded = persist.load_game(slot)
-        assert loaded.tutorial.seen == set() and loaded.tutorial.enabled is True
-    finally:
-        persist.delete_world(slot)
-
-
 def test_guild_screen_tabs_and_badge_are_on_same_line_without_overlap():
     import os
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")

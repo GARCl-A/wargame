@@ -63,7 +63,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `group.py` | Group = physical subset of the guild (members, node, order, `pending`); `BASE_SLOTS` / fame → how many groups the guild may run. `pending` is a forced order (ambush, guard, raid) that came due and awaits its fight: `order` is already None (so `advance` ignores the group) but `locked` is true — no split, merge, leader swap or kit change until it resolves |
 | `cohesion.py` | daily sweep: an overextended group's weakest member may walk (7-day notice, alignment decides the loot) |
 | `economy.py` | prices, stock, haggling, garrison/property constants |
-| `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, tolerates missing keys. Saves each group's `order` and `pending` fight (enemy pack included); never a battle or hunt in progress (`App._can_save`) |
+| `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, no migration: a save of an older shape does not load (`from_save` reads every key). Saves each group's `order` and `pending` fight (enemy pack included); never a battle or hunt in progress (`App._can_save`) |
 | `settings.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, the pause menu lists them |
 | `menu_screen.py` / `saves_screen.py` | guild list at launch → every save of a guild, with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |

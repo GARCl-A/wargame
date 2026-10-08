@@ -312,9 +312,9 @@ def _should_delay(battle, unit):
 
 
 def take_turn(battle, unit):
-    if getattr(unit, "dormant", False):
+    if unit.dormant:
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
-        r = getattr(unit, "awareness_radius", 8)
+        r = unit.awareness_radius
         close_visible = [e for e in enemies if battle.can_see_unit(unit, e) and battle.units_distance(unit, e) <= r]
         alarm = getattr(battle, "alarm_triggered", False)
         if close_visible or alarm or getattr(unit, "alerted", False):

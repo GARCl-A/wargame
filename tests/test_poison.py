@@ -89,7 +89,7 @@ def test_a_fresh_bite_restarts_the_clock():
     assert u.poisons[VENOM]["hours"] == 24 and u.poisons[VENOM]["level"] == 2
 
 
-def test_poison_survives_a_save_and_old_saves_load_clean():
+def test_poison_survives_a_save():
     u = _human(dex=14)
     u.add_poison(VENOM, 12)
     u.add_poison(VENOM, 12)
@@ -98,9 +98,6 @@ def test_poison_survives_a_save_and_old_saves_load_clean():
     back = Unit.from_save(d)
     assert back.poisons == u.poisons and back.antidote_cooldown == 9
     assert back.dexterity == u.dexterity == 12
-    d.pop("poisons"), d.pop("antidote_cooldown")
-    legacy = Unit.from_save(d)
-    assert not legacy.poisoned and legacy.antidote_cooldown == 0
 
 
 def test_the_world_clock_ticks_every_roster_members_poison():

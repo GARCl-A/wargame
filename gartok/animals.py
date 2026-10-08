@@ -130,5 +130,5 @@ class Animal(Creature):
 
     @classmethod
     def from_dict(cls, d):
-        return cls(d["species"], d.get("hp"), d.get("unfed_days", 0), d.get("tack"),
-                   d.get("contents", []), d.get("uid"), d.get("hitch"))
+        return cls(d["species"], d["hp"], d["unfed_days"], d["tack"],
+                   d["contents"], d["uid"], d["hitch"])

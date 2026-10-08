@@ -84,17 +84,6 @@ def test_a_rest_in_flight_survives_next_to_an_idle_group():
     assert loaded[1].order is None and not loaded[1].busy
 
 
-def test_a_save_from_before_orders_loads_every_group_idle():
-    g = Group([Unit("player")], node="city")
-    g.order = orders.rest(8)
-    d = persist.group_to_dict(g)
-    del d["order"], d["pending"]
-
-    loaded = persist.group_from_dict(d)
-
-    assert loaded.order is None and loaded.pending is None
-
-
 def test_a_pending_fight_round_trips_with_the_same_enemy_pack():
     pack = tuple(encounters.build_enemy(2) for _ in range(3))
     g = Group([Unit("player")], node="road")

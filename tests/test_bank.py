@@ -67,7 +67,7 @@ def test_withdraw_is_capped_by_the_members_load():
     random.seed(4)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank=Stash(30, [("Rope", 1)]))
+    guild = Guild([p], bank=Stash(30, packed(["Rope"])))
     s = _screen(guild, [p])
 
     p.carry_max = 0.5                                 # can't take on even a rope
@@ -88,7 +88,7 @@ def test_equip_straight_out_of_the_chest():
     random.seed(2)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank=Stash(30, [("Dagger", 1)]))
+    guild = Guild([p], bank=Stash(30, packed(["Dagger"])))
     s = _screen(guild, [p])
 
     s.selected = [("bank", 0)]
@@ -144,7 +144,7 @@ def test_partial_qty_deposit_via_the_chest_stepper():
     random.seed(12)
     p = Unit("player")
     p._base_inventory = []
-    guild = Guild([p], bank=Stash(30, [("Rope", 3)]))
+    guild = Guild([p], bank=Stash(30, packed(["Rope"] * 3)))
     s = _screen(guild, [p])
 
     s.selected = [("bank", 0)]

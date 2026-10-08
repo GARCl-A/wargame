@@ -1,11 +1,11 @@
 from gartok import economy
 from gartok.guild import Guild
 from gartok.holdings import CityProperty, Stash
-from tests.helpers import Unit
+from tests.helpers import Unit, packed
 
 
 def test_stash_tracks_load_and_free_room():
-    s = Stash(10, [("Rope", 2)])
+    s = Stash(10, packed(["Rope", "Rope"]))
     assert s.open and s.load > 0 and s.free == 10 - s.load
     assert s.fits(s.free) and not s.fits(s.free + 0.1)
 
@@ -61,7 +61,7 @@ def test_a_squatter_is_not_taxed():
 
 
 def test_food_rots_in_the_bank_and_in_the_house():
-    guild = Guild([Unit("player")], bank=Stash(30, [("Fruit", 2)]))
+    guild = Guild([Unit("player")], bank=Stash(30, packed(["Fruit", "Fruit"])))
     guild.buy_city_property()
     guild.house.stash.put("Fruit", 3)
     guild.pass_time(24 * 3)

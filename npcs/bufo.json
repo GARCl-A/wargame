@@ -3,16 +3,33 @@
   "recruited_by": null,
   "name": "Bufo",
   "auto_name": false,
+  "portrait_id": 77310170,
   "race": "Grippli",
   "occupation": "Butcher",
   "alignment": "Neutral and Neutral",
-  "gold": 30,
+  "crime": 0,
   "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 38,
   "share_food": true,
   "combat_xp": 78,
   "work_hours": 96,
   "bio": "The big brother. Plants himself between you and the flag and does not move -- a wall of warty muscle with a broadsword in his fists and a spear on his tongue.",
   "arena_title": false,
+  "recipes": [
+    "Dictionary of Sylvan"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
   "talents": {
     "combat": [
       "strong",
@@ -48,6 +65,9 @@
   "age": 22,
   "hp_roll": 4,
   "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
   "racial_override": null,
   "hp_max": 38,
   "languages": [
@@ -58,7 +78,19 @@
   "equipped_tongue": "Shortspear",
   "equipped_armor": "Chainmail",
   "inventory": [
-    "Meat"
+    {
+      "id": "meat",
+      "name": "Meat",
+      "qty": 1
+    },
+    {
+      "id": "copper_coin",
+      "name": "Copper Coin",
+      "qty": 30
+    }
   ],
+  "locked_items": {},
+  "dormant": false,
+  "awareness_radius": 0,
   "npc_slug": "bufo"
 }

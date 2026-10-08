@@ -503,13 +503,6 @@ def test_several_wagons_survive_a_save():
     assert [w.uid for w in back.wagons] == [w.uid for w in g.wagons] and len(back.herd) == 1
 
 
-def test_a_save_from_before_the_herd_rename_still_loads():
-    d = persist.group_to_dict(Group([_unit()], node="city", wagons=[Wagon()], herd=[_animal()]))
-    d["wagon"], d["animals"] = d.pop("wagons")[0], d.pop("herd")
-    back = persist.group_from_dict(d)
-    assert len(back.wagons) == 1 and [a.species for a in back.herd] == ["Donkey"]
-
-
 # --------------------------------------------------------------------------- #
 # vehicles, the hitch, several wagons                                         #
 # --------------------------------------------------------------------------- #
@@ -586,17 +579,6 @@ def test_the_hitch_and_the_vehicle_type_survive_a_save():
     back = persist.group_from_dict(persist.group_to_dict(g))
     assert [w.kind for w in back.wagons] == ["Cart", "Carriage"]
     assert back.pulling(back.herd[0]) is back.wagons[1] and back.wagons[1].budget == 180
-
-
-def test_a_save_from_before_the_hitch_still_pulls():
-    _, g = _fleet("Cart", pets=[_animal("Ox", HARNESS)])
-    d = persist.group_to_dict(g)
-    for a in d["herd"]:
-        del a["hitch"]
-    for w in d["wagons"]:
-        del w["kind"]
-    back = persist.group_from_dict(d)
-    assert back.wagons[0].kind == "Cart" and back.wagons[0].draft == back.herd
 
 
 def test_merging_keeps_each_animal_on_its_own_wagon():
@@ -865,7 +847,8 @@ def test_several_wagons_seat_the_group_between_them():
 
 def test_a_wagon_never_holds_more_hp_than_its_vehicle_allows():
     assert Wagon("Cart", hp=30).hp == VEHICLES["Cart"].hp_max
-    assert persist.wagon_from_dict({"kind": "Cart", "hp": 30, "travelled": 16.0}).hp == VEHICLES["Cart"].hp_max
+    saved = persist.wagon_to_dict(Wagon("Cart", hp=30))
+    assert persist.wagon_from_dict(saved).hp == VEHICLES["Cart"].hp_max
     assert Wagon("Cart", hp=2).hp == 2
 
 

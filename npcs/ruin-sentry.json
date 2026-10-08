@@ -12,8 +12,6 @@
   "sick": false,
   "medicine_attempted_today": false,
   "treated": false,
-  "first_aid_charges": 0,
-  "quiver_charges": 0,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
   "hp": 54,

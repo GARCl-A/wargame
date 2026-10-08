@@ -243,7 +243,7 @@ def test_city_property_state_survives_a_save_round_trip():
     p = Unit("player")
     guild = Guild([p])
     guild.buy_city_property()
-    guild.house.stash.items = ["Rope"]
+    guild.house.stash.put("Rope")
     guild.house.missed_payments = 2
     guild.bankers_debt = 15
     guild.bankers_debt_since = guild.clock.day

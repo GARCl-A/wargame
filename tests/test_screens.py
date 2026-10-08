@@ -322,7 +322,7 @@ def test_every_screen_draws_native_at_any_window_size():
         BankScreen(F, guild, list(roster[:3]), noop),          # locked: no chest yet
     ]
 
-    stocked = Guild(list(roster), node=world.START_NODE, bank=Stash(10, ["Rope", "Dagger"]))
+    stocked = Guild(list(roster), node=world.START_NODE, bank=Stash(10, packed(["Rope", "Dagger"])))
     scenes.append(BankScreen(F, stocked, list(roster[:2]), noop))   # rented + stashed
     scenes.append(PauseScreen(UI_F, scenes[2], noop, noop, noop))
 

@@ -238,6 +238,3 @@ def test_the_claim_garage_survives_a_save_round_trip():
         persist.delete_world(slot)
 
 
-def test_an_old_save_without_a_claim_garage_loads_empty_and_open_ended():
-    garage = persist.garage_from_dict(None, unlimited=True)
-    assert garage.empty and garage.open

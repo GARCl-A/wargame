@@ -22,7 +22,7 @@ import random
 import uuid
 
 from . import abilities, data, economy, items, magic, names, talents
-from .data import ATTRIBUTES, mod, roll
+from .data import ATTRIBUTES, roll
 from .unit_derive import DerivationMixin
 from .unit_edit import EditMixin
 from .unit_hunger import HungerMixin
@@ -86,6 +86,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
         self.consecutive_rest_hours = 0
         self.last_daily_luck_day = 0
+        self.dormant = False                           # authored NPC that sleeps until a foe comes within awareness_radius
+        self.awareness_radius = 8
 
         self._auto_name = name is None
         self.name = name or names.random_name()
@@ -105,12 +107,12 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         """
         u = cls.__new__(cls)
         u.team = "player"
-        u.uid = d.get("uid") or uuid.uuid4().hex     # back-fill: pre-uid saves get one now
-        u.recruited_by = d.get("recruited_by")
-        u.talents = {t: list(d.get("talents", {}).get(t, [])) for t in talents.TRACKS}
-        u.poisons = {pid: dict(st) for pid, st in d.get("poisons", {}).items()}
-        u.antidote_cooldown = d.get("antidote_cooldown", 0)
-        u._level_hp_rolls = list(d.get("level_hp_rolls", []))
+        u.uid = d["uid"]
+        u.recruited_by = d["recruited_by"]
+        u.talents = {t: list(d["talents"][t]) for t in talents.TRACKS}
+        u.poisons = {pid: dict(st) for pid, st in d["poisons"].items()}
+        u.antidote_cooldown = d["antidote_cooldown"]
+        u._level_hp_rolls = list(d["level_hp_rolls"])
         u.base_attributes = dict(d["base_attributes"])
         for a in ATTRIBUTES:
             setattr(u, a, u.base_attributes[a])
@@ -119,7 +121,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.spells_known = []
         u.race = data.race_by_name(d["race"])
         u._configure_race()
-        u.age = d.get("age", u.age)                     # creator-set age wins; older saves fall back to the derived one
+        u.age = d["age"]                                # creator-set age wins over the derived one
         u.languages = [l for l in d["languages"] if l]   # keep the saved picks, don't re-sort; drop blanks
         u.occupation = data.occupation_by_name(d["occupation"])
         if u.race["kind"] == "beast":
@@ -127,56 +129,47 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         else:
             u._configure_occupation()
         u._base_inventory = pack_from_raw(d["inventory"])
-        u.locked_items = dict(d.get("locked_items", {}))
-        u.equipped_weapon = d.get("equipped_weapon", u.occupation["weapon"])
-        u.equipped_offhand = d.get("equipped_offhand")
-        u.equipped_armor = d.get("equipped_armor")
-        u.equipped_tongue = d.get("equipped_tongue")
+        u.locked_items = dict(d["locked_items"])
+        u.equipped_weapon = d["equipped_weapon"]
+        u.equipped_offhand = d["equipped_offhand"]
+        u.equipped_armor = d["equipped_armor"]
+        u.equipped_tongue = d["equipped_tongue"]
         u.alignment = d["alignment"]
-        if "gold" in d:                                  # pre-coin-item saves kept the purse as a number
-            u.money = d["gold"]
-        u.crime = d.get("crime", 0)
-        u.unfed_days = d.get("unfed_days", 0)
-        u.sick = d.get("sick", False)
-        u.medicine_attempted_today = d.get("medicine_attempted_today", False)
-        u.treated = d.get("treated", False)
-        if "first_aid_charges" in d:                     # older saves kept the charges on the character
-            u.first_aid_charges = d["first_aid_charges"]
-        if "quiver_charges" in d:
-            u.quiver_charges = d["quiver_charges"]
-        u.consecutive_rest_hours = d.get("consecutive_rest_hours", 0)
-        u.last_daily_luck_day = d.get("last_daily_luck_day", 0)
-        u.share_food = d.get("share_food", True)
-        u.combat_xp = d.get("combat_xp", 0)
-        u.work_hours = d.get("work_hours", 0)
-        u.bio = d.get("bio", "")
-        u.arena_title = d.get("arena_title", False)
-        
-        u.magic_source = d.get("magic_source")
-        u.spells_known = list(d.get("spells_known", []))
-        u.study_target = d.get("study_target")
-        u.study_progress = d.get("study_progress", 0)
-        u.recipes = list(d.get("recipes", []))
-        u.crafting_target = d.get("crafting_target")
-        u.crafting_progress = d.get("crafting_progress", 0)
-        u.craft_bonuses = dict(d.get("craft_bonuses", {}))
+        u.crime = d["crime"]
+        u.unfed_days = d["unfed_days"]
+        u.sick = d["sick"]
+        u.medicine_attempted_today = d["medicine_attempted_today"]
+        u.treated = d["treated"]
+        u.consecutive_rest_hours = d["consecutive_rest_hours"]
+        u.last_daily_luck_day = d["last_daily_luck_day"]
+        u.share_food = d["share_food"]
+        u.combat_xp = d["combat_xp"]
+        u.work_hours = d["work_hours"]
+        u.bio = d["bio"]
+        u.arena_title = d["arena_title"]
+
+        u.magic_source = d["magic_source"]
+        u.spells_known = list(d["spells_known"])
+        u.study_target = d["study_target"]
+        u.study_progress = d["study_progress"]
+        u.recipes = list(d["recipes"])
+        u.crafting_target = d["crafting_target"]
+        u.crafting_progress = d["crafting_progress"]
+        u.craft_bonuses = dict(d["craft_bonuses"])
 
         u._auto_name = d["auto_name"]
         u.name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
-        pid = d.get("portrait_id")                       # old saves: derive it like __init__ -- hash() changes per run
-        u.portrait_id = int(u.uid[:8], 16) if pid is None else pid
-        u._hp_roll = d.get("hp_roll")
-        u._hp_override = d.get("hp_override")            # creator-set HP max, or None
-        u.natural_armor = d.get("natural_armor", 0)
-        u._racial_override = d.get("racial_override")    # creator-pinned racial level, or None
-        u.dormant = d.get("dormant", False)
-        u.awareness_radius = d.get("awareness_radius", 0)
-        if u._hp_roll is None:                           # pre-hunger save: back it out of hp_max
-            u._hp_roll = max(1, d["hp_max"] - mod(u.constitution) - u._ability.hp_max)
+        u.portrait_id = d["portrait_id"]
+        u._hp_roll = d["hp_roll"]
+        u._hp_override = d["hp_override"]                # creator-set HP max, or None
+        u.natural_armor = d["natural_armor"]
+        u._racial_override = d["racial_override"]        # creator-pinned racial level, or None
+        u.dormant = d["dormant"]
+        u.awareness_radius = d["awareness_radius"]
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
-        u.hp = d.get("hp", u.hp_max)
+        u.hp = d["hp"]
         u._sync_dictionary_recipes()
         return u
 

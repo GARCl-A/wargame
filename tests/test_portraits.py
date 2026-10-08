@@ -1,5 +1,7 @@
 import os
+
 import pygame
+
 from gartok import artwork, data, persist, unit
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -284,14 +286,6 @@ def test_portrait_id_survives_a_save_round_trip():
     u = unit.Unit("player")
     v = unit.Unit.from_save(persist.unit_to_dict(u))
     assert v.portrait_id == u.portrait_id
-
-
-def test_a_save_without_portrait_id_derives_it_from_the_uid_not_hash():
-    u = unit.Unit("player")
-    d = persist.unit_to_dict(u)
-    del d["portrait_id"]
-    v = unit.Unit.from_save(d)
-    assert v.portrait_id == u.portrait_id == int(u.uid[:8], 16)
 
 
 def test_squad_and_prison_cards_carry_the_units_portrait():

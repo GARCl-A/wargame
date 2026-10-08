@@ -88,9 +88,8 @@ class _Camp:
         total = 0
         for pack in (*(u._base_inventory for u in self.members), *self.stores):
             for entry in pack:
-                name, qty = entry if isinstance(entry, tuple) else (entry.name, entry.qty)
-                if name.startswith("Rotten Food"):
-                    total += qty
+                if entry.name.startswith("Rotten Food"):
+                    total += entry.qty
         return total
 
     def can_feed_tomorrow(self, guild):

@@ -1,6 +1,8 @@
 import random
 import sys
 
+from tests.helpers import packed
+
 try:
     import pygame
 except ImportError:
@@ -40,7 +42,7 @@ from unittest.mock import MagicMock
 
 from gartok.guild import Guild
 from gartok.guild_screen import GuildScreen
-from gartok.unit import Unit, pack_from_raw
+from gartok.unit import Unit
 
 
 def test_guild_screen_initialization_and_smart_pick():
@@ -231,7 +233,7 @@ def test_bank_view_screen_lists_stash_without_any_move_button():
     from gartok.bank_view_screen import BankViewScreen
     g, *_ = _two_band_guild()
     g.bank.capacity = 30
-    g.bank.items = pack_from_raw([("Rope", 2), ("Torch", 1)])
+    g.bank.items = packed(["Rope", "Rope", "Torch"])
     done = []
     scr = BankViewScreen(MagicMock(), g, on_done=lambda: done.append(1))
     pygame.font.init()
@@ -257,7 +259,7 @@ def test_stat_breakdown_names_armor_and_overload():
     u.equipped_armor = "Chainmail"
     u._derive_combat()
     assert any("Chainmail" in label for label, _ in u.ac_breakdown())
-    u._base_inventory = [("Iron Bar", 99)]
+    u._base_inventory = packed(["Iron Bar"] * 99)
     u._derive_combat()
     assert u.encumbered
     assert ("overloaded", -1) in u.speed_breakdown()

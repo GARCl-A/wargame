@@ -3,22 +3,42 @@
   "recruited_by": null,
   "name": "Adelio Small-Knife",
   "auto_name": false,
-  "bio": "A village cutpurse who talked his way into the Pits a season ago. He fights dirty, ducks early and has held the bottom rung's belt longer than anyone bet he would -- the best of a bad lot, and he knows it.",
+  "portrait_id": 2710693184,
   "race": "Halfling",
   "occupation": "Thief",
   "alignment": "Neutral and Evil",
-  "gold": 32,
+  "crime": 0,
   "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 5,
   "share_food": true,
   "combat_xp": 3,
   "work_hours": 32,
+  "bio": "A village cutpurse who talked his way into the Pits a season ago. He fights dirty, ducks early and has held the bottom rung's belt longer than anyone bet he would -- the best of a bad lot, and he knows it.",
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Halfling",
+    "Dictionary of Ankarin"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
   "talents": {
     "combat": [
       "agile"
     ],
     "work": [
       "negotiator"
-    ]
+    ],
+    "racial": []
   },
   "level_hp_rolls": [
     3
@@ -35,6 +55,10 @@
   "age": 62,
   "hp_roll": 4,
   "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
   "hp_max": 5,
   "languages": [
     "Halfling",
@@ -42,9 +66,22 @@
   ],
   "equipped_weapon": "Dagger",
   "equipped_offhand": "Torch",
+  "equipped_tongue": null,
   "equipped_armor": "Studded Leather",
   "inventory": [
-    "Cloak"
+    {
+      "id": "cloak",
+      "name": "Cloak",
+      "qty": 1
+    },
+    {
+      "id": "copper_coin",
+      "name": "Copper Coin",
+      "qty": 32
+    }
   ],
+  "locked_items": {},
+  "dormant": false,
+  "awareness_radius": 0,
   "npc_slug": "adelio-small-knife"
 }

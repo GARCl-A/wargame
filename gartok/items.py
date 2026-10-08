@@ -160,10 +160,6 @@ class ItemInstance:
     def from_raw(cls, raw: Any) -> "ItemInstance":
         if isinstance(raw, ItemInstance):
             return raw.copy()
-        if isinstance(raw, str):
-            return create_instance(raw, 1)
-        if isinstance(raw, (tuple, list)) and len(raw) == 2 and isinstance(raw[1], int):
-            return create_instance(raw[0], qty=raw[1])
         if isinstance(raw, dict):
             key = raw.get("id") or raw.get("name")
             qty = raw.get("qty", 1)

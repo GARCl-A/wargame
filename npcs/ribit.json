@@ -3,16 +3,34 @@
   "recruited_by": null,
   "name": "Ribit",
   "auto_name": false,
+  "portrait_id": 2773871148,
   "race": "Grippli",
   "occupation": "Hunter",
   "alignment": "Chaotic and Neutral",
-  "gold": 40,
+  "crime": 0,
   "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 31,
   "share_food": true,
   "combat_xp": 78,
   "work_hours": 96,
   "bio": "The eldest of the three and the one who does the talking. Fast, never where the blow lands, and fond of letting you tire yourself out in the open before the tongue finds your throat.",
   "arena_title": false,
+  "recipes": [
+    "Dictionary of Sylvan",
+    "Dictionary of Ankarin"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_source": null,
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
   "talents": {
     "combat": [
       "agile",
@@ -48,6 +66,9 @@
   "age": 24,
   "hp_roll": 6,
   "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
   "racial_override": null,
   "hp_max": 31,
   "languages": [
@@ -58,6 +79,15 @@
   "equipped_offhand": null,
   "equipped_tongue": "Dagger",
   "equipped_armor": "Leather Jerkin",
-  "inventory": [],
+  "inventory": [
+    {
+      "id": "copper_coin",
+      "name": "Copper Coin",
+      "qty": 40
+    }
+  ],
+  "locked_items": {},
+  "dormant": false,
+  "awareness_radius": 0,
   "npc_slug": "ribit"
 }

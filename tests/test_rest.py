@@ -190,8 +190,15 @@ def test_without_sharing_a_member_with_no_ration_blocks_the_plan():
     assert "last day of rations" in rest.until_full(guild, g).reason
 
 
+def test_meat_lasts_two_midnights_before_it_spoils():
+    u = _hurt(missing=8, meals=6, food="Meat")
+    guild, g = _guild(u)
+    plan = rest.until_full(guild, g)
+    assert plan.capped and 24 < plan.hours < 48
+
+
 def test_food_that_will_have_rotted_by_tomorrow_does_not_count_toward_the_floor():
-    u = _hurt(missing=8, meals=6, food="Meat")       # Meat spoils in 2 days
+    u = _hurt(missing=8, meals=6, food="Fruit")      # Fruit spoils after 1 day
     guild, g = _guild(u)
     plan = rest.until_full(guild, g)
     assert plan.capped and plan.hours < 24

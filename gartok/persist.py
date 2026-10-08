@@ -10,17 +10,13 @@ The player roster is saved as **groups** (`gartok/group.py`): each group's own
 member list, map node and leader (a uid, resolved back to a `Unit` after its
 members load), plus a small shared campaign meta (wins, clock, bank chest, the
 guild's own leader + whether its one free change is spent, the guild's chosen
-name/banner, the taverna's current weekly pool of would-be recruits). A save
-from before the groups layer (`"roster"`/`"node"`, no `"groups"` key) loads as
-one group holding the whole old roster; a save from before leadership existed
-(no `"leader"` key on the guild or a group) auto-picks one by Charisma on load
-(`Guild._sync_leadership`/`Group.ensure_leader`). Enemies are rolled fresh each
+name/banner, the taverna's current weekly pool of would-be recruits). Enemies are rolled fresh each
 battle and battle state lives on a throwaway `Combatant` wrapper, never on the
 `Unit`, so disk never sees it -- a saved unit is always "full HP, standing".
 
 A group's `order` (travel, rest, garrison...) and its `pending` forced order
 (an ambush that came due, enemy pack included) are saved too, so a load picks
-the world back up where it stood; a save without them loads every group idle.
+the world back up where it stood.
 Nothing mid-battle or mid-hunt is ever saved (`App._can_save`).
 """
 
@@ -32,7 +28,7 @@ import time
 import uuid
 from dataclasses import fields
 
-from . import items, missions
+from . import missions
 from .animals import Animal
 from .clock import Clock
 from .group import Group
@@ -52,7 +48,11 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
-SAVE_VERSION = 22                # bumped when the payload shape changes; `from_save` still tolerates missing keys
+SAVE_VERSION = 1                 # bumped when the payload shape changes; nothing upgrades an older save
+
+
+class SaveVersionError(Exception):
+    """The save was written by another version of the game and cannot be read."""
 
 
 def new_world_id():
@@ -68,19 +68,7 @@ def save_path(world, save_id=CURRENT):
 
 
 def _serialize_pack(pack):
-    res = []
-    for it in pack:
-        if hasattr(it, "to_dict"):
-            res.append(it.to_dict())
-        elif isinstance(it, str):
-            res.append(items.create_instance(it, qty=1).to_dict())
-        elif isinstance(it, (tuple, list)) and len(it) == 2:
-            res.append(items.create_instance(it[0], qty=it[1]).to_dict())
-        elif isinstance(it, dict):
-            res.append(it)
-        else:
-            res.append({"id": str(it).lower(), "name": str(it), "qty": 1})
-    return res
+    return [it.to_dict() for it in pack]
 
 
 def unit_to_dict(u):
@@ -90,18 +78,18 @@ def unit_to_dict(u):
         "recruited_by": u.recruited_by,          # uid of the member who recruited this one, or None
         "name": u.name,
         "auto_name": u._auto_name,
-        "portrait_id": getattr(u, "portrait_id", None),
+        "portrait_id": u.portrait_id,
         "race": u.race["name"],
         "occupation": u.occupation["name"],
         "alignment": u.alignment,
         "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
-        "sick": getattr(u, "sick", False),       # food poisoning
-        "medicine_attempted_today": getattr(u, "medicine_attempted_today", False),
-        "treated": getattr(u, "treated", False),
+        "sick": u.sick,                          # food poisoning
+        "medicine_attempted_today": u.medicine_attempted_today,
+        "treated": u.treated,
         "consecutive_rest_hours": u.consecutive_rest_hours,
-        "last_daily_luck_day": getattr(u, "last_daily_luck_day", 0),
-        "hp": getattr(u, "hp", u.hp_max),
+        "last_daily_luck_day": u.last_daily_luck_day,
+        "hp": u.hp,
         "share_food": u.share_food,              # pools rations for hungry guild-mates
         "combat_xp": u.combat_xp,                # combat XP (see progression.py)
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
@@ -126,7 +114,6 @@ def unit_to_dict(u):
         "antidote_cooldown": u.antidote_cooldown,    # hours until the next Antidote may be used
         "natural_armor": u.natural_armor,        # flat AC the body itself gives (creator-set), 0 by default
         "racial_override": u._racial_override,   # creator-pinned racial level (hit dice + racial picks), or None
-        "hp_max": u.hp_max,                      # kept for pre-hunger saves / at-a-glance
         "languages": list(u.languages),          # racial + random extras + any learned via study
         "equipped_weapon": u.equipped_weapon,    # weapon hand (None = unarmed)
         "equipped_offhand": u.equipped_offhand,  # off hand: a torch, or None
@@ -134,8 +121,8 @@ def unit_to_dict(u):
         "equipped_armor": u.equipped_armor,      # body slot: armor name, or None
         "inventory": _serialize_pack(u._base_inventory),    # the pack: spare items, weapons included
         "locked_items": dict(u.locked_items),    # item name -> count exempt from distribute_load
-        "dormant": getattr(u, "dormant", False),
-        "awareness_radius": getattr(u, "awareness_radius", 0),
+        "dormant": u.dormant,
+        "awareness_radius": u.awareness_radius,
     }
 
 
@@ -145,14 +132,12 @@ def wagon_to_dict(w):
 
 
 def wagon_from_dict(d):
-    kind = d.get("kind", "Cart")
-    return Wagon(kind, d.get("hp"), d.get("contents", []), d.get("uid"), d.get("travelled", 0.0))
+    return Wagon(d["kind"], d["hp"], d["contents"], d["uid"], d["travelled"])
 
 
 def garage_from_dict(d, unlimited=False):
-    d = d or {}
-    return Garage(d.get("tier", 0), [wagon_from_dict(w) for w in d.get("wagons", [])],
-                  [Animal.from_dict(a) for a in d.get("herd", [])], unlimited=unlimited)
+    return Garage(d["tier"], [wagon_from_dict(w) for w in d["wagons"]],
+                  [Animal.from_dict(a) for a in d["herd"]], unlimited=unlimited)
 
 
 def garage_to_dict(garage):
@@ -173,11 +158,10 @@ def order_to_dict(order):
 
 
 def order_from_dict(d):
-    kwargs = {f.name: d[f.name] for f in fields(Order) if f.name in d}
+    kwargs = {f.name: d[f.name] for f in fields(Order)}
     for key in _ORDER_SEQUENCES:
-        if key in kwargs:
-            kwargs[key] = tuple(kwargs[key])
-    kwargs["pack"] = tuple(Unit.from_save(u) for u in d.get("pack", []))
+        kwargs[key] = tuple(kwargs[key])
+    kwargs["pack"] = tuple(Unit.from_save(u) for u in d["pack"])
     return Order(**kwargs)
 
 
@@ -198,19 +182,16 @@ def group_to_dict(g):
 
 def group_from_dict(d):
     members = [Unit.from_save(m) for m in d["members"]]
-    leader = next((u for u in members if u.uid == d.get("leader")), None)
-    wagons = [wagon_from_dict(w) for w in d.get("wagons", [d["wagon"]] if d.get("wagon") else [])]
-    herd_dicts = d.get("herd", d.get("animals", []))
-    herd = [Animal.from_dict(a) for a in herd_dicts]
-    group = Group(members, node=d.get("node"), name=d.get("name"), gid=d.get("gid"),
+    leader = next((u for u in members if u.uid == d["leader"]), None)
+    wagons = [wagon_from_dict(w) for w in d["wagons"]]
+    herd = [Animal.from_dict(a) for a in d["herd"]]
+    group = Group(members, node=d["node"], name=d["name"], gid=d["gid"],
                   leader=leader, wagons=wagons, herd=herd)
-    group.herd_notice = d.get("herd_notice")
-    if d.get("order"):
+    group.herd_notice = d["herd_notice"]
+    if d["order"]:
         group.order = order_from_dict(d["order"])
-    if d.get("pending"):
+    if d["pending"]:
         group.pending = order_from_dict(d["pending"])
-    if any("hitch" not in a for a in herd_dicts):     # saved before the Harness linked to one wagon
-        group.hitch_idle()
     return group
 
 
@@ -243,7 +224,7 @@ def _payload(guild, kind, label):
         "wilds_claim_sustain_days_left": guild.wilds_claim_sustain_days_left,
         "wilds_claim_owner": guild.wilds_claim_owner,
         "wilds_claim_campfire": guild.wilds_claim_campfire,
-        "ancient_ruins_discovered": getattr(guild, "ancient_ruins_discovered", False),
+        "ancient_ruins_discovered": guild.ancient_ruins_discovered,
         "market_stock": dict(guild.market_stock),
         "market_cash": dict(guild.market_cash),
         "total_spent": guild.total_spent,
@@ -296,63 +277,60 @@ def _prune_autosaves(world):
 
 
 def load_game(world, save_id=CURRENT):
-    """-> Guild (groups + campaign meta). Missing keys default (old saves); a
-    save from before the groups layer (`"roster"`/`"node"`, no `"groups"`) is
-    rebuilt as a single group holding the whole old roster at the old node."""
+    """-> Guild (groups + campaign meta). Every key `_payload` writes must be there."""
     with open(save_path(world, save_id), encoding="utf-8") as fh:
         payload = json.load(fh)
-    if "groups" in payload:
-        groups = [group_from_dict(d) for d in payload["groups"]]
-    else:
-        roster = [Unit.from_save(d) for d in payload["roster"]]
-        groups = [Group(roster, node=payload.get("node"))]
-    pool = payload.get("taverna_pool")
-    p_pool = payload.get("prison_pool")
+    if payload.get("save_version") != SAVE_VERSION:
+        raise SaveVersionError(f"This save is from another version of the game (save format "
+                               f"{payload.get('save_version')}, expected {SAVE_VERSION}) and cannot be loaded.")
+    groups = [group_from_dict(d) for d in payload["groups"]]
+    pool = payload["taverna_pool"]
+    p_pool = payload["prison_pool"]
     roster = [u for g in groups for u in g.members]
-    leader = next((u for u in roster if u.uid == payload.get("leader")), None)
+    leader = next((u for u in roster if u.uid == payload["leader"]), None)
     return Guild(None, groups=groups,
-                 battles_won=payload.get("battles_won", 0),
-                 reputation=payload.get("reputation", {}),
-                 deeds_done=payload.get("deeds_done", []),
-                 arena_challenge_day=payload.get("arena_challenge_day"),
-                 clock=Clock(payload.get("clock_seconds", 0)),
-                 bank=Stash(payload.get("bank_capacity", 0), payload.get("bank_items", [])),
-                 house=CityProperty(owned=payload.get("property_city_unlocked", False),
-                                    contents=payload.get("property_city_items", []),
-                                    tax_due_day=payload.get("property_city_tax_due_day"),
-                                    missed_payments=payload.get("property_city_missed_payments", 0),
-                                    squatting=payload.get("property_city_squatting", False),
-                                    oven=payload.get("property_city_oven", False),
-                                    garage=garage_from_dict(payload.get("property_city_garage"))),
-                 bankers_debt=payload.get("bankers_debt", 0),
-                 bankers_debt_since=payload.get("property_city_debt_since"),
-                 garrison_stock=payload.get("garrison_stock"),
-                 wilds_claim_stage=payload.get("wilds_claim_stage", "NONE"),
-                 wilds_claim_fence_lumber=payload.get("wilds_claim_fence_lumber", 0),
-                 wilds_claim_sustain_days_left=payload.get("wilds_claim_sustain_days_left"),
-                 wilds_claim_owner=payload.get("wilds_claim_owner"),
-                 wilds_claim_campfire=payload.get("wilds_claim_campfire", False),
-                 claim_garage=garage_from_dict(payload.get("wilds_claim_garage"), unlimited=True),
-                 market_stock=payload.get("market_stock"),
-                 market_cash=payload.get("market_cash"),
-                 total_spent=payload.get("total_spent", 0),
-                 items_sold_kinds=payload.get("items_sold_kinds", []),
-                 missions=[missions.mission_from_dict(d) for d in payload.get("missions", [])],
-                 taverna_week=payload.get("taverna_week"),
+                 battles_won=payload["battles_won"],
+                 reputation=payload["reputation"],
+                 deeds_done=payload["deeds_done"],
+                 arena_challenge_day=payload["arena_challenge_day"],
+                 clock=Clock(payload["clock_seconds"]),
+                 bank=Stash(payload["bank_capacity"], payload["bank_items"]),
+                 house=CityProperty(owned=payload["property_city_unlocked"],
+                                    contents=payload["property_city_items"],
+                                    tax_due_day=payload["property_city_tax_due_day"],
+                                    missed_payments=payload["property_city_missed_payments"],
+                                    squatting=payload["property_city_squatting"],
+                                    oven=payload["property_city_oven"],
+                                    garage=garage_from_dict(payload["property_city_garage"])),
+                 bankers_debt=payload["bankers_debt"],
+                 bankers_debt_since=payload["property_city_debt_since"],
+                 garrison_stock=payload["garrison_stock"],
+                 wilds_claim_stage=payload["wilds_claim_stage"],
+                 wilds_claim_fence_lumber=payload["wilds_claim_fence_lumber"],
+                 wilds_claim_sustain_days_left=payload["wilds_claim_sustain_days_left"],
+                 wilds_claim_owner=payload["wilds_claim_owner"],
+                 wilds_claim_campfire=payload["wilds_claim_campfire"],
+                 claim_garage=garage_from_dict(payload["wilds_claim_garage"], unlimited=True),
+                 market_stock=payload["market_stock"],
+                 market_cash=payload["market_cash"],
+                 total_spent=payload["total_spent"],
+                 items_sold_kinds=payload["items_sold_kinds"],
+                 missions=[missions.mission_from_dict(d) for d in payload["missions"]],
+                 taverna_week=payload["taverna_week"],
                  taverna_pool=[Unit.from_save(d) for d in pool] if pool is not None else None,
-                 taverna_blocked=payload.get("taverna_blocked"),
-                 prison_week=payload.get("prison_week"),
+                 taverna_blocked=payload["taverna_blocked"],
+                 prison_week=payload["prison_week"],
                  prison_pool=[Unit.from_save(d) for d in p_pool] if p_pool is not None else None,
-                 prison_blocked=payload.get("prison_blocked"),
+                 prison_blocked=payload["prison_blocked"],
                  jailed=[(Unit.from_save(d["unit"]), d["released_day"])
-                         for d in payload.get("jailed", [])],
-                 leader=leader, leader_swaps_used=payload.get("leader_swaps_used", 0),
-                 leaving=payload.get("leaving"),
-                 name=payload.get("name", ""), banner_color=payload.get("banner_color"),
-                 banner_icon=payload.get("banner_icon"),
-                 ancient_ruins_discovered=payload.get("ancient_ruins_discovered", False),
-                 tutorial=TutorialState(seen=payload.get("tutorial_seen", []),
-                                       enabled=payload.get("tutorial_enabled", True)))
+                         for d in payload["jailed"]],
+                 leader=leader, leader_swaps_used=payload["leader_swaps_used"],
+                 leaving=payload["leaving"],
+                 name=payload["name"], banner_color=payload["banner_color"],
+                 banner_icon=payload["banner_icon"],
+                 ancient_ruins_discovered=payload["ancient_ruins_discovered"],
+                 tutorial=TutorialState(seen=payload["tutorial_seen"],
+                                       enabled=payload["tutorial_enabled"]))
 
 
 def delete_world(world):

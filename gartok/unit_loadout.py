@@ -9,23 +9,11 @@ name, so an `idx` addresses a stack, not a physical item.
 from . import data, items
 from .data import roll
 
-
 COIN_HANDFUL = 10          # coins moved per step when spreading a purse (0.05 kg)
 
 
 def pack_from_raw(raw):
-    """Build a stacked list of ItemInstance from a save field that may be
-    an old flat list[str], a list[[name, qty]], a list[dict], or list[ItemInstance]."""
-    if not raw:
-        return []
-    if isinstance(raw[0], str):
-        order, counts = [], {}
-        for name in raw:
-            if name not in counts:
-                order.append(name)
-                counts[name] = 0
-            counts[name] += 1
-        return [items.create_instance(name, qty=counts[name]) for name in order]
+    """Build a stacked list of ItemInstance from a list of dicts or ItemInstances."""
     return [items.ItemInstance.from_raw(entry) for entry in raw]
 
 
@@ -38,15 +26,10 @@ def stack_add(pack, name, qty=1, charges=None, days_old=0):
         if charges is None:
             charges = getattr(name, "charges", None)
         inst = items.create_instance(name, qty=qty, charges=charges, days_old=days_old)
-    for i, it in enumerate(pack):
-        if isinstance(it, items.ItemInstance):
-            if it.id == inst.id and it.days_old == inst.days_old and it.charges == inst.charges:
-                it.qty += inst.qty
-                return
-        elif isinstance(it, tuple):
-            if it[0] == inst.name:
-                pack[i] = (it[0], it[1] + inst.qty)
-                return
+    for it in pack:
+        if it.id == inst.id and it.days_old == inst.days_old and it.charges == inst.charges:
+            it.qty += inst.qty
+            return
     pack.append(inst)
 
 
@@ -54,23 +37,14 @@ def stack_take(pack, idx, qty=1):
     """Remove up to `qty` from the stack at `idx` in place, dropping the row
     once it empties. Returns `(name, removed, remaining)`."""
     entry = pack[idx]
-    if isinstance(entry, items.ItemInstance):
-        name = items.stack_name(entry)
-        removed = min(qty, entry.qty)
-        entry.qty -= removed
-        if entry.qty <= 0:
-            pack.pop(idx)
-            remaining = 0
-        else:
-            remaining = entry.qty
-        return name, removed, remaining
-    name, held = entry
-    removed = min(qty, held)
-    remaining = held - removed
-    if remaining <= 0:
+    name = items.stack_name(entry)
+    removed = min(qty, entry.qty)
+    entry.qty -= removed
+    if entry.qty <= 0:
         pack.pop(idx)
+        remaining = 0
     else:
-        pack[idx] = (name, remaining)
+        remaining = entry.qty
     return name, removed, remaining
 
 
@@ -78,19 +52,12 @@ def split_stack(pack, idx, qty):
     """Peel `qty` off the stack at `idx` into its own stack right after it.
     False (and nothing changes) unless `0 < qty < held`."""
     entry = pack[idx]
-    if isinstance(entry, items.ItemInstance):
-        if not (0 < qty < entry.qty):
-            return False
-        entry.qty -= qty
-        split_inst = entry.copy()
-        split_inst.qty = qty
-        pack.insert(idx + 1, split_inst)
-        return True
-    name, held = entry
-    if not (0 < qty < held):
+    if not (0 < qty < entry.qty):
         return False
-    pack[idx] = (name, held - qty)
-    pack.insert(idx + 1, (name, qty))
+    entry.qty -= qty
+    split_inst = entry.copy()
+    split_inst.qty = qty
+    pack.insert(idx + 1, split_inst)
     return True
 
 

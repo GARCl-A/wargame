@@ -130,15 +130,11 @@ building them:
 
 # Needs more information
 
-- **Strip legacy-save compatibility code.** The game is still in testing and no save needs
-  to survive a format change, so code that only keeps old saves loading is dead weight.
-  Find it and cut it: the tuple and string branches of `Guild._rot_food` /
-  `_age_food_name` and `unit_hunger.take_ration` (food aged by renaming, `"Potato (2d)"`),
-  the "tolerates missing keys" defaults and the `pack_from_raw` flat-list shapes, the
-  `from_save` shape-polymorphism, `SAVE_VERSION` upgrade steps, and the tests that only
-  cover those. Settle first which part stays on purpose (a tolerant `from_save` for new
-  optional keys is cheap) and update the `persist.py` / `AGENTS.md` notes that promise
-  compatibility.
+- **Tolerant `from_save` for new optional keys.** Legacy-save code is gone: `Unit.from_save`
+  and `persist.load_game` read every key strictly, and `load_game` refuses a save whose
+  `save_version` differs (`SaveVersionError`). Decide how a new optional field gets a
+  default without bringing back per-key `.get` noise (one defaults table next to
+  `unit_to_dict` / `_payload`?) and when `SAVE_VERSION` bumps versus when a default is enough.
 - **Combat info modal.** Hide part of it by default and rework it: it carries information
   that should not be there and lacks some that would help. Define what goes in and out first.
 - **Economy sim catch-up.** `scripts/economy_sim.py` models a trader against its own

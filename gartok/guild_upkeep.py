@@ -108,53 +108,21 @@ class UpkeepMixin:
                 larder += self.claim_garage.food_stores()
         return larder
 
-    @staticmethod
-    def _age_food_name(name):
-        """One day of aging for a single food name -- `(new_name, rotted)`.
-        Anything without a `lifespan` entry passes through unchanged."""
-        base = name.split(" (")[0]
-        it = items.get(base)
-        if it is None or it.lifespan is None:
-            return name, False
-        age = int(name.split(" (")[1].replace("d)", "")) + 1 if " (" in name else 1
-        if age >= it.lifespan:
-            return "Rotten Food", True
-        return f"{base} ({age}d)", False
-
     def _rot_food(self, inventory):
-        """Age every food entry a day in place. `inventory` is either a
-        Unit's pack (`list[(name,qty)]` -- a stack ages as one unit, since
-        aging changes the name and same-name is exactly what stacks
-        together) or a `Stash`'s items; rotted portions
-        merge into any Rotten Food already held instead of duplicating it."""
+        """Age every food entry a day in place. `inventory` is a Unit's pack
+        or a `Stash`'s items (a stack ages as one unit)."""
         rotten = 0
         new_inv = []
         for it in inventory:
-            if isinstance(it, items.ItemInstance):
-                if it.defn.food and it.defn.lifespan is not None:
-                    it.days_old += 1
-                    if it.is_rotten():
-                        rotten += it.qty
-                        rotten_inst = items.create_instance("Rotten Food", qty=it.qty)
-                        new_inv.append(rotten_inst)
-                    else:
-                        new_inv.append(it)
+            if it.defn.food and it.defn.lifespan is not None:
+                it.days_old += 1
+                if it.is_rotten():
+                    rotten += it.qty
+                    new_inv.append(items.create_instance("Rotten Food", qty=it.qty))
                 else:
                     new_inv.append(it)
-            elif isinstance(it, tuple):
-                name, qty = it
-                new_name, rotted = self._age_food_name(name)
-                if rotted:
-                    rotten += qty
-                existing = next((i for i, (n, _) in enumerate(new_inv) if n == new_name), None)
-                if existing is not None:
-                    new_inv[existing] = (new_name, new_inv[existing][1] + qty)
-                else:
-                    new_inv.append((new_name, qty))
             else:
-                new_name, rotted = self._age_food_name(it)
-                rotten += rotted
-                new_inv.append(new_name)
+                new_inv.append(it)
         inventory[:] = new_inv
         return rotten
 

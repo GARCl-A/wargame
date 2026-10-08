@@ -98,7 +98,7 @@ def test_split_pack_peels_a_partial_quantity_into_its_own_stack():
     u._base_inventory = packed(["Coal"] * 40)
 
     assert u.split_pack(0, 15) is True
-    assert u._base_inventory == [("Coal", 25), ("Coal", 15)]
+    assert [e.qty for e in u._base_inventory] == [25, 15]
 
 
 def test_split_pack_rejects_the_whole_stack_or_nothing():

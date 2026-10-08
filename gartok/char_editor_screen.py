@@ -15,6 +15,8 @@ from. Loading a library entry brings it back to edit; RANDOMIZE starts a fresh
 roll. `on_back` returns to the editor hub.
 """
 
+import uuid
+
 import pygame
 
 from . import data, items, magic, npc_lib, persist, talents
@@ -97,7 +99,7 @@ class CharEditorScreen(Screen):
         """Clone the current character into a fresh, unsaved copy -- new identity,
         same everything else. SAVE then writes it as its own npcs/ file."""
         d = persist.unit_to_dict(self.unit)
-        d.pop("uid", None)                     # from_save mints a new one
+        d["uid"] = uuid.uuid4().hex
         d["recruited_by"] = None
         clone = Unit.from_save(d)
         clone.set_name(f"{self.unit.name} (copy)")

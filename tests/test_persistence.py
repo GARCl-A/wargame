@@ -33,31 +33,6 @@ def test_locked_items_round_trip_through_save():
     assert v.locked_of("Rope") == 2 and v.locked_of("Torch") == 0
 
 
-def test_old_flat_inventory_save_loads_as_stacks():
-    """A save from before quantity-stacks stored `"inventory"` as a flat
-    `list[str]` (repetition = stack). `from_save` still has to load one."""
-    from gartok import persist
-    u = Unit("player")
-    d = persist.unit_to_dict(u)
-    d["inventory"] = ["Rope", "Rope", "Map"]           # old-shape fixture
-    v = Unit.from_save(d)
-    assert v.count_of("Rope") == 2 and v.count_of("Map") == 1
-    assert v._base_inventory == [("Rope", 2), ("Map", 1)]
-    assert persist.unit_to_dict(v)["inventory"] == [{"id": "rope", "name": "Rope", "qty": 2}, {"id": "map", "name": "Map", "qty": 1}]
-
-
-def test_missing_locked_items_key_loads_as_unlocked():
-    """Older saves never wrote `locked_items` -- `persist.py` tolerates the
-    missing key rather than erroring."""
-    from gartok import persist
-    u = Unit("player")
-    u._base_inventory = packed(["Rope"])
-    d = persist.unit_to_dict(u)
-    del d["locked_items"]
-    v = Unit.from_save(d)
-    assert v.locked_items == {} and v.locked_of("Rope") == 0
-
-
 def test_weapon_is_an_item_hand_and_pack():
     u = _unit()
     start = u.equipped_weapon
@@ -133,7 +108,7 @@ def test_save_slot_file_round_trip():
     guild = Guild([Unit("player") for _ in range(3)], battles_won=4,
                   reputation={"arena": 3}, deeds_done=["arena_first_blood"],
                   arena_challenge_day=12, clock=Clock(30 * 3600), node="wilds",
-                  bank=Stash(10, ["Rope", "Shovel"]))
+                  bank=Stash(10, packed(["Rope", "Shovel"])))
     guild.roster[0].money = 42
     guild.roster[0].arena_title = True
     guild.roster[0].bio = "kept the belt through a lean winter"
@@ -161,45 +136,6 @@ def test_save_slot_file_round_trip():
         assert back.missions[0].template_id == m.template_id
         assert back.missions[0].unit_uid == m.unit_uid
         assert back.missions[0].deadline_day == m.deadline_day
-    finally:
-        persist.delete_world(slot)
-
-
-def test_load_game_falls_back_to_one_group_for_a_pre_groups_save():
-    """A save from before the groups layer has flat "roster"/"node" keys and no
-    "groups" key at all -- `load_game` must still rebuild a working Guild."""
-    import json
-
-    from gartok import persist
-    slot = "testworld"
-    if os.path.exists(persist.save_path(slot)):
-        return                                        # never clobber a real save
-    random.seed(8)
-    old_payload = {
-        "save_version": 6,
-        "battles_won": 2,
-        "reputation": {},
-        "deeds_done": [],
-        "arena_challenge_day": None,
-        "clock_seconds": 3600,
-        "node": "wilds",
-        "bank_capacity": 0,
-        "bank_items": [],
-        "saved_at": 0,
-        "squad": ["Bob"],
-        "roster": [persist.unit_to_dict(Unit("player"))],
-        "taverna_week": None,
-        "taverna_pool": None,
-        "taverna_blocked": [],
-    }
-    os.makedirs(persist.world_dir(slot), exist_ok=True)
-    with open(persist.save_path(slot), "w", encoding="utf-8") as fh:
-        json.dump(old_payload, fh)
-    try:
-        guild = persist.load_game(slot)
-        assert len(guild.groups) == 1
-        assert guild.groups[0].node == "wilds"
-        assert len(guild.roster) == 1
     finally:
         persist.delete_world(slot)
 
@@ -232,12 +168,6 @@ def test_leadership_survives_a_save_round_trip():
 def test_uid_is_stable_across_a_save_round_trip():
     u = _unit(seed=3)
     assert Unit.from_save(persist.unit_to_dict(u)).uid == u.uid
-
-
-def test_from_save_backfills_a_uid_for_pre_uid_saves():
-    d = persist.unit_to_dict(_unit(seed=3))
-    d.pop("uid")
-    assert Unit.from_save(d).uid                            # got a fresh one, no crash
 
 
 def test_recruited_by_survives_a_save_round_trip():
@@ -288,14 +218,6 @@ def test_quiver_charges_survive_save_round_trip():
     assert v.quiver_charges == 14
 
 
-def test_from_save_reads_the_legacy_character_level_quiver_charges():
-    u = _unit()
-    u.give_to_pack(data.AMMO_ITEM)
-    d = persist.unit_to_dict(u)
-    d["quiver_charges"] = 7
-    assert Unit.from_save(d).quiver_charges == 7
-
-
 def test_from_save_gives_an_old_save_a_full_quiver():
     u = _unit()
     u.give_to_pack(data.AMMO_ITEM)
@@ -310,6 +232,25 @@ def _world_guild(name="Iron Fists"):
     from gartok.guild import Guild
     guild = Guild([Unit("player")], node="city", name=name)
     return guild
+
+
+def test_a_save_of_another_version_is_refused_with_a_clear_error():
+    import json
+
+    import pytest
+    world = persist.new_world_id()
+    persist.save_game(world, _world_guild())
+    path = persist.save_path(world)
+    with open(path, encoding="utf-8") as fh:
+        payload = json.load(fh)
+    payload["save_version"] = persist.SAVE_VERSION + 1
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh)
+    try:
+        with pytest.raises(persist.SaveVersionError):
+            persist.load_game(world)
+    finally:
+        persist.delete_world(world)
 
 
 def test_a_world_keeps_current_plus_every_snapshot_kind():

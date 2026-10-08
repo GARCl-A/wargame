@@ -46,10 +46,7 @@ def depart(guild, unit):
         for name, qty in left_coins:
             leader.give_to_pack(name, qty)
         for entry in left_items:
-            if isinstance(entry, tuple):
-                leader._pack_add(*entry)
-            else:
-                leader._pack_add(entry)
+            leader._pack_add(entry)
     guild.remove_members([unit])
     if leader is not None and leader is not unit and (left_items or left_coins):
         leader._derive_combat()
