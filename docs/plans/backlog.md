@@ -42,6 +42,11 @@ Polish:
   Market, like the other containers.
 - **Arena bets use the group purse.** Betting should combine the whole group's money, not
   only the fighters'.
+- **Tolerant `from_save` for new optional keys.** `Unit.from_save` and `persist.load_game`
+  read every key strictly. Add one defaults table next to `unit_to_dict` / `_payload` and
+  have `from_save` read `{**DEFAULTS, **data}`, so a new optional field gets a default
+  without per-key `.get` noise. `SAVE_VERSION` bumps only when the shape changes (a field
+  removed, renamed or with new meaning), not for an added optional field.
 
 ## Medium
 
@@ -73,6 +78,34 @@ Polish:
 
 ## Large
 
+- **Intelligence reveals enemy info (combat info modal).** The modal today carries
+  information that should not be there and lacks some that would help. Rework it around
+  INT as the way to learn about enemies, so INT helps the player decide (and later the AI).
+  - **Always visible, no INT:** name, race, weapon in hand, visible conditions, health in
+    bands (unhurt / wounded / near death) and anything the active unit can simply see.
+  - **Passive:** when a fight starts, each ally rolls an INT check against the enemies they
+    face; what it reveals (exact HP, AC, MD, attacks, bonuses, abilities) is stored on the
+    enemy and shared by the whole squad.
+  - **Action:** an Assess action (AP cost) to dig further into one target.
+  - **To define while building:** which field sits behind which success margin, how the
+    check scales with the target's level, whether knowledge outlasts the fight (a creature
+    met before). Needs the action, AI support and tests.
+- **Economy sim rewrite.** `scripts/economy_sim.py` models a trader against its own
+  `Vendor` class, so it never sees what changed the economy: the market's finite cash
+  (`Guild.market_cash`: $100 to start, +$25/day up to $500), coins as items (`$`, gold, the
+  bank exchange), the Medic and upkeep that drain money (house tax, garrison, wagon wear,
+  animal feed, group rest), and a squad pooling one market. Drive the real `Guild`, market
+  and daily upkeep instead of a parallel model. Question it answers: **does a guild sustain
+  itself, and is the risk x time x reward of each activity right?** Runs at levels 1, 3 and
+  5, over 7 and 30 days. Reports:
+  - $/hour per activity (lumber, arena, Wilds, trade, missions, tavern...) with the risk of
+    loss or death next to it;
+  - ranking by attribute, occupation and race;
+  - exploit detector: profitable loops (buy 100% / sell 50% between shops, the gold
+    exchange, market cash) and any activity that dominates the rest;
+  - guild sustain curve: daily balance after house, garrison, wagon and rations, and the
+    expected money after X days.
+  Until it lands, a change to wages, purses or loot is checked by hand.
 - **Crafting tools.** Crafting consumes everything today. Let a recipe also require a tool
   that is not consumed (a cart needs wood, nails and a saw). Gives Chisel, Scissors, Shovel
   and the Goldsmith's Pliers a job (and jewellery crafting, when it exists). Shapes the
@@ -130,44 +163,23 @@ building them:
 
 # Needs more information
 
-- **Tolerant `from_save` for new optional keys.** Legacy-save code is gone: `Unit.from_save`
-  and `persist.load_game` read every key strictly, and `load_game` refuses a save whose
-  `save_version` differs (`SaveVersionError`). Decide how a new optional field gets a
-  default without bringing back per-key `.get` noise (one defaults table next to
-  `unit_to_dict` / `_payload`?) and when `SAVE_VERSION` bumps versus when a default is enough.
-- **Combat info modal.** Hide part of it by default and rework it: it carries information
-  that should not be there and lacks some that would help. Define what goes in and out first.
-- **Economy sim catch-up.** `scripts/economy_sim.py` models a trader against its own
-  `Vendor` class, so it never sees what changed the economy in the game: the market's
-  finite cash (`Guild.market_cash`: $100 to start, +$25/day up to $500), coins as items
-  (`$`, gold, the bank exchange), the Medic and upkeep that now drain money (house tax,
-  garrison, wagon wear, animal feed, group rest), and a squad pooling one market instead
-  of a lone trader. First decide what question it answers (can one character earn a
-  living? can a guild?), then have it drive the real `Guild`, market and daily upkeep
-  instead of a parallel model. Until then a change to wages, purses or loot is checked by
-  hand.
-- **Found-the-guild screen** (`draft_screen.py`). Founding the guild should be the
+- **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
   the guild. Today it is a colour, an icon and a leader pick, and the screen looks
-  off-pattern. Redesign in two phases around a founding charter (epic once defined):
-  - **Before the picks:** pick a *vocation* from a curated list of 5-8. It biases the
-    candidates' race, age, occupation and tendency; it never locks the pool. Pick the
-    *oath* (separate from the vocation): a short list, each with a mechanical effect,
-    built on `cohesion.py` and `factions.py`. An oath cannot be broken, but it can be
-    changed. Name and banner may also go here.
-  - **Draft:** a pool of 9 candidates, pick 3 (replaces 3 rounds of 1 of 3). The 3
-    Commission Tokens stay, now spent to reroll one of the 9 before choosing.
-  - **After the picks:** choose the guild leader.
-  - **Presentation:** a richer composed banner (more shapes, colours and patterns), a
-    live preview of the guild as choices are made, and an opening scene: a founding
-    charter that writes itself line by line as the player decides, signed at the end
-    with the banner and the oath, and kept as the first entry of the guild's chronicle.
-  - Open: the vocation list and each one's bias; the oath list, effects and the cost of
-    changing one; whether Commission Tokens still shape archetypes or only reroll; AI
-    and tests for the new generation bias.
-- **Inventory containers.** Decide whether the inventory should be split into containers
-  at all. Sack and Iron Shackles were removed from the catalogue; bring a container back
-  when this is decided.
+  off-pattern. The draft step is defined (below); the rest waits for design.
+  - **Next, ready to size (Medium):** draft a pool of 9 candidates and pick 3, replacing 3
+    rounds of 1 of 3. The 3 Commission Tokens stay, now spent to reroll one of the 9 before
+    choosing. Then choose the guild leader from the 3. Independent of vocation and oath.
+  - **Vocation:** a curated list of 5-8 that biases the candidates' race, age, occupation
+    and tendency; it never locks the pool. Open: the list and each one's bias.
+  - **Oath** (separate from the vocation): a short list, each with a mechanical effect,
+    built on `cohesion.py` and `factions.py`. It cannot be broken, but it can be changed.
+    Open: the list, the effects and the cost of changing one.
+  - **Presentation:** a richer composed banner, a live preview of the guild as choices are
+    made, and an opening scene: a founding charter that writes itself line by line, signed
+    with the banner and the oath, kept as the first entry of the guild's chronicle.
+  - Open: whether Commission Tokens still shape archetypes or only reroll; AI and tests for
+    the new generation bias.
 
 ## Starting items waiting on another system
 
