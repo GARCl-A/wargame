@@ -20,18 +20,6 @@ Two parts:
 
 # Ready to do
 
-## Small
-
-- **Re-check the Champion bout after Adelio's CON 14 (9 HP).** He was hardened to 9 HP so a
-  combat-0 squad stops walking over him. Re-run `scripts/economy_activities.py` and see what
-  the bout pays now (stake $20 each, purse $120); if it is still the best money of the first
-  ten days, the stake/purse is the next lever. The sim's policies only try him from mean
-  combat 2, so also check the recorded run (champion on day 6 at combat 0) against the new
-  numbers.
-- **`unit_compare.py` with gear.** `scripts/unit_compare.py` lifts bare draft bodies, but
-  Adelio's edge is Studded Leather (AC 15), and the recorded squads own armour by day 11-14.
-  Add an `--armor` / `--weapon` option so the comparison is body-for-body with a kitted squad.
-
 ## Medium
 
 - **Founding draft: 9 pick 3.** `draft_screen.py` offers a pool of 9 candidates and the
@@ -42,11 +30,6 @@ Two parts:
 - **Founding screen on the `ui/` kit.** The draft screen is off-pattern; rebuild it with the
   `gartok/ui/` components (data-driven `draw_x`, 8px grid, palette) and keep its tutorial
   card. Do it together with the 9-pick-3 draft so the layout is built once.
-- **Medic, hospital stay (B2).** The quick treatment is built (`medic.py`, the Apothecary's MEDIC tab) and refuses what takes
-  more than 24 h (poison from 4 stacks up). A treatment of more than 24 h admits the patient:
-  they split off into a new Group on a new order kind (saved with the groups), locked like
-  any group with an order. With no free group slot the whole group waits with them instead.
-  On discharge the patient is a loose group and the player merges by hand.
 - **Claim construction: oven.** Built at the Claim with time and Stone Brick; like the
   campfire but always lit. First thing to build there, and the start of a general
   build-at-the-Claim system.
@@ -98,9 +81,10 @@ Two parts:
   `economy_guild.py --policies human --profile recordings/2026-10-08/human_profile.json`.
   The `food_low_days` of 0 is real, not a recorder bug: the player shops the day the larder is
   empty (Potatoes, 4-5 days at a time), so the policy now shops *at* the threshold, not under
-  it (`keep_fed(at_low=True)`). With that, 1 of 3 `human` guilds still wipes and all go hungry
-  at some point, which is what the recordings show a person doing; check whether the wipe is
-  the policy or the thresholds from two short runs. Then compare
+  it (`keep_fed(at_low=True)`). With that, all `human` guilds go hungry at some point, which
+  is what the recordings show a person doing. It wipes 30-40% of 20 guilds, and that is the
+  threshold, not the player: `hunt_min_level` 0.5 comes from three won hunts, and at 2.0 the
+  wipe is 0% ([finding 20](economy_sim_v2.md)). Settling it needs a third, longer run. Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the

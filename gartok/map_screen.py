@@ -235,6 +235,8 @@ class MapScreen(Screen):
             return f"working ({o.remaining:g} h left)"
         if o.kind == "rest":
             return f"resting ({rest.format_hours(o.remaining)} left)"
+        if o.kind == "hospital":
+            return f"in the hospital ({o.remaining:g} h left)"
         return f"heading to {o.kind} ({o.remaining:g} h)"
 
     def _mates_for(self, g):

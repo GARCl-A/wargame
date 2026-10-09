@@ -121,10 +121,10 @@ house,Donkey,Cart` (what it must keep), `--restock TARGET:PER_DAY` (finite shelv
 racial level is combat level + work level, so a squad that only fights is not the same fighter
 as one that also works. A guild's fight is drawn at `(mean combat, mean work)`, rounded.
 
-**The Medic is a switch, not a game feature yet** (backlog B1, not built). `--medic` makes
-`Sim.heal` a one-hour stop at the City where every hurt member is mended for the Minor Healing
-Potions it would take (`ceil(missing HP / 3.5)` at 0.7x the catalogue price); a guild that cannot
-pay it and still eat tomorrow rests instead. Layer 1 does the same: with `medic` a bout's damage
+**The Medic is in the game** (the Apothecary's MEDIC tab, `medic.py`) and `--medic` is the sim's
+switch for it: `Sim.heal` prices and cures through the same `medic.quote` / `medic.cure` the screen
+uses (HP, sickness and poison, up to `economy.MEDIC_MAX_HOURS`, at `MEDIC_PRICE_FACTOR` 0.7x the
+potions and doses it would take). A guild that cannot pay it and still eat tomorrow rests instead. Layer 1 does the same: with `medic` a bout's damage
 costs potions and the bouts a day stop being capped by healing.
 
 **The Claim** runs the real stage machine (`wilds_claim_*`, `campaign.advance(dt=24)`,
@@ -255,7 +255,7 @@ keeps in a week, so the ladder is capital-gated, not time-gated. The champion bo
 its purse is $120 for a $60 stake and the AI wins it 75%. The Ribbit Brothers (six a side,
 $450 purse, $240 stake) are won 3-7% of the time by the AI and are layer 1 only.
 
-**10. The Medic as the backlog specifies it is a luxury, not a time saver.** In layer 1 it lifts
+**10. The Medic as built is a luxury, not a time saver.** In layer 1 it lifts
 the Games from about 0.5 bouts a day (healing-capped) to the walk's limit of 3, and 10x the XP a
 day, if you pay for it. A Minor Healing Potion
 costs $80 and restores 3.5 HP; at 0.7x that is **$16 an HP**. Resting costs a lumberjack about
@@ -267,6 +267,8 @@ capital-gated: bouts rise from 2.2 to **4.1 only at 5% of the potion price** (ab
 and XP from 1.3 to 1.8 per member. The Medic is worth building for the late game, where a squad's
 day is worth $50 or more; as a fix for the first month's slow healing it would have to cost about
 what a rest costs.
+The hospital stay (a long poison, over 24 h) is priced the same way, so it is a luxury too: the sim does
+not use it, a person pays it for a patient a rest would not cure.
 
 **11. The Claim is a gamble that needs healing it does not have.** From level 3 with $250, 12
 days of food and the fence Lumber, the `claimer` establishes the Claim in **13%** of guilds at
@@ -363,6 +365,20 @@ barrier to the Wilds, not a main danger) after the first run of this finding gav
 the starting kit on day 0, and the Champion is tried at the stake, not at combat 2. The report's
 sustain table now lists `rush`, `games`, `climber` and `human` too.
 
+**19. The Champion after Adelio's CON 14 (9 HP), level 0.** The AI squad now wins the bout 27%
+(it was 75%), so the AI loses $9 a run; a person at 80% nets $12 a member a run ($13 a day), at 95%
+$18. It stays a one-off gate (shown, not judged) and pays less than the Wilds hunt for a person
+(about $15 a day at 80%), so stake $20 and purse $120 are left alone. The recorded day-6 Champion
+at combat 0 is a win at the 80-95% a person plays, not at the AI's 27%. With gear on
+(`unit_compare.py --armor "Studded Leather" --weapon Axe`) a combat-0 squad has AC 12 against his 15,
+so he is still the fight a bare squad should not take.
+
+**20. `human` wipes because of its hunt threshold, not because people die.** 20 guilds, 30 days,
+profile from the two recorded runs: wiped 30% (AI) / 40% (80% skill), 100% hungry; the recordings
+hold no death in 25 days. The profile hunts from mean combat 0.5 (`hunt_min_level`), taken from
+three hunts that were all won. With `hunt_min_level` 2.0 the wipe is 0% (80% skill). Two short
+runs cannot set that threshold; it needs the third run the recorder was built for.
+
 ## Decisions made without asking
 
 Everything below was a call I made from how the game and the backlog are going. Each could have
@@ -415,8 +431,9 @@ gone another way; the ones I was least sure of are repeated as questions in the 
     the lumber floor would have failed them for the wrong reason. Brawl and capture the flag are
     also not compared with each other by the dominance scan (they differ by noise); the scan now
     compares only activities of different roles.
-19. **The Medic is a switch (`--medic`), priced as the backlog says** (potions at 0.7x), and
-    `--medic-factor` changes the price. It is not in the game; nothing else in the code reads it.
+19. **The Medic is a switch (`--medic`) over the game's own `medic.quote` / `medic.cure`**
+    (potions at 0.7x); `--medic-factor` changes the price. The game offers it (backlog B1 is built),
+    but the switch stays off by default so the other findings keep their baseline.
 20. **A hurt guild goes to the Medic only if it can afford the bill and still eat tomorrow**;
     otherwise it rests. The policies themselves did not change.
 21. **The Claim expedition buys 12 days of food and the 10 Lumber, walks, and runs the stages in

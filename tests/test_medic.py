@@ -179,3 +179,108 @@ def test_the_sim_treats_with_the_same_quotes_for_sickness_and_poison():
     assert sim.treat()
     assert before - sim.money == cost == sim.treated
     assert u.hp == u.hp_max and not u.sick and not u.poisoned
+
+
+def _poisoned(stacks=4, **kw):
+    u = _unit(**kw)
+    for _ in range(stacks):
+        u.add_poison(VENOM, 12)
+    return u
+
+
+def test_a_lone_patient_is_admitted_on_their_own_group():
+    u = _poisoned()
+    guild, g = _setup(u)
+    q = medic.quote(u)
+    ok, _ = medic.admit(guild, g, u)
+    assert ok and g.order.kind == "hospital" and g.order.remaining == q.hours
+    assert g.locked and u.money == 1000 - q.cost and u.poisoned
+
+
+def test_an_admitted_patient_splits_into_a_locked_group_and_the_rest_stay_free():
+    sick, mate = _poisoned(), _unit()
+    guild, g = _setup(sick, mate)
+    ok, _ = medic.admit(guild, g, sick)
+    ward = next(x for x in guild.groups if sick in x.members)
+    assert ok and ward is not g and ward.members == [sick] and g.members == [mate]
+    assert ward.order.kind == "hospital" and ward.locked and not g.locked
+    assert guild.clock.hour_of_day == 12
+    with pytest.raises(ValueError):
+        guild.merge_groups(g, ward)
+
+
+def test_the_stay_runs_on_the_clock_and_discharges_cured():
+    from gartok import campaign
+    sick, mate = _poisoned(), _unit()
+    guild, g = _setup(sick, mate)
+    hours = medic.quote(sick).hours
+    medic.admit(guild, g, sick)
+    ward = next(x for x in guild.groups if sick in x.members)
+    res = campaign.advance(guild)
+    assert ward.order is None and not ward.locked
+    assert sick.hp == sick.hp_max and not sick.poisoned
+    assert any("leaves the hospital cured" in e for e in res.events)
+    assert guild.clock.hour_of_day == (12 + hours) % 24
+    guild.merge_groups(g, ward)
+    assert set(g.members) == {sick, mate}
+
+
+def test_with_no_free_slot_the_whole_group_waits():
+    sick, mate = _poisoned(), _unit()
+    guild, g = _setup(sick, mate)
+    guild.groups += [Group([_unit()], node="city") for _ in range(guild.group_slots)]
+    assert not guild.free_slots
+    hours = medic.quote(sick).hours
+    ok, lines = medic.admit(guild, g, sick)
+    assert ok and "waits" in lines[0] and len(guild.groups) == 1 + guild.group_slots
+    assert g.members == [sick, mate] and g.order is None
+    assert not sick.poisoned and guild.clock.hour_of_day == (12 + hours) % 24
+
+
+def test_admit_refuses_what_a_visit_covers_or_the_group_cannot_pay():
+    guild, g = _setup(_unit(missing=2))
+    assert not medic.admit(guild, g, g.members[0])[0]
+    guild, g = _setup(_unit())
+    assert not medic.admit(guild, g, g.members[0])[0]
+    poor = _poisoned(money=0)
+    guild, g = _setup(poor)
+    ok, lines = medic.admit(guild, g, poor)
+    assert not ok and "pay" in lines[0] and g.order is None and poor.poisoned
+
+
+def test_admit_refuses_a_group_with_an_order():
+    from gartok import orders
+    u = _poisoned()
+    guild, g = _setup(u)
+    g.order = orders.rest(8)
+    ok, _ = medic.admit(guild, g, u)
+    assert not ok and u.money == 1000
+
+
+def test_a_hospital_order_survives_a_save():
+    from gartok import persist
+    u = _poisoned()
+    guild, g = _setup(u)
+    medic.admit(guild, g, u)
+    back = persist.order_from_dict(persist.order_to_dict(g.order))
+    assert back.kind == "hospital" and back.remaining == g.order.remaining
+
+
+def test_screen_admits_a_long_poison_alone():
+    import pygame
+    sick, hurt = _poisoned(), _unit(missing=2)
+    guild, g = _setup(sick, hurt)
+    scr = MedicScreen(fonts(), guild, g, lambda: None)
+    surf = pygame.Surface((1280, 720))
+    scr.draw(surf)
+    rects = dict(scr.row_rects)
+    scr._click(rects[hurt.uid].center)
+    scr._click(rects[sick.uid].center)
+    assert scr.picked == {sick.uid}
+    scr.draw(surf)
+    scr._click(rects[hurt.uid].center)
+    assert scr.picked == {hurt.uid}
+    scr.picked = {sick.uid}
+    scr.draw(surf)
+    scr._click(scr.treat_rect.center)
+    assert any(x.order and x.order.kind == "hospital" for x in guild.groups) and not scr.picked

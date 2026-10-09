@@ -2,7 +2,8 @@
 footer that totals the picked ones.
 
 `rows` is a list of dicts: `{key, name, lines: [str], cost, hours, picked, enabled,
-note}` (`lines` the ailments, `note` why a row cannot be picked). Returns
+note}` (`lines` the ailments). `stay` is the hospital stay picked, if any: its footer line
+and button replace the quick treatment's. Returns
 `(row_rects, treat_rect)`; `row_rects` is `[(key, rect)]`.
 """
 
@@ -14,7 +15,7 @@ from .tokens import T, mix
 ROW_H = T.S * 8
 
 
-def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos):
+def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos, stay=None):
     row_rects = []
     y = rect.y
     footer_h = T.S * 6
@@ -40,9 +41,10 @@ def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos):
 
     hline(surf, rect.x, rect.right, list_bottom)
     fy = list_bottom + T.S * 2
-    summary = f"${total_cost}  ·  {total_hours} h for the whole group" if total_cost else "pick who to treat"
+    who = stay or "for the whole group"
+    summary = f"${total_cost}  ·  {total_hours} h {who}" if total_cost else "pick who to treat"
     text(surf, F["bodyb"], summary, (rect.x, fy + T.S), T.BLOOD if total_cost and not can_pay else T.TX)
     treat = pygame.Rect(rect.right - T.S * 22, fy, T.S * 22, T.S * 4)
-    draw_button(surf, F, treat, "TREAT" if can_pay or not total_cost else "CANNOT PAY",
+    draw_button(surf, F, treat, ("ADMIT" if stay else "TREAT") if can_pay or not total_cost else "CANNOT PAY",
                 primary=bool(total_cost and can_pay), enabled=bool(total_cost and can_pay), mpos=mpos)
     return row_rects, treat

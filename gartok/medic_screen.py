@@ -35,20 +35,33 @@ class MedicScreen(Screen):
         return [q for q in medic.quotes(self.group.members) if q.needs_care]
 
     def _picked_quotes(self):
-        return [q for q in self._quotes() if q.uid in self.picked and q.offered]
+        return [q for q in self._quotes() if q.uid in self.picked]
+
+    def _stay(self):
+        """The one patient picked for a hospital stay, or None (a stay is picked alone)."""
+        return next((q for q in self._picked_quotes() if not q.offered), None)
 
     def _click(self, pos):
         if self.treat_rect.collidepoint(pos):
             patients = [u for u in self.group.members if u.uid in self.picked]
-            ok, lines = medic.treat(self.guild, self.group, patients)
+            if self._stay():
+                ok, lines = medic.admit(self.guild, self.group, patients[0])
+            else:
+                ok, lines = medic.treat(self.guild, self.group, patients)
             self.notice = "  ".join(lines)
             if ok:
                 self.picked.clear()
             return
+        offered = {q.uid: q.offered for q in self._quotes()}
         for uid, rect in self.row_rects:
             if rect.collidepoint(pos):
-                self.picked ^= {uid}
                 self.notice = None
+                if uid in self.picked:
+                    self.picked.discard(uid)
+                elif offered[uid]:
+                    self.picked = {u for u in self.picked if offered.get(u)} | {uid}
+                else:
+                    self.picked = {uid}
                 return
 
     def draw(self, screen):
@@ -56,7 +69,8 @@ class MedicScreen(Screen):
         screen.fill(T.TABLE)
         m = T.S * 3
         caps(screen, F["head"], "THE APOTHECARY (MEDIC)", (m, m), T.TX)
-        sub = "Quick treatment: potions and doses at a discount, the whole group waits."
+        sub = ("Quick treatment: potions and doses at a discount, the whole group waits. "
+               "A long poison is a hospital stay.")
         text(screen, F["body"], sub, (m, m + T.S * 4), T.TX_MUTED)
 
         top = m + T.S * 8
@@ -69,11 +83,18 @@ class MedicScreen(Screen):
         area = pygame.Rect(m, top, screen.get_width() - 2 * m, screen.get_height() - top - m - notice_h)
 
         picked = self._picked_quotes()
+        stay = self._stay()
         cost, hours = medic.total(picked)
-        rows = [{"key": q.uid, "name": q.name, "lines": [f"{lbl} ${c}" for lbl, c, _ in q.parts],
-                 "cost": q.cost, "hours": q.hours, "picked": q.uid in self.picked and q.offered,
-                 "enabled": q.offered, "note": "needs a hospital stay (over 24 h)"}
+        def lines(q):
+            return [f"{lbl} ${c}" for lbl, c, _ in q.parts] + ([] if q.offered else ["hospital stay"])
+
+        rows = [{"key": q.uid, "name": q.name, "lines": lines(q),
+                 "cost": q.cost, "hours": q.hours, "picked": q.uid in self.picked,
+                 "enabled": True, "note": ""}
                 for q in self._quotes()]
         can_pay = sum(u.money for u in self.group.members) >= cost
-        self.row_rects, self.treat_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse)
+        where = ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
+                 else "the whole group waits (no free group slot)")
+        self.row_rects, self.treat_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,
+                                                     stay=where if stay else None)
         set_pointer(any(r.collidepoint(self.mouse) for _, r in self.row_rects) or self.treat_rect.collidepoint(self.mouse))

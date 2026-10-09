@@ -4,13 +4,15 @@ poisoned for the potions and doses it would take, at a discount (`economy.MEDIC_
 A patient's cost is the *expected* consumables: Minor Healing Potions for lost HP, one
 First Aid Kit charge for sickness, Antidotes for poison (every dose assumed to take).
 The clock moves for the whole group by the longest treatment picked. Anything past
-`economy.MEDIC_MAX_HOURS` is not offered here.
+`economy.MEDIC_MAX_HOURS` is not a visit but a hospital stay (`admit`): the patient splits off
+into a group of their own on a `hospital` order and leaves cured when it runs out. With no free
+group slot the whole group waits with them instead. Either way the price is the quote's.
 """
 
 import math
 from dataclasses import dataclass
 
-from . import economy, items, poisons
+from . import economy, items, orders, poisons
 
 POTION = "Minor Healing Potion"
 
@@ -95,3 +97,40 @@ def treat(guild, group, patients):
             cure(u)
     names = ", ".join(u.name for u, _ in picked)
     return True, [f"The Medic treats {names}: ${cost}, {hours} h."] + list(events)
+
+
+def admit(guild, group, patient):
+    """Admit `patient` (a unit of `group`) for a treatment longer than a visit. The group pays now.
+    A patient with a group slot to spare splits off on a `hospital` order (a lone patient's own
+    group takes it); with none, the whole group waits the stay out and the patient is cured.
+    Returns `(ok, lines)`; nothing happens when the patient is fine, needs only a visit,
+    cannot be paid for or the group is busy."""
+    q = quote(patient)
+    if not q.needs_care:
+        return False, [f"{patient.name} needs no treatment."]
+    if q.offered:
+        return False, [f"{patient.name} needs only a visit, not a hospital stay."]
+    if group.locked:
+        return False, ["A group with an order in flight cannot admit anyone."]
+    if sum(u.money for u in group.members) < q.cost:
+        return False, [f"The group cannot pay ${q.cost}."]
+    economy.charge_richest_first(group.members, q.cost)
+    if len(group.members) > 1 and not guild.free_slots:
+        events, _ = guild.pass_time(q.hours)
+        if patient in guild.roster:
+            cure(patient)
+        wait = f"No free group slot: the group waits with {patient.name} (${q.cost}, {q.hours} h)."
+        return True, [wait] + list(events)
+    ward = group if len(group.members) == 1 else guild.split_group(
+        group, [patient], name=f"{patient.name} (hospital)")
+    ward.order = orders.hospital(q.hours)
+    return True, [f"{patient.name} is admitted to the hospital: ${q.cost}, {q.hours} h."]
+
+
+def discharge(group):
+    """Cures everyone in the ward; the player merges them back by hand."""
+    lines = []
+    for u in group.members:
+        cure(u)
+        lines.append(f"{u.name} leaves the hospital cured.")
+    return lines

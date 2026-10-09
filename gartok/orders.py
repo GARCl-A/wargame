@@ -2,7 +2,8 @@
 
 An order is issued once (`travel`/`work`/`rest`/`interactive`) and then ticked down by
 `campaign.advance` until it completes. `travel`, `work` and `rest` resolve silently
-(auto) -- the group just arrives, gets paid, or has rested (and sits down to eat). Every other kind (`market`,
+(auto) -- the group just arrives, gets paid, has rested (and sits down to eat), or is
+discharged from the hospital cured (`medic.discharge`). Every other kind (`market`,
 `bank`, `recruit`, `hunt`, `arena`, `tanner`) is interactive: the order only
 covers *getting to* the activity, then `campaign.advance` hands the group back
 as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
@@ -51,7 +52,7 @@ from dataclasses import dataclass
 
 from . import world
 
-AUTO_KINDS = frozenset({"travel", "work", "rest"})
+AUTO_KINDS = frozenset({"travel", "work", "rest", "hospital"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable"})
@@ -126,6 +127,13 @@ def rest(hours):
     as resting (`Guild.pass_time`) -- it heals -- instead of busy. `rest.py`
     says how long a stretch is worth, for the "until full" row."""
     return Order("rest", eta=hours, remaining=hours, hours=hours)
+
+
+def hospital(hours):
+    """A patient admitted by the Medic (`medic.admit`): the group they split off into waits
+    `hours` and leaves cured. Not a rest, so nothing heals on the side, and not cancellable:
+    the stay is paid up front."""
+    return Order("hospital", eta=hours, remaining=hours, hours=hours)
 
 
 def interactive(kind, hours=APPROACH_HOURS):

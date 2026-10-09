@@ -36,6 +36,7 @@ from . import (
     factions,
     justice,
     loot,
+    medic,
     missions,
     orders,
     recorder,
@@ -350,6 +351,8 @@ def _advance(guild, dt=None, busy=()):
             events += guild._pay_shift(g.members, order.hours, order.eta)
         elif order.kind == "rest":
             events += guild.eat_now_pass(g.members)
+        elif order.kind == "hospital":
+            events += medic.discharge(g)
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
     claim_events, claim_pending = _wilds_claim_attack_check(guild)

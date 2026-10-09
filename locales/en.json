@@ -182,7 +182,8 @@
       "title": "The Medic",
       "body": [
         "A quick cure for the group at the Apothecary. Pick the patients; the price is the Minor Healing Potions, First Aid Kit charge and Antidotes it would take, sold to you at a discount. Anyone picked leaves at full HP, cured and unpoisoned.",
-        "The clock moves for the whole group by the longest treatment: an hour for wounds, eight for sickness, a day for light poison. Heavier poison needs a hospital stay and is not offered here. The group pays from its packs, richest first."
+        "The clock moves for the whole group by the longest treatment: an hour for wounds, eight for sickness, a day for light poison. The group pays from its packs, richest first.",
+        "Heavier poison is a hospital stay: pick that patient alone and ADMIT them. They split off into a group of their own, locked until the stay is over, and come out cured; merge them back by hand. With no free group slot the whole group waits with them instead."
       ]
     },
     "property": {

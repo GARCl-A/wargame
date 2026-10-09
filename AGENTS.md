@@ -71,7 +71,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `menu_screen.py` / `saves_screen.py` | guild list at launch → every save of a guild, with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
-| `medic.py` | the Medic's quick treatment (Apothecary hub, MEDIC tab): HP / sickness / poison priced as the expected potions and doses at `economy.MEDIC_PRICE_FACTOR`, one clock for the group; the sim prices it from the same constants |
+| `medic.py` | the Medic's quick treatment (Apothecary hub, MEDIC tab): HP / sickness / poison priced as the expected potions and doses at `economy.MEDIC_PRICE_FACTOR`, one clock for the group; past `MEDIC_MAX_HOURS` it is a hospital stay (`admit`: the patient splits off on a `hospital` order, `campaign.advance` calls `discharge`); the sim prices it from the same constants |
 | `craft_level.py` | a recipe's level, worked out from its difficulty (who may start it, scarce reagents, batch time), never set by hand; it blocks nobody, it is the label and the work-XP multiplier |
 | `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS`, a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |

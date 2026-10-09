@@ -6,6 +6,7 @@ valid talent picks -- the way a player's squad ends up -- beside authored NPCs
 
     python scripts/unit_compare.py                    # combat 2 vs Adelio and his goons
     python scripts/unit_compare.py --combat 4 --work 1 --npc the-ancient-archivist -n 5000
+    python scripts/unit_compare.py --armor "Studded Leather" --weapon Axe   # a kitted squad
 """
 
 import argparse
@@ -16,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from gartok import arena, npc_lib, talents
+from gartok import arena, items, npc_lib, talents
 from gartok.unit import Unit
 
 METRICS = ("HP", "AC", "MD", "Speed", "To-hit", "Avg dmg", "Dmg/turn vs AC10")
@@ -60,8 +61,16 @@ def pick_talents(u, rng):
             u.choose_talent(track, rng.choice(options))
 
 
-def drafted(combat, work, rng):
-    u = Unit("player")
+def kit(u, armor, weapon):
+    if armor:
+        u.give_to_armor(armor)
+    if weapon:
+        u.give_to_hand(weapon)
+    return u
+
+
+def drafted(combat, work, rng, armor=None, weapon=None):
+    u = kit(Unit("player"), armor, weapon)
     u.set_track_level("combat", combat)
     u.set_track_level("work", work)
     pick_talents(u, rng)
@@ -83,15 +92,23 @@ def main():
     ap.add_argument("--combat", type=int, default=2)
     ap.add_argument("--work", type=int, default=0)
     ap.add_argument("--npc", action="append", default=None, help="NPC slug(s); default: the champion")
+    ap.add_argument("--armor", help="armor every squad member wears (draft bodies are bare)")
+    ap.add_argument("--weapon", help="weapon every squad member wields")
     ap.add_argument("--seed", type=int, default=1)
     args = ap.parse_args()
     rng = random.Random(args.seed)
     random.seed(args.seed)
 
-    squad = [drafted(args.combat, args.work, rng) for _ in range(args.n)]
+    for name in (args.armor, args.weapon):
+        if name and items.get(name) is None:
+            ap.error(f"unknown item: {name}")
+
+    squad = [drafted(args.combat, args.work, rng, args.armor, args.weapon) for _ in range(args.n)]
+    gear = ", ".join(x for x in (args.armor, args.weapon) if x) or "bare"
     summarize(f"Draft body lifted to combat {args.combat} / work {args.work} "
-              f"(racial {squad[0].racial_level})", [stats(u) for u in squad])
-    summarize("Draft body, level 0", [stats(Unit("player")) for _ in range(args.n)])
+              f"(racial {squad[0].racial_level}), {gear}", [stats(u) for u in squad])
+    summarize(f"Draft body, level 0, {gear}",
+              [stats(kit(Unit("player"), args.armor, args.weapon)) for _ in range(args.n)])
     summarize(f"Champion goon (enemy, level 0) x{arena.CHAMPION_GOONS} per bout",
               [stats(Unit("enemy")) for _ in range(args.n)])
 
