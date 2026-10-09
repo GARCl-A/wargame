@@ -5,17 +5,20 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates, not checked against the code. When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-09. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
-Three parts:
+Parts:
 
 - **Ready to do** — the task is defined enough to start. Sorted by size: small (a sitting),
-  large (a system: UI, AI and tests), epic (its own arc).
+  *Architecture debt* (past choices to pay when a feature needs them), large (a system: UI,
+  AI and tests), *Art* (made by hand) and epic (its own arc).
 - **Needs more information** — a design question, a repro or another system has to land
   before the task can be sized.
 - **Starting items waiting on another system** — not a question: a list of items whose
   system does not exist yet.
+
+The *Suggested order* below comes first.
 
 ---
 
@@ -25,12 +28,11 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. Mine + Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
-2. Vocations in the draft (decided, table below).
+1. Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
+2. Vocations in the draft (perks and the travel stance are decided; the numbers of Delvers, Wilds and Caravan are still to set, see *Needs more information*).
 3. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
    player the AI does not match yet.
-4. Docs refresh (Small, below) can go in any sitting. The *Architecture debt* section lists
-   what to pay on the way.
+4. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -40,17 +42,28 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
 
 ## Small
 
-- **README and RULES describe an older game.** They sell "tactical squad + factions"; the code
-  is an open-world guild manager. The README barely mentions wagons and animals, the Claim,
-  the bank, the Medic, vocations or the economy sim. Refresh both to today's game (RULES
-  stays prose, `REFERENCE.md` stays generated).
 - **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
   (2026-10-09): the `balanced` policy reaches the milestone in 0% of guilds (need 50%), cost
   from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
   with *Feed the recorded runs* and the planner, not by tuning prices. The run exited 0, so
   this does not break a gate.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
-  lists them in `tools`, the Chisel on the Horn, the Shovel on the Mine and Chains on *Prisoners*.
+  lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
+  works with the Pick, which the Miner already starts with.
+- **Mine leftovers (built 2026-10-09).** (1) *Amethyst* was meant as a Mine drop, but nothing
+  rolls it: a shift pays only the wage. Decide a chance per shift (the stone is worth $120, so
+  it must be rare enough not to beat the wage) or drop the idea. (2) *Iron Ore* has no recipe or
+  use until the Smith's chain exists. (3) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
+  work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
+  guilds are wiped on the road; with a player winning 80% (the report's setting) `miner` earns
+  $166 a member by day 30 against the yard's $67, reaches the day-30 milestone in 70% of guilds
+  (every other policy: 0-20%) and loses 30% of them. A 2-shift stay is worse than the yard.
+  So the $1 premium pays only for a long stay, and the Mine is the best way to the
+  milestone. **Decided 2026-10-09: keep it** (the risk and the time are what it pays for); re-judge
+  after a playtest, and if it is too strong a lower premium or a longer road is the lever, not a bigger one. The crafter policy
+  still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
+  unpriced. (4) The Mine has no art or map icon of its own (it uses the
+  work glyph), and no tutorial line.
 
 ## Architecture debt
 
@@ -63,7 +76,7 @@ pointed to, not repeated.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
 - **Big screen files.** `app.py` (1188 lines, 102 `def`s) is the wiring hub; `map_screen.py`,
-  `market_screen.py` and `battle_screen.py` run 800-950. Not critical. When one takes a new node
+  `market_screen.py` and `battle_screen.py` run 830-980. Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
   any outside playtest decide: keep "an older shape does not load" with a clear message, or add
@@ -81,21 +94,6 @@ pointed to, not repeated.
      reward is learning the recipe; the last one points at the ox.
   4. The recipe in `items.CRAFTING_RECIPES` (`craft_level.py` derives the level), then re-run
      `scripts/economy_report.py` (a new craft-for-sale line). Needs tests, tutorial and RULES line.
-- **Mine (new node, a copy of the Lumber Yard elsewhere).** A work node plus a shop on the
-  plain `work` order (not `solo`). Always visible, not a hidden node. **Stone Brick, Iron Ore
-  (new item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven will
-  need a trip to the Mine. Amethyst is a Mine drop (loot).
-  - **Place (decided):** off the city. Edges: **Old Road 6 h, The Claim 2 h**. Road -> Mine ->
-    Claim is 8 h, the same as Road -> Wilds -> Claim today, so there is a second route of equal
-    length to the Claim; re-check the route Dijkstra and the sim.
-  - **Work (decided):** same mechanic as the yard. Without a Pickaxe the foreman's pick pays
-    less; with your own Pickaxe it pays more, at the same ratio as the yard's Axe (`LUMBER_AXE_RATIO = (4, 3)`, decided).
-  - **Pays more than the yard (decided in principle):** the way there crosses the Old Road
-    (`unsafe`, ambush table), and a round trip is the minimum: nobody works there at zero cost.
-    **Decided:** one unit of money more than the yard ($1 per paid block); confirm with
-    `scripts/economy_report.py` that it covers the round trip's risk.
-  - Iron Bar stays with the Smith's chain; Iron Ore feeds it later. Needs the node, shop, UI,
-    sim support and tests.
 - **Item properties: base material, source, rarity (design first, feeds the economy).** Every
   item is craftable except the **base materials**: an item with no recipe is a base material
   (derived, like `craft_level.py`, not set by hand), and each one must **declare its source**:
@@ -127,7 +125,7 @@ pointed to, not repeated.
   - **To define while building:** which field sits behind which success margin, how the
     check scales with the target's level, whether knowledge outlasts the fight (a creature
     met before). Needs the action, AI support and tests.
-- **Prisoners.** (Not started; decide whether it lands before the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
+- **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** Every economy number depends on how often the
   squad wins, and a person wins far more than `ai.py` does: measured in the economy report
@@ -150,7 +148,7 @@ pointed to, not repeated.
   - **Hand-over (decided):** a fight with a fixed setup (the Ribbit Brothers, 12 units) is
     played by a person on *both* sides: two human controllers, player 1 and player 2, so the
     log holds good decisions for each side. A controller per team (human or AI) is the seam;
-    not checked whether `battle.py` has one.
+    checked 2026-10-09: it does not. `battle_screen.py` hardcodes control by team string (`active.team == "enemy"` calls `ai.take_turn`, `"player"` takes clicks; lines 138, 151, 364), so the seam has to be built.
   - Needs: a combat event in `recorder.py`, the per-team controller, and an analysis script
     for the combat rows.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
@@ -163,7 +161,7 @@ pointed to, not repeated.
   is what the recordings show a person doing. It wipes 30-40% of 20 guilds, and that is the
   threshold, not the player: `hunt_min_level` 0.5 comes from three won hunts, and at 2.0 the
   wipe is 0% ([finding 20](economy_sim_v2.md)). Settling it needs a third run (to be played by
-  the user), and it must include an ambush on the Old Road, which neither run touched. Then compare
+  the user, after the vocations land), and it must include an ambush on the Old Road, which neither run touched. Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the
@@ -199,7 +197,7 @@ pointed to, not repeated.
   - **Shops:** Smith, Apothecary and Tanner are new nodes outside the city (today `forge`,
     `apothecary` and `tanner` are functions of `city`, with no till of their own). The Smith and the Apothecary take their
     crafting with them, as tabs. Farm (today only the stables), Tavern, Lumber Yard (a shop
-    *and* a work node) and Market already exist. Rough split: Smith = weapons, shields,
+    *and* a work node), the Mine (the same, with its own shelf) and Market already exist. Rough split: Smith = weapons, shields,
     metal armour, Iron Bar; Tanner = leather armour, Cloak, Hide, Quiver; Apothecary =
     potions, Vial, First Aid Kit; Farm = raw food and Salt; Tavern = Beer and Jerky (the only
     ready-made food today); Lumber Yard = Lumber; Mine = Stone Brick, Iron Ore and Coal;
@@ -239,9 +237,9 @@ the ones that also need code say so. Order is the suggested priority.
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur
   and Orc (Halfling has 14, Grippli 17).
-- **Map node icons.** The 13 nodes share three kinds of glyph (`map_screen.KIND_ICON`). Give
-  Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient Ruins and the Claim a mark of
-  their own. The map works as it is, so this is polish.
+- **Map node icons.** The 14 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
+  share the work glyph). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
+  Ruins, the Claim and the Mine a mark of their own. The map works as it is, so this is polish.
 - **Occupation icons.** `icons/body` and `icons/hat` are staged and nothing loads them. If
   the character sheet is to show the vocation, pick a consistent icon per occupation (18 or
   more). Depends on the sheet calling it.
@@ -289,15 +287,8 @@ building them:
     Reading the map does not consume it (decided). The revealed set lives in the guild's save (decided; a new optional field, so its neutral value goes in `persist.PAYLOAD_DEFAULTS`).
   - **To define:** the exact reputation gate and the intermediate mission; the three
     factions as nodes with their own deeds (see `factions.py`); how each school's study
-    differs (`magic.py`); whether the three are exclusive. Holy Symbol (below) belongs to
+    differs (`magic.py`); the three schools are **not exclusive** (decided 2026-10-09: anyone may study any; the barrier is study cost). Holy Symbol (below) belongs to
     the faith school.
-
-- **Better food (not started).** Food only quells hunger today and the Potato does that at the
-  lowest price, so nothing else is worth buying. Add dishes that are better and dearer and spoil
-  fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
-  Marsh's slower rot (see the charter) is priced low until this lands. Open: what a good meal
-  gives (HP, a buff, morale), the recipes and who cooks (`Crafter`, the Claim oven), and the
-  cost to the economy sim (`cheapest_food_price` stops being the one price of a meal).
 
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
@@ -308,20 +299,20 @@ building them:
       races; the other 3 come from the normal draw (natural race weights, all 18 races). A
       commission token re-rolls only the clicked card, from the natural race table and outside
       the vocation. Every race is in at least one vocation.
-    - **The 6 (first cut, names and lists can change):**
+    - **The 6 (decided 2026-10-09: names and race lists are closed):**
 
       | Vocation | Races | Perk |
       |---|---|---|
-      | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (5% fewer walk-outs); the defense penalty of overextension is unchanged |
-      | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | more yield from gathering work (which orders count and how much: to set) |
-      | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of an ambush while the group's travel stance is *Cautious* (with a floor, not immunity; to set) |
+      | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (5% fewer walk-outs); the defense penalty of overextension is unchanged (weak on purpose, confirmed 2026-10-09) |
+      | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering work: work shifts and hunt/forage (decided 2026-10-09) |
+      | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of an ambush while the group's travel stance is *Cautious* (x0.8 on the chance, multiplicative; decided 2026-10-09) |
       | Mystics | Kobold, Gnome, Elf, Sprite, Kenku, Human | faster spell study (dormant until the magic line exists) |
-      | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | faster travel on the world map (check how it stacks with wagons and animals) |
+      | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | -15% travel hours, multiplicative after wagon and animal speed (decided 2026-10-09) |
       | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | the guild's food does not age one day in ten (`guild_upkeep._rot_food`; decided, replaces the extra hunger day) |
 
     - **Perk scope (decided):** the perk is the guild's, every member has it, not only the
       members of the listed races.
-    - **Travel stance (decided, new, the Wilds perk needs it):** each group gets a stance, *Normal*
+    - **Travel stance (decided, new, the Wilds perk needs it):** each group gets a stance (**decided: a `Group.stance` field, not a guild switch**), *Normal*
       (nothing changes) or *Cautious* (applies the vocation's ambush reduction, if the guild has
       one). The player flips it, so the same group can travel quiet on the Old Road at level 3-4
       and stay *Normal* before a hunt for wolf Hide. **Covers every rolled forced fight (decided):**
@@ -329,9 +320,10 @@ building them:
       (`hunt.AMBUSH_CHANCE_PER_HOUR`) and the other `orders.FORCED_KINDS` that roll a chance
       (guard patrol, Claim raid and seizure; which of them roll is not checked). The Elf's
       *Woodland Scout* talent halves the road and hunt chance today, always on
-      (`campaign._road_ambush_catch`, `hunt.hunt_stretch`), so it moves under *Cautious* too:
-      a guild with an Elf gets something from the stance without the perk, and the two stack down
-      to a floor. *Cautious* costs nothing but the XP and loot given up (decided). The hunt screen
+      (`campaign._road_ambush_catch`, `hunt.hunt_stretch`). **Decided 2026-10-09:** *Cautious*
+      is a multiplier of 1 with no bonus; the guild perk makes it x0.8 and Woodland Scout x0.9,
+      and they multiply (road 0.2 -> 0.144 with both), so there is no floor. This replaces the
+      always-on halving: the talent now does something only under *Cautious*, and its tests change. *Cautious* costs nothing but the XP and loot given up (decided). The hunt screen
       shows the group's stance. Open: the group screen control and AI use of it; the tests of the
       talent; a new optional field in `persist.PAYLOAD_DEFAULTS`. Caravan and Marsh stay unconditional. Perks that fire every day
       for everyone get small numbers (about 10-20%), judged against the guild's daily wage, not
@@ -339,7 +331,7 @@ building them:
     - **Marsh rot (decided):** one day in ten no food ages, by the guild's clock (day % 10), not a
       roll per stack; a stack already ages as one entry in `_rot_food`.
       It prices at under 1% of the daily wage today (Potato is cheap and eats as well as any food);
-      that is accepted until *Better food* below gives rotting food a cost worth saving.
+      that is accepted until *Better food* (last in this part) gives rotting food a cost worth saving.
     - **Yardstick (decided): copper per guild-day**, measured by `scripts/vocation_report.py`
       (each perk's value as a share of the guild's daily wage). A lost unit costs **7 days of its
       production** (the weekly recruit pool is the time to replace it); a desertion costs the same
@@ -350,8 +342,7 @@ building them:
       that recruits all it can; going wide is the intended play (Goblin and Hobgoblin share a
       language, so the draft opens two recruit windows). Mystics cannot be measured until
       the magic line exists.
-    - **To set while building:** the numbers of Delvers, Wilds (the Cautious reduction and its
-      floor) and Caravan; Delvers and Caravan start at about 15%, checked against the share of
+    - **To set while building:** the exact numbers are set above (Delvers +15%, Caravan -15%, Wilds x0.8); Delvers and Caravan start at about 15%, checked against the share of
       the daily wage that `vocation_report.py` prints. Needs the vocation registry, pool rule in
       `draft_screen.py`, perk hooks, save field and tests (including the pool guarantee and each perk).
   - **Oath (deferred, not scheduled)** (separate from the vocation): *what binds the members
@@ -365,6 +356,13 @@ building them:
     a richer composed banner, and an opening scene: a founding charter that writes itself
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
+
+- **Better food (not started).** Food only quells hunger today and the Potato does that at the
+  lowest price, so nothing else is worth buying. Add dishes that are better and dearer and spoil
+  fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
+  Marsh's slower rot (see the charter) is priced low until this lands. Open: what a good meal
+  gives (HP, a buff, morale), the recipes and who cooks (`Crafter`, the Claim oven), and the
+  cost to the economy sim (`cheapest_food_price` stops being the one price of a meal).
 
 ---
 

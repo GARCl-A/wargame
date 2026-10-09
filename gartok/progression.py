@@ -95,19 +95,18 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     """Return human-readable descriptions of work activities that grant work-XP
     to a worker of `worker_level`."""
     activities = []
-    # Lumber yard
-    if worker_level == 0:
-        activities.append("Lumber Yard (bare-handed or Axe)")
-    elif worker_level == 1:
-        if unit is not None:
-            from . import economy
-            has_axe = economy.lumber_level(unit) >= 1
-            if has_axe:
-                activities.append("Lumber Yard (with your Axe)")
+    for place, node_id, tool in (("Lumber Yard", "lumber_yard", "Axe"), ("Mine", "mine", "Pick")):
+        if worker_level == 0:
+            activities.append(f"{place} (bare-handed or {tool})")
+        elif worker_level == 1:
+            if unit is not None:
+                from . import economy
+                if economy.work_level(unit, node_id) >= 1:
+                    activities.append(f"{place} (with your {tool})")
+                else:
+                    activities.append(f"{place} (requires owning {'an' if tool[0] in 'AEIOU' else 'a'} {tool})")
             else:
-                activities.append("Lumber Yard (requires owning an Axe)")
-        else:
-            activities.append("Lumber Yard (requires Axe)")
+                activities.append(f"{place} (requires {tool})")
 
     # Tavern stage
     if worker_level <= 1:

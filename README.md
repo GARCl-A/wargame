@@ -1,15 +1,18 @@
 # GARTOK Tactical
 
-A turn-based tactical wargame based on the **GARTOK RPG**, rebuilt from the
-character generator at
+An open-world **guild manager** with turn-based tactical combat, based on the
+**GARTOK RPG**, rebuilt from the character generator at
 [Gerenciador-Gartok](https://github.com/GARCl-A/Gerenciador-Gartok).
+It is a sandbox: there is no win condition and no end screen. The run ends only
+when the whole guild is wiped out.
 
-Every unit is a randomly generated GARTOK character (race + occupation + 3d6).
+Every unit is a randomly generated GARTOK character (race + occupation + 3d6)
+and its own individual: the group is a container, the unit is the atom.
 
-**Draft:** the game opens on a selection screen — three characters are rolled,
-you keep one, three times. Those three are your **guild**: name it, pick its
-banner (colour + emblem — cosmetic, recolours every unit token from then on),
-then choose who leads it.
+**Draft:** the game opens on a pool of nine rolled characters; you keep three.
+Those three are your **guild**: name it, pick its banner (colour + emblem —
+cosmetic, recolours every unit token from then on), then choose who leads it.
+Early mortality is very high on purpose — the starters are meant to be lost.
 
 **Campaign:** the guild is one or more **groups** on the world map, each a
 physical unit of members standing on their own node. Give a group an order
@@ -19,12 +22,15 @@ travel and work silently and handing you the rest to actually play. For a
 battle you pick a **squad** (1–3 members), drop onto a grid, and win by
 putting the enemy team down. Time only passes while the clock is running or on
 a group resting (day/night, hunger); death is permanent; a total wipe ends
-the run. Saved by slot.
+the run. Each guild is a **world** of its own (a save folder: the current state,
+an automatic snapshot before every fight, and named manual saves).
 
-Progress toward the game's goal is **reputation with factions**, earned by
-pulling off a faction's signature challenges (`deeds`) — the arena (The Pits) is
-the first, with its staked bouts, its champion title, and a three-deed
-sub-campaign.
+There is no money pool: coins are items in a character's pack. Adventure
+out-earns day labour — the lumber yard is only a survival floor — so the risk pays.
+What the guild builds is **standing and property**: reputation with factions
+(earned by one-shot `deeds` and paid missions — the arena, the Bankers, the
+Library, the Tanner), a house in the City or a fenced Claim in the Wilds, wagons
+and animals, and a growing set of groups run in parallel.
 
 ## Run
 
@@ -113,10 +119,23 @@ World systems, outside combat:
 - **Magic**: a first foothold, not a full system yet — three spells gated by a
   racial magic source, cast in battle (`actions.CastSpellAction`, `ai.py`),
   learned by studying at the taverna over several in-game days (`magic.py`).
-- **Economy**: copper on the character (no treasury); a market with haggling by
-  language + Charisma + alignment; the arena's staked non-lethal bouts; field
-  loot; the lumber yard's day-labour wage; the Forge turns learned recipes and
-  materials into gear and battlefield traps (`crafting_screen.py`).
+- **Economy**: money lives on the character as `Copper Coin` ($1) and `Gold Coin`
+  ($100) items in the pack (they weigh and split like any item); gold only exists
+  through the bank's exchange. A market with haggling by language + Charisma +
+  alignment and finite stock per shop; the arena's staked non-lethal bouts; field
+  loot; the lumber yard's and the Mine's day-labour wages (the Mine pays $1 more per block and
+  sells the stone, ore and coal); the Forge turns learned recipes and
+  materials into gear and battlefield traps (`crafting_screen.py`). The numbers are
+  kept honest by an economy sim (`scripts/economy_report.py`).
+- **Bank**: a rented strongbox at the City, the gold exchange and the Bankers'
+  trust mission (`bank_screen.py`, `economy.buy_gold`/`sell_gold`).
+- **Medic**: a quick treatment at the Apothecary that mends HP, sickness and poison
+  for the potions it would take at a discount; a long one is a hospital stay on a
+  `solo` order (`medic.py`, `solo.py`).
+- **Wagons and animals**: a group keeps livestock (Donkey, Ox, Horse) and wagons
+  (cart, carriage) that carry cargo and passengers by weight, eat, wear down on the
+  road and are lost with the group (`wagon.py`, `animals.py`, `stables_screen.py`,
+  `garage_screen.py`).
 - **Recruitment**: a tavern pool refreshed weekly (no money, a Charisma-vs-
   Charisma pitch) or the prison's bail-and-pitch alternative (pay first, then
   pitch); each member can only sponsor so many people (Charisma-gated), the
@@ -271,7 +290,8 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     (all of them in one report, with verdicts), ai_usage.py (which actions the combat AI takes, and
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
                     vocation_report.py (each vocation perk's value as a share of the guild's daily wage)
-docs/plans/         design plans not yet built (campaign AI roadmap)
+docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),
+                    campaign_ai_roadmap.md (the long-range AI plan)
 ```
 
 > Rendering is procedural, with two asset-backed exceptions: `artwork.py` loads

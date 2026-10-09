@@ -46,7 +46,7 @@ def test_a_rest_order_heals_and_goes_idle_when_done():
 
 def test_resting_leaves_the_other_groups_to_their_own_orders():
     a, b = _hurt(1), Unit("player")
-    ga, gb = Group([a], node="market"), Group([b], node="market")
+    ga, gb = Group([a], node="lumber_yard"), Group([b], node="lumber_yard")
     guild = Guild(None, groups=[ga, gb], clock=Clock(FOUR_AM))
     ga.order = orders.rest(8)
     gb.order = orders.work(guild, gb, 4)

@@ -35,6 +35,8 @@ LUMBER_BLOCK_HOURS = 4                  # ...one block is four hours at the yard
 LUMBER_XP_HOURS = 16                    # hours of labour banked per work-XP mark
 LUMBER_SHIFT_HOURS = (4, 8, 12, 16)     # shift lengths the foreman offers
 LUMBER_LEVEL_OWN_AXE = 1                # the yard's ceiling once you bring your own Axe
+MINE_WAGE_PREMIUM = 1                   # $ more per paid block at the Mine than at the yard: its road is the Old Road
+WORK_TOOLS = {"lumber_yard": "Axe", "mine": "Pick"}   # work node -> the tool that, owned, lifts a worker to level 1
 
 # The tavern stage: bring a Musical Instrument and play for the crowd. Each hour
 # is a Charisma test (`d20 + CHA mod`) tipped one coin per PERFORM_TIP_STEP over
@@ -138,11 +140,11 @@ PRICES = {item.name: item.price for item in items.all_items().values()}
 
 # What the market keeps in stock to buy (fixed list for now).
 MARKET_STOCK = [
-    "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Hammer", "Broadsword", "Rapier",
+    "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Pick", "Hammer", "Broadsword", "Rapier",
     "Light Crossbow", "Shortbow",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Cloak", "Musical Instrument",
     "Meat", "Fruit", "Potato", "Salt", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
-    "1sqm Hide", "Lumber", "Stone Brick", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
+    "1sqm Hide", "Lumber", "Iron Bar", "Minor Healing Potion", "Vial",
     "Quiver", "Bear Trap", "Alarm Trap",
 ]
 
@@ -162,11 +164,12 @@ STOCK = {
 
 
 LIBRARY_SUPPLIES = ("Paper", "Ink")          # the Library shop sells these without a count
+MINE_SUPPLIES = ("Stone Brick", "Iron Ore", "1kg Coal")   # sold at the Mine only, without a count
 
 
 def freely_buyable(name):
     """True if the shops sell `name` without a finite count: as many as you like, any day."""
-    return (name in MARKET_STOCK and name not in STOCK) or name in LIBRARY_SUPPLIES
+    return (name in MARKET_STOCK and name not in STOCK) or name in LIBRARY_SUPPLIES or name in MINE_SUPPLIES
 
 
 MARKET_CASH_START = 100    # $ a market holds the first time the guild meets it
@@ -199,11 +202,11 @@ def _stock_category(name):
     return "kit"
 
 
-def market_categories():
+def market_categories(node_id=None):
     """`[(label, key, [names])]` for the market tabs, in display order -- the
-    active tab's list is what `market_screen` lays out."""
+    active tab's list is what `market_screen` lays out. The Mine's shelf is its own."""
     groups = {key: [] for _lbl, key in _MARKET_TABS}
-    for name in MARKET_STOCK:
+    for name in (MINE_SUPPLIES if node_id == "mine" else MARKET_STOCK):
         groups[_stock_category(name)].append(name)
     return [(lbl, key, groups[key]) for lbl, key in _MARKET_TABS]
 
@@ -298,25 +301,37 @@ def deal_value(mods, item, side):
     return round(max(DEAL_MIN, min(DEAL_MAX, total)), 3)
 
 
+def work_level(unit, node_id):
+    """A worker's job level at the work node `node_id`: 0 with the foreman's lent tool, 1 once
+    they own the node's tool (`WORK_TOOLS`) -- carried in the pack is enough, it does not have
+    to be the weapon in hand."""
+    tool = WORK_TOOLS[node_id]
+    owns = unit.has_item(tool) or unit.equipped_weapon == tool or unit.equipped_tongue == tool
+    return LUMBER_LEVEL_OWN_AXE if owns else 0
+
+
 def lumber_level(unit):
     """The lumber yard's job level for this worker: 0 with the foreman's lent
     axe, 1 once they own an Axe -- carried in the pack is enough, it does not
     have to be the weapon in hand. Gates work-XP the same way
     `progression.xp_award` gates combat XP -- see `work_xp_hours`."""
-    owns_axe = (unit.has_item("Axe") or unit.equipped_weapon == "Axe"
-                or unit.equipped_tongue == "Axe")
-    return LUMBER_LEVEL_OWN_AXE if owns_axe else 0
+    return work_level(unit, "lumber_yard")
 
 
-def lumber_pay(hours, level=0):
-    """Wage for `hours` at the lumber yard, paid by the whole block, leftover
-    hours unpaid. Your own Axe (`level` >= LUMBER_LEVEL_OWN_AXE) cuts faster,
+def work_pay(node_id, hours, level=0):
+    """Wage for `hours` at the work node `node_id`, paid by the whole block, leftover
+    hours unpaid. Your own tool (`level` >= LUMBER_LEVEL_OWN_AXE) works faster,
     for a better wage."""
-    pay = LUMBER_WAGE * (int(hours) // LUMBER_BLOCK_HOURS)
+    wage = LUMBER_WAGE + (MINE_WAGE_PREMIUM if node_id == "mine" else 0)
+    pay = wage * (int(hours) // LUMBER_BLOCK_HOURS)
     if level >= LUMBER_LEVEL_OWN_AXE:
         num, den = LUMBER_AXE_RATIO
         pay = pay * num // den
     return pay
+
+
+def lumber_pay(hours, level=0):
+    return work_pay("lumber_yard", hours, level)
 
 
 def scroll_price(level):

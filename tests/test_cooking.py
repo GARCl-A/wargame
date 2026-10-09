@@ -348,8 +348,9 @@ def test_the_claim_oven_costs_the_same_as_the_house_oven_in_bricks():
     assert economy.CLAIM_OVEN_BRICKS * economy.PRICES[economy.CLAIM_OVEN_BRICK] == economy.OVEN_PRICE
 
 
-def test_the_bricks_are_sold_at_the_market():
-    assert economy.CLAIM_OVEN_BRICK in economy.MARKET_STOCK and economy.PRICES[economy.CLAIM_OVEN_BRICK] > 0
+def test_the_bricks_are_sold_at_the_mine():
+    assert economy.CLAIM_OVEN_BRICK in economy.MINE_SUPPLIES and economy.PRICES[economy.CLAIM_OVEN_BRICK] > 0
+    assert economy.CLAIM_OVEN_BRICK not in economy.MARKET_STOCK
 
 
 def test_the_claim_screen_offers_the_oven_only_with_enough_bricks():

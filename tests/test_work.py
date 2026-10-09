@@ -34,7 +34,7 @@ def test_work_shift_pays_every_worker_and_banks_the_hours():
     assert a.money == 4 and b.money == 4
     assert a.work_hours == 16 and b.work_hours == 16
     assert guild.clock.hour_of_day == 22 and guild.clock.day == 1
-    assert any("Lumber yard" in e for e in events)
+    assert any("Lumber Yard" in e for e in events)
 
 
 def test_work_shift_crossing_midnight_runs_the_daily_meal():

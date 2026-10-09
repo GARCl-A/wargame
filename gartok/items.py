@@ -344,6 +344,7 @@ _register(ItemDef(id="red_mushroom", name="Red Mushroom", type=ItemType.MATERIAL
 _register(ItemDef(id="lumber", name="Lumber", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=2.0, price=7))
 _register(ItemDef(id="iron_bar", name="Iron Bar", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=5.0, price=15))
 _register(ItemDef(id="1kg_coal", name="1kg Coal", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=1.0, price=5), "coal")
+_register(ItemDef(id="iron_ore", name="Iron Ore", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=4.0, price=8))
 _register(ItemDef(id="stone_brick", name="Stone Brick", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=3.0, price=10))
 _register(ItemDef(id="paper", name="Paper", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
 _register(ItemDef(id="ink", name="Ink", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=45))

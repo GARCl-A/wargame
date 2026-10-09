@@ -6,7 +6,7 @@ since it advances the clock itself.
 
 from collections import Counter
 
-from . import economy, items, recorder
+from . import economy, items, recorder, world
 from .constants import fmt_money
 from .unit_loadout import pooled_unlocked
 
@@ -28,8 +28,8 @@ class LaborMixin:
             mults.append(1 - speed)
         return max(mults)
 
-    def work_shift(self, workers, hours):
-        """A stint at the lumber yard outside the walls, done right now:
+    def work_shift(self, workers, hours, node_id="lumber_yard"):
+        """A stint at a work node (the lumber yard outside the walls, the Mine), done right now:
         advances the campaign clock through `pass_time` (a long shift can cross
         midnight and run the daily meal -- a starving worker may not live to be
         paid) and then pays the crew. See `_pay_shift` for the pay/XP step alone
@@ -38,10 +38,10 @@ class LaborMixin:
         crew = [u for u in workers if u in self.roster]
         clock_hours = hours * self.work_speedup(crew)
         events, casualties = self.pass_time(clock_hours, busy=crew)
-        events += self._pay_shift(workers, hours, clock_hours)
+        events += self._pay_shift(workers, hours, clock_hours, node_id)
         return events, casualties
 
-    def _pay_shift(self, workers, hours, clock_hours):
+    def _pay_shift(self, workers, hours, clock_hours, node_id="lumber_yard"):
         """Pay + bank work-XP for a completed shift -- no clock advance, the
         caller already ran `pass_time`. `hours` is the nominal shift length
         (what pay/XP are based on); `clock_hours` is how long it actually took
@@ -50,13 +50,13 @@ class LaborMixin:
         paid = []
         events = []
         for u in earners:
-            level = economy.lumber_level(u)
-            paid.append(self._pay_worker(u, economy.lumber_pay(hours, level), hours, level, events))
+            level = economy.work_level(u, node_id)
+            paid.append(self._pay_worker(u, economy.work_pay(node_id, hours, level), hours, level, events))
         if earners:
             names = ", ".join(u.name for u in earners)
             wage = (f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1
                     else f"+{fmt_money(sum(paid))} total")
-            note = f"Lumber yard: {names} worked {hours} h ({wage})."
+            note = f"{world.node(node_id).name}: {names} worked {hours} h ({wage})."
             if clock_hours < hours:
                 note += f"  Brisk Hands: crew done in {clock_hours:g} h."
             events.append(note)

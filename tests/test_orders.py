@@ -125,7 +125,7 @@ def test_work_order_pays_without_double_advancing_the_clock():
     pay = economy.lumber_pay(8)
     assert a.money == start_a + pay and b.money == start_b + pay
     assert a.work_hours == 8 and b.work_hours == 8
-    assert any("Lumber yard" in e for e in result.events)
+    assert any("Lumber Yard" in e for e in result.events)
     assert g.order is None
 
 

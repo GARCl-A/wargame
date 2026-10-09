@@ -651,27 +651,28 @@ class MapScreen(Screen):
             blocks.append({"type": "text",
                           "text": "trade hours of the day for money  ·  pays little, but it's sure",
                           "color": T.TX_FAINT})
+            tool = economy.WORK_TOOLS[here.id]
             for u in g.members:
-                level = economy.lumber_level(u)
+                level = economy.work_level(u, here.id)
                 own_axe = level >= economy.LUMBER_LEVEL_OWN_AXE
-                day = economy.lumber_pay(WORK_HOURS[-1], level)
-                status = "own Axe" if own_axe else "foreman's axe"
+                day = economy.work_pay(here.id, WORK_HOURS[-1], level)
+                status = f"own {tool}" if own_axe else f"foreman's {tool.lower()}"
                 blocks.append({"type": "text",
                               "text": f"{u.name}: {status} -- {fmt_money(day)} / "
                                       f"{WORK_HOURS[-1]}h shift",
                               "color": T.GREEN if own_axe else T.TX_FAINT})
-            need_axe = [u for u in g.members if u.work_level > 0 and economy.lumber_level(u) == 0]
-            capped = [u for u in g.members if economy.lumber_level(u) >= economy.LUMBER_LEVEL_OWN_AXE
-                     and u.work_level > economy.lumber_level(u)]
+            need_axe = [u for u in g.members if u.work_level > 0 and economy.work_level(u, here.id) == 0]
+            capped = [u for u in g.members if economy.work_level(u, here.id) >= economy.LUMBER_LEVEL_OWN_AXE
+                     and u.work_level > economy.work_level(u, here.id)]
             if need_axe:
                 names = ", ".join(u.name for u in need_axe)
                 blocks.append({"type": "wrapped_text", "color": T.BRASS,
                               "text": f"{names}: past this job bare-handed -- bring their own "
-                                      "Axe for a better wage and to keep banking work XP"})
+                                      f"{tool} for a better wage and to keep banking work XP"})
             if capped:
                 names = ", ".join(u.name for u in capped)
                 blocks.append({"type": "wrapped_text", "color": T.BRASS,
-                              "text": f"{names}: has outgrown this job even with their own Axe "
+                              "text": f"{names}: has outgrown this job even with their own {tool} "
                                       "-- no more work XP here, look for tougher work"})
 
         offered = [f for f in node_functions.offered(here)

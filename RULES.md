@@ -822,14 +822,25 @@ must be reloaded between shots.
 Rules that exist **outside combat** — the guild on the map, time passing, the
 economy. Each starts as a "world thing" and only then talks to the fight.
 
+Design premises that hold across them:
+
+- **A sandbox with no win condition.** The run ends only on a full wipe.
+- **Every unit is its own individual.** A shared activity (a shift, a craft, a hunt)
+  resolves per person.
+- **No guild treasury.** Money is `Copper Coin` ($1) and `Gold Coin` ($100) items in
+  a character's pack; paying spends copper first, then breaks gold and returns change.
+- **Adventure out-earns day labour.** The lumber yard is a floor (16 h buys the cheapest
+  meal plus $1); the arena and the wilds pay more for the risk.
+- **Vision is per-character**: you see what the active unit sees.
+
 ### Identity 🟡
 
 Purely cosmetic, no mechanical effect: after the three squad picks, the draft's
 "identity" phase asks for a **guild name** and a **banner** — a colour and an
-emblem, both from a small curated set (`theme.BANNER_COLORS`,
+emblem, both from a small curated set (`ui.banner`,
 `artwork.BANNER_ICONS`), not a free painter. The chosen colour becomes every
-unit token's fill for the rest of the run (`theme.set_player_color`, read live
-by `theme.token_badge` — every roster card in the game uses it without
+unit token's fill for the rest of the run (`ui.banner.set_player_color`, read live
+by the token badge — every roster card in the game uses it without
 knowing it changed). `battle_screen`'s player/enemy colour-coding is untouched
 on purpose: that one is a readability cue, not an identity, and must stay
 distinct from `ENEMY_C`. A save from before this existed shows "The Guild" in
@@ -1040,6 +1051,24 @@ copper instead of walking into the wilds and dying.
 - A character **incapacitated by hunger can work** (it is not combat) — that is
   exactly who needs it most.
 
+### The Mine: the yard's twin past the Old Road 🟡
+
+The `mine` node (a `town` with `work` and `shop`), **6 h from the Old Road and 2 h from the
+Claim**. Road → Mine → Claim is 8 h, the same as Road → Wilds → Claim, so the Claim has a second
+route of equal length. Work is the yard's mechanic (`economy.work_pay` / `work_level`, shifts of
+4/8/12/16 h, work XP at level 0 or 1) with two differences:
+
+- **Wage:** `MINE_WAGE_PREMIUM` = **$1 more per paid block** than the yard (so 16 h = **$8**
+  bare-handed). The way there crosses the Old Road's ambush table and a round trip is the
+  minimum, so nobody works there at zero cost.
+- **Tool:** the foreman lends a pick; owning a **Pick** (carried or in hand) pays the same 4/3
+  as the yard's Axe (16 h = **$10**). Each node counts only its own tool (`economy.WORK_TOOLS`).
+
+**The Mine's shelf is its own** (`economy.MINE_SUPPLIES`): **Stone Brick, Iron Ore and Coal** are
+sold only there, in unlimited supply, out of the Market (`economy.market_categories("mine")`).
+The Claim's oven therefore needs a trip to the Mine. The Mine keeps its own till
+(`Guild.shop("mine")`). Iron Ore has no recipe yet: it is the base of the Smith's chain later.
+
 ### The tavern stage: busking for tips 🟡
 
 The PERFORM tab of the Tavern (`taverna_screen.py`). Rule in
@@ -1090,6 +1119,18 @@ abandoned craft doesn't get them back.
   mover, an Alarm Trap stops it and wakes every dormant unit on the board — and
   the trap is removed. The one exception is a web: the spider's own side walks
   through it.
+
+### The Medic: quick treatment and the hospital 🟡
+
+`medic.py`, a tab of the Apothecary hub (`medic_screen.py`). A patient's cost is the
+*expected* consumables: Minor Healing Potions for lost HP (`MEDIC_POTION_HP` = 3.5 each),
+one First Aid Kit charge for sickness, Antidotes for poison, all at
+`MEDIC_PRICE_FACTOR` (0.7) of the catalogue price. Treating HP takes
+`MEDIC_HP_HOURS`, sickness `MEDIC_SICKNESS_HOURS`; the clock moves for the whole group by
+the longest treatment picked. Past `MEDIC_MAX_HOURS` (24) it is a **hospital stay**: the
+patient splits off into a group of their own on a `solo` order and leaves cured when the
+hours run out (with no free group slot the group waits instead). The economy sim prices
+the Medic from the same constants.
 
 ### Poison 🟡
 

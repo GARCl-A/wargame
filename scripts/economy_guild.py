@@ -14,6 +14,7 @@ player's, drawing a won or a lost sample, because the AI plays much worse than a
 A policy is a class with `step(sim)`; each step spends time. Policies:
 
   lumber    the floor: work the yard 16 h, rest 8 h, eat
+  miner     day labour at the Mine: a trip past the Old Road, a stay of six shifts, back (miner_short: two)
   cautious  lumber, plus the Scrapper bout until everyone is combat 1; hunts only at mean
             level 3 and full health
   balanced  Scrapper to combat 1, lumber to build a buffer, buys Studded Leather, a weapon
@@ -617,8 +618,8 @@ class Sim:
         CLAIM_RESOLVERS[pend.kind](self.guild, group, pend, SimpleNamespace(won=sample.won))
 
     # -- places ------------------------------------------------------------ #
-    def work_shift(self, hours=SHIFT_HOURS):
-        self.goto("lumber_yard")
+    def work_shift(self, hours=SHIFT_HOURS, node="lumber_yard"):
+        self.goto(node)
         self.run_order(orders.work(self.guild, self.group, hours))
 
     def heal(self):
@@ -959,6 +960,57 @@ class Lumber(Policy):
     def step(self, sim):
         self.upkeep(sim)
         self.lumber_day(sim)
+
+
+class Miner(Policy):
+    """Day labour at the Mine, a long walk past the Old Road: stock up in the City (a Pick each
+    and food for the whole stay), walk there, work `STAY_DAYS` shifts, walk back. A guild that
+    cannot afford the trip works the yard that day. The point is the break-even: the Mine pays
+    more a day, the trip costs two days of walking and two rolls on the road."""
+    name = "miner"
+    STAY_DAYS = 6
+
+    def __init__(self):
+        self.left = 0
+
+    def step(self, sim):
+        if self.left > 0:
+            if sim.food_days < 1:
+                self.left = 0
+                sim.goto("market")
+                return
+            sim.work_shift(node="mine")
+            sim.sleep()
+            self.left -= 1
+            if self.left == 0:
+                sim.goto("market")
+            return
+        if getattr(sim, self.HURT):
+            sim.heal()
+        if not self.provision(sim):
+            self.lumber_day(sim)
+            return
+        self.left = self.STAY_DAYS
+        sim.goto("mine")
+
+    def provision(self, sim):
+        """Sell the loot, buy a Pick for whoever lacks one while the trip's food stays covered,
+        then the food. True when the stay is fed."""
+        trip_food = (self.STAY_DAYS + 1) * sim.mouths * cheapest_food_price()
+        pick = items.get(economy.WORK_TOOLS["mine"]).price
+        with sim.market() as shop:
+            shop.sell_loot()
+            for u in sim.members:
+                if economy.work_level(u, "mine") == 0 and sim.money >= pick + trip_food:
+                    shop.buy(u, economy.WORK_TOOLS["mine"])
+            shop.buy_food(self.STAY_DAYS + 1)
+        return sim.food_days >= self.STAY_DAYS
+
+
+class MinerShort(Miner):
+    """The same trip for two shifts: does the premium survive a short stay?"""
+    name = "miner_short"
+    STAY_DAYS = 2
 
 
 class Cautious(Policy):
@@ -1404,7 +1456,8 @@ class Crafter(Policy):
         deal = MarketScreen(None, sim.guild, sim.members, world.node("market"), lambda: None).deal
         for name in crafter.known_recipes:
             recipe = items.CRAFTING_RECIPES.get(name)
-            if recipe is None or not all(economy.freely_buyable(m) for m in recipe.materials):
+            if recipe is None or not all(economy.freely_buyable(m) and m not in economy.MINE_SUPPLIES
+                                         for m in recipe.materials):
                 continue
             margin = (recipe.yield_qty * economy.sell_price(recipe.target, deal)
                       - sum(economy.buy_price(m, deal) for m in recipe.materials))
@@ -1429,7 +1482,7 @@ class Crafter(Policy):
                 break
 
 
-POLICIES = {cls.name: cls for cls in (Lumber, Cautious, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
+POLICIES = {cls.name: cls for cls in (Lumber, Miner, MinerShort, Cautious, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
 
 
 # --------------------------------------------------------------------------- #

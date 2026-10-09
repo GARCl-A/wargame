@@ -670,6 +670,12 @@
     "food": false,
     "lifespan": null
   },
+  "Iron Ore": {
+    "weight": 4.0,
+    "price": 8,
+    "food": false,
+    "lifespan": null
+  },
   "Compass": {
     "weight": 0.2,
     "price": 1,

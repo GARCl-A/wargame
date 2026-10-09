@@ -126,7 +126,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         return pygame.Rect(W - MARGIN - 28, MARGIN - 4, 28, 28)
 
     def get_categories(self):
-        return economy.market_categories()
+        return economy.market_categories(self._node_id())
 
     # ------------------------------------------------------------------ #
     def _ui_fonts(self):

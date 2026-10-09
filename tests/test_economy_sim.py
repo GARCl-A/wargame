@@ -189,6 +189,19 @@ def test_the_floor_policy_lives_a_week_on_the_real_clock_and_stays_fed():
     assert all(u.unfed_days == 0 for u in sim.guild.roster)
 
 
+def test_the_miner_policy_buys_a_pick_and_works_the_mine_past_the_old_road():
+    sim = _run(_sim("miner", seed=2, capital=200), 10)
+    assert sim.guild.roster, "seed 2 survives the road"
+    assert any(economy.work_level(u, "mine") for u in sim.guild.roster)
+    assert sum(u.work_hours for u in sim.guild.roster) > 0
+    assert sim.group.node in ("mine", "market")
+
+
+def test_the_short_miner_makes_the_same_trip_for_fewer_shifts():
+    assert sim_mod.MinerShort.STAY_DAYS < sim_mod.Miner.STAY_DAYS
+    assert {"miner", "miner_short"} <= set(sim_mod.POLICIES)
+
+
 def test_every_policy_runs_a_few_days_without_breaking():
     for name in ("cautious", "balanced", "greedy", "maxev"):
         sim = _run(_sim(name, seed=2), 4)

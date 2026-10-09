@@ -350,7 +350,7 @@ def _advance(guild, dt=None, busy=()):
             for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):
                 events.append(factions.deed_notice(d))
         elif order.kind == "work":
-            events += guild._pay_shift(g.members, order.hours, order.eta)
+            events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
             events += guild.eat_now_pass(g.members)
         elif order.kind == "solo":

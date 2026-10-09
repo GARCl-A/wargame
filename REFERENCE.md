@@ -212,6 +212,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Holy Symbol | 0.5 kg | -- |
 | Ink | 0.1 kg | material |
 | Iron Bar | 5 kg | material |
+| Iron Ore | 4 kg | material |
 | Jerky | 0.5 kg | food, consumable |
 | Lantern | 1 kg | light 6 sq |
 | Large Axe | 6 kg | -- |

@@ -34,7 +34,7 @@ import economy_guild as guild_sim
 MILESTONE_POLICY = "balanced"        # the sensible play the day-30 milestone is judged on
 MILESTONE_SHARE = 0.5                # of its guilds that must reach it
 WILDS_LEVEL = 3
-SUSTAIN_POLICIES = ("lumber", "cautious", "balanced", "greedy", "maxev", "rush", "games", "climber", "human")
+SUSTAIN_POLICIES = ("lumber", "miner", "cautious", "balanced", "greedy", "maxev", "rush", "games", "climber", "human")
 MEDIC_POLICIES = ("cautious", "balanced", "greedy")
 LATE_LEVEL = 3                       # a squad that has climbed out of the Scrapper...
 LATE_CAPITAL = 250                   # ...and has a first week's savings

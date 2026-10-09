@@ -27,9 +27,9 @@ def load_baseline():
         return json.load(f)
 
 
-def test_baseline_has_exactly_93_items():
+def test_baseline_has_exactly_94_items():
     baseline = load_baseline()
-    assert len(baseline) == 93
+    assert len(baseline) == 94
 
 
 def test_every_baseline_item_exists_in_items_registry():

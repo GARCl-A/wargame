@@ -156,6 +156,9 @@ NODES = [
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",
          functions=("work",)),
+    Node("mine", "The Mine", "town", (0.78, 0.54),
+         "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal "
+         "for sale are sold here.", functions=("work", "shop")),
     Node("arena", "Arena", "battle", (0.405, 0.32),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
          ArenaScenario, lethal=False, arena=True, jurisdiction="the_city"),
@@ -209,6 +212,8 @@ EDGES = [
     ("road", "ledger_hold", 5),
     ("road", "ancient_ruins", 2),
     ("wilds", "wilds_territory", 2),
+    ("road", "mine", 6),
+    ("mine", "wilds_territory", 2),
 ]
 
 START_NODE = "city"
