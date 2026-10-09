@@ -25,14 +25,12 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. The `shop` function on nodes (see *Specialised shops*; unblocks Mine, Smith, Tanner, Library).
-2. Mine + Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
-3. Generic *solo task* order (craft, hospital, Mine on one mechanism).
-4. Vocations in the draft (decided, table below).
-5. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
+1. Mine + Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
+2. Vocations in the draft (decided, table below).
+3. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
    player the AI does not match yet.
-6. Docs refresh (Small, below) can go in any sitting. The *Architecture debt* section lists
-   what to pay on the way (steps 1 and 3 are debts).
+4. Docs refresh (Small, below) can go in any sitting. The *Architecture debt* section lists
+   what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -46,10 +44,6 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   is an open-world guild manager. The README barely mentions wagons and animals, the Claim,
   the bank, the Medic, vocations or the economy sim. Refresh both to today's game (RULES
   stays prose, `REFERENCE.md` stays generated).
-- **`watch` and `garage` are missing from `tutorial.TUTORIALS`.** `WatchScreen` and
-  `GarageScreen` return those keys and `locales/en.json` has their copy, but the tuple omits
-  them, so the tests that walk `TUTORIALS` (copy exists, badge rect) never cover the two cards.
-  Add both and extend the screen-key test.
 - **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
   (2026-10-09): the `balanced` policy reaches the milestone in 0% of guilds (need 50%), cost
   from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
@@ -66,24 +60,11 @@ Past choices that now fight the direction. Each has the cost of fixing it; pay o
 feature that needs it is next, not before. Debts already written as part of a feature are
 pointed to, not repeated.
 
-- **Everything is a flag on `city`; `is_market` owns the till.** The premise was "one town with
-  everything". `forge` / `apothecary` / `tanner` are flags (`map_screen.py` VISIT buttons,
-  `app.py` `_ACTIVITY_OPENERS`), and `guild_upkeep.py` refills cash only for `is_market`
-  nodes. The Mine, the specialised shops, the Library and the Tavern all need a `shop`
-  function that owns till, stock and refill. **Cost: medium** (a data concept touching nodes,
-  sim, UI). Detail under *Specialised shops*; do it first.
-- **Node openers are hand-wired.** Each node adds a lambda in `app.py`, a button in
-  `map_screen.py` and a tutorial. Replace with one registry keyed by node function (opener,
-  button label, tutorial key) so a node is declared once. **Cost: low-medium**, best done in the
-  same change as the `shop` function.
 - **Weapon traits are ad-hoc fields.** `ItemDef.finesse` / `thrown` plus hand-written `if`s in
   the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
-- **Crafting spends the whole guild's clock.** `Guild.crafting_shift` assumes one crafter and
-  everyone waiting. Crafting, the hospital stay and the Mine want the same *solo task* order.
-  **Cost: medium-high** (order kind, saves, UI). Detail under *Crafting in parallel*.
-- **Big screen files.** `app.py` (1180 lines, 93 functions) is the wiring hub; `map_screen.py`,
+- **Big screen files.** `app.py` (1180 lines, 102 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run 800-950. Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
@@ -104,7 +85,7 @@ pointed to, not repeated.
      `scripts/economy_report.py` (a new craft-for-sale line). Needs tests, tutorial and RULES line.
 - **Mine (new node, like the Lumber Yard).** A work node plus a shop, mechanically close to the
   Lumber Yard. It is a normal node on the map, not a hidden one. **Stone Brick, Iron Ore (new
-  item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven now needs a
+  item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven will need a
   trip to the Mine. Work order pays in the Mine's goods or wage like the yard does.
   - **To set while building:** the distance from Ankareth (suggestion: about 3 h, farther than the
     Farm), the wage and pay, whether it needs a Pickaxe (`CraftingRecipe.tools`: a tool in any
@@ -185,22 +166,24 @@ pointed to, not repeated.
   any line the recordings missed; `rush` stays as the reference. Then retire the guessed
   policies that it beats. Needs the planner, the offers listing (the missions, bouts and kit
   hooks the policies reach by hand today) and tests.
-- **Crafting in parallel.** Crafting spends the whole guild's clock today
-  (`Guild.crafting_shift`: one crafter at a time, everyone waits). Instead the player
-  allocates a character to craft: they split off the group into their own Group on a craft
-  order, work at the station while the others do something else, and rejoin by hand (the
-  same shape as the Medic's hospital stay, and it competes for the same group slots).
-  The economy sim's `crafter` policy then becomes one member crafting while the rest work
-  the yard. **Decided:** build one generic *solo task* order kind (the character splits off,
-  works alone, rejoins by hand) and move the Medic's hospital stay onto it too, so craft,
-  hospital and later the Mine share one mechanism. Needs the order kind, saves, UI and tests.
+- **The Mine on the solo task.** `orders.solo` / `solo.py` carry the hospital stay and the craft
+  (a member splits off, or the whole group waits; merge back by hand). The Mine is one more
+  `task` there: a branch in `solo.finish` and an issue function like `solo.craft`.
+- **Finite stock and a target per item, in every shop.** Split from *Specialised shops*: the
+  `shop` function (a `Shop` per node, `Guild.shop(node_id)`) landed without changing a rule, so
+  most of `MARKET_STOCK` is still infinite and only `economy.STOCK` items are finite, now per
+  shop. Make every item finite in every shop, with a target count per shop and item that the
+  shelf walks back to a little each day; a shop buys any item at 50% and resells it at 100%.
+  First step: the target table and the refill rate (see the numbers in *Specialised shops*).
+  Re-run `scripts/economy_report.py`, since this changes the whole economy.
 - **Specialised shops.** Split the single general market into shops, each its own node
   with a walking distance between them, so the player has to go around. The market's
-  finite cash is built (`Guild.market_cash`, keyed by node id), so each shop gets its own.
+  finite cash is built (`Guild.shop(node_id)`, one `Shop` per node offering `shop`), so each shop
+  gets its own.
   The production chain (lumberjack -> carpenter, smith) and restocking tied to the world
   are a later arc; this task is the structure with a fixed restock.
   - **Shops:** Smith, Apothecary and Tanner are new nodes outside the city (today `forge`,
-    `apothecary` and `tanner` are flags on `city`). The Smith and the Apothecary take their
+    `apothecary` and `tanner` are functions of `city`, with no till of their own). The Smith and the Apothecary take their
     crafting with them, as tabs. Farm (today only the stables), Tavern, Lumber Yard (a shop
     *and* a work node) and Market already exist. Rough split: Smith = weapons, shields,
     metal armour, Iron Bar; Tanner = leather armour, Cloak, Hide, Quiver; Apothecary =
@@ -213,11 +196,6 @@ pointed to, not repeated.
     resells everything, the targets are what makes each one specialised.
   - The Library joins the same rule (stock target, finite cash, buys anything at 50%) and
     keeps its other tabs.
-  - **The till belongs to the shop, not to the node's kind.** `Guild._daily_upkeep` refills
-    cash only for nodes with `is_market` (`kind == "market"`), so the Library's till (a `town` with a
-    shop tab) never refills and a Tavern (recruiting, work and a shop in one node) would not
-    either. A node with several functions needs a `shop` function that owns the till, its
-    refill and its stock; the economy sim's route scan reads the same list.
   - **Node distances:** the new nodes need a walking distance from Ankareth, and the
     existing ones (Market and Library 1 h, Farm 2 h) should be reviewed together with them,
     since the distance is the cost of going around between shops.
@@ -233,11 +211,6 @@ Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`; the
 art is game-icons.net SVG silhouettes. Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- [x] **Portraits for the named NPCs.** Adelio, Ribit, Bufo, Peep, Biwolf, the Ancient Archivist,
-  the Ruin Sentry and the Sanctum Spider (`npcs/*.json`) now have dedicated pinned portraits in
-  `gartok/assets/portraits/npc/` via `"portrait_file"`, with 3 curated/generated options each in
-  `docs/art/npc_options/`. The generic race pool was isolated to numeric indices so recruits never
-  draw named NPC portraits. Supported across all screens and tested in `test_portraits.py`.
 - **Item icons (the biggest gap).** `items.py` has no icon field and the pack, market, stash
   and loot screens are text only. **Decide first** the style (medallion or silhouette). Then
   by category: one-handed weapon, two-handed weapon, bow/crossbow, light/medium/heavy armor,

@@ -274,16 +274,16 @@ not use it, a person pays it for a patient a rest would not cure.
 days of food and the fence Lumber, the `claimer` establishes the Claim in **13%** of guilds at
 80% skill (median day 21), **15%** at 95% (day 24) and **28%** at a perfect record (day 24); it
 is wiped in 65%, 30% and 0%. Most guilds finish day 30 in `SUSTAINING` with the clock reset.
+*(Measured before the fix: the game now rolls the raid and the seizure once per calendar day, and the
+`hold` job heals the garrison, so the figures above overstate the gamble.)*
 Why: the 10-day garrison has to survive a raid (3 level-3 foes) with 20% chance per daily
-advance, and **a garrisoned group never heals** (`pass_time` heals only a group that is idle or
-resting, and a `garrison` order counts as busy), so each raid wears the squad down; below a
+advance, and **a garrisoned group never healed** (`pass_time` heals only a group that is idle or
+resting, and a `garrison` order counted as busy), so each raid wore the squad down; below a
 quarter of its HP the policy walks out, and an unguarded claim resets the countdown. The
 established claim then yields 1 Lumber per member per day (about $3.5 at the market's 50% buy
-price against $4-5 at the yard), and the seizure roll (the same 20%) fires on **every**
-`advance()` call while the guild is anywhere else, so a market trip for food is several rolls
+price against $4-5 at the yard), and the seizure roll (the same 20%) fired on **every**
+`advance()` call while the guild was anywhere else, so a market trip for food was several rolls
 at 20% (8-10% of all guilds had lost an established claim by day 30). As a 30-day goal the Claim is a late-game project, not a way to become rich.
-Two rules look unintended and are in the questions: the garrison never heals, and the seizure
-roll runs per call, not per day.
 
 **12. The tavern replaces a day at the yard, and pays more from CHA +1.** A day of shows
 (16 h, one Charisma test an hour) tips $3.2 at CHA +0, $4.8 at +1, $7.2 at +2 and $16 at +5, against
@@ -499,10 +499,10 @@ What is still open after your answers, in rough order of how much they change th
 3. **What should the Medic cost?** As built (potions at 0.7x) it is $16 an HP against $1.3 an
    HP for a rest, so only a rich squad uses it ([finding 10](#findings)). Price it at the rest it
    saves (a few copper an HP), or keep it as a late-game luxury?
-4. **The garrison never heals and the seizure roll fires on every `advance()` call.** Both look
-   like oversights (a garrison that is attacked every five days and never mends; an established
-   claim lost to the walk to the market). Intended? Without a fix the Claim is a 13-28% proposition
-   for a skilled level-3 squad, and the campfire / oven do not heal either.
+4. **(Settled in the game, not yet in the sim.)** The garrison now has a `hold` job that counts as
+   rest (heals in 8 h) and the raid and seizure rolls fire once per calendar day crossed, not per
+   `advance()` call. The numbers in finding 11 predate that fix; re-measure the `claimer` once the
+   sim models `hold`.
 5. **Upkeep.** A house costs a lumberjack's whole wage and a Donkey a third more. Intended as
    "assets need an adventuring income", or should the first assets be reachable on day labour?
 6. **How lethal should the Wilds be?** See the answer above. Is the Old Road's ambush (now 20%) per
@@ -536,7 +536,8 @@ What is still open after your answers, in rough order of how much they change th
   kit; a guild that has bought armor or a weapon is not drawn stronger.
 - The champion's title and its 15-day defense cycle, and the Ribbit Brothers, are not in layer 2.
 - The Claim has no campfire, oven or garage in the sim (the game has the oven since the Stone
-  Brick commit; the sim does not model it); the garrison only gathers Lumber.
+  Brick commit; the sim does not model it), nor the garrison's `hold` job (rest, heals in 8 h);
+  the garrison only gathers Lumber.
 - The Medic and the Games' stake are the numbers the code has (or the backlog proposes), not tuned.
 - The hunt and the road each use their own encounter table (`hunt.wilds_pack`, the Old Road's
   `encounter_table`); the pack rolled by `campaign` for an ambush is not the one fought.

@@ -87,13 +87,34 @@ only makes sense historically is the expensive one.
      covered by the green suite, and re-read the resulting diff.
    - Ask the user only about what genuinely needs their call: two reasonable
      designs with different trade-offs, a behaviour change beyond the diff's
-     intent, or a change that widens scope. Put those in the recap (step 6) as
+     intent, or a change that widens scope. Put those in the recap (step 7) as
      explicit questions, each with a recommendation.
    - Things checked and deliberately left alone (e.g. behaviour that matches the
      backlog and has a test) get one line in the recap — not a question.
    - Don't invent findings to fill a category; "nothing here" is a valid result.
 
-5. **Look for anything that shouldn't ride along.** Common culprits in this
+5. **Keep the docs and the backlog in sync with what this diff changes.**
+   Stale docs are what made `/check_backlog` find drift after the fact; close
+   it here, in the same commit, instead. The fixes are yours to apply (same
+   rule as step 4).
+
+   - **Items the diff finishes or reshapes.** Read `docs/plans/backlog.md`.
+     An item the diff completes is deleted (the backlog's own rule); one it
+     changes is reworded; a claim that stops being true ("now", "not built",
+     a size, a count) is corrected.
+   - **Docs that describe what changed.** For each flag, function, constant,
+     module or behaviour the diff adds, removes or renames, `grep` the names
+     (and the old prose, such as "never heals") across `RULES.md`,
+     `README.md`, `AGENTS.md` (the module table), `docs/plans/*.md` and
+     `locales/en.json` tutorial copy. Fix every sentence that is now false.
+     `REFERENCE.md` is generated: regenerate it, never edit it by hand.
+   - **Follow-ups the diff creates.** Debt left on purpose, a split-off task
+     or a decision deferred goes into the backlog as an item (size, what
+     blocks it), not into a code comment or the recap alone.
+   - Say in the recap what was updated and where. "Nothing to sync" is valid,
+     but only after the greps were run.
+
+6. **Look for anything that shouldn't ride along.** Common culprits in this
    repo: files under `saves/` (per-machine save slots, not game content),
    `__pycache__`/`.pyc`, stray debug prints, anything that looks like a
    credential or token. Files that don't belong to this change (untracked
@@ -101,8 +122,8 @@ only makes sense historically is the expensive one.
    the commit, mention them in one line and propose a separate commit. If
    `git add` was run broadly, re-check `git status` after staging.
 
-6. **Recap decisions and implementation — separate from, and more complete
-   than, the commit message.** The commit message (step 7) stays terse and in
+7. **Recap decisions and implementation — separate from, and more complete
+   than, the commit message.** The commit message (step 8) stays terse and in
    the repo's own compressed style; this recap is for the user, right now, in
    the conversation, so they can approve with the full picture instead of
    reconstructing it from a diff. Parts, in order:
@@ -126,7 +147,7 @@ only makes sense historically is the expensive one.
    conversation, not a file — don't create a decisions log or design-doc
    artifact for it unless the user asks for one.
 
-7. **Draft the commit message in this repo's own voice**, not a generic one:
+8. **Draft the commit message in this repo's own voice**, not a generic one:
    check `git log -3 --format='%B---'` for the current convention before
    writing (`--oneline` alone hides the body). As of this writing that's
    Portuguese, present-tense, no accented characters, a short colon-split
@@ -143,17 +164,17 @@ only makes sense historically is the expensive one.
    **No `Co-Authored-By:` trailer or AI attribution, ever.** The user reviews
    every change and keeps the history free of tooling noise.
 
-8. **Present the summary + drafted message, then stop.** Wait for the user's
+9. **Present the summary + drafted message, then stop.** Wait for the user's
    explicit approval in that same conversation. "Looks fine" / "go" / a
    thumbs-up counts; silence, a topic change, or you deciding it's obviously
    fine does not.
 
-9. **Only after approval:** `git pull` first (a teammate works on `main` in
+10. **Only after approval:** `git pull` first (a teammate works on `main` in
    parallel), stage exactly the files that belong to this change (named
    explicitly — not a blanket `git add -A`), commit with the approved message,
    then `git status` to confirm a clean result.
 
-10. **If this commit closes a major arc**, update the project context:
+11. **If this commit closes a major arc**, update the project context:
     - Create or update a reference file in
       `.agents/skills/project-context/references/` with the design rationale
       (what was decided and why, what NOT to redo).
@@ -169,5 +190,5 @@ only makes sense historically is the expensive one.
 - Step 4 (the quality pass) is never skipped for being "too small a change" —
   a one-line diff can still be the wrong one line.
 - If the user has already reviewed the diff and says "just commit it," steps
-  1–7 still happen (silently is fine) but step 8's approval is satisfied by
+  1–8 still happen (silently is fine) but step 9's approval is satisfied by
   that instruction — don't re-ask once they've already said go.
