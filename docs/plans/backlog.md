@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Ease and impact are estimates, not checked against the code. When an item is done, delete
+Sizes are estimates, not checked against the code. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Two parts:
@@ -19,6 +19,18 @@ Two parts:
 ---
 
 # Ready to do
+
+## Small
+
+- **Re-check the Champion bout after Adelio's CON 14 (9 HP).** He was hardened to 9 HP so a
+  combat-0 squad stops walking over him. Re-run `scripts/economy_activities.py` and see what
+  the bout pays now (stake $20 each, purse $120); if it is still the best money of the first
+  ten days, the stake/purse is the next lever. The sim's policies only try him from mean
+  combat 2, so also check the recorded run (champion on day 6 at combat 0) against the new
+  numbers.
+- **`unit_compare.py` with gear.** `scripts/unit_compare.py` lifts bare draft bodies, but
+  Adelio's edge is Studded Leather (AC 15), and the recorded squads own armour by day 11-14.
+  Add an `--armor` / `--weapon` option so the comparison is body-for-body with a kitted squad.
 
 ## Medium
 
