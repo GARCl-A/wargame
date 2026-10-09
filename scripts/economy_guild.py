@@ -1416,7 +1416,7 @@ class Crafter(Policy):
     @classmethod
     def stock_up(cls, sim, shop, unit, recipe):
         need = Counter(items.CRAFTING_RECIPES[recipe].materials)
-        reserve = FOOD_LOW_DAYS * len(sim.members) * cheapest_food_price()
+        reserve = FOOD_LOW_DAYS * len(sim.guild.roster) * cheapest_food_price()
         for _ in range(cls.BATCHES - min(unit.count_of(m) // q for m, q in need.items())):
             if any(sim.guild.shop("market").stock.get(m, 1) < q for m, q in need.items()):
                 break
