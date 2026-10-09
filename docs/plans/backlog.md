@@ -22,9 +22,6 @@ Two parts:
 
 ## Medium
 
-- **Claim construction: oven.** Built at the Claim with time and Stone Brick; like the
-  campfire but always lit. First thing to build there, and the start of a general
-  build-at-the-Claim system.
 - **Signal Horn** (new item, not a starting item: too strong). A combat action that warns
   allies, for example extra movement or drawing attention. Talks to the Alarm Trap and the
   Alert talent. Needs the action, AI support and tests.
@@ -162,6 +159,17 @@ building them:
 
 # Needs more information
 
+- **The Mine (new node).** A place to dig, and where Stone Brick (the Claim oven's material,
+  15 x $10) and the ore side of the Smith's chain (Iron Bar, Coal) come from, instead of only
+  the Market. Not sized: it is a node with its own work, risk and loot, and the first node of
+  the production chain the specialised shops wait for.
+  - **To define:** where it sits and its distance from Ankareth; what it yields and at what
+    rate (a work order like the yard, or a Wilds-style activity with ambushes); the risk
+    (cave-ins, creatures, the Z axis already has pits); whether it needs a tool (a Pickaxe;
+    ties to *Crafting tools*); how its pay compares with the yard and the Wilds (re-run
+    `scripts/economy_report.py`); whether it is a Claim-like holding the guild can own.
+  - Needs the node, its order or activity, UI, AI/sim support and tests.
+
 - **Weapons that are really different.** Today every weapon of one damage die is the same
   weapon (all d8 melee play alike; the d6 ones differ only by Finesse, as the rapier). Two
   lines, not yet chosen between (they may combine):
@@ -193,8 +201,7 @@ building them:
 
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
-  the guild. The 9-pick-3 draft and its `ui/draft_panel.py` components are built; what is
-  left waits for design.
+  the guild. What is left waits for design.
   - **Vocation:** a curated list of 5-8 that biases only the candidate pool, mostly the
     **races and occupations** drawn (age and tendency may follow). It has no effect after the
     draft and never locks the pool. Open: the list and each one's bias.

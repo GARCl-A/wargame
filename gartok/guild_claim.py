@@ -6,7 +6,7 @@ Mixed into `guild.Guild`; see `economy.WILDS_CLAIM_*` and
 
 import random
 
-from . import data, economy, wagon_watch, world
+from . import data, economy, recorder, wagon_watch, world
 
 # The Wilds claim's own stage machine (see economy.WILDS_CLAIM_*).
 WILDS_CLAIM_STAGES = ("NONE", "SCOUTED", "CLEARED", "FENCED", "SWEPT", "SUSTAINING", "ESTABLISHED")
@@ -38,7 +38,25 @@ class WildsClaimMixin:
 
     @property
     def wilds_claim_can_cook(self):
-        return self.wilds_claim_campfire and self.wilds_claim_owner != "seized"
+        return (self.wilds_claim_campfire or self.claim_oven) and self.wilds_claim_owner != "seized"
+
+    def claim_build_oven(self, crew):
+        """Build the oven: Stone Brick pooled from `crew`'s packs and a stretch of the clock.
+        Unlike the campfire it never goes out, and it stays standing if the claim is seized.
+        Returns `(built, events, casualties)`."""
+        if self.claim_oven:
+            return False, ["the claim already has an oven."], []
+        have = sum(u.count_of(economy.CLAIM_OVEN_BRICK) for u in crew)
+        if have < economy.CLAIM_OVEN_BRICKS:
+            return False, [f"the oven needs {economy.CLAIM_OVEN_BRICKS} {economy.CLAIM_OVEN_BRICK}; "
+                           f"the group carries {have}."], []
+        left = economy.CLAIM_OVEN_BRICKS
+        for u in crew:
+            left -= u.remove_named(economy.CLAIM_OVEN_BRICK, left)
+        events, casualties = self.pass_time(economy.CLAIM_OVEN_HOURS, busy=crew)
+        self.claim_oven = True
+        recorder.emit("asset", what="claim_oven")
+        return True, ["the oven is built -- the claim can cook, fire or no fire."] + events, casualties
 
     def wilds_claim_light_campfire(self, crew):
         """Build a fire at the claim: one unit of fuel from someone's pack, an hour

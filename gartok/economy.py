@@ -106,6 +106,9 @@ GARAGE_PRICE = 690                # copper per tier, flat: 150 to build + 3 cp/k
 CAMPFIRE_HOURS = 1                # time to build a fire at the claim
 CAMPFIRE_FUEL = "Lumber"          # one unit burns per attempt, lit or not
 CAMPFIRE_DC = 8                   # 1d20 + WIS mod, best of the group
+CLAIM_OVEN_BRICK = "Stone Brick"
+CLAIM_OVEN_BRICKS = 15            # x the brick's price = OVEN_PRICE, paid in stone
+CLAIM_OVEN_HOURS = 8              # no check, unlike the campfire: it costs time and weight
 
 TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 
@@ -139,7 +142,7 @@ MARKET_STOCK = [
     "Light Crossbow", "Shortbow",
     "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Cloak", "Musical Instrument",
     "Meat", "Fruit", "Potato", "Salt", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
-    "1sqm Hide", "Lumber", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
+    "1sqm Hide", "Lumber", "Stone Brick", "Iron Bar", "1kg Coal", "Minor Healing Potion", "Vial",
     "Quiver", "Bear Trap", "Alarm Trap",
 ]
 

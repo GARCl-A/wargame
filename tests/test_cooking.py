@@ -282,3 +282,95 @@ def test_the_daily_sweep_puts_the_fire_out_without_a_garrison():
     guild.wilds_claim_campfire = True
     guild.pass_time(24)
     assert not guild.wilds_claim_campfire
+
+
+# --------------------------------------------------------------------------- #
+# the claim oven                                                              #
+# --------------------------------------------------------------------------- #
+
+def _bricked(n=economy.CLAIM_OVEN_BRICKS):
+    guild, g, p = _claim(fuel=0)
+    p._base_inventory = packed([economy.CLAIM_OVEN_BRICK] * n)
+    return guild, g, p
+
+
+def test_the_oven_takes_bricks_and_hours_and_unlocks_cooking():
+    guild, g, p = _bricked(economy.CLAIM_OVEN_BRICKS + 1)
+    t0 = guild.clock.seconds
+    built, events, _ = guild.claim_build_oven(g.members)
+    assert built and guild.claim_oven and guild.wilds_claim_can_cook
+    assert p.count_of(economy.CLAIM_OVEN_BRICK) == 1
+    assert guild.clock.seconds - t0 == economy.CLAIM_OVEN_HOURS * 3600
+
+
+def test_the_oven_pools_bricks_across_the_group():
+    guild, g, p = _bricked(economy.CLAIM_OVEN_BRICKS - 2)
+    q = Unit("second")
+    q._base_inventory = packed([economy.CLAIM_OVEN_BRICK] * 2)
+    g.members.append(q)
+    built, _, _ = guild.claim_build_oven(g.members)
+    assert built and p.count_of(economy.CLAIM_OVEN_BRICK) + q.count_of(economy.CLAIM_OVEN_BRICK) == 0
+
+
+def test_too_few_bricks_build_nothing_and_cost_no_time():
+    guild, g, p = _bricked(economy.CLAIM_OVEN_BRICKS - 1)
+    t0 = guild.clock.seconds
+    built, events, _ = guild.claim_build_oven(g.members)
+    assert not built and not guild.claim_oven and guild.clock.seconds == t0
+    assert p.count_of(economy.CLAIM_OVEN_BRICK) == economy.CLAIM_OVEN_BRICKS - 1
+
+
+def test_a_second_oven_is_refused():
+    guild, g, p = _bricked(economy.CLAIM_OVEN_BRICKS * 2)
+    guild.claim_build_oven(g.members)
+    built, _, _ = guild.claim_build_oven(g.members)
+    assert not built and p.count_of(economy.CLAIM_OVEN_BRICK) == economy.CLAIM_OVEN_BRICKS
+
+
+def test_the_oven_outlives_the_garrison_that_puts_the_campfire_out():
+    guild, g, _ = _bricked()
+    guild.claim_build_oven(g.members)
+    guild.wilds_claim_campfire = True
+    guild._campfire_tick()
+    assert not guild.wilds_claim_campfire and guild.wilds_claim_can_cook
+
+
+def test_a_seized_claim_cannot_cook_but_keeps_the_oven():
+    guild, g, _ = _bricked()
+    guild.claim_build_oven(g.members)
+    guild.wilds_claim_seize()
+    assert guild.claim_oven and not guild.wilds_claim_can_cook
+    guild.wilds_claim_owner = "guild"
+    assert guild.wilds_claim_can_cook
+
+
+def test_the_claim_oven_costs_the_same_as_the_house_oven_in_bricks():
+    assert economy.CLAIM_OVEN_BRICKS * economy.PRICES[economy.CLAIM_OVEN_BRICK] == economy.OVEN_PRICE
+
+
+def test_the_bricks_are_sold_at_the_market():
+    assert economy.CLAIM_OVEN_BRICK in economy.MARKET_STOCK and economy.PRICES[economy.CLAIM_OVEN_BRICK] > 0
+
+
+def test_the_claim_screen_offers_the_oven_only_with_enough_bricks():
+    guild, g, _ = _bricked(economy.CLAIM_OVEN_BRICKS - 1)
+    assert "oven" not in _button_keys(_claim_screen(guild, g))
+    guild, g, _ = _bricked()
+    scr = _claim_screen(guild, g)
+    assert "oven" in _button_keys(scr)
+    scr._build_oven()
+    keys = _button_keys(scr)
+    assert "cook" in keys and not {"oven", "campfire"} & keys
+
+
+def test_the_claim_oven_survives_a_save_round_trip():
+    slot = "testworld_claim_oven"
+    if os.path.exists(persist.save_path(slot)):
+        return
+    guild = Guild([Unit("player")])
+    guild.claim_oven = True
+    try:
+        persist.save_game(slot, guild)
+        assert persist.load_game(slot).claim_oven
+    finally:
+        persist.delete_world(slot)

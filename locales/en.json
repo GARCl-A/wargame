@@ -216,7 +216,7 @@
       "body": [
         "A claim goes through six stages: scout the land (2 hours), clear the creatures living there (a fight), fence it (10 Lumber, 8 hours), sweep out a nearby bandit camp or nest (a fight), then hold it with a garrison for 10 days. After that it is established.",
         "Once established, garrisoned members gather Lumber for you each day -- but raids can still contest the claim.",
-        "Once the land is swept you can build a campfire (1 Lumber, 1 hour, a WIS check) and cook there. Jerky is how a garrison eats for 10 days.",
+        "Once the land is swept you can build a campfire (1 Lumber, 1 hour, a WIS check) and cook there; it goes out the day nobody is garrisoned. An oven (15 Stone Brick from the Market, $150 of stone, 8 hours) cooks for good. Jerky is how a garrison eats for 10 days.",
         "Once the garrison opens, the claim has a garage for your wagons. A wagon parked there feeds the garrison, but it is only safe while someone stands guard."
       ]
     },

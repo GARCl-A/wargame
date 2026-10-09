@@ -90,6 +90,7 @@ class WildsClaimScreen(Screen):
                 "leave_garrison": self._leave_garrison,
                 "collect": self._collect_lumber,
                 "campfire": self._light_campfire,
+                "oven": self._build_oven,
                 "cook": self.on_cook,
                 "garage": self.on_garage,
             }[key]()
@@ -108,7 +109,12 @@ class WildsClaimScreen(Screen):
         self.notice = "  ".join(["the fences go up -- time to sweep the region."] + events)
 
     def _light_campfire(self):
-        _, events, _ = self.guild.wilds_claim_light_campfire(self.group.members)
+        self._built(self.guild.wilds_claim_light_campfire(self.group.members)[1])
+
+    def _build_oven(self):
+        self._built(self.guild.claim_build_oven(self.group.members)[1])
+
+    def _built(self, events):
         self.notice = "  ".join(events)
         for m in self.group.members:
             m._derive_combat()
@@ -281,11 +287,21 @@ class WildsClaimScreen(Screen):
         if self.guild.wilds_claim_can_cook and self.on_cook:
             self._button(screen, F, "cook", "COOK", y, w)
             return
-        fuel = economy.CAMPFIRE_FUEL
+        fuel, brick = economy.CAMPFIRE_FUEL, economy.CLAIM_OVEN_BRICK
         have = sum(m.count_of(fuel) for m in self.group.members)
+        bricks = sum(m.count_of(brick) for m in self.group.members)
         text(screen, F["body_sm"], f"No fire -- burns 1 {fuel}, {economy.CAMPFIRE_HOURS} h, a WIS check (DC {economy.CAMPFIRE_DC}); "
              f"it stays lit while a garrison is here.  {have} {fuel} carried.", (x, y), T.TX_MUTED)
-        self._button(screen, F, "campfire", "BUILD A CAMPFIRE", y + 22, w, enabled=have > 0)
+        text(screen, F["body_sm"], f"An oven needs {economy.CLAIM_OVEN_BRICKS} {brick} and {economy.CLAIM_OVEN_HOURS} h, "
+             f"and never goes out.  {bricks} {brick} carried.", (x, y + 18), T.TX_MUTED)
+        half = (w - T.S * 2) // 2
+        for i, (key, label, ok) in enumerate((
+                ("campfire", "BUILD A CAMPFIRE", have > 0),
+                ("oven", "BUILD AN OVEN", bricks >= economy.CLAIM_OVEN_BRICKS))):
+            r = pygame.Rect(x + i * (half + T.S * 2), y + 40, half, 40)
+            draw_button(screen, F, r, label, primary=True, enabled=ok, mpos=self.mouse)
+            if ok:
+                self.buttons.append((key, r))
 
     def _draw_established(self, screen, F, x, y, w):
         if self.guild.wilds_claim_owner == "seized":

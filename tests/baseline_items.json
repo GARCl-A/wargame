@@ -696,7 +696,7 @@
   },
   "Stone Brick": {
     "weight": 3.0,
-    "price": 6,
+    "price": 10,
     "food": false,
     "lifespan": null
   },

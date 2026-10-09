@@ -384,68 +384,68 @@ runs cannot set that threshold; it needs the third run the recorder was built fo
 Everything below was a call I made from how the game and the backlog are going. Each could have
 gone another way; the ones I was least sure of are repeated as questions in the next section.
 
-1. **Fights are drawn from a library of real battles, not played live in layer 2.** A 30-day
+D1. **Fights are drawn from a library of real battles, not played live in layer 2.** A 30-day
    guild, six policies and dozens of guilds per cell would take tens of minutes with live
    battles; the library (40 battles per kind, level and party size) keeps layer 2 to under a
    minute a policy and gives `--skill` a clean seam (draw a won or a lost sample). It
    regenerates every run, so it never goes stale against combat changes.
-2. **Everything but the fight is the real engine**, including walking, the Old Road ambush,
+D2. **Everything but the fight is the real engine**, including walking, the Old Road ambush,
    meals and rot, the market screen and the market's cash. I preferred driving `campaign.advance`
    and `MarketScreen` headless to modelling them, so a rule change moves the sim.
-3. **`relief` carried into layer 2.** At a perfect record layer 1 said 0% deaths while layer 2
+D3. **`relief` carried into layer 2.** At a perfect record layer 1 said 0% deaths while layer 2
    still killed members in the AI's bloody wins; I applied the same shrink to both.
-4. **A day is a 16 h shift plus 8 h of sleep** for every policy, the same day the yard's wage
+D4. **A day is a 16 h shift plus 8 h of sleep** for every policy, the same day the yard's wage
    assumes.
-5. **Policies are deliberately simple and parametrised by constants** (food buffer 2 days, buy
+D5. **Policies are deliberately simple and parametrised by constants** (food buffer 2 days, buy
    to 6, an evening bout only when healthy and the stake plus 3 days of food is covered,
    `balanced` buffer = stake + 3 days of food). They are reference players, not optimisers.
-6. **The milestone is affordability, with credit for what is owned.** The "weapon" is an Axe
+D6. **The milestone is affordability, with credit for what is owned.** The "weapon" is an Axe
    ($35: the cheapest tool that also lifts the yard to level 1), armor is Studded Leather, food
    is 7 days of the cheapest ration, and the chest is the Bankers' $90. A member already holding
    gear at least that dear needs none.
-7. **The milestone verdict is judged on `balanced` at 80% skill, passing at >= 50% of guilds.**
+D7. **The milestone verdict is judged on `balanced` at 80% skill, passing at >= 50% of guilds.**
    You gave the target, not the threshold; I read "consigam" as "most guilds".
-8. **The purse goes to the first survivor** (the player picks one member in the real flow). The
+D8. **The purse goes to the first survivor** (the player picks one member in the real flow). The
    Scrapper, the champion and the Games' brawl and capture the flag are all library kinds; the
    Ribbit Brothers need six a side, so they exist in layer 1 only.
-9. **Selling goes through the market's cash and only sells what the guild picked up or crafted.**
+D9. **Selling goes through the market's cash and only sells what the guild picked up or crafted.**
    Starting items (the Axe, an instrument, a Holy Symbol) are never sold.
-10. **Crafting is single-threaded on the clock**: `Guild.crafting_shift` spends the whole guild's
+D10. **Crafting is single-threaded on the clock**: `Guild.crafting_shift` spends the whole guild's
     clock hours, so the `crafter` policy puts one member at the forge and the others wait.
-11. **Finite shelves apply to the freely bought items only**; the items already finite
+D11. **Finite shelves apply to the freely bought items only**; the items already finite
     (`economy.STOCK`: Jerkin, Studded Leather, Hide, potion, Vial) keep today's no-refill rule.
-12. **Dominance needs a $1/day gap, no less XP in either track, no more deaths**, among in-band
+D12. **Dominance needs a $1/day gap, no less XP in either track, no more deaths**, among in-band
     activities only, with a squad of performers standing in for the tavern.
-13. **The route scan reads the world's market nodes**, so it needs no change when the shops split.
-14. **Layer 1's per-day figure includes the walk but not the road ambush**; layer 2 has the ambush.
-15. **Ranking is by guild outcome**, shared by its three members, so a trait shows only over many
+D13. **The route scan reads the world's market nodes**, so it needs no change when the shops split.
+D14. **Layer 1's per-day figure includes the walk but not the road ambush**; layer 2 has the ambush.
+D15. **Ranking is by guild outcome**, shared by its three members, so a trait shows only over many
     guilds; the traits ranked are the six attribute modifiers, languages, race, occupation and
     "owns an Axe".
-16. **Deleted `scripts/economy_sim.py`**, as the plan's step 5 says, and moved its references:
+D16. **Deleted `scripts/economy_sim.py`**, as the plan's step 5 says, and moved its references:
     `AGENTS.md`, `README.md` and the backlog's "Economy sim rewrite" item; later (you said
     "vale tratar") also the `project-context` notes, with a new reference `gartok-economy-sim-v2.md`.
-17. **Test cost.** The tests add about 26 s to the suite (22 s to 48 s): a shared fight library,
+D17. **Test cost.** The tests add about 26 s to the suite (22 s to 48 s): a shared fight library,
     seeded runs, a tiny report. The heaviest is the report smoke test (about 11 s).
-18. **The Games are *leveling*, not *income*.** At level 3 they pay less than the yard in copper
+D18. **The Games are *leveling*, not *income*.** At level 3 they pay less than the yard in copper
     and far more in XP, which is what the Scrapper is for one step lower; judging them against
     the lumber floor would have failed them for the wrong reason. Brawl and capture the flag are
     also not compared with each other by the dominance scan (they differ by noise); the scan now
     compares only activities of different roles.
-19. **The Medic is a switch (`--medic`) over the game's own `medic.quote` / `medic.cure`**
+D19. **The Medic is a switch (`--medic`) over the game's own `medic.quote` / `medic.cure`**
     (potions at 0.7x); `--medic-factor` changes the price. The game offers it (the Apothecary's MEDIC tab),
     but the switch stays off by default so the other findings keep their baseline.
-20. **A hurt guild goes to the Medic only if it can afford the bill and still eat tomorrow**;
+D20. **A hurt guild goes to the Medic only if it can afford the bill and still eat tomorrow**;
     otherwise it rests. The policies themselves did not change.
-21. **The Claim expedition buys 12 days of food and the 10 Lumber, walks, and runs the stages in
+D21. **The Claim expedition buys 12 days of food and the 10 Lumber, walks, and runs the stages in
     order**, stopping the run on a lost fight (the guild heals and tries again). The garrison
     stands down when anyone is under a quarter of their HP, the food is under a day or the claim
     is seized. The `claimer` policy sets that trip's cost aside before it buys any gear.
-22. **The Games policy fights only when the stake and 3 days of food are covered**, and only a
+D22. **The Games policy fights only when the stake and 3 days of food are covered**, and only a
     bout whose expected purse beats its stake (the champion is always tried first: it opens the
     Games and you gave it its own reward).
-23. **Both level tracks key the fight library**, and the dominance scan, `balanced` and the rest
+D23. **Both level tracks key the fight library**, and the dominance scan, `balanced` and the rest
     use `Sim.fight_level`. Layer 1 keeps one number for both tracks (its squads level together).
-24. **The late-game scenario is level 3 with $250** (a first week behind a squad): the Games and
+D24. **The late-game scenario is level 3 with $250** (a first week behind a squad): the Games and
     the Claim cannot be reached from level 0 in 30 days, so the report starts them where a
     squad would plausibly be. The number is mine.
 
