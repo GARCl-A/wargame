@@ -16,6 +16,7 @@ Exit code 1 if any verdict fails; the report is also written to sim_results/.
 from __future__ import annotations
 
 import argparse
+import glob
 import os
 import random
 import sys
@@ -160,7 +161,15 @@ def main():
     ap.add_argument("--skill", type=float, default=0.8)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out-dir", default="sim_results")
+    ap.add_argument("--profile", default=None, metavar="JSON",
+                    help="thresholds for the `human` policy; default: the newest recordings/*/human_profile.json")
     args = ap.parse_args()
+    profile = args.profile or next(iter(sorted(glob.glob(os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recordings", "*", "human_profile.json")),
+        reverse=True)), None)
+    if profile:
+        guild_sim.Human.load(profile)
+        print(f"human policy thresholds from {profile}")
     base = QUICK if args.quick else Settings()
     text, failed = build(Settings(**{**base.__dict__, "skill": args.skill, "seed": args.seed}))
     print(text)

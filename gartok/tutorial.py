@@ -15,7 +15,7 @@ TUTORIALS = (
     "guild.members", "guild.overview", "guild.reputations",
     "squad", "battle", "loot", "reward",
     "market", "taverna", "hunt", "bank", "gear", "level", "library",
-    "group", "missions", "trust", "ledger", "craft", "property", "claim", "guard", "prison", "stable"
+    "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "prison", "stable"
 )
 
 class TutorialState:

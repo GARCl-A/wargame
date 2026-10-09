@@ -30,17 +30,8 @@ Two parts:
 - **Founding screen on the `ui/` kit.** The draft screen is off-pattern; rebuild it with the
   `gartok/ui/` components (data-driven `draw_x`, 8px grid, palette) and keep its tutorial
   card. Do it together with the 9-pick-3 draft so the layout is built once.
-- **Medic, quick treatment (B1).** A tab in the Apothecary hub: the answer to rest healing
-  being slow (1 HP per 8 h at CON mod 0). A hospital that treats with healing potions and
-  antidotes at a discount, priced as the *expected* potions and antidotes needed to leave
-  cured, at catalogue price x 0.7 (a constant in `economy.py`). It is a transaction: pick
-  the patients from the party present, pay, and the clock advances for the whole group.
-  - HP: always up to max, 1 h. Cost = `ceil((hp_max - hp) / 3.5)` Minor Healing Potions.
-  - Sickness: 8 h, cost = one First Aid Kit charge (price / charges).
-  - Poison: assume every Antidote save passes; stacks fall about 2 a day (natural + dose),
-    so N stacks take 24 h x `ceil((N - 1) / 2)` (at least 1 h) and `ceil(N / 2)` doses.
-    Only treatments up to 24 h belong here; longer ones are B2.
-- **Medic, hospital stay (B2).** After B1. A treatment of 24 h or more admits the patient:
+- **Medic, hospital stay (B2).** The quick treatment is built (`medic.py`, the Apothecary's MEDIC tab) and refuses what takes
+  more than 24 h (poison from 4 stacks up). A treatment of more than 24 h admits the patient:
   they split off into a new Group on a new order kind (saved with the groups), locked like
   any group with an order. With no free group slot the whole group waits with them instead.
   On discharge the patient is a loose group and the player merges by hand.
@@ -80,6 +71,15 @@ Two parts:
   (and `autowin`) stop needing a `--skill` knob. Start from what the AI does badly in the
   Games (objective play in capture the flag, focus fire, using the terrain), re-run
   `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
+  - **Way in: record the player's combat, as was done for the economy.** First list every
+    action the AI can take (`actions/`) and what `ai.py` does with each. Then the player plays
+    fights by hand: AI vs AI with the player taking over one side's unit (the wolf, different
+    races and levels), and the recorder logs each decision (state, options, pick). From those
+    rows, derive a policy the way `play_analysis.py` derived the `human` economy profile:
+    thresholds and priorities (when to focus fire, when to retreat, when to go for the flag),
+    then feed them to `ai.py` and measure against the benchmark win rates above.
+  - Needs: a combat event in `recorder.py`, a way to hand a unit to the player in an AI fight,
+    and an analysis script for the combat rows.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
   `recordings/2026-10-08/` (14 and 11 days, not 30; a third was judged not worth playing) with
   the `human_profile.json` that `scripts/play_analysis.py` makes from them. Run
@@ -112,7 +112,7 @@ Two parts:
   (`Guild.crafting_shift`: one crafter at a time, everyone waits). Instead the player
   allocates a character to craft: they split off the group into their own Group on a craft
   order, work at the station while the others do something else, and rejoin by hand (the
-  same shape as the Medic's hospital stay, B2, and it competes for the same group slots).
+  same shape as the Medic's hospital stay, and it competes for the same group slots).
   The economy sim's `crafter` policy then becomes one member crafting while the rest work
   the yard. Needs the order kind, saves, UI and tests.
 - **Specialised shops.** Split the single general market into shops, each its own node
@@ -174,11 +174,34 @@ building them:
 
 # Needs more information
 
-- **Adelio is too easy (Champion of the Pit).** A combat-0 squad beats the Champion bout (stake
-  $20 each, purse $120), and the first recorded run did it at level ~0.4 with no trouble. The bout
-  was meant as a gate to the Games, but at $60 of stake for $120 it is also the best money in the
-  first ten days. Decide whether to rebalance him (levels, HP, the goons) or the stake/purse, and
-  re-run `economy_activities.py`: the sim's policies only try the champion from mean combat 2.
+- **Weapons that are really different.** Today every weapon of one damage die is the same
+  weapon (all d8 melee play alike; the d6 ones differ only by Finesse, as the rapier). Two
+  lines, not yet chosen between (they may combine):
+  1. **A 2-AP action per weapon.** Every weapon keeps the basic attack; each weapon *kind*
+     also gets its own two-point action. Open: which actions, one per weapon or per family,
+     how the AI chooses between them.
+  2. **Explicit weapon traits.** `ItemDef` carries ad-hoc fields (`finesse: bool`,
+     `thrown: int`, `items.py:64`) and each trait's rule text is a hand-written `if` in the
+     description builder. Model them as a set of named keywords (Finesse, Thrown, Entangle...)
+     so a new weapon is declared by listing traits (a spiked spinning chain: Finesse + Thrown
+     + Entangle) and the code, UI text and `REFERENCE.md` read from the one registry. Same
+     shape as `abilities.py`.
+  - **First step:** audit the weapon catalog for what any two share (die, hands, range,
+    trait) and what makes each one unique, then decide whether trait keywords can carry the
+    2-AP action too (a trait grants an action). Needs AI and tests.
+
+- **Magic as the vertical progression.** Follows the library's tome quest. Chain:
+  1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that
+     unlocks a new place.
+  2. An intermediate mission to earn their trust in the guild.
+  3. Then the Library sends the codex to one of the **three magic factions** (Blood mages,
+     Nature mages, Faith mages), where the magic line proper begins.
+  - **New mechanic to build first: a node that unlocks maps.** Items or deeds (the map)
+    must be able to make a node/map appear in the world. Nothing does that today.
+  - **To define:** the exact reputation gate and the intermediate mission; the three
+    factions as nodes with their own deeds (see `factions.py`); how each school's study
+    differs (`magic.py`); whether the three are exclusive. Holy Symbol (below) belongs to
+    the faith school.
 
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*

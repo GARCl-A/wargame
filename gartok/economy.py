@@ -71,6 +71,13 @@ def perform_expected(hours, cha_mod):
 BANK_CHEST_PRICE = constants.BANK_CHEST_PRICE                   # copper for the right to a strongbox
 BANK_CHEST_CAPACITY = constants.BANK_CHEST_CAPACITY                # kg the strongbox holds
 
+# The Medic: a visit to treat a group's hurt, sick and poisoned for a discount (`medic.py`).
+MEDIC_PRICE_FACTOR = 0.7                # the Medic sells the potions and doses it uses at this share of the catalogue price
+MEDIC_POTION_HP = 3.5                   # HP one Minor Healing Potion restores, as the Medic prices it
+MEDIC_HP_HOURS = 1                      # a hurt patient is mended to full in this time
+MEDIC_SICKNESS_HOURS = 8
+MEDIC_MAX_HOURS = 24                    # longer treatments need a hospital stay, not a visit
+
 # The Bankers also sell the guild a house inside the walls -- the "City" half of
 # [[gartok-property-two-paths]]'s two paths to a base. Subordinate to the
 # Bankers (a recurring tax, not a one-off fee like the strongbox); gated on the

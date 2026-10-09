@@ -59,8 +59,8 @@ FLOOR_MARGIN = 1             # copper a member keeps after eating, doing the flo
 TURN_GUARD = 600
 SECONDS_PER_HOUR = 3600
 ROUND_SECONDS = 6
-MEDIC_POTION_HP = 3.5        # HP one Minor Healing Potion restores (backlog B1)
-MEDIC_PRICE_FACTOR = 0.7     # the Medic sells the potions it uses at this share of the catalogue price
+MEDIC_POTION_HP = economy.MEDIC_POTION_HP
+MEDIC_PRICE_FACTOR = economy.MEDIC_PRICE_FACTOR      # --medic-factor overrides it
 
 # activity -> (role, lowest level, highest level) the squad is meant to do it at
 ROLES = {
@@ -104,8 +104,8 @@ def make_squad(size, level, team="player"):
 
 
 def medic_cost(damage):
-    """Copper the Medic (backlog B1) charges to bring a member back from `damage` HP lost:
-    the potions it would take, at a discount. Not built yet: the numbers are the backlog's."""
+    """Copper the Medic charges to bring a member back from `damage` HP lost:
+    the potions it would take, at a discount."""
     return math.ceil(damage / MEDIC_POTION_HP) * items.get("Minor Healing Potion").price * MEDIC_PRICE_FACTOR
 
 
@@ -459,9 +459,9 @@ def main():
     ap.add_argument("--judge", type=float, default=0.8,
                     help="the skill the verdict and the exit code use")
     ap.add_argument("--medic", action="store_true",
-                    help="bouts are healed by the Medic (backlog B1), paid in potions, not by resting")
+                    help="bouts are healed by the Medic, paid in potions, not by resting")
     ap.add_argument("--medic-factor", type=float, default=None, metavar="F",
-                    help=f"the Medic's price as a share of the potions (backlog: {MEDIC_PRICE_FACTOR})")
+                    help=f"the Medic's price as a share of the potions ({MEDIC_PRICE_FACTOR})")
     args = ap.parse_args()
     random.seed(args.seed)
     if args.medic_factor is not None:

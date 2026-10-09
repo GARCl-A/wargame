@@ -164,9 +164,22 @@ def test_missions_and_crafts_are_logged(tmp_path):
     assert got["craft"]["recipe"] == "Jerky"
 
 
+class _SurvivableLibrary(sim_mod.FightLibrary):
+    """The real won fights with the deaths taken out: the test is about the line the policy
+    walks, not about the dice of a 6-fight library deciding whether the squad lives to walk it."""
+
+    def pool(self, kind, level, size):
+        fights = _LIBRARY.pool(kind, level, size)
+        won = [f for f in fights if f.won] or fights
+        return [sim_mod.Sample(f.won, f.rounds, [(min(lost, 1), False, xp) for lost, _, xp in f.members],
+                               f.loot, f.purse) for f in won]
+
+
 def test_the_rush_policy_follows_the_recorded_line():
-    sim = sim_mod.Sim(sim_mod.Rush(), seed=6, library=_LIBRARY, skill=0.95, horizon=30)
-    while sim.elapsed < 30 and not sim.policy.dictionary_done:
+    sim = sim_mod.Sim(sim_mod.Rush(), seed=6, library=_SurvivableLibrary(), skill=0.95, horizon=30)
+    for _ in range(500):
+        if sim.elapsed >= 30 or sim.policy.dictionary_done:
+            break
         sim.policy.step(sim)
     assert sim.champion_beaten and sim.policy.dictionary_done
     assert sim.guild.missions[0].state == "done"

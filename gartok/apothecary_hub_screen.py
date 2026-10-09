@@ -4,6 +4,7 @@ import pygame
 
 from .apothecary_mission_screen import ApothecaryMissionScreen
 from .crafting_screen import CraftingScreen
+from .medic_screen import MedicScreen
 from .screen import Screen
 from .ui.primitives import draw_button
 from .ui.tokens import T
@@ -30,13 +31,15 @@ class ApothecaryHubScreen(Screen):
                                            station="apothecary")
         self.jobs_screen = ApothecaryMissionScreen(self._F, guild, group, on_done)
         
+        self.medic_screen = MedicScreen(self._F, guild, group, on_done)
+
         self.buttons = []
 
     def tutorial_key(self):
         return self.active_screen().tutorial_key()
 
     def active_screen(self):
-        return self.craft_screen if self.tab == "craft" else self.jobs_screen
+        return {"craft": self.craft_screen, "medic": self.medic_screen}.get(self.tab, self.jobs_screen)
 
     def handle_escape(self):
         return self.active_screen().handle_escape()
@@ -88,3 +91,12 @@ class ApothecaryHubScreen(Screen):
         if self.tab != "craft":
             self.buttons.append(("craft", r_craft))
         self._hot = self._hot or r_craft.collidepoint(self.mouse)
+
+        x -= bw + T.S
+
+        r_medic = pygame.Rect(x, m, bw, 32)
+        draw_button(screen, F, r_medic, "MEDIC", primary=self.tab == "medic",
+                    enabled=self.tab != "medic", mpos=self.mouse)
+        if self.tab != "medic":
+            self.buttons.append(("medic", r_medic))
+        self._hot = self._hot or r_medic.collidepoint(self.mouse)

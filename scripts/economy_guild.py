@@ -61,6 +61,7 @@ from gartok import (
     hunt,
     items,
     matchup,
+    medic,
     missions,
     orders,
     recorder,
@@ -632,19 +633,21 @@ class Sim:
         self.run_order(orders.rest(plan.hours if plan.available else SLEEP_HOURS))
 
     def treat(self):
-        """The Medic's quick treatment (backlog B1, not built): an hour at the City for the
-        whole group and every hurt member is back to full, for the potions it would take at a
-        discount. False when the guild cannot pay it and still eat tomorrow."""
-        hurt = [u for u in self.members if u.hp < u.hp_max]
-        cost = sum(round(act.medic_cost(u.hp_max - u.hp)) for u in hurt)
-        if not hurt or self.money < cost + self.mouths * cheapest_food_price():
+        """The Medic's quick treatment (`medic.py`): every hurt, sick or poisoned member is
+        cured at the City for the potions and doses it would take at a discount, in the
+        longest treatment's hours. False when the guild cannot pay it and still eat tomorrow."""
+        quotes = [q for q in medic.quotes(self.members) if q.needs_care and q.offered]
+        patients = {q.uid for q in quotes}
+        cost, hours = medic.total(quotes)
+        if not quotes or self.money < cost + self.mouths * cheapest_food_price():
             return False
         self.goto("city")
         economy.charge_richest_first(self.members, cost)
-        for u in hurt:
-            u.hp = u.hp_max
+        for u in self.members:
+            if u.uid in patients:
+                medic.cure(u)
         self.treated += cost
-        self.pass_hours(1)
+        self.pass_hours(hours)
         return True
 
     def stage_show(self, hours=4):
@@ -1681,11 +1684,11 @@ def main():
     ap.add_argument("--assets", default="",
                     help="comma list the guild starts with and must keep: house, Donkey, Ox, Horse, Cart")
     ap.add_argument("--medic", action="store_true",
-                    help="a Medic at the City heals for potions at a discount, in an hour (backlog B1)")
+                    help="a Medic at the City heals for potions at a discount, in an hour")
     ap.add_argument("--mixed", action="store_true",
                     help="hurt members work the yard while they heal (1 HP a night) instead of resting")
     ap.add_argument("--medic-factor", type=float, default=None, metavar="F",
-                    help=f"the Medic's price as a share of the potions (backlog: {act.MEDIC_PRICE_FACTOR})")
+                    help=f"the Medic's price as a share of the potions ({act.MEDIC_PRICE_FACTOR})")
     ap.add_argument("--capital", type=int, default=0,
                     help="extra copper at the start, for a guild past its first week")
     ap.add_argument("--profile", default=None, metavar="JSON",

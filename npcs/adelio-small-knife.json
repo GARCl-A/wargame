@@ -14,7 +14,7 @@
   "treated": false,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
-  "hp": 5,
+  "hp": 9,
   "share_food": true,
   "combat_xp": 3,
   "work_hours": 32,
@@ -46,7 +46,7 @@
   "base_attributes": {
     "strength": 10,
     "dexterity": 13,
-    "constitution": 10,
+    "constitution": 14,
     "intelligence": 8,
     "wisdom": 11,
     "charisma": 11

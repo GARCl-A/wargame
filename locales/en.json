@@ -178,6 +178,13 @@
         "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2. Work as many hours as you like: each hour rolls toward a batch, leftover progress carries into the next one, and the shift ends early when the materials run out. The campfire at the claim stays lit while a garrison is there, and goes out the day nobody is."
       ]
     },
+    "medic": {
+      "title": "The Medic",
+      "body": [
+        "A quick cure for the group at the Apothecary. Pick the patients; the price is the Minor Healing Potions, First Aid Kit charge and Antidotes it would take, sold to you at a discount. Anyone picked leaves at full HP, cured and unpoisoned.",
+        "The clock moves for the whole group by the longest treatment: an hour for wounds, eight for sickness, a day for light poison. Heavier poison needs a hospital stay and is not offered here. The group pays from its packs, richest first."
+      ]
+    },
     "property": {
       "title": "The City house",
       "body": [
