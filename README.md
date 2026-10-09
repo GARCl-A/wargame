@@ -190,6 +190,8 @@ gartok/
 
   # world + campaign
   world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
+  node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
+  shop.py           a shop's own till and finite shelf, one per node that offers `shop`
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
@@ -294,9 +296,10 @@ docs/plans/         design plans not yet built (campaign AI roadmap)
   subclass with `build(battle)` in `scenario.py`; point a `world.Node` at it. A
   non-elimination objective goes through `Scenario.win_check` (capture-the-flag
   `_FlagObjective` and `AncientRuinsScenario` already override it).
-- **New place on the map**: a `Node` in `world.NODES` + edges in `world.EDGES`
-  (cost in hours). An order's `kind` becomes its screen through one line in
-  `app.App._ACTIVITY_OPENERS`; a forced fight's aftermath is one line in
+- **New place on the map**: a `Node` in `world.NODES` listing its `functions` + edges in
+  `world.EDGES` (cost in hours). Offering something already built is only the id in the list.
+  A new kind of service is one `NodeFunction` in `node_functions.FUNCTIONS` (order kind, button
+  label) plus its opener in `app.App._FUNCTION_OPENERS`; a forced fight's aftermath is one line in
   `_FORCED_FIGHT_RESOLVERS`.
 - **New world system** (outside combat): the routine that passes time in
   `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the

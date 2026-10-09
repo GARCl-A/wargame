@@ -7,7 +7,7 @@ from tests.helpers import Unit, _unit, economy, fixed_d20, packed, persist, worl
 
 def test_lumber_yard_is_a_work_town_one_hour_from_the_city():
     n = world.node("lumber_yard")
-    assert n.kind == "town" and n.work
+    assert n.kind == "town" and n.has("work")
     _, hours = world.route("city", "lumber_yard")
     assert hours == 1
 

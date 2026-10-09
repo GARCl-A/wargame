@@ -54,7 +54,9 @@ When the two disagree, `REFERENCE.md` wins.
 | `ground.py` | GroundObject (weapon, torch) + Creature (neutral body) |
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |
 | `ai.py` | heuristic over actions/; alignment tempers behaviour |
-| `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)` |
+| `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) |
+| `node_functions.py` | what a node can offer, one `NodeFunction` per id: order kind, map button label, note; `app._FUNCTION_OPENERS` holds each id's screen opener and a test keeps them in step |
+| `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); refilled daily for every node that offers `shop` |
 | `orders.py` | Order dataclass; AUTO (travel / work / rest) / INTERACTIVE / garrison / forced kinds |
 | `rest.py` | what a rest order costs and how long "until full" lasts (simulation on copies, keeps a day of rations) |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
@@ -73,7 +75,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `medic.py` | the Medic's quick treatment (Apothecary hub, MEDIC tab): HP / sickness / poison priced as the expected potions and doses at `economy.MEDIC_PRICE_FACTOR`, one clock for the group; past `MEDIC_MAX_HOURS` it is a hospital stay (`admit`: the patient splits off on a `hospital` order, `campaign.advance` calls `discharge`); the sim prices it from the same constants |
 | `craft_level.py` | a recipe's level, worked out from its difficulty (who may start it, scarce reagents, batch time), never set by hand; it blocks nobody, it is the label and the work-XP multiplier |
-| `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS`, a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
+| `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS` (built from `_FUNCTION_OPENERS` + arena + forced kinds), a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 | `archetypes.py` | recruit archetype catalog + candidate generation |
 | `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |

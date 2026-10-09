@@ -1241,7 +1241,7 @@ def test_market_screen_item_hover_tooltip():
     shopper.give_to_pack("Dagger")
     guild = Guild([shopper])
     node = next(n for n in NODES if n.kind == "market")
-    guild.market_stock = {"Dagger": 5, "Meat": 10}
+    guild.shop(node.id).stock = {"Dagger": 5, "Meat": 10}
     
     ms = MarketScreen(ui_fonts(), guild, [shopper], node, lambda: None)
     surf = pygame.Surface((1280, 720))

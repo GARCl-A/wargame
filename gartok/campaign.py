@@ -442,10 +442,10 @@ def _fortress_ambush_catch(guild, group, resume_path):
     valuable, not a standing risk of the fortress itself the way `unsafe`
     marks the Old Road (so gated on the guild's mission state too, not just
     the node) -- but it still only ever happens AT Ledger Hold, hence the
-    `node.ledger` check up front, same shape as `_road_ambush_catch`'s own
+    `ledger` function check up front, same shape as `_road_ambush_catch`'s own
     `node.unsafe` gate. Marks the mission's `ambush_done` the moment it fires,
     win or lose, so it never springs twice on the same shipment."""
-    if not world.node(group.node).ledger:
+    if not world.node(group.node).has("ledger"):
         return None
     mission = missions.pending_fortress_ambush(guild, group)
     if mission is None:
@@ -464,13 +464,13 @@ CITY_RAID_SIZE = 3
 def _property_raid_catch(guild, group, resume_path):
     """The City guard coming to clear a squatted property
     (`guild.house.squatting`, set by `guild.house.squat` after
-    the guild refuses a repossession offer): gated on `node.city_property` the
-    same way `_fortress_ambush_catch` gates on `node.ledger`, plus the squat
+    the guild refuses a repossession offer): gated on the node's `property` function the
+    same way `_fortress_ambush_catch` gates on `ledger`, plus the squat
     state itself, then rolls `CITY_RAID_CHANCE` once per arrival like
     `_road_ambush_catch` does for an unsafe node. Unlike a road ambush, losing
     this fight has a further consequence (`resolve_property_raid` ends the
     squat for good) -- see [[gartok-property-two-paths]]."""
-    if not (guild.house.squatting and world.node(group.node).city_property):
+    if not (guild.house.squatting and world.node(group.node).has("property")):
         return None
     if random.random() >= CITY_RAID_CHANCE:
         return None
@@ -554,11 +554,11 @@ def _wilds_claim_seizure_check(guild, days):
 def _wilds_claim_retake_catch(guild, group, resume_path):
     """Arriving at a seized Wilds claim (Sistema 4, `guild.wilds_claim_owner
     == "seized"`): the occupiers are still holding it, same one-off shape as
-    `_fortress_ambush_catch` (gated on `node.claim` rather than `node.ledger`,
+    `_fortress_ambush_catch` (gated on `claim` rather than `ledger`,
     and on the guild's ownership state rather than a mission flag). Winning
     hands the ground back (`resolve_wilds_retake`) without redoing Sistema
     3's campaign; the structure was never touched, only who holds it."""
-    if not (world.node(group.node).claim and guild.wilds_claim_owner == "seized"):
+    if not (world.node(group.node).has("claim") and guild.wilds_claim_owner == "seized"):
         return None
     pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
                 for _ in range(economy.WILDS_RAID_SIZE))

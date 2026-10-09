@@ -59,7 +59,8 @@ class UpkeepMixin:
             working = g.busy and g.order.kind in orders.WORK_KINDS and not resting
             for u in g.members:
                 on_the_job = working or u in busy
-                if ((g.busy and not resting) or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
+                waiting = g.busy and g.order.kind == "solo" and u.uid != g.order.who
+                if ((g.busy and not resting and not waiting) or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
                     u.consecutive_rest_hours = 0
                     continue
                 if not (u.hp < u.hp_max or getattr(u, "sick", False)):
@@ -188,8 +189,8 @@ class UpkeepMixin:
         events += self._city_property_upkeep()
         events += self._garrison_upkeep()
         for n in world.NODES:
-            if n.is_market:
-                self.market_cash[n.id] = economy.regen_market_cash(self.market_cash_at(n.id))
+            if n.has("shop"):
+                self.shop(n.id).refill()
         events += self._wilds_claim_sustain_tick()
         self._claim_garage_tick()
         self._campfire_tick()

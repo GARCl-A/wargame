@@ -3,7 +3,7 @@
 Plan: docs/plans/economy_sim_v2.md. The real `Guild` lives the days: the real order engine
 (`orders` + `campaign.advance`) walks it between places and ticks the clock, the real daily
 upkeep feeds it, rots its food and heals it, and the market is the real `MarketScreen`, so
-prices, haggling, finite stock and the market's cash (`Guild.market_cash`) all bite. Work and
+prices, haggling, finite stock and the market's cash (`Guild.shop(node_id).cash`) all bite. Work and
 tavern shifts, hunts and rests go through the same calls the game makes.
 
 The one stand-in is the fight. A policy only decides *what* to do; fights are drawn from a
@@ -298,7 +298,7 @@ class Sim:
         if restock:
             for name in dict.fromkeys(economy.MARKET_STOCK):
                 if economy.freely_buyable(name):
-                    self.guild.market_stock[name] = restock.target
+                    self.guild.shop("market").stock[name] = restock.target
         self.snap()
 
     def own(self, asset):
@@ -405,7 +405,7 @@ class Sim:
         days, self._stock_day = today - self._stock_day, today
         if days <= 0:
             return
-        shelves = self.guild.market_stock
+        shelves = self.guild.shop("market").stock
         for name, count in shelves.items():
             if economy.freely_buyable(name):
                 shelves[name] = min(self.restock.target, count + self.restock.per_day * days)
@@ -831,7 +831,7 @@ class MarketVisit:
     def sell_loot(self):
         """Sell what the guild picked up, as much as the market's cash can pay for."""
         screen, sim = self.screen, self.sim
-        cash = sim.guild.market_cash_at(self.node.id)
+        cash = sim.guild.shop(self.node.id).cash
         picks, total = [], 0
         stacks = [(u, i, n, q) for u in sim.members for i, (n, q) in enumerate(u._base_inventory)
                   if sim.sellable[n] > 0 and not items.is_coin(n)]
@@ -1402,7 +1402,7 @@ class Crafter(Policy):
         need = Counter(items.CRAFTING_RECIPES[recipe].materials)
         reserve = FOOD_LOW_DAYS * len(sim.members) * cheapest_food_price()
         for _ in range(cls.BATCHES - min(unit.count_of(m) // q for m, q in need.items())):
-            if any(sim.guild.market_stock.get(m, 1) < q for m, q in need.items()):
+            if any(sim.guild.shop("market").stock.get(m, 1) < q for m, q in need.items()):
                 break
             cost = sum(economy.buy_price(m, shop.screen.deal) * q for m, q in need.items())
             if sim.money < cost + reserve:

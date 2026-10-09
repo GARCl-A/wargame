@@ -36,6 +36,7 @@ from .group import Group
 from .guild import Guild
 from .holdings import CityProperty, Garage, Stash
 from .orders import Order
+from .shop import Shop
 from .tutorial import TutorialState
 from .unit import ATTRIBUTES, Unit
 from .wagon import Wagon
@@ -49,7 +50,7 @@ else:
 SAVE_DIR = os.path.join(_BASE_DIR, "saves")
 CURRENT = "current"
 AUTOSAVES_KEPT = 10
-SAVE_VERSION = 1                 # bumped when the payload shape changes; nothing upgrades an older save
+SAVE_VERSION = 2                 # bumped when the payload shape changes; nothing upgrades an older save
 
 
 class SaveVersionError(Exception):
@@ -205,7 +206,7 @@ PAYLOAD_DEFAULTS = {
     "wilds_claim_stage": "NONE", "wilds_claim_fence_lumber": 0,
     "wilds_claim_sustain_days_left": None, "wilds_claim_owner": None,
     "wilds_claim_campfire": False, "claim_oven": False, "ancient_ruins_discovered": False,
-    "market_cash": {}, "total_spent": 0, "items_sold_kinds": [], "missions": [],
+    "shops": {}, "total_spent": 0, "items_sold_kinds": [], "missions": [],
     "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
     "leader": None, "leader_swaps_used": 0, "leaving": {},
@@ -244,8 +245,7 @@ def _payload(guild, kind, label):
         "wilds_claim_campfire": guild.wilds_claim_campfire,
         "claim_oven": guild.claim_oven,
         "ancient_ruins_discovered": guild.ancient_ruins_discovered,
-        "market_stock": dict(guild.market_stock),
-        "market_cash": dict(guild.market_cash),
+        "shops": {node_id: shop.to_dict() for node_id, shop in guild.shops.items()},
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
         "missions": [missions.mission_to_dict(m) for m in guild.missions],
@@ -332,8 +332,7 @@ def load_game(world, save_id=CURRENT):
                  wilds_claim_campfire=payload["wilds_claim_campfire"],
                  claim_oven=payload["claim_oven"],
                  claim_garage=garage_from_dict(payload["wilds_claim_garage"], unlimited=True),
-                 market_stock=payload["market_stock"],
-                 market_cash=payload["market_cash"],
+                 shops={node_id: Shop.from_dict(d) for node_id, d in payload["shops"].items()},
                  total_spent=payload["total_spent"],
                  items_sold_kinds=payload["items_sold_kinds"],
                  missions=[missions.mission_from_dict(d) for d in payload["missions"]],

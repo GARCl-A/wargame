@@ -26,7 +26,7 @@ def _shopper(copper=0, *goods):
 def _screen(u, cash=None):
     guild = Guild([u])
     if cash is not None:
-        guild.market_cash[NODE.id] = cash
+        guild.shop(NODE.id).cash = cash
     return MarketScreen(None, guild, [u], NODE, lambda: None)
 
 
@@ -35,7 +35,7 @@ def _pick(s, u, name):
 
 
 def test_a_fresh_market_starts_with_its_opening_cash():
-    assert Guild([_shopper()]).market_cash_at(NODE.id) == economy.MARKET_CASH_START
+    assert Guild([_shopper()]).shop(NODE.id).cash == economy.MARKET_CASH_START
 
 
 def test_the_daily_refill_stops_at_the_cap_and_never_takes_cash_away():
@@ -47,9 +47,9 @@ def test_the_daily_refill_stops_at_the_cap_and_never_takes_cash_away():
 
 def test_a_day_refills_every_market():
     guild = Guild([_shopper()])
-    guild.market_cash[NODE.id] = 0
+    guild.shop(NODE.id).cash = 0
     guild._daily_upkeep()
-    assert guild.market_cash_at(NODE.id) == economy.MARKET_CASH_REGEN
+    assert guild.shop(NODE.id).cash == economy.MARKET_CASH_REGEN
 
 
 def test_spending_at_the_market_fills_its_cash():
@@ -57,7 +57,7 @@ def test_spending_at_the_market_fills_its_cash():
     s = _screen(u, cash=0)
     s.selected = [("stock", "Dagger")]
     s._buy(u, ["Dagger"])
-    assert s.guild.market_cash_at(NODE.id) == economy.buy_price("Dagger", s.deal)
+    assert s.guild.shop(NODE.id).cash == economy.buy_price("Dagger", s.deal)
 
 
 def test_selling_drains_the_market_cash_by_what_it_paid():
@@ -67,7 +67,7 @@ def test_selling_drains_the_market_cash_by_what_it_paid():
     paid = economy.sell_price("Rope", s.deal)
     s._sell()
     assert u.money == paid
-    assert s.guild.market_cash_at(NODE.id) == 500 - paid
+    assert s.guild.shop(NODE.id).cash == 500 - paid
 
 
 def test_a_sale_above_what_the_market_holds_is_refused_whole():
@@ -77,7 +77,7 @@ def test_a_sale_above_what_the_market_holds_is_refused_whole():
     s.selected = _pick(s, u, "Rope")
     s._sell()
     assert u.money == 0 and u.has_item("Rope")
-    assert s.guild.market_cash_at(NODE.id) == price - 1
+    assert s.guild.shop(NODE.id).cash == price - 1
     assert "only has" in s.notice
 
 
@@ -86,13 +86,17 @@ def test_the_market_cash_survives_a_save_round_trip():
     if os.path.exists(persist.save_path(slot)):
         return
     guild = Guild([_shopper()], node="city")
-    guild.market_cash[NODE.id] = 321
+    guild.shop(NODE.id).cash = 321
     try:
         persist.save_game(slot, guild)
-        assert persist.load_game(slot).market_cash_at(NODE.id) == 321
+        assert persist.load_game(slot).shop(NODE.id).cash == 321
     finally:
         persist.delete_world(slot)
 
 
-def test_an_old_save_without_market_cash_loads_with_the_opening_cash():
-    assert Guild([_shopper()], node="city").market_cash == {}
+def test_a_shop_is_made_on_first_use_with_the_opening_cash_and_shelf():
+    guild = Guild([_shopper()], node="city")
+    assert guild.shops == {}
+    shop = guild.shop(NODE.id)
+    assert shop.cash == economy.MARKET_CASH_START and shop.stock == economy.STOCK
+    assert guild.shop(NODE.id) is shop

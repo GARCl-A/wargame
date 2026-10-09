@@ -59,7 +59,17 @@ the guild out entirely. Leaving to the main menu is Esc -> the pause menu
 
 import pygame
 
-from . import arena, artwork, autowin, campaign, economy, orders, rest, world
+from . import (
+    arena,
+    artwork,
+    autowin,
+    campaign,
+    economy,
+    node_functions,
+    orders,
+    rest,
+    world,
+)
 from .constants import fmt_money
 from .scenario import Scenario
 from .screen import Screen
@@ -198,7 +208,7 @@ class MapScreen(Screen):
     @staticmethod
     def _node_dict(n):
         return {"pos": n.pos, "name": n.name, "terrain": KIND_TERRAIN.get(n.kind, "rock"),
-                "kind": n.kind, "work": n.work}
+                "kind": n.kind, "work": n.has("work")}
 
     def _group_blocked(self, group):
         """True for the one group `self._pending_event` is paused on -- it
@@ -555,12 +565,47 @@ class MapScreen(Screen):
     # ------------------------------------------------------------------ #
     # INSPECTOR content                                                   #
     # ------------------------------------------------------------------ #
-    @staticmethod
-    def _wilds_actions():
-        """The activities on offer in the wilds -- (button key, label, one-liner).
-        Just Hunt for now; foraging and the like slot in here later."""
-        return [("hunt", "GO HUNTING",
-                 "spend the day hunting or foraging  ·  a pack may find you first")]
+    def _has_property_business(self):
+        house = self.guild.house
+        return house.owned or house.squatting or self.guild.bankers_debt > 0
+
+    def _function_notes(self, fn):
+        """The text lines under a function's button: its static note, or what the guild's
+        state says about it (strongbox, house, claim)."""
+        guild = self.guild
+        if fn.id == "bank":
+            if not guild.bank.open:
+                return []
+            return [{"type": "text", "color": T.TX_FAINT,
+                     "text": f"strongbox: {guild.bank.load:g} / {guild.bank.capacity} kg"}]
+        if fn.id == "property":
+            if guild.house.repossession_due:
+                note, col = "the Bankers want the house back, or the tax paid", T.BLOOD
+            elif guild.house.squatting:
+                note, col = "squatting -- the guard can still come to clear it out", T.BRASS
+            elif guild.house.owned:
+                note = (f"house: {guild.house.stash.load:g} / "
+                        f"{economy.CITY_PROPERTY_CAPACITY} kg")
+                col = T.TX_FAINT
+            else:
+                note, col = f"owes the Bankers {fmt_money(guild.bankers_debt)}", T.BLOOD
+            return [{"type": "text", "text": note, "color": col}]
+        if fn.id == "claim":
+            stage = guild.wilds_claim_stage
+            if stage == "ESTABLISHED" and guild.wilds_claim_owner == "seized":
+                note, col = "SEIZED -- send a group to retake it", T.BLOOD
+            elif stage == "ESTABLISHED":
+                note, col = "established -- the guild's own ground", T.GREEN
+            elif stage == "SUSTAINING":
+                note, col = f"sustaining: {guild.wilds_claim_sustain_days_left} day(s) left", T.BRASS
+            elif stage == "NONE":
+                note, col = "unclaimed -- scout it to begin", T.TX_FAINT
+            else:
+                note, col = f"stage: {stage.title()}", T.TX_FAINT
+            return [{"type": "text", "text": note, "color": col}]
+        if fn.note:
+            return [{"type": "text", "text": fn.note, "color": T.TX_FAINT}]
+        return []
 
     def _inspector_content(self, g, here):
         if self._group_blocked(g):
@@ -581,9 +626,9 @@ class MapScreen(Screen):
                 blocks.append({"type": "button", "key": "stop_rest", "label": "STOP RESTING",
                                "danger": True})
             if g.order is not None and g.order.kind == "garrison":
-                if here.is_tavern:
+                if here.has("recruit"):
                     blocks.append({"type": "button", "key": "visit_tavern", "label": "ENTER THE TAVERN", "primary": True})
-                if here.claim:
+                if here.has("claim"):
                     blocks.append({"type": "button", "key": "visit_claim", "label": "THE WILDS CLAIM", "primary": True})
                 blocks.append({"type": "button", "key": "recall_garrison", "label": "RECALL FROM GARRISON", "danger": True})
             return blocks
@@ -598,13 +643,7 @@ class MapScreen(Screen):
                    else "non-lethal · stake money, win the purse" if here.arena
                    else "lethal combat · loot the bodies")
             blocks.append({"type": "text", "text": note, "color": T.BRASS if defense else T.TX_FAINT})
-        elif here.is_market:
-            blocks.append({"type": "button", "key": "market", "label": "ENTER THE MARKET"})
-        elif here.is_tavern:
-            blocks.append({"type": "button", "key": "recruit", "label": "ENTER THE TAVERN"})
-        elif here.is_prison:
-            blocks.append({"type": "button", "key": "prison", "label": "VISIT THE PRISON"})
-        elif here.work:
+        if here.has("work"):
             blocks.append({"type": "section", "label": "work a shift"})
             blocks.append({"type": "button_row", "height": 34,
                           "items": [{"key": f"work:{h}", "label": f"{h} h"} for h in WORK_HOURS]})
@@ -633,99 +672,26 @@ class MapScreen(Screen):
                 blocks.append({"type": "wrapped_text", "color": T.BRASS,
                               "text": f"{names}: has outgrown this job even with their own Axe "
                                       "-- no more work XP here, look for tougher work"})
-        elif here.is_wilds:
-            for key, label, note in self._wilds_actions():
-                blocks.append({"type": "button", "key": key, "label": label})
-                blocks.append({"type": "text", "text": note, "color": T.TX_FAINT})
-        elif here.bank:
-            blocks.append({"type": "button", "key": "bank", "label": "VISIT THE BANK"})
-            if self.guild.bank.open:
-                blocks.append({"type": "text",
-                              "text": f"strongbox: {self.guild.bank.load:g} / "
-                                      f"{self.guild.bank.capacity} kg",
-                              "color": T.TX_FAINT})
-        else:
-            has_other_services = any([
-                here.tanner, here.trust, here.forge, here.apothecary, here.stable,
-                getattr(here, "library", False), here.city_property, here.claim
-            ])
-            if not has_other_services:
-                blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
-                              "color": T.TX_FAINT})
 
-        # A node's flags aren't mutually exclusive (the City is both a bank and
-        # a tanner) -- checked after the kind-dispatch chain above, not nested
-        # in one branch of it, so a future node can carry `tanner` on its own.
-        if here.tanner:
-            blocks.append({"type": "button", "key": "tanner", "label": "VISIT THE TANNER",
-                          "gap_before": T.S * 2})
-
-        if here.forge:
-            blocks.append({"type": "button", "key": "forge", "label": "VISIT THE FORGE",
-                          "gap_before": T.S * 2})
-                          
-        if here.apothecary:
-            blocks.append({"type": "button", "key": "apothecary", "label": "VISIT THE APOTHECARY",
-                          "gap_before": T.S * 2})
-
-        if here.stable:
-            blocks.append({"type": "button", "key": "stable", "label": "VISIT THE STABLES",
-                          "gap_before": T.S * 2})
-
-        if getattr(here, "library", False):
-            blocks.append({"type": "button", "key": "library", "label": "VISIT THE LIBRARY",
-                          "gap_before": T.S * 2})
-
-        has_property_business = (self.guild.house.owned or
-                                 self.guild.house.squatting or
-                                 self.guild.bankers_debt > 0)
-        if here.city_property and has_property_business:
-            blocks.append({"type": "button", "key": "property", "label": "VISIT THE PROPERTY",
-                          "gap_before": T.S * 2})
-            if self.guild.house.repossession_due:
-                note, col = "the Bankers want the house back, or the tax paid", T.BLOOD
-            elif self.guild.house.squatting:
-                note, col = "squatting -- the guard can still come to clear it out", T.BRASS
-            elif self.guild.house.owned:
-                note = (f"house: {self.guild.house.stash.load:g} / "
-                       f"{economy.CITY_PROPERTY_CAPACITY} kg")
-                col = T.TX_FAINT
-            else:
-                note, col = f"owes the Bankers {fmt_money(self.guild.bankers_debt)}", T.BLOOD
-            blocks.append({"type": "text", "text": note, "color": col})
-
-        if here.claim:
-            blocks.append({"type": "button", "key": "claim", "label": "THE WILDS CLAIM",
-                          "gap_before": T.S * 2})
-            stage = self.guild.wilds_claim_stage
-            if stage == "ESTABLISHED" and self.guild.wilds_claim_owner == "seized":
-                note, col = "SEIZED -- send a group to retake it", T.BLOOD
-            elif stage == "ESTABLISHED":
-                note, col = "established -- the guild's own ground", T.GREEN
-            elif stage == "SUSTAINING":
-                note, col = f"sustaining: {self.guild.wilds_claim_sustain_days_left} day(s) left", T.BRASS
-            elif stage == "NONE":
-                note, col = "unclaimed -- scout it to begin", T.TX_FAINT
-            else:
-                note, col = f"stage: {stage.title()}", T.TX_FAINT
-            blocks.append({"type": "text", "text": note, "color": col})
-
-        if here.ledger:
-            blocks.append({"type": "button", "key": "ledger", "label": "VISIT THE OUTPOST",
-                          "gap_before": T.S * 2})
-            blocks.append({"type": "text", "text": "hand over what you're carrying, if anything's owed",
+        offered = [f for f in node_functions.offered(here)
+                   if f.label and (f.id != "property" or self._has_property_business())]
+        if not (here.is_battle or here.has("work") or offered):
+            blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
                           "color": T.TX_FAINT})
 
+        for fn in offered:
+            first = not blocks
+            btn = {"type": "button", "key": fn.order_kind, "label": fn.label}
+            if fn.id == "ancient_ruins":
+                btn["primary"] = True
+            if not first:
+                btn["gap_before"] = T.S * 2
+            blocks.append(btn)
+            blocks += self._function_notes(fn)
         if here.id == "road" and not getattr(self.guild, "ancient_ruins_discovered", False):
             blocks.append({"type": "button", "key": "scout_ruins", "label": "EXPLORE THE AREA (4 h)",
                           "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
-                          "color": T.TX_FAINT})
-
-        if getattr(here, "dungeon", False):
-            blocks.append({"type": "button", "key": "ancient_ruins", "label": "ENTER THE ANCIENT RUINS",
-                          "primary": True, "gap_before": T.S * 2})
-            blocks.append({"type": "text", "text": "Delve into the sunken library chambers (Lethal tactical battle)",
                           "color": T.TX_FAINT})
 
         return blocks

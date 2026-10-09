@@ -148,7 +148,7 @@ MARKET_STOCK = [
 
 
 # Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.
-# A name listed here instead carries a live, finite count (`Guild.market_stock`,
+# A name listed here instead carries a live, finite count (`Shop.stock`,
 # seeded from this at a fresh guild): buying draws it down, selling back tops it
 # up, nothing else restocks it. Leather Jerkin/Studded Leather start scarce on
 # purpose (early armor is meant to feel earned); 1sqm Hide starts at zero -- the

@@ -20,7 +20,7 @@ shopper's items for one move.
   carry max;
 - a shopper's item -> drop on another shopper to hand it over, or on the SELL bar
   to sell it back (at `economy.sell_price`, always a loss) -- the market pays out of
-  its own cash (`Guild.market_cash`): what you spend goes in, what you sell comes
+  its own cash (`Guild.shop(node_id).cash`): what you spend goes in, what you sell comes
   out, a day refills it, and a sale above what it holds is refused;
 - drop on nothing / click away to cancel.
 """
@@ -281,18 +281,22 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
     def _stock_of(self, name):
         """Units of `name` left to buy, or None if unlimited -- also None with
         no `guild` (a few tests build a bare screen with no campaign behind it)."""
-        guild = getattr(self, "guild", None)
-        return economy.stock_of(guild.market_stock, name) if guild else None
+        shop = self._shop()
+        return economy.stock_of(shop.stock, name) if shop else None
 
     def _cash(self):
         """What the market can still pay out today, or None with no `guild`."""
-        guild, node = getattr(self, "guild", None), getattr(self, "node", None)
-        return guild.market_cash_at(node.id) if guild and node else None
+        shop = self._shop()
+        return shop.cash if shop else None
 
     def _till(self, delta):
+        shop = self._shop()
+        if shop:
+            shop.move_cash(delta)
+
+    def _shop(self):
         guild, node = getattr(self, "guild", None), getattr(self, "node", None)
-        if guild and node:
-            guild.move_market_cash(node.id, delta)
+        return guild.shop(node.id) if guild and node else None
 
     def _deal_note(self):
         """One-line summary of how the party's haggling moved the prices."""
@@ -636,7 +640,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             self._till(price)
             self.guild.total_spent += price
             if stock is not None:
-                self.guild.market_stock[name] = stock - 1
+                self._shop().stock[name] = stock - 1
 
             if zone == "hand":
                 member.give_to_hand(name)
@@ -678,7 +682,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 self.guild.total_spent += price
                 member.give_to_pack(name)
                 if stock is not None:
-                    self.guild.market_stock[name] = stock - 1
+                    self._shop().stock[name] = stock - 1
                 bought += 1
                 paid[name] = paid.get(name, 0) + 1
             if stopped:
@@ -725,7 +729,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                               price=economy.sell_price(n, self.deal))
                 stock = self._stock_of(n)
                 if stock is not None:
-                    self.guild.market_stock[n] = stock + q
+                    self._shop().stock[n] = stock + q
                 self.guild.items_sold_kinds.add(n)
             owner._derive_combat()
         self._sel_qty = {}

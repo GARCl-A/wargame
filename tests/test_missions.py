@@ -100,8 +100,8 @@ def test_signers_death_leaves_the_mission_unreachable():
 def test_market_stock_is_finite_for_scarce_items_and_unlimited_otherwise():
     random.seed(2)
     guild = Guild([Unit("player")])
-    assert guild.market_stock["1sqm Hide"] == 0
-    assert economy.stock_of(guild.market_stock, "Meat") is None   # never scarce
+    assert guild.shop("market").stock["1sqm Hide"] == 0
+    assert economy.stock_of(guild.shop("market").stock, "Meat") is None   # never scarce
 
 
 def test_apothecary_and_tanner_both_satisfy_bankers_good_for_business():

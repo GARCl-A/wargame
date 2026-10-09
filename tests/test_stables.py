@@ -27,7 +27,7 @@ def _keys(scr):
 
 
 def test_the_stables_are_on_the_farm_outside_the_city_and_the_map_can_send_a_group_there():
-    assert world.node("farm").stable and not world.node("city").stable
+    assert world.node("farm").has("stable") and not world.node("city").has("stable")
     path, hours = world.route("city", "farm")
     assert path == ["city", "farm"] and hours > 0
     assert world.node("farm").jurisdiction is None

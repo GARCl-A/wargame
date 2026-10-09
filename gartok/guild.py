@@ -77,7 +77,7 @@ still on the roster's books, so upkeep and saves keep seeing it. Freed by
 `justice.release_due`, called once a day from `_daily_upkeep` below.
 """
 
-from . import cohesion, economy
+from . import cohesion
 from .clock import Clock
 from .group import BASE_SLOTS, FAME_PER_SLOT, Group
 from .guild_claim import (
@@ -88,6 +88,7 @@ from .guild_holdings import HoldingsMixin
 from .guild_labor import LaborMixin
 from .guild_upkeep import UpkeepMixin
 from .holdings import CityProperty, Garage, Stash
+from .shop import Shop
 from .tutorial import TutorialState
 
 # Fallbacks for a guild with no chosen identity (the draft's naming/banner
@@ -105,7 +106,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  bank=None, groups=None,
                  leader=None, leader_swaps_used=0,
                  name="", banner_color=None, banner_icon=None, tutorial=None,
-                 market_stock=None, market_cash=None, missions=None,
+                 shops=None, missions=None,
                  total_spent=0, items_sold_kinds=None, jailed=None,
                  prison_week=None, prison_pool=None, prison_blocked=None,
                  house=None, bankers_debt=0,
@@ -126,11 +127,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
         self.bank = bank if bank is not None else Stash()   # the rented strongbox; capacity 0 = none rented
-        # live market stock (economy.STOCK) -- a name absent here restocks freely
-        self.market_stock = dict(economy.STOCK) if market_stock is None else dict(market_stock)
-        # what each market can still pay for goods, keyed by node id; a node absent here
-        # holds `economy.MARKET_CASH_START`
-        self.market_cash = dict(market_cash or {})
+        self.shops = dict(shops or {})        # shop.Shop per node id, made on first visit
         self.missions = list(missions or [])  # active/finished missions.Mission, see missions.py
         # lifetime market tallies the Bankers' deeds read straight off the guild
         # (`factions.py`), rather than off a single "market" event's payload
@@ -177,11 +174,10 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
 
-    def market_cash_at(self, node_id):
-        return self.market_cash.get(node_id, economy.MARKET_CASH_START)
-
-    def move_market_cash(self, node_id, delta):
-        self.market_cash[node_id] = max(0, self.market_cash_at(node_id) + delta)
+    def shop(self, node_id):
+        if node_id not in self.shops:
+            self.shops[node_id] = Shop()
+        return self.shops[node_id]
 
     # ------------------------------------------------------------------ #
     # the roster: a flattened read view across every group                #

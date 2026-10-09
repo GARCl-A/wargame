@@ -47,6 +47,7 @@ from . import (
     hunt,
     justice,
     matchup,
+    node_functions,
     orders,
     persist,
     recorder,
@@ -435,9 +436,9 @@ class App:
     # order.kind -> opener(self, group, node, order); a new activity is one line.
     _screen_dead: ClassVar[tuple] = ()     # starved during a screen's hour, until the screen is left
 
-    _ACTIVITY_OPENERS: ClassVar[dict] = {
-        "arena": lambda s, g, n, o: s._open_arena(g, n),
-        "market": lambda s, g, n, o: s._open_market_stalls(list(g.members), n, None),
+    # node function id (node_functions.FUNCTIONS) -> the screen that plays it
+    _FUNCTION_OPENERS: ClassVar[dict] = {
+        "shop": lambda s, g, n, o: s._open_market_stalls(list(g.members), n, None),
         "bank": lambda s, g, n, o: s._open_bank_vault(g, n, None),
         "property": lambda s, g, n, o: s._open_city_property(g, n),
         "claim": lambda s, g, n, o: s._open_wilds_claim(g, n),
@@ -452,6 +453,13 @@ class App:
         "library": lambda s, g, n, o: s._open_library(g, n, None),
         "stable": lambda s, g, n, o: s._open_stables(g),
         "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
+    }
+
+    # order.kind -> opener: the node functions' kinds, the arena and the forced fights
+    _ACTIVITY_OPENERS: ClassVar[dict] = {
+        **{node_functions.FUNCTIONS[fid].order_kind: opener
+           for fid, opener in _FUNCTION_OPENERS.items()},
+        "arena": lambda s, g, n, o: s._open_arena(g, n),
         "guard": lambda s, g, n, o: s._open_guard_check(g, o),
         "ambush": lambda s, g, n, o: s._land_on_map_paused(g, o),
         "eviction": lambda s, g, n, o: s._start_property_raid(g, o),
@@ -553,7 +561,7 @@ class App:
         self._after_activity()
 
     # ------------------------------------------------------------------ #
-    # the Wilds claim (world.Node.claim, wilds_claim_screen.py)           #
+    # the Wilds claim (the `claim` node function, wilds_claim_screen.py)           #
     # ------------------------------------------------------------------ #
     def _open_kitchen(self, group, title, on_back):
         from .crafting_screen import CraftingScreen
@@ -715,7 +723,7 @@ class App:
         self._start_forced_battle(group, order, list(order.pack))
 
     # ------------------------------------------------------------------ #
-    # a squatted City property (world.Node.city_property): the guard comes   #
+    # a squatted City property (the `property` node function): the guard comes   #
     # to clear it out (campaign._property_raid_catch)                       #
     # ------------------------------------------------------------------ #
     def _start_property_raid(self, group, order):
@@ -851,7 +859,7 @@ class App:
 
     def _visit_claim(self, group):
         node = world.node(group.node)
-        if not node.claim:
+        if not node.has("claim"):
             return
         self._pending = []
         self._open_wilds_claim(group, node)

@@ -55,7 +55,7 @@ def _screen(guild, group):
 
 def test_the_claim_node_exists_reachable_from_the_wilds_and_offers_the_lumber_job():
     node = world.node(NODE)
-    assert node.claim and node.garrison_job == "lumber"
+    assert node.has("claim") and node.garrison_job == "lumber"
     path, hours = world.route("wilds", NODE)
     assert path == ["wilds", NODE] and hours > 0
 

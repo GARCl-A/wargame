@@ -1159,7 +1159,8 @@ Neutral**).
 - Applied: `buy = base × (1 − deal)`, `sell = base × (0.5 + 0.4 × deal)`. The
   `deal` cap keeps sell **below** buy, so you cannot make money buying and
   reselling.
-- **The market's cash is finite** (`Guild.market_cash`, per market node). It opens at
+- **A shop's cash is finite** (`Guild.shop(node_id).cash`, one `shop.Shop` per node that offers
+  `shop`: the Market and the Library). It opens at
   **$100**, takes in whatever the guild spends, pays out what the guild sells and refills
   **$25 a day** up to **$500** (spending can push it past the cap; the refill never takes
   anything away). A sale worth more than the market holds is refused whole.
@@ -1290,7 +1291,7 @@ instance of a given template can be active guild-wide at a time
   whole group's packs, the same trick the shared food larder uses.
 - **The Tanner** (`tanner_screen.py`, at the City): wants 15× `1sqm Hide`,
   pays $200, 5 days. Hides only drop from Wilds beasts, not from hours
-  hunted; a finite market stock (`economy.STOCK`, `Guild.market_stock`) keeps
+  hunted; a finite shop stock (`economy.STOCK`, `Shop.stock`) keeps
   the hide from just being bought instead of hunted.
 - **The Apothecary** (`apothecary_mission_screen.py`, at the City): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
