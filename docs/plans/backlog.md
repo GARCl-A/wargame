@@ -221,9 +221,9 @@ the ones that also need code say so. Order is the suggested priority.
   common Ox's), the Mine, Smith, Apothecary and Tanner nodes, the Tanner and Smith as
   mission givers with a face, and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py`
   is text only today).
-- **Fill the short portrait pools.** Beasts have 4 each (Wolf, Giant Spider, Donkey, Ox,
-  Horse) and the Skeleton 4; the Wolf is the only beast the Wilds rolls, so take it to 8 or
-  more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Halfling
+- **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
+  the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
+  or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Halfling
   and Orc.
 - **Map node icons.** The 13 nodes share three kinds of glyph (`map_screen.KIND_ICON`). Give
   Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient Ruins and the Claim a mark of
