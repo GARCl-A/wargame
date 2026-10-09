@@ -18,7 +18,86 @@ Two parts:
 
 ---
 
+# Suggested order (project review, 2026-10-09)
+
+Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
+sim work is ahead of the content it balances, so the order favours content verticals and
+the seams they need.
+
+1. *Crafting tools* (unblocks the Chisel, the Pickaxe and the Mine).
+2. The `shop` function on nodes (see *Specialised shops*; unblocks Mine, Smith, Tanner, Library).
+3. Mine + Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
+4. Generic *solo task* order (craft, hospital, Mine on one mechanism).
+5. Vocations in the draft (decided, table below).
+6. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
+   player the AI does not match yet.
+7. Docs refresh (Small, below) can go in any sitting. The *Architecture debt* section lists
+   what to pay on the way (steps 2 and 4 are debts).
+
+Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
+
+---
+
 # Ready to do
+
+## Small
+
+- **README and RULES describe an older game.** They sell "tactical squad + factions"; the code
+  is an open-world guild manager. The README barely mentions wagons and animals, the Claim,
+  the bank, the Medic, vocations or the economy sim. Refresh both to today's game (RULES
+  stays prose, `REFERENCE.md` stays generated).
+- **`watch` and `garage` are missing from `tutorial.TUTORIALS`.** `WatchScreen` and
+  `GarageScreen` return those keys and `locales/en.json` has their copy, but the tuple omits
+  them, so the tests that walk `TUTORIALS` (copy exists, badge rect) never cover the two cards.
+  Add both and extend the screen-key test.
+- **Claim raid cadence may scale with legs, not days.** `_wilds_claim_attack_check` runs at
+  the end of every `campaign._advance` call, and `WILDS_RAID_CHANCE` (20%) rolls once per call
+  per garrisoned group. While any other group walks a multi-leg route, each leg is a call, so
+  the garrison is tested several times a day. Confirm with a trace; if so, roll once per
+  calendar day crossed (or document it as intended in `economy.py`).
+- **Garrisoned groups never heal.** In `Guild.pass_time` natural healing runs only for groups
+  not `busy` (or resting), and a `garrison` order is busy, so defenders at the Claim stay
+  wounded however well fed. Design question first: intended (the garrison pays for its HP in
+  upkeep) or a bug (allow it with rations plus a fire or the oven)?
+- **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
+  (2026-10-09): the `balanced` policy reaches the milestone in 0% of guilds (need 50%), cost
+  from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
+  with *Feed the recorded runs* and the planner, not by tuning prices. The run exited 0, so
+  this does not break a gate.
+- **Starting tools with no job: Bucket, Scissors, Pliers.** Scissors and Pliers wait on
+  *Crafting tools*, the Chisel on the Horn, the Shovel on the Mine and Chains on *Prisoners*.
+  The Bucket (Peasant) has no planned system at all: give it one (water, milking, camp) or
+  swap the Peasant's item, since the rule is that every starting item is useful.
+
+## Architecture debt
+
+Past choices that now fight the direction. Each has the cost of fixing it; pay one when the
+feature that needs it is next, not before. Debts already written as part of a feature are
+pointed to, not repeated.
+
+- **Everything is a flag on `city`; `is_market` owns the till.** The premise was "one town with
+  everything". `forge` / `apothecary` / `tanner` are flags (`map_screen.py` VISIT buttons,
+  `app.py` `_ACTIVITY_OPENERS`), and `guild_upkeep.py` refills cash only for `is_market`
+  nodes. The Mine, the specialised shops, the Library and the Tavern all need a `shop`
+  function that owns till, stock and refill. **Cost: medium** (a data concept touching nodes,
+  sim, UI). Detail under *Specialised shops*; do it first.
+- **Node openers are hand-wired.** Each node adds a lambda in `app.py`, a button in
+  `map_screen.py` and a tutorial. Replace with one registry keyed by node function (opener,
+  button label, tutorial key) so a node is declared once. **Cost: low-medium**, best done in the
+  same change as the `shop` function.
+- **Weapon traits are ad-hoc fields.** `ItemDef.finesse` / `thrown` plus hand-written `if`s in
+  the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
+  **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
+  different*.
+- **Crafting spends the whole guild's clock.** `Guild.crafting_shift` assumes one crafter and
+  everyone waiting. Crafting, the hospital stay and the Mine want the same *solo task* order.
+  **Cost: medium-high** (order kind, saves, UI). Detail under *Crafting in parallel*.
+- **Big screen files.** `app.py` (1180 lines, 93 functions) is the wiring hub; `map_screen.py`,
+  `market_screen.py` and `battle_screen.py` run 800-950. Not critical. When one takes a new node
+  or tab, split by concern instead of growing it. **Cost: low per split.**
+- **Saves have no migration (on purpose).** Fine while the author is the only player. Before
+  any outside playtest decide: keep "an older shape does not load" with a clear message, or add
+  a version bridge. **Cost: low (message) to medium (bridge).**
 
 ## Large
 
@@ -70,7 +149,7 @@ Two parts:
   (the Signal Horn), Scissors, Shovel, Pickaxe (the Mine) and the Goldsmith's Pliers a job.
   Shapes the future wagon recipe. Needs the recipe field, the check in `guild_labor.py`, the
   craft UI line ("needs: Chisel") and tests.
-- **Prisoners.** Non-lethal attacks that knock a unit out even in lethal zones, then
+- **Prisoners.** (Not started; decide whether it lands before the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** Every economy number depends on how often the
   squad wins, and a person wins far more than `ai.py` does: measured in the economy report
@@ -164,6 +243,40 @@ Two parts:
     day keeps a crafting specialist at about 2x a lumberjack's wage; below 4 with 1 a day
     makes crafting for sale pointless. Open: AI and tests.
 
+## Art (made by hand, not code)
+
+Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`; the rest of the
+art is game-icons.net SVG silhouettes. Each task below is its own sitting of art-making;
+the ones that also need code say so. Order is the suggested priority.
+
+- **Portraits for the named NPCs.** Adelio, Ribit, Bufo, Peep, Biwolf, the Ancient Archivist,
+  the Ruin Sentry and the Sanctum Spider (`npcs/*.json`) only carry a `portrait_id` drawn from
+  their race's pool. Give each a portrait of its own and a way to pin it (an NPC file naming
+  its image, so the pool does not pick). The Ribbit Brothers fight (3 authored Grippli + 3
+  goons) comes first.
+- **Item icons (the biggest gap).** `items.py` has no icon field and the pack, market, stash
+  and loot screens are text only. **Decide first** the style (medallion or silhouette). Then
+  by category: one-handed weapon, two-handed weapon, bow/crossbow, light/medium/heavy armor,
+  shield, potion, food, material (leather, wood, iron, stone), tool, Copper Coin, Gold Coin.
+  After that the key items: Signal Horn, Chisel, Pickaxe, Holy Symbol, Legendary Horn. Needs
+  the `ItemDef` field, a `ui/` component for the icon and tests.
+- **Art for content already in this backlog.** The Legendary Ox (its own portrait, not the
+  common Ox's), the Mine, Smith, Apothecary and Tanner nodes, the Tanner and Smith as
+  mission givers with a face, and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py`
+  is text only today).
+- **Fill the short portrait pools.** Beasts have 4 each (Wolf, Giant Spider, Donkey, Ox,
+  Horse) and the Skeleton 4; the Wolf is the only beast the Wilds rolls, so take it to 8 or
+  more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Halfling
+  and Orc.
+- **Map node icons.** The 13 nodes share three kinds of glyph (`map_screen.KIND_ICON`). Give
+  Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient Ruins and the Claim a mark of
+  their own. The map works as it is, so this is polish.
+- **Occupation icons.** `icons/body` and `icons/hat` are staged and nothing loads them. If
+  the character sheet is to show the vocation, pick a consistent icon per occupation (18 or
+  more). Depends on the sheet calling it.
+- **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
+  drawn procedurally. Lowest priority.
+
 ## Epic
 
 - **Riding and mounts.** A riding saddle enters `animals.TACK`; the rider and animal pair
@@ -191,7 +304,8 @@ building them:
 
 # Needs more information
 
-- **Magic as the vertical progression.** Follows the library's tome quest. Chain:
+- **Magic as the vertical progression.** The biggest content gap (only the library tome quest
+  exists). Blocked on the *node that unlocks* mechanic below. Follows the library's tome quest. Chain:
   1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that
      unlocks a new place.
   2. An intermediate mission to earn their trust in the guild.
