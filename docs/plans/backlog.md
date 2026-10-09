@@ -20,16 +20,37 @@ Two parts:
 
 # Ready to do
 
-## Medium
-
-- **Signal Horn recipe.** The Signal Horn (artifact slot, built) is not sold anywhere: it
-  is only crafted. Define its recipe (`items.CRAFTING_RECIPES`): station, materials, yield,
-  difficulty (`craft_level.py` derives the level), who can learn it and where the recipe is
-  found. Then re-run `scripts/economy_report.py`, since it opens a new craft-for-sale line.
-  Needs the recipe, its tests and the tutorial/RULES line.
-
 ## Large
 
+- **Signal Horn chain (the item is built, it cannot be obtained).** The Signal Horn (artifact
+  slot) is not sold: only crafted, and the recipe is rare. Final shape: **Leather + Rope + a
+  Chisel (tool, not consumed) + the Legendary Ox's horn**. Pieces, in order:
+  1. *Crafting tools* (below), so the Chisel can be required.
+  2. **The Legendary Ox:** a unique creature, its loot is a new `Legendary Horn` item. It is the
+     target of the last mission of the chain, so it is placed by the mission, not random.
+  3. **Mission chain from the Tanner** (2-3 missions on the hub's board, reputation-gated) whose
+     reward is learning the recipe; the last one points at the ox.
+  4. The recipe in `items.CRAFTING_RECIPES` (`craft_level.py` derives the level), then re-run
+     `scripts/economy_report.py` (a new craft-for-sale line). Needs tests, tutorial and RULES line.
+- **Mine (new node, like the Lumber Yard).** A work node plus a shop, mechanically close to the
+  Lumber Yard. It is a normal node on the map, not a hidden one. **Stone Brick, Iron Ore (new
+  item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven now needs a
+  trip to the Mine. Work order pays in the Mine's goods or wage like the yard does.
+  - **To set while building:** the distance from Ankareth (suggestion: about 3 h, farther than the
+    Farm), the wage and pay, whether it needs a Pickaxe (ties to *Crafting tools*: a tool in any
+    group pack), whether the work carries a per-hour risk. Re-run `scripts/economy_report.py`.
+  - Iron Bar stays with the Smith's chain; Iron Ore feeds it later. Needs the node, shop, UI,
+    sim support and tests.
+- **Weapons that are really different (two tracks, both to build).**
+  1. **Named weapon traits.** `ItemDef` carries ad-hoc fields (`finesse: bool`, `thrown: int`)
+     and each trait's rule text is a hand-written `if` in the description builder. Model them as
+     a registry of named keywords (Finesse, Thrown, Entangle...) like `abilities.py`, so a new
+     weapon is declared by listing traits and the code, UI text and `REFERENCE.md` read from one
+     place.
+  2. **A 2-AP action per weapon kind.** Every weapon keeps the basic attack; each kind also gets
+     its own two-point action. A trait may grant an action.
+  - **First step:** audit the weapon catalog for what any two share (die, hands, range, trait)
+    and what makes each unique; the audit decides the traits and the actions. Needs AI and tests.
 - **Intelligence reveals enemy info (combat info modal).** The modal today carries
   information that should not be there and lacks some that would help. Rework it around
   INT as the way to learn about enemies, so INT helps the player decide (and later the AI).
@@ -43,9 +64,12 @@ Two parts:
     check scales with the target's level, whether knowledge outlasts the fight (a creature
     met before). Needs the action, AI support and tests.
 - **Crafting tools.** Crafting consumes everything today. Let a recipe also require a tool
-  that is not consumed (a cart needs wood, nails and a saw). Gives Chisel, Scissors, Shovel
-  and the Goldsmith's Pliers a job (and jewellery crafting, when it exists). Shapes the
-  future wagon recipe.
+  that is not consumed (a cart needs wood, nails and a saw). **Decided:** the recipe lists
+  `tools=[...]` and it is enough for *any pack in the working group* to hold the item (the
+  tool weighs and is lost with the group, but it is not tied to the crafter). Gives Chisel
+  (the Signal Horn), Scissors, Shovel, Pickaxe (the Mine) and the Goldsmith's Pliers a job.
+  Shapes the future wagon recipe. Needs the recipe field, the check in `guild_labor.py`, the
+  craft UI line ("needs: Chisel") and tests.
 - **Prisoners.** Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** Every economy number depends on how often the
@@ -54,8 +78,10 @@ Two parts:
   95%, the champion bout 75%, a Games brawl 43%, capture the flag 37%, a Wilds ambush at
   level 3 61% and the Ribbit Brothers 7%. A person wins the Pit's bouts "almost always".
   Goal: AI win rates close to a competent player's on those benchmark fights, so the sim
-  (and `autowin`) stop needing a `--skill` knob. Start from what the AI does badly in the
-  Games (objective play in capture the flag, focus fire, using the terrain), re-run
+  (and `autowin`) stop needing a `--skill` knob. **Benchmark scenarios (decided):** Scrapper,
+  Games brawl, champion, capture the flag, Ribbit Brothers, dungeon and ambush (wolves and
+  bandits); the player's recorded fights on these train the policy. Start from what the AI
+  does badly in the Games (objective play in capture the flag, focus fire, using the terrain), re-run
   `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
   - **Way in: record the player's combat, as was done for the economy.** First list every
     action the AI can take (`actions/`) and what `ai.py` does with each. Then the player plays
@@ -75,7 +101,8 @@ Two parts:
   it (`keep_fed(at_low=True)`). With that, all `human` guilds go hungry at some point, which
   is what the recordings show a person doing. It wipes 30-40% of 20 guilds, and that is the
   threshold, not the player: `hunt_min_level` 0.5 comes from three won hunts, and at 2.0 the
-  wipe is 0% ([finding 20](economy_sim_v2.md)). Settling it needs a third, longer run. Then compare
+  wipe is 0% ([finding 20](economy_sim_v2.md)). Settling it needs a third run (to be played by
+  the user), and it must include an ambush on the Old Road, which neither run touched. Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the
@@ -101,7 +128,9 @@ Two parts:
   order, work at the station while the others do something else, and rejoin by hand (the
   same shape as the Medic's hospital stay, and it competes for the same group slots).
   The economy sim's `crafter` policy then becomes one member crafting while the rest work
-  the yard. Needs the order kind, saves, UI and tests.
+  the yard. **Decided:** build one generic *solo task* order kind (the character splits off,
+  works alone, rejoins by hand) and move the Medic's hospital stay onto it too, so craft,
+  hospital and later the Mine share one mechanism. Needs the order kind, saves, UI and tests.
 - **Specialised shops.** Split the single general market into shops, each its own node
   with a walking distance between them, so the player has to go around. The market's
   finite cash is built (`Guild.market_cash`, keyed by node id), so each shop gets its own.
@@ -111,9 +140,10 @@ Two parts:
     `apothecary` and `tanner` are flags on `city`). The Smith and the Apothecary take their
     crafting with them, as tabs. Farm (today only the stables), Tavern, Lumber Yard (a shop
     *and* a work node) and Market already exist. Rough split: Smith = weapons, shields,
-    metal armour, Iron Bar, Coal; Tanner = leather armour, Cloak, Hide, Quiver; Apothecary =
+    metal armour, Iron Bar; Tanner = leather armour, Cloak, Hide, Quiver; Apothecary =
     potions, Vial, First Aid Kit; Farm = raw food and Salt; Tavern = Beer and Jerky (the only
-    ready-made food today); Lumber Yard = Lumber; Market = the rest (Torch, Lantern, traps).
+    ready-made food today); Lumber Yard = Lumber; Mine = Stone Brick, Iron Ore and Coal;
+    Market = the rest (Torch, Lantern, traps).
   - **Prices and stock:** one base price everywhere. Every item is finite in every shop. A
     shop buys any item at 50% and puts it on its shelf to resell at 100%. Each item has a
     target count per shop and the shop walks back to it a little each day. Since every shop
@@ -161,41 +191,16 @@ building them:
 
 # Needs more information
 
-- **The Mine (new node).** A place to dig, and where Stone Brick (the Claim oven's material,
-  15 x $10) and the ore side of the Smith's chain (Iron Bar, Coal) come from, instead of only
-  the Market. Not sized: it is a node with its own work, risk and loot, and the first node of
-  the production chain the specialised shops wait for.
-  - **To define:** where it sits and its distance from Ankareth; what it yields and at what
-    rate (a work order like the yard, or a Wilds-style activity with ambushes); the risk
-    (cave-ins, creatures, the Z axis already has pits); whether it needs a tool (a Pickaxe;
-    ties to *Crafting tools*); how its pay compares with the yard and the Wilds (re-run
-    `scripts/economy_report.py`); whether it is a Claim-like holding the guild can own.
-  - Needs the node, its order or activity, UI, AI/sim support and tests.
-
-- **Weapons that are really different.** Today every weapon of one damage die is the same
-  weapon (all d8 melee play alike; the d6 ones differ only by Finesse, as the rapier). Two
-  lines, not yet chosen between (they may combine):
-  1. **A 2-AP action per weapon.** Every weapon keeps the basic attack; each weapon *kind*
-     also gets its own two-point action. Open: which actions, one per weapon or per family,
-     how the AI chooses between them.
-  2. **Explicit weapon traits.** `ItemDef` carries ad-hoc fields (`finesse: bool`,
-     `thrown: int`, `items.py:64`) and each trait's rule text is a hand-written `if` in the
-     description builder. Model them as a set of named keywords (Finesse, Thrown, Entangle...)
-     so a new weapon is declared by listing traits (a spiked spinning chain: Finesse + Thrown
-     + Entangle) and the code, UI text and `REFERENCE.md` read from the one registry. Same
-     shape as `abilities.py`.
-  - **First step:** audit the weapon catalog for what any two share (die, hands, range,
-    trait) and what makes each one unique, then decide whether trait keywords can carry the
-    2-AP action too (a trait grants an action). Needs AI and tests.
-
 - **Magic as the vertical progression.** Follows the library's tome quest. Chain:
   1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that
      unlocks a new place.
   2. An intermediate mission to earn their trust in the guild.
   3. Then the Library sends the codex to one of the **three magic factions** (Blood mages,
      Nature mages, Faith mages), where the magic line proper begins.
-  - **New mechanic to build first: a node that unlocks maps.** Items or deeds (the map)
-    must be able to make a node/map appear in the world. Nothing does that today.
+  - **New mechanic to build first (decided: a general one): a node that unlocks.** A node
+    carries a reveal condition (an item in the pack, a deed, a reputation) and appears in the
+    world when it holds. The map is the first user. Nothing does that today. The Mine does *not*
+    use it: it is a plain node.
   - **To define:** the exact reputation gate and the intermediate mission; the three
     factions as nodes with their own deeds (see `factions.py`); how each school's study
     differs (`magic.py`); whether the three are exclusive. Holy Symbol (below) belongs to
@@ -204,11 +209,29 @@ building them:
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
   the guild. What is left waits for design.
-  - **Vocation:** a curated list of 5-8 that biases only the candidate pool, mostly the
-    **races and occupations** drawn (age and tendency may follow). It has no effect after the
-    draft and never locks the pool. Open: the list and each one's bias.
-  - **Oath** (separate from the vocation): *what binds the members together, and how a
-    stranger would tell someone belongs to the guild* (a creed, a mark, a code). It cannot be
+  - **Vocation (decided):** the guild picks one of 6 at founding. Each is a list of **6 races**
+    and a **fixed guild perk** (no talent tree; the perk may become a tree's root later).
+    - **Pool rule:** the 9-card pool always holds at least one card of each of the vocation's 6
+      races; the other 3 come from the normal draw (natural race weights, all 18 races). A
+      commission token re-rolls only the clicked card, from the natural race table and outside
+      the vocation. Every race is in at least one vocation.
+    - **The 6 (first cut, names and lists can change):**
+
+      | Vocation | Races | Perk |
+      |---|---|---|
+      | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (5% fewer walk-outs); the defense penalty of overextension is unchanged |
+      | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | more yield from gathering work (which orders count and how much: to set) |
+      | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of a road ambush (with a floor, not immunity; to set) |
+      | Mystics | Kobold, Gnome, Elf, Sprite, Kenku, Human | faster spell study (dormant until the magic line exists) |
+      | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | faster travel on the world map (check how it stacks with wagons and animals) |
+      | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | one extra day before hunger starts (`unit_hunger.hunger_level`, `unfed_days` minus 1) |
+
+    - **To set while building:** the numbers of Delvers, Wilds, Mystics and Caravan (measure
+      them with `scripts/economy_report.py`), and that the perk is the guild's (every member), not
+      only the members of the listed races. Needs the vocation registry, pool rule in
+      `draft_screen.py`, perk hooks, save field and tests (including the pool guarantee and each perk).
+  - **Oath (deferred, not scheduled)** (separate from the vocation): *what binds the members
+    together, and how a stranger would tell someone belongs to the guild* (a creed, a mark, a code). It cannot be
     broken, but it can be changed. It has a mechanical side in two places: **cohesion**
     (`cohesion.py`, how members stay or leave) and a **combat/world rule** (something the
     guild will or will not do, trading a lock for a bonus). Not economy or per-faction
@@ -218,7 +241,6 @@ building them:
     a richer composed banner, and an opening scene: a founding charter that writes itself
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
-  - Open: AI and tests for the vocation bias.
 
 ## Starting items waiting on another system
 
