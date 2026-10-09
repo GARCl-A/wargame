@@ -292,6 +292,13 @@ building them:
     differs (`magic.py`); whether the three are exclusive. Holy Symbol (below) belongs to
     the faith school.
 
+- **Better food (not started).** Food only quells hunger today and the Potato does that at the
+  lowest price, so nothing else is worth buying. Add dishes that are better and dearer and spoil
+  fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
+  Marsh's slower rot (see the charter) is priced low until this lands. Open: what a good meal
+  gives (HP, a buff, morale), the recipes and who cooks (`Crafter`, the Claim oven), and the
+  cost to the economy sim (`cheapest_food_price` stops being the one price of a meal).
+
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
   the guild. What is left waits for design.
@@ -307,14 +314,45 @@ building them:
       |---|---|---|
       | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (5% fewer walk-outs); the defense penalty of overextension is unchanged |
       | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | more yield from gathering work (which orders count and how much: to set) |
-      | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of a road ambush (with a floor, not immunity; to set) |
+      | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of an ambush while the group's travel stance is *Cautious* (with a floor, not immunity; to set) |
       | Mystics | Kobold, Gnome, Elf, Sprite, Kenku, Human | faster spell study (dormant until the magic line exists) |
       | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | faster travel on the world map (check how it stacks with wagons and animals) |
-      | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | one extra day before hunger starts (`unit_hunger.hunger_level`, `unfed_days` minus 1) |
+      | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | the guild's food does not age one day in ten (`guild_upkeep._rot_food`; decided, replaces the extra hunger day) |
 
-    - **To set while building:** the numbers of Delvers, Wilds, Mystics and Caravan (measure
-      them with `scripts/economy_report.py`), and that the perk is the guild's (every member), not
-      only the members of the listed races. Needs the vocation registry, pool rule in
+    - **Perk scope (decided):** the perk is the guild's, every member has it, not only the
+      members of the listed races.
+    - **Travel stance (decided, new, the Wilds perk needs it):** each group gets a stance, *Normal*
+      (nothing changes) or *Cautious* (applies the vocation's ambush reduction, if the guild has
+      one). The player flips it, so the same group can travel quiet on the Old Road at level 3-4
+      and stay *Normal* before a hunt for wolf Hide. **Covers every rolled forced fight (decided):**
+      the Old Road leg (`world.ROAD_AMBUSH_CHANCE`, once per leg), the hunt's per-hour roll
+      (`hunt.AMBUSH_CHANCE_PER_HOUR`) and the other `orders.FORCED_KINDS` that roll a chance
+      (guard patrol, Claim raid and seizure; which of them roll is not checked). The Elf's
+      *Woodland Scout* talent halves the road and hunt chance today, always on
+      (`campaign._road_ambush_catch`, `hunt.hunt_stretch`), so it moves under *Cautious* too:
+      a guild with an Elf gets something from the stance without the perk, and the two stack down
+      to a floor. *Cautious* costs nothing but the XP and loot given up (decided). The hunt screen
+      shows the group's stance. Open: the group screen control and AI use of it; the tests of the
+      talent; a new optional field in `persist.PAYLOAD_DEFAULTS`. Caravan and Marsh stay unconditional. Perks that fire every day
+      for everyone get small numbers (about 10-20%), judged against the guild's daily wage, not
+      against the Warband.
+    - **Marsh rot (decided):** one day in ten no food ages, by the guild's clock (day % 10), not a
+      roll per stack; a stack already ages as one entry in `_rot_food`.
+      It prices at under 1% of the daily wage today (Potato is cheap and eats as well as any food);
+      that is accepted until *Better food* below gives rotting food a cost worth saving.
+    - **Yardstick (decided): copper per guild-day**, measured by `scripts/vocation_report.py`
+      (each perk's value as a share of the guild's daily wage). A lost unit costs **7 days of its
+      production** (the weekly recruit pool is the time to replace it); a desertion costs the same
+      plus what the unit's alignment lets it carry out (`cohesion.depart`: Lawful leaves coins and
+      pack, Neutral leaves coins, Chaotic leaves nothing). A death leaves the kit as loot. Measure
+      survival perks (Warband, Marsh) at an early and a late point, since their value grows with
+      the wage. Warband only pays a guild that overextends, so it is measured on a *wide* policy
+      that recruits all it can; going wide is the intended play (Goblin and Hobgoblin share a
+      language, so the draft opens two recruit windows). Mystics cannot be measured until
+      the magic line exists.
+    - **To set while building:** the numbers of Delvers, Wilds (the Cautious reduction and its
+      floor) and Caravan; Delvers and Caravan start at about 15%, checked against the share of
+      the daily wage that `vocation_report.py` prints. Needs the vocation registry, pool rule in
       `draft_screen.py`, perk hooks, save field and tests (including the pool guarantee and each perk).
   - **Oath (deferred, not scheduled)** (separate from the vocation): *what binds the members
     together, and how a stranger would tell someone belongs to the guild* (a creed, a mark, a code). It cannot be

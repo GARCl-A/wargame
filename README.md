@@ -269,7 +269,8 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     race / occupation ranking and the restock sweep), economy_exploits.py
                     (money-from-nothing loops, recipe barriers, dominance), economy_report.py
                     (all of them in one report, with verdicts), ai_usage.py (which actions the combat AI takes, and
-                    what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py
+                    what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
+                    vocation_report.py (each vocation perk's value as a share of the guild's daily wage)
 docs/plans/         design plans not yet built (campaign AI roadmap)
 ```
 
