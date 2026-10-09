@@ -44,8 +44,8 @@ Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
 
 | Action | How |
 |---|---|
-| Pick a character (draft) | click one of the three cards |
-| Edit a candidate (draft) | **EDIT** button (top right) → click "swap" on a card to change race/occupation; **EDITING** again returns to picking |
+| Pick a character (draft) | click up to three of the nine cards (click again to put one back), then **CONTINUE** |
+| Replace a candidate (draft) | **COMMISSION** (top right) → choose archetypes → click the card to replace |
 | Walk (1 point) | click a green cell — the path to the cursor is drawn; the walked trail this turn is marked |
 | Attack (1 point) | click an enemy with a red outline |
 | Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In | panel buttons (the aimed ones ask for a target click) |

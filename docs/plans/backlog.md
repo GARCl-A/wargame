@@ -22,14 +22,6 @@ Two parts:
 
 ## Medium
 
-- **Founding draft: 9 pick 3.** `draft_screen.py` offers a pool of 9 candidates and the
-  player picks 3, replacing 3 rounds of 1 of 3. The 3 Commission Tokens work as they do
-  today: spent to call the archetypes missing from the pool, here rerolling one of the 9.
-  Then choose the guild leader from the 3. Independent of vocation and oath. Needs the
-  generation, the UI and tests.
-- **Founding screen on the `ui/` kit.** The draft screen is off-pattern; rebuild it with the
-  `gartok/ui/` components (data-driven `draw_x`, 8px grid, palette) and keep its tutorial
-  card. Do it together with the 9-pick-3 draft so the layout is built once.
 - **Claim construction: oven.** Built at the Claim with time and Stone Brick; like the
   campfire but always lit. First thing to build there, and the start of a general
   build-at-the-Claim system.
@@ -201,8 +193,8 @@ building them:
 
 - **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
-  the guild. The draft (9 pick 3) and the screen fix are in Ready > Medium; what is left
-  waits for design.
+  the guild. The 9-pick-3 draft and its `ui/draft_panel.py` components are built; what is
+  left waits for design.
   - **Vocation:** a curated list of 5-8 that biases only the candidate pool, mostly the
     **races and occupations** drawn (age and tendency may follow). It has no effect after the
     draft and never locks the pool. Open: the list and each one's bias.
@@ -213,7 +205,7 @@ building them:
     guild will or will not do, trading a lock for a bonus). Not economy or per-faction
     reputation. Open: the list, the exact effects, how the guild is recognised in the world
     (does an NPC react to it?), and the cost of changing one.
-  - **Presentation, after the screen fix:** a live preview of the guild as choices are made,
+  - **Presentation (the identity phase of `draft_screen.py` is still off the kit):** a live preview of the guild as choices are made,
     a richer composed banner, and an opening scene: a founding charter that writes itself
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.

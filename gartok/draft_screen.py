@@ -1,10 +1,10 @@
-"""Draft screen: build your squad by picking 1 of 3 candidates, three times,
-then naming the guild and picking its banner, then choosing which of the
-three leads it.
+"""Draft screen: a pool of nine candidates, pick three, then name the guild,
+pick its banner and choose which of the three leads it.
 
-Players have 3 Commission Tokens across the entire squad draft to tailor candidates
-into essential archetypes (Leaders, Strong, Tough, etc.) via a dedicated
-modal, eliminating the slot-machine reroll loop while maintaining tabletop emergent variety.
+The player has 3 Commission Tokens across the whole draft to call the archetypes
+the pool lacks (Leaders, Strong, Tough, etc.): the commission picks the
+archetypes, then the candidate it replaces. A replaced card that was picked
+leaves the squad.
 
 `on_done(picks, leader, name, banner_color, banner_icon)` -- the "identity"
 phase (name + banner, purely cosmetic -- see `Guild.name`/`banner_color`/
@@ -27,29 +27,35 @@ from .archetypes import (
 from .combatant import Combatant
 from .screen import Screen
 from .ui.banner import BANNER_COLORS, set_player_color
+from .ui.draft_panel import (
+    draw_commission_modal,
+    draw_pool_card,
+    draw_squad_rail,
+    pool_card_height,
+)
 from .ui.primitives import (
     TOKEN_INK,
-    caps,
+    contained,
     draw_button,
     draw_tooltip,
-    ellipsize,
     format_tooltip,
-    modal_card,
     panel,
+    scrollbar,
     smooth_circle,
     text,
-    token_badge,
     tracked,
 )
-from .ui.sheet_card import draw_row, draw_sheet, sheet_height, unit_to_ch
-from .ui.tokens import ARCHETYPE_COLORS, T, mix
+from .ui.sheet_card import draw_row, unit_to_ch
+from .ui.tokens import T
 from .unit import Unit
 
 TEAM_SIZE = 3
-DRAFT_ROUNDS = 3
-DRAFT_CHOICES = 3
+POOL_SIZE = 9
+POOL_COLUMNS = 3
 COMMISSION_TOKENS = 3
 _MAX_GUILD_NAME = 24
+_ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
+          ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma"))
 
 
 class DraftScreen(Screen):
@@ -61,9 +67,14 @@ class DraftScreen(Screen):
         self.on_done = on_done
         self.tutorial = tutorial
         self.picks = []
-        self.phase = "pick"        # "pick" (rounds 1-3) | "identity"
+        self.phase = "pick"        # "pick" | "identity"
         self.tokens = COMMISSION_TOKENS
-        self.commissioned_labels = []
+        self.pool = [Unit("player") for _ in range(POOL_SIZE)]
+        self.commissioned = {}     # id(unit) -> the archetypes that were called for it
+        self.pending_labels = []   # a confirmed commission waiting for the card it replaces
+        self.scroll = 0
+        self.max_scroll = 0
+        self.pool_view = None
         self.commission_modal_open = False
         self.selected_modal_labels = []
 
@@ -73,10 +84,6 @@ class DraftScreen(Screen):
         self.modal_confirm_rect = None
         self.modal_cancel_rect = None
         self.card_rects = []
-
-        # legacy button rects preserved as None for safety
-        self.edit_btn_rect = None
-        self.reroll_btn_rect = None
 
         # identity phase state
         self.guild_name = ""
@@ -92,20 +99,25 @@ class DraftScreen(Screen):
         self.continue_rect = None
 
         set_player_color(self.banner_color)
-        self._new_candidates()
 
     # ------------------------------------------------------------------ #
-    def _new_candidates(self):
-        self.candidates = [Unit("player") for _ in range(DRAFT_CHOICES)]
-        self.commissioned_labels = []
+    def _toggle_pick(self, unit):
+        if unit in self.picks:
+            self.picks.remove(unit)
+        elif len(self.picks) < TEAM_SIZE:
+            self.picks.append(unit)
 
-    def _pick(self, unit):
-        self.picks.append(unit)
-        self.commissioned_labels = []
-        if len(self.picks) < DRAFT_ROUNDS:
-            self._new_candidates()
-        else:
-            self.phase = "identity"
+    def _replace(self, unit):
+        """Spend the pending commission on `unit`'s slot in the pool."""
+        labels = self.pending_labels
+        fresh = generate_candidate(labels)
+        self.pool[self.pool.index(unit)] = fresh
+        if unit in self.picks:
+            self.picks.remove(unit)
+        self.commissioned.pop(id(unit), None)
+        self.commissioned[id(fresh)] = list(labels)
+        self.tokens -= len(labels)
+        self.pending_labels = []
 
     def handle_event(self, event):
         if self.editing_name and event.type == pygame.KEYDOWN:
@@ -120,11 +132,27 @@ class DraftScreen(Screen):
 
         if self.commission_modal_open and event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self.commission_modal_open = False
-                self.selected_modal_labels = []
+                self._close_modal()
+            return
+
+        if event.type == pygame.MOUSEWHEEL and self.phase == "pick" and not self.commission_modal_open:
+            self.scroll = max(0, min(self.max_scroll, self.scroll - event.y * T.S * 5))
             return
 
         super().handle_event(event)
+
+    def handle_escape(self):
+        if self.commission_modal_open:
+            self._close_modal()
+            return True
+        if self.pending_labels:
+            self.pending_labels = []
+            return True
+        return False
+
+    def _close_modal(self):
+        self.commission_modal_open = False
+        self.selected_modal_labels = []
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
@@ -137,33 +165,36 @@ class DraftScreen(Screen):
             return
 
         if self.commission_btn_rect and self.commission_btn_rect.collidepoint(px):
-            if self.tokens > 0:
+            if self.pending_labels:
+                self.pending_labels = []
+            elif self.tokens > 0:
                 self.commission_modal_open = True
                 self.selected_modal_labels = []
             return
 
+        if self.continue_rect and self.continue_rect.collidepoint(px) and len(self.picks) == TEAM_SIZE:
+            self.phase = "identity"
+            return
+
+        if self.pool_view is not None and not self.pool_view.collidepoint(px):
+            return
         for rect, unit in self.card_rects:
             if rect.collidepoint(px):
-                self._pick(unit)
+                if self.pending_labels:
+                    self._replace(unit)
+                else:
+                    self._toggle_pick(unit)
                 return
 
     def _click_commission_modal(self, px):
         if self.modal_confirm_rect and self.modal_confirm_rect.collidepoint(px):
-            cost = len(self.selected_modal_labels)
-            if 1 <= cost <= self.tokens:
-                self.tokens -= cost
-                self.commissioned_labels = list(self.selected_modal_labels)
-                self.candidates = [
-                    generate_candidate(self.commissioned_labels)
-                    for _ in range(DRAFT_CHOICES)
-                ]
-                self.commission_modal_open = False
-                self.selected_modal_labels = []
+            if 1 <= len(self.selected_modal_labels) <= self.tokens:
+                self.pending_labels = list(self.selected_modal_labels)
+                self._close_modal()
             return
 
         if self.modal_cancel_rect and self.modal_cancel_rect.collidepoint(px):
-            self.commission_modal_open = False
-            self.selected_modal_labels = []
+            self._close_modal()
             return
 
         for rect, key, can_toggle in self.modal_item_rects:
@@ -175,9 +206,7 @@ class DraftScreen(Screen):
                 return
 
         if self.modal_rect and not self.modal_rect.collidepoint(px):
-            self.commission_modal_open = False
-            self.selected_modal_labels = []
-            return
+            self._close_modal()
 
     # ------------------------------------------------------------------ #
     # tutorial (screen.py) -- one id per phase                           #
@@ -189,7 +218,7 @@ class DraftScreen(Screen):
         return {"pick": "draft.pick", "identity": "draft.identity"}.get(self.phase)
 
     def tutorial_badge_rect(self, size):
-        W, H = size
+        W, _H = size
         pad = T.S * 4
         return pygame.Rect(W - pad - 28, pad, 28, 28)
 
@@ -231,228 +260,120 @@ class DraftScreen(Screen):
                 draw_tooltip(screen, F, self.tooltip, mouse)
             return
 
-        round_no = len(self.picks) + 1
+        W, H = screen.get_size()
+        pad = T.S * 4
+        modal = self.commission_modal_open
 
-        text(screen, F["titleb"], "SQUAD DRAFT", (T.S * 4, T.S * 4 - 2), T.TX)
+        text(screen, F["titleb"], "SQUAD DRAFT", (pad, pad - 2), T.TX)
         tokens_dots = "● " * self.tokens + "○ " * (COMMISSION_TOKENS - self.tokens)
-        sub = (f"Round {round_no} of {DRAFT_ROUNDS}  ·  pick 1 of {DRAFT_CHOICES}  "
-               f"·  squad {len(self.picks)}/{TEAM_SIZE}  ·  commission tokens: {tokens_dots.strip()}")
-        text(screen, F["body"], sub, (T.S * 4, T.S * 4 + 30), T.TX_MUTED)
-
+        sub = (f"Pick {TEAM_SIZE} of {POOL_SIZE}  ·  squad {len(self.picks)}/{TEAM_SIZE}  "
+               f"·  commission tokens: {tokens_dots.strip()}")
+        text(screen, F["body"], sub, (pad, pad + 30), T.TX_MUTED)
         self._draw_top_buttons(screen, mouse)
 
         rail_h = 92
-        header_h = 16 + T.S * 2
-        sh = sheet_height("normal")
-        footer_h = T.S * 3 + 26 + T.S * 3
-        card_h = T.S * 3 + header_h + sh + footer_h
+        rail_y = H - 28 - rail_h
+        view = pygame.Rect(pad, pad + 58, W - 2 * pad, rail_y - T.S * 2 - (pad + 58))
+        self.pool_view = view
 
-        group_h = card_h + T.S * 4 + rail_h
-        slack = max(0, (screen.get_height() - 18) - (T.S * 4 + 58) - group_h)
-        top = T.S * 4 + 58 + slack // 2
-        rail_y = top + card_h + T.S * 4
-        gap = T.S * 3
-        card_w = (screen.get_width() - 2 * (T.S * 4) - (DRAFT_CHOICES - 1) * gap) // DRAFT_CHOICES
+        gap = T.S * 2
+        card_w = (view.w - T.S - (POOL_COLUMNS - 1) * gap) // POOL_COLUMNS
+        card_h = pool_card_height()
+        rows = (POOL_SIZE + POOL_COLUMNS - 1) // POOL_COLUMNS
+        content_h = rows * card_h + (rows - 1) * gap
+        self.max_scroll = max(0, content_h - view.h)
+        self.scroll = min(self.scroll, self.max_scroll)
 
         self.card_rects = []
-        for i, unit in enumerate(self.candidates):
-            rect = pygame.Rect(T.S * 4 + i * (card_w + gap), top, card_w, card_h)
-            self.card_rects.append((rect, unit))
-            hover = rect.collidepoint(mouse) and not self.commission_modal_open
-            self._draw_card(screen, rect, unit, hover, mouse)
+        tip = None
+        off = (-1, -1)
+        hover = off if modal else mouse
+        pool_hover = hover if view.collidepoint(mouse) else off
+        with contained(screen, view):
+            for i, unit in enumerate(self.pool):
+                rect = pygame.Rect(view.x + (i % POOL_COLUMNS) * (card_w + gap),
+                                   view.y + (i // POOL_COLUMNS) * (card_h + gap) - self.scroll,
+                                   card_w, card_h)
+                if rect.bottom < view.y or rect.y > view.bottom:
+                    continue
+                self.card_rects.append((rect, unit))
+                labels = self.commissioned.get(id(unit), [])
+                tags = unit_archetypes(unit)
+                tags.sort(key=lambda t: 0 if t[0] in labels else 1)
+                card = {"ch": unit_to_ch(Combatant(unit)),
+                        "tags": [(lb, st, ds, lb in labels) for lb, st, ds in tags],
+                        "selected": unit in self.picks,
+                        "order": self.picks.index(unit) + 1 if unit in self.picks else None,
+                        "targeting": bool(self.pending_labels)}
+                tip = draw_pool_card(screen, F, rect, card, pool_hover) or tip
+        if self.max_scroll:
+            scrollbar(screen, view, self.scroll, self.max_scroll, content_h)
 
-        self._draw_squad_rail(screen, T.S * 4, rail_y, screen.get_width() - 2 * (T.S * 4), rail_h)
-        text(screen, F["body_sm"], "[Esc] quit", (T.S * 4, screen.get_height() - 18), T.TX_FAINT)
+        slots = [self._rail_slot(self.picks[i]) if i < len(self.picks) else None
+                 for i in range(TEAM_SIZE)]
+        btn_w = T.S * 25
+        rail = pygame.Rect(pad, rail_y, W - 2 * pad - btn_w - T.S * 2, rail_h)
+        tip = draw_squad_rail(screen, F, rail, slots, hover) or tip
+        self.tooltip = tip
+        self.continue_rect = pygame.Rect(W - pad - btn_w, rail_y + rail_h - T.S * 6, btn_w, T.S * 5)
+        draw_button(screen, F, self.continue_rect, "CONTINUE", primary=True,
+                    enabled=len(self.picks) == TEAM_SIZE, mpos=mouse)
 
-        if self.commission_modal_open:
+        text(screen, F["body_sm"], "[Esc] quit", (pad, H - 18), T.TX_FAINT)
+
+        if modal:
             self._draw_commission_modal(screen, mouse)
 
         if getattr(self, "tooltip", None):
             draw_tooltip(screen, F, self.tooltip, mouse)
 
     # ------------------------------------------------------------------ #
+    def _rail_slot(self, unit):
+        return {"ch": unit_to_ch(Combatant(unit)),
+                "attrs": [(k, getattr(unit, name)) for k, name in _ATTRS]}
+
     def _draw_top_buttons(self, screen, mouse):
         F = self.F
         W = screen.get_width()
         pad = T.S * 4
-        has_tut = self.tutorial_key() is not None
-        offset = (28 + T.S) if has_tut else 0
+        offset = (28 + T.S) if self.tutorial_key() is not None else 0
 
         btn_w = 190
         r_comm = pygame.Rect(W - pad - offset - btn_w, pad, btn_w, 28)
         self.commission_btn_rect = r_comm
 
-        if self.tokens > 0:
+        if self.pending_labels:
+            text(screen, F["body"], "Click the candidate to replace  ·  " + ", ".join(self.pending_labels),
+                 (r_comm.x - T.S * 2, pad + 6), T.BRASS, right=True)
+            draw_button(screen, F, r_comm, "CANCEL", ghost=True, mpos=mouse)
+        elif self.tokens > 0:
             lbl = f"COMMISSION ({self.tokens} TOKENS)" if self.tokens > 1 else "COMMISSION (1 TOKEN)"
             draw_button(screen, F, r_comm, lbl, primary=(self.tokens == COMMISSION_TOKENS),
                         enabled=not self.commission_modal_open, mpos=mouse)
         else:
             draw_button(screen, F, r_comm, "NO TOKENS LEFT", enabled=False, mpos=mouse)
 
-    # ------------------------------------------------------------------ #
     def _draw_commission_modal(self, screen, mouse):
-        F = self.F
-        cw, ch = 230, 52
-        gap = 8
-        cols = 3
-        rows = 4
-        pw = cols * cw + (cols - 1) * gap + 48
-        ph = rows * ch + (rows - 1) * gap + 144
-
-        panel_r = modal_card(screen, (pw, ph), veil=True)
-        self.modal_rect = panel_r
-
-        text(screen, F["titleb"], "COMMISSION RECRUITS", (panel_r.x + 24, panel_r.y + 16), T.TX)
-        token_str = f"{self.tokens} token" if self.tokens == 1 else f"{self.tokens} tokens"
-        sub = f"Guarantee archetypes for this round's 3 candidates. You have {token_str} remaining."
-        text(screen, F["body_sm"], sub, (panel_r.x + 24, panel_r.y + 44), T.TX_MUTED)
-
-        self.modal_item_rects = []
-        for i, (key, arc) in enumerate(ARCHETYPES.items()):
-            col_i = i % cols
-            row_i = i // cols
-            rx = panel_r.x + 24 + col_i * (cw + gap)
-            ry = panel_r.y + 72 + row_i * (ch + gap)
-            r = pygame.Rect(rx, ry, cw, ch)
-
-            selected = key in self.selected_modal_labels
+        items = []
+        for key, arc in ARCHETYPES.items():
+            on = key in self.selected_modal_labels
             compatible = is_compatible(self.selected_modal_labels, key)
-            tokens_left = len(self.selected_modal_labels) < self.tokens
-            can_toggle = selected or (tokens_left and compatible)
-
-            hover = r.collidepoint(mouse) and can_toggle
-            if selected:
-                pygame.draw.rect(screen, T.STEEL_HI, r)
-                pygame.draw.rect(screen, T.BRASS, r, 2)
-            elif can_toggle:
-                pygame.draw.rect(screen, T.STEEL_HI if hover else T.STEEL, r)
-                pygame.draw.rect(screen, T.BRASS if hover else T.STEEL_LINE, r, 1)
-            else:
-                pygame.draw.rect(screen, T.TABLE, r)
-                pygame.draw.rect(screen, T.STEEL_LINE, r, 1)
-
-            mark = "[✓] " if selected else "[ ] "
-            arc_col = ARCHETYPE_COLORS.get(arc.style, T.TX_MUTED)
-            lbl_col = T.BRASS if selected else (arc_col if can_toggle else T.TX_FAINT)
-            caps(screen, F["microb"], mark + arc.label, (r.x + 10, r.y + 8), lbl_col)
-
-            if not compatible and not selected:
-                desc = "Incompatible with selection"
-                dcol = T.TX_FAINT
-            elif not tokens_left and not selected:
-                desc = "Token limit reached"
-                dcol = T.TX_FAINT
-            else:
-                desc = ellipsize(arc.desc, F["body_sm"], cw - 20)
-                dcol = T.TX_MUTED if can_toggle else T.TX_FAINT
-
-            text(screen, F["body_sm"], desc, (r.x + 10, r.y + 26), dcol)
-
-            if r.collidepoint(mouse):
-                title = arc.label + (" [SELECTED]" if selected else "")
-                self.tooltip = format_tooltip(title, arc.desc, F)
-
-            self.modal_item_rects.append((r, key, can_toggle))
-
-        fy = panel_r.bottom - 48
-        cost = len(self.selected_modal_labels)
-        cost_txt = f"Cost: {cost} of {self.tokens} tokens"
-        text(screen, F["body"], cost_txt, (panel_r.x + 24, fy + 8),
-             T.BRASS if cost > 0 else T.TX_MUTED)
-
-        cancel_r = pygame.Rect(panel_r.right - 24 - 100 - 8 - 140, fy, 100, 32)
-        self.modal_cancel_rect = cancel_r
-        draw_button(screen, F, cancel_r, "CANCEL", ghost=True, mpos=mouse)
-
-        confirm_r = pygame.Rect(panel_r.right - 24 - 140, fy, 140, 32)
-        self.modal_confirm_rect = confirm_r
-        conf_lbl = f"CONFIRM ({cost})" if cost > 0 else "CONFIRM"
-        draw_button(screen, F, confirm_r, conf_lbl, primary=True,
-                    enabled=(1 <= cost <= self.tokens), mpos=mouse)
-
-    # ------------------------------------------------------------------ #
-    def _draw_card(self, screen, rect, unit, hover, mouse):
-        F = self.F
-        pad = T.S * 3
-
-        header_h = 16 + T.S * 2
-        sh = sheet_height("normal")
-        footer_h = T.S * 3 + 26 + T.S * 3
-
-        actual_h = pad + header_h + sh + footer_h
-        bg_rect = pygame.Rect(rect.x, rect.y, rect.w, max(rect.h, actual_h))
-        panel(screen, bg_rect, hover=hover, width=2 if hover else 1)
-
-        ty = bg_rect.y + pad
-        tx = bg_rect.x + pad
-
-        # Prioritize commissioned archetypes to appear first on the card
-        tags = unit_archetypes(unit)
-        tags.sort(key=lambda t: 0 if t[0] in self.commissioned_labels else 1)
-
-        for label, style, desc in tags[:3]:
-            tcol = ARCHETYPE_COLORS.get(style, T.TX_MUTED)
-            is_comm = label in self.commissioned_labels
-            display_label = f"★ {label}" if is_comm else label
-            w = F["microb"].size(display_label)[0] + 12
-            pill = pygame.Rect(tx, ty, w, 16)
-            pill_fill = mix(T.STEEL_HI, T.BRASS, 0.25) if is_comm else T.STEEL_HI
-            pill_border = T.BRASS if is_comm else tcol
-            pygame.draw.rect(screen, pill_fill, pill, border_radius=4)
-            pygame.draw.rect(screen, pill_border, pill, 2 if is_comm else 1, border_radius=4)
-            text(screen, F["microb"], display_label, pill.center, T.BRASS if is_comm else tcol, center=True)
-            if pill.collidepoint(mouse):
-                title = label + (" (COMMISSIONED)" if is_comm else "")
-                self.tooltip = format_tooltip(title, desc, F)
-            tx += w + T.S
-
-        ty += 16 + T.S * 2
-
-        sheet_rect = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, sh)
-        ch = unit_to_ch(Combatant(unit))
-        used_h, tip = draw_sheet(screen, F, sheet_rect, ch, density="normal", mouse=mouse)
-        if tip:
-            self.tooltip = tip
-
-        ty += used_h + T.S * 3
-
-        fr = pygame.Rect(bg_rect.x + pad, ty, bg_rect.w - 2 * pad, 26)
-        panel(screen, fr, hover=hover)
-        text(screen, F["microb"] if hover else F["body_sm"], "PICK" if hover else "click to pick",
-             fr.center, T.BRASS if hover else T.TX_MUTED, center=True)
-
-    # ------------------------------------------------------------------ #
-    def _draw_squad_rail(self, screen, x, y, w, h):
-        F = self.F
-        tracked(screen, F["microb"], "YOUR SQUAD", (x, y), T.TX_FAINT)
-        y += 16
-        slot_w = (w - 2 * (T.S * 2)) // 3
-        for i in range(TEAM_SIZE):
-            r = pygame.Rect(x + i * (slot_w + T.S * 2), y, slot_w, h - 16)
-            if i < len(self.picks):
-                u = self.picks[i]
-                panel(screen, r)
-                pygame.draw.rect(screen, T.GREEN, r, 1)
-                dot = (r.x + T.S * 3 + 9, r.centery)
-                token_badge(screen, F, dot, u, r=12)
-                text(screen, F["bodyb"], u.name, (dot[0] + 20, r.y + T.S * 2), T.TX)
-                text(screen, F["body_sm"], f"{u.race['name']}  ·  {u.occupation['name']}",
-                     (dot[0] + 20, r.y + T.S * 2 + 18), T.TX_MUTED)
-                attr_x = dot[0] + 20
-                for k, name in (("STR", "strength"), ("DEX", "dexterity"),
-                                ("CON", "constitution"), ("INT", "intelligence"),
-                                ("WIS", "wisdom"), ("CHA", "charisma")):
-                    txt = f"{k} {getattr(u, name)}"
-                    tw = F["body_sm"].size(txt)[0]
-                    ar = pygame.Rect(attr_x, r.y + T.S * 2 + 36, tw, 16)
-                    text(screen, F["body_sm"], txt, (attr_x, r.y + T.S * 2 + 36), T.TX_MUTED)
-                    if ar.collidepoint(self.mouse) and k in data.ATTRIBUTE_HELP:
-                        t, d = data.ATTRIBUTE_HELP[k]
-                        self.tooltip = format_tooltip(t, d, F)
-                    attr_x += tw + 8
-            else:
-                pygame.draw.rect(screen, T.STEEL_LINE, r, 1)
-                text(screen, F["body_sm"], f"slot {i + 1}", r.center, T.TX_FAINT, center=True)
+            room = len(self.selected_modal_labels) < self.tokens
+            note = ""
+            if not on and not compatible:
+                note = "Incompatible with selection"
+            elif not on and not room:
+                note = "Token limit reached"
+            items.append({"key": key, "label": arc.label, "desc": arc.desc, "style": arc.style,
+                          "can_toggle": on or (room and compatible), "note": note})
+        out = draw_commission_modal(screen, self.F, items, self.selected_modal_labels,
+                                    self.tokens, mouse)
+        self.modal_rect = out["modal"]
+        self.modal_item_rects = out["items"]
+        self.modal_cancel_rect = out["cancel"]
+        self.modal_confirm_rect = out["confirm"]
+        if out["tooltip"]:
+            self.tooltip = out["tooltip"]
 
     # ------------------------------------------------------------------ #
     def _draw_identity(self, screen):
@@ -526,9 +447,7 @@ class DraftScreen(Screen):
         def _trailing(surf, r, ch):
             u = ch["unit"]
             attr_x = r.right - 380
-            for k, name in (("STR", "strength"), ("DEX", "dexterity"),
-                            ("CON", "constitution"), ("INT", "intelligence"),
-                            ("WIS", "wisdom"), ("CHA", "charisma")):
+            for k, name in _ATTRS:
                 txt = f"{k} {getattr(u, name)}"
                 tw = F["body_sm"].size(txt)[0]
                 ar = pygame.Rect(attr_x, r.centery - F["body_sm"].get_height() // 2, tw, F["body_sm"].get_height())

@@ -15,8 +15,8 @@
         "title": "Building your guild",
         "body": [
           "Each candidate is a random GARTOK character: a race, an occupation, and a 3d6 roll for every attribute. The card shows what matters at a glance: HP, AC (how hard they are to hit), MD (mental defense), speed, the starting weapon, languages and the racial ability.",
-          "Click a card to keep that character. You keep one per round, three in all, and the rest are discarded. Expect to lose some of them: an early squad is meant to be spent.",
-          "You also have 3 Commission Tokens for the whole draft. Spend one to guarantee an archetype (Leader, Strong, Tough) when the raw rolls don't fit your plans."
+          "Nine candidates are on the table; scroll to see them all. Click three to keep (click again to put one back), then press Continue. The rest are discarded. Expect to lose some of them: an early squad is meant to be spent.",
+          "You also have 3 Commission Tokens for the whole draft. Spend them to call the archetypes the pool is missing (Leader, Strong, Tough), then click the candidate to replace with a fresh one that has them."
         ]
       },
       "identity": {

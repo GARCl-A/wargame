@@ -89,10 +89,11 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
                       banner_color=banner_color, banner_icon=banner_icon)
 
     ds = DraftScreen(fonts, on_done)
-    for _ in range(3):
-        ds.draw(screen)
-        rect, _unit = ds.card_rects[0]
+    ds.draw(screen)
+    for rect, _unit in ds.card_rects[:3]:
         ds._click(rect.center)
+    ds.draw(screen)
+    ds._click(ds.continue_rect.center)
     assert ds.phase == "identity"
 
     ds.draw(screen)                     # populates name_rect / color_rects / icon_rects

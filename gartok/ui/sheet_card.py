@@ -284,6 +284,12 @@ def _b_vitals(s, F, r, ch, d, ed, mouse, tip):
             caps(s, F["micro"], k, (x, r.y + 2), T.TX_FAINT)
             text(s, F["bodyb"], str(vals[k]), (x + T.S * 4, r.y),
                  _hp_color(cur, mx) if k == "hp" else T.TX)
+            if mouse and pygame.Rect(x, r.y, T.S * 9, r.h).collidepoint(mouse):
+                if k == "hp":
+                    tip.append(hp_tooltip(ch["unit"], F))
+                elif k.upper() in data.DERIVED_HELP:
+                    t, desc = data.DERIVED_HELP[k.upper()]
+                    tip.append(_format_tip(t, desc, F))
             x += T.S * 9
         return
     n = len(keys)

@@ -51,9 +51,9 @@ The generator's exact order:
 ### The squad draft & commission tokens 🟡
 
 A new campaign begins at the **Draft** (`DraftScreen`):
-- The squad draft lasts **3 rounds**, picking 1 recruit from 3 candidates each round to form the starting squad of 3.
+- The draft offers a **pool of 9 candidates**; the player keeps 3 of them as the starting squad (click to pick, click again to put one back, scroll to see all nine).
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
-- Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) for that round's candidate pool:
+- Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens):
   - **LEADER**: Charisma mod $\ge +2$. Essential for tavern recruitment and haggling.
   - **STRONG**: Strength mod $\ge +2$. Hits hard in melee and hauls heavy armor, tools, and spoils.
   - **TOUGH**: Max HP $\ge 8$. Durable frontline combatant.
@@ -63,7 +63,7 @@ A new campaign begins at the **Draft** (`DraftScreen`):
   - **WISE**: Wisdom mod $\ge +2$. High initiative, mental defense, and skilled field medicine.
 - An archetype is a **role**, never a racial trait that would just pick a race: FAST, LARGE and SEES IN DARK were dropped for that reason (only Centaur, or Dwarf/Hobgoblin, ever matched). MAGIC went for the same reason (only Kobold and Gnome start as casters). Each remaining label needs at least 3 races to cover half its candidates, and each attribute has one label at most (Pack Mule and Damage Dealer were both just Strength, so they became STRONG). `tests/test_draft_commission.py` checks the races.
 - Commissioned candidates highlight their guaranteed tags with a star (`★`) and brass border.
-- Once the three picks are locked, the draft moves into **Identity** (Guild Name, Banner Color, and Banner Icon), followed by picking the guild's **Leader** (`Guild.leader`).
+- Once three are picked and Continue is pressed, the draft moves into **Identity** (Guild Name, Banner Color, and Banner Icon), followed by picking the guild's **Leader** (`Guild.leader`).
 
 ---
 
