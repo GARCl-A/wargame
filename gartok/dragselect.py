@@ -103,6 +103,8 @@ class LoadoutMoveMixin:
             return unit.equipped_offhand
         if loc == "tongue":
             return unit.equipped_tongue
+        if loc == "artifact":
+            return unit.equipped_artifact
         if loc == "armor":
             return unit.equipped_armor
         return unit._base_inventory[loc][0] if loc < len(unit._base_inventory) else None
@@ -128,6 +130,8 @@ class LoadoutMoveMixin:
             return src.take_from_offhand(), 1
         if loc == "tongue":
             return src.take_from_tongue(), 1
+        if loc == "artifact":
+            return src.take_from_artifact(), 1
         if loc == "armor":
             return src.take_from_armor(), 1
         if loc >= len(src._base_inventory):
@@ -143,6 +147,8 @@ class LoadoutMoveMixin:
             return dst.fits_offhand(name)
         if zone == "tongue":
             return dst.fits_tongue(name)
+        if zone == "artifact":
+            return dst.fits_artifact(name)
         if zone == "armor":
             return dst.fits_armor(name)
         return True                                      # pack / discard take anything
@@ -159,7 +165,7 @@ class LoadoutMoveMixin:
                 u._derive_combat()
             return
 
-        if zone in ("hand", "offhand", "tongue", "armor"):
+        if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
             fit = next((p for p in picks
                         if self._fits_slot(dst, zone, self._item_at(*p))
                         and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
@@ -175,7 +181,8 @@ class LoadoutMoveMixin:
                 src.give_to_pack(taken_name, qty - 1)
                 
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
-             "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
+             "tongue": dst.give_to_tongue, "artifact": dst.give_to_artifact,
+             "armor": dst.give_to_armor}[zone](name)
             src._derive_combat()
             dst._derive_combat()
             return

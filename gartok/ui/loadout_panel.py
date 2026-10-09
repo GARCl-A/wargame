@@ -47,7 +47,7 @@ def tag_pill(surf, F, tag, pos, max_x=None):
             x += font.size(TAG_SEP)[0]
 
 
-SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "armor": "armor",
+SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "artifact": "artifact", "armor": "armor",
                "tack": "saddle / harness"}
 
 
@@ -62,7 +62,7 @@ def load_bar(surf, rect, ratio, over):
 
 
 def slot(surf, F, rect, kind, held, mouse):
-    """One HAND/OFF/TONGUE/BODY box. `held` is `{"name","note","accepts"}`
+    """One HAND/OFF/TONGUE/ARTIFACT/BODY box. `held` is `{"name","note","accepts"}`
     or `None` to draw the box as a placeholder text with nothing to pick
     up or drop into (the two-handed "off hand" line). `rect` is the
     caller's own -- there is nothing to report back, it already has it
@@ -204,7 +204,7 @@ def rail(surf, F, rect, members, pinned_keys, carrying, scroll, mouse, band=None
 
 def column(surf, F, rect, member, scroll, mouse):
     """One full member column: header (name, role, load), HAND/OFF/
-    (TONGUE)/BODY slots, scrollable PACK. `member` is a dict the caller
+    (TONGUE)/ARTIFACT/BODY slots, scrollable PACK. `member` is a dict the caller
     builds (see `group_screen._member_dict`) carrying every slot's
     already-resolved `{"name","note","accepts","sel"}` (or `None` for a
     slot the caller doesn't want drawn as interactive, e.g. a blocked
@@ -264,7 +264,7 @@ def column(surf, F, rect, member, scroll, mouse):
         draw_button(surf, F, action_rect, act["label"], enabled=act.get("enabled", True), mpos=mouse)
         y = action_rect.bottom + T.S * 3
     slot_rects = {}
-    for kind in ("hand", "offhand", "tongue", "armor", "tack"):
+    for kind in ("hand", "offhand", "tongue", "artifact", "armor", "tack"):
         held = member.get(kind, "skip")
         if held == "skip":
             continue

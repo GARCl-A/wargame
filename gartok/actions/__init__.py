@@ -65,6 +65,7 @@ from .support import (
     Investigate,
     Mount,
     PickUp,
+    SignalHorn,
     SpinWeb,
     Stabilize,
     WakeUp,
@@ -101,6 +102,7 @@ SHARE_MAGIC = ShareMagicAction()
 INVESTIGATE = Investigate()
 DISARM = Disarm()
 DRINK_POTION = DrinkPotion()
+SIGNAL_HORN = SignalHorn()
 
 # Panel actions split into clear combat and utility categories for the UI.
 COMBAT_ACTIONS = [
@@ -120,6 +122,7 @@ UTILITY_ACTIONS = [
     FIRST_AID,
     STABILIZE,
     DRINK_POTION,
+    SIGNAL_HORN,
     PICK_UP,
     DISARM,
     INVESTIGATE,

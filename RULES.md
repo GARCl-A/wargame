@@ -416,6 +416,15 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   new order carries into later rounds). Once per round. Only before spending any point or
   walking, and only while a standing unit acts after you; the turn you resume
   is the same one (full points, no second start-of-turn effects).
+- **Signal Horn** (2 points, once per battle) = the action of the **Signal Horn**, an
+  item of the **artifact** type. Every character has one **artifact slot** beside the hands
+  and the armor (`equipped_artifact`); an artifact in the pack does nothing, it has to be
+  equipped. Blowing it gives every standing ally within **10 squares** (not the blower) **+2
+  initiative** for the rest of the battle, which can reorder the turns: a boosted unit passes
+  only those it now strictly outranks, and nobody crosses the active unit, so the boost
+  never costs a turn nor grants one (those who already acted climb among themselves and
+  show it next round). The AI blows it while the fight is still a walk away (no foe within
+  reach) and at least two allies hear it.
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**
   (for now only the **Dagger**, range 9 m = 6 cells). See below.
 - **Lash** (1 point) = the Grippli's **Tongue** attack — the 1-handed weapon in

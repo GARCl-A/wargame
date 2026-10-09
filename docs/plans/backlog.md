@@ -22,9 +22,11 @@ Two parts:
 
 ## Medium
 
-- **Signal Horn** (new item, not a starting item: too strong). A combat action that warns
-  allies, for example extra movement or drawing attention. Talks to the Alarm Trap and the
-  Alert talent. Needs the action, AI support and tests.
+- **Signal Horn recipe.** The Signal Horn (artifact slot, built) is not sold anywhere: it
+  is only crafted. Define its recipe (`items.CRAFTING_RECIPES`): station, materials, yield,
+  difficulty (`craft_level.py` derives the level), who can learn it and where the recipe is
+  found. Then re-run `scripts/economy_report.py`, since it opens a new craft-for-sale line.
+  Needs the recipe, its tests and the tutorial/RULES line.
 
 ## Large
 
@@ -119,7 +121,7 @@ Two parts:
   - The Library joins the same rule (stock target, finite cash, buys anything at 50%) and
     keeps its other tabs.
   - **The till belongs to the shop, not to the node's kind.** `Guild._daily_upkeep` refills
-    cash only for nodes with `kind == "market"`, so the Library's till (a `town` with a
+    cash only for nodes with `is_market` (`kind == "market"`), so the Library's till (a `town` with a
     shop tab) never refills and a Tavern (recruiting, work and a shop in one node) would not
     either. A node with several functions needs a `shop` function that owns the till, its
     refill and its stock; the economy sim's route scan reads the same list.
@@ -222,7 +224,8 @@ building them:
 
 Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupation's item
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
-already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, First
+already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
+(the Claim oven's material), First
 Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. Amethyst is only a store
 of value, and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:

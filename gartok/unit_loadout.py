@@ -1,4 +1,4 @@
-"""The persistent loadout: the two hands, the tongue, the armor slot and the pack.
+"""The persistent loadout: the two hands, the tongue, the artifact and armor slots and the pack.
 
 A weapon is an item; the weapon hand holds one (1-2 hands), the off hand a
 torch. `equipped_weapon` / `equipped_offhand` are what every battle re-seeds a
@@ -81,6 +81,10 @@ class LoadoutMixin:
     def fits_armor(name):
         return items.is_armor(name)
 
+    @staticmethod
+    def fits_artifact(name):
+        return items.is_artifact(name)
+
     def can_wield(self, name):
         """Checks if this unit can wield `name`. Large weapons require Large size
         (e.g. Centaur) or the Giant's Grip talent (Goliath)."""
@@ -131,6 +135,16 @@ class LoadoutMixin:
         if self.equipped_tongue:
             self._pack_add(self.equipped_tongue)
         self.equipped_tongue = name
+        return True
+
+    def give_to_artifact(self, name):
+        """Equip artifact `name`; the one already there goes to the pack. No-op if
+        `name` is not an artifact."""
+        if not self.fits_artifact(name):
+            return False
+        if self.equipped_artifact:
+            self._pack_add(self.equipped_artifact)
+        self.equipped_artifact = name
         return True
 
     # ------------------------------------------------------------------ #
@@ -202,6 +216,10 @@ class LoadoutMixin:
 
     def take_from_tongue(self):
         name, self.equipped_tongue = self.equipped_tongue, None
+        return name
+
+    def take_from_artifact(self):
+        name, self.equipped_artifact = self.equipped_artifact, None
         return name
 
     def give_to_armor(self, name):

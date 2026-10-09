@@ -2,7 +2,7 @@
 
 import random
 
-from .. import data
+from .. import data, items
 from ..board import cells, chebyshev
 from ..conditions import Demoralized
 from ..constants import fmt_money
@@ -519,6 +519,45 @@ class Delay(Action):
     def execute(self, battle, actor, target=None):
         if self.available(battle, actor):
             battle.delay_turn(actor)
+
+
+class SignalHorn(Action):
+    id, name, cost, target = "signal_horn", "Signal Horn", 2, "none"
+    RADIUS = 10
+    BONUS = 2
+    desc = (f"Blow the horn, once per battle: allies within {RADIUS} squares gain +{BONUS} "
+            "initiative, which can reorder the turns.")
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if actor.artifact_name != items.SIGNAL_HORN_ITEM:
+            return False, "No Signal Horn equipped."
+        if "signal_horn" in actor.used_abilities:
+            return False, "Already blown this battle."
+        return True, ""
+
+    def allies_in_range(self, battle, actor):
+        return [u for u in battle.units
+                if u.alive and u.team == actor.team and u is not actor
+                and battle.units_distance(actor, u) <= self.RADIUS]
+
+    def available(self, battle, actor):
+        return super().available(battle, actor) and bool(self.allies_in_range(battle, actor))
+
+    def label(self, battle, actor):
+        return f"Signal Horn ({self.cost} pts, allies within {self.RADIUS} +{self.BONUS} initiative)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        actor.spend_once("signal_horn")
+        allies = self.allies_in_range(battle, actor)
+        battle.raise_initiative(allies, self.BONUS)
+        battle.fx(actor.pos, "Signal Horn!", "crit")
+        battle.log(f"{actor.name} blows the Signal Horn! "
+                   + ", ".join(a.name for a in allies) + f" gain +{self.BONUS} initiative.")
 
 
 class Investigate(Action):

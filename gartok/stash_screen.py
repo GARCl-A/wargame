@@ -158,7 +158,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
                 self.selected = picks
                 return
 
-        if zone in ("hand", "offhand", "tongue", "armor"):
+        if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
             fit = next((p for p in picks
                        if self._fits_slot(dst, zone, self._item_at(*p))
                        and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
@@ -174,7 +174,8 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
                 else:
                     src.give_to_pack(taken_name, qty - 1)
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
-             "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
+             "tongue": dst.give_to_tongue, "artifact": dst.give_to_artifact,
+             "armor": dst.give_to_armor}[zone](name)
             if src != self.OWNER:
                 src._derive_combat()
             dst._derive_combat()
@@ -407,6 +408,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         }
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)
+        member["artifact"] = held("artifact", unit.equipped_artifact, None)
         return member
 
     def _stash_rows(self):

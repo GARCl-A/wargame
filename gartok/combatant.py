@@ -83,6 +83,7 @@ class Combatant:
         # the Tongue is a separate limb: its weapon rides alongside the hands
         self.tongue_weapon_name = c.equipped_tongue if c.has_tongue else None
         self.tongue_weapon = items.get(self.tongue_weapon_name)
+        self.artifact_name = c.equipped_artifact
         self.torch_hand = False
         self.lantern_hand = False
         if c.equipped_offhand in (data.TORCH_ITEM, data.LANTERN_ITEM):

@@ -119,7 +119,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
                 self.selected = picks
                 return
 
-        if zone in ("hand", "offhand", "tongue", "armor"):
+        if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
             fit = next((p for p in picks
                        if self._fits_slot(dst, zone, self._item_at(*p))
                        and not (p[0] is dst and self._slot_of(p[1]) == zone)), None)
@@ -139,7 +139,8 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
                 else:
                     src.give_to_pack(taken_name, qty - 1)
             {"hand": dst.give_to_hand, "offhand": dst.give_to_offhand,
-             "tongue": dst.give_to_tongue, "armor": dst.give_to_armor}[zone](name)
+             "tongue": dst.give_to_tongue, "artifact": dst.give_to_artifact,
+             "armor": dst.give_to_armor}[zone](name)
             if src != "pool":
                 src._derive_combat()
             dst._derive_combat()
@@ -398,6 +399,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
                 "hand": _slot("weapon"),
                 "offhand": None if two_handed else _slot("offhand"),
                 "tongue": _slot("tongue") if u.has_tongue else None,
+                "artifact": _slot("artifact"),
                 "armor": _slot("armor")
             },
             "pack": []

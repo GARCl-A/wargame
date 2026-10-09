@@ -650,6 +650,23 @@ class Battle:
         self.turn_idx -= 1                   # _advance_turn steps onto whoever slid into this slot
         self._advance_turn()
 
+    def raise_initiative(self, units, bonus):
+        """Add `bonus` to each of `units`' initiative and let them climb the order.
+        Nobody crosses the active unit: those who already acted this round move among
+        themselves (it shows next round), those still to act among the ones still to
+        act, so a boost never costs a turn nor grants a second one. A boosted unit
+        passes only a unit it now strictly outranks."""
+        boosted = set(units)
+        for u in boosted:
+            u.initiative += bonus
+        for lo, hi in ((0, self.turn_idx), (self.turn_idx + 1, len(self.order))):
+            for i in range(lo, hi):
+                j = i
+                while (self.order[j] in boosted and j > lo
+                       and self.order[j - 1].initiative < self.order[j].initiative):
+                    self.order[j - 1], self.order[j] = self.order[j], self.order[j - 1]
+                    j -= 1
+
     def _advance_turn(self):
         """Advance to the next standing unit. A dying unit gets a turn on the way
         (its death counter ticks / it rolls the save); stable and dead are skipped."""

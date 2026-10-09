@@ -49,7 +49,7 @@ SAVE_DEFAULTS = {
     "magic_source": None, "spells_known": [], "study_target": None, "study_progress": 0,
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
-    "equipped_armor": None, "equipped_tongue": None, "natural_armor": 0,
+    "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
     "hp_override": None, "racial_override": None, "dormant": False, "awareness_radius": 8,
 }
 
@@ -98,6 +98,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self._hp_override = None                       # sandbox: a hand-set HP max that wins over the derived one
         self.natural_armor = 0                         # flat AC from the body itself (sandbox-set; see _derive_ac)
         self._racial_override = None                   # sandbox: a pinned racial level (hit dice + racial picks), else derived
+        self.equipped_artifact = None                  # artifact slot: one ItemType.ARTIFACT, it grants a combat action
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
         self.consecutive_rest_hours = 0
@@ -151,6 +152,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.equipped_offhand = d["equipped_offhand"]
         u.equipped_armor = d["equipped_armor"]
         u.equipped_tongue = d["equipped_tongue"]
+        u.equipped_artifact = d["equipped_artifact"]
         u.alignment = d["alignment"]
         u.crime = d["crime"]
         u.unfed_days = d["unfed_days"]

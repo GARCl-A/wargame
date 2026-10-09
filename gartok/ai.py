@@ -214,6 +214,21 @@ def _try_mount(battle, unit):
     return True
 
 
+def _try_signal_horn(battle, unit):
+    """Blow the Signal Horn while the fight is still a walk away: it takes the whole turn,
+    so only when nobody is in reach to hit and at least two allies hear it."""
+    horn = actions.SIGNAL_HORN
+    if not horn.available(battle, unit):
+        return False
+    foes = [u for u in battle.units if u.alive and u.team != unit.team]
+    if not foes or any(battle.units_distance(unit, f) <= unit.speed + 1 for f in foes):
+        return False
+    if len(horn.allies_in_range(battle, unit)) < 2:
+        return False
+    horn.execute(battle, unit)
+    return True
+
+
 def _try_drink_potion(battle, unit):
     if unit.hp <= unit.hp_max * 0.5:
         if actions.DRINK_POTION.can(battle, unit, unit):
@@ -335,6 +350,9 @@ def take_turn(battle, unit):
             break
 
         if _try_mount(battle, unit):          # mount a Centaur ally if adjacent
+            continue
+
+        if _try_signal_horn(battle, unit):
             continue
 
         if actions.WAKE_UP.available(battle, unit):

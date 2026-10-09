@@ -293,6 +293,7 @@ class GearScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMix
         }
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)
+        member["artifact"] = held("artifact", unit.equipped_artifact, None)
         return member
 
     # ------------------------------------------------------------------ #

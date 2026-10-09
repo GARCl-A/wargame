@@ -176,6 +176,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         }
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)
+        member["artifact"] = held("artifact", unit.equipped_artifact, None)
         return member
 
     def _fits_slot(self, dst, zone, name):
@@ -185,6 +186,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             return dst.fits_offhand(name)
         if zone == "tongue":
             return dst.fits_tongue(name)
+        if zone == "artifact":
+            return dst.fits_artifact(name)
         if zone == "armor":
             return dst.fits_armor(name)
         return True
@@ -195,6 +198,10 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             return member.equipped_weapon
         if loc == "offhand":
             return member.equipped_offhand
+        if loc == "tongue":
+            return member.equipped_tongue
+        if loc == "artifact":
+            return member.equipped_artifact
         if loc == "armor":
             return member.equipped_armor
         return items.stack_name(member._base_inventory[loc]) if loc < len(member._base_inventory) else None
@@ -208,6 +215,10 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             return member.take_from_hand(), 1
         if loc == "offhand":
             return member.take_from_offhand(), 1
+        if loc == "tongue":
+            return member.take_from_tongue(), 1
+        if loc == "artifact":
+            return member.take_from_artifact(), 1
         if loc == "armor":
             return member.take_from_armor(), 1
         if loc >= len(member._base_inventory):
@@ -556,7 +567,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             self.selected = picks
             return
 
-        if zone in ("hand", "offhand", "tongue", "armor"):
+        if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
             fit = next((p for p in picks if self._fits_slot(member, zone, self._name_of(p))), None)
             if fit is None:
                 self.selected = picks
@@ -567,7 +578,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         collected, touched = self._collect(picks)
         self._sel_qty = {}
         for name, qty in collected:
-            if zone in ("hand", "offhand", "tongue", "armor"):
+            if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
                 src_unit = fit[0]
                 if qty > 1:
                     src_unit.give_to_pack(name, qty - 1)
@@ -577,6 +588,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                     member.give_to_offhand(name)
                 elif zone == "tongue":
                     member.give_to_tongue(name)
+                elif zone == "artifact":
+                    member.give_to_artifact(name)
                 elif zone == "armor":
                     member.give_to_armor(name)
             else:
@@ -606,7 +619,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
 
     def _buy(self, member, names, zone="pack"):
-        if zone in ("hand", "offhand", "tongue", "armor"):
+        if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
             name = names[0]
             if not self._fits_slot(member, zone, name):
                 self.notice = f"{name} won't fit {member.name}'s {zone}."
@@ -631,6 +644,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 member.give_to_offhand(name)
             elif zone == "tongue":
                 member.give_to_tongue(name)
+            elif zone == "artifact":
+                member.give_to_artifact(name)
             elif zone == "armor":
                 member.give_to_armor(name)
             member._derive_combat()

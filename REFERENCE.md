@@ -264,6 +264,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Shortbow | 1 kg | -- |
 | Shortspear | 1.5 kg | -- |
 | Shovel | 2 kg | -- |
+| Signal Horn | 1 kg | -- |
 | Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
 | Torch | 0.5 kg | -- |

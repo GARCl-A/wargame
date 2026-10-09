@@ -535,7 +535,8 @@ What is still open after your answers, in rough order of how much they change th
 - Library battles come from fresh squads at the party's mean combat and work level, with starting
   kit; a guild that has bought armor or a weapon is not drawn stronger.
 - The champion's title and its 15-day defense cycle, and the Ribbit Brothers, are not in layer 2.
-- The Claim has no campfire, oven or garage in the sim; the garrison only gathers Lumber.
+- The Claim has no campfire, oven or garage in the sim (the game has the oven since the Stone
+  Brick commit; the sim does not model it); the garrison only gathers Lumber.
 - The Medic and the Games' stake are the numbers the code has (or the backlog proposes), not tuned.
 - The hunt and the road each use their own encounter table (`hunt.wilds_pack`, the Old Road's
   `encounter_table`); the pack rolled by `campaign` for an ambush is not the one fought.

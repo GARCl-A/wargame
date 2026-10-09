@@ -354,7 +354,7 @@ class DerivationMixin:
 
     @property
     def load(self):
-        """Weight of the equipped loadout: weapon hand + off hand + tongue + pack + armor."""
+        """Weight of the equipped loadout: weapon hand + off hand + tongue + artifact + pack + armor."""
         w = sum(items.item_weight(name) * qty for name, qty in self._base_inventory)
         if self.equipped_weapon:
             w += items.item_weight(self.equipped_weapon)
@@ -362,6 +362,8 @@ class DerivationMixin:
             w += items.item_weight(self.equipped_tongue)
         if self.equipped_offhand:
             w += items.item_weight(self.equipped_offhand)
+        if self.equipped_artifact:
+            w += items.item_weight(self.equipped_artifact)
         if self.armor:
             w += self.armor.weight
         return round(w, 1)

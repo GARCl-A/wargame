@@ -119,6 +119,7 @@ def unit_to_dict(u):
         "equipped_weapon": u.equipped_weapon,    # weapon hand (None = unarmed)
         "equipped_offhand": u.equipped_offhand,  # off hand: a torch, or None
         "equipped_tongue": u.equipped_tongue,    # Grippli Tongue slot: a 1-handed weapon, or None
+        "equipped_artifact": u.equipped_artifact,    # artifact slot: an ItemType.ARTIFACT, or None
         "equipped_armor": u.equipped_armor,      # body slot: armor name, or None
         "inventory": _serialize_pack(u._base_inventory),    # the pack: spare items, weapons included
         "locked_items": dict(u.locked_items),    # item name -> count exempt from distribute_load

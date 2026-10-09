@@ -218,6 +218,17 @@ def _web(surf, rect, c):
     pygame.draw.polygon(surf, c, ring, w)
 
 
+def _horn(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    # a flared horn blowing to the right, with two sound arcs
+    pygame.draw.polygon(surf, c, [(x, y + s * 0.42), (x + s * 0.5, y + s * 0.42),
+                                  (x + s * 0.72, y + s * 0.18), (x + s * 0.72, y + s * 0.82),
+                                  (x + s * 0.5, y + s * 0.58), (x, y + s * 0.58)], w)
+    pygame.draw.arc(surf, c, (x + s * 0.7, y + s * 0.3, s * 0.3, s * 0.4), -1.0, 1.0, w)
+    pygame.draw.arc(surf, c, (x + s * 0.55, y + s * 0.12, s * 0.45, s * 0.76), -1.0, 1.0, w)
+
+
 def _lock(surf, rect, c):
     x, y, s = _box(rect)
     w = _lw(s)
@@ -238,7 +249,7 @@ def _unlock(surf, rect, c):
 
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
-    "demoralize": _shout, "eat_corpse": _bite, "spin_web": _web,
+    "demoralize": _shout, "eat_corpse": _bite, "spin_web": _web, "signal_horn": _horn,
     "pickup": _hand, "defend": _shield, "end": _hourglass, "delay": _restart, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,

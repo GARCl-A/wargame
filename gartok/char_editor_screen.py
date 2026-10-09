@@ -178,12 +178,15 @@ class CharEditorScreen(Screen):
                     "weapon": ["(unarmed)"] + list(items.weapons()),
                     "tongue": ["(empty)"] + [n for n, w in items.weapons().items()
                                              if w.hands == 1],
+                    "artifact": ["(empty)"] + [n for n, i in items.all_items().items()
+                                               if i.type == items.ItemType.ARTIFACT],
                     "armor": ["(none)"] + list(items.armor()),
                     "additem": _ITEM_CATALOG,
                     "magic": ["(none)"] + [s.capitalize() for s in magic.SOURCES]}[pk]
             cur = {"race": u.race["name"], "occupation": u.occupation["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,
-                   "tongue": u.equipped_tongue, "armor": u.equipped_armor,
+                   "tongue": u.equipped_tongue, "artifact": u.equipped_artifact,
+                   "armor": u.equipped_armor,
                    "additem": None,
                    "magic": u.magic_source.capitalize() if u.magic_source else "(none)"}[pk]
             self.picker = (pk, opts, cur)
@@ -252,6 +255,9 @@ class CharEditorScreen(Screen):
                 u._derive_combat()
             elif pk == "tongue":
                 u.take_from_tongue() if name == "(empty)" else u.give_to_tongue(name)
+                u._derive_combat()
+            elif pk == "artifact":
+                u.take_from_artifact() if name == "(empty)" else u.give_to_artifact(name)
                 u._derive_combat()
             elif pk == "armor":
                 u.take_from_armor() if name == "(none)" else u.give_to_armor(name)
@@ -552,6 +558,10 @@ class CharEditorScreen(Screen):
             self._pick_row(screen, tr2, "TONGUE", u.equipped_tongue or "(empty)",
                            ("picker", "tongue"))
             y += 24 + T.S // 2
+        far = pygame.Rect(x, y, w, 24)
+        self._pick_row(screen, far, "ARTIFACT", u.equipped_artifact or "(empty)",
+                       ("picker", "artifact"))
+        y += 24 + T.S // 2
         arr = pygame.Rect(x, y, w, 24)
         self._pick_row(screen, arr, "ARMOR", u.equipped_armor or "(none)",
                        ("picker", "armor"))
@@ -767,7 +777,7 @@ class CharEditorScreen(Screen):
         box(screen, panel_r, fill=T.TABLE, border=T.BRASS, width=2)
         noun = {"additem": "an item", "occupation": "an occupation",
                 "alignment": "an alignment", "armor": "armor",
-                "tongue": "a tongue weapon", "magic": "a magic source"}.get(kind, f"a {kind}")
+                "tongue": "a tongue weapon", "artifact": "an artifact", "magic": "a magic source"}.get(kind, f"a {kind}")
         text(screen, F["titleb"], f"pick {noun}", (panel_r.x + pad, panel_r.y + 12), T.TX)
 
         prev = screen.get_clip()
