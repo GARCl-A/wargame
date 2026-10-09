@@ -226,7 +226,7 @@ class MapScreen(Screen):
         o = group.order
         if o is None or o.kind == "idle":
             return "NO ORDERS", T.BRASS
-        return o.kind.upper().replace("_", " "), T.TX_MUTED
+        return (o.task if o.kind == "solo" else o.kind).upper().replace("_", " "), T.TX_MUTED
 
     def _order_status(self, group):
         """One-line status for a group's ROSTER card / INSPECTOR header."""
@@ -245,8 +245,9 @@ class MapScreen(Screen):
             return f"working ({o.remaining:g} h left)"
         if o.kind == "rest":
             return f"resting ({rest.format_hours(o.remaining)} left)"
-        if o.kind == "hospital":
-            return f"in the hospital ({o.remaining:g} h left)"
+        if o.kind == "solo":
+            doing = "in the hospital" if o.task == "hospital" else f"crafting {o.recipe}"
+            return f"{doing} ({o.remaining:g} h left)"
         return f"heading to {o.kind} ({o.remaining:g} h)"
 
     def _mates_for(self, g):
@@ -678,7 +679,6 @@ class MapScreen(Screen):
         if not (here.is_battle or here.has("work") or offered):
             blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
                           "color": T.TX_FAINT})
-
         for fn in offered:
             first = not blocks
             btn = {"type": "button", "key": fn.order_kind, "label": fn.label}
@@ -688,6 +688,7 @@ class MapScreen(Screen):
                 btn["gap_before"] = T.S * 2
             blocks.append(btn)
             blocks += self._function_notes(fn)
+
         if here.id == "road" and not getattr(self.guild, "ancient_ruins_discovered", False):
             blocks.append({"type": "button", "key": "scout_ruins", "label": "EXPLORE THE AREA (4 h)",
                           "gap_before": T.S * 2})

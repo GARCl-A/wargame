@@ -22,8 +22,9 @@ A policy is a class with `step(sim)`; each step spends time. Policies:
   maxev     each cycle picks the activity with the best expected copper per day
   human     balanced, playing by thresholds measured from recorded play (--profile)
   rush      the recorded line: Axes, the Champion at level 0, one hunt for a Hide, the Dictionary mission
-  crafter   a specialist guild that buys inputs, crafts and sells at the market (the
-            experiment for the restock limiter; needs `--recipes`)
+  crafter   a specialist guild: the best crafter buys inputs and crafts on a solo order
+            while the rest work the yard, then sells at the market (the experiment for
+            the restock limiter; needs `--recipes`)
 
     python scripts/economy_guild.py                         # every policy, 7 and 30 days
     python scripts/economy_guild.py --policies lumber,balanced --guilds 60 --skill 0.8
@@ -67,6 +68,7 @@ from gartok import (
     recorder,
     recruit,
     rest,
+    solo,
     wagon,
     world,
 )
@@ -1354,13 +1356,14 @@ class MaxEV(Policy):
 
 
 class Crafter(Policy):
-    """The guild's best crafter buys inputs for a few batches, works a shift at the forge and
-    sells the product at the market. Crafting spends the whole guild's clock (one crafter at
-    a time, as `Guild.crafting_shift` does), so the others wait."""
+    """The guild's best crafter buys inputs for a few batches, works a shift at the forge on a
+    solo order (`solo.craft`) and sells the product at the market. The rest of the guild works
+    the yard as a crew meanwhile; its wages pay for the next batches."""
     name = "crafter"
     BATCHES = 6
 
     def step(self, sim):
+        self.seat(sim)
         sim.keep_fed()
         crafter = max(sim.members, key=lambda u: u.mod_intelligence)
         recipe = self.pick(sim, crafter)
@@ -1375,11 +1378,24 @@ class Crafter(Policy):
             self.lumber_day(sim)                    # too poor for a batch: the floor job
             return
         sim.goto("city")
-        sim.guild.crafting_shift(crafter, recipe, SHIFT_HOURS)
+        ok, _ = solo.craft(sim.guild, sim.group, crafter, recipe, SHIFT_HOURS)
+        if not ok:
+            self.lumber_day(sim)
+            return
+        sim.run_order(sim.group.order)
         target = items.CRAFTING_RECIPES[recipe].target
         sim.sellable[target] = max(sim.sellable[target], crafter.count_of(target))
         sim.snap()
         sim.sleep()
+
+    @staticmethod
+    def seat(sim):
+        """The best crafter stays with the main group; everyone else becomes the yard crew."""
+        if sim.crew is not None or len(sim.members) < 2:
+            return
+        members = sim.main.members
+        members.insert(0, members.pop(members.index(max(members, key=lambda u: u.mod_intelligence))))
+        sim.seat_extras(1)
 
     @staticmethod
     def pick(sim, crafter):

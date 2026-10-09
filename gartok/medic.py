@@ -5,8 +5,8 @@ A patient's cost is the *expected* consumables: Minor Healing Potions for lost H
 First Aid Kit charge for sickness, Antidotes for poison (every dose assumed to take).
 The clock moves for the whole group by the longest treatment picked. Anything past
 `economy.MEDIC_MAX_HOURS` is not a visit but a hospital stay (`admit`): the patient splits off
-into a group of their own on a `hospital` order and leaves cured when it runs out. With no free
-group slot the whole group waits with them instead. Either way the price is the quote's.
+into a group of their own on a `solo` order and leaves cured when it runs out (`solo.finish`). With
+no free group slot the whole group waits with them instead. Either way the price is the quote's.
 """
 
 import math
@@ -115,22 +115,14 @@ def admit(guild, group, patient):
     if sum(u.money for u in group.members) < q.cost:
         return False, [f"The group cannot pay ${q.cost}."]
     economy.charge_richest_first(group.members, q.cost)
-    if len(group.members) > 1 and not guild.free_slots:
-        events, _ = guild.pass_time(q.hours)
-        if patient in guild.roster:
-            cure(patient)
-        wait = f"No free group slot: the group waits with {patient.name} (${q.cost}, {q.hours} h)."
-        return True, [wait] + list(events)
-    ward = group if len(group.members) == 1 else guild.split_group(
-        group, [patient], name=f"{patient.name} (hospital)")
-    ward.order = orders.hospital(q.hours)
+    order = orders.solo("hospital", patient.uid, q.hours)
+    if guild.send_alone(group, patient, order, f"{patient.name} (hospital)") is None:
+        group.order = order
+        return True, [f"No free group slot: the group waits with {patient.name} (${q.cost}, {q.hours} h)."]
     return True, [f"{patient.name} is admitted to the hospital: ${q.cost}, {q.hours} h."]
 
 
-def discharge(group):
-    """Cures everyone in the ward; the player merges them back by hand."""
-    lines = []
-    for u in group.members:
-        cure(u)
-        lines.append(f"{u.name} leaves the hospital cured.")
-    return lines
+def discharge(patient):
+    """Cures the patient; the player merges them back by hand."""
+    cure(patient)
+    return f"{patient.name} leaves the hospital cured."

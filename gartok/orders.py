@@ -3,7 +3,8 @@
 An order is issued once (`travel`/`work`/`rest`/`interactive`) and then ticked down by
 `campaign.advance` until it completes. `travel`, `work` and `rest` resolve silently
 (auto) -- the group just arrives, gets paid, has rested (and sits down to eat), or is
-discharged from the hospital cured (`medic.discharge`). Every other kind (`market`,
+done with a solo task (`solo.finish`: discharged cured, or a craft rolled). Every other
+kind (`market`,
 `bank`, `recruit`, `hunt`, `arena`, `tanner`) is interactive: the order only
 covers *getting to* the activity, then `campaign.advance` hands the group back
 as `TickResult.pending` for the existing screen (`MarketScreen`, `BankScreen`,
@@ -52,7 +53,7 @@ from dataclasses import dataclass
 
 from . import world
 
-AUTO_KINDS = frozenset({"travel", "work", "rest", "hospital"})
+AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable", "trust"})
@@ -76,6 +77,9 @@ class Order:
     resume_path: tuple = ()  # guard/ambush: travel waypoints still owed once resolved (empty = was the final stop)
     pack: tuple = ()         # ambush: the enemy Units rolled at the moment of the catch (encounters.py)
     job: str | None = None   # garrison: which job (economy.GARRISON_JOBS) the group is working
+    task: str | None = None  # solo: "hospital" or "craft"
+    who: str | None = None   # solo: uid of the member doing the task
+    recipe: str | None = None  # solo craft: what is being made
 
     @property
     def interactive(self):
@@ -129,11 +133,15 @@ def rest(hours):
     return Order("rest", eta=hours, remaining=hours, hours=hours)
 
 
-def hospital(hours):
-    """A patient admitted by the Medic (`medic.admit`): the group they split off into waits
-    `hours` and leaves cured. Not a rest, so nothing heals on the side, and not cancellable:
-    the stay is paid up front."""
-    return Order("hospital", eta=hours, remaining=hours, hours=hours)
+def solo(task, who, hours, recipe=None, clock_hours=None):
+    """One member (`who`, a uid) busy with `task` for `hours` while the rest of the guild acts:
+    they split off into a group of their own when there is a slot, else their whole group waits.
+    `solo.finish` pays the task out when the clock runs out. Not a rest, so nothing heals on the
+    side, and not cancellable: a hospital stay is paid up front and a craft's materials are in use.
+    `hours` is the nominal length (what a craft rolls); `clock_hours` is what the clock runs when
+    Brisk Hands shortens it."""
+    clock = hours if clock_hours is None else clock_hours
+    return Order("solo", eta=clock, remaining=clock, hours=hours, task=task, who=who, recipe=recipe)
 
 
 def interactive(kind, hours=APPROACH_HOURS):

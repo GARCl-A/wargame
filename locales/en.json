@@ -175,7 +175,8 @@
       "title": "Crafting",
       "body": [
         "Only recipes a member of the party has learned appear. Pick one and the materials are consumed at once, taken from every pack in the group (a padlocked item is never used); progress is a d20 + INT roll over hours of work. A recipe may also name a tool (a Chisel, say): it is not consumed and any pack in the group may hold it, but without it the recipe cannot start.",
-        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2. Work as many hours as you like: each hour rolls toward a batch, leftover progress carries into the next one, and the shift ends early when the materials run out. The campfire at the claim stays lit while a garrison is there, and goes out the day nobody is."
+        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2. Work as many hours as you like: each hour rolls toward a batch, leftover progress carries into the next one, and the shift ends early when the materials run out. The campfire at the claim stays lit while a garrison is there, and goes out the day nobody is.",
+        "WORK makes the whole group wait out the hours. ALONE sends the crafter off instead: they split off into a group of their own (it takes a free group slot, and only their own pack feeds the craft), the others keep playing, and the craft is rolled when the hours are up. Merge them back by hand."
       ]
     },
     "medic": {

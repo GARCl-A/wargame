@@ -1072,6 +1072,11 @@ abandoned craft doesn't get them back.
 - **Progress** rolls `1d20 + INT mod` per hour worked (`Unit.progress_crafting`,
   driven by `Guild.crafting_shift`) toward the recipe's point target; hitting
   it drops the finished item into the pack and clears the target.
+- **Two ways to work.** A shift (1, 4 or 8 h) makes the whole group wait out the hours. *Alone*
+  (4, 8 or 16 h) sends the crafter off on a `solo` order (`solo.py`): they split off into a group
+  of their own (a free group slot, and only their own pack feeds the craft) while the others
+  act, and the progress is rolled when the hours are up. They stay where they are until the
+  player merges them back. The hospital stay is the same order.
 - **Recipes** are granted the same way a magic source is (see Magic above) —
   a racial talent (the Dwarf's "Dwarf Crafting" hands over the Dwarf
   Axe/Shield/Armor recipes outright) — with no other way to learn one yet.

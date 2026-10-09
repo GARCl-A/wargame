@@ -9,7 +9,7 @@ from collections import Counter
 
 import pygame
 
-from . import items, progression
+from . import items, progression, solo
 from .screen import Screen
 from .unit_loadout import pooled_unlocked
 from .ui.primitives import (
@@ -24,6 +24,7 @@ from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 SIDE_W = 340
+ROW_H = 150
 
 class CraftingScreen(Screen):
     native = True
@@ -103,6 +104,12 @@ class CraftingScreen(Screen):
             if rect.collidepoint(px):
                 if key == "done":
                     self.on_done()
+                elif key.startswith("alone:"):
+                    _, hours, recipe = key.split(":")
+                    ok, lines = solo.craft(self.guild, self.group, self.selected_crafter, recipe, int(hours))
+                    if ok:
+                        self.on_done()
+                    self.notices = lines
                 elif key.startswith("work:"):
                     parts = key.split(":")
                     hours = int(parts[1])
@@ -186,7 +193,7 @@ class CraftingScreen(Screen):
                 continue
 
             is_active = m.crafting_target == r_name
-            r = pygame.Rect(x, y, w, 110)
+            r = pygame.Rect(x, y, w, ROW_H)
             hov = r.collidepoint(self.mouse)
             panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
 
@@ -237,11 +244,22 @@ class CraftingScreen(Screen):
                     self.add_button(screen, btn_r, f"work:{h}:{r_name}", f"Work {h}h",
                                     font=F["body_sm"])
                     bx += bw + T.S
+                alone_ok = ((len(self.group.members) == 1 or bool(self.guild.free_slots))
+                            and self.guild.craft_blocker(m, r_name, [m]) is None)
+                bx, by = r.x + T.S, by + 36
+                for h in [4, 8, 16]:
+                    btn_r = pygame.Rect(bx, by, bw, 32)
+                    self.add_button(screen, btn_r, f"alone:{h}:{r_name}", f"Alone {h}h",
+                                    enabled=alone_ok, font=F["body_sm"])
+                    bx += bw + T.S
+                if not alone_ok:
+                    text(screen, F["body_sm"], "Alone: needs a free group slot and the materials in their own pack.",
+                         (bx, by + 6), T.TX_FAINT)
             else:
                 text(screen, F["body_sm"], "Requires materials in the group's packs to start.",
                      (r.x + T.S, r.y + T.S + 65), T.TX_FAINT)
 
-            y += 110 + T.S
+            y += ROW_H + T.S
 
     def _draw_footer(self, screen):
         F = self._F
