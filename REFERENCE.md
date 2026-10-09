@@ -178,7 +178,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Bear Trap | 3 kg | -- |
 | Brigandine | 18 kg | -- |
 | Broadsword | 4 kg | -- |
-| Bucket | 1 kg | -- |
 | Chainmail | 10 kg | -- |
 | Chains | 5 kg | -- |
 | Chisel | 0.3 kg | -- |

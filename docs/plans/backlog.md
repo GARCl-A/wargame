@@ -49,10 +49,8 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
   with *Feed the recorded runs* and the planner, not by tuning prices. The run exited 0, so
   this does not break a gate.
-- **Starting tools with no job: Bucket, Scissors, Pliers.** Scissors and Pliers wait on a
-  recipe that lists them in `tools`, the Chisel on the Horn, the Shovel on the Mine and Chains on *Prisoners*.
-  The Bucket (Peasant) has no planned system at all: give it one (water, milking, camp) or
-  swap the Peasant's item, since the rule is that every starting item is useful.
+- **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
+  lists them in `tools`, the Chisel on the Horn, the Shovel on the Mine and Chains on *Prisoners*.
 
 ## Architecture debt
 
@@ -64,7 +62,7 @@ pointed to, not repeated.
   the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
-- **Big screen files.** `app.py` (1180 lines, 102 `def`s) is the wiring hub; `map_screen.py`,
+- **Big screen files.** `app.py` (1188 lines, 102 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run 800-950. Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
@@ -83,17 +81,32 @@ pointed to, not repeated.
      reward is learning the recipe; the last one points at the ox.
   4. The recipe in `items.CRAFTING_RECIPES` (`craft_level.py` derives the level), then re-run
      `scripts/economy_report.py` (a new craft-for-sale line). Needs tests, tutorial and RULES line.
-- **Mine (new node, like the Lumber Yard).** A work node plus a shop, mechanically close to the
-  Lumber Yard. It is a normal node on the map, not a hidden one. **Stone Brick, Iron Ore (new
-  item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven will need a
-  trip to the Mine. Work order pays in the Mine's goods or wage like the yard does.
-  - **To set while building:** the distance from Ankareth (suggestion: about 3 h, farther than the
-    Farm), the wage and pay, whether it needs a Pickaxe (`CraftingRecipe.tools`: a tool in any
-    group pack), whether the work carries a per-hour risk. Re-run `scripts/economy_report.py`.
+- **Mine (new node, a copy of the Lumber Yard elsewhere).** A work node plus a shop on the
+  plain `work` order (not `solo`). Always visible, not a hidden node. **Stone Brick, Iron Ore
+  (new item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven will
+  need a trip to the Mine. Amethyst is a Mine drop (loot).
+  - **Place (decided):** off the city. Edges: **Old Road 6 h, The Claim 2 h**. Road -> Mine ->
+    Claim is 8 h, the same as Road -> Wilds -> Claim today, so there is a second route of equal
+    length to the Claim; re-check the route Dijkstra and the sim.
+  - **Work (decided):** same mechanic as the yard. Without a Pickaxe the foreman's pick pays
+    less; with your own Pickaxe it pays more, at the same ratio as the yard's Axe (`LUMBER_AXE_RATIO = (4, 3)`, decided).
+  - **Pays more than the yard (decided in principle):** the way there crosses the Old Road
+    (`unsafe`, ambush table), and a round trip is the minimum: nobody works there at zero cost.
+    **Decided:** one unit of money more than the yard ($1 per paid block); confirm with
+    `scripts/economy_report.py` that it covers the round trip's risk.
   - Iron Bar stays with the Smith's chain; Iron Ore feeds it later. Needs the node, shop, UI,
     sim support and tests.
+- **Item properties: base material, source, rarity (design first, feeds the economy).** Every
+  item is craftable except the **base materials**: an item with no recipe is a base material
+  (derived, like `craft_level.py`, not set by hand), and each one must **declare its source**:
+  gathered at a node (Lumber, Iron Ore), hunted (Meat, Hide) or loot (Amethyst, which is a base
+  material, found as a Mine drop, never crafted). A test checks that no item lacks both a
+  recipe and a source. Rarity then says how scarce each base material is, and the chain
+  (source -> recipe -> sale) is what the economy sim and the per-shop stock targets read.
+  Do this before *Finite stock and a target per item*.
 - **Weapons that are really different (two tracks, both to build).**
-  1. **Named weapon traits.** `ItemDef` carries ad-hoc fields (`finesse: bool`, `thrown: int`)
+  1. **Named weapon traits (decided: a registry like `abilities.py`).** `ItemDef` carries
+     ad-hoc fields (`finesse: bool`, `thrown: int`)
      and each trait's rule text is a hand-written `if` in the description builder. Model them as
      a registry of named keywords (Finesse, Thrown, Entangle...) like `abilities.py`, so a new
      weapon is declared by listing traits and the code, UI text and `REFERENCE.md` read from one
@@ -134,8 +147,12 @@ pointed to, not repeated.
     rows, derive a policy the way `play_analysis.py` derived the `human` economy profile:
     thresholds and priorities (when to focus fire, when to retreat, when to go for the flag),
     then feed them to `ai.py` and measure against the benchmark win rates above.
-  - Needs: a combat event in `recorder.py`, a way to hand a unit to the player in an AI fight,
-    and an analysis script for the combat rows.
+  - **Hand-over (decided):** a fight with a fixed setup (the Ribbit Brothers, 12 units) is
+    played by a person on *both* sides: two human controllers, player 1 and player 2, so the
+    log holds good decisions for each side. A controller per team (human or AI) is the seam;
+    not checked whether `battle.py` has one.
+  - Needs: a combat event in `recorder.py`, the per-team controller, and an analysis script
+    for the combat rows.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
   `recordings/2026-10-08/` (14 and 11 days, not 30; a third was judged not worth playing) with
   the `human_profile.json` that `scripts/play_analysis.py` makes from them. Run
@@ -166,9 +183,6 @@ pointed to, not repeated.
   any line the recordings missed; `rush` stays as the reference. Then retire the guessed
   policies that it beats. Needs the planner, the offers listing (the missions, bouts and kit
   hooks the policies reach by hand today) and tests.
-- **The Mine on the solo task.** `orders.solo` / `solo.py` carry the hospital stay and the craft
-  (a member splits off, or the whole group waits; merge back by hand). The Mine is one more
-  `task` there: a branch in `solo.finish` and an issue function like `solo.craft`.
 - **Finite stock and a target per item, in every shop.** Split from *Specialised shops*: the
   `shop` function (a `Shop` per node, `Guild.shop(node_id)`) landed without changing a rule, so
   most of `MARKET_STOCK` is still infinite and only `economy.STOCK` items are finite, now per
@@ -223,8 +237,8 @@ the ones that also need code say so. Order is the suggested priority.
   is text only today).
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
-  or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Halfling
-  and Orc.
+  or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur
+  and Orc (Halfling has 14, Grippli 17).
 - **Map node icons.** The 13 nodes share three kinds of glyph (`map_screen.KIND_ICON`). Give
   Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient Ruins and the Claim a mark of
   their own. The map works as it is, so this is polish.
@@ -268,10 +282,11 @@ building them:
   2. An intermediate mission to earn their trust in the guild.
   3. Then the Library sends the codex to one of the **three magic factions** (Blood mages,
      Nature mages, Faith mages), where the magic line proper begins.
-  - **New mechanic to build first (decided: a general one): a node that unlocks.** A node
-    carries a reveal condition (an item in the pack, a deed, a reputation) and appears in the
-    world when it holds. The map is the first user. Nothing does that today. The Mine does *not*
-    use it: it is a plain node.
+  - **New mechanic to build first (decided: a general one): a node that unlocks.** Every node
+    is revealed or not, and an event flips it (reading a map, completing a deed, reaching a
+    reputation). The map is the first user. Nothing does that today. The Mine does *not*
+    use it: it is a plain node. **Open:** whether the flip happens once and stays (recommended);
+    Reading the map does not consume it (decided). The revealed set lives in the guild's save (decided; a new optional field, so its neutral value goes in `persist.PAYLOAD_DEFAULTS`).
   - **To define:** the exact reputation gate and the intermediate mission; the three
     factions as nodes with their own deeds (see `factions.py`); how each school's study
     differs (`magic.py`); whether the three are exclusive. Holy Symbol (below) belongs to

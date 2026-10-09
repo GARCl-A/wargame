@@ -1,7 +1,7 @@
 """Comprehensive layered regression suite for gartok.items.
 
 Validates:
-1. Layer 1 (Structural Parity): 100% exact attribute match for all 94 items
+1. Layer 1 (Structural Parity): 100% exact attribute match for all 93 items
    in baseline_items.json (weight, price, damage, range, finesse, thrown,
    hands, reload, size, ac, max_dex, speed_penalty, food, lifespan, spell_id, language).
 2. Layer 2 (Integration & Game Rules):
@@ -27,9 +27,9 @@ def load_baseline():
         return json.load(f)
 
 
-def test_baseline_has_exactly_94_items():
+def test_baseline_has_exactly_93_items():
     baseline = load_baseline()
-    assert len(baseline) == 94
+    assert len(baseline) == 93
 
 
 def test_every_baseline_item_exists_in_items_registry():

@@ -354,7 +354,6 @@ _register(ItemDef(id="gold_coin", name="Gold Coin", type=ItemType.MISC, rarity=I
 _register(ItemDef(id="pack_saddle", name="Pack Saddle", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=5.0, price=60))
 _register(ItemDef(id="harness", name="Harness", type=ItemType.TACK, rarity=ItemRarity.COMMON, weight=4.0, price=30))
 _register(ItemDef(id="rope", name="Rope", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
-_register(ItemDef(id="bucket", name="Bucket", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=1.0, price=2))
 _register(ItemDef(id="scissors", name="Scissors", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.2, price=1))
 _register(ItemDef(id="shovel", name="Shovel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
 _register(ItemDef(id="chisel", name="Chisel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=1))

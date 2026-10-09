@@ -508,12 +508,6 @@
     "food": false,
     "lifespan": null
   },
-  "Bucket": {
-    "weight": 1.0,
-    "price": 2,
-    "food": false,
-    "lifespan": null
-  },
   "First Aid Kit": {
     "weight": 0.8,
     "price": 40,
