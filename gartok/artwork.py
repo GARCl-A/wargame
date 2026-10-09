@@ -83,10 +83,59 @@ def race_icon(race_name, px, color=_WHITE):
     return icon("head", RACE_ICON.get(race_name), px, color)
 
 
+def _load_scaled_portrait(path, px):
+    px = max(1, int(px))
+    try:
+        surf = pygame.image.load(path)
+        if surf.get_size() != (px, px):
+            surf = pygame.transform.smoothscale(surf, (px, px))
+        try:
+            surf = surf.convert_alpha()
+        except pygame.error:
+            pass
+        return surf
+    except Exception:
+        return None
+
+
 @functools.lru_cache(maxsize=256)
 def portrait(race_name, portrait_id, px):
     """Circular medallion portrait for a unit, scaled to `(px, px)`.
-    Returns None if the race has no portrait assets (caller falls back to `race_icon`)."""
+    Returns None if the race has no portrait assets (caller falls back to `race_icon`).
+
+    If `portrait_id` is a string (e.g. 'ribit.png', 'adelio', 'npc/bufo.png'),
+    it pins to that specific image file so the generic race pool does not pick it.
+    Otherwise, an integer selects deterministically from the numbered portraits in the pool."""
+    if not race_name and not portrait_id:
+        return None
+    px = max(1, int(px))
+
+    if isinstance(portrait_id, str) and not portrait_id.isdigit():
+        p_str = portrait_id.strip()
+        candidates = [p_str] if p_str.lower().endswith(".png") else [p_str, f"{p_str}.png"]
+        search_dirs = []
+        if race_name:
+            r_clean = str(race_name).lower().strip()
+            if r_clean == "leshy":
+                r_clean = "treefolk"
+            folder = os.path.join(_PORTRAITS, r_clean)
+            if not os.path.isdir(folder):
+                alt = r_clean.replace(" ", "_") if " " in r_clean else r_clean.replace("_", " ")
+                folder = os.path.join(_PORTRAITS, alt)
+            if os.path.isdir(folder):
+                search_dirs.append(folder)
+        search_dirs.extend([
+            os.path.join(_PORTRAITS, "npc"),
+            _PORTRAITS,
+        ])
+        for sdir in search_dirs:
+            if not os.path.isdir(sdir):
+                continue
+            for cand in candidates:
+                p_cand = os.path.join(sdir, cand)
+                if os.path.isfile(p_cand):
+                    return _load_scaled_portrait(p_cand, px)
+
     if not race_name:
         return None
     r_clean = str(race_name).lower().strip()
@@ -111,20 +160,16 @@ def portrait(race_name, portrait_id, px):
         return None
     if not files:
         return None
-    idx = (abs(portrait_id) if portrait_id is not None else 0) % len(files)
-    path = os.path.join(folder, files[idx])
-    px = max(1, int(px))
-    try:
-        surf = pygame.image.load(path)
-        if surf.get_size() != (px, px):
-            surf = pygame.transform.smoothscale(surf, (px, px))
-        try:
-            surf = surf.convert_alpha()
-        except pygame.error:
-            pass
-        return surf
-    except Exception:
-        return None
+
+    numeric_pool = [f for f in files if os.path.splitext(f)[0].isdigit()]
+    pool = numeric_pool if numeric_pool else files
+
+    if isinstance(portrait_id, int) or (isinstance(portrait_id, str) and portrait_id.isdigit()):
+        idx = abs(int(portrait_id)) % len(pool)
+    else:
+        idx = 0
+    path = os.path.join(folder, pool[idx])
+    return _load_scaled_portrait(path, px)
 
 
 # A small curated gallery for the guild's banner emblem (see draft_screen.py's

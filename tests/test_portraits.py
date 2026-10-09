@@ -310,3 +310,54 @@ def test_squad_and_prison_cards_carry_the_units_portrait():
     with patch.object(artwork, "portrait", spy):
         screen.draw(pygame.Surface((1280, 800)))
     assert u.portrait_id in seen
+
+
+def test_pinned_named_portraits():
+    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png"]:
+        port = artwork.portrait(None, name, 32)
+        assert port is not None
+        assert port.get_size() == (32, 32)
+
+
+def test_named_npcs_load_pinned_portraits():
+    import json
+    npc_files = [
+        "adelio-small-knife.json",
+        "ribit.json",
+        "bufo.json",
+        "peep.json",
+        "biwolf.json",
+        "the-ancient-archivist.json",
+        "ruin-sentry.json",
+        "sanctum-spider.json",
+    ]
+    for filename in npc_files:
+        path = os.path.join("npcs", filename)
+        with open(path, "r", encoding="utf-8") as f:
+            d = json.load(f)
+        u = unit.Unit.from_save(d)
+        assert u.portrait_file is not None
+        assert u.portrait_id == u.portrait_file
+        port = artwork.portrait(u.race["name"], u.portrait_id, 28)
+        assert port is not None
+        assert port.get_size() == (28, 28)
+
+
+def test_generic_units_do_not_draw_named_portraits():
+    # Numbered pool modulo should never select a named image string
+    for idx in range(30):
+        # Grippli has 11 numbered portraits (0..10)
+        port = artwork.portrait("Grippli", idx, 24)
+        assert port is not None
+
+
+def test_portrait_file_survives_save_round_trip():
+    u = unit.Unit("player")
+    u.portrait_file = "adelio.png"
+    u.portrait_id = "adelio.png"
+    saved = persist.unit_to_dict(u)
+    assert saved["portrait_file"] == "adelio.png"
+    v = unit.Unit.from_save(saved)
+    assert v.portrait_file == "adelio.png"
+    assert v.portrait_id == "adelio.png"
+

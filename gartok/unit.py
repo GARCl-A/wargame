@@ -51,6 +51,7 @@ SAVE_DEFAULTS = {
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
     "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
     "hp_override": None, "racial_override": None, "dormant": False, "awareness_radius": 8,
+    "portrait_file": None,
 }
 
 
@@ -110,6 +111,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.name = name or names.random_name()
         self.token = self.race["token"]
         self.portrait_id = int(self.uid[:8], 16)
+        self.portrait_file = None
 
         self._derive_combat()
         self._sync_dictionary_recipes()
@@ -180,7 +182,11 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
-        u.portrait_id = d.get("portrait_id", int(u.uid[:8], 16))
+        u.portrait_file = d.get("portrait_file") or (d.get("portrait") if isinstance(d.get("portrait"), str) else None)
+        if u.portrait_file:
+            u.portrait_id = u.portrait_file
+        else:
+            u.portrait_id = d.get("portrait_id", int(u.uid[:8], 16))
         u._hp_roll = d["hp_roll"]
         u._hp_override = d["hp_override"]                # creator-set HP max, or None
         u.natural_armor = d["natural_armor"]

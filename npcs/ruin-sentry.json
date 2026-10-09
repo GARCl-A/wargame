@@ -4,6 +4,7 @@
   "name": "Ruin Sentry",
   "auto_name": false,
   "portrait_id": 2161468498,
+  "portrait_file": "ruin-sentry.png",
   "race": "Automaton",
   "occupation": "Guard",
   "alignment": "Chaotic and Good",

@@ -81,6 +81,7 @@ def unit_to_dict(u):
         "name": u.name,
         "auto_name": u._auto_name,
         "portrait_id": u.portrait_id,
+        "portrait_file": getattr(u, "portrait_file", None),
         "race": u.race["name"],
         "occupation": u.occupation["name"],
         "alignment": u.alignment,
