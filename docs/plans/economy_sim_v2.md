@@ -264,7 +264,7 @@ member, 14x what resting costs, so no early guild can afford it: in layer 2 `--m
 changes any policy (the `games` guild pays $22 in 30 days and fights the same 2.2 bouts, and
 `balanced` pays $3). Lowering the price does not help much either, because the Games are
 capital-gated: bouts rise from 2.2 to **4.1 only at 5% of the potion price** (about $4 a potion),
-and XP from 1.3 to 1.8 per member. The Medic is worth building for the late game, where a squad's
+and XP from 1.3 to 1.8 per member. The Medic is worth keeping as a late-game luxury, where a squad's
 day is worth $50 or more; as a fix for the first month's slow healing it would have to cost about
 what a rest costs.
 The hospital stay (a long poison, over 24 h) is priced the same way, so it is a luxury too: the sim does
@@ -432,7 +432,7 @@ gone another way; the ones I was least sure of are repeated as questions in the 
     also not compared with each other by the dominance scan (they differ by noise); the scan now
     compares only activities of different roles.
 19. **The Medic is a switch (`--medic`) over the game's own `medic.quote` / `medic.cure`**
-    (potions at 0.7x); `--medic-factor` changes the price. The game offers it (backlog B1 is built),
+    (potions at 0.7x); `--medic-factor` changes the price. The game offers it (the Apothecary's MEDIC tab),
     but the switch stays off by default so the other findings keep their baseline.
 20. **A hurt guild goes to the Medic only if it can afford the bill and still eat tomorrow**;
     otherwise it rests. The policies themselves did not change.
@@ -461,7 +461,7 @@ to the old question numbers.
 | 3 | The Axe is fine, one of the best basic weapons; late game is axe + torch, two-hander or bow (axe + shield for dwarves) | Kept the Axe as the milestone's weapon and credited an equal weapon already owned. |
 | 4 | Not sure; today crafting is click-buy-craft-sell forever | Kept the 10:3 shelf as the first estimate and moved the Specialised shops backlog item along. Open: question 2. |
 | 5 | Crafting should be parallel: allocate a character, it splits from the group and crafts | New backlog item **Crafting in parallel**. The sim still has one crafter at a time. |
-| 6 | Put the Medic in the count | `--medic` in both layers: [finding 10](#findings). Priced as backlog B1 says it is out of reach; see question 3. |
+| 6 | Put the Medic in the count | `--medic` in both layers: [finding 10](#findings). Priced as built (`economy.MEDIC_PRICE_FACTOR`, 0.7x) it is out of reach; see question 3. |
 | 7 | How lethal is the Wilds today? | Answered below. |
 | 8 | Review: nodes now have many functions (a tavern recruits, works and sells) | New note under **Specialised shops**: the till and its refill belong to a shop function, not to `kind == "market"`. |
 | 9 | (did not understand) | A house costs $30 a week, $4.3 a day, which is a lumberjack's whole wage ($4), and a Donkey eats a ration like a member. So a squad on day labour cannot keep a house or an animal; only an adventuring income can. Is that the intent? Question 5. |
@@ -496,7 +496,7 @@ What is still open after your answers, in rough order of how much they change th
 2. **How much may a crafting specialist earn?** I assumed 2-3x a lumberjack (a shelf of about 10
    refilling 3 a day); your note says crafting is mostly to save money and reach things you cannot
    buy, and is not to be encouraged as a business. If so the shelf can be tighter (6:2 gives 1.5x).
-3. **What should the Medic cost?** As specified (potions at 0.7x) it is $16 an HP against $1.3 an
+3. **What should the Medic cost?** As built (potions at 0.7x) it is $16 an HP against $1.3 an
    HP for a rest, so only a rich squad uses it ([finding 10](#findings)). Price it at the rest it
    saves (a few copper an HP), or keep it as a late-game luxury?
 4. **The garrison never heals and the seizure roll fires on every `advance()` call.** Both look

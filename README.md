@@ -201,6 +201,7 @@ gartok/
                     fame buys group slots (`BASE_SLOTS`, `group_slots`)
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk
                     (7-day notice, loot by alignment)
+  medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; medic_screen.py is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
   missions.py       paid, deadlined jobs from a named giver (the Tanner, the Bankers'
