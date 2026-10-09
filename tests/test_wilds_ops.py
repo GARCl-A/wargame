@@ -64,7 +64,7 @@ def test_an_unguarded_established_claim_is_seized_without_a_fight():
     orig = _forced_raid_chance(1.0)
     try:
         guild, g, p = _established_guild(garrisoned=False)
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
@@ -78,7 +78,7 @@ def test_a_garrisoned_established_claim_can_be_attacked():
     orig = _forced_raid_chance(1.0)
     try:
         guild, g, p = _established_guild(garrisoned=True)
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
@@ -94,12 +94,12 @@ def test_no_seizure_attempt_before_established_or_after_already_seized():
     try:
         guild, g, p = _established_guild(garrisoned=True)
         guild.wilds_claim_stage = "SWEPT"          # not established yet
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
         assert not result.pending and guild.wilds_claim_owner == "guild"
 
         guild.wilds_claim_stage = "ESTABLISHED"
         guild.wilds_claim_owner = "seized"         # already lost -- nothing left to seize
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
         assert not result.pending
     finally:
         economy.WILDS_RAID_CHANCE = orig
@@ -116,7 +116,7 @@ def test_no_seizure_roll_ever_touches_a_sustaining_claim():
         guild = Guild(None, groups=[g])
         guild.wilds_claim_start_sustaining()
         g.order = orders.garrison("lumber")
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
@@ -179,7 +179,7 @@ def test_app_runs_the_seizure_battle_end_to_end():
         guild.wilds_claim_owner = "guild"
         g.order = orders.garrison("lumber")
         app = _app(guild)
-        app._advance(dt=1)
+        app._advance(dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 

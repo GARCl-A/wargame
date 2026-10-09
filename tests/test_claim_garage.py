@@ -135,7 +135,7 @@ def test_an_unguarded_seizure_takes_it_too(monkeypatch):
     guild.wilds_claim_owner = "guild"
     _park_all(guild, g)
     _roll(monkeypatch, 0.0)
-    campaign._wilds_claim_seizure_check(guild)
+    campaign._wilds_claim_seizure_check(guild, 1)
     assert guild.claim_garage.empty
 
 

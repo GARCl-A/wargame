@@ -55,8 +55,8 @@ class UpkeepMixin:
         # Passive healing: every 8h of continuous rest (not busy) heals the unit.
         # Steady Pace lets a group that is working where it stands rest on the job.
         for g in self.groups:
-            working = g.busy and g.order.kind in orders.WORK_KINDS
-            resting = g.busy and g.order.kind == "rest"
+            resting = g.busy and orders.is_resting(g.order)
+            working = g.busy and g.order.kind in orders.WORK_KINDS and not resting
             for u in g.members:
                 on_the_job = working or u in busy
                 if ((g.busy and not resting) or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):

@@ -99,11 +99,13 @@ class LaborMixin:
         items are never used."""
         pool = [unit] + [u for u in pool or () if u is not unit]
         hours = int(hours)
-        if unit.crafting_target != recipe:
-            if recipe not in items.CRAFTING_RECIPES:
-                return [f"Unknown recipe {recipe}."], []
-            if not self._start_batch(unit, recipe, pool=pool):
-                return [f"{unit.name} can't craft {recipe} -- missing materials."], []
+        if recipe not in items.CRAFTING_RECIPES:
+            return [f"Unknown recipe {recipe}."], []
+        lacking = items.missing_tools(items.CRAFTING_RECIPES[recipe], pool)
+        if lacking:
+            return [f"{unit.name} can't craft {recipe} -- needs a {', '.join(lacking)}."], []
+        if unit.crafting_target != recipe and not self._start_batch(unit, recipe, pool=pool):
+            return [f"{unit.name} can't craft {recipe} -- missing materials."], []
 
         recipe_data = items.CRAFTING_RECIPES[recipe]
         progress_total = made = worked = 0

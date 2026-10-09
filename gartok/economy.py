@@ -98,7 +98,7 @@ CITY_PROPERTY_DEBT_GRACE_DAYS = 14            # days of ignored debt before the 
 # job -- Wilds wood-gathering, once Sistema 3 adds the Wilds territory node --
 # but the mechanism (job name -> output item, yield per member) is generic so
 # a future job is just another `GARRISON_JOBS` entry, not new plumbing.
-GARRISON_JOBS = {"lumber": "Lumber", "study": None}           # order.job -> the item name it produces (None if it produces no items, e.g. study)
+GARRISON_JOBS = {"lumber": "Lumber", "study": None, "hold": None}   # order.job -> the item name it produces (None if it produces no items); "hold" only stands guard, which counts as resting
 GARRISON_YIELD_PER_MEMBER_PER_DAY = 1          # units of that item, per garrisoned member, per day
 
 OVEN_PRICE = 150                  # copper, bought from the Bankers once the house is the guild's
@@ -129,7 +129,7 @@ WILDS_CLAIM_FENCE_HOURS = constants.WILDS_CLAIM_FENCE_HOURS
 WILDS_CLAIM_SWEEP_LEVEL = 2       # stage 5's fight: a bandit camp or nest nearby
 WILDS_CLAIM_SWEEP_SIZE = 2
 WILDS_CLAIM_SUSTAIN_DAYS = 10     # days the garrison has to hold before ESTABLISHED
-WILDS_RAID_CHANCE = 0.2           # rolled once per campaign.advance() call while SUSTAINING -- see campaign.py
+WILDS_RAID_CHANCE = 0.2           # per day, for SUSTAINING raids and ESTABLISHED seizure attempts -- see campaign._claim_attack_rolls
 WILDS_RAID_LEVEL = 3
 WILDS_RAID_SIZE = 3
 

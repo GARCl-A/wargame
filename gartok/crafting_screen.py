@@ -87,8 +87,12 @@ class CraftingScreen(Screen):
                 missing.append(f"{qty - have}x {mat}")
         return missing
 
+    def _get_missing_tools(self, recipe):
+        recipe_data = items.CRAFTING_RECIPES.get(recipe)
+        return items.missing_tools(recipe_data, self.group.members) if recipe_data else []
+
     def _has_materials(self, recipe):
-        return len(self._get_missing_materials(recipe)) == 0
+        return not self._get_missing_materials(recipe) and not self._get_missing_tools(recipe)
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
@@ -213,7 +217,13 @@ class CraftingScreen(Screen):
                 status_text = f"Target Progress: {target_val} (Roll: 1d20 {mod_sign})"
                 if not has_mat:
                     status_text += f" - MISSING: {', '.join(missing)}"
+                lacking = self._get_missing_tools(r_name)
+                if lacking:
+                    status_color = T.BLOOD
+                    status_text += f" - NEEDS: {', '.join(lacking)}"
 
+            if r_data.tools:
+                materials_str += f"  |  Tools: {', '.join(r_data.tools)}"
             text(screen, F["body_sm"], f"Materials: {materials_str}",
                  (r.x + T.S, r.y + T.S + 20), T.TX_MUTED)
             text(screen, F["body_sm"], status_text, (r.x + T.S, r.y + T.S + 40), status_color)

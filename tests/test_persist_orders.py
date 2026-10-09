@@ -224,12 +224,12 @@ def test_fleeing_into_a_second_ambush_parks_the_new_one():
 def test_a_wilds_raid_on_a_garrison_is_parked_too():
     g = Group([Unit("player")], node=world.WILDS_TERRITORY_NODE)
     guild = Guild(None, groups=[g])
-    guild.wilds_claim_stage = "SUSTAINING"
+    guild.wilds_claim_start_sustaining()
     g.order = orders.garrison("lumber")
     orig = economy.WILDS_RAID_CHANCE
     economy.WILDS_RAID_CHANCE = 1.0
     try:
-        campaign.advance(guild, dt=1)
+        campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 

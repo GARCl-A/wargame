@@ -288,3 +288,57 @@ def test_the_crafting_screen_counts_the_groups_materials():
     assert not screen._get_missing_materials("Bear Trap")
     b.toggle_lock("Iron Bar")
     assert screen._get_missing_materials("Bear Trap")
+
+
+def _toolbox_recipe(monkeypatch, tools=("Chisel",)):
+    monkeypatch.setitem(items.CRAFTING_RECIPES, "Carved Thing", items.CraftingRecipe(
+        target="Bear Trap", materials=["Iron Bar"], complexity=10,
+        station=items.CraftingStation.FORGE, tools=tools))
+
+
+def test_missing_tools_lists_what_no_pack_holds(monkeypatch):
+    _toolbox_recipe(monkeypatch, ("Chisel", "Rope"))
+    a, b = Unit("player"), Unit("player")
+    recipe = items.CRAFTING_RECIPES["Carved Thing"]
+    assert items.missing_tools(recipe, [a, b]) == ["Chisel", "Rope"]
+    b.give_to_pack("Chisel")
+    assert items.missing_tools(recipe, [a, b]) == ["Rope"]
+    assert items.missing_tools(items.CRAFTING_RECIPES["Bear Trap"], [a]) == []
+
+
+def test_craft_refused_without_the_tool_and_materials_untouched(monkeypatch):
+    _toolbox_recipe(monkeypatch)
+    u = Unit("player")
+    guild = Guild(roster=[u], node="city")
+    u.recipes.append("Carved Thing")
+    u.give_to_pack("Iron Bar")
+
+    notices, _ = guild.crafting_shift(u, "Carved Thing", hours=1)
+    assert any("needs a Chisel" in n for n in notices)
+    assert u.has_item("Iron Bar") and u.crafting_target is None
+
+
+def test_tool_in_another_pack_of_the_group_is_enough_and_is_kept(monkeypatch):
+    _toolbox_recipe(monkeypatch)
+    crafter, mate = Unit("player"), Unit("player")
+    guild = Guild(roster=[crafter, mate], node="city")
+    crafter.recipes.append("Carved Thing")
+    crafter.give_to_pack("Iron Bar")
+    mate.give_to_pack("Chisel")
+
+    guild.crafting_shift(crafter, "Carved Thing", hours=1, pool=[crafter, mate])
+    assert crafter.crafting_target == "Carved Thing"
+    assert not crafter.has_item("Iron Bar")
+    assert mate.has_item("Chisel")
+
+
+def test_a_craft_in_progress_stops_when_the_tool_is_gone(monkeypatch):
+    _toolbox_recipe(monkeypatch)
+    u = Unit("player")
+    guild = Guild(roster=[u], node="city")
+    u.recipes.append("Carved Thing")
+    u.crafting_target = "Carved Thing"
+
+    notices, _ = guild.crafting_shift(u, "Carved Thing", hours=1)
+    assert any("needs a Chisel" in n for n in notices)
+    assert u.crafting_progress == 0

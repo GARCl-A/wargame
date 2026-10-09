@@ -300,7 +300,9 @@ def _advance(guild, dt=None, busy=()):
             return TickResult(hungry=[u for u in guild.roster if u.hunger_level > 0])
         dt = min(g.order.remaining for g in active)
 
+    start_day = guild.clock.day
     events, casualties = guild.pass_time(dt, busy=busy)
+    days_crossed = guild.clock.day - start_day
     if forced:
         events += guild.eat_now_pass()
     
@@ -355,7 +357,7 @@ def _advance(guild, dt=None, busy=()):
             events += medic.discharge(g)
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
-    claim_events, claim_pending = _wilds_claim_attack_check(guild)
+    claim_events, claim_pending = _wilds_claim_attack_check(guild, days_crossed)
     events += claim_events
     pending += claim_pending
     for g, order in pending:
@@ -476,27 +478,34 @@ def _property_raid_catch(guild, group, resume_path):
     return orders.Order("eviction", pack=pack, resume_path=tuple(resume_path))
 
 
-def _wilds_claim_attack_check(guild):
+def _claim_attack_rolls(days):
+    """Whether a claim attack lands over `days` calendar days crossed: `WILDS_RAID_CHANCE`
+    is a per-day chance, so a jump of several days gets the odds of at least one hit and
+    a call that crosses no midnight (a 1 h rest) never rolls."""
+    return days > 0 and random.random() < 1 - (1 - economy.WILDS_RAID_CHANCE) ** days
+
+
+def _wilds_claim_attack_check(guild, days):
     """`(events, pending)` for whichever periodic Wilds-claim attack applies
-    right now, checked once per `advance()` call (see `_wilds_claim_raid_check`'s
+    after `days` calendar days crossed (see `_wilds_claim_raid_check`'s
     docstring for why this can't live on `_arrival_pause` like every other
     forced fight): a raid mid-`"SUSTAINING"`, or (Sistema 4) a seizure attempt
     once `"ESTABLISHED"` and still `guild.wilds_claim_owner == "guild"`. The
     two stages never overlap, so exactly one branch (or neither) ever fires."""
     if guild.wilds_claim_stage == "SUSTAINING":
-        return [], _wilds_claim_raid_check(guild)
+        return [], _wilds_claim_raid_check(guild, days)
     if guild.wilds_claim_stage == "ESTABLISHED" and guild.wilds_claim_owner == "guild":
-        return _wilds_claim_seizure_check(guild)
+        return _wilds_claim_seizure_check(guild, days)
     return [], []
 
 
-def _wilds_claim_raid_check(guild):
+def _wilds_claim_raid_check(guild, days):
     """Whether a raider band tests the Wilds claim's garrison during
     `"SUSTAINING"`: not through `_arrival_pause` like every other forced
     fight above, because a garrison never "arrives" again after
     `orders.garrison` is issued (it's excluded from `active` on purpose), so
     nothing would ever call this if it lived on that seam instead. Rolls
-    `economy.WILDS_RAID_CHANCE` once per garrisoned group actually sitting at
+    `economy.WILDS_RAID_CHANCE` per day crossed for each garrisoned group actually sitting at
     `world.WILDS_TERRITORY_NODE` -- carries `job` so a won fight can reissue
     the exact `orders.garrison(job)` it interrupted. Losing only resets the
     sustain countdown (`resolve_wilds_raid`) -- there is no ownership yet to
@@ -507,7 +516,7 @@ def _wilds_claim_raid_check(guild):
             continue
         if g.node != world.WILDS_TERRITORY_NODE:
             continue
-        if random.random() >= economy.WILDS_RAID_CHANCE:
+        if not _claim_attack_rolls(days):
             continue
         job = g.order.job
         pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
@@ -517,7 +526,7 @@ def _wilds_claim_raid_check(guild):
     return pending
 
 
-def _wilds_claim_seizure_check(guild):
+def _wilds_claim_seizure_check(guild, days):
     """Sistema 4: once `ESTABLISHED`, the same roll (`economy.WILDS_RAID_CHANCE`
     -- reused rather than a second tuning knob for what is the same kind of
     threat against the same ground) decides whether raiders test the claim.
@@ -527,7 +536,7 @@ def _wilds_claim_seizure_check(guild):
     **Garrisoned**, it plays out as a real fight (`"wilds_seizure"`, resolved
     by `resolve_wilds_seizure`) -- winning holds the claim, losing seizes it
     same as the unguarded case, but only after the garrison actually fell."""
-    if random.random() >= economy.WILDS_RAID_CHANCE:
+    if not _claim_attack_rolls(days):
         return [], []
     garrison = next((g for g in guild.groups if not g.empty and g.order is not None
                      and g.order.kind == "garrison" and g.node == world.WILDS_TERRITORY_NODE),

@@ -544,6 +544,7 @@ class CraftingRecipe:
     complexity: int
     station: CraftingStation
     yield_qty: int = 1
+    tools: tuple[str, ...] = ()
 
     @property
     def level(self) -> int:
@@ -560,6 +561,12 @@ class CraftingRecipe:
     def __contains__(self, key: str) -> bool:
         return hasattr(self, key)
 
+
+
+def missing_tools(recipe: CraftingRecipe, packs) -> list[str]:
+    """The tools `recipe` needs that no pack in `packs` holds. A tool is never consumed and
+    needs no particular crafter: any pack of the working group is enough."""
+    return [t for t in recipe.tools if not any(u.has_item(t) for u in packs)]
 
 
 def recipe_goal(recipe: CraftingRecipe) -> int:

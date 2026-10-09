@@ -1064,6 +1064,11 @@ learned recipe (`Unit.recipes`) before they can start; the recipe's materials
 are consumed the moment `crafting_target` is set, not on completion — an
 abandoned craft doesn't get them back.
 
+- **Tools.** A recipe may list `tools` (`CraftingRecipe.tools`). A tool is not
+  consumed, and it is enough for any pack in the working group to hold it, not
+  the crafter's own; it weighs and is lost with the group. Without it the
+  craft does not start (`items.missing_tools`).
+
 - **Progress** rolls `1d20 + INT mod` per hour worked (`Unit.progress_crafting`,
   driven by `Guild.crafting_shift`) toward the recipe's point target; hitting
   it drops the finished item into the pack and clears the target.
@@ -1330,7 +1335,7 @@ shipped start to finish (buy/claim, use, lose, recover):
   squad picker); **Fence** consumes hauled-in Lumber (bought at the Market
   until the claim can produce its own); **Sustain** parks a garrisoned group
   there for a countdown, rolling a raid chance
-  (`economy.WILDS_RAID_CHANCE` = 0.2) each `campaign.advance()` — losing only
+  (`economy.WILDS_RAID_CHANCE` = 0.2) per calendar day crossed, never per `campaign.advance()` call — losing only
   resets the sustain timer, never the earlier stages. Once **Established**,
   the garrison produces Lumber daily (`economy.GARRISON_JOBS`,
   `Guild._garrison_upkeep`) and the claim becomes a real target: an

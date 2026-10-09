@@ -277,7 +277,7 @@ def test_a_garrison_can_be_raided_mid_sustain():
         guild.wilds_claim_start_sustaining()
         g.order = orders.garrison("lumber")
 
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
@@ -293,7 +293,7 @@ def test_no_raid_outside_the_sustaining_stage():
         g = Group([Unit("player")], node=NODE)
         guild = Guild(None, groups=[g])
         g.order = orders.garrison("lumber")        # no claim in progress at all
-        result = campaign.advance(guild, dt=1)
+        result = campaign.advance(guild, dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
@@ -341,7 +341,7 @@ def test_app_runs_the_wilds_raid_battle_end_to_end():
         guild.wilds_claim_start_sustaining()
         g.order = orders.garrison("lumber")
         app = _app(guild)
-        app._advance(dt=1)
+        app._advance(dt=24)
     finally:
         economy.WILDS_RAID_CHANCE = orig
 
@@ -548,3 +548,68 @@ def test_waiting_on_the_map_counts_the_sustain_days_down():
     g.members[0]._base_inventory = packed(["Meat"] * 4)
     ms.guild.pass_time(24)
     assert ms.guild.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS - 1
+
+
+# --------------------------------------------------------------------------- #
+# the attack chance is per day, not per call; a holding garrison rests        #
+# --------------------------------------------------------------------------- #
+
+def _sustaining_guild(job="lumber"):
+    g = Group([Unit("player")], node=NODE)
+    guild = Guild(None, groups=[g])
+    guild.wilds_claim_start_sustaining()
+    g.order = orders.garrison(job)
+    return guild, g
+
+
+def test_hour_long_advances_roll_the_raid_once_a_day_not_once_a_call(monkeypatch):
+    rolls = []
+    monkeypatch.setattr(campaign.random, "random", lambda: rolls.append(1) or 0.99)
+    guild, _ = _sustaining_guild()
+    for _ in range(24):
+        campaign.advance(guild, dt=1)
+    assert len(rolls) == 1
+
+
+def test_a_call_that_crosses_no_midnight_never_rolls(monkeypatch):
+    monkeypatch.setattr(campaign.random, "random", lambda: 0.0)
+    guild, g = _sustaining_guild()
+    result = campaign.advance(guild, dt=1)
+    assert not result.pending and g.order.kind == "garrison"
+
+
+def test_several_days_in_one_jump_raise_the_odds_of_a_hit():
+    assert not campaign._claim_attack_rolls(0)
+    hits = lambda days: sum(campaign._claim_attack_rolls(days) for _ in range(4000))
+    random.seed(3)
+    one, five = hits(1), hits(5)
+    assert 0.15 < one / 4000 < 0.25
+    assert 0.62 < five / 4000 < 0.72
+
+
+def test_a_holding_garrison_heals_and_a_gathering_one_does_not():
+    for job, heals in (("hold", True), ("lumber", False)):
+        guild, g = _sustaining_guild(job)
+        p = g.members[0]
+        p.hp = max(1, p.hp_max - 5)
+        before = p.hp
+        guild.pass_time(8)
+        assert (p.hp > before) is heals, job
+
+
+def test_hold_is_a_known_garrison_job_that_produces_nothing():
+    assert "hold" in economy.GARRISON_JOBS and economy.GARRISON_JOBS["hold"] is None
+    assert orders.is_resting(orders.garrison("hold"))
+    assert not orders.is_resting(orders.garrison("lumber"))
+    assert orders.is_resting(orders.rest(8))
+
+
+def test_the_claim_screen_toggles_the_garrison_job():
+    from gartok.wilds_claim_screen import WildsClaimScreen
+    _, g = _sustaining_guild()
+    screen = WildsClaimScreen.__new__(WildsClaimScreen)
+    screen.group = g
+    screen._toggle_garrison_job()
+    assert g.order.job == "hold"
+    screen._toggle_garrison_job()
+    assert g.order.job == "lumber"

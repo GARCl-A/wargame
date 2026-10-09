@@ -88,6 +88,7 @@ class WildsClaimScreen(Screen):
                 "fight_sweep": lambda: self.on_fight_sweep(self.group),
                 "garrison": self._start_garrison,
                 "leave_garrison": self._leave_garrison,
+                "garrison_job": self._toggle_garrison_job,
                 "collect": self._collect_lumber,
                 "campfire": self._light_campfire,
                 "oven": self._build_oven,
@@ -123,6 +124,20 @@ class WildsClaimScreen(Screen):
         self.group.order = orders.garrison("lumber")
         self.guild.wilds_claim_start_sustaining()
         self.on_done()
+
+    def _toggle_garrison_job(self):
+        order = self.group.order
+        if order is None or order.kind != "garrison":
+            return
+        order.job = "lumber" if order.job == "hold" else "hold"
+
+    def _garrison_job_button(self, screen, F, y, w):
+        order = self.group.order
+        if order is None or order.kind != "garrison":
+            return y
+        holding = order.job == "hold"
+        label = "GATHER LUMBER INSTEAD" if holding else "JUST HOLD THE CLAIM (REST)"
+        return self._button(screen, F, "garrison_job", label, y, w)
 
     def _leave_garrison(self):
         if self.group.order is not None and self.group.order.kind == "garrison":
@@ -273,6 +288,7 @@ class WildsClaimScreen(Screen):
             y += 20
         y += T.S
         if self.group.order is not None and self.group.order.kind == "garrison":
+            y = self._garrison_job_button(screen, F, y, w)
             self._button(screen, F, "leave_garrison", "STAND DOWN THE GARRISON", y, w)
         elif not garrisoned:
             self._button(screen, F, "garrison", "GARRISON HERE", y, w)
@@ -326,4 +342,5 @@ class WildsClaimScreen(Screen):
             text(screen, F["body_sm"], "(nothing banked yet)", (x, y), T.TX_FAINT)
             y += 20
         y += T.S * 2
-        self._button(screen, F, "collect", "COLLECT LUMBER", y, w, enabled=bool(stock))
+        y = self._button(screen, F, "collect", "COLLECT LUMBER", y, w, enabled=bool(stock))
+        self._garrison_job_button(screen, F, y, w)

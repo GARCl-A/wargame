@@ -154,5 +154,11 @@ def garrison(job):
     return Order("garrison", job=job)
 
 
+def is_resting(order):
+    """A `rest`, or a garrison that only holds the place: standing there doing nothing is
+    resting, so the body heals (`Guild.pass_time`)."""
+    return order is not None and (order.kind == "rest" or (order.kind == "garrison" and order.job == "hold"))
+
+
 def idle():
     return Order("idle")

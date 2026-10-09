@@ -8,13 +8,14 @@ tests and the git log; the long-range AI plan is
 Sizes are estimates, not checked against the code. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
-Two parts:
+Three parts:
 
 - **Ready to do** — the task is defined enough to start. Sorted by size: small (a sitting),
-  medium (a feature touching a few modules), large (a system: UI, AI and tests), epic (its
-  own arc).
+  large (a system: UI, AI and tests), epic (its own arc).
 - **Needs more information** — a design question, a repro or another system has to land
   before the task can be sized.
+- **Starting items waiting on another system** — not a question: a list of items whose
+  system does not exist yet.
 
 ---
 
@@ -24,15 +25,14 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. *Crafting tools* (unblocks the Chisel, the Pickaxe and the Mine).
-2. The `shop` function on nodes (see *Specialised shops*; unblocks Mine, Smith, Tanner, Library).
-3. Mine + Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
-4. Generic *solo task* order (craft, hospital, Mine on one mechanism).
-5. Vocations in the draft (decided, table below).
-6. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
+1. The `shop` function on nodes (see *Specialised shops*; unblocks Mine, Smith, Tanner, Library).
+2. Mine + Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
+3. Generic *solo task* order (craft, hospital, Mine on one mechanism).
+4. Vocations in the draft (decided, table below).
+5. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
    player the AI does not match yet.
-7. Docs refresh (Small, below) can go in any sitting. The *Architecture debt* section lists
-   what to pay on the way (steps 2 and 4 are debts).
+6. Docs refresh (Small, below) can go in any sitting. The *Architecture debt* section lists
+   what to pay on the way (steps 1 and 3 are debts).
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -50,22 +50,13 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   `GarageScreen` return those keys and `locales/en.json` has their copy, but the tuple omits
   them, so the tests that walk `TUTORIALS` (copy exists, badge rect) never cover the two cards.
   Add both and extend the screen-key test.
-- **Claim raid cadence may scale with legs, not days.** `_wilds_claim_attack_check` runs at
-  the end of every `campaign._advance` call, and `WILDS_RAID_CHANCE` (20%) rolls once per call
-  per garrisoned group. While any other group walks a multi-leg route, each leg is a call, so
-  the garrison is tested several times a day. Confirm with a trace; if so, roll once per
-  calendar day crossed (or document it as intended in `economy.py`).
-- **Garrisoned groups never heal.** In `Guild.pass_time` natural healing runs only for groups
-  not `busy` (or resting), and a `garrison` order is busy, so defenders at the Claim stay
-  wounded however well fed. Design question first: intended (the garrison pays for its HP in
-  upkeep) or a bug (allow it with rations plus a fire or the oven)?
 - **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
   (2026-10-09): the `balanced` policy reaches the milestone in 0% of guilds (need 50%), cost
   from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
   with *Feed the recorded runs* and the planner, not by tuning prices. The run exited 0, so
   this does not break a gate.
-- **Starting tools with no job: Bucket, Scissors, Pliers.** Scissors and Pliers wait on
-  *Crafting tools*, the Chisel on the Horn, the Shovel on the Mine and Chains on *Prisoners*.
+- **Starting tools with no job: Bucket, Scissors, Pliers.** Scissors and Pliers wait on a
+  recipe that lists them in `tools`, the Chisel on the Horn, the Shovel on the Mine and Chains on *Prisoners*.
   The Bucket (Peasant) has no planned system at all: give it one (water, milking, camp) or
   swap the Peasant's item, since the rule is that every starting item is useful.
 
@@ -104,7 +95,7 @@ pointed to, not repeated.
 - **Signal Horn chain (the item is built, it cannot be obtained).** The Signal Horn (artifact
   slot) is not sold: only crafted, and the recipe is rare. Final shape: **Leather + Rope + a
   Chisel (tool, not consumed) + the Legendary Ox's horn**. Pieces, in order:
-  1. *Crafting tools* (below), so the Chisel can be required.
+  1. **The recipe lists the Chisel** in `tools=(...)` (the mechanism is built: `CraftingRecipe.tools`).
   2. **The Legendary Ox:** a unique creature, its loot is a new `Legendary Horn` item. It is the
      target of the last mission of the chain, so it is placed by the mission, not random.
   3. **Mission chain from the Tanner** (2-3 missions on the hub's board, reputation-gated) whose
@@ -116,7 +107,7 @@ pointed to, not repeated.
   item) and Coal are sold only there**: they leave `MARKET_STOCK`, so the Claim oven now needs a
   trip to the Mine. Work order pays in the Mine's goods or wage like the yard does.
   - **To set while building:** the distance from Ankareth (suggestion: about 3 h, farther than the
-    Farm), the wage and pay, whether it needs a Pickaxe (ties to *Crafting tools*: a tool in any
+    Farm), the wage and pay, whether it needs a Pickaxe (`CraftingRecipe.tools`: a tool in any
     group pack), whether the work carries a per-hour risk. Re-run `scripts/economy_report.py`.
   - Iron Bar stays with the Smith's chain; Iron Ore feeds it later. Needs the node, shop, UI,
     sim support and tests.
@@ -142,13 +133,6 @@ pointed to, not repeated.
   - **To define while building:** which field sits behind which success margin, how the
     check scales with the target's level, whether knowledge outlasts the fight (a creature
     met before). Needs the action, AI support and tests.
-- **Crafting tools.** Crafting consumes everything today. Let a recipe also require a tool
-  that is not consumed (a cart needs wood, nails and a saw). **Decided:** the recipe lists
-  `tools=[...]` and it is enough for *any pack in the working group* to hold the item (the
-  tool weighs and is lost with the group, but it is not tied to the crafter). Gives Chisel
-  (the Signal Horn), Scissors, Shovel, Pickaxe (the Mine) and the Goldsmith's Pliers a job.
-  Shapes the future wagon recipe. Needs the recipe field, the check in `guild_labor.py`, the
-  craft UI line ("needs: Chisel") and tests.
 - **Prisoners.** (Not started; decide whether it lands before the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** Every economy number depends on how often the
@@ -249,11 +233,11 @@ Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`; the
 art is game-icons.net SVG silhouettes. Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Portraits for the named NPCs.** Adelio, Ribit, Bufo, Peep, Biwolf, the Ancient Archivist,
-  the Ruin Sentry and the Sanctum Spider (`npcs/*.json`) only carry a `portrait_id` drawn from
-  their race's pool. Give each a portrait of its own and a way to pin it (an NPC file naming
-  its image, so the pool does not pick). The Ribbit Brothers fight (3 authored Grippli + 3
-  goons) comes first.
+- [x] **Portraits for the named NPCs.** Adelio, Ribit, Bufo, Peep, Biwolf, the Ancient Archivist,
+  the Ruin Sentry and the Sanctum Spider (`npcs/*.json`) now have dedicated pinned portraits in
+  `gartok/assets/portraits/npc/` via `"portrait_file"`, with 3 curated/generated options each in
+  `docs/art/npc_options/`. The generic race pool was isolated to numeric indices so recruits never
+  draw named NPC portraits. Supported across all screens and tested in `test_portraits.py`.
 - **Item icons (the biggest gap).** `items.py` has no icon field and the pack, market, stash
   and loot screens are text only. **Decide first** the style (medallion or silhouette). Then
   by category: one-handed weapon, two-handed weapon, bow/crossbow, light/medium/heavy armor,
@@ -356,7 +340,9 @@ building them:
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
 
-## Starting items waiting on another system
+---
+
+# Starting items waiting on another system
 
 Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupation's item
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
