@@ -187,6 +187,30 @@ def report(profile_):
     return "\n".join(lines)
 
 
+def run_label(path):
+    """A run's name: its world folder for a `saves/<world>/play.jsonl`, else the file's own name."""
+    stem, parent = os.path.splitext(os.path.basename(path))[0], os.path.dirname(os.path.abspath(path))
+    return os.path.basename(parent) if stem == "play" else stem
+
+
+def death_report(rows, label):
+    """Who was lost and how: one line per `death` row, with the lines before a fall in battle."""
+    deaths = [r for r in rows if r["e"] == "death"]
+    if not deaths:
+        return f"== {label}: nobody died"
+    lines = [f"== {label}: {len(deaths)} lost"]
+    for r in deaths:
+        who = f"{r['name']} ({r['race']} {r['occupation']}, combat {r['combat']}, work {r['work']})"
+        if r["cause"] == "starvation":
+            lines.append(f"  day {day_of(r['t'])}  {who}: starved after {r['unfed_days']} unfed days, "
+                         f"{r['food_days']} days of food left, ${r['money']} in hand")
+            continue
+        lines.append(f"  day {day_of(r['t'])}  {who}: {r['how'].replace('_', ' ')} in round {r['round']} "
+                     f"vs {', '.join(r['foes'])}")
+        lines += [f"      {ln}" for ln in r["trail"]]
+    return "\n".join(lines)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -195,7 +219,10 @@ def main():
     args = ap.parse_args()
     runs = [load(p) for p in args.logs]
     for path, rows in zip(args.logs, runs):
-        print(table_report(day_table(rows), os.path.basename(os.path.dirname(os.path.abspath(path)))))
+        label = run_label(path)
+        print(table_report(day_table(rows), label))
+        print()
+        print(death_report(rows, label))
         print()
     prof = profile(runs)
     print(report(prof))

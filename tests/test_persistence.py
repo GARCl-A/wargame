@@ -314,3 +314,48 @@ def test_delete_save_never_touches_current_and_delete_world_removes_everything()
     assert [r["id"] for r in persist.list_saves(world)] == [persist.CURRENT]
     persist.delete_world(world)
     assert persist.list_saves(world) == [] and persist.list_worlds() == []
+
+
+def test_from_save_fills_a_missing_optional_key_with_its_default():
+    d = persist.unit_to_dict(_unit())
+    for key in ("bio", "combat_xp", "poisons", "dormant", "portrait_id"):
+        d.pop(key)
+    v = Unit.from_save(d)
+    assert (v.bio, v.combat_xp, v.poisons, v.dormant) == ("", 0, {}, False)
+    assert v.portrait_id == int(v.uid[:8], 16)
+
+
+def test_from_save_defaults_are_not_shared_between_units():
+    d = persist.unit_to_dict(_unit())
+    d.pop("recipes")
+    a, b = Unit.from_save(dict(d)), Unit.from_save(dict(d))
+    a.recipes.append("x")
+    assert "x" not in b.recipes and "x" not in persist.unit_to_dict(b)["recipes"]
+
+
+def test_from_save_still_refuses_a_key_with_no_default():
+    d = persist.unit_to_dict(_unit())
+    d.pop("race")
+    import pytest
+    with pytest.raises(KeyError):
+        Unit.from_save(d)
+
+
+def test_load_game_fills_a_missing_optional_payload_key():
+    import json
+    world = persist.new_world_id()
+    persist.save_game(world, _world_guild())
+    path = persist.save_path(world)
+    with open(path, encoding="utf-8") as fh:
+        payload = json.load(fh)
+    for key in ("bankers_debt", "tutorial_seen", "taverna_blocked", "leaving"):
+        payload.pop(key)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh)
+    try:
+        g = persist.load_game(world)
+        assert g.bankers_debt == 0 and g.taverna_blocked == []
+        g.taverna_blocked.append(["a", "b"])
+        assert persist.PAYLOAD_DEFAULTS["taverna_blocked"] == []
+    finally:
+        persist.delete_world(world)

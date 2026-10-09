@@ -8,6 +8,7 @@ from collections import Counter
 
 from . import economy, items, recorder
 from .constants import fmt_money
+from .unit_loadout import pooled_unlocked
 
 
 class LaborMixin:
@@ -90,14 +91,18 @@ class LaborMixin:
             events += xp_lines
         return events, casualties
 
-    def crafting_shift(self, unit, recipe, hours):
+    def crafting_shift(self, unit, recipe, hours, pool=None):
         """A stint at the forge/workbench, done right now:
-        advances the campaign clock through `pass_time` and rolls progress."""
+        advances the campaign clock through `pass_time` and rolls progress.
+        `pool` is the units whose packs feed the craft as one (the crafter's
+        own first); without it only the crafter's pack counts. Padlocked
+        items are never used."""
+        pool = [unit] + [u for u in pool or () if u is not unit]
         hours = int(hours)
         if unit.crafting_target != recipe:
             if recipe not in items.CRAFTING_RECIPES:
                 return [f"Unknown recipe {recipe}."], []
-            if not self._start_batch(unit, recipe):
+            if not self._start_batch(unit, recipe, pool=pool):
                 return [f"{unit.name} can't craft {recipe} -- missing materials."], []
 
         recipe_data = items.CRAFTING_RECIPES[recipe]
@@ -111,7 +116,7 @@ class LaborMixin:
                 continue
             made += 1
             overflow = before + p - unit.crafting_goal(recipe)
-            if not self._start_batch(unit, recipe, overflow):
+            if not self._start_batch(unit, recipe, overflow, pool):
                 break
 
         clock_hours = worked * self.work_speedup([unit])
@@ -129,14 +134,17 @@ class LaborMixin:
             events.append(f"{unit.name} worked on {recipe} for {worked}h (+{progress_total} progress).")
         return events, casualties
 
-    def _start_batch(self, unit, recipe, progress=0):
-        """Take one batch's materials from `unit`'s pack and begin it with `progress` carried
-        over from the last batch. False, with the pack untouched, when it is missing any."""
+    def _start_batch(self, unit, recipe, progress=0, pool=None):
+        """Take one batch's materials from the `pool` of packs (the crafter's first) and begin
+        it with `progress` carried over from the last batch. False, with every pack untouched,
+        when the pool is missing any."""
+        pool = pool or [unit]
         need = Counter(items.CRAFTING_RECIPES[recipe]["materials"])
-        if any(unit.count_of(mat) < qty for mat, qty in need.items()):
+        if any(pooled_unlocked(pool, mat) < qty for mat, qty in need.items()):
             return False
         for mat, qty in need.items():
-            unit.remove_named(mat, qty)
+            for holder in pool:
+                qty -= holder.remove_named(mat, min(qty, holder.unlocked_of(mat)))
         unit.crafting_target = recipe
         unit.crafting_progress = progress
         return True

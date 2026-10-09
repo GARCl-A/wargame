@@ -171,3 +171,85 @@ def test_the_rush_policy_follows_the_recorded_line():
     assert sim.champion_beaten and sim.policy.dictionary_done
     assert sim.guild.missions[0].state == "done"
     assert all(economy.lumber_level(u) > 0 for u in sim.members)
+
+
+def test_a_fall_in_battle_leaves_a_death_row_with_how_it_happened(tmp_path):
+    from gartok.battle import Battle
+    squad = [Unit("player") for _ in range(2)]
+    guild = Guild(list(squad))
+    recorder.attach(str(tmp_path), guild)
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "player"
+    victim = battle.player_units[1]
+    battle.log("The Wolf bites Victim.")
+    battle.log(f"  {victim.name} goes down, dying (4 turns to the death save).")
+    battle.log(f"{victim.name}: death save d20(3) -> dies.")
+    victim.status = "dead"
+    battle.player_units[0].status = "up"
+
+    campaign.absorb_battle(guild, squad, battle)
+
+    row = next(r for r in _rows(tmp_path) if r["e"] == "death")
+    assert row["name"] == victim.name and row["cause"] == "combat" and row["how"] == "death_save"
+    assert "The Wolf bites Victim." in row["trail"] and "goes down" in row["trail"][-1]
+    assert row["foes"] and row["race"] and "combat" in row
+
+
+def test_a_defeat_is_told_apart_from_a_failed_death_save(tmp_path):
+    from gartok.battle import Battle
+    squad = [Unit("player")]
+    guild = Guild(list(squad) + [Unit("player")])
+    recorder.attach(str(tmp_path), guild)
+    battle = Battle(squad, [Unit("enemy")])
+    battle.winner = "enemy"
+    battle.log(f"  {battle.player_units[0].name} goes down, dying (4 turns to the death save).")
+    battle.log(f"{battle.player_units[0].name} doesn't survive their wounds after the defeat.")
+    battle.player_units[0].status = "dead"
+
+    campaign.absorb_battle(guild, squad, battle)
+
+    row = next(r for r in _rows(tmp_path) if r["e"] == "death")
+    assert row["how"] == "defeat"
+
+
+def test_starving_to_death_leaves_a_death_row(tmp_path):
+    u, mate = Unit("player"), Unit("player")
+    u.inventory, mate.inventory = [], []
+    u.unfed_days = 3
+    guild = Guild([u, mate], node="city")
+    recorder.attach(str(tmp_path), guild)
+    guild.pass_time(24)
+    rows = [r for r in _rows(tmp_path) if r["e"] == "death"]
+    assert [r["cause"] for r in rows] == ["starvation"] and rows[0]["name"] == u.name
+
+
+def test_keep_fed_at_low_shops_when_the_larder_is_empty():
+    sim = sim_mod.Sim(sim_mod.Lumber(), seed=1, library=_LIBRARY)
+    for u in sim.members:
+        u.inventory = []
+        u.money = 50
+    assert sim.food_days == 0
+    assert not sim.keep_fed(low=0)                    # "under 0 days" is never true
+    assert sim.keep_fed(low=0, at_low=True) and sim.food_days > 0
+
+
+def test_the_analysis_tells_who_died_and_how(tmp_path):
+    rows = [{"e": "death", "t": 2 * SECONDS_PER_DAY, "name": "Ana", "race": "Elf", "occupation": "Smith",
+             "combat": 0.3, "work": 1.0, "cause": "combat", "how": "death_save", "round": 5,
+             "foes": ["Wolf"], "trail": ["The Wolf bites Ana.", "Ana goes down"], "money": 5, "food_days": 1.0},
+            {"e": "death", "t": 4 * SECONDS_PER_DAY, "name": "Bo", "race": "Orc", "occupation": "Slave",
+             "combat": 0.0, "work": 0.0, "cause": "starvation", "unfed_days": 3, "money": 0, "food_days": 0.0}]
+    out = pa.death_report(rows, "run")
+    assert "2 lost" in out and "Ana" in out and "death save in round 5 vs Wolf" in out
+    assert "The Wolf bites Ana." in out and "starved after 3 unfed days" in out
+    assert "nobody died" in pa.death_report([], "run")
+
+
+def test_a_death_in_a_sim_fight_names_the_fight(tmp_path):
+    sim = sim_mod.Sim(sim_mod.Lumber(), seed=1, library=_LIBRARY)
+    recorder.attach(str(tmp_path), sim.guild)
+    party = list(sim.members)
+    sample = sim_mod.Sample(False, 4, [(0, True, 0), (1, False, 0), (1, False, 0)], [], 0)
+    sim.apply(sample, party, kind="wilds")
+    rows = [r for r in _rows(tmp_path) if r["e"] == "death"]
+    assert len(rows) == 1 and rows[0]["kind"] == "wilds" and rows[0]["won"] is False

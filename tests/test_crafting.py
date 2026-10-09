@@ -206,3 +206,85 @@ def test_the_forge_card_shows_each_recipes_level_and_what_it_teaches(monkeypatch
                        station="forge").draw(pygame.Surface((1280, 720)))
     level = items.CRAFTING_RECIPES["Bear Trap"].level
     assert any(f"LEVEL {level}" in s and f"x{level + 1} work XP" in s for s in shown)
+
+
+def _pair():
+    a, b = Unit("player"), Unit("player")
+    for u in (a, b):
+        u.inventory = []
+    guild = Guild(roster=[a, b], node="city")
+    a.recipes.append("Bear Trap")
+    return guild, a, b
+
+
+def test_a_craft_draws_on_the_whole_groups_packs():
+    guild, a, b = _pair()
+    b.give_to_pack("Iron Bar")
+    notices, _ = guild.crafting_shift(a, "Bear Trap", 1, pool=guild.roster)
+    assert a.crafting_target == "Bear Trap"
+    assert not b.has_item("Iron Bar")
+
+
+def test_a_craft_takes_the_crafters_own_materials_first():
+    guild, a, b = _pair()
+    a.give_to_pack("Iron Bar")
+    b.give_to_pack("Iron Bar")
+    guild.crafting_shift(a, "Bear Trap", 1, pool=guild.roster)
+    assert not a.has_item("Iron Bar") and b.count_of("Iron Bar") == 1
+
+
+def test_a_craft_splits_a_batch_across_packs_and_stays_atomic():
+    guild, a, b = _pair()
+    a.recipes.append("Dwarf Axe")
+    mats = items.CRAFTING_RECIPES["Dwarf Axe"]["materials"]
+    for i, m in enumerate(mats):
+        (a, b)[i % 2].give_to_pack(m)
+    guild.crafting_shift(a, "Dwarf Axe", 1, pool=guild.roster)
+    assert a.crafting_target == "Dwarf Axe"
+    assert sum(u.count_of(m) for u in (a, b) for m in mats) == 0
+
+    c, d = Unit("player"), Unit("player")
+    c.inventory, d.inventory = [], []
+    c.recipes.append("Dwarf Axe")
+    c.give_to_pack(mats[0])
+    d.give_to_pack(mats[1])
+    Guild(roster=[c, d], node="city").crafting_shift(c, "Dwarf Axe", 1, pool=[c, d])
+    assert c.crafting_target is None and c.has_item(mats[0]) and d.has_item(mats[1])
+
+
+def test_a_craft_without_the_pool_ignores_other_packs():
+    guild, a, b = _pair()
+    b.give_to_pack("Iron Bar")
+    notices, _ = guild.crafting_shift(a, "Bear Trap", 1)
+    assert "missing materials" in notices[0] and b.has_item("Iron Bar")
+
+
+def test_a_padlocked_item_is_never_used_in_a_craft():
+    guild, a, b = _pair()
+    a.give_to_pack("Iron Bar")
+    a.toggle_lock("Iron Bar")
+    b.give_to_pack("Iron Bar")
+    b.toggle_lock("Iron Bar")
+    notices, _ = guild.crafting_shift(a, "Bear Trap", 1, pool=guild.roster)
+    assert "missing materials" in notices[0]
+    assert a.count_of("Iron Bar") == 1 and b.count_of("Iron Bar") == 1
+
+
+def test_a_partly_locked_stack_gives_only_the_free_part():
+    guild, a, b = _pair()
+    a.give_to_pack("Iron Bar", 2)
+    a.locked_items["Iron Bar"] = 1
+    guild.crafting_shift(a, "Bear Trap", 1, pool=[a])
+    assert a.count_of("Iron Bar") == 1 and a.locked_of("Iron Bar") == 1
+
+
+def test_the_crafting_screen_counts_the_groups_materials():
+    from gartok.crafting_screen import CraftingScreen
+    guild, a, b = _pair()
+    group = guild.group_of(a)
+    screen = CraftingScreen(None, guild, group, on_done=lambda: None, station="forge")
+    assert screen._get_missing_materials("Bear Trap")
+    b.give_to_pack("Iron Bar")
+    assert not screen._get_missing_materials("Bear Trap")
+    b.toggle_lock("Iron Bar")
+    assert screen._get_missing_materials("Bear Trap")

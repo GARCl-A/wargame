@@ -275,6 +275,10 @@ class LoadoutMixin:
         clamped to what's actually held, so a lock never outlives its items."""
         return min(self.locked_items.get(name, 0), self.count_of(name))
 
+    def unlocked_of(self, name):
+        """How many of `name` a craft may use: held minus the padlocked ones."""
+        return self.count_of(name) - self.locked_of(name)
+
     @property
     def money(self):
         """What the pack's coins add up to in $: copper plus 100 per Gold Coin.
@@ -345,6 +349,11 @@ class LoadoutMixin:
             self.crafting_target = None
             self.crafting_progress = 0
         return prog, is_done
+
+
+def pooled_unlocked(units, name):
+    """How many unlocked `name` the packs of `units` hold between them."""
+    return sum(u.unlocked_of(name) for u in units)
 
 
 def flatten_pack(unit):

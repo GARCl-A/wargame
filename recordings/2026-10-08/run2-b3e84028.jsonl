@@ -1,0 +1,89 @@
+{"e":"session","t":0,"members":3,"money":97,"food_days":0.0,"node":"city"}
+{"e":"order","t":0,"members":3,"money":97,"food_days":0.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"city","dest":"market","hours":1.0,"size":3}
+{"e":"order","t":3600,"members":3,"money":97,"food_days":0.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"market","node":"market","dest":null,"hours":1,"size":3}
+{"e":"buy","t":7200,"members":3,"money":66,"food_days":0.0,"node":"market","item":"Axe","qty":1,"price":31,"zone":"hand"}
+{"e":"buy","t":7200,"members":3,"money":35,"food_days":0.0,"node":"market","item":"Axe","qty":1,"price":31,"zone":"hand"}
+{"e":"buy","t":7200,"members":3,"money":4,"food_days":0.0,"node":"market","item":"Axe","qty":1,"price":31,"zone":"hand"}
+{"e":"sell","t":7200,"members":3,"money":7,"food_days":0.0,"node":"market","item":"Quarterstaff","qty":1,"price":3}
+{"e":"sell","t":7200,"members":3,"money":11,"food_days":0.0,"node":"market","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":7200,"members":3,"money":15,"food_days":0.0,"node":"market","item":"Dagger","qty":1,"price":4}
+{"e":"buy","t":7200,"members":3,"money":0,"food_days":1.67,"node":"market","item":"Potato","qty":5,"price":3,"zone":"pack"}
+{"e":"order","t":7200,"members":3,"money":0,"food_days":1.67,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"market","dest":"lumber_yard","hours":1.0,"size":3}
+{"e":"order","t":14400,"members":3,"money":0,"food_days":1.67,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":72000,"members":3,"money":15,"food_days":1.67,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":129600,"members":3,"money":15,"food_days":0.67,"day":2,"roster":[{"name":"Gormvyrmun","money":5,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Quenhel","money":5,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Dorbraebranob","money":5,"hp":11,"hp_max":11,"combat":0,"work":1}],"rations":2,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"talent","t":129600,"members":3,"money":30,"food_days":0.67,"unit":"Gormvyrmun","track":"work","talent":"negotiator"}
+{"e":"talent","t":129600,"members":3,"money":30,"food_days":0.67,"unit":"Quenhel","track":"work","talent":"negotiator"}
+{"e":"talent","t":129600,"members":3,"money":30,"food_days":0.67,"unit":"Dorbraebranob","track":"work","talent":"negotiator"}
+{"e":"order","t":129600,"members":3,"money":30,"food_days":0.67,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":187200,"members":3,"money":30,"food_days":0.0,"day":3,"roster":[{"name":"Gormvyrmun","money":10,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Quenhel","money":10,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Dorbraebranob","money":10,"hp":10,"hp_max":10,"combat":0,"work":1}],"rations":0,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"order","t":187200,"members":3,"money":45,"food_days":0.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"lumber_yard","dest":"market","hours":1.0,"size":3}
+{"e":"order","t":194400,"members":3,"money":45,"food_days":0.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"market","node":"market","dest":null,"hours":1,"size":3}
+{"e":"buy","t":198000,"members":3,"money":0,"food_days":5.0,"node":"market","item":"Potato","qty":15,"price":3,"zone":"pack"}
+{"e":"order","t":198000,"members":3,"money":0,"food_days":5.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"market","dest":"lumber_yard","hours":1.0,"size":3}
+{"e":"order","t":205200,"members":3,"money":0,"food_days":5.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":262800,"members":3,"money":0,"food_days":4.0,"day":4,"roster":[{"name":"Gormvyrmun","money":0,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Quenhel","money":0,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Dorbraebranob","money":0,"hp":11,"hp_max":11,"combat":0,"work":1}],"rations":12,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"order","t":262800,"members":3,"money":15,"food_days":4.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":320400,"members":3,"money":30,"food_days":4.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"lumber_yard","dest":"tavern","hours":1.0,"size":3}
+{"e":"talent","t":327600,"members":3,"money":30,"food_days":4.0,"unit":"Gormvyrmun","track":"work","talent":"fixer"}
+{"e":"talent","t":327600,"members":3,"money":30,"food_days":4.0,"unit":"Quenhel","track":"work","talent":"fixer"}
+{"e":"talent","t":327600,"members":3,"money":30,"food_days":4.0,"unit":"Dorbraebranob","track":"work","talent":"fixer"}
+{"e":"order","t":327600,"members":3,"money":30,"food_days":4.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"tavern","dest":"arena","hours":1.0,"size":3}
+{"e":"order","t":338400,"members":3,"money":30,"food_days":4.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"order","t":342000,"members":3,"money":30,"food_days":4.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"arena","dest":"lumber_yard","hours":2.0,"size":3}
+{"e":"day","t":349200,"members":3,"money":30,"food_days":3.0,"day":5,"roster":[{"name":"Gormvyrmun","money":10,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":10,"hp":9,"hp_max":9,"combat":0,"work":2},{"name":"Dorbraebranob","money":10,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":9,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"arena","size":3}]}
+{"e":"order","t":352800,"members":3,"money":30,"food_days":3.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":410400,"members":3,"money":45,"food_days":3.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":468000,"members":3,"money":45,"food_days":2.0,"day":6,"roster":[{"name":"Gormvyrmun","money":15,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":15,"hp":9,"hp_max":9,"combat":0,"work":2},{"name":"Dorbraebranob","money":15,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":6,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"order","t":468000,"members":3,"money":60,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"lumber_yard","dest":"arena","hours":1.0,"size":3}
+{"e":"order","t":478800,"members":3,"money":60,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"fight","t":482454,"members":3,"money":0,"food_days":2.0,"hp_frac":1.0,"level_before":0.0,"members_before":3,"money_before":0,"food_days_before":2.0,"node":"arena","kind":"Challenge the Champion","won":true,"squad":3,"deaths":0,"foes":3,"xp":4,"level":0.33}
+{"e":"recruit","t":482454,"members":3,"money":120,"food_days":2.0,"pitcher":"Gormvyrmun","candidate":"Adelio Small-Knife","bail":0,"ok":false}
+{"e":"order","t":482454,"members":3,"money":120,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"arena","dest":"tavern","hours":2.0,"size":3}
+{"e":"order","t":493254,"members":3,"money":120,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":3}
+{"e":"order","t":496854,"members":3,"money":120,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"tavern","dest":"market","hours":1.0,"size":3}
+{"e":"order","t":504054,"members":3,"money":120,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"market","node":"market","dest":null,"hours":1,"size":3}
+{"e":"buy","t":507654,"members":3,"money":71,"food_days":2.0,"node":"market","item":"Studded Leather","qty":1,"price":49,"zone":"armor"}
+{"e":"buy","t":507654,"members":3,"money":69,"food_days":2.0,"node":"market","item":"Torch","qty":1,"price":2,"zone":"offhand"}
+{"e":"buy","t":507654,"members":3,"money":20,"food_days":2.0,"node":"market","item":"Studded Leather","qty":1,"price":49,"zone":"armor"}
+{"e":"order","t":507654,"members":3,"money":20,"food_days":2.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"market","dest":"road","hours":1.0,"size":3}
+{"e":"day","t":525654,"members":3,"money":20,"food_days":1.0,"day":7,"roster":[{"name":"Gormvyrmun","money":0,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":20,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Dorbraebranob","money":0,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":3,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"city","size":3}]}
+{"e":"order","t":525654,"members":3,"money":20,"food_days":1.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"road","dest":"wilds","hours":6.0,"size":3}
+{"e":"order","t":547254,"members":3,"money":20,"food_days":1.0,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"hunt","node":"wilds","dest":null,"hours":1,"size":3}
+{"e":"talent","t":565254,"members":3,"money":20,"food_days":1.0,"unit":"Irzathrogek","track":"combat","talent":"tough"}
+{"e":"talent","t":565254,"members":3,"money":20,"food_days":1.0,"unit":"Irzathrogek","track":"combat","talent":"bulwark"}
+{"e":"talent","t":565254,"members":3,"money":20,"food_days":1.0,"unit":"Irzathrogek","track":"work","talent":"crafter"}
+{"e":"talent","t":565254,"members":3,"money":20,"food_days":1.0,"unit":"Irzathrogek","track":"work","talent":"negotiator"}
+{"e":"fight","t":565266,"members":3,"money":20,"food_days":1.0,"hp_frac":1.0,"level_before":0.33,"members_before":3,"money_before":20,"food_days_before":1.0,"node":"wilds","kind":"hunt","won":true,"squad":3,"deaths":0,"foes":3,"xp":3,"level":0.33}
+{"e":"order","t":579666,"members":3,"money":20,"food_days":4.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"wilds","dest":"library","hours":6.0,"size":3}
+{"e":"day","t":615666,"members":3,"money":20,"food_days":3.33,"day":8,"roster":[{"name":"Gormvyrmun","money":0,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":20,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Dorbraebranob","money":0,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":10,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"road","size":3}]}
+{"e":"order","t":619266,"members":3,"money":20,"food_days":3.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"library","node":"library","dest":null,"hours":1,"size":3}
+{"e":"order","t":622866,"members":3,"money":20,"food_days":3.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"library","dest":"lumber_yard","hours":1.0,"size":3}
+{"e":"order","t":630066,"members":3,"money":20,"food_days":3.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":687666,"members":3,"money":35,"food_days":3.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":745266,"members":3,"money":35,"food_days":2.33,"day":9,"roster":[{"name":"Gormvyrmun","money":5,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":25,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Dorbraebranob","money":5,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":7,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"order","t":745266,"members":3,"money":50,"food_days":2.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":802866,"members":3,"money":50,"food_days":1.33,"day":10,"roster":[{"name":"Gormvyrmun","money":10,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":30,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Dorbraebranob","money":10,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":4,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"order","t":802866,"members":3,"money":65,"food_days":1.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":860466,"members":3,"money":80,"food_days":1.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"lumber_yard","dest":"library","hours":1.0,"size":3}
+{"e":"day","t":864066,"members":3,"money":80,"food_days":0.33,"day":11,"roster":[{"name":"Gormvyrmun","money":20,"hp":17,"hp_max":17,"combat":0,"work":2},{"name":"Quenhel","money":40,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Dorbraebranob","money":20,"hp":17,"hp_max":17,"combat":0,"work":2}],"rations":1,"groups":[{"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","node":"lumber_yard","size":3}]}
+{"e":"order","t":867666,"members":3,"money":80,"food_days":0.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"library","node":"library","dest":null,"hours":1,"size":3}
+{"e":"buy","t":871266,"members":3,"money":70,"food_days":0.33,"node":"library","item":"Paper","qty":1,"price":10,"zone":"pack"}
+{"e":"buy","t":871266,"members":3,"money":25,"food_days":0.33,"node":"library","item":"Ink","qty":1,"price":45,"zone":"pack"}
+{"e":"order","t":871266,"members":3,"money":25,"food_days":0.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"library","node":"library","dest":null,"hours":1,"size":3}
+{"e":"craft","t":878466,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"mission","t":878466,"members":3,"money":25,"food_days":0.33,"what":"accept","id":"library_dictionary","reward":250,"deadline":15}
+{"e":"craft","t":882066,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":885666,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":889266,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":892866,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":896466,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":900066,"members":3,"money":25,"food_days":0.33,"unit":"Gormvyrmun","recipe":"Dictionary of Ankarin","hours":1,"made":1}
+{"e":"mission","t":900066,"members":3,"money":275,"food_days":0.33,"what":"turn_in","id":"library_dictionary","reward":250}
+{"e":"order","t":900066,"members":3,"money":275,"food_days":0.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"library","dest":"city","hours":1.2,"size":3}
+{"e":"order","t":904386,"members":3,"money":275,"food_days":0.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"bank","node":"city","dest":null,"hours":1,"size":3}
+{"e":"asset","t":907986,"members":3,"money":185,"food_days":0.33,"what":"bank_chest"}
+{"e":"order","t":907986,"members":3,"money":185,"food_days":0.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"travel","node":"city","dest":"market","hours":1.2,"size":3}
+{"e":"order","t":912306,"members":3,"money":185,"food_days":0.33,"gid":"d3641b2f566e4cd79a9e4ffc8640f0af","kind":"market","node":"market","dest":null,"hours":1,"size":3}
+{"e":"buy","t":915906,"members":3,"money":43,"food_days":0.33,"node":"market","item":"Chainmail","qty":1,"price":142,"zone":"armor"}
+{"e":"session","t":915906,"members":3,"money":43,"food_days":0.33,"node":"market"}

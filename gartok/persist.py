@@ -20,6 +20,7 @@ the world back up where it stood.
 Nothing mid-battle or mid-hunt is ever saved (`App._can_save`).
 """
 
+import copy
 import json
 import os
 import shutil
@@ -195,6 +196,22 @@ def group_from_dict(d):
     return group
 
 
+# What `load_game` assumes for a key a save does not carry; a new optional field goes
+# here instead of bumping SAVE_VERSION.
+PAYLOAD_DEFAULTS = {
+    "battles_won": 0, "reputation": {}, "deeds_done": [], "arena_challenge_day": None,
+    "bankers_debt": 0, "property_city_debt_since": None, "garrison_stock": {},
+    "wilds_claim_stage": "NONE", "wilds_claim_fence_lumber": 0,
+    "wilds_claim_sustain_days_left": None, "wilds_claim_owner": None,
+    "wilds_claim_campfire": False, "ancient_ruins_discovered": False,
+    "market_cash": {}, "total_spent": 0, "items_sold_kinds": [], "missions": [],
+    "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
+    "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
+    "leader": None, "leader_swaps_used": 0, "leaving": {},
+    "tutorial_seen": [], "tutorial_enabled": True,
+}
+
+
 def _payload(guild, kind, label):
     return {
         "save_version": SAVE_VERSION,
@@ -277,9 +294,10 @@ def _prune_autosaves(world):
 
 
 def load_game(world, save_id=CURRENT):
-    """-> Guild (groups + campaign meta). Every key `_payload` writes must be there."""
+    """-> Guild (groups + campaign meta). A key absent from the file falls back to `PAYLOAD_DEFAULTS`."""
     with open(save_path(world, save_id), encoding="utf-8") as fh:
         payload = json.load(fh)
+    payload = {**copy.deepcopy(PAYLOAD_DEFAULTS), **payload}
     if payload.get("save_version") != SAVE_VERSION:
         raise SaveVersionError(f"This save is from another version of the game (save format "
                                f"{payload.get('save_version')}, expected {SAVE_VERSION}) and cannot be loaded.")

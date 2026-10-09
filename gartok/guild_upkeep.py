@@ -166,6 +166,7 @@ class UpkeepMixin:
         for u, outcome in self._meal_pass(self.roster, self._shared_larder, studying_fed).items():
             if outcome == "dead":
                 casualties.append(u)
+                recorder.death(u, "starvation", unfed_days=u.unfed_days)
                 events.append(f"{u.name} starved to death.")
             elif outcome == "hungry":
                 events.append(f"{u.name} did not eat today: {u.hunger_label}.")

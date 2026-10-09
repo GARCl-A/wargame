@@ -1,7 +1,7 @@
 """The Forge: craft items using recipes and materials.
 
 Requires members to have learned recipes.
-Materials are consumed immediately.
+Materials come from the whole group's packs (padlocked items excepted) and are consumed immediately.
 Progress requires rolling a 1d20+INT over hours.
 """
 
@@ -11,6 +11,7 @@ import pygame
 
 from . import items, progression
 from .screen import Screen
+from .unit_loadout import pooled_unlocked
 from .ui.primitives import (
     caps,
     draw_button,
@@ -74,20 +75,20 @@ class CraftingScreen(Screen):
     def handle_escape(self):
         return False
 
-    def _get_missing_materials(self, crafter, recipe):
+    def _get_missing_materials(self, recipe):
         recipe_data = items.CRAFTING_RECIPES.get(recipe)
         if not recipe_data:
             return []
         need = Counter(recipe_data["materials"])
         missing = []
         for mat, qty in need.items():
-            have = crafter.count_of(mat)
+            have = pooled_unlocked(self.group.members, mat)
             if have < qty:
                 missing.append(f"{qty - have}x {mat}")
         return missing
 
-    def _has_materials(self, crafter, recipe):
-        return len(self._get_missing_materials(crafter, recipe)) == 0
+    def _has_materials(self, recipe):
+        return len(self._get_missing_materials(recipe)) == 0
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
@@ -102,7 +103,8 @@ class CraftingScreen(Screen):
                     parts = key.split(":")
                     hours = int(parts[1])
                     recipe = parts[2]
-                    result = self.guild.crafting_shift(self.selected_crafter, recipe, hours)
+                    result = self.guild.crafting_shift(self.selected_crafter, recipe, hours,
+                                                      pool=self.group.members)
                     self.notices = result[0] if isinstance(result, tuple) else result
                 return
 
@@ -205,7 +207,7 @@ class CraftingScreen(Screen):
                 status_color = T.BRASS
                 status_text = f"IN PROGRESS: {m.crafting_progress}/{target_val} progress"
             else:
-                missing = self._get_missing_materials(m, r_name)
+                missing = self._get_missing_materials(r_name)
                 has_mat = len(missing) == 0
                 status_color = T.GREEN if has_mat else T.BLOOD
                 status_text = f"Target Progress: {target_val} (Roll: 1d20 {mod_sign})"
@@ -216,7 +218,7 @@ class CraftingScreen(Screen):
                  (r.x + T.S, r.y + T.S + 20), T.TX_MUTED)
             text(screen, F["body_sm"], status_text, (r.x + T.S, r.y + T.S + 40), status_color)
 
-            if is_active or self._has_materials(m, r_name):
+            if is_active or self._has_materials(r_name):
                 bw = 100
                 bx = r.x + T.S
                 by = r.y + T.S + 65
@@ -226,7 +228,7 @@ class CraftingScreen(Screen):
                                     font=F["body_sm"])
                     bx += bw + T.S
             else:
-                text(screen, F["body_sm"], "Requires materials in personal pack to start.",
+                text(screen, F["body_sm"], "Requires materials in the group's packs to start.",
                      (r.x + T.S, r.y + T.S + 65), T.TX_FAINT)
 
             y += 110 + T.S

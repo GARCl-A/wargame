@@ -18,6 +18,7 @@ spinning up a Combatant.
 - `self.armor` = armor slot (starts empty, no armor data yet).
 """
 
+import copy
 import random
 import uuid
 
@@ -36,6 +37,21 @@ from .unit_loadout import (  # noqa: F401 -- re-exported
     stack_take,
 )
 from .unit_poison import PoisonMixin
+
+
+# What `from_save` assumes for a key a save does not carry: the same neutral value
+# `__init__` starts with. A new optional field goes here, not into a SAVE_VERSION bump.
+SAVE_DEFAULTS = {
+    "recruited_by": None, "poisons": {}, "antidote_cooldown": 0, "level_hp_rolls": [],
+    "crime": 0, "unfed_days": 0, "sick": False, "medicine_attempted_today": False,
+    "treated": False, "consecutive_rest_hours": 0, "last_daily_luck_day": 0,
+    "share_food": True, "combat_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
+    "magic_source": None, "spells_known": [], "study_target": None, "study_progress": 0,
+    "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
+    "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
+    "equipped_armor": None, "equipped_tongue": None, "natural_armor": 0,
+    "hp_override": None, "racial_override": None, "dormant": False, "awareness_radius": 8,
+}
 
 
 class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin, PoisonMixin):
@@ -105,6 +121,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         rolled `hp_max` and sorted `languages` are restored verbatim, only the
         deterministic derivations run again.
         """
+        d = {**copy.deepcopy(SAVE_DEFAULTS), **d}
         u = cls.__new__(cls)
         u.team = "player"
         u.uid = d["uid"]
@@ -161,7 +178,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.name = d["name"]
         u.group_overextension = 0                        # recomputed by Guild._sync_leadership on load
         u.token = u.race["token"]
-        u.portrait_id = d["portrait_id"]
+        u.portrait_id = d.get("portrait_id", int(u.uid[:8], 16))
         u._hp_roll = d["hp_roll"]
         u._hp_override = d["hp_override"]                # creator-set HP max, or None
         u.natural_armor = d["natural_armor"]

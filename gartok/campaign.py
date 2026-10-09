@@ -108,6 +108,24 @@ def _carry_forward(member, combatant):
     member.hp = min(member.hp_max, member.hp + member.talent_bonus("post_combat_heal"))
 
 
+def _death_note(battle, combatant):
+    """How a fallen combatant was lost, read off the battle log: the way the death came
+    (a failed death save, or the defeat that finished everyone on the ground) and the lines
+    leading up to the fall."""
+    lines, name = battle.log_lines, combatant.name
+
+    def last(*needles, before=len(lines)):
+        return next((i for i in range(before - 1, -1, -1)
+                     if name in lines[i] and any(n in lines[i] for n in needles)), None)
+
+    end = last("dies", "survive their wounds")
+    how = "unknown" if end is None else "defeat" if "survive their wounds" in lines[end] else "death_save"
+    down = last("goes down", "collapses", before=len(lines) if end is None else end + 1)
+    trail = [] if down is None else [ln.strip() for ln in lines[max(0, down - 3):down + 1]]
+    foes = [c.name for c in battle.enemy_units][:8]
+    return {"how": how, "round": battle.round_no, "foes": foes, "trail": trail}
+
+
 def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     """Fold `battle`'s result into `guild` (mutates it) and return a `BattleOutcome`.
 
@@ -132,6 +150,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
         else:
             fallen.append(member)
             fallen_combatants.append(combatant)
+            recorder.death(member, "combat", **_death_note(battle, combatant))
 
     guild.remove_members(fallen)
     guild.clock.advance_rounds(battle.round_no)

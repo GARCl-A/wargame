@@ -7,7 +7,7 @@ it never joins `Group.members`: animals live in `Group.herd`, wagons in
 """
 
 from . import items
-from .holdings import Stash
+from .stash import Stash
 from .unit_loadout import split_stack, stack_add
 
 

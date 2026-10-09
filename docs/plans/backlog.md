@@ -20,24 +20,8 @@ Two parts:
 
 # Ready to do
 
-## Small
-
-Polish:
-
-- **Tolerant `from_save` for new optional keys.** `Unit.from_save` and `persist.load_game`
-  read every key strictly. Add one defaults table next to `unit_to_dict` / `_payload` and
-  have `from_save` read `{**DEFAULTS, **data}`, so a new optional field gets a default
-  without per-key `.get` noise. `SAVE_VERSION` bumps only when the shape changes (a field
-  removed, renamed or with new meaning), not for an added optional field.
-
 ## Medium
 
-- **Craft with the group's shared inventory.** The crafting screen only sees the crafter's own
-  pack today, so the materials sitting on the rest of the group are invisible and the recipe
-  reads as impossible. Inside a crafting screen the group's packs count as one pool, both in
-  what the screen shows (materials owned, what is missing) and in what the craft consumes, so
-  items need not be moved onto one character first. A locked item (padlock) can never be used
-  in any craft.
 - **Founding draft: 9 pick 3.** `draft_screen.py` offers a pool of 9 candidates and the
   player picks 3, replacing 3 rounds of 1 of 3. The 3 Commission Tokens work as they do
   today: spent to call the archetypes missing from the pool, here rerolling one of the 9.
@@ -96,24 +80,24 @@ Polish:
   (and `autowin`) stop needing a `--skill` knob. Start from what the AI does badly in the
   Games (objective play in capture the flag, focus fire, using the terrain), re-run
   `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
-- **Play three 30-day runs for the economy sim.** The recorder is built (`gartok/recorder.py`,
-  setting `PLAY RECORDER` in the pause menu, log at `saves/<world>/play.jsonl`; hooks in
-  `campaign.advance`, `Guild.pass_time`, the market, stables, tavern, bank/house, talents and
-  `App._battle_end`), and so are the analysis (`scripts/play_analysis.py`) and the `human` policy
-  (`economy_guild.py --policies human --profile`). What is left is the play: turn the recorder
-  on, play three 30-day runs from a fresh guild, then
-  `python scripts/play_analysis.py run1.jsonl run2.jsonl run3.jsonl --out sim_results/human_profile.json`
-  and compare `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
+- **Feed the recorded runs to the economy sim.** Two runs are kept in
+  `recordings/2026-10-08/` (14 and 11 days, not 30; a third was judged not worth playing) with
+  the `human_profile.json` that `scripts/play_analysis.py` makes from them. Run
+  `economy_guild.py --policies human --profile recordings/2026-10-08/human_profile.json`.
+  The `food_low_days` of 0 is real, not a recorder bug: the player shops the day the larder is
+  empty (Potatoes, 4-5 days at a time), so the policy now shops *at* the threshold, not under
+  it (`keep_fed(at_low=True)`). With that, 1 of 3 `human` guilds still wipes and all go hungry
+  at some point, which is what the recordings show a person doing; check whether the wipe is
+  the policy or the thresholds from two short runs. Then compare
+  `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
-  ladder (yard, Scrapper, Games, Wilds) is how people really climb. First recorded run (2026-10-08):
-  the milestone gear (Axe each, Studded Leather or better each, strongbox) in **14 days**, against
-  the sim's day 49-80 and 0% at day 30. It sold the starting kit on day 0 to buy Axes (the sim never
-  sells starting items), beat the Champion on day 11 at combat level ~0.4 (a $120 purse for a
-  $60 stake) and turned in the library's Dictionary mission on day 13 (Paper $10 + Ink $45 bought,
-  $250 paid: +$195 in a few hours). The two Wilds hunts (level ~0.7, no deaths) paid no coin at
-  the time. Skill near 100%, not 80%. The Dictionary needs 1sqm Hide, so the trip to the Wilds was the prerequisite; it was crafted once (the mission pays once). Known gaps: the other shops
-  (Smith, Apothecary, Tanner) do not log purchases yet; HP before a fight is the squad's at the
-  battle's start; replayed library fights use a 0.9-0.95 skill.
+  ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the
+  milestone gear (Axe each, Studded Leather or better each, strongbox) in 11-14 days against the
+  sim's 49-80; the starting kit sold on day 0 to buy Axes (the sim never sells starting items);
+  the Champion beaten on day 6 at combat 0 and day 12 at ~0.3; the library Dictionary mission
+  turned in on day 11 (Paper + Ink bought, $250 paid). Known gaps: the other shops (Smith,
+  Apothecary, Tanner) do not log purchases yet; HP before a fight is the squad's at the
+  battle's start.
 - **Sim policies that find the opportunities themselves.** Every policy in `economy_guild.py` is
   a hand-written line (`rush` is the player's own, recorded). The recorded runs found things the
   earlier policies never tried: selling the starting kit on day 0, the Champion at the stake and

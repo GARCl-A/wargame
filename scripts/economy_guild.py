@@ -63,6 +63,7 @@ from gartok import (
     matchup,
     missions,
     orders,
+    recorder,
     recruit,
     rest,
     wagon,
@@ -557,7 +558,7 @@ class Sim:
         self.members[0].money += total
 
     # -- fights ------------------------------------------------------------ #
-    def apply(self, sample, party, relief=1.0):
+    def apply(self, sample, party, relief=1.0, kind=None):
         """Fold a drawn fight into the real guild: hurt, kill, level, then hand out the loot.
         `relief` thins the deaths of a won fight (see `FightLibrary.relief`)."""
         dead = []
@@ -568,6 +569,9 @@ class Sim:
                 died, lost = False, unit.hp
             if died:
                 dead.append(unit)
+                recorder.death(unit, "combat", kind=kind, won=sample.won, rounds=sample.rounds,
+                               hp_frac=round(max(0, unit.hp) / unit.hp_max, 2), squad=len(party),
+                               unfed_days=unit.unfed_days)
                 continue
             unit.hp = max(1, unit.hp - lost)
             if xp:
@@ -598,7 +602,7 @@ class Sim:
                  round(statistics.mean(u.work_level for u in party)))
         sample = self.library.draw(kind, level, len(party), self.rng, self.skill)
         relief = self.library.relief(kind, level, len(party), self.skill)
-        return sample, self.apply(sample, party, relief)
+        return sample, self.apply(sample, party, relief, kind)
 
     def _road_fight(self, group, pend):
         self.fight("road", list(group.members))
@@ -773,8 +777,12 @@ class Sim:
         self.arrive("market", "market")
         return MarketVisit(self)
 
-    def keep_fed(self, low=FOOD_LOW_DAYS, target=FOOD_TARGET_DAYS):
-        if (self.food_days >= low and self.crew_food_days >= low) or self.money < cheapest_food_price():
+    def keep_fed(self, low=FOOD_LOW_DAYS, target=FOOD_TARGET_DAYS, at_low=False):
+        """Shop when the food in hand is under `low` days, or at it with `at_low`: a person who
+        shops the day the larder is empty is recorded as a threshold of 0."""
+        def stocked(days):
+            return days > low if at_low else days >= low
+        if (stocked(self.food_days) and stocked(self.crew_food_days)) or self.money < cheapest_food_price():
             return False
         with self.market() as shop:
             shop.sell_loot()
@@ -1142,7 +1150,7 @@ class Human(Balanced):
 
     def upkeep(self, sim):
         sim.keep_fed(self.want("food_low_days", FOOD_LOW_DAYS),
-                     self.want("food_target_days", FOOD_TARGET_DAYS))
+                     self.want("food_target_days", FOOD_TARGET_DAYS), at_low=True)
         self.buy_axes(sim)
         if sim.badly_hurt:
             sim.heal()
