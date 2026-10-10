@@ -74,6 +74,18 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   once the cure forgets to re-derive). Find which path (meal, `guild_upkeep`, `medic`) skips the
   re-derive and make the derive happen where `sick` flips, with a test.
 
+- **The Evil coup de grace is too punitive; rethink it (the author's call, 2026-10-10).** An Evil AI
+  unit (`ai._finish_off`, alignment axis below zero, lethal fights only) hits an adjacent downed
+  enemy before anything else, even with a standing foe next to it, and each blow ticks the death
+  clock (`Battle.tick_dying`), so two blows a turn put a downed character on the clock for good in
+  about two turns. For the player's squad that is permadeath handed out by the AI's bias, not by
+  the fight. Options to weigh: (a) only when no standing foe is in reach (tried on the campaign
+  logs: no change in win rates, so it costs the AI nothing); (b) at most one blow per turn, so a
+  stabilize or a rescue has time; (c) only the Chaotic Evil; (d) give the downed a death-save
+  bonus from allies standing guard. Recommended: (a) and (b) together. Touches `RULES.md` (the
+  Coup de grace and AI-by-alignment paragraphs), `tests/test_ai.py` and the AI of the enemy packs
+  that score on kills.
+
 ## Architecture debt
 
 Past choices that now fight the direction. Each has the cost of fixing it; pay one when the
@@ -181,7 +193,16 @@ pointed to, not repeated.
        AI already ends only 5% of its turns with a point left, a person 23%). First read of the 28
        fights in the author's campaign save (20 trials each, the person won all 28): the AI wins
        hunts 83%, ambushes 95%, the Scrapper 88%, the champion 85%; the ones it loses are the cases
-       to study (hunts of days 20 and 49 at 15% and 10%, day 20's second hunt 45%, day 73's 55%).
+       to study (hunts of days 20 and 49 at 15% and 10%, day 20's second hunt 45%, day 73's 55%). Two more tried
+       and dropped, 40 trials over all the logs: an evil unit finishes a downed body only when no standing foe
+       is in reach (hunts 82 to 81%, ambushes 89 to 91%), and a unit that would walk into a foe's reach
+       without a blow waits one turn instead (hunts 82 to 82%, the day-49 hunt 15 to 2%, the campaign Pit
+       and champion bouts up 8 to 10 points on one or three fights). Neither moved the hunts beyond noise
+       (a fight swings about 8 points between runs).
+    4. **Read the second campaign save** (`saves/a846750e/combat_logs/`, played after 2026-10-10,
+       record_play ON): `combat_analysis.py` for the mix, `combat_pairs.py` for the AI replaying
+       each fight, and the fights the AI loses that the person won. First check whether a lost
+       fight or a wipe writes its `end` row (the first save's 28 logs are all wins).
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
     its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
