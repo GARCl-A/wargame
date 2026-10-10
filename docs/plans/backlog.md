@@ -85,6 +85,18 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   appears only in the log, on the character's card (there is horizontal room).
 - **Combat: no marker for a defending unit.** Nothing on the board or in the unit card says that a
   unit is in Defend (`conditions.Defending`). Add a marker on the token and a line in the info panel.
+- **Hunt: show the forage chance.** The expected meat is shown (it is deterministic), but the chance of
+  gathering mushrooms and fruit while hunting is not. Show it next to the meat estimate.
+- **Rest "until full": say what is missing.** The player cannot tell what a rest still needs
+  (rations, time, medicine) to heal to full. Show the missing piece on the rest screen (see `rest.py`).
+- **Bank screen has no scroll.** To manage the chest the player has to show and hide members one by one.
+  Add scroll to the member list (and the chest side if it overflows).
+- **Market: a whole-group view.** A toggle between the current per-member view and one that lists the
+  whole group's inventory at once; selling the fifth or sixth member's items today means scrolling
+  sideways. It can reuse the cargo display the Gear screen already has.
+- **Guild > Members "Manage Gear" opens a second equipment screen.** It differs from "Manage Gear &
+  Quests" and has less than it. Open the group's Manage Gear & Quests screen instead and drop the
+  duplicate screen.
 
 ## Architecture debt
 
