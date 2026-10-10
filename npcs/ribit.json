@@ -19,7 +19,7 @@
   "share_food": true,
   "combat_xp": 78,
   "work_hours": 96,
-  "bio": "The eldest of the three and the one who does the talking. Fast, never where the blow lands, and fond of letting you tire yourself out in the open before the tongue finds your throat.",
+  "bio": "The eldest of the three and the one who does the talking. Fast, never where the blow lands, and fond of letting you tire yourself out in the open before the dagger finds your throat.",
   "arena_title": false,
   "recipes": [
     "Dictionary of Sylvan",
@@ -46,7 +46,7 @@
       "brisk_hands"
     ],
     "racial": [
-      "tongue"
+      "webbed_feet"
     ]
   },
   "level_hp_rolls": [
@@ -78,7 +78,7 @@
   ],
   "equipped_weapon": "Dagger",
   "equipped_offhand": null,
-  "equipped_tongue": "Dagger",
+  "equipped_tongue": null,
   "equipped_armor": "Leather Jerkin",
   "inventory": [
     {

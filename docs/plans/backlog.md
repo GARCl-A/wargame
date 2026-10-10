@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-09 (after the Aurochs commit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-10 (after the Combat lab and vocations commits). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -41,10 +41,10 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
 ## Small
 
 - **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
-  (2026-10-09): the `balanced` policy reaches the milestone in 0% of guilds (need 50%), cost
-  from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
-  with *Feed the recorded runs* and the planner, not by tuning prices. The run exited 0, so
-  this does not break a gate.
+  (re-run 2026-10-10, after the vocations: unchanged): the `balanced` policy reaches the milestone
+  in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
+  days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
+  prices. The run exits 1 on a failed verdict, but no test or gate reads it.
 - **Signal Horn has no line in the economy report.** The chain is built (Tanner missions,
   Aurochs, `items.CRAFTING_RECIPES["Signal Horn"]` with a Chisel); `scripts/economy_report.py`
   still lacks a craft-for-sale line for it. The ox's portrait is under *Art*.
@@ -76,8 +76,9 @@ pointed to, not repeated.
   the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
-- **Big screen files.** `app.py` (1205 lines, 104 `def`s) is the wiring hub; `map_screen.py`,
-  `market_screen.py` and `battle_screen.py` run 830-980. Not critical. When one takes a new node
+- **Big screen files.** `app.py` (1240 lines, 108 `def`s) is the wiring hub; `map_screen.py`,
+  `market_screen.py` and `battle_screen.py` run 865-1024 (`battle_screen.py` is past 1000 since the
+  per-team controllers). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
   any outside playtest decide: keep "an older shape does not load" with a clear message, or add
@@ -156,9 +157,10 @@ pointed to, not repeated.
        Road ambushes at 3, Ancient Ruins at 2-3, Ribbit Brothers at 3. Play to win, as you
        would in the campaign: the win rate comes out of the same logs and is the number to
        compare with the AI's benchmark rates. Then **two Ribbit Brothers fights human against
-       human** (one decision list per side). `boss-human-vs-human.jsonl` of 2026-10-10 is
-       tainted from decision 143 (the flag lay under a downed body and could not be clicked,
-       fixed since): replay it and drop that file.
+       human** (one decision list per side). The tainted 2026-10-10 try was dropped; one clean
+       `boss-human-vs-human.jsonl` is in, one is still to play. The brothers changed on
+       2026-10-10 (Peep and Ribit swap the Tongue for Webbed Feet, so no Lash), and
+       `boss-human-vs-ai.jsonl` predates that.
     2. **Derive the policy** from the rows the way `play_analysis.py` derived the `human` economy
        profile: thresholds and priorities (when to focus fire, when to retreat, when to go for
        the flag). A new script over `combat_log.frames`.

@@ -210,9 +210,14 @@ class Swim(Action):
                 return True
         return False
 
+    @staticmethod
+    def _squares(actor, rolled):
+        """Squares a swim covers: the roll plus the talent, capped at half speed (plus the talent) and at full speed."""
+        bonus = actor.char.talent_bonus("swim_reach")
+        return max(1, min(rolled + bonus, actor.speed, max(1, actor.speed // 2) + bonus))
+
     def _max_reach(self, battle, actor):
-        by_str = (20 + actor.mod_strength) // SWIM_DIVISOR
-        return max(1, min(by_str, max(1, actor.speed // 2)))
+        return self._squares(actor, (20 + actor.mod_strength) // SWIM_DIVISOR)
 
     def available(self, battle, actor):
         return (actor.ap >= self.cost and not actor.flies
@@ -246,7 +251,7 @@ class Swim(Action):
         actor.walking = False
         nat = d20()
         total = nat + actor.mod_strength
-        dist = max(1, min(total // SWIM_DIVISOR, max(1, actor.speed // 2)))
+        dist = self._squares(actor, total // SWIM_DIVISOR)
         landing = actor.pos
         for step, cell in enumerate(line_cells(actor.pos, target)[1:], start=1):
             if step > dist or cell in battle.board.walls \

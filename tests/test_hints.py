@@ -66,7 +66,7 @@ def test_hint_messages_for_utility_and_spells():
 
     s.aim_action = actions.SWIM
     msg, _ = s._hint_message()
-    assert msg == "click an adjacent water cell to swim"
+    assert msg == "click a water cell within reach to swim"
 
     s.aim_action = actions.CastSpellAction("sleep")
     msg, _ = s._hint_message()

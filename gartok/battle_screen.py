@@ -479,7 +479,7 @@ class BattleScreen(Screen):
         elif self.aim_action is actions.JUMP:
             return "click a cell to jump over a pit", board_style.MOVE_HL
         elif self.aim_action is actions.SWIM:
-            return "click an adjacent water cell to swim", board_style.MOVE_HL
+            return "click a water cell within reach to swim", board_style.MOVE_HL
         elif spell_id == "sleep":
             return "click enemy within 6 cells to cast Sleep", T.BRASS
         elif spell_id == "magic_missile":

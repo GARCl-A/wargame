@@ -45,7 +45,7 @@
       "brisk_hands"
     ],
     "racial": [
-      "tongue"
+      "webbed_feet"
     ]
   },
   "level_hp_rolls": [
@@ -76,7 +76,7 @@
   ],
   "equipped_weapon": "Light Crossbow",
   "equipped_offhand": null,
-  "equipped_tongue": "Dagger",
+  "equipped_tongue": null,
   "equipped_armor": "Leather Jerkin",
   "inventory": [
     {

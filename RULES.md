@@ -281,7 +281,7 @@ track** earns no XP of its own — its "XP" is the sum of the other track levels
 (`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
 dice scale with every racial level (L1+), the **first racial talent pick unlocks
 only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
-(e.g., `Tongue` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
+(e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf).
 All three tables run to level 15 so the creator can pin NPCs that high, but
 generated enemies stay capped at combat 7 / work 6 (`constants.ENEMY_*_CAP`).
@@ -665,7 +665,9 @@ map as `[x, y]` cells). Its behaviour depends on whether the cell is a pit:
 - **Swim** (1-point action, like Jump) — the only way through deep water on foot.
   `d20 + STR mod`, cross **`result ÷ 5`** cells toward the aimed cell, capped at
   **half** the unit's speed. The swim runs only through water cells; a wall, a
-  body or the water's edge ends it there (climb out with a separate **Climb**).
+  body or the water's edge ends it there (climb out with a separate **Climb**). The
+  Grippli's **Webbed Feet** adds **+1 cell** to a swim and to the cap, never past the
+  unit's full speed.
 - **Breath.** A submerged unit holds its breath **`4 + Constitution mod`** rounds
   (`data.BREATH_BASE`). Every round under past that: **escalating drowning
   damage** — `1d6`, then `2d6`, then `3d6`, … — each of its turns until it

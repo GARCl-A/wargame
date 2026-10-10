@@ -357,6 +357,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | Tier | Talent | Effect | Requires | Race |
 |---|---|---|---|---|
 | 1 | Tongue | your tongue is a third limb and a weapon: +1 square of reach on melee attacks. | -- | Grippli |
+| 1 | Webbed Feet | a strong swimmer: +1 square on every Swim, never past your full speed. | -- | Grippli |
 | 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- | Treefolk |
 | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- | Human |
 | 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- | Halfling |

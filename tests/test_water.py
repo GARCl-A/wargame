@@ -151,3 +151,51 @@ def test_a_plunge_into_deep_water_is_cushioned():
     hp = a.hp
     batt.apply_fall(a, 5, batt.log)
     assert a.hp == hp                             # the water broke the fall
+
+
+# --- Webbed Feet (Grippli racial talent) -------------------------------- #
+
+def _swimmer(talent):
+    batt, a, d = _water_battle(deep=[(6, 5), (7, 5), (8, 5), (9, 5), (10, 5)])
+    a.pos = (6, 5)
+    a.speed = 4
+    a.char.talents["racial"] = [talent] if talent else []
+    _set_stats(a, strength=10)
+    return batt, a
+
+
+def test_webbed_feet_add_one_square_to_the_swim_and_its_cap():
+    batt, a = _swimmer(None)
+    assert actions.SWIM._max_reach(batt, a) == 2          # half of speed 4
+    assert not actions.SWIM.can(batt, a, (9, 5))
+    with fixed_d20(20):
+        actions.SWIM.execute(batt, a, (8, 5))
+    assert a.pos == (8, 5)
+
+    batt, a = _swimmer("webbed_feet")
+    assert actions.SWIM._max_reach(batt, a) == 3
+    with fixed_d20(20):
+        actions.SWIM.execute(batt, a, (9, 5))
+    assert a.pos == (9, 5)
+
+
+def test_webbed_feet_add_to_a_poor_roll_but_never_pass_full_speed():
+    batt, a = _swimmer("webbed_feet")
+    with fixed_d20(5):                                   # 5 // 5 = 1, +1 from the talent
+        actions.SWIM.execute(batt, a, (9, 5))
+    assert a.pos == (8, 5)
+
+    batt, a = _swimmer("webbed_feet")
+    a.speed = 1                                          # cap is min(speed, 1 + 1)
+    assert actions.SWIM._max_reach(batt, a) == 1
+
+
+def test_ai_swims_farther_with_webbed_feet():
+    from gartok import ai
+    batt, a = _swimmer("webbed_feet")
+    d = batt.enemy_units[0]
+    d.pos = (10, 5)
+    a.ap = 2
+    with fixed_d20(20):
+        assert ai._step_over_terrain(batt, a, d)
+    assert a.pos == (9, 5)

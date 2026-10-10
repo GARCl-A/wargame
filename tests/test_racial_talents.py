@@ -411,6 +411,7 @@ def test_hobgoblin_phalanx_grants_ac_when_adjacent_to_ally():
     enemy = _orc()
 
     batt = Battle([hob, ally], [enemy])
+    batt.ambient_light = True
     h_c, a_c, e_c = batt.player_units[0], batt.player_units[1], batt.enemy_units[0]
 
     h_c.pos, a_c.pos = (5, 5), (0, 0)

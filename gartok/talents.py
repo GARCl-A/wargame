@@ -18,6 +18,7 @@ exactly one consumer that reads it back:
     size_up           Unit._derive_size (+N sizes)     --
     unarmed_finesse   Unit.attack_bonus / Combatant    --
     spin_web          actions.SpinWeb                  --
+    swim_reach        actions.Swim (+squares per swim) --
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
     post_combat_heal  campaign._carry_forward          --
@@ -50,7 +51,7 @@ which chains: `fleet` (tier 3) pulls in `deadeye` then `agile`.
 `progression.racial_level(combat_level + work_level)`, so every level anywhere
 grants a racial pick (and a hit die). Its nodes are **race-gated**: a `Talent`
 with `race` set only shows / can be picked for that race. Grippli is the first
-race with an authored node (`tongue`); other races have racial levels and picks
+race with authored nodes (`tongue`, `webbed_feet`); other races have racial levels and picks
 but no nodes yet, same way the combat / work trees started.
 
 `name` / `effect` are player-facing (English, the current text standard); `id`
@@ -188,6 +189,9 @@ _LIST = [
            "your tongue is a third limb and a weapon: +1 square of reach on "
            "melee attacks.", race="Grippli",
            effects=(Effect("melee_reach", 1),), icon="action/swallow"),
+    Talent("webbed_feet", "racial", 1, "Webbed Feet",
+           "a strong swimmer: +1 square on every Swim, never past your full speed.",
+           race="Grippli", effects=(Effect("swim_reach", 1),), icon="action/drowning"),
     Talent("fruitful", "racial", 1, "Fruitful",
            "your leafy body blooms at dawn: produce 1 fresh fruit each day to "
            "nourish yourself or your companions.", race="Treefolk",
