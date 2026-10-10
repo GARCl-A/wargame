@@ -47,7 +47,7 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   prices. The run exits 1 on a failed verdict, but no test or gate reads it.
 - **Signal Horn has no line in the economy report.** The chain is built (Tanner missions,
   Aurochs, `items.CRAFTING_RECIPES["Signal Horn"]` with a Chisel); `scripts/economy_report.py`
-  still lacks a craft-for-sale line for it. The ox's portrait is under *Art*.
+  still lacks a craft-for-sale line for it.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -274,7 +274,9 @@ pointed to, not repeated.
 ## Art (made by hand, not code)
 
 Portraits are engraved medallions in `gartok/assets/portraits/<race>/N.png`; the rest of the
-art is game-icons.net SVG silhouettes. Each task below is its own sitting of art-making;
+art is game-icons.net SVG silhouettes. Portraits come from the `/gen-portrait` skill (local
+Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about 7 minutes of
+GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
 - **Item icons (the biggest gap).** `items.py` has no icon field and the pack, market, stash
@@ -283,10 +285,9 @@ the ones that also need code say so. Order is the suggested priority.
   shield, potion, food, material (leather, wood, iron, stone), tool, Copper Coin, Gold Coin.
   After that the key items: Signal Horn, Chisel, Pickaxe, Holy Symbol, Legendary Horn. Needs
   the `ItemDef` field, a `ui/` component for the icon and tests.
-- **Art for content already in this backlog.** The Legendary Ox (its own portrait, not the
-  common Ox's), the Mine, Smith, Apothecary and Tanner nodes, the Tanner and Smith as
-  mission givers with a face, and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py`
-  is text only today).
+- **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes,
+  the Tanner and Smith as mission givers with a face, and the Cart and Carriage
+  (`wagon.Vehicle`; `watch_screen.py` is text only today).
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur

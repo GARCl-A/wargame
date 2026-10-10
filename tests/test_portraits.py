@@ -330,6 +330,7 @@ def test_named_npcs_load_pinned_portraits():
         "the-ancient-archivist.json",
         "ruin-sentry.json",
         "sanctum-spider.json",
+        "aurochs.json",
     ]
     for filename in npc_files:
         path = os.path.join("npcs", filename)
