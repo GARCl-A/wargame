@@ -123,7 +123,7 @@ def _recover_weapon(battle, unit):
     dest = battle.path_step_toward(unit, obj.pos, unit.speed)
     if dest == unit.pos:
         return False
-    battle.move_unit(unit, dest)
+    actions.MOVE.execute(battle, unit, dest)
     unit.walking = False
     if unit.ap > 0 and any(o.is_weapon for o in battle.ground_in_reach(unit)):
         actions.PICK_UP.execute(battle, unit)
@@ -151,7 +151,7 @@ def _recover_torch(battle, unit):
     dest = battle.path_step_toward(unit, obj.pos, unit.speed)
     if dest == unit.pos:
         return False
-    battle.move_unit(unit, dest)
+    actions.MOVE.execute(battle, unit, dest)
     unit.walking = False
     if unit.ap > 0 and any(o.is_torch for o in battle.ground_in_reach(unit)):
         actions.PICK_UP.execute(battle, unit)
@@ -373,7 +373,7 @@ def _skitter(battle, unit):
             grid_distance(best, f.pos) for f in foes) <= here:
         battle.log(f"{unit.name} is cornered and turns to fight!")
         return "fight"
-    battle.move_unit(unit, best)
+    actions.MOVE.execute(battle, unit, best)
     unit.walking = False
     return "moved"
 
@@ -437,7 +437,7 @@ def take_turn(battle, unit):
                     if _step_over_terrain(battle, unit, ally):
                         continue
                     break # walled off from the ally
-                battle.move_unit(unit, dest)
+                actions.MOVE.execute(battle, unit, dest)
                 unit.walking = False
                 continue
 
@@ -452,7 +452,7 @@ def take_turn(battle, unit):
             step = goal if goal in reach else next(
                 (c for c in reversed(route) if c in reach), None)
             if step is not None and step != unit.pos:
-                battle.move_unit(unit, step)
+                actions.MOVE.execute(battle, unit, step)
                 unit.walking = False
                 continue
             # genuinely walled off from the flag -- fight through this turn
@@ -471,7 +471,7 @@ def take_turn(battle, unit):
                 target_edge = min(edges, key=lambda c: grid_distance(unit.pos, c))
                 dest = battle.path_step_toward(unit, target_edge, unit.speed, reach=0)
                 if dest != unit.pos:
-                    battle.move_unit(unit, dest)
+                    actions.MOVE.execute(battle, unit, dest)
                     unit.walking = False
                     continue
                 else:
@@ -544,7 +544,7 @@ def take_turn(battle, unit):
             if actions.DEFEND.available(battle, unit):
                 actions.DEFEND.execute(battle, unit)
             break
-        battle.move_unit(unit, dest)
+        actions.MOVE.execute(battle, unit, dest)
         unit.walking = False  # close the walk; the next action spends another point
 
         atk = _pick_attack(battle, unit, target)

@@ -150,8 +150,9 @@ pointed to, not repeated.
     campaign fights log into `saves/<world>/combat_logs/` while `record_play` is ON;
     `scripts/combat_analysis.py` reads them (action mix, how often a person matched the AI, a
     replay). What is left, in order:
-    1. **Play the fights** (the user, in the Combat lab; the 2026-10-10 recordings in
-       `combat_lab/2026-10-10/` are one try of each, not enough). A first target, 10 fights each,
+    1. **Play the fights** (the user, in the Combat lab; the 12 human-against-AI
+       tries of 2026-10-10 were thrown away: the AI's walking was not in the log, fixed since,
+       and they were played at levels off this list). A first target, 10 fights each,
        human (player 1) against the AI, at the level the economy expects of that fight:
        Scrapper at level 0, champion at 0-1, brawl and capture the flag at 1-3, Wilds and Old
        Road ambushes at 3, Ancient Ruins at 2-3, Ribbit Brothers at 3. Play to win, as you
@@ -159,8 +160,7 @@ pointed to, not repeated.
        compare with the AI's benchmark rates. Then **two Ribbit Brothers fights human against
        human** (one decision list per side). The tainted 2026-10-10 try was dropped; one clean
        `boss-human-vs-human.jsonl` is in, one is still to play. The brothers changed on
-       2026-10-10 (Peep and Ribit swap the Tongue for Webbed Feet, so no Lash), and
-       `boss-human-vs-ai.jsonl` predates that.
+       2026-10-10 (Peep and Ribit swap the Tongue for Webbed Feet, so no Lash).
     2. **Derive the policy** from the rows the way `play_analysis.py` derived the `human` economy
        profile: thresholds and priorities (when to focus fire, when to retreat, when to go for
        the flag). A new script over `combat_log.frames`.

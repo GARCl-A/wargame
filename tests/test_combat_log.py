@@ -107,6 +107,13 @@ def test_rows_say_who_decided_and_only_a_person_gets_the_ais_guess(tmp_path):
         assert (r["ai"] is not None) == (r["by"] == "human")
 
 
+def test_the_ais_walking_is_a_row_like_a_persons(tmp_path):
+    battle, log = _recorded(tmp_path)
+    _play(battle)
+    acts = [r for r in combat_log.load(log.path) if r["e"] == "act"]
+    assert any(r["by"] == "ai" and r["action"] == "move" for r in acts)
+
+
 def test_the_ais_guess_changes_nothing_and_is_what_it_then_really_does(tmp_path):
     battle, log = _recorded(tmp_path, controllers={"player": "human", "enemy": "human"})
     for _ in range(12):
