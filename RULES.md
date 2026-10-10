@@ -1512,7 +1512,7 @@ it can catch up with a character wherever the City's authority reaches
   through it — deserters, bandits and roving packs — the same
   pause/resume seam the guard uses, unrelated to jurisdiction or crime.
 - **Locked chests** (`chest.py`, `data.CHEST_ITEM`): a generic pack item
-  picked open outside battle (`gear_screen.py`'s right-click send menu),
+  picked open outside battle (`group_screen.py`'s right-click send menu),
   `d20 + Dexterity ≥ data.CHEST_DC`. A miss costs nothing, just try later.
   The Bankers' mission chest (see Missions) is a deliberately different item
   so it's never picked open by mistake — doing so fails that mission and

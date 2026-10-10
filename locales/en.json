@@ -146,12 +146,6 @@
         "Money is $: a Copper Coin is $1, a Gold Coin $100 and just as light. This is the only place to mint or melt gold -- open a coin stack's ⋮ menu (or right-click it), pick how many, and pay $1 per coin each way. Shops spend your copper first and break a gold coin only when they must, giving the change back."
       ]
     },
-    "gear": {
-      "title": "Managing gear, side by side",
-      "body": [
-        "Same moves as the guild screen's loadout, but every member of the group gets their own column at once -- good for shuffling gear across the band in one visit. Only the group's own members are here: gear can't change hands between bands standing in different places. Right-click an item for a quick \"send to...\" menu. The ARTIFACT slot holds one artifact (the Signal Horn, say), which gives its wearer a combat action."
-      ]
-    },
     "level": {
       "title": "Spending picks",
       "body": [
@@ -169,7 +163,7 @@
     "group": {
       "title": "Managing a group's gear",
       "body": [
-        "The strip on the left lists every member; click one to open their column. Drag items between HAND / OFF HAND / BODY / PACK slots and between members -- or click an item and then click where it goes. Shift or ctrl gathers several first.",
+        "The strip on the left lists every member; click one to open their column. Drag items between HAND / OFF HAND / BODY / PACK slots and between members -- or click an item and then click where it goes. Shift or ctrl gathers several first. Right-click an item for a quick \"send to...\" menu. The ARTIFACT slot holds one artifact (the Signal Horn, say), which gives its wearer a combat action.",
         "The QUESTS tab, top right, lists the jobs this group carries, with their deadlines and progress."
       ]
     },

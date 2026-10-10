@@ -1,6 +1,6 @@
-"""Shared drag bookkeeping for the gear and group management screens.
+"""Shared drag bookkeeping for the pack screens.
 
-`gear_screen.GearScreen` and `group_screen.GroupScreen` both show a per-member
+`group_screen.GroupScreen` and `market_screen.MarketScreen` both show a per-member
 loadout column (header, load bar, HANDS/OFF/(TONGUE), BODY, PACK) via
 `gartok.ui.loadout_panel.column()` now, but still share the padlock hit-testing
 (exempt an item from `unit.distribute_load`), the item-tag lookup `column()`'s
@@ -11,13 +11,13 @@ screens by hand, before they moved onto `gartok/ui/`: just that bookkeeping,
 no drawing of its own left.
 
 Mix in before `Screen`, same convention as `dragselect.DragSelectMixin`:
-``class GearScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen)``
+``class GroupScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen)``
 
 Needs from the host screen: `self.mouse`. Screens reset `self._lock_hits = []`
 and `self._pack_areas = []` at the top of `draw()` alongside their other
 per-frame lists, append to `self._pack_areas` as they draw each column (see
-`GearScreen._draw_columns`), and route a click through `self._lock_at(px)`
-before treating it as an item pick (see `GearScreen._source_at`/`_drop`).
+`GroupScreen._draw_bags`), and route a click through `self._lock_at(px)`
+before treating it as an item pick (see `GroupScreen._source_at`/`_drop`).
 
 `stash_screen.py` (the bank and the house) doesn't mix this in -- it keeps
 its own smaller `_item_tag` since it doesn't need the rest of this contract

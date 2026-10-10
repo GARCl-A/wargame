@@ -1,6 +1,6 @@
 """The RAIL / column / CARGO pieces `group_screen.py`'s BAGS and CARGO
 views are built from -- factored out so a future screen that needs the
-same "member as a bag of gear" view (`gear_screen.py`, one day) reuses
+same "member as a bag of gear" view (`stash_screen.py`, `loot_screen.py`) reuses
 these instead of forking `group_screen.py`'s copy.
 
 Purely presentational, same contract as the rest of `gartok.ui`: every
@@ -292,7 +292,7 @@ def column(surf, F, rect, member, scroll, mouse):
 
     # `scroll` is an item-index offset (rows scrolled past), not pixels --
     # it's `PackColumnMixin`'s own wheel handler that owns this value
-    # (`gartok/packbox.py`, shared with `GearScreen`), one row per wheel
+    # (`gartok/packbox.py`, shared with the pack screens), one row per wheel
     # tick, clamped only to `len(items)-1`; re-clamp here to what actually
     # fits so a stale value from a shorter previous list can't skip rows
     row_h = T.S * 6 + T.S

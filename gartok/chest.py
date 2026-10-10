@@ -1,5 +1,5 @@
 """A locked chest (`data.CHEST_ITEM`): a pack item with its own lock, picked
-outside battle (see `gear_screen.py`'s right-click send-to menu) rather than
+outside battle (see `group_screen.py`'s right-click send-to menu) rather than
 through `actions.py` (that module is battle-only -- opening a chest happens
 on the map, between fights).
 

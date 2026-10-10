@@ -77,14 +77,14 @@ def test_drag_into_the_artifact_slot_only_takes_artifacts():
 def test_screens_draw_the_artifact_slot():
     import pygame
 
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
     pygame.display.set_mode((1, 1))
     u = Unit("player")
     u.give_to_artifact("Signal Horn")
-    scr = GearScreen(ui_fonts(), Guild([u]), lambda: None)
+    scr = GroupScreen(ui_fonts(), (guild := Guild([u])), guild.groups[0], lambda: None)
     assert scr._member_dict(u, [])["artifact"]["name"] == "Signal Horn"
     scr.mouse = (0, 0)
     scr.draw(pygame.Surface((1600, 1000)))

@@ -286,7 +286,6 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.hunt import HuntState
     from gartok.hunt_screen import HuntScreen
     from gartok.guild_screen import GuildScreen
-    from gartok.gear_screen import GearScreen
     from gartok.group_screen import GroupScreen
     from gartok.level_screen import LevelScreen
     from gartok.pause_screen import PauseScreen
@@ -316,7 +315,6 @@ def test_every_screen_draws_native_at_any_window_size():
         HuntScreen(F, guild, HuntState(list(roster[:3]), wnode, hours_left=4, hours_hunted=6),
                    phase="interlude", on_ambush=noop, on_done=noop),
         GuildScreen(F, guild, noop, noop),
-        GearScreen(F, guild, noop),
         GroupScreen(F, guild, guild.groups[0], noop),
         LevelScreen(F, roster[0], noop, noop),
         BankScreen(F, guild, list(roster[:3]), noop),          # locked: no chest yet
@@ -686,7 +684,7 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     from gartok.char_editor_screen import CharEditorScreen
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.sheet_panel import draw_sheet
     from gartok.combatant import Combatant
     pygame.init()
@@ -701,8 +699,9 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
     u.give_to_tongue("Dagger")
     u.equipped_weapon = "Broadsword"                     # 2-handed in the hands, dagger on the tongue
 
+    solo = Guild([u])
     surf = pygame.Surface((1600, 1000))
-    for scr in (GearScreen(F, Guild([u]), lambda: None),
+    for scr in (GroupScreen(F, solo, solo.groups[0], lambda: None),
                 CharEditorScreen(ui_fonts(), lambda: None)):
         if isinstance(scr, CharEditorScreen):
             scr._load_unit(u)
@@ -712,7 +711,8 @@ def test_tongue_grippli_renders_across_the_gear_and_editor_screens():
 
 
 def test_gear_screen_distribute_load():
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
+    from gartok.ui.tokens import fonts as ui_fonts
     from gartok.guild import Guild
     from gartok import data
     r = data.race_by_name("Human")
@@ -723,12 +723,8 @@ def test_gear_screen_distribute_load():
     u1._base_inventory = packed(["Stone Brick", "Stone Brick"])
     u2._base_inventory = []
     g = Guild([u1, u2])
-    gs = GearScreen.__new__(GearScreen)
-    gs.guild = g
-    gs.roster = g.roster
-    gs.pinned = [u1, u2]
-    gs.notice = None
-    gs._distribute_load()
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
+    gs._handle_button("distribute")
     # Heaviest items should be shared across members
     assert len(u1._base_inventory) == 1
     assert len(u2._base_inventory) == 1
@@ -741,7 +737,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
     from gartok import data
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
@@ -756,7 +752,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     u1._base_inventory = packed(["Rope"])
     u2._base_inventory = []
     g = Guild([u1, u2])
-    gs = GearScreen(ui_fonts(), g, lambda: None)
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
     surf = pygame.Surface((1600, 900))
     gs.mouse = (0, 0)
     gs.draw(surf)
@@ -770,7 +766,7 @@ def test_gear_screen_padlock_toggle_exempts_item_from_distribute_load():
     assert u1.locked_of("Rope") == 1
     assert gs.selected == []                              # a lock click never picks the item up
 
-    gs._distribute_load()
+    gs._handle_button("distribute")
     assert u1._base_inventory == packed(["Rope"])          # stayed put, still locked
 
 
@@ -813,7 +809,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     menu, mirroring the sandbox character editor's toggle."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
@@ -823,17 +819,9 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     u.magic_source = "nature"
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
-    gs = GearScreen.__new__(GearScreen)
-    gs.fonts = ui_fonts()
-    gs.guild = g
-    gs.roster = g.roster
-    gs.pinned = [u]
-    gs.selected = []
-    gs.notice = None
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
     gs.mouse = (5, 5)
     gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
-    gs.menu = None
-    gs._hot = False
 
     surf = pygame.Surface((800, 600))
 
@@ -855,7 +843,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
 def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     pygame.init()
     pygame.display.set_mode((1, 1))
@@ -864,16 +852,9 @@ def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
     u.magic_source = None
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
-    gs = GearScreen.__new__(GearScreen)
     from gartok.ui.tokens import fonts as ui_fonts
-    gs.fonts = ui_fonts()
-    gs.guild = g
-    gs.roster = g.roster
-    gs.pinned = [u]
-    gs.selected = []
-    gs.notice = None
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
     gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
-    gs.menu = None
 
     gs._open_menu((5, 5))
     assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
@@ -885,7 +866,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     no `magic_source` required, unlike scrolls."""
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
@@ -896,17 +877,9 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     u.languages = ["Ankarin"]
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
-    gs = GearScreen.__new__(GearScreen)
-    gs.fonts = ui_fonts()
-    gs.guild = g
-    gs.roster = g.roster
-    gs.pinned = [u]
-    gs.selected = []
-    gs.notice = None
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
     gs.mouse = (5, 5)
     gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
-    gs.menu = None
-    gs._hot = False
 
     surf = pygame.Surface((800, 600))
 
@@ -928,7 +901,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
 def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     import pygame
-    from gartok.gear_screen import GearScreen
+    from gartok.group_screen import GroupScreen
     from gartok.guild import Guild
     from gartok.ui.tokens import fonts as ui_fonts
     pygame.init()
@@ -938,15 +911,8 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     u.languages = ["Ankarin", "Elvish"]
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])
-    gs = GearScreen.__new__(GearScreen)
-    gs.fonts = ui_fonts()
-    gs.guild = g
-    gs.roster = g.roster
-    gs.pinned = [u]
-    gs.selected = []
-    gs.notice = None
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
     gs.sources = [(pygame.Rect(0, 0, 10, 10), u, 0)]
-    gs.menu = None
 
     gs._open_menu((5, 5))
     assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]

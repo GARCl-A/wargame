@@ -34,6 +34,7 @@ from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel, market_panel
+from .ui.hscroll import ColumnScroll
 from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, draw_tooltip, format_tooltip, set_pointer
 from .ui.primitives import text as ui_text
@@ -87,6 +88,11 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         self.item_rows = []                  # [(rect, member, loc)]
         self.cards = []                      # [(rect, member)]
         self.buttons = []                   # [(key, rect)]
+        self._col_scroll = ColumnScroll()
+        self._shoppers_area = pygame.Rect(0, 0, 0, 0)
+        self.group_view = False             # one table of every stack instead of a column per member
+        self._cargo_scroll = 0
+        self._cargo_rect = None
 
     def _stock_weapon_size(self, base_name):
         return self._weapon_sizes.get(base_name, self.weapon_size)
@@ -360,18 +366,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         if self._menu_event(event):
             return
         if event.type == pygame.MOUSEWHEEL:
-            mods = pygame.key.get_mods()
-            is_shift = mods & pygame.KMOD_SHIFT
-            
-            hx = getattr(event, 'x', 0)
             hy = getattr(event, 'y', 0)
-            
-            if hx != 0 or (is_shift and hy != 0):
-                scroll_amt = hx if hx != 0 else -hy
-                max_scroll = getattr(self, "_shoppers_max_scroll", 0)
-                if max_scroll > 0:
-                    cur = getattr(self, "_shoppers_scroll", 0)
-                    self._shoppers_scroll = max(0, min(max_scroll, cur + scroll_amt))
+            if self._col_scroll.wheel(event, over=False):
                 return
 
             hit = next((m for r, m in self._pack_areas if r.collidepoint(self.mouse)), None)
@@ -380,13 +376,12 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 cur = self._pack_scroll.get(id(hit), 0)
                 self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - hy))
                 return
-            
-            if getattr(self, "_shoppers_area", pygame.Rect(0,0,0,0)).collidepoint(self.mouse):
-                max_scroll = getattr(self, "_shoppers_max_scroll", 0)
-                if max_scroll > 0:
-                    cur = getattr(self, "_shoppers_scroll", 0)
-                    self._shoppers_scroll = max(0, min(max_scroll, cur - hy))
-                    return
+
+            if self._cargo_rect is not None and self._cargo_rect.collidepoint(self.mouse):
+                self._cargo_scroll = max(0, self._cargo_scroll - hy * 40)
+                return
+            if self._shoppers_area.collidepoint(self.mouse) and self._col_scroll.wheel(event):
+                return
 
         super().handle_event(event)
 
@@ -507,6 +502,10 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                     self._sell_all()
                 elif key == "distribute":
                     self._distribute_load()
+                elif key == "group_view":
+                    self.group_view = not self.group_view
+                    self.selected = []
+                    self._sel_qty = {}
                 return
 
         for rect, key in self.tab_hits:
@@ -775,10 +774,16 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         cats = [(label, key) for label, key, _names in self.get_categories()]
         self.tab_hits = market_panel.category_tabs(
             screen, F, pygame.Rect(MARGIN, top, STOCK_W, 28), cats, self.tab, self.mouse)
+        btn_x = W - MARGIN
         if len(self.shoppers) > 1:
-            dl_btn = pygame.Rect(W - MARGIN - 160, top, 160, 28)
+            dl_btn = pygame.Rect(btn_x - 160, top, 160, 28)
             draw_button(screen, F, dl_btn, "distribute load", mpos=self.mouse)
             self.buttons.append(("distribute", dl_btn))
+            btn_x = dl_btn.x - T.S
+        if len(self.shoppers) + len(self.stores) > 1:
+            gv_btn = pygame.Rect(btn_x - 160, top, 160, 28)
+            draw_button(screen, F, gv_btn, "per member" if self.group_view else "all items", mpos=self.mouse)
+            self.buttons.append(("group_view", gv_btn))
 
         body_top = top + 28 + T.S
         stock = pygame.Rect(MARGIN, body_top, STOCK_W, H - body_top - 72)
@@ -899,19 +904,16 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
     def _draw_shoppers(self, screen, area):
         self._shoppers_area = area
+        self._cargo_rect = None
         F = self._ui_fonts()
         gap = T.S * 2
         columns = [*self.shoppers, *self.stores]
+        if self.group_view and not self._buying:
+            self._draw_cargo(screen, F, area, columns)
+            return
 
-        cap = max(1, (area.w + gap) // (300 + gap))
-        n_shown = min(cap, len(columns))
-        card_w = min(420, max(300, (area.w - (n_shown - 1) * gap) // n_shown)) if n_shown > 0 else 300
-
-        self._shoppers_max_scroll = max(0, len(columns) - cap)
-        cur = getattr(self, "_shoppers_scroll", 0)
-        self._shoppers_scroll = max(0, min(cur, self._shoppers_max_scroll))
-
-        shown = columns[self._shoppers_scroll : self._shoppers_scroll + n_shown]
+        window, card_w = self._col_scroll.fit(len(columns), area.w, gap, 300, 420)
+        shown = columns[window]
         carried = self._selected_names()
 
         for i, m in enumerate(shown):
@@ -945,13 +947,28 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, m, idx))
 
-        if self._shoppers_max_scroll > 0:
-            hr = self._shoppers_max_scroll - self._shoppers_scroll
-            hl = self._shoppers_scroll
-            if hr > 0:
-                ui_text(screen, F["body_sm"], f"{hr} more \u2192  (scroll)", (area.right - 8, area.bottom + 8), T.TX_FAINT, right=True)
-            if hl > 0:
-                ui_text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
+        self._col_scroll.hint(screen, F, area)
+
+    def _draw_cargo(self, screen, F, area, owners):
+        rows = []
+        for o in owners:
+            for idx, (name, qty) in enumerate(o._base_inventory):
+                rows.append((o, idx, name, qty))
+        rows.sort(key=lambda t: -items.item_weight(t[2]) * t[3])
+        by_key = {id(o): o for o in owners}
+        data = [((id(o), idx), name, o.pack_tag(name), items.item_weight(name), qty,
+                 o.locked_of(name) > 0, (o, idx) in self.selected, o.name.split()[0][:10])
+                for o, idx, name, qty in rows]
+        res = loadout_panel.cargo_table(screen, F, area, data, self._cargo_scroll, self.mouse)
+        self._cargo_rect = res["list_rect"]
+        self._cargo_scroll = res["scroll"]
+        for r, (oid, idx) in res["hits"]:
+            self.item_rows.append((r, by_key[oid], idx))
+        for r, (oid, idx) in res["lock_hits"]:
+            o = by_key[oid]
+            self.lock_hits.append((r, o, o._base_inventory[idx][0]))
+        for r, (oid, idx) in res["dots_hits"]:
+            self._dots_hits.append((r, by_key[oid], idx))
 
     def _distribute_load(self):
 

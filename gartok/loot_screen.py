@@ -14,6 +14,7 @@ from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import PackColumnMixin
 from .screen import Screen
 from .ui import loadout_panel
+from .ui.hscroll import ColumnScroll
 from .ui.primitives import set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -44,6 +45,7 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
         self.sources = []                     # [(rect, owner, loc)]
         self.zones = []                       # [(rect, owner_or_"pool", zone)]
         self._chest_scroll = 0
+        self._cols = ColumnScroll()
         self._service_hits = []               # [(rect, key)]
         self._chest_steppers = []             # [(rect, idx, delta)]
         self.back_rect = None
@@ -180,6 +182,8 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
+            if self._cols.wheel(event, over=False):
+                return
             hit = next((u for r, u in self._pack_areas if r.collidepoint(self.mouse)), None)
             if hit is None and self._chest_area and self._chest_area.collidepoint(self.mouse):
                 n = len(self.pool)
@@ -313,16 +317,15 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
 
         avail_w = W - chest_r.right - pad - T.S * 4
         pinned = [u for u in self.pinned if u in self.survivors] or list(self.survivors)
-        n_cols = max(1, len(pinned))
-        col_w = max(COL_MIN, min(COL_MAX, (avail_w - pad * (n_cols - 1)) // n_cols))
+        window, col_w = self._cols.fit(len(pinned), avail_w, pad, COL_MIN, COL_MAX)
 
         cx = chest_r.right + pad
-        for u in pinned:
+        for u in pinned[window]:
             r = pygame.Rect(cx, y, col_w, H - y - T.S * 4)
             self._draw_member(screen, F, r, u)
             cx += col_w + pad
-
-
+        cols_area = pygame.Rect(chest_r.right + pad, y, avail_w, H - y - T.S * 4)
+        self._cols.hint(screen, F, cols_area)
 
         set_pointer(self._hovering())
 

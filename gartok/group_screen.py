@@ -1,16 +1,12 @@
 """Manage Gear: shuffle the roster's loadouts side by side, two views on the
 same band.
 
-Ported from the `screen_prototypes/group_screen.py` v6 mock onto the real
-`gartok.ui` component set instead of the legacy `PackColumnMixin`
-drawing layer `GearScreen` still uses, and wired back onto the same
-drag/click plumbing the gear-management screens share (`DragSelectMixin` /
-`LoadoutMoveMixin`, `gartok/dragselect.py`) -- the mock's own click-only
-interaction never grew an equip gesture, so dragging an item onto a
-HAND/OFF/BODY slot (or another member's column, or the rail) is how gear
-actually moves here, exactly like `GearScreen`. Click-then-click-destination
-still works too (a click without dragging "picks up" a source; shift/ctrl
-gathers several).
+Built on the real `gartok.ui` component set and the drag/click plumbing the
+pack screens share (`DragSelectMixin` / `LoadoutMoveMixin`,
+`gartok/dragselect.py`): dragging an item onto a HAND/OFF/BODY slot (or
+another member's column, or the rail) is how gear moves here.
+Click-then-click-destination still works too (a click without dragging
+"picks up" a source; shift/ctrl gathers several).
 
 This file is the adapter + input/state layer only, same split as
 `map_screen.py`: it turns real `Unit`/`Group` objects into the plain dicts
@@ -18,7 +14,7 @@ This file is the adapter + input/state layer only, same split as
 `split_prompt` draw from, and translates the rects they hand back into
 `self.sources`/`self.zones` (which stay `Unit`-keyed -- that's the boundary
 where "component" ends and "domain" begins, same seam `LoadoutMoveMixin`
-already sits on for `GearScreen`).
+already sits on).
 
   RAIL   left strip, every member, always -- a compact row per member and,
          since this is *also* a drop target whether or not that member's
@@ -26,7 +22,7 @@ already sits on for `GearScreen`).
          currently pinned. Clicking a row (with nothing carried) pins/
          unpins its full column.
   BAGS   pinned members as full columns: HAND / OFF / (TONGUE) / BODY /
-         PACK, dragged exactly like `GearScreen`.
+         PACK.
   CARGO  every stack across the whole band in one sortable table, with the
          same pick-up-and-place selection (a row is a `sources` pick, same
          as a BAGS pack row) so batch actions (send to.../split/drop) reuse
@@ -51,16 +47,17 @@ import pygame
 
 from . import chest, data, items, magic, missions, store_column, world
 from .animals import Animal
-from .wagon import Wagon
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
 from .ui import loadout_panel, quest_panel
+from .ui.hscroll import ColumnScroll
 from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, header, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .wagon import Wagon
 
 COL_MIN, COL_MAX = 300, 400              # loadout column width clamps
 RAIL_W = 230
@@ -100,8 +97,7 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         self._cargo_rect = None
         self._cargo_scroll = 0
         self._cargo_max_scroll = 0
-        self._bags_scroll = 0
-        self._bags_max_scroll = 0
+        self._cols = ColumnScroll()
         self.editing_name = False
         self.name_buf = ""
         self._bulk_anchor = (0, 0)           # CARGO's "send to..." button center, set when it's drawn
@@ -235,16 +231,10 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             return
 
         if event.type == pygame.MOUSEWHEEL:
-            mods = pygame.key.get_mods()
-            is_shift = mods & pygame.KMOD_SHIFT
-            hx = getattr(event, 'x', 0)
             hy = getattr(event, 'y', 0)
             
             if self.tab == "gear" and self.view == "bags":
-                if hx != 0 or (is_shift and hy != 0):
-                    scroll_amt = hx if hx != 0 else -hy
-                    if self._bags_max_scroll > 0:
-                        self._bags_scroll = max(0, min(self._bags_max_scroll, self._bags_scroll + scroll_amt))
+                if self._cols.wheel(event, over=False):
                     return
 
             if self.tab == "gear" and self._rail_rect and self._rail_rect.collidepoint(self.mouse):
@@ -640,14 +630,8 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         members = [u for u in self.pinned if u in self.group.members]
         stores = [*self.group.herd, *self.group.wagons]
         shown = members + stores
-        cap = max(1, (area.w + gap) // (COL_MIN + gap))
-        
-        self._bags_max_scroll = max(0, len(shown) - cap)
-        self._bags_scroll = max(0, min(self._bags_scroll, self._bags_max_scroll))
-        
-        shown = shown[self._bags_scroll : self._bags_scroll + cap]
-        n = max(1, len(shown))
-        col_w = min(COL_MAX, max(COL_MIN, (area.w - (n - 1) * gap) // n))
+        window, col_w = self._cols.fit(len(shown), area.w, gap, COL_MIN, COL_MAX)
+        shown = shown[window]
         carried = self._carried_names()
 
         for i, u in enumerate(shown):
@@ -682,13 +666,7 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, u, idx))
 
-        if self._bags_max_scroll > 0:
-            hr = self._bags_max_scroll - self._bags_scroll
-            hl = self._bags_scroll
-            if hr > 0:
-                text(screen, F["body_sm"], f"{hr} more \u2192  (scroll)", (area.right - 8, area.bottom + 8), T.TX_FAINT, right=True)
-            if hl > 0:
-                text(screen, F["body_sm"], f"\u2190 {hl} more  (scroll)", (area.x + 8, area.bottom + 8), T.TX_FAINT)
+        self._cols.hint(screen, F, area)
 
         hidden = len(members) - len([u for u in shown if not self._is_store(u)])
         if hidden > 0:

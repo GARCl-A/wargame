@@ -68,7 +68,6 @@ from .combat_log import CombatLog
 from .constants import fmt_money
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
-from .gear_screen import GearScreen
 from .group import NORMAL
 from .guild import Guild
 from .guild_screen import GuildScreen
@@ -350,22 +349,17 @@ class App:
     def _open_guild(self):
         self.scene = GuildScreen(self.ui_fonts, self.guild,
                                  on_back=self._start_map, on_level=self._open_level,
-                                 on_manage=self._open_gear, on_bank=self._open_vault_view)
+                                 on_manage=lambda g: self._open_group(g, back=self._open_guild), on_bank=self._open_vault_view)
 
     def _open_vault_view(self):
         from .bank_view_screen import BankViewScreen
         self.scene = BankViewScreen(self.ui_fonts, self.guild, on_done=self._open_guild)
 
-    def _open_gear(self, group):
-        if group.fight_due:
-            return
-        self.scene = GearScreen(self.ui_fonts, self.guild, on_back=self._open_guild, group=group)
-
-    def _open_group(self, group):
+    def _open_group(self, group, back=None):
         if group.fight_due:
             return
         from .group_screen import GroupScreen
-        self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=self._after_activity,
+        self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=back or self._after_activity,
                                  on_tick=self._tick_outside_map)
     def _open_level(self, unit):
         self.scene = LevelScreen(self.ui_fonts, unit,

@@ -11,7 +11,17 @@ from types import SimpleNamespace
 
 import pygame
 
-from . import artwork, data, factions, magic, progression, talents, vocations, world
+from . import (
+    artwork,
+    data,
+    factions,
+    magic,
+    progression,
+    recruit,
+    talents,
+    vocations,
+    world,
+)
 from .animals import STARVE_DAYS, Animal
 from .combatant import Combatant
 from .constants import fmt_money
@@ -540,12 +550,18 @@ class GuildScreen(Screen):
 
         recruiter = self._recruited_by(unit)
         lines = [(f"Recruited by {recruiter}" if recruiter else "Founding member of the guild", T.TX_MUTED, "body_sm")]
+        lines.append(self._sponsor_line(unit))
         if getattr(unit, "arena_title", False):
             lines.append(("Champion of the Pit", T.BRASS, "body_sm"))
         if getattr(unit, "bio", ""):
             lines.append((unit.bio, T.TX_FAINT, "micro"))
         y, t = member_panel.draw_record(screen, F, x, y, w, lines, mp)
         return y, next((t for t in tips if t), None), hits
+
+    def _sponsor_line(self, unit):
+        used, cap = recruit.slots_used(self.guild, unit), recruit.capacity(self.guild, unit)
+        left = (f"{cap - used} more may join on their word" if cap > used else "none left")
+        return f"Sponsored recruits: {used} of {cap} -- {left}", T.TX_MUTED if cap > used else T.TX_FAINT, "body_sm"
 
     def _role_rows(self, unit, grp):
         cap = BASE_CAPACITY + unit.mod_charisma + (unit.racial_level // 2)

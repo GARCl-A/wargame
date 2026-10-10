@@ -95,7 +95,6 @@ def test_every_simple_screen_reports_its_registered_id():
     from gartok import (
         bank_screen,
         battle_screen,
-        gear_screen,
         hunt_screen,
         city_property_screen,
         crafting_screen,
@@ -123,7 +122,6 @@ def test_every_simple_screen_reports_its_registered_id():
         (taverna_screen.TavernaScreen, "taverna"),
         (hunt_screen.HuntScreen, "hunt"),
         (bank_screen.BankScreen, "bank"),
-        (gear_screen.GearScreen, "gear"),
         (level_screen.LevelScreen, "level"),
         (group_screen.GroupScreen, "group"),
         (tanner_screen.TannerScreen, "missions"),
@@ -288,7 +286,6 @@ def test_draft_screen_buttons_clear_tutorial_badge():
 def test_all_tutorial_screens_have_aligned_badge_rect():
     import pygame
 
-    from gartok.gear_screen import GearScreen
     from gartok.hunt_screen import HuntScreen
     from gartok.loot_screen import LootScreen
     from gartok.reward_screen import RewardScreen
@@ -299,14 +296,12 @@ def test_all_tutorial_screens_have_aligned_badge_rect():
     W, H = 1280, 800
     tav = TavernaScreen.__new__(TavernaScreen)
     rew = RewardScreen.__new__(RewardScreen)
-    gear = GearScreen.__new__(GearScreen)
     loot = LootScreen.__new__(LootScreen)
     hunt = HuntScreen.__new__(HuntScreen)
     squad = SquadScreen.__new__(SquadScreen)
 
     assert tav.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
     assert rew.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
-    assert gear.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
     assert loot.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 4 - 28, T.S * 4, 28, 28)
     assert hunt.tutorial_badge_rect((W, H)) == pygame.Rect(W - T.S * 3 - 28, T.S * 3 - 4, 28, 28)
     assert squad.tutorial_badge_rect((W, H)) == pygame.Rect(W - 16 - 28, 16 - 4, 28, 28)

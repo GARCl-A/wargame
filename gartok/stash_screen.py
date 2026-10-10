@@ -24,12 +24,13 @@ to a `Unit`: the string `OWNER`.
 
 import pygame
 
-from . import economy, items
+from . import economy, items, store_column
 from .constants import fmt_money
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin
 from .screen import Screen
 from .ui import loadout_panel
+from .ui.hscroll import ColumnScroll
 from .ui.inspector_panel import role_for
 from .ui.primitives import draw_button, header, set_pointer, text
 from .ui.tokens import T
@@ -77,6 +78,9 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         self._stash_steppers = []             # [(rect, pick, delta)]
         self._dots_hits = []                  # [(rect, unit, idx)] -- the pack row's menu button
         self._unit_by_uid = {u.uid: u for u in party}
+        self.group = guild.group_of(party[0]) if party else None
+        self.stores = [*self.group.herd, *self.group.wagons] if self.group else []
+        self._cols = ColumnScroll()
         self.back_rect = None
 
     # ------------------------------------------------------------------ #
@@ -158,6 +162,14 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
                 self.selected = picks
                 return
 
+        if store_column.is_store(dst) and zone == "pack":
+            moving = [p for p in picks if p[0] is not dst]
+            add = sum(items.item_weight(self._item_at(*p)) * self._qty_at(*p) for p in moving)
+            if not dst.stash.fits(add):
+                self.notice = f"won't fit -- {dst.stash.free:g} kg free on the {dst.name.lower()}."
+                self.selected = picks
+                return
+
         if zone in ("hand", "offhand", "tongue", "artifact", "armor"):
             fit = next((p for p in picks
                        if self._fits_slot(dst, zone, self._item_at(*p))
@@ -217,6 +229,8 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         if self._menu_event(event):
             return
         if event.type == pygame.MOUSEWHEEL:
+            if self._cols.wheel(event, over=False):
+                return
             if self._rail_rect and self._rail_rect.collidepoint(self.mouse):
                 self._rail_scroll = max(0, min(self._rail_max_scroll,
                                                self._rail_scroll - event.y * 40))
@@ -435,16 +449,22 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
 
     def _draw_columns(self, screen, F, area):
         gap = T.S * 2
-        shown = [u for u in self.pinned if u in self.party]
-        cap = max(1, (area.w + gap) // (COL_MIN + gap))
-        shown = shown[:cap]
-        n = max(1, len(shown))
-        col_w = min(COL_MAX, max(COL_MIN, (area.w - (n - 1) * gap) // n))
+        members = [u for u in self.pinned if u in self.party]
+        shown = members + self.stores
+        window, col_w = self._cols.fit(len(shown), area.w, gap, COL_MIN, COL_MAX)
+        shown = shown[window]
         carried = self._carried_names()
 
         for i, u in enumerate(shown):
             r = pygame.Rect(area.x + i * (col_w + gap), area.y, col_w, area.h)
-            member = self._member_dict(u, carried)
+            store = store_column.is_store(u)
+            if store:
+                picked = {loc for o, loc in self.selected if o is u}
+                member = store_column.store_dict(self.group, u, picked, carried)
+                member.pop("action", None)
+                member.pop("tack", None)
+            else:
+                member = self._member_dict(u, carried)
             res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
             self._pack_scroll[id(u)] = res["scroll"]
             for kind, slot_rect in res["slot_rects"].items():
@@ -459,10 +479,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, u, idx))
 
-        hidden = len(self.pinned) - len(shown)
-        if hidden > 0:
-            text(screen, F["body_sm"], f"+{hidden} pinned but hidden -- widen the window",
-                (area.x, area.bottom + 4), T.TX_FAINT)
+        self._cols.hint(screen, F, area)
         if not shown:
             text(screen, F["body"], "Pin a member on the left to see their gear.",
                 area.center, T.TX_FAINT, center=True)

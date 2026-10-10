@@ -365,12 +365,12 @@ def test_the_guild_screen_freezes_gear_leader_and_load_for_a_group_with_a_fight_
     assert not {"manage", "distribute", "group_leader"} & frozen
 
 
-def test_the_app_will_not_open_gear_or_group_screens_for_a_group_with_a_fight_due():
+def test_the_app_will_not_open_the_group_screen_for_a_group_with_a_fight_due():
     guild, g = _ambushed()
     app = make_app(guild)
     app.scene = "untouched"
 
-    app._open_gear(g)
+    app._open_group(g, back=app._open_guild)
     app._open_group(g)
 
     assert app.scene == "untouched"

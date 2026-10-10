@@ -6,7 +6,7 @@ import random
 import pygame
 
 from gartok import items, persist, unit_loadout
-from gartok.gear_screen import GearScreen
+from gartok.group_screen import GroupScreen
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.unit import Unit, distribute_load, flatten_pack
@@ -123,7 +123,7 @@ def test_gear_screen_splits_a_purse_and_hands_part_of_it_to_a_mate():
     a, b = _bare(100), _bare(0)
     g = Group([a, b], node="city")
     guild = Guild(None, groups=[g])
-    s = GearScreen(None, guild, lambda: None, group=g)
+    s = GroupScreen(None, guild, g, lambda: None)
     s.draw(pygame.Surface((1400, 900)))
 
     s.selected = [(a, 0)]

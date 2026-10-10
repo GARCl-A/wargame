@@ -343,13 +343,13 @@ def test_manage_gear_opens_for_the_selected_members_group_only():
     assert opened == [g.group_of(a)]
 
 
-def test_gear_screen_scoped_to_a_group_lists_only_its_members():
-    from gartok.gear_screen import GearScreen
-    from gartok.group import Group
+def test_a_member_card_says_how_many_recruits_they_may_still_sponsor():
+    from gartok import recruit
     a, b = Unit("player"), Unit("player")
-    ga, gb = Group([a], node="city"), Group([b], node="road")
-    g = Guild(None, groups=[ga, gb])
-    gs = GearScreen(MagicMock(), g, on_back=lambda: None, group=ga)
-    assert list(gs.roster) == [a]
-    assert gs.pinned == [a]
-    assert list(GearScreen(MagicMock(), g, on_back=lambda: None).roster) == [a, b]
+    g = Guild([a, b])
+    b.recruited_by = a.uid
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    text, _color, _font = gs._sponsor_line(a)
+    cap = recruit.capacity(g, a)
+    assert f"1 of {cap}" in text and (f"{cap - 1} more" in text or "none left" in text)
+    assert "0 of" in gs._sponsor_line(b)[0]
