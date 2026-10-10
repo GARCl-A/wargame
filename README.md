@@ -297,6 +297,7 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)
                     combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change)
+                    archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks)
                     gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by
                     the /gen-portrait skill; portrait_lora/ has the setup and the Colab notebook that trains the LoRA)
 docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),

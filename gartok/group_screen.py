@@ -333,6 +333,23 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
 
         self.selected = [src] if src is not None else []
 
+    def _toggle_ride(self, uid):
+        unit = self._unit_by_uid.get(uid)
+        if unit is None:
+            return
+        unit.afoot = not unit.afoot
+        self.notice = (f"{unit.name} walks beside the wagon." if unit.afoot
+                       else f"{unit.name} rides when there is room.")
+
+    def _cycle_hitch(self, uid):
+        animal = next((a for a in self.group.herd if a.uid == uid), None)
+        if animal is None:
+            return
+        self.group.next_hitch(animal)
+        pulled = self.group.pulling(animal)
+        self.notice = (f"the {animal.species} pulls the {pulled.kind.lower()}." if pulled
+                       else f"the {animal.species} is unhitched.")
+
     def _repair_wagon(self, uid):
         wagon = next((w for w in self.group.wagons if w.uid == uid), None)
         if wagon is None:
@@ -345,6 +362,10 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
     def _handle_button(self, key):
         if key == "done":
             self.on_back()
+        elif key.startswith("ride:"):
+            self._toggle_ride(key.partition(":")[2])
+        elif key.startswith("hitch:"):
+            self._cycle_hitch(key.partition(":")[2])
         elif key.startswith("repair:"):
             self._repair_wagon(key.partition(":")[2])
         elif key == "distribute":
@@ -573,6 +594,11 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         if unit.has_tongue:
             member["tongue"] = held("tongue", unit.equipped_tongue, None)
         member["artifact"] = held("artifact", unit.equipped_artifact, None)
+        if self.group.wagons:
+            riding = unit in self.group.riders
+            member["action"] = {"label": "RIDES  ·  MAKE WALK" if riding else
+                                "WALKS  ·  LET RIDE" if unit.afoot else "WALKS  ·  NO ROOM",
+                                "enabled": riding or unit.afoot}
         return member
 
     def _cargo_rows(self):
@@ -631,12 +657,16 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             self._pack_scroll[id(u)] = res["scroll"]
             if not self._is_store(u):
                 self.sheet_hits.append((res["sheet_rect"], u))
+                if res["action_rect"] is not None and member["action"]["enabled"]:
+                    self.buttons.append((f"ride:{u.uid}", res["action_rect"]))
             if isinstance(u, Wagon):
                 self.zones.append((res["head_rect"], u, "hitch"))
                 if res["action_rect"] is not None and member["action"]["enabled"]:
                     self.buttons.append((f"repair:{u.uid}", res["action_rect"]))
             elif isinstance(u, Animal) and u.role == "draft":
                 self.sources.append((res["head_rect"], u, "hitch"))
+                if res["action_rect"] is not None:
+                    self.buttons.append((f"hitch:{u.uid}", res["action_rect"]))
             for kind, slot_rect in res["slot_rects"].items():
                 if slot_rect is None:
                     continue

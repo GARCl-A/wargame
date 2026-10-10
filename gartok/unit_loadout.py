@@ -250,7 +250,8 @@ class LoadoutMixin:
         it empties, and reconcile `locked_items` against what's left. Returns
         `(name, removed)`; shared by `take_from_pack` (index) and
         `remove_named` (name)."""
-        name, removed, held_after = stack_take(self._base_inventory, idx, qty)
+        name, removed, _ = stack_take(self._base_inventory, idx, qty)
+        held_after = self.count_of(name)
         if self.locked_items.get(name, 0) > held_after:
             self.locked_items[name] = held_after
             if not held_after:
@@ -403,9 +404,12 @@ def distribute_load(units, share_coins=True, creatures=()):
     coins = {}
     for u in bearers:
         keep, move = [], []
+        lock_left = {}                                 # a lock counts a name, not one of its rows
         for it in u._base_inventory:
             name, qty = it[0], it[1]
-            locked = u.locked_of(name)
+            lock_left.setdefault(name, u.locked_of(name))
+            locked = min(qty, lock_left[name])
+            lock_left[name] -= locked
             if items.is_coin(name) and share_coins:
                 coins[name] = coins.get(name, 0) + qty - locked
             elif items.is_coin(name):

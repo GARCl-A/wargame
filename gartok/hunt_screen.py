@@ -188,8 +188,11 @@ class HuntScreen(Screen):
             best = max((u.mod_wisdom for u in self.state.party), default=0)
             yields = f"best tracker: Wisdom {best:+d}"
         else:
-            yields = (f"meat: {y / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party" if self.state.target == "meat"
-                      else f"forage: {y:.2f}x the usual finds for the party")
+            if self.state.target == "meat":
+                yields = f"meat: {y * self.state.yield_mult / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party"
+            else:
+                shroom, fruit = hunt.forage_chances(self.state)
+                yields = f"forage per hour: {shroom:.0%} mushroom, {fruit:.0%} fruit"
         if self.state.ambush_mult != 1.0:
             yields += f"   ·   ambush chance x{self.state.ambush_mult:.2f} (cautious)"
         text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   {yields}",

@@ -158,6 +158,23 @@ def test_planting_the_flag_is_a_decision_and_the_flags_are_in_the_world(tmp_path
     assert plant["state"]["world"]["flags"]["enemy"]
 
 
+def test_skipping_the_trap_setup_is_a_logged_decision(tmp_path):
+    random.seed(4)
+    squad = [encounters.build_enemy(1) for _ in range(2)]
+    foes = [encounters.build_enemy(1) for _ in range(2)]
+    battle = Battle(squad, foes)
+    trapper = battle.player_units[0]
+    trapper.inventory.append("Bear Trap")
+    battle.trap_setup_queue = [trapper]
+    log = combat_log.CombatLog(str(tmp_path / "traps.jsonl"), {}, HUMAN_AI)
+    battle.record_to(log)
+
+    battle.skip_traps()
+    skip = combat_log.load(log.path)[1]
+    assert skip["action"] == "skip_traps" and skip["target"] is None
+    assert battle.awaiting_trap is None and "Bear Trap" in trapper.inventory
+
+
 def test_a_unit_who_joins_mid_fight_arrives_with_its_static_data(tmp_path):
     battle, log = _recorded(tmp_path)
     before = len(battle.units)

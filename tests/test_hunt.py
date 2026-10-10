@@ -228,3 +228,77 @@ def test_foraging_odds_scale_with_the_party_too():
     hunt.hunt_stretch(solo, Always())
     hunt.hunt_stretch(crew, Always())
     assert solo.fruit_found == 0 and crew.fruit_found == 4
+
+
+def test_forage_chances_scale_with_the_party_and_match_what_the_stretch_rolls():
+    from gartok import hunt
+
+    st = hunt.HuntState([Unit("player")] * 3, None, hours_left=1, target="shrooms")
+    shroom, fruit = hunt.forage_chances(st)
+    assert (shroom, fruit) == (hunt.FORAGE_MUSHROOM, hunt.FORAGE_FRUIT)      # a crew of three is 1.0
+    st.yield_mult = 2.0
+    assert hunt.forage_chances(st) == (shroom * 2, fruit * 2)
+
+    class JustUnder:
+        def __init__(self, *chances): self.vals = list(chances)
+        def random(self): return self.vals.pop(0)
+
+    st = hunt.HuntState([Unit("player")] * 3, None, hours_left=1, target="shrooms")
+    hunt.hunt_stretch(st, JustUnder(shroom - 0.001, fruit - 0.001, 1.0))
+    assert (st.shrooms_found, st.fruit_found) == (1, 1)
+    st = hunt.HuntState([Unit("player")] * 3, None, hours_left=1, target="shrooms")
+    hunt.hunt_stretch(st, JustUnder(shroom + 0.001, fruit + 0.001, 1.0))
+    assert (st.shrooms_found, st.fruit_found) == (0, 0)
+
+
+def test_the_hunt_screen_prints_the_forage_chance():
+    import pygame
+    from gartok import hunt, world
+    from gartok.guild import Guild
+    from gartok.hunt_screen import HuntScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    party = [Unit("player") for _ in range(3)]
+    st = hunt.HuntState(party, world.node("wilds"), hours_left=8, target="shrooms")
+    shown = []
+    from gartok import hunt_screen
+    real = hunt_screen.text
+    hunt_screen.text = lambda s, f, t, *a, **k: (shown.append(t), real(s, f, t, *a, **k))[1]
+    try:
+        scr = HuntScreen(ui_fonts(), Guild(party), st, phase="setup", on_ambush=lambda *_: None, on_done=lambda: None)
+        scr.mouse = (0, 0)
+        scr.draw(pygame.Surface((1280, 800)))
+    finally:
+        hunt_screen.text = real
+    assert any("10% mushroom, 15% fruit" in t for t in shown)
+
+
+def test_the_hunt_screen_meat_estimate_includes_the_guilds_gathering_bonus():
+    import pygame
+    from gartok import hunt, world
+    from gartok.guild import Guild
+    from gartok import hunt_screen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    party = [Unit("player") for _ in range(3)]
+
+    def shown_for(mult):
+        st = hunt.HuntState(party, world.node("wilds"), hours_left=8, yield_mult=mult)
+        lines = []
+        real = hunt_screen.text
+        hunt_screen.text = lambda s, f, t, *a, **k: (lines.append(t), real(s, f, t, *a, **k))[1]
+        try:
+            scr = hunt_screen.HuntScreen(ui_fonts(), Guild(party), st, phase="setup",
+                                         on_ambush=lambda *_: None, on_done=lambda: None)
+            scr.mouse = (0, 0)
+            scr.draw(pygame.Surface((1280, 800)))
+        finally:
+            hunt_screen.text = real
+        return next(t for t in lines if "kg per hour" in t)
+
+    assert "meat: 0.50 kg per hour" in shown_for(1.0)
+    assert "meat: 0.75 kg per hour" in shown_for(1.5)

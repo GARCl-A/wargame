@@ -372,6 +372,49 @@ def _draw(scr):
     scr.draw(pygame.Surface((1900, 900)))
 
 
+def _click_button(scr, key):
+    """The button must be on screen (drawn and live); the click itself is the screen's handler."""
+    _draw(scr)
+    assert key in {k for k, _ in scr.buttons}
+    scr._handle_button(key)
+
+
+def test_the_gear_screen_lets_a_member_walk_beside_the_wagon_and_frees_the_cargo():
+    scr, g = _gear(_animal("Ox", tack=HARNESS), wagon=True)
+    for u in g.members:
+        u.size = "Small"
+    g.hitch_idle()
+    seated = list(g.riders)
+    assert seated
+    room_before = g.wagons[0].capacity
+
+    walker = seated[0]
+    _click_button(scr, f"ride:{walker.uid}")
+    assert walker.afoot and walker not in g.riders and "walks" in scr.notice
+    assert g.wagons[0].capacity > room_before
+
+    _click_button(scr, f"ride:{walker.uid}")
+    assert not walker.afoot and walker in g.riders
+
+
+def test_the_gear_screen_has_no_ride_button_without_a_wagon():
+    scr, g = _gear(_animal(tack=HARNESS))
+    _draw(scr)
+    assert not [k for k, _ in scr.buttons if k.startswith("ride:")]
+
+
+def test_the_gear_screen_hitch_button_cycles_an_animal_between_wagons_and_none():
+    scr, g = _gear(_animal(tack=HARNESS), wagon=True)
+    g.add_wagon(Wagon("Carriage"))
+    g.hitch_idle()
+    pet = g.herd[0]
+    first = g.pulling(pet)
+    _click_button(scr, f"hitch:{pet.uid}")
+    assert g.pulling(pet) is not first
+    _click_button(scr, f"hitch:{pet.uid}")
+    assert g.pulling(pet) is None and "unhitched" in scr.notice
+
+
 def test_a_member_item_can_be_dragged_into_the_wagon():
     scr, g = _gear(_animal(tack=HARNESS), wagon=True, carried=["Rope", "Map"])
     scr.selected = [(g.members[0], 0)]

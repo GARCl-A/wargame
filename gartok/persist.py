@@ -126,6 +126,7 @@ def unit_to_dict(u):
         "inventory": _serialize_pack(u._base_inventory),    # the pack: spare items, weapons included
         "locked_items": dict(u.locked_items),    # item name -> count exempt from distribute_load
         "dormant": u.dormant,
+        "afoot": u.afoot,
         "awareness_radius": u.awareness_radius,
     }
 

@@ -335,3 +335,18 @@ def test_the_rest_row_prices_the_whole_group_not_one_mouth():
     assert "6 meals in all" in MapScreen._rest_row("rest:8", "8 h", plan, eaters=2)["label"]
     assert "3 meals in all" in MapScreen._rest_row("rest:8", "8 h", plan)["label"]
     assert "no meal" in MapScreen._rest_row("rest:1", "1 h", rest.RestPlan(hours=1), eaters=4)["label"]
+
+
+def test_a_capped_rest_says_how_many_days_of_rations_it_still_lacks():
+    from gartok.map_screen import MapScreen
+    u = _hurt(missing=8, meals=2)
+    guild, g = _guild(u)
+    capped = rest.until_full(guild, g)
+    assert capped.capped and capped.short_days >= 1
+    sub = MapScreen._rest_row("rest:full", "UNTIL FULL", capped)["sub"]
+    assert f"{capped.short_days} more day" in sub
+
+    rich_guild, rich = _guild(_hurt(missing=3, meals=20))
+    full = rest.until_full(rich_guild, rich)
+    assert not full.capped and full.short_days == 0
+    assert "more day" not in MapScreen._rest_row("rest:full", "UNTIL FULL", full)["sub"]

@@ -182,6 +182,13 @@ class Battle:
             self.trap_setup_queue.pop(0)
         self._recorded("plant_trap", trapper, tile, run)
 
+    def skip_traps(self):
+        """Place no trap: the queue empties and every trap stays in its pack."""
+        trapper = self.awaiting_trap
+        if trapper is None:
+            return
+        self._recorded("skip_traps", trapper, None, self.trap_setup_queue.clear)
+
     def _assign_flag_runners(self):
         """Tag the fastest half of the enemy side as flag runners -- the AI sends
         them for the player's flag while the rest hold and fight."""

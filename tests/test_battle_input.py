@@ -232,3 +232,29 @@ def test_space_just_ends_the_turn_when_defend_is_not_possible():
     me.ap = 0
     scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
     assert not me.defending and batt.active is not me
+
+
+def test_place_nothing_skips_the_trap_setup_and_keeps_the_traps():
+    scr, batt = _screen()
+    trapper = batt.player_units[0]
+    trapper.give_to_pack("Bear Trap")
+    batt.trap_setup_queue = [trapper]
+    pack_before = trapper.inventory.count("Bear Trap")
+    assert batt.awaiting_trap is trapper
+
+    from gartok.ui.tokens import fonts as ui_fonts
+    scr.F = ui_fonts()
+    scr.draw(pygame.Surface((800, 600)))
+    assert scr._skip_traps_rect is not None
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=scr._skip_traps_rect.center))
+
+    assert batt.awaiting_trap is None
+    assert trapper.inventory.count("Bear Trap") == pack_before
+    assert not [o for o in batt.ground if getattr(o, "is_trap", False)]
+
+
+def test_skip_traps_with_nothing_queued_is_a_no_op():
+    _, batt = _screen()
+    batt.trap_setup_queue = []
+    batt.skip_traps()
+    assert batt.awaiting_trap is None

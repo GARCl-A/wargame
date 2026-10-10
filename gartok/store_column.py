@@ -33,6 +33,9 @@ def store_dict(group, store, selected, carried):
         member["tack"] = {"name": store.tack, "note": store.role,
                           "sel": "tack" in selected,
                           "accepts": any(store.can_wear(n) for n in carried)}
+        if store.role == "draft" and group.wagons:
+            member["action"] = {"label": f"PULLS {pulled.kind.upper()}  ·  NEXT" if pulled else "UNHITCHED  ·  HITCH",
+                                "enabled": True}
     else:
         drawn_by = " + ".join(a.species for a in store.draft) or "no animals"
         aboard = f"  ·  {len(store.passengers)} riding" if store.passengers else ""

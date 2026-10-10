@@ -27,6 +27,8 @@ HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield 
 # hunt was tuned around), and each hand after that adds less until a 7th adds
 # the last bit. Applies to meat and to the forage rolls alike.
 HUNT_PARTY_YIELD = (0.5, 0.3, 0.2, 0.2, 0.15, 0.1, 0.05)
+FORAGE_MUSHROOM = 0.10         # chance an hour of foraging turns up a Red Mushroom, at a yield of 1.0
+FORAGE_FRUIT = 0.15
 HUNT_SHIFT_HOURS = (4, 8, 12, 16)   # lengths offered, like the lumber yard
 MEAT_ITEM = "Meat"
 HUNT_LEVEL = 3                   # the wilds' job level: real risk, so it keeps
@@ -73,6 +75,12 @@ def party_yield(size):
     return sum(HUNT_PARTY_YIELD[:max(0, size)])
 
 
+def forage_chances(state):
+    """`(mushroom, fruit)`: the chance one hour of foraging finds each, for this party."""
+    y = party_yield(len(state.party)) * state.yield_mult
+    return FORAGE_MUSHROOM * y, FORAGE_FRUIT * y
+
+
 def biwolf_lure(guild, party):
     """Whether the Biwolf is on the party's trail: the tanner's job is out, his
     ambush is still unspent and the party carries `BIWOLF_MEAT` portions of meat."""
@@ -104,9 +112,9 @@ def hunt_stretch(state, rng=random, hour=None, lure=False):
         state.yield_hours += yield_now
         elapsed += 1
         if state.target == "shrooms":
-            if rng.random() < 0.10 * yield_now:
+            if rng.random() < FORAGE_MUSHROOM * yield_now:
                 state.shrooms_found += 1
-            if rng.random() < 0.15 * yield_now:
+            if rng.random() < FORAGE_FRUIT * yield_now:
                 state.fruit_found += 1
         if lure and hour is not None and not clock.daylight_at(hour + elapsed - 1):
             state.biwolf = True

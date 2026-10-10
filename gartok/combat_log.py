@@ -10,7 +10,7 @@ Rows (all carry `e`):
          every unit (`units`: static data, with the character as `persist.unit_to_dict`), the
          first `state` and the turn order.
   act    one decision: `n`, `round`, `actor` (index into `units`), `team`, `by` (who decided),
-         `action` (an Action id, "end_turn", "plant_flag", "plant_trap"), `target`
+         `action` (an Action id, "end_turn", "plant_flag", "plant_trap", "skip_traps"), `target`
          ({"unit": i} | {"cell": [x, y]}), `kw`, `ap`, `options` (what was legal), `ai`
          (what `ai.py` would have done in the same state, human rows only), `state` after it,
          the `log` lines it produced, and `winner` once the fight is decided. `new_units` adds

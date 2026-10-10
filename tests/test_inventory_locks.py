@@ -132,3 +132,46 @@ def test_group_distribute_load_delegates_and_respects_locks():
     g.distribute_load()
     assert a.has_item("Torch")
     assert len(b._base_inventory) >= 1
+
+
+def _two_quivers(charges=(0, 20)):
+    """Two Quiver rows (they differ in charges, so they never merge)."""
+    u = _bare()
+    u._base_inventory = []
+    for c in charges:
+        u.give_to_pack("Quiver", charges=c)
+    assert len(u._base_inventory) == 2
+    return u
+
+
+def test_lock_survives_taking_one_of_several_rows_of_the_same_name():
+    u = _two_quivers()
+    u.toggle_lock("Quiver")
+    assert u.locked_of("Quiver") == 2
+
+    u.take_from_pack(0)                               # the emptied 0/20 row leaves; one Quiver stays
+    assert u.count_of("Quiver") == 1
+    assert u.locked_of("Quiver") == 1                 # the lock follows what is left, not dropped to 0
+
+
+def test_a_spent_quiver_keeps_its_lock_through_the_battle_writeback():
+    u = _bare()
+    u._base_inventory = []
+    u.give_to_pack("Quiver", qty=2)
+    u.toggle_lock("Quiver")
+
+    u.quiver_charges = 0                              # peels one copy off the stack
+    assert u.count_of("Quiver") == 2 and u.locked_of("Quiver") == 2
+    u.take_from_pack(0)
+    assert u.locked_of("Quiver") == 1
+
+
+def test_distribute_load_keeps_a_lock_to_its_count_across_rows():
+    a, b = _bare(), _two_quivers()
+    a, b = b, a                                       # `a` holds the two Quivers
+    a.toggle_lock("Quiver")
+    a.locked_items["Quiver"] = 1                      # only one of the two is locked
+    unit_module.distribute_load([a, b])
+
+    assert a.count_of("Quiver") + b.count_of("Quiver") == 2
+    assert a.count_of("Quiver") >= 1 and a.locked_of("Quiver") == 1

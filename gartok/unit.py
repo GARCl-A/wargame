@@ -50,7 +50,7 @@ SAVE_DEFAULTS = {
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
     "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
     "hp_override": None, "racial_override": None, "dormant": False, "awareness_radius": 8,
-    "portrait_file": None,
+    "portrait_file": None, "afoot": False,
 }
 
 
@@ -103,6 +103,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
         self.consecutive_rest_hours = 0
         self.last_daily_luck_day = 0
+        self.afoot = False                             # the player has this member walk beside the wagon
         self.dormant = False                           # authored NPC that sleeps until a foe comes within awareness_radius
         self.awareness_radius = 8
 
@@ -191,6 +192,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.natural_armor = d["natural_armor"]
         u._racial_override = d["racial_override"]        # creator-pinned racial level, or None
         u.dormant = d["dormant"]
+        u.afoot = d["afoot"]
         u.awareness_radius = d["awareness_radius"]
         u._apply_attributes()                            # the worn artifact is only known now
         u._derive_combat()                               # rebuilds hp_max from _hp_roll

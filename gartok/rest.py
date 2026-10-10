@@ -31,6 +31,7 @@ class RestPlan:
     capped: bool = False               # the floor, not full health, ended it
     reason: str | None = None          # why it is unavailable
     worst: tuple | None = None         # (name, hp, hp_max) of the one furthest from full at the end
+    short_days: int = 0                # when capped: the days of rations still missing to reach full health
 
     @property
     def available(self):
@@ -127,7 +128,7 @@ def until_full(guild, group):
     if hours <= 0:
         return RestPlan(reason="the group is already down to its last day of rations")
     return RestPlan(hours=hours, meals=allowed if capped else wanted, capped=capped,
-                    worst=_worst(camp.members, heals, hours))
+                    worst=_worst(camp.members, heals, hours), short_days=wanted - allowed if capped else 0)
 
 
 def _blocked(group):

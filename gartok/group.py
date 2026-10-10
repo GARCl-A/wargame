@@ -243,10 +243,11 @@ class Group:
         """Who rides which wagon, `{wagon uid: [unit]}`. A wagon seats people by
         weight: each one counts as their body plus everything they carry, against
         what the wagon draws less its own cargo. The slowest are seated first, onto
-        the wagon with the most room left; whoever does not fit walks."""
+        the wagon with the most room left; whoever does not fit walks, and so does
+        anyone the player marked `afoot`."""
         room = {w.uid: w.budget - w.stash.load for w in self.wagons}
         seats = {w.uid: [] for w in self.wagons}
-        for unit in sorted(self.members, key=lambda u: u.speed):
+        for unit in sorted((u for u in self.members if not u.afoot), key=lambda u: u.speed):
             weight = unit.ride_weight
             uid = max(room, key=room.get, default=None)
             if uid is not None and room[uid] >= weight:

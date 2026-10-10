@@ -745,6 +745,8 @@ class MapScreen(Screen):
             return {"type": "button", "key": key, "label": f"{label}  ·  {meals}", "gap_before": 4}
         who = f"{plan.worst[0]} {plan.worst[1]}/{plan.worst[2]}"
         head = "UNTIL RATIONS HIT THE FLOOR" if plan.capped else label
+        if plan.capped:
+            who += f"  ·  {plan.short_days} more day{'s' * (plan.short_days != 1)} of rations to be full"
         return {"type": "button", "key": key, "gap_before": 4,
                 "label": f"{head}  ·  {rest.format_hours(plan.hours)}",
                 "sub": f"{meals}  ·  {who}"}

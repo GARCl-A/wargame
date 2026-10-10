@@ -87,18 +87,12 @@ class StablesScreen(Screen):
             g.remove_wagon(sold)
             self._receive(_resale(sold.price))
             self.notice = f"sold the {sold.kind.lower()}."
-        elif kind == "hitch":
-            animal = g.herd[int(arg)]
-            g.next_hitch(animal)
-            pulled = g.pulling(animal)
-            self.notice = (f"the {animal.species} pulls {self._wagon_label(pulled)}." if pulled
-                           else f"the {animal.species} is unhitched.")
         elif kind == "buy":
             self._buy_animal(arg)
-        elif kind in ("sell", "fit", "unfit"):
+        elif kind in ("sell", "fit"):
             idx, _, tack = arg.partition(":")
             animal = g.herd[int(idx)]
-            {"sell": self._sell_animal, "fit": lambda a: self._fit(a, tack), "unfit": self._unfit}[kind](animal)
+            {"sell": self._sell_animal, "fit": lambda a: self._fit(a, tack)}[kind](animal)
 
     def _buy_animal(self, species):
         animal = animals.Animal(species)
@@ -114,13 +108,6 @@ class StablesScreen(Screen):
             animal.give_to_tack(tack)
             self.group.hitch_idle()
             self.notice = f"the {animal.species} now wears a {tack}."
-
-    def _unfit(self, animal):
-        if animal.stash.items:
-            self.notice = f"unload the {animal.species} first."
-            return
-        self._keeper.give_to_pack(animal.take_tack())
-        self.notice = f"took the tack off the {animal.species}."
 
     def _sell_animal(self, animal):
         if animal.stash.items:
@@ -150,7 +137,7 @@ class StablesScreen(Screen):
         self._hot = False
 
         text(screen, F["titleb"], "THE STABLES", (m, m - 2), T.TX)
-        text(screen, F["body"], "animals, wagons and tack  ·  they belong to the group that buys them",
+        text(screen, F["body"], "buy and sell animals, wagons and tack  ·  hitching and riding are managed on the group's gear screen",
              (m, m + 30), T.TX_MUTED)
         text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (screen.get_width() - m, m + 4), T.BRASS, right=True)
 
@@ -207,15 +194,7 @@ class StablesScreen(Screen):
             text(screen, F["bodyb"], a.species, (x, y + 4), T.TX)
             bx = x + w - 130
             self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"sell:{i}", f"SELL · {fmt_money(_resale(a.price))}")
-            if a.tack:
-                bx -= 138
-                self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"unfit:{i}", "TAKE TACK OFF")
-                if a.role == "draft" and g.wagons:
-                    pulled = g.pulling(a)
-                    bx -= 138
-                    self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"hitch:{i}",
-                                    f"→ {self._wagon_label(pulled).upper()}" if pulled else "HITCH")
-            else:
+            if not a.tack:
                 for tack in (animals.HARNESS, animals.PACK_SADDLE):
                     price = _tack_price(tack)
                     bx -= 138

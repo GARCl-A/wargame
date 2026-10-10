@@ -67,6 +67,7 @@ class BattleScreen(Screen):
         self._actions_max_scroll = 0
         self._hotkey_actions = []
         self.buttons = []
+        self._skip_traps_rect = None
         self.log_scroll = 0                   # lines scrolled up from the live bottom
         self._log_len_seen = 0
 
@@ -288,6 +289,10 @@ class BattleScreen(Screen):
                     self._action_click(key)
                 return
 
+        if (b.awaiting_trap and self._skip_traps_rect is not None
+                and self._skip_traps_rect.collidepoint(px)):
+            b.skip_traps()
+            return
         tile = self._tile_at_px(px)
         if tile is None:
             return
@@ -670,6 +675,8 @@ class BattleScreen(Screen):
         trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
         banner = f"TRAP PLACEMENT  ·  {trapper.name} is placing a {trap_type}"
         board_render.draw_placement(screen, self.F, self.view, candidates, hover, banner)
+        self._skip_traps_rect = pygame.Rect(self.view.rect.right - 168, self.view.rect.y + 38, 160, 28)
+        ui_primitives.draw_button(screen, self.F, self._skip_traps_rect, "PLACE NOTHING", mpos=self.mouse)
 
     def _draw_tactical(self, screen):
         b = self.battle

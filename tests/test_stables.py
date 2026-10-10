@@ -88,18 +88,11 @@ def test_tack_that_cannot_be_afforded_is_not_offered():
     assert f"fit:0:{animals.HARNESS}" not in keys
 
 
-def test_taking_tack_off_returns_it_to_the_leaders_pack():
-    scr, g, _ = _stables(0, pets=[animals.Animal("Donkey", tack=animals.HARNESS)])
-    scr._click("unfit:0")
-    assert g.herd[0].tack is None and g.leader.count_of(animals.HARNESS) == 1
-
-
-def test_a_loaded_animal_has_to_be_unloaded_before_it_is_sold_or_unfitted():
+def test_a_loaded_animal_has_to_be_unloaded_before_it_is_sold():
     pet = animals.Animal("Donkey", tack=animals.PACK_SADDLE)
     pet.stash.put("Rope")
     scr, g, _ = _stables(0, pets=[pet])
     scr._click("sell:0")
-    scr._click("unfit:0")
     assert g.herd == [pet] and pet.tack == animals.PACK_SADDLE
     assert "unload" in scr.notice
 
@@ -149,18 +142,6 @@ def test_a_new_wagon_takes_the_idle_harnessed_animal():
     assert g.pulling(pet) is g.wagons[0]
 
 
-def test_the_hitch_button_moves_an_animal_between_wagons_and_back_to_none():
-    pet = animals.Animal("Ox", tack=animals.HARNESS)
-    scr, g, _ = _stables(0, wagon.Wagon(), pets=[pet])
-    g.add_wagon(wagon.Wagon("Carriage"))
-    g.hitch_idle()
-    assert "hitch:0" in _keys(scr)
-    scr._click("hitch:0")
-    assert g.pulling(pet) is g.wagons[1] and "carriage" in scr.notice
-    scr._click("hitch:0")
-    assert g.pulling(pet) is None and "unhitched" in scr.notice
-
-
 def test_selling_a_wagon_pays_its_own_price_and_frees_its_animals():
     pet = animals.Animal("Ox", tack=animals.HARNESS)
     scr, g, _ = _stables(0, wagon.Wagon("Carriage"), pets=[pet])
@@ -175,3 +156,10 @@ def test_every_species_is_for_sale_with_its_loads():
     assert {f"buy:{s}" for s in data.LIVESTOCK} <= _keys(scr)
     scr._click("buy:Horse")
     assert scr.group.herd[0].species == "Horse" and a.money == 10_000 - animals.PRICE["Horse"]
+
+
+def test_walking_beside_the_wagon_survives_a_save():
+    from gartok import persist
+    u = Unit("player")
+    u.afoot = True
+    assert Unit.from_save(persist.unit_to_dict(u)).afoot is True

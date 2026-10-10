@@ -904,11 +904,15 @@ different questions:
   with fixed attributes whose Strength sets what they carry) and wagons (a cart
   for two people's worth of load, a carriage for six). The tack an animal wears
   decides its job: a Pack Saddle carries cargo on its back, a Harness lets it
-  pull. A harnessed animal is hitched to one wagon (the stables' HITCH button, or
+  pull. A harnessed animal is hitched to one wagon (the HITCH button on its column of the gear screen, or
   dragging its header onto the wagon's on the gear screen; dropping on a full
   wagon swaps the two animals), and a wagon holds no more than the animals
   hitched to it can draw, up to its box. Cargo on animals and wagons never goes
-  into a fight, everyone eats from it, and it is lost with the group.
+  into a fight, everyone eats from it, and it is lost with the group. People ride
+  by weight, the slowest first, and every rider takes room the cargo could use;
+  the RIDES button on a member's column of the group's gear screen makes them walk
+  beside the wagon instead. The stables only buy and sell; hitching (the button on a
+  draft animal's column, or dragging it onto the wagon) is done on the gear screen too.
 - **Broken wagons.** A vehicle has Hit Dice of d8 and no Constitution at all: a
   cart is 1 HD (5 HP), a carriage 3 HD (13 HP), the mean of the dice, never
   rolled. Every 100 units of map distance a group travels costs each of its

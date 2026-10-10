@@ -78,25 +78,25 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
 - **"Found the guild" screen looks off the game's identity.** Check whether `vocation_screen.py` and the
   identity phase of `draft_screen.py` are on the `gartok/ui/` kit; migrate what is not (the charter item
   under *Needs more information* lists the presentation work).
-- **Guild > Members: show each member's recruit limit.** `recruit.recruit_capacity` exists but the tab
+- **Guild > Members: show each member's recruit limit.** `recruit.capacity` / `recruit.slots_free` exist but the tab
   does not say how many a character may still sponsor.
 - **The Wilds screen: group HP, load and work XP.** Show the HP of every character (the group as a
   whole matters, not each ration), the group's carrying capacity, and the hours-of-XP bar that today
   appears only in the log, on the character's card (there is horizontal room).
-- **Combat: no marker for a defending unit.** Nothing on the board or in the unit card says that a
-  unit is in Defend (`conditions.Defending`). Add a marker on the token and a line in the info panel.
-- **Hunt: show the forage chance.** The expected meat is shown (it is deterministic), but the chance of
-  gathering mushrooms and fruit while hunting is not. Show it next to the meat estimate.
-- **Rest "until full": say what is missing.** The player cannot tell what a rest still needs
-  (rations, time, medicine) to heal to full. Show the missing piece on the rest screen (see `rest.py`).
-- **Bank screen has no scroll.** To manage the chest the player has to show and hide members one by one.
-  Add scroll to the member list (and the chest side if it overflows).
 - **Market: a whole-group view.** A toggle between the current per-member view and one that lists the
   whole group's inventory at once; selling the fifth or sixth member's items today means scrolling
   sideways. It can reuse the cargo display the Gear screen already has.
 - **Guild > Members "Manage Gear" opens a second equipment screen.** It differs from "Manage Gear &
   Quests" and has less than it. Open the group's Manage Gear & Quests screen instead and drop the
   duplicate screen.
+- **Ambush loot: what is the chance of a scroll or a chest?** The player cannot tell. Read the drop
+  tables of the ambush fights and show the chance (or say it in the tutorial); the hunt screen now prints its forage chance, do the same.
+- **Loot screen has no horizontal scroll.** With a big group the columns overflow and the right-hand
+  members are out of reach (see the Bank item above: build the sideways scroll once).
+- **Market: an autosell list.** Mark item kinds once and have SELL ALL / the sale pick them, instead of
+  selecting the same items every visit.
+- **Bank screen does not show the wagon or the donkey.** The group's wagons and animals (and what they
+  carry) are missing there, as on the other pack screens.
 
 ## Architecture debt
 
@@ -109,7 +109,7 @@ pointed to, not repeated.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
 - **Big screen files.** `app.py` (1240 lines, 108 `def`s) is the wiring hub; `map_screen.py`,
-  `market_screen.py` and `battle_screen.py` run 865-1024 (`battle_screen.py` is past 1000 since the
+  `market_screen.py` and `battle_screen.py` run 877-1046 (`battle_screen.py` is past 1000 since the
   per-team controllers). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
@@ -179,7 +179,8 @@ pointed to, not repeated.
     a controller per team (human or AI) drives `BattleScreen`; the Combat lab (Editor menu,
     `combat_lab.py`) sets up Scrapper, champion, brawl, capture the flag, Ribbit Brothers, Wilds
     and Old Road ambushes and the Ancient Ruins and logs into `combat_lab/<date>/<name>.jsonl`;
-    campaign fights log into `saves/<world>/combat_logs/` while `record_play` is ON;
+    campaign fights log into `saves/<world>/combat_logs/` while `record_play` is ON (git does not track
+    `saves/`: run `scripts/archive_combat_logs.py` after playing and commit `combat_lab/campaign/`);
     `scripts/combat_analysis.py` reads them (action mix, how often a person matched the AI, a
     replay). What is left, in order:
     1. **Play the fights** (the user, in the Combat lab). **Scrapper at level 0 is done**: 10 fights,
@@ -207,10 +208,14 @@ pointed to, not repeated.
        without a blow waits one turn instead (hunts 82 to 82%, the day-49 hunt 15 to 2%, the campaign Pit
        and champion bouts up 8 to 10 points on one or three fights). Neither moved the hunts beyond noise
        (a fight swings about 8 points between runs).
-    4. **Read the second campaign save** (`saves/a846750e/combat_logs/`, 5 logs so far: three Scrapper, a champion bout
-       and a hunt, days 5-14; record_play ON): `combat_analysis.py` for the mix, `combat_pairs.py` for the AI replaying
-       each fight, and the fights the AI loses that the person won. First check whether a lost
-       fight or a wipe writes its `end` row (the first save's 28 logs are all wins).
+    4. **Second campaign save, read (2026-10-10)** (`combat_lab/campaign/GreenSex-a846750e/`, 34 logs, days 5-57,
+       record_play ON): the person won 32 of 34 (25 of 25 hunts, 3 of 3 ambushes); `combat_pairs.py`
+       (20 trials) has the AI winning those hunts 96% and the ambushes 100%, so **hunts and ambushes are no
+       longer where the AI trails**. The gap is the arena: Defend the Title, AI 15% (the person 1 of 2; the
+       lost bout, day 45, is a 1-on-1 against a 32 HP Throgdrokor, the AI wins it 0 of 20), the Scrapper 52%
+       (the person 2 of 3; day 6 at 20%) and the champion 85%. **Losses do write their `end` row** (the two
+       lost fights are in the logs). Next: study the duels (Defend the Title, the day-6 Scrapper), where
+       one decision (delay, defend, when to close in) decides a 1-on-1.
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
     its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in

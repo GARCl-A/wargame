@@ -94,6 +94,10 @@ fitness = (
 ## 6. Implementation Roadmap
 
 ### Phase 1: Headless Campaign Runner (~1 - 2 hours)
+**Status: done, as `scripts/economy_guild.py`** (not `sim_campaign.py`): a headless 30-day guild run on
+the real `campaign.advance`, with hand-written policies. Phase 2 is the open part; see the
+*Sim policies that find the opportunities themselves* item in [backlog.md](backlog.md).
+
 - Create `sim_campaign.py` (analogous to [sim_test.py](../../sim_test.py)).
 - Initialize a `Guild`, assign basic orders, call `campaign.advance()`, and simulate 30 campaign days in a simple loop without GUI.
 
@@ -130,5 +134,5 @@ fitness = (
 
 To start development when the time is right:
 1. Review this document.
-2. Begin with **Phase 1** by creating a minimal headless campaign runner script.
-3. Validate that 30 campaign ticks complete cleanly without UI dependencies.
+2. Phase 1 exists (`scripts/economy_guild.py`); begin with **Phase 2**, a `CampaignAgent` that picks orders from a genome.
+3. Validate that 30 campaign ticks complete cleanly without UI dependencies (the runner already does).
