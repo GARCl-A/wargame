@@ -23,6 +23,7 @@ from .ui.tokens import T
 
 ENEMY_DELAY = 450  # ms between AI actions
 
+FELLED_STREAK_SECONDS = 1.0     # longest pause that still counts as the same run of clicks
 ARROW_STEPS = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0),
                pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
 
@@ -53,6 +54,7 @@ class BattleScreen(Screen):
         self.inspect = None
         self.inspect_open = True
         self._armed = None                    # enemy a repeat click on it will now attack
+        self._felled = None                   # (actor, body, time of last click): a click streak that outlived its target
         self.enemy_timer = 0
         self.aim_action = None
         self.height_prompt = None
@@ -337,6 +339,7 @@ class BattleScreen(Screen):
                                 and self.aim_action.can(b, actor, u)), clicked)
             if clicked is not None and self.aim_action.can(b, actor, clicked):
                 self.aim_action.execute(b, actor, clicked)
+                self._note_felled(actor, clicked)
                 self.aim_action = None
                 self._after_player_action()
             return
@@ -347,14 +350,30 @@ class BattleScreen(Screen):
                 return
             if actions.ATTACK.can(b, actor, clicked):
                 actions.ATTACK.execute(b, actor, clicked)
+                self._note_felled(actor, clicked)
                 self._armed = None
                 self._after_player_action()
+            return
+        if clicked is not None and self._felled_streak(actor, clicked):
             return
         if clicked is None or not clicked.alive:        # a body on the floor does not block the cell
             dest = self._anchor_of_click(actor, tile)
             if dest is not None:
                 actions.MOVE.execute(b, actor, dest)
                 self._after_player_action()
+
+    def _note_felled(self, actor, target):
+        if not target.alive:
+            self._felled = (actor, target, time.monotonic())
+
+    def _felled_streak(self, actor, body):
+        """True while the player keeps clicking the body they just brought down: those
+        clicks were meant for the attack, and a late one would walk onto the cell."""
+        now = time.monotonic()
+        streak = (self._felled is not None and self._felled[:2] == (actor, body)
+                  and now - self._felled[2] <= FELLED_STREAK_SECONDS)
+        self._felled = (actor, body, now) if streak else None
+        return streak
 
     def _step_with_arrows(self):
         """One step in the direction the arrows of the chord add up to: two
