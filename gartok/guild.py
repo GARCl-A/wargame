@@ -115,7 +115,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  ancient_ruins_discovered=False, leaving=None,
-                 ox_fields_discovered=False, ox_trails=0, vocation=None):
+                 ox_fields_discovered=False, ox_trails=0, vocation=None, recruit_seen=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -144,7 +144,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.prison_week = prison_week
         self.prison_pool = prison_pool
         self.prison_blocked = prison_blocked if prison_blocked is not None else []
-        
+        self.recruit_seen = dict(recruit_seen or {})   # {"taverna"|"prison": week last visited}, drives the map's "!"
+
         self.jailed = list(jailed or [])      # [(Unit, released_day), ...] -- see the docstring above
         # the City property -- see the docstring above and economy.CITY_PROPERTY_*
         self.house = house if house is not None else CityProperty()

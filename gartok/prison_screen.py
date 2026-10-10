@@ -18,6 +18,7 @@ class PrisonScreen(TavernaScreen):
     EMPTY_LIST = "The cells are empty right now.\nCome back when the crowd changes."
     REJECTED_LABEL = "WALKED FREE THIS WEEK"
     PITCH_BONUS = (BAIL_BONUS,)
+    SEEN_KEY = "prison"
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
         pool = list(candidates) if candidates is not None else recruit.refresh_prison_pool(guild)

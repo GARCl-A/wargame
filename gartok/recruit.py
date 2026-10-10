@@ -160,6 +160,18 @@ def refresh_pool(guild):
     return guild.taverna_pool
 
 
+SEEN_FUNCTIONS = {"recruit": "taverna", "prison": "prison"}   # node function id -> `recruit_seen` key
+
+
+def mark_seen(guild, pool_key):
+    guild.recruit_seen[pool_key] = current_week(guild.clock)
+
+
+def has_new_faces(guild, pool_key):
+    """True while the pool has turned over since the guild last walked in."""
+    return guild.recruit_seen.get(pool_key) != current_week(guild.clock)
+
+
 def barred(guild, candidate, recruiter):
     """True if `recruiter` already failed to talk `candidate` into it this week."""
     return [candidate.uid, recruiter.uid] in guild.taverna_blocked

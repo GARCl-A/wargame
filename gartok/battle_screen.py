@@ -80,7 +80,10 @@ class BattleScreen(Screen):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and self._is_player_turn():
                 self.aim_action = None
-                self.battle.end_turn()
+                b = self.battle
+                if actions.DEFEND.can(b, b.active):
+                    actions.DEFEND.execute(b, b.active)
+                b.end_turn()
             elif event.key == pygame.K_TAB and self._is_player_turn():
                 self.action_tab = "utility" if self.action_tab == "combat" else "combat"
                 self.actions_scroll = 0
@@ -499,7 +502,7 @@ class BattleScreen(Screen):
             return ("grab the enemy flag and bring it home to win  ·  "
                     "guard your own, and whoever's carrying it"), T.TX_MUTED
         else:
-            return "green square: move  ·  enemy: attack  ·  space: end", T.TX_MUTED
+            return "green square: move  ·  enemy: attack  ·  space: defend and end", T.TX_MUTED
 
     def _cell_rect(self, cx, cy):
         return self.view.cell_rect(cx, cy)

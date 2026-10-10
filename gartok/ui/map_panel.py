@@ -134,6 +134,12 @@ def draw_map_node(surf, F, key, node, p, selected=False, icon_fn=None):
         pygame.draw.polygon(surf, T.INK, [(x, y - 7), (x - 6, y + 5), (x + 6, y + 5)], 2)
     if selected:
         pygame.draw.circle(surf, T.BRASS, (x, y), NODE_R + 7, 2)
+    if node.get("alert"):
+        bx, by = x + NODE_R, y - NODE_R
+        pygame.draw.circle(surf, T.BLOOD, (bx, by), 8)
+        pygame.draw.circle(surf, (250, 240, 230), (bx, by), 8, 1)
+        mark = F["inkb"].render("!", True, (250, 240, 230))
+        surf.blit(mark, mark.get_rect(center=(bx, by)))
 
     lab = F["inkb"].render(node["name"], True, T.INK)
     r = lab.get_rect(midtop=(x, y + NODE_R + 6))

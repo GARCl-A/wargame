@@ -145,3 +145,18 @@ def test_clicking_a_cell_with_a_downed_body_walks_onto_it_and_takes_the_flag_und
     screen._click(screen.view.cell_rect(*foe.pos).center)
     assert actor.pos == foe.pos
     assert battle.flag_carrier["enemy"] is actor
+
+
+def test_space_defends_with_the_points_left_then_ends_the_turn():
+    scr, batt = _screen()
+    me = batt.player_units[0]
+    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
+    assert me.defending and batt.active is not me
+
+
+def test_space_just_ends_the_turn_when_defend_is_not_possible():
+    scr, batt = _screen()
+    me = batt.player_units[0]
+    me.ap = 0
+    scr.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
+    assert not me.defending and batt.active is not me

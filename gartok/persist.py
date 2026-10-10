@@ -213,6 +213,7 @@ PAYLOAD_DEFAULTS = {
     "shops": {}, "total_spent": 0, "items_sold_kinds": [], "missions": [],
     "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
+    "recruit_seen": {},
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True,
 }
@@ -273,6 +274,7 @@ def _payload(guild, kind, label):
         "prison_pool": ([unit_to_dict(u) for u in guild.prison_pool]
                          if guild.prison_pool is not None else None),
         "prison_blocked": guild.prison_blocked,
+        "recruit_seen": guild.recruit_seen,
         "jailed": [{"unit": unit_to_dict(u), "released_day": day}
                    for u, day in guild.jailed],
         "tutorial_seen": sorted(guild.tutorial.seen),
@@ -349,6 +351,7 @@ def load_game(world, save_id=CURRENT):
                  prison_week=payload["prison_week"],
                  prison_pool=[Unit.from_save(d) for d in p_pool] if p_pool is not None else None,
                  prison_blocked=payload["prison_blocked"],
+                 recruit_seen=payload["recruit_seen"],
                  jailed=[(Unit.from_save(d["unit"]), d["released_day"])
                          for d in payload["jailed"]],
                  leader=leader, leader_swaps_used=payload["leader_swaps_used"],

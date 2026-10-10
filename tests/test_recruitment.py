@@ -451,3 +451,18 @@ def test_no_slots_is_the_first_reason_even_when_the_language_is_missing_too():
     recruit.enlist(g, _person(2), r)
     stranger = _person(3, lang="Orque")
     assert recruit.pitch_block_reason(g, [r], stranger) == "no recruitment slots available"
+
+
+def test_map_flags_a_pool_that_turned_over_until_the_guild_walks_in():
+    from gartok.clock import Clock
+    from gartok.guild import Guild
+    from gartok.prison_screen import PrisonScreen
+    from gartok.taverna_screen import TavernaScreen
+    g = Guild([_person(1)], clock=Clock())
+    assert recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")
+    TavernaScreen(None, g, g.roster, None, lambda *a: None)
+    assert not recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")
+    PrisonScreen(None, g, g.roster, None, lambda *a: None)
+    assert not recruit.has_new_faces(g, "prison")
+    g.clock.advance_hours(24 * recruit.REFRESH_DAYS)
+    assert recruit.has_new_faces(g, "taverna") and recruit.has_new_faces(g, "prison")

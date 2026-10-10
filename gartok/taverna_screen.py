@@ -54,9 +54,11 @@ class TavernaScreen(Screen):
     EMPTY_LIST = "No one looking for work right now.\nCome back when the crowd changes."
     REJECTED_LABEL = "REJECTED THIS WEEK"
     PITCH_BONUS = ()                      # (value, label) mods added to every pitch roll
+    SEEN_KEY = "taverna"
 
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None):
         super().__init__()
+        recruit.mark_seen(guild, self.SEEN_KEY)
         self.fonts = fonts
         self._F = fonts if (isinstance(fonts, dict) and "body" in fonts) else ui_fonts()
         self.guild = guild

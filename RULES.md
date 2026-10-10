@@ -1248,6 +1248,8 @@ can still try.
   No money changes hands.
 - **The Prison** (`prison_screen.py`, at the City's `prison` node): a second,
   separate weekly pool (`recruit.refresh_prison_pool`) of minor criminals.
+  Both pools show a red "!" on their map node once they turn over, until the
+  guild next walks in (`recruit.has_new_faces`, `Guild.recruit_seen`).
   Unlike the Tavern, you must pay `recruit.bail_cost` — `(sum of the six
   attributes × (racial level + 1)) + 20` $ — before you can even pitch;
   the payment adds a **+2** bonus to the Charisma contest (their gratitude).

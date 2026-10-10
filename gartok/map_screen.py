@@ -69,6 +69,7 @@ from . import (
     node_functions,
     orders,
     ox,
+    recruit,
     rest,
     vocations,
     world,
@@ -212,7 +213,17 @@ class MapScreen(Screen):
     @staticmethod
     def _node_dict(n):
         return {"pos": n.pos, "name": n.name, "terrain": KIND_TERRAIN.get(n.kind, "rock"),
-                "kind": n.kind, "work": n.has("work")}
+                "kind": n.kind, "work": n.has("work"), "alert": False}
+
+    def _sync_node_alerts(self):
+        """A "!" on a node that has something new to do: the taverna or the
+        prison turned over its strangers since the guild last walked in."""
+        g = self.guild
+        for node in world.NODES:
+            d = self._nodes.get(node.id)
+            if d is not None:
+                d["alert"] = any(node.has(fn) and recruit.has_new_faces(g, key)
+                                 for fn, key in recruit.SEEN_FUNCTIONS.items())
 
     def _group_blocked(self, group):
         """True for the one group `self._pending_event` is paused on -- it
@@ -803,6 +814,7 @@ class MapScreen(Screen):
         groups = [self._group_dict(g) for g in self.guild.groups]
 
         visible_edges = [(a, b, w) for a, b, w in world.EDGES if a in self._nodes and b in self._nodes]
+        self._sync_node_alerts()
         self._minimap_box, self._minimap_params = draw_map(
             screen, F, mid, self._cam, self._nodes, visible_edges, WASH, self._region_r,
             groups, self.selected.gid, self.mouse, icon_fn=_icon_fn)
