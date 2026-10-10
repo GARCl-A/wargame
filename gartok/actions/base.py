@@ -186,7 +186,7 @@ def _envenom(battle, attacker, target):
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None):
     total = nat + bonus
-    ac = target.ac
+    ac = target.ac_vs(attacker)
     phalanx = _phalanxed(battle, target)
     if phalanx:
         ac += 1

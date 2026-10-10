@@ -364,6 +364,7 @@ _register(ItemDef(id="deck_of_cards", name="Deck of Cards", type=ItemType.TOOL, 
 _register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
 _register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.5, price=1))
 _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, rarity=ItemRarity.UNCOMMON, weight=1.0, price=60))
+_register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
 _register(ItemDef(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1))
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="map", name="Map", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
@@ -654,6 +655,7 @@ GOLD_ITEM = "Gold Coin"        # 100 $, only ever minted at the bank
 COIN_VALUE = {COIN_ITEM: 1, GOLD_ITEM: 100}
 LANTERN_ITEM = "Lantern"
 SIGNAL_HORN_ITEM = "Signal Horn"
+BIWOLF_LEATHER_ITEM = "Leather of Biwolf"
 AMMO_ITEM = "Quiver"
 FIRST_AID_ITEM = "First Aid Kit"
 ANTIDOTE_ITEM = "Antidote"
@@ -755,7 +757,11 @@ def item_tooltip(name: str) -> tuple[str, str]:
     elif it.type == ItemType.SHIELD:
         desc.append(f"Shield: +{it.ac} Armor Class when equipped in the off-hand.")
     elif it.type == ItemType.ARTIFACT:
-        desc.append("Artifact: worn in its own slot, it grants a combat action.")
+        if it.name == BIWOLF_LEATHER_ITEM:
+            desc.append("Artifact: worn in its own slot.")
+            desc.append("Passive: +1 AC against anything that is not a humanoid.")
+        else:
+            desc.append("Artifact: worn in its own slot, it grants a combat action.")
         if it.name == SIGNAL_HORN_ITEM:
             desc.append("Once per battle, 2 points: allies within 10 squares gain +2 initiative.")
     elif it.name == FIRST_AID_ITEM or it.id == "first_aid_kit":

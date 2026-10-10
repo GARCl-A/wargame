@@ -101,7 +101,7 @@ def test_hunt_screen_offers_the_interlude_after_a_won_ambush_then_wraps_up():
                      on_ambush=lambda s, pack: fired.append(s.hours_hunted),
                      on_done=lambda: fired.append("done"))
 
-    def scripted(state, rng=None):
+    def scripted(state, rng=None, **_):
         step = 3 if not state.fights else state.hours_left
         state.hours_left -= step
         state.hours_hunted += step

@@ -57,9 +57,12 @@ def quest_list(surf, F, area, quests, empty_label="No active quests."):
         text(surf, F["body_sm"], f"Accepted by {q['accepted_by']}", (r.x + T.S * 3, r.y + 40), T.TX_FAINT)
 
         days_left = q["days_left"]
-        dcol = T.BLOOD if days_left <= 1 else T.BRASS if days_left <= 3 else T.GREEN
-        text(surf, F["body"], f"{max(0, days_left)} day(s) left",
-             (r.right - T.S * 3, r.y + T.S * 2), dcol, right=True)
+        if days_left is None:
+            dcol, due = T.TX_MUTED, "no deadline"
+        else:
+            dcol = T.BLOOD if days_left <= 1 else T.BRASS if days_left <= 3 else T.GREEN
+            due = f"{max(0, days_left)} day(s) left"
+        text(surf, F["body"], due, (r.right - T.S * 3, r.y + T.S * 2), dcol, right=True)
 
         progress = q["progress"]
         if progress is not None:

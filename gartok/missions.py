@@ -19,7 +19,7 @@ is what a place wants, authored, not rolled.
 
 from dataclasses import dataclass
 
-from . import chest, data, factions, recorder, world
+from . import chest, data, factions, items, recorder, world
 
 
 @dataclass(frozen=True)
@@ -32,10 +32,12 @@ class MissionTemplate:
     goal_item: str
     goal_qty: int
     reward: int             # copper, split evenly across the current group
-    deadline_days: int      # in-game days from acceptance to the deadline
+    deadline_days: int | None   # days from acceptance; None = no deadline
     tags: tuple[str, ...] = ()
     tag: str | None = None
     starting_item: str | None = None   # handed to the signer's pack the moment they accept
+    requires: str | None = None        # template id that must be done before this one is offered
+    retry_days: int | None = None      # a failed run is offered again this many days after the failure
 
     def __post_init__(self):
         tags_val = self.tags
@@ -57,9 +59,10 @@ class Mission:
     template_id: str
     unit_uid: str           # who accepted it -- see the module docstring
     accepted_day: int
-    deadline_day: int
+    deadline_day: int | None
     state: str = "active"    # active | done | failed
-    ambush_done: bool = False   # the trust mission's fortress ambush: fires once (campaign.py)
+    ambush_done: bool = False   # the one-shot ambush the mission springs (fortress, Biwolf): fires once
+    failed_day: int | None = None   # clock.day it failed, for `MissionTemplate.retry_days`
 
 
 TANNER_HIDES = MissionTemplate(
@@ -67,7 +70,21 @@ TANNER_HIDES = MissionTemplate(
     "The tanner wants 15 sqm of hide off anything with fur. The Wilds is "
     "thick with it, if you can bring down what's wearing it.",
     goal_item="1sqm Hide", goal_qty=15, reward=200, deadline_days=5,
-    tags=("economic", "tanner"),
+    tags=("economic", "tanner", "hides"), retry_days=7,
+)
+
+# The Biwolf is not on any road: he comes to the smell of meat, at night, to a
+# hunt in the Wilds (`hunt.biwolf_lure`). His leather is the goal; with no
+# deadline, it is open until delivered -- or failed for good the moment the
+# leather is lost (`fail_if_leather_lost`).
+TANNER_BIWOLF = MissionTemplate(
+    "tanner_biwolf", "tanner", "city", "The Biwolf's Hide",
+    "The tanner has heard of a wolf the size of a cart that hunts the Wilds by "
+    "night. It follows the smell of meat -- hunt after dark with fifteen "
+    "portions in your packs and it will find you, and its pack with it. Bring "
+    "me its leather.",
+    goal_item=items.BIWOLF_LEATHER_ITEM, goal_qty=1, reward=0, deadline_days=None,
+    tags=("economic", "tanner", "biwolf"), requires="tanner_hides",
 )
 
 # The Bankers' trust mission: accepting hands over a sealed chest
@@ -108,7 +125,8 @@ LIBRARY_ANCIENT_CODEX = MissionTemplate(
 )
 
 TEMPLATES = {
-    TANNER_HIDES.id: TANNER_HIDES, 
+    TANNER_HIDES.id: TANNER_HIDES,
+    TANNER_BIWOLF.id: TANNER_BIWOLF,
     TRUST_CHEST.id: TRUST_CHEST,
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
@@ -118,16 +136,37 @@ TEMPLATES = {
 
 def offers_at(guild, node_id):
     """Templates offered at `node_id` the guild hasn't ever accepted --
-    these missions are one-offs (not repeatable)."""
-    seen_ids = {m.template_id for m in guild.missions}
+    these missions are one-offs (not repeatable), except a failed one with
+    `retry_days`, offered again once that many days have passed."""
     out = []
     for t in TEMPLATES.values():
-        if t.node != node_id or t.id in seen_ids:
+        if t.node != node_id or not _open_to_take(guild, t):
             continue
         if t.id == "library_ancient_codex" and "library_initiate" not in guild.deeds_done:
             continue
+        if t.requires and not any(m.template_id == t.requires and m.state == "done"
+                                  for m in guild.missions):
+            continue
         out.append(t)
     return out
+
+
+def _runs(guild, template):
+    return [m for m in guild.missions if m.template_id == template.id]
+
+
+def retry_in(guild, template):
+    """Days until a failed `template` with `retry_days` can be taken again, 0 if it
+    can now, None if it never will (no retry, or not failed)."""
+    runs = _runs(guild, template)
+    if template.retry_days is None or not runs or any(m.state != "failed" for m in runs):
+        return None
+    last = max(m.failed_day if m.failed_day is not None else guild.clock.day for m in runs)
+    return max(0, last + template.retry_days - guild.clock.day)
+
+
+def _open_to_take(guild, template):
+    return not _runs(guild, template) or retry_in(guild, template) == 0
 
 
 def template_of(mission):
@@ -135,8 +174,8 @@ def template_of(mission):
 
 
 def accept(guild, unit, template):
-    m = Mission(template.id, unit.uid, guild.clock.day,
-               guild.clock.day + template.deadline_days)
+    deadline = None if template.deadline_days is None else guild.clock.day + template.deadline_days
+    m = Mission(template.id, unit.uid, guild.clock.day, deadline)
     guild.missions.append(m)
     recorder.emit("mission", what="accept", id=template.id, reward=template.reward, deadline=template.deadline_days)
     if template.starting_item:
@@ -151,6 +190,19 @@ def _current_group(guild, mission):
     return guild.group_of(unit) if unit is not None else None
 
 
+def days_left(guild, mission):
+    """Days until the deadline, or None for a mission that has none."""
+    if mission.deadline_day is None:
+        return None
+    return mission.deadline_day - guild.clock.day
+
+
+def _held(unit, item):
+    """`item` in the pack, plus the one worn in the artifact slot: a turn-in
+    counts an artifact the signer already put on."""
+    return unit.count_of(item) + (unit.equipped_artifact == item)
+
+
 def progress(guild, mission):
     """How many of the goal item the unit's *current* group is carrying."""
     group = _current_group(guild, mission)
@@ -161,7 +213,7 @@ def progress(guild, mission):
         from .library_screen import library_stock_dictionaries
         stock = set(library_stock_dictionaries(guild))
         return sum(sum(qty for name, qty in u._base_inventory if name.startswith("Dictionary of ") and name not in stock) for u in group.members)
-    return sum(u.count_of(item) for u in group.members)
+    return sum(_held(u, item) for u in group.members)
 
 
 def can_turn_in(guild, mission):
@@ -191,6 +243,9 @@ def turn_in(guild, mission):
                     left -= u.remove_named(name, min(left, qty))
         else:
             left -= u.remove_named(t.goal_item, left)
+            if left > 0 and u.equipped_artifact == t.goal_item:
+                u.take_from_artifact()
+                left -= 1
     n = len(group.members)
     base, rem = divmod(t.reward, n)
     for i, u in enumerate(group.members):
@@ -243,14 +298,43 @@ def pending_fortress_ambush(guild, group):
     return mission
 
 
+def pending_biwolf(guild):
+    """The Biwolf job, if it is active and has not sprung its ambush yet --
+    the Mission to mark `ambush_done` on (`hunt.biwolf_pack`), else None."""
+    mission = next((m for m in guild.missions
+                    if m.template_id == TANNER_BIWOLF.id and m.state == "active"), None)
+    return None if mission is None or mission.ambush_done else mission
+
+
+def _leather_held(guild):
+    if any(_held(u, items.BIWOLF_LEATHER_ITEM) for u in guild.roster):
+        return True
+    return (guild.bank.count_of(items.BIWOLF_LEATHER_ITEM)
+            + guild.house.stash.count_of(items.BIWOLF_LEATHER_ITEM)) > 0
+
+
+def fail_if_leather_lost(guild):
+    """After the Biwolf's ambush is over: if the leather is nowhere in the guild
+    (left on the field, never dropped), the job fails for good -- there is no
+    second ambush. Returns the failed Mission, else None."""
+    mission = next((m for m in guild.missions
+                    if m.template_id == TANNER_BIWOLF.id and m.state == "active"), None)
+    if mission is None or not mission.ambush_done or _leather_held(guild):
+        return None
+    mission.state = "failed"
+    mission.failed_day = guild.clock.day
+    return mission
+
+
 def expire_overdue(guild):
     """Fail every active mission whose deadline has passed -- called once a
     day from `Guild._daily_upkeep`. Returns the ones that just failed, for the
     caller to report."""
     failed = []
     for m in guild.missions:
-        if m.state == "active" and guild.clock.day > m.deadline_day:
+        if m.state == "active" and m.deadline_day is not None and guild.clock.day > m.deadline_day:
             m.state = "failed"
+            m.failed_day = guild.clock.day
             failed.append(m)
     return failed
 
@@ -258,9 +342,10 @@ def expire_overdue(guild):
 def mission_to_dict(m):
     return {"template_id": m.template_id, "unit_uid": m.unit_uid,
             "accepted_day": m.accepted_day, "deadline_day": m.deadline_day,
-            "state": m.state, "ambush_done": m.ambush_done}
+            "state": m.state, "ambush_done": m.ambush_done,
+            "failed_day": m.failed_day}
 
 
 def mission_from_dict(d):
     return Mission(d["template_id"], d["unit_uid"], d["accepted_day"],
-                   d["deadline_day"], d["state"], d["ambush_done"])
+                   d["deadline_day"], d["state"], d["ambush_done"], d.get("failed_day"))

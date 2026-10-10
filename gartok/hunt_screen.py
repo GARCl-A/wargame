@@ -93,7 +93,10 @@ class HuntScreen(Screen):
             self.result = hunt.grant_haul(self.state)
 
     def _do_stretch(self):
-        elapsed, ambushed = hunt.hunt_stretch(self.state)
+        clock = self.guild.clock
+        lure = hunt.biwolf_lure(self.guild, self.state.party)
+        self.state.biwolf = False
+        elapsed, ambushed = hunt.hunt_stretch(self.state, hour=clock.hour_of_day, lure=lure)
         res = self.on_tick(elapsed)
         self.stretch_events = res[0] if isinstance(res, tuple) else (res or [])
         self.state.party = [u for u in self.state.party if u in self.guild.roster]
@@ -102,7 +105,7 @@ class HuntScreen(Screen):
             return
         if ambushed:
             self.state.fights += 1
-            self.ambush_pack = hunt.wilds_pack()
+            self.ambush_pack = hunt.biwolf_pack(self.guild) if self.state.biwolf else hunt.wilds_pack()
             self.phase = "ambush"
             scen = self.state.node.scenario() if self.state.node.scenario else Scenario()
             self.autowin_estimator.request(self.state.party, self.ambush_pack,
@@ -276,7 +279,10 @@ class HuntScreen(Screen):
         F = self._F
         m = T.S * 3
         w = screen.get_width() - 2 * m
-        top = section(screen, F, "AMBUSH IN THE WILDS!", m, top, w)
+        top = section(screen, F, "THE BIWOLF!" if self.state.biwolf else "AMBUSH IN THE WILDS!", m, top, w)
+        if self.state.biwolf:
+            text(screen, F["body_sm"], "The smell of your meat drew it out of the dark.", (m, top), T.TX_FAINT)
+            top += 20
         n = len(self.ambush_pack or [])
         enemies_desc = ", ".join(u.name for u in (self.ambush_pack or []))
         text(screen, F["bodyb"], f"A pack of {n} hostile{'s' if n > 1 else ''} intercepted the party!", (m, top), T.BLOOD)

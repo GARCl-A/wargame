@@ -18,6 +18,11 @@ DAY_START = 6
 NIGHT_START = 18
 
 
+def daylight_at(hour):
+    """Whether the clock hour `hour` (0-23, wraps) is lit."""
+    return DAY_START <= hour % HOURS_PER_DAY < NIGHT_START
+
+
 class Clock:
     def __init__(self, seconds=0):
         self.seconds = int(seconds)
@@ -44,7 +49,7 @@ class Clock:
 
     @property
     def is_daylight(self):
-        return DAY_START <= self.hour_of_day < NIGHT_START
+        return daylight_at(self.hour_of_day)
 
     @property
     def phase(self):

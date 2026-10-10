@@ -19,7 +19,7 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 import random
 from dataclasses import dataclass
 
-from . import encounters
+from . import clock, data, encounters, missions, npc_lib
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0
@@ -31,6 +31,10 @@ HUNT_SHIFT_HOURS = (4, 8, 12, 16)   # lengths offered, like the lumber yard
 MEAT_ITEM = "Meat"
 HUNT_LEVEL = 3                   # the wilds' job level: real risk, so it keeps
                                  # paying work-XP well past where the lumber yard caps
+BIWOLF_SLUG = "biwolf"
+BIWOLF_MEAT = 15
+BIWOLF_ESCORT = 3
+BIWOLF_ESCORT_LEVEL = HUNT_LEVEL
 
 
 @dataclass
@@ -44,6 +48,7 @@ class HuntState:
     target: str = "meat"           # "meat" or "shrooms"
     shrooms_found: int = 0
     fruit_found: int = 0
+    biwolf: bool = False           # the ambush in progress is his
 
     @property
     def meat(self):
@@ -57,10 +62,28 @@ def party_yield(size):
     return sum(HUNT_PARTY_YIELD[:max(0, size)])
 
 
-def hunt_stretch(state, rng=random):
+def biwolf_lure(guild, party):
+    """Whether the Biwolf is on the party's trail: the tanner's job is out, his
+    ambush is still unspent and the party carries `BIWOLF_MEAT` portions of meat."""
+    if missions.pending_biwolf(guild) is None:
+        return False
+    return sum(u.count_of(MEAT_ITEM) for u in party) >= BIWOLF_MEAT
+
+
+def biwolf_pack(guild):
+    """The Biwolf and his escort. Spends the job's one ambush."""
+    missions.pending_biwolf(guild).ambush_done = True
+    escort = [encounters.build_enemy(BIWOLF_ESCORT_LEVEL, race_pool=data.WILD_POOL)
+              for _ in range(BIWOLF_ESCORT)]
+    return [npc_lib.load_npc(BIWOLF_SLUG)] + escort
+
+
+def hunt_stretch(state, rng=random, hour=None, lure=False):
     """Spend hours one at a time until an ambush hits or the daylight runs out.
     Mutates `state` (`hours_left` down, `hours_hunted` up). Returns
-    `(elapsed_hours, ambushed)`."""
+    `(elapsed_hours, ambushed)`. With `lure` and the clock's `hour` the stretch
+    starts at, the first hour spent after dark is the Biwolf's ambush
+    (`state.biwolf`) instead of a roll."""
     elapsed = 0
     chance = AMBUSH_CHANCE_PER_HOUR
     if any(u.has_talent("woodland_scout") for u in state.party):
@@ -77,6 +100,9 @@ def hunt_stretch(state, rng=random):
                 state.shrooms_found += 1
             if rng.random() < 0.15 * yield_now:
                 state.fruit_found += 1
+        if lure and hour is not None and not clock.daylight_at(hour + elapsed - 1):
+            state.biwolf = True
+            return elapsed, True
         if rng.random() < chance:
             return elapsed, True
     return elapsed, False

@@ -47,6 +47,7 @@ from . import (
     hunt,
     justice,
     matchup,
+    missions,
     node_functions,
     orders,
     persist,
@@ -995,7 +996,13 @@ class App:
                 hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
                 won = battle.winner == "player"
                 resume = won and hunt_state.party and hunt_state.hours_left > 0
-                nxt = self._resume_hunt if resume else self._finish_hunt
+                step = self._resume_hunt if resume else self._finish_hunt
+
+                def nxt():
+                    if hunt_state.biwolf and missions.fail_if_leather_lost(self.guild):
+                        self._map_notices.append(
+                            "The Biwolf's leather is lost -- the tanner's job is failed for good.")
+                    step()
                 if outcome.loot_pool and outcome.survivors:
                     self._save()
                     self.scene = LootScreen(self.ui_fonts, self.guild, outcome.survivors,

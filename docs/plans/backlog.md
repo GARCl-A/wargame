@@ -91,7 +91,10 @@ pointed to, not repeated.
   2. **The Legendary Ox:** a unique creature, its loot is a new `Legendary Horn` item. It is the
      target of the last mission of the chain, so it is placed by the mission, not random.
   3. **Mission chain from the Tanner** (2-3 missions on the hub's board, reputation-gated) whose
-     reward is learning the recipe; the last one points at the ox.
+     reward is learning the recipe; the last one points at the ox. *Built: 1 Fifteen Hides,
+     2 The Biwolf's Hide (night hunt with 15 Meat, `hunt.biwolf_lure`, Leather of Biwolf
+     artifact; no deadline). Missing: the ox job itself, offered with `requires="tanner_biwolf"`
+     (`MissionTemplate.requires`).*
   4. The recipe in `items.CRAFTING_RECIPES` (`craft_level.py` derives the level), then re-run
      `scripts/economy_report.py` (a new craft-for-sale line). Needs tests, tutorial and RULES line.
 - **Item properties: base material, source, rarity (design first, feeds the economy).** Every

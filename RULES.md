@@ -1336,9 +1336,23 @@ instance of a given template can be active guild-wide at a time
   resolve the signer's *current* group (`guild.group_of`) and count that
   whole group's packs, the same trick the shared food larder uses.
 - **The Tanner** (`tanner_screen.py`, at the City): wants 15× `1sqm Hide`,
-  pays $200, 5 days. Hides only drop from Wilds beasts, not from hours
+  pays $200, 5 days, +1 reputation with the Tanners. If the deadline passes it is
+  offered again 7 days after the failure (`MissionTemplate.retry_days`), until
+  it is done. Hides only drop from Wilds beasts, not from hours
   hunted; a finite shop stock (`economy.STOCK`, `Shop.stock`) keeps
   the hide from just being bought instead of hunted.
+- **The Tanner's second job, the Biwolf** (same screen, offered once the hides
+  are in; no deadline and no copper, the pay is the second reputation point with the Tanners).
+  While it is out, a hunt in the Wilds that spends an hour after dark
+  (18:00-06:00) with **15 Meat** in the hunters' packs is ambushed once by the
+  Biwolf (the level-10 NPC `npcs/biwolf.json`) and 3 ordinary wolves
+  (`hunt.biwolf_lure` / `hunt.biwolf_pack`); the job's `ambush_done` spends it.
+  The Biwolf always drops the **Leather of Biwolf** (`loot.UNIQUE_DROPS`), an
+  artifact worn in its own slot: +1 AC against anything not a humanoid
+  (`Combatant.ac_vs`). Handing it in (worn or in a pack) ends the job and banks
+  the `tanners_biwolf` deed; if the ambush is over and the leather is nowhere in the guild
+  (left on the field), the job fails for good (`missions.fail_if_leather_lost`,
+  no retry); it is the gate for the Legendary Ox job to come.
 - **The Apothecary** (`apothecary_mission_screen.py`, at the City): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`trust_screen.py` at the City,

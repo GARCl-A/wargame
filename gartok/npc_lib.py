@@ -48,7 +48,9 @@ def save_npc(unit, slug=None):
 def load_npc(slug):
     """-> Unit rebuilt from `npcs/<slug>.json` (raises if the file is gone)."""
     with open(npc_path(slug), encoding="utf-8") as fh:
-        return Unit.from_save(json.load(fh))
+        unit = Unit.from_save(json.load(fh))
+    unit.npc_slug = slug
+    return unit
 
 
 def delete_npc(slug):

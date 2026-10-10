@@ -4,7 +4,7 @@ and the market's finite stock on a few items (economy.STOCK)."""
 
 import random
 
-from gartok import missions
+from gartok import items, missions
 from gartok.guild import Guild
 from tests.helpers import Unit, economy
 
@@ -191,9 +191,17 @@ def test_completed_mission_shows_completed_label():
 
     hunters.node = "city"
     screen = TannerScreen(ui_fonts(), guild, hunters, None)
+    assert screen._template is missions.TANNER_BIWOLF       # the chain moves on
+    assert screen._offered
+    surf = pygame.Surface((800, 600))
+    screen.draw(surf)
+
+    biwolf = missions.accept(guild, signer, missions.TANNER_BIWOLF)
+    signer.give_to_pack(items.BIWOLF_LEATHER_ITEM)
+    missions.turn_in(guild, biwolf)
+    screen = TannerScreen(ui_fonts(), guild, hunters, None)
     assert screen._completed
     assert not screen._offered
-    surf = pygame.Surface((800, 600))
     screen.draw(surf)
 
 

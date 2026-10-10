@@ -180,7 +180,7 @@ class MissionOfferScreen(Screen):
             else:
                 progress = missions.progress(self.guild, m)
                 ready = progress >= t.goal_qty
-                days_left = m.deadline_day - self.guild.clock.day
+                days_left = missions.days_left(self.guild, m)
                 status_str = self.get_status_str(t, progress, ready, days_left)
                 status_lines = wrap(F["body"], status_str, qw)
                 detail_h = len(status_lines) * 24
@@ -259,8 +259,13 @@ class MissionOfferScreen(Screen):
                             text(screen, F["body_sm"], ln, (qx, qy), T.BRASS)
                             qy += 20
 
-                        if self._completed:
-                            label = "JOB COMPLETED"
+                        wait = missions.retry_in(self.guild, t)
+                        if wait:
+                            label = f"FAILED -- TRY AGAIN IN {wait} DAY(S)"
+                        elif self._completed:
+                            label = ("JOB COMPLETED" if any(x.template_id == t.id and x.state == "done"
+                                                            for x in self.guild.missions)
+                                     else "JOB FAILED")
                         elif offered:
                             label = self.accept_label
                         else:

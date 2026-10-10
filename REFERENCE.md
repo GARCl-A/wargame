@@ -231,6 +231,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Large Shortbow | 2 kg | -- |
 | Large Shortspear | 3 kg | -- |
 | Leather Jerkin | 4 kg | -- |
+| Leather of Biwolf | 1 kg | -- |
 | Letter of Receipt | 0.1 kg | -- |
 | Light Crossbow | 2.5 kg | -- |
 | Light Hammer | 1 kg | -- |
@@ -403,6 +404,15 @@ Scholars and linguists. They trade in knowledge.
 |---|---|---|---|
 | Library Initiate | Complete a task for the library. | +1 | -- |
 | Trusted Scholar | Complete a second task for the library. | +1 | library_initiate |
+
+### The Tanners
+
+The leatherworkers of the city. They pay for what the Wilds sheds.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| Fifteen Hides | Bring the tanner fifteen hides. | +1 | -- |
+| The Biwolf's Hide | Bring the tanner the leather of the Biwolf. | +1 | -- |
 
 ## Constants
 

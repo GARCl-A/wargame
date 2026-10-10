@@ -178,7 +178,7 @@ def test_hunt_stretch_keeps_another_groups_work_order_in_lockstep_with_the_clock
 
     from gartok import hunt
     orig = hunt.hunt_stretch
-    hunt.hunt_stretch = lambda state, rng=None: (4, False)  # a clean 4 h stretch, no ambush
+    hunt.hunt_stretch = lambda state, rng=None, **_: (4, False)  # a clean 4 h stretch, no ambush
     try:
         app.scene.hours = 4                                  # the setup-screen's chosen shift
         app.scene.state.hours_left = app.scene.hours          # what CONFIRM does before the stretch

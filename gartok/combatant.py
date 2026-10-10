@@ -409,6 +409,14 @@ class Combatant:
         total, _ = resolve_bonus(mods)
         return self.ac_base + total
 
+    def ac_vs(self, attacker):
+        """AC against one particular attacker: the Leather of Biwolf adds 1 against
+        anything that is not a humanoid."""
+        if (self.artifact_name == items.BIWOLF_LEATHER_ITEM
+                and attacker.char.race.get("kind", "humanoid") != "humanoid"):
+            return self.ac + 1
+        return self.ac
+
     @property
     def mental_defense(self):
         total, _ = resolve_bonus(self._condition_mods("mental_defense_mods"))

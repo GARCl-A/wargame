@@ -49,15 +49,16 @@ class MagicMissileAction(SpellAction):
             battle.log(" Critical miss!")
             return
         hit_score = atk + actor.mod_intelligence
-        if atk == 20 or hit_score >= target.ac:
+        ac = target.ac_vs(actor)
+        if atk == 20 or hit_score >= ac:
             dmg = data.roll(1, 4)
-            battle.log(f" Hit ({hit_score} vs AC {target.ac}) for {dmg} magic damage.")
+            battle.log(f" Hit ({hit_score} vs AC {ac}) for {dmg} magic damage.")
             was_up = target.alive
             target.take_damage(dmg, battle.log)
             if was_up and not target.alive and target.team != actor.team:
                 actor.credit_kill(target)
         else:
-            battle.log(f" Miss ({hit_score} vs AC {target.ac}).")
+            battle.log(f" Miss ({hit_score} vs AC {ac}).")
 
 
 class SleepAction(SpellAction):

@@ -717,7 +717,7 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                 "name": t.name,
                 "tags": getattr(t, "tags", ()),
                 "accepted_by": unit.name if unit else "Unknown",
-                "days_left": m.deadline_day - self.guild.clock.day,
+                "days_left": missions.days_left(self.guild, m),
                 "progress": progress,
             })
 

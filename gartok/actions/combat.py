@@ -47,12 +47,12 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
 
     if result == "miss" and nat != 1 and ab.on_attack_miss \
             and actor.spend_once("on_attack_miss"):
-        ab.on_attack_miss(battle, actor, target, bonus, target.ac, battle.log)
+        ab.on_attack_miss(battle, actor, target, bonus, target.ac_vs(actor), battle.log)
     elif result == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
         actor.use_luck(getattr(battle, "clock_day", 1))
         nat2 = d20()
         total2 = nat2 + bonus
-        hits = nat2 == 20 or total2 >= target.ac
+        hits = nat2 == 20 or total2 >= target.ac_vs(actor)
         battle.log(f"  Halfling Luck! {actor.name} rerolls attack: d20({nat2}) = {total2} -> "
                    + ("hit." if hits else "misses again."))
         if hits:
@@ -267,7 +267,7 @@ class Throw(Action):
             actor.use_luck(getattr(battle, "clock_day", 1))
             nat2 = d20()
             total2 = nat2 + bonus
-            hits = nat2 == 20 or total2 >= target.ac
+            hits = nat2 == 20 or total2 >= target.ac_vs(actor)
             battle.log(f"  Halfling Luck! {actor.name} rerolls throw: d20({nat2}) = {total2} -> "
                        + ("hit." if hits else "misses again."))
             if hits:

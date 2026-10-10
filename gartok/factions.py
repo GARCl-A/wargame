@@ -103,6 +103,8 @@ _FACTIONS = [
             "The coin-keepers of the city. They rent strongboxes and trade in property."),
     Faction("library", "The Library",
             "Scholars and linguists. They trade in knowledge."),
+    Faction("tanners", "The Tanners",
+            "The leatherworkers of the city. They pay for what the Wilds sheds."),
 ]
 
 _DEEDS = [
@@ -176,6 +178,14 @@ _DEEDS = [
              and {"bankers_good_for_business", "bankers_steady_customer",
                   "bankers_diverse_portfolio"} <= set(g.deeds_done))),
     
+    Deed("tanners_hides", "tanners", "Fifteen Hides",
+         "Bring the tanner fifteen hides.", rep=1,
+         check=lambda g, e: e.kind == "mission" and "hides" in e.tags),
+
+    Deed("tanners_biwolf", "tanners", "The Biwolf's Hide",
+         "Bring the tanner the leather of the Biwolf.", rep=1,
+         check=lambda g, e: e.kind == "mission" and "biwolf" in e.tags),
+
     # Library deeds
     Deed("library_initiate", "library", "Library Initiate",
          "Complete a task for the library.", rep=1,
