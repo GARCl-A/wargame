@@ -43,6 +43,17 @@ def feed_herd(herd, packs_for):
     return events
 
 
+def feed_hungry(herd, packs_for):
+    """Between daily meals: an animal already behind on food eats now if any meal is
+    at hand. Never penalises the ones that find none. Returns the animals fed."""
+    fed = []
+    for animal in herd:
+        if animal.unfed_days and any(take_ration(pack) is not None for pack in packs_for(animal)):
+            animal.unfed_days = 0
+            fed.append(animal)
+    return fed
+
+
 def _to_units(kg):
     return max(LOAD_UNIT, round(kg / LOAD_UNIT) * LOAD_UNIT)
 

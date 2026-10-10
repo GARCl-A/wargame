@@ -26,7 +26,7 @@ all (death, or peeled into a different group by a split).
 from uuid import uuid4
 
 from . import items
-from .animals import feed_herd
+from .animals import feed_herd, feed_hungry
 from .data import METERS_PER_SQUARE
 
 BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overextension`
@@ -140,12 +140,16 @@ class Group:
         """One day's feeding: each animal eats from its own load, then the rest of
         the group's stores, then any member's pack. They starve and die after
         `animals.STARVE_DAYS` unfed days. Returns the log lines."""
-        def packs_for(animal):
-            own = animal.stash.items
-            return [own, *(p for p in self.food_stores() if p is not own),
-                    *(u._base_inventory for u in self.members)]
+        return feed_herd(self.herd, self._packs_for_animal)
 
-        return feed_herd(self.herd, packs_for)
+    def feed_hungry_animals(self):
+        """The animals behind on food eat right now, without waiting for the day."""
+        return feed_hungry(self.herd, self._packs_for_animal)
+
+    def _packs_for_animal(self, animal):
+        own = animal.stash.items
+        return [own, *(p for p in self.food_stores() if p is not own),
+                *(u._base_inventory for u in self.members)]
 
     @property
     def display_name(self):

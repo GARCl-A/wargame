@@ -157,6 +157,25 @@ def test_a_meal_resets_an_animals_hunger():
     assert g.herd[0].unfed_days == 0 and g.members[0].count_of("Potato") == 0
 
 
+def test_eat_now_pass_feeds_a_hungry_animal_without_waiting_for_the_day():
+    guild, g = _group(_animal(), food=["Potato"])
+    g.herd[0].unfed_days = 1
+    events = guild.eat_now_pass(g.members)
+    assert g.herd[0].unfed_days == 0 and g.members[0].count_of("Potato") == 0
+    assert any("Donkey" in e for e in events)
+
+
+def test_eat_now_pass_leaves_a_fed_animal_and_a_foodless_one_alone():
+    guild, g = _group(_animal(), _animal(), food=["Potato"])
+    g.herd[0].unfed_days = 0
+    g.herd[1].unfed_days = 0
+    guild.eat_now_pass(g.members)
+    assert g.members[0].count_of("Potato") == 1
+    g.members[0]._base_inventory = []
+    g.herd[1].unfed_days = 2
+    assert guild.eat_now_pass(g.members) == [] and g.herd[1].unfed_days == 2
+
+
 def test_food_carried_by_the_group_rots_like_any_other():
     guild, g = _group(_animal(tack=PACK_SADDLE, cargo=["Meat"]), wagon=True, cargo=["Meat"] * 3, food=["Potato"] * 5)
     guild.pass_time(24 * 3)

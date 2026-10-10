@@ -996,7 +996,8 @@ meal).
   enters this.
 - **Rest** (the REST button on the map -- `orders.rest`, one group's order
   like travel or work): the selected group first **eats if it is hungry**
-  (`Guild.eat_now_pass`, own pack then the shared larder), then rests 1 h, 8 h
+  (`Guild.eat_now_pass`, own pack then the shared larder; an animal already
+  behind on food eats too, from the group's stores), then rests 1 h, 8 h
   or **until full**; the other groups keep their own orders and the clock runs
   through them. A rest that crosses midnight still has its daily meal, and the
   hungry eat again when it ends. *Until full* is HP only (not sickness): the time

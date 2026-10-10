@@ -246,8 +246,11 @@ class UpkeepMixin:
         (the caller runs `pass_time` itself, or is mid-tick already).
         `members` narrows it to one group (a rest order's); the default is
         everyone."""
-        fed = self._eat_now(self.roster if members is None else list(members), self._shared_larder)
-        if not fed:
+        members = self.roster if members is None else list(members)
+        fed = self._eat_now(members, self._shared_larder)
+        beasts = [a for g in self.groups if any(m in g.members for m in members)
+                  for a in g.feed_hungry_animals()]
+        if not fed and not beasts:
             return []
-        names = ", ".join(u.name for u in fed)
+        names = ", ".join([u.name for u in fed] + [a.species for a in beasts])
         return [f"Stopped to eat: {names} ({self.rations} rations left)."]
