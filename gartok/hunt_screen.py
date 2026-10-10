@@ -190,6 +190,8 @@ class HuntScreen(Screen):
         else:
             yields = (f"meat: {y / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party" if self.state.target == "meat"
                       else f"forage: {y:.2f}x the usual finds for the party")
+        if self.state.ambush_mult != 1.0:
+            yields += f"   ·   ambush chance x{self.state.ambush_mult:.2f} (cautious)"
         text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   {yields}",
              (m, m + 30), T.TX_MUTED)
 

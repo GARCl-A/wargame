@@ -6,7 +6,8 @@ what each group is doing with its slot, and what it holds.
   "slots": (used, total), "factions": [(name, rep)],
   "notices": [(text, tone)],              # tone: "warn" | "bad"
   "groups": [{"name", "where", "task", "size", "capacity", "over", "note"}],
-  "bases": [{"name", "status", "tone": "good" | "warn" | "bad" | "muted", "detail"}]}`.
+  "bases": [{"name", "status", "tone": "good" | "warn" | "bad" | "muted", "detail"}],
+  "vocation": {"name", "perk", "dormant"} or None}`.
 `note` is a short warning line or "". Fame is the sum of the factions' rep; the
 rule it feeds lives in `RULES.md` ("Fame and group slots").
 """
@@ -100,6 +101,18 @@ def _draw_base(surf, F, rect, b):
     text(surf, F["body_sm"], ellipsize(b["detail"], F["body_sm"], w), (x, y + T.S * 3), T.TX_MUTED)
 
 
+def _draw_vocation(surf, F, x, y, w, voc):
+    """The founding trade and its perk; returns the y below it."""
+    text(surf, F["bodyb"], voc["name"], (x, y), T.TX)
+    if voc["dormant"]:
+        caps(surf, F["microb"], "NO EFFECT YET", (x + w, y + 2), T.BLOOD, right=True)
+    y += T.S * 3
+    for line in wrap(F["body_sm"], voc["perk"], w):
+        text(surf, F["body_sm"], line, (x, y), T.TX_MUTED)
+        y += F["body_sm"].get_height()
+    return y
+
+
 def draw_guild(surf, F, rect, data, scroll, mpos):
     """Returns `{"content_h", "view_h"}` so the caller can clamp its scroll."""
     gap = T.S * 2
@@ -120,6 +133,10 @@ def draw_guild(surf, F, rect, data, scroll, mpos):
             y += nr.h + T.S
         if data["notices"]:
             y += T.S
+        voc = data.get("vocation")
+        if voc:
+            y = section(surf, F, "Vocation", main.x, y, main.w - T.S)
+            y = _draw_vocation(surf, F, main.x, y, main.w - T.S, voc) + T.S * 2
         y = section(surf, F, "Groups", main.x, y, main.w - T.S)
         for g in data["groups"]:
             _draw_group(surf, F, pygame.Rect(main.x, y, main.w - T.S, ROW_H), g)

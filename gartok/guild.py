@@ -115,7 +115,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  ancient_ruins_discovered=False, leaving=None,
-                 ox_fields_discovered=False, ox_trails=0):
+                 ox_fields_discovered=False, ox_trails=0, vocation=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -162,6 +162,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.claim_oven = claim_oven   # built from Stone Brick: cooks at the claim without a fire
         self.claim_garage = claim_garage or Garage(unlimited=True)   # wagons and animals parked at the claim
         self.leaving = dict(leaving or {})    # {uid: day the notice lapses} -- see cohesion.py
+        self.vocation = vocation              # vocations.VOCATIONS id picked at the draft, or None; never changes
         self.leader = leader                  # the guild's "who am I" -- None resolves below
         self.leader_swaps_used = leader_swaps_used   # 0 or 1: the one free deliberate change
         self.name = name or ""                # chosen at the draft; "" shows as "The Guild"

@@ -54,6 +54,7 @@ from . import (
     recorder,
     settings,
     tutorial_card,
+    vocations,
     wagon_watch,
     world,
 )
@@ -65,6 +66,7 @@ from .constants import fmt_money
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
 from .gear_screen import GearScreen
+from .group import NORMAL
 from .guild import Guild
 from .guild_screen import GuildScreen
 from .hunt_screen import HuntScreen, TrackScreen
@@ -87,6 +89,7 @@ from .tutorial import TutorialState
 from .ui.banner import set_player_color
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .vocation_screen import VocationScreen
 from .watch_screen import WatchScreen
 from .wilds_claim_screen import WildsClaimScreen
 
@@ -163,14 +166,18 @@ class App:
         self.world = None                    # minted in `_draft_done`, once there is a guild to name it
         self.guild = None
         self._draft_tutorial = TutorialState()
-        self.scene = DraftScreen(self.ui_fonts, on_done=self._draft_done,
-                                 tutorial=self._draft_tutorial)
+        self.scene = VocationScreen(self.ui_fonts, on_done=self._vocation_done,
+                                    tutorial=self._draft_tutorial)
 
-    def _draft_done(self, picks, leader, name, banner_color, banner_icon):
+    def _vocation_done(self, vocation):
+        self.scene = DraftScreen(self.ui_fonts, on_done=self._draft_done,
+                                 tutorial=self._draft_tutorial, vocation=vocation)
+
+    def _draft_done(self, picks, leader, name, banner_color, banner_icon, vocation=None):
         self.world = persist.new_world_id()
         self.guild = Guild(picks, node=world.START_NODE, leader=leader,
                            name=name, banner_color=banner_color, banner_icon=banner_icon,
-                           tutorial=self._draft_tutorial)
+                           tutorial=self._draft_tutorial, vocation=vocation)
         set_player_color(self.guild.banner_color)
         self._record_play()
         self._start_map()
@@ -272,7 +279,7 @@ class App:
             return
         wagon = next((w for w in group.wagons if w.broken), None)
         if wagon is None:
-            group.order = orders.travel(group, dest)
+            group.order = orders.travel(group, dest, vocations.travel_mult(self.guild))
             self._start_map()
             return
 
@@ -780,7 +787,8 @@ class App:
 
     def _begin_hunt(self, party, node, group, guarded, target="meat"):
         self._leave_outside(group, node, guarded)
-        self._hunt = hunt.HuntState(list(party), node, hours_left=0, target=target)
+        stance = group.stance if group is not None else NORMAL
+        self._hunt = hunt.begin(self.guild, party, node, stance, target=target)
         self.scene = self._hunt_screen("setup")
 
     def _hunt_screen(self, phase, autowin=True):

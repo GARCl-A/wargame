@@ -19,7 +19,7 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 import random
 from dataclasses import dataclass
 
-from . import clock, data, encounters, missions, npc_lib
+from . import clock, data, encounters, missions, npc_lib, vocations
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0
@@ -49,12 +49,23 @@ class HuntState:
     shrooms_found: int = 0
     fruit_found: int = 0
     biwolf: bool = False           # the ambush in progress is his
+    yield_mult: float = 1.0        # the guild's gathering bonus (vocations.gather_mult)
+    ambush_mult: float = 1.0       # the group's stance and the party's scouts (vocations.ambush_mult)
 
     @property
     def meat(self):
         if self.target == "meat":
             return int(self.yield_hours // HUNT_MEAT_HOURS)
         return 0
+
+
+def begin(guild, party, node, stance, hours_left=0, target="meat"):
+    """A fresh hunt of `party` for `guild`, with the guild's gathering perk and the
+    group's travel stance already folded in."""
+    scouts = any(u.has_talent("woodland_scout") for u in party)
+    return HuntState(list(party), node, hours_left=hours_left, target=target,
+                     yield_mult=vocations.gather_mult(guild),
+                     ambush_mult=vocations.ambush_mult(guild, stance, scout=scouts))
 
 
 def party_yield(size):
@@ -85,11 +96,8 @@ def hunt_stretch(state, rng=random, hour=None, lure=False):
     starts at, the first hour spent after dark is the Biwolf's ambush
     (`state.biwolf`) instead of a roll."""
     elapsed = 0
-    chance = AMBUSH_CHANCE_PER_HOUR
-    if any(u.has_talent("woodland_scout") for u in state.party):
-        chance /= 2.0
-
-    yield_now = party_yield(len(state.party))
+    chance = AMBUSH_CHANCE_PER_HOUR * state.ambush_mult
+    yield_now = party_yield(len(state.party)) * state.yield_mult
     while state.hours_left > 0:
         state.hours_left -= 1
         state.hours_hunted += 1

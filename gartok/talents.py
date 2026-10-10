@@ -201,8 +201,8 @@ _LIST = [
            "failed d20 test (in or out of combat).", race="Halfling",
            effects=(Effect("halfling_luck", 1),), icon="action/juggler"),
     Talent("woodland_scout", "racial", 1, "Woodland Scout",
-           "the forest whispers its secrets to you: greatly reduces the chance of "
-           "the group suffering an ambush in the wilds or on the road.", race="Elf",
+           "the forest whispers its secrets to you: while the group travels Cautious, "
+           "the chance of an ambush on the road or on a hunt is 10% lower.", race="Elf",
            effects=(Effect("woodland_scout", 1),), icon="action/run"),
     Talent("intimidating_presence", "racial", 1, "Intimidating Presence",
            "a terrifying physical presence: you may use your Strength modifier "

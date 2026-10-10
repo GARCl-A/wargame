@@ -6,7 +6,7 @@ the pool lacks (Leaders, Strong, Tough, etc.): the commission picks the
 archetypes, then the candidate it replaces. A replaced card that was picked
 leaves the squad.
 
-`on_done(picks, leader, name, banner_color, banner_icon)` -- the "identity"
+`on_done(picks, leader, name, banner_color, banner_icon, vocation)` -- the "identity"
 phase (name + banner, purely cosmetic -- see `Guild.name`/`banner_color`/
 `banner_icon` in `guild.py`) recolours every unit token live via
 `ui.banner.set_player_color` as the player picks, so the leader-pick cards that
@@ -17,7 +17,7 @@ run's one free way to change your mind).
 
 import pygame
 
-from . import artwork, data
+from . import artwork, data, vocations
 from .archetypes import (
     ARCHETYPES,
     generate_candidate,
@@ -61,7 +61,7 @@ _ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
 class DraftScreen(Screen):
     native = True
 
-    def __init__(self, fonts, on_done, tutorial=None):
+    def __init__(self, fonts, on_done, tutorial=None, vocation=None):
         super().__init__()
         self.F = fonts
         self.on_done = on_done
@@ -69,7 +69,9 @@ class DraftScreen(Screen):
         self.picks = []
         self.phase = "pick"        # "pick" | "identity"
         self.tokens = COMMISSION_TOKENS
-        self.pool = [Unit("player") for _ in range(POOL_SIZE)]
+        self.vocation = vocation
+        self.pool = ([Unit("player", race=r) for r in vocations.draft_pool(vocation, POOL_SIZE)]
+                     if vocation else [Unit("player") for _ in range(POOL_SIZE)])
         self.commissioned = {}     # id(unit) -> the archetypes that were called for it
         self.pending_labels = []   # a confirmed commission waiting for the card it replaces
         self.scroll = 0
@@ -243,7 +245,7 @@ class DraftScreen(Screen):
                 return
         if self.continue_rect and self.continue_rect.collidepoint(px) and self.leader_pick is not None:
             self.on_done(self.picks, self.leader_pick, self.guild_name or "The Guild",
-                         self.banner_color, self.banner_icon)
+                         self.banner_color, self.banner_icon, self.vocation)
 
     # ------------------------------------------------------------------ #
     # drawing                                                            #

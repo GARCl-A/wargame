@@ -70,9 +70,11 @@ from . import (
     orders,
     ox,
     rest,
+    vocations,
     world,
 )
 from .constants import fmt_money
+from .group import CAUTIOUS, NORMAL
 from .scenario import Scenario
 from .screen import Screen
 from .ui.camera import MapCamera
@@ -90,6 +92,8 @@ from .ui.tokens import fonts as ui_fonts
 ROSTER_FRAC, ROSTER_MIN, ROSTER_MAX = 0.22, 260, 360
 INSPECTOR_FRAC, INSPECTOR_MIN, INSPECTOR_MAX = 0.26, 320, 440
 WORK_HOURS = (4, 8, 12, 16)
+STANCE_NOTES = {NORMAL: "no change to the ambush chance",
+                CAUTIOUS: "fewer ambushes on the road and on hunts"}
 ADVANCE_HOURS = 24                      # the CTA's world-wide wait, once every group is garrisoned
 
 KIND_TERRAIN = {"town": "town", "market": "town", "tavern": "town",
@@ -265,7 +269,7 @@ class MapScreen(Screen):
                 "lead": g.leader.name if g.leader is not None else "",
                 "at": g.node,
                 "busy": g.busy,
-                "pace": world.hours(1, g.speed),
+                "pace": world.hours(1, g.speed) * vocations.travel_mult(self.guild),
                 "needs_orders": self._is_idle(g),
                 "alert": blocked,
                 "state_label": label,
@@ -412,7 +416,8 @@ class MapScreen(Screen):
             self.on_abandon(self.selected, target.id)
             return
         try:
-            self.selected.order = orders.travel(self.selected, target.id)
+            self.selected.order = orders.travel(self.selected, target.id,
+                                                vocations.travel_mult(self.guild))
         except ValueError:
             return
         self._maybe_auto_advance()
@@ -543,6 +548,9 @@ class MapScreen(Screen):
         elif key == "visit_claim":
             if self.on_visit_claim:
                 self.on_visit_claim(self.selected)
+        elif key == "stance":
+            g = self.selected
+            g.stance = CAUTIOUS if g.stance == NORMAL else NORMAL
         elif key == "rest_menu":
             self._rest_open = not self._rest_open
         elif key.startswith("rest:"):
@@ -750,6 +758,9 @@ class MapScreen(Screen):
         items = []
         if not (g.busy or self._group_blocked(g)):
             items.append({"type": "button", "key": "manage_group", "label": "MANAGE GEAR & QUESTS"})
+            items.append({"type": "button", "key": "stance", "gap_before": 4,
+                          "label": f"TRAVEL: {g.stance.upper()}",
+                          "sub": STANCE_NOTES[g.stance]})
             # nothing may move the clock past an unresolved event
             paused = self._pending_event is not None
             starving = g.rations == 0 and not paused

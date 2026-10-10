@@ -84,7 +84,7 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
     fonts = ui_fonts()
     result = {}
 
-    def on_done(picks, leader, name, banner_color, banner_icon):
+    def on_done(picks, leader, name, banner_color, banner_icon, vocation):
         result.update(picks=picks, leader=leader, name=name,
                       banner_color=banner_color, banner_icon=banner_icon)
 

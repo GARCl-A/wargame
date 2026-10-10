@@ -6,7 +6,6 @@ racial ability Innocent Face (crime natural decay).
 from unittest.mock import patch
 
 from gartok import actions, chest
-from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import (
     Battle,
@@ -335,34 +334,30 @@ def _kenku():
     return u
 
 
-def test_elf_woodland_scout_halves_road_and_hunt_ambushes():
-    from gartok import campaign, hunt, world
+def test_elf_woodland_scout_trims_road_and_hunt_ambushes_only_when_cautious():
+    from gartok import campaign, hunt, vocations, world
+    from gartok.group import CAUTIOUS, NORMAL
     elf = _elf()
     assert elf.choose_talent("racial", "woodland_scout")
-    human = _human()
+    guild = Guild([elf], node="road")
+    group = guild.groups[0]
+    roll = world.ROAD_AMBUSH_CHANCE * 0.95          # between x0.9 and x1
 
-    g_scout = Group([elf], node="road")
-    g_normal = Group([human], node="road")
-
-    with patch("gartok.campaign.random.random", return_value=world.ROAD_AMBUSH_CHANCE * 0.75):
+    with patch("gartok.campaign.random.random", return_value=roll):
         with patch("gartok.campaign.encounters.roll_encounter", return_value=["Goblin"]):
-            order_scout = campaign._road_ambush_catch(g_scout, ["road"])
-            order_normal = campaign._road_ambush_catch(g_normal, ["road"])
-            assert order_scout is None
-            assert order_normal is not None
-            assert order_normal.kind == "ambush"
+            group.stance = NORMAL
+            assert campaign._road_ambush_catch(guild, group, ["road"]).kind == "ambush"
+            group.stance = CAUTIOUS
+            assert campaign._road_ambush_catch(guild, group, ["road"]) is None
 
     class FakeRNG:
         def random(self):
-            return 0.10
+            return hunt.AMBUSH_CHANCE_PER_HOUR * 0.95
 
-    state_scout = hunt.HuntState([elf], None, 4)
-    _, amb_scout = hunt.hunt_stretch(state_scout, rng=FakeRNG())
-    assert amb_scout is False
-
-    state_normal = hunt.HuntState([human], None, 4)
-    _, amb_normal = hunt.hunt_stretch(state_normal, rng=FakeRNG())
-    assert amb_normal is True
+    normal = hunt.HuntState([elf], None, 4, ambush_mult=vocations.ambush_mult(guild, NORMAL, scout=True))
+    assert hunt.hunt_stretch(normal, rng=FakeRNG())[1] is True
+    cautious = hunt.HuntState([elf], None, 4, ambush_mult=vocations.ambush_mult(guild, CAUTIOUS, scout=True))
+    assert hunt.hunt_stretch(cautious, rng=FakeRNG())[1] is False
 
 
 def test_orc_intimidating_presence_uses_strength_for_demoralize():

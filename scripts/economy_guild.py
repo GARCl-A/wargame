@@ -17,6 +17,8 @@ A policy is a class with `step(sim)`; each step spends time. Policies:
   miner     day labour at the Mine: a trip past the Old Road, a stay of six shifts, back (miner_short: two)
   cautious  lumber, plus the Scrapper bout until everyone is combat 1; hunts only at mean
             level 3 and full health
+  wary      cautious, with the group's travel stance always on Cautious (the Wilds perk's policy;
+            pair with --vocation wilds and compare against cautious)
   balanced  Scrapper to combat 1, lumber to build a buffer, buys Studded Leather, a weapon
             and the strongbox in turn, hunts from mean level 2
   greedy    Scrapper and the Wilds from day one, buys food only when the packs are empty
@@ -70,10 +72,12 @@ from gartok import (
     recruit,
     rest,
     solo,
+    vocations,
     wagon,
     world,
 )
 from gartok.clock import SECONDS_PER_DAY
+from gartok.group import CAUTIOUS, NORMAL
 from gartok.guild import Guild
 from gartok.market_screen import MarketScreen
 from gartok.prison_screen import BAIL_BONUS
@@ -258,7 +262,8 @@ class Snapshot:
 
 class Sim:
     def __init__(self, policy, *, size=3, level=0, skill=None, seed=0, library=None,
-                 restock=None, recipes=(), capital=0, assets=(), medic=False, horizon=None, mixed=False, talents=True):
+                 restock=None, recipes=(), capital=0, assets=(), medic=False, horizon=None, mixed=False, talents=True,
+                 vocation=None):
         random.seed(seed)
         self.rng = random.Random(seed)
         squad = act.make_squad(size, level)
@@ -266,8 +271,9 @@ class Sim:
             u.recipes.extend(r for r in recipes if r not in u.recipes)
         if capital:
             squad[0].give_to_pack(items.COIN_ITEM, capital)
-        self.guild = Guild(squad, node="city")
+        self.guild = Guild(squad, node="city", vocation=vocation)
         self.main = self.guild.groups[0]
+        self.main.stance = policy.stance
         self.crew = None                      # the group that works the yard while the squad is out
         self._crew_works = False
         self.recruited = 0                    # strangers who signed on
@@ -450,7 +456,7 @@ class Sim:
 
     def goto(self, node_id):
         if self.group.node != node_id:
-            self.run_order(orders.travel(self.group, node_id))
+            self.run_order(orders.travel(self.group, node_id, vocations.travel_mult(self.guild)))
 
     def arrive(self, kind, node_id):
         self.goto(node_id)
@@ -543,7 +549,7 @@ class Sim:
         if crew.busy:
             return
         if crew.node != "lumber_yard":
-            crew.order = orders.travel(crew, "lumber_yard")
+            crew.order = orders.travel(crew, "lumber_yard", vocations.travel_mult(self.guild))
             return
         self._crew_works = not self._crew_works
         crew.order = (orders.work(self.guild, crew, SHIFT_HOURS) if self._crew_works
@@ -683,7 +689,8 @@ class Sim:
     def hunt(self, hours=SHIFT_HOURS):
         """A day in the Wilds: walk there, hunt, an ambush now and then, walk back later."""
         self.arrive("hunt", "wilds")
-        state = hunt.HuntState(party=self.members, node=world.node("wilds"), hours_left=hours)
+        state = hunt.begin(self.guild, self.members, world.node("wilds"), self.main.stance,
+                           hours_left=hours)
         while state.hours_left > 0 and state.party:
             elapsed, ambushed = hunt.hunt_stretch(state, self.rng)
             self.pass_hours(elapsed, busy=state.party)
@@ -913,6 +920,7 @@ def milestone_cost(sim):
 # --------------------------------------------------------------------------- #
 class Policy:
     name = "policy"
+    stance = NORMAL                # the travel stance the group keeps for the whole run
     HURT = "badly_hurt"            # how hurt the guild may be and still go about its day
 
     def upkeep(self, sim):
@@ -1024,6 +1032,11 @@ class Cautious(Policy):
             return
         self.level_up_bout(sim, 3 * len(sim.members))
         self.lumber_day(sim)
+
+
+class Wary(Cautious):
+    name = "wary"
+    stance = CAUTIOUS
 
 
 class Balanced(Policy):
@@ -1482,7 +1495,7 @@ class Crafter(Policy):
                 break
 
 
-POLICIES = {cls.name: cls for cls in (Lumber, Miner, MinerShort, Cautious, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
+POLICIES = {cls.name: cls for cls in (Lumber, Miner, MinerShort, Cautious, Wary, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
 
 
 # --------------------------------------------------------------------------- #
@@ -1532,10 +1545,11 @@ def at_day(snaps, day):
 
 
 def run_guild(policy_name, *, days=30, seed=0, size=3, level=0, skill=None, library=None,
-              restock=None, recipes=(), marks=(7, 30), capital=0, assets=(), medic=False, mixed=False, talents=True):
+              restock=None, recipes=(), marks=(7, 30), capital=0, assets=(), medic=False, mixed=False, talents=True,
+              vocation=None):
     sim = Sim(POLICIES[policy_name](), size=size, level=level, skill=skill, seed=seed,
               library=library, restock=restock, recipes=recipes, capital=capital, assets=assets,
-              medic=medic, horizon=days, mixed=mixed, talents=talents)
+              medic=medic, horizon=days, mixed=mixed, talents=talents, vocation=vocation)
     traits = [member_traits(u) for u in sim.members]
     wiped, crashed, wiped_at = False, "", None
     try:
@@ -1754,6 +1768,8 @@ def main():
                     help="comma list the guild starts with and must keep: house, Donkey, Ox, Horse, Cart")
     ap.add_argument("--medic", action="store_true",
                     help="a Medic at the City heals for potions at a discount, in an hour")
+    ap.add_argument("--vocation", default=None, choices=sorted(vocations.VOCATIONS),
+                    help="the guild's founding trade (its perk is live in the sim)")
     ap.add_argument("--mixed", action="store_true",
                     help="hurt members work the yard while they heal (1 HP a night) instead of resting")
     ap.add_argument("--medic-factor", type=float, default=None, metavar="F",
@@ -1795,7 +1811,8 @@ def main():
         results = [run_guild(name, days=args.days, seed=args.seed + i, size=args.size,
                              level=args.level, skill=args.skill, library=library,
                              restock=restock, recipes=recipes, marks=marks, capital=args.capital,
-                             assets=assets, medic=args.medic, mixed=args.mixed)
+                             assets=assets, medic=args.medic, mixed=args.mixed,
+                             vocation=args.vocation)
                    for i in range(args.guilds)]
         table[name] = summarize(results, marks)
         if args.ranking:

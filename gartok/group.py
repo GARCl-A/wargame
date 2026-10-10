@@ -33,6 +33,8 @@ BASE_CAPACITY = 3   # + the leader's Charisma modifier -- see `capacity`/`overex
 HERD_BASE = 3       # + the leader's Wisdom modifier -- see `herd_capacity`
 BASE_SLOTS = 2      # groups an unknown guild may run: one to study, one in the field
 FAME_PER_SLOT = 3   # total reputation that buys the guild one more group
+NORMAL, CAUTIOUS = "normal", "cautious"   # travel stances: Cautious trades XP and loot for fewer ambushes
+STANCES = (NORMAL, CAUTIOUS)
 
 
 def _food_in(pack):
@@ -46,6 +48,7 @@ class Group:
         self.node = node                  # world node id
         self.name = name                  # optional label ("Water Team"), or None
         self.order = None                 # in-flight Order, or None (idle) -- later
+        self.stance = NORMAL              # travel stance, see vocations.ambush_mult
         self.pending = None               # a forced Order (orders.FORCED_KINDS) that came due and awaits its fight
         self.leader = leader              # Unit; None resolves via ensure_leader below
         self.herd = list(herd or [])      # animals.Animal -- lost with the group

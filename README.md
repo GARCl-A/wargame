@@ -237,6 +237,7 @@ gartok/
   justice.py        crime per character, City jurisdiction, the guard's catch/patrol/prison
   recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
                     bail-and-pitch alternative
+  vocations.py      the founding trade (six races + one guild perk), read by travel, hunt, work, food and cohesion
   hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
   ox.py             the tanner's last job: the Country Roads search, tracking Aurochs by daylight
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
@@ -253,7 +254,7 @@ gartok/
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
-  menu_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
+  menu_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
   gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py

@@ -1,8 +1,7 @@
 """Vocation perks on one yardstick: copper per guild-day, against the guild's daily wage.
 
-Backlog: docs/plans/backlog.md ("Found-the-guild charter"). The perks are not in the game yet, so
-this prices each one from the game's own constants, at the effect the backlog proposes, and shows
-what share of the guild's daily wage it is worth. A perk that fires every day for everyone should
+The perks live in `gartok/vocations.py`. This prices each one from the game's own constants (the
+defaults below read them) and shows what share of the guild's daily wage it is worth. A perk that fires every day for everyone should
 land at a few percent of that wage; far above it is too strong, far below it is not worth a slot.
 
 The wage `w` is the copper a member earns per day, at two points: early (the yard's pay) and late
@@ -11,7 +10,7 @@ The wage `w` is the copper a member earns per day, at two points: early (the yar
 unit's alignment lets it carry out (`cohesion.depart`), taken here as `--kit` copper.
 
 Not priced: the Wilds perk, because the travel stance makes it a choice and not a flow, and
-Mystics, which waits for the magic line. Shares the sim does not count yet (how much of a day is
+Scholars, which waits for the combat info modal. Shares the sim does not count yet (how much of a day is
 gathering or travelling, how much food rots) are arguments with a stated default.
 
     python scripts/vocation_report.py
@@ -32,10 +31,10 @@ sys.path.insert(0, os.path.dirname(SCRIPTS))
 import economy_activities as act
 import economy_guild as eg
 
-from gartok import economy, recruit
+from gartok import economy, recruit, vocations
 
 REPLACE_DAYS = recruit.REFRESH_DAYS
-MD_STEP = 1 / 20                      # +1 Mental Defense moves the d20 walk-out roll by one face
+MD_STEP = vocations.COHESION_BONUS / 20                      # +1 Mental Defense moves the d20 walk-out roll by one face
 
 
 def yard_wage():
@@ -83,9 +82,9 @@ def main():
     ap.add_argument("--travel", type=float, default=0.25, help="share of the day spent travelling")
     ap.add_argument("--rot-share", type=float, default=0.1,
                     help="share of the food the guild buys that rots before it is eaten")
-    ap.add_argument("--delvers", type=float, default=0.15, help="Delvers' extra gathering yield")
-    ap.add_argument("--caravan", type=float, default=0.15, help="Caravan's travel time saved")
-    ap.add_argument("--marsh", type=float, default=0.10, help="Marsh's share of rot avoided")
+    ap.add_argument("--delvers", type=float, default=vocations.GATHER_BONUS, help="Delvers' extra gathering yield")
+    ap.add_argument("--caravan", type=float, default=1 - vocations.TRAVEL_FACTOR, help="Caravan's travel time saved")
+    ap.add_argument("--marsh", type=float, default=1 / vocations.FOOD_PAUSE_EVERY, help="Marsh's share of rot avoided")
     a = ap.parse_args()
 
     report("EARLY (yard wage)", yard_wage(), a)

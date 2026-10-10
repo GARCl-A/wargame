@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pygame
 
-from . import artwork, data, factions, magic, progression, talents, world
+from . import artwork, data, factions, magic, progression, talents, vocations, world
 from .animals import STARVE_DAYS, Animal
 from .combatant import Combatant
 from .constants import fmt_money
@@ -716,6 +716,10 @@ class GuildScreen(Screen):
                     else "Rent one at the bank in the City."))
         return [{"name": n, "status": st, "tone": tone, "detail": d} for n, st, tone, d in out]
 
+    def _vocation(self):
+        voc = vocations.of(self.guild)
+        return None if voc is None else {"name": voc.name, "perk": voc.perk, "dormant": not voc.active}
+
     def _draw_guild(self, screen, F, rect):
         guild = self.guild
         data = {
@@ -723,6 +727,7 @@ class GuildScreen(Screen):
             "slots": (len(guild.groups), guild.group_slots),
             "factions": [(f.name, guild.reputation.get(f.id, 0)) for f in factions.FACTIONS.values()],
             "notices": self._notices(), "groups": self._group_rows(), "bases": self._holdings(),
+            "vocation": self._vocation(),
         }
         info = guild_panel.draw_guild(screen, F, rect, data, self._guild_scroll, self.mouse)
         self._guild_max_scroll = max(0, info["content_h"] - info["view_h"])

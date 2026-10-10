@@ -50,7 +50,19 @@ The generator's exact order:
 
 ### The squad draft & commission tokens 🟡
 
-A new campaign begins at the **Draft** (`DraftScreen`):
+A new campaign begins at the **Vocation** screen (`VocationScreen`), then the **Draft** (`DraftScreen`):
+- The guild picks one **vocation** (`vocations.py`), once and for good. Each is a list of six races and one fixed perk that **the whole guild** has, whatever a member's race; the Guild tab shows it. The draft pool of the chosen vocation always holds at least one candidate of each of its six races, the other three come from the natural race table (all 18 races); a commission replaces a card from that same natural table.
+
+  | Vocation | Races | Perk |
+  |---|---|---|
+  | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (`cohesion._roll_groups`); an overextended group's defence penalty is unchanged |
+  | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% from gathering: work-shift pay (`vocations.gather_pay`; the odd fraction of a coin is paid by chance) and the meat, mushrooms and fruit of a hunt or forage (`HuntState.yield_mult`). A creature's drop (wolf hide) is not gathering |
+  | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | the ambush chance is x0.8 while the group's stance is *Cautious* |
+  | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information (`vocations.INFO_BONUS`); dormant until the combat info modal exists |
+  | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | x0.85 on travel hours, after wagon and animal speed (`orders.next_leg(pace=...)`) |
+  | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | on every 10th day of the guild's clock (day % 10 == 0) no food ages (`guild_upkeep._daily_upkeep`) |
+
+- **Travel stance.** Each group is *Normal* or *Cautious* (`Group.stance`, flipped with the TRAVEL button of the map's inspector while the group is idle; a new group starts *Normal*). It covers the two ambushes the player walks into: the Old Road leg (`campaign._road_ambush_catch`) and the hunt's hourly roll (`hunt.hunt_stretch`). The guard's patrol, a Claim raid, a seizure and an eviction are not ambushes and ignore it. *Cautious* alone is x1; the Wilds perk makes it x0.8 and the Elf's *Woodland Scout* x0.9, and they multiply (road 0.2 -> 0.144 with both). *Cautious* costs nothing but the XP and loot of the fights it avoids.
 - The draft offers a **pool of 9 candidates**; the player keeps 3 of them as the starting squad (click to pick, click again to put one back, scroll to see all nine).
 - To prevent infinite rerolling or hard-editing while maintaining tabletop emergent variety, the guild starts with **3 Commission Tokens**.
 - Players may spend commission tokens to guarantee functional **Squad Archetypes** (1 token per requested archetype) in the pool: the commission names the archetypes, then the player clicks the candidate it replaces with a fresh one that has them (a replaced pick leaves the squad; tokens are spent only when the replacement happens):

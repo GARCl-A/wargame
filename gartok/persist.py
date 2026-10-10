@@ -32,7 +32,7 @@ from dataclasses import fields
 from . import missions
 from .animals import Animal
 from .clock import Clock
-from .group import Group
+from .group import NORMAL, Group
 from .guild import Guild
 from .holdings import CityProperty, Garage, Stash
 from .orders import Order
@@ -181,6 +181,7 @@ def group_to_dict(g):
         "wagons": [wagon_to_dict(w) for w in g.wagons],
         "herd": [a.to_dict(_serialize_pack) for a in g.herd],
         "herd_notice": g.herd_notice,
+        "stance": g.stance,
     }
 
 
@@ -192,6 +193,7 @@ def group_from_dict(d):
     group = Group(members, node=d["node"], name=d["name"], gid=d["gid"],
                   leader=leader, wagons=wagons, herd=herd)
     group.herd_notice = d["herd_notice"]
+    group.stance = d.get("stance", NORMAL)
     if d["order"]:
         group.order = order_from_dict(d["order"])
     if d["pending"]:
@@ -211,7 +213,7 @@ PAYLOAD_DEFAULTS = {
     "shops": {}, "total_spent": 0, "items_sold_kinds": [], "missions": [],
     "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
-    "leader": None, "leader_swaps_used": 0, "leaving": {},
+    "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True,
 }
 
@@ -256,6 +258,7 @@ def _payload(guild, kind, label):
         "leader": guild.leader.uid if guild.leader else None,
         "leader_swaps_used": guild.leader_swaps_used,
         "leaving": dict(guild.leaving),
+        "vocation": guild.vocation,
         "name": guild.name,
         "banner_color": list(guild.banner_color),
         "banner_icon": guild.banner_icon,
@@ -350,6 +353,7 @@ def load_game(world, save_id=CURRENT):
                          for d in payload["jailed"]],
                  leader=leader, leader_swaps_used=payload["leader_swaps_used"],
                  leaving=payload["leaving"],
+                 vocation=payload["vocation"],
                  name=payload["name"], banner_color=payload["banner_color"],
                  banner_icon=payload["banner_icon"],
                  ancient_ruins_discovered=payload["ancient_ruins_discovered"],

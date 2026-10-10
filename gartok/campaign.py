@@ -40,6 +40,7 @@ from . import (
     orders,
     recorder,
     solo,
+    vocations,
     world,
 )
 
@@ -336,7 +337,8 @@ def _advance(guild, dt=None, busy=()):
                 g.order = None
                 pending.append((g, pause))
                 continue
-            g.order = orders.next_leg(order.dest, list(order.path), g.speed)
+            g.order = orders.next_leg(order.dest, list(order.path), g.speed,
+                                      vocations.travel_mult(guild))
             continue
         g.order = None                         # resolved -- the group goes idle
         if order.kind == "travel":
@@ -390,7 +392,7 @@ def _arrival_pause(guild, group, prev_node, resume_path):
     guard = _guard_catch(group, prev_node, resume_path)
     if guard is not None:
         return guard
-    ambush = _road_ambush_catch(group, resume_path)
+    ambush = _road_ambush_catch(guild, group, resume_path)
     if ambush is not None:
         return ambush
     fortress = _fortress_ambush_catch(guild, group, resume_path)
@@ -415,7 +417,7 @@ def _guard_catch(group, prev_node, resume_path):
                         prev_node=prev_node, resume_path=tuple(resume_path))
 
 
-def _road_ambush_catch(group, resume_path):
+def _road_ambush_catch(guild, group, resume_path):
     """If `group.node` is unsafe, roll `world.ROAD_AMBUSH_CHANCE` once (per
     leg, not per hour -- see `world.py`'s docstring) against the node's own
     `encounter_table`. Returns an "ambush" `Order` carrying the rolled pack to
@@ -423,9 +425,8 @@ def _road_ambush_catch(group, resume_path):
     node = world.node(group.node)
     if not node.unsafe:
         return None
-    chance = world.ROAD_AMBUSH_CHANCE
-    if group.has_talent("woodland_scout"):
-        chance /= 2.0
+    chance = world.ROAD_AMBUSH_CHANCE * vocations.ambush_mult(
+        guild, group.stance, scout=group.has_talent("woodland_scout"))
     if random.random() >= chance:
         return None
     pack = encounters.roll_encounter(node.encounter_table)
@@ -710,7 +711,8 @@ def _resume_arrival(guild, group, order):
     if group.empty:
         return []
     if order.resume_path:
-        group.order = orders.next_leg(group.node, list(order.resume_path), group.speed)
+        group.order = orders.next_leg(group.node, list(order.resume_path), group.speed,
+                                      vocations.travel_mult(guild))
         return []
     events = [factions.deed_notice(d) for d in
              factions.settle(guild, factions.Event("travel", node=world.node(group.node)))]

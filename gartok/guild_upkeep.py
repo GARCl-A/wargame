@@ -5,7 +5,18 @@ Mixed into `guild.Guild`. `pass_time` is the only path that moves the clock
 by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 """
 
-from . import cohesion, data, economy, items, justice, missions, orders, recorder, world
+from . import (
+    cohesion,
+    data,
+    economy,
+    items,
+    justice,
+    missions,
+    orders,
+    recorder,
+    vocations,
+    world,
+)
 
 HOURS_PER_HEAL = 8
 
@@ -134,12 +145,13 @@ class UpkeepMixin:
         
         # 1) rot food in everyone's inventory, the bank chest and the house
         total_rotten = 0
-        for u in self.roster:
-            total_rotten += self._rot_food(u._base_inventory)
-        total_rotten += self._rot_food(self.bank.items)
-        total_rotten += self._rot_food(self.house.stash.items)
-        for pack in [p for g in self.groups for p in g.food_stores()] + self._garaged_food():
-            total_rotten += self._rot_food(pack)
+        if not vocations.food_pauses(self):
+            for u in self.roster:
+                total_rotten += self._rot_food(u._base_inventory)
+            total_rotten += self._rot_food(self.bank.items)
+            total_rotten += self._rot_food(self.house.stash.items)
+            for pack in [p for g in self.groups for p in g.food_stores()] + self._garaged_food():
+                total_rotten += self._rot_food(pack)
         if total_rotten:
             events.append(f"{total_rotten} portions of food rotted away.")
 

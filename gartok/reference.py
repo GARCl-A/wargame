@@ -26,6 +26,7 @@ from . import (
     items,
     progression,
     talents,
+    vocations,
 )
 
 REFERENCE_PATH = Path(__file__).resolve().parent.parent / "REFERENCE.md"
@@ -83,6 +84,14 @@ def _archetypes():
     head = ("Archetype", "Role & Qualification", "Incompatible With")
     return "## Squad archetypes\n\nFunctional squad roles for candidate generation " \
            "and commission tokens at the draft.\n\n" + _table(head, rows)
+
+
+def _vocations():
+    rows = [(v.name, ", ".join(v.races), v.perk + ("" if v.active else " (dormant)"))
+            for v in vocations.VOCATIONS.values()]
+    return ("## Vocations\n\nThe guild's founding trade, picked once at the draft: six races "
+            "(the draft pool always holds one of each) and one perk for the whole guild.\n\n"
+            + _table(("Vocation", "Races", "Perk"), rows))
 
 
 def _occupations():
@@ -221,7 +230,7 @@ def _constants():
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _abilities, _archetypes, _occupations, _weapons, _armor, _shields, _items,
+_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _armor, _shields, _items,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

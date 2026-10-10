@@ -6,7 +6,7 @@ since it advances the clock itself.
 
 from collections import Counter
 
-from . import economy, items, recorder, world
+from . import economy, items, recorder, vocations, world
 from .constants import fmt_money
 from .unit_loadout import pooled_unlocked
 
@@ -51,7 +51,8 @@ class LaborMixin:
         events = []
         for u in earners:
             level = economy.work_level(u, node_id)
-            paid.append(self._pay_worker(u, economy.work_pay(node_id, hours, level), hours, level, events))
+            pay = vocations.gather_pay(self, economy.work_pay(node_id, hours, level))
+            paid.append(self._pay_worker(u, pay, hours, level, events))
         if earners:
             names = ", ".join(u.name for u in earners)
             wage = (f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1

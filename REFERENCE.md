@@ -71,6 +71,19 @@ Functional squad roles for candidate generation and commission tokens at the dra
 | GENIUS | Brilliant intellect (+2 mod). Accelerated crafting, manual reading, and arcane research. | — |
 | WISE | Perceptive mind (+2 mod). High combat initiative, mental defense, and skilled field medicine. | — |
 
+## Vocations
+
+The guild's founding trade, picked once at the draft: six races (the draft pool always holds one of each) and one perk for the whole guild.
+
+| Vocation | Races | Perk |
+|---|---|---|
+| Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll: fewer walk-outs from an overextended group. |
+| Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering: work shifts, and the meat, mushrooms and fruit of a hunt or forage. |
+| Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt. |
+| Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information. No effect until the combat info modal exists. (dormant) |
+| Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | Travel takes 15% fewer hours. |
+| Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
+
 ## Occupations
 
 Each occupation grants one starting weapon and one starting item.
@@ -347,7 +360,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Fruitful | your leafy body blooms at dawn: produce 1 fresh fruit each day to nourish yourself or your companions. | -- | Treefolk |
 | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- | Human |
 | 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- | Halfling |
-| 1 | Woodland Scout | the forest whispers its secrets to you: greatly reduces the chance of the group suffering an ambush in the wilds or on the road. | -- | Elf |
+| 1 | Woodland Scout | the forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower. | -- | Elf |
 | 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- | Orc |
 | 1 | Swarm Logic | there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- | Goblin |
 | 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- | Automaton |

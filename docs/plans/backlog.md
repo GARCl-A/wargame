@@ -28,10 +28,9 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. Vocations in the draft (perks and the travel stance are decided; the numbers of Delvers, Wilds and Caravan are still to set, see *Needs more information*).
-2. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
+1. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
    player the AI does not match yet.
-3. The *Architecture debt* section lists what to pay on the way.
+2. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -293,60 +292,15 @@ building them:
     differs (`magic.py`); the three schools are **not exclusive** (decided 2026-10-09: anyone may study any; the barrier is study cost). Holy Symbol (below) belongs to
     the faith school.
 
-- **Found-the-guild charter** (`draft_screen.py`). Founding the guild should be the
+- **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
-  the guild. What is left waits for design.
-  - **Vocation (decided):** the guild picks one of 6 at founding. Each is a list of **6 races**
-    and a **fixed guild perk** (no talent tree; the perk may become a tree's root later).
-    - **Pool rule:** the 9-card pool always holds at least one card of each of the vocation's 6
-      races; the other 3 come from the normal draw (natural race weights, all 18 races). A
-      commission token re-rolls only the clicked card, from the natural race table and outside
-      the vocation. Every race is in at least one vocation.
-    - **The 6 (decided 2026-10-09: names and race lists are closed):**
-
-      | Vocation | Races | Perk |
-      |---|---|---|
-      | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (5% fewer walk-outs); the defense penalty of overextension is unchanged (weak on purpose, confirmed 2026-10-09) |
-      | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering work: work shifts and what a hunt or forage gathers (meat, mushrooms, fruit); a creature's drop such as wolf hide is not gathering (decided 2026-10-09 and 2026-10-10) |
-      | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of an ambush while the group's travel stance is *Cautious* (x0.8 on the chance, multiplicative; decided 2026-10-09) |
-      | Scholars (was Mystics; renamed 2026-10-10, same races) | Kobold, Gnome, Elf, Sprite, Kenku, Human | bonus on the INT roll that reveals enemy info; dormant until the combat info modal exists (see *Intelligence reveals enemy info*); no magic perk, since the study route needs an initiate |
-      | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | -15% travel hours, multiplicative after wagon and animal speed (decided 2026-10-09) |
-      | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | the guild's food does not age one day in ten (`guild_upkeep._rot_food`; decided, replaces the extra hunger day) |
-
-    - **Perk scope (decided):** the perk is the guild's, every member has it, not only the
-      members of the listed races.
-    - **Travel stance (decided, new, the Wilds perk needs it):** each group gets a stance (**decided: a `Group.stance` field, not a guild switch**), *Normal*
-      (nothing changes) or *Cautious* (applies the vocation's ambush reduction, if the guild has
-      one). The player flips it, so the same group can travel quiet on the Old Road at level 3-4
-      and stay *Normal* before a hunt for wolf Hide. **Covers only the two ambushes (decided 2026-10-10):**
-      the Old Road leg (`world.ROAD_AMBUSH_CHANCE`, once per leg) and the hunt's per-hour roll
-      (`hunt.AMBUSH_CHANCE_PER_HOUR`); guard patrols, Claim raids and seizures are not ambushes (the group is on the spot and the enemy comes to it), so *Cautious* does not touch them. The Elf's
-      *Woodland Scout* talent halves the road and hunt chance today, always on
-      (`campaign._road_ambush_catch`, `hunt.hunt_stretch`). **Decided 2026-10-09:** *Cautious*
-      is a multiplier of 1 with no bonus; the guild perk makes it x0.8 and Woodland Scout x0.9,
-      and they multiply (road 0.2 -> 0.144 with both), so there is no floor. This replaces the
-      always-on halving: the talent now does something only under *Cautious*, and its tests change. *Cautious* costs nothing but the XP and loot given up (decided). The hunt screen
-      shows the group's stance. Decided 2026-10-10: a new group starts *Normal*, the sim policies stay *Normal* except the one that measures Wilds, and the vocation cannot be changed after founding and shows on the Guild tab. Open: the group screen control; the tests of the
-      talent; a new optional field in `persist.PAYLOAD_DEFAULTS`. Caravan and Marsh stay unconditional. Perks that fire every day
-      for everyone get small numbers (about 10-20%), judged against the guild's daily wage, not
-      against the Warband.
-    - **Marsh rot (decided):** one day in ten no food ages, by the guild's clock (day % 10), not a
-      roll per stack; a stack already ages as one entry in `_rot_food`.
-      It prices at under 1% of the daily wage today (Potato is cheap and eats as well as any food);
-      that is accepted until *Better food* (last in this part) gives rotting food a cost worth saving.
-    - **Yardstick (decided): copper per guild-day**, measured by `scripts/vocation_report.py`
-      (each perk's value as a share of the guild's daily wage). A lost unit costs **7 days of its
-      production** (the weekly recruit pool is the time to replace it); a desertion costs the same
-      plus what the unit's alignment lets it carry out (`cohesion.depart`: Lawful leaves coins and
-      pack, Neutral leaves coins, Chaotic leaves nothing). A death leaves the kit as loot. Measure
-      survival perks (Warband, Marsh) at an early and a late point, since their value grows with
-      the wage. Warband only pays a guild that overextends, so it is measured on a *wide* policy
-      that recruits all it can; going wide is the intended play (Goblin and Hobgoblin share a
-      language, so the draft opens two recruit windows). Scholars cannot be measured until
-      the info modal exists.
-    - **To set while building:** the exact numbers are set above (Delvers +15%, Caravan -15%, Wilds x0.8); Delvers and Caravan start at about 15%, checked against the share of
-      the daily wage that `vocation_report.py` prints. Needs the vocation registry, pool rule in
-      `draft_screen.py`, perk hooks, save field and tests (including the pool guarantee and each perk).
+  the guild. The vocation is built (`vocations.py`, see RULES.md); what is left:
+  - **Measure the Wilds perk.** The sim has the `wary` policy (`cautious` with the group always
+    *Cautious*) and `--vocation`; `scripts/vocation_report.py` still does not price the Wilds
+    perk. Compare `cautious` and `wary` under `--vocation wilds` at level 3+ (level 0 never
+    reaches an ambush) and price the ambushes avoided.
+  - **Scholars wait for the info modal.** Its perk is dormant (`vocations.INFO_BONUS`, see
+    *Intelligence reveals enemy info*).
   - **Oath (deferred, not scheduled)** (separate from the vocation): *what binds the members
     together, and how a stranger would tell someone belongs to the guild* (a creed, a mark, a code). It cannot be
     broken, but it can be changed. It has a mechanical side in two places: **cohesion**

@@ -624,3 +624,64 @@ def test_a_squad_that_dies_ends_the_guild_even_if_the_crew_lives():
     sim.guild.remove_members(list(sim.main.members))
     with pytest.raises(sim_mod.Wiped):
         _ = sim.group
+
+
+# ------------------------------------------------------------------ #
+# vocations and the travel stance in the sim                         #
+# ------------------------------------------------------------------ #
+def test_the_wary_policy_keeps_its_group_cautious_and_the_rest_normal():
+    from gartok.group import CAUTIOUS, NORMAL
+    assert _sim("wary").main.stance == CAUTIOUS
+    for name in ("cautious", "lumber", "balanced"):
+        assert _sim(name).main.stance == NORMAL
+
+
+def test_a_sim_guild_carries_its_vocation_and_the_hunt_reads_it():
+    from gartok import hunt
+    sim = _sim("wary", vocation="wilds")
+    assert sim.guild.vocation == "wilds"
+    seen = {}
+    orig = hunt.hunt_stretch
+
+    def spy(state, rng=random, **kw):
+        seen["ambush"] = state.ambush_mult
+        seen["yield"] = state.yield_mult
+        state.hours_left = 0
+        return 0, False
+
+    hunt.hunt_stretch = spy
+    try:
+        sim.hunt(hours=4)
+    finally:
+        hunt.hunt_stretch = orig
+    assert seen["ambush"] <= 0.8 and seen["yield"] == 1.0
+
+
+def test_a_delvers_sim_hunt_gathers_more_and_a_normal_stance_does_not_dodge():
+    from gartok import hunt
+    seen = {}
+    orig = hunt.hunt_stretch
+
+    def spy(state, rng=random, **kw):
+        seen["ambush"], seen["yield"] = state.ambush_mult, state.yield_mult
+        state.hours_left = 0
+        return 0, False
+
+    hunt.hunt_stretch = spy
+    try:
+        _sim("cautious", vocation="wilds").hunt(hours=4)
+        assert seen["ambush"] == 1.0                      # Wilds perk needs Cautious
+        _sim("cautious", vocation="delvers").hunt(hours=4)
+        assert seen["yield"] == 1.15
+    finally:
+        hunt.hunt_stretch = orig
+
+
+def test_the_caravan_sim_walks_faster():
+    walkers = {}
+    for vid in (None, "caravan"):
+        sim = _sim("lumber", vocation=vid)
+        before = sim.guild.clock.seconds
+        sim.goto("road")
+        walkers[vid] = sim.guild.clock.seconds - before
+    assert walkers["caravan"] < walkers[None]
