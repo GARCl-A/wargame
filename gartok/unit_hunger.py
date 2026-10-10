@@ -88,6 +88,7 @@ class HungerMixin:
             self.unfed_days = 0
             if food == "Rotten Food" and self._ability.id != "strong_stomach":
                 self.sick = True
+                self._apply_attributes()
             return "ate"
         self.unfed_days += 1
         return "dead" if self.unfed_days >= data.STARVATION_DEATH_DAYS else "hungry"
@@ -105,6 +106,7 @@ class HungerMixin:
         self.unfed_days = 0
         if food == "Rotten Food" and self._ability.id != "strong_stomach":
             self.sick = True
+            self._apply_attributes()
         return True
 
     @property

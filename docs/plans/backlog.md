@@ -22,14 +22,15 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (project review, 2026-10-09)
+# Suggested order (project review, 2026-10-09; updated 2026-10-10)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. Play the combat recordings (the Combat lab is built) and derive the AI's policy from them;
-   the economy is calibrated against a player the AI does not match yet.
+1. Play the rest of the combat recordings (the Combat lab is built; the Scrapper is done, 10 fights)
+   and derive the AI's policy from them; the economy is calibrated against a player the AI does not
+   match yet.
 2. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
@@ -45,9 +46,11 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. The run exits 1 on a failed verdict, but no test or gate reads it.
-- **Signal Horn has no line in the economy report.** The chain is built (Tanner missions,
-  Aurochs, `items.CRAFTING_RECIPES["Signal Horn"]` with a Chisel); `scripts/economy_report.py`
-  still lacks a craft-for-sale line for it.
+- **`economy_exploits.py` calls the Signal Horn a dead recipe.** Its `[barriers]` scan reads only
+  talents, and the horn is taught by the Tanner's last job (`items.TANNER_RECIPES`), so it prints
+  "no talent teaches it and nobody starts knowing it". Teach the scan the recipes that missions
+  teach. The horn needs no sale line: it is a quest artifact (one Legendary Horn per Aurochs), and
+  the recipes scan already drops it, since its scarce input is valued at its sale price.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -66,25 +69,22 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   unpriced. (4) The Mine has no art or map icon of its own (it uses the
   work glyph), and no tutorial line.
 
-- **A sick character fights at full strength until the save is reloaded.** `Unit._apply_attributes`
-  takes -4 CON and -2 to the rest while `sick`, but `unit_hunger` sets `sick` and the callers are
-  left to re-derive. In the author's campaign logs, 11 of 27 rebuildable fights have a unit whose
-  logged HP, AC and speed differ from what `Unit.from_save` computes (`combat_pairs.py` prints
-  "stats differ"; the unit is sick in the log and healthy in the fight, and the other way round
-  once the cure forgets to re-derive). Find which path (meal, `guild_upkeep`, `medic`) skips the
-  re-derive and make the derive happen where `sick` flips, with a test.
-
-- **The Evil coup de grace is too punitive; rethink it (the author's call, 2026-10-10).** An Evil AI
-  unit (`ai._finish_off`, alignment axis below zero, lethal fights only) hits an adjacent downed
-  enemy before anything else, even with a standing foe next to it, and each blow ticks the death
-  clock (`Battle.tick_dying`), so two blows a turn put a downed character on the clock for good in
-  about two turns. For the player's squad that is permadeath handed out by the AI's bias, not by
-  the fight. Options to weigh: (a) only when no standing foe is in reach (tried on the campaign
-  logs: no change in win rates, so it costs the AI nothing); (b) at most one blow per turn, so a
-  stabilize or a rescue has time; (c) only the Chaotic Evil; (d) give the downed a death-save
-  bonus from allies standing guard. Recommended: (a) and (b) together. Touches `RULES.md` (the
-  Coup de grace and AI-by-alignment paragraphs), `tests/test_ai.py` and the AI of the enemy packs
-  that score on kills.
+- **Draft screen (pick 3 of 9): portraits and vertical space.** The cards have no portrait and
+  there is horizontal room for one. The screen also scrolls for no good reason: the cards waste
+  height (a weapon prints as three lines, "Club / to hit... / damage"; one line, "Club +1 (STR)
+  1d6+1 (STR)", says the same). Tighten the card until the scroll goes.
+- **Vocation icons.** The six vocations have no icon or image (draft, `vocation_screen.py`, Guild tab).
+  Same style decision as *Item icons* below.
+- **"Found the guild" screen looks off the game's identity.** Check whether `vocation_screen.py` and the
+  identity phase of `draft_screen.py` are on the `gartok/ui/` kit; migrate what is not (the charter item
+  under *Needs more information* lists the presentation work).
+- **Guild > Members: show each member's recruit limit.** `recruit.recruit_capacity` exists but the tab
+  does not say how many a character may still sponsor.
+- **The Wilds screen: group HP, load and work XP.** Show the HP of every character (the group as a
+  whole matters, not each ration), the group's carrying capacity, and the hours-of-XP bar that today
+  appears only in the log, on the character's card (there is horizontal room).
+- **Combat: no marker for a defending unit.** Nothing on the board or in the unit card says that a
+  unit is in Defend (`conditions.Defending`). Add a marker on the token and a line in the info panel.
 
 ## Architecture debt
 
@@ -109,7 +109,7 @@ pointed to, not repeated.
 - **Talent trees are shorter than the level cap (to be authored by hand, no rush).** The XP
   tables now run to level 15 (2026-10), but the trees do not: combat has 14 nodes and work 10
   (each level grants one pick), so combat 15 wastes a pick and work levels 11-15 grant picks with
-  nothing to spend them on. The racial track (picks from racial level 5) is worse: its 26 nodes
+  nothing to spend them on. The racial track (picks from racial level 5) is worse: its 27 nodes
   are split across races, so most races have almost none of their own and a high racial level
   buys hit dice only (the Aurochs has zero). Goal: **at least 30 combat and 30 work talents**,
   and enough racial nodes per race for its picks. Nothing built; the author will design them.
@@ -170,17 +170,14 @@ pointed to, not repeated.
     campaign fights log into `saves/<world>/combat_logs/` while `record_play` is ON;
     `scripts/combat_analysis.py` reads them (action mix, how often a person matched the AI, a
     replay). What is left, in order:
-    1. **Play the fights** (the user, in the Combat lab; the 12 human-against-AI
-       tries of 2026-10-10 were thrown away: the AI's walking was not in the log, fixed since,
-       and they were played at levels off this list). A first target, 10 fights each,
-       human (player 1) against the AI, at the level the economy expects of that fight:
-       Scrapper at level 0, champion at 0-1, brawl and capture the flag at 1-3, Wilds and Old
-       Road ambushes at 3, Ancient Ruins at 2-3, Ribbit Brothers at 3. Play to win, as you
-       would in the campaign: the win rate comes out of the same logs and is the number to
-       compare with the AI's benchmark rates. Then **two Ribbit Brothers fights human against
-       human** (one decision list per side). The tainted 2026-10-10 try was dropped; one clean
-       `boss-human-vs-human.jsonl` is in, one is still to play. The brothers changed on
-       2026-10-10 (Peep and Ribit swap the Tongue for Webbed Feet, so no Lash).
+    1. **Play the fights** (the user, in the Combat lab). **Scrapper at level 0 is done**: 10 fights,
+       human (player 1) against the AI, in `combat_lab/2026-10-10/`. Left, 10 each: champion at 0-1,
+       brawl and capture the flag at 1-3, Wilds and Old Road ambushes at 3, Ancient Ruins at 2-3,
+       Ribbit Brothers at 3. Play to win, as you would in the campaign: the win rate comes out of the
+       same logs and is the number to compare with the AI's benchmark rates. Then **two Ribbit
+       Brothers fights human against human** (one decision list per side): one clean
+       `boss-human-vs-human.jsonl` is in, one is still to play. The brothers changed on 2026-10-10
+       (Peep and Ribit swap the Tongue for Webbed Feet, so no Lash).
     2. **Derive the policy** from the rows the way `play_analysis.py` derived the `human` economy
        profile: thresholds and priorities (when to focus fire, when to retreat, when to go for
        the flag). A new script over `combat_log.frames`.
@@ -193,14 +190,13 @@ pointed to, not repeated.
        AI already ends only 5% of its turns with a point left, a person 23%). First read of the 28
        fights in the author's campaign save (20 trials each, the person won all 28): the AI wins
        hunts 83%, ambushes 95%, the Scrapper 88%, the champion 85%; the ones it loses are the cases
-       to study (hunts of days 20 and 49 at 15% and 10%, day 20's second hunt 45%, day 73's 55%). Two more tried
-       and dropped, 40 trials over all the logs: an evil unit finishes a downed body only when no standing foe
-       is in reach (hunts 82 to 81%, ambushes 89 to 91%), and a unit that would walk into a foe's reach
+       to study (hunts of days 20 and 49 at 15% and 10%, day 20's second hunt 45%, day 73's 55%). Two more tried, 40 trials over all the logs: an evil unit finishes a downed body only when no standing foe
+       is in reach (hunts 82 to 81%, ambushes 89 to 91%; kept anyway, built 2026-10-10, because it costs the AI nothing), and a unit that would walk into a foe's reach
        without a blow waits one turn instead (hunts 82 to 82%, the day-49 hunt 15 to 2%, the campaign Pit
        and champion bouts up 8 to 10 points on one or three fights). Neither moved the hunts beyond noise
        (a fight swings about 8 points between runs).
-    4. **Read the second campaign save** (`saves/a846750e/combat_logs/`, played after 2026-10-10,
-       record_play ON): `combat_analysis.py` for the mix, `combat_pairs.py` for the AI replaying
+    4. **Read the second campaign save** (`saves/a846750e/combat_logs/`, 5 logs so far: three Scrapper, a champion bout
+       and a hunt, days 5-14; record_play ON): `combat_analysis.py` for the mix, `combat_pairs.py` for the AI replaying
        each fight, and the fights the AI loses that the person won. First check whether a lost
        fight or a wipe writes its `end` row (the first save's 28 logs are all wins).
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants

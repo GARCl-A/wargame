@@ -571,7 +571,7 @@ the clock when the battle ends take **one last death save** to settle
 `stable`/`dead`.
 
 The **AI** treats downed bodies by **alignment**: **Evil** delivers the coup de
-grace to an adjacent `dying` enemy before fighting on; **Good** stabilizes an
+grace to an adjacent `dying` enemy, but only when no standing enemy is within its reach; **Good** stabilizes an
 adjacent downed ally before anything else. Otherwise a body is not a target.
 The AI **pathfinds** to reach a downed ally (stopping adjacent to stabilize) or
 navigates toward the nearest map edge when it decides to flee.
@@ -790,7 +790,7 @@ Action in `actions.py` (the `Flee` class). For **both sides** — player and AI.
 moral axis:
 
 - **Evil:** delivers the **coup de grace** to an adjacent downed enemy (hammers
-  the `dying` clock, spending its actions to deny the player a stabilize) before fighting on. Only in
+  the `dying` clock, spending its actions to deny the player a stabilize), but only when no standing enemy is within its reach. Only in
   a **lethal** fight — in the arena it just knocks out.
 - **Good:** **stabilizes** an adjacent downed ally before anything else and, when
   it flees, drags the wounded along.

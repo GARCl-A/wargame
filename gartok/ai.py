@@ -160,9 +160,12 @@ def _recover_torch(battle, unit):
 
 def _finish_off(battle, unit):
     """A downed enemy body this unit could hit right now -- dying (each blow ticks its death clock)
-    before merely stable, nearest first. Only when the fight is lethal and the
-    unit is of evil bent."""
+    before merely stable, nearest first. Only when the fight is lethal, the
+    unit is of evil bent and no standing foe is within its reach."""
     if not battle.lethal or _axes(unit)[1] >= 0:
+        return None
+    if any(actions.ATTACK.can(battle, unit, u)
+           for u in battle.units if u.team != unit.team and not u.downed):
         return None
     bodies = sorted((u for u in battle.units if u.team != unit.team and u.downed),
                     key=lambda u: (not u.dying, battle.units_distance(unit, u)))

@@ -91,6 +91,7 @@ class UpkeepMixin:
                         if cured:
                             u.sick = False
                             u.treated = False
+                            u._apply_attributes()
                             u._derive_combat()
                         else:
                             u.treated = False

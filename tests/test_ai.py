@@ -71,6 +71,18 @@ def test_evil_ai_gives_a_downed_enemy_the_coup_de_grace():
     assert a.dying and a.death_clock >= 2            # two actions, two ticks -- not an instant kill
 
 
+def test_evil_ai_holds_the_coup_de_grace_while_a_standing_foe_is_in_reach():
+    from gartok import ai
+    batt, a, d = _melee_battle()
+    d.alignment = "Chaotic and Evil"
+    a.go_down(batt.log)
+    mate = _recruit(batt)
+    mate.pos = (6, 6)                                # adjacent to d, still standing
+    assert ai._finish_off(batt, d) is None
+    mate.pos = (0, 0)
+    assert ai._finish_off(batt, d) is a
+
+
 def test_neutral_ai_ignores_a_downed_enemy():
     from gartok import ai
     batt, a, d = _melee_battle()

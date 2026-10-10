@@ -286,3 +286,14 @@ def test_screen_admits_a_long_poison_alone():
     scr.draw(surf)
     scr._click(scr.treat_rect.center)
     assert any(x.order and x.order.task == "hospital" for x in guild.groups) and not scr.picked
+
+
+def test_a_rotten_meal_weakens_the_attributes_at_once_and_the_cure_restores_them():
+    u = _unit()
+    con = u.constitution
+    u._pack_add("Rotten Food")
+    u.unfed_days = 1
+    assert u.eat_now()
+    assert u.sick and u.constitution == con - 4
+    medic.cure(u)
+    assert not u.sick and u.constitution == con
