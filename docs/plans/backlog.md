@@ -93,10 +93,19 @@ pointed to, not repeated.
   3. **Mission chain from the Tanner** (2-3 missions on the hub's board, reputation-gated) whose
      reward is learning the recipe; the last one points at the ox. *Built: 1 Fifteen Hides,
      2 The Biwolf's Hide (night hunt with 15 Meat, `hunt.biwolf_lure`, Leather of Biwolf
-     artifact; no deadline). Missing: the ox job itself, offered with `requires="tanner_biwolf"`
-     (`MissionTemplate.requires`).*
-  4. The recipe in `items.CRAFTING_RECIPES` (`craft_level.py` derives the level), then re-run
-     `scripts/economy_report.py` (a new craft-for-sale line). Needs tests, tutorial and RULES line.
+     artifact; no deadline), 3 The Immortal Ox (Country Roads search, daylight tracking, the
+     skittish Aurochs on a big field, Thunderhide +1 STR, Legendary Horn, recipe on delivery).
+     The recipe is registered too (`items.CRAFTING_RECIPES["Signal Horn"]`, Hide + Rope +
+     Legendary Horn with a Chisel).*
+  4. Open: `scripts/economy_report.py` has no craft-for-sale line for the Signal Horn yet, and
+     the ox needs its own portrait (see the art item below).
+- **Talent trees are shorter than the level cap (to be authored by hand, no rush).** The XP
+  tables now run to level 15 (2026-10), but the trees do not: combat has 14 nodes and work 10
+  (each level grants one pick), so combat 15 wastes a pick and work levels 11-15 grant picks with
+  nothing to spend them on. The racial track (picks from racial level 5) is worse: its 26 nodes
+  are split across races, so most races have almost none of their own and a high racial level
+  buys hit dice only (the Aurochs has zero). Goal: **at least 30 combat and 30 work talents**,
+  and enough racial nodes per race for its picks. Nothing built; the author will design them.
 - **Item properties: base material, source, rarity (design first, feeds the economy).** Every
   item is craftable except the **base materials**: an item with no recipe is a base material
   (derived, like `craft_level.py`, not set by hand), and each one must **declare its source**:

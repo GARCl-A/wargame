@@ -67,7 +67,7 @@ from .editor_menu_screen import EditorMenuScreen
 from .gear_screen import GearScreen
 from .guild import Guild
 from .guild_screen import GuildScreen
-from .hunt_screen import HuntScreen
+from .hunt_screen import HuntScreen, TrackScreen
 from .justice_screen import GuardScreen
 from .ledger_screen import LedgerScreen
 from .level_screen import LevelScreen
@@ -446,6 +446,7 @@ class App:
         "recruit": lambda s, g, n, o: s._open_taverna(list(g.members), n, None, group=g),
         "prison": lambda s, g, n, o: s._open_prison(list(g.members), n, None),
         "hunt": lambda s, g, n, o: s._open_hunt_ground(list(g.members), n, None, group=g),
+        "ox_hunt": lambda s, g, n, o: s._open_hunt_ground(list(g.members), n, None, group=g, target="ox"),
         "tanner": lambda s, g, n, o: s._open_tanner_stall(g, n, None),
         "trust": lambda s, g, n, o: s._open_trust_offer(g, n, None),
         "ledger": lambda s, g, n, o: s._open_ledger_desk(g, n, None),
@@ -768,21 +769,26 @@ class App:
     # ------------------------------------------------------------------ #
     # hunting the wilds -- an activity that can spring a fight            #
     # ------------------------------------------------------------------ #
-    def _open_hunt_ground(self, party, node, _offer, group=None):
+    def _open_hunt_ground(self, party, node, _offer, group=None, target="meat"):
         if group is not None and wagon_watch.needs_watch(group):
-            self.scene = WatchScreen(self.ui_fonts, group, node, "GO HUNTING",
-                                     on_confirm=lambda hunters, guarded: self._begin_hunt(hunters, node, group, guarded),
+            label = "TRACK THE OX" if target == "ox" else "GO HUNTING"
+            self.scene = WatchScreen(self.ui_fonts, group, node, label,
+                                     on_confirm=lambda hunters, guarded: self._begin_hunt(hunters, node, group, guarded, target),
                                      on_back=self._after_activity)
         else:
-            self._begin_hunt(party, node, group, True)
+            self._begin_hunt(party, node, group, True, target)
 
-    def _begin_hunt(self, party, node, group, guarded):
+    def _begin_hunt(self, party, node, group, guarded, target="meat"):
         self._leave_outside(group, node, guarded)
-        self._hunt = hunt.HuntState(list(party), node, hours_left=0)
-        self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="setup",
-                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
-                                on_tick=self._hunt_tick,
-                                on_autowin=self._resolve_hunt_autowin)
+        self._hunt = hunt.HuntState(list(party), node, hours_left=0, target=target)
+        self.scene = self._hunt_screen("setup")
+
+    def _hunt_screen(self, phase, autowin=True):
+        cls = TrackScreen if self._hunt.target == "ox" else HuntScreen
+        return cls(self.ui_fonts, self.guild, self._hunt, phase=phase,
+                   on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
+                   on_tick=self._hunt_tick,
+                   on_autowin=self._resolve_hunt_autowin if autowin else None)
 
     def _hunt_tick(self, hours):
         """A hunt stretch spends hours outside the map's tick/orders loop --
@@ -833,18 +839,13 @@ class App:
     def _resume_hunt(self):
         """Back from a won ambush with daylight still to spend."""
         self._save()
-        self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="interlude",
-                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
-                                on_tick=self._hunt_tick,
-                                on_autowin=self._resolve_hunt_autowin)
+        self.scene = self._hunt_screen("interlude")
 
     def _finish_hunt(self):
         """The hunt is over (dark, driven off, or the party is spent) -- the
         screen banks the haul on entering its wrap-up phase."""
         self._save()
-        self.scene = HuntScreen(self.ui_fonts, self.guild, self._hunt, phase="done",
-                                on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
-                                on_tick=self._hunt_tick)
+        self.scene = self._hunt_screen("done", autowin=False)
 
     def _end_hunt(self):
         self._hunt = None
@@ -995,6 +996,10 @@ class App:
             if hunt_state is not None:            # an ambush during a hunt
                 hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
                 won = battle.winner == "player"
+                if hunt_state.target == "ox":
+                    hunt_state.hours_left = 0          # one chase per trail found
+                    if won:
+                        missions.slay_ox(self.guild)
                 resume = won and hunt_state.party and hunt_state.hours_left > 0
                 step = self._resume_hunt if resume else self._finish_hunt
 
@@ -1002,6 +1007,11 @@ class App:
                     if hunt_state.biwolf and missions.fail_if_leather_lost(self.guild):
                         self._map_notices.append(
                             "The Biwolf's leather is lost -- the tanner's job is failed for good.")
+                    if hunt_state.target == "ox" and won:
+                        self._map_notices.append("Aurochs, the immortal ox, is dead.")
+                        if missions.fail_if_hide_lost(self.guild):
+                            self._map_notices.append(
+                                "The hide is lost -- the tanner's job is failed for good.")
                     step()
                 if outcome.loot_pool and outcome.survivors:
                     self._save()

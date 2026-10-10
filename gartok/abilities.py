@@ -162,6 +162,9 @@ _LIST = [
             "racial level) or the victim is poisoned: Giant Spider Venom, one stack "
             "more per failed save, each eating a point of Dexterity.",
             venom="giant_spider_venom"),
+    Ability("aurochs_might", "Aurochs Might",
+            "+3 squares of speed, +3 [melee] damage (a gore that lifts a man).",
+            speed=3, melee_damage=3),
     Ability("wolf_pack_tactics", "Pack Tactics",
             "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
             "ally already on the target, not just the first.",

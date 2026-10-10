@@ -136,6 +136,8 @@ class MissionOfferScreen(Screen):
                     t = missions.template_of(m)
                     earned = missions.turn_in(self.guild, m)
                     self.notice = self.get_success_notice(t.reward)
+                    if t.reward_recipe:
+                        self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
                     for d in earned:
                         self.notice += "  ·  " + factions.deed_notice(d)
             elif key == "done":

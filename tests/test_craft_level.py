@@ -18,7 +18,7 @@ def test_the_levels_the_difficulty_works_out_for_every_recipe():
               if not name.startswith("Dictionary of ") or name == "Dictionary of Ankarin"}
     assert levels == {
         "Jerky": 1, "Bear Trap": 1, "Alarm Trap": 2, "Dwarf Shield": 2, "Dictionary of Ankarin": 2,
-        "Dwarf Axe": 3, "Dwarf Armor": 3, "Minor Healing Potion": 3, "Antidote": 3,
+        "Dwarf Axe": 3, "Dwarf Armor": 3, "Minor Healing Potion": 3, "Antidote": 3, "Signal Horn": 4,
     }
 
 

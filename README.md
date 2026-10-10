@@ -238,6 +238,8 @@ gartok/
   recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
                     bail-and-pitch alternative
   hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
+  ox.py             the tanner's last job: the Country Roads search, tracking Aurochs by daylight
+  ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
   settings.py       player preferences (settings.json), listed in the pause menu
   recorder.py       opt-in play log (play.jsonl beside the saves) the economy sim learns from

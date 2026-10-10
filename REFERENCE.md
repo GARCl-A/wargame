@@ -54,6 +54,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Ferocity | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Spider Venom | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
+| Aurochs Might | +3 squares of speed, +3 [melee] damage (a gore that lifts a man). |
 | Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 
 ## Squad archetypes
@@ -232,6 +233,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Large Shortspear | 3 kg | -- |
 | Leather Jerkin | 4 kg | -- |
 | Leather of Biwolf | 1 kg | -- |
+| Legendary Horn | 2 kg | material |
 | Letter of Receipt | 0.1 kg | -- |
 | Light Crossbow | 2.5 kg | -- |
 | Light Hammer | 1 kg | -- |
@@ -268,6 +270,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Signal Horn | 1 kg | -- |
 | Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
+| Thunderhide | 1.5 kg | -- |
 | Torch | 0.5 kg | -- |
 | Venom Gland | 0.2 kg | material |
 | Vial | 0.1 kg | material |
@@ -413,6 +416,7 @@ The leatherworkers of the city. They pay for what the Wilds sheds.
 |---|---|---|---|
 | Fifteen Hides | Bring the tanner fifteen hides. | +1 | -- |
 | The Biwolf's Hide | Bring the tanner the leather of the Biwolf. | +1 | -- |
+| The Immortal Ox | Bring the tanner the hide of Aurochs, the immortal ox. | +1 | tanners_biwolf |
 
 ## Constants
 
@@ -436,6 +440,6 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Lumber wage | $1 per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
 | Hunting job level | 3 |
 | Bank strongbox | $90 to rent, holds 30 kg |
-| Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105, 136, 171, 210 |
-| Work XP thresholds | 2, 6, 12, 20, 30, 42, 56, 72, 90, 110 |
-| Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14, 16, 18, 20 |
+| Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253, 300, 351, 406, 465 |
+| Work XP thresholds | 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156, 182, 210, 240 |
+| Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 |

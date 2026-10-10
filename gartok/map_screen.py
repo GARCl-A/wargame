@@ -65,8 +65,10 @@ from . import (
     autowin,
     campaign,
     economy,
+    missions,
     node_functions,
     orders,
+    ox,
     rest,
     world,
 )
@@ -196,9 +198,7 @@ class MapScreen(Screen):
         self._minimap_params = (0.0, 0.0, 1.0)
 
     def _refresh_nodes(self):
-        discovered = getattr(self.guild, "ancient_ruins_discovered", False)
-        self._nodes = {n.id: self._node_dict(n) for n in world.NODES
-                       if n.id != "ancient_ruins" or discovered}
+        self._nodes = {n.id: self._node_dict(n) for n in world.known(self.guild)}
         self._region_r = {n.id: (WILDS_REGION_R if n.kind == "wilds" else DEFAULT_REGION_R)
                           for n in world.NODES if n.id in self._nodes}
 
@@ -560,6 +560,11 @@ class MapScreen(Screen):
             self._refresh_nodes()
             self.notices.append(msg)
             self._maybe_auto_advance()
+        elif key == "scout_fields":
+            _found, msg = ox.scout_country_roads(self.guild, self.selected)
+            self._refresh_nodes()
+            self.notices.append(msg)
+            self._maybe_auto_advance()
         elif key in orders.INTERACTIVE_KINDS:
             self._issue(orders.interactive(key))
 
@@ -675,9 +680,14 @@ class MapScreen(Screen):
                               "text": f"{names}: has outgrown this job even with their own {tool} "
                                       "-- no more work XP here, look for tougher work"})
 
+        trail_cold = here.has("ox_hunt") and missions.pending_ox(self.guild) is None
         offered = [f for f in node_functions.offered(here)
-                   if f.label and (f.id != "property" or self._has_property_business())]
-        if not (here.is_battle or here.has("work") or offered):
+                   if f.label and (f.id != "property" or self._has_property_business())
+                   and (f.id != "ox_hunt" or not trail_cold)]
+        if trail_cold:
+            blocks.append({"type": "text", "color": T.TX_FAINT,
+                           "text": "The trail is cold. Only the tanner's job brings you back here."})
+        elif not (here.is_battle or here.has("work") or offered):
             blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
                           "color": T.TX_FAINT})
         for fn in offered:
@@ -695,6 +705,12 @@ class MapScreen(Screen):
                           "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
                           "color": T.TX_FAINT})
+
+        if here.id == "country_roads" and not self.guild.ox_fields_discovered:
+            blocks.append({"type": "button", "key": "scout_fields",
+                           "label": f"SEARCH THE LANES ({ox.SCOUT_HOURS} h)", "gap_before": T.S * 2})
+            blocks.append({"type": "text", "text": "Look for where the land opens out (WIS check)",
+                           "color": T.TX_FAINT})
 
         return blocks
 

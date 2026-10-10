@@ -24,11 +24,11 @@ CITY_RAID_LEVEL = 4
 
 # Progression (XP Thresholds)
 # Combat level thresholds (Level 1, 2, 3...)
-COMBAT_XP_THRESHOLDS = (3, 10, 21, 36, 55, 78, 105, 136, 171, 210)
+COMBAT_XP_THRESHOLDS = (3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253, 300, 351, 406, 465)
 # Work marks thresholds (Level 1, 2, 3...)
-WORK_XP_THRESHOLDS = (2, 6, 12, 20, 30, 42, 56, 72, 90, 110)
+WORK_XP_THRESHOLDS = (2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156, 182, 210, 240)
 # Racial level thresholds (combat + work level)
-RACIAL_XP_THRESHOLDS = (2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+RACIAL_XP_THRESHOLDS = (2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30)
 # Highest combat / work level an enemy pack is pitched at (encounters.py, arena.py):
 # the XP tables above run past it so the creator can pin NPCs higher
 ENEMY_COMBAT_CAP = 7

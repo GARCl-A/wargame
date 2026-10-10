@@ -4,7 +4,7 @@ The level never blocks anyone: it is the recipe's difficulty label and, through
 `progression.work_xp_hours`, the work-XP multiplier for a crafter below it. Points come from
 three things, `LEVEL_PER_POINTS` of them per level above the first:
 
-- the barrier to start: anyone (0), a talent any race can take (1), a racial talent only (2);
+- the barrier to start: anyone (0), a talent any race can take (1), a racial talent or a quest's teaching only (2);
 - scarce reagents, those the shops do not sell without limit (0, 1, 2 or more);
 - the time a batch takes at an average roll (`HOURS_STEPS` hours add a point each).
 """
@@ -19,7 +19,7 @@ AVG_ROLL = 10.5                       # a d20 at INT mod 0: crafting progress pe
 
 def entry_of(name):
     """Who may start the recipe: `open` (everyone, or anyone who speaks the dictionary's
-    language), `talent` (a talent any race can take) or `race` (only a racial talent)."""
+    language), `talent` (a talent any race can take) or `race` (only a racial talent, or a job's reward like the tanner's)."""
     if name in items.COMMON_RECIPES or name.startswith("Dictionary of "):
         return "open"
     if name in items.APOTHECARY_RECIPES or name in items.BLACKSMITH_RECIPES:

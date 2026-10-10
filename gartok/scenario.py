@@ -42,6 +42,10 @@ class Scenario:
         self._scatter_torches(battle)
         self._place_ai_traps(battle)
 
+    def on_round(self, battle):
+        """A new round begins -- a scenario with a clock of its own (reinforcements,
+        a hint) hooks here. The base scenario has none."""
+
     def _place_ai_traps(self, battle):
         """The AI automatically places one trap from its inventory, if it has any,
         near its starting position before the battle starts."""

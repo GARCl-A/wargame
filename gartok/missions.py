@@ -38,6 +38,7 @@ class MissionTemplate:
     starting_item: str | None = None   # handed to the signer's pack the moment they accept
     requires: str | None = None        # template id that must be done before this one is offered
     retry_days: int | None = None      # a failed run is offered again this many days after the failure
+    reward_recipe: str | None = None   # a crafting recipe every member of the delivering group learns
 
     def __post_init__(self):
         tags_val = self.tags
@@ -93,6 +94,20 @@ TANNER_BIWOLF = MissionTemplate(
 # (`ledger_screen.py`) -- `turn_in`'s ordinary goal_item/goal_qty count works
 # unchanged, it just counts a letter instead of hides. No copper reward: the
 # point is the trust, not the pay (see factions.py's `bankers_trust` deed).
+# Aurochs, the immortal ox, is the chain's end: found only by tracking him in the
+# Ox Fields (`ox.py`), which the Country Roads show only while this job is out.
+# Same rule as the Biwolf's leather: lose the hide after the kill and it fails
+# for good (`fail_if_hide_lost`). The pay is double the hides', plus the recipe.
+TANNER_OX = MissionTemplate(
+    "tanner_ox", "tanner", "city", "The Immortal Ox",
+    "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, "
+    "grazing the fertile fields south of the farm. Its hide is the finest there is. "
+    "Bring it to me and I will teach you what the horn is good for.",
+    goal_item=items.THUNDERHIDE_ITEM, goal_qty=1, reward=2 * TANNER_HIDES.reward, deadline_days=None,
+    tags=("economic", "tanner", "ox"), requires="tanner_biwolf",
+    reward_recipe="Signal Horn",
+)
+
 TRUST_CHEST = MissionTemplate(
     "bankers_trust_chest", "bankers", "city", "A Test of Trust",
     "The Bankers want proof the guild can be trusted with something precious "
@@ -127,6 +142,7 @@ LIBRARY_ANCIENT_CODEX = MissionTemplate(
 TEMPLATES = {
     TANNER_HIDES.id: TANNER_HIDES,
     TANNER_BIWOLF.id: TANNER_BIWOLF,
+    TANNER_OX.id: TANNER_OX,
     TRUST_CHEST.id: TRUST_CHEST,
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
@@ -251,6 +267,10 @@ def turn_in(guild, mission):
     for i, u in enumerate(group.members):
         u.money += base + (1 if i < rem else 0)
     mission.state = "done"
+    if t.reward_recipe:
+        for u in group.members:
+            if t.reward_recipe not in u.recipes:
+                u.recipes.append(t.reward_recipe)
     recorder.emit("mission", what="turn_in", id=t.id, reward=t.reward)
     return factions.settle(guild, factions.Event(
         "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
@@ -298,32 +318,58 @@ def pending_fortress_ambush(guild, group):
     return mission
 
 
+def _active(guild, template):
+    return next((m for m in guild.missions
+                 if m.template_id == template.id and m.state == "active"), None)
+
+
 def pending_biwolf(guild):
     """The Biwolf job, if it is active and has not sprung its ambush yet --
     the Mission to mark `ambush_done` on (`hunt.biwolf_pack`), else None."""
-    mission = next((m for m in guild.missions
-                    if m.template_id == TANNER_BIWOLF.id and m.state == "active"), None)
+    mission = _active(guild, TANNER_BIWOLF)
     return None if mission is None or mission.ambush_done else mission
 
 
-def _leather_held(guild):
-    if any(_held(u, items.BIWOLF_LEATHER_ITEM) for u in guild.roster):
+def pending_ox(guild):
+    """The ox job, while Aurochs still walks: active and not yet slain
+    (`slay_ox`). It is what shows the Ox Fields and lets the party track him."""
+    mission = _active(guild, TANNER_OX)
+    return None if mission is None or mission.ambush_done else mission
+
+
+def slay_ox(guild):
+    """Aurochs fell: the trail is closed for good (`ambush_done`)."""
+    mission = _active(guild, TANNER_OX)
+    if mission is not None:
+        mission.ambush_done = True
+
+
+def _item_held(guild, item):
+    if any(_held(u, item) for u in guild.roster):
         return True
-    return (guild.bank.count_of(items.BIWOLF_LEATHER_ITEM)
-            + guild.house.stash.count_of(items.BIWOLF_LEATHER_ITEM)) > 0
+    return (guild.bank.count_of(item) + guild.house.stash.count_of(item)) > 0
+
+
+def _fail_if_lost(guild, template):
+    mission = _active(guild, template)
+    if mission is None or not mission.ambush_done or _item_held(guild, template.goal_item):
+        return None
+    mission.state = "failed"
+    mission.failed_day = guild.clock.day
+    return mission
 
 
 def fail_if_leather_lost(guild):
     """After the Biwolf's ambush is over: if the leather is nowhere in the guild
     (left on the field, never dropped), the job fails for good -- there is no
     second ambush. Returns the failed Mission, else None."""
-    mission = next((m for m in guild.missions
-                    if m.template_id == TANNER_BIWOLF.id and m.state == "active"), None)
-    if mission is None or not mission.ambush_done or _leather_held(guild):
-        return None
-    mission.state = "failed"
-    mission.failed_day = guild.clock.day
-    return mission
+    return _fail_if_lost(guild, TANNER_BIWOLF)
+
+
+def fail_if_hide_lost(guild):
+    """Same for Aurochs: once he is slain, a hide that is nowhere in the guild
+    fails the job for good. Returns the failed Mission, else None."""
+    return _fail_if_lost(guild, TANNER_OX)
 
 
 def expire_overdue(guild):

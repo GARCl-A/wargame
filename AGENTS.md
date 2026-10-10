@@ -80,6 +80,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 | `archetypes.py` | recruit archetype catalog + candidate generation |
 | `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |
+| `ox.py` / `ox_fields.py` | the tanner's last job: the Country Roads search, the daylight tracking of Aurochs (`ox.track`, DC climbs per found trail) and the big skittish-beast field (`OxFieldsScenario`: terrain, the herd's call, win on his fall); `ai._skitter` is his flight |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
 | `arena.py` | Champion of the Pit title and its defense cycle |
 | `magic.py` | spell registry + study-difficulty math (casting is in actions/spells.py) |

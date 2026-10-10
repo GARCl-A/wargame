@@ -14,15 +14,16 @@ A rolled beast (`Unit.race["kind"] == "beast"`, see `data.BEAST_POOL`) never
 carries gear -- it drops its own trophy material instead, straight off the race dict
 (`drop_item`/`drop_chance`, e.g. the Wolf's `data.BEASTS` row): a new species'
 material is a data change in `data.py`, not a new branch here. An authored NPC
-(`npc_lib`) can instead carry a guaranteed unique drop, keyed by its slug in
-`UNIQUE_DROPS` (the Biwolf's leather).
+(`npc_lib`) can instead carry guaranteed unique drops, keyed by its slug in
+`UNIQUE_DROPS` (the Biwolf's leather, the Aurochs' hide and horn).
 """
 
 import random
 
 from . import items
 
-UNIQUE_DROPS = {"biwolf": items.BIWOLF_LEATHER_ITEM}
+UNIQUE_DROPS = {"biwolf": (items.BIWOLF_LEATHER_ITEM,),
+               "aurochs": (items.THUNDERHIDE_ITEM, items.LEGENDARY_HORN_ITEM)}
 
 
 def parse_currency(it):
@@ -71,9 +72,7 @@ def field_loot(battle, fallen_combatants, rng=random):
             for coin in items.COIN_VALUE:
                 pool += [coin] * char.count_of(coin)
         if char is not None:
-            unique = UNIQUE_DROPS.get(getattr(char, "npc_slug", None))
-            if unique:
-                pool.append(unique)
+            pool += UNIQUE_DROPS.get(getattr(char, "npc_slug", None), ())
             drop = char.race.get("drop_item")
             if drop and rng.random() < char.race.get("drop_chance", 0.0):
                 pool.append(drop)

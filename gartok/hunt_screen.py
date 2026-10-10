@@ -14,7 +14,7 @@ just drives one stretch at a time and shows what happened.
 
 import pygame
 
-from . import autowin, hunt
+from . import autowin, hunt, ox
 from .scenario import Scenario
 from .screen import Screen
 from .ui.primitives import (
@@ -48,7 +48,8 @@ class HuntScreen(Screen):
         # `app` passes the real tick (`_hunt_tick`, via `campaign.advance`,
         # keeps other groups synced); the `pass_time` fallback is test-only.
         self.on_tick = on_tick or guild.pass_time
-        self.hours = hunt.HUNT_SHIFT_HOURS[1]   # default: the second option
+        shifts = ox.TRACK_SHIFT_HOURS if state.target == "ox" else hunt.HUNT_SHIFT_HOURS
+        self.hours = shifts[1]            # default: the second option
         self.stretch_events = []          # daily-upkeep lines from the last stretch
         self.result = None                # hunt.grant_haul lines, once wrapped up
         self.chips = []                   # [(rect, hours)]
@@ -92,7 +93,31 @@ class HuntScreen(Screen):
         if self.result is None:
             self.result = hunt.grant_haul(self.state)
 
+    @property
+    def _tracking(self):
+        return self.state.target == "ox"
+
+    def _daylight(self):
+        return ox.daylight_hours(self.guild.clock.hour_of_day)
+
+    def _do_track(self):
+        elapsed, found = ox.track(self.state, self.guild)
+        res = self.on_tick(elapsed)
+        self.stretch_events = res[0] if isinstance(res, tuple) else (res or [])
+        self.state.party = [u for u in self.state.party if u in self.guild.roster]
+        if self.guild.empty or not self.state.party:
+            self._wrap_up()
+        elif found:
+            self.state.fights += 1
+            self.ambush_pack = ox.aurochs_pack()
+            self.phase = "ambush"
+        else:
+            self._wrap_up()
+
     def _do_stretch(self):
+        if self._tracking:
+            self._do_track()
+            return
         clock = self.guild.clock
         lure = hunt.biwolf_lure(self.guild, self.state.party)
         self.state.biwolf = False
@@ -121,7 +146,7 @@ class HuntScreen(Screen):
             if not rect.collidepoint(px):
                 continue
             if key == "confirm":
-                self.state.hours_left = self.hours
+                self.state.hours_left = min(self.hours, self._daylight()) if self._tracking else self.hours
                 self._do_stretch()
             elif key == "hunt_on":
                 self._do_stretch()
@@ -156,11 +181,15 @@ class HuntScreen(Screen):
         self.target_chips = []
         self._reset_buttons()
 
-        text(screen, F["titleb"], "THE WILDS", (m, m - 2), T.TX)
+        text(screen, F["titleb"], "THE OX FIELDS" if self._tracking else "THE WILDS", (m, m - 2), T.TX)
         clock = self.guild.clock
         y = hunt.party_yield(len(self.state.party))
-        yields = (f"meat: {y / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party" if self.state.target == "meat"
-                  else f"forage: {y:.2f}x the usual finds for the party")
+        if self._tracking:
+            best = max((u.mod_wisdom for u in self.state.party), default=0)
+            yields = f"best tracker: Wisdom {best:+d}"
+        else:
+            yields = (f"meat: {y / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party" if self.state.target == "meat"
+                      else f"forage: {y:.2f}x the usual finds for the party")
         text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   {yields}",
              (m, m + 30), T.TX_MUTED)
 
@@ -201,7 +230,36 @@ class HuntScreen(Screen):
             c = Combatant(u)
             draw_row(screen, F, rect, unit_to_ch(c), draw_trailing=_trailing)
 
+    def _draw_tracking_setup(self, screen, top):
+        F = self._F
+        m = T.S * 3
+        w = screen.get_width() - 2 * m
+        daylight = self._daylight()
+        top = section(screen, F, "HOW LONG TO READ THE GROUND", m, top, w)
+        opts = [h for h in ox.TRACK_SHIFT_HOURS if h <= daylight] or [0]
+        self.hours = min(self.hours, max(opts))
+        gap = T.S
+        cw = (w - (len(opts) - 1) * gap) // len(opts)
+        for i, h in enumerate(opts):
+            r = pygame.Rect(m + i * (cw + gap), top, cw, 56)
+            sel = h == self.hours
+            panel(screen, r, hover=sel or r.collidepoint(self.mouse), width=2 if sel else 1)
+            text(screen, F["bodyb"], f"{h} h", (r.x + T.S, r.y + 8), T.BRASS if sel else T.TX)
+            text(screen, F["body_sm"], f"{h} Wisdom check{'s' * (h != 1)}", (r.x + T.S, r.y + 30), T.TX_MUTED)
+            self.chips.append((r, h))
+        top += 66
+        dc = ox.track_dc(self.guild)
+        text(screen, F["body_sm"], f"One check an hour against DC {dc}; a found trail opens the field and "
+             f"makes the next DC {dc + ox.TRACK_DC_STEP}.", (m, top), T.TX_FAINT)
+        top += 18
+        note = ("The tracks can only be read by daylight." if daylight else
+                "Too dark to read the ground -- come back at dawn.")
+        text(screen, F["body_sm"], note, (m, top), T.TX_FAINT if daylight else T.BLOOD)
+
     def _draw_setup(self, screen, top):
+        if self._tracking:
+            self._draw_tracking_setup(screen, top)
+            return
         F = self._F
         m = T.S * 3
         w = screen.get_width() - 2 * m
@@ -268,7 +326,7 @@ class HuntScreen(Screen):
         F = self._F
         m = T.S * 3
         w = screen.get_width() - 2 * m
-        top = section(screen, F, "BACK FROM THE WILDS", m, top, w)
+        top = section(screen, F, "THE TRAIL GOES COLD" if self._tracking else "BACK FROM THE WILDS", m, top, w)
         for ln in self.result or []:
             text(screen, F["body_sm"], ln, (m, top), T.GREEN if ("meat" in ln or "bring back" in ln) else T.BRASS)
             top += 16
@@ -279,6 +337,15 @@ class HuntScreen(Screen):
         F = self._F
         m = T.S * 3
         w = screen.get_width() - 2 * m
+        if self._tracking:
+            top = section(screen, F, "THE TRAIL IS FRESH!", m, top, w)
+            text(screen, F["bodyb"], "Aurochs is grazing somewhere on the open fields ahead.", (m, top), T.BLOOD)
+            top += 24
+            text(screen, F["body_sm"], "A lethal chase: he runs from anyone near. Pin him in a canyon "
+                 "and bring him down -- and every few rounds the herd answers his call.", (m, top), T.TX_MUTED)
+            top += 24
+            self._draw_events(screen, top)
+            return
         top = section(screen, F, "THE BIWOLF!" if self.state.biwolf else "AMBUSH IN THE WILDS!", m, top, w)
         if self.state.biwolf:
             text(screen, F["body_sm"], "The smell of your meat drew it out of the dark.", (m, top), T.TX_FAINT)
@@ -307,12 +374,16 @@ class HuntScreen(Screen):
     def _draw_footer(self, screen):
         if self.phase == "setup":
             footer_bar(self, screen, self._F, back=("leave", "LEAVE"),
-                       primary=("confirm", "INTO THE WILDS"))
+                       primary=("confirm", "READ THE GROUND" if self._tracking else "INTO THE WILDS",
+                                not self._tracking or self._daylight() > 0))
         elif self.phase == "interlude":
             footer_bar(self, screen, self._F, back=("head_back", "HEAD BACK"),
                       primary=("hunt_on", "KEEP HUNTING"))
         elif self.phase == "ambush":
             sec = None
+            if self._tracking:
+                footer_bar(self, screen, self._F, primary=("fight_ambush", "FOLLOW THE TRAIL"), danger=True)
+                return
             if self.autowin_estimator.result and self.autowin_estimator.result.eligible:
                 sec = ("autowin_ambush", "AUTO-WIN (100% - NO XP)")
             n = len(self.ambush_pack or [])
@@ -321,3 +392,10 @@ class HuntScreen(Screen):
                        danger=True)
         else:
             footer_bar(self, screen, self._F, primary=("done", "CONTINUE"))
+
+
+class TrackScreen(HuntScreen):
+    """The same screen, tracking Aurochs (`HuntState.target == "ox"`): its own card."""
+
+    def tutorial_key(self):
+        return "ox_hunt"

@@ -45,6 +45,8 @@ FUNCTIONS = {f.id: f for f in (
     NodeFunction("claim", "claim", "THE WILDS CLAIM"),
     NodeFunction("ledger", "ledger", "VISIT THE OUTPOST",
                  note="hand over what you're carrying, if anything's owed"),
+    NodeFunction("ox_hunt", "ox_hunt", "TRACK THE OX",
+                 note="read the ground by daylight, one Wisdom check an hour  ·  a found trail is a lethal fight"),
     NodeFunction("ancient_ruins", "ancient_ruins", "ENTER THE ANCIENT RUINS",
                  note="Delve into the sunken library chambers (Lethal tactical battle)"),
 )}

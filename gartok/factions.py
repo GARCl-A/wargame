@@ -186,6 +186,11 @@ _DEEDS = [
          "Bring the tanner the leather of the Biwolf.", rep=1,
          check=lambda g, e: e.kind == "mission" and "biwolf" in e.tags),
 
+    Deed("tanners_ox", "tanners", "The Immortal Ox",
+         "Bring the tanner the hide of Aurochs, the immortal ox.", rep=1,
+         requires="tanners_biwolf",
+         check=lambda g, e: e.kind == "mission" and "ox" in e.tags),
+
     # Library deeds
     Deed("library_initiate", "library", "Library Initiate",
          "Complete a task for the library.", rep=1,

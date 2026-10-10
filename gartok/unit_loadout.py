@@ -145,6 +145,7 @@ class LoadoutMixin:
         if self.equipped_artifact:
             self._pack_add(self.equipped_artifact)
         self.equipped_artifact = name
+        self._rederive_artifact()
         return True
 
     # ------------------------------------------------------------------ #
@@ -220,7 +221,13 @@ class LoadoutMixin:
 
     def take_from_artifact(self):
         name, self.equipped_artifact = self.equipped_artifact, None
+        self._rederive_artifact()
         return name
+
+    def _rederive_artifact(self):
+        """An artifact that moves an attribute changes everything hung off it."""
+        self._apply_attributes()
+        self._derive_combat()
 
     def give_to_armor(self, name):
         """Don `name`; whatever was worn goes back to the pack. Armor changes the

@@ -115,6 +115,13 @@
         "Win an ambush and you can keep hunting or call it a day with whatever you've banked. Meat feeds the guild (1 kg is one meal) or sells at the Market. FORAGE WILDS looks for Red Mushrooms and fruit instead."
       ]
     },
+    "ox_hunt": {
+      "title": "Tracking the ox",
+      "body": [
+        "Pick how many hours of daylight to read the ground. Each hour is one Wisdom check by your best tracker; find the trail and the chase begins. Miss, and you can try again -- but every found trail makes the next one 2 harder.",
+        "Aurochs runs from anyone near and is faster than you: don't chase him, pin him against the groves, a canyon or the map edge, and bring ranged hands. Every few rounds the herd answers his call. The fight is won when he falls."
+      ]
+    },
     "bank": {
       "title": "The strongbox",
       "body": [

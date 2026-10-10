@@ -207,6 +207,7 @@ PAYLOAD_DEFAULTS = {
     "wilds_claim_stage": "NONE", "wilds_claim_fence_lumber": 0,
     "wilds_claim_sustain_days_left": None, "wilds_claim_owner": None,
     "wilds_claim_campfire": False, "claim_oven": False, "ancient_ruins_discovered": False,
+    "ox_fields_discovered": False, "ox_trails": 0,
     "shops": {}, "total_spent": 0, "items_sold_kinds": [], "missions": [],
     "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
@@ -246,6 +247,8 @@ def _payload(guild, kind, label):
         "wilds_claim_campfire": guild.wilds_claim_campfire,
         "claim_oven": guild.claim_oven,
         "ancient_ruins_discovered": guild.ancient_ruins_discovered,
+        "ox_fields_discovered": guild.ox_fields_discovered,
+        "ox_trails": guild.ox_trails,
         "shops": {node_id: shop.to_dict() for node_id, shop in guild.shops.items()},
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
@@ -350,6 +353,8 @@ def load_game(world, save_id=CURRENT):
                  name=payload["name"], banner_color=payload["banner_color"],
                  banner_icon=payload["banner_icon"],
                  ancient_ruins_discovered=payload["ancient_ruins_discovered"],
+                 ox_fields_discovered=payload["ox_fields_discovered"],
+                 ox_trails=payload["ox_trails"],
                  tutorial=TutorialState(seen=payload["tutorial_seen"],
                                        enabled=payload["tutorial_enabled"]))
 

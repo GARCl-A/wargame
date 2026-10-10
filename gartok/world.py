@@ -52,6 +52,7 @@ import os
 from dataclasses import dataclass
 
 from . import encounters
+from .ox_fields import OxFieldsScenario
 from .scenario import ArenaScenario, CustomScenario, ErmosScenario
 
 WALK_SPEED = 9.0           # meters per move of the walker one distance unit is measured by
@@ -194,7 +195,14 @@ NODES = [
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
          functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE),
+    Node("country_roads", "Country Roads", "town", (0.44, 0.92),
+         "Dirt lanes between the farmsteads south of the city. Quiet, and wide open."),
+    Node("ox_fields", "Legendary Ox Fields", "town", (0.62, 0.88),
+         "Fertile grazing land where something very old and very large has outlived every hunter sent after it.",
+         OxFieldsScenario, functions=("ox_hunt",)),
 ]
+
+HIDDEN_NODES = {"ancient_ruins": "ancient_ruins_discovered", "ox_fields": "ox_fields_discovered"}
 
 WILDS_TERRITORY_NODE = "wilds_territory"
 
@@ -211,6 +219,8 @@ EDGES = [
     ("road", "wilds", 6),
     ("road", "ledger_hold", 5),
     ("road", "ancient_ruins", 2),
+    ("farm", "country_roads", 1),
+    ("country_roads", "ox_fields", 1),
     ("wilds", "wilds_territory", 2),
     ("road", "mine", 6),
     ("mine", "wilds_territory", 2),
@@ -228,6 +238,11 @@ for _a, _b, _w in EDGES:
 
 def node(id):
     return _BY_ID[id]
+
+
+def known(guild):
+    """The nodes the guild can see: everything but the places still to be found."""
+    return [n for n in NODES if n.id not in HIDDEN_NODES or getattr(guild, HIDDEN_NODES[n.id])]
 
 
 def hours(distance, speed):

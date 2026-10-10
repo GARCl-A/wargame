@@ -365,6 +365,8 @@ _register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemT
 _register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.5, price=1))
 _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, rarity=ItemRarity.UNCOMMON, weight=1.0, price=60))
 _register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
+_register(ItemDef(id="thunderhide", name="Thunderhide", type=ItemType.ARTIFACT, rarity=ItemRarity.UNIQUE, weight=1.5, price=400))
+_register(ItemDef(id="legendary_horn", name="Legendary Horn", type=ItemType.MATERIAL, rarity=ItemRarity.UNIQUE, weight=2.0, price=60))
 _register(ItemDef(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1))
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="map", name="Map", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
@@ -632,6 +634,14 @@ for _lang in _LANGUAGES:
         station=CraftingStation.SCRIPTORIUM,
     )
 
+CRAFTING_RECIPES["Signal Horn"] = CraftingRecipe(
+    target="Signal Horn",
+    materials=["1sqm Hide", "Rope", "Legendary Horn"],
+    complexity=20,
+    station=CraftingStation.FORGE,
+    tools=("Chisel",),
+)
+
 CRAFTING_RECIPES["Jerky"] = CraftingRecipe(
     target="Jerky",
     materials=["Meat", "Meat", "Salt"],
@@ -644,6 +654,7 @@ COMMON_RECIPES = ["Jerky"]            # known by everyone, no talent or teacher 
 
 APOTHECARY_RECIPES = ["Minor Healing Potion", "Antidote"]
 BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
+TANNER_RECIPES = ["Signal Horn"]      # taught by the tanner's last job, never by a talent
 
 # --------------------------------------------------------------------------- #
 # Standard Item Constants                                                     #
@@ -656,6 +667,9 @@ COIN_VALUE = {COIN_ITEM: 1, GOLD_ITEM: 100}
 LANTERN_ITEM = "Lantern"
 SIGNAL_HORN_ITEM = "Signal Horn"
 BIWOLF_LEATHER_ITEM = "Leather of Biwolf"
+THUNDERHIDE_ITEM = "Thunderhide"
+LEGENDARY_HORN_ITEM = "Legendary Horn"
+ARTIFACT_ATTRIBUTES = {THUNDERHIDE_ITEM: ("strength", 1)}    # worn: +N to one attribute score
 AMMO_ITEM = "Quiver"
 FIRST_AID_ITEM = "First Aid Kit"
 ANTIDOTE_ITEM = "Antidote"
@@ -760,6 +774,9 @@ def item_tooltip(name: str) -> tuple[str, str]:
         if it.name == BIWOLF_LEATHER_ITEM:
             desc.append("Artifact: worn in its own slot.")
             desc.append("Passive: +1 AC against anything that is not a humanoid.")
+        elif it.name == THUNDERHIDE_ITEM:
+            desc.append("Artifact: worn in its own slot.")
+            desc.append("Passive: +1 Strength while worn.")
         else:
             desc.append("Artifact: worn in its own slot, it grants a combat action.")
         if it.name == SIGNAL_HORN_ITEM:

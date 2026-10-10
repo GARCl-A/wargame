@@ -326,6 +326,58 @@ def _should_delay(battle, unit):
                and any(battle.units_distance(u, f) <= 1 for f in foes) for u in after)
 
 
+SKITTISH_SLUGS = frozenset({"aurochs"})
+SKITTISH_ALARM = 12       # squares: a beast this near anyone runs
+SKITTISH_STAMINA = 3      # turns of running before it turns and charges
+SKITTISH_CHARGE_ROUNDS = 2    # rounds it then stands and fights
+
+
+def _is_skittish(unit):
+    return getattr(getattr(unit, "char", None), "npc_slug", None) in SKITTISH_SLUGS
+
+
+def _skitter(battle, unit):
+    """A hunted beast's turn: "idle" (nobody near enough to spook it), "moved"
+    (ran for the open ground farthest from the party), or "fight" -- cornered, or
+    winded after `SKITTISH_STAMINA` turns of running, when it lowers its head and
+    charges. The cells it likes are far from every foe and out in the open, so a
+    straight chase just herds it round the groves; it is pinned in a canyon or
+    pincered."""
+    foes = [e for e in battle.units if e.alive and e.team != unit.team]
+    if not foes:
+        return "idle"
+    here = min(grid_distance(unit.pos, f.pos) for f in foes)
+    if getattr(unit, "charging_until", 0) >= battle.round_no:
+        return "fight"
+    if here > SKITTISH_ALARM:
+        unit.fled_turns = 0
+        return "idle"
+    if getattr(unit, "flee_round", None) != battle.round_no:
+        if getattr(unit, "fled_turns", 0) >= SKITTISH_STAMINA:
+            unit.fled_turns = 0
+            unit.charging_until = battle.round_no + SKITTISH_CHARGE_ROUNDS - 1
+            battle.log(f"{unit.name} is winded -- it lowers its head and charges!")
+            return "fight"
+        unit.fled_turns = getattr(unit, "fled_turns", 0) + 1
+        unit.flee_round = battle.round_no
+    board = battle.board
+
+    def score(cell):
+        near = min(grid_distance(cell, f.pos) for f in foes)
+        open_ground = sum(1 for n in board.neighbors(cell) if n not in board.walls)
+        edge = min(cell[0], cell[1], board.cols - 1 - cell[0], board.rows - 1 - cell[1])
+        return near * 2 + open_ground + min(edge, 4)
+
+    best = max(battle.reachable(unit), key=score, default=None)
+    if best is None or best == unit.pos or min(
+            grid_distance(best, f.pos) for f in foes) <= here:
+        battle.log(f"{unit.name} is cornered and turns to fight!")
+        return "fight"
+    battle.move_unit(unit, best)
+    unit.walking = False
+    return "moved"
+
+
 def take_turn(battle, unit):
     if unit.dormant:
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
@@ -348,6 +400,13 @@ def take_turn(battle, unit):
     for _ in range(4):  # safety stop; a turn spends at most 2 points
         if unit.ap <= 0 or not unit.alive:
             break
+
+        if _is_skittish(unit):
+            mode = _skitter(battle, unit)
+            if mode == "moved":
+                continue
+            if mode == "idle":
+                break
 
         if _try_mount(battle, unit):          # mount a Centaur ally if adjacent
             continue

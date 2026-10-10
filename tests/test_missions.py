@@ -200,6 +200,13 @@ def test_completed_mission_shows_completed_label():
     signer.give_to_pack(items.BIWOLF_LEATHER_ITEM)
     missions.turn_in(guild, biwolf)
     screen = TannerScreen(ui_fonts(), guild, hunters, None)
+    assert screen._template is missions.TANNER_OX            # and on to the ox
+    assert screen._offered
+
+    ox = missions.accept(guild, signer, missions.TANNER_OX)
+    signer.give_to_pack(items.THUNDERHIDE_ITEM)
+    missions.turn_in(guild, ox)
+    screen = TannerScreen(ui_fonts(), guild, hunters, None)
     assert screen._completed
     assert not screen._offered
     screen.draw(surf)

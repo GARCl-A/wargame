@@ -38,7 +38,6 @@ from .unit_loadout import (  # noqa: F401 -- re-exported
 )
 from .unit_poison import PoisonMixin
 
-
 # What `from_save` assumes for a key a save does not carry: the same neutral value
 # `__init__` starts with. A new optional field goes here, not into a SAVE_VERSION bump.
 SAVE_DEFAULTS = {
@@ -193,6 +192,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u._racial_override = d["racial_override"]        # creator-pinned racial level, or None
         u.dormant = d["dormant"]
         u.awareness_radius = d["awareness_radius"]
+        u._apply_attributes()                            # the worn artifact is only known now
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
         u.hp = d["hp"]
         u._sync_dictionary_recipes()
@@ -224,7 +224,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         Rebuilt from scratch so it is safe to re-run when a talent is picked."""
         for a, m in zip(ATTRIBUTES, self.race["mods"]):
             setattr(self, a, self.base_attributes[a] + m + self.talent_bonus("attr", a)
-                    - self.poison_penalty(a))
+                    - self.poison_penalty(a) + self._artifact_bonus(a))
         if getattr(self, "sick", False):
             self.constitution -= 4
             self.strength -= 2
@@ -232,6 +232,11 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
             self.intelligence -= 2
             self.wisdom -= 2
             self.charisma -= 2
+
+    def _artifact_bonus(self, attr):
+        """What the worn artifact adds to attribute `attr` (see `items.ARTIFACT_ATTRIBUTES`)."""
+        stat, amount = items.ARTIFACT_ATTRIBUTES.get(getattr(self, "equipped_artifact", None), (None, 0))
+        return amount if stat == attr else 0
 
     def _apply_race(self):
         self.race = data.roll_race()

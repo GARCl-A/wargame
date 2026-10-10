@@ -45,7 +45,7 @@ class HuntState:
     hours_hunted: int = 0          # hours actually spent (drives work XP)
     yield_hours: float = 0.0       # hours weighted by the party's yield (drives the meat haul)
     fights: int = 0                # ambushes fought so far, for the tally line
-    target: str = "meat"           # "meat" or "shrooms"
+    target: str = "meat"           # "meat", "shrooms" or "ox" (tracking Aurochs, see ox.py)
     shrooms_found: int = 0
     fruit_found: int = 0
     biwolf: bool = False           # the ambush in progress is his
@@ -126,6 +126,11 @@ def grant_haul(state):
 
     for u in hunters:
         lines += u.bank_work(state.hours_hunted, HUNT_LEVEL)
+
+    if state.target == "ox":
+        who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} trackers"
+        lines.append(f"{who} spent {state.hours_hunted} h on the trail of the ox.")
+        return lines
 
     if state.target == "meat":
         meat = state.meat

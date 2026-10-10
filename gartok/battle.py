@@ -85,6 +85,28 @@ class Battle:
         self.log("--- Round 1 ---")
         self._announce_turn()
 
+    def reinforce(self, unit, candidates):
+        """Bring a fresh enemy `unit` onto the field at the first of `candidates`
+        (anchors) its footprint fits; it acts last this round. Returns the new
+        combatant, or None when no candidate is free."""
+        c = Combatant(unit, "enemy")
+        c.reset_battle_state()
+        c.nonlethal = not self.lethal
+        taken = self.occupied() | self.board.walls | self.creature_cells()
+        for p in candidates:
+            shape = cells(p, c.footprint)
+            if all(self.board.in_bounds(q) for q in shape) and not (taken & set(shape)):
+                break
+        else:
+            return None
+        c.pos = p
+        c.z = self.board.elevation_at(p)
+        c.initiative = d20() + c.initiative_bonus()
+        self.enemy_units.append(c)
+        self.units.append(c)
+        self.order.append(c)
+        return c
+
     def creature_cells(self):
         return {c for cr in self.creatures for c in cells(cr.pos, cr.footprint)}
 
@@ -677,6 +699,7 @@ class Battle:
                 self.turn_idx = 0
                 self.round_no += 1
                 self.log(f"--- Round {self.round_no} ---")
+                self.scenario.on_round(self)
             u = self.active
             if u.status == "dying":
                 u.delayed = False            # downed while waiting: a revived turn starts fresh

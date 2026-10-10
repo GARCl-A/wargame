@@ -114,7 +114,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
-                 ancient_ruins_discovered=False, leaving=None):
+                 ancient_ruins_discovered=False, leaving=None,
+                 ox_fields_discovered=False, ox_trails=0):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -171,6 +172,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         # the draft (before a Guild exists) keeps its own until `app._draft_done`
         # hands it in
         self.ancient_ruins_discovered = ancient_ruins_discovered
+        self.ox_fields_discovered = ox_fields_discovered   # the Legendary Ox Fields, found once with the tanner's job out
+        self.ox_trails = ox_trails                         # times the Aurochs' trail was found: each makes the next harder
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
 

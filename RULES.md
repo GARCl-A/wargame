@@ -271,7 +271,7 @@ dice scale with every racial level (L1+), the **first racial talent pick unlocks
 only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
 (e.g., `Tongue` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf).
-All three tables run to level 10 so the creator can pin NPCs that high, but
+All three tables run to level 15 so the creator can pin NPCs that high, but
 generated enemies stay capped at combat 7 / work 6 (`constants.ENEMY_*_CAP`).
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
@@ -1352,7 +1352,38 @@ instance of a given template can be active guild-wide at a time
   (`Combatant.ac_vs`). Handing it in (worn or in a pack) ends the job and banks
   the `tanners_biwolf` deed; if the ambush is over and the leather is nowhere in the guild
   (left on the field), the job fails for good (`missions.fail_if_leather_lost`,
-  no retry); it is the gate for the Legendary Ox job to come.
+  no retry); it is the gate for the Legendary Ox job.
+- **The Tanner's third job, Aurochs the immortal ox** (`ox.py`, `ox_fields.py`;
+  offered once the Biwolf is in; no deadline). Pays double the hides' $200, the
+  recipe for the **Signal Horn** (every member of the delivering group learns
+  it) and the third reputation point with the Tanners.
+  - *Finding the place.* The Farm leads 1 h to the **Country Roads**, and from
+    there 1 h to the **Legendary Ox Fields** -- hidden. With the job out, the
+    roads' SEARCH (2 h, Wisdom check of the group's best against DC 10) reveals
+    them for good (`Guild.ox_fields_discovered`); without the job the search finds
+    nothing. With the job gone (done or failed) the Fields stay on the map but
+    the trail is cold.
+  - *Tracking.* At the Fields TRACK THE OX is a hunt-style shift of daylight hours
+    (2 / 4 / 6 / 8, never past dusk): one Wisdom check an hour against DC 12.
+    A found trail opens the fight; every time one is found the next DC is 2 higher
+    (`Guild.ox_trails`), so a lost chase is run again, harder. A found trail is one
+    chase: the hunt ends after it, win or lose.
+  - *The field.* A 48x30 daylight map (the tracks were read by day, so no torches
+    are needed): groves that block sight, mud, and two box canyons opening west.
+    Aurochs (`npcs/aurochs.json`, level 13, Large, faster than
+    any hunter, 119 HP, +5 Strength and +3 melee) is **skittish** (`ai._skitter`):
+    anyone within 12 squares sends him for open ground far from the party, so a
+    straight chase herds him round the groves. He turns and fights when cornered
+    -- a canyon, the map edge, a pincer -- or winded (3 turns of running), and then
+    stands for 2 rounds. Every 5 rounds he bellows and an ox of the party's level
+    minus 2 (1..3) charges in from the far edge, at most 4. While he is out of sight
+    the log gives the compass way to him. The fight is won the moment he falls.
+  - *Loot and failure.* He always drops the **Thunderhide** (artifact: +1 Strength
+    while worn, `items.ARTIFACT_ATTRIBUTES`) and the **Legendary Horn** (the Signal
+    Horn's material, yours to keep, craft or sell). Handing the hide in (worn or in
+    a pack) completes the job and banks `tanners_ox`. Once he is dead the trail is
+    closed for good (`missions.slay_ox`); a hide that is nowhere in the guild fails
+    the job forever (`missions.fail_if_hide_lost`).
 - **The Apothecary** (`apothecary_mission_screen.py`, at the City): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`trust_screen.py` at the City,
