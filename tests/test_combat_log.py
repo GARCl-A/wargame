@@ -425,16 +425,37 @@ def _lab_log(tmp_path, name, controllers, seed=5):
 def test_the_pairs_script_replays_only_logged_fights_a_person_played_against_the_ai(tmp_path):
     battle = _lab_log(tmp_path, "mine.jsonl", HUMAN_AI)
     _lab_log(tmp_path, "two.jsonl", {"player": "human", "enemy": "human"})
-    found = combat_pairs.played([str(tmp_path)])
-    assert [(n, w) for n, _m, w in found] == [("mine.jsonl", battle.winner == "player")]
-    assert found[0][1]["seed"] == 5
-    assert combat_pairs.played([str(tmp_path)], fight="brawl") == []
+    found, skipped = combat_pairs.played([str(tmp_path)])
+    assert [(n, w) for n, _r, w in found] == [("mine.jsonl", battle.winner == "player")]
+    assert skipped == 0
+    assert combat_pairs.played([str(tmp_path)], fight="brawl") == ([], 0)
 
 
-def test_the_pairs_script_gives_the_same_ai_rate_every_run():
-    first = combat_pairs.ai_win_rate("scrapper", 0, 3, 5, 3)
+def test_a_log_rebuilds_into_the_same_squads_on_the_same_cells(tmp_path):
+    _lab_log(tmp_path, "mine.jsonl", HUMAN_AI)
+    rows = combat_log.load(str(tmp_path / "mine.jsonl"))
+    rebuilt = combat_log.rebuild(rows)
+    assert [(u.name, u.team, u.hp_max, u.ac, u.speed, u.weapon_name) for u in rebuilt.units] ==         [(s["name"], s["team"], s["hp_max"], s["ac"], s["speed"], s["weapon"]) for s in rows[0]["units"]]
+    assert [tuple(u.pos) for u in rebuilt.units] == [tuple(v[:2]) for v in rows[0]["state"]["units"]]
+    assert rebuilt.board.walls == {tuple(w) for w in rows[0]["board"]["walls"]}
+    assert combat_pairs.drift(rows) == []
+
+
+def test_a_fight_with_an_objective_of_its_own_is_not_rebuilt(tmp_path):
+    battle, meta = combat_lab.build("ctf", 2, 3, seed=5)
+    log = combat_log.CombatLog(str(tmp_path / "ctf.jsonl"), meta, HUMAN_AI)
+    battle.record_to(log)
+    log.end(battle)
+    with pytest.raises(ValueError):
+        combat_log.rebuild(combat_log.load(log.path))
+
+
+def test_the_pairs_script_gives_the_same_ai_rate_every_run(tmp_path):
+    _lab_log(tmp_path, "mine.jsonl", HUMAN_AI)
+    rows = combat_log.load(str(tmp_path / "mine.jsonl"))
+    first = combat_pairs.ai_win_rate(lambda: combat_log.rebuild(rows), 3)
     assert 0 <= first <= 1
-    assert combat_pairs.ai_win_rate("scrapper", 0, 3, 5, 3) == first
+    assert combat_pairs.ai_win_rate(lambda: combat_log.rebuild(rows), 3) == first
 
 
 def test_the_lab_has_a_tutorial_card_with_copy():

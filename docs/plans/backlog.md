@@ -66,6 +66,14 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   unpriced. (4) The Mine has no art or map icon of its own (it uses the
   work glyph), and no tutorial line.
 
+- **A sick character fights at full strength until the save is reloaded.** `Unit._apply_attributes`
+  takes -4 CON and -2 to the rest while `sick`, but `unit_hunger` sets `sick` and the callers are
+  left to re-derive. In the author's campaign logs, 11 of 27 rebuildable fights have a unit whose
+  logged HP, AC and speed differ from what `Unit.from_save` computes (`combat_pairs.py` prints
+  "stats differ"; the unit is sick in the log and healthy in the fight, and the other way round
+  once the cure forgets to re-derive). Find which path (meal, `guild_upkeep`, `medic`) skips the
+  re-derive and make the derive happen where `sick` flips, with a test.
+
 ## Architecture debt
 
 Past choices that now fight the direction. Each has the cost of fixing it; pay one when the
@@ -165,12 +173,15 @@ pointed to, not repeated.
        profile: thresholds and priorities (when to focus fire, when to retreat, when to go for
        the flag). A new script over `combat_log.frames`.
     3. **Feed it to `ai.py`** and measure against the benchmark win rates above. The gauge is
-       `scripts/combat_pairs.py` (the AI replays each logged squad, same dice before and after a change,
-       plus `--fresh` for unseen squads). Baseline at level 0, Scrapper: the AI wins 59% of the 10 logged
+       `scripts/combat_pairs.py` (the AI replays each logged fight through `combat_log.rebuild`, same dice
+       before and after a change; campaign logs work too; `--fresh` plays unseen lab squads). Baseline at level 0, Scrapper: the AI wins 59% of the 10 logged
        squads (the person 7 of 10) and 56% of unseen ones, not the 95% the report prints. Leads from the
        10 Scrapper logs: the person holds position where the AI walks up (19 of 278 decisions) and
        focuses fire more (89% against 77%); tried and dropped: Defend with a spare point (no change, the
-       AI already ends only 5% of its turns with a point left, a person 23%).
+       AI already ends only 5% of its turns with a point left, a person 23%). First read of the 28
+       fights in the author's campaign save (20 trials each, the person won all 28): the AI wins
+       hunts 83%, ambushes 95%, the Scrapper 88%, the champion 85%; the ones it loses are the cases
+       to study (hunts of days 20 and 49 at 15% and 10%, day 20's second hunt 45%, day 73's 55%).
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
     its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in

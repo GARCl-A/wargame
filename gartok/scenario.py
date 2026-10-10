@@ -226,6 +226,31 @@ class ErmosScenario(Scenario):
         return Board(min_seg=1, max_seg=2)
 
 
+class ReplayScenario(Scenario):
+    """A fight put back at the opening row of a combat log (`combat_log.rebuild`): its board, the
+    cells each unit stood on and the light, with nothing rolled. Only the base rule (a side loses
+    when it is all down) carries over."""
+
+    def __init__(self, start):
+        self.start = start
+
+    def _make_board(self):
+        b = self.start["board"]
+        return Board(walls=b["walls"], elevation=b["elevation"], ropes=b["ropes"],
+                     water=b["water"], cols=b["cols"], rows=b["rows"])
+
+    def build(self, battle):
+        battle.board = self._make_board()
+        battle.ambient_light = self.start["ambient_light"]
+        for u, vals in zip(battle.units, self.start["state"]["units"]):
+            u.pos = (vals[0], vals[1])
+        for kind, x, y, name in self.start["state"]["world"]["ground"]:
+            if kind == GroundObject.TORCH:
+                battle.ground.append(GroundObject.torch((x, y)))
+            elif kind == GroundObject.WEAPON:
+                battle.ground.append(GroundObject.weapon((x, y), name))
+
+
 class CustomScenario(Scenario):
     """A battle built from a map laid out in the editor (`map_lib`): fixed walls,
     fixed torches, and the deployment cells the author painted -- a player zone, a

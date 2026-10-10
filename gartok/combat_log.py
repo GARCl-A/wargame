@@ -269,6 +269,29 @@ def load(path):
         return [json.loads(line) for line in fh if line.strip()]
 
 
+REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "CustomScenario")
+
+
+def rebuild(rows):
+    """A `Battle` standing at the opening of the fight in `rows`: the same characters (rebuilt from
+    their saved dicts), the same board and cells. The turn order and the dice are fresh, so
+    each rebuild is one more way the same fight could have gone. Raises `ValueError` for a fight
+    with an objective of its own (flags, the Ruins), which the rebuild does not carry."""
+    from .battle import Battle
+    from .scenario import ReplayScenario
+    from .unit import Unit
+    start = rows[0]
+    if start["scenario"] not in REPLAYABLE:
+        raise ValueError(f"cannot rebuild a {start['scenario']} fight")
+    sides = {"player": [], "enemy": []}
+    for static in start["units"]:
+        unit = Unit.from_save(static["char"])
+        unit.team = static["team"]
+        sides[static["team"]].append(unit)
+    return Battle(sides["player"], sides["enemy"], scenario=ReplayScenario(start),
+                  daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"])
+
+
 def frames(rows):
     """The fight as a list of states, the opening one first: each is
     {"n", "round", "active": unit index, "units": [dict per unit], "world", "row"}.
