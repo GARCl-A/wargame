@@ -199,7 +199,7 @@ class Reload(Action):
 
 class Defend(Action):
     id, name, cost, target = "defend", "Defend", 1, "none"
-    desc = "+2 AC until your next turn."
+    desc = "+1 AC until your next turn."
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and not actor.defending

@@ -296,6 +296,7 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
                     vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)
+                    combat_pairs.py (the AI replays the squads a person played: its win rate before and after an ai.py change)
 docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),
                     campaign_ai_roadmap.md (the long-range AI plan)
 ```

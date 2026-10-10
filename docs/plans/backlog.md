@@ -164,7 +164,13 @@ pointed to, not repeated.
     2. **Derive the policy** from the rows the way `play_analysis.py` derived the `human` economy
        profile: thresholds and priorities (when to focus fire, when to retreat, when to go for
        the flag). A new script over `combat_log.frames`.
-    3. **Feed it to `ai.py`** and measure against the benchmark win rates above.
+    3. **Feed it to `ai.py`** and measure against the benchmark win rates above. The gauge is
+       `scripts/combat_pairs.py` (the AI replays each logged squad, same dice before and after a change,
+       plus `--fresh` for unseen squads). Baseline at level 0, Scrapper: the AI wins 59% of the 10 logged
+       squads (the person 7 of 10) and 56% of unseen ones, not the 95% the report prints. Leads from the
+       10 Scrapper logs: the person holds position where the AI walks up (19 of 278 decisions) and
+       focuses fire more (89% against 77%); tried and dropped: Defend with a spare point (no change, the
+       AI already ends only 5% of its turns with a point left, a person 23%).
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
     its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in

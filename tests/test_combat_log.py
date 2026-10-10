@@ -1,5 +1,5 @@
 """The combat log, the per-team controllers and the combat lab (combat_log.py, combat_lab.py,
-battle_screen controllers, scripts/combat_analysis.py)."""
+battle_screen controllers, scripts/combat_analysis.py, scripts/combat_pairs.py)."""
 
 import os
 import random
@@ -22,6 +22,7 @@ from gartok.ui.tokens import fonts as ui_fonts
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
 import combat_analysis
+import combat_pairs
 
 HUMAN_AI = {"player": "human", "enemy": "ai"}
 
@@ -410,6 +411,30 @@ def test_the_agreement_counts_where_a_person_parts_from_the_ai():
     total, same_action, same_all, split = combat_analysis.agreement(rows)
     assert (total, same_action, same_all) == (3, 2, 1)
     assert split == {("defend", "attack"): 1}
+
+
+def _lab_log(tmp_path, name, controllers, seed=5):
+    battle, meta = combat_lab.build("scrapper", 0, 3, seed=seed)
+    log = combat_log.CombatLog(str(tmp_path / name), meta, controllers)
+    battle.record_to(log)
+    _play(battle)
+    log.end(battle)
+    return battle
+
+
+def test_the_pairs_script_replays_only_logged_fights_a_person_played_against_the_ai(tmp_path):
+    battle = _lab_log(tmp_path, "mine.jsonl", HUMAN_AI)
+    _lab_log(tmp_path, "two.jsonl", {"player": "human", "enemy": "human"})
+    found = combat_pairs.played([str(tmp_path)])
+    assert [(n, w) for n, _m, w in found] == [("mine.jsonl", battle.winner == "player")]
+    assert found[0][1]["seed"] == 5
+    assert combat_pairs.played([str(tmp_path)], fight="brawl") == []
+
+
+def test_the_pairs_script_gives_the_same_ai_rate_every_run():
+    first = combat_pairs.ai_win_rate("scrapper", 0, 3, 5, 3)
+    assert 0 <= first <= 1
+    assert combat_pairs.ai_win_rate("scrapper", 0, 3, 5, 3) == first
 
 
 def test_the_lab_has_a_tutorial_card_with_copy():
