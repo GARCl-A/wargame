@@ -28,8 +28,9 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. Play the rest of the combat recordings (the Combat lab is built; the Scrapper is done, 10 fights)
-   and derive the AI's policy from them; the economy is calibrated against a player the AI does not
+1. Study the arena duels the AI loses (Defend the Title, the day-6 Scrapper; hunts and ambushes
+   are no longer the gap, see *Combat AI*) and play the benchmark fights still missing (champion, brawl,
+   capture the flag, Ribbit Brothers); the economy is calibrated against a player the AI does not
    match yet.
 2. The *Architecture debt* section lists what to pay on the way.
 
@@ -46,11 +47,6 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. The run exits 1 on a failed verdict, but no test or gate reads it.
-- **`economy_exploits.py` calls the Signal Horn a dead recipe.** Its `[barriers]` scan reads only
-  talents, and the horn is taught by the Tanner's last job (`items.TANNER_RECIPES`), so it prints
-  "no talent teaches it and nobody starts knowing it". Teach the scan the recipes that missions
-  teach. The horn needs no sale line: it is a quest artifact (one Legendary Horn per Aurochs), and
-  the recipes scan already drops it, since its scarce input is valued at its sale price.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -78,25 +74,11 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
 - **"Found the guild" screen looks off the game's identity.** Check whether `vocation_screen.py` and the
   identity phase of `draft_screen.py` are on the `gartok/ui/` kit; migrate what is not (the charter item
   under *Needs more information* lists the presentation work).
-- **Guild > Members: show each member's recruit limit.** `recruit.capacity` / `recruit.slots_free` exist but the tab
-  does not say how many a character may still sponsor.
-- **The Wilds screen: group HP, load and work XP.** Show the HP of every character (the group as a
-  whole matters, not each ration), the group's carrying capacity, and the hours-of-XP bar that today
-  appears only in the log, on the character's card (there is horizontal room).
-- **Market: a whole-group view.** A toggle between the current per-member view and one that lists the
-  whole group's inventory at once; selling the fifth or sixth member's items today means scrolling
-  sideways. It can reuse the cargo display the Gear screen already has.
-- **Guild > Members "Manage Gear" opens a second equipment screen.** It differs from "Manage Gear &
-  Quests" and has less than it. Open the group's Manage Gear & Quests screen instead and drop the
-  duplicate screen.
-- **Ambush loot: what is the chance of a scroll or a chest?** The player cannot tell. Read the drop
-  tables of the ambush fights and show the chance (or say it in the tutorial); the hunt screen now prints its forage chance, do the same.
-- **Loot screen has no horizontal scroll.** With a big group the columns overflow and the right-hand
-  members are out of reach (see the Bank item above: build the sideways scroll once).
+- **The Wilds screen: group capacity and work-XP bar.** Each row already prints HP now, AC, load, rations
+  and work XP as numbers (`hunt_screen._draw_party`). Missing: max HP beside the current, the group's
+  carrying capacity as a whole, and the work XP as a bar toward the next level.
 - **Market: an autosell list.** Mark item kinds once and have SELL ALL / the sale pick them, instead of
   selecting the same items every visit.
-- **Bank screen does not show the wagon or the donkey.** The group's wagons and animals (and what they
-  carry) are missing there, as on the other pack screens.
 
 ## Architecture debt
 
@@ -109,7 +91,7 @@ pointed to, not repeated.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
 - **Big screen files.** `app.py` (1240 lines, 108 `def`s) is the wiring hub; `map_screen.py`,
-  `market_screen.py` and `battle_screen.py` run 877-1046 (`battle_screen.py` is past 1000 since the
+  `market_screen.py` and `battle_screen.py` run 879-1053 (`battle_screen.py` is past 1000 since the
   per-team controllers). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
@@ -227,8 +209,9 @@ pointed to, not repeated.
   it (`keep_fed(at_low=True)`). With that, all `human` guilds go hungry at some point, which
   is what the recordings show a person doing. It wipes 30-40% of 20 guilds, and that is the
   threshold, not the player: `hunt_min_level` 0.5 comes from three won hunts, and at 2.0 the
-  wipe is 0% ([finding 20](economy_sim_v2.md)). Settling it needs a third run (to be played by
-  the user, after the vocations land), and it must include an ambush on the Old Road, which neither run touched. Then compare
+  wipe is 0% ([finding 20](economy_sim_v2.md)). There are now four runs: the two of 2026-10-08 and two longer saves in
+  `recordings/2026-10-10/` (65 and 95 days, with the Old Road ambushes, 3 and 4, that the first two never
+  touched), so no third run is needed. Next: run `play_analysis.py` over all four and re-derive the `human` profile. Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the
@@ -293,8 +276,14 @@ GPU a portrait, curated by hand). Each task below is its own sitting of art-maki
 the ones that also need code say so. Order is the suggested priority.
 
 - **Item icons (the biggest gap).** `items.py` has no icon field and the pack, market, stash
-  and loot screens are text only. **Decide first** the style (medallion or silhouette). Then
-  by category: one-handed weapon, two-handed weapon, bow/crossbow, light/medium/heavy armor,
+  and loot screens are text only. **Decided 2026-10-10: silhouettes drawn in code**, one
+  generator per category tinted by material, rarity as the rim colour (no artist, and AI art does not
+  hold one style across ~100 items). **Prototype built:** `ui/item_icons.py` (blade, bow, armor,
+  flask; `scripts/item_icon_preview.py` renders a contact sheet) with a test. Left: an adapter from
+  `ItemDef` to (kind, tone, shape) (material comes from the name, since `ItemDef` has no material
+  field yet, see *Item properties*), the axe / hammer / spear / crossbow / shield / tool / food /
+  material / coin generators, and wiring the icon into the pack, market, stash and loot rows. The
+  categories: one-handed weapon, two-handed weapon, bow/crossbow, light/medium/heavy armor,
   shield, potion, food, material (leather, wood, iron, stone), tool, Copper Coin, Gold Coin.
   After that the key items: Signal Horn, Chisel, Pickaxe, Holy Symbol, Legendary Horn. Needs
   the `ItemDef` field, a `ui/` component for the icon and tests.
@@ -391,9 +380,12 @@ building them:
   recipe book).** Food only quells hunger today and the Potato does that at the
   lowest price, so nothing else is worth buying. Add dishes that are better and dearer and spoil
   fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
-  Marsh's slower rot (see the charter) is priced low until this lands. Open: what a good meal
-  gives (HP, a buff, morale), the recipes and who cooks (`Crafter`, the Claim oven), and the
-  cost to the economy sim (`cheapest_food_price` stops being the one price of a meal).
+  Marsh's slower rot (see the charter) is priced low until this lands. **Decided 2026-10-10:**
+  cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
+  one number for 24 h (HP, an attribute, advantage on a named kind of action...). Open: the
+  list of dishes and their buffs, how a buff is stored on the unit (a timed condition, like
+  sickness), and the cost to the economy sim (`cheapest_food_price` stops being the one price
+  of a meal).
 
 ---
 

@@ -233,7 +233,7 @@ gartok/
                     also the tick engine (`advance`) that plays orders out
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
   constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
-  chest.py          a generic locked pack item (d20+DEX vs DC), opened via gear_screen
+  chest.py          a generic locked pack item (d20+DEX vs DC), opened via group_screen
   justice.py        crime per character, City jurisdiction, the guard's catch/patrol/prison
   recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
                     bail-and-pitch alternative
@@ -257,7 +257,7 @@ gartok/
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
   menu_screen.py / combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
-  gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
+  squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
@@ -296,6 +296,7 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
                     vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)
+                    item_icon_preview.py (contact sheet of the code-drawn item silhouettes, ui/item_icons.py)
                     combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change)
                     archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks)
                     gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by
