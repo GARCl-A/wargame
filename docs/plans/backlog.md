@@ -121,6 +121,10 @@ pointed to, not repeated.
     face; what it reveals (exact HP, AC, MD, attacks, bonuses, abilities) is stored on the
     enemy and shared by the whole squad.
   - **Action:** an Assess action (AP cost) to dig further into one target.
+  - **Scholars perk (decided 2026-10-10, built with this modal):** the Scholars vocation gives the
+    whole guild a bonus on the INT roll that reveals enemy info (passive and Assess). Size it at
+    about the Kobold's +2 and check it with `vocation_report.py`. Until the modal exists the
+    vocation is dormant and the draft shows it as "no effect yet".
   - **To define while building:** which field sits behind which success margin, how the
     check scales with the target's level, whether knowledge outlasts the fight (a creature
     met before). Needs the action, AI support and tests.
@@ -303,9 +307,9 @@ building them:
       | Vocation | Races | Perk |
       |---|---|---|
       | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (5% fewer walk-outs); the defense penalty of overextension is unchanged (weak on purpose, confirmed 2026-10-09) |
-      | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering work: work shifts and hunt/forage (decided 2026-10-09) |
+      | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering work: work shifts and what a hunt or forage gathers (meat, mushrooms, fruit); a creature's drop such as wolf hide is not gathering (decided 2026-10-09 and 2026-10-10) |
       | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | lower chance of an ambush while the group's travel stance is *Cautious* (x0.8 on the chance, multiplicative; decided 2026-10-09) |
-      | Mystics | Kobold, Gnome, Elf, Sprite, Kenku, Human | faster spell study (dormant until the magic line exists) |
+      | Scholars (was Mystics; renamed 2026-10-10, same races) | Kobold, Gnome, Elf, Sprite, Kenku, Human | bonus on the INT roll that reveals enemy info; dormant until the combat info modal exists (see *Intelligence reveals enemy info*); no magic perk, since the study route needs an initiate |
       | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | -15% travel hours, multiplicative after wagon and animal speed (decided 2026-10-09) |
       | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | the guild's food does not age one day in ten (`guild_upkeep._rot_food`; decided, replaces the extra hunger day) |
 
@@ -314,16 +318,15 @@ building them:
     - **Travel stance (decided, new, the Wilds perk needs it):** each group gets a stance (**decided: a `Group.stance` field, not a guild switch**), *Normal*
       (nothing changes) or *Cautious* (applies the vocation's ambush reduction, if the guild has
       one). The player flips it, so the same group can travel quiet on the Old Road at level 3-4
-      and stay *Normal* before a hunt for wolf Hide. **Covers every rolled forced fight (decided):**
-      the Old Road leg (`world.ROAD_AMBUSH_CHANCE`, once per leg), the hunt's per-hour roll
-      (`hunt.AMBUSH_CHANCE_PER_HOUR`) and the other `orders.FORCED_KINDS` that roll a chance
-      (guard patrol, Claim raid and seizure; which of them roll is not checked). The Elf's
+      and stay *Normal* before a hunt for wolf Hide. **Covers only the two ambushes (decided 2026-10-10):**
+      the Old Road leg (`world.ROAD_AMBUSH_CHANCE`, once per leg) and the hunt's per-hour roll
+      (`hunt.AMBUSH_CHANCE_PER_HOUR`); guard patrols, Claim raids and seizures are not ambushes (the group is on the spot and the enemy comes to it), so *Cautious* does not touch them. The Elf's
       *Woodland Scout* talent halves the road and hunt chance today, always on
       (`campaign._road_ambush_catch`, `hunt.hunt_stretch`). **Decided 2026-10-09:** *Cautious*
       is a multiplier of 1 with no bonus; the guild perk makes it x0.8 and Woodland Scout x0.9,
       and they multiply (road 0.2 -> 0.144 with both), so there is no floor. This replaces the
       always-on halving: the talent now does something only under *Cautious*, and its tests change. *Cautious* costs nothing but the XP and loot given up (decided). The hunt screen
-      shows the group's stance. Open: the group screen control and AI use of it; the tests of the
+      shows the group's stance. Decided 2026-10-10: a new group starts *Normal*, the sim policies stay *Normal* except the one that measures Wilds, and the vocation cannot be changed after founding and shows on the Guild tab. Open: the group screen control; the tests of the
       talent; a new optional field in `persist.PAYLOAD_DEFAULTS`. Caravan and Marsh stay unconditional. Perks that fire every day
       for everyone get small numbers (about 10-20%), judged against the guild's daily wage, not
       against the Warband.
@@ -339,8 +342,8 @@ building them:
       survival perks (Warband, Marsh) at an early and a late point, since their value grows with
       the wage. Warband only pays a guild that overextends, so it is measured on a *wide* policy
       that recruits all it can; going wide is the intended play (Goblin and Hobgoblin share a
-      language, so the draft opens two recruit windows). Mystics cannot be measured until
-      the magic line exists.
+      language, so the draft opens two recruit windows). Scholars cannot be measured until
+      the info modal exists.
     - **To set while building:** the exact numbers are set above (Delvers +15%, Caravan -15%, Wilds x0.8); Delvers and Caravan start at about 15%, checked against the share of
       the daily wage that `vocation_report.py` prints. Needs the vocation registry, pool rule in
       `draft_screen.py`, perk hooks, save field and tests (including the pool guarantee and each perk).
@@ -355,6 +358,14 @@ building them:
     a richer composed banner, and an opening scene: a founding charter that writes itself
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
+
+- **Magic sources (for the magic arc, decided 2026-10-10).** `Unit.magic_source` holds one source.
+  Make it a set: a unit already initiated who takes another school's initiation (Kenku or Skeleton
+  *Faith Initiate*) trains in it too, as the schools are not exclusive. Touches `can_study_spell`,
+  the save, the char editor, `sheet_card` and the tavern screen. Today it is invisible, since
+  Kenku, Skeleton and Sprite start with no source. Share Magic stays battle-only on purpose.
+  Sprite's *Nature Initiate* gives no free spell when already initiated, unlike Faith Initiate;
+  equalise if it ever matters.
 
 - **Better food (not started; direction 2026-10-09: buffs for eating good food, which leads to a
   recipe book).** Food only quells hunger today and the Potato does that at the
