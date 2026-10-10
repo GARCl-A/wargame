@@ -42,6 +42,7 @@ import pygame
 from . import (
     arena,
     campaign,
+    combat_lab,
     economy,
     encounters,
     hunt,
@@ -62,6 +63,8 @@ from .battle import Battle
 from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
 from .city_property_screen import CityPropertyScreen, RepossessionScreen
+from .combat_lab_screen import CombatLabScreen
+from .combat_log import CombatLog
 from .constants import fmt_money
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
@@ -154,7 +157,19 @@ class App:
         self.scene = EditorMenuScreen(self.ui_fonts,
                                       on_character=self._open_char_editor,
                                       on_scenario=self._open_map_editor,
+                                      on_combat_lab=self._open_combat_lab,
                                       on_back=self._start_menu)
+
+    def _open_combat_lab(self):
+        self.scene = CombatLabScreen(self.ui_fonts, on_start=self._start_lab_fight,
+                                     on_back=self._start_editor)
+
+    def _start_lab_fight(self, setup):
+        battle, meta = combat_lab.build(setup["fight"], setup["level"], setup["squad"])
+        controllers = setup["controllers"]
+        path = combat_lab.log_path(setup["name"])
+        battle.record_to(CombatLog(path, {"source": "lab", "name": setup["name"], **meta}, controllers))
+        self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=lambda _b: self._open_combat_lab())
 
     def _open_char_editor(self):
         self.scene = CharEditorScreen(self.ui_fonts, on_back=self._start_editor)
@@ -922,7 +937,19 @@ class App:
         """Every fight starts here: snapshot the world first, so a bad one can be undone."""
         self._autosave_before(battle, node)
         recorder.before_fight(self._battle_squad)
+        self._log_fight(battle, node)
         self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
+
+    def _log_fight(self, battle, node):
+        """With the play recorder on, the fight's decisions go to `combat_logs/` in the world folder."""
+        offer, pause = self._arena_offer, self._pause_order
+        kind = pause.kind if pause is not None else "hunt" if self._hunt is not None else (
+            offer.name if offer else node.id)
+        day = self.guild.clock.day
+        path = recorder.combat_log_path(f"d{day:03d}-{combat_lab.slug(f'{node.id}-{kind}')}")
+        if path is not None:
+            battle.record_to(CombatLog(path, {"source": "campaign", "node": node.id, "kind": kind, "day": day},
+                                       {"player": "human", "enemy": "ai"}))
 
     def _autosave_before(self, battle, node):
         foes = len(battle.enemy_units)

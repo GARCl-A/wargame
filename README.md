@@ -243,6 +243,8 @@ gartok/
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
   persist.py        save slots (JSON); only the roster + campaign meta hit disk
   settings.py       player preferences (settings.json), listed in the pause menu
+  combat_log.py     one JSONL per fight, enough to rebuild it: every decision, its options, what the AI would have done
+  combat_lab.py     the benchmark fights set up outside a campaign (Editor menu: COMBAT LAB), either side a person or the AI
   recorder.py       opt-in play log (play.jsonl beside the saves) the economy sim learns from
   npc_lib.py        the NPC library (git-tracked npcs/*.json, outside the saves)
   map_lib.py        the map library (git-tracked maps/*.json) + npc_units
@@ -254,7 +256,7 @@ gartok/
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
-  menu_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
+  menu_screen.py / combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
   gear_screen.py / squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
@@ -292,7 +294,8 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     (money-from-nothing loops, recipe barriers, dominance), economy_report.py
                     (all of them in one report, with verdicts), ai_usage.py (which actions the combat AI takes, and
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
-                    vocation_report.py (each vocation perk's value as a share of the guild's daily wage)
+                    vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
+                    combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)
 docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),
                     campaign_ai_roadmap.md (the long-range AI plan)
 ```

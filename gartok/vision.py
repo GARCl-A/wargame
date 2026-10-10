@@ -81,15 +81,15 @@ def can_see_unit(battle, observer, target):
 # On-screen vision (what the player sees now)                                  #
 # --------------------------------------------------------------------------- #
 
-def observers(battle, view_squad):
-    """Whose vision is shown now.
+def observers(battle, view_squad, team="player"):
+    """Whose vision is shown now, through `team`'s eyes.
 
     On your turn the vision is the ACTIVE character's; `view_squad` (key L) toggles
     to the union of your living team. On the enemy turn it is always the whole squad.
     """
-    if battle.winner is None and battle.active.team == "player" and not view_squad:
+    if battle.winner is None and battle.active.team == team and not view_squad:
         return [battle.active]
-    return [u for u in battle.units if u.alive and u.team == "player"]
+    return [u for u in battle.units if u.alive and u.team == team]
 
 
 def enemy_visible(battle, obs, u):

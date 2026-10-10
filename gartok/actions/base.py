@@ -2,7 +2,7 @@
 
 import random
 
-from .. import poisons
+from .. import combat_log, poisons
 from ..board import cells
 
 
@@ -33,6 +33,11 @@ class Action:
     desc = ""
     target = "none"        # "none" | "enemy" | "cell"
     aimed = False          # True: needs the target picked by clicking the screen
+
+    def __init_subclass__(cls, **kw):
+        super().__init_subclass__(**kw)
+        if "execute" in cls.__dict__:
+            cls.execute = combat_log.recorded(lambda self: self.id)(cls.__dict__["execute"])
 
     @classmethod
     def applicable(cls, battle, actor):

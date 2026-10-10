@@ -24,6 +24,8 @@ class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
                  lethal=True, arena=False, clock_day=1):
         self.log_lines = []
+        self.log_total = 0                    # lines ever logged: `log_lines` keeps only the last 200
+        self.sink = None                      # a combat_log.CombatLog while this fight is recorded
         self.clock_day = clock_day
         self.daylight = daylight              # outdoor scenarios read this for ambient light
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
@@ -34,7 +36,13 @@ class Battle:
         self.setup()
 
     # ------------------------------------------------------------------ #
+    def record_to(self, sink):
+        """Write this fight's decisions to `sink` (a `combat_log.CombatLog`) from now on."""
+        self.sink = sink
+        sink.start(self)
+
     def log(self, msg):
+        self.log_total += 1
         self.log_lines.append(msg)
         del self.log_lines[:-200]
 
@@ -145,8 +153,16 @@ class Battle:
     def plant_flag(self, tile):
         """Plant the player's flag at `tile` (see `awaiting_flag`) and let the
         scenario drop the enemy's to match."""
-        self.flags["player"] = tile
-        self.scenario.auto_place_enemy_flag(self)
+        def run():
+            self.flags["player"] = tile
+            self.scenario.auto_place_enemy_flag(self)
+        self._recorded("plant_flag", self.player_units[0], tile, run)
+
+    def _recorded(self, name, actor, target, run):
+        """Run `run()` through the combat log when one is attached and not already inside a decision."""
+        if self.sink is None or self.sink.busy:
+            return run()
+        return self.sink.record(self, name, actor, target, {}, run)
 
     def can_plant_trap(self, trapper, tile):
         """Is `tile` free (no unit / wall / creature / ground object) and within
@@ -159,10 +175,12 @@ class Battle:
     def plant_trap(self, trapper, tile):
         """Plant the next queued trap from `trapper`'s pack at `tile` (see
         `awaiting_trap`), popping it off `trap_setup_queue`."""
-        trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
-        self.ground.append(GroundObject.trap(tile, trap_type.lower(), trapper.team))
-        trapper.inventory.remove(trap_type)
-        self.trap_setup_queue.pop(0)
+        def run():
+            trap_type = "Bear Trap" if "Bear Trap" in trapper.inventory else "Alarm Trap"
+            self.ground.append(GroundObject.trap(tile, trap_type.lower(), trapper.team))
+            trapper.inventory.remove(trap_type)
+            self.trap_setup_queue.pop(0)
+        self._recorded("plant_trap", trapper, tile, run)
 
     def _assign_flag_runners(self):
         """Tag the fastest half of the enemy side as flag runners -- the AI sends
@@ -646,6 +664,9 @@ class Battle:
     def end_turn(self):
         if self.winner:
             return
+        self._recorded("end_turn", self.active, None, self._end_turn)
+
+    def _end_turn(self):
         self.active.end_turn(self.log)       # demoralized expires at the end of the sufferer's turn
         self._advance_turn()
 

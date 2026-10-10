@@ -23,12 +23,16 @@ Events (all carry `t`, the clock in seconds):
   recruit  a pitch (pitcher, candidate, bail, ok)
   mission  a mission accepted or turned in (id, reward)
   craft    a crafting shift (recipe, hours worked, units made)
+
+Each fight also writes its own decision log next to this file, in `combat_logs/` (`combat_log.py`).
 """
 
 import json
 import os
 
 FILE = "play.jsonl"
+
+COMBAT_DIR = "combat_logs"
 
 _guild = None
 _path = None
@@ -53,6 +57,19 @@ def attach(world_dir, guild):
     _last_day, _before = guild.clock.day, None
     emit("session", node=_node_of(guild), members=len(guild.roster))
     return True
+
+
+def combat_log_path(label):
+    """Where the combat log of a campaign fight goes (`<world>/combat_logs/<label>.jsonl`, `-2`,
+    `-3` ... when taken), or None while the recorder is detached."""
+    if _path is None:
+        return None
+    folder = os.path.join(os.path.dirname(_path), COMBAT_DIR)
+    path, n = os.path.join(folder, f"{label}.jsonl"), 1
+    while os.path.exists(path):
+        n += 1
+        path = os.path.join(folder, f"{label}-{n}.jsonl")
+    return path
 
 
 def detach():

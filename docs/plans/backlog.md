@@ -28,8 +28,8 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
-   player the AI does not match yet.
+1. Play the combat recordings (the Combat lab is built) and derive the AI's policy from them;
+   the economy is calibrated against a player the AI does not match yet.
 2. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
@@ -140,19 +140,31 @@ pointed to, not repeated.
   bandits); the player's recorded fights on these train the policy. Start from what the AI
   does badly in the Games (objective play in capture the flag, focus fire, using the terrain), re-run
   `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
-  - **Way in: record the player's combat, as was done for the economy.** First list every
-    action the AI can take (`actions/`) and what `ai.py` does with each. Then the player plays
-    fights by hand: AI vs AI with the player taking over one side's unit (the wolf, different
-    races and levels), and the recorder logs each decision (state, options, pick). From those
-    rows, derive a policy the way `play_analysis.py` derived the `human` economy profile:
-    thresholds and priorities (when to focus fire, when to retreat, when to go for the flag),
-    then feed them to `ai.py` and measure against the benchmark win rates above.
-  - **Hand-over (decided):** a fight with a fixed setup (the Ribbit Brothers, 12 units) is
-    played by a person on *both* sides: two human controllers, player 1 and player 2, so the
-    log holds good decisions for each side. A controller per team (human or AI) is the seam;
-    checked 2026-10-09: it does not. `battle_screen.py` hardcodes control by team string (`active.team == "enemy"` calls `ai.take_turn`, `"player"` takes clicks; lines 138, 151, 364), so the seam has to be built.
-  - Needs: a combat event in `recorder.py`, the per-team controller, and an analysis script
-    for the combat rows.
+  - **Way in: record the player's combat, as was done for the economy.** The recorder is built
+    (2026-10-10): `combat_log.py` writes one JSONL file per fight with the whole fight, every
+    decision with its legal options and what `ai.py` would have done, and each state after it;
+    a controller per team (human or AI) drives `BattleScreen`; the Combat lab (Editor menu,
+    `combat_lab.py`) sets up Scrapper, champion, brawl, capture the flag, Ribbit Brothers, Wilds
+    and Old Road ambushes and the Ancient Ruins and logs into `combat_lab/<date>/<name>.jsonl`;
+    campaign fights log into `saves/<world>/combat_logs/` while `record_play` is ON;
+    `scripts/combat_analysis.py` reads them (action mix, how often a person matched the AI, a
+    replay). What is left, in order:
+    1. **Play the fights** (the user, in the Combat lab; the 2026-10-10 recordings in
+       `combat_lab/2026-10-10/` are one try of each, not enough). A first target, 10 fights each,
+       human (player 1) against the AI, at the level the economy expects of that fight:
+       Scrapper at level 0, champion at 0-1, brawl and capture the flag at 1-3, Wilds and Old
+       Road ambushes at 3, Ancient Ruins at 2-3, Ribbit Brothers at 3. Play to win, as you
+       would in the campaign: the win rate comes out of the same logs and is the number to
+       compare with the AI's benchmark rates. Then **two Ribbit Brothers fights human against
+       human** (one decision list per side). `boss-human-vs-human.jsonl` of 2026-10-10 is
+       tainted from decision 143 (the flag lay under a downed body and could not be clicked,
+       fixed since): replay it and drop that file.
+    2. **Derive the policy** from the rows the way `play_analysis.py` derived the `human` economy
+       profile: thresholds and priorities (when to focus fire, when to retreat, when to go for
+       the flag). A new script over `combat_log.frames`.
+    3. **Feed it to `ai.py`** and measure against the benchmark win rates above.
+    Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
+    its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
   `recordings/2026-10-08/` (14 and 11 days, not 30; a third was judged not worth playing) with
   the `human_profile.json` that `scripts/play_analysis.py` makes from them. Run

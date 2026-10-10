@@ -117,3 +117,31 @@ def test_arrows_are_ignored_while_aiming_an_action():
     start = actor.pos
     _press(scr, pygame.K_RIGHT)
     assert actor.pos == start
+
+
+def test_clicking_a_cell_with_a_downed_body_walks_onto_it_and_takes_the_flag_under_it():
+    from gartok import combat_lab
+    from gartok.battle_screen import BattleScreen
+    pygame.init()
+    battle, _ = combat_lab.build("ctf", 1, 3, seed=2)
+    battle.plant_flag((2, 5))
+    actor = battle.player_units[0]
+    foe = battle.enemy_units[0]
+    battle.board.walls = set()
+    actor.pos, foe.pos = (8, 5), (9, 5)
+    for u in battle.units:
+        if u not in (actor, foe):
+            u.pos = (0, battle.units.index(u))
+    battle._pf_cache.clear()
+    battle.trap_setup_queue.clear()
+    battle.order = [actor] + [u for u in battle.units if u is not actor]
+    battle.turn_idx = 0
+    actor.ap = 2
+    foe.status = "dying"
+    battle.flags["enemy"] = foe.pos
+    screen = BattleScreen(None, battle, on_battle_end=lambda *x: None)
+    screen.view.fit(pygame.Rect(0, 0, 800, 600))
+    assert battle.unit_at(foe.pos, include_downed=True) is foe
+    screen._click(screen.view.cell_rect(*foe.pos).center)
+    assert actor.pos == foe.pos
+    assert battle.flag_carrier["enemy"] is actor

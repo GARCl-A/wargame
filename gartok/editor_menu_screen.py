@@ -1,8 +1,9 @@
 """Editor hub: pick what to build.
 
-Reached from the main menu's EDITOR button. Two doors: the character creator
-(`char_editor_screen`) and the scenario creator (`map_editor_screen`).
-`on_character` / `on_scenario` open them; `on_back` returns to the main menu.
+Reached from the main menu's EDITOR button. Three doors: the character creator
+(`char_editor_screen`), the scenario creator (`map_editor_screen`) and the combat
+lab (`combat_lab_screen`). `on_character` / `on_scenario` / `on_combat_lab` open
+them; `on_back` returns to the main menu.
 """
 
 import pygame
@@ -15,11 +16,12 @@ from .ui.tokens import T
 class EditorMenuScreen(Screen):
     native = True
 
-    def __init__(self, fonts, on_character, on_back, on_scenario=None):
+    def __init__(self, fonts, on_character, on_back, on_scenario=None, on_combat_lab=None):
         super().__init__()
         self.fonts = fonts
         self.on_character = on_character
         self.on_scenario = on_scenario
+        self.on_combat_lab = on_combat_lab
         self.on_back = on_back
         self.cards = []                       # [(key, rect, enabled)] -- the two feature tiles
         self.buttons = []                     # [(key, rect)] -- the footer BACK button
@@ -32,6 +34,8 @@ class EditorMenuScreen(Screen):
                 self.on_character()
             elif key == "scenario":
                 self.on_scenario()
+            elif key == "combat_lab":
+                self.on_combat_lab()
             return
         for key, rect in self.buttons:
             if rect.collidepoint(px):
@@ -55,7 +59,7 @@ class EditorMenuScreen(Screen):
         card_w = min(560, W - 2 * T.S * 4)
         card_h = 104
         x = (W - card_w) // 2
-        y = max(T.S * 4 + 96, H // 2 - card_h - T.S * 3)
+        y = max(T.S * 4 + 96, H // 2 - card_h * 3 // 2 - T.S * 3)
 
         self._card(screen, pygame.Rect(x, y, card_w, card_h), "character",
                    "CHARACTER CREATOR",
@@ -67,6 +71,12 @@ class EditorMenuScreen(Screen):
                    "paint a battle map -- walls, torches and deployment zones; "
                    "save it to the map library",
                    self.on_scenario is not None, mpos)
+        y += card_h + T.S * 3
+        self._card(screen, pygame.Rect(x, y, card_w, card_h), "combat_lab",
+                   "COMBAT LAB",
+                   "play the benchmark fights by hand, against the AI or another person, "
+                   "and record every decision",
+                   self.on_combat_lab is not None, mpos)
 
         back = pygame.Rect(T.S * 4, H - T.S * 4 - 30, 120, 30)
         draw_button(screen, f, back, "BACK", ghost=True, mpos=mpos)

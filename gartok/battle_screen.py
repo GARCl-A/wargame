@@ -5,6 +5,7 @@ the log. Drawing delegates to `board_render` (playfield) and `battle_panel`
 
 import json
 import os
+import random
 import time
 
 import pygame
@@ -32,11 +33,17 @@ DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "deb
 class BattleScreen(Screen):
     native = True
 
-    def __init__(self, fonts, battle, on_battle_end):
+    def __init__(self, fonts, battle, on_battle_end, controllers=None):
         super().__init__()
         self.F = fonts
         self.battle = battle
         self.on_battle_end = on_battle_end
+        sink_controllers = battle.sink.controllers if battle.sink else {}
+        self.controllers = {"player": "human", "enemy": "ai", **sink_controllers, **(controllers or {})}
+        humans = [t for t in ("player", "enemy") if self.controllers[t] == "human"]
+        self._viewer = humans[0] if humans else "player"   # whose eyes the board is drawn through
+        self._seat = self._viewer              # the team sitting at the screen (two humans share it)
+        self._handoff = None                   # a team about to take the seat: the board stays hidden
         self.lighting = LightRenderer()
         self.view = BoardView(battle.board.cols, battle.board.rows)
         self._pan = None                      # (mouse, cam) anchor while dragging the board
@@ -132,10 +139,15 @@ class BattleScreen(Screen):
             if not self.view.rect.collidepoint(self.view.cell_rect(*b.active.pos).center):
                 self.view.center_on(b.active.pos)
         if b.winner is not None:
+            if b.sink is not None and not b.sink.closed:
+                b.sink.end(b)
+            return
+        if self._autoplace_setup():
             return
         if b.awaiting_flag or b.awaiting_trap:
             return
-        if b.active.team == "enemy":
+        self._check_handoff()
+        if not self._human(b.active.team):
             self.enemy_timer += dt
             if self.enemy_timer >= ENEMY_DELAY:
                 self.enemy_timer = 0
@@ -146,12 +158,50 @@ class BattleScreen(Screen):
     # ------------------------------------------------------------------ #
     # battle logic                                                       #
     # ------------------------------------------------------------------ #
+    def _human(self, team):
+        return self.controllers.get(team) == "human"
+
+    @property
+    def me(self):
+        """The team whose eyes the board is drawn through: the active team on a human's turn,
+        else whoever looked last."""
+        b = self.battle
+        if b.winner is None and self._human(b.active.team):
+            self._viewer = b.active.team
+        return self._viewer
+
+    @property
+    def foe(self):
+        return "enemy" if self.me == "player" else "player"
+
     def _is_player_turn(self):
         b = self.battle
-        return b and b.winner is None and b.active.team == "player"
+        return bool(b and b.winner is None and self._handoff is None
+                    and self._human(b.active.team))
+
+    def _autoplace_setup(self):
+        """A side no person controls gets its flag planted and its traps skipped, so the fight
+        can begin."""
+        b = self.battle
+        if b.awaiting_flag and not self._human("player"):
+            tiles = [(x, y) for x in own_half("player", b.board.cols) for y in range(b.board.rows)
+                     if b.can_plant_flag((x, y))]
+            b.plant_flag(random.choice(tiles) if tiles else (0, b.board.rows // 2))
+            return True
+        if b.awaiting_trap and not self._human("player"):
+            b.trap_setup_queue.clear()
+            return True
+        return False
+
+    def _check_handoff(self):
+        """With two people at one screen, hide the board between their turns."""
+        team = self.battle.active.team
+        if (self._human("player") and self._human("enemy") and self._human(team)
+                and team != self._seat and self._handoff is None):
+            self._handoff = team
 
     def _observers(self):
-        return vision.observers(self.battle, self.view_squad)
+        return vision.observers(self.battle, self.view_squad, self.me)
 
     def _enemy_visible(self, u):
         return vision.enemy_visible(self.battle, self._obs, u)
@@ -185,6 +235,10 @@ class BattleScreen(Screen):
         b = self.battle
         if b.winner is not None:
             self.on_battle_end(b)
+            return
+        if self._handoff is not None:
+            self._seat, self._handoff = self._handoff, None
+            self._centered_on = None
             return
 
         if getattr(self, "height_prompt", None) is not None:
@@ -246,7 +300,7 @@ class BattleScreen(Screen):
 
         self._obs = self._observers()
         clicked = b.unit_at(tile, include_downed=True)
-        if clicked is not None and clicked.team == "enemy" \
+        if clicked is not None and clicked.team == self.foe \
                 and not self._enemy_visible(clicked):
             clicked = None
         if clicked is not None:
@@ -284,7 +338,7 @@ class BattleScreen(Screen):
                 self._after_player_action()
             return
 
-        if clicked is not None and clicked.team == "enemy":
+        if clicked is not None and clicked.alive and clicked.team == self.foe:
             if self._armed is not clicked:
                 self._armed = clicked
                 return
@@ -293,7 +347,7 @@ class BattleScreen(Screen):
                 self._armed = None
                 self._after_player_action()
             return
-        if clicked is None:
+        if clicked is None or not clicked.alive:        # a body on the floor does not block the cell
             dest = self._anchor_of_click(actor, tile)
             if dest is not None:
                 actions.MOVE.execute(b, actor, dest)
@@ -361,7 +415,7 @@ class BattleScreen(Screen):
         b = self.battle
         if b.is_ctf:
             b.check_objective()
-        if b.winner is not None or b.active.team != "player":
+        if b.winner is not None or not self._human(b.active.team):
             return
         act = b.active
         if act.ap < 1 and not b.reachable(act):
@@ -491,6 +545,8 @@ class BattleScreen(Screen):
             self._draw_winner(screen)
         else:
             self._draw_tooltips(screen)
+        if self._handoff is not None:
+            self._draw_handoff(screen)
 
     def _draw_grid(self, screen):
         b = self.battle.board
@@ -529,7 +585,7 @@ class BattleScreen(Screen):
         for u in b.units:
             if u.dead or u.fled:
                 continue
-            if u.team == "enemy" and not self._enemy_visible(u) \
+            if u.team == self.foe and not self._enemy_visible(u) \
                     and not (self._is_player_turn() and u.alive
                              and actions.ATTACK.can(b, b.active, u)):
                 continue
@@ -563,7 +619,7 @@ class BattleScreen(Screen):
             pos = self.battle.flag_pos(team)
             if pos is None:
                 continue
-            if team == "enemy" and pos not in self._visible:
+            if team == self.foe and pos not in self._visible:
                 continue
             self._draw_pennant(screen, pos, board_render.team_color(team))
 
@@ -619,7 +675,7 @@ class BattleScreen(Screen):
 
         atk_rects = [
             self._unit_rect(u) for u in b.units
-            if u.alive and u.team == "enemy" and (actions.ATTACK.can(b, actor, u)
+            if u.alive and u.team == self.foe and (actions.ATTACK.can(b, actor, u)
                                                   or actions.ATTACK_TONGUE.can(b, actor, u))
         ]
         board_render.draw_rings(screen, atk_rects, board_style.ATK_HL)
@@ -642,7 +698,7 @@ class BattleScreen(Screen):
         for u in b.order:
             if not (u.alive or u.dying):
                 continue
-            known = u.team == "player" or self._enemy_visible(u)
+            known = u.team == self.me or self._enemy_visible(u)
             entries.append({
                 "name": u.name.split()[0] if known else "Enemy",
                 "team": u.team,
@@ -686,12 +742,12 @@ class BattleScreen(Screen):
                 "race": act.race["name"],
                 "portrait_id": act.portrait_id,
                 "token": act.token,
-                "mine": act.team == "player",
+                "mine": act.team == self.me,
                 "stats": stats,
                 "ap": act.ap,
                 "ap_max": 2,
                 "walk": (act.moved, act.speed) if act.walking else None,
-                "note": None if act.walking or act.team != "player" else vd,
+                "note": None if act.walking or act.team != self.me else vd,
             }
             battle_panel.draw_turn_card(screen, F, card_r, card_data)
             cur_y = card_r.bottom + T.S * 2
@@ -703,9 +759,9 @@ class BattleScreen(Screen):
         else:
             card_r = pygame.Rect(pr.x, cur_y, pr.w, battle_panel.VICTORY_CARD_H)
             vdata = {
-                "won": b.winner == "player",
-                "stabilized": [u.name for u in b.player_units if u.status in ("stable", "broken")],
-                "fallen": [u.name for u in b.player_units if u.status == "dead"],
+                "won": b.winner == self.me,
+                "stabilized": [u.name for u in b.units if u.team == self.me and u.status in ("stable", "broken")],
+                "fallen": [u.name for u in b.units if u.team == self.me and u.status == "dead"],
             }
             battle_panel.draw_victory_card(screen, F, card_r, vdata)
             cur_y = card_r.bottom + T.S * 2
@@ -713,7 +769,7 @@ class BattleScreen(Screen):
         self.buttons = []
 
         insp = self.inspect
-        if insp and insp.team == "enemy" and not self._enemy_visible(insp):
+        if insp and insp.team == self.foe and not self._enemy_visible(insp):
             insp = None
         if insp and (insp.dead or insp.fled):
             insp = None
@@ -904,8 +960,24 @@ class BattleScreen(Screen):
             battle_panel.draw_action_tip(screen, self.F, btn_rect, desc)
 
     def _draw_winner(self, screen):
-        txt = "You won" if self.battle.winner == "player" else "The AI won"
+        txt = self._winner_text()
         battle_panel.draw_winner(screen, self.F, self.view.rect.center, txt)
+
+    def _winner_text(self):
+        winner = self.battle.winner
+        if self._human("player") and self._human("enemy"):
+            return "Player 1 won" if winner == "player" else "Player 2 won"
+        if self._human(winner):
+            return "You won"
+        return "The AI won"
+
+    def _draw_handoff(self, screen):
+        W, H = screen.get_size()
+        screen.fill(T.TABLE)
+        seat = "Player 1" if self._handoff == "player" else "Player 2"
+        ui_primitives.text(screen, self.F["titleb"], f"{seat}'s turn", (W // 2, H // 2 - 24), T.TX, center=True)
+        ui_primitives.text(screen, self.F["body"], "Click when only you are looking at the screen",
+                           (W // 2, H // 2 + 12), T.TX_MUTED, center=True)
 
     def _export_state(self):
         b = self.battle

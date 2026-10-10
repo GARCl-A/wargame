@@ -34,6 +34,14 @@
         ]
       }
     },
+    "combat_lab": {
+      "title": "The combat lab",
+      "body": [
+        "Pick one of the benchmark fights, its level and squad size, and say who plays each side. Player 1 is the guild on the left of the board, Player 2 the opposing side; either can be you or the AI.",
+        "Every decision, yours and the AI's, is written to combat_lab/<date>/<name>.jsonl: the whole fight can be rebuilt from that file, and each of your moves carries what the AI would have done in the same spot. That is what the AI will be tuned against.",
+        "With two humans the screen hides the board between turns: click when only the next player is looking. Capture the flag: an AI-controlled guild plants its flag by itself, and the opposing flag is always placed for you."
+      ]
+    },
     "map": {
       "title": "Running the guild",
       "body": [
