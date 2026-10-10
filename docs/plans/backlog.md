@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-09. When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-09 (after the Aurochs commit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -28,11 +28,10 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. Legendary Ox + Tanner missions + Signal Horn recipe (first craft -> mission -> item loop).
-2. Vocations in the draft (perks and the travel stance are decided; the numbers of Delvers, Wilds and Caravan are still to set, see *Needs more information*).
-3. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
+1. Vocations in the draft (perks and the travel stance are decided; the numbers of Delvers, Wilds and Caravan are still to set, see *Needs more information*).
+2. AI combat recording (`recorder.py` combat event); the economy is calibrated against a
    player the AI does not match yet.
-4. The *Architecture debt* section lists what to pay on the way.
+3. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -47,12 +46,15 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   from $423. It is the known gap with the recorded runs (11-14 days by hand), so it settles
   with *Feed the recorded runs* and the planner, not by tuning prices. The run exited 0, so
   this does not break a gate.
+- **Signal Horn has no line in the economy report.** The chain is built (Tanner missions,
+  Aurochs, `items.CRAFTING_RECIPES["Signal Horn"]` with a Chisel); `scripts/economy_report.py`
+  still lacks a craft-for-sale line for it. The ox's portrait is under *Art*.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
-- **Mine leftovers (built 2026-10-09).** (1) *Amethyst* was meant as a Mine drop, but nothing
-  rolls it: a shift pays only the wage. Decide a chance per shift (the stone is worth $120, so
-  it must be rare enough not to beat the wage) or drop the idea. (2) *Iron Ore* has no recipe or
+- **Mine leftovers (built 2026-10-09).** (1) *Amethyst* was meant as a Mine drop, but a shift only pays the wage: the Mine is work,
+  not gathering. **Decided 2026-10-09: wait** until the Mine gets gathering of its own, then the
+  Amethyst drops from it (rare enough not to beat the wage; the stone is worth $120). (2) *Iron Ore* has no recipe or
   use until the Smith's chain exists. (3) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
   guilds are wiped on the road; with a player winning 80% (the report's setting) `miner` earns
@@ -75,7 +77,7 @@ pointed to, not repeated.
   the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
-- **Big screen files.** `app.py` (1188 lines, 102 `def`s) is the wiring hub; `map_screen.py`,
+- **Big screen files.** `app.py` (1205 lines, 104 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run 830-980. Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
@@ -84,21 +86,6 @@ pointed to, not repeated.
 
 ## Large
 
-- **Signal Horn chain (the item is built, it cannot be obtained).** The Signal Horn (artifact
-  slot) is not sold: only crafted, and the recipe is rare. Final shape: **Leather + Rope + a
-  Chisel (tool, not consumed) + the Legendary Ox's horn**. Pieces, in order:
-  1. **The recipe lists the Chisel** in `tools=(...)` (the mechanism is built: `CraftingRecipe.tools`).
-  2. **The Legendary Ox:** a unique creature, its loot is a new `Legendary Horn` item. It is the
-     target of the last mission of the chain, so it is placed by the mission, not random.
-  3. **Mission chain from the Tanner** (2-3 missions on the hub's board, reputation-gated) whose
-     reward is learning the recipe; the last one points at the ox. *Built: 1 Fifteen Hides,
-     2 The Biwolf's Hide (night hunt with 15 Meat, `hunt.biwolf_lure`, Leather of Biwolf
-     artifact; no deadline), 3 The Immortal Ox (Country Roads search, daylight tracking, the
-     skittish Aurochs on a big field, Thunderhide +1 STR, Legendary Horn, recipe on delivery).
-     The recipe is registered too (`items.CRAFTING_RECIPES["Signal Horn"]`, Hide + Rope +
-     Legendary Horn with a Chisel).*
-  4. Open: `scripts/economy_report.py` has no craft-for-sale line for the Signal Horn yet, and
-     the ox needs its own portrait (see the art item below).
 - **Talent trees are shorter than the level cap (to be authored by hand, no rush).** The XP
   tables now run to level 15 (2026-10), but the trees do not: combat has 14 nodes and work 10
   (each level grants one pick), so combat 15 wastes a pick and work levels 11-15 grant picks with
@@ -369,7 +356,8 @@ building them:
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
 
-- **Better food (not started).** Food only quells hunger today and the Potato does that at the
+- **Better food (not started; direction 2026-10-09: buffs for eating good food, which leads to a
+  recipe book).** Food only quells hunger today and the Potato does that at the
   lowest price, so nothing else is worth buying. Add dishes that are better and dearer and spoil
   fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
   Marsh's slower rot (see the charter) is priced low until this lands. Open: what a good meal
