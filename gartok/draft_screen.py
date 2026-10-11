@@ -282,7 +282,8 @@ class DraftScreen(Screen):
         card_w = (view.w - T.S - (POOL_COLUMNS - 1) * gap) // POOL_COLUMNS
         card_h = pool_card_height()
         rows = (POOL_SIZE + POOL_COLUMNS - 1) // POOL_COLUMNS
-        content_h = rows * card_h + (rows - 1) * gap
+        row_gap = T.S
+        content_h = rows * card_h + (rows - 1) * row_gap
         self.max_scroll = max(0, content_h - view.h)
         self.scroll = min(self.scroll, self.max_scroll)
 
@@ -294,7 +295,7 @@ class DraftScreen(Screen):
         with contained(screen, view):
             for i, unit in enumerate(self.pool):
                 rect = pygame.Rect(view.x + (i % POOL_COLUMNS) * (card_w + gap),
-                                   view.y + (i // POOL_COLUMNS) * (card_h + gap) - self.scroll,
+                                   view.y + (i // POOL_COLUMNS) * (card_h + row_gap) - self.scroll,
                                    card_w, card_h)
                 if rect.bottom < view.y or rect.y > view.bottom:
                     continue

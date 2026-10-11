@@ -221,3 +221,25 @@ def test_strong_is_about_strength_not_size():
     assert archetypes.ARCHETYPES["STRONG"].predicate(u)
     u.set_base_attribute("strength", 6)
     assert not archetypes.ARCHETYPES["STRONG"].predicate(u)
+
+
+def test_pool_cards_show_a_portrait_and_fit_a_900p_window_without_scroll():
+    pygame.init()
+    ds = DraftScreen(ui_fonts(), lambda *a: None)
+    surf = pygame.Surface((1600, 900))
+    ds.draw(surf)
+    assert ds.max_scroll == 0
+    rect, _ = ds.card_rects[0]
+    ring = pygame.Rect(rect.x + 16, rect.y + 16, 64, 64)
+    assert len({tuple(surf.get_at(p)[:3]) for p in
+                [(ring.x + i * 8, ring.y + j * 8) for i in range(8) for j in range(8)]}) > 3
+
+
+def test_compact_weapon_block_is_two_lines():
+    from gartok.combatant import Combatant
+    from gartok.ui import sheet_card
+    assert sheet_card.H["compact"]["weapon"] == 32
+    ch = sheet_card.unit_to_ch(Combatant(Unit("player")))
+    pygame.init()
+    surf = pygame.Surface((600, 80))
+    sheet_card.draw_sheet(surf, ui_fonts(), pygame.Rect(0, 0, 400, 80), ch, density="compact", only=("weapon",))

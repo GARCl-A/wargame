@@ -14,11 +14,11 @@ just drives one stretch at a time and shows what happened.
 
 import pygame
 
-from . import autowin, hunt, ox
+from . import autowin, hunt, ox, progression
 from .scenario import Scenario
 from .screen import Screen
+from .ui.party_panel import draw_party_stats, party_load
 from .ui.primitives import (
-    caps,
     draw_button,
     footer_bar,
     panel,
@@ -195,8 +195,9 @@ class HuntScreen(Screen):
                 yields = f"forage per hour: {shroom:.0%} mushroom, {fruit:.0%} fruit"
         if self.state.ambush_mult != 1.0:
             yields += f"   ·   ambush chance x{self.state.ambush_mult:.2f} (cautious)"
-        text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   {yields}",
-             (m, m + 30), T.TX_MUTED)
+        kg, cap = party_load([self._party_row(u) for u in self.state.party])
+        text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   "
+             f"carrying {kg:g} / {cap:g} kg   ·   {yields}", (m, m + 30), T.TX_MUTED)
 
         self._draw_party(screen, m + 72)
 
@@ -223,17 +224,20 @@ class HuntScreen(Screen):
         
         col_w = (w - T.S * 2) // 2
         
-        def _trailing(surf, r, ch):
-            u = ch["unit"]
-            caps(surf, F["micro"], f"{u.rations} RATIONS", (r.right - T.S * 2, r.centery - 10), T.GREEN, right=True)
-            caps(surf, F["micro"], f"{u.work_xp} WORK XP", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
-            
         for i, u in enumerate(party):
             col = i % 2
             row_idx = i // 2
             rect = pygame.Rect(pad + col * (col_w + T.S * 2), top + row_idx * (74 + T.S), col_w, 74)
             c = Combatant(u)
-            draw_row(screen, F, rect, unit_to_ch(c), draw_trailing=_trailing)
+            row = self._party_row(u)
+            draw_row(screen, F, rect, unit_to_ch(c), draw_trailing=lambda surf, r, ch, row=row:
+                     draw_party_stats(surf, F, r, row))
+
+    @staticmethod
+    def _party_row(u):
+        into, span = progression.to_next(progression.WORK_XP_THRESHOLDS, u.work_xp)
+        return {"hp": (max(u.hp, 0), u.hp_max), "ac": u.ac, "load": (u.load, u.carry_normal),
+                "rations": u.rations, "work": (u.work_level, into, span)}
 
     def _draw_tracking_setup(self, screen, top):
         F = self._F

@@ -57,6 +57,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `reputation_panel.py` | faction cards (deeds, unlocks) in as many columns as fit |
 | `combat_card.py` | unit cards for recruit / squad lists and party rows |
 | `sheet_card.py` | the character sheet at three densities |
+| `party_panel.py` | the figures on a party row (HP, AC, load, rations, work-XP bar) and the party's total load |
 | `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
 | `market_panel.py` | the market's vendor shelf: category tabs, stock list and drag ghost |

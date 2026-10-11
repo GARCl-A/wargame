@@ -33,14 +33,15 @@ from .primitives import (
 from .sheet_card import draw_sheet, sheet_height
 from .tokens import ARCHETYPE_COLORS, T, mix
 
-SHEET_BLOCKS = ("identity", "vitals", "attributes", "weapon")
+SHEET_BLOCKS = ("vitals", "attributes", "weapon")
+PORTRAIT_R = T.S * 4
 _TAG_H = 16
-_FOOT_H = T.S * 3
+_FOOT_H = T.S * 2
 _RAIL_LABEL_H = 16
 
 
 def pool_card_height():
-    return (T.S * 2 + _TAG_H + T.S + sheet_height("compact", SHEET_BLOCKS)
+    return (T.S * 2 + PORTRAIT_R * 2 + T.S + sheet_height("compact", SHEET_BLOCKS)
             + T.S + _FOOT_H + T.S)
 
 
@@ -56,7 +57,11 @@ def draw_pool_card(surf, F, rect, card, mpos):
         pygame.draw.rect(surf, T.BLOOD, rect, 2)
 
     with contained(surf, rect):
-        tx, ty = rect.x + pad, rect.y + pad
+        ch = card["ch"]
+        token_badge(surf, F, (rect.x + pad + PORTRAIT_R, rect.y + pad + PORTRAIT_R), ch["unit"],
+                    r=PORTRAIT_R)
+        left = rect.x + pad + PORTRAIT_R * 2 + T.S * 2
+        tx, ty = left, rect.y + pad
         for label, style, desc, starred in card["tags"][:3]:
             tcol = ARCHETYPE_COLORS.get(style, T.TX_MUTED)
             shown = f"★ {label}" if starred else label
@@ -79,13 +84,16 @@ def draw_pool_card(surf, F, rect, card, mpos):
             text(surf, F["bodyb"], str(card["order"]), token_pos, T.TABLE, center=True)
 
         ty += _TAG_H + T.S
+        draw_sheet(surf, F, pygame.Rect(left, ty, rect.right - pad - left, T.S * 5), ch,
+                   density="compact", only=("identity",), mouse=mpos)
+
+        ty = rect.y + pad + PORTRAIT_R * 2 + T.S
         sh = sheet_height("compact", SHEET_BLOCKS)
         _used, sheet_tip = draw_sheet(surf, F, pygame.Rect(rect.x + pad, ty, rect.w - 2 * pad, sh),
                                       card["ch"], density="compact", only=SHEET_BLOCKS, mouse=mpos)
         tip = sheet_tip or tip
 
         ty += sh + T.S
-        ch = card["ch"]
         line = f"{ch['ability'][0]}  ·  {', '.join(ch['langs']) or 'no languages'}"
         text(surf, F["body_sm"], ellipsize(line, F["body_sm"], rect.w - 2 * pad),
              (rect.x + pad, ty), T.TX_MUTED)

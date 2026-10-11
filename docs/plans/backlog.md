@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-10 (after the Combat lab and vocations commits). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-10 (after the shopkeeper portraits and the item icons). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -47,16 +47,11 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. The run exits 1 on a failed verdict, but no test or gate reads it.
-- **Item icons: the lists that are still text.** All 106 catalogue items have a code-drawn silhouette (2026-10-10)
-  and it shows on the pack rows, the CARGO table, the shop / loot / chest rows and the slots
-  (`loadout_panel`), the market shelf (`market_panel`), the Bank view, the recipe rows of the Forge /
-  Apothecary / Library (the product), the quest goal item and an icon strip for the pack on the
-  character sheet. `ui/item_icons.py` has the ~50 generators, `gartok/item_icon.py` maps each item to one (kind,
-  material, shape; rarity is the rim; a Large weapon, every spell scroll and every dictionary share their plain
-  kind's icon) and a test fails for an item with no entry. Not checked, so possibly still text: the mission offer
-  card's reward / goal item, the recipe materials line (names only), the Stables' tack and the Tavern's candidate
-  gear. The material comes from a table keyed by name, not from `ItemDef`, until *Item properties* gives items a
-  base material.
+- **Item icons: four lists may still be text.** Not checked: the mission offer card's reward / goal
+  item, the recipe materials line (names only), the Stables' tack and the Tavern's candidate gear.
+  Every other list already draws the icon (`ui/item_icons.py`, `gartok/item_icon.py`; a test fails for
+  an item with no entry). The material comes from a table keyed by name, not from `ItemDef`, until
+  *Item properties* gives items a base material.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -75,18 +70,11 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   unpriced. (4) The Mine has no art or map icon of its own (it uses the
   work glyph), and no tutorial line.
 
-- **Draft screen (pick 3 of 9): portraits and vertical space.** The cards have no portrait and
-  there is horizontal room for one. The screen also scrolls for no good reason: the cards waste
-  height (a weapon prints as three lines, "Club / to hit... / damage"; one line, "Club +1 (STR)
-  1d6+1 (STR)", says the same). Tighten the card until the scroll goes.
 - **Vocation icons.** The six vocations have no icon or image (draft, `vocation_screen.py`, Guild tab).
-  Same style decision as *Item icons* below.
+  Draw them in code like the item icons (`ui/item_icons.py`).
 - **"Found the guild" screen looks off the game's identity.** Check whether `vocation_screen.py` and the
   identity phase of `draft_screen.py` are on the `gartok/ui/` kit; migrate what is not (the charter item
   under *Needs more information* lists the presentation work).
-- **The Wilds screen: group capacity and work-XP bar.** Each row already prints HP now, AC, load, rations
-  and work XP as numbers (`hunt_screen._draw_party`). Missing: max HP beside the current, the group's
-  carrying capacity as a whole, and the work XP as a bar toward the next level.
 - **Market: an autosell list.** Mark item kinds once and have SELL ALL / the sale pick them, instead of
   selecting the same items every visit.
 
@@ -100,7 +88,7 @@ pointed to, not repeated.
   the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
-- **Big screen files.** `app.py` (1240 lines, 108 `def`s) is the wiring hub; `map_screen.py`,
+- **Big screen files.** `app.py` (1234 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run 879-1053 (`battle_screen.py` is past 1000 since the
   per-team controllers). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
@@ -296,10 +284,13 @@ the ones that also need code say so. Order is the suggested priority.
 
 - **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes
   and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py` is text only today). The
-  shopkeepers' faces are made and wait for their NPCs: `portraits/npc/` holds `merchant.png`
-  (Automaton), `tanner.png` (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf);
-  each NPC's `npcs/<id>.json` needs `"portrait_file"` and a line in
-  `test_named_npcs_load_pinned_portraits`.
+  shopkeepers' faces are made: `portraits/npc/` holds `merchant.png` (Automaton), `tanner.png`
+  (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf). **Decided 2026-10-10:** the
+  vendor's face shows in the shop header, so the player learns to recognise who they haggle with
+  (the vendor already has a language and an alignment on the `Node`, which set the deal:
+  `economy.deal_mods`). There is no shopkeeper NPC file or portrait field yet: the work is a
+  portrait on the `Node` (or an NPC behind it), drawn in the header of the Market, Forge, Tanner
+  and Library screens, with a test that every named portrait file loads.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur

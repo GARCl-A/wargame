@@ -53,8 +53,8 @@ BLOCKS = {
 
 # fixed height per block per density -- this is what makes cards align
 H = {
-    "compact": dict(identity=T.S * 5, status=T.S * 3, vitals=T.S * 4,
-                    attributes=T.S * 4, weapon=T.S * 6, gear=T.S * 5),
+    "compact": dict(identity=T.S * 5, status=T.S * 3, vitals=T.S * 3,
+                    attributes=T.S * 3, weapon=T.S * 4, gear=T.S * 5),
     "normal":  dict(identity=T.S * 6, status=T.S * 3, vitals=T.S * 8,
                     attributes=T.S * 8, weapon=T.S * 8, gear=T.S * 6,
                     languages=T.S * 5, magic=T.S * 5, ability=T.S * 9),
@@ -343,6 +343,10 @@ def _b_weapon(s, F, r, ch, d, ed, mouse, tip):
     text(s, F["bodyb"], w["nm"], (r.x, y), T.TX)
     caps(s, F["micro"], w["tags"], (r.right, y + 2), T.TX_FAINT, right=True)
     y += T.S * 2 + 4
+    if d == "compact":
+        line = f"{w['hit']}  ·  {w['dmg']}  ·  {w['crit']}"
+        text(s, F["micro"], ellipsize(line, F["micro"], r.w), (r.x, y), T.TX_MUTED)
+        return
     text(s, F["micro"], f"to hit  {w['hit']}   ·   {w['crit']}", (r.x, y), T.TX_MUTED)
     y += T.S * 2
     text(s, F["micro"], f"damage  {w['dmg']}", (r.x, y), T.TX_MUTED)
