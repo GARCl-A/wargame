@@ -21,7 +21,7 @@ validating the work: [Decisions made without asking](#decisions-made-without-ask
 |---|---|---|
 | `scripts/economy_report.py` | one report in this plan's order: verdicts, exploits, activities, sustain, ranking; writes `sim_results/economy-report-*.txt`; exit 1 if a verdict fails | `python scripts/economy_report.py [--quick]` |
 | `scripts/economy_activities.py` | **layer 1**: what each activity pays a squad per day in copper and XP, risk, days to the next level, the floor check; the Pit and the Games; the tavern against the yard | `--level 0\|3 --skills 0.8,0.95 [--medic]` |
-| `scripts/economy_guild.py` | **layer 2**: a whole guild lives 7 and 30 days under a policy on the real engine; sustain curve, milestone, ranking, restock sweep, upkeep, the Games ladder, the Wilds claim, the Medic | `--policies ... --skill 0.8 [--curve] [--ranking] [--medic] [--level 3 --capital 250]` |
+| `scripts/economy_guild.py` | **layer 2**: a whole guild lives 7 and 30 days under a policy on the real engine; sustain curve, milestone, ranking, restock sweep, upkeep, the Games ladder, the Wilds claim, the Medic | `--policies ... --skill 0.95 [--curve] [--ranking] [--medic] [--level 3 --capital 250]` |
 | `scripts/economy_exploits.py` | the exploit detector: loops, barriers, dominance, route, conservation fuzz | `--fuzz 200` |
 | `tests/test_economy_sim.py`, `test_economy_exploits.py`, `test_craft_level.py` | pytest on seeded short runs; the detector tests break the rules on purpose to prove each scan can fail | `python -m pytest tests/` |
 
@@ -71,7 +71,7 @@ level 2-3 only. The Wilds give little XP on purpose: the arena and the dungeon a
 The AI plays a squad much worse than a person (a person wins nearly every level-0 Scrapper
 bout; the AI wins about half), so a win rate measured from AI-vs-AI is a floor, not the game.
 Every fight-bearing activity is reported at the AI's own win rate and at `--skills` (0.8 and
-0.95 by default; the verdict uses 0.8). A skilled player's loot, XP and casualties are drawn
+0.95 by default; the verdict uses 0.95, the rate the four recorded runs show: 68 of 70 fights won). A skilled player's loot, XP and casualties are drawn
 from the fights the AI did play, split by outcome, and the casualties in a *won* fight shrink as
 skill rises (`relief`: 1 at the AI's own win rate, 0 at a perfect record). That shrink is an
 assumption, in both layers; replace it with measured play when it exists.

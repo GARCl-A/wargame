@@ -43,7 +43,7 @@ LATE_POLICIES = ("balanced", "games", "claimer")
 
 @dataclass
 class Settings:
-    skill: float = 0.8
+    skill: float = 0.95
     trials: int = 150            # battles per layer-1 activity
     guilds: int = 40             # per policy, layer 2
     ranking_guilds: int = 200
@@ -158,7 +158,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--quick", action="store_true", help="fewer battles and guilds")
-    ap.add_argument("--skill", type=float, default=0.8)
+    ap.add_argument("--skill", type=float, default=0.95)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out-dir", default="sim_results")
     ap.add_argument("--profile", default=None, metavar="JSON",

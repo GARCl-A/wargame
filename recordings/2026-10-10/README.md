@@ -2,7 +2,8 @@
 
 Two longer campaign saves, recorded with the `PLAY RECORDER` setting. Copied from
 `saves/<world>/play.jsonl` (`saves/` is gitignored, this is the kept copy). Their fights are
-in `combat_lab/campaign/<guild>-<world id>/`. **Not analysed yet**: with the two runs of 2026-10-08 they make four.
+in `combat_lab/campaign/<guild>-<world id>/`. With the two runs of 2026-10-08 they make four; `human_profile_4runs.json` is `play_analysis.py` over all four
+(medians), see the backlog item *Feed the recorded runs*.
 
 | file | days (last row) | ambushes | what it adds |
 |---|---|---|---|

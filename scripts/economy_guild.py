@@ -30,7 +30,7 @@ A policy is a class with `step(sim)`; each step spends time. Policies:
             the restock limiter; needs `--recipes`)
 
     python scripts/economy_guild.py                         # every policy, 7 and 30 days
-    python scripts/economy_guild.py --policies lumber,balanced --guilds 60 --skill 0.8
+    python scripts/economy_guild.py --policies lumber,balanced --guilds 60 --skill 0.95
     python scripts/economy_guild.py --policies crafter --recipes "Bear Trap" --restock 4:1
 """
 

@@ -47,6 +47,11 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. The run exits 1 on a failed verdict, but no test or gate reads it.
+- **Louder hunger warnings.** The map header's alerts are discreet: a guild went three days at 0 days of
+  food while the player kept ordering work, and three members starved with $237 in hand (Gozatron save,
+  day 96). Make an empty or nearly empty larder critical: a blood-coloured banner or modal on the map
+  when any group has under a day of food (and money to buy it), and a confirm before a work or rest order
+  that would run it out. See `ui/command_bar.py` for the alert strip.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -55,7 +60,7 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   Amethyst drops from it (rare enough not to beat the wage; the stone is worth $120). (2) *Iron Ore* has no recipe or
   use until the Smith's chain exists. (3) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
-  guilds are wiped on the road; with a player winning 80% (the report's setting) `miner` earns
+  guilds are wiped on the road; with a player winning 80% (the report's setting then; it is 0.95 since 2026-10-10) `miner` earns
   $166 a member by day 30 against the yard's $67, reaches the day-30 milestone in 70% of guilds
   (every other policy: 0-20%) and loses 30% of them. A 2-shift stay is worse than the yard.
   So the $1 premium pays only for a long stay, and the Mine is the best way to the
@@ -209,9 +214,18 @@ pointed to, not repeated.
   it (`keep_fed(at_low=True)`). With that, all `human` guilds go hungry at some point, which
   is what the recordings show a person doing. It wipes 30-40% of 20 guilds, and that is the
   threshold, not the player: `hunt_min_level` 0.5 comes from three won hunts, and at 2.0 the
-  wipe is 0% ([finding 20](economy_sim_v2.md)). There are now four runs: the two of 2026-10-08 and two longer saves in
-  `recordings/2026-10-10/` (65 and 95 days, with the Old Road ambushes, 3 and 4, that the first two never
-  touched), so no third run is needed. Next: run `play_analysis.py` over all four and re-derive the `human` profile. Then compare
+  wipe is 0% ([finding 20](economy_sim_v2.md)). **Analysed 2026-10-10 over four runs** (the two of 2026-10-08 and the 65- and 95-day saves in
+  `recordings/2026-10-10/`, which add the Old Road ambushes; profile in
+  `recordings/2026-10-10/human_profile_4runs.json`). The person won **68 of 70 fights** (hunts 48/48,
+  ambushes 7/7, Scrapper 8/9, champion 4/4, Defend the Title 1/2). Medians: hunt at 0.71 HP and level
+  0.36, bout cash $12.7 a member, food target 4.1 days, leave the yard on day 5. Run through the sim
+  (`economy_guild.py --policies human --guilds 40`), the `human` guild is wiped in **65% at skill 0.8
+  (the report's setting), 42% at 0.9, 30% at 0.95 and 0% at 1.0**, so the wipes are the fight win rate, not
+  the thresholds (the hunt HP floor 0.92 to 0.71 alone takes the wipe from 25% to 60% at 0.8). At 1.0 the
+  day-30 milestone comes in 28% of guilds, first on day 28, against 11-14 days by hand. **Decided 2026-10-10:** the report's default `--skill` is now 0.95 (it was 0.8; the verdicts did not change at
+  0.95, the milestone still fails at 0%), and the sim's findings below were measured at 0.8. The day-96 wipe in the
+  Gozatron save (three of five starved with $237 in hand after three days at 0 food) was the player clicking
+  work without buying food; see *Louder hunger warnings* under *Small*. Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the
