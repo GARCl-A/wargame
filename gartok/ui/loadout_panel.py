@@ -38,6 +38,23 @@ def item_icon(surf, name, x, cy, size=ICON):
     return x + size + ICON_GAP
 
 
+def icon_strip(surf, F, rect, names, size=T.S * 3):
+    """A row of icons for a flat list of item names, equal names stacked with a count; what does
+    not fit in `rect.w` is summed up as `+N`."""
+    stacks = {}
+    for n in names:
+        stacks[n] = stacks.get(n, 0) + 1
+    x = rect.x
+    for i, (n, qty) in enumerate(stacks.items()):
+        if x + size > rect.right - (T.S * 3 if i < len(stacks) - 1 else 0):
+            caps(surf, F["micro"], f"+{len(stacks) - i}", (x + 2, rect.centery - 5), T.TX_FAINT)
+            return
+        draw_icon(surf, pygame.Rect(x, rect.centery - size // 2, size, size), n)
+        if qty > 1:
+            caps(surf, F["microb"], f"{qty}", (x + size - 2, rect.centery + size // 2 - 8), T.TX, right=True)
+        x += size + 4
+
+
 def tag_pill(surf, F, tag, pos, max_x=None):
     """A row's tag line: each part in its own colour (`FOOD · MATERIAL`, or
     `AMMO · 14/20` where the count stays faint), dropping trailing parts that

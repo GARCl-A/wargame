@@ -36,6 +36,7 @@ import pygame
 
 from .. import data, magic
 from ..constants import fmt_money
+from . import loadout_panel
 from .primitives import caps, contained, ellipsize, section, text, token_badge, wrap
 from .tokens import T
 
@@ -58,7 +59,7 @@ H = {
                     attributes=T.S * 8, weapon=T.S * 8, gear=T.S * 6,
                     languages=T.S * 5, magic=T.S * 5, ability=T.S * 9),
     "full":    dict(identity=T.S * 8, status=T.S * 3, vitals=T.S * 10,
-                    attributes=T.S * 10, weapon=T.S * 9, gear=T.S * 14,
+                    attributes=T.S * 10, weapon=T.S * 9, gear=T.S * 18,
                     languages=T.S * 5, magic=T.S * 5, ability=T.S * 9),
 }
 
@@ -365,6 +366,9 @@ def _b_gear(s, F, r, ch, d, ed, mouse, tip):
             text(s, F["body"], ellipsize(val, F["body"], vw), (vx, y - 1),
                  T.TX_FAINT if val in ("empty", "none") else T.TX_MUTED)
             y += T.S * 2 + 4
+        if g["pack"]:
+            loadout_panel.icon_strip(s, F, pygame.Rect(vx, y, vw, T.S * 3), g["pack"])
+            y += T.S * 3 + 4
         y += 2
     bar = pygame.Rect(r.x, y, r.w, 8)
     pygame.draw.rect(s, T.TABLE, bar)

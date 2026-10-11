@@ -11,7 +11,7 @@ import pygame
 
 from . import items, progression, solo
 from .screen import Screen
-from .unit_loadout import pooled_unlocked
+from .ui.loadout_panel import item_icon
 from .ui.primitives import (
     caps,
     draw_button,
@@ -22,6 +22,7 @@ from .ui.primitives import (
 )
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .unit_loadout import pooled_unlocked
 
 SIDE_W = 340
 ROW_H = 150
@@ -197,11 +198,12 @@ class CraftingScreen(Screen):
             hov = r.collidepoint(self.mouse)
             panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
 
-            text(screen, F["bodyb"], r_name, (r.x + T.S, r.y + T.S), T.TX)
+            tx = item_icon(screen, r_name, r.x + T.S, r.y + T.S + 20)
+            text(screen, F["bodyb"], r_name, (tx, r.y + T.S), T.TX)
             xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
             xp_note = f"x{xp_mult} work XP" if xp_mult else "no work XP"
             caps(screen, F["micro"], f"LEVEL {r_data.level}  ·  {xp_note}",
-                 (r.x + T.S + F["bodyb"].size(r_name)[0] + T.S, r.y + T.S + 4), T.BRASS)
+                 (tx + F["bodyb"].size(r_name)[0] + T.S, r.y + T.S + 4), T.BRASS)
             if r_data.yield_qty > 1:
                 caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
 
@@ -232,8 +234,8 @@ class CraftingScreen(Screen):
             if r_data.tools:
                 materials_str += f"  |  Tools: {', '.join(r_data.tools)}"
             text(screen, F["body_sm"], f"Materials: {materials_str}",
-                 (r.x + T.S, r.y + T.S + 20), T.TX_MUTED)
-            text(screen, F["body_sm"], status_text, (r.x + T.S, r.y + T.S + 40), status_color)
+                 (tx, r.y + T.S + 20), T.TX_MUTED)
+            text(screen, F["body_sm"], status_text, (tx, r.y + T.S + 40), status_color)
 
             if is_active or self._has_materials(r_name):
                 bw = 100

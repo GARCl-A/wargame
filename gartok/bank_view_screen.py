@@ -5,6 +5,7 @@ import pygame
 
 from . import items
 from .screen import Screen
+from .ui.loadout_panel import ICON, item_icon
 from .ui.primitives import (
     caps,
     contained,
@@ -103,9 +104,10 @@ class BankViewScreen(Screen):
             for i, (name, qty) in enumerate(stash):
                 ry = view.y + i * ROW_H - self._scroll
                 tag = items.item_tag(name)
-                text(screen, F["bodyb"], ellipsize(name, F["bodyb"], w - T.S * 30), (x, ry + 4), T.TX)
+                nx = item_icon(screen, name, x, ry + ROW_H // 2 - 1, ICON)
+                text(screen, F["bodyb"], ellipsize(name, F["bodyb"], w - T.S * 30 - (nx - x)), (nx, ry + 4), T.TX)
                 if tag:
-                    caps(screen, F["micro"], tag, (x, ry + 22), T.TX_FAINT)
+                    caps(screen, F["micro"], tag, (nx, ry + 22), T.TX_FAINT)
                 text(screen, F["body"], f"x{qty}", (x + w - T.S * 12, ry + 8), T.TX_MUTED, right=True)
                 text(screen, F["body"], f"{items.item_weight(name) * qty:g} kg", (x + w, ry + 8),
                      T.TX_MUTED, right=True)

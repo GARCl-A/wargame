@@ -7,6 +7,7 @@ over."""
 
 import pygame
 
+from .loadout_panel import ICON_GAP, item_icon
 from .primitives import text
 from .tokens import T
 
@@ -67,8 +68,10 @@ def quest_list(surf, F, area, quests, empty_label="No active quests."):
         progress = q["progress"]
         if progress is not None:
             have, goal, item = progress
-            text(surf, F["body"], f"{have} / {goal} {item}",
-                 (r.right - T.S * 3, r.y + 40), T.GREEN if have >= goal else T.TX, right=True)
+            label = f"{have} / {goal} {item}"
+            text(surf, F["body"], label, (r.right - T.S * 3, r.y + 40), T.GREEN if have >= goal else T.TX, right=True)
+            item_icon(surf, item, r.right - T.S * 3 - F["body"].size(label)[0] - ICON_GAP - T.S * 3,
+                      r.y + 48, T.S * 3)
         else:
             text(surf, F["body"], "Delivery", (r.right - T.S * 3, r.y + 40), T.TX, right=True)
 
