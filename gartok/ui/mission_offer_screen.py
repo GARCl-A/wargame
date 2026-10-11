@@ -2,7 +2,8 @@
 
 import pygame
 
-from .. import factions, missions
+from .. import factions, missions, world
+from ..item_icon import draw_icon
 from ..screen import Screen
 from .primitives import (
     caps,
@@ -16,6 +17,7 @@ from .primitives import (
 )
 from .tokens import T, mix
 from .tokens import fonts as ui_fonts
+from .vendor_panel import draw_vendor, draw_vendor_name
 
 CARD_W = 560
 
@@ -33,6 +35,7 @@ TAG_COLOR = {
 
 class MissionOfferScreen(Screen):
     native = True
+    VENDOR = None      # (node id, function) of the keeper whose face the card shows
 
     def __init__(self, fonts, guild, group, on_done):
         super().__init__()
@@ -41,6 +44,8 @@ class MissionOfferScreen(Screen):
         self.group = group
         self.on_done = on_done
         self.notice = None
+        keeper = world.vendor(*self.VENDOR) if self.VENDOR else None
+        self.vendor_card = keeper.card if keeper else None
         self.buttons = []              # [(key, rect)]
         self._hot = False
 
@@ -158,8 +163,11 @@ class MissionOfferScreen(Screen):
         m = self._mission
         offered = self._offered
 
-        subtitle_lines = wrap(F["body"], self.subtitle_text, inner_w) if self.subtitle_text else []
-        header_h = 30 + (len(subtitle_lines) * 22 if subtitle_lines else 0)
+        face = T.S * 7 if self.vendor_card else 0
+        subtitle_lines = (wrap(F["body"], self.subtitle_text, inner_w - face - T.S * 2)
+                          if self.subtitle_text else [])
+        name_h = 20 if self.vendor_card else 0
+        header_h = max(30 + name_h + (len(subtitle_lines) * 22 if subtitle_lines else 0), face)
 
         qpad = T.S * 2
         qw = inner_w - 2 * qpad
@@ -213,8 +221,10 @@ class MissionOfferScreen(Screen):
             cx = card.x + pad
             cy = card.y + pad
 
+            draw_vendor(screen, F, (cx + inner_w - face, cy), self.vendor_card, size=face)
             caps(screen, F["head"], self.title_text, (cx, cy), T.TX)
-            cy += 30
+            draw_vendor_name(screen, F, (cx, cy + 28), self.vendor_card)
+            cy += 30 + name_h
             for ln in subtitle_lines:
                 text(screen, F["body"], ln, (cx, cy), T.TX_MUTED)
                 cy += 22
@@ -233,6 +243,8 @@ class MissionOfferScreen(Screen):
                     qx = quest_rect.x + qpad
                     qy = quest_rect.y + qpad
 
+                    draw_icon(screen, pygame.Rect(quest_rect.right - qpad - T.S * 5, qy, T.S * 5, T.S * 5),
+                              t.goal_item)
                     caps(screen, F["head"], t.name, (qx, qy), T.TX)
                     qy += 24
 

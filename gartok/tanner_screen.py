@@ -13,6 +13,7 @@ from .ui.mission_offer_screen import MissionOfferScreen
 
 class TannerScreen(MissionOfferScreen):
     GIVER = "tanner"
+    VENDOR = ("city", "tanner")
 
     @property
     def title_text(self):

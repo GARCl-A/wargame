@@ -26,6 +26,7 @@ from .animals import STARVE_DAYS, Animal
 from .combatant import Combatant
 from .constants import fmt_money
 from .group import BASE_CAPACITY
+from .item_icon import vocation_icon
 from .screen import Screen
 from .ui import guild_panel, guild_roster, member_panel, reputation_panel
 from .ui.primitives import (
@@ -734,7 +735,8 @@ class GuildScreen(Screen):
 
     def _vocation(self):
         voc = vocations.of(self.guild)
-        return None if voc is None else {"name": voc.name, "perk": voc.perk, "dormant": not voc.active}
+        return None if voc is None else {"name": voc.name, "perk": voc.perk, "dormant": not voc.active,
+                                         "icon": vocation_icon(voc.id)}
 
     def _draw_guild(self, screen, F, rect):
         guild = self.guild

@@ -25,7 +25,8 @@ from .tokens import T, mix
 
 TAG_COLOR = {"": T.TX_FAINT, "WEAPON": T.TX_MUTED, "ARMOR": T.TX_MUTED,
              "AMMO": T.TX_FAINT, "HEAL": T.GREEN, "LIGHT": T.BRASS_DIM,
-             "FOOD": T.TX_FAINT, "TACK": T.TX_MUTED, "MATERIAL": T.BRASS_DIM, "CHEST": T.BRASS, "SEALED": T.BRASS}
+             "FOOD": T.TX_FAINT, "TACK": T.TX_MUTED, "MATERIAL": T.BRASS_DIM, "CHEST": T.BRASS, "SEALED": T.BRASS,
+             "AUTO-SELL": T.BRASS}
 
 TAG_SEP = " · "      # between a row's tags (and before a charge count)
 ICON = T.S * 4       # an item's icon, a square at the left of its row
@@ -36,6 +37,22 @@ def item_icon(surf, name, x, cy, size=ICON):
     """Paint `name`'s icon with its left edge at `x`, centred on `cy`; returns where the text may start."""
     draw_icon(surf, pygame.Rect(x, cy - size // 2, size, size), name)
     return x + size + ICON_GAP
+
+
+def icon_list(surf, F, pos, names, color, max_x, size=T.S * 2 + 4):
+    """`names` side by side, each behind its small icon (`icon Hide, icon Paper`), cut off at `max_x`;
+    returns where the line ends."""
+    x, y = pos
+    for i, n in enumerate(names):
+        label = n + (", " if i < len(names) - 1 else "")
+        w = size + 4 + F["body_sm"].size(label)[0]
+        if x + w > max_x:
+            text(surf, F["body_sm"], "...", (x, y), color)
+            return x + F["body_sm"].size("...")[0]
+        draw_icon(surf, pygame.Rect(x, y - 1, size, size), n)
+        text(surf, F["body_sm"], label, (x + size + 4, y), color)
+        x += w
+    return x
 
 
 def icon_strip(surf, F, rect, names, size=T.S * 3):

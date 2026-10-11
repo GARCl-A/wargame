@@ -7,13 +7,14 @@ what each group is doing with its slot, and what it holds.
   "notices": [(text, tone)],              # tone: "warn" | "bad"
   "groups": [{"name", "where", "task", "size", "capacity", "over", "note"}],
   "bases": [{"name", "status", "tone": "good" | "warn" | "bad" | "muted", "detail"}],
-  "vocation": {"name", "perk", "dormant"} or None}`.
+  "vocation": {"name", "perk", "dormant", "icon"} or None}`.
 `note` is a short warning line or "". Fame is the sum of the factions' rep; the
 rule it feeds lives in `RULES.md` ("Fame and group slots").
 """
 
 import pygame
 
+from .item_icons import draw_item_icon
 from .primitives import (
     caps,
     contained,
@@ -103,10 +104,12 @@ def _draw_base(surf, F, rect, b):
 
 def _draw_vocation(surf, F, x, y, w, voc):
     """The founding trade and its perk; returns the y below it."""
-    text(surf, F["bodyb"], voc["name"], (x, y), T.TX)
+    kind, tone, shape = voc["icon"]
+    draw_item_icon(surf, pygame.Rect(x, y, T.S * 4, T.S * 4), kind, tone, **shape)
+    text(surf, F["bodyb"], voc["name"], (x + T.S * 5, y + T.S), T.TX)
     if voc["dormant"]:
-        caps(surf, F["microb"], "NO EFFECT YET", (x + w, y + 2), T.BLOOD, right=True)
-    y += T.S * 3
+        caps(surf, F["microb"], "NO EFFECT YET", (x + w, y + T.S + 2), T.BLOOD, right=True)
+    y += T.S * 5
     for line in wrap(F["body_sm"], voc["perk"], w):
         text(surf, F["body_sm"], line, (x, y), T.TX_MUTED)
         y += F["body_sm"].get_height()

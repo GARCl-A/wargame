@@ -197,7 +197,7 @@ gartok/
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai.py             enemy squad AI (over actions/); alignment tempers the edges
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
-  item_icon.py      what each item looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
+  item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
@@ -293,7 +293,8 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     economy_guild.py (a whole guild living days under a policy, with the
                     race / occupation ranking and the restock sweep), economy_exploits.py
                     (money-from-nothing loops, recipe barriers, dominance), economy_report.py
-                    (all of them in one report, with verdicts), ai_usage.py (which actions the combat AI takes, and
+                    (all of them in one report, with verdicts), economy_offers.py (what a guild can take up
+                    today, each priced in copper and days), ai_usage.py (which actions the combat AI takes, and
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
                     vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)

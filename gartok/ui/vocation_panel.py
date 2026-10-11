@@ -3,18 +3,21 @@
     draw_vocation_cards(surf, F, rect, cards, selected, mpos) -> [(rect, id)]
 
 Data is plain dicts. A `card` is
-    {"id", "name", "races": [race name], "perk": str, "dormant": bool}
-(`dormant`: the perk waits on a system that is not built yet). `selected` is the
+    {"id", "name", "races": [race name], "perk": str, "dormant": bool, "icon": (kind, tone, shape)}
+(`dormant`: the perk waits on a system that is not built yet; `icon` is what
+`item_icons.draw_item_icon` takes). `selected` is the
 chosen card's id or None. The cards lay out in as many columns as fit `rect`.
 """
 
 import pygame
 
+from .item_icons import draw_item_icon
 from .primitives import caps, contained, panel, text, wrap
 from .tokens import T
 
 MIN_CARD_W = T.S * 30
-CARD_H = T.S * 17
+CARD_H = T.S * 23
+ICON = T.S * 6
 
 
 def draw_vocation_cards(surf, F, rect, cards, selected, mpos):
@@ -40,8 +43,11 @@ def _draw_card(surf, F, r, card):
     inner = r.w - 2 * pad
     with contained(surf, r):
         y = r.y + pad
-        text(surf, F["head"], card["name"], (r.x + pad, y), T.TX)
-        y += F["head"].get_height() + T.S
+        kind, tone, shape = card["icon"]
+        draw_item_icon(surf, pygame.Rect(r.x + pad, y, ICON, ICON), kind, tone, **shape)
+        text(surf, F["head"], card["name"],
+             (r.x + pad + ICON + T.S * 2, y + (ICON - F["head"].get_height()) // 2), T.TX)
+        y += ICON + T.S
         caps(surf, F["micro"], "RACES", (r.x + pad, y), T.TX_FAINT)
         y += F["micro"].get_height() + 2
         for line in wrap(F["body_sm"], ", ".join(card["races"]), inner):

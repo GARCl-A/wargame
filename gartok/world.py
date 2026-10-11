@@ -76,11 +76,26 @@ def fortress_scenario():
     return ErmosScenario()
 
 
+@dataclass(frozen=True)
+class Vendor:
+    """The face and name behind one of a node's functions: shown in that screen's
+    header so the player learns who they deal with. `portrait` is a file in
+    `assets/portraits/npc/`."""
+    name: str
+    race: str
+    role: str
+    portrait: str
+
+    @property
+    def card(self):
+        return {"name": self.name, "caption": f"{self.race} {self.role}", "portrait": self.portrait}
+
+
 class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, functions=(),
                  jurisdiction=None, unsafe=False, encounter_table=None,
-                 garrison_job=None, wagon_risk=0.0):
+                 garrison_job=None, wagon_risk=0.0, vendors=None):
         self.id = id
         self.name = name
         self.kind = kind
@@ -97,6 +112,7 @@ class Node:
         self.encounter_table = encounter_table   # encounters.EncounterEntry tuple an unsafe node's ambush rolls off
         self.garrison_job = garrison_job     # the job a "garrison" order can work here, or None
         self.wagon_risk = wagon_risk         # chance a wagon left unguarded here is lost (wagon_watch.py)
+        self.vendors = dict(vendors or {})   # function id -> the Vendor behind it
 
     def has(self, function):
         return function in self.functions
@@ -152,7 +168,9 @@ NODES = [
     Node("city", "Ankareth", "town", (0.30, 0.50),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", jurisdiction="the_city",
-         functions=("bank", "tanner", "trust", "forge", "apothecary", "property")),
+         functions=("bank", "tanner", "trust", "forge", "apothecary", "property"),
+         vendors={"tanner": Vendor("Dungorm", "Gnoll", "tanner", "tanner.png"),
+                  "forge": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png")}),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours.",
@@ -166,7 +184,7 @@ NODES = [
     Node("market", "Market", "market", (0.38, 0.64),
          "Buy and sell gear for copper. The traders speak Ankarin.",
          language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city",
-         functions=("shop",)),
+         functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png")}),
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
          jurisdiction="the_city", garrison_job="study", functions=("recruit",)),
@@ -188,7 +206,8 @@ NODES = [
          garrison_job="lumber", functions=("claim",)),
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
-         jurisdiction="the_city", functions=("library", "shop")),
+         jurisdiction="the_city", functions=("library", "shop"),
+         vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png")}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
          "A farmstead beyond the walls. For now it keeps the stables: wagons and the animals that pull them.",
          functions=("stable",)),
@@ -238,6 +257,11 @@ for _a, _b, _w in EDGES:
 
 def node(id):
     return _BY_ID[id]
+
+
+def vendor(node_id, function):
+    """The `Vendor` behind `function` at the node, or None when it has no face."""
+    return _BY_ID[node_id].vendors.get(function)
 
 
 def known(guild):

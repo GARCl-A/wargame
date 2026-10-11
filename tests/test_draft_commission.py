@@ -243,3 +243,17 @@ def test_compact_weapon_block_is_two_lines():
     pygame.init()
     surf = pygame.Surface((600, 80))
     sheet_card.draw_sheet(surf, ui_fonts(), pygame.Rect(0, 0, 400, 80), ch, density="compact", only=("weapon",))
+
+
+def test_identity_form_reports_a_hit_rect_for_every_choice():
+    from gartok import artwork
+    from gartok.ui.banner import BANNER_COLORS
+    ds, surf = _screen()
+    ds.picks = ds.pool[:TEAM_SIZE]
+    ds.leader_pick = ds.picks[0]
+    ds.phase = "identity"
+    ds.draw(surf)
+    assert len(ds.color_rects) == len(BANNER_COLORS)
+    assert len(ds.icon_rects) == len(artwork.BANNER_ICONS)
+    assert [u for _, u in ds.leader_rects] == ds.picks
+    assert ds.continue_rect is not None and ds.name_rect is not None

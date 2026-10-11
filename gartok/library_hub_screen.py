@@ -2,6 +2,7 @@
 
 import pygame
 
+from . import world
 from .crafting_screen import CraftingScreen
 from .library_mission_screen import LibraryMissionScreen
 from .library_screen import LibraryScreen
@@ -30,7 +31,8 @@ class LibraryHubScreen(Screen):
         self.craft_screen = CraftingScreen(fonts, guild, group, on_done,
                                            title="THE LIBRARY (WRITE)",
                                            subtitle="write dictionaries and translate texts  ·  needs recipes and materials",
-                                           station="scriptorium")
+                                           station="scriptorium",
+                                           vendor=world.vendor(node.id, "library"))
         self.shop_screen.header_reserve = 3 * (TAB_W + T.S) + T.S * 2
         self.jobs_screen = LibraryMissionScreen(self._F, guild, group, on_done)
         

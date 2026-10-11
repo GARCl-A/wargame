@@ -17,7 +17,7 @@ run's one free way to change your mind).
 
 import pygame
 
-from . import artwork, data, vocations
+from . import artwork, vocations
 from .archetypes import (
     ARCHETYPES,
     generate_candidate,
@@ -29,23 +29,19 @@ from .screen import Screen
 from .ui.banner import BANNER_COLORS, set_player_color
 from .ui.draft_panel import (
     draw_commission_modal,
+    draw_identity_form,
     draw_pool_card,
     draw_squad_rail,
     pool_card_height,
 )
 from .ui.primitives import (
-    TOKEN_INK,
     contained,
     draw_button,
     draw_tooltip,
-    format_tooltip,
-    panel,
     scrollbar,
-    smooth_circle,
     text,
-    tracked,
 )
-from .ui.sheet_card import draw_row, unit_to_ch
+from .ui.sheet_card import unit_to_ch
 from .ui.tokens import T
 from .unit import Unit
 
@@ -380,98 +376,20 @@ class DraftScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_identity(self, screen):
-        F = self.F
-        W, H = screen.get_size()
-        mouse = self.mouse
-
-        cw = min(560, W - 2 * (T.S * 4))
-        cx = (W - cw) // 2
-
-        text(screen, F["titleb"], "FOUND THE GUILD", (cx, T.S * 4 - 2), T.TX)
-        text(screen, F["body"], "Name your guild, pick a banner, and choose your leader.",
-             (cx, T.S * 4 + 30), T.TX_MUTED)
-
-        y = T.S * 4 + 74
-
-        pv = (cx + 24, y + 28)
-        smooth_circle(screen, self.banner_color, pv, 24)
-        art = artwork.banner_icon(self.banner_icon, 32, TOKEN_INK)
-        if art is not None:
-            screen.blit(art, art.get_rect(center=pv))
-
-        nx = cx + 64
-        nw = cw - 64
-        tracked(screen, F["microb"], "GUILD NAME", (nx, y), T.TX_FAINT)
-        self.name_rect = pygame.Rect(nx, y + 16, nw, 40)
-        hov = self.name_rect.collidepoint(mouse)
-        panel(screen, self.name_rect, hover=(hov or self.editing_name), width=2 if (hov or self.editing_name) else 1)
-        shown = self.name_buf + "|" if self.editing_name else self.guild_name or "click to name your guild"
-        col = T.TX if (self.editing_name or self.guild_name) else T.TX_FAINT
-        text(screen, F["body"], shown, (self.name_rect.x + T.S * 2, self.name_rect.centery - F["body"].get_height() // 2), col)
-        y += 56 + T.S * 3
-
-        tracked(screen, F["microb"], "BANNER COLOUR", (cx, y), T.TX_FAINT)
-        y += 18
-        self.color_rects = []
-        sw = 40
-        for i, (_, color) in enumerate(BANNER_COLORS):
-            r = pygame.Rect(cx + i * (sw + T.S * 2), y, sw, sw)
-            sel = color == self.banner_color
-            hov = r.collidepoint(mouse)
-            smooth_circle(screen, color, r.center, sw // 2)
-            smooth_circle(screen, T.BRASS if sel else (T.STEEL_LINE if hov else T.STEEL),
-                          r.center, sw // 2, 3 if sel else 1)
-            self.color_rects.append((r, color))
-        y += sw + T.S * 3
-
-        tracked(screen, F["microb"], "EMBLEM", (cx, y), T.TX_FAINT)
-        y += 18
-        self.icon_rects = []
-        isz = 44
-        per_row = max(1, (cw + T.S * 2) // (isz + T.S * 2))
-        for i, (_, slug, _label) in enumerate(artwork.BANNER_ICONS):
-            col_i, row_i = i % per_row, i // per_row
-            r = pygame.Rect(cx + col_i * (isz + T.S * 2), y + row_i * (isz + T.S * 2), isz, isz)
-            sel = slug == self.banner_icon
-            hov = r.collidepoint(mouse)
-            panel(screen, r, hover=(sel or hov), width=2 if sel else 1)
-            smooth_circle(screen, self.banner_color, r.center, 14)
-            art = artwork.banner_icon(slug, isz - 16, TOKEN_INK)
-            if art is not None:
-                screen.blit(art, art.get_rect(center=r.center))
-            self.icon_rects.append((r, slug))
-        rows = (len(artwork.BANNER_ICONS) + per_row - 1) // per_row
-        y += rows * (isz + T.S * 2) + T.S * 3
-
-        tracked(screen, F["microb"], "WHO LEADS THE GUILD?", (cx, y), T.TX_FAINT)
-        y += 18
-        self.leader_rects = []
-
-        def _trailing(surf, r, ch):
-            u = ch["unit"]
-            attr_x = r.right - 380
-            for k, name in _ATTRS:
-                txt = f"{k} {getattr(u, name)}"
-                tw = F["body_sm"].size(txt)[0]
-                ar = pygame.Rect(attr_x, r.centery - F["body_sm"].get_height() // 2, tw, F["body_sm"].get_height())
-                text(surf, F["body_sm"], txt, (attr_x, r.centery - F["body_sm"].get_height() // 2), T.TX_MUTED)
-                if ar.collidepoint(mouse) and k in data.ATTRIBUTE_HELP:
-                    t, d = data.ATTRIBUTE_HELP[k]
-                    self.tooltip = format_tooltip(t, d, F)
-                attr_x += tw + 20
-
-        for i, unit in enumerate(self.picks):
-            r = pygame.Rect(cx, y + i * (74 + T.S * 2), cw, 74)
-            sel = unit == self.leader_pick
-            c = Combatant(unit)
-            draw_row(screen, F, r, unit_to_ch(c), selected=sel, draw_trailing=_trailing)
-            self.leader_rects.append((r, unit))
-
-        rows_h = len(self.picks) * (74 + T.S * 2) + T.S * 4
-        y += rows_h
-
-        self.continue_rect = pygame.Rect(cx + cw - 200, y, 200, 44)
-        can_cont = self.leader_pick is not None
-        draw_button(screen, F, self.continue_rect, "FOUND THE GUILD", primary=True, enabled=can_cont, mpos=mouse)
-
-        text(screen, F["body_sm"], "[Esc] quit", (T.S * 4, H - 18), T.TX_FAINT)
+        form = {"name": self.name_buf if self.editing_name else self.guild_name,
+                "name_set": bool(self.guild_name), "editing": self.editing_name,
+                "color": self.banner_color, "icon": self.banner_icon,
+                "colors": [color for _, color in BANNER_COLORS],
+                "icons": [slug for _, slug, _label in artwork.BANNER_ICONS],
+                "leaders": [{"ch": unit_to_ch(Combatant(u)), "selected": u == self.leader_pick}
+                            for u in self.picks],
+                "can_continue": self.leader_pick is not None}
+        out = draw_identity_form(screen, self.F, screen.get_rect(), form, self.mouse)
+        self.name_rect = out["name"]
+        self.color_rects = out["colors"]
+        self.icon_rects = out["icons"]
+        self.leader_rects = [(r, self.picks[i]) for r, i in out["leaders"]]
+        self.continue_rect = out["continue"]
+        if out["tooltip"]:
+            self.tooltip = out["tooltip"]
+        text(screen, self.F["body_sm"], "[Esc] quit", (T.S * 4, screen.get_height() - 18), T.TX_FAINT)

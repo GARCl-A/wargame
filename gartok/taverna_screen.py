@@ -27,6 +27,7 @@ from .archetypes import unit_archetypes
 from .constants import fmt_money
 from .data import alignment_distance
 from .screen import Screen
+from .ui.loadout_panel import icon_strip
 from .ui.primitives import (
     FOOTER_H,
     caps,
@@ -493,6 +494,10 @@ class TavernaScreen(Screen):
         vit_str = f"HP {cand.hp_max}   AC {cand.ac}   Speed {cand.speed} squares   Attack: {cand.weapon_name or 'Unarmed'}"
         text(screen, F["bodyb"], vit_str, (cx, cy), T.TX)
         cy += 24
+        kit = [n for n in (cand.equipped_weapon, cand.armor_name) if n] + [i.name for i in cand.inventory]
+        if kit:
+            icon_strip(screen, F, pygame.Rect(cx, cy, right_rect.right - cx - 20, T.S * 3), kit)
+            cy += T.S * 3 + T.S
         bail = self._bail(cand)
         if bail:
             text(screen, F["bodyb"], f"Bail: {fmt_money(bail)}  ·  party holds {fmt_money(self._wealth())}", (cx, cy),

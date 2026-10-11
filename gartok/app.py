@@ -637,7 +637,8 @@ class App:
     def _open_forge(self, group, node, _offer):
         from .crafting_screen import CraftingScreen
         self.scene = CraftingScreen(self.ui_fonts, self.guild, group,
-                                    on_done=self._after_activity)
+                                    on_done=self._after_activity,
+                                    vendor=world.vendor(node.id, "forge"))
 
     def _open_apothecary(self, group, node, _offer):
         from .apothecary_hub_screen import ApothecaryHubScreen

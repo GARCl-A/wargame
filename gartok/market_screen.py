@@ -27,7 +27,7 @@ shopper's items for one move.
 
 import pygame
 
-from . import economy, factions, items, recorder, store_column
+from . import economy, factions, items, recorder, store_column, world
 from .constants import fmt_money
 from .dragselect import DragSelectMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
@@ -40,6 +40,7 @@ from .ui.primitives import draw_button, draw_tooltip, format_tooltip, set_pointe
 from .ui.primitives import text as ui_text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .ui.vendor_panel import draw_vendor, draw_vendor_name
 
 STOCK_W = 412
 MARGIN = T.S * 2
@@ -48,6 +49,7 @@ MARGIN = T.S * 2
 class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelectMixin, SheetModalMixin, Screen):
     native = True
     header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
+    vendor_function = "shop"  # which of the node's functions the keeper behind this stall serves
 
     def __init__(self, fonts, guild, shoppers, node, on_done):
         super().__init__()
@@ -176,7 +178,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             "hand": held("hand", unit.equipped_weapon, self._hand_note(unit)),
             "offhand": None if two_handed else held("offhand", unit.equipped_offhand, None),
             "armor": held("armor", unit.equipped_armor, self._armor_note(unit)),
-            "pack": [(name, unit.pack_tag(name), items.item_weight(name), qty,
+            "pack": [(name, self._pack_tag(unit, name), items.item_weight(name), qty,
                      unit.locked_of(name) > 0, idx in selected_locs)
                     for idx, (name, qty) in enumerate(unit._base_inventory)],
         }
@@ -239,6 +241,45 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         if pick[0] == "stock":
             return pick[1]
         return self._item_at(*pick)
+
+    def _marked(self):
+        return getattr(self.guild, "autosell", None) or set()
+
+    def _pack_tag(self, owner, name):
+        tag = owner.pack_tag(name)
+        return f"{tag} · AUTO-SELL" if name in self._marked() else tag
+
+    def _marked_stock(self):
+        """`([(member, loc)], {pick: qty})` for every marked item the shoppers carry -- all of a
+        stack but the padlocked part."""
+        picks, qty = [], {}
+        for member in self.shoppers:
+            left = {n: member.unlocked_of(n) for n in self._marked()}
+            for loc, (name, held) in enumerate(member._base_inventory):
+                take = min(held, left.get(name, 0))
+                if take > 0:
+                    left[name] -= take
+                    picks.append((member, loc))
+                    qty[(member, loc)] = take
+        return picks, qty
+
+    def _marked_total(self):
+        picks, qty = self._marked_stock()
+        return sum(economy.sell_price(self._name_of(p), self.deal) * qty[p] for p in picks)
+
+    def _sell_marked(self):
+        picks, qty = self._marked_stock()
+        if not picks:
+            self.notice = "nothing marked for auto-sell in the packs."
+            return
+        self.selected, self._sel_qty = picks, qty
+        self._sell()
+
+    def _toggle_marked(self, name):
+        marked = self.guild.autosell
+        marked.symmetric_difference_update({name})
+        self.notice = (f"{name}: will be sold with SELL MARKED." if name in marked
+                       else f"{name}: no longer marked.")
 
     def _goods(self, picks):
         """The picks that are pack items a shop would buy -- not stock rows, not coins."""
@@ -429,9 +470,14 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         rows = [("sell", f"sell all x{qty}  (+{fmt_money(each * qty)})" if qty > 1 else f"sell  (+{fmt_money(each)})", qty)]
         if qty > 1:
             rows.insert(0, ("sell", f"sell 1  (+{fmt_money(each)})", 1))
+        if self.guild is not None:
+            rows.append(("mark", "unmark auto-sell" if name in self._marked() else "mark to auto-sell", name))
         return rows + dests
 
     def _menu_run(self, picks, kind, arg):
+        if kind == "mark":
+            self._toggle_marked(arg)
+            return
         self.selected = list(picks)
         if kind == "sell":
             self._sel_qty = {picks[0]: arg}
@@ -500,6 +546,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                     self._sell()
                 elif key == "sell_all":
                     self._sell_all()
+                elif key == "sell_marked":
+                    self._sell_marked()
                 elif key == "distribute":
                     self._distribute_load()
                 elif key == "group_view":
@@ -758,7 +806,11 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         self.zones = []
         W, H = screen.get_size()
 
-        ui_text(screen, F["head"], "MARKET", (MARGIN, MARGIN - 2), T.TX)
+        keeper = world.vendor(self.node.id, self.vendor_function)
+        card = keeper.card if keeper else None
+        tx = MARGIN + draw_vendor(screen, F, (MARGIN, MARGIN - 4), card)
+        title = ui_text(screen, F["head"], "MARKET", (tx, MARGIN - 2), T.TX)
+        draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 6), card)
         has_tut = self.tutorial_key() is not None
         purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
         ui_text(screen, F["body_sm"], f"common purse: {fmt_money(self.purse)}",
@@ -768,7 +820,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             ui_text(screen, F["body_sm"], f"market can pay: {fmt_money(cash)}",
                     (purse_x, MARGIN + 24), T.TX_FAINT, right=True)
         msg, col = self._status_line()
-        ui_text(screen, F["body"], msg, (MARGIN, MARGIN + 30), col)
+        ui_text(screen, F["body"], msg, (tx, MARGIN + 30), col)
 
         top = MARGIN + 62
         cats = [(label, key) for label, key, _names in self.get_categories()]
@@ -956,7 +1008,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 rows.append((o, idx, name, qty))
         rows.sort(key=lambda t: -items.item_weight(t[2]) * t[3])
         by_key = {id(o): o for o in owners}
-        data = [((id(o), idx), name, o.pack_tag(name), items.item_weight(name), qty,
+        data = [((id(o), idx), name, self._pack_tag(o, name), items.item_weight(name), qty,
                  o.locked_of(name) > 0, (o, idx) in self.selected, o.name.split()[0][:10])
                 for o, idx, name, qty in rows]
         res = loadout_panel.cargo_table(screen, F, area, data, self._cargo_scroll, self.mouse)
@@ -992,6 +1044,15 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             sell_r.center = (W // 2, H - T.S * 8 + T.S * 2)
             draw_button(screen, F, sell_r, f"SELL FOR {fmt_money(self._sell_total())}", mpos=self.mouse)
             self.buttons.append(("sell", sell_r))
+
+        if not self._buying and self._marked():
+            total = self._marked_total()
+            marked_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
+            marked_r.center = (W // 2 + T.S * 26, H - T.S * 8 + T.S * 2)
+            draw_button(screen, F, marked_r, f"SELL MARKED (+{fmt_money(total)})" if total else "SELL MARKED",
+                        enabled=bool(total), mpos=self.mouse)
+            if total:
+                self.buttons.append(("sell_marked", marked_r))
 
         if self.notice:
             ui_text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)

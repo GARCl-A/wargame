@@ -100,3 +100,36 @@ def test_the_vault_the_forge_the_quest_card_and_the_sheet_draw_with_icons():
     draw_sheet(surf, pygame.Rect(0, 0, 520, 900), Combatant(u), F)
     quest_panel.quest_list(surf, F, pygame.Rect(0, 0, 600, 100),
                            [{"name": "Hides", "accepted_by": "A", "days_left": 2, "progress": (1, 3, "1sqm Hide"), "tags": ()}])
+
+
+def test_icon_list_draws_each_item_and_cuts_off_at_the_edge():
+    import pygame
+
+    from gartok.ui.loadout_panel import icon_list
+    from gartok.ui.tokens import T, fonts
+    pygame.init()
+    surf = pygame.Surface((400, 40))
+    F = fonts()
+    names = ["1sqm Hide", "Paper", "Ink"]
+    wide = icon_list(surf, F, (0, 10), names, T.TX_MUTED, 400)
+    assert wide > icon_list(surf, F, (0, 10), names[:1], T.TX_MUTED, 400)
+    assert icon_list(surf, F, (0, 10), names, T.TX_MUTED, 60) <= 100
+
+
+def test_a_mission_goal_of_any_dictionary_draws_the_dictionary_icon():
+    from gartok import item_icon
+    any_one, plain = item_icon.icon_spec("Any Dictionary"), item_icon.icon_spec("Dictionary of Ankarin")
+    assert (any_one[0], any_one[1], any_one[4]) == (plain[0], plain[1], plain[4])
+
+
+def test_every_vocation_has_an_icon_that_draws():
+    import pygame
+
+    from gartok import item_icon, vocations
+    from gartok.ui.item_icons import KINDS, draw_item_icon
+    pygame.init()
+    assert set(item_icon.VOCATION_ICONS) == set(vocations.VOCATIONS)
+    for vid in vocations.VOCATIONS:
+        kind, tone, shape = item_icon.vocation_icon(vid)
+        assert kind in KINDS
+        draw_item_icon(pygame.Surface((48, 48)), pygame.Rect(0, 0, 48, 48), kind, tone, **shape)

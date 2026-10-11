@@ -6,19 +6,25 @@ and the commission modal.
     draw_squad_rail(surf, F, rect, slots, mpos)          -> tooltip or None
     draw_commission_modal(surf, F, items, picked, tokens, mpos)
         -> {"modal", "items": [(rect, key, can_toggle)], "cancel", "confirm", "tooltip"}
+    draw_identity_form(surf, F, rect, form, mpos)
+        -> {"name", "colors": [(rect, color)], "icons": [(rect, slug)], "leaders": [(rect, index)],
+            "continue", "tooltip"}
 
 Data is plain dicts. A `card` is
     {"ch": the `sheet_card.unit_to_ch` dict, "tags": [(label, style, desc, starred)],
      "selected": bool, "order": 1-based pick number or None, "targeting": bool}
 (`targeting`: a commission is waiting for a card to replace). A rail `slot` is None
 for an empty seat or {"ch": ..., "attrs": [(abbr, value)]}. Modal `items` are
-{"key", "label", "desc", "style", "can_toggle", "note"}.
+{"key", "label", "desc", "style", "can_toggle", "note"}. The identity `form` is
+    {"name": str, "name_set": bool, "editing": bool, "color": rgb, "icon": slug, "colors": [rgb],
+     "icons": [slug], "leaders": [{"ch": ..., "selected": bool}], "can_continue": bool}.
 """
 
 import pygame
 
-from .. import data
+from .. import artwork, data
 from .primitives import (
+    TOKEN_INK,
     caps,
     contained,
     draw_button,
@@ -26,11 +32,12 @@ from .primitives import (
     format_tooltip,
     modal_card,
     panel,
+    smooth_circle,
     text,
     token_badge,
     tracked,
 )
-from .sheet_card import draw_sheet, sheet_height
+from .sheet_card import draw_row, draw_sheet, sheet_height
 from .tokens import ARCHETYPE_COLORS, T, mix
 
 SHEET_BLOCKS = ("vitals", "attributes", "weapon")
@@ -194,3 +201,90 @@ def draw_commission_modal(surf, F, items, picked, tokens, mpos):
                 enabled=1 <= cost <= tokens, mpos=mpos)
     return {"modal": panel_r, "items": item_rects, "cancel": cancel, "confirm": confirm,
             "tooltip": tip}
+
+
+_NAME_W_MAX = 560
+_SWATCH = 40
+_EMBLEM = 44
+_LEADER_H = 74
+
+
+def draw_identity_form(surf, F, rect, form, mpos):
+    """The guild's name, banner colour and emblem, then who leads it. Centred in `rect`."""
+    cw = min(_NAME_W_MAX, rect.w - 2 * T.S * 4)
+    cx = rect.x + (rect.w - cw) // 2
+    out = {"colors": [], "icons": [], "leaders": [], "tooltip": None}
+
+    text(surf, F["titleb"], "FOUND THE GUILD", (cx, rect.y + T.S * 4 - 2), T.TX)
+    text(surf, F["body"], "Name your guild, pick a banner, and choose your leader.",
+         (cx, rect.y + T.S * 4 + 30), T.TX_MUTED)
+    y = rect.y + T.S * 4 + 74
+
+    pv = (cx + 24, y + 28)
+    smooth_circle(surf, form["color"], pv, 24)
+    art = artwork.banner_icon(form["icon"], 32, TOKEN_INK)
+    if art is not None:
+        surf.blit(art, art.get_rect(center=pv))
+
+    nx, nw = cx + 64, cw - 64
+    tracked(surf, F["microb"], "GUILD NAME", (nx, y), T.TX_FAINT)
+    name_r = pygame.Rect(nx, y + 16, nw, 40)
+    out["name"] = name_r
+    lit = name_r.collidepoint(mpos) or form["editing"]
+    panel(surf, name_r, hover=lit, width=2 if lit else 1)
+    shown = form["name"] + "|" if form["editing"] else form["name"] or "click to name your guild"
+    text(surf, F["body"], shown, (name_r.x + T.S * 2, name_r.centery - F["body"].get_height() // 2),
+         T.TX if (form["editing"] or form["name"]) else T.TX_FAINT)
+    y += 56 + T.S * 3
+
+    tracked(surf, F["microb"], "BANNER COLOUR", (cx, y), T.TX_FAINT)
+    y += 18
+    for i, color in enumerate(form["colors"]):
+        r = pygame.Rect(cx + i * (_SWATCH + T.S * 2), y, _SWATCH, _SWATCH)
+        sel = color == form["color"]
+        smooth_circle(surf, color, r.center, _SWATCH // 2)
+        smooth_circle(surf, T.BRASS if sel else (T.STEEL_LINE if r.collidepoint(mpos) else T.STEEL),
+                      r.center, _SWATCH // 2, 3 if sel else 1)
+        out["colors"].append((r, color))
+    y += _SWATCH + T.S * 3
+
+    tracked(surf, F["microb"], "EMBLEM", (cx, y), T.TX_FAINT)
+    y += 18
+    per_row = max(1, (cw + T.S * 2) // (_EMBLEM + T.S * 2))
+    for i, slug in enumerate(form["icons"]):
+        r = pygame.Rect(cx + (i % per_row) * (_EMBLEM + T.S * 2),
+                        y + (i // per_row) * (_EMBLEM + T.S * 2), _EMBLEM, _EMBLEM)
+        sel = slug == form["icon"]
+        panel(surf, r, hover=sel or r.collidepoint(mpos), width=2 if sel else 1)
+        smooth_circle(surf, form["color"], r.center, 14)
+        art = artwork.banner_icon(slug, _EMBLEM - 16, TOKEN_INK)
+        if art is not None:
+            surf.blit(art, art.get_rect(center=r.center))
+        out["icons"].append((r, slug))
+    rows = (len(form["icons"]) + per_row - 1) // per_row
+    y += rows * (_EMBLEM + T.S * 2) + T.S * 3
+
+    tracked(surf, F["microb"], "WHO LEADS THE GUILD?", (cx, y), T.TX_FAINT)
+    y += 18
+
+    def attrs(surf, r, ch):
+        x = r.right - 380
+        for abbr, value, _mod, _penalized in ch["attrs"]:
+            label = f"{abbr} {value}"
+            w = F["body_sm"].size(label)[0]
+            top = r.centery - F["body_sm"].get_height() // 2
+            text(surf, F["body_sm"], label, (x, top), T.TX_MUTED)
+            if pygame.Rect(x, top, w, F["body_sm"].get_height()).collidepoint(mpos) and abbr in data.ATTRIBUTE_HELP:
+                out["tooltip"] = format_tooltip(*data.ATTRIBUTE_HELP[abbr], F)
+            x += w + 20
+
+    for i, leader in enumerate(form["leaders"]):
+        r = pygame.Rect(cx, y + i * (_LEADER_H + T.S * 2), cw, _LEADER_H)
+        draw_row(surf, F, r, leader["ch"], selected=leader["selected"], draw_trailing=attrs)
+        out["leaders"].append((r, i))
+    y += len(form["leaders"]) * (_LEADER_H + T.S * 2) + T.S * 4
+
+    out["continue"] = pygame.Rect(cx + cw - 200, y, 200, 44)
+    draw_button(surf, F, out["continue"], "FOUND THE GUILD", primary=True,
+                enabled=form["can_continue"], mpos=mpos)
+    return out

@@ -37,6 +37,8 @@ When the two disagree, `REFERENCE.md` wins.
   more. Re-run `scripts/economy_report.py` (verdicts, exploits, what each activity pays,
   a guild living 30 days, the ranking; its parts are `economy_activities.py`,
   `economy_guild.py` and `economy_exploits.py`) after touching wages, purses, prices or loot.
+  `scripts/economy_offers.py` lists what a guild can take up today (bouts, missions, kit, tools),
+  each priced in copper and days, from the same tables.
 
 ## Architecture — one concern per module
 
@@ -54,7 +56,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `ground.py` | GroundObject (weapon, torch) + Creature (neutral body) |
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |
 | `ai.py` | heuristic over actions/; alignment tempers behaviour |
-| `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) |
+| `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) and may carry a `Vendor` (name, race, role, portrait) per function: `world.vendor(node_id, function)` is the keeper whose face the shop screens show |
 | `node_functions.py` | what a node can offer, one `NodeFunction` per id: order kind, map button label, note; `app._FUNCTION_OPENERS` holds each id's screen opener and a test keeps them in step |
 | `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); refilled daily for every node that offers `shop` |
 | `orders.py` | Order dataclass; AUTO (travel / work / rest) / INTERACTIVE / garrison / forced kinds |

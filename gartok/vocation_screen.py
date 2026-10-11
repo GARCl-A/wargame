@@ -8,6 +8,7 @@ the trade's races. `on_done(vocation_id)` hands the pick to the draft.
 import pygame
 
 from . import vocations
+from .item_icon import vocation_icon
 from .screen import Screen
 from .ui.primitives import draw_button, text
 from .ui.tokens import T
@@ -28,7 +29,8 @@ class VocationScreen(Screen):
 
     def _cards(self):
         return [{"id": v.id, "name": v.name, "races": list(v.races), "perk": v.perk,
-                 "dormant": not v.active} for v in vocations.VOCATIONS.values()]
+                 "dormant": not v.active, "icon": vocation_icon(v.id)}
+                for v in vocations.VOCATIONS.values()]
 
     def _click(self, px):
         for rect, vid in self.card_rects:

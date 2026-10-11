@@ -1236,6 +1236,14 @@ Neutral**).
   anything away). A sale worth more than the market holds is refused whole.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
+- **Auto-sell marks.** The ⋮ menu of a pack row marks an item *kind* (`Guild.autosell`, saved
+  with the guild); a marked row wears an AUTO-SELL tag and **SELL MARKED** sells every marked
+  stack the shoppers carry, except the padlocked part, in one sale (the market's cash limit
+  still applies to the whole sale).
+- **The vendor has a face.** Each shop function has a `world.Vendor` (name, race, role and a
+  portrait from `assets/portraits/npc/`) on its `Node.vendors`: the Market's Automaton merchant,
+  the Library's Kobold librarian, the City's Gnoll tanner and Dwarf blacksmith. The face and
+  name show in that screen's header; the Apothecary and the Mine have none yet.
 
 ### Recruitment 🟡
 

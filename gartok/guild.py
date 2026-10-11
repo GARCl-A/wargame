@@ -107,7 +107,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  leader=None, leader_swaps_used=0,
                  name="", banner_color=None, banner_icon=None, tutorial=None,
                  shops=None, missions=None,
-                 total_spent=0, items_sold_kinds=None, jailed=None,
+                 total_spent=0, items_sold_kinds=None, autosell=None, jailed=None,
                  prison_week=None, prison_pool=None, prison_blocked=None,
                  house=None, bankers_debt=0,
                  bankers_debt_since=None, garrison_stock=None,
@@ -134,6 +134,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         # (`factions.py`), rather than off a single "market" event's payload
         self.total_spent = total_spent               # copper ever paid to the market
         self.items_sold_kinds = set(items_sold_kinds or ())  # distinct item names ever sold
+        self.autosell = set(autosell or ())   # item names the Market's SELL MARKED button takes, see market_screen.py
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None
         self.taverna_pool = taverna_pool      # list[Unit] on offer, or None (roll on first visit)

@@ -104,11 +104,21 @@ FALLBACK = {
 }
 GENERIC = ("coin", "copper", {})
 
+# the founding trades: the same silhouettes, picked for what the trade does
+VOCATION_ICONS = {
+    "warband": ("shield", "iron", {"boss": TONES["brass"]}),
+    "delvers": ("hafted", "wood", {"head": "pick", "length": 74, "metal": TONES["iron"]}),
+    "wilds": ("bow", "wood", {}),
+    "scholars": ("book", "leather", {"clasp": True}),
+    "caravan": ("compass", "brass", {}),
+    "marsh": ("drop", "green", {}),
+}
+
 
 def _base(name):
     """The catalogue name an icon is filed under: no ` (aged)` suffix, no `Large ` prefix, and every
     spell scroll and language dictionary is the plain Scroll and Dictionary."""
-    name = name.split(" (")[0].removeprefix("Large ")
+    name = name.split(" (")[0].removeprefix("Large ").removeprefix("Any ")
     if name.startswith("Scroll of "):
         return "Scroll"
     if name.startswith("Dictionary of "):
@@ -121,6 +131,12 @@ def icon_spec(name):
     defn = items.get(name)
     kind, material, shape = ICONS.get(_base(name)) or FALLBACK.get(defn.type if defn else None, GENERIC)
     return kind, TONES[material], RIM.get(defn.rarity if defn else None), SCALE, shape
+
+
+def vocation_icon(vocation_id):
+    """-> `(kind, tone, shape)` for `draw_item_icon`, the plain data a vocation card carries."""
+    kind, material, shape = VOCATION_ICONS[vocation_id]
+    return kind, TONES[material], shape
 
 
 def draw_icon(surf, rect, name):

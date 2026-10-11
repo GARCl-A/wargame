@@ -22,17 +22,22 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (project review, 2026-10-09; updated 2026-10-10)
+# Suggested order (project review, 2026-10-09; updated 2026-10-10 after the backlog interview)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. Study the arena duels the AI loses (Defend the Title, the day-6 Scrapper; hunts and ambushes
-   are no longer the gap, see *Combat AI*) and play the benchmark fights still missing (champion, brawl,
-   capture the flag, Ribbit Brothers); the economy is calibrated against a player the AI does not
-   match yet.
-2. The *Architecture debt* section lists what to pay on the way.
+1. **The info modal first** (*Intelligence reveals enemy info*). The AI is a second player and sees
+   exactly what the player sees, so what the modal shows is also what `ai.py` may read; build the
+   modal, then make `ai.py` stop reading enemy HP and AC it should not know. Then the AI's tactics
+   (focus the weakest it can tell is weakest, terrain, retreat) and the arena duels it loses
+   (Defend the Title, the day-6 Scrapper). Hunts and ambushes are no longer the gap.
+2. **Gathering at the Mine and the Lumber Yard, with a licence**, then *Item properties*, which
+   reads the sources it creates, then the specialised shops and finite stock.
+3. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
+   list exists (`scripts/economy_offers.py`), to settle the day-30 verdict against the recorded runs.
+4. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -46,18 +51,15 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   (re-run 2026-10-10, after the vocations: unchanged): the `balanced` policy reaches the milestone
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
-  prices. The run exits 1 on a failed verdict, but no test or gate reads it.
-- **Item icons: four lists may still be text.** Not checked: the mission offer card's reward / goal
-  item, the recipe materials line (names only), the Stables' tack and the Tavern's candidate gear.
-  Every other list already draws the icon (`ui/item_icons.py`, `gartok/item_icon.py`; a test fails for
-  an item with no entry). The material comes from a table keyed by name, not from `ItemDef`, until
-  *Item properties* gives items a base material.
+  prices. **Decided 2026-10-10:** recalibrate the sim until it matches the recorded runs (both
+  ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
 - **Mine leftovers (built 2026-10-09).** (1) *Amethyst* was meant as a Mine drop, but a shift only pays the wage: the Mine is work,
-  not gathering. **Decided 2026-10-09: wait** until the Mine gets gathering of its own, then the
-  Amethyst drops from it (rare enough not to beat the wage; the stone is worth $120). (2) *Iron Ore* has no recipe or
+  not gathering. **Decided 2026-10-10:** the Mine's gathering is
+  its own item under *Large* (*Gathering at the Mine and the Lumber Yard*); the gems it yields are
+  *semi-precious* and *precious gemstones*, not named stones, so the Amethyst is replaced by them. (2) *Iron Ore* has no recipe or
   use until the Smith's chain exists. (3) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
   guilds are wiped on the road; with a player winning 80% (the report's setting then; it is 0.95 since 2026-10-10) `miner` earns
@@ -69,14 +71,6 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
   unpriced. (4) The Mine has no art or map icon of its own (it uses the
   work glyph), and no tutorial line.
-
-- **Vocation icons.** The six vocations have no icon or image (draft, `vocation_screen.py`, Guild tab).
-  Draw them in code like the item icons (`ui/item_icons.py`).
-- **"Found the guild" screen looks off the game's identity.** Check whether `vocation_screen.py` and the
-  identity phase of `draft_screen.py` are on the `gartok/ui/` kit; migrate what is not (the charter item
-  under *Needs more information* lists the presentation work).
-- **Market: an autosell list.** Mark item kinds once and have SELL ALL / the sale pick them, instead of
-  selecting the same items every visit.
 
 ## Architecture debt
 
@@ -105,11 +99,23 @@ pointed to, not repeated.
   are split across races, so most races have almost none of their own and a high racial level
   buys hit dice only (the Aurochs has zero). Goal: **at least 30 combat and 30 work talents**,
   and enough racial nodes per race for its picks. Nothing built; the author will design them.
+- **Gathering at the Mine and the Lumber Yard (decided 2026-10-10, not started).** Today those two
+  nodes only pay a wage; the Wilds is the only place that gathers (mushrooms, fruit, meat). Give
+  each a gather mode beside the work shift: the player pays a **licence once, for the whole guild**,
+  then sends characters to gather the item instead of the wage: stone, Iron Ore, Lumber and gems
+  at the Mine and the Yard. **Gems are two items, *semi-precious gemstones* and *precious
+  gemstones*** (the Amethyst, still the Merchant's starting item in `data.OCCUPATIONS`, is replaced by them). Gathering **costs time in 4 / 8 / 12 / 16 h shifts and
+  carries risk**, as the Wilds does. Model it on `hunt.py` and `guild_labor.py`. To define: the
+  licence price and where it is bought, each node's drop table, the risk (an ambush like the
+  Wilds', a cave-in at the Mine), how a shift pays against the wage (it must not beat the wage's
+  floor, see *Adventure out-earns day labour*) and the sim's policies. Needs the UI (a shift
+  screen), the AI for the risk fight and tests. It is also the source *Item properties* needs for
+  the base materials, so build it first.
 - **Item properties: base material, source, rarity (design first, feeds the economy).** Every
   item is craftable except the **base materials**: an item with no recipe is a base material
   (derived, like `craft_level.py`, not set by hand), and each one must **declare its source**:
-  gathered at a node (Lumber, Iron Ore), hunted (Meat, Hide) or loot (Amethyst, which is a base
-  material, found as a Mine drop, never crafted). A test checks that no item lacks both a
+  gathered at a node (Lumber, Iron Ore), hunted (Meat, Hide) or a gem (*semi-precious* and *precious
+  gemstones*, gathered at the Mine, never crafted). A test checks that no item lacks both a
   recipe and a source. Rarity then says how scarce each base material is, and the chain
   (source -> recipe -> sale) is what the economy sim and the per-shop stock targets read.
   Do this before *Finite stock and a target per item*.
@@ -126,7 +132,11 @@ pointed to, not repeated.
     and what makes each unique; the audit decides the traits and the actions. Needs AI and tests.
 - **Intelligence reveals enemy info (combat info modal).** The modal today carries
   information that should not be there and lacks some that would help. Rework it around
-  INT as the way to learn about enemies, so INT helps the player decide (and later the AI).
+  INT as the way to learn about enemies, so INT helps the player decide. **Decided 2026-10-10:
+  the AI gets exactly the same view** (it is another player run by the computer: no INT of its
+  own, no HP or AC it should not know). Build this before the AI's tactics; `ai.py` then reads
+  only what the modal would show a player. Audit what `ai.py` reads of the enemy side today
+  before touching it.
   - **Always visible, no INT:** name, race, weapon in hand, visible conditions, health in
     bands (unhurt / wounded / near death) and anything the active unit can simply see.
   - **Passive:** when a fight starts, each ally rolls an INT check against the enemies they
@@ -137,12 +147,23 @@ pointed to, not repeated.
     whole guild a bonus on the INT roll that reveals enemy info (passive and Assess). Size it at
     about the Kobold's +2 and check it with `vocation_report.py`. Until the modal exists the
     vocation is dormant and the draft shows it as "no effect yet".
+  - **What `ai.py` reads of the enemy side today (audited 2026-10-10):** no AC and no MD. It reads
+    the exact `hp` once (the `_target` tiebreak, nearest first, then lowest HP), the target's
+    `sleep_immunity` ability (`_pick_attack`) and the `sleeping` / `demoralized` / `downed` / `dying`
+    states. It also knows where *every* enemy is, seen or not: with nobody in sight `_target` still
+    walks to the nearest one, and `_should_flee` (foe count), `_should_delay`, `_try_signal_horn` and
+    `_skitter` count or measure all foes. The modal's rule is the AI's rule, so: HP becomes a band, the
+    ability is revealed by the INT check, and only foes the unit can see count for flee, delay and the horn.
   - **To define while building:** which field sits behind which success margin, how the
     check scales with the target's level, whether knowledge outlasts the fight (a creature
     met before). Needs the action, AI support and tests.
 - **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
-- **Combat AI plays far below a person.** Every economy number depends on how often the
+- **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI
+  playing the player's squad wins hunts 96% and ambushes 100%, so it is close to a person there;
+  the gap is the arena duels. The author wins 60 of 62 against the AI and the game feels easy, so
+  the lever is a smarter enemy built on what it can see (above), not stronger enemies.
+  Wiping is the end of the run, so a person should still win almost everything.) Every economy number depends on how often the
   squad wins, and a person wins far more than `ai.py` does: measured in the economy report
   (layer 1 prints the AI's own win rate beside the skilled ones), the AI wins the Scrapper
   95%, the champion bout 75%, a Games brawl 43%, capture the flag 37%, a Wilds ambush at
@@ -228,7 +249,10 @@ pointed to, not repeated.
   turned in on day 11 (Paper + Ink bought, $250 paid). Known gaps: the other shops (Smith,
   Apothecary, Tanner) do not log purchases yet; HP before a fight is the squad's at the
   battle's start.
-- **Sim policies that find the opportunities themselves.** Every policy in `economy_guild.py` is
+- **Sim policies that find the opportunities themselves.** **The offers list is built
+  (`scripts/economy_offers.py`, 2026-10-10)**: one-off missions, bouts with their stake, kit worth
+  selling and the work tools, each priced in copper and days; what is left is the planner that reads it
+  (a hunt or forage mission's hours price one trip only, and a bout's win chance is not in the list). Every policy in `economy_guild.py` is
   a hand-written line (`rush` is the player's own, recorded). The recorded runs found things the
   earlier policies never tried: selling the starting kit on day 0, the Champion at the stake and
   not at combat 2, a one-off mission whose material is a Wilds trip away. Rebuild `maxev` (or a new
@@ -285,12 +309,11 @@ the ones that also need code say so. Order is the suggested priority.
 - **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes
   and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py` is text only today). The
   shopkeepers' faces are made: `portraits/npc/` holds `merchant.png` (Automaton), `tanner.png`
-  (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf). **Decided 2026-10-10:** the
-  vendor's face shows in the shop header, so the player learns to recognise who they haggle with
-  (the vendor already has a language and an alignment on the `Node`, which set the deal:
-  `economy.deal_mods`). There is no shopkeeper NPC file or portrait field yet: the work is a
-  portrait on the `Node` (or an NPC behind it), drawn in the header of the Market, Forge, Tanner
-  and Library screens, with a test that every named portrait file loads.
+  (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf). **Built 2026-10-10:** each vendor has a
+  name (from `names.py`, fixed per node) and a face in the header of the Market, the Library (shop, craft and
+  jobs), the Forge and the Tanner (`world.Vendor`, `ui/vendor_panel.py`), so the player learns to recognise who
+  they haggle with. Left: the Apothecary and the Mine have no portrait, and a vendor is not an NPC (no stats,
+  no recruiting or robbing them).
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur
@@ -364,7 +387,7 @@ building them:
     guild will or will not do, trading a lock for a bonus). Not economy or per-faction
     reputation. Open: the list, the exact effects, how the guild is recognised in the world
     (does an NPC react to it?), and the cost of changing one.
-  - **Presentation (the identity phase of `draft_screen.py` is still off the kit):** a live preview of the guild as choices are made,
+  - **Presentation (the identity form is a `ui/draft_panel` component since 2026-10-10, the vocation screen too):** a live preview of the guild as choices are made,
     a richer composed banner, and an opening scene: a founding charter that writes itself
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
@@ -396,8 +419,8 @@ Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupatio
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
 already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
 (the Claim oven's material), First
-Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. Amethyst is only a store
-of value, and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
+Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. Amethyst (the Merchant's) is only a store
+of value and goes when the gems replace it (see *Gathering at the Mine*), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
 - **Map.** Finds treasures and secret zones. Waits for those systems.

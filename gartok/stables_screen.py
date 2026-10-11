@@ -11,10 +11,13 @@ import pygame
 
 from . import animals, data, economy, items, recorder, wagon
 from .constants import fmt_money
+from .item_icon import draw_icon
 from .screen import Screen
 from .ui.primitives import draw_button, ellipsize, footer_bar, panel, section, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+
+ICON = T.S * 3
 
 
 def _resale(price):
@@ -191,17 +194,20 @@ class StablesScreen(Screen):
             note = f"{role}  ·  speed {a.speed:g} m  ·  HP {a.hp}"
             if a.unfed_days:
                 note = f"unfed {a.unfed_days} day(s)  ·  " + note
-            text(screen, F["bodyb"], a.species, (x, y + 4), T.TX)
+            text(screen, F["bodyb"], a.species, (x + (ICON + T.S if a.tack else 0), y + 4), T.TX)
+            if a.tack:
+                draw_icon(screen, pygame.Rect(x, y + 2, ICON, ICON), a.tack)
             bx = x + w - 130
             self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"sell:{i}", f"SELL · {fmt_money(_resale(a.price))}")
             if not a.tack:
                 for tack in (animals.HARNESS, animals.PACK_SADDLE):
                     price = _tack_price(tack)
-                    bx -= 138
-                    self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"fit:{i}:{tack}",
+                    bx -= 168
+                    self.add_button(screen, pygame.Rect(bx, y, 160, 28), f"fit:{i}:{tack}",
                                     f"{tack.upper()} · {fmt_money(price)}", enabled=self.wealth >= price)
-            text(screen, F["body_sm"], ellipsize(note, F["body_sm"], bx - (x + 80) - T.S),
-                 (x + 80, y + 6), T.BLOOD if a.unfed_days else T.TX_MUTED)
+                    draw_icon(screen, pygame.Rect(bx + 3, y + 3, 22, 22), tack)
+            text(screen, F["body_sm"], ellipsize(note, F["body_sm"], bx - (x + 80 + (ICON if a.tack else 0)) - T.S),
+                 (x + 80 + (ICON if a.tack else 0), y + 6), T.BLOOD if a.unfed_days else T.TX_MUTED)
             y += 36
         if not g.herd:
             text(screen, F["body_sm"], "No animals yet.", (x, y), T.TX_FAINT)

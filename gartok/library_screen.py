@@ -19,6 +19,8 @@ def library_stock_dictionaries(guild):
 
 
 class LibraryScreen(MarketScreen):
+    vendor_function = "library"
+
     def __init__(self, fonts, guild, shoppers, node, on_done):
         # We need to set the categories first, or super().__init__ will call it
         self._guild_ref = guild

@@ -9,6 +9,7 @@ from .ui.mission_offer_screen import MissionOfferScreen
 
 class LibraryMissionScreen(MissionOfferScreen):
     GIVER = "library"
+    VENDOR = ("library", "library")
 
     @property
     def title_text(self):

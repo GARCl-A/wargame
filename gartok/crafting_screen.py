@@ -11,7 +11,7 @@ import pygame
 
 from . import items, progression, solo
 from .screen import Screen
-from .ui.loadout_panel import item_icon
+from .ui.loadout_panel import icon_list, item_icon
 from .ui.primitives import (
     caps,
     draw_button,
@@ -22,6 +22,7 @@ from .ui.primitives import (
 )
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
+from .ui.vendor_panel import draw_vendor, draw_vendor_name
 from .unit_loadout import pooled_unlocked
 
 SIDE_W = 340
@@ -35,7 +36,7 @@ class CraftingScreen(Screen):
 
     def __init__(self, fonts, guild, group, on_done, title="THE FORGE",
                  subtitle="forge weapons and armor  ·  needs recipes and materials",
-                 station="forge"):
+                 station="forge", vendor=None):
         super().__init__()
         self.fonts = fonts
         self._F = ui_fonts()
@@ -45,6 +46,7 @@ class CraftingScreen(Screen):
         self.title = title
         self.subtitle = subtitle
         self.station = station
+        self.vendor = vendor
         
         # List members that have recipes for this station
         if self.station:
@@ -133,8 +135,11 @@ class CraftingScreen(Screen):
         self._reset_buttons()
         self.roster_rows = []
 
-        text(screen, F["titleb"], self.title, (m, m - 2), T.TX)
-        text(screen, F["body"], self.subtitle, (m, m + 30), T.TX_MUTED)
+        card = self.vendor.card if self.vendor else None
+        tx = m + draw_vendor(screen, F, (m, m - 4), card, size=T.S * 7)
+        title = text(screen, F["titleb"], self.title, (tx, m - 2), T.TX)
+        draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
+        text(screen, F["body"], self.subtitle, (tx, m + 30), T.TX_MUTED)
 
         top = m + 62
         left_panel = pygame.Rect(m, top, SIDE_W, screen.get_height() - top - 72)
@@ -209,8 +214,6 @@ class CraftingScreen(Screen):
 
             target_val = m.crafting_goal(r_name)
 
-            materials_str = ", ".join(r_data["materials"])
-
             station = r_data.get("station")
             bonus = m.talent_bonus("craft_bonus") + m.craft_bonuses.get(station, 0)
             total_mod = m.mod_intelligence + bonus
@@ -231,10 +234,11 @@ class CraftingScreen(Screen):
                     status_color = T.BLOOD
                     status_text += f" - NEEDS: {', '.join(lacking)}"
 
+            line = text(screen, F["body_sm"], "Materials: ", (tx, r.y + T.S + 20), T.TX_MUTED)
+            end = icon_list(screen, F, (line.right, r.y + T.S + 20), r_data["materials"], T.TX_MUTED, r.right - T.S)
             if r_data.tools:
-                materials_str += f"  |  Tools: {', '.join(r_data.tools)}"
-            text(screen, F["body_sm"], f"Materials: {materials_str}",
-                 (tx, r.y + T.S + 20), T.TX_MUTED)
+                line = text(screen, F["body_sm"], "  |  Tools: ", (end, r.y + T.S + 20), T.TX_MUTED)
+                icon_list(screen, F, (line.right, r.y + T.S + 20), r_data.tools, T.TX_MUTED, r.right - T.S)
             text(screen, F["body_sm"], status_text, (tx, r.y + T.S + 40), status_color)
 
             if is_active or self._has_materials(r_name):
