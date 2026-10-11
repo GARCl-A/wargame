@@ -134,7 +134,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         return pygame.Rect(W - MARGIN - 28, MARGIN - 4, 28, 28)
 
     def get_categories(self):
-        return economy.market_categories(self._node_id())
+        shop = self._shop()
+        return economy.market_categories(self._node_id(), shop.strays() if shop else ())
 
     # ------------------------------------------------------------------ #
     def _ui_fonts(self):
@@ -326,7 +327,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         return member.load + items.item_weight(name) <= member.carry_max
 
     def _stock_of(self, name):
-        """Units of `name` left to buy, or None if unlimited -- also None with
+        """Units of `name` left to buy, or None if the shop has no count -- also None with
         no `guild` (a few tests build a bare screen with no campaign behind it)."""
         shop = self._shop()
         return economy.stock_of(shop.stock, name) if shop else None
@@ -764,6 +765,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         for p in picks:
             by_owner.setdefault(id(p[0]), (p[0], []))[1].append(p)
         total = sold = 0
+        shop = self._shop()
         for owner, owner_picks in by_owner.values():
             collected, _ = self._collect(owner_picks)  # _take reads self._sel_qty -- clear after
             proceeds = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
@@ -774,9 +776,8 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
             for n, q in collected:
                 recorder.emit("sell", node=self._node_id(), item=n, qty=q,
                               price=economy.sell_price(n, self.deal))
-                stock = self._stock_of(n)
-                if stock is not None:
-                    self._shop().stock[n] = stock + q
+                if shop and items.get(n) and not items.is_coin(n):
+                    shop.add(n, q)
                 self.guild.items_sold_kinds.add(n)
             owner._derive_combat()
         self._sel_qty = {}

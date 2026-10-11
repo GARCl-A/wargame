@@ -25,6 +25,7 @@ from . import (
     hunt,
     items,
     progression,
+    sources,
     talents,
     vocations,
 )
@@ -152,6 +153,13 @@ def _items():
            "the same stowed as worn.\n\n" + _table(("Item", "Weight", "Notes"), rows)
 
 
+def _base_materials():
+    rows = [(n, ", ".join(f"{s.kind}: {s.where}" for s in sources.sources_of(n)))
+            for n in sources.base_materials()]
+    return "## Base materials\n\nRaw goods no recipe makes, and where each comes from " \
+           "(`gartok/sources.py`).\n\n" + _table(("Item", "Source"), rows)
+
+
 def _sizes():
     rows = [(name, f"{s['speed']:g} m ({data.squares(s['speed'])} sq)",
              f"x{s['carry']:g}", f"{s['footprint']}x{s['footprint']}",
@@ -230,7 +238,7 @@ def _constants():
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _armor, _shields, _items,
+_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _armor, _shields, _items, _base_materials,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

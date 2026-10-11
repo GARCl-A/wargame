@@ -149,10 +149,9 @@ MARKET_STOCK = [
 ]
 
 
-# Most of `MARKET_STOCK` restocks freely -- the vendor always has another Axe.
-# A name listed here instead carries a live, finite count (`Shop.stock`,
-# seeded from this at a fresh guild): buying draws it down, selling back tops it
-# up, nothing else restocks it. Leather Jerkin/Studded Leather start scarce on
+# The scarce subset of the shelves (`SHELVES` holds every target): the items that keep
+# `freely_buyable` false, so a recipe that needs one is a scarce-input recipe. Leather
+# Jerkin/Studded Leather start scarce on
 # purpose (early armor is meant to feel earned); 1sqm Hide starts at zero -- the
 # tanner's mission (`missions.py`) wants it hunted in the Wilds, not bought, so
 # the market only ever has what a player has actually sold back to it.
@@ -163,12 +162,56 @@ STOCK = {
 }
 
 
-LIBRARY_SUPPLIES = ("Paper", "Ink")          # the Library shop sells these without a count
-MINE_SUPPLIES = ("Stone Brick", "Iron Ore", "1kg Coal")   # sold at the Mine only, without a count
+# Each shop's shelf: item -> (target count, units walked back toward it each day). Smith,
+# tanner, apothecary, farm and tavern are not nodes yet, so the Market keeps their shelves
+# (`NODE_SHELVES`), minus what it does not sell (`MARKET_STOCK`). A fractional rate accrues
+# over days. A count above the target (the player sold) walks back down at the same rate;
+# a rate of 0 leaves it alone.
+SHELVES = {
+    "smith": {
+        "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Shortspear": (6, 2),
+        "Axe": (6, 1), "Pick": (6, 1), "Hammer": (6, 1), "Broadsword": (3, 0.5), "Rapier": (2, 0.3),
+        "Chainmail": (2, 0.3), "Brigandine": (1, 0.15), "Plate Armor": (1, 0.1),
+    },
+    "tanner": {
+        "Cloak": (15, 4), "1sqm Hide": (0, 0), "Leather Jerkin": (3, 0.5), "Studded Leather": (3, 0.3),
+        "Quiver": (5, 1), "Light Crossbow": (2, 0.3), "Shortbow": (1, 0.15),
+    },
+    "apothecary": {"Vial": (10, 3), "First Aid Kit": (5, 1), "Minor Healing Potion": (3, 0.5)},
+    "farm": {"Potato": (30, 10), "Salt": (20, 5), "Meat": (10, 3), "Fruit": (10, 3)},
+    "tavern": {"1L Beer": (15, 5), "Jerky": (10, 3)},
+    "market": {
+        "Torch": (30, 10), "Lantern": (5, 1), "Musical Instrument": (5, 1),
+        "Bear Trap": (4, 0.5), "Alarm Trap": (4, 0.5), "Lumber": (20, 6),
+    },
+    "lumber_yard": {"Lumber": (20, 6), "Fruit": (10, 3)},
+    "mine": {"Stone Brick": (10, 3), "1kg Coal": (15, 4), "Iron Ore": (10, 2)},
+    "library": {"Paper": (20, 5), "Ink": (10, 2)},
+}
+NODE_SHELVES = {
+    "market": ("market", "smith", "tanner", "apothecary", "farm", "tavern"),
+    "lumber_yard": ("lumber_yard",), "mine": ("mine",), "library": ("library",),
+}
+
+
+def targets_of(node_id):
+    """`{item: (target, per_day)}` for the shop at `node_id`; empty for a node with no shelf."""
+    merged = {}
+    for shelf in NODE_SHELVES.get(node_id, ()):
+        merged.update(SHELVES[shelf])
+    if node_id == "market":
+        merged = {n: t for n, t in merged.items() if n in MARKET_STOCK}
+    return merged
+
+
+LIBRARY_SUPPLIES = ("Paper", "Ink")          # the Library shelf
+MINE_SUPPLIES = ("Stone Brick", "Iron Ore", "1kg Coal")   # the Mine shelf, sold nowhere else
+YARD_SUPPLIES = ("Lumber", "Fruit")          # the Lumber Yard shelf (the Market sells them too)
+NODE_SUPPLIES = {"mine": MINE_SUPPLIES, "lumber_yard": YARD_SUPPLIES}   # a work node's own shelf
 
 
 def freely_buyable(name):
-    """True if the shops sell `name` without a finite count: as many as you like, any day."""
+    """True if `name` is not one of the scarce `STOCK` items (the shelves refill it fast enough to count as always there)."""
     return (name in MARKET_STOCK and name not in STOCK) or name in LIBRARY_SUPPLIES or name in MINE_SUPPLIES
 
 
@@ -183,8 +226,7 @@ def regen_market_cash(cash):
 
 
 def stock_of(market_stock, name):
-    """Units of `name` left to buy, or None if it isn't stock-limited (an
-    unlimited item -- everything not in `STOCK`)."""
+    """Units of `name` left to buy, or None if the shop has no count of it."""
     return market_stock.get(name)
 
 
@@ -202,11 +244,13 @@ def _stock_category(name):
     return "kit"
 
 
-def market_categories(node_id=None):
+def market_categories(node_id=None, extra=()):
     """`[(label, key, [names])]` for the market tabs, in display order -- the
-    active tab's list is what `market_screen` lays out. The Mine's shelf is its own."""
+    active tab's list is what `market_screen` lays out. A work node's shelf is its own;
+    `extra` are the strays the player sold it (`Shop.strays`), listed after the shelf."""
     groups = {key: [] for _lbl, key in _MARKET_TABS}
-    for name in (MINE_SUPPLIES if node_id == "mine" else MARKET_STOCK):
+    shelf = list(NODE_SUPPLIES.get(node_id, MARKET_STOCK))
+    for name in shelf + [n for n in extra if n not in shelf]:
         groups[_stock_category(name)].append(name)
     return [(lbl, key, groups[key]) for lbl, key in _MARKET_TABS]
 

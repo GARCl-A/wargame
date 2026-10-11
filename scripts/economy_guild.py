@@ -811,9 +811,9 @@ class Sim:
                 self.claim_lumber += 1
 
     # -- the market -------------------------------------------------------- #
-    def market(self):
-        self.arrive("market", "market")
-        return MarketVisit(self)
+    def market(self, node_id="market"):
+        self.arrive("market", node_id)
+        return MarketVisit(self, node_id)
 
     def keep_fed(self, low=FOOD_LOW_DAYS, target=FOOD_TARGET_DAYS, at_low=False):
         """Shop when the food in hand is under `low` days, or at it with `at_low`: a person who
@@ -831,9 +831,9 @@ class Sim:
 class MarketVisit:
     """One stop at the market, through the real `MarketScreen`."""
 
-    def __init__(self, sim):
+    def __init__(self, sim, node_id="market"):
         self.sim = sim
-        self.node = world.node("market")
+        self.node = world.node(node_id)
         sim.crew_pay_in()
         crew = list(sim.crew.members) if sim.crew is not None else []
         self.screen = MarketScreen(None, sim.guild, sim.members + crew, self.node, lambda: None)
@@ -900,16 +900,22 @@ class MarketVisit:
     def buy_food(self, target_days):
         """Buy the cheapest food up to `target_days` of rations, each unit into whichever
         pack has the most room, until the money, the shelf or the room runs out."""
-        sim, name = self.sim, cheapest_food()
+        sim = self.sim
         need = int(target_days * sim.mouths) - sim.rations
-        for _ in range(max(0, need)):
-            roomy = sorted(sim.members, key=lambda u: u.carry_max - u.load, reverse=True)
-            if sim.money < economy.buy_price(name, self.screen.deal) or not self.buy(roomy[0], name):
-                break
+        for name in foods_by_price():
+            while need > 0:
+                roomy = sorted(sim.members, key=lambda u: u.carry_max - u.load, reverse=True)
+                if sim.money < economy.buy_price(name, self.screen.deal) or not self.buy(roomy[0], name):
+                    break
+                need -= 1
+
+
+def foods_by_price():
+    return sorted((n for n in data.FOOD_ITEMS if n != "Rotten Food"), key=lambda n: items.get(n).price)
 
 
 def cheapest_food():
-    return min((n for n in data.FOOD_ITEMS if n != "Rotten Food"), key=lambda n: items.get(n).price)
+    return foods_by_price()[0]
 
 
 def cheapest_food_price():
@@ -1009,7 +1015,7 @@ class Lumber(Policy):
 
 class Gatherer(Policy):
     """The yard's day labour, but gathering once the licence is bought: Lumber and Fruit go to
-    the Market every couple of days."""
+    the Yard's own till every couple of days."""
     name = "gatherer"
     SELL_EVERY = 2
 
@@ -1018,7 +1024,7 @@ class Gatherer(Policy):
         self.work_node_shift(sim, "lumber_yard")
         sim.sleep()
         if sum(sim.sellable.values()) >= self.SELL_EVERY * sim.mouths * gather.rolls(SHIFT_HOURS):
-            with sim.market() as shop:
+            with sim.market("lumber_yard") as shop:
                 shop.sell_loot()
 
 

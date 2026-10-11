@@ -36,7 +36,11 @@ class LibraryScreen(MarketScreen):
         return cats
 
     def get_categories(self):
-        return getattr(self, "_custom_categories", self._build_categories())
+        cats = list(getattr(self, "_custom_categories", None) or self._build_categories())
+        shop = self._shop()
+        if shop and shop.strays():
+            cats.append(("RESALE", "resale", shop.strays()))
+        return cats
 
     def tutorial_key(self):
         return "library"

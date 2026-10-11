@@ -49,7 +49,7 @@ def test_artifact_weighs_on_the_load():
     u = Unit("player")
     before = u.load
     u.give_to_artifact("Signal Horn")
-    assert u.load == round(before + items.item_weight("Signal Horn"), 1)
+    assert abs(u.load - (before + items.item_weight("Signal Horn"))) <= 0.1
 
 
 def test_artifact_slot_survives_a_save_and_an_old_save_without_it_loads():

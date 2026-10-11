@@ -59,10 +59,11 @@ When the two disagree, `REFERENCE.md` wins.
 | `ai.py` | heuristic over actions/; alignment tempers behaviour; reads only `intel.known_fields`; with nobody in sight the side that brought the fight (`Battle.aggressor`) searches and the other groups up |
 | `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) and may carry a `Vendor` (name, race, role, portrait) per function: `world.vendor(node_id, function)` is the keeper whose face the shop screens show |
 | `node_functions.py` | what a node can offer, one `NodeFunction` per id: order kind, map button label, note; `app._FUNCTION_OPENERS` holds each id's screen opener and a test keeps them in step |
-| `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); refilled daily for every node that offers `shop` |
+| `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); every item on it has a target and a daily rate (`economy.SHELVES`, `NODE_SHELVES`); refilled daily for every node that offers `shop` |
 | `orders.py` | Order dataclass; AUTO (travel / work / rest) / INTERACTIVE / garrison / forced kinds |
 | `rest.py` | what a rest order costs and how long "until full" lasts (simulation on copies, keeps a day of rations) |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
+| `sources.py` | where each base material comes from: a material, food or gem no recipe makes (derived), with its source read off `gather.TABLES` / `data.BEASTS` or declared (`DECLARED`); a test fails for one with none; REFERENCE.md lists them |
 | `gather.py` | gathering at the Lumber Yard and the Mine: the drop tables, the licence prices, `roll_haul`, the ambush odds and pack; `Guild.buy_licence` / `gather_shift` / `bank_haul` (in `guild_labor.py`), a `work` order with `gather=True`, and the forced `gather_ambush` fight that `campaign.resolve_gather_ambush` settles |
 | `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage; defined in `stash.py`, re-exported), `CityProperty` (house, tax, squat, oven), `Garage` (wagons and animals kept at the house, or at the Claim with no limit; `garage_screen.py`) |

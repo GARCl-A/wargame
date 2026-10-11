@@ -41,7 +41,7 @@ def test_a_function_that_hosts_another_hides_its_button():
 def test_the_map_shows_one_button_per_offered_function():
     assert _buttons("market") == ["market"]
     assert _buttons("library") == ["library"]
-    assert _buttons("lumber_yard") == ["buy_licence"]
+    assert _buttons("lumber_yard") == ["buy_licence", "market"]
     assert _buttons("tavern") == ["recruit"]
     assert _buttons("city") == ["bank", "tanner", "forge", "apothecary", "property"]
 
@@ -73,9 +73,9 @@ def test_every_shop_node_has_its_till_refilled_each_day():
 def test_each_shop_keeps_its_own_cash_and_shelf():
     guild = Guild([Unit("player")])
     guild.shop("market").cash = 7
-    guild.shop("market").stock["Vial"] = 0
+    guild.shop("market").stock["Torch"] = 0
     assert guild.shop("library").cash != 7
-    assert guild.shop("library").stock["Vial"] > 0
+    assert guild.shop("library").stock["Paper"] > 0 and "Torch" not in guild.shop("library").stock
 
 
 def test_a_shop_round_trips_through_a_save():

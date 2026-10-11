@@ -346,7 +346,7 @@ def load_game(world, save_id=CURRENT):
                  wilds_claim_campfire=payload["wilds_claim_campfire"],
                  claim_oven=payload["claim_oven"],
                  claim_garage=garage_from_dict(payload["wilds_claim_garage"], unlimited=True),
-                 shops={node_id: Shop.from_dict(d) for node_id, d in payload["shops"].items()},
+                 shops={node_id: Shop.from_dict(d, node_id) for node_id, d in payload["shops"].items()},
                  total_spent=payload["total_spent"],
                  items_sold_kinds=payload["items_sold_kinds"],
                  autosell=payload["autosell"],

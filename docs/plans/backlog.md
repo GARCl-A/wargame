@@ -28,8 +28,9 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Item properties** (design first), which reads the sources gathering created (built 2026-10-11),
-   then the specialised shops and finite stock.
+1. **Specialised shops**: item properties (`sources.py`) and the finite stock with a target per item
+   (`economy.SHELVES`) are built (2026-10-11); what is left is giving the Smith, Tanner, Apothecary and Farm
+   their own nodes, whose shelves the Market holds today.
 2. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
    list exists (`scripts/economy_offers.py`), to settle the day-30 verdict against the recorded runs.
 3. The AI's first tactics are built (2026-10-11, `intel.py`, RULES.md; flanking helped, focus fire,
@@ -69,8 +70,8 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
-- **Mine leftovers (built 2026-10-09).** (1) Gathering at the Mine is built (2026-10-11, see *Gathering: loose ends*); the gems it yields are *semi-precious* and *precious gemstones*. (2) *Iron Ore* has no recipe or
-  use until the Smith's chain exists. (3) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
+- **Mine leftovers (built 2026-10-09).** (1) *Iron Ore* has no recipe or
+  use until the Smith's chain exists (art, tutorial and gathering numbers: see *Gathering: loose ends*). (2) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
   guilds are wiped on the road; with a player winning 80% (the report's setting then; it is 0.95 since 2026-10-10) `miner` earns
   $166 a member by day 30 against the yard's $67, reaches the day-30 milestone in 70% of guilds
@@ -79,8 +80,7 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   milestone. **Decided 2026-10-09: keep it** (the risk and the time are what it pays for); re-judge
   after a playtest, and if it is too strong a lower premium or a longer road is the lever, not a bigger one. The crafter policy
   still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
-  unpriced. (4) The Mine has no art or map icon of its own (it uses the
-  work glyph), and no tutorial line.
+  unpriced.
 
 ## Architecture debt
 
@@ -117,21 +117,23 @@ pointed to, not repeated.
   the pack (none by `lumber`). **The licence does not pay back in the sim:** with the ambush switched off the
   gatherer still ends at $147, because the +2 copper a shift the table adds is eaten by what the sim makes
   it pay to cash the haul in (a walk to the Market, about 1.2 days a step, and Fruit that rots on the way).
-  The Yard has no shop of its own to sell Lumber to. Decide whether the Yard should buy what it yields
-  (a till, like the Mine's), or the margin should be wider; `miner` is wiped on the road as before. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the node's own pack, but
+  **The Yard is a shop since 2026-10-11** (`economy.YARD_SUPPLIES`, its own till like the Mine's; the `gatherer` sells there), which only moved the day-30 median from $30 to $34 (`lumber` $51):
+  the licence still does not pay, so the margin should be wider; `miner` is wiped on the road as before. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the node's own pack, but
   with no recorded fights of a person against these packs, the win rate is the AI's or the skill knob's. (3) The
   shift picker shows the drops and the rolls but not the average worth of a shift against the wage.
   (4) **Snakes:** the Yard's packs were meant to include snakes, but there is no snake race (`data.BEASTS`); add one (venom, small, low HD) and put it in `encounters.LUMBER_YARD_TABLE`. (5) The Mine and the Yard have no
   tutorial line of their own beyond the map card, and no art for the Mine. (6) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is
   food, but it rots in a day, so a Yard crew eats it or sells it that evening.
-- **Item properties: base material, source, rarity (design first, feeds the economy).** Every
-  item is craftable except the **base materials**: an item with no recipe is a base material
-  (derived, like `craft_level.py`, not set by hand), and each one must **declare its source**:
-  gathered at a node (Lumber, Fruit, Stone Brick, Coal, Iron Ore: built, `gather.TABLES`), hunted (Meat, Hide) or a gem (*semi-precious* and *precious
-  gemstones*, gathered at the Mine, never crafted). A test checks that no item lacks both a
-  recipe and a source. Rarity then says how scarce each base material is, and the chain
-  (source -> recipe -> sale) is what the economy sim and the per-shop stock targets read.
-  Do this before *Finite stock and a target per item*.
+- **Item properties: base material sources (rarities decided 2026-10-11).** Built 2026-10-11
+  (`sources.py`, REFERENCE.md *Base materials*): a base material is a material, food or gem no recipe
+  makes (derived), and a test fails for one with no source (gathered, dropped, hunted, foraged, quest,
+  traded or spoiled; gathered and beast drops are read off `gather.TABLES` / `data.BEASTS`). Left: (1) the
+  rule covers only those types, since weapons, armour and the rest have no recipes yet; widen it as recipes
+  land (Smith chain). (2) Seven goods are declared `traded` (Potato (Farm), Iron Bar (Smith), Salt, Beer, Vial (Market), Paper, Ink (Library)):
+  the shop supplies them and no node produces them, so each waits for its production chain (Farm, Smith,
+  Library). (3) Rarity per base
+  material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
+  it (`economy.SHELVES`).
 - **Weapons that are really different (two tracks, both to build).**
   1. **Named weapon traits (decided: a registry like `abilities.py`).** `ItemDef` carries
      ad-hoc fields (`finesse: bool`, `thrown: int`)
@@ -251,13 +253,18 @@ pointed to, not repeated.
   any line the recordings missed; `rush` stays as the reference. Then retire the guessed
   policies that it beats. Needs the planner, the offers listing (the missions, bouts and kit
   hooks the policies reach by hand today) and tests.
-- **Finite stock and a target per item, in every shop.** Split from *Specialised shops*: the
-  `shop` function (a `Shop` per node, `Guild.shop(node_id)`) landed without changing a rule, so
-  most of `MARKET_STOCK` is still infinite and only `economy.STOCK` items are finite, now per
-  shop. Make every item finite in every shop, with a target count per shop and item that the
-  shelf walks back to a little each day; a shop buys any item at 50% and resells it at 100%.
-  First step: the target table and the refill rate (see the numbers in *Specialised shops*).
-  Re-run `scripts/economy_report.py`, since this changes the whole economy.
+- **Finite stock and a target per item, in every shop.** Built 2026-10-11 in `economy.SHELVES`
+  (item -> target, units a day) and `Shop.refill`: every item on the Market, the Yard, the Mine and the
+  Library is finite, opens at its target and walks back a little each day (a slow item accrues a fraction;
+  a surplus the player sold walks down; Hide has rate 0). The planned Smith, Tanner, Apothecary, Farm and
+  Tavern shelves are tables in `SHELVES` that the Market holds until those nodes exist (`NODE_SHELVES`).
+  The report's verdicts did not change (the day-30 milestone still fails). A stray (an item the player sold
+  a shop that is not on its shelf) is listed and resold there and stays until bought (the Library lists them on a
+  RESALE tab). Left: (1) the Library's Paper 20/5 and Ink 10/2 and the Market's Lumber
+  20/6 are my guesses, not from the table; (2) Jerky (tavern shelf, 10/3) is not sold anywhere yet; its $8 is
+  the batch (2 Meat + 1 Salt + 3 = $16) over its 2 units; (3) the sim's food buying now falls back to the next
+  cheapest food when the cheapest runs out (a 12-day Claim trip outgrows 30 Potatoes). Moving each shelf to
+  its own node is *Specialised shops*.
 - **Specialised shops.** Split the single general market into shops, each its own node
   with a walking distance between them, so the player has to go around. The market's
   finite cash is built (`Guild.shop(node_id)`, one `Shop` per node offering `shop`), so each shop
@@ -281,11 +288,13 @@ pointed to, not repeated.
   - **Node distances:** the new nodes need a walking distance from Ankareth, and the
     existing ones (Market and Library 1 h, Farm 2 h) should be reviewed together with them,
     since the distance is the cost of going around between shops.
-  - **First step:** define the stock target per item and per shop, and the daily refill
-    rate. A first estimate from the economy sim's restock sweep
+  - **First step (done 2026-10-11):** the stock target per item and per shop and the daily refill
+    rate are `economy.SHELVES`, sized from the economy sim's restock sweep
     ([economy_sim_v2.md](economy_sim_v2.md), finding 6): a shelf of about 10 refilling 3 a
     day keeps a crafting specialist at about 2x a lumberjack's wage; below 4 with 1 a day
-    makes crafting for sale pointless. Open: AI and tests.
+    makes crafting for sale pointless. Left: the nodes themselves (a `NODE_SHELVES` entry per new
+    node, the distance, the screens), and the tanner holds the Shortbow and Light Crossbow until a
+    carpenter exists.
 
 ## Art (made by hand, not code)
 
@@ -409,7 +418,7 @@ Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupatio
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
 already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
 (the Claim oven's material), First
-Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. The Merchant starts with a Semi-precious Gemstone (a store of value; the Amethyst is gone from the game), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
+Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
 - **Map.** Finds treasures and secret zones. Waits for those systems.

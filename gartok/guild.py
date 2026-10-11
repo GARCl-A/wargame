@@ -185,7 +185,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
 
     def shop(self, node_id):
         if node_id not in self.shops:
-            self.shops[node_id] = Shop()
+            self.shops[node_id] = Shop(node_id=node_id)
         return self.shops[node_id]
 
     # ------------------------------------------------------------------ #

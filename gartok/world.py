@@ -173,8 +173,9 @@ NODES = [
                   "forge": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png")}),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
-         "a tree that isn't yours and take only the wage for the hours.",
-         functions=("work",)),
+         "a tree that isn't yours and take only the wage for the hours. The yard "
+         "buys what it yields and sells its lumber and fruit.",
+         functions=("work", "shop")),
     Node("mine", "The Mine", "town", (0.78, 0.54),
          "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal "
          "for sale are sold here.", functions=("work", "shop")),

@@ -98,5 +98,5 @@ def test_a_shop_is_made_on_first_use_with_the_opening_cash_and_shelf():
     guild = Guild([_shopper()], node="city")
     assert guild.shops == {}
     shop = guild.shop(NODE.id)
-    assert shop.cash == economy.MARKET_CASH_START and shop.stock == economy.STOCK
+    assert shop.cash == economy.MARKET_CASH_START and all(shop.stock[n] == c for n, c in economy.STOCK.items())
     assert guild.shop(NODE.id) is shop

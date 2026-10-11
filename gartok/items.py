@@ -336,7 +336,7 @@ _register(ItemDef(id="lantern", name="Lantern", type=ItemType.LIGHT, rarity=Item
 _register(ItemDef(id="first_aid_kit", name="First Aid Kit", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=0.8, price=40, max_charges=10))
 _register(ItemDef(id="quiver", name="Quiver", type=ItemType.CONTAINER, rarity=ItemRarity.COMMON, weight=1.5, price=25, max_charges=20))
 _register(ItemDef(id="minor_healing_potion", name="Minor Healing Potion", type=ItemType.POTION, rarity=ItemRarity.COMMON, weight=0.2, price=80))
-_register(ItemDef(id="venom_gland", name="Venom Gland", type=ItemType.MATERIAL, rarity=ItemRarity.UNCOMMON, weight=0.2, price=25))
+_register(ItemDef(id="venom_gland", name="Venom Gland", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.2, price=25))
 _register(ItemDef(id="antidote", name="Antidote", type=ItemType.POTION, rarity=ItemRarity.UNCOMMON, weight=0.2, price=60))
 _register(ItemDef(id="vial", name="Vial", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.1, price=10))
 _register(ItemDef(id="1sqm_hide", name="1sqm Hide", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=2.0, price=12), "hide")

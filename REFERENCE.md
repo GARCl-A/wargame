@@ -288,6 +288,33 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Venom Gland | 0.2 kg | material |
 | Vial | 0.1 kg | material |
 
+## Base materials
+
+Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
+
+| Item | Source |
+|---|---|
+| 1L Beer | traded: Market |
+| 1kg Coal | gathered: mine |
+| 1sqm Hide | dropped: Wolf |
+| Fruit | gathered: lumber_yard |
+| Ink | traded: Library |
+| Iron Bar | traded: Smith |
+| Iron Ore | gathered: mine |
+| Legendary Horn | quest: the tanner's last job |
+| Lumber | gathered: lumber_yard |
+| Meat | dropped: Wolf, hunted: the Wilds |
+| Paper | traded: Library |
+| Potato | traded: Farm |
+| Precious Gemstone | gathered: mine |
+| Red Mushroom | foraged: the Wilds |
+| Rotten Food | spoiled: food left to rot |
+| Salt | traded: Market |
+| Semi-precious Gemstone | gathered: mine |
+| Stone Brick | gathered: mine |
+| Venom Gland | dropped: Giant Spider |
+| Vial | traded: Market |
+
 ## Sizes
 
 Base speed does not change with size; a Large creature moves like a Medium one.

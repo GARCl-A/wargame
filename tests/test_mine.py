@@ -76,6 +76,17 @@ def test_stone_ore_and_coal_are_sold_only_at_the_mine():
     assert all(economy.freely_buyable(n) for n in economy.MINE_SUPPLIES)
 
 
+def test_the_lumber_yard_is_a_shop_with_its_own_shelf_and_till():
+    yard = world.node("lumber_yard")
+    assert yard.has("work") and yard.has("shop")
+    shelf = [n for _, _, names in economy.market_categories("lumber_yard") for n in names]
+    assert shelf == list(economy.YARD_SUPPLIES)
+    assert all(economy.freely_buyable(n) for n in economy.YARD_SUPPLIES)
+    assert [n for _, _, names in economy.market_categories("mine") for n in names] == list(economy.MINE_SUPPLIES)
+    guild = Guild([_worker()], clock=Clock(6 * 3600))
+    assert guild.shop("lumber_yard") is not guild.shop("market")
+
+
 def test_a_pick_is_sold_at_the_market():
     assert "Pick" in economy.MARKET_STOCK
 

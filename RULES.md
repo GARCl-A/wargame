@@ -1092,7 +1092,8 @@ The `lumber_yard` node (a `town` with `work=True`), 1 h from the City. Rule in
 `Guild.work_shift` / `economy.lumber_pay`; on the map it's an order, resolved
 silently by `campaign.advance` (`gartok/orders.py`). It is the **economic
 floor**: whoever lost everything in the arena goes there to trade time for
-copper instead of walking into the wilds and dying.
+copper instead of walking into the wilds and dying. The yard is also a shop
+(its own till, like the Mine's): it sells Lumber and Fruit and buys anything at the usual rate.
 
 - **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
   or 16 h — which issues a work order; ADVANCE resolves it: passes the time (can
@@ -1134,7 +1135,7 @@ route of equal length. Work is the yard's mechanic (`economy.work_pay` / `work_l
 Besides the wage the Mine can be **gathered** (see *Gathering at the yard and the Mine*).
 
 **The Mine's shelf is its own** (`economy.MINE_SUPPLIES`): **Stone Brick, Iron Ore and Coal** are
-sold only there, in unlimited supply, out of the Market (`economy.market_categories("mine")`).
+sold only there, out of the Market (`economy.market_categories("mine")`).
 The Claim's oven therefore needs a trip to the Mine. The Mine keeps its own till
 (`Guild.shop("mine")`). Iron Ore has no recipe yet: it is the base of the Smith's chain later.
 
@@ -1297,10 +1298,14 @@ Neutral**).
   `deal` cap keeps sell **below** buy, so you cannot make money buying and
   reselling.
 - **A shop's cash is finite** (`Guild.shop(node_id).cash`, one `shop.Shop` per node that offers
-  `shop`: the Market and the Library). It opens at
+  `shop`: the Market, the Library, the Lumber Yard and the Mine). It opens at
   **$100**, takes in whatever the guild spends, pays out what the guild sells and refills
   **$25 a day** up to **$500** (spending can push it past the cap; the refill never takes
   anything away). A sale worth more than the market holds is refused whole.
+- **A shop's shelf is finite too** (`economy.SHELVES`): every item has a target count and a
+  daily rate (a slow one earns a fraction a day); the shelf opens full, buying draws it down and
+  it walks back to the target each morning, a surplus the player sold walks back down. An item
+  sold to a shop that is not on its shelf is listed and resold there until bought.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
 - **Auto-sell marks.** The ⋮ menu of a pack row marks an item *kind* (`Guild.autosell`, saved
