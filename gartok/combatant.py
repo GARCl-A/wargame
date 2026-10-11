@@ -431,7 +431,7 @@ class Combatant:
         WEAPONS dict) overrides the held one -- the Tongue weapon, always a plain
         1-handed melee strike."""
         if weapon is not None:
-            if weapon["finesse"]:
+            if weapon["finesse"] or self.ability.finesse:
                 mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
                 hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
             else:
@@ -440,7 +440,7 @@ class Combatant:
         elif thrown:
             mods = [(self.mod_dexterity, None, "DEX")]       # a throw hits with Dexterity
             hit_stat = "dex"
-        elif (self.unarmed or self.improvised) and self.char.talent_bonus("unarmed_finesse"):
+        elif (self.unarmed or self.improvised) and (self.char.talent_bonus("unarmed_finesse") or self.ability.finesse):
             mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
             hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         elif self.unarmed or self.improvised:
@@ -449,7 +449,7 @@ class Combatant:
         elif self.ranged:
             mods = [(self.mod_dexterity, None, "DEX")]
             hit_stat = "dex"
-        elif self.weapon["finesse"]:
+        elif self.weapon["finesse"] or self.ability.finesse:
             mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
             hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         else:

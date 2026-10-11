@@ -130,13 +130,14 @@ OLD_ROAD_TABLE = (
 )
 
 
-# Gathering at a work node (gather.py): a small pack, wolves and spiders around the
+# Gathering at a work node (gather.py): a small pack, wolves, snakes and spiders around the
 # Lumber Yard, spiders and skeletons down the Mine.
 GATHER_COUNT_WEIGHTS = {1: 40, 2: 40, 3: 20}
 
 LUMBER_YARD_TABLE = (
-    EncounterEntry(60, tuple(data.WILD_POOL)),
-    EncounterEntry(40, tuple(data.SPIDER_POOL)),
+    EncounterEntry(45, tuple(data.WILD_POOL)),
+    EncounterEntry(30, tuple(data.SNAKE_POOL)),
+    EncounterEntry(25, tuple(data.SPIDER_POOL)),
 )
 
 MINE_TABLE = (

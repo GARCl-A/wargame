@@ -132,3 +132,10 @@ def test_the_trades_group_stands_at_their_node_when_the_order_resolves():
             break
         campaign.advance(guild)
     assert group.node == "smith"
+
+
+def test_shops_without_a_trade_beside_them_name_the_place():
+    labels = {n.id: n.shop_label for n in world.NODES if n.shop_label}
+    assert labels == {"lumber_yard": "BROWSE THE YARD", "mine": "BROWSE THE MINE", "market": "ENTER THE MARKET",
+                      "tavern": "BUY FOOD AND DRINK", "farm": "BROWSE THE FARM"}
+    assert all(n.has("shop") for n in world.NODES if n.shop_label)

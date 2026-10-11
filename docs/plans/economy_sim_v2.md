@@ -223,7 +223,7 @@ $4/day) while the shelves are loose; a Dwarf Shield crafter 1.4x. A shelf of **a
 refill of 3 a day** holds the Bear Trap crafter at 2.3x a lumberjack and the Dwarf Shield one at
 1.7x; 6:2 gives 1.5x and 1.0x; tighter than 4:1 makes crafting for sale pointless (fine if
 crafting is meant for saving money, not for selling). The refill is a number to set per shop and
-per item when the shops split; this sweep is the first estimate.
+per item (split into the shops' own shelves since 2026-10-11); this sweep is the first estimate.
 
 **7. Ranking.** Net copper per member at day 30 under `lumber` (200-400 guilds): **owning an Axe
 is the biggest lever, +$10** ($36.0 vs $26.4; the yard pays 4/3). By race the spread is $26 but
@@ -238,7 +238,7 @@ Potato, Salt); eight recipes (the Dictionary among them) whose margin per hour i
 lumber wage and are held back only by gating, scarce reagents and the market's cash; and the
 Dictionary's open door (anyone who speaks the language can start it). 0 dominance. The route scan: with one market a tour is about 5 h and the
 refills allow $25/day, 2.1x a squad's lumber day (informational); it turns FRAGILE once the
-shops split and the walk stops paying for the extra refills.
+walk stops paying for the extra refills (the shops are split now; the sweep above predates it).
 
 **9. The Games are a ladder, not an income, and they are gated by capital.** Layer 1 at level 3,
 a player who wins 80%: a Brawl or Capture the Flag pays +$4.7 per member per bout (break-even is
@@ -416,7 +416,7 @@ D11. **Finite shelves apply to the freely bought items only**; the items already
     (`economy.STOCK`: Jerkin, Studded Leather, Hide, potion, Vial) keep today's no-refill rule.
 D12. **Dominance needs a $1/day gap, no less XP in either track, no more deaths**, among in-band
     activities only, with a squad of performers standing in for the tavern.
-D13. **The route scan reads the world's market nodes**, so it needs no change when the shops split.
+D13. **The route scan reads the world's market nodes**, so it needed no change when the shops split (2026-10-11).
 D14. **Layer 1's per-day figure includes the walk but not the road ambush**; layer 2 has the ambush.
 D15. **Ranking is by guild outcome**, shared by its three members, so a trait shows only over many
     guilds; the traits ranked are the six attribute modifiers, languages, race, occupation and

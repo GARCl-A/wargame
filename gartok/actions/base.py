@@ -172,7 +172,7 @@ def _pickable(unit, obj):
 def _envenom(battle, attacker, target):
     """A venomous attacker's hit that hurt a standing target: Constitution save or
     one more stack of the venom (it lasts past the fight -- see unit_poison.py)."""
-    pid = attacker.ability.venom
+    pid = attacker.char.venom
     if not pid or not target.alive:
         return
     poison = poisons.get(pid)

@@ -28,6 +28,7 @@ class Poison:
 
 _LIST = [
     Poison("giant_spider_venom", "Giant Spider Venom", "dexterity"),
+    Poison("snake_venom", "Snake Venom", "constitution"),
 ]
 
 POISONS = {p.id: p for p in _LIST}

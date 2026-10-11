@@ -44,6 +44,7 @@ ICONS = {
     "Rotten Food": ("apple", "rot", {"rot": True}),
     "Salt": ("sack", "salt", {}),
     "Venom Gland": ("drop", "green", {}),
+    "Snake Venom Gland": ("drop", "green", {}),
     "Vial": ("flask", "glass", {"empty": True}),
     "1sqm Hide": ("hide", "leather", {}),
     "Red Mushroom": ("mushroom", "mushroom", {}),

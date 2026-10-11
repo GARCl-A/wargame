@@ -216,6 +216,7 @@ BEASTS = [
     # threshold, name, token, Str Dex Con Int Wis Cha  ability             language  age    hd  size      drop_item     drop_chance  speed (m)  also_drops  flight
     (100, "Wolf", "w", ( 2,  2,  1, -4, -1, -3), "wolf_pack_tactics", "",       0.400,  8, "Medium", "1sqm Hide",  1.000,      10.5, (("Meat", 1.0, 2),)),
     (100, "Giant Spider", "x", ( 1,  2,  1, -4,  1, -4), ("climber", "spider_venom"), "", 0.200,  8, "Medium", "Venom Gland", 0.5, None),
+    (100, "Snake", "n", (-2,  4,  1, -1,  2, -1), "serpentine",      "", 0.200,  6, "Small", "Snake Venom Gland", 0.5, None),
     (100, "Donkey", "d", ( 2,  0,  1, -4,  0, -3), "",                "", 0.500,  8, "Large", None, 0.0, 6.0, (), 0.05),
     (100, "Ox",     "o", ( 3,  0,  2, -4,  0, -3), "beast_of_burden", "", 0.500, 10, "Large", None, 0.0, 6.0, (), 0.15),
     (100, "Horse",  "h", ( 5,  1,  1, -4,  0, -3), "",                "", 0.600,  8, "Large", None, 0.0, 12.0, (), 0.10),
@@ -256,6 +257,7 @@ OX_POOL = [r for r in _BEASTS if r["name"] == "Ox"]     # the herd the Aurochs c
 # Skeleton are placed by hand, not drawn from a locality's table.
 WILD_BEASTS = ("Wolf",)
 WILD_POOL = [r for r in _BEASTS if r["name"] in WILD_BEASTS]
+SNAKE_POOL = [r for r in _BEASTS if r["name"] == "Snake"]     # what finds a crew at the Lumber Yard (gather.py)
 SPIDER_POOL = [r for r in _BEASTS if r["name"] == "Giant Spider"]     # what finds a crew gathering (gather.py)
 SKELETON_POOL = [r for r in _UNDEAD if r["name"] == "Skeleton"]
 

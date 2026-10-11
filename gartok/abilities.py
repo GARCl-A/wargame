@@ -50,6 +50,8 @@ class Ability:
     water_breathing: bool = False    # never runs out of breath while submerged
     sleep_immunity: bool = False      # the Sleep spell (magic.py) never affects this unit
     venom: str | None = None          # poison id (poisons.py): a bite that hurts forces a Constitution save
+    finesse: bool = False             # every melee attack hits with the better of Strength and Dexterity
+    natural_weapon: str | None = None  # what the unarmed attack is called (Fangs), else "Unarmed"
 
     # --- hooks (all optional) ------------------------------------------- #
     # mods are always (value, type, label) -> see data.resolve_bonus
@@ -162,6 +164,10 @@ _LIST = [
             "racial level) or the victim is poisoned: Giant Spider Venom, one stack "
             "more per failed save, each eating a point of Dexterity.",
             venom="giant_spider_venom"),
+    Ability("serpentine", "Serpentine",
+            "a body that strikes before it is seen: every attack is a finesse attack (the better "
+            "of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs.",
+            finesse=True, natural_weapon="Fangs"),
     Ability("aurochs_might", "Aurochs Might",
             "+3 squares of speed, +3 [melee] damage (a gore that lifts a man).",
             speed=3, melee_damage=3),
@@ -202,7 +208,7 @@ def _combined(ids):
             merged[f.name] = max(vals)
         elif f.name == "carry_mult":
             merged[f.name] = math.prod(vals)
-        elif f.name in ("carry_size", "venom"):
+        elif f.name in ("carry_size", "venom", "natural_weapon"):
             merged[f.name] = next((v for v in vals if v), None)
         elif isinstance(vals[0], bool):
             merged[f.name] = any(vals)

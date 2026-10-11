@@ -59,21 +59,28 @@ def test_a_shift_sold_beats_the_best_wage_by_a_copper(node_id, hours):
 
 
 @pytest.mark.parametrize("node_id", sorted(gather.TABLES))
+def test_a_full_day_sold_beats_the_best_wage_by_the_premium(node_id):
+    best_wage = max(economy.work_pay(node_id, gather.DAY_HOURS, level)
+                    for level in (0, economy.LUMBER_LEVEL_OWN_AXE))
+    assert gather.expected_value(node_id, gather.DAY_HOURS) >= best_wage + gather.PREMIUM
+
+
+@pytest.mark.parametrize("node_id", sorted(gather.TABLES))
 def test_a_licence_pays_back_in_about_thirty_days_for_three_workers(node_id):
     gain = gather.expected_value(node_id, 16) - economy.work_pay(node_id, 16, economy.LUMBER_LEVEL_OWN_AXE)
     days = gather.licence_price(node_id) / (gather.PAYBACK_CREW * gain)
     assert gather.PAYBACK_DAYS * 0.9 <= days <= gather.PAYBACK_DAYS * 1.1
 
 
-def test_a_shift_rolls_once_per_eight_hours_rounded_up():
-    assert [gather.rolls(h) for h in SHIFTS] == [1, 1, 2, 2]
+def test_a_shift_rolls_at_a_rate_per_hour():
+    assert [gather.rolls(h) for h in SHIFTS] == [h / gather.HOURS_PER_ROLL for h in SHIFTS]
 
 
 def test_a_haul_has_one_item_per_roll_and_comes_from_the_table():
     rng = random.Random(1)
     for node_id in gather.TABLES:
         haul = gather.roll_haul(node_id, 16, rng=rng)
-        assert sum(haul.values()) == 2
+        assert sum(haul.values()) in (2, 3)
         assert set(haul) <= {name for name, _ in gather.TABLES[node_id]}
 
 
@@ -81,7 +88,8 @@ def test_the_delvers_bonus_adds_rolls_on_average():
     rng = random.Random(2)
     plain = sum(sum(gather.roll_haul("mine", 16, 1.0, rng).values()) for _ in range(400))
     delver = sum(sum(gather.roll_haul("mine", 16, 1.5, rng).values()) for _ in range(400))
-    assert plain == 800 and delver == 1200
+    per_shift = gather.rolls(16)
+    assert abs(plain - 400 * per_shift) < 40 and abs(delver - 400 * per_shift * 1.5) < 60
 
 
 def test_the_odds_of_a_haul_follow_the_table():
@@ -106,14 +114,15 @@ def test_who_finds_a_crew_gathering():
     random.seed(5)
     yard = {u.race["name"] for _ in range(60) for u in gather.ambush_pack("lumber_yard")}
     mine = {u.race["name"] for _ in range(60) for u in gather.ambush_pack("mine")}
-    assert yard == {"Wolf", "Giant Spider"}
+    assert yard == {"Wolf", "Snake", "Giant Spider"}
     assert mine == {"Giant Spider", "Skeleton"}
 
 
 def test_a_licence_is_bought_once_by_the_richest_first():
     guild, group = _crew("mine", 2, licensed=False)
     a, b = group.members
-    a.money, b.money = 300, 100
+    price = gather.licence_price("mine")
+    a.money, b.money = price + 75, 100
     assert guild.licence_shortfall("mine", group.members) == 0
     assert guild.buy_licence("mine", group.members)
     assert guild.has_licence("mine") and (a.money, b.money) == (75, 100)
@@ -123,7 +132,7 @@ def test_a_licence_is_bought_once_by_the_richest_first():
 
 def test_a_licence_the_crew_cannot_afford_is_not_sold():
     guild, group = _crew("lumber_yard", 2, licensed=False, money=50)
-    assert guild.licence_shortfall("lumber_yard", group.members) == 80
+    assert guild.licence_shortfall("lumber_yard", group.members) == gather.licence_price("lumber_yard") - 100
     assert not guild.buy_licence("lumber_yard", group.members)
     assert not guild.has_licence("lumber_yard") and sum(u.money for u in group.members) == 100
 
@@ -148,7 +157,7 @@ def test_a_gathering_shift_fills_each_pack_instead_of_paying_the_wage(monkeypatc
     result = campaign.advance(guild)
     for u in group.members:
         assert u.money == 0
-        assert sum(u.count_of(name) for name, _ in gather.TABLES["mine"]) == 2
+        assert sum(u.count_of(name) for name, _ in gather.TABLES["mine"]) in (2, 3)
         assert u.work_hours == 16
     assert any("gathered 16 h" in e for e in result.events)
     assert group.order is None and not result.pending
@@ -189,7 +198,7 @@ def test_winning_the_ambush_banks_the_haul_and_losing_it_does_not(monkeypatch, w
     held = sum(u.count_of("Lumber") + u.count_of("Fruit") for u in group.members)
     assert group.pending is None and group.order.kind == "idle" and events
     if won:
-        assert held == 4 and sum(u.work_hours for u in group.members) == 32
+        assert 4 <= held <= 6 and sum(u.work_hours for u in group.members) == 32
     else:
         assert held == 0 and sum(u.work_hours for u in group.members) == 0
 
@@ -225,7 +234,7 @@ def test_the_map_offers_the_licence_until_it_is_held_then_the_shifts():
     ms, blocks = _blocks(guild, "mine")
     buy = next(b for b in blocks if b.get("key") == "buy_licence")
     assert not buy["enabled"] and any("short" in b.get("text", "") for b in blocks)
-    group.members[0].money = 400
+    group.members[0].money = gather.licence_price("mine") + 175
     ms, blocks = _blocks(guild, "mine")
     assert next(b for b in blocks if b.get("key") == "buy_licence")["enabled"]
     ms.selected = group

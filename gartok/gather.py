@@ -6,18 +6,21 @@ rolls `rolls(hours)` times on the node's drop table, rarer items further down, a
 into their pack. A pack may find the crew first (`ambushed`); the haul is banked only if the
 crew wins. `Guild.gather_shift` runs it, `campaign` and `app` play the fight.
 
-The tables, the rate and the licence prices are tuned so that a shift sold to a shop is worth at
-least the best wage for the same hours + 1 copper (a test holds it), and a licence pays back in about
-`PAYBACK_DAYS` days for `PAYBACK_CREW` workers gathering 16 h a day.
+The tables, the rate and the licence prices are tuned so that a shift sold to a shop is worth more
+than the best wage for the same hours, and a full day (16 h) at least `PREMIUM` copper more (a test
+holds both); a licence pays back in about `PAYBACK_DAYS` days for `PAYBACK_CREW` workers gathering
+16 h a day. Rolls are a rate, not a count: a shift gets `hours / HOURS_PER_ROLL` of them, the
+fraction left over being the chance of one more.
 """
 
-import math
 import random
 from collections import Counter
 
 from . import economy, encounters, items
 
-HOURS_PER_ROLL = 8
+HOURS_PER_ROLL = 7
+PREMIUM = 3
+DAY_HOURS = 16
 PAYBACK_DAYS = 30
 PAYBACK_CREW = 3
 
@@ -27,7 +30,7 @@ TABLES = {
     "mine": (("Stone Brick", 55), ("1kg Coal", 25), ("Iron Ore", 15),
              (items.GEM_ITEM, 4), (items.PRECIOUS_GEM_ITEM, 1)),
 }
-LICENCE_PRICE = {"lumber_yard": 180, "mine": 225}
+LICENCE_PRICE = {"lumber_yard": 270, "mine": 385}
 RISK_PER_HOUR = {"lumber_yard": 0.005, "mine": 0.01}
 AMBUSH_TABLES = {"lumber_yard": encounters.LUMBER_YARD_TABLE, "mine": encounters.MINE_TABLE}
 AMBUSH_LEVEL_WEIGHTS = encounters.WILDS_LEVEL_WEIGHTS
@@ -38,7 +41,7 @@ def can_gather(node_id):
 
 
 def rolls(hours):
-    return math.ceil(hours / HOURS_PER_ROLL)
+    return hours / HOURS_PER_ROLL
 
 
 def licence_price(node_id):

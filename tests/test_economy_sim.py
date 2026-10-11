@@ -233,7 +233,8 @@ def test_a_pack_on_a_gathering_shift_is_fought_with_its_own_pack_and_a_win_banks
     count = lambda: sum(u.count_of("Lumber") + u.count_of("Fruit") for u in sim.guild.roster)
     before = count()
     sim.gather_shift()
-    assert seen == ["gather:lumber_yard"] and count() - before == 2 * len(sim.guild.roster)
+    n = len(sim.guild.roster)
+    assert seen == ["gather:lumber_yard"] and 2 * n <= count() - before <= 3 * n
     assert sum(sim.sellable[n] for n in ("Lumber", "Fruit")) == count() - before
 
 

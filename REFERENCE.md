@@ -54,6 +54,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Ferocity | once per battle, when downed drops to 0 HP and dying, but only falls at the end of their turn (the death save runs normally from there). |
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Spider Venom | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
+| Serpentine | a body that strikes before it is seen: every attack is a finesse attack (the better of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs. |
 | Aurochs Might | +3 squares of speed, +3 [melee] damage (a gore that lifts a man). |
 | Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 
@@ -281,6 +282,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Shortspear | 1.5 kg | -- |
 | Shovel | 2 kg | -- |
 | Signal Horn | 1 kg | -- |
+| Snake Venom Gland | 0.1 kg | material |
 | Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
 | Thunderhide | 1.5 kg | -- |
@@ -311,6 +313,7 @@ Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
 | Rotten Food | spoiled: food left to rot |
 | Salt | traded: Market |
 | Semi-precious Gemstone | gathered: mine |
+| Snake Venom Gland | dropped: Snake |
 | Stone Brick | gathered: mine |
 | Venom Gland | dropped: Giant Spider |
 | Vial | traded: Market |
@@ -409,6 +412,9 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Giant Growth | you swell past your kin: your size goes up one step (Medium to Large, 2x2). | -- | Giant Spider |
 | 2 | Titanic Growth | a second growth spurt: your size goes up another step (Large to Huge, 3x3). | giant_growth | Giant Spider |
 | 1 | Spin Web | spin a web trap next to you, as wide as your own body (1x1, 2x2 or 3x3): the first foe to touch it is stuck, unable to walk through its next turn. | -- | Giant Spider |
+| 1 | Serpent Growth | you outgrow your coils: your size goes up one step (Small to Medium). | -- | Snake |
+| 2 | Great Serpent | a second shedding: your size goes up another step (Medium to Large, 2x2). | serpent_growth | Snake |
+| 1 | Snake Venom | your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution. | -- | Snake |
 | 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- | Wolf |
 
 ## Factions and deeds

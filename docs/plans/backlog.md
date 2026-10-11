@@ -107,20 +107,25 @@ pointed to, not repeated.
   and enough racial nodes per race for its picks. Nothing built; the author will design them.
 - **Gathering: loose ends (built 2026-10-11, `gather.py`, RULES.md).** The licence, the drop tables,
   the pay rule, the ambush and the sim's `gatherer` policy (and `miner` gathering once it can afford
-  the licence) are in. Left: (1) the numbers are a first cut (Yard Lumber 75 / Fruit 25, Mine Stone 55 /
-  Coal 25 / Iron Ore 15 / semi-precious 4 / precious 1, a roll per 8 h, licences $180 and $225, risk 0.5%
-  and 1% an hour): play and tune. Sim read over 90 days (20 guilds of 3 at level 0, skill 0.95): median money a member at day 30 / 60 / 90 is
-  $51 / 125 / 207 for `lumber` and $30 / 71 / 139 for `gatherer`, and 5 of 20 `gatherer` guilds are wiped by
-  the pack (none by `lumber`). **The licence does not pay back in the sim:** with the ambush switched off the
-  gatherer still ends at $147, because the +2 copper a shift the table adds is eaten by what the sim makes
-  it pay to cash the haul in (a walk to the Market, about 1.2 days a step, and Fruit that rots on the way).
-  **The Yard is a shop since 2026-10-11** (`economy.YARD_SUPPLIES`, its own till like the Mine's; the `gatherer` sells there), which only moved the day-30 median from $30 to $34 (`lumber` $51):
-  the licence still does not pay, so the margin should be wider; `miner` is wiped on the road as before. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the node's own pack, but
-  with no recorded fights of a person against these packs, the win rate is the AI's or the skill knob's. (3) The
-  shift picker shows the drops and the rolls but not the average worth of a shift against the wage.
-  (4) **Snakes:** the Yard's packs were meant to include snakes, but there is no snake race (`data.BEASTS`); add one (venom, small, low HD) and put it in `encounters.LUMBER_YARD_TABLE`. (5) The Mine and the Yard have no
-  tutorial line of their own beyond the map card, and no art for the Mine. (6) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is
-  food, but it rots in a day, so a Yard crew eats it or sells it that evening.
+  the licence) are in. **Retuned 2026-10-11:** a shift rolls `hours / 7` times (a rate, with the leftover as a
+  chance of one more), so a full 16 h day sold is worth at least 3 copper more than the best wage (Yard 8 against
+  5, Mine 14.3 against 10, `gather.PREMIUM`), and the licences are priced for a 30-day payback at that gain for 3
+  workers ($270 and $385). The Snake joined the Yard's packs (Wolf 45 / Snake 30 / Giant Spider 25). Left:
+  (1) **the sim says the payback is longer than the table's.** Over 90 days (20 guilds of 3 at level 0, skill 0.95)
+  the median money a member at day 30 / 60 / 90 is $37 / 107 / 172 for `lumber` and $35 / 65 / 136 for `gatherer`
+  (3 of 20 wiped by the pack); with the ambush off the gatherer ends at $137, and with a licence bought on day 1 it
+  nets about +1.7 a day over `lumber`, not +3: the haul is worth less than `gather.expected_value` once it is cashed
+  in (Fruit that rots, haggling, selling every second day). Either the licence comes down (about $150 / $215 for a
+  30-day payback at +1.7), the premium goes up, or the policy sells better; decide after a playtest. Also, the
+  `gatherer` only buys the licence once the pooled money covers it, so it is behind until about day 50. The Mine's
+  premium is the same +3 on a 10 h road each way and double the risk; if the sim's `miner` is still the best way to
+  the milestone (it was), leave it. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the
+  node's own pack, but with no recorded fights of a person against these packs, the win rate is the AI's or the
+  skill knob's. (3) The shift picker shows the drops and the rolls but not the average worth of a shift against the
+  wage. (4) The Mine and the Yard have no tutorial line of their own beyond the map card, and no art for the Mine.
+  (5) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is food, but it rots in
+  a day, so a Yard crew eats it or sells it that evening. (6) **Snake Venom Gland** has no recipe or use yet (the
+  Antidote takes the Giant Spider's Venom Gland): let the Antidote take either, or give it its own use.
 - **Item properties: base material sources (rarities decided 2026-10-11).** Built 2026-10-11
   (`sources.py`, REFERENCE.md *Base materials*): a base material is a material, food or gem no recipe
   makes (derived), and a test fails for one with no source (gathered, dropped, hunted, foraged, quest,
@@ -258,20 +263,19 @@ pointed to, not repeated.
   The report's verdicts did not change (the day-30 milestone still fails). A stray (an item the player sold
   a shop that is not on its shelf) is listed and resold there and stays until bought (the Library lists them on a
   RESALE tab). Left: (1) the Library's Paper 20/5 and Ink 10/2 and the Market's Lumber
-  20/6 are my guesses, not from the table; (2) Jerky (tavern shelf, 10/3) is not sold anywhere yet; its $8 is
+  20/6 are my guesses, not from the table; (2) Jerky's $8 (tavern shelf, 10/3) is
   the batch (2 Meat + 1 Salt + 3 = $16) over its 2 units; (3) the sim's food buying now falls back to the next
-  cheapest food when the cheapest runs out (a 12-day Claim trip outgrows 30 Potatoes). (Jerky is now on the Tavern's shelf.)
+  cheapest food when the cheapest runs out (a 12-day Claim trip outgrows 30 Potatoes).
 - **Tune the specialised shops.** The Smithy, Tannery and Apothecary are nodes (0.5 h from Ankareth, 0.3 h between them), every node has its own shelf and the sim walks the round (2026-10-11; the report's
   verdicts did not change). What is left:
-  - **Distances and bents are a first guess.** Re-run `scripts/economy_report.py` and tune `world.EDGES`;
+  - **Distances and bents are a first guess.** Re-run on 2026-10-11 (button labels in): verdicts unchanged, 0 exploits; the route scan (9 shops, a 43.6 h tour,
+    a cap of $124/day, 10.3x the yard) is a cap and not income, and only the Mine's road makes the tour long, so `world.EDGES` stays until a playtest says the walk is wrong;
     the tongue of each shop follows its keeper's race, the alignments of the Tannery (Chaotic and Neutral),
     Library (Lawful and Evil) and Apothecary (Chaotic and Good) are authored; the Smithy (Lawful and Neutral),
     Tavern (Neutral and Good) and Farm (Lawful and Good) are picks to confirm, and so is the Farm's second
     tongue (Sylvan).
   - **Jerky is on the Tavern shelf** (10/3, $8). The report says it does not sell at a profit; check it
     does not undercut camp cooking (`cooking` tests, the Claim's food).
-  - **Shop button label** is generic ("ENTER THE SHOP") at the Farm, Tavern, Yard and Mine; could name
-    the place.
   - **Old saves** keep their Market stock as strays there (Axe, Potato...): harmless, listed and
     resold; a sweep on load would clean it.
   - **Production chain** (lumberjack -> carpenter, smith) and world-tied restocking are a later arc; the
@@ -285,25 +289,25 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes
-  and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py` is text only today). The
-  shopkeepers' faces are made: `portraits/npc/` holds `merchant.png` (Automaton), `tanner.png`
-  (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf). **Built 2026-10-10:** each vendor has a
-  name (from `names.py`, fixed per node) and a face in the header of the Market, the Library (shop, craft and
-  jobs), the Forge and the Tanner (`world.Vendor`, `ui/vendor_panel.py`), so the player learns to recognise who
-  they haggle with. Left: the Mine has no portrait (the other three keepers are in *Faces for the three keepers*), and a vendor is not an NPC (no stats,
-  no recruiting or robbing them).
+- **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`;
+  `watch_screen.py` is text only today) and a portrait for the Mine's keeper. Each vendor has a name
+  (from `names.py`, fixed per node) and a face in the header of the Market, the Library, the Forge and the
+  Tanner (`world.Vendor`, `ui/vendor_panel.py`); the faces that are missing are in the next item, and a
+  vendor is not an NPC (no stats, no recruiting or robbing them). The node marks are under *Map node icons*.
 - **Faces for the three keepers still to draw.** The Apothecary's **Gnome**, the Tavern's **Halfling**
   and the Farm's **Human** (two tongues) have a language and a bent on their node and no `world.Vendor`
   (name, race, role, `portraits/npc/<role>.png`): once the images exist, add the vendor to each node's
   `vendors` (the Tavern's and the Farm's under `shop`, the Apothecary's under `apothecary` and `shop`).
+- **Portraits for the Snake.** The Snake (`data.BEASTS`, the Lumber Yard's new pack) has no
+  `portraits/snake/` folder, so it shows its head icon (`artwork.RACE_ICON`, the Medusa head): generate a pool of
+  about 6 with `/gen-portrait`, then drop the images in `gartok/assets/portraits/snake/N.png`.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur
   and Orc (Halfling has 14, Grippli 17).
-- **Map node icons.** The 14 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
-  share the work glyph). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
-  Ruins, the Claim and the Mine a mark of their own. The map works as it is, so this is polish.
+- **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
+  share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
+  Ruins, the Claim, the Mine, the Smithy, the Tannery and the Apothecary a mark of their own. The map works as it is, so this is polish.
 - **Occupation icons.** `icons/body` and `icons/hat` are staged and nothing loads them. If
   the character sheet is to show the vocation, pick a consistent icon per occupation (18 or
   more). Depends on the sheet calling it.

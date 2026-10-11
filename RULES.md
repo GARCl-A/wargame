@@ -113,7 +113,7 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 no occupation, they fight with their own body, and the creator can pick them
 like any race (the Wolf is the first). A race may set its own **speed** in
 meters; unset, it is the size's (the Wolf walks 10.5 m / 7 cells). Switching a
-character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** is a beast too. The **Skeleton** is
+character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** and the **Snake** are beasts too (the Snake is Small, +4 Dex, and every attack it makes is a finesse attack with its *Fangs*). The **Skeleton** is
 `kind = "undead"` (the `data.UNDEAD` table): not an animal, so it keeps a job — an
 occupation with its weapon and item. Neither rolls in a locality's encounter table
 (`data.WILD_POOL` is wolves only); they are authored in the creator or placed by hand.
@@ -147,7 +147,7 @@ In the wargame **1 cell = 1.5 m**. 🟡
   **Gallop** (+3 m), not because it is large.
 - A talent can raise size one step (`size_up`, capped at Huge): the Wolf's
   *Dire Growth* makes it Large (2×2, Large unarmed die); the Giant Spider has two
-  growth talents, Medium → Large → **Huge** (3×3, unarmed 1d6).
+  growth talents, Medium → Large → **Huge** (3×3, unarmed 1d6), and the Snake two, Small → Medium → Large.
 - **Large creatures occupy 2×2 cells.** The stored position is the **anchor**
   (top-left); the footprint is the 4 cells from there. It applies to everything:
   collision and pathfinding (only lands where all 4 cells fit and are free),
@@ -1142,22 +1142,22 @@ The Claim's oven therefore needs a trip to the Mine. The Mine keeps its own till
 ### Gathering at the yard and the Mine 🟡
 
 `gather.py`. Beside the wage, each work node can be **gathered**: the guild buys the node's
-**licence** once, at the node (the Yard's **$180**, the Mine's **$225**, `gather.LICENCE_PRICE`;
+**licence** once, at the node (the Yard's **$270**, the Mine's **$385**, `gather.LICENCE_PRICE`;
 paid richest first by the selected group, held by the whole guild: `Guild.licences`, saved), and
 from then on a group there can order a **gather shift** (4 / 8 / 12 / 16 h, `gather:N` on the
 map; `orders.work(..., gather=True)`) instead of the wage.
 
-- **The haul:** every worker rolls `ceil(hours / 8)` times on the node's table (a 16 h shift is 2
-  items, a 4 h shift 1), each roll one item, rarer further down. The items go into that worker's own
+- **The haul:** every worker rolls `hours / 7` times on the node's table (a 16 h shift is 2.3
+  items: 2, and a 3-in-10 chance of a third), each roll one item, rarer further down. The items go into that worker's own
   pack and the hours into their work track at the node's level (the tool is not needed to gather).
   The Delvers' perk adds rolls. **Lumber Yard:** Lumber 75%, Fruit 25%. **Mine:** Stone Brick 55%,
   Coal 25%, Iron Ore 15%, Semi-precious Gemstone 4% ($60), Precious Gemstone 1% ($240).
 - **Pays more than the wage, on average:** a shift sold to a shop is worth at least the node's best
-  wage for the same hours + 1 copper (a test holds it for every shift length). The Mine's two items
-  seldom beat the wage unless a gem turns up: the gems are the draw, on purpose. A licence pays back in
-  about 30 days for 3 workers gathering 16 h a day.
+  wage for the same hours, and a full 16 h day at least **3 copper** more (`gather.PREMIUM`; a test holds
+  both). The Yard's day pays 8 against a wage of 5, the Mine's 14.3 against 10 (its road and its risk are
+  longer). A licence pays back in about 30 days for 3 workers gathering 16 h a day.
 - **Risk:** every hour carries a chance that a pack finds the crew (Yard 0.5% an hour, Mine 1%;
-  Cautious and the Woodland Scout shave it like any ambush). **Yard:** wolves or Giant Spiders;
+  Cautious and the Woodland Scout shave it like any ambush). **Yard:** wolves, Snakes or Giant Spiders;
   **Mine:** Giant Spiders or Skeletons; 1-3 bodies. It is a lethal forced fight (`gather_ambush`);
   a win banks the haul for the survivors, a loss sends them away with nothing.
 
@@ -1228,7 +1228,9 @@ the Medic from the same constants.
 
 `gartok/poisons.py` (a registry like `abilities.py`) + `unit_poison.py`. The first
 toxin is **Giant Spider Venom**, delivered by the Giant Spider's *Spider Venom*
-ability (`Ability.venom`):
+ability (`Ability.venom`). The second is **Snake Venom**, which eats **Constitution** and is
+delivered by a Snake that took the *Snake Venom* racial talent (the `venom` talent channel; the
+race itself has none). Both work the same way:
 
 - **A bite that hurts a standing foe** forces a **Constitution save**: `d20 + CON
   mod` vs **DC 11 + the spider's racial level**. A failure adds one **stack**; each

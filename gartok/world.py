@@ -95,7 +95,7 @@ class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, functions=(),
                  jurisdiction=None, unsafe=False, encounter_table=None,
-                 garrison_job=None, wagon_risk=0.0, vendors=None):
+                 garrison_job=None, wagon_risk=0.0, vendors=None, shop_label=None):
         self.id = id
         self.name = name
         self.kind = kind
@@ -113,6 +113,7 @@ class Node:
         self.garrison_job = garrison_job     # the job a "garrison" order can work here, or None
         self.wagon_risk = wagon_risk         # chance a wagon left unguarded here is lost (wagon_watch.py)
         self.vendors = dict(vendors or {})   # function id -> the Vendor behind it
+        self.shop_label = shop_label         # the map button's text for the `shop` function (default: the function's)
 
     def has(self, function):
         return function in self.functions
@@ -173,17 +174,17 @@ NODES = [
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours. The yard "
          "buys what it yields and sells its lumber and fruit.",
-         functions=("work", "shop")),
+         functions=("work", "shop"), shop_label="BROWSE THE YARD"),
     Node("mine", "The Mine", "town", (0.78, 0.54),
          "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal "
-         "for sale are sold here.", functions=("work", "shop")),
+         "for sale are sold here.", functions=("work", "shop"), shop_label="BROWSE THE MINE"),
     Node("arena", "Arena", "battle", (0.405, 0.32),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
          ArenaScenario, lethal=False, arena=True, jurisdiction="the_city"),
     Node("market", "Market", "market", (0.38, 0.64),
          "Buy and sell gear for copper. The traders speak Ankarin.",
          language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city",
-         functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png")}),
+         functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png")}, shop_label="ENTER THE MARKET"),
     Node("smith", "The Smithy", "town", (0.47, 0.57),
          "A forge on the road out of the walls, loud enough to hear from the gate. Weapons, metal armour and "
          "iron bars are sold here, and the smith lends the anvil.",
@@ -203,7 +204,7 @@ NODES = [
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
          jurisdiction="the_city", garrison_job="study",
-         language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop")),
+         language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop"), shop_label="BUY FOOD AND DRINK"),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
          jurisdiction="the_city", functions=("prison",)),
@@ -226,7 +227,7 @@ NODES = [
          vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png")}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
          "A farmstead beyond the walls. It sells what the fields give and keeps the stables: wagons and the animals that pull them.",
-         language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop")),
+         language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop"), shop_label="BROWSE THE FARM"),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
          functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE),

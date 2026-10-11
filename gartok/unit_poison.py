@@ -47,6 +47,11 @@ class PoisonMixin:
         total = nat + self.mod_constitution
         return total >= dc, nat, total
 
+    @property
+    def venom(self):
+        """The poison this character's bite carries: the race's own, else one a talent grants."""
+        return self.ability.venom or next((pid for pid in poisons.POISONS if self.talent_bonus("venom", pid)), None)
+
     def add_poison(self, poison_id, dc):
         """One more stack of `poison_id`; the 24h clock restarts and the DC kept
         is the highest seen."""

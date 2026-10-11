@@ -51,6 +51,7 @@ RACE_ICON = {
     "Orc":        "orc-head",
     "Sprite":     "air-man",
     "Wolf":       "wolf-head",
+    "Snake":      "medusa-head",
 }
 
 

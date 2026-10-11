@@ -609,7 +609,7 @@ class MapScreen(Screen):
             blocks.append({"type": "button_row", "height": 34,
                            "items": [{"key": f"gather:{h}", "label": f"{h} h"} for h in WORK_HOURS]})
             blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
-                           "text": f"{gather.rolls(top)} rolls a worker per {top} h  ·  a pack may find the crew"})
+                           "text": f"{gather.rolls(top):.1f} rolls a worker per {top} h  ·  a pack may find the crew"})
         else:
             short = self.guild.licence_shortfall(here.id, g.members)
             blocks.append({"type": "button", "key": "buy_licence", "height": 40,
@@ -745,7 +745,8 @@ class MapScreen(Screen):
                           "color": T.TX_FAINT})
         for fn in offered:
             first = not blocks
-            btn = {"type": "button", "key": fn.order_kind, "label": fn.label}
+            btn = {"type": "button", "key": fn.order_kind,
+                   "label": here.shop_label if fn.id == "shop" and here.shop_label else fn.label}
             if fn.id == "ancient_ruins":
                 btn["primary"] = True
             if not first:

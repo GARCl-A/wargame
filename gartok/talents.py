@@ -18,6 +18,7 @@ exactly one consumer that reads it back:
     size_up           Unit._derive_size (+N sizes)     --
     unarmed_finesse   Unit.attack_bonus / Combatant    --
     spin_web          actions.SpinWeb                  --
+    venom             actions.base._envenom            poison id
     swim_reach        actions.Swim (+squares per swim) --
     ranged_reach      Combatant.attack_range/throw     --
     hp_per_hd         Unit._derive_hp (x Hit Dice)     --
@@ -281,6 +282,18 @@ _LIST = [
            "the first foe to touch it is stuck, unable to walk through its next turn.",
            race="Giant Spider",
            effects=(Effect("spin_web", 1),), icon="action/hive-mind"),
+    Talent("serpent_growth", "racial", 1, "Serpent Growth",
+           "you outgrow your coils: your size goes up one step (Small to Medium).", race="Snake",
+           effects=(Effect("size_up", 1),), icon="body/cavalry"),
+    Talent("great_serpent", "racial", 2, "Great Serpent",
+           "a second shedding: your size goes up another step (Medium to Large, 2x2).",
+           requires="serpent_growth", race="Snake",
+           effects=(Effect("size_up", 1),), icon="body/cavalry"),
+    Talent("snake_venom", "racial", 1, "Snake Venom",
+           "your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your "
+           "racial level) or the victim is poisoned, one stack more per failed save, each eating a "
+           "point of Constitution.", race="Snake",
+           effects=(Effect("venom", 1, "snake_venom"),), icon="head/snake-bite"),
     Talent("dire_growth", "racial", 1, "Dire Growth",
            "you grow past your kin: your size goes up one step (a Wolf becomes Large).", race="Wolf",
            effects=(Effect("size_up", 1),), icon="body/cavalry"),

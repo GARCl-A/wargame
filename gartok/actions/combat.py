@@ -66,6 +66,10 @@ class Attack(Action):
     id, name, cost, target, aimed = "attack", "Attack", 1, "enemy", True
     desc = "Melee or Ranged attack based on your equipped weapon."
 
+    def label(self, battle, actor):
+        natural = actor.ability.natural_weapon if actor.unarmed else None
+        return natural or self.name
+
     def can(self, battle, actor, target=None):
         if actor.ap < self.cost or not _attackable_target(actor, target):
             return False
@@ -102,7 +106,9 @@ class Attack(Action):
             else:
                 actor.ammo -= 1                             # a bow draws from the quiver on every shot
                 battle.log(f"{actor.name} shoots ({actor.ammo} arrow(s) left in the quiver).")
-        _strike(battle, actor, target)
+        natural = actor.ability.natural_weapon if actor.unarmed and not actor.ranged else None
+        _strike(battle, actor, target,
+                prefix=f"{actor.name} -> {target.name} ({natural.lower()})" if natural else None)
 
 
 class AttackTongue(Action):
