@@ -63,6 +63,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `orders.py` | Order dataclass; AUTO (travel / work / rest) / INTERACTIVE / garrison / forced kinds |
 | `rest.py` | what a rest order costs and how long "until full" lasts (simulation on copies, keeps a day of rations) |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |
+| `gather.py` | gathering at the Lumber Yard and the Mine: the drop tables, the licence prices, `roll_haul`, the ambush odds and pack; `Guild.buy_licence` / `gather_shift` / `bank_haul` (in `guild_labor.py`), a `work` order with `gather=True`, and the forced `gather_ambush` fight that `campaign.resolve_gather_ambush` settles |
 | `guild.py` | Guild state: groups, roster, leadership, fame slots; owns `bank` + `house`. Behaviour lives in mixins — `guild_upkeep.py` (clock, meals, daily sweep), `guild_holdings.py` (bank, property, debt, garrison), `guild_claim.py` (Wilds claim), `guild_labor.py` (work/crafting shifts) |
 | `holdings.py` | what the guild owns: `Stash` (weight-capped storage; defined in `stash.py`, re-exported), `CityProperty` (house, tax, squat, oven), `Garage` (wagons and animals kept at the house, or at the Claim with no limit; `garage_screen.py`) |
 | `creature.py` / `animals.py` | what a Group keeps besides people: `Creature` is the shared pack owner (HP, load); `Animal` is a livestock race from `data.BEASTS` (Donkey, Ox, Horse) with fixed attributes, loads from Strength; kept in `Group.herd` |

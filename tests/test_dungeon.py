@@ -148,7 +148,7 @@ def test_pickup_chest_and_codex():
     gold_before = actor.char.money
     pu.execute(battle, actor)
     assert "Scroll of Sleep" in actor.inventory
-    assert "Amethyst" in actor.inventory
+    assert "Semi-precious Gemstone" in actor.inventory
     assert actor.char.money == gold_before + 150
     assert not any(o.pos == (20, 3) and o.is_chest for o in battle.ground)
 
@@ -270,7 +270,7 @@ def test_parse_currency():
     assert parse_currency(("copper", 25)) == 25
     assert parse_currency((30, "coins")) == 30
     assert parse_currency("Scroll of Sleep") is None
-    assert parse_currency("Amethyst") is None
+    assert parse_currency("Semi-precious Gemstone") is None
     assert parse_currency(None) is None
 
 

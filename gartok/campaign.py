@@ -351,6 +351,11 @@ def _advance(guild, dt=None, busy=()):
                 continue
             for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):
                 events.append(factions.deed_notice(d))
+        elif order.kind == "work" and order.gather:
+            gathered, ambush = guild.gather_shift(g, order)
+            events += gathered
+            if ambush is not None:
+                pending.append((g, ambush))
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
@@ -632,6 +637,19 @@ def resolve_road_ambush(guild, group, order):
     there is no choice to make here (unlike a guard catch) -- whoever's left
     just resumes whatever the ambush interrupted."""
     return _resume_arrival(guild, group, order)
+
+
+def resolve_gather_ambush(guild, group, order, outcome):
+    """After `app` has already run the fight through `absorb_battle`: a win banks the haul of the
+    shift for whoever is left; a loss sends the survivors away with nothing."""
+    group.pending = None
+    if group.empty:
+        return []
+    group.order = orders.idle()
+    if not outcome.won:
+        return ["The crew is driven off the work site and comes away with nothing."]
+    survivors = [u for u in group.members if u in outcome.survivors]
+    return ["The crew drives the pack off."] + guild.bank_haul(survivors, order.hours, group.node)
 
 
 def resolve_property_raid(guild, group, order, outcome):

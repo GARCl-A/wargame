@@ -164,7 +164,7 @@ def order_to_dict(order):
 
 
 def order_from_dict(d):
-    kwargs = {f.name: d[f.name] for f in fields(Order)}
+    kwargs = {f.name: d[f.name] for f in fields(Order) if f.name in d}
     for key in _ORDER_SEQUENCES:
         kwargs[key] = tuple(kwargs[key])
     kwargs["pack"] = tuple(Unit.from_save(u) for u in d["pack"])
@@ -212,7 +212,7 @@ PAYLOAD_DEFAULTS = {
     "wilds_claim_sustain_days_left": None, "wilds_claim_owner": None,
     "wilds_claim_campfire": False, "claim_oven": False, "ancient_ruins_discovered": False,
     "ox_fields_discovered": False, "ox_trails": 0,
-    "shops": {}, "total_spent": 0, "items_sold_kinds": [], "autosell": [], "bestiary": {"races": [], "abilities": [], "named": {}}, "missions": [],
+    "shops": {}, "total_spent": 0, "items_sold_kinds": [], "autosell": [], "licences": [], "bestiary": {"races": [], "abilities": [], "named": {}}, "missions": [],
     "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
     "recruit_seen": {},
@@ -258,6 +258,7 @@ def _payload(guild, kind, label):
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
         "autosell": sorted(guild.autosell),
+        "licences": sorted(guild.licences),
         "bestiary": guild.bestiary.to_dict(),
         "missions": [missions.mission_to_dict(m) for m in guild.missions],
         "leader": guild.leader.uid if guild.leader else None,
@@ -349,6 +350,7 @@ def load_game(world, save_id=CURRENT):
                  total_spent=payload["total_spent"],
                  items_sold_kinds=payload["items_sold_kinds"],
                  autosell=payload["autosell"],
+                 licences=payload["licences"],
                  bestiary=Bestiary.from_dict(payload["bestiary"]),
                  missions=[missions.mission_from_dict(d) for d in payload["missions"]],
                  taverna_week=payload["taverna_week"],

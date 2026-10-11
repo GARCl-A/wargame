@@ -115,7 +115,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  ancient_ruins_discovered=False, leaving=None,
-                 ox_fields_discovered=False, ox_trails=0, vocation=None, recruit_seen=None):
+                 ox_fields_discovered=False, ox_trails=0, vocation=None, recruit_seen=None,
+                 licences=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -135,6 +136,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.total_spent = total_spent               # copper ever paid to the market
         self.items_sold_kinds = set(items_sold_kinds or ())  # distinct item names ever sold
         self.bestiary = bestiary if bestiary is not None else intel.Bestiary()   # what it has learned of foes, see intel.py
+        self.licences = set(licences or ())   # node ids whose gathering licence the guild bought, see gather.py
         self.autosell = set(autosell or ())   # item names the Market's SELL MARKED button takes, see market_screen.py
         # the taverna's strangers, re-rolled weekly by `recruit.refresh_pool`
         self.taverna_week = taverna_week      # week index the pool was rolled for, or None

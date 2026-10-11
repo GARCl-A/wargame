@@ -366,7 +366,7 @@ class AncientRuinsScenario(Scenario):
         self._walls = [tuple(c) for c in m.get("walls")] if "walls" in m else self._build_walls()
         self._torches = [tuple(c) for c in m.get("torches", [(2, 4), (2, 12), (18, 1), (19, 8), (24, 8)])]
         self._traps = [list(c) for c in m.get("traps", [[11, 8, "bear trap"], [13, 8, "alarm trap"]])]
-        self._chests = [list(c) for c in m.get("chests", [[18, 3, ["Scroll of Sleep", "Amethyst", "50 Copper"]]])]
+        self._chests = [list(c) for c in m.get("chests", [[18, 3, ["Scroll of Sleep", "Semi-precious Gemstone", "50 Copper"]]])]
         self._relics = [list(c) for c in m.get("relics", [[27, 11, data.CODEX_ITEM]])]
         self.secret_walls = {tuple(c) for c in m.get("secret_walls", [[14, 6]])}
         self.escape_cells = {tuple(c) for c in m.get("escape_cells", [[0, 7], [0, 8], [1, 7], [1, 8]])}

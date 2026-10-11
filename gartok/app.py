@@ -484,6 +484,7 @@ class App:
         "wilds_raid": lambda s, g, n, o: s._start_wilds_raid(g, o),
         "wilds_seizure": lambda s, g, n, o: s._start_wilds_seizure(g, o),
         "wilds_retake": lambda s, g, n, o: s._start_wilds_retake(g, o),
+        "gather_ambush": lambda s, g, n, o: s._start_forced_battle(g, o, list(o.pack)),
     }
 
     # forced-fight order.kind -> campaign.resolve_*(guild, group, order, outcome);
@@ -494,6 +495,7 @@ class App:
         "wilds_raid": campaign.resolve_wilds_raid,
         "wilds_seizure": campaign.resolve_wilds_seizure,
         "wilds_retake": campaign.resolve_wilds_claim_retake,
+        "gather_ambush": campaign.resolve_gather_ambush,
     }
 
     def _after_activity(self):

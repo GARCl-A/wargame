@@ -66,6 +66,7 @@ from . import (
     autowin,
     campaign,
     economy,
+    gather,
     missions,
     node_functions,
     orders,
@@ -242,7 +243,8 @@ class MapScreen(Screen):
         o = group.order
         if o is None or o.kind == "idle":
             return "NO ORDERS", T.BRASS
-        return (o.task if o.kind == "solo" else o.kind).upper().replace("_", " "), T.TX_MUTED
+        label = "gather" if o.kind == "work" and o.gather else o.task if o.kind == "solo" else o.kind
+        return label.upper().replace("_", " "), T.TX_MUTED
 
     def _order_status(self, group):
         """One-line status for a group's ROSTER card / INSPECTOR header."""
@@ -258,7 +260,7 @@ class MapScreen(Screen):
                 return f"→ {dest_name} via {world.node(o.dest).name} ({o.remaining:g} h)"
             return f"→ {dest_name} ({o.remaining:g} h)"
         if o.kind == "work":
-            return f"working ({o.remaining:g} h left)"
+            return f"{'gathering' if o.gather else 'working'} ({o.remaining:g} h left)"
         if o.kind == "rest":
             return f"resting ({rest.format_hours(o.remaining)} left)"
         if o.kind == "solo":
@@ -575,6 +577,12 @@ class MapScreen(Screen):
             self.on_manage_group(self.selected)
         elif key.startswith("work:"):
             self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1])))
+        elif key.startswith("gather:"):
+            self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1]), gather=True))
+        elif key == "buy_licence":
+            node = world.node(self.selected.node)
+            if self.guild.buy_licence(node.id, self.selected.members):
+                self.notices.append(f"{node.name}: the guild now holds the gathering licence.")
         elif key == "scout_ruins":
             success, msg = campaign.scout_ancient_ruins(self.guild, self.selected)
             self._refresh_nodes()
@@ -591,6 +599,29 @@ class MapScreen(Screen):
     # ------------------------------------------------------------------ #
     # INSPECTOR content                                                   #
     # ------------------------------------------------------------------ #
+    def _gather_blocks(self, g, here):
+        """The inspector's gathering rows at a work node: the shift buttons once the guild holds
+        the licence, else the licence to buy."""
+        top = WORK_HOURS[-1]
+        drops = " · ".join(f"{name} {pct}%" for name, pct in gather.drops(here.id))
+        blocks = [{"type": "section", "label": "gather a shift", "gap_before": T.S}]
+        if self.guild.has_licence(here.id):
+            blocks.append({"type": "button_row", "height": 34,
+                           "items": [{"key": f"gather:{h}", "label": f"{h} h"} for h in WORK_HOURS]})
+            blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
+                           "text": f"{gather.rolls(top)} rolls a worker per {top} h  ·  a pack may find the crew"})
+        else:
+            short = self.guild.licence_shortfall(here.id, g.members)
+            blocks.append({"type": "button", "key": "buy_licence", "height": 40,
+                           "label": f"BUY THE LICENCE ({fmt_money(gather.licence_price(here.id))})",
+                           "enabled": not short})
+            if short:
+                blocks.append({"type": "text", "color": T.BRASS, "text": f"{fmt_money(short)} short"})
+            blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
+                           "text": "gather items instead of the wage  ·  one licence for the whole guild"})
+        blocks.append({"type": "wrapped_text", "color": T.TX_FAINT, "text": f"drops: {drops}"})
+        return blocks
+
     def _has_property_business(self):
         house = self.guild.house
         return house.owned or house.squatting or self.guild.bankers_debt > 0
@@ -686,6 +717,8 @@ class MapScreen(Screen):
                               "text": f"{u.name}: {status} -- {fmt_money(day)} / "
                                       f"{WORK_HOURS[-1]}h shift",
                               "color": T.GREEN if own_axe else T.TX_FAINT})
+            if gather.can_gather(here.id):
+                blocks += self._gather_blocks(g, here)
             need_axe = [u for u in g.members if u.work_level > 0 and economy.work_level(u, here.id) == 0]
             capped = [u for u in g.members if economy.work_level(u, here.id) >= economy.LUMBER_LEVEL_OWN_AXE
                      and u.work_level > economy.work_level(u, here.id)]

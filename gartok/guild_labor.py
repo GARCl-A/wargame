@@ -6,7 +6,7 @@ since it advances the clock itself.
 
 from collections import Counter
 
-from . import economy, items, recorder, vocations, world
+from . import economy, gather, items, orders, recorder, vocations, world
 from .constants import fmt_money
 from .unit_loadout import pooled_unlocked
 
@@ -61,6 +61,52 @@ class LaborMixin:
             if clock_hours < hours:
                 note += f"  Brisk Hands: crew done in {clock_hours:g} h."
             events.append(note)
+        return events
+
+    def has_licence(self, node_id):
+        return node_id in self.licences
+
+    def licence_shortfall(self, node_id, payers):
+        """Copper `payers` lack for the node's licence, 0 when they can pay it."""
+        return max(0, gather.licence_price(node_id) - sum(u.money for u in payers))
+
+    def buy_licence(self, node_id, payers):
+        """Buy the gathering licence of `node_id` for the whole guild, paid richest first by
+        `payers`. False, with nothing taken, when it is not on sale, already held or too dear."""
+        if not gather.can_gather(node_id) or node_id in self.licences:
+            return False
+        if self.licence_shortfall(node_id, payers):
+            return False
+        economy.charge_richest_first(list(payers), gather.licence_price(node_id))
+        self.licences.add(node_id)
+        return True
+
+    def gather_shift(self, group, order):
+        """A gathering shift whose clock has run out. Returns `(events, ambush)`: with no ambush
+        the crew's haul is banked here; with one, `ambush` is the forced `gather_ambush` Order for
+        the caller to fight, and the haul waits for `bank_haul` on a win."""
+        node_id = group.node
+        mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
+        if gather.ambushed(node_id, order.hours, mult):
+            name = world.node(node_id).name
+            return ([f"{name}: a pack finds {group.display_name} at work."],
+                    orders.Order("gather_ambush", pack=tuple(gather.ambush_pack(node_id)), hours=order.hours))
+        return self.bank_haul(group.members, order.hours, node_id), None
+
+    def bank_haul(self, workers, hours, node_id):
+        """Each worker's roll on the node's table goes into their own pack and the hours into their
+        work track. Returns the lines to show."""
+        events = []
+        mult = vocations.gather_mult(self)
+        found = []
+        for u in (u for u in workers if u in self.roster):
+            haul = gather.roll_haul(node_id, hours, mult)
+            for name, n in haul.items():
+                u.give_to_pack(name, n)
+            events += u.bank_work(hours, economy.work_level(u, node_id))
+            found.append(f"{u.name} {gather.describe(haul)}")
+        if found:
+            events.insert(0, f"{world.node(node_id).name}: gathered {hours} h ({'; '.join(found)}).")
         return events
 
     def _pay_worker(self, u, pay, hours, activity_level, events):

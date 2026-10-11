@@ -270,7 +270,8 @@ def load(path):
 
 
 # fights logged before `Battle.aggressor` existed: the campaign kinds where the pack came to the guild
-_AGGRESSOR_OF_KIND = {"hunt": "enemy", "ambush": "enemy", "guard": "enemy", "raid": "enemy"}
+_AGGRESSOR_OF_KIND = {"hunt": "enemy", "ambush": "enemy", "guard": "enemy", "raid": "enemy",
+                      "gather_ambush": "enemy"}
 
 REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "CustomScenario")
 

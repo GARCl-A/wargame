@@ -370,8 +370,8 @@ _register(ItemDef(id="legendary_horn", name="Legendary Horn", type=ItemType.MATE
 _register(ItemDef(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1))
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="map", name="Map", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
-_register(ItemDef(id="amethyst", name="Amethyst", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.5, price=120))
-_register(ItemDef(id="gemstones", name="Gemstones", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
+_register(ItemDef(id="semi_precious_gemstone", name="Semi-precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
+_register(ItemDef(id="precious_gemstone", name="Precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.RARE, weight=0.1, price=240))
 _register(ItemDef(id="locked_chest", name="Locked Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="sealed_chest", name="Sealed Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="letter_of_receipt", name="Letter of Receipt", type=ItemType.QUEST, rarity=ItemRarity.COMMON, weight=0.1, price=1))
@@ -675,7 +675,8 @@ FIRST_AID_ITEM = "First Aid Kit"
 ANTIDOTE_ITEM = "Antidote"
 VENOM_GLAND_ITEM = "Venom Gland"
 CHEST_ITEM = "Locked Chest"
-GEM_ITEM = "Gemstones"
+GEM_ITEM = "Semi-precious Gemstone"
+PRECIOUS_GEM_ITEM = "Precious Gemstone"
 MISSION_CHEST_ITEM = "Sealed Chest"
 LETTER_ITEM = "Letter of Receipt"
 CODEX_ITEM = "Ancient Codex"

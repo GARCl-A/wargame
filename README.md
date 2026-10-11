@@ -241,6 +241,7 @@ gartok/
                     bail-and-pitch alternative
   vocations.py      the founding trade (six races + one guild perk), read by travel, hunt, work, food and cohesion
   hunt.py           a live wilds hunt: hours, ambush risk, the meat payout
+  gather.py         gathering at the Lumber Yard and the Mine: licence, drop tables, haul, ambush
   ox.py             the tanner's last job: the Country Roads search, tracking Aurochs by daylight
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall
   persist.py        save slots (JSON); only the roster + campaign meta hit disk

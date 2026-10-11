@@ -62,6 +62,7 @@ from gartok import (
     data,
     economy,
     encounters,
+    gather,
     hunt,
     items,
     matchup,
@@ -81,7 +82,7 @@ from gartok.group import CAUTIOUS, NORMAL
 from gartok.guild import Guild
 from gartok.market_screen import MarketScreen
 from gartok.prison_screen import BAIL_BONUS
-from gartok.scenario import ErmosScenario
+from gartok.scenario import ErmosScenario, Scenario
 
 SHIFT_HOURS = 16                     # a work shift; the other 8 h of the day are sleep
 SLEEP_HOURS = 24 - SHIFT_HOURS
@@ -154,7 +155,7 @@ def as_levels(level):
 class FightLibrary:
     """Real battles for each (kind, levels, size), played once and cached. Kinds: the arena's
     bouts (`arena` the Scrapper, `champion`, `brawl`, `ctf`; non-lethal), `wilds` (a hunt's
-    ambush), `road` (the Old Road), and the Claim's `claim_clear`, `claim_sweep` and `raid`."""
+    ambush), `road` (the Old Road), `gather:<node>` (a pack finding a crew gathering), and the Claim's `claim_clear`, `claim_sweep` and `raid`."""
 
     def __init__(self, samples=40):
         self.samples = samples
@@ -184,7 +185,10 @@ class FightLibrary:
             battle = act.play(squad, foes, node.scenario(), lethal=True)
             outcome = campaign.absorb_battle(guild, squad, battle, node=node)
         else:
-            if kind == "wilds":
+            if kind.startswith("gather:"):
+                node_id = kind.split(":", 1)[1]
+                node, foes, scenario = world.node(node_id), gather.ambush_pack(node_id), Scenario()
+            elif kind == "wilds":
                 node, foes, scenario = world.node("wilds"), hunt.wilds_pack(), ErmosScenario()
             else:
                 node = world.node("road")
@@ -439,6 +443,8 @@ class Sim:
                     continue
                 if pend.kind == "ambush":
                     self._road_fight(grp, pend)
+                elif pend.kind == "gather_ambush":
+                    self._gather_fight(grp, pend)
                 elif pend.kind in CLAIM_RESOLVERS:
                     self._claim_fight(grp, pend)
                 elif pend.kind in orders.FORCED_KINDS:
@@ -618,6 +624,11 @@ class Sim:
         self.fight("road", list(group.members))
         campaign.resolve_road_ambush(self.guild, group, pend)
 
+    def _gather_fight(self, group, pend):
+        sample, survivors = self.fight(f"gather:{group.node}", list(group.members))
+        campaign.resolve_gather_ambush(self.guild, group, pend,
+                                       SimpleNamespace(won=sample.won, survivors=survivors))
+
     def _claim_fight(self, group, pend):
         """A raid on the garrison, a seizure attempt or the fight to retake a seized claim."""
         sample, _ = self.fight("raid", list(group.members))
@@ -627,6 +638,20 @@ class Sim:
     def work_shift(self, hours=SHIFT_HOURS, node="lumber_yard"):
         self.goto(node)
         self.run_order(orders.work(self.guild, self.group, hours))
+
+    def gather_shift(self, hours=SHIFT_HOURS, node="lumber_yard"):
+        """A gathering shift (the guild must hold the node's licence); what the crew picks up is
+        loot to sell."""
+        self.goto(node)
+        names = [name for name, _ in gather.TABLES[node]]
+        held = {name: sum(u.count_of(name) for u in self.members) for name in names}
+        self.run_order(orders.work(self.guild, self.group, hours, gather=True))
+        for name in names:
+            self.sellable[name] += max(0, sum(u.count_of(name) for u in self.members) - held[name])
+
+    def buy_licence(self, node):
+        self.goto(node)
+        return self.guild.buy_licence(node, self.members)
 
     def heal(self):
         if self.medic and self.treat():
@@ -947,6 +972,18 @@ class Policy:
         sim.work_shift()
         sim.sleep()
 
+    def work_node_shift(self, sim, node):
+        """A day's shift at `node`: gathered once the guild holds the licence, bought when the
+        cash covers it and the next meals, else the wage."""
+        reserve = 3 * sim.mouths * cheapest_food_price()
+        if (gather.can_gather(node) and not sim.guild.has_licence(node)
+                and sim.money >= gather.licence_price(node) + reserve):
+            sim.buy_licence(node)
+        if sim.guild.has_licence(node):
+            sim.gather_shift(node=node)
+        else:
+            sim.work_shift(node=node)
+
     def stake(self, sim):
         return arena.scrapper_bout().entry * len(sim.members)
 
@@ -970,6 +1007,21 @@ class Lumber(Policy):
         self.lumber_day(sim)
 
 
+class Gatherer(Policy):
+    """The yard's day labour, but gathering once the licence is bought: Lumber and Fruit go to
+    the Market every couple of days."""
+    name = "gatherer"
+    SELL_EVERY = 2
+
+    def step(self, sim):
+        self.upkeep(sim)
+        self.work_node_shift(sim, "lumber_yard")
+        sim.sleep()
+        if sum(sim.sellable.values()) >= self.SELL_EVERY * sim.mouths * gather.rolls(SHIFT_HOURS):
+            with sim.market() as shop:
+                shop.sell_loot()
+
+
 class Miner(Policy):
     """Day labour at the Mine, a long walk past the Old Road: stock up in the City (a Pick each
     and food for the whole stay), walk there, work `STAY_DAYS` shifts, walk back. A guild that
@@ -987,7 +1039,7 @@ class Miner(Policy):
                 self.left = 0
                 sim.goto("market")
                 return
-            sim.work_shift(node="mine")
+            self.work_node_shift(sim, "mine")
             sim.sleep()
             self.left -= 1
             if self.left == 0:
@@ -1495,7 +1547,7 @@ class Crafter(Policy):
                 break
 
 
-POLICIES = {cls.name: cls for cls in (Lumber, Miner, MinerShort, Cautious, Wary, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
+POLICIES = {cls.name: cls for cls in (Lumber, Gatherer, Miner, MinerShort, Cautious, Wary, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
 
 
 # --------------------------------------------------------------------------- #

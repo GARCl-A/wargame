@@ -85,8 +85,8 @@ ICONS = {
     "Signal Horn": ("horn", "bone", {"accent": TONES["brass"]}),
     "Leather of Biwolf": ("hide", "fur", {}),
     "Thunderhide": ("storm_hide", "storm", {}),
-    "Amethyst": ("gem", "purple", {}),
-    "Gemstones": ("gems", "blue", {}),
+    "Semi-precious Gemstone": ("gems", "blue", {}),
+    "Precious Gemstone": ("gems", "gold", {}),
     "Letter of Receipt": ("letter", "paper", {}),
     "Ancient Codex": ("book", "oak", {"clasp": True, "accent": TONES["amber"]}),
 }

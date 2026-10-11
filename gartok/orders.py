@@ -26,8 +26,9 @@ need fresh orders, same as any other order in flight) but `Group.locked`
 carves it out so `Guild.split_group`/`merge_groups` can still shuffle a
 garrison's membership without cancelling it first -- see [[gartok-property-two-paths]].
 
-"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure" and
-"wilds_retake" are six more, narrower kinds: none is issued by the player,
+"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure",
+"wilds_retake" and "gather_ambush" (a pack finds a crew gathering, `gather.py`) are seven more,
+narrower kinds: none is issued by the player,
 and none is in `INTERACTIVE_KINDS` -- `campaign.advance` creates one itself,
 on top of whatever the group was actually doing, the moment it catches
 someone at a jurisdiction node (`justice.py`, "guard"), a pack finds it at an
@@ -37,7 +38,7 @@ raider band tests a Wilds claim mid-`"SUSTAINING"`
 (`guild.wilds_claim_stage`, "wilds_raid"), the same once `"ESTABLISHED"`
 against a garrison ("wilds_seizure" -- Sistema 4), or a group arrives at a
 Wilds claim the guild no longer holds (`guild.wilds_claim_owner == "seized"`,
-"wilds_retake" -- see [[gartok-property-two-paths]]). All six carry their
+"wilds_retake" -- see [[gartok-property-two-paths]]). Each carries its
 own extra fields (`caught`/`prev_node` guard-only, `pack` everywhere but
 guard, `resume_path` on every kind that can interrupt travel rather than a
 garrison, `job` wilds_raid/wilds_seizure -- so a won fight can reissue the
@@ -57,7 +58,8 @@ AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt"})
-FORCED_KINDS = frozenset({"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake"})
+FORCED_KINDS = frozenset({"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake",
+                          "gather_ambush"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | FORCED_KINDS | {"idle"}
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
@@ -80,6 +82,7 @@ class Order:
     task: str | None = None  # solo: "hospital" or "craft"
     who: str | None = None   # solo: uid of the member doing the task
     recipe: str | None = None  # solo craft: what is being made
+    gather: bool = False     # work: gather items at the node (gather.py) instead of taking the wage
 
     @property
     def interactive(self):
@@ -116,12 +119,14 @@ def next_leg(src, remaining_path, speed, pace=1.0):
                 path=tuple(remaining_path[1:]))
 
 
-def work(guild, group, hours):
+def work(guild, group, hours, gather=False):
     """Order `group` to work `hours` where it stands. Brisk Hands can shrink
     the clock cost below the nominal `hours` pay/XP is banked on -- see
-    `Guild.work_speedup`."""
+    `Guild.work_speedup`. With `gather` the shift yields the node's drops, not the wage."""
+    if gather and not guild.has_licence(group.node):
+        raise ValueError(f"no gathering licence for {group.node!r}")
     clock_hours = hours * guild.work_speedup(group.members)
-    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours)
+    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather)
 
 
 def rest(hours):

@@ -99,7 +99,7 @@ Each occupation grants one starting weapon and one starting item.
 | Jailer | Club | Chains |
 | Cartographer | Dagger | Map |
 | Brewer | Dagger | 1L Beer |
-| Merchant | Dagger | Amethyst |
+| Merchant | Dagger | Semi-precious Gemstone |
 | Builder | Hammer | Stone Brick |
 | Tanner | Dagger | 1sqm Hide |
 | Gravedigger | Light Pick | Shovel |
@@ -185,7 +185,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | 1kg Coal | 1 kg | material |
 | 1sqm Hide | 2 kg | material |
 | Alarm Trap | 1 kg | -- |
-| Amethyst | 0.5 kg | -- |
 | Ancient Codex | 2 kg | -- |
 | Antidote | 0.2 kg | consumable |
 | Axe | 3 kg | -- |
@@ -218,7 +217,6 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Dwarf Shield | 3 kg | -- |
 | First Aid Kit | 0.8 kg | consumable |
 | Fruit | 0.2 kg | food, consumable, material |
-| Gemstones | 0.1 kg | -- |
 | Gold Coin | 0.005 kg | -- |
 | Hammer | 4 kg | -- |
 | Harness | 4 kg | -- |
@@ -263,6 +261,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Plate Armor | 28 kg | -- |
 | Pliers | 0.3 kg | -- |
 | Potato | 1 kg | food, consumable |
+| Precious Gemstone | 0.1 kg | -- |
 | Quarterstaff | 2 kg | -- |
 | Quiver | 1.5 kg | -- |
 | Rapier | 1 kg | -- |
@@ -277,6 +276,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Scroll of Magic Missile | 0.1 kg | -- |
 | Scroll of Sleep | 0.1 kg | -- |
 | Sealed Chest | 8 kg | -- |
+| Semi-precious Gemstone | 0.1 kg | -- |
 | Shortbow | 1 kg | -- |
 | Shortspear | 1.5 kg | -- |
 | Shovel | 2 kg | -- |

@@ -256,6 +256,8 @@ OX_POOL = [r for r in _BEASTS if r["name"] == "Ox"]     # the herd the Aurochs c
 # Skeleton are placed by hand, not drawn from a locality's table.
 WILD_BEASTS = ("Wolf",)
 WILD_POOL = [r for r in _BEASTS if r["name"] in WILD_BEASTS]
+SPIDER_POOL = [r for r in _BEASTS if r["name"] == "Giant Spider"]     # what finds a crew gathering (gather.py)
+SKELETON_POOL = [r for r in _UNDEAD if r["name"] == "Skeleton"]
 
 BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
 
@@ -380,7 +382,7 @@ OCCUPATIONS = [
     (27,  "Jailer",  "Club",         "Chains"),
     (28,  "Cartographer",  "Dagger",         "Map"),
     (29,  "Brewer",  "Dagger",         "1L Beer"),
-    (32,  "Merchant", "Dagger",         "Amethyst"),
+    (32,  "Merchant", "Dagger",         "Semi-precious Gemstone"),
     (35,  "Builder",  "Hammer",       "Stone Brick"),
     (38,  "Tanner",    "Dagger",         "1sqm Hide"),
     (40,  "Gravedigger",     "Light Pick", "Shovel"),

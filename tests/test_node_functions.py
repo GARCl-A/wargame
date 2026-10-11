@@ -41,7 +41,7 @@ def test_a_function_that_hosts_another_hides_its_button():
 def test_the_map_shows_one_button_per_offered_function():
     assert _buttons("market") == ["market"]
     assert _buttons("library") == ["library"]
-    assert _buttons("lumber_yard") == []
+    assert _buttons("lumber_yard") == ["buy_licence"]
     assert _buttons("tavern") == ["recruit"]
     assert _buttons("city") == ["bank", "tanner", "forge", "apothecary", "property"]
 

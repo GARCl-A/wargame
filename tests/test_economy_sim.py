@@ -14,7 +14,7 @@ sys.path.insert(0, SCRIPTS)
 import economy_activities as act
 import economy_guild as sim_mod
 
-from gartok import arena, economy, items, world
+from gartok import arena, economy, gather, items, world
 from gartok.guild import Guild
 from gartok.unit import Unit
 
@@ -213,6 +213,28 @@ def test_the_miner_policy_buys_a_pick_and_works_the_mine_past_the_old_road():
 def test_the_short_miner_makes_the_same_trip_for_fewer_shifts():
     assert sim_mod.MinerShort.STAY_DAYS < sim_mod.Miner.STAY_DAYS
     assert {"miner", "miner_short"} <= set(sim_mod.POLICIES)
+
+
+def test_the_gatherer_buys_the_yards_licence_then_gathers_and_sells_the_haul(monkeypatch):
+    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: False)
+    sim = _run(_sim("gatherer", capital=900), 6)
+    assert sim.guild.has_licence("lumber_yard")
+    assert sum(u.work_hours for u in sim.guild.roster) > 0
+    assert sum(sim.sellable[n] for n in ("Lumber", "Fruit")) > 0 or sim.money > sim.start_money
+
+
+def test_a_pack_on_a_gathering_shift_is_fought_with_its_own_pack_and_a_win_banks_the_haul(monkeypatch):
+    monkeypatch.setattr(gather, "ambushed", lambda *a, **k: True)
+    sim = _sim(skill=1.0, library=_WON)
+    sim.guild.licences.add("lumber_yard")
+    seen = []
+    real = sim.library.draw
+    sim.library.draw = lambda kind, *a, **kw: (seen.append(kind), real(kind, *a, **kw))[1]
+    count = lambda: sum(u.count_of("Lumber") + u.count_of("Fruit") for u in sim.guild.roster)
+    before = count()
+    sim.gather_shift()
+    assert seen == ["gather:lumber_yard"] and count() - before == 2 * len(sim.guild.roster)
+    assert sum(sim.sellable[n] for n in ("Lumber", "Fruit")) == count() - before
 
 
 def test_every_policy_runs_a_few_days_without_breaking():

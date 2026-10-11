@@ -299,14 +299,14 @@ def test_map_editor_container_and_item_tools():
     # Add a second item
     ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("open_chest_add", None))]
     ed._picker_click((20, 20))
-    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("chest_add_item", "Amethyst"))]
+    ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("chest_add_item", "Semi-precious Gemstone"))]
     ed._picker_click((20, 20))
-    assert ed.chests[(7, 3)] == ["Scroll of Sleep", "Amethyst"]
+    assert ed.chests[(7, 3)] == ["Scroll of Sleep", "Semi-precious Gemstone"]
 
     # Remove the first item
     ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("chest_remove_item", 0))]
     ed._picker_click((20, 20))
-    assert ed.chests[(7, 3)] == ["Amethyst"]
+    assert ed.chests[(7, 3)] == ["Semi-precious Gemstone"]
 
     # Close modal
     ed.picker_hits = [(pygame.Rect(10, 10, 50, 50), ("close", None))]
@@ -315,7 +315,7 @@ def test_map_editor_container_and_item_tools():
 
     # Serialization contains chest
     d = ed._to_dict()
-    assert d["chests"] == [[7, 3, ["Amethyst"]]]
+    assert d["chests"] == [[7, 3, ["Semi-precious Gemstone"]]]
 
     # Right-click removes chest
     ev3 = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {"pos": (0, 0), "button": 3})

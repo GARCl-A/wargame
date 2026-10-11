@@ -77,7 +77,7 @@ _LAYER_C = {"wall": WALL_HI, "secret_wall": _SECRET_WALL_C,
 
 _ITEM_CATALOG = sorted(set(
     list(items.all_items().keys()) +
-    [data.CODEX_ITEM, "50 Copper", "100 Copper", "Scroll of Sleep", "Scroll of Light", "Amethyst"]
+    [data.CODEX_ITEM, "50 Copper", "100 Copper", "Scroll of Sleep", "Scroll of Light", "Semi-precious Gemstone"]
 ))
 
 

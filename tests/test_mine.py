@@ -92,7 +92,7 @@ def test_the_mine_screen_shows_the_foreman_pick_and_a_shop_button():
     blocks = ms._inspector_content(g.groups[0], world.node("mine"))
     texts = [b["text"] for b in blocks if b["type"] == "text"]
     assert any("foreman's pick" in t for t in texts)
-    assert [b["key"] for b in blocks if b["type"] == "button"] == ["market"]
+    assert [b["key"] for b in blocks if b["type"] == "button" and b["key"] != "buy_licence"] == ["market"]
     assert any(b["type"] == "button_row" for b in blocks)
 
 

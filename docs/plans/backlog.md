@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-10 (after the shopkeeper portraits and the item icons). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-11 (after the info modal and the AI's flanking). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -28,15 +28,13 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Terrain rules, then the AI that uses them** (the info modal and the AI's first tactics are built
-   2026-10-11, see `intel.py` and RULES.md; flanking helped, focus fire, holding and demoralizing first did
-   not, see *Combat AI*): decide what cover and high ground give in combat (*Needs more information*), since
-   a wall only blocks movement and sight today. Then the arena duels it loses (Defend the Title, the day-6
-   Scrapper), which looked like stat gaps more than decisions.
-2. **Gathering at the Mine and the Lumber Yard, with a licence**, then *Item properties*, which
-   reads the sources it creates, then the specialised shops and finite stock.
-3. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
+1. **Item properties** (design first), which reads the sources gathering created (built 2026-10-11),
+   then the specialised shops and finite stock.
+2. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
    list exists (`scripts/economy_offers.py`), to settle the day-30 verdict against the recorded runs.
+3. The AI's first tactics are built (2026-10-11, `intel.py`, RULES.md; flanking helped, focus fire,
+   holding and demoralizing first did not, see *Combat AI*). The arena duels it loses (Defend the Title,
+   the day-6 Scrapper) look like stat gaps more than decisions: leave them.
 4. The *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
@@ -66,15 +64,12 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   against a boss) is open. (4) The foe card is tall once the HARD band opens and squeezes the action
   list at 720p: let it scroll or fold. (5) Allies' bars stay exact; whether the Guild screen's party
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
-  only on the board. (6) `combat_pairs.py` now seeds the dice before the rebuild (the turn order was
-  loose before), so its rates moved a little: re-baseline before comparing with the numbers above.
+  only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
+  loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
-- **Mine leftovers (built 2026-10-09).** (1) *Amethyst* was meant as a Mine drop, but a shift only pays the wage: the Mine is work,
-  not gathering. **Decided 2026-10-10:** the Mine's gathering is
-  its own item under *Large* (*Gathering at the Mine and the Lumber Yard*); the gems it yields are
-  *semi-precious* and *precious gemstones*, not named stones, so the Amethyst is replaced by them. (2) *Iron Ore* has no recipe or
+- **Mine leftovers (built 2026-10-09).** (1) Gathering at the Mine is built (2026-10-11, see *Gathering: loose ends*); the gems it yields are *semi-precious* and *precious gemstones*. (2) *Iron Ore* has no recipe or
   use until the Smith's chain exists. (3) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
   guilds are wiped on the road; with a player winning 80% (the report's setting then; it is 0.95 since 2026-10-10) `miner` earns
@@ -97,9 +92,8 @@ pointed to, not repeated.
   the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
   **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
   different*.
-- **Big screen files.** `app.py` (1234 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
-  `market_screen.py` and `battle_screen.py` run 879-1053 (`battle_screen.py` is past 1000 since the
-  per-team controllers). Not critical. When one takes a new node
+- **Big screen files.** `app.py` (about 1200 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
+  `market_screen.py` and `battle_screen.py` run about 900-1100 (the last two are past 1000). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Before
   any outside playtest decide: keep "an older shape does not load" with a clear message, or add
@@ -114,22 +108,26 @@ pointed to, not repeated.
   are split across races, so most races have almost none of their own and a high racial level
   buys hit dice only (the Aurochs has zero). Goal: **at least 30 combat and 30 work talents**,
   and enough racial nodes per race for its picks. Nothing built; the author will design them.
-- **Gathering at the Mine and the Lumber Yard (decided 2026-10-10, not started).** Today those two
-  nodes only pay a wage; the Wilds is the only place that gathers (mushrooms, fruit, meat). Give
-  each a gather mode beside the work shift: the player pays a **licence once, for the whole guild**,
-  then sends characters to gather the item instead of the wage: stone, Iron Ore, Lumber and gems
-  at the Mine and the Yard. **Gems are two items, *semi-precious gemstones* and *precious
-  gemstones*** (the Amethyst, still the Merchant's starting item in `data.OCCUPATIONS`, is replaced by them). Gathering **costs time in 4 / 8 / 12 / 16 h shifts and
-  carries risk**, as the Wilds does. Model it on `hunt.py` and `guild_labor.py`. To define: the
-  licence price and where it is bought, each node's drop table, the risk (an ambush like the
-  Wilds', a cave-in at the Mine), how a shift pays against the wage (it must not beat the wage's
-  floor, see *Adventure out-earns day labour*) and the sim's policies. Needs the UI (a shift
-  screen), the AI for the risk fight and tests. It is also the source *Item properties* needs for
-  the base materials, so build it first.
+- **Gathering: loose ends (built 2026-10-11, `gather.py`, RULES.md).** The licence, the drop tables,
+  the pay rule, the ambush and the sim's `gatherer` policy (and `miner` gathering once it can afford
+  the licence) are in. Left: (1) the numbers are a first cut (Yard Lumber 75 / Fruit 25, Mine Stone 55 /
+  Coal 25 / Iron Ore 15 / semi-precious 4 / precious 1, a roll per 8 h, licences $180 and $225, risk 0.5%
+  and 1% an hour): play and tune. Sim read over 90 days (20 guilds of 3 at level 0, skill 0.95): median money a member at day 30 / 60 / 90 is
+  $51 / 125 / 207 for `lumber` and $30 / 71 / 139 for `gatherer`, and 5 of 20 `gatherer` guilds are wiped by
+  the pack (none by `lumber`). **The licence does not pay back in the sim:** with the ambush switched off the
+  gatherer still ends at $147, because the +2 copper a shift the table adds is eaten by what the sim makes
+  it pay to cash the haul in (a walk to the Market, about 1.2 days a step, and Fruit that rots on the way).
+  The Yard has no shop of its own to sell Lumber to. Decide whether the Yard should buy what it yields
+  (a till, like the Mine's), or the margin should be wider; `miner` is wiped on the road as before. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the node's own pack, but
+  with no recorded fights of a person against these packs, the win rate is the AI's or the skill knob's. (3) The
+  shift picker shows the drops and the rolls but not the average worth of a shift against the wage.
+  (4) **Snakes:** the Yard's packs were meant to include snakes, but there is no snake race (`data.BEASTS`); add one (venom, small, low HD) and put it in `encounters.LUMBER_YARD_TABLE`. (5) The Mine and the Yard have no
+  tutorial line of their own beyond the map card, and no art for the Mine. (6) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is
+  food, but it rots in a day, so a Yard crew eats it or sells it that evening.
 - **Item properties: base material, source, rarity (design first, feeds the economy).** Every
   item is craftable except the **base materials**: an item with no recipe is a base material
   (derived, like `craft_level.py`, not set by hand), and each one must **declare its source**:
-  gathered at a node (Lumber, Iron Ore), hunted (Meat, Hide) or a gem (*semi-precious* and *precious
+  gathered at a node (Lumber, Fruit, Stone Brick, Coal, Iron Ore: built, `gather.TABLES`), hunted (Meat, Hide) or a gem (*semi-precious* and *precious
   gemstones*, gathered at the Mine, never crafted). A test checks that no item lacks both a
   recipe and a source. Rarity then says how scarce each base material is, and the chain
   (source -> recipe -> sale) is what the economy sim and the per-shop stock targets read.
@@ -160,7 +158,7 @@ pointed to, not repeated.
   (and `autowin`) stop needing a `--skill` knob. **Benchmark scenarios (decided):** Scrapper,
   Games brawl, champion, capture the flag, Ribbit Brothers, dungeon and ambush (wolves and
   bandits); the player's recorded fights on these train the policy. Start from what the AI
-  does badly in the Games (objective play in capture the flag, focus fire, using the terrain), re-run
+  does badly in the Games (objective play in capture the flag, focus fire), re-run
   `scripts/economy_activities.py` as the gauge. Needs AI changes, tests and `sim_test.py`.
   - **Way in: record the player's combat, as was done for the economy.** The recorder is built
     (2026-10-10): `combat_log.py` writes one JSONL file per fight with the whole fight, every
@@ -185,39 +183,29 @@ pointed to, not repeated.
        the flag). A new script over `combat_log.frames`.
     3. **Feed it to `ai.py`** and measure against the benchmark win rates above. The gauge is
        `scripts/combat_pairs.py` (the AI replays each logged fight through `combat_log.rebuild`, same dice
-       before and after a change; campaign logs work too; `--fresh` plays unseen lab squads). Baseline of 2026-10-10 (superseded by step 5's numbers) at level 0, Scrapper: the AI wins 59% of the 10 logged
-       squads (the person 7 of 10) and 56% of unseen ones, not the 95% the report prints. Leads from the
-       10 Scrapper logs: the person holds position where the AI walks up (19 of 278 decisions) and
-       focuses fire more (89% against 77%); tried and dropped: Defend with a spare point (no change, the
-       AI already ends only 5% of its turns with a point left, a person 23%). First read of the 28
-       fights in the author's campaign save (20 trials each, the person won all 28): the AI wins
-       hunts 83%, ambushes 95%, the Scrapper 88%, the champion 85%; the ones it loses are the cases
-       to study (hunts of days 20 and 49 at 15% and 10%, day 20's second hunt 45%, day 73's 55%). Two more tried, 40 trials over all the logs: an evil unit finishes a downed body only when no standing foe
-       is in reach (hunts 82 to 81%, ambushes 89 to 91%; kept anyway, built 2026-10-10, because it costs the AI nothing), and a unit that would walk into a foe's reach
-       without a blow waits one turn instead (hunts 82 to 82%, the day-49 hunt 15 to 2%, the campaign Pit
-       and champion bouts up 8 to 10 points on one or three fights). Neither moved the hunts beyond noise
-       (a fight swings about 8 points between runs).
-    4. **Second campaign save, read (2026-10-10)** (`combat_lab/campaign/GreenSex-a846750e/`, 34 logs, days 5-57,
-       record_play ON): the person won 32 of 34 (25 of 25 hunts, 3 of 3 ambushes); `combat_pairs.py`
-       (20 trials) has the AI winning those hunts 96% and the ambushes 100%, so **hunts and ambushes are no
-       longer where the AI trails**. The gap is the arena: Defend the Title, AI 15% (the person 1 of 2; the
-       lost bout, day 45, is a 1-on-1 against a 32 HP Throgdrokor, the AI wins it 0 of 20), the Scrapper 52%
-       (the person 2 of 3; day 6 at 20%) and the champion 85%. **Losses do write their `end` row** (the two
-       lost fights are in the logs). The duels were studied on 2026-10-11 (step 5): they read as stat gaps
-       more than decisions, and the tactics tried did not move them.
+       before and after a change; campaign logs work too; `--fresh` plays unseen lab squads). Tried before
+       step 5 and dropped or kept for free: Defend with a spare point (no change), an evil unit finishing a
+       downed body only when no standing foe is in reach (kept, costs nothing), and waiting one turn
+       instead of walking into a foe's reach (no gain on hunts). A fight swings about 8 points between runs.
+    4. **Where the AI trails (read of two campaign saves, 2026-10-10).** The person won 60 of 62 fights
+       (hunts and ambushes all); the AI replaying those squads wins hunts and ambushes almost as often, so
+       **the gap is the arena**: Defend the Title, the Scrapper and the champion. The lost bout (day 45)
+       is a 1-on-1 against a 32 HP foe the AI never beats. **Losses do write their `end` row.** Step 5
+       studied the duels: they read as stat gaps more than decisions.
     5. **Tactics tried against a baseline (2026-10-11).** A better way to measure a change than the AI on
        both sides (where the two cancel out and a squad pair reads about 50%): the *challenger* plays the
        player's side with the new rule and the old `ai.py` plays the enemy's, same squads, same dice, over the
        72 finished logs x 40 trials. Baseline (the AI on both sides, after the intel and role changes):
        Scrapper 50%, the Pit's Scrapper 74%, champion 85%, hunts 89%, ambushes 93%, Defend the Title 26%.
+       **Re-baselined 2026-10-11 with flanking in, `combat_pairs.py combat_lab --trials 40` (72 logs, the dice
+       now fixed before the rebuild): Scrapper 49%, the Pit's Scrapper 71%, champion 91%, hunts 90%, ambushes
+       93%, Defend the Title 26%.** Use these as the number to beat; a fight swings about 8 points between runs.
        **Kept:** flanking (a melee unit walks to the far side of a foe an ally already holds): 80.7% to 82.1%
        over all logs, every fight type equal or better. **Dropped, no gain or worse (arena subset, 20 logs):**
        focus fire (nearest first became weakest-reachable first with a crowd bonus, 58.6% to 56.9%), holding
        once to let a melee foe close and answering with two attacks (56.6%), demoralizing first (57.2%),
        and stopping an archer at its range (no ranged unit in the logs, identical). The arena duels did not
        move: Defend the Title stays at 26%, the lost bout is a stat gap (a 32 HP foe) and not a decision.
-       **Terrain has no mechanical lever today**: there is no cover or high-ground bonus (a wall only blocks
-       movement and sight), so "use the terrain" needs a rule first (see *Needs more information*).
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
     its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
@@ -355,14 +343,6 @@ building them:
 
 # Needs more information
 
-- **Terrain in combat: cover and high ground (a design decision, found 2026-10-11).** A wall blocks
-  movement and sight and nothing else: no cover bonus to AC, no high-ground bonus, no penalty for
-  shooting through anything, and an elevation difference only decides whether a melee blow reaches.
-  So the AI has no terrain to use and a player has little reason to. Decide whether to add cover (a
-  bonus to AC against ranged attacks from behind a wall corner), high ground (+1 to hit from a higher
-  floor) or a chokepoint rule, and what the guild's gear does with it. The AI then uses what is decided
-  (it picks the attack cell by it, as `ai._flank_cell` already does for the flank). Needs the rule, the
-  UI hint on the board, AI support and tests.
 - **Magic as the vertical progression.** The biggest content gap (only the library tome quest
   exists). Blocked on the *node that unlocks* mechanic below. Follows the library's tome quest. Chain:
   1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that
@@ -374,7 +354,7 @@ building them:
     is revealed or not, and an event flips it (reading a map, completing a deed, reaching a
     reputation). The map is the first user. Nothing does that today. The Mine does *not*
     use it: it is a plain node. **Open:** whether the flip happens once and stays (recommended);
-    Reading the map does not consume it (decided). The revealed set lives in the guild's save (decided; a new optional field, so its neutral value goes in `persist.PAYLOAD_DEFAULTS`).
+    Reading the map does not consume it (decided). The revealed set lives in the guild's save (decided; a new optional field `revealed`, a list of node ids, neutral value `[]` in `persist.PAYLOAD_DEFAULTS`).
   - **To define:** the exact reputation gate and the intermediate mission; the three
     factions as nodes with their own deeds (see `factions.py`); how each school's study
     differs (`magic.py`); the three schools are **not exclusive** (decided 2026-10-09: anyone may study any; the barrier is study cost). Holy Symbol (below) belongs to
@@ -429,8 +409,7 @@ Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupatio
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
 already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
 (the Claim oven's material), First
-Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. Amethyst (the Merchant's) is only a store
-of value and goes when the gems replace it (see *Gathering at the Mine*), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
+Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. The Merchant starts with a Semi-precious Gemstone (a store of value; the Amethyst is gone from the game), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
 - **Map.** Finds treasures and secret zones. Waits for those systems.

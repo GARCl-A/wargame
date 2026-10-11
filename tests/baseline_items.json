@@ -526,12 +526,6 @@
     "food": false,
     "lifespan": null
   },
-  "Amethyst": {
-    "weight": 0.5,
-    "price": 120,
-    "food": false,
-    "lifespan": null
-  },
   "Scissors": {
     "weight": 0.2,
     "price": 1,
@@ -631,12 +625,6 @@
   "Chains": {
     "weight": 5.0,
     "price": 10,
-    "food": false,
-    "lifespan": null
-  },
-  "Gemstones": {
-    "weight": 0.1,
-    "price": 60,
     "food": false,
     "lifespan": null
   },
@@ -792,5 +780,17 @@
     "weight": 2.0,
     "price": 150,
     "language": "Verdant"
+  },
+  "Semi-precious Gemstone": {
+    "weight": 0.1,
+    "price": 60,
+    "food": false,
+    "lifespan": null
+  },
+  "Precious Gemstone": {
+    "weight": 0.1,
+    "price": 240,
+    "food": false,
+    "lifespan": null
   }
 }
