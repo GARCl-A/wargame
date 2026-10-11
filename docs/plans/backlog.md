@@ -294,9 +294,12 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes,
-  the Tanner and Smith as mission givers with a face, and the Cart and Carriage
-  (`wagon.Vehicle`; `watch_screen.py` is text only today).
+- **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes
+  and the Cart and Carriage (`wagon.Vehicle`; `watch_screen.py` is text only today). The
+  shopkeepers' faces are made and wait for their NPCs: `portraits/npc/` holds `merchant.png`
+  (Automaton), `tanner.png` (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf);
+  each NPC's `npcs/<id>.json` needs `"portrait_file"` and a line in
+  `test_named_npcs_load_pinned_portraits`.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur
