@@ -322,3 +322,50 @@ def test_natural_rest_healing_caps_at_hp_max():
     assert u.hp == 10
     assert u.consecutive_rest_hours == 0
 
+
+
+def _guild_with_food(*meals):
+    from gartok.guild import Guild
+    crew = [Unit("player") for _ in meals]
+    for u, n in zip(crew, meals):
+        u._base_inventory = packed(["Potato"] * n)
+    return Guild(list(crew), node="city"), crew
+
+
+def test_the_food_alert_is_critical_with_no_food_and_a_warning_with_a_day_left():
+    guild, crew = _guild_with_food(5, 5)
+    assert guild.food_alert() is None                          # five meals each: fine
+    guild, crew = _guild_with_food(1, 1)
+    level, text = guild.food_alert()
+    assert level == "warning" and "2 meals" in text and "2 members" in text
+    guild, _ = _guild_with_food(0, 0)
+    level, text = guild.food_alert()
+    assert level == "critical" and "NO FOOD LEFT" in text
+
+
+def test_the_starving_alert_counts_the_days_to_the_first_death():
+    guild, crew = _guild_with_food(0, 0, 0)
+    crew[0].unfed_days = 1
+    level, text = guild.food_alert()
+    assert level == "critical" and "1 member hungry" in text and "dies in 3 days" in text
+    crew[1].unfed_days = 3
+    assert "2 members hungry" in guild.food_alert()[1] and "dies in 1 day." in guild.food_alert()[1]
+
+
+def test_the_map_reserves_a_banner_when_food_runs_low_and_none_when_it_does_not():
+    import pygame
+
+    from gartok.map_screen import MapScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    rich, _ = _guild_with_food(9, 9)
+    poor, _ = _guild_with_food(0, 0)
+    tops = []
+    for guild in (rich, poor):
+        ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
+        ms.mouse = (0, 0)
+        ms.draw(pygame.Surface((1500, 900)))
+        tops.append(ms._roster_rects)
+    assert tops[1] and tops[0]
+    assert min(r.y for r, *_ in tops[1]) > min(r.y for r, *_ in tops[0])

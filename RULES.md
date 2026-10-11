@@ -998,6 +998,11 @@ meal).
   passes so nobody loses their own meal to a mate earlier in roster order. A
   guild-mate in a different group is out of reach. The Autotroph (Treefolk) never
   enters this.
+- **The map warns loudly.** `Guild.food_alert` puts a full-width banner under the command bar:
+  amber (*LOW ON FOOD*) when the whole guild holds no more than about a day of meals, red
+  (*NO FOOD*) when none is left, and then it says how many are hungry and in how many days the
+  first one starves (`data.STARVATION_DEATH_DAYS` minus the worst `unfed_days`). The banner
+  takes its own strip from the layout, so nothing is covered.
 - **Rest** (the REST button on the map -- `orders.rest`, one group's order
   like travel or work): the selected group first **eats if it is hungry**
   (`Guild.eat_now_pass`, own pack then the shared larder; an animal already

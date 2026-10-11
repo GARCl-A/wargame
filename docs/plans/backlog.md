@@ -47,11 +47,6 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. The run exits 1 on a failed verdict, but no test or gate reads it.
-- **Louder hunger warnings.** The map header's alerts are discreet: a guild went three days at 0 days of
-  food while the player kept ordering work, and three members starved with $237 in hand (Gozatron save,
-  day 96). Make an empty or nearly empty larder critical: a blood-coloured banner or modal on the map
-  when any group has under a day of food (and money to buy it), and a confirm before a work or rest order
-  that would run it out. See `ui/command_bar.py` for the alert strip.
 - **Item icons: the lists that are still text.** All 106 catalogue items have a code-drawn silhouette (2026-10-10)
   and it shows on the pack rows, the CARGO table, the shop / loot / chest rows and the slots
   (`loadout_panel`), the market shelf (`market_panel`), the Bank view, the recipe rows of the Forge /
@@ -235,7 +230,7 @@ pointed to, not repeated.
   day-30 milestone comes in 28% of guilds, first on day 28, against 11-14 days by hand. **Decided 2026-10-10:** the report's default `--skill` is now 0.95 (it was 0.8; the verdicts did not change at
   0.95, the milestone still fails at 0%), and the sim's findings below were measured at 0.8. The day-96 wipe in the
   Gozatron save (three of five starved with $237 in hand after three days at 0 food) was the player clicking
-  work without buying food; see *Louder hunger warnings* under *Small*. Then compare
+  work without buying food; the map now raises a red banner when the larder is empty or low (`Guild.food_alert`). Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the

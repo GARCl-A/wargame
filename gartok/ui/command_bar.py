@@ -7,7 +7,7 @@ mock strings."""
 import pygame
 
 from .primitives import caps, draw_button, hline, text
-from .tokens import T
+from .tokens import T, mix
 
 
 def draw_command(surf, F, rect, day, time_str, messages, metrics, mpos=(0, 0),
@@ -86,3 +86,16 @@ def draw_command(surf, F, rect, day, time_str, messages, metrics, mpos=(0, 0),
         x += col_w
 
     return hovered, {"help": help_rect, "guild": guild_rect}
+
+
+def draw_alert_banner(surf, F, rect, message, critical):
+    """A full-width strip under the command bar for what must not be missed: blood red when
+    `critical`, brass otherwise. The caller reserves `rect` from the layout."""
+    col = T.BLOOD if critical else T.BRASS
+    pygame.draw.rect(surf, mix(col, T.STEEL, .55 if critical else .75), rect)
+    pygame.draw.rect(surf, col, pygame.Rect(rect.x, rect.y, T.S // 2, rect.h))
+    hline(surf, rect.x, rect.right, rect.bottom - 1)
+    label = "NO FOOD" if critical else "LOW ON FOOD"
+    caps(surf, F["microb"], label, (rect.x + T.S * 3, rect.centery - 5), col)
+    label_w = F["microb"].size(label)[0]
+    text(surf, F["body"], message, (rect.x + T.S * 3 + label_w + T.S * 3, rect.centery - 8), T.TX)

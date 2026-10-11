@@ -36,7 +36,8 @@ enabled while `pending_event` (an ambush `app` paused the clock on -- see
 `app._resolve_pending_event`) is waiting to be fought; otherwise it steps
 `self.selected` to whichever other band is still idle, grey when there's
 none to jump to. Neither hunger nor an ambush interrupts with a screen of
-its own any more -- hunger is COMMAND's own alert icon, and the ambushed
+its own any more -- hunger is COMMAND's own alert icon plus a banner under
+the bar (`Guild.food_alert`), and the ambushed
 band just shows up here as `_group_blocked`, unable to take a new order
 until the CTA is clicked.
 
@@ -79,7 +80,7 @@ from .group import CAUTIOUS, NORMAL
 from .scenario import Scenario
 from .screen import Screen
 from .ui.camera import MapCamera
-from .ui.command_bar import draw_command
+from .ui.command_bar import draw_alert_banner, draw_command
 from .ui.inspector_panel import draw_inspector, role_for
 from .ui.map_panel import draw_map, node_hit_rect
 from .ui.primitives import draw_button, set_pointer
@@ -808,10 +809,12 @@ class MapScreen(Screen):
         inspector_w = max(INSPECTOR_MIN, min(INSPECTOR_MAX, round(W * INSPECTOR_FRAC)))
         cmd = pygame.Rect(0, 0, W, T.S * 9)
         margin = T.S * 2
-        bh = H - cmd.bottom - margin
-        left = pygame.Rect(0, cmd.bottom, roster_w, bh)
-        right = pygame.Rect(W - inspector_w, cmd.bottom, inspector_w, bh)
-        mid = pygame.Rect(left.right, cmd.bottom, right.x - left.right, bh)
+        alert = self.guild.food_alert()
+        banner = pygame.Rect(0, cmd.bottom, W, T.S * 4 if alert else 0)
+        bh = H - banner.bottom - margin
+        left = pygame.Rect(0, banner.bottom, roster_w, bh)
+        right = pygame.Rect(W - inspector_w, banner.bottom, inspector_w, bh)
+        mid = pygame.Rect(left.right, banner.bottom, right.x - left.right, bh)
 
         groups = [self._group_dict(g) for g in self.guild.groups]
 
@@ -829,6 +832,8 @@ class MapScreen(Screen):
             screen, F, cmd, str(clock.day), f"{clock.hour_of_day:02d}:{clock.minute_of_hour:02d}",
             self._messages(), self._metrics(), self.mouse, guild_label=self._guild_label(),
             icon_fn=_alert_icon_fn)
+        if alert:
+            draw_alert_banner(screen, F, banner, alert[1], alert[0] == "critical")
         self.buttons.append(("guild", cmd_buttons["guild"]))
         self._help_rect = cmd_buttons["help"]
 
