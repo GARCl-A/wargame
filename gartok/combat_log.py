@@ -269,6 +269,9 @@ def load(path):
         return [json.loads(line) for line in fh if line.strip()]
 
 
+# fights logged before `Battle.aggressor` existed: the campaign kinds where the pack came to the guild
+_AGGRESSOR_OF_KIND = {"hunt": "enemy", "ambush": "enemy", "guard": "enemy", "raid": "enemy"}
+
 REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "CustomScenario")
 
 
@@ -290,7 +293,7 @@ def rebuild(rows):
         sides[static["team"]].append(unit)
     return Battle(sides["player"], sides["enemy"], scenario=ReplayScenario(start),
                   daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"],
-                  aggressor=start.get("aggressor"))
+                  aggressor=start.get("aggressor") or _AGGRESSOR_OF_KIND.get(start["meta"].get("kind")))
 
 
 def frames(rows):

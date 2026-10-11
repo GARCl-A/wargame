@@ -22,16 +22,17 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (project review, 2026-10-09; updated 2026-10-10 after the backlog interview)
+# Suggested order (project review, 2026-10-09; updated 2026-10-11 after the info modal and the AI tactics)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **The AI's tactics, on top of the info modal** (built 2026-10-11, see `intel.py` and RULES.md): focus
-   the weakest foe it can tell is weakest (`ai._focus_key` already ranks by the health step), terrain,
-   retreat, and the arena duels it loses (Defend the Title, the day-6 Scrapper). Hunts and ambushes are no
-   longer the gap. Measure each step with `scripts/combat_pairs.py`.
+1. **Terrain rules, then the AI that uses them** (the info modal and the AI's first tactics are built
+   2026-10-11, see `intel.py` and RULES.md; flanking helped, focus fire, holding and demoralizing first did
+   not, see *Combat AI*): decide what cover and high ground give in combat (*Needs more information*), since
+   a wall only blocks movement and sight today. Then the arena duels it loses (Defend the Title, the day-6
+   Scrapper), which looked like stat gaps more than decisions.
 2. **Gathering at the Mine and the Lumber Yard, with a licence**, then *Item properties*, which
    reads the sources it creates, then the specialised shops and finite stock.
 3. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
@@ -184,7 +185,7 @@ pointed to, not repeated.
        the flag). A new script over `combat_log.frames`.
     3. **Feed it to `ai.py`** and measure against the benchmark win rates above. The gauge is
        `scripts/combat_pairs.py` (the AI replays each logged fight through `combat_log.rebuild`, same dice
-       before and after a change; campaign logs work too; `--fresh` plays unseen lab squads). Baseline at level 0, Scrapper: the AI wins 59% of the 10 logged
+       before and after a change; campaign logs work too; `--fresh` plays unseen lab squads). Baseline of 2026-10-10 (superseded by step 5's numbers) at level 0, Scrapper: the AI wins 59% of the 10 logged
        squads (the person 7 of 10) and 56% of unseen ones, not the 95% the report prints. Leads from the
        10 Scrapper logs: the person holds position where the AI walks up (19 of 278 decisions) and
        focuses fire more (89% against 77%); tried and dropped: Defend with a spare point (no change, the
@@ -202,8 +203,21 @@ pointed to, not repeated.
        longer where the AI trails**. The gap is the arena: Defend the Title, AI 15% (the person 1 of 2; the
        lost bout, day 45, is a 1-on-1 against a 32 HP Throgdrokor, the AI wins it 0 of 20), the Scrapper 52%
        (the person 2 of 3; day 6 at 20%) and the champion 85%. **Losses do write their `end` row** (the two
-       lost fights are in the logs). Next: study the duels (Defend the Title, the day-6 Scrapper), where
-       one decision (delay, defend, when to close in) decides a 1-on-1.
+       lost fights are in the logs). The duels were studied on 2026-10-11 (step 5): they read as stat gaps
+       more than decisions, and the tactics tried did not move them.
+    5. **Tactics tried against a baseline (2026-10-11).** A better way to measure a change than the AI on
+       both sides (where the two cancel out and a squad pair reads about 50%): the *challenger* plays the
+       player's side with the new rule and the old `ai.py` plays the enemy's, same squads, same dice, over the
+       72 finished logs x 40 trials. Baseline (the AI on both sides, after the intel and role changes):
+       Scrapper 50%, the Pit's Scrapper 74%, champion 85%, hunts 89%, ambushes 93%, Defend the Title 26%.
+       **Kept:** flanking (a melee unit walks to the far side of a foe an ally already holds): 80.7% to 82.1%
+       over all logs, every fight type equal or better. **Dropped, no gain or worse (arena subset, 20 logs):**
+       focus fire (nearest first became weakest-reachable first with a crowd bonus, 58.6% to 56.9%), holding
+       once to let a melee foe close and answering with two attacks (56.6%), demoralizing first (57.2%),
+       and stopping an archer at its range (no ranged unit in the logs, identical). The arena duels did not
+       move: Defend the Title stays at 26%, the lost bout is a stat gap (a 32 HP foe) and not a decision.
+       **Terrain has no mechanical lever today**: there is no cover or high-ground bonus (a wall only blocks
+       movement and sight), so "use the terrain" needs a rule first (see *Needs more information*).
     Known limits of the lab: the opposing flag is always placed at random, an AI-run guild plants
     its own flag and skips its traps, and `ai.py` only knows the objectives of the enemy side.
 - **Feed the recorded runs to the economy sim.** Two runs are kept in
@@ -341,6 +355,14 @@ building them:
 
 # Needs more information
 
+- **Terrain in combat: cover and high ground (a design decision, found 2026-10-11).** A wall blocks
+  movement and sight and nothing else: no cover bonus to AC, no high-ground bonus, no penalty for
+  shooting through anything, and an elevation difference only decides whether a melee blow reaches.
+  So the AI has no terrain to use and a player has little reason to. Decide whether to add cover (a
+  bonus to AC against ranged attacks from behind a wall corner), high ground (+1 to hit from a higher
+  floor) or a chokepoint rule, and what the guild's gear does with it. The AI then uses what is decided
+  (it picks the attack cell by it, as `ai._flank_cell` already does for the flank). Needs the rule, the
+  UI hint on the board, AI support and tests.
 - **Magic as the vertical progression.** The biggest content gap (only the library tome quest
   exists). Blocked on the *node that unlocks* mechanic below. Follows the library's tome quest. Chain:
   1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that

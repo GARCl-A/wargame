@@ -242,3 +242,60 @@ def test_good_ai_uses_first_aid_when_medkit_available():
 
 
 
+
+
+def _pincer():
+    """Two players and one enemy: `a` already beside the foe on its west, `b` free to walk round."""
+    random.seed(3)
+    batt = Battle([Unit("player"), Unit("player")], [Unit("enemy")])
+    batt.ambient_light = True
+    batt.board.walls = set()
+    a, b = batt.player_units
+    foe = batt.enemy_units[0]
+    for u in (a, b, foe):
+        u.weapon_hand, u.torch_hand = True, False
+        u.equipped_weapon = "Dagger"
+        u.size = "Medium"
+    foe.pos, a.pos, b.pos = (8, 5), (7, 5), (7, 9)
+    for u in batt.units:
+        u.speed = 6
+    batt.turn_idx = batt.order.index(b)
+    b.ap = 2
+    return batt, a, b, foe
+
+
+def test_a_melee_unit_walks_to_the_far_side_of_a_foe_an_ally_already_holds():
+    from gartok import ai, intel
+    batt, a, b, foe = _pincer()
+    intel.observe(batt, "player")
+    cell = ai._flank_cell(batt, b, foe)
+    assert cell is not None and cell[0] > foe.pos[0]          # east of the foe, opposite the ally
+    b.pos = cell
+    assert ai.actions._flanked(batt, b, foe)
+
+
+def test_nobody_walks_round_a_foe_that_no_ally_is_beside():
+    from gartok import ai
+    batt, a, b, foe = _pincer()
+    a.pos = (0, 0)
+    assert ai._flank_cell(batt, b, foe) is None
+
+
+def test_an_archer_and_a_unit_already_beside_the_foe_do_not_reposition():
+    from gartok import ai
+    batt, a, b, foe = _pincer()
+    b.pos = (9, 5)
+    assert ai._flank_cell(batt, b, foe) is None               # already beside it
+    b.pos = (7, 9)
+    b.equip_weapon("Light Crossbow")
+    b.ammo, b.crossbow_loaded = 5, True
+    assert b.ranged and ai._flank_cell(batt, b, foe) is None
+
+
+def test_the_ai_takes_the_flank_and_then_strikes():
+    from gartok import ai
+    batt, a, b, foe = _pincer()
+    from gartok.conditions import Demoralized
+    foe.add_condition(Demoralized())                          # so the spare point is not spent shouting
+    ai.take_turn(batt, b)
+    assert any("Flank" in line for line in batt.log_lines)    # it walked round and struck with the +2

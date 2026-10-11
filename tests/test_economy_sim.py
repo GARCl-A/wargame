@@ -21,6 +21,18 @@ from gartok.unit import Unit
 _LIBRARY = sim_mod.FightLibrary(samples=6)     # real battles are slow: one shared cache for the file
 
 
+class _WonOnly(sim_mod.FightLibrary):
+    """The real won fights only, for a test about something other than whether a squad survives the
+    road: which of a library's six samples a seeded sim draws changes with every AI change."""
+
+    def pool(self, kind, level, size):
+        fights = super().pool(kind, level, size)
+        return [f for f in fights if f.won] or fights
+
+
+_WON = _WonOnly(samples=6)
+
+
 def _lib():
     return _LIBRARY
 
@@ -639,7 +651,7 @@ def test_the_wary_policy_keeps_its_group_cautious_and_the_rest_normal():
 
 def test_a_sim_guild_carries_its_vocation_and_the_hunt_reads_it():
     from gartok import hunt
-    sim = _sim("wary", vocation="wilds")
+    sim = _sim("wary", vocation="wilds", library=_WON)
     assert sim.guild.vocation == "wilds"
     seen = {}
     orig = hunt.hunt_stretch
@@ -670,9 +682,9 @@ def test_a_delvers_sim_hunt_gathers_more_and_a_normal_stance_does_not_dodge():
 
     hunt.hunt_stretch = spy
     try:
-        _sim("cautious", vocation="wilds").hunt(hours=4)
+        _sim("cautious", vocation="wilds", library=_WON).hunt(hours=4)
         assert seen["ambush"] == 1.0                      # Wilds perk needs Cautious
-        _sim("cautious", vocation="delvers").hunt(hours=4)
+        _sim("cautious", vocation="delvers", library=_WON).hunt(hours=4)
         assert seen["yield"] == 1.15
     finally:
         hunt.hunt_stretch = orig
@@ -681,7 +693,7 @@ def test_a_delvers_sim_hunt_gathers_more_and_a_normal_stance_does_not_dodge():
 def test_the_caravan_sim_walks_faster():
     walkers = {}
     for vid in (None, "caravan"):
-        sim = _sim("lumber", vocation=vid)
+        sim = _sim("lumber", vocation=vid, library=_WON)
         before = sim.guild.clock.seconds
         sim.goto("road")
         walkers[vid] = sim.guild.clock.seconds - before

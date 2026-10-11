@@ -712,6 +712,9 @@ Rules in `board.py` (`los_clear`) and `vision.py` (`cell_lit`, `can_see`).
   sees (or closes on what a teammate sees). It ignores torches (only chases a
   dropped weapon when unarmed). What it counts for fleeing, waiting and the
   Signal Horn is the foes some unit of its side sees.
+- **Flanking:** a melee unit that can walk to the far side of a foe an ally is already beside
+  (a cell where `_flanked` holds) goes there first and strikes with the +2; archers and units
+  already beside the foe do not reposition.
 - **With nobody in sight the AI acts by its role** (`Battle.aggressor`, set where the map
   builds the fight): the side that *brought* the fight (an ambush, a patrol, a raid, a hunt
   where the pack finds you, the guild sweeping its Claim, delving the Ruins, tracking the
