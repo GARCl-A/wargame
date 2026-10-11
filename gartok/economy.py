@@ -138,17 +138,6 @@ WILDS_RAID_SIZE = 3
 PRICES = {item.name: item.price for item in items.all_items().values()}
 
 
-# What the market keeps in stock to buy (fixed list for now).
-MARKET_STOCK = [
-    "Dagger", "Hatchet", "Club", "Shortspear", "Axe", "Pick", "Hammer", "Broadsword", "Rapier",
-    "Light Crossbow", "Shortbow",
-    "Leather Jerkin", "Studded Leather", "Chainmail", "Brigandine", "Plate Armor", "Cloak", "Musical Instrument",
-    "Meat", "Fruit", "Potato", "Salt", "1L Beer", TORCH_ITEM, "First Aid Kit", "Lantern",
-    "1sqm Hide", "Lumber", "Iron Bar", "Minor Healing Potion", "Vial",
-    "Quiver", "Bear Trap", "Alarm Trap",
-]
-
-
 # The scarce subset of the shelves (`SHELVES` holds every target): the items that keep
 # `freely_buyable` false, so a recipe that needs one is a scarce-input recipe. Leather
 # Jerkin/Studded Leather start scarce on
@@ -162,11 +151,10 @@ STOCK = {
 }
 
 
-# Each shop's shelf: item -> (target count, units walked back toward it each day). Smith,
-# tanner, apothecary, farm and tavern are not nodes yet, so the Market keeps their shelves
-# (`NODE_SHELVES`), minus what it does not sell (`MARKET_STOCK`). A fractional rate accrues
-# over days. A count above the target (the player sold) walks back down at the same rate;
-# a rate of 0 leaves it alone.
+# Each shop's shelf: item -> (target count, units walked back toward it each day). A shop buys
+# anything at half price and resells it, so the targets are what makes each one specialised.
+# A fractional rate accrues over days. A count above the target (the player sold) walks back
+# down at the same rate; a rate of 0 leaves it alone.
 SHELVES = {
     "smith": {
         "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Shortspear": (6, 2),
@@ -185,13 +173,19 @@ SHELVES = {
         "Bear Trap": (4, 0.5), "Alarm Trap": (4, 0.5), "Lumber": (20, 6),
     },
     "lumber_yard": {"Lumber": (20, 6), "Fruit": (10, 3)},
-    "mine": {"Stone Brick": (10, 3), "1kg Coal": (15, 4), "Iron Ore": (10, 2)},
+    "mine": {"Stone Brick": (10, 3), "Iron Ore": (10, 2), "1kg Coal": (15, 4)},
     "library": {"Paper": (20, 5), "Ink": (10, 2)},
 }
-NODE_SHELVES = {
-    "market": ("market", "smith", "tanner", "apothecary", "farm", "tavern"),
-    "lumber_yard": ("lumber_yard",), "mine": ("mine",), "library": ("library",),
-}
+NODE_SHELVES = {node_id: (node_id,) for node_id in SHELVES}
+
+# What the town's shops sell between them (the yard, the mine and the library keep their own).
+TOWN_SHOPS = ("smith", "tanner", "apothecary", "farm", "tavern", "market")
+MARKET_STOCK = list(dict.fromkeys(name for node_id in TOWN_SHOPS for name in SHELVES[node_id]))
+
+
+def shop_of(name):
+    """The town shop whose shelf carries `name`, or None for what no shop keeps."""
+    return next((node_id for node_id in TOWN_SHOPS if name in SHELVES[node_id]), None)
 
 
 def targets_of(node_id):
@@ -199,15 +193,12 @@ def targets_of(node_id):
     merged = {}
     for shelf in NODE_SHELVES.get(node_id, ()):
         merged.update(SHELVES[shelf])
-    if node_id == "market":
-        merged = {n: t for n, t in merged.items() if n in MARKET_STOCK}
     return merged
 
 
 LIBRARY_SUPPLIES = ("Paper", "Ink")          # the Library shelf
 MINE_SUPPLIES = ("Stone Brick", "Iron Ore", "1kg Coal")   # the Mine shelf, sold nowhere else
 YARD_SUPPLIES = ("Lumber", "Fruit")          # the Lumber Yard shelf (the Market sells them too)
-NODE_SUPPLIES = {"mine": MINE_SUPPLIES, "lumber_yard": YARD_SUPPLIES}   # a work node's own shelf
 
 
 def freely_buyable(name):
@@ -246,13 +237,14 @@ def _stock_category(name):
 
 def market_categories(node_id=None, extra=()):
     """`[(label, key, [names])]` for the market tabs, in display order -- the
-    active tab's list is what `market_screen` lays out. A work node's shelf is its own;
-    `extra` are the strays the player sold it (`Shop.strays`), listed after the shelf."""
+    active tab's list is what `market_screen` lays out. Each shop lists its own shelf, and a
+    tab only shows if it has something on it; `extra` are the strays the player sold it (`Shop.strays`), listed after the shelf."""
     groups = {key: [] for _lbl, key in _MARKET_TABS}
-    shelf = list(NODE_SUPPLIES.get(node_id, MARKET_STOCK))
+    shelf = list(targets_of(node_id))
     for name in shelf + [n for n in extra if n not in shelf]:
         groups[_stock_category(name)].append(name)
-    return [(lbl, key, groups[key]) for lbl, key in _MARKET_TABS]
+    tabs = [(lbl, key, groups[key]) for lbl, key in _MARKET_TABS if groups[key]]
+    return tabs or [(_MARKET_TABS[-1][0], _MARKET_TABS[-1][1], [])]
 
 
 DEAL_MIN, DEAL_MAX = -0.15, 0.25
@@ -283,6 +275,17 @@ class PriceMod:
         return self._applies is None or self._applies(item, side)
 
 
+def vendor_tongues(vendor_language):
+    """The tongues a vendor haggles in: `Node.language` is one name or a tuple of them."""
+    if not vendor_language:
+        return ()
+    return (vendor_language,) if isinstance(vendor_language, str) else tuple(vendor_language)
+
+
+def speaks_with(vendor_language, member):
+    return any(t in member.languages for t in vendor_tongues(vendor_language))
+
+
 def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
     """The base deal for the whole party: only members who share the vendor's
     language haggle. Among those, the party's **leader** speaks (see
@@ -291,7 +294,7 @@ def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
     modifier does. Their Charisma narrows the spread; alignment distance
     nudges it (same bent = a break, opposite = a premium)."""
     speakers = [m for m in party if vendor_alignment is not None
-                and vendor_language in m.languages]
+                and speaks_with(vendor_language, m)]
     if not speakers:
         return 0.0
     def _eff_dist(m):

@@ -30,13 +30,13 @@ def test_every_vendor_serves_a_function_its_node_offers_and_has_a_portrait():
 
 
 def test_vendor_names_are_distinct():
-    names = [v.name for _, _, v in _VENDORS]
+    names = [name for _, name in {(node_id, v.name) for node_id, _, v in _VENDORS}]
     assert len(set(names)) == len(names)
 
 
 def test_vendor_lookup_is_none_for_a_node_without_a_face():
     assert world.vendor("mine", "shop") is None
-    assert world.vendor("city", "apothecary") is None
+    assert world.vendor("apothecary", "apothecary") is None
 
 
 def test_no_card_draws_nothing():
@@ -56,7 +56,7 @@ def test_screens_draw_with_the_keeper_and_without():
         MarketScreen(F, guild, shoppers, world.node("market"), lambda: None),
         MarketScreen(F, guild, shoppers, world.node("mine"), lambda: None),
         LibraryScreen(F, guild, shoppers, world.node("library"), lambda: None),
-        CraftingScreen(F, guild, group, lambda: None, vendor=world.vendor("city", "forge")),
+        CraftingScreen(F, guild, group, lambda: None, vendor=world.vendor("smith", "forge")),
         CraftingScreen(F, guild, group, lambda: None),
         TannerScreen(F, guild, group, lambda: None),
         LibraryMissionScreen(F, guild, group, lambda: None),
@@ -65,4 +65,4 @@ def test_screens_draw_with_the_keeper_and_without():
         scr.mouse = (0, 0)
         scr.draw(pygame.Surface((1280, 720)))
     assert screens[0].vendor_function == "shop" and screens[2].vendor_function == "library"
-    assert screens[5].vendor_card["name"] == world.vendor("city", "tanner").name
+    assert screens[5].vendor_card["name"] == world.vendor("tanner", "tanner").name

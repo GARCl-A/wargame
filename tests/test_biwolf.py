@@ -34,7 +34,7 @@ class _Never:
 
 def test_the_biwolf_job_is_offered_only_after_the_hides_are_in():
     guild, (signer, _) = _guild()
-    offered = lambda: {t.id for t in missions.offers_at(guild, "city")}
+    offered = lambda: {t.id for t in missions.offers_at(guild, "tanner")}
     assert missions.TANNER_BIWOLF.id not in offered()
     hides = missions.accept(guild, signer, missions.TANNER_HIDES)
     assert missions.TANNER_BIWOLF.id not in offered()
@@ -254,7 +254,7 @@ def test_a_failed_hides_job_comes_back_seven_days_after_the_failure():
     guild.clock.advance_hours(24 * (missions.TANNER_HIDES.deadline_days + 1))
     missions.expire_overdue(guild)
     assert hides.state == "failed" and hides.failed_day is not None
-    offered = lambda: missions.TANNER_HIDES.id in {t.id for t in missions.offers_at(guild, "city")}
+    offered = lambda: missions.TANNER_HIDES.id in {t.id for t in missions.offers_at(guild, "tanner")}
     assert not offered() and missions.retry_in(guild, missions.TANNER_HIDES) > 0
     guild.clock.advance_hours(24 * 6)
     assert not offered()
@@ -265,7 +265,7 @@ def test_a_failed_hides_job_comes_back_seven_days_after_the_failure():
     signer.give_to_pack("1sqm Hide", 15)
     missions.turn_in(guild, again)
     assert not offered()                                        # done: never again
-    assert missions.TANNER_BIWOLF.id in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_BIWOLF.id in {t.id for t in missions.offers_at(guild, "tanner")}
 
 
 def test_the_retry_wait_survives_a_save():
@@ -287,9 +287,9 @@ def test_losing_the_leather_fails_the_job_for_good():
     mate.remove_named(items.BIWOLF_LEATHER_ITEM)
     assert missions.fail_if_leather_lost(guild) is m
     assert m.state == "failed"
-    assert missions.TANNER_BIWOLF.id not in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_BIWOLF.id not in {t.id for t in missions.offers_at(guild, "tanner")}
     guild.pass_time(24 * 30)
-    assert missions.TANNER_BIWOLF.id not in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_BIWOLF.id not in {t.id for t in missions.offers_at(guild, "tanner")}
     assert missions.retry_in(guild, missions.TANNER_BIWOLF) is None
 
 

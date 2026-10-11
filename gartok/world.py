@@ -104,7 +104,7 @@ class Node:
         self.scenario = scenario             # a Scenario subclass, for "battle"
         self.lethal = lethal                 # False -> 0 HP knocks out, no permadeath
         self.arena = arena                   # True -> staked, non-lethal, pays a purse
-        self.language = language             # shop: the tongue the vendor haggles in
+        self.language = language             # shop: the tongue (or a tuple of them) the vendor haggles in
         self.alignment = alignment           # shop: the vendor's bent (price sympathy)
         self.functions = tuple(functions)    # what the node offers (node_functions.FUNCTIONS)
         self.jurisdiction = jurisdiction     # e.g. "the_city" -- the guard tests every arrival (justice.py)
@@ -168,9 +168,7 @@ NODES = [
     Node("city", "Ankareth", "town", (0.30, 0.50),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", jurisdiction="the_city",
-         functions=("bank", "tanner", "trust", "forge", "apothecary", "property"),
-         vendors={"tanner": Vendor("Dungorm", "Gnoll", "tanner", "tanner.png"),
-                  "forge": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png")}),
+         functions=("bank", "trust", "property")),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours. The yard "
@@ -186,9 +184,26 @@ NODES = [
          "Buy and sell gear for copper. The traders speak Ankarin.",
          language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city",
          functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png")}),
+    Node("smith", "The Smithy", "town", (0.47, 0.57),
+         "A forge on the road out of the walls, loud enough to hear from the gate. Weapons, metal armour and "
+         "iron bars are sold here, and the smith lends the anvil.",
+         jurisdiction="the_city", language="Dwarvish", alignment="Lawful and Neutral", functions=("forge", "shop"),
+         vendors={"forge": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png"),
+                  "shop": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png")}),
+    Node("tanner", "The Tannery", "town", (0.10, 0.72),
+         "Racks of hide downwind of the lumber yard. Leather armour, cloaks, quivers and bows, and a tanner with "
+         "work for anyone who hunts.",
+         language="Orcish", alignment="Chaotic and Neutral", functions=("tanner", "shop"),
+         vendors={"tanner": Vendor("Dungorm", "Gnoll", "tanner", "tanner.png"),
+                  "shop": Vendor("Dungorm", "Gnoll", "tanner", "tanner.png")}),
+    Node("apothecary", "The Apothecary", "town", (0.29, 0.20),
+         "A herbalist's shop past the arena, smelling of vinegar and smoke. Potions, vials and first aid kits, "
+         "brewed to order.",
+         jurisdiction="the_city", language="Gnomish", alignment="Chaotic and Good", functions=("apothecary", "shop")),
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
-         jurisdiction="the_city", garrison_job="study", functions=("recruit",)),
+         jurisdiction="the_city", garrison_job="study",
+         language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop")),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
          jurisdiction="the_city", functions=("prison",)),
@@ -207,11 +222,11 @@ NODES = [
          garrison_job="lumber", functions=("claim",)),
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
-         jurisdiction="the_city", functions=("library", "shop"),
+         jurisdiction="the_city", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),
          vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png")}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
-         "A farmstead beyond the walls. For now it keeps the stables: wagons and the animals that pull them.",
-         functions=("stable",)),
+         "A farmstead beyond the walls. It sells what the fields give and keeps the stables: wagons and the animals that pull them.",
+         language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop")),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
          functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE),
@@ -234,6 +249,12 @@ EDGES = [
     ("city", "prison", 1),
     ("city", "library", 1),
     ("city", "farm", 2),
+    ("city", "smith", 0.5),
+    ("city", "tanner", 0.5),
+    ("city", "apothecary", 0.5),
+    ("smith", "tanner", 0.3),
+    ("smith", "apothecary", 0.3),
+    ("tanner", "apothecary", 0.3),
     ("city", "road", 4),
     ("arena", "road", 3),
     ("road", "wilds", 6),

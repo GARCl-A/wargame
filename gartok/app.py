@@ -85,7 +85,7 @@ from .reward_screen import RewardScreen
 from .saves_screen import SavesScreen
 from .scenario import Scenario
 from .squad_screen import SquadScreen
-from .tanner_screen import TannerScreen
+from .tanner_hub_screen import TannerHubScreen
 from .taverna_screen import TavernaScreen
 from .tutorial import TutorialState
 from .ui.banner import set_player_color
@@ -629,23 +629,22 @@ class App:
         self._enter_battle(battle, node)
 
     def _open_tanner_stall(self, group, node, _offer):
-        self.scene = TannerScreen(self.ui_fonts, self.guild, group,
-                                  on_done=self._after_activity)
+        self.scene = TannerHubScreen(self.ui_fonts, self.guild, group, node,
+                                     on_done=self._after_activity)
 
     def _open_ledger_desk(self, group, node, _offer):
         self.scene = LedgerScreen(self.ui_fonts, self.guild, group,
                                  on_done=self._after_activity)
 
     def _open_forge(self, group, node, _offer):
-        from .crafting_screen import CraftingScreen
-        self.scene = CraftingScreen(self.ui_fonts, self.guild, group,
-                                    on_done=self._after_activity,
-                                    vendor=world.vendor(node.id, "forge"))
+        from .forge_hub_screen import ForgeHubScreen
+        self.scene = ForgeHubScreen(self.ui_fonts, self.guild, group, node,
+                                    on_done=self._after_activity)
 
     def _open_apothecary(self, group, node, _offer):
         from .apothecary_hub_screen import ApothecaryHubScreen
         self.scene = ApothecaryHubScreen(self.ui_fonts, self.guild, group,
-                                         on_done=self._after_activity)
+                                         on_done=self._after_activity, node=node)
 
     def _open_stables(self, group):
         from .stables_screen import StablesScreen

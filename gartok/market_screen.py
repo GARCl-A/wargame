@@ -356,13 +356,13 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         if not lang:
             return f"resale at {int(economy.SELL_FACTOR * 100)}% of price"
         pct = round(general * 100)
-        speaks = any(lang in m.languages for m in self.shoppers)
-        if not speaks:
-            return (f"no one speaks {lang}: no haggling "
+        tongues = " or ".join(economy.vendor_tongues(lang))
+        if not any(economy.speaks_with(lang, m) for m in self.shoppers):
+            return (f"no one speaks {tongues}: no haggling "
                     f"(resale at {int(economy.SELL_FACTOR * 100)}%)" + food_tag)
         how = (f"{pct}% discount" if pct > 0
                else f"{-pct}% markup" if pct < 0 else "no margin")
-        return f"vendor speaks {lang} · {self.node.alignment} · {how}{food_tag}"
+        return f"vendor speaks {tongues} · {self.node.alignment} · {how}{food_tag}"
 
     # ------------------------------------------------------------------ #
     # input: click / shift-click to (multi-)select, or drag onto a card  #
@@ -810,7 +810,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         keeper = world.vendor(self.node.id, self.vendor_function)
         card = keeper.card if keeper else None
         tx = MARGIN + draw_vendor(screen, F, (MARGIN, MARGIN - 4), card)
-        title = ui_text(screen, F["head"], "MARKET", (tx, MARGIN - 2), T.TX)
+        title = ui_text(screen, F["head"], self.node.name.upper(), (tx, MARGIN - 2), T.TX)
         draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 6), card)
         has_tut = self.tutorial_key() is not None
         purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
@@ -818,7 +818,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
                 (purse_x, MARGIN + 2), T.BRASS, right=True)
         cash = self._cash()
         if cash is not None:
-            ui_text(screen, F["body_sm"], f"market can pay: {fmt_money(cash)}",
+            ui_text(screen, F["body_sm"], f"shop can pay: {fmt_money(cash)}",
                     (purse_x, MARGIN + 24), T.TX_FAINT, right=True)
         msg, col = self._status_line()
         ui_text(screen, F["body"], msg, (tx, MARGIN + 30), col)

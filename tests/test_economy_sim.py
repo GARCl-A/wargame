@@ -258,7 +258,21 @@ def test_a_market_visit_buys_food_with_the_real_prices_and_the_money_it_has():
         shop.buy_food(5)
     assert sim.rations > 0
     assert sim.money < sim.start_money
-    assert sim.guild.shop("market").cash > economy.MARKET_CASH_START
+    assert sim.guild.shop("farm").cash > economy.MARKET_CASH_START
+    assert sim.group.node == "farm"
+
+
+def test_a_round_of_the_shops_walks_to_each_one_that_sells_what_is_asked():
+    sim = _sim()
+    sim.members[0].give_to_pack(items.COIN_ITEM, 200)
+    before = sim.elapsed
+    with sim.market() as shop:
+        shop.buy(sim.members[0], "Axe")
+        assert sim.group.node == "smith"
+        shop.buy(sim.members[0], "Torch")
+        assert sim.group.node == "market"
+    assert sim.elapsed > before
+    assert sim.members[0].count_of("Axe") and sim.members[0].count_of("Torch")
 
 
 def test_only_what_the_guild_picked_up_is_sold_and_only_up_to_the_markets_cash():
@@ -266,9 +280,9 @@ def test_only_what_the_guild_picked_up_is_sold_and_only_up_to_the_markets_cash()
     sim.members[0].give_to_pack("Dagger", 3)
     sim.sellable["Dagger"] = 2
     sim.guild.shop("market").cash = 0
-    with sim.market() as shop:
+    with sim.market("market") as shop:
         assert shop.sell_loot() == 0
-    with sim.market() as shop:
+    with sim.market("market") as shop:
         price = shop._price("Dagger")
         sim.guild.shop("market").cash = price
         assert shop.sell_loot() == price
@@ -277,10 +291,10 @@ def test_only_what_the_guild_picked_up_is_sold_and_only_up_to_the_markets_cash()
 
 def test_finite_shelves_run_out_and_refill_each_morning():
     sim = _sim(restock=sim_mod.Restock(2, 1))
-    assert sim.guild.shop("market").stock["Iron Bar"] == 2
-    sim.guild.shop("market").stock["Iron Bar"] = 0
+    assert sim.guild.shop("smith").stock["Iron Bar"] == 2
+    sim.guild.shop("smith").stock["Iron Bar"] = 0
     sim.sleep(24)
-    assert sim.guild.shop("market").stock["Iron Bar"] >= 1
+    assert sim.guild.shop("smith").stock["Iron Bar"] >= 1
 
 
 def test_the_tighter_the_shelves_the_less_a_crafter_pulls_out_of_the_market():

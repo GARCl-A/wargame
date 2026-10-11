@@ -76,7 +76,7 @@ def test_turn_in_consumes_the_hides_and_splits_the_reward():
 def test_missed_deadline_fails_the_mission_and_it_is_not_offered_again():
     guild, hunters, home = _guild_with_two_groups()
     m = missions.accept(guild, hunters.members[0], missions.TANNER_HIDES)
-    assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "tanner")}
 
     for u in guild.roster:                       # keep everyone fed -- not what's under test
         for _ in range(10):
@@ -85,7 +85,7 @@ def test_missed_deadline_fails_the_mission_and_it_is_not_offered_again():
     guild.pass_time(24 * (missions.TANNER_HIDES.deadline_days + 1))
 
     assert m.state == "failed"
-    assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_HIDES.id not in {t.id for t in missions.offers_at(guild, "tanner")}
 
 
 def test_signers_death_leaves_the_mission_unreachable():
@@ -100,8 +100,8 @@ def test_signers_death_leaves_the_mission_unreachable():
 def test_market_stock_starts_at_each_items_target():
     random.seed(2)
     guild = Guild([Unit("player")])
-    assert guild.shop("market").stock["1sqm Hide"] == 0
-    assert economy.stock_of(guild.shop("market").stock, "Meat") == 10
+    assert guild.shop("tanner").stock["1sqm Hide"] == 0
+    assert economy.stock_of(guild.shop("farm").stock, "Meat") == 10
 
 
 def test_apothecary_and_tanner_both_satisfy_bankers_good_for_business():
@@ -189,7 +189,7 @@ def test_completed_mission_shows_completed_label():
     missions.turn_in(guild, m)
     assert m.state == "done"
 
-    hunters.node = "city"
+    hunters.node = "tanner"
     screen = TannerScreen(ui_fonts(), guild, hunters, None)
     assert screen._template is missions.TANNER_BIWOLF       # the chain moves on
     assert screen._offered

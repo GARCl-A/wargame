@@ -42,8 +42,11 @@ def test_the_map_shows_one_button_per_offered_function():
     assert _buttons("market") == ["market"]
     assert _buttons("library") == ["library"]
     assert _buttons("lumber_yard") == ["buy_licence", "market"]
-    assert _buttons("tavern") == ["recruit"]
-    assert _buttons("city") == ["bank", "tanner", "forge", "apothecary", "property"]
+    assert _buttons("tavern") == ["market", "recruit"]
+    assert _buttons("smith") == ["forge"]
+    assert _buttons("tanner") == ["tanner"]
+    assert _buttons("apothecary") == ["apothecary"]
+    assert _buttons("city") == ["bank", "property"]
 
 
 def test_a_node_with_a_shop_and_other_functions_gets_both_buttons():
@@ -118,5 +121,5 @@ def test_shop_stock_reaches_the_market_screen():
     guild.shop(node.id).stock["Vial"] = 0
     screen = MarketScreen(None, guild, [shopper], node, lambda: None)
     assert screen._stock_of("Vial") == 0
-    assert MarketScreen(None, guild, [shopper], world.node("market"), lambda: None)._stock_of("Vial") > 0
+    assert MarketScreen(None, guild, [shopper], world.node("apothecary"), lambda: None)._stock_of("Vial") > 0
 

@@ -28,15 +28,12 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Specialised shops**: item properties (`sources.py`) and the finite stock with a target per item
-   (`economy.SHELVES`) are built (2026-10-11); what is left is giving the Smith, Tanner, Apothecary and Farm
-   their own nodes, whose shelves the Market holds today.
-2. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
+1. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
    list exists (`scripts/economy_offers.py`), to settle the day-30 verdict against the recorded runs.
-3. The AI's first tactics are built (2026-10-11, `intel.py`, RULES.md; flanking helped, focus fire,
+2. The AI's first tactics are built (2026-10-11, `intel.py`, RULES.md; flanking helped, focus fire,
    holding and demoralizing first did not, see *Combat AI*). The arena duels it loses (Defend the Title,
    the day-6 Scrapper) look like stat gaps more than decisions: leave them.
-4. The *Architecture debt* section lists what to pay on the way.
+3. *Tune the specialised shops* with the report, then the *Architecture debt* section lists what to pay on the way.
 
 Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
 
@@ -256,45 +253,29 @@ pointed to, not repeated.
 - **Finite stock and a target per item, in every shop.** Built 2026-10-11 in `economy.SHELVES`
   (item -> target, units a day) and `Shop.refill`: every item on the Market, the Yard, the Mine and the
   Library is finite, opens at its target and walks back a little each day (a slow item accrues a fraction;
-  a surplus the player sold walks down; Hide has rate 0). The planned Smith, Tanner, Apothecary, Farm and
-  Tavern shelves are tables in `SHELVES` that the Market holds until those nodes exist (`NODE_SHELVES`).
+  a surplus the player sold walks down; Hide has rate 0). The Smith, Tanner, Apothecary, Farm and
+  Tavern shelves are now their own nodes' (*Specialised shops*).
   The report's verdicts did not change (the day-30 milestone still fails). A stray (an item the player sold
   a shop that is not on its shelf) is listed and resold there and stays until bought (the Library lists them on a
   RESALE tab). Left: (1) the Library's Paper 20/5 and Ink 10/2 and the Market's Lumber
   20/6 are my guesses, not from the table; (2) Jerky (tavern shelf, 10/3) is not sold anywhere yet; its $8 is
   the batch (2 Meat + 1 Salt + 3 = $16) over its 2 units; (3) the sim's food buying now falls back to the next
-  cheapest food when the cheapest runs out (a 12-day Claim trip outgrows 30 Potatoes). Moving each shelf to
-  its own node is *Specialised shops*.
-- **Specialised shops.** Split the single general market into shops, each its own node
-  with a walking distance between them, so the player has to go around. The market's
-  finite cash is built (`Guild.shop(node_id)`, one `Shop` per node offering `shop`), so each shop
-  gets its own.
-  The production chain (lumberjack -> carpenter, smith) and restocking tied to the world
-  are a later arc; this task is the structure with a fixed restock.
-  - **Shops:** Smith, Apothecary and Tanner are new nodes outside the city (today `forge`,
-    `apothecary` and `tanner` are functions of `city`, with no till of their own). The Smith and the Apothecary take their
-    crafting with them, as tabs. Farm (today only the stables), Tavern, Lumber Yard (a shop
-    *and* a work node), the Mine (the same, with its own shelf) and Market already exist. Rough split: Smith = weapons, shields,
-    metal armour, Iron Bar; Tanner = leather armour, Cloak, Hide, Quiver; Apothecary =
-    potions, Vial, First Aid Kit; Farm = raw food and Salt; Tavern = Beer and Jerky (the only
-    ready-made food today); Lumber Yard = Lumber; Mine = Stone Brick, Iron Ore and Coal;
-    Market = the rest (Torch, Lantern, traps).
-  - **Prices and stock:** one base price everywhere. Every item is finite in every shop. A
-    shop buys any item at 50% and puts it on its shelf to resell at 100%. Each item has a
-    target count per shop and the shop walks back to it a little each day. Since every shop
-    resells everything, the targets are what makes each one specialised.
-  - The Library joins the same rule (stock target, finite cash, buys anything at 50%) and
-    keeps its other tabs.
-  - **Node distances:** the new nodes need a walking distance from Ankareth, and the
-    existing ones (Market and Library 1 h, Farm 2 h) should be reviewed together with them,
-    since the distance is the cost of going around between shops.
-  - **First step (done 2026-10-11):** the stock target per item and per shop and the daily refill
-    rate are `economy.SHELVES`, sized from the economy sim's restock sweep
-    ([economy_sim_v2.md](economy_sim_v2.md), finding 6): a shelf of about 10 refilling 3 a
-    day keeps a crafting specialist at about 2x a lumberjack's wage; below 4 with 1 a day
-    makes crafting for sale pointless. Left: the nodes themselves (a `NODE_SHELVES` entry per new
-    node, the distance, the screens), and the tanner holds the Shortbow and Light Crossbow until a
-    carpenter exists.
+  cheapest food when the cheapest runs out (a 12-day Claim trip outgrows 30 Potatoes). (Jerky is now on the Tavern's shelf.)
+- **Tune the specialised shops.** The Smithy, Tannery and Apothecary are nodes (0.5 h from Ankareth, 0.3 h between them), every node has its own shelf and the sim walks the round (2026-10-11; the report's
+  verdicts did not change). What is left:
+  - **Distances and bents are a first guess.** Re-run `scripts/economy_report.py` and tune `world.EDGES`;
+    the tongue of each shop follows its keeper's race, the alignments of the Tannery (Chaotic and Neutral),
+    Library (Lawful and Evil) and Apothecary (Chaotic and Good) are authored; the Smithy (Lawful and Neutral),
+    Tavern (Neutral and Good) and Farm (Lawful and Good) are picks to confirm, and so is the Farm's second
+    tongue (Sylvan).
+  - **Jerky is on the Tavern shelf** (10/3, $8). The report says it does not sell at a profit; check it
+    does not undercut camp cooking (`cooking` tests, the Claim's food).
+  - **Shop button label** is generic ("ENTER THE SHOP") at the Farm, Tavern, Yard and Mine; could name
+    the place.
+  - **Old saves** keep their Market stock as strays there (Axe, Potato...): harmless, listed and
+    resold; a sweep on load would clean it.
+  - **Production chain** (lumberjack -> carpenter, smith) and world-tied restocking are a later arc; the
+    tanner holds the Shortbow and Light Crossbow until a carpenter exists.
 
 ## Art (made by hand, not code)
 
@@ -310,8 +291,12 @@ the ones that also need code say so. Order is the suggested priority.
   (Gnoll), `librarian.png` (Kobold) and `blacksmith.png` (Dwarf). **Built 2026-10-10:** each vendor has a
   name (from `names.py`, fixed per node) and a face in the header of the Market, the Library (shop, craft and
   jobs), the Forge and the Tanner (`world.Vendor`, `ui/vendor_panel.py`), so the player learns to recognise who
-  they haggle with. Left: the Apothecary and the Mine have no portrait, and a vendor is not an NPC (no stats,
+  they haggle with. Left: the Mine has no portrait (the other three keepers are in *Faces for the three keepers*), and a vendor is not an NPC (no stats,
   no recruiting or robbing them).
+- **Faces for the three keepers still to draw.** The Apothecary's **Gnome**, the Tavern's **Halfling**
+  and the Farm's **Human** (two tongues) have a language and a bent on their node and no `world.Vendor`
+  (name, race, role, `portraits/npc/<role>.png`): once the images exist, add the vendor to each node's
+  `vendors` (the Tavern's and the Farm's under `shop`, the Apothecary's under `apothecary` and `shop`).
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur

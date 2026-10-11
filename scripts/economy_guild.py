@@ -311,7 +311,7 @@ class Sim:
         if restock:
             for name in dict.fromkeys(economy.MARKET_STOCK):
                 if economy.freely_buyable(name):
-                    self.guild.shop("market").stock[name] = restock.target
+                    self.guild.shop(economy.shop_of(name)).stock[name] = restock.target
         self.snap()
 
     def own(self, asset):
@@ -418,10 +418,11 @@ class Sim:
         days, self._stock_day = today - self._stock_day, today
         if days <= 0:
             return
-        shelves = self.guild.shop("market").stock
-        for name, count in shelves.items():
-            if economy.freely_buyable(name):
-                shelves[name] = min(self.restock.target, count + self.restock.per_day * days)
+        for node_id in economy.TOWN_SHOPS:
+            shelves = self.guild.shop(node_id).stock
+            for name, count in shelves.items():
+                if economy.freely_buyable(name):
+                    shelves[name] = min(self.restock.target, count + self.restock.per_day * days)
 
     # -- the order engine -------------------------------------------------- #
     def run_order(self, order):
@@ -811,8 +812,9 @@ class Sim:
                 self.claim_lumber += 1
 
     # -- the market -------------------------------------------------------- #
-    def market(self, node_id="market"):
-        self.arrive("market", node_id)
+    def market(self, node_id=None):
+        """A shopping stop. With no node the guild walks to whichever shop sells what it asks
+        for first (`MarketVisit.buy`), or to the Market to sell."""
         return MarketVisit(self, node_id)
 
     def keep_fed(self, low=FOOD_LOW_DAYS, target=FOOD_TARGET_DAYS, at_low=False):
@@ -829,14 +831,37 @@ class Sim:
 
 
 class MarketVisit:
-    """One stop at the market, through the real `MarketScreen`."""
+    """A round of the shops, through the real `MarketScreen`: it stands at one shop at a time
+    and walks to the next when an item is not on the shelf it is at."""
 
-    def __init__(self, sim, node_id="market"):
+    def __init__(self, sim, node_id=None):
         self.sim = sim
-        self.node = world.node(node_id)
+        self.node = None
+        self._screen = None
+        if node_id:
+            self.go(node_id)
+
+    def go(self, node_id):
+        sim = self.sim
+        sim.arrive("market", node_id)
         sim.crew_pay_in()
         crew = list(sim.crew.members) if sim.crew is not None else []
-        self.screen = MarketScreen(None, sim.guild, sim.members + crew, self.node, lambda: None)
+        self.node = world.node(node_id)
+        self._screen = MarketScreen(None, sim.guild, sim.members + crew, self.node, lambda: None)
+
+    @property
+    def screen(self):
+        if self._screen is None:
+            self.go("market")
+        return self._screen
+
+    def stand_at(self, name):
+        """Walk to the shop that sells `name`, unless the one we are at has it."""
+        if self.node is not None and self._screen._stock_of(name) is not None:
+            return
+        node_id = economy.shop_of(name)
+        if node_id and (self.node is None or node_id != self.node.id):
+            self.go(node_id)
 
     def __enter__(self):
         return self
@@ -856,6 +881,8 @@ class MarketVisit:
         name = cheapest_food()
         need = int(CREW_FOOD_DAYS * len(sim.crew.members)) - sim.crew.rations
         for _ in range(max(0, need)):
+            if sim.crew is None:                 # the crew was called in while the guild walked
+                break
             roomy = max(sim.crew.members, key=lambda u: u.carry_max - u.load)
             if sim.money < economy.buy_price(name, self.screen.deal) or not self.buy(roomy, name):
                 break
@@ -890,6 +917,7 @@ class MarketVisit:
         return sim.money - before
 
     def buy(self, member, name, qty=1, zone="pack"):
+        self.stand_at(name)
         screen = self.screen
         screen.qty[name] = qty
         screen.selected = [("stock", name)]
@@ -1494,8 +1522,8 @@ class Crafter(Policy):
             self.lumber_day(sim)
             return
         with sim.market() as shop:
-            shop.sell_loot()
             self.stock_up(sim, shop, crafter, recipe)
+            shop.sell_loot()
         need = items.CRAFTING_RECIPES[recipe].materials
         if crafter.crafting_target != recipe and not all(crafter.count_of(m) for m in need):
             self.lumber_day(sim)                    # too poor for a batch: the floor job
@@ -1542,7 +1570,7 @@ class Crafter(Policy):
         need = Counter(items.CRAFTING_RECIPES[recipe].materials)
         reserve = FOOD_LOW_DAYS * len(sim.guild.roster) * cheapest_food_price()
         for _ in range(cls.BATCHES - min(unit.count_of(m) // q for m, q in need.items())):
-            if any(sim.guild.shop("market").stock.get(m, 1) < q for m, q in need.items()):
+            if any(sim.guild.shop(economy.shop_of(m)).stock.get(m, 1) < q for m, q in need.items()):
                 break
             cost = sum(economy.buy_price(m, shop.screen.deal) * q for m, q in need.items())
             if sim.money < cost + reserve:

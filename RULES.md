@@ -1180,7 +1180,7 @@ right now (clock advanced through `pass_time`), no order.
 
 ### The Forge: crafting 🟡
 
-`crafting_screen.py`, at the City (`Node.forge = True`). A member needs a
+`crafting_screen.py`, at the Smithy (the `forge` function of node `smith`; `forge_hub_screen.py` puts the smith's shop beside it). A member needs a
 learned recipe (`Unit.recipes`) before they can start; the recipe's materials
 are consumed the moment `crafting_target` is set, not on completion — an
 abandoned craft doesn't get them back.
@@ -1250,8 +1250,8 @@ ability (`Ability.venom`):
 
 ### The Apothecary: brewing and foraging 🟡
 
-`apothecary_hub_screen.py`, at the City (`Node.apothecary = True`). Integrates
-potion brewing, jobs, and supplies.
+`apothecary_hub_screen.py`, at the Apothecary node (`apothecary`). Integrates
+shop, potion brewing, the Medic and jobs.
 
 - **Brewing:** Members who have learned alchemical recipes (via the `Apothecary`
   work talent) can brew remedies at the Apothecary station. Brewing a **Minor Healing
@@ -1298,7 +1298,7 @@ Neutral**).
   `deal` cap keeps sell **below** buy, so you cannot make money buying and
   reselling.
 - **A shop's cash is finite** (`Guild.shop(node_id).cash`, one `shop.Shop` per node that offers
-  `shop`: the Market, the Library, the Lumber Yard and the Mine). It opens at
+  `shop`: the Smithy, the Tannery, the Apothecary, the Farm, the Tavern, the Market, the Library, the Lumber Yard and the Mine). It opens at
   **$100**, takes in whatever the guild spends, pays out what the guild sells and refills
   **$25 a day** up to **$500** (spending can push it past the cap; the refill never takes
   anything away). A sale worth more than the market holds is refused whole.
@@ -1306,6 +1306,18 @@ Neutral**).
   daily rate (a slow one earns a fraction a day); the shelf opens full, buying draws it down and
   it walks back to the target each morning, a surplus the player sold walks back down. An item
   sold to a shop that is not on its shelf is listed and resold there until bought.
+- **Specialised shops.** Every shop buys anything at 50 % and resells it, so what makes one
+  specialised is its shelf: Smith = weapons, metal armour, Iron Bar; Tanner = leather armour,
+  Cloak, Hide, Quiver, the bows; Apothecary = potions, Vial, First Aid Kit; Farm = raw food and
+  Salt; Tavern = Beer and Jerky; Market = Torch, Lantern, instruments, traps, Lumber. Each is a
+  node of its own, 0.5 h from Ankareth and 0.3 h from each other (`world.EDGES`), so a guild kitting
+  out walks a round of them. The keeper's race sets the shop's tongue and bent: the Smithy's Dwarf
+  haggles in Dwarvish, the Tannery's Gnoll in Orcish (a Gnoll's native tongue is Orcish in `data.RACES`), the
+  Library's Kobold in Draconic; the Apothecary's Gnome (Gnomish), the Tavern's Halfling (Halfling) and the Farm's
+  Human (Ankarin and Sylvan; `Node.language` may be a tuple) are planned keepers. A guild with nobody who speaks
+  it pays the tabled price. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
+  (`hub_screen.py`); the Farm and the Tavern show the shop beside their stables / recruiting.
+  A tab with nothing on it is not listed.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a
   parameter — the Provisioner talent adds one scoped to food, buy-side.
 - **Auto-sell marks.** The ⋮ menu of a pack row marks an item *kind* (`Guild.autosell`, saved
@@ -1314,8 +1326,8 @@ Neutral**).
   still applies to the whole sale).
 - **The vendor has a face.** Each shop function has a `world.Vendor` (name, race, role and a
   portrait from `assets/portraits/npc/`) on its `Node.vendors`: the Market's Automaton merchant,
-  the Library's Kobold librarian, the City's Gnoll tanner and Dwarf blacksmith. The face and
-  name show in that screen's header; the Apothecary and the Mine have none yet.
+  the Library's Kobold librarian, the Tannery's Gnoll tanner and the Smithy's Dwarf blacksmith. The face and
+  name show in that screen's header; the Apothecary, the Farm, the Tavern and the Mine have none yet.
 
 ### Recruitment 🟡
 
@@ -1441,7 +1453,7 @@ instance of a given template can be active guild-wide at a time
   reshuffled by splits/merges constantly, so `progress`/`turn_in` always
   resolve the signer's *current* group (`guild.group_of`) and count that
   whole group's packs, the same trick the shared food larder uses.
-- **The Tanner** (`tanner_screen.py`, at the City): wants 15× `1sqm Hide`,
+- **The Tanner** (`tanner_screen.py`, at the Tannery node): wants 15× `1sqm Hide`,
   pays $200, 5 days, +1 reputation with the Tanners. If the deadline passes it is
   offered again 7 days after the failure (`MissionTemplate.retry_days`), until
   it is done. Hides only drop from Wilds beasts, not from hours
@@ -1490,7 +1502,7 @@ instance of a given template can be active guild-wide at a time
     a pack) completes the job and banks `tanners_ox`. Once he is dead the trail is
     closed for good (`missions.slay_ox`); a hide that is nowhere in the guild fails
     the job forever (`missions.fail_if_hide_lost`).
-- **The Apothecary** (`apothecary_mission_screen.py`, at the City): wants 15×
+- **The Apothecary** (`apothecary_mission_screen.py`, at the Apothecary node): wants 15×
   `Red Mushroom` gathered from the Wilds, pays $150, 10 days.
 - **The Bankers' trust mission** (`trust_screen.py` at the City,
   `ledger_screen.py` at Ledger Hold): hands the signer a sealed chest

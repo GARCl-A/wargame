@@ -1,39 +1,49 @@
-from gartok import economy, persist
+from gartok import economy, world
 from gartok.guild import Guild
 from gartok.shop import Shop
 from gartok.unit import Unit
 
+TOWN_SHOPS = economy.TOWN_SHOPS
 
-def test_every_item_the_market_sells_has_a_target():
-    targets = economy.targets_of("market")
-    assert [n for n in economy.MARKET_STOCK if n not in targets] == []
+
+def test_every_item_the_town_sells_is_on_the_shelf_of_one_of_its_shops():
+    on_shelves = {n for shop in TOWN_SHOPS for n in economy.targets_of(shop)}
+    assert set(economy.MARKET_STOCK) == on_shelves
+
+
+def test_each_shop_is_a_node_that_offers_it():
+    for shop in TOWN_SHOPS:
+        assert world.node(shop).has("shop"), shop
+        assert economy.targets_of(shop), shop
 
 
 def test_a_shelf_item_belongs_to_one_shop_and_each_work_node_has_its_own_shelf():
     assert set(economy.targets_of("mine")) == set(economy.MINE_SUPPLIES)
     assert set(economy.targets_of("lumber_yard")) == set(economy.YARD_SUPPLIES)
     assert set(economy.targets_of("library")) == set(economy.LIBRARY_SUPPLIES)
-    planned = [n for shelf in ("smith", "tanner", "apothecary", "farm") for n in economy.SHELVES[shelf]]
-    assert len(planned) == len(set(planned))
+    town = [n for shelf in TOWN_SHOPS for n in economy.SHELVES[shelf]]
+    assert len(town) == len(set(town))
 
 
 def test_the_scarce_items_open_at_their_target():
-    shop = Shop(node_id="market")
-    assert all(shop.stock[n] == c == economy.targets_of("market")[n][0] for n, c in economy.STOCK.items())
+    for name, count in economy.STOCK.items():
+        shop = next(Shop(node_id=n) for n in TOWN_SHOPS if name in economy.targets_of(n))
+        assert shop.stock[name] == count == shop.targets[name][0]
 
 
 def test_a_shelf_walks_back_to_its_target_by_the_rate():
-    shop = Shop(node_id="market")
+    shop = Shop(node_id="smith")
     shop.stock["Axe"] = 0
     shop.refill()
     assert shop.stock["Axe"] == 1
-    shop.stock["Potato"] = 0
-    shop.refill()
-    assert shop.stock["Potato"] == 10
+    farm = Shop(node_id="farm")
+    farm.stock["Potato"] = 0
+    farm.refill()
+    assert farm.stock["Potato"] == 10
 
 
 def test_a_slow_item_earns_a_unit_over_several_days():
-    shop = Shop(node_id="market")
+    shop = Shop(node_id="smith")
     shop.stock["Rapier"] = 0
     days = 0
     while shop.stock["Rapier"] == 0:
@@ -46,24 +56,25 @@ def test_a_slow_item_earns_a_unit_over_several_days():
 
 
 def test_a_surplus_the_player_sold_walks_back_down_and_hide_stays():
-    shop = Shop(node_id="market")
-    shop.stock["Dagger"] = 20
-    shop.stock["1sqm Hide"] = 5
-    shop.refill()
-    assert shop.stock["Dagger"] == 18 and shop.stock["1sqm Hide"] == 5
+    smith, tanner = Shop(node_id="smith"), Shop(node_id="tanner")
+    smith.stock["Dagger"] = 20
+    tanner.stock["1sqm Hide"] = 5
+    smith.refill()
+    tanner.refill()
+    assert smith.stock["Dagger"] == 18 and tanner.stock["1sqm Hide"] == 5
 
 
 def test_progress_and_stock_survive_a_save():
-    shop = Shop(node_id="market")
+    shop = Shop(node_id="smith")
     shop.stock["Rapier"] = 0
     shop.refill()
-    back = Shop.from_dict(shop.to_dict(), "market")
+    back = Shop.from_dict(shop.to_dict(), "smith")
     assert back.stock == shop.stock and back.progress == shop.progress
 
 
 def test_a_saved_shop_with_a_short_shelf_fills_the_rest_at_target():
-    back = Shop.from_dict({"cash": 5, "stock": {"Vial": 1}}, "market")
-    assert back.stock["Vial"] == 1 and back.stock["Axe"] == 6
+    back = Shop.from_dict({"cash": 5, "stock": {"Vial": 1}}, "apothecary")
+    assert back.stock["Vial"] == 1 and back.stock["First Aid Kit"] == 5
 
 
 def test_the_guild_makes_each_shop_with_its_own_shelf():
@@ -72,7 +83,7 @@ def test_the_guild_makes_each_shop_with_its_own_shelf():
 
 
 def test_an_item_sold_to_a_shop_off_its_shelf_is_listed_and_resold():
-    from gartok import items, world
+    from gartok import world
     from gartok.market_screen import MarketScreen
     seller = Unit("player")
     guild = Guild([seller])

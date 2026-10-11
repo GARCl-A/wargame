@@ -1249,7 +1249,7 @@ def test_market_screen_weapon_size_toggle():
 
     shopper = Unit("player")
     guild = Guild([shopper])
-    node = next(n for n in NODES if n.kind == "market")
+    node = next(n for n in NODES if n.id == "smith")
     
     ms = MarketScreen(ui_fonts(), guild, [shopper], node, lambda: None)
     surf = pygame.Surface((1280, 720))

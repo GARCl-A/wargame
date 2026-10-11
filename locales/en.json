@@ -112,8 +112,8 @@
       "title": "Buying and selling",
       "body": [
         "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out.",
-        "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half. The market only pays out of its own cash, shown at the top: what you spend goes in, what you sell comes out, and a day refills a little.",
-        "Potatoes ($3) and Meat ($5) feed one character for a day.",
+        "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half. Every shop buys anything at half price, but each keeps its own shelf: weapons and metal armour at the Smithy, leather and bows at the Tannery, potions at the Apothecary, raw food at the Farm, beer and jerky at the Tavern, the odds and ends here. A shop only pays out of its own cash, shown at the top: what you spend goes in, what you sell comes out, and a day refills a little.",
+        "Potatoes ($3) and Meat ($5), sold at the Farm, feed one character for a day.",
         "Tired of picking the same items? Open an item's ⋮ menu and mark it to auto-sell: SELL MARKED then takes every marked stack in the party's packs at once."
       ]
     },
@@ -129,7 +129,7 @@
     "hunt": {
       "title": "Hunting the wilds",
       "body": [
-        "Pick a shift length and head out. Every 2 hours earns 1 kg of Meat, and every hour risks an ambush: a real fight, but the bodies are worth looting -- wolves drop Hide, which the market and the Tanner buy, and a couple of kilos of Meat.",
+        "Pick a shift length and head out. Every 2 hours earns 1 kg of Meat, and every hour risks an ambush: a real fight, but the bodies are worth looting -- wolves drop Hide, which the Tannery buys, and a couple of kilos of Meat.",
         "Win an ambush and you can keep hunting or call it a day with whatever you've banked. Meat feeds the guild (1 kg is one meal) or sells at the Market. FORAGE WILDS looks for Red Mushrooms and fruit instead."
       ]
     },

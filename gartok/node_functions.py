@@ -9,8 +9,8 @@ screen, so it cannot live in this pure module; a test keeps the two in step.
 Adding a place that offers something already built is a line in `world.NODES`;
 a new kind of service is one entry here plus its opener.
 
-`absorbs` names functions this one hosts inside its own screen: the Library's
-hub carries the shop as a tab, so a node with both gets one button, not two.
+`absorbs` names functions this one hosts inside its own screen: the hubs of the Library,
+Smithy, Tannery and Apothecary carry the shop as a tab, so a node with both gets one button, not two.
 `label=None` is a function with no map button of its own (`work` draws a shift
 picker, `trust` is reached through the Bankers' hub).
 """
@@ -28,7 +28,7 @@ class NodeFunction:
 
 
 FUNCTIONS = {f.id: f for f in (
-    NodeFunction("shop", "market", "ENTER THE MARKET"),
+    NodeFunction("shop", "market", "ENTER THE SHOP"),
     NodeFunction("recruit", "recruit", "ENTER THE TAVERN"),
     NodeFunction("prison", "prison", "VISIT THE PRISON"),
     NodeFunction("work"),
@@ -36,9 +36,9 @@ FUNCTIONS = {f.id: f for f in (
                  note="spend the day hunting or foraging  ·  a pack may find you first"),
     NodeFunction("bank", "bank", "VISIT THE BANK"),
     NodeFunction("trust", "trust"),
-    NodeFunction("tanner", "tanner", "VISIT THE TANNER"),
-    NodeFunction("forge", "forge", "VISIT THE FORGE"),
-    NodeFunction("apothecary", "apothecary", "VISIT THE APOTHECARY"),
+    NodeFunction("tanner", "tanner", "VISIT THE TANNER", absorbs=("shop",)),
+    NodeFunction("forge", "forge", "VISIT THE FORGE", absorbs=("shop",)),
+    NodeFunction("apothecary", "apothecary", "VISIT THE APOTHECARY", absorbs=("shop",)),
     NodeFunction("stable", "stable", "VISIT THE STABLES"),
     NodeFunction("library", "library", "VISIT THE LIBRARY", absorbs=("shop",)),
     NodeFunction("property", "property", "VISIT THE PROPERTY"),

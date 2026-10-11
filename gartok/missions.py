@@ -67,7 +67,7 @@ class Mission:
 
 
 TANNER_HIDES = MissionTemplate(
-    "tanner_hides", "tanner", "city", "Fifteen Hides",
+    "tanner_hides", "tanner", "tanner", "Fifteen Hides",
     "The tanner wants 15 sqm of hide off anything with fur. The Wilds is "
     "thick with it, if you can bring down what's wearing it.",
     goal_item="1sqm Hide", goal_qty=15, reward=200, deadline_days=5,
@@ -79,7 +79,7 @@ TANNER_HIDES = MissionTemplate(
 # deadline, it is open until delivered -- or failed for good the moment the
 # leather is lost (`fail_if_leather_lost`).
 TANNER_BIWOLF = MissionTemplate(
-    "tanner_biwolf", "tanner", "city", "The Biwolf's Hide",
+    "tanner_biwolf", "tanner", "tanner", "The Biwolf's Hide",
     "The tanner has heard of a wolf the size of a cart that hunts the Wilds by "
     "night. It follows the smell of meat -- hunt after dark with fifteen "
     "portions in your packs and it will find you, and its pack with it. Bring "
@@ -99,7 +99,7 @@ TANNER_BIWOLF = MissionTemplate(
 # Same rule as the Biwolf's leather: lose the hide after the kill and it fails
 # for good (`fail_if_hide_lost`). The pay is double the hides', plus the recipe.
 TANNER_OX = MissionTemplate(
-    "tanner_ox", "tanner", "city", "The Immortal Ox",
+    "tanner_ox", "tanner", "tanner", "The Immortal Ox",
     "The tanner tells of Aurochs, an ox that has outlived every hunter sent after it, "
     "grazing the fertile fields south of the farm. Its hide is the finest there is. "
     "Bring it to me and I will teach you what the horn is good for.",
@@ -118,7 +118,7 @@ TRUST_CHEST = MissionTemplate(
 )
 
 APOTHECARY_MUSHROOMS = MissionTemplate(
-    "apothecary_mushrooms", "apothecary", "city", "Fifteen Red Mushrooms",
+    "apothecary_mushrooms", "apothecary", "apothecary", "Fifteen Red Mushrooms",
     "The apothecary needs 15 red mushrooms to brew more potions. They grow in the Wilds.",
     goal_item="Red Mushroom", goal_qty=15, reward=150, deadline_days=10,
     tags=("economic", "apothecary"),

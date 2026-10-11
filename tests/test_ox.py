@@ -47,7 +47,7 @@ def _job(guild, signer):
 
 def test_the_ox_job_is_offered_only_after_the_biwolf_is_in():
     guild, (signer, _) = _guild()
-    offered = lambda: {t.id for t in missions.offers_at(guild, "city")}
+    offered = lambda: {t.id for t in missions.offers_at(guild, "tanner")}
     missions.accept(guild, signer, missions.TANNER_HIDES).state = "done"
     assert missions.TANNER_OX.id not in offered()
     biwolf = missions.accept(guild, signer, missions.TANNER_BIWOLF)
@@ -107,7 +107,7 @@ def test_losing_the_hide_after_the_kill_fails_the_job_for_good():
     mate.remove_named(items.THUNDERHIDE_ITEM)
     assert missions.fail_if_hide_lost(guild) is m
     assert m.state == "failed"
-    assert missions.TANNER_OX.id not in {t.id for t in missions.offers_at(guild, "city")}
+    assert missions.TANNER_OX.id not in {t.id for t in missions.offers_at(guild, "tanner")}
     assert missions.retry_in(guild, missions.TANNER_OX) is None
 
 

@@ -22,8 +22,8 @@ NODE = world.WILDS_TERRITORY_NODE
 # items and the recipe                                                        #
 # --------------------------------------------------------------------------- #
 
-def test_salt_is_sold_at_the_market_and_jerky_is_not():
-    assert "Salt" in economy.MARKET_STOCK and "Jerky" not in economy.MARKET_STOCK
+def test_salt_is_sold_at_the_farm_and_jerky_at_the_tavern():
+    assert "Salt" in economy.targets_of("farm") and "Jerky" in economy.targets_of("tavern")
     assert economy.PRICES["Salt"] > 0
 
 
