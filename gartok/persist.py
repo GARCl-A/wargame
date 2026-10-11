@@ -35,6 +35,7 @@ from .clock import Clock
 from .group import NORMAL, Group
 from .guild import Guild
 from .holdings import CityProperty, Garage, Stash
+from .intel import Bestiary
 from .orders import Order
 from .shop import Shop
 from .tutorial import TutorialState
@@ -211,7 +212,7 @@ PAYLOAD_DEFAULTS = {
     "wilds_claim_sustain_days_left": None, "wilds_claim_owner": None,
     "wilds_claim_campfire": False, "claim_oven": False, "ancient_ruins_discovered": False,
     "ox_fields_discovered": False, "ox_trails": 0,
-    "shops": {}, "total_spent": 0, "items_sold_kinds": [], "autosell": [], "missions": [],
+    "shops": {}, "total_spent": 0, "items_sold_kinds": [], "autosell": [], "bestiary": {"races": [], "abilities": [], "named": {}}, "missions": [],
     "taverna_week": None, "taverna_pool": None, "taverna_blocked": [],
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
     "recruit_seen": {},
@@ -257,6 +258,7 @@ def _payload(guild, kind, label):
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
         "autosell": sorted(guild.autosell),
+        "bestiary": guild.bestiary.to_dict(),
         "missions": [missions.mission_to_dict(m) for m in guild.missions],
         "leader": guild.leader.uid if guild.leader else None,
         "leader_swaps_used": guild.leader_swaps_used,
@@ -347,6 +349,7 @@ def load_game(world, save_id=CURRENT):
                  total_spent=payload["total_spent"],
                  items_sold_kinds=payload["items_sold_kinds"],
                  autosell=payload["autosell"],
+                 bestiary=Bestiary.from_dict(payload["bestiary"]),
                  missions=[missions.mission_from_dict(d) for d in payload["missions"]],
                  taverna_week=payload["taverna_week"],
                  taverna_pool=[Unit.from_save(d) for d in pool] if pool is not None else None,

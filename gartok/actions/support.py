@@ -2,7 +2,7 @@
 
 import random
 
-from .. import data, items
+from .. import data, intel, items
 from ..board import cells, chebyshev
 from ..conditions import Demoralized
 from ..constants import fmt_money
@@ -308,9 +308,9 @@ class EatCorpse(Action):
                 md = u.mental_defense
                 if total >= md:
                     u.add_condition(Demoralized())
-                    battle.log(f"    {u.name} (MD {md}) is terrified -> DEMORALIZED.")
+                    battle.log(f"    {u.name} (MD {intel.shown(battle, u, 'md', md)}) is terrified -> DEMORALIZED.")
                 else:
-                    battle.log(f"    {u.name} (MD {md}) resists the horror.")
+                    battle.log(f"    {u.name} (MD {intel.shown(battle, u, 'md', md)}) resists the horror.")
 
 
 class SpinWeb(Action):
@@ -558,6 +558,30 @@ class SignalHorn(Action):
         battle.fx(actor.pos, "Signal Horn!", "crit")
         battle.log(f"{actor.name} blows the Signal Horn! "
                    + ", ".join(a.name for a in allies) + f" gain +{self.BONUS} initiative.")
+
+
+class Assess(Action):
+    id, name, cost, target, aimed = "assess", "Assess", 1, "enemy", True
+    desc = (f"INT +{intel.ASSESS_BONUS} against the foe's DC: learn more of its stats. "
+            "One foe in sight, once per foe each round.")
+
+    def can(self, battle, actor, target=None):
+        return actor.ap >= self.cost and not intel.assess_block(battle, actor, target)
+
+    def label(self, battle, actor):
+        return "Assess (1 pt, INT vs the foe)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        total, _margin, opened = intel.assess(battle, actor, target)
+        need = intel.dc(battle, actor.team, target)
+        learned = ", ".join(intel.LABELS[f] for f in opened) or "nothing new"
+        battle.log(f"{actor.name} studies {target.name}: d20 + INT + {intel.ASSESS_BONUS} = {total} "
+                   f"vs DC {need}  -> {learned}.")
+        battle.fx(target.pos, f"{total} vs DC {need}", "ok" if opened else "faint")
 
 
 class Investigate(Action):

@@ -63,11 +63,12 @@ def build(fight_id, level, squad_size, seed=None):
                         lethal=node.lethal, arena=node.arena)
     elif fight_id == "dungeon":
         scenario = AncientRuinsScenario()
-        battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=False, lethal=True)
+        battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=False, lethal=True,
+                        aggressor="player")
     else:
         pack = (hunt.wilds_pack() if fight_id == "wilds"
                 else encounters.roll_encounter(world.node("road").encounter_table))
-        battle = Battle(squad, pack, scenario=ErmosScenario(), daylight=True, lethal=True)
+        battle = Battle(squad, pack, scenario=ErmosScenario(), daylight=True, lethal=True, aggressor="enemy")
     return battle, {"fight": fight_id, "level": level, "squad": squad_size, "seed": seed}
 
 

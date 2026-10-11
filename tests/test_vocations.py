@@ -51,8 +51,13 @@ def test_every_playable_race_belongs_to_a_vocation():
     assert covered == set(data.RACE_NAMES)
 
 
-def test_only_scholars_is_dormant():
-    assert [v.id for v in vocations.VOCATIONS.values() if not v.active] == ["scholars"]
+def test_no_vocation_is_dormant_now_that_the_info_modal_exists():
+    assert all(v.active for v in vocations.VOCATIONS.values())
+
+
+def test_only_the_scholars_add_to_the_info_roll():
+    assert vocations.info_bonus(_guild("scholars")) == vocations.INFO_BONUS > 0
+    assert vocations.info_bonus(_guild("marsh")) == vocations.info_bonus(_guild(None)) == 0
 
 
 # ---- the draft pool ------------------------------------------------------ #
@@ -137,10 +142,10 @@ def test_the_founded_guild_keeps_the_vocation():
     assert app.guild.vocation == "delvers"
 
 
-def test_the_guild_tab_shows_the_vocation_and_flags_a_dormant_one():
+def test_the_guild_tab_shows_the_vocation_and_carries_its_dormant_flag():
     from gartok.guild_screen import GuildScreen
     pygame.init()
-    for vid, dormant in (("marsh", False), ("scholars", True), (None, False)):
+    for vid, dormant in (("marsh", False), ("scholars", False), (None, False)):
         guild = _guild(vid)
         gs = GuildScreen(ui_fonts(), guild, lambda: None)
         v = gs._vocation()

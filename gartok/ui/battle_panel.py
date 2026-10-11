@@ -11,7 +11,7 @@ Data shapes::
 
     init_entry = {"name": str, "team": "player" | "enemy", "known": bool,
                   "active": bool, "race": str, "portrait_id": str | None,
-                  "token": str, "hp_frac": float, "dying": str | None}
+                  "token": str, "hp_frac": float, "hp_steps": int | None, "dying": str | None}
 
     turn_card = {"name": str, "race": str, "portrait_id": str | None, "token": str,
                  "mine": bool, "stats": str,
@@ -85,7 +85,7 @@ def _init_chip(surf, F, r, e):
     if e["dying"]:
         text(surf, F["micro"], f"dying {e['dying']}", (r.x + 8, r.bottom - 14), DANGER)
     elif known:
-        hp_bar(surf, pygame.Rect(r.x + 8, r.bottom - 9, r.w - 16, 4), e["hp_frac"])
+        hp_bar(surf, pygame.Rect(r.x + 8, r.bottom - 9, r.w - 16, 4), e["hp_frac"], e.get("hp_steps"))
 
 
 # ---------------------------------------------------------------------- #

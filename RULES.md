@@ -709,8 +709,47 @@ Rules in `board.py` (`los_clear`) and `vision.py` (`cell_lit`, `can_see`).
 - Enemies out of sight are **hidden**: not drawn, cannot be targeted or
   inspected.
 - The **AI** sees through each of its units' eyes: it only attacks what that unit
-  sees, but still advances toward the nearest enemy. It ignores torches (only
-  chases a dropped weapon when unarmed).
+  sees (or closes on what a teammate sees). It ignores torches (only chases a
+  dropped weapon when unarmed). What it counts for fleeing, waiting and the
+  Signal Horn is the foes some unit of its side sees.
+- **With nobody in sight the AI acts by its role** (`Battle.aggressor`, set where the map
+  builds the fight): the side that *brought* the fight (an ambush, a patrol, a raid, a hunt
+  where the pack finds you, the guild sweeping its Claim, delving the Ruins, tracking the
+  Aurochs) **searches**: it walks to the last place its side saw a foe (the aggressor starts
+  knowing where its prey was), and once that is empty sweeps waypoints across the board, four
+  squares apart, skipping the ones a teammate has been near. The side that was *found* **groups
+  up**: each unit closes on its nearest ally, to within 2 squares, and holds (a lone one
+  stays put). No role (the arena, and anything a test builds) keeps the old rule: advance on
+  the nearest foe anyway.
+
+### What a side knows of a foe 🟡
+
+Rule in `intel.py` (free functions over `battle.intel`, like `vision.py`); the card is
+`ui/foe_panel.py`. **The AI is another player: it reads exactly what a player is
+shown (`intel.known_fields`).**
+
+- **Visible, no roll:** position, name, race, size, alignment, the *names* of the weapon,
+  armour and artefact (not what an artefact does), visible conditions (asleep, demoralized,
+  dying, poisoned, hungry) and health as a bar in **5 steps** (20% each; a standing foe keeps
+  at least one). A foe's bar on the board and in the initiative strip is the same 5 steps; an
+  ally's stays exact.
+- **The opening read:** the first time anyone on a side sees a foe, every teammate that sees it
+  rolls d20 + INT modifier (+ the Scholars' +2) against `DC = 8 + the foe's racial level`
+  (2 lower against a race the guild has fought); the best margin is stored and shared by the side.
+  Margin **≥ 0** opens damage die, speed, level and the racial ability (name and effect
+  together, like every ability); **≥ +5** opens to-hit and damage bonus, AC and mental defense;
+  **≥ +10** opens the attributes, exact and maximum HP, talents, known spells and the artefact's
+  effect. A failed roll reveals nothing and never lies. A field not learned shows as **?**.
+- **Assess** (1 point, a foe in sight, once per foe each round): d20 + INT + 4 against the same
+  DC; the stored margin is the better of the two. The Scholars' bonus applies.
+- **The log keeps the secret:** an attack line says `vs AC ?` (or `vs MD ?`) until the player's
+  side has read it; an attack on your own unit always shows its AC.
+- **The bestiary** (`Guild.bestiary`, saved): races fought (the lower DC), racial abilities seen
+  (free on the next of the race) and the best margin read of each authored NPC (the Ribbit
+  Brothers, the Aurochs, Adelio), which stays known in every later fight against it. An
+  individual's stats are known for that fight only.
+- The Aurochs' run from the hunters (`ai._skitter`) is a beast's senses, not a player's, and still measures
+  every foe.
 
 ### Throwing 🟡
 

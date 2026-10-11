@@ -80,7 +80,7 @@ The guild's founding trade, picked once at the draft: six races (the draft pool 
 | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll: fewer walk-outs from an overextended group. |
 | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% yield from gathering: work shifts, and the meat, mushrooms and fruit of a hunt or forage. |
 | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | Ambushes are 20% less likely while a group travels Cautious: on the Old Road and on a hunt. |
-| Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information. No effect until the combat info modal exists. (dormant) |
+| Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information: the opening read and Assess. |
 | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | Travel takes 15% fewer hours. |
 | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | On every 10th day no food in the guild ages. |
 

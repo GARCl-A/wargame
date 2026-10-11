@@ -28,11 +28,10 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **The info modal first** (*Intelligence reveals enemy info*). The AI is a second player and sees
-   exactly what the player sees, so what the modal shows is also what `ai.py` may read; build the
-   modal, then make `ai.py` stop reading enemy HP and AC it should not know. Then the AI's tactics
-   (focus the weakest it can tell is weakest, terrain, retreat) and the arena duels it loses
-   (Defend the Title, the day-6 Scrapper). Hunts and ambushes are no longer the gap.
+1. **The AI's tactics, on top of the info modal** (built 2026-10-11, see `intel.py` and RULES.md): focus
+   the weakest foe it can tell is weakest (`ai._focus_key` already ranks by the health step), terrain,
+   retreat, and the arena duels it loses (Defend the Title, the day-6 Scrapper). Hunts and ambushes are no
+   longer the gap. Measure each step with `scripts/combat_pairs.py`.
 2. **Gathering at the Mine and the Lumber Yard, with a licence**, then *Item properties*, which
    reads the sources it creates, then the specialised shops and finite stock.
 3. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
@@ -53,6 +52,21 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. **Decided 2026-10-10:** recalibrate the sim until it matches the recorded runs (both
   ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
+- **Enemy info: loose ends of the first version (built 2026-10-11).** (1) The thresholds are a first
+  guess (`intel.BASE_DC` 8, bands at margin 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4): play
+  and tune, and size the Scholars' +2 with `vocation_report.py` (the perk is live now, not yet priced).
+  (2) With nobody in sight an *attacker* searches and a *defender* groups up (built 2026-10-11,
+  `Battle.aggressor`, RULES.md). Left: the search is a coarse waypoint sweep (it ignores doors and
+  cover), a defender only groups and never sets a line or a trap, the arena has no role, and
+  `ai._skitter` (the Aurochs' run from the hunters in the Ox Fields) keeps measuring every foe: it
+  is a beast's nose, not a player's.
+  (3) The AI only assesses when it is
+  cornered and out of reach (`ai._try_assess`): a policy for when a point is worth it (before a duel,
+  against a boss) is open. (4) The foe card is tall once the HARD band opens and squeezes the action
+  list at 720p: let it scroll or fold. (5) Allies' bars stay exact; whether the Guild screen's party
+  rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
+  only on the board. (6) `combat_pairs.py` now seeds the dice before the rebuild (the turn order was
+  loose before), so its rates moved a little: re-baseline before comparing with the numbers above.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -130,39 +144,12 @@ pointed to, not repeated.
      its own two-point action. A trait may grant an action.
   - **First step:** audit the weapon catalog for what any two share (die, hands, range, trait)
     and what makes each unique; the audit decides the traits and the actions. Needs AI and tests.
-- **Intelligence reveals enemy info (combat info modal).** The modal today carries
-  information that should not be there and lacks some that would help. Rework it around
-  INT as the way to learn about enemies, so INT helps the player decide. **Decided 2026-10-10:
-  the AI gets exactly the same view** (it is another player run by the computer: no INT of its
-  own, no HP or AC it should not know). Build this before the AI's tactics; `ai.py` then reads
-  only what the modal would show a player. Audit what `ai.py` reads of the enemy side today
-  before touching it.
-  - **Always visible, no INT:** name, race, weapon in hand, visible conditions, health in
-    bands (unhurt / wounded / near death) and anything the active unit can simply see.
-  - **Passive:** when a fight starts, each ally rolls an INT check against the enemies they
-    face; what it reveals (exact HP, AC, MD, attacks, bonuses, abilities) is stored on the
-    enemy and shared by the whole squad.
-  - **Action:** an Assess action (AP cost) to dig further into one target.
-  - **Scholars perk (decided 2026-10-10, built with this modal):** the Scholars vocation gives the
-    whole guild a bonus on the INT roll that reveals enemy info (passive and Assess). Size it at
-    about the Kobold's +2 and check it with `vocation_report.py`. Until the modal exists the
-    vocation is dormant and the draft shows it as "no effect yet".
-  - **What `ai.py` reads of the enemy side today (audited 2026-10-10):** no AC and no MD. It reads
-    the exact `hp` once (the `_target` tiebreak, nearest first, then lowest HP), the target's
-    `sleep_immunity` ability (`_pick_attack`) and the `sleeping` / `demoralized` / `downed` / `dying`
-    states. It also knows where *every* enemy is, seen or not: with nobody in sight `_target` still
-    walks to the nearest one, and `_should_flee` (foe count), `_should_delay`, `_try_signal_horn` and
-    `_skitter` count or measure all foes. The modal's rule is the AI's rule, so: HP becomes a band, the
-    ability is revealed by the INT check, and only foes the unit can see count for flee, delay and the horn.
-  - **To define while building:** which field sits behind which success margin, how the
-    check scales with the target's level, whether knowledge outlasts the fight (a creature
-    met before). Needs the action, AI support and tests.
 - **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI
   playing the player's squad wins hunts 96% and ambushes 100%, so it is close to a person there;
   the gap is the arena duels. The author wins 60 of 62 against the AI and the game feels easy, so
-  the lever is a smarter enemy built on what it can see (above), not stronger enemies.
+  the lever is a smarter enemy built on what it can see (`intel.known_fields`, built), not stronger enemies.
   Wiping is the end of the run, so a person should still win almost everything.) Every economy number depends on how often the
   squad wins, and a person wins far more than `ai.py` does: measured in the economy report
   (layer 1 prints the AI's own win rate beside the skilled ones), the AI wins the Scrapper
@@ -378,8 +365,9 @@ building them:
     *Cautious*) and `--vocation`; `scripts/vocation_report.py` still does not price the Wilds
     perk. Compare `cautious` and `wary` under `--vocation wilds` at level 3+ (level 0 never
     reaches an ambush) and price the ambushes avoided.
-  - **Scholars wait for the info modal.** Its perk is dormant (`vocations.INFO_BONUS`, see
-    *Intelligence reveals enemy info*).
+  - **Price the Scholars' perk.** It is live since 2026-10-11 (`vocations.info_bonus`: +2 on the opening
+    read and on Assess), and `vocation_report.py` does not price it yet; the perk's value is how much
+    sooner a guild reads a foe, so it needs a fight-level measure, not a copper-a-day one.
   - **Oath (deferred, not scheduled)** (separate from the vocation): *what binds the members
     together, and how a stranger would tell someone belongs to the guild* (a creed, a mark, a code). It cannot be
     broken, but it can be changed. It has a mechanical side in two places: **cohesion**

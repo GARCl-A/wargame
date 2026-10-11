@@ -9,7 +9,7 @@ Battle owns its *combatants*: it wraps every character it is given in a
 roster and a rematch could reuse the same picks.
 """
 
-from . import data, vision
+from . import data, intel, vision
 from .board import COLS, ROWS, cells, cells_distance, chebyshev
 from .combatant import AP_PER_TURN, Combatant
 from .conditions import Entangled
@@ -22,7 +22,7 @@ __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
 
 class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
-                 lethal=True, arena=False, clock_day=1):
+                 lethal=True, arena=False, clock_day=1, aggressor=None):
         self.log_lines = []
         self.log_total = 0                    # lines ever logged: `log_lines` keeps only the last 200
         self.sink = None                      # a combat_log.CombatLog while this fight is recorded
@@ -30,6 +30,7 @@ class Battle:
         self.daylight = daylight              # outdoor scenarios read this for ambient light
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
         self.arena = arena                   # True = fought in the pits: the Champion of the Pit title bites here
+        self.aggressor = aggressor           # "player" | "enemy": who brought the fight (ai.py: it searches, the other side groups); None = neither
         self.scenario = scenario or ArenaScenario()
         self.player_units = [Combatant(u, "player") for u in player_units]
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
@@ -78,6 +79,7 @@ class Battle:
             u.z = self.board.elevation_at(u.pos)
         self.round_no = 1
         self.winner = None
+        self.intel = intel.Intel(self)
         self._mopup_open = False              # enemies down, allies still bleeding out
         if self.is_ctf:
             self._assign_flag_runners()

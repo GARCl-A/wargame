@@ -2,7 +2,7 @@
 
 import random
 
-from .. import combat_log, poisons
+from .. import combat_log, intel, poisons
 from ..board import cells
 
 
@@ -196,8 +196,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     if phalanx:
         ac += 1
     crit = nat == 20
-    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac}" + (" [Phalanx]" if phalanx else "")
-    fx_text = f"{total} vs AC {ac}"
+    shown = intel.shown(battle, target, "ac", ac)
+    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {shown}" + (" [Phalanx]" if phalanx and shown != "?" else "")
+    fx_text = f"{total} vs AC {shown}"
     if nat == 1:
         battle.log(desc + "  -> critical miss.")
         battle.fx(target.pos, "Crit Miss!", "faint")

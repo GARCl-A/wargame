@@ -2,7 +2,7 @@
 
 import random
 
-from .. import data, magic
+from .. import data, intel, magic
 from ..board import grid_distance
 from ..conditions import Sleeping
 from ..data import d20
@@ -52,13 +52,13 @@ class MagicMissileAction(SpellAction):
         ac = target.ac_vs(actor)
         if atk == 20 or hit_score >= ac:
             dmg = data.roll(1, 4)
-            battle.log(f" Hit ({hit_score} vs AC {ac}) for {dmg} magic damage.")
+            battle.log(f" Hit ({hit_score} vs AC {intel.shown(battle, target, 'ac', ac)}) for {dmg} magic damage.")
             was_up = target.alive
             target.take_damage(dmg, battle.log)
             if was_up and not target.alive and target.team != actor.team:
                 actor.credit_kill(target)
         else:
-            battle.log(f" Miss ({hit_score} vs AC {ac}).")
+            battle.log(f" Miss ({hit_score} vs AC {intel.shown(battle, target, 'ac', ac)}).")
 
 
 class SleepAction(SpellAction):
@@ -84,7 +84,7 @@ class SleepAction(SpellAction):
         atk = d20()
         hit_score = atk + actor.mod_intelligence
         md = target.mental_defense
-        desc = f" d20({atk}) {actor.mod_intelligence:+}(INT) = {hit_score} vs MD {md}"
+        desc = f" d20({atk}) {actor.mod_intelligence:+}(INT) = {hit_score} vs MD {intel.shown(battle, target, 'md', md)}"
 
         if atk == 1:
             battle.log(desc + " -> Critical miss!")

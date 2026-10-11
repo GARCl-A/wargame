@@ -1,6 +1,7 @@
 """Attack-shaped actions: Attack, Reload, Defend, Throw, Demoralize, Flee, Push."""
 
 
+from .. import intel
 from ..board import cells, cells_in_radius
 from ..conditions import Defending, Demoralized
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus
@@ -341,7 +342,7 @@ class Demoralize(Action):
             md += 1                                # the champion is hard to rattle in their own pit
         crit = nat == 20
         desc = (f"{actor.name} tries to demoralize {target.name}: "
-                f"d20({nat}) {detail} = {total} vs MD {md}")
+                f"d20({nat}) {detail} = {total} vs MD {intel.shown(battle, target, 'md', md)}")
         if nat == 1:
             battle.log(desc + "  -> critical miss.")
         elif crit or total >= md:

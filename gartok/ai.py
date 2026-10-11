@@ -15,7 +15,7 @@ the morality axis mostly:
   still stands.
 """
 
-from . import actions, data
+from . import actions, data, intel
 from .board import cells, grid_distance
 
 
@@ -40,7 +40,7 @@ def _pick_attack(battle, unit, target):
             if a.can(battle, unit, target)]
             
     if "sleep" in getattr(unit, "spells_known", []):
-        if not getattr(target.char.ability, "sleep_immunity", False) and not target.has_condition("sleeping"):
+        if not _sleep_immune(battle, unit, target) and not target.has_condition("sleeping"):
             sleep_spell = actions.CastSpellAction("sleep")
             if sleep_spell.can(battle, unit, target):
                 return sleep_spell  # always prioritize putting them to sleep first
@@ -72,6 +72,19 @@ def _pick_attack(battle, unit, target):
     return opts[0]
 
 
+def _sleep_immune(battle, unit, target):
+    """Only a racial ability the unit's side has read can tell it the foe will not sleep."""
+    return (intel.knows(battle, unit.team, target, "racial_ability")
+            and getattr(target.char.ability, "sleep_immunity", False))
+
+
+def _focus_key(battle, unit, foe):
+    """How a unit ranks the foes it may hit: nearest first, then the lowest health it can tell
+    (the exact hit points once read, the health step before that)."""
+    exact = foe.hp if intel.knows(battle, unit.team, foe, "hp") else 99
+    return (battle.units_distance(unit, foe), intel.health_steps(foe), exact)
+
+
 def _approach_reach(unit):
     """How close the unit needs to get to a foe to strike -- so the path stops
     there instead of always closing to adjacent. 1 normally; the Tongue's longer
@@ -91,12 +104,29 @@ def _axes(unit):
     return data.alignment_axes(unit.alignment)
 
 
+SEARCH_STEP = 4           # spacing of the waypoints an attacker sweeps
+SEARCH_REACH = 3          # a waypoint counts as searched once a unit is this near
+GROUP_GAP = 2             # a defender with nobody in sight closes to this far from an ally
+
+
+def _role(battle, unit):
+    """"attacker" for the side that brought the fight, "defender" for the other, None when neither did."""
+    if battle.aggressor is None:
+        return None
+    return "attacker" if unit.team == battle.aggressor else "defender"
+
+
 def _target(battle, unit):
     enemies = [u for u in battle.units if u.alive and u.team != unit.team]
     if not enemies:
         return None
     visible = [e for e in enemies if battle.can_see_unit(unit, e)]
-    # nobody in sight: advance toward the nearest one anyway
+    if not visible and _role(battle, unit):
+        # nobody in its own sight: it closes on what a teammate sees, else it searches or groups up
+        visible = intel.visible_foes(battle, unit)
+        if not visible:
+            return None
+    # no role (the arena): advance toward the nearest one anyway
     pool = visible or enemies
     if battle.is_ctf:
         # someone is running off with OUR flag -- stopping them beats whatever
@@ -104,7 +134,72 @@ def _target(battle, unit):
         runner = battle.flag_carrier[unit.team]
         if runner in pool:
             return runner
-    return min(pool, key=lambda e: (battle.units_distance(unit, e), e.hp))
+    return min(pool, key=lambda e: _focus_key(battle, unit, e))
+
+
+def _search_goal(battle, unit):
+    """`(cell, reach)` an attacker walks to: the nearest place its side last saw a foe, and once
+    that is empty a sweep of waypoints across the board, skipping the ones a teammate has been near."""
+    memory = battle.intel.last_seen[unit.team]
+    while memory:
+        goal = min(memory.values(), key=lambda p: grid_distance(unit.pos, p))
+        if grid_distance(unit.pos, goal) > 1:
+            return goal, 1
+        for foe in [f for f, p in memory.items() if p == goal]:     # it was here and is gone
+            del memory[foe]
+    board = battle.board
+    visited = battle.intel.visited[unit.team]
+    points = [(x, y) for x in range(SEARCH_STEP // 2, board.cols, SEARCH_STEP)
+              for y in range(SEARCH_STEP // 2, board.rows, SEARCH_STEP) if (x, y) not in board.walls]
+    for p in points:
+        if any(u.alive and u.team == unit.team and grid_distance(u.pos, p) <= SEARCH_REACH for u in battle.units):
+            visited.add(p)
+    left = [p for p in points if p not in visited]
+    if not left:
+        visited.clear()
+        left = points
+    return (min(left, key=lambda p: grid_distance(unit.pos, p)), 0) if left else (None, 0)
+
+
+def _search(battle, unit):
+    """An attacker with nobody in sight goes looking. True if it moved."""
+    goal, reach = _search_goal(battle, unit)
+    if goal is None:
+        return False
+    dest = battle.path_step_toward(unit, goal, unit.speed, reach=reach)
+    if dest == unit.pos:                      # walled off from it: do not try again
+        battle.intel.visited[unit.team].add(goal)
+        battle.intel.last_seen[unit.team] = {f: p for f, p in battle.intel.last_seen[unit.team].items() if p != goal}
+        return False
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return True
+
+
+def _group_up(battle, unit):
+    """A defender with nobody in sight closes on its nearest ally and holds there. True if it moved."""
+    mates = [u for u in battle.units if u.alive and u.team == unit.team and u is not unit]
+    if not mates:
+        return False
+    near = min(mates, key=lambda m: battle.units_distance(unit, m))
+    if battle.units_distance(unit, near) <= GROUP_GAP:
+        return False
+    dest = battle.path_step_toward(unit, near.pos, unit.speed, reach=GROUP_GAP)
+    if dest == unit.pos:
+        return False
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return True
+
+
+def _no_contact(battle, unit):
+    """What a unit does when no foe is in sight, by role. True if it spent a point."""
+    role = _role(battle, unit)
+    if role == "attacker":
+        return _search(battle, unit)
+    if role == "defender":
+        return _group_up(battle, unit)
+    return False
 
 
 def _weapons_on_ground(battle):
@@ -223,7 +318,7 @@ def _try_signal_horn(battle, unit):
     horn = actions.SIGNAL_HORN
     if not horn.available(battle, unit):
         return False
-    foes = [u for u in battle.units if u.alive and u.team != unit.team]
+    foes = intel.visible_foes(battle, unit)
     if not foes or any(battle.units_distance(unit, f) <= unit.speed + 1 for f in foes):
         return False
     if len(horn.allies_in_range(battle, unit)) < 2:
@@ -283,6 +378,19 @@ def _step_over_terrain(battle, unit, target):
     return True
 
 
+def _try_assess(battle, unit):
+    """With nothing better to spend a point on, read the foe in sight it knows least about."""
+    if not actions.ASSESS.available(battle, unit):
+        return False
+    foes = [f for f in intel.visible_foes(battle, unit) if actions.ASSESS.can(battle, unit, f)]
+    foes = [f for f in foes if battle.intel.margin[unit.team].get(f, -99) < intel.HARD]
+    if not foes:
+        return False
+    foe = min(foes, key=lambda f: battle.intel.margin[unit.team].get(f, -99))
+    actions.ASSESS.execute(battle, unit, foe)
+    return True
+
+
 def _ctf_goal(battle, unit):
     """The cell a capture-the-flag runner is racing for: the player's flag
     until they scoop it up, then their own side's flag to plant it on and
@@ -305,7 +413,7 @@ def _should_flee(battle, unit):
     order = _axes(unit)[0]
     allies = [u for u in battle.units
               if u.alive and u.team == unit.team and u is not unit]
-    foes = [u for u in battle.units if u.alive and u.team != unit.team]
+    foes = intel.visible_foes(battle, unit)
     if not foes:
         return False
     if order > 0 and allies:                 # lawful: hold the line
@@ -321,7 +429,7 @@ def _should_delay(battle, unit):
     runner (it has somewhere to be)."""
     if unit.ranged or getattr(unit, "ctf_runner", False) or not actions.DELAY.available(battle, unit):
         return False
-    foes = [u for u in battle.units if u.alive and u.team != unit.team]
+    foes = intel.visible_foes(battle, unit)
     if not foes or any(battle.units_distance(unit, f) <= unit.speed + 1 for f in foes):
         return False
     after = battle.order[battle.turn_idx + 1:]
@@ -497,6 +605,8 @@ def take_turn(battle, unit):
 
         target = _target(battle, unit)
         if target is None:
+            if _no_contact(battle, unit):
+                continue
             break
 
         # a crossbow only fires loaded -- keep it fed instead of closing to melee
@@ -542,6 +652,8 @@ def take_turn(battle, unit):
             # try to climb / drop / swim toward the target so the fight doesn't
             # stall out.
             if _step_over_terrain(battle, unit, target):
+                continue
+            if _try_assess(battle, unit):
                 continue
             # cornered and out of range: defend (once) and end
             if actions.DEFEND.available(battle, unit):

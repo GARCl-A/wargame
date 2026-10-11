@@ -32,8 +32,8 @@ def ai_win_rate(make_battle, trials):
     """Share of `trials` the AI wins as the player's side, both sides driven by `ai.take_turn`."""
     wins = 0
     for t in range(trials):
-        battle = make_battle()
         random.seed(DICE_BASE + t)
+        battle = make_battle()
         for _ in range(MAX_DECISIONS):
             if battle.winner is not None:
                 break

@@ -1,5 +1,6 @@
 """Tests for the Auto-Win Monte Carlo simulation and eligibility criteria."""
 
+import random
 import time
 
 from gartok import autowin, campaign, data, world
@@ -33,6 +34,7 @@ def _make_scrapper(name="Ruffian", hp=4):
 
 
 def test_autowin_overwhelming_victory():
+    random.seed(1)
     squad = [_make_fighter(level=4, hp=25) for _ in range(4)]
     enemies = [_make_scrapper(hp=3)]
     res = autowin.simulate_matchup(squad, enemies, max_iterations=5, max_time=0.5)

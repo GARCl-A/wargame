@@ -187,6 +187,7 @@ gartok/
                     the PANEL_ACTIONS registry lives in __init__.py
   board.py          grid, walls, elevation, pathfinding (Dijkstra), line of sight
   vision.py         light + what each character sees (screen vision)
+  intel.py          what a side knows of a foe (INT read, Assess, bestiary); foe_card.py adapts it for the card
   ground.py         ground objects (GroundObject) and neutral creatures (Creature)
   scenario.py       builds a battle's map: terrain, deployment, torches; win_check seam
   encounters.py     enemy packs scaled to a target mean level

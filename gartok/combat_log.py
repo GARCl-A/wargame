@@ -76,7 +76,7 @@ class CombatLog:
             "meta": self.meta, "controllers": self.controllers,
             "scenario": type(battle.scenario).__name__,
             "lethal": battle.lethal, "arena": battle.arena, "daylight": battle.daylight,
-            "ambient_light": battle.ambient_light,
+            "ambient_light": battle.ambient_light, "aggressor": battle.aggressor,
             "board": {"cols": board.cols, "rows": board.rows,
                       "walls": sorted(_cell(c) for c in board.walls),
                       "elevation": sorted([*_cell(c), z] for c, z in board.elevation.items()),
@@ -289,7 +289,8 @@ def rebuild(rows):
         unit.team = static["team"]
         sides[static["team"]].append(unit)
     return Battle(sides["player"], sides["enemy"], scenario=ReplayScenario(start),
-                  daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"])
+                  daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"],
+                  aggressor=start.get("aggressor"))
 
 
 def frames(rows):

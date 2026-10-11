@@ -15,7 +15,8 @@ Data shapes::
 
     token = {"team": "player" | "enemy", "active": bool,
              "race": str, "portrait_id": str | None, "token": str,
-             "hp_frac": float, "torch": bool, "defending": bool,
+             "hp_frac": float, "hp_steps": int | None,   # steps: a foe's bar, in that many segments
+             "torch": bool, "defending": bool,
              "ferocity": bool, "demoralized": bool,
              "flag": "player" | "enemy" | None,   # whose flag it carries
              "focus": None | "inspect" | "armed",
@@ -94,9 +95,16 @@ def hp_color(frac):
     return OK if frac > 0.4 else WARN if frac > 0.15 else DANGER
 
 
-def hp_bar(surf, rect, frac):
+def hp_bar(surf, rect, frac, steps=None):
+    """A health bar: continuous, or in `steps` equal segments (a foe's health is only known to the step)."""
     pygame.draw.rect(surf, HP_TRACK, rect)
-    pygame.draw.rect(surf, hp_color(frac), pygame.Rect(rect.x, rect.y, int(rect.w * frac), rect.h))
+    if not steps:
+        pygame.draw.rect(surf, hp_color(frac), pygame.Rect(rect.x, rect.y, int(rect.w * frac), rect.h))
+        return
+    w = rect.w / steps
+    for i in range(round(frac * steps)):
+        left, right = round(rect.x + i * w), round(rect.x + (i + 1) * w)
+        pygame.draw.rect(surf, hp_color(frac), pygame.Rect(left, rect.y, max(1, right - left - 1), rect.h))
 
 
 def _badge(surf, F, center, w, label, fill):
@@ -349,7 +357,7 @@ def _standing(surf, F, r, tok):
         pygame.draw.circle(surf, DEMO_HL, (r.x + 8, r.y + 8), 4)
     _face(surf, F, center, rad - 5, round(rad * 1.5), tok)
     pygame.draw.circle(surf, ring_color(tok["team"]), center, rad - 4, 3)
-    hp_bar(surf, pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4), tok["hp_frac"])
+    hp_bar(surf, pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4), tok["hp_frac"], tok.get("hp_steps"))
     if tok.get("flag"):
         _badge(surf, F, (r.centerx, r.y + 8), 34, "FLAG", team_color(tok["flag"]))
 

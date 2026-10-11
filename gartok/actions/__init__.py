@@ -55,6 +55,7 @@ from .spells import (  # noqa: F401
     _PlacedSpellAction,
 )
 from .support import (
+    Assess,
     Disarm,
     Dismount,
     Delay,
@@ -83,6 +84,7 @@ DEFEND = Defend()
 THROW = Throw()
 PICK_UP = PickUp()
 DEMORALIZE = Demoralize()
+ASSESS = Assess()
 STABILIZE = Stabilize()
 FIRST_AID = FirstAid()
 PUSH = Push()
@@ -109,6 +111,7 @@ COMBAT_ACTIONS = [
     ATTACK,
     THROW,
     DEMORALIZE,
+    ASSESS,
     PUSH,
     DEFEND,
     RELOAD,

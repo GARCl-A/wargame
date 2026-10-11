@@ -47,8 +47,10 @@ def test_chaotic_ai_breaks_early_but_lawful_holds_the_line():
                   [Unit("enemy"), Unit("enemy")], lethal=True)
     a, b = batt.player_units
     e, mate = batt.enemy_units
+    batt.ambient_light = True                          # daylight: it sees who it flees from
+    batt.board.walls = set()
     a.pos, b.pos = (13, 2), (13, 9)                    # the players are far off
-    e.pos, mate.pos = (0, 5), (14, 5)                  # e on the edge, a clean run home
+    e.pos, mate.pos = (6, 5), (14, 5)                  # e a clean run from the edge
     e.hp = 1                                           # badly hurt, outnumbered
     e.alignment = "Chaotic and Neutral"
     assert ai._should_flee(batt, e)

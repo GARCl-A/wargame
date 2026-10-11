@@ -623,7 +623,7 @@ class App:
         pack = [encounters.build_enemy(level) for _ in range(size)]
         battle = Battle(list(group.members), pack, scenario=node.scenario(),
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
-                        clock_day=self.guild.clock.day)
+                        clock_day=self.guild.clock.day, aggressor="player")
         self._enter_battle(battle, node)
 
     def _open_tanner_stall(self, group, node, _offer):
@@ -667,7 +667,7 @@ class App:
         self._leave_outside(group, node, guarded)
         scenario = AncientRuinsScenario()
         battle = Battle(squad, scenario.enemies, scenario=scenario,
-                        daylight=False, lethal=True, clock_day=self.guild.clock.day)
+                        daylight=False, lethal=True, clock_day=self.guild.clock.day, aggressor="player")
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None
@@ -780,7 +780,7 @@ class App:
         scenario = node.scenario() if node.scenario else Scenario()
         battle = Battle(list(group.members), enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
-                        clock_day=self.guild.clock.day)
+                        clock_day=self.guild.clock.day, aggressor="enemy")
         self._enter_battle(battle, node)
 
     # ------------------------------------------------------------------ #
@@ -826,7 +826,8 @@ class App:
         battle = Battle(state.party, pack, scenario=state.node.scenario(),
                         daylight=self.guild.clock.is_daylight,
                         lethal=state.node.lethal, arena=False,
-                        clock_day=self.guild.clock.day)
+                        clock_day=self.guild.clock.day,
+                        aggressor="player" if state.target == "ox" else "enemy")
         self._enter_battle(battle, state.node)
 
     def _resolve_hunt_autowin(self, state, pack, autowin_result):
@@ -933,6 +934,7 @@ class App:
         self._autosave_before(battle, node)
         recorder.before_fight(self._battle_squad)
         self._log_fight(battle, node)
+        battle.intel.bind("player", self.guild.bestiary, vocations.info_bonus(self.guild))
         self.scene = BattleScreen(self.ui_fonts, battle, on_battle_end=self._battle_end)
 
     def _log_fight(self, battle, node):

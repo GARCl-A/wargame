@@ -230,6 +230,8 @@ def _enemy_band(horn=True, allies=2):
     if horn:
         foes[0].give_to_artifact("Signal Horn")
     batt = Battle([Unit("player")], foes)
+    batt.ambient_light = True                      # daylight: the band sees the hero across the field
+    batt.board.walls = set()
     lead, *rest = batt.enemy_units
     hero = batt.player_units[0]
     hero.pos = (0, 5)

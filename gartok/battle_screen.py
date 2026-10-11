@@ -10,13 +10,14 @@ import time
 
 import pygame
 
-from . import actions, ai, data, settings, vision
+from . import actions, ai, data, intel, settings, vision
 from .battle_fx import BattleFX
 from .board import cells
+from .foe_card import foe_card
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
-from .ui import battle_panel, board_render, board_style, primitives as ui_primitives
+from .ui import battle_panel, board_render, board_style, foe_panel, primitives as ui_primitives
 from .ui.board_style import BoardView, battle_layout
 from .ui.sheet_card import draw_sheet as draw_sheet_card, sheet_height, unit_to_ch
 from .ui.tokens import T
@@ -211,6 +212,21 @@ class BattleScreen(Screen):
 
     def _enemy_visible(self, u):
         return vision.enemy_visible(self.battle, self._obs, u)
+
+    def _foe_card(self, u):
+        return foe_card(intel.known_fields(self.battle, self.me, u))
+
+    def _inspect_body_h(self, who):
+        """Height of what the INSPECT panel shows for `who`: a foe's card grows as its fields open."""
+        if who.team == self.foe:
+            return foe_panel.card_height(self._foe_card(who))
+        return sheet_height("compact")
+
+    def _hp_bar(self, u):
+        """A foe's health shows in steps (what `intel` lets its viewer know); your own is exact."""
+        if u.team == self.foe:
+            return {"hp_frac": intel.health_steps(u) / intel.STEPS, "hp_steps": intel.STEPS}
+        return {"hp_frac": max(0, u.hp) / u.hp_max, "hp_steps": None}
 
     def _tile_at_px(self, px):
         return self.view.cell_at(px)
@@ -625,7 +641,7 @@ class BattleScreen(Screen):
                 "race": u.race["name"],
                 "portrait_id": getattr(u, "portrait_id", None),
                 "token": u.token,
-                "hp_frac": max(0, u.hp) / u.hp_max,
+                **self._hp_bar(u),
                 "torch": u.has_torch,
                 "defending": u.defending,
                 "ferocity": getattr(u, "ferocity_pending", False),
@@ -736,7 +752,7 @@ class BattleScreen(Screen):
                 "race": u.race["name"],
                 "portrait_id": getattr(u, "portrait_id", None),
                 "token": u.token if known else "?",
-                "hp_frac": max(0, u.hp) / u.hp_max,
+                **self._hp_bar(u),
                 "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
             })
         battle_panel.draw_initiative(screen, self.F, self._L["init"], entries)
@@ -807,7 +823,7 @@ class BattleScreen(Screen):
         inspect_h = 0
         if who is not None:
             inspect_h = battle_panel.inspect_height(
-                self.inspect_open, who is insp and self._armed is insp, sheet_height("compact")
+                self.inspect_open, who is insp and self._armed is insp, self._inspect_body_h(who)
             )
 
         inspect_top = pr.bottom - inspect_h
@@ -944,9 +960,13 @@ class BattleScreen(Screen):
         if not self.inspect_open:
             return
 
-        ch = unit_to_ch(who)
-        card_rect = pygame.Rect(rect.x, cur_y, rect.w - T.S, 0)
-        h, tooltip = draw_sheet_card(screen, F, card_rect, ch, density="compact", mouse=self.mouse)
+        if who.team == self.foe:
+            card = self._foe_card(who)
+            area = pygame.Rect(rect.x, cur_y, rect.w - T.S, foe_panel.card_height(card))
+            tooltip = foe_panel.draw_foe_card(screen, F, area, card, self.mouse)
+        else:
+            card_rect = pygame.Rect(rect.x, cur_y, rect.w - T.S, 0)
+            _, tooltip = draw_sheet_card(screen, F, card_rect, unit_to_ch(who), density="compact", mouse=self.mouse)
         if tooltip:
             ui_primitives.draw_tooltip(screen, F, tooltip, self.mouse)
 

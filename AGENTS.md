@@ -53,9 +53,10 @@ When the two disagree, `REFERENCE.md` wins.
 | `conditions.py` | `Condition` subclasses (Defending, Demoralized) |
 | `board.py` | grid geometry, walls, LOS, pathfinding (pure, no battle state) |
 | `vision.py` | free fns over battle: light, can_see, visible_cells |
+| `intel.py` / `foe_card.py` | what a side knows of a foe: the opening INT read, its bands, Assess, the guild's `Bestiary`, `known_fields` (the one read the foe card, the log and `ai.py` share); `foe_card` adapts it for `ui/foe_panel.py` |
 | `ground.py` | GroundObject (weapon, torch) + Creature (neutral body) |
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |
-| `ai.py` | heuristic over actions/; alignment tempers behaviour |
+| `ai.py` | heuristic over actions/; alignment tempers behaviour; reads only `intel.known_fields`; with nobody in sight the side that brought the fight (`Battle.aggressor`) searches and the other groups up |
 | `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) and may carry a `Vendor` (name, race, role, portrait) per function: `world.vendor(node_id, function)` is the keeper whose face the shop screens show |
 | `node_functions.py` | what a node can offer, one `NodeFunction` per id: order kind, map button label, note; `app._FUNCTION_OPENERS` holds each id's screen opener and a test keeps them in step |
 | `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); refilled daily for every node that offers `shop` |

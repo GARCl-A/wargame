@@ -22,7 +22,7 @@ GATHER_BONUS = 0.15         # Delvers: extra yield from gathering work
 CAUTIOUS_AMBUSH = 0.8       # Wilds: x on the ambush chance while the group is Cautious
 TRAVEL_FACTOR = 0.85        # Caravan: x on travel hours, after wagon and animal speed
 FOOD_PAUSE_EVERY = 10       # Marsh: on every 10th day of the guild's clock no food ages
-INFO_BONUS = 2              # Scholars: bonus on the INT roll that reveals enemy info (the modal is not built yet)
+INFO_BONUS = 2              # Scholars: bonus on the INT roll that reveals enemy info (the opening read and Assess)
 
 POOL_SIZE = 9
 
@@ -51,8 +51,8 @@ VOCATIONS = {v.id: v for v in (
              "and on a hunt."),
     Vocation(SCHOLARS, "Scholars",
              ("Kobold", "Gnome", "Elf", "Sprite", "Kenku", "Human"),
-             f"+{INFO_BONUS} on the INT roll that reveals enemy information. No effect "
-             "until the combat info modal exists.", active=False),
+             f"+{INFO_BONUS} on the INT roll that reveals enemy information: the opening read "
+             "and Assess."),
     Vocation(CARAVAN, "Caravan",
              ("Human", "Halfling", "Dwarf", "Kenku", "Automaton", "Centaur"),
              "Travel takes 15% fewer hours."),
@@ -76,6 +76,10 @@ def _is(guild, vocation_id):
 
 def cohesion_bonus(guild):
     return COHESION_BONUS if _is(guild, WARBAND) else 0
+
+
+def info_bonus(guild):
+    return INFO_BONUS if _is(guild, SCHOLARS) else 0
 
 
 def gather_mult(guild):
