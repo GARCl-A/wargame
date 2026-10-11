@@ -18,6 +18,7 @@ translation step itself.
 import pygame
 
 from .. import icons
+from ..item_icon import draw_icon
 from .inspector_panel import ROLE_MARK, draw_role
 from .primitives import caps, contained, draw_button, hline, scrollbar, text
 from .tokens import T, mix
@@ -27,6 +28,14 @@ TAG_COLOR = {"": T.TX_FAINT, "WEAPON": T.TX_MUTED, "ARMOR": T.TX_MUTED,
              "FOOD": T.TX_FAINT, "TACK": T.TX_MUTED, "MATERIAL": T.BRASS_DIM, "CHEST": T.BRASS, "SEALED": T.BRASS}
 
 TAG_SEP = " · "      # between a row's tags (and before a charge count)
+ICON = T.S * 4       # an item's icon, a square at the left of its row
+ICON_GAP = 6
+
+
+def item_icon(surf, name, x, cy, size=ICON):
+    """Paint `name`'s icon with its left edge at `x`, centred on `cy`; returns where the text may start."""
+    draw_icon(surf, pygame.Rect(x, cy - size // 2, size, size), name)
+    return x + size + ICON_GAP
 
 
 def tag_pill(surf, F, tag, pos, max_x=None):
@@ -80,8 +89,11 @@ def slot(surf, F, rect, kind, held, mouse):
     border = T.BRASS if (sel or drop) else T.STEEL_LINE
     pygame.draw.rect(surf, fill, rect)
     pygame.draw.rect(surf, border, rect, 1)
+    text_x = rect.x + T.S
+    if name:
+        text_x = item_icon(surf, name, rect.x + 4, rect.centery, min(ICON, rect.h - 8))
     with contained(surf, rect.inflate(-16, 0)):
-        text(surf, F["body"], name or "empty", (rect.x + T.S, rect.centery - 8),
+        text(surf, F["body"], name or "empty", (text_x, rect.centery - 8),
              T.TX_FAINT if not name else T.TX)
     if note:
         caps(surf, F["micro"], note, (rect.right - T.S, rect.centery - 5), T.TX_FAINT, right=True)
@@ -99,7 +111,7 @@ def pack_row(surf, F, rect, item, *, selected, mouse):
     name_x = rect.x + T.S
     lock_r = pygame.Rect(name_x, rect.centery - 9, 18, 18)
     icons.icon(surf, "lock" if locked else "unlock", lock_r, T.BRASS if locked else T.TX_FAINT)
-    name_x += 22
+    name_x = item_icon(surf, name, name_x + 22, rect.centery)
 
     dots_r = pygame.Rect(rect.right - T.S * 3, rect.centery - 10, 20, 20)
     draw_button(surf, F, dots_r, "⋮", ghost=True, mpos=mouse)
@@ -336,7 +348,7 @@ def shop_row(surf, F, rect, item, *, qty_sel, mouse):
     pygame.draw.rect(surf, mix(T.BRASS, T.STEEL, .85) if sel else T.TABLE, rect)
     pygame.draw.rect(surf, T.BRASS if sel else T.STEEL_LINE, rect, 1)
 
-    name_x = rect.x + T.S
+    name_x = item_icon(surf, name, rect.x + T.S, rect.centery)
     fg = T.TX_FAINT if not ok else (T.TX_MUTED if sel else T.TX)
     label = name if held == 1 else f"{name}  ×{held}"
     text(surf, F["body"], label, (name_x, rect.centery - 13), fg)
@@ -511,7 +523,7 @@ def _cargo_row(surf, F, r, name, tag, weight, qty, locked, sel, carrier, mouse):
     caps(surf, F["micro"], carrier, (carrier_r.x + T.S, carrier_r.centery - 5), T.TX_MUTED)
     caps(surf, F["micro"], "▾", (carrier_r.right - T.S, carrier_r.centery - 5), T.TX_FAINT, right=True)
 
-    name_x = lock_r.right + T.S
+    name_x = item_icon(surf, name, lock_r.right + T.S, r.centery)
     label = name if qty == 1 else f"{name}  ×{qty}"
     text(surf, F["body"], label, (name_x, r.centery - 8), T.TX)
     tag_pill(surf, F, tag, (name_x + F["body"].size(label)[0] + T.S, r.centery - 5),

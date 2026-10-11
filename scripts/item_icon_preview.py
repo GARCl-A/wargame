@@ -1,4 +1,4 @@
-"""Render a contact sheet of the item silhouettes (prototype): python scripts/item_icon_preview.py out.png"""
+"""Render a contact sheet of every item's icon: python scripts/item_icon_preview.py out.png"""
 
 import os
 import sys
@@ -8,38 +8,22 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pygame
 
-from gartok.ui.item_icons import draw_item_icon
+from gartok import item_icon, items
 from gartok.ui.tokens import T, fonts
-
-IRON, STEEL_TONE, WOOD, LEATHER, BRASS = (150, 158, 170), (186, 194, 206), (150, 108, 66), (160, 120, 76), T.BRASS
-RIM = {"common": None, "uncommon": T.GREEN, "rare": T.BRASS, "unique": T.BLOOD}
-
-SAMPLES = [
-    ("Dagger", "blade", IRON, "common", {"length": 34, "width": 8, "guard": 16, "taper": .3}),
-    ("Rapier", "blade", STEEL_TONE, "uncommon", {"length": 62, "width": 5, "guard": 26, "taper": .2}),
-    ("Broadsword", "blade", IRON, "common", {"length": 58, "width": 14, "guard": 30, "taper": .3}),
-    ("Dwarf Axe", "blade", BRASS, "uncommon", {"length": 44, "width": 12, "guard": 20, "taper": .5}),
-    ("Shortbow", "bow", WOOD, "common", {}),
-    ("Leather Jerkin", "armor", LEATHER, "common", {"heavy": 0}),
-    ("Chainmail", "armor", IRON, "uncommon", {"heavy": .5}),
-    ("Plate Armor", "armor", STEEL_TONE, "rare", {"heavy": 1}),
-    ("Healing Potion", "flask", (190, 205, 215), "common", {"liquid": (176, 66, 58)}),
-    ("Antidote", "flask", (190, 205, 215), "uncommon", {"liquid": (106, 160, 98)}),
-]
 
 if __name__ == "__main__":
     pygame.init()
     pygame.display.set_mode((1, 1))
     F = fonts()
-    cell, pad = 128, 24
-    cols = 5
-    rows = -(-len(SAMPLES) // cols)
-    sheet = pygame.Surface((cols * (cell + pad) + pad, rows * (cell + pad + 28) + pad))
+    names = [n for n in items.all_items() if item_icon._base(n) == n]
+    cell, pad, label_h, cols = 96, 20, 22, 10
+    rows = -(-len(names) // cols)
+    sheet = pygame.Surface((cols * (cell + pad) + pad, rows * (cell + label_h + pad) + pad))
     sheet.fill(T.TABLE)
-    for i, (name, kind, tone, rarity, shape) in enumerate(SAMPLES):
+    for i, name in enumerate(names):
         x = pad + (i % cols) * (cell + pad)
-        y = pad + (i // cols) * (cell + pad + 28)
-        draw_item_icon(sheet, pygame.Rect(x, y, cell, cell), kind, tone, RIM[rarity], **shape)
-        label = F["body_sm"].render(name, True, T.TX_MUTED)
-        sheet.blit(label, label.get_rect(midtop=(x + cell // 2, y + cell + 6)))
+        y = pad + (i // cols) * (cell + label_h + pad)
+        item_icon.draw_icon(sheet, pygame.Rect(x, y, cell, cell), name)
+        label = F["micro"].render(name[:16], True, T.TX_MUTED)
+        sheet.blit(label, label.get_rect(midtop=(x + cell // 2, y + cell + 4)))
     pygame.image.save(sheet, sys.argv[1] if len(sys.argv) > 1 else "item_icons.png")

@@ -52,6 +52,14 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   day 96). Make an empty or nearly empty larder critical: a blood-coloured banner or modal on the map
   when any group has under a day of food (and money to buy it), and a confirm before a work or rest order
   that would run it out. See `ui/command_bar.py` for the alert strip.
+- **Item icons: the lists that are still text.** All 106 catalogue items have a code-drawn silhouette and
+  it shows on the pack rows, the CARGO table, the shop/loot/bank-chest rows (`loadout_panel`), the hand /
+  armor / artifact slots and the market shelf (`market_panel`) (2026-10-10). `ui/item_icons.py` has the ~50
+  generators, `gartok/item_icon.py` maps each item to one (kind, material, shape; rarity is the rim; a Large
+  weapon, every spell scroll and every dictionary share their plain kind's icon) and a test fails for an
+  item with no entry. Still text: the Bank view (`bank_view_screen.py`), the crafting and library screens,
+  the battle loot and the Tanner / mission goal items. The material comes from a table keyed by name, not
+  from `ItemDef`, until *Item properties* gives items a base material.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -289,18 +297,6 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Item icons (the biggest gap).** `items.py` has no icon field and the pack, market, stash
-  and loot screens are text only. **Decided 2026-10-10: silhouettes drawn in code**, one
-  generator per category tinted by material, rarity as the rim colour (no artist, and AI art does not
-  hold one style across ~100 items). **Prototype built:** `ui/item_icons.py` (blade, bow, armor,
-  flask; `scripts/item_icon_preview.py` renders a contact sheet) with a test. Left: an adapter from
-  `ItemDef` to (kind, tone, shape) (material comes from the name, since `ItemDef` has no material
-  field yet, see *Item properties*), the axe / hammer / spear / crossbow / shield / tool / food /
-  material / coin generators, and wiring the icon into the pack, market, stash and loot rows. The
-  categories: one-handed weapon, two-handed weapon, bow/crossbow, light/medium/heavy armor,
-  shield, potion, food, material (leather, wood, iron, stone), tool, Copper Coin, Gold Coin.
-  After that the key items: Signal Horn, Chisel, Pickaxe, Holy Symbol, Legendary Horn. Needs
-  the `ItemDef` field, a `ui/` component for the icon and tests.
 - **Art for content already in this backlog.** The Mine, Smith, Apothecary and Tanner nodes,
   the Tanner and Smith as mission givers with a face, and the Cart and Carriage
   (`wagon.Vehicle`; `watch_screen.py` is text only today).

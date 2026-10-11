@@ -197,6 +197,7 @@ gartok/
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai.py             enemy squad AI (over actions/); alignment tempers the edges
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
+  item_icon.py      what each item looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
@@ -296,7 +297,7 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
                     vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
                     combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)
-                    item_icon_preview.py (contact sheet of the code-drawn item silhouettes, ui/item_icons.py)
+                    item_icon_preview.py (contact sheet of every item's code-drawn icon, ui/item_icons.py + item_icon.py)
                     combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change)
                     archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks)
                     gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by

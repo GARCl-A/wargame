@@ -75,6 +75,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `menu_screen.py` / `saves_screen.py` | guild list at launch → every save of a guild, with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
+| `item_icon.py` | what each item looks like: `ICONS` names every catalogue item (kind, material, shape) for `ui/item_icons.py`'s code-drawn silhouettes, rarity is the rim; a test fails for an item with no entry |
 | `medic.py` | the Medic's quick treatment (Apothecary hub, MEDIC tab): HP / sickness / poison priced as the expected potions and doses at `economy.MEDIC_PRICE_FACTOR`, one clock for the group; past `MEDIC_MAX_HOURS` it is a hospital stay (`admit`: the patient splits off on a `solo` order); the sim prices it from the same constants |
 | `solo.py` | a *solo task* (`orders.solo`: kind `solo`, `task` hospital / craft): one member splits off into a group of their own (`Guild.send_alone`, costs a group slot) or the whole group waits; `campaign.advance` calls `solo.finish` when the hours run out and the player merges them back by hand. `solo.craft` rolls the craft at the end, from the crafter's own pack when alone or the group's when it waits; the Forge screen's "Alone" row issues it |
 | `craft_level.py` | a recipe's level, worked out from its difficulty (who may start it, scarce reagents, batch time), never set by hand; it blocks nobody, it is the label and the work-XP multiplier |

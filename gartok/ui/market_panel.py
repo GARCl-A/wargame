@@ -29,7 +29,7 @@ draws the vendor's side.
 import pygame
 
 from ..constants import fmt_money
-from .loadout_panel import TAG_COLOR
+from .loadout_panel import ICON, TAG_COLOR, item_icon
 from .primitives import caps, draw_button, ellipsize, hline, text
 from .tokens import T, mix
 
@@ -131,9 +131,11 @@ def _stock_row(surf, F, r, row, kit, weapons, name_w, price_x, wt_x, hov, mpos, 
 
     spec = "" if kit else row.get("spec", "")
     name_y = r.y + 4 if spec else r.centery - 8
-    text(surf, F["body"], ellipsize(row["name"], F["body"], name_w), (r.x + T.S, name_y), ink)
+    name_x = item_icon(surf, row["name"], r.x + 4, r.centery, min(ICON, r.h - 6))
+    name_w -= name_x - (r.x + T.S)
+    text(surf, F["body"], ellipsize(row["name"], F["body"], name_w), (name_x, name_y), ink)
     if spec:
-        text(surf, F["micro"], spec, (r.x + T.S, r.y + 17), faint)
+        text(surf, F["micro"], spec, (name_x, r.y + 17), faint)
 
     if weapons:
         bw, bh = 20, 18
