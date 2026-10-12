@@ -175,6 +175,39 @@ def test_field_loot_gathers_the_dead_and_the_ground():
     assert sorted(pool) == ["Axe", "Axe", "Club", "Dagger", "Rope", "Rope", "Torch"]
 
 
+def test_field_loot_recovers_fallen_allies_worn_equipment():
+    from gartok import loot
+    ally = Unit("player")
+    ally.equipped_armor = "Studded Leather"
+    ally.equipped_offhand = "Round Shield"
+    ally.equipped_artifact = "Healing Ring"
+    batt = Battle([ally], [Unit("enemy")])
+    dead_ally = batt.player_units[0]
+    dead_ally.weapon_hand, dead_ally.weapon_name = True, "Spear"
+    dead_ally.inventory = ["Potato"]
+    batt.ground = []
+    batt.enemy_units[0].inventory = []
+    batt.enemy_units[0].weapon_hand = False
+
+    pool = loot.field_loot(batt, [dead_ally])
+    assert "Studded Leather" in pool
+    assert "Round Shield" in pool
+    assert "Healing Ring" in pool
+    assert "Spear" in pool
+    assert "Potato" in pool
+
+    # Off-hand torch when lit in hand is not duplicated
+    ally.equipped_offhand = "Torch"
+    dead_ally.torch_hand = True
+    pool2 = loot.field_loot(batt, [dead_ally])
+    assert pool2.count("Torch") == 1
+
+    # Tongue weapon is recovered
+    ally.equipped_tongue = "Dagger"
+    pool3 = loot.field_loot(batt, [dead_ally])
+    assert "Dagger" in pool3
+
+
 def test_field_loot_includes_a_fallen_enemys_equipped_lantern():
     from gartok import data, loot
     random.seed(4)

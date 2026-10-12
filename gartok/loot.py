@@ -83,6 +83,19 @@ def field_loot(battle, fallen_combatants, rng=random):
         if char is not None and u in fallen_combatants:
             for coin in items.COIN_VALUE:
                 pool += [coin] * char.count_of(coin)
+            if char.equipped_armor:
+                pool.append(char.equipped_armor)
+            if char.equipped_offhand:
+                if char.equipped_offhand == items.TORCH_ITEM and getattr(u, "torch_hand", False):
+                    pass
+                elif char.equipped_offhand == items.LANTERN_ITEM and getattr(u, "lantern_hand", False):
+                    pass
+                else:
+                    pool.append(char.equipped_offhand)
+            if char.equipped_artifact:
+                pool.append(char.equipped_artifact)
+            if getattr(char, "equipped_tongue", None):
+                pool.append(char.equipped_tongue)
         if char is not None:
             pool += UNIQUE_DROPS.get(getattr(char, "npc_slug", None), ())
             drop = char.race.get("drop_item")

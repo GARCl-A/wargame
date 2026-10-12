@@ -799,7 +799,8 @@ class App:
     def _begin_hunt(self, party, node, group, guarded, target="meat"):
         self._leave_outside(group, node, guarded)
         stance = group.stance if group is not None else NORMAL
-        self._hunt = hunt.begin(self.guild, party, node, stance, target=target)
+        guards = [u for u in group.members if u not in party] if group is not None else []
+        self._hunt = hunt.begin(self.guild, party, node, stance, target=target, guards=guards)
         self.scene = self._hunt_screen("setup")
 
     def _hunt_screen(self, phase, autowin=True):

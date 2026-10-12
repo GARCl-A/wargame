@@ -45,8 +45,8 @@ def _enemies(offer, squad_size, guild):
         return [arena.build_challenger(mean)]
     if offer.boss:
         brothers = map_lib.npc_units(map_lib.load_map(offer.map_slug))
-        goons = [encounters.build_enemy(offer.level) for _ in range(offer.enemies)]
-        return brothers + goons
+        lackeys = [encounters.build_enemy(offer.level) for _ in range(offer.enemies)]
+        return brothers + lackeys
     if offer.stage2:
         return arena.stage2_pack(offer.enemies)
 

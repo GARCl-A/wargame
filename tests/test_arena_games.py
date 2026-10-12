@@ -39,9 +39,10 @@ def test_the_boss_bout_is_a_six_a_side_ctf_on_the_authored_map():
     boss = arena.boss_bout()
     assert boss.stage2 and boss.ctf and boss.boss
     assert boss.map_slug == arena.BOSS_MAP
-    assert boss.enemies == arena.BOSS_GOONS and boss.level == arena.BOSS_GOON_LEVEL
-    assert boss.player_cap == arena.BOSS_SQUAD == 6         # brothers + goons, matched
+    assert boss.enemies == arena.BOSS_LACKEYS and boss.level == arena.BOSS_LACKEY_LEVEL
+    assert boss.player_cap == arena.BOSS_SQUAD == 6         # brothers + lackeys, matched
     assert boss.purse == arena.BOSS_PURSE
+    assert "Lackeys" in arena.bout_level_range(boss, [])
 
 
 # --------------------------------------------------------------------------- #

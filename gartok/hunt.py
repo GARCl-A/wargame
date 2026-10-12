@@ -17,7 +17,7 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 """
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from . import clock, data, encounters, missions, npc_lib, vocations
 
@@ -33,6 +33,7 @@ HUNT_SHIFT_HOURS = (4, 8, 12, 16)   # lengths offered, like the lumber yard
 MEAT_ITEM = "Meat"
 HUNT_LEVEL = 3                   # the wilds' job level: real risk, so it keeps
                                  # paying work-XP well past where the lumber yard caps
+GUARD_WORK_LEVEL = 1             # wagon watch: lower risk, activity level 1
 BIWOLF_SLUG = "biwolf"
 BIWOLF_MEAT = 15
 BIWOLF_ESCORT = 3
@@ -53,6 +54,7 @@ class HuntState:
     biwolf: bool = False           # the ambush in progress is his
     yield_mult: float = 1.0        # the guild's gathering bonus (vocations.gather_mult)
     ambush_mult: float = 1.0       # the group's stance and the party's scouts (vocations.ambush_mult)
+    guards: list = field(default_factory=list)  # units left outside minding the wagon
 
     @property
     def meat(self):
@@ -61,13 +63,14 @@ class HuntState:
         return 0
 
 
-def begin(guild, party, node, stance, hours_left=0, target="meat"):
+def begin(guild, party, node, stance, hours_left=0, target="meat", guards=()):
     """A fresh hunt of `party` for `guild`, with the guild's gathering perk and the
     group's travel stance already folded in."""
     scouts = any(u.has_talent("woodland_scout") for u in party)
     return HuntState(list(party), node, hours_left=hours_left, target=target,
                      yield_mult=vocations.gather_mult(guild),
-                     ambush_mult=vocations.ambush_mult(guild, stance, scout=scouts))
+                     ambush_mult=vocations.ambush_mult(guild, stance, scout=scouts),
+                     guards=list(guards or ()))
 
 
 def party_yield(size):
@@ -138,10 +141,15 @@ def grant_haul(state):
     hunters = list(state.party)
     lines = []
     if not hunters:
-        return ["Nobody made it back with the haul."]
+        for g in getattr(state, "guards", ()):
+            lines += g.bank_work(state.hours_hunted, GUARD_WORK_LEVEL)
+        return lines + ["Nobody made it back with the haul."]
 
     for u in hunters:
         lines += u.bank_work(state.hours_hunted, HUNT_LEVEL)
+
+    for g in getattr(state, "guards", ()):
+        lines += g.bank_work(state.hours_hunted, GUARD_WORK_LEVEL)
 
     if state.target == "ox":
         who = hunters[0].name if len(hunters) == 1 else f"{len(hunters)} trackers"

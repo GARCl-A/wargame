@@ -29,7 +29,8 @@ from . import constants, encounters, npc_lib, world
 
 CHAMPION_SLUG = "adelio-small-knife"
 
-CHAMPION_GOONS = 2                 # random level-0 bodies fighting alongside the champion
+CHAMPION_LACKEYS = 2               # random level-0 bodies fighting alongside the champion
+CHAMPION_GOONS = CHAMPION_LACKEYS   # alias
 CHAMPION_ENTRY = 20               # stake per fighter to challenge for the title
 CHAMPION_PURSE = 120             # flat purse for taking the champion team down
 DEFENSE_PURSE = 90              # flat purse for turning a title challenger away
@@ -51,13 +52,15 @@ STAGE2_ENEMIES = 3           # opponents fielded (a 3v3)
 
 # The Games' boss: the three Ribbit brothers -- a hand-built Grippli team
 # (`npcs/ribit|bufo|peep.json`, placed by the map's `deploy_npc`) backed by
-# scaled goons, fought capture-the-flag on an authored map. The stage's capstone:
+# scaled lackeys, fought capture-the-flag on an authored map. The stage's capstone:
 # a 6-a-side bout, so the player may bring six.
 BOSS_ENTRY = 40
 BOSS_PURSE = 450
-BOSS_GOONS = 3                 # scaled bodies fighting alongside the brothers
-BOSS_GOON_LEVEL = 3          # the goons' mean level -- the expected player level here
-BOSS_SQUAD = 6               # brothers + goons; the player matches it
+BOSS_LACKEYS = 3                # scaled bodies fighting alongside the brothers
+BOSS_GOONS = BOSS_LACKEYS       # alias
+BOSS_LACKEY_LEVEL = 3         # the lackeys' mean level -- the expected player level here
+BOSS_GOON_LEVEL = BOSS_LACKEY_LEVEL  # alias
+BOSS_SQUAD = 6               # brothers + lackeys; the player matches it
 BOSS_MAP = "capture-the-flag-the-gamers"
 
 
@@ -158,13 +161,13 @@ def bout_level_range(bout, squad):
     """Returns a string describing the expected enemy levels for the UI."""
     if bout.champion:
         avg = sum(u.mean_level for u in squad) // max(1, len(squad)) if squad else 0
-        return f"Lv {avg + 1} + goons (Lv 0)"
+        return f"Lv {avg + 1} + Lackeys (Lv 0)"
     if bout.defense:
         avg = sum(u.mean_level for u in squad) // max(1, len(squad)) if squad else 0
         return f"Lv {avg + 1}"
     if bout.stage2:
         if bout.boss:
-            return f"Bosses + goons (Lv {bout.level})"
+            return f"Bosses + Lackeys (Lv {bout.level})"
         return "Lv 1-6"
     return f"Lv {bout.level}"
 

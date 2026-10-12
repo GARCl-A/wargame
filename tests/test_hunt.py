@@ -40,6 +40,35 @@ def test_grant_meat_splits_the_haul_and_banks_the_hours():
     assert any("meat" in ln for ln in lines)
 
 
+def test_wagon_guard_earns_level_1_work_xp():
+    from gartok import hunt
+    hunter = Unit("player")
+    hunter.work_hours = 0
+    guard = Unit("player")
+    guard.work_hours = 0
+    st = hunt.HuntState([hunter], None, hours_left=0, hours_hunted=8, yield_hours=4.0, guards=[guard])
+    lines = hunt.grant_haul(st)
+
+    assert hunter.work_hours == 8 * 4                          # level 3 job for level 0: 8 * 4 = 32
+    assert guard.work_hours == 8 * 2                           # level 1 job for level 0: 8 * 2 = 16
+    assert hunter.count_of("Meat") == 2
+    assert guard.count_of("Meat") == 0
+    assert any(guard.name in ln for ln in lines)
+
+
+def test_wagon_guard_above_level_1_earns_no_work_xp():
+    from gartok import hunt
+    hunter = Unit("player")
+    guard = Unit("player")
+    guard.set_track_level("work", 2)
+    initial_hours = guard.work_hours
+    st = hunt.HuntState([hunter], None, hours_left=0, hours_hunted=8, yield_hours=4.0, guards=[guard])
+    lines = hunt.grant_haul(st)
+
+    assert guard.work_hours == initial_hours                   # level 1 job below work level 2
+    assert any(f"{guard.name}: no work XP" in ln for ln in lines)
+
+
 class _ScriptRNG:
     """Feeds `hunt_stretch` a fixed sequence of `random()` values (ambush when
     the value is below `AMBUSH_CHANCE_PER_HOUR`)."""
