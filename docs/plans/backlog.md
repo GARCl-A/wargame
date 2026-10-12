@@ -64,15 +64,13 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
-- **Test suite takes too long (audit).** `python -m pytest tests/` is the hard gate and ran 2014
-  tests in 4 min 17 s on 2026-10-12 (110 files in `tests/`), run before every commit and by
-  `/check_backlog`. Audit, then decide what to cut: (1) `pytest --durations=25` for the slowest
-  tests and files; (2) for the sim, battle and save round-trip tests, see which spend their time on seeded
-  fights, full-guild days or screen builds, and whether a smaller squad, fewer days or a shared
-  fixture does the same job; (3) mark the few heavy ones (`slow` marker in `tests/conftest.py`) and keep
-  them out of the pre-commit run but in a nightly or manual run; (4) check `pytest-xdist` (`-n auto`),
-  which is not in `requirements-dev.txt`, against the seeded-RNG tests that may share state. Goal: a
-  gate under about 1 minute that still catches a regression. Record the new time here.
+- **Test suite takes too long (audit).** `python -m pytest tests/` is the hard gate. Profiling
+  revealed `scan_route` (3.6M Dijkstras over 9! permutations across 3 tests) was responsible for >75%
+  of run time (213s of 286s). Optimised with leg precomputation and Held-Karp (`shortest_tour` in
+  `economy_exploits.py`, exact, tested against brute force in `test_economy_exploits.py`): `scan_route`
+  dropped from ~47 s to ~0.01 s. Suite duration dropped from 4 min 46 s to **1 min 36 s** (2031 tests,
+  2026-10-12). Next targets to bring it under 1 minute: `test_the_report_runs_every_part` (17 s),
+  `test_the_ai_plays_the_chase_to_a_result` (10 s), and `test_the_economy_has_no_exploit_today` (6.5 s).
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
