@@ -131,7 +131,8 @@ def draw_blocks(surf, F, x, y, w, blocks, mpos, button):
 def draw_inspector(surf, F, rect, name, state_label, state_color, where, party,
                    blocks, bottom_blocks=(), mpos=(-1, -1), button=None, party_icon=None):
     """`party` items are `(name, role, hp_frac)`, or `(name, role, hp_frac,
-    *extra)` -- `party_icon(surf, item, center)`, when given, draws whatever
+    *extra)`; an item's fifth field, when non-empty, is a blood-red tag at the
+    row's right edge (e.g. "SICK") -- `party_icon(surf, item, center)`, when given, draws whatever
     the caller wants for that row's mark (e.g. a real screen's own unit
     token art) in place of the built-in role glyph (shield/bow/cross/sword,
     from `role`)."""
@@ -163,6 +164,8 @@ def draw_inspector(surf, F, rect, name, state_label, state_color, where, party,
         else:
             draw_role(surf, center, ROLE_MARK.get(role, "sword"), T.TX_MUTED)
         text(surf, F["body"], nm, (row.x + T.S * 4, row.centery - 7), T.TX)
+        if len(item) > 4 and item[4]:
+            caps(surf, F["microb"], item[4], (row.right - T.S, row.centery - 5), T.BLOOD, right=True)
         y = row.bottom + 4
     y += T.S * 2
 

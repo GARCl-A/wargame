@@ -6,12 +6,12 @@ mock strings."""
 
 import pygame
 
-from .primitives import caps, draw_button, hline, text
+from .primitives import caps, draw_button, ellipsize, hline, text
 from .tokens import T, mix
 
 
 def draw_command(surf, F, rect, day, time_str, messages, metrics, mpos=(0, 0),
-                 guild_label="guild", icon_fn=None):
+                 guild_label="guild", icon_fn=None, card=None):
     """Draws the command strip. `messages` items are `(text, color)` or
     `(text, color, icon_key)`; `icon_fn(surf, icon_key, icon_rect, color)`,
     when given, draws the alert's icon in place of the default "!" glyph
@@ -19,8 +19,13 @@ def draw_command(surf, F, rect, day, time_str, messages, metrics, mpos=(0, 0),
 
     Returns `(hovered, buttons)`: `hovered` is hover tooltip data for an
     alert icon under the mouse, as `(x, y, text, color)`, or None;
-    `buttons` is `{"help": rect, "guild": rect}` for the caller's own
-    click-dispatch (this component draws but doesn't register hits itself)."""
+    `buttons` is `{"help": rect, "guild": rect, "card": rect}` (`card` only when drawn) for the caller's own
+    click-dispatch (this component draws but doesn't register hits itself).
+
+    `card`, when given, is a wide alert after the icon tray for what must not be
+    missed: `(title, tip, critical)`, blood red when `critical`, brass otherwise;
+    `tip` shows on hover like an icon's. It shrinks (the title clips) to fit
+    before the metrics."""
     pygame.draw.rect(surf, T.STEEL, rect)
     hline(surf, rect.x, rect.right, rect.bottom - 1)
     x = rect.x + T.S * 3
@@ -77,6 +82,7 @@ def draw_command(surf, F, rect, day, time_str, messages, metrics, mpos=(0, 0),
     col_widths = [max(F["micro"].size(label.upper())[0], F["big"].size(value)[0]) + T.S * 4
                   for label, value in metrics]
     x = bx - T.S * 3 - sum(col_widths)
+    metrics_x = x
     pygame.draw.line(surf, T.STEEL_LINE, (x, rect.y + T.S), (x, rect.bottom - T.S), 1)
     x += T.S * 3
 
@@ -85,17 +91,20 @@ def draw_command(surf, F, rect, day, time_str, messages, metrics, mpos=(0, 0),
         text(surf, F["big"], value, (x, y + 14), T.TX)
         x += col_w
 
-    return hovered, {"help": help_rect, "guild": guild_rect}
+    buttons = {"help": help_rect, "guild": guild_rect}
+    if card is not None:
+        title, tip, critical = card
+        col = T.BLOOD if critical else T.BRASS
+        cr = pygame.Rect(icon_x, rect.centery - T.S * 5 // 2, 0, T.S * 5)
+        cr.w = min(F["nameb"].size(title)[0] + T.S * 4, metrics_x - T.S * 2 - icon_x)
+        if cr.w > T.S * 6:
+            pygame.draw.rect(surf, mix(col, T.STEEL, .55 if critical else .75), cr)
+            pygame.draw.rect(surf, col, cr, 1)
+            pygame.draw.rect(surf, col, pygame.Rect(cr.x, cr.y, T.S // 2, cr.h))
+            label = ellipsize(title, F["nameb"], cr.w - T.S * 3)
+            text(surf, F["nameb"], label, (cr.x + T.S * 2, cr.centery - F["nameb"].get_height() // 2), T.TX)
+            if cr.collidepoint(mpos):
+                hovered = (cr.centerx, cr.bottom + 8, tip, col)
+            buttons["card"] = cr
 
-
-def draw_alert_banner(surf, F, rect, message, critical):
-    """A full-width strip under the command bar for what must not be missed: blood red when
-    `critical`, brass otherwise. The caller reserves `rect` from the layout."""
-    col = T.BLOOD if critical else T.BRASS
-    pygame.draw.rect(surf, mix(col, T.STEEL, .55 if critical else .75), rect)
-    pygame.draw.rect(surf, col, pygame.Rect(rect.x, rect.y, T.S // 2, rect.h))
-    hline(surf, rect.x, rect.right, rect.bottom - 1)
-    label = "NO FOOD" if critical else "LOW ON FOOD"
-    caps(surf, F["microb"], label, (rect.x + T.S * 3, rect.centery - 5), col)
-    label_w = F["microb"].size(label)[0]
-    text(surf, F["body"], message, (rect.x + T.S * 3 + label_w + T.S * 3, rect.centery - 8), T.TX)
+    return hovered, buttons

@@ -37,20 +37,24 @@ class UpkeepMixin:
         return sum(u.rations for u in self.roster) + sum(g.carried_rations for g in self.groups)
 
     def food_alert(self):
-        """`(level, text)` for the map's food banner, or None: "critical" with no food left,
-        "warning" with about a day of it. Meals count rations across the whole guild."""
+        """`(level, text, title)` for the map's food card, or None: "critical" with no food left,
+        "warning" with about a day of it. Meals count rations across the whole guild. `title`
+        is the card's few words, `text` the full line shown on hover."""
         mouths, rations = len(self.roster), self.rations
         if not mouths or rations > mouths:
             return None
         if rations > 0:
-            return "warning", (f"Only {rations} meal{'s' * (rations != 1)} left for {mouths} "
-                               f"member{'s' * (mouths != 1)}: about a day of food. Buy more before the next order.")
+            return ("warning", (f"Only {rations} meal{'s' * (rations != 1)} left for {mouths} "
+                                f"member{'s' * (mouths != 1)}: about a day of food. Buy more before the next order."),
+                    "LOW ON FOOD")
         hungry = self.hungry
         if not hungry:
-            return "critical", "NO FOOD LEFT: the whole guild goes hungry at the next dawn. Buy food now."
+            return ("critical", "NO FOOD LEFT: the whole guild goes hungry at the next dawn. Buy food now.",
+                    "NO FOOD LEFT")
         days = max(1, data.STARVATION_DEATH_DAYS - max(u.unfed_days for u in hungry))
-        return "critical", (f"STARVING: {len(hungry)} member{'s' * (len(hungry) != 1)} hungry and no food left. "
-                            f"The first one dies in {days} day{'s' * (days != 1)}. Buy food now.")
+        return ("critical", (f"STARVING: {len(hungry)} member{'s' * (len(hungry) != 1)} hungry and no food left. "
+                             f"The first one dies in {days} day{'s' * (days != 1)}. Buy food now."),
+                f"STARVING: first death in {days} day{'s' * (days != 1)}")
 
     # ------------------------------------------------------------------ #
     # time + daily upkeep                                                #

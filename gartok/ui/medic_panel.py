@@ -4,7 +4,7 @@ footer that totals the picked ones.
 `rows` is a list of dicts: `{key, name, lines: [str], cost, hours, picked, enabled,
 note}` (`lines` the ailments). `stay` is the hospital stay picked, if any: its footer line
 and button replace the quick treatment's. Returns
-`(row_rects, treat_rect)`; `row_rects` is `[(key, rect)]`.
+`(row_rects, treat_rect, leave_rect)`; `row_rects` is `[(key, rect)]`.
 """
 
 import pygame
@@ -47,4 +47,6 @@ def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos, stay
     treat = pygame.Rect(rect.right - T.S * 22, fy, T.S * 22, T.S * 4)
     draw_button(surf, F, treat, ("ADMIT" if stay else "TREAT") if can_pay or not total_cost else "CANNOT PAY",
                 primary=bool(total_cost and can_pay), enabled=bool(total_cost and can_pay), mpos=mpos)
-    return row_rects, treat
+    leave = pygame.Rect(treat.x - T.S * 3 - T.S * 22, fy, T.S * 22, T.S * 4)
+    draw_button(surf, F, leave, "LEAVE THE MEDIC", mpos=mpos)
+    return row_rects, treat, leave

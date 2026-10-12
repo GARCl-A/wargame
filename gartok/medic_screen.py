@@ -23,6 +23,7 @@ class MedicScreen(Screen):
         self.notice = None
         self.row_rects = []
         self.treat_rect = pygame.Rect(0, 0, 0, 0)
+        self.leave_rect = pygame.Rect(0, 0, 0, 0)
 
     def tutorial_key(self):
         return "medic"
@@ -42,6 +43,9 @@ class MedicScreen(Screen):
         return next((q for q in self._picked_quotes() if not q.offered), None)
 
     def _click(self, pos):
+        if self.leave_rect.collidepoint(pos):
+            self.on_done()
+            return
         if self.treat_rect.collidepoint(pos):
             patients = [u for u in self.group.members if u.uid in self.picked]
             if self._stay():
@@ -95,6 +99,7 @@ class MedicScreen(Screen):
         can_pay = sum(u.money for u in self.group.members) >= cost
         where = ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
                  else "the whole group waits (no free group slot)")
-        self.row_rects, self.treat_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,
+        self.row_rects, self.treat_rect, self.leave_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,
                                                      stay=where if stay else None)
-        set_pointer(any(r.collidepoint(self.mouse) for _, r in self.row_rects) or self.treat_rect.collidepoint(self.mouse))
+        set_pointer(any(r.collidepoint(self.mouse) for _, r in self.row_rects)
+                    or self.treat_rect.collidepoint(self.mouse) or self.leave_rect.collidepoint(self.mouse))

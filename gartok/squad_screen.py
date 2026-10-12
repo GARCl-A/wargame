@@ -345,6 +345,9 @@ class SquadScreen(SheetModalMixin, Screen):
         if unit.hunger_level:
             extra.append((None, f"HUNGER: {unit.hunger_label}", T.BLOOD if unit.hunger_level >= 2 else T.BRASS))
 
+        if unit.sick:
+            extra.append((None, "SICK", T.BLOOD))
+
         no_xp = self.unit_outlevels_bout(unit)
         if no_xp:
             max_lvl = arena.bout_max_combat_level(self.offer)

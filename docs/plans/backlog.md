@@ -114,11 +114,7 @@ its functions are tabs inside.
 - **Bank:** the button overlaps the quantity text.
 - **Load screen:** guild member names overflow the box (a component bug: it must clip). Show
   "X members" instead of the names.
-- **Food alert:** appears twice (small "the larder is empty" in the header plus a big bar under it).
-  Replace the small one with a bigger "NO FOOD LEFT" card in the header, no bar below.
-- **Apothecary > Medic has no button back to the map.**
 - **Manage and Gear: the wagon does not show on the right.**
-- **Sick characters are not visible** (no marker on cards or lists).
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
   talent may let a unit carry more than it should, or it is only the display.
 
@@ -333,7 +329,7 @@ pointed to, not repeated.
   day-30 milestone comes in 28% of guilds, first on day 28, against 11-14 days by hand. **Decided 2026-10-10:** the report's default `--skill` is now 0.95 (it was 0.8; the verdicts did not change at
   0.95, the milestone still fails at 0%), and the sim's findings below were measured at 0.8. The day-96 wipe in the
   Gozatron save (three of five starved with $237 in hand after three days at 0 food) was the player clicking
-  work without buying food; the map now raises a red banner when the larder is empty or low (`Guild.food_alert`). Then compare
+  work without buying food; the map now raises a red card in the command bar when the larder is empty or low (`Guild.food_alert`). Then compare
   `human` with `lumber`, `balanced`, `climber`. Findings it should settle are in
   [economy_sim_v2.md](economy_sim_v2.md): the day-30 milestone, the Axe-first order, whether the
   ladder (yard, Scrapper, Games, Wilds) is how people really climb. What the runs show: the

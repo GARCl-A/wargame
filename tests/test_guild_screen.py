@@ -353,3 +353,28 @@ def test_a_member_card_says_how_many_recruits_they_may_still_sponsor():
     cap = recruit.capacity(g, a)
     assert f"1 of {cap}" in text and (f"{cap - 1} more" in text or "none left" in text)
     assert "0 of" in gs._sponsor_line(b)[0]
+
+
+def test_a_sick_member_wears_the_badge_and_is_an_alert():
+    from gartok.ui.tokens import T
+    g, a, b, c = _two_band_guild()
+    b.sick = True
+    gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
+    gs.filter_mode = "alerts"
+    _draw(gs)
+    assert {u.uid for _, u in gs.member_hits} == {b.uid}
+    assert ("SICK", T.BLOOD) in gs._member_data(b, False)["badges"]
+    assert "SICK" not in [lbl for lbl, _ in gs._member_data(a, False)["badges"]]
+
+
+def test_a_sick_member_is_marked_on_the_map_party_and_the_sheet():
+    from gartok.combatant import Combatant
+    from gartok.map_screen import MapScreen
+    from gartok.ui import sheet_card
+    from gartok.ui.tokens import fonts as ui_fonts
+    g, a, b, c = _two_band_guild()
+    b.sick = True
+    ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda gr: None)
+    party = ms._group_dict(g.groups[0])["party"]
+    assert [p[4] for p in party] == ["", "SICK"]
+    assert "sick" in sheet_card.unit_to_ch(Combatant(b))["status"]

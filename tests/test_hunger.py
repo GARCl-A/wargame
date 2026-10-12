@@ -336,23 +336,24 @@ def test_the_food_alert_is_critical_with_no_food_and_a_warning_with_a_day_left()
     guild, crew = _guild_with_food(5, 5)
     assert guild.food_alert() is None                          # five meals each: fine
     guild, crew = _guild_with_food(1, 1)
-    level, text = guild.food_alert()
-    assert level == "warning" and "2 meals" in text and "2 members" in text
+    level, text, title = guild.food_alert()
+    assert level == "warning" and "2 meals" in text and "2 members" in text and title == "LOW ON FOOD"
     guild, _ = _guild_with_food(0, 0)
-    level, text = guild.food_alert()
-    assert level == "critical" and "NO FOOD LEFT" in text
+    level, text, title = guild.food_alert()
+    assert level == "critical" and "NO FOOD LEFT" in text and title == "NO FOOD LEFT"
 
 
 def test_the_starving_alert_counts_the_days_to_the_first_death():
     guild, crew = _guild_with_food(0, 0, 0)
     crew[0].unfed_days = 1
-    level, text = guild.food_alert()
+    level, text, title = guild.food_alert()
     assert level == "critical" and "1 member hungry" in text and "dies in 3 days" in text
+    assert title == "STARVING: first death in 3 days"
     crew[1].unfed_days = 3
     assert "2 members hungry" in guild.food_alert()[1] and "dies in 1 day." in guild.food_alert()[1]
 
 
-def test_the_map_reserves_a_banner_when_food_runs_low_and_none_when_it_does_not():
+def test_the_food_alert_is_one_card_in_the_command_bar_and_takes_no_strip():
     import pygame
 
     from gartok.map_screen import MapScreen
@@ -361,11 +362,33 @@ def test_the_map_reserves_a_banner_when_food_runs_low_and_none_when_it_does_not(
     pygame.display.set_mode((1, 1))
     rich, _ = _guild_with_food(9, 9)
     poor, _ = _guild_with_food(0, 0)
-    tops = []
+    tops, cards = [], []
     for guild in (rich, poor):
         ms = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
         ms.mouse = (0, 0)
-        ms.draw(pygame.Surface((1500, 900)))
-        tops.append(ms._roster_rects)
-    assert tops[1] and tops[0]
-    assert min(r.y for r, *_ in tops[1]) > min(r.y for r, *_ in tops[0])
+        surf = pygame.Surface((1500, 900))
+        ms.draw(surf)
+        tops.append(min(r.y for r, *_ in ms._roster_rects))
+        cards.append(ms._messages())
+    assert tops[0] == tops[1]
+    assert all("larder" not in m[0] for m in cards[1])
+
+
+def test_the_command_bar_draws_the_card_and_shows_the_full_line_on_hover():
+    import pygame
+
+    from gartok.ui.command_bar import draw_command
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+    F = ui_fonts()
+    rect = pygame.Rect(0, 0, 1500, 72)
+    card = ("NO FOOD LEFT", "the whole guild goes hungry", True)
+    plain = pygame.Surface((1500, 72))
+    draw_command(plain, F, rect, "1", "08:00", [], [("members", "3")])
+    with_card = pygame.Surface((1500, 72))
+    hovered, buttons = draw_command(with_card, F, rect, "1", "08:00", [], [("members", "3")], card=card)
+    assert hovered is None
+    assert pygame.image.tobytes(plain, "RGB") != pygame.image.tobytes(with_card, "RGB")
+    hovered, _ = draw_command(with_card, F, rect, "1", "08:00", [], [("members", "3")], mpos=buttons["card"].center, card=card)
+    assert hovered and hovered[2] == card[1]

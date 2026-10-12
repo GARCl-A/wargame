@@ -297,3 +297,13 @@ def test_a_rotten_meal_weakens_the_attributes_at_once_and_the_cure_restores_them
     assert u.sick and u.constitution == con - 4
     medic.cure(u)
     assert not u.sick and u.constitution == con
+
+
+def test_screen_has_a_button_back_to_the_map():
+    import pygame
+    guild, g = _setup(_unit(missing=2))
+    done = []
+    scr = MedicScreen(fonts(), guild, g, lambda: done.append(1))
+    scr.draw(pygame.Surface((1280, 720)))
+    scr._click(scr.leave_rect.center)
+    assert done == [1]

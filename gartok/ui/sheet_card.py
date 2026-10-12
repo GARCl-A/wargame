@@ -130,6 +130,8 @@ def unit_to_ch(u):
         status.append("dead")
     elif u.hunger_level:
         status.append(u.hunger_label)
+    if u.sick:
+        status.append("sick")
     if u.poisoned:
         status.append(u.poison_label)
     tags = ["champion of the pit"] if getattr(u, "arena_title", False) else []
