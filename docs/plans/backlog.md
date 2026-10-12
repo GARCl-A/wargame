@@ -96,6 +96,9 @@ its functions are tabs inside.
 - **Start screen** (title) still to be built.
 
 **Layout overlaps (component rule; Market shelf, Bank quantity box and Load cards fixed 2026-10-12: the shelf's columns are laid out from the row texts, `market_panel._columns`)**
+- **Draft "Found the guild": Rename button overlaps attributes.** In `draft_panel.draw_identity_form`, the `RENAME` button placed after the unit's name (`r.x + T.S * 6 + name_w + 8`) collides with and renders over the `STR` attribute label (`r.right - 380`) on the right side of the leader row.
+- **Map inspector: Rest accordion overflows screen vertically.** Opening the rest options accordion (`REST (OPEN)` in `map_screen._inspector_bottom`) at a node with multiple action buttons (licence, browse, stance, etc.) pushes the rest option rows and the footer CTA past the bottom edge of the window. Needs vertical scrolling, compaction, or subpanel budgeting.
+- **Tavern hub tabs overlap.** In `hub_screen.py`, `TabbedHubScreen.for_node` puts `TavernaScreen` behind a `TAVERN` tab alongside `FOOD & DRINK`. However, `TavernaScreen` also draws its own header tabs (`RECRUIT`, `STUDY`, `PERFORM`), causing both sets of tabs to draw on top of each other in the top-right header area. The Tavern hub should cleanly provide 4 distinct tabs: `FOOD & DRINK`, `RECRUIT`, `STUDY`, `PERFORM`.
 - **Manage and Gear: the wagon does not show on the right.**
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
   talent may let a unit carry more than it should, or it is only the display.
