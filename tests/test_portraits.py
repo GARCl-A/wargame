@@ -190,8 +190,8 @@ def test_grippli_portraits():
 
 
 def test_sprite_portraits():
-    # 11 curated Sprite portraits
-    for idx in range(11):
+    # 14 curated Sprite portraits
+    for idx in range(14):
         p = artwork.portrait("Sprite", idx, 32)
         assert p is not None
         assert p.get_size() == (32, 32)
@@ -324,7 +324,7 @@ def test_squad_and_prison_cards_carry_the_units_portrait():
 
 
 def test_pinned_named_portraits():
-    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png"]:
+    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png"]:
         port = artwork.portrait(None, name, 32)
         assert port is not None
         assert port.get_size() == (32, 32)

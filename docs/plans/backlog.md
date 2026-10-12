@@ -384,10 +384,10 @@ the ones that also need code say so. Order is the suggested priority.
   in its header (`world.Vendor`, `ui/vendor_panel.py`); a vendor is not an NPC (no stats, no recruiting or
   robbing them). The Apothecary's keeper shows only on its shop tab: the hub's Medic tab has none yet. The
   node marks are under *Map node icons*.
-- **Faces for three keepers with none (checked 2026-10-12: every race, beast and authored NPC
-  already has art).** The Banker (a Sprite; Ankareth: bank, trust test, property), the Ledger Hold officer (a
-  Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes) and the
-  Prison guard (an Elf). Races decided 2026-10-12.
+- **Faces for keepers with none (checked 2026-10-12: every race, beast and authored NPC
+  already has art).** The Banker (a Sprite; Ankareth: bank, trust test, property) has art in `portraits/npc/banker.png`.
+  Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes)
+  and the Prison guard (an Elf). Races decided 2026-10-12.
   Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
   goons need none (only the three brothers become recruitable).
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
