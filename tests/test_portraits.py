@@ -64,8 +64,8 @@ def test_human_portraits():
 
 
 def test_elf_portraits():
-    # 12 complete Elf portraits
-    for idx in range(12):
+    # 15 complete Elf portraits
+    for idx in range(15):
         p = artwork.portrait("Elf", idx, 32)
         assert p is not None
         assert p.get_size() == (32, 32)
@@ -324,7 +324,7 @@ def test_squad_and_prison_cards_carry_the_units_portrait():
 
 
 def test_pinned_named_portraits():
-    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png"]:
+    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png"]:
         port = artwork.portrait(None, name, 32)
         assert port is not None
         assert port.get_size() == (32, 32)

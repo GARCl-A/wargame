@@ -379,8 +379,8 @@ the ones that also need code say so. Order is the suggested priority.
   node marks are under *Map node icons*.
 - **Faces for keepers with none (checked 2026-10-12: every race, beast and authored NPC
   already has art).** The Banker (a Sprite; Ankareth: bank, trust test, property) has art in `portraits/npc/banker.png`.
-  Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes)
-  and the Prison guard (an Elf). Races decided 2026-10-12.
+  The Prison guard (an Elf; Ankareth: holding cells, bail) has art in `portraits/npc/prison_guard.png`.
+  Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes).
   Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
   goons need none (only the three brothers become recruitable).
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
@@ -390,7 +390,7 @@ the ones that also need code say so. Order is the suggested priority.
   before drawing more of it.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse),
   Snake has 3, and the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
-  or more first. Kenku has 8 and Goliath 8 against 15 for Human and Gnome, 16 for Orc, 12 for Elf and
+  or more first. Kenku has 8 and Goliath 8 against 15 for Human, Gnome and Elf, 16 for Orc, 12 for
   Centaur (Goblin has 9, Halfling 18, Grippli 17).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
   share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
