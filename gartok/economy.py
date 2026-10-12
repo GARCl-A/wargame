@@ -171,6 +171,7 @@ SHELVES = {
     "market": {
         "Torch": (30, 10), "Lantern": (5, 1), "Musical Instrument": (5, 1),
         "Bear Trap": (4, 0.5), "Alarm Trap": (4, 0.5), "Lumber": (20, 6),
+        "Flint and Steel": (5, 1),
     },
     "lumber_yard": {"Lumber": (20, 6), "Fruit": (10, 3)},
     "mine": {"Stone Brick": (10, 3), "Iron Ore": (10, 2), "1kg Coal": (15, 4)},

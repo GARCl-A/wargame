@@ -226,10 +226,14 @@ def test_two_interactive_orders_drain_one_screen_at_a_time():
 
     opened = []
     orig_market, orig_taverna = app_mod.MarketScreen, app_mod.TavernaScreen
+    orig_for_node = app_mod.TabbedHubScreen.for_node
     app_mod.MarketScreen = lambda fonts, guild_, shoppers, node, on_done: (
         opened.append("market"), object())[1]
     app_mod.TavernaScreen = lambda fonts, guild_, party, node, on_done, group=None: (
         opened.append("recruit"), object())[1]
+    app_mod.TabbedHubScreen.for_node = staticmethod(
+        lambda fonts, guild_, group, node, on_done, first=None: (
+            opened.append("recruit"), object())[1])
     try:
         app._advance()
         assert opened == ["market"]                # only the first one opened so far
@@ -239,6 +243,7 @@ def test_two_interactive_orders_drain_one_screen_at_a_time():
         assert not app._pending
     finally:
         app_mod.MarketScreen, app_mod.TavernaScreen = orig_market, orig_taverna
+        app_mod.TabbedHubScreen.for_node = orig_for_node
 
 
 def test_a_group_that_starves_out_before_resolution_is_skipped():

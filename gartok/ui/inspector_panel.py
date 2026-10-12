@@ -63,7 +63,7 @@ def draw_role(surf, p, kind, c):
 
 
 def _default_button(surf, F, rect, mpos, *, key=None, label="", sub=None,
-                    primary=False, danger=False, enabled=True, font=None):
+                    primary=False, danger=False, enabled=True, font=None, tooltip=None):
     draw_button(surf, F, rect, label, sub=sub, primary=primary, danger=danger,
                enabled=enabled, mpos=mpos, fnt=font)
 
@@ -113,7 +113,7 @@ def draw_blocks(surf, F, x, y, w, blocks, mpos, button):
             button(surf, F, r, mpos, key=item.get("key"), label=item["label"],
                   sub=item.get("sub"), primary=item.get("primary", False),
                   danger=item.get("danger", False), enabled=item.get("enabled", True),
-                  font=item.get("font"))
+                  font=item.get("font"), tooltip=item.get("tooltip"))
             y = r.bottom + T.S
         elif kind == "button_row":
             h = item.get("height", 34)

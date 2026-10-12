@@ -350,3 +350,39 @@ def test_a_capped_rest_says_how_many_days_of_rations_it_still_lacks():
     full = rest.until_full(rich_guild, rich)
     assert not full.capped and full.short_days == 0
     assert "more day" not in MapScreen._rest_row("rest:full", "UNTIL FULL", full)["sub"]
+
+
+def test_rest_row_disabled_has_tooltip_and_sub_reason():
+    from gartok.map_screen import MapScreen
+    unavail = rest.RestPlan(reason="no rations available")
+    row = MapScreen._rest_row("rest:full", "UNTIL FULL", unavail)
+    assert not row["enabled"]
+    assert row["sub"] == "no rations available"
+    assert row["tooltip"] == "no rations available"
+
+
+def test_map_screen_rest_open_button_and_inspector_tooltip():
+    import pygame
+    from gartok.map_screen import MapScreen
+    from gartok.group import Group
+    from gartok.ui.tokens import fonts as ui_fonts
+    u = _hurt(missing=8, meals=2)
+    guild, g = _guild(u)
+    ms, _ = _map(g)
+    bottom = ms._inspector_bottom(g)
+    rest_btn = next(b for b in bottom if b.get("key") == "rest_menu")
+    assert rest_btn["label"] == "REST  ▾"
+
+    ms._rest_open = True
+    bottom_open = ms._inspector_bottom(g)
+    rest_btn_open = next(b for b in bottom_open if b.get("key") == "rest_menu")
+    assert rest_btn_open["label"] == "REST (OPEN)  ▴"
+    assert rest_btn_open["primary"] is True
+
+    # Test inspector tooltip on hover
+    surf = pygame.Surface((1400, 900))
+    ms.mouse = (100, 100)
+    rect = pygame.Rect(50, 50, 100, 100)
+    ms._inspector_button(surf, ui_fonts(), rect, ms.mouse, key="test", label="Test", tooltip="Helpful tip")
+    assert ms._inspector_tooltip is not None
+    assert ms._inspector_tooltip[2] == "Helpful tip"

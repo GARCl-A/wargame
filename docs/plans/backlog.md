@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename and wagon guard work XP). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, elf & prison guard portraits, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -86,18 +86,13 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Node screens as tabs, one Enter button.** Tavern (Buy food and drink becomes a tab beside
-  Recruit, Study, Perform), Farm (Browse + Stables), Lumber Yard (Buy licence, Work a shift,
-  Browse become tabs behind "Enter the Lumber Yard"; this also fixes the axe / no-axe list
-  overflowing onto the map). Decided 2026-10-12: Option B — generalise `TabbedHubScreen` data-driven
-  from `Node.functions`.
+- **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm and Tavern unified under `TabbedHubScreen.for_node`). Left: Lumber Yard gathering tabs behind a single entrance.
 - **Travel graph is hard to read.** The layout algorithm needs rework.
 - **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
   in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone. Decided 2026-10-12:
-  campfire cooking is an intentional manual action by the player when paused at a node, not an automatic trip interruption.
+  campfire cooking is an intentional manual action by the player from the group menu when paused at a node, not an automatic trip interruption.
+  The tool Flint and Steel ($40) is added to the catalogue and the Market shelf.
 - **Group swap with 2 groups feels odd.**
-- **Rest panel:** the open Rest tab looks the same as the other buttons, and it is not clear what
-  is missing to press "rest until full". Show the open state, and a hover naming the missing condition.
 - **Start screen** (title) still to be built.
 
 **Layout overlaps (component rule; Market shelf, Bank quantity box and Load cards fixed 2026-10-12: the shelf's columns are laid out from the row texts, `market_panel._columns`)**
@@ -106,7 +101,6 @@ its functions are tabs inside.
   talent may let a unit carry more than it should, or it is only the display.
 
 **Draft, leveling and talents**
-- **Rename the units in the draft.**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
 - **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
@@ -128,11 +122,6 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 - **Cannot lock items in the cart.**
 - **Cargo screen:** search by item name.
 
-**Medic and sickness**
-- **Sickness treatment price and time.** Treating sickness: treat everyone in one go (8 h batch for the
-  group). Decided 2026-10-12: priced at $3 per treated member (represents the medical kit charge consumed
-  per person, `economy.MEDIC_PRICE_FACTOR`).
-
 **Auto orders**
 - **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
@@ -140,9 +129,10 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 **Factions, nodes and world**
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
-- **Ledger Hold has no use.** Make it a "guards" faction with themed territory-expansion missions.
-  Decided 2026-10-12: military hub featuring patrol hiring and territory-containment missions.
-- **Ancient Ruins as an archaeological site:** start "archaeology" work there (to define).
+- **Ledger Hold has no use.** Make it a "guards" military hub with themed training and territory missions.
+  Decided 2026-10-12: after completing the Bankers' trust test, Ledger Hold offers a mission to take and train a level 0 recruit up to at least level 2; once brought back, the guild receives pay and Ledger Hold permanently unlocks as a character training hub for the guild.
+- **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
+  Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
 - **The Claim:** let the player build their own farm to stock food.
 
@@ -155,8 +145,7 @@ henchmen renamed to Lackeys, 2026-10-12)
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
   (armour is hard to wear, healing is slow); low CHA caps guild growth; the mental stats hurt little.
-  Decided 2026-10-12: keep current stat severity for now; schedule analysis on how racial modifiers, diseases,
-  poisons and conditions interact with attributes; mental stats will gain more mechanical weight once the magic arc lands.
+  Decided 2026-10-12: keep current stat severity for now; revisit attribute weighting and severity after the magic arc lands.
 
 ---
 
@@ -218,10 +207,10 @@ pointed to, not repeated.
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
 - **Weapons that are really different (two tracks, both to build).**
-  1. **Named weapon traits (decided: a registry like `abilities.py`).** `ItemDef` carries
+  1. **Named weapon traits (decided 2026-10-12: immutable model, central keyword registry mirroring `abilities.py`).** `ItemDef` carries
      ad-hoc fields (`finesse: bool`, `thrown: int`)
      and each trait's rule text is a hand-written `if` in the description builder. Model them as
-     a registry of named keywords (Finesse, Thrown, Entangle...) like `abilities.py`, so a new
+     an immutable registry of named keywords (Finesse, Thrown, Entangle...) like `abilities.py`, so a new
      weapon is declared by listing traits and the code, UI text and `REFERENCE.md` read from one
      place.
   2. **A 2-AP action per weapon kind.** Every weapon keeps the basic attack; each kind also gets
@@ -375,10 +364,8 @@ the ones that also need code say so. Order is the suggested priority.
   in its header (`world.Vendor`, `ui/vendor_panel.py`); a vendor is not an NPC (no stats, no recruiting or
   robbing them). The Apothecary's keeper shows only on its shop tab: the hub's Medic tab has none yet. The
   node marks are under *Map node icons*.
-- **Faces for keepers with none (checked 2026-10-12: every race, beast and authored NPC
-  already has art).** The Banker (a Sprite; Ankareth: bank, trust test, property) has art in `portraits/npc/banker.png`.
-  The Prison guard (an Elf; Ankareth: holding cells, bail) has art in `portraits/npc/prison_guard.png`.
-  Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes).
+- **Faces for keepers with none (checked 2026-10-12: every race, beast, the Banker and the Prison Guard already have art).**
+  Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction / training hub).
   Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
   lackeys need none (only the three brothers become recruitable).
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`

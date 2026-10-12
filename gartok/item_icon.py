@@ -83,6 +83,7 @@ ICONS = {
     "Holy Symbol": ("holy", "gold", {}),
     "Chains": ("chains", "iron", {}),
     "Map": ("map", "paper", {}),
+    "Flint and Steel": ("rocks", "iron", {}),
     "Signal Horn": ("horn", "bone", {"accent": TONES["brass"]}),
     "Leather of Biwolf": ("hide", "fur", {}),
     "Thunderhide": ("storm_hide", "storm", {}),

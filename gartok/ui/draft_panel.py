@@ -278,10 +278,28 @@ def draw_identity_form(surf, F, rect, form, mpos):
                 out["tooltip"] = format_tooltip(*data.ATTRIBUTE_HELP[abbr], F)
             x += w + 20
 
+    out["unit_names"] = []
+    editing_idx = form.get("editing_unit_idx")
+    unit_buf = form.get("unit_name_buf", "")
+
     for i, leader in enumerate(form["leaders"]):
         r = pygame.Rect(cx, y + i * (_LEADER_H + T.S * 2), cw, _LEADER_H)
         draw_row(surf, F, r, leader["ch"], selected=leader["selected"], draw_trailing=attrs)
         out["leaders"].append((r, i))
+
+        if editing_idx == i:
+            name_box = pygame.Rect(r.x + T.S * 6 - 2, r.centery - 16, 150, 24)
+            panel(surf, name_box, hover=True, width=2)
+            text(surf, F["body"], unit_buf + "|", (name_box.x + 4, name_box.centery - F["body"].get_height() // 2), T.BRASS)
+            ok_btn = pygame.Rect(name_box.right + 4, r.centery - 12, 34, 20)
+            draw_button(surf, F, ok_btn, "OK", primary=True, fnt=F["microb"], mpos=mpos)
+            out["unit_names"].append((ok_btn, i))
+        else:
+            name_w = F["name"].size(leader["ch"]["name"])[0]
+            ren_btn = pygame.Rect(r.x + T.S * 6 + name_w + 8, r.centery - 16, 52, 18)
+            draw_button(surf, F, ren_btn, "RENAME", ghost=True, fnt=F["micro"], mpos=mpos)
+            out["unit_names"].append((ren_btn, i))
+
     y += len(form["leaders"]) * (_LEADER_H + T.S * 2) + T.S * 4
 
     out["continue"] = pygame.Rect(cx + cw - 200, y, 200, 44)

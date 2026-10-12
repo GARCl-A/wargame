@@ -371,6 +371,7 @@ _register(ItemDef(id="legendary_horn", name="Legendary Horn", type=ItemType.MATE
 _register(ItemDef(id="cloak", name="Cloak", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=1.0, price=2, guard_bonus=1))
 _register(ItemDef(id="chains", name="Chains", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=5.0, price=10))
 _register(ItemDef(id="map", name="Map", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.1, price=1))
+_register(ItemDef(id="flint_and_steel", name="Flint and Steel", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.3, price=40))
 _register(ItemDef(id="semi_precious_gemstone", name="Semi-precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.UNCOMMON, weight=0.1, price=60))
 _register(ItemDef(id="precious_gemstone", name="Precious Gemstone", type=ItemType.GEM, rarity=ItemRarity.RARE, weight=0.1, price=240))
 _register(ItemDef(id="locked_chest", name="Locked Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))

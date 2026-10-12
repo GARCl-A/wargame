@@ -33,6 +33,53 @@ class TabbedHubScreen(Screen):
             if isinstance(screen, MarketScreen):
                 screen.header_reserve = len(self.tabs) * (TAB_W + T.S) + T.S * 2
 
+    @classmethod
+    def for_node(cls, fonts, guild, group, node, on_done, first=None):
+        """Constructs a TabbedHubScreen dynamically from node.functions."""
+        from . import world
+        tabs = []
+        if node.has("shop"):
+            shop_label = "FOOD & DRINK" if node.id == "tavern" else "FARM" if node.id == "farm" else "SHOP"
+            shop = MarketScreen(fonts, guild, list(group.members), node, on_done)
+            tabs.append(("shop", shop_label, shop))
+        if node.has("recruit"):
+            from .taverna_screen import TavernaScreen
+            tavern = TavernaScreen(fonts, guild, list(group.members), node, on_done, group=group)
+            tabs.append(("tavern", "TAVERN", tavern))
+        if node.has("stable"):
+            from .stables_screen import StablesScreen
+            stables = StablesScreen(fonts, guild, group, on_done)
+            tabs.append(("stable", "STABLES", stables))
+        if node.has("forge"):
+            from .crafting_screen import CraftingScreen
+            craft = CraftingScreen(fonts, guild, group, on_done, vendor=world.vendor(node.id, "forge"))
+            tabs.append(("forge", "FORGE", craft))
+        if node.has("tanner"):
+            from .tanner_screen import TannerScreen
+            jobs = TannerScreen(fonts, guild, group, on_done)
+            tabs.append(("jobs", "JOBS", jobs))
+        if node.has("apothecary"):
+            from .medic_screen import MedicScreen
+            from .apothecary_mission_screen import ApothecaryMissionScreen
+            medic = MedicScreen(fonts, guild, group, on_done)
+            jobs = ApothecaryMissionScreen(fonts, guild, group, on_done)
+            tabs.append(("medic", "MEDIC", medic))
+            tabs.append(("jobs", "JOBS", jobs))
+        if node.has("library"):
+            from .library_screen import LibraryScreen
+            from .library_mission_screen import LibraryMissionScreen
+            study = LibraryScreen(fonts, guild, group, on_done)
+            jobs = LibraryMissionScreen(fonts, guild, group, on_done)
+            tabs.append(("study", "STUDY", study))
+            tabs.append(("jobs", "JOBS", jobs))
+
+        if not tabs:
+            return MarketScreen(fonts, guild, list(group.members), node, on_done)
+        if len(tabs) == 1:
+            return tabs[0][2]
+        chosen = first if (first and any(k == first for k, _, _ in tabs)) else tabs[0][0]
+        return cls(fonts, tabs, first=chosen)
+
     def active_screen(self):
         return next(s for k, _label, s in self.tabs if k == self.tab)
 

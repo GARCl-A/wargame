@@ -217,6 +217,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Dwarf Axe | 4 kg | -- |
 | Dwarf Shield | 3 kg | -- |
 | First Aid Kit | 0.8 kg | consumable |
+| Flint and Steel | 0.3 kg | -- |
 | Fruit | 0.2 kg | food, consumable, material |
 | Gold Coin | 0.005 kg | -- |
 | Hammer | 4 kg | -- |

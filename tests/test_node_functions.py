@@ -42,16 +42,29 @@ def test_the_map_shows_one_button_per_offered_function():
     assert _buttons("market") == ["market"]
     assert _buttons("library") == ["library"]
     assert _buttons("lumber_yard") == ["buy_licence", "market"]
-    assert _buttons("tavern") == ["market", "recruit"]
+    assert _buttons("tavern") == ["recruit"]
+    assert _buttons("farm") == ["stable"]
     assert _buttons("smith") == ["forge"]
     assert _buttons("tanner") == ["tanner"]
     assert _buttons("apothecary") == ["apothecary"]
     assert _buttons("city") == ["bank", "property"]
 
 
-def test_a_node_with_a_shop_and_other_functions_gets_both_buttons():
-    node = world.Node("t", "T", "tavern", (0, 0), "x", functions=("recruit", "shop"))
-    assert [f.id for f in node_functions.offered(node)] == ["shop", "recruit"]
+def test_a_node_with_independent_functions_gets_both_buttons():
+    node = world.Node("t", "T", "town", (0, 0), "x", functions=("prison", "hunt"))
+    assert [f.id for f in node_functions.offered(node)] == ["prison", "hunt"]
+
+
+def test_tabbed_hub_screen_for_node():
+    from gartok.hub_screen import TabbedHubScreen
+    g = Guild([Unit("player")], node="tavern")
+    hub = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("tavern"), lambda: None)
+    assert isinstance(hub, TabbedHubScreen)
+    assert [k for k, _, _ in hub.tabs] == ["shop", "tavern"]
+
+    hub_farm = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("farm"), lambda: None)
+    assert isinstance(hub_farm, TabbedHubScreen)
+    assert [k for k, _, _ in hub_farm.tabs] == ["shop", "stable"]
 
 
 def test_a_place_with_nothing_to_offer_says_so():

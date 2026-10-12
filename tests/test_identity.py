@@ -125,3 +125,35 @@ def test_draft_screen_identity_phase_collects_name_and_banner():
     assert result["banner_color"] == chosen_color
     assert result["banner_icon"] == chosen_icon
     banner.set_player_color(banner.DEFAULT_COLOR)          # don't leak into other tests
+
+
+def test_draft_renaming_unit():
+    pygame.init()
+    screen = pygame.display.set_mode((1600, 900))
+    random.seed(9)
+    from gartok.draft_screen import DraftScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    fonts = ui_fonts()
+
+    ds = DraftScreen(fonts, lambda *args: None)
+    ds.draw(screen)
+    for rect, _unit in ds.card_rects[:3]:
+        ds._click(rect.center)
+    ds.draw(screen)
+    ds._click(ds.continue_rect.center)
+    assert ds.phase == "identity"
+
+    ds.draw(screen)
+    assert len(ds.unit_name_rects) == 3
+    ren_rect, idx = ds.unit_name_rects[0]
+    ds._click(ren_rect.center)
+    assert ds.editing_unit_idx == 0
+
+    for _ in range(30):
+        ds.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_BACKSPACE, unicode=""))
+    for ch in "Galahad":
+        ds.handle_event(pygame.event.Event(pygame.KEYDOWN, key=0, unicode=ch))
+    ds.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN, unicode=""))
+
+    assert ds.editing_unit_idx is None
+    assert ds.picks[0].name == "Galahad"

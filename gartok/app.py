@@ -77,6 +77,7 @@ from .ledger_screen import LedgerScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
 from .map_editor_screen import MapEditorScreen
+from .hub_screen import TabbedHubScreen
 from .map_screen import MapScreen
 from .market_screen import MarketScreen
 from .menu_screen import MenuScreen
@@ -539,8 +540,14 @@ class App:
                                  confirm_label="STAKE AND FIGHT")
 
     def _open_market_stalls(self, shoppers, node, _offer):
-        self.scene = MarketScreen(self.ui_fonts, self.guild, shoppers, node,
-                                  on_done=self._after_activity)
+        group = next((g for g in self.guild.groups if g.node == node.id), None) or (self.guild.groups[0] if self.guild.groups else None)
+        if group is not None and len(node.functions) > 1 and len(node_functions.offered(node)) <= 1:
+            from .hub_screen import TabbedHubScreen
+            self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
+                                                  on_done=self._after_activity, first="shop")
+        else:
+            self.scene = MarketScreen(self.ui_fonts, self.guild, shoppers, node,
+                                      on_done=self._after_activity)
 
     def _open_bank_vault(self, group, node, _offer):
         from .bank_hub_screen import BankHubScreen
@@ -632,6 +639,11 @@ class App:
         self.scene = TannerHubScreen(self.ui_fonts, self.guild, group, node,
                                      on_done=self._after_activity)
 
+    def _open_trust_offer(self, group, node, _offer):
+        from .trust_screen import TrustScreen
+        self.scene = TrustScreen(self.ui_fonts, self.guild, group,
+                                 on_done=self._after_activity)
+
     def _open_ledger_desk(self, group, node, _offer):
         self.scene = LedgerScreen(self.ui_fonts, self.guild, group,
                                  on_done=self._after_activity)
@@ -647,8 +659,14 @@ class App:
                                          on_done=self._after_activity, node=node)
 
     def _open_stables(self, group):
-        from .stables_screen import StablesScreen
-        self.scene = StablesScreen(self.ui_fonts, self.guild, group, on_done=self._after_activity)
+        node = world.node(group.node) if group.node else None
+        if node is not None and node.has("shop"):
+            from .hub_screen import TabbedHubScreen
+            self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
+                                                  on_done=self._after_activity, first="stable")
+        else:
+            from .stables_screen import StablesScreen
+            self.scene = StablesScreen(self.ui_fonts, self.guild, group, on_done=self._after_activity)
 
     def _open_library(self, group, node, _offer):
         from .library_hub_screen import LibraryHubScreen
@@ -888,8 +906,14 @@ class App:
         self._open_wilds_claim(group, node)
 
     def _open_taverna(self, party, node, _offer, group=None):
-        self.scene = TavernaScreen(self.ui_fonts, self.guild, party, node,
-                                   on_done=self._after_activity, group=group)
+        grp = group or (self.guild.groups[0] if self.guild.groups else None)
+        if grp is not None and node is not None and node.has("shop"):
+            from .hub_screen import TabbedHubScreen
+            self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, grp, node,
+                                                  on_done=self._after_activity, first="tavern")
+        else:
+            self.scene = TavernaScreen(self.ui_fonts, self.guild, party, node,
+                                       on_done=self._after_activity, group=group)
 
     def _open_prison(self, party, node, _offer):
         from .prison_screen import PrisonScreen

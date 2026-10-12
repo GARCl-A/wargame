@@ -94,6 +94,9 @@ class DraftScreen(Screen):
         self.icon_rects = []
         self.leader_pick = None
         self.leader_rects = []
+        self.editing_unit_idx = None
+        self.unit_name_buf = ""
+        self.unit_name_rects = []
         self.continue_rect = None
 
         set_player_color(self.banner_color)
@@ -118,6 +121,19 @@ class DraftScreen(Screen):
         self.pending_labels = []
 
     def handle_event(self, event):
+        if self.editing_unit_idx is not None and event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                if self.unit_name_buf.strip():
+                    self.picks[self.editing_unit_idx].name = self.unit_name_buf.strip()
+                self.editing_unit_idx = None
+            elif event.key == pygame.K_ESCAPE:
+                self.editing_unit_idx = None
+            elif event.key == pygame.K_BACKSPACE:
+                self.unit_name_buf = self.unit_name_buf[:-1]
+            elif event.unicode and len(self.unit_name_buf) < 24 and event.unicode.isprintable():
+                self.unit_name_buf += event.unicode
+            return
+
         if self.editing_name and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                 self.guild_name, self.editing_name = self.name_buf, False
@@ -140,6 +156,9 @@ class DraftScreen(Screen):
         super().handle_event(event)
 
     def handle_escape(self):
+        if self.editing_unit_idx is not None:
+            self.editing_unit_idx = None
+            return True
         if self.commission_modal_open:
             self._close_modal()
             return True
@@ -226,6 +245,22 @@ class DraftScreen(Screen):
         if self.name_rect and self.name_rect.collidepoint(px):
             self.name_buf, self.editing_name = self.guild_name, True
             return
+        for rect, idx in self.unit_name_rects:
+            if rect.collidepoint(px):
+                if self.editing_unit_idx == idx:
+                    if self.unit_name_buf.strip():
+                        self.picks[idx].name = self.unit_name_buf.strip()
+                    self.editing_unit_idx = None
+                else:
+                    if self.editing_unit_idx is not None and self.unit_name_buf.strip():
+                        self.picks[self.editing_unit_idx].name = self.unit_name_buf.strip()
+                    self.editing_unit_idx = idx
+                    self.unit_name_buf = self.picks[idx].name
+                return
+        if self.editing_unit_idx is not None:
+            if self.unit_name_buf.strip():
+                self.picks[self.editing_unit_idx].name = self.unit_name_buf.strip()
+            self.editing_unit_idx = None
         for rect, color in self.color_rects:
             if rect.collidepoint(px):
                 self.banner_color = color
@@ -383,12 +418,15 @@ class DraftScreen(Screen):
                 "icons": [slug for _, slug, _label in artwork.BANNER_ICONS],
                 "leaders": [{"ch": unit_to_ch(Combatant(u)), "selected": u == self.leader_pick}
                             for u in self.picks],
-                "can_continue": self.leader_pick is not None}
+                "can_continue": self.leader_pick is not None,
+                "editing_unit_idx": self.editing_unit_idx,
+                "unit_name_buf": self.unit_name_buf}
         out = draw_identity_form(screen, self.F, screen.get_rect(), form, self.mouse)
         self.name_rect = out["name"]
         self.color_rects = out["colors"]
         self.icon_rects = out["icons"]
         self.leader_rects = [(r, self.picks[i]) for r, i in out["leaders"]]
+        self.unit_name_rects = out.get("unit_names", [])
         self.continue_rect = out["continue"]
         if out["tooltip"]:
             self.tooltip = out["tooltip"]

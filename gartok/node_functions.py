@@ -29,7 +29,7 @@ class NodeFunction:
 
 FUNCTIONS = {f.id: f for f in (
     NodeFunction("shop", "market", "ENTER THE SHOP"),
-    NodeFunction("recruit", "recruit", "ENTER THE TAVERN"),
+    NodeFunction("recruit", "recruit", "ENTER THE TAVERN", absorbs=("shop",)),
     NodeFunction("prison", "prison", "VISIT THE PRISON"),
     NodeFunction("work"),
     NodeFunction("hunt", "hunt", "GO HUNTING",
@@ -39,7 +39,7 @@ FUNCTIONS = {f.id: f for f in (
     NodeFunction("tanner", "tanner", "VISIT THE TANNER", absorbs=("shop",)),
     NodeFunction("forge", "forge", "VISIT THE FORGE", absorbs=("shop",)),
     NodeFunction("apothecary", "apothecary", "VISIT THE APOTHECARY", absorbs=("shop",)),
-    NodeFunction("stable", "stable", "VISIT THE STABLES"),
+    NodeFunction("stable", "stable", "ENTER THE FARM", absorbs=("shop",)),
     NodeFunction("library", "library", "VISIT THE LIBRARY", absorbs=("shop",)),
     NodeFunction("property", "property", "VISIT THE PROPERTY"),
     NodeFunction("claim", "claim", "THE WILDS CLAIM"),

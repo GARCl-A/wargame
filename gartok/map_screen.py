@@ -203,6 +203,7 @@ class MapScreen(Screen):
         self._merge_rects = []                # [(other_gid, rect)] -- MERGE buttons in that same card
         self._minimap_box = None
         self._minimap_params = (0.0, 0.0, 1.0)
+        self._inspector_tooltip = None
 
     def _refresh_nodes(self):
         self._nodes = {n.id: self._node_dict(n) for n in world.known(self.guild)}
@@ -384,9 +385,11 @@ class MapScreen(Screen):
         return hov
 
     def _inspector_button(self, surf, F, rect, mpos, *, key=None, label="", sub=None,
-                          primary=False, danger=False, enabled=True, font=None):
+                          primary=False, danger=False, enabled=True, font=None, tooltip=None):
         self.add_button(surf, rect, key, label, enabled=enabled, primary=primary,
                         danger=danger, font=font, sub=sub)
+        if rect.collidepoint(self.mouse) and tooltip:
+            self._inspector_tooltip = (self.mouse[0], self.mouse[1], tooltip, T.TX)
 
     # ------------------------------------------------------------------ #
     def _here(self):
@@ -772,18 +775,20 @@ class MapScreen(Screen):
         """One REST row: what it takes and what it costs (`eaters` mouths), or why it is off."""
         if not plan.available:
             return {"type": "button", "key": key, "label": label, "sub": plan.reason,
-                    "enabled": False, "gap_before": 4}
+                    "tooltip": plan.reason, "enabled": False, "gap_before": 4}
         rations = plan.meals * eaters
         meals = "no meal" if rations == 0 else f"{rations} meal{'s' * (rations != 1)} in all"
         if key != "rest:full":
             return {"type": "button", "key": key, "label": f"{label}  ·  {meals}", "gap_before": 4}
         who = f"{plan.worst[0]} {plan.worst[1]}/{plan.worst[2]}"
         head = "UNTIL RATIONS HIT THE FLOOR" if plan.capped else label
+        tooltip = None
         if plan.capped:
             who += f"  ·  {plan.short_days} more day{'s' * (plan.short_days != 1)} of rations to be full"
+            tooltip = f"Rations run out before full health ({plan.short_days} more day{'s' * (plan.short_days != 1)} needed)"
         return {"type": "button", "key": key, "gap_before": 4,
                 "label": f"{head}  ·  {rest.format_hours(plan.hours)}",
-                "sub": f"{meals}  ·  {who}"}
+                "sub": f"{meals}  ·  {who}", "tooltip": tooltip}
 
     def _rest_urgent(self, g):
         """A stop only helps if a hungry member can actually reach a ration --
@@ -812,8 +817,9 @@ class MapScreen(Screen):
             paused = self._pending_event is not None
             starving = g.rations == 0 and not paused
             items.append({"type": "button", "key": "rest_menu",
-                          "label": "REST  ▴" if self._rest_open else "REST  ▾",
-                          "gap_before": T.S * 2, "primary": self._rest_urgent(g) and not paused,
+                          "label": "REST (OPEN)  ▴" if self._rest_open else "REST  ▾",
+                          "gap_before": T.S * 2,
+                          "primary": (self._rest_urgent(g) or self._rest_open) and not paused,
                           "danger": starving, "enabled": not paused, "height": T.S * 5})
             if self._rest_open and not paused:
                 items += [self._rest_row(k, label, plan, len(g.members)) for k, label, plan in self._rest_plans(g)]
@@ -873,6 +879,7 @@ class MapScreen(Screen):
             screen, F, left, groups, self._events(), self.selected.gid,
             self._split_target, self.split_picks, self.mouse)
 
+        self._inspector_tooltip = None
         g = self.selected
         gd = next(gd for gd in groups if gd["key"] == g.gid)
         here = self._here()
@@ -881,7 +888,9 @@ class MapScreen(Screen):
                        self._inspector_bottom(g), self.mouse, button=self._inspector_button,
                        party_icon=_party_icon_fn)
 
-        if cmd_hover:
+        if self._inspector_tooltip:
+            self._draw_tooltip(screen, self._inspector_tooltip, (W, H))
+        elif cmd_hover:
             self._draw_tooltip(screen, cmd_hover, (W, H))
         set_pointer(self._hovering())
 
