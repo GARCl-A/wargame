@@ -29,14 +29,19 @@ def test_every_vendor_serves_a_function_its_node_offers_and_has_a_portrait():
         assert v.name and v.card["caption"] == f"{v.race} {v.role}"
 
 
+def test_every_shop_has_a_keeper():
+    shops = {n.id for n in world.NODES if "shop" in n.functions}
+    assert shops == {n for n, _, _ in _VENDORS}
+
+
 def test_vendor_names_are_distinct():
     names = [name for _, name in {(node_id, v.name) for node_id, _, v in _VENDORS}]
     assert len(set(names)) == len(names)
 
 
 def test_vendor_lookup_is_none_for_a_node_without_a_face():
-    assert world.vendor("mine", "shop") is None
     assert world.vendor("apothecary", "apothecary") is None
+    assert world.vendor("city", "bank") is None
 
 
 def test_no_card_draws_nothing():

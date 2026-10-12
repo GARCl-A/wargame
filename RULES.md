@@ -1328,8 +1328,9 @@ Neutral**).
   still applies to the whole sale).
 - **The vendor has a face.** Each shop function has a `world.Vendor` (name, race, role and a
   portrait from `assets/portraits/npc/`) on its `Node.vendors`: the Market's Automaton merchant,
-  the Library's Kobold librarian, the Tannery's Gnoll tanner and the Smithy's Dwarf blacksmith. The face and
-  name show in that screen's header; the Apothecary, the Farm, the Tavern and the Mine have none yet.
+  the Library's Kobold librarian, the Tannery's Gnoll tanner, the Smithy's Dwarf blacksmith, the Apothecary's
+  Gnome, the Tavern's Halfling innkeeper, the Farm's Human farmer, the Lumber Yard's Orc foreman and the Mine's
+  Goblin foreman. The face and name show in that screen's header.
 
 ### Recruitment 🟡
 

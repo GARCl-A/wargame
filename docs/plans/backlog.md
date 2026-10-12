@@ -290,21 +290,17 @@ GPU a portrait, curated by hand). Each task below is its own sitting of art-maki
 the ones that also need code say so. Order is the suggested priority.
 
 - **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`;
-  `watch_screen.py` is text only today) and a portrait for the Mine's keeper. Each vendor has a name
-  (from `names.py`, fixed per node) and a face in the header of the Market, the Library, the Forge and the
-  Tanner (`world.Vendor`, `ui/vendor_panel.py`); the faces that are missing are in the next item, and a
-  vendor is not an NPC (no stats, no recruiting or robbing them). The node marks are under *Map node icons*.
-- **Faces for the three keepers still to draw.** The Apothecary's **Gnome**, the Tavern's **Halfling**
-  and the Farm's **Human** (two tongues) have a language and a bent on their node and no `world.Vendor`
-  (name, race, role, `portraits/npc/<role>.png`): once the images exist, add the vendor to each node's
-  `vendors` (the Tavern's and the Farm's under `shop`, the Apothecary's under `apothecary` and `shop`).
+  `watch_screen.py` is text only today). Every shop node has a keeper with a name (fixed per node) and a face
+  in its header (`world.Vendor`, `ui/vendor_panel.py`); a vendor is not an NPC (no stats, no recruiting or
+  robbing them). The Apothecary's keeper shows only on its shop tab: the hub's Medic tab has none yet. The
+  node marks are under *Map node icons*.
 - **Portraits for the Snake.** The Snake (`data.BEASTS`, the Lumber Yard's new pack) has no
   `portraits/snake/` folder, so it shows its head icon (`artwork.RACE_ICON`, the Medusa head): generate a pool of
   about 6 with `/gen-portrait`, then drop the images in `gartok/assets/portraits/snake/N.png`.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
   the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
-  or more first. Goblin has 7, Kenku 8 and Goliath 8 against 12 for Human, Elf, Gnome, Centaur
-  and Orc (Halfling has 14, Grippli 17).
+  or more first. Kenku has 8 and Goliath 8 against 15 for Human and Gnome, 16 for Orc, 12 for Elf and
+  Centaur (Goblin has 9, Halfling 18, Grippli 17).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
   share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
   Ruins, the Claim, the Mine, the Smithy, the Tannery and the Apothecary a mark of their own. The map works as it is, so this is polish.
