@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -88,18 +88,16 @@ its functions are tabs inside.
 **Map and node entry**
 - **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm, Tavern, Lumber Yard and Mine unified under `TabbedHubScreen.for_node` with 4 distinct Tavern tabs and `GatherScreen`).
 - **Travel graph is hard to read.** The layout algorithm needs rework.
-- **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
-  in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone. Decided 2026-10-12:
-  campfire cooking is an intentional manual action by the player from the group menu when paused at a node, not an automatic trip interruption.
-  Its primary role is field sustenance and preventing spoilage (e.g. converting 20 Meat into cooked food/Jerky while hunting in the Wilds before it rots, without having to return to town).
-  The tool Flint and Steel ($40) is added to the catalogue and the Market shelf.
+- **Crafting button on the map (Campfire cooking).** Built 2026-10-12: with Flint and Steel + 1 Lumber + 1 Coal
+  in the pack the group lights a field campfire on the spot (`Group.light_campfire`); it burns 4 h at that node,
+  allowing cooking (`station="cooking"`) directly from the group menu toolbar and map inspector to preserve meat into Jerky.
 - **Group swap with 2 groups feels odd.**
 - **Start screen** (title) still to be built.
 
 **Layout overlaps (component rule; Market shelf, Bank quantity box, Load cards, Draft leader row attributes, Rest accordion budgeting and Tavern hub tabs fixed 2026-10-12)**
 - **Manage and Gear: the wagon does not show on the right.**
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
-  talent may let a unit carry more than it should, or it is only the display.
+  talent: investigated 2026-10-12 -- both Tannery and Market share the exact same `MarketScreen` and `LoadoutMixin`. The perceived weight variance was due to temporary attribute drops from hunger/sickness altering the base carry threshold, and `_carry_relief` dynamically scaling only with non-weapon, non-consumable pack cargo as designed.
 
 **Draft, leveling and talents**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
@@ -110,15 +108,10 @@ its functions are tabs inside.
 - **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
   onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
   (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
-  (3) archaeology at Ancient Ruins.
-- **Generate eligible work/combat activities dynamically.** In `guild_screen.py` and `progression.py`,
-  `eligible_work_activities` is currently hand-coded up to level 3 only (which is why a level 4 worker sees no
-  available tasks on the guild screen even though `Signal Horn` is a level 4 craft). Generate the list dynamically
-  from registered recipes (`craft_level.level_of`), nodes, hunting grounds and world activities so any level's
-  growth options are always accurate.
+  (3) archaeology at Ancient Ruins. Built 2026-10-12: `progression.eligible_work_activities` dynamically inspects registered recipes up to level 4+.
 - **In-game dynamic wiki / compendium.** A searchable in-game encyclopedia screen generated dynamically
   from the game's data catalogs (`items`, `abilities`, `talents`, `recipes`, `data.BEASTS`, node functions and
-  combat rules), accessible from the command bar or pause menu without leaving the game.
+  combat rules), accessible from the command bar or pause menu without leaving the game. Decided 2026-10-12: implemented as a floating modal window rather than full-window, preserving context.
 - **Perk to reduce armour weight.**
 - **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
@@ -140,7 +133,7 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
 - **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
-  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 recruit (tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them from the guild to Ledger Hold, the guild receives pay, and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
+  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 recruit (tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives pay, and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
@@ -196,7 +189,7 @@ pointed to, not repeated.
   (3 of 20 wiped by the pack); with the ambush off the gatherer ends at $137. Why day 50? A starter guild of 3 works day-labour first to pool the $270 licence (reached around day 20-25); once bought, it nets about +$1.70 a day per member over day labour, not +$3: hauls lose value to rotting Fruit (24 h life), bi-daily selling cycles, and haggling. Thus cumulative money only catches up to pure day-labour around day 50. Applies to both Lumber Yard ($270) and Mine ($385; $10 road each way, higher pack risk). **Decided 2026-10-12: keep current licence prices ($270 and $385)**; the payback gap will naturally improve when future food crafting recipes allow processing Fruit into longer-lasting rations/food (preserving haul value without forced rapid resale); the Mine's higher ambush risk on the Old Road is intentional and accepted. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the
   node's own pack, but with no recorded fights of a person against these packs, the win rate is the AI's or the
   skill knob's. (3) The shift picker shows the drops and the rolls but not the average worth of a shift against the
-  wage. (4) The Mine and the Yard have no tutorial line of their own beyond the map card, and no art for the Mine.
+  wage. (4) The Mine has no art yet (the Gathering tutorial card was delivered in 2026-10-12 for both Yard and Mine).
   (5) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is food, but it rots in
   a day, so a Yard crew eats it or sells it that evening. (6) **Snake Venom Gland:** Decided 2026-10-12: the Antidote recipe in the Apothecary accepts either Spider or Snake Venom Gland interchangeably. Blade poison coating for player/enemy weapons will be a separate craft, scheduled for after the new weapon actions and traits land.
 - **Item properties: base material sources (rarities decided 2026-10-11).** Built 2026-10-11
@@ -463,12 +456,12 @@ building them:
   recipe book).** Food only quells hunger today and the Potato does that at the
   lowest price, so nothing else is worth buying. Add dishes that are better and dearer and spoil
   fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
-  Marsh's slower rot (see the charter) is priced low until this lands. **Decided 2026-10-10:**
+  Marsh's slower rot (see the charter) is priced low until this lands. **Decided 2026-10-10 & 2026-10-12:**
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
-  one number for 24 h (HP, an attribute, advantage on a named kind of action...). Open: the
-  list of dishes and their buffs, how a buff is stored on the unit (a timed condition, like
-  sickness), and the cost to the economy sim (`cheapest_food_price` stops being the one price
-  of a meal).
+  one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
+  buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
+  allow multiple buffs simultaneously. Open: the list of dishes and their buffs, and the cost to the economy sim
+  (`cheapest_food_price` stops being the one price of a meal).
 
 ---
 

@@ -25,7 +25,7 @@ all (death, or peeled into a different group by a split).
 
 from uuid import uuid4
 
-from . import items
+from . import economy, items
 from .animals import feed_herd, feed_hungry
 from .data import METERS_PER_SQUARE
 
@@ -56,6 +56,8 @@ class Group:
         for wagon in wagons or []:
             self.add_wagon(wagon)
         self.herd_notice = None           # day an overextended herd starts to stray -- see cohesion.py
+        self.campfire_node = None         # node where an intentional field campfire was lit
+        self.campfire_expires = 0         # seconds on campaign clock when field fire goes out
         self.ensure_leader()
 
     def __len__(self):
@@ -324,4 +326,37 @@ class Group:
         if not self.members:
             return 0
         return self.rations // len(self.members)
+
+    def has_campfire(self, clock_seconds):
+        """Whether a lit field campfire is burning at this group's current node."""
+        return bool(self.campfire_node == self.node and self.campfire_expires > clock_seconds)
+
+    def campfire_hours_left(self, clock_seconds):
+        """Hours remaining on the active campfire, rounded to 1 decimal place."""
+        if not self.has_campfire(clock_seconds):
+            return 0.0
+        return max(0.0, round((self.campfire_expires - clock_seconds) / 3600, 1))
+
+    def can_light_campfire(self):
+        """Checks if the group has Flint and Steel, plus 1 Lumber and 1 Coal unlocked."""
+        has_tool = any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*self.members, *self.stores))
+        has_lumber = sum(u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) for u in self.members) >= 1
+        has_coal = sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in self.members) >= 1
+        return has_tool and has_lumber and has_coal
+
+    def light_campfire(self, clock_seconds):
+        """Consumes 1 Lumber and 1 Coal from unlocked inventory and lights a 4-hour campfire."""
+        if not self.can_light_campfire():
+            return False
+        for item in (economy.FIELD_CAMPFIRE_LUMBER, economy.FIELD_CAMPFIRE_COAL):
+            needed = 1
+            for u in self.members:
+                if u.unlocked_of(item) > 0:
+                    took = u.remove_named(item, needed)
+                    needed -= took
+                    if needed <= 0:
+                        break
+        self.campfire_node = self.node
+        self.campfire_expires = clock_seconds + economy.FIELD_CAMPFIRE_HOURS * 3600
+        return True
 

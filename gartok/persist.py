@@ -184,6 +184,8 @@ def group_to_dict(g):
         "herd": [a.to_dict(_serialize_pack) for a in g.herd],
         "herd_notice": g.herd_notice,
         "stance": g.stance,
+        "campfire_node": g.campfire_node,
+        "campfire_expires": g.campfire_expires,
     }
 
 
@@ -196,6 +198,8 @@ def group_from_dict(d):
                   leader=leader, wagons=wagons, herd=herd)
     group.herd_notice = d["herd_notice"]
     group.stance = d.get("stance", NORMAL)
+    group.campfire_node = d.get("campfire_node", None)
+    group.campfire_expires = d.get("campfire_expires", 0)
     if d["order"]:
         group.order = order_from_dict(d["order"])
     if d["pending"]:

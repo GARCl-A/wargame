@@ -112,6 +112,11 @@ CLAIM_OVEN_BRICK = "Stone Brick"
 CLAIM_OVEN_BRICKS = 15            # x the brick's price = OVEN_PRICE, paid in stone
 CLAIM_OVEN_HOURS = 8              # no check, unlike the campfire: it costs time and weight
 
+FIELD_CAMPFIRE_HOURS = 4          # how long a field campfire burns at a node
+FIELD_CAMPFIRE_TOOL = "Flint and Steel"
+FIELD_CAMPFIRE_LUMBER = "Lumber"
+FIELD_CAMPFIRE_COAL = "1kg Coal"
+
 TAVERN_STUDY_COST_PER_DAY = 15   # copper, per member per day to rent a quiet room to study
 
 LUMBER_PRICE = 7   # copper, market buy price -- the guild has to import its own building material,

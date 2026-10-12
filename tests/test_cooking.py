@@ -375,3 +375,123 @@ def test_the_claim_oven_survives_a_save_round_trip():
         assert persist.load_game(slot).claim_oven
     finally:
         persist.delete_world(slot)
+
+
+# --------------------------------------------------------------------------- #
+# field campfire cooking at any node                                         #
+# --------------------------------------------------------------------------- #
+
+def test_field_campfire_lighting_consumes_lumber_and_coal_requires_flint_and_steel():
+    u = Unit("player")
+    u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal", "Meat", "Meat", "Salt"])
+    g = Group([u], node="wilds")
+    assert g.can_light_campfire()
+    assert not g.has_campfire(1000)
+
+    assert g.light_campfire(1000)
+    assert g.has_campfire(1000)
+    assert g.campfire_hours_left(1000) == 4.0
+    assert u.count_of("Flint and Steel") == 1
+    assert u.count_of("Lumber") == 0
+    assert u.count_of("1kg Coal") == 0
+
+
+def test_field_campfire_cannot_light_without_tools_or_fuel():
+    # Missing flint & steel
+    u = Unit("player")
+    u._base_inventory = packed(["Lumber", "1kg Coal"])
+    g = Group([u], node="wilds")
+    assert not g.can_light_campfire()
+    assert not g.light_campfire(1000)
+
+    # Missing lumber
+    u._base_inventory = packed(["Flint and Steel", "1kg Coal"])
+    assert not g.can_light_campfire()
+
+    # Missing coal
+    u._base_inventory = packed(["Flint and Steel", "Lumber"])
+    assert not g.can_light_campfire()
+
+
+def test_field_campfire_expires_after_4_hours():
+    u = Unit("player")
+    u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal"])
+    g = Group([u], node="wilds")
+    g.light_campfire(0)
+    assert g.has_campfire(3600 * 3)
+    assert g.campfire_hours_left(3600 * 3) == 1.0
+    assert not g.has_campfire(3600 * 4)
+    assert g.campfire_hours_left(3600 * 4) == 0.0
+
+
+def test_field_campfire_left_behind_when_moving():
+    u = Unit("player")
+    u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal"])
+    g = Group([u], node="wilds")
+    g.light_campfire(100)
+    assert g.has_campfire(100)
+    g.node = "road"
+    assert not g.has_campfire(100)
+
+
+def test_field_campfire_survives_save_round_trip():
+    slot = "testworld_field_campfire"
+    if os.path.exists(persist.save_path(slot)):
+        return
+    u = Unit("player")
+    g = Group([u], node="wilds")
+    g.campfire_node = "wilds"
+    g.campfire_expires = 50000
+    guild = Guild([u], groups=[g])
+    guild.clock.seconds = 10000
+    try:
+        persist.save_game(slot, guild)
+        loaded = persist.load_game(slot)
+        lg = loaded.groups[0]
+        assert lg.has_campfire(10000)
+        assert lg.campfire_node == "wilds"
+        assert lg.campfire_expires == 50000
+    finally:
+        persist.delete_world(slot)
+
+
+def test_field_campfire_in_group_screen_actions():
+    from gartok.group_screen import GroupScreen
+    pygame.init()
+    u = Unit("player")
+    u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal"])
+    g = Group([u], node="wilds")
+    guild = Guild([u], groups=[g])
+
+    cook_opened = []
+    scr = GroupScreen(ui_fonts(), guild, g, on_back=lambda: None, on_cook=lambda: cook_opened.append(True))
+    scr.mouse = (0, 0)
+    scr.draw(pygame.Surface((1280, 800)))
+    
+    # Click campfire action in toolbar
+    scr._handle_button("campfire_cook")
+    assert g.has_campfire(guild.clock.seconds)
+    assert cook_opened == [True]
+
+
+def test_field_campfire_in_map_screen_inspector():
+    from gartok.map_screen import MapScreen
+    pygame.init()
+    u = Unit("player")
+    u._base_inventory = packed(["Flint and Steel", "Lumber", "1kg Coal"])
+    g = Group([u], node="wilds")
+    guild = Guild([u], groups=[g])
+
+    cook_opened = []
+    scr = MapScreen(ui_fonts(), guild, on_guild=lambda: None, on_wipe=lambda: None,
+                    on_advance=lambda: None, on_manage_group=lambda g: None,
+                    on_cook=lambda grp: cook_opened.append(grp))
+    scr.mouse = (0, 0)
+    scr.draw(pygame.Surface((1280, 800)))
+
+    # Inspector shows campfire button and triggers it
+    keys = {k for k, _ in scr.buttons}
+    assert "campfire_cook" in keys
+    scr._handle_button("campfire_cook")
+    assert g.has_campfire(guild.clock.seconds)
+    assert cook_opened == [g]

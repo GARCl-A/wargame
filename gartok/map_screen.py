@@ -156,7 +156,8 @@ class MapScreen(Screen):
 
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
                 pending_event=None, on_resolve_event=None, on_autowin=None,
-                on_visit_tavern=None, on_visit_claim=None, on_abandon=None):
+                on_visit_tavern=None, on_visit_claim=None, on_abandon=None,
+                on_cook=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -164,6 +165,7 @@ class MapScreen(Screen):
         self.on_wipe = on_wipe
         self.on_advance = on_advance
         self.on_manage_group = on_manage_group
+        self.on_cook = on_cook
         self._pending_event = pending_event    # (Group, Order) an ambush paused here -- see app._resolve_pending_event
         self.on_resolve_event = on_resolve_event
         self.on_autowin = on_autowin
@@ -577,6 +579,16 @@ class MapScreen(Screen):
             self.on_advance(dt=ADVANCE_HOURS)
         elif key == "manage_group":
             self.on_manage_group(self.selected)
+        elif key == "campfire_cook":
+            g = self.selected
+            if g.has_campfire(self.guild.clock.seconds):
+                if self.on_cook:
+                    self.on_cook(g)
+            elif g.can_light_campfire():
+                g.light_campfire(self.guild.clock.seconds)
+                self.notices.append(f"{g.display_name}: campfire lit. Burns for 4 hours.")
+                if self.on_cook:
+                    self.on_cook(g)
         elif key.startswith("work:"):
             self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1])))
         elif key.startswith("gather:"):
@@ -810,6 +822,24 @@ class MapScreen(Screen):
         items = []
         if not (g.busy or self._group_blocked(g)):
             items.append({"type": "button", "key": "manage_group", "label": "MANAGE GEAR & QUESTS", "height": 32})
+            if self.on_cook is not None:
+                if g.has_campfire(self.guild.clock.seconds):
+                    left = g.campfire_hours_left(self.guild.clock.seconds)
+                    items.append({"type": "button", "key": "campfire_cook",
+                                  "label": f"CAMPFIRE COOKING ({left:g}h)", "primary": True,
+                                  "gap_before": 2, "height": 32})
+                else:
+                    missing = []
+                    if not any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*g.members, *g.stores)):
+                        missing.append("Flint & Steel")
+                    if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) for u in g.members) < 1:
+                        missing.append("1 Lumber")
+                    if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in g.members) < 1:
+                        missing.append("1 Coal")
+                    sub = "burns 4h · " + (f"needs {', '.join(missing)}" if missing else "ready to light")
+                    items.append({"type": "button", "key": "campfire_cook",
+                                  "label": "LIGHT CAMPFIRE & COOK", "enabled": not missing,
+                                  "sub": sub, "gap_before": 2, "height": 32})
             items.append({"type": "button", "key": "stance", "gap_before": 2, "height": 32,
                           "label": f"TRAVEL: {g.stance.upper()}",
                           "sub": STANCE_NOTES[g.stance]})

@@ -279,7 +279,8 @@ class App:
                                on_autowin=self._resolve_ambush_autowin,
                                on_visit_tavern=self._visit_tavern,
                                on_visit_claim=self._visit_claim,
-                               on_abandon=self._abandon_broken)
+                               on_abandon=self._abandon_broken,
+                               on_cook=lambda g: self._open_kitchen(g, "CAMPFIRE COOKING", self._start_map))
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -361,7 +362,10 @@ class App:
             return
         from .group_screen import GroupScreen
         self.scene = GroupScreen(self.ui_fonts, self.guild, group, on_back=back or self._after_activity,
-                                 on_tick=self._tick_outside_map)
+                                 on_tick=self._tick_outside_map,
+                                 on_cook=lambda: self._open_kitchen(
+                                     group, "CAMPFIRE COOKING",
+                                     lambda: self._open_group(group, back=back)))
     def _open_level(self, unit):
         self.scene = LevelScreen(self.ui_fonts, unit,
                                  on_back=self._open_guild, on_change=self._save)

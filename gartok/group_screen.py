@@ -70,13 +70,14 @@ def _short(name):
 class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, SheetModalMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, group, on_back, on_tick=None):
+    def __init__(self, fonts, guild, group, on_back, on_tick=None, on_cook=None):
         super().__init__()
         self.fonts = fonts                 
         self.guild = guild
         self.group = group
         self.on_back = on_back
         self.on_tick = on_tick
+        self.on_cook = on_cook
         self.tab = "gear"
         self.view = "bags"
         self.pinned = list(self.group.members)        # columns shown in BAGS, clamped to fit at draw time
@@ -365,6 +366,17 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             self._treat_sickness()
         elif key == "treat_poison":
             self._treat_poison()
+        elif key == "campfire_cook":
+            if self.group.has_campfire(self.guild.clock.seconds):
+                if self.on_cook:
+                    self.on_cook()
+            elif self.group.can_light_campfire():
+                self.group.light_campfire(self.guild.clock.seconds)
+                self.notice = "Campfire lit! Burns for 4 hours."
+                if self.on_cook:
+                    self.on_cook()
+            else:
+                self.notice = "Campfire requires Flint & Steel, 1 Lumber, and 1 Coal in the pack."
         elif key == "rename":
             self.editing_name = True
             self.name_buf = self.group.name or ""
@@ -787,6 +799,12 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                 actions.append(("treat_sickness", "treat sickness"))
             if self._can_treat_poison():
                 actions.append(("treat_poison", "use antidote"))
+            if self.on_cook:
+                if self.group.has_campfire(self.guild.clock.seconds):
+                    left = self.group.campfire_hours_left(self.guild.clock.seconds)
+                    actions.append(("campfire_cook", f"campfire ({left:g}h)"))
+                else:
+                    actions.append(("campfire_cook", "campfire cooking"))
 
             res = loadout_panel.toolbar(screen, F, bar, mid.x, (("bags", "BAGS"), ("cargo", "CARGO")),
                                         self.view, metrics, actions, self.mouse)
