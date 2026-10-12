@@ -412,16 +412,37 @@ def _try_assess(battle, unit):
 
 
 def _ctf_goal(battle, unit):
-    """The cell a capture-the-flag runner is racing for: the player's flag
-    until they scoop it up, then their own side's flag to plant it on and
-    score. None for a non-runner, or before both flags are down."""
-    if not battle.is_ctf or not unit.ctf_runner:
+    """The cell a capture-the-flag runner or defender is racing for:
+    - a runner heads for the opposing flag, then races it home to score;
+    - a non-runner defends their own side's flag by standing directly on its square.
+    None before both flags are down or if an ally already guards the home flag."""
+    if not battle.is_ctf:
         return None
     if battle.flags["player"] is None or battle.flags["enemy"] is None:
         return None
-    if battle.flag_carrier["player"] is unit:
-        return battle.flags["enemy"]          # got it -- now get it home
-    return battle.flag_pos("player")          # not carrying yet: go get it
+    if getattr(unit, "ctf_runner", False):
+        if battle.flag_carrier["player"] is unit:
+            return battle.flags["enemy"]          # got it -- now get it home
+        return battle.flag_pos("player")          # not carrying yet: go get it
+
+    # Non-runner / defender:
+    # If the team's flag is currently stolen, pursue the carrier (handled by _target).
+    if battle.flag_carrier.get(unit.team) is not None:
+        return None
+    home = battle.flags.get(unit.team)
+    if home is None:
+        return None
+    # If another living ally is already guarding directly on the flag, do not crowd it
+    guardian = next((u for u in battle.units
+                     if u.alive and u.team == unit.team and u is not unit and home in battle.cells_of(u)), None)
+    if guardian is not None:
+        return None
+    # Closest living non-runner takes the post on the flag
+    defenders = [u for u in battle.units
+                 if u.alive and u.team == unit.team and not getattr(u, "ctf_runner", False)]
+    if defenders and min(defenders, key=lambda d: grid_distance(d.pos, home)) is unit:
+        return home
+    return None
 
 
 def _should_flee(battle, unit):
@@ -573,20 +594,23 @@ def take_turn(battle, unit):
                 continue
 
         goal = _ctf_goal(battle, unit)
-        if goal is not None:                  # flag runner: fetch it, then race it home
+        if goal is not None:                  # flag runner or defender
             if goal in battle.cells_of(unit):
-                break                         # on it -- end_turn picks it up / scores it
-            # step ONTO the flag cell (not adjacent, the way `path_step_toward`
-            # stops next to a unit) -- a downed body lying on it does not block.
-            reach = battle.reachable(unit)
-            route = battle.path_to(unit, goal)
-            step = goal if goal in reach else next(
-                (c for c in reversed(route) if c in reach), None)
-            if step is not None and step != unit.pos:
-                actions.MOVE.execute(battle, unit, step)
-                unit.walking = False
-                continue
-            # genuinely walled off from the flag -- fight through this turn
+                if getattr(unit, "ctf_runner", False):
+                    break                     # on it -- end_turn picks it up / scores it
+                # defender is on the flag tile: hold position, but allow attacks/actions below
+            else:
+                # step ONTO the flag cell (not adjacent, the way `path_step_toward`
+                # stops next to a unit) -- a downed body lying on it does not block.
+                reach = battle.reachable(unit)
+                route = battle.path_to(unit, goal)
+                step = goal if goal in reach else next(
+                    (c for c in reversed(route) if c in reach), None)
+                if step is not None and step != unit.pos:
+                    actions.MOVE.execute(battle, unit, step)
+                    unit.walking = False
+                    continue
+                # genuinely walled off from the flag -- fight through this turn
 
         if _should_flee(battle, unit):
             if actions.FLEE.available(battle, unit):
@@ -652,6 +676,13 @@ def take_turn(battle, unit):
         if not target.demoralized and actions.DEMORALIZE.can(battle, unit, target):
             actions.DEMORALIZE.execute(battle, unit, target)
             continue
+
+        if (battle.is_ctf and not getattr(unit, "ctf_runner", False)
+                and battle.flags.get(unit.team) in battle.cells_of(unit)
+                and battle.flag_carrier.get(unit.team) is None):
+            if actions.DEFEND.available(battle, unit):
+                actions.DEFEND.execute(battle, unit)
+            break
 
         flank = _flank_cell(battle, unit, target)
         if flank is not None:

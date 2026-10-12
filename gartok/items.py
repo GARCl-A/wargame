@@ -465,7 +465,9 @@ def is_crafting_material(name: str) -> bool:
 
 
 def crafting_materials() -> set[str]:
-    return {m for r in CRAFTING_RECIPES.values() for m in r.materials}
+    return {m for recipes in CRAFTING_RECIPES.values()
+            for r in (recipes if isinstance(recipes, list) else [recipes])
+            for m in r.materials}
 
 
 
@@ -574,83 +576,231 @@ def missing_tools(recipe: CraftingRecipe, packs) -> list[str]:
     return [t for t in recipe.tools if not any(u.has_item(t) for u in packs)]
 
 
-def recipe_goal(recipe: CraftingRecipe) -> int:
+def recipe_goal(recipe: Any) -> int:
     """The progress one batch of `recipe` takes: its complexity plus what its materials cost."""
-    total = recipe.complexity
-    for mat in recipe.materials:
+    recipe_data = recipe if isinstance(recipe, CraftingRecipe) else (recipe[0] if isinstance(recipe, list) and recipe else None)
+    if recipe_data is None:
+        return 10
+    total = recipe_data.complexity
+    for mat in recipe_data.materials:
         mat_item = get(mat)
         total += mat_item.price if mat_item else 10
     return total
 
 
-CRAFTING_RECIPES: dict[str, CraftingRecipe] = {
-    "Minor Healing Potion": CraftingRecipe(
-        target="Minor Healing Potion",
-        materials=["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"],
-        complexity=15,
-        station=CraftingStation.APOTHECARY,
-    ),
-    "Antidote": CraftingRecipe(
-        target="Antidote",
-        materials=["Venom Gland", "Vial"],
-        complexity=15,
-        station=CraftingStation.APOTHECARY,
-    ),
-    "Dwarf Axe": CraftingRecipe(
-        target="Dwarf Axe",
-        materials=["Iron Bar", "1sqm Hide", "1kg Coal"],
-        complexity=10,
-        station=CraftingStation.FORGE,
-    ),
-    "Dwarf Shield": CraftingRecipe(
-        target="Dwarf Shield",
-        materials=["Iron Bar", "Lumber", "1kg Coal"],
-        complexity=10,
-        station=CraftingStation.FORGE,
-    ),
-    "Dwarf Armor": CraftingRecipe(
-        target="Dwarf Armor",
-        materials=["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"],
-        complexity=15,
-        station=CraftingStation.FORGE,
-    ),
-    "Bear Trap": CraftingRecipe(
-        target="Bear Trap",
-        materials=["Iron Bar"],
-        complexity=5,
-        station=CraftingStation.FORGE,
-    ),
-    "Alarm Trap": CraftingRecipe(
-        target="Alarm Trap",
-        materials=["Iron Bar", "Rope"],
-        complexity=5,
-        station=CraftingStation.FORGE,
-    ),
-}
+class RecipeList(list):
+    """A list of CraftingRecipe variants for a target item.
+    For backwards compatibility and single-recipe convenience, delegates attribute
+    lookups to self[0]."""
+
+    @property
+    def target(self) -> str:
+        return self[0].target if self else ""
+
+    @property
+    def materials(self) -> list[str]:
+        return self[0].materials if self else []
+
+    @property
+    def complexity(self) -> int:
+        return self[0].complexity if self else 0
+
+    @property
+    def station(self) -> CraftingStation:
+        return self[0].station if self else CraftingStation.FORGE
+
+    @property
+    def yield_qty(self) -> int:
+        return self[0].yield_qty if self else 1
+
+    @property
+    def tools(self) -> tuple[str, ...]:
+        return self[0].tools if self else ()
+
+    @property
+    def level(self) -> int:
+        return self[0].level if self else 1
+
+    def get(self, key: str, default: Any = None) -> Any:
+        if self:
+            return getattr(self[0], key, default)
+        return default
+
+    def __getitem__(self, item: Any) -> Any:
+        if isinstance(item, str):
+            if self:
+                return getattr(self[0], item)
+            raise KeyError(item)
+        return super().__getitem__(item)
+
+
+def get_recipe(key: Any, variant: int = 0) -> CraftingRecipe | None:
+    if isinstance(key, CraftingRecipe):
+        return key
+    if not isinstance(key, str):
+        return None
+    if ":" in key:
+        name, idx_str = key.split(":", 1)
+        try:
+            variant = int(idx_str)
+            key = name
+        except ValueError:
+            pass
+    recipes = CRAFTING_RECIPES.get(key)
+    if not recipes:
+        return None
+    if isinstance(recipes, list):
+        if 0 <= variant < len(recipes):
+            return recipes[variant]
+        return recipes[0] if recipes else None
+    return recipes
+
+
+class RecipeDict(dict):
+    """Registry mapping item name -> list of CraftingRecipe variants.
+    Supports resolving 'Name:idx' directly, and wraps single recipes into RecipeList."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        if args:
+            init_val = args[0]
+            if isinstance(init_val, dict):
+                for k, v in init_val.items():
+                    self[k] = v
+            else:
+                for k, v in init_val:
+                    self[k] = v
+        for k, v in kwargs.items():
+            self[k] = v
+
+    def __setitem__(self, key: str, value: Any):
+        if isinstance(value, CraftingRecipe):
+            value = RecipeList([value])
+        elif isinstance(value, (list, tuple)) and not isinstance(value, RecipeList):
+            value = RecipeList(value)
+        super().__setitem__(key, value)
+
+    def __getitem__(self, key: str) -> Any:
+        if isinstance(key, str) and ":" in key:
+            name, idx = key.split(":", 1)
+            if name in self:
+                try:
+                    return self[name][int(idx)]
+                except (ValueError, IndexError):
+                    pass
+        return super().__getitem__(key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def __contains__(self, key: object) -> bool:
+        if isinstance(key, str) and ":" in key:
+            name, idx = key.split(":", 1)
+            if name in self:
+                try:
+                    return 0 <= int(idx) < len(self[name])
+                except ValueError:
+                    return False
+        return super().__contains__(key)
+
+
+CRAFTING_RECIPES: dict[str, list[CraftingRecipe]] = RecipeDict({
+    "Minor Healing Potion": [
+        CraftingRecipe(
+            target="Minor Healing Potion",
+            materials=["1L Beer", "Red Mushroom", "Red Mushroom", "Fruit", "Vial"],
+            complexity=15,
+            station=CraftingStation.APOTHECARY,
+        ),
+    ],
+    "Antidote": [
+        CraftingRecipe(
+            target="Antidote",
+            materials=["Venom Gland", "Vial"],
+            complexity=15,
+            station=CraftingStation.APOTHECARY,
+        ),
+        CraftingRecipe(
+            target="Antidote",
+            materials=["Snake Venom Gland", "Vial"],
+            complexity=15,
+            station=CraftingStation.APOTHECARY,
+        ),
+    ],
+    "Dwarf Axe": [
+        CraftingRecipe(
+            target="Dwarf Axe",
+            materials=["Iron Bar", "1sqm Hide", "1kg Coal"],
+            complexity=10,
+            station=CraftingStation.FORGE,
+        ),
+    ],
+    "Dwarf Shield": [
+        CraftingRecipe(
+            target="Dwarf Shield",
+            materials=["Iron Bar", "Lumber", "1kg Coal"],
+            complexity=10,
+            station=CraftingStation.FORGE,
+        ),
+    ],
+    "Dwarf Armor": [
+        CraftingRecipe(
+            target="Dwarf Armor",
+            materials=["Iron Bar", "Iron Bar", "1sqm Hide", "1kg Coal"],
+            complexity=15,
+            station=CraftingStation.FORGE,
+        ),
+    ],
+    "Bear Trap": [
+        CraftingRecipe(
+            target="Bear Trap",
+            materials=["Iron Bar"],
+            complexity=5,
+            station=CraftingStation.FORGE,
+        ),
+    ],
+    "Alarm Trap": [
+        CraftingRecipe(
+            target="Alarm Trap",
+            materials=["Iron Bar", "Rope"],
+            complexity=5,
+            station=CraftingStation.FORGE,
+        ),
+    ],
+})
 
 for _lang in _LANGUAGES:
-    CRAFTING_RECIPES[f"Dictionary of {_lang}"] = CraftingRecipe(
-        target=f"Dictionary of {_lang}",
-        materials=["1sqm Hide", "Paper", "Ink"],
-        complexity=25,
-        station=CraftingStation.SCRIPTORIUM,
+    CRAFTING_RECIPES[f"Dictionary of {_lang}"] = [
+        CraftingRecipe(
+            target=f"Dictionary of {_lang}",
+            materials=["1sqm Hide", "Paper", "Ink"],
+            complexity=25,
+            station=CraftingStation.SCRIPTORIUM,
+        )
+    ]
+
+CRAFTING_RECIPES["Signal Horn"] = [
+    CraftingRecipe(
+        target="Signal Horn",
+        materials=["1sqm Hide", "Rope", "Legendary Horn"],
+        complexity=20,
+        station=CraftingStation.FORGE,
+        tools=("Chisel",),
     )
+]
 
-CRAFTING_RECIPES["Signal Horn"] = CraftingRecipe(
-    target="Signal Horn",
-    materials=["1sqm Hide", "Rope", "Legendary Horn"],
-    complexity=20,
-    station=CraftingStation.FORGE,
-    tools=("Chisel",),
-)
-
-CRAFTING_RECIPES["Jerky"] = CraftingRecipe(
-    target="Jerky",
-    materials=["Meat", "Meat", "Salt"],
-    complexity=5,
-    station=CraftingStation.COOKING,
-    yield_qty=2,
-)
+CRAFTING_RECIPES["Jerky"] = [
+    CraftingRecipe(
+        target="Jerky",
+        materials=["Meat", "Meat", "Salt"],
+        complexity=5,
+        station=CraftingStation.COOKING,
+        yield_qty=2,
+    )
+]
 
 COMMON_RECIPES = ["Jerky"]            # known by everyone, no talent or teacher needed
 

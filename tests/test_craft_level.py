@@ -23,7 +23,7 @@ def test_the_levels_the_difficulty_works_out_for_every_recipe():
 
 
 def test_the_level_is_a_property_nobody_can_set():
-    recipe = items.CRAFTING_RECIPES["Jerky"]
+    recipe = items.get_recipe("Jerky")
     assert "level" not in {f.name for f in dataclasses.fields(recipe)}
     with pytest.raises(dataclasses.FrozenInstanceError):
         recipe.level = 9

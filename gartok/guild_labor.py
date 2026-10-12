@@ -156,15 +156,16 @@ class LaborMixin:
     def craft_blocker(self, unit, recipe, pool):
         """Why `unit` cannot start or carry on crafting `recipe` from the packs of `pool`,
         or None when they can. Takes nothing."""
-        if recipe not in items.CRAFTING_RECIPES:
+        data = items.get_recipe(recipe)
+        if data is None:
             return f"Unknown recipe {recipe}."
-        data = items.CRAFTING_RECIPES[recipe]
         lacking = items.missing_tools(data, pool)
+        target = data.target
         if lacking:
-            return f"{unit.name} can't craft {recipe} -- needs a {', '.join(lacking)}."
-        need = Counter(data["materials"])
+            return f"{unit.name} can't craft {target} -- needs a {', '.join(lacking)}."
+        need = Counter(data.materials)
         if unit.crafting_target != recipe and any(pooled_unlocked(pool, m) < q for m, q in need.items()):
-            return f"{unit.name} can't craft {recipe} -- missing materials."
+            return f"{unit.name} can't craft {target} -- missing materials."
         return None
 
     def crafting_shift(self, unit, recipe, hours, pool=None):
@@ -204,17 +205,17 @@ class LaborMixin:
 
     def craft_report(self, unit, recipe, hours, worked, made, progress_total):
         """Bank the work-XP of a craft and tell what came of it."""
-        recipe_data = items.CRAFTING_RECIPES[recipe]
+        recipe_data = items.get_recipe(recipe)
         events = unit.bank_work(worked, recipe_data.level)
         recorder.emit("craft", unit=unit.name, recipe=recipe, hours=worked, made=made * recipe_data.yield_qty)
 
         if made:
             total = made * recipe_data.yield_qty
             more = f" -- out of materials after {worked}h" if worked < hours and not unit.crafting_target else ""
-            events.append(f"{unit.name} finished crafting: {recipe}"
+            events.append(f"{unit.name} finished crafting: {recipe_data.target}"
                           f"{f' x{total}' if total > 1 else ''}!{more}")
         else:
-            events.append(f"{unit.name} worked on {recipe} for {worked}h (+{progress_total} progress).")
+            events.append(f"{unit.name} worked on {recipe_data.target} for {worked}h (+{progress_total} progress).")
         return events
 
     def _start_batch(self, unit, recipe, progress=0, pool=None):
@@ -222,7 +223,10 @@ class LaborMixin:
         it with `progress` carried over from the last batch. False, with every pack untouched,
         when the pool is missing any."""
         pool = pool or [unit]
-        need = Counter(items.CRAFTING_RECIPES[recipe]["materials"])
+        recipe_data = items.get_recipe(recipe)
+        if recipe_data is None:
+            return False
+        need = Counter(recipe_data.materials)
         if any(pooled_unlocked(pool, mat) < qty for mat, qty in need.items()):
             return False
         for mat, qty in need.items():

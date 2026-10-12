@@ -51,7 +51,8 @@ class CraftingScreen(Screen):
         # List members that have recipes for this station
         if self.station:
             self.crafters = [u for u in group.members
-                             if any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in u.known_recipes)]
+                             if any(any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else []))
+                                    for r in u.known_recipes)]
         else:
             self.crafters = [u for u in group.members if u.known_recipes]
         self.selected_crafter = self.crafters[0] if self.crafters else None
@@ -80,10 +81,10 @@ class CraftingScreen(Screen):
         return False
 
     def _get_missing_materials(self, recipe):
-        recipe_data = items.CRAFTING_RECIPES.get(recipe)
+        recipe_data = items.get_recipe(recipe)
         if not recipe_data:
             return []
-        need = Counter(recipe_data["materials"])
+        need = Counter(recipe_data.materials)
         missing = []
         for mat, qty in need.items():
             have = pooled_unlocked(self.group.members, mat)
@@ -92,7 +93,7 @@ class CraftingScreen(Screen):
         return missing
 
     def _get_missing_tools(self, recipe):
-        recipe_data = items.CRAFTING_RECIPES.get(recipe)
+        recipe_data = items.get_recipe(recipe)
         return items.missing_tools(recipe_data, self.group.members) if recipe_data else []
 
     def _has_materials(self, recipe):
@@ -108,13 +109,15 @@ class CraftingScreen(Screen):
                 if key == "done":
                     self.on_done()
                 elif key.startswith("alone:"):
-                    _, hours, recipe = key.split(":")
+                    parts = key.split(":", 2)
+                    hours = parts[1]
+                    recipe = parts[2]
                     ok, lines = solo.craft(self.guild, self.group, self.selected_crafter, recipe, int(hours))
                     if ok:
                         self.on_done()
                     self.notices = lines
                 elif key.startswith("work:"):
-                    parts = key.split(":")
+                    parts = key.split(":", 2)
                     hours = int(parts[1])
                     recipe = parts[2]
                     result = self.guild.crafting_shift(self.selected_crafter, recipe, hours,
@@ -160,13 +163,13 @@ class CraftingScreen(Screen):
 
         def _trailing(surf, r, ch):
             u = ch["unit"]
-            count = sum(1 for r in u.known_recipes if not self.station or items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station)
+            count = sum(1 for r in u.known_recipes if not self.station or any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])))
             caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
             if u.crafting_target:
                 caps(surf, F["micro"], "IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
 
         for m in self.group.members:
-            has_recipes = any(items.CRAFTING_RECIPES.get(r, {}).get("station") == self.station for r in m.known_recipes) if self.station else bool(m.known_recipes)
+            has_recipes = any(any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])) for r in m.known_recipes) if self.station else bool(m.known_recipes)
             if not has_recipes:
                 continue
 
@@ -192,80 +195,84 @@ class CraftingScreen(Screen):
         m = self.selected_crafter
 
         for r_name in m.known_recipes:
-            r_data = items.CRAFTING_RECIPES.get(r_name)
-            if not r_data:
-                continue
-            if self.station and r_data.get("station") != self.station:
-                continue
+            recipe_list = items.CRAFTING_RECIPES.get(r_name, [])
+            if not isinstance(recipe_list, (list, tuple)):
+                recipe_list = [recipe_list] if recipe_list else []
+            for variant_idx, r_data in enumerate(recipe_list):
+                if not r_data:
+                    continue
+                if self.station and r_data.station != self.station:
+                    continue
 
-            is_active = m.crafting_target == r_name
-            r = pygame.Rect(x, y, w, ROW_H)
-            hov = r.collidepoint(self.mouse)
-            panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
+                recipe_id = f"{r_name}:{variant_idx}" if len(recipe_list) > 1 else r_name
+                is_active = (m.crafting_target == recipe_id or (len(recipe_list) == 1 and m.crafting_target == r_name))
+                r = pygame.Rect(x, y, w, ROW_H)
+                hov = r.collidepoint(self.mouse)
+                panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
 
-            tx = item_icon(screen, r_name, r.x + T.S, r.y + T.S + 20)
-            text(screen, F["bodyb"], r_name, (tx, r.y + T.S), T.TX)
-            xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
-            xp_note = f"x{xp_mult} work XP" if xp_mult else "no work XP"
-            caps(screen, F["micro"], f"LEVEL {r_data.level}  ·  {xp_note}",
-                 (tx + F["bodyb"].size(r_name)[0] + T.S, r.y + T.S + 4), T.BRASS)
-            if r_data.yield_qty > 1:
-                caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
+                tx = item_icon(screen, r_data.target, r.x + T.S, r.y + T.S + 20)
+                text(screen, F["bodyb"], r_data.target, (tx, r.y + T.S), T.TX)
+                xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
+                xp_note = f"x{xp_mult} work XP" if xp_mult else "no work XP"
+                caps(screen, F["micro"], f"LEVEL {r_data.level}  ·  {xp_note}",
+                     (tx + F["bodyb"].size(r_data.target)[0] + T.S, r.y + T.S + 4), T.BRASS)
+                if r_data.yield_qty > 1:
+                    caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
 
-            target_val = m.crafting_goal(r_name)
+                target_val = m.crafting_goal(r_data)
 
-            station = r_data.get("station")
-            bonus = m.talent_bonus("craft_bonus") + m.craft_bonuses.get(station, 0)
-            total_mod = m.mod_intelligence + bonus
-            mod_sign = f"+ {total_mod}" if total_mod >= 0 else f"- {abs(total_mod)}"
+                station = r_data.station
+                bonus = m.talent_bonus("craft_bonus") + m.craft_bonuses.get(station, 0)
+                total_mod = m.mod_intelligence + bonus
+                mod_sign = f"+ {total_mod}" if total_mod >= 0 else f"- {abs(total_mod)}"
 
-            if is_active:
-                status_color = T.BRASS
-                status_text = f"IN PROGRESS: {m.crafting_progress}/{target_val} progress"
-            else:
-                missing = self._get_missing_materials(r_name)
-                has_mat = len(missing) == 0
-                status_color = T.GREEN if has_mat else T.BLOOD
-                status_text = f"Target Progress: {target_val} (Roll: 1d20 {mod_sign})"
-                if not has_mat:
-                    status_text += f" - MISSING: {', '.join(missing)}"
-                lacking = self._get_missing_tools(r_name)
-                if lacking:
-                    status_color = T.BLOOD
-                    status_text += f" - NEEDS: {', '.join(lacking)}"
+                if is_active:
+                    status_color = T.BRASS
+                    status_text = f"IN PROGRESS: {m.crafting_progress}/{target_val} progress"
+                else:
+                    missing = self._get_missing_materials(recipe_id)
+                    has_mat = len(missing) == 0
+                    status_color = T.GREEN if has_mat else T.BLOOD
+                    status_text = f"Target Progress: {target_val} (Roll: 1d20 {mod_sign})"
+                    if not has_mat:
+                        status_text += f" - MISSING: {', '.join(missing)}"
+                    lacking = self._get_missing_tools(recipe_id)
+                    if lacking:
+                        status_color = T.BLOOD
+                        status_text += f" - NEEDS: {', '.join(lacking)}"
 
-            line = text(screen, F["body_sm"], "Materials: ", (tx, r.y + T.S + 20), T.TX_MUTED)
-            end = icon_list(screen, F, (line.right, r.y + T.S + 20), r_data["materials"], T.TX_MUTED, r.right - T.S)
-            if r_data.tools:
-                line = text(screen, F["body_sm"], "  |  Tools: ", (end, r.y + T.S + 20), T.TX_MUTED)
-                icon_list(screen, F, (line.right, r.y + T.S + 20), r_data.tools, T.TX_MUTED, r.right - T.S)
-            text(screen, F["body_sm"], status_text, (tx, r.y + T.S + 40), status_color)
+                line = text(screen, F["body_sm"], "Materials: ", (tx, r.y + T.S + 20), T.TX_MUTED)
+                end = icon_list(screen, F, (line.right, r.y + T.S + 20), r_data.materials, T.TX_MUTED, r.right - T.S)
+                if r_data.tools:
+                    line = text(screen, F["body_sm"], "  |  Tools: ", (end, r.y + T.S + 20), T.TX_MUTED)
+                    icon_list(screen, F, (line.right, r.y + T.S + 20), r_data.tools, T.TX_MUTED, r.right - T.S)
+                text(screen, F["body_sm"], status_text, (tx, r.y + T.S + 40), status_color)
 
-            if is_active or self._has_materials(r_name):
-                bw = 100
-                bx = r.x + T.S
-                by = r.y + T.S + 65
-                for h in [1, 4, 8]:
-                    btn_r = pygame.Rect(bx, by, bw, 32)
-                    self.add_button(screen, btn_r, f"work:{h}:{r_name}", f"Work {h}h",
-                                    font=F["body_sm"])
-                    bx += bw + T.S
-                alone_ok = ((len(self.group.members) == 1 or bool(self.guild.free_slots))
-                            and self.guild.craft_blocker(m, r_name, [m]) is None)
-                bx, by = r.x + T.S, by + 36
-                for h in [4, 8, 16]:
-                    btn_r = pygame.Rect(bx, by, bw, 32)
-                    self.add_button(screen, btn_r, f"alone:{h}:{r_name}", f"Alone {h}h",
-                                    enabled=alone_ok, font=F["body_sm"])
-                    bx += bw + T.S
-                if not alone_ok:
-                    text(screen, F["body_sm"], "Alone: needs a free group slot and the materials in their own pack.",
-                         (bx, by + 6), T.TX_FAINT)
-            else:
-                text(screen, F["body_sm"], "Requires materials in the group's packs to start.",
-                     (r.x + T.S, r.y + T.S + 65), T.TX_FAINT)
+                if is_active or self._has_materials(recipe_id):
+                    bw = 100
+                    bx = r.x + T.S
+                    by = r.y + T.S + 65
+                    for h in [1, 4, 8]:
+                        btn_r = pygame.Rect(bx, by, bw, 32)
+                        self.add_button(screen, btn_r, f"work:{h}:{recipe_id}", f"Work {h}h",
+                                        font=F["body_sm"])
+                        bx += bw + T.S
+                    alone_ok = ((len(self.group.members) == 1 or bool(self.guild.free_slots))
+                                and self.guild.craft_blocker(m, recipe_id, [m]) is None)
+                    bx, by = r.x + T.S, by + 36
+                    for h in [4, 8, 16]:
+                        btn_r = pygame.Rect(bx, by, bw, 32)
+                        self.add_button(screen, btn_r, f"alone:{h}:{recipe_id}", f"Alone {h}h",
+                                        enabled=alone_ok, font=F["body_sm"])
+                        bx += bw + T.S
+                    if not alone_ok:
+                        text(screen, F["body_sm"], "Alone: needs a free group slot and the materials in their own pack.",
+                             (bx, by + 6), T.TX_FAINT)
+                else:
+                    text(screen, F["body_sm"], "Requires materials in the group's packs to start.",
+                         (r.x + T.S, r.y + T.S + 65), T.TX_FAINT)
 
-            y += ROW_H + T.S
+                y += ROW_H + T.S
 
     def _draw_footer(self, screen):
         F = self._F

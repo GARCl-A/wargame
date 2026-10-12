@@ -298,3 +298,18 @@ def test_the_group_screen_offers_an_antidote_from_anyones_pack():
     assert not holder.has_item(items.ANTIDOTE_ITEM)
     assert patient.antidote_cooldown == 24
     assert scr.notice and "Antidote" in scr.notice
+
+
+def test_the_snake_antidote_recipe_wants_a_snake_gland():
+    recipes = items.CRAFTING_RECIPES["Antidote"]
+    assert len(recipes) == 2
+    materials_list = [r.materials for r in recipes]
+    assert ["Venom Gland", "Vial"] in materials_list
+    assert ["Snake Venom Gland", "Vial"] in materials_list
+    assert all(r.target == "Antidote" for r in recipes)
+    assert "Antidote" in items.APOTHECARY_RECIPES
+
+    u = Unit("player")
+    u.recipes.append("Antidote")
+    assert "Antidote" in u.known_recipes
+

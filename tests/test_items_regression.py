@@ -140,17 +140,17 @@ def test_market_layer_pricing_and_haggling():
 
 
 def test_crafting_recipes_validity():
-    for target, recipe in items.CRAFTING_RECIPES.items():
-        # Recipe target exists
-        target_item = items.get(target)
-        assert target_item is not None, f"Recipe target {target} not in items"
-        assert isinstance(recipe.station, CraftingStation)
-        assert recipe.complexity > 0
+    for name, recipes in items.CRAFTING_RECIPES.items():
+        recipe_list = recipes if isinstance(recipes, list) else [recipes]
+        for recipe in recipe_list:
+            target_item = items.get(recipe.target)
+            assert target_item is not None, f"Recipe target {recipe.target} not in items"
+            assert isinstance(recipe.station, CraftingStation)
+            assert recipe.complexity > 0
 
-        # All materials exist in items registry
-        for mat in recipe.materials:
-            mat_item = items.get(mat)
-            assert mat_item is not None, f"Material {mat} in recipe {target} not in items"
+            for mat in recipe.materials:
+                mat_item = items.get(mat)
+                assert mat_item is not None, f"Material {mat} in recipe {name} not in items"
 
 
 def test_food_perishables_and_batch_stacking():

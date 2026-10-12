@@ -450,3 +450,27 @@ def test_the_champion_title_demoralizes_in_a_ctf_bout_without_a_shared_language(
     with patch("gartok.actions.combat.d20", return_value=20):
         actions.DEMORALIZE.execute(b, champ, foe)
     assert foe.demoralized
+
+
+def test_a_defender_holds_position_on_own_flag_square():
+    b = _ctf_battle()
+    b.board.walls = set()
+    b.flags["player"] = (2, 5)
+    b.flags["enemy"] = (12, 5)
+    d = b.enemy_units[0]
+    d.ctf_runner = False
+    d.pos = (14, 5)
+    b.player_units[0].pos = (2, 8)
+    b.order = [d]
+    b.turn_idx = 0
+
+    # Turn 1: defender moves directly onto (12, 5)
+    ai.take_turn(b, d)
+    assert d.pos == (12, 5)
+
+    # Turn 2: defender holds on (12, 5) without moving away towards player
+    d.ap = 2
+    d.walking = False
+    ai.take_turn(b, d)
+    assert d.pos == (12, 5)
+

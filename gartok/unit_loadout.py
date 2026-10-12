@@ -359,14 +359,14 @@ class LoadoutMixin(CoinPurse):
     @staticmethod
     def crafting_goal(recipe):
         """The progress one batch of `recipe` takes."""
-        return items.recipe_goal(items.CRAFTING_RECIPES[recipe])
+        return items.recipe_goal(items.get_recipe(recipe) or items.CRAFTING_RECIPES.get(recipe))
 
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
         if not self.crafting_target:
             return 0, False
         target_val = self.crafting_goal(self.crafting_target)
-        recipe_data = items.CRAFTING_RECIPES[self.crafting_target]
+        recipe_data = items.get_recipe(self.crafting_target) or items.CRAFTING_RECIPES[self.crafting_target]
         station = recipe_data.station
         bonus = self.talent_bonus("craft_bonus") + self.craft_bonuses.get(station, 0)
         prog = roll(1, 20) + self.mod_intelligence + bonus
@@ -375,7 +375,7 @@ class LoadoutMixin(CoinPurse):
         
         is_done = self.crafting_progress >= target_val
         if is_done:
-            self.give_to_pack(self.crafting_target, recipe_data.yield_qty)
+            self.give_to_pack(recipe_data.target, recipe_data.yield_qty)
             self.crafting_target = None
             self.crafting_progress = 0
         return prog, is_done

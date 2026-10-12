@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -64,9 +64,7 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
-- **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
-  lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
-  works with the Pick, which the Miner already starts with.
+- **Starting tools with no job: Scissors, Pliers.** Decided 2026-10-12: Scissors will be used for shearing sheep once player husbandry/farms land (Claim/property); Shovel will be used for archaeology at Ancient Ruins; Pliers will be associated with high-yield, long-duration jewelry crafting recipes (generating substantial money and specific craftable artifacts). Chisel waits on the Horn and Chains on *Prisoners*.
 - **Mine leftovers (built 2026-10-09).** (1) *Iron Ore* has no recipe or
   use until the Smith's chain exists (art, tutorial and gathering numbers: see *Gathering: loose ends*). (2) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
@@ -86,11 +84,7 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm, Tavern, Lumber Yard and Mine unified under `TabbedHubScreen.for_node` with 4 distinct Tavern tabs and `GatherScreen`).
 - **Travel graph is hard to read.** The layout algorithm needs rework.
-- **Crafting button on the map (Campfire cooking).** Built 2026-10-12: with Flint and Steel + 1 Lumber + 1 Coal
-  in the pack the group lights a field campfire on the spot (`Group.light_campfire`); it burns 4 h at that node,
-  allowing cooking (`station="cooking"`) directly from the group menu toolbar and map inspector to preserve meat into Jerky.
 - **Group swap with 2 groups feels odd.**
 - **Start screen** (title) still to be built.
 
@@ -133,15 +127,14 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
 - **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
-  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 recruit (tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives pay, and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
+  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 Treefolk recruit (given pre-generated directly into the guild roster upon accepting the quest; tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives pay, and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
 - **The Claim:** let the player build their own farm to stock food.
 
 **Combat and AI** (allies recover worn armor, off-hands and artifacts on won battle loot screen, 2026-10-12;
-henchmen renamed to Lackeys, 2026-10-12)
-- **CTF AI:** defending the flag works best standing on the *same* square as the flag, not adjacent.
+henchmen renamed to Lackeys, 2026-10-12; CTF AI defender holding home flag square built 2026-10-12)
 - **Ribbit Brothers:** after beating them they leave the arena selection line; they should also be
   recruitable, like Adelio.
 
@@ -191,7 +184,7 @@ pointed to, not repeated.
   skill knob's. (3) The shift picker shows the drops and the rolls but not the average worth of a shift against the
   wage. (4) The Mine has no art yet (the Gathering tutorial card was delivered in 2026-10-12 for both Yard and Mine).
   (5) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is food, but it rots in
-  a day, so a Yard crew eats it or sells it that evening. (6) **Snake Venom Gland:** Decided 2026-10-12: the Antidote recipe in the Apothecary accepts either Spider or Snake Venom Gland interchangeably. Blade poison coating for player/enemy weapons will be a separate craft, scheduled for after the new weapon actions and traits land.
+  a day, so a Yard crew eats it or sells it that evening. (6) **Snake Venom Gland:** Built 2026-10-12: `CRAFTING_RECIPES` is a dictionary of lists mapping each produced item to its recipe variants; the Antidote in the Apothecary has two recipe variants under "Antidote" (one with Spider Venom Gland and one with Snake Venom Gland), both yielding Antidote. Blade poison coating for player/enemy weapons will be a separate craft, scheduled for after the new weapon actions and traits land.
 - **Item properties: base material sources (rarities decided 2026-10-11).** Built 2026-10-11
   (`sources.py`, REFERENCE.md *Base materials*): a base material is a material, food or gem no recipe
   makes (derived), and a test fails for one with no source (gathered, dropped, hunted, foraged, quest,
@@ -355,17 +348,11 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`;
-  `watch_screen.py` is text only today). Keepers resolved (decided 2026-10-12):
+- **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`). `carriage.png` portrait installed and wired into `watch_screen.py` (2026-10-12); only the Cart medallion (`cart.png`) remains to be drawn. Keepers resolved:
   (1) The Medic is Pimbletwig himself, sharing the Apothecary's keeper art.
   (2) Stables at the Farm are run by Edric Ashvale himself (`farmer.png`), no new keeper needed.
-  (3) Arena Master: decided 2026-10-12 as a Goliath pit master / bookie (portrait staged for `portraits/npc/arena_master.png`).
-- **Keepers in game and faces for keepers with none.** Banker (`banker.png`, Sprite Elysia), Prison Guard (`prison_guard.png`, Elf Captain Caelen), Ledger Hold Officer (`ledger_hold_officer.png`, Hobgoblin Commander Varkas), and Arena Master (`arena_master.png`, Goliath pit master Thok'Gar) wired into `world.NODES` and headers via `vendor_panel` (2026-10-12). All town and outpost nodes now have distinct face art.
-- **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
-  loads it) and nothing else: no race or beast entry, no stats, no encounter, no tutorial line. It is a
-  portrait staged for a creature that has no design yet, probably the top of the Snake's growth line
-  (Small -> Large, see `RULES.md`); decide what it is (a boss, a late growth form, a Wilds encounter)
-  before drawing more of it.
+  (3) Arena Master: Goliath pit master Thok'Gar (`portraits/npc/arena_master.png`) wired in `world.NODES`.
+- **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists. Decided 2026-10-12: reserved for one of the magic questlines following the Library's codex / trust sequence; deferred to when the post-library magic quests are built.
 - **Fill the short portrait pools.** Updated 2026-10-12: Wolf reached 8, Skeleton reached 9,
   Ox reached 7, Sheep pool created (4), Goliath reached 10, and Goblin reached 12.
   Remaining short: Snake (3), Giant Spider (4), Donkey (4), Horse (4), Kenku (8), Centaur (12).
@@ -460,7 +447,7 @@ building them:
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
   one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
   buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
-  allow multiple buffs simultaneously. Open: the list of dishes and their buffs, and the cost to the economy sim
+  allow multiple buffs simultaneously. Specific upcoming recipes decided 2026-10-12: (1) Jerky (2 Meat + 1 Salt, built); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Open: the exact buff stats per dish, and the cost to the economy sim
   (`cheapest_food_price` stops being the one price of a meal).
 
 ---

@@ -7,7 +7,7 @@ The guards stay in the group, only the ones who go in take part in the activity.
 
 import pygame
 
-from . import wagon_watch
+from . import artwork, wagon_watch
 from .screen import Screen
 from .ui.primitives import draw_button, footer_bar, panel, section, text
 from .ui.tokens import T
@@ -102,13 +102,29 @@ class WatchScreen(Screen):
 
     def _draw_risk(self, screen, x, y, w):
         F = self._F
-        y = section(screen, F, "THE WAGON", x, y, w)
+        wagons = getattr(self.group, "wagons", [])
+        title = "THE WAGON"
+        medallion = None
+        if wagons:
+            w_first = wagons[0]
+            title = f"{w_first.kind.upper()}  ·  {w_first.hp}/{w_first.hp_max} HP"
+            medallion = artwork.portrait("npc", f"{w_first.kind.lower()}.png", 44)
+
+        y = section(screen, F, title, x, y, w)
+        tx_offset = 0
+        if medallion:
+            screen.blit(medallion, (x, y))
+            tx_offset = 54
+
         if self.guards:
-            text(screen, F["body"], "Guarded: it is safe while the party is away.", (x, y), T.TX)
+            text(screen, F["bodyb"], "Guarded: it is safe while the party is away.",
+                 (x + tx_offset, y + (12 if medallion else 0)), T.TX)
             return
+
         chance = wagon_watch.risk(self.group, self.node)
         text(screen, F["bodyb"], f"Left alone: {chance:.0%} chance of losing it, cargo and animals with it.",
-             (x, y), T.BLOOD if chance else T.TX)
+             (x + tx_offset, y), T.BLOOD if chance else T.TX)
         flight = wagon_watch.flight_chance(self.group)
         text(screen, F["body_sm"], f"{self.node.wagon_risk:.0%} the place  ·  {flight:.0%} the animals bolt",
-             (x, y + 24), T.TX_MUTED)
+             (x + tx_offset, y + 24), T.TX_MUTED)
+

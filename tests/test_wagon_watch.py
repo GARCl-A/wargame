@@ -187,3 +187,15 @@ def test_the_ruins_open_the_selector_then_the_battle_with_the_wagon_left_outside
     app.scene._click("go")
     assert app._battle_squad == g.members[1:]
     assert app._left_outside == (g, world.node("ancient_ruins"), True)
+
+
+def test_watch_screen_renders_carriage_medallion():
+    pygame.init()
+    g = Group([Unit("player"), Unit("player")], node="ancient_ruins",
+              wagons=[Wagon("Carriage")])
+    scr = _screen(g)
+    surf = pygame.Surface((1280, 800))
+    scr.draw(surf)
+    # Renders without error and shows Carriage title
+    assert g.wagons[0].kind == "Carriage"
+

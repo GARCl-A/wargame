@@ -7,7 +7,7 @@ they stand and the player merges them back by hand. A hospital stay (`medic.admi
 craft (`craft`) share this one mechanism.
 """
 
-from . import medic, orders
+from . import items, medic, orders
 
 
 def craft(guild, group, unit, recipe, hours, *, alone=True):
@@ -22,12 +22,13 @@ def craft(guild, group, unit, recipe, hours, *, alone=True):
     if blocked:
         return False, [blocked]
     order = orders.solo("craft", unit.uid, hours, recipe, clock_hours=hours * guild.work_speedup([unit]))
+    target = items.CRAFTING_RECIPES[recipe].target if recipe in items.CRAFTING_RECIPES else recipe
     if alone:
         if guild.send_alone(group, unit, order, f"{unit.name} (crafting)") is None:
             return False, ["No free group slot to send them alone."]
-        return True, [f"{unit.name} sets to work on {recipe} for {hours} h."]
+        return True, [f"{unit.name} sets to work on {target} for {hours} h."]
     group.order = order
-    return True, [f"The group waits while {unit.name} works on {recipe} for {hours} h."]
+    return True, [f"The group waits while {unit.name} works on {target} for {hours} h."]
 
 
 def finish(guild, group, order):

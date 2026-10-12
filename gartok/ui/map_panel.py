@@ -51,9 +51,12 @@ def paper_surface(size, seed=11):
         return cached
     if len(_paper_cache) >= _PAPER_CACHE_MAX:
         _paper_cache.pop(next(iter(_paper_cache)))
-    rnd = random.Random(seed)
-    s = pygame.Surface(size).convert()
+    try:
+        s = pygame.Surface(size).convert()
+    except pygame.error:
+        s = pygame.Surface(size)
     s.fill(T.PAPER)
+    rnd = random.Random(seed)
     for _ in range(120):                       # fibre / stain
         r = rnd.randint(30, 150)
         blob = pygame.Surface((r * 2, r * 2), pygame.SRCALPHA)
