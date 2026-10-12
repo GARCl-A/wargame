@@ -408,7 +408,7 @@ class App:
                 from . import loot
                 pool = []
                 for u in casualties:
-                    pool += loot.carried_by(u)
+                    pool += loot.worn_by(u) + loot.carried_by(u)
                 if pool and self.guild.roster:
                     from .loot_screen import LootScreen
                     self.scene = LootScreen(self.ui_fonts, self.guild, self.guild.roster, pool, on_done=nxt)

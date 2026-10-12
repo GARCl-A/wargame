@@ -53,8 +53,20 @@ def carried_by(u):
         carried.append(items.TORCH_ITEM)
     if getattr(u, "lantern_hand", False):
         carried.append(items.LANTERN_ITEM)
-    carried += list(getattr(u, "inventory", []))
+    for it in getattr(u, "inventory", []):
+        if isinstance(it, str):
+            carried.append(it)
+        else:
+            carried += [it.name] * it.qty
     return carried
+
+
+def worn_by(unit):
+    """What a roster `Unit` has on their body: hands, tongue, armor, artifact.
+    A fight's loot reads the combatant instead, so this is for deaths outside one."""
+    slots = (unit.equipped_weapon, unit.equipped_offhand, unit.equipped_tongue,
+             unit.equipped_armor, unit.equipped_artifact)
+    return [name for name in slots if name]
 
 
 def field_loot(battle, fallen_combatants, rng=random):

@@ -8,9 +8,9 @@ by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 from . import (
     cohesion,
     data,
-    economy,
     items,
     justice,
+    magic,
     missions,
     orders,
     recorder,
@@ -181,13 +181,12 @@ class UpkeepMixin:
                 u.crime -= 1
                 events.append(f"{u.name}'s criminal record fades by 1 (Innocent Face).")
         # Units studying at the tavern pay for a room that includes a meal.
-        # Check their funds directly since the rent isn't deducted until _garrison_upkeep.
+        # The rent isn't deducted until _garrison_upkeep, so check the group's funds here.
         studying_fed = {
             u for g in self.groups
             if g.order and g.order.kind == "garrison" and g.order.job == "study"
             and world.node(g.node).garrison_job == "study"
-            for u in g.members
-            if u.study_target and u.money >= economy.TAVERN_STUDY_COST_PER_DAY
+            for u in magic.rent_covered(g)
         }
 
         # Everyone eats from their own pack first (a full pass), so a hungry mate

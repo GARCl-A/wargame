@@ -144,8 +144,7 @@ class HoldingsMixin:
                 if not any(u.study_target for u in g.members):
                     g.order = None
                     events.append(f"{node.name}: studies are over -- rooms released.")
-                elif not any(u.study_target and u.money >= economy.TAVERN_STUDY_COST_PER_DAY
-                             for u in g.members):
+                elif not magic.rent_covered(g):
                     g.order = None
                     events.append(f"{node.name}: no one can pay for another night -- rooms released.")
                 continue
@@ -188,11 +187,11 @@ class HoldingsMixin:
             else:
                 house.missed_payments += 1
                 events.append("The guild can't cover the property tax -- the Bankers note it.")
-        if self.bankers_debt > 0 and self.bankers_debt_since is not None:
-            if self.clock.day - self.bankers_debt_since >= economy.CITY_PROPERTY_DEBT_GRACE_DAYS:
-                self.bankers_debt_since = self.clock.day     # resets the grace window
-                if self.leader is not None:
-                    self.leader.crime += 1
-                    events.append(f"{self.leader.name}'s unpaid debt to the Bankers "
-                                  "reaches the guard's ears.")
+        if (self.bankers_debt > 0 and self.bankers_debt_since is not None
+                and self.clock.day - self.bankers_debt_since >= economy.CITY_PROPERTY_DEBT_GRACE_DAYS):
+            self.bankers_debt_since = self.clock.day     # resets the grace window
+            if self.leader is not None:
+                self.leader.crime += 1
+                events.append(f"{self.leader.name}'s unpaid debt to the Bankers "
+                              "reaches the guard's ears.")
         return events

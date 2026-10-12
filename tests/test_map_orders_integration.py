@@ -250,6 +250,7 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
     random.seed(1)
     doomed = Unit("player")
     doomed._base_inventory = []
+    doomed.equipped_weapon = doomed.equipped_offhand = doomed.equipped_armor = None
     doomed.share_food = False
     survivor = Unit("player")
     survivor._base_inventory = packed(["Meat"] * 20)

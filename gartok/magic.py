@@ -57,11 +57,8 @@ def points_to_learn(level):
     return study_difficulty(level) * (weeks * 7)
 
 def _has_study_item(unit, item_name, group=None):
-    if unit.has_item(item_name):
-        return True
-    if group is not None and any(m.has_item(item_name) for m in group.members):
-        return True
-    return False
+    return unit.has_item(item_name) or (
+        group is not None and any(m.has_item(item_name) for m in group.members))
 
 def study_item_name(target_id):
     """The pack item a study target is read from: a scroll for a spell id, a
@@ -112,9 +109,13 @@ def progress_study(unit, group=None):
     target set, no matching item, not initiated -- rent still comes due)."""
     if not unit.study_target:
         return None
-    if unit.money < economy.TAVERN_STUDY_COST_PER_DAY:
+    cost = economy.TAVERN_STUDY_COST_PER_DAY
+    mates = [m for m in group.members if m is not unit] if group else []
+    if unit.money + sum(m.money for m in mates) < cost:
         return f"{unit.name} could not afford the rent to study."
-    unit.money -= economy.TAVERN_STUDY_COST_PER_DAY
+    own = min(unit.money, cost)
+    unit.money -= own
+    economy.charge_richest_first(mates, cost - own)
     spell = SPELLS.get(unit.study_target)
     if spell is not None:
         return _progress_spell(unit, spell, group=group)
@@ -122,13 +123,26 @@ def progress_study(unit, group=None):
         return _progress_language(unit, unit.study_target, group=group)
     return None
 
+
+def rent_covered(group):
+    """The studying members of `group` whose day's rent the group can pay, in
+    member order: each pays from their own purse and the rest falls on their
+    mates, so a penniless student rooms on a mate's coin instead of starving."""
+    cost = economy.TAVERN_STUDY_COST_PER_DAY
+    purse = sum(m.money for m in group.members)
+    covered = set()
+    for m in group.members:
+        if m.study_target and purse >= cost:
+            covered.add(m)
+            purse -= cost
+    return covered
+
+
 def can_study_spell(unit, spell):
     """True if `unit` has an affinity matching `spell.sources` and has not already mastered it."""
     if not unit.magic_source or unit.magic_source not in spell.sources:
         return False
-    if spell.id in unit.spells_known:
-        return False
-    return True
+    return spell.id not in unit.spells_known
 
 def _progress_spell(unit, spell, group=None):
     if not can_study_spell(unit, spell) or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):

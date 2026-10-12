@@ -50,6 +50,38 @@ def _student(language="Elvish"):
     return u
 
 
+def test_a_penniless_student_rooms_on_a_mates_coin_and_does_not_starve():
+    broke, rich = _student(), _student("Halfling")
+    broke.money, rich.money = 0, 1000
+    for u in (broke, rich):
+        u.unfed_days = 0
+    g = Group([broke, rich], node="tavern")
+    guild = Guild(None, groups=[g])
+    g.order = orders.garrison("study")
+
+    guild.pass_time(24 * 3)
+
+    assert broke in guild.roster and broke.unfed_days == 0
+    assert rich.money == 1000 - 15 * 2 * 3         # both rents, three days, on the one purse
+
+
+def test_loot_from_a_starved_unit_lists_item_names():
+    from gartok import loot
+    u = _student()
+    u.give_to_pack("Torch", 2)
+    carried = loot.carried_by(u)
+    assert carried.count("Torch") == 2 and all(isinstance(n, str) for n in carried)
+
+
+def test_a_starved_units_worn_kit_goes_to_the_loot_too():
+    from gartok import loot
+    u = _student()
+    u.give_to_hand("Dagger")
+    u.give_to_armor("Chainmail")
+    assert u.equipped_weapon and u.equipped_armor
+    assert set(loot.worn_by(u)) == {u.equipped_weapon, u.equipped_armor}
+
+
 def test_studying_a_language_needs_no_magic_source():
     random.seed(1)
     u = _student()
