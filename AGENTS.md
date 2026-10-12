@@ -60,7 +60,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) and may carry a `Vendor` (name, race, role, portrait) per function: `world.vendor(node_id, function)` is the keeper whose face the shop screens show |
 | `node_functions.py` | what a node can offer, one `NodeFunction` per id: order kind, map button label, note; `app._FUNCTION_OPENERS` holds each id's screen opener and a test keeps them in step |
 | `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); every item on it has a target and a daily rate (`economy.SHELVES`, one shelf per node); refilled daily for every node that offers `shop`. The Smithy, Tannery, Apothecary, Farm, Tavern and Market each sell their own part of the town's goods (`economy.TOWN_SHOPS`, `economy.shop_of(item)`) |
-| `hub_screen.py` | `TabbedHubScreen` (a node's screens behind one row of tabs) and `ShopHubScreen` (the node's shop as the first tab): `forge_hub_screen.py`, `tanner_hub_screen.py`, `apothecary_hub_screen.py` |
+| `hub_screen.py` | `TabbedHubScreen` (a node's screens behind one row of tabs; `for_node` builds them dynamically for multi-function nodes like Tavern, Farm, Lumber Yard, Mine) and `ShopHubScreen` (the node's shop as the first tab): `forge_hub_screen.py`, `tanner_hub_screen.py`, `apothecary_hub_screen.py` |
+| `gather_screen.py` | the Gathering tab of a work node (Lumber Yard, Mine): buy licence and pick gathering shifts |
 | `orders.py` | Order dataclass; AUTO (travel / work / rest) / INTERACTIVE / garrison / forced kinds |
 | `rest.py` | what a rest order costs and how long "until full" lasts (simulation on copies, keeps a day of rations) |
 | `campaign.py` | tick engine (`advance`), battle absorption, forced fights |

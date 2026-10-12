@@ -86,11 +86,12 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm, Tavern and Lumber Yard unified under `TabbedHubScreen.for_node` with 4 distinct Tavern tabs and `GatherScreen`).
+- **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm, Tavern, Lumber Yard and Mine unified under `TabbedHubScreen.for_node` with 4 distinct Tavern tabs and `GatherScreen`).
 - **Travel graph is hard to read.** The layout algorithm needs rework.
 - **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
   in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone. Decided 2026-10-12:
   campfire cooking is an intentional manual action by the player from the group menu when paused at a node, not an automatic trip interruption.
+  Its primary role is field sustenance and preventing spoilage (e.g. converting 20 Meat into cooked food/Jerky while hunting in the Wilds before it rots, without having to return to town).
   The tool Flint and Steel ($40) is added to the catalogue and the Market shelf.
 - **Group swap with 2 groups feels odd.**
 - **Start screen** (title) still to be built.
@@ -139,7 +140,7 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
 - **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
-  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a level 0 recruit up to at least level 2; once brought back, the guild receives pay and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
+  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 recruit (tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them from the guild to Ledger Hold, the guild receives pay, and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
@@ -190,15 +191,9 @@ pointed to, not repeated.
   chance of one more), so a full 16 h day sold is worth at least 3 copper more than the best wage (Yard 8 against
   5, Mine 14.3 against 10, `gather.PREMIUM`), and the licences are priced for a 30-day payback at that gain for 3
   workers ($270 and $385). The Snake joined the Yard's packs (Wolf 45 / Snake 30 / Giant Spider 25). Left:
-  (1) **the sim says the payback is longer than the table's.** Over 90 days (20 guilds of 3 at level 0, skill 0.95)
-  the median money a member at day 30 / 60 / 90 is $37 / 107 / 172 for `lumber` and $35 / 65 / 136 for `gatherer`
-  (3 of 20 wiped by the pack); with the ambush off the gatherer ends at $137, and with a licence bought on day 1 it
-  nets about +1.7 a day over `lumber`, not +3: the haul is worth less than `gather.expected_value` once it is cashed
-  in (Fruit that rots, haggling, selling every second day). Either the licence comes down (about $150 / $215 for a
-  30-day payback at +1.7), the premium goes up, or the policy sells better; decide after a playtest. Also, the
-  `gatherer` only buys the licence once the pooled money covers it, so it is behind until about day 50. The Mine's
-  premium is the same +3 on a 10 h road each way and double the risk; if the sim's `miner` is still the best way to
-  the milestone (it was), leave it. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the
+  (1) **the sim says the payback is longer than the table's.** Measured over 90 days (20 guilds of 3 starter workers at level 0, skill 0.95):
+  median money a member at day 30 / 60 / 90 is $37 / 107 / 172 for `lumber` and $35 / 65 / 136 for `gatherer`
+  (3 of 20 wiped by the pack); with the ambush off the gatherer ends at $137. Why day 50? A starter guild of 3 works day-labour first to pool the $270 licence (reached around day 20-25); once bought, it nets about +$1.70 a day per member over day labour, not +$3: hauls lose value to rotting Fruit (24 h life), bi-daily selling cycles, and haggling. Thus cumulative money only catches up to pure day-labour around day 50. Applies to both Lumber Yard ($270) and Mine ($385; $10 road each way, higher pack risk). **Decided 2026-10-12: keep current licence prices ($270 and $385)**; the payback gap will naturally improve when future food crafting recipes allow processing Fruit into longer-lasting rations/food (preserving haul value without forced rapid resale); the Mine's higher ambush risk on the Old Road is intentional and accepted. (2) The sim plays the gathering ambush (`gather:<node>`) as real battles of the
   node's own pack, but with no recorded fights of a person against these packs, the win rate is the AI's or the
   skill knob's. (3) The shift picker shows the drops and the rolls but not the average worth of a shift against the
   wage. (4) The Mine and the Yard have no tutorial line of their own beyond the map card, and no art for the Mine.
@@ -372,7 +367,7 @@ the ones that also need code say so. Order is the suggested priority.
   (1) The Medic is Pimbletwig himself, sharing the Apothecary's keeper art.
   (2) Stables at the Farm are run by Edric Ashvale himself (`farmer.png`), no new keeper needed.
   (3) Arena Master: decided 2026-10-12 as a Goliath pit master / bookie (portrait staged for `portraits/npc/arena_master.png`).
-- **Keepers in game and faces for keepers with none.** Banker and Prison Guard portraits exist in assets (`banker.png`, `prison_guard.png`) but are not yet wired into `world.NODES` or rendered in `bank_screen.py` / `prison_screen.py` via `vendor_panel`. Ledger Hold officer art was generated (`ledger_hold_officer.png`); wiring pending. Arena Master (Goliath) generating.
+- **Keepers in game and faces for keepers with none.** Banker (`banker.png`, Sprite Elysia), Prison Guard (`prison_guard.png`, Elf Captain Caelen), and Ledger Hold Officer (`ledger_hold_officer.png`, Hobgoblin Commander Varkas) wired into `world.NODES` and headers via `vendor_panel` (2026-10-12). Arena Master (Goliath) generating.
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
   loads it) and nothing else: no race or beast entry, no stats, no encounter, no tutorial line. It is a
   portrait staged for a creature that has no design yet, probably the top of the Snake's growth line

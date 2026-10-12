@@ -75,8 +75,14 @@ class LedgerScreen(Screen):
         screen.fill(T.TABLE)
         self._reset_buttons()
 
-        text(screen, F["titleb"], "LEDGER HOLD", (m, m - 2), T.TX)
-        text(screen, F["body"], "\"State your business.\"", (m, m + 30), T.TX_MUTED)
+        from . import world
+        from .ui.vendor_panel import draw_vendor, draw_vendor_name
+        vendor = world.vendor("ledger_hold", "ledger")
+        card = vendor.card if vendor else None
+        tx = m + draw_vendor(screen, F, (m, m - 4), card, size=T.S * 7)
+        title = text(screen, F["titleb"], "LEDGER HOLD", (tx, m - 2), T.TX)
+        draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
+        text(screen, F["body"], "\"State your business.\"", (tx, m + 30), T.TX_MUTED)
 
         card = pygame.Rect(m, m + 70, min(CARD_W, screen.get_width() - 2 * m), 110)
         panel(screen, card)

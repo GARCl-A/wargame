@@ -28,7 +28,7 @@ class GatherScreen(Screen):
         self.notice = None
 
     def tutorial_key(self):
-        return None
+        return "gathering"
 
     def handle_escape(self):
         self.on_done()

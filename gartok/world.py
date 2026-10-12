@@ -169,7 +169,10 @@ NODES = [
     Node("city", "Ankareth", "town", (0.30, 0.50),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", jurisdiction="the_city",
-         functions=("bank", "trust", "property")),
+         functions=("bank", "trust", "property"),
+         vendors={"bank": Vendor("Elysia", "Sprite", "banker", "banker.png"),
+                  "trust": Vendor("Elysia", "Sprite", "banker", "banker.png"),
+                  "property": Vendor("Elysia", "Sprite", "banker", "banker.png")}),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours. The yard "
@@ -211,7 +214,8 @@ NODES = [
          vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png")}),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
-         jurisdiction="the_city", functions=("prison",)),
+         jurisdiction="the_city", functions=("prison",),
+         vendors={"prison": Vendor("Captain Caelen", "Elf", "warden", "prison_guard.png")}),
     Node("road", "Old Road", "town", (0.60, 0.50),
          "A dirt track cutting across the open country to the east.",
          unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
@@ -220,7 +224,8 @@ NODES = [
          "risk what else hunts here.", ErmosScenario, functions=("hunt",)),
     Node("ledger_hold", "Ledger Hold", "town", (0.76, 0.73),
          "A fortified counting-house the Bankers keep well outside the walls -- "
-         "armed, and used to precious cargo.", fortress_scenario, functions=("ledger",)),
+         "armed, and used to precious cargo.", fortress_scenario, functions=("ledger",),
+         vendors={"ledger": Vendor("Commander Varkas", "Hobgoblin", "officer", "ledger_hold_officer.png")}),
     Node("wilds_territory", "The Claim", "town", (0.97, 0.31),
          "A stretch of the Wilds the guild means to make its own -- if it can "
          "clear it, fence it, and hold it.", ErmosScenario,

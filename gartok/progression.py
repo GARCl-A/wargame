@@ -112,14 +112,36 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     if worker_level <= 1:
         activities.append("Tavern stage (with a Musical Instrument)")
 
-    # Crafting
-    if worker_level <= 1:
-        activities.append("Crafting (Lv 1+ recipes)")
-    elif worker_level == 2:
-        activities.append("Crafting (Lv 2: Armor, Dictionaries)")
-
     # Hunting in the Wilds
     if worker_level <= 3:
         activities.append("Hunting (Lv 3 in Wilds)")
+
+    # Crafting (dynamically generated from registered recipes)
+    from . import craft_level, items
+    recipes_by_level = {}
+    for r_name, r in items.CRAFTING_RECIPES.items():
+        lvl = craft_level.level_of(r)
+        if lvl >= worker_level:
+            recipes_by_level.setdefault(lvl, []).append(r_name)
+
+    if worker_level <= 1:
+        if recipes_by_level:
+            activities.append("Crafting (Lv 1+ recipes)")
+    else:
+        for lvl in sorted(recipes_by_level.keys()):
+            names = recipes_by_level[lvl]
+            summary_names = []
+            dict_count = 0
+            for n in names:
+                if n.startswith("Dictionary of "):
+                    dict_count += 1
+                else:
+                    summary_names.append(n)
+            if dict_count:
+                summary_names.append(f"{dict_count} Dictionaries" if summary_names else "Dictionaries")
+            label = ", ".join(summary_names[:4])
+            if len(summary_names) > 4:
+                label += ", ..."
+            activities.append(f"Crafting (Lv {lvl}: {label})")
 
     return activities

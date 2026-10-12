@@ -25,6 +25,11 @@ class PrisonScreen(TavernaScreen):
         super().__init__(fonts, guild, party, node, on_done, candidates=pool,
                          title=title or "CITY PRISON")
 
+    @property
+    def vendor(self):
+        from . import world
+        return world.vendor("prison", "prison")
+
     def tutorial_key(self):
         return "prison"
 

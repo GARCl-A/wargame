@@ -600,15 +600,21 @@ def test_eligible_work_activities():
     assert any("Crafting" in j for j in jobs_2)
     assert any("Hunting" in j for j in jobs_2)
 
-    # Level 3: Only Hunting
+    # Level 3: Hunting and Level 3+ Crafting
     jobs_3 = progression.eligible_work_activities(3, u)
     assert not any("Lumber Yard" in j for j in jobs_3)
-    assert not any("Crafting" in j for j in jobs_3)
+    assert any("Crafting" in j for j in jobs_3)
     assert any("Hunting" in j for j in jobs_3)
 
-    # Level 4: Nothing standard
+    # Level 4: Level 4 Crafting (Signal Horn)
     jobs_4 = progression.eligible_work_activities(4, u)
-    assert jobs_4 == []
+    assert not any("Hunting" in j for j in jobs_4)
+    assert any("Crafting" in j for j in jobs_4)
+    assert any("Signal Horn" in j for j in jobs_4)
+
+    # Level 5: Nothing standard yet
+    jobs_5 = progression.eligible_work_activities(5, u)
+    assert jobs_5 == []
 
 
 

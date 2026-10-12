@@ -262,6 +262,15 @@
         "Animals eat a ration a day from what the group carries and starve after three unfed days. If the whole group dies, the animals and the wagon go with it; if anyone gets away, they stay.",
         "The road wears a wagon down, 1 HP every 100 units travelled. At 0 HP it breaks: it stops pulling and carrying until you REPAIR it on the group screen (Lumber and an hour; the group's best INT rolls against DC 15), and setting out with it broken means leaving it behind."
       ]
+    },
+    "gathering": {
+      "title": "Gathering materials",
+      "body": [
+        "A gathering licence allows the guild to exploit the node's resources directly instead of taking day-labour wages. The licence is bought once and lasts forever, covering any guild group that comes here.",
+        "Choose a shift (4 to 16 hours) to harvest materials. Longer shifts yield multiple drops from the node's drop tables (Lumber and Fruit at the Lumber Yard; Stone, Iron Ore, Coal and Gems at the Mine).",
+        "Hauls are banked directly into the group's packs. While gathering out-earns standard wages over time, crews working long shifts risk attracting wild beast ambushes."
+      ],
+      "suggestion": "Be prepared to fight off local predators if you take long shifts, or keep your group well-armed."
     }
   }
 }

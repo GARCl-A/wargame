@@ -358,7 +358,8 @@ class TavernaScreen(Screen):
         active_tab_label = {"recruits": "RECRUIT", "rooms": "STUDY", "perform": "PERFORM"}[self.tab]
         header_rect = pygame.Rect(0, 0, W, 72)
         tab_hits = header(screen, F, header_rect, self.title if not is_tavern else "THE TAVERN",
-                          sub, tabs_list, active_tab_label, mpos=self.mouse, has_tutorial=True)
+                          sub, tabs_list, active_tab_label, mpos=self.mouse, has_tutorial=True,
+                          vendor=getattr(self, "vendor", None))
 
         for tab_name, r in tab_hits.items():
             if tab_name == "RECRUIT" and self.tab != "recruits":

@@ -269,6 +269,7 @@ def test_gather_screen_interaction():
     surf = pygame.Surface((1280, 720))
     gs.draw(surf)
 
+    assert gs.tutorial_key() == "gathering"
     assert any(k == "buy_licence" for k, _ in gs.buttons)
     gs._on_button("buy_licence")
     assert guild.has_licence("lumber_yard")

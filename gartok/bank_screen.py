@@ -34,6 +34,11 @@ class BankScreen(StashScreen):
 
     exchange = None              # {"holder","mode","amount","max"} while picking gold to mint or melt
 
+    @property
+    def vendor(self):
+        from . import world
+        return world.vendor("city", "bank")
+
     def tutorial_key(self):
         return "bank"
 

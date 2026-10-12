@@ -526,7 +526,8 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         rail_rect = pygame.Rect(stash_rect.right, body.y, RAIL_W, body.h)
         cols = pygame.Rect(rail_rect.right, body.y, W - rail_rect.right, body.h)
 
-        header(screen, F, head, self.TITLE, self.SUBTITLE, (), None, mpos=self.mouse)
+        header(screen, F, head, self.TITLE, self.SUBTITLE, (), None, mpos=self.mouse,
+               vendor=getattr(self, "vendor", None))
         self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
         has_tut = self.tutorial_key() is not None
         purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0) - self.header_reserve
