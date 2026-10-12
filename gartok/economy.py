@@ -171,7 +171,7 @@ SHELVES = {
         "Quiver": (5, 1), "Light Crossbow": (2, 0.3), "Shortbow": (1, 0.15),
     },
     "apothecary": {"Vial": (10, 3), "First Aid Kit": (5, 1), "Minor Healing Potion": (3, 0.5)},
-    "farm": {"Potato": (30, 10), "Salt": (20, 5), "Meat": (10, 3), "Fruit": (10, 3)},
+    "farm": {"Potato": (30, 10), "Salt": (20, 5), "Sugar": (15, 5), "Meat": (10, 3), "Fruit": (10, 3)},
     "tavern": {"1L Beer": (15, 5), "Jerky": (10, 3)},
     "market": {
         "Torch": (30, 10), "Lantern": (5, 1), "Musical Instrument": (5, 1),

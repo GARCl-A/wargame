@@ -98,6 +98,7 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         self._cargo_rect = None
         self._cargo_scroll = 0
         self._cargo_max_scroll = 0
+        self._wagon_idx = 0
         self._cols = ColumnScroll()
         self.editing_name = False
         self.name_buf = ""
@@ -391,6 +392,12 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         elif key == "drop_selected":
             self._give_many(None, "discard")
             self.notice = "Thrown away."
+        elif key == "wagon_prev":
+            if self.group.wagons:
+                self._wagon_idx = (self._wagon_idx - 1) % len(self.group.wagons)
+        elif key == "wagon_next":
+            if self.group.wagons:
+                self._wagon_idx = (self._wagon_idx + 1) % len(self.group.wagons)
 
     def _poison_cases(self):
         """`(patient, giver)` pairs: a poisoned member who may take an Antidote now,
@@ -640,7 +647,8 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
     def _draw_bags(self, screen, F, area):
         gap = T.S * 2
         members = [u for u in self.pinned if u in self.group.members]
-        stores = [*self.group.herd, *self.group.wagons]
+        other_wagons = [w for i, w in enumerate(self.group.wagons) if i != self._wagon_idx]
+        stores = [*self.group.herd, *other_wagons]
         shown = members + stores
         window, col_w = self._cols.fit(len(shown), area.w, gap, COL_MIN, COL_MAX)
         shown = shown[window]
@@ -687,6 +695,49 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         if not shown:
             text(screen, F["body"], "Pin a member on the left to see their gear.",
                 area.center, T.TX_FAINT, center=True)
+
+    def _draw_wagon_column(self, screen, F, area):
+        if not self.group.wagons:
+            return
+        if self._wagon_idx >= len(self.group.wagons):
+            self._wagon_idx = 0
+        wagon = self.group.wagons[self._wagon_idx]
+        carried = self._carried_names()
+        member = self._store_dict(wagon, carried)
+
+        col_area = area
+        if len(self.group.wagons) > 1:
+            sel_h = T.S * 4
+            btn_w = T.S * 4
+            sel_rect = pygame.Rect(area.x, area.y, area.w, sel_h)
+            lbl = f"{self._wagon_idx + 1} / {len(self.group.wagons)} {wagon.kind}"
+            text(screen, F["body_sm"], lbl, sel_rect.center, T.TX_MUTED, center=True)
+            prev_r = pygame.Rect(area.x, area.y, btn_w, sel_h)
+            next_r = pygame.Rect(area.right - btn_w, area.y, btn_w, sel_h)
+            draw_button(screen, F, prev_r, "<", ghost=True, mpos=self.mouse)
+            draw_button(screen, F, next_r, ">", ghost=True, mpos=self.mouse)
+            self.buttons.append(("wagon_prev", prev_r))
+            self.buttons.append(("wagon_next", next_r))
+            col_area = pygame.Rect(area.x, area.y + sel_h + 2, area.w, area.h - sel_h - 2)
+
+        res = loadout_panel.column(screen, F, col_area, member, self._pack_scroll.get(id(wagon), 0), self.mouse)
+        self._pack_scroll[id(wagon)] = res["scroll"]
+        self.zones.append((res["head_rect"], wagon, "hitch"))
+        if res["action_rect"] is not None and member.get("action", {}).get("enabled"):
+            self.buttons.append((f"repair:{wagon.uid}", res["action_rect"]))
+        for kind, slot_rect in res["slot_rects"].items():
+            if slot_rect is not None:
+                self.zones.append((slot_rect, wagon, kind))
+                if member.get(kind, {}).get("name"):
+                    self.sources.append((slot_rect, wagon, kind))
+        self.zones.append((res["pack_zone"], wagon, "pack"))
+        self._pack_areas.append((res["pack_area"], wagon))
+        for pr, idx in res["pack_hits"]:
+            self.sources.append((pr, wagon, idx))
+        for lr, idx in res["lock_hits"]:
+            self._lock_hits.append((lr, wagon, wagon._base_inventory[idx][0]))
+        for dr, idx in res["dots_hits"]:
+            self._dots_hits.append((dr, wagon, idx))
 
     def _draw_cargo(self, screen, F, rect):
         rows = self._cargo_rows()
@@ -761,7 +812,11 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         head = pygame.Rect(0, 0, W, T.S * 9)
         bar = pygame.Rect(0, head.bottom, W, T.S * 7)
         left = pygame.Rect(0, bar.bottom, RAIL_W, H - bar.bottom - T.S * 2)
-        mid = pygame.Rect(left.right, bar.bottom, W - left.right, H - bar.bottom - T.S * 2)
+        has_wagon = bool(self.group.wagons)
+        wagon_w = min(320, max(260, (W - RAIL_W) // 4)) if has_wagon else 0
+        mid_w = W - left.right - (wagon_w + T.S * 2 if has_wagon else 0)
+        mid = pygame.Rect(left.right, bar.bottom, mid_w, H - bar.bottom - T.S * 2)
+        right = pygame.Rect(W - wagon_w - T.S * 2, bar.bottom, wagon_w, H - bar.bottom - T.S * 2) if has_wagon else None
 
         title = self.group.display_name
         order = self.group.order
@@ -817,6 +872,9 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                 self._draw_bags(screen, F, mid.inflate(-T.S * 2, -T.S * 2))
             else:
                 self._draw_cargo(screen, F, mid.inflate(-T.S * 2, -T.S * 2))
+
+            if right is not None:
+                self._draw_wagon_column(screen, F, right.inflate(-T.S * 1, -T.S * 2))
         else:
             self._draw_quests(screen, F, pygame.Rect(T.S * 4, bar.top + T.S * 4, W - T.S * 8, H - bar.top - T.S * 12))
 

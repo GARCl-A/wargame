@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -86,10 +86,10 @@ its functions are tabs inside.
 **Map and node entry**
 - **Travel graph is hard to read.** The layout algorithm needs rework.
 - **Group swap with 2 groups feels odd.**
-- **Start screen** (title) still to be built.
+- **Start screen** (title): decided 2026-10-12: classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
 
 **Layout overlaps (component rule; Market shelf, Bank quantity box, Load cards, Draft leader row attributes, Rest accordion budgeting and Tavern hub tabs fixed 2026-10-12)**
-- **Manage and Gear: the wagon does not show on the right.**
+- **Manage and Gear: the wagon does not show on the right:** built 2026-10-12: dedicated vehicle container column integrated on the right side of `GroupScreen` across both BAGS and CARGO views.
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
   talent: investigated 2026-10-12 -- both Tannery and Market share the exact same `MarketScreen` and `LoadoutMixin`. The perceived weight variance was due to temporary attribute drops from hunger/sickness altering the base carry threshold, and `_carry_relief` dynamically scaling only with non-weapon, non-consumable pack cargo as designed.
 
@@ -97,8 +97,8 @@ its functions are tabs inside.
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
 - **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
-- **New tree rooted on +1 CHA.** Work tree: the root becomes +1 CHA, Negotiator drops to tier 2,
-  Provisioner to tier 3 under Negotiator.
+- **New tree rooted on +1 CHA.** Built 2026-10-12: Work tree root becomes +1 CHA (`charismatic`), Negotiator drops to tier 2 (`negotiator`, requires `charismatic`), Fixer to tier 2 (`fixer`, requires `charismatic`), and Provisioner to tier 3 (`provisioner`, requires `negotiator`).
+- **Craft sub-tree in work track.** Decided 2026-10-12: The root of the crafting branch in work will be +1 INT, with Crafting being a tier 2 node under it. The second tier 2 option beside Crafting will be evaluated later (possibly language study speed / study efficiency).
 - **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
   onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
   (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
@@ -447,7 +447,7 @@ building them:
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
   one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
   buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
-  allow multiple buffs simultaneously. Specific upcoming recipes decided 2026-10-12: (1) Jerky (2 Meat + 1 Salt, built); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Open: the exact buff stats per dish, and the cost to the economy sim
+  allow multiple buffs simultaneously. Specific upcoming recipes decided 2026-10-12: (1) Jerky (2 Meat + 1 Salt, built); (2) Roast Meat (pure Meat + campfire, quick cooked meat, built 2026-10-12); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h, built 2026-10-12). Cooking recipes take priority over jewelry crafting. Open: the exact buff stats per dish, and the cost to the economy sim
   (`cheapest_food_price` stops being the one price of a meal).
 
 ---
@@ -461,6 +461,10 @@ already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Co
 Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
+- **Scissors** (Barber). For shearing sheep once player husbandry/farms land (Claim/property).
+- **Pliers** (Goldsmith). High-yield, long-duration jewelry crafting recipes (generating substantial money and craftable artifacts).
+- **Shovel** (Grave Robber). Archaeology at Ancient Ruins.
+- **Chisel** (Sculptor). Carving the Legendary Horn (`Signal Horn`, built) and artistic stonework.
 - **Map.** Finds treasures and secret zones. Waits for those systems.
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.

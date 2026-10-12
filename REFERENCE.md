@@ -219,6 +219,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | First Aid Kit | 0.8 kg | consumable |
 | Flint and Steel | 0.3 kg | -- |
 | Fruit | 0.2 kg | food, consumable, material |
+| Fruit Compote | 0.4 kg | food, consumable |
 | Gold Coin | 0.005 kg | -- |
 | Hammer | 4 kg | -- |
 | Harness | 4 kg | -- |
@@ -268,6 +269,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Quiver | 1.5 kg | -- |
 | Rapier | 1 kg | -- |
 | Red Mushroom | 0.1 kg | material |
+| Roast Meat | 0.8 kg | food, consumable |
 | Rope | 2 kg | material |
 | Rotten Food | 1 kg | food, consumable |
 | Salt | 0.5 kg | material |
@@ -286,6 +288,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Snake Venom Gland | 0.1 kg | material |
 | Stone Brick | 3 kg | material |
 | Studded Leather | 6 kg | -- |
+| Sugar | 0.5 kg | material |
 | Thunderhide | 1.5 kg | -- |
 | Torch | 0.5 kg | -- |
 | Venom Gland | 0.2 kg | material |
@@ -316,6 +319,7 @@ Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
 | Semi-precious Gemstone | gathered: mine |
 | Snake Venom Gland | dropped: Snake |
 | Stone Brick | gathered: mine |
+| Sugar | traded: Farm |
 | Venom Gland | dropped: Giant Spider |
 | Vial | traded: Market |
 
@@ -376,9 +380,10 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Piecework | +20% coin from work that pays in coin. | carrier |
 | 2 | Brisk Hands | work finishes 10% faster -- you keep the time. | carrier |
 | 3 | Steady Pace | work counts as rest: you recover HP while you work, as if resting. | brisk_hands |
-| 1 | Negotiator | +1 Charisma for market buy and sell checks. | -- |
-| 2 | Fixer | +1 to your pitch when talking someone into the guild. | negotiator |
-| 2 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |
+| 1 | Charismatic | +1 Charisma. | -- |
+| 2 | Negotiator | +1 Charisma for market buy and sell checks. | charismatic |
+| 2 | Fixer | +1 to your pitch when talking someone into the guild. | charismatic |
+| 3 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |
 | 1 | Crafter | +1 to progress rolls when crafting items. | -- |
 | 2 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | crafter |
 | 2 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | crafter |

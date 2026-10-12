@@ -31,6 +31,29 @@ def test_everyone_knows_the_jerky_recipe_without_learning_it():
     u = Unit("player")
     assert "Jerky" not in u.recipes
     assert "Jerky" in u.known_recipes
+    assert "Roast Meat" in u.known_recipes
+    assert "Fruit Compote" in u.known_recipes
+
+
+def test_cooking_roast_meat():
+    u = Unit("player")
+    u._base_inventory = packed(["Meat"])
+    guild = Guild([u])
+    events, _ = guild.crafting_shift(u, "Roast Meat", 4)
+    assert u.count_of("Roast Meat") == 1
+    assert u.count_of("Meat") == 0
+    assert any("finished crafting" in e for e in events)
+
+
+def test_cooking_fruit_compote_preserves_fruit_lifespan():
+    u = Unit("player")
+    u._base_inventory = packed(["Fruit", "Sugar", "Vial"])
+    guild = Guild([u])
+    events, _ = guild.crafting_shift(u, "Fruit Compote", 8)
+    assert u.count_of("Fruit Compote") == 1
+    assert u.count_of("Fruit") == 0 and u.count_of("Sugar") == 0 and u.count_of("Vial") == 0
+    assert items.get("Fruit Compote").lifespan == 25
+    assert items.get("Fruit").lifespan == 1
 
 
 def test_cooking_one_batch_turns_two_meat_and_salt_into_two_jerky():

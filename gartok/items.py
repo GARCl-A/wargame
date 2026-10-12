@@ -311,7 +311,10 @@ _register(ItemDef(id="fruit", name="Fruit", type=ItemType.FOOD, rarity=ItemRarit
 _register(ItemDef(id="potato", name="Potato", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=3, food=True, lifespan=7))
 _register(ItemDef(id="1l_beer", name="1L Beer", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=4, food=True, lifespan=30), "beer")
 _register(ItemDef(id="salt", name="Salt", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.5, price=3))
+_register(ItemDef(id="sugar", name="Sugar", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.5, price=4))
 _register(ItemDef(id="jerky", name="Jerky", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.5, price=8, food=True, lifespan=20))
+_register(ItemDef(id="roast_meat", name="Roast Meat", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.8, price=6, food=True, lifespan=5))
+_register(ItemDef(id="fruit_compote", name="Fruit Compote", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.4, price=18, food=True, lifespan=25))
 _register(ItemDef(id="rotten_food", name="Rotten Food", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=2, food=True, lifespan=None))
 
 # Scrolls
@@ -802,7 +805,27 @@ CRAFTING_RECIPES["Jerky"] = [
     )
 ]
 
-COMMON_RECIPES = ["Jerky"]            # known by everyone, no talent or teacher needed
+CRAFTING_RECIPES["Roast Meat"] = [
+    CraftingRecipe(
+        target="Roast Meat",
+        materials=["Meat"],
+        complexity=3,
+        station=CraftingStation.COOKING,
+        yield_qty=1,
+    )
+]
+
+CRAFTING_RECIPES["Fruit Compote"] = [
+    CraftingRecipe(
+        target="Fruit Compote",
+        materials=["Fruit", "Sugar", "Vial"],
+        complexity=8,
+        station=CraftingStation.COOKING,
+        yield_qty=1,
+    )
+]
+
+COMMON_RECIPES = ["Jerky", "Roast Meat", "Fruit Compote"]            # known by everyone, no talent or teacher needed
 
 APOTHECARY_RECIPES = ["Minor Healing Potion", "Antidote"]
 BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]

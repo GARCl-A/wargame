@@ -132,12 +132,21 @@ def test_choosing_a_combat_root_raises_the_real_attribute():
     assert not u.choose_talent("combat", "strong")  # not twice
 
 
-def test_negotiator_lifts_only_the_haggle_charisma():
+def test_charismatic_lifts_real_charisma():
     u = _unit(seed=4)
     u.work_hours = economy.LUMBER_XP_HOURS * 2    # work level 1
+    cha = u.charisma
+    assert u.choose_talent("work", "charismatic")
+    assert u.charisma == cha + 1
+
+
+def test_negotiator_lifts_only_the_haggle_charisma():
+    u = _unit(seed=4)
+    u.work_hours = economy.LUMBER_XP_HOURS * 6    # work level 2
+    assert u.choose_talent("work", "charismatic")
     cha_mod = u.mod_charisma
     assert u.choose_talent("work", "negotiator")
-    assert u.mod_charisma == cha_mod              # the real Charisma is untouched
+    assert u.mod_charisma == cha_mod              # the real Charisma is untouched by negotiator
     assert u.haggle_charisma_mod == data.mod(
         u.charisma + u.hunger_attribute_penalty + 1)
 
@@ -450,11 +459,12 @@ def test_tree_layout_places_every_node_below_its_parent():
 
 
 def _work_ready(*picks):
-    """A fresh Unit at work level 2 with the given work talents spent."""
+    """A fresh Unit at enough work level with the given work talents spent."""
     u = Unit("player")
     u.money = 0
     u._base_inventory = []
-    u.work_hours = economy.LUMBER_XP_HOURS * 6    # work_xp 6 -> work level 2 -> 2 picks
+    marks = 12 if len(picks) == 3 else 20 if len(picks) >= 4 else 6
+    u.work_hours = economy.LUMBER_XP_HOURS * marks
     u._derive_combat()
     for p in picks:
         assert u.choose_talent("work", p)
@@ -488,7 +498,7 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
 
 
 def test_provisioner_discounts_food_with_no_shared_language():
-    u = _work_ready("negotiator", "provisioner")
+    u = _work_ready("charismatic", "negotiator", "provisioner")
     u.languages = ["Orcish"]                      # not the market's Ankarin
     mods = economy.deal_mods([u], "Ankarin", "Lawful and Neutral")
     assert economy.deal_value(mods, "Axe", "buy") == 0.0          # no general haggle
@@ -497,7 +507,7 @@ def test_provisioner_discounts_food_with_no_shared_language():
 
 
 def test_provisioner_stacks_on_the_base_haggle_for_food_only():
-    u = _work_ready("negotiator", "provisioner")
+    u = _work_ready("charismatic", "negotiator", "provisioner")
     u.languages = ["Ankarin"]
     u.charisma = 12
     u.alignment = "Lawful and Neutral"           # same as the vendor -> +0.10
@@ -511,7 +521,7 @@ def test_provisioner_stacks_on_the_base_haggle_for_food_only():
 
 
 def test_fixer_lifts_the_recruiters_pitch():
-    r = _work_ready("negotiator", "fixer")
+    r = _work_ready("charismatic", "fixer")
     r.languages = ["Ankarin"]
     r.alignment = "Neutral and Neutral"
     r.mod_charisma = 0                            # pin after the talent re-derive

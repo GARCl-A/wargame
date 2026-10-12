@@ -1047,3 +1047,21 @@ def test_the_animal_sheet_scrolls_when_the_window_is_short():
     assert scr._detail_max_scroll == 0
     scr.draw(pygame.Surface((1700, 420)))
     assert scr._detail_max_scroll > 0
+
+
+def test_wagon_container_renders_on_the_right_of_group_screen_in_bags_and_cargo():
+    import pygame
+    scr, g = _gear(wagon=True)
+    wagon = g.wagons[0]
+    surf = pygame.Surface((1280, 720))
+
+    scr.view = "bags"
+    scr.draw(surf)
+    assert any(o is wagon and zone == "pack" for _, o, zone in scr.zones)
+    wagon_pack_rect = next(r for r, o, zone in scr.zones if o is wagon and zone == "pack")
+    assert wagon_pack_rect.right >= 1280 - 400
+
+    scr.view = "cargo"
+    scr.draw(surf)
+    assert any(o is wagon and zone == "pack" for _, o, zone in scr.zones)
+

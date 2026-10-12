@@ -28,6 +28,7 @@ DECLARED = {
     # Farm and Smith are the shops they will move to; the Market sells them until then
     "Potato": (Source(TRADED, "Farm"),),
     "Salt": (Source(TRADED, "Market"),),
+    "Sugar": (Source(TRADED, "Farm"),),
     "1L Beer": (Source(TRADED, "Market"),),
     "Iron Bar": (Source(TRADED, "Smith"),),
     "Vial": (Source(TRADED, "Market"),),
