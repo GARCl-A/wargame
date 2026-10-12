@@ -18,6 +18,8 @@ RECIPE = "Bear Trap"
 def _crafter(material=True):
     u = Unit("player")
     u.recipes.append(RECIPE)
+    while u.has_item(RECIPE):
+        u.remove_named(RECIPE)
     if material:
         u.give_to_pack("Iron Bar")
     return u
@@ -135,8 +137,11 @@ def test_the_forge_does_not_offer_alone_without_a_free_slot():
 def test_a_waiting_group_heals_everyone_but_the_worker(monkeypatch):
     _sure_rolls(monkeypatch)
     u, mate = _crafter(), Unit("player")
-    u.hp -= 3
-    mate.hp -= 3
+    for x in (u, mate):
+        x.give_to_pack("Meat", 3)
+        x._hp_override = 20
+        x._derive_combat()
+        x.hp = 17
     guild, g = _setup(u, mate)
     solo.craft(guild, g, u, RECIPE, 16, alone=False)
     guild.pass_time(16)

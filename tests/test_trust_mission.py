@@ -146,6 +146,23 @@ def test_turning_in_early_does_not_earn_the_deed_without_the_economic_three():
     assert earned == [] and guild.reputation.get("bankers", 0) == 0
 
 
+def test_trust_deed_lands_later_when_the_economic_three_finish_after_the_turn_in():
+    from gartok import factions
+    guild, _, signer = _guild_with_signer()
+    m = missions.accept(guild, signer, missions.TRUST_CHEST)
+    signer.remove_named(data.MISSION_CHEST_ITEM)
+    signer.give_to_pack(data.LETTER_ITEM)
+    missions.turn_in(guild, m)
+    guild.deeds_done = ["bankers_good_for_business", "bankers_steady_customer",
+                        "bankers_diverse_portfolio"]
+    guild.reputation["bankers"] = 3
+
+    earned = factions.settle(guild, factions.Event("market"))
+
+    assert [d.id for d in earned] == ["bankers_trust"]
+    assert guild.reputation["bankers"] == 4
+
+
 def test_opening_the_sealed_chest_early_fails_the_mission_and_marks_a_crime():
     guild, g, signer = _guild_with_signer()
     signer.set_base_attribute("dexterity", 14)          # the chest and purse weigh the signer down
