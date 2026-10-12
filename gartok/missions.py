@@ -64,6 +64,7 @@ class Mission:
     state: str = "active"    # active | done | failed
     ambush_done: bool = False   # the one-shot ambush the mission springs (fortress, Biwolf): fires once
     failed_day: int | None = None   # clock.day it failed, for `MissionTemplate.retry_days`
+    recruit_uid: str | None = None
 
 
 TANNER_HIDES = MissionTemplate(
@@ -139,6 +140,14 @@ LIBRARY_ANCIENT_CODEX = MissionTemplate(
     tags=("library", "ruins"),
 )
 
+LEDGER_TREEFOLK = MissionTemplate(
+    "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
+    "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. "
+    "Train them on the road until they master their racial roots (racial level 2) and return them to the garrison.",
+    goal_item="Treefolk Recruit", goal_qty=1, reward=230, deadline_days=None,
+    tags=("guards", "ledger_hold", "mentorship"),
+)
+
 TEMPLATES = {
     TANNER_HIDES.id: TANNER_HIDES,
     TANNER_BIWOLF.id: TANNER_BIWOLF,
@@ -147,6 +156,7 @@ TEMPLATES = {
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
     LIBRARY_ANCIENT_CODEX.id: LIBRARY_ANCIENT_CODEX,
+    LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
 
 
@@ -159,6 +169,8 @@ def offers_at(guild, node_id):
         if t.node != node_id or not _open_to_take(guild, t):
             continue
         if t.id == "library_ancient_codex" and "library_initiate" not in guild.deeds_done:
+            continue
+        if t.id == "ledger_treefolk" and "bankers_trust" not in guild.deeds_done:
             continue
         if t.requires and not any(m.template_id == t.requires and m.state == "done"
                                   for m in guild.missions):
@@ -224,7 +236,13 @@ def progress(guild, mission):
     group = _current_group(guild, mission)
     if group is None:
         return 0
-    item = template_of(mission).goal_item
+    t = template_of(mission)
+    if t.id == "ledger_treefolk":
+        recruit = next((u for u in guild.roster if u.uid == mission.recruit_uid), None)
+        if recruit is not None and recruit in group.members and recruit.racial_level >= 2:
+            return 1
+        return 0
+    item = t.goal_item
     if item == "Any Dictionary":
         from .library_screen import library_stock_dictionaries
         stock = set(library_stock_dictionaries(guild))
@@ -247,6 +265,10 @@ def turn_in(guild, mission):
         raise ValueError("mission goal not met")
     t = template_of(mission)
     group = _current_group(guild, mission)
+    if t.id == "ledger_treefolk":
+        recruit = next((u for u in guild.roster if u.uid == mission.recruit_uid), None)
+        if recruit is not None:
+            return deliver_treefolk_recruit(guild, group, mission, recruit)
     left = t.goal_qty
     for u in group.members:
         if left <= 0:
@@ -389,9 +411,84 @@ def mission_to_dict(m):
     return {"template_id": m.template_id, "unit_uid": m.unit_uid,
             "accepted_day": m.accepted_day, "deadline_day": m.deadline_day,
             "state": m.state, "ambush_done": m.ambush_done,
-            "failed_day": m.failed_day}
+            "failed_day": m.failed_day, "recruit_uid": m.recruit_uid}
 
 
 def mission_from_dict(d):
     return Mission(d["template_id"], d["unit_uid"], d["accepted_day"],
-                   d["deadline_day"], d["state"], d["ambush_done"], d.get("failed_day"))
+                   d["deadline_day"], d["state"], d["ambush_done"], d.get("failed_day"),
+                   d.get("recruit_uid"))
+
+
+def make_treefolk_recruit():
+    """Create the designated level 0 Treefolk recruit for the Ledger Hold mentorship quest."""
+    from . import names
+    from .unit import Unit
+    race_row = next(r for r in data.RACES if r[1] == "Treefolk")
+    race_dict = data._race_dict(*race_row)
+    unit = Unit("player", race=race_dict, name=names.random_name())
+    unit.base_attributes = {
+        "strength": 13,
+        "dexterity": 11,
+        "constitution": 12,
+        "intelligence": 10,
+        "wisdom": 10,
+        "charisma": 11,
+    }
+    unit.money = 0
+    unit._apply_attributes()
+    unit.combat_xp = 0
+    unit.work_hours = 0
+    unit._level_hp_rolls = []
+    unit.talents = {"combat": [], "work": [], "racial": []}
+    unit._derive_combat()
+    return unit
+
+
+def accept_treefolk_mentorship(guild, unit, recruit):
+    """Start the Treefolk mentorship mission, binding the recruit to the quest."""
+    t = LEDGER_TREEFOLK
+    m = Mission(t.id, unit.uid, guild.clock.day, deadline_day=None, recruit_uid=recruit.uid)
+    guild.missions.append(m)
+    recorder.emit("mission", what="accept", id=t.id, reward=t.reward, deadline=None)
+    return m
+
+
+def deliver_treefolk_recruit(guild, group, mission, recruit):
+    """Complete the mentorship: strip recruit gear and return to group stores,
+    pay $230 reward, release recruit to garrison, bank deed and faction standing."""
+    other_members = [m for m in group.members if m.uid != recruit.uid]
+    recipient = other_members[0] if other_members else None
+
+    items_to_return = []
+    for slot in ("equipped_weapon", "equipped_offhand", "equipped_armor", "equipped_artifact", "equipped_tongue"):
+        item = getattr(recruit, slot, None)
+        if item:
+            items_to_return.append((item, 1))
+            setattr(recruit, slot, None)
+    for inst in list(recruit.inventory):
+        items_to_return.append((inst.name, inst.qty))
+    recruit.inventory.clear()
+
+    if recipient is not None:
+        for name, qty in items_to_return:
+            recipient.give_to_pack(name, qty)
+        recipient._derive_combat()
+    elif group.wagons:
+        for name, qty in items_to_return:
+            group.wagons[0].stash.add(name, qty)
+
+    t = template_of(mission)
+    reward = t.reward
+    if other_members:
+        per, rem = divmod(reward, len(other_members))
+        for i, u in enumerate(other_members):
+            u.give_to_pack("Copper Coin", per + (1 if i < rem else 0))
+    elif group.wagons:
+        group.wagons[0].stash.add("Copper Coin", reward)
+
+    guild.remove_members([recruit])
+    mission.state = "done"
+    recorder.emit("mission", what="turn_in", id=mission.template_id, reward=reward)
+    return factions.settle(guild, factions.Event("mission", node=world.node("ledger_hold"), tags=t.tags, tag="ledger_hold"))
+

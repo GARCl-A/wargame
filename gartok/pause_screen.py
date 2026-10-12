@@ -22,7 +22,7 @@ MAX_SAVE_NAME = 40
 class PauseScreen(Screen):
     def __init__(self, fonts, resume_to, on_resume, on_menu, on_quit,
                  tutorial=None, on_tutorial_toggle=None, on_tutorial_reset=None,
-                 on_save_as=None, can_save=True):
+                 on_save_as=None, can_save=True, on_wiki=None):
         super().__init__()
         self.fonts = fonts
         self.resume_to = resume_to
@@ -35,6 +35,7 @@ class PauseScreen(Screen):
         self.on_tutorial_reset = on_tutorial_reset
         self.on_save_as = on_save_as      # callable(name) or None: no SAVE AS row
         self.can_save = can_save          # False: the row shows greyed out and does nothing
+        self.on_wiki = on_wiki            # callable() or None: opens in-game wiki compendium
         self.naming = False
         self.name_buf = ""
         self.saved_note = None
@@ -66,6 +67,10 @@ class PauseScreen(Screen):
                 if key == "save_as":
                     self.naming, self.saved_note = True, None
                     return
+                if key == "wiki":
+                    if self.on_wiki:
+                        self.on_wiki()
+                    return
                 if key.startswith("set_"):
                     settings.cycle(key[4:])
                     return
@@ -87,7 +92,7 @@ class PauseScreen(Screen):
             screen.fill(T.TABLE)
 
         tutorial_rows = ((2 if self.tutorial is not None else 0) + (1 if self.on_save_as else 0)
-                         + len(settings.SPEC))
+                         + (1 if self.on_wiki else 0) + len(settings.SPEC))
         card = modal_card(screen, (320, 250 + tutorial_rows * 48), veil=True)
 
         f = self.fonts
@@ -96,6 +101,8 @@ class PauseScreen(Screen):
              (card.centerx, card.y + 58), T.TX_FAINT, center=True)
 
         rows = [("resume", "RESUME", True, False)]
+        if self.on_wiki:
+            rows.append(("wiki", "WIKI & RULES", False, False))
         if self.on_save_as:
             rows.append(("save_as", "SAVE AS...", False, False))
         rows += [("menu", "SAVE & MAIN MENU", False, False),

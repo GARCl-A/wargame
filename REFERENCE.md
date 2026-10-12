@@ -305,7 +305,6 @@ Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
 | 1sqm Hide | dropped: Wolf |
 | Fruit | gathered: lumber_yard |
 | Ink | traded: Library |
-| Iron Bar | traded: Smith |
 | Iron Ore | gathered: mine |
 | Legendary Horn | quest: the tanner's last job |
 | Lumber | gathered: lumber_yard |
@@ -478,6 +477,14 @@ Herbalists and alchemists of the city. They brew remedies and trade in rare reag
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
 | Fifteen Red Mushrooms | Bring the apothecary fifteen red mushrooms. | +1 | -- |
+
+### Ledger Hold
+
+The fortified garrison of the march. They train soldiers and hold the border.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| Treefolk Mentorship | Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold. | +1 | -- |
 
 ## Constants
 

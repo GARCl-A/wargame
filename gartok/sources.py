@@ -30,7 +30,6 @@ DECLARED = {
     "Salt": (Source(TRADED, "Market"),),
     "Sugar": (Source(TRADED, "Farm"),),
     "1L Beer": (Source(TRADED, "Market"),),
-    "Iron Bar": (Source(TRADED, "Smith"),),
     "Vial": (Source(TRADED, "Market"),),
     "Paper": (Source(TRADED, "Library"),),
     "Ink": (Source(TRADED, "Library"),),

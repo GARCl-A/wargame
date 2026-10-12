@@ -63,6 +63,21 @@ class LedgerScreen(Screen):
                     carrier.give_to_pack(data.LETTER_ITEM)
                     self.notice = (f"{carrier.name} hands over the sealed chest -- the "
                                    "outpost gives a letter of receipt in return.")
+            elif key == "accept_mentorship":
+                from . import missions
+                recruit = missions.make_treefolk_recruit()
+                self.guild.add_member(recruit, self.group)
+                signer = self.group.leader or self.group.members[0]
+                missions.accept_treefolk_mentorship(self.guild, signer, recruit)
+                self.notice = f"{recruit.name} (Treefolk) joins your group for mentorship."
+            elif key == "deliver_recruit":
+                from . import missions
+                m_tree = next((m for m in self.guild.missions if m.template_id == "ledger_treefolk"), None)
+                if m_tree is not None:
+                    recruit = next((u for u in self.guild.roster if u.uid == m_tree.recruit_uid), None)
+                    if recruit is not None:
+                        missions.deliver_treefolk_recruit(self.guild, self.group, m_tree, recruit)
+                        self.notice = f"{recruit.name} steps into the garrison. $230 reward received!"
             elif key == "done":
                 self.on_done()
                 return
@@ -84,20 +99,57 @@ class LedgerScreen(Screen):
         draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
         text(screen, F["body"], "\"State your business.\"", (tx, m + 30), T.TX_MUTED)
 
-        card = pygame.Rect(m, m + 70, min(CARD_W, screen.get_width() - 2 * m), 110)
-        panel(screen, card)
+        card_w = min(CARD_W, screen.get_width() - 2 * m)
+        cy = m + 70
         pad = 12
-        x, y, w = card.x + pad, card.y + pad, card.w - 2 * pad
-        carrier = self._carrier()
 
+        # 1. Bankers' sealed chest exchange
+        carrier = self._carrier()
         if carrier is not None:
+            card1 = pygame.Rect(m, cy, card_w, 100)
+            panel(screen, card1)
+            x, y = card1.x + pad, card1.y + pad
             text(screen, F["body_sm"], f"{carrier.name} carries the Bankers' sealed chest.",
                  (x, y), T.TX_MUTED)
-            y += 30
-            r = pygame.Rect(x, y, w, 36)
+            r = pygame.Rect(x, y + 26, card1.w - 2 * pad, 36)
             self.add_button(screen, r, "exchange", "HAND OVER THE CHEST", primary=True)
-        else:
-            text(screen, F["body_sm"], "Nothing to hand over here.", (x, y), T.TX_FAINT)
+            cy = card1.bottom + T.S * 2
+
+        # 2. Treefolk mentorship mission
+        if "bankers_trust" in self.guild.deeds_done:
+            m_tree = next((m for m in self.guild.missions if m.template_id == "ledger_treefolk"), None)
+            card2 = pygame.Rect(m, cy, card_w, 130)
+            panel(screen, card2)
+            x, y = card2.x + pad, card2.y + pad
+            text(screen, F["label"], "GARRISON MENTORSHIP", (x, y), T.BRASS)
+            y += 24
+            if m_tree is None:
+                text(screen, F["body_sm"], "Commander Varkas offers a green Treefolk recruit to train to racial level 2.", (x, y), T.TX)
+                r = pygame.Rect(x, y + 24, card2.w - 2 * pad, 36)
+                self.add_button(screen, r, "accept_mentorship", "ACCEPT RECRUIT & MENTORSHIP", primary=True, sub="Receive Treefolk recruit (lvl 0)")
+            elif m_tree.state == "active":
+                recruit = next((u for u in self.guild.roster if u.uid == m_tree.recruit_uid), None)
+                if recruit is None:
+                    m_tree.state = "failed"
+                    text(screen, F["body_sm"], "The Treefolk recruit fell in battle. The mentorship has failed.", (x, y), T.RED)
+                elif recruit in self.group.members:
+                    lvl = recruit.racial_level
+                    ready = lvl >= 2
+                    msg = f"{recruit.name} is ready for garrison service (Racial Lvl {lvl})!" if ready else f"{recruit.name} is training (Racial Lvl {lvl}/2)."
+                    text(screen, F["body_sm"], msg, (x, y), T.GREEN if ready else T.TX_MUTED)
+                    r = pygame.Rect(x, y + 24, card2.w - 2 * pad, 36)
+                    self.add_button(screen, r, "deliver_recruit", "DELIVER TRAINED RECRUIT", enabled=ready, primary=ready,
+                                    sub="$230 reward  ·  leaves the guild" if ready else "Requires racial level 2")
+                else:
+                    text(screen, F["body_sm"], f"{recruit.name} is in another group. Bring them here to hand over.", (x, y), T.TX_MUTED)
+            else:
+                text(screen, F["body_sm"], "Commander Varkas salutes: 'The Treefolk soldier serves with honor.'", (x, y), T.GREEN)
+                text(screen, F["body_sm"], "Ledger Hold's gates stand open to your guild.", (x, y + 20), T.TX_MUTED)
+        elif carrier is None:
+            card0 = pygame.Rect(m, cy, card_w, 80)
+            panel(screen, card0)
+            x, y = card0.x + pad, card0.y + pad
+            text(screen, F["body_sm"], "Nothing to hand over here. Complete the Bankers' trust test to earn their standing.", (x, y), T.TX_FAINT)
 
         self._draw_footer(screen)
 

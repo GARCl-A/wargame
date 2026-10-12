@@ -22,15 +22,15 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-12 after cooking recipes, wagon container and start screen)
+# Suggested order (updated 2026-10-12 after start screen & wiki compendium)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Classic Start Screen & Dynamic Wiki/Compendium modal** (clean game entry flow, save loader and in-game catalog reference).
+1. **Ledger Hold Treefolk mentoring quest & hub unlock** (train Treefolk recruit to racial 2, yields $230 reward, returns recruit's gear to group stores, and permanently unlocks military/training hub; validates general node unlocking mechanic).
 2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-3. **Factions & Unlocking Nodes** (Apothecary reputation & mushrooms deed; Ledger Hold Treefolk mentoring quest yielding $230 and unlocking the military/training hub).
+3. **In-game pause menu Wiki access** (open `WikiScreen` from pause menu / hotkey during gameplay preserving game state on Esc/back).
 4. **Weapon traits registry and 2-AP actions** (immutable keyword model in `weapon_traits.py`, followed by unique 2-AP weapon actions).
 5. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
 
@@ -82,7 +82,7 @@ its functions are tabs inside.
 **Map and node entry**
 - **Travel graph is hard to read.** Decided 2026-10-12: algorithmic auto-layout rework avoiding edge crossings and treating highly connected nodes as central hubs.
 - **Group swap with 2 groups feels odd.**
-- **Start screen** (title): decided 2026-10-12: classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
+- **Start screen (built 2026-10-12):** classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
 
 **Layout overlaps (component rule; Market shelf, Bank quantity box, Load cards, Draft leader row attributes, Rest accordion budgeting and Tavern hub tabs fixed 2026-10-12)**
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
@@ -97,9 +97,9 @@ its functions are tabs inside.
   onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
   (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
   (3) archaeology at Ancient Ruins. Built 2026-10-12: `progression.eligible_work_activities` dynamically inspects registered recipes up to level 4+.
-- **In-game dynamic wiki / compendium.** A searchable in-game encyclopedia screen generated dynamically
+- **In-game dynamic wiki / compendium (built 2026-10-12):** A searchable in-game encyclopedia screen generated dynamically
   from the game's data catalogs (`items`, `abilities`, `talents`, `recipes`, `data.BEASTS`, node functions and
-  combat rules), accessible from the command bar or pause menu without leaving the game. Decided 2026-10-12: implemented as a floating modal window rather than full-window, preserving context.
+  combat rules), accessible from StartScreen and from PauseScreen during active gameplay (Esc/back restores the exact paused scene state).
 - **Perk to reduce armour weight.**
 - **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
@@ -119,16 +119,16 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 
 **Factions, nodes and world**
 - **Bankers' trust test (resolved 2026-10-12):** Investigated and fixed: `TrustScreen` modal accept/leave buttons visually overlay the `ledger_hold` node position on the underlying map screen at standard resolutions; rapid double-clicks on modal close were passing mouse events directly to `MapScreen`, triggering an accidental travel order to Ledger Hold. Fixed by adding a 250ms click debounce window (`SCENE_DEBOUNCE_MS`) when transitioning to the map.
-- **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
-  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 Treefolk recruit (given pre-generated directly into the guild roster upon accepting the quest; tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives $230 reward ($30 food allowance for the ~10 days of training + $200 completion bonus), and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
+- **Ledger Hold as a guards faction hub (mentorship quest built 2026-10-12):** Ledger Hold is its own distinct faction.
+  After completing the Bankers' trust test, visiting Ledger Hold offers a mission from Commander Varkas to mentor a designated level 0 Treefolk recruit (added to guild roster; tracked by unique `recruit_uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). Once `racial_level >= 2`, turning the recruit in strips all gear and pack items back to the group, awards $230 reward and banks faction deeds. Military work shifts at the garrison scheduled for next iteration.
+- **Iron Bar smelting (built 2026-10-12):** 2x Iron Ore + 1kg Coal at the Blacksmith forge produces 1x Iron Bar (`CRAFTING_RECIPES`, `CraftingStation.FORGE`).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
-- **Apothecary in reputations (built 2026-10-12):** registered `apothecary` in `factions._FACTIONS`, added `apothecary_mushrooms` deed (+1 rep with The Apothecary) satisfied when turning in the 15 Red Mushrooms quest.
 - **The Claim:** let the player build their own farm to stock food.
 
 **Combat and AI** (allies recover worn armor, off-hands and artifacts on won battle loot screen, 2026-10-12;
-henchmen renamed to Lackeys, 2026-10-12; CTF AI defender holding home flag square built 2026-10-12)
-- **Ribbit Brothers (built 2026-10-12):** removed from arena offers once defeated (`arena_ribbit_brothers` in `guild.deeds_done`). Post-battle `RibbitPromptScreen` offers a one-time chance to convince all three brothers individually (`TavernaScreen(candidates=[bufo, ribit, peep])`). Unrecruited brothers never enter the public tavern pool, but gain a 5% cameo chance in pit/games arena bouts (mirroring Adelio). Recruited brothers never cameo.
+henchmen renamed to Lackeys, 2026-10-12; CTF AI defender holding home flag square built 2026-10-12;
+Ribbit Brothers defeated deed, post-battle recruit prompt on tavern screen and arena cameo built 2026-10-12)
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing

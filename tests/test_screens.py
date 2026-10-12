@@ -1808,6 +1808,21 @@ def test_primitives_text_and_ellipsize_none_resilience():
     assert rc.width == 0
 
 
+def test_pause_screen_wiki_callback():
+    from gartok.pause_screen import PauseScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    opened = []
+    pause = PauseScreen(ui_fonts(), None, lambda: None, lambda: None, lambda: None,
+                        on_wiki=lambda: opened.append(True))
+    class _Rect:
+        def collidepoint(self, _p):
+            return True
+    pause._buttons = [("wiki", _Rect())]
+    pause._click((0, 0))
+    assert opened == [True]
+
+
+
 
 
 

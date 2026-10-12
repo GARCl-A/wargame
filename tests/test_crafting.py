@@ -350,3 +350,23 @@ def test_crafting_recipe_properties():
     assert rec.batch_hours > 0
     assert rec.craft_level == rec.level
 
+
+def test_smelt_iron_bar_at_forge():
+    u = Unit("player")
+    guild = Guild(roster=[u], node="smithy")
+    u.recipes.append("Iron Bar")
+    u.give_to_pack("Iron Ore", 2)
+    u.give_to_pack("1kg Coal", 1)
+
+    recipe = items.get_recipe("Iron Bar")
+    assert recipe.station == items.CraftingStation.FORGE
+    assert recipe.materials == ["Iron Ore", "Iron Ore", "1kg Coal"]
+
+    u.crafting_target = "Iron Bar"
+    u.crafting_progress = items.recipe_goal(recipe)
+    notices, done = guild.crafting_shift(u, "Iron Bar", hours=1)
+    assert u.has_item("Iron Bar")
+    assert u.count_of("Iron Ore") == 0
+    assert u.count_of("1kg Coal") == 0
+
+

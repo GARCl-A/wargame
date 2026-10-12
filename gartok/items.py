@@ -782,6 +782,15 @@ CRAFTING_RECIPES: dict[str, list[CraftingRecipe]] = RecipeDict({
             station=CraftingStation.FORGE,
         ),
     ],
+    "Iron Bar": [
+        CraftingRecipe(
+            target="Iron Bar",
+            materials=["Iron Ore", "Iron Ore", "1kg Coal"],
+            complexity=5,
+            station=CraftingStation.FORGE,
+            yield_qty=1,
+        ),
+    ],
 })
 
 for _lang in _LANGUAGES:
@@ -837,7 +846,7 @@ CRAFTING_RECIPES["Fruit Compote"] = [
 COMMON_RECIPES = ["Jerky", "Roast Meat", "Fruit Compote"]            # known by everyone, no talent or teacher needed
 
 APOTHECARY_RECIPES = ["Minor Healing Potion", "Antidote"]
-BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap"]
+BLACKSMITH_RECIPES = ["Bear Trap", "Alarm Trap", "Iron Bar"]
 TANNER_RECIPES = ["Signal Horn"]      # taught by the tanner's last job, never by a talent
 
 # --------------------------------------------------------------------------- #

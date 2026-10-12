@@ -107,6 +107,8 @@ _FACTIONS = [
             "The leatherworkers of the city. They pay for what the Wilds sheds."),
     Faction("apothecary", "The Apothecary",
             "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents."),
+    Faction("ledger_hold", "Ledger Hold",
+            "The fortified garrison of the march. They train soldiers and hold the border."),
 ]
 
 _DEEDS = [
@@ -210,6 +212,11 @@ _DEEDS = [
     Deed("apothecary_mushrooms", "apothecary", "Fifteen Red Mushrooms",
          "Bring the apothecary fifteen red mushrooms.", rep=1,
          check=lambda g, e: e.kind == "mission" and ("apothecary" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "apothecary")),
+
+    # Ledger Hold deeds
+    Deed("ledger_hold_mentoring", "ledger_hold", "Treefolk Mentorship",
+         "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.", rep=1,
+         check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

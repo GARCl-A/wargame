@@ -78,8 +78,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `persist.py` | worlds (one folder per guild): `current.json` + auto snapshots before each fight (last 10) + named manual saves; SAVE_VERSION, no migration: a save of an older shape does not load. A new *optional* field needs no bump: add its neutral value to `unit.SAVE_DEFAULTS` / `persist.PAYLOAD_DEFAULTS`; a key with no default is still required. Saves each group's `order` and `pending` fight (enemy pack included); never a battle or hunt in progress (`App._can_save`) |
 | `combat_log.py` / `combat_lab.py` / `combat_lab_screen.py` | one JSONL per fight that rebuilds it from the file alone (`battle.sink`; every `Action.execute`, end of turn and flag/trap goes through `CombatLog.record`, human or AI, with the legal options and what `ai.py` would have done); `BattleScreen` takes a controller per team (human or AI, two humans get a hand-over card); the lab (Editor menu) sets up the benchmark fights and logs to `combat_lab/<date>/<name>.jsonl`, campaign fights to `saves/<world>/combat_logs/` while `record_play` is ON (`saves/` is not in git: `scripts/archive_combat_logs.py` copies them to `combat_lab/campaign/<guild>-<world id>/`, run it after a session); `scripts/combat_analysis.py` reads them; `combat_log.rebuild` puts a logged fight back at its opening (campaign or lab, not flag or Ruins fights) and `scripts/combat_pairs.py` has the AI replay the squads a person played (the win rate to move when `ai.py` changes) |
 | `recorder.py` | opt-in play log (`record_play` setting): one JSONL row per day, order, market buy/sell, fight, talent, asset and recruit pitch, in `saves/<world>/play.jsonl`; a no-op while detached. `scripts/play_analysis.py` reads it into the sim's day table and the thresholds of the `human` policy |
-| `settings.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, the pause menu lists them |
-| `start_screen.py` / `menu_screen.py` / `saves_screen.py` | classic main menu (Continue, New, Load, Editor, Settings, Wiki) -> guild browser -> save snapshots with date and time |
+| `settings.py` / `settings_screen.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, pause menu and settings screen list them |
+| `start_screen.py` / `wiki_screen.py` / `menu_screen.py` / `saves_screen.py` | classic main menu (Continue, New, Load, Editor, Settings, Wiki) and in-game compendium -> guild browser -> save snapshots with date and time |
 | `factions.py` | factions + one-shot deeds → reputation |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `item_icon.py` | what each item looks like: `ICONS` names every catalogue item (kind, material, shape) for `ui/item_icons.py`'s code-drawn silhouettes, rarity is the rim; a test fails for an item with no entry |
@@ -92,7 +92,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |
 | `ox.py` / `ox_fields.py` | the tanner's last job: the Country Roads search, the daylight tracking of Aurochs (`ox.track`, DC climbs per found trail) and the big skittish-beast field (`OxFieldsScenario`: terrain, the herd's call, win on his fall); `ai._skitter` is his flight |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
-| `arena.py` | Champion of the Pit title and its defense cycle |
+| `arena.py` / `ribbit_prompt_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer |
 | `magic.py` | spell registry + study-difficulty math (casting is in actions/spells.py) |
 | `encounters.py` | enemy packs scaled to a target mean level |
 | `progression.py` | XP curves + combat-XP rule |

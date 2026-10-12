@@ -1196,8 +1196,10 @@ class App:
             self._resume_from_pause()
         elif isinstance(self.scene, StartScreen):
             self._running = False
-        elif isinstance(self.scene, (MenuScreen, SettingsScreen, WikiScreen)):
+        elif isinstance(self.scene, (MenuScreen, SettingsScreen)):
             self._start_screen()
+        elif isinstance(self.scene, WikiScreen):
+            self.scene.handle_escape()
         else:
             self.scene = PauseScreen(self.ui_fonts, self.scene,
                                      on_resume=self._resume_from_pause,
@@ -1207,7 +1209,15 @@ class App:
                                      on_tutorial_toggle=self._toggle_tutorial,
                                      on_tutorial_reset=self._reset_tutorial,
                                      on_save_as=self._save_as,
-                                     can_save=self._can_save())
+                                     can_save=self._can_save(),
+                                     on_wiki=self._pause_to_wiki)
+
+    def _pause_to_wiki(self):
+        prev_scene = self.scene.resume_to if isinstance(self.scene, PauseScreen) else self.scene
+        self.scene = WikiScreen(self.ui_fonts, on_back=lambda: self._return_to_scene(prev_scene))
+
+    def _return_to_scene(self, scene):
+        self.scene = scene
 
     def _save_as(self, name):
         persist.save_game(self.world, self.guild, kind="manual", label=name)
