@@ -110,6 +110,14 @@ its functions are tabs inside.
   onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
   (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
   (3) archaeology at Ancient Ruins.
+- **Generate eligible work/combat activities dynamically.** In `guild_screen.py` and `progression.py`,
+  `eligible_work_activities` is currently hand-coded up to level 3 only (which is why a level 4 worker sees no
+  available tasks on the guild screen even though `Signal Horn` is a level 4 craft). Generate the list dynamically
+  from registered recipes (`craft_level.level_of`), nodes, hunting grounds and world activities so any level's
+  growth options are always accurate.
+- **In-game dynamic wiki / compendium.** A searchable in-game encyclopedia screen generated dynamically
+  from the game's data catalogs (`items`, `abilities`, `talents`, `recipes`, `data.BEASTS`, node functions and
+  combat rules), accessible from the command bar or pause menu without leaving the game.
 - **Perk to reduce armour weight.**
 - **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade

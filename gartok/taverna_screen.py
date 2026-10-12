@@ -57,8 +57,9 @@ class TavernaScreen(Screen):
     PITCH_BONUS = ()                      # (value, label) mods added to every pitch roll
     SEEN_KEY = "taverna"
 
-    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None):
+    def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None, group=None, hide_tabs=False):
         super().__init__()
+        self.hide_tabs = hide_tabs
         recruit.mark_seen(guild, self.SEEN_KEY)
         self.fonts = fonts
         self._F = fonts if (isinstance(fonts, dict) and "body" in fonts) else ui_fonts()
@@ -353,7 +354,7 @@ class TavernaScreen(Screen):
         else:
             sub = "Rent a quiet room for the day · anyone with a study target will make daily progress"
 
-        tabs_list = ["RECRUIT", "STUDY", "PERFORM"] if is_tavern else []
+        tabs_list = ["RECRUIT", "STUDY", "PERFORM"] if (is_tavern and not self.hide_tabs) else []
         active_tab_label = {"recruits": "RECRUIT", "rooms": "STUDY", "perform": "PERFORM"}[self.tab]
         header_rect = pygame.Rect(0, 0, W, 72)
         tab_hits = header(screen, F, header_rect, self.title if not is_tavern else "THE TAVERN",

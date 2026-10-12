@@ -175,6 +175,6 @@ def draw_inspector(surf, F, rect, name, state_label, state_color, where, party,
     y = draw_blocks(surf, F, x, y, w, blocks, mpos, button)
 
     bottom_h = T.S * 2 + sum(block_height(b) + b.get("gap_before", 0) + T.S for b in bottom_blocks)
-    by = max(y, rect.bottom - bottom_h)
+    by = max(rect.y + T.S * 4, rect.bottom - bottom_h)
     hline(surf, x, x + w, by)
     draw_blocks(surf, F, x, by + T.S * 2, w, bottom_blocks, mpos, button)

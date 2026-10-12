@@ -268,15 +268,17 @@ def draw_identity_form(surf, F, rect, form, mpos):
     y += 18
 
     def attrs(surf, r, ch):
-        x = r.right - 380
-        for abbr, value, _mod, _penalized in ch["attrs"]:
-            label = f"{abbr} {value}"
-            w = F["body_sm"].size(label)[0]
-            top = r.centery - F["body_sm"].get_height() // 2
-            text(surf, F["body_sm"], label, (x, top), T.TX_MUTED)
-            if pygame.Rect(x, top, w, F["body_sm"].get_height()).collidepoint(mpos) and abbr in data.ATTRIBUTE_HELP:
-                out["tooltip"] = format_tooltip(*data.ATTRIBUTE_HELP[abbr], F)
-            x += w + 20
+        x_base = r.right - 180
+        for row_idx, row in enumerate((ch["attrs"][:3], ch["attrs"][3:])):
+            x = x_base
+            top = r.centery - 16 if row_idx == 0 else r.centery + 4
+            for abbr, value, _mod, _penalized in row:
+                label = f"{abbr} {value}"
+                w = F["body_sm"].size(label)[0]
+                text(surf, F["body_sm"], label, (x, top), T.TX_MUTED)
+                if pygame.Rect(x, top, w, F["body_sm"].get_height()).collidepoint(mpos) and abbr in data.ATTRIBUTE_HELP:
+                    out["tooltip"] = format_tooltip(*data.ATTRIBUTE_HELP[abbr], F)
+                x += w + 12
 
     out["unit_names"] = []
     editing_idx = form.get("editing_unit_idx")

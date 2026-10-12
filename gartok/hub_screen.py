@@ -42,7 +42,13 @@ class TabbedHubScreen(Screen):
             shop_label = "FOOD & DRINK" if node.id == "tavern" else "FARM" if node.id == "farm" else "SHOP"
             shop = MarketScreen(fonts, guild, list(group.members), node, on_done)
             tabs.append(("shop", shop_label, shop))
-        if node.has("recruit"):
+        if node.has("recruit") and node.id == "tavern":
+            from .taverna_screen import TavernaScreen
+            tavern = TavernaScreen(fonts, guild, list(group.members), node, on_done, group=group, hide_tabs=True)
+            tabs.append(("recruits", "RECRUIT", tavern))
+            tabs.append(("rooms", "STUDY", tavern))
+            tabs.append(("perform", "PERFORM", tavern))
+        elif node.has("recruit"):
             from .taverna_screen import TavernaScreen
             tavern = TavernaScreen(fonts, guild, list(group.members), node, on_done, group=group)
             tabs.append(("tavern", "TAVERN", tavern))
@@ -72,16 +78,29 @@ class TabbedHubScreen(Screen):
             jobs = LibraryMissionScreen(fonts, guild, group, on_done)
             tabs.append(("study", "STUDY", study))
             tabs.append(("jobs", "JOBS", jobs))
+        from . import gather
+        if node.has("work") and gather.can_gather(node.id):
+            from .gather_screen import GatherScreen
+            gathering = GatherScreen(fonts, guild, group, node, on_done)
+            tabs.append(("gather", "GATHERING", gathering))
 
         if not tabs:
             return MarketScreen(fonts, guild, list(group.members), node, on_done)
         if len(tabs) == 1:
             return tabs[0][2]
+        if first in ("tavern", "recruit"):
+            first = "recruits"
+        elif first == "study" and node.id == "tavern":
+            first = "rooms"
         chosen = first if (first and any(k == first for k, _, _ in tabs)) else tabs[0][0]
         return cls(fonts, tabs, first=chosen)
 
     def active_screen(self):
-        return next(s for k, _label, s in self.tabs if k == self.tab)
+        screen = next(s for k, _label, s in self.tabs if k == self.tab)
+        if hasattr(screen, "hide_tabs") and screen.hide_tabs:
+            if self.tab in ("recruits", "rooms", "perform"):
+                screen.tab = self.tab
+        return screen
 
     def tutorial_key(self):
         return self.active_screen().tutorial_key()

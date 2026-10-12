@@ -60,11 +60,15 @@ def test_tabbed_hub_screen_for_node():
     g = Guild([Unit("player")], node="tavern")
     hub = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("tavern"), lambda: None)
     assert isinstance(hub, TabbedHubScreen)
-    assert [k for k, _, _ in hub.tabs] == ["shop", "tavern"]
+    assert [k for k, _, _ in hub.tabs] == ["shop", "recruits", "rooms", "perform"]
 
     hub_farm = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("farm"), lambda: None)
     assert isinstance(hub_farm, TabbedHubScreen)
     assert [k for k, _, _ in hub_farm.tabs] == ["shop", "stable"]
+
+    hub_yard = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("lumber_yard"), lambda: None)
+    assert isinstance(hub_yard, TabbedHubScreen)
+    assert [k for k, _, _ in hub_yard.tabs] == ["shop", "gather"]
 
 
 def test_a_place_with_nothing_to_offer_says_so():

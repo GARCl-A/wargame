@@ -254,3 +254,28 @@ def test_a_gather_button_issues_a_gathering_order_the_map_names():
     assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
     assert ms._order_status(group).startswith("gathering")
     assert ms._state(group)[0] == "GATHER"
+
+
+def test_gather_screen_interaction():
+    import pygame
+    from gartok import world
+    from gartok.gather_screen import GatherScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    guild, group = _crew("lumber_yard", licensed=False, money=500)
+    node = world.node("lumber_yard")
+    done = []
+    gs = GatherScreen(ui_fonts(), guild, group, node, on_done=lambda: done.append(True))
+    surf = pygame.Surface((1280, 720))
+    gs.draw(surf)
+
+    assert any(k == "buy_licence" for k, _ in gs.buttons)
+    gs._on_button("buy_licence")
+    assert guild.has_licence("lumber_yard")
+
+    gs.draw(surf)
+    assert any(k == "gather:8" for k, _ in gs.buttons)
+    gs._on_button("gather:8")
+    assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
+    assert done == [True]
+
