@@ -30,7 +30,7 @@ def stamp(ts):
 class MenuScreen(Screen):
     native = True                            # draw at the real window size
 
-    def __init__(self, fonts, on_new, on_continue, on_saves, on_delete, on_editor=None, notice=None):
+    def __init__(self, fonts, on_new, on_continue, on_saves, on_delete, on_editor=None, notice=None, on_back=None):
         super().__init__()
         self.F = fonts
         self.on_new = on_new
@@ -39,11 +39,21 @@ class MenuScreen(Screen):
         self.on_delete = on_delete
         self.on_editor = on_editor
         self.notice = notice
+        self.on_back = on_back
         self.confirm_delete = None            # world id awaiting delete confirmation
         self.buttons = []                    # [(key, world, rect)]
         self.scroll = 0
         self._max_scroll = 0
         self._refresh()
+
+    def handle_escape(self):
+        if self.confirm_delete is not None:
+            self.confirm_delete = None
+            return True
+        if self.on_back:
+            self.on_back()
+            return True
+        return False
 
     def _refresh(self):
         self.worlds = persist.list_worlds()
@@ -73,6 +83,8 @@ class MenuScreen(Screen):
                 self._refresh()
             elif key == "delete_no":
                 self.confirm_delete = None
+            elif key == "back" and self.on_back:
+                self.on_back()
             elif key == "editor" and self.on_editor:
                 self.on_editor()
             return
@@ -90,6 +102,11 @@ class MenuScreen(Screen):
         text(screen, F["body"], "pick a guild to play", (MARGIN, MARGIN + 32), T.TX_MUTED)
         if self.notice:
             text(screen, F["body"], self.notice, (MARGIN, MARGIN + 54), T.BLOOD)
+
+        if self.on_back:
+            br = pygame.Rect(W - MARGIN - 100, MARGIN, 100, 32)
+            draw_button(screen, F, br, "BACK", mpos=mouse)
+            self.buttons.append(("back", None, br))
 
         card_w = min(560, W - 2 * MARGIN)
         x = (W - card_w) // 2
@@ -119,7 +136,8 @@ class MenuScreen(Screen):
             text(screen, F["body"], "character & scenario creator", (er.centerx, er.centery + 4), T.TX_FAINT, center=True)
             self.buttons.append(("editor", None, er))
 
-        text(screen, F["body"], "[Esc] quit", (MARGIN, H - 18), T.TX_FAINT)
+        esc_text = "[Esc] back" if self.on_back else "[Esc] quit"
+        text(screen, F["body"], esc_text, (MARGIN, H - 18), T.TX_FAINT)
         set_pointer(any(rect.collidepoint(mouse) for _, _, rect in self.buttons))
 
     @staticmethod

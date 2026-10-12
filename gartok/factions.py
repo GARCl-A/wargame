@@ -105,6 +105,8 @@ _FACTIONS = [
             "Scholars and linguists. They trade in knowledge."),
     Faction("tanners", "The Tanners",
             "The leatherworkers of the city. They pay for what the Wilds sheds."),
+    Faction("apothecary", "The Apothecary",
+            "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents."),
 ]
 
 _DEEDS = [
@@ -203,6 +205,11 @@ _DEEDS = [
          requires="library_initiate",
          check=lambda g, e: e.kind == "mission" and ("library" in e.tags or e.tag == "library") and
              sum(1 for m in g.missions if m.state == "done" and ("library" in getattr(__import__('gartok.missions', fromlist=['']).template_of(m), "tags", ()) or __import__('gartok.missions', fromlist=['']).template_of(m).tag == "library")) >= 2),
+
+    # Apothecary deeds
+    Deed("apothecary_mushrooms", "apothecary", "Fifteen Red Mushrooms",
+         "Bring the apothecary fifteen red mushrooms.", rep=1,
+         check=lambda g, e: e.kind == "mission" and ("apothecary" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "apothecary")),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}

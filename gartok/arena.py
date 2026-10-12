@@ -63,6 +63,9 @@ BOSS_GOON_LEVEL = BOSS_LACKEY_LEVEL  # alias
 BOSS_SQUAD = 6               # brothers + lackeys; the player matches it
 BOSS_MAP = "capture-the-flag-the-gamers"
 
+RIBBIT_SLUGS = ("bufo", "ribit", "peep")
+RIBBIT_CAMEO_CHANCE = 0.05    # chance an arena bout fields an unrecruited Ribbit brother
+
 
 def scrapper_bout():
     """An introductory fight in the Pit."""
@@ -201,11 +204,44 @@ def load_champion():
     return adelio
 
 
-def cameo_enemy():
-    """The dethroned Adelio, `ADELIO_CAMEO_CHANCE` of the time, else None."""
-    if random.random() >= ADELIO_CAMEO_CHANCE:
+def cameo_enemy(guild=None, rng=random):
+    """The dethroned Adelio, `ADELIO_CAMEO_CHANCE` of the time, else None.
+    Never cameos if already recruited into the guild roster."""
+    if guild and any(u.name.startswith("Adelio") for u in guild.roster):
+        return None
+    if rng.random() >= ADELIO_CAMEO_CHANCE:
         return None
     try:
         return npc_lib.load_npc(CHAMPION_SLUG)
+    except OSError:
+        return None
+
+
+def load_ribbit_brothers():
+    """The three Grippli brothers (Bufo, Ribit, Peep) loaded as recruit candidates."""
+    candidates = []
+    for slug in RIBBIT_SLUGS:
+        try:
+            u = npc_lib.load_npc(slug)
+            u.arena_role = None
+            u.side = "player"
+            candidates.append(u)
+        except OSError:
+            pass
+    return candidates
+
+
+def ribbit_cameo_enemy(guild=None, rng=random):
+    """An unrecruited Ribbit brother, `RIBBIT_CAMEO_CHANCE` of the time, else None.
+    Only chooses among brothers not currently present in the guild roster."""
+    if rng.random() >= RIBBIT_CAMEO_CHANCE:
+        return None
+    roster_names = {u.name for u in guild.roster} if guild else set()
+    unrecruited = [slug for slug in RIBBIT_SLUGS if slug.title() not in roster_names]
+    if not unrecruited:
+        return None
+    chosen_slug = rng.choice(unrecruited)
+    try:
+        return npc_lib.load_npc(chosen_slug)
     except OSError:
         return None

@@ -85,7 +85,9 @@ from .pause_screen import PauseScreen
 from .reward_screen import RewardScreen
 from .saves_screen import SavesScreen
 from .scenario import Scenario
+from .settings_screen import SettingsScreen
 from .squad_screen import SquadScreen
+from .start_screen import StartScreen
 from .tanner_hub_screen import TannerHubScreen
 from .taverna_screen import TavernaScreen
 from .tutorial import TutorialState
@@ -93,11 +95,13 @@ from .ui.banner import set_player_color
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 from .vocation_screen import VocationScreen
+from .wiki_screen import WikiScreen
 from .watch_screen import WatchScreen
 from .wilds_claim_screen import WildsClaimScreen
 
 START_SIZE = (1212, 832)
 TUTORIAL_DEBOUNCE_MS = 300      # clicks swallowed right after a tutorial card closes
+SCENE_DEBOUNCE_MS = 250         # clicks swallowed right after landing back on the map
 
 
 class App:
@@ -129,7 +133,8 @@ class App:
         self._tutorial_rect_scene = None     # which scene those rects were drawn for
         self._tutorial_block_until = 0       # ms: swallow clicks right after a dismissal
         self._tutorial_swallow_up = False    # the release that closes the dismissing press
-        self._start_menu()
+        self._scene_block_until = 0          # ms: swallow clicks right after scene transition
+        self._start_screen()
 
     @property
     def tutorial(self):
@@ -141,13 +146,37 @@ class App:
     # ------------------------------------------------------------------ #
     # campaign flow                                                      #
     # ------------------------------------------------------------------ #
+    def _start_screen(self, notice=None):
+        recorder.detach()
+        self.scene = StartScreen(self.ui_fonts,
+                                 on_continue=self._continue_latest_game,
+                                 on_new=self._new_game,
+                                 on_load=self._start_menu,
+                                 on_editor=self._start_editor,
+                                 on_settings=self._open_settings,
+                                 on_wiki=self._open_wiki,
+                                 on_quit=self._quit,
+                                 notice=notice)
+
+    def _continue_latest_game(self):
+        worlds = persist.list_worlds()
+        if worlds:
+            self._continue_game(worlds[0]["world"])
+
+    def _open_settings(self):
+        self.scene = SettingsScreen(self.ui_fonts, on_back=self._start_screen)
+
+    def _open_wiki(self):
+        self.scene = WikiScreen(self.ui_fonts, on_back=self._start_screen)
+
     def _start_menu(self, notice=None):
         recorder.detach()
         self.scene = MenuScreen(self.ui_fonts, on_new=self._new_game,
                                 on_continue=self._continue_game,
                                 on_saves=self._open_saves,
                                 on_delete=persist.delete_world,
-                                on_editor=self._start_editor, notice=notice)
+                                on_editor=self._start_editor, notice=notice,
+                                on_back=self._start_screen)
 
     def _open_saves(self, world_id):
         self.scene = SavesScreen(self.ui_fonts, world_id, on_load=self._continue_game,
@@ -158,7 +187,7 @@ class App:
                                       on_character=self._open_char_editor,
                                       on_scenario=self._open_map_editor,
                                       on_combat_lab=self._open_combat_lab,
-                                      on_back=self._start_menu)
+                                      on_back=self._start_screen)
 
     def _open_combat_lab(self):
         self.scene = CombatLabScreen(self.ui_fonts, on_start=self._start_lab_fight,
@@ -269,6 +298,7 @@ class App:
             return
         self._map_notices += arena.sync(self.guild)
         self._save()
+        self._scene_block_until = pygame.time.get_ticks() + SCENE_DEBOUNCE_MS
         self.scene = MapScreen(self.ui_fonts, self.guild,
                                on_guild=self._open_guild,
                                on_wipe=self._campaign_over,
@@ -535,7 +565,9 @@ class App:
         if "arena_dethrone" not in self.guild.deeds_done:
             offers.append(arena.champion_bout())
         else:                                   # champion beaten: the Games are open
-            offers += [arena.brawl_bout(), arena.ctf_bout(), arena.boss_bout()]
+            offers += [arena.brawl_bout(), arena.ctf_bout()]
+            if "arena_ribbit_brothers" not in self.guild.deeds_done:
+                offers.append(arena.boss_bout())
         disabled = {u for u in group.members if u.incapacitated}
         self._arena_purse = group.members
         self.scene = SquadScreen(self.ui_fonts, group.members, node,
@@ -989,6 +1021,7 @@ class App:
         hunt_state = self._hunt
         pause_order, pause_group = self._pause_order, self._pause_group
         was_champion_bout = bool(self._arena_offer and getattr(self._arena_offer, "champion", False))
+        was_boss_bout = bool(self._arena_offer and getattr(self._arena_offer, "boss", False))
         battle_node = self._battle_node
         offer = self._arena_offer
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
@@ -1025,6 +1058,8 @@ class App:
         def after_arena_reward():
             if was_champion_bout and outcome.won and not any(u.name.startswith("Adelio") for u in self.guild.roster):
                 self._prompt_recruit_adelio(outcome.survivors, battle_node)
+            elif was_boss_bout and outcome.won:
+                self._prompt_recruit_ribbits(outcome.survivors, battle_node)
             else:
                 self._after_activity()
 
@@ -1141,14 +1176,28 @@ class App:
                                        candidates=[adelio], title="RECRUIT ADELIO")
         self.scene = AdelioPromptScreen(self.ui_fonts, on_recruit=do_recruit, on_leave=self._after_activity)
 
+    def _prompt_recruit_ribbits(self, survivors, node):
+        from . import arena
+        from .ribbit_prompt_screen import RibbitPromptScreen
+        from .taverna_screen import TavernaScreen
+        def do_recruit():
+            candidates = arena.load_ribbit_brothers()
+            self.scene = TavernaScreen(self.ui_fonts, self.guild, survivors, node,
+                                       on_done=self._after_activity,
+                                       candidates=candidates, title="RECRUIT THE RIBBIT BROTHERS",
+                                       hide_tabs=True)
+        self.scene = RibbitPromptScreen(self.ui_fonts, on_recruit=do_recruit, on_leave=self._after_activity)
+
     # ------------------------------------------------------------------ #
     def _toggle_pause(self):
         """Esc: into / out of the pause menu. On the main menu Esc quits; there
         is no in-game quick exit -- leaving is a deliberate step from the menu."""
         if isinstance(self.scene, PauseScreen):
             self._resume_from_pause()
-        elif isinstance(self.scene, MenuScreen):
+        elif isinstance(self.scene, StartScreen):
             self._running = False
+        elif isinstance(self.scene, (MenuScreen, SettingsScreen, WikiScreen)):
+            self._start_screen()
         else:
             self.scene = PauseScreen(self.ui_fonts, self.scene,
                                      on_resume=self._resume_from_pause,
@@ -1170,7 +1219,7 @@ class App:
     def _pause_to_menu(self):
         if self._can_save():
             self._save()
-        self._start_menu()
+        self._start_screen()
 
     def _quit(self):
         self._running = False
@@ -1253,6 +1302,9 @@ class App:
                     if not self.scene.handle_escape():
                         self._toggle_pause()
                 elif self._tutorial_swallow(event) or self._tutorial_click(event):
+                    pass
+                elif (event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP)
+                      and pygame.time.get_ticks() < self._scene_block_until):
                     pass
                 else:
                     self.scene.handle_event(event)

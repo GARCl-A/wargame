@@ -294,11 +294,17 @@ def test_every_screen_draws_native_at_any_window_size():
     from gartok.editor_menu_screen import EditorMenuScreen
     from gartok.char_editor_screen import CharEditorScreen
     from gartok.map_editor_screen import MapEditorScreen
+    from gartok.start_screen import StartScreen
+    from gartok.settings_screen import SettingsScreen
+    from gartok.wiki_screen import WikiScreen
 
     from gartok.ui.tokens import fonts as ui_fonts
     UI_F = ui_fonts()
 
     scenes = [
+        StartScreen(UI_F, noop, noop, noop, noop, noop, noop, noop),
+        SettingsScreen(UI_F, noop),
+        WikiScreen(UI_F, noop),
         MenuScreen(UI_F, noop, noop, noop, noop, on_editor=noop),
         EditorMenuScreen(UI_F, noop, noop, on_scenario=noop),
         CharEditorScreen(UI_F, noop),

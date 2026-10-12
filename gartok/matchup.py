@@ -48,15 +48,24 @@ def _enemies(offer, squad_size, guild):
         lackeys = [encounters.build_enemy(offer.level) for _ in range(offer.enemies)]
         return brothers + lackeys
     if offer.stage2:
-        return arena.stage2_pack(offer.enemies)
+        pack = arena.stage2_pack(offer.enemies)
+        if "arena_ribbit_brothers" in guild.deeds_done:
+            cameo = arena.ribbit_cameo_enemy(guild)
+            if cameo is not None:
+                pack[0] = cameo
+        return pack
 
     pack = [encounters.build_enemy(offer.level) for _ in range(offer.enemies)]
     if offer.champion:
         pack[0] = arena.load_champion()
     elif "arena_dethrone" in guild.deeds_done:
-        cameo = arena.cameo_enemy()
+        cameo = arena.cameo_enemy(guild)
         if cameo is not None:
             pack[0] = cameo
+        elif "arena_ribbit_brothers" in guild.deeds_done:
+            cameo = arena.ribbit_cameo_enemy(guild)
+            if cameo is not None:
+                pack[0] = cameo
     return pack
 
 

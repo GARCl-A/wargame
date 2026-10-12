@@ -118,19 +118,17 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
 
 **Factions, nodes and world**
-- **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
-  reason. That must be the player's choice.
+- **Bankers' trust test (resolved 2026-10-12):** Investigated and fixed: `TrustScreen` modal accept/leave buttons visually overlay the `ledger_hold` node position on the underlying map screen at standard resolutions; rapid double-clicks on modal close were passing mouse events directly to `MapScreen`, triggering an accidental travel order to Ledger Hold. Fixed by adding a 250ms click debounce window (`SCENE_DEBOUNCE_MS`) when transitioning to the map.
 - **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
   Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 Treefolk recruit (given pre-generated directly into the guild roster upon accepting the quest; tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives $230 reward ($30 food allowance for the ~10 days of training + $200 completion bonus), and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
-- **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
+- **Apothecary in reputations (built 2026-10-12):** registered `apothecary` in `factions._FACTIONS`, added `apothecary_mushrooms` deed (+1 rep with The Apothecary) satisfied when turning in the 15 Red Mushrooms quest.
 - **The Claim:** let the player build their own farm to stock food.
 
 **Combat and AI** (allies recover worn armor, off-hands and artifacts on won battle loot screen, 2026-10-12;
 henchmen renamed to Lackeys, 2026-10-12; CTF AI defender holding home flag square built 2026-10-12)
-- **Ribbit Brothers:** after beating them they leave the arena selection line; they should also be
-  recruitable, like Adelio.
+- **Ribbit Brothers (built 2026-10-12):** removed from arena offers once defeated (`arena_ribbit_brothers` in `guild.deeds_done`). Post-battle `RibbitPromptScreen` offers a one-time chance to convince all three brothers individually (`TavernaScreen(candidates=[bufo, ribit, peep])`). Unrecruited brothers never enter the public tavern pool, but gain a 5% cameo chance in pit/games arena bouts (mirroring Adelio). Recruited brothers never cameo.
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing

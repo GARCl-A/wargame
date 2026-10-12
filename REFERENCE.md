@@ -471,6 +471,14 @@ The leatherworkers of the city. They pay for what the Wilds sheds.
 | The Biwolf's Hide | Bring the tanner the leather of the Biwolf. | +1 | -- |
 | The Immortal Ox | Bring the tanner the hide of Aurochs, the immortal ox. | +1 | tanners_biwolf |
 
+### The Apothecary
+
+Herbalists and alchemists of the city. They brew remedies and trade in rare reagents.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| Fifteen Red Mushrooms | Bring the apothecary fifteen red mushrooms. | +1 | -- |
+
 ## Constants
 
 The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
