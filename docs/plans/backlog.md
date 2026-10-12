@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, elf & prison guard portraits, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -86,7 +86,7 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm and Tavern unified under `TabbedHubScreen.for_node`). Left: Lumber Yard gathering tabs behind a single entrance.
+- **Node screens as tabs, one Enter button.** Built 2026-10-12 for multi-function nodes (Farm, Tavern and Lumber Yard unified under `TabbedHubScreen.for_node` with 4 distinct Tavern tabs and `GatherScreen`).
 - **Travel graph is hard to read.** The layout algorithm needs rework.
 - **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
   in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone. Decided 2026-10-12:
@@ -95,10 +95,7 @@ its functions are tabs inside.
 - **Group swap with 2 groups feels odd.**
 - **Start screen** (title) still to be built.
 
-**Layout overlaps (component rule; Market shelf, Bank quantity box and Load cards fixed 2026-10-12: the shelf's columns are laid out from the row texts, `market_panel._columns`)**
-- **Draft "Found the guild": Rename button overlaps attributes.** In `draft_panel.draw_identity_form`, the `RENAME` button placed after the unit's name (`r.x + T.S * 6 + name_w + 8`) collides with and renders over the `STR` attribute label (`r.right - 380`) on the right side of the leader row.
-- **Map inspector: Rest accordion overflows screen vertically.** Opening the rest options accordion (`REST (OPEN)` in `map_screen._inspector_bottom`) at a node with multiple action buttons (licence, browse, stance, etc.) pushes the rest option rows and the footer CTA past the bottom edge of the window. Needs vertical scrolling, compaction, or subpanel budgeting.
-- **Tavern hub tabs overlap.** In `hub_screen.py`, `TabbedHubScreen.for_node` puts `TavernaScreen` behind a `TAVERN` tab alongside `FOOD & DRINK`. However, `TavernaScreen` also draws its own header tabs (`RECRUIT`, `STUDY`, `PERFORM`), causing both sets of tabs to draw on top of each other in the top-right header area. The Tavern hub should cleanly provide 4 distinct tabs: `FOOD & DRINK`, `RECRUIT`, `STUDY`, `PERFORM`.
+**Layout overlaps (component rule; Market shelf, Bank quantity box, Load cards, Draft leader row attributes, Rest accordion budgeting and Tavern hub tabs fixed 2026-10-12)**
 - **Manage and Gear: the wagon does not show on the right.**
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
   talent may let a unit carry more than it should, or it is only the display.
@@ -110,8 +107,9 @@ its functions are tabs inside.
 - **New tree rooted on +1 CHA.** Work tree: the root becomes +1 CHA, Negotiator drops to tier 2,
   Provisioner to tier 3 under Negotiator.
 - **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
-  onward; it needs activities that pay work XP at higher levels (check the work XP sources and
-  curve in `progression.py` and the activities that grant it).
+  onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
+  (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
+  (3) archaeology at Ancient Ruins.
 - **Perk to reduce armour weight.**
 - **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
@@ -132,8 +130,8 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 **Factions, nodes and world**
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
-- **Ledger Hold has no use.** Make it a "guards" military hub with themed training and territory missions.
-  Decided 2026-10-12: after completing the Bankers' trust test, Ledger Hold offers a mission to take and train a level 0 recruit up to at least level 2; once brought back, the guild receives pay and Ledger Hold permanently unlocks as a character training hub for the guild.
+- **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
+  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a level 0 recruit up to at least level 2; once brought back, the guild receives pay and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
@@ -197,8 +195,7 @@ pointed to, not repeated.
   skill knob's. (3) The shift picker shows the drops and the rolls but not the average worth of a shift against the
   wage. (4) The Mine and the Yard have no tutorial line of their own beyond the map card, and no art for the Mine.
   (5) Coal and the gems have no use but to be sold (Coal waits for the Smith's chain); Fruit is food, but it rots in
-  a day, so a Yard crew eats it or sells it that evening. (6) **Snake Venom Gland** has no recipe or use yet (the
-  Antidote takes the Giant Spider's Venom Gland): let the Antidote take either, or give it its own use.
+  a day, so a Yard crew eats it or sells it that evening. (6) **Snake Venom Gland:** Decided 2026-10-12: the Antidote recipe in the Apothecary accepts either Spider or Snake Venom Gland interchangeably. Blade poison coating for player/enemy weapons will be a separate craft, scheduled for after the new weapon actions and traits land.
 - **Item properties: base material sources (rarities decided 2026-10-11).** Built 2026-10-11
   (`sources.py`, REFERENCE.md *Base materials*): a base material is a material, food or gem no recipe
   makes (derived), and a test fails for one with no source (gathered, dropped, hunted, foraged, quest,
@@ -363,14 +360,11 @@ GPU a portrait, curated by hand). Each task below is its own sitting of art-maki
 the ones that also need code say so. Order is the suggested priority.
 
 - **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`;
-  `watch_screen.py` is text only today). Every shop node has a keeper with a name (fixed per node) and a face
-  in its header (`world.Vendor`, `ui/vendor_panel.py`); a vendor is not an NPC (no stats, no recruiting or
-  robbing them). The Apothecary's keeper shows only on its shop tab: the hub's Medic tab has none yet. The
-  node marks are under *Map node icons*.
-- **Faces for keepers with none (checked 2026-10-12: every race, beast, the Banker and the Prison Guard already have art).**
-  Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction / training hub).
-  Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
-  lackeys need none (only the three brothers become recruitable).
+  `watch_screen.py` is text only today). Keepers resolved (decided 2026-10-12):
+  (1) The Medic is Pimbletwig himself, sharing the Apothecary's keeper art.
+  (2) Stables at the Farm are run by Edric Ashvale himself (`farmer.png`), no new keeper needed.
+  (3) Arena Master: decided 2026-10-12 as a Goliath pit master / bookie (portrait staged for `portraits/npc/arena_master.png`).
+- **Keepers in game and faces for keepers with none.** Banker and Prison Guard portraits exist in assets (`banker.png`, `prison_guard.png`) but are not yet wired into `world.NODES` or rendered in `bank_screen.py` / `prison_screen.py` via `vendor_panel`. Ledger Hold officer art was generated (`ledger_hold_officer.png`); wiring pending. Arena Master (Goliath) generating.
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
   loads it) and nothing else: no race or beast entry, no stats, no encounter, no tutorial line. It is a
   portrait staged for a creature that has no design yet, probably the top of the Snake's growth line
@@ -379,7 +373,7 @@ the ones that also need code say so. Order is the suggested priority.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse),
   Snake has 3, and the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Kenku has 8 and Goliath 8 against 15 for Human, Gnome and Elf, 16 for Orc, 12 for
-  Centaur (Goblin has 9, Halfling 18, Grippli 17).
+  Centaur and Hobgoblin (Goblin has 9, Halfling 18, Grippli 17).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
   share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
   Ruins, the Claim, the Mine, the Smithy, the Tannery and the Apothecary a mark of their own. The map works as it is, so this is polish.
