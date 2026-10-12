@@ -133,3 +133,13 @@ def test_every_vocation_has_an_icon_that_draws():
         kind, tone, shape = item_icon.vocation_icon(vid)
         assert kind in KINDS
         draw_item_icon(pygame.Surface((48, 48)), pygame.Rect(0, 0, 48, 48), kind, tone, **shape)
+
+
+def test_item_instance_draws_icon_without_error():
+    from gartok import item_icon, items
+    inst = items.create_instance("Dagger", qty=2)
+    kind, _tone, rim, _scale, _shape = item_icon.icon_spec(inst)
+    assert kind in KINDS
+    surf = pygame.Surface((32, 32))
+    item_icon.draw_icon(surf, pygame.Rect(0, 0, 32, 32), inst)
+

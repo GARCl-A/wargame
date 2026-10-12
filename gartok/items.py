@@ -562,6 +562,15 @@ class CraftingRecipe:
         from .craft_level import level_of
         return level_of(self)
 
+    @property
+    def batch_hours(self) -> float:
+        from .craft_level import batch_hours
+        return batch_hours(self)
+
+    @property
+    def craft_level(self) -> int:
+        return self.level
+
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key)
 

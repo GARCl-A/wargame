@@ -123,7 +123,9 @@ VOCATION_ICONS = {
 def _base(name):
     """The catalogue name an icon is filed under: no ` (aged)` suffix, no `Large ` prefix, and every
     spell scroll and language dictionary is the plain Scroll and Dictionary."""
-    name = name.split(" (")[0].removeprefix("Large ").removeprefix("Any ")
+    if hasattr(name, "name"):
+        name = name.name
+    name = str(name).split(" (")[0].removeprefix("Large ").removeprefix("Any ")
     if name.startswith("Scroll of "):
         return "Scroll"
     if name.startswith("Dictionary of "):
@@ -133,6 +135,8 @@ def _base(name):
 
 def icon_spec(name):
     """-> `(kind, tone, rim, scale, shape)` for `draw_item_icon`."""
+    if hasattr(name, "name"):
+        name = name.name
     defn = items.get(name)
     kind, material, shape = ICONS.get(_base(name)) or FALLBACK.get(defn.type if defn else None, GENERIC)
     return kind, TONES[material], RIM.get(defn.rarity if defn else None), SCALE, shape
@@ -145,5 +149,7 @@ def vocation_icon(vocation_id):
 
 
 def draw_icon(surf, rect, name):
+    if hasattr(name, "name"):
+        name = name.name
     kind, tone, rim, scale, shape = icon_spec(name)
     draw_item_icon(surf, rect, kind, tone, rim, scale=scale, **shape)

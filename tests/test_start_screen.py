@@ -137,27 +137,32 @@ def test_wiki_screen_navigation():
     screen.draw(surf)
     assert screen.tab == "items"
 
-    # Switch tabs
+    # Switch tabs and verify drawing works on each
     recipes_rect = next(r for tid, r in screen.tab_buttons if tid == "recipes")
     screen._click(recipes_rect.center)
     assert screen.tab == "recipes"
+    screen.draw(surf)
 
     talents_rect = next(r for tid, r in screen.tab_buttons if tid == "talents")
     screen._click(talents_rect.center)
     assert screen.tab == "talents"
+    screen.draw(surf)
 
     beasts_rect = next(r for tid, r in screen.tab_buttons if tid == "beasts")
     screen._click(beasts_rect.center)
     assert screen.tab == "beasts"
+    screen.draw(surf)
 
     rules_rect = next(r for tid, r in screen.tab_buttons if tid == "rules")
     screen._click(rules_rect.center)
     assert screen.tab == "rules"
+    screen.draw(surf)
 
-    # Search filter keydown
+    # Search filter keydown and redraw
     event = pygame.event.Event(pygame.KEYDOWN, unicode="a", key=pygame.K_a)
     screen.handle_event(event)
     assert screen.search_query == "a"
+    screen.draw(surf)
 
     # Back
     back_rect = next(r for k, r in screen.buttons if k == "back")

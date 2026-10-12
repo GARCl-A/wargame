@@ -360,6 +360,11 @@ def test_every_screen_draws_native_at_any_window_size():
         mkt.qty["Meat"] = 12
         scenes.append(mkt)
 
+    for wtab in ("recipes", "talents", "beasts", "rules"):
+        ws = WikiScreen(UI_F, noop)
+        ws.tab = wtab
+        scenes.append(ws)
+
     guild.reputation = {"arena": 1}
     guild.deeds_done = ["arena_first_blood"]
     rep_tab = GuildScreen(F, guild, noop, noop)

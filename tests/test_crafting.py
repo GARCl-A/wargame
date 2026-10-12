@@ -342,3 +342,11 @@ def test_a_craft_in_progress_stops_when_the_tool_is_gone(monkeypatch):
     notices, _ = guild.crafting_shift(u, "Carved Thing", hours=1)
     assert any("needs a Chisel" in n for n in notices)
     assert u.crafting_progress == 0
+
+
+def test_crafting_recipe_properties():
+    recipes = items.CRAFTING_RECIPES["Bear Trap"]
+    rec = recipes[0]
+    assert rec.batch_hours > 0
+    assert rec.craft_level == rec.level
+

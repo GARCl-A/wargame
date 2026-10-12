@@ -177,7 +177,8 @@ class WikiScreen(Screen):
         q = self.search_query
         entries = []
         for out_name, rlist in items.CRAFTING_RECIPES.items():
-            for rec in rlist:
+            recipes = rlist if isinstance(rlist, (list, tuple)) else [rlist]
+            for rec in recipes:
                 entries.append((out_name, rec))
         entries.sort(key=lambda pair: pair[0])
         if q:
@@ -192,7 +193,7 @@ class WikiScreen(Screen):
                 text(screen, F["bodyb"], f"{out_name} (x{rec.yield_qty})", (r.x + T.S * 2, r.y + 6), T.TX)
                 mat_str = " + ".join(rec.materials)
                 text(screen, F["body"], f"Materials: {mat_str}", (r.x + T.S * 2, r.y + 24), T.TX_MUTED)
-                meta = f"Station: {rec.station.upper()}  ·  Batch: {rec.batch_hours} h  ·  Level: {rec.craft_level}"
+                meta = f"Station: {rec.station.upper()}  ·  Batch: {rec.batch_hours:.1f} h  ·  Level: {rec.level}"
                 text(screen, F["micro"], meta, (r.x + T.S * 2, r.y + 40), T.TX_FAINT)
             y += row_h + gap
         return y - orig_y
@@ -202,7 +203,7 @@ class WikiScreen(Screen):
         orig_y = y
         q = self.search_query
         all_talents = []
-        for track, tree in talents.TREES.items():
+        for track, tree in talents.TREE.items():
             for t in tree:
                 all_talents.append((track, t))
         all_talents.sort(key=lambda pair: (pair[0], pair[1].tier, pair[1].name))
@@ -219,7 +220,7 @@ class WikiScreen(Screen):
                 text(screen, F["bodyb"], t.name, (r.x + T.S * 2, r.y + 6), T.TX)
                 text(screen, F["micro"], f"Track: {track.upper()}  ·  Tier {t.tier}  ·  {req_str}",
                      (r.x + T.S * 2, r.y + 24), T.BRASS)
-                text(screen, F["body"], t.desc, (r.x + T.S * 2, r.y + 38), T.TX_MUTED)
+                text(screen, F["body"], t.effect, (r.x + T.S * 2, r.y + 38), T.TX_MUTED)
             y += row_h + gap
         return y - orig_y
 
@@ -227,20 +228,31 @@ class WikiScreen(Screen):
         F = self.F
         orig_y = y
         q = self.search_query
-        beast_list = sorted(data.BEASTS.items(), key=lambda pair: pair[0])
+        beast_list = sorted(data._BEASTS, key=lambda b: b["name"])
         if q:
-            beast_list = [p for p in beast_list if q in p[0].lower()]
+            beast_list = [b for b in beast_list if q in b["name"].lower()]
 
         row_h = 52
         gap = 6
-        for name, b in beast_list:
+        for b in beast_list:
             r = pygame.Rect(view.x, y, view.w, row_h)
             if r.bottom > view.top and r.top < view.bottom:
                 panel(screen, r)
-                text(screen, F["bodyb"], name, (r.x + T.S * 2, r.y + 6), T.TX)
-                atk_str = ", ".join(f"{w} ({d})" for w, d in b.attacks) if b.attacks else "None"
-                drops_str = ", ".join(f"{i} (x{qty})" for i, qty, _ in b.drops) if b.drops else "None"
-                text(screen, F["micro"], f"HD: {b.hd}  ·  AC: {b.base_ac}  ·  Speed: {b.speed}m  ·  Attacks: {atk_str}",
+                text(screen, F["bodyb"], b["name"], (r.x + T.S * 2, r.y + 6), T.TX)
+                abilities = b.get("ability", "")
+                if isinstance(abilities, (tuple, list)):
+                    ab_str = ", ".join(abilities) if abilities else "None"
+                else:
+                    ab_str = abilities or "None"
+                drops = []
+                if b.get("drop_item"):
+                    pct = int(b.get("drop_chance", 0.0) * 100)
+                    drops.append(f"{b['drop_item']} ({pct}%)")
+                for it, ch, qty in b.get("also_drops", ()):
+                    pct = int(ch * 100)
+                    drops.append(f"{it} x{qty} ({pct}%)")
+                drops_str = ", ".join(drops) if drops else "None"
+                text(screen, F["micro"], f"HD: d{b['hd']}  ·  Size: {b['size']}  ·  Speed: {b['speed']}m  ·  Ability: {ab_str}",
                      (r.x + T.S * 2, r.y + 22), T.TX_MUTED)
                 text(screen, F["micro"], f"Drops: {drops_str}", (r.x + T.S * 2, r.y + 36), T.TX_FAINT)
             y += row_h + gap

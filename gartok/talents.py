@@ -306,6 +306,7 @@ TALENTS = {t.id: t for t in _LIST}
 # Per-track, in list order (root then its children) -- what the level screen draws.
 # TREE["racial"] holds every racial node; `racial_tree` narrows it to one race.
 TREE = {track: [t for t in _LIST if t.track == track] for track in TRACKS}
+TREES = TREE
 
 
 def get(talent_id):
