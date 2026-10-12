@@ -79,6 +79,97 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
   unpriced.
 
+## Playtest notes 2026-10-12 (not yet sized or checked against the code)
+
+Raw notes from a playtest, grouped; split each into a sized item as it is picked up. Guiding
+rule from the notes: **fewest possible buttons on the map**: a node has one "Enter" button and
+its functions are tabs inside.
+
+**Map and node entry**
+- **Node screens as tabs, one Enter button.** Tavern (Buy food and drink becomes a tab beside
+  Recruit, Study, Perform), Farm (Browse + Stables), Lumber Yard (Buy licence, Work a shift,
+  Browse become tabs behind "Enter the Lumber Yard"; this also fixes the axe / no-axe list
+  overflowing onto the map).
+- **Travel graph is hard to read.** The layout algorithm needs rework.
+- **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
+  in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone.
+- **Money per group** on the map's left panel next to rations (`Money: qty`).
+- **Group swap with 2 groups feels odd.**
+- **Rest panel:** the open Rest tab looks the same as the other buttons, and it is not clear what
+  is missing to press "rest until full". Show the open state, and a hover naming the missing condition.
+- **Start screen** (title) still to be built.
+
+**Layout overlaps (component rule)**
+- **Market:** item text overlaps the buttons and other text. Rework the rule: a thicker line, and
+  a text box component that holds its text at an adequate size, so neighbours adapt instead of overlapping.
+- **Bank:** the button overlaps the quantity text.
+- **Load screen:** guild member names overflow the box (a component bug: it must clip). Show
+  "X members" instead of the names.
+- **Food alert:** appears twice (small "the larder is empty" in the header plus a big bar under it).
+  Replace the small one with a bigger "NO FOOD LEFT" card in the header, no bar below.
+- **Apothecary > Medic has no button back to the map.**
+- **Manage and Gear: the wagon does not show on the right.**
+- **Sick characters are not visible** (no marker on cards or lists).
+- **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
+  talent may let a unit carry more than it should, or it is only the display.
+
+**Draft, leveling and talents**
+- **Rename the units in the draft.**
+- **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
+  repeated every level.
+- **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
+- **New tree rooted on +1 CHA.** Work tree: the root becomes +1 CHA, Negotiator drops to tier 2,
+  Provisioner to tier 3 under Negotiator.
+- **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
+  onward; it needs activities that pay work XP at higher levels (check the work XP sources and
+  curve in `progression.py` and the activities that grant it).
+- **Perk to reduce armour weight.**
+- **Craft talent:** converts Lumber into arrows daily, by a percentage.
+- **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
+  available it swaps by itself.
+
+**Pack, cart and coins**
+- **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
+  within its load limit.
+- **Cannot lock items in the cart.**
+- **Coins kept in the cart do not count toward the common purse in shops.**
+- **Dictionaries in the cart do not count for studying at the tavern.**
+- **Lumber carried in the cart does not count as a deposit at the Wilds claim.**
+- **Cargo screen:** search by item name.
+- **Who guards the cart vs who goes on the activity:** show the same info as the arena pick card.
+- **Does the unit guarding the cart during a hunt earn work XP?** (check, then decide.)
+
+**Medic and sickness**
+- Treating sickness costs 8 h per person: treat everyone in one go. Why is it priced at only 3, and
+  how was that price set? (check `medic.py` and `economy.MEDIC_PRICE_FACTOR`.)
+
+**Auto orders**
+- **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and
+  buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
+
+**Factions, nodes and world**
+- **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
+  reason. That must be the player's choice.
+- **Ledger Hold has no use.** Make it a "guards" faction with themed territory-expansion missions.
+- **Ancient Ruins as an archaeological site:** start "archaeology" work there (to define).
+- **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
+- **The Claim:** let the player build their own farm to stock food.
+
+**Combat and AI**
+- **Rename "goons"** to another word for the henchmen (reads as a sexual joke).
+- **CTF AI:** defending the flag works best standing on the *same* square as the flag, not adjacent.
+- **Ribbit Brothers:** after beating them they leave the arena selection line; they should also be
+  recruitable, like Adelio.
+- **Does an ally's armour drop when they die in combat?** (check.)
+
+**Balance question**
+- Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
+  (armour is hard to wear, healing is slow); low CHA caps guild growth; the mental stats hurt little.
+  How does that line up with the races' attribute distribution and the expected mean? Are the
+  commission tokens enough to fix the starting squad? Check with the balance sim.
+
+---
+
 ## Architecture debt
 
 Past choices that now fight the direction. Each has the cost of fixing it; pay one when the
@@ -294,6 +385,12 @@ the ones that also need code say so. Order is the suggested priority.
   in its header (`world.Vendor`, `ui/vendor_panel.py`); a vendor is not an NPC (no stats, no recruiting or
   robbing them). The Apothecary's keeper shows only on its shop tab: the hub's Medic tab has none yet. The
   node marks are under *Map node icons*.
+- **Faces for three keepers with none (checked 2026-10-12: every race, beast and authored NPC
+  already has art).** The Banker (a Sprite; Ankareth: bank, trust test, property), the Ledger Hold officer (a
+  Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes) and the
+  Prison guard (an Elf). Races decided 2026-10-12.
+  Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
+  goons need none (only the three brothers become recruitable).
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse),
   Snake has 3, and the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Kenku has 8 and Goliath 8 against 15 for Human and Gnome, 16 for Orc, 12 for Elf and
