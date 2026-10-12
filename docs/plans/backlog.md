@@ -367,16 +367,15 @@ the ones that also need code say so. Order is the suggested priority.
   (1) The Medic is Pimbletwig himself, sharing the Apothecary's keeper art.
   (2) Stables at the Farm are run by Edric Ashvale himself (`farmer.png`), no new keeper needed.
   (3) Arena Master: decided 2026-10-12 as a Goliath pit master / bookie (portrait staged for `portraits/npc/arena_master.png`).
-- **Keepers in game and faces for keepers with none.** Banker (`banker.png`, Sprite Elysia), Prison Guard (`prison_guard.png`, Elf Captain Caelen), and Ledger Hold Officer (`ledger_hold_officer.png`, Hobgoblin Commander Varkas) wired into `world.NODES` and headers via `vendor_panel` (2026-10-12). Arena Master (Goliath) generating.
+- **Keepers in game and faces for keepers with none.** Banker (`banker.png`, Sprite Elysia), Prison Guard (`prison_guard.png`, Elf Captain Caelen), Ledger Hold Officer (`ledger_hold_officer.png`, Hobgoblin Commander Varkas), and Arena Master (`arena_master.png`, Goliath pit master Thok'Gar) wired into `world.NODES` and headers via `vendor_panel` (2026-10-12). All town and outpost nodes now have distinct face art.
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
   loads it) and nothing else: no race or beast entry, no stats, no encounter, no tutorial line. It is a
   portrait staged for a creature that has no design yet, probably the top of the Snake's growth line
   (Small -> Large, see `RULES.md`); decide what it is (a boss, a late growth form, a Wilds encounter)
   before drawing more of it.
-- **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse),
-  Snake has 3, and the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
-  or more first. Kenku has 8 and Goliath 8 against 15 for Human, Gnome and Elf, 16 for Orc, 12 for
-  Centaur and Hobgoblin (Goblin has 9, Halfling 18, Grippli 17).
+- **Fill the short portrait pools.** Updated 2026-10-12: Wolf reached 8, Skeleton reached 9,
+  Ox reached 7, Sheep pool created (4), Goliath reached 10, and Goblin reached 12.
+  Remaining short: Snake (3), Giant Spider (4), Donkey (4), Horse (4), Kenku (8), Centaur (12).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
   share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
   Ruins, the Claim, the Mine, the Smithy, the Tannery and the Apothecary a mark of their own. The map works as it is, so this is polish.

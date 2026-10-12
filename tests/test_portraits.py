@@ -218,8 +218,8 @@ def test_kenku_portraits():
 
 
 def test_goliath_portraits():
-    # 8 curated Goliath portraits
-    for idx in range(8):
+    # 10 curated Goliath portraits
+    for idx in range(10):
         p = artwork.portrait("Goliath", idx, 32)
         assert p is not None
         assert p.get_size() == (32, 32)
@@ -231,15 +231,29 @@ def test_goliath_portraits():
     assert p_gl.get_size() == (24, 24)
 
 
+def test_goblin_portraits():
+    # 12 curated Goblin portraits
+    for idx in range(12):
+        p = artwork.portrait("Goblin", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    gob = unit.Unit("player", race=data.race_by_name("Goblin"))
+    assert hasattr(gob, "portrait_id")
+    p_gob = artwork.portrait(gob.race["name"], gob.portrait_id, 24)
+    assert p_gob is not None
+    assert p_gob.get_size() == (24, 24)
+
+
 def test_creature_portraits():
-    # 4 Wolf portraits
-    for idx in range(4):
+    # 8 Wolf portraits
+    for idx in range(8):
         p = artwork.portrait("Wolf", idx, 32)
         assert p is not None
         assert p.get_size() == (32, 32)
 
-    # 4 Skeleton portraits
-    for idx in range(4):
+    # 9 Skeleton portraits
+    for idx in range(9):
         p = artwork.portrait("Skeleton", idx, 32)
         assert p is not None
         assert p.get_size() == (32, 32)
@@ -277,9 +291,15 @@ def test_livestock_portraits():
         assert p is not None
         assert p.get_size() == (32, 32)
 
-    # 4 Ox portraits
-    for idx in range(4):
+    # 7 Ox portraits
+    for idx in range(7):
         p = artwork.portrait("Ox", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # 4 Sheep portraits
+    for idx in range(4):
+        p = artwork.portrait("Sheep", idx, 32)
         assert p is not None
         assert p.get_size() == (32, 32)
 
@@ -324,7 +344,7 @@ def test_squad_and_prison_cards_carry_the_units_portrait():
 
 
 def test_pinned_named_portraits():
-    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png", "ledger_hold_officer.png"]:
+    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png", "ledger_hold_officer.png", "arena_master.png", "carriage.png"]:
         port = artwork.portrait(None, name, 32)
         assert port is not None
         assert port.get_size() == (32, 32)
