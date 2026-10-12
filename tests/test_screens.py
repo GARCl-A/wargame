@@ -1114,19 +1114,17 @@ def test_draft_screen_attribute_and_stat_hover_tooltips():
     found_attr_tooltip = False
     found_stat_tooltip = False
 
-    # Test scanning Y down the card center
-    for y in range(card_rect.y, card_rect.bottom, 4):
-        for x in range(card_rect.x + 10, card_rect.right - 10, 15):
-            ds.mouse = (x, y)
-            ds.draw(surf)
-            if ds.tooltip and isinstance(ds.tooltip, list):
-                title = ds.tooltip[0][0]
-                if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
-                    found_attr_tooltip = True
-                if any(stat in title for stat in ("HP", "AC", "MD", "SPD")):
-                    found_stat_tooltip = True
-            if found_attr_tooltip and found_stat_tooltip:
-                break
+    for pt in [(card_rect.x + dx, card_rect.y + dy)
+               for dy in (30, 110, 200, 240)
+               for dx in (45, 70, 120, 145, 195)]:
+        ds.mouse = pt
+        ds.draw(surf)
+        if ds.tooltip and isinstance(ds.tooltip, list):
+            title = ds.tooltip[0][0]
+            if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
+                found_attr_tooltip = True
+            if any(stat in title for stat in ("HP", "AC", "MD", "SPD")):
+                found_stat_tooltip = True
         if found_attr_tooltip and found_stat_tooltip:
             break
 
@@ -1149,19 +1147,12 @@ def test_sheet_panel_attribute_hover_tooltip():
     surf = pygame.Surface((1280, 720))
     rect = pygame.Rect(100, 50, sheet_panel.PANEL_W, sheet_panel.PANEL_H)
 
-    # Scan across the attribute row area (y ~ 100-260)
-    found_tooltip = False
-    for y in range(rect.y + 40, rect.y + 240, 6):
-        for x in range(rect.x + 20, rect.right - 20, 15):
-            sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=(x, y))
-            # Test that draw_sheet runs cleanly with mouse hover
-    # Also directly verify the attribute cell collision logic
+    # Directly verify the attribute cell collision logic
     w = rect.w - 32
     aw = w // 6
-    # Attributes header is at section ATTRIBUTES
-    # Let's test hovering at first attribute cell: x + 1, centered
     attr_cell = pygame.Rect(rect.x + 16 + 1, rect.y + 16 + 52 + 44 + 8 + 20, aw - 2, 48)
     sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=attr_cell.center)
+    sheet_panel.draw_sheet(surf, rect, c, fonts, mouse=(rect.x + 20, rect.y + 40))
 
 
 def test_char_editor_attribute_hover_tooltip():
@@ -1177,20 +1168,16 @@ def test_char_editor_attribute_hover_tooltip():
     ed.mouse = (0, 0)
     ed.draw(surf)
 
-    # Hover inside the form area to find attribute cell
     found_tooltip = False
     if ed._form_rect:
-        for y in range(ed._form_rect.y + 160, ed._form_rect.y + 350, 8):
-            for x in range(ed._form_rect.x + 20, ed._form_rect.right - 20, 20):
-                ed.mouse = (x, y)
-                ed.draw(surf)
-                if ed.tooltip and isinstance(ed.tooltip, list):
-                    title = ed.tooltip[0][0]
-                    if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
-                        found_tooltip = True
-                        break
-            if found_tooltip:
-                break
+        for x, y in ((36, 268), (ed._form_rect.x + 40, ed._form_rect.y + 200)):
+            ed.mouse = (x, y)
+            ed.draw(surf)
+            if ed.tooltip and isinstance(ed.tooltip, list):
+                title = ed.tooltip[0][0]
+                if any(attr in title for attr in ("STR", "DEX", "CON", "INT", "WIS", "CHA")):
+                    found_tooltip = True
+                    break
     assert found_tooltip, "Character editor attribute cells should set tooltip on hover"
 
 def test_market_screen_item_hover_tooltip():
@@ -1344,17 +1331,9 @@ def test_char_editor_screen_hp_tooltip():
     cs.unit = u
     surf = pygame.Surface((1280, 720))
 
-    # Scan across the left column around progression/HP area
-    found_hp_tooltip = False
-    for y in range(200, 500, 5):
-        for x in (50, 100, 150):
-            cs.mouse = (x, y)
-            cs.draw(surf)
-            if cs.tooltip and any("HIT POINTS (HP)" in text for text, _, _ in cs.tooltip):
-                found_hp_tooltip = True
-                break
-        if found_hp_tooltip:
-            break
+    cs.mouse = (50, 410)
+    cs.draw(surf)
+    found_hp_tooltip = bool(cs.tooltip and any("HIT POINTS (HP)" in item[0] for item in cs.tooltip if isinstance(item, tuple)))
     assert found_hp_tooltip, "CharEditorScreen should display HP breakdown tooltip on hover"
 
 

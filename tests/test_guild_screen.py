@@ -270,7 +270,7 @@ def test_guild_screen_stat_tooltips_show_the_calculation():
     gs = GuildScreen(MagicMock(), g, on_back=lambda: None)
     gs.member = a
     seen = set()
-    for x in range(480, 1200, 10):
+    for x in (600, 740, 880, 1020, 1160):
         gs.mouse = (x, 300)
         _draw(gs)
         if isinstance(gs.tooltip, list):

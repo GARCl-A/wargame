@@ -68,9 +68,11 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   revealed `scan_route` (3.6M Dijkstras over 9! permutations across 3 tests) was responsible for >75%
   of run time (213s of 286s). Optimised with leg precomputation and Held-Karp (`shortest_tour` in
   `economy_exploits.py`, exact, tested against brute force in `test_economy_exploits.py`): `scan_route`
-  dropped from ~47 s to ~0.01 s. Suite duration dropped from 4 min 46 s to **1 min 36 s** (2031 tests,
-  2026-10-12). Next targets to bring it under 1 minute: `test_the_report_runs_every_part` (17 s),
-  `test_the_ai_plays_the_chase_to_a_result` (10 s), and `test_the_economy_has_no_exploit_today` (6.5 s).
+  dropped from ~47 s to ~0.01 s. Screen tooltip tests in `test_screens.py` and `test_guild_screen.py`
+  optimised with targeted probes instead of pixel grid redraw scans (saving ~16 s). Suite duration dropped
+  from 4 min 46 s to **1 min 20 s** (2031 tests, 2026-10-12). Remaining heavy tests:
+  `test_the_report_runs_every_part` (14 s), `test_the_ai_plays_the_chase_to_a_result` (10 s), and
+  `test_the_economy_has_no_exploit_today` (6.4 s).
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
