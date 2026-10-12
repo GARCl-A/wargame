@@ -50,7 +50,7 @@ class StablesScreen(Screen):
 
     @property
     def wealth(self):
-        return sum(m.money for m in self.group.members)
+        return sum(m.money for m in (*self.group.members, *getattr(self.group, "stores", ())))
 
     @property
     def _keeper(self):
@@ -60,7 +60,7 @@ class StablesScreen(Screen):
         if self.wealth < price:
             self.notice = f"{what} costs {fmt_money(price)} -- the party has {fmt_money(self.wealth)}."
             return False
-        economy.charge_richest_first(self.group.members, price)
+        economy.charge_richest_first((*self.group.members, *getattr(self.group, "stores", ())), price)
         return True
 
     def _receive(self, amount):

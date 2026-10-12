@@ -64,15 +64,6 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
-- **Test suite takes too long (audit).** `python -m pytest tests/` is the hard gate. Profiling
-  revealed `scan_route` (3.6M Dijkstras over 9! permutations across 3 tests) was responsible for >75%
-  of run time (213s of 286s). Optimised with leg precomputation and Held-Karp (`shortest_tour` in
-  `economy_exploits.py`, exact, tested against brute force in `test_economy_exploits.py`): `scan_route`
-  dropped from ~47 s to ~0.01 s. Screen tooltip tests in `test_screens.py` and `test_guild_screen.py`
-  optimised with targeted probes instead of pixel grid redraw scans (saving ~16 s). Suite duration dropped
-  from 4 min 46 s to **1 min 20 s** (2031 tests, 2026-10-12). Remaining heavy tests:
-  `test_the_report_runs_every_part` (14 s), `test_the_ai_plays_the_chase_to_a_result` (10 s), and
-  `test_the_economy_has_no_exploit_today` (6.4 s).
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -98,7 +89,8 @@ its functions are tabs inside.
 - **Node screens as tabs, one Enter button.** Tavern (Buy food and drink becomes a tab beside
   Recruit, Study, Perform), Farm (Browse + Stables), Lumber Yard (Buy licence, Work a shift,
   Browse become tabs behind "Enter the Lumber Yard"; this also fixes the axe / no-axe list
-  overflowing onto the map).
+  overflowing onto the map). Decided 2026-10-12: Option B — generalise `TabbedHubScreen` data-driven
+  from `Node.functions`.
 - **Travel graph is hard to read.** The layout algorithm needs rework.
 - **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
   in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone.
@@ -128,19 +120,19 @@ its functions are tabs inside.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 
-**Pack, cart and coins** (coins at the shops and the bank, a Dictionary at the tavern and Lumber at the Claim now
-read the cart and the animals too, 2026-10-12: `Creature` has the pack calls and `money`, `economy.PartyPurse._purse_stores`;
-what is left is the same read for the medic, stables, garage, licence and study rent, which still sum the members' coins)
+**Pack, cart and coins** (coins at the shops, bank, medic, stables, garage, licence, study rent and Claim now
+read the cart and animals too, 2026-10-12: `Creature` has pack calls and `money`, `Group.money` / `Group.stores`;
+a Dictionary at the tavern and Lumber at the Claim read stores too)
 - **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
   within its load limit.
 - **Cannot lock items in the cart.**
 - **Cargo screen:** search by item name.
-- **Who guards the cart vs who goes on the activity:** show the same info as the arena pick card.
-- **Does the unit guarding the cart during a hunt earn work XP?** (check, then decide.)
+- **Unit guarding the cart earns work XP.** Today the guard earns no XP at all (`state.party` in `hunt.py` excludes guards). Decided 2026-10-12: guarding the wagon should count as level 1 work (credit work XP for the hours on guard at activity level 1).
 
 **Medic and sickness**
-- **Sickness treatment price and time.** Treating sickness costs 8 h per person: treat everyone in one go. Why is it priced at only 3, and
-  how was that price set? (check `medic.py` and `economy.MEDIC_PRICE_FACTOR`.)
+- **Sickness treatment price and time.** Treating sickness: treat everyone in one go (8 h batch for the
+  group). Decided 2026-10-12: priced at $3 per treated member (represents the medical kit charge consumed
+  per person, `economy.MEDIC_PRICE_FACTOR`).
 
 **Auto orders**
 - **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and
@@ -155,11 +147,12 @@ what is left is the same read for the medic, stables, garage, licence and study 
 - **The Claim:** let the player build their own farm to stock food.
 
 **Combat and AI**
-- **Rename "goons"** to another word for the henchmen (reads as a sexual joke).
+- **Rename "goons"** to "Lackeys" for the henchmen in the Ribbit Brothers fight (decided 2026-10-12).
 - **CTF AI:** defending the flag works best standing on the *same* square as the flag, not adjacent.
 - **Ribbit Brothers:** after beating them they leave the arena selection line; they should also be
   recruitable, like Adelio.
-- **Does an ally's armour drop when they die in combat?** (check.)
+- **Ally equipment when dying in combat.** Decided 2026-10-12: armour, off-hands and artifacts of fallen
+  allies are recovered along with weapon and pack inventory on the post-battle loot screen if the guild wins.
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing

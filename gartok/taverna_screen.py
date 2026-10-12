@@ -128,7 +128,8 @@ class TavernaScreen(Screen):
         return ""
 
     def _wealth(self):
-        return sum(m.money for m in self.party)
+        stores = getattr(self.group, "stores", ()) if self.group is not None else ()
+        return sum(m.money for m in (*self.party, *stores))
 
     def _eligible(self, cand):
         """Party members who could still pitch `cand` (share a tongue, not yet
@@ -263,7 +264,8 @@ class TavernaScreen(Screen):
             self.notice = f"Not enough coin to pay {cand.name}'s bail ({fmt_money(cost)})."
             return
         if cost:
-            economy.charge_richest_first(self.party, cost)
+            stores = getattr(self.group, "stores", ()) if self.group is not None else ()
+            economy.charge_richest_first((*self.party, *stores), cost)
         pitch = recruit.convince(member, cand, len(self.guild.roster), day=self.guild.clock.day,
                                  extra_mods=list(self.PITCH_BONUS))
         self.last[cand.uid] = (pitch, member)

@@ -267,8 +267,8 @@ gartok/
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
   alert_screen.py / adelio_prompt_screen.py
-  bank_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py (tabbed hubs
-  wrapping a shop/strongbox, crafting and a mission board)
+  bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
+  (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)
   library_screen.py / library_mission_screen.py / apothecary_mission_screen.py
   pause_screen.py / editor_menu_screen.py / char_editor_screen.py / map_editor_screen.py
 

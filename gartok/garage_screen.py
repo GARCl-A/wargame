@@ -47,7 +47,7 @@ class GarageScreen(Screen):
 
     @property
     def wealth(self):
-        return sum(m.money for m in self.group.members)
+        return sum(m.money for m in (*self.group.members, *getattr(self.group, "stores", ())))
 
     def handle_event(self, event):
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
@@ -66,7 +66,7 @@ class GarageScreen(Screen):
             if self.wealth < economy.GARAGE_PRICE:
                 self.notice = f"a bay costs {fmt_money(economy.GARAGE_PRICE)} -- the party has {fmt_money(self.wealth)}."
                 return
-            economy.charge_richest_first(g.members, economy.GARAGE_PRICE)
+            economy.charge_richest_first((*g.members, *getattr(g, "stores", ())), economy.GARAGE_PRICE)
             guild.buy_garage_tier()
             self.notice = "a new bay: room for one more wagon and one more animal."
         elif kind in ("repair_garaged", "repair_group"):

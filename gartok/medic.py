@@ -88,9 +88,10 @@ def treat(guild, group, patients):
     if not all(q.offered for _, q in picked):
         return False, ["A longer treatment needs a hospital stay."]
     cost, hours = total([q for _, q in picked])
-    if sum(u.money for u in group.members) < cost:
+    holders = (*group.members, *getattr(group, "stores", ()))
+    if sum(u.money for u in holders) < cost:
         return False, [f"The group cannot pay ${cost}."]
-    economy.charge_richest_first(group.members, cost)
+    economy.charge_richest_first(holders, cost)
     events, _ = guild.pass_time(hours)
     for u, _ in picked:
         if u in guild.roster:
@@ -112,9 +113,10 @@ def admit(guild, group, patient):
         return False, [f"{patient.name} needs only a visit, not a hospital stay."]
     if group.locked:
         return False, ["A group with an order in flight cannot admit anyone."]
-    if sum(u.money for u in group.members) < q.cost:
+    holders = (*group.members, *getattr(group, "stores", ()))
+    if sum(u.money for u in holders) < q.cost:
         return False, [f"The group cannot pay ${q.cost}."]
-    economy.charge_richest_first(group.members, q.cost)
+    economy.charge_richest_first(holders, q.cost)
     order = orders.solo("hospital", patient.uid, q.hours)
     if guild.send_alone(group, patient, order, f"{patient.name} (hospital)") is None:
         group.order = order

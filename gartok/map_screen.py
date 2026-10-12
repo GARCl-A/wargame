@@ -579,7 +579,7 @@ class MapScreen(Screen):
             self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1]), gather=True))
         elif key == "buy_licence":
             node = world.node(self.selected.node)
-            if self.guild.buy_licence(node.id, self.selected.members):
+            if self.guild.buy_licence(node.id, self.selected):
                 self.notices.append(f"{node.name}: the guild now holds the gathering licence.")
         elif key == "scout_ruins":
             success, msg = campaign.scout_ancient_ruins(self.guild, self.selected)
@@ -609,7 +609,7 @@ class MapScreen(Screen):
             blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
                            "text": f"{gather.rolls(top):.1f} rolls a worker per {top} h  ·  a pack may find the crew"})
         else:
-            short = self.guild.licence_shortfall(here.id, g.members)
+            short = self.guild.licence_shortfall(here.id, g)
             blocks.append({"type": "button", "key": "buy_licence", "height": 40,
                            "label": f"BUY THE LICENCE ({fmt_money(gather.licence_price(here.id))})",
                            "enabled": not short})

@@ -96,7 +96,7 @@ class MedicScreen(Screen):
                  "cost": q.cost, "hours": q.hours, "picked": q.uid in self.picked,
                  "enabled": True, "note": ""}
                 for q in self._quotes()]
-        can_pay = sum(u.money for u in self.group.members) >= cost
+        can_pay = sum(u.money for u in (*self.group.members, *getattr(self.group, "stores", ()))) >= cost
         where = ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
                  else "the whole group waits (no free group slot)")
         self.row_rects, self.treat_rect, self.leave_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,

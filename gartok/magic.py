@@ -110,7 +110,8 @@ def progress_study(unit, group=None):
     if not unit.study_target:
         return None
     cost = economy.TAVERN_STUDY_COST_PER_DAY
-    mates = [m for m in group.members if m is not unit] if group else []
+    stores = getattr(group, "stores", ()) if group else ()
+    mates = [m for m in (*group.members, *stores) if m is not unit] if group else []
     if unit.money + sum(m.money for m in mates) < cost:
         return f"{unit.name} could not afford the rent to study."
     own = min(unit.money, cost)
@@ -129,7 +130,8 @@ def rent_covered(group):
     member order: each pays from their own purse and the rest falls on their
     mates, so a penniless student rooms on a mate's coin instead of starving."""
     cost = economy.TAVERN_STUDY_COST_PER_DAY
-    purse = sum(m.money for m in group.members)
+    stores = getattr(group, "stores", ()) if group else ()
+    purse = sum(m.money for m in (*group.members, *stores))
     covered = set()
     for m in group.members:
         if m.study_target and purse >= cost:

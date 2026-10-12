@@ -68,16 +68,18 @@ class LaborMixin:
 
     def licence_shortfall(self, node_id, payers):
         """Copper `payers` lack for the node's licence, 0 when they can pay it."""
-        return max(0, gather.licence_price(node_id) - sum(u.money for u in payers))
+        holders = (*payers.members, *getattr(payers, "stores", ())) if hasattr(payers, "members") else payers
+        return max(0, gather.licence_price(node_id) - sum(u.money for u in holders))
 
     def buy_licence(self, node_id, payers):
         """Buy the gathering licence of `node_id` for the whole guild, paid richest first by
         `payers`. False, with nothing taken, when it is not on sale, already held or too dear."""
         if not gather.can_gather(node_id) or node_id in self.licences:
             return False
-        if self.licence_shortfall(node_id, payers):
+        holders = list((*payers.members, *getattr(payers, "stores", ())) if hasattr(payers, "members") else payers)
+        if self.licence_shortfall(node_id, holders):
             return False
-        economy.charge_richest_first(list(payers), gather.licence_price(node_id))
+        economy.charge_richest_first(holders, gather.licence_price(node_id))
         self.licences.add(node_id)
         return True
 
