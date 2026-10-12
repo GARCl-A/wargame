@@ -8,7 +8,7 @@ it never joins `Group.members`: animals live in `Group.herd`, wagons in
 
 from . import items
 from .stash import Stash
-from .unit_loadout import split_stack, stack_add
+from .unit_loadout import CoinPurse, split_stack, stack_add
 
 
 class _Load(Stash):
@@ -27,7 +27,7 @@ class _Load(Stash):
         pass
 
 
-class Creature:
+class Creature(CoinPurse):
     name = full_name = "Creature"
 
     def __init__(self, uid, hp, contents=None):
@@ -64,11 +64,27 @@ class Creature:
     def split_pack(self, idx, qty):
         return split_stack(self.stash.items, idx, qty)
 
+    @property
+    def inventory(self):
+        return self.stash.items
+
+    def count_of(self, name):
+        return self.stash.count_of(name)
+
+    def has_item(self, name):
+        return self.count_of(name) > 0
+
     def locked_of(self, name):
         return 0
 
     def toggle_lock(self, name):
         pass
+
+    def unlocked_of(self, name):
+        return self.count_of(name) - self.locked_of(name)
+
+    def remove_named(self, name, qty=1):
+        return self.stash.remove_named(name, qty)
 
     def pack_tag(self, name):
         return items.item_tag(name)

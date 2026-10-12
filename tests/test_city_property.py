@@ -40,6 +40,7 @@ def _screen(guild, party):
     s = CityPropertyScreen.__new__(CityPropertyScreen)
     s.guild = guild
     s.party = party
+    s.stores = []
     s.selected = []
     s._sel_qty = {}
     s.notice = None

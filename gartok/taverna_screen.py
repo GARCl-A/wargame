@@ -161,7 +161,7 @@ class TavernaScreen(Screen):
                 for key, rect, arg in self.modal_buttons:
                     if rect.collidepoint(px):
                         if key == "set_target":
-                            magic.begin_study(self.study_modal_member, arg["id"], self.party)
+                            magic.begin_study(self.study_modal_member, arg["id"], self._study_holders())
                             self.notice = f"{self.study_modal_member.name} begins studying {arg['name']}."
                             self.study_modal_member = None
                         elif key == "clear_target":
@@ -286,13 +286,18 @@ class TavernaScreen(Screen):
                 self.notice = f"{cand.name} turns {member.name} down. They can only try again next week."
 
     # ------------------------------------------------------------------ #
+    def _study_holders(self):
+        """Whoever may hold a study item: the group's members, then its wagons and animals."""
+        if self.group is None:
+            return list(self.party)
+        return [*self.group.members, *self.group.wagons, *self.group.herd]
+
     def _available_study_options(self, student):
         """Finds all scrolls and dictionaries carried by any member in the party/group
         that `student` can study."""
         options = []
         seen = set()
-        members = self.group.members if self.group is not None else self.party
-        for m in members:
+        for m in self._study_holders():
             for item in m.inventory:
                 spell = magic.spell_for_scroll(item)
                 if spell and magic.can_study_spell(student, spell):

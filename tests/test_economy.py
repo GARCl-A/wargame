@@ -132,7 +132,7 @@ def test_selling_a_used_quiver_at_the_market_pays_pro_rata():
     u.give_to_pack("Quiver")
     u.quiver_charges = 5
     s = MarketScreen.__new__(MarketScreen)
-    s.guild, s.shoppers, s.deal = Guild([u]), [u], []
+    s.guild, s.shoppers, s.deal, s.stores = Guild([u]), [u], [], []
     s.purse = 0
     s.selected, s._sel_qty, s.notice = [(u, 0)], {}, None
     s.qty = {}

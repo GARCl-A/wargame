@@ -45,12 +45,15 @@ class WildsClaimScreen(Screen):
         return "claim"
 
     # ------------------------------------------------------------------ #
+    def _carriers(self):
+        return [*self.group.members, *self.group.wagons, *self.group.herd]
+
     def _party_lumber(self):
-        return sum(m.count_of("Lumber") for m in self.group.members)
+        return sum(m.count_of("Lumber") for m in self._carriers())
 
     def _deposit_lumber(self):
         total = 0
-        for m in self.group.members:
+        for m in self._carriers():
             n = m.count_of("Lumber")
             if n:
                 m.remove_named("Lumber", n)

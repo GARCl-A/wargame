@@ -58,7 +58,7 @@ def points_to_learn(level):
 
 def _has_study_item(unit, item_name, group=None):
     return unit.has_item(item_name) or (
-        group is not None and any(m.has_item(item_name) for m in group.members))
+        group is not None and any(m.has_item(item_name) for m in (*group.members, *group.wagons, *group.herd)))
 
 def study_item_name(target_id):
     """The pack item a study target is read from: a scroll for a spell id, a

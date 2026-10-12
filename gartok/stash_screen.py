@@ -374,6 +374,9 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
     def _purse_members(self):
         return self.party
 
+    def _purse_stores(self):
+        return self.stores
+
     def _leave(self):
         self.on_done()
 

@@ -769,7 +769,7 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
         for owner, owner_picks in by_owner.values():
             collected, _ = self._collect(owner_picks)  # _take reads self._sel_qty -- clear after
             proceeds = sum(economy.sell_price(n, self.deal) * q for n, q in collected)
-            payee = owner if hasattr(owner, "money") else self.shoppers[0]    # a wagon or animal has no purse
+            payee = owner if owner in self.shoppers else self.shoppers[0]    # a wagon or animal takes no coin
             payee.money += proceeds
             total += proceeds
             sold += sum(q for _, q in collected)
@@ -787,6 +787,9 @@ class MarketScreen(economy.PartyPurse, ItemMenuMixin, PackColumnMixin, DragSelec
 
     def _purse_members(self):
         return self.shoppers
+
+    def _purse_stores(self):
+        return self.stores
 
     def _checkout(self):
         self.on_done()

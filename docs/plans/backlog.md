@@ -108,12 +108,7 @@ its functions are tabs inside.
   is missing to press "rest until full". Show the open state, and a hover naming the missing condition.
 - **Start screen** (title) still to be built.
 
-**Layout overlaps (component rule)**
-- **Market:** item text overlaps the buttons and other text. Rework the rule: a thicker line, and
-  a text box component that holds its text at an adequate size, so neighbours adapt instead of overlapping.
-- **Bank:** the button overlaps the quantity text.
-- **Load screen:** guild member names overflow the box (a component bug: it must clip). Show
-  "X members" instead of the names.
+**Layout overlaps (component rule; Market shelf, Bank quantity box and Load cards fixed 2026-10-12: the shelf's columns are laid out from the row texts, `market_panel._columns`)**
 - **Manage and Gear: the wagon does not show on the right.**
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
   talent may let a unit carry more than it should, or it is only the display.
@@ -133,14 +128,12 @@ its functions are tabs inside.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 
-**Pack, cart and coins** (the coins, dictionaries and Lumber notes in the cart share one fix: shops, the
-tavern and the Claim read the group's pooled goods, not only the packs; `magic.rent_covered` already does it for rent)
+**Pack, cart and coins** (coins at the shops and the bank, a Dictionary at the tavern and Lumber at the Claim now
+read the cart and the animals too, 2026-10-12: `Creature` has the pack calls and `money`, `economy.PartyPurse._purse_stores`;
+what is left is the same read for the medic, stables, garage, licence and study rent, which still sum the members' coins)
 - **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
   within its load limit.
 - **Cannot lock items in the cart.**
-- **Coins kept in the cart do not count toward the common purse in shops.**
-- **Dictionaries in the cart do not count for studying at the tavern.**
-- **Lumber carried in the cart does not count as a deposit at the Wilds claim.**
 - **Cargo screen:** search by item name.
 - **Who guards the cart vs who goes on the activity:** show the same info as the arena pick card.
 - **Does the unit guarding the cart during a hunt earn work XP?** (check, then decide.)

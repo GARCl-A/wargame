@@ -12,7 +12,7 @@ import pygame
 
 from . import persist
 from .screen import Screen
-from .ui.primitives import draw_button, panel, set_pointer, text
+from .ui.primitives import draw_button, ellipsize, panel, set_pointer, text
 from .ui.tokens import T
 
 MARGIN = T.S * 2
@@ -140,13 +140,14 @@ class MenuScreen(Screen):
         world = w["world"]
         panel(screen, rect)
         title = w["name"] or "Unnamed guild"
-        text(screen, F["bodyb"], title, (rect.x + SP3, rect.y + SP3), T.TX)
-        squad = "  ·  ".join(name.split()[0] for name in w["squad"]) or "(no squad)"
+        room = rect.w - SP3 * 2
+        text(screen, F["bodyb"], ellipsize(title, F["bodyb"], room), (rect.x + SP3, rect.y + SP3), T.TX)
+        members = len(w["squad"])
+        squad = f"{members} member{'s' if members != 1 else ''}" if members else "(no squad)"
         text(screen, F["body"], squad, (rect.x + SP3, rect.y + 34), T.TX_MUTED)
         n = w["saves"]
-        text(screen, F["body"],
-             f"{w['battles_won']} wins  ·  {n} save{'s' if n != 1 else ''}  ·  last played {stamp(w['saved_at'])}",
-             (rect.x + SP3, rect.y + 54), T.TX_FAINT)
+        stats = f"{w['battles_won']} wins  ·  {n} save{'s' if n != 1 else ''}  ·  last played {stamp(w['saved_at'])}"
+        text(screen, F["body"], ellipsize(stats, F["body"], room), (rect.x + SP3, rect.y + 54), T.TX_FAINT)
 
         if not self._visible(rect, view):
             return

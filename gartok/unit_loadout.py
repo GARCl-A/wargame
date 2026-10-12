@@ -61,7 +61,35 @@ def split_stack(pack, idx, qty):
     return True
 
 
-class LoadoutMixin:
+class CoinPurse:
+    """`money` over a pack that offers `count_of`, `remove_named` and `give_to_pack`."""
+
+    @property
+    def money(self):
+        """What the pack's coins add up to in $: copper plus 100 per Gold Coin.
+        Money is ordinary items -- it weighs, splits and moves like any."""
+        return sum(self.count_of(n) * v for n, v in items.COIN_VALUE.items())
+
+    @money.setter
+    def money(self, amount):
+        """Raising it mints copper. Lowering it spends copper first, then breaks
+        just enough Gold Coins and gives the change back in copper, no fee."""
+        amount = max(0, int(amount))
+        held = self.money
+        if amount > held:
+            self.give_to_pack(items.COIN_ITEM, amount - held)
+            return
+        owed = held - amount
+        owed -= self.remove_named(items.COIN_ITEM, owed)
+        if owed:
+            golds = -(-owed // items.COIN_VALUE[items.GOLD_ITEM])
+            self.remove_named(items.GOLD_ITEM, golds)
+            change = golds * items.COIN_VALUE[items.GOLD_ITEM] - owed
+            if change:
+                self.give_to_pack(items.COIN_ITEM, change)
+
+
+class LoadoutMixin(CoinPurse):
     # ------------------------------------------------------------------ #
     # roster management: shuffling items between the two hands and the   #
     # pack. A weapon is an item; the weapon hand holds one (1-2 hands),  #
@@ -304,30 +332,6 @@ class LoadoutMixin:
     def unlocked_of(self, name):
         """How many of `name` a craft may use: held minus the padlocked ones."""
         return self.count_of(name) - self.locked_of(name)
-
-    @property
-    def money(self):
-        """What the pack's coins add up to in $: copper plus 100 per Gold Coin.
-        Money is ordinary items -- it weighs, splits and moves like any."""
-        return sum(self.count_of(n) * v for n, v in items.COIN_VALUE.items())
-
-    @money.setter
-    def money(self, amount):
-        """Raising it mints copper. Lowering it spends copper first, then breaks
-        just enough Gold Coins and gives the change back in copper, no fee."""
-        amount = max(0, int(amount))
-        held = self.money
-        if amount > held:
-            self.give_to_pack(items.COIN_ITEM, amount - held)
-            return
-        owed = held - amount
-        owed -= self.remove_named(items.COIN_ITEM, owed)
-        if owed:
-            golds = -(-owed // items.COIN_VALUE[items.GOLD_ITEM])
-            self.remove_named(items.GOLD_ITEM, golds)
-            change = golds * items.COIN_VALUE[items.GOLD_ITEM] - owed
-            if change:
-                self.give_to_pack(items.COIN_ITEM, change)
 
     @property
     def inventory(self):

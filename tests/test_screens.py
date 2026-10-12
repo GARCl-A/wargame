@@ -108,6 +108,7 @@ def test_market_sell_is_a_loss_and_checkout_splits_the_purse():
         m.money = 10
     ms = MarketScreen.__new__(MarketScreen)           # no draw in this test
     ms.shoppers = shoppers
+    ms.stores = []
     assert ms.purse == 30
     ms.on_done = lambda: None
     ms._checkout()
@@ -127,6 +128,7 @@ def test_market_stepper_buys_the_quantity_in_one_drop_and_stops_at_the_purse():
     ms.guild = Guild([buyer])
     ms.node = None
     ms.shoppers = [buyer]
+    ms.stores = []
     ms.deal = []
     ms.qty = {}
     ms.notice = None

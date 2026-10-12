@@ -505,12 +505,19 @@ class PartyPurse:
     coin. Reading it adds up their real `Copper Coin` stacks, and assigning
     to it pays or credits the difference across them (`spread_coin`), so the
     money is always items in packs -- there is nothing to settle when the
-    visit ends. The host names its members in `_purse_members`."""
+    visit ends. The host names its members in `_purse_members`; the group's
+    wagons and animals (`_purse_stores`) count toward the sum and pay out, but
+    never receive coin."""
+
+    def _purse_stores(self):
+        return ()
 
     @property
     def purse(self):
-        return sum(m.money for m in self._purse_members())
+        return sum(m.money for m in (*self._purse_members(), *self._purse_stores()))
 
     @purse.setter
     def purse(self, amount):
-        spread_coin(self._purse_members(), amount - self.purse)
+        delta = amount - self.purse
+        holders = self._purse_members() if delta > 0 else (*self._purse_members(), *self._purse_stores())
+        spread_coin(holders, delta)
