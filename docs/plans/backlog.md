@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -22,20 +22,17 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (project review, 2026-10-09; updated 2026-10-11 after the info modal and the AI tactics)
+# Suggested order (updated 2026-10-12 after cooking recipes, wagon container and start screen)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. The sim's planner (*Sim policies that find the opportunities themselves*), now that the offers
-   list exists (`scripts/economy_offers.py`), to settle the day-30 verdict against the recorded runs.
-2. The AI's first tactics are built (2026-10-11, `intel.py`, RULES.md; flanking helped, focus fire,
-   holding and demoralizing first did not, see *Combat AI*). The arena duels it loses (Defend the Title,
-   the day-6 Scrapper) look like stat gaps more than decisions: leave them.
-3. *Tune the specialised shops* with the report, then the *Architecture debt* section lists what to pay on the way.
-
-Magic comes after the *node that unlocks* mechanic; it is the next big content gap.
+1. **Classic Start Screen & Dynamic Wiki/Compendium modal** (clean game entry flow, save loader and in-game catalog reference).
+2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
+3. **Factions & Unlocking Nodes** (Apothecary reputation & mushrooms deed; Ledger Hold Treefolk mentoring quest yielding $230 and unlocking the military/training hub).
+4. **Weapon traits registry and 2-AP actions** (immutable keyword model in `weapon_traits.py`, followed by unique 2-AP weapon actions).
+5. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
 
 ---
 
@@ -64,7 +61,6 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
-- **Starting tools with no job: Scissors, Pliers.** Decided 2026-10-12: Scissors will be used for shearing sheep once player husbandry/farms land (Claim/property); Shovel will be used for archaeology at Ancient Ruins; Pliers will be associated with high-yield, long-duration jewelry crafting recipes (generating substantial money and specific craftable artifacts). Chisel waits on the Horn and Chains on *Prisoners*.
 - **Mine leftovers (built 2026-10-09).** (1) *Iron Ore* has no recipe or
   use until the Smith's chain exists (art, tutorial and gathering numbers: see *Gathering: loose ends*). (2) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
@@ -84,12 +80,11 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Travel graph is hard to read.** The layout algorithm needs rework.
+- **Travel graph is hard to read.** Decided 2026-10-12: algorithmic auto-layout rework avoiding edge crossings and treating highly connected nodes as central hubs.
 - **Group swap with 2 groups feels odd.**
 - **Start screen** (title): decided 2026-10-12: classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
 
 **Layout overlaps (component rule; Market shelf, Bank quantity box, Load cards, Draft leader row attributes, Rest accordion budgeting and Tavern hub tabs fixed 2026-10-12)**
-- **Manage and Gear: the wagon does not show on the right:** built 2026-10-12: dedicated vehicle container column integrated on the right side of `GroupScreen` across both BAGS and CARGO views.
 - **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
   talent: investigated 2026-10-12 -- both Tannery and Market share the exact same `MarketScreen` and `LoadoutMixin`. The perceived weight variance was due to temporary attribute drops from hunger/sickness altering the base carry threshold, and `_carry_relief` dynamically scaling only with non-weapon, non-consumable pack cargo as designed.
 
@@ -97,7 +92,6 @@ its functions are tabs inside.
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
 - **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
-- **New tree rooted on +1 CHA.** Built 2026-10-12: Work tree root becomes +1 CHA (`charismatic`), Negotiator drops to tier 2 (`negotiator`, requires `charismatic`), Fixer to tier 2 (`fixer`, requires `charismatic`), and Provisioner to tier 3 (`provisioner`, requires `negotiator`).
 - **Craft sub-tree in work track.** Decided 2026-10-12: The root of the crafting branch in work will be +1 INT, with Crafting being a tier 2 node under it. The second tier 2 option beside Crafting will be evaluated later (possibly language study speed / study efficiency).
 - **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
   onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
@@ -127,7 +121,7 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
 - **Ledger Hold as a guards faction hub.** Ledger Hold is its own distinct faction.
-  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 Treefolk recruit (given pre-generated directly into the guild roster upon accepting the quest; tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives pay, and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
+  Decided 2026-10-12: after completing the Bankers' trust test, visiting Ledger Hold offers a mission from the Hold itself to take and train a designated level 0 Treefolk recruit (given pre-generated directly into the guild roster upon accepting the quest; tracked by unique unit `uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). The player brings the recruit in the group to Ledger Hold; on the Jobs screen, the turn-in button checks if that recruit's `racial_level >= 2`. If satisfied, the button enables: handing the recruit over releases them permanently from the guild to Ledger Hold as a demonstration of the guild's mentoring capacity, the guild receives $230 reward ($30 food allowance for the ~10 days of training + $200 completion bonus), and Ledger Hold permanently unlocks as a character training and military work hub for the guild.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
@@ -348,7 +342,7 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`). `carriage.png` portrait installed and wired into `watch_screen.py` (2026-10-12); only the Cart medallion (`cart.png`) remains to be drawn. Keepers resolved:
+- **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`). Both `carriage.png` and `cart.png` installed in `portraits/npc/` and wired into vehicle displays (2026-10-12). Keepers resolved:
   (1) The Medic is Pimbletwig himself, sharing the Apothecary's keeper art.
   (2) Stables at the Farm are run by Edric Ashvale himself (`farmer.png`), no new keeper needed.
   (3) Arena Master: Goliath pit master Thok'Gar (`portraits/npc/arena_master.png`) wired in `world.NODES`.
