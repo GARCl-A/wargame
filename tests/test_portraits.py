@@ -252,6 +252,17 @@ def test_creature_portraits():
         p_under = artwork.portrait("giant_spider", idx, 32)
         assert p_under is not None
 
+    # 3 Snake portraits
+    for idx in range(3):
+        p = artwork.portrait("Snake", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    # Future snake_dragon portrait
+    p_dragon = artwork.portrait("snake_dragon", 0, 32)
+    assert p_dragon is not None
+    assert p_dragon.get_size() == (32, 32)
+
 
 def test_livestock_portraits():
     # 4 Horse portraits

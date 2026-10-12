@@ -294,11 +294,8 @@ the ones that also need code say so. Order is the suggested priority.
   in its header (`world.Vendor`, `ui/vendor_panel.py`); a vendor is not an NPC (no stats, no recruiting or
   robbing them). The Apothecary's keeper shows only on its shop tab: the hub's Medic tab has none yet. The
   node marks are under *Map node icons*.
-- **Portraits for the Snake.** The Snake (`data.BEASTS`, the Lumber Yard's new pack) has no
-  `portraits/snake/` folder, so it shows its head icon (`artwork.RACE_ICON`, the Medusa head): generate a pool of
-  about 6 with `/gen-portrait`, then drop the images in `gartok/assets/portraits/snake/N.png`.
-- **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse) and
-  the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
+- **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse),
+  Snake has 3, and the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Kenku has 8 and Goliath 8 against 15 for Human and Gnome, 16 for Orc, 12 for Elf and
   Centaur (Goblin has 9, Halfling 18, Grippli 17).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
