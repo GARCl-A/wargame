@@ -36,6 +36,7 @@ def draw_roster(surf, F, rect, groups, events, selected, split_target=None,
                 split_picks=frozenset(), mpos=(-1, -1)):
     """`groups` items: `{"key", "name", "lead", "state_label", "state_color",
     "needs_orders" (bool), "detail" (one-line status text), "rations_label",
+    "money_label" (optional),
     "party": [(name, role, hp_frac)],
     "roster_members": [(member_id, name, tag)],
     "mates": [(other_key, other_name)], "split_blocked" (optional)}` (`tag` is an
@@ -97,7 +98,10 @@ def draw_roster(surf, F, rect, groups, events, selected, split_target=None,
             r3 = text(surf, F["body"], g["detail"], (cx, cy), T.TX_FAINT)
 
             cy = r3.bottom + 4
-            r4 = caps(surf, F["micro"], g["rations_label"], (cx, cy), T.TX_FAINT)
+            r4 = caps(surf, F["micro"], g.get("rations_label", ""), (cx, cy), T.TX_FAINT)
+            if g.get("money_label"):
+                mx = r4.right + T.S * 2 if g.get("rations_label") else cx
+                caps(surf, F["micro"], g["money_label"], (mx, cy), T.TX_FAINT)
 
             # gear button (split/merge)
             gear_rect = pygame.Rect(card.right - 24, r4.bottom - 16, 20, 20)

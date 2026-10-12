@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-11 (after the info modal and the AI's flanking). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename and wagon guard work XP). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -79,7 +79,7 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
   unpriced.
 
-## Playtest notes 2026-10-12 (not yet sized or checked against the code)
+## Playtest notes 2026-10-12
 
 Raw notes from a playtest, grouped; split each into a sized item as it is picked up. Guiding
 rule from the notes: **fewest possible buttons on the map**: a node has one "Enter" button and
@@ -93,8 +93,8 @@ its functions are tabs inside.
   from `Node.functions`.
 - **Travel graph is hard to read.** The layout algorithm needs rework.
 - **Crafting button on the map.** Cooking should be one click: with Lumber + Flint and Steel + Coal
-  in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone.
-- **Money per group** on the map's left panel next to rations (`Money: qty`).
+  in the pack the group lights a campfire on the spot; it burns 4 h at that node, then is gone. Decided 2026-10-12:
+  campfire cooking is an intentional manual action by the player when paused at a node, not an automatic trip interruption.
 - **Group swap with 2 groups feels odd.**
 - **Rest panel:** the open Rest tab looks the same as the other buttons, and it is not clear what
   is missing to press "rest until full". Show the open state, and a hover naming the missing condition.
@@ -122,12 +122,11 @@ its functions are tabs inside.
 
 **Pack, cart and coins** (coins at the shops, bank, medic, stables, garage, licence, study rent and Claim now
 read the cart and animals too, 2026-10-12: `Creature` has pack calls and `money`, `Group.money` / `Group.stores`;
-a Dictionary at the tavern and Lumber at the Claim read stores too)
+a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the wagon counts as level 1 work, 2026-10-12)
 - **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
   within its load limit.
 - **Cannot lock items in the cart.**
 - **Cargo screen:** search by item name.
-- **Unit guarding the cart earns work XP.** Today the guard earns no XP at all (`state.party` in `hunt.py` excludes guards). Decided 2026-10-12: guarding the wagon should count as level 1 work (credit work XP for the hours on guard at activity level 1).
 
 **Medic and sickness**
 - **Sickness treatment price and time.** Treating sickness: treat everyone in one go (8 h batch for the
@@ -142,23 +141,22 @@ a Dictionary at the tavern and Lumber at the Claim read stores too)
 - **Bankers' trust test:** accepting the quest sends the group straight to Ledger Hold for no
   reason. That must be the player's choice.
 - **Ledger Hold has no use.** Make it a "guards" faction with themed territory-expansion missions.
+  Decided 2026-10-12: military hub featuring patrol hiring and territory-containment missions.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (to define).
 - **Apothecary in reputations;** the 15-mushrooms quest counts toward it too.
 - **The Claim:** let the player build their own farm to stock food.
 
-**Combat and AI**
-- **Rename "goons"** to "Lackeys" for the henchmen in the Ribbit Brothers fight (decided 2026-10-12).
+**Combat and AI** (allies recover worn armor, off-hands and artifacts on won battle loot screen, 2026-10-12;
+henchmen renamed to Lackeys, 2026-10-12)
 - **CTF AI:** defending the flag works best standing on the *same* square as the flag, not adjacent.
 - **Ribbit Brothers:** after beating them they leave the arena selection line; they should also be
   recruitable, like Adelio.
-- **Ally equipment when dying in combat.** Decided 2026-10-12: armour, off-hands and artifacts of fallen
-  allies are recovered along with weapon and pack inventory on the post-battle loot screen if the guild wins.
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
   (armour is hard to wear, healing is slow); low CHA caps guild growth; the mental stats hurt little.
-  How does that line up with the races' attribute distribution and the expected mean? Are the
-  commission tokens enough to fix the starting squad? Check with the balance sim.
+  Decided 2026-10-12: keep current stat severity for now; schedule analysis on how racial modifiers, diseases,
+  poisons and conditions interact with attributes; mental stats will gain more mechanical weight once the magic arc lands.
 
 ---
 
@@ -382,7 +380,7 @@ the ones that also need code say so. Order is the suggested priority.
   The Prison guard (an Elf; Ankareth: holding cells, bail) has art in `portraits/npc/prison_guard.png`.
   Still pending: the Ledger Hold officer (a Hobgoblin, a high-ranking soldier; he fronts the guards faction, see the playtest notes).
   Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
-  goons need none (only the three brothers become recruitable).
+  lackeys need none (only the three brothers become recruitable).
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
   loads it) and nothing else: no race or beast entry, no stats, no encounter, no tutorial line. It is a
   portrait staged for a creature that has no design yet, probably the top of the Snake's growth line

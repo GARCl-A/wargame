@@ -290,6 +290,7 @@ class MapScreen(Screen):
                 "state_color": color,
                 "detail": self._order_status(g),
                 "rations_label": f"RATIONS: {g.rations}",
+                "money_label": f"MONEY: {fmt_money(g.money)}",
                 "party": [(u.name, role_for(u.occupation), _hp_frac(u), u.race.get("name", ""), "SICK" if u.sick else "") for u in g.members],
                 "roster_members": [*((u.uid, u.name, _race_tag(u)) for u in g.members),
                                    *((w.uid, w.kind, "WAGON") for w in g.wagons),
