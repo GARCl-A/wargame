@@ -346,7 +346,10 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   `orders.garrison("study")` order — the same engine the garrison jobs use,
   see Property below). Each day the order holds, a member with a
   `study_target` set and the matching `Scroll of <Spell>` in their pack pays
-  `economy.TAVERN_STUDY_COST_PER_DAY` ($15) and rolls `1d20 + INT mod`
+  `economy.TAVERN_STUDY_COST_PER_DAY` ($15) -- from their own purse first, then
+  richest-first from their groupmates', so a penniless student rooms on a
+  mate's coin (`magic.rent_covered`: only as many students as the group's
+  pooled money covers get a room and the day's meal) -- and rolls `1d20 + INT mod`
   toward `magic.points_to_learn(spell)` — `(15 + level) × (level + 1) × 7`
   points, so a level-0 spell needs 105 (roughly a week of daily rolls) and
   Sleep (level 1) needs 224. No gold, no scroll, or no `magic_source` yet all

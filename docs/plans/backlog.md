@@ -11,8 +11,8 @@ it here and, if it changed a design premise, record it in `AGENTS.md` or the doc
 Parts:
 
 - **Ready to do** — the task is defined enough to start. Sorted by size: small (a sitting),
-  *Architecture debt* (past choices to pay when a feature needs them), large (a system: UI,
-  AI and tests), *Art* (made by hand) and epic (its own arc).
+  *Playtest notes* (raw, to be sized as they are picked up), *Architecture debt* (past choices to
+  pay when a feature needs them), large (a system: UI, AI and tests), *Art* (made by hand) and epic (its own arc).
 - **Needs more information** — a design question, a repro or another system has to land
   before the task can be sized.
 - **Starting items waiting on another system** — not a question: a list of items whose
@@ -64,6 +64,15 @@ Magic comes after the *node that unlocks* mechanic; it is the next big content g
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
+- **Test suite takes too long (audit).** `python -m pytest tests/` is the hard gate and ran 2014
+  tests in 4 min 17 s on 2026-10-12 (110 files in `tests/`), run before every commit and by
+  `/check_backlog`. Audit, then decide what to cut: (1) `pytest --durations=25` for the slowest
+  tests and files; (2) for the sim, battle and save round-trip tests, see which spend their time on seeded
+  fights, full-guild days or screen builds, and whether a smaller squad, fewer days or a shared
+  fixture does the same job; (3) mark the few heavy ones (`slow` marker in `tests/conftest.py`) and keep
+  them out of the pre-commit run but in a nightly or manual run; (4) check `pytest-xdist` (`-n auto`),
+  which is not in `requirements-dev.txt`, against the seeded-RNG tests that may share state. Goal: a
+  gate under about 1 minute that still catches a regression. Record the new time here.
 - **Starting tools with no job: Scissors, Pliers.** Scissors and Pliers wait on a recipe that
   lists them in `tools`, the Chisel on the Horn and Chains on *Prisoners*. The Shovel has no job either: the Mine
   works with the Pick, which the Miner already starts with.
@@ -128,7 +137,8 @@ its functions are tabs inside.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 
-**Pack, cart and coins**
+**Pack, cart and coins** (the coins, dictionaries and Lumber notes in the cart share one fix: shops, the
+tavern and the Claim read the group's pooled goods, not only the packs; `magic.rent_covered` already does it for rent)
 - **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
   within its load limit.
 - **Cannot lock items in the cart.**
@@ -140,7 +150,7 @@ its functions are tabs inside.
 - **Does the unit guarding the cart during a hunt earn work XP?** (check, then decide.)
 
 **Medic and sickness**
-- Treating sickness costs 8 h per person: treat everyone in one go. Why is it priced at only 3, and
+- **Sickness treatment price and time.** Treating sickness costs 8 h per person: treat everyone in one go. Why is it priced at only 3, and
   how was that price set? (check `medic.py` and `economy.MEDIC_PRICE_FACTOR`.)
 
 **Auto orders**
@@ -163,7 +173,7 @@ its functions are tabs inside.
 - **Does an ally's armour drop when they die in combat?** (check.)
 
 **Balance question**
-- Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
+- **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
   (armour is hard to wear, healing is slow); low CHA caps guild growth; the mental stats hurt little.
   How does that line up with the races' attribute distribution and the expected mean? Are the
   commission tokens enough to fix the starting squad? Check with the balance sim.
@@ -391,6 +401,11 @@ the ones that also need code say so. Order is the suggested priority.
   Prison guard (an Elf). Races decided 2026-10-12.
   Each is a `world.Vendor` portrait in `portraits/npc/`, like the other keepers; the Ribbit Brothers'
   goons need none (only the three brothers become recruitable).
+- **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists (test `test_creature_portraits`
+  loads it) and nothing else: no race or beast entry, no stats, no encounter, no tutorial line. It is a
+  portrait staged for a creature that has no design yet, probably the top of the Snake's growth line
+  (Small -> Large, see `RULES.md`); decide what it is (a boss, a late growth form, a Wilds encounter)
+  before drawing more of it.
 - **Fill the short portrait pools.** Beasts have 4 each (Giant Spider, Donkey, Ox, Horse),
   Snake has 3, and the Wolf 6; the Skeleton has 6. The Wolf is the only beast the Wilds rolls, so take it to 8
   or more first. Kenku has 8 and Goliath 8 against 15 for Human and Gnome, 16 for Orc, 12 for Elf and
