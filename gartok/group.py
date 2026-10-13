@@ -139,6 +139,14 @@ class Group:
         return sum(m.money for m in (*self.members, *self.stores))
 
     @property
+    def free_cargo_capacity(self):
+        """Total free kilograms available for cargo across members, herd animals, and wagons."""
+        member_free = sum(max(0.0, getattr(u, "carry_normal", 0.0) - getattr(u, "load", 0.0)) for u in self.members)
+        wagon_free = sum(max(0.0, getattr(w, "capacity", 0.0) - getattr(w, "load", 0.0)) for w in self.wagons if not getattr(w, "broken", False))
+        herd_free = sum(max(0.0, getattr(a, "carry_normal", getattr(a, "carry_max", 0.0)) - getattr(a, "load", 0.0)) for a in self.herd)
+        return round(member_free + wagon_free + herd_free, 1)
+
+    @property
     def carried_rations(self):
         """Meals on the wagons and on the animals' backs."""
         return sum(_food_in(pack) for pack in self.food_stores())

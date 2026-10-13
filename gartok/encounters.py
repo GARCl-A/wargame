@@ -158,3 +158,19 @@ def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
     if table[i].race_pool is None and pack and rng.random() < BANDIT_CHEST_DROP_CHANCE:
         pack[0].give_to_pack(data.CHEST_ITEM)
     return pack
+
+
+# Frontier Supply Run ambush table: marauders and wild predators along the frontier
+FRONTIER_SUPPLY_TABLE = (
+    EncounterEntry(60, None),                       # Frontier bandits / marauders
+    EncounterEntry(25, tuple(data.WILD_POOL)),       # Wolves
+    EncounterEntry(15, tuple(data.SKELETON_POOL)),   # Ancient skeletons
+)
+FRONTIER_SUPPLY_COUNT = {2: 30, 3: 40, 4: 20, 5: 10}
+FRONTIER_SUPPLY_LEVEL = {1: 30, 2: 40, 3: 20, 4: 10}
+
+
+def roll_supply_ambush(rng=random):
+    """Roll a pack of frontier raiders ambushing a supply caravan."""
+    return roll_encounter(FRONTIER_SUPPLY_TABLE, FRONTIER_SUPPLY_COUNT, FRONTIER_SUPPLY_LEVEL, rng=rng)
+

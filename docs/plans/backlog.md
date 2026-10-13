@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry, Intellect Clever/Linguist work sub-tree, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout, in-game dynamic wiki compendium, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -22,17 +22,16 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-12 after weapon actions & map auto-layout)
+# Suggested order (updated 2026-10-12)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Weapon 2-AP actions and traits expansion (built 2026-10-12):** 14 traits registered, 11 2-AP weapon actions covering all 15 weapons (`SneakAttack`, `PreciseThrust`, `Cleave`, `RepelStrike`, `MaimingStrike`, `ArmorPierce`, `PowerShot`, `ExtremeShot`, `HookShield`, `JavelinCharge`, `ParryStrike`), Pick/Light Pick 3x crit multiplier, conditions `Maimed` and `ShieldHooked`, full AI priority support and unit test coverage.
-2. **World map graph algorithmic auto-layout (built 2026-10-12):** Kamada-Kawai distance-proportional force-directed layout in `gartok/world.py` (`compute_layout` and `apply_layout`), spring rest lengths strictly proportional to walking hours (`EDGES`, Pearson correlation r > 0.98), node repulsion avoiding overlap, deterministic seed=42, normalized into map viewport.
-3. **Ledger Hold military frontier supply runs & hub unlock** (repeatable work order with Ledger Hold <-> First Outpost travel, cargo capacity check, outbound/return ambush rolls, and military work XP).
-4. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-5. **Magic as the vertical progression** (built on the *node that unlocks* Option A mechanic; all 3 rival factions revealed simultaneously).
+1. **Ledger Hold military frontier supply runs & hub unlock** (repeatable work order with Ledger Hold <-> First Outpost travel, cargo capacity check, outbound/return ambush rolls, and military work XP).
+2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
+3. **Magic as the vertical progression** (built on the *node that unlocks* Option A mechanic; all 3 rival factions revealed simultaneously).
+4. **Culinária e buffs temporários de refeições** (postergado para após o arco de magia).
 
 ---
 
@@ -79,34 +78,18 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Travel graph is hard to read.** Built 2026-10-12: Kamada-Kawai distance-proportional force-directed layout in `gartok/world.py` (`compute_layout` and `apply_layout`), spring rest lengths strictly proportional to walking hours (`EDGES`, Pearson correlation r > 0.98), deterministic seed=42, and repulsion between non-adjacent nodes avoiding label overlaps.
 - **Group swap with 2 groups feels odd.**
-- **Start screen (built 2026-10-12):** classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
-
-**Layout overlaps (component rule; Market shelf, Bank quantity box, Load cards, Draft leader row attributes, Rest accordion budgeting and Tavern hub tabs fixed 2026-10-12)**
-- **Carry-weight display differs between screens** (Tannery vs normal Market), and the *Carrier*
-  talent: investigated 2026-10-12 -- both Tannery and Market share the exact same `MarketScreen` and `LoadoutMixin`. The perceived weight variance was due to temporary attribute drops from hunger/sickness altering the base carry threshold, and `_carry_relief` dynamically scaling only with non-weapon, non-consumable pack cargo as designed.
 
 **Draft, leveling and talents**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
 - **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
-- **Craft sub-tree in work track (built 2026-10-12):** +1 INT root (`Clever`) with `Crafter` (+1 crafting progress) and `Linguist` (+2 language study rolls) at tier 2, and `Apothecary` / `Blacksmith` at tier 3.
-- **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
-  onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
-  (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
-  (3) archaeology at Ancient Ruins. Built 2026-10-12: `progression.eligible_work_activities` dynamically inspects registered recipes up to level 4+.
-- **In-game dynamic wiki / compendium (built 2026-10-12):** A searchable in-game encyclopedia screen generated dynamically
-  from the game's data catalogs (`items`, `abilities`, `talents`, `recipes`, `data.BEASTS`, node functions and
-  combat rules), accessible from StartScreen and from PauseScreen during active gameplay (Esc/back restores the exact paused scene state).
 - **Perk to reduce armour weight.**
 - **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 
-**Pack, cart and coins** (coins at the shops, bank, medic, stables, garage, licence, study rent and Claim now
-read the cart and animals too, 2026-10-12: `Creature` has pack calls and `money`, `Group.money` / `Group.stores`;
-a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the wagon counts as level 1 work, 2026-10-12)
+**Pack, cart and coins**
 - **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
   within its load limit.
 - **Cannot lock items in the cart.**
@@ -117,17 +100,10 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
 
 **Factions, nodes and world**
-- **Bankers' trust test (resolved 2026-10-12):** Investigated and fixed: `TrustScreen` modal accept/leave buttons visually overlay the `ledger_hold` node position on the underlying map screen at standard resolutions; rapid double-clicks on modal close were passing mouse events directly to `MapScreen`, triggering an accidental travel order to Ledger Hold. Fixed by adding a 250ms click debounce window (`SCENE_DEBOUNCE_MS`) when transitioning to the map.
-- **Ledger Hold as a guards faction hub (mentorship quest built 2026-10-12):** Ledger Hold is its own distinct faction.
-  After completing the Bankers' trust test, visiting Ledger Hold offers a mission from Commander Varkas to mentor a designated level 0 Treefolk recruit (added to guild roster; tracked by unique `recruit_uid`; designated portrait `treefolk_recruit.png`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). Once `racial_level >= 2`, turning the recruit in strips all gear and pack items back to the group, awards $230 reward and banks faction deeds. General Treefolk portrait pool expanded to 20 portraits (0..19). Decided 2026-10-12: first military work shift is "frontier supply run" (repeatable `work` order with `task="supply_run"`, moving goods from Ledger Hold to First Outpost and back under high ambush risk; requires minimum group cargo capacity; rolls ambush encounters on both outbound and return journeys; yields copper wages, military standing deeds, and military work XP upon safe return to Ledger Hold).
-- **Iron Bar smelting (built 2026-10-12):** 2x Iron Ore + 1kg Coal at the Blacksmith forge produces 1x Iron Bar (`CRAFTING_RECIPES`, `CraftingStation.FORGE`).
+- **Ledger Hold as a guards faction hub:** Mentorship quest built 2026-10-12. First military work shift is "frontier supply run" (repeatable `work` order with `task="supply_run"`, moving goods from Ledger Hold to First Outpost and back under high ambush risk; requires minimum group cargo capacity; rolls ambush encounters on both outbound and return journeys; yields copper wages, military standing deeds, and military work XP upon safe return to Ledger Hold).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
-
-**Combat and AI** (allies recover worn armor, off-hands and artifacts on won battle loot screen, 2026-10-12;
-henchmen renamed to Lackeys, 2026-10-12; CTF AI defender holding home flag square built 2026-10-12;
-Ribbit Brothers defeated deed, post-battle recruit prompt on tavern screen and arena cameo built 2026-10-12)
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
@@ -142,7 +118,7 @@ Past choices that now fight the direction. Each has the cost of fixing it; pay o
 feature that needs it is next, not before. Debts already written as part of a feature are
 pointed to, not repeated.
 
-- **Weapon traits are ad-hoc fields.** Registry model built 2026-10-12 in `gartok/weapon_traits.py` with `ItemDef.traits` and `ItemDef.has_trait()`. Remaining debt: migrate combat resolvers (`combatant.py`, `unit_derive.py`), UI/display screens (`market_screen.py`, `group_screen.py`, `wiki_screen.py`), and catalog generator (`reference.py`) from legacy ad-hoc flags (`finesse`, `thrown`) to `has_trait(...)`. **Cost: low** (migration of existing callers). Detail under *Weapons that are really different*.
+- **Weapon traits are ad-hoc fields.** Registry model built in `gartok/weapon_traits.py` with `ItemDef.traits` and `ItemDef.has_trait()`. Remaining debt: migrate combat resolvers (`combatant.py`, `unit_derive.py`), UI/display screens (`market_screen.py`, `group_screen.py`, `wiki_screen.py`), and catalog generator (`reference.py`) from legacy ad-hoc flags (`finesse`, `thrown`) to `has_trait(...)`. **Cost: low** (migration of existing callers).
 - **Big screen files.** `app.py` (about 1200 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run about 900-1100 (the last two are past 1000). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
@@ -181,25 +157,6 @@ pointed to, not repeated.
   Library). (3) Rarity per base
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
-- **Weapons that are really different (two tracks, designed 2026-10-12).**
-  1. **Named weapon traits (registry built 2026-10-12 in `weapon_traits.py`, attributes and adjustments to build).** Immutable keyword registry (`WeaponTrait`) mirroring `abilities.py`. `ItemDef.traits` and `ItemDef.has_trait()` live. Properties designed to implement:
-     - `crit_mult`: damage multiplier on critical hit (default 2x; Pick and Light Pick gain 3x).
-     - `crit_range`: threat margin on d20 (default 20; seam for future expanded critical range).
-     - Trait adjustments: Quarterstaff gains `Finesse`; Hatchet gains `Thrown 4 sq`; Light Hammer gains `Thrown 8 sq`; Shortspear gains `Thrown 12 sq`; Light Pick gains `Thrown 6 sq` and `Crit 3x`; Pick gains `Crit 3x`; Shortbow range 14 sq; Light Crossbow range 18 sq.
-     - Rationale checks: Dwarf Axe serves as the progression craft reward for having a Dwarven blacksmith artisan in the guild; Light Pick serves as the dedicated light throwable armor-piercer (1d4, 1.0kg, Thrown 6sq, Crit 3x, Armor Pierce).
-  2. **A 2-AP action per weapon kind (audited and finalized for all 15 weapons 2026-10-12; Decided: Option B static registry):**
-     - **Dagger:** *Sneak Attack* (if target is flanked, deals +1d4 bonus damage).
-     - **Rapier:** *Precise Thrust* (if target is flanked, gains +2 to hit).
-     - **Axe / Dwarf Axe:** *Cleave* (attacks 2 adjacent foes who are adjacent to each other and to the attacker).
-     - **Quarterstaff:** *Repel Strike* (attacks and delivers a *Push* with +2 bonus to the push check).
-     - **Club / Hammer / Light Hammer:** *Maiming Strike* (on hit, reduces foe's movement by half until start of attacker's next round).
-     - **Pick / Light Pick:** *Armor Pierce* (attack ignores worn armor AC bonus; shield, natural and dex still count).
-     - **Shortbow:** *Power Shot* (adds positive STR modifier to arrow damage).
-     - **Light Crossbow:** *Extreme Shot* (doubles attack range to 36 sq).
-     - **Hatchet:** *Hook Shield* (on hit, nullifies target's shield AC bonus until next round).
-     - **Shortspear:** *Javelin Charge* (if thrown after moving this round, gains +1d4 bonus damage).
-     - **Broadsword:** *Parry & Strike* (attacks and grants the attacker the *Defending* condition until next round).
-     - Architecture (Decided 2026-10-12: Option B): Implement static action classes in `gartok/actions/weapon_actions.py` registered in `gartok/actions/__init__.py` and mapped via `WeaponTrait.action_id`. Needs AI evaluation and tests.
 - **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI
@@ -442,7 +399,7 @@ building them:
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
   one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
   buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
-  allow multiple buffs simultaneously. Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Cooking recipes take priority over jewelry crafting; food buffs and the magic arc are independent (proceed with whichever is simpler or unblocks content first). Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
+  allow multiple buffs simultaneously. Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Dishes with temporary stat buffs are explicitly scheduled for AFTER the magic arc. Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
   (`cheapest_food_price` stops being the one price of a meal).
 
 ---

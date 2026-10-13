@@ -47,7 +47,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, artifact slot, pack, stack helpers; `CoinPurse` is the base for `Unit.money` and `Creature`: coins in the pack, 200 coins = 1 kg) |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant |
-| `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells`, registry in `__init__.py` |
+| `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells` / `weapon_actions`, registry in `__init__.py` |
 | `abilities.py` | `Ability` frozen-dataclass registry (passives + hooks) |
 | `talents.py` | talent-tree registry mirroring abilities.py |
 | `conditions.py` | `Condition` subclasses (Defending, Demoralized) |
@@ -57,7 +57,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `ground.py` | GroundObject (weapon, torch) + Creature (neutral body) |
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |
 | `ai.py` | heuristic over actions/; alignment tempers behaviour; reads only `intel.known_fields`; with nobody in sight the side that brought the fight (`Battle.aggressor`) searches and the other groups up |
-| `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`; a `Node` offers `functions` (no per-service flags) and may carry a `Vendor` (name, race, role, portrait) per function: `world.vendor(node_id, function)` is the keeper whose face the shop screens show |
+| `world.py` | Node graph, edges as distance (walking hours), route Dijkstra, `hours(distance, speed)`, algorithmic layout via Kamada-Kawai (`compute_layout`, `apply_layout`); a `Node` offers `functions` (no per-service flags) and may carry a `Vendor` (name, race, role, portrait) per function: `world.vendor(node_id, function)` is the keeper whose face the shop screens show |
 | `node_functions.py` | what a node can offer, one `NodeFunction` per id: order kind, map button label, note; `app._FUNCTION_OPENERS` holds each id's screen opener and a test keeps them in step |
 | `shop.py` | `Shop` = one node's till and finite shelf (`Guild.shop(node_id)`); every item on it has a target and a daily rate (`economy.SHELVES`, one shelf per node); refilled daily for every node that offers `shop`. The Smithy, Tannery, Apothecary, Farm, Tavern and Market each sell their own part of the town's goods (`economy.TOWN_SHOPS`, `economy.shop_of(item)`) |
 | `hub_screen.py` | `TabbedHubScreen` (a node's screens behind one row of tabs; `for_node` builds them dynamically for multi-function nodes like Tavern, Farm, Lumber Yard, Mine) and `ShopHubScreen` (the node's shop as the first tab): `forge_hub_screen.py`, `tanner_hub_screen.py`, `apothecary_hub_screen.py` |

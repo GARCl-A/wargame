@@ -59,7 +59,7 @@ INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt"})
 FORCED_KINDS = frozenset({"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake",
-                          "gather_ambush"})
+                          "gather_ambush", "supply_ambush"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | FORCED_KINDS | {"idle"}
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
@@ -119,14 +119,28 @@ def next_leg(src, remaining_path, speed, pace=1.0):
                 path=tuple(remaining_path[1:]))
 
 
-def work(guild, group, hours, gather=False):
+def work(guild, group, hours, gather=False, task=None):
     """Order `group` to work `hours` where it stands. Brisk Hands can shrink
     the clock cost below the nominal `hours` pay/XP is banked on -- see
     `Guild.work_speedup`. With `gather` the shift yields the node's drops, not the wage."""
     if gather and not guild.has_licence(group.node):
         raise ValueError(f"no gathering licence for {group.node!r}")
     clock_hours = hours * guild.work_speedup(group.members)
-    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather)
+    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task)
+
+
+def supply_run(guild, group):
+    """Order `group` to execute a Ledger Hold military frontier supply run.
+    Requires Ledger Hold node and at least 20 kg of free cargo capacity."""
+    from . import economy
+    if group.node != "ledger_hold":
+        raise ValueError(f"supply runs can only be issued at ledger_hold, got {group.node!r}")
+    if group.free_cargo_capacity < economy.SUPPLY_RUN_CARGO_KG:
+        raise ValueError(
+            f"group needs at least {economy.SUPPLY_RUN_CARGO_KG} kg free cargo capacity, has {group.free_cargo_capacity:.1f}"
+        )
+    clock_hours = economy.SUPPLY_RUN_HOURS * guild.work_speedup(group.members)
+    return Order("work", eta=clock_hours, remaining=clock_hours, hours=economy.SUPPLY_RUN_HOURS, task="supply_run")
 
 
 def rest(hours):

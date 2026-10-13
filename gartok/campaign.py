@@ -356,6 +356,11 @@ def _advance(guild, dt=None, busy=()):
             events += gathered
             if ambush is not None:
                 pending.append((g, ambush))
+        elif order.kind == "work" and order.task == "supply_run":
+            run_events, ambush = guild.supply_run_shift(g, order)
+            events += run_events
+            if ambush is not None:
+                pending.append((g, ambush))
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
@@ -650,6 +655,19 @@ def resolve_gather_ambush(guild, group, order, outcome):
         return ["The crew is driven off the work site and comes away with nothing."]
     survivors = [u for u in group.members if u in outcome.survivors]
     return ["The crew drives the pack off."] + guild.bank_haul(survivors, order.hours, group.node)
+
+
+def resolve_supply_ambush(guild, group, order, outcome):
+    """After `app` has already run the fight through `absorb_battle`: a win banks the supply run pay,
+    deed and work-XP for whoever is left; a loss loses the cargo and returns with nothing."""
+    group.pending = None
+    if group.empty:
+        return []
+    group.order = orders.idle()
+    if not outcome.won:
+        return ["The supply caravan was overrun and routed -- the cargo is lost and the contract unfulfilled."]
+    survivors = [u for u in group.members if u in outcome.survivors]
+    return ["The caravan guards fought off the frontier warband and delivered the supplies."] + guild.bank_supply_run(survivors, order.hours)
 
 
 def resolve_property_raid(guild, group, order, outcome):

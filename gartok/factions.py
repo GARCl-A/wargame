@@ -217,6 +217,9 @@ _DEEDS = [
     Deed("ledger_hold_mentoring", "ledger_hold", "Treefolk Mentorship",
          "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.", rep=1,
          check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
+    Deed("ledger_hold_supply_run", "ledger_hold", "Frontier Supply Run",
+         "Successfully complete a military supply caravan run to the frontier outpost.", rep=1,
+         check=lambda g, e: e.kind == "supply_run"),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}
@@ -280,6 +283,15 @@ def get_unlocks(faction_id: str):
                 2,
                 "Rare Manuscripts",
                 "The library unlocks rare language dictionaries and deeper archives."
+            )
+        )
+    elif faction_id == "ledger_hold":
+        unlocks.append(
+            Unlock(
+                "ledger_hold",
+                1,
+                "Military Supply Network",
+                "Recognised caravan runner for the military frontier outpost."
             )
         )
     return unlocks

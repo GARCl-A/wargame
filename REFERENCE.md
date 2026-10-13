@@ -508,6 +508,7 @@ The fortified garrison of the march. They train soldiers and hold the border.
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
 | Treefolk Mentorship | Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold. | +1 | -- |
+| Frontier Supply Run | Successfully complete a military supply caravan run to the frontier outpost. | +1 | -- |
 
 ## Constants
 

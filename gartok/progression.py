@@ -116,6 +116,10 @@ def eligible_work_activities(worker_level, unit=None) -> list[str]:
     if worker_level <= 3:
         activities.append("Hunting (Lv 3 in Wilds)")
 
+    # Frontier Supply Run at Ledger Hold
+    if worker_level <= 5:
+        activities.append("Frontier Supply Run (Lv 5 at Ledger Hold)")
+
     # Crafting (dynamically generated from registered recipes)
     from . import craft_level, items
     recipes_by_level = {}

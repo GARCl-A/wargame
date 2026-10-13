@@ -630,9 +630,13 @@ def test_eligible_work_activities():
     assert any("Crafting" in j for j in jobs_4)
     assert any("Signal Horn" in j for j in jobs_4)
 
-    # Level 5: Nothing standard yet
+    # Level 5: Frontier Supply Run at Ledger Hold
     jobs_5 = progression.eligible_work_activities(5, u)
-    assert jobs_5 == []
+    assert any("Frontier Supply Run" in j for j in jobs_5)
+
+    # Level 6: Nothing standard yet
+    jobs_6 = progression.eligible_work_activities(6, u)
+    assert jobs_6 == []
 
 
 

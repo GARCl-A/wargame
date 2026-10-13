@@ -6,7 +6,7 @@ since it advances the clock itself.
 
 from collections import Counter
 
-from . import economy, gather, items, orders, recorder, vocations, world
+from . import economy, encounters, factions, gather, items, orders, recorder, vocations, world
 from .constants import fmt_money
 from .unit_loadout import pooled_unlocked
 
@@ -109,6 +109,37 @@ class LaborMixin:
             found.append(f"{u.name} {gather.describe(haul)}")
         if found:
             events.insert(0, f"{world.node(node_id).name}: gathered {hours} h ({'; '.join(found)}).")
+        return events
+
+    def supply_run_shift(self, group, order):
+        """A frontier military supply run whose clock has run out. Returns `(events, ambush)`:
+        with no ambush, wages and XP are banked here; with one, `ambush` is the forced
+        `supply_ambush` Order for the caller to fight, and payout waits for `bank_supply_run` on a win."""
+        import random
+        mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
+        chance = economy.SUPPLY_RUN_AMBUSH_CHANCE * mult
+        if random.random() < chance:
+            pack = encounters.roll_supply_ambush()
+            return (
+                ["Ledger Hold: a hostile frontier warband ambushes the military supply caravan!"],
+                orders.Order("supply_ambush", pack=tuple(pack), hours=order.hours),
+            )
+        return self.bank_supply_run(group.members, order.hours), None
+
+    def bank_supply_run(self, workers, hours):
+        """Pay each escort worker $30, bank Level 5 work XP, and settle faction deeds."""
+        earners = [u for u in workers if u in self.roster]
+        paid = []
+        events = []
+        for u in earners:
+            gain = self._pay_worker(u, economy.SUPPLY_RUN_PAY, hours, economy.SUPPLY_RUN_LEVEL, events)
+            paid.append(gain)
+        if earners:
+            names = ", ".join(u.name for u in earners)
+            wage = f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1 else f"+{fmt_money(sum(paid))} total"
+            events.insert(0, f"Ledger Hold: {names} completed the frontier supply run ({wage}).")
+        for d in factions.settle(self, factions.Event("supply_run")):
+            events.append(factions.deed_notice(d))
         return events
 
     def _pay_worker(self, u, pay, hours, activity_level, events):

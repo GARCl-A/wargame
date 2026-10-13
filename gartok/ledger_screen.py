@@ -78,6 +78,14 @@ class LedgerScreen(Screen):
                     if recruit is not None:
                         missions.deliver_treefolk_recruit(self.guild, self.group, m_tree, recruit)
                         self.notice = f"{recruit.name} steps into the garrison. $230 reward received!"
+            elif key == "supply_run":
+                from . import orders
+                try:
+                    self.group.order = orders.supply_run(self.guild, self.group)
+                    self.on_done()
+                except ValueError as err:
+                    self.notice = str(err)
+                return
             elif key == "done":
                 self.on_done()
                 return
@@ -121,7 +129,7 @@ class LedgerScreen(Screen):
             card2 = pygame.Rect(m, cy, card_w, 130)
             panel(screen, card2)
             x, y = card2.x + pad, card2.y + pad
-            text(screen, F["label"], "GARRISON MENTORSHIP", (x, y), T.BRASS)
+            text(screen, F["bodyb"], "GARRISON MENTORSHIP", (x, y), T.BRASS)
             y += 24
             if m_tree is None:
                 text(screen, F["body_sm"], "Commander Varkas offers a green Treefolk recruit to train to racial level 2.", (x, y), T.TX)
@@ -145,6 +153,29 @@ class LedgerScreen(Screen):
             else:
                 text(screen, F["body_sm"], "Commander Varkas salutes: 'The Treefolk soldier serves with honor.'", (x, y), T.GREEN)
                 text(screen, F["body_sm"], "Ledger Hold's gates stand open to your guild.", (x, y + 20), T.TX_MUTED)
+            cy = card2.bottom + T.S * 2
+
+            # 3. Frontier Supply Run
+            from . import economy
+            card3 = pygame.Rect(m, cy, card_w, 140)
+            panel(screen, card3)
+            x, y = card3.x + pad, card3.y + pad
+            text(screen, F["bodyb"], "FRONTIER SUPPLY RUN", (x, y), T.BRASS)
+            y += 24
+            text(screen, F["body_sm"], "Escort 20 kg of military supplies to the frontier outpost (10h).", (x, y), T.TX)
+            y += 20
+            cargo = self.group.free_cargo_capacity
+            can_run = cargo >= economy.SUPPLY_RUN_CARGO_KG
+            stat_msg = (
+                f"Free cargo capacity: {cargo:.1f} kg / {economy.SUPPLY_RUN_CARGO_KG:.0f} kg required  ·  +$30 each  ·  Work Lv 5"
+                if can_run else
+                f"Free cargo capacity: {cargo:.1f} kg / {economy.SUPPLY_RUN_CARGO_KG:.0f} kg required (bring pack animals or lighten load)"
+            )
+            text(screen, F["body_sm"], stat_msg, (x, y), T.GREEN if can_run else T.RED)
+            r = pygame.Rect(x, y + 24, card3.w - 2 * pad, 36)
+            self.add_button(screen, r, "supply_run", "DEPART WITH SUPPLY CARAVAN", enabled=can_run, primary=can_run,
+                            sub="10 hours  ·  +$30 each  ·  ambush risk on frontier roads")
+            cy = card3.bottom + T.S * 2
         elif carrier is None:
             card0 = pygame.Rect(m, cy, card_w, 80)
             panel(screen, card0)

@@ -998,8 +998,11 @@ class BattleScreen(Screen):
         mpos = pygame.mouse.get_pos()
         hovered_action = None
         btn_rect = None
+        scroll_r = getattr(self, "_actions_scroll_rect", None)
         for action, rect in self.buttons:
             if isinstance(action, actions.Action) and rect.collidepoint(mpos):
+                if scroll_r is not None and not scroll_r.collidepoint(mpos):
+                    continue
                 hovered_action = action
                 btn_rect = rect
                 break

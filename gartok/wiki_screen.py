@@ -10,13 +10,13 @@ Consumes centralized data catalogs:
 
 import pygame
 
-from . import data, items, talents
+from . import actions, data, items, talents, weapon_traits
 from .screen import Screen
 from .ui.primitives import draw_button, panel, set_pointer, text, wrap
 from .ui.tokens import T
 
 MARGIN = T.S * 4
-TAB_W = 110
+TAB_W = 96
 TAB_H = 32
 
 
@@ -77,12 +77,12 @@ class WikiScreen(Screen):
         self.tab_buttons = []
 
         text(screen, F["big"], "WIKI & COMPENDIUM", (MARGIN, MARGIN), T.TX)
-        text(screen, F["body"], "in-game encyclopedia of rules, items, recipes, talents and beasts",
+        text(screen, F["body"], "in-game encyclopedia of rules, items, recipes, actions, talents and beasts",
              (MARGIN, MARGIN + 32), T.TX_MUTED)
 
         # Tab bar
-        tabs = [("items", "ITEMS"), ("recipes", "RECIPES"), ("talents", "TALENTS"),
-                ("beasts", "BEASTS"), ("rules", "RULES")]
+        tabs = [("items", "ITEMS"), ("recipes", "RECIPES"), ("actions", "ACTIONS"),
+                ("talents", "TALENTS"), ("beasts", "BEASTS"), ("rules", "RULES")]
         tx = MARGIN
         ty = MARGIN + 64
         for tab_id, tab_label in tabs:
@@ -131,6 +131,8 @@ class WikiScreen(Screen):
             return self._draw_items(screen, view, start_y)
         elif self.tab == "recipes":
             return self._draw_recipes(screen, view, start_y)
+        elif self.tab == "actions":
+            return self._draw_actions(screen, view, start_y)
         elif self.tab == "talents":
             return self._draw_talents(screen, view, start_y)
         elif self.tab == "beasts":
@@ -162,10 +164,19 @@ class WikiScreen(Screen):
                     extra.append(f"Dmg: {it.damage[0]}d{it.damage[1]}")
                 if it.ac:
                     extra.append(f"AC +{it.ac}")
-                if it.has_trait("finesse") if hasattr(it, "has_trait") else it.finesse:
+                if getattr(it, "traits", ()):
+                    for tid in it.traits:
+                        tr = weapon_traits.get(tid)
+                        if tr:
+                            extra.append(tr.name)
+                        else:
+                            extra.append(tid.replace("_", " ").title())
+                elif it.has_trait("finesse") if hasattr(it, "has_trait") else getattr(it, "finesse", False):
                     extra.append("Finesse")
-                if hasattr(it, "has_trait") and it.has_trait("crit_3x"):
-                    extra.append("Crit 3x")
+                if getattr(it, "thrown", 0):
+                    extra.append(f"Thrown {it.thrown}sq")
+                if getattr(it, "range", 0):
+                    extra.append(f"Range {it.range}sq")
                 if it.hands == 2:
                     extra.append("Two-handed")
                 if extra:
@@ -197,6 +208,42 @@ class WikiScreen(Screen):
                 text(screen, F["body"], f"Materials: {mat_str}", (r.x + T.S * 2, r.y + 24), T.TX_MUTED)
                 meta = f"Station: {rec.station.upper()}  ·  Batch: {rec.batch_hours:.1f} h  ·  Level: {rec.level}"
                 text(screen, F["micro"], meta, (r.x + T.S * 2, r.y + 40), T.TX_FAINT)
+            y += row_h + gap
+        return y - orig_y
+
+    def _draw_actions(self, screen, view, y):
+        F = self.F
+        orig_y = y
+        q = self.search_query
+
+        entries = []
+        seen = set()
+
+        for tr in weapon_traits.all_traits():
+            if tr.id not in seen:
+                seen.add(tr.id)
+                kind = "WEAPON ACTION (2 AP)" if tr.action_id else "WEAPON TRAIT"
+                entries.append((tr.name, kind, tr.desc))
+
+        for act in actions.PANEL_ACTIONS:
+            if act.id not in seen:
+                seen.add(act.id)
+                kind = f"COMBAT ({act.cost} AP)" if act in actions.COMBAT_ACTIONS else f"UTILITY ({act.cost} AP)"
+                entries.append((act.name, kind, getattr(act, "desc", "")))
+
+        entries.sort(key=lambda e: e[0])
+        if q:
+            entries = [e for e in entries if q in e[0].lower() or q in e[1].lower() or q in e[2].lower()]
+
+        row_h = 44
+        gap = 6
+        for name, kind, desc in entries:
+            r = pygame.Rect(view.x, y, view.w, row_h)
+            if r.bottom > view.top and r.top < view.bottom:
+                panel(screen, r)
+                text(screen, F["bodyb"], name, (r.x + T.S * 2, r.y + 6), T.TX)
+                text(screen, F["micro"], kind, (r.x + T.S * 2, r.y + 24), T.BRASS)
+                text(screen, F["body"], desc, (r.x + 240, r.y + 12), T.TX_MUTED)
             y += row_h + gap
         return y - orig_y
 
@@ -275,6 +322,13 @@ class WikiScreen(Screen):
                 "Demoralized: -1 to dice checks and morale; attacks suffer disadvantage.",
                 "Defending: +2 AC, active defense stance.",
                 "Poison: damage ticked down each combat round until antidote or treated.",
+            ]),
+            ("WEAPON TRAITS & ACTIONS (2 AP)", [
+                "Every weapon kind in the catalog grants unique tactical options or passive traits.",
+                "2 AP Weapon Actions (Sneak Attack, Cleave, Armor Pierce, etc.) require the equipped weapon trait.",
+                "Picks and Light Picks deal 3x damage dice on critical hits (Crit 3x trait).",
+                "Finesse weapons use Dexterity for attack rolls when DEX is higher than Strength.",
+                "Thrown weapons can be hurled up to their designated range (adding STR mod to attack & damage).",
             ]),
             ("WORLD & GUILD", [
                 "No global guild treasury: coins exist physically in characters' and pack animals' inventories.",

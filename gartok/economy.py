@@ -48,6 +48,13 @@ PERFORM_LEVEL = 1                       # activity level: work-XP stops once you
 PERFORM_TIP_BASE = 16
 PERFORM_TIP_STEP = 2
 
+# Ledger Hold military frontier supply runs
+SUPPLY_RUN_HOURS = 10                   # 5h outbound, 5h return
+SUPPLY_RUN_PAY = 30                     # copper pay per member for completing the run
+SUPPLY_RUN_LEVEL = 5                    # work activity level 5 (grants work XP up to level 5)
+SUPPLY_RUN_CARGO_KG = 20.0              # minimum free cargo capacity required (kg)
+SUPPLY_RUN_AMBUSH_CHANCE = 0.35         # base chance of ambush per leg
+
 
 def can_perform(unit):
     return unit.has_item(PERFORM_ITEM)

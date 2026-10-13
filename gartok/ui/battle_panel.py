@@ -255,14 +255,18 @@ def _action_button(surf, F, r, it):
 
 
 def draw_action_tip(surf, F, anchor, desc):
-    """The description bubble above (or below, near the top) a button."""
-    w = T.S * 25
+    """The description bubble beside the button."""
+    w = T.S * 28
     lines = wrap(F["body_sm"], desc, w - T.S * 2)
-    tip = pygame.Rect(0, 0, w, T.S + len(lines) * 16)
-    tip.bottomleft = (anchor.left, anchor.top - 4)
-    if tip.top < 0:
-        tip.topleft = (anchor.left, anchor.bottom + 4)
-    box(surf, tip, fill=T.STEEL_HI, border=T.STEEL_LINE)
+    tip_h = T.S + len(lines) * 16
+    tip = pygame.Rect(0, 0, w, tip_h)
+    if anchor.left - w - 8 >= 0:
+        tip.topright = (anchor.left - 8, max(4, anchor.top))
+    else:
+        tip.bottomleft = (anchor.left, anchor.top - 4)
+        if tip.top < 0:
+            tip.topleft = (anchor.left, anchor.bottom + 4)
+    box(surf, tip, fill=T.STEEL_HI, border=T.BRASS, width=1)
     y = tip.y + T.S // 2
     for ln in lines:
         text(surf, F["body_sm"], ln, (tip.x + T.S, y), T.TX)

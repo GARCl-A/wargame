@@ -282,7 +282,6 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
 
 def test_every_order_kind_that_reaches_the_app_has_an_opener():
     from gartok import orders
-    forced = {"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake",
-              "gather_ambush"}
+    forced = set(orders.FORCED_KINDS)
     assert (orders.INTERACTIVE_KINDS | forced) <= set(App._ACTIVITY_OPENERS)
     assert set(App._FORCED_FIGHT_RESOLVERS) <= forced
