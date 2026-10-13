@@ -8,6 +8,8 @@ from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
+from . import weapon_traits
+
 
 class ItemType(StrEnum):
     WEAPON = "weapon"
@@ -66,6 +68,7 @@ class ItemDef:
     thrown: int = 0
     hands: int = 1
     reload: bool = False
+    traits: tuple[str, ...] = ()
     ac: int = 0
     max_dex: int | None = None
     speed_penalty: int = 0
@@ -77,6 +80,9 @@ class ItemDef:
     language: str | None = None
     max_charges: int | None = None
     light_radius: int = 0
+
+    def has_trait(self, trait_id: str) -> bool:
+        return trait_id in self.traits
 
     @property
     def speed(self) -> int:
@@ -279,10 +285,12 @@ _BASE_WEAPONS_DATA = [
 ]
 
 for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload in _BASE_WEAPONS_DATA:
+    traits = tuple([t for t in ("finesse" if fin else None, "thrown" if thr else None) if t])
     _register(ItemDef(
         id=slug, name=name, type=ItemType.WEAPON, rarity=rarity,
         weight=weight, price=price, size=WeaponSize.MEDIUM, damage=dmg,
-        range=rng, finesse=fin, thrown=thr, hands=hands, reload=reload
+        range=rng, finesse=fin, thrown=thr, hands=hands, reload=reload,
+        traits=traits,
     ))
     # Large variant
     large_slug = f"large_{slug}"
@@ -291,7 +299,7 @@ for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload in _BAS
         id=large_slug, name=large_name, type=ItemType.WEAPON, rarity=rarity,
         weight=round(weight * 2, 1), price=price * 2, size=WeaponSize.LARGE,
         damage=step_damage_die(dmg), range=rng, finesse=fin, thrown=thr,
-        hands=hands, reload=reload
+        hands=hands, reload=reload, traits=traits,
     ))
 
 # Armor
@@ -950,10 +958,13 @@ def item_tooltip(name: str) -> tuple[str, str]:
         hands = "Two-handed" if it.hands >= 2 else "One-handed"
         reach = f"{it.range * 1.5:g}m range" if it.range else "Melee"
         desc.append(f"Weapon: {n}d{faces} damage  ·  {hands}  ·  {reach}.")
-        if it.finesse:
-            desc.append("Finesse: Uses Dexterity for attack rolls if it is higher than Strength.")
-        if it.thrown:
-            desc.append(f"Thrown: Can be thrown up to {it.thrown * 1.5:g}m.")
+        for tid in it.traits:
+            wt = weapon_traits.get(tid)
+            if wt is not None:
+                if tid == "thrown" and it.thrown:
+                    desc.append(f"Thrown: Can be thrown up to {it.thrown * 1.5:g}m.")
+                else:
+                    desc.append(f"{wt.name}: {wt.desc}")
     elif it.type == ItemType.ARMOR:
         desc.append(f"Armor: +{it.ac} Armor Class.")
         if it.max_dex is not None:

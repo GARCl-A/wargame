@@ -243,3 +243,19 @@ def test_mastering_a_language_releases_the_lock_too():
     magic.progress_study(student)
     assert "Elvish" in student.languages
     assert student.locked_of("Dictionary of Elvish") == 0
+
+
+def test_linguist_talent_boosts_language_study_progress(monkeypatch):
+    student = Unit("player")
+    student.set_track_level("work", 2)
+    assert student.choose_talent("work", "clever")
+    assert student.choose_talent("work", "linguist")
+    student.money = 100
+    student.give_to_pack("Dictionary of Orcish")
+    magic.begin_study(student, "Orcish")
+
+    from gartok import data
+    monkeypatch.setattr(data, "roll", lambda n, d: 10)
+
+    magic.progress_study(student)
+    assert student.study_progress == max(0, 10 + student.mod_intelligence + 2)

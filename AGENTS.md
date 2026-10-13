@@ -89,7 +89,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS` (built from `_FUNCTION_OPENERS` + arena + forced kinds), a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 | `archetypes.py` | recruit archetype catalog + candidate generation |
-| `missions.py` | paid, deadlined jobs from a named giver (has a reward, can fail) |
+| `missions.py` / `ledger_screen.py` | paid, deadlined jobs from a named giver (has a reward, can fail); ledger_screen is Ledger Hold's Bankers' chest exchange and Commander Varkas Treefolk mentorship |
 | `ox.py` / `ox_fields.py` | the tanner's last job: the Country Roads search, the daylight tracking of Aurochs (`ox.track`, DC climbs per found trail) and the big skittish-beast field (`OxFieldsScenario`: terrain, the herd's call, win on his fall); `ai._skitter` is his flight |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
 | `arena.py` / `ribbit_prompt_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer |

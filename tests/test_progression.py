@@ -140,6 +140,14 @@ def test_charismatic_lifts_real_charisma():
     assert u.charisma == cha + 1
 
 
+def test_clever_lifts_real_intelligence():
+    u = _unit(seed=4)
+    u.work_hours = economy.LUMBER_XP_HOURS * 2    # work level 1
+    intel = u.intelligence
+    assert u.choose_talent("work", "clever")
+    assert u.intelligence == intel + 1
+
+
 def test_negotiator_lifts_only_the_haggle_charisma():
     u = _unit(seed=4)
     u.work_hours = economy.LUMBER_XP_HOURS * 6    # work level 2

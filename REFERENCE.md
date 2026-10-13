@@ -158,6 +158,15 @@ Each occupation grants one starting weapon and one starting item.
 | Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 | Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
 
+## Weapon Traits
+
+Properties and keywords carried by weapons.
+
+| Trait | Description |
+|---|---|
+| Finesse | Uses Dexterity for attack rolls if it is higher than Strength. |
+| Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
+
 ## Armor
 
 | Armor | AC | Max DEX to AC | Speed | Guard test | Weight | Price ($) |
@@ -383,9 +392,11 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Negotiator | +1 Charisma for market buy and sell checks. | charismatic |
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | charismatic |
 | 3 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |
-| 1 | Crafter | +1 to progress rolls when crafting items. | -- |
-| 2 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | crafter |
-| 2 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | crafter |
+| 1 | Clever | +1 Intelligence. | -- |
+| 2 | Linguist | +2 to progress rolls when studying a foreign language. | clever |
+| 2 | Crafter | +1 to progress rolls when crafting items. | clever |
+| 3 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | crafter |
+| 3 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | crafter |
 
 ### Racial track
 

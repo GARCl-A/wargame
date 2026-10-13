@@ -28,6 +28,7 @@ from . import (
     sources,
     talents,
     vocations,
+    weapon_traits,
 )
 
 REFERENCE_PATH = Path(__file__).resolve().parent.parent / "REFERENCE.md"
@@ -113,6 +114,11 @@ def _weapons():
     head = ("Weapon", "Size", "Damage", "Range", "Finesse", "Thrown", "Hands", "Weight",
             "Price ($)")
     return "## Weapons\n\n" + _table(head, rows)
+
+
+def _weapon_traits():
+    rows = [(t.name, t.desc) for t in weapon_traits.all_traits()]
+    return "## Weapon Traits\n\nProperties and keywords carried by weapons.\n\n" + _table(("Trait", "Description"), rows)
 
 
 def _armor():
@@ -238,7 +244,7 @@ def _constants():
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _armor, _shields, _items, _base_materials,
+_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _weapon_traits, _armor, _shields, _items, _base_materials,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

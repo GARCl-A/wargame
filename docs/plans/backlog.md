@@ -22,17 +22,16 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-12 after start screen & wiki compendium)
+# Suggested order (updated 2026-10-12 after wiki compendium & mentorship)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Ledger Hold Treefolk mentoring quest & hub unlock** (train Treefolk recruit to racial 2, yields $230 reward, returns recruit's gear to group stores, and permanently unlocks military/training hub; validates general node unlocking mechanic).
-2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-3. **In-game pause menu Wiki access** (open `WikiScreen` from pause menu / hotkey during gameplay preserving game state on Esc/back).
-4. **Weapon traits registry and 2-AP actions** (immutable keyword model in `weapon_traits.py`, followed by unique 2-AP weapon actions).
-5. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
+1. **Ledger Hold military frontier supply runs & hub unlock** (transport supplies from Ledger Hold to First Outpost under high ambush risk; requires minimum cargo capacity and travel speed).
+2. **Weapon traits registry and 2-AP actions** (immutable keyword model in `weapon_traits.py`, followed by unique 2-AP weapon actions).
+3. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
+4. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
 
 ---
 
@@ -61,8 +60,7 @@ the seams they need.
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
-- **Mine leftovers (built 2026-10-09).** (1) *Iron Ore* has no recipe or
-  use until the Smith's chain exists (art, tutorial and gathering numbers: see *Gathering: loose ends*). (2) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
+- **Mine leftovers (built 2026-10-09).** (1) *Iron Ore* is smelted into *Iron Bar* at the Blacksmith forge (`2x Iron Ore + 1kg Coal -> 1x Iron Bar`, built 2026-10-12). (2) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
   work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
   guilds are wiped on the road; with a player winning 80% (the report's setting then; it is 0.95 since 2026-10-10) `miner` earns
   $166 a member by day 30 against the yard's $67, reaches the day-30 milestone in 70% of guilds
@@ -92,7 +90,7 @@ its functions are tabs inside.
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
 - **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
-- **Craft sub-tree in work track.** Decided 2026-10-12: The root of the crafting branch in work will be +1 INT, with Crafting being a tier 2 node under it. The second tier 2 option beside Crafting will be evaluated later (possibly language study speed / study efficiency).
+- **Craft sub-tree in work track (built 2026-10-12):** +1 INT root (`Clever`) with `Crafter` (+1 crafting progress) and `Linguist` (+2 language study rolls) at tier 2, and `Apothecary` / `Blacksmith` at tier 3.
 - **No activity gives work XP past work level 4.** Nothing lets a character climb from work 4
   onward (`Signal Horn` is level 4, the current recipe ceiling). Decided 2026-10-12: XP past level 4 will come from
   (1) higher-tier, complex crafting recipes, (2) Ledger Hold military enlistment / border skirmishes work shifts, and
@@ -120,7 +118,7 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 **Factions, nodes and world**
 - **Bankers' trust test (resolved 2026-10-12):** Investigated and fixed: `TrustScreen` modal accept/leave buttons visually overlay the `ledger_hold` node position on the underlying map screen at standard resolutions; rapid double-clicks on modal close were passing mouse events directly to `MapScreen`, triggering an accidental travel order to Ledger Hold. Fixed by adding a 250ms click debounce window (`SCENE_DEBOUNCE_MS`) when transitioning to the map.
 - **Ledger Hold as a guards faction hub (mentorship quest built 2026-10-12):** Ledger Hold is its own distinct faction.
-  After completing the Bankers' trust test, visiting Ledger Hold offers a mission from Commander Varkas to mentor a designated level 0 Treefolk recruit (added to guild roster; tracked by unique `recruit_uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). Once `racial_level >= 2`, turning the recruit in strips all gear and pack items back to the group, awards $230 reward and banks faction deeds. Military work shifts at the garrison scheduled for next iteration.
+  After completing the Bankers' trust test, visiting Ledger Hold offers a mission from Commander Varkas to mentor a designated level 0 Treefolk recruit (added to guild roster; tracked by unique `recruit_uid`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). Once `racial_level >= 2`, turning the recruit in strips all gear and pack items back to the group, awards $230 reward and banks faction deeds. Decided 2026-10-12: first military work shift is "frontier supply run" (transporting resources from Ledger Hold to First Outpost under high ambush risk, requiring minimum cargo capacity and travel speed).
 - **Iron Bar smelting (built 2026-10-12):** 2x Iron Ore + 1kg Coal at the Blacksmith forge produces 1x Iron Bar (`CRAFTING_RECIPES`, `CraftingStation.FORGE`).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
@@ -182,8 +180,8 @@ pointed to, not repeated.
   makes (derived), and a test fails for one with no source (gathered, dropped, hunted, foraged, quest,
   traded or spoiled; gathered and beast drops are read off `gather.TABLES` / `data.BEASTS`). Left: (1) the
   rule covers only those types, since weapons, armour and the rest have no recipes yet; widen it as recipes
-  land (Smith chain). (2) Seven goods are declared `traded` (Potato (Farm), Iron Bar (Smith), Salt, Beer, Vial (Market), Paper, Ink (Library)):
-  the shop supplies them and no node produces them, so each waits for its production chain (Farm, Smith,
+  land (Smith chain). (2) Six goods are declared `traded` (Potato (Farm), Salt, Beer, Vial (Market), Paper, Ink (Library)):
+  Iron Bar moved to forge crafting recipe 2026-10-12; the remaining six wait for their production chains (Farm,
   Library). (3) Rarity per base
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
@@ -439,7 +437,7 @@ building them:
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
   one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
   buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
-  allow multiple buffs simultaneously. Specific upcoming recipes decided 2026-10-12: (1) Jerky (2 Meat + 1 Salt, built); (2) Roast Meat (pure Meat + campfire, quick cooked meat, built 2026-10-12); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h, built 2026-10-12). Cooking recipes take priority over jewelry crafting. Open: the exact buff stats per dish, and the cost to the economy sim
+  allow multiple buffs simultaneously. Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Cooking recipes take priority over jewelry crafting. Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
   (`cheapest_food_price` stops being the one price of a meal).
 
 ---

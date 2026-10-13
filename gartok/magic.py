@@ -162,7 +162,8 @@ def _progress_spell(unit, spell, group=None):
 def _progress_language(unit, language, group=None):
     if not _has_study_item(unit, f"Dictionary of {language}", group=group):
         return None
-    unit.study_progress += max(0, data.roll(1, 20) + unit.mod_intelligence)
+    bonus = unit.talent_bonus("language_study")
+    unit.study_progress += max(0, data.roll(1, 20) + unit.mod_intelligence + bonus)
     if unit.study_progress >= points_to_learn(0):     # same threshold as a level-0 spell
         unit.languages.append(language)
         unit._sync_dictionary_recipes()

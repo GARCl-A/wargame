@@ -20,6 +20,8 @@ def _crafter(material=True):
     u.recipes.append(RECIPE)
     while u.has_item(RECIPE):
         u.remove_named(RECIPE)
+    while u.has_item("Iron Bar"):
+        u.remove_named("Iron Bar")
     if material:
         u.give_to_pack("Iron Bar")
     return u

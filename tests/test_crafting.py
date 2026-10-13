@@ -80,7 +80,8 @@ def test_crafting_shift_missing_materials():
 def test_crafter_talent_boosts_progress_roll():
     random.seed(42)
     u = Unit("player")
-    u.set_track_level("work", 1)
+    u.set_track_level("work", 2)
+    assert u.choose_talent("work", "clever")
     assert u.choose_talent("work", "crafter")
 
     u.recipes.append("Bear Trap")
@@ -98,7 +99,8 @@ def test_crafter_talent_boosts_progress_roll():
 
 def test_apothecary_talent_learns_potion_and_mastery():
     u = Unit("player")
-    u.set_track_level("work", 2)
+    u.set_track_level("work", 3)
+    assert u.choose_talent("work", "clever")
     assert u.choose_talent("work", "crafter")
     assert not any(r in u.recipes for r in items.APOTHECARY_RECIPES)
 
@@ -109,8 +111,9 @@ def test_apothecary_talent_learns_potion_and_mastery():
 
     # Another unit that already knows all apothecary recipes
     u2 = Unit("player")
-    u2.set_track_level("work", 2)
+    u2.set_track_level("work", 3)
     u2.recipes.extend(items.APOTHECARY_RECIPES)
+    assert u2.choose_talent("work", "clever")
     assert u2.choose_talent("work", "crafter")
     assert u2.choose_talent("work", "apothecary")
     assert u2.craft_bonuses.get("apothecary") == 1
@@ -128,16 +131,18 @@ def test_apothecary_talent_learns_potion_and_mastery():
 
 def test_blacksmith_talent_learns_forge_recipe_and_mastery():
     u = Unit("player")
-    u.set_track_level("work", 2)
+    u.set_track_level("work", 3)
+    assert u.choose_talent("work", "clever")
     assert u.choose_talent("work", "crafter")
     assert u.choose_talent("work", "blacksmith")
     assert any(r in u.recipes for r in data.BLACKSMITH_RECIPES)
 
     # Unit that already knows all blacksmith recipes (e.g. Kobold trapper)
     u2 = Unit("player")
-    u2.set_track_level("work", 2)
+    u2.set_track_level("work", 3)
     for r in data.BLACKSMITH_RECIPES:
         u2.recipes.append(r)
+    assert u2.choose_talent("work", "clever")
     assert u2.choose_talent("work", "crafter")
     assert u2.choose_talent("work", "blacksmith")
     assert u2.craft_bonuses.get("forge") == 1
