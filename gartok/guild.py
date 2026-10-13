@@ -116,7 +116,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  ancient_ruins_discovered=False, leaving=None,
                  ox_fields_discovered=False, ox_trails=0, vocation=None, recruit_seen=None,
-                 licences=None, revealed=None):
+                 licences=None, revealed=None, supply_runs_completed=0):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -181,6 +181,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.ox_fields_discovered = ox_fields_discovered   # the Legendary Ox Fields, found once with the tanner's job out
         self.ox_trails = ox_trails                         # times the Aurochs' trail was found: each makes the next harder
         self.revealed = set(revealed or ())                 # node ids revealed on the world map
+        self.supply_runs_completed = int(supply_runs_completed)
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
 

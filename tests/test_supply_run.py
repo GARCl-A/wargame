@@ -57,9 +57,18 @@ def test_supply_run_peaceful_completion(monkeypatch):
     assert grp.order is None
     assert u1.money == m1_before + economy.SUPPLY_RUN_PAY
     assert u2.money == m2_before + economy.SUPPLY_RUN_PAY
-    assert "ledger_hold_supply_run" in g.deeds_done
+    assert g.supply_runs_completed == 1
+    assert "ledger_hold_supply_run" not in g.deeds_done
     assert u1.work_xp > 0
     assert any("completed the frontier supply run" in ev for ev in res.events)
+
+    # 10th run awards the deed
+    g.supply_runs_completed = 9
+    grp.order = orders.supply_run(g, grp)
+    res10 = campaign.advance(g, economy.SUPPLY_RUN_HOURS)
+    assert g.supply_runs_completed == 10
+    assert "ledger_hold_supply_run" in g.deeds_done
+    assert any("Deed completed" in ev or "Frontier Supply Run" in ev for ev in res10.events)
 
 
 def test_supply_run_ambush_and_resolution(monkeypatch):
@@ -84,15 +93,18 @@ def test_supply_run_ambush_and_resolution(monkeypatch):
 
     events_loss = campaign.resolve_supply_ambush(g, grp, saved_order, MockOutcomeLoss())
     assert any("overrun and routed" in ev for ev in events_loss)
+    assert g.supply_runs_completed == 0
     assert "ledger_hold_supply_run" not in g.deeds_done
 
-    # Test win resolution
+    # Test win resolution on 10th run
+    g.supply_runs_completed = 9
     class MockOutcomeWin:
         won = True
         survivors = [u1, u2, u3]
 
     events_win = campaign.resolve_supply_ambush(g, grp, saved_order, MockOutcomeWin())
     assert any("fought off the frontier warband" in ev for ev in events_win)
+    assert g.supply_runs_completed == 10
     assert "ledger_hold_supply_run" in g.deeds_done
 
 
@@ -120,3 +132,16 @@ def test_ledger_screen_supply_run_card():
     assert grp.order is not None
     assert grp.order.task == "supply_run"
     assert done_called is True
+
+
+def test_supply_run_persistence(tmp_path, monkeypatch):
+    from gartok import persist
+    monkeypatch.setattr(persist, "SAVE_DIR", str(tmp_path))
+    g, grp, u1, u2, u3 = _make_guild()
+    g.supply_runs_completed = 7
+    world_id = "test_world_supply"
+    persist.save_game(world_id, g)
+
+    loaded = persist.load_game(world_id)
+    assert loaded.supply_runs_completed == 7
+

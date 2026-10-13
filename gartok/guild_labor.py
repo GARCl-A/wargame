@@ -138,6 +138,7 @@ class LaborMixin:
             names = ", ".join(u.name for u in earners)
             wage = f"+{fmt_money(paid[0])} each" if len(set(paid)) == 1 else f"+{fmt_money(sum(paid))} total"
             events.insert(0, f"Ledger Hold: {names} completed the frontier supply run ({wage}).")
+        self.supply_runs_completed += 1
         for d in factions.settle(self, factions.Event("supply_run")):
             events.append(factions.deed_notice(d))
         return events

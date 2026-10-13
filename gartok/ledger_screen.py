@@ -162,7 +162,10 @@ class LedgerScreen(Screen):
             x, y = card3.x + pad, card3.y + pad
             text(screen, F["bodyb"], "FRONTIER SUPPLY RUN", (x, y), T.BRASS)
             y += 24
-            text(screen, F["body_sm"], "Escort 20 kg of military supplies to the frontier outpost (10h).", (x, y), T.TX)
+            runs = self.guild.supply_runs_completed
+            deed_done = "ledger_hold_supply_run" in self.guild.deeds_done
+            status_text = f"Escort 20 kg of military supplies to the frontier outpost (10h) · Progress: {runs}/10 deliveries{' (Deed earned)' if deed_done else ''}."
+            text(screen, F["body_sm"], status_text, (x, y), T.TX)
             y += 20
             cargo = self.group.free_cargo_capacity
             can_run = cargo >= economy.SUPPLY_RUN_CARGO_KG

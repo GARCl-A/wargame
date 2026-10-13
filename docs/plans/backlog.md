@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, frontier supply run 10 deliveries deed requirement, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -28,8 +28,8 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Magic as the vertical progression** (Library delivers Ancient Codex mission -> 3 hidden magic faction nodes revealed -> deliver Codex to 1 chosen faction for +1 rep; 2 rep needed to initiate magic; build magic initiate and spells progression).
-2. **Frontier supply run Deed requirement** (update Ledger Hold supply run deed to require 10 completed delivery trips: `supply_runs_completed >= 10`).
+1. **Magic Arc — Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex** (definir nós e facções em factions/world, gancho da biblioteca que revela os 3 nós e entrega da missão).
+2. **Magic Arc — Fatia 2: Rito de Iniciação e Primeiros Feitiços** (verificação de 2 rep, Holy Symbol para Fé, desbloqueio de traço de iniciante e feitiços tier 1).
 3. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
 4. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; scheduled after magic).
 5. **Culinária e buffs temporários de refeições** (postergado para após o arco de magia).
@@ -40,7 +40,6 @@ the seams they need.
 
 ## Small
 
-- **Frontier Supply Run Deed: require 10 completed deliveries.** The military deed granted by Commander Varkas at Ledger Hold should only be awarded after the guild completes 10 supply runs (`supply_runs_completed >= 10`), rather than after the very first successful delivery trip.
 - **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
   (re-run 2026-10-10, after the vocations: unchanged): the `balanced` policy reaches the milestone
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
@@ -72,6 +71,19 @@ the seams they need.
   after a playtest, and if it is too strong a lower premium or a longer road is the lever, not a bigger one. The crafter policy
   still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
   unpriced.
+
+## Medium
+
+- **Magic Arc — Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex.**
+  1. *Definições de facção:* Três facções rivais em `factions.py`: `blood_cult` (Sangue, Caótico/Mau), `nature_coven` (Natureza, Neutro/Bom), `faith_order` (Fé, Leal/Bom). Deed de entrega do Codex (`rep=1`).
+  2. *Nós secretos no mapa:* Três nós com `hidden=True` em `world.py` integrados ao grafo de distâncias: Santuário de Sangue (próximo às Ruínas), Bosque da Natureza (próximo à Floresta/Wilds), Catedral da Fé (próximo a Ledger Hold/Colinas).
+  3. *Missão de entrega na Biblioteca:* Ao entregar o Ancient Codex recuperado da masmorra na Biblioteca, o sábio entrega a nova missão de despacho para UMA das três facções e revela os 3 locais simultaneamente via `guild.reveal_node(node_id)`.
+  4. *Entrega e Recompensa:* Entregar o Codex no santuário da facção escolhida completa a missão, consome o item e concede +1 de reputação com aquela facção.
+- **Magic Arc — Fatia 2: Rito de Iniciação e Primeiros Feitiços.**
+  1. *Trava de reputação:* Iniciar na escola mágica requer 2 de reputação com a respectiva facção (entrega do Codex garante o primeiro ponto, um segundo favor/deed concede o segundo).
+  2. *Requisitos de Fé:* Fé exige portar o item `Holy Symbol`.
+  3. *Interação e Treinamento:* Cada santuário oferece mestre/função de iniciação que concede o status de iniciante (`Unit.magic_source` ou conjunto).
+  4. *Tier 1 de Feitiços:* Disponibilização de grimório inicial e estudo de feitiços básicos da escola.
 
 ## Playtest notes 2026-10-12
 
@@ -354,7 +366,7 @@ building them:
   6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources`).
   - **Infrastructure built (2026-10-13):** Revealed nodes system (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node(node_id)` and persistence in `persist.py` with `"revealed": []` default).
   - **Priority:** Magic progression is strictly prioritised before Archaeology.
-  - **To define next:** The specific node identities and positions for the 3 magic factions, their faction definitions in `factions.py`, initiation mechanics (costs, trainer dialogues, Holy Symbol requirement for Faith), and initial tier of learnable spells.
+  - **Execution breakdown:** Fatias 1 e 2 estão detalhadas e prontas em *Ready to do -> Medium* (Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex; Fatia 2: Rito de Iniciação e Primeiros Feitiços). Apenas a expansão de feitiços de tiers avançados (tier 2+) e penalidades severas de rivalidade aguardam escopo posterior.
 
 - **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*

@@ -218,8 +218,8 @@ _DEEDS = [
          "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.", rep=1,
          check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
     Deed("ledger_hold_supply_run", "ledger_hold", "Frontier Supply Run",
-         "Successfully complete a military supply caravan run to the frontier outpost.", rep=1,
-         check=lambda g, e: e.kind == "supply_run"),
+         "Successfully complete 10 military supply caravan runs to the frontier outpost.", rep=1,
+         check=lambda g, e: e.kind == "supply_run" and g.supply_runs_completed >= 10),
 ]
 
 FACTIONS = {f.id: f for f in _FACTIONS}
