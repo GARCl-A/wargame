@@ -221,7 +221,7 @@ PAYLOAD_DEFAULTS = {
     "prison_week": None, "prison_pool": None, "prison_blocked": [], "jailed": [],
     "recruit_seen": {},
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
-    "tutorial_seen": [], "tutorial_enabled": True,
+    "tutorial_seen": [], "tutorial_enabled": True, "revealed": [],
 }
 
 
@@ -258,6 +258,7 @@ def _payload(guild, kind, label):
         "ancient_ruins_discovered": guild.ancient_ruins_discovered,
         "ox_fields_discovered": guild.ox_fields_discovered,
         "ox_trails": guild.ox_trails,
+        "revealed": sorted(guild.revealed),
         "shops": {node_id: shop.to_dict() for node_id, shop in guild.shops.items()},
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
@@ -374,6 +375,7 @@ def load_game(world, save_id=CURRENT):
                  ancient_ruins_discovered=payload["ancient_ruins_discovered"],
                  ox_fields_discovered=payload["ox_fields_discovered"],
                  ox_trails=payload["ox_trails"],
+                 revealed=payload["revealed"],
                  tutorial=TutorialState(seen=payload["tutorial_seen"],
                                        enabled=payload["tutorial_enabled"]))
 

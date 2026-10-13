@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout, in-game dynamic wiki compendium, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -22,16 +22,17 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-12)
+# Suggested order (updated 2026-10-13)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Ledger Hold military frontier supply runs & hub unlock** (repeatable work order with Ledger Hold <-> First Outpost travel, cargo capacity check, outbound/return ambush rolls, and military work XP).
-2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-3. **Magic as the vertical progression** (built on the *node that unlocks* Option A mechanic; all 3 rival factions revealed simultaneously).
-4. **Culinária e buffs temporários de refeições** (postergado para após o arco de magia).
+1. **Magic as the vertical progression** (Library delivers Ancient Codex mission -> 3 hidden magic faction nodes revealed -> deliver Codex to 1 chosen faction for +1 rep; 2 rep needed to initiate magic; build magic initiate and spells progression).
+2. **Frontier supply run Deed requirement** (update Ledger Hold supply run deed to require 10 completed delivery trips: `supply_runs_completed >= 10`).
+3. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
+4. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; scheduled after magic).
+5. **Culinária e buffs temporários de refeições** (postergado para após o arco de magia).
 
 ---
 
@@ -39,6 +40,7 @@ the seams they need.
 
 ## Small
 
+- **Frontier Supply Run Deed: require 10 completed deliveries.** The military deed granted by Commander Varkas at Ledger Hold should only be awarded after the guild completes 10 supply runs (`supply_runs_completed >= 10`), rather than after the very first successful delivery trip.
 - **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
   (re-run 2026-10-10, after the vocations: unchanged): the `balanced` policy reaches the milestone
   in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
@@ -100,7 +102,7 @@ its functions are tabs inside.
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
 
 **Factions, nodes and world**
-- **Ledger Hold as a guards faction hub:** Mentorship quest built 2026-10-12. First military work shift is "frontier supply run" (repeatable `work` order with `task="supply_run"`, moving goods from Ledger Hold to First Outpost and back under high ambush risk; requires minimum group cargo capacity; rolls ambush encounters on both outbound and return journeys; yields copper wages, military standing deeds, and military work XP upon safe return to Ledger Hold).
+- **Ledger Hold as a guards faction hub:** Mentorship quest built 2026-10-12. First military work shift is "frontier supply run" (repeatable `work` order with `task="supply_run"`, moving goods from Ledger Hold to First Outpost and back under high ambush risk; requires minimum group cargo capacity; rolls ambush encounters on both outbound and return journeys; yields copper wages and military work XP upon safe return to Ledger Hold; deed requires 10 completed runs).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
@@ -118,7 +120,6 @@ Past choices that now fight the direction. Each has the cost of fixing it; pay o
 feature that needs it is next, not before. Debts already written as part of a feature are
 pointed to, not repeated.
 
-- **Weapon traits are ad-hoc fields.** Registry model built in `gartok/weapon_traits.py` with `ItemDef.traits` and `ItemDef.has_trait()`. Remaining debt: migrate combat resolvers (`combatant.py`, `unit_derive.py`), UI/display screens (`market_screen.py`, `group_screen.py`, `wiki_screen.py`), and catalog generator (`reference.py`) from legacy ad-hoc flags (`finesse`, `thrown`) to `has_trait(...)`. **Cost: low** (migration of existing callers).
 - **Big screen files.** `app.py` (about 1200 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run about 900-1100 (the last two are past 1000). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
@@ -344,22 +345,16 @@ building them:
 # Needs more information
 
 - **Magic as the vertical progression.** The biggest content gap (only the library tome quest
-  exists). Blocked on the *node that unlocks* mechanic below. Follows the library's tome quest. Chain:
-  1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that
-     unlocks a new place.
-  2. An intermediate mission to earn their trust in the guild.
-  3. Then the Library sends the codex to the **three magic factions** (Blood mages,
-     Nature mages, Faith mages), where the magic line proper begins. Decided 2026-10-12: all three
-     magic factions are revealed at the same time and they actively dislike / rival each other. Aiding
-     one harms relations with another, forcing the player to manage faction choices and trade-offs.
-  - **New mechanic to build first: a node that unlocks (Decided 2026-10-12: Option A).** Every node
-    is revealed or not, and an event flips it (reading a map, completing a deed, reaching a
-    reputation). The map is the first user. The revealed set lives in the guild's save (`revealed`, a list of node ids, neutral value `[]` in `persist.PAYLOAD_DEFAULTS`, public nodes always visible by default).
-    The flip happens once and stays; reading the map does not consume it.
-  - **To define:** the exact reputation gate and the intermediate mission; the three
-    factions as nodes with their own deeds (see `factions.py`); how each school's study
-    differs (`magic.py`); the three schools are **not exclusive** (decided 2026-10-09: anyone may study any; the barrier is study cost). Holy Symbol (below) belongs to
-    the faith school.
+  exists). Follows the Ancient Codex recovery from the dungeon. **Decided 2026-10-13:**
+  1. Upon delivering the Ancient Codex from the dungeon to the Library, the Library gives the guild a new mission: deliver the Ancient Codex safely to **ONE of the three magic factions** (Blood mages, Nature mages, Faith mages).
+  2. At that exact instant, the secret map locations of all 3 magic factions are revealed simultaneously on the world map (`guild.reveal_node(node_id)`).
+  3. The quest completes upon safely delivering the Ancient Codex to one chosen magic faction.
+  4. Delivering the Codex awards +1 reputation with that chosen faction.
+  5. **Initiation lock:** unlocking the ability to initiate squad members into a faction's magic requires **2 reputation** with that faction. Delivering the Codex is therefore a pivotal strategic choice that speeds up initiation with the chosen school.
+  6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources`).
+  - **Infrastructure built (2026-10-13):** Revealed nodes system (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node(node_id)` and persistence in `persist.py` with `"revealed": []` default).
+  - **Priority:** Magic progression is strictly prioritised before Archaeology.
+  - **To define next:** The specific node identities and positions for the 3 magic factions, their faction definitions in `factions.py`, initiation mechanics (costs, trainer dialogues, Holy Symbol requirement for Faith), and initial tier of learnable spells.
 
 - **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
@@ -410,13 +405,12 @@ Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupatio
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
 already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
 (the Claim oven's material), First
-Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap. The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
+Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap, Chisel (crafting tool for Signal Horn). The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
 - **Scissors** (Barber). For shearing sheep once player husbandry/farms land (Claim/property).
 - **Pliers** (Goldsmith). High-yield, long-duration jewelry crafting recipes (generating substantial money and craftable artifacts).
-- **Shovel** (Grave Robber). Archaeology at Ancient Ruins.
-- **Chisel** (Sculptor). Carving the Legendary Horn (`Signal Horn`, built) and artistic stonework.
+- **Shovel** (Grave Robber). Archaeology at Ancient Ruins (scheduled after Magic arc).
 - **Map.** Finds treasures and secret zones. Waits for those systems.
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.

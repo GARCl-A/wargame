@@ -116,7 +116,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  ancient_ruins_discovered=False, leaving=None,
                  ox_fields_discovered=False, ox_trails=0, vocation=None, recruit_seen=None,
-                 licences=None):
+                 licences=None, revealed=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -180,8 +180,22 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.ancient_ruins_discovered = ancient_ruins_discovered
         self.ox_fields_discovered = ox_fields_discovered   # the Legendary Ox Fields, found once with the tanner's job out
         self.ox_trails = ox_trails                         # times the Aurochs' trail was found: each makes the next harder
+        self.revealed = set(revealed or ())                 # node ids revealed on the world map
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
+
+    def reveal_node(self, node_id: str) -> bool:
+        """Reveal a hidden node on the world map. Returns True if newly revealed."""
+        if node_id not in self.revealed:
+            self.revealed.add(node_id)
+            return True
+        return False
+
+    def is_node_revealed(self, node_id: str) -> bool:
+        """True if the node is known/revealed to this guild."""
+        if node_id in self.revealed:
+            return True
+        return False
 
     def shop(self, node_id):
         if node_id not in self.shops:

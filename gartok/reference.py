@@ -109,7 +109,7 @@ def _weapons():
         thrown = "--" if w.thrown == 0 else f"{w.thrown} sq"
         price = economy._base_price(name) if (name in economy.PRICES or name.startswith("Large ")) else "--"
         rows.append((name, w.size or "Medium", _dice(*w.damage), rng,
-                     "yes" if w.finesse else "--", thrown, w.hands,
+                     "yes" if w.has_trait("finesse") else "--", thrown, w.hands,
                      f"{w.weight:g} kg", price))
     head = ("Weapon", "Size", "Damage", "Range", "Finesse", "Thrown", "Hands", "Weight",
             "Price ($)")

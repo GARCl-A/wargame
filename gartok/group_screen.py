@@ -567,7 +567,7 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         hit_bonus, _ = unit.attack_bonus
         dn, faces = w.damage
         dmg = f"{dn}d{faces}"
-        if (w.range == 0 or w.thrown) and unit.mod_strength:
+        if (w.range == 0 or (w.has_trait("thrown") if hasattr(w, "has_trait") else getattr(w, "thrown", 0))) and unit.mod_strength:
             dmg += f" {unit.mod_strength:+}"
         return f"{hit_bonus:+} hit  ·  {dmg} dmg  ·  {w.weight}kg"
 

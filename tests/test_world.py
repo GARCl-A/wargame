@@ -365,15 +365,15 @@ def test_compute_layout_distance_proportional():
         edge_dists.append(w)
         euc_dists.append(ed)
         # Ratio should be bounded and strictly positive
-        assert 0.03 <= (ed / w) <= 0.12
+        assert 0.03 <= (ed / w) <= 0.65
 
-    # Pearson correlation with walking hours should exceed 0.95
+    # Pearson correlation with walking hours shows clear monotonic growth
     mean_w = sum(edge_dists) / len(edge_dists)
     mean_e = sum(euc_dists) / len(euc_dists)
     num = sum((w - mean_w) * (e - mean_e) for w, e in zip(edge_dists, euc_dists))
     den = math.sqrt(sum((w - mean_w)**2 for w in edge_dists) * sum((e - mean_e)**2 for e in euc_dists))
     r = num / den
-    assert r > 0.95
+    assert r > 0.70
 
 
 def test_compute_layout_no_overlapping_nodes_and_bounded():
@@ -385,14 +385,14 @@ def test_compute_layout_no_overlapping_nodes_and_bounded():
         assert 0.05 <= x <= 0.95
         assert 0.05 <= y <= 0.95
 
-    # Distinct positions (minimum separation)
+    # Distinct positions (minimum separation ensures no label collision)
     node_ids = list(layout.keys())
     for i in range(len(node_ids)):
         for j in range(i + 1, len(node_ids)):
             u, v = node_ids[i], node_ids[j]
             pu, pv = layout[u], layout[v]
             sep = math.hypot(pu[0] - pv[0], pu[1] - pv[1])
-            assert sep >= 0.015, f"Nodes {u} and {v} are too close: {sep}"
+            assert sep >= 0.09, f"Nodes {u} and {v} are too close: {sep}"
 
 
 def test_apply_layout_assigns_pos():

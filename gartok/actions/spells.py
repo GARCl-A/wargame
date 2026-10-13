@@ -151,6 +151,7 @@ def CastSpellAction(spell_id):
 class ShareMagicAction(Action):
     id = "share_magic"
     name = "Share Magic"
+    desc = "Temporarily share a known spell with a random ally for this battle."
     cost = 1
     target = "none"
     

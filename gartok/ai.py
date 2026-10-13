@@ -378,6 +378,22 @@ def _try_drink_potion(battle, unit):
     return False
 
 
+def _try_share_magic(battle, unit):
+    """Sprite Nature Initiate: share a known spell with an ally who lacks it."""
+    if not actions.SHARE_MAGIC.available(battle, unit):
+        return False
+    allies = [u for u in battle.units if u.alive and u.team == unit.team and u != unit]
+    needy = [u for u in allies if any(s not in getattr(u, "spells_known", []) for s in unit.spells_known)]
+    if not needy:
+        return False
+    enemies = [u for u in battle.units if u.alive and u.team != unit.team]
+    in_melee = any(battle.units_distance(unit, e) <= 1 for e in enemies)
+    if in_melee and unit.ap < 2:
+        return False
+    actions.SHARE_MAGIC.execute(battle, unit)
+    return True
+
+
 def _ally_to_help(battle, unit):
     """A downed ally this unit wants to stabilize -- only if it is of good
     bent (it will spend the action to save a friend before fighting)."""
@@ -596,6 +612,9 @@ def take_turn(battle, unit):
                 continue
 
         if _try_drink_potion(battle, unit):
+            continue
+
+        if _try_share_magic(battle, unit):
             continue
 
         ally = _ally_to_help(battle, unit)

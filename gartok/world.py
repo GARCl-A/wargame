@@ -97,7 +97,8 @@ class Node:
     def __init__(self, id, name, kind, pos, blurb, scenario=None,
                  lethal=True, arena=False, language=None, alignment=None, functions=(),
                  jurisdiction=None, unsafe=False, encounter_table=None,
-                 garrison_job=None, wagon_risk=0.0, vendors=None, shop_label=None):
+                 garrison_job=None, wagon_risk=0.0, vendors=None, shop_label=None,
+                 hidden=False):
         self.id = id
         self.name = name
         self.kind = kind
@@ -116,6 +117,7 @@ class Node:
         self.wagon_risk = wagon_risk         # chance a wagon left unguarded here is lost (wagon_watch.py)
         self.vendors = dict(vendors or {})   # function id -> the Vendor behind it
         self.shop_label = shop_label         # the map button's text for the `shop` function (default: the function's)
+        self.hidden = hidden
 
     def has(self, function):
         return function in self.functions
@@ -300,8 +302,17 @@ def vendor(node_id, function):
 
 
 def known(guild):
-    """The nodes the guild can see: everything but the places still to be found."""
-    return [n for n in NODES if n.id not in HIDDEN_NODES or getattr(guild, HIDDEN_NODES[n.id])]
+    """The nodes the guild can see: public nodes plus any revealed hidden nodes."""
+    res = []
+    for n in NODES:
+        if not n.hidden and n.id not in HIDDEN_NODES:
+            res.append(n)
+        elif guild is not None:
+            if hasattr(guild, "is_node_revealed") and guild.is_node_revealed(n.id):
+                res.append(n)
+            elif n.id in HIDDEN_NODES and getattr(guild, HIDDEN_NODES[n.id], False):
+                res.append(n)
+    return res
 
 
 def hours(distance, speed):
@@ -344,12 +355,15 @@ def route(src, dst):
     return path[::-1], dist[dst]
 
 
-def compute_layout(nodes=None, edges=None, seed=42, iterations=400, margin=0.08):
+_BASE_POS = {n.id: n.pos for n in NODES}
+
+
+def compute_layout(nodes=None, edges=None, seed=42, iterations=500, margin=0.08):
     """Computes a 2D distance-proportional layout using Kamada-Kawai spring embedding.
 
-    Spring rest lengths are strictly proportional to shortest-path walking hours,
-    and non-adjacent nodes experience repulsive forces to prevent overlapping labels.
-    The layout is deterministic for a given seed and normalized into [margin, 1 - margin].
+    Spring rest lengths are scaled to guarantee comfortable visual clearance around
+    town nodes while maintaining geographic proportionality with travel hours across
+    the world map.
     """
     if nodes is None:
         nodes = NODES
@@ -379,7 +393,9 @@ def compute_layout(nodes=None, edges=None, seed=42, iterations=400, margin=0.08)
     pos = {}
     for n in nodes:
         nid = n.id if hasattr(n, "id") else n
-        if hasattr(n, "pos") and n.pos:
+        if nid in _BASE_POS:
+            pos[nid] = list(_BASE_POS[nid])
+        elif hasattr(n, "pos") and n.pos:
             pos[nid] = list(n.pos)
         else:
             pos[nid] = [rng.uniform(0.2, 0.8), rng.uniform(0.2, 0.8)]
@@ -390,27 +406,28 @@ def compute_layout(nodes=None, edges=None, seed=42, iterations=400, margin=0.08)
         for j in range(i + 1, N)
         if dist[node_ids[i]][node_ids[j]] < float("inf")
     ]
-    L0 = 0.06
+    L0 = 0.075
     K = 1.0
-    step_size = 0.1
+    step_size = 0.08
+    min_sep = 0.09
 
     for step in range(iterations):
         temp = 1.0 - (step / iterations)
         forces = {u: [0.0, 0.0] for u in node_ids}
 
         for u, v in pairs:
-            d_ideal = dist[u][v] * L0
+            d_raw = dist[u][v]
+            d_eff = (d_raw ** 0.6) + 1.5
+            d_ideal = d_eff * L0
             if d_ideal <= 0:
                 continue
-            k_uv = K / (dist[u][v] ** 2)
+            k_uv = K / (d_eff ** 1.8)
 
             dx = pos[u][0] - pos[v][0]
             dy = pos[u][1] - pos[v][1]
             d_actual = math.hypot(dx, dy)
             if d_actual < 1e-5:
-                dx = rng.uniform(-1e-3, 1e-3)
-                dy = rng.uniform(-1e-3, 1e-3)
-                d_actual = math.hypot(dx, dy)
+                continue
 
             f = k_uv * (d_actual - d_ideal)
             fx = f * (dx / d_actual)
@@ -421,13 +438,12 @@ def compute_layout(nodes=None, edges=None, seed=42, iterations=400, margin=0.08)
             forces[v][0] += fx
             forces[v][1] += fy
 
-        min_sep = 0.04
         for u, v in pairs:
             dx = pos[u][0] - pos[v][0]
             dy = pos[u][1] - pos[v][1]
             d_actual = math.hypot(dx, dy)
             if 1e-5 < d_actual < min_sep:
-                rep_f = 0.5 * (min_sep - d_actual) / d_actual
+                rep_f = 0.7 * (min_sep - d_actual) / d_actual
                 forces[u][0] += rep_f * dx
                 forces[u][1] += rep_f * dy
                 forces[v][0] -= rep_f * dx
@@ -474,4 +490,5 @@ def apply_layout(nodes=None, edges=None, seed=42):
 
 
 apply_layout()
+
 

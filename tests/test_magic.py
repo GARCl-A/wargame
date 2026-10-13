@@ -188,6 +188,14 @@ def test_share_magic_teaches_an_ally_a_known_spell():
     assert actions.ShareMagicAction().available(batt, a)
     actions.ShareMagicAction().execute(batt, a)
     assert a.ap == 1
+def test_ai_uses_share_magic_for_needy_ally():
+    batt = Battle([Unit("enemy")], [Unit("player"), Unit("player")])
+    e, a, mate = batt.units
+    e.pos, a.pos, mate.pos = (0, 0), (5, 5), (5, 6)
+    a.char.talents["racial"] = ["sprite_nature_initiate"]
+    _caster(a, ["light_globe"])
+    a.ap = 2
+    ai.take_turn(batt, a)
     assert "light_globe" in mate.spells_known
 
 
