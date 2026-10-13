@@ -144,12 +144,49 @@ def draw_map_node(surf, F, key, node, p, selected=False, icon_fn=None):
         mark = F["inkb"].render("!", True, (250, 240, 230))
         surf.blit(mark, mark.get_rect(center=(bx, by)))
 
-    lab = F["inkb"].render(node["name"], True, T.INK)
-    r = lab.get_rect(midtop=(x, y + NODE_R + 6))
+
+def draw_node_label(surf, F, name, r):
+    lab = F["inkb"].render(name, True, T.INK)
     halo = pygame.Surface((r.w + 10, r.h + 4), pygame.SRCALPHA)
     halo.fill((*T.PAPER, 190))
     surf.blit(halo, (r.x - 5, r.y - 2))
     surf.blit(lab, r)
+
+
+def place_labels(F, centers, names, bounds):
+    """node -> Rect for each name: below its mark when free, else the spot around it that
+    overlaps the other names and marks the least (a few passes settle the order)."""
+    reach = NODE_R + 9
+    marks = {k: pygame.Rect(x - reach, y - reach, 2 * reach, 2 * reach) for k, (x, y) in centers.items()}
+    font, gap = F["inkb"], NODE_R + 6
+    room = bounds.inflate(-12, -8)
+
+    def spots(k):
+        x, y = centers[k]
+        w, h = font.size(names[k])
+        cells = [(x - w // 2, y + gap), (x - w // 2, y - gap - h), (x + gap, y - h // 2),
+                 (x - gap - w, y - h // 2), (x + gap - 6, y + gap - 4), (x - gap - w + 6, y + gap - 4),
+                 (x + gap - 6, y - gap - h + 4), (x - gap - w + 6, y - gap - h + 4),
+                 (x - w // 2, y + gap + h), (x - w // 2, y - gap - 2 * h)]
+        return [pygame.Rect(cx, cy, w, h).clamp(room) for cx, cy in cells]
+
+    def area(a, b):
+        q = a.clip(b)
+        return q.w * q.h
+
+    def cost(k, i, r, others):
+        hit = r.inflate(10, 4)
+        return (3 * i + 4 * sum(area(hit, o.inflate(10, 4)) for o in others.values())
+                + 6 * sum(area(hit, m) for j, m in marks.items() if j != k))
+
+    cands = {k: spots(k) for k in centers}
+    placed = {}
+    order = sorted(centers, key=lambda k: (centers[k][1], centers[k][0]))
+    for _ in range(4):
+        for k in order:
+            others = {j: r for j, r in placed.items() if j != k}
+            placed[k] = min(enumerate(cands[k]), key=lambda ir: cost(k, ir[0], ir[1], others))[1]
+    return placed
 
 
 def draw_pawn(surf, p, color=T.BRASS, alert=False):
@@ -206,7 +243,8 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
     inner = pygame.Rect(rect.x + T.S, rect.y + T.S, rect.w - T.S * 2, rect.h - T.S)
     cam.set_rect(inner)
     cam.autofit(nodes, pad=(T.S * 9, T.S * 8),
-                reserve_bottom=minimap_dims(inner, minimap_size)[1] + T.S * 2, floor=440.0)
+                reserve_bottom=minimap_dims(inner, minimap_size)[1] + T.S * 2, floor=440.0,
+                radii={k: region_r[k] / 2 for k in nodes})
 
     # the paper's shadow on the table
     for i in range(6):
@@ -291,6 +329,10 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
     sel_at = next((g["at"] for g in groups if g["key"] == selected), None)
     for k, n in nodes.items():
         draw_map_node(surf, F, k, n, w2s(n["pos"]), selected=(k == sel_at), icon_fn=icon_fn)
+    spots = place_labels(F, {k: w2s(n["pos"]) for k, n in nodes.items()},
+                         {k: n["name"] for k, n in nodes.items()}, inner)
+    for k, n in nodes.items():
+        draw_node_label(surf, F, n["name"], spots[k])
 
     # 5. pawns
     for g in groups:

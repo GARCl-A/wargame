@@ -48,11 +48,11 @@ the seams they need.
   ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
 - **Enemy info: calibragem e comportamento (built 2026-10-11).** (1) *Calibragem de DC e Scholars:* Limiares são um chute inicial (`intel.BASE_DC` 8, bandas em margem 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4); testar na próxima gameplay e calibrar com `vocation_report.py` (bônus +2 de Scholars). (2) *Busca e patrulha sem visão:* quando ninguém está em vista o agressor faz varredura de waypoints e o defensor se agrupa (detalhado em `ai.py`); pendente refinar se queremos comportamento mais avançado em portas/terreno. (3) *IA usando Assess:* a IA usa Assess como fallback quando não consegue alcançar o alvo no turno; IA lê `known_fields`.
 - **Mine leftovers:** In the economy simulation (`scripts/economy_report.py`), the `crafter` policy still skips recipes that need Coal, and no policy builds the Claim oven, so those two trips stay unpriced in the automated report.
-- **UI polish leftovers (found 2026-10-13 by rendering the screens at 1000x640 to 1920x1080).** (1) The Tannery,
-  Apothecary and Smithy labels overlap in the map's automatic layout (`world.compute_layout`); the cluster needs more
-  room or label placement that avoids neighbours. (2) The Wilds' forest trees are clipped at the top edge of the map.
-  (3) The draft cards' attribute row (`ui/draft_panel`) is tight between groups ("+0 CON"). (4) In a window below
-  about 1100 px the map frames at its zoom floor (`MapCamera.autofit`, 440) and overflows instead of fitting.
+- **UI polish leftovers (found 2026-10-13 by rendering the screens at 1000x640 to 1920x1080).** Map labels
+  (`map_panel.place_labels`: a name sits where it overlaps no other name or mark) and the Wilds' trees (`MapCamera.autofit`
+  takes `radii`, half a region's radius around each node) were fixed 2026-10-13. Left: (1) The draft cards' attribute row
+  (`ui/draft_panel`) is tight between groups ("+0 CON"). (2) In a window below about 1100 px the map frames at its zoom
+  floor (`MapCamera.autofit`, 440 in `map_panel.draw_map`) and overflows instead of fitting.
 - **`Unit.from_save` still reads the old `magic_source` key** (one line, so a save from before 2026-10-13 keeps a
   Gnome's or Kobold's school). It contradicts "an older shape does not load": delete it when no old save matters.
 
@@ -63,10 +63,13 @@ the seams they need.
   2. *Nós secretos no mapa:* Três nós com `hidden=True` em `world.py` integrados ao grafo de distâncias: Santuário de Sangue (próximo às Ruínas), Bosque da Natureza (próximo à Floresta/Wilds), Catedral da Fé (próximo a Ledger Hold/Colinas).
   3. *Missão de entrega na Biblioteca:* Ao entregar o Ancient Codex recuperado da masmorra na Biblioteca, o sábio entrega a nova missão de despacho para UMA das três facções e revela os 3 locais simultaneamente via `guild.reveal_node(node_id)`.
   4. *Entrega e Recompensa:* Entregar o Codex no santuário da facção escolhida completa a missão, consome o item e concede +1 de reputação com aquela facção.
+  5. *Rivalidade por recurso (decidido 2026-10-13):* o Codex só existe um e só vai para UMA facção; entregá-lo a uma fecha esse deed nas outras duas. A rivalidade é disputa de recurso (o deed é exclusivo), não um campo de penalidade de reputação.
+  6. *Um mecanismo só de nó oculto:* hoje há dois, `world.HIDDEN_NODES` (ancient_ruins e ox_fields, por flag do guild) e `Node.hidden` + `Guild.revealed`. Migrar os dois nós antigos para `Guild.revealed` e apagar `HIDDEN_NODES` junto com esta fatia.
+  7. *Arte:* cada santuário tem retrato de mestre e imagem próprios (`/gen-portrait`).
 - **Magic Arc — Fatia 2: Rito de Iniciação e Primeiros Feitiços.**
-  1. *Trava de reputação:* Iniciar na escola mágica requer 2 de reputação com a respectiva facção (entrega do Codex garante o primeiro ponto, um segundo favor/deed concede o segundo).
-  2. *Requisitos de Fé:* Fé exige portar o item `Holy Symbol`.
-  3. *Interação e Treinamento:* Cada santuário oferece mestre/função de iniciação que concede o status de iniciante (`Unit.add_magic_source`; `Unit.magic_sources` já é um conjunto).
+  1. *Trava de reputação:* Iniciar na escola mágica requer 2 de reputação com a respectiva facção. Entregar o Codex dá 1 (falta só 1 deed); quem não o entregou àquela facção precisa de 2. **Decidido 2026-10-13:** são pelo menos 2 missões a mais por facção (6 no total), cada uma valendo 1 de reputação.
+  2. *Requisitos de Fé (decidido 2026-10-13):* a iniciação em Fé **consome** um `Holy Symbol`. Ele não se compra: nenhuma loja o vende (hoje só o Priest nasce com um). Vem de nascença ou de um bandido numa emboscada (pendente: pô-lo numa tabela de saque de bandidos). Explicação de fantasia: o deus escolhe seus discípulos fazendo o símbolo chegar às mãos deles.
+  3. *Interação e Treinamento:* Cada santuário oferece mestre/função de iniciação (uma `NodeFunction` nova, com vendor e retrato próprios) que concede o status de iniciante (`Unit.add_magic_source`; `Unit.magic_sources` já é uma lista sem repetição).
   4. *Tier 1 de Feitiços:* Disponibilização de grimório inicial e estudo de feitiços básicos da escola.
 
 ## Playtest notes 2026-10-12
@@ -76,7 +79,7 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Group swap with 2 groups feels odd.**
+- **Controlling 2+ groups does not feel good.** (Raw, 2026-10-13: the author has no target behaviour, only the feel.) Needs a playtest diagnosis before any design: is it switching groups, selecting one, giving orders, or seeing what the others do? Do not build until the cause is named.
 
 **Draft, leveling and talents**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
@@ -326,7 +329,7 @@ building them:
   3. The quest completes upon safely delivering the Ancient Codex to one chosen magic faction.
   4. Delivering the Codex awards +1 reputation with that chosen faction.
   5. **Initiation lock:** unlocking the ability to initiate squad members into a faction's magic requires **2 reputation** with that faction. Delivering the Codex is therefore a pivotal strategic choice that speeds up initiation with the chosen school.
-  6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources` is a set since 2026-10-13).
+  6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources` is a list without repeats since 2026-10-13).
   - **Infrastructure built (2026-10-13):** Revealed nodes system (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node(node_id)` and persistence in `persist.py` with `"revealed": []` default).
   - **Priority:** Magic progression is strictly prioritised before Archaeology.
   - **Execution breakdown:** Fatias 1 e 2 estão detalhadas e prontas em *Ready to do -> Medium* (Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex; Fatia 2: Rito de Iniciação e Primeiros Feitiços). Apenas a expansão de feitiços de tiers avançados (tier 2+) e penalidades severas de rivalidade aguardam escopo posterior.
@@ -353,7 +356,7 @@ building them:
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
 
-- **Sprite's *Nature Initiate* gives no free spell when already initiated** (`Unit.magic_sources` is a set since
+- **Sprite's *Nature Initiate* gives no free spell when already initiated** (`Unit.magic_sources` is a list without repeats since
   2026-10-13), unlike Faith Initiate; equalise if it ever matters. Share Magic stays battle-only on purpose.
 
 - **Better food (not started; direction 2026-10-09: buffs for eating good food, which leads to a
@@ -385,4 +388,4 @@ for a system that does not exist yet:
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
-- **Holy Symbol.** Required, together with everything else, to start in faith magic.
+- **Holy Symbol.** Consumed by the initiation in faith magic (see *Magic Arc, Fatia 2*); not for sale, only from birth or a bandit's loot.

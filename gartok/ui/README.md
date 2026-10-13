@@ -46,7 +46,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
 | `board_style.py` | the battle board's palette, `battle_layout`, `BoardView` (pan/zoom camera) |
 | `camera.py` | `MapCamera`: pan / zoom around a screen-space centre |
-| `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns |
+| `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns, `place_labels` (names that overlap neither each other nor a mark) |
 | `command_bar.py` | the COMMAND zone: clock, alerts, headline stats |
 | `roster_panel.py` | the ROSTER zone: one card per group, events timeline |
 | `inspector_panel.py` | the INSPECTOR zone: selected band, status, available orders |

@@ -27,16 +27,18 @@ class MapCamera:
     def set_rect(self, rect):
         self.rect = rect
 
-    def autofit(self, nodes, pad, reserve_bottom=0, floor=0.0):
+    def autofit(self, nodes, pad, reserve_bottom=0, floor=0.0, radii=None):
         """Frame every node inside the rect (`pad` = (x, y) px kept clear for labels,
         `reserve_bottom` px kept clear for an overlay, `floor` the smallest zoom worth
         framing at: a window too small for it overflows instead of piling labels) -- once per rect size, and
-        never after the player has taken the camera."""
+        never after the player has taken the camera. `radii` (node -> world units) widens a
+        node's box by the terrain drawn around it, so a big region is not cut at the edge."""
         if self.touched or self._fit_size == self.rect.size:
             return
         self._fit_size = self.rect.size
-        xs = [n["pos"][0] for n in nodes.values()]
-        ys = [n["pos"][1] for n in nodes.values()]
+        r = radii or {}
+        xs = [n["pos"][0] + d * r.get(k, 0) for k, n in nodes.items() for d in (-1, 1)]
+        ys = [n["pos"][1] + d * r.get(k, 0) for k, n in nodes.items() for d in (-1, 1)]
         span_x, span_y = max(max(xs) - min(xs), 1e-6), max(max(ys) - min(ys), 1e-6)
         avail_w = max(1, self.rect.w - 2 * pad[0])
         avail_h = max(1, self.rect.h - 2 * pad[1] - reserve_bottom)
