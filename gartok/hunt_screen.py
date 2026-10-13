@@ -17,6 +17,7 @@ import pygame
 from . import autowin, hunt, ox, progression
 from .scenario import Scenario
 from .screen import Screen
+from .sheet_panel import SheetModalMixin
 from .ui.party_panel import draw_party_stats, party_load
 from .ui.primitives import (
     draw_button,
@@ -30,10 +31,10 @@ from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 
-class HuntScreen(Screen):
+class HuntScreen(SheetModalMixin, Screen):
     native = True
 
-    def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None, on_autowin=None):
+    def __init__(self, fonts, guild, state, phase, on_ambush, on_done, on_tick=None, on_autowin=None, on_level=None):
         super().__init__()
         self.fonts = fonts
         self._F = ui_fonts()
@@ -43,6 +44,7 @@ class HuntScreen(Screen):
         self.on_ambush = on_ambush
         self.on_done = on_done
         self.on_autowin = on_autowin
+        self.on_level = on_level
         self.ambush_pack = None
         self.autowin_estimator = autowin.AutoWinEstimator()
         # `app` passes the real tick (`_hunt_tick`, via `campaign.advance`,
@@ -55,9 +57,15 @@ class HuntScreen(Screen):
         self.chips = []                   # [(rect, hours)]
         self.target_chips = []            # [(rect, target_str)]
         self.buttons = []                 # [(key, rect)]
+        self.sheet_hits = []              # [(rect, unit)]
         self._hot = False
         if self.phase == "done":
             self._wrap_up()
+
+    def handle_escape(self):
+        if self.close_sheet_on_click():
+            return True
+        return False
 
     def _reset_buttons(self):
         self.buttons = []
@@ -142,9 +150,20 @@ class HuntScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _click(self, px):
+        if self.close_sheet_on_click():
+            return
+        for r, u in self.sheet_hits:
+            if r.collidepoint(px):
+                self.open_sheet(u)
+                return
         for key, rect in self.buttons:
             if not rect.collidepoint(px):
                 continue
+            if key.startswith("level:"):
+                idx = int(key.split(":")[1])
+                if self.on_level:
+                    self.on_level(self.state.party[idx])
+                return
             if key == "confirm":
                 self.state.hours_left = min(self.hours, self._daylight()) if self._tracking else self.hours
                 self._do_stretch()
@@ -179,6 +198,7 @@ class HuntScreen(Screen):
         screen.fill(T.TABLE)
         self.chips = []
         self.target_chips = []
+        self.sheet_hits = []
         self._reset_buttons()
 
         text(screen, F["titleb"], "THE OX FIELDS" if self._tracking else "THE WILDS", (m, m - 2), T.TX)
@@ -211,6 +231,7 @@ class HuntScreen(Screen):
         else:
             self._draw_done(screen, body_top)
         self._draw_footer(screen)
+        self.draw_sheet_modal(screen, F)
 
     # ------------------------------------------------------------------ #
     def _draw_party(self, screen, top):
@@ -230,8 +251,17 @@ class HuntScreen(Screen):
             rect = pygame.Rect(pad + col * (col_w + T.S * 2), top + row_idx * (74 + T.S), col_w, 74)
             c = Combatant(u)
             row = self._party_row(u)
-            draw_row(screen, F, rect, unit_to_ch(c), draw_trailing=lambda surf, r, ch, row=row:
+            tag = f"LEVEL UP ({len(u.pending_picks)})" if u.pending_picks else None
+            draw_row(screen, F, rect, unit_to_ch(c), tag=tag, draw_trailing=lambda surf, r, ch, row=row:
                      draw_party_stats(surf, F, r, row))
+
+            badge_r = self.sheet_badge(screen, (rect.right - 4, rect.y + 4))
+            self.sheet_hits.append((badge_r, u))
+
+            if self.on_level and u.pending_picks:
+                btn_w = 110
+                btn_rect = pygame.Rect(rect.right - 230 - btn_w, rect.centery - 13, btn_w, 26)
+                self.add_button(screen, btn_rect, f"level:{i}", f"LEVEL UP ({len(u.pending_picks)})", primary=True)
 
     @staticmethod
     def _party_row(u):

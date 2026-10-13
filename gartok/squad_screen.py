@@ -17,7 +17,7 @@ Migrated fully onto `gartok.ui`: data-driven drawing via `gartok.ui.primitives`,
 
 import pygame
 
-from . import arena
+from . import arena, world
 from .constants import fmt_money
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
@@ -216,12 +216,25 @@ class SquadScreen(SheetModalMixin, Screen):
         self._reset_buttons()
 
         pad = 16 if W < 1500 else 24
-        text(screen, F["titleb"], self.title, (pad, pad - 2), T.TX)
+        vendor_obj = None
+        if hasattr(self.location, "id"):
+            vendor_obj = world.vendor(self.location.id, "arena") or world.vendor(self.location.id, "battle")
         n = len(self.picked)
         sub_col = T.BRASS if self.ok else T.TX_MUTED
-        text(screen, F["body"],
-             f"{self.location.name}   ·   {n}/{self.max_pick} picked   ·   click to toggle (1 to {self.max_pick})",
-             (pad, pad + 30), sub_col)
+        if vendor_obj:
+            from .ui.vendor_panel import draw_vendor, draw_vendor_name
+            card = vendor_obj.card
+            tx = pad + draw_vendor(screen, F, (pad, pad - 4), card, size=T.S * 7)
+            title_r = text(screen, F["titleb"], self.title, (tx, pad - 2), T.TX)
+            draw_vendor_name(screen, F, (title_r.right + T.S * 2, title_r.y + 6), card)
+            text(screen, F["body"],
+                 f"{self.location.name}   ·   {n}/{self.max_pick} picked   ·   click to toggle (1 to {self.max_pick})",
+                 (tx, pad + 30), sub_col)
+        else:
+            text(screen, F["titleb"], self.title, (pad, pad - 2), T.TX)
+            text(screen, F["body"],
+                 f"{self.location.name}   ·   {n}/{self.max_pick} picked   ·   click to toggle (1 to {self.max_pick})",
+                 (pad, pad + 30), sub_col)
 
         top = pad + 68
         if self.offers:

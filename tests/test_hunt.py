@@ -331,3 +331,37 @@ def test_the_hunt_screen_meat_estimate_includes_the_guilds_gathering_bonus():
 
     assert "meat: 0.50 kg per hour" in shown_for(1.0)
     assert "meat: 0.75 kg per hour" in shown_for(1.5)
+
+
+def test_hunt_screen_level_up_and_sheet_modal():
+    import pygame
+    from gartok import hunt, hunt_screen, progression, world
+    from gartok.guild import Guild
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    u = Unit("player")
+    u.combat_xp = progression.COMBAT_XP_THRESHOLDS[1]
+    assert u.pending_picks == ["combat"]
+
+    st = hunt.HuntState([u], world.node("wilds"), hours_left=8)
+    levelled = []
+    scr = hunt_screen.HuntScreen(ui_fonts(), Guild([u]), st, phase="setup",
+                                 on_ambush=lambda *_: None, on_done=lambda: None,
+                                 on_level=lambda member: levelled.append(member))
+    surf = pygame.Surface((1280, 800))
+    scr.draw(surf)
+
+    # Level up button is present in buttons
+    lvl_btn = next((r for k, r in scr.buttons if k.startswith("level:")), None)
+    assert lvl_btn is not None
+    scr._click(lvl_btn.center)
+    assert levelled == [u]
+
+    # Sheet badge is present and opens modal
+    assert scr.sheet_hits
+    badge_r, unit_hit = scr.sheet_hits[0]
+    assert unit_hit is u
+    scr._click(badge_r.center)
+    assert scr.sheet_open
+    assert scr.handle_escape()
+    assert not scr.sheet_open

@@ -396,9 +396,9 @@ class App:
                                  on_cook=lambda: self._open_kitchen(
                                      group, "CAMPFIRE COOKING",
                                      lambda: self._open_group(group, back=back)))
-    def _open_level(self, unit):
+    def _open_level(self, unit, on_back=None):
         self.scene = LevelScreen(self.ui_fonts, unit,
-                                 on_back=self._open_guild, on_change=self._save)
+                                 on_back=on_back or self._open_guild, on_change=self._save)
 
     # ------------------------------------------------------------------ #
     # the tick: MapScreen issues orders on groups; the clock plays them out #
@@ -864,7 +864,9 @@ class App:
         return cls(self.ui_fonts, self.guild, self._hunt, phase=phase,
                    on_ambush=self._start_hunt_battle, on_done=self._end_hunt,
                    on_tick=self._hunt_tick,
-                   on_autowin=self._resolve_hunt_autowin if autowin else None)
+                   on_autowin=self._resolve_hunt_autowin if autowin else None,
+                   on_level=lambda u: self._open_level(
+                       u, on_back=lambda: setattr(self, "scene", self._hunt_screen(phase, autowin=autowin))))
 
     def _hunt_tick(self, hours):
         """A hunt stretch spends hours outside the map's tick/orders loop --

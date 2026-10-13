@@ -406,6 +406,7 @@ def distribute_load(units, share_coins=True, creatures=()):
     bearers = [*units, *(c for c in creatures if c.capacity > 0)]
     pool = []
     coins = {}
+    unmet_locks = {u: dict(getattr(u, "locked_items", {})) for u in bearers}
     for u in bearers:
         keep, move = [], []
         lock_left = {}                                 # a lock counts a name, not one of its rows
@@ -414,6 +415,8 @@ def distribute_load(units, share_coins=True, creatures=()):
             lock_left.setdefault(name, u.locked_of(name))
             locked = min(qty, lock_left[name])
             lock_left[name] -= locked
+            if name in unmet_locks[u]:
+                unmet_locks[u][name] -= locked
             if items.is_coin(name) and share_coins:
                 coins[name] = coins.get(name, 0) + qty - locked
             elif items.is_coin(name):
@@ -439,7 +442,17 @@ def distribute_load(units, share_coins=True, creatures=()):
 
     pool.sort(key=items.item_weight, reverse=True)
     for item in pool:
-        best = min(bearers, key=lambda m: m.load / max(1.0, m.carry_normal))
+        iname = item.name if isinstance(item, items.ItemInstance) else item
+        w = items.item_weight(item)
+        locked_candidates = [
+            u for u in bearers
+            if unmet_locks[u].get(iname, 0) > 0 and (u.load + w <= u.carry_normal)
+        ]
+        if locked_candidates:
+            best = min(locked_candidates, key=lambda m: m.load / max(1.0, m.carry_normal))
+            unmet_locks[best][iname] -= 1
+        else:
+            best = min(bearers, key=lambda m: m.load / max(1.0, m.carry_normal))
         best.give_to_pack(item)
         best._derive_combat()
 

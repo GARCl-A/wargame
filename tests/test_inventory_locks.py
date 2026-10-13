@@ -175,3 +175,35 @@ def test_distribute_load_keeps_a_lock_to_its_count_across_rows():
 
     assert a.count_of("Quiver") + b.count_of("Quiver") == 2
     assert a.count_of("Quiver") >= 1 and a.locked_of("Quiver") == 1
+
+
+def test_distribute_load_fills_locked_stackable_first_within_capacity():
+    a, b = _bare(), _bare()
+    a._base_inventory = []
+    b._base_inventory = []
+    a.give_to_pack("Iron Bar", qty=2)  # 10kg on a
+    a.give_to_pack("Salt", qty=2)
+    a.locked_items["Salt"] = 5
+    b.give_to_pack("Salt", qty=8)
+
+    # a is heavier (11kg vs 4kg), but a has an unmet lock for 3 more Salt
+    unit_module.distribute_load([a, b])
+
+    assert a.count_of("Salt") == 5
+    assert b.count_of("Salt") == 5
+
+
+def test_distribute_load_locked_stackable_respects_load_limit():
+    a, b = _bare(), _bare()
+    a._base_inventory = []
+    b._base_inventory = []
+    a.give_to_pack("Salt", qty=1)
+    a.locked_items["Salt"] = 100  # huge lock desire
+    b.give_to_pack("Salt", qty=50)
+
+    unit_module.distribute_load([a, b])
+
+    # a shouldn't exceed carry_normal
+    assert a.load <= a.carry_normal
+    assert a.count_of("Salt") > 1
+    assert a.count_of("Salt") + b.count_of("Salt") == 51

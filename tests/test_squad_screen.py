@@ -124,3 +124,16 @@ def test_arena_stake_draws_on_the_whole_group_purse():
     assert scr.ok and scr.picked_gold == 100
     economy.charge_richest_first([fighter, bench], bout.entry)
     assert fighter.money == 0 and bench.money == 100 - bout.entry
+ 
+
+def test_squad_screen_draws_arena_vendor():
+    u = Unit("player")
+    scr = SquadScreen(None, [u], world.node("arena"),
+                      on_confirm=lambda *a: None, on_back=lambda: None,
+                      arena_offers=[arena.scrapper_bout()])
+    surf = pygame.Surface((1280, 800))
+    scr.draw(surf)
+    v = world.vendor("arena", "arena")
+    assert v is not None
+    assert v.name == "Thok'Gar"
+    assert v.portrait == "arena_master.png"

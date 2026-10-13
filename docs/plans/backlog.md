@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, frontier supply run 10 deliveries deed requirement, cart item locking, cargo search by name filter, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, frontier supply run 10 deliveries deed requirement, cart item locking, cargo search by name filter, Arena Master Thok'Gar vendor display, Wilds hunt level up & sheet modal, and locked stackables distribution priority). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -61,16 +61,7 @@ the seams they need.
   rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
   only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
   loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
-- **Mine leftovers (built 2026-10-09).** (1) *Iron Ore* is smelted into *Iron Bar* at the Blacksmith forge (`2x Iron Ore + 1kg Coal -> 1x Iron Bar`, built 2026-10-12). (2) The sim now has the `miner` and `miner_short` policies (stock up, walk past the Old Road,
-  work 6 or 2 shifts, walk back). Result at level 0: with the AI's own fights 75-95% of the
-  guilds are wiped on the road; with a player winning 80% (the report's setting then; it is 0.95 since 2026-10-10) `miner` earns
-  $166 a member by day 30 against the yard's $67, reaches the day-30 milestone in 70% of guilds
-  (every other policy: 0-20%) and loses 30% of them. A 2-shift stay is worse than the yard.
-  So the $1 premium pays only for a long stay, and the Mine is the best way to the
-  milestone. **Decided 2026-10-09: keep it** (the risk and the time are what it pays for); re-judge
-  after a playtest, and if it is too strong a lower premium or a longer road is the lever, not a bigger one. The crafter policy
-  still skips recipes that need Coal and no policy builds the Claim oven, so those two trips stay
-  unpriced.
+- **Mine leftovers:** In the economy simulation (`scripts/economy_report.py`), the `crafter` policy still skips recipes that need Coal, and no policy builds the Claim oven, so those two trips stay unpriced in the automated report.
 
 ## Medium
 
@@ -97,22 +88,16 @@ its functions are tabs inside.
 **Draft, leveling and talents**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
-- **Level up during a Wilds hunt:** attach the level-up modal to the unit's card in the hunt.
 - **Perk to reduce armour weight.**
 - **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
-
-**Pack, cart and coins**
-- **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
-  within its load limit.
 
 **Auto orders**
 - **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
 
 **Factions, nodes and world**
-- **Ledger Hold as a guards faction hub:** Mentorship quest built 2026-10-12. First military work shift is "frontier supply run" (repeatable `work` order with `task="supply_run"`, moving goods from Ledger Hold to First Outpost and back under high ambush risk; requires minimum group cargo capacity; rolls ambush encounters on both outbound and return journeys; yields copper wages and military work XP upon safe return to Ledger Hold; deed requires 10 completed runs).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
@@ -310,14 +295,8 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Art for content already in this backlog.** The Cart and Carriage (`wagon.Vehicle`). Both `carriage.png` and `cart.png` installed in `portraits/npc/` and wired into vehicle displays (2026-10-12). Keepers resolved:
-  (1) The Medic is Pimbletwig himself, sharing the Apothecary's keeper art.
-  (2) Stables at the Farm are run by Edric Ashvale himself (`farmer.png`), no new keeper needed.
-  (3) Arena Master: Goliath pit master Thok'Gar (`portraits/npc/arena_master.png`) wired in `world.NODES`.
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists. Decided 2026-10-12: reserved for one of the magic questlines following the Library's codex / trust sequence; deferred to when the post-library magic quests are built.
-- **Fill the short portrait pools.** Updated 2026-10-12: Wolf reached 8, Skeleton reached 9,
-  Ox reached 7, Sheep pool created (4), Goliath reached 10, Goblin reached 12, and Treefolk reached 20 (plus dedicated recruit).
-  Remaining short: Snake (3), Giant Spider (4), Donkey (4), Horse (4), Kenku (8), Centaur (12).
+- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
   share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
   Ruins, the Claim, the Mine, the Smithy, the Tannery and the Apothecary a mark of their own. The map works as it is, so this is polish.
