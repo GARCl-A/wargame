@@ -232,7 +232,7 @@ def test_resolve_guard_fight_aftermath_only_banks_crime_for_the_caught_survivor(
 
 
 def test_app_opens_guard_screen_then_the_patrol_fight_resolves_through_battle_end():
-    import gartok.app as app_mod
+    import gartok.app_forced as app_mod
     random.seed(1)
     culprit = Unit("player")
     culprit.crime = 4
@@ -282,7 +282,7 @@ def test_fleeing_into_a_recatch_reopens_guard_screen_instead_of_dropping_it():
     `group.order` without ever showing it -- the player would just be dropped
     back on the map with an unresolved arrest nobody could see. RUN's result
     now flows through the same `_pending` dispatch as any fresh catch."""
-    import gartok.app as app_mod
+    import gartok.app_forced as app_mod
     random.seed(1)
     culprit = Unit("player")
     culprit.crime = 5

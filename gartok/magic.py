@@ -103,7 +103,7 @@ def end_study(unit):
 def progress_study(unit, group=None):
     """One day of `unit` studying at a tavern's "study" garrison job: charge
     the daily rent, then roll progress toward `study_target` -- a spell id
-    (needs `magic_source` and a `Scroll of <Spell>`) or a language name (needs
+    (needs a school in `magic_sources` and a `Scroll of <Spell>`) or a language name (needs
     a `Dictionary of <Language>`), whichever `study_target` names. Returns an
     event string worth telling the player about, or None for a quiet day (no
     target set, no matching item, not initiated -- rent still comes due)."""
@@ -140,11 +140,13 @@ def rent_covered(group):
     return covered
 
 
+def casts(unit, spell):
+    return any(s in spell.sources for s in unit.magic_sources)
+
+
 def can_study_spell(unit, spell):
     """True if `unit` has an affinity matching `spell.sources` and has not already mastered it."""
-    if not unit.magic_source or unit.magic_source not in spell.sources:
-        return False
-    return spell.id not in unit.spells_known
+    return casts(unit, spell) and spell.id not in unit.spells_known
 
 def _progress_spell(unit, spell, group=None):
     if not can_study_spell(unit, spell) or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):

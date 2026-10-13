@@ -30,7 +30,9 @@
   "crafting_target": null,
   "crafting_progress": 0,
   "craft_bonuses": {},
-  "magic_source": "faith",
+  "magic_sources": [
+    "faith"
+  ],
   "spells_known": [
     "magic_missile",
     "sleep"

@@ -476,7 +476,7 @@ def test_gnome_magic_excitement_doubles_progress_die_on_first_study_day():
     from gartok import magic
     gnome = _gnome()
     assert gnome.choose_talent("racial", "gnome_magic_excitement")
-    gnome.magic_source = "nature"
+    gnome.magic_sources = ["nature"]
     gnome.spells_known.clear()
     gnome.money = 100
     gnome.give_to_pack("Scroll of Magic Missile")
@@ -504,18 +504,18 @@ def test_gnome_magic_excitement_doubles_progress_die_on_first_study_day():
 
 def test_kenku_faith_initiate_initiates_or_grants_free_spell():
     k1 = _kenku()
-    k1.magic_source = None
+    k1.magic_sources = []
     assert k1.choose_talent("racial", "kenku_faith_initiate")
     assert k1.has_talent("kenku_faith_initiate")
-    assert k1.magic_source == "faith"
+    assert k1.magic_sources == ["faith"]
     assert len(k1.spells_known) == 0
 
     k2 = _kenku()
-    k2.magic_source = "faith"
+    k2.magic_sources = ["faith"]
     k2.spells_known = ["light_globe"]
     assert k2.choose_talent("racial", "kenku_faith_initiate")
     assert k2.has_talent("kenku_faith_initiate")
-    assert k2.magic_source == "faith"
+    assert k2.magic_sources == ["faith"]
     assert len(k2.spells_known) == 2
     assert k2.spells_known[1] in ("magic_missile", "floating_disk")
 

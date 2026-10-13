@@ -124,7 +124,7 @@ def test_taverna_hub_screen_flow():
     u1 = Unit("player")
     u1.name = "Garrick"
     u1.languages = ["Ankarin"]
-    u1.magic_source = "nature"
+    u1.magic_sources = ["nature"]
     u1.spells_known = []
 
     u2 = Unit("player")
@@ -252,3 +252,16 @@ def test_taverna_perform_tab_plays_a_show():
         click("perform_go")
     assert bard.money == 2 * ((20 + bard.mod_charisma - 16) // 2) > 0 and mute.money == 0
     assert "Tavern stage" in screen.notice
+
+
+def test_every_node_builds_as_a_tabbed_hub():
+    """`TabbedHubScreen.for_node` wires a screen per function; a wrong constructor call
+    only surfaces when that node is entered, so build and draw one for each node."""
+    from gartok.hub_screen import TabbedHubScreen
+    pygame.init()
+    surf = pygame.display.set_mode((1280, 720))
+    guild = Guild([Unit("player") for _ in range(3)], node=world.START_NODE)
+    for node in world.NODES:
+        scr = TabbedHubScreen.for_node(ui_fonts(), guild, guild.groups[0], node, on_done=lambda *a: None)
+        scr.mouse = (10, 10)
+        scr.draw(surf)

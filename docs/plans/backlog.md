@@ -48,6 +48,13 @@ the seams they need.
   ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
 - **Enemy info: calibragem e comportamento (built 2026-10-11).** (1) *Calibragem de DC e Scholars:* Limiares são um chute inicial (`intel.BASE_DC` 8, bandas em margem 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4); testar na próxima gameplay e calibrar com `vocation_report.py` (bônus +2 de Scholars). (2) *Busca e patrulha sem visão:* quando ninguém está em vista o agressor faz varredura de waypoints e o defensor se agrupa (detalhado em `ai.py`); pendente refinar se queremos comportamento mais avançado em portas/terreno. (3) *IA usando Assess:* a IA usa Assess como fallback quando não consegue alcançar o alvo no turno; IA lê `known_fields`.
 - **Mine leftovers:** In the economy simulation (`scripts/economy_report.py`), the `crafter` policy still skips recipes that need Coal, and no policy builds the Claim oven, so those two trips stay unpriced in the automated report.
+- **UI polish leftovers (found 2026-10-13 by rendering the screens at 1000x640 to 1920x1080).** (1) The Tannery,
+  Apothecary and Smithy labels overlap in the map's automatic layout (`world.compute_layout`); the cluster needs more
+  room or label placement that avoids neighbours. (2) The Wilds' forest trees are clipped at the top edge of the map.
+  (3) The draft cards' attribute row (`ui/draft_panel`) is tight between groups ("+0 CON"). (4) In a window below
+  about 1100 px the map frames at its zoom floor (`MapCamera.autofit`, 440) and overflows instead of fitting.
+- **`Unit.from_save` still reads the old `magic_source` key** (one line, so a save from before 2026-10-13 keeps a
+  Gnome's or Kobold's school). It contradicts "an older shape does not load": delete it when no old save matters.
 
 ## Medium
 
@@ -59,7 +66,7 @@ the seams they need.
 - **Magic Arc — Fatia 2: Rito de Iniciação e Primeiros Feitiços.**
   1. *Trava de reputação:* Iniciar na escola mágica requer 2 de reputação com a respectiva facção (entrega do Codex garante o primeiro ponto, um segundo favor/deed concede o segundo).
   2. *Requisitos de Fé:* Fé exige portar o item `Holy Symbol`.
-  3. *Interação e Treinamento:* Cada santuário oferece mestre/função de iniciação que concede o status de iniciante (`Unit.magic_source` ou conjunto).
+  3. *Interação e Treinamento:* Cada santuário oferece mestre/função de iniciação que concede o status de iniciante (`Unit.add_magic_source`; `Unit.magic_sources` já é um conjunto).
   4. *Tier 1 de Feitiços:* Disponibilização de grimório inicial e estudo de feitiços básicos da escola.
 
 ## Playtest notes 2026-10-12
@@ -99,9 +106,10 @@ Past choices that now fight the direction. Each has the cost of fixing it; pay o
 feature that needs it is next, not before. Debts already written as part of a feature are
 pointed to, not repeated.
 
-- **Big screen files.** `app.py` (about 1200 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
-  `market_screen.py` and `battle_screen.py` run about 900-1100 (the last two are past 1000). Not critical. When one takes a new node
-  or tab, split by concern instead of growing it. **Cost: low per split.**
+- **Big screen files.** Split 2026-10-13: `app.py` (680 lines) keeps the loop and the dispatch tables, its methods live in
+  `app_nodes.py`, `app_forced.py`, `app_hunt.py` and `app_battle.py`; `battle_screen.py` keeps input and turn flow, the
+  painting is `battle_draw.py`. Still about 860-1060: `market_screen.py`, `map_screen.py`, `group_screen.py`,
+  `taverna_screen.py`. When one takes a new node or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Decided 2026-10-12: keep the strict premise that "an older shape does not load"; no migration bridge needed for now. **Cost: zero.**
 
 ## Large
@@ -111,7 +119,7 @@ pointed to, not repeated.
   (each level grants one pick), so combat 15 wastes a pick and work levels 11-15 grant picks with
   nothing to spend them on. The racial track (picks from racial level 5) is worse: its 27 nodes
   are split across races, so most races have almost none of their own and a high racial level
-  buys hit dice only (the Aurochs has zero). Goal: **at least 30 combat and 30 work talents**,
+  buys hit dice only (the Ox has one node, Aurochs Might). Goal: **at least 30 combat and 30 work talents**,
   and enough racial nodes per race for its picks. Nothing built; the author will design them.
 - **Gathering: loose ends (built 2026-10-11, `gather.py`, RULES.md).** The licence, the drop tables,
   the pay rule, the ambush and the sim's `gatherer` policy (and `miner` gathering once it can afford
@@ -281,12 +289,6 @@ the ones that also need code say so. Order is the suggested priority.
 
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists. Decided 2026-10-12: reserved for one of the magic questlines following the Library's codex / trust sequence; deferred to when the post-library magic quests are built.
 - **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10).
-- **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
-  share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
-  Ruins, the Claim, the Mine, the Smithy, the Tannery and the Apothecary a mark of their own. The map works as it is, so this is polish.
-- **Occupation icons.** `icons/body` and `icons/hat` are staged and nothing loads them. If
-  the character sheet is to show the vocation, pick a consistent icon per occupation (18 or
-  more). Depends on the sheet calling it.
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.
 
@@ -324,7 +326,7 @@ building them:
   3. The quest completes upon safely delivering the Ancient Codex to one chosen magic faction.
   4. Delivering the Codex awards +1 reputation with that chosen faction.
   5. **Initiation lock:** unlocking the ability to initiate squad members into a faction's magic requires **2 reputation** with that faction. Delivering the Codex is therefore a pivotal strategic choice that speeds up initiation with the chosen school.
-  6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources`).
+  6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources` is a set since 2026-10-13).
   - **Infrastructure built (2026-10-13):** Revealed nodes system (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node(node_id)` and persistence in `persist.py` with `"revealed": []` default).
   - **Priority:** Magic progression is strictly prioritised before Archaeology.
   - **Execution breakdown:** Fatias 1 e 2 estão detalhadas e prontas em *Ready to do -> Medium* (Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex; Fatia 2: Rito de Iniciação e Primeiros Feitiços). Apenas a expansão de feitiços de tiers avançados (tier 2+) e penalidades severas de rivalidade aguardam escopo posterior.
@@ -351,13 +353,8 @@ building them:
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
 
-- **Magic sources (for the magic arc, decided 2026-10-10).** `Unit.magic_source` holds one source.
-  Make it a set: a unit already initiated who takes another school's initiation (Kenku or Skeleton
-  *Faith Initiate*) trains in it too, as the schools are not exclusive. Touches `can_study_spell`,
-  the save, the char editor, `sheet_card` and the tavern screen. Today it is invisible, since
-  Kenku, Skeleton and Sprite start with no source. Share Magic stays battle-only on purpose.
-  Sprite's *Nature Initiate* gives no free spell when already initiated, unlike Faith Initiate;
-  equalise if it ever matters.
+- **Sprite's *Nature Initiate* gives no free spell when already initiated** (`Unit.magic_sources` is a set since
+  2026-10-13), unlike Faith Initiate; equalise if it ever matters. Share Magic stays battle-only on purpose.
 
 - **Better food (not started; direction 2026-10-09: buffs for eating good food, which leads to a
   recipe book).** Food only quells hunger today and the Potato does that at the

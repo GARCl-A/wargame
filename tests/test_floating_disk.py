@@ -7,7 +7,7 @@ from tests.helpers import Battle, Unit, actions, data
 
 def _caster():
     u = Unit("player", race=data.race_by_name("Human"))
-    u.magic_source = "nature"
+    u.magic_sources = ["nature"]
     u.spells_known = ["floating_disk"]
     return u
 

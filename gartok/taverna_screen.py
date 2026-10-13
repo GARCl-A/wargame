@@ -40,6 +40,7 @@ from .ui.primitives import (
     panel,
     text,
     token_badge,
+    wrap,
 )
 from .ui.tokens import ARCHETYPE_COLORS, T, mix
 from .ui.tokens import fonts as ui_fonts
@@ -434,7 +435,7 @@ class TavernaScreen(Screen):
                 caps(screen, F["micro"], f"{cand.race['name']} · {cand.occupation['name']}",
                      (tx, cr.y + 28), T.TX_MUTED)
                 text(screen, F["body_sm"], f"Resists CHA {cand.mod_charisma:+} · Speaks {', '.join(cand.languages)}",
-                     (cr.x + 12, cr.y + 48), T.TX_FAINT)
+                     (cr.x + 12, cr.y + 58), T.TX_FAINT)
                 bail = self._bail(cand)
                 if bail:
                     caps(screen, F["microb"], f"BAIL {fmt_money(bail)}", (cr.right - 12, cr.y + 12),
@@ -446,7 +447,7 @@ class TavernaScreen(Screen):
                 for label, style, desc in tags[:3]:
                     tcol = ARCHETYPE_COLORS.get(style, T.TX_MUTED)
                     tw = F["microb"].size(label)[0] + 10
-                    pill = pygame.Rect(tag_x, cr.y + 70, tw, 16)
+                    pill = pygame.Rect(tag_x, cr.y + 80, tw, 16)
                     pygame.draw.rect(screen, T.STEEL_HI, pill, border_radius=3)
                     pygame.draw.rect(screen, tcol, pill, 1, border_radius=3)
                     text(screen, F["microb"], label, pill.center, tcol, center=True)
@@ -512,8 +513,11 @@ class TavernaScreen(Screen):
             text(screen, F["bodyb"], f"Bail: {fmt_money(bail)}  ·  party holds {fmt_money(self._wealth())}", (cx, cy),
                  T.BRASS if self._wealth() >= bail else T.BLOOD)
             cy += 24
-        text(screen, F["body_sm"], f"Racial Ability: {cand.ability.name} — {cand.ability.effect}", (cx, cy), T.TX_MUTED)
-        cy += 24
+        for line in wrap(F["body_sm"], f"Racial Ability: {cand.ability.name} — {cand.ability.effect}",
+                         right_rect.right - 20 - cx):
+            text(screen, F["body_sm"], line, (cx, cy), T.TX_MUTED)
+            cy += 18
+        cy += 6
 
         # Candidate archetypes in dossier
         tags = unit_archetypes(cand)
@@ -674,7 +678,7 @@ class TavernaScreen(Screen):
             # Left stats
             tx = mr.x + 60
             text(screen, F["bodyb"], m.name, (tx, mr.y + 12), T.TX)
-            magic_tag = f"Magic: {m.magic_source.capitalize()}" if m.magic_source else "No Magic Affinity"
+            magic_tag = "Magic: " + "/".join(s.capitalize() for s in m.magic_sources) if m.magic_sources else "No Magic Affinity"
             caps(screen, F["micro"], f"{m.race['name']} · {m.occupation['name']} · INT {m.mod_intelligence:+} · {magic_tag} · {fmt_money(m.money)}",
                  (tx, mr.y + 36), T.TX_MUTED)
 
@@ -814,7 +818,7 @@ class TavernaScreen(Screen):
 
         options = self._available_study_options(student)
         if not options:
-            if not student.magic_source:
+            if not student.magic_sources:
                 text(screen, F["body"], f"{student.name} has no magical affinity and carries no unlearned dictionaries.", (cx, cy + 20), T.TX)
             else:
                 text(screen, F["body"], "No eligible scrolls or dictionaries carried by the party.", (cx, cy + 20), T.TX)

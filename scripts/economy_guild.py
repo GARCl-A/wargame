@@ -164,7 +164,12 @@ class FightLibrary:
     def pool(self, kind, level, size):
         key = (kind, as_levels(level), size)
         if key not in self.cache:
-            self.cache[key] = [self._play(kind, key[1], size) for _ in range(self.samples)]
+            state = random.getstate()
+            random.seed(repr(key))      # the same fights for a key whatever ran first
+            try:
+                self.cache[key] = [self._play(kind, key[1], size) for _ in range(self.samples)]
+            finally:
+                random.setstate(state)
         return self.cache[key]
 
     @staticmethod

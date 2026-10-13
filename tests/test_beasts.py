@@ -319,9 +319,9 @@ def test_elder_skeleton_adds_four_int_and_four_cha():
 def test_skeleton_faith_initiate_opens_faith_magic():
     s = _skeleton()
     s.set_track_level("racial", 6)
-    assert s.magic_source is None
+    assert s.magic_sources == []
     assert s.choose_talent("racial", "skeleton_faith_initiate")
-    assert s.magic_source == "faith"
+    assert s.magic_sources == ["faith"]
 
 
 def test_deft_bones_lets_unarmed_attacks_hit_with_dexterity():

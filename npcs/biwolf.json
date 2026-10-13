@@ -30,7 +30,7 @@
   "crafting_target": null,
   "crafting_progress": 0,
   "craft_bonuses": {},
-  "magic_source": null,
+  "magic_sources": [],
   "spells_known": [],
   "study_target": null,
   "study_progress": 0,

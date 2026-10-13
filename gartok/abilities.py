@@ -168,9 +168,6 @@ _LIST = [
             "a body that strikes before it is seen: every attack is a finesse attack (the better "
             "of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs.",
             finesse=True, natural_weapon="Fangs"),
-    Ability("aurochs_might", "Aurochs Might",
-            "+3 squares of speed, +3 [melee] damage (a gore that lifts a man).",
-            speed=3, melee_damage=3),
     Ability("wolf_pack_tactics", "Pack Tactics",
             "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
             "ally already on the target, not just the first.",

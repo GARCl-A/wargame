@@ -22,7 +22,7 @@ from .constants import fmt_money
 from .draft_screen import TEAM_SIZE as MAX_SQUAD
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
-from .ui.combat_card import draw_combat_card
+from .ui.combat_card import draw_combat_card, height_for
 from .ui.primitives import (
     contained,
     draw_button,
@@ -247,6 +247,7 @@ class SquadScreen(SheetModalMixin, Screen):
         card_w = min(360, (W - 2 * pad - (cols - 1) * gap) // cols)
         avail_h = H - top - 64
         card_h = min(232, max(210, (avail_h - (rows - 1) * gap) // max(1, rows)))
+        card_h = max(card_h, height_for(max((len(self._extras(u)) for u in self.roster), default=1)))
         total_grid_h = rows * card_h + (rows - 1) * gap
         self._max_scroll = max(0, total_grid_h - avail_h)
         self._scroll = min(self._scroll, self._max_scroll)
@@ -319,6 +320,27 @@ class SquadScreen(SheetModalMixin, Screen):
             top += 20
         return top + 4
 
+    def _extras(self, unit):
+        """The lines under a card's weapon row: purse and level, then whatever needs flagging."""
+        lvl = f"C{unit.combat_level}"
+        if unit.work_xp or unit.work_level:
+            lvl += f"/W{unit.work_level}"
+        lvl += f"/R{unit.racial_level}"
+        if unit.pending_picks:
+            lvl += " *"
+
+        extra = [(None, f"{fmt_money(unit.money)}  ·  lvl {lvl}", T.BRASS)]
+        if unit.pending_picks:
+            extra.append((None, "TALENT PICK READY", T.BRASS))
+        if unit.hunger_level:
+            extra.append((None, f"HUNGER: {unit.hunger_label}", T.BLOOD if unit.hunger_level >= 2 else T.BRASS))
+        if unit.sick:
+            extra.append((None, "SICK", T.BLOOD))
+        if self.unit_outlevels_bout(unit):
+            max_lvl = arena.bout_max_combat_level(self.offer)
+            extra.append((None, f"NO COMBAT XP (enemy max Lv {max_lvl})", T.BRASS))
+        return extra
+
     def _draw_card(self, screen, F, rect, unit):
         chosen = unit in self.picked
         off = unit in self.disabled
@@ -343,28 +365,8 @@ class SquadScreen(SheetModalMixin, Screen):
             "dmg": f"{n}d{faces}"
         }
 
-        lvl = f"C{unit.combat_level}"
-        if unit.work_xp or unit.work_level:
-            lvl += f"/W{unit.work_level}"
-        lvl += f"/R{unit.racial_level}"
-        if unit.pending_picks:
-            lvl += " *"
-
-        extra = [
-            (None, f"{fmt_money(unit.money)}  ·  lvl {lvl}", T.BRASS)
-        ]
-        if unit.pending_picks:
-            extra.append((None, "TALENT PICK READY", T.BRASS))
-        if unit.hunger_level:
-            extra.append((None, f"HUNGER: {unit.hunger_label}", T.BLOOD if unit.hunger_level >= 2 else T.BRASS))
-
-        if unit.sick:
-            extra.append((None, "SICK", T.BLOOD))
-
+        extra = self._extras(unit)
         no_xp = self.unit_outlevels_bout(unit)
-        if no_xp:
-            max_lvl = arena.bout_max_combat_level(self.offer)
-            extra.append((None, f"NO COMBAT XP (enemy max Lv {max_lvl})", T.BRASS))
 
         mark = ("UNFIT (hunger)" if off
                 else ("PICKED (NO XP)" if (chosen and no_xp) else "PICKED") if chosen

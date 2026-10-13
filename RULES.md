@@ -58,7 +58,7 @@ A new campaign begins at the **Vocation** screen (`VocationScreen`), then the **
   | Warband | Orc, Hobgoblin, Goblin, Goliath, Gnoll, Lizardfolk | +1 Mental Defense in the daily cohesion roll only (`cohesion._roll_groups`); an overextended group's defence penalty is unchanged |
   | Delvers | Dwarf, Kobold, Gnome, Automaton, Goblin, Goliath | +15% from gathering: work-shift pay (`vocations.gather_pay`; the odd fraction of a coin is paid by chance) and the meat, mushrooms and fruit of a hunt or forage (`HuntState.yield_mult`). A creature's drop (wolf hide) is not gathering |
   | Wilds | Centaur, Elf, Treefolk, Grippli, Gnoll, Sprite | the ambush chance is x0.8 while the group's stance is *Cautious* |
-  | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information (`vocations.INFO_BONUS`); dormant until the combat info modal exists |
+  | Scholars | Kobold, Gnome, Elf, Sprite, Kenku, Human | +2 on the INT roll that reveals enemy information (`vocations.INFO_BONUS`): added to the opening read and to Assess (`intel.bind("player", guild.bestiary, vocations.info_bonus(guild))`) |
   | Caravan | Human, Halfling, Dwarf, Kenku, Automaton, Centaur | x0.85 on travel hours, after wagon and animal speed (`orders.next_leg(pace=...)`) |
   | Marsh | Grippli, Lizardfolk, Treefolk, Halfling, Kobold, Kenku | on every 10th day of the guild's clock (day % 10 == 0) no food ages (`guild_upkeep._daily_upkeep`) |
 
@@ -282,7 +282,7 @@ track** earns no XP of its own — its "XP" is the sum of the other track levels
 dice scale with every racial level (L1+), the **first racial talent pick unlocks
 only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
 (e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
-`Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf).
+`Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox).
 All three tables run to level 15 so the creator can pin NPCs that high, but
 generated enemies stay capped at combat 7 / work 6 (`constants.ENEMY_*_CAP`).
 
@@ -297,7 +297,10 @@ step deeper specialises the character in one action. **No pick is mutually
 exclusive** (the `group` field is reserved): one pick per track level, filled in
 any order, and over enough levels a character can hold every node. A deeper node
 just needs the one above it first (`requires`), which chains down the branch. The
-first tier-3 node is `Fleet` (+1 Speed, behind Deadeye). The node list with
+first tier-3 node is `Fleet` (+1 Speed, behind Deadeye); **Armor Bearer** (combat tier 3, behind
+Bulwark) takes up to 6 kg off the carried weight of the armor worn (never more than the armor
+weighs, `armor_weight_relief`), so heavy plate stops counting against encumbrance; **Fletcher** (work
+tier 3, behind Crafter) is the arrow-carver (see *Ammo*). The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
 **Hit die by racial level.** Each racial level grants a hit die: `1d(racial HD) +
@@ -310,16 +313,20 @@ character creator. `mean_level` survives only as the encounter-difficulty scalar
 
 ## Magic 🟡
 
-State on `unit.py` (`magic_source`, `spells_known`, `study_target`,
+State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
 `conditions.py`. A first foothold, not a full system — four spells today.
 
-- **Sources.** `magic_source` (`nature` / `blood` / `faith`) gates which
-  spells a character can ever learn. It comes from a race (Gnome starts
-  `nature`, Kobold starts `blood`) or a racial talent (the Kenku's "Faith
-  Initiate", the Sprite's "Nature Initiate").
+- **Sources.** `magic_sources` (a set of `nature` / `blood` / `faith`) gates which
+  spells a character can ever learn: a spell is castable when any one of the unit's
+  schools is among its `sources` (`magic.casts`). The schools are not exclusive, so a unit
+  already initiated in one takes another's initiation on top (`Unit.add_magic_source`). A
+  school comes from a race (Gnome starts `nature`, Kobold starts `blood`) or a racial talent
+  (the Kenku's and the Skeleton's "Faith Initiate", the Sprite's "Nature Initiate"); a
+  Faith Initiate who already holds `faith` gains a free faith spell instead. The creator
+  toggles each school on its own; dropping one forgets only the spells no remaining school casts.
 - **Casting** costs 1 action point and only shows up once the spell's id is
   in `spells_known`:
   - **Magic Missile** (level 0) — ranged (6 cells), `d20 + INT` vs AC, `1d4`
@@ -602,6 +609,10 @@ act on the modifiers and do not count.
   Strength (melee), never Dexterity.
 - "Improvised weapon" is a reusable concept; for now only the crossbow triggers
   it.
+- **Fletcher** (work talent): whenever a group rests with a Fletcher in it and anyone's quiver is
+  short of 20 bolts (or a ranged-weapon carrier has none), the rest consumes **1 Lumber** from the
+  members' unlocked packs, then the wagons, then the herd, and refills every quiver
+  (`campaign._fletcher_rest_pass`). No Lumber, no arrows.
 
 ### Terrain 🟡
 
@@ -1410,6 +1421,13 @@ measure the guild's standing:
 - **Earned Trust:** carry the Bankers' sealed chest intact to Ledger Hold and
   return their receipt (`bankers_trust_chest` mission).
 
+**Ledger Hold** also has deeds: *Treefolk Mentorship* (train a Treefolk recruit to racial level 2 and
+bring them) and *Frontier Supply Run*, the military deed: **10** completed supply runs. A run
+(`orders.supply_run`, 10 h, a work order of level 5) needs 20 kg of free cargo capacity; each escort
+earns $30 and work XP, there is a 35% ambush chance per run (a forced `supply_ambush` fight; the pay
+waits for a win), and every run that is banked counts toward `Guild.supply_runs_completed`. The deed
+fires on the tenth.
+
 What they sell today is the guild's **first shared property**: a **strongbox** at the bank.
 
 - The `city` node carries `bank=True`; **VISIT THE BANK** on the map opens
@@ -1494,8 +1512,8 @@ instance of a given template can be active guild-wide at a time
     chase: the hunt ends after it, win or lose.
   - *The field.* A 48x30 daylight map (the tracks were read by day, so no torches
     are needed): groves that block sight, mud, and two box canyons opening west.
-    Aurochs (`npcs/aurochs.json`, level 13, Large, faster than
-    any hunter, 119 HP, +5 Strength and +3 melee) is **skittish** (`ai._skitter`):
+    Aurochs (`npcs/aurochs.json`, an Ox by race, level 13, Large, 119 HP, Strength 20,
+    faster than any hunter: his racial talent *Aurochs Might* gives +5 squares of speed and +3 melee damage) is **skittish** (`ai._skitter`):
     anyone within 12 squares sends him for open ground far from the party, so a
     straight chase herds him round the groves. He turns and fights when cornered
     -- a canyon, the map edge, a pincer -- or winded (3 turns of running), and then
@@ -1567,6 +1585,16 @@ shipped start to finish (buy/claim, use, lose, recover):
   (the City property has none), no mechanical battle-map cover from fences
   (a checklist step only, no combat-terrain hookup), no per-unit job choice
   inside a garrison.
+
+### Secret nodes 🟡
+
+A node can be secret: `Node.hidden`, or one of the two legacy flags in `world.HIDDEN_NODES` (the
+Ancient Ruins, the Legendary Ox Fields, each opened by its own discovery). `world.known(guild)` is
+the one list of nodes a guild can see: the public ones plus every secret node it has revealed.
+`Guild.reveal_node(node_id)` reveals one for good (true the first time) and `Guild.revealed` is
+saved (`"revealed"` in the guild payload, empty by default). The map, routes and the minimap all
+read `known`, so a revealed node simply appears with its edges. Nothing in the world is secret by
+this route yet; the magic arc's three schools are the first planned users.
 
 ### Dungeons and the Ancient Ruins 🟡
 

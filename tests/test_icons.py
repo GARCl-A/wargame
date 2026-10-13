@@ -1,0 +1,23 @@
+"""Every node on the map and every occupation has a glyph of its own that exists on disk."""
+
+import os
+
+from gartok import artwork, data, world
+from gartok.map_screen import NODE_ICON
+
+
+def _exists(slug):
+    return os.path.isfile(os.path.join(artwork._ICONS, slug[0], slug[1] + ".svg"))
+
+
+def test_every_node_has_its_own_map_icon():
+    ids = {n.id for n in world.NODES}
+    assert set(NODE_ICON) == ids
+    assert all(_exists(s) for s in NODE_ICON.values())
+    assert len(set(NODE_ICON.values())) == len(ids), "two nodes share a glyph"
+
+
+def test_every_occupation_has_an_icon():
+    names = {o[1] for o in data.OCCUPATIONS} | {data.BEAST_OCCUPATION["name"]}
+    assert set(artwork.OCCUPATION_ICON) == names
+    assert all(_exists(s) for s in artwork.OCCUPATION_ICON.values())

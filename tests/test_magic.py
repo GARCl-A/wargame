@@ -233,7 +233,7 @@ def test_ai_prefers_magic_missile_over_a_weak_hand_attack():
 
 def _student(spell_id="light_globe"):
     u = Unit("player")
-    u.magic_source = "nature"
+    u.magic_sources = ["nature"]
     u.study_target = spell_id
     u.give_to_pack(f"Scroll of {magic.SPELLS[spell_id].name}")
     return u
@@ -321,7 +321,7 @@ def test_magic_state_survives_a_save_round_trip():
         return
     random.seed(1)
     u = Unit("player")
-    u.magic_source = "nature"
+    u.magic_sources = ["nature"]
     u.spells_known = ["light_globe", "sleep"]
     u.study_target = "magic_missile"
     u.study_progress = 42
@@ -330,7 +330,7 @@ def test_magic_state_survives_a_save_round_trip():
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
         back_u = back.roster[0]
-        assert back_u.magic_source == "nature"
+        assert back_u.magic_sources == ["nature"]
         assert back_u.spells_known == ["light_globe", "sleep"]
         assert back_u.study_target == "magic_missile"
         assert back_u.study_progress == 42
@@ -340,18 +340,18 @@ def test_magic_state_survives_a_save_round_trip():
 
 def test_can_study_spell_requires_matching_affinity_and_unlearned():
     u = Unit("player")
-    u.magic_source = None
+    u.magic_sources = []
     missile = magic.SPELLS["magic_missile"]
 
     # Non-magic user cannot study
     assert not magic.can_study_spell(u, missile)
 
     # Magic user with mismatched source cannot study
-    u.magic_source = "astral"
+    u.magic_sources = ["astral"]
     assert not magic.can_study_spell(u, missile)
 
     # Matching source can study
-    u.magic_source = "nature"
+    u.magic_sources = ["nature"]
     assert magic.can_study_spell(u, missile)
 
     # Already known spell cannot be studied again
@@ -400,3 +400,44 @@ def test_a_member_not_studying_pays_nothing_and_eats_their_own_ration():
     assert idler.money == 100
     assert student.money == 1000 - 15
     assert idler.count_of("Potato") < rations_before
+
+
+def test_schools_are_not_exclusive():
+    u = Unit("player")
+    u.magic_sources = []
+    u.set_magic_source("nature")
+    u.set_magic_source("faith")
+    u.set_magic_source("faith")
+    assert u.magic_sources == ["nature", "faith"]
+    for sid in ("magic_missile", "floating_disk"):
+        assert magic.casts(u, magic.SPELLS[sid]) == any(s in u.magic_sources for s in magic.SPELLS[sid].sources)
+
+
+def test_dropping_one_school_forgets_only_spells_no_other_school_casts(monkeypatch):
+    u = Unit("player")
+    u.magic_sources = []
+    nature_only = magic.Spell("gale", "Gale", 0, ("nature",))
+    monkeypatch.setitem(magic.SPELLS, nature_only.id, nature_only)
+    u.set_magic_source("nature")
+    u.set_magic_source("faith")
+    u.set_spell_known(nature_only.id, True)
+    u.set_magic_source("faith", False)
+    assert u.magic_sources == ["nature"] and nature_only.id in u.spells_known
+    u.set_magic_source("nature", False)
+    assert u.magic_sources == [] and u.spells_known == []
+
+
+def test_every_school_round_trips_through_a_save():
+    from gartok import persist
+    u = Unit("player")
+    u.magic_sources = ["blood", "faith"]
+    back = Unit.from_save(persist.unit_to_dict(u))
+    assert back.magic_sources == ["blood", "faith"]
+
+
+def test_a_legacy_single_source_save_keeps_its_school():
+    from gartok import persist
+    d = persist.unit_to_dict(Unit("player"))
+    d.pop("magic_sources")
+    d["magic_source"] = "nature"
+    assert Unit.from_save(d).magic_sources == ["nature"]

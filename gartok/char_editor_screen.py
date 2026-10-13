@@ -181,14 +181,12 @@ class CharEditorScreen(Screen):
                     "artifact": ["(empty)"] + [n for n, i in items.all_items().items()
                                                if i.type == items.ItemType.ARTIFACT],
                     "armor": ["(none)"] + list(items.armor()),
-                    "additem": _ITEM_CATALOG,
-                    "magic": ["(none)"] + [s.capitalize() for s in magic.SOURCES]}[pk]
+                    "additem": _ITEM_CATALOG}[pk]
             cur = {"race": u.race["name"], "occupation": u.occupation["name"],
                    "alignment": u.alignment, "weapon": u.equipped_weapon,
                    "tongue": u.equipped_tongue, "artifact": u.equipped_artifact,
                    "armor": u.equipped_armor,
-                   "additem": None,
-                   "magic": u.magic_source.capitalize() if u.magic_source else "(none)"}[pk]
+                   "additem": None}[pk]
             self.picker = (pk, opts, cur)
         elif kind == "attr":
             _, name, delta = action
@@ -209,6 +207,9 @@ class CharEditorScreen(Screen):
         elif kind == "talent":
             _, track, tid = action
             (u.drop_talent if tid in u.talents[track] else u.choose_talent)(track, tid)
+        elif kind == "source":
+            _, src = action
+            u.set_magic_source(src, src not in u.magic_sources)
         elif kind == "lang":
             _, name = action
             u.set_language(name, name not in u.languages)
@@ -262,8 +263,6 @@ class CharEditorScreen(Screen):
             elif pk == "armor":
                 u.take_from_armor() if name == "(none)" else u.give_to_armor(name)
                 u._derive_combat()
-            elif pk == "magic":
-                u.set_magic_source(None if name == "(none)" else name.lower())
             elif pk == "additem":
                 u.give_to_pack(name)
                 u._derive_combat()
@@ -508,14 +507,22 @@ class CharEditorScreen(Screen):
 
         # --- magic ------------------------------------------------ #
         y = section(screen, F, "MAGIC", x, y, w)
-        self._pick_row(screen, pygame.Rect(x, y, w, 26), "SOURCE",
-                       (u.magic_source or "none").capitalize(),
-                       ("picker", "magic"))
-        y += 26 + T.S // 2
-        if u.magic_source:
+        cx = x
+        for src in magic.SOURCES:
+            on = src in u.magic_sources
+            label = src.capitalize()
+            cwid = F["body_sm"].size(label)[0] + T.S * 3
+            sr = pygame.Rect(cx, y, cwid, 22)
+            box(screen, sr, fill=T.STEEL_HI if on else T.STEEL,
+                border=T.BRASS if on else T.STEEL_LINE, width=1)
+            text(screen, F["body_sm"], label, sr.center, T.TX if on else T.TX_FAINT, center=True)
+            self._hit(sr, ("source", src))
+            cx += cwid + T.S // 2
+        y += 22 + T.S // 2
+        if u.magic_sources:
             cx, cy = x, y
             for spell in magic.SPELLS.values():
-                if u.magic_source not in spell.sources:
+                if not magic.casts(u, spell):
                     continue
                 on = spell.id in u.spells_known
                 label = f"{spell.name}  L{spell.level}"
@@ -603,7 +610,7 @@ class CharEditorScreen(Screen):
             text(screen, F["bodyb"], "×", xr.center, T.BLOOD if h else T.TX_MUTED, center=True)
             self._hit(xr, ("unpack", idx))
             target = None
-            if item.startswith("Scroll of ") and u.magic_source:
+            if item.startswith("Scroll of ") and u.magic_sources:
                 spell = magic.spell_for_scroll(item)
                 if spell and spell.id not in u.spells_known:
                     target = spell

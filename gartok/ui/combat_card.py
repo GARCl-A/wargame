@@ -5,6 +5,14 @@ from . import banner
 from .primitives import TOKEN_INK, caps, text
 from .tokens import T, fonts, mix
 
+_BODY_H = 24 + 64 + 16 + 18 + 24 + 32      # header + vitals + weapon rows, before the extra lines
+_EXTRA_H = 26
+_ACTION_H = 40
+
+
+def height_for(extra_count):
+    return _BODY_H + _EXTRA_H * extra_count + _ACTION_H + T.S
+
 
 def draw_combat_card(s, rect, ch, action="PICK", hovered=False, selected=False, disabled=False, state_msg=None, extra_lines=None):
     """
@@ -78,10 +86,10 @@ def draw_combat_card(s, rect, ch, action="PICK", hovered=False, selected=False, 
                 caps(s, F["micro"], lbl, (rect.x + pad, y), T.TX_FAINT)
                 y += 18
             text(s, F["body"], val, (rect.x + pad, y), col)
-            y += 26
+            y += _EXTRA_H
             
     # Bottom Action / State
-    b_h = 40
+    b_h = _ACTION_H
     b_r = pygame.Rect(rect.x, rect.bottom - b_h, rect.w, b_h)
     pygame.draw.rect(s, T.STEEL, b_r)
     pygame.draw.rect(s, border, b_r, 1)

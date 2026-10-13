@@ -83,17 +83,30 @@ class EditMixin:
         elif not on and name in self.languages and len(self.languages) > 1:
             self.languages.remove(name)
 
-    def set_magic_source(self, source):
-        """Initiate the unit into a source (`nature` / `blood` / `faith`) or
-        pass `None` to strip the affinity. Spells the new source can't cast
+    def add_magic_source(self, source):
+        """Initiate the unit into a school (`nature` / `blood` / `faith`); the
+        schools are not exclusive, so it adds to the ones already held."""
+        if source in magic.SOURCES and source not in self.magic_sources:
+            self.magic_sources.append(source)
+
+    def set_magic_source(self, source, on=True):
+        """Sandbox: initiate the unit into a school (or, with `on` False, strip
+        it); `None` strips every school. Spells no remaining school can cast
         are forgotten, and a study in flight is dropped."""
-        if source is not None and source not in magic.SOURCES:
+        if source is None:
+            changed = bool(self.magic_sources)
+            self.magic_sources = []
+        elif source not in magic.SOURCES or (source in self.magic_sources) == on:
             return
-        if source == self.magic_source:
+        else:
+            changed = True
+            if on:
+                self.add_magic_source(source)
+            else:
+                self.magic_sources.remove(source)
+        if not changed:
             return
-        self.magic_source = source
-        self.spells_known = [sid for sid in self.spells_known
-                             if source and source in magic.SPELLS[sid].sources]
+        self.spells_known = [sid for sid in self.spells_known if magic.casts(self, magic.SPELLS[sid])]
         self.study_target = None
         self.study_progress = 0
 
@@ -106,7 +119,7 @@ class EditMixin:
         if not on:
             if spell_id in self.spells_known:
                 self.spells_known.remove(spell_id)
-        elif spell_id not in self.spells_known and self.magic_source in spell.sources:
+        elif spell_id not in self.spells_known and magic.casts(self, spell):
             self.spells_known.append(spell_id)
             if self.study_target == spell_id:
                 self.study_target, self.study_progress = None, 0

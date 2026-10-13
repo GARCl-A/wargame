@@ -43,7 +43,7 @@ def test_language_for_dictionary_rejects_non_dictionary_items():
 
 def _student(language="Elvish"):
     u = Unit("player")
-    u.magic_source = None
+    u.magic_sources = []
     u.languages = ["Ankarin"]
     u.study_target = language
     u.give_to_pack(f"Dictionary of {language}")
@@ -154,7 +154,7 @@ def test_studying_a_language_with_shared_party_dictionary():
     import random
     random.seed(1)
     student = Unit("player")
-    student.magic_source = None
+    student.magic_sources = []
     student.languages = ["Ankarin"]
     student.study_target = "Elvish"
     student.money = 1000
@@ -234,7 +234,7 @@ def test_ending_a_study_releases_the_lock_on_the_study_item():
 def test_mastering_a_language_releases_the_lock_too():
     random.seed(4)
     student, companion = Unit("player"), Unit("player")
-    student.magic_source = None
+    student.magic_sources = []
     student.languages = ["Ankarin"]
     student.money = 1000
     companion.give_to_pack("Dictionary of Elvish")

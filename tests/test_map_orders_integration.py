@@ -136,7 +136,7 @@ def test_a_second_group_does_not_auto_advance():
 
 
 def test_market_order_opens_the_market_screen_scoped_to_the_group():
-    import gartok.app as app_mod
+    import gartok.app_nodes as app_mod
     random.seed(1)
     a, b = Unit("player"), Unit("player")
     g = Group([a, b], node="market")
@@ -163,7 +163,7 @@ def test_hunt_stretch_keeps_another_groups_work_order_in_lockstep_with_the_clock
     tick/orders loop -- it must still cost every OTHER busy group its share
     of the clock (here: a lumber-yard shift), not just the 1 h approach that
     got it to `HuntScreen` in the first place."""
-    import gartok.app as app_mod
+    import gartok.hunt_screen as app_mod
     random.seed(1)
     lumber = Group([walker()], node="lumber_yard")
     hunters = Group([walker()], node="wilds")
@@ -191,7 +191,7 @@ def test_hunt_stretch_keeps_another_groups_work_order_in_lockstep_with_the_clock
 
 
 def test_arena_order_opens_squad_screen_with_offers_scoped_to_the_group():
-    import gartok.app as app_mod
+    import gartok.app_nodes as app_mod
     random.seed(1)
     a, b = Unit("player"), Unit("player")
     g = Group([a, b], node="arena")
@@ -213,7 +213,8 @@ def test_arena_order_opens_squad_screen_with_offers_scoped_to_the_group():
 
 
 def test_two_interactive_orders_drain_one_screen_at_a_time():
-    import gartok.app as app_mod
+    import gartok.app_nodes as app_mod
+    import gartok.hub_screen as hub_mod
     random.seed(1)
     a, b = Unit("player"), Unit("player")
     g1 = Group([a], node="market")
@@ -226,12 +227,12 @@ def test_two_interactive_orders_drain_one_screen_at_a_time():
 
     opened = []
     orig_market, orig_taverna = app_mod.MarketScreen, app_mod.TavernaScreen
-    orig_for_node = app_mod.TabbedHubScreen.for_node
+    orig_for_node = hub_mod.TabbedHubScreen.for_node
     app_mod.MarketScreen = lambda fonts, guild_, shoppers, node, on_done: (
         opened.append("market"), object())[1]
     app_mod.TavernaScreen = lambda fonts, guild_, party, node, on_done, group=None: (
         opened.append("recruit"), object())[1]
-    app_mod.TabbedHubScreen.for_node = staticmethod(
+    hub_mod.TabbedHubScreen.for_node = staticmethod(
         lambda fonts, guild_, group, node, on_done, first=None: (
             opened.append("recruit"), object())[1])
     try:
@@ -243,7 +244,7 @@ def test_two_interactive_orders_drain_one_screen_at_a_time():
         assert not app._pending
     finally:
         app_mod.MarketScreen, app_mod.TavernaScreen = orig_market, orig_taverna
-        app_mod.TabbedHubScreen.for_node = orig_for_node
+        hub_mod.TabbedHubScreen.for_node = orig_for_node
 
 
 def test_a_group_that_starves_out_before_resolution_is_skipped():
@@ -267,7 +268,7 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
     g2.order = orders.interactive("market", hours=24 * 6)    # same ETA -- survivor has food
 
     opened = []
-    import gartok.app as app_mod
+    import gartok.app_nodes as app_mod
     orig = app_mod.MarketScreen
     app_mod.MarketScreen = lambda *a, **k: (opened.append("market"), object())[1]
     try:

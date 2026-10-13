@@ -418,7 +418,7 @@ def _app(guild):
 
 
 def test_the_ox_node_order_opens_the_tracking_screen():
-    import gartok.app as app_mod
+    import gartok.hunt_screen as hunt_screen_mod
     from gartok import orders
     from gartok.group import Group
     random.seed(1)
@@ -427,12 +427,13 @@ def test_the_ox_node_order_opens_the_tracking_screen():
     app = _app(guild)
     g.order = orders.interactive("ox_hunt")
     app._advance()
-    assert isinstance(app.scene, app_mod.TrackScreen)
+    assert isinstance(app.scene, hunt_screen_mod.TrackScreen)
     assert app._hunt.target == "ox" and app.scene.tutorial_key() == "ox_hunt"
 
 
 def test_killing_aurochs_closes_the_trail_and_losing_the_hide_fails_the_job():
-    import gartok.app as app_mod
+    import gartok.hunt_screen as hunt_screen_mod
+    import gartok.loot_screen as loot_screen_mod
     guild, (signer, mate) = _guild(hour=10, node="ox_fields")
     m = _job(guild, signer)
     app = _app(guild)
@@ -447,11 +448,11 @@ def test_killing_aurochs_closes_the_trail_and_losing_the_hide_fails_the_job():
     app._battle_end(battle)
     assert missions.pending_ox(guild) is None and m.ambush_done
     assert app._hunt.hours_left == 0
-    assert isinstance(app.scene, app_mod.LootScreen)             # the hide and the horn on the field
+    assert isinstance(app.scene, loot_screen_mod.LootScreen)             # the hide and the horn on the field
     app.scene.on_done()                                          # ...left lying
     assert m.state == "failed"
     assert any("hide is lost" in n for n in app._map_notices)
-    assert isinstance(app.scene, app_mod.TrackScreen) and app.scene.phase == "done"
+    assert isinstance(app.scene, hunt_screen_mod.TrackScreen) and app.scene.phase == "done"
 
 
 def test_a_lost_chase_leaves_the_trail_open_and_the_next_one_harder():
@@ -514,3 +515,23 @@ def test_the_fields_offer_the_track_button_only_with_the_job_out():
     missions.slay_ox(guild)
     _, blocks = _inspect(guild, "ox_fields")
     assert "ox_hunt" not in [b.get("key") for b in blocks]
+
+
+def test_aurochs_is_an_ox_with_aurochs_might():
+    from gartok import npc_lib
+
+    a = npc_lib.load_npc("aurochs")
+    assert a.race["name"] == "Ox"
+    assert a.talents["racial"] == ["aurochs_might"]
+    assert a.speed > 6 and a.hp_max == 119
+
+
+def test_a_herd_ox_never_carries_aurochs_might():
+    import random
+
+    from gartok import data, encounters
+    rng = random.Random(7)
+    for lvl in (1, 2, 3):
+        for _ in range(40):
+            ox = encounters.build_enemy(lvl, rng, race_pool=data.OX_POOL)
+            assert not ox.has_talent("aurochs_might")

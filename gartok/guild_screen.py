@@ -469,7 +469,8 @@ class GuildScreen(Screen):
 
         run(member_panel.draw_identity, {
             "name": unit.name, "token": _token_of(unit),
-            "sub": f"{unit.race['name']} · {unit.age} yrs · {unit.alignment.capitalize()}",
+            "sub": f"{unit.race['name']} {unit.occupation['name']} · {unit.age} yrs · {unit.alignment.capitalize()}",
+            "occ": unit.occupation["name"],
             "where": _node_label(grp.node) if grp else "Camp",
             "task": "Idle" if grp is None or _is_idle(grp) else grp.order.kind.title(),
         })

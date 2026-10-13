@@ -55,7 +55,6 @@ The generator kept only the names; every effect below was designed for the warga
 | Flight | flies: moves freely in three dimensions (up and down pits with no check, ignores terrain) and never takes falling damage. |
 | Spider Venom | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
 | Serpentine | a body that strikes before it is seen: every attack is a finesse attack (the better of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs. |
-| Aurochs Might | +3 squares of speed, +3 [melee] damage (a gore that lifts a man). |
 | Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
 
 ## Squad archetypes
@@ -435,6 +434,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Nature Initiate | fey magic: you become initiated in nature magic and gain the Share Magic action. | -- | Sprite |
 | 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- | Dwarf |
 | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- | Kobold |
+| 1 | Aurochs Might | a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- | Ox |
 | 1 | Rending Bite | jaws that tear: roll one extra die on your unarmed attack. | -- | Wolf |
 | 1 | Elder Skeleton | centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- | Skeleton |
 | 1 | Faith Initiate | a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- | Skeleton |

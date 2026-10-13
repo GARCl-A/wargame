@@ -55,6 +55,28 @@ RACE_ICON = {
 }
 
 
+# Occupation name -> (category, file under assets/icons/). Every occupation in
+# `data.OCCUPATIONS` needs a line (a test fails for one with none).
+OCCUPATION_ICON = {
+    "Butcher": ("map", "cleaver"), "Farmer": ("body", "farmer"), "Craftsman": ("action", "crafting"),
+    "Barber": ("map", "scissors"), "Crossbowman": ("body", "bowman"), "Hunter": ("hat", "robin-hood-hat"),
+    "Jailer": ("body", "guards"), "Cartographer": ("body", "atlas"), "Brewer": ("action", "pouring-chalice"),
+    "Merchant": ("action", "trade"), "Builder": ("action", "stone-crafting"), "Tanner": ("map", "hide"),
+    "Gravedigger": ("map", "shovel"), "Slave": ("body", "slavery-whip"), "Scribe": ("action", "read"),
+    "Blacksmith": ("body", "blacksmith"), "Guard": ("body", "static-guard"), "Guide": ("action", "hiking"),
+    "Gambler": ("body", "tabletop-players"), "Thief": ("body", "rogue"), "Woodcutter": ("action", "stick-splitting"),
+    "Linguist": ("action", "conversation"), "Physician": ("hat", "plague-doctor-profile"),
+    "Messenger": ("action", "run"), "Mercenary": ("body", "swordman"), "Miner": ("body", "miner"),
+    "Musician": ("action", "sing"), "Goldsmith": ("hat", "crown-coin"), "Priest": ("body", "sun-priest"),
+    "Shepherd": ("map", "crook"), "Innkeeper": ("action", "drinking"), "Wild Beast": ("action", "wolf-howl"),
+}
+
+
+def occupation_icon(occupation, px, color=_WHITE):
+    slug = OCCUPATION_ICON.get(occupation)
+    return icon(slug[0], slug[1], px, color) if slug else None
+
+
 @functools.lru_cache(maxsize=1024)
 def icon(category, name, px, color=_WHITE):
     """A `px`x`px` RGBA surface of `assets/icons/<category>/<name>.svg`, tinted

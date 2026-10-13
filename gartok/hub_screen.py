@@ -74,7 +74,7 @@ class TabbedHubScreen(Screen):
         if node.has("library"):
             from .library_screen import LibraryScreen
             from .library_mission_screen import LibraryMissionScreen
-            study = LibraryScreen(fonts, guild, group, on_done)
+            study = LibraryScreen(fonts, guild, list(group.members), node, on_done)
             jobs = LibraryMissionScreen(fonts, guild, group, on_done)
             tabs.append(("study", "STUDY", study))
             tabs.append(("jobs", "JOBS", jobs))

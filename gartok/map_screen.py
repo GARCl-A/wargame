@@ -105,17 +105,21 @@ WASH = {"town": T.WASH_TOWN, "rock": T.WASH_ROCK, "green": T.WASH_GREEN}
 DEFAULT_REGION_R = 0.045
 WILDS_REGION_R = 0.09
 
-KIND_ICON = {"battle": ("body", "sword-tie"), "market": ("gui", "wallet"),
-            "tavern": ("action", "drinking"), "town": ("gui", "house"),
-            "wilds": ("action", "wolf-howl"), "prison": ("body", "imprisoned")}
-WORK_ICON = ("action", "stick-splitting")
+NODE_ICON = {
+    "city": ("map", "city"), "lumber_yard": ("action", "stick-splitting"), "mine": ("action", "mining"),
+    "arena": ("body", "sword-tie"), "market": ("action", "trade"), "smith": ("map", "smith"),
+    "tanner": ("map", "hide"), "apothecary": ("map", "flask"), "tavern": ("action", "drinking"),
+    "prison": ("body", "imprisoned"), "road": ("map", "signpost"), "wilds": ("action", "wolf-howl"),
+    "ledger_hold": ("map", "fort"), "wilds_territory": ("map", "claim"), "library": ("gui", "open-book"),
+    "farm": ("map", "wheat"), "ancient_ruins": ("map", "ruins"), "country_roads": ("action", "journey"),
+    "ox_fields": ("map", "ox"),
+}
 
 
 def _icon_fn(surf, node, center):
-    """`map_panel.draw_map_node`'s `icon_fn` hook -- draws the app's real
-    game-icons.net silhouettes instead of the component's own three
-    hand-drawn glyph shapes."""
-    slug = WORK_ICON if node["work"] else KIND_ICON.get(node["kind"])
+    """`map_panel.draw_map_node`'s `icon_fn` hook -- draws each node's own
+    silhouette (`NODE_ICON`) instead of the component's three hand-drawn glyph shapes."""
+    slug = NODE_ICON.get(node["id"])
     if slug is None:
         return
     img = artwork.icon(slug[0], slug[1], 20, color=T.INK)
@@ -217,7 +221,7 @@ class MapScreen(Screen):
     # ------------------------------------------------------------------ #
     @staticmethod
     def _node_dict(n):
-        return {"pos": n.pos, "name": n.name, "terrain": KIND_TERRAIN.get(n.kind, "rock"),
+        return {"id": n.id, "pos": n.pos, "name": n.name, "terrain": KIND_TERRAIN.get(n.kind, "rock"),
                 "kind": n.kind, "work": n.has("work"), "alert": False}
 
     def _sync_node_alerts(self):

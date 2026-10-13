@@ -205,6 +205,8 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
              minimap_size=None, icon_fn=None):
     inner = pygame.Rect(rect.x + T.S, rect.y + T.S, rect.w - T.S * 2, rect.h - T.S)
     cam.set_rect(inner)
+    cam.autofit(nodes, pad=(T.S * 9, T.S * 8),
+                reserve_bottom=minimap_dims(inner, minimap_size)[1] + T.S * 2, floor=440.0)
 
     # the paper's shadow on the table
     for i in range(6):
@@ -312,16 +314,19 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
     return draw_minimap(surf, F, inner, cam, nodes, edges, size=minimap_size)
 
 
+def minimap_dims(map_rect, size=None):
+    if size is not None:
+        return size
+    return (max(120, min(220, round(map_rect.w * 0.16))),
+            max(72, min(140, round(map_rect.h * 0.20))))
+
+
 def draw_minimap(surf, F, map_rect, cam, nodes, edges, size=None):
     """`size`, when given, is `(w, h)` in px. Left at None, the minimap
     scales with the map area it sits in instead of a fixed box, so it
     stays proportionate whether the map panel is a phone-sized pane or a
     full monitor."""
-    if size is None:
-        w = max(120, min(220, round(map_rect.w * 0.16)))
-        h = max(72, min(140, round(map_rect.h * 0.20)))
-    else:
-        w, h = size
+    w, h = minimap_dims(map_rect, size)
     box = pygame.Rect(map_rect.right - w - T.S * 2, map_rect.bottom - h - T.S * 2, w, h)
     pygame.draw.rect(surf, T.STEEL, box)
     pygame.draw.rect(surf, T.STEEL_LINE, box, 1)

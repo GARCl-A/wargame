@@ -5,7 +5,7 @@
   "auto_name": false,
   "portrait_id": 2095512110,
   "portrait_file": "aurochs.png",
-  "race": "Aurochs",
+  "race": "Ox",
   "occupation": "Wild Beast",
   "alignment": "Neutral and Neutral",
   "crime": 0,
@@ -25,7 +25,7 @@
   "crafting_target": null,
   "crafting_progress": 0,
   "craft_bonuses": {},
-  "magic_source": null,
+  "magic_sources": [],
   "spells_known": [],
   "study_target": null,
   "study_progress": 0,
@@ -46,7 +46,9 @@
       "iron_will"
     ],
     "work": [],
-    "racial": []
+    "racial": [
+      "aurochs_might"
+    ]
   },
   "level_hp_rolls": [
     3,
@@ -64,14 +66,14 @@
     4
   ],
   "base_attributes": {
-    "strength": 14,
-    "dexterity": 15,
-    "constitution": 12,
+    "strength": 16,
+    "dexterity": 16,
+    "constitution": 14,
     "intelligence": 12,
-    "wisdom": 4,
+    "wisdom": 5,
     "charisma": 9
   },
-  "age_base": 49,
+  "age_base": 78,
   "age": 39,
   "hp_roll": 5,
   "hp_override": null,

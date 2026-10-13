@@ -52,7 +52,7 @@ def test_arena_hides_boss_bout_once_ribbit_brothers_beaten():
         captured["offers"] = kw["arena_offers"]
         return object()
 
-    import gartok.app as app_mod
+    import gartok.app_nodes as app_mod
     orig = app_mod.SquadScreen
     app_mod.SquadScreen = fake_squad_screen
     try:

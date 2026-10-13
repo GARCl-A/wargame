@@ -347,7 +347,7 @@ def test_arena_node_swaps_the_champion_bout_for_the_games_after_dethroning():
     def fake_screen(fonts, roster, node, **kw):
         captured["offers"] = kw["arena_offers"]
         return object()
-    import gartok.app as app_mod
+    import gartok.app_nodes as app_mod
     orig = app_mod.SquadScreen
     app_mod.SquadScreen = fake_screen
     try:

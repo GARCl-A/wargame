@@ -829,7 +829,7 @@ def test_gear_screen_scroll_right_click_offers_and_toggles_study():
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
-    u.magic_source = "nature"
+    u.magic_sources = ["nature"]
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
     gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
@@ -862,7 +862,7 @@ def test_gear_screen_scroll_menu_hidden_without_a_magic_source():
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
-    u.magic_source = None
+    u.magic_sources = []
     u._base_inventory = packed(["Scroll of Light Globe"])
     g = Guild([u])
     from gartok.ui.tokens import fonts as ui_fonts
@@ -886,7 +886,7 @@ def test_gear_screen_dictionary_right_click_offers_and_toggles_study():
     pygame.display.set_mode((1, 1))
 
     u = Unit("player")
-    u.magic_source = None
+    u.magic_sources = []
     u.languages = ["Ankarin"]
     u._base_inventory = packed(["Dictionary of Elvish"])
     g = Guild([u])

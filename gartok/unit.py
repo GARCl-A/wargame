@@ -45,7 +45,7 @@ SAVE_DEFAULTS = {
     "crime": 0, "unfed_days": 0, "sick": False, "medicine_attempted_today": False,
     "treated": False, "consecutive_rest_hours": 0, "last_daily_luck_day": 0,
     "share_food": True, "combat_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
-    "magic_source": None, "spells_known": [], "study_target": None, "study_progress": 0,
+    "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": 0,
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
     "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
@@ -63,7 +63,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.poisons = {}                    # poison id -> {"level", "hours", "dc"} (see unit_poison.py)
         self.antidote_cooldown = 0           # hours until another Antidote may be used
         self._level_hp_rolls = []            # 1dHD per mean-level gained (see collect_levels)
-        self.magic_source = None
+        self.magic_sources = []
         self.spells_known = []
         self.study_target = None
         self.study_progress = 0
@@ -137,7 +137,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         for a in ATTRIBUTES:
             setattr(u, a, u.base_attributes[a])
         u._age_base = d["age_base"]
-        u.magic_source = None                            # set for real below; _configure_race needs it to exist first
+        u.magic_sources = []                             # set for real below; _configure_race needs it to exist first
         u.spells_known = []
         u.race = data.race_by_name(d["race"])
         u._configure_race()
@@ -169,7 +169,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.bio = d["bio"]
         u.arena_title = d["arena_title"]
 
-        u.magic_source = d["magic_source"]
+        u.magic_sources = list(d["magic_sources"] or ([d["magic_source"]] if d.get("magic_source") else []))
         u.spells_known = list(d["spells_known"])
         u.study_target = d["study_target"]
         u.study_progress = d["study_progress"]
@@ -258,13 +258,13 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.age = int(round(self._age_base * self.race["age_mult"]))
 
         if self.race["name"] == "Gnome":
-            self.magic_source = "nature"
+            self.add_magic_source("nature")
             if not self.spells_known:
                 nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
                 if nature_spells:
                     self.spells_known.append(random.choice(nature_spells).id)
         elif self.race["name"] == "Kobold":
-            self.magic_source = "blood"
+            self.add_magic_source("blood")
 
     def _apply_occupation(self):
         self.occupation = data.roll_occupation()

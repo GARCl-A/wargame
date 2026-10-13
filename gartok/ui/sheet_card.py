@@ -34,7 +34,7 @@ own).
 
 import pygame
 
-from .. import data, magic
+from .. import artwork, data, magic
 from ..constants import fmt_money
 from . import loadout_panel
 from .primitives import caps, contained, ellipsize, section, text, token_badge, wrap
@@ -172,7 +172,7 @@ def unit_to_ch(u):
                 "load": (u.load, u.carry_normal, u.carry_max), "copper": u.money},
         "langs": list(u.languages),
         "recipes": list(getattr(u, "recipes", []) or []),
-        "magic": (u.magic_source, [magic.SPELLS[s].name for s in u.spells_known if s in magic.SPELLS]),
+        "magic": (list(u.magic_sources), [magic.SPELLS[s].name for s in u.spells_known if s in magic.SPELLS]),
         "ability": (u.ability.name, u.ability.effect),
         "unit": u,                    # kept for tooltip lookups (hp_breakdown, etc.)
     }
@@ -241,18 +241,28 @@ def _hp_color(cur, mx):
     return T.GREEN
 
 
+def _occ_glyph(s, occupation, x, cy, color, px=14):
+    img = artwork.occupation_icon(occupation, px, color)
+    if img is None:
+        return x
+    s.blit(img, img.get_rect(midleft=(x, cy)))
+    return x + px + T.S // 2
+
+
 # ---------------------------------------------------------------- blocks
 def _b_identity(s, F, r, ch, d, ed, mouse, tip):
     if d == "compact":
         text(s, F["bodyb"], ch["name"], (r.x, r.y), T.TX)
-        caps(s, F["micro"], f"{ch['race']} · {ch['occ']}", (r.x, r.y + T.S * 2 + 2), T.TX_FAINT)
+        gx = _occ_glyph(s, ch["occ"], r.x, r.y + T.S * 2 + 2 + 6, T.TX_FAINT, px=12)
+        caps(s, F["micro"], f"{ch['race']} · {ch['occ']}", (gx, r.y + T.S * 2 + 2), T.TX_FAINT)
         return
     dr = T.S * 3 if d == "normal" else T.S * 4
     cx, cy = r.x + dr, r.y + dr
     token_badge(s, F, (cx, cy), ch["unit"], r=dr)
     x = r.x + dr * 2 + T.S * 2
     text(s, F["titleb"] if d == "full" else F["nameb"], ch["name"], (x, r.y), T.TX)
-    caps(s, F["micro"], f"{ch['race']} · {ch['occ']}", (x, r.y + T.S * 3 + 4), T.TX_MUTED)
+    gx = _occ_glyph(s, ch["occ"], x, r.y + T.S * 3 + 4 + 6, T.TX_MUTED)
+    caps(s, F["micro"], f"{ch['race']} · {ch['occ']}", (gx, r.y + T.S * 3 + 4), T.TX_MUTED)
     if d == "full":
         caps(s, F["micro"], f"{ch['align']} · {ch['size']} · {ch['age']} yrs · combat {ch['combat']}",
              (x, r.y + T.S * 5 + 4), T.TX_FAINT)
@@ -316,13 +326,14 @@ def _format_tip(title, desc, F):
 def _b_attributes(s, F, r, ch, d, ed, mouse, tip):
     n = len(ch["attrs"])
     if d == "compact":
-        x = r.x
-        for nm, v, mod, penalized in ch["attrs"]:
+        step = r.w // n
+        for i, (nm, v, mod, penalized) in enumerate(ch["attrs"]):
+            x = r.x + i * step
             caps(s, F["micro"], nm, (x, r.y + 2), T.TX_FAINT)
-            text(s, F["body"], f"{v}", (x + T.S * 3, r.y - 1), T.BLOOD if penalized else T.TX)
-            caps(s, F["micro"], f"{mod:+d}", (x + T.S * 5 + 4, r.y + 2),
+            vx = x + F["micro"].size(nm)[0] + 4
+            text(s, F["body"], f"{v}", (vx, r.y - 1), T.BLOOD if penalized else T.TX)
+            caps(s, F["micro"], f"{mod:+d}", (vx + F["body"].size(f"{v}")[0] + 3, r.y + 2),
                  T.GREEN if mod > 0 else T.BLOOD if mod < 0 else T.TX_FAINT)
-            x += T.S * 8
         return
     cw = (r.w - T.S * (n - 1)) // n
     for i, (nm, v, mod, penalized) in enumerate(ch["attrs"]):
@@ -401,9 +412,9 @@ def _b_languages(s, F, r, ch, d, ed, mouse, tip):
 
 
 def _b_magic(s, F, r, ch, d, ed, mouse, tip):
-    source, spells = ch["magic"]
+    sources, spells = ch["magic"]
     y = section(s, F, "magic", r.x, r.y, r.w)
-    caps(s, F["micro"], f"{source} initiate", (r.x, y), T.BRASS)
+    caps(s, F["micro"], " / ".join(sources) + " initiate", (r.x, y), T.BRASS)
     text(s, F["body_sm"], ellipsize(", ".join(spells) or "no spells known", F["body_sm"], r.w - T.S * 11),
          (r.x + T.S * 11, y - 1), T.TX_MUTED)
 
@@ -456,8 +467,9 @@ def draw_row(surf, F, rect, ch, selected=False, tag=None, draw_trailing=None):
     cx = rect.x + T.S * 3
     token_badge(surf, F, (cx, rect.centery), ch["unit"], r=T.S * 2)
     text(surf, F["name"], ch["name"], (rect.x + T.S * 6, rect.centery - 16), T.TX)
+    gx = _occ_glyph(surf, ch["occ"], rect.x + T.S * 6, rect.centery + 4 + 6, T.TX_FAINT, px=12)
     caps(surf, F["micro"], f"{ch['race']} · {ch['occ']}",
-         (rect.x + T.S * 6, rect.centery + 4), T.TX_FAINT)
+         (gx, rect.centery + 4), T.TX_FAINT)
     
     if draw_trailing:
         draw_trailing(surf, rect, ch)
@@ -470,5 +482,5 @@ def draw_row(surf, F, rect, ch, selected=False, tag=None, draw_trailing=None):
                  T.BLOOD, right=True)
     if tag:
         label_w = F["micro"].size(f"{ch['race']} · {ch['occ']}".upper())[0]
-        caps(surf, F["micro"], tag, (rect.x + T.S * 6 + label_w + T.S * 2, rect.centery + 4),
+        caps(surf, F["micro"], tag, (gx + label_w + T.S * 2, rect.centery + 4),
              T.BRASS)

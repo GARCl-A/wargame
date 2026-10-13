@@ -265,7 +265,7 @@ gartok/
   screen.py         the screens' base class (click dispatch -> self._click)
   start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py
   combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
-  squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
+  squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
@@ -280,7 +280,8 @@ gartok/
                     presentation (rules + catalog in ui/README.md)
   icons.py          vector action icons (pygame.draw) -- no asset file
   artwork.py        loads/tints/caches the SVGs under assets/icons/ and the race
-                    portraits under assets/portraits/
+                    portraits under assets/portraits/; `RACE_ICON` and `OCCUPATION_ICON`
+                    name each race's and occupation's glyph (`map_screen.NODE_ICON` the nodes')
   lighting.py       LightRenderer: the darkness layer + radial light holes
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions
   dragselect.py     shared press/drag/drop plumbing for the item screens
@@ -290,7 +291,10 @@ gartok/
   tutorial_card.py  draws the current screen's tutorial card + its `?` badge
 
   app.py            the pygame shell: resizable window, loop, screen switching,
-                    the campaign <-> battle loop
+                    the campaign <-> battle loop, the dispatch tables; its methods live in
+                    mixins: app_nodes.py (a node's screens), app_forced.py (guard, ambush,
+                    raid and Claim fights), app_hunt.py (the hunt), app_battle.py
+                    (entering a battle and settling it)
 main.py             entry point
 tests/              the rule tests, one file per domain (run: python -m pytest tests/)
 sim_test.py         headless simulation (200 AI-vs-AI battles)

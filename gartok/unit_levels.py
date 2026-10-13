@@ -126,17 +126,16 @@ class LevelingMixin:
         
         # Hooks for specific racial talents
         if talent_id in ("kenku_faith_initiate", "skeleton_faith_initiate"):
-            if not self.magic_source:
-                self.magic_source = "faith"
-            elif self.magic_source == "faith":
+            if "faith" not in self.magic_sources:
+                self.add_magic_source("faith")
+            else:
                 # Find lowest level faith spell not known
                 faith_spells = [s for s in magic.SPELLS.values() if "faith" in s.sources and s.id not in self.spells_known]
                 if faith_spells:
                     faith_spells.sort(key=lambda s: s.level)
                     self.spells_known.append(faith_spells[0].id)
         elif talent_id == "sprite_nature_initiate":
-            if not self.magic_source:
-                self.magic_source = "nature"
+            self.add_magic_source("nature")
         elif talent_id == "dwarf_crafting":
             for r in ["Dwarf Axe", "Dwarf Shield", "Dwarf Armor"]:
                 if r not in self.recipes:

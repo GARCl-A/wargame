@@ -4,7 +4,7 @@ Every `draw_*` takes `(surf, F, x, y, w, data, mpos)` and returns
 `(y_below, tip)`; `tip` is a tooltip string when the mouse is over something
 that explains itself, else None. Data is plain dicts / tuples:
 
-- `identity`: `{"name", "sub", "where", "task", "token"}`; a stat `tip` is a string or tooltip lines
+- `identity`: `{"name", "sub", "where", "task", "token", "occ" (optional: the occupation whose glyph leads `sub`)}`; a stat `tip` is a string or tooltip lines
 - `vitals`: `{"hp": (cur, max), "hp_tip", "stats": [(label, value, tip)], "attrs": [(label, value, mod, penalised)]}`
 - `weapon`: `{"name", "tags", "chips": [(label, value, tip)]}`
 - `gear`: `{"hands", "armor", "armor_note", "coins", "rations": (n, ok), "load": (cur, normal, max), "load_state": (text, color)}`
@@ -18,6 +18,7 @@ that explains itself, else None. Data is plain dicts / tuples:
 
 import pygame
 
+from .. import artwork
 from ..constants import fmt_money
 from .primitives import (
     caps,
@@ -49,7 +50,11 @@ def draw_identity(surf, F, x, y, w, d, mpos):
     tx = x + PORTRAIT_R * 2 + T.S * 2
     tw = w - (tx - x)
     text(surf, F["titleb"], ellipsize(d["name"], F["titleb"], tw), (tx, y + T.S), T.TX)
-    text(surf, F["body"], ellipsize(d["sub"], F["body"], tw), (tx, y + T.S * 5), T.TX_MUTED)
+    glyph = artwork.occupation_icon(d.get("occ"), 16, T.TX_MUTED)
+    if glyph is not None:
+        surf.blit(glyph, glyph.get_rect(midleft=(tx, y + T.S * 5 + 8)))
+    gx = tx + (16 + T.S // 2 if glyph is not None else 0)
+    text(surf, F["body"], ellipsize(d["sub"], F["body"], tw - (gx - tx)), (gx, y + T.S * 5), T.TX_MUTED)
     loc = pygame.Rect(tx, y + PORTRAIT_R * 2 - T.S * 5, min(tw, T.S * 26), T.S * 5)
     pygame.draw.rect(surf, T.STEEL, loc)
     pygame.draw.rect(surf, T.STEEL_LINE, loc, 1)

@@ -389,7 +389,7 @@ def test_sandbox_magic_source_and_spells():
     u.set_spell_known("sleep", False)
     assert u.spells_known == ["magic_missile"]
     u.set_magic_source(None)
-    assert u.magic_source is None and u.spells_known == []
+    assert u.magic_sources == [] and u.spells_known == []
     u.set_magic_source("faith")
     u.set_spell_known("sleep", True)
     assert Unit.from_save(persist.unit_to_dict(u)).spells_known == ["sleep"]

@@ -45,8 +45,10 @@ When the two disagree, `REFERENCE.md` wins.
 | Module | Role |
 |---|---|
 | `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, artifact slot, pack, stack helpers; `CoinPurse` is the base for `Unit.money` and `Creature`: coins in the pack, 200 coins = 1 kg) |
+| `artwork.py` | loads, tints and caches the SVG glyphs (`assets/icons/<category>/<name>.svg`) and the portraits; `RACE_ICON`, `OCCUPATION_ICON` and `map_screen.NODE_ICON` name each race's, occupation's and node's glyph (a test fails for one with none); `icons/map/` holds the hand-drawn ones game-icons.net lacks |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant |
+| `battle_screen.py` / `battle_draw.py` | the fight's screen: input and turn flow / everything it paints (`BattleDrawMixin`) |
 | `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells` / `weapon_actions`, registry in `__init__.py` |
 | `abilities.py` | `Ability` frozen-dataclass registry (passives + hooks) |
 | `talents.py` | talent-tree registry mirroring abilities.py |
@@ -87,7 +89,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `medic.py` | the Medic's quick treatment (Apothecary hub, MEDIC tab): HP / sickness / poison priced as the expected potions and doses at `economy.MEDIC_PRICE_FACTOR`, one clock for the group; past `MEDIC_MAX_HOURS` it is a hospital stay (`admit`: the patient splits off on a `solo` order); the sim prices it from the same constants |
 | `solo.py` | a *solo task* (`orders.solo`: kind `solo`, `task` hospital / craft): one member splits off into a group of their own (`Guild.send_alone`, costs a group slot) or the whole group waits; `campaign.advance` calls `solo.finish` when the hours run out and the player merges them back by hand. `solo.craft` rolls the craft at the end, from the crafter's own pack when alone or the group's when it waits; the Forge screen's "Alone" row issues it |
 | `craft_level.py` | a recipe's level, worked out from its difficulty (who may start it, scarce reagents, batch time), never set by hand; it blocks nobody, it is the label and the work-XP multiplier |
-| `app.py` | pygame shell: scene loop, screen wiring; a tick's pending order → its screen via `_ACTIVITY_OPENERS` (built from `_FUNCTION_OPENERS` + arena + forced kinds), a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
+| `app.py` | pygame shell: scene loop, screen wiring (its methods are split into mixins: `app_nodes.py` the screens a node opens, `app_forced.py` guard / ambush / raid / Claim fights, `app_hunt.py` the hunt, `app_battle.py` entering and settling a battle); a tick's pending order → its screen via `_ACTIVITY_OPENERS` (built from `_FUNCTION_OPENERS` + arena + forced kinds), a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 | `archetypes.py` | recruit archetype catalog + candidate generation |
 | `missions.py` / `ledger_screen.py` | paid, deadlined jobs from a named giver (has a reward, can fail); ledger_screen is Ledger Hold's Bankers' chest exchange, Commander Varkas Treefolk mentorship, and frontier supply runs (`orders.supply_run`, 10 deliveries for military deed) |
