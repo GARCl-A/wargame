@@ -648,3 +648,40 @@ def test_work_xp_hours_scale_like_combat_xp():
     assert progression.work_xp_hours(4, 1, 2) == 0          # outgrown: nothing
     for act, worker in ((0, 0), (3, 1), (1, 2)):
         assert progression.work_xp_hours(1, act, worker) == progression.xp_award(worker, act)
+
+
+def test_armor_bearer_requires_bulwark_and_reduces_armor_weight():
+    from gartok import items
+    from gartok.combatant import Combatant
+
+    u = _unit(seed=1)
+    u.combat_xp = 30                              # level 4 -> 4 picks
+    u.collect_levels()
+
+    # Prerequisite check: cannot take armor_bearer without bulwark
+    assert not u.choose_talent("combat", "armor_bearer")
+    assert u.choose_talent("combat", "tough")
+    assert not u.choose_talent("combat", "armor_bearer")
+    assert u.choose_talent("combat", "bulwark")
+    assert u.choose_talent("combat", "armor_bearer")
+
+    # Equip heavy armor (Chainmail weighs 10 kg, with armor_bearer -6kg -> contributes 4kg)
+    u.equipped_armor = "Chainmail"
+    u._derive_combat()
+    
+    u_without_talent = _unit(seed=1)
+    u_without_talent.equipped_armor = "Chainmail"
+    u_without_talent._derive_combat()
+    assert u.load == round(u_without_talent.load - 6.0, 1)
+
+    # Combatant load matches the 6kg reduction
+    c = Combatant(u)
+    c_without_talent = Combatant(u_without_talent)
+    assert c.load == round(c_without_talent.load - 6.0, 1)
+
+    # Light armor (less than 6 kg, e.g. Leather Jerkin 4 kg clamped at 0.0 relief)
+    u.equipped_armor = "Leather Jerkin"
+    u._derive_combat()
+    u_no_armor = _unit(seed=1)
+    assert u.load == u_no_armor.load
+

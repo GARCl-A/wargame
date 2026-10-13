@@ -388,6 +388,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Hardy | +1 max HP for every Hit Die you have. | tough |
 | 3 | Recovery | heal 1 HP after every fight you survive. | hardy |
 | 2 | Bulwark | +1 AC. | tough |
+| 3 | Armor Bearer | reduces the carried weight of equipped armor by up to 6 kg. | bulwark |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | alert |
 | 2 | Iron Will | +2 Mental Defense. | alert |
@@ -409,6 +410,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Crafter | +1 to progress rolls when crafting items. | clever |
 | 3 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | crafter |
 | 3 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | crafter |
+| 3 | Fletcher | carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests. | crafter |
 
 ### Racial track
 

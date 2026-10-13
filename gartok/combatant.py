@@ -341,7 +341,8 @@ class Combatant:
         if self.lantern_hand:
             w += items.item_weight(data.LANTERN_ITEM)
         if self.armor:
-            w += self.armor.weight
+            relief = min(self.char.talent_bonus("armor_weight_relief") if hasattr(self.char, "talent_bonus") else 0, self.armor.weight)
+            w += max(0.0, self.armor.weight - relief)
         return round(w, 1)
 
     # ------------------------------------------------------------------ #

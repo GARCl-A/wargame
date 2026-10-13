@@ -365,6 +365,7 @@ def _advance(guild, dt=None, busy=()):
             events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
             events += guild.eat_now_pass(g.members)
+            events += _fletcher_rest_pass(guild, g)
         elif order.kind == "solo":
             events += solo.finish(guild, g, order)
         elif order.interactive:                # arena/market/bank/recruit/hunt
@@ -376,6 +377,53 @@ def _advance(guild, dt=None, busy=()):
         if order.kind in orders.FORCED_KINDS:
             g.pending = order
     return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties, hungry=hungry)
+
+
+def _fletcher_rest_pass(guild, group):
+    """If anyone in the group has the Fletcher talent and any member needs
+    arrows, consume 1 Lumber from the group's packs/stores to refill/craft quivers."""
+    fletcher = next((u for u in group.members if u.has_talent("fletcher")), None)
+    if fletcher is None:
+        return []
+
+    needy = []
+    for u in group.members:
+        if u.count_of(data.AMMO_ITEM) > 0:
+            if u.quiver_charges < data.QUIVER_AMMO:
+                needy.append(u)
+        elif bool(u.weapon and getattr(u.weapon, "range", 0) > 0):
+            needy.append(u)
+
+    if not needy:
+        return []
+
+    lumber_carrier = None
+    for u in group.members:
+        if u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) > 0:
+            lumber_carrier = u
+            break
+    if lumber_carrier is None:
+        for w in getattr(group, "wagons", []):
+            if not getattr(w, "broken", False) and w.stash.count_of(economy.FIELD_CAMPFIRE_LUMBER) > 0:
+                lumber_carrier = w.stash
+                break
+    if lumber_carrier is None:
+        for a in getattr(group, "herd", []):
+            if a.stash.count_of(economy.FIELD_CAMPFIRE_LUMBER) > 0:
+                lumber_carrier = a.stash
+                break
+
+    if lumber_carrier is None:
+        return []
+
+    lumber_carrier.remove_named(economy.FIELD_CAMPFIRE_LUMBER, 1)
+
+    for u in needy:
+        if u.count_of(data.AMMO_ITEM) == 0:
+            u.give_to_pack(data.AMMO_ITEM)
+        u.quiver_charges = data.QUIVER_AMMO
+
+    return [f"{fletcher.name} carved arrows from 1 Lumber while resting, refilling quivers."]
 
 
 def _wear_wagons(group, src, dest):

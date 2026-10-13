@@ -54,6 +54,9 @@ class BattleScreen(Screen):
         self._centered_on = None              # unit the camera last snapped to
         self.inspect = None
         self.inspect_open = True
+        self.inspect_scroll = 0
+        self._foe_inspect_rect = None
+        self._foe_max_scroll = 0
         self._armed = None                    # enemy a repeat click on it will now attack
         self._felled = None                   # (actor, body, time of last click): a click streak that outlived its target
         self.enemy_timer = 0
@@ -103,10 +106,14 @@ class BattleScreen(Screen):
                 self._hotkey_action(event.key - pygame.K_1)
         elif event.type == pygame.MOUSEWHEEL:
             act_rect = getattr(self, "_actions_scroll_rect", None)
+            foe_rect = getattr(self, "_foe_inspect_rect", None)
             log_rect = getattr(self, "_L", None) and self._L.get("log")
             if act_rect and act_rect.collidepoint(self.mouse):
                 max_s = getattr(self, "_actions_max_scroll", 0)
                 self.actions_scroll = max(0, min(max_s, self.actions_scroll - event.y * 34))
+            elif foe_rect and foe_rect.collidepoint(self.mouse):
+                max_s = getattr(self, "_foe_max_scroll", 0)
+                self.inspect_scroll = max(0, min(max_s, self.inspect_scroll - event.y * 20))
             elif log_rect and log_rect.collidepoint(self.mouse):
                 self.log_scroll = max(0, self.log_scroll + event.y)
             else:
@@ -330,6 +337,8 @@ class BattleScreen(Screen):
                 and not self._enemy_visible(clicked):
             clicked = None
         if clicked is not None:
+            if self.inspect is not clicked:
+                self.inspect_scroll = 0
             self.inspect = clicked
             self.inspect_open = True
 
@@ -822,9 +831,13 @@ class BattleScreen(Screen):
 
         inspect_h = 0
         if who is not None:
+            desired_body_h = self._inspect_body_h(who)
+            avail_panel = pr.h - (cur_y - pr.y)
+            max_inspect_total = max(battle_panel.INSPECT_HEAD_H + 40, avail_panel - 180)
             inspect_h = battle_panel.inspect_height(
-                self.inspect_open, who is insp and self._armed is insp, self._inspect_body_h(who)
+                self.inspect_open, who is insp and self._armed is insp, desired_body_h
             )
+            inspect_h = min(inspect_h, max_inspect_total)
 
         inspect_top = pr.bottom - inspect_h
         actions_h = max(40, inspect_top - (T.S if inspect_h else 0) - cur_y)
@@ -962,8 +975,11 @@ class BattleScreen(Screen):
 
         if who.team == self.foe:
             card = self._foe_card(who)
-            area = pygame.Rect(rect.x, cur_y, rect.w - T.S, foe_panel.card_height(card))
-            tooltip = foe_panel.draw_foe_card(screen, F, area, card, self.mouse)
+            card_h = max(40, rect.bottom - cur_y)
+            area = pygame.Rect(rect.x, cur_y, rect.w - T.S, card_h)
+            self._foe_inspect_rect = area
+            self._foe_max_scroll = max(0, foe_panel.card_height(card) - card_h)
+            tooltip = foe_panel.draw_foe_card(screen, F, area, card, self.mouse, self.inspect_scroll)
         else:
             card_rect = pygame.Rect(rect.x, cur_y, rect.w - T.S, 0)
             _, tooltip = draw_sheet_card(screen, F, card_rect, unit_to_ch(who), density="compact", mouse=self.mouse)

@@ -386,3 +386,39 @@ def test_map_screen_rest_open_button_and_inspector_tooltip():
     ms._inspector_button(surf, ui_fonts(), rect, ms.mouse, key="test", label="Test", tooltip="Helpful tip")
     assert ms._inspector_tooltip is not None
     assert ms._inspector_tooltip[2] == "Helpful tip"
+
+
+def test_fletcher_crafts_quivers_on_rest():
+    from gartok import data, economy
+
+    # Archer with depleted quiver
+    archer = Unit("player")
+    archer.equipped_weapon = "Shortbow"
+    archer.give_to_pack("Quiver")
+    archer.quiver_charges = 4
+
+    # Crafter with Fletcher talent
+    crafter = Unit("player")
+    crafter.work_hours = economy.LUMBER_XP_HOURS * 12
+    crafter._derive_combat()
+    assert crafter.choose_talent("work", "clever")
+    assert crafter.choose_talent("work", "crafter")
+    assert crafter.choose_talent("work", "fletcher")
+    crafter.give_to_pack("Lumber")
+
+    guild, g = _guild(archer, crafter)
+    g.order = orders.rest(8)
+    res = campaign.advance(guild)
+
+    # 1 Lumber consumed, quiver refilled to 20
+    assert crafter.count_of("Lumber") == 0
+    assert archer.quiver_charges == data.QUIVER_AMMO
+    assert any("carved arrows from 1 Lumber" in ev for ev in res.events)
+
+    # Second rest: quiver is full, so lumber is not consumed even if present
+    crafter.give_to_pack("Lumber")
+    g.order = orders.rest(8)
+    res2 = campaign.advance(guild)
+    assert crafter.count_of("Lumber") == 1
+    assert not any("carved arrows" in ev for ev in res2.events)
+

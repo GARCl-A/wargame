@@ -365,5 +365,6 @@ class DerivationMixin:
         if self.equipped_artifact:
             w += items.item_weight(self.equipped_artifact)
         if self.armor:
-            w += self.armor.weight
+            relief = min(self.talent_bonus("armor_weight_relief"), self.armor.weight)
+            w += max(0.0, self.armor.weight - relief)
         return round(w, 1)

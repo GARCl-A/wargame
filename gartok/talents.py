@@ -28,6 +28,7 @@ exactly one consumer that reads it back:
     initiative        Combatant.initiative_bonus       --
     speed             Unit._derive_speed               --
     carry_buffer      Unit._carry_relief (capped)      --
+    armor_weight_relief Unit.load / Combatant.load     --
     haggle_cha        Unit.haggle_charisma_mod         --
     food_haggle       Unit.price_mods (economy)        --
     coin_gain         Guild.work_shift                 --
@@ -36,6 +37,7 @@ exactly one consumer that reads it back:
     recruit_cha       recruit.convince                 --
     craft_bonus       Unit.progress_crafting           --
     language_study    magic._progress_language         --
+    fletcher          campaign._fletcher_rest_pass     --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -133,6 +135,9 @@ _LIST = [
            effects=(Effect("post_combat_heal", 1),), icon="body/arm-bandage"),
     Talent("bulwark", "combat", 2, "Bulwark", "+1 AC.", requires="tough",
            effects=(Effect("ac", 1),), icon="body/surrounded-shield"),
+    Talent("armor_bearer", "combat", 3, "Armor Bearer",
+           "reduces the carried weight of equipped armor by up to 6 kg.", requires="bulwark",
+           effects=(Effect("armor_weight_relief", 6),), icon="body/master-of-arms"),
 
     Talent("alert", "combat", 1, "Alert", "+1 Wisdom.",
            effects=(Effect("attr", 1, "wisdom"),), icon="head/gaze"),
@@ -189,6 +194,10 @@ _LIST = [
            "learn a random forge recipe (or +1 forging rolls if all known).",
            requires="crafter",
            effects=(), icon="body/blacksmith"),
+    Talent("fletcher", "work", 3, "Fletcher",
+           "carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests.",
+           requires="crafter",
+           effects=(Effect("fletcher", 1),), icon="action/bowman"),
 
     # ================================================================== #
     # racial -- race-gated; the level is racial_level (sum of the other    #

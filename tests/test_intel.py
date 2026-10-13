@@ -345,6 +345,31 @@ def test_the_battle_screen_inspects_a_foe_through_its_card_and_an_ally_through_t
     assert scr._inspect_body_h(foe) == foe_panel.card_height(scr._foe_card(foe))
 
 
+def test_foe_card_scrolls_and_clamps_at_720p():
+    from gartok.battle_screen import BattleScreen
+    pygame.init()
+    batt, hero, (foe,) = _fight()
+    _read(batt, "player", foe, intel.HARD)
+    card = foe_card.foe_card(intel.known_fields(batt, "player", foe))
+
+    # 1. Direct draw_foe_card test with constrained height and scroll
+    surf = pygame.Surface((300, 150))
+    rect = pygame.Rect(0, 0, 300, 150)
+    tip = foe_panel.draw_foe_card(surf, ui_fonts(), rect, card, (0, 0), scroll=50)
+    assert tip is None
+
+    # 2. BattleScreen at 720p clamps inspect so actions has room and foe panel is scrollable
+    scr = BattleScreen(ui_fonts(), batt, on_battle_end=lambda b: None)
+    screen_720 = pygame.Surface((1280, 720))
+    scr.inspect = foe
+    scr.inspect_open = True
+    scr.mouse = (0, 0)
+    scr.draw(screen_720)
+    assert getattr(scr, "_foe_max_scroll", 0) > 0
+    assert getattr(scr, "_actions_scroll_rect", None) is not None
+    assert scr._actions_scroll_rect.h >= 140
+
+
 # ---- the guild keeps what it learned ----------------------------------------- #
 
 
@@ -390,8 +415,12 @@ def _stand_off(aggressor, foes=1):
     batt.board.walls = {(5, y) for y in range(10)}
     hero = batt.player_units[0]
     hero.pos = (2, 0)
+    hero.hp = max(hero.hp, 10)
+    hero.status = "up"
     for i, e in enumerate(batt.enemy_units):
         e.pos = (10, 2 + 4 * i)
+        e.hp = max(e.hp, 10)
+        e.status = "up"
     batt.intel = intel.Intel(batt)
     return batt, hero, batt.enemy_units
 

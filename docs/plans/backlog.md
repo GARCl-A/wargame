@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, frontier supply run 10 deliveries deed requirement, cart item locking, cargo search by name filter, Arena Master Thok'Gar vendor display, Wilds hunt level up & sheet modal, and locked stackables distribution priority). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-13. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -46,21 +46,7 @@ the seams they need.
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. **Decided 2026-10-10:** recalibrate the sim until it matches the recorded runs (both
   ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
-- **Enemy info: loose ends of the first version (built 2026-10-11).** (1) The thresholds are a first
-  guess (`intel.BASE_DC` 8, bands at margin 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4): play
-  and tune, and size the Scholars' +2 with `vocation_report.py` (the perk is live now, not yet priced).
-  (2) With nobody in sight an *attacker* searches and a *defender* groups up (built 2026-10-11,
-  `Battle.aggressor`, RULES.md). Left: the search is a coarse waypoint sweep (it ignores doors and
-  cover), a defender only groups and never sets a line or a trap, the arena has no role, and
-  `ai._skitter` (the Aurochs' run from the hunters in the Ox Fields) keeps measuring every foe: it
-  is a beast's nose, not a player's.
-  (3) The AI only assesses when it is
-  cornered and out of reach (`ai._try_assess`): a policy for when a point is worth it (before a duel,
-  against a boss) is open. (4) The foe card is tall once the HARD band opens and squeezes the action
-  list at 720p: let it scroll or fold. (5) Allies' bars stay exact; whether the Guild screen's party
-  rows or the Wilds rows should ever show a foe is moot, but the hunt and ambush screens show foes
-  only on the board. (6) `combat_pairs.py` seeds the dice before the rebuild (the turn order was
-  loose before); re-baselined 2026-10-11, see *Combat AI* step 5.
+- **Enemy info: calibragem e comportamento (built 2026-10-11).** (1) *Calibragem de DC e Scholars:* Limiares são um chute inicial (`intel.BASE_DC` 8, bandas em margem 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4); testar na próxima gameplay e calibrar com `vocation_report.py` (bônus +2 de Scholars). (2) *Busca e patrulha sem visão:* quando ninguém está em vista o agressor faz varredura de waypoints e o defensor se agrupa (detalhado em `ai.py`); pendente refinar se queremos comportamento mais avançado em portas/terreno. (3) *IA usando Assess:* a IA usa Assess como fallback quando não consegue alcançar o alvo no turno; IA lê `known_fields`.
 - **Mine leftovers:** In the economy simulation (`scripts/economy_report.py`), the `crafter` policy still skips recipes that need Coal, and no policy builds the Claim oven, so those two trips stay unpriced in the automated report.
 
 ## Medium
@@ -88,8 +74,6 @@ its functions are tabs inside.
 **Draft, leveling and talents**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
   repeated every level.
-- **Perk to reduce armour weight.**
-- **Craft talent:** converts Lumber into arrows daily, by a percentage.
 - **Target equipment:** per unit, how it should be equipped; on entering a shop with an upgrade
   available it swaps by itself.
 
