@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-12 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry, Intellect Clever/Linguist work sub-tree, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -22,16 +22,17 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-12 after wiki compendium & mentorship)
+# Suggested order (updated 2026-10-12 after 15-weapon design & ledger hold work spec)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Ledger Hold military frontier supply runs & hub unlock** (transport supplies from Ledger Hold to First Outpost under high ambush risk; requires minimum cargo capacity and travel speed).
-2. **Weapon traits registry and 2-AP actions** (immutable keyword model in `weapon_traits.py`, followed by unique 2-AP weapon actions).
-3. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-4. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
+1. **Weapon 2-AP actions and traits expansion** (implement the 15 designed 2-AP actions, `crit_mult` 3x for picks, and wire `WeaponTrait.action_id`).
+2. **Ledger Hold military frontier supply runs & hub unlock** (repeatable work order with Ledger Hold <-> First Outpost travel, cargo capacity check, outbound/return ambush rolls, and military work XP).
+3. **World map graph algorithmic auto-layout** (Force-Directed / Spring-Embedder layout with distance-proportional springs and crossing avoidance).
+4. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
+5. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
 
 ---
 
@@ -78,7 +79,7 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Travel graph is hard to read.** Decided 2026-10-12: algorithmic auto-layout rework avoiding edge crossings and treating highly connected nodes as central hubs.
+- **Travel graph is hard to read.** Decided 2026-10-12: algorithmic auto-layout rework avoiding edge crossings and treating highly connected nodes as central hubs. Algorithmic design: Force-Directed (Spring-Embedder / Kamada-Kawai) layout where rest edge lengths between connected nodes (u, v) strictly match `world.distance(u, v)` (walking hours), non-connected nodes repel to avoid overlapping labels, and edge crossings are penalized. Deterministic seed guarantees layout stability across runs.
 - **Group swap with 2 groups feels odd.**
 - **Start screen (built 2026-10-12):** classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
 
@@ -118,7 +119,7 @@ a Dictionary at the tavern and Lumber at the Claim read stores too; guarding the
 **Factions, nodes and world**
 - **Bankers' trust test (resolved 2026-10-12):** Investigated and fixed: `TrustScreen` modal accept/leave buttons visually overlay the `ledger_hold` node position on the underlying map screen at standard resolutions; rapid double-clicks on modal close were passing mouse events directly to `MapScreen`, triggering an accidental travel order to Ledger Hold. Fixed by adding a 250ms click debounce window (`SCENE_DEBOUNCE_MS`) when transitioning to the map.
 - **Ledger Hold as a guards faction hub (mentorship quest built 2026-10-12):** Ledger Hold is its own distinct faction.
-  After completing the Bankers' trust test, visiting Ledger Hold offers a mission from Commander Varkas to mentor a designated level 0 Treefolk recruit (added to guild roster; tracked by unique `recruit_uid`; designated portrait `treefolk_recruit.png`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). Once `racial_level >= 2`, turning the recruit in strips all gear and pack items back to the group, awards $230 reward and banks faction deeds. General Treefolk portrait pool expanded to 20 portraits (0..19). Decided 2026-10-12: first military work shift is "frontier supply run" (transporting resources from Ledger Hold to First Outpost under high ambush risk, requiring minimum cargo capacity and travel speed).
+  After completing the Bankers' trust test, visiting Ledger Hold offers a mission from Commander Varkas to mentor a designated level 0 Treefolk recruit (added to guild roster; tracked by unique `recruit_uid`; designated portrait `treefolk_recruit.png`; base attributes before racial modifiers: 13, 11, 12, 10, 10, 11). Once `racial_level >= 2`, turning the recruit in strips all gear and pack items back to the group, awards $230 reward and banks faction deeds. General Treefolk portrait pool expanded to 20 portraits (0..19). Decided 2026-10-12: first military work shift is "frontier supply run" (repeatable `work` order with `task="supply_run"`, moving goods from Ledger Hold to First Outpost and back under high ambush risk; requires minimum group cargo capacity; rolls ambush encounters on both outbound and return journeys; yields copper wages, military standing deeds, and military work XP upon safe return to Ledger Hold).
 - **Iron Bar smelting (built 2026-10-12):** 2x Iron Ore + 1kg Coal at the Blacksmith forge produces 1x Iron Bar (`CRAFTING_RECIPES`, `CraftingStation.FORGE`).
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
@@ -141,10 +142,7 @@ Past choices that now fight the direction. Each has the cost of fixing it; pay o
 feature that needs it is next, not before. Debts already written as part of a feature are
 pointed to, not repeated.
 
-- **Weapon traits are ad-hoc fields.** `ItemDef.finesse` / `thrown` plus hand-written `if`s in
-  the description builder; every new weapon is a new `if`. Blocks the 2-AP action per weapon.
-  **Cost: medium** (a registry like `abilities.py`). Detail under *Weapons that are really
-  different*.
+- **Weapon traits are ad-hoc fields.** Registry model built 2026-10-12 in `gartok/weapon_traits.py` with `ItemDef.traits` and `ItemDef.has_trait()`. Remaining debt: migrate combat resolvers (`combatant.py`, `unit_derive.py`) and weapon actions from legacy ad-hoc flags (`finesse`, `thrown`) to `has_trait(...)`. **Cost: low** (migration of existing callers). Detail under *Weapons that are really different*.
 - **Big screen files.** `app.py` (about 1200 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run about 900-1100 (the last two are past 1000). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
@@ -185,17 +183,25 @@ pointed to, not repeated.
   Library). (3) Rarity per base
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
-- **Weapons that are really different (two tracks, both to build).**
-  1. **Named weapon traits (decided 2026-10-12: immutable model, central keyword registry mirroring `abilities.py`).** `ItemDef` carries
-     ad-hoc fields (`finesse: bool`, `thrown: int`)
-     and each trait's rule text is a hand-written `if` in the description builder. Model them as
-     an immutable registry of named keywords (Finesse, Thrown, Entangle...) like `abilities.py`, so a new
-     weapon is declared by listing traits and the code, UI text and `REFERENCE.md` read from one
-     place.
-  2. **A 2-AP action per weapon kind.** Every weapon keeps the basic attack; each kind also gets
-     its own two-point action. A trait may grant an action.
-  - **First step:** audit the weapon catalog for what any two share (die, hands, range, trait)
-    and what makes each unique; the audit decides the traits and the actions. Needs AI and tests.
+- **Weapons that are really different (two tracks, designed 2026-10-12).**
+  1. **Named weapon traits (built 2026-10-12, `weapon_traits.py`).** Immutable keyword registry (`WeaponTrait`) mirroring `abilities.py`. `ItemDef.traits` and `ItemDef.has_trait()` live. Properties added:
+     - `crit_mult`: damage multiplier on critical hit (default 2x; Pick and Light Pick gain 3x).
+     - `crit_range`: threat margin on d20 (default 20; seam for future expanded critical range).
+     - Trait adjustments: Quarterstaff gains `Finesse`; Hatchet gains `Thrown 4 sq`; Light Hammer gains `Thrown 8 sq`; Shortspear gains `Thrown 12 sq`; Light Pick gains `Thrown 6 sq` and `Crit 3x`; Pick gains `Crit 3x`; Shortbow range 14 sq; Light Crossbow range 18 sq.
+     - Rationale checks: Dwarf Axe serves as the progression craft reward for having a Dwarven blacksmith artisan in the guild; Light Pick serves as the dedicated light throwable armor-piercer (1d4, 1.0kg, Thrown 6sq, Crit 3x, Armor Pierce).
+  2. **A 2-AP action per weapon kind (audited and finalized for all 15 weapons 2026-10-12):**
+     - **Dagger:** *Sneak Attack* (if target is flanked, deals +1d4 bonus damage).
+     - **Rapier:** *Precise Thrust* (if target is flanked, gains +2 to hit).
+     - **Axe / Dwarf Axe:** *Cleave* (attacks 2 adjacent foes who are adjacent to each other and to the attacker).
+     - **Quarterstaff:** *Repel Strike* (attacks and delivers a *Push* with +2 bonus to the push check).
+     - **Club / Hammer / Light Hammer:** *Maiming Strike* (on hit, reduces foe's movement by half until start of attacker's next round).
+     - **Pick / Light Pick:** *Armor Pierce* (attack ignores worn armor AC bonus; shield, natural and dex still count).
+     - **Shortbow:** *Power Shot* (adds positive STR modifier to arrow damage).
+     - **Light Crossbow:** *Extreme Shot* (doubles attack range to 36 sq).
+     - **Hatchet:** *Hook Shield* (on hit, nullifies target's shield AC bonus until next round).
+     - **Shortspear:** *Javelin Charge* (if thrown after moving this round, gains +1d4 bonus damage).
+     - **Broadsword:** *Parry & Strike* (attacks and grants the attacker the *Defending* condition until next round).
+     - Architecture: Implement in `gartok/actions/weapon_actions.py` registered via `WeaponTrait.action_id`. Needs AI evaluation and tests.
 - **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI

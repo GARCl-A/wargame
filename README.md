@@ -199,6 +199,7 @@ gartok/
   ai.py             enemy squad AI (over actions/); alignment tempers the edges
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
   item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
+  weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
@@ -262,12 +263,13 @@ gartok/
   # screens (Screen base: handle_event / update(dt) / draw(surface), reads self.mouse)
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
-  menu_screen.py / combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
+  start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py
+  combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
   squad_screen.py / battle_screen.py / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
-  alert_screen.py / adelio_prompt_screen.py
+  alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py
   bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
   (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)
   library_screen.py / library_mission_screen.py / apothecary_mission_screen.py
