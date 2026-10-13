@@ -102,6 +102,10 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         self._cols = ColumnScroll()
         self.editing_name = False
         self.name_buf = ""
+        self.cargo_search = ""
+        self.editing_search = False
+        self._search_rect = None
+        self._search_clear_rect = None
         self._bulk_anchor = (0, 0)           # CARGO's "send to..." button center, set when it's drawn
         self._F = None                       # lazy: building pygame Fonts needs pygame.font initialised
 
@@ -232,6 +236,26 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                 self.name_buf += event.unicode
             return
 
+        if self.editing_search and event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                self.editing_search = False
+            elif event.key == pygame.K_ESCAPE:
+                self.cargo_search = ""
+                self.editing_search = False
+                self._cargo_scroll = 0
+            elif event.key == pygame.K_BACKSPACE:
+                self.cargo_search = self.cargo_search[:-1]
+                self._cargo_scroll = 0
+            elif event.unicode and len(self.cargo_search) < 32 and event.unicode.isprintable():
+                self.cargo_search += event.unicode
+                self._cargo_scroll = 0
+            return
+
+        if (self.tab == "gear" and self.view == "cargo" and not self.editing_name
+                and event.type == pygame.KEYDOWN and event.key == pygame.K_SLASH):
+            self.editing_search = True
+            return
+
         if event.type == pygame.MOUSEWHEEL:
             hy = getattr(event, 'y', 0)
             
@@ -260,6 +284,9 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                     return
         super().handle_event(event)
 
+    def _click(self, pos):
+        self._drop(pos, False, None)
+
     def _drop(self, px, dragging, src):
         if dragging:
             hit = self._zone_at(px)
@@ -270,6 +297,17 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         if self.back_rect is not None and self.back_rect.collidepoint(px):
             self.on_back()
             return
+
+        if self._search_clear_rect is not None and self._search_clear_rect.collidepoint(px):
+            self.cargo_search = ""
+            self.editing_search = False
+            self._cargo_scroll = 0
+            return
+        if self._search_rect is not None and self._search_rect.collidepoint(px):
+            self.editing_search = True
+            return
+        elif self.view == "cargo" and not dragging:
+            self.editing_search = False
 
         lock_hit = self._lock_at(px)
         if lock_hit is not None:
@@ -363,6 +401,10 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         elif key == "distribute":
             self.group.distribute_load()
             self.notice = "Redistributed packs by carrying capacity."
+        elif key == "clear_cargo_search":
+            self.cargo_search = ""
+            self.editing_search = False
+            self._cargo_scroll = 0
         elif key == "treat_sickness":
             self._treat_sickness()
         elif key == "treat_poison":
@@ -612,8 +654,11 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
 
     def _cargo_rows(self):
         rows = []
+        q = (self.cargo_search or "").strip().lower()
         for u in self._owners():
             for idx, (name, qty) in enumerate(u._base_inventory):
+                if q and q not in name.lower() and q not in u.pack_tag(name).lower():
+                    continue
                 rows.append((u, idx, name, qty))
         rows.sort(key=lambda t: -items.item_weight(t[2]) * t[3])
         return [((u.uid, idx), name, u.pack_tag(name), items.item_weight(name), qty,
@@ -740,6 +785,14 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             self._dots_hits.append((dr, wagon, idx))
 
     def _draw_cargo(self, screen, F, rect):
+        search_h = T.S * 4
+        search_rect = pygame.Rect(rect.x, rect.y, rect.w, search_h)
+        s_res = loadout_panel.cargo_search_bar(screen, F, search_rect, self.cargo_search, self.editing_search, self.mouse)
+        self._search_rect = s_res["rect"]
+        self._search_clear_rect = s_res["clear_rect"]
+        if self._search_clear_rect is not None:
+            self.buttons.append(("clear_cargo_search", self._search_clear_rect))
+
         rows = self._cargo_rows()
         sel_count = sum(1 for u, idx in self.selected if isinstance(idx, int))
         sel_kg = sum(items.item_weight(u._base_inventory[idx][0]) * u._base_inventory[idx][1]
@@ -747,7 +800,9 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                     if isinstance(idx, int) and idx < len(u._base_inventory))
 
         footer_h = T.S * 7 if sel_count else 0
-        table_rect = pygame.Rect(rect.x, rect.y, rect.w, rect.h - footer_h)
+        table_y = search_rect.bottom + T.S
+        table_h = rect.h - search_h - T.S - footer_h
+        table_rect = pygame.Rect(rect.x, table_y, rect.w, table_h)
         res = loadout_panel.cargo_table(screen, F, table_rect, rows, self._cargo_scroll, self.mouse)
 
         self._cargo_rect = res["list_rect"]
@@ -760,6 +815,10 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             self._lock_hits.append((r, unit, unit._base_inventory[idx][0]))
         for r, (uid, idx) in res["dots_hits"]:
             self._dots_hits.append((r, self._unit_by_uid[uid], idx))
+
+        if not rows:
+            msg = f'No items matching "{self.cargo_search}".' if self.cargo_search else "No items in cargo."
+            text(screen, F["body_sm"], msg, (table_rect.x + T.S * 4, table_rect.y + T.S * 6), T.TX_FAINT)
 
         if sel_count:
             footer_rect = pygame.Rect(rect.x, rect.bottom - footer_h, rect.w, footer_h)
@@ -895,6 +954,10 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
         if self.split_prompt:
             return self._split_hovering()
         if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
+            return True
+        if self._search_rect is not None and self._search_rect.collidepoint(self.mouse):
+            return True
+        if self._search_clear_rect is not None and self._search_clear_rect.collidepoint(self.mouse):
             return True
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):
             return True

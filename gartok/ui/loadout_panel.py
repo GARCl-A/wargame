@@ -494,6 +494,36 @@ def container_panel(surf, F, rect, data, scroll, mouse):
             "service_hits": service_hits, "scroll": scroll}
 
 
+def cargo_search_bar(surf, F, rect, query, editing, mouse):
+    """Draw a search/filter bar for cargo tables.
+    Returns {"rect": rect, "clear_rect": clear_rect or None}.
+    """
+    bg = T.STEEL_HI if editing else T.STEEL
+    border = T.BRASS if editing else T.STEEL_LINE
+    pygame.draw.rect(surf, bg, rect)
+    pygame.draw.rect(surf, border, rect, 1)
+
+    label_w = F["micro"].size("FILTER:")[0]
+    caps(surf, F["micro"], "FILTER:", (rect.x + T.S * 2, rect.centery - 4), T.BRASS if editing else T.TX_MUTED)
+
+    text_x = rect.x + T.S * 2 + label_w + T.S * 2
+    if query:
+        cursor = "|" if editing else ""
+        text(surf, F["body_sm"], query + cursor, (text_x, rect.centery - 8), T.TX)
+    else:
+        hint = "|" if editing else "Filter items by name or tag... (type to search)"
+        text(surf, F["body_sm"], hint, (text_x, rect.centery - 8), T.TX if editing else T.TX_FAINT)
+
+    clear_rect = None
+    if query:
+        cw = T.S * 3
+        cr = pygame.Rect(rect.right - cw - T.S, rect.centery - cw // 2, cw, cw)
+        draw_button(surf, F, cr, "×", ghost=True, mpos=mouse)
+        clear_rect = cr
+
+    return {"rect": rect, "clear_rect": clear_rect}
+
+
 def cargo_table(surf, F, rect, rows, scroll, mouse):
     """Every stack across the whole band, one sortable table. `rows` is
     `[(key, name, tag, weight, qty, locked, sel, carrier_label)]` -- `key`

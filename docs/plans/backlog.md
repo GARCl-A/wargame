@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, frontier supply run 10 deliveries deed requirement, and check_backlog audit). When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-13 (after cart currency pooling, fallen ally loot recovery, lackeys rename, wagon guard work XP, map roster group money, dynamic node tabs, draft rename & layout, rest accordion budgeting, lumber yard hub gathering tab, gathering tutorial, dynamic work XP recipes, keepers in game, field campfire cooking, CTF defender positioning, Carriage display on WatchScreen, Snake Antidote recipe, work tree CHA root, vehicle container in group screen, Roast Meat & Fruit Compote cooking recipes, classic start screen, Iron Bar smelting recipe, Treefolk mentorship quest, weapon traits immutable registry & 2-AP weapon actions, Intellect Clever/Linguist work sub-tree, world map Kamada-Kawai auto-layout with proportional node spacing, in-game dynamic wiki compendium, frontier supply runs work order, revealed nodes infrastructure, weapon traits callers migration to has_trait(), Share Magic action description & AI usage, frontier supply run 10 deliveries deed requirement, cart item locking, cargo search by name filter, and check_backlog audit). When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -106,8 +106,6 @@ its functions are tabs inside.
 **Pack, cart and coins**
 - **Locked stackable (e.g. Salt):** the distribution should fill the inventory with the lock first,
   within its load limit.
-- **Cannot lock items in the cart.**
-- **Cargo screen:** search by item name.
 
 **Auto orders**
 - **Programmable order chains for a group**, e.g. gather Lumber at the Yard -> sell Lumber and

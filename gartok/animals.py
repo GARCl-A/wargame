@@ -63,14 +63,14 @@ class Animal(Creature):
     attributes. Its Strength sets the two loads it can take: `back_load` with a
     Pack Saddle, `draw` pulling a wagon with a Harness."""
 
-    def __init__(self, species, hp=None, unfed_days=0, tack=None, contents=None, uid=None, hitch=None):
+    def __init__(self, species, hp=None, unfed_days=0, tack=None, contents=None, uid=None, hitch=None, locked_items=None):
         self.species = species
         self.race = data.race_by_name(species)
         self.ability = abilities.get(self.race["ability"])
         self.attributes = {a: AVERAGE_SCORE + m for a, m in zip(data.ATTRIBUTES, self.race["mods"])}
         self.size = self.race["size"]
         self.hp_max = max(1, (self.race["hd"] + 2) // 2 + data.mod(self.attributes["constitution"]))
-        super().__init__(uid or uuid4().hex, self.hp_max if hp is None else hp, contents)
+        super().__init__(uid or uuid4().hex, self.hp_max if hp is None else hp, contents, locked_items=locked_items)
         self.unfed_days = unfed_days
         self.tack = tack
         self.hitch = hitch              # uid of the wagon it pulls (needs a Harness), or None
@@ -137,9 +137,10 @@ class Animal(Creature):
     def to_dict(self, serialize_pack):
         return {"uid": self.uid, "species": self.species, "hp": self.hp,
                 "unfed_days": self.unfed_days, "tack": self.tack, "hitch": self.hitch,
-                "contents": serialize_pack(self.stash.items)}
+                "contents": serialize_pack(self.stash.items),
+                "locked_items": dict(self.locked_items)}
 
     @classmethod
     def from_dict(cls, d):
         return cls(d["species"], d["hp"], d["unfed_days"], d["tack"],
-                   d["contents"], d["uid"], d["hitch"])
+                   d["contents"], d["uid"], d.get("hitch"), locked_items=d.get("locked_items", {}))

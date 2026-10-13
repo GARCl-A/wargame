@@ -30,10 +30,11 @@ class _Load(Stash):
 class Creature(CoinPurse):
     name = full_name = "Creature"
 
-    def __init__(self, uid, hp, contents=None):
+    def __init__(self, uid, hp, contents=None, locked_items=None):
         self.uid = uid
         self.hp = hp
         self.stash = _Load(self, contents)
+        self.locked_items = dict(locked_items or {})
 
     @property
     def capacity(self):
@@ -75,10 +76,16 @@ class Creature(CoinPurse):
         return self.count_of(name) > 0
 
     def locked_of(self, name):
-        return 0
+        return min(self.locked_items.get(name, 0), self.count_of(name))
 
     def toggle_lock(self, name):
-        pass
+        held = self.count_of(name)
+        if held == 0:
+            return
+        if self.locked_of(name) >= held:
+            self.locked_items.pop(name, None)
+        else:
+            self.locked_items[name] = held
 
     def unlocked_of(self, name):
         return self.count_of(name) - self.locked_of(name)

@@ -60,9 +60,10 @@ def repairer(crew):
 
 
 class Wagon(Creature):
-    def __init__(self, kind="Cart", hp=None, contents=None, uid=None, travelled=0.0):
+    def __init__(self, kind="Cart", hp=None, contents=None, uid=None, travelled=0.0, locked_items=None):
         vehicle = VEHICLES[kind]
-        super().__init__(uid or uuid4().hex, vehicle.hp_max if hp is None else min(hp, vehicle.hp_max), contents)
+        super().__init__(uid or uuid4().hex, vehicle.hp_max if hp is None else min(hp, vehicle.hp_max),
+                         contents, locked_items=locked_items)
         self.kind = kind
         self.vehicle = vehicle
         self.travelled = travelled     # map distance since it last lost a point

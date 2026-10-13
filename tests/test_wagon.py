@@ -1065,3 +1065,65 @@ def test_wagon_container_renders_on_the_right_of_group_screen_in_bags_and_cargo(
     scr.draw(surf)
     assert any(o is wagon and zone == "pack" for _, o, zone in scr.zones)
 
+
+def test_wagon_and_animal_toggle_lock():
+    w = Wagon("Cart")
+    w.give_to_pack("Salt", 5)
+    w.give_to_pack("Lumber", 2)
+    assert w.locked_of("Salt") == 0
+    w.toggle_lock("Salt")
+    assert w.locked_of("Salt") == 5
+    assert w.unlocked_of("Salt") == 0
+    w.toggle_lock("Salt")
+    assert w.locked_of("Salt") == 0
+    assert w.unlocked_of("Salt") == 5
+
+    a = _animal("Donkey", tack=PACK_SADDLE)
+    a.give_to_pack("Torch", 3)
+    assert a.locked_of("Torch") == 0
+    a.toggle_lock("Torch")
+    assert a.locked_of("Torch") == 3
+    a.toggle_lock("Torch")
+    assert a.locked_of("Torch") == 0
+
+
+def test_wagon_lock_exempt_from_distribute_load():
+    guild, g = _group(_animal("Ox", HARNESS), wagon="Cart", members=2)
+    w = g.wagons[0]
+    w.give_to_pack("Salt", 10)
+    w.toggle_lock("Salt")
+    w.give_to_pack("Lumber", 10)
+    assert w.locked_of("Salt") == 10
+    assert w.locked_of("Lumber") == 0
+
+    g.distribute_load(share_coins=False)
+    # Locked salt must stay in the wagon
+    assert w.count_of("Salt") == 10
+    assert w.locked_of("Salt") == 10
+
+
+def test_wagon_locked_items_persistence(tmp_path, monkeypatch):
+    monkeypatch.setattr(persist, "SAVE_DIR", str(tmp_path))
+    guild, g = _group(_animal("Ox", HARNESS), wagon="Cart", members=1)
+    w = g.wagons[0]
+    w.give_to_pack("Salt", 5)
+    w.toggle_lock("Salt")
+    assert w.locked_of("Salt") == 5
+
+    ox = g.herd[0]
+    ox.give_to_pack("Iron Bar", 2)
+    ox.toggle_lock("Iron Bar")
+
+    world_id = "test_wagon_locks"
+    persist.save_game(world_id, guild)
+    loaded = persist.load_game(world_id)
+
+    loaded_wagon = loaded.groups[0].wagons[0]
+    assert loaded_wagon.count_of("Salt") == 5
+    assert loaded_wagon.locked_of("Salt") == 5
+
+    loaded_ox = loaded.groups[0].herd[0]
+    assert loaded_ox.count_of("Iron Bar") == 2
+    assert loaded_ox.locked_of("Iron Bar") == 2
+
+

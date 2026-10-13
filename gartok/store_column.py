@@ -23,7 +23,8 @@ def store_dict(group, store, selected, carried):
         kg, cap = kg + store.passenger_weight, store.budget
     member = {"role": "wagon", "pending_picks": False, "no_sheet": True,
               "kg": kg, "cap": cap,
-              "pack": [(name, store.pack_tag(name), items.item_weight(name), qty, False, idx in selected)
+              "pack": [(name, store.pack_tag(name), items.item_weight(name), qty,
+                        store.locked_of(name) > 0, idx in selected)
                        for idx, (name, qty) in enumerate(store._base_inventory)]}
     if isinstance(store, Animal):
         pulled = group.pulling(store)

@@ -931,6 +931,60 @@ def test_gear_screen_dictionary_hidden_once_the_language_is_known():
     assert "study" not in [kind for kind, _label, _arg in gs.menu["rows"]]
 
 
+def test_group_screen_cargo_search_filter():
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    import pygame
+    from gartok.group_screen import GroupScreen
+    from gartok.guild import Guild
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    surf = pygame.display.set_mode((1280, 720))
+
+    u = Unit("player")
+    u._base_inventory = packed(["Salt", "Iron Bar", "Dagger"])
+    g = Guild([u])
+    gs = GroupScreen(ui_fonts(), g, g.groups[0], lambda: None)
+    gs.tab = "gear"
+    gs.view = "cargo"
+
+    # All items visible with empty search
+    rows = gs._cargo_rows()
+    assert len(rows) == 3
+
+    # Filter by name
+    gs.cargo_search = "salt"
+    rows = gs._cargo_rows()
+    assert len(rows) == 1
+    assert rows[0][1] == "Salt"
+
+    # Filter with no matches
+    gs.cargo_search = "unknown item xyz"
+    rows = gs._cargo_rows()
+    assert len(rows) == 0
+
+    # Draw test
+    gs.cargo_search = "iron"
+    gs.draw(surf)
+    assert gs._search_rect is not None
+    assert gs._search_clear_rect is not None
+
+    # Clicking clear rect clears search
+    gs._click(gs._search_clear_rect.center)
+    assert gs.cargo_search == ""
+    assert gs.editing_search is False
+
+    # Keyboard typing
+    gs.editing_search = True
+    event_type = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_d, unicode="d")
+    gs.handle_event(event_type)
+    assert gs.cargo_search == "d"
+    event_esc = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)
+    gs.handle_event(event_esc)
+    assert gs.cargo_search == ""
+    assert gs.editing_search is False
+
+
+
 
 
 
