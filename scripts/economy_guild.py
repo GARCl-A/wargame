@@ -68,6 +68,7 @@ from gartok import (
     matchup,
     medic,
     missions,
+    names,
     orders,
     recorder,
     recruit,
@@ -164,12 +165,14 @@ class FightLibrary:
     def pool(self, kind, level, size):
         key = (kind, as_levels(level), size)
         if key not in self.cache:
-            state = random.getstate()
+            state, names_state = random.getstate(), names._rng.getstate()
             random.seed(repr(key))      # the same fights for a key whatever ran first
+            names._rng.seed(repr(key))  # names seed the foes' intel read (intel.py), so they change the fight
             try:
                 self.cache[key] = [self._play(kind, key[1], size) for _ in range(self.samples)]
             finally:
                 random.setstate(state)
+                names._rng.setstate(names_state)
         return self.cache[key]
 
     @staticmethod

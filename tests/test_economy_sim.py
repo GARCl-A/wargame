@@ -2,6 +2,7 @@
 the floor holds, the Wilds beat it for a level 2-3 squad, and a whole guild lives its days on
 the real engine."""
 
+import dataclasses
 import os
 import random
 import sys
@@ -23,11 +24,16 @@ _LIBRARY = sim_mod.FightLibrary(samples=6)     # real battles are slow: one shar
 
 class _WonOnly(sim_mod.FightLibrary):
     """The real won fights only, for a test about something other than whether a squad survives the
-    road: which of a library's six samples a seeded sim draws changes with every AI change."""
+    road: which of a library's six samples a seeded sim draws changes with every AI change. A pool
+    with no win (a level 0 squad on the Old Road) gets its first fight turned into one."""
 
     def pool(self, kind, level, size):
         fights = super().pool(kind, level, size)
-        return [f for f in fights if f.won] or fights
+        won = [f for f in fights if f.won]
+        if won:
+            return won
+        first = fights[0]
+        return [dataclasses.replace(first, won=True, members=[(hp, False, xp) for hp, _, xp in first.members])]
 
 
 _WON = _WonOnly(samples=6)
@@ -185,7 +191,7 @@ def test_walking_takes_the_real_route_time_and_stops_where_it_was_sent():
 
 def test_an_ambush_on_the_road_is_fought_and_the_walk_goes_on(monkeypatch):
     monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 1.0)
-    sim = _sim(skill=1.0)
+    sim = _sim(skill=1.0, library=_WON)
     seen = []
     real = sim.library.draw
     sim.library.draw = lambda kind, *a, **kw: (seen.append(kind), real(kind, *a, **kw))[1]
