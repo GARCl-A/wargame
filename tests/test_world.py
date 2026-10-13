@@ -338,3 +338,69 @@ def test_a_fallen_allys_purse_is_loot_but_an_enemys_is_not():
 
     pool = loot.field_loot(batt, [dead])
     assert pool.count(items.COIN_ITEM) == 130
+
+
+# --------------------------------------------------------------------------- #
+# world auto-layout tests                                                     #
+# --------------------------------------------------------------------------- #
+
+def test_compute_layout_deterministic():
+    import math
+    from gartok import world
+    l1 = world.compute_layout(seed=42)
+    l2 = world.compute_layout(seed=42)
+    assert l1 == l2
+    assert len(l1) == len(world.NODES)
+
+
+def test_compute_layout_distance_proportional():
+    import math
+    from gartok import world
+    layout = world.compute_layout(seed=42)
+    edge_dists = []
+    euc_dists = []
+    for u, v, w in world.EDGES:
+        pu, pv = layout[u], layout[v]
+        ed = math.hypot(pu[0] - pv[0], pu[1] - pv[1])
+        edge_dists.append(w)
+        euc_dists.append(ed)
+        # Ratio should be bounded and strictly positive
+        assert 0.03 <= (ed / w) <= 0.12
+
+    # Pearson correlation with walking hours should exceed 0.95
+    mean_w = sum(edge_dists) / len(edge_dists)
+    mean_e = sum(euc_dists) / len(euc_dists)
+    num = sum((w - mean_w) * (e - mean_e) for w, e in zip(edge_dists, euc_dists))
+    den = math.sqrt(sum((w - mean_w)**2 for w in edge_dists) * sum((e - mean_e)**2 for e in euc_dists))
+    r = num / den
+    assert r > 0.95
+
+
+def test_compute_layout_no_overlapping_nodes_and_bounded():
+    import math
+    from gartok import world
+    layout = world.compute_layout(seed=42)
+    # All nodes within bounds
+    for nid, (x, y) in layout.items():
+        assert 0.05 <= x <= 0.95
+        assert 0.05 <= y <= 0.95
+
+    # Distinct positions (minimum separation)
+    node_ids = list(layout.keys())
+    for i in range(len(node_ids)):
+        for j in range(i + 1, len(node_ids)):
+            u, v = node_ids[i], node_ids[j]
+            pu, pv = layout[u], layout[v]
+            sep = math.hypot(pu[0] - pv[0], pu[1] - pv[1])
+            assert sep >= 0.015, f"Nodes {u} and {v} are too close: {sep}"
+
+
+def test_apply_layout_assigns_pos():
+    from gartok import world
+    world.apply_layout(seed=42)
+    for n in world.NODES:
+        assert isinstance(n.pos, tuple)
+        assert len(n.pos) == 2
+        assert 0.05 <= n.pos[0] <= 0.95
+        assert 0.05 <= n.pos[1] <= 0.95
+

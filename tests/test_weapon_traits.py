@@ -33,7 +33,8 @@ def test_items_weapon_traits_integration():
     assert axe is not None
     assert not axe.has_trait("finesse")
     assert not axe.has_trait("thrown")
-    assert len(axe.traits) == 0
+    assert axe.has_trait("cleave")
+    assert "cleave" in axe.traits
 
     rapier = items.get("rapier")
     assert rapier is not None

@@ -189,13 +189,20 @@ def _envenom(battle, attacker, target):
 
 
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
-                 weapon=None):
+                 weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None):
     total = nat + bonus
-    ac = target.ac_vs(attacker)
+    ac = target.ac_vs(attacker, armor_pierce=armor_pierce)
     phalanx = _phalanxed(battle, target)
     if phalanx:
         ac += 1
-    crit = nat == 20
+    w = weapon if weapon is not None else attacker.weapon
+    if hasattr(w, "crit_range"):
+        crit_range = w.crit_range
+    elif isinstance(w, dict):
+        crit_range = w.get("crit_range", 20)
+    else:
+        crit_range = 20
+    crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
     desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {shown}" + (" [Phalanx]" if phalanx and shown != "?" else "")
     fx_text = f"{total} vs AC {shown}"
@@ -212,7 +219,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> hit."))
         was_up = target.alive
         target.take_damage(
-            attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon), battle.log)
+            attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon,
+                                 crit_mult=crit_mult, bonus_damage=bonus_damage),
+            battle.log)
         if was_up and target.team != attacker.team:
             if not target.alive:
                 attacker.credit_kill(target)

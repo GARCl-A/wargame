@@ -162,8 +162,10 @@ class WikiScreen(Screen):
                     extra.append(f"Dmg: {it.damage[0]}d{it.damage[1]}")
                 if it.ac:
                     extra.append(f"AC +{it.ac}")
-                if it.finesse:
+                if it.has_trait("finesse") if hasattr(it, "has_trait") else it.finesse:
                     extra.append("Finesse")
+                if hasattr(it, "has_trait") and it.has_trait("crit_3x"):
+                    extra.append("Crit 3x")
                 if it.hands == 2:
                     extra.append("Two-handed")
                 if extra:

@@ -15,7 +15,7 @@ the morality axis mostly:
   still stands.
 """
 
-from . import actions, data, intel
+from . import actions, data, intel, items
 from .board import cells, grid_distance
 
 
@@ -33,17 +33,40 @@ def _hand_die(unit):
 
 
 def _pick_attack(battle, unit, target):
-    """The attack to make on `target` this instant, or None. A Grippli with a
-    Tongue weapon chooses between the hand weapon and the reach lash: whichever
-    connects, and when both do, the bigger damage die."""
-    opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
-            if a.can(battle, unit, target)]
-            
+    """The attack to make on `target` this instant, or None. Evaluates spells,
+    2-AP weapon actions when AP is available, Grippli Tongue reach lash, and basic
+    attacks."""
     if "sleep" in getattr(unit, "spells_known", []):
         if not _sleep_immune(battle, unit, target) and not target.has_condition("sleeping"):
             sleep_spell = actions.CastSpellAction("sleep")
             if sleep_spell.can(battle, unit, target):
                 return sleep_spell  # always prioritize putting them to sleep first
+
+    if unit.ap >= 2 and not unit.unarmed and unit.weapon:
+        for w_act in actions.WEAPON_ACTIONS:
+            if w_act.can(battle, unit, target):
+                if w_act.id == "cleave":
+                    return w_act
+                if w_act.id in ("sneak_attack", "precise_thrust"):
+                    if actions._flanked(battle, unit, target) or actions._pack_flank(battle, unit, target):
+                        return w_act
+                elif w_act.id == "hook_shield":
+                    if target.equipped_offhand and items.is_shield(target.equipped_offhand):
+                        return w_act
+                elif w_act.id == "armor_pierce":
+                    if target.armor and target.armor.ac >= 2:
+                        return w_act
+                elif w_act.id == "maiming_strike":
+                    if not target.has_condition("maimed"):
+                        return w_act
+                elif w_act.id == "parry_strike":
+                    if not unit.has_condition("defending"):
+                        return w_act
+                elif w_act.id in ("power_shot", "extreme_shot", "repel_strike", "javelin_charge"):
+                    return w_act
+
+    opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
+            if a.can(battle, unit, target)]
 
     mm = None
     if "magic_missile" in getattr(unit, "spells_known", []):

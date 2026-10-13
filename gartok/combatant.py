@@ -322,6 +322,10 @@ class Combatant:
             self.drop_lantern()
         return [x for x in dropped if x]
 
+    @property
+    def unarmed(self):
+        return (not self.weapon_hand) or (self.weapon is None)
+
     # ------------------------------------------------------------------ #
     # carry (foundation: carried weight vs capacity; no penalty yet)     #
     # ------------------------------------------------------------------ #
@@ -401,21 +405,43 @@ class Combatant:
         return self.weapon["thrown"] + self.char.talent_bonus("ranged_reach")
 
     @property
+    def speed(self):
+        s = getattr(self, "_override_speed", None)
+        if s is None:
+            s = self.char.speed
+        for c in self.conditions:
+            if hasattr(c, "modify_speed"):
+                s = c.modify_speed(s)
+        return max(1, s)
+
+    @speed.setter
+    def speed(self, val):
+        self._override_speed = val
+
+    @property
     def ac(self):
         """Effective AC. Bonuses of the same type do not stack (see resolve_bonus)."""
         mods = self._condition_mods("ac_mods")
         if self.ac_natural:
             mods.append((self.ac_natural, "natural", "race"))
         total, _ = resolve_bonus(mods)
-        return self.ac_base + total
+        ac = self.ac_base + total
+        if self.has_condition("shield_hooked") and self.equipped_offhand and items.is_shield(self.equipped_offhand):
+            shield = items.get(self.equipped_offhand)
+            if shield:
+                ac -= shield.ac
+        return ac
 
-    def ac_vs(self, attacker):
+    def ac_vs(self, attacker, armor_pierce=False):
         """AC against one particular attacker: the Leather of Biwolf adds 1 against
-        anything that is not a humanoid."""
+        anything that is not a humanoid. If armor_pierce is True, ignores worn armor AC."""
+        base = self.ac
+        if armor_pierce and self.armor:
+            base -= self.armor.ac
         if (self.artifact_name == items.BIWOLF_LEATHER_ITEM
                 and attacker.char.race.get("kind", "humanoid") != "humanoid"):
-            return self.ac + 1
-        return self.ac
+            return base + 1
+        return base
 
     @property
     def mental_defense(self):
@@ -430,8 +456,15 @@ class Combatant:
         """List of (value, type, label) that enter the attack roll. `weapon` (a
         WEAPONS dict) overrides the held one -- the Tongue weapon, always a plain
         1-handed melee strike."""
+        def _is_fin(w):
+            if w is None:
+                return False
+            if hasattr(w, "has_trait") and w.has_trait("finesse"):
+                return True
+            return bool(w.get("finesse", False))
+
         if weapon is not None:
-            if weapon["finesse"] or self.ability.finesse:
+            if _is_fin(weapon) or self.ability.finesse:
                 mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
                 hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
             else:
@@ -449,7 +482,7 @@ class Combatant:
         elif self.ranged:
             mods = [(self.mod_dexterity, None, "DEX")]
             hit_stat = "dex"
-        elif self.weapon["finesse"] or self.ability.finesse:
+        elif _is_fin(self.weapon) or self.ability.finesse:
             mods = [(max(self.mod_strength, self.mod_dexterity), None, "STR/DEX")]
             hit_stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
         else:
@@ -465,16 +498,20 @@ class Combatant:
         mods += self._condition_mods("attack_mods")
         return mods
 
-    def damage_roll(self, crit=False, thrown=False, weapon=None):
-        """`weapon` (a WEAPONS dict) overrides the held one -- the Tongue weapon."""
+    def damage_roll(self, crit=False, thrown=False, weapon=None, crit_mult=None, bonus_damage=0):
+        """`weapon` (a WEAPONS dict or ItemDef) overrides the held one -- the Tongue weapon."""
         if weapon is not None:
             n, faces = weapon["damage"]
+            mult = crit_mult or weapon.get("crit_mult", 2)
         elif (self.unarmed or self.improvised) and not thrown:
             n, faces = self.unarmed_damage
+            mult = crit_mult or 2
         else:
             n, faces = self.weapon["damage"]
+            mult = crit_mult or (self.weapon.get("crit_mult", 2) if self.weapon else 2)
         
-        dice = roll(n, faces) + (roll(n, faces) if crit else 0)
+        crit_dice = sum(roll(n, faces) for _ in range(max(1, mult) - 1)) if crit else 0
+        dice = roll(n, faces) + crit_dice + bonus_damage
         bonus = 0
         if thrown:
             bonus += self.mod_strength              # thrown: add Strength to damage

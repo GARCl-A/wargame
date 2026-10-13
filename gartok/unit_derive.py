@@ -330,7 +330,7 @@ class DerivationMixin:
             base, stat, src = self.mod_strength, "str", "STR"
         elif w.range > 0:
             base, stat, src = self.mod_dexterity, "dex", "DEX"
-        elif w.finesse or self.ability.finesse:
+        elif (w.has_trait("finesse") if hasattr(w, "has_trait") else w.finesse) or self.ability.finesse:
             base = max(self.mod_strength, self.mod_dexterity)
             stat = "dex" if self.mod_dexterity >= self.mod_strength else "str"
             src = "STR/DEX"

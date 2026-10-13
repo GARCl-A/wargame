@@ -69,6 +69,8 @@ class ItemDef:
     hands: int = 1
     reload: bool = False
     traits: tuple[str, ...] = ()
+    crit_mult: int = 2
+    crit_range: int = 20
     ac: int = 0
     max_dex: int | None = None
     speed_penalty: int = 0
@@ -265,32 +267,31 @@ def _register(item: ItemDef, *aliases: str) -> ItemDef:
     return item
 
 
-# 15 Base Weapons
+# 15 Base Weapons: (slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits, crit_mult)
 _BASE_WEAPONS_DATA = [
-    ("dagger", "Dagger", ItemRarity.COMMON, 0.5, 8, (1, 4), 0, True, 6, 1, False),
-    ("hatchet", "Hatchet", ItemRarity.COMMON, 1.0, 10, (1, 6), 0, False, 0, 1, False),
-    ("axe", "Axe", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False),
-    ("light_hammer", "Light Hammer", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 0, 1, False),
-    ("hammer", "Hammer", ItemRarity.COMMON, 4.0, 35, (1, 8), 0, False, 0, 1, False),
-    ("club", "Club", ItemRarity.COMMON, 1.5, 6, (1, 6), 0, False, 0, 1, False),
-    ("quarterstaff", "Quarterstaff", ItemRarity.COMMON, 2.0, 5, (1, 6), 0, False, 0, 1, False),
-    ("shortspear", "Shortspear", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 0, 1, False),
-    ("light_pick", "Light Pick", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 0, 1, False),
-    ("pick", "Pick", ItemRarity.COMMON, 3.0, 30, (1, 8), 0, False, 0, 1, False),
-    ("broadsword", "Broadsword", ItemRarity.COMMON, 4.0, 105, (1, 12), 0, False, 0, 2, False),
-    ("light_crossbow", "Light Crossbow", ItemRarity.COMMON, 2.5, 80, (1, 8), 11, False, 0, 2, True),
-    ("shortbow", "Shortbow", ItemRarity.COMMON, 1.0, 320, (1, 6), 11, False, 0, 2, False),
-    ("dwarf_axe", "Dwarf Axe", ItemRarity.UNCOMMON, 4.0, 75, (1, 10), 0, False, 0, 1, False),
-    ("rapier", "Rapier", ItemRarity.UNCOMMON, 1.0, 65, (1, 6), 0, True, 0, 1, False),
+    ("dagger", "Dagger", ItemRarity.COMMON, 0.5, 8, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "sneak_attack"), 2),
+    ("hatchet", "Hatchet", ItemRarity.COMMON, 1.0, 10, (1, 6), 0, False, 4, 1, False, ("thrown", "hook_shield"), 2),
+    ("axe", "Axe", ItemRarity.COMMON, 3.0, 35, (1, 8), 0, False, 0, 1, False, ("cleave",), 2),
+    ("light_hammer", "Light Hammer", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 8, 1, False, ("finesse", "thrown", "maiming_strike"), 2),
+    ("hammer", "Hammer", ItemRarity.COMMON, 4.0, 35, (1, 8), 0, False, 0, 1, False, ("maiming_strike",), 2),
+    ("club", "Club", ItemRarity.COMMON, 1.5, 6, (1, 6), 0, False, 0, 1, False, ("maiming_strike",), 2),
+    ("quarterstaff", "Quarterstaff", ItemRarity.COMMON, 2.0, 5, (1, 6), 0, True, 0, 1, False, ("finesse", "repel_strike"), 2),
+    ("shortspear", "Shortspear", ItemRarity.COMMON, 1.5, 12, (1, 6), 0, False, 12, 1, False, ("thrown", "javelin_charge"), 2),
+    ("light_pick", "Light Pick", ItemRarity.COMMON, 1.0, 10, (1, 4), 0, True, 6, 1, False, ("finesse", "thrown", "crit_3x", "armor_pierce"), 3),
+    ("pick", "Pick", ItemRarity.COMMON, 3.0, 30, (1, 8), 0, False, 0, 1, False, ("crit_3x", "armor_pierce"), 3),
+    ("broadsword", "Broadsword", ItemRarity.COMMON, 4.0, 105, (1, 12), 0, False, 0, 2, False, ("parry_strike",), 2),
+    ("light_crossbow", "Light Crossbow", ItemRarity.COMMON, 2.5, 80, (1, 8), 18, False, 0, 2, True, ("extreme_shot",), 2),
+    ("shortbow", "Shortbow", ItemRarity.COMMON, 1.0, 320, (1, 6), 14, False, 0, 2, False, ("power_shot",), 2),
+    ("dwarf_axe", "Dwarf Axe", ItemRarity.UNCOMMON, 4.0, 75, (1, 10), 0, False, 0, 1, False, ("cleave",), 2),
+    ("rapier", "Rapier", ItemRarity.UNCOMMON, 1.0, 65, (1, 6), 0, True, 0, 1, False, ("finesse", "precise_thrust"), 2),
 ]
 
-for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload in _BASE_WEAPONS_DATA:
-    traits = tuple([t for t in ("finesse" if fin else None, "thrown" if thr else None) if t])
+for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits, crit_mult in _BASE_WEAPONS_DATA:
     _register(ItemDef(
         id=slug, name=name, type=ItemType.WEAPON, rarity=rarity,
         weight=weight, price=price, size=WeaponSize.MEDIUM, damage=dmg,
         range=rng, finesse=fin, thrown=thr, hands=hands, reload=reload,
-        traits=traits,
+        traits=traits, crit_mult=crit_mult,
     ))
     # Large variant
     large_slug = f"large_{slug}"
@@ -299,7 +300,7 @@ for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload in _BAS
         id=large_slug, name=large_name, type=ItemType.WEAPON, rarity=rarity,
         weight=round(weight * 2, 1), price=price * 2, size=WeaponSize.LARGE,
         damage=step_damage_die(dmg), range=rng, finesse=fin, thrown=thr,
-        hands=hands, reload=reload, traits=traits,
+        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
     ))
 
 # Armor

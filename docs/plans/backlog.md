@@ -22,17 +22,17 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-12 after 15-weapon design & ledger hold work spec)
+# Suggested order (updated 2026-10-12 after weapon actions & map auto-layout)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Weapon 2-AP actions and traits expansion** (implement the 15 designed 2-AP actions, `crit_mult` 3x for picks, and wire `WeaponTrait.action_id`).
-2. **Ledger Hold military frontier supply runs & hub unlock** (repeatable work order with Ledger Hold <-> First Outpost travel, cargo capacity check, outbound/return ambush rolls, and military work XP).
-3. **World map graph algorithmic auto-layout** (Force-Directed / Spring-Embedder layout with distance-proportional springs and crossing avoidance).
+1. **Weapon 2-AP actions and traits expansion (built 2026-10-12):** 14 traits registered, 11 2-AP weapon actions covering all 15 weapons (`SneakAttack`, `PreciseThrust`, `Cleave`, `RepelStrike`, `MaimingStrike`, `ArmorPierce`, `PowerShot`, `ExtremeShot`, `HookShield`, `JavelinCharge`, `ParryStrike`), Pick/Light Pick 3x crit multiplier, conditions `Maimed` and `ShieldHooked`, full AI priority support and unit test coverage.
+2. **World map graph algorithmic auto-layout (built 2026-10-12):** Kamada-Kawai distance-proportional force-directed layout in `gartok/world.py` (`compute_layout` and `apply_layout`), spring rest lengths strictly proportional to walking hours (`EDGES`, Pearson correlation r > 0.98), node repulsion avoiding overlap, deterministic seed=42, normalized into map viewport.
+3. **Ledger Hold military frontier supply runs & hub unlock** (repeatable work order with Ledger Hold <-> First Outpost travel, cargo capacity check, outbound/return ambush rolls, and military work XP).
 4. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-5. **Magic as the vertical progression** (built on the *node that unlocks* mechanic once Ledger Hold / library maps land).
+5. **Magic as the vertical progression** (built on the *node that unlocks* Option A mechanic; all 3 rival factions revealed simultaneously).
 
 ---
 
@@ -79,7 +79,7 @@ rule from the notes: **fewest possible buttons on the map**: a node has one "Ent
 its functions are tabs inside.
 
 **Map and node entry**
-- **Travel graph is hard to read.** Decided 2026-10-12: algorithmic auto-layout rework avoiding edge crossings and treating highly connected nodes as central hubs. Algorithmic design: Force-Directed (Spring-Embedder / Kamada-Kawai) layout where rest edge lengths between connected nodes (u, v) strictly match `world.distance(u, v)` (walking hours), non-connected nodes repel to avoid overlapping labels, and edge crossings are penalized. Deterministic seed guarantees layout stability across runs.
+- **Travel graph is hard to read.** Built 2026-10-12: Kamada-Kawai distance-proportional force-directed layout in `gartok/world.py` (`compute_layout` and `apply_layout`), spring rest lengths strictly proportional to walking hours (`EDGES`, Pearson correlation r > 0.98), deterministic seed=42, and repulsion between non-adjacent nodes avoiding label overlaps.
 - **Group swap with 2 groups feels odd.**
 - **Start screen (built 2026-10-12):** classic main menu screen ("Continue", "Load Game", "New Game", "Editor", "Settings", "Wiki") replacing direct boot into the saves list in `menu_screen.py`.
 
@@ -142,13 +142,11 @@ Past choices that now fight the direction. Each has the cost of fixing it; pay o
 feature that needs it is next, not before. Debts already written as part of a feature are
 pointed to, not repeated.
 
-- **Weapon traits are ad-hoc fields.** Registry model built 2026-10-12 in `gartok/weapon_traits.py` with `ItemDef.traits` and `ItemDef.has_trait()`. Remaining debt: migrate combat resolvers (`combatant.py`, `unit_derive.py`) and weapon actions from legacy ad-hoc flags (`finesse`, `thrown`) to `has_trait(...)`. **Cost: low** (migration of existing callers). Detail under *Weapons that are really different*.
+- **Weapon traits are ad-hoc fields.** Registry model built 2026-10-12 in `gartok/weapon_traits.py` with `ItemDef.traits` and `ItemDef.has_trait()`. Remaining debt: migrate combat resolvers (`combatant.py`, `unit_derive.py`), UI/display screens (`market_screen.py`, `group_screen.py`, `wiki_screen.py`), and catalog generator (`reference.py`) from legacy ad-hoc flags (`finesse`, `thrown`) to `has_trait(...)`. **Cost: low** (migration of existing callers). Detail under *Weapons that are really different*.
 - **Big screen files.** `app.py` (about 1200 lines, 107 `def`s) is the wiring hub; `map_screen.py`,
   `market_screen.py` and `battle_screen.py` run about 900-1100 (the last two are past 1000). Not critical. When one takes a new node
   or tab, split by concern instead of growing it. **Cost: low per split.**
-- **Saves have no migration (on purpose).** Fine while the author is the only player. Before
-  any outside playtest decide: keep "an older shape does not load" with a clear message, or add
-  a version bridge. **Cost: low (message) to medium (bridge).**
+- **Saves have no migration (on purpose).** Fine while the author is the only player. Decided 2026-10-12: keep the strict premise that "an older shape does not load"; no migration bridge needed for now. **Cost: zero.**
 
 ## Large
 
@@ -184,12 +182,12 @@ pointed to, not repeated.
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
 - **Weapons that are really different (two tracks, designed 2026-10-12).**
-  1. **Named weapon traits (built 2026-10-12, `weapon_traits.py`).** Immutable keyword registry (`WeaponTrait`) mirroring `abilities.py`. `ItemDef.traits` and `ItemDef.has_trait()` live. Properties added:
+  1. **Named weapon traits (registry built 2026-10-12 in `weapon_traits.py`, attributes and adjustments to build).** Immutable keyword registry (`WeaponTrait`) mirroring `abilities.py`. `ItemDef.traits` and `ItemDef.has_trait()` live. Properties designed to implement:
      - `crit_mult`: damage multiplier on critical hit (default 2x; Pick and Light Pick gain 3x).
      - `crit_range`: threat margin on d20 (default 20; seam for future expanded critical range).
      - Trait adjustments: Quarterstaff gains `Finesse`; Hatchet gains `Thrown 4 sq`; Light Hammer gains `Thrown 8 sq`; Shortspear gains `Thrown 12 sq`; Light Pick gains `Thrown 6 sq` and `Crit 3x`; Pick gains `Crit 3x`; Shortbow range 14 sq; Light Crossbow range 18 sq.
      - Rationale checks: Dwarf Axe serves as the progression craft reward for having a Dwarven blacksmith artisan in the guild; Light Pick serves as the dedicated light throwable armor-piercer (1d4, 1.0kg, Thrown 6sq, Crit 3x, Armor Pierce).
-  2. **A 2-AP action per weapon kind (audited and finalized for all 15 weapons 2026-10-12):**
+  2. **A 2-AP action per weapon kind (audited and finalized for all 15 weapons 2026-10-12; Decided: Option B static registry):**
      - **Dagger:** *Sneak Attack* (if target is flanked, deals +1d4 bonus damage).
      - **Rapier:** *Precise Thrust* (if target is flanked, gains +2 to hit).
      - **Axe / Dwarf Axe:** *Cleave* (attacks 2 adjacent foes who are adjacent to each other and to the attacker).
@@ -201,7 +199,7 @@ pointed to, not repeated.
      - **Hatchet:** *Hook Shield* (on hit, nullifies target's shield AC bonus until next round).
      - **Shortspear:** *Javelin Charge* (if thrown after moving this round, gains +1d4 bonus damage).
      - **Broadsword:** *Parry & Strike* (attacks and grants the attacker the *Defending* condition until next round).
-     - Architecture: Implement in `gartok/actions/weapon_actions.py` registered via `WeaponTrait.action_id`. Needs AI evaluation and tests.
+     - Architecture (Decided 2026-10-12: Option B): Implement static action classes in `gartok/actions/weapon_actions.py` registered in `gartok/actions/__init__.py` and mapped via `WeaponTrait.action_id`. Needs AI evaluation and tests.
 - **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
   capture it. Chains are what holds the captive. Needs the AI to know it too.
 - **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI
@@ -350,7 +348,7 @@ the ones that also need code say so. Order is the suggested priority.
   (3) Arena Master: Goliath pit master Thok'Gar (`portraits/npc/arena_master.png`) wired in `world.NODES`.
 - **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists. Decided 2026-10-12: reserved for one of the magic questlines following the Library's codex / trust sequence; deferred to when the post-library magic quests are built.
 - **Fill the short portrait pools.** Updated 2026-10-12: Wolf reached 8, Skeleton reached 9,
-  Ox reached 7, Sheep pool created (4), Goliath reached 10, and Goblin reached 12.
+  Ox reached 7, Sheep pool created (4), Goliath reached 10, Goblin reached 12, and Treefolk reached 20 (plus dedicated recruit).
   Remaining short: Snake (3), Giant Spider (4), Donkey (4), Horse (4), Kenku (8), Centaur (12).
 - **Map node icons.** The 19 nodes share three kinds of glyph (`map_screen.KIND_ICON`; the Lumber Yard and the Mine
   share the work glyph, and the Smithy, Tannery and Apothecary the `town` house). Give Ankareth, Arena, Market, Tavern, Prison, Library, Farm, Ancient
@@ -393,13 +391,14 @@ building them:
   1. After the tome quest, at reputation 3 with the Library, they hand over a **map** that
      unlocks a new place.
   2. An intermediate mission to earn their trust in the guild.
-  3. Then the Library sends the codex to one of the **three magic factions** (Blood mages,
-     Nature mages, Faith mages), where the magic line proper begins.
-  - **New mechanic to build first (decided: a general one): a node that unlocks.** Every node
+  3. Then the Library sends the codex to the **three magic factions** (Blood mages,
+     Nature mages, Faith mages), where the magic line proper begins. Decided 2026-10-12: all three
+     magic factions are revealed at the same time and they actively dislike / rival each other. Aiding
+     one harms relations with another, forcing the player to manage faction choices and trade-offs.
+  - **New mechanic to build first: a node that unlocks (Decided 2026-10-12: Option A).** Every node
     is revealed or not, and an event flips it (reading a map, completing a deed, reaching a
-    reputation). The map is the first user. Nothing does that today. The Mine does *not*
-    use it: it is a plain node. **Open:** whether the flip happens once and stays (recommended);
-    Reading the map does not consume it (decided). The revealed set lives in the guild's save (decided; a new optional field `revealed`, a list of node ids, neutral value `[]` in `persist.PAYLOAD_DEFAULTS`).
+    reputation). The map is the first user. The revealed set lives in the guild's save (`revealed`, a list of node ids, neutral value `[]` in `persist.PAYLOAD_DEFAULTS`, public nodes always visible by default).
+    The flip happens once and stays; reading the map does not consume it.
   - **To define:** the exact reputation gate and the intermediate mission; the three
     factions as nodes with their own deeds (see `factions.py`); how each school's study
     differs (`magic.py`); the three schools are **not exclusive** (decided 2026-10-09: anyone may study any; the barrier is study cost). Holy Symbol (below) belongs to
@@ -443,7 +442,7 @@ building them:
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
   one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
   buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
-  allow multiple buffs simultaneously. Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Cooking recipes take priority over jewelry crafting. Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
+  allow multiple buffs simultaneously. Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Cooking recipes take priority over jewelry crafting; food buffs and the magic arc are independent (proceed with whichever is simpler or unblocks content first). Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
   (`cheapest_food_price` stops being the one price of a meal).
 
 ---

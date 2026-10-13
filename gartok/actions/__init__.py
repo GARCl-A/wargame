@@ -72,6 +72,21 @@ from .support import (
     WakeUp,
 )
 
+from . import weapon_actions
+from .weapon_actions import (
+    ArmorPierce,
+    Cleave,
+    ExtremeShot,
+    HookShield,
+    JavelinCharge,
+    MaimingStrike,
+    ParryStrike,
+    PowerShot,
+    PreciseThrust,
+    RepelStrike,
+    SneakAttack,
+)
+
 # --------------------------------------------------------------------------- #
 # Registry                                                                     #
 # --------------------------------------------------------------------------- #
@@ -106,9 +121,37 @@ DISARM = Disarm()
 DRINK_POTION = DrinkPotion()
 SIGNAL_HORN = SignalHorn()
 
+# Weapon 2-AP actions
+SNEAK_ATTACK = SneakAttack()
+PRECISE_THRUST = PreciseThrust()
+CLEAVE = Cleave()
+REPEL_STRIKE = RepelStrike()
+MAIMING_STRIKE = MaimingStrike()
+ARMOR_PIERCE = ArmorPierce()
+POWER_SHOT = PowerShot()
+EXTREME_SHOT = ExtremeShot()
+HOOK_SHIELD = HookShield()
+JAVELIN_CHARGE = JavelinCharge()
+PARRY_STRIKE = ParryStrike()
+
+WEAPON_ACTIONS = [
+    SNEAK_ATTACK,
+    PRECISE_THRUST,
+    CLEAVE,
+    REPEL_STRIKE,
+    MAIMING_STRIKE,
+    ARMOR_PIERCE,
+    POWER_SHOT,
+    EXTREME_SHOT,
+    HOOK_SHIELD,
+    JAVELIN_CHARGE,
+    PARRY_STRIKE,
+]
+
 # Panel actions split into clear combat and utility categories for the UI.
 COMBAT_ACTIONS = [
     ATTACK,
+    *WEAPON_ACTIONS,
     THROW,
     DEMORALIZE,
     ASSESS,

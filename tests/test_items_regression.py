@@ -98,7 +98,8 @@ def test_dict_subscript_compatibility():
 
 
 def test_combat_layer_weapon_stepping_and_finesse():
-    for base_slug, name, _, _, _, dmg, _, fin, _, _, _ in items._BASE_WEAPONS_DATA:
+    for row in items._BASE_WEAPONS_DATA:
+        base_slug, name = row[0], row[1]
         base_item = items.get(name)
         large_item = items.get(f"Large {name}")
         assert base_item is not None

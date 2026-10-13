@@ -129,30 +129,30 @@ Each occupation grants one starting weapon and one starting item.
 |---|---|---|---|---|---|---|---|---|
 | Dagger | Medium | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
 | Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
-| Hatchet | Medium | 1d6 | melee | -- | -- | 1 | 1 kg | 10 |
-| Large Hatchet | Large | 1d8 | melee | -- | -- | 1 | 2 kg | 20 |
+| Hatchet | Medium | 1d6 | melee | -- | 4 sq | 1 | 1 kg | 10 |
+| Large Hatchet | Large | 1d8 | melee | -- | 4 sq | 1 | 2 kg | 20 |
 | Axe | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
 | Large Axe | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
-| Light Hammer | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
-| Large Light Hammer | Large | 1d6 | melee | yes | -- | 1 | 2 kg | 20 |
+| Light Hammer | Medium | 1d4 | melee | yes | 8 sq | 1 | 1 kg | 10 |
+| Large Light Hammer | Large | 1d6 | melee | yes | 8 sq | 1 | 2 kg | 20 |
 | Hammer | Medium | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
 | Large Hammer | Large | 1d10 | melee | -- | -- | 1 | 8 kg | 70 |
 | Club | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
 | Large Club | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 12 |
-| Quarterstaff | Medium | 1d6 | melee | -- | -- | 1 | 2 kg | 5 |
-| Large Quarterstaff | Large | 1d8 | melee | -- | -- | 1 | 4 kg | 10 |
-| Shortspear | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 12 |
-| Large Shortspear | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 24 |
-| Light Pick | Medium | 1d4 | melee | yes | -- | 1 | 1 kg | 10 |
-| Large Light Pick | Large | 1d6 | melee | yes | -- | 1 | 2 kg | 20 |
+| Quarterstaff | Medium | 1d6 | melee | yes | -- | 1 | 2 kg | 5 |
+| Large Quarterstaff | Large | 1d8 | melee | yes | -- | 1 | 4 kg | 10 |
+| Shortspear | Medium | 1d6 | melee | -- | 12 sq | 1 | 1.5 kg | 12 |
+| Large Shortspear | Large | 1d8 | melee | -- | 12 sq | 1 | 3 kg | 24 |
+| Light Pick | Medium | 1d4 | melee | yes | 6 sq | 1 | 1 kg | 10 |
+| Large Light Pick | Large | 1d6 | melee | yes | 6 sq | 1 | 2 kg | 20 |
 | Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
 | Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 60 |
 | Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
-| Light Crossbow | Medium | 1d8 | 11 sq | -- | -- | 2 | 2.5 kg | 80 |
-| Large Light Crossbow | Large | 1d10 | 11 sq | -- | -- | 2 | 5 kg | 160 |
-| Shortbow | Medium | 1d6 | 11 sq | -- | -- | 2 | 1 kg | 320 |
-| Large Shortbow | Large | 1d8 | 11 sq | -- | -- | 2 | 2 kg | 640 |
+| Light Crossbow | Medium | 1d8 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
+| Large Light Crossbow | Large | 1d10 | 18 sq | -- | -- | 2 | 5 kg | 160 |
+| Shortbow | Medium | 1d6 | 14 sq | -- | -- | 2 | 1 kg | 320 |
+| Large Shortbow | Large | 1d8 | 14 sq | -- | -- | 2 | 2 kg | 640 |
 | Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
 | Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
 | Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
@@ -166,6 +166,18 @@ Properties and keywords carried by weapons.
 |---|---|
 | Finesse | Uses Dexterity for attack rolls if it is higher than Strength. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
+| Crit 3x | Critical hits deal 3x weapon damage dice instead of 2x. |
+| Sneak Attack | 2 AP: Deals +1d4 bonus damage against flanked foes. |
+| Precise Thrust | 2 AP: Gains +2 to hit against flanked foes. |
+| Cleave | 2 AP: Strikes two adjacent foes in a single sweep. |
+| Repel Strike | 2 AP: Attacks and shoves the target with a +2 bonus to the push roll. |
+| Maiming Strike | 2 AP: Attacks and halves the target's movement speed until next round. |
+| Armor Pierce | 2 AP: Attack ignores worn armor AC bonus. |
+| Power Shot | 2 AP: Adds positive Strength modifier to arrow damage. |
+| Extreme Shot | 2 AP: Doubles attack range to 36 squares. |
+| Hook Shield | 2 AP: Attacks and nullifies target's shield AC bonus until next round. |
+| Javelin Charge | 2 AP: Deals +1d4 bonus damage when thrown after moving this turn. |
+| Parry & Strike | 2 AP: Attacks and grants Defending (+1 AC) to attacker until next round. |
 
 ## Armor
 

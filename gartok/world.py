@@ -48,7 +48,9 @@ checks it against the order's own `job` before banking any output
 """
 
 import heapq
+import math
 import os
+import random
 from dataclasses import dataclass
 
 from . import encounters
@@ -340,3 +342,136 @@ def route(src, dst):
     while path[-1] != src:
         path.append(prev[path[-1]])
     return path[::-1], dist[dst]
+
+
+def compute_layout(nodes=None, edges=None, seed=42, iterations=400, margin=0.08):
+    """Computes a 2D distance-proportional layout using Kamada-Kawai spring embedding.
+
+    Spring rest lengths are strictly proportional to shortest-path walking hours,
+    and non-adjacent nodes experience repulsive forces to prevent overlapping labels.
+    The layout is deterministic for a given seed and normalized into [margin, 1 - margin].
+    """
+    if nodes is None:
+        nodes = NODES
+    if edges is None:
+        edges = EDGES
+    node_ids = [n.id if hasattr(n, "id") else n for n in nodes]
+    N = len(node_ids)
+
+    adj = {u: {} for u in node_ids}
+    for u, v, w in edges:
+        if u in adj and v in adj:
+            adj[u][v] = min(adj[u].get(v, w), w)
+            adj[v][u] = min(adj[v].get(u, w), w)
+
+    dist = {u: {v: float("inf") for v in node_ids} for u in node_ids}
+    for u in node_ids:
+        dist[u][u] = 0.0
+        for v, w in adj[u].items():
+            dist[u][v] = w
+
+    for k in node_ids:
+        for i in node_ids:
+            for j in node_ids:
+                dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+
+    rng = random.Random(seed)
+    pos = {}
+    for n in nodes:
+        nid = n.id if hasattr(n, "id") else n
+        if hasattr(n, "pos") and n.pos:
+            pos[nid] = list(n.pos)
+        else:
+            pos[nid] = [rng.uniform(0.2, 0.8), rng.uniform(0.2, 0.8)]
+
+    pairs = [
+        (node_ids[i], node_ids[j])
+        for i in range(N)
+        for j in range(i + 1, N)
+        if dist[node_ids[i]][node_ids[j]] < float("inf")
+    ]
+    L0 = 0.06
+    K = 1.0
+    step_size = 0.1
+
+    for step in range(iterations):
+        temp = 1.0 - (step / iterations)
+        forces = {u: [0.0, 0.0] for u in node_ids}
+
+        for u, v in pairs:
+            d_ideal = dist[u][v] * L0
+            if d_ideal <= 0:
+                continue
+            k_uv = K / (dist[u][v] ** 2)
+
+            dx = pos[u][0] - pos[v][0]
+            dy = pos[u][1] - pos[v][1]
+            d_actual = math.hypot(dx, dy)
+            if d_actual < 1e-5:
+                dx = rng.uniform(-1e-3, 1e-3)
+                dy = rng.uniform(-1e-3, 1e-3)
+                d_actual = math.hypot(dx, dy)
+
+            f = k_uv * (d_actual - d_ideal)
+            fx = f * (dx / d_actual)
+            fy = f * (dy / d_actual)
+
+            forces[u][0] -= fx
+            forces[u][1] -= fy
+            forces[v][0] += fx
+            forces[v][1] += fy
+
+        min_sep = 0.04
+        for u, v in pairs:
+            dx = pos[u][0] - pos[v][0]
+            dy = pos[u][1] - pos[v][1]
+            d_actual = math.hypot(dx, dy)
+            if 1e-5 < d_actual < min_sep:
+                rep_f = 0.5 * (min_sep - d_actual) / d_actual
+                forces[u][0] += rep_f * dx
+                forces[u][1] += rep_f * dy
+                forces[v][0] -= rep_f * dx
+                forces[v][1] -= rep_f * dy
+
+        cur_step = step_size * temp
+        for u in node_ids:
+            f_norm = math.hypot(forces[u][0], forces[u][1])
+            if f_norm > 1.0:
+                forces[u][0] /= f_norm
+                forces[u][1] /= f_norm
+            pos[u][0] += forces[u][0] * cur_step
+            pos[u][1] += forces[u][1] * cur_step
+
+    min_x = min(pos[u][0] for u in node_ids)
+    max_x = max(pos[u][0] for u in node_ids)
+    min_y = min(pos[u][1] for u in node_ids)
+    max_y = max(pos[u][1] for u in node_ids)
+    span_x = max(max_x - min_x, 1e-5)
+    span_y = max(max_y - min_y, 1e-5)
+    max_span = max(span_x, span_y)
+
+    avail = 1.0 - 2 * margin
+    offset_x = margin + (avail - (span_x / max_span) * avail) / 2.0
+    offset_y = margin + (avail - (span_y / max_span) * avail) / 2.0
+
+    result = {}
+    for u in node_ids:
+        nx = offset_x + ((pos[u][0] - min_x) / max_span) * avail
+        ny = offset_y + ((pos[u][1] - min_y) / max_span) * avail
+        result[u] = (round(nx, 3), round(ny, 3))
+    return result
+
+
+def apply_layout(nodes=None, edges=None, seed=42):
+    """Assigns computed layout coordinates to Node.pos."""
+    ns = nodes if nodes is not None else NODES
+    es = edges if edges is not None else EDGES
+    layout = compute_layout(ns, es, seed=seed)
+    for n in ns:
+        if n.id in layout:
+            n.pos = layout[n.id]
+    return layout
+
+
+apply_layout()
+

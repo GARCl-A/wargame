@@ -94,3 +94,40 @@ class Sleeping(Condition):
                 log(f"{unit.name} stirs and wakes up.")
                 return True
         return False
+
+
+class Maimed(Condition):
+    """Maiming Strike: movement speed halved through the victim's next turn."""
+    id = "maimed"
+
+    def __init__(self):
+        self.held = False
+
+    def modify_speed(self, speed):
+        return max(1, speed // 2)
+
+    def on_turn_start(self, unit, log):
+        self.held = True
+        return False
+
+    def on_turn_end(self, unit, log):
+        if self.held:
+            log(f"{unit.name} recovers from the maiming blow.")
+        return self.held
+
+
+class ShieldHooked(Condition):
+    """Hook Shield: victim's shield AC bonus nullified through their next turn."""
+    id = "shield_hooked"
+
+    def __init__(self):
+        self.held = False
+
+    def on_turn_start(self, unit, log):
+        self.held = True
+        return False
+
+    def on_turn_end(self, unit, log):
+        if self.held:
+            log(f"{unit.name}'s shield is no longer tangled.")
+        return self.held
