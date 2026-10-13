@@ -38,6 +38,8 @@ def test_make_treefolk_recruit():
     assert recruit.racial_level == 0
     assert recruit.combat_xp == 0
     assert recruit.work_hours == 0
+    assert recruit.portrait_file == "treefolk_recruit.png"
+    assert recruit.portrait_id == "treefolk_recruit.png"
 
 
 def test_treefolk_mission_offered_only_after_bankers_trust():

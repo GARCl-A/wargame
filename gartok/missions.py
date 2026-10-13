@@ -441,6 +441,8 @@ def make_treefolk_recruit():
     unit.work_hours = 0
     unit._level_hp_rolls = []
     unit.talents = {"combat": [], "work": [], "racial": []}
+    unit.portrait_file = "treefolk_recruit.png"
+    unit.portrait_id = "treefolk_recruit.png"
     unit._derive_combat()
     return unit
 

@@ -217,6 +217,20 @@ def test_kenku_portraits():
     assert p_kk.get_size() == (24, 24)
 
 
+def test_treefolk_portraits():
+    # 20 curated Treefolk portraits (0..19)
+    for idx in range(20):
+        p = artwork.portrait("Treefolk", idx, 32)
+        assert p is not None
+        assert p.get_size() == (32, 32)
+
+    tf = unit.Unit("player", race=data.race_by_name("Treefolk"))
+    assert hasattr(tf, "portrait_id")
+    p_tf = artwork.portrait(tf.race["name"], tf.portrait_id, 24)
+    assert p_tf is not None
+    assert p_tf.get_size() == (24, 24)
+
+
 def test_goliath_portraits():
     # 10 curated Goliath portraits
     for idx in range(10):
@@ -344,7 +358,7 @@ def test_squad_and_prison_cards_carry_the_units_portrait():
 
 
 def test_pinned_named_portraits():
-    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png", "ledger_hold_officer.png", "arena_master.png", "carriage.png", "cart.png"]:
+    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png", "ledger_hold_officer.png", "arena_master.png", "carriage.png", "cart.png", "treefolk_recruit.png"]:
         port = artwork.portrait(None, name, 32)
         assert port is not None
         assert port.get_size() == (32, 32)
