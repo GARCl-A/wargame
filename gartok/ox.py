@@ -40,7 +40,7 @@ def scout_country_roads(guild, group):
     nat = data.d20()
     total = nat + (scout.mod_wisdom if scout else 0)
     if total >= SCOUT_DC:
-        guild.ox_fields_discovered = True
+        guild.reveal_node("ox_fields")
         return True, (f"{who} follows the churned earth to where the land opens out. "
                       "The Legendary Ox Fields are found.")
     return False, (f"{who} searches the lanes for {SCOUT_HOURS} hours and finds no sign "

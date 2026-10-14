@@ -82,7 +82,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `recorder.py` | opt-in play log (`record_play` setting): one JSONL row per day, order, market buy/sell, fight, talent, asset and recruit pitch, in `saves/<world>/play.jsonl`; a no-op while detached. `scripts/play_analysis.py` reads it into the sim's day table and the thresholds of the `human` policy |
 | `settings.py` / `settings_screen.py` | player preferences in `settings.json` beside the saves (not per guild); one `SPEC` line per option, pause menu and settings screen list them |
 | `start_screen.py` / `wiki_screen.py` / `menu_screen.py` / `saves_screen.py` | classic main menu (Continue, New, Load, Editor, Settings, Wiki) and in-game compendium -> guild browser -> save snapshots with date and time |
-| `factions.py` | factions + one-shot deeds → reputation |
+| `factions.py` | factions + one-shot deeds → reputation; a faction is `hidden` until the guild enters one of its `nodes` (`Guild.meet_factions_at`, `factions.known`) |
 | `items.py` | single source of truth for all items (ItemDef, ItemInstance, catalog, recipes) |
 | `item_icon.py` | what each item looks like: `ICONS` names every catalogue item (kind, material, shape) for `ui/item_icons.py`'s code-drawn silhouettes, rarity is the rim; a test fails for an item with no entry |
 | `weapon_traits.py` | `WeaponTrait` frozen-dataclass keyword registry (Finesse, Thrown, crit/action seams) mirroring `abilities.py`; single API is `ItemDef.has_trait()` across combat, UI, and generator |
@@ -92,7 +92,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `app.py` | pygame shell: scene loop, screen wiring (its methods are split into mixins: `app_nodes.py` the screens a node opens, `app_forced.py` guard / ambush / raid / Claim fights, `app_hunt.py` the hunt, `app_battle.py` entering and settling a battle); a tick's pending order → its screen via `_ACTIVITY_OPENERS` (built from `_FUNCTION_OPENERS` + arena + forced kinds), a forced fight's aftermath via `_FORCED_FIGHT_RESOLVERS` |
 | `recruit.py` | recruitment contest (CHA vs CHA, shared language gate) |
 | `archetypes.py` | recruit archetype catalog + candidate generation |
-| `missions.py` / `ledger_screen.py` | paid, deadlined jobs from a named giver (has a reward, can fail); ledger_screen is Ledger Hold's Bankers' chest exchange, Commander Varkas Treefolk mentorship, and frontier supply runs (`orders.supply_run`, 10 deliveries for military deed) |
+| `missions.py` / `ledger_screen.py` / `shrine_screen.py` | paid, deadlined jobs from a named giver (has a reward, can fail); a board lists every job its giver has (`MissionOfferScreen.get_templates`, `missions.board`); `shrine_screen` is the JOBS tab of the three hidden sanctuaries (the Codex deliveries, revealed by the Library turn-in); ledger_screen is Ledger Hold's Bankers' chest exchange, Commander Varkas Treefolk mentorship, and frontier supply runs (`orders.supply_run`, 10 deliveries for military deed) |
 | `ox.py` / `ox_fields.py` | the tanner's last job: the Country Roads search, the daylight tracking of Aurochs (`ox.track`, DC climbs per found trail) and the big skittish-beast field (`OxFieldsScenario`: terrain, the herd's call, win on his fall); `ai._skitter` is his flight |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
 | `arena.py` / `ribbit_prompt_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer |

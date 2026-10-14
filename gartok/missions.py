@@ -39,6 +39,8 @@ class MissionTemplate:
     requires: str | None = None        # template id that must be done before this one is offered
     retry_days: int | None = None      # a failed run is offered again this many days after the failure
     reward_recipe: str | None = None   # a crafting recipe every member of the delivering group learns
+    reveals: tuple[str, ...] = ()      # hidden nodes the turn-in shows on the map
+    returns_goal: bool = False         # the goal item is handed back after the turn-in
 
     def __post_init__(self):
         tags_val = self.tags
@@ -138,7 +140,32 @@ LIBRARY_ANCIENT_CODEX = MissionTemplate(
     "Delve into the forgotten ruins and retrieve the Ancient Codex.",
     goal_item=data.CODEX_ITEM, goal_qty=1, reward=500, deadline_days=20,
     tags=("library", "ruins"),
+    reveals=("blood_sanctuary", "nature_grove", "faith_cathedral"), returns_goal=True,
 )
+
+
+def _codex_delivery(school, node, name, blurb):
+    return MissionTemplate(
+        f"{school}_codex", school, node, name, blurb,
+        goal_item=data.CODEX_ITEM, goal_qty=1, reward=0, deadline_days=None,
+        tags=("magic", school, "codex"), requires=LIBRARY_ANCIENT_CODEX.id,
+    )
+
+
+CODEX_BLOOD = _codex_delivery(
+    "blood", "blood_sanctuary", "The Codex for the Blood",
+    "The blood mages have waited for the Ancient Codex. There is only one: give it to us, "
+    "and the other schools will never read it.")
+CODEX_NATURE = _codex_delivery(
+    "nature", "nature_grove", "The Codex for the Green",
+    "The grove asks for the Ancient Codex. There is only one: leave it with us, "
+    "and the other schools will never read it.")
+CODEX_FAITH = _codex_delivery(
+    "faith", "faith_cathedral", "The Codex for the Faith",
+    "The cathedral asks for the Ancient Codex. There is only one: entrust it to us, "
+    "and the other schools will never read it.")
+CODEX_DELIVERIES = (CODEX_BLOOD, CODEX_NATURE, CODEX_FAITH)
+CODEX_IDS = frozenset(t.id for t in CODEX_DELIVERIES)
 
 LEDGER_TREEFOLK = MissionTemplate(
     "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
@@ -156,6 +183,7 @@ TEMPLATES = {
     APOTHECARY_MUSHROOMS.id: APOTHECARY_MUSHROOMS,
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
     LIBRARY_ANCIENT_CODEX.id: LIBRARY_ANCIENT_CODEX,
+    **{t.id: t for t in CODEX_DELIVERIES},
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
 
@@ -172,11 +200,28 @@ def offers_at(guild, node_id):
             continue
         if t.id == "ledger_treefolk" and "bankers_trust" not in guild.deeds_done:
             continue
+        if t.id in CODEX_IDS and any(m.state == "done" and m.template_id in CODEX_IDS
+                                     for m in guild.missions):
+            continue
         if t.requires and not any(m.template_id == t.requires and m.state == "done"
                                   for m in guild.missions):
             continue
         out.append(t)
     return out
+
+
+def board(guild, giver, node_id):
+    """The jobs a giver's board shows at `node_id`: those out now, then those on offer;
+    when there are none, the last one the guild took (so a finished board reads
+    "JOB COMPLETED" and not empty)."""
+    mine = [t for t in TEMPLATES.values() if t.giver == giver and t.node == node_id]
+    out = {m.template_id for m in guild.missions if m.state == "active"}
+    on_offer = {t.id for t in offers_at(guild, node_id)}
+    shown = [t for t in mine if t.id in out] + [t for t in mine if t.id in on_offer and t.id not in out]
+    if shown:
+        return shown
+    taken = [t for t in mine if any(m.template_id == t.id for m in guild.missions)]
+    return taken[-1:]
 
 
 def _runs(guild, template):
@@ -284,6 +329,10 @@ def turn_in(guild, mission):
             if left > 0 and u.equipped_artifact == t.goal_item:
                 u.take_from_artifact()
                 left -= 1
+    if t.returns_goal:
+        group.members[0].give_to_pack(t.goal_item, t.goal_qty)
+    for node_id in t.reveals:
+        guild.reveal_node(node_id)
     n = len(group.members)
     base, rem = divmod(t.reward, n)
     for i, u in enumerate(group.members):

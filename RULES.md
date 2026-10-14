@@ -1386,6 +1386,13 @@ battle (`campaign.absorb_battle`) and on arriving somewhere on the map
 (`map_screen`). A market / hunt / hire trigger is one `settle` line at that flow
 when a non-arena faction grows a deed that needs it.
 
+**Hidden factions.** Every faction but the Pits and the Bankers starts unknown to the guild
+(`Faction.hidden`): the Guild and Reputation tabs list only `factions.known(guild)`. A hidden faction
+becomes known once the guild enters one of its nodes (`Faction.nodes`; `Guild.meet_factions_at`, called
+on every arrival and by `settle`; saved as `met_factions`), and the arrival reports "You have found ...".
+A faction the guild already has standing with counts as known. The Library, Tanners, Apothecary and
+Ledger Hold own their own node; the Blood Cult, Nature Coven and Faith Order own their sanctuary.
+
 > **A faction is an organisation, not a place.** It can hold ground across
 > several nodes. Reputation with it **only rises by completing *deeds*** — there
 > is no per-win grind. A deed is a one-shot achievement: a named condition that,
@@ -1540,7 +1547,8 @@ instance of a given template can be active guild-wide at a time
     expand the archives, pays $250, 15 days.
   - **The Lost Codex:** unlocked after `library_initiate` is completed; asks the
     guild to delve into the sunken vaults of the Ancient Ruins off the Old Road
-    and retrieve the `Ancient Codex`, paying $500, 20 days.
+    and retrieve the `Ancient Codex`, paying $500, 20 days. Turning it in hands the Codex back and
+    reveals the three sanctuaries (see *Secret nodes*).
 
 ### Property and holdings 🟡
 
@@ -1588,13 +1596,20 @@ shipped start to finish (buy/claim, use, lose, recover):
 
 ### Secret nodes 🟡
 
-A node can be secret: `Node.hidden`, or one of the two legacy flags in `world.HIDDEN_NODES` (the
-Ancient Ruins, the Legendary Ox Fields, each opened by its own discovery). `world.known(guild)` is
+A node can be secret: `Node.hidden`. The Ancient Ruins and the Legendary Ox Fields are opened by
+their own discovery (the Old Road scout, the Country Roads search); the three sanctuaries (Blood
+Sanctuary, Nature Grove, Faith Cathedral) by the Library's Codex turn-in. `world.known(guild)` is
 the one list of nodes a guild can see: the public ones plus every secret node it has revealed.
 `Guild.reveal_node(node_id)` reveals one for good (true the first time) and `Guild.revealed` is
 saved (`"revealed"` in the guild payload, empty by default). The map, routes and the minimap all
-read `known`, so a revealed node simply appears with its edges. Nothing in the world is secret by
-this route yet; the magic arc's three schools are the first planned users.
+read `known`, so a revealed node simply appears with its edges.
+
+**The three sanctuaries** (`shrine` function, JOBS tab, `shrine_screen.py`): turning the Ancient Codex in at
+the Library pays as before, hands the Codex back and reveals all three (`MissionTemplate.reveals`,
+`returns_goal`). Each sanctuary then offers one job, delivering the Codex (`missions.CODEX_DELIVERIES`, no
+pay, no deadline), worth 1 reputation with that school's faction (The Blood Cult, The Nature Coven, The
+Faith Order). There is one Codex, so the first delivery closes the other two (offers and deeds). Nothing
+else is on offer there yet; initiation comes next.
 
 ### Dungeons and the Ancient Ruins 🟡
 

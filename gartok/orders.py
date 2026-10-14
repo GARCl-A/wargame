@@ -57,7 +57,7 @@ from . import world
 AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
-                               "library", "ancient_ruins", "stable", "trust", "ox_hunt"})
+                               "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine"})
 FORCED_KINDS = frozenset({"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake",
                           "gather_ambush", "supply_ambush"})
 KINDS = AUTO_KINDS | INTERACTIVE_KINDS | FORCED_KINDS | {"idle"}

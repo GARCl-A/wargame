@@ -169,7 +169,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.bio = d["bio"]
         u.arena_title = d["arena_title"]
 
-        u.magic_sources = list(d["magic_sources"] or ([d["magic_source"]] if d.get("magic_source") else []))
+        u.magic_sources = list(d["magic_sources"])
         u.spells_known = list(d["spells_known"])
         u.study_target = d["study_target"]
         u.study_progress = d["study_progress"]

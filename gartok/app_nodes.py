@@ -149,6 +149,11 @@ class NodeScreensMixin:
         self.scene = LibraryHubScreen(self.ui_fonts, self.guild, group, node,
                                       on_done=self._after_activity)
 
+    def _open_shrine(self, group, node):
+        from .hub_screen import TabbedHubScreen
+        self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
+                                              on_done=self._after_activity)
+
     def _enter_ancient_ruins(self, group, node):
         if wagon_watch.needs_watch(group):
             self.scene = WatchScreen(self.ui_fonts, group, node, "ENTER THE RUINS",

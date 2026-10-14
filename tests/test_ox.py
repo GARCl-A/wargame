@@ -157,7 +157,7 @@ def test_the_signal_horn_recipe_needs_the_horn_and_a_chisel():
 def test_the_fields_are_hidden_until_found_and_two_hours_from_the_farm():
     guild, _ = _guild()
     assert "ox_fields" not in {n.id for n in world.known(guild)}
-    guild.ox_fields_discovered = True
+    guild.reveal_node("ox_fields")
     assert "ox_fields" in {n.id for n in world.known(guild)}
     path, dist = world.route("farm", "ox_fields")
     assert path == ["farm", "country_roads", "ox_fields"] and dist == 2
@@ -170,7 +170,7 @@ def test_the_search_finds_nothing_without_the_job_and_costs_the_hours():
     before = guild.clock.seconds
     with fixed_d20(20):
         found, _msg = ox.scout_country_roads(guild, guild.groups[0])
-    assert not found and not guild.ox_fields_discovered
+    assert not found and not guild.is_node_revealed("ox_fields")
     assert guild.clock.seconds - before == ox.SCOUT_HOURS * 3600
 
 
@@ -180,10 +180,10 @@ def test_the_search_finds_them_with_the_job_out_and_a_good_roll_only():
     _job(guild, signer)
     with fixed_d20(ox.SCOUT_DC - 1):
         found, _msg = ox.scout_country_roads(guild, guild.groups[0])
-    assert not found and not guild.ox_fields_discovered
+    assert not found and not guild.is_node_revealed("ox_fields")
     with fixed_d20(ox.SCOUT_DC):
         found, msg = ox.scout_country_roads(guild, guild.groups[0])
-    assert found and guild.ox_fields_discovered and "Fields" in msg
+    assert found and guild.is_node_revealed("ox_fields") and "Fields" in msg
 
 
 def test_a_found_field_and_the_trail_count_survive_a_save():
@@ -191,12 +191,12 @@ def test_a_found_field_and_the_trail_count_survive_a_save():
     if os.path.exists(persist.save_path(slot)):
         return                                        # never clobber a real save
     guild, _ = _guild()
-    guild.ox_fields_discovered = True
+    guild.reveal_node("ox_fields")
     guild.ox_trails = 2
     try:
         persist.save_game(slot, guild)
         back = persist.load_game(slot)
-        assert back.ox_fields_discovered and back.ox_trails == 2
+        assert back.is_node_revealed("ox_fields") and back.ox_trails == 2
     finally:
         persist.delete_world(slot)
 
@@ -247,7 +247,7 @@ def test_the_hunt_screen_tracks_then_hands_over_aurochs():
     from gartok.hunt_screen import HuntScreen
     from gartok.ui.tokens import fonts as ui_fonts
     guild, (signer, mate) = _guild(hour=8, node="ox_fields")
-    guild.ox_fields_discovered = True
+    guild.reveal_node("ox_fields")
     _job(guild, signer)
     st = HuntState([signer, mate], world.node("ox_fields"), hours_left=0, target="ox")
     scr = HuntScreen(ui_fonts(), guild, st, phase="setup",
@@ -486,7 +486,7 @@ def test_the_country_roads_offer_a_search_until_the_fields_are_found():
     guild, _ = _guild(node="country_roads")
     _, blocks = _inspect(guild, "country_roads")
     assert "scout_fields" in [b.get("key") for b in blocks]
-    guild.ox_fields_discovered = True
+    guild.reveal_node("ox_fields")
     _, blocks = _inspect(guild, "country_roads")
     assert "scout_fields" not in [b.get("key") for b in blocks]
 
@@ -500,12 +500,12 @@ def test_the_search_button_reveals_the_fields_on_the_map():
     assert "ox_fields" not in ms._nodes
     with fixed_d20(20):
         ms._handle_button("scout_fields")
-    assert "ox_fields" in ms._nodes and guild.ox_fields_discovered
+    assert "ox_fields" in ms._nodes and guild.is_node_revealed("ox_fields")
 
 
 def test_the_fields_offer_the_track_button_only_with_the_job_out():
     guild, (signer, _) = _guild(node="ox_fields")
-    guild.ox_fields_discovered = True
+    guild.reveal_node("ox_fields")
     _, blocks = _inspect(guild, "ox_fields")
     assert "ox_hunt" not in [b.get("key") for b in blocks]
     assert any("trail is cold" in b.get("text", "") for b in blocks)

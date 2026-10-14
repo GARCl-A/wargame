@@ -114,9 +114,8 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_stage="NONE", wilds_claim_fence_lumber=0,
                  wilds_claim_sustain_days_left=None, wilds_claim_owner=None,
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
-                 ancient_ruins_discovered=False, leaving=None,
-                 ox_fields_discovered=False, ox_trails=0, vocation=None, recruit_seen=None,
-                 licences=None, revealed=None, supply_runs_completed=0):
+                 leaving=None, ox_trails=0, vocation=None, recruit_seen=None,
+                 licences=None, revealed=None, supply_runs_completed=0, met_factions=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -177,10 +176,9 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         # the guild so it saves and loads by slot, like everything else here;
         # the draft (before a Guild exists) keeps its own until `app._draft_done`
         # hands it in
-        self.ancient_ruins_discovered = ancient_ruins_discovered
-        self.ox_fields_discovered = ox_fields_discovered   # the Legendary Ox Fields, found once with the tanner's job out
         self.ox_trails = ox_trails                         # times the Aurochs' trail was found: each makes the next harder
         self.revealed = set(revealed or ())                 # node ids revealed on the world map
+        self.met_factions = set(met_factions or ())         # hidden factions the guild has met (`factions.known`)
         self.supply_runs_completed = int(supply_runs_completed)
         self.tutorial = tutorial if tutorial is not None else TutorialState()
         self._sync_leadership()
@@ -191,6 +189,21 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
             self.revealed.add(node_id)
             return True
         return False
+
+    def meet_factions_at(self, node_id: str):
+        """The guild is at `node_id`: every hidden faction that owns it becomes known.
+        Returns the factions met for the first time."""
+        from . import factions
+        met = [f for f in factions.FACTIONS.values()
+               if f.hidden and node_id in f.nodes and f.id not in self.met_factions]
+        self.met_factions.update(f.id for f in met)
+        return met
+
+    def faction_known(self, faction_id: str) -> bool:
+        from . import factions
+        f = factions.FACTIONS[faction_id]
+        return (not f.hidden or faction_id in self.met_factions
+                or self.reputation.get(faction_id, 0) > 0)
 
     def is_node_revealed(self, node_id: str) -> bool:
         """True if the node is known/revealed to this guild."""

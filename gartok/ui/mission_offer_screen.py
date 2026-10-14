@@ -1,4 +1,4 @@
-"""Base class for city NPC screens offering a single active job."""
+"""Base class for NPC screens that list the jobs a giver has on the board."""
 
 import pygame
 
@@ -46,8 +46,10 @@ class MissionOfferScreen(Screen):
         self.notice = None
         keeper = world.vendor(*self.VENDOR) if self.VENDOR else None
         self.vendor_card = keeper.card if keeper else None
-        self.buttons = []              # [(key, rect)]
+        self.buttons = []              # [(key, rect)]; key is "done" or (action, template id)
         self._hot = False
+        self.scroll = 0
+        self._max_scroll = 0
 
     # Subclasses must implement these properties and methods:
     @property
@@ -69,6 +71,12 @@ class MissionOfferScreen(Screen):
     def get_template(self):
         raise NotImplementedError
 
+    def get_templates(self):
+        """Every job the board shows, top to bottom. The default is the one
+        `get_template` picks; a giver with several jobs at once overrides this."""
+        t = self.get_template()
+        return [] if t is None else [t]
+
     def get_req_str(self, t):
         raise NotImplementedError
 
@@ -83,41 +91,50 @@ class MissionOfferScreen(Screen):
 
     @property
     def _template(self):
-        return self.get_template()
+        """The first job on the board."""
+        return next(iter(self.get_templates()), None)
+
+    def _is_offered(self, t):
+        """Whether `t` can be freshly accepted here right now
+        (`missions.offers_at` -- the "one job out at a time" rule)."""
+        return t in missions.offers_at(self.guild, self.group.node)
+
+    def _active_of(self, t):
+        """`t`'s job out right now, if any, regardless of who's holding it."""
+        return next((m for m in self.guild.missions
+                     if m.template_id == t.id and m.state == "active"), None)
+
+    def _completed_of(self, t):
+        return any(m.template_id == t.id and m.state in ("done", "failed")
+                   for m in self.guild.missions)
+
+    def _mission_of(self, t):
+        """`t`'s active job, but only if the group standing here right now is
+        the one sharing it (its signer is one of `self.group.members`)."""
+        m = self._active_of(t)
+        if m is None:
+            return None
+        return m if any(u.uid == m.unit_uid for u in self.group.members) else None
 
     @property
     def _offered(self):
-        """Whether `_template` can be freshly accepted here right now
-        (`missions.offers_at` -- the "one job out at a time" rule)."""
         t = self._template
-        return t is not None and t in missions.offers_at(self.guild, self.group.node)
+        return t is not None and self._is_offered(t)
 
     @property
     def _active(self):
-        """This giver's one job out right now, if any, regardless of who's
-        holding it."""
         t = self._template
-        if t is None:
-            return None
-        return next((m for m in self.guild.missions
-                     if m.template_id == t.id and m.state == "active"), None)
+        return None if t is None else self._active_of(t)
 
     @property
     def _completed(self):
         t = self._template
-        if t is None:
-            return False
-        return any(m.template_id == t.id and m.state in ("done", "failed")
-                   for m in self.guild.missions)
+        return t is not None and self._completed_of(t)
 
     @property
     def _mission(self):
-        """The active job, but only if the group standing here right now is
-        the one sharing it (its signer is one of `self.group.members`)."""
-        m = self._active
-        if m is None:
-            return None
-        return m if any(u.uid == m.unit_uid for u in self.group.members) else None
+        t = self._template
+        return None if t is None else self._mission_of(t)
 
     def tutorial_key(self):
         return "missions"
@@ -126,29 +143,113 @@ class MissionOfferScreen(Screen):
         self.on_done()
         return True
 
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL and self._max_scroll:
+            self.scroll = max(0, min(self._max_scroll, self.scroll - event.y * 40))
+            return
+        super().handle_event(event)
+
     def _click(self, px):
         for key, rect in self.buttons:
             if not rect.collidepoint(px):
                 continue
-            if key == "accept":
-                t = self._template
-                if t is not None and self._offered:
+            if key == "done":
+                self.on_done()
+                return
+            action, tid = key
+            t = missions.TEMPLATES[tid]
+            if action == "accept":
+                if self._is_offered(t):
                     missions.accept(self.guild, self.group.leader, t)
                     self.notice = None
-            elif key == "turn_in":
-                m = self._mission
+            elif action == "turn_in":
+                m = self._mission_of(t)
                 if m is not None and missions.can_turn_in(self.guild, m):
-                    t = missions.template_of(m)
                     earned = missions.turn_in(self.guild, m)
                     self.notice = self.get_success_notice(t.reward)
                     if t.reward_recipe:
                         self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
                     for d in earned:
                         self.notice += "  ·  " + factions.deed_notice(d)
-            elif key == "done":
-                self.on_done()
-                return
             return
+
+    def _quest_layout(self, F, t, qw):
+        """Everything a job's card needs to be sized and drawn, worked out once."""
+        qpad = T.S * 2
+        m = self._mission_of(t)
+        tags = getattr(t, "tags", ()) or ((t.tag,) if getattr(t, "tag", None) else ())
+        blurb_lines = wrap(F["body_sm"], t.blurb, qw) if getattr(t, "blurb", None) else []
+        lay = {"t": t, "m": m, "tags": tags, "blurb_lines": blurb_lines}
+        if m is None:
+            lay["req_lines"] = wrap(F["body_sm"], self.get_req_str(t), qw)
+            detail_h = len(lay["req_lines"]) * 20
+        else:
+            progress = missions.progress(self.guild, m)
+            lay["progress"] = progress
+            lay["ready"] = progress >= t.goal_qty
+            lay["status_lines"] = wrap(F["body"], self.get_status_str(
+                t, progress, lay["ready"], missions.days_left(self.guild, m)), qw)
+            detail_h = len(lay["status_lines"]) * 24
+        lay["h"] = (qpad + 24 + (22 + 8 if tags else 0) + (len(blurb_lines) * 18 + 12 if blurb_lines else 0)
+                    + detail_h + 16 + 36 + qpad)
+        return lay
+
+    def _draw_quest(self, screen, F, rect, lay):
+        t, m, qpad, btn_h = lay["t"], lay["m"], T.S * 2, 36
+        qw = rect.w - 2 * qpad
+        pygame.draw.rect(screen, T.STEEL_HI, rect, border_radius=4)
+        pygame.draw.rect(screen, T.STEEL_LINE, rect, 1, border_radius=4)
+        with contained(screen, rect):
+            qx = rect.x + qpad
+            qy = rect.y + qpad
+            draw_icon(screen, pygame.Rect(rect.right - qpad - T.S * 5, qy, T.S * 5, T.S * 5), t.goal_item)
+            caps(screen, F["head"], t.name, (qx, qy), T.TX)
+            qy += 24
+            if lay["tags"]:
+                qy += 4
+                tx = qx
+                for tag in lay["tags"]:
+                    label = tag.upper()
+                    col = TAG_COLOR.get(tag.lower(), T.TX_MUTED)
+                    pw = F["microb"].size(label)[0] + 12
+                    pill = pygame.Rect(tx, qy, pw, 18)
+                    pygame.draw.rect(screen, T.TABLE, pill, border_radius=4)
+                    pygame.draw.rect(screen, col, pill, 1, border_radius=4)
+                    text(screen, F["microb"], label, pill.center, col, center=True)
+                    tx += pw + T.S
+                qy += 22 + 4
+            if lay["blurb_lines"]:
+                for ln in lay["blurb_lines"]:
+                    text(screen, F["body_sm"], ln, (qx, qy), T.TX_MUTED)
+                    qy += 18
+                qy += 12
+            btn_r = pygame.Rect(qx, rect.bottom - qpad - btn_h, qw, btn_h)
+            if m is None:
+                for ln in lay["req_lines"]:
+                    text(screen, F["body_sm"], ln, (qx, qy), T.BRASS)
+                    qy += 20
+                offered = self._is_offered(t)
+                wait = missions.retry_in(self.guild, t)
+                if wait:
+                    label = f"FAILED -- TRY AGAIN IN {wait} DAY(S)"
+                elif self._completed_of(t):
+                    label = ("JOB COMPLETED" if any(x.template_id == t.id and x.state == "done"
+                                                    for x in self.guild.missions)
+                             else "JOB FAILED")
+                elif offered:
+                    label = self.accept_label
+                else:
+                    label = "ALREADY OUT WITH ANOTHER GROUP"
+                draw_button(screen, F, btn_r, label, enabled=offered, primary=offered, mpos=self.mouse)
+                self.buttons.append((("accept", t.id), btn_r))
+            else:
+                for ln in lay["status_lines"]:
+                    text(screen, F["body"], ln, (qx, qy), T.GREEN if lay["ready"] else T.TX_MUTED)
+                    qy += 24
+                ready = lay["ready"]
+                label = self.get_turn_in_label(t, lay["progress"], ready)
+                draw_button(screen, F, btn_r, label, enabled=ready, primary=ready, mpos=self.mouse)
+                self.buttons.append((("turn_in", t.id), btn_r))
 
     def draw(self, screen):
         F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
@@ -158,10 +259,7 @@ class MissionOfferScreen(Screen):
         card_w = min(CARD_W, screen.get_width() - 2 * T.S * 3)
         pad = T.S * 3
         inner_w = card_w - 2 * pad
-
-        t = self._template
-        m = self._mission
-        offered = self._offered
+        gap = T.S
 
         face = T.S * 7 if self.vendor_card else 0
         subtitle_lines = (wrap(F["body"], self.subtitle_text, inner_w - face - T.S * 2)
@@ -169,37 +267,8 @@ class MissionOfferScreen(Screen):
         name_h = 20 if self.vendor_card else 0
         header_h = max(30 + name_h + (len(subtitle_lines) * 22 if subtitle_lines else 0), face)
 
-        qpad = T.S * 2
-        qw = inner_w - 2 * qpad
-
-        if t is None:
-            quest_card_h = 70
-        else:
-            tags = getattr(t, "tags", ()) or ((t.tag,) if getattr(t, "tag", None) else ())
-            title_h = 24
-            tags_h = 22 if tags else 0
-
-            blurb_lines = wrap(F["body_sm"], t.blurb, qw) if getattr(t, "blurb", None) else []
-            blurb_h = len(blurb_lines) * 18
-
-            if m is None:
-                req_str = self.get_req_str(t)
-                req_lines = wrap(F["body_sm"], req_str, qw)
-                req_h = len(req_lines) * 20
-                detail_h = req_h
-            else:
-                progress = missions.progress(self.guild, m)
-                ready = progress >= t.goal_qty
-                days_left = missions.days_left(self.guild, m)
-                status_str = self.get_status_str(t, progress, ready, days_left)
-                status_lines = wrap(F["body"], status_str, qw)
-                detail_h = len(status_lines) * 24
-
-            btn_h = 36
-            quest_card_h = (qpad + title_h +
-                            (tags_h + 8 if tags else 0) +
-                            (blurb_h + 12 if blurb_lines else 0) +
-                            detail_h + 16 + btn_h + qpad)
+        layouts = [self._quest_layout(F, t, inner_w - 4 * T.S) for t in self.get_templates()]
+        list_h = (sum(lay["h"] for lay in layouts) + gap * (len(layouts) - 1)) if layouts else 70
 
         notice_lines = []
         notice_h = 0
@@ -209,13 +278,12 @@ class MissionOfferScreen(Screen):
 
         footer_btn_h = 34
         footer_h = T.S * 2 + 1 + T.S * 2 + footer_btn_h
+        chrome_h = pad + header_h + T.S * 2 + (T.S * 2 + notice_h if self.notice else 0) + footer_h + pad
+        visible_h = max(120, min(list_h, screen.get_height() - T.S * 4 - chrome_h))
+        self._max_scroll = max(0, list_h - visible_h)
+        self.scroll = min(self.scroll, self._max_scroll)
 
-        card_h = pad + header_h + T.S * 2 + quest_card_h
-        if self.notice:
-            card_h += T.S * 2 + notice_h
-        card_h += footer_h + pad
-
-        card = modal_card(screen, (card_w, card_h))
+        card = modal_card(screen, (card_w, chrome_h + visible_h))
 
         with contained(screen, card):
             cx = card.x + pad
@@ -231,74 +299,22 @@ class MissionOfferScreen(Screen):
 
             cy += T.S * 2
 
-            quest_rect = pygame.Rect(cx, cy, inner_w, quest_card_h)
-            pygame.draw.rect(screen, T.STEEL_HI, quest_rect, border_radius=4)
-            pygame.draw.rect(screen, T.STEEL_LINE, quest_rect, 1, border_radius=4)
-
-            with contained(screen, quest_rect):
-                if t is None:
+            list_rect = pygame.Rect(cx, cy, inner_w, visible_h)
+            with contained(screen, list_rect):
+                if not layouts:
+                    box = pygame.Rect(cx, cy, inner_w, 70)
+                    pygame.draw.rect(screen, T.STEEL_HI, box, border_radius=4)
+                    pygame.draw.rect(screen, T.STEEL_LINE, box, 1, border_radius=4)
                     text(screen, F["body_sm"], "Nothing on offer here right now.",
-                         quest_rect.center, T.TX_FAINT, center=True)
-                else:
-                    qx = quest_rect.x + qpad
-                    qy = quest_rect.y + qpad
+                         box.center, T.TX_FAINT, center=True)
+                y = cy - self.scroll
+                for lay in layouts:
+                    self._draw_quest(screen, F, pygame.Rect(cx, y, inner_w, lay["h"]), lay)
+                    y += lay["h"] + gap
+            self.buttons = [(k, r.clip(list_rect)) for k, r in self.buttons]
+            self.buttons = [(k, r) for k, r in self.buttons if r.w and r.h]
 
-                    draw_icon(screen, pygame.Rect(quest_rect.right - qpad - T.S * 5, qy, T.S * 5, T.S * 5),
-                              t.goal_item)
-                    caps(screen, F["head"], t.name, (qx, qy), T.TX)
-                    qy += 24
-
-                    if tags:
-                        qy += 4
-                        tx = qx
-                        for tag in tags:
-                            label = tag.upper()
-                            col = TAG_COLOR.get(tag.lower(), T.TX_MUTED)
-                            pw = F["microb"].size(label)[0] + 12
-                            pill = pygame.Rect(tx, qy, pw, 18)
-                            pygame.draw.rect(screen, T.TABLE, pill, border_radius=4)
-                            pygame.draw.rect(screen, col, pill, 1, border_radius=4)
-                            text(screen, F["microb"], label, pill.center, col, center=True)
-                            tx += pw + T.S
-                        qy += 22 + 4
-
-                    if blurb_lines:
-                        for ln in blurb_lines:
-                            text(screen, F["body_sm"], ln, (qx, qy), T.TX_MUTED)
-                            qy += 18
-                        qy += 12
-
-                    if m is None:
-                        for ln in req_lines:
-                            text(screen, F["body_sm"], ln, (qx, qy), T.BRASS)
-                            qy += 20
-
-                        wait = missions.retry_in(self.guild, t)
-                        if wait:
-                            label = f"FAILED -- TRY AGAIN IN {wait} DAY(S)"
-                        elif self._completed:
-                            label = ("JOB COMPLETED" if any(x.template_id == t.id and x.state == "done"
-                                                            for x in self.guild.missions)
-                                     else "JOB FAILED")
-                        elif offered:
-                            label = self.accept_label
-                        else:
-                            label = "ALREADY OUT WITH ANOTHER GROUP"
-
-                        btn_r = pygame.Rect(qx, quest_rect.bottom - qpad - btn_h, qw, btn_h)
-                        draw_button(screen, F, btn_r, label, enabled=offered, primary=offered, mpos=self.mouse)
-                        self.buttons.append(("accept", btn_r))
-                    else:
-                        for ln in status_lines:
-                            text(screen, F["body"], ln, (qx, qy), T.GREEN if ready else T.TX_MUTED)
-                            qy += 24
-
-                        label = self.get_turn_in_label(t, progress, ready)
-                        btn_r = pygame.Rect(qx, quest_rect.bottom - qpad - btn_h, qw, btn_h)
-                        draw_button(screen, F, btn_r, label, enabled=ready, primary=ready, mpos=self.mouse)
-                        self.buttons.append(("turn_in", btn_r))
-
-            cy = quest_rect.bottom
+            cy = list_rect.bottom
 
             if self.notice:
                 cy += T.S * 2

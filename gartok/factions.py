@@ -38,6 +38,8 @@ class Faction:
     id: str
     name: str
     blurb: str
+    hidden: bool = False                      # unknown to the guild until it enters one of `nodes`
+    nodes: tuple[str, ...] = ()               # the nodes that belong to it
 
 
 @dataclass(frozen=True)
@@ -102,14 +104,31 @@ _FACTIONS = [
     Faction("bankers", "The Bankers",
             "The coin-keepers of the city. They rent strongboxes and trade in property."),
     Faction("library", "The Library",
-            "Scholars and linguists. They trade in knowledge."),
+            "Scholars and linguists. They trade in knowledge.", hidden=True, nodes=("library",)),
     Faction("tanners", "The Tanners",
-            "The leatherworkers of the city. They pay for what the Wilds sheds."),
+            "The leatherworkers of the city. They pay for what the Wilds sheds.", hidden=True, nodes=("tanner",)),
     Faction("apothecary", "The Apothecary",
-            "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents."),
+            "Herbalists and alchemists of the city. They brew remedies and trade in rare reagents.", hidden=True, nodes=("apothecary",)),
     Faction("ledger_hold", "Ledger Hold",
-            "The fortified garrison of the march. They train soldiers and hold the border."),
+            "The fortified garrison of the march. They train soldiers and hold the border.", hidden=True, nodes=("ledger_hold",)),
+    Faction("blood_cult", "The Blood Cult",
+            "Mages of the blood, hidden under the ruins. Chaotic, and cruel with it.", hidden=True, nodes=("blood_sanctuary",)),
+    Faction("nature_coven", "The Nature Coven",
+            "Mages of the green, hidden deep in the Wilds. They keep to themselves.", hidden=True, nodes=("nature_grove",)),
+    Faction("faith_order", "The Faith Order",
+            "Mages of faith, hidden in a cathedral in the hills. They answer to a higher call.", hidden=True, nodes=("faith_cathedral",)),
 ]
+
+# One Codex exists, so it goes to one school: a delivery closes the other two deeds.
+_CODEX_DEEDS = ("blood_codex", "nature_codex", "faith_codex")
+
+
+def _codex_delivered(school, own_id):
+    def check(g, e):
+        return (e.kind == "mission" and "codex" in e.tags and school in e.tags
+                and not any(d in g.deeds_done for d in _CODEX_DEEDS if d != own_id))
+    return check
+
 
 _DEEDS = [
     Deed("arena_first_blood", "arena", "First Blood",
@@ -217,6 +236,15 @@ _DEEDS = [
     Deed("ledger_hold_mentoring", "ledger_hold", "Treefolk Mentorship",
          "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.", rep=1,
          check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
+    Deed("blood_codex", "blood_cult", "The Codex Delivered",
+         "Bring the Ancient Codex to the Blood Sanctuary.", rep=1,
+         check=_codex_delivered("blood", "blood_codex")),
+    Deed("nature_codex", "nature_coven", "The Codex Delivered",
+         "Bring the Ancient Codex to the Nature Grove.", rep=1,
+         check=_codex_delivered("nature", "nature_codex")),
+    Deed("faith_codex", "faith_order", "The Codex Delivered",
+         "Bring the Ancient Codex to the Faith Cathedral.", rep=1,
+         check=_codex_delivered("faith", "faith_codex")),
     Deed("ledger_hold_supply_run", "ledger_hold", "Frontier Supply Run",
          "Successfully complete 10 military supply caravan runs to the frontier outpost.", rep=1,
          check=lambda g, e: e.kind == "supply_run" and g.supply_runs_completed >= 10),
@@ -229,6 +257,12 @@ DEEDS_BY_FACTION = {fid: [d for d in _DEEDS if d.faction == fid] for fid in FACT
 
 def faction(fid):
     return FACTIONS[fid]
+
+
+def known(guild):
+    """The factions the guild knows of: the open ones, plus every hidden one it has met
+    (`Guild.meet_factions_at`) or already holds standing with."""
+    return [f for f in _FACTIONS if guild.faction_known(f.id)]
 
 
 def deed_notice(d):
@@ -310,6 +344,8 @@ def settle(guild, event):
     faction). Loops so a deed gated behind one that completes in the same pass
     still fires. Returns the newly completed deeds, in completion order, for the
     caller to show."""
+    if event.node is not None:
+        guild.meet_factions_at(event.node.id)
     earned = []
     progressing = True
     while progressing:

@@ -349,8 +349,7 @@ def _advance(guild, dt=None, busy=()):
             if pause is not None:
                 pending.append((g, pause))
                 continue
-            for d in factions.settle(guild, factions.Event("travel", node=world.node(order.dest))):
-                events.append(factions.deed_notice(d))
+            events += _arrival_notices(guild, order.dest)
         elif order.kind == "work" and order.gather:
             gathered, ambush = guild.gather_shift(g, order)
             events += gathered
@@ -424,6 +423,15 @@ def _fletcher_rest_pass(guild, group):
         u.quiver_charges = data.QUIVER_AMMO
 
     return [f"{fletcher.name} carved arrows from 1 Lumber while resting, refilling quivers."]
+
+
+def _arrival_notices(guild, node_id):
+    """What arriving at `node_id` tells the player: a faction met for the first time, then
+    the deeds the arrival completed."""
+    events = [f"You have found {f.name}." for f in guild.meet_factions_at(node_id)]
+    events += [factions.deed_notice(d)
+               for d in factions.settle(guild, factions.Event("travel", node=world.node(node_id)))]
+    return events
 
 
 def _wear_wagons(group, src, dest):
@@ -798,8 +806,7 @@ def _resume_arrival(guild, group, order):
         group.order = orders.next_leg(group.node, list(order.resume_path), group.speed,
                                       vocations.travel_mult(guild))
         return []
-    events = [factions.deed_notice(d) for d in
-             factions.settle(guild, factions.Event("travel", node=world.node(group.node)))]
+    events = _arrival_notices(guild, group.node)
     group.order = orders.idle()
     return events
 
@@ -814,7 +821,7 @@ def scout_ancient_ruins(guild, group):
     total = nat + wis_mod
     dc = 12
     if total >= dc:
-        guild.ancient_ruins_discovered = True
+        guild.reveal_node("ancient_ruins")
         name = scout.name if scout else "The squad"
         msg = f"{name} spots ancient stone markers half-buried in the scrub! The Ancient Ruins are discovered."
         return True, msg

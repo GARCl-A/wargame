@@ -231,7 +231,7 @@ def test_mission_offer_screen_containment_and_notice():
 
     # 1. Draw fresh offer and verify all button bounds
     screen.draw(surf)
-    accept_btn = next((r for k, r in screen.buttons if k == "accept"), None)
+    accept_btn = next((r for k, r in screen.buttons if k[0] == "accept"), None)
     leave_btn = next((r for k, r in screen.buttons if k == "done"), None)
     assert accept_btn is not None
     assert leave_btn is not None

@@ -512,6 +512,30 @@ The fortified garrison of the march. They train soldiers and hold the border.
 | Treefolk Mentorship | Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold. | +1 | -- |
 | Frontier Supply Run | Successfully complete 10 military supply caravan runs to the frontier outpost. | +1 | -- |
 
+### The Blood Cult
+
+Mages of the blood, hidden under the ruins. Chaotic, and cruel with it.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| The Codex Delivered | Bring the Ancient Codex to the Blood Sanctuary. | +1 | -- |
+
+### The Nature Coven
+
+Mages of the green, hidden deep in the Wilds. They keep to themselves.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| The Codex Delivered | Bring the Ancient Codex to the Nature Grove. | +1 | -- |
+
+### The Faith Order
+
+Mages of faith, hidden in a cathedral in the hills. They answer to a higher call.
+
+| Deed | Condition | Rep | Requires |
+|---|---|---|---|
+| The Codex Delivered | Bring the Ancient Codex to the Faith Cathedral. | +1 | -- |
+
 ## Constants
 
 The tunable knobs, from `data.py`, `economy.py` and `progression.py`.

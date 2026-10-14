@@ -78,6 +78,9 @@ class TabbedHubScreen(Screen):
             jobs = LibraryMissionScreen(fonts, guild, group, on_done)
             tabs.append(("study", "STUDY", study))
             tabs.append(("jobs", "JOBS", jobs))
+        if node.has("shrine"):
+            from .shrine_screen import ShrineMissionScreen
+            tabs.append(("jobs", "JOBS", ShrineMissionScreen(fonts, guild, group, on_done)))
         from . import gather
         if node.has("work") and gather.can_gather(node.id):
             from .gather_screen import GatherScreen

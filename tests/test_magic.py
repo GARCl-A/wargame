@@ -433,11 +433,3 @@ def test_every_school_round_trips_through_a_save():
     u.magic_sources = ["blood", "faith"]
     back = Unit.from_save(persist.unit_to_dict(u))
     assert back.magic_sources == ["blood", "faith"]
-
-
-def test_a_legacy_single_source_save_keeps_its_school():
-    from gartok import persist
-    d = persist.unit_to_dict(Unit("player"))
-    d.pop("magic_sources")
-    d["magic_source"] = "nature"
-    assert Unit.from_save(d).magic_sources == ["nature"]

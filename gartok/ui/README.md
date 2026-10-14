@@ -66,7 +66,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `intro_card.py` | the centred, veiled card (title, paragraphs, optional brass note, one button) used by every tutorial card |
 | `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
-| `mission_offer_screen.py` | base class for city NPC screens with one active job |
+| `mission_offer_screen.py` | base class for NPC job boards: lists every job the giver has (`get_templates`), scrolls when they do not fit |
 
 ## Adding to the kit
 

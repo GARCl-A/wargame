@@ -112,7 +112,8 @@ NODE_ICON = {
     "prison": ("body", "imprisoned"), "road": ("map", "signpost"), "wilds": ("action", "wolf-howl"),
     "ledger_hold": ("map", "fort"), "wilds_territory": ("map", "claim"), "library": ("gui", "open-book"),
     "farm": ("map", "wheat"), "ancient_ruins": ("map", "ruins"), "country_roads": ("action", "journey"),
-    "ox_fields": ("map", "ox"),
+    "ox_fields": ("map", "ox"), "blood_sanctuary": ("map", "blood"),
+    "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
 }
 
 
@@ -772,13 +773,13 @@ class MapScreen(Screen):
             blocks.append(btn)
             blocks += self._function_notes(fn)
 
-        if here.id == "road" and not getattr(self.guild, "ancient_ruins_discovered", False):
+        if here.id == "road" and not self.guild.is_node_revealed("ancient_ruins"):
             blocks.append({"type": "button", "key": "scout_ruins", "label": "EXPLORE THE AREA (4 h)",
                           "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
                           "color": T.TX_FAINT})
 
-        if here.id == "country_roads" and not self.guild.ox_fields_discovered:
+        if here.id == "country_roads" and not self.guild.is_node_revealed("ox_fields"):
             blocks.append({"type": "button", "key": "scout_fields",
                            "label": f"SEARCH THE LANES ({ox.SCOUT_HOURS} h)", "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Look for where the land opens out (WIS check)",

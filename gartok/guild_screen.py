@@ -746,7 +746,7 @@ class GuildScreen(Screen):
         data = {
             "fame": guild.fame, "fame_next": guild.fame_to_next_slot,
             "slots": (len(guild.groups), guild.group_slots),
-            "factions": [(f.name, guild.reputation.get(f.id, 0)) for f in factions.FACTIONS.values()],
+            "factions": [(f.name, guild.reputation.get(f.id, 0)) for f in factions.known(guild)],
             "notices": self._notices(), "groups": self._group_rows(), "bases": self._holdings(),
             "vocation": self._vocation(),
         }
@@ -758,7 +758,7 @@ class GuildScreen(Screen):
     def _draw_reputations(self, screen, F, rect):
         done = set(self.guild.deeds_done)
         data = []
-        for fac in factions.FACTIONS.values():
+        for fac in factions.known(self.guild):
             rep = self.guild.reputation.get(fac.id, 0)
             data.append({
                 "name": fac.name, "blurb": fac.blurb, "rep": rep,

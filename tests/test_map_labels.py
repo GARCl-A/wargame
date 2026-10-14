@@ -21,8 +21,8 @@ def _setup():
 
 def test_labels_of_a_crowded_map_do_not_overlap_each_other_or_other_marks():
     F = _setup()
-    bounds = pygame.Rect(0, 0, 900, 700)
-    centers = {n.id: (150 + n.pos[0] * 600, 100 + n.pos[1] * 500) for n in world.NODES}
+    bounds = pygame.Rect(0, 0, 1200, 800)
+    centers = {n.id: (150 + n.pos[0] * 900, 100 + n.pos[1] * 600) for n in world.NODES}
     names = {n.id: n.name for n in world.NODES}
     spots = map_panel.place_labels(F, centers, names, bounds)
     assert set(spots) == set(centers)

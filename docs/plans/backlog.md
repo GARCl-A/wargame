@@ -28,11 +28,10 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Magic Arc — Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex** (definir nós e facções em factions/world, gancho da biblioteca que revela os 3 nós e entrega da missão).
-2. **Magic Arc — Fatia 2: Rito de Iniciação e Primeiros Feitiços** (verificação de 2 rep, Holy Symbol para Fé, desbloqueio de traço de iniciante e feitiços tier 1).
-3. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-4. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; scheduled after magic).
-5. **Culinária e buffs temporários de refeições** (postergado para após o arco de magia).
+1. **Magic Arc — Slice 2: initiation rite and first spells** (2 reputation, Holy Symbol for Faith, beginner trait and tier 1 spells).
+2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
+3. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; scheduled after magic).
+4. **Cooking and temporary meal buffs** (postponed until after the magic arc).
 
 ---
 
@@ -53,24 +52,16 @@ the seams they need.
   takes `radii`, half a region's radius around each node) were fixed 2026-10-13. Left: (1) The draft cards' attribute row
   (`ui/draft_panel`) is tight between groups ("+0 CON"). (2) In a window below about 1100 px the map frames at its zoom
   floor (`MapCamera.autofit`, 440 in `map_panel.draw_map`) and overflows instead of fitting.
-- **`Unit.from_save` still reads the old `magic_source` key** (one line, so a save from before 2026-10-13 keeps a
-  Gnome's or Kobold's school). It contradicts "an older shape does not load": delete it when no old save matters.
 
 ## Medium
 
-- **Magic Arc — Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex.**
-  1. *Definições de facção:* Três facções rivais em `factions.py`: `blood_cult` (Sangue, Caótico/Mau), `nature_coven` (Natureza, Neutro/Bom), `faith_order` (Fé, Leal/Bom). Deed de entrega do Codex (`rep=1`).
-  2. *Nós secretos no mapa:* Três nós com `hidden=True` em `world.py` integrados ao grafo de distâncias: Santuário de Sangue (próximo às Ruínas), Bosque da Natureza (próximo à Floresta/Wilds), Catedral da Fé (próximo a Ledger Hold/Colinas).
-  3. *Missão de entrega na Biblioteca:* Ao entregar o Ancient Codex recuperado da masmorra na Biblioteca, o sábio entrega a nova missão de despacho para UMA das três facções e revela os 3 locais simultaneamente via `guild.reveal_node(node_id)`.
-  4. *Entrega e Recompensa:* Entregar o Codex no santuário da facção escolhida completa a missão, consome o item e concede +1 de reputação com aquela facção.
-  5. *Rivalidade por recurso (decidido 2026-10-13):* o Codex só existe um e só vai para UMA facção; entregá-lo a uma fecha esse deed nas outras duas. A rivalidade é disputa de recurso (o deed é exclusivo), não um campo de penalidade de reputação.
-  6. *Um mecanismo só de nó oculto:* hoje há dois, `world.HIDDEN_NODES` (ancient_ruins e ox_fields, por flag do guild) e `Node.hidden` + `Guild.revealed`. Migrar os dois nós antigos para `Guild.revealed` e apagar `HIDDEN_NODES` junto com esta fatia.
-  7. *Arte:* cada santuário tem retrato de mestre e imagem próprios (`/gen-portrait`).
-- **Magic Arc — Fatia 2: Rito de Iniciação e Primeiros Feitiços.**
-  1. *Trava de reputação:* Iniciar na escola mágica requer 2 de reputação com a respectiva facção. Entregar o Codex dá 1 (falta só 1 deed); quem não o entregou àquela facção precisa de 2. **Decidido 2026-10-13:** são pelo menos 2 missões a mais por facção (6 no total), cada uma valendo 1 de reputação.
-  2. *Requisitos de Fé (decidido 2026-10-13):* a iniciação em Fé **consome** um `Holy Symbol`. Ele não se compra: nenhuma loja o vende (hoje só o Priest nasce com um). Vem de nascença ou de um bandido numa emboscada (pendente: pô-lo numa tabela de saque de bandidos). Explicação de fantasia: o deus escolhe seus discípulos fazendo o símbolo chegar às mãos deles.
-  3. *Interação e Treinamento:* Cada santuário oferece mestre/função de iniciação (uma `NodeFunction` nova, com vendor e retrato próprios) que concede o status de iniciante (`Unit.add_magic_source`; `Unit.magic_sources` já é uma lista sem repetição).
-  4. *Tier 1 de Feitiços:* Disponibilização de grimório inicial e estudo de feitiços básicos da escola.
+- **Sanctuary art (Slice 1 is built 2026-10-13: see RULES.md *Secret nodes*).** Each sanctuary still needs its keeper: a portrait (by hand, e.g. Gemini) and a `Vendor` in `world.NODES` (`vendors={"shrine": ...}`) with `ShrineMissionScreen.VENDOR` set; the Codex deed text and the keepers' lines are first drafts.
+- **Magic Arc — Slice 2: initiation rite and first spells.**
+  Initiation belongs to the **character**, not the guild: a unit is taken to one of the three hidden nodes, and only if the guild has enough reputation with that faction can the rite be done for that unit.
+  1. *Reputation gate:* initiating into a school requires 2 reputation with its faction. The Codex delivery gives 1; whoever did not deliver to that faction needs 2 deeds. **Decided 2026-10-13:** at least 2 more missions per faction (6 in all), each worth 1 reputation. **Decided 2026-10-13:** one of them is about the Snake Dragon (`portraits/snake_dragon/0.png`; its level is still to be set: for scale, The Ancient Archivist, the Ruins boss, is a level-10 Skeleton with 83 HP). The other five are still to be designed.
+  2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no shop stocks it (only the Priest is born with one). It comes from birth or from a bandit in an ambush (pending: put it on a bandit loot table). Fantasy reason: the god picks disciples by getting the symbol into their hands.
+  3. *Interaction and training:* each sanctuary offers an initiation master/function (a new `NodeFunction` with its own vendor and portrait) that grants beginner status (`Unit.add_magic_source`; `Unit.magic_sources` is already a list without repeats).
+  4. *Tier 1 spells:* a starting grimoire and the study of the school's basic spells.
 
 ## Playtest notes 2026-10-12
 
@@ -322,17 +313,11 @@ building them:
 
 # Needs more information
 
-- **Magic as the vertical progression.** The biggest content gap (only the library tome quest
-  exists). Follows the Ancient Codex recovery from the dungeon. **Decided 2026-10-13:**
-  1. Upon delivering the Ancient Codex from the dungeon to the Library, the Library gives the guild a new mission: deliver the Ancient Codex safely to **ONE of the three magic factions** (Blood mages, Nature mages, Faith mages).
-  2. At that exact instant, the secret map locations of all 3 magic factions are revealed simultaneously on the world map (`guild.reveal_node(node_id)`).
-  3. The quest completes upon safely delivering the Ancient Codex to one chosen magic faction.
-  4. Delivering the Codex awards +1 reputation with that chosen faction.
-  5. **Initiation lock:** unlocking the ability to initiate squad members into a faction's magic requires **2 reputation** with that faction. Delivering the Codex is therefore a pivotal strategic choice that speeds up initiation with the chosen school.
-  6. The 3 schools are rival factions that dislike each other; aiding one affects standing with others. The schools are not mutually exclusive (any character may study multiple schools if prerequisites and study costs are met; `Unit.magic_sources` is a list without repeats since 2026-10-13).
-  - **Infrastructure built (2026-10-13):** Revealed nodes system (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node(node_id)` and persistence in `persist.py` with `"revealed": []` default).
-  - **Priority:** Magic progression is strictly prioritised before Archaeology.
-  - **Execution breakdown:** Fatias 1 e 2 estão detalhadas e prontas em *Ready to do -> Medium* (Fatia 1: Facções Mágicas, Nós Ocultos e Missão do Codex; Fatia 2: Rito de Iniciação e Primeiros Feitiços). Apenas a expansão de feitiços de tiers avançados (tier 2+) e penalidades severas de rivalidade aguardam escopo posterior.
+- **Magic as the vertical progression.** The biggest content gap. Decided 2026-10-13 and
+  specified in *Ready to do -> Medium* (Slice 1 and Slice 2); the infrastructure for revealed nodes is built
+  (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node`, saved as `"revealed"`). The schools are
+  rival factions but not mutually exclusive for a character. Magic comes strictly before Archaeology.
+  Still open: the five unwritten faction missions, tier 2+ spells, and any reputation penalty for rivalry.
 
 - **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*

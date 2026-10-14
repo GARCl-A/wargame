@@ -245,15 +245,22 @@ NODES = [
          vendors={"shop": Vendor("Edric Ashvale", "Human", "farmer", "farmer.png")}),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
-         functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE),
+         functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE, hidden=True),
+    Node("blood_sanctuary", "Blood Sanctuary", "town", (0.66, 0.10),
+         "A sunken chapel under the ruins' spires, its floor stained dark. The blood mages keep it.",
+         alignment="Chaotic and Evil", functions=("shrine",), hidden=True),
+    Node("nature_grove", "Nature Grove", "town", (0.95, 0.20),
+         "A ring of old trees deep in the Wilds where no path leads. The nature mages keep it.",
+         alignment="Neutral and Good", functions=("shrine",), hidden=True),
+    Node("faith_cathedral", "Faith Cathedral", "town", (0.88, 0.85),
+         "A white-stone cathedral in the hills behind Ledger Hold. The faith mages keep it.",
+         alignment="Lawful and Good", functions=("shrine",), hidden=True),
     Node("country_roads", "Country Roads", "town", (0.44, 0.92),
          "Dirt lanes between the farmsteads south of the city. Quiet, and wide open."),
     Node("ox_fields", "Legendary Ox Fields", "town", (0.62, 0.88),
          "Fertile grazing land where something very old and very large has outlived every hunter sent after it.",
-         OxFieldsScenario, functions=("ox_hunt",)),
+         OxFieldsScenario, functions=("ox_hunt",), hidden=True),
 ]
-
-HIDDEN_NODES = {"ancient_ruins": "ancient_ruins_discovered", "ox_fields": "ox_fields_discovered"}
 
 WILDS_TERRITORY_NODE = "wilds_territory"
 
@@ -276,6 +283,9 @@ EDGES = [
     ("road", "wilds", 6),
     ("road", "ledger_hold", 5),
     ("road", "ancient_ruins", 2),
+    ("ancient_ruins", "blood_sanctuary", 2),
+    ("wilds", "nature_grove", 3),
+    ("ledger_hold", "faith_cathedral", 3),
     ("farm", "country_roads", 1),
     ("country_roads", "ox_fields", 1),
     ("wilds", "wilds_territory", 2),
@@ -306,13 +316,8 @@ def known(guild):
     """The nodes the guild can see: public nodes plus any revealed hidden nodes."""
     res = []
     for n in NODES:
-        if not n.hidden and n.id not in HIDDEN_NODES:
+        if not n.hidden or (guild is not None and guild.is_node_revealed(n.id)):
             res.append(n)
-        elif guild is not None:
-            if hasattr(guild, "is_node_revealed") and guild.is_node_revealed(n.id):
-                res.append(n)
-            elif n.id in HIDDEN_NODES and getattr(guild, HIDDEN_NODES[n.id], False):
-                res.append(n)
     return res
 
 

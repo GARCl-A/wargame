@@ -15,19 +15,19 @@ def test_scout_ancient_ruins():
     u._apply_attributes()
     u._derive_combat()
     g = Guild([u], node="road")
-    assert not g.ancient_ruins_discovered
+    assert not g.is_node_revealed("ancient_ruins")
 
     # Low roll fails
     with fixed_d20(2):
         ok, msg = campaign.scout_ancient_ruins(g, g.groups[0])
         assert not ok
-        assert not g.ancient_ruins_discovered
+        assert not g.is_node_revealed("ancient_ruins")
 
     # High roll succeeds
     with fixed_d20(18):
         ok, msg = campaign.scout_ancient_ruins(g, g.groups[0])
         assert ok
-        assert g.ancient_ruins_discovered
+        assert g.is_node_revealed("ancient_ruins")
         assert "discovered" in msg.lower()
 
 
@@ -256,7 +256,7 @@ def test_library_quest_two_turn_in_and_trusted_deed():
     earned = missions.turn_in(guild, m2)
     assert m2.state == "done"
     assert u.money == copper_before + t2.reward
-    assert not u.has_item(data.CODEX_ITEM) # Turned in
+    assert u.has_item(data.CODEX_ITEM)  # handed back, to be taken to a school
 
     # Verify library_trusted deed was banked
     assert "library_trusted" in guild.deeds_done
