@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-13. When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-15. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -28,9 +28,9 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc, to the end** (Slice 2: the six faction missions, the keepers, initiation per character
-   in all three schools, Holy Symbol on a bandit loot table, tier 1 spells per school). The five missions
-   besides the Snake Dragon are not designed yet; that is the arc's first step.
+1. **Magic Arc, to the end** (*Ready to do -> Medium*): the rest of the faction missions (the Faith
+   Order's first is next), the keepers and the initiation, Holy Symbol on a bandit loot table, tier 1
+   spells per school. The Snake Dragon job is built (2026-10-15).
 2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
 3. **Group hand-over card** (*Small*): the clock no longer drops the player into another group's screen unannounced.
 4. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
@@ -69,22 +69,34 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
 
 ## Medium
 
-- **Sanctuary art (Slice 1 is built 2026-10-13: see RULES.md *Secret nodes*).** Each sanctuary still needs its keeper: a portrait (by hand, e.g. Gemini) and a `Vendor` in `world.NODES` (`vendors={"shrine": ...}`) with `ShrineMissionScreen.VENDOR` set; the Codex deed text and the keepers' lines are first drafts.
-- **Magic Arc — Slice 2: initiation rite and first spells.**
-  Initiation belongs to the **character**, not the guild: a unit is taken to one of the three hidden nodes, and only if the guild has enough reputation with that faction can the rite be done for that unit.
-  1. *Reputation gate:* initiating into a school requires 2 reputation with its faction. The Codex delivery gives 1; whoever did not deliver to that faction needs 2 deeds. **Decided 2026-10-13:** at least 2 more missions per faction (6 in all), each worth 1 reputation. **Decided 2026-10-13:** one of them is about the Snake Dragon (`portraits/snake_dragon/0.png`; its level is still to be set: for scale, The Ancient Archivist, the Ruins boss, is a level-10 Skeleton with 83 HP). The other five are still to be designed.
-     **Decided 2026-10-15:** *Blood* is **bloodline**, not blood magic: the magic is born in you (child of a dragon, an
-     angel, a demon). The Blood Cult's blurb in `factions.py` ("cruel") is to be rewritten to match. The Snake Dragon is an
-     ordinary snake with dragon blood in it. It can be delivered **dead to the Blood Cult** (an autopsy, to read the
-     bloodline) or **alive to the Nature Coven** (to find out whether a curse corrupted it, and to treat it). One beast, two
-     outcomes, exclusive like the Codex. Delivering it alive needs a capture: a first, narrow slice of *Prisoners* (below).
-     The Faith Order gets a first mission of its own. **The Snake Dragon job is built (2026-10-15)**, see
-     [snake_dragon.md](snake_dragon.md) and RULES.md (*Secret nodes*, *Capture*, *Dragon Breath*, the magic track),
-     and so is the failed state of an exclusive delivery (the Codex too). Left: the other missions (Faith's first,
-     and the rest, designed by story), and checking at the end that no path leaves a school unreachable.
-  2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no shop stocks it (only the Priest is born with one). It comes from birth or from a bandit in an ambush (pending: put it on a bandit loot table). Fantasy reason: the god picks disciples by getting the symbol into their hands.
-  3. *Interaction and training:* each sanctuary offers an initiation master/function (a new `NodeFunction` with its own vendor and portrait) that grants beginner status (`Unit.add_magic_source`; `Unit.magic_sources` is already a list without repeats).
-  4. *Tier 1 spells:* a starting grimoire and the study of the school's basic spells.
+- **Magic Arc — what is left (Slice 1 and the Snake Dragon are built: RULES.md *Secret nodes*, *Magic*,
+  *Capture*, *Dragon Breath*; plan and as-built notes in [snake_dragon.md](snake_dragon.md)).**
+  Initiation belongs to the **character**, not the guild: a unit is taken to one of the three hidden nodes, and only
+  if the guild has enough reputation with that faction can the rite be done for that unit.
+  1. *Missions, designed by story (decided 2026-10-15).* Initiating into a school needs 2 reputation with its faction;
+     each faction gets about three missions, each worth 1. **Exclusivity is intended**: the Codex goes to one school
+     and the Snake Dragon to one of Blood / Nature, so in theory a character can be initiated in all three schools but
+     in practice the guild's choices close doors, and a closed delivery shows as FAILED so the player sees it. More
+     missions come as the game grows. When the set is written, check that no path leaves a school unreachable; if
+     one does, add a mission there. Built: the Codex (all three) and the Snake Dragon (Blood dead / Nature alive).
+     **Next: the Faith Order's first mission**, then the rest.
+  2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no
+     shop stocks it (only the Priest is born with one). It comes from birth or from a bandit in an ambush (pending:
+     put it on a bandit loot table). Fantasy reason: the god picks disciples by getting the symbol into their hands.
+  3. *Keepers and the rite:* each sanctuary's keeper (portrait by hand, a `Vendor` in `world.NODES` with
+     `ShrineMissionScreen.VENDOR` set; the keepers' lines are first drafts) offers the initiation (a new
+     `NodeFunction`) that grants the school (`Unit.add_magic_source`). That also opens the school's root in the
+     **magic talent track** (built 2026-10-15: roots granted, never picked), so initiation is what makes the track
+     reachable for the player.
+  4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Today the four spells
+     (`magic.SPELLS`) belong to all three schools, so the schools do not differ yet.
+  5. *Blood is bloodline (decided 2026-10-15):* the magic is born in you (a dragon, an angel, a demon in the line).
+     Rewrite the Blood Cult's blurb in `factions.py` ("Chaotic, and cruel with it") to match. New Blood branches follow
+     the same shape as Bloodline -> Dragon -> Dragon Breath (other bloodlines: angel, demon...).
+  6. *More magic XP sources:* today a magic kill and a finished spell study (`progression.py`, combat's curve as a
+     placeholder); the author plans more magic activities.
+  7. *Tuning, after a playtest:* the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
+     captive and the 3-day corpse are first picks.
 
 ## Playtest notes 2026-10-12
 
@@ -137,6 +149,8 @@ pointed to, not repeated.
   their own branches. The magic arc's tier 1 spells need the same as they land. Goal: every action an
   enemy can hold is scored against its alternatives (expected damage, AP spent, position), with tests per
   action and `sim_test.py`. Gauge: `scripts/combat_pairs.py` against the 2026-10-11 baseline below.
+  Built with their own AI on 2026-10-15: Dragon Breath (only on 3+ foes in the cone, but the breather does not move
+  to set up a better cone), Capture and the Non-lethal toggle (the player's side, against a foe it wants alive).
 - **Playtest on the current build, then feed it and the Caravana run to the AI and the sim.**
   The *Caravana Do Homem Verde* run (world `95ea6648`, 205 days, the longest) is archived but **never analysed**:
   its `play.jsonl` is in `recordings/2026-10-12/` and its 62 fights in `combat_lab/campaign/`, yet the
@@ -184,8 +198,9 @@ pointed to, not repeated.
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
 - **Prisoners.** (First slice built 2026-10-15 for the Snake Dragon: the Non-lethal toggle, Capture with a Rope or
-  Chains, captives kept by a group for 7 days, `captives.py`.) Left: what a captive is *for* beyond a mission (ransom,
-  questioning, recruiting, the prison), the enemy side capturing the player's people, and rescuing a captive in battle.
+  Chains, captives kept by a group for 7 days on the herd limit, `captives.py`; decided that anything captured follows
+  that same scheme.) Left: what a captive is *for* beyond a mission (ransom, questioning, recruiting, the prison), the
+  enemy side capturing the player's people, and rescuing a captive in battle.
 - **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI
   playing the player's squad wins hunts 96% and ambushes 100%, so it is close to a person there;
   the gap is the arena duels. The author wins 60 of 62 against the AI and the game feels easy, so
@@ -357,11 +372,9 @@ building them:
 
 # Needs more information
 
-- **Magic as the vertical progression.** The biggest content gap. Decided 2026-10-13 and
-  specified in *Ready to do -> Medium* (Slice 1 and Slice 2); the infrastructure for revealed nodes is built
-  (`Node.hidden`, `world.known(guild)`, `Guild.revealed`, `Guild.reveal_node`, saved as `"revealed"`). The schools are
-  rival factions but not mutually exclusive for a character. Magic comes strictly before Archaeology.
-  Still open: the five unwritten faction missions, tier 2+ spells, and any reputation penalty for rivalry.
+- **Magic as the vertical progression.** The biggest content gap; the arc's work is in *Ready to do -> Medium*.
+  The schools are rival factions but not mutually exclusive for a character. Magic comes strictly before
+  Archaeology. Still open, beyond that list: tier 2+ spells and any reputation penalty for rivalry.
 
 - **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
@@ -407,7 +420,7 @@ Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupatio
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
 already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
 (the Claim oven's material), First
-Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope, Bear Trap, Chisel (crafting tool for Signal Horn). The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
+Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope and Chains (Capture), Bear Trap, Chisel (crafting tool for Signal Horn). The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
 - **Scissors** (Barber). For shearing sheep once player husbandry/farms land (Claim/property).
@@ -417,4 +430,4 @@ for a system that does not exist yet:
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
-- **Holy Symbol.** Consumed by the initiation in faith magic (see *Magic Arc, Fatia 2*); not for sale, only from birth or a bandit's loot.
+- **Holy Symbol.** Consumed by the initiation in faith magic (see *Magic Arc*); not for sale, only from birth or a bandit's loot.
