@@ -335,7 +335,7 @@ def _kenku():
 
 
 def test_elf_woodland_scout_trims_road_and_hunt_ambushes_only_when_cautious():
-    from gartok import campaign, hunt, vocations, world
+    from gartok import forced, hunt, vocations, world
     from gartok.group import CAUTIOUS, NORMAL
     elf = _elf()
     assert elf.choose_talent("racial", "woodland_scout")
@@ -343,12 +343,12 @@ def test_elf_woodland_scout_trims_road_and_hunt_ambushes_only_when_cautious():
     group = guild.groups[0]
     roll = world.ROAD_AMBUSH_CHANCE * 0.95          # between x0.9 and x1
 
-    with patch("gartok.campaign.random.random", return_value=roll):
-        with patch("gartok.campaign.encounters.roll_encounter", return_value=["Goblin"]):
+    with patch("gartok.forced.random.random", return_value=roll):
+        with patch("gartok.forced.encounters.roll_encounter", return_value=["Goblin"]):
             group.stance = NORMAL
-            assert campaign._road_ambush_catch(guild, group, ["road"]).kind == "ambush"
+            assert forced.road_ambush_catch(guild, group, None, ["road"]).kind == "ambush"
             group.stance = CAUTIOUS
-            assert campaign._road_ambush_catch(guild, group, ["road"]) is None
+            assert forced.road_ambush_catch(guild, group, None, ["road"]) is None
 
     class FakeRNG:
         def random(self):

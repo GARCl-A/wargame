@@ -23,7 +23,7 @@ import sys
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(SCRIPTS))
 
-from gartok import items, orders
+from gartok import forced, items
 from gartok.clock import SECONDS_PER_DAY
 
 CURVE_DAYS = (1, 3, 7, 14, 21, 30)
@@ -130,8 +130,7 @@ def first_axe(rows):
 
 
 def fights(rows):
-    forced = orders.FORCED_KINDS
-    bouts = [r for r in rows if r["e"] == "fight" and r["kind"] not in forced and r["kind"] != "hunt"]
+    bouts = [r for r in rows if r["e"] == "fight" and r["kind"] not in forced.EVENTS and r["kind"] != "hunt"]
     hunts = [r for r in rows if r["e"] == "fight" and r["kind"] == "hunt"]
     return bouts, hunts
 

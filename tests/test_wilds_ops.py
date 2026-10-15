@@ -6,7 +6,7 @@ Sistema 3 left open once a claim is finally the guild's own ground.
 
 import random
 
-from gartok import campaign, orders
+from gartok import campaign, forced, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
@@ -135,7 +135,7 @@ def test_winning_the_seizure_fight_keeps_the_claim_and_resumes_the_garrison():
     order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), job="lumber")
 
     outcome = campaign.BattleOutcome(won=True, survivors=[p], fallen=[])
-    events = campaign.resolve_wilds_seizure(guild, g, order, outcome)
+    events = forced.resolve_wilds_seizure(guild, g, order, outcome)
     assert guild.wilds_claim_owner == "guild"
     assert g.order.kind == "garrison" and g.order.job == "lumber"
     assert any("holds the claim" in e for e in events)
@@ -147,7 +147,7 @@ def test_losing_the_seizure_fight_seizes_the_claim():
     order = orders.Order("wilds_seizure", pack=(Unit("enemy"),), job="lumber")
 
     outcome = campaign.BattleOutcome(won=False, survivors=[p], fallen=[])
-    events = campaign.resolve_wilds_seizure(guild, g, order, outcome)
+    events = forced.resolve_wilds_seizure(guild, g, order, outcome)
     assert guild.wilds_claim_owner == "seized"
     assert g.order.kind == "idle"
     assert any("seized" in e for e in events)
@@ -160,7 +160,7 @@ def test_a_full_wipe_during_the_seizure_fight_still_seizes_the_claim():
     guild.remove_members([p])                       # the fight wiped the garrison
 
     outcome = campaign.BattleOutcome(won=False, survivors=[], fallen=[p])
-    events = campaign.resolve_wilds_seizure(guild, g, order, outcome)
+    events = forced.resolve_wilds_seizure(guild, g, order, outcome)
     assert guild.wilds_claim_owner == "seized"
     assert any("seized" in e for e in events)        # must not crash on an emptied group
 
@@ -240,7 +240,7 @@ def test_winning_the_retake_restores_guild_ownership_and_resumes_travel():
     order = orders.Order("wilds_retake", pack=(Unit("enemy"),), resume_path=())
 
     outcome = campaign.BattleOutcome(won=True, survivors=[p], fallen=[])
-    events = campaign.resolve_wilds_claim_retake(guild, g, order, outcome)
+    events = forced.resolve_wilds_claim_retake(guild, g, order, outcome)
     assert guild.wilds_claim_owner == "guild"
     assert g.order.kind == "idle"
     assert any("retaken" in e for e in events)
@@ -255,7 +255,7 @@ def test_losing_the_retake_leaves_the_claim_seized():
     order = orders.Order("wilds_retake", pack=(Unit("enemy"),), resume_path=())
 
     outcome = campaign.BattleOutcome(won=False, survivors=[p], fallen=[])
-    events = campaign.resolve_wilds_claim_retake(guild, g, order, outcome)
+    events = forced.resolve_wilds_claim_retake(guild, g, order, outcome)
     assert guild.wilds_claim_owner == "seized"
     assert any("stays lost" in e for e in events)
 
@@ -375,7 +375,7 @@ def test_the_full_wilds_claim_lifecycle_end_to_end():
     order = next(o for grp, o in result.pending if grp is g2)
     assert order.kind == "wilds_retake"
 
-    events = campaign.resolve_wilds_claim_retake(
+    events = forced.resolve_wilds_claim_retake(
         guild, g2, order, campaign.BattleOutcome(won=True, survivors=[rescuer], fallen=[]))
     assert guild.wilds_claim_owner == "guild"
     assert any("retaken" in e for e in events)

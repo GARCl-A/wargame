@@ -7,7 +7,7 @@ is a tuning knob, not something worth making tests fight over."""
 
 import random
 
-from gartok import campaign, orders
+from gartok import campaign, forced, orders
 from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import Battle, Unit, make_app, world
@@ -94,7 +94,7 @@ def test_the_pause_survives_a_waypoint_and_resumes_the_rest_of_the_route():
     for c in fought.player_units:
         c.status = "up"
     outcome = campaign.absorb_battle(guild, list(g.members), fought, node=world.node("road"))
-    events = campaign.resolve_road_ambush(guild, g, order)
+    events = forced.resolve_road_ambush(guild, g, order)
 
     assert g.order.kind == "travel" and g.order.dest == "wilds"
     assert outcome.won and not events                 # no notices -- just the fight itself
@@ -120,7 +120,7 @@ def test_a_wiped_group_after_the_ambush_leaves_nothing_to_resume():
     campaign.absorb_battle(guild, [victim], fought, node=world.node("road"))
 
     assert g not in guild.groups                       # the lone member fell, group pruned
-    assert campaign.resolve_road_ambush(guild, g, order) == []   # no-op, nothing left to resume
+    assert forced.resolve_road_ambush(guild, g, order) == []   # no-op, nothing left to resume
 
 
 def test_fleeing_a_guard_catch_back_onto_an_unsafe_node_can_ambush():
@@ -144,7 +144,7 @@ def test_fleeing_a_guard_catch_back_onto_an_unsafe_node_can_ambush():
     orig = _forced_chance(1.0)
     try:
         with fixed_d20(1):                       # the guard test itself misses this time
-            events, pause = campaign.resolve_guard_flee(guild, g, order)
+            events, pause = forced.resolve_guard_flee(guild, g, order)
     finally:
         world.ROAD_AMBUSH_CHANCE = orig
 

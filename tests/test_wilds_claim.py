@@ -7,7 +7,7 @@ first node with a `garrison_job` actually set)."""
 
 import random
 
-from gartok import campaign, orders
+from gartok import campaign, forced, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
@@ -309,7 +309,7 @@ def test_winning_the_raid_resumes_the_same_garrison_job():
     order = orders.Order("wilds_raid", pack=(Unit("enemy"),), job="lumber")
 
     outcome = campaign.BattleOutcome(won=True, survivors=[p], fallen=[])
-    events = campaign.resolve_wilds_raid(guild, g, order, outcome)
+    events = forced.resolve_wilds_raid(guild, g, order, outcome)
     assert g.order.kind == "garrison" and g.order.job == "lumber"
     assert guild.wilds_claim_stage == "SUSTAINING"
     assert any("drives off" in e for e in events)
@@ -325,7 +325,7 @@ def test_losing_the_raid_resets_the_sustain_countdown():
     order = orders.Order("wilds_raid", pack=(Unit("enemy"),), job="lumber")
 
     outcome = campaign.BattleOutcome(won=False, survivors=[p], fallen=[])
-    events = campaign.resolve_wilds_raid(guild, g, order, outcome)
+    events = forced.resolve_wilds_raid(guild, g, order, outcome)
     assert g.order.kind == "idle"
     assert guild.wilds_claim_sustain_days_left == economy.WILDS_CLAIM_SUSTAIN_DAYS
     assert any("scattered" in e for e in events)
@@ -564,7 +564,7 @@ def _sustaining_guild(job="lumber"):
 
 def test_hour_long_advances_roll_the_raid_once_a_day_not_once_a_call(monkeypatch):
     rolls = []
-    monkeypatch.setattr(campaign.random, "random", lambda: rolls.append(1) or 0.99)
+    monkeypatch.setattr(forced.random, "random", lambda: rolls.append(1) or 0.99)
     guild, _ = _sustaining_guild()
     for _ in range(24):
         campaign.advance(guild, dt=1)
@@ -572,15 +572,15 @@ def test_hour_long_advances_roll_the_raid_once_a_day_not_once_a_call(monkeypatch
 
 
 def test_a_call_that_crosses_no_midnight_never_rolls(monkeypatch):
-    monkeypatch.setattr(campaign.random, "random", lambda: 0.0)
+    monkeypatch.setattr(forced.random, "random", lambda: 0.0)
     guild, g = _sustaining_guild()
     result = campaign.advance(guild, dt=1)
     assert not result.pending and g.order.kind == "garrison"
 
 
 def test_several_days_in_one_jump_raise_the_odds_of_a_hit():
-    assert not campaign._claim_attack_rolls(0)
-    hits = lambda days: sum(campaign._claim_attack_rolls(days) for _ in range(4000))
+    assert not forced.claim_attack_rolls(0)
+    hits = lambda days: sum(forced.claim_attack_rolls(days) for _ in range(4000))
     random.seed(3)
     one, five = hits(1), hits(5)
     assert 0.15 < one / 4000 < 0.25

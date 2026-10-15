@@ -7,7 +7,7 @@ same shape as `test_bank.py` (the screen) and `test_justice_integration.py` /
 
 import random
 
-from gartok import campaign, orders
+from gartok import campaign, forced, orders
 from gartok.app import App
 from gartok.city_property_screen import CityPropertyScreen, RepossessionScreen
 from gartok.group import Group
@@ -276,8 +276,8 @@ def test_app_opens_the_normal_property_screen_otherwise():
 # --------------------------------------------------------------------------- #
 
 def _forced_raid_chance(value):
-    orig = campaign.CITY_RAID_CHANCE
-    campaign.CITY_RAID_CHANCE = value
+    orig = forced.CITY_RAID_CHANCE
+    forced.CITY_RAID_CHANCE = value
     return orig
 
 
@@ -293,7 +293,7 @@ def test_squatting_can_pause_an_arrival_on_an_eviction_raid():
         g.order = orders.travel(g, "city")
         result = campaign.advance(guild)
     finally:
-        campaign.CITY_RAID_CHANCE = orig
+        forced.CITY_RAID_CHANCE = orig
 
     assert g.node == "city" and g.order is None
     order = next(o for grp, o in result.pending if grp is g)
@@ -310,7 +310,7 @@ def test_a_non_squatted_property_never_draws_a_raid():
         g.order = orders.travel(g, "city")
         result = campaign.advance(guild)
     finally:
-        campaign.CITY_RAID_CHANCE = orig
+        forced.CITY_RAID_CHANCE = orig
 
     assert g.node == "city" and g.order is None and not result.pending
 
@@ -325,12 +325,12 @@ def test_winning_the_raid_keeps_the_squat_losing_ends_it_for_good():
     order = orders.Order("eviction", pack=(Unit("enemy"),))
 
     won = campaign.BattleOutcome(won=True, survivors=[p], fallen=[])
-    events = campaign.resolve_property_raid(guild, g, order, won)
+    events = forced.resolve_property_raid(guild, g, order, won)
     assert guild.house.squatting and guild.house.owned
     assert any("drive off" in e for e in events)
 
     lost = campaign.BattleOutcome(won=False, survivors=[p], fallen=[])
-    events = campaign.resolve_property_raid(guild, g, order, lost)
+    events = forced.resolve_property_raid(guild, g, order, lost)
     assert not guild.house.squatting and not guild.house.owned
     assert any("gone for good" in e for e in events)
 
@@ -408,7 +408,7 @@ def test_app_runs_the_raid_battle_and_resolves_it_through_battle_end():
         g.order = orders.travel(g, "city")
         app._advance()
     finally:
-        campaign.CITY_RAID_CHANCE = orig
+        forced.CITY_RAID_CHANCE = orig
 
     assert app._pause_order is not None and app._pause_order.kind == "eviction"
     battle = app.scene.battle

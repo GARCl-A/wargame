@@ -1,5 +1,6 @@
 import pytest
-from gartok import campaign, economy, encounters, factions, orders
+
+from gartok import campaign, economy, forced, orders
 from gartok.group import Group
 from gartok.guild import Guild
 from gartok.ledger_screen import LedgerScreen
@@ -91,7 +92,7 @@ def test_supply_run_ambush_and_resolution(monkeypatch):
         won = False
         survivors = [u1, u2, u3]
 
-    events_loss = campaign.resolve_supply_ambush(g, grp, saved_order, MockOutcomeLoss())
+    events_loss = forced.resolve_supply_ambush(g, grp, saved_order, MockOutcomeLoss())
     assert any("overrun and routed" in ev for ev in events_loss)
     assert g.supply_runs_completed == 0
     assert "ledger_hold_supply_run" not in g.deeds_done
@@ -102,7 +103,7 @@ def test_supply_run_ambush_and_resolution(monkeypatch):
         won = True
         survivors = [u1, u2, u3]
 
-    events_win = campaign.resolve_supply_ambush(g, grp, saved_order, MockOutcomeWin())
+    events_win = forced.resolve_supply_ambush(g, grp, saved_order, MockOutcomeWin())
     assert any("fought off the frontier warband" in ev for ev in events_win)
     assert g.supply_runs_completed == 10
     assert "ledger_hold_supply_run" in g.deeds_done

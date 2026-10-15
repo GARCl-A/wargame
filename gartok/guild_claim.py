@@ -118,7 +118,7 @@ class WildsClaimMixin:
         """Once a day, while `SUSTAINING`: the countdown only advances for a
         day the claim was actually garrisoned the whole time through -- no
         partial credit, same "start the clock over" rule
-        `campaign.resolve_wilds_raid` applies to a raid the garrison loses.
+        `forced.resolve_wilds_raid` applies to a raid the garrison loses.
         Pulling the garrison out early (a fresh order, not a lost fight) has
         the same effect -- sustaining only counts while someone is there."""
         if self.wilds_claim_stage != "SUSTAINING":

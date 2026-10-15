@@ -62,6 +62,7 @@ from gartok import (
     data,
     economy,
     encounters,
+    forced,
     gather,
     hunt,
     items,
@@ -134,11 +135,7 @@ class Sample:
 
 CLAIM_NODE = world.WILDS_TERRITORY_NODE
 CLAIM_FOOD_DAYS = 12                 # rations bought for a Claim expedition: the walk and a stay
-CLAIM_RESOLVERS = {
-    "wilds_raid": campaign.resolve_wilds_raid,
-    "wilds_seizure": campaign.resolve_wilds_seizure,
-    "wilds_retake": campaign.resolve_wilds_claim_retake,
-}
+CLAIM_KINDS = frozenset({"wilds_raid", "wilds_seizure", "wilds_retake"})
 # the Claim's fights: (enemy level, enemy count)
 CLAIM_FIGHTS = {
     "claim_clear": (economy.WILDS_CLAIM_CLEAR_LEVEL, economy.WILDS_CLAIM_CLEAR_SIZE),
@@ -448,15 +445,15 @@ class Sim:
             self.tend_crew()
             arrived = None
             for grp, pend in result.pending:
-                if grp is not group and pend.kind not in CLAIM_RESOLVERS and pend.kind != "ambush":
+                if grp is not group and pend.kind not in CLAIM_KINDS and pend.kind != "ambush":
                     continue
                 if pend.kind == "ambush":
                     self._road_fight(grp, pend)
                 elif pend.kind == "gather_ambush":
                     self._gather_fight(grp, pend)
-                elif pend.kind in CLAIM_RESOLVERS:
+                elif pend.kind in CLAIM_KINDS:
                     self._claim_fight(grp, pend)
-                elif pend.kind in orders.FORCED_KINDS:
+                elif pend.kind in forced.EVENTS:
                     raise RuntimeError(f"unexpected forced order {pend.kind!r}")
                 else:
                     arrived = pend
@@ -631,17 +628,17 @@ class Sim:
 
     def _road_fight(self, group, pend):
         self.fight("road", list(group.members))
-        campaign.resolve_road_ambush(self.guild, group, pend)
+        forced.resolve_road_ambush(self.guild, group, pend)
 
     def _gather_fight(self, group, pend):
         sample, survivors = self.fight(f"gather:{group.node}", list(group.members))
-        campaign.resolve_gather_ambush(self.guild, group, pend,
-                                       SimpleNamespace(won=sample.won, survivors=survivors))
+        forced.resolve_gather_ambush(self.guild, group, pend,
+                                     SimpleNamespace(won=sample.won, survivors=survivors))
 
     def _claim_fight(self, group, pend):
         """A raid on the garrison, a seizure attempt or the fight to retake a seized claim."""
         sample, _ = self.fight("raid", list(group.members))
-        CLAIM_RESOLVERS[pend.kind](self.guild, group, pend, SimpleNamespace(won=sample.won))
+        forced.resolve(self.guild, group, pend, SimpleNamespace(won=sample.won))
 
     # -- places ------------------------------------------------------------ #
     def work_shift(self, hours=SHIFT_HOURS, node="lumber_yard"):

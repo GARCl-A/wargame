@@ -143,7 +143,7 @@ WILDS_CLAIM_FENCE_HOURS = constants.WILDS_CLAIM_FENCE_HOURS
 WILDS_CLAIM_SWEEP_LEVEL = 2       # stage 5's fight: a bandit camp or nest nearby
 WILDS_CLAIM_SWEEP_SIZE = 2
 WILDS_CLAIM_SUSTAIN_DAYS = 10     # days the garrison has to hold before ESTABLISHED
-WILDS_RAID_CHANCE = 0.2           # per day, for SUSTAINING raids and ESTABLISHED seizure attempts -- see campaign._claim_attack_rolls
+WILDS_RAID_CHANCE = 0.2           # per day, for SUSTAINING raids and ESTABLISHED seizure attempts -- see forced.claim_attack_rolls
 WILDS_RAID_LEVEL = 3
 WILDS_RAID_SIZE = 3
 

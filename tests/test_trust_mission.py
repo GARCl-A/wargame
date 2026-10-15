@@ -5,7 +5,7 @@ closes the arc's 4th deed once the three economic ones are already banked."""
 
 import random
 
-from gartok import campaign, data, missions, orders
+from gartok import campaign, data, forced, missions, orders
 from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import Battle, Unit, world
@@ -77,7 +77,7 @@ def test_the_fortress_ambush_fires_once_through_campaign_advance():
     assert g.node == "ledger_hold" and g.order is None
     order = next(o for grp, o in result.pending if grp is g)
     assert order.kind == "ambush"
-    assert len(order.pack) == campaign.FORTRESS_AMBUSH_SIZE
+    assert len(order.pack) == forced.FORTRESS_AMBUSH_SIZE
     mission = missions._active_trust_mission(guild)
     assert mission.ambush_done
 
@@ -87,7 +87,7 @@ def test_the_fortress_ambush_fires_once_through_campaign_advance():
     fought.round_no = 1
     fought.player_units[0].status = "up"
     campaign.absorb_battle(guild, [signer], fought, node=world.node("ledger_hold"))
-    campaign.resolve_road_ambush(guild, g, order)
+    forced.resolve_road_ambush(guild, g, order)
     assert g.order.kind == "idle"
 
     g.order = orders.travel(g, "road")

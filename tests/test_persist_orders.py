@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from gartok import campaign, economy, encounters, orders, persist, world
+from gartok import campaign, economy, encounters, forced, orders, persist, world
 from gartok.group import Group
 from gartok.guild import Guild
 from tests.helpers import Unit, fixed_d20, make_app
@@ -180,7 +180,7 @@ def test_resolving_the_ambush_unlocks_the_group():
     guild, g = _ambushed()
     order = g.pending
 
-    campaign.resolve_road_ambush(guild, g, order)
+    forced.resolve_road_ambush(guild, g, order)
 
     assert g.pending is None and not g.locked
 
@@ -196,7 +196,7 @@ def test_a_guard_prison_choice_clears_the_pending_order():
     order = next(o for grp, o in result.pending if grp is g)
     assert g.pending is order and g.locked
 
-    campaign.resolve_guard_prison(guild, g, order)
+    forced.resolve_guard_prison(guild, g, order)
     assert g.pending is None
 
 
@@ -214,7 +214,7 @@ def test_fleeing_into_a_second_ambush_parks_the_new_one():
     world.ROAD_AMBUSH_CHANCE = 1.0
     try:
         with fixed_d20(1):
-            _, pause = campaign.resolve_guard_flee(guild, g, guard)
+            _, pause = forced.resolve_guard_flee(guild, g, guard)
     finally:
         world.ROAD_AMBUSH_CHANCE = orig
 
@@ -236,7 +236,7 @@ def test_a_wilds_raid_on_a_garrison_is_parked_too():
     assert g.pending is not None and g.pending.kind == "wilds_raid" and g.pending.job == "lumber"
     assert g.locked
 
-    campaign.resolve_wilds_raid(guild, g, g.pending, SimpleNamespace(won=True))
+    forced.resolve_wilds_raid(guild, g, g.pending, SimpleNamespace(won=True))
     assert g.pending is None and g.order.kind == "garrison"
 
 

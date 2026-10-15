@@ -1,6 +1,6 @@
 """Hidden factions: known only after the guild enters one of their nodes."""
 
-from gartok import campaign, factions, persist
+from gartok import factions, forced, persist
 from gartok.guild import Guild
 from tests.helpers import Unit
 
@@ -33,9 +33,9 @@ def test_entering_a_node_meets_its_faction_once():
 
 def test_arriving_reports_the_faction_found():
     guild = Guild([Unit("player")], node="city")
-    notes = campaign._arrival_notices(guild, "tanner")
+    notes = forced.arrival_notices(guild, "tanner")
     assert notes == ["You have found The Tanners."]
-    assert campaign._arrival_notices(guild, "tanner") == []
+    assert forced.arrival_notices(guild, "tanner") == []
 
 
 def test_standing_alone_makes_a_faction_known():

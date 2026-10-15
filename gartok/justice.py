@@ -24,7 +24,7 @@ can't do two different things with itself at once:
   through the normal pipeline (`campaign.absorb_battle`) against a patrol
   scaled to the crime that got someone caught -- winning does not clear the
   slate, it adds to it (see `resolve_fight_crime`).
-- **flee**: no rules live here -- `campaign.resolve_guard_flee` just moves the
+- **flee**: no rules live here -- `forced.resolve_guard_flee` just moves the
   group back to wherever it came from.
 
 `PRISON_DAYS_PER_CRIME` and `PATROL_LEVEL_CAP`/`PATROL_SIZE` are placeholders

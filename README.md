@@ -236,6 +236,8 @@ gartok/
   arena.py          the Champion of the Pit title: dethrone, defend, the 15/7-day cycle
   campaign.py       folds a battle result back into the guild (permadeath, loot, deeds);
                     also the tick engine (`advance`) that plays orders out
+  forced.py         forced events (guard, ambushes, raids, seizures): where each is caught,
+                    how it is played and settled, one `ForcedEvent` per kind in `EVENTS`
   economy.py        prices, market stock, haggling (language + Charisma + alignment)
   constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
   chest.py          a generic locked pack item (d20+DEX vs DC), opened via group_screen
@@ -345,8 +347,9 @@ docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and i
 - **New place on the map**: a `Node` in `world.NODES` listing its `functions` + edges in
   `world.EDGES` (cost in hours). Offering something already built is only the id in the list.
   A new kind of service is one `NodeFunction` in `node_functions.FUNCTIONS` (order kind, button
-  label) plus its opener in `app.App._FUNCTION_OPENERS`; a forced fight's aftermath is one line in
-  `_FORCED_FIGHT_RESOLVERS`.
+  label) plus its opener in `app.App._FUNCTION_OPENERS`.
+- **New threat** (a fight the world forces on a group): a catch function (on arrival or daily)
+  and a resolve function in `forced.py`, plus one `ForcedEvent` in `forced.EVENTS`.
 - **New world system** (outside combat): the routine that passes time in
   `guild.pass_time` / `_daily_upkeep`; the battle result that returns to the
   roster in `campaign.absorb_battle`.

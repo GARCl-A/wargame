@@ -5,7 +5,18 @@ import random
 
 import pytest
 
-from gartok import ai, campaign, data, economy, gather, items, orders, persist, world
+from gartok import (
+    ai,
+    campaign,
+    data,
+    economy,
+    forced,
+    gather,
+    items,
+    orders,
+    persist,
+    world,
+)
 from gartok.battle import Battle
 from gartok.clock import Clock
 from gartok.guild import Guild
@@ -177,7 +188,7 @@ def test_a_pack_that_finds_the_crew_is_a_forced_fight_and_holds_the_haul(monkeyp
     group.order = orders.work(guild, group, 16, gather=True)
     result = campaign.advance(guild)
     (g, ambush), = result.pending
-    assert g is group and ambush.kind == "gather_ambush" and ambush.kind in orders.FORCED_KINDS
+    assert g is group and ambush.kind == "gather_ambush" and ambush.kind in forced.EVENTS
     assert ambush.pack and ambush.hours == 16
     assert group.pending is ambush and group.locked
     assert group.members[0].count_of("Lumber") + group.members[0].count_of("Fruit") == 0
@@ -194,7 +205,7 @@ def test_winning_the_ambush_banks_the_haul_and_losing_it_does_not(monkeypatch, w
     guild, group = _crew("lumber_yard", 2)
     group.order = orders.work(guild, group, 16, gather=True)
     (g, ambush), = campaign.advance(guild).pending
-    events = campaign.resolve_gather_ambush(guild, g, ambush, _outcome(group, won))
+    events = forced.resolve_gather_ambush(guild, g, ambush, _outcome(group, won))
     held = sum(u.count_of("Lumber") + u.count_of("Fruit") for u in group.members)
     assert group.pending is None and group.order.kind == "idle" and events
     if won:
@@ -258,6 +269,7 @@ def test_a_gather_button_issues_a_gathering_order_the_map_names():
 
 def test_gather_screen_interaction():
     import pygame
+
     from gartok import world
     from gartok.gather_screen import GatherScreen
     from gartok.ui.tokens import fonts as ui_fonts

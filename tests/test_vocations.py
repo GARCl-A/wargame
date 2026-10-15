@@ -12,6 +12,7 @@ from gartok import (
     campaign,
     cohesion,
     data,
+    forced,
     hunt,
     items,
     orders,
@@ -258,7 +259,7 @@ def test_caravan_keeps_the_pace_on_every_leg_of_a_route():
         group = guild.groups[0]
         group.order = orders.travel(group, "mine", vocations.travel_mult(guild))
         etas = [group.order.eta]
-        with patch("gartok.campaign._arrival_pause", return_value=None):
+        with patch("gartok.forced.arrival_pause", return_value=None):
             while group.order is not None and group.order.kind == "travel":
                 campaign.advance(guild, dt=group.order.remaining)
                 if group.order is not None and group.order.kind == "travel":
@@ -315,12 +316,12 @@ def test_a_cautious_wilds_group_dodges_a_road_ambush_a_normal_one_walks_into():
     group = guild.groups[0]
     group.node = "road"
     roll = world.ROAD_AMBUSH_CHANCE * 0.9               # under 0.2, over 0.16
-    with patch("gartok.campaign.random.random", return_value=roll), \
-            patch("gartok.campaign.encounters.roll_encounter", return_value=["Goblin"]):
+    with patch("gartok.forced.random.random", return_value=roll), \
+            patch("gartok.forced.encounters.roll_encounter", return_value=["Goblin"]):
         group.stance = NORMAL
-        assert campaign._road_ambush_catch(guild, group, ["road"]) is not None
+        assert forced.road_ambush_catch(guild, group, None, ["road"]) is not None
         group.stance = CAUTIOUS
-        assert campaign._road_ambush_catch(guild, group, ["road"]) is None
+        assert forced.road_ambush_catch(guild, group, None, ["road"]) is None
 
 
 def test_the_stance_does_not_touch_the_guards_or_the_claim_raids():
@@ -329,8 +330,8 @@ def test_the_stance_does_not_touch_the_guards_or_the_claim_raids():
     group.stance = CAUTIOUS
     guild.house.squatting = True
     group.node = "city"
-    with patch("gartok.campaign.random.random", return_value=campaign.CITY_RAID_CHANCE - 0.001):
-        order = campaign._property_raid_catch(guild, group, [])
+    with patch("gartok.forced.random.random", return_value=forced.CITY_RAID_CHANCE - 0.001):
+        order = forced.property_raid_catch(guild, group, None, [])
     assert order is not None and order.kind == "eviction"
 
 

@@ -1,5 +1,5 @@
 """The guard, end to end: `campaign.advance` pausing a group at a jurisdiction
-node, the three `campaign.resolve_guard_*` outcomes, and the app wiring that
+node, the three `forced.resolve_guard_*` outcomes, and the app wiring that
 opens `GuardScreen` / runs the patrol fight (same monkeypatch technique as
 `test_map_orders_integration.py`).
 
@@ -14,7 +14,7 @@ discarding it -- see the regression test below.
 
 import random
 
-from gartok import campaign, orders
+from gartok import campaign, forced, orders
 from gartok.app import App
 from gartok.group import Group
 from gartok.guild import Guild
@@ -120,7 +120,7 @@ def test_the_pause_survives_a_waypoint_and_resumes_the_rest_of_the_route():
     assert g.order is None
     assert order.resume_path == ("arena",)
 
-    events = campaign.resolve_guard_prison(guild, g, order)
+    events = forced.resolve_guard_prison(guild, g, order)
     assert any("cells" in e for e in events)
     assert g.order.kind == "travel" and g.order.dest == "arena"
 
@@ -139,7 +139,7 @@ def test_resolve_guard_prison_jails_and_resumes_to_idle_at_the_final_stop():
     with fixed_d20(20):
         _result, order = _caught(guild, g)
 
-    events = campaign.resolve_guard_prison(guild, g, order)
+    events = forced.resolve_guard_prison(guild, g, order)
 
     assert culprit not in g.members and (culprit, guild.clock.day + 4) in guild.jailed
     assert mate in g.members                   # the rest of the group stays free
@@ -165,7 +165,7 @@ def test_mass_arrest_emptying_the_only_group_does_not_crash_the_map():
     with fixed_d20(20):
         _result, order = _caught(guild, g)
 
-    campaign.resolve_guard_prison(guild, g, order)
+    forced.resolve_guard_prison(guild, g, order)
     assert guild.groups == [] and len(guild.jailed) == 2   # both jailed -- the group emptied out
 
     app._start_map()                            # must not IndexError
@@ -189,12 +189,12 @@ def test_resolve_guard_flee_falls_back_and_can_chain_into_another_catch():
     assert g.node == "market"
 
     with fixed_d20(20):                       # caught again immediately back at the city
-        events, pause = campaign.resolve_guard_flee(guild, g, order)
+        events, pause = forced.resolve_guard_flee(guild, g, order)
     assert g.node == "city" and g.order is None   # idle -- same convention as advance()'s own catch
     assert pause is not None and pause.kind == "guard"   # re-caught, no further node to flee to
     assert pause.prev_node is None             # RUN is off the table now (GuardScreen hides it)
     assert any("fall back" in e for e in events)
-    assert campaign.resolve_guard_flee(guild, g, pause) == ([], None)   # a no-op if reached anyway
+    assert forced.resolve_guard_flee(guild, g, pause) == ([], None)   # a no-op if reached anyway
 
 
 def test_resolve_guard_flee_resumes_idle_when_the_fallback_node_is_clean():
@@ -209,7 +209,7 @@ def test_resolve_guard_flee_resumes_idle_when_the_fallback_node_is_clean():
     assert g.node == "market"
 
     with fixed_d20(1):                        # no catch this time back at the city
-        events, pause = campaign.resolve_guard_flee(guild, g, order)
+        events, pause = forced.resolve_guard_flee(guild, g, order)
     assert g.node == "city" and g.order.kind == "idle" and pause is None
 
 
@@ -224,7 +224,7 @@ def test_resolve_guard_fight_aftermath_only_banks_crime_for_the_caught_survivor(
         _result, order = _caught(guild, g)
 
     outcome = campaign.BattleOutcome(won=True, survivors=[culprit, mate], fallen=[], player_kos=1)
-    campaign.resolve_guard_fight_aftermath(guild, g, order, outcome)
+    forced.resolve_guard_fight_aftermath(guild, g, order, outcome)
 
     assert culprit.crime == 3 + 1 + 1          # brawled + 1 guard downed
     assert mate.crime == 0                     # bystander, untouched

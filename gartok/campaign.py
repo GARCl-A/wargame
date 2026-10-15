@@ -29,14 +29,11 @@ from dataclasses import dataclass, field
 
 from . import (
     arena,
-    constants,
     data,
     economy,
-    encounters,
     factions,
-    justice,
+    forced,
     loot,
-    missions,
     orders,
     recorder,
     solo,
@@ -294,9 +291,9 @@ def _advance(guild, dt=None, busy=()):
     instead), so folding it in here would either wreck the soonest-completion
     jump (its `remaining` is meaningless) or, on a forced stop, decrement it
     toward a spurious "completion" no kind branch below handles."""
-    forced = dt is not None
+    jumped = dt is not None
     active = [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
-    if not forced:
+    if not jumped:
         if not active:
             return TickResult(hungry=[u for u in guild.roster if u.hunger_level > 0])
         dt = min(g.order.remaining for g in active)
@@ -304,7 +301,7 @@ def _advance(guild, dt=None, busy=()):
     start_day = guild.clock.day
     events, casualties = guild.pass_time(dt, busy=busy)
     days_crossed = guild.clock.day - start_day
-    if forced:
+    if jumped:
         events += guild.eat_now_pass()
     
     hungry = [u for u in guild.roster if u.hunger_level > 0]
@@ -326,7 +323,7 @@ def _advance(guild, dt=None, busy=()):
             prev = g.node
             g.node = order.dest
             events += _wear_wagons(g, prev, order.dest)
-            pause = _arrival_pause(guild, g, prev, order.path)
+            pause = forced.arrival_pause(guild, g, prev, order.path)
             if pause is not None:
                 # NOT g.order = pause: same convention as an interactive order
                 # below -- once due, the group goes idle (order=None) and the
@@ -345,11 +342,11 @@ def _advance(guild, dt=None, busy=()):
             prev = g.node
             g.node = order.dest
             events += _wear_wagons(g, prev, order.dest)
-            pause = _arrival_pause(guild, g, prev, ())
+            pause = forced.arrival_pause(guild, g, prev, ())
             if pause is not None:
                 pending.append((g, pause))
                 continue
-            events += _arrival_notices(guild, order.dest)
+            events += forced.arrival_notices(guild, order.dest)
         elif order.kind == "work" and order.gather:
             gathered, ambush = guild.gather_shift(g, order)
             events += gathered
@@ -369,11 +366,11 @@ def _advance(guild, dt=None, busy=()):
             events += solo.finish(guild, g, order)
         elif order.interactive:                # arena/market/bank/recruit/hunt
             pending.append((g, order))
-    claim_events, claim_pending = _wilds_claim_attack_check(guild, days_crossed)
-    events += claim_events
-    pending += claim_pending
+    forced_events, forced_pending = forced.daily_checks(guild, days_crossed)
+    events += forced_events
+    pending += forced_pending
     for g, order in pending:
-        if order.kind in orders.FORCED_KINDS:
+        if order.kind in forced.EVENTS:
             g.pending = order
     return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties, hungry=hungry)
 
@@ -425,390 +422,10 @@ def _fletcher_rest_pass(guild, group):
     return [f"{fletcher.name} carved arrows from 1 Lumber while resting, refilling quivers."]
 
 
-def _arrival_notices(guild, node_id):
-    """What arriving at `node_id` tells the player: a faction met for the first time, then
-    the deeds the arrival completed."""
-    events = [f"You have found {f.name}." for f in guild.meet_factions_at(node_id)]
-    events += [factions.deed_notice(d)
-               for d in factions.settle(guild, factions.Event("travel", node=world.node(node_id)))]
-    return events
-
-
 def _wear_wagons(group, src, dest):
     """A leg walked: the road takes its toll on the group's wagons."""
     distance = next((w for v, w in world.neighbors(src) if v == dest), 0)
     return group.wear_wagons(distance)
-
-
-def _arrival_pause(guild, group, prev_node, resume_path):
-    """After `group` arrives at `group.node`: does anything happen there that
-    must pause its order before the arrival is considered complete? Checked in
-    order -- the guard (`justice.py`, jurisdiction) first, then a road ambush
-    (`encounters.py`, an unsafe node), then the trust mission's fortress
-    ambush (`missions.py`, mission-conditional, not a node property at all),
-    then a raid on a squatted City property (`guild.house.squatting`),
-    then a fight to retake a seized Wilds claim (`guild.wilds_claim_owner`) --
-    and returns the `Order` to pause on, or None to let the caller proceed
-    exactly as it would without any of them. The first two never both fire
-    off one arrival in practice (no node is both a jurisdiction and unsafe
-    today), but the order is deliberate in case that changes: the guard is a
-    *legal* consequence of who you are, checked before whatever the road
-    throws at you; the rest are checked last since each only ever fires at
-    one specific node anyway."""
-    guard = _guard_catch(group, prev_node, resume_path)
-    if guard is not None:
-        return guard
-    ambush = _road_ambush_catch(guild, group, resume_path)
-    if ambush is not None:
-        return ambush
-    fortress = _fortress_ambush_catch(guild, group, resume_path)
-    if fortress is not None:
-        return fortress
-    raid = _property_raid_catch(guild, group, resume_path)
-    if raid is not None:
-        return raid
-    return _wilds_claim_retake_catch(guild, group, resume_path)
-
-
-def _guard_catch(group, prev_node, resume_path):
-    """If `group.node` is a jurisdiction node, roll the guard test
-    (`justice.catch`) on its crime-carrying members. Returns a "guard" `Order`
-    to pause on if anyone is caught, else None."""
-    if not world.node(group.node).jurisdiction:
-        return None
-    caught = justice.catch(group)
-    if not caught:
-        return None
-    return orders.Order("guard", caught=tuple(u.uid for u in caught),
-                        prev_node=prev_node, resume_path=tuple(resume_path))
-
-
-def _road_ambush_catch(guild, group, resume_path):
-    """If `group.node` is unsafe, roll `world.ROAD_AMBUSH_CHANCE` once (per
-    leg, not per hour -- see `world.py`'s docstring) against the node's own
-    `encounter_table`. Returns an "ambush" `Order` carrying the rolled pack to
-    pause on if it hits, else None."""
-    node = world.node(group.node)
-    if not node.unsafe:
-        return None
-    chance = world.ROAD_AMBUSH_CHANCE * vocations.ambush_mult(
-        guild, group.stance, scout=group.has_talent("woodland_scout"))
-    if random.random() >= chance:
-        return None
-    pack = encounters.roll_encounter(node.encounter_table)
-    return orders.Order("ambush", pack=tuple(pack), resume_path=tuple(resume_path))
-
-
-FORTRESS_AMBUSH_LEVEL = constants.FORTRESS_AMBUSH_LEVEL   # placeholder, tune once this has been played -- see justice.py's own
-FORTRESS_AMBUSH_SIZE = constants.FORTRESS_AMBUSH_SIZE    # placeholders for the guard patrol / Old Road pack
-
-
-def _fortress_ambush_catch(guild, group, resume_path):
-    """The trust mission's own one-off ambush at Ledger Hold
-    (`missions.pending_fortress_ambush`): bandits who know the sealed chest is
-    valuable, not a standing risk of the fortress itself the way `unsafe`
-    marks the Old Road (so gated on the guild's mission state too, not just
-    the node) -- but it still only ever happens AT Ledger Hold, hence the
-    `ledger` function check up front, same shape as `_road_ambush_catch`'s own
-    `node.unsafe` gate. Marks the mission's `ambush_done` the moment it fires,
-    win or lose, so it never springs twice on the same shipment."""
-    if not world.node(group.node).has("ledger"):
-        return None
-    mission = missions.pending_fortress_ambush(guild, group)
-    if mission is None:
-        return None
-    mission.ambush_done = True
-    pack = tuple(encounters.build_enemy(FORTRESS_AMBUSH_LEVEL)
-                for _ in range(FORTRESS_AMBUSH_SIZE))
-    return orders.Order("ambush", pack=pack, resume_path=tuple(resume_path))
-
-
-CITY_RAID_CHANCE = constants.CITY_RAID_CHANCE    # per arrival at a squatted City property -- placeholder, tune once played
-CITY_RAID_LEVEL = constants.CITY_RAID_LEVEL        # placeholders for the guard patrol sent to clear a squat
-CITY_RAID_SIZE = 3
-
-
-def _property_raid_catch(guild, group, resume_path):
-    """The City guard coming to clear a squatted property
-    (`guild.house.squatting`, set by `guild.house.squat` after
-    the guild refuses a repossession offer): gated on the node's `property` function the
-    same way `_fortress_ambush_catch` gates on `ledger`, plus the squat
-    state itself, then rolls `CITY_RAID_CHANCE` once per arrival like
-    `_road_ambush_catch` does for an unsafe node. Unlike a road ambush, losing
-    this fight has a further consequence (`resolve_property_raid` ends the
-    squat for good) -- see [[gartok-property-two-paths]]."""
-    if not (guild.house.squatting and world.node(group.node).has("property")):
-        return None
-    if random.random() >= CITY_RAID_CHANCE:
-        return None
-    pack = tuple(encounters.build_enemy(CITY_RAID_LEVEL) for _ in range(CITY_RAID_SIZE))
-    return orders.Order("eviction", pack=pack, resume_path=tuple(resume_path))
-
-
-def _claim_attack_rolls(days):
-    """Whether a claim attack lands over `days` calendar days crossed: `WILDS_RAID_CHANCE`
-    is a per-day chance, so a jump of several days gets the odds of at least one hit and
-    a call that crosses no midnight (a 1 h rest) never rolls."""
-    return days > 0 and random.random() < 1 - (1 - economy.WILDS_RAID_CHANCE) ** days
-
-
-def _wilds_claim_attack_check(guild, days):
-    """`(events, pending)` for whichever periodic Wilds-claim attack applies
-    after `days` calendar days crossed (see `_wilds_claim_raid_check`'s
-    docstring for why this can't live on `_arrival_pause` like every other
-    forced fight): a raid mid-`"SUSTAINING"`, or (Sistema 4) a seizure attempt
-    once `"ESTABLISHED"` and still `guild.wilds_claim_owner == "guild"`. The
-    two stages never overlap, so exactly one branch (or neither) ever fires."""
-    if guild.wilds_claim_stage == "SUSTAINING":
-        return [], _wilds_claim_raid_check(guild, days)
-    if guild.wilds_claim_stage == "ESTABLISHED" and guild.wilds_claim_owner == "guild":
-        return _wilds_claim_seizure_check(guild, days)
-    return [], []
-
-
-def _wilds_claim_raid_check(guild, days):
-    """Whether a raider band tests the Wilds claim's garrison during
-    `"SUSTAINING"`: not through `_arrival_pause` like every other forced
-    fight above, because a garrison never "arrives" again after
-    `orders.garrison` is issued (it's excluded from `active` on purpose), so
-    nothing would ever call this if it lived on that seam instead. Rolls
-    `economy.WILDS_RAID_CHANCE` per day crossed for each garrisoned group actually sitting at
-    `world.WILDS_TERRITORY_NODE` -- carries `job` so a won fight can reissue
-    the exact `orders.garrison(job)` it interrupted. Losing only resets the
-    sustain countdown (`resolve_wilds_raid`) -- there is no ownership yet to
-    lose."""
-    pending = []
-    for g in guild.groups:
-        if g.empty or g.order is None or g.order.kind != "garrison":
-            continue
-        if g.node != world.WILDS_TERRITORY_NODE:
-            continue
-        if not _claim_attack_rolls(days):
-            continue
-        job = g.order.job
-        pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
-                    for _ in range(economy.WILDS_RAID_SIZE))
-        g.order = None
-        pending.append((g, orders.Order("wilds_raid", pack=pack, job=job)))
-    return pending
-
-
-def _wilds_claim_seizure_check(guild, days):
-    """Sistema 4: once `ESTABLISHED`, the same roll (`economy.WILDS_RAID_CHANCE`
-    -- reused rather than a second tuning knob for what is the same kind of
-    threat against the same ground) decides whether raiders test the claim.
-    **Unguarded**, they simply take it -- no fight, nobody to contest it
-    (`guild.wilds_claim_owner = "seized"` straight away, an `events` line for
-    the caller since there is no battle to report the outcome of instead).
-    **Garrisoned**, it plays out as a real fight (`"wilds_seizure"`, resolved
-    by `resolve_wilds_seizure`) -- winning holds the claim, losing seizes it
-    same as the unguarded case, but only after the garrison actually fell."""
-    if not _claim_attack_rolls(days):
-        return [], []
-    garrison = next((g for g in guild.groups if not g.empty and g.order is not None
-                     and g.order.kind == "garrison" and g.node == world.WILDS_TERRITORY_NODE),
-                    None)
-    if garrison is None:
-        guild.wilds_claim_seize()
-        return (["The Wilds claim sits unguarded -- it's seized without a fight."], [])
-    job = garrison.order.job
-    pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
-                for _ in range(economy.WILDS_RAID_SIZE))
-    garrison.order = None
-    return [], [(garrison, orders.Order("wilds_seizure", pack=pack, job=job))]
-
-
-def _wilds_claim_retake_catch(guild, group, resume_path):
-    """Arriving at a seized Wilds claim (Sistema 4, `guild.wilds_claim_owner
-    == "seized"`): the occupiers are still holding it, same one-off shape as
-    `_fortress_ambush_catch` (gated on `claim` rather than `ledger`,
-    and on the guild's ownership state rather than a mission flag). Winning
-    hands the ground back (`resolve_wilds_retake`) without redoing Sistema
-    3's campaign; the structure was never touched, only who holds it."""
-    if not (world.node(group.node).has("claim") and guild.wilds_claim_owner == "seized"):
-        return None
-    pack = tuple(encounters.build_enemy(economy.WILDS_RAID_LEVEL)
-                for _ in range(economy.WILDS_RAID_SIZE))
-    return orders.Order("wilds_retake", pack=pack, resume_path=tuple(resume_path))
-
-
-# --------------------------------------------------------------------------- #
-# resolving a paused "guard" order -- the three choices `justice_screen`      #
-# offers, decided for the whole catch at once (see justice.py's docstring)    #
-# and a paused "ambush" order -- no choice, just the fight `app` already ran  #
-# --------------------------------------------------------------------------- #
-
-def resolve_guard_prison(guild, group, order):
-    """'Accept prison': jail every caught unit (its own days, off its own
-    crime), then resume whatever the arrest interrupted."""
-    events = []
-    for u in list(group.members):
-        if u.uid in order.caught:
-            days = justice.jail(guild, u)
-            events.append(f"{u.name} accepts arrest -- {days} day(s) in the City's cells.")
-    events += _resume_arrival(guild, group, order)
-    return events
-
-
-def resolve_guard_flee(guild, group, order):
-    """'Run': the group falls back to `order.prev_node` -- immediate, it
-    already covered that ground. The fallback node gets the same arrival
-    check as any other (`_arrival_pause`): a guard re-catch there carries
-    `prev_node=None` (no further node to flee to is tracked, so
-    `justice_screen.GuardScreen` hides RUN once that's the case), and an
-    ambush is just as live if that node happens to be unsafe too.
-
-    Returns `(events, pause)`: `pause` is the new "guard"/"ambush" `Order` for
-    the caller to resolve next (same as a fresh entry in `TickResult.pending`
-    -- `app._resolve_guard_flee` re-queues it through the normal dispatch), or
-    None if the group is simply idle now. `([], None)` if called with nothing
-    left to flee to."""
-    group.pending = None
-    if order.prev_node is None:
-        return [], None
-    caught = [u for u in group.members if u.uid in order.caught]
-    names = ", ".join(u.name for u in caught) if caught else "The group"
-    events = [f"{names} fall back toward {world.node(order.prev_node).name}."]
-    group.node = order.prev_node
-    pause = _arrival_pause(guild, group, None, ())
-    if pause is not None:
-        group.order = None            # same "not busy" convention as advance()
-        if pause.kind in orders.FORCED_KINDS:
-            group.pending = pause
-        return events, pause
-    group.order = orders.idle()
-    return events, None
-
-
-def resolve_guard_fight_aftermath(guild, group, order, outcome):
-    """After `app` has already run the patrol fight through `absorb_battle`:
-    every originally-caught unit that survived banks the crime the brawl adds
-    (`justice.resolve_fight_crime`), then the group's order resumes."""
-    events = []
-    for u in outcome.survivors:
-        if u.uid in order.caught:
-            justice.resolve_fight_crime(u, outcome)
-            events.append(f"{u.name} lives to fight another day -- crime now {u.crime}.")
-    events += _resume_arrival(guild, group, order)
-    return events
-
-
-def resolve_road_ambush(guild, group, order):
-    """After `app` has already run the ambush fight through `absorb_battle`:
-    there is no choice to make here (unlike a guard catch) -- whoever's left
-    just resumes whatever the ambush interrupted."""
-    return _resume_arrival(guild, group, order)
-
-
-def resolve_gather_ambush(guild, group, order, outcome):
-    """After `app` has already run the fight through `absorb_battle`: a win banks the haul of the
-    shift for whoever is left; a loss sends the survivors away with nothing."""
-    group.pending = None
-    if group.empty:
-        return []
-    group.order = orders.idle()
-    if not outcome.won:
-        return ["The crew is driven off the work site and comes away with nothing."]
-    survivors = [u for u in group.members if u in outcome.survivors]
-    return ["The crew drives the pack off."] + guild.bank_haul(survivors, order.hours, group.node)
-
-
-def resolve_supply_ambush(guild, group, order, outcome):
-    """After `app` has already run the fight through `absorb_battle`: a win banks the supply run pay,
-    deed and work-XP for whoever is left; a loss loses the cargo and returns with nothing."""
-    group.pending = None
-    if group.empty:
-        return []
-    group.order = orders.idle()
-    if not outcome.won:
-        return ["The supply caravan was overrun and routed -- the cargo is lost and the contract unfulfilled."]
-    survivors = [u for u in group.members if u in outcome.survivors]
-    return ["The caravan guards fought off the frontier warband and delivered the supplies."] + guild.bank_supply_run(survivors, order.hours)
-
-
-def resolve_property_raid(guild, group, order, outcome):
-    """After `app` has already run the eviction fight through `absorb_battle`:
-    no choice to make (same as a road ambush), but losing has a consequence
-    beyond casualties -- the guard finally clears the squat for good. Winning
-    just drives the patrol off; the squat stands until the next roll."""
-    events = _resume_arrival(guild, group, order)
-    if outcome.won:
-        events.insert(0, "The guild's fighters drive off the guard patrol -- the "
-                      "property stays, for now.")
-    else:
-        guild.house.abandon()
-        events.insert(0, "The City guard finally clears the squatted property -- it's gone for good.")
-    return events
-
-
-def resolve_wilds_raid(guild, group, order, outcome):
-    """After `app` has already run the raid fight through `absorb_battle`: no
-    choice to make (same as a road ambush), but this one doesn't go through
-    `_resume_arrival` -- a garrisoned group was never "travelling" anywhere,
-    it was just standing there. Winning reissues the same `orders.garrison`
-    it interrupted; losing doesn't touch the stages already done, it only
-    resets the sustain countdown (`Guild.wilds_claim_start_sustaining`'s
-    value) and leaves survivors idle -- same "no partial punishment" shape
-    `resolve_property_raid` uses for a lost City squat."""
-    group.pending = None
-    if group.empty:
-        return []
-    if outcome.won:
-        group.order = orders.garrison(order.job)
-        return ["The garrison drives off the raiders and keeps sustaining the claim."]
-    guild.wilds_claim_sustain_days_left = economy.WILDS_CLAIM_SUSTAIN_DAYS
-    group.order = orders.idle()
-    return ["The garrison is scattered -- sustaining the claim starts over."]
-
-
-def resolve_wilds_seizure(guild, group, order, outcome):
-    """After `app` has already run the seizure fight through `absorb_battle`
-    (Sistema 4, `ESTABLISHED` + garrisoned): winning resumes the same
-    garrison job; losing hands the claim to the occupiers
-    (`guild.wilds_claim_owner = "seized"`) -- unlike `resolve_wilds_raid`,
-    there is no "try again from here", the structure stands but someone else
-    holds it until a retake (`resolve_wilds_claim_retake`)."""
-    group.pending = None
-    if outcome.won:
-        if not group.empty:
-            group.order = orders.garrison(order.job)
-        return ["The garrison drives off the raiders and holds the claim."]
-    guild.wilds_claim_seize()
-    if not group.empty:
-        group.order = orders.idle()
-    return ["The garrison falls -- the Wilds claim is seized."]
-
-
-def resolve_wilds_claim_retake(guild, group, order, outcome):
-    """After `app` has already run the retake fight through `absorb_battle`:
-    winning hands the claim back to the guild (`resolve_wilds_claim_retake`
-    itself never re-runs Sistema 3's campaign, the structure was never
-    touched); losing just resumes whatever arrival this interrupted -- the
-    claim stays seized, nothing stops the guild trying again."""
-    events = _resume_arrival(guild, group, order)
-    if outcome.won:
-        guild.wilds_claim_owner = "guild"
-        events.insert(0, "The Wilds claim is retaken -- the occupiers are driven out.")
-    else:
-        events.insert(0, "The attempt to retake the claim fails -- it stays lost.")
-    return events
-
-
-def _resume_arrival(guild, group, order):
-    """Hand `group` back the order a guard/ambush pause interrupted: the rest
-    of a multi-leg route if any is owed, or idle -- firing the "arrived"
-    travel deed-settle event that was withheld while it was unresolved (skip
-    it entirely on a guard "flee", which never really arrived)."""
-    group.pending = None
-    if group.empty:
-        return []
-    if order.resume_path:
-        group.order = orders.next_leg(group.node, list(order.resume_path), group.speed,
-                                      vocations.travel_mult(guild))
-        return []
-    events = _arrival_notices(guild, group.node)
-    group.order = orders.idle()
-    return events
 
 
 def scout_ancient_ruins(guild, group):

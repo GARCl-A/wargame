@@ -43,6 +43,7 @@ from . import (
     arena,
     campaign,
     combat_lab,
+    forced,
     node_functions,
     orders,
     persist,
@@ -53,7 +54,7 @@ from . import (
     world,
 )
 from .app_battle import BattleFlowMixin
-from .app_forced import ForcedFightsMixin
+from .app_forced import FORCED_PLAYERS, ForcedFightsMixin
 from .app_hunt import HuntFlowMixin
 from .app_nodes import NodeScreensMixin
 from .battle_screen import BattleScreen
@@ -455,7 +456,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
 
     def _land_on_map_paused(self, group, order):
         # No more "AMBUSH! [FIGHT]" popup -- land back on the map with this
-        # group paused (already idle, see campaign._arrival_pause) and let
+        # group paused (already idle, see forced.arrival_pause) and let
         # MapScreen's own red CTA start the fight when the player is ready.
         # `_start_map` resets `self._pending`, so the rest of this tick's
         # queue (rare, but possible) is stashed around the call instead of
@@ -489,31 +490,12 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         "shrine": lambda s, g, n, o: s._open_shrine(g, n),
     }
 
-    # order.kind -> opener: the node functions' kinds, the arena and the forced fights
+    # order.kind -> opener: the node functions' kinds, the arena and the forced events
     _ACTIVITY_OPENERS: ClassVar[dict] = {
         **{node_functions.FUNCTIONS[fid].order_kind: opener
            for fid, opener in _FUNCTION_OPENERS.items()},
         "arena": lambda s, g, n, o: s._open_arena(g, n),
-        "guard": lambda s, g, n, o: s._open_guard_check(g, o),
-        "ambush": lambda s, g, n, o: s._land_on_map_paused(g, o),
-        "eviction": lambda s, g, n, o: s._start_property_raid(g, o),
-        "wilds_raid": lambda s, g, n, o: s._start_wilds_raid(g, o),
-        "wilds_seizure": lambda s, g, n, o: s._start_wilds_seizure(g, o),
-        "wilds_retake": lambda s, g, n, o: s._start_wilds_retake(g, o),
-        "gather_ambush": lambda s, g, n, o: s._start_forced_battle(g, o, list(o.pack)),
-        "supply_ambush": lambda s, g, n, o: s._start_forced_battle(g, o, list(o.pack)),
-    }
-
-    # forced-fight order.kind -> campaign.resolve_*(guild, group, order, outcome);
-    # anything else is a road ambush.
-    _FORCED_FIGHT_RESOLVERS: ClassVar[dict] = {
-        "guard": campaign.resolve_guard_fight_aftermath,
-        "eviction": campaign.resolve_property_raid,
-        "wilds_raid": campaign.resolve_wilds_raid,
-        "wilds_seizure": campaign.resolve_wilds_seizure,
-        "wilds_retake": campaign.resolve_wilds_claim_retake,
-        "gather_ambush": campaign.resolve_gather_ambush,
-        "supply_ambush": campaign.resolve_supply_ambush,
+        **{kind: FORCED_PLAYERS[event.play] for kind, event in forced.EVENTS.items()},
     }
 
     def _after_activity(self):

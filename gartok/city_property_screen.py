@@ -11,7 +11,7 @@ fee, and no equivalent of the strongbox's second "rent" step.
 or keep it and become an illegal occupier -- same three-way modal shape
 `justice_screen.GuardScreen` uses for the guard's catch, just two options
 instead of three (there is no "fight" here, only later, if the guild squats
-and the guard actually comes -- `campaign.py`'s "eviction" pause).
+and the guard actually comes -- `forced.py`'s "eviction" pause).
 """
 
 import pygame
@@ -145,7 +145,7 @@ class RepossessionScreen(Screen):
     `guild.house.repossession_due` -- the Bankers want their house
     back, or their tax paid; there is no third option here (unlike
     `justice_screen.GuardScreen`'s FIGHT, squatting is not a fight, it's a
-    standing risk played out later, in `campaign.py`'s "eviction" pause).
+    standing risk played out later, in `forced.py`'s "eviction" pause).
     Modernized to the `gartok/ui/` design system using `modal_card`."""
 
     native = True

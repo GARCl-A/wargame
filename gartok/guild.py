@@ -34,7 +34,7 @@ property** (`house`, a `CityProperty` bought from the Bankers; see
 (`_city_property_upkeep`, called from `_daily_upkeep` below). Missing enough
 cycles (`house.missed_payments`) offers a choice next visit: return it
 (`repossess_city_property`, banking `bankers_debt`) or squat
-(`house.squat`, drawing periodic guard raids -- `campaign.py`'s "eviction"
+(`house.squat`, drawing periodic guard raids -- `forced.py`'s "eviction"
 pause). Outstanding debt escalates to the guard the same way an ignored rap
 sheet does (`justice.py`) once `CITY_PROPERTY_DEBT_GRACE_DAYS` passes with
 nothing paid.
@@ -50,17 +50,17 @@ through `wilds_claim_screen.WildsClaimScreen`: scout, clear the land (a real
 fight), raise fences (consumes `wilds_claim_fence_lumber`, hauled in by hand),
 sweep the region (a second fight), then hold a garrison there for
 `economy.WILDS_CLAIM_SUSTAIN_DAYS` (`_wilds_claim_sustain_tick`, called from
-`_daily_upkeep`) -- interrupted by a raid (`campaign.resolve_wilds_raid`) or
+`_daily_upkeep`) -- interrupted by a raid (`forced.resolve_wilds_raid`) or
 just pulling the garrison out early, either of which resets the countdown,
 never the stages already done.
 
 Once `ESTABLISHED`, `wilds_claim_owner` ("guild" | "seized") is Sistema 4's
 own ownership flag: the same periodic roll that raided a `SUSTAINING`
-garrison can now seize the claim outright instead (`campaign.
-_wilds_claim_seizure_check` -- ungarrisoned, no fight at all; garrisoned, a
-real one, `campaign.resolve_wilds_seizure`), and a seized claim is won back
+garrison can now seize the claim outright instead (`forced.
+wilds_claim_seizure_check` -- ungarrisoned, no fight at all; garrisoned, a
+real one, `forced.resolve_wilds_seizure`), and a seized claim is won back
 by simply travelling there and beating the occupiers
-(`campaign.resolve_wilds_claim_retake`) -- never a redo of the stages above.
+(`forced.resolve_wilds_claim_retake`) -- never a redo of the stages above.
 
 `reputation` is `{faction_id: score}` and moves only when a `factions.Deed` is
 completed (banked in `deeds_done`); there is no per-win grind. `arena_reputation`

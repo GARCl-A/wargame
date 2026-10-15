@@ -1,11 +1,12 @@
 """Fights nobody chose: the guard, ambushes, raids, seizures and the Claim stages.
 
-Mixed into `app.App`; the dispatch tables that reach these live there."""
+Mixed into `app.App`. What each forced event is lives in `forced.py`; `FORCED_PLAYERS` is how
+`app` plays each `ForcedEvent.play`, read into `App._ACTIVITY_OPENERS`."""
 
 from . import (
-    campaign,
     economy,
     encounters,
+    forced,
     justice,
     world,
 )
@@ -50,11 +51,11 @@ class ForcedFightsMixin:
                                  on_fight=self._start_guard_battle)
 
     def _resolve_guard_prison(self, group, order):
-        self._map_notices += campaign.resolve_guard_prison(self.guild, group, order)
+        self._map_notices += forced.resolve_guard_prison(self.guild, group, order)
         self._after_activity()
 
     def _resolve_guard_flee(self, group, order):
-        events, pause = campaign.resolve_guard_flee(self.guild, group, order)
+        events, pause = forced.resolve_guard_flee(self.guild, group, order)
         self._map_notices += events
         if pause is not None:          # re-caught, or ambushed, on the way back
             self._pending.insert(0, (group, pause))
@@ -74,7 +75,7 @@ class ForcedFightsMixin:
     def _resolve_pending_event(self):
         group, order = self._pending_event
         self._pending_event = None
-        self._start_ambush_battle(group, order)
+        self._start_forced_battle(group, order, list(order.pack))
 
     def _resolve_ambush_autowin(self, group, order, autowin_result):
         self._pending_event = None
@@ -104,38 +105,10 @@ class ForcedFightsMixin:
         self._pause_order, self._pause_group = order, group
         self._battle_end(battle)
 
-    def _start_ambush_battle(self, group, order):
-        self._start_forced_battle(group, order, list(order.pack))
-
-    # ------------------------------------------------------------------ #
-    # a squatted City property (the `property` node function): the guard comes   #
-    # to clear it out (campaign._property_raid_catch)                       #
-    # ------------------------------------------------------------------ #
-    def _start_property_raid(self, group, order):
-        self._start_forced_battle(group, order, list(order.pack))
-
-    # ------------------------------------------------------------------ #
-    # a raid on a Wilds claim mid-SUSTAINING (campaign._wilds_claim_raid_check) #
-    # ------------------------------------------------------------------ #
-    def _start_wilds_raid(self, group, order):
-        self._start_forced_battle(group, order, list(order.pack))
-
-    # ------------------------------------------------------------------ #
-    # Sistema 4: a seizure attempt once ESTABLISHED, and retaking a seized  #
-    # claim (campaign._wilds_claim_seizure_check / _wilds_claim_retake_catch) #
-    # ------------------------------------------------------------------ #
-    def _start_wilds_seizure(self, group, order):
-        self._start_forced_battle(group, order, list(order.pack))
-
-    def _start_wilds_retake(self, group, order):
-        self._start_forced_battle(group, order, list(order.pack))
-
     def _start_forced_battle(self, group, order, enemies):
-        """A lethal fight the map forces on `group` rather than one the
-        player picked -- the guard's patrol (`order.kind == "guard"`) or a
-        road ambush (`"ambush"`). `order` is carried across to `_battle_end`
-        via `self._pause_order`/`self._pause_group`, which reads `order.kind`
-        to know which `campaign.resolve_*` finishes it."""
+        """A lethal fight the map forces on `group` rather than one the player picked.
+        `order` is carried across to `_battle_end` via `self._pause_order`/`self._pause_group`,
+        which settles it through `forced.resolve`."""
         node = world.node(group.node)
         self._battle_squad = list(group.members)
         self._battle_node = node
@@ -148,3 +121,11 @@ class ForcedFightsMixin:
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day, aggressor="enemy")
         self._enter_battle(battle, node)
+
+
+# ForcedEvent.play -> opener(app, group, node, order)
+FORCED_PLAYERS = {
+    "battle": lambda s, g, n, o: s._start_forced_battle(g, o, list(o.pack)),
+    "map": lambda s, g, n, o: s._land_on_map_paused(g, o),
+    "guard": lambda s, g, n, o: s._open_guard_check(g, o),
+}

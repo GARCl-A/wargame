@@ -26,28 +26,9 @@ need fresh orders, same as any other order in flight) but `Group.locked`
 carves it out so `Guild.split_group`/`merge_groups` can still shuffle a
 garrison's membership without cancelling it first -- see [[gartok-property-two-paths]].
 
-"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure",
-"wilds_retake" and "gather_ambush" (a pack finds a crew gathering, `gather.py`) are seven more,
-narrower kinds: none is issued by the player,
-and none is in `INTERACTIVE_KINDS` -- `campaign.advance` creates one itself,
-on top of whatever the group was actually doing, the moment it catches
-someone at a jurisdiction node (`justice.py`, "guard"), a pack finds it at an
-unsafe one (`world.Node.unsafe`, "ambush"), the guard comes to clear a
-squatted City property (`guild.house.squatting`, "eviction"), a
-raider band tests a Wilds claim mid-`"SUSTAINING"`
-(`guild.wilds_claim_stage`, "wilds_raid"), the same once `"ESTABLISHED"`
-against a garrison ("wilds_seizure" -- Sistema 4), or a group arrives at a
-Wilds claim the guild no longer holds (`guild.wilds_claim_owner == "seized"`,
-"wilds_retake" -- see [[gartok-property-two-paths]]). Each carries its
-own extra fields (`caught`/`prev_node` guard-only, `pack` everywhere but
-guard, `resume_path` on every kind that can interrupt travel rather than a
-garrison, `job` wilds_raid/wilds_seizure -- so a won fight can reissue the
-same `orders.garrison(job)` it interrupted) so `justice_screen.GuardScreen` /
-a forced battle can play out and `campaign.resolve_guard_*` /
-`campaign.resolve_road_ambush` / `campaign.resolve_property_raid` /
-`campaign.resolve_wilds_raid` / `campaign.resolve_wilds_seizure` /
-`campaign.resolve_wilds_claim_retake` can hand the group back its
-interrupted order once resolved.
+The forced kinds (the guard, ambushes, raids, seizures) are never issued by the player:
+`forced.py` owns them, where each is caught, played and settled, and the extra fields
+below (`caught`, `prev_node`, `resume_path`, `pack`, `job`) are theirs.
 """
 
 from dataclasses import dataclass
@@ -58,9 +39,6 @@ AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine"})
-FORCED_KINDS = frozenset({"guard", "ambush", "eviction", "wilds_raid", "wilds_seizure", "wilds_retake",
-                          "gather_ambush", "supply_ambush"})
-KINDS = AUTO_KINDS | INTERACTIVE_KINDS | FORCED_KINDS | {"idle"}
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds

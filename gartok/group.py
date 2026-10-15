@@ -49,7 +49,7 @@ class Group:
         self.name = name                  # optional label ("Water Team"), or None
         self.order = None                 # in-flight Order, or None (idle) -- later
         self.stance = NORMAL              # travel stance, see vocations.ambush_mult
-        self.pending = None               # a forced Order (orders.FORCED_KINDS) that came due and awaits its fight
+        self.pending = None               # a forced Order (forced.EVENTS) that came due and awaits its fight
         self.leader = leader              # Unit; None resolves via ensure_leader below
         self.herd = list(herd or [])      # animals.Animal -- lost with the group
         self.wagons = []                  # wagon.Wagon -- lost with the group

@@ -5,7 +5,7 @@ import os
 
 import pygame
 
-from gartok import economy, orders, persist, world
+from gartok import economy, forced, orders, persist, world
 from gartok.animals import Animal
 from gartok.garage_screen import GarageScreen
 from gartok.group import Group
@@ -130,17 +130,15 @@ def test_a_seized_claim_takes_what_was_parked_there():
 
 
 def test_an_unguarded_seizure_takes_it_too(monkeypatch):
-    from gartok import campaign
     guild, g, _ = _setup("ESTABLISHED", garrisoned=False)
     guild.wilds_claim_owner = "guild"
     _park_all(guild, g)
     _roll(monkeypatch, 0.0)
-    campaign._wilds_claim_seizure_check(guild, 1)
+    forced.wilds_claim_seizure_check(guild, 1)
     assert guild.claim_garage.empty
 
 
 def test_a_lost_seizure_fight_takes_it_and_a_won_one_keeps_it():
-    from gartok import campaign
 
     class Outcome:
         def __init__(self, won):
@@ -148,9 +146,9 @@ def test_a_lost_seizure_fight_takes_it_and_a_won_one_keeps_it():
 
     guild, g, _ = _setup("ESTABLISHED")
     _park_all(guild, g)
-    campaign.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", job="lumber"), Outcome(True))
+    forced.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", job="lumber"), Outcome(True))
     assert not guild.claim_garage.empty
-    campaign.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", job="lumber"), Outcome(False))
+    forced.resolve_wilds_seizure(guild, g, orders.Order("wilds_seizure", job="lumber"), Outcome(False))
     assert guild.claim_garage.empty
 
 

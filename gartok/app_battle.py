@@ -7,6 +7,7 @@ from . import (
     campaign,
     combat_lab,
     economy,
+    forced,
     matchup,
     missions,
     persist,
@@ -144,11 +145,7 @@ class BattleFlowMixin:
         def do_next_step():
             if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
                 self._pause_order = self._pause_group = None
-                resolver = self._FORCED_FIGHT_RESOLVERS.get(pause_order.kind)
-                if resolver:
-                    self._map_notices += resolver(self.guild, pause_group, pause_order, outcome)
-                else:
-                    self._map_notices += campaign.resolve_road_ambush(self.guild, pause_group, pause_order)
+                self._map_notices += forced.resolve(self.guild, pause_group, pause_order, outcome)
                 if outcome.loot_pool and outcome.survivors:
                     self._save()
                     self.scene = LootScreen(self.ui_fonts, self.guild, outcome.survivors,
