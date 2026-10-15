@@ -14,6 +14,8 @@ experience (combat, work) has its own level, and its own talent tree in
   nothing (`work_xp_hours`). The lumber yard is level 0 bare-handed, level 1
   once you own an Axe -- carried is enough (`economy.lumber_level`); hunting the wilds is level 3
   (`hunt.HUNT_LEVEL`), risk buying a longer runway before it too caps out.
+- **Magic XP** comes from magic: a last hit dealt with a spell or a magic talent's action
+  (the combat rule's amount, banked as magic instead), and a spell studied to the end.
 - The **racial track** earns nothing of its own: its "XP" is the sum of the
   other track levels (`Unit.racial_xp`), run through `RACIAL_XP_THRESHOLDS`.
   Its level is what drives the hit-die gain and grants the racial talent picks
@@ -33,7 +35,10 @@ COMBAT_XP_THRESHOLDS = list(constants.COMBAT_XP_THRESHOLDS)
 # Cumulative work *marks* (Unit.work_xp) for work level 1, 2, 3, ...  Stub.
 WORK_XP_THRESHOLDS = list(constants.WORK_XP_THRESHOLDS)
 
-# The racial track's "XP" is `combat_level + work_level` (Unit.racial_xp): every
+# Cumulative magic XP for magic level 1, 2, 3, ...  Combat's curve until magic is played.
+MAGIC_XP_THRESHOLDS = list(constants.COMBAT_XP_THRESHOLDS)
+
+# The racial track's "XP" is `combat_level + work_level + magic_level` (Unit.racial_xp): every
 # level anywhere feeds it. These cumulative sums for racial level 1, 2, 3, ...
 # are set to reproduce the old `floor((combat + work) / 2)` hit-die count, so
 # enemy HD / the balance sim / arena scaling do not move. Tune freely here.
@@ -52,8 +57,12 @@ def work_level(work_xp):
     return _level_for(WORK_XP_THRESHOLDS, work_xp)
 
 
+def magic_level(magic_xp):
+    return _level_for(MAGIC_XP_THRESHOLDS, magic_xp)
+
+
 def racial_level(racial_xp):
-    """Racial-track level for a `combat_level + work_level` sum -- how many hit
+    """Racial-track level for a `combat_level + work_level + magic_level` sum -- how many hit
     dice the character has earned past their starting one, and how many racial
     talent picks they hold."""
     return _level_for(RACIAL_XP_THRESHOLDS, racial_xp)

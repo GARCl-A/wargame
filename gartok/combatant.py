@@ -113,20 +113,26 @@ class Combatant:
         self.used_abilities = set()   # keys of once-per-battle effects already spent
         self.kills = 0                # enemies this combatant downed (count, for display)
         self.combat_xp_earned = 0     # combat XP from those kills, by level difference
+        self.magic_xp_earned = 0      # the same, for kills dealt with magic
+        self.nonlethal_blows = False  # the Non-lethal toggle: -1 to hit, a foe dropped is knocked out
+        self.captured = False         # bound by the other side (actions.Capture): out of the fight for good
+        self.capture_tools_used = []  # Ropes / Chains this unit spent binding captives
         self.downed_by = None         # the combatant whose blow first put this one down (arena title)
         self.ferocity_downer = None   # who brought this unit to 0 HP while Ferocity keeps it up
         self.ctf_runner = False       # capture-the-flag: this enemy rushes the player's flag (set by Battle)
         self.mounted_on = None        # another Combatant this unit is riding (Centaur mount)
         self.rider = None             # a Combatant riding this one (Centaur mount)
 
-    def credit_kill(self, victim):
-        """Book a downed enemy: +1 to the kill count, plus combat XP scaled by the
-        level gap (`progression.xp_award` -- nothing for a victim below your level).
-        Also records who put the victim down (the arena title goes to whoever
-        lands the blow on the champion)."""
+    def credit_kill(self, victim, magic=False):
+        """Book a downed enemy: +1 to the kill count, plus XP scaled by the level gap
+        (`progression.xp_award` -- nothing for a victim below your level): combat XP, or
+        magic XP for a blow dealt with magic. Also records who put the victim down (the
+        arena title goes to whoever lands the blow on the champion)."""
         self.kills += 1
-        self.combat_xp_earned += progression.xp_award(self.combat_level,
-                                                      victim.combat_level)
+        if magic:
+            self.magic_xp_earned += progression.xp_award(self.magic_level, victim.combat_level)
+        else:
+            self.combat_xp_earned += progression.xp_award(self.combat_level, victim.combat_level)
         victim.downed_by = self
 
     def spend_once(self, key):
@@ -179,7 +185,7 @@ class Combatant:
         automaton is recovered afterwards and a runaway is fine, so both count."""
         return self.status in ("up", "stable", "broken", "fled")
 
-    def go_down(self, log):
+    def go_down(self, log, knockout=False):
         """Drop to 0 HP. An automaton goes `broken` (no death clock); everyone else
         enters `dying`, restarting the death counter. Called for a standing unit
         downed, or a `stable` unit that takes a hit."""
@@ -193,9 +199,9 @@ class Combatant:
 
         self.hp = 0
         self.ferocity_pending = False
-        if self.nonlethal:
-            self.status = "stable"           # non-lethal fight: knocked out, survives
-            log(f"  {self.name} is knocked out (non-lethal fight).")
+        if self.nonlethal or knockout:
+            self.status = "stable"           # knocked out, survives
+            log(f"  {self.name} is knocked out" + (" (non-lethal fight)." if self.nonlethal else "."))
             return
         if self._ability.breaks_when_downed:
             if self.status != "broken":
@@ -521,7 +527,7 @@ class Combatant:
                       + self.char.talent_bonus("melee_damage"))
         return max(1, dice + bonus)
 
-    def take_damage(self, amount, log):
+    def take_damage(self, amount, log, knockout=False):
         amount = max(0, amount - self.dr)
         
         # Wakes up if sleeping
@@ -536,7 +542,7 @@ class Combatant:
             if self._ability.on_downed and self.spend_once("on_downed"):
                 self._ability.on_downed(self, log)
             else:
-                self.go_down(log)
+                self.go_down(log, knockout)
 
     # ------------------------------------------------------------------ #
     # turn cycle                                                         #

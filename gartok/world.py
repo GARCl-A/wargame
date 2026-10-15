@@ -255,6 +255,10 @@ NODES = [
     Node("faith_cathedral", "Faith Cathedral", "town", (0.88, 0.85),
          "A white-stone cathedral in the hills behind Ledger Hold. The faith mages keep it.",
          alignment="Lawful and Good", functions=("shrine",), hidden=True),
+    Node("serpents_nest", "Serpent's Nest", "town", (0.10, 0.74),
+         "A split in the rock below the Lumber Yard, hung with shed skins. Snakes den here, and "
+         "something older than snakes.",
+         functions=("serpents_nest",), wagon_risk=ROAD_AMBUSH_CHANCE, hidden=True),
     Node("country_roads", "Country Roads", "town", (0.44, 0.92),
          "Dirt lanes between the farmsteads south of the city. Quiet, and wide open."),
     Node("ox_fields", "Legendary Ox Fields", "town", (0.62, 0.88),
@@ -288,6 +292,7 @@ EDGES = [
     ("ledger_hold", "faith_cathedral", 3),
     ("farm", "country_roads", 1),
     ("country_roads", "ox_fields", 1),
+    ("lumber_yard", "serpents_nest", 1),
     ("wilds", "wilds_territory", 2),
     ("road", "mine", 6),
     ("mine", "wilds_territory", 2),

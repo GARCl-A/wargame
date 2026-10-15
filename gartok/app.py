@@ -487,6 +487,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         "library": lambda s, g, n, o: s._open_library(g, n, None),
         "stable": lambda s, g, n, o: s._open_stables(g),
         "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
+        "serpents_nest": lambda s, g, n, o: s._enter_nest(g, n),
         "shrine": lambda s, g, n, o: s._open_shrine(g, n),
     }
 

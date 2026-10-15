@@ -104,7 +104,11 @@ def _roll_groups(guild, d20):
 
 def stray(group):
     """An animal wanders off, leaving its tack and load with the group's leader.
-    Untacked animals go first, then the latest bought."""
+    Untacked animals go first, then the latest bought. A herd of captives only loses
+    the latest taken, who slips its bonds."""
+    if not group.herd:
+        captive = group.captives.pop()
+        return f"{captive.name} slips its bonds: {group.display_name} cannot watch that many."
     animal = min(reversed(group.herd), key=lambda a: a.tack is not None)
     group.herd.remove(animal)
     keeper = group.leader or group.members[0]

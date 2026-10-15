@@ -45,7 +45,7 @@ loadout. `native = True`. `on_back()` returns to the map.
 
 import pygame
 
-from . import chest, data, items, magic, missions, store_column, world
+from . import captives, chest, data, items, magic, missions, store_column, world
 from .animals import Animal
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
@@ -389,6 +389,11 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             self.group.hitch_idle()
         self.notice = "  ".join(events)
 
+    def _release(self, uid):
+        cap = next((c for c in self.group.captives if c.unit.uid == uid), None)
+        if cap is not None:
+            self.notice = captives.release(self.group, cap)
+
     def _handle_button(self, key):
         if key == "done":
             self.on_back()
@@ -398,6 +403,8 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
             self._cycle_hitch(key.partition(":")[2])
         elif key.startswith("repair:"):
             self._repair_wagon(key.partition(":")[2])
+        elif key.startswith("release:"):
+            self._release(key.partition(":")[2])
         elif key == "distribute":
             self.group.distribute_load()
             self.notice = "Redistributed packs by carrying capacity."
@@ -851,7 +858,13 @@ class GroupScreen(ItemMenuMixin, PackColumnMixin, DragSelectMixin, LoadoutMoveMi
                 "progress": progress,
             })
 
-        quest_panel.quest_list(screen, F, area, quests, empty_label="No active quests for this group.")
+        bottom = quest_panel.quest_list(screen, F, area, quests, empty_label="No active quests for this group.")
+        today = self.guild.clock.day
+        rows = [{"key": c.unit.uid, "name": c.name, "race": c.unit.race["name"],
+                 "days_left": c.days_left(today)} for c in self.group.captives]
+        below = pygame.Rect(area.x, bottom + T.S * 2, area.w, area.bottom - bottom - T.S * 2)
+        hits = quest_panel.captive_list(screen, F, below, rows, self.mouse)
+        self.buttons.extend((f"release:{key}", r) for r, key in hits)
 
     # ------------------------------------------------------------------ #
     def draw(self, screen):

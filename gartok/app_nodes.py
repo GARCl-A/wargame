@@ -4,7 +4,9 @@ Mixed into `app.App`; the dispatch tables that reach these live there."""
 
 from . import (
     arena,
+    missions,
     node_functions,
+    serpent_nest,
     wagon_watch,
     world,
 )
@@ -168,6 +170,28 @@ class NodeScreensMixin:
         scenario = AncientRuinsScenario()
         battle = Battle(squad, scenario.enemies, scenario=scenario,
                         daylight=False, lethal=True, clock_day=self.guild.clock.day, aggressor="player")
+        self._battle_squad = squad
+        self._battle_node = node
+        self._arena_offer = None
+        self._enter_battle(battle, node)
+
+    def _enter_nest(self, group, node):
+        if wagon_watch.needs_watch(group):
+            self.scene = WatchScreen(self.ui_fonts, group, node, "ENTER THE NEST",
+                                     on_confirm=lambda party, guarded: self._delve_nest(group, node, party, guarded),
+                                     on_back=self._after_activity)
+        else:
+            self._delve_nest(group, node, list(group.members), True)
+
+    def _delve_nest(self, group, node, squad, guarded):
+        self._leave_outside(group, node, guarded)
+        level = max(1, round(sum(u.mean_level for u in squad) / len(squad)))
+        scenario = serpent_nest.NestScenario(level, dragon=serpent_nest.dragon_home(self.guild))
+        battle = Battle(squad, scenario.enemies, scenario=scenario,
+                        daylight=False, lethal=True, clock_day=self.guild.clock.day, aggressor="player")
+        dragon = serpent_nest.dragon_of(battle)
+        if dragon is not None and missions.snake_wanted_alive(self.guild):
+            battle.wanted_alive.add(dragon)
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None

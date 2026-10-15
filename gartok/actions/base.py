@@ -141,8 +141,9 @@ def _shovable_target(actor, target):
 
 
 def _attackable_target(actor, target):
-    """Attack and Throw may also target a downed enemy body, to finish it off."""
-    return target is not None and not target.dead and target.team != actor.team
+    """Attack and Throw may also target a downed enemy body, to finish it off -- not a captive."""
+    return (target is not None and not target.dead and target.team != actor.team
+            and not getattr(target, "captured", False))
 
 
 def _shared_language(a, b):
@@ -188,8 +189,19 @@ def _envenom(battle, attacker, target):
     target.check_collapse(battle.log)
 
 
+NONLETHAL_PENALTY = 1      # to hit, while a character pulls its blows (the Non-lethal toggle)
+
+
+def nonlethal_penalty(attacker):
+    return NONLETHAL_PENALTY if getattr(attacker, "nonlethal_blows", False) else 0
+
+
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None):
+    pulled = nonlethal_penalty(attacker)
+    if pulled:
+        bonus -= pulled
+        detail += f" -{pulled}(non-lethal)"
     total = nat + bonus
     ac = target.ac_vs(attacker, armor_pierce=armor_pierce)
     phalanx = _phalanxed(battle, target)
@@ -213,6 +225,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     if crit or total >= ac:
         battle.fx(target.pos, fx_text, "ok" if not crit else "crit")
         if target.dying:
+            if pulled:
+                battle.log(desc + "  -> the blow is pulled; the fallen is spared.")
+                return "crit" if crit else "hit"
             battle.log(desc + "  -> a blow on the fallen.")
             battle.tick_dying(target)       # the hit counts as one more turn on the clock
             return "crit" if crit else "hit"
@@ -221,7 +236,7 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         target.take_damage(
             attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon,
                                  crit_mult=crit_mult, bonus_damage=bonus_damage),
-            battle.log)
+            battle.log, knockout=bool(pulled))
         if was_up and target.team != attacker.team:
             if not target.alive:
                 attacker.credit_kill(target)

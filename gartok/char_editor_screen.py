@@ -347,7 +347,8 @@ class CharEditorScreen(Screen):
         # --- identity --------------------------------------------------- #
         y = section(screen, F, "IDENTITY", x, y, w)
         half = (w - T.S) // 2
-        third = (w - 2 * T.S) // 3            # the three track columns (progression + talents)
+        ntr = len(talents.TRACKS)
+        third = (w - (ntr - 1) * T.S) // ntr  # one column per track (progression + talents)
         self._edit_row(screen, pygame.Rect(x, y, w, 26), "NAME", "name",
                        "" if u._auto_name else u.name)
         y += 26 + T.S // 2
@@ -474,9 +475,8 @@ class CharEditorScreen(Screen):
             if not nodes:
                 text(screen, F["micro"], "— none for this race yet", (colx, ty + 2), T.TX_FAINT)
             for t in nodes:
-                taken = t.id in u.talents[track]
-                blocked = t.requires and t.requires not in u.talents[track]
-                openp = not taken and not blocked and u.picks_available(track) > 0
+                taken = u.holds_talent(track, t.id)
+                openp = not taken and u.offerable(track, t) and u.picks_available(track) > 0
                 indent = T.S * 2 if t.requires else 0
                 tr = pygame.Rect(colx + indent, ty, third - indent, 18)
                 edge = T.GREEN if taken else T.BRASS if openp else T.STEEL_LINE
@@ -484,7 +484,7 @@ class CharEditorScreen(Screen):
                 tc = T.GREEN if taken else T.BRASS if openp else T.TX_FAINT
                 text(screen, F["micro"], ellipsize(t.name, F["micro"], tr.w - 2 * T.S // 2),
                      (tr.x + T.S // 2, tr.y + 4), tc)
-                if taken or openp:
+                if (taken and not t.granted) or openp:
                     self._hit(tr, ("talent", track, t.id))
                 ty += 20
             col_bottom = max(col_bottom, ty)

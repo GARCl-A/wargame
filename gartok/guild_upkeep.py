@@ -6,6 +6,7 @@ by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 """
 
 from . import (
+    captives,
     cohesion,
     data,
     items,
@@ -142,21 +143,24 @@ class UpkeepMixin:
                 larder += self.claim_garage.food_stores()
         return larder
 
-    def _rot_food(self, inventory):
-        """Age every food entry a day in place. `inventory` is a Unit's pack
-        or a `Stash`'s items (a stack ages as one unit)."""
+    def _rot_food(self, inventory, spoiled=None):
+        """Age every perishable entry a day in place. `inventory` is a Unit's pack
+        or a `Stash`'s items (a stack ages as one unit). Food past its days turns to
+        Rotten Food; anything else perishable (a body) is gone, its name added to `spoiled`."""
         rotten = 0
         new_inv = []
         for it in inventory:
-            if it.defn.food and it.defn.lifespan is not None:
-                it.days_old += 1
-                if it.is_rotten():
-                    rotten += it.qty
-                    new_inv.append(items.create_instance("Rotten Food", qty=it.qty))
-                else:
-                    new_inv.append(it)
-            else:
+            if it.defn.lifespan is None:
                 new_inv.append(it)
+                continue
+            it.days_old += 1
+            if not it.is_rotten():
+                new_inv.append(it)
+            elif it.defn.food:
+                rotten += it.qty
+                new_inv.append(items.create_instance("Rotten Food", qty=it.qty))
+            elif spoiled is not None:
+                spoiled.append(it.name)
         inventory[:] = new_inv
         return rotten
 
@@ -166,15 +170,18 @@ class UpkeepMixin:
         
         # 1) rot food in everyone's inventory, the bank chest and the house
         total_rotten = 0
+        spoiled = []
         if not vocations.food_pauses(self):
             for u in self.roster:
-                total_rotten += self._rot_food(u._base_inventory)
-            total_rotten += self._rot_food(self.bank.items)
-            total_rotten += self._rot_food(self.house.stash.items)
+                total_rotten += self._rot_food(u._base_inventory, spoiled)
+            total_rotten += self._rot_food(self.bank.items, spoiled)
+            total_rotten += self._rot_food(self.house.stash.items, spoiled)
             for pack in [p for g in self.groups for p in g.food_stores()] + self._garaged_food():
-                total_rotten += self._rot_food(pack)
+                total_rotten += self._rot_food(pack, spoiled)
         if total_rotten:
             events.append(f"{total_rotten} portions of food rotted away.")
+        events += [f"The {name} rotted away." for name in spoiled]
+        events += captives.daily(self)
 
         for u in self.roster:
             u.medicine_attempted_today = False

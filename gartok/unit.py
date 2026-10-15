@@ -44,7 +44,7 @@ SAVE_DEFAULTS = {
     "recruited_by": None, "poisons": {}, "antidote_cooldown": 0, "level_hp_rolls": [],
     "crime": 0, "unfed_days": 0, "sick": False, "medicine_attempted_today": False,
     "treated": False, "consecutive_rest_hours": 0, "last_daily_luck_day": 0,
-    "share_food": True, "combat_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
+    "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
     "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": 0,
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
@@ -91,6 +91,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.treated = False                           # if a medkit treatment succeeded (cures after 8h rest)
         self.share_food = True                         # pools rations for hungry guild-mates
         self.combat_xp = 0                             # +1 per enemy this character downs in a fight
+        self.magic_xp = 0                              # magic kills and spells studied (progression.py)
         self.work_hours = 0                            # lifetime hours of day-labour (see work_xp)
         self.bio = ""                                  # free-text backstory (authored NPCs; editable in the creator)
         self.arena_title = False                       # holds the arena's "Champion of the Pit" (see arena.py)
@@ -129,7 +130,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.team = "player"
         u.uid = d["uid"]
         u.recruited_by = d["recruited_by"]
-        u.talents = {t: list(d["talents"][t]) for t in talents.TRACKS}
+        u.talents = {t: list(d["talents"].get(t, [])) for t in talents.TRACKS}
         u.poisons = {pid: dict(st) for pid, st in d["poisons"].items()}
         u.antidote_cooldown = d["antidote_cooldown"]
         u._level_hp_rolls = list(d["level_hp_rolls"])
@@ -165,6 +166,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.last_daily_luck_day = d["last_daily_luck_day"]
         u.share_food = d["share_food"]
         u.combat_xp = d["combat_xp"]
+        u.magic_xp = d["magic_xp"]
         u.work_hours = d["work_hours"]
         u.bio = d["bio"]
         u.arena_title = d["arena_title"]

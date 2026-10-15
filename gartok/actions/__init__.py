@@ -30,7 +30,9 @@ from .combat import (  # noqa: F401
     AttackTongue,
     Defend,
     Demoralize,
+    DragonBreath,
     Flee,
+    NonLethal,
     Push,
     Reload,
     Throw,
@@ -56,6 +58,7 @@ from .spells import (  # noqa: F401
 )
 from .support import (
     Assess,
+    Capture,
     Disarm,
     Dismount,
     Delay,
@@ -120,6 +123,9 @@ INVESTIGATE = Investigate()
 DISARM = Disarm()
 DRINK_POTION = DrinkPotion()
 SIGNAL_HORN = SignalHorn()
+DRAGON_BREATH = DragonBreath()
+NONLETHAL = NonLethal()
+CAPTURE = Capture()
 
 # Weapon 2-AP actions
 SNEAK_ATTACK = SneakAttack()
@@ -152,11 +158,13 @@ WEAPON_ACTIONS = [
 COMBAT_ACTIONS = [
     ATTACK,
     *WEAPON_ACTIONS,
+    DRAGON_BREATH,
     THROW,
     DEMORALIZE,
     ASSESS,
     PUSH,
     DEFEND,
+    NONLETHAL,
     RELOAD,
     ATTACK_TONGUE,
     FLEE,
@@ -167,6 +175,7 @@ COMBAT_ACTIONS = [
 UTILITY_ACTIONS = [
     FIRST_AID,
     STABILIZE,
+    CAPTURE,
     DRINK_POTION,
     SIGNAL_HORN,
     PICK_UP,

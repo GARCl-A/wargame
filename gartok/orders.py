@@ -38,7 +38,8 @@ from . import world
 AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
-                               "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine"})
+                               "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine",
+                               "serpents_nest"})
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds

@@ -486,11 +486,11 @@ class BattleScreen(BattleDrawMixin, Screen):
     @staticmethod
     def _aim_kind(action):
         if action in (actions.STABILIZE, actions.FIRST_AID, actions.DRINK_POTION,
-                      actions.MOUNT, actions.WAKE_UP):
+                      actions.MOUNT, actions.WAKE_UP, actions.CAPTURE):
             return "heal"
         if action in (actions.DEMORALIZE, actions.EAT_CORPSE):
             return "demo"
-        if action in (actions.ATTACK, actions.ATTACK_TONGUE):
+        if action in (actions.ATTACK, actions.ATTACK_TONGUE, actions.DRAGON_BREATH):
             return "attack"
         if action in (actions.CLIMB, actions.DROP, actions.JUMP,
                       actions.SWIM, actions.DISMOUNT, actions.PUSH):
@@ -509,6 +509,8 @@ class BattleScreen(BattleDrawMixin, Screen):
             return "click a purple enemy to Demoralize", board_style.DEMO_HL
         elif self.aim_action is actions.ATTACK_TONGUE:
             return "click an enemy in tongue range", board_style.ATK_HL
+        elif self.aim_action is actions.DRAGON_BREATH:
+            return "click a cell beside you to breathe that way (the cone hits allies too)", board_style.ATK_HL
         elif self.aim_action is actions.THROW:
             return "click an enemy in the orange range", board_style.THROW_HL
         elif self.aim_action in (actions.STABILIZE, actions.FIRST_AID):
@@ -545,9 +547,14 @@ class BattleScreen(BattleDrawMixin, Screen):
             return f"click target within range to cast {self.aim_action.name}", T.BRASS
         elif actions.FLEE.available(self.battle, self.battle.active):
             return "at the map edge: you can Flee the fight", board_style.OK
+        elif self.aim_action is actions.CAPTURE:
+            return "click an adjacent fallen foe to bind it", board_style.OK
         elif self.battle.mopping_up:
             return ("enemies down  ·  stabilize the downed or space "
                     "to let the counter run"), board_style.WARN
+        elif self.battle.binding_captives:
+            return ("enemies down  ·  Capture a fallen foe with a Rope or Chains, "
+                    "or space to let the round run out"), board_style.WARN
         elif self.battle.is_ctf:
             return ("grab the enemy flag and bring it home to win  ·  "
                     "guard your own, and whoever's carrying it"), T.TX_MUTED

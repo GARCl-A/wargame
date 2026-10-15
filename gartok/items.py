@@ -390,6 +390,7 @@ _register(ItemDef(id="locked_chest", name="Locked Chest", type=ItemType.CONTAINE
 _register(ItemDef(id="sealed_chest", name="Sealed Chest", type=ItemType.CONTAINER, rarity=ItemRarity.UNCOMMON, weight=8.0, price=16))
 _register(ItemDef(id="letter_of_receipt", name="Letter of Receipt", type=ItemType.QUEST, rarity=ItemRarity.COMMON, weight=0.1, price=1))
 _register(ItemDef(id="ancient_codex", name="Ancient Codex", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=2.0, price=4))
+_register(ItemDef(id="snake_dragon_corpse", name="Snake Dragon Corpse", type=ItemType.QUEST, rarity=ItemRarity.RARE, weight=12.0, price=4, lifespan=3))
 
 
 # --------------------------------------------------------------------------- #
@@ -882,6 +883,7 @@ PRECIOUS_GEM_ITEM = "Precious Gemstone"
 MISSION_CHEST_ITEM = "Sealed Chest"
 LETTER_ITEM = "Letter of Receipt"
 CODEX_ITEM = "Ancient Codex"
+SNAKE_DRAGON_CORPSE_ITEM = "Snake Dragon Corpse"
 
 
 def is_coin(name) -> bool:

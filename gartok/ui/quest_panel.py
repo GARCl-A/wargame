@@ -8,7 +8,7 @@ over."""
 import pygame
 
 from .loadout_panel import ICON_GAP, item_icon
-from .primitives import text
+from .primitives import draw_button, text
 from .tokens import T
 
 TAG_COLOR = {
@@ -26,11 +26,11 @@ TAG_COLOR = {
 def quest_list(surf, F, area, quests, empty_label="No active quests."):
     """`quests` is `[{"name","accepted_by","days_left","progress","tags"}]` --
     `progress` is `(have, goal, item)`, or `None` for a flat delivery quest
-    with no tracked quantity ("Delivery"). Purely presentational; no hits
-    to return since a quest card isn't clickable yet."""
+    with no tracked quantity ("Delivery"). Purely presentational: returns the y
+    below the last card, where the caller may draw on."""
     if not quests:
-        text(surf, F["body"], empty_label, area.center, T.TX_FAINT, center=True)
-        return
+        text(surf, F["body"], empty_label, (area.x, area.y), T.TX_FAINT)
+        return area.y + T.S * 5
 
     y = area.y
     for q in quests:
@@ -76,3 +76,29 @@ def quest_list(surf, F, area, quests, empty_label="No active quests."):
             text(surf, F["body"], "Delivery", (r.right - T.S * 3, r.y + 40), T.TX, right=True)
 
         y += r.h + T.S * 3
+    return y
+
+
+def captive_list(surf, F, area, captives, mpos=None):
+    """`captives` is `[{"key","name","race","days_left"}]`: one row per bound foe the group
+    keeps, with a RELEASE button. Returns `[(rect, key)]` for the buttons."""
+    text(surf, F["microb"], "CAPTIVES", (area.x, area.y), T.BRASS)
+    y = area.y + T.S * 3
+    if not captives:
+        text(surf, F["body_sm"], "No one in bonds.", (area.x, y), T.TX_FAINT)
+        return []
+    hits = []
+    for c in captives:
+        r = pygame.Rect(area.x, y, min(600, area.w), T.S * 6)
+        pygame.draw.rect(surf, T.STEEL, r)
+        pygame.draw.rect(surf, T.STEEL_LINE, r, 1)
+        text(surf, F["nameb"], c["name"], (r.x + T.S * 3, r.y + T.S + 2), T.TX)
+        text(surf, F["body_sm"], c["race"], (r.x + T.S * 3, r.y + T.S * 3 + 4), T.TX_FAINT)
+        left = c["days_left"]
+        col = T.BLOOD if left <= 1 else T.BRASS if left <= 3 else T.TX_MUTED
+        btn = pygame.Rect(r.right - T.S * 14, r.y + T.S + 2, T.S * 12, r.h - T.S * 2 - 4)
+        text(surf, F["body"], f"{left} day(s) to live", (btn.x - T.S * 2, r.y + T.S * 2), col, right=True)
+        draw_button(surf, F, btn, "release", ghost=True, mpos=mpos)
+        hits.append((btn, c["key"]))
+        y += r.h + T.S
+    return hits

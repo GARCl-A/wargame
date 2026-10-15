@@ -1,9 +1,10 @@
-"""Non-attack actions: pick up, stabilise, potions, racial actions, traps, End Turn."""
+"""Non-attack actions: pick up, stabilise, capture, potions, racial actions, traps, End Turn."""
 
 import random
 
 from .. import data, intel, items
 from ..board import cells, chebyshev
+from ..captives import capture_tool
 from ..conditions import Demoralized
 from ..constants import fmt_money
 from ..data import d20
@@ -656,3 +657,48 @@ class Disarm(Action):
         elif nat == 1 or total <= dc - 5:
             battle.log(f"  Critical fumble! {actor.name} accidentally triggers the trap!")
             battle.trigger_trap(actor, trap)
+
+
+# --------------------------------------------------------------------------- #
+# Capture                                                                      #
+# --------------------------------------------------------------------------- #
+
+class Capture(Action):
+    """Bind an adjacent fallen foe (dying or knocked out) with a Rope or Chains, used up. The
+    captive is out of the fight for good: no coup de grace, no death save; after a won battle
+    it joins the group as a captured unit (`captives.py`)."""
+    id, name, cost, target, aimed = "capture", "Capture", 1, "enemy", True
+    desc = "Bind an adjacent fallen foe with a Rope or Chains; it leaves the fight as your captive."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if capture_tool(actor) is None:
+            return False, "Needs a Rope or Chains."
+        return True, ""
+
+    def _bodies(self, battle, actor):
+        return [u for u in battle.units
+                if u.team != actor.team and u.status in ("dying", "stable", "broken")
+                and not u.captured and battle.units_distance(actor, u) <= 1]
+
+    def available(self, battle, actor):
+        return super().available(battle, actor) and bool(self._bodies(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        return super().available(battle, actor) and target in self._bodies(battle, actor)
+
+    def highlight_targets(self, battle, actor):
+        return self._bodies(battle, actor) if super().available(battle, actor) else []
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        tool = capture_tool(actor)
+        actor.inventory.remove(tool)
+        actor.capture_tools_used.append(tool)
+        target.captured = True
+        if target.status == "dying":
+            target.status = "stable"
+        battle.log(f"{actor.name} binds {target.name} with {tool}: captured.")
+        battle.fx(target.pos, "Captured", "ok")

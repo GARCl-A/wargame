@@ -107,8 +107,12 @@ class EditMixin:
         if not changed:
             return
         self.spells_known = [sid for sid in self.spells_known if magic.casts(self, magic.SPELLS[sid])]
+        self.talents["magic"] = [tid for tid in self.talents["magic"]
+                                 if talents.get(tid).school in self.magic_sources]
         self.study_target = None
         self.study_progress = 0
+        self._apply_attributes()
+        self._derive_combat()
 
     def set_spell_known(self, spell_id, on):
         """Teach / forget a spell outright. Teaching needs an affinity the spell
@@ -141,8 +145,8 @@ class EditMixin:
         self._derive_combat()
 
     def set_track_level(self, track, level):
-        """Set a track level directly. `combat` / `work` jump `combat_xp` /
-        `work_hours` to that level's threshold. `racial` pins `_racial_override`
+        """Set a track level directly. `combat` / `work` / `magic` jump `combat_xp` /
+        `work_hours` / `magic_xp` to that level's threshold. `racial` pins `_racial_override`
         (hit dice + racial picks), or `level=None` drops it back to derived.
         Hit dice and talent picks resync -- picks the new level no longer
         supports are dropped."""
@@ -150,12 +154,15 @@ class EditMixin:
             self._racial_override = (None if level is None else
                 max(0, min(len(progression.RACIAL_XP_THRESHOLDS), int(level))))
         else:
-            thresholds = (progression.COMBAT_XP_THRESHOLDS if track == "combat"
-                          else progression.WORK_XP_THRESHOLDS)
+            thresholds = {"combat": progression.COMBAT_XP_THRESHOLDS,
+                          "work": progression.WORK_XP_THRESHOLDS,
+                          "magic": progression.MAGIC_XP_THRESHOLDS}[track]
             level = max(0, min(len(thresholds), int(level)))
             marks = thresholds[level - 1] if level else 0
             if track == "combat":
                 self.combat_xp = marks
+            elif track == "magic":
+                self.magic_xp = marks
             else:
                 self.work_hours = marks * economy.LUMBER_XP_HOURS
         del self._level_hp_rolls[self.racial_level:]        # a lower level owes fewer dice

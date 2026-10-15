@@ -86,6 +86,24 @@ def cells_in_radius(origin, radius):
                 yield (ox + dx, oy + dy)
 
 
+def cone_cells(origin, direction, depth):
+    """A cone breathed from `origin` toward one of the 8 directions (`(sx, sy)`, each -1/0/1):
+    row `d` (1..`depth`) is `2d - 1` cells wide, so 1, 3, 5... A straight cone widens to both
+    sides; a diagonal one spreads along the two edges of its corner."""
+    (ox, oy), (sx, sy) = origin, direction
+    out = []
+    for d in range(1, depth + 1):
+        if sx and sy:
+            out.append((ox + sx * d, oy + sy * d))
+            for i in range(1, d):
+                out += [(ox + sx * (d - i), oy + sy * d), (ox + sx * d, oy + sy * (d - i))]
+        elif sx:
+            out += [(ox + sx * d, oy + off) for off in range(1 - d, d)]
+        else:
+            out += [(ox + off, oy + sy * d) for off in range(1 - d, d)]
+    return out
+
+
 def fits(pos, footprint, blocked, cols=COLS, rows=ROWS):
     """Is the footprint anchored at `pos` fully inside the grid and free of
     `blocked`? Prefer `Board.fits` when a board is in hand -- it is sized to

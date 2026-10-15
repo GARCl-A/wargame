@@ -29,7 +29,7 @@ import time
 import uuid
 from dataclasses import fields
 
-from . import missions
+from . import captives, missions
 from .animals import Animal
 from .clock import Clock
 from .group import NORMAL, Group
@@ -96,6 +96,7 @@ def unit_to_dict(u):
         "hp": u.hp,
         "share_food": u.share_food,              # pools rations for hungry guild-mates
         "combat_xp": u.combat_xp,                # combat XP (see progression.py)
+        "magic_xp": u.magic_xp,
         "work_hours": u.work_hours,              # lifetime hours of lumber-yard day-labour
         "bio": u.bio,                            # free-text backstory (blank for a rolled character)
         "arena_title": u.arena_title,            # holds the "Champion of the Pit" title (arena.py)
@@ -185,6 +186,7 @@ def group_to_dict(g):
         "wagons": [wagon_to_dict(w) for w in g.wagons],
         "herd": [a.to_dict(_serialize_pack) for a in g.herd],
         "herd_notice": g.herd_notice,
+        "captives": [captives.to_dict(c, unit_to_dict) for c in g.captives],
         "stance": g.stance,
         "campfire_node": g.campfire_node,
         "campfire_expires": g.campfire_expires,
@@ -199,6 +201,7 @@ def group_from_dict(d):
     group = Group(members, node=d["node"], name=d["name"], gid=d["gid"],
                   leader=leader, wagons=wagons, herd=herd)
     group.herd_notice = d["herd_notice"]
+    group.captives = [captives.from_dict(c, Unit.from_save) for c in d.get("captives", [])]
     group.stance = d.get("stance", NORMAL)
     group.campfire_node = d.get("campfire_node", None)
     group.campfire_expires = d.get("campfire_expires", 0)

@@ -24,6 +24,10 @@ def _library_done():
     return guild, u
 
 
+def _codex_offers(guild, node):
+    return [t for t in missions.offers_at(guild, node) if "codex" in t.tags]
+
+
 def test_shrines_are_hidden_until_the_codex_is_turned_in():
     guild = Guild([Unit("player")], node="city")
     known = {n.id for n in world.known(guild)}
@@ -43,7 +47,7 @@ def test_every_shrine_is_wired_into_the_graph():
 def test_each_shrine_offers_its_own_codex_delivery_once_the_library_is_done():
     guild, _u = _library_done()
     for s, t in zip(SHRINES, missions.CODEX_DELIVERIES, strict=True):
-        assert missions.offers_at(guild, s) == [t]
+        assert _codex_offers(guild, s) == [t]
 
 
 def test_delivering_to_one_school_closes_the_other_two():
@@ -54,8 +58,9 @@ def test_delivering_to_one_school_closes_the_other_two():
     assert [d.id for d in earned] == ["nature_codex"]
     assert guild.reputation["nature_coven"] == 1
     assert not u.has_item(data.CODEX_ITEM)
-    assert not missions.offers_at(guild, "blood_sanctuary")
-    assert not missions.offers_at(guild, "faith_cathedral")
+    assert not _codex_offers(guild, "blood_sanctuary")
+    assert not _codex_offers(guild, "faith_cathedral")
+    assert missions.closed(guild, missions.CODEX_BLOOD) and missions.closed(guild, missions.CODEX_FAITH)
     assert "blood_codex" not in guild.deeds_done and "faith_codex" not in guild.deeds_done
 
 

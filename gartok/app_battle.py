@@ -112,6 +112,7 @@ class BattleFlowMixin:
         self._arena_offer = None
         if pause_group is not None:           # the fight is over: a save from here on must not replay it
             pause_group.pending = None
+        self._map_notices += outcome.captive_notes
         note = outcome.arena_title_event
         if hunt_state is None:
             self._back_from_outside()

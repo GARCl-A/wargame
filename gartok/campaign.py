@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 
 from . import (
     arena,
+    captives,
     data,
     economy,
     factions,
@@ -57,7 +58,8 @@ class BattleOutcome:
     deeds_earned: list = field(default_factory=list)  # factions.Deed completed by this result
     arena_title_event: str | None = None          # a one-liner if the Champion of the Pit title changed hands
     stabilized: list = field(default_factory=list) # survivors that were stabilized / broken at end of combat
-    leveled_up: list = field(default_factory=list) # survivors that gained a combat level from XP
+    leveled_up: list = field(default_factory=list) # survivors that gained a combat or magic level from XP
+    captive_notes: list = field(default_factory=list)  # lines for the foes bound and led away
 
 
 def _carry_forward(member, combatant):
@@ -99,6 +101,8 @@ def _carry_forward(member, combatant):
 
     for item in getattr(combatant, "picked_up_items", []):
         member.give_to_pack(item)
+    for tool in combatant.capture_tools_used:
+        member.remove_named(tool)
 
     if combatant.hp <= 0:
         member.hp = 1
@@ -137,12 +141,14 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
         if combatant.survived:
             if combatant.status in ("stable", "broken"):
                 stabilized.append(member)
-            if combatant.combat_xp_earned:        # XP scaled by the level gap of each kill
-                old_lvl = member.combat_level
+            earned = combatant.combat_xp_earned + combatant.magic_xp_earned
+            if earned:                            # XP scaled by the level gap of each kill
+                old_lvls = (member.combat_level, member.magic_level)
                 member.combat_xp += combatant.combat_xp_earned
-                member.collect_levels()           # a new mean level rolls a hit die
-                xp_awards[member.name] = combatant.combat_xp_earned
-                if member.combat_level > old_lvl:
+                member.magic_xp += combatant.magic_xp_earned
+                member.collect_levels()           # a new racial level rolls a hit die
+                xp_awards[member.name] = earned
+                if (member.combat_level, member.magic_level) > old_lvls:
                     leveled_up.append(member)
             _carry_forward(member, combatant)
             survivors.append(member)
@@ -171,6 +177,10 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
         outcome.arena_reward = arena_offer.purse
     elif won and battle.lethal:                   # lethal win: loot the field
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
+        bound = [c for c in battle.enemy_units if c.captured]
+        group = guild.group_of(survivors[0]) if survivors else None
+        if bound and group is not None:
+            outcome.captive_notes = captives.take(guild, group, bound)
         
         # Lizardfolk Organic Harvester
         if any(s.has_talent("organic_harvester") for s in survivors):

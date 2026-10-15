@@ -296,6 +296,34 @@ def _recover_torch(battle, unit):
     return True
 
 
+def _wants_alive(battle, unit, target):
+    """The player's side pulls its blows on a foe it means to capture (`Battle.wanted_alive`);
+    the enemy side never captures."""
+    return unit.team == "player" and target in battle.wanted_alive
+
+
+def _try_capture(battle, unit):
+    """Bind a fallen foe the player's side wants alive, walking up to it first if it lies out of
+    reach. Returns True if it acted."""
+    if not actions.CAPTURE.applicable(battle, unit)[0]:
+        return False
+    bodies = [u for u in battle.wanted_alive
+              if u.status in ("dying", "stable", "broken") and not u.captured
+              and _wants_alive(battle, unit, u)]
+    if not bodies:
+        return False
+    body = min(bodies, key=lambda b: battle.units_distance(unit, b))
+    if actions.CAPTURE.can(battle, unit, body):
+        actions.CAPTURE.execute(battle, unit, body)
+        return True
+    dest = battle.path_step_toward(unit, body.pos, unit.speed, reach=1)
+    if dest == unit.pos:
+        return False
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return True
+
+
 def _finish_off(battle, unit):
     """A downed enemy body this unit could hit right now -- dying (each blow ticks its death clock)
     before merely stable, nearest first. Only when the fight is lethal, the
@@ -305,7 +333,8 @@ def _finish_off(battle, unit):
     if any(actions.ATTACK.can(battle, unit, u)
            for u in battle.units if u.team != unit.team and not u.downed):
         return None
-    bodies = sorted((u for u in battle.units if u.team != unit.team and u.downed),
+    bodies = sorted((u for u in battle.units if u.team != unit.team and u.downed
+                     and not _wants_alive(battle, unit, u)),
                     key=lambda u: (not u.dying, battle.units_distance(unit, u)))
     return next((b for b in bodies if actions.ATTACK.can(battle, unit, b)), None)
 
@@ -569,6 +598,27 @@ def _skitter(battle, unit):
     return "moved"
 
 
+BREATH_MIN_FOES = 3
+
+
+def _try_breath(battle, unit):
+    """Dragon Breath, only when a cone catches at least `BREATH_MIN_FOES` foes and fewer
+    allies than foes. Returns True if it breathed."""
+    breath = actions.DRAGON_BREATH
+    if not breath.available(battle, unit):
+        return False
+    best, best_foes = None, 0
+    for cell in breath.highlight_cells(battle, unit):
+        caught = breath.caught(battle, unit, cell)
+        foes = sum(1 for u in caught if u.team != unit.team)
+        if foes >= BREATH_MIN_FOES and foes > len(caught) - foes and foes > best_foes:
+            best, best_foes = cell, foes
+    if best is None:
+        return False
+    breath.execute(battle, unit, best)
+    return True
+
+
 def take_turn(battle, unit):
     if unit.dormant:
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
@@ -635,6 +685,9 @@ def take_turn(battle, unit):
                 unit.walking = False
                 continue
 
+        if _try_capture(battle, unit):
+            continue
+
         goal = _ctf_goal(battle, unit)
         if goal is not None:                  # flag runner or defender
             if goal in battle.cells_of(unit):
@@ -694,6 +747,8 @@ def take_turn(battle, unit):
             if _no_contact(battle, unit):
                 continue
             break
+        if battle.lethal and unit.nonlethal_blows != _wants_alive(battle, unit, target):
+            actions.NONLETHAL.execute(battle, unit)
 
         # a crossbow only fires loaded -- keep it fed instead of closing to melee
         if unit.can_reload:
@@ -706,6 +761,9 @@ def take_turn(battle, unit):
                 if not any(o.is_torch for o in battle.ground if grid_distance(o.pos, target.pos) <= 3):
                     lg.execute(battle, unit, target.pos)
                     continue
+
+        if _try_breath(battle, unit):
+            continue
 
         atk = _pick_attack(battle, unit, target)
         if atk is not None:

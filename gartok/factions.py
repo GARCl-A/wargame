@@ -83,6 +83,7 @@ class Deed:
     rep: int                                  # reputation banked on completion
     check: Callable                           # (guild, event) -> bool
     requires: str | None = None            # deed id that must be done first
+    exclusive: str | None = None           # a set only one deed of which can ever be done
 
 
 def _arena_win(event):
@@ -119,14 +120,10 @@ _FACTIONS = [
             "Mages of faith, hidden in a cathedral in the hills. They answer to a higher call.", hidden=True, nodes=("faith_cathedral",)),
 ]
 
-# One Codex exists, so it goes to one school: a delivery closes the other two deeds.
-_CODEX_DEEDS = ("blood_codex", "nature_codex", "faith_codex")
-
-
-def _codex_delivered(school, own_id):
+def _delivered(thing, school):
+    """A mission handing `thing` (a tag: "codex", "snake_dragon") to `school`'s faction."""
     def check(g, e):
-        return (e.kind == "mission" and "codex" in e.tags and school in e.tags
-                and not any(d in g.deeds_done for d in _CODEX_DEEDS if d != own_id))
+        return e.kind == "mission" and thing in e.tags and school in e.tags
     return check
 
 
@@ -236,15 +233,22 @@ _DEEDS = [
     Deed("ledger_hold_mentoring", "ledger_hold", "Treefolk Mentorship",
          "Train a designated Treefolk recruit to racial level 2 and deliver them to Ledger Hold.", rep=1,
          check=lambda g, e: e.kind == "mission" and ("ledger_hold" in getattr(e, "tags", ()) or getattr(e, "tag", None) == "ledger_hold")),
+    # One Codex exists, so it goes to one school; one Snake Dragon, dead or alive.
     Deed("blood_codex", "blood_cult", "The Codex Delivered",
          "Bring the Ancient Codex to the Blood Sanctuary.", rep=1,
-         check=_codex_delivered("blood", "blood_codex")),
+         check=_delivered("codex", "blood"), exclusive="codex"),
     Deed("nature_codex", "nature_coven", "The Codex Delivered",
          "Bring the Ancient Codex to the Nature Grove.", rep=1,
-         check=_codex_delivered("nature", "nature_codex")),
+         check=_delivered("codex", "nature"), exclusive="codex"),
     Deed("faith_codex", "faith_order", "The Codex Delivered",
          "Bring the Ancient Codex to the Faith Cathedral.", rep=1,
-         check=_codex_delivered("faith", "faith_codex")),
+         check=_delivered("codex", "faith"), exclusive="codex"),
+    Deed("blood_snake", "blood_cult", "The Dragon's Blood",
+         "Bring the Snake Dragon's body to the Blood Sanctuary.", rep=1,
+         check=_delivered("snake_dragon", "blood"), exclusive="snake_dragon"),
+    Deed("nature_snake", "nature_coven", "The Snake Saved",
+         "Bring the Snake Dragon alive to the Nature Grove.", rep=1,
+         check=_delivered("snake_dragon", "nature"), exclusive="snake_dragon"),
     Deed("ledger_hold_supply_run", "ledger_hold", "Frontier Supply Run",
          "Successfully complete 10 military supply caravan runs to the frontier outpost.", rep=1,
          check=lambda g, e: e.kind == "supply_run" and g.supply_runs_completed >= 10),
@@ -331,11 +335,19 @@ def get_unlocks(faction_id: str):
     return unlocks
 
 
+def failed(guild, deed):
+    """`deed` can never be done: another deed of its exclusive set already was."""
+    done = set(guild.deeds_done)
+    return (deed.exclusive is not None and deed.id not in done
+            and any(d.exclusive == deed.exclusive and d.id in done for d in _DEEDS))
+
+
 def open_deeds(guild):
-    """Deeds not yet done whose `requires` (if any) is already done."""
+    """Deeds not yet done (nor failed) whose `requires` (if any) is already done."""
     done = set(guild.deeds_done)
     return [d for d in _DEEDS
-            if d.id not in done and (d.requires is None or d.requires in done)]
+            if d.id not in done and (d.requires is None or d.requires in done)
+            and not failed(guild, d)]
 
 
 def settle(guild, event):

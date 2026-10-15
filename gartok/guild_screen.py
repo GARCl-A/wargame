@@ -762,7 +762,9 @@ class GuildScreen(Screen):
             rep = self.guild.reputation.get(fac.id, 0)
             data.append({
                 "name": fac.name, "blurb": fac.blurb, "rep": rep,
-                "deeds": [(d.name, d.blurb, d.rep, d.id in done) for d in factions.DEEDS_BY_FACTION[fac.id]],
+                "deeds": [(d.name, d.blurb, d.rep,
+                           "done" if d.id in done else "failed" if factions.failed(self.guild, d) else "open")
+                          for d in factions.DEEDS_BY_FACTION[fac.id]],
                 "unlocks": [(u.title, u.description, rep >= u.rep_required, u.rep_required)
                             for u in factions.get_unlocks(fac.id)],
             })

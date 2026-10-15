@@ -52,6 +52,7 @@ class Group:
         self.pending = None               # a forced Order (forced.EVENTS) that came due and awaits its fight
         self.leader = leader              # Unit; None resolves via ensure_leader below
         self.herd = list(herd or [])      # animals.Animal -- lost with the group
+        self.captives = []                # captives.Captive: bound foes, not members (captives.py)
         self.wagons = []                  # wagon.Wagon -- lost with the group
         for wagon in wagons or []:
             self.add_wagon(wagon)
@@ -254,7 +255,7 @@ class Group:
 
     @property
     def herd_load(self):
-        return sum(a.herd_weight for a in self.herd)
+        return sum(a.herd_weight for a in (*self.herd, *self.captives))
 
     def can_take(self, animal):
         return self.herd_load + animal.herd_weight <= self.herd_capacity
@@ -286,6 +287,7 @@ class Group:
         a wagon goes at the pace of the animals pulling it."""
         riding = self.riders
         return min([u.speed * METERS_PER_SQUARE for u in self.members if u not in riding]
+                   + [c.unit.speed * METERS_PER_SQUARE for c in self.captives]
                    + [a.speed for a in self.herd], default=0)
 
     @property

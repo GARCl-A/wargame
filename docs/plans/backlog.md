@@ -73,6 +73,15 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
 - **Magic Arc — Slice 2: initiation rite and first spells.**
   Initiation belongs to the **character**, not the guild: a unit is taken to one of the three hidden nodes, and only if the guild has enough reputation with that faction can the rite be done for that unit.
   1. *Reputation gate:* initiating into a school requires 2 reputation with its faction. The Codex delivery gives 1; whoever did not deliver to that faction needs 2 deeds. **Decided 2026-10-13:** at least 2 more missions per faction (6 in all), each worth 1 reputation. **Decided 2026-10-13:** one of them is about the Snake Dragon (`portraits/snake_dragon/0.png`; its level is still to be set: for scale, The Ancient Archivist, the Ruins boss, is a level-10 Skeleton with 83 HP). The other five are still to be designed.
+     **Decided 2026-10-15:** *Blood* is **bloodline**, not blood magic: the magic is born in you (child of a dragon, an
+     angel, a demon). The Blood Cult's blurb in `factions.py` ("cruel") is to be rewritten to match. The Snake Dragon is an
+     ordinary snake with dragon blood in it. It can be delivered **dead to the Blood Cult** (an autopsy, to read the
+     bloodline) or **alive to the Nature Coven** (to find out whether a curse corrupted it, and to treat it). One beast, two
+     outcomes, exclusive like the Codex. Delivering it alive needs a capture: a first, narrow slice of *Prisoners* (below).
+     The Faith Order gets a first mission of its own. **The Snake Dragon job is built (2026-10-15)**, see
+     [snake_dragon.md](snake_dragon.md) and RULES.md (*Secret nodes*, *Capture*, *Dragon Breath*, the magic track),
+     and so is the failed state of an exclusive delivery (the Codex too). Left: the other missions (Faith's first,
+     and the rest, designed by story), and checking at the end that no path leaves a school unreachable.
   2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no shop stocks it (only the Priest is born with one). It comes from birth or from a bandit in an ambush (pending: put it on a bandit loot table). Fantasy reason: the god picks disciples by getting the symbol into their hands.
   3. *Interaction and training:* each sanctuary offers an initiation master/function (a new `NodeFunction` with its own vendor and portrait) that grants beginner status (`Unit.add_magic_source`; `Unit.magic_sources` is already a list without repeats).
   4. *Tier 1 spells:* a starting grimoire and the study of the school's basic spells.
@@ -174,8 +183,9 @@ pointed to, not repeated.
   Library). (3) Rarity per base
   material is set (Venom Gland became common; the rest stayed), and each shop's target count already follows
   it (`economy.SHELVES`).
-- **Prisoners.** (Not started; decided 2026-10-09: lands after the specialised shops.) Non-lethal attacks that knock a unit out even in lethal zones, then
-  capture it. Chains are what holds the captive. Needs the AI to know it too.
+- **Prisoners.** (First slice built 2026-10-15 for the Snake Dragon: the Non-lethal toggle, Capture with a Rope or
+  Chains, captives kept by a group for 7 days, `captives.py`.) Left: what a captive is *for* beyond a mission (ransom,
+  questioning, recruiting, the prison), the enemy side capturing the player's people, and rescuing a captive in battle.
 - **Combat AI plays far below a person.** (Reframed 2026-10-10: on the author's own fights the AI
   playing the player's squad wins hunts 96% and ambushes 100%, so it is close to a person there;
   the gap is the arena duels. The author wins 60 of 62 against the AI and the game feels easy, so
@@ -316,7 +326,6 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Snake Dragon (future creature).** `portraits/snake_dragon/0.png` exists. Decided 2026-10-12: reserved for one of the magic questlines following the Library's codex / trust sequence; deferred to when the post-library magic quests are built.
 - **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10).
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.

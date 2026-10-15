@@ -185,13 +185,17 @@ def _alignments():
 def _talent_trees():
     out = ["## Talent trees\n\nOne tree per track. A new level in a track grants "
            "one pick in its tree; `requires` gates the deeper nodes. The racial "
-           "track's level is `combat + work` on a scale "
-           "(`progression.RACIAL_XP_THRESHOLDS`); its nodes are race-gated."]
+           "track's level is `combat + work + magic` on a scale "
+           "(`progression.RACIAL_XP_THRESHOLDS`); its nodes are race-gated. A magic "
+           "node belongs to a school; each school's root is granted by its initiation, "
+           "not picked."]
     for track in talents.TRACKS:
-        racial = track == "racial"
-        head = ("Tier", "Talent", "Effect", "Requires") + (("Race",) if racial else ())
-        rows = [(t.tier, t.name, t.effect, t.requires or "--")
+        racial, magic = track == "racial", track == "magic"
+        head = (("Tier", "Talent", "Effect", "Requires") + (("Race",) if racial else ())
+                + (("School",) if magic else ()))
+        rows = [(t.tier, t.name, t.effect, "granted" if t.granted else t.requires or "--")
                 + ((t.race or "any",) if racial else ())
+                + ((t.school,) if magic else ())
                 for t in talents.TREE[track]]
         out.append(f"### {track.capitalize()} track\n\n" + _table(head, rows))
     return "\n\n".join(out)

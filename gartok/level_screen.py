@@ -6,7 +6,7 @@ a graph -- a root identity up top, the actions it unlocks branching below, joine
 by connectors so it reads at a glance what leads to what and how deep a branch
 runs. A track with an unspent pick lights its available nodes; click a lit node
 to take it (`Unit.choose_talent`). Hovering any node pops a detail card. The
-racial track (its level = the other two summed, on a scale) drives hit dice,
+racial track (its level = the others summed, on a scale) drives hit dice,
 handled on XP gain, so nothing to do here but spend picks. `on_back` returns to
 the guild.
 
@@ -38,8 +38,9 @@ from .ui.tokens import fonts as ui_fonts
 
 _TRACK_XP = {"combat": progression.COMBAT_XP_THRESHOLDS,
              "work": progression.WORK_XP_THRESHOLDS,
-             "racial": progression.RACIAL_XP_THRESHOLDS}
-_TRACK_LABEL = {"combat": "COMBAT", "work": "WORK", "racial": "RACIAL"}
+             "racial": progression.RACIAL_XP_THRESHOLDS,
+             "magic": progression.MAGIC_XP_THRESHOLDS}
+_TRACK_LABEL = {"combat": "COMBAT", "work": "WORK", "racial": "RACIAL", "magic": "MAGIC"}
 
 
 def _check(surf, cx, cy, col):
@@ -74,6 +75,29 @@ def _tree_layout(track, race=None):
         place(r, 0)
     depths = 1 + max((d for _, d in pos.values()), default=0)
     return pos, max(cursor[0], 1.0), depths
+
+
+COL_MIN = 220
+
+
+def _column_widths(spans, avail, floor=COL_MIN):
+    """Widths for the track columns, each in proportion to its tree's breadth (`spans`) but
+    never under `floor`, together filling `avail`."""
+    widths = [None] * len(spans)
+    free = list(range(len(spans)))
+    room = avail
+    while free:
+        total = sum(spans[i] for i in free)
+        narrow = [i for i in free if room * spans[i] / total < floor]
+        if not narrow:
+            for i in free:
+                widths[i] = int(room * spans[i] / total)
+            break
+        for i in narrow:
+            widths[i] = floor
+            room -= floor
+            free.remove(i)
+    return widths
 
 
 class LevelScreen(SheetModalMixin, Screen):
@@ -145,10 +169,9 @@ class LevelScreen(SheetModalMixin, Screen):
 
     def _node_state(self, track, t):
         u = self.unit
-        if t.id in u.talents[track]:
+        if u.holds_talent(track, t.id):
             return "taken"
-        blocked = t.requires and t.requires not in u.talents[track]
-        if not blocked and u.picks_available(track) > 0:
+        if u.offerable(track, t) and u.picks_available(track) > 0:
             return "open"
         return "locked"
 
@@ -189,11 +212,13 @@ class LevelScreen(SheetModalMixin, Screen):
 
         top = div + T.S * 4
         gap = T.S * 3
-        col_w = min(480, (W - 2 * pad - 2 * gap) // 3)
-
-        for i, track in enumerate(talents.TRACKS):
-            x = pad + i * (col_w + gap)
+        n = len(talents.TRACKS)
+        spans = [_tree_layout(t, u.race["name"])[1] for t in talents.TRACKS]
+        widths = _column_widths(spans, min(W - 2 * pad - (n - 1) * gap, 480 * n))
+        x = pad
+        for track, col_w in zip(talents.TRACKS, widths, strict=True):
             self._draw_track(screen, track, x, top, col_w, H - top - 68)
+            x += col_w + gap
 
         self._draw_tooltip(screen)
         self._draw_footer(screen, F, pad)
@@ -214,7 +239,8 @@ class LevelScreen(SheetModalMixin, Screen):
         caps(screen, F["bodyb"], f"LEVEL {level}", (ix + iw, cy - 2), T.TX, right=True)
         cy += 22
 
-        xp = {"combat": u.combat_xp, "work": u.work_xp, "racial": u.racial_xp}[track]
+        xp = {"combat": u.combat_xp, "work": u.work_xp, "racial": u.racial_xp,
+              "magic": u.magic_xp}[track]
         into, span = progression.to_next(_TRACK_XP[track], xp)
         bar = pygame.Rect(ix, cy, iw, 10)
         pygame.draw.rect(screen, T.TABLE, bar, border_radius=3)
@@ -238,6 +264,9 @@ class LevelScreen(SheetModalMixin, Screen):
                  "— choose a lit node", (ix, cy), T.BRASS)
         elif track == "racial" and u.racial_level < 5:
             text(screen, F["micro"], "first racial talent unlocks at racial level 5",
+                 (ix, cy), T.TX_FAINT)
+        elif track == "magic" and not u.magic_sources:
+            text(screen, F["micro"], "a school's branch opens with its initiation",
                  (ix, cy), T.TX_FAINT)
         cy += 18
 
@@ -335,7 +364,9 @@ class LevelScreen(SheetModalMixin, Screen):
             status, scol = "Taken", T.GREEN
         elif state == "open":
             status, scol = "Available — click to take", T.BRASS
-        elif t.requires and t.requires not in self.unit.talents[track]:
+        elif t.granted:
+            status, scol = f"Granted by initiation into {t.school.capitalize()}", T.TX_FAINT
+        elif t.requires and not self.unit.holds_talent(track, t.requires):
             req = talents.get(t.requires)
             status, scol = f"Requires {req.name if req else t.requires}", T.TX_FAINT
         else:

@@ -371,6 +371,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
             b.remove_wagon(wagon)
             a.add_wagon(wagon)
         a.herd += b.herd
+        a.captives += b.captives
         a.hitch_idle()
         a.members += b.members
         self.groups.remove(b)

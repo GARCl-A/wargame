@@ -19,7 +19,7 @@ is what a place wants, authored, not rolled.
 
 from dataclasses import dataclass
 
-from . import chest, data, factions, items, recorder, world
+from . import chest, data, factions, items, recorder, talents, world
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,8 @@ class MissionTemplate:
     reward_recipe: str | None = None   # a crafting recipe every member of the delivering group learns
     reveals: tuple[str, ...] = ()      # hidden nodes the turn-in shows on the map
     returns_goal: bool = False         # the goal item is handed back after the turn-in
+    exclusive: str | None = None       # a set only one template of which can ever be done
+    goal_captive: str | None = None    # the goal is a captive (its NPC slug), not an item
 
     def __post_init__(self):
         tags_val = self.tags
@@ -148,7 +150,7 @@ def _codex_delivery(school, node, name, blurb):
     return MissionTemplate(
         f"{school}_codex", school, node, name, blurb,
         goal_item=data.CODEX_ITEM, goal_qty=1, reward=0, deadline_days=None,
-        tags=("magic", school, "codex"), requires=LIBRARY_ANCIENT_CODEX.id,
+        tags=("magic", school, "codex"), requires=LIBRARY_ANCIENT_CODEX.id, exclusive="codex",
     )
 
 
@@ -165,7 +167,26 @@ CODEX_FAITH = _codex_delivery(
     "The cathedral asks for the Ancient Codex. There is only one: entrust it to us, "
     "and the other schools will never read it.")
 CODEX_DELIVERIES = (CODEX_BLOOD, CODEX_NATURE, CODEX_FAITH)
-CODEX_IDS = frozenset(t.id for t in CODEX_DELIVERIES)
+
+# The Snake Dragon (`serpent_nest.py`): one beast, wanted dead by one school and alive by another.
+SNAKE_SLUG = "snake_dragon"
+BLOOD_SNAKE = MissionTemplate(
+    "blood_snake", "blood", "blood_sanctuary", "The Dragon's Blood",
+    "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. "
+    "Bring us its body: the blood is read in the flesh, and the cult would read it.",
+    goal_item=items.SNAKE_DRAGON_CORPSE_ITEM, goal_qty=1, reward=0, deadline_days=None,
+    tags=("magic", "blood", SNAKE_SLUG), exclusive=SNAKE_SLUG, requires=LIBRARY_ANCIENT_CODEX.id,
+)
+NATURE_SNAKE = MissionTemplate(
+    "nature_snake", "nature", "nature_grove", "The Snake Saved",
+    "A snake with dragon blood in it nests near the Lumber Yard -- search the yard for its den. "
+    "Something has twisted it, a curse perhaps. Bring it to us alive, bound with rope or chain, "
+    "and the grove will tend it.",
+    goal_item="Snake Dragon", goal_qty=1, reward=0, deadline_days=None,
+    tags=("magic", "nature", SNAKE_SLUG), exclusive=SNAKE_SLUG, goal_captive=SNAKE_SLUG,
+    requires=LIBRARY_ANCIENT_CODEX.id,
+)
+SNAKE_HUNTS = (BLOOD_SNAKE, NATURE_SNAKE)
 
 LEDGER_TREEFOLK = MissionTemplate(
     "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
@@ -184,6 +205,7 @@ TEMPLATES = {
     LIBRARY_DICTIONARY.id: LIBRARY_DICTIONARY,
     LIBRARY_ANCIENT_CODEX.id: LIBRARY_ANCIENT_CODEX,
     **{t.id: t for t in CODEX_DELIVERIES},
+    **{t.id: t for t in SNAKE_HUNTS},
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
 
@@ -200,8 +222,7 @@ def offers_at(guild, node_id):
             continue
         if t.id == "ledger_treefolk" and "bankers_trust" not in guild.deeds_done:
             continue
-        if t.id in CODEX_IDS and any(m.state == "done" and m.template_id in CODEX_IDS
-                                     for m in guild.missions):
+        if closed(guild, t):
             continue
         if t.requires and not any(m.template_id == t.requires and m.state == "done"
                                   for m in guild.missions):
@@ -218,10 +239,18 @@ def board(guild, giver, node_id):
     out = {m.template_id for m in guild.missions if m.state == "active"}
     on_offer = {t.id for t in offers_at(guild, node_id)}
     shown = [t for t in mine if t.id in out] + [t for t in mine if t.id in on_offer and t.id not in out]
+    shown += [t for t in mine if closed(guild, t) and t not in shown]
     if shown:
         return shown
     taken = [t for t in mine if any(m.template_id == t.id for m in guild.missions)]
     return taken[-1:]
+
+
+def closed(guild, template):
+    """`template` can never be done: another of its exclusive set already was."""
+    return template.exclusive is not None and any(
+        m.state == "done" and m.template_id != template.id
+        and TEMPLATES[m.template_id].exclusive == template.exclusive for m in guild.missions)
 
 
 def _runs(guild, template):
@@ -287,6 +316,8 @@ def progress(guild, mission):
         if recruit is not None and recruit in group.members and recruit.racial_level >= 2:
             return 1
         return 0
+    if t.goal_captive:
+        return sum(1 for c in group.captives if c.npc_slug == t.goal_captive)
     item = t.goal_item
     if item == "Any Dictionary":
         from .library_screen import library_stock_dictionaries
@@ -315,6 +346,10 @@ def turn_in(guild, mission):
         if recruit is not None:
             return deliver_treefolk_recruit(guild, group, mission, recruit)
     left = t.goal_qty
+    if t.goal_captive:
+        for cap in [c for c in group.captives if c.npc_slug == t.goal_captive][:left]:
+            group.captives.remove(cap)
+            left -= 1
     for u in group.members:
         if left <= 0:
             break
@@ -338,6 +373,9 @@ def turn_in(guild, mission):
     for i, u in enumerate(group.members):
         u.money += base + (1 if i < rem else 0)
     mission.state = "done"
+    for other in guild.missions:
+        if other.state == "active" and closed(guild, template_of(other)):
+            other.state, other.failed_day = "failed", guild.clock.day
     if t.reward_recipe:
         for u in group.members:
             if t.reward_recipe not in u.recipes:
@@ -392,6 +430,16 @@ def pending_fortress_ambush(guild, group):
 def _active(guild, template):
     return next((m for m in guild.missions
                  if m.template_id == template.id and m.state == "active"), None)
+
+
+def pending_snake(guild):
+    """A Snake Dragon job is out: the nest can be searched for from the Lumber Yard."""
+    return next((m for t in SNAKE_HUNTS if (m := _active(guild, t)) is not None), None)
+
+
+def snake_wanted_alive(guild):
+    """The Nature Coven's job is out: the squad means to take the Snake Dragon alive."""
+    return _active(guild, NATURE_SNAKE) is not None
 
 
 def pending_biwolf(guild):
@@ -489,7 +537,8 @@ def make_treefolk_recruit():
     unit.combat_xp = 0
     unit.work_hours = 0
     unit._level_hp_rolls = []
-    unit.talents = {"combat": [], "work": [], "racial": []}
+    unit.magic_xp = 0
+    unit.talents = {t: [] for t in talents.TRACKS}
     unit.portrait_file = "treefolk_recruit.png"
     unit.portrait_id = "treefolk_recruit.png"
     unit._derive_combat()

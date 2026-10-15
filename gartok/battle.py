@@ -9,7 +9,7 @@ Battle owns its *combatants*: it wraps every character it is given in a
 roster and a rematch could reuse the same picks.
 """
 
-from . import data, intel, vision
+from . import captives, data, intel, vision
 from .board import COLS, ROWS, cells, cells_distance, chebyshev
 from .combatant import AP_PER_TURN, Combatant
 from .conditions import Entangled
@@ -31,6 +31,7 @@ class Battle:
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
         self.arena = arena                   # True = fought in the pits: the Champion of the Pit title bites here
         self.aggressor = aggressor           # "player" | "enemy": who brought the fight (ai.py: it searches, the other side groups); None = neither
+        self.wanted_alive = set()            # foes the player's side means to capture: its AI pulls its blows on them
         self.scenario = scenario or ArenaScenario()
         self.player_units = [Combatant(u, "player") for u in player_units]
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
@@ -81,6 +82,7 @@ class Battle:
         self.winner = None
         self.intel = intel.Intel(self)
         self._mopup_open = False              # enemies down, allies still bleeding out
+        self._capture_round = None            # enemies down: the round left to bind the fallen
         if self.is_ctf:
             self._assign_flag_runners()
             
@@ -225,6 +227,19 @@ class Battle:
         """Enemies are down; the fight runs on only so standing allies can
         stabilize the dying (and the dying finish their death saves)."""
         return self._mopup_open and self.winner is None
+
+    @property
+    def binding_captives(self):
+        """Enemies are down; the fight runs on for one round so the squad can bind the fallen."""
+        return self._capture_round is not None and self.winner is None
+
+    def _capturable(self):
+        """Fallen foes still to bind, while someone standing on the player's side holds a Rope or
+        Chains."""
+        if not any(u.alive and captives.capture_tool(u) for u in self.player_units):
+            return []
+        return [u for u in self.enemy_units
+                if u.status in ("dying", "stable", "broken") and not u.captured]
 
     def cells_of(self, unit, pos=None):
         return cells(pos or unit.pos, unit.footprint)
@@ -520,6 +535,13 @@ class Battle:
                 self.log("Enemies down -- stabilize the downed allies before "
                          "the fight ends.")
             return None
+
+        if self.lethal and players_up and self._capturable():
+            if self._capture_round is None:
+                self._capture_round = self.round_no
+                self.log("Enemies down -- one round to bind the fallen before the fight ends.")
+            if self.round_no <= self._capture_round + 1:
+                return None
 
         self.winner = "player"
         self._resolve_dangling_dying()

@@ -51,6 +51,8 @@ FUNCTIONS = {f.id: f for f in (
                  note="a hidden seat of one of the three magic schools"),
     NodeFunction("ancient_ruins", "ancient_ruins", "ENTER THE ANCIENT RUINS",
                  note="Delve into the sunken library chambers (Lethal tactical battle)"),
+    NodeFunction("serpents_nest", "serpents_nest", "ENTER THE NEST",
+                 note="five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal"),
 )}
 
 

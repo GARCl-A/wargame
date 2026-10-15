@@ -46,6 +46,11 @@ def language_for_dictionary(item_name):
     lang_name = name[len("Dictionary of "):]
     return Language(lang_name, lang_name) if lang_name in data.LANGUAGES else None
 
+def study_xp(spell):
+    """Magic XP for studying `spell` to the end."""
+    return spell.level + 1
+
+
 def study_difficulty(level):
     """The DC to learn something at this level. Daily rolls check against this
     average to accumulate points."""
@@ -158,7 +163,9 @@ def _progress_spell(unit, spell, group=None):
     if unit.study_progress >= points_to_learn(spell.level):
         unit.spells_known.append(spell.id)
         end_study(unit)
-        return f"{unit.name} masters the spell {spell.name}!"
+        unit.magic_xp += study_xp(spell)
+        unit.collect_levels()
+        return f"{unit.name} masters the spell {spell.name}! (+{study_xp(spell)} magic XP)"
     return None
 
 def _progress_language(unit, language, group=None):

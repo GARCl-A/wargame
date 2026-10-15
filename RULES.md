@@ -272,11 +272,12 @@ state on the `Unit` (`talents`, `_level_hp_rolls`); screen in
 |---|---|---|
 | Combat | `combat_xp` | downing enemies (below) |
 | Work | `work_xp` (marks, 1 per 16 h) | lumber-yard shifts, wilds hunts |
-| Racial | `combat level + work level` | every level in another track feeds it |
+| Racial | `combat level + work level + magic level` | every level in another track feeds it |
+| Magic | `magic_xp` | a last hit dealt with magic, a spell studied to the end |
 
 **Level per track** — cumulative thresholds in `progression.py`, a first guess,
 tunable. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author); past L2 is a stub.
-Each level in combat and work grants **one pick** in that track's tree. The **racial
+Each level in combat, work and magic grants **one pick** in that track's tree. The **racial
 track** earns no XP of its own — its "XP" is the sum of the other track levels
 (`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
 dice scale with every racial level (L1+), the **first racial talent pick unlocks
@@ -302,6 +303,16 @@ Bulwark) takes up to 6 kg off the carried weight of the armor worn (never more t
 weighs, `armor_weight_relief`), so heavy plate stops counting against encumbrance; **Fletcher** (work
 tier 3, behind Crafter) is the arrow-carver (see *Ammo*). The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
+
+**The magic track** (`magic_xp`, `progression.MAGIC_XP_THRESHOLDS`, combat's curve for now). Magic XP
+comes from a last hit dealt with magic (a spell or a magic talent's action: the combat rule's amount,
+banked as magic instead of combat) and from finishing the study of a spell (`spell level + 1`). Each
+school has one **root, granted and never picked**: a character holds it while that school is in its
+`magic_sources` (*Bloodline* for Blood, *Nature Initiated*, *Faith Initiated*), and only under a root it
+holds can it spend picks. Losing a school drops its branch. **Blood is bloodline**: the magic is born in
+you (a dragon, an angel, a demon in the line). Its first branch is **Bloodline → Dragon** (scales,
++1 AC) **→ Dragon Breath** (see the combat rules). The player reaches the track through initiation
+(next in the magic arc); today the Snake Dragon and the Blood-born Kobold hold it.
 
 **Hit die by racial level.** Each racial level grants a hit die: `1d(racial HD) +
 CON mod` (min 1), added to max HP. The rolls are saved (`_level_hp_rolls`) —
@@ -591,6 +602,42 @@ Constitution score reaches **0** (poison, sickness, a harsh race mod on a low ro
 they fall to the ground **dying** — checked when a battle starts and whenever poison
 takes another point (`Combatant.check_collapse`). Hunger and encumbrance penalties
 act on the modifiers and do not count.
+
+### Non-lethal blows 🟡
+
+A free switch per character, kept for the rest of the fight (`actions.NonLethal`, the
+*Non-lethal* button; not offered in a non-lethal fight). While it is on, every attack is
+**−1 to hit**, a foe it drops is **knocked out** (`stable`) instead of `dying`, and a blow on a
+dying body is pulled: the death clock does not move. The AI on the player's side turns it on
+against a foe it means to capture (`Battle.wanted_alive`) and off again; the enemy side never does.
+
+### Capture 🟡
+
+**Capture** (1 point, `actions.Capture`): an adjacent fallen foe (dying, knocked out or broken)
+and a **Rope or Chains**, which is used up (the Market sells Rope, the Smithy Chains; the
+Mercenary and the Jailer start with one). The captive is out of the fight for good: no coup de
+grace, no death save. When the last foe falls and someone standing still holds a Rope or Chains,
+the fight runs on **one more round** so the squad can walk over and bind the fallen (*BIND THE
+FALLEN*), then ends.
+
+After a won fight every captive joins the group (`captives.py`): **not a member** (it never
+fights, works or eats), it walks with the group (its speed counts in the pace), takes **1 of the
+herd limit** (`Group.herd_capacity`) and **dies 7 days** after its capture. A herd over the limit
+loses its latest captive first when it has no animal to lose. The group screen's QUESTS tab lists
+the captives with their days left and a RELEASE button. A captive with a body worth keeping (the
+Snake Dragon) leaves it in the leader's pack when it dies; a foe left fallen and unbound after a won
+lethal fight is finished off and drops that body in the loot. Bodies rot (the Snake Dragon Corpse in
+3 days) and are simply gone. The AI on the player's side binds a foe it wants alive, walking up to
+it first.
+
+### Dragon Breath 🟡
+
+The *Dragon Breath* magic talent's action (`actions.DragonBreath`, 2 points): a cone 3 squares
+deep, 1, 3 and 5 wide, toward one of the 8 directions (click a cell beside the breather; hovering
+shows the cone). Walls stop it. **One attack roll** (`d20 + CON mod`) against the AC of every
+standing unit in it, **allies included**; each hit takes **2d6** (a natural 20 doubles the dice, a
+natural 1 sputters out). A kill is magic XP. The AI breathes only on a cone with at least 3 foes
+and fewer allies than foes.
 
 ### Ammo and improvised weapon 🟡
 
@@ -1608,8 +1655,22 @@ read `known`, so a revealed node simply appears with its edges.
 the Library pays as before, hands the Codex back and reveals all three (`MissionTemplate.reveals`,
 `returns_goal`). Each sanctuary then offers one job, delivering the Codex (`missions.CODEX_DELIVERIES`, no
 pay, no deadline), worth 1 reputation with that school's faction (The Blood Cult, The Nature Coven, The
-Faith Order). There is one Codex, so the first delivery closes the other two (offers and deeds). Nothing
-else is on offer there yet; initiation comes next.
+Faith Order). There is one Codex, so the first delivery closes the other two (offers and deeds): a
+closed one shows as **FAILED** on the sanctuary's board and on the faction's deeds
+(`MissionTemplate.exclusive`, `factions.Deed.exclusive`, `factions.failed`), so the player sees what
+they could have done.
+
+**The Snake Dragon** (`serpent_nest.py`). Once the sanctuaries are revealed, two schools want the same
+beast: an ordinary snake with dragon blood in it. The **Blood Cult** wants its **body** (to read the
+bloodline); the **Nature Coven** wants it **alive** (to learn whether a curse twisted it, and tend
+it). One beast, so one delivery closes the other (failed, like the Codex), +1 reputation either way.
+With either job out, a group at the Lumber Yard can **search for the nest** (2 h, Wisdom DC 10). The
+**Serpent's Nest** is a dark dungeon of five chambers: packs of snakes (a Giant Spider at most) scaled
+to the squad sleep in the first four until a foe comes within 5 squares; the fifth is the lair, a pool
+of shallow and deep water, and the **Snake Dragon** (`npcs/snake_dragon.json`): a level-8 Snake,
+Serpent Growth (Medium), Dragon and Dragon Breath. The fight is won the moment it is dead or bound.
+Taken alive, it is delivered from the group's captives (`MissionTemplate.goal_captive`); dead, its body
+(the *Snake Dragon Corpse*, 3 days before it rots). Once delivered, the lair stays empty.
 
 ### Dungeons and the Ancient Ruins 🟡
 

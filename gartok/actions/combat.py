@@ -1,10 +1,11 @@
-"""Attack-shaped actions: Attack, Reload, Defend, Throw, Demoralize, Flee, Push."""
+"""Attack-shaped actions: Attack, Reload, Defend, Throw, Demoralize, Flee, Push, Dragon Breath,
+the Non-lethal toggle."""
 
 
 from .. import intel
-from ..board import cells, cells_in_radius
+from ..board import cells, cells_in_radius, cone_cells
 from ..conditions import Defending, Demoralized
-from ..data import DEMORALIZE_RANGE, d20, resolve_bonus
+from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
 from ..ground import GroundObject
 from .base import (
     Action,
@@ -18,6 +19,7 @@ from .base import (
     _shared_language,
     _shovable_target,
     _sign,
+    nonlethal_penalty,
 )
 
 PUSH_DC_BASE = 10          # Shove: Strength vs 10 + the target's Constitution modifier
@@ -52,12 +54,13 @@ def _strike(battle, actor, target, *, weapon=None, prefix=None):
     elif result == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
         actor.use_luck(getattr(battle, "clock_day", 1))
         nat2 = d20()
-        total2 = nat2 + bonus
+        total2 = nat2 + bonus - nonlethal_penalty(actor)
         hits = nat2 == 20 or total2 >= target.ac_vs(actor)
         battle.log(f"  Halfling Luck! {actor.name} rerolls attack: d20({nat2}) = {total2} -> "
                    + ("hit." if hits else "misses again."))
         if hits:
-            target.take_damage(actor.damage_roll(crit=nat2 == 20, weapon=weapon), battle.log)
+            target.take_damage(actor.damage_roll(crit=nat2 == 20, weapon=weapon), battle.log,
+                               knockout=actor.nonlethal_blows)
             result = "hit"
     return result
 
@@ -273,12 +276,13 @@ class Throw(Action):
         if res == "miss" and actor.can_use_luck(getattr(battle, "clock_day", 1)):
             actor.use_luck(getattr(battle, "clock_day", 1))
             nat2 = d20()
-            total2 = nat2 + bonus
+            total2 = nat2 + bonus - nonlethal_penalty(actor)
             hits = nat2 == 20 or total2 >= target.ac_vs(actor)
             battle.log(f"  Halfling Luck! {actor.name} rerolls throw: d20({nat2}) = {total2} -> "
                        + ("hit." if hits else "misses again."))
             if hits:
-                target.take_damage(actor.damage_roll(crit=nat2 == 20, thrown=True), battle.log)
+                target.take_damage(actor.damage_roll(crit=nat2 == 20, thrown=True), battle.log,
+                                   knockout=actor.nonlethal_blows)
 
         actor.disarm()
         landing = _drop_cell(battle, target)
@@ -500,3 +504,123 @@ class Push(Action):
                 actor.credit_kill(target)
             elif target.hp <= 0 and target.ferocity_downer is None:
                 target.ferocity_downer = actor
+
+
+# --------------------------------------------------------------------------- #
+# Dragon Breath                                                                #
+# --------------------------------------------------------------------------- #
+
+class DragonBreath(Action):
+    """A cone of breath from the Dragon Breath magic talent: one Constitution attack roll
+    against every standing unit in it, allies included. Aimed by clicking a cell beside the
+    breather, which sets the direction."""
+    id, name, cost, target, aimed = "dragon_breath", "Dragon Breath", 2, "cell", True
+    desc = "2 points: a cone 3 squares deep; one attack roll against everyone in it, allies too."
+    DEPTH = 3
+    DICE = (2, 6)
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.char.talent_bonus("dragon_breath"):
+            return False, "Needs the Dragon Breath talent."
+        return True, ""
+
+    @staticmethod
+    def direction(battle, actor, cell):
+        """Which of the 8 directions `cell` lies in from the breather's body, or (0, 0)."""
+        body = battle.cells_of(actor)
+        xs, ys = [x for x, _ in body], [y for _, y in body]
+        x, y = cell
+        return ((x > max(xs)) - (x < min(xs)), (y > max(ys)) - (y < min(ys)))
+
+    def can(self, battle, actor, target=None):
+        return (self.available(battle, actor) and target is not None
+                and battle.board.in_bounds(target)
+                and self.direction(battle, actor, target) != (0, 0))
+
+    def highlight_cells(self, battle, actor):
+        body = set(battle.cells_of(actor))
+        ring = {n for c in body for n in battle.board.neighbors(c)} - body
+        return sorted(c for c in ring if self.can(battle, actor, c))
+
+    def highlight_targets(self, battle, actor):
+        return []
+
+    def area_cells(self, battle, actor, cell):
+        """The cone toward `cell`: open ground the breath reaches past no wall."""
+        sx, sy = self.direction(battle, actor, cell)
+        if (sx, sy) == (0, 0):
+            return []
+        body = battle.cells_of(actor)
+        area = set()
+        for origin in body:
+            area.update(c for c in cone_cells(origin, (sx, sy), self.DEPTH)
+                        if battle.board.in_bounds(c) and c not in battle.board.walls
+                        and battle.board.los_clear(origin, c))
+        return sorted(area - set(body))
+
+    def caught(self, battle, actor, cell):
+        """The standing units the cone toward `cell` reaches."""
+        area = set(self.area_cells(battle, actor, cell))
+        return [u for u in battle.units
+                if u is not actor and u.alive and area.intersection(battle.cells_of(u))]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        victims = self.caught(battle, actor, target)
+        nat = d20()
+        pulled = nonlethal_penalty(actor)
+        total = nat + actor.mod_constitution - pulled
+        battle.log(f"{actor.name} breathes fire! d20({nat}) {actor.mod_constitution:+}(CON)"
+                   + (f" -{pulled}(non-lethal)" if pulled else "") + f" = {total}")
+        if nat == 1:
+            battle.log("  -> the breath sputters out.")
+            return
+        for u in victims:
+            ac = u.ac_vs(actor)
+            shown = intel.shown(battle, u, "ac", ac)
+            if nat != 20 and total < ac:
+                battle.log(f"  {u.name} (AC {shown}) -> misses.")
+                battle.fx(u.pos, f"{total} vs AC {shown}", "faint")
+                continue
+            battle.fx(u.pos, f"{total} vs AC {shown}", "crit" if nat == 20 else "ok")
+            dice = self.DICE[0] * (2 if nat == 20 else 1)
+            battle.log(f"  {u.name} (AC {shown}) -> " + ("CRITICAL HIT!" if nat == 20 else "hit."))
+            was_up = u.alive
+            u.take_damage(roll(dice, self.DICE[1]), battle.log, knockout=bool(pulled))
+            if was_up and u.team != actor.team:
+                if not u.alive:
+                    actor.credit_kill(u, magic=True)
+                elif u.hp <= 0 and u.ferocity_downer is None:
+                    u.ferocity_downer = actor
+
+
+# --------------------------------------------------------------------------- #
+# Non-lethal toggle                                                            #
+# --------------------------------------------------------------------------- #
+
+class NonLethal(Action):
+    """Pull your blows, or stop pulling them: a free switch, kept for the rest of the
+    fight. Pulled blows are -1 to hit; a foe they drop is knocked out (`stable`) instead of
+    dying, and a blow on a dying body spares it."""
+    id, name, cost, target, aimed = "nonlethal", "Non-lethal", 0, "none", False
+    desc = "Free: pull your blows (-1 to hit); a foe you drop is knocked out, not dying."
+    toggle = True
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not battle.lethal:
+            return False, "the fight is non-lethal already."
+        return True, ""
+
+    def label(self, battle, actor):
+        return "Non-lethal: ON" if actor.nonlethal_blows else "Non-lethal: OFF"
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.nonlethal_blows = not actor.nonlethal_blows
+        battle.log(f"{actor.name} " + ("pulls their blows (non-lethal)." if actor.nonlethal_blows
+                                       else "fights to kill again."))

@@ -49,10 +49,14 @@ class LevelingMixin:
         return progression.work_level(self.work_xp)
 
     @property
+    def magic_level(self):
+        return progression.magic_level(self.magic_xp)
+
+    @property
     def racial_xp(self):
         """The racial track's "XP": the sum of the other track levels. Every
         level anywhere feeds it (see `progression.RACIAL_XP_THRESHOLDS`)."""
-        return self.combat_level + self.work_level
+        return self.combat_level + self.work_level + self.magic_level
 
     @property
     def racial_level(self):
@@ -65,7 +69,7 @@ class LevelingMixin:
     @property
     def track_level(self):
         return {"combat": self.combat_level, "work": self.work_level,
-                "racial": self.racial_level}
+                "racial": self.racial_level, "magic": self.magic_level}
 
     @property
     def mean_level(self):
@@ -81,13 +85,22 @@ class LevelingMixin:
             return earned - len(self.talents["racial"])
         return self.track_level[track] - len(self.talents[track])
 
+    def holds_talent(self, track, talent_id):
+        """`talent_id` is picked in `track`, or is a magic root granted by a school held."""
+        if talent_id in self.talents[track]:
+            return True
+        t = talents.get(talent_id)
+        return bool(t and t.granted and t.school in self.magic_sources)
+
+    def offerable(self, track, t):
+        return (not t.granted and t.id not in self.talents[track]
+                and (not t.requires or self.holds_talent(track, t.requires)))
+
     def _has_offerable(self, track):
         """The `track` has at least one node this character could still take."""
         tree = (talents.racial_tree(self.race["name"]) if track == "racial"
                 else talents.TREE[track])
-        return any(t.id not in self.talents[track]
-                   and (not t.requires or t.requires in self.talents[track])
-                   for t in tree)
+        return any(self.offerable(track, t) for t in tree)
 
     @property
     def pending_picks(self):
@@ -116,10 +129,9 @@ class LevelingMixin:
     def choose_talent(self, track, talent_id):
         """Spend a pick in `track` on `talent_id`. Returns True if it took."""
         t = talents.get(talent_id)
-        if (t is None or t.track != track or talent_id in self.talents[track]
-                or self.picks_available(track) <= 0
+        if (t is None or t.track != track or self.picks_available(track) <= 0
                 or (t.race and t.race != self.race["name"])
-                or (t.requires and t.requires not in self.talents[track])):
+                or not self.offerable(track, t)):
             return False
         self.talents[track].append(talent_id)
         recorder.emit("talent", unit=self.name, track=track, talent=talent_id)
@@ -179,7 +191,8 @@ class LevelingMixin:
         return talents.bonus(picked, channel, stat)
 
     def has_talent(self, talent_id):
-        return any(talent_id in lst for lst in self.talents.values())
+        t = talents.get(talent_id)
+        return t is not None and self.holds_talent(t.track, talent_id)
 
     def can_use_luck(self, day=1):
         d = 1 if day is None else day

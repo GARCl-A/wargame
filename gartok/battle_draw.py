@@ -179,6 +179,9 @@ class BattleDrawMixin:
                 if 0 <= pos[0] < b.board.cols and 0 <= pos[1] < b.board.rows
             ]
             board_render.tint_cells(screen, self.view, highlight_cells, color, 46)
+            hover = self._tile_at_px(self.mouse)
+            if hasattr(self.aim_action, "area_cells") and hover and self.aim_action.can(b, actor, hover):
+                board_render.tint_cells(screen, self.view, self.aim_action.area_cells(b, actor, hover), color, 110)
             target_rects = [
                 self._unit_rect(u) for u in self.aim_action.highlight_targets(b, actor)
                 if u.team == actor.team or self._enemy_visible(u)
@@ -233,8 +236,10 @@ class BattleDrawMixin:
         pr = self._L["panel"]
         F = self.F
 
-        title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up else f"Round {b.round_no}")
-        state = "victory" if b.winner else "mopping" if b.mopping_up else None
+        title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up
+                 else "BIND THE FALLEN" if b.binding_captives else f"Round {b.round_no}")
+        state = ("victory" if b.winner else "mopping" if (b.mopping_up or b.binding_captives)
+                 else None)
         vision_active = self._is_player_turn() and not self.view_squad
         head_r = pygame.Rect(pr.x, pr.y, pr.w, battle_panel.TITLE_H)
         battle_panel.draw_title(screen, F, head_r, title, state, vision_active)
@@ -398,7 +403,8 @@ class BattleDrawMixin:
                 hotkey_num = hotkey_i
                 self._hotkey_actions.append(action)
 
-            label = action.name if not armed else f"{action.name}: click the target"
+            name = action.label(b, act) if getattr(action, "toggle", False) else action.name
+            label = name if not armed else f"{name}: click the target"
             if not applies:
                 label += f" ({reason})"
             if hotkey_num is not None:

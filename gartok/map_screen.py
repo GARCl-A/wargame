@@ -73,6 +73,7 @@ from . import (
     ox,
     recruit,
     rest,
+    serpent_nest,
     vocations,
     world,
 )
@@ -113,6 +114,7 @@ NODE_ICON = {
     "ledger_hold": ("map", "fort"), "wilds_territory": ("map", "claim"), "library": ("gui", "open-book"),
     "farm": ("map", "wheat"), "ancient_ruins": ("map", "ruins"), "country_roads": ("action", "journey"),
     "ox_fields": ("map", "ox"), "blood_sanctuary": ("map", "blood"),
+    "serpents_nest": ("head", "snake-bite"),
     "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
 }
 
@@ -612,6 +614,11 @@ class MapScreen(Screen):
             self._refresh_nodes()
             self.notices.append(msg)
             self._maybe_auto_advance()
+        elif key == "search_nest":
+            _found, msg = serpent_nest.search(self.guild, self.selected)
+            self._refresh_nodes()
+            self.notices.append(msg)
+            self._maybe_auto_advance()
         elif key in orders.INTERACTIVE_KINDS:
             self._issue(orders.interactive(key))
 
@@ -778,6 +785,13 @@ class MapScreen(Screen):
                           "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Scout the surroundings for hidden paths or landmarks (WIS check)",
                           "color": T.TX_FAINT})
+
+        if (here.id == "lumber_yard" and missions.pending_snake(self.guild) is not None
+                and not self.guild.is_node_revealed(serpent_nest.NODE)):
+            blocks.append({"type": "button", "key": "search_nest",
+                           "label": f"SEARCH FOR THE NEST ({serpent_nest.SEARCH_HOURS} h)", "gap_before": T.S * 2})
+            blocks.append({"type": "text", "text": "Follow the shed skins to the Snake Dragon's den (WIS check)",
+                           "color": T.TX_FAINT})
 
         if here.id == "country_roads" and not self.guild.is_node_revealed("ox_fields"):
             blocks.append({"type": "button", "key": "scout_fields",

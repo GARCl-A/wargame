@@ -48,6 +48,7 @@ ICONS = {
     "Fruit Compote": ("flask", "glass", {"accent": TONES["red"]}),
     "Venom Gland": ("drop", "green", {}),
     "Snake Venom Gland": ("drop", "green", {}),
+    "Snake Dragon Corpse": ("hide", "green", {}),
     "Vial": ("flask", "glass", {"empty": True}),
     "1sqm Hide": ("hide", "leather", {}),
     "Red Mushroom": ("mushroom", "mushroom", {}),

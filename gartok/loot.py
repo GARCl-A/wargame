@@ -15,12 +15,13 @@ carries gear -- it drops its own trophy material instead, straight off the race 
 (`drop_item`/`drop_chance`, e.g. the Wolf's `data.BEASTS` row): a new species'
 material is a data change in `data.py`, not a new branch here. An authored NPC
 (`npc_lib`) can instead carry guaranteed unique drops, keyed by its slug in
-`UNIQUE_DROPS` (the Biwolf's leather, the Aurochs' hide and horn).
+`UNIQUE_DROPS` (the Biwolf's leather, the Aurochs' hide and horn), and a body worth keeping
+(`captives.CORPSES`) from a foe left fallen and unbound -- a won lethal fight finishes it.
 """
 
 import random
 
-from . import items
+from . import captives, items
 
 UNIQUE_DROPS = {"biwolf": (items.BIWOLF_LEATHER_ITEM,),
                "aurochs": (items.THUNDERHIDE_ITEM, items.LEGENDARY_HORN_ITEM)}
@@ -96,8 +97,11 @@ def field_loot(battle, fallen_combatants, rng=random):
                 pool.append(char.equipped_artifact)
             if getattr(char, "equipped_tongue", None):
                 pool.append(char.equipped_tongue)
-        if char is not None:
-            pool += UNIQUE_DROPS.get(getattr(char, "npc_slug", None), ())
+        if char is not None and not getattr(u, "captured", False):
+            slug = getattr(char, "npc_slug", None)
+            pool += UNIQUE_DROPS.get(slug, ())
+            if slug in captives.CORPSES and u in battle.enemy_units and not u.alive:
+                pool.append(captives.CORPSES[slug])
             drop = char.race.get("drop_item")
             if drop and rng.random() < char.race.get("drop_chance", 0.0):
                 pool.append(drop)

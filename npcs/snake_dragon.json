@@ -1,0 +1,90 @@
+{
+  "uid": "361a7b3241c4454aa4376db2b39c0997",
+  "recruited_by": null,
+  "name": "The Snake Dragon",
+  "auto_name": true,
+  "portrait_id": 907705138,
+  "portrait_file": "snake_dragon/0.png",
+  "race": "Snake",
+  "occupation": "Wild Beast",
+  "alignment": "Chaotic and Evil",
+  "crime": 0,
+  "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 46,
+  "share_food": true,
+  "combat_xp": 136,
+  "magic_xp": 10,
+  "work_hours": 0,
+  "bio": "An ordinary snake, but for the dragon blood in it: the scales, the breath, the eyes.",
+  "arena_title": false,
+  "recipes": [],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_sources": [
+    "blood"
+  ],
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
+  "talents": {
+    "combat": [
+      "agile",
+      "deadeye",
+      "tough",
+      "hardy",
+      "bulwark",
+      "recovery",
+      "alert",
+      "quick_wits"
+    ],
+    "work": [],
+    "racial": [
+      "serpent_growth"
+    ],
+    "magic": [
+      "dragon",
+      "dragon_breath"
+    ]
+  },
+  "level_hp_rolls": [
+    4,
+    2,
+    4,
+    2,
+    2
+  ],
+  "base_attributes": {
+    "strength": 8,
+    "dexterity": 9,
+    "constitution": 16,
+    "intelligence": 16,
+    "wisdom": 12,
+    "charisma": 17
+  },
+  "age_base": 98,
+  "age": 20,
+  "hp_roll": 2,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "languages": [],
+  "equipped_weapon": null,
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_artifact": null,
+  "equipped_armor": null,
+  "inventory": [],
+  "locked_items": {},
+  "dormant": true,
+  "afoot": false,
+  "awareness_radius": 6,
+  "npc_slug": "snake_dragon"
+}

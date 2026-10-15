@@ -7,7 +7,7 @@ from ..board import grid_distance
 from ..conditions import Sleeping
 from ..data import d20
 from ..ground import GroundObject
-from .base import Action, _cell_free, _hostile_target
+from .base import Action, _cell_free, _hostile_target, nonlethal_penalty
 
 
 class SpellAction(Action):
@@ -48,15 +48,16 @@ class MagicMissileAction(SpellAction):
         if atk == 1:
             battle.log(" Critical miss!")
             return
-        hit_score = atk + actor.mod_intelligence
+        pulled = nonlethal_penalty(actor)
+        hit_score = atk + actor.mod_intelligence - pulled
         ac = target.ac_vs(actor)
         if atk == 20 or hit_score >= ac:
             dmg = data.roll(1, 4)
             battle.log(f" Hit ({hit_score} vs AC {intel.shown(battle, target, 'ac', ac)}) for {dmg} magic damage.")
             was_up = target.alive
-            target.take_damage(dmg, battle.log)
+            target.take_damage(dmg, battle.log, knockout=bool(pulled))
             if was_up and not target.alive and target.team != actor.team:
-                actor.credit_kill(target)
+                actor.credit_kill(target, magic=True)
         else:
             battle.log(f" Miss ({hit_score} vs AC {intel.shown(battle, target, 'ac', ac)}).")
 

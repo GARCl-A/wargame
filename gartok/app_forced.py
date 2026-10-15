@@ -95,7 +95,7 @@ class ForcedFightsMixin:
         for c, u in zip(battle.player_units, group.members):
             c.status = "up"
             c.hp = u.hp
-            c.combat_xp_earned = 0
+            c.combat_xp_earned = c.magic_xp_earned = 0
         battle.winner = "player"
         battle.round_no = max(1, round(autowin_result.avg_rounds))
 

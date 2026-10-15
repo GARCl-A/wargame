@@ -232,6 +232,8 @@ class MissionOfferScreen(Screen):
                 wait = missions.retry_in(self.guild, t)
                 if wait:
                     label = f"FAILED -- TRY AGAIN IN {wait} DAY(S)"
+                elif missions.closed(self.guild, t):
+                    label = "FAILED -- IT WENT TO ANOTHER SCHOOL"
                 elif self._completed_of(t):
                     label = ("JOB COMPLETED" if any(x.template_id == t.id and x.state == "done"
                                                     for x in self.guild.missions)

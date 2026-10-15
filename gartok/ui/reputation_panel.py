@@ -1,7 +1,8 @@
 """The reputations view: one card per faction -- standing, its deeds, what its
 standing unlocks -- laid out in as many columns as the width allows.
 
-`factions` items: `{"name", "blurb", "rep", "deeds": [(name, blurb, rep, done)],
+`factions` items: `{"name", "blurb", "rep", "deeds": [(name, blurb, rep, state)],
+where `state` is "done", "failed" (an exclusive deed another took) or "open",
 "unlocks": [(title, description, unlocked, rep_required)]}`.
 """
 
@@ -51,13 +52,15 @@ def _draw_card(surf, F, rect, f, mpos):
     if not f["deeds"]:
         text(surf, F["body_sm"], "None yet -- this faction's standing does not move.", (x, y), T.TX_FAINT)
         y += DEED_H
-    for name, blurb, rep, done in f["deeds"]:
-        smooth_circle(surf, T.GREEN if done else T.TX_FAINT, (x + 5, y + 9), 5, 0 if done else 1)
-        text(surf, F["bodyb"], name, (x + T.S * 2, y), T.GREEN if done else T.TX)
+    for name, blurb, rep, state in f["deeds"]:
+        done, failed = state == "done", state == "failed"
+        col = T.GREEN if done else T.BLOOD if failed else T.TX_FAINT
+        smooth_circle(surf, col, (x + 5, y + 9), 5, 0 if done else 1)
+        text(surf, F["bodyb"], name, (x + T.S * 2, y), T.GREEN if done else T.TX_FAINT if failed else T.TX)
         text(surf, F["body_sm"], ellipsize(blurb, F["body_sm"], w - T.S * 2 - T.S * 10),
-             (x + T.S * 2, y + 18), T.TX_MUTED)
-        caps(surf, F["microb"], "DONE" if done else f"+{rep} REP", (x + w, y + 2),
-             T.GREEN if done else T.BRASS, right=True)
+             (x + T.S * 2, y + 18), T.TX_FAINT if failed else T.TX_MUTED)
+        caps(surf, F["microb"], "DONE" if done else "FAILED" if failed else f"+{rep} REP", (x + w, y + 2),
+             T.GREEN if done else T.BLOOD if failed else T.BRASS, right=True)
         y += DEED_H
 
     if f["unlocks"]:

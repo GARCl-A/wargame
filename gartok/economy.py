@@ -172,6 +172,7 @@ SHELVES = {
         "Iron Bar": (12, 3), "Club": (8, 2), "Dagger": (8, 2), "Hatchet": (8, 2), "Shortspear": (6, 2),
         "Axe": (6, 1), "Pick": (6, 1), "Hammer": (6, 1), "Broadsword": (3, 0.5), "Rapier": (2, 0.3),
         "Chainmail": (2, 0.3), "Brigandine": (1, 0.15), "Plate Armor": (1, 0.1),
+        "Chains": (3, 0.5),
     },
     "tanner": {
         "Cloak": (15, 4), "1sqm Hide": (0, 0), "Leather Jerkin": (3, 0.5), "Studded Leather": (3, 0.3),
@@ -183,7 +184,7 @@ SHELVES = {
     "market": {
         "Torch": (30, 10), "Lantern": (5, 1), "Musical Instrument": (5, 1),
         "Bear Trap": (4, 0.5), "Alarm Trap": (4, 0.5), "Lumber": (20, 6),
-        "Flint and Steel": (5, 1),
+        "Flint and Steel": (5, 1), "Rope": (8, 2),
     },
     "lumber_yard": {"Lumber": (20, 6), "Fruit": (10, 3)},
     "mine": {"Stone Brick": (10, 3), "Iron Ore": (10, 2), "1kg Coal": (15, 4)},

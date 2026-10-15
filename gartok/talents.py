@@ -38,6 +38,7 @@ exactly one consumer that reads it back:
     craft_bonus       Unit.progress_crafting           --
     language_study    magic._progress_language         --
     fletcher          campaign._fletcher_rest_pass     --
+    dragon_breath     actions.DragonBreath             --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -58,14 +59,18 @@ with `race` set only shows / can be picked for that race. Grippli is the first
 race with authored nodes (`tongue`, `webbed_feet`); other races have racial levels and picks
 but no nodes yet, same way the combat / work trees started.
 
+**The magic track** (`magic`) earns magic XP (`progression.py`). Each school has one root,
+granted rather than picked (`granted=True`): a character holds it while that school is in its
+`magic_sources`, and only then can it pick the branch under it (`school` names the school).
+
 `name` / `effect` are player-facing (English, the current text standard); `id`
 and field names are English identifiers.
 """
 
 from dataclasses import dataclass
 
-TRACKS = ("combat", "work", "racial")
-XP_TRACKS = ("combat", "work")        # the tracks that earn their own XP / level directly
+TRACKS = ("combat", "work", "racial", "magic")
+XP_TRACKS = ("combat", "work", "magic")   # the tracks that earn their own XP / level directly
 
 # Work-track tuning knobs, kept here so the trees are the one place to tune.
 COIN_BONUS = 0.20         # "Piecework": fraction added to coin from paid work
@@ -86,7 +91,7 @@ class Effect:
 @dataclass(frozen=True)
 class Talent:
     id: str
-    track: str                       # "combat" | "work" | "racial"
+    track: str                       # "combat" | "work" | "racial" | "magic"
     tier: int                        # 1 = a root; deeper nodes sit at higher tiers
     name: str
     effect: str                      # player-facing one-liner
@@ -94,6 +99,8 @@ class Talent:
     race: str | None = None          # racial track: only offered to this race (None = any)
     icon: str = ""                   # "<category>/<name>" under assets/icons/ (level screen)
     effects: tuple = ()              # Effect(...) contributions -- see the module docstring
+    school: str | None = None        # magic track: the school this node belongs to
+    granted: bool = False            # magic root: held while the school is held, never picked
 
     @property
     def desc(self):
@@ -318,6 +325,28 @@ _LIST = [
     Talent("dire_growth", "racial", 1, "Dire Growth",
            "you grow past your kin: your size goes up one step (a Wolf becomes Large).", race="Wolf",
            effects=(Effect("size_up", 1),), icon="body/cavalry"),
+
+    # ================================================================== #
+    # magic -- one granted root per school, its branch below             #
+    # ================================================================== #
+    Talent("bloodline", "magic", 1, "Bloodline",
+           "initiated into Blood: the magic was born with you, in your veins.",
+           school="blood", granted=True, icon="map/blood"),
+    Talent("dragon", "magic", 2, "Dragon",
+           "dragon blood runs in you: your hide hardens into scales (+1 AC).",
+           requires="bloodline", school="blood",
+           effects=(Effect("ac", 1),), icon="head/horned-reptile"),
+    Talent("dragon_breath", "magic", 3, "Dragon Breath",
+           "2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll "
+           "against everyone in it, allies too, 2d6 damage on each hit.",
+           requires="dragon", school="blood",
+           effects=(Effect("dragon_breath", 1),), icon="body/fire-dash"),
+    Talent("nature_initiated", "magic", 1, "Nature Initiated",
+           "initiated into Nature: the green answers you.",
+           school="nature", granted=True, icon="map/leaf"),
+    Talent("faith_initiated", "magic", 1, "Faith Initiated",
+           "initiated into Faith: a higher call answers you.",
+           school="faith", granted=True, icon="head/spiked-halo"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}
