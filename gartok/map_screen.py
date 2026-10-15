@@ -116,6 +116,7 @@ NODE_ICON = {
     "ox_fields": ("map", "ox"), "blood_sanctuary": ("map", "blood"),
     "serpents_nest": ("head", "snake-bite"),
     "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
+    "frontier_outpost": ("body", "spiked-wall"), "battlefield": ("action", "trench-assault"),
 }
 
 
@@ -760,12 +761,18 @@ class MapScreen(Screen):
                                       "-- no more work XP here, look for tougher work"})
 
         trail_cold = here.has("ox_hunt") and missions.pending_ox(self.guild) is None
+        front_quiet = here.has("skirmish") and missions.pending_battlefield(self.guild, g) is None
         offered = [f for f in node_functions.offered(here)
                    if f.label and (f.id != "property" or self._has_property_business())
-                   and (f.id != "ox_hunt" or not trail_cold)]
+                   and (f.id != "ox_hunt" or not trail_cold)
+                   and (f.id != "skirmish" or not front_quiet)]
         if trail_cold:
             blocks.append({"type": "text", "color": T.TX_FAINT,
                            "text": "The trail is cold. Only the tanner's job brings you back here."})
+        elif front_quiet:
+            blocks.append({"type": "text", "color": T.TX_FAINT,
+                           "text": "The line holds without you. Only the Faith Order's errand "
+                                   "puts you in the trench."})
         elif not (here.is_battle or here.has("work") or offered):
             blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
                           "color": T.TX_FAINT})

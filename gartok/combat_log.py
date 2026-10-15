@@ -91,7 +91,7 @@ class CombatLog:
         self.busy = True
         try:
             idx = battle.units.index(actor)
-            by = self.controllers.get(actor.team, "ai")
+            by = "ai" if actor.ai_ally else self.controllers.get(actor.team, "ai")
             before = {"round": battle.round_no, "ap": actor.ap, "options": legal_options(battle, actor)}
             guess = ai_choice(battle, actor) if by == "human" else None
             result = run()
@@ -178,7 +178,7 @@ def unit_static(idx, c):
         char = {"name": c.name, "race": c.race["name"]}
     return {"i": idx, "name": c.name, "team": c.team, "char": char, "hp_max": c.hp_max,
             "ac": c.ac, "speed": c.speed, "footprint": c.footprint,
-            "weapon": c.weapon_name, "spells": list(c.spells_known)}
+            "weapon": c.weapon_name, "spells": list(c.spells_known), "ai_ally": c.ai_ally}
 
 
 def legal_options(battle, actor):

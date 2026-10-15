@@ -24,9 +24,10 @@ AP_PER_TURN = 2
 
 
 class Combatant:
-    def __init__(self, char, team=None):
+    def __init__(self, char, team=None, ai_ally=False):
         self.char = char
         self.team = team or getattr(char, "team", "player")
+        self.ai_ally = ai_ally        # on the player's side, but played by ai.py (not the guild's)
         self.reset_battle_state()
 
     def __getattr__(self, name):

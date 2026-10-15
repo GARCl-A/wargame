@@ -28,9 +28,9 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc, to the end** (*Ready to do -> Medium*): the rest of the faction missions (the Faith
-   Order's first is next), the keepers and the initiation, Holy Symbol on a bandit loot table, tier 1
-   spells per school. The Snake Dragon job is built (2026-10-15).
+1. **Magic Arc, to the end** (*Ready to do -> Medium*): the three missions left (Faith's second, Blood's
+   and Nature's third), then the keepers and the initiation, then tier 1 spells per school. The Snake
+   Dragon job and the Faith Order's Battlefield errand are built (2026-10-15).
 2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
 3. **Group hand-over card** (*Small*): the clock no longer drops the player into another group's screen unannounced.
 4. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
@@ -59,6 +59,11 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   takes `radii`, half a region's radius around each node) were fixed 2026-10-13. Left: (1) The draft cards' attribute row
   (`ui/draft_panel`) is tight between groups ("+0 CON"). (2) In a window below about 1100 px the map frames at its zoom
   floor (`MapCamera.autofit`, 440 in `map_panel.draw_map`) and overflows instead of fitting.
+- **Map names on a crowded map (found 2026-10-15).** The layout no longer squeezes a growing map into the
+  unit box: it grows past 1 and the camera pans (`world.compute_layout`, `_spread` keeps every pair of nodes
+  0.09 apart, so icons never stack). Names are the next limit: at the camera's zoom floor 0.09 is about 40 px,
+  narrower than a name, so a dense region (tried with 60 extra nodes) piles labels even where icons are clear.
+  Options when the map gets there: names only past a zoom level or on hover, or a wider spacing.
 - **Group hand-over card (diagnosed 2026-10-15, replaces "controlling 2+ groups does not feel good").**
   The cause, in the author's words: order group A into the Tavern, the map moves on to group B by itself;
   order B to walk to the Wilds, and the screen suddenly switches to A already inside the Tavern. Nothing
@@ -79,23 +84,31 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      in practice the guild's choices close doors, and a closed delivery shows as FAILED so the player sees it. More
      missions come as the game grows. When the set is written, check that no path leaves a school unreachable; if
      one does, add a mission there. Built: the Codex (all three) and the Snake Dragon (Blood dead / Nature alive).
-     **Next: the Faith Order's first mission**, then the rest.
+     The Faith Order's first, *Mercy at the Front* (the Battlefield skirmish beside AI-played Ledger Hold soldiers),
+     is built (2026-10-15, RULES.md *Secret nodes*). **Left: three missions** (Faith 1, Blood 1, Nature 1).
+     *Reachability caveat:* with three missions each, Blood and Nature can still close: Codex to Faith and the Snake
+     to Blood leaves Nature with only its third mission (1 of 2). Faith is safe (its two new missions are not
+     exclusive). Decide when the last two are written: accept it, or give Blood and Nature a second open mission each.
   2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no
-     shop stocks it (only the Priest is born with one). It comes from birth or from a bandit in an ambush (pending:
-     put it on a bandit loot table). Fantasy reason: the god picks disciples by getting the symbol into their hands.
-  3. *Keepers and the rite:* each sanctuary's keeper (portrait by hand, a `Vendor` in `world.NODES` with
-     `ShrineMissionScreen.VENDOR` set; the keepers' lines are first drafts) offers the initiation (a new
-     `NodeFunction`) that grants the school (`Unit.add_magic_source`). That also opens the school's root in the
-     **magic talent track** (built 2026-10-15: roots granted, never picked), so initiation is what makes the track
-     reachable for the player.
+     shop stocks it. It comes from birth (the Priest) or from a Priest among a humanoid ambush pack (checked
+     2026-10-15: a rolled Priest carries it in the pack and `loot.field_loot` drops it). Fantasy reason: the god picks
+     disciples by getting the symbol into their hands.
+  3. *Keepers and the rite (after the missions, author 2026-10-15):* each sanctuary's keeper (portrait by hand, a
+     `Vendor` in `world.NODES` with `ShrineMissionScreen.VENDOR` set; the keepers' lines are first drafts) offers the
+     initiation (a new `NodeFunction`) that grants the school (`Unit.add_magic_source`). That also opens the school's
+     root in the **magic talent track** (built 2026-10-15: roots granted, never picked), so initiation is what makes
+     the track reachable for the player. **Keepers' races (author 2026-10-15):** a Centaur at the Nature Grove, a
+     Kenku at the Faith Cathedral, a Lizardfolk at the Blood Sanctuary. With them every playable race has someone in
+     the game (the Treefolk is Varkas' recruit).
   4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Today the four spells
-     (`magic.SPELLS`) belong to all three schools, so the schools do not differ yet.
-  5. *Blood is bloodline (decided 2026-10-15):* the magic is born in you (a dragon, an angel, a demon in the line).
-     Rewrite the Blood Cult's blurb in `factions.py` ("Chaotic, and cruel with it") to match. New Blood branches follow
-     the same shape as Bloodline -> Dragon -> Dragon Breath (other bloodlines: angel, demon...).
+     (`magic.SPELLS`) belong to all three schools, so the schools do not differ yet. **Minimum (author 2026-10-15): at
+     least one level-0 and one level-1 spell of each school's own**, each with its AI.
+  5. *Blood is bloodline (decided 2026-10-15; the Cult's blurb rewritten):* the magic is born in you (a dragon, an
+     angel, a demon in the line). New Blood branches follow the same shape as Bloodline -> Dragon -> Dragon Breath
+     (other bloodlines: angel, demon...).
   6. *More magic XP sources:* today a magic kill and a finished spell study (`progression.py`, combat's curve as a
      placeholder); the author plans more magic activities.
-  7. *Tuning, after a playtest:* the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
+  7. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
      captive and the 3-day corpse are first picks.
 
 ## Playtest notes 2026-10-12
@@ -115,6 +128,17 @@ its functions are tabs inside.
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
 
 **Factions, nodes and world**
+- **The Battlefield beyond the Faith mission (author 2026-10-15).** The node is meant to host fights
+  without a mission too, but for now its only use is the Faith Order's skirmish. Revisit: what an open
+  skirmish pays, how often the front has a fight, whether Ledger Hold reputation ties in.
+- **Frontier supply run as a real trip (author 2026-10-15).** The run (`orders.supply_run`,
+  `Guild.supply_run_shift`) is still a 10 h work order the group spends standing at Ledger Hold; the
+  Frontier Outpost node exists now (with the Battlefield) but does nothing. Revisit: the escort walks the
+  caravan to the Outpost and back, the ambush on that road.
+- **Gold spent on equipment per level (author 2026-10-15).** A table of how much kit a body of a given
+  level should carry (weapon, armour, consumables), for the enemy generators (`encounters.py`, the
+  Battlefield's soldiers and warband) and for future balance. Today a generated body carries its
+  occupation's weapon and item whatever its level.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
@@ -430,4 +454,5 @@ for a system that does not exist yet:
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
-- **Holy Symbol.** Consumed by the initiation in faith magic (see *Magic Arc*); not for sale, only from birth or a bandit's loot.
+- **Holy Symbol.** Consumed by the initiation in faith magic (see *Magic Arc*); not for sale, only from birth or a
+  Priest's loot in an ambush. Works as a drop already; waits for the rite.

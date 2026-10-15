@@ -20,6 +20,7 @@ from .tokens import T
 # --- colours --------------------------------------------------------------- #
 PLAYER_C  = (94, 156, 214)
 ENEMY_C   = (214, 103, 92)
+ALLY_C    = (112, 186, 150)            # an allied NPC on the player's side, played by the AI
 NEUTRAL_C = (176, 170, 154)
 
 OK        = (111, 191, 115)

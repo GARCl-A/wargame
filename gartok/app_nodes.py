@@ -4,6 +4,7 @@ Mixed into `app.App`; the dispatch tables that reach these live there."""
 
 from . import (
     arena,
+    battlefield,
     missions,
     node_functions,
     serpent_nest,
@@ -192,6 +193,29 @@ class NodeScreensMixin:
         dragon = serpent_nest.dragon_of(battle)
         if dragon is not None and missions.snake_wanted_alive(self.guild):
             battle.wanted_alive.add(dragon)
+        self._battle_squad = squad
+        self._battle_node = node
+        self._arena_offer = None
+        self._enter_battle(battle, node)
+
+    def _enter_skirmish(self, group, node):
+        if missions.pending_battlefield(self.guild, group) is None:
+            self._after_activity()
+            return
+        if wagon_watch.needs_watch(group):
+            self.scene = WatchScreen(self.ui_fonts, group, node, "JOIN THE SKIRMISH",
+                                     on_confirm=lambda party, guarded: self._skirmish_fight(group, node, party, guarded),
+                                     on_back=self._after_activity)
+        else:
+            self._skirmish_fight(group, node, list(group.members), True)
+
+    def _skirmish_fight(self, group, node, squad, guarded):
+        self._leave_outside(group, node, guarded)
+        scenario = battlefield.BattlefieldScenario(squad)
+        battle = Battle(squad, scenario.enemies, scenario=scenario, allies=scenario.allies,
+                        daylight=self.guild.clock.is_daylight, lethal=True,
+                        clock_day=self.guild.clock.day, aggressor="enemy")
+        self._skirmish = missions.pending_battlefield(self.guild, group)
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None

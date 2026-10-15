@@ -29,6 +29,7 @@ import pygame
 from .. import artwork
 from . import banner
 from .board_style import (
+    ALLY_C,
     BADGE_INK,
     CHEST_TRIM,
     CHEST_WOOD,
@@ -72,9 +73,9 @@ from .board_style import (
     WALL_HI,
     WALL_LO,
     WALL_SHADOW,
-    WEB_C,
     WARN,
     WATER_C,
+    WEB_C,
 )
 from .primitives import TOKEN_INK, box, text
 from .tokens import T
@@ -83,12 +84,13 @@ WALL_RADIUS = 6
 
 
 def team_color(team):
-    return PLAYER_C if team == "player" else ENEMY_C
+    return PLAYER_C if team == "player" else ALLY_C if team == "ally" else ENEMY_C
 
 
 def ring_color(team):
-    """The ring around a token: the guild's banner colour for the player, red for the enemy."""
-    return banner.player_color() if team == "player" else ENEMY_C
+    """The ring around a token: the guild's banner colour for the player, green for an allied
+    NPC (`"ally"`), red for the enemy."""
+    return banner.player_color() if team == "player" else ALLY_C if team == "ally" else ENEMY_C
 
 
 def hp_color(frac):

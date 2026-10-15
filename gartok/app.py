@@ -88,6 +88,7 @@ SCENE_DEBOUNCE_MS = 250         # clicks swallowed right after landing back on t
 
 class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
     _left_outside = None    # (group, node, guarded): a wagon waiting outside the node the party entered
+    _skirmish = None        # the Faith Order's errand (a Mission) the Battlefield fight in flight decides
 
     def __init__(self):
         pygame.init()
@@ -488,6 +489,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         "stable": lambda s, g, n, o: s._open_stables(g),
         "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
         "serpents_nest": lambda s, g, n, o: s._enter_nest(g, n),
+        "skirmish": lambda s, g, n, o: s._enter_skirmish(g, n),
         "shrine": lambda s, g, n, o: s._open_shrine(g, n),
     }
 

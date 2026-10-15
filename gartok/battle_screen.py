@@ -162,7 +162,7 @@ class BattleScreen(BattleDrawMixin, Screen):
         if b.awaiting_flag or b.awaiting_trap:
             return
         self._check_handoff()
-        if not self._human(b.active.team):
+        if not self._plays(b.active):
             self.enemy_timer += dt
             if self.enemy_timer >= ENEMY_DELAY:
                 self.enemy_timer = 0
@@ -176,12 +176,16 @@ class BattleScreen(BattleDrawMixin, Screen):
     def _human(self, team):
         return self.controllers.get(team) == "human"
 
+    def _plays(self, unit):
+        """A person moves `unit`: its side is human and it is not an allied NPC (`ai_ally`)."""
+        return self._human(unit.team) and not unit.ai_ally
+
     @property
     def me(self):
         """The team whose eyes the board is drawn through: the active team on a human's turn,
         else whoever looked last."""
         b = self.battle
-        if b.winner is None and self._human(b.active.team):
+        if b.winner is None and self._plays(b.active):
             self._viewer = b.active.team
         return self._viewer
 
@@ -192,7 +196,7 @@ class BattleScreen(BattleDrawMixin, Screen):
     def _is_player_turn(self):
         b = self.battle
         return bool(b and b.winner is None and self._handoff is None
-                    and self._human(b.active.team))
+                    and self._plays(b.active))
 
     def _autoplace_setup(self):
         """A side no person controls gets its flag planted and its traps skipped, so the fight
@@ -211,7 +215,7 @@ class BattleScreen(BattleDrawMixin, Screen):
     def _check_handoff(self):
         """With two people at one screen, hide the board between their turns."""
         team = self.battle.active.team
-        if (self._human("player") and self._human("enemy") and self._human(team)
+        if (self._human("player") and self._human("enemy") and self._plays(self.battle.active)
                 and team != self._seat and self._handoff is None):
             self._handoff = team
 
@@ -468,7 +472,7 @@ class BattleScreen(BattleDrawMixin, Screen):
         b = self.battle
         if b.is_ctf:
             b.check_objective()
-        if b.winner is not None or not self._human(b.active.team):
+        if b.winner is not None or not self._plays(b.active):
             return
         act = b.active
         if act.ap < 1 and not b.reachable(act):

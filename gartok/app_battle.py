@@ -4,9 +4,11 @@ Mixed into `app.App`; the dispatch tables that reach these live there."""
 
 from . import (
     arena,
+    battlefield,
     campaign,
     combat_lab,
     economy,
+    factions,
     forced,
     matchup,
     missions,
@@ -113,6 +115,12 @@ class BattleFlowMixin:
         if pause_group is not None:           # the fight is over: a save from here on must not replay it
             pause_group.pending = None
         self._map_notices += outcome.captive_notes
+        if self._skirmish is not None:
+            notice, deeds = missions.settle_battlefield(self.guild, self._skirmish, outcome.won,
+                                                        battlefield.soldiers_lost(battle))
+            self._skirmish = None
+            self._map_notices.append(notice)
+            self._map_notices += [factions.deed_notice(d) for d in deeds]
         note = outcome.arena_title_event
         if hunt_state is None:
             self._back_from_outside()

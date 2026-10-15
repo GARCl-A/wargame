@@ -474,8 +474,9 @@ and neutral creatures in `gartok/ground.py`, map assembly in
 - **Flee** (1 point, ends the turn) = leave combat by the map edge. See below.
 - **Climb / Push / Jump / Drop In** (1 point) = the Z-axis moves. See below.
 - **Drink Potion** (1 point) = drinks a potion (such as a `Minor Healing Potion`)
-  from the pack, recovering **`1d4 + 1` HP** immediately (capped at max HP).
-  Consumes the item. The AI drinks when wounded to $\le 50\%$ HP.
+  from the pack, or feeds it to an adjacent ally, recovering **`1d6` HP** immediately
+  (capped at max HP). Consumes the item. An ally on the ground (dying or stable) who is fed
+  one is back on their feet with that HP. The AI drinks when wounded to $\le 50\%$ HP.
 - **Investigate** (1 point) = inspects adjacent wall segments for hidden doors,
   sliding panels or concealed mechanisms, revealing and opening them on discovery.
 - **Disarm** (1 point) = attempts to disarm an adjacent trap (`Bear Trap` or
@@ -1671,6 +1672,18 @@ of shallow and deep water, and the **Snake Dragon** (`npcs/snake_dragon.json`): 
 Serpent Growth (Medium), Dragon and Dragon Breath. The fight is won the moment it is dead or bound.
 Taken alive, it is delivered from the group's captives (`MissionTemplate.goal_captive`); dead, its body
 (the *Snake Dragon Corpse*, 3 days before it rots). Once delivered, the lair stays empty.
+
+**Mercy at the Front** (`battlefield.py`, the Faith Order's errand). The Faith Cathedral sends its
+medicine to the border war: on accepting, the signer gets **6 Minor Healing Potions** (the first time
+only; a retry brings none). The group has **7 days** to reach **The Battlefield** (a public node past the
+**Frontier Outpost**, beyond Ledger Hold; the outpost does nothing yet) and **JOIN THE SKIRMISH**, which
+only the group carrying the errand sees. The field is two trenches (a parapet wall with gaps) and open
+ground between. Beside the squad, in its trench, stand **4 Ledger Hold soldiers** (Lawful and Good, a
+leather jerkin, **two levels under** the squad's mean, at least 0) who fight on the player's side but are
+played by the AI (green tokens); across the field, a **warband of 6** mixed humanoids **one level over**.
+Lethal. Won with **every soldier alive**, the errand is done: +1 reputation with the Faith Order, and the
+potions left over are the pay. A dead soldier, a lost fight or a missed week fail it; the Order asks again
+**14 days** later. The guild's own deaths do not fail it.
 
 ### Dungeons and the Ancient Ruins 🟡
 

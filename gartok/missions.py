@@ -43,6 +43,9 @@ class MissionTemplate:
     returns_goal: bool = False         # the goal item is handed back after the turn-in
     exclusive: str | None = None       # a set only one template of which can ever be done
     goal_captive: str | None = None    # the goal is a captive (its NPC slug), not an item
+    starting_qty: int = 1              # how many `starting_item`s are handed over
+    starting_once: bool = False        # the starting items come with the first run only, not a retry
+    fight_at: str | None = None        # the goal is a fight won at this node, not a turn-in
 
     def __post_init__(self):
         tags_val = self.tags
@@ -188,6 +191,22 @@ NATURE_SNAKE = MissionTemplate(
 )
 SNAKE_HUNTS = (BLOOD_SNAKE, NATURE_SNAKE)
 
+# The Faith Order's errand of mercy: its medics' potions go with the group to the border war
+# (`battlefield.py`). Done the moment the fight is won with every soldier alive; a soldier lost,
+# a lost fight or a missed week fails it, and the Order asks again two weeks later -- with no
+# fresh potions.
+FAITH_BATTLEFIELD = MissionTemplate(
+    "faith_battlefield", "faith", "faith_cathedral", "Mercy at the Front",
+    "The cathedral sends its medicine where the dying are -- the first time it asks, six potions "
+    "go with you. Go to the Battlefield past Ledger Hold's frontier outpost and fight beside the "
+    "soldiers there. Win the skirmish, and bring every one of them through alive.",
+    goal_item="Minor Healing Potion", goal_qty=1,       # goal_item: only the board's icon here
+    reward=0, deadline_days=7,
+    tags=("magic", "faith", "battlefield"), requires=LIBRARY_ANCIENT_CODEX.id,
+    starting_item="Minor Healing Potion", starting_qty=6, starting_once=True,
+    retry_days=14, fight_at="battlefield",
+)
+
 LEDGER_TREEFOLK = MissionTemplate(
     "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
     "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. "
@@ -206,6 +225,7 @@ TEMPLATES = {
     LIBRARY_ANCIENT_CODEX.id: LIBRARY_ANCIENT_CODEX,
     **{t.id: t for t in CODEX_DELIVERIES},
     **{t.id: t for t in SNAKE_HUNTS},
+    FAITH_BATTLEFIELD.id: FAITH_BATTLEFIELD,
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
 
@@ -277,11 +297,12 @@ def template_of(mission):
 
 def accept(guild, unit, template):
     deadline = None if template.deadline_days is None else guild.clock.day + template.deadline_days
+    first = not _runs(guild, template)
     m = Mission(template.id, unit.uid, guild.clock.day, deadline)
     guild.missions.append(m)
     recorder.emit("mission", what="accept", id=template.id, reward=template.reward, deadline=template.deadline_days)
-    if template.starting_item:
-        unit.give_to_pack(template.starting_item)
+    if template.starting_item and (first or not template.starting_once):
+        unit.give_to_pack(template.starting_item, template.starting_qty)
     return m
 
 
@@ -315,6 +336,8 @@ def progress(guild, mission):
         recruit = next((u for u in guild.roster if u.uid == mission.recruit_uid), None)
         if recruit is not None and recruit in group.members and recruit.racial_level >= 2:
             return 1
+        return 0
+    if t.fight_at:
         return 0
     if t.goal_captive:
         return sum(1 for c in group.captives if c.npc_slug == t.goal_captive)
@@ -440,6 +463,36 @@ def pending_snake(guild):
 def snake_wanted_alive(guild):
     """The Nature Coven's job is out: the squad means to take the Snake Dragon alive."""
     return _active(guild, NATURE_SNAKE) is not None
+
+
+def pending_battlefield(guild, group):
+    """The Faith Order's errand, when `group` is the one carrying it (its signer is a member):
+    the Battlefield's skirmish is open to that group. Else None."""
+    m = _active(guild, FAITH_BATTLEFIELD)
+    if m is None or not any(u.uid == m.unit_uid for u in group.members):
+        return None
+    return m
+
+
+def settle_battlefield(guild, mission, won, lost):
+    """The skirmish is over: `won` the fight, `lost` the soldiers who died. Done (and the
+    Faith Order's deed) only on a win with nobody lost; any other end fails it, open again
+    after `retry_days`. -> (notice, deeds banked)."""
+    if won and not lost:
+        mission.state = "done"
+        recorder.emit("mission", what="turn_in", id=mission.template_id, reward=0)
+        t = template_of(mission)
+        deeds = factions.settle(guild, factions.Event(
+            "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
+        return "Every soldier came through. The Faith Order hears of it.", deeds
+    mission.state, mission.failed_day = "failed", guild.clock.day
+    if lost:
+        names = ", ".join(c.name for c in lost)
+        why = f"{names} did not come home"
+    else:
+        why = "the line broke"
+    return (f"Mercy at the Front failed: {why}. The Order will ask again in "
+            f"{template_of(mission).retry_days} days."), []
 
 
 def pending_biwolf(guild):

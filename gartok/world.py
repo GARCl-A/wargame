@@ -28,7 +28,8 @@ picks for the guild's `arena_reputation`; winning pays the flat purse, losing
 forfeits the stake. Nobody dies either way. Reputation with the Pits comes from
 completing arena deeds (`factions`), not from the win itself.
 
-`pos` is normalised (0..1, 0..1) inside the map area; `MapScreen` scales it.
+`pos` is in map units: a small map fills (0..1, 0..1), a bigger one runs past 1 (never squeezed,
+so nodes keep their spacing) and the map camera pans over it.
 
 `jurisdiction` (e.g. `"the_city"`) marks a node the guard patrols: `campaign.advance`
 tests every crime-carrying member of a group that arrives there -- waypoint or
@@ -231,6 +232,12 @@ NODES = [
          "A fortified counting-house the Bankers keep well outside the walls -- "
          "armed, and used to precious cargo.", fortress_scenario, functions=("ledger",),
          vendors={"ledger": Vendor("Commander Varkas", "Hobgoblin", "officer", "ledger_hold_officer.png")}),
+    Node("frontier_outpost", "Frontier Outpost", "town", (0.90, 0.64),
+         "A palisade at the edge of the march, where Ledger Hold's caravans end and its soldiers "
+         "take over. Nothing for hire here -- the war is one road further."),
+    Node("battlefield", "The Battlefield", "town", (0.99, 0.58),
+         "Two lines of trenches and churned ground between them, where the border war is fought. "
+         "Ledger Hold holds the near trench.", functions=("skirmish",)),
     Node("wilds_territory", "The Claim", "town", (0.97, 0.31),
          "A stretch of the Wilds the guild means to make its own -- if it can "
          "clear it, fence it, and hold it.", ErmosScenario,
@@ -290,6 +297,8 @@ EDGES = [
     ("ancient_ruins", "blood_sanctuary", 2),
     ("wilds", "nature_grove", 3),
     ("ledger_hold", "faith_cathedral", 3),
+    ("ledger_hold", "frontier_outpost", 5),
+    ("frontier_outpost", "battlefield", 2),
     ("farm", "country_roads", 1),
     ("country_roads", "ox_fields", 1),
     ("lumber_yard", "serpents_nest", 1),
@@ -477,16 +486,45 @@ def compute_layout(nodes=None, edges=None, seed=42, iterations=500, margin=0.08)
     span_y = max(max_y - min_y, 1e-5)
     max_span = max(span_x, span_y)
 
+    # A small map is stretched to fill the unit box; a big one is never squeezed into it (that
+    # would pull nodes under `min_sep`): it grows past 1 and the map camera pans over it.
     avail = 1.0 - 2 * margin
-    offset_x = margin + (avail - (span_x / max_span) * avail) / 2.0
-    offset_y = margin + (avail - (span_y / max_span) * avail) / 2.0
+    scale = max(1.0, avail / max_span)
+    offset_x = margin + max(0.0, (avail - span_x * scale) / 2.0)
+    offset_y = margin + max(0.0, (avail - span_y * scale) / 2.0)
 
-    result = {}
-    for u in node_ids:
-        nx = offset_x + ((pos[u][0] - min_x) / max_span) * avail
-        ny = offset_y + ((pos[u][1] - min_y) / max_span) * avail
-        result[u] = (round(nx, 3), round(ny, 3))
-    return result
+    out = {u: [offset_x + (pos[u][0] - min_x) * scale, offset_y + (pos[u][1] - min_y) * scale]
+           for u in node_ids}
+    _spread(out, min_sep + 0.001, margin)     # + what the rounding below can eat
+    return {u: (round(x, 3), round(y, 3)) for u, (x, y) in out.items()}
+
+
+def _spread(pos, min_sep, margin, rounds=300):
+    """Push apart every pair closer than `min_sep` (springs alone do not guarantee it on a
+    crowded map), then shift the whole map back inside `margin`."""
+    ids = list(pos)
+    for _ in range(rounds):
+        moved = False
+        for i, u in enumerate(ids):
+            for v in ids[i + 1:]:
+                dx, dy = pos[u][0] - pos[v][0], pos[u][1] - pos[v][1]
+                d = math.hypot(dx, dy)
+                if d >= min_sep:
+                    continue
+                ux, uy = (dx / d, dy / d) if d > 1e-9 else (1.0, 0.0)
+                push = (min_sep - d) / 2 + 1e-4
+                pos[u][0] += ux * push
+                pos[u][1] += uy * push
+                pos[v][0] -= ux * push
+                pos[v][1] -= uy * push
+                moved = True
+        if not moved:
+            break
+    shift_x = margin - min(p[0] for p in pos.values())
+    shift_y = margin - min(p[1] for p in pos.values())
+    for p in pos.values():
+        p[0] += max(0.0, shift_x)
+        p[1] += max(0.0, shift_y)
 
 
 def apply_layout(nodes=None, edges=None, seed=42):

@@ -669,6 +669,9 @@ def take_turn(battle, unit):
 
         ally = _ally_to_help(battle, unit)
         if ally is not None:                  # good: save the friend first
+            if ally.dying and actions.DRINK_POTION.can(battle, unit, ally):
+                actions.DRINK_POTION.execute(battle, unit, ally)     # up again, not just stable
+                continue
             if actions.FIRST_AID.can(battle, unit, ally):
                 actions.FIRST_AID.execute(battle, unit, ally)
                 continue

@@ -39,13 +39,24 @@ class ShrineMissionScreen(MissionOfferScreen):
         return missions.board(self.guild, self._giver, self.group.node)
 
     def get_req_str(self, t):
-        goal = f"the {t.goal_item}, alive" if t.goal_captive else f"{t.goal_qty}x {t.goal_item}"
-        return f"goal: {goal}  ·  no deadline"
+        if t.fight_at:
+            goal = f"win the skirmish at {world.node(t.fight_at).name}, every soldier alive"
+            if t.starting_item and not any(m.template_id == t.id for m in self.guild.missions):
+                goal += f"  ·  you get {t.starting_qty}x {t.starting_item}"
+        else:
+            goal = f"the {t.goal_item}, alive" if t.goal_captive else f"{t.goal_qty}x {t.goal_item}"
+        due = f"{t.deadline_days} days" if t.deadline_days else "no deadline"
+        return f"goal: {goal}  ·  {due}"
 
     def get_status_str(self, t, progress, ready, days_left):
+        if t.fight_at:
+            due = f"  ·  {days_left} day(s) left" if days_left is not None else ""
+            return f"fight at {world.node(t.fight_at).name}, lose no soldier{due}"
         return f"{progress} / {t.goal_qty} {t.goal_item}"
 
     def get_turn_in_label(self, t, progress, ready):
+        if t.fight_at:
+            return f"GO TO {world.node(t.fight_at).name.upper()}"
         return "HAND IT OVER" if ready else f"NEED {t.goal_qty - progress} MORE"
 
     def get_success_notice(self, reward):

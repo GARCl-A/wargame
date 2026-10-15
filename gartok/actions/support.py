@@ -251,9 +251,13 @@ class DrinkPotion(Action):
         
         heal = random.randint(1, 6)
         target.hp = min(target.hp_max, target.hp + heal)
-        
+        revived = target.dying or target.stable
+        if revived:
+            target.status, target.death_clock = "up", 0
+
         verb = "drinks" if actor == target else f"feeds {target.name}"
-        battle.log(f"{actor.name} {verb} a Minor Healing Potion, recovering {heal} HP.")
+        battle.log(f"{actor.name} {verb} a Minor Healing Potion, recovering {heal} HP"
+                   + (" -- back on their feet." if revived else "."))
         battle.fx(target.pos, f"+{heal} HP", "ok")
 
 

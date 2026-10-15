@@ -107,7 +107,7 @@ class BattleDrawMixin:
             focus = "armed" if (self.inspect is u and self._armed is u) else ("inspect" if self.inspect is u else None)
             flag = next((t for t, c in b.flag_carrier.items() if c is u), None) if b.is_ctf else None
             tok = {
-                "team": u.team,
+                "team": "ally" if u.ai_ally else u.team,
                 "active": u is b.active and b.winner is None,
                 "race": u.race["name"],
                 "portrait_id": getattr(u, "portrait_id", None),
@@ -220,7 +220,7 @@ class BattleDrawMixin:
             known = u.team == self.me or self._enemy_visible(u)
             entries.append({
                 "name": u.name.split()[0] if known else "Enemy",
-                "team": u.team,
+                "team": "ally" if u.ai_ally else u.team,
                 "known": known,
                 "active": u is b.active and b.winner is None,
                 "race": u.race["name"],

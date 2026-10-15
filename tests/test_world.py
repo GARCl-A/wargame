@@ -345,7 +345,6 @@ def test_a_fallen_allys_purse_is_loot_but_an_enemys_is_not():
 # --------------------------------------------------------------------------- #
 
 def test_compute_layout_deterministic():
-    import math
     from gartok import world
     l1 = world.compute_layout(seed=42)
     l2 = world.compute_layout(seed=42)
@@ -353,13 +352,21 @@ def test_compute_layout_deterministic():
     assert len(l1) == len(world.NODES)
 
 
+# A fixed graph, not the real map: the edge lengths are the author's to set freely, so this
+# measures the layout algorithm, not how well today's map happens to fit a plane.
+_LAYOUT_NODES = ["hub", "a", "b", "c", "d", "e", "f", "g", "h", "i"]
+_LAYOUT_EDGES = [("hub", "a", 1), ("hub", "b", 2), ("hub", "c", 4), ("a", "d", 3), ("b", "e", 6),
+                 ("c", "f", 2), ("e", "g", 5), ("f", "h", 1), ("d", "i", 8), ("g", "h", 3)]
+
+
 def test_compute_layout_distance_proportional():
     import math
+
     from gartok import world
-    layout = world.compute_layout(seed=42)
+    layout = world.compute_layout(nodes=_LAYOUT_NODES, edges=_LAYOUT_EDGES, seed=42)
     edge_dists = []
     euc_dists = []
-    for u, v, w in world.EDGES:
+    for u, v, w in _LAYOUT_EDGES:
         pu, pv = layout[u], layout[v]
         ed = math.hypot(pu[0] - pv[0], pu[1] - pv[1])
         edge_dists.append(w)
@@ -376,23 +383,32 @@ def test_compute_layout_distance_proportional():
     assert r > 0.70
 
 
-def test_compute_layout_no_overlapping_nodes_and_bounded():
+def _min_separation(layout):
     import math
+    ids = list(layout)
+    return min(math.hypot(layout[u][0] - layout[v][0], layout[u][1] - layout[v][1])
+               for i, u in enumerate(ids) for v in ids[i + 1:])
+
+
+def test_compute_layout_no_overlapping_nodes():
     from gartok import world
     layout = world.compute_layout(seed=42)
-    # All nodes within bounds
-    for nid, (x, y) in layout.items():
-        assert 0.05 <= x <= 0.95
-        assert 0.05 <= y <= 0.95
+    assert all(x >= 0.05 and y >= 0.05 for x, y in layout.values())
+    assert _min_separation(layout) >= 0.09
 
-    # Distinct positions (minimum separation ensures no label collision)
-    node_ids = list(layout.keys())
-    for i in range(len(node_ids)):
-        for j in range(i + 1, len(node_ids)):
-            u, v = node_ids[i], node_ids[j]
-            pu, pv = layout[u], layout[v]
-            sep = math.hypot(pu[0] - pv[0], pu[1] - pv[1])
-            assert sep >= 0.09, f"Nodes {u} and {v} are too close: {sep}"
+
+def test_a_growing_map_spreads_out_instead_of_piling_up():
+    import random
+
+    from gartok import world
+    rng = random.Random(1)
+    nodes, edges = [n.id for n in world.NODES], list(world.EDGES)
+    for i in range(60):
+        edges.append((rng.choice(nodes), f"new{i}", rng.choice([1, 2, 3, 5, 8])))
+        nodes.append(f"new{i}")
+    layout = world.compute_layout(nodes=nodes, edges=edges, seed=42)
+    assert _min_separation(layout) >= 0.09
+    assert max(max(x, y) for x, y in layout.values()) > 1.0      # bigger than the box, not squeezed
 
 
 def test_apply_layout_assigns_pos():
@@ -401,6 +417,11 @@ def test_apply_layout_assigns_pos():
     for n in world.NODES:
         assert isinstance(n.pos, tuple)
         assert len(n.pos) == 2
-        assert 0.05 <= n.pos[0] <= 0.95
-        assert 0.05 <= n.pos[1] <= 0.95
+        assert n.pos[0] >= 0.05 and n.pos[1] >= 0.05
 
+
+def test_two_nodes_dropped_on_the_same_spot_are_pulled_apart():
+    from gartok import world
+    pos = {"a": [0.5, 0.5], "b": [0.5, 0.5]}
+    world._spread(pos, 0.09, 0.08)
+    assert abs(pos["a"][0] - pos["b"][0]) >= 0.09

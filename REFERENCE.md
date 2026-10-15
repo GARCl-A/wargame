@@ -525,7 +525,7 @@ The fortified garrison of the march. They train soldiers and hold the border.
 
 ### The Blood Cult
 
-Mages of the blood, hidden under the ruins. Chaotic, and cruel with it.
+Mages born to it, hidden under the ruins: the magic runs in their line, from a dragon, an angel or a demon somewhere back. They study the blood that carries it.
 
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
@@ -548,6 +548,7 @@ Mages of faith, hidden in a cathedral in the hills. They answer to a higher call
 | Deed | Condition | Rep | Requires |
 |---|---|---|---|
 | The Codex Delivered | Bring the Ancient Codex to the Faith Cathedral. | +1 | -- |
+| Mercy at the Front | Win the Battlefield's skirmish without losing one of the soldiers. | +1 | -- |
 
 ## Constants
 

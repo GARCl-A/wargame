@@ -22,7 +22,7 @@ __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
 
 class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
-                 lethal=True, arena=False, clock_day=1, aggressor=None):
+                 lethal=True, arena=False, clock_day=1, aggressor=None, allies=()):
         self.log_lines = []
         self.log_total = 0                    # lines ever logged: `log_lines` keeps only the last 200
         self.sink = None                      # a combat_log.CombatLog while this fight is recorded
@@ -33,7 +33,8 @@ class Battle:
         self.aggressor = aggressor           # "player" | "enemy": who brought the fight (ai.py: it searches, the other side groups); None = neither
         self.wanted_alive = set()            # foes the player's side means to capture: its AI pulls its blows on them
         self.scenario = scenario or ArenaScenario()
-        self.player_units = [Combatant(u, "player") for u in player_units]
+        self.player_units = ([Combatant(u, "player") for u in player_units]
+                             + [Combatant(u, "player", ai_ally=True) for u in allies])
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
         self.setup()
 
@@ -88,7 +89,7 @@ class Battle:
             
         self.trap_setup_queue = [
             u for u in self.player_units
-            if "Bear Trap" in u.inventory or "Alarm Trap" in u.inventory
+            if not u.ai_ally and ("Bear Trap" in u.inventory or "Alarm Trap" in u.inventory)
         ]
         
         for u in self.units:
