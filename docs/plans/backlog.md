@@ -22,16 +22,23 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-13)
+# Suggested order (updated 2026-10-15)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
-the seams they need.
+the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc — Slice 2: initiation rite and first spells** (2 reputation, Holy Symbol for Faith, beginner trait and tier 1 spells).
-2. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner) to settle the day-30 milestone verdict against recorded runs.
-3. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; scheduled after magic).
-4. **Cooking and temporary meal buffs** (postponed until after the magic arc).
+1. **Magic Arc, to the end** (Slice 2: the six faction missions, the keepers, initiation per character
+   in all three schools, Holy Symbol on a bandit loot table, tier 1 spells per school). The five missions
+   besides the Snake Dragon are not designed yet; that is the arc's first step.
+2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
+3. **Group hand-over card** (*Small*): the clock no longer drops the player into another group's screen unannounced.
+4. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
+5. **Production chain between groups** (*Large*, after magic).
+6. **Talent trees to the level cap** (*Large*, after magic).
+7. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
+8. **Cooking and temporary meal buffs** (after magic).
+9. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 4's data is in.
 
 ---
 
@@ -52,6 +59,13 @@ the seams they need.
   takes `radii`, half a region's radius around each node) were fixed 2026-10-13. Left: (1) The draft cards' attribute row
   (`ui/draft_panel`) is tight between groups ("+0 CON"). (2) In a window below about 1100 px the map frames at its zoom
   floor (`MapCamera.autofit`, 440 in `map_panel.draw_map`) and overflows instead of fitting.
+- **Group hand-over card (diagnosed 2026-10-15, replaces "controlling 2+ groups does not feel good").**
+  The cause, in the author's words: order group A into the Tavern, the map moves on to group B by itself;
+  order B to walk to the Wilds, and the screen suddenly switches to A already inside the Tavern. Nothing
+  says whose turn it is. Wanted: a clear "turn of group X" beat. Before `App._after_activity` runs a
+  pending order's opener (`_ACTIVITY_OPENERS`), show a card with the group's banner, name, node and
+  what is about to open, plus one button to go on. Same when the map moves to the next idle group after an
+  order. Reuse the battle's hand-over card pattern (two human controllers) and give it a tutorial card.
 
 ## Medium
 
@@ -68,9 +82,6 @@ the seams they need.
 Raw notes from a playtest, grouped; split each into a sized item as it is picked up. Guiding
 rule from the notes: **fewest possible buttons on the map**: a node has one "Enter" button and
 its functions are tabs inside.
-
-**Map and node entry**
-- **Controlling 2+ groups does not feel good.** (Raw, 2026-10-13: the author has no target behaviour, only the feel.) Needs a playtest diagnosis before any design: is it switching groups, selecting one, giving orders, or seeing what the others do? Do not build until the cause is named.
 
 **Draft, leveling and talents**
 - **Leveling templates:** player-made, editable autopick of talents, so the same clicks are not
@@ -108,7 +119,31 @@ pointed to, not repeated.
 
 ## Large
 
-- **Talent trees are shorter than the level cap (to be authored by hand, no rush).** The XP
+- **Teach the AI the newer actions (before the next playtest).** Checked 2026-10-15 in `ai.py`:
+  (1) **Never used:** Throw, Push, Disarm, Jump, Investigate, Dismount. (2) **Used, but blindly:** the 11 weapon
+  actions (`ai._pick_attack`). With 2 AP left, the first one whose `can()` passes is taken, ahead of two
+  plain attacks and with no expected-damage comparison. Power Shot, Extreme Shot, Repel Strike and Javelin Charge
+  are taken whenever possible, whatever the target. The 2-AP cost also stops the AI from moving first and
+  striking after. (3) **Spells:** Sleep and Magic Missile in the pick, Light Globe and Floating Disk in
+  their own branches. The magic arc's tier 1 spells need the same as they land. Goal: every action an
+  enemy can hold is scored against its alternatives (expected damage, AP spent, position), with tests per
+  action and `sim_test.py`. Gauge: `scripts/combat_pairs.py` against the 2026-10-11 baseline below.
+- **Playtest on the current build, then feed it and the Caravana run to the AI and the sim.**
+  The *Caravana Do Homem Verde* run (world `95ea6648`, 205 days, the longest) is archived but **never analysed**:
+  its `play.jsonl` is in `recordings/2026-10-12/` and its 62 fights in `combat_lab/campaign/`, yet the
+  `human` profile (`recordings/2026-10-10/human_profile_4runs.json`) and the `combat_pairs.py` baseline
+  (72 logs, 2026-10-11) were both made before it. Order: (1) teach the AI the newer actions (above), so the
+  enemy is worth feeling; (2) play a fresh run on the current build with `record_play` ON (weapon actions,
+  2-AP actions, magic once in); (3) run `play_analysis.py` over the four earlier runs + Caravana + the new
+  one into a new profile, and re-baseline `combat_pairs.py` with the new campaign logs; (4) then settle
+  *Economy report prints a FAIL* and the planner with that data.
+- **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
+  group's output is another's input, which is the heart of the open-world vision. Lumber feeds a
+  carpenter (bows, wagons: the Tanner holds the Shortbow and Light Crossbow until one exists), Coal feeds the
+  Smith (Iron Bar is already a forge recipe). Gives Coal and the gems a use and closes `sources.py`'s
+  `traded` goods one chain at a time. Needs recipes, a carpenter node or function, the sim's `crafter`
+  policy and tests.
+- **Talent trees are shorter than the level cap (to be authored by hand, after the magic arc).** The XP
   tables now run to level 15 (2026-10), but the trees do not: combat has 14 nodes and work 10
   (each level grants one pick), so combat 15 wastes a pick and work levels 11-15 grant picks with
   nothing to spend them on. The racial track (picks from racial level 5) is worse: its 27 nodes
