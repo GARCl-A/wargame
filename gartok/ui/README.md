@@ -64,6 +64,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
 | `market_panel.py` | the market's vendor shelf: category tabs, stock list and drag ghost |
 | `intro_card.py` | the centred, veiled card (title, paragraphs, optional brass note, one button) used by every tutorial card |
+| `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
 | `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
 | `mission_offer_screen.py` | base class for NPC job boards: lists every job the giver has (`get_templates`), scrolls when they do not fit |

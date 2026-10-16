@@ -72,6 +72,7 @@ from .board_style import (
     TRAP_STEEL,
     TRAP_TEETH,
     TRAP_WIRE,
+    UNDEAD_C,
     WALL_FILL,
     WALL_HI,
     WALL_LO,
@@ -86,14 +87,17 @@ from .tokens import T
 WALL_RADIUS = 6
 
 
+_SIDE_C = {"ally": ALLY_C, "undead": UNDEAD_C}
+
+
 def team_color(team):
-    return PLAYER_C if team == "player" else ALLY_C if team == "ally" else ENEMY_C
+    return PLAYER_C if team == "player" else _SIDE_C.get(team, ENEMY_C)
 
 
 def ring_color(team):
     """The ring around a token: the guild's banner colour for the player, green for an allied
-    NPC (`"ally"`), red for the enemy."""
-    return banner.player_color() if team == "player" else ALLY_C if team == "ally" else ENEMY_C
+    NPC (`"ally"`), violet for a third side (`"undead"`), red for the enemy."""
+    return banner.player_color() if team == "player" else _SIDE_C.get(team, ENEMY_C)
 
 
 def hp_color(frac):

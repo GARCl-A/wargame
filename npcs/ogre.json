@@ -4,7 +4,7 @@
   "name": "Grumbold the Builder",
   "auto_name": false,
   "portrait_id": 2103356650,
-  "portrait_file": null,
+  "portrait_file": "ogre.png",
   "race": "Ogre",
   "occupation": "Builder",
   "alignment": "Chaotic and Neutral",

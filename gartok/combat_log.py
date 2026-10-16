@@ -291,8 +291,9 @@ def rebuild(rows):
     for static in start["units"]:
         unit = Unit.from_save(static["char"])
         unit.team = static["team"]
-        sides[static["team"]].append(unit)
-    return Battle(sides["player"], sides["enemy"], scenario=ReplayScenario(start),
+        sides.setdefault(static["team"], []).append(unit)
+    player, enemy = sides.pop("player"), sides.pop("enemy")
+    return Battle(player, enemy, scenario=ReplayScenario(start), others=sides,
                   daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"],
                   aggressor=start.get("aggressor") or _AGGRESSOR_OF_KIND.get(start["meta"].get("kind")))
 

@@ -15,10 +15,11 @@
   "treated": false,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
-  "hp": 31,
+  "hp": 37,
   "share_food": true,
   "combat_xp": 78,
-  "work_hours": 96,
+  "magic_xp": 0,
+  "work_hours": 320,
   "bio": "The eldest of the three and the one who does the talking. Fast, never where the blow lands, and fond of letting you tire yourself out in the open before the dagger finds your throat.",
   "arena_title": false,
   "recipes": [
@@ -47,13 +48,15 @@
     ],
     "racial": [
       "webbed_feet"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     5,
     1,
     6,
-    8
+    8,
+    5
   ],
   "base_attributes": {
     "strength": 10,
@@ -71,7 +74,6 @@
   "antidote_cooldown": 0,
   "natural_armor": 0,
   "racial_override": null,
-  "hp_max": 31,
   "languages": [
     "Sylvan",
     "Ankarin"
@@ -79,6 +81,7 @@
   "equipped_weapon": "Dagger",
   "equipped_offhand": null,
   "equipped_tongue": null,
+  "equipped_artifact": null,
   "equipped_armor": "Leather Jerkin",
   "inventory": [
     {
@@ -89,6 +92,7 @@
   ],
   "locked_items": {},
   "dormant": false,
+  "afoot": false,
   "awareness_radius": 0,
   "npc_slug": "ribit"
 }

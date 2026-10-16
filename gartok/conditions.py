@@ -131,3 +131,19 @@ class ShieldHooked(Condition):
         if self.held:
             log(f"{unit.name}'s shield is no longer tangled.")
         return self.held
+
+
+class Invisible(Condition):
+    """Unseen by every other side (`Combatant.hidden_from`) until it deals damage. A side that
+    finds it (a bump, an Investigate, a wound) sees it until the start of its next turn, when it
+    slips away again."""
+    id = "invisible"
+
+    def __init__(self):
+        self.seen_by = set()
+        self.wounded = False             # a wound shows where it stands, to every side
+
+    def on_turn_start(self, unit, log):
+        self.seen_by.clear()
+        self.wounded = False
+        return False

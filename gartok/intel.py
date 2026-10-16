@@ -69,14 +69,15 @@ class Intel:
 
     def __init__(self, battle):
         self.rng = random.Random("|".join(sorted(u.name for u in battle.units)))
-        self.margin = {"player": {}, "enemy": {}}
-        self.bonus = {"player": 0, "enemy": 0}
-        self.bestiary = {"player": None, "enemy": None}
+        teams = battle.teams
+        self.margin = {t: {} for t in teams}
+        self.bonus = dict.fromkeys(teams, 0)
+        self.bestiary = dict.fromkeys(teams)
         self.assessed = {}
-        self.last_seen = {"player": {}, "enemy": {}}   # foe -> the cell its side last saw it on
+        self.last_seen = {t: {} for t in teams}   # foe -> the cell its side last saw it on
         if battle.aggressor:        # whoever brought the fight knows where its prey was when it set out
             self.last_seen[battle.aggressor] = {u: u.pos for u in battle.units if u.team != battle.aggressor}
-        self.visited = {"player": set(), "enemy": set()}  # search waypoints a side has been near
+        self.visited = {t: set() for t in teams}  # search waypoints a side has been near
         self._sight = {}
 
     def bind(self, team, bestiary=None, bonus=0):

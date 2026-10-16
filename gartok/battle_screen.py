@@ -73,6 +73,7 @@ class BattleScreen(BattleDrawMixin, Screen):
         self._hotkey_actions = []
         self.buttons = []
         self._skip_traps_rect = None
+        self._withdraw_rect = None            # shown once the scenario lets the squad leave as winners
         self.log_scroll = 0                   # lines scrolled up from the live bottom
         self._log_len_seen = 0
 
@@ -230,13 +231,13 @@ class BattleScreen(BattleDrawMixin, Screen):
 
     def _inspect_body_h(self, who):
         """Height of what the INSPECT panel shows for `who`: a foe's card grows as its fields open."""
-        if who.team == self.foe:
+        if who.team != self.me:
             return foe_panel.card_height(self._foe_card(who))
         return sheet_height("compact")
 
     def _hp_bar(self, u):
         """A foe's health shows in steps (what `intel` lets its viewer know); your own is exact."""
-        if u.team == self.foe:
+        if u.team != self.me:
             return {"hp_frac": intel.health_steps(u) / intel.STEPS, "hp_steps": intel.STEPS}
         return {"hp_frac": max(0, u.hp) / u.hp_max, "hp_steps": None}
 
@@ -321,6 +322,9 @@ class BattleScreen(BattleDrawMixin, Screen):
                 and self._skip_traps_rect.collidepoint(px)):
             b.skip_traps()
             return
+        if b.can_withdraw and self._withdraw_rect is not None and self._withdraw_rect.collidepoint(px):
+            b.withdraw()
+            return
         tile = self._tile_at_px(px)
         if tile is None:
             return
@@ -338,7 +342,7 @@ class BattleScreen(BattleDrawMixin, Screen):
 
         self._obs = self._observers()
         clicked = b.unit_at(tile, include_downed=True)
-        if clicked is not None and clicked.team == self.foe \
+        if clicked is not None and clicked.team != self.me \
                 and not self._enemy_visible(clicked):
             clicked = None
         if clicked is not None:
@@ -379,7 +383,7 @@ class BattleScreen(BattleDrawMixin, Screen):
                 self._after_player_action()
             return
 
-        if clicked is not None and clicked.alive and clicked.team == self.foe:
+        if clicked is not None and clicked.alive and clicked.team != self.me:
             if self._armed is not clicked:
                 self._armed = clicked
                 return

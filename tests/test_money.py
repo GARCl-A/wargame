@@ -114,7 +114,7 @@ def test_a_fallen_members_gold_is_in_the_loot():
         weapon_hand = torch_hand = lantern_hand = False
 
     class Battle:
-        enemy_units, ground = [], []
+        enemy_units, foe_units, player_units, ground = [], [], [], []
 
     pool = loot.field_loot(Battle(), [Body()], random.Random(0))
     assert pool.count(COPPER) == 7 and pool.count(GOLD) == 2

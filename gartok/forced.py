@@ -51,6 +51,7 @@ class ForcedEvent:
     resolve: Callable               # (guild, group, order, outcome) -> events
     arrival: tuple = ()             # catch(guild, group, prev_node, resume_path) -> Order | None
     daily: Callable | None = None   # (guild, days) -> (events, [(group, Order)])
+    label: str = ""                 # the group hand-over card's headline
 
 
 # --------------------------------------------------------------------------- #
@@ -350,14 +351,18 @@ def resolve_wilds_claim_retake(guild, group, order, outcome):
 
 
 EVENTS = {e.kind: e for e in (
-    ForcedEvent("guard", "guard", resolve_guard_fight_aftermath, arrival=(guard_catch,)),
+    ForcedEvent("guard", "guard", resolve_guard_fight_aftermath, arrival=(guard_catch,),
+                label="STOPPED BY THE GUARD"),
     ForcedEvent("ambush", "map", resolve_road_ambush,
-                arrival=(road_ambush_catch, fortress_ambush_catch)),
-    ForcedEvent("eviction", "battle", resolve_property_raid, arrival=(property_raid_catch,)),
+                arrival=(road_ambush_catch, fortress_ambush_catch), label="AMBUSHED ON THE ROAD"),
+    ForcedEvent("eviction", "battle", resolve_property_raid, arrival=(property_raid_catch,),
+                label="RAID ON THE HOUSE"),
     ForcedEvent("wilds_retake", "battle", resolve_wilds_claim_retake,
-                arrival=(wilds_claim_retake_catch,)),
-    ForcedEvent("wilds_raid", "battle", resolve_wilds_raid, daily=wilds_claim_raid_check),
-    ForcedEvent("wilds_seizure", "battle", resolve_wilds_seizure, daily=wilds_claim_seizure_check),
-    ForcedEvent("gather_ambush", "battle", resolve_gather_ambush),
-    ForcedEvent("supply_ambush", "battle", resolve_supply_ambush),
+                arrival=(wilds_claim_retake_catch,), label="RETAKE THE CLAIM"),
+    ForcedEvent("wilds_raid", "battle", resolve_wilds_raid, daily=wilds_claim_raid_check,
+                label="RAID ON THE CLAIM"),
+    ForcedEvent("wilds_seizure", "battle", resolve_wilds_seizure, daily=wilds_claim_seizure_check,
+                label="THE CLAIM IS SEIZED"),
+    ForcedEvent("gather_ambush", "battle", resolve_gather_ambush, label="AMBUSHED AT WORK"),
+    ForcedEvent("supply_ambush", "battle", resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
 )}

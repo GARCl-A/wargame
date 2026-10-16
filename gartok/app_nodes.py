@@ -7,6 +7,7 @@ from . import (
     battlefield,
     encounters,
     missions,
+    necromancer,
     node_functions,
     serpent_nest,
     wagon_watch,
@@ -203,7 +204,7 @@ class NodeScreensMixin:
         self._enter_battle(battle, node)
 
     def _enter_skirmish(self, group, node):
-        if missions.pending_battlefield(self.guild, group) is None:
+        if missions.pending_front(self.guild, group) is None:
             self._after_activity()
             return
         if wagon_watch.needs_watch(group):
@@ -215,11 +216,16 @@ class NodeScreensMixin:
 
     def _skirmish_fight(self, group, node, squad, guarded):
         self._leave_outside(group, node, guarded)
-        scenario = battlefield.BattlefieldScenario(squad)
-        battle = Battle(squad, scenario.enemies, scenario=scenario, allies=scenario.allies,
+        hunt = missions.pending_necromancer(self.guild, group)
+        if hunt is not None:
+            scenario = necromancer.NecromancerScenario(squad)
+            others = scenario.others
+        else:
+            scenario, others = battlefield.BattlefieldScenario(squad), None
+        battle = Battle(squad, scenario.enemies, scenario=scenario, allies=scenario.allies, others=others,
                         daylight=self.guild.clock.is_daylight, lethal=True,
                         clock_day=self.guild.clock.day, aggressor="enemy")
-        self._skirmish = missions.pending_battlefield(self.guild, group)
+        self._skirmish = hunt or missions.pending_battlefield(self.guild, group)
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None

@@ -12,6 +12,7 @@ from . import (
     forced,
     matchup,
     missions,
+    necromancer,
     persist,
     recorder,
     vocations,
@@ -117,8 +118,12 @@ class BattleFlowMixin:
             pause_group.pending = None
         self._map_notices += outcome.captive_notes
         if self._skirmish is not None:
-            notice, deeds = missions.settle_battlefield(self.guild, self._skirmish, outcome.won,
-                                                        battlefield.soldiers_lost(battle))
+            if self._skirmish.template_id == missions.FAITH_NECROMANCER.id:
+                notice, deeds = missions.settle_necromancer(self.guild, self._skirmish,
+                                                            necromancer.errand_met(battle))
+            else:
+                notice, deeds = missions.settle_battlefield(self.guild, self._skirmish, outcome.won,
+                                                            battlefield.soldiers_lost(battle))
             self._skirmish = None
             self._map_notices.append(notice)
             self._map_notices += [factions.deed_notice(d) for d in deeds]

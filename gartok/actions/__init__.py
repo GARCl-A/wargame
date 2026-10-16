@@ -49,8 +49,10 @@ from .movement import (  # noqa: F401
 from .spells import (  # noqa: F401
     CastSpellAction,
     FloatingDiskAction,
+    InvisibilityAction,
     LightGlobeAction,
     MagicMissileAction,
+    RaiseDeadAction,
     ShareMagicAction,
     SleepAction,
     SpellAction,

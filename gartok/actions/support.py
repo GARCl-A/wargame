@@ -590,18 +590,28 @@ class Assess(Action):
 
 
 class Investigate(Action):
+    """Look around: an adjacent secret wall opens, and a foe nobody can see within `RADIUS` is
+    found on d20 + WIS against 10 + its INT (its side then sees it until it slips away)."""
     id, name, cost, target = "investigate", "Investigate", 1, "none"
-    desc = "Inspect nearby walls and surfaces for secret doors or hidden switches."
+    desc = "Inspect nearby walls for secret doors, and look and listen for something unseen."
+    RADIUS = 3
 
     def _adjacent_secrets(self, battle, actor):
         secrets = getattr(battle, "secret_walls", set())
         return [p for p in secrets if chebyshev(actor.pos, p) <= 1]
 
+    @staticmethod
+    def _lurkers(battle, actor):
+        return [u for u in battle.units if u.alive and u.hidden_from(actor.team)]
+
     def available(self, battle, actor):
-        return actor.ap >= self.cost and bool(self._adjacent_secrets(battle, actor))
+        return actor.ap >= self.cost and bool(self._adjacent_secrets(battle, actor)
+                                              or self._lurkers(battle, actor))
 
     def label(self, battle, actor):
-        return "Investigate secret (1 pt)"
+        if self._adjacent_secrets(battle, actor):
+            return "Investigate secret (1 pt)"
+        return f"Investigate ({self.RADIUS} squares, WIS)"
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):
@@ -614,6 +624,18 @@ class Investigate(Action):
             battle.secret_walls.discard(p)
             battle.log(f"{actor.name} inspects the wall and triggers a hidden lever! A secret door slides open at {p}.")
             battle.fx(p, "Secret Opened!", "crit")
+        lurkers = self._lurkers(battle, actor)
+        if not lurkers:
+            return
+        found = False
+        for u in lurkers:
+            if battle.units_distance(actor, u) <= self.RADIUS and d20() + actor.mod_wisdom >= 10 + u.mod_intelligence:
+                u.reveal_to(actor.team)
+                found = True
+                battle.log(f"{actor.name} searches and finds {u.name} hiding at {u.pos}!")
+                battle.fx(u.pos, "Found!", "crit")
+        if not found and not secrets:
+            battle.log(f"{actor.name} searches the dark around them and finds nothing.")
 
 
 class Disarm(Action):

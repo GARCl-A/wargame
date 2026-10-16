@@ -74,7 +74,7 @@ def can_see(battle, observer, target_pos):
 
 def can_see_unit(battle, observer, target):
     # a downed body (dying/stable) can still be seen -- e.g. to be finished off
-    return (observer.alive and not target.dead
+    return (observer.alive and not target.dead and not target.hidden_from(observer.team)
             and any(can_see(battle, observer, c)
                     for c in cells(target.pos, target.footprint)))
 

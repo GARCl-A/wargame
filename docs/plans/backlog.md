@@ -22,25 +22,25 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-15)
+# Suggested order (updated 2026-10-16)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc, to the end** (*Ready to do -> Medium*): the two missions left (Faith's second and Blood's
-   third), then the keepers and the initiation, then tier 1 spells per school. The Snake Dragon job, the
-   Faith Order's Battlefield errand and the Nature Coven's Ogre's Wildfire are built (2026-10-15).
-   Before the last two bosses, settle the two racial-rule items (*Small*): they decide what a "racial 15"
-   boss is, and the Ogre's fight is still short of it (item 1's endgame note).
+1. **Magic Arc, to the end** (*Ready to do -> Medium*): the one mission left (Blood's third), then the
+   keepers and the initiation, then tier 1 spells per school. The Snake Dragon job, the Faith Order's
+   Battlefield errand and the Nature Coven's Ogre's Wildfire are built (2026-10-15), and the Faith
+   Order's Necromancer at the Front (2026-10-16).
+   The racial rule is settled (2026-10-16: a pick at racial 5, 10 and 15, no authored NPC pins its level, a
+   test holds it); the Ogre's fight is still short of a racial-15 boss (item 1's endgame note).
 2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
-3. **Group hand-over card** (*Small*): the clock no longer drops the player into another group's screen unannounced.
-4. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
-5. **Production chain between groups** (*Large*, after magic).
-6. **Talent trees to the level cap** (*Large*, after magic).
-7. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
-8. **Cooking and temporary meal buffs** (after magic).
-9. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 4's data is in.
+3. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
+4. **Production chain between groups** (*Large*, after magic).
+5. **Talent trees to the level cap** (*Large*, after magic).
+6. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
+7. **Cooking and temporary meal buffs** (after magic).
+8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 3's data is in.
 
 ---
 
@@ -54,7 +54,10 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
   prices. **Decided 2026-10-10:** recalibrate the sim until it matches the recorded runs (both
   ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
-- **Enemy info: calibragem e comportamento (built 2026-10-11).** (1) *Calibragem de DC e Scholars:* Limiares são um chute inicial (`intel.BASE_DC` 8, bandas em margem 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4); testar na próxima gameplay e calibrar com `vocation_report.py` (bônus +2 de Scholars). (2) *Busca e patrulha sem visão:* quando ninguém está em vista o agressor faz varredura de waypoints e o defensor se agrupa (detalhado em `ai.py`); pendente refinar se queremos comportamento mais avançado em portas/terreno. (3) *IA usando Assess:* a IA usa Assess como fallback quando não consegue alcançar o alvo no turno; IA lê `known_fields`.
+- **Enemy info: tune the read (built 2026-10-11, `intel.py`).** The thresholds are a first guess (`intel.BASE_DC` 8,
+  bands at margin 0 / +5 / +10, `RACE_DISCOUNT` 2, `ASSESS_BONUS` 4): tune them on the next playtest, with
+  `vocation_report.py` for the Scholars' +2. The AI's search with nobody in sight (the aggressor sweeps waypoints,
+  the defender groups up) may want smarter play around doors and terrain.
 - **Mine leftovers:** In the economy simulation (`scripts/economy_report.py`), the `crafter` policy still skips recipes that need Coal, and no policy builds the Claim oven, so those two trips stay unpriced in the automated report.
 - **UI polish leftovers (found 2026-10-13 by rendering the screens at 1000x640 to 1920x1080).** Map labels
   (`map_panel.place_labels`: a name sits where it overlaps no other name or mark) and the Wilds' trees (`MapCamera.autofit`
@@ -66,32 +69,6 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   0.09 apart, so icons never stack). Names are the next limit: at the camera's zoom floor 0.09 is about 40 px,
   narrower than a name, so a dense region (tried with 60 extra nodes) piles labels even where icons are clear.
   Options when the map gets there: names only past a zoom level or on hover, or a wider spacing.
-- **Group hand-over card (diagnosed 2026-10-15, replaces "controlling 2+ groups does not feel good").**
-  The cause, in the author's words: order group A into the Tavern, the map moves on to group B by itself;
-  order B to walk to the Wilds, and the screen suddenly switches to A already inside the Tavern. Nothing
-  says whose turn it is. Wanted: a clear "turn of group X" beat. Before `App._after_activity` runs a
-  pending order's opener (`_ACTIVITY_OPENERS`), show a card with the group's banner, name, node and
-  what is about to open, plus one button to go on. Same when the map moves to the next idle group after an
-  order. Reuse the battle's hand-over card pattern (two human controllers) and give it a tutorial card.
-
-- **Authored creatures must follow the racial-level rule (author 2026-10-15).** Racial level is
-  `progression.racial_level(combat + work + magic)` (thresholds 2, 4, ... 30), but `npcs/*.json` can pin it
-  with `racial_override`, and the pin is what sets the hit dice. Checked 2026-10-15: **Aurochs** is the one
-  breaking it (combat 13 / work 0 / magic 0 -> rule says racial 6, pinned at 13, so 13 HD and 119 HP).
-  Biwolf, the Ancient Archivist (both 10/10/0 -> 10) and the Ruin Sentry (8/4/0 -> 6) pin the value the rule
-  already gives; drop those pins so they cannot drift. Fix: remove `racial_override` from every authored NPC
-  and give the Aurochs the tracks its weight needs (e.g. work levels: 13 HD needs a track sum of 26) instead of a
-  pin, then re-check his fight. Add a test that loads every `npcs/*.json` and asserts
-  `racial_level == progression.racial_level(racial_xp)`, so a new NPC cannot pin it again. The Ogre
-  (`npcs/ogre.json`, 10/10/0 -> 10) already follows it, with no pin.
-
-- **Racial talents every 5 levels (author 2026-10-15).** The rule is one racial pick at racial 5, 10 and
-  15 (3 at the cap). The code gives one per level from racial 5 (`Unit.picks_available`:
-  `max(0, racial_level - 4)`, so racial 10 earns 6) and RULES.md says the same. Fix both, then check every
-  authored NPC and test unit that holds racial talents still fits (a unit holding more than it earns must
-  drop some; the Ogre's 2 at racial 10 already fit), `encounters.build_enemy`'s racial picks and the
-  racial-track UI (`level_screen`) that shows the next pick.
-
 ## Medium
 
 - **Magic Arc — what is left (Slice 1, the Snake Dragon, Mercy at the Front and the Ogre's Wildfire are built:
@@ -106,7 +83,7 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      missions come as the game grows. When the set is written, check that no path leaves a school unreachable; if
      one does, add a mission there. Built (2026-10-15): the Codex (all three, exclusive), the Snake Dragon (Blood
      dead / Nature alive, exclusive), the Faith Order's *Mercy at the Front* and the Nature Coven's third, *The
-     Ogre's Wildfire* (not exclusive). **Left: two missions, Faith's second and Blood's third.**
+     Ogre's Wildfire* (not exclusive). Faith's second, *The Necromancer at the Front*, is built (2026-10-16, [necromancer.md](necromancer.md): a third side on the board, Raise Dead and Invisibility at level 2, Investigate finding the unseen, the Zombie). **Left: one mission, Blood's third.**
      *Reachability (decide when the last two are written):* Faith is safe (its two new missions are open to all).
      Nature reaches 2 only with the Codex or the Snake: Codex to Faith and the Snake to Blood leave it the Wildfire
      alone (1 of 2). Blood is the same with its third. Options: accept it (the guild's choices close a school), or
@@ -138,12 +115,19 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   6. *More magic XP sources:* today a magic kill and a finished spell study (`progression.py`, combat's curve as a
      placeholder); the author plans more magic activities.
   7. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
-     captive and the 3-day corpse are first picks. **The Ogre's Wildfire:** the Ogre is 4d6-drop-lowest (STR 17,
+     captive and the 3-day corpse are first picks. **After the racial rule (2026-10-16):** the Ribbit Brothers went
+     from work 2 to 4 to earn their one racial talent at racial 5, so they are mean 5 (the arena rule was boss = +1
+     over an expected level 3, i.e. 4) with one more hit die each (Bufo 38 -> 44 HP, Peep 23 -> 27, Ribit 31 -> 37);
+     the Ancient Archivist lost Deft Bones (3 talents at racial 10, which earns 2); the Aurochs carries work 13
+     instead of a pin (same 13 HD). Re-check those fights in the lab. **The Ogre's Wildfire:** the Ogre is 4d6-drop-lowest (STR 17,
      98 HP), in Plate Armor (AC 15, speed 4) with a Huge Club; his escort is clamped at mean 6. AI against AI in the
      lab (`combat_lab` "fortress", squad at mean 6): 2/30 wins with four, 4/30 with six. Play it in the lab first (an
      AI squad plays far below a person), then decide the escort's cap (item 1), the fire (2d6 a cell, 1-2 cells a
      round), the camp's crew (3 Goblins + a Hobgoblin a level over), the DCs (13 / 15, -1 a taught focus), the
-     put-out (16 h, DC 13) and the meat loss (5% a burned focus, for good).
+     put-out (16 h, DC 13) and the meat loss (5% a burned focus, for good). **The Necromancer at the Front:** the field
+     (48 x 30, night), the sides (4 soldiers at -2, 8 raiders and 4 Zombies at +1, 6 bodies), the necromancer (racial 15,
+     96 HP, a raise a turn, reach 6) and Investigate's search (3 cells, WIS vs 10 + INT); AI against AI the squad loses at level 3
+     and 6 (`combat_lab` "necromancer").
 
 ## Playtest notes 2026-10-12
 
@@ -199,7 +183,7 @@ pointed to, not repeated.
 ## Large
 
 - **Teach the AI the newer actions (before the next playtest).** Checked 2026-10-15 in `ai.py`:
-  (1) **Never used:** Throw, Disarm, Jump, Investigate, Dismount. Push only when the shove does damage (into the
+  (1) **Never used:** Throw, Disarm, Jump, Dismount (Investigate only to find the unseen, not a secret wall). Push only when the shove does damage (into the
   flames, or a Mighty Shove against a wall: `ai._try_shove`), never to break a flank or win a pit. (2) **Used, but blindly:** the 11 weapon
   actions (`ai._pick_attack`). With 2 AP left, the first one whose `can()` passes is taken, ahead of two
   plain attacks and with no expected-damage comparison. Power Shot, Extreme Shot, Repel Strike and Javelin Charge
@@ -210,7 +194,10 @@ pointed to, not repeated.
   action and `sim_test.py`. Gauge: `scripts/combat_pairs.py` against the 2026-10-11 baseline below.
   Built with their own AI on 2026-10-15: Dragon Breath (only on 3+ foes in the cone, but the breather does not move
   to set up a better cone), Capture and the Non-lethal toggle (the player's side, against a foe it wants alive),
-  fire (step out, route round it), Mighty Shove and Water Jet.
+  fire (step out, route round it), Mighty Shove and Water Jet. On 2026-10-16: the necromancer's turn (`ai._necromancy`:
+  vanish, raise the strongest body in reach, walk to the next, back off when found), Investigate (once a turn with nobody
+  in sight), never targeting an unseen foe, and the undead never fleeing. The player's side has no use for Raise Dead
+  yet (no source teaches it).
 - **Playtest on the current build, then feed it and the Caravana run to the AI and the sim.**
   The *Caravana Do Homem Verde* run (world `95ea6648`, 205 days, the longest) is archived but **never analysed**:
   its `play.jsonl` is in `recordings/2026-10-12/` and its 62 fights in `combat_lab/campaign/`, yet the
@@ -229,8 +216,8 @@ pointed to, not repeated.
 - **Talent trees are shorter than the level cap (to be authored by hand, after the magic arc).** The XP
   tables run to level 15, and each level grants one pick: combat has 15 nodes and work 14 (checked
   2026-10-15), so work 15 has nothing to spend its pick on and neither tree has room to choose. The racial
-  track has 32 nodes split across races (some shared, like Giant's Grip); once *Racial talents every 5
-  levels* lands a race needs only 3 of its own (racial 5, 10, 15), and most have 1. Goal: **at least 30
+  track has 32 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
+  its own (one pick at racial 5, 10 and 15), and most have 1. Goal: **at least 30
   combat and 30 work talents**, and 3+ racial nodes per race. Nothing built; the author will design them.
 - **Gathering: loose ends (built 2026-10-11, `gather.py`, RULES.md).** The licence, the drop tables,
   the pay rule, the ambush and the sim's `gatherer` policy (and `miner` gathering once it can afford
@@ -400,9 +387,8 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10).
-- **The Ogre's portrait** (`npcs/ogre.json` has none: the board shows the generic face). Also the
-  keeper's face if the friendly fortress ever gets a function (a `Vendor`).
+- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Ogre (3), Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10), Dwarf (11), Zombie (3, the former `portraits/undead/`).
+- **The Necromancer's portrait** (`npcs/necromancer.json` has none: the board shows a Human face).
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.
 

@@ -43,6 +43,7 @@ MAGIC_XP_THRESHOLDS = list(constants.COMBAT_XP_THRESHOLDS)
 # are set to reproduce the old `floor((combat + work) / 2)` hit-die count, so
 # enemy HD / the balance sim / arena scaling do not move. Tune freely here.
 RACIAL_XP_THRESHOLDS = list(constants.RACIAL_XP_THRESHOLDS)
+RACIAL_PICK_EVERY = 5
 
 
 def _level_for(thresholds, xp):
@@ -66,6 +67,18 @@ def racial_level(racial_xp):
     dice the character has earned past their starting one, and how many racial
     talent picks they hold."""
     return _level_for(RACIAL_XP_THRESHOLDS, racial_xp)
+
+
+def racial_picks(level):
+    """Racial talent picks earned at racial `level`: one every `RACIAL_PICK_EVERY` levels
+    (5, 10 and 15, so three at the cap)."""
+    return level // RACIAL_PICK_EVERY
+
+
+def next_racial_pick(level):
+    """The racial level that earns the next pick, or None past the last one."""
+    nxt = (level // RACIAL_PICK_EVERY + 1) * RACIAL_PICK_EVERY
+    return nxt if nxt <= len(RACIAL_XP_THRESHOLDS) else None
 
 
 def mean_level(*track_levels):

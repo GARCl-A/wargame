@@ -18,6 +18,7 @@
   "hp": 83,
   "share_food": true,
   "combat_xp": 210,
+  "magic_xp": 0,
   "work_hours": 1760,
   "bio": "Keeper of the lost library codex. Slumbers on its stone pedestal until intruders disturb its sanctum.",
   "arena_title": false,
@@ -66,9 +67,9 @@
     ],
     "racial": [
       "skeleton_faith_initiate",
-      "deft_bones",
       "elder_skeleton"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     6,
@@ -97,8 +98,7 @@
   "poisons": {},
   "antidote_cooldown": 0,
   "natural_armor": 3,
-  "racial_override": 10,
-  "hp_max": 83,
+  "racial_override": null,
   "languages": [
     "Ankarin",
     "Draconic"
@@ -106,6 +106,7 @@
   "equipped_weapon": null,
   "equipped_offhand": null,
   "equipped_tongue": null,
+  "equipped_artifact": null,
   "equipped_armor": null,
   "inventory": [
     {
@@ -121,6 +122,7 @@
   ],
   "locked_items": {},
   "dormant": true,
+  "afoot": false,
   "awareness_radius": 8,
   "npc_slug": "the-ancient-archivist"
 }

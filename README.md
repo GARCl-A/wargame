@@ -250,6 +250,7 @@ gartok/
   gather.py         gathering at the Lumber Yard and the Mine: licence, drop tables, haul, ambush
   serpent_nest.py   the Snake Dragon job: the nest search off the Lumber Yard and its dark dungeon
   battlefield.py    the Faith Order's errand: the border skirmish beside Ledger Hold's AI-played soldiers
+  necromancer.py    the Faith Order's second errand: three sides at the front and an invisible necromancer raising the dead
   wildfire.py       the Nature Coven's errand: the Ogre's wildfires, ethereal nodes that burn and spread
   fortress_scenario.py  the Ogre's half-raised fortress: walls, a spreading bonfire, won when he falls
   captives.py       foes bound in battle and kept by a group: herd room, 7 days to live
@@ -276,7 +277,7 @@ gartok/
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
-  alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py
+  alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py / group_turn_screen.py
   bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
   (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)
   library_screen.py / library_mission_screen.py / apothecary_mission_screen.py

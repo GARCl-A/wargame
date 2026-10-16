@@ -180,7 +180,7 @@ def _role(battle, unit):
 
 
 def _target(battle, unit):
-    enemies = [u for u in battle.units if u.alive and u.team != unit.team]
+    enemies = [u for u in battle.units if u.alive and u.team != unit.team and not u.hidden_from(unit.team)]
     if not enemies:
         return None
     visible = [e for e in enemies if battle.can_see_unit(unit, e)]
@@ -533,11 +533,16 @@ def _ctf_goal(battle, unit):
     return None
 
 
+def _mindless(unit):
+    """The dead do not break and run: an undead body, or one raised from the dead."""
+    return getattr(unit, "raised", False) or unit.race.get("kind") == "undead"
+
+
 def _should_flee(battle, unit):
     """Whether the unit breaks and runs this turn. Never from a non-lethal bout
     (the arena -- nobody dies). Chaotic units break sooner and while less outnumbered;
     lawful units stay while any ally is still standing."""
-    if not battle.lethal:
+    if not battle.lethal or _mindless(unit):
         return False
     order = _axes(unit)[0]
     allies = [u for u in battle.units
@@ -556,7 +561,8 @@ def _should_delay(battle, unit):
     """A melee unit that cannot reach anyone this turn waits for an ally that is
     already in the fight, so it arrives after the line has formed. Never a flag
     runner (it has somewhere to be)."""
-    if unit.ranged or getattr(unit, "ctf_runner", False) or not actions.DELAY.available(battle, unit):
+    if (unit.ranged or getattr(unit, "ctf_runner", False) or not actions.DELAY.available(battle, unit)
+            or "raise_dead" in getattr(unit, "spells_known", ())):
         return False
     foes = intel.visible_foes(battle, unit)
     if not foes or any(battle.units_distance(unit, f) <= unit.speed + 1 for f in foes):
@@ -699,6 +705,52 @@ def _leave_fire(battle, unit):
     return True
 
 
+NECRO_KEEP_AWAY = 3          # the raiser backs off from a foe that has found it this close
+
+
+def _necromancy(battle, unit):
+    """A raiser's turn (Raise Dead known): vanish when it can, raise the strongest body in reach,
+    walk toward the nearest one, back away from a foe that found it. It never attacks while a
+    body is left to raise. -> "acted", "hold" (nothing worth the AP: end the turn) or None (no
+    raiser, or no bodies left: fight on as usual)."""
+    if "raise_dead" not in getattr(unit, "spells_known", ()):
+        return None
+    raise_dead = actions.CastSpellAction("raise_dead")
+    bodies = raise_dead.bodies(battle)
+    if not bodies:
+        return None
+    hunters = [e for e in battle.units if e.alive and e.team != unit.team and not unit.hidden_from(e.team)
+               and battle.units_distance(unit, e) <= NECRO_KEEP_AWAY]
+    if hunters and not unit.walking and unit.ap >= 1:
+        def gap(p):
+            return min(grid_distance(p, e.pos) for e in hunters)
+        away = max(battle.reachable(unit), key=gap, default=unit.pos)
+        if gap(away) > gap(unit.pos):
+            actions.MOVE.execute(battle, unit, away)
+            unit.walking = False
+            return "acted"
+    if "invisibility" in getattr(unit, "spells_known", ()) and not hunters:
+        vanish = actions.CastSpellAction("invisibility")
+        if vanish.available(battle, unit):
+            vanish.execute(battle, unit)
+            return "acted"
+    in_reach = [b for b in bodies if raise_dead.can(battle, unit, b.pos)]
+    if in_reach:
+        if unit.ap < raise_dead.cost:
+            return "hold"
+        raise_dead.execute(battle, unit, max(in_reach, key=lambda b: b.hp_max).pos)
+        return "acted"
+    if unit.ap < 1 or unit.walking:
+        return "hold"
+    near = min(bodies, key=lambda b: battle.units_distance(unit, b))
+    dest = _step_toward(battle, unit, near.pos, raise_dead.REACH)
+    if dest == unit.pos:
+        return "hold"
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return "acted"
+
+
 def _step_toward(battle, unit, goal, reach):
     """`path_step_toward`, around the flames when a way round exists."""
     if battle.fire:
@@ -727,6 +779,7 @@ def take_turn(battle, unit):
         actions.DELAY.execute(battle, unit)
         return
 
+    searched = None
     for _ in range(4):  # safety stop; a turn spends at most 2 points
         if unit.ap <= 0 or not unit.alive:
             break
@@ -782,6 +835,12 @@ def take_turn(battle, unit):
 
         if _try_capture(battle, unit):
             continue
+
+        raised = _necromancy(battle, unit)
+        if raised == "acted":
+            continue
+        if raised == "hold":
+            break
 
         goal = _ctf_goal(battle, unit)
         if goal is not None:                  # flag runner or defender
@@ -839,6 +898,10 @@ def take_turn(battle, unit):
 
         target = _target(battle, unit)
         if target is None:
+            if searched != battle.round_no and actions.INVESTIGATE.available(battle, unit):
+                searched = battle.round_no
+                actions.INVESTIGATE.execute(battle, unit)
+                continue
             if _no_contact(battle, unit):
                 continue
             break

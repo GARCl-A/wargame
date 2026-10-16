@@ -22,6 +22,20 @@ def _cell_free(battle, actor, pos, footprint=None):
     return not blocked.intersection(shape)
 
 
+def _breaks_invisibility(execute):
+    """An invisible actor that hurts someone on another side is seen from then on."""
+    def run(self, battle, actor, target=None, **kw):
+        if not actor.has_condition("invisible"):
+            return execute(self, battle, actor, target, **kw)
+        before = {u: u.hp for u in battle.units if u.team != actor.team}
+        result = execute(self, battle, actor, target, **kw)
+        if any(u.hp < hp for u, hp in before.items()):
+            actor.drop_invisibility(battle.log)
+        return result
+    run.__name__, run.__doc__ = execute.__name__, execute.__doc__
+    return run
+
+
 # --------------------------------------------------------------------------- #
 # Base                                                                         #
 # --------------------------------------------------------------------------- #
@@ -37,7 +51,7 @@ class Action:
     def __init_subclass__(cls, **kw):
         super().__init_subclass__(**kw)
         if "execute" in cls.__dict__:
-            cls.execute = combat_log.recorded(lambda self: self.id)(cls.__dict__["execute"])
+            cls.execute = combat_log.recorded(lambda self: self.id)(_breaks_invisibility(cls.__dict__["execute"]))
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -132,7 +146,8 @@ def _phalanxed(battle, target):
 
 
 def _hostile_target(actor, target):
-    return target is not None and target.alive and target.team != actor.team
+    return (target is not None and target.alive and target.team != actor.team
+            and not target.hidden_from(actor.team))
 
 
 def _shovable_target(actor, target):
@@ -143,7 +158,7 @@ def _shovable_target(actor, target):
 def _attackable_target(actor, target):
     """Attack and Throw may also target a downed enemy body, to finish it off -- not a captive."""
     return (target is not None and not target.dead and target.team != actor.team
-            and not getattr(target, "captured", False))
+            and not getattr(target, "captured", False) and not target.hidden_from(actor.team))
 
 
 def _shared_language(a, b):

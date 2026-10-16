@@ -2,6 +2,7 @@
 
 import random
 
+from gartok import npc_lib, progression
 from tests.helpers import (
     Battle,
     Combatant,
@@ -347,7 +348,7 @@ def test_tongue_is_refused_to_non_grippli():
     assert u.talents["racial"] == []
 
 
-def test_racial_talent_picks_unlock_at_level_5():
+def test_racial_talent_picks_come_every_5_levels():
     u = _unit(seed=1)
     u.set_race("Grippli")
     for lvl in range(5):
@@ -358,8 +359,24 @@ def test_racial_talent_picks_unlock_at_level_5():
     assert u.picks_available("racial") == 1
     assert u.choose_talent("racial", "tongue")
     assert u.picks_available("racial") == 0
-    u.set_track_level("racial", 6)
+    u.set_track_level("racial", 9)
+    assert u.picks_available("racial") == 0
+    u.set_track_level("racial", 10)
     assert u.picks_available("racial") == 1
+    u.set_track_level("racial", 15)
+    assert u.picks_available("racial") == 2
+    assert progression.next_racial_pick(15) is None
+    assert progression.next_racial_pick(5) == 10
+
+
+def test_authored_npcs_follow_the_racial_rule():
+    """No authored NPC pins its racial level or holds more racial talents than it earns."""
+    for entry in npc_lib.list_npcs():
+        slug = entry["slug"]
+        u = npc_lib.load_npc(slug)
+        assert u._racial_override is None, slug
+        assert u.racial_level == progression.racial_level(u.racial_xp), slug
+        assert u.picks_available("racial") >= 0, slug
 
 
 def test_racial_level_is_the_summed_track_levels_on_a_scale():

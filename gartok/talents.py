@@ -54,8 +54,8 @@ can hold every node. A deeper node just needs the one above it first (`requires`
 which chains: `fleet` (tier 3) pulls in `deadeye` then `agile`.
 
 **The racial track** (`racial`) earns no XP of its own -- its level is
-`progression.racial_level(combat_level + work_level)`, so every level anywhere
-grants a racial pick (and a hit die). Its nodes are **race-gated**: a `Talent`
+`progression.racial_level(combat_level + work_level + magic_level)`, so every level
+anywhere grants a hit die, and every 5th racial level a racial pick. Its nodes are **race-gated**: a `Talent`
 with `race` set only shows / can be picked for that race. Grippli is the first
 race with authored nodes (`tongue`, `webbed_feet`); other races have racial levels and picks
 but no nodes yet, same way the combat / work trees started.

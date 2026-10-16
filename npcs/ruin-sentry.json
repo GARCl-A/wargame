@@ -18,6 +18,7 @@
   "hp": 54,
   "share_food": true,
   "combat_xp": 136,
+  "magic_xp": 0,
   "work_hours": 320,
   "bio": "Ancient automaton construct bound to guard the library entrance.",
   "arena_title": false,
@@ -51,7 +52,8 @@
     ],
     "racial": [
       "tireless_worker"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     4,
@@ -76,8 +78,7 @@
   "poisons": {},
   "antidote_cooldown": 0,
   "natural_armor": 0,
-  "racial_override": 6,
-  "hp_max": 54,
+  "racial_override": null,
   "languages": [
     "Ankarin",
     "Draconic"
@@ -85,10 +86,12 @@
   "equipped_weapon": "Axe",
   "equipped_offhand": "Torch",
   "equipped_tongue": null,
+  "equipped_artifact": null,
   "equipped_armor": "Brigandine",
   "inventory": [],
   "locked_items": {},
   "dormant": false,
+  "afoot": false,
   "awareness_radius": 0,
   "npc_slug": "ruin-sentry"
 }

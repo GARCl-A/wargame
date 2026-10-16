@@ -113,9 +113,10 @@ mods, a hit die, a size, a language, a racial ability and an age multiplier.
 no occupation, they fight with their own body, and the creator can pick them
 like any race (the Wolf is the first). A race may set its own **speed** in
 meters; unset, it is the size's (the Wolf walks 10.5 m / 7 cells). Switching a
-character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** and the **Snake** are beasts too (the Snake is Small, +4 Dex, and every attack it makes is a finesse attack with its *Fangs*). The **Skeleton** is
-`kind = "undead"` (the `data.UNDEAD` table): not an animal, so it keeps a job — an
-occupation with its weapon and item. Neither rolls in a locality's encounter table
+character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** and the **Snake** are beasts too (the Snake is Small, +4 Dex, and every attack it makes is a finesse attack with its *Fangs*). The **Skeleton** and the **Zombie** are
+`kind = "undead"` (the `data.UNDEAD` table): not animals, so they keep a job — an
+occupation with its weapon and item. The Zombie is slow and tough (STR +2, DEX −2, CON +4, 6 m / 4
+cells, Darkvision, Sleep Immunity); the undead never break and run (`ai._mindless`). Neither rolls in a locality's encounter table
 (`data.WILD_POOL` is wolves only); they are authored in the creator or placed by hand.
 The **Ogre** (the `data.GIANTS` table) is the same: a humanoid with a job, never a
 player's race. Large, `d12` Hit Die, STR +4 DEX −2 CON +2 INT −2 WIS +2 CHA −2, Jotun,
@@ -284,8 +285,8 @@ tunable. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author); past L2 is a stub.
 Each level in combat, work and magic grants **one pick** in that track's tree. The **racial
 track** earns no XP of its own — its "XP" is the sum of the other track levels
 (`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
-dice scale with every racial level (L1+), the **first racial talent pick unlocks
-only at Racial Level 5** (`max(0, racial_level - 4)`). Its nodes are **race-gated**
+dice scale with every racial level (L1+), a **racial talent pick comes only every
+5 racial levels**: one at 5, 10 and 15, three at the cap (`progression.racial_picks`). Its nodes are **race-gated**
 (e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox).
 All three tables run to level 15 so the creator can pin NPCs that high, but
@@ -332,7 +333,7 @@ State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
-`conditions.py`. A first foothold, not a full system — five spells today.
+`conditions.py`. A first foothold, not a full system — seven spells today.
 
 - **Sources.** `magic_sources` (a list, no repeats, of `nature` / `blood` / `faith`) gates which
   spells a character can ever learn: a spell is castable when any one of the unit's
@@ -342,7 +343,7 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   (the Kenku's and the Skeleton's "Faith Initiate", the Sprite's "Nature Initiate"); a
   Faith Initiate who already holds `faith` gains a free faith spell instead. The creator
   toggles each school on its own; dropping one forgets only the spells no remaining school casts.
-- **Casting** costs 1 action point and only shows up once the spell's id is
+- **Casting** costs 1 action point (a level-2 spell, both) and only shows up once the spell's id is
   in `spells_known`:
   - **Magic Missile** (level 0) — ranged (6 cells), `d20 + INT` vs AC, `1d4`
     damage on a hit; a natural 20 crits (rolls the die twice), a natural 1
@@ -358,6 +359,15 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
     straight away from the caster unless something is in the way (into the flames, it burns).
     Its scroll is the Nature Coven's reward for the Ogre's Wildfire; no shop sells it. The AI casts
     it when it beats its hand weapon or would throw a foe into the fire.
+  - **Invisibility** (level 2, every school, 2 points) — the caster vanishes from every other
+    side's sight (`conditions.Invisible`, see *Invisibility*). No scroll yet: only the
+    necromancer at the front knows it.
+  - **Raise Dead** (level 2, **Faith only**, 2 points) — a **dead** body (not dying, not stable)
+    within 6 cells and in sight stands up again with **1 HP on the caster's side**, the same body with
+    its gear, immune to Sleep. A raised body that falls again is dead for good and is never raised
+    twice; a guild member's body can be raised against the guild. The log names the cell it rises on.
+    A teaser of what a strong caster does: only the necromancer at the front knows it, and no source
+    teaches it yet.
   - **Light Globe** (level 0) — drop a light source ground object at a cell in range (6 cells).
   - **Floating Disk** (level 0) — conjures a magical floating platform at a cell
     in range (6 cells) at a chosen altitude (e.g. ground level z=0). Bridges
@@ -767,6 +777,33 @@ A battle can have **burning cells** (`Battle.fire`); for now only the Ogre's for
 - **Walking.** A walk goes round the flames when that costs no more than going through
   (`Battle._walk_path`); the AI steps out of the fire first thing (`ai._leave_fire`) and routes round
   it when there is a way (`ai._step_toward`).
+
+### Three sides 🟡
+
+A fight can hold **more than two sides** (`Battle(others={team: [units]})`): each further side is
+hostile to every other one and played by the AI, and the warband fights it as surely as the guild
+does. The player's side still wins only when every other side is down (`Battle.foe_units`); the
+loot is every body on the field. Every 2-sided fight plays as before. For now only the necromancer
+at the front brings one (`undead`, violet tokens), plus `fallen`, a side of the dead of days before
+that never acts.
+
+A scenario can also let the squad **withdraw** as winners once its objective is met
+(`Scenario.can_withdraw`, the **WITHDRAW** button): the fight ends there, with the loot of what
+has fallen so far.
+
+### Invisibility 🟡
+
+- **Invisible** (`conditions.Invisible`): every other side neither sees nor targets the unit, and
+  routes walk through its cell as if it were empty.
+- **Found:** a unit that walks into its cell **bumps into it** (the walk stops a cell short) and
+  its side sees it; **Investigate** (1 point; besides an adjacent secret wall, it is offered while
+  something unseen is on the field) finds any within **3 cells** on `d20 + WIS` against `10 + its INT`;
+  a **wound** shows it to every side.
+  Found, it is seen until the start of its own next turn, when it slips away again.
+- **Broken:** it is gone for good the moment the invisible unit **hurts someone** on another side.
+  Raising the dead does not break it.
+- The AI never picks an unseen target; with nobody in sight and something unseen on the field, a
+  unit investigates (once a turn).
 
 ### Vision and light 🟡
 
@@ -1721,6 +1758,21 @@ played by the AI (green tokens); across the field, a **warband of 6** mixed huma
 Lethal. Won with **every soldier alive**, the errand is done: +1 reputation with the Faith Order, and the
 potions left over are the pay. A dead soldier, a lost fight or a missed week fail it; the Order asks again
 **14 days** later. The guild's own deaths do not fail it.
+
+**The Necromancer at the Front** (`necromancer.py`, the Faith Order's second errand, offered once
+Mercy is done, **14 days**). The soldiers who fell at the front do not stay dead. The same JOIN THE
+SKIRMISH opens a **48 x 30 field at night** (the trenches' watch fires the only light) with three
+sides: the squad and **4 soldiers** (as in Mercy), a **warband of 8** one level over in Studded Leather, and the
+necromancer's dead (**4 Zombies** at the warband's level), while **6 bodies** of the days before lie in
+no man's land. **Oskar Vell, the Gravecaller** (`npcs/necromancer.json`, a Human Gravedigger, racial 15:
+combat 5 / work 10 / magic 15) starts the fight **invisible** in the middle and raises a body each turn
+he can, the strongest in reach, walking to the next when none is; he backs off from whoever found him
+and never strikes while a body is left. His fall drops every undead with him and **meets the errand**
+(+1 Faith Order); then the squad **withdraws** or fights the warband on for its loot. The soldiers may
+all die. A fight he survives, or a missed deadline, fails it; the Order asks again in 14 days. His
+the field is the pay: every body there gives up what it **wore** as well as what it carried
+(`Scenario.strips_the_dead`: the raiders in Studded Leather, the soldiers in Leather Jerkins, the dead of
+both armies in theirs), and the necromancer's pack holds gems, two scrolls and potions.
 
 **Ethereal nodes.** An event can put nodes on the map for a while and take them off again
 (`world.add_node` / `world.remove_node`): they are on the map, the routes and the minimap like any

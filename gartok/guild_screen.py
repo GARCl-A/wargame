@@ -619,9 +619,10 @@ class GuildScreen(Screen):
         into_w, span_w = progression.to_next(progression.WORK_XP_THRESHOLDS, unit.work_xp)
         into_r, span_r = progression.to_next(progression.RACIAL_XP_THRESHOLDS, unit.racial_xp)
         jobs = progression.eligible_work_activities(unit.work_level, unit)
+        nxt = progression.next_racial_pick(unit.racial_level)
         racial = (f"Combat {unit.combat_level} + Work {unit.work_level} levels. +1 hit die per level. "
-                  + (f"First racial talent at Lv 5 ({5 - unit.racial_level} to go)."
-                     if unit.racial_level < 5 else "Racial talent tree unlocked."))
+                  + (f"Next racial talent at Lv {nxt} ({nxt - unit.racial_level} to go)."
+                     if nxt else "Every racial talent earned."))
         tracks = [
             {"label": "Combat career", "value": f"LVL {unit.combat_level}  ({into_c}/{span_c} XP)" if span_c
              else f"LVL {unit.combat_level}  (MAX)",

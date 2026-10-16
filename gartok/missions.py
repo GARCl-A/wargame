@@ -207,6 +207,20 @@ FAITH_BATTLEFIELD = MissionTemplate(
     retry_days=14, fight_at="battlefield",
 )
 
+# The Faith Order's second (`necromancer.py`): the dead at the front will not stay down. Done the
+# moment the necromancer falls, whatever happens after; the soldiers do not matter this time. A lost
+# fight or a missed deadline fails it, and the Order asks again two weeks later.
+FAITH_NECROMANCER = MissionTemplate(
+    "faith_necromancer", "faith", "faith_cathedral", "The Necromancer at the Front",
+    "The soldiers who fell at the Battlefield do not stay dead: days later they get up and walk. "
+    "Someone out there is raising them, and nobody has seen who. Go to the front, find whoever "
+    "wakes the dead, and put them down.",
+    goal_item="Holy Symbol", goal_qty=1,                  # goal_item: only the board's icon here
+    reward=0, deadline_days=14,
+    tags=("magic", "faith", "necromancer"), requires=FAITH_BATTLEFIELD.id,
+    retry_days=14, fight_at="battlefield",
+)
+
 # The Nature Coven's third (`wildfire.py`): an Ogre's goblins set the Wilds on fire. Taking it puts
 # the foci and the Great Focus on the map; it is done the moment the Ogre is talked round or beaten,
 # and fails on the event's last day with the Ogre still unbeaten.
@@ -240,6 +254,7 @@ TEMPLATES = {
     **{t.id: t for t in CODEX_DELIVERIES},
     **{t.id: t for t in SNAKE_HUNTS},
     FAITH_BATTLEFIELD.id: FAITH_BATTLEFIELD,
+    FAITH_NECROMANCER.id: FAITH_NECROMANCER,
     NATURE_WILDFIRE.id: NATURE_WILDFIRE,
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
@@ -487,10 +502,7 @@ def snake_wanted_alive(guild):
 def pending_battlefield(guild, group):
     """The Faith Order's errand, when `group` is the one carrying it (its signer is a member):
     the Battlefield's skirmish is open to that group. Else None."""
-    m = active(guild, FAITH_BATTLEFIELD)
-    if m is None or not any(u.uid == m.unit_uid for u in group.members):
-        return None
-    return m
+    return _held_by(guild, FAITH_BATTLEFIELD, group)
 
 
 def settle_battlefield(guild, mission, won, lost):
@@ -511,6 +523,38 @@ def settle_battlefield(guild, mission, won, lost):
     else:
         why = "the line broke"
     return (f"Mercy at the Front failed: {why}. The Order will ask again in "
+            f"{template_of(mission).retry_days} days."), []
+
+
+def _held_by(guild, template, group):
+    """`template`'s run out now when its signer is in `group`, else None."""
+    m = active(guild, template)
+    return m if m is not None and any(u.uid == m.unit_uid for u in group.members) else None
+
+
+def pending_necromancer(guild, group):
+    """The Faith Order's hunt for the necromancer, when `group` carries it. Else None."""
+    return _held_by(guild, FAITH_NECROMANCER, group)
+
+
+def pending_front(guild, group):
+    """Either Faith errand at the Battlefield that `group` carries (the skirmish opens for it)."""
+    return pending_battlefield(guild, group) or pending_necromancer(guild, group)
+
+
+def settle_necromancer(guild, mission, fallen):
+    """The fight at the front is over: `fallen` = the necromancer went down in it. Done (and the
+    Faith Order's deed) when he did; else failed, open again after `retry_days`.
+    -> (notice, deeds banked)."""
+    if fallen:
+        mission.state = "done"
+        recorder.emit("mission", what="turn_in", id=mission.template_id, reward=0)
+        t = template_of(mission)
+        deeds = factions.settle(guild, factions.Event(
+            "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
+        return "The necromancer is dead, and the dead at the front lie still. The Faith Order hears of it.", deeds
+    mission.state, mission.failed_day = "failed", guild.clock.day
+    return (f"The necromancer still walks the front. The Order will ask again in "
             f"{template_of(mission).retry_days} days."), []
 
 

@@ -178,7 +178,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
         outcome.arena_reward = arena_offer.purse
     elif won and battle.lethal:                   # lethal win: loot the field
         outcome.loot_pool = loot.field_loot(battle, fallen_combatants)
-        bound = [c for c in battle.enemy_units if c.captured]
+        bound = [c for c in battle.foe_units if c.captured]
         group = guild.group_of(survivors[0]) if survivors else None
         if bound and group is not None:
             outcome.captive_notes = captives.take(guild, group, bound)

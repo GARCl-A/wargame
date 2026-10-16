@@ -1,0 +1,147 @@
+{
+  "uid": "8323f8f6f21a4e2dbfbb17f67c966ec1",
+  "recruited_by": null,
+  "name": "Oskar Vell, the Gravecaller",
+  "auto_name": false,
+  "portrait_id": 2200172790,
+  "portrait_file": null,
+  "race": "Human",
+  "occupation": "Gravedigger",
+  "alignment": "Neutral and Evil",
+  "crime": 0,
+  "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 96,
+  "share_food": true,
+  "combat_xp": 55,
+  "magic_xp": 465,
+  "work_hours": 1760,
+  "bio": "A gravedigger of the Faith who learned to wake what he buried. The war gives him all the dead he wants.",
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Ankarin",
+    "Dictionary of Elvish"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_sources": [
+    "faith"
+  ],
+  "spells_known": [
+    "raise_dead",
+    "invisibility",
+    "magic_missile",
+    "sleep"
+  ],
+  "study_target": null,
+  "study_progress": 0,
+  "talents": {
+    "combat": [
+      "tough",
+      "alert",
+      "quick_wits",
+      "agile",
+      "strong"
+    ],
+    "work": [
+      "charismatic",
+      "clever",
+      "linguist",
+      "carrier",
+      "negotiator",
+      "brisk_hands",
+      "piecework",
+      "fixer",
+      "provisioner",
+      "crafter"
+    ],
+    "racial": [
+      "cosmopolitan"
+    ],
+    "magic": []
+  },
+  "level_hp_rolls": [
+    6,
+    7,
+    8,
+    2,
+    7,
+    7,
+    6,
+    1,
+    4,
+    1,
+    8,
+    4,
+    6,
+    3,
+    3
+  ],
+  "base_attributes": {
+    "strength": 7,
+    "dexterity": 13,
+    "constitution": 12,
+    "intelligence": 17,
+    "wisdom": 16,
+    "charisma": 10
+  },
+  "age_base": 7,
+  "age": 7,
+  "hp_roll": 7,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "languages": [
+    "Ankarin",
+    "Elvish"
+  ],
+  "equipped_weapon": "Light Pick",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_artifact": null,
+  "equipped_armor": null,
+  "inventory": [
+    {
+      "id": "shovel",
+      "name": "Shovel",
+      "qty": 1
+    },
+    {
+      "id": "semi_precious_gemstone",
+      "name": "Semi-precious Gemstone",
+      "qty": 2
+    },
+    {
+      "id": "precious_gemstone",
+      "name": "Precious Gemstone",
+      "qty": 1
+    },
+    {
+      "id": "scroll_of_sleep",
+      "name": "Scroll of Sleep",
+      "qty": 1
+    },
+    {
+      "id": "scroll_of_magic_missile",
+      "name": "Scroll of Magic Missile",
+      "qty": 1
+    },
+    {
+      "id": "minor_healing_potion",
+      "name": "Minor Healing Potion",
+      "qty": 2
+    }
+  ],
+  "locked_items": {},
+  "dormant": false,
+  "afoot": false,
+  "awareness_radius": 8,
+  "npc_slug": "necromancer"
+}

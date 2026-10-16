@@ -44,6 +44,7 @@ from . import (
     campaign,
     combat_lab,
     forced,
+    group_turn_screen,
     node_functions,
     orders,
     persist,
@@ -65,6 +66,7 @@ from .combat_log import CombatLog
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
 from .guild import Guild
+from .group_turn_screen import GroupTurnScreen
 from .guild_screen import GuildScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
@@ -226,6 +228,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         self._record_play()
         self._left_outside = None
         self._pending_event = None
+        self._focus_gid = None
         if save_id != persist.CURRENT:
             self._save()                     # the snapshot becomes the live state
         set_player_color(self.guild.banner_color)
@@ -300,6 +303,29 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
+        self._hand_over_map()
+
+    def _hand_over_map(self):
+        """The map lands on a band other than the one the player last had in view: say so."""
+        m = self.scene
+        group = m.selected
+        if not self._turn_moved(group, first_counts=False):
+            return
+        ambushed = self._pending_event is not None and self._pending_event[0] is group
+        action = "AMBUSHED -- FIGHT WHEN READY" if ambushed else "AWAITS ORDERS"
+        self.scene = GroupTurnScreen(self.ui_fonts, self.guild, group, action,
+                                     on_go=lambda: setattr(self, "scene", m), resume_to=m, danger=ambushed)
+
+    @staticmethod
+    def _activity_label(order):
+        """The hand-over card's headline for a pending order: the node button's label, the
+        forced event's, or the kind itself."""
+        if order.kind in forced.EVENTS:
+            return forced.EVENTS[order.kind].label or order.kind.upper()
+        if order.kind == "arena":
+            return "ENTER THE ARENA"
+        return next((f.label for f in node_functions.FUNCTIONS.values()
+                     if f.order_kind == order.kind and f.label), order.kind.replace("_", " ").upper())
 
     def _abandon_broken(self, group, dest):
         """The group means to travel with a broken wagon: that leaves it behind. Ask about
@@ -398,6 +424,8 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         jump, no chasing. Auto orders (travel/work/rest) already happened by the
         time this returns; anything else comes back as `self._pending` for
         `_after_activity`."""
+        if isinstance(self.scene, MapScreen):
+            self._focus_gid = self.scene.selected.gid
         chase = dt is None
         all_casualties = []
         while True:
@@ -472,6 +500,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
 
     # order.kind -> opener(self, group, node, order); a new activity is one line.
     _screen_dead: ClassVar[tuple] = ()     # starved during a screen's hour, until the screen is left
+    _focus_gid = None                      # the group the player last had in view: the hand-over card fires off it
 
     # node function id (node_functions.FUNCTIONS) -> the screen that plays it
     _FUNCTION_OPENERS: ClassVar[dict] = {
@@ -526,9 +555,26 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
             node = world.node(group.node)
             handler = self._ACTIVITY_OPENERS.get(order.kind)
             if handler:
-                handler(self, group, node, order)
+                self._hand_over(group, order, lambda: handler(self, group, node, order))
             return
         self._start_map()
+
+    def _turn_moved(self, group, first_counts=True):
+        """Bring `group` into view; true when that moves the player off another group and
+        there is more than one. `first_counts` False: nothing in view yet is no move."""
+        moved = group.gid != self._focus_gid and (first_counts or self._focus_gid is not None)
+        self._focus_gid = group.gid
+        return moved and group_turn_screen.needed(self.guild)
+
+    def _hand_over(self, group, order, go):
+        """Open `group`'s pending screen, behind a hand-over card when the clock moved the
+        player off the group they had in view."""
+        if not self._turn_moved(group):
+            go()
+            return
+        behind = self.scene if isinstance(self.scene, MapScreen) else None
+        self.scene = GroupTurnScreen(self.ui_fonts, self.guild, group, self._activity_label(order), go,
+                                     resume_to=behind, danger=order.kind in forced.EVENTS)
 
     # ------------------------------------------------------------------ #
     def _toggle_pause(self):

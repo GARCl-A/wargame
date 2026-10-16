@@ -72,6 +72,7 @@ class Combatant:
         self.z = None                 # floor elevation standing on (None = query board)
         self.status = "up"            # up | dying | stable | broken | fled | dead
         self.death_clock = 0          # dying: own turns elapsed; save on DYING_TURNS
+        self.raised = False           # stood back up by Raise Dead: undead now, falls for good
         self.nonlethal = False        # set by Battle for a non-lethal fight: 0 HP -> knocked out
         self.ferocity_pending = False # Orc downed this turn, falls at end_turn
         self.rounds_submerged = 0     # turns spent underwater in deep water (breath / drowning)
@@ -186,6 +187,17 @@ class Combatant:
         automaton is recovered afterwards and a runaway is fine, so both count."""
         return self.status in ("up", "stable", "broken", "fled")
 
+    def raise_from_dead(self, team):
+        """Raise Dead: this dead body stands again with 1 HP, on `team`'s side."""
+        self.status = "up"
+        self.hp = 1
+        self.death_clock = 0
+        self.raised = True
+        self.team = team
+        self.ai_ally = False
+        self.conditions = []
+        self.ap = 0
+
     def go_down(self, log, knockout=False):
         """Drop to 0 HP. An automaton goes `broken` (no death clock); everyone else
         enters `dying`, restarting the death counter. Called for a standing unit
@@ -200,6 +212,10 @@ class Combatant:
 
         self.hp = 0
         self.ferocity_pending = False
+        if self.raised:
+            self.status = "dead"
+            log(f"  {self.name} collapses, dead for good.")
+            return
         if self.nonlethal or knockout:
             self.status = "stable"           # knocked out, survives
             log(f"  {self.name} is knocked out" + (" (non-lethal fight)." if self.nonlethal else "."))
@@ -232,6 +248,25 @@ class Combatant:
     def add_condition(self, cond):
         if not self.has_condition(cond.id):
             self.conditions.append(cond)
+
+    def condition(self, cid):
+        return next((c for c in self.conditions if c.id == cid), None)
+
+    def hidden_from(self, team):
+        """Invisible to `team`: another side that has not found it this round."""
+        inv = self.condition("invisible")
+        return inv is not None and team != self.team and not inv.wounded and team not in inv.seen_by
+
+    def reveal_to(self, *teams):
+        inv = self.condition("invisible")
+        if inv is not None:
+            inv.seen_by.update(teams)
+
+    def drop_invisibility(self, log):
+        inv = self.condition("invisible")
+        if inv is not None:
+            self.conditions.remove(inv)
+            log(f"{self.name} flickers into sight!")
 
     def _condition_mods(self, field):
         mods = []
@@ -539,6 +574,9 @@ class Combatant:
             
         self.hp -= amount
         log(f"{self.name} takes {amount} damage (HP {max(self.hp, 0)}/{self.hp_max}).")
+        inv = self.condition("invisible")
+        if inv is not None and amount > 0:
+            inv.wounded = True
         if self.hp <= 0:
             if self._ability.on_downed and self.spend_once("on_downed"):
                 self._ability.on_downed(self, log)

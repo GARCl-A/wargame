@@ -268,7 +268,7 @@ def test_the_log_is_closed_when_the_screen_sees_the_end(tmp_path):
 def test_every_benchmark_fight_builds_at_any_level(fight_id):
     fight = combat_lab.FIGHTS[fight_id]
     battle, meta = combat_lab.build(fight_id, 3, fight.squad, seed=11)
-    assert len(battle.player_units) == fight.squad and battle.enemy_units
+    assert len([u for u in battle.player_units if not u.ai_ally]) == fight.squad and battle.enemy_units
     assert meta == {"fight": fight_id, "level": 3, "squad": fight.squad, "seed": 11}
 
 

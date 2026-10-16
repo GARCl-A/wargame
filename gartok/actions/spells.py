@@ -4,7 +4,7 @@ import random
 
 from .. import data, intel, items, magic
 from ..board import grid_distance
-from ..conditions import Sleeping
+from ..conditions import Invisible, Sleeping
 from ..data import d20
 from ..ground import GroundObject
 from .base import Action, _cell_free, _hostile_target, _sign, nonlethal_penalty
@@ -78,7 +78,7 @@ class SleepAction(SpellAction):
             return
         actor.ap -= self.cost
         battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
-        if getattr(target.char.ability, "sleep_immunity", False):
+        if getattr(target.char.ability, "sleep_immunity", False) or target.raised:
             battle.log(f"  {target.name} is immune to sleep effects!")
             return
 
@@ -200,12 +200,72 @@ class FloatingDiskAction(_PlacedSpellAction):
         battle.clear_pf_cache()
 
 
+class InvisibilityAction(SpellAction):
+    """Level 2, every school: the caster vanishes from every other side's sight until it
+    hurts someone (`conditions.Invisible`, `Combatant.hidden_from`)."""
+    spell_id = "invisibility"
+    cost = 2
+
+    def available(self, battle, actor):
+        return super().available(battle, actor) and not actor.has_condition("invisible")
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        actor.add_condition(Invisible())
+        battle.log(f"{actor.name} casts {self.spell.name} and fades from sight.")
+
+
+class RaiseDeadAction(SpellAction):
+    """Level 2, Faith: a dead body in reach stands up again on the caster's side with 1 HP.
+    A body raised once and fallen again stays down. The ground stirs where it rises, which
+    is all an unseen caster gives away."""
+    spell_id = "raise_dead"
+    target, aimed = "cell", True
+    cost = 2
+    REACH = 6
+
+    @staticmethod
+    def bodies(battle):
+        """The dead on the field that can still be raised."""
+        return [u for u in battle.units if u.dead and not u.raised and not u.captured]
+
+    def body_at(self, battle, pos):
+        return next((u for u in self.bodies(battle) if pos in battle.cells_of(u)), None)
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target) or target is None:
+            return False
+        body = self.body_at(battle, target)
+        if body is None:
+            return False
+        return (battle.units_distance(actor, body) <= self.REACH and battle.los_between(actor, body)
+                and _cell_free(battle, body, body.pos))
+
+    def highlight_cells(self, battle, actor):
+        return [u.pos for u in self.bodies(battle) if self.can(battle, actor, u.pos)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        body = self.body_at(battle, target)
+        body.raise_from_dead(actor.team)
+        battle.log(f"The earth stirs at {body.pos} -- {body.name} rises again!")
+        battle.fx(body.pos, "rises!", "crit")
+
+
 _SPELL_ACTIONS = {
     "magic_missile": MagicMissileAction,
     "sleep": SleepAction,
     "light_globe": LightGlobeAction,
     "floating_disk": FloatingDiskAction,
     "water_jet": WaterJetAction,
+    "invisibility": InvisibilityAction,
+    "raise_dead": RaiseDeadAction,
 }
 
 

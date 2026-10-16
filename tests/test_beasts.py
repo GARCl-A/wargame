@@ -175,7 +175,7 @@ def test_dire_growth_makes_a_wolf_large_and_stacks_with_the_bite():
     assert w.choose_talent("racial", "dire_growth")
     assert (w.size, w.footprint) == ("Large", 2)
     assert w.unarmed_damage == (1, 4)                      # the Large unarmed die
-    w.set_track_level("racial", 7)
+    w.set_track_level("racial", 10)
     w.choose_talent("racial", "rending_bite")
     assert w.unarmed_damage == (2, 4)
     assert w.speed == data.squares(10.5)                  # Large does not slow it
@@ -202,7 +202,7 @@ def test_the_creator_can_pin_racial_level_up_to_fifteen():
     w = _wolf()
     w.set_track_level("racial", 10)
     assert w.racial_level == 10
-    assert w.picks_available("racial") == 6
+    assert w.picks_available("racial") == 2
     w.set_track_level("racial", 99)
     assert w.racial_level == 15
 
@@ -284,7 +284,7 @@ def _skeleton():
 def _spider(*picks):
     random.seed(13)
     sp = Unit("enemy", race=data.race_by_name("Giant Spider"))
-    sp.set_track_level("racial", 10)
+    sp.set_track_level("racial", 15)
     for p in picks:
         assert sp.choose_talent("racial", p)
     return sp

@@ -11,6 +11,7 @@ import random
 from gartok import forced, orders
 from gartok.app import App
 from gartok.group import Group
+from gartok.group_turn_screen import GroupTurnScreen
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen
 from tests.helpers import Unit, packed, walker, world
@@ -174,6 +175,8 @@ def test_hunt_stretch_keeps_another_groups_work_order_in_lockstep_with_the_clock
 
     app._advance()                                         # chases the 1 h approach
     assert lumber.order.remaining == 7
+    assert isinstance(app.scene, GroupTurnScreen)          # two groups: the hand-over card first
+    app.scene.on_go()
     assert isinstance(app.scene, app_mod.HuntScreen)
 
     from gartok import hunt
@@ -237,9 +240,13 @@ def test_two_interactive_orders_drain_one_screen_at_a_time():
             opened.append("recruit"), object())[1])
     try:
         app._advance()
+        assert opened == [] and isinstance(app.scene, GroupTurnScreen)
+        app.scene.on_go()
         assert opened == ["market"]                # only the first one opened so far
         assert len(app._pending) == 1
         app._after_activity()                       # simulate the market screen finishing
+        assert isinstance(app.scene, GroupTurnScreen) and app.scene.group is g2
+        app.scene.on_go()
         assert opened == ["market", "recruit"]
         assert not app._pending
     finally:

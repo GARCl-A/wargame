@@ -42,6 +42,9 @@ class ShrineMissionScreen(MissionOfferScreen):
         if t is missions.NATURE_WILDFIRE:
             return (f"goal: talk the Ogre round or beat him, and put out what fires you can  ·  "
                     f"{t.deadline_days} days  ·  the Coven gives a {wildfire.REWARD}")
+        if t is missions.FAITH_NECROMANCER:
+            return (f"goal: find and put down whoever raises the dead at {world.node(t.fight_at).name}  ·  "
+                    f"{t.deadline_days} days")
         if t.fight_at:
             goal = f"win the skirmish at {world.node(t.fight_at).name}, every soldier alive"
             if t.starting_item and not any(m.template_id == t.id for m in self.guild.missions):
@@ -59,6 +62,8 @@ class ShrineMissionScreen(MissionOfferScreen):
             return f"the fires burn round The Wilds{due}{burned}"
         if t.fight_at:
             due = f"  ·  {days_left} day(s) left" if days_left is not None else ""
+            if t is missions.FAITH_NECROMANCER:
+                return f"the dead rise at {world.node(t.fight_at).name}: find the one who wakes them{due}"
             return f"fight at {world.node(t.fight_at).name}, lose no soldier{due}"
         return f"{progress} / {t.goal_qty} {t.goal_item}"
 

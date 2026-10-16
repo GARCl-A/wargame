@@ -42,20 +42,26 @@ def build_soldiers(level, rng=random):
         u = encounters.build_enemy(encounters.clamp_level(level - SOLDIER_GAP), rng)
         u.team = "player"
         u.alignment = SOLDIER_ALIGNMENT
-        if u.fits_armor(SOLDIER_ARMOR) and not u.equipped_armor:
-            u.give_to_armor(SOLDIER_ARMOR)
+        dress(u, SOLDIER_ARMOR)
         out.append(u)
     return out
 
 
-def build_warband(level, rng=random):
-    """The frontier warband: `WARBAND` mixed humanoids `WARBAND_EDGE` over `level`."""
-    return [encounters.build_enemy(encounters.clamp_level(level + WARBAND_EDGE), rng) for _ in range(WARBAND)]
+def dress(unit, armor):
+    """Put `armor` on `unit` when it fits and it wears none."""
+    if unit.fits_armor(armor) and not unit.equipped_armor:
+        unit.give_to_armor(armor)
+    return unit
 
 
-def parapet(x):
+def build_warband(level, rng=random, count=WARBAND):
+    """The frontier warband: `count` mixed humanoids `WARBAND_EDGE` over `level`."""
+    return [encounters.build_enemy(encounters.clamp_level(level + WARBAND_EDGE), rng) for _ in range(count)]
+
+
+def parapet(x, rows=ROWS):
     """A trench's wall line at column `x`, with a two-cell gap every `GAP_EVERY` rows."""
-    return {(x, y) for y in range(ROWS) if y % GAP_EVERY not in (2, 3)}
+    return {(x, y) for y in range(rows) if y % GAP_EVERY not in (2, 3)}
 
 
 def soldiers_lost(battle):
@@ -81,8 +87,13 @@ class BattlefieldScenario(Scenario):
 
     def build(self, battle):
         super().build(battle)
-        if not battle.daylight:            # the watch fires burn in both trenches
-            for x in (PARAPET_X[0] - 1, PARAPET_X[1] + 1):
-                for y in (ROWS // 4, 3 * ROWS // 4):
-                    battle.ground.append(GroundObject.torch((x, y)))
+        if not battle.daylight:
+            watch_fires(battle, PARAPET_X, ROWS)
+
+
+def watch_fires(battle, parapets, rows):
+    """The watch fires burning behind both trenches."""
+    for x in (parapets[0] - 1, parapets[1] + 1):
+        for y in range(rows // 4, rows, rows // 2):
+            battle.ground.append(GroundObject.torch((x, y)))
 

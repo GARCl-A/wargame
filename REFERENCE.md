@@ -403,7 +403,7 @@ Two axes -- order (Lawful/Neutral/Chaotic) and morality (Good/Neutral/Evil).
 
 ## Talent trees
 
-One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`); its nodes are race-gated. A magic node belongs to a school; each school's root is granted by its initiation, not picked.
+One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick only at racial 5, 10 and 15; its nodes are race-gated. A magic node belongs to a school; each school's root is granted by its initiation, not picked.
 
 ### Combat track
 
@@ -583,6 +583,7 @@ Mages of faith, hidden in a cathedral in the hills. They answer to a higher call
 |---|---|---|---|
 | The Codex Delivered | Bring the Ancient Codex to the Faith Cathedral. | +1 | -- |
 | Mercy at the Front | Win the Battlefield's skirmish without losing one of the soldiers. | +1 | -- |
+| The Necromancer at the Front | Put down the necromancer raising the dead at the Battlefield. | +1 | -- |
 
 ## Constants
 

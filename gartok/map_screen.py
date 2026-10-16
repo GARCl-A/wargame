@@ -829,7 +829,7 @@ class MapScreen(Screen):
         if focus is not None:
             blocks += self._wildfire_blocks(g, focus)
         trail_cold = here.has("ox_hunt") and missions.pending_ox(self.guild) is None
-        front_quiet = here.has("skirmish") and missions.pending_battlefield(self.guild, g) is None
+        front_quiet = here.has("skirmish") and missions.pending_front(self.guild, g) is None
         offered = [f for f in node_functions.offered(here)
                    if f.label and (f.id != "property" or self._has_property_business())
                    and (f.id != "ox_hunt" or not trail_cold)

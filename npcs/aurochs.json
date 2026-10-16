@@ -18,7 +18,8 @@
   "hp": 119,
   "share_food": true,
   "combat_xp": 351,
-  "work_hours": 0,
+  "magic_xp": 0,
+  "work_hours": 2912,
   "bio": "The immortal ox. Every hunter sent after it is a story somebody else tells.",
   "arena_title": false,
   "recipes": [],
@@ -48,7 +49,8 @@
     "work": [],
     "racial": [
       "aurochs_might"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     3,
@@ -80,7 +82,7 @@
   "poisons": {},
   "antidote_cooldown": 0,
   "natural_armor": 3,
-  "racial_override": 13,
+  "racial_override": null,
   "languages": [],
   "equipped_weapon": null,
   "equipped_offhand": null,
@@ -90,6 +92,7 @@
   "inventory": [],
   "locked_items": {},
   "dormant": false,
+  "afoot": false,
   "awareness_radius": 8,
   "npc_slug": "aurochs"
 }

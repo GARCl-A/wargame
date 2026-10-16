@@ -33,6 +33,7 @@ class Scenario:
     ambient_light = False    # indoor default: seen only by torchlight / darkvision
     outdoor = False          # outdoor: ambient light tracks the clock (battle.daylight)
     torch_count = 6
+    strips_the_dead = False  # the loot takes what every body wore, not only what it carried (loot.field_loot)
 
     def build(self, battle):
         battle.board = self._make_board()
@@ -68,6 +69,11 @@ class Scenario:
 
     def _make_board(self):
         return Board()
+
+    def can_withdraw(self, battle):
+        """May the player's side leave the field now as winners (`Battle.withdraw`)? Only
+        a scenario whose objective can be met before every foe is down says yes."""
+        return False
 
     def win_check(self, battle):
         """Force a winner on a non-elimination objective: return "player" or

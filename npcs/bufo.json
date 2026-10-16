@@ -15,10 +15,11 @@
   "treated": false,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
-  "hp": 38,
+  "hp": 44,
   "share_food": true,
   "combat_xp": 78,
-  "work_hours": 96,
+  "magic_xp": 0,
+  "work_hours": 320,
   "bio": "The big brother. Plants himself between you and the flag and does not move -- a wall of warty muscle with a broadsword in his fists and a spear on his tongue.",
   "arena_title": false,
   "recipes": [
@@ -46,13 +47,15 @@
     ],
     "racial": [
       "tongue"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     8,
     5,
     1,
-    5
+    5,
+    3
   ],
   "base_attributes": {
     "strength": 17,
@@ -70,13 +73,13 @@
   "antidote_cooldown": 0,
   "natural_armor": 0,
   "racial_override": null,
-  "hp_max": 38,
   "languages": [
     "Sylvan"
   ],
   "equipped_weapon": "Broadsword",
   "equipped_offhand": null,
   "equipped_tongue": "Shortspear",
+  "equipped_artifact": null,
   "equipped_armor": "Chainmail",
   "inventory": [
     {
@@ -92,6 +95,7 @@
   ],
   "locked_items": {},
   "dormant": false,
+  "afoot": false,
   "awareness_radius": 0,
   "npc_slug": "bufo"
 }

@@ -262,9 +262,9 @@ class LevelScreen(SheetModalMixin, Screen):
         if picks:
             text(screen, F["body_sm"], f"{picks} pick{'s' if picks > 1 else ''} to spend "
                  "— choose a lit node", (ix, cy), T.BRASS)
-        elif track == "racial" and u.racial_level < 5:
-            text(screen, F["micro"], "first racial talent unlocks at racial level 5",
-                 (ix, cy), T.TX_FAINT)
+        elif track == "racial" and progression.next_racial_pick(u.racial_level):
+            text(screen, F["micro"], f"next racial talent at racial level "
+                 f"{progression.next_racial_pick(u.racial_level)}", (ix, cy), T.TX_FAINT)
         elif track == "magic" and not u.magic_sources:
             text(screen, F["micro"], "a school's branch opens with its initiation",
                  (ix, cy), T.TX_FAINT)

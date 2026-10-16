@@ -271,6 +271,14 @@
         "Hauls are banked directly into the group's packs. While gathering out-earns standard wages over time, crews working long shifts risk attracting wild beast ambushes."
       ],
       "suggestion": "Be prepared to fight off local predators if you take long shifts, or keep your group well-armed."
+    },
+    "group_turn": {
+      "title": "Another group's turn",
+      "body": [
+        "Every group moves on the same clock. When an order runs out, the screen goes to the group it belongs to, and that may not be the one you were just looking at.",
+        "This card says whose turn it is: the band, where it stands and what is about to open. Click GO ON (or press Enter) and play that group's turn; the map comes back once it is done."
+      ],
+      "suggestion": "Give your groups names (the pencil beside the name on the group screen) so this card tells them apart at a glance."
     }
   }
 }

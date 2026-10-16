@@ -18,6 +18,7 @@
   "hp": 90,
   "share_food": true,
   "combat_xp": 210,
+  "magic_xp": 0,
   "work_hours": 1760,
   "bio": "Just a BIG F. Wolf",
   "arena_title": false,
@@ -59,7 +60,8 @@
     "racial": [
       "rending_bite",
       "dire_growth"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     3,
@@ -88,16 +90,17 @@
   "poisons": {},
   "antidote_cooldown": 0,
   "natural_armor": 3,
-  "racial_override": 10,
-  "hp_max": 90,
+  "racial_override": null,
   "languages": [],
   "equipped_weapon": null,
   "equipped_offhand": null,
   "equipped_tongue": null,
+  "equipped_artifact": null,
   "equipped_armor": null,
   "inventory": [],
   "locked_items": {},
   "dormant": false,
+  "afoot": false,
   "awareness_radius": 0,
   "npc_slug": "biwolf"
 }

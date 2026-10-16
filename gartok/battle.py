@@ -24,7 +24,7 @@ __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
 
 class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
-                 lethal=True, arena=False, clock_day=1, aggressor=None, allies=()):
+                 lethal=True, arena=False, clock_day=1, aggressor=None, allies=(), others=None):
         self.log_lines = []
         self.log_total = 0                    # lines ever logged: `log_lines` keeps only the last 200
         self.sink = None                      # a combat_log.CombatLog while this fight is recorded
@@ -38,6 +38,8 @@ class Battle:
         self.player_units = ([Combatant(u, "player") for u in player_units]
                              + [Combatant(u, "player", ai_ally=True) for u in allies])
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]
+        # further sides, hostile to everyone else and played by ai.py: {team: [units]}
+        self.other_units = [Combatant(u, team) for team, units in (others or {}).items() for u in units]
         self.setup()
 
     # ------------------------------------------------------------------ #
@@ -62,7 +64,7 @@ class Battle:
         self.fx_events = []
         self.ambient_light = False           # scenario.build sets the real value
         self.ground = []                     # GroundObject list (dropped weapons, torches)
-        self.units = list(self.player_units) + list(self.enemy_units)
+        self.units = list(self.player_units) + list(self.enemy_units) + list(self.other_units)
         for u in self.units:
             u.reset_battle_state()           # fresh state (also full heal on a rematch)
             u.nonlethal = not self.lethal    # 0 HP -> knocked out instead of dying
@@ -84,6 +86,7 @@ class Battle:
             u.z = self.board.elevation_at(u.pos)
         self.round_no = 1
         self.winner = None
+        self.withdrew = False
         self.intel = intel.Intel(self)
         self._mopup_open = False              # enemies down, allies still bleeding out
         self._capture_round = None            # enemies down: the round left to bind the fallen
@@ -101,11 +104,11 @@ class Battle:
         self.log("--- Round 1 ---")
         self._announce_turn()
 
-    def reinforce(self, unit, candidates):
-        """Bring a fresh enemy `unit` onto the field at the first of `candidates`
+    def reinforce(self, unit, candidates, team="enemy"):
+        """Bring a fresh `unit` onto the field for `team` at the first of `candidates`
         (anchors) its footprint fits; it acts last this round. Returns the new
         combatant, or None when no candidate is free."""
-        c = Combatant(unit, "enemy")
+        c = Combatant(unit, team)
         c.reset_battle_state()
         c.nonlethal = not self.lethal
         taken = self.occupied() | self.board.walls | self.creature_cells()
@@ -118,7 +121,7 @@ class Battle:
         c.pos = p
         c.z = self.board.elevation_at(p)
         c.initiative = d20() + c.initiative_bonus()
-        self.enemy_units.append(c)
+        (self.enemy_units if team == "enemy" else self.other_units).append(c)
         self.units.append(c)
         self.order.append(c)
         return c
@@ -205,6 +208,25 @@ class Battle:
         for i, c in enumerate(ranked):
             c.ctf_runner = i < cut
 
+    @property
+    def can_withdraw(self):
+        """The scenario lets the player's side leave now, its objective met (`withdraw`)."""
+        return self.winner is None and self.scenario.can_withdraw(self)
+
+    def withdraw(self):
+        """The player's side leaves the field as winners, whatever is still standing."""
+        if not self.can_withdraw:
+            return
+
+        def run():
+            self.winner = "player"
+            self.withdrew = True
+            self.log("The squad withdraws from the field.")
+            self._resolve_dangling_dying()
+            self._log_aftermath()
+            self.log(f"*** Victory: {self.winner} ***")
+        self._recorded("withdraw", self.player_units[0], None, run)
+
     def check_objective(self):
         """Let a caller (the screen, mid-turn) settle a scenario objective the
         instant it is met, instead of waiting for the turn to end."""
@@ -215,7 +237,7 @@ class Battle:
         for u in self.units:
             u.initiative = d20() + u.initiative_bonus()
         self.order = sorted(self.units, key=lambda u: u.initiative, reverse=True)
-        self.turn_idx = 0
+        self.turn_idx = next((i for i, u in enumerate(self.order) if u.alive), 0)   # a body laid out dead never acts
         self.active.start_turn(self.log)
         self._apply_submersion(self.active)
 
@@ -225,6 +247,16 @@ class Battle:
     @property
     def active(self):
         return self.order[self.turn_idx]
+
+    @property
+    def teams(self):
+        """Every side on the field, the player's and the enemy's first."""
+        return list(dict.fromkeys(["player", "enemy", *(u.team for u in self.units)]))
+
+    @property
+    def foe_units(self):
+        """Every unit not on the player's side: the enemy and any further side."""
+        return [u for u in self.units if u.team != "player"]
 
     @property
     def mopping_up(self):
@@ -242,7 +274,7 @@ class Battle:
         Chains."""
         if not any(u.alive and captives.capture_tool(u) for u in self.player_units):
             return []
-        return [u for u in self.enemy_units
+        return [u for u in self.foe_units
                 if u.status in ("dying", "stable", "broken") and not u.captured]
 
     def cells_of(self, unit, pos=None):
@@ -316,8 +348,8 @@ class Battle:
         if getattr(unit, "mounted_on", None):
             ignore.add(unit.mounted_on)
         for u in self.units:
-            if not u.alive or u in ignore:
-                continue
+            if not u.alive or u in ignore or u.hidden_from(unit.team):
+                continue                     # an unseen foe does not shape the route: it is bumped into
             dest = allies if u.team == unit.team else enemies
             dest.update(self.cells_of(u))
         return allies, enemies
@@ -422,6 +454,12 @@ class Battle:
             result.update(cells(anchor, unit.footprint))
         return result
 
+    def _unseen_at(self, unit, anchor):
+        """A foe hidden from `unit`'s side standing where `unit`'s footprint would land at `anchor`."""
+        shape = set(cells(anchor, unit.footprint))
+        return next((u for u in self.units if u.alive and u.hidden_from(unit.team)
+                     and shape & set(self.cells_of(u))), None)
+
     def _walk_path(self, unit, dest, cost):
         """The route a walk to `dest` takes: around the flames when that costs no more than
         `cost` (what the reachability scan charged), else straight through them."""
@@ -507,6 +545,13 @@ class Battle:
         current_z = self.elevation(unit)
         
         for step in segment[1:]:
+            lurker = self._unseen_at(unit, step)
+            if lurker is not None:
+                lurker.reveal_to(unit.team)
+                self.log(f"{unit.name} bumps into something unseen -- {lurker.name} is there!")
+                self.fx(step, "!", "crit")
+                unit.moved = unit.speed
+                break
             left = set(self.cells_of(unit)) if self.fire else None
             step_cost, unit.diag_steps = self.board.path_cost([unit.pos, step], unit.diag_steps,
                                                               platforms=platforms, z_start=current_z)
@@ -559,7 +604,7 @@ class Battle:
             return self.winner
 
         players_up = self._living_side("player")
-        enemies_up = self._living_side("enemy")
+        enemies_up = [u for u in self.foe_units if u.alive]
         if players_up and enemies_up:
             return None
 

@@ -15,10 +15,11 @@
   "treated": false,
   "consecutive_rest_hours": 0,
   "last_daily_luck_day": 0,
-  "hp": 23,
+  "hp": 27,
   "share_food": true,
   "combat_xp": 78,
-  "work_hours": 96,
+  "magic_xp": 0,
+  "work_hours": 320,
   "bio": "The runt, and the deadliest at range. Sits chin-deep in the water channels -- he breathes it fine -- and picks off anyone wading across while his brothers hold the bank.",
   "arena_title": false,
   "recipes": [
@@ -46,12 +47,14 @@
     ],
     "racial": [
       "webbed_feet"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     5,
     4,
     2,
+    3,
     3
   ],
   "base_attributes": {
@@ -70,13 +73,13 @@
   "antidote_cooldown": 0,
   "natural_armor": 0,
   "racial_override": null,
-  "hp_max": 23,
   "languages": [
     "Sylvan"
   ],
   "equipped_weapon": "Light Crossbow",
   "equipped_offhand": null,
   "equipped_tongue": null,
+  "equipped_artifact": null,
   "equipped_armor": "Leather Jerkin",
   "inventory": [
     {
@@ -93,6 +96,7 @@
   ],
   "locked_items": {},
   "dormant": false,
+  "afoot": false,
   "awareness_radius": 0,
   "npc_slug": "peep"
 }

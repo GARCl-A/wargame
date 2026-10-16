@@ -186,7 +186,8 @@ def _talent_trees():
     out = ["## Talent trees\n\nOne tree per track. A new level in a track grants "
            "one pick in its tree; `requires` gates the deeper nodes. The racial "
            "track's level is `combat + work + magic` on a scale "
-           "(`progression.RACIAL_XP_THRESHOLDS`); its nodes are race-gated. A magic "
+           "(`progression.RACIAL_XP_THRESHOLDS`) and grants a pick only at racial 5, 10 "
+           "and 15; its nodes are race-gated. A magic "
            "node belongs to a school; each school's root is granted by its initiation, "
            "not picked."]
     for track in talents.TRACKS:

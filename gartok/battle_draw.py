@@ -58,6 +58,7 @@ class BattleDrawMixin:
         if self.battle.winner:
             self._draw_winner(screen)
         else:
+            self._draw_withdraw(screen)
             self._draw_tooltips(screen)
         if self._handoff is not None:
             self._draw_handoff(screen)
@@ -99,7 +100,7 @@ class BattleDrawMixin:
         for u in b.units:
             if u.dead or u.fled:
                 continue
-            if u.team == self.foe and not self._enemy_visible(u) \
+            if u.team != self.me and not self._enemy_visible(u) \
                     and not (self._is_player_turn() and u.alive
                              and actions.ATTACK.can(b, b.active, u)):
                 continue
@@ -165,6 +166,15 @@ class BattleDrawMixin:
         self._skip_traps_rect = pygame.Rect(self.view.rect.right - 168, self.view.rect.y + 38, 160, 28)
         ui_primitives.draw_button(screen, self.F, self._skip_traps_rect, "PLACE NOTHING", mpos=self.mouse)
 
+    def _draw_withdraw(self, screen):
+        """The objective is met (`Battle.can_withdraw`): leave now, or fight on for the field."""
+        self._withdraw_rect = None
+        if not (self.battle.can_withdraw and self._human("player")):
+            return
+        self._withdraw_rect = pygame.Rect(self.view.rect.right - 168, self.view.rect.y + 38, 160, 28)
+        ui_primitives.draw_button(screen, self.F, self._withdraw_rect, "WITHDRAW",
+                                  primary=True, mpos=self.mouse)
+
     def _draw_tactical(self, screen):
         b = self.battle
         if not self._is_player_turn():
@@ -194,7 +204,7 @@ class BattleDrawMixin:
 
         atk_rects = [
             self._unit_rect(u) for u in b.units
-            if u.alive and u.team == self.foe and (actions.ATTACK.can(b, actor, u)
+            if u.alive and u.team != self.me and (actions.ATTACK.can(b, actor, u)
                                                   or actions.ATTACK_TONGUE.can(b, actor, u))
         ]
         board_render.draw_rings(screen, atk_rects, board_style.ATK_HL)
@@ -290,7 +300,7 @@ class BattleDrawMixin:
         self.buttons = []
 
         insp = self.inspect
-        if insp and insp.team == self.foe and not self._enemy_visible(insp):
+        if insp and insp.team != self.me and not self._enemy_visible(insp):
             insp = None
         if insp and (insp.dead or insp.fled):
             insp = None
@@ -441,7 +451,7 @@ class BattleDrawMixin:
         if not self.inspect_open:
             return
 
-        if who.team == self.foe:
+        if who.team != self.me:
             card = self._foe_card(who)
             card_h = max(40, rect.bottom - cur_y)
             area = pygame.Rect(rect.x, cur_y, rect.w - T.S, card_h)

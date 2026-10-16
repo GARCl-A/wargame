@@ -73,10 +73,17 @@ def worn_by(unit):
 def field_loot(battle, fallen_combatants, rng=random):
     """-> sorted list[str] of item names on the field after a player win.
 
-    `fallen_combatants` are the player's own dead (from `battle.player_units`).
+    `fallen_combatants` are the player's own dead (from `battle.player_units`). The bodies of
+    every other side and of the allied NPCs who fell lie there too (a raised member of the
+    guild is counted once, as one of the guild's own). A scenario with `strips_the_dead` gives
+    up what every body wore too (armour, off hand, artifact), not only what it carried.
     """
     pool = []
-    for u in list(battle.enemy_units) + list(fallen_combatants):
+    strip = getattr(getattr(battle, "scenario", None), "strips_the_dead", False)
+    fallen = list(fallen_combatants)
+    bodies = [u for u in battle.foe_units if u not in fallen]
+    bodies += [u for u in battle.player_units if u.ai_ally and u.dead and u not in fallen]
+    for u in bodies + fallen:
         if getattr(u, "fled", False):
             continue                      # ran off the map with their kit
         pool += carried_by(u)
@@ -84,6 +91,7 @@ def field_loot(battle, fallen_combatants, rng=random):
         if char is not None and u in fallen_combatants:
             for coin in items.COIN_VALUE:
                 pool += [coin] * char.count_of(coin)
+        if char is not None and (u in fallen_combatants or strip):
             if char.equipped_armor:
                 pool.append(char.equipped_armor)
             if char.equipped_offhand:
@@ -100,7 +108,7 @@ def field_loot(battle, fallen_combatants, rng=random):
         if char is not None and not getattr(u, "captured", False):
             slug = getattr(char, "npc_slug", None)
             pool += UNIQUE_DROPS.get(slug, ())
-            if slug in captives.CORPSES and u in battle.enemy_units and not u.alive:
+            if slug in captives.CORPSES and u in battle.foe_units and not u.alive:
                 pool.append(captives.CORPSES[slug])
             drop = char.race.get("drop_item")
             if drop and rng.random() < char.race.get("drop_chance", 0.0):

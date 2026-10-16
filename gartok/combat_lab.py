@@ -15,7 +15,7 @@ import re
 import time
 from dataclasses import dataclass
 
-from . import arena, encounters, hunt, matchup, wildfire, world
+from . import arena, encounters, hunt, matchup, necromancer, wildfire, world
 from .battle import Battle
 from .fortress_scenario import FortressScenario
 from .guild import Guild
@@ -47,6 +47,8 @@ FIGHTS = {f.id: f for f in (
     LabFight("camp", "Wildfire camp", "a goblin crew and its Hobgoblin foreman by a small focus; lethal"),
     LabFight("fortress", "The Ogre's fortress", "the Ogre and his goblins among half-raised walls, "
              "the bonfire spreading; won when the Ogre falls; lethal"),
+    LabFight("necromancer", "The Necromancer at the Front", "three sides on the big Battlefield at night, "
+             "an invisible necromancer raising the dead; met when he falls; lethal", squad=4),
 )}
 
 BOUTS = {"scrapper": arena.scrapper_bout, "champion": arena.champion_bout, "brawl": arena.brawl_bout,
@@ -76,6 +78,10 @@ def build(fight_id, level, squad_size, seed=None):
         foes = wildfire.ogre_band(level)
         battle = Battle(squad, foes, scenario=FortressScenario(foes), daylight=True, lethal=True,
                         aggressor="player")
+    elif fight_id == "necromancer":
+        scenario = necromancer.NecromancerScenario(squad)
+        battle = Battle(squad, scenario.enemies, scenario=scenario, allies=scenario.allies,
+                        others=scenario.others, daylight=False, lethal=True, aggressor="enemy")
     else:
         pack = (hunt.wilds_pack() if fight_id == "wilds"
                 else encounters.roll_encounter(world.node("road").encounter_table))

@@ -241,10 +241,11 @@ _BEASTS = [_beast_dict(*row) for row in BEASTS]
 # but like a beast they are never rolled as a player race -- authored in the
 # creator or placed by hand (the ruins).
 UNDEAD = [
-    # threshold, name, token, Str Dex Con Int Wis Cha  ability                                language  age    hd  size
-    (100, "Skeleton", "s", ( 0,  2,  4, -4, -2, -4), ("darkvision", "sleep_immunity"), "", 5.000,  8, "Medium"),
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability                                language  age    hd  size      speed (m)
+    (100, "Skeleton", "s", ( 0,  2,  4, -4, -2, -4), ("darkvision", "sleep_immunity"), "", 5.000,  8, "Medium", None),
+    (100, "Zombie",   "z", ( 2, -2,  4, -4, -2, -4), ("darkvision", "sleep_immunity"), "", 5.000,  8, "Medium", 6.0),
 ]
-_UNDEAD = [_race_dict(*row, kind="undead") for row in UNDEAD]
+_UNDEAD = [_race_dict(*row[:9], kind="undead", speed=row[9]) for row in UNDEAD]
 
 # Giants keep a job too and are never rolled as a player race: authored, like the Ogre who
 # leads the goblins burning the Wilds (`wildfire.py`).

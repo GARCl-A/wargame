@@ -62,7 +62,7 @@ def test_the_boss_bout_fields_the_ribbit_brothers_plus_goons_on_the_authored_ctf
     brothers = [e for e in enemies if not e._auto_name]
     goons = [e for e in enemies if e._auto_name]
     assert {e.name for e in brothers} == {"Ribit", "Bufo", "Peep"}
-    assert all(e.race["name"] == "Grippli" and e.mean_level == 4 for e in brothers)
+    assert all(e.race["name"] == "Grippli" and e.mean_level == 5 for e in brothers)
     assert len(goons) == arena.BOSS_GOONS
     assert all(e.mean_level == arena.BOSS_GOON_LEVEL for e in goons)
     assert isinstance(scenario, CustomFlagScenario) and scenario.is_ctf
