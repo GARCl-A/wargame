@@ -75,6 +75,7 @@ from . import (
     rest,
     serpent_nest,
     vocations,
+    wildfire,
     world,
 )
 from .constants import fmt_money
@@ -118,12 +119,21 @@ NODE_ICON = {
     "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
     "frontier_outpost": ("body", "spiked-wall"), "battlefield": ("action", "trench-assault"),
 }
+# The ethereal nodes (`wildfire.py`): a focus is numbered as it starts, so it goes by its prefix.
+ETHEREAL_ICON = {wildfire.GREAT_ID: ("head", "ogre"), wildfire.FORTRESS_ID: ("head", "ogre")}   # never on the map together
+FOCUS_ICON = ("body", "fire-silhouette")
+
+
+def node_icon(node_id):
+    if node_id.startswith("wildfire_focus_"):
+        return FOCUS_ICON
+    return NODE_ICON.get(node_id) or ETHEREAL_ICON.get(node_id)
 
 
 def _icon_fn(surf, node, center):
     """`map_panel.draw_map_node`'s `icon_fn` hook -- draws each node's own
     silhouette (`NODE_ICON`) instead of the component's three hand-drawn glyph shapes."""
-    slug = NODE_ICON.get(node["id"])
+    slug = node_icon(node["id"])
     if slug is None:
         return
     img = artwork.icon(slug[0], slug[1], 20, color=T.INK)
@@ -216,6 +226,7 @@ class MapScreen(Screen):
         self._inspector_tooltip = None
 
     def _refresh_nodes(self):
+        self._world_version = world.VERSION
         self._nodes = {n.id: self._node_dict(n) for n in world.known(self.guild)}
         self._region_r = {n.id: (WILDS_REGION_R if n.kind == "wilds" else DEFAULT_REGION_R)
                           for n in world.NODES if n.id in self._nodes}
@@ -615,6 +626,10 @@ class MapScreen(Screen):
             self._refresh_nodes()
             self.notices.append(msg)
             self._maybe_auto_advance()
+        elif key.startswith("wf_talk:"):
+            self._wildfire_talk(key.split(":", 1)[1])
+        elif key == "wf_put_out":
+            self._issue(orders.put_out(self.guild, self.selected))
         elif key == "search_nest":
             _found, msg = serpent_nest.search(self.guild, self.selected)
             self._refresh_nodes()
@@ -622,6 +637,56 @@ class MapScreen(Screen):
             self._maybe_auto_advance()
         elif key in orders.INTERACTIVE_KINDS:
             self._issue(orders.interactive(key))
+
+    def _wildfire_talk(self, uid):
+        g = self.selected
+        focus = wildfire.focus_at(self.guild, g.node)
+        unit = next((u for u in g.members if u.uid == uid), None)
+        if focus is None or unit is None or not wildfire.can_talk(focus):
+            return
+        great = focus.great
+        passed, msg = wildfire.talk(self.guild, focus, unit)
+        self.notices.append(msg)
+        self._refresh_nodes()
+        if not passed:
+            self._issue(orders.interactive("ogre_fight" if great else "camp_fight"))
+
+    def _wildfire_blocks(self, g, focus):
+        """The inspector's rows at a wildfire focus: how long it has, the talk chain (one button a
+        member, their modifier on it), and putting the fire out once the crew is beaten."""
+        state = self.guild.wildfire
+        day = self.guild.clock.day
+        if focus.great:
+            left = state.start_day + wildfire.DAYS - day
+            line = f"the fortress stands in {left} day(s) unless the Ogre is stopped"
+        else:
+            left = focus.spawn_day + wildfire.BURN_DAYS - day
+            line = f"burns through in {left} day(s), and spreads"
+        blocks = [{"type": "text", "text": line, "color": T.BLOOD}]
+        if focus.cleared:
+            blocks += [{"type": "section", "label": "the fire", "gap_before": T.S},
+                       {"type": "button", "key": "wf_put_out", "primary": True, "height": 40,
+                        "label": f"PUT OUT THE FIRE ({wildfire.PUT_OUT_HOURS} h)"},
+                       {"type": "wrapped_text", "color": T.TX_FAINT,
+                        "text": f"the best mind of the group rolls INT vs DC {wildfire.PUT_OUT_DC} at the end  ·  "
+                                "a miss can be tried again"}]
+            return blocks
+        if focus.hostile:
+            blocks.append({"type": "text", "text": "They are coming for you.", "color": T.BLOOD})
+            return blocks
+        if wildfire.can_talk(focus):
+            attr = wildfire.next_check(focus)
+            who = "the Ogre" if focus.great else "the foreman"
+            dc = wildfire.talk_dc(self.guild, focus)
+            step = "get a hearing" if focus.talk == 0 else "show them how it is done"
+            blocks.append({"type": "section", "label": f"talk to {who}", "gap_before": T.S})
+            blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
+                           "text": f"{step}: {attr[:3].upper()} vs DC {dc}  ·  a miss and they fight"})
+            for u in g.members:
+                mod = getattr(u, f"mod_{attr}")
+                blocks.append({"type": "button", "key": f"wf_talk:{u.uid}", "height": 30, "gap_before": 2,
+                               "label": f"{u.name}  {mod:+d}"})
+        return blocks
 
     # ------------------------------------------------------------------ #
     # INSPECTOR content                                                   #
@@ -760,12 +825,16 @@ class MapScreen(Screen):
                               "text": f"{names}: has outgrown this job even with their own {tool} "
                                       "-- no more work XP here, look for tougher work"})
 
+        focus = wildfire.focus_at(self.guild, here.id)
+        if focus is not None:
+            blocks += self._wildfire_blocks(g, focus)
         trail_cold = here.has("ox_hunt") and missions.pending_ox(self.guild) is None
         front_quiet = here.has("skirmish") and missions.pending_battlefield(self.guild, g) is None
         offered = [f for f in node_functions.offered(here)
                    if f.label and (f.id != "property" or self._has_property_business())
                    and (f.id != "ox_hunt" or not trail_cold)
-                   and (f.id != "skirmish" or not front_quiet)]
+                   and (f.id != "skirmish" or not front_quiet)
+                   and (f.id != "camp_fight" or not focus.cleared)]
         if trail_cold:
             blocks.append({"type": "text", "color": T.TX_FAINT,
                            "text": "The trail is cold. Only the tanner's job brings you back here."})
@@ -773,7 +842,7 @@ class MapScreen(Screen):
             blocks.append({"type": "text", "color": T.TX_FAINT,
                            "text": "The line holds without you. Only the Faith Order's errand "
                                    "puts you in the trench."})
-        elif not (here.is_battle or here.has("work") or offered):
+        elif not (here.is_battle or here.has("work") or offered or focus is not None):
             blocks.append({"type": "text", "text": "Nothing happens here. A safe stop.",
                           "color": T.TX_FAINT})
         for fn in offered:
@@ -913,6 +982,11 @@ class MapScreen(Screen):
 
         groups = [self._group_dict(g) for g in self.guild.groups]
 
+        if self._world_version != world.VERSION:      # an ethereal node came or went
+            self._refresh_nodes()
+            self._cam.refit()
+            if self.selected is not None and self.selected.node not in self._nodes:
+                self.selected = self.guild.groups[0]
         visible_edges = [(a, b, w) for a, b, w in world.EDGES if a in self._nodes and b in self._nodes]
         self._sync_node_alerts()
         self._minimap_box, self._minimap_params = draw_map(

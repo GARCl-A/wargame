@@ -54,7 +54,7 @@ class SneakAttack(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -100,7 +100,7 @@ class PreciseThrust(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -144,7 +144,7 @@ class Cleave(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -205,7 +205,7 @@ class RepelStrike(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -269,7 +269,7 @@ class MaimingStrike(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -314,7 +314,7 @@ class ArmorPierce(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -453,7 +453,7 @@ class HookShield(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 
@@ -555,7 +555,7 @@ class ParryStrike(Action):
     def can(self, battle, actor, target=None):
         if not self.available(battle, actor) or not _hostile_target(actor, target):
             return False
-        if battle.units_distance(actor, target) > 1:
+        if battle.units_distance(actor, target) > actor.attack_range:
             return False
         return battle.los_between(actor, target)
 

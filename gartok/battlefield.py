@@ -32,16 +32,6 @@ SOLDIER_ARMOR = "Leather Jerkin"
 COLS, ROWS = 32, 18
 PARAPET_X = (5, COLS - 6)              # the guild's trench, the warband's trench
 GAP_EVERY = 6                          # a two-cell gap in the parapet every this many rows
-_MAX_MEAN = (encounters._COMBAT_CAP + encounters._WORK_CAP) // 2
-
-
-def squad_level(squad):
-    """The squad's mean level, the yardstick for both sides."""
-    return round(sum(u.mean_level for u in squad) / len(squad)) if squad else 0
-
-
-def _clamp(level):
-    return max(0, min(_MAX_MEAN, level))
 
 
 def build_soldiers(level, rng=random):
@@ -49,7 +39,7 @@ def build_soldiers(level, rng=random):
     and good, in a leather jerkin where it fits."""
     out = []
     for _ in range(SOLDIERS):
-        u = encounters.build_enemy(_clamp(level - SOLDIER_GAP), rng)
+        u = encounters.build_enemy(encounters.clamp_level(level - SOLDIER_GAP), rng)
         u.team = "player"
         u.alignment = SOLDIER_ALIGNMENT
         if u.fits_armor(SOLDIER_ARMOR) and not u.equipped_armor:
@@ -60,7 +50,7 @@ def build_soldiers(level, rng=random):
 
 def build_warband(level, rng=random):
     """The frontier warband: `WARBAND` mixed humanoids `WARBAND_EDGE` over `level`."""
-    return [encounters.build_enemy(_clamp(level + WARBAND_EDGE), rng) for _ in range(WARBAND)]
+    return [encounters.build_enemy(encounters.clamp_level(level + WARBAND_EDGE), rng) for _ in range(WARBAND)]
 
 
 def parapet(x):
@@ -78,7 +68,7 @@ class BattlefieldScenario(Scenario):
     torch_count = 0
 
     def __init__(self, squad, rng=random):
-        level = squad_level(squad)
+        level = encounters.squad_level(squad)
         self.allies = build_soldiers(level, rng)
         self.enemies = build_warband(level, rng)
 

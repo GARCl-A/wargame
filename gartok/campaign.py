@@ -39,6 +39,7 @@ from . import (
     recorder,
     solo,
     vocations,
+    wildfire,
     world,
 )
 
@@ -362,6 +363,8 @@ def _advance(guild, dt=None, busy=()):
             events += gathered
             if ambush is not None:
                 pending.append((g, ambush))
+        elif order.kind == "work" and order.task == "put_out":
+            events += wildfire.put_out(guild, g)
         elif order.kind == "work" and order.task == "supply_run":
             run_events, ambush = guild.supply_run_shift(g, order)
             events += run_events

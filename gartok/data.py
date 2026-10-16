@@ -113,6 +113,8 @@ FIRST_AID_CHARGES = 10     # a kit starts with this many charges (rechargeable)
 QUIVER_AMMO = 20          # a quiver starts with this many bolts
 BREATH_BASE = 4            # rounds a unit can stay underwater = this + its Constitution mod;
                           # every round past it: escalating drowning damage (1d6, 2d6, ...)
+FIRE_DICE = (2, 6)         # a burning cell burns a body for this, per burning cell it covers
+FIRE_LIGHT = squares(3)    # a burning cell lights this far
 
 
 # --------------------------------------------------------------------------- #
@@ -244,6 +246,14 @@ UNDEAD = [
 ]
 _UNDEAD = [_race_dict(*row, kind="undead") for row in UNDEAD]
 
+# Giants keep a job too and are never rolled as a player race: authored, like the Ogre who
+# leads the goblins burning the Wilds (`wildfire.py`).
+GIANTS = [
+    # threshold, name, token, Str Dex Con Int Wis Cha  ability  language  age    hd  size
+    (100, "Ogre", "g", ( 4, -2,  2, -2,  2, -2), "reach", "Jotun", 1.500, 12, "Large"),
+]
+_GIANTS = [_race_dict(*row) for row in GIANTS]
+
 # Public pools for anything that needs to draw an arbitrary body from one
 # (`encounters.EncounterEntry.race_pool`) -- `roll_race` stays the one path
 # that rolls a fresh *player* race (humanoid, weighted by `RACES`' thresholds).
@@ -258,6 +268,9 @@ WILD_POOL = [r for r in _BEASTS if r["name"] in WILD_BEASTS]
 SNAKE_POOL = [r for r in _BEASTS if r["name"] == "Snake"]     # what finds a crew at the Lumber Yard (gather.py)
 SPIDER_POOL = [r for r in _BEASTS if r["name"] == "Giant Spider"]     # what finds a crew gathering (gather.py)
 SKELETON_POOL = [r for r in _UNDEAD if r["name"] == "Skeleton"]
+GOBLIN_POOL = [r for r in _RACES if r["name"] == "Goblin"]
+HOBGOBLIN_POOL = [r for r in _RACES if r["name"] == "Hobgoblin"]
+GOBLINOID_POOL = GOBLIN_POOL + HOBGOBLIN_POOL
 
 BEAST_OCCUPATION = {"name": "Wild Beast", "weapon": None, "item": None}
 
@@ -266,7 +279,8 @@ _RACE_THRESHOLDS = [row[0] for row in RACES]
 RACE_NAMES = [r["name"] for r in _RACES]
 BEAST_NAMES = [r["name"] for r in _BEASTS]
 UNDEAD_NAMES = [r["name"] for r in _UNDEAD]
-ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES + UNDEAD_NAMES        # what the creator offers; RACE_NAMES stays the playable set
+GIANT_NAMES = [r["name"] for r in _GIANTS]
+ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES + UNDEAD_NAMES + GIANT_NAMES   # what the creator offers; RACE_NAMES stays the playable set
 
 
 def roll_race():
@@ -280,7 +294,7 @@ def roll_race():
 def race_by_name(name):
     if name == "Leshy":
         name = "Treefolk"
-    for race in _RACES + _BEASTS + _UNDEAD:
+    for race in _RACES + _BEASTS + _UNDEAD + _GIANTS:
         if race["name"] == name:
             return dict(race)
     return None

@@ -39,7 +39,7 @@ AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine",
-                               "serpents_nest", "skirmish"})
+                               "serpents_nest", "skirmish", "camp_fight", "ogre_fight"})
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds
@@ -106,6 +106,15 @@ def work(guild, group, hours, gather=False, task=None):
         raise ValueError(f"no gathering licence for {group.node!r}")
     clock_hours = hours * guild.work_speedup(group.members)
     return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, gather=gather, task=task)
+
+
+def put_out(guild, group):
+    """Order `group` to fight the fire at the wildfire focus it stands on (`wildfire.put_out`
+    rolls when the hours are spent)."""
+    from . import wildfire
+    hours = wildfire.PUT_OUT_HOURS
+    clock_hours = hours * guild.work_speedup(group.members)
+    return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, task="put_out")
 
 
 def supply_run(guild, group):

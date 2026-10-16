@@ -392,7 +392,7 @@ class Combatant:
         (`tongue_reach`) -- see `actions.AttackTongue`."""
         if self.ranged:
             return self.weapon["range"] + self.char.talent_bonus("ranged_reach")
-        return 1
+        return 1 + self._ability.melee_reach
 
     @property
     def has_tongue_weapon(self):

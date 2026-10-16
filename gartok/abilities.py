@@ -37,6 +37,7 @@ class Ability:
     damage_reduction: int = 0
     initiative: int = 0
     melee_damage: int = 0
+    melee_reach: int = 0              # extra squares of reach on every melee attack
     darkvision: int = 0               # range in squares; 0 = no darkvision
     extra_languages: int = 0
     demoralize_ignores_language: bool = False
@@ -172,6 +173,9 @@ _LIST = [
             "+1 [melee] damage (a real bite); +2 [circumstance] to attack per "
             "ally already on the target, not just the first.",
             melee_damage=1, attack_mods=_wolf_pack_tactics_mods),
+    Ability("reach", "Reach",
+            "long arms on a huge body: melee attacks reach 1 square farther.",
+            melee_reach=1),
 ]
 
 ABILITIES = {a.id: a for a in _LIST}
@@ -180,7 +184,7 @@ _NONE = Ability("none", "No ability", "no effect.")
 
 
 _SUMMED = ("hp_max", "speed", "ac_natural", "damage_reduction", "initiative",
-           "melee_damage", "extra_languages", "demoralize_vs_weaker")
+           "melee_damage", "melee_reach", "extra_languages", "demoralize_vs_weaker")
 _WIDEST = ("darkvision", "auto_climb_dc")
 
 

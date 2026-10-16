@@ -1,7 +1,7 @@
 """A hidden sanctuary's job board: the school's keeper takes the Ancient Codex and
 whatever else that school asks for (`missions.py`), the Snake Dragon among them."""
 
-from . import missions, world
+from . import missions, wildfire, world
 from .ui.mission_offer_screen import MissionOfferScreen
 
 KEEPER_LINE = {
@@ -39,6 +39,9 @@ class ShrineMissionScreen(MissionOfferScreen):
         return missions.board(self.guild, self._giver, self.group.node)
 
     def get_req_str(self, t):
+        if t is missions.NATURE_WILDFIRE:
+            return (f"goal: talk the Ogre round or beat him, and put out what fires you can  ·  "
+                    f"{t.deadline_days} days  ·  the Coven gives a {wildfire.REWARD}")
         if t.fight_at:
             goal = f"win the skirmish at {world.node(t.fight_at).name}, every soldier alive"
             if t.starting_item and not any(m.template_id == t.id for m in self.guild.missions):
@@ -49,6 +52,11 @@ class ShrineMissionScreen(MissionOfferScreen):
         return f"goal: {goal}  ·  {due}"
 
     def get_status_str(self, t, progress, ready, days_left):
+        if t is missions.NATURE_WILDFIRE:
+            state = self.guild.wildfire
+            burned = f"  ·  {state.burned} burned" if state is not None and state.burned else ""
+            due = f"  ·  {days_left} day(s) left" if days_left is not None else ""
+            return f"the fires burn round The Wilds{due}{burned}"
         if t.fight_at:
             due = f"  ·  {days_left} day(s) left" if days_left is not None else ""
             return f"fight at {world.node(t.fight_at).name}, lose no soldier{due}"

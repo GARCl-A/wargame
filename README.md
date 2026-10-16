@@ -250,6 +250,8 @@ gartok/
   gather.py         gathering at the Lumber Yard and the Mine: licence, drop tables, haul, ambush
   serpent_nest.py   the Snake Dragon job: the nest search off the Lumber Yard and its dark dungeon
   battlefield.py    the Faith Order's errand: the border skirmish beside Ledger Hold's AI-played soldiers
+  wildfire.py       the Nature Coven's errand: the Ogre's wildfires, ethereal nodes that burn and spread
+  fortress_scenario.py  the Ogre's half-raised fortress: walls, a spreading bonfire, won when he falls
   captives.py       foes bound in battle and kept by a group: herd room, 7 days to live
   ox.py             the tanner's last job: the Country Roads search, tracking Aurochs by daylight
   ox_fields.py      the Ox Fields battle: terrain, the herd's call, win on the beast's fall

@@ -19,7 +19,7 @@ ambush battles so a screen rebuilt after a fight can pick the hunt back up.
 import random
 from dataclasses import dataclass, field
 
-from . import clock, data, encounters, missions, npc_lib, vocations
+from . import clock, data, encounters, missions, npc_lib, vocations, wildfire
 
 AMBUSH_CHANCE_PER_HOUR = 0.15   # ~one ambush per 6-7 h hunted
 HUNT_MEAT_HOURS = 2             # hours of hunting per 1 kg of meat, at a yield of 1.0
@@ -54,12 +54,13 @@ class HuntState:
     biwolf: bool = False           # the ambush in progress is his
     yield_mult: float = 1.0        # the guild's gathering bonus (vocations.gather_mult)
     ambush_mult: float = 1.0       # the group's stance and the party's scouts (vocations.ambush_mult)
+    meat_mult: float = 1.0         # what the wildfires left of the Wilds' game (wildfire.meat_mult)
     guards: list = field(default_factory=list)  # units left outside minding the wagon
 
     @property
     def meat(self):
         if self.target == "meat":
-            return int(self.yield_hours // HUNT_MEAT_HOURS)
+            return int(self.yield_hours * self.meat_mult // HUNT_MEAT_HOURS)
         return 0
 
 
@@ -67,9 +68,12 @@ def begin(guild, party, node, stance, hours_left=0, target="meat", guards=()):
     """A fresh hunt of `party` for `guild`, with the guild's gathering perk and the
     group's travel stance already folded in."""
     scouts = any(u.has_talent("woodland_scout") for u in party)
+    wilds = getattr(node, "id", None) == "wilds"
     return HuntState(list(party), node, hours_left=hours_left, target=target,
                      yield_mult=vocations.gather_mult(guild),
-                     ambush_mult=vocations.ambush_mult(guild, stance, scout=scouts),
+                     ambush_mult=vocations.ambush_mult(guild, stance, scout=scouts)
+                     * (wildfire.ambush_mult(guild) if wilds else 1.0),
+                     meat_mult=wildfire.meat_mult(guild) if wilds else 1.0,
                      guards=list(guards or ()))
 
 
@@ -127,9 +131,12 @@ def hunt_stretch(state, rng=random, hour=None, lure=False):
     return elapsed, False
 
 
-def wilds_pack(rng=random):
+def wilds_pack(rng=random, guild=None):
     """The pack that springs an ambush -- a scaled `encounters` roll, mostly
-    wolves (see `encounters.WILDS_TABLE`)."""
+    wolves (see `encounters.WILDS_TABLE`); while the Ogre's fortress stands, often
+    its goblins (`wildfire.wilds_pack`)."""
+    if guild is not None:
+        return wildfire.wilds_pack(guild, rng)
     return encounters.roll_encounter(encounters.WILDS_TABLE, rng=rng)
 
 

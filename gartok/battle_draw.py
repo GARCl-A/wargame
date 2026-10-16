@@ -67,7 +67,7 @@ class BattleDrawMixin:
         terrain = {
             "cols": b.cols, "rows": b.rows, "walls": b.walls,
             "elevation": b.elevation, "water": getattr(b, "water", set()),
-            "ropes": getattr(b, "ropes", set()),
+            "ropes": getattr(b, "ropes", set()), "fire": self.battle.fire,
         }
         board_render.draw_terrain(screen, self.F, self.view, terrain)
 

@@ -207,6 +207,20 @@ FAITH_BATTLEFIELD = MissionTemplate(
     retry_days=14, fight_at="battlefield",
 )
 
+# The Nature Coven's third (`wildfire.py`): an Ogre's goblins set the Wilds on fire. Taking it puts
+# the foci and the Great Focus on the map; it is done the moment the Ogre is talked round or beaten,
+# and fails on the event's last day with the Ogre still unbeaten.
+WILDFIRE_DAYS = 14
+NATURE_WILDFIRE = MissionTemplate(
+    "nature_wildfire", "nature", "nature_grove", "The Ogre's Wildfire",
+    "An Ogre has brought a goblin band into the Wilds to clear ground for a fortress, and they burn "
+    "the forest to do it -- badly. Every fire they set runs wild. Teach them, or stop them, and put "
+    "the fires out before they spread. The Ogre is at the heart of it.",
+    goal_item="Scroll of Water Jet", goal_qty=1,          # goal_item: only the board's icon here
+    reward=0, deadline_days=WILDFIRE_DAYS,
+    tags=("magic", "nature", "wildfire"), requires=LIBRARY_ANCIENT_CODEX.id, fight_at="wilds",
+)
+
 LEDGER_TREEFOLK = MissionTemplate(
     "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
     "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. "
@@ -226,6 +240,7 @@ TEMPLATES = {
     **{t.id: t for t in CODEX_DELIVERIES},
     **{t.id: t for t in SNAKE_HUNTS},
     FAITH_BATTLEFIELD.id: FAITH_BATTLEFIELD,
+    NATURE_WILDFIRE.id: NATURE_WILDFIRE,
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
 
@@ -303,6 +318,9 @@ def accept(guild, unit, template):
     recorder.emit("mission", what="accept", id=template.id, reward=template.reward, deadline=template.deadline_days)
     if template.starting_item and (first or not template.starting_once):
         unit.give_to_pack(template.starting_item, template.starting_qty)
+    if template is NATURE_WILDFIRE:
+        from . import wildfire
+        wildfire.start(guild)
     return m
 
 
@@ -450,25 +468,26 @@ def pending_fortress_ambush(guild, group):
     return mission
 
 
-def _active(guild, template):
+def active(guild, template):
+    """The run of `template` out now, or None."""
     return next((m for m in guild.missions
                  if m.template_id == template.id and m.state == "active"), None)
 
 
 def pending_snake(guild):
     """A Snake Dragon job is out: the nest can be searched for from the Lumber Yard."""
-    return next((m for t in SNAKE_HUNTS if (m := _active(guild, t)) is not None), None)
+    return next((m for t in SNAKE_HUNTS if (m := active(guild, t)) is not None), None)
 
 
 def snake_wanted_alive(guild):
     """The Nature Coven's job is out: the squad means to take the Snake Dragon alive."""
-    return _active(guild, NATURE_SNAKE) is not None
+    return active(guild, NATURE_SNAKE) is not None
 
 
 def pending_battlefield(guild, group):
     """The Faith Order's errand, when `group` is the one carrying it (its signer is a member):
     the Battlefield's skirmish is open to that group. Else None."""
-    m = _active(guild, FAITH_BATTLEFIELD)
+    m = active(guild, FAITH_BATTLEFIELD)
     if m is None or not any(u.uid == m.unit_uid for u in group.members):
         return None
     return m
@@ -495,23 +514,31 @@ def settle_battlefield(guild, mission, won, lost):
             f"{template_of(mission).retry_days} days."), []
 
 
+def settle_wildfire(guild, mission):
+    """The Ogre is talked round or beaten: the Coven's errand is done. -> deeds banked."""
+    mission.state = "done"
+    recorder.emit("mission", what="turn_in", id=mission.template_id, reward=0)
+    t = template_of(mission)
+    return factions.settle(guild, factions.Event("mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
+
+
 def pending_biwolf(guild):
     """The Biwolf job, if it is active and has not sprung its ambush yet --
     the Mission to mark `ambush_done` on (`hunt.biwolf_pack`), else None."""
-    mission = _active(guild, TANNER_BIWOLF)
+    mission = active(guild, TANNER_BIWOLF)
     return None if mission is None or mission.ambush_done else mission
 
 
 def pending_ox(guild):
     """The ox job, while Aurochs still walks: active and not yet slain
     (`slay_ox`). It is what shows the Ox Fields and lets the party track him."""
-    mission = _active(guild, TANNER_OX)
+    mission = active(guild, TANNER_OX)
     return None if mission is None or mission.ambush_done else mission
 
 
 def slay_ox(guild):
     """Aurochs fell: the trail is closed for good (`ambush_done`)."""
-    mission = _active(guild, TANNER_OX)
+    mission = active(guild, TANNER_OX)
     if mission is not None:
         mission.ambush_done = True
 
@@ -523,7 +550,7 @@ def _item_held(guild, item):
 
 
 def _fail_if_lost(guild, template):
-    mission = _active(guild, template)
+    mission = active(guild, template)
     if mission is None or not mission.ambush_done or _item_held(guild, template.goal_item):
         return None
     mission.state = "failed"

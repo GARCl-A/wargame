@@ -317,6 +317,76 @@ for _a, _b, _w in EDGES:
     _ADJ[_b].append((_a, _w))
 
 
+# Ethereal nodes: places an event puts on the map for a while and takes off again (`wildfire.py`).
+# They live in the guild's save; `clear_runtime` + `add_node` rebuild them on load. `VERSION`
+# moves on every change, so a map on screen knows to refresh.
+_RUNTIME = set()
+VERSION = 0
+
+
+def add_node(n, links):
+    """Put `n` on the map, joined to each `(node_id, distance)` in `links`."""
+    global VERSION
+    NODES.append(n)
+    _BY_ID[n.id] = n
+    _ADJ[n.id] = []
+    _RUNTIME.add(n.id)
+    for other, w in links:
+        EDGES.append((n.id, other, w))
+        _ADJ[n.id].append((other, w))
+        _ADJ[other].append((n.id, w))
+    VERSION += 1
+
+
+def remove_node(node_id):
+    """Take an ethereal node off the map, with every edge into it."""
+    global VERSION
+    if node_id not in _RUNTIME:
+        return
+    _RUNTIME.discard(node_id)
+    NODES[:] = [n for n in NODES if n.id != node_id]
+    del _BY_ID[node_id]
+    for other, _w in _ADJ.pop(node_id):
+        _ADJ[other] = [(v, w) for v, w in _ADJ[other] if v != node_id]
+    EDGES[:] = [e for e in EDGES if node_id not in e[:2]]
+    VERSION += 1
+
+
+def clear_runtime():
+    for node_id in list(_RUNTIME):
+        remove_node(node_id)
+
+
+def exists(node_id):
+    return node_id in _BY_ID
+
+
+def is_ethereal(node_id):
+    return node_id in _RUNTIME
+
+
+def free_spot(near, away=None, radius=0.12, min_sep=0.09, seed=0):
+    """A map position about `radius` from `near` (a position) that keeps `min_sep` from every
+    node, leaning away from the position `away` when given."""
+    rng = random.Random(seed)
+    taken = [n.pos for n in NODES]
+    best, best_score = None, -1.0
+    for i in range(48):
+        angle = 2 * math.pi * i / 48 + rng.uniform(-0.05, 0.05)
+        for r in (radius, radius * 1.4, radius * 1.9):
+            p = (near[0] + r * math.cos(angle), near[1] + r * math.sin(angle))
+            if p[0] < 0.02 or p[1] < 0.02:
+                continue
+            gap = min((math.dist(p, q) for q in taken), default=1.0)
+            lean = 0.0 if away is None else math.dist(p, away) * 0.05
+            score = min(gap, min_sep) + lean
+            if score > best_score:
+                best, best_score = p, score
+            if gap >= min_sep:
+                break
+    return (round(best[0], 3), round(best[1], 3))
+
+
 def node(id):
     return _BY_ID[id]
 

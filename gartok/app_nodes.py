@@ -5,17 +5,21 @@ Mixed into `app.App`; the dispatch tables that reach these live there."""
 from . import (
     arena,
     battlefield,
+    encounters,
     missions,
     node_functions,
     serpent_nest,
     wagon_watch,
+    wildfire,
     world,
 )
 from .battle import Battle
 from .city_property_screen import CityPropertyScreen, RepossessionScreen
 from .constants import fmt_money
+from .fortress_scenario import FortressScenario
 from .ledger_screen import LedgerScreen
 from .market_screen import MarketScreen
+from .scenario import ErmosScenario
 from .squad_screen import SquadScreen
 from .tanner_hub_screen import TannerHubScreen
 from .taverna_screen import TavernaScreen
@@ -216,6 +220,37 @@ class NodeScreensMixin:
                         daylight=self.guild.clock.is_daylight, lethal=True,
                         clock_day=self.guild.clock.day, aggressor="enemy")
         self._skirmish = missions.pending_battlefield(self.guild, group)
+        self._battle_squad = squad
+        self._battle_node = node
+        self._arena_offer = None
+        self._enter_battle(battle, node)
+
+    def _enter_wildfire_fight(self, group, node):
+        focus = wildfire.focus_at(self.guild, node.id)
+        hold = node.id == wildfire.FORTRESS_ID and wildfire.hold_standing(self.guild)
+        if not hold and (focus is None or focus.cleared):
+            self._after_activity()
+            return
+        label = "ATTACK THE CAMP" if focus is not None and not focus.great else "STORM THE FORTRESS"
+        if wagon_watch.needs_watch(group):
+            self.scene = WatchScreen(self.ui_fonts, group, node, label,
+                                     on_confirm=lambda party, guarded: self._wildfire_fight(group, node, party, guarded),
+                                     on_back=self._after_activity)
+        else:
+            self._wildfire_fight(group, node, list(group.members), True)
+
+    def _wildfire_fight(self, group, node, squad, guarded):
+        self._leave_outside(group, node, guarded)
+        level = encounters.squad_level(squad)
+        focus = wildfire.focus_at(self.guild, node.id)
+        if focus is not None and not focus.great:
+            scenario, foes = ErmosScenario(), wildfire.camp_crew(level)
+        else:
+            foes = wildfire.ogre_band(level, hold=focus is None)
+            scenario = FortressScenario(foes, finished=focus is None)
+        battle = Battle(squad, foes, scenario=scenario, daylight=self.guild.clock.is_daylight,
+                        lethal=True, clock_day=self.guild.clock.day, aggressor="player")
+        self._wildfire_node = node.id
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None

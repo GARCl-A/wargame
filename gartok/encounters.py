@@ -60,6 +60,16 @@ def _split_tracks(mean_level, rng):
     return combat, total - combat
 
 
+def squad_level(squad):
+    """A squad's mean level, rounded: the yardstick a fight scaled to the squad builds its foes on."""
+    return round(sum(u.mean_level for u in squad) / len(squad)) if squad else 0
+
+
+def clamp_level(mean_level):
+    """`mean_level` held inside what `build_enemy` can build (the enemy track caps)."""
+    return max(0, min((_COMBAT_CAP + _WORK_CAP) // 2, mean_level))
+
+
 def build_enemy(mean_level, rng=random, race_pool=None):
     """A fresh `Unit("enemy")` pitched at `mean_level`: track levels split at
     random to that mean, then random talent picks that respect each tree.

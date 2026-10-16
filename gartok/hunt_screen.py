@@ -14,7 +14,7 @@ just drives one stretch at a time and shows what happened.
 
 import pygame
 
-from . import autowin, hunt, ox, progression
+from . import autowin, hunt, ox, progression, wildfire
 from .scenario import Scenario
 from .screen import Screen
 from .sheet_panel import SheetModalMixin
@@ -138,7 +138,7 @@ class HuntScreen(SheetModalMixin, Screen):
             return
         if ambushed:
             self.state.fights += 1
-            self.ambush_pack = hunt.biwolf_pack(self.guild) if self.state.biwolf else hunt.wilds_pack()
+            self.ambush_pack = hunt.biwolf_pack(self.guild) if self.state.biwolf else hunt.wilds_pack(guild=self.guild)
             self.phase = "ambush"
             scen = self.state.node.scenario() if self.state.node.scenario else Scenario()
             self.autowin_estimator.request(self.state.party, self.ambush_pack,
@@ -209,12 +209,16 @@ class HuntScreen(SheetModalMixin, Screen):
             yields = f"best tracker: Wisdom {best:+d}"
         else:
             if self.state.target == "meat":
-                yields = f"meat: {y * self.state.yield_mult / hunt.HUNT_MEAT_HOURS:.2f} kg per hour for the party"
+                rate = y * self.state.yield_mult * self.state.meat_mult / hunt.HUNT_MEAT_HOURS
+                yields = f"meat: {rate:.2f} kg per hour for the party"
+                if self.state.meat_mult < 1:
+                    yields += f" (the wildfires left {self.state.meat_mult:.0%} of the game)"
             else:
                 shroom, fruit = hunt.forage_chances(self.state)
                 yields = f"forage per hour: {shroom:.0%} mushroom, {fruit:.0%} fruit"
         if self.state.ambush_mult != 1.0:
-            yields += f"   ·   ambush chance x{self.state.ambush_mult:.2f} (cautious)"
+            why = "the Ogre's goblins range the Wilds" if wildfire.hold_standing(self.guild) else "cautious"
+            yields += f"   ·   ambush chance x{self.state.ambush_mult:.2f} ({why})"
         kg, cap = party_load([self._party_row(u) for u in self.state.party])
         text(screen, F["body"], f"{clock.label}   ·   {len(self.state.party)} in the party   ·   "
              f"carrying {kg:g} / {cap:g} kg   ·   {yields}", (m, m + 30), T.TX_MUTED)

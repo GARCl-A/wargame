@@ -29,7 +29,7 @@ import time
 import uuid
 from dataclasses import fields
 
-from . import captives, missions
+from . import captives, missions, wildfire
 from .animals import Animal
 from .clock import Clock
 from .group import NORMAL, Group
@@ -227,6 +227,7 @@ PAYLOAD_DEFAULTS = {
     "recruit_seen": {},
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True, "revealed": [], "met_factions": [], "supply_runs_completed": 0,
+    "wildfire": None,
 }
 
 
@@ -264,6 +265,7 @@ def _payload(guild, kind, label):
         "revealed": sorted(guild.revealed),
         "met_factions": sorted(guild.met_factions),
         "supply_runs_completed": guild.supply_runs_completed,
+        "wildfire": wildfire.to_dict(guild.wildfire),
         "shops": {node_id: shop.to_dict() for node_id, shop in guild.shops.items()},
         "total_spent": guild.total_spent,
         "items_sold_kinds": sorted(guild.items_sold_kinds),
@@ -332,7 +334,7 @@ def load_game(world, save_id=CURRENT):
     p_pool = payload["prison_pool"]
     roster = [u for g in groups for u in g.members]
     leader = next((u for u in roster if u.uid == payload["leader"]), None)
-    return Guild(None, groups=groups,
+    guild = Guild(None, groups=groups,
                  battles_won=payload["battles_won"],
                  reputation=payload["reputation"],
                  deeds_done=payload["deeds_done"],
@@ -381,8 +383,11 @@ def load_game(world, save_id=CURRENT):
                  revealed=payload["revealed"],
                  met_factions=payload["met_factions"],
                  supply_runs_completed=payload["supply_runs_completed"],
+                 wildfire=wildfire.from_dict(payload["wildfire"]),
                  tutorial=TutorialState(seen=payload["tutorial_seen"],
                                        enabled=payload["tutorial_enabled"]))
+    wildfire.sync_world(guild)
+    return guild
 
 
 def delete_world(world):

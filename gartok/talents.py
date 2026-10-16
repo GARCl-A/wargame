@@ -39,6 +39,7 @@ exactly one consumer that reads it back:
     language_study    magic._progress_language         --
     fletcher          campaign._fletcher_rest_pass     --
     dragon_breath     actions.DragonBreath             --
+    mighty_shove      actions.Push                     --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -96,7 +97,7 @@ class Talent:
     name: str
     effect: str                      # player-facing one-liner
     requires: str | None = None      # id of a talent that must be taken first
-    race: str | None = None          # racial track: only offered to this race (None = any)
+    race: str | tuple | None = None  # racial track: only offered to this race, or these (None = any)
     icon: str = ""                   # "<category>/<name>" under assets/icons/ (level screen)
     effects: tuple = ()              # Effect(...) contributions -- see the module docstring
     school: str | None = None        # magic track: the school this node belongs to
@@ -105,6 +106,14 @@ class Talent:
     @property
     def desc(self):
         return f"{self.name}: {self.effect}"
+
+    @property
+    def races(self):
+        """The races this node is offered to; empty for any race."""
+        return () if self.race is None else (self.race,) if isinstance(self.race, str) else tuple(self.race)
+
+    def for_race(self, race_name):
+        return not self.races or race_name in self.races
 
 
 _LIST = [
@@ -235,7 +244,7 @@ _LIST = [
            effects=(Effect("woodland_scout", 1),), icon="action/run"),
     Talent("intimidating_presence", "racial", 1, "Intimidating Presence",
            "a terrifying physical presence: you may use your Strength modifier "
-           "instead of Charisma when attempting to Demoralize enemies.", race="Orc",
+           "instead of Charisma when attempting to Demoralize enemies.", race=("Orc", "Ogre"),
            effects=(Effect("intimidating_presence", 1),), icon="action/shouting"),
     Talent("swarm_logic", "racial", 1, "Swarm Logic",
            "there is safety, and speed, in numbers: you work 10% faster for "
@@ -249,8 +258,13 @@ _LIST = [
            "your strong back: allow a Medium or Small ally to ride you.", race="Centaur",
            effects=(Effect("centaur_mount", 1),), icon="body/cavalry"),
     Talent("giant_grip", "racial", 1, "Giant's Grip",
-           "immense physical strength: allows you to wield Large weapons.", race="Goliath",
+           "immense physical strength: wield weapons one size above your own (Large for a Goliath, "
+           "Huge for an Ogre).", race=("Goliath", "Ogre"),
            effects=(Effect("giant_grip", 1),), icon="action/muscle-up"),
+    Talent("mighty_shove", "racial", 1, "Mighty Shove",
+           "your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way "
+           "(a wall, or a body, which takes the 1d6 too) deals 1d6 more.", race="Ogre",
+           effects=(Effect("mighty_shove", 1),), icon="action/back-forth"),
     Talent("phalanx", "racial", 1, "Phalanx",
            "martial discipline: +1 AC if you are adjacent to at least one ally.", race="Hobgoblin",
            effects=(Effect("phalanx", 1),), icon="body/surrounded-shield"),
@@ -364,7 +378,7 @@ def get(talent_id):
 def racial_tree(race_name):
     """The racial nodes offered to `race_name` -- those with no `race` gate plus
     that race's own. Empty for a race with nothing authored yet."""
-    return [t for t in TREE["racial"] if t.race in (None, race_name)]
+    return [t for t in TREE["racial"] if t.for_race(race_name)]
 
 
 def bonus(talent_ids, channel, stat=""):

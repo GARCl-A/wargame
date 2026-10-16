@@ -16,6 +16,7 @@ from . import (
     recorder,
     vocations,
     wagon_watch,
+    wildfire,
 )
 from .battle import Battle
 from .battle_screen import BattleScreen
@@ -121,6 +122,9 @@ class BattleFlowMixin:
             self._skirmish = None
             self._map_notices.append(notice)
             self._map_notices += [factions.deed_notice(d) for d in deeds]
+        if self._wildfire_node is not None:
+            self._map_notices += wildfire.settle_fight(self.guild, self._wildfire_node, outcome.won)
+            self._wildfire_node = None
         note = outcome.arena_title_event
         if hunt_state is None:
             self._back_from_outside()

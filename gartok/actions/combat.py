@@ -432,10 +432,14 @@ class Push(Action):
     """Shove an adjacent unit -- foe or friend -- one square straight back.
     Strength vs 10 + their Constitution modifier. If the square behind them is
     a pit, they go in (and take the fall). A wall / body behind them stops the
-    shove dead."""
+    shove dead. Mighty Shove (the Ogre's talent) throws them `MIGHTY_SQUARES` back
+    for 1d6, and whatever stops them on the way -- a wall, or a body, which takes
+    the blow too -- deals 1d6 more."""
 
     id, name, cost, target, aimed = "push", "Push", 1, "unit", True
     desc = "Push an adjacent unit."
+    MIGHTY_SQUARES = 3
+    MIGHTY_DIE = (1, 6)
 
     def _targets(self, battle, actor):
         return [u for u in battle.units
@@ -454,10 +458,47 @@ class Push(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
+        if actor.char.talent_bonus("mighty_shove"):
+            return f"Mighty Shove (1 pt, STR vs 10 + target CON, {self.MIGHTY_SQUARES} sq, 1d6)"
         return "Push (1 pt, STR vs 10 + target CON)"
 
     def highlight_targets(self, battle, actor):
         return self._targets(battle, actor)
+
+    @staticmethod
+    def direction(actor, target):
+        return _sign(target.pos[0] - actor.pos[0]), _sign(target.pos[1] - actor.pos[1])
+
+    @staticmethod
+    def _stopper(battle, target, dest, mighty):
+        """What stops `target` stepping onto `dest`: None (it can), "wall", or the unit standing
+        there -- a downed body too under a Mighty Shove (a plain shove lands on a fallen one)."""
+        shape = cells(dest, target.footprint)
+        if not all(battle.board.in_bounds(c) for c in shape)                 or battle.board.diagonal_corner_blocked(target.pos, dest)                 or battle.board.walls.intersection(shape) or battle.creature_cells().intersection(shape):
+            return "wall"
+        for u in battle.units:
+            if u is not target and (u.alive or (mighty and u.downed)) and set(battle.cells_of(u)) & set(shape):
+                return u
+        return None
+
+    def landing(self, battle, actor, target):
+        """Where a shove would leave `target` and what stops it: `(cells walked, stopper)`, the
+        stopper None when the shove ran its full length. Read by the AI before it shoves."""
+        dx, dy = self.direction(actor, target)
+        mighty = bool(actor.char.talent_bonus("mighty_shove"))
+        squares = self.MIGHTY_SQUARES if mighty else 1
+        pos, path = target.pos, []
+        z = battle.elevation(target)
+        for _ in range(squares):
+            dest = (pos[0] + dx, pos[1] + dy)
+            stop = self._stopper(battle, target, dest, mighty)
+            if stop is not None:
+                return path, stop
+            path.append(dest)
+            pos = dest
+            if battle.elevation_at(dest, target) < z:
+                break                          # over the lip: it falls in, the shove ends there
+        return path, None
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -467,35 +508,50 @@ class Push(Action):
         dc = PUSH_DC_BASE + target.mod_constitution
         nat = d20()
         total = nat + actor.mod_strength
-        desc = (f"{actor.name} shoves {target.name}: d20({nat}) "
+        mighty = bool(actor.char.talent_bonus("mighty_shove"))
+        desc = (f"{actor.name} {'heaves' if mighty else 'shoves'} {target.name}: d20({nat}) "
                 f"{actor.mod_strength:+}(STR) = {total} vs {dc}")
         if nat != 20 and (nat == 1 or total < dc):
             battle.log(desc + "  -> holds their ground.")
             return
-
-        ax, ay = actor.pos
-        tx, ty = target.pos
-        dx, dy = _sign(tx - ax), _sign(ty - ay)
-        if dx == 0 and dy == 0:
+        if self.direction(actor, target) == (0, 0):
             battle.log(desc + "  -> no room to shove.")
             return
-        dest = (tx + dx, ty + dy)
-        if battle.board.diagonal_corner_blocked(target.pos, dest) \
-                or not _cell_free(battle, actor, dest, target.footprint):
+        path, stopper = self.landing(battle, actor, target)
+        if not path and not mighty:
             battle.log(desc + f"  -> {target.name} is shoved against something and can't move.")
             return
-        z_from = battle.elevation(target)
-        z_to = battle.elevation_at(dest, target)
-        target.pos = dest
-        target.z = z_to
-        target.walking = False
-        battle.log(desc + f"  -> {target.name} is shoved to {dest}.")
-        
+
         was_up = target.alive
-        trap = battle.ground_at(dest)
+        z_from = battle.elevation(target)
+        before = set(battle.cells_of(target))
+        entered = set()
+        for dest in path:
+            target.pos = dest
+            entered |= set(battle.cells_of(target))
+        target.walking = False
+        z_to = battle.elevation_at(target.pos, target)
+        target.z = z_to
+        battle.log(desc + (f"  -> {target.name} is thrown to {target.pos}." if path
+                           else f"  -> {target.name} is slammed where they stand."))
+
+        if mighty:
+            target.take_damage(roll(*self.MIGHTY_DIE), battle.log)
+            if stopper is not None:
+                what = "a wall" if stopper == "wall" else stopper.name
+                battle.log(f"  {target.name} crashes into {what}!")
+                target.take_damage(roll(*self.MIGHTY_DIE), battle.log)
+                if stopper != "wall":
+                    body_up = stopper.alive
+                    stopper.take_damage(roll(*self.MIGHTY_DIE), battle.log)
+                    if body_up and not stopper.alive and stopper.team != actor.team:
+                        actor.credit_kill(stopper)
+
+        trap = battle.ground_at(target.pos)
         if trap and battle.springs(trap, target):
             battle.trigger_trap(target, trap)
-            
+        battle.burn(target, entered - before)
+
         if z_to < z_from:
             battle.apply_fall(target, z_from - z_to, battle.log)
 

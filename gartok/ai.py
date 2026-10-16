@@ -68,6 +68,12 @@ def _pick_attack(battle, unit, target):
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
 
+    if "water_jet" in getattr(unit, "spells_known", []):
+        jet = actions.CastSpellAction("water_jet")
+        if jet.can(battle, unit, target) and (not opts or _hand_die(unit) < _jet_avg(unit)
+                                              or _jet_burns(battle, jet, unit, target)):
+            return jet
+
     mm = None
     if "magic_missile" in getattr(unit, "spells_known", []):
         mm = actions.CastSpellAction("magic_missile")
@@ -95,6 +101,16 @@ def _pick_attack(battle, unit, target):
     return opts[0]
 
 
+def _jet_avg(unit):
+    return _avg_die(actions.WaterJetAction.DICE) + unit.mod_intelligence
+
+
+def _jet_burns(battle, jet, unit, target):
+    """The jet would throw `target` into the flames."""
+    dest = jet.landing(battle, unit, target)
+    return dest is not None and any(c in battle.fire for c in cells(dest, target.footprint))
+
+
 def _sleep_immune(battle, unit, target):
     """Only a racial ability the unit's side has read can tell it the foe will not sleep."""
     return (intel.knows(battle, unit.team, target, "racial_ability")
@@ -118,6 +134,8 @@ def _flank_cell(battle, unit, target):
         return None
     home, best = unit.pos, None
     for pos, cost in battle.reachable(unit).items():
+        if battle.fire and any(c in battle.fire for c in cells(pos, unit.footprint)):
+            continue
         unit.pos = pos
         try:
             flanks = battle.units_distance(unit, target) <= 1 and actions._flanked(battle, unit, target)
@@ -139,7 +157,9 @@ def _approach_reach(unit):
         return unit.tongue_reach
     if "magic_missile" in getattr(unit, "spells_known", []) and _hand_die(unit) < 2.5:
         return 6
-    return 1
+    if "water_jet" in getattr(unit, "spells_known", []) and _hand_die(unit) < _jet_avg(unit):
+        return actions.WaterJetAction.reach()
+    return 1 if unit.ranged else unit.attack_range
 
 
 def _axes(unit):
@@ -619,6 +639,75 @@ def _try_breath(battle, unit):
     return True
 
 
+SHOVE_HIT_ODDS = 0.6        # how often the AI reckons a swing lands, to weigh a shove against it
+
+
+def _shove_odds(unit, foe):
+    """Chance the shove beats Strength vs 10 + the foe's Constitution."""
+    need = actions.combat.PUSH_DC_BASE + foe.mod_constitution - unit.mod_strength
+    return max(0.05, min(0.95, (21 - need) / 20))
+
+
+def _shove_worth(battle, unit, foe):
+    """The damage a shove of `foe` is expected to do: the flames it lands in, and a Mighty
+    Shove's blows."""
+    push = actions.PUSH
+    path, stop = push.landing(battle, unit, foe)
+    before = set(battle.cells_of(foe))
+    entered = {c for p in path for c in cells(p, foe.footprint)} - before
+    n, faces = data.FIRE_DICE
+    worth = sum(1 for c in entered if c in battle.fire) * _avg_die((n, faces))
+    if unit.char.talent_bonus("mighty_shove"):
+        worth += _avg_die(push.MIGHTY_DIE) * (2 if stop is not None else 1)
+    return worth * _shove_odds(unit, foe)
+
+
+def _try_shove(battle, unit):
+    """Push a foe when the shove is worth more than a swing: into the flames, or with a Mighty
+    Shove against a wall. Returns True if it shoved."""
+    push = actions.PUSH
+    if not push.available(battle, unit):
+        return False
+    swing = SHOVE_HIT_ODDS * (_hand_die(unit) + unit.mod_strength)
+    best, best_worth = None, max(0.0, swing)
+    for foe in push.highlight_targets(battle, unit):
+        if foe.team == unit.team:
+            continue
+        worth = _shove_worth(battle, unit, foe)
+        if worth > best_worth:
+            best, best_worth = foe, worth
+    if best is None:
+        return False
+    push.execute(battle, unit, best)
+    return True
+
+
+def _leave_fire(battle, unit):
+    """Standing in the flames: walk to the nearest cell that is not burning, toward the foe
+    when there is one. Returns True if it moved."""
+    if not battle.burning_under(unit) or unit.ap < 1:
+        return False
+    foe = _target(battle, unit)
+    safe = [p for p in battle.reachable(unit)
+            if not any(c in battle.fire for c in cells(p, unit.footprint))]
+    if not safe:
+        return False
+    goal = foe.pos if foe is not None else unit.pos
+    dest = min(safe, key=lambda p: (grid_distance(p, goal), grid_distance(p, unit.pos)))
+    actions.MOVE.execute(battle, unit, dest)
+    unit.walking = False
+    return True
+
+
+def _step_toward(battle, unit, goal, reach):
+    """`path_step_toward`, around the flames when a way round exists."""
+    if battle.fire:
+        dest = battle.path_step_toward(unit, goal, unit.speed, reach=reach, avoid=battle.fire_avoid(unit))
+        if dest != unit.pos:
+            return dest
+    return battle.path_step_toward(unit, goal, unit.speed, reach=reach)
+
+
 def take_turn(battle, unit):
     if unit.dormant:
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
@@ -641,6 +730,9 @@ def take_turn(battle, unit):
     for _ in range(4):  # safety stop; a turn spends at most 2 points
         if unit.ap <= 0 or not unit.alive:
             break
+
+        if _leave_fire(battle, unit):
+            continue
 
         if _is_skittish(unit):
             mode = _skitter(battle, unit)
@@ -768,6 +860,9 @@ def take_turn(battle, unit):
         if _try_breath(battle, unit):
             continue
 
+        if _try_shove(battle, unit):
+            continue
+
         atk = _pick_attack(battle, unit, target)
         if atk is not None:
             atk.execute(battle, unit, target)
@@ -793,8 +888,7 @@ def take_turn(battle, unit):
             unit.walking = False
             continue
 
-        dest = battle.path_step_toward(unit, target.pos, unit.speed,
-                                       reach=_approach_reach(unit))
+        dest = _step_toward(battle, unit, target.pos, _approach_reach(unit))
         if dest == unit.pos:
             # can't walk any closer -- maybe a pit or deep water is in the way.
             

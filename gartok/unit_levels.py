@@ -130,7 +130,7 @@ class LevelingMixin:
         """Spend a pick in `track` on `talent_id`. Returns True if it took."""
         t = talents.get(talent_id)
         if (t is None or t.track != track or self.picks_available(track) <= 0
-                or (t.race and t.race != self.race["name"])
+                or not t.for_race(self.race["name"])
                 or not self.offerable(track, t)):
             return False
         self.talents[track].append(talent_id)

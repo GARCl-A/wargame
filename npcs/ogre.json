@@ -1,0 +1,114 @@
+{
+  "uid": "7d5eaceac89b4a44a2ee7e9ed54e8ff3",
+  "recruited_by": null,
+  "name": "Grumbold the Builder",
+  "auto_name": false,
+  "portrait_id": 2103356650,
+  "portrait_file": null,
+  "race": "Ogre",
+  "occupation": "Builder",
+  "alignment": "Chaotic and Neutral",
+  "crime": 0,
+  "unfed_days": 0,
+  "sick": false,
+  "medicine_attempted_today": false,
+  "treated": false,
+  "consecutive_rest_hours": 0,
+  "last_daily_luck_day": 0,
+  "hp": 98,
+  "share_food": true,
+  "combat_xp": 210,
+  "magic_xp": 0,
+  "work_hours": 1760,
+  "bio": "An Ogre who means to build a fortress in the Wilds and has no idea how to clear the ground for it. His goblins burn the forest by the acre.",
+  "arena_title": false,
+  "recipes": [
+    "Dictionary of Jotun"
+  ],
+  "crafting_target": null,
+  "crafting_progress": 0,
+  "craft_bonuses": {},
+  "magic_sources": [],
+  "spells_known": [],
+  "study_target": null,
+  "study_progress": 0,
+  "talents": {
+    "combat": [
+      "strong",
+      "heavy_hand",
+      "sure_strike",
+      "tough",
+      "hardy",
+      "bulwark",
+      "recovery",
+      "alert",
+      "iron_will",
+      "quick_wits"
+    ],
+    "work": [
+      "carrier",
+      "brisk_hands",
+      "steady_pace",
+      "piecework",
+      "clever",
+      "crafter",
+      "charismatic",
+      "fixer",
+      "negotiator",
+      "provisioner"
+    ],
+    "racial": [
+      "giant_grip",
+      "mighty_shove"
+    ],
+    "magic": []
+  },
+  "level_hp_rolls": [
+    5,
+    2,
+    6,
+    11,
+    4,
+    5,
+    10,
+    7,
+    3,
+    1
+  ],
+  "base_attributes": {
+    "strength": 12,
+    "dexterity": 11,
+    "constitution": 12,
+    "intelligence": 13,
+    "wisdom": 15,
+    "charisma": 9
+  },
+  "age_base": 51,
+  "age": 76,
+  "hp_roll": 11,
+  "hp_override": null,
+  "poisons": {},
+  "antidote_cooldown": 0,
+  "natural_armor": 0,
+  "racial_override": null,
+  "languages": [
+    "Jotun"
+  ],
+  "equipped_weapon": "Huge Club",
+  "equipped_offhand": null,
+  "equipped_tongue": null,
+  "equipped_artifact": null,
+  "equipped_armor": "Plate Armor",
+  "inventory": [
+    {
+      "id": "stone_brick",
+      "name": "Stone Brick",
+      "qty": 1
+    }
+  ],
+  "locked_items": {},
+  "dormant": false,
+  "afoot": false,
+  "awareness_radius": 8,
+  "npc_slug": "ogre"
+}

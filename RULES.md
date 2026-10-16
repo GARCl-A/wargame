@@ -117,6 +117,10 @@ character to a beast keeps its pack. Besides the Wolf, the **Giant Spider** and 
 `kind = "undead"` (the `data.UNDEAD` table): not an animal, so it keeps a job — an
 occupation with its weapon and item. Neither rolls in a locality's encounter table
 (`data.WILD_POOL` is wolves only); they are authored in the creator or placed by hand.
+The **Ogre** (the `data.GIANTS` table) is the same: a humanoid with a job, never a
+player's race. Large, `d12` Hit Die, STR +4 DEX −2 CON +2 INT −2 WIS +2 CHA −2, Jotun,
+and **Reach**: every melee attack reaches 1 cell farther. His racial tree is
+Giant's Grip, Intimidating Presence (both shared) and Mighty Shove.
 
 A race's `ability` may be a **list** of ids, merged into one (`abilities.get`
 folds numbers, flags and hooks together): the Skeleton has *Darkvision* and
@@ -328,7 +332,7 @@ State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
-`conditions.py`. A first foothold, not a full system — four spells today.
+`conditions.py`. A first foothold, not a full system — five spells today.
 
 - **Sources.** `magic_sources` (a list, no repeats, of `nature` / `blood` / `faith`) gates which
   spells a character can ever learn: a spell is castable when any one of the unit's
@@ -349,6 +353,11 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
     at most $\max(1, 10 - \text{CON mod} - \text{WIS mod})$ rounds, ticking down
     at the end of each skipped turn. Sleep ends early if the target takes any damage
     or an adjacent ally spends 1 AP on `Wake Up`.
+  - **Water Jet** (level 1, **Nature only**) — ranged (the Dagger's thrown range, 6 cells),
+    `d20 + INT` vs AC, `1d6 + INT` damage on a hit, and the jet throws the target **1 cell**
+    straight away from the caster unless something is in the way (into the flames, it burns).
+    Its scroll is the Nature Coven's reward for the Ogre's Wildfire; no shop sells it. The AI casts
+    it when it beats its hand weapon or would throw a foe into the fire.
   - **Light Globe** (level 0) — drop a light source ground object at a cell in range (6 cells).
   - **Floating Disk** (level 0) — conjures a magical floating platform at a cell
     in range (6 cells) at a chosen altitude (e.g. ground level z=0). Bridges
@@ -708,6 +717,13 @@ triples.
   difference): `d20 + STR mod` (attacker) vs **10 + Constitution mod** (target).
   Success shoves the target **1 cell** straight back; if the cell behind is a
   pit, they fall. A wall or a body behind the target stops the shove.
+- **Mighty Shove** (the Ogre's racial talent) turns his Push into a throw: on a
+  success the target flies up to **3 cells** straight back and takes **1d6**.
+  Whatever stops it on the way -- a wall, or a body (standing or downed, friend
+  or foe), which takes **1d6** too -- deals **1d6 more**. Over a pit lip it falls
+  in and the throw ends there; onto burning cells it burns (Fire, below). The AI
+  shoves when the throw is worth more than a swing: into the flames, or a Mighty
+  Shove into a wall (`ai._try_shove`).
 - **Vertical combat.** Melee reaches between two elevations if the difference is
   **≤ 1** (a fight at the lip). A difference of **2 or more** takes the target
   out of melee reach until someone climbs — a **ranged** attack still connects.
@@ -736,6 +752,21 @@ map as `[x, y]` cells). Its behaviour depends on whether the cell is a pit:
   surfaces or goes down (`Battle._apply_submersion`, run at the top of the turn).
   Surfacing resets the count.
 - **Amphibious** (Grippli) — breathes water; the breath clock never starts.
+
+### Fire on the board 🟡
+
+A battle can have **burning cells** (`Battle.fire`); for now only the Ogre's fortress lights them
+(`fortress_scenario.py`: a bonfire in the yard).
+
+- **Burning.** A body takes **2d6 for every burning cell it covers** (`data.FIRE_DICE`) at the top
+  of its turn and on stepping, being shoved or being thrown into one -- a Large body on four burning
+  cells takes 8d6.
+- **Spreading.** The fortress's bonfire takes **1 or 2** more open-floor cells a round
+  (`Battle.spread_fire`, never a wall or water).
+- **Light.** A burning cell lights 2 squares around it (`data.FIRE_LIGHT`).
+- **Walking.** A walk goes round the flames when that costs no more than going through
+  (`Battle._walk_path`); the AI steps out of the fire first thing (`ai._leave_fire`) and routes round
+  it when there is a way (`ai._step_toward`).
 
 ### Vision and light 🟡
 
@@ -930,8 +961,10 @@ must be reloaded between shots.
 
 - **Weapon sizes:** Base weapons are **Medium**. **Large** variants have double
   weight (`weight × 2`) and deal **+1 damage step** (`1d4 -> 1d6 -> 1d8 -> 1d10 -> 1d12 -> 2d8`).
-- **Wielding requirements:** Only **Large** creatures (e.g. Centaur) or characters
-  with the Goliath's **Giant's Grip** racial talent can equip and wield Large weapons.
+  **Huge** variants weigh `× 4`, cost `× 4` and step the die **twice**. Neither is sold.
+- **Wielding requirements:** a weapon above Medium needs a body that big (a Large
+  Centaur holds a Large weapon). **Giant's Grip** (a racial talent of the Goliath and
+  the Ogre) lifts that one size: a Goliath holds a Large weapon, an Ogre a Huge one.
 
 ---
 
@@ -1340,6 +1373,10 @@ the yield with diminishing returns (`hunt.HUNT_PARTY_YIELD`: 0.5, 0.3, 0.2, 0.2,
 and the same factor scales the forage odds. The yield follows the survivors, so
 losing a hunter to an ambush lowers it for the rest of the trip.
 
+The Ogre's Wildfire leaves its mark here: every focus that burned takes **5 %** of The Wilds' meat
+for good (`wildfire.meat_mult`, 10 burned at worst = half), and while the Ogre's fortress stands
+hostile a hunt meets **1.5×** the ambushes, half of them his goblins (`wildfire.wilds_pack`).
+
 ### Market and haggling 🟡
 
 Rule in `economy.py` (`market_deal` / `buy_price` / `sell_price`); screen in
@@ -1684,6 +1721,37 @@ played by the AI (green tokens); across the field, a **warband of 6** mixed huma
 Lethal. Won with **every soldier alive**, the errand is done: +1 reputation with the Faith Order, and the
 potions left over are the pay. A dead soldier, a lost fight or a missed week fail it; the Order asks again
 **14 days** later. The guild's own deaths do not fail it.
+
+**Ethereal nodes.** An event can put nodes on the map for a while and take them off again
+(`world.add_node` / `world.remove_node`): they are on the map, the routes and the minimap like any
+other, and gone with every edge into them when the event is over. They live in the guild's save
+(`Guild.wildfire`) and come back on a load (`wildfire.sync_world`). A group standing on one when it
+goes walks back to The Wilds; one walking to it stops where it is.
+
+**The Ogre's Wildfire** (`wildfire.py`, the Nature Coven's third errand, 14 days). An Ogre has brought
+a goblin band into the Wilds to clear ground for a fortress, and they set the forest on fire doing it.
+Accepting puts four ethereal nodes on the map: **three foci** and **the Great Focus**, each an hour off
+The Wilds and the foci an hour off the Great Focus.
+
+- **A small focus** holds **3 Goblins** at the squad's mean level and their **Hobgoblin foreman** one
+  over. **Talk** to the foreman: a chain of two checks, **CHA** for a hearing then **INT** to show them
+  how it is done, **DC 13** each, the player picks who rolls each one (the map lists every member with
+  their modifier). Passing both puts the fire out and the node goes. A miss sets the camp on the
+  group: the fight starts (**ATTACK THE CAMP**, on open ground, lethal). A beaten crew leaves the fire
+  burning: **PUT OUT THE FIRE** is **16 hours** of work and an INT check (**DC 13**, the best mind of
+  the group rolls); a miss costs the hours and can be tried again.
+- **A focus left 7 days** burns through: it is gone, it counts as burned, and **two new foci** start
+  where it was, linked to the same nodes **an hour farther**, each with its own week.
+- **The Great Focus** is the fortress going up: **talk** the Ogre round (the same chain, **DC 15**,
+  **−1 for every small focus taught**) or **STORM THE FORTRESS** (`fortress_scenario.py`: half-raised
+  walls, the bonfire spreading, the **Ogre** -- `npcs/ogre.json`, racial 10, Large, plate armour and a Huge Club,
+  Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** one over the squad). The fight is
+  won when the Ogre is down. Either way the errand is **done**: +1 reputation with the Nature Coven and
+  a **Scroll of Water Jet** to the signer. Talked round, he builds it right: **The Ogre's Fortress**
+  stays as a friendly node with nothing to offer yet. The small foci still burning keep their clock.
+- **Day 14**: every focus still burning is lost. With the Ogre unbeaten the errand **fails** and the
+  fortress stands **hostile** for good: more ambushes on a Wilds hunt (above), and **STORM THE
+  FORTRESS** there (the finished walls with one gate, **7** escorts **two** over the squad) takes it down.
 
 ### Dungeons and the Ancient Ruins 🟡
 

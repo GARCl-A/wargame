@@ -48,6 +48,8 @@ PATH_DONE = (108, 138, 112)
 
 # terrain and props
 WATER_C      = (74, 128, 174)
+FIRE_C       = (226, 92, 38)
+FIRE_CORE    = (252, 196, 84)
 ROPE_C       = (198, 160, 104)
 WALL_SHADOW  = (0, 0, 0, 110)
 PROP_EDGE    = (25, 22, 12)

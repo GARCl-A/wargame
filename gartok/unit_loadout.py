@@ -114,16 +114,19 @@ class LoadoutMixin(CoinPurse):
         return items.is_artifact(name)
 
     def can_wield(self, name):
-        """Checks if this unit can wield `name`. Large weapons require Large size
-        (e.g. Centaur) or the Giant's Grip talent (Goliath)."""
+        """Checks if this unit can wield `name`. A weapon above Medium needs a body that
+        big (a Centaur holds a Large one); Giant's Grip lifts one size more (a Goliath
+        holds a Large weapon, an Ogre a Huge one)."""
         if not self.is_weapon(name):
             return False
         w = items.get(name)
         if not w:
             return False
-        if w.size == "Large":
-            return self.size in ("Large", "Huge") or self.has_talent("giant_grip")
-        return True
+        order = data.SIZE_ORDER
+        need = order.index(w.size or "Medium")
+        if need <= order.index("Medium"):
+            return True
+        return order.index(self.size) + (1 if self.has_talent("giant_grip") else 0) >= need
 
     def fits_tongue(self, name):
         """The Tongue slot takes one 1-handed weapon (it is a single extra limb),

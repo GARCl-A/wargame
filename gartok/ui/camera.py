@@ -46,6 +46,11 @@ class MapCamera:
         self.clamp()
         self.cam = [(min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2 + reserve_bottom / 2 / self.zoom]
 
+    def refit(self):
+        """Frame the nodes again at the next `autofit` (nodes came or went), unless the player
+        has taken the camera."""
+        self._fit_size = None
+
     def clamp(self):
         self.zoom = max(self.MIN_ZOOM, min(self.MAX_ZOOM, self.zoom))
 

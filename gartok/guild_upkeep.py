@@ -16,6 +16,7 @@ from . import (
     orders,
     recorder,
     vocations,
+    wildfire,
     world,
 )
 
@@ -221,6 +222,7 @@ class UpkeepMixin:
             events += g.feed_animals()
         events += self.house.garage.feed(self.house.stash.items)
         events += self._claim_garage_feed()
+        events += wildfire.daily(self)
         for m in missions.expire_overdue(self):
             events.append(f"{missions.template_of(m).name}: the deadline passed.")
         for u in justice.release_due(self):

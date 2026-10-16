@@ -53,6 +53,10 @@ FUNCTIONS = {f.id: f for f in (
                  note="Delve into the sunken library chambers (Lethal tactical battle)"),
     NodeFunction("skirmish", "skirmish", "JOIN THE SKIRMISH",
                  note="fight beside Ledger Hold's soldiers, played by the AI  ·  lethal"),
+    NodeFunction("camp_fight", "camp_fight", "ATTACK THE CAMP",
+                 note="a goblin crew and its Hobgoblin foreman, by the fire  ·  lethal"),
+    NodeFunction("ogre_fight", "ogre_fight", "STORM THE FORTRESS",
+                 note="the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal"),
     NodeFunction("serpents_nest", "serpents_nest", "ENTER THE NEST",
                  note="five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal"),
 )}

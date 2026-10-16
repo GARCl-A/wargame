@@ -9,6 +9,8 @@ Battle owns its *combatants*: it wraps every character it is given in a
 roster and a rematch could reuse the same picks.
 """
 
+import random
+
 from . import captives, data, intel, vision
 from .board import COLS, ROWS, cells, cells_distance, chebyshev
 from .combatant import AP_PER_TURN, Combatant
@@ -66,6 +68,7 @@ class Battle:
             u.nonlethal = not self.lethal    # 0 HP -> knocked out instead of dying
 
         self.creatures = []                  # neutral bodies (e.g. the Shepherd's sheep)
+        self.fire = set()                    # burning cells (a scenario lights them and spreads them)
         self._pf_cache = {}                   # per-turn Dijkstra field cache (see _pf_field)
         # capture-the-flag: {"player": cell|None, "enemy": cell|None}, else None.
         # the player's flag is planted by `battle_screen`; the scenario drops the
@@ -419,22 +422,63 @@ class Battle:
             result.update(cells(anchor, unit.footprint))
         return result
 
-    def path_to(self, unit, dest):
+    def _walk_path(self, unit, dest, cost):
+        """The route a walk to `dest` takes: around the flames when that costs no more than
+        `cost` (what the reachability scan charged), else straight through them."""
+        if self.fire:
+            safe = self.path_to(unit, dest, avoid=self.fire)
+            if safe and self.board.path_cost(safe, self._walk_diags(unit))[0] <= cost:
+                return safe
+        return self.path_to(unit, dest) or [unit.pos, dest]
+
+    def fire_avoid(self, unit):
+        """The burning cells a unit walking somewhere would rather go around (not the ones it
+        stands on: it has to leave those)."""
+        return frozenset(self.fire - set(self.cells_of(unit)))
+
+    def burning_under(self, unit):
+        return [c for c in self.cells_of(unit) if c in self.fire]
+
+    def burn(self, unit, entered):
+        """`unit` just entered the cells `entered`: each one on fire burns it for `FIRE_DICE`."""
+        hot = [c for c in entered if c in self.fire]
+        if not hot or unit.dead:
+            return
+        n, faces = data.FIRE_DICE
+        dmg = data.roll(n * len(hot), faces)
+        self.log(f"{unit.name} is in the flames! ({n * len(hot)}d{faces})")
+        self.fx(unit.pos, f"-{dmg}", "crit")
+        unit.take_damage(dmg, self.log)
+
+    def _apply_fire(self, unit):
+        """The top of a turn spent standing in fire burns like walking into it."""
+        if unit.alive and self.fire:
+            self.burn(unit, self.burning_under(unit))
+
+    def spread_fire(self, count, rng=None):
+        """`count` cells next to the flames catch fire: open floor only, never a wall or water."""
+        rng = rng or random
+        edge = sorted({n for c in self.fire for n in self.board.neighbors(c)}
+                      - self.fire - self.board.walls - self.board.water)
+        for c in rng.sample(edge, min(count, len(edge))):
+            self.fire.add(c)
+
+    def path_to(self, unit, dest, avoid=frozenset()):
         """The cells `unit` would walk through to reach the anchor `dest`,
-        ``[unit.pos, ..., dest]`` (``[]`` if unreachable)."""
+        ``[unit.pos, ..., dest]`` (``[]`` if unreachable). `avoid` cells are routed around."""
         _, enemies = self.cells_by_side(unit)
         blocked = frozenset(enemies | self.board.walls | self.creature_cells()
-                            | self._impassable_water(unit))
+                            | self._impassable_water(unit) | avoid)
         diags = self._walk_diags(unit)
         field = self._pf_field(unit.pos, unit.footprint, diags,
                                unit.can_move_vertically, blocked)
         return self.board.path_to(unit.pos, dest, blocked, unit.footprint, diags,
                                   vertical=unit.can_move_vertically, field=field)
 
-    def path_step_toward(self, unit, goal, budget, reach=1):
+    def path_step_toward(self, unit, goal, budget, reach=1, avoid=frozenset()):
         allies, enemies = self.cells_by_side(unit)
         blocked = frozenset(enemies | self.board.walls | self.creature_cells()
-                            | self._impassable_water(unit))
+                            | self._impassable_water(unit) | avoid)
         target = self.unit_at(goal)
         target_cells = self.cells_of(target) if target else None
         diags = self._walk_diags(unit)
@@ -449,6 +493,7 @@ class Battle:
         reach = self.reachable(unit)
         if dest not in reach:
             return False
+        segment = self._walk_path(unit, dest, reach[dest])
         if not unit.walking:                 # start the Move action (1 point)
             if unit.ap < 1:
                 return False
@@ -458,11 +503,11 @@ class Battle:
             unit.diag_steps = 0              # a fresh walk restarts the diagonal alternation
             self.log(f"{unit.name} moves (1 action point).")
             
-        segment = self.path_to(unit, dest) or [unit.pos, dest]
         platforms = self._platforms()
         current_z = self.elevation(unit)
         
         for step in segment[1:]:
+            left = set(self.cells_of(unit)) if self.fire else None
             step_cost, unit.diag_steps = self.board.path_cost([unit.pos, step], unit.diag_steps,
                                                               platforms=platforms, z_start=current_z)
             unit.moved += step_cost
@@ -483,7 +528,11 @@ class Battle:
                 self.trigger_trap(unit, trap)
                 if not unit.alive:
                     break
-                    
+            if self.fire:
+                self.burn(unit, set(self.cells_of(unit)) - left)
+                if not unit.alive:
+                    break
+
         if unit.moved >= unit.speed or not unit.alive:          # walk exhausted; next step = new action
             unit.walking = False
         return True
@@ -771,6 +820,7 @@ class Battle:
         else:
             self.active.start_turn(self.log)
             self._apply_submersion(self.active)
+            self._apply_fire(self.active)
         if self._check_winner():
             self.log(f"*** Victory: {self.winner} ***")
             return

@@ -51,6 +51,7 @@ from . import (
     settings,
     tutorial_card,
     vocations,
+    wildfire,
     world,
 )
 from .app_battle import BattleFlowMixin
@@ -89,6 +90,7 @@ SCENE_DEBOUNCE_MS = 250         # clicks swallowed right after landing back on t
 class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
     _left_outside = None    # (group, node, guarded): a wagon waiting outside the node the party entered
     _skirmish = None        # the Faith Order's errand (a Mission) the Battlefield fight in flight decides
+    _wildfire_node = None   # the focus or fortress (a node id) the wildfire fight in flight is at
 
     def __init__(self):
         pygame.init()
@@ -205,6 +207,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         self.guild = Guild(picks, node=world.START_NODE, leader=leader,
                            name=name, banner_color=banner_color, banner_icon=banner_icon,
                            tutorial=self._draft_tutorial, vocation=vocation)
+        wildfire.sync_world(self.guild)
         set_player_color(self.guild.banner_color)
         self._record_play()
         self._start_map()
@@ -490,6 +493,8 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
         "serpents_nest": lambda s, g, n, o: s._enter_nest(g, n),
         "skirmish": lambda s, g, n, o: s._enter_skirmish(g, n),
+        "camp_fight": lambda s, g, n, o: s._enter_wildfire_fight(g, n),
+        "ogre_fight": lambda s, g, n, o: s._enter_wildfire_fight(g, n),
         "shrine": lambda s, g, n, o: s._open_shrine(g, n),
     }
 

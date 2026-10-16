@@ -2,7 +2,7 @@
 
 `ICONS` names every item once (kind, material, shape); an item it does not know falls back to a
 generic icon for its type, so a new item never draws nothing. Rarity is the rim colour; a Large
-weapon, a spell scroll and a language dictionary share the icon of their plain kind.
+or Huge weapon, a spell scroll and a language dictionary share the icon of their plain kind.
 """
 
 from . import items
@@ -122,11 +122,11 @@ VOCATION_ICONS = {
 
 
 def _base(name):
-    """The catalogue name an icon is filed under: no ` (aged)` suffix, no `Large ` prefix, and every
+    """The catalogue name an icon is filed under: no ` (aged)` suffix, no `Large ` / `Huge ` prefix, and every
     spell scroll and language dictionary is the plain Scroll and Dictionary."""
     if hasattr(name, "name"):
         name = name.name
-    name = str(name).split(" (")[0].removeprefix("Large ").removeprefix("Any ")
+    name = str(name).split(" (")[0].removeprefix("Large ").removeprefix("Huge ").removeprefix("Any ")
     if name.startswith("Scroll of "):
         return "Scroll"
     if name.startswith("Dictionary of "):

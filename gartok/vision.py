@@ -34,6 +34,8 @@ def _light_sources(battle):
         radius = ground_light(obj)
         if radius:
             yield obj.pos, radius
+    for c in getattr(battle, "fire", ()):
+        yield c, data.FIRE_LIGHT
 
 
 def light_sources(battle):

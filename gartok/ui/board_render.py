@@ -8,7 +8,8 @@ hit-tests cells through `view.cell_at`).
 Data shapes::
 
     terrain = {"cols": int, "rows": int, "walls": set[(x, y)],
-               "elevation": {(x, y): z}, "water": set, "ropes": set}
+               "elevation": {(x, y): z}, "water": set, "ropes": set,
+               "fire": set}                       # optional: burning cells
 
     prop = {"kind": "torch" | "chest" | "relic" | "trap" | "disk" | "item",
             "pos": (x, y), "trap_type": str, "elevation": int}
@@ -40,6 +41,8 @@ from .board_style import (
     DISK_HALO,
     DISK_RIM,
     ENEMY_C,
+    FIRE_C,
+    FIRE_CORE,
     FLOOR_A,
     FLOOR_B,
     HP_TRACK,
@@ -152,6 +155,10 @@ def draw_terrain(surf, F, view, terrain):
         wl.fill((*WATER_C, 150 if deep else 92))
         surf.blit(wl, view.cell_rect(cx, cy))
 
+    for cx, cy in terrain.get("fire", ()):
+        if vis(cx, cy):
+            _flame(surf, view.cell_rect(cx, cy), tile)
+
     for cx, cy in terrain["ropes"]:
         if not vis(cx, cy):
             continue
@@ -176,6 +183,16 @@ def draw_terrain(surf, F, view, terrain):
         surf.blit(shadow, (r.x + 5, r.y + 5))
     for wx, wy in shown:
         _wall_block(surf, view.cell_rect(wx, wy).inflate(-2, -2), wx, wy, walls)
+
+
+def _flame(surf, r, tile):
+    """A burning cell: an ember wash and a tongue of flame."""
+    glow = pygame.Surface((tile, tile), pygame.SRCALPHA)
+    glow.fill((*FIRE_C, 120))
+    surf.blit(glow, r)
+    cx, base, h, w = r.centerx, r.bottom - tile // 6, tile * 2 // 3, tile // 3
+    pygame.draw.polygon(surf, FIRE_C, [(cx - w, base), (cx, base - h), (cx + w, base)])
+    pygame.draw.polygon(surf, FIRE_CORE, [(cx - w // 2, base), (cx, base - h // 2), (cx + w // 2, base)])
 
 
 def _wall_block(surf, r, wx, wy, walls):

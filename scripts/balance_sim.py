@@ -422,7 +422,7 @@ def build_report(agg, cfg, tal_fx=None):
             for tid, fx in sorted(rows, key=lambda r: r[1]["delta"], reverse=True):
                 t = talents.get(tid)
                 z = fx["delta"] / fx["se"] if fx["se"] else 0.0
-                p(f"  {t.name:<24}{(t.race or ''):<12}{fx['holders']:>8.1%}"
+                p(f"  {t.name:<24}{', '.join(t.races):<12}{fx['holders']:>8.1%}"
                   f"{fx['delta']:>+8.3f}{fx['se']:>8.3f}{z:>6.1f}")
 
     p("")

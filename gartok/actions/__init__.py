@@ -54,6 +54,7 @@ from .spells import (  # noqa: F401
     ShareMagicAction,
     SleepAction,
     SpellAction,
+    WaterJetAction,
     _PlacedSpellAction,
 )
 from .support import (

@@ -44,6 +44,7 @@ class WeaponSize(StrEnum):
     SMALL = "Small"
     MEDIUM = "Medium"
     LARGE = "Large"
+    HUGE = "Huge"
 
 
 class CraftingStation(StrEnum):
@@ -302,6 +303,13 @@ for slug, name, rarity, weight, price, dmg, rng, fin, thr, hands, reload, traits
         damage=step_damage_die(dmg), range=rng, finesse=fin, thrown=thr,
         hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
     ))
+    # Huge variant: an Ogre's, or a Large body with Giant's Grip
+    _register(ItemDef(
+        id=f"huge_{slug}", name=f"Huge {name}", type=ItemType.WEAPON, rarity=rarity,
+        weight=round(weight * 4, 1), price=price * 4, size=WeaponSize.HUGE,
+        damage=step_damage_die(step_damage_die(dmg)), range=rng, finesse=fin, thrown=thr,
+        hands=hands, reload=reload, traits=traits, crit_mult=crit_mult,
+    ))
 
 # Armor
 _register(ItemDef(id="leather_jerkin", name="Leather Jerkin", type=ItemType.ARMOR, rarity=ItemRarity.COMMON, weight=4.0, price=20, ac=1, max_dex=None, speed_penalty=0))
@@ -332,6 +340,7 @@ _register(ItemDef(id="scroll_of_light_globe", name="Scroll of Light Globe", type
 _register(ItemDef(id="scroll_of_magic_missile", name="Scroll of Magic Missile", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="magic_missile"), "scroll_magic_missile")
 _register(ItemDef(id="scroll_of_floating_disk", name="Scroll of Floating Disk", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="floating_disk"), "scroll_floating_disk")
 _register(ItemDef(id="scroll_of_sleep", name="Scroll of Sleep", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="sleep"), "scroll_sleep")
+_register(ItemDef(id="scroll_of_water_jet", name="Scroll of Water Jet", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="water_jet"), "scroll_water_jet")
 
 # Dictionaries
 _register(ItemDef(id="dictionary", name="Dictionary", type=ItemType.DICTIONARY, rarity=ItemRarity.COMMON, weight=2.0, price=4))

@@ -2,12 +2,12 @@
 
 import random
 
-from .. import data, intel, magic
+from .. import data, intel, items, magic
 from ..board import grid_distance
 from ..conditions import Sleeping
 from ..data import d20
 from ..ground import GroundObject
-from .base import Action, _cell_free, _hostile_target, nonlethal_penalty
+from .base import Action, _cell_free, _hostile_target, _sign, nonlethal_penalty
 
 
 class SpellAction(Action):
@@ -97,6 +97,69 @@ class SleepAction(SpellAction):
             battle.log(desc + " -> resisted.")
 
 
+class WaterJetAction(SpellAction):
+    """Nature's own: a jet of water, INT to hit against AC, 1d6 + INT and a hit throws the
+    target a square away from the caster. Reaches as far as a dagger is thrown."""
+    spell_id = "water_jet"
+    target, aimed = "enemy", True
+    DICE = (1, 6)
+
+    @staticmethod
+    def reach():
+        return items.get("Dagger").thrown
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target):
+            return False
+        if not _hostile_target(actor, target):
+            return False
+        return (battle.units_distance(actor, target) <= self.reach()
+                and battle.los_between(actor, target))
+
+    def landing(self, battle, actor, target):
+        """The cell the jet throws `target` onto, or None when something is in the way."""
+        dx, dy = _sign(target.pos[0] - actor.pos[0]), _sign(target.pos[1] - actor.pos[1])
+        if (dx, dy) == (0, 0):
+            return None
+        dest = (target.pos[0] + dx, target.pos[1] + dy)
+        if battle.board.diagonal_corner_blocked(target.pos, dest) or not _cell_free(battle, target, dest):
+            return None
+        return dest
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
+        atk = d20()
+        if atk == 1:
+            battle.log(" Critical miss!")
+            return
+        pulled = nonlethal_penalty(actor)
+        hit_score = atk + actor.mod_intelligence - pulled
+        ac = target.ac_vs(actor)
+        shown = intel.shown(battle, target, 'ac', ac)
+        if atk != 20 and hit_score < ac:
+            battle.log(f" Miss ({hit_score} vs AC {shown}).")
+            return
+        dmg = max(1, data.roll(*self.DICE) + actor.mod_intelligence)
+        battle.log(f" Hit ({hit_score} vs AC {shown}) for {dmg} damage.")
+        was_up = target.alive
+        dest = self.landing(battle, actor, target)
+        target.take_damage(dmg, battle.log, knockout=bool(pulled))
+        if dest is not None and not target.dead:
+            before = set(battle.cells_of(target))
+            z_from = battle.elevation(target)
+            target.pos = dest
+            target.z = battle.elevation_at(dest, target)
+            battle.log(f"  The water throws {target.name} back to {dest}.")
+            battle.burn(target, set(battle.cells_of(target)) - before)
+            if target.z < z_from:
+                battle.apply_fall(target, z_from - target.z, battle.log)
+        if was_up and not target.alive and target.team != actor.team:
+            actor.credit_kill(target, magic=True)
+
+
 class _PlacedSpellAction(SpellAction):
     """Shared `can()` for the two spells that drop something on a cell
     (Light Globe, Floating Disk) instead of targeting an enemy."""
@@ -142,6 +205,7 @@ _SPELL_ACTIONS = {
     "sleep": SleepAction,
     "light_globe": LightGlobeAction,
     "floating_disk": FloatingDiskAction,
+    "water_jet": WaterJetAction,
 }
 
 

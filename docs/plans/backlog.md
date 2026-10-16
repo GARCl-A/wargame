@@ -28,9 +28,11 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc, to the end** (*Ready to do -> Medium*): the three missions left (Faith's second, Blood's
-   and Nature's third), then the keepers and the initiation, then tier 1 spells per school. The Snake
-   Dragon job and the Faith Order's Battlefield errand are built (2026-10-15).
+1. **Magic Arc, to the end** (*Ready to do -> Medium*): the two missions left (Faith's second and Blood's
+   third), then the keepers and the initiation, then tier 1 spells per school. The Snake Dragon job, the
+   Faith Order's Battlefield errand and the Nature Coven's Ogre's Wildfire are built (2026-10-15).
+   Before the last two bosses, settle the two racial-rule items (*Small*): they decide what a "racial 15"
+   boss is, and the Ogre's fight is still short of it (item 1's endgame note).
 2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
 3. **Group hand-over card** (*Small*): the clock no longer drops the player into another group's screen unannounced.
 4. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
@@ -72,10 +74,29 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   what is about to open, plus one button to go on. Same when the map moves to the next idle group after an
   order. Reuse the battle's hand-over card pattern (two human controllers) and give it a tutorial card.
 
+- **Authored creatures must follow the racial-level rule (author 2026-10-15).** Racial level is
+  `progression.racial_level(combat + work + magic)` (thresholds 2, 4, ... 30), but `npcs/*.json` can pin it
+  with `racial_override`, and the pin is what sets the hit dice. Checked 2026-10-15: **Aurochs** is the one
+  breaking it (combat 13 / work 0 / magic 0 -> rule says racial 6, pinned at 13, so 13 HD and 119 HP).
+  Biwolf, the Ancient Archivist (both 10/10/0 -> 10) and the Ruin Sentry (8/4/0 -> 6) pin the value the rule
+  already gives; drop those pins so they cannot drift. Fix: remove `racial_override` from every authored NPC
+  and give the Aurochs the tracks its weight needs (e.g. work levels: 13 HD needs a track sum of 26) instead of a
+  pin, then re-check his fight. Add a test that loads every `npcs/*.json` and asserts
+  `racial_level == progression.racial_level(racial_xp)`, so a new NPC cannot pin it again. The Ogre
+  (`npcs/ogre.json`, 10/10/0 -> 10) already follows it, with no pin.
+
+- **Racial talents every 5 levels (author 2026-10-15).** The rule is one racial pick at racial 5, 10 and
+  15 (3 at the cap). The code gives one per level from racial 5 (`Unit.picks_available`:
+  `max(0, racial_level - 4)`, so racial 10 earns 6) and RULES.md says the same. Fix both, then check every
+  authored NPC and test unit that holds racial talents still fits (a unit holding more than it earns must
+  drop some; the Ogre's 2 at racial 10 already fit), `encounters.build_enemy`'s racial picks and the
+  racial-track UI (`level_screen`) that shows the next pick.
+
 ## Medium
 
-- **Magic Arc — what is left (Slice 1 and the Snake Dragon are built: RULES.md *Secret nodes*, *Magic*,
-  *Capture*, *Dragon Breath*; plan and as-built notes in [snake_dragon.md](snake_dragon.md)).**
+- **Magic Arc — what is left (Slice 1, the Snake Dragon, Mercy at the Front and the Ogre's Wildfire are built:
+  RULES.md *Secret nodes*, *Magic*, *Capture*, *Dragon Breath*, *Fire on the board*; plans and as-built notes in
+  [snake_dragon.md](snake_dragon.md) and [ogre_wildfire.md](ogre_wildfire.md)).**
   Initiation belongs to the **character**, not the guild: a unit is taken to one of the three hidden nodes, and only
   if the guild has enough reputation with that faction can the rite be done for that unit.
   1. *Missions, designed by story (decided 2026-10-15).* Initiating into a school needs 2 reputation with its faction;
@@ -83,12 +104,19 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      and the Snake Dragon to one of Blood / Nature, so in theory a character can be initiated in all three schools but
      in practice the guild's choices close doors, and a closed delivery shows as FAILED so the player sees it. More
      missions come as the game grows. When the set is written, check that no path leaves a school unreachable; if
-     one does, add a mission there. Built: the Codex (all three) and the Snake Dragon (Blood dead / Nature alive).
-     The Faith Order's first, *Mercy at the Front* (the Battlefield skirmish beside AI-played Ledger Hold soldiers),
-     is built (2026-10-15, RULES.md *Secret nodes*). **Left: three missions** (Faith 1, Blood 1, Nature 1).
-     *Reachability caveat:* with three missions each, Blood and Nature can still close: Codex to Faith and the Snake
-     to Blood leaves Nature with only its third mission (1 of 2). Faith is safe (its two new missions are not
-     exclusive). Decide when the last two are written: accept it, or give Blood and Nature a second open mission each.
+     one does, add a mission there. Built (2026-10-15): the Codex (all three, exclusive), the Snake Dragon (Blood
+     dead / Nature alive, exclusive), the Faith Order's *Mercy at the Front* and the Nature Coven's third, *The
+     Ogre's Wildfire* (not exclusive). **Left: two missions, Faith's second and Blood's third.**
+     *Reachability (decide when the last two are written):* Faith is safe (its two new missions are open to all).
+     Nature reaches 2 only with the Codex or the Snake: Codex to Faith and the Snake to Blood leave it the Wildfire
+     alone (1 of 2). Blood is the same with its third. Options: accept it (the guild's choices close a school), or
+     give Blood and Nature one more open mission each.
+     *The third missions are the game's endgame for now (author 2026-10-15):* each boss is a fight worth a
+     **racial-15** character (the cap: a track sum of 30). Generated enemies stop at combat 7 / work 6
+     (`constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`, mean 6), so the bosses are authored NPCs. The Ogre (racial
+     10) and his escort clamped at mean 6 do not reach it yet (see Tuning). **Decision for the Blood boss and for
+     the Ogre:** lift the escort's cap inside these fights (the scaled bodies follow the squad past mean 6), or
+     keep the cap and make the boss itself carry the weight.
   2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no
      shop stocks it. It comes from birth (the Priest) or from a Priest among a humanoid ambush pack (checked
      2026-10-15: a rolled Priest carries it in the pack and `loot.field_loot` drops it). Fantasy reason: the god picks
@@ -100,16 +128,22 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      the track reachable for the player. **Keepers' races (author 2026-10-15):** a Centaur at the Nature Grove, a
      Kenku at the Faith Cathedral, a Lizardfolk at the Blood Sanctuary. With them every playable race has someone in
      the game (the Treefolk is Varkas' recruit).
-  4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Today the four spells
-     (`magic.SPELLS`) belong to all three schools, so the schools do not differ yet. **Minimum (author 2026-10-15): at
-     least one level-0 and one level-1 spell of each school's own**, each with its AI.
+  4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Four spells
+     (`magic.SPELLS`) belong to all three schools; the first of a school's own is **Water Jet** (Nature, level 1,
+     the Wildfire's reward, with its AI). **Minimum (author 2026-10-15): at least one level-0 and one level-1 spell
+     of each school's own**, each with its AI. Left: Nature's level 0; Blood's and Faith's level 0 and 1.
   5. *Blood is bloodline (decided 2026-10-15; the Cult's blurb rewritten):* the magic is born in you (a dragon, an
      angel, a demon in the line). New Blood branches follow the same shape as Bloodline -> Dragon -> Dragon Breath
      (other bloodlines: angel, demon...).
   6. *More magic XP sources:* today a magic kill and a finished spell study (`progression.py`, combat's curve as a
      placeholder); the author plans more magic activities.
   7. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
-     captive and the 3-day corpse are first picks.
+     captive and the 3-day corpse are first picks. **The Ogre's Wildfire:** the Ogre is 4d6-drop-lowest (STR 17,
+     98 HP), in Plate Armor (AC 15, speed 4) with a Huge Club; his escort is clamped at mean 6. AI against AI in the
+     lab (`combat_lab` "fortress", squad at mean 6): 2/30 wins with four, 4/30 with six. Play it in the lab first (an
+     AI squad plays far below a person), then decide the escort's cap (item 1), the fire (2d6 a cell, 1-2 cells a
+     round), the camp's crew (3 Goblins + a Hobgoblin a level over), the DCs (13 / 15, -1 a taught focus), the
+     put-out (16 h, DC 13) and the meat loss (5% a burned focus, for good).
 
 ## Playtest notes 2026-10-12
 
@@ -165,16 +199,18 @@ pointed to, not repeated.
 ## Large
 
 - **Teach the AI the newer actions (before the next playtest).** Checked 2026-10-15 in `ai.py`:
-  (1) **Never used:** Throw, Push, Disarm, Jump, Investigate, Dismount. (2) **Used, but blindly:** the 11 weapon
+  (1) **Never used:** Throw, Disarm, Jump, Investigate, Dismount. Push only when the shove does damage (into the
+  flames, or a Mighty Shove against a wall: `ai._try_shove`), never to break a flank or win a pit. (2) **Used, but blindly:** the 11 weapon
   actions (`ai._pick_attack`). With 2 AP left, the first one whose `can()` passes is taken, ahead of two
   plain attacks and with no expected-damage comparison. Power Shot, Extreme Shot, Repel Strike and Javelin Charge
   are taken whenever possible, whatever the target. The 2-AP cost also stops the AI from moving first and
-  striking after. (3) **Spells:** Sleep and Magic Missile in the pick, Light Globe and Floating Disk in
+  striking after. (3) **Spells:** Sleep, Magic Missile and Water Jet in the pick, Light Globe and Floating Disk in
   their own branches. The magic arc's tier 1 spells need the same as they land. Goal: every action an
   enemy can hold is scored against its alternatives (expected damage, AP spent, position), with tests per
   action and `sim_test.py`. Gauge: `scripts/combat_pairs.py` against the 2026-10-11 baseline below.
   Built with their own AI on 2026-10-15: Dragon Breath (only on 3+ foes in the cone, but the breather does not move
-  to set up a better cone), Capture and the Non-lethal toggle (the player's side, against a foe it wants alive).
+  to set up a better cone), Capture and the Non-lethal toggle (the player's side, against a foe it wants alive),
+  fire (step out, route round it), Mighty Shove and Water Jet.
 - **Playtest on the current build, then feed it and the Caravana run to the AI and the sim.**
   The *Caravana Do Homem Verde* run (world `95ea6648`, 205 days, the longest) is archived but **never analysed**:
   its `play.jsonl` is in `recordings/2026-10-12/` and its 62 fights in `combat_lab/campaign/`, yet the
@@ -191,12 +227,11 @@ pointed to, not repeated.
   `traded` goods one chain at a time. Needs recipes, a carpenter node or function, the sim's `crafter`
   policy and tests.
 - **Talent trees are shorter than the level cap (to be authored by hand, after the magic arc).** The XP
-  tables now run to level 15 (2026-10), but the trees do not: combat has 14 nodes and work 10
-  (each level grants one pick), so combat 15 wastes a pick and work levels 11-15 grant picks with
-  nothing to spend them on. The racial track (picks from racial level 5) is worse: its 27 nodes
-  are split across races, so most races have almost none of their own and a high racial level
-  buys hit dice only (the Ox has one node, Aurochs Might). Goal: **at least 30 combat and 30 work talents**,
-  and enough racial nodes per race for its picks. Nothing built; the author will design them.
+  tables run to level 15, and each level grants one pick: combat has 15 nodes and work 14 (checked
+  2026-10-15), so work 15 has nothing to spend its pick on and neither tree has room to choose. The racial
+  track has 32 nodes split across races (some shared, like Giant's Grip); once *Racial talents every 5
+  levels* lands a race needs only 3 of its own (racial 5, 10, 15), and most have 1. Goal: **at least 30
+  combat and 30 work talents**, and 3+ racial nodes per race. Nothing built; the author will design them.
 - **Gathering: loose ends (built 2026-10-11, `gather.py`, RULES.md).** The licence, the drop tables,
   the pay rule, the ambush and the sim's `gatherer` policy (and `miner` gathering once it can afford
   the licence) are in. **Retuned 2026-10-11:** a shift rolls `hours / 7` times (a rate, with the leftover as a
@@ -366,6 +401,8 @@ GPU a portrait, curated by hand). Each task below is its own sitting of art-maki
 the ones that also need code say so. Order is the suggested priority.
 
 - **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10).
+- **The Ogre's portrait** (`npcs/ogre.json` has none: the board shows the generic face). Also the
+  keeper's face if the friendly fortress ever gets a function (a `Vendor`).
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.
 

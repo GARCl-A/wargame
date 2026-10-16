@@ -56,6 +56,7 @@ The generator kept only the names; every effect below was designed for the warga
 | Spider Venom | a bite that draws blood forces a Constitution save (DC 11 + the spider's racial level) or the victim is poisoned: Giant Spider Venom, one stack more per failed save, each eating a point of Dexterity. |
 | Serpentine | a body that strikes before it is seen: every attack is a finesse attack (the better of Strength and Dexterity to hit), and the unarmed attack is a bite of Fangs. |
 | Pack Tactics | +1 [melee] damage (a real bite); +2 [circumstance] to attack per ally already on the target, not just the first. |
+| Reach | long arms on a huge body: melee attacks reach 1 square farther. |
 
 ## Squad archetypes
 
@@ -128,34 +129,49 @@ Each occupation grants one starting weapon and one starting item.
 |---|---|---|---|---|---|---|---|---|
 | Dagger | Medium | 1d4 | melee | yes | 6 sq | 1 | 0.5 kg | 8 |
 | Large Dagger | Large | 1d6 | melee | yes | 6 sq | 1 | 1 kg | 16 |
+| Huge Dagger | Huge | 1d8 | melee | yes | 6 sq | 1 | 2 kg | 32 |
 | Hatchet | Medium | 1d6 | melee | -- | 4 sq | 1 | 1 kg | 10 |
 | Large Hatchet | Large | 1d8 | melee | -- | 4 sq | 1 | 2 kg | 20 |
+| Huge Hatchet | Huge | 1d10 | melee | -- | 4 sq | 1 | 4 kg | 40 |
 | Axe | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 35 |
 | Large Axe | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 70 |
+| Huge Axe | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 140 |
 | Light Hammer | Medium | 1d4 | melee | yes | 8 sq | 1 | 1 kg | 10 |
 | Large Light Hammer | Large | 1d6 | melee | yes | 8 sq | 1 | 2 kg | 20 |
+| Huge Light Hammer | Huge | 1d8 | melee | yes | 8 sq | 1 | 4 kg | 40 |
 | Hammer | Medium | 1d8 | melee | -- | -- | 1 | 4 kg | 35 |
 | Large Hammer | Large | 1d10 | melee | -- | -- | 1 | 8 kg | 70 |
+| Huge Hammer | Huge | 1d12 | melee | -- | -- | 1 | 16 kg | 140 |
 | Club | Medium | 1d6 | melee | -- | -- | 1 | 1.5 kg | 6 |
 | Large Club | Large | 1d8 | melee | -- | -- | 1 | 3 kg | 12 |
+| Huge Club | Huge | 1d10 | melee | -- | -- | 1 | 6 kg | 24 |
 | Quarterstaff | Medium | 1d6 | melee | yes | -- | 1 | 2 kg | 5 |
 | Large Quarterstaff | Large | 1d8 | melee | yes | -- | 1 | 4 kg | 10 |
+| Huge Quarterstaff | Huge | 1d10 | melee | yes | -- | 1 | 8 kg | 20 |
 | Shortspear | Medium | 1d6 | melee | -- | 12 sq | 1 | 1.5 kg | 12 |
 | Large Shortspear | Large | 1d8 | melee | -- | 12 sq | 1 | 3 kg | 24 |
+| Huge Shortspear | Huge | 1d10 | melee | -- | 12 sq | 1 | 6 kg | 48 |
 | Light Pick | Medium | 1d4 | melee | yes | 6 sq | 1 | 1 kg | 10 |
 | Large Light Pick | Large | 1d6 | melee | yes | 6 sq | 1 | 2 kg | 20 |
+| Huge Light Pick | Huge | 1d8 | melee | yes | 6 sq | 1 | 4 kg | 40 |
 | Pick | Medium | 1d8 | melee | -- | -- | 1 | 3 kg | 30 |
 | Large Pick | Large | 1d10 | melee | -- | -- | 1 | 6 kg | 60 |
+| Huge Pick | Huge | 1d12 | melee | -- | -- | 1 | 12 kg | 120 |
 | Broadsword | Medium | 1d12 | melee | -- | -- | 2 | 4 kg | 105 |
 | Large Broadsword | Large | 2d8 | melee | -- | -- | 2 | 8 kg | 210 |
+| Huge Broadsword | Huge | 3d8 | melee | -- | -- | 2 | 16 kg | 420 |
 | Light Crossbow | Medium | 1d8 | 18 sq | -- | -- | 2 | 2.5 kg | 80 |
 | Large Light Crossbow | Large | 1d10 | 18 sq | -- | -- | 2 | 5 kg | 160 |
+| Huge Light Crossbow | Huge | 1d12 | 18 sq | -- | -- | 2 | 10 kg | 320 |
 | Shortbow | Medium | 1d6 | 14 sq | -- | -- | 2 | 1 kg | 320 |
 | Large Shortbow | Large | 1d8 | 14 sq | -- | -- | 2 | 2 kg | 640 |
+| Huge Shortbow | Huge | 1d10 | 14 sq | -- | -- | 2 | 4 kg | 1280 |
 | Dwarf Axe | Medium | 1d10 | melee | -- | -- | 1 | 4 kg | 75 |
 | Large Dwarf Axe | Large | 1d12 | melee | -- | -- | 1 | 8 kg | 150 |
+| Huge Dwarf Axe | Huge | 2d8 | melee | -- | -- | 1 | 16 kg | 300 |
 | Rapier | Medium | 1d6 | melee | yes | -- | 1 | 1 kg | 65 |
 | Large Rapier | Large | 1d8 | melee | yes | -- | 1 | 2 kg | 130 |
+| Huge Rapier | Huge | 1d10 | melee | yes | -- | 1 | 4 kg | 260 |
 
 ## Weapon Traits
 
@@ -245,6 +261,21 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Harness | 4 kg | -- |
 | Hatchet | 1 kg | -- |
 | Holy Symbol | 0.5 kg | -- |
+| Huge Axe | 12 kg | -- |
+| Huge Broadsword | 16 kg | -- |
+| Huge Club | 6 kg | -- |
+| Huge Dagger | 2 kg | -- |
+| Huge Dwarf Axe | 16 kg | -- |
+| Huge Hammer | 16 kg | -- |
+| Huge Hatchet | 4 kg | -- |
+| Huge Light Crossbow | 10 kg | -- |
+| Huge Light Hammer | 4 kg | -- |
+| Huge Light Pick | 4 kg | -- |
+| Huge Pick | 12 kg | -- |
+| Huge Quarterstaff | 8 kg | -- |
+| Huge Rapier | 4 kg | -- |
+| Huge Shortbow | 4 kg | -- |
+| Huge Shortspear | 6 kg | -- |
 | Ink | 0.1 kg | material |
 | Iron Bar | 5 kg | material |
 | Iron Ore | 4 kg | material |
@@ -299,6 +330,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Scroll of Light Globe | 0.1 kg | -- |
 | Scroll of Magic Missile | 0.1 kg | -- |
 | Scroll of Sleep | 0.1 kg | -- |
+| Scroll of Water Jet | 0.1 kg | -- |
 | Sealed Chest | 8 kg | -- |
 | Semi-precious Gemstone | 0.1 kg | -- |
 | Shortbow | 1 kg | -- |
@@ -422,11 +454,12 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Cosmopolitan | at home among strangers: reduces alignment distance penalties by 1 when recruiting, negotiating, or trading. | -- | Human |
 | 1 | Halfling Luck | fate bends around you: once every 24 hours, reroll your first failed d20 test (in or out of combat). | -- | Halfling |
 | 1 | Woodland Scout | the forest whispers its secrets to you: while the group travels Cautious, the chance of an ambush on the road or on a hunt is 10% lower. | -- | Elf |
-| 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- | Orc |
+| 1 | Intimidating Presence | a terrifying physical presence: you may use your Strength modifier instead of Charisma when attempting to Demoralize enemies. | -- | Orc, Ogre |
 | 1 | Swarm Logic | there is safety, and speed, in numbers: you work 10% faster for every other Goblin working alongside you. | -- | Goblin |
 | 1 | Tireless Worker | machines do not sleep or complain: you complete simple labor and gathering tasks significantly faster. | -- | Automaton |
 | 1 | Mount | your strong back: allow a Medium or Small ally to ride you. | -- | Centaur |
-| 1 | Giant's Grip | immense physical strength: allows you to wield Large weapons. | -- | Goliath |
+| 1 | Giant's Grip | immense physical strength: wield weapons one size above your own (Large for a Goliath, Huge for an Ogre). | -- | Goliath, Ogre |
+| 1 | Mighty Shove | your Push throws the target 3 squares back and deals 1d6; whatever stops it on the way (a wall, or a body, which takes the 1d6 too) deals 1d6 more. | -- | Ogre |
 | 1 | Phalanx | martial discipline: +1 AC if you are adjacent to at least one ally. | -- | Hobgoblin |
 | 1 | Organic Harvester | scavenging instinct: 25% chance per organic loot type to find more meat or hide after a beast battle. | -- | Lizardfolk |
 | 1 | Corpse Eater | brutal feast: spend 1 AP to eat a dead enemy, satiating hunger and demoralizing enemies who see you. | -- | Gnoll |
@@ -540,6 +573,7 @@ Mages of the green, hidden deep in the Wilds. They keep to themselves.
 |---|---|---|---|
 | The Codex Delivered | Bring the Ancient Codex to the Nature Grove. | +1 | -- |
 | The Snake Saved | Bring the Snake Dragon alive to the Nature Grove. | +1 | -- |
+| The Ogre's Wildfire | Talk the Ogre round, or beat him, before his fires take the Wilds. | +1 | -- |
 
 ### The Faith Order
 

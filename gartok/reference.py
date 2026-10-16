@@ -107,7 +107,7 @@ def _weapons():
     for name, w in items.weapons().items():
         rng = "melee" if w.range == 0 else f"{w.range} sq"
         thrown = "--" if w.thrown == 0 else f"{w.thrown} sq"
-        price = economy._base_price(name) if (name in economy.PRICES or name.startswith("Large ")) else "--"
+        price = economy._base_price(name) if (name in economy.PRICES or name.startswith(("Large ", "Huge "))) else "--"
         rows.append((name, w.size or "Medium", _dice(*w.damage), rng,
                      "yes" if w.has_trait("finesse") else "--", thrown, w.hands,
                      f"{w.weight:g} kg", price))
@@ -194,7 +194,7 @@ def _talent_trees():
         head = (("Tier", "Talent", "Effect", "Requires") + (("Race",) if racial else ())
                 + (("School",) if magic else ()))
         rows = [(t.tier, t.name, t.effect, "granted" if t.granted else t.requires or "--")
-                + ((t.race or "any",) if racial else ())
+                + ((", ".join(t.races) or "any",) if racial else ())
                 + ((t.school,) if magic else ())
                 for t in talents.TREE[track]]
         out.append(f"### {track.capitalize()} track\n\n" + _table(head, rows))

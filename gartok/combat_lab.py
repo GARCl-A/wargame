@@ -15,8 +15,9 @@ import re
 import time
 from dataclasses import dataclass
 
-from . import arena, encounters, hunt, matchup, world
+from . import arena, encounters, hunt, matchup, wildfire, world
 from .battle import Battle
+from .fortress_scenario import FortressScenario
 from .guild import Guild
 from .scenario import AncientRuinsScenario, ErmosScenario
 
@@ -43,6 +44,9 @@ FIGHTS = {f.id: f for f in (
     LabFight("wilds", "Wilds ambush", "a hunt's ambush on open ground, mostly wolves; lethal"),
     LabFight("road", "Old Road ambush", "bandits on the Old Road; lethal"),
     LabFight("dungeon", "Ancient Ruins", "the delve, in the dark with torches; lethal"),
+    LabFight("camp", "Wildfire camp", "a goblin crew and its Hobgoblin foreman by a small focus; lethal"),
+    LabFight("fortress", "The Ogre's fortress", "the Ogre and his goblins among half-raised walls, "
+             "the bonfire spreading; won when the Ogre falls; lethal"),
 )}
 
 BOUTS = {"scrapper": arena.scrapper_bout, "champion": arena.champion_bout, "brawl": arena.brawl_bout,
@@ -64,6 +68,13 @@ def build(fight_id, level, squad_size, seed=None):
     elif fight_id == "dungeon":
         scenario = AncientRuinsScenario()
         battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=False, lethal=True,
+                        aggressor="player")
+    elif fight_id == "camp":
+        battle = Battle(squad, wildfire.camp_crew(level), scenario=ErmosScenario(), daylight=True,
+                        lethal=True, aggressor="player")
+    elif fight_id == "fortress":
+        foes = wildfire.ogre_band(level)
+        battle = Battle(squad, foes, scenario=FortressScenario(foes), daylight=True, lethal=True,
                         aggressor="player")
     else:
         pack = (hunt.wilds_pack() if fight_id == "wilds"

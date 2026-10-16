@@ -17,6 +17,7 @@ SPELLS = {
     "magic_missile": Spell("magic_missile", "Magic Missile", 0, ("nature", "blood", "faith")),
     "floating_disk": Spell("floating_disk", "Floating Disk", 0, ("nature", "blood", "faith")),
     "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
+    "water_jet": Spell("water_jet", "Water Jet", 1, ("nature",)),
 }
 
 SOURCES = ("nature", "blood", "faith")
