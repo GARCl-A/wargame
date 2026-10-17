@@ -2,6 +2,8 @@
 
 import random
 
+import pytest
+
 from gartok import npc_lib, progression
 from tests.helpers import (
     Battle,
@@ -365,8 +367,22 @@ def test_racial_talent_picks_come_every_5_levels():
     assert u.picks_available("racial") == 1
     u.set_track_level("racial", 15)
     assert u.picks_available("racial") == 2
-    assert progression.next_racial_pick(15) is None
+    assert progression.next_racial_pick(15) == 20
     assert progression.next_racial_pick(5) == 10
+    u.set_track_level("racial", 20)
+    assert u.picks_available("racial") == 3
+
+
+def test_the_level_curves_have_no_top():
+    c, w, r = progression.COMBAT_XP_THRESHOLDS, progression.WORK_XP_THRESHOLDS, progression.RACIAL_XP_THRESHOLDS
+    assert c.first(15) == [3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253, 300, 351, 406, 465]
+    assert w.first(15) == [2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156, 182, 210, 240]
+    assert r.first(15) == list(range(2, 31, 2))
+    assert progression.combat_level(c[19]) == 20 and progression.combat_level(c[19] - 1) == 19
+    assert progression.racial_level(40) == 20 and progression.work_level(10 ** 6) > 900
+    assert progression.to_next(c, c[29]) == (0, c[30] - c[29])
+    with pytest.raises(IndexError):
+        c[-1]
 
 
 def test_authored_npcs_follow_the_racial_rule():

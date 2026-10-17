@@ -63,10 +63,11 @@ from .battle_screen import BattleScreen
 from .char_editor_screen import CharEditorScreen
 from .combat_lab_screen import CombatLabScreen
 from .combat_log import CombatLog
+from .dialogue_screen import DialogueScreen
 from .draft_screen import DraftScreen
 from .editor_menu_screen import EditorMenuScreen
-from .guild import Guild
 from .group_turn_screen import GroupTurnScreen
+from .guild import Guild
 from .guild_screen import GuildScreen
 from .level_screen import LevelScreen
 from .loot_screen import LootScreen
@@ -299,7 +300,8 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                                on_visit_tavern=self._visit_tavern,
                                on_visit_claim=self._visit_claim,
                                on_abandon=self._abandon_broken,
-                               on_cook=lambda g: self._open_kitchen(g, "CAMPFIRE COOKING", self._start_map))
+                               on_cook=lambda g: self._open_kitchen(g, "CAMPFIRE COOKING", self._start_map),
+                               on_dialogue=self._map_dialogue)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []
@@ -486,6 +488,17 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
             self._campaign_over()
         return result.events, result.casualties
 
+    def _map_dialogue(self, group, encounter, done):
+        """A talk the map starts (a Wildfire focus): the dialogue screen, then back to that same
+        map, which applies the result."""
+        behind = self.scene
+
+        def finish(result):
+            self.scene = behind
+            done(result)
+
+        self.scene = DialogueScreen(self.ui_fonts, self.guild, group, encounter, on_done=finish)
+
     def _land_on_map_paused(self, group, order):
         # No more "AMBUSH! [FIGHT]" popup -- land back on the map with this
         # group paused (already idle, see forced.arrival_pause) and let
@@ -521,6 +534,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         "stable": lambda s, g, n, o: s._open_stables(g),
         "ancient_ruins": lambda s, g, n, o: s._enter_ancient_ruins(g, n),
         "serpents_nest": lambda s, g, n, o: s._enter_nest(g, n),
+        "dragon_lair": lambda s, g, n, o: s._enter_lair(g, n),
         "skirmish": lambda s, g, n, o: s._enter_skirmish(g, n),
         "camp_fight": lambda s, g, n, o: s._enter_wildfire_fight(g, n),
         "ogre_fight": lambda s, g, n, o: s._enter_wildfire_fight(g, n),

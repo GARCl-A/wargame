@@ -99,7 +99,6 @@ def test_every_simple_screen_reports_its_registered_id():
         city_property_screen,
         crafting_screen,
         group_screen,
-        justice_screen,
         ledger_screen,
         level_screen,
         loot_screen,
@@ -130,7 +129,6 @@ def test_every_simple_screen_reports_its_registered_id():
         (crafting_screen.CraftingScreen, "craft"),
         (city_property_screen.CityPropertyScreen, "property"),
         (wilds_claim_screen.WildsClaimScreen, "claim"),
-        (justice_screen.GuardScreen, "guard"),
         (prison_screen.PrisonScreen, "prison"),
     ]
     for cls, expected in cases:

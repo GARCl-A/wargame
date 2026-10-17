@@ -28,6 +28,7 @@ class Battle:
         self.log_lines = []
         self.log_total = 0                    # lines ever logged: `log_lines` keeps only the last 200
         self.sink = None                      # a combat_log.CombatLog while this fight is recorded
+        self.talk_handler = None              # (encounter, members, done) -> a person answers a challenge on the board; None: the AI does
         self.clock_day = clock_day
         self.daylight = daylight              # outdoor scenarios read this for ambient light
         self.lethal = lethal                 # False = arena bout: 0 HP knocks out, no permadeath
@@ -87,6 +88,7 @@ class Battle:
         self.round_no = 1
         self.winner = None
         self.withdrew = False
+        self.opening = None                   # how the talk before the fight started it (`open_with`)
         self.intel = intel.Intel(self)
         self._mopup_open = False              # enemies down, allies still bleeding out
         self._capture_round = None            # enemies down: the round left to bind the fallen
@@ -786,6 +788,7 @@ class Battle:
     def _announce_turn(self):
         u = self.active
         self.log(f"{u.name}'s turn ({u.team}).")
+        self.scenario.on_turn_start(self, u)
 
     def end_turn(self):
         if self.winner:
@@ -793,6 +796,7 @@ class Battle:
         self._recorded("end_turn", self.active, None, self._end_turn)
 
     def _end_turn(self):
+        self.scenario.on_turn_end(self, self.active)
         self.active.end_turn(self.log)       # demoralized expires at the end of the sufferer's turn
         self._advance_turn()
 
@@ -874,5 +878,38 @@ class Battle:
             self.log(f"{self.active.name} is fast asleep... (turn skipped).")
             self.end_turn()
             return
-            
+        if self._skip_surprised():
+            return
+
         self._announce_turn()
+
+    def _skip_surprised(self):
+        if not self.active.has_condition("surprised"):
+            return False
+        self.log(f"{self.active.name} is caught off guard (turn lost).")
+        self.end_turn()
+        return True
+
+    def open_with(self, surprised=None, demoralized=None, initiative=None):
+        """Start the fight the way the talk before it ended (`dialogue.Opening`): `surprised`
+        is the team that loses its first turn, `demoralized` the team that starts shaken,
+        `initiative` {team: bonus}. Called before anyone has acted."""
+        from .conditions import Demoralized, Surprised
+        self.opening = {"surprised": surprised, "demoralized": demoralized,
+                        "initiative": dict(initiative or {})}
+        for u in self.units:
+            if not u.alive:
+                continue
+            if u.team == surprised:
+                u.add_condition(Surprised())
+            if u.team == demoralized:
+                u.add_condition(Demoralized())
+            u.initiative += (initiative or {}).get(u.team, 0)
+        self.order = sorted(self.units, key=lambda u: u.initiative, reverse=True)
+        self.turn_idx = next((i for i, u in enumerate(self.order) if u.alive), 0)
+        self.active.start_turn(self.log)
+        self._apply_submersion(self.active)
+        if surprised:
+            self.log(f"The {surprised} side is caught off guard!")
+        if not self._skip_surprised():
+            self._announce_turn()

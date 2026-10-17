@@ -20,7 +20,7 @@ def _worker():
 def test_the_mine_sits_six_hours_past_the_old_road_and_two_from_the_claim():
     n = world.node("mine")
     assert n.kind == "town" and n.has("work") and n.has("shop") and not n.unsafe
-    assert dict(world.neighbors("mine")) == {"road": 6, "wilds_territory": 2}
+    assert dict(world.neighbors("mine")) == {"road": 6, "wilds_territory": 2, "dragon_lair": 2}
 
 
 def test_the_claim_is_still_eight_hours_from_the_road_by_either_way():

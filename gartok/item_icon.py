@@ -49,6 +49,7 @@ ICONS = {
     "Venom Gland": ("drop", "green", {}),
     "Snake Venom Gland": ("drop", "green", {}),
     "Snake Dragon Corpse": ("hide", "green", {}),
+    "Dragon Egg": ("egg", "red", {}),
     "Vial": ("flask", "glass", {"empty": True}),
     "1sqm Hide": ("hide", "leather", {}),
     "Red Mushroom": ("mushroom", "mushroom", {}),

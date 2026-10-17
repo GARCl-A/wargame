@@ -651,6 +651,9 @@ class DragonBreath(Action):
                     actor.credit_kill(u, magic=True)
                 elif u.hp <= 0 and u.ferocity_downer is None:
                     u.ferocity_downer = actor
+        if getattr(battle.scenario, "breath_burns", False):
+            battle.fire.update(self.area_cells(battle, actor, target))
+            battle.log("  The breath leaves the ground burning.")
 
 
 # --------------------------------------------------------------------------- #

@@ -23,6 +23,7 @@ DECLARED = {
     "Meat": (Source(HUNTED, "the Wilds"),),
     "Red Mushroom": (Source(FORAGED, "the Wilds"),),
     "Legendary Horn": (Source(QUEST, "the tanner's last job"),),
+    "Dragon Egg": (Source(QUEST, "the Dragon's Lair, under the Mine"),),
     "Rotten Food": (Source(SPOILED, "food left to rot"),),
     # the shops supply these; no node produces them until the production chain exists.
     # Farm and Smith are the shops they will move to; the Market sells them until then

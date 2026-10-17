@@ -249,6 +249,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Dictionary of Orcish | 2 kg | -- |
 | Dictionary of Sylvan | 2 kg | -- |
 | Dictionary of Verdant | 2 kg | -- |
+| Dragon Egg | 8 kg | -- |
 | Dwarf Armor | 25 kg | -- |
 | Dwarf Axe | 4 kg | -- |
 | Dwarf Shield | 3 kg | -- |
@@ -326,6 +327,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Salt | 0.5 kg | material |
 | Scissors | 0.2 kg | -- |
 | Scroll | 0.1 kg | -- |
+| Scroll of Dragonfire | 0.1 kg | -- |
 | Scroll of Floating Disk | 0.1 kg | -- |
 | Scroll of Light Globe | 0.1 kg | -- |
 | Scroll of Magic Missile | 0.1 kg | -- |
@@ -356,6 +358,7 @@ Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
 | 1L Beer | traded: Market |
 | 1kg Coal | gathered: mine |
 | 1sqm Hide | dropped: Wolf |
+| Dragon Egg | quest: the Dragon's Lair, under the Mine |
 | Fruit | gathered: lumber_yard |
 | Ink | traded: Library |
 | Iron Ore | gathered: mine |
@@ -403,7 +406,7 @@ Two axes -- order (Lawful/Neutral/Chaotic) and morality (Good/Neutral/Evil).
 
 ## Talent trees
 
-One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick only at racial 5, 10 and 15; its nodes are race-gated. A magic node belongs to a school; each school's root is granted by its initiation, not picked.
+One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 racial levels; its nodes are race-gated. A magic node belongs to a school; each school's root is granted by its initiation, not picked.
 
 ### Combat track
 
@@ -564,6 +567,7 @@ Mages born to it, hidden under the ruins: the magic runs in their line, from a d
 |---|---|---|---|
 | The Codex Delivered | Bring the Ancient Codex to the Blood Sanctuary. | +1 | -- |
 | The Dragon's Blood | Bring the Snake Dragon's body to the Blood Sanctuary. | +1 | -- |
+| The Dragon's Clutch | Bring one of the dragon's eggs from under the Mine to the Blood Sanctuary. | +1 | -- |
 
 ### The Nature Coven
 
@@ -607,6 +611,6 @@ The tunable knobs, from `data.py`, `economy.py` and `progression.py`.
 | Lumber wage | $1 per 4 h (level 0, bare-handed); 4/3 of that with your own Axe (level 1), floored |
 | Hunting job level | 3 |
 | Bank strongbox | $90 to rent, holds 30 kg |
-| Combat XP thresholds | 3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253, 300, 351, 406, 465 |
-| Work XP thresholds | 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156, 182, 210, 240 |
-| Racial level thresholds (combat+work) | 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 |
+| Combat XP thresholds | `2n² + n` for level n, no top: 3, 10, 21, 36, 55, 78, 105, 136, 171, 210, 253, 300, 351, 406, 465, 528, 595, 666, 741, 820, ... |
+| Work XP thresholds | `n(n + 1)` for level n, no top: 2, 6, 12, 20, 30, 42, 56, 72, 90, 110, 132, 156, 182, 210, 240, 272, 306, 342, 380, 420, ... |
+| Racial level thresholds (combat+work+magic) | `2n` for level n, no top: 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, ... |

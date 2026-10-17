@@ -39,7 +39,7 @@ AUTO_KINDS = frozenset({"travel", "work", "rest", "solo"})
 INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "hunt", "tanner",
                                "ledger", "property", "claim", "forge", "apothecary",
                                "library", "ancient_ruins", "stable", "trust", "ox_hunt", "shrine",
-                               "serpents_nest", "skirmish", "camp_fight", "ogre_fight"})
+                               "serpents_nest", "skirmish", "camp_fight", "ogre_fight", "dragon_lair"})
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
 APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds
@@ -62,6 +62,7 @@ class Order:
     who: str | None = None   # solo: uid of the member doing the task
     recipe: str | None = None  # solo craft: what is being made
     gather: bool = False     # work: gather items at the node (gather.py) instead of taking the wage
+    parley: dict | None = None  # forced: how the talk before the fight ended (`dialogue.Result.to_dict`), once rolled
 
     @property
     def interactive(self):

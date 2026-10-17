@@ -86,6 +86,15 @@ class MissionOfferScreen(Screen):
     def get_turn_in_label(self, t, progress, ready):
         raise NotImplementedError
 
+    def footer_action(self):
+        """`(label, enabled)` for a second button beside the leave one (a keeper buying
+        something), or None for none."""
+        return None
+
+    def run_footer_action(self):
+        """Press the footer action: -> the notice to show."""
+        return None
+
     def get_success_notice(self, reward):
         raise NotImplementedError
 
@@ -156,6 +165,9 @@ class MissionOfferScreen(Screen):
             if key == "done":
                 self.on_done()
                 return
+            if key == "footer_action":
+                self.notice = self.run_footer_action()
+                return
             action, tid = key
             t = missions.TEMPLATES[tid]
             if action == "accept":
@@ -169,6 +181,8 @@ class MissionOfferScreen(Screen):
                     self.notice = self.get_success_notice(t.reward)
                     if t.reward_recipe:
                         self.notice += f"  ·  the group learns to craft the {t.reward_recipe}"
+                    if t.reward_item:
+                        self.notice += f"  ·  you are given a {t.reward_item}"
                     for d in earned:
                         self.notice += "  ·  " + factions.deed_notice(d)
             return
@@ -337,6 +351,14 @@ class MissionOfferScreen(Screen):
             btn_leave = pygame.Rect(card.right - pad - bw, card.bottom - pad - footer_btn_h, bw, footer_btn_h)
             draw_button(screen, F, btn_leave, self.leave_label, mpos=self.mouse)
             self.buttons.append(("done", btn_leave))
+            extra = self.footer_action()
+            if extra is not None:
+                label, enabled = extra
+                aw = min(T.S * 36, btn_leave.x - cx - T.S * 2)
+                btn_extra = pygame.Rect(btn_leave.x - T.S * 2 - aw, btn_leave.y, aw, footer_btn_h)
+                draw_button(screen, F, btn_extra, label, enabled=enabled, primary=enabled, mpos=self.mouse)
+                if enabled:
+                    self.buttons.append(("footer_action", btn_extra))
 
         self._hot = any(rect.collidepoint(self.mouse) for _, rect in self.buttons)
         set_pointer(self._hot)

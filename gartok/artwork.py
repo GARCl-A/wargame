@@ -53,6 +53,7 @@ RACE_ICON = {
     "Wolf":       "wolf-head",
     "Snake":      "medusa-head",
     "Ogre":       "ogre",
+    "Dragon":     "dragon-head",
     "Skeleton":   "dead-head",
     "Zombie":     "mummy-head",
 }

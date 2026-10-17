@@ -65,8 +65,11 @@ from . import (
     artwork,
     autowin,
     campaign,
+    dialogue,
     economy,
+    encounters,
     gather,
+    lair,
     missions,
     node_functions,
     orders,
@@ -115,7 +118,7 @@ NODE_ICON = {
     "ledger_hold": ("map", "fort"), "wilds_territory": ("map", "claim"), "library": ("gui", "open-book"),
     "farm": ("map", "wheat"), "ancient_ruins": ("map", "ruins"), "country_roads": ("action", "journey"),
     "ox_fields": ("map", "ox"), "blood_sanctuary": ("map", "blood"),
-    "serpents_nest": ("head", "snake-bite"),
+    "serpents_nest": ("head", "snake-bite"), "dragon_lair": ("head", "dragon-head"),
     "nature_grove": ("map", "leaf"), "faith_cathedral": ("map", "cathedral"),
     "frontier_outpost": ("body", "spiked-wall"), "battlefield": ("action", "trench-assault"),
 }
@@ -175,7 +178,7 @@ class MapScreen(Screen):
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
                 pending_event=None, on_resolve_event=None, on_autowin=None,
                 on_visit_tavern=None, on_visit_claim=None, on_abandon=None,
-                on_cook=None):
+                on_cook=None, on_dialogue=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -184,6 +187,7 @@ class MapScreen(Screen):
         self.on_advance = on_advance
         self.on_manage_group = on_manage_group
         self.on_cook = on_cook
+        self.on_dialogue = on_dialogue        # (group, dialogue.Encounter, done(result)) -> the talk's screen
         self._pending_event = pending_event    # (Group, Order) an ambush paused here -- see app._resolve_pending_event
         self.on_resolve_event = on_resolve_event
         self.on_autowin = on_autowin
@@ -487,8 +491,9 @@ class MapScreen(Screen):
         OTHER band is idle and not already the one in view (a lone group,
         or the one idle band already selected, has nothing to jump to)."""
         if self._pending_event is not None:
-            n = len(self._pending_event[1].pack)
-            return ("resolve_event", f"AMBUSHED -- FIGHT ({n})", True, True)
+            pack = self._pending_event[1].pack
+            verb = "FACE THEM" if dialogue.can_talk(pack) else "FIGHT"
+            return ("resolve_event", f"AMBUSHED -- {verb} ({len(pack)})", True, True)
         idle = self._idle_groups()
         if not idle and self._everyone_garrisoned():
             return ("advance_world", f"ADVANCE {ADVANCE_HOURS} h  ·  WHOLE WORLD", False, True)
@@ -626,10 +631,15 @@ class MapScreen(Screen):
             self._refresh_nodes()
             self.notices.append(msg)
             self._maybe_auto_advance()
-        elif key.startswith("wf_talk:"):
-            self._wildfire_talk(key.split(":", 1)[1])
+        elif key == "wf_talk":
+            self._wildfire_talk()
         elif key == "wf_put_out":
             self._issue(orders.put_out(self.guild, self.selected))
+        elif key == "search_lair":
+            _found, msg = lair.search(self.guild, self.selected)
+            self._refresh_nodes()
+            self.notices.append(msg)
+            self._maybe_auto_advance()
         elif key == "search_nest":
             _found, msg = serpent_nest.search(self.guild, self.selected)
             self._refresh_nodes()
@@ -638,18 +648,23 @@ class MapScreen(Screen):
         elif key in orders.INTERACTIVE_KINDS:
             self._issue(orders.interactive(key))
 
-    def _wildfire_talk(self, uid):
+    def _wildfire_talk(self):
+        """TALK at a focus: the dialogue (`dialogue.WildfireTalk`); a miss or ATTACK sends the
+        group into the fight, a lesson learned puts the fire out."""
         g = self.selected
         focus = wildfire.focus_at(self.guild, g.node)
-        unit = next((u for u in g.members if u.uid == uid), None)
-        if focus is None or unit is None or not wildfire.can_talk(focus):
+        if focus is None or self.on_dialogue is None or not wildfire.can_talk(focus):
             return
         great = focus.great
-        passed, msg = wildfire.talk(self.guild, focus, unit)
-        self.notices.append(msg)
-        self._refresh_nodes()
-        if not passed:
-            self._issue(orders.interactive("ogre_fight" if great else "camp_fight"))
+        enc = dialogue.WildfireTalk(self.guild, focus, wildfire.talker(focus, encounters.squad_level(g.members)))
+
+        def done(result):
+            self.notices.append(result.text)
+            self._refresh_nodes()
+            if result.kind == "fight":
+                self._issue(orders.interactive("ogre_fight" if great else "camp_fight"))
+
+        self.on_dialogue(g, enc, done)
 
     def _wildfire_blocks(self, g, focus):
         """The inspector's rows at a wildfire focus: how long it has, the talk chain (one button a
@@ -682,10 +697,8 @@ class MapScreen(Screen):
             blocks.append({"type": "section", "label": f"talk to {who}", "gap_before": T.S})
             blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
                            "text": f"{step}: {attr[:3].upper()} vs DC {dc}  ·  a miss and they fight"})
-            for u in g.members:
-                mod = getattr(u, f"mod_{attr}")
-                blocks.append({"type": "button", "key": f"wf_talk:{u.uid}", "height": 30, "gap_before": 2,
-                               "label": f"{u.name}  {mod:+d}"})
+            blocks.append({"type": "button", "key": "wf_talk", "height": 36, "gap_before": 2,
+                           "label": f"TALK TO {who.upper()}"})
         return blocks
 
     # ------------------------------------------------------------------ #
@@ -867,6 +880,13 @@ class MapScreen(Screen):
             blocks.append({"type": "button", "key": "search_nest",
                            "label": f"SEARCH FOR THE NEST ({serpent_nest.SEARCH_HOURS} h)", "gap_before": T.S * 2})
             blocks.append({"type": "text", "text": "Follow the shed skins to the Snake Dragon's den (WIS check)",
+                           "color": T.TX_FAINT})
+
+        if (here.id == "mine" and missions.pending_clutch(self.guild) is not None
+                and not self.guild.is_node_revealed(lair.NODE)):
+            blocks.append({"type": "button", "key": "search_lair",
+                           "label": f"SEARCH THE DEEP GALLERIES ({lair.SEARCH_HOURS} h)", "gap_before": T.S * 2})
+            blocks.append({"type": "text", "text": "Follow the warm air past where the miners stopped (WIS check)",
                            "color": T.TX_FAINT})
 
         if here.id == "country_roads" and not self.guild.is_node_revealed("ox_fields"):

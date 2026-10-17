@@ -7,6 +7,7 @@ rows. `scripts/combat_analysis.py` reads them back.
 
 Rows (all carry `e`):
   start  the whole fight as it begins: `meta`, `controllers` ({team: "human" | "ai"}), the board,
+         `opening` (how the talk before it started it, `Battle.open_with`, or null),
          every unit (`units`: static data, with the character as `persist.unit_to_dict`), the
          first `state` and the turn order.
   act    one decision: `n`, `round`, `actor` (index into `units`), `team`, `by` (who decided),
@@ -77,6 +78,7 @@ class CombatLog:
             "scenario": type(battle.scenario).__name__,
             "lethal": battle.lethal, "arena": battle.arena, "daylight": battle.daylight,
             "ambient_light": battle.ambient_light, "aggressor": battle.aggressor,
+            "opening": battle.opening,
             "board": {"cols": board.cols, "rows": board.rows,
                       "walls": sorted(_cell(c) for c in board.walls),
                       "elevation": sorted([*_cell(c), z] for c, z in board.elevation.items()),
@@ -293,9 +295,12 @@ def rebuild(rows):
         unit.team = static["team"]
         sides.setdefault(static["team"], []).append(unit)
     player, enemy = sides.pop("player"), sides.pop("enemy")
-    return Battle(player, enemy, scenario=ReplayScenario(start), others=sides,
-                  daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"],
-                  aggressor=start.get("aggressor") or _AGGRESSOR_OF_KIND.get(start["meta"].get("kind")))
+    battle = Battle(player, enemy, scenario=ReplayScenario(start), others=sides,
+                    daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"],
+                    aggressor=start.get("aggressor") or _AGGRESSOR_OF_KIND.get(start["meta"].get("kind")))
+    if start.get("opening"):
+        battle.open_with(**start["opening"])
+    return battle
 
 
 def frames(rows):

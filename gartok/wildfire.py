@@ -262,7 +262,7 @@ def talk(guild, focus, unit, rng=random):
     total = nat + mod
     roll = f"d20({nat}) {mod:+}({attr[:3].upper()}) = {total} vs DC {dc}"
     who = "the Ogre" if focus.great else "the foreman"
-    if nat != 20 and (nat == 1 or total < dc):
+    if total < dc:
         focus.hostile = True
         return False, f"{unit.name} cannot reach {who} ({roll}). They reach for their weapons!"
     focus.talk += 1
@@ -351,6 +351,14 @@ def ogre_band(level, rng=random, hold=False):
     escort = [encounters.build_enemy(encounters.clamp_level(level + edge), rng, race_pool=data.GOBLINOID_POOL)
               for _ in range(n)]
     return [npc_lib.load_npc(OGRE_SLUG)] + escort
+
+
+def talker(focus, level, rng=random):
+    """Who answers for a focus in its dialogue: the Ogre, or a crew's Hobgoblin foreman."""
+    if focus.great:
+        from . import npc_lib  # lazy: see ogre_band
+        return npc_lib.load_npc(OGRE_SLUG)
+    return encounters.build_enemy(encounters.clamp_level(level + FOREMAN_EDGE), rng, race_pool=data.HOBGOBLIN_POOL)
 
 
 def ogre_of(battle):

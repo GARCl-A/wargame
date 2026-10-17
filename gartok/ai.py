@@ -74,6 +74,12 @@ def _pick_attack(battle, unit, target):
                                               or _jet_burns(battle, jet, unit, target)):
             return jet
 
+    if "dragonfire" in getattr(unit, "spells_known", []):
+        fire = actions.CastSpellAction("dragonfire")
+        if (fire.can(battle, unit, target) and _can_bleed(unit)
+                and (not opts or _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE))):
+            return fire
+
     mm = None
     if "magic_missile" in getattr(unit, "spells_known", []):
         mm = actions.CastSpellAction("magic_missile")
@@ -99,6 +105,11 @@ def _pick_attack(battle, unit, target):
     if actions.ATTACK_TONGUE in opts:
         return actions.ATTACK_TONGUE
     return opts[0]
+
+
+def _can_bleed(unit):
+    """Dragonfire is paid in blood: the AI only spends it above half health."""
+    return unit.hp > unit.hp_max // 2
 
 
 def _jet_avg(unit):
@@ -159,6 +170,9 @@ def _approach_reach(unit):
         return 6
     if "water_jet" in getattr(unit, "spells_known", []) and _hand_die(unit) < _jet_avg(unit):
         return actions.WaterJetAction.reach()
+    if ("dragonfire" in getattr(unit, "spells_known", []) and _can_bleed(unit)
+            and _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE)):
+        return actions.DragonfireAction.reach()
     return 1 if unit.ranged else unit.attack_range
 
 
@@ -760,6 +774,67 @@ def _step_toward(battle, unit, goal, reach):
     return battle.path_step_toward(unit, goal, unit.speed, reach=reach)
 
 
+def _patrol(battle, unit):
+    """A patrol on its rounds (`lair.py`): a foe it sees within its sight goes to the scenario's
+    `contact` (a challenge, a parley or the alarm); otherwise it walks on to its next waypoint.
+    True when its turn is spent; False when it now fights."""
+    seen = [e for e in battle.units if e.alive and e.team == "player"
+            and battle.can_see_unit(unit, e) and battle.units_distance(unit, e) <= unit.awareness_radius]
+    if seen:
+        verdict = battle.scenario.contact(battle, unit, seen)
+        if verdict == "fight":
+            return False
+        if verdict == "wait":
+            unit.ap = 0
+            battle.end_turn()
+            return True
+    route = unit.patrol_route
+    goal = route[unit.patrol_step % len(route)]
+    if grid_distance(unit.pos, goal) <= 1:
+        unit.patrol_step += 1
+        goal = route[unit.patrol_step % len(route)]
+    dest = _step_toward(battle, unit, goal, reach=1)
+    if dest != unit.pos:
+        actions.MOVE.execute(battle, unit, dest)
+        unit.walking = False
+    if battle.winner is None and battle.active is unit:
+        battle.end_turn()
+    return True
+
+
+def _heist(battle, unit):
+    """The squad's side in a heist (`lair.py`): leave the moment the scenario allows it, lift what
+    is in reach, and otherwise make for the scenario's goal -- at a creep (half speed) while the
+    thing it robs still sleeps. A foe on top of it is fought instead. True when the turn is spent."""
+    if battle.can_withdraw:
+        battle.withdraw()
+        return True
+    if any(f.alive and getattr(f, "alerted", False) and battle.units_distance(unit, f) <= 1
+           for f in battle.foe_units):
+        return False
+    if actions.PICK_UP.available(battle, unit) and any(o.is_relic for o in battle.ground_in_reach(unit)):
+        actions.PICK_UP.execute(battle, unit)
+    aim = battle.scenario.heist_goal(battle, unit)
+    if aim is None:
+        if battle.winner is None and battle.active is unit:
+            battle.end_turn()             # in place: wait for the rest
+        return True
+    goal, reach = aim
+    budget = unit.speed if battle.scenario.stage == "awake" else unit.speed // 2
+    dest = battle.path_step_toward(unit, goal, max(1, budget), reach=reach)
+    if dest == unit.pos and grid_distance(unit.pos, goal) > reach:
+        return False                      # walled off from it: fight instead
+    if dest != unit.pos and unit.ap >= 1:
+        actions.MOVE.execute(battle, unit, dest)
+        unit.walking = False
+    if battle.can_withdraw:
+        battle.withdraw()
+        return True
+    if battle.winner is None and battle.active is unit:
+        battle.end_turn()
+    return True
+
+
 def take_turn(battle, unit):
     if unit.dormant:
         enemies = [u for u in battle.units if u.alive and u.team != unit.team]
@@ -774,6 +849,11 @@ def take_turn(battle, unit):
             unit.ap = 0
             battle.end_turn()
             return
+
+    if getattr(unit, "patrol_route", None) and not getattr(unit, "alerted", False) and _patrol(battle, unit):
+        return
+    if unit.team == "player" and hasattr(battle.scenario, "heist_goal") and _heist(battle, unit):
+        return
 
     if _should_delay(battle, unit):
         actions.DELAY.execute(battle, unit)

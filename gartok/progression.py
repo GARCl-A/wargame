@@ -22,63 +22,78 @@ experience (combat, work) has its own level, and its own talent tree in
   (see `Unit`). `mean_level` survives only as the encounter/arena difficulty
   scalar -- it no longer touches hit points.
 
-The thresholds are a first-pass guess and meant to be tuned here -- this module
-is the one place the curves live, like `economy.PRICES` for money.
+The curves are formulas with no top (`Curve`): a level is always one more threshold away.
+They are a first-pass guess and meant to be tuned here -- this module is the one place
+the curves live, like `economy.PRICES` for money.
 """
 
-from . import constants
+class Curve:
+    """Cumulative XP for level 1, 2, 3, ... with no top: `curve[i]` is level i+1's threshold,
+    worked out by `fn(level)`. `text` is the formula, for the reference."""
 
-# Cumulative XP for combat level 1, 2, 3, ...  L1 and L2 are set (the user's
-# call); the rest is a stub with a widening gap (+4 each step). Tune freely.
-COMBAT_XP_THRESHOLDS = list(constants.COMBAT_XP_THRESHOLDS)
+    def __init__(self, fn, text):
+        self.fn = fn
+        self.text = text
 
-# Cumulative work *marks* (Unit.work_xp) for work level 1, 2, 3, ...  Stub.
-WORK_XP_THRESHOLDS = list(constants.WORK_XP_THRESHOLDS)
+    def __getitem__(self, i):
+        if i < 0:
+            raise IndexError("a curve has no last level")
+        return self.fn(i + 1)
 
-# Cumulative magic XP for magic level 1, 2, 3, ...  Combat's curve until magic is played.
-MAGIC_XP_THRESHOLDS = list(constants.COMBAT_XP_THRESHOLDS)
+    def level(self, xp):
+        n = 0
+        while self.fn(n + 1) <= xp:
+            n += 1
+        return n
+
+    def first(self, n):
+        return [self.fn(k) for k in range(1, n + 1)]
+
+
+# Combat: L1 = 3 and L2 = 10 are set (the user's call); the gaps widen by 4 a level.
+COMBAT_XP_THRESHOLDS = Curve(lambda n: 2 * n * n + n, "2n² + n")
+
+# Work marks (Unit.work_xp): the gaps widen by 2 a level.
+WORK_XP_THRESHOLDS = Curve(lambda n: n * (n + 1), "n(n + 1)")
+
+# Magic XP: combat's curve until magic is played.
+MAGIC_XP_THRESHOLDS = COMBAT_XP_THRESHOLDS
 
 # The racial track's "XP" is `combat_level + work_level + magic_level` (Unit.racial_xp): every
-# level anywhere feeds it. These cumulative sums for racial level 1, 2, 3, ...
-# are set to reproduce the old `floor((combat + work) / 2)` hit-die count, so
-# enemy HD / the balance sim / arena scaling do not move. Tune freely here.
-RACIAL_XP_THRESHOLDS = list(constants.RACIAL_XP_THRESHOLDS)
+# level anywhere feeds it, two of them a racial level -- the old `floor((combat + work) / 2)`
+# hit-die count, so enemy HD / the balance sim / arena scaling do not move.
+RACIAL_XP_THRESHOLDS = Curve(lambda n: 2 * n, "2n")
 RACIAL_PICK_EVERY = 5
-
-
-def _level_for(thresholds, xp):
-    return sum(1 for t in thresholds if xp >= t)
+LEVEL_UI_CAP = 30         # the highest level an editor stepper offers; the curves themselves go on
 
 
 def combat_level(combat_xp):
-    return _level_for(COMBAT_XP_THRESHOLDS, combat_xp)
+    return COMBAT_XP_THRESHOLDS.level(combat_xp)
 
 
 def work_level(work_xp):
-    return _level_for(WORK_XP_THRESHOLDS, work_xp)
+    return WORK_XP_THRESHOLDS.level(work_xp)
 
 
 def magic_level(magic_xp):
-    return _level_for(MAGIC_XP_THRESHOLDS, magic_xp)
+    return MAGIC_XP_THRESHOLDS.level(magic_xp)
 
 
 def racial_level(racial_xp):
     """Racial-track level for a `combat_level + work_level + magic_level` sum -- how many hit
     dice the character has earned past their starting one, and how many racial
     talent picks they hold."""
-    return _level_for(RACIAL_XP_THRESHOLDS, racial_xp)
+    return RACIAL_XP_THRESHOLDS.level(racial_xp)
 
 
 def racial_picks(level):
-    """Racial talent picks earned at racial `level`: one every `RACIAL_PICK_EVERY` levels
-    (5, 10 and 15, so three at the cap)."""
+    """Racial talent picks earned at racial `level`: one every `RACIAL_PICK_EVERY` levels."""
     return level // RACIAL_PICK_EVERY
 
 
 def next_racial_pick(level):
-    """The racial level that earns the next pick, or None past the last one."""
-    nxt = (level // RACIAL_PICK_EVERY + 1) * RACIAL_PICK_EVERY
-    return nxt if nxt <= len(RACIAL_XP_THRESHOLDS) else None
+    """The racial level that earns the next pick."""
+    return (level // RACIAL_PICK_EVERY + 1) * RACIAL_PICK_EVERY
 
 
 def mean_level(*track_levels):
@@ -105,10 +120,8 @@ def work_xp_hours(hours, activity_level, worker_level):
 
 def to_next(thresholds, xp):
     """`(into, span)` for a progress bar: `into` XP earned toward the next level
-    out of a `span`-wide band. At the top of the table -> `(0, 0)`."""
-    level = _level_for(thresholds, xp)
-    if level >= len(thresholds):
-        return 0, 0
+    out of a `span`-wide band."""
+    level = thresholds.level(xp)
     prev = thresholds[level - 1] if level else 0
     return xp - prev, thresholds[level] - prev
 

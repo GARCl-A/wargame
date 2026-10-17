@@ -281,16 +281,18 @@ state on the `Unit` (`talents`, `_level_hp_rolls`); screen in
 | Magic | `magic_xp` | a last hit dealt with magic, a spell studied to the end |
 
 **Level per track** — cumulative thresholds in `progression.py`, a first guess,
-tunable. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author); past L2 is a stub.
+tunable, written as **formulas with no top** (`progression.Curve`): combat (and magic) `2n² + n`,
+work `n(n + 1)`, racial `2n`. Combat: L1 = 3 XP, L2 = 10 XP (fixed by the author).
 Each level in combat, work and magic grants **one pick** in that track's tree. The **racial
 track** earns no XP of its own — its "XP" is the sum of the other track levels
 (`RACIAL_XP_THRESHOLDS`), so it rises as the character grows anywhere. While hit
 dice scale with every racial level (L1+), a **racial talent pick comes only every
-5 racial levels**: one at 5, 10 and 15, three at the cap (`progression.racial_picks`). Its nodes are **race-gated**
+5 racial levels**: one at 5, 10, 15, 20... (`progression.racial_picks`). Its nodes are **race-gated**
 (e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox).
-All three tables run to level 15 so the creator can pin NPCs that high, but
-generated enemies stay capped at combat 7 / work 6 (`constants.ENEMY_*_CAP`).
+No level is the last: an authored NPC can sit past 15 (the editors stop at
+`progression.LEVEL_UI_CAP`, 30, only as a stepper limit), but generated enemies stay capped at
+combat 7 / work 6 (`constants.ENEMY_*_CAP`).
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
@@ -359,6 +361,11 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
     straight away from the caster unless something is in the way (into the flames, it burns).
     Its scroll is the Nature Coven's reward for the Ogre's Wildfire; no shop sells it. The AI casts
     it when it beats its hand weapon or would throw a foe into the fire.
+  - **Dragonfire** (level 1, **Blood only**, the Dragon branch) — ranged (the Dagger's thrown
+    range), `d20 + INT` vs AC, **2d6** fire damage on a hit; the blood is the price: casting costs
+    the caster **1d4 HP**, hit or miss, and nobody casts it with 4 HP or less. Its scroll is the
+    Blood Cult's reward for the Dragon's Clutch; the dragon under the Mine knows it. The AI casts
+    it while above half its HP and when it beats its hand weapon.
   - **Invisibility** (level 2, every school, 2 points) — the caster vanishes from every other
     side's sight (`conditions.Invisible`, see *Invisibility*). No scroll yet: only the
     necromancer at the front knows it.
@@ -528,10 +535,44 @@ Implemented in `data.resolve_bonus()`. Types in use: `circumstance`, `natural`,
 circumstance bonus to AC; Pack Tactics (+2 circ. to attack) does not add to the
 +2 of a strict flank — a Goblin flanking gets +2, not +4.
 
+### Dialogue before initiative 🟡
+
+Rule in `dialogue.py`, screen `dialogue_screen.py`. When the guild meets foes who can talk, a
+**dialogue** comes before anyone rolls initiative: the City guard's catch, the road ambush (its red
+CTA, **AMBUSHED -- FACE THEM**), a pack that finds a crew gathering or a supply caravan, and a
+Wildfire focus (**TALK**). A pack with **nobody who speaks** (beasts, the dead) opens none: straight
+to the fight, as before.
+
+- **The leader** talks for the foes: the most experienced one with a language.
+- **Who speaks** for the group is the player's pick; **that member's** attributes and languages count.
+- **The answers** (`dialogue.VERBS`), each encounter offering its own:
+
+| Answer | Check | Passed | Missed |
+|---|---|---|---|
+| **Persuade** | CHA vs 10 + the leader's WIS mod, **−3 a good leader, +3 an evil one** | no fight | a plain fight |
+| **Bluff** | CHA vs 10 + the leader's WIS mod | no fight | they **strike first** |
+| **Intimidate** | CHA (or STR with Intimidating Presence) vs 10 + the leader's WIS mod, **easier the stronger the squad looks** (its HP against the pack's, ±4) | they start **Demoralized**; passed by **5+** they run | they get **+5 initiative** |
+| **Bribe** | none: **$3 a foe per (its level + 1)**, paid from the group's purses, richest first | no fight | — |
+| **Attack** | none | the fight, initiative as rolled | — |
+
+- **A language** the speaker shares with the leader is needed for every answer that talks; coin and
+  steel need none. A closed answer shows why ("needs Orcish", "not enough coin").
+- **No criticals:** a natural 1 or 20 is just its number.
+- **Striking first** puts **Surprised** on the other side: each of its units **loses its first turn**.
+- **The roll is kept:** the moment a dialogue ends it is stored on the group's pending order
+  (`Order.parley`), so a reload opens it on its result instead of rolling again.
+- **The guard** offers **Surrender** (arrest), **Bluff** ("the wrong man"), **Bribe** (**$10 a point
+  of the caught members' crime**), **Attack** and **Run** (when there is somewhere to run). A bluff or a
+  bribe lets the group go **with the crime still on the books**.
+- **A Wildfire focus** is two steps, **Persuade** (CHA) then **Teach** (INT), with the focus's own DCs
+  and no language needed; the crew will not take a bribe.
+- **The AI** (`dialogue.ai_choice`), when it plays the squad (the economy sim): the answer with the best
+  expected worth against its odds in the fight; a bribe whenever it costs under a tenth of the purse.
+
 ### Initiative and attack
 
 - **Initiative**: `d20 + Wisdom mod` (+ racial bonus, + the Quick Wits talent).
-  Decreasing order, fixed for the battle.
+  Decreasing order, fixed for the battle. A dialogue before the fight can move it (see above).
 - **Attack**: `d20 + mods` vs the target's `AC`.
   - base mod = `Strength mod` (melee), `Dexterity mod` (ranged / thrown), or the
     **better of Strength and Dexterity** (a *finesse* weapon).
@@ -1786,9 +1827,9 @@ Accepting puts four ethereal nodes on the map: **three foci** and **the Great Fo
 The Wilds and the foci an hour off the Great Focus.
 
 - **A small focus** holds **3 Goblins** at the squad's mean level and their **Hobgoblin foreman** one
-  over. **Talk** to the foreman: a chain of two checks, **CHA** for a hearing then **INT** to show them
-  how it is done, **DC 13** each, the player picks who rolls each one (the map lists every member with
-  their modifier). Passing both puts the fire out and the node goes. A miss sets the camp on the
+  over. **Talk** to the foreman (a dialogue, see *Dialogue before initiative*): a chain of two checks,
+  **CHA** for a hearing then **INT** to show them how it is done, **DC 13** each, the player picks who
+  rolls each one. Passing both puts the fire out and the node goes. A miss sets the camp on the
   group: the fight starts (**ATTACK THE CAMP**, on open ground, lethal). A beaten crew leaves the fire
   burning: **PUT OUT THE FIRE** is **16 hours** of work and an INT check (**DC 13**, the best mind of
   the group rolls); a miss costs the hours and can be tried again.
@@ -1804,6 +1845,36 @@ The Wilds and the foci an hour off the Great Focus.
 - **Day 14**: every focus still burning is lost. With the Ogre unbeaten the errand **fails** and the
   fortress stands **hostile** for good: more ambushes on a Wilds hunt (above), and **STORM THE
   FORTRESS** there (the finished walls with one gate, **7** escorts **two** over the squad) takes it down.
+
+**The Dragon's Clutch** (`lair.py`, the Blood Cult's third errand, open to all once the Ancient Codex is
+recovered, no deadline). The Codex names a lair under the Mine where a dragon sleeps on its clutch; the
+Cult wants one egg. **SEARCH THE DEEP GALLERIES** at the Mine (**3 h**, WIS **DC 12**, the job out) reveals
+**The Dragon's Lair**, two hours off the Mine. **ENTER THE LAIR** is a heist in the dark:
+
+- **The board** (44 x 22): the way in and a kobold-sized tunnel (the dragon cannot follow), the
+  kobolds' warren, the **hoard** (8 piles of 15-40 copper, a gem now and then: picked up, the coin is the
+  carrier's at once), the **clutch** (**4 Dragon Eggs**, 8 kg each) and the hall where the dragon sleeps.
+- **The dragon**: **Kharzuul the Ember-Old** (`npcs/dragon.json`), a **Dragon** (a beast race, Huge,
+  d12 hit dice, Draconic, never rolled into a pack), **racial 20** (combat 20, work 19, magic 2: Dragon,
+  Dragon Breath, Dragonfire), 227 HP, AC 15 with its scales. Its breath **leaves the cells it reaches
+  burning**, and once it is awake the lair's fire spreads a cell a round.
+- **Its sleep is noise** (asleep -> **stirring** at 6 -> **awake** at 14): a walk past half the walker's
+  speed **+2**, heavy armour on the move **+1**, a creep that fails **+1** (each walk of half speed or less
+  rolls `d20 + DEX` against `10 + its WIS`) -- these three only within **14 cells** of it -- a turn in
+  which anyone was hurt **+3**, a pile of the hoard **+2**, an egg lifted **+2**, the alarm **+8**.
+  Stirring, it wakes on anyone it sees within 5 cells. Awake (or the alarm rung), the lair hunts.
+- **Kobold patrols** (two of three, at the squad's level, the first with a torch) walk their rounds.
+  One that sees the squad within 6 cells **challenges** it before the alarm (a dialogue on the board,
+  `dialogue.Challenge`): **Bluff** and **Bribe** both need **Draconic** (a Kobold is born with it; a
+  bluff's DC climbs **+2** for every bluff already told in the lair, a miss rings the alarm and the squad
+  loses its first turn); **Attack** needs nothing, and the patrol rings the alarm on its next turn unless
+  it is silenced first. A patrol talked down or paid lets the squad be -- unless it sees an egg: a patrol
+  that sees someone carrying one rings the alarm, no talk.
+- **Leaving**: once everyone standing is at the way in and someone carries an egg, **WITHDRAW** wins the
+  fight with what they carry. With the dragon dead, the eggs still on the ground are loot too.
+- **The eggs**: one handed in at the Blood Sanctuary is the errand: **+1 Blood Cult** and a **Scroll of
+  Dragonfire**. The rest are the guild's: the Market pays its usual half of **$400**, a sanctuary's
+  keeper pays **$1200** (the Cult only once its own egg is in).
 
 ### Dungeons and the Ancient Ruins 🟡
 
@@ -1836,8 +1907,8 @@ it can catch up with a character wherever the City's authority reaches
   a jurisdiction node: `d20 + crime ≥ 11` (`justice.GUARD_CHECK_MIN`) — a
   clean record (`crime == 0`) can never roll high enough to be caught. A worn
   **Cloak** (armour slot, +0 AC) takes 1 off the roll. Anyone
-  caught pauses the whole group on a `"guard"` order for
-  `justice_screen.GuardScreen`, decided once for everyone caught together:
+  caught pauses the whole group on a `"guard"` order for the patrol's dialogue
+  (`dialogue.Patrol`, see *Dialogue before initiative*), decided once for everyone caught together:
   - **Accept arrest** — `prison_days = crime × constants.PRISON_DAYS_PER_CRIME`
     (2 days per point), crime resets to 0, the unit leaves its group into
     `Guild.jailed` (released automatically, back into a City group, once its
@@ -1848,6 +1919,7 @@ it can catch up with a character wherever the City's authority reaches
     slate — it adds `1 + kills` more crime on top.
   - **Flee** — falls back to wherever the group came from, which can itself
     land it on a fresh `"guard"` or `"ambush"` pause.
+  - **Bluff or bribe** — the patrol lets the group go; the crime stays.
 - **The Old Road** (`world.Node.unsafe`) rolls an ambush per travel leg
   through it — deserters, bandits and roving packs — the same
   pause/resume seam the guard uses, unrelated to jurisdiction or crime.

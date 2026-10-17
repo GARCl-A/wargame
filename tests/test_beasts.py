@@ -198,13 +198,14 @@ def test_a_grown_wolf_takes_a_2x2_footprint_in_battle():
     assert batt.enemy_units[0].footprint == 2
 
 
-def test_the_creator_can_pin_racial_level_up_to_fifteen():
+def test_the_creator_can_pin_racial_level_up_to_the_editor_cap():
+    from gartok import progression
     w = _wolf()
     w.set_track_level("racial", 10)
     assert w.racial_level == 10
     assert w.picks_available("racial") == 2
     w.set_track_level("racial", 99)
-    assert w.racial_level == 15
+    assert w.racial_level == progression.LEVEL_UI_CAP
 
 
 def test_natural_armor_is_flat_ac_that_ignores_armor_rules():
@@ -234,15 +235,15 @@ def test_natural_armor_counts_in_battle_and_survives_a_save():
     assert back.natural_armor == 4 and back.ac == w.ac
 
 
-def test_the_creator_can_pin_combat_and_work_up_to_fifteen_without_moving_enemy_caps():
-    from gartok import encounters
+def test_the_creator_can_pin_combat_and_work_past_fifteen_without_moving_enemy_caps():
+    from gartok import encounters, progression
     u = _wolf()
-    u.set_track_level("combat", 15)
-    u.set_track_level("work", 15)
-    assert (u.combat_level, u.work_level) == (15, 15)
+    u.set_track_level("combat", 20)
+    u.set_track_level("work", 20)
+    assert (u.combat_level, u.work_level) == (20, 20)
+    assert u.racial_level == 20                       # (20 + 20) / 2: the racial curve has no top either
     u.set_track_level("combat", 99)
-    assert u.combat_level == 15
-    assert u.racial_level == 15                       # (15 + 15) lands on the top racial level
+    assert u.combat_level == progression.LEVEL_UI_CAP
     assert (encounters._COMBAT_CAP, encounters._WORK_CAP) == (7, 6)
     for lvl in range(0, 7):
         rng = random.Random(lvl)

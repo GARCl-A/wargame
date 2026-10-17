@@ -1,6 +1,6 @@
 """The guard, end to end: `campaign.advance` pausing a group at a jurisdiction
 node, the three `forced.resolve_guard_*` outcomes, and the app wiring that
-opens `GuardScreen` / runs the patrol fight (same monkeypatch technique as
+opens the patrol's dialogue / runs the patrol fight (same monkeypatch technique as
 `test_map_orders_integration.py`).
 
 A caught group goes idle (`group.order is None`) the moment the catch fires --
@@ -192,7 +192,7 @@ def test_resolve_guard_flee_falls_back_and_can_chain_into_another_catch():
         events, pause = forced.resolve_guard_flee(guild, g, order)
     assert g.node == "city" and g.order is None   # idle -- same convention as advance()'s own catch
     assert pause is not None and pause.kind == "guard"   # re-caught, no further node to flee to
-    assert pause.prev_node is None             # RUN is off the table now (GuardScreen hides it)
+    assert pause.prev_node is None             # RUN is off the table now (the patrol's dialogue drops it)
     assert any("fall back" in e for e in events)
     assert forced.resolve_guard_flee(guild, g, pause) == ([], None)   # a no-op if reached anyway
 
@@ -231,8 +231,9 @@ def test_resolve_guard_fight_aftermath_only_banks_crime_for_the_caught_survivor(
     assert g.order.kind == "idle"
 
 
-def test_app_opens_guard_screen_then_the_patrol_fight_resolves_through_battle_end():
+def test_app_opens_guard_dialogue_then_the_patrol_fight_resolves_through_battle_end():
     import gartok.app_forced as app_mod
+    from gartok import dialogue
     random.seed(1)
     culprit = Unit("player")
     culprit.crime = 4
@@ -242,23 +243,23 @@ def test_app_opens_guard_screen_then_the_patrol_fight_resolves_through_battle_en
     g.order = orders.travel(g, "market")
 
     saved = {}
-    orig = app_mod.GuardScreen
-    app_mod.GuardScreen = lambda fonts, guild_, group, order, caught, **kw: saved.update(
-        group=group, order=order, caught=caught, kw=kw) or object()
+    orig = app_mod.DialogueScreen
+    app_mod.DialogueScreen = lambda fonts, guild_, group, enc, **kw: saved.update(
+        group=group, order=group.pending, enc=enc, kw=kw) or object()
     try:
         with fixed_d20(20):
             app._advance()
     finally:
-        app_mod.GuardScreen = orig
+        app_mod.DialogueScreen = orig
 
-    assert saved["caught"] == [culprit]
+    assert saved["enc"].caught == [culprit]
     guard_order = saved["order"]
     assert guard_order.kind == "guard" and g.order is None
 
-    # FIGHT THE PATROL: the app drops the whole present squad into a real,
-    # lethal fight against a scaled patrol -- resolved the same way any other
+    # ATTACK: the app drops the whole present squad into a real, lethal fight
+    # against the patrol that talked -- resolved the same way any other
     # battle folds back into the guild (campaign.absorb_battle).
-    saved["kw"]["on_fight"](g, guard_order)
+    saved["kw"]["on_done"](dialogue.Result("fight", "", dialogue.Opening()))
     assert app._pause_order is guard_order and app._pause_group is g
 
     # BattleScreen isn't monkeypatched here -- build the battle result by hand,
@@ -277,7 +278,7 @@ def test_app_opens_guard_screen_then_the_patrol_fight_resolves_through_battle_en
     assert g.order.kind == "idle"
 
 
-def test_fleeing_into_a_recatch_reopens_guard_screen_instead_of_dropping_it():
+def test_fleeing_into_a_recatch_reopens_the_guard_dialogue_instead_of_dropping_it():
     """Regression: `_resolve_guard_flee` used to leave a re-catch sitting on
     `group.order` without ever showing it -- the player would just be dropped
     back on the map with an unresolved arrest nobody could see. RUN's result
@@ -292,9 +293,9 @@ def test_fleeing_into_a_recatch_reopens_guard_screen_instead_of_dropping_it():
     g.order = orders.travel(g, "market")
 
     opened = []
-    orig = app_mod.GuardScreen
-    app_mod.GuardScreen = lambda fonts, guild_, group, order, caught, **kw: (
-        opened.append(order), object())[1]
+    orig = app_mod.DialogueScreen
+    app_mod.DialogueScreen = lambda fonts, guild_, group, enc, **kw: (
+        opened.append(group.pending), object())[1]
     try:
         with fixed_d20(20):
             app._advance()                    # first catch, at "market"
@@ -302,7 +303,7 @@ def test_fleeing_into_a_recatch_reopens_guard_screen_instead_of_dropping_it():
         with fixed_d20(20):                   # RUN, then caught again right back at "city"
             app._resolve_guard_flee(g, opened[0])
     finally:
-        app_mod.GuardScreen = orig
+        app_mod.DialogueScreen = orig
 
     assert len(opened) == 2                   # the re-catch reopened the screen, not silently lost
     assert opened[1].prev_node is None and g.node == "city"

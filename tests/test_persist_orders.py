@@ -258,7 +258,7 @@ def test_loading_a_save_with_an_ambush_pending_lands_on_the_map_with_the_cta():
     assert loaded.locked and loaded.pending.kind == "ambush"
 
 
-def test_loading_a_save_with_a_guard_pending_reopens_the_guard_screen():
+def test_loading_a_save_with_a_guard_pending_reopens_the_guard_dialogue():
     culprit = Unit("player")
     culprit.crime = 5
     g = Group([culprit], node="city")
@@ -267,7 +267,7 @@ def test_loading_a_save_with_a_guard_pending_reopens_the_guard_screen():
 
     app._resume_pending()
 
-    assert app.scene.__class__.__name__ == "GuardScreen"
+    assert app.scene.__class__.__name__ == "DialogueScreen"
 
 
 def test_loading_a_save_with_nothing_pending_just_lands_on_the_map():
@@ -302,6 +302,13 @@ def test_the_fight_is_no_longer_pending_once_the_battle_is_over():
     assert g.pending is None
 
 
+def _attack(app):
+    """Past the ambush's talk, if its pack talks, into the fight."""
+    if app.scene.__class__.__name__ == "DialogueScreen":
+        app.scene.choose("attack")
+        app.scene.go_on()
+
+
 def test_no_save_is_allowed_in_a_battle_or_a_hunt_but_is_on_the_map():
     guild, g = _ambushed()
     app = make_app(guild)
@@ -310,6 +317,9 @@ def test_no_save_is_allowed_in_a_battle_or_a_hunt_but_is_on_the_map():
 
     app._pending_event = (g, g.pending)
     app._resolve_pending_event()
+    if app.scene.__class__.__name__ == "DialogueScreen":
+        assert app._can_save()             # the talk is in the save: the pending order reopens it
+    _attack(app)
     assert app.scene.__class__.__name__ == "BattleScreen" and not app._can_save()
 
     app._hunt = object()
@@ -325,6 +335,7 @@ def test_leaving_to_the_menu_mid_battle_writes_nothing():
     app._start_menu = lambda: None
     app._pending_event = (g, g.pending)
     app._resolve_pending_event()
+    _attack(app)
 
     app._pause_to_menu()
     assert saves == []

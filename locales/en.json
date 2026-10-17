@@ -243,8 +243,17 @@
     "guard": {
       "title": "The guard has caught up",
       "body": [
-        "The City guard has caught members who have a rap sheet. You choose for the whole group at once.",
-        "Accept arrest and serve the time, fight the patrol (lethal), or run -- running can get the group caught again or ambushed on the way."
+        "The City guard has caught members who have a rap sheet. You choose for the whole group at once, and pick who speaks for it.",
+        "Surrender and serve the time, fight the patrol (lethal), or run -- running can get the group caught again or ambushed on the way.",
+        "A bluff or a bribe lets the group go, but the rap sheet stays: the next patrol can catch it again. A bluff that fails starts the fight with the patrol striking first."
+      ]
+    },
+    "dialogue": {
+      "title": "Talk before you fight",
+      "body": [
+        "Foes who can talk say their piece before anyone rolls initiative. Pick who answers for the group: their own Charisma and languages count.",
+        "Persuade, bluff or intimidate needs a language the speaker shares with the leader; a bribe is paid from the group's purses. Each answer shows its odds, and a closed one says why.",
+        "A failed bluff lets them strike first; a failed threat gives them the jump. Attack skips the talk and rolls initiative."
       ]
     },
     "prison": {

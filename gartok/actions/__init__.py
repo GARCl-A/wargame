@@ -48,6 +48,7 @@ from .movement import (  # noqa: F401
 )
 from .spells import (  # noqa: F401
     CastSpellAction,
+    DragonfireAction,
     FloatingDiskAction,
     InvisibilityAction,
     LightGlobeAction,

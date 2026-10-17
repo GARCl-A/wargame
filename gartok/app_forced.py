@@ -4,14 +4,15 @@ Mixed into `app.App`. What each forced event is lives in `forced.py`; `FORCED_PL
 `app` plays each `ForcedEvent.play`, read into `App._ACTIVITY_OPENERS`."""
 
 from . import (
+    dialogue,
     economy,
     encounters,
     forced,
-    justice,
+    recorder,
     world,
 )
 from .battle import Battle
-from .justice_screen import GuardScreen
+from .dialogue_screen import DialogueScreen
 from .scenario import Scenario
 
 
@@ -41,14 +42,35 @@ class ForcedFightsMixin:
         self._enter_battle(battle, node)
 
     # ------------------------------------------------------------------ #
-    # the guard: a jurisdiction node just caught someone (justice.py)     #
+    # the talk before a forced fight (dialogue.py): the guard, ambushes    #
     # ------------------------------------------------------------------ #
-    def _open_guard_check(self, group, order):
-        caught = [u for u in group.members if u.uid in order.caught]
-        self.scene = GuardScreen(self.ui_fonts, self.guild, group, order, caught,
-                                 on_prison=self._resolve_guard_prison,
-                                 on_flee=self._resolve_guard_flee,
-                                 on_fight=self._start_guard_battle)
+    def _open_dialogue(self, group, order):
+        """The foes talk first: the dialogue screen, or straight to the fight when nobody in the
+        pack speaks. A talk already rolled (a reload) opens on its result."""
+        enc = forced.encounter(self.guild, group, order)
+        if enc is None:
+            self._start_forced_battle(group, order, list(order.pack))
+            return
+        decided = dialogue.Result.from_dict(order.parley) if order.parley else None
+
+        def decide(result):
+            order.parley = result.to_dict()
+            recorder.emit("talk", kind=order.kind, result=result.kind, paid=result.paid)
+
+        self.scene = DialogueScreen(self.ui_fonts, self.guild, group, enc,
+                                    on_done=lambda r: self._dialogue_done(group, order, r),
+                                    on_decided=decide, decided=decided)
+
+    def _dialogue_done(self, group, order, result):
+        if result.kind == "fight":
+            self._start_forced_battle(group, order, list(order.pack), opening=result.opening)
+        elif result.kind == "surrender":
+            self._resolve_guard_prison(group, order)
+        elif result.kind == "leave":
+            self._resolve_guard_flee(group, order)
+        else:
+            self._map_notices += [result.text, *forced.settle_talk(self.guild, group, order)]
+            self._after_activity()
 
     def _resolve_guard_prison(self, group, order):
         self._map_notices += forced.resolve_guard_prison(self.guild, group, order)
@@ -61,21 +83,16 @@ class ForcedFightsMixin:
             self._pending.insert(0, (group, pause))
         self._after_activity()
 
-    def _start_guard_battle(self, group, order):
-        caught = [u for u in group.members if u.uid in order.caught]
-        crime = max((u.crime for u in caught), default=0)
-        self._start_forced_battle(group, order, justice.patrol_pack(crime))
-
     # ------------------------------------------------------------------ #
     # the Old Road (or any other "unsafe" node): a pack found the group    #
-    # first -- no choice, straight into a lethal fight (world.py). Set as  #
-    # `self._pending_event` by `_after_activity`, resolved by a click on   #
-    # MapScreen's own red CTA instead of a "press OK to fight" screen.     #
+    # first (world.py). Set as `self._pending_event` by `_after_activity`, #
+    # resolved by a click on MapScreen's own red CTA: the talk, or the     #
+    # fight when nobody in the pack speaks.                                #
     # ------------------------------------------------------------------ #
     def _resolve_pending_event(self):
         group, order = self._pending_event
         self._pending_event = None
-        self._start_forced_battle(group, order, list(order.pack))
+        self._open_dialogue(group, order)
 
     def _resolve_ambush_autowin(self, group, order, autowin_result):
         self._pending_event = None
@@ -105,10 +122,11 @@ class ForcedFightsMixin:
         self._pause_order, self._pause_group = order, group
         self._battle_end(battle)
 
-    def _start_forced_battle(self, group, order, enemies):
+    def _start_forced_battle(self, group, order, enemies, opening=None):
         """A lethal fight the map forces on `group` rather than one the player picked.
         `order` is carried across to `_battle_end` via `self._pause_order`/`self._pause_group`,
-        which settles it through `forced.resolve`."""
+        which settles it through `forced.resolve`. `opening` is how the talk before it ended
+        (`dialogue.Opening`)."""
         node = world.node(group.node)
         self._battle_squad = list(group.members)
         self._battle_node = node
@@ -120,6 +138,8 @@ class ForcedFightsMixin:
         battle = Battle(list(group.members), enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day, aggressor="enemy")
+        if opening is not None:
+            battle.open_with(**opening.to_dict())
         self._enter_battle(battle, node)
 
 
@@ -127,5 +147,5 @@ class ForcedFightsMixin:
 FORCED_PLAYERS = {
     "battle": lambda s, g, n, o: s._start_forced_battle(g, o, list(o.pack)),
     "map": lambda s, g, n, o: s._land_on_map_paused(g, o),
-    "guard": lambda s, g, n, o: s._open_guard_check(g, o),
+    "talk": lambda s, g, n, o: s._open_dialogue(g, o),
 }

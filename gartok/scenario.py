@@ -47,6 +47,15 @@ class Scenario:
         """A new round begins -- a scenario with a clock of its own (reinforcements,
         a hint) hooks here. The base scenario has none."""
 
+    def on_turn_start(self, battle, unit):
+        """`unit`'s turn begins (after its own start-of-turn effects)."""
+
+    def on_turn_end(self, battle, unit):
+        """`unit` ends its turn, before its end-of-turn effects."""
+
+    def on_pick_up(self, battle, unit, obj):
+        """`unit` just picked `obj` (a `GroundObject`) up."""
+
     def _place_ai_traps(self, battle):
         """The AI automatically places one trap from its inventory, if it has any,
         near its starting position before the battle starts."""

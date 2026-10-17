@@ -6,6 +6,7 @@ from . import (
     arena,
     battlefield,
     encounters,
+    lair,
     missions,
     necromancer,
     node_functions,
@@ -198,6 +199,24 @@ class NodeScreensMixin:
         dragon = serpent_nest.dragon_of(battle)
         if dragon is not None and missions.snake_wanted_alive(self.guild):
             battle.wanted_alive.add(dragon)
+        self._battle_squad = squad
+        self._battle_node = node
+        self._arena_offer = None
+        self._enter_battle(battle, node)
+
+    def _enter_lair(self, group, node):
+        if wagon_watch.needs_watch(group):
+            self.scene = WatchScreen(self.ui_fonts, group, node, "ENTER THE LAIR",
+                                     on_confirm=lambda party, guarded: self._delve_lair(group, node, party, guarded),
+                                     on_back=self._after_activity)
+        else:
+            self._delve_lair(group, node, list(group.members), True)
+
+    def _delve_lair(self, group, node, squad, guarded):
+        self._leave_outside(group, node, guarded)
+        scenario = lair.LairScenario(encounters.squad_level(squad))
+        battle = Battle(squad, scenario.enemies, scenario=scenario,
+                        daylight=False, lethal=True, clock_day=self.guild.clock.day, aggressor="player")
         self._battle_squad = squad
         self._battle_node = node
         self._arena_offer = None

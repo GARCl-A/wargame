@@ -266,6 +266,10 @@ NODES = [
          "A split in the rock below the Lumber Yard, hung with shed skins. Snakes den here, and "
          "something older than snakes.",
          functions=("serpents_nest",), wagon_risk=ROAD_AMBUSH_CHANCE, hidden=True),
+    Node("dragon_lair", "The Dragon's Lair", "town", (0.86, 0.62),
+         "Past where the miners stopped, the galleries run hot and smell of sulphur and old gold. "
+         "Kobolds walk the dark here, and something vast sleeps below.",
+         functions=("dragon_lair",), hidden=True),
     Node("country_roads", "Country Roads", "town", (0.44, 0.92),
          "Dirt lanes between the farmsteads south of the city. Quiet, and wide open."),
     Node("ox_fields", "Legendary Ox Fields", "town", (0.62, 0.88),
@@ -302,6 +306,7 @@ EDGES = [
     ("farm", "country_roads", 1),
     ("country_roads", "ox_fields", 1),
     ("lumber_yard", "serpents_nest", 1),
+    ("mine", "dragon_lair", 2),
     ("wilds", "wilds_territory", 2),
     ("road", "mine", 6),
     ("mine", "wilds_territory", 2),

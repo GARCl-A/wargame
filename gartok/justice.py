@@ -10,7 +10,7 @@ rolls -- it can't hit 11 with a d20 alone.
 `campaign.advance` runs the test on every group that arrives at a jurisdiction
 node (waypoint or final stop, travelling internally within the city included)
 and, if it catches someone, pauses that group on a "guard" `Order` for
-`justice_screen.GuardScreen` to play out. The whole catch (everyone caught in
+the patrol's dialogue (`dialogue.Patrol`, `forced.encounter`) to play out. The whole catch (everyone caught in
 that one test, if more than one) resolves as a single decision -- the group
 can't do two different things with itself at once:
 
@@ -26,6 +26,8 @@ can't do two different things with itself at once:
   slate, it adds to it (see `resolve_fight_crime`).
 - **flee**: no rules live here -- `forced.resolve_guard_flee` just moves the
   group back to wherever it came from.
+- **talk**: a bluff or a bribe (`dialogue.Patrol`) lets the group go with the
+  crime still on the books.
 
 `PRISON_DAYS_PER_CRIME` and `PATROL_LEVEL_CAP`/`PATROL_SIZE` are placeholders
 (the plan doc flags them as such) -- tune once this has actually been played.

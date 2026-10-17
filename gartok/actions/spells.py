@@ -160,6 +160,54 @@ class WaterJetAction(SpellAction):
             actor.credit_kill(target, magic=True)
 
 
+class DragonfireAction(SpellAction):
+    """Blood's own, on the Dragon branch: fire spat from the caster's blood, INT to hit against
+    AC for 2d6. The blood is the price: casting costs the caster 1d4 hit points, hit or miss,
+    and nobody casts it with that much or less left. Reaches as far as a dagger is thrown."""
+    spell_id = "dragonfire"
+    target, aimed = "enemy", True
+    DICE = (2, 6)
+    PRICE = (1, 4)
+
+    @staticmethod
+    def reach():
+        return items.get("Dagger").thrown
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target):
+            return False
+        if actor.hp <= self.PRICE[0] * self.PRICE[1] or not _hostile_target(actor, target):
+            return False
+        return (battle.units_distance(actor, target) <= self.reach()
+                and battle.los_between(actor, target))
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        price = data.roll(*self.PRICE)
+        actor.hp -= price
+        battle.log(f"{actor.name} bleeds {price} HP into {self.spell.name} at {target.name}!")
+        atk = d20()
+        if atk == 1:
+            battle.log(" Critical miss!")
+            return
+        pulled = nonlethal_penalty(actor)
+        hit_score = atk + actor.mod_intelligence - pulled
+        ac = target.ac_vs(actor)
+        shown = intel.shown(battle, target, "ac", ac)
+        if atk != 20 and hit_score < ac:
+            battle.log(f" Miss ({hit_score} vs AC {shown}).")
+            return
+        dice = self.DICE[0] * (2 if atk == 20 else 1)
+        dmg = data.roll(dice, self.DICE[1])
+        battle.log(f" Hit ({hit_score} vs AC {shown}) for {dmg} fire damage.")
+        was_up = target.alive
+        target.take_damage(dmg, battle.log, knockout=bool(pulled))
+        if was_up and not target.alive and target.team != actor.team:
+            actor.credit_kill(target, magic=True)
+
+
 class _PlacedSpellAction(SpellAction):
     """Shared `can()` for the two spells that drop something on a cell
     (Light Globe, Floating Disk) instead of targeting an enemy."""
@@ -264,6 +312,7 @@ _SPELL_ACTIONS = {
     "light_globe": LightGlobeAction,
     "floating_disk": FloatingDiskAction,
     "water_jet": WaterJetAction,
+    "dragonfire": DragonfireAction,
     "invisibility": InvisibilityAction,
     "raise_dead": RaiseDeadAction,
 }

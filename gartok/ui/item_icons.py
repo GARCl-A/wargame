@@ -225,6 +225,13 @@ def _potato(g):
     g.circle((34, 42), 6, g.lite)
 
 
+def _egg(g):
+    g.poly(_blob(50, 54, 26, 34), g.tone)
+    for x, y in ((40, 40), (60, 50), (44, 64), (58, 72), (34, 56)):
+        g.circle((x, y), 3.2, g.dark)
+    g.circle((40, 34), 6, g.lite)
+
+
 def _mug(g):
     g.poly(_rect(24, 30, 38, 52), g.tone)
     g.line(_arc(62, 56, 14, 16, -90, 90), g.dark, 4)
@@ -583,7 +590,7 @@ def _lightning(g):
 KINDS = {
     "blade": _blade, "hafted": _hafted, "bow": _bow, "crossbow": _crossbow, "shield": _shield,
     "armor": _armor, "cloak": _cloak, "flask": _flask, "ink": _ink,
-    "steak": _steak, "apple": _apple, "potato": _potato, "mug": _mug, "jerky": _jerky,
+    "steak": _steak, "apple": _apple, "potato": _potato, "mug": _mug, "jerky": _jerky, "egg": _egg,
     "sack": _sack, "drop": _drop, "hide": _hide, "mushroom": _mushroom, "logs": _logs,
     "ingot": _ingot, "rocks": _rocks, "brick": _brick, "sheet": _sheet, "horn": _horn,
     "scroll": _scroll, "book": _book, "torch": _torch, "lantern": _lantern,

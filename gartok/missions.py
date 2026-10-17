@@ -46,6 +46,7 @@ class MissionTemplate:
     starting_qty: int = 1              # how many `starting_item`s are handed over
     starting_once: bool = False        # the starting items come with the first run only, not a retry
     fight_at: str | None = None        # the goal is a fight won at this node, not a turn-in
+    reward_item: str | None = None     # handed to the first member of the delivering group at the turn-in
 
     def __post_init__(self):
         tags_val = self.tags
@@ -235,6 +236,18 @@ NATURE_WILDFIRE = MissionTemplate(
     tags=("magic", "nature", "wildfire"), requires=LIBRARY_ANCIENT_CODEX.id, fight_at="wilds",
 )
 
+# The Blood Cult's third (`lair.py`): a dragon sleeps under the Mine, and the Cult wants its eggs.
+# Open to all; done when one egg is handed over, the rest are the guild's to sell.
+BLOOD_CLUTCH = MissionTemplate(
+    "blood_clutch", "blood", "blood_sanctuary", "The Dragon's Clutch",
+    "The Codex names a lair below the Mine, where the galleries run hot: a dragon sleeps there on "
+    "its clutch. Search the deep galleries, go down, and bring us one of its eggs -- the bloodline "
+    "itself, unhatched. Whatever else you carry out of there is yours.",
+    goal_item=items.DRAGON_EGG_ITEM, goal_qty=1, reward=0, deadline_days=None,
+    tags=("magic", "blood", "dragon_clutch"), requires=LIBRARY_ANCIENT_CODEX.id,
+    reward_item="Scroll of Dragonfire",
+)
+
 LEDGER_TREEFOLK = MissionTemplate(
     "ledger_treefolk", "ledger_hold", "ledger_hold", "Treefolk Mentorship",
     "Commander Varkas of Ledger Hold entrusts your guild with a green Treefolk recruit. "
@@ -256,6 +269,7 @@ TEMPLATES = {
     FAITH_BATTLEFIELD.id: FAITH_BATTLEFIELD,
     FAITH_NECROMANCER.id: FAITH_NECROMANCER,
     NATURE_WILDFIRE.id: NATURE_WILDFIRE,
+    BLOOD_CLUTCH.id: BLOOD_CLUTCH,
     LEDGER_TREEFOLK.id: LEDGER_TREEFOLK,
 }
 
@@ -436,6 +450,8 @@ def turn_in(guild, mission):
         for u in group.members:
             if t.reward_recipe not in u.recipes:
                 u.recipes.append(t.reward_recipe)
+    if t.reward_item:
+        group.members[0].give_to_pack(t.reward_item)
     recorder.emit("mission", what="turn_in", id=t.id, reward=t.reward)
     return factions.settle(guild, factions.Event(
         "mission", node=world.node(t.node), tag=t.tag, tags=t.tags))
@@ -492,6 +508,11 @@ def active(guild, template):
 def pending_snake(guild):
     """A Snake Dragon job is out: the nest can be searched for from the Lumber Yard."""
     return next((m for t in SNAKE_HUNTS if (m := active(guild, t)) is not None), None)
+
+
+def pending_clutch(guild):
+    """The Dragon's Clutch is out: the lair can be searched for from the Mine."""
+    return active(guild, BLOOD_CLUTCH)
 
 
 def snake_wanted_alive(guild):

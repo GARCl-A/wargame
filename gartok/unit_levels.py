@@ -79,7 +79,7 @@ class LevelingMixin:
 
     def picks_available(self, track):
         """Unspent talent picks in `track`. Combat and work grant 1 pick per level;
-        the racial track grants one at racial level 5, 10 and 15."""
+        the racial track grants one every 5 racial levels."""
         if track == "racial":
             return progression.racial_picks(self.racial_level) - len(self.talents["racial"])
         return self.track_level[track] - len(self.talents[track])

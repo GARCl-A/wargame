@@ -133,17 +133,22 @@ def test_resolve_fight_crime_adds_for_the_brawl_and_every_guard_downed():
     assert u.crime == 2 + 1 + 2               # untouched + brawled + 2 guards downed
 
 
-def test_guard_screen_draws_the_caught_roster_with_their_crime():
+def test_guard_dialogue_draws_the_patrol_and_its_answers():
     import pygame
-    from unittest.mock import MagicMock
+    from gartok import forced
+    from gartok.dialogue_screen import DialogueScreen
     from gartok.guild import Guild
-    from gartok.justice_screen import GuardScreen
     from gartok.orders import Order
     from gartok.unit import Unit
 
     u = Unit("player")
     u.crime = 3
     g = Guild([u])
-    scr = GuardScreen(MagicMock(), g, g.groups[0], Order(kind="guard", prev_node="city"), [u], None, None, None)
+    order = Order(kind="guard", caught=(u.uid,), prev_node="city")
+    enc = forced.encounter(g, g.groups[0], order)
+    assert len(order.pack) == justice.PATROL_SIZE
+    assert [o.verb for o in enc.options(u, [u])] == ["surrender", "bluff", "bribe", "attack", "leave"]
+    scr = DialogueScreen(None, g, g.groups[0], enc, on_done=lambda r: None)
+    assert scr.tutorial_key() == "guard"
     pygame.font.init()
     scr.draw(pygame.Surface((1280, 720)))

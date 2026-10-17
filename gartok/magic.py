@@ -18,6 +18,7 @@ SPELLS = {
     "floating_disk": Spell("floating_disk", "Floating Disk", 0, ("nature", "blood", "faith")),
     "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
     "water_jet": Spell("water_jet", "Water Jet", 1, ("nature",)),
+    "dragonfire": Spell("dragonfire", "Dragonfire", 1, ("blood",)),
     "invisibility": Spell("invisibility", "Invisibility", 2, ("nature", "blood", "faith")),
     "raise_dead": Spell("raise_dead", "Raise Dead", 2, ("faith",)),
 }

@@ -152,7 +152,7 @@ def loot_value(pool):
 
 def days_to_next(thresholds, level, per_day):
     """Days of `per_day` XP to climb from `level` to the next, None if it never will."""
-    if per_day <= 0 or level >= len(thresholds):
+    if per_day <= 0:
         return None
     prev = thresholds[level - 1] if level else 0
     return (thresholds[level] - prev) / per_day

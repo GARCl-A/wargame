@@ -152,12 +152,12 @@ class EditMixin:
         supports are dropped."""
         if track not in talents.XP_TRACKS:                  # "racial": derived, or a sandbox pin
             self._racial_override = (None if level is None else
-                max(0, min(len(progression.RACIAL_XP_THRESHOLDS), int(level))))
+                max(0, min(progression.LEVEL_UI_CAP, int(level))))
         else:
             thresholds = {"combat": progression.COMBAT_XP_THRESHOLDS,
                           "work": progression.WORK_XP_THRESHOLDS,
                           "magic": progression.MAGIC_XP_THRESHOLDS}[track]
-            level = max(0, min(len(thresholds), int(level)))
+            level = max(0, min(progression.LEVEL_UI_CAP, int(level)))
             marks = thresholds[level - 1] if level else 0
             if track == "combat":
                 self.combat_xp = marks

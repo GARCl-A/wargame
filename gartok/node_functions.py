@@ -59,6 +59,8 @@ FUNCTIONS = {f.id: f for f in (
                  note="the Ogre and his goblins among the walls, the bonfire spreading  ·  lethal"),
     NodeFunction("serpents_nest", "serpents_nest", "ENTER THE NEST",
                  note="five dark chambers of snakes, and the Snake Dragon at the bottom  ·  lethal"),
+    NodeFunction("dragon_lair", "dragon_lair", "ENTER THE LAIR",
+                 note="kobold patrols, a hoard, the clutch, and the dragon asleep beside it  ·  lethal"),
 )}
 
 

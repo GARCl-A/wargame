@@ -60,6 +60,7 @@ from gartok import (
     campaign,
     craft_level,
     data,
+    dialogue,
     economy,
     encounters,
     forced,
@@ -619,18 +620,39 @@ class Sim:
                         self.sellable[name] += 1
                     break
 
+    @staticmethod
+    def _levels(party):
+        return (round(statistics.mean(u.combat_level for u in party)),
+                round(statistics.mean(u.work_level for u in party)))
+
     def fight(self, kind, party):
-        level = (round(statistics.mean(u.combat_level for u in party)),
-                 round(statistics.mean(u.work_level for u in party)))
+        level = self._levels(party)
         sample = self.library.draw(kind, level, len(party), self.rng, self.skill)
         relief = self.library.relief(kind, level, len(party), self.skill)
         return sample, self.apply(sample, party, relief, kind)
 
+    def talked_down(self, kind, group, pend):
+        """The squad's AI talks first (`dialogue.ai_play`, weighing its odds in the fight):
+        True when the talk settled the ambush without one."""
+        enc = forced.encounter(self.guild, group, pend)
+        if enc is None:
+            return False
+        party = list(group.members)
+        odds, _, _ = self.library.stats(kind, self._levels(party), len(party), self.skill)
+        if dialogue.ai_play(enc, party, odds, self.rng).kind != "peace":
+            return False
+        forced.settle_talk(self.guild, group, pend)
+        return True
+
     def _road_fight(self, group, pend):
+        if self.talked_down("road", group, pend):
+            return
         self.fight("road", list(group.members))
         forced.resolve_road_ambush(self.guild, group, pend)
 
     def _gather_fight(self, group, pend):
+        if self.talked_down(f"gather:{group.node}", group, pend):
+            return
         sample, survivors = self.fight(f"gather:{group.node}", list(group.members))
         forced.resolve_gather_ambush(self.guild, group, pend,
                                      SimpleNamespace(won=sample.won, survivors=survivors))

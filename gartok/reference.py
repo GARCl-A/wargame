@@ -182,12 +182,16 @@ def _alignments():
            "morality (Good/Neutral/Evil).\n\n" + lines
 
 
+def _curve(curve, shown=20):
+    return f"`{curve.text}` for level n, no top: " + ", ".join(map(str, curve.first(shown))) + ", ..."
+
+
 def _talent_trees():
     out = ["## Talent trees\n\nOne tree per track. A new level in a track grants "
            "one pick in its tree; `requires` gates the deeper nodes. The racial "
            "track's level is `combat + work + magic` on a scale "
-           "(`progression.RACIAL_XP_THRESHOLDS`) and grants a pick only at racial 5, 10 "
-           "and 15; its nodes are race-gated. A magic "
+           "(`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 racial "
+           "levels; its nodes are race-gated. A magic "
            "node belongs to a school; each school's root is granted by its initiation, "
            "not picked."]
     for track in talents.TRACKS:
@@ -240,10 +244,9 @@ def _constants():
         ("Hunting job level", hunt.HUNT_LEVEL),
         ("Bank strongbox", f"${economy.BANK_CHEST_PRICE} to rent, holds "
          f"{economy.BANK_CHEST_CAPACITY} kg"),
-        ("Combat XP thresholds", ", ".join(map(str, progression.COMBAT_XP_THRESHOLDS))),
-        ("Work XP thresholds", ", ".join(map(str, progression.WORK_XP_THRESHOLDS))),
-        ("Racial level thresholds (combat+work)",
-         ", ".join(map(str, progression.RACIAL_XP_THRESHOLDS))),
+        ("Combat XP thresholds", _curve(progression.COMBAT_XP_THRESHOLDS)),
+        ("Work XP thresholds", _curve(progression.WORK_XP_THRESHOLDS)),
+        ("Racial level thresholds (combat+work+magic)", _curve(progression.RACIAL_XP_THRESHOLDS)),
     ]
     return "## Constants\n\nThe tunable knobs, from `data.py`, `economy.py` and " \
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)

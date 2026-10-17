@@ -3,12 +3,14 @@ spreading clock, the talk chain, the fights' aftermath, putting a fire out, the 
 what it leaves on The Wilds."""
 
 import random
+from unittest.mock import patch
 
-from gartok import campaign, factions, hunt, missions, orders, wildfire, world
+from gartok import campaign, dialogue, factions, hunt, missions, orders, wildfire, world
 from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen, node_icon
 from gartok.ui.tokens import fonts as ui_fonts
+
 from tests.helpers import Unit, _FixedRNG
 
 DAY = 24 * 3600
@@ -259,21 +261,39 @@ def _map(guild):
     return MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda grp: None)
 
 
-def test_the_map_offers_the_talk_one_button_a_member_then_the_fight_on_a_miss():
+def test_the_map_offers_one_talk_button_that_opens_the_dialogue_and_a_miss_starts_the_fight():
     guild, (a, b), _, state = _started()
     f = _small(state)[0]
     group = guild.groups[0]
     group.node = f.id
+    talks = []
     ms = _map(guild)
+    ms.on_dialogue = lambda g, enc, done: talks.append((g, enc, done))
     blocks = ms._inspector_content(group, world.node(f.id))
     keys = [blk.get("key") for blk in blocks]
-    assert f"wf_talk:{a.uid}" in keys and f"wf_talk:{b.uid}" in keys and "camp_fight" in keys
+    assert "wf_talk" in keys and "camp_fight" in keys
     assert any("burns through" in blk.get("text", "") for blk in blocks)
     ms.selected = group
-    from unittest.mock import patch
+    ms._handle_button("wf_talk")
+    g, enc, done = talks[0]
+    assert g is group and [o.verb for o in enc.options(a, [a, b])] == ["persuade", "bribe", "attack"]
+    assert enc.option("bribe", a, [a, b]).block == "they want to learn, not be paid"
     with patch("gartok.wildfire.random.randint", return_value=1):
-        ms._handle_button(f"wf_talk:{a.uid}")
+        result = enc.choose("persuade", a, [a, b], rng=_FixedRNG(1))
+    done(result)
     assert f.hostile and group.order is not None and group.order.kind == "camp_fight"
+
+
+def test_the_wildfire_dialogue_walks_the_two_checks_to_the_lesson():
+    guild, (a, b), _, state = _started()
+    f = _small(state)[0]
+    enc = dialogue.WildfireTalk(guild, f, wildfire.talker(f, 1))
+    first = enc.choose("persuade", a, [a, b], rng=_FixedRNG(20))
+    assert first.kind == "next" and not first.over
+    assert [o.verb for o in enc.options(b, [a, b])] == ["teach", "bribe", "attack"]
+    assert enc.option("teach", b, [a, b]).check.startswith("INT")
+    second = enc.choose("teach", b, [a, b], rng=_FixedRNG(20))
+    assert second.kind == "peace" and not world.exists(f.id)
 
 
 def test_the_map_offers_the_put_out_once_the_crew_is_beaten():

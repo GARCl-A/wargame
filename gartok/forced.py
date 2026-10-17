@@ -9,9 +9,11 @@ a supply caravan. Each is one `ForcedEvent` in `EVENTS`, keyed by its order kind
   days crossed (`daily_checks`); an event with neither is raised by the work that triggers it
   (`Guild.gather_shift`, `Guild.supply_run_shift`).
 - **how it is played** (`play`): "battle" goes straight into the fight against `order.pack`,
-  "map" lands on the map with a red CTA to start it, "guard" opens `GuardScreen` first.
-  `app.FORCED_PLAYERS` maps each to its screen.
-- **how it is settled** (`resolve`), after the fight: `resolve(guild, group, order, outcome)`.
+  "map" lands on the map with a red CTA to start it, "talk" opens the dialogue before it
+  (`encounter`, `dialogue.py`; a pack nobody in talks goes straight to the fight). The road
+  ambush's CTA opens the dialogue too. `app.FORCED_PLAYERS` maps each to its screen.
+- **how it is settled** (`resolve`), after the fight: `resolve(guild, group, order, outcome)`;
+  a talk that ends without one is settled by `settle_talk`.
 
 A caught event comes back from `campaign.advance` as a `(group, Order)` pending pair with
 `group.order` already None and `group.pending` set, so the group is locked until it is fought.
@@ -24,9 +26,11 @@ Adding a threat = its catch and resolve functions here and one `ForcedEvent` lin
 import random
 from collections.abc import Callable
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 from . import (
     constants,
+    dialogue,
     economy,
     encounters,
     factions,
@@ -47,7 +51,7 @@ CITY_RAID_SIZE = 3
 @dataclass(frozen=True)
 class ForcedEvent:
     kind: str
-    play: str                       # "battle" | "map" | "guard"
+    play: str                       # "battle" | "map" | "talk"
     resolve: Callable               # (guild, group, order, outcome) -> events
     arrival: tuple = ()             # catch(guild, group, prev_node, resume_path) -> Order | None
     daily: Callable | None = None   # (guild, days) -> (events, [(group, Order)])
@@ -235,7 +239,7 @@ def resolve_guard_prison(guild, group, order):
 
 def resolve_guard_flee(guild, group, order):
     """'Run': the group falls back to `order.prev_node`, which gets the same arrival check as any
-    other. A re-catch there carries `prev_node=None`, so `GuardScreen` hides RUN.
+    other. A re-catch there carries `prev_node=None`, so the patrol's dialogue offers no RUN.
 
     Returns `(events, pause)`: `pause` is the new forced `Order` for the caller to resolve next,
     or None if the group is simply idle now."""
@@ -350,8 +354,45 @@ def resolve_wilds_claim_retake(guild, group, order, outcome):
     return events
 
 
+# --------------------------------------------------------------------------- #
+# the talk before the fight                                                   #
+# --------------------------------------------------------------------------- #
+TALKS = {"guard", "ambush", "gather_ambush", "supply_ambush"}
+_TITLES = {"ambush": "AMBUSHED ON THE ROAD", "gather_ambush": "AMBUSHED AT WORK",
+           "supply_ambush": "THE CARAVAN IS STOPPED"}
+
+
+def encounter(guild, group, order):
+    """The dialogue `order` opens before its fight (`dialogue.py`), or None for straight to it:
+    a kind with no talk, or a pack with nobody who speaks. The guard's patrol is built here, on
+    the order, so the one who talks is the one who fights."""
+    if order.kind not in TALKS:
+        return None
+    if order.kind == "guard":
+        caught = [u for u in group.members if u.uid in order.caught]
+        if not order.pack:
+            crime = max((u.crime for u in caught), default=0)
+            order.pack = tuple(justice.patrol_pack(crime))
+        return dialogue.Patrol(order.pack, caught, can_run=order.prev_node is not None)
+    if not dialogue.can_talk(order.pack):
+        return None
+    enc = dialogue.Ambush(order.pack, title=_TITLES[order.kind])
+    enc.set_odds(group.members)
+    return enc
+
+
+def settle_talk(guild, group, order):
+    """The talk ended with no fight (a bluff, a bribe, a rout): settle `order` as a fight won
+    without a blow -- the road goes on, the haul or the cargo is banked, the guard lets them go
+    with the rap sheet as it was."""
+    if order.kind == "guard":
+        return resume_arrival(guild, group, order)
+    calm = SimpleNamespace(won=True, survivors=list(group.members), fallen=[], player_kos=0)
+    return EVENTS[order.kind].resolve(guild, group, order, calm)
+
+
 EVENTS = {e.kind: e for e in (
-    ForcedEvent("guard", "guard", resolve_guard_fight_aftermath, arrival=(guard_catch,),
+    ForcedEvent("guard", "talk", resolve_guard_fight_aftermath, arrival=(guard_catch,),
                 label="STOPPED BY THE GUARD"),
     ForcedEvent("ambush", "map", resolve_road_ambush,
                 arrival=(road_ambush_catch, fortress_ambush_catch), label="AMBUSHED ON THE ROAD"),
@@ -363,6 +404,6 @@ EVENTS = {e.kind: e for e in (
                 label="RAID ON THE CLAIM"),
     ForcedEvent("wilds_seizure", "battle", resolve_wilds_seizure, daily=wilds_claim_seizure_check,
                 label="THE CLAIM IS SEIZED"),
-    ForcedEvent("gather_ambush", "battle", resolve_gather_ambush, label="AMBUSHED AT WORK"),
-    ForcedEvent("supply_ambush", "battle", resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
+    ForcedEvent("gather_ambush", "talk", resolve_gather_ambush, label="AMBUSHED AT WORK"),
+    ForcedEvent("supply_ambush", "talk", resolve_supply_ambush, label="THE CARAVAN IS ATTACKED"),
 )}

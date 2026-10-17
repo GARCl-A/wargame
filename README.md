@@ -151,7 +151,7 @@ World systems, outside combat:
   (`city_property_screen.py`, `wilds_claim_screen.py`).
 - **Crime & justice**: a personal rap sheet that can get a character caught by
   the City guard at a jurisdiction node — accept prison time, fight the
-  patrol, or flee; the Old Road carries its own ambush risk regardless of
+  patrol, flee, or talk (bluff or bribe) your way out; the Old Road carries its own ambush risk regardless of
   crime (`justice.py`).
 - **Editors**: sandbox character and map creators (`char_editor_screen.py`,
   `map_editor_screen.py`) writing git-tracked content to `npcs/` and `maps/`. The
@@ -242,6 +242,9 @@ gartok/
   constants.py      tuning knobs shared by economy/justice/campaign (bail, patrols, taxes)
   chest.py          a generic locked pack item (d20+DEX vs DC), opened via group_screen
   justice.py        crime per character, City jurisdiction, the guard's catch/patrol/prison
+  lair.py           the Dragon's Lair under the Mine: a heist past kobold patrols and a sleeping dragon
+  dialogue.py       the talk before a fight: the verbs (persuade, bluff, intimidate, bribe...),
+                    the checks, the encounters (ambush, patrol, Wildfire) and the squad's AI
   recruit.py        the recruitment contest, the weekly tavern pool, and the prison's
                     bail-and-pitch alternative
   vocations.py      the founding trade (six races + one guild perk), read by travel, hunt, work, food and cohesion
@@ -276,7 +279,7 @@ gartok/
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
   market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
-  city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / justice_screen.py
+  city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / dialogue_screen.py
   alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py / group_turn_screen.py
   bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
   (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)

@@ -28,12 +28,12 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc, to the end** (*Ready to do -> Medium*): the one mission left (Blood's third), then the
-   keepers and the initiation, then tier 1 spells per school. The Snake Dragon job, the Faith Order's
-   Battlefield errand and the Nature Coven's Ogre's Wildfire are built (2026-10-15), and the Faith
-   Order's Necromancer at the Front (2026-10-16).
-   The racial rule is settled (2026-10-16: a pick at racial 5, 10 and 15, no authored NPC pins its level, a
-   test holds it); the Ogre's fight is still short of a racial-15 boss (item 1's endgame note).
+1. **Magic Arc, to the end** (*Ready to do -> Medium*): the six school missions are built (2026-10-16: the
+   dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
+   [dragon_lair.md](dragon_lair.md)); next the keepers and the initiation, then tier 1 spells per school.
+   The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
+   test holds it; the level curves have no top since the same day); the Ogre's fight is still short of a
+   racial-15 boss (item 1's endgame note).
 2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
 3. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
 4. **Production chain between groups** (*Large*, after magic).
@@ -83,11 +83,10 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      missions come as the game grows. When the set is written, check that no path leaves a school unreachable; if
      one does, add a mission there. Built (2026-10-15): the Codex (all three, exclusive), the Snake Dragon (Blood
      dead / Nature alive, exclusive), the Faith Order's *Mercy at the Front* and the Nature Coven's third, *The
-     Ogre's Wildfire* (not exclusive). Faith's second, *The Necromancer at the Front*, is built (2026-10-16, [necromancer.md](necromancer.md): a third side on the board, Raise Dead and Invisibility at level 2, Investigate finding the unseen, the Zombie). **Left: one mission, Blood's third.**
-     *Reachability (decide when the last two are written):* Faith is safe (its two new missions are open to all).
-     Nature reaches 2 only with the Codex or the Snake: Codex to Faith and the Snake to Blood leave it the Wildfire
-     alone (1 of 2). Blood is the same with its third. Options: accept it (the guild's choices close a school), or
-     give Blood and Nature one more open mission each.
+     Ogre's Wildfire* (not exclusive). Faith's second, *The Necromancer at the Front*, is built (2026-10-16, [necromancer.md](necromancer.md): a third side on the board, Raise Dead and Invisibility at level 2, Investigate finding the unseen, the Zombie). Blood's third, *The Dragon's Clutch*, is built (2026-10-16, [dragon_lair.md](dragon_lair.md): a heist past kobold patrols that challenge on the board, a racial-20 dragon woken by noise, the eggs the keepers buy, Dragonfire). **Later, Blood's fourth (author 2026-10-16):** the robbed dragon notices and keeps attacking (not designed).
+     *Reachability (2026-10-16):* Faith and Blood are safe (each has two missions open to all). **Nature** still
+     reaches 2 only with the Codex or the Snake: Codex to Faith and the Snake to Blood leave it the Wildfire alone
+     (1 of 2). Open: accept it (the guild's choices close a school), or give Nature one more open mission.
      *The third missions are the game's endgame for now (author 2026-10-15):* each boss is a fight worth a
      **racial-15** character (the cap: a track sum of 30). Generated enemies stop at combat 7 / work 6
      (`constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`, mean 6), so the bosses are authored NPCs. The Ogre (racial
@@ -108,7 +107,8 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Four spells
      (`magic.SPELLS`) belong to all three schools; the first of a school's own is **Water Jet** (Nature, level 1,
      the Wildfire's reward, with its AI). **Minimum (author 2026-10-15): at least one level-0 and one level-1 spell
-     of each school's own**, each with its AI. Left: Nature's level 0; Blood's and Faith's level 0 and 1.
+     of each school's own**, each with its AI. Blood's level 1 is **Dragonfire** (the Clutch's reward, 2026-10-16).
+     Left: Nature's level 0; Blood's level 0; Faith's level 0 and 1.
   5. *Blood is bloodline (decided 2026-10-15; the Cult's blurb rewritten):* the magic is born in you (a dragon, an
      angel, a demon in the line). New Blood branches follow the same shape as Bloodline -> Dragon -> Dragon Breath
      (other bloodlines: angel, demon...).
@@ -127,7 +127,10 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      put-out (16 h, DC 13) and the meat loss (5% a burned focus, for good). **The Necromancer at the Front:** the field
      (48 x 30, night), the sides (4 soldiers at -2, 8 raiders and 4 Zombies at +1, 6 bodies), the necromancer (racial 15,
      96 HP, a raise a turn, reach 6) and Investigate's search (3 cells, WIS vs 10 + INT); AI against AI the squad loses at level 3
-     and 6 (`combat_lab` "necromancer").
+     and 6 (`combat_lab` "necromancer"). **The Dragon's Clutch:** the noise (stir 6, wake 14, the sounds' worth, the
+     14-cell hearing), the patrols (two of three, sight 6, a torch each), the dragon (racial 20, 227 HP, AC 15, a
+     Huge body the tunnel keeps out), the hoard and the egg prices ($400 at the Market, $1200 at a keeper); AI
+     against AI at level 3 the squad gets out with an egg in 4 of 20 (`combat_lab` "lair").
 
 ## Playtest notes 2026-10-12
 
@@ -213,9 +216,10 @@ pointed to, not repeated.
   Smith (Iron Bar is already a forge recipe). Gives Coal and the gems a use and closes `sources.py`'s
   `traded` goods one chain at a time. Needs recipes, a carpenter node or function, the sim's `crafter`
   policy and tests.
-- **Talent trees are shorter than the level cap (to be authored by hand, after the magic arc).** The XP
-  tables run to level 15, and each level grants one pick: combat has 15 nodes and work 14 (checked
-  2026-10-15), so work 15 has nothing to spend its pick on and neither tree has room to choose. The racial
+- **Talent trees are shorter than the levels (to be authored by hand, after the magic arc).** The XP
+  curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat has
+  15 nodes and work 14 (checked 2026-10-15), so a pick past the last node waits unspent and neither tree
+  has room to choose. The racial
   track has 32 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
   its own (one pick at racial 5, 10 and 15), and most have 1. Goal: **at least 30
   combat and 30 work talents**, and 3+ racial nodes per race. Nothing built; the author will design them.

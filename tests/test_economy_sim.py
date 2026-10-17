@@ -15,7 +15,7 @@ sys.path.insert(0, SCRIPTS)
 import economy_activities as act
 import economy_guild as sim_mod
 
-from gartok import arena, economy, gather, items, world
+from gartok import arena, dialogue, economy, forced, gather, items, world
 from gartok.guild import Guild
 from gartok.unit import Unit
 
@@ -191,12 +191,27 @@ def test_walking_takes_the_real_route_time_and_stops_where_it_was_sent():
 
 def test_an_ambush_on_the_road_is_fought_and_the_walk_goes_on(monkeypatch):
     monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 1.0)
+    monkeypatch.setattr(forced, "encounter", lambda *a: None)     # a pack nobody in talks
     sim = _sim(skill=1.0, library=_WON)
     seen = []
     real = sim.library.draw
     sim.library.draw = lambda kind, *a, **kw: (seen.append(kind), real(kind, *a, **kw))[1]
     sim.goto("wilds")
     assert "road" in seen and sim.group.node == "wilds"
+
+
+def test_an_ambush_the_squad_talks_down_is_never_fought(monkeypatch):
+    monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 1.0)
+    monkeypatch.setattr(forced, "encounter", lambda *a: "a pack that talks")
+    talks = []
+    monkeypatch.setattr(dialogue, "ai_play",
+                        lambda enc, party, odds, rng: talks.append(enc) or dialogue.Result("peace", "bribed"))
+    sim = _sim(skill=1.0, library=_WON)
+    seen = []
+    real = sim.library.draw
+    sim.library.draw = lambda kind, *a, **kw: (seen.append(kind), real(kind, *a, **kw))[1]
+    sim.goto("wilds")
+    assert talks and "road" not in seen and sim.group.node == "wilds"
 
 
 def test_the_floor_policy_lives_a_week_on_the_real_clock_and_stays_fed():

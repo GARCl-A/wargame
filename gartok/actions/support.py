@@ -94,6 +94,7 @@ class PickUp(Action):
             battle.log(f"{actor.name} picks up {obj.weapon_name} from the ground.")
             for kind, weapon_name in dropped:
                 self._drop_on_ground(battle, actor, kind, weapon_name)
+        battle.scenario.on_pick_up(battle, actor, obj)
 
 
 # --------------------------------------------------------------------------- #

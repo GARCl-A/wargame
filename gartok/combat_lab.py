@@ -15,14 +15,24 @@ import re
 import time
 from dataclasses import dataclass
 
-from . import arena, encounters, hunt, matchup, necromancer, wildfire, world
+from . import (
+    arena,
+    encounters,
+    hunt,
+    lair,
+    matchup,
+    necromancer,
+    progression,
+    wildfire,
+    world,
+)
 from .battle import Battle
 from .fortress_scenario import FortressScenario
 from .guild import Guild
 from .scenario import AncientRuinsScenario, ErmosScenario
 
 ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "combat_lab")
-MAX_LEVEL = 15
+MAX_LEVEL = progression.LEVEL_UI_CAP
 MAX_SQUAD = 6
 
 
@@ -49,6 +59,8 @@ FIGHTS = {f.id: f for f in (
              "the bonfire spreading; won when the Ogre falls; lethal"),
     LabFight("necromancer", "The Necromancer at the Front", "three sides on the big Battlefield at night, "
              "an invisible necromancer raising the dead; met when he falls; lethal", squad=4),
+    LabFight("lair", "The Dragon's Lair", "a heist: kobold patrols that challenge, a sleeping level-20 dragon "
+             "that noise wakes; met by leaving with an egg; lethal", squad=4),
 )}
 
 BOUTS = {"scrapper": arena.scrapper_bout, "champion": arena.champion_bout, "brawl": arena.brawl_bout,
@@ -77,6 +89,10 @@ def build(fight_id, level, squad_size, seed=None):
     elif fight_id == "fortress":
         foes = wildfire.ogre_band(level)
         battle = Battle(squad, foes, scenario=FortressScenario(foes), daylight=True, lethal=True,
+                        aggressor="player")
+    elif fight_id == "lair":
+        scenario = lair.LairScenario(level)
+        battle = Battle(squad, scenario.enemies, scenario=scenario, daylight=False, lethal=True,
                         aggressor="player")
     elif fight_id == "necromancer":
         scenario = necromancer.NecromancerScenario(squad)

@@ -1,7 +1,7 @@
 """A hidden sanctuary's job board: the school's keeper takes the Ancient Codex and
 whatever else that school asks for (`missions.py`), the Snake Dragon among them."""
 
-from . import missions, wildfire, world
+from . import lair, missions, wildfire, world
 from .ui.mission_offer_screen import MissionOfferScreen
 
 KEEPER_LINE = {
@@ -52,7 +52,8 @@ class ShrineMissionScreen(MissionOfferScreen):
         else:
             goal = f"the {t.goal_item}, alive" if t.goal_captive else f"{t.goal_qty}x {t.goal_item}"
         due = f"{t.deadline_days} days" if t.deadline_days else "no deadline"
-        return f"goal: {goal}  ·  {due}"
+        prize = f"  ·  you get a {t.reward_item}" if t.reward_item else ""
+        return f"goal: {goal}  ·  {due}{prize}"
 
     def get_status_str(self, t, progress, ready, days_left):
         if t is missions.NATURE_WILDFIRE:
@@ -74,3 +75,22 @@ class ShrineMissionScreen(MissionOfferScreen):
 
     def get_success_notice(self, reward):
         return "the keeper takes it and speaks your name to the school."
+
+    def _egg_holder(self):
+        if self._giver == "blood" and missions.pending_clutch(self.guild) is not None:
+            return None                   # the first egg is the Cult's job here, not a sale
+        return next((u for u in self.group.members if u.count_of(lair.EGG)), None)
+
+    def footer_action(self):
+        holder = self._egg_holder()
+        if holder is None and not any(u.count_of(lair.EGG) for u in self.group.members):
+            return None
+        return f"SELL A DRAGON EGG  ·  ${lair.SHRINE_EGG_PRICE}", holder is not None
+
+    def run_footer_action(self):
+        holder = self._egg_holder()
+        if holder is None:
+            return None
+        holder.remove_named(lair.EGG, 1)
+        holder.money += lair.SHRINE_EGG_PRICE
+        return f"the keeper weighs the egg in both hands and pays {holder.name} ${lair.SHRINE_EGG_PRICE}."

@@ -130,5 +130,8 @@ def field_loot(battle, fallen_combatants, rng=random):
             for it in getattr(obj, "contents", []):
                 if parse_currency(it) is None:
                     pool.append(it)
+    relics_left = getattr(getattr(battle, "scenario", None), "relics_left", None)
+    if relics_left is not None:
+        pool += relics_left(battle)
     return sorted(pool)
 

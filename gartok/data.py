@@ -222,11 +222,13 @@ BEASTS = [
     (100, "Donkey", "d", ( 2,  0,  1, -4,  0, -3), "",                "", 0.500,  8, "Large", None, 0.0, 6.0, (), 0.05),
     (100, "Ox",     "o", ( 3,  0,  2, -4,  0, -3), "beast_of_burden", "", 0.500, 10, "Large", None, 0.0, 6.0, (), 0.15),
     (100, "Horse",  "h", ( 5,  1,  1, -4,  0, -3), "",                "", 0.600,  8, "Large", None, 0.0, 12.0, (), 0.10),
+    (100, "Dragon", "W", ( 5,  0,  4,  2,  2,  2), "darkvision",      "Draconic", 8.000, 12, "Huge", None, 0.0, None),
 ]
 
 # Bought at the Farm and kept by a group (`animals.py`): beast rows like the
 # Wolf, but never met in the wild, so they stay out of `BEAST_POOL`.
 LIVESTOCK = ("Donkey", "Ox", "Horse")
+AUTHORED_BEASTS = ("Dragon",)   # only ever placed by hand (`lair.py`), never drawn into a pack
 
 def _beast_dict(threshold, name, token, mods, ability, language, age, hd, size,
                 drop_item, drop_chance, speed=None, also_drops=(), flight=0.0):
@@ -259,7 +261,7 @@ _GIANTS = [_race_dict(*row) for row in GIANTS]
 # (`encounters.EncounterEntry.race_pool`) -- `roll_race` stays the one path
 # that rolls a fresh *player* race (humanoid, weighted by `RACES`' thresholds).
 RACE_POOL = _RACES
-BEAST_POOL = [r for r in _BEASTS if r["name"] not in LIVESTOCK]
+BEAST_POOL = [r for r in _BEASTS if r["name"] not in LIVESTOCK + AUTHORED_BEASTS]
 OX_POOL = [r for r in _BEASTS if r["name"] == "Ox"]     # the herd the Aurochs calls
 
 # What the Wilds and the Old Road actually roll. The Giant Spider and the
@@ -270,6 +272,7 @@ SNAKE_POOL = [r for r in _BEASTS if r["name"] == "Snake"]     # what finds a cre
 SPIDER_POOL = [r for r in _BEASTS if r["name"] == "Giant Spider"]     # what finds a crew gathering (gather.py)
 SKELETON_POOL = [r for r in _UNDEAD if r["name"] == "Skeleton"]
 GOBLIN_POOL = [r for r in _RACES if r["name"] == "Goblin"]
+KOBOLD_POOL = [r for r in _RACES if r["name"] == "Kobold"]
 HOBGOBLIN_POOL = [r for r in _RACES if r["name"] == "Hobgoblin"]
 GOBLINOID_POOL = GOBLIN_POOL + HOBGOBLIN_POOL
 
