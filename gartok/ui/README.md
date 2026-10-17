@@ -59,6 +59,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `sheet_card.py` | the character sheet at three densities |
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
+| `initiation_panel.py` | a sanctuary's initiation: the school's terms, one row per member with where they stand (or why they cannot), the begin / leave footer |
 | `party_panel.py` | the figures on a party row (HP, AC, load, rations, work-XP bar) and the party's total load |
 | `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal, the identity form |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |

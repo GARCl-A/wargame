@@ -18,6 +18,7 @@ from . import (
     magic,
     progression,
     recruit,
+    rite,
     talents,
     vocations,
     world,
@@ -651,6 +652,13 @@ class GuildScreen(Screen):
                            "frac": cur / need if need else 0,
                            "text": "Studying at the taverna: daily progress toward mastery.",
                            "tip": f"Rolls 1d20 + INT per day on a Study order. {cur}/{need} points."})
+        if unit.rite_school:
+            label, done, total = rite.stage(unit, unit.rite_school)
+            unit_word = "days" if label == "blood test" else "pts"
+            tracks.append({"label": f"{unit.rite_school.title()} rite", "value": f"{label}  ({done}/{total} {unit_word})",
+                           "frac": done / total if total else 0,
+                           "text": "Boarding at the sanctuary: daily progress toward initiation.",
+                           "tip": f"Rolls 1d20 + INT per day while boarding. {done}/{total} {unit_word}."})
         return tracks
 
     # ------------------------------------------------------------------ #

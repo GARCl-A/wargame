@@ -342,6 +342,10 @@ _register(ItemDef(id="scroll_of_floating_disk", name="Scroll of Floating Disk", 
 _register(ItemDef(id="scroll_of_sleep", name="Scroll of Sleep", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="sleep"), "scroll_sleep")
 _register(ItemDef(id="scroll_of_water_jet", name="Scroll of Water Jet", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="water_jet"), "scroll_water_jet")
 _register(ItemDef(id="scroll_of_dragonfire", name="Scroll of Dragonfire", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="dragonfire"), "scroll_dragonfire")
+_register(ItemDef(id="scroll_of_grasping_roots", name="Scroll of Grasping Roots", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="grasping_roots"), "scroll_grasping_roots")
+_register(ItemDef(id="scroll_of_hex", name="Scroll of Hex", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="hex"), "scroll_hex")
+_register(ItemDef(id="scroll_of_spare_the_dying", name="Scroll of Spare the Dying", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="spare_the_dying"), "scroll_spare_the_dying")
+_register(ItemDef(id="scroll_of_healing_touch", name="Scroll of Healing Touch", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="healing_touch"), "scroll_healing_touch")
 
 # Dictionaries
 _register(ItemDef(id="dictionary", name="Dictionary", type=ItemType.DICTIONARY, rarity=ItemRarity.COMMON, weight=2.0, price=4))

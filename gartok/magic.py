@@ -1,5 +1,6 @@
 """Magic system registry and learning math."""
 
+import random
 from dataclasses import dataclass
 
 from . import data, economy
@@ -16,14 +17,28 @@ SPELLS = {
     "light_globe": Spell("light_globe", "Light Globe", 0, ("nature", "blood", "faith")),
     "magic_missile": Spell("magic_missile", "Magic Missile", 0, ("nature", "blood", "faith")),
     "floating_disk": Spell("floating_disk", "Floating Disk", 0, ("nature", "blood", "faith")),
+    "grasping_roots": Spell("grasping_roots", "Grasping Roots", 0, ("nature",)),
+    "hex": Spell("hex", "Hex", 0, ("blood",)),
+    "spare_the_dying": Spell("spare_the_dying", "Spare the Dying", 0, ("faith",)),
     "sleep": Spell("sleep", "Sleep", 1, ("nature", "blood", "faith")),
     "water_jet": Spell("water_jet", "Water Jet", 1, ("nature",)),
     "dragonfire": Spell("dragonfire", "Dragonfire", 1, ("blood",)),
+    "healing_touch": Spell("healing_touch", "Healing Touch", 1, ("faith",)),
     "invisibility": Spell("invisibility", "Invisibility", 2, ("nature", "blood", "faith")),
     "raise_dead": Spell("raise_dead", "Raise Dead", 2, ("faith",)),
 }
 
 SOURCES = ("nature", "blood", "faith")
+MAGIC_BLOOD_CHANCE = 0.05
+
+
+def roll_magic_blood(unit):
+    """Whether `unit` was born with magic in the blood (the Blood rite tests it, `rite.py`): a
+    Kobold always (Blood Magic), anyone else at `MAGIC_BLOOD_CHANCE`. A private roll seeded by
+    the uid, so making a character does not move the shared dice."""
+    if unit.race["name"] == "Kobold":
+        return True
+    return random.Random(f"{unit.uid}:magic_blood").random() < MAGIC_BLOOD_CHANCE
 
 @dataclass(frozen=True)
 class Language:

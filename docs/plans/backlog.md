@@ -22,7 +22,7 @@ The *Suggested order* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-16)
+# Suggested order (updated 2026-10-17)
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
@@ -30,19 +30,23 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
 
 1. **Magic Arc, to the end** (*Ready to do -> Medium*): the six school missions are built (2026-10-16: the
    dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
-   [dragon_lair.md](dragon_lair.md)); **next (author 2026-10-16): the keepers and the initiation**, then tier 1
-   spells per school.
+   [dragon_lair.md](dragon_lair.md)); the keepers, the initiation and each school's own level-0 / level-1
+   spells are built (2026-10-17). **Next:** a source for the new scrolls (item 4 of the arc) and the keepers'
+   portraits.
    The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
    test holds it; the level curves have no top since the same day); the Ogre's fight is still short of a
    racial-15 boss (item 1's endgame note).
-2. **The AI's leftovers and the weapon actions' worth** (*Large*, mostly done 2026-10-16), so the next playtest says
-   how the enemy really plays.
-3. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
+2. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): the
+   rite and the tier 0/1 spells are in, so it plays magic once their scrolls have a source. The AI work it waited on is done (2026-10-16);
+   what the AI still lacks is a short list (*Teach the AI the newer actions*), and the weapon actions' cases are
+   tuned from this playtest.
+3. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
+   magic arc (author 2026-10-17: the playtest and the tuning it feeds).
 4. **Production chain between groups** (*Large*, after magic).
 5. **Talent trees as long as the levels** (*Large*, after magic).
 6. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
 7. **Cooking and temporary meal buffs** (after magic).
-8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 3's data is in.
+8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 2's data is in.
 
 ---
 
@@ -85,7 +89,7 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      missions come as the game grows. When the set is written, check that no path leaves a school unreachable; if
      one does, add a mission there. Built (2026-10-15): the Codex (all three, exclusive), the Snake Dragon (Blood
      dead / Nature alive, exclusive), the Faith Order's *Mercy at the Front* and the Nature Coven's third, *The
-     Ogre's Wildfire* (not exclusive). Faith's second, *The Necromancer at the Front*, is built (2026-10-16, [necromancer.md](necromancer.md): a third side on the board, Raise Dead and Invisibility at level 2, Investigate finding the unseen, the Zombie). Blood's third, *The Dragon's Clutch*, is built (2026-10-16, [dragon_lair.md](dragon_lair.md): a heist past kobold patrols that challenge on the board, a racial-20 dragon woken by noise, the eggs the keepers buy, Dragonfire). **Later, Blood's fourth (author 2026-10-16):** the robbed dragon notices and keeps attacking (not designed).
+     Ogre's Wildfire* (not exclusive). Faith's second, *The Necromancer at the Front*, is built (2026-10-16, [necromancer.md](necromancer.md): a third side on the board, Raise Dead and Invisibility at level 2, Investigate finding the unseen, the Zombie). Blood's third, *The Dragon's Clutch*, is built (2026-10-16, [dragon_lair.md](dragon_lair.md): a heist past kobold patrols that challenge on the board, a racial-20 dragon woken by noise, the eggs the keepers buy, Dragonfire). **Later, Blood's fourth (author 2026-10-16):** the robbed dragon notices and keeps attacking (not designed; author 2026-10-17: not before every test scheduled after the magic arc is done).
      *Reachability (2026-10-16):* Faith is safe (Mercy and the Necromancer, both open to all). **Nature and Blood**
      each have one open mission (the Wildfire, the Clutch) and reach 2 only with the Codex or the Snake: the Codex
      to Faith with the Snake to the other school leaves one of them at 1 of 2. **Accepted (author 2026-10-16):**
@@ -94,31 +98,29 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      **racial-15** character (the endgame target: a track sum of 30; the levels themselves have no top since
      2026-10-16). Generated enemies stop at combat 7 / work 6
      (`constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`, mean 6), so the bosses are authored NPCs. The Ogre (racial
-     10) and his escort clamped at mean 6 do not reach it yet (see Tuning). **Decision for the Blood boss and for
-     the Ogre:** lift the escort's cap inside these fights (the scaled bodies follow the squad past mean 6), or
-     keep the cap and make the boss itself carry the weight.
+     10) and his escort clamped at mean 6 do not reach it yet (see Tuning). The Dragon's Clutch already took the
+     second way: its kobolds keep the cap (`lair.py` builds them through `encounters.clamp_level`) and the
+     racial-20 dragon carries the fight. **Decision left for the Ogre:** lift the escort's cap inside his fight (the
+     scaled bodies follow the squad past mean 6), or keep the cap and make the Ogre himself carry the weight, as
+     the Clutch does.
   2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no
      shop stocks it. It comes from birth (the Priest) or from a Priest among a humanoid ambush pack (checked
      2026-10-15: a rolled Priest carries it in the pack and `loot.field_loot` drops it). Fantasy reason: the god picks
      disciples by getting the symbol into their hands.
-  3. *Keepers and the rite (the next step, author 2026-10-16):* each sanctuary's keeper offers the initiation (a
-     new `NodeFunction`) that grants the school (`Unit.add_magic_source`). Built: only their lines
-     (`shrine_screen.KEEPER_LINE`, first drafts). To build: a `Vendor` per sanctuary in `world.NODES` with its
-     portrait (by hand), `ShrineMissionScreen.VENDOR` set (it inherits None today), and the rite itself. That also opens the school's
-     root in the **magic talent track** (built 2026-10-15: roots granted, never picked), so initiation is what makes
-     the track reachable for the player. **Keepers' races (author 2026-10-15):** a Centaur at the Nature Grove, a
-     Kenku at the Faith Cathedral, a Lizardfolk at the Blood Sanctuary. With them every playable race has someone in
-     the game (the Treefolk is Varkas' recruit).
-  4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Four spells
-     (`magic.SPELLS`) belong to all three schools; the first of a school's own is **Water Jet** (Nature, level 1,
-     the Wildfire's reward, with its AI). Today's spells (`magic.SPELLS`): Light Globe, Magic Missile, Floating
-     Disk (level 0, all three), Sleep (1, all three), Water Jet (1, Nature), Dragonfire (1, Blood), Invisibility
-     (2, all three), Raise Dead (2, Faith, the necromancer's only). **Minimum (author 2026-10-15): at least one level-0 and one level-1 spell
-     of each school's own**, each with its AI. Blood's level 1 is **Dragonfire** (the Clutch's reward, 2026-10-16; no HP cost).
-     Left: Nature's level 0; Blood's level 0; Faith's level 0 and 1. **Their shape (author 2026-10-16), to
-     design:** Faith 1 heals **1d6** at melee reach; Faith 0 **stabilizes** a downed body with **no check**;
-     Nature 0 **slows** a foe (cuts its movement); Blood 0 puts a **debuff** on a foe. **Blood magic costs no
-     hit points** (author 2026-10-16: Dragonfire's 1d4 HP price is gone).
+  3. *Keepers and the rite:* **built 2026-10-17** (`rite.py`, the INITIATION tab, RULES.md *Magic -> Initiation*):
+     the 2-reputation door, boarding on a `garrison("rite")` order (alone, or the whole group waits), Faith's Holy
+     Symbol and 180 points, Blood's 7-day test of `Unit.magic_blood` (5%, rolled at creation) and 90 points, Nature's
+     270, the $3 board on a foodless day; the keepers are each sanctuary's `shrine` `Vendor` (Ssareth Coldvein,
+     Elowen Mossmane, Brother Quillon). Left: (1) **their portraits** point at the race pool for now
+     (`lizardfolk/0.png`, `centaur/0.png`, `kenku/0.png` in `world.NODES`): swap in the hand-made ones
+     (`npc/<keeper>.png`) when they are done. (2) The sim does not initiate anyone (no policy boards a member).
+  4. *Tier 0/1 spells per school:* **built 2026-10-17**, each with its AI and a scroll: **Grasping Roots** (Nature 0),
+     **Hex** (Blood 0), **Spare the Dying** (Faith 0), **Healing Touch** (Faith 1), beside Water Jet (Nature 1) and
+     Dragonfire (Blood 1); RULES.md *Magic* has their numbers. **Left, a question for the author:** where a player gets
+     the scrolls of Hex, Spare the Dying and Healing Touch. The rite teaches no spell and no shop sells a scroll;
+     Grasping Roots comes as the Scroll occupation's starting item (a random Nature level-0 scroll) and Gnomes may be
+     born knowing it, the other three have no source yet (a keeper's shelf for initiates? a mission reward? loot?).
+     **Blood magic costs no hit points** (author 2026-10-16: Dragonfire's 1d4 HP price is gone).
   5. *Blood is bloodline (decided 2026-10-15; the Cult's blurb rewritten):* the magic is born in you (a dragon, an
      angel, a demon in the line). New Blood branches follow the same shape as Bloodline -> Dragon -> Dragon Breath
      (other bloodlines: angel, demon...).
@@ -222,9 +224,11 @@ pointed to, not repeated.
   `sim_test.py`: no stuck seed, 98/102, 5.4 -> 4.8 rounds a fight. After the weapon-action rebalance (same
   day): Scrapper 46%, the Pit's 63%, champion 91%, ambushes 92%, hunts 89%, Defend the Title 62%, brawl 98%,
   within a run's swing of the line above. These are the new numbers to beat.
-  Left: (1) a 2-point weapon action cannot follow a walk (two points a turn): the rule, not the AI; (2) the player's side has no use for Raise Dead (no source
-  teaches it); (3) the magic arc's tier 1 spells need their AI as they land, best in the same expected-damage
-  terms (`ai._strike_worth`); (4) Dragon Breath's breather does not move to set up a better cone.
+  Left: (1) a 2-point weapon action cannot follow a walk (two points a turn): the rule, not the AI (Javelin Charge
+  is the exception, 1 point after a walk since 2026-10-16); (2) the player's side has no use for Raise Dead or
+  Invisibility (no scroll or other source teaches either: `items.py` has scrolls for the other six spells only);
+  (3) the tier 0/1 spells have their AI (2026-10-17, `ai._hex_or_roots`, `_try_healing_touch`), but Grasping
+  Roots and Hex are rules of thumb, not scored in `ai._strike_worth`'s expected-damage terms; (4) Dragon Breath's breather does not move to set up a better cone.
 - **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16 (author: two plain attacks
   win in general, the 2-point action wins in its favoured case): out of its case an action is one strike; in it
   the strike lands twice over plus a small edge (RULES.md *Weapon actions*, `favoured` on each action, the
@@ -421,14 +425,15 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Ogre (3), Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10), Dwarf (11), Zombie (3, the former `portraits/undead/`).
+- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Ogre (3), Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10), Dwarf (11), Zombie (3, the former `portraits/undead/`), Dragon (2), Snake Dragon (1).
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.
 
 ## Epic
 
-- **Riding and mounts.** A riding saddle enters `animals.TACK`; the rider and animal pair
-  goes into combat. Controllable and AI-driven animals in combat (today the Shepherd's
+- **Riding and mounts.** Riding a Centaur ally is built (Mount / Dismount in `actions/support.py`, the
+  `centaur_mount` talent; the AI rider since 2026-10-16). What is left is riding animals: a riding saddle enters
+  `animals.TACK`; the rider and animal pair goes into combat. Controllable and AI-driven animals in combat (today the Shepherd's
   Sheep only stands still on the board) belong to this arc. The creature abstraction
   should not make it harder.
 - **Auto battler with priority programming** (Siralim Ultimate style). Its own arc and
@@ -500,7 +505,7 @@ Each occupation starts with one item (`data.OCCUPATIONS`). Rule: every occupatio
 is useful and **unique to it**, as an occupation is only a weapon and an item. Items that
 already work: Meat, Potato, Quiver, 1L Beer, 1sqm Hide, Iron Bar, Lumber, 1kg Coal, Stone Brick
 (the Claim oven's material), First
-Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope and Chains (Capture), Bear Trap, Chisel (crafting tool for Signal Horn). The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
+Aid Kit, Lantern, Scroll, Dictionary, Salt, Ink, Rope and Chains (Capture), Bear Trap, Chisel (crafting tool for Signal Horn), Holy Symbol (the Faith rite consumes it). The Merchant starts with a Semi-precious Gemstone (a store of value), and Rotten Food is the Slave's on purpose (eating it makes you sick). These wait
 for a system that does not exist yet:
 
 - **Scissors** (Barber). For shearing sheep once player husbandry/farms land (Claim/property).
@@ -510,5 +515,4 @@ for a system that does not exist yet:
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
-- **Holy Symbol.** Consumed by the initiation in faith magic (see *Magic Arc*); not for sale, only from birth or a
   Priest's loot in an ambush. Works as a drop already; waits for the rite.

@@ -46,6 +46,7 @@ SAVE_DEFAULTS = {
     "treated": False, "consecutive_rest_hours": 0, "last_daily_luck_day": 0,
     "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
     "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": 0,
+    "magic_blood": None, "blood_tested": False, "blood_test_days": 0, "rite_school": None, "rite_progress": {},
     "recipes": [], "crafting_target": None, "crafting_progress": 0, "craft_bonuses": {},
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
     "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
@@ -67,6 +68,10 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.spells_known = []
         self.study_target = None
         self.study_progress = 0
+        self.blood_tested = False                      # the Blood Cult has tested `magic_blood` (rite.py)
+        self.blood_test_days = 0
+        self.rite_school = None                        # the school whose rite this unit boards for, or None
+        self.rite_progress = {}                        # school -> learning points toward its rite
         self.recipes = []
         self.crafting_target = None
         self.crafting_progress = 0
@@ -113,6 +118,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.token = self.race["token"]
         self.portrait_id = int(self.uid[:8], 16)
         self.portrait_file = None
+        self.magic_blood = magic.roll_magic_blood(self)  # hidden: only the Blood Cult's test reveals it (rite.py)
 
         self._derive_combat()
         self._sync_dictionary_recipes()
@@ -175,6 +181,10 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.spells_known = list(d["spells_known"])
         u.study_target = d["study_target"]
         u.study_progress = d["study_progress"]
+        u.blood_tested = d["blood_tested"]
+        u.blood_test_days = d["blood_test_days"]
+        u.rite_school = d["rite_school"]
+        u.rite_progress = dict(d["rite_progress"])
         u.recipes = list(d["recipes"])
         u.crafting_target = d["crafting_target"]
         u.crafting_progress = d["crafting_progress"]
@@ -196,6 +206,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.dormant = d["dormant"]
         u.afoot = d["afoot"]
         u.awareness_radius = d["awareness_radius"]
+        u.magic_blood = magic.roll_magic_blood(u) if d["magic_blood"] is None else d["magic_blood"]
         u._apply_attributes()                            # the worn artifact is only known now
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
         u.hp = d["hp"]

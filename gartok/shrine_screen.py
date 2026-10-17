@@ -13,6 +13,10 @@ KEEPER_LINE = {
 
 class ShrineMissionScreen(MissionOfferScreen):
     @property
+    def VENDOR(self):
+        return self.group.node, "shrine"
+
+    @property
     def _giver(self):
         return next((t.giver for t in missions.TEMPLATES.values() if t.node == self.group.node), None)
 

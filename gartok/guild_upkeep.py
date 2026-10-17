@@ -15,6 +15,7 @@ from . import (
     missions,
     orders,
     recorder,
+    rite,
     vocations,
     wildfire,
     world,
@@ -194,17 +195,18 @@ class UpkeepMixin:
                 events.append(f"{u.name}'s criminal record fades by 1 (Innocent Face).")
         # Units studying at the tavern pay for a room that includes a meal.
         # The rent isn't deducted until _garrison_upkeep, so check the group's funds here.
-        studying_fed = {
+        # A rite's boarder with an empty pack is fed (and charged) by `rite.board`.
+        board_fed = {
             u for g in self.groups
             if g.order and g.order.kind == "garrison" and g.order.job == "study"
             and world.node(g.node).garrison_job == "study"
             for u in magic.rent_covered(g)
-        }
+        } | rite.board(self)
 
         # Everyone eats from their own pack first (a full pass), so a hungry mate
         # drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.
-        for u, outcome in self._meal_pass(self.roster, self._shared_larder, studying_fed).items():
+        for u, outcome in self._meal_pass(self.roster, self._shared_larder, board_fed).items():
             if outcome == "dead":
                 casualties.append(u)
                 recorder.death(u, "starvation", unfed_days=u.unfed_days)

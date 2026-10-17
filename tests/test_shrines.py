@@ -88,12 +88,14 @@ def test_the_shrine_screen_lists_its_job_and_hands_the_codex_over():
     assert "The Codex Delivered" in screen.notice
 
 
-def test_the_hub_for_a_shrine_node_is_its_job_board():
+def test_the_hub_for_a_shrine_node_opens_on_its_job_board_beside_the_initiation():
     guild, _u = _library_done()
     group = guild.groups[0]
     group.node = "faith_cathedral"
-    assert isinstance(TabbedHubScreen.for_node(ui_fonts(), guild, group, world.node("faith_cathedral"),
-                                               lambda: None), ShrineMissionScreen)
+    hub = TabbedHubScreen.for_node(ui_fonts(), guild, group, world.node("faith_cathedral"), lambda: None)
+    assert [k for k, _label, _s in hub.tabs] == ["jobs", "initiation"]
+    assert isinstance(hub.active_screen(), ShrineMissionScreen)
+    assert hub.active_screen().vendor_card["name"] == "Brother Quillon"
 
 
 def test_a_board_with_two_jobs_shows_both_and_scrolls_when_too_tall():

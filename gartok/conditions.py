@@ -156,3 +156,55 @@ class Invisible(Condition):
         self.seen_by.clear()
         self.wounded = False
         return False
+
+
+class Rooted(Condition):
+    """Grasping Roots: the victim walks 1 cell at most, through its next whole turn."""
+    id = "rooted"
+
+    def __init__(self):
+        self.held = False
+
+    def modify_speed(self, speed):
+        return 1
+
+    def on_turn_start(self, unit, log):
+        self.held = True
+        return False
+
+    def on_turn_end(self, unit, log):
+        if self.held:
+            log(f"{unit.name} pulls free of the roots.")
+        return self.held
+
+
+class Hexed(Condition):
+    """Hex: -1 on each of the six attribute scores through the victim's next whole turn.
+    `deltas` is what that does to each modifier (-1 on an even score, 0 on an odd one),
+    worked out by `Combatant.hex` when it lands; `hp_lost` is the max HP an even CON took,
+    given back to the max (not the current HP) when it wears off."""
+    id = "hexed"
+
+    def __init__(self, deltas, ac_delta=0, hp_lost=0):
+        self.deltas = dict(deltas)
+        self.ac_delta = ac_delta
+        self.hp_lost = hp_lost
+        self.held = False
+
+    def ac_mods(self):
+        return [(self.ac_delta, "hex", "Hex")] if self.ac_delta else []
+
+    def mental_defense_mods(self):
+        wis = self.deltas.get("wisdom", 0)
+        return [(wis, "hex", "Hex")] if wis else []
+
+    def on_turn_start(self, unit, log):
+        self.held = True
+        return False
+
+    def on_turn_end(self, unit, log):
+        if not self.held:
+            return False
+        unit.hp_max += self.hp_lost
+        log(f"{unit.name} shakes off the hex.")
+        return True

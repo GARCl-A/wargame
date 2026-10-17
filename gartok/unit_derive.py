@@ -76,11 +76,13 @@ class DerivationMixin:
     def _derive_attribute_mods(self):
         """`mod_<attr>` for all six: the score, minus hunger on every attribute
         (0 / -2 / -4), minus 2 more on Strength and Dexterity while overloaded."""
-        pen = self.hunger_attribute_penalty
-        enc = -2 if self.encumbered else 0
         for a in ATTRIBUTES:
-            extra = enc if a in ("strength", "dexterity") else 0
-            setattr(self, f"mod_{a}", mod(getattr(self, a) + pen + extra))
+            setattr(self, f"mod_{a}", mod(self.attribute_score(a)))
+
+    def attribute_score(self, a):
+        """The score `mod_<a>` is read off: hunger and the overload already taken."""
+        enc = -2 if self.encumbered and a in ("strength", "dexterity") else 0
+        return getattr(self, a) + self.hunger_attribute_penalty + enc
 
     def recalculate_hp(self):
         """Re-derive attribute mods and HP max, preserving/shifting current HP by any delta."""

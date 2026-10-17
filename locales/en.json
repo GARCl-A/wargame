@@ -198,6 +198,15 @@
         "WORK makes the whole group wait out the hours. ALONE sends the crafter off instead: they split off into a group of their own (it takes a free group slot, and only their own pack feeds the craft), the others keep playing, and the craft is rolled when the hours are up. Merge them back by hand."
       ]
     },
+    "initiation": {
+      "title": "The Initiation",
+      "body": [
+        "A school takes the guild's people once the guild has 2 reputation with it. Reputation is the door, not the price: it is never spent, and everyone may go through.",
+        "Pick one member and BEGIN THE RITE. They stay to board at the sanctuary, in a group of their own (or the whole group waits when there is no free group slot), and roll 1d20 + INT learning points a day: 180 for Faith, 90 for Blood, 270 for Nature. Leave and the points are kept; come back and RESUME.",
+        "Faith consumes a Holy Symbol when the rite first starts. The Blood Cult first tests the blood for 7 days: few are born with magic in it, and a failed test is final.",
+        "Board is $3 a day with the meal, charged only on a day the boarder has no food in their own pack. The rite grants the school and its root in the magic talents, not a spell: spells are still studied from scrolls."
+      ]
+    },
     "medic": {
       "title": "The Medic",
       "body": [

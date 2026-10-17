@@ -108,6 +108,11 @@ def unit_to_dict(u):
         "spells_known": list(u.spells_known),
         "study_target": u.study_target,          # spell id or language name being studied at the taverna, or None
         "study_progress": u.study_progress,
+        "magic_blood": u.magic_blood,
+        "blood_tested": u.blood_tested,
+        "blood_test_days": u.blood_test_days,
+        "rite_school": u.rite_school,
+        "rite_progress": dict(u.rite_progress),
         "talents": {t: list(v) for t, v in u.talents.items()},   # picked talent ids per track
         "level_hp_rolls": list(u._level_hp_rolls),               # 1dHD per mean-level gained
         "base_attributes": {a: u.base_attributes[a] for a in ATTRIBUTES},

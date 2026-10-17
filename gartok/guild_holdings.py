@@ -4,7 +4,7 @@ Bankers' debt and the garrison's stockpile.
 Mixed into `guild.Guild`; the stores themselves live in `holdings.py`.
 """
 
-from . import data, economy, magic, recorder, world
+from . import data, economy, magic, recorder, rite, world
 from . import wagon as wagons
 from .constants import fmt_money
 
@@ -134,6 +134,10 @@ class HoldingsMixin:
                 continue
             node = world.node(g.node)
             if node.garrison_job != g.order.job:
+                continue
+
+            if g.order.job == rite.JOB:
+                events += rite.daily(g)
                 continue
 
             if g.order.job == "study":

@@ -335,15 +335,17 @@ State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
 sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
-`conditions.py`. A first foothold, not a full system — seven spells today.
+`conditions.py`. A first foothold, not a full system — twelve spells today, and each school has a
+level-0 and a level-1 spell of its own.
 
 - **Sources.** `magic_sources` (a list, no repeats, of `nature` / `blood` / `faith`) gates which
   spells a character can ever learn: a spell is castable when any one of the unit's
   schools is among its `sources` (`magic.casts`). The schools are not exclusive, so a unit
   already initiated in one takes another's initiation on top (`Unit.add_magic_source`). A
-  school comes from a race (Gnome starts `nature`, Kobold starts `blood`) or a racial talent
-  (the Kenku's and the Skeleton's "Faith Initiate", the Sprite's "Nature Initiate"); a
-  Faith Initiate who already holds `faith` gains a free faith spell instead. The creator
+  school comes from a race (Gnome starts `nature`, Kobold starts `blood`), a racial talent
+  (the Kenku's and the Skeleton's "Faith Initiate", the Sprite's "Nature Initiate"; a
+  Faith Initiate who already holds `faith` gains a free faith spell instead) or the school's
+  **initiation** at its hidden sanctuary (see *Initiation* below). The creator
   toggles each school on its own; dropping one forgets only the spells no remaining school casts.
 - **Casting** costs 1 action point (a level-2 spell, both) and only shows up once the spell's id is
   in `spells_known`:
@@ -374,6 +376,25 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
     twice; a guild member's body can be raised against the guild. The log names the cell it rises on.
     A teaser of what a strong caster does: only the necromancer at the front knows it, and no source
     teaches it yet.
+  - **Grasping Roots** (level 0, **Nature only**) — a foe within 6 cells and in sight, `d20 + INT`
+    vs AC: on a hit it walks **1 cell** at most until the end of its next turn (`conditions.Rooted`).
+    Recast, it refreshes. The AI roots a flag runner, or a melee foe still closing on a caster or
+    archer that would rather keep its distance.
+  - **Hex** (level 0, **Blood only**) — a foe within 6 cells and in sight, `d20 + INT` vs Mental
+    Defense: on a hit, **-1 on each of its six attribute scores** until the end of its next turn
+    (`conditions.Hexed`, never stacked: a recast refreshes it). A modifier is `(score - 10) // 2`, so
+    the hex bites only where a score is **even**: an odd one keeps its modifier. Everything read off a
+    modifier follows (rolls, damage, AC through Dexterity as far as armour lets it count, Mental
+    Defense through Wisdom). An even Constitution also costs one max HP **and** one current HP per hit
+    die; when the hex wears off the max comes back and the current HP does not, so in practice it is
+    damage equal to the level. Reading the foe's attributes (Assess) tells whether it is worth it: the
+    AI casts it only on a foe whose attributes its side has read, where three modifiers drop or the
+    Constitution loss finishes it.
+  - **Spare the Dying** (level 0, **Faith only**) — touch: a **dying** ally in reach is stable, no
+    check (Stabilize is a coin flip). A good AI casts it instead of Stabilize.
+  - **Healing Touch** (level 1, **Faith only**) — touch: an ally in reach, or the caster, heals **1d6**,
+    nothing added; a body on the ground (dying or stable) is back on its feet. The AI heals the most
+    hurt in reach at half health or less, and a good one lifts a dying friend with it.
   - **Light Globe** (level 0) — drop a light source ground object at a cell in range (6 cells).
   - **Floating Disk** (level 0) — conjures a magical floating platform at a cell
     in range (6 cells) at a chosen altitude (e.g. ground level z=0). Bridges
@@ -384,6 +405,22 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
   - **Share Magic** — a Sprite Nature Initiate's own action: spends a point
     to teach a random ally one of its known spells for the rest of the
     battle.
+- **Initiation** (`rite.py`, the INITIATION tab of each hidden sanctuary, `initiation_screen.py`). A
+  school takes a character once the guild has **2 reputation** with its faction: a threshold, never
+  spent. The character stays to **board** at the sanctuary: they split off into a group of their own
+  on a `garrison("rite")` order (`Guild.send_alone`), or the whole group waits when there is no free
+  group slot, and roll `1d20 + INT` learning points a day. Leaving keeps the points (one counter per
+  school, `Unit.rite_progress`); RESUME picks them up. Board is **$3 a day** with the meal, charged
+  (own purse, then the group's) only on a day the boarder has no food in their own pack.
+  - *Faith* (the Faith Cathedral, Brother Quillon, a Kenku): one **Holy Symbol**, consumed when the
+    rite first starts, and **180** learning points.
+  - *Blood* (the Blood Sanctuary, Ssareth Coldvein, a Lizardfolk): **7 days** of testing the blood,
+    then **90** learning points. `Unit.magic_blood` is rolled when the character is made (**5%**; a
+    Kobold always has it; a private roll seeded by the uid, rolled on load for a unit saved without
+    it) and stays hidden: the test only reveals it, and a failed test is final.
+  - *Nature* (the Nature Grove, Elowen Mossmane, a Centaur): **270** learning points.
+  The rite grants the school and its root in the magic talent track, **no spell**: spells are still
+  studied from scrolls (below). A race or talent that already holds a school skips its rite.
 - **Learning a spell** happens outside combat, at the Tavern
   (`taverna_screen.py`'s "rent a quiet room" button issues an
   `orders.garrison("study")` order — the same engine the garrison jobs use,

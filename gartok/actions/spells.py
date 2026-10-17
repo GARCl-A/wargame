@@ -4,7 +4,7 @@ import random
 
 from .. import data, intel, items, magic
 from ..board import grid_distance
-from ..conditions import Invisible, Sleeping
+from ..conditions import Invisible, Rooted, Sleeping
 from ..data import d20
 from ..ground import GroundObject
 from .base import Action, _cell_free, _hostile_target, _sign, nonlethal_penalty
@@ -204,6 +204,131 @@ class DragonfireAction(SpellAction):
             actor.credit_kill(target, magic=True)
 
 
+class _HostileSpellAction(SpellAction):
+    """A foe in sight within `REACH`, `d20 + INT` against one of its defences (`against`): a
+    natural 1 misses, a natural 20 lands. `lands` is what a landed cast does."""
+    target, aimed = "enemy", True
+    REACH = 6
+    against = "ac"
+
+    def can(self, battle, actor, target=None):
+        if not super().can(battle, actor, target) or not _hostile_target(actor, target):
+            return False
+        return battle.units_distance(actor, target) <= self.REACH and battle.los_between(actor, target)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
+        atk = d20()
+        score = atk + actor.mod_intelligence
+        defence = target.ac_vs(actor) if self.against == "ac" else target.mental_defense
+        label = "AC" if self.against == "ac" else "MD"
+        desc = (f" d20({atk}) {actor.mod_intelligence:+}(INT) = {score} vs {label} "
+                f"{intel.shown(battle, target, self.against, defence)}")
+        if atk == 1:
+            battle.log(desc + " -> Critical miss!")
+        elif atk == 20 or score >= defence:
+            battle.log(desc + " -> lands.")
+            self.lands(battle, actor, target)
+        else:
+            battle.log(desc + " -> resisted.")
+
+
+class GraspingRootsAction(_HostileSpellAction):
+    """Nature's level 0: roots hold a foe to 1 cell of walking until the end of its next turn."""
+    spell_id = "grasping_roots"
+
+    def lands(self, battle, actor, target):
+        old = target.condition("rooted")
+        if old is not None:
+            target.conditions.remove(old)
+        target.add_condition(Rooted())
+        battle.log(f"  Roots grip {target.name}'s legs: one cell of walking until its next turn is over.")
+        battle.fx(target.pos, "rooted", "faint")
+
+
+class HexAction(_HostileSpellAction):
+    """Blood's level 0: -1 on each of the foe's six scores until the end of its next turn
+    (`Combatant.hex`), which bites only where a score is even."""
+    spell_id = "hex"
+    against = "md"
+
+    def lands(self, battle, actor, target):
+        was_up = target.alive
+        target.hex(battle.log)
+        bit = [a[:3].upper() for a, d in target.condition("hexed").deltas.items() if d]
+        battle.log(f"  {target.name} is hexed: " + (f"{', '.join(bit)} -1." if bit else "nothing gives."))
+        battle.fx(target.pos, "hexed", "faint")
+        if was_up and not target.alive and target.team != actor.team:
+            actor.credit_kill(target, magic=True)
+
+
+class _TouchSpellAction(SpellAction):
+    """A Faith touch spell: an ally (or the caster) in reach of a hand, no roll."""
+    target, aimed = "ally", True
+
+    def wants(self, unit):
+        return False
+
+    def _targets(self, battle, actor):
+        return [u for u in battle.units
+                if u.team == actor.team and self.wants(u) and battle.units_distance(actor, u) <= 1]
+
+    def available(self, battle, actor):
+        return super().available(battle, actor) and bool(self._targets(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        return (super().available(battle, actor) and target is not None
+                and target in self._targets(battle, actor))
+
+    def highlight_targets(self, battle, actor):
+        return self._targets(battle, actor)
+
+
+class SpareTheDyingAction(_TouchSpellAction):
+    """Faith's level 0: a dying ally in reach is stable, no check."""
+    spell_id = "spare_the_dying"
+
+    def wants(self, unit):
+        return unit.dying and not unit.raised
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        battle.log(f"{actor.name} lays a hand on {target.name} and casts {self.spell.name}.")
+        battle.stabilize(target)
+        battle.fx(target.pos, "stable", "ok")
+
+
+class HealingTouchAction(_TouchSpellAction):
+    """Faith's level 1: 1d6 HP to an ally in reach (or the caster), nothing added; a body on
+    the ground is back on its feet."""
+    spell_id = "healing_touch"
+    DICE = (1, 6)
+
+    def wants(self, unit):
+        return ((unit.alive and unit.hp < unit.hp_max) or unit.dying or unit.stable) and not unit.raised
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        heal = data.roll(*self.DICE)
+        revived = target.dying or target.stable
+        target.hp = min(target.hp_max, max(target.hp, 0) + heal)
+        if revived:
+            target.status, target.death_clock = "up", 0
+        who = "themself" if target is actor else target.name
+        battle.log(f"{actor.name} casts {self.spell.name} on {who}, healing {heal} HP"
+                   + (" -- back on their feet." if revived else "."))
+        battle.fx(target.pos, f"+{heal} HP", "ok")
+
+
 class _PlacedSpellAction(SpellAction):
     """Shared `can()` for the two spells that drop something on a cell
     (Light Globe, Floating Disk) instead of targeting an enemy."""
@@ -311,6 +436,10 @@ _SPELL_ACTIONS = {
     "dragonfire": DragonfireAction,
     "invisibility": InvisibilityAction,
     "raise_dead": RaiseDeadAction,
+    "grasping_roots": GraspingRootsAction,
+    "hex": HexAction,
+    "spare_the_dying": SpareTheDyingAction,
+    "healing_touch": HealingTouchAction,
 }
 
 

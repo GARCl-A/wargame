@@ -16,6 +16,7 @@ and the next fight re-seeds a new Combatant from the character.
 """
 
 from . import data, items, progression
+from .conditions import Hexed
 from .data import resolve_bonus, roll
 from .unit import flatten_pack
 
@@ -490,6 +491,53 @@ class Combatant:
     def mental_defense(self):
         total, _ = resolve_bonus(self._condition_mods("mental_defense_mods"))
         return self.mental_defense_base + total
+
+    def _attr_delta(self, a):
+        hexed = self.condition("hexed")
+        return hexed.deltas.get(a, 0) if hexed is not None else 0
+
+    def _hexed_mod(a):
+        key = f"mod_{a}"
+        return property(lambda self: getattr(self.char, key) + self._attr_delta(a),
+                        lambda self, value: setattr(self.char, key, value))
+
+    mod_strength = _hexed_mod("strength")
+    mod_dexterity = _hexed_mod("dexterity")
+    mod_constitution = _hexed_mod("constitution")
+    mod_intelligence = _hexed_mod("intelligence")
+    mod_wisdom = _hexed_mod("wisdom")
+    mod_charisma = _hexed_mod("charisma")
+    del _hexed_mod
+
+    def hex_deltas(self):
+        """What a Hex does to each modifier: -1 where the score is even, 0 where it is odd."""
+        score = getattr(self.char, "attribute_score", None)
+        if score is None:
+            return dict.fromkeys(data.ATTRIBUTES, 0)
+        return {a: data.mod(score(a) - 1) - data.mod(score(a)) for a in data.ATTRIBUTES}
+
+    def hex_hp_cost(self, deltas):
+        """The max (and current) HP a Hex takes: one per hit die on an even Constitution."""
+        if not deltas["constitution"] or getattr(self.char, "_hp_override", None) is not None:
+            return 0
+        return min(1 + len(getattr(self.char, "_level_hp_rolls", ())), self.hp_max - 1)
+
+    def hex(self, log):
+        """Lay a Hex on this unit; a recast on a hexed unit only renews its length. The AC follows
+        the Dexterity drop as far as worn armour lets Dexterity count; an even Constitution takes
+        `hex_hp_cost`, the max coming back when the hex wears off."""
+        old = self.condition("hexed")
+        if old is not None:
+            old.held = False
+            return
+        deltas = self.hex_deltas()
+        dex, cap = self.char.mod_dexterity, (self.armor.max_dex if self.armor is not None else None)
+        ac_delta = (min(dex + deltas["dexterity"], cap) - min(dex, cap)) if cap is not None else deltas["dexterity"]
+        lost = self.hex_hp_cost(deltas)
+        self.add_condition(Hexed(deltas, ac_delta, lost))
+        if lost:
+            self.hp_max -= lost
+            self.take_damage(lost, log)
 
     def initiative_bonus(self):
         return (self.mod_wisdom + self._ability.initiative

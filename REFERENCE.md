@@ -329,9 +329,13 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Scroll | 0.1 kg | -- |
 | Scroll of Dragonfire | 0.1 kg | -- |
 | Scroll of Floating Disk | 0.1 kg | -- |
+| Scroll of Grasping Roots | 0.1 kg | -- |
+| Scroll of Healing Touch | 0.1 kg | -- |
+| Scroll of Hex | 0.1 kg | -- |
 | Scroll of Light Globe | 0.1 kg | -- |
 | Scroll of Magic Missile | 0.1 kg | -- |
 | Scroll of Sleep | 0.1 kg | -- |
+| Scroll of Spare the Dying | 0.1 kg | -- |
 | Scroll of Water Jet | 0.1 kg | -- |
 | Sealed Chest | 8 kg | -- |
 | Semi-precious Gemstone | 0.1 kg | -- |

@@ -229,6 +229,7 @@ gartok/
                     (7-day notice, loot by alignment)
   solo.py           solo tasks (hospital stay, craft): one member busy apart from the group on a `solo` order
   medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; medic_screen.py is its tab
+  rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; initiation_screen.py is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
   missions.py       paid, deadlined jobs from a named giver (the Tanner, the Bankers'

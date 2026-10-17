@@ -42,6 +42,10 @@ def _pick_attack(battle, unit, target):
             if sleep_spell.can(battle, unit, target):
                 return sleep_spell  # always prioritize putting them to sleep first
 
+    hold = _hex_or_roots(battle, unit, target)
+    if hold is not None:
+        return hold
+
     w_act = _weapon_action(battle, unit, target)
     if w_act is not None:
         return w_act
@@ -86,6 +90,45 @@ def _pick_attack(battle, unit, target):
     if actions.ATTACK_TONGUE in opts:
         return actions.ATTACK_TONGUE
     return opts[0]
+
+
+def _hex_bites(battle, unit, target):
+    """How many of the target's modifiers a Hex would drop, as far as the unit's side has read its
+    attributes (None when it has not: Assess first), and whether its even CON would down it."""
+    if not intel.knows(battle, unit.team, target, "attrs"):
+        return None, False
+    deltas = target.hex_deltas()
+    return sum(1 for d in deltas.values() if d), target.hex_hp_cost(deltas) >= target.hp > 0
+
+
+def _hex_or_roots(battle, unit, target):
+    """Hex when it drops three modifiers or more (or an even CON would finish the foe); Grasping
+    Roots on a flag runner, or on a melee foe still closing on a unit that would rather stay off."""
+    known = getattr(unit, "spells_known", [])
+    if "hex" in known and not target.has_condition("hexed"):
+        hex_spell = actions.CastSpellAction("hex")
+        bites, kills = _hex_bites(battle, unit, target)
+        if hex_spell.can(battle, unit, target) and bites is not None and (bites >= 3 or kills):
+            return hex_spell
+    if "grasping_roots" in known and not target.has_condition("rooted"):
+        roots = actions.CastSpellAction("grasping_roots")
+        keeps_off = unit.ranged or ("magic_missile" in known and _hand_die(unit) < 2.5)
+        closing = not target.ranged and battle.units_distance(unit, target) >= 2
+        if roots.can(battle, unit, target) and (target.ctf_runner or (keeps_off and closing)):
+            return roots
+    return None
+
+
+def _try_healing_touch(battle, unit):
+    """Healing Touch on the most hurt of the unit and the allies in reach, at half health or less."""
+    if "healing_touch" not in getattr(unit, "spells_known", []):
+        return False
+    touch = actions.CastSpellAction("healing_touch")
+    hurt = [u for u in touch.highlight_targets(battle, unit) if u.alive and u.hp <= u.hp_max * 0.5]
+    if not hurt or not touch.available(battle, unit):
+        return False
+    touch.execute(battle, unit, min(hurt, key=lambda u: u.hp / u.hp_max))
+    return True
 
 
 def _shield_ac(unit):
@@ -573,6 +616,11 @@ def _try_share_magic(battle, unit):
     return True
 
 
+def _spell_can(battle, unit, spell_id, target):
+    return (spell_id in getattr(unit, "spells_known", [])
+            and actions.CastSpellAction(spell_id).can(battle, unit, target))
+
+
 def _ally_to_help(battle, unit):
     """A downed ally this unit wants to stabilize -- only if it is of good
     bent (it will spend the action to save a friend before fighting)."""
@@ -580,7 +628,8 @@ def _ally_to_help(battle, unit):
         return None
     # Prefer an adjacent one if possible
     adj = next((a for a in battle.units
-                if actions.FIRST_AID.can(battle, unit, a) or actions.STABILIZE.can(battle, unit, a)), None)
+                if actions.FIRST_AID.can(battle, unit, a) or actions.STABILIZE.can(battle, unit, a)
+                or any(_spell_can(battle, unit, sid, a) for sid in ("healing_touch", "spare_the_dying"))), None)
     if adj:
         return adj
     # Else nearest ally still savable -- a stable one is already saved, and
@@ -1139,6 +1188,9 @@ def take_turn(battle, unit):
         if _try_drink_potion(battle, unit):
             continue
 
+        if _try_healing_touch(battle, unit):
+            continue
+
         if _try_share_magic(battle, unit):
             continue
 
@@ -1146,6 +1198,12 @@ def take_turn(battle, unit):
         if ally is not None:                  # good: save the friend first
             if ally.dying and actions.DRINK_POTION.can(battle, unit, ally):
                 actions.DRINK_POTION.execute(battle, unit, ally)     # up again, not just stable
+                continue
+            if ally.dying and _spell_can(battle, unit, "healing_touch", ally):
+                actions.CastSpellAction("healing_touch").execute(battle, unit, ally)
+                continue
+            if _spell_can(battle, unit, "spare_the_dying", ally):
+                actions.CastSpellAction("spare_the_dying").execute(battle, unit, ally)   # no roll, unlike Stabilize
                 continue
             if actions.FIRST_AID.can(battle, unit, ally):
                 actions.FIRST_AID.execute(battle, unit, ally)
