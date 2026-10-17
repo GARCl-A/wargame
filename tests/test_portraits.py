@@ -358,7 +358,7 @@ def test_squad_and_prison_cards_carry_the_units_portrait():
 
 
 def test_pinned_named_portraits():
-    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png", "ledger_hold_officer.png", "arena_master.png", "carriage.png", "cart.png", "treefolk_recruit.png"]:
+    for name in ["adelio.png", "ribit.png", "bufo.png", "peep.png", "biwolf.png", "banker.png", "prison_guard.png", "ledger_hold_officer.png", "arena_master.png", "carriage.png", "cart.png", "treefolk_recruit.png", "dragon.png"]:
         port = artwork.portrait(None, name, 32)
         assert port is not None
         assert port.get_size() == (32, 32)
@@ -376,6 +376,7 @@ def test_named_npcs_load_pinned_portraits():
         "ruin-sentry.json",
         "sanctum-spider.json",
         "aurochs.json",
+        "dragon.json",
     ]
     for filename in npc_files:
         path = os.path.join("npcs", filename)
