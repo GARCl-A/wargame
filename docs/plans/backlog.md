@@ -31,8 +31,7 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
 1. **Magic Arc, to the end** (*Ready to do -> Medium*): the six school missions are built (2026-10-16: the
    dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
    [dragon_lair.md](dragon_lair.md)); the keepers, the initiation and each school's own level-0 / level-1
-   spells are built (2026-10-17). **Next:** a source for the new scrolls (item 4 of the arc) and the keepers'
-   portraits.
+   spells are built (2026-10-17). **Next:** a source for the new scrolls (item 4 of the arc).
    The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
    test holds it; the level curves have no top since the same day); the Ogre's fight is still short of a
    racial-15 boss (item 1's endgame note).
@@ -111,9 +110,8 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      the 2-reputation door, boarding on a `garrison("rite")` order (alone, or the whole group waits), Faith's Holy
      Symbol and 180 points, Blood's 7-day test of `Unit.magic_blood` (5%, rolled at creation) and 90 points, Nature's
      270, the $3 board on a foodless day; the keepers are each sanctuary's `shrine` `Vendor` (Ssareth Coldvein,
-     Elowen Mossmane, Brother Quillon). Left: (1) **their portraits** point at the race pool for now
-     (`lizardfolk/0.png`, `centaur/0.png`, `kenku/0.png` in `world.NODES`): swap in the hand-made ones
-     (`npc/<keeper>.png`) when they are done. (2) The sim does not initiate anyone (no policy boards a member).
+     Thorne Mossmane, Brother Quillon). Their portraits are in (2026-10-17, `npc/blood_keeper.png`,
+     `grove_keeper.png`, `cathedral_keeper.png`). Left: the sim does not initiate anyone (no policy boards a member).
   4. *Tier 0/1 spells per school:* **built 2026-10-17**, each with its AI and a scroll: **Grasping Roots** (Nature 0),
      **Hex** (Blood 0), **Spare the Dying** (Faith 0), **Healing Touch** (Faith 1), beside Water Jet (Nature 1) and
      Dragonfire (Blood 1); RULES.md *Magic* has their numbers. **Left, a question for the author:** where a player gets
@@ -425,7 +423,7 @@ Stable Diffusion + a LoRA trained on this pool, `scripts/gen_portrait.py`; about
 GPU a portrait, curated by hand). Each task below is its own sitting of art-making;
 the ones that also need code say so. Order is the suggested priority.
 
-- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Ogre (3), Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Kenku (8), Skeleton (9), Lizardfolk (9), Goliath (10), Dwarf (11), Zombie (3, the former `portraits/undead/`), Dragon (2), Snake Dragon (1).
+- **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Kenku, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Ogre (3), Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Skeleton (9), Lizardfolk (11), Goliath (10), Dwarf (11), Zombie (3, the former `portraits/undead/`), Dragon (2), Snake Dragon (1).
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.
 
