@@ -175,4 +175,4 @@ deed, the AI per side, and a lab fight in `combat_lab`.
 - **AI against AI** (lab "necromancer", squad of 4): the AI squad loses at level 3 and at level 6;
   it never searches while it has another target in sight. A person plays the puzzle; tune after a
   playtest.
-- **Not built:** the necromancer's portrait (the board shows a Human face); the Zombie pool has 3.
+- **Not built:** the Zombie pool has 3. The necromancer's portrait came after (`portraits/npc/necromancer.png`).
