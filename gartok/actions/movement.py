@@ -28,6 +28,8 @@ class Move(Action):
         return target in battle.reachable(actor)
 
     def execute(self, battle, actor, target=None):
+        if getattr(actor, "mounted_on", None) is not None:
+            return
         battle.move_unit(actor, target)
 
     def highlight_cells(self, battle, actor):

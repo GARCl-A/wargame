@@ -182,17 +182,17 @@ Properties and keywords carried by weapons.
 | Finesse | Uses Dexterity for attack rolls if it is higher than Strength. |
 | Thrown | Can be thrown up to its thrown range. Adds Strength modifier to attack and damage. |
 | Crit 3x | Critical hits deal 3x weapon damage dice instead of 2x. |
-| Sneak Attack | 2 AP: Deals +1d4 bonus damage against flanked foes. |
-| Precise Thrust | 2 AP: Gains +2 to hit against flanked foes. |
-| Cleave | 2 AP: Strikes two adjacent foes in a single sweep. |
-| Repel Strike | 2 AP: Attacks and shoves the target with a +2 bonus to the push roll. |
-| Maiming Strike | 2 AP: Attacks and halves the target's movement speed until next round. |
-| Armor Pierce | 2 AP: Attack ignores worn armor AC bonus. |
-| Power Shot | 2 AP: Adds positive Strength modifier to arrow damage. |
+| Sneak Attack | 2 AP: One strike; against a flanked foe the blow lands twice over (a second roll of the weapon's damage), +1d4. |
+| Precise Thrust | 2 AP: One strike; against a flanked foe +2 to hit and the blow lands twice over (a second roll of the weapon's damage). |
+| Cleave | 2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit. |
+| Repel Strike | 2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow lands twice over (a second roll of the weapon's damage), +1d4. |
+| Maiming Strike | 2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow lands twice over (a second roll of the weapon's damage). |
+| Armor Pierce | 2 AP: One strike that ignores worn armor AC; against an armoured foe the blow lands twice over (a second roll of the weapon's damage). |
+| Power Shot | 2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow lands twice over (a second roll of the weapon's damage). |
 | Extreme Shot | 2 AP: Doubles attack range to 36 squares. |
-| Hook Shield | 2 AP: Attacks and nullifies target's shield AC bonus until next round. |
-| Javelin Charge | 2 AP: Deals +1d4 bonus damage when thrown after moving this turn. |
-| Parry & Strike | 2 AP: Attacks and grants Defending (+1 AC) to attacker until next round. |
+| Hook Shield | 2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that lands twice over (a second roll of the weapon's damage). Otherwise one plain strike. |
+| Javelin Charge | 1 AP: Throws the spear after moving this turn, +1d4 bonus damage. |
+| Parry & Strike | 2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage). |
 
 ## Armor
 

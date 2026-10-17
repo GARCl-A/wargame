@@ -15,8 +15,8 @@ the morality axis mostly:
   still stands.
 """
 
-from . import actions, data, intel, items
-from .board import cells, grid_distance
+from . import actions, data, intel, items, vision
+from .board import cells, grid_distance, line_cells
 
 
 def _avg_die(nf):
@@ -42,28 +42,9 @@ def _pick_attack(battle, unit, target):
             if sleep_spell.can(battle, unit, target):
                 return sleep_spell  # always prioritize putting them to sleep first
 
-    if unit.ap >= 2 and not unit.unarmed and unit.weapon:
-        for w_act in actions.WEAPON_ACTIONS:
-            if w_act.can(battle, unit, target):
-                if w_act.id == "cleave":
-                    return w_act
-                if w_act.id in ("sneak_attack", "precise_thrust"):
-                    if actions._flanked(battle, unit, target) or actions._pack_flank(battle, unit, target):
-                        return w_act
-                elif w_act.id == "hook_shield":
-                    if target.equipped_offhand and items.is_shield(target.equipped_offhand):
-                        return w_act
-                elif w_act.id == "armor_pierce":
-                    if target.armor and target.armor.ac >= 2:
-                        return w_act
-                elif w_act.id == "maiming_strike":
-                    if not target.has_condition("maimed"):
-                        return w_act
-                elif w_act.id == "parry_strike":
-                    if not unit.has_condition("defending"):
-                        return w_act
-                elif w_act.id in ("power_shot", "extreme_shot", "repel_strike", "javelin_charge"):
-                    return w_act
+    w_act = _weapon_action(battle, unit, target)
+    if w_act is not None:
+        return w_act
 
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
@@ -76,7 +57,7 @@ def _pick_attack(battle, unit, target):
 
     if "dragonfire" in getattr(unit, "spells_known", []):
         fire = actions.CastSpellAction("dragonfire")
-        if (fire.can(battle, unit, target) and _can_bleed(unit)
+        if (fire.can(battle, unit, target)
                 and (not opts or _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE))):
             return fire
 
@@ -107,9 +88,142 @@ def _pick_attack(battle, unit, target):
     return opts[0]
 
 
-def _can_bleed(unit):
-    """Dragonfire is paid in blood: the AI only spends it above half health."""
-    return unit.hp > unit.hp_max // 2
+def _shield_ac(unit):
+    hand = unit.equipped_offhand
+    shield = items.get(hand) if hand and items.is_shield(hand) else None
+    return shield.ac if shield else 0
+
+
+def _reckoned_ac(battle, unit, target, armor_pierce=False):
+    """The AC the unit plays against: the number once its side has read it, else a bare 10 plus
+    the armour and shield it can see the foe wearing."""
+    if intel.knows(battle, unit.team, target, "ac"):
+        return target.ac_vs(unit, armor_pierce=armor_pierce)
+    worn = target.armor.ac if target.armor and not armor_pierce else 0
+    shield = 0 if target.has_condition("shield_hooked") else _shield_ac(target)
+    return 10 + worn + shield
+
+
+def _hit_odds(battle, unit, target, extra=0, armor_pierce=False, thrown=False):
+    mods = unit.attack_mods(target, actions._pack_flank(battle, unit, target), thrown=thrown)
+    if actions._flanked(battle, unit, target):
+        mods.append((2, "circumstance", "Flank"))
+    bonus, _ = data.resolve_bonus(mods)
+    need = _reckoned_ac(battle, unit, target, armor_pierce) - bonus - extra
+    return max(0.05, min(0.95, (21 - need) / 20))
+
+
+def _blow(unit, thrown=False):
+    """Average damage of one landed blow of the held weapon (thrown, or swung / shot)."""
+    if thrown:
+        return _avg_die(unit.weapon["damage"]) + unit.mod_strength
+    if unit.ranged:
+        return _hand_die(unit)
+    return (_hand_die(unit) + unit.mod_strength + unit.ability.melee_damage
+            + unit.char.talent_bonus("melee_damage"))
+
+
+def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
+    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage)
+
+
+def _two_points(battle, unit, target):
+    """What the unit's two points are worth as plain attacks on `target`: two swings or shots, one
+    for a crossbow (the other point reloads it), none when the target is out of reach."""
+    if not actions.ATTACK.can(battle, unit, target):
+        return 0.0
+    blows = 1 if unit.weapon and unit.weapon.get("reload") else (min(2, unit.ammo) if unit.ranged else 2)
+    return blows * _strike_worth(battle, unit, target)
+
+
+DEFEND_SWING_ODDS = 0.05    # +1 AC takes this much off each blow aimed at the defender
+UNLOADED_COST = 0.5         # an Extreme Shot leaves the crossbow empty, where a shot + Reload does not
+REPEL_PUSH_BONUS = 2
+
+
+def _incoming(battle, unit):
+    """Damage the foes beside `unit` would deal it with one blow each, before any to-hit roll."""
+    return sum(_blow(f) for f in battle.units
+               if f.alive and f.team != unit.team and not f.hidden_from(unit.team)
+               and battle.units_distance(unit, f) <= f.attack_range)
+
+
+def _fall_worth(battle, foe, dest):
+    """Average damage of `foe` falling into `dest`: the first level is free, deep water breaks it."""
+    drop = battle.elevation(foe) - battle.elevation_at(dest, foe)
+    if drop <= 1 or foe.flies or battle.board.is_deep_water(dest):
+        return 0.0
+    return _avg_die((drop - 1, 6))
+
+
+def _cell_damage(battle, foe, dest):
+    """Damage `foe` takes for being thrown onto `dest`: the flames there, the fall into it."""
+    fire = battle.fire and any(c in battle.fire for c in cells(dest, foe.footprint))
+    return (_avg_die(data.FIRE_DICE) if fire else 0.0) + _fall_worth(battle, foe, dest)
+
+
+def _repel_worth(battle, unit, target):
+    """A Repel Strike's shove: what landing one square back costs the foe."""
+    step, dest = actions.REPEL_STRIKE.behind(unit, target)
+    if step == (0, 0) or actions.REPEL_STRIKE.favoured(battle, unit, target):
+        return 0.0
+    need = actions.combat.PUSH_DC_BASE + target.mod_constitution - unit.mod_strength - REPEL_PUSH_BONUS
+    return max(0.05, min(0.95, (21 - need) / 20)) * _cell_damage(battle, target, dest)
+
+
+def _weapon_action_worth(battle, unit, act, target):
+    """Expected damage (or its equivalent) of a 2-point weapon action on `target`: one strike, which
+    lands twice over in the action's favoured case (`act.favoured`), plus the action's own edge."""
+    if act.id == "extreme_shot":
+        return _strike_worth(battle, unit, target) - UNLOADED_COST
+    twice = _blow(unit) if act.favoured(battle, unit, target) else 0
+    if act.id == "sneak_attack":
+        return _strike_worth(battle, unit, target, bonus_damage=twice + (2.5 if twice else 0))
+    if act.id == "precise_thrust":
+        return _strike_worth(battle, unit, target, extra=2 if twice else 0, bonus_damage=twice)
+    if act.id == "cleave":
+        second = act.second(battle, unit, target)
+        if second is None:
+            return _strike_worth(battle, unit, target)
+        return _strike_worth(battle, unit, target, extra=2) + _strike_worth(battle, unit, second, extra=2)
+    if act.id == "repel_strike":
+        shove = 0 if twice else _hit_odds(battle, unit, target) * _repel_worth(battle, unit, target)
+        return _strike_worth(battle, unit, target, bonus_damage=twice + (2.5 if twice else 0)) + shove
+    if act.id == "maiming_strike":
+        runner = battle.is_ctf and target in battle.flag_carrier.values()
+        stop = 2 * _blow(unit) if runner and not target.has_condition("maimed") else 0
+        return (_strike_worth(battle, unit, target, extra=2 if twice else 0, bonus_damage=twice)
+                + _hit_odds(battle, unit, target) * stop)
+    if act.id == "armor_pierce":
+        return _strike_worth(battle, unit, target, armor_pierce=True, bonus_damage=twice)
+    if act.id == "power_shot":
+        return _strike_worth(battle, unit, target, bonus_damage=max(1 if twice else 0, unit.mod_strength) + twice)
+    if act.id == "hook_shield":
+        if not twice:
+            return _strike_worth(battle, unit, target)
+        helpers = sum(1 for a in battle.units if a.alive and a.team == unit.team and a is not unit
+                      and battle.units_distance(a, target) <= a.attack_range)
+        opened = _shield_ac(target) * DEFEND_SWING_ODDS * _blow(unit) * helpers
+        own = _hit_odds(battle, unit, target, extra=_shield_ac(target)) * 2 * _blow(unit)
+        return own + opened
+    if act.id == "parry_strike":
+        guard = 0 if unit.has_condition("defending") else DEFEND_SWING_ODDS * _incoming(battle, unit)
+        return _strike_worth(battle, unit, target, bonus_damage=twice) + guard
+    return 0.0
+
+
+def _weapon_action(battle, unit, target):
+    """The 2-point weapon action worth at least the two plain attacks it costs, the best one, or None."""
+    if unit.ap < 2 or unit.unarmed or not unit.weapon:
+        return None
+    best, best_worth = None, _two_points(battle, unit, target)
+    for act in actions.WEAPON_ACTIONS:
+        if act.cost < 2 or not act.can(battle, unit, target):
+            continue
+        worth = _weapon_action_worth(battle, unit, act, target)
+        if worth >= best_worth and worth > 0:
+            best, best_worth = act, worth
+    return best
 
 
 def _jet_avg(unit):
@@ -170,7 +284,7 @@ def _approach_reach(unit):
         return 6
     if "water_jet" in getattr(unit, "spells_known", []) and _hand_die(unit) < _jet_avg(unit):
         return actions.WaterJetAction.reach()
-    if ("dragonfire" in getattr(unit, "spells_known", []) and _can_bleed(unit)
+    if ("dragonfire" in getattr(unit, "spells_known", [])
             and _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE)):
         return actions.DragonfireAction.reach()
     return 1 if unit.ranged else unit.attack_range
@@ -411,6 +525,8 @@ def _try_mount(battle, unit):
     and the unit is not already riding. Returns True if acted."""
     if not actions.MOUNT.available(battle, unit):
         return False
+    if any(actions.ATTACK.can(battle, unit, f) for f in battle.units if f.team != unit.team and f.alive):
+        return False                      # a foe in reach: fight on foot rather than climb up
     targets = actions.MOUNT.highlight_targets(battle, unit)
     if not targets:
         return False
@@ -488,8 +604,9 @@ def _step_over_terrain(battle, unit, target):
 
     now = score(unit.pos)
     best = None
-    for act in (actions.CLIMB, actions.DROP, actions.SWIM):
-        for c in act.highlight_cells(battle, unit):
+    for act in (actions.CLIMB, actions.DROP, actions.SWIM, actions.JUMP):
+        spots = _jump_spots(battle, unit) if act is actions.JUMP else act.highlight_cells(battle, unit)
+        for c in spots:
             s = score(c)
             if s < now and act.can(battle, unit, c) and (best is None or s < best[0]):
                 best = (s, act, c)
@@ -498,6 +615,106 @@ def _step_over_terrain(battle, unit, target):
     _, act, c = best
     act.execute(battle, unit, c)
     return True
+
+
+def _jump_spots(battle, unit):
+    """Cells a jump lands on with an average roll: in a clear line, no lower than a one-level drop
+    (a longer one hurts), and nothing it could have walked to."""
+    if not actions.JUMP.available(battle, unit):
+        return []
+    sure = max(0, min((10 + unit.mod_strength) // actions.movement.JUMP_DIVISOR, unit.speed))
+    z = battle.elevation(unit)
+    walk = battle.reachable(unit)
+    spots = []
+    for c in actions.JUMP.highlight_cells(battle, unit):
+        if c in walk or grid_distance(unit.pos, c) > sure:
+            continue
+        if z - battle.elevation_at(c, unit) > 1:
+            continue
+        line = line_cells(unit.pos, c)[1:]
+        if all(p not in battle.board.walls and actions._cell_free(battle, unit, p) for p in line):
+            spots.append(c)
+    return spots
+
+
+def _visible_traps(battle, unit):
+    """Traps that would spring under `unit` and that it can see."""
+    return [o for o in battle.ground if o.is_trap and battle.springs(o, unit)
+            and vision.can_see(battle, unit, o.pos)]
+
+
+def _trap_avoid(battle, unit):
+    return frozenset(o.pos for o in _visible_traps(battle, unit))
+
+
+def _try_disarm(battle, unit, target):
+    """Clear a trap beside the unit that stands on its way to `target` with no way round. Only
+    when the trap Disarm would pick is one that springs on this unit."""
+    disarm = actions.DISARM
+    if not disarm.available(battle, unit):
+        return False
+    first = disarm._adjacent_traps(battle, unit)[0]
+    if first not in _visible_traps(battle, unit):
+        return False
+    reach = _approach_reach(unit)
+    walk = battle.path_step_toward(unit, target.pos, unit.speed, reach=reach)
+    if walk == unit.pos or first.pos not in battle.path_to(unit, walk):
+        return False
+    disarm.execute(battle, unit)
+    return True
+
+
+def _try_secret(battle, unit):
+    """Stalled beside a wall the Investigate button reads as a secret: open it."""
+    if not actions.INVESTIGATE.available(battle, unit) or not actions.INVESTIGATE._adjacent_secrets(battle, unit):
+        return False
+    actions.INVESTIGATE.execute(battle, unit)
+    return True
+
+
+def _try_throw(battle, unit, target, stalled):
+    """Out of reach of a swing after a walk: a Javelin Charge when it can. Else throw the held
+    weapon with the turn's last point when it may drop the foe, stop a flag runner, or the unit
+    cannot get any nearer -- a thrown weapon is a point to pick up again, so not as a matter of
+    course."""
+    if actions.JAVELIN_CHARGE.can(battle, unit, target) and not actions.ATTACK.can(battle, unit, target):
+        actions.JAVELIN_CHARGE.execute(battle, unit, target)
+        return True
+    throw = actions.THROW
+    if unit.ap != 1 or unit.ranged or not throw.can(battle, unit, target):
+        return False
+    if actions.ATTACK.can(battle, unit, target):
+        return False
+    hp = target.hp if intel.knows(battle, unit.team, target, "hp") else None
+    worth = _blow(unit, thrown=True)
+    downs = hp is not None and worth >= hp or hp is None and intel.health_steps(target) <= 1
+    runner = battle.is_ctf and target in battle.flag_carrier.values()
+    if not (stalled or downs or runner) or _hit_odds(battle, unit, target, thrown=True) < 0.3:
+        return False
+    throw.execute(battle, unit, target)
+    return True
+
+
+def _rider(battle, unit, target):
+    """A unit on a mount does not walk: the mount carries it. Out of reach, a melee rider gets off
+    beside the foe when it still has the point to swing, or off a mount that cannot move; else
+    it waits for the mount's turn. -> "acted", "delayed", "hold" (end the turn) or None (not
+    riding, or the foe is in reach: fight on as usual)."""
+    mount = getattr(unit, "mounted_on", None)
+    if mount is None or target is None or _pick_attack(battle, unit, target) is not None:
+        return None
+    stuck = mount.has_condition("entangled") or mount.demoralized or mount.dormant
+    spots = actions.DISMOUNT.highlight_cells(battle, unit) if unit.ap >= 1 else []
+    if spots and not unit.ranged:
+        striking = [c for c in spots if grid_distance(c, target.pos) <= unit.attack_range]
+        if striking and unit.ap >= 2 or stuck:
+            spot = min(striking or spots, key=lambda c: grid_distance(c, target.pos))
+            actions.DISMOUNT.execute(battle, unit, spot)
+            return "acted"
+    if mount in battle.order[battle.turn_idx + 1:] and actions.DELAY.available(battle, unit):
+        actions.DELAY.execute(battle, unit)
+        return "delayed"
+    return "hold"
 
 
 def _try_assess(battle, unit):
@@ -677,9 +894,28 @@ def _shove_worth(battle, unit, foe):
     entered = {c for p in path for c in cells(p, foe.footprint)} - before
     n, faces = data.FIRE_DICE
     worth = sum(1 for c in entered if c in battle.fire) * _avg_die((n, faces))
+    if path:
+        worth += _fall_worth(battle, foe, path[-1])
+        trap = battle.ground_at(path[-1])
+        if trap is not None and trap.trap_type == "bear trap":
+            worth += _avg_die(BEAR_TRAP_DIE)
+        worth += _unflank_worth(battle, unit, foe)
     if unit.char.talent_bonus("mighty_shove"):
         worth += _avg_die(push.MIGHTY_DIE) * (2 if stop is not None else 1)
     return worth * _shove_odds(unit, foe)
+
+
+BEAR_TRAP_DIE = (1, 8)
+FLANK_ODDS = 0.1            # the +2 a flank gives each blow of the pair
+
+
+def _unflank_worth(battle, unit, foe):
+    """`foe` and a mate of its stand on opposite sides of `unit`: shoving it out breaks the flank
+    for the blows both would land before the unit's next turn."""
+    if battle.units_distance(unit, foe) > 1 or not actions._flanked(battle, foe, unit):
+        return 0.0
+    pair = [f for f in battle.units if f.alive and f.team == foe.team and battle.units_distance(f, unit) <= 1]
+    return FLANK_ODDS * sum(2 * _blow(f) for f in pair)
 
 
 def _try_shove(battle, unit):
@@ -766,12 +1002,26 @@ def _necromancy(battle, unit):
 
 
 def _step_toward(battle, unit, goal, reach):
-    """`path_step_toward`, around the flames when a way round exists."""
-    if battle.fire:
-        dest = battle.path_step_toward(unit, goal, unit.speed, reach=reach, avoid=battle.fire_avoid(unit))
+    """`path_step_toward`, around the flames and the traps it can see when a way round exists."""
+    traps = _trap_avoid(battle, unit)
+    avoid = traps | (battle.fire_avoid(unit) if battle.fire else frozenset())
+    if avoid:
+        dest = battle.path_step_toward(unit, goal, unit.speed, reach=reach, avoid=avoid)
         if dest != unit.pos:
             return dest
-    return battle.path_step_toward(unit, goal, unit.speed, reach=reach)
+    dest = battle.path_step_toward(unit, goal, unit.speed, reach=reach)
+    return _short_of_traps(battle, unit, dest, traps)
+
+
+def _short_of_traps(battle, unit, dest, traps):
+    """`dest`, or the last cell of the walk there before it would step on one of `traps`."""
+    if not traps or dest == unit.pos:
+        return dest
+    route = battle.path_to(unit, dest)
+    for i, c in enumerate(route[1:], start=1):
+        if any(p in traps for p in cells(c, unit.footprint)):
+            return route[i - 1]
+    return dest
 
 
 def _patrol(battle, unit):
@@ -992,6 +1242,14 @@ def take_turn(battle, unit):
         if unit.can_reload:
             actions.RELOAD.execute(battle, unit)
             continue
+
+        riding = _rider(battle, unit, target)
+        if riding == "acted":
+            continue
+        if riding == "delayed":
+            return
+        if riding == "hold":
+            break
             
         if "light_globe" in getattr(unit, "spells_known", []):
             lg = actions.CastSpellAction("light_globe")
@@ -1050,6 +1308,10 @@ def take_turn(battle, unit):
             # stall out.
             if _step_over_terrain(battle, unit, target):
                 continue
+            if _try_disarm(battle, unit, target) or _try_secret(battle, unit):
+                continue
+            if _try_throw(battle, unit, target, stalled=True):
+                continue
             if _try_assess(battle, unit):
                 continue
             # cornered and out of range: defend (once) and end
@@ -1062,5 +1324,7 @@ def take_turn(battle, unit):
         atk = _pick_attack(battle, unit, target)
         if unit.ap > 0 and atk is not None:
             atk.execute(battle, unit, target)
+        elif unit.ap > 0:
+            _try_throw(battle, unit, target, stalled=False)
 
     battle.end_turn()

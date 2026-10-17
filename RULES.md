@@ -362,10 +362,9 @@ for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
     Its scroll is the Nature Coven's reward for the Ogre's Wildfire; no shop sells it. The AI casts
     it when it beats its hand weapon or would throw a foe into the fire.
   - **Dragonfire** (level 1, **Blood only**, the Dragon branch) — ranged (the Dagger's thrown
-    range), `d20 + INT` vs AC, **2d6** fire damage on a hit; the blood is the price: casting costs
-    the caster **1d4 HP**, hit or miss, and nobody casts it with 4 HP or less. Its scroll is the
-    Blood Cult's reward for the Dragon's Clutch; the dragon under the Mine knows it. The AI casts
-    it while above half its HP and when it beats its hand weapon.
+    range), `d20 + INT` vs AC, **2d6** fire damage on a hit. Blood magic costs no hit points.
+    Its scroll is the Blood Cult's reward for the Dragon's Clutch; the dragon under the Mine knows
+    it. The AI casts it when it beats its hand weapon.
   - **Invisibility** (level 2, every school, 2 points) — the caster vanishes from every other
     side's sight (`conditions.Invisible`, see *Invisibility*). No scroll yet: only the
     necromancer at the front knows it.
@@ -485,7 +484,34 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   show it next round). The AI blows it while the fight is still a walk away (no foe within
   reach) and at least two allies hear it.
 - **Throw** (1 point) = throws the weapon in hand, if it is a **thrown weapon**
-  (for now only the **Dagger**, range 9 m = 6 cells). See below.
+  (Dagger 6 cells, Light Pick 6, Hatchet 4, Light Hammer 8, Shortspear 12; REFERENCE.md has
+  the catalogue). See below. The AI throws only with its last point and no foe in swing reach,
+  when the throw may drop the foe, stops a flag runner, or it cannot get any nearer.
+- **Weapon actions** (one per weapon kind; REFERENCE.md *Weapon Traits*). A 2-point action is
+  **one strike** for the price of two plain attacks, so it is the worse buy out of its **favoured
+  case**; in that case the strike **lands twice over** (a second roll of the weapon's damage) plus
+  the action's own edge, and beats the two attacks whatever the weapon or the modifiers:
+  - **Sneak Attack** (Dagger): a flanked foe; +1d4.
+  - **Precise Thrust** (Rapier): a flanked foe; +2 to hit.
+  - **Cleave** (Axe): a second foe beside both; the sweep strikes both, each swing +2 to hit
+    (no double: two blows already).
+  - **Repel Strike** (Quarterstaff): shoves the foe 1 cell (+2 to the push); with its back to a
+    wall or a body it is slammed instead, +1d4.
+  - **Maiming Strike** (Club, Hammers): halves the foe's speed; a foe Entangled, Sleeping,
+    Surprised or Demoralized (it cannot dodge); +2 to hit.
+  - **Armor Pierce** (Picks): ignores worn armour; an armoured foe.
+  - **Power Shot** (Shortbow): +STR; at half the bow's range or farther, +STR at least +1.
+  - **Hook Shield** (Hatchet): a foe with a shield; the hook comes first, so the shield gives no
+    AC to this strike or anyone's until next round.
+  - **Parry & Strike** (Broadsword): Defending (+1 AC); two or more foes in reach.
+  - **Extreme Shot** (Light Crossbow): no double; its case is a target past the normal range,
+    which only it reaches (36 cells).
+  - **Javelin Charge** (Shortspear) is **1 point**: a throw after a walk this turn, +1d4, so a
+    walk and the throw fill a turn.
+
+  The AI scores each by expected damage (hit odds against the AC it can reckon) against the two
+  plain attacks the same points buy (one shot for a crossbow, whose other point reloads it) and
+  takes the better; a test holds the premise for every action, STR 10-18 and AC 10-19.
 - **Lash** (1 point) = the Grippli's **Tongue** attack — the 1-handed weapon in
   the `equipped_tongue` slot, swung at **+1 cell of reach**. A separate action, so
   a Grippli chooses each turn between the reach lash and the hand weapon (e.g. a
@@ -505,10 +531,13 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   one is back on their feet with that HP. The AI drinks when wounded to $\le 50\%$ HP.
 - **Investigate** (1 point) = inspects adjacent wall segments for hidden doors,
   sliding panels or concealed mechanisms, revealing and opening them on discovery.
+  The AI opens one it is stalled beside (the button names a secret wall when one is there).
 - **Disarm** (1 point) = attempts to disarm an adjacent trap (`Bear Trap` or
   `Alarm Trap`): rolls `d20 + Dexterity mod` vs **DC 12**. Success safely removes
   the trap and recovers the item into the inventory; a natural 1, or failing by 5
-  or more, accidentally triggers the trap on the character.
+  or more, accidentally triggers the trap on the character. Traps are neutral and seen by whoever
+  sees their cell: the AI walks round one it sees, stops short of one it cannot walk round, and
+  disarms the one in its way.
 - **Spin Web** (1 point, Giant Spider's `Spin Web` talent) = places a **web
   trap** beside the spider, as wide as its own body (1×1, 2×2 or 3×3), on open
   ground. The first foe to touch any cell springs the whole web: it is
@@ -517,8 +546,10 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   (no item to recover). The AI spins one when its prey is still a few steps off.
 - **Mount / Dismount** (1 point) = a Small or Medium character rides on the back
   of an adjacent allied Centaur (unlocked via the Centaur's `Mount` talent),
-  sharing the mount's positioning and speed. Dismounting spends 1 point to step
-  onto an adjacent free cell.
+  sharing the mount's positioning and speed (a rider does not walk: Move does nothing while
+  mounted). Dismounting spends 1 point to step onto a free cell around the mount's body. The AI
+  rider waits (Delay) for its mount's turn to be carried, gets off beside a foe when it still has
+  the point to strike, or off a mount that cannot move, and does not climb back up with a foe in reach.
 - **Eat Corpse** (1 point) = a Gnoll with the `Corpse Eater` talent feasts on an
   adjacent dead body: satiates hunger for the day and inflicts an immediate AoE
   Demoralize test on all enemy witnesses within line of sight.
@@ -763,7 +794,8 @@ triples.
 - **Jump** (1-point action): a horizontal leap. Rolls `d20 + STR mod` and
   advances in a line toward the aimed cell up to **`result ÷ 5`** cells (never
   more than the unit's speed), passing **over** any pit on the way; a wall or a
-  body stops the jump short. Landing lower than it started takes the fall.
+  body stops the jump short. Landing lower than it started takes the fall. The AI jumps when it
+  cannot walk any nearer, to a cell an average roll reaches with at most a one-level drop.
 - **Push** (1-point action, target = an adjacent enemy up to 1 level of
   difference): `d20 + STR mod` (attacker) vs **10 + Constitution mod** (target).
   Success shoves the target **1 cell** straight back; if the cell behind is a
@@ -773,8 +805,8 @@ triples.
   Whatever stops it on the way -- a wall, or a body (standing or downed, friend
   or foe), which takes **1d6** too -- deals **1d6 more**. Over a pit lip it falls
   in and the throw ends there; onto burning cells it burns (Fire, below). The AI
-  shoves when the throw is worth more than a swing: into the flames, or a Mighty
-  Shove into a wall (`ai._try_shove`).
+  shoves when the throw is worth more than a swing: into the flames, a pit deep enough to hurt,
+  a bear trap, out of a flank on itself, or a Mighty Shove into a wall (`ai._try_shove`).
 - **Vertical combat.** Melee reaches between two elevations if the difference is
   **≤ 1** (a fight at the lip). A difference of **2 or more** takes the target
   out of melee reach until someone climbs — a **ranged** attack still connects.

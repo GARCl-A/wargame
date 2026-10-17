@@ -162,12 +162,10 @@ class WaterJetAction(SpellAction):
 
 class DragonfireAction(SpellAction):
     """Blood's own, on the Dragon branch: fire spat from the caster's blood, INT to hit against
-    AC for 2d6. The blood is the price: casting costs the caster 1d4 hit points, hit or miss,
-    and nobody casts it with that much or less left. Reaches as far as a dagger is thrown."""
+    AC for 2d6. Reaches as far as a dagger is thrown."""
     spell_id = "dragonfire"
     target, aimed = "enemy", True
     DICE = (2, 6)
-    PRICE = (1, 4)
 
     @staticmethod
     def reach():
@@ -176,7 +174,7 @@ class DragonfireAction(SpellAction):
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
             return False
-        if actor.hp <= self.PRICE[0] * self.PRICE[1] or not _hostile_target(actor, target):
+        if not _hostile_target(actor, target):
             return False
         return (battle.units_distance(actor, target) <= self.reach()
                 and battle.los_between(actor, target))
@@ -185,9 +183,7 @@ class DragonfireAction(SpellAction):
         if not self.can(battle, actor, target):
             return
         actor.ap -= self.cost
-        price = data.roll(*self.PRICE)
-        actor.hp -= price
-        battle.log(f"{actor.name} bleeds {price} HP into {self.spell.name} at {target.name}!")
+        battle.log(f"{actor.name} spits {self.spell.name} at {target.name}!")
         atk = d20()
         if atk == 1:
             battle.log(" Critical miss!")

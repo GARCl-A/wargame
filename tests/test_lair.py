@@ -353,27 +353,25 @@ def _caster_duel(caster_team="player"):
     return b, me, foe
 
 
-def test_dragonfire_costs_blood_and_burns():
+def test_dragonfire_burns_and_costs_no_blood():
     b, me, foe = _caster_duel()
     spell = actions.CastSpellAction("dragonfire")
     assert spell.can(b, me, foe)
     random.seed(1)
     spell.execute(b, me, foe)
-    assert 26 <= me.hp < 30 and any("Dragonfire" in ln for ln in b.log_lines)
-    me.ap, me.hp = 2, 4
-    assert not spell.can(b, me, foe)          # not with that little blood left
-    me.hp = 30
+    assert me.hp == 30 and any("Dragonfire" in ln for ln in b.log_lines)
+    me.ap, me.hp = 2, 1
+    assert spell.can(b, me, foe)              # no blood price: even at 1 HP
     foe.pos = (5 + actions.DragonfireAction.reach() + 1, 5)
     assert not spell.can(b, me, foe)
 
 
-def test_the_ai_casts_dragonfire_while_it_has_blood_to_spare():
+def test_the_ai_casts_dragonfire_whatever_its_health():
     b, me, foe = _caster_duel("enemy")
     me.hp = me.hp_max = 30
     assert ai._pick_attack(b, me, foe).id == "cast_dragonfire"
-    me.hp = 10
-    pick = ai._pick_attack(b, me, foe)
-    assert pick is None or pick.id != "cast_dragonfire"
+    me.hp = 3
+    assert ai._pick_attack(b, me, foe).id == "cast_dragonfire"
 
 
 # --- the job and the eggs ------------------------------------------------------------ #

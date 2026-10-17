@@ -1,6 +1,6 @@
 # Dialogue before initiative — plan
 
-**Slice 1 built 2026-10-16**, as planned below except where *As built* says otherwise; the rules now live
+**Slices 1 and 2 built 2026-10-16** (slice 2, the on-board challenge, with the dragon lair), as planned below except where *As built* says otherwise; the rules now live
 in RULES.md (*Dialogue before initiative*). **Designed 2026-10-16 (author interview, first pass).** A general tool for talking before a fight: when
 the guild meets a foe, a dialogue opens before anyone rolls initiative, and what is said decides
 whether there is a fight and how it starts. It comes **before the Blood Cult's third mission**
@@ -15,7 +15,8 @@ Talking exists today, built once per case:
 - the Wildfire's foci and the Ogre: a CHA-then-INT chain of buttons in the map's inspector
   (`wildfire.talk`, `map_screen._wildfire_blocks`);
 - recruitment: the language gate (`recruit.shared_languages`) and a CHA contest;
-- the guard's check (`GuardScreen`: prison / flee / fight) and the arena's prompts (Adelio, Ribbit).
+- the guard's check (`GuardScreen`: prison / flee / fight; removed in slice 1, now the `Patrol`) and the
+  arena's prompts (Adelio, Ribbit).
 
 **Decided (author 2026-10-16):** one dialogue system, its own step, and **the Wildfire's talk moves
 into it**. The dragon lair's Parley is not a new combat action: it is a dialogue at the patrol's
@@ -83,7 +84,7 @@ An outcome the caller applies, so the system never knows about ambushes or fires
 
 ## 5b. The guard moves in
 
-`GuardScreen` (`justice_screen.py`) becomes the patrol's dialogue, decided for the whole catch at once
+`GuardScreen` (`justice_screen.py`, both gone since slice 1) becomes the patrol's dialogue, decided for the whole catch at once
 as today:
 - **Surrender** = ACCEPT ARREST (`forced.resolve_guard_prison`);
 - **Leave** = RUN (`forced.resolve_guard_flee`), hidden when there is nowhere to fall back to, as today;

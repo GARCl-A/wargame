@@ -5,7 +5,7 @@ camp to-do list and the later playtest notes. What is already built is in the co
 tests and the git log; the long-range AI plan is
 [campaign_ai_roadmap.md](campaign_ai_roadmap.md).
 
-Sizes are estimates; claims about what the code already has were checked on 2026-10-15. When an item is done, delete
+Sizes are estimates; claims about what the code already has were checked on 2026-10-16. When an item is done, delete
 it here and, if it changed a design premise, record it in `AGENTS.md` or the doc that owns it.
 
 Parts:
@@ -30,14 +30,16 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
 
 1. **Magic Arc, to the end** (*Ready to do -> Medium*): the six school missions are built (2026-10-16: the
    dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
-   [dragon_lair.md](dragon_lair.md)); next the keepers and the initiation, then tier 1 spells per school.
+   [dragon_lair.md](dragon_lair.md)); **next (author 2026-10-16): the keepers and the initiation**, then tier 1
+   spells per school.
    The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
    test holds it; the level curves have no top since the same day); the Ogre's fight is still short of a
    racial-15 boss (item 1's endgame note).
-2. **Teach the AI the newer actions** (*Large*), so the next playtest says how the enemy really plays.
+2. **The AI's leftovers and the weapon actions' worth** (*Large*, mostly done 2026-10-16), so the next playtest says
+   how the enemy really plays.
 3. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*).
 4. **Production chain between groups** (*Large*, after magic).
-5. **Talent trees to the level cap** (*Large*, after magic).
+5. **Talent trees as long as the levels** (*Large*, after magic).
 6. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
 7. **Cooking and temporary meal buffs** (after magic).
 8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 3's data is in.
@@ -84,11 +86,13 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      one does, add a mission there. Built (2026-10-15): the Codex (all three, exclusive), the Snake Dragon (Blood
      dead / Nature alive, exclusive), the Faith Order's *Mercy at the Front* and the Nature Coven's third, *The
      Ogre's Wildfire* (not exclusive). Faith's second, *The Necromancer at the Front*, is built (2026-10-16, [necromancer.md](necromancer.md): a third side on the board, Raise Dead and Invisibility at level 2, Investigate finding the unseen, the Zombie). Blood's third, *The Dragon's Clutch*, is built (2026-10-16, [dragon_lair.md](dragon_lair.md): a heist past kobold patrols that challenge on the board, a racial-20 dragon woken by noise, the eggs the keepers buy, Dragonfire). **Later, Blood's fourth (author 2026-10-16):** the robbed dragon notices and keeps attacking (not designed).
-     *Reachability (2026-10-16):* Faith and Blood are safe (each has two missions open to all). **Nature** still
-     reaches 2 only with the Codex or the Snake: Codex to Faith and the Snake to Blood leave it the Wildfire alone
-     (1 of 2). Open: accept it (the guild's choices close a school), or give Nature one more open mission.
+     *Reachability (2026-10-16):* Faith is safe (Mercy and the Necromancer, both open to all). **Nature and Blood**
+     each have one open mission (the Wildfire, the Clutch) and reach 2 only with the Codex or the Snake: the Codex
+     to Faith with the Snake to the other school leaves one of them at 1 of 2. **Accepted (author 2026-10-16):**
+     three missions per school is enough for now; the guild's choices may close a school.
      *The third missions are the game's endgame for now (author 2026-10-15):* each boss is a fight worth a
-     **racial-15** character (the cap: a track sum of 30). Generated enemies stop at combat 7 / work 6
+     **racial-15** character (the endgame target: a track sum of 30; the levels themselves have no top since
+     2026-10-16). Generated enemies stop at combat 7 / work 6
      (`constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`, mean 6), so the bosses are authored NPCs. The Ogre (racial
      10) and his escort clamped at mean 6 do not reach it yet (see Tuning). **Decision for the Blood boss and for
      the Ogre:** lift the escort's cap inside these fights (the scaled bodies follow the squad past mean 6), or
@@ -97,18 +101,24 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      shop stocks it. It comes from birth (the Priest) or from a Priest among a humanoid ambush pack (checked
      2026-10-15: a rolled Priest carries it in the pack and `loot.field_loot` drops it). Fantasy reason: the god picks
      disciples by getting the symbol into their hands.
-  3. *Keepers and the rite (after the missions, author 2026-10-15):* each sanctuary's keeper (portrait by hand, a
-     `Vendor` in `world.NODES` with `ShrineMissionScreen.VENDOR` set; the keepers' lines are first drafts) offers the
-     initiation (a new `NodeFunction`) that grants the school (`Unit.add_magic_source`). That also opens the school's
+  3. *Keepers and the rite (the next step, author 2026-10-16):* each sanctuary's keeper offers the initiation (a
+     new `NodeFunction`) that grants the school (`Unit.add_magic_source`). Built: only their lines
+     (`shrine_screen.KEEPER_LINE`, first drafts). To build: a `Vendor` per sanctuary in `world.NODES` with its
+     portrait (by hand), `ShrineMissionScreen.VENDOR` set (it inherits None today), and the rite itself. That also opens the school's
      root in the **magic talent track** (built 2026-10-15: roots granted, never picked), so initiation is what makes
      the track reachable for the player. **Keepers' races (author 2026-10-15):** a Centaur at the Nature Grove, a
      Kenku at the Faith Cathedral, a Lizardfolk at the Blood Sanctuary. With them every playable race has someone in
      the game (the Treefolk is Varkas' recruit).
   4. *Tier 1 spells per school:* a starting grimoire and the study of the school's basic spells. Four spells
      (`magic.SPELLS`) belong to all three schools; the first of a school's own is **Water Jet** (Nature, level 1,
-     the Wildfire's reward, with its AI). **Minimum (author 2026-10-15): at least one level-0 and one level-1 spell
-     of each school's own**, each with its AI. Blood's level 1 is **Dragonfire** (the Clutch's reward, 2026-10-16).
-     Left: Nature's level 0; Blood's level 0; Faith's level 0 and 1.
+     the Wildfire's reward, with its AI). Today's spells (`magic.SPELLS`): Light Globe, Magic Missile, Floating
+     Disk (level 0, all three), Sleep (1, all three), Water Jet (1, Nature), Dragonfire (1, Blood), Invisibility
+     (2, all three), Raise Dead (2, Faith, the necromancer's only). **Minimum (author 2026-10-15): at least one level-0 and one level-1 spell
+     of each school's own**, each with its AI. Blood's level 1 is **Dragonfire** (the Clutch's reward, 2026-10-16; no HP cost).
+     Left: Nature's level 0; Blood's level 0; Faith's level 0 and 1. **Their shape (author 2026-10-16), to
+     design:** Faith 1 heals **1d6** at melee reach; Faith 0 **stabilizes** a downed body with **no check**;
+     Nature 0 **slows** a foe (cuts its movement); Blood 0 puts a **debuff** on a foe. **Blood magic costs no
+     hit points** (author 2026-10-16: Dragonfire's 1d4 HP price is gone).
   5. *Blood is bloodline (decided 2026-10-15; the Cult's blurb rewritten):* the magic is born in you (a dragon, an
      angel, a demon in the line). New Blood branches follow the same shape as Bloodline -> Dragon -> Dragon Breath
      (other bloodlines: angel, demon...).
@@ -130,7 +140,11 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      and 6 (`combat_lab` "necromancer"). **The Dragon's Clutch:** the noise (stir 6, wake 14, the sounds' worth, the
      14-cell hearing), the patrols (two of three, sight 6, a torch each), the dragon (racial 20, 227 HP, AC 15, a
      Huge body the tunnel keeps out), the hoard and the egg prices ($400 at the Market, $1200 at a keeper); AI
-     against AI at level 3 the squad gets out with an egg in 4 of 20 (`combat_lab` "lair").
+     against AI at level 3 the squad gets out with an egg in 4 of 20 (`combat_lab` "lair"). **The dialogue
+     before initiative** ([dialogue.md](dialogue.md)): every number is a first pick (`dialogue.BASE_DC` 10 +
+     the leader's WIS, a bribe of $3 a foe per level + 1 and $10 a crime point for a patrol, Persuade's ±3 by
+     alignment, Intimidate's ±4 and the rout at +5, the +5 initiative a failed Intimidate gives, +2 a bluff
+     told in a Challenge).
 
 ## Playtest notes 2026-10-12
 
@@ -163,6 +177,12 @@ its functions are tabs inside.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
+- **The Ogre's fortress after the Wildfire** ([ogre_wildfire.md](ogre_wildfire.md)). Convinced, it stays as a
+  friendly node with the Ogre as its `Vendor` and **no function yet**: what it offers is open. Hostile, it
+  can be attacked later (the finished fortress, a harder fight; winning removes the node): not built.
+- **A talk before the arena's first boss fights (author 2026-10-16).** The arena does not move to the
+  dialogue (it is about winning the fight on the board), but the first bout against Adelio and the first
+  against the Ribbit Brothers may open a short dialogue, for immersion only.
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
@@ -185,28 +205,38 @@ pointed to, not repeated.
 
 ## Large
 
-- **Teach the AI the newer actions (before the next playtest).** Checked 2026-10-15 in `ai.py`:
-  (1) **Never used:** Throw, Disarm, Jump, Dismount (Investigate only to find the unseen, not a secret wall). Push only when the shove does damage (into the
-  flames, or a Mighty Shove against a wall: `ai._try_shove`), never to break a flank or win a pit. (2) **Used, but blindly:** the 11 weapon
-  actions (`ai._pick_attack`). With 2 AP left, the first one whose `can()` passes is taken, ahead of two
-  plain attacks and with no expected-damage comparison. Power Shot, Extreme Shot, Repel Strike and Javelin Charge
-  are taken whenever possible, whatever the target. The 2-AP cost also stops the AI from moving first and
-  striking after. (3) **Spells:** Sleep, Magic Missile and Water Jet in the pick, Light Globe and Floating Disk in
-  their own branches. The magic arc's tier 1 spells need the same as they land. Goal: every action an
-  enemy can hold is scored against its alternatives (expected damage, AP spent, position), with tests per
-  action and `sim_test.py`. Gauge: `scripts/combat_pairs.py` against the 2026-10-11 baseline below.
-  Built with their own AI on 2026-10-15: Dragon Breath (only on 3+ foes in the cone, but the breather does not move
-  to set up a better cone), Capture and the Non-lethal toggle (the player's side, against a foe it wants alive),
-  fire (step out, route round it), Mighty Shove and Water Jet. On 2026-10-16: the necromancer's turn (`ai._necromancy`:
-  vanish, raise the strongest body in reach, walk to the next, back off when found), Investigate (once a turn with nobody
-  in sight), never targeting an unseen foe, and the undead never fleeing. The player's side has no use for Raise Dead
-  yet (no source teaches it).
+- **Teach the AI the newer actions: what is left.** Done 2026-10-16 (`tests/test_ai_actions.py`): the 2-point
+  weapon actions are scored by expected damage (hit odds against the AC the unit can reckon: the read number,
+  else 10 + the armour and shield it sees) against the two plain attacks the same points buy (one shot for a
+  crossbow), so each is taken only where it pays (Cleave on two foes, Armor Pierce on heavy armour, Extreme Shot
+  past the crossbow's range, Power Shot on the last arrow, Maiming Strike on a flag runner, Parry & Strike when the
+  swing barely lands and foes crowd in); Throw with the last point at a foe it may drop, a flag runner, or when it
+  cannot get nearer; Jump over a gap it cannot walk; Push also into a pit, a bear trap or out of a flank on itself;
+  traps it sees are walked round, stopped short of and disarmed when in the way; a secret wall it is stalled beside
+  is opened; a rider never walks off its mount, waits for it (Delay), dismounts beside a foe to strike, and does not
+  remount with a foe in reach. Earlier: Dragon Breath, Capture and Non-lethal, fire, Mighty Shove, Water Jet,
+  Dragonfire, the necromancer (`ai._necromancy`), Investigate on the unseen, the patrols (`ai._patrol`) and the
+  heist (`ai._heist`). **Gauge (`combat_pairs.py combat_lab --trials 40`, 97 logs, the AI on both sides, HEAD
+  before -> after):** Scrapper 49 -> 48%, the Pit's Scrapper 55 -> 63%, champion 89 -> 92%, ambushes 85 -> 92%,
+  hunts 83 -> 89%, Defend the Title 46 -> 65%, brawl 92 -> 95%; the one-log Claim fights move within noise.
+  `sim_test.py`: no stuck seed, 98/102, 5.4 -> 4.8 rounds a fight. After the weapon-action rebalance (same
+  day): Scrapper 46%, the Pit's 63%, champion 91%, ambushes 92%, hunts 89%, Defend the Title 62%, brawl 98%,
+  within a run's swing of the line above. These are the new numbers to beat.
+  Left: (1) a 2-point weapon action cannot follow a walk (two points a turn): the rule, not the AI; (2) the player's side has no use for Raise Dead (no source
+  teaches it); (3) the magic arc's tier 1 spells need their AI as they land, best in the same expected-damage
+  terms (`ai._strike_worth`); (4) Dragon Breath's breather does not move to set up a better cone.
+- **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16 (author: two plain attacks
+  win in general, the 2-point action wins in its favoured case): out of its case an action is one strike; in it
+  the strike lands twice over plus a small edge (RULES.md *Weapon actions*, `favoured` on each action, the
+  premise held by `test_ai_actions`); Javelin Charge is 1 point after a walk. Left: whether each case comes up
+  often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
+  the slimmest), and the old Extreme Shot / Power Shot niches.
 - **Playtest on the current build, then feed it and the Caravana run to the AI and the sim.**
   The *Caravana Do Homem Verde* run (world `95ea6648`, 205 days, the longest) is archived but **never analysed**:
   its `play.jsonl` is in `recordings/2026-10-12/` and its 62 fights in `combat_lab/campaign/`, yet the
   `human` profile (`recordings/2026-10-10/human_profile_4runs.json`) and the `combat_pairs.py` baseline
-  (72 logs, 2026-10-11) were both made before it. Order: (1) teach the AI the newer actions (above), so the
-  enemy is worth feeling; (2) play a fresh run on the current build with `record_play` ON (weapon actions,
+  (72 logs, 2026-10-11) were both made before it. Order: (1) teach the AI the newer actions (above, done 2026-10-16), so
+  the enemy is worth feeling; (2) play a fresh run on the current build with `record_play` ON (weapon actions,
   2-AP actions, magic once in); (3) run `play_analysis.py` over the four earlier runs + Caravana + the new
   one into a new profile, and re-baseline `combat_pairs.py` with the new campaign logs; (4) then settle
   *Economy report prints a FAIL* and the planner with that data.

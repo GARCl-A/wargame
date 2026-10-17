@@ -437,12 +437,16 @@ class Dismount(Action):
             return False
         if getattr(actor, "mounted_on", None) is None or target is None:
             return False
-        return target in battle.board.neighbors(actor.mounted_on.pos) and _cell_free(battle, actor, target)
+        return target in self.highlight_cells(battle, actor)
 
     def highlight_cells(self, battle, actor):
-        if not getattr(actor, "mounted_on", None):
+        """The free cells around the mount's whole body, never one under it."""
+        mount = getattr(actor, "mounted_on", None)
+        if not mount:
             return []
-        return [c for c in battle.board.neighbors(actor.mounted_on.pos) if _cell_free(battle, actor, c)]
+        body = set(battle.cells_of(mount))
+        around = {n for c in body for n in battle.board.neighbors(c)} - body
+        return sorted(c for c in around if _cell_free(battle, actor, c))
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):

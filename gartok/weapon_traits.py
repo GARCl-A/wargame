@@ -47,43 +47,43 @@ _TRAITS = [
     WeaponTrait(
         id="sneak_attack",
         name="Sneak Attack",
-        desc="2 AP: Deals +1d4 bonus damage against flanked foes.",
+        desc="2 AP: One strike; against a flanked foe the blow lands twice over (a second roll of the weapon's damage), +1d4.",
         action_id="sneak_attack",
     ),
     WeaponTrait(
         id="precise_thrust",
         name="Precise Thrust",
-        desc="2 AP: Gains +2 to hit against flanked foes.",
+        desc="2 AP: One strike; against a flanked foe +2 to hit and the blow lands twice over (a second roll of the weapon's damage).",
         action_id="precise_thrust",
     ),
     WeaponTrait(
         id="cleave",
         name="Cleave",
-        desc="2 AP: Strikes two adjacent foes in a single sweep.",
+        desc="2 AP: One strike; with a second foe beside both, the sweep strikes it too, each swing +2 to hit.",
         action_id="cleave",
     ),
     WeaponTrait(
         id="repel_strike",
         name="Repel Strike",
-        desc="2 AP: Attacks and shoves the target with a +2 bonus to the push roll.",
+        desc="2 AP: One strike that shoves the target (+2 to the push); against a foe with its back to a wall or a body the blow lands twice over (a second roll of the weapon's damage), +1d4.",
         action_id="repel_strike",
     ),
     WeaponTrait(
         id="maiming_strike",
         name="Maiming Strike",
-        desc="2 AP: Attacks and halves the target's movement speed until next round.",
+        desc="2 AP: One strike that halves the target's speed until next round; against a foe Entangled, Sleeping, Surprised or Demoralized +2 to hit and the blow lands twice over (a second roll of the weapon's damage).",
         action_id="maiming_strike",
     ),
     WeaponTrait(
         id="armor_pierce",
         name="Armor Pierce",
-        desc="2 AP: Attack ignores worn armor AC bonus.",
+        desc="2 AP: One strike that ignores worn armor AC; against an armoured foe the blow lands twice over (a second roll of the weapon's damage).",
         action_id="armor_pierce",
     ),
     WeaponTrait(
         id="power_shot",
         name="Power Shot",
-        desc="2 AP: Adds positive Strength modifier to arrow damage.",
+        desc="2 AP: One shot with +STR damage; at half the bow's range or farther +STR (at least +1) and the blow lands twice over (a second roll of the weapon's damage).",
         action_id="power_shot",
     ),
     WeaponTrait(
@@ -95,19 +95,19 @@ _TRAITS = [
     WeaponTrait(
         id="hook_shield",
         name="Hook Shield",
-        desc="2 AP: Attacks and nullifies target's shield AC bonus until next round.",
+        desc="2 AP: Against a foe with a shield: hooks it first (no shield AC until next round, this strike included), then one strike that lands twice over (a second roll of the weapon's damage). Otherwise one plain strike.",
         action_id="hook_shield",
     ),
     WeaponTrait(
         id="javelin_charge",
         name="Javelin Charge",
-        desc="2 AP: Deals +1d4 bonus damage when thrown after moving this turn.",
+        desc="1 AP: Throws the spear after moving this turn, +1d4 bonus damage.",
         action_id="javelin_charge",
     ),
     WeaponTrait(
         id="parry_strike",
         name="Parry & Strike",
-        desc="2 AP: Attacks and grants Defending (+1 AC) to attacker until next round.",
+        desc="2 AP: One strike and Defending (+1 AC) until next round; with two or more foes in reach the blow lands twice over (a second roll of the weapon's damage).",
         action_id="parry_strike",
     ),
 ]

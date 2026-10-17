@@ -260,7 +260,7 @@ def test_javelin_charge_requires_moving():
     assert actions.JAVELIN_CHARGE.can(batt, a, d)
     with fixed_d20(18):
         actions.JAVELIN_CHARGE.execute(batt, a, d)
-    assert a.ap == 0
+    assert a.ap == 1                       # one point: a walk and the throw fill a turn
     assert a.unarmed
     assert any("Javelin Charge" in log for log in batt.log_lines)
 
@@ -276,25 +276,3 @@ def test_parry_strike_grants_defending():
         actions.PARRY_STRIKE.execute(batt, a, d)
     assert a.ap == 0
     assert a.has_condition("defending")
-
-
-def test_ai_uses_weapon_actions():
-    from gartok import ai
-    batt, a, d1 = _melee_battle()
-    d1.hp = 20
-    a.equip_weapon("Axe")
-    a.ap = 2
-    d2 = _recruit(batt, team="enemy")
-    d2.hp = 20
-    a.pos = (5, 5)
-    d1.pos = (5, 6)
-    d2.pos = (6, 6)
-
-    # AI picks Cleave when adjacent to multiple enemies
-    chosen = ai._pick_attack(batt, a, d1)
-    assert chosen is actions.CLEAVE
-
-    # Broadsword: AI picks Parry & Strike if not defending
-    a.equip_weapon("Broadsword")
-    chosen = ai._pick_attack(batt, a, d1)
-    assert chosen is actions.PARRY_STRIKE

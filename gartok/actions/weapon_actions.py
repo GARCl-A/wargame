@@ -1,21 +1,23 @@
-"""Weapon 2-AP actions: unique tactical options granted by equipped weapon traits.
+"""Weapon actions: unique tactical options granted by equipped weapon traits.
 
-Every weapon kind in the catalog grants its own 2-AP action:
-- Dagger: Sneak Attack (bonus damage against flanked foes)
-- Rapier: Precise Thrust (bonus to hit against flanked foes)
-- Axe / Dwarf Axe: Cleave (strikes two adjacent foes)
-- Quarterstaff: Repel Strike (attacks and shoves foe with +2 bonus)
-- Club / Hammer / Light Hammer: Maiming Strike (halves foe speed)
-- Pick / Light Pick: Armor Pierce (ignores worn armor AC)
-- Shortbow: Power Shot (adds positive STR modifier to arrow damage)
-- Light Crossbow: Extreme Shot (doubles range to 36 squares)
-- Hatchet: Hook Shield (nullifies foe shield AC until next round)
-- Shortspear: Javelin Charge (bonus damage when thrown after moving)
-- Broadsword: Parry & Strike (attacks and gains Defending condition)
+A 2-AP action is one strike for the price of two plain attacks, so out of its favoured case it is
+the worse buy; in that case (`favoured`) the strike lands twice over -- a second roll of the
+weapon's damage -- plus the action's own edge, and beats the two attacks for any weapon or
+modifier:
+- Dagger: Sneak Attack (a flanked foe; +1d4)
+- Rapier: Precise Thrust (a flanked foe; +2 to hit)
+- Axe / Dwarf Axe: Cleave (a second foe beside both: two swings, each +2 to hit)
+- Quarterstaff: Repel Strike (shoves the foe; with its back to a wall or a body it is slammed)
+- Club / Hammer / Light Hammer: Maiming Strike (halves foe speed; a foe that cannot dodge)
+- Pick / Light Pick: Armor Pierce (ignores worn armor AC; an armoured foe)
+- Shortbow: Power Shot (+STR; a foe at half the bow's range or farther)
+- Light Crossbow: Extreme Shot (doubles range to 36 squares: the only shot past the normal one)
+- Hatchet: Hook Shield (nullifies foe shield AC until next round; a foe with a shield)
+- Shortspear: Javelin Charge (1 AP, thrown after moving this turn, +1d4)
+- Broadsword: Parry & Strike (gains Defending; two or more foes in reach)
 """
 
-from .. import intel, items
-from ..board import cells, cells_in_radius, grid_distance
+from .. import items
 from ..conditions import Defending, Maimed, ShieldHooked
 from ..data import d20, resolve_bonus, roll
 from ..ground import GroundObject
@@ -34,6 +36,19 @@ from .combat import PUSH_DC_BASE
 
 def _is_flanked(battle, actor, target):
     return _flanked(battle, actor, target) or bool(_pack_flank(battle, actor, target))
+
+
+UNGUARDED = ("entangled", "sleeping", "surprised", "demoralized")
+
+
+def _second_blow(actor, favoured, **kw):
+    """A favoured strike lands twice over: one more roll of the weapon's damage, or 0."""
+    return actor.damage_roll(**kw) if favoured else 0
+
+
+def _log_twice(battle, res, favoured, why):
+    if favoured and res in ("hit", "crit"):
+        battle.log(f"  {why}: the blow lands twice over!")
 
 
 # --------------------------------------------------------------------------- #
@@ -59,7 +74,10 @@ class SneakAttack(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Sneak Attack (2 pts, +1d4 vs flanked)"
+        return "Sneak Attack (2 pts, double damage +1d4 vs flanked)"
+
+    def favoured(self, battle, actor, target):
+        return _is_flanked(battle, actor, target)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -67,8 +85,8 @@ class SneakAttack(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        flanked = _is_flanked(battle, actor, target)
-        bonus_dmg = roll(1, 4) if flanked else 0
+        flanked = self.favoured(battle, actor, target)
+        bonus_dmg = roll(1, 4) + _second_blow(actor, True) if flanked else 0
 
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
@@ -78,8 +96,7 @@ class SneakAttack(Action):
         nat = d20()
         prefix = f"{actor.name} Sneak Attack -> {target.name}"
         res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=bonus_dmg)
-        if res in ("hit", "crit") and flanked:
-            battle.log(f"  Sneak Attack strikes a vulnerable spot (+{bonus_dmg} damage)!")
+        _log_twice(battle, res, flanked, "Sneak Attack strikes a vulnerable spot")
 
 
 # --------------------------------------------------------------------------- #
@@ -105,7 +122,10 @@ class PreciseThrust(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Precise Thrust (2 pts, +2 to hit vs flanked)"
+        return "Precise Thrust (2 pts, +2 to hit & double damage vs flanked)"
+
+    def favoured(self, battle, actor, target):
+        return _is_flanked(battle, actor, target)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -113,17 +133,20 @@ class PreciseThrust(Action):
         actor.ap -= self.cost
         actor.walking = False
 
+        favoured = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
-        if _is_flanked(battle, actor, target):
+        if favoured:
             mods.append((2, "circumstance", "Precise Thrust"))
 
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Precise Thrust -> {target.name}"
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                           bonus_damage=_second_blow(actor, favoured))
+        _log_twice(battle, res, favoured, "The thrust finds the gap")
 
 
 # --------------------------------------------------------------------------- #
@@ -149,18 +172,36 @@ class Cleave(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Cleave (2 pts, strike 2 adjacent foes)"
+        return "Cleave (2 pts, strike 2 adjacent foes at +2)"
+
+    @staticmethod
+    def second(battle, actor, target):
+        """The foe the sweep carries into: beside both, the weakest."""
+        candidates = [
+            u for u in battle.units
+            if u.alive and u.team != actor.team and u is not target and not u.hidden_from(actor.team)
+            and battle.units_distance(actor, u) <= 1
+            and battle.units_distance(target, u) <= 1
+            and battle.los_between(actor, u)
+        ]
+        return min(candidates, key=lambda c: c.hp) if candidates else None
+
+    def favoured(self, battle, actor, target):
+        return self.second(battle, actor, target) is not None
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
             return
         actor.ap -= self.cost
         actor.walking = False
+        sec = self.second(battle, actor, target)
 
         # 1. Primary strike
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
+        if sec is not None:
+            mods.append((2, "circumstance", "Cleave"))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -168,18 +209,11 @@ class Cleave(Action):
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
 
         # 2. Secondary strike on adjacent foe
-        candidates = [
-            u for u in battle.units
-            if u.alive and u.team != actor.team and u is not target
-            and battle.units_distance(actor, u) <= 1
-            and battle.units_distance(target, u) <= 1
-            and battle.los_between(actor, u)
-        ]
-        if candidates:
-            sec = min(candidates, key=lambda c: c.hp)
+        if sec is not None and sec.alive:
             mods2 = actor.attack_mods(sec, _pack_flank(battle, actor, sec))
             if _flanked(battle, actor, sec):
                 mods2.append((2, "circumstance", "Flank"))
+            mods2.append((2, "circumstance", "Cleave"))
             bonus2, applied2 = resolve_bonus(mods2)
             detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
             nat2 = d20()
@@ -210,7 +244,20 @@ class RepelStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Repel Strike (2 pts, attack & push +2)"
+        return "Repel Strike (2 pts, attack & push +2; double +1d4 vs a foe against a wall)"
+
+    @staticmethod
+    def behind(actor, target):
+        dx, dy = _sign(target.pos[0] - actor.pos[0]), _sign(target.pos[1] - actor.pos[1])
+        return (dx, dy), (target.pos[0] + dx, target.pos[1] + dy)
+
+    def favoured(self, battle, actor, target):
+        """Its back to a wall or a body: the shove has nowhere to go and slams it instead."""
+        step, dest = self.behind(actor, target)
+        if step == (0, 0):
+            return False
+        return (battle.board.diagonal_corner_blocked(target.pos, dest)
+                or not _cell_free(battle, actor, dest, target.footprint))
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -218,6 +265,7 @@ class RepelStrike(Action):
         actor.ap -= self.cost
         actor.walking = False
 
+        pinned = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
@@ -225,9 +273,11 @@ class RepelStrike(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Repel Strike -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+        slam = roll(1, 4) + _second_blow(actor, True) if pinned else 0
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=slam)
+        _log_twice(battle, res, pinned, f"{target.name} is slammed against what stands behind")
 
-        if res in ("hit", "crit"):
+        if res in ("hit", "crit") and not pinned:
             dc = PUSH_DC_BASE + target.mod_constitution
             shove_nat = d20()
             shove_total = shove_nat + actor.mod_strength + 2
@@ -274,7 +324,11 @@ class MaimingStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Maiming Strike (2 pts, halves speed)"
+        return "Maiming Strike (2 pts, halves speed; +2 & double vs a foe that cannot dodge)"
+
+    def favoured(self, battle, actor, target):
+        """Caught, asleep, surprised or shaken: it cannot get its legs out of the way."""
+        return any(target.has_condition(c) for c in UNGUARDED)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -282,14 +336,19 @@ class MaimingStrike(Action):
         actor.ap -= self.cost
         actor.walking = False
 
+        unguarded = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
+        if unguarded:
+            mods.append((2, "circumstance", "Maiming Strike"))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Maiming Strike -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                           bonus_damage=_second_blow(actor, unguarded))
+        _log_twice(battle, res, unguarded, f"{target.name} cannot get out of the way")
 
         if res in ("hit", "crit"):
             target.add_condition(Maimed())
@@ -319,7 +378,10 @@ class ArmorPierce(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Armor Pierce (2 pts, ignores armor AC)"
+        return "Armor Pierce (2 pts, ignores armor AC; double vs an armoured foe)"
+
+    def favoured(self, battle, actor, target):
+        return target.armor is not None and target.armor.ac > 0
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -327,6 +389,7 @@ class ArmorPierce(Action):
         actor.ap -= self.cost
         actor.walking = False
 
+        armoured = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
@@ -334,7 +397,9 @@ class ArmorPierce(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Armor Pierce -> {target.name}"
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, armor_pierce=True)
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, armor_pierce=True,
+                           bonus_damage=_second_blow(actor, armoured))
+        _log_twice(battle, res, armoured, "The point punches through the armour")
 
 
 # --------------------------------------------------------------------------- #
@@ -362,12 +427,15 @@ class PowerShot(Action):
         return battle.can_see_unit(actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Power Shot (2 pts, +STR to damage)"
+        return "Power Shot (2 pts, +STR to damage; double at half range or farther)"
 
     def highlight_targets(self, battle, actor):
-        w = actor.weapon
-        reach = (w.range if w else 14) + actor.char.talent_bonus("ranged_reach")
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+
+    def favoured(self, battle, actor, target):
+        """A long shot: half the bow's range or farther, where a full draw tells."""
+        w = actor.weapon
+        return battle.units_distance(actor, target) * 2 >= (w.range if w else 14)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -375,17 +443,20 @@ class PowerShot(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        str_bonus = max(0, actor.mod_strength)
+        far = self.favoured(battle, actor, target)
+        str_bonus = max(1 if far else 0, actor.mod_strength)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Power Shot -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix, bonus_damage=str_bonus)
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                           bonus_damage=str_bonus + _second_blow(actor, far))
 
         actor.ammo = max(0, actor.ammo - 1)
         if res in ("hit", "crit") and str_bonus > 0:
             battle.log(f"  Drawn with great power (+{str_bonus} STR damage)!")
+        _log_twice(battle, res, far, "A full draw at long range")
 
 
 # --------------------------------------------------------------------------- #
@@ -415,7 +486,6 @@ class ExtremeShot(Action):
         return "Extreme Shot (2 pts, 36 sq range)"
 
     def highlight_targets(self, battle, actor):
-        reach = 36 + actor.char.talent_bonus("ranged_reach")
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
 
     def execute(self, battle, actor, target=None):
@@ -458,7 +528,11 @@ class HookShield(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Hook Shield (2 pts, strip shield AC)"
+        return "Hook Shield (2 pts, strip shield AC; double vs a shield)"
+
+    def favoured(self, battle, actor, target):
+        hand = target.equipped_offhand
+        return bool(hand and items.is_shield(hand)) and not target.has_condition("shield_hooked")
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -466,6 +540,10 @@ class HookShield(Action):
         actor.ap -= self.cost
         actor.walking = False
 
+        shielded = self.favoured(battle, actor, target)
+        if shielded:
+            target.add_condition(ShieldHooked())
+            battle.log(f"  {actor.name} hooks {target.name}'s shield and wrenches it aside (loses shield AC)!")
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
@@ -473,11 +551,9 @@ class HookShield(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Hook Shield -> {target.name}"
-        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
-
-        if res in ("hit", "crit"):
-            target.add_condition(ShieldHooked())
-            battle.log(f"  {target.name}'s shield is hooked and wrenched aside (loses shield AC)!")
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                           bonus_damage=_second_blow(actor, shielded))
+        _log_twice(battle, res, shielded, "The hook bites behind the shield")
 
 
 # --------------------------------------------------------------------------- #
@@ -485,8 +561,8 @@ class HookShield(Action):
 # --------------------------------------------------------------------------- #
 
 class JavelinCharge(Action):
-    id, name, cost, target, aimed = "javelin_charge", "Javelin Charge", 2, "enemy", True
-    desc = "2 AP: Throws spear after moving this turn for +1d4 bonus damage."
+    id, name, cost, target, aimed = "javelin_charge", "Javelin Charge", 1, "enemy", True
+    desc = "1 AP: Throws the spear after moving this turn for +1d4 bonus damage."
 
     @classmethod
     def applicable(cls, battle, actor):
@@ -507,11 +583,9 @@ class JavelinCharge(Action):
         return battle.can_see_unit(actor, target) and battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Javelin Charge (2 pts, throw after move +1d4 dmg)"
+        return "Javelin Charge (1 pt, throw after a move, +1d4 dmg)"
 
     def highlight_targets(self, battle, actor):
-        w = actor.weapon
-        reach = (w.thrown if w else 12) + actor.char.talent_bonus("ranged_reach")
         return [u for u in battle.units if u.alive and u.team != actor.team and self.can(battle, actor, u)]
 
     def execute(self, battle, actor, target=None):
@@ -560,7 +634,13 @@ class ParryStrike(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
-        return "Parry & Strike (2 pts, attack & Defend)"
+        return "Parry & Strike (2 pts, attack & Defend; double with 2+ foes in reach)"
+
+    def favoured(self, battle, actor, target):
+        """Pressed by two or more: every parry opens a riposte."""
+        return sum(1 for u in battle.units
+                   if u.alive and u.team != actor.team and not u.hidden_from(actor.team)
+                   and battle.units_distance(actor, u) <= max(1, u.attack_range if not u.ranged else 1)) >= 2
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -568,6 +648,7 @@ class ParryStrike(Action):
         actor.ap -= self.cost
         actor.walking = False
 
+        pressed = self.favoured(battle, actor, target)
         mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
@@ -575,7 +656,9 @@ class ParryStrike(Action):
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
         prefix = f"{actor.name} Parry & Strike -> {target.name}"
-        _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
+        res = _resolve_hit(battle, actor, target, nat, bonus, detail, prefix,
+                           bonus_damage=_second_blow(actor, pressed))
+        _log_twice(battle, res, pressed, "Parry and riposte")
 
         actor.add_condition(Defending())
         battle.log(f"  {actor.name} falls back into a parrying stance (+1 AC until next turn)!")
