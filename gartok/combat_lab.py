@@ -87,7 +87,7 @@ def build(fight_id, level, squad_size, seed=None):
         battle = Battle(squad, wildfire.camp_crew(level), scenario=ErmosScenario(), daylight=True,
                         lethal=True, aggressor="player")
     elif fight_id == "fortress":
-        foes = wildfire.ogre_band(level)
+        foes = wildfire.ogre_band()
         battle = Battle(squad, foes, scenario=FortressScenario(foes), daylight=True, lethal=True,
                         aggressor="player")
     elif fight_id == "lair":

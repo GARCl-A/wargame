@@ -40,8 +40,7 @@ CREW = 3                      # goblins at a small focus, beside the foreman
 ESCORT = 5                    # goblins and hobgoblins at the Great Focus, beside the Ogre
 HOLD_ESCORT = 7               # ... at the finished fortress, once it stands
 FOREMAN_EDGE = 1              # the foreman is this many levels over the squad
-ESCORT_EDGE = 1
-HOLD_EDGE = 2
+ESCORT_LEVEL = 6              # the escort's level, whatever the squad's
 HOLD_AMBUSH_MULT = 1.5        # a hunt in the Wilds while the hostile fortress stands
 HOLD_GOBLIN_ODDS = 0.5        # ... and how often the pack that finds you is its goblins
 OGRE_SLUG = "ogre"
@@ -343,13 +342,12 @@ def camp_crew(level, rng=random):
     return crew + [encounters.build_enemy(encounters.clamp_level(level + FOREMAN_EDGE), rng, race_pool=data.HOBGOBLIN_POOL)]
 
 
-def ogre_band(level, rng=random, hold=False):
-    """The Ogre and his escort: goblins and hobgoblins over the squad, more of them and tougher
-    once the fortress stands (`hold`)."""
+def ogre_band(rng=random, hold=False):
+    """The Ogre and his escort of goblins and hobgoblins at `ESCORT_LEVEL`, more of them once the
+    fortress stands (`hold`)."""
     from . import npc_lib  # lazy: npc_lib -> persist -> guild -> guild_upkeep -> here
-    edge, n = (HOLD_EDGE, HOLD_ESCORT) if hold else (ESCORT_EDGE, ESCORT)
-    escort = [encounters.build_enemy(encounters.clamp_level(level + edge), rng, race_pool=data.GOBLINOID_POOL)
-              for _ in range(n)]
+    n = HOLD_ESCORT if hold else ESCORT
+    escort = [encounters.build_enemy(ESCORT_LEVEL, rng, race_pool=data.GOBLINOID_POOL) for _ in range(n)]
     return [npc_lib.load_npc(OGRE_SLUG)] + escort
 
 

@@ -113,10 +113,10 @@ Great Focus -- Focus 1, Focus 2, Focus 3              (1 h each)
   race's mods and his talents: STR 17, DEX 9, CON 15, INT 12, WIS 18, CHA 8; 98 HP. Combat 10,
   work 10, racial 10 by the rule (no pin), Builder, Giant's Grip and Mighty Shove. Equipped (author
   2026-10-15) with Plate Armor (AC 15, speed 4 squares) and a Huge Club (1d10).
-- **The escort** (5 at the Great Focus, 7 at the finished fortress) is clamped at the enemy cap (mean 6),
-  like the Battlefield's warband.
+- **The escort** (5 at the Great Focus, 7 at the finished fortress) is fixed at level 6, whatever the
+  squad's level (author 2026-10-17, `wildfire.ESCORT_LEVEL`); the Ogre stays racial 10.
 - **The hostile fortress** is one node an hour off The Wilds; storming it is the finished walls (one
-  gate), the bonfire and 7 escorts two over the squad. Winning removes it; the meat stays lost.
+  gate), the bonfire and 7 escorts at level 6. Winning removes it; the meat stays lost.
 - **Mighty Shove and bodies:** a downed body stops the throw (and takes the 1d6); a dead one is off the
   board (the board does not draw the dead), so it does not. A plain Push still lands on a downed body.
 - **The AI** steps out of the fire, routes round it, shoves a foe into the flames (anyone) or into a wall

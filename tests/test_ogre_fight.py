@@ -211,13 +211,14 @@ def test_a_shove_into_the_flames_burns():
 def test_the_fortress_puts_the_ogre_by_his_bonfire_and_falls_with_him():
     random.seed(4)
     squad = [Unit("player") for _ in range(4)]
-    foes = wildfire.ogre_band(5)
+    foes = wildfire.ogre_band()
     sc = FortressScenario(foes)
     batt = Battle(squad, foes, scenario=sc, aggressor="player")
     ogre = wildfire.ogre_of(batt)
     assert ogre.pos == OGRE_CELL and batt.fire == set(BONFIRE)
     assert len(batt.enemy_units) == 1 + wildfire.ESCORT
     assert all(u.race["name"] in ("Goblin", "Hobgoblin") for u in foes[1:])
+    assert all(u.mean_level == wildfire.ESCORT_LEVEL for u in foes[1:])
     assert not any(c in batt.fire for u in batt.units for c in batt.cells_of(u))
     sc.on_round(batt)
     assert len(batt.fire) > len(BONFIRE)
@@ -341,3 +342,10 @@ def test_a_whole_fortress_fight_plays_to_the_end_under_the_ai():
             break
         ai.take_turn(b, b.active)
     assert b.winner in ("player", "enemy")
+
+
+def test_the_escort_is_fixed_whatever_the_squad():
+    random.seed(1)
+    held = wildfire.ogre_band(hold=True)[1:]
+    assert len(held) == wildfire.HOLD_ESCORT
+    assert all(u.mean_level == wildfire.ESCORT_LEVEL for u in held)

@@ -418,7 +418,7 @@ level-0 and a level-1 spell of its own.
     then **90** learning points. `Unit.magic_blood` is rolled when the character is made (**5%**; a
     Kobold always has it; a private roll seeded by the uid, rolled on load for a unit saved without
     it) and stays hidden: the test only reveals it, and a failed test is final.
-  - *Nature* (the Nature Grove, Elowen Mossmane, a Centaur): **270** learning points.
+  - *Nature* (the Nature Grove, Thorne Mossmane, a Centaur): **270** learning points.
   The rite grants the school and its root in the magic talent track, **no spell**: spells are still
   studied from scrolls (below). A race or talent that already holds a school skips its rite.
 - **Learning a spell** happens outside combat, at the Tavern
@@ -1907,13 +1907,13 @@ The Wilds and the foci an hour off the Great Focus.
 - **The Great Focus** is the fortress going up: **talk** the Ogre round (the same chain, **DC 15**,
   **−1 for every small focus taught**) or **STORM THE FORTRESS** (`fortress_scenario.py`: half-raised
   walls, the bonfire spreading, the **Ogre** -- `npcs/ogre.json`, racial 10, Large, plate armour and a Huge Club,
-  Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** one over the squad). The fight is
+  Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** at level **6**, whatever the squad's level). The fight is
   won when the Ogre is down. Either way the errand is **done**: +1 reputation with the Nature Coven and
   a **Scroll of Water Jet** to the signer. Talked round, he builds it right: **The Ogre's Fortress**
   stays as a friendly node with nothing to offer yet. The small foci still burning keep their clock.
 - **Day 14**: every focus still burning is lost. With the Ogre unbeaten the errand **fails** and the
   fortress stands **hostile** for good: more ambushes on a Wilds hunt (above), and **STORM THE
-  FORTRESS** there (the finished walls with one gate, **7** escorts **two** over the squad) takes it down.
+  FORTRESS** there (the finished walls with one gate, **7** escorts at level 6) takes it down.
 
 **The Dragon's Clutch** (`lair.py`, the Blood Cult's third errand, open to all once the Ancient Codex is
 recovered, no deadline). The Codex names a lair under the Mine where a dragon sleeps on its clutch; the

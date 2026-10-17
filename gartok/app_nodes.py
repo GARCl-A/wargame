@@ -271,7 +271,7 @@ class NodeScreensMixin:
         if focus is not None and not focus.great:
             scenario, foes = ErmosScenario(), wildfire.camp_crew(level)
         else:
-            foes = wildfire.ogre_band(level, hold=focus is None)
+            foes = wildfire.ogre_band(hold=focus is None)
             scenario = FortressScenario(foes, finished=focus is None)
         battle = Battle(squad, foes, scenario=scenario, daylight=self.guild.clock.is_daylight,
                         lethal=True, clock_day=self.guild.clock.day, aggressor="player")
