@@ -2001,6 +2001,10 @@ it can catch up with a character wherever the City's authority reaches
 
 ### The Champion of the Pit 🟡
 
+Before the guild's first bout against Adelio, and its first against the Ribbit Brothers, each
+boss says one line beside his portrait (the brothers one card each, Ribit first), then the fight
+starts. No choices: it is flavour, and it is heard once a guild.
+
 Beating the champion team hands the **Champion of the Pit** title to whoever on
 the winning squad lands the blow that puts Adelio down. It is a *character's*
 title, held on the `Unit` (`unit.arena_title`), never the guild's. A messy finish

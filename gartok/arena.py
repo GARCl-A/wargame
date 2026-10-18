@@ -25,7 +25,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 
 import random
 
-from . import constants, encounters, npc_lib, world
+from . import constants, encounters, i18n, npc_lib, world
 
 CHAMPION_SLUG = "adelio-small-knife"
 
@@ -65,6 +65,13 @@ BOSS_MAP = "capture-the-flag-the-gamers"
 
 RIBBIT_SLUGS = ("bufo", "ribit", "peep")
 RIBBIT_CAMEO_CHANCE = 0.05    # chance an arena bout fields an unrecruited Ribbit brother
+
+# Who speaks before the guild's first bout against each boss, in order: (npc slug, caption).
+# The lines are `arena_talk.<slug>` in locales/en.json.
+BOSS_TALKS = {
+    "champion": ((CHAMPION_SLUG, "champion of the pit"),),
+    "boss": (("ribit", "the eldest brother"), ("bufo", "the big brother"), ("peep", "the runt")),
+}
 
 
 def scrapper_bout():
@@ -215,6 +222,30 @@ def cameo_enemy(guild=None, rng=random):
         return npc_lib.load_npc(CHAMPION_SLUG)
     except OSError:
         return None
+
+
+def boss_talk_key(offer):
+    """The `BOSS_TALKS` key of a bout, or None for a bout no boss talks before."""
+    if offer is None:
+        return None
+    return "champion" if offer.champion else "boss" if offer.boss else None
+
+
+def boss_talk(guild, offer):
+    """The cards the bosses speak before `offer`, the first time this guild fights them, else [].
+    Each card is {"name", "race", "portrait", "caption", "line"}."""
+    key = boss_talk_key(offer)
+    if key is None or key in guild.boss_talks_seen:
+        return []
+    cards = []
+    for slug, caption in BOSS_TALKS[key]:
+        try:
+            npc = npc_lib.load_npc(slug)
+        except OSError:
+            continue
+        cards.append({"name": npc.name, "race": npc.race["name"], "portrait": npc.portrait_file,
+                      "caption": caption, "line": i18n.t(f"arena_talk.{slug}")})
+    return cards
 
 
 def load_ribbit_brothers():

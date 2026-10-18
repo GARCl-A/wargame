@@ -298,5 +298,11 @@
       ],
       "suggestion": "Give your groups names (the pencil beside the name on the group screen) so this card tells them apart at a glance."
     }
+  },
+  "arena_talk": {
+    "adelio-small-knife": "Another hopeful with a borrowed blade. Go on, everyone wants the belt. Mind your purse on the way down.",
+    "ribit": "Bufo holds the flag, Peep holds the water, and I hold your attention. Let's see who tires first.",
+    "bufo": "Flag stays. You go.",
+    "peep": "Wade in, wade in. The water's lovely. I'll count the splashes."
   }
 }

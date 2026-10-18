@@ -522,7 +522,7 @@
   },
   "Holy Symbol": {
     "weight": 0.5,
-    "price": 1,
+    "price": 80,
     "food": false,
     "lifespan": null
   },

@@ -21,6 +21,7 @@ from . import (
 )
 from .battle import Battle
 from .battle_screen import BattleScreen
+from .boss_talk_screen import BossTalkScreen
 from .combat_log import CombatLog
 from .loot_screen import LootScreen
 from .reward_screen import RewardScreen
@@ -39,6 +40,11 @@ class BattleFlowMixin:
         battle = Battle(squad, enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena, clock_day=self.guild.clock.day)
+        talk = arena.boss_talk(self.guild, offer)
+        if talk:
+            self.guild.boss_talks_seen.add(arena.boss_talk_key(offer))
+            self.scene = BossTalkScreen(self.ui_fonts, talk, lambda: self._enter_battle(battle, node))
+            return
         self._enter_battle(battle, node)
 
     def _start_title_defense(self, node):

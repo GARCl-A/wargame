@@ -60,6 +60,7 @@ from .app_forced import FORCED_PLAYERS, ForcedFightsMixin
 from .app_hunt import HuntFlowMixin
 from .app_nodes import NodeScreensMixin
 from .battle_screen import BattleScreen
+from .boss_talk_screen import BossTalkScreen
 from .char_editor_screen import CharEditorScreen
 from .combat_lab_screen import CombatLabScreen
 from .combat_log import CombatLog
@@ -260,10 +261,11 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
 
     def _can_save(self):
         """Never mid-battle or mid-hunt: neither lives in the save, so a snapshot
-        taken inside one would load as if the fight had never happened."""
+        taken inside one would load as if the fight had never happened. The boss's line
+        comes after the bout's entry is paid, so it counts as the battle."""
         scene = self.scene.resume_to if isinstance(self.scene, PauseScreen) else self.scene
         return (self.guild is not None and self._hunt is None
-                and not isinstance(scene, BattleScreen))
+                and not isinstance(scene, (BattleScreen, BossTalkScreen)))
 
     def _start_map(self):
         """Land on the map -- unless every group already has an order and

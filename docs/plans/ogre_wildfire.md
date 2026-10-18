@@ -62,8 +62,8 @@ Great Focus -- Focus 1, Focus 2, Focus 3              (1 h each)
 
 - **The fight is the equivalent of a racial-15 character:** the **Ogre at racial ~10** (authored,
   following the racial rule: a track sum of 20, no `racial_override`) plus **about 5 Goblins and
-  Hobgoblins at the squad's level +1**, like the Battlefield's warband. Tune it in the sim until it
-  weighs as much as one racial-15 boss.
+  Hobgoblins** (first planned at the squad's level +1; built fixed at level 6, see the as-built
+  notes). Tune it in the sim until it weighs as much as one racial-15 boss.
 - **New race: Ogre** (author 2026-10-15), enemy only (never in the draft or recruit pool):
   - mods STR +4, DEX -2, CON +2, INT -2, WIS +2, CHA -2; hit die **d12** (new: today's top is d10); Large.
   - **Ability, Reach:** melee attacks reach 1 square farther (the `melee_reach` seam the Grippli's

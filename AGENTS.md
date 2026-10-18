@@ -103,8 +103,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `captives.py` | a foe bound in battle (`actions.Capture`) kept by a group (`Group.captives`): not a member, counts 1 on the herd limit, walks in the pace, dies 7 days after capture (`daily`), a body worth keeping (`CORPSES`) left with the leader |
 | `ox.py` / `ox_fields.py` | the tanner's last job: the Country Roads search, the daylight tracking of Aurochs (`ox.track`, DC climbs per found trail) and the big skittish-beast field (`OxFieldsScenario`: terrain, the herd's call, win on his fall); `ai._skitter` is his flight |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
-| `dialogue.py` / `dialogue_screen.py` | the talk before a fight: an `Encounter` (`Ambush`, `Patrol`, `WildfireTalk`) offers verbs (`VERBS`), `choose` rolls one into a `Result` (peace / fight with an `Opening` for `Battle.open_with` / leave / surrender); `forced.encounter` builds it for the guard and the ambushes, `Order.parley` keeps a rolled one; `ai_choice` is the squad's side |
-| `arena.py` / `ribbit_prompt_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer |
+| `dialogue.py` / `dialogue_screen.py` | the talk before a fight: an `Encounter` (`Ambush`, `Patrol`, `Challenge`, `WildfireTalk`) offers verbs (`VERBS`), `choose` rolls one into a `Result` (peace / fight with an `Opening` for `Battle.open_with` / leave / surrender); `forced.encounter` builds it for the guard and the ambushes, `Order.parley` keeps a rolled one; `ai_choice` is the squad's side |
+| `arena.py` / `ribbit_prompt_screen.py` / `boss_talk_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer; before the guild's first bout against Adelio or the Ribbit Brothers each boss says one line (`arena.boss_talk`, `Guild.boss_talks_seen`, copy in `locales/en.json` under `arena_talk`) |
 | `magic.py` | spell registry + study-difficulty math (casting is in actions/spells.py) |
 | `encounters.py` | enemy packs scaled to a target mean level |
 | `progression.py` | XP curves + combat-XP rule |

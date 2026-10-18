@@ -232,7 +232,7 @@ PAYLOAD_DEFAULTS = {
     "recruit_seen": {},
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True, "revealed": [], "met_factions": [], "supply_runs_completed": 0,
-    "wildfire": None,
+    "wildfire": None, "boss_talks_seen": [],
 }
 
 
@@ -269,6 +269,7 @@ def _payload(guild, kind, label):
         "ox_trails": guild.ox_trails,
         "revealed": sorted(guild.revealed),
         "met_factions": sorted(guild.met_factions),
+        "boss_talks_seen": sorted(guild.boss_talks_seen),
         "supply_runs_completed": guild.supply_runs_completed,
         "wildfire": wildfire.to_dict(guild.wildfire),
         "shops": {node_id: shop.to_dict() for node_id, shop in guild.shops.items()},
@@ -387,6 +388,7 @@ def load_game(world, save_id=CURRENT):
                  ox_trails=payload["ox_trails"],
                  revealed=payload["revealed"],
                  met_factions=payload["met_factions"],
+                 boss_talks_seen=payload["boss_talks_seen"],
                  supply_runs_completed=payload["supply_runs_completed"],
                  wildfire=wildfire.from_dict(payload["wildfire"]),
                  tutorial=TutorialState(seen=payload["tutorial_seen"],

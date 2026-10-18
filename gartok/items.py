@@ -389,7 +389,7 @@ _register(ItemDef(id="pliers", name="Pliers", type=ItemType.TOOL, rarity=ItemRar
 _register(ItemDef(id="compass", name="Compass", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.2, price=1))
 _register(ItemDef(id="deck_of_cards", name="Deck of Cards", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.2, price=1))
 _register(ItemDef(id="musical_instrument", name="Musical Instrument", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=2.0, price=4))
-_register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.COMMON, weight=0.5, price=1))
+_register(ItemDef(id="holy_symbol", name="Holy Symbol", type=ItemType.TOOL, rarity=ItemRarity.UNCOMMON, weight=0.5, price=80))
 _register(ItemDef(id="signal_horn", name="Signal Horn", type=ItemType.ARTIFACT, rarity=ItemRarity.UNCOMMON, weight=1.0, price=60))
 _register(ItemDef(id="leather_of_biwolf", name="Leather of Biwolf", type=ItemType.ARTIFACT, rarity=ItemRarity.RARE, weight=1.0, price=150))
 _register(ItemDef(id="thunderhide", name="Thunderhide", type=ItemType.ARTIFACT, rarity=ItemRarity.UNIQUE, weight=1.5, price=400))
