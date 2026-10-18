@@ -152,6 +152,117 @@ its functions are tabs inside.
   (armour is hard to wear, healing is slow); low CHA caps guild growth; the mental stats hurt little.
   Decided 2026-10-12: keep current stat severity for now; revisit attribute weighting and severity after the magic arc lands.
 
+## Playtest notes 2026-10-18 (Claude's 30-day run from a new game)
+
+**Not the author's playtest.** This is a run Claude played through a headless driver; the playtest in
+*Suggested order* item 2 (after the magic arc) is still the author's own and still to do. A fresh Warband
+guild played from the main menu to day 30 through the real UI (real clicks; some fights left to the AI). End state: 4 members, no deaths, $66 (started $89), 1 reputation,
+two members sick. Screenshots and the full write-up: the "GARTOK em 30 Dias" artifact. Design questions
+raised by the same run are under *Needs more information -> Playtest 2026-10-18*.
+
+**Bugs**
+- **Rotten food eaten before a groupmate's fresh food.** `unit_hunger.take_ration` prefers fresh food
+  only inside one pack; `HungerMixin._take_ration` takes the first ration found walking own pack then
+  `larder`, so a member with Rotten Food in their own pack eats it while a groupmate carries Potatoes.
+  Seen twice (three members sick on day 22, two again on day 30). Nothing on the map announced it.
+- **Blind night fight never ends.** Wilds ambush at night, no light on either side: 117 rounds on a 16x12
+  board without contact. The aggressor's search (`ai.py`) never found the squad; an unseen foe stood in
+  the cell next to a squad member and could not be attacked; Flee was blocked by that unseen foe and
+  the button gave no reason. Whatever the darkness rework decides, a fight needs a way to end.
+- **Victory / defeat panel contradicts itself:** the header reads VICTORY while the box reads DEFEAT and
+  the centre says "The AI won" (seen after fleeing and after an arena loss).
+- **Tavern hub tabs keep the old party** after a recruit signs: Food & Drink and Study list 3 of 4 until
+  the tavern is left and reopened (tabs built once in `hub_screen.for_node`).
+- **Attack needs two clicks** (arm, then confirm, `battle_screen._click`) but the combat card says one.
+- **Rest "until full" stopped at 23:59** with a member at 6/12 HP and no reason given.
+- **Medic prices by whole potion:** 1 HP costs $56, the same as 2 HP.
+- **Hunt summary wording:** "Fought off 1 pack" after the squad fled; "6 h of daylight left" at 00:13.
+- **The battle only ends on End Turn** after the last foe falls; an extra click on the body walks onto it.
+- **A noon fight looks like night:** the Old Road ambush at 11:59 drew the board as dark as the night one,
+  lit only around the torches. Check whether the scenario reads the hour at all.
+- **Arena start puts the squad next to a foe:** the first bout opened with the orc at (2,0) beside an
+  enemy at (3,0). Check whether the arena's deployment mixes the sides on purpose.
+- **The board goes black on a wipe:** with the whole squad down nobody is left to see, so the defeat
+  screen shows an empty dark board.
+
+**UI overlaps and layout**
+- Lumber Yard panel: when the "past this job bare-handed" line shows, BROWSE THE YARD is drawn over
+  MANAGE GEAR & QUESTS.
+- Rest menu: the "until full" detail line runs past both panel edges; the hover tooltip covers the 8 H row.
+- Farm hub: "party holds $N" overlaps the STABLES tab.
+- Loot: "FOOD · MATERIAL" runs under the quantity buttons.
+- The "⋮" glyph renders as a box in the tutorial card's serif font (Market, Bank cards).
+- A hub opens on a tab that is not the node's point: the Farm on Stables, the Apothecary on an empty
+  CRAFT tab with no empty-state line.
+- With 4+ members, shop columns past the third need a sideways scroll.
+
+**Tutorials (review all of them)**
+- Wrong facts: the map card sends the player to the Market for Potatoes and Meat (they are at the Farm);
+  the Crafting card says Salt is sold at the Market (Farm); the Library card promises dictionaries the
+  shelf does not show (gated, unexplained).
+- Volume: about 25 modal cards, the map's with six paragraphs; the guild's goal ("what you're playing
+  for") is the 12th. Decided 2026-10-18: the first card only says "this is your guild; your objectives
+  are here" and points to the **guild objectives** list (*Needs more information*); every other card gets
+  much shorter, since each stays one `?` click away.
+
+**Discoverability**
+- Nothing suggests a light source before a night hunt (a Torch is $2 and decides the fight).
+- Nothing points a wounded group to the Medic.
+- Ledger Hold is reachable before the Bankers hand over the chest, so the first visit is a wasted, risky
+  trip. Still open. Hiding it (`Node.hidden`) would hide the Frontier Outpost and the Battlefield behind
+  it too. **Rejected 2026-10-18:** listing on the map panel what a node holds before the trip; arriving and
+  finding out is the old-school exploration the game wants.
+- The Library's "A New Translation" asks for a Dictionary of an Unarchived Tongue and nothing says how
+  one is made (presumably the WRITE tab).
+- Direction 2026-10-18: teach at the moment of the decision (one line where the choice is made) rather
+  than with a card earlier.
+- The work level 2 opening (level 1 at the Yard, buy Axes, level 2: a second hit die) is the author's
+  own first move every run, and nothing in the game shows it. Decided 2026-10-18: it becomes a chain in
+  the guild objectives (work level 1 -> buy Axes -> work level 2), not a card.
+
+**Reward feedback (agreed 2026-10-18, ready to do)**
+Today all three are a generic `AlertScreen` tuple (`app_battle.py` "LEVEL UP!", `unit_levels` work
+level lines) or a small green line (the tavern). Each becomes its own screen built on `ui/`:
+- **Level up:** the portrait large, the new level stamped, the numbers climbing from before to after
+  (HP, hit dice) and a button straight to the talent picks (`LevelScreen`).
+- **Recruit signed:** the new member's card slides into the roster with an ink signature and a line
+  of their own.
+- **After-action report** before the loot screen: who downed whom, XP bars filling, loot, deeds earned.
+- **The ambush itself:** a Wilds ambush is three lines of text on an empty hunt screen, the tensest moment
+  of a hunt. Give it the same weight (the foes' portraits, the odds, the choice).
+
+**Non-lethal damage heals with a day of rest (decided 2026-10-18)**
+- Damage taken in a non-lethal fight (the arena) heals in full after 24 h of unbroken rest. Lethal
+  damage keeps today's pace (`guild_upkeep.rest_heal`), so cheap healing stays a milestone for the
+  production chains. Needs non-lethal damage tracked apart from lethal damage on the unit.
+
+**Darkness: fog of war (direction agreed 2026-10-18)**
+- Three states per cell: never seen (black), seen before but out of light now (terrain dimmed, no units),
+  visible. A first visit starts black and the torch reveals it; a known place (arena, city, the Claim)
+  starts in the second state. Pairs with *heard* adjacent foes (attackable with a penalty) and a way for
+  a contact-less fight to end, both under *Needs more information*.
+
+**Sound**
+- The author dropped four Kenney packs in `scratch/audios/` (impact, interface, RPG, UI; about 330 files,
+  all CC0, licence files included). To explore: hits, coins, level up, UI clicks. `scratch/` is git-ignored,
+  so the sounds used move to `gartok/assets/` with their licence.
+
+**Presentation (agreed directions)**
+- **A floor per place, prototype first.** Step 1: a code-drawn prototype of two boards, the Arena and
+  the Wilds, rendered to images for the author to judge before anything lands (tight palette per place,
+  soft tile-to-tile variation, small scattered marks, soft shadows, torch light tinting the floor; Brogue
+  is the reference for simple tiles made beautiful by colour and light). Step 2, if approved: every
+  place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the
+  Ruins...); today every board is the same grey.
+- **The log on the board:** floating damage numbers, a hit flash, a mark on the fallen, a crit banner.
+- **Memorial card on a death:** portrait, name, race, days lived, who downed them, the log line; built to
+  be screenshotted.
+- **Friend / foe apart from the banner colour:** a fixed ring or shape per side; the banner only as a
+  detail. A red banner makes the squad and the foes the same red.
+- **Bigger vendor portrait** in the shop screens, with a line of their own. Decided 2026-10-18: no accent
+  colour per shop (the game would change colour all the time) and the stock stays as rows, not an icon
+  grid (name and weight matter; the icons are not strong enough to lead).
+
 ---
 
 ## Architecture debt
@@ -421,6 +532,33 @@ building them:
 ---
 
 # Needs more information
+
+- **Playtest 2026-10-18: open design questions** (being discussed with the author, no code yet).
+  - **Guild objectives list.** Agreed 2026-10-18 as the shape of the tutorial; the detail is open. A list
+    on the Guild screen (the first card sends the player there) with first steps ("buy food", "equip a
+    torch", the work level 2 chain, a first win) next to the factions' deeds. Battle Brothers' Ambitions is
+    the market reference. Open: the list, the order, what each one gives.
+  - **Healing dominates the early economy.** An arena bout nets $2 and costs about 3 days of rest or
+    $112-224 a member at the Medic. Author 2026-10-18: cheap healing should stay a milestone (potions
+    from a production chain), so do not make healing cheap across the board. "Rest until full" already
+    removes the tedium; what is left is the ratio between what an early fight pays and the food-days it
+    costs to recover (`guild_upkeep.rest_heal`: 1 HP per 8 h at racial level 1). The arena side is decided
+    (non-lethal damage heals with a day of rest, *Ready to do*).
+  - **The world moving by itself and members with a will of their own** (a Wilds node turns into a lair
+    if nobody clears it; an idle veteran asks for work or threatens to leave). The author's long-term
+    vision for time pressure; non-trivial in design and code and waits on earlier subsystems.
+  - **Lumber as an endless floor.** Day labour nets about $1 a member a day; risk-free, so a patient
+    player never has a reason to fight. Author's plan: the Yard produces Lumber by how many work there,
+    so a guild working it floods the market. Open: today's time pressures (Bankers' rent, the title
+    defence, the Ogre's deadline) are all ones the player chooses; nothing comes from the world itself.
+  - **Darkness.** Pitch black stays the rule (author 2026-10-18), but foes in adjacent cells should be
+    known and attackable as obscured (a penalty), not invisible.
+  - **Darkness vs fog on screen.** Settled as fog of war (*Ready to do*). Still open: how weather fog, if
+    it ever exists, looks apart from darkness.
+  - **Art direction for the board and shops.** The author is not an artist and worries that an engraved
+    board, or AI-made textures, would look bad or cause trouble later.
+  - **Tutorial shape.** Fewer, shorter modal cards and the guild objectives list (above); still open
+    which rules move to one-line hints at the moment of the decision and which go to the wiki.
 
 - **Magic as the vertical progression.** The biggest content gap; the arc's work is in *Ready to do -> Medium*.
   The schools are rival factions but not mutually exclusive for a character. Magic comes strictly before
