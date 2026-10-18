@@ -118,7 +118,7 @@ What changes with them:
 - `reference.py` prints the formula and the first levels instead of the full list.
 - **Talent trees are finite.** A pick past the last node of a tree waits unspent: that is item 5 of
   the backlog's order (*Talent trees to the level cap*), not a blocker.
-- Generated enemies keep their caps (combat 7 / work 6); only authored NPCs go past 15.
+- Generated enemies keep their caps (combat 7 / work 6) when scaled to the squad (`clamp_level`); only authored NPCs go past 15.
 
 ## As built (2026-10-16)
 

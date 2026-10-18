@@ -21,6 +21,7 @@ weight, then hands its `race_pool` down to `roll_pack`/`build_enemy` -- headcoun
 and level keep coming from the same weights regardless of who shows up.
 """
 
+import math
 import random
 from dataclasses import dataclass
 
@@ -47,15 +48,23 @@ def weighted_choice(weights, rng=random):
     return rng.choices(keys, weights=[weights[k] for k in keys])[0]
 
 
+def level_weights(lo, hi, peak, spread):
+    """`{level: weight}` over `lo..hi` from a bell centred on `peak` and cut at both ends: a
+    `peak` near `lo` leans the draw low, the top levels rare but possible."""
+    return {n: math.exp(-0.5 * ((n - peak) / spread) ** 2) for n in range(lo, hi + 1)}
+
+
 def _split_tracks(mean_level, rng):
     """A random (combat, work) level pair that averages to `mean_level`.
 
     `mean_level` is floor((c + w) / 2), so any pair summing to `2 * mean_level`
     hits it exactly. Pick `c` in the range the track caps allow, `w` fills in.
-    `lo <= hi` holds for every `mean_level` up to (combat cap + work cap) // 2."""
+    Past (combat cap + work cap) // 2 both tracks climb together: the caps bind the
+    fights scaled to the squad (`clamp_level`), not a table that asks for more."""
     total = 2 * mean_level
-    lo = max(0, total - _WORK_CAP)
-    hi = min(_COMBAT_CAP, total)
+    combat_cap, work_cap = max(_COMBAT_CAP, mean_level), max(_WORK_CAP, mean_level)
+    lo = max(0, total - work_cap)
+    hi = min(combat_cap, total)
     combat = rng.randint(lo, hi)
     return combat, total - combat
 
@@ -170,14 +179,10 @@ def roll_encounter(table, count_weights=WILDS_COUNT_WEIGHTS,
     return pack
 
 
-# Frontier Supply Run ambush table: marauders and wild predators along the frontier
-FRONTIER_SUPPLY_TABLE = (
-    EncounterEntry(60, None),                       # Frontier bandits / marauders
-    EncounterEntry(25, tuple(data.WILD_POOL)),       # Wolves
-    EncounterEntry(15, tuple(data.SKELETON_POOL)),   # Ancient skeletons
-)
-FRONTIER_SUPPLY_COUNT = {2: 30, 3: 40, 4: 20, 5: 10}
-FRONTIER_SUPPLY_LEVEL = {1: 30, 2: 40, 3: 20, 4: 10}
+# Frontier Supply Run ambush: enemy soldiers (humanoids only) on the Outpost road, meant to be hard
+FRONTIER_SUPPLY_TABLE = (EncounterEntry(1, None),)
+FRONTIER_SUPPLY_COUNT = level_weights(4, 10, peak=6, spread=2)
+FRONTIER_SUPPLY_LEVEL = level_weights(3, 8, peak=4, spread=2)
 
 
 def roll_supply_ambush(rng=random):

@@ -7,7 +7,7 @@ a supply caravan. Each is one `ForcedEvent` in `EVENTS`, keyed by its order kind
 - **where it is caught.** `arrival` catchers run when a group reaches a node
   (`arrival_pause`, called by `campaign.advance`); a `daily` check runs once per tick for the
   days crossed (`daily_checks`); an event with neither is raised by the work that triggers it
-  (`Guild.gather_shift`, `Guild.supply_run_shift`).
+  (`Guild.gather_shift`; a supply run's leg stopping at its ambush, `Guild.supply_leg`).
 - **how it is played** (`play`): "battle" goes straight into the fight against `order.pack`,
   "map" lands on the map with a red CTA to start it, "talk" opens the dialogue before it
   (`encounter`, `dialogue.py`; a pack nobody in talks goes straight to the fight). The road
@@ -289,17 +289,19 @@ def resolve_gather_ambush(guild, group, order, outcome):
 
 
 def resolve_supply_ambush(guild, group, order, outcome):
-    """A win banks the supply run's pay, deed and work XP for whoever is left; a loss loses the
-    cargo."""
+    """A win walks the caravan on from where it stopped (the pay waits for Ledger Hold); a loss or
+    a flight leaves the group where the leg began -- Ledger Hold on the way out, the Outpost on the
+    way back -- with the cargo lost."""
     group.pending = None
     if group.empty:
         return []
-    group.order = orders.idle()
     if not outcome.won:
-        return ["The supply caravan was overrun and routed -- the cargo is lost and the contract unfulfilled."]
-    survivors = [u for u in group.members if u in outcome.survivors]
-    return (["The caravan guards fought off the frontier warband and delivered the supplies."]
-            + guild.bank_supply_run(survivors, order.hours))
+        group.order = orders.idle()
+        return [f"The supply caravan is routed -- the cargo is lost; the escort falls back to "
+                f"{world.node(group.node).name}."]
+    group.order = orders.Order("travel", eta=order.eta, remaining=order.owed, dest=order.dest,
+                               path=order.resume_path, task="supply_run")
+    return ["The caravan guards drive the soldiers off and the caravan rolls on."]
 
 
 def resolve_property_raid(guild, group, order, outcome):

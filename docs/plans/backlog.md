@@ -32,14 +32,14 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
    dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
    [dragon_lair.md](dragon_lair.md)); the keepers, the initiation and each school's own level-0 / level-1
    spells are built (2026-10-17). The talk before the arena's first boss fights is built (2026-10-18,
-   `boss_talk_screen.py`). **Next:** a few choices in the magic tree for Nature and Faith (*Medium -> Magic Arc*); then the frontier supply
-   run as a real trip (*Playtest notes*), which goes in before the playtest too (author 2026-10-18).
+   `boss_talk_screen.py`). **Next:** a few choices in the magic tree for Nature and Faith (*Medium -> Magic Arc*). The frontier supply run walks since
+   2026-10-18 (RULES.md *Ledger Hold*).
    How a player gets the new scrolls is deferred past the arc (author 2026-10-17: scrolls are never sold).
    The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
    test holds it; the level curves have no top since the same day); the Ogre stays racial 10 with a fixed
    level-6 escort (2026-10-17).
 2. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): starts once the
-   magic arc closes and the supply run walks (author 2026-10-17 / 2026-10-18); the rite and the tier 0/1 spells are in. The AI work it waited on is done (2026-10-16);
+   magic arc closes (author 2026-10-17); the walked supply run is in; the rite and the tier 0/1 spells are in. The AI work it waited on is done (2026-10-16);
    what the AI still lacks is a short list (*Teach the AI the newer actions*), and the weapon actions' cases are
    tuned from this playtest.
 3. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
@@ -143,18 +143,8 @@ its functions are tabs inside.
 **Factions, nodes and world**
 - **The Battlefield beyond the Faith mission (author 2026-10-15).** For now its only use is the Faith
   Order's errands, and it stays that way (author 2026-10-17). Later it becomes one more place of Ledger
-  Hold work and missions: what an open skirmish pays, how often the front has a fight.
-- **Frontier supply run as a real trip (author 2026-10-15; important, 2026-10-17; before the playtest, 2026-10-18).** The run (`orders.supply_run`,
-  `Guild.supply_run_shift`) is still a 10 h work order the group spends standing at Ledger Hold; the
-  Frontier Outpost node exists now (with the Battlefield) but does nothing. **Shape (author 2026-10-18):** the
-  group really walks Ledger Hold -> Frontier Outpost -> Ledger Hold, its marker moving on the map; the run's
-  length is the trip at the group's own pace with the cargo (edge of 5 each way), not a fixed clock. Cancelled or
-  fled midway, the group stays where it is: fleeing an ambush on the way out returns to Ledger Hold, on the way
-  back to the Outpost. The ambush is enemy soldiers, generated at level 3-8, 4 to 10 of them: meant to be
-  hard (today `encounters.roll_supply_ambush` is 2-5 raiders at level 1-4). **Pay (author 2026-10-18):** fixed
-  per trip, the current $30 a member (about $3 an hour at walking pace, 10 h); a faster group earns more an
-  hour, a slower one less. A first pick, to revisit after a playtest. The same walked-order shape is what the Battlefield's
-  later Ledger Hold work would use.
+  Hold work and missions: what an open skirmish pays, how often the front has a fight. The supply run's
+  walked order with an ambush part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse.
 - **Gold spent on equipment per level (author 2026-10-15).** A table of how much kit a body of a given
   level should carry (weapon, armour, consumables), for the enemy generators (`encounters.py`, the
   Battlefield's soldiers and warband) and for future balance. Today a generated body carries its

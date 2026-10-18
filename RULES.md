@@ -291,8 +291,10 @@ dice scale with every racial level (L1+), a **racial talent pick comes only ever
 (e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox).
 No level is the last: an authored NPC can sit past 15 (the editors stop at
-`progression.LEVEL_UI_CAP`, 30, only as a stepper limit), but generated enemies stay capped at
-combat 7 / work 6 (`constants.ENEMY_*_CAP`).
+`progression.LEVEL_UI_CAP`, 30, only as a stepper limit). A fight scaled to the squad's level holds
+its generated enemies at combat 7 / work 6 (`constants.ENEMY_*_CAP`, `encounters.clamp_level`); an
+encounter table may ask for more (the supply run's soldiers reach 8), and past the caps both tracks
+climb together.
 
 **Combat XP — only from enemies at your level or above.** Downing a standing
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
@@ -1662,10 +1664,18 @@ measure the guild's standing:
 
 **Ledger Hold** also has deeds: *Treefolk Mentorship* (train a Treefolk recruit to racial level 2 and
 bring them) and *Frontier Supply Run*, the military deed: **10** completed supply runs. A run
-(`orders.supply_run`, 10 h, a work order of level 5) needs 20 kg of free cargo capacity; each escort
-earns $30 and work XP, there is a 35% ambush chance per run (a forced `supply_ambush` fight; the pay
-waits for a win), and every run that is banked counts toward `Guild.supply_runs_completed`. The deed
-fires on the tenth.
+(`orders.supply_run`) needs 20 kg of free cargo capacity and is a **walk**: the group carries the
+supplies out to the Frontier Outpost and back to Ledger Hold, at its own pace (5 distance each way,
+10 h for a walker), its pawn moving on the map. The pay is fixed per run, **$30** an escort and work
+XP of level 5 (as 10 h of work), banked on the return to Ledger Hold, so a faster group earns more an
+hour. **Each leg** (out, back) rolls a **35%** ambush (`economy.SUPPLY_RUN_AMBUSH_CHANCE`, cut by the
+Wilds vocation and Woodland Scout like a road's): enemy soldiers stop the caravan part-way along the
+road (a forced `supply_ambush`, talk first). They are **4-10** humanoids of level **3-8**, drawn from a
+bell leaning low (`encounters.level_weights`: headcount peak 6, level peak 4, spread 2), so about one
+soldier in eight is level 7-8. A win, a bribe or a bluff walks the caravan on from where it stopped;
+a loss routs it with the cargo lost, and the escort falls back to where the leg began (Ledger Hold on
+the way out, the Outpost on the way back). Every completed run counts toward
+`Guild.supply_runs_completed`; the deed fires on the tenth.
 
 What they sell today is the guild's **first shared property**: a **strongbox** at the bank.
 

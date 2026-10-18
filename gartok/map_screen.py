@@ -171,6 +171,16 @@ def _race_tag(u):
     return f"{u.race.get('name', '')} · R-Lvl {u.racial_level}"
 
 
+def _position(g):
+    """Where the group's pawn stands: its node, or `(from, to, share)` part-way along the leg it
+    walks (or stopped on, for a caravan held by its ambush). The share counts the hours a stopped
+    leg still owes, so the pawn never gives an ambush away before it springs."""
+    o = g.order if g.order is not None and g.order.kind == "travel" else g.pending
+    if o is None or not o.dest or o.dest == g.node or o.eta <= 0:
+        return g.node
+    return (g.node, o.dest, max(0.0, min(1.0, (o.eta - o.remaining - o.owed) / o.eta)))
+
+
 class MapScreen(Screen):
     native = True
     on_abandon = None
@@ -280,6 +290,8 @@ class MapScreen(Screen):
         o = group.order
         if o is None or o.kind == "idle":
             return "idle"
+        if o.kind == "travel" and o.task == "supply_run":
+            return f"supply run → {world.node(o.dest).name} ({o.remaining + o.owed:.1f} h)"
         if o.kind == "travel":
             dest_name = world.node(o.final_dest).name
             if o.path:                            # more waypoints still to come
@@ -307,7 +319,7 @@ class MapScreen(Screen):
         return {"key": g.gid,
                 "name": g.display_name,
                 "lead": g.leader.name if g.leader is not None else "",
-                "at": g.node,
+                "at": _position(g),
                 "busy": g.busy,
                 "pace": world.hours(1, g.speed) * vocations.travel_mult(self.guild),
                 "needs_orders": self._is_idle(g),
@@ -327,7 +339,7 @@ class MapScreen(Screen):
     def _events(self):
         clock = self.guild.clock
         now = clock.hour_of_day + clock.minute_of_hour / 60
-        return [(g.gid, 0, now + g.order.remaining, g.order.kind.replace("_", " "), T.TX_MUTED)
+        return [(g.gid, 0, now + g.order.remaining + g.order.owed, g.order.kind.replace("_", " "), T.TX_MUTED)
                for g in self.guild.groups if g.order is not None and g.order.kind != "idle"]
 
     def _messages(self):

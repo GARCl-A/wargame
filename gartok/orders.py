@@ -63,6 +63,7 @@ class Order:
     recipe: str | None = None  # solo craft: what is being made
     gather: bool = False     # work: gather items at the node (gather.py) instead of taking the wage
     parley: dict | None = None  # forced: how the talk before the fight ended (`dialogue.Result.to_dict`), once rolled
+    owed: float = 0.0        # supply run: hours of this leg still to walk past the ambush the order stops at
 
     @property
     def interactive(self):
@@ -118,18 +119,34 @@ def put_out(guild, group):
     return Order("work", eta=clock_hours, remaining=clock_hours, hours=hours, task="put_out")
 
 
+SUPPLY_START, SUPPLY_TURN = "ledger_hold", "frontier_outpost"
+
+
+def supply_route():
+    """The waypoints of a supply run after Ledger Hold: out to the Frontier Outpost and back."""
+    out, _ = world.route(SUPPLY_START, SUPPLY_TURN)
+    back, _ = world.route(SUPPLY_TURN, SUPPLY_START)
+    return out[1:] + back[1:]
+
+
+def supply_hours(guild, group):
+    """How long `group` walks a whole supply run, there and back, with no ambush."""
+    from . import vocations
+    distance = world.route(SUPPLY_START, SUPPLY_TURN)[1] + world.route(SUPPLY_TURN, SUPPLY_START)[1]
+    return world.hours(distance, group.speed) * vocations.travel_mult(guild)
+
+
 def supply_run(guild, group):
-    """Order `group` to execute a Ledger Hold military frontier supply run.
-    Requires Ledger Hold node and at least 20 kg of free cargo capacity."""
+    """Order `group` to walk a Ledger Hold supply caravan to the Frontier Outpost and back
+    (`Guild.supply_leg` per leg). Needs Ledger Hold and `SUPPLY_RUN_CARGO_KG` of free cargo."""
     from . import economy
-    if group.node != "ledger_hold":
-        raise ValueError(f"supply runs can only be issued at ledger_hold, got {group.node!r}")
+    if group.node != SUPPLY_START:
+        raise ValueError(f"supply runs can only be issued at {SUPPLY_START}, got {group.node!r}")
     if group.free_cargo_capacity < economy.SUPPLY_RUN_CARGO_KG:
         raise ValueError(
             f"group needs at least {economy.SUPPLY_RUN_CARGO_KG} kg free cargo capacity, has {group.free_cargo_capacity:.1f}"
         )
-    clock_hours = economy.SUPPLY_RUN_HOURS * guild.work_speedup(group.members)
-    return Order("work", eta=clock_hours, remaining=clock_hours, hours=economy.SUPPLY_RUN_HOURS, task="supply_run")
+    return guild.supply_leg(group, group.node, supply_route())
 
 
 def rest(hours):

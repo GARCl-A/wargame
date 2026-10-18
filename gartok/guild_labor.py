@@ -4,6 +4,7 @@ Mixed into `guild.Guild`. The tick/orders engine uses `_pay_shift` alone,
 since it advances the clock itself.
 """
 
+import random
 from collections import Counter
 
 from . import economy, encounters, factions, gather, items, orders, recorder, vocations, world
@@ -111,28 +112,31 @@ class LaborMixin:
             events.insert(0, f"{world.node(node_id).name}: gathered {hours} h ({'; '.join(found)}).")
         return events
 
-    def supply_run_shift(self, group, order):
-        """A frontier military supply run whose clock has run out. Returns `(events, ambush)`:
-        with no ambush, wages and XP are banked here; with one, `ambush` is the forced
-        `supply_ambush` Order for the caller to fight, and payout waits for `bank_supply_run` on a win."""
-        import random
+    def supply_leg(self, group, src, path, rng=random):
+        """The travel order for the next leg of a supply run (`src` -> `path[0]`). Each leg rolls
+        `SUPPLY_RUN_AMBUSH_CHANCE` once; a hit stops the order somewhere along the road and keeps
+        the rest of the leg in `owed` for after the fight."""
+        order = orders.next_leg(src, path, group.speed, vocations.travel_mult(self))
+        order.task = "supply_run"
         mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
-        chance = economy.SUPPLY_RUN_AMBUSH_CHANCE * mult
-        if random.random() < chance:
-            pack = encounters.roll_supply_ambush()
-            return (
-                ["Ledger Hold: a hostile frontier warband ambushes the military supply caravan!"],
-                orders.Order("supply_ambush", pack=tuple(pack), hours=order.hours),
-            )
-        return self.bank_supply_run(group.members, order.hours), None
+        if rng.random() < economy.SUPPLY_RUN_AMBUSH_CHANCE * mult:
+            order.owed = order.eta * rng.uniform(0.2, 0.8)
+            order.remaining = order.eta - order.owed
+        return order
 
-    def bank_supply_run(self, workers, hours):
-        """Pay each escort worker $30, bank Level 5 work XP, and settle faction deeds."""
+    def supply_ambush(self, order):
+        """The forced fight a supply leg stopped at: the pack, and the rest of the leg to walk on a win."""
+        return orders.Order("supply_ambush", pack=tuple(encounters.roll_supply_ambush()), dest=order.dest,
+                            resume_path=order.path, eta=order.eta, owed=order.owed)
+
+    def bank_supply_run(self, workers):
+        """Pay each escort the run's fixed `SUPPLY_RUN_PAY`, bank its work XP, and settle faction deeds."""
         earners = [u for u in workers if u in self.roster]
         paid = []
         events = []
         for u in earners:
-            gain = self._pay_worker(u, economy.SUPPLY_RUN_PAY, hours, economy.SUPPLY_RUN_LEVEL, events)
+            gain = self._pay_worker(u, economy.SUPPLY_RUN_PAY, economy.SUPPLY_RUN_HOURS,
+                                    economy.SUPPLY_RUN_LEVEL, events)
             paid.append(gain)
         if earners:
             names = ", ".join(u.name for u in earners)

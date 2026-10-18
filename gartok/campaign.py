@@ -328,6 +328,11 @@ def _advance(guild, dt=None, busy=()):
         if g.order.remaining > 1e-9:
             continue
         order = g.order
+        if order.kind == "travel" and order.owed > 0:
+            # a supply caravan stopped on the road: it stays at the leg's start until the fight
+            g.order = None
+            pending.append((g, guild.supply_ambush(order)))
+            continue
         if order.kind == "travel" and order.path:
             # arrived at a waypoint, not the final stop -- visibly stop here and
             # queue the next edge, rather than resolving the whole route at once
@@ -345,14 +350,19 @@ def _advance(guild, dt=None, busy=()):
                 g.order = None
                 pending.append((g, pause))
                 continue
-            g.order = orders.next_leg(order.dest, list(order.path), g.speed,
-                                      vocations.travel_mult(guild))
+            if order.task == "supply_run":
+                g.order = guild.supply_leg(g, order.dest, list(order.path))
+            else:
+                g.order = orders.next_leg(order.dest, list(order.path), g.speed,
+                                          vocations.travel_mult(guild))
             continue
         g.order = None                         # resolved -- the group goes idle
         if order.kind == "travel":
             prev = g.node
             g.node = order.dest
             events += _wear_wagons(g, prev, order.dest)
+            if order.task == "supply_run":
+                events += guild.bank_supply_run(g.members)
             pause = forced.arrival_pause(guild, g, prev, ())
             if pause is not None:
                 pending.append((g, pause))
@@ -365,11 +375,6 @@ def _advance(guild, dt=None, busy=()):
                 pending.append((g, ambush))
         elif order.kind == "work" and order.task == "put_out":
             events += wildfire.put_out(guild, g)
-        elif order.kind == "work" and order.task == "supply_run":
-            run_events, ambush = guild.supply_run_shift(g, order)
-            events += run_events
-            if ambush is not None:
-                pending.append((g, ambush))
         elif order.kind == "work":
             events += guild._pay_shift(g.members, order.hours, order.eta, g.node)
         elif order.kind == "rest":
