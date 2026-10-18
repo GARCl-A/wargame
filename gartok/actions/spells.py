@@ -27,17 +27,30 @@ class SpellAction(Action):
     def available(self, battle, actor):
         return actor.ap >= self.cost and self.spell_id in actor.spells_known
 
+    def spell_range(self, actor, base):
+        return base + int(actor.talent_bonus("spell_range"))
+
+    def spell_to_hit(self, actor):
+        return actor.mod_intelligence + int(actor.talent_bonus("spell_to_hit"))
+
+    def spell_damage_bonus(self, actor):
+        return int(actor.talent_bonus("spell_damage"))
+
+    def spell_heal_bonus(self, actor):
+        return int(actor.talent_bonus("spell_heal"))
+
 
 class MagicMissileAction(SpellAction):
     spell_id = "magic_missile"
     target, aimed = "enemy", True
+    REACH = 6
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
             return False
         if not _hostile_target(actor, target):
             return False
-        return battle.units_distance(actor, target) <= 6
+        return battle.units_distance(actor, target) <= self.spell_range(actor, self.REACH)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -49,10 +62,10 @@ class MagicMissileAction(SpellAction):
             battle.log(" Critical miss!")
             return
         pulled = nonlethal_penalty(actor)
-        hit_score = atk + actor.mod_intelligence - pulled
+        hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
         if atk == 20 or hit_score >= ac:
-            dmg = data.roll(1, 4)
+            dmg = data.roll(1, 4) + self.spell_damage_bonus(actor)
             battle.log(f" Hit ({hit_score} vs AC {intel.shown(battle, target, 'ac', ac)}) for {dmg} magic damage.")
             was_up = target.alive
             target.take_damage(dmg, battle.log, knockout=bool(pulled))
@@ -65,13 +78,14 @@ class MagicMissileAction(SpellAction):
 class SleepAction(SpellAction):
     spell_id = "sleep"
     target, aimed = "enemy", True
+    REACH = 6
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
             return False
         if not _hostile_target(actor, target):
             return False
-        return battle.units_distance(actor, target) <= 6
+        return battle.units_distance(actor, target) <= self.spell_range(actor, self.REACH)
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -83,9 +97,10 @@ class SleepAction(SpellAction):
             return
 
         atk = d20()
-        hit_score = atk + actor.mod_intelligence
+        to_hit = self.spell_to_hit(actor)
+        hit_score = atk + to_hit
         md = target.mental_defense
-        desc = f" d20({atk}) {actor.mod_intelligence:+}(INT) = {hit_score} vs MD {intel.shown(battle, target, 'md', md)}"
+        desc = f" d20({atk}) {to_hit:+}(INT) = {hit_score} vs MD {intel.shown(battle, target, 'md', md)}"
 
         if atk == 1:
             battle.log(desc + " -> Critical miss!")
@@ -105,15 +120,16 @@ class WaterJetAction(SpellAction):
     DICE = (1, 6)
 
     @staticmethod
-    def reach():
-        return items.get("Dagger").thrown
+    def reach(actor=None):
+        bonus = int(actor.talent_bonus("spell_range")) if actor is not None else 0
+        return items.get("Dagger").thrown + bonus
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
             return False
         if not _hostile_target(actor, target):
             return False
-        return (battle.units_distance(actor, target) <= self.reach()
+        return (battle.units_distance(actor, target) <= self.reach(actor)
                 and battle.los_between(actor, target))
 
     def landing(self, battle, actor, target):
@@ -136,13 +152,13 @@ class WaterJetAction(SpellAction):
             battle.log(" Critical miss!")
             return
         pulled = nonlethal_penalty(actor)
-        hit_score = atk + actor.mod_intelligence - pulled
+        hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
         shown = intel.shown(battle, target, 'ac', ac)
         if atk != 20 and hit_score < ac:
             battle.log(f" Miss ({hit_score} vs AC {shown}).")
             return
-        dmg = max(1, data.roll(*self.DICE) + actor.mod_intelligence)
+        dmg = max(1, data.roll(*self.DICE) + actor.mod_intelligence + self.spell_damage_bonus(actor))
         battle.log(f" Hit ({hit_score} vs AC {shown}) for {dmg} damage.")
         was_up = target.alive
         dest = self.landing(battle, actor, target)
@@ -168,15 +184,16 @@ class DragonfireAction(SpellAction):
     DICE = (2, 6)
 
     @staticmethod
-    def reach():
-        return items.get("Dagger").thrown
+    def reach(actor=None):
+        bonus = int(actor.talent_bonus("spell_range")) if actor is not None else 0
+        return items.get("Dagger").thrown + bonus
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
             return False
         if not _hostile_target(actor, target):
             return False
-        return (battle.units_distance(actor, target) <= self.reach()
+        return (battle.units_distance(actor, target) <= self.reach(actor)
                 and battle.los_between(actor, target))
 
     def execute(self, battle, actor, target=None):
@@ -189,14 +206,14 @@ class DragonfireAction(SpellAction):
             battle.log(" Critical miss!")
             return
         pulled = nonlethal_penalty(actor)
-        hit_score = atk + actor.mod_intelligence - pulled
+        hit_score = atk + self.spell_to_hit(actor) - pulled
         ac = target.ac_vs(actor)
         shown = intel.shown(battle, target, "ac", ac)
         if atk != 20 and hit_score < ac:
             battle.log(f" Miss ({hit_score} vs AC {shown}).")
             return
         dice = self.DICE[0] * (2 if atk == 20 else 1)
-        dmg = data.roll(dice, self.DICE[1])
+        dmg = data.roll(dice, self.DICE[1]) + self.spell_damage_bonus(actor)
         battle.log(f" Hit ({hit_score} vs AC {shown}) for {dmg} fire damage.")
         was_up = target.alive
         target.take_damage(dmg, battle.log, knockout=bool(pulled))
@@ -214,7 +231,8 @@ class _HostileSpellAction(SpellAction):
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target) or not _hostile_target(actor, target):
             return False
-        return battle.units_distance(actor, target) <= self.REACH and battle.los_between(actor, target)
+        return (battle.units_distance(actor, target) <= self.spell_range(actor, self.REACH)
+                and battle.los_between(actor, target))
 
     def execute(self, battle, actor, target=None):
         if not self.can(battle, actor, target):
@@ -222,10 +240,11 @@ class _HostileSpellAction(SpellAction):
         actor.ap -= self.cost
         battle.log(f"{actor.name} casts {self.spell.name} on {target.name}!")
         atk = d20()
-        score = atk + actor.mod_intelligence
+        to_hit = self.spell_to_hit(actor)
+        score = atk + to_hit
         defence = target.ac_vs(actor) if self.against == "ac" else target.mental_defense
         label = "AC" if self.against == "ac" else "MD"
-        desc = (f" d20({atk}) {actor.mod_intelligence:+}(INT) = {score} vs {label} "
+        desc = (f" d20({atk}) {to_hit:+}(INT) = {score} vs {label} "
                 f"{intel.shown(battle, target, self.against, defence)}")
         if atk == 1:
             battle.log(desc + " -> Critical miss!")
@@ -318,7 +337,7 @@ class HealingTouchAction(_TouchSpellAction):
             return
         actor.ap -= self.cost
         actor.walking = False
-        heal = data.roll(*self.DICE)
+        heal = data.roll(*self.DICE) + self.spell_heal_bonus(actor)
         revived = target.dying or target.stable
         target.hp = min(target.hp_max, max(target.hp, 0) + heal)
         if revived:
@@ -333,6 +352,7 @@ class _PlacedSpellAction(SpellAction):
     """Shared `can()` for the two spells that drop something on a cell
     (Light Globe, Floating Disk) instead of targeting an enemy."""
     target, aimed = "cell", True
+    REACH = 6
 
     def can(self, battle, actor, target=None):
         if not super().can(battle, actor, target):
@@ -340,7 +360,7 @@ class _PlacedSpellAction(SpellAction):
         if not target or not battle.board.in_bounds(target):
             return False
         dist = grid_distance(battle.cells_of(actor)[0], target)
-        return dist <= 6 and _cell_free(battle, actor, target, footprint=1)
+        return dist <= self.spell_range(actor, self.REACH) and _cell_free(battle, actor, target, footprint=1)
 
 
 class LightGlobeAction(_PlacedSpellAction):
@@ -410,7 +430,8 @@ class RaiseDeadAction(SpellAction):
         body = self.body_at(battle, target)
         if body is None:
             return False
-        return (battle.units_distance(actor, body) <= self.REACH and battle.los_between(actor, body)
+        return (battle.units_distance(actor, body) <= self.spell_range(actor, self.REACH)
+                and battle.los_between(actor, body)
                 and _cell_free(battle, body, body.pos))
 
     def highlight_cells(self, battle, actor):

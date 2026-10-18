@@ -44,13 +44,13 @@ When the two disagree, `REFERENCE.md` wins.
 
 | Module | Role |
 |---|---|
-| `unit.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, artifact slot, pack, stack helpers; `CoinPurse` is the base for `Unit.money` and `Creature`: coins in the pack, 200 coins = 1 kg) |
+| `unit.py` / `poisons.py` | persistent character: init, save/load, generation; the rest is mixins — `unit_hunger.py` (meals), `unit_levels.py` (XP tracks, talents), `unit_edit.py` (draft/sandbox setters), `unit_derive.py` (HP/AC/speed + breakdowns), `unit_loadout.py` (hands, armor, artifact slot, pack, stack helpers; `CoinPurse` is the base for `Unit.money` and `Creature`: coins in the pack, 200 coins = 1 kg), `unit_poison.py` (persistent poisons from `poisons.py`: Snake Venom, Spider Venom, Antidote) |
 | `artwork.py` | loads, tints and caches the SVG glyphs (`assets/icons/<category>/<name>.svg`) and the portraits; `RACE_ICON`, `OCCUPATION_ICON` and `map_screen.NODE_ICON` name each race's, occupation's and node's glyph (a test fails for one with none); `icons/map/` holds the hand-drawn ones game-icons.net lacks |
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant; any number of sides (`others={team: units}`: hostile to all, played by `ai.py`; `foe_units` is everyone off the player's side) and `withdraw` once the scenario allows it |
 | `battle_screen.py` / `battle_draw.py` | the fight's screen: input and turn flow / everything it paints (`BattleDrawMixin`) |
 | `map_screen.py` / `map_inspector.py` | the map: groups, orders, travel / what the inspector shows at the selected band's node (`MapInspectorMixin`) |
-| `market_screen.py` / `market_trade.py` / `market_draw.py`, `group_screen.py` / `group_draw.py`, `taverna_screen.py` / `taverna_draw.py` | each screen's state and input / its trades (`MarketTradeMixin`) / everything it paints (`*DrawMixin`) |
+| `market_screen.py` / `market_trade.py` / `market_draw.py`, `group_screen.py` / `group_draw.py`, `taverna_screen.py` / `taverna_draw.py`, `store_column.py` | each screen's state and input / its trades (`MarketTradeMixin`) / everything it paints (`*DrawMixin`); `store_column.py` is the shared wagon/animal store column |
 | `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells` / `weapon_actions`, registry in `__init__.py` |
 | `abilities.py` | `Ability` frozen-dataclass registry (passives + hooks) |
 | `talents.py` | talent-tree registry mirroring abilities.py |

@@ -332,7 +332,7 @@ def test_the_dragon_is_an_authored_level_twenty_huge_red_dragon():
     d = npc_lib.load_npc(lair.DRAGON_SLUG)
     assert d.race["name"] == "Dragon" and d.race["size"] == "Huge" and d.racial_level == 20
     assert d._racial_override is None and "Draconic" in d.languages
-    assert {"dragon", "dragon_breath"} <= set(d.talents["magic"]) and "dragonfire" in d.spells_known
+    assert {"dragon", "dragon_breath"} <= set(d.talents["racial"]) and "dragonfire" in d.spells_known
     assert d.natural_armor == 5
     assert "Dragon" not in [r["name"] for r in data.BEAST_POOL]
 

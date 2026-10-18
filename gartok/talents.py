@@ -40,6 +40,10 @@ exactly one consumer that reads it back:
     fletcher          campaign._fletcher_rest_pass     --
     dragon_breath     actions.DragonBreath             --
     mighty_shove      actions.Push                     --
+    spell_to_hit      actions.SpellAction              --
+    spell_damage      actions.SpellAction              --
+    spell_heal        actions.SpellAction              --
+    spell_range       actions.SpellAction              --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -56,13 +60,12 @@ which chains: `fleet` (tier 3) pulls in `deadeye` then `agile`.
 **The racial track** (`racial`) earns no XP of its own -- its level is
 `progression.racial_level(combat_level + work_level + magic_level)`, so every level
 anywhere grants a hit die, and every 5th racial level a racial pick. Its nodes are **race-gated**: a `Talent`
-with `race` set only shows / can be picked for that race. Grippli is the first
+with `race` set only shows / can be picked for that race (or any component race of a hybrid). Grippli is the first
 race with authored nodes (`tongue`, `webbed_feet`); other races have racial levels and picks
 but no nodes yet, same way the combat / work trees started.
 
-**The magic track** (`magic`) earns magic XP (`progression.py`). Each school has one root,
-granted rather than picked (`granted=True`): a character holds it while that school is in its
-`magic_sources`, and only then can it pick the branch under it (`school` names the school).
+**The magic track** (`magic`) earns magic XP (`progression.py`). Its nodes are school-agnostic
+and open to any caster, regardless of which school they are initiated in.
 
 `name` / `effect` are player-facing (English, the current text standard); `id`
 and field names are English identifiers.
@@ -77,6 +80,16 @@ XP_TRACKS = ("combat", "work", "magic")   # the tracks that earn their own XP / 
 COIN_BONUS = 0.20         # "Piecework": fraction added to coin from paid work
 ACTIVITY_SPEEDUP = 0.10   # "Brisk Hands": fraction shaved off an activity's clock
                           #   cost (user weighing 0.05 -- tune here after the math)
+
+
+def _race_names(race_spec):
+    if isinstance(race_spec, dict):
+        return tuple(race_spec.get("races") or (race_spec["name"],))
+    if isinstance(race_spec, (list, tuple, set)):
+        return tuple(race_spec)
+    if isinstance(race_spec, str):
+        return tuple(s.strip() for s in race_spec.split(",") if s.strip())
+    return ()
 
 
 @dataclass(frozen=True)
@@ -113,7 +126,7 @@ class Talent:
         return () if self.race is None else (self.race,) if isinstance(self.race, str) else tuple(self.race)
 
     def for_race(self, race_name):
-        return not self.races or race_name in self.races
+        return not self.races or any(r in self.races for r in _race_names(race_name))
 
 
 _LIST = [
@@ -339,28 +352,36 @@ _LIST = [
     Talent("dire_growth", "racial", 1, "Dire Growth",
            "you grow past your kin: your size goes up one step (a Wolf becomes Large).", race="Wolf",
            effects=(Effect("size_up", 1),), icon="body/cavalry"),
-
-    # ================================================================== #
-    # magic -- one granted root per school, its branch below             #
-    # ================================================================== #
-    Talent("bloodline", "magic", 1, "Bloodline",
-           "initiated into Blood: the magic was born with you, in your veins.",
-           school="blood", granted=True, icon="map/blood"),
-    Talent("dragon", "magic", 2, "Dragon",
+    Talent("dragon", "racial", 1, "Dragon",
            "dragon blood runs in you: your hide hardens into scales (+1 AC).",
-           requires="bloodline", school="blood",
+           race="Dragon",
            effects=(Effect("ac", 1),), icon="head/horned-reptile"),
-    Talent("dragon_breath", "magic", 3, "Dragon Breath",
+    Talent("dragon_breath", "racial", 2, "Dragon Breath",
            "2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll "
            "against everyone in it, allies too, 2d6 damage on each hit.",
-           requires="dragon", school="blood",
+           requires="dragon", race="Dragon",
            effects=(Effect("dragon_breath", 1),), icon="body/fire-dash"),
-    Talent("nature_initiated", "magic", 1, "Nature Initiated",
-           "initiated into Nature: the green answers you.",
-           school="nature", granted=True, icon="map/leaf"),
-    Talent("faith_initiated", "magic", 1, "Faith Initiated",
-           "initiated into Faith: a higher call answers you.",
-           school="faith", granted=True, icon="head/spiked-halo"),
+
+    # ================================================================== #
+    # magic -- school-agnostic spellcasting mastery                      #
+    # ================================================================== #
+    Talent("arcane_mind", "magic", 1, "Arcane Mind", "+1 Intelligence.",
+           effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
+    Talent("spell_focus", "magic", 2, "Spell Focus",
+           "+1 to hit with spell attacks.", requires="arcane_mind",
+           effects=(Effect("spell_to_hit", 1),), icon="action/targeting"),
+    Talent("destructive_casting", "magic", 2, "Destructive Casting",
+           "+1 damage with damaging spells.", requires="arcane_mind",
+           effects=(Effect("spell_damage", 1),), icon="body/fire-dash"),
+    Talent("blessed_hands", "magic", 2, "Blessed Hands",
+           "+1 HP restored with healing spells.", requires="arcane_mind",
+           effects=(Effect("spell_heal", 1),), icon="head/spiked-halo"),
+    Talent("focused_will", "magic", 2, "Focused Will",
+           "+1 Mental Defense.", requires="arcane_mind",
+           effects=(Effect("mental_defense", 1),), icon="action/meditation"),
+    Talent("far_cast", "magic", 3, "Far Cast",
+           "+1 square of range with non-melee spells.", requires="spell_focus",
+           effects=(Effect("spell_range", 1),), icon="action/ricochet"),
 ]
 
 TALENTS = {t.id: t for t in _LIST}

@@ -108,7 +108,8 @@ class EditMixin:
             return
         self.spells_known = [sid for sid in self.spells_known if magic.casts(self, magic.SPELLS[sid])]
         self.talents["magic"] = [tid for tid in self.talents["magic"]
-                                 if talents.get(tid).school in self.magic_sources]
+                                 if talents.get(tid).school is None
+                                 or talents.get(tid).school in self.magic_sources]
         self.study_target = None
         self.study_progress = 0
         self._apply_attributes()

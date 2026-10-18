@@ -59,10 +59,11 @@ def _pick_attack(battle, unit, target):
                                               or _jet_burns(battle, jet, unit, target)):
             return jet
 
+    spell_dmg = unit.talent_bonus("spell_damage")
     if "dragonfire" in getattr(unit, "spells_known", []):
         fire = actions.CastSpellAction("dragonfire")
         if (fire.can(battle, unit, target)
-                and (not opts or _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE))):
+                and (not opts or _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE) + spell_dmg)):
             return fire
 
     mm = None
@@ -79,7 +80,7 @@ def _pick_attack(battle, unit, target):
     if mm in opts:
         if actions.ATTACK not in opts and actions.ATTACK_TONGUE not in opts:
             return mm
-        if _hand_die(unit) < 2.5:  # Magic Missile is 1d4 (avg 2.5)
+        if _hand_die(unit) < 2.5 + spell_dmg:  # Magic Missile is 1d4 (avg 2.5)
             return mm
             
     if actions.ATTACK in opts and actions.ATTACK_TONGUE in opts and unit.tongue_weapon:
@@ -270,7 +271,7 @@ def _weapon_action(battle, unit, target):
 
 
 def _jet_avg(unit):
-    return _avg_die(actions.WaterJetAction.DICE) + unit.mod_intelligence
+    return _avg_die(actions.WaterJetAction.DICE) + unit.mod_intelligence + unit.talent_bonus("spell_damage")
 
 
 def _jet_burns(battle, jet, unit, target):
@@ -323,13 +324,14 @@ def _approach_reach(unit):
     if unit.has_tongue_weapon and (unit.unarmed or unit.improvised
                                    or _avg_die(unit.tongue_weapon["damage"]) >= _hand_die(unit)):
         return unit.tongue_reach
-    if "magic_missile" in getattr(unit, "spells_known", []) and _hand_die(unit) < 2.5:
-        return 6
+    spell_dmg = unit.talent_bonus("spell_damage")
+    if "magic_missile" in getattr(unit, "spells_known", []) and _hand_die(unit) < 2.5 + spell_dmg:
+        return 6 + int(unit.talent_bonus("spell_range"))
     if "water_jet" in getattr(unit, "spells_known", []) and _hand_die(unit) < _jet_avg(unit):
-        return actions.WaterJetAction.reach()
+        return actions.WaterJetAction.reach(unit)
     if ("dragonfire" in getattr(unit, "spells_known", [])
-            and _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE)):
-        return actions.DragonfireAction.reach()
+            and _hand_die(unit) < _avg_die(actions.DragonfireAction.DICE) + spell_dmg):
+        return actions.DragonfireAction.reach(unit)
     return 1 if unit.ranged else unit.attack_range
 
 
@@ -1066,7 +1068,7 @@ def _necromancy(battle, unit):
     if unit.ap < 1 or unit.walking:
         return "hold"
     near = min(bodies, key=lambda b: battle.units_distance(unit, b))
-    dest = _step_toward(battle, unit, near.pos, raise_dead.REACH)
+    dest = _step_toward(battle, unit, near.pos, raise_dead.spell_range(unit, raise_dead.REACH))
     if dest == unit.pos:
         return "hold"
     actions.MOVE.execute(battle, unit, dest)

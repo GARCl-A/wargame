@@ -36,7 +36,7 @@ def roll_magic_blood(unit):
     """Whether `unit` was born with magic in the blood (the Blood rite tests it, `rite.py`): a
     Kobold always (Blood Magic), anyone else at `MAGIC_BLOOD_CHANCE`. A private roll seeded by
     the uid, so making a character does not move the shared dice."""
-    if unit.race["name"] == "Kobold":
+    if "Kobold" in unit.race.get("races", (unit.race["name"],)):
         return True
     return random.Random(f"{unit.uid}:magic_blood").random() < MAGIC_BLOOD_CHANCE
 
@@ -175,7 +175,7 @@ def can_study_spell(unit, spell):
 def _progress_spell(unit, spell, group=None):
     if not can_study_spell(unit, spell) or not _has_study_item(unit, f"Scroll of {spell.name}", group=group):
         return None
-    bonus = 2 if unit.race["name"] == "Kobold" and "blood" in spell.sources else 0
+    bonus = 2 if "Kobold" in unit.race.get("races", (unit.race["name"],)) and "blood" in spell.sources else 0
     dice_qty = (2 if "gnome_magic_excitement" in unit.talents["racial"]
                 and unit.study_progress == 0 else 1)
     unit.study_progress += max(0, data.roll(dice_qty, 20) + unit.mod_intelligence + bonus)

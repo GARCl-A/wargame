@@ -114,11 +114,13 @@ World systems, outside combat:
   Defense (`Group.leader`/`capacity`, `Guild.leader`).
 - **Hunger**: one meal a day, a shared larder; without food, growing penalties
   up to death.
-- **Progression**: no classes — each XP track (combat, work) has its own level
-  and its own talent tree (`progression.py`, `talents.py`, `level_screen.py`).
-- **Magic**: a first foothold, not a full system yet — three spells gated by a
-  racial magic source, cast in battle (`actions.CastSpellAction`, `ai.py`),
-  learned by studying at the taverna over several in-game days (`magic.py`).
+- **Progression**: no classes — each XP track (combat, work, racial, magic) has
+  its own level and its own talent tree (`progression.py`, `talents.py`,
+  `level_screen.py`).
+- **Magic**: twelve spells across three schools (`nature`, `blood`, `faith`),
+  initiated at the schools' hidden sanctuaries (`rite.py`, `initiation_screen.py`),
+  learned by studying at the taverna over several in-game days (`magic.py`), and
+  cast in battle (`actions.CastSpellAction`, `ai.py`).
 - **Economy**: money lives on the character as `Copper Coin` ($1) and `Gold Coin`
   ($100) items in the pack (they weigh and split like any item); gold only exists
   through the bank's exchange. A market with haggling by language + Charisma +
@@ -183,8 +185,8 @@ gartok/
   reference.py      walks the registries -> REFERENCE.md (the data dictionary)
   abilities.py      racial abilities: each one's numeric passive and/or hook
   conditions.py     a combatant's temporary states (Defending, Demoralized, ...)
-  actions/          combat actions (cost, target, can/execute): base, combat, movement, support, spells;
-                    the PANEL_ACTIONS registry lives in __init__.py
+  actions/          combat actions (cost, target, can/execute): base, combat, movement, support, spells,
+                    weapon_actions; the PANEL_ACTIONS registry lives in __init__.py
   board.py          grid, walls, elevation, pathfinding (Dijkstra), line of sight
   vision.py         light + what each character sees (screen vision)
   intel.py          what a side knows of a foe (INT read, Assess, bestiary); foe_card.py adapts it for the card
@@ -193,13 +195,15 @@ gartok/
   encounters.py     enemy packs scaled to a target mean level
   matchup.py        (node, arena Bout) -> the opponents + the scenario for one fight
   unit.py           Unit = the persistent character (init, save/load, generation), built from mixins:
-                    unit_hunger / unit_levels / unit_edit / unit_derive / unit_loadout
+                    unit_hunger / unit_levels / unit_edit / unit_derive / unit_loadout / unit_poison
+  poisons.py        persistent poisons (Snake Venom, Spider Venom): levels, saves, Antidote
   combatant.py      Combatant = a Unit inside one battle (HP/AP/pos/conditions/hands)
   battle.py         battle state (wraps each unit in a Combatant), initiative, death
   ai.py             enemy squad AI (over actions/); alignment tempers the edges
   items.py          every item in the game: ItemDef/ItemInstance, catalog, recipes
   item_icon.py      what each item (and each vocation) looks like (kind, material, shape) for ui/item_icons.py's code-drawn icons
   weapon_traits.py  weapon traits registry: immutable keyword model (Finesse, Thrown, crit/action seams) mirroring abilities.py
+  craft_level.py    a recipe's difficulty level, worked out from its requirements, reagents and batch time
   archetypes.py     recruit archetype catalog, candidate generation, commission constraints
   names.py          procedural personal names for every generated Unit
   autowin.py        auto-resolve a battle: background Monte Carlo estimate
@@ -219,10 +223,10 @@ gartok/
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;
                     guild_upkeep / guild_holdings / guild_claim / guild_labor hold its behaviour
-  holdings.py       Stash (weight-capped storage) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals)
+  holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals)
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
-  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at stables_screen.py
+  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at stables_screen.py; wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt
   group.py          Group = a physical subset of the guild: its own node + squad + order;
                     fame buys group slots (`BASE_SLOTS`, `group_slots`)
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk
@@ -231,6 +235,7 @@ gartok/
   medic.py          the Medic's quick treatment (HP, sickness, poison at the Apothecary) and the hospital stay past 24 h; medic_screen.py is its tab
   rite.py           initiation into a magic school at its hidden sanctuary: the reputation door, boarding on a `garrison("rite")` order, the blood test, the board; initiation_screen.py is its tab
   orders.py         what a group is doing (travel/work/interactive) and how long it takes
+  rest.py           what a rest order costs in rations and how long "until full" lasts
   factions.py       factions and their deeds (one-shot achievements that grant reputation)
   missions.py       paid, deadlined jobs from a named giver (the Tanner, the Bankers'
                     trust chest) -- distinct from a Deed: has a reward and can fail
@@ -282,9 +287,9 @@ gartok/
   memorial_screen.py / report_screen.py / level_up_screen.py (after a fight: the fallen, the after-action report, each level-up; data in aftermath.py)
   market_screen.py + market_draw.py (painting) + market_trade.py (drops, buying, selling) / taverna_screen.py + taverna_draw.py (painting)
   prison_screen.py / hunt_screen.py / level_screen.py
-  bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
+  bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / shrine_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / dialogue_screen.py
-  alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py / group_turn_screen.py
+  alert_screen.py / ribbit_prompt_screen.py / group_turn_screen.py
   bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
   (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)
   library_screen.py / library_mission_screen.py / apothecary_mission_screen.py
@@ -301,6 +306,7 @@ gartok/
   battle_fx.py      combat juice: floating numbers, hit/lunge reactions
   dragselect.py     shared press/drag/drop plumbing for the item screens
   packbox.py        shared drag bookkeeping for the gear and group screens
+  store_column.py   shared wagon/animal store column for group, market and stash screens
   stash_screen.py   shared body of the bank / city-property screens (move gear party <-> Stash)
   sheet_panel.py    the full drawn character sheet (guild-screen modal)
   tutorial_card.py  draws the current screen's tutorial card + its `?` badge
@@ -320,13 +326,14 @@ scripts/            balance_sim.py (race / occupation / combo rankings; --level 
                     race / occupation ranking and the restock sweep), economy_exploits.py
                     (money-from-nothing loops, recipe barriers, dominance), economy_report.py
                     (all of them in one report, with verdicts), economy_offers.py (what a guild can take up
-                    today, each priced in copper and days), ai_usage.py (which actions the combat AI takes, and
-                    what losing each costs it), unit_stats.py (creation-stat spread), crafting_cost.py,
-                    vocation_report.py (each vocation perk's value as a share of the guild's daily wage,
-                    combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay)
-                    item_icon_preview.py (contact sheet of every item's code-drawn icon, ui/item_icons.py + item_icon.py)
-                    combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change)
-                    archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks)
+                    today, each priced in copper and days), play_analysis.py (reads play.jsonl into the sim's
+                    day table and human policy thresholds), ai_usage.py (which actions the combat AI takes, and
+                    what losing each costs it), unit_stats.py (creation-stat spread), unit_compare.py,
+                    crafting_cost.py, vocation_report.py (each vocation perk's value as a share of the guild's daily wage),
+                    combat_analysis.py (reads the combat logs: action mix, how often a person matched the AI, a replay),
+                    item_icon_preview.py (contact sheet of every item's code-drawn icon, ui/item_icons.py + item_icon.py),
+                    combat_pairs.py (the AI replays the squads a person played, lab or campaign logs: its win rate before and after an ai.py change),
+                    archive_combat_logs.py (copies each world's campaign combat logs from saves/ into combat_lab/campaign/, which git tracks),
                     gen_portrait.py (medallion portraits from a local Stable Diffusion + the style LoRA, driven by
                     the /gen-portrait skill; portrait_lora/ has the setup and the Colab notebook that trains the LoRA)
 docs/plans/         backlog.md (all open work), economy_sim_v2.md (the sim and its findings),

@@ -135,7 +135,6 @@ def test_a_day_of_boarding_rolls_1d20_plus_int_and_initiation_ends_the_stay():
     assert a.rite_progress["nature"] == 10
     _days(guild, 26, roll=10)
     assert "nature" in a.magic_sources and a.rite_school is None and ward.order is None
-    assert a.holds_talent("magic", "nature_initiated")
     assert not a.spells_known                               # the rite teaches no spell
 
 

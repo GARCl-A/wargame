@@ -70,6 +70,9 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
+| `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
+| `medic_panel.py` | the Apothecary's Medic tab: party treatment rows, bill breakdown, quick treat / admit actions |
+| `vocation_panel.py` | the founding vocation picker: six vocation cards with race icons and guild perk |
 | `mission_offer_screen.py` | base class for NPC job boards: lists every job the giver has (`get_templates`), scrolls when they do not fit |
 
 ## Adding to the kit

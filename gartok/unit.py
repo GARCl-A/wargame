@@ -265,20 +265,21 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self._ability = abilities.get(self.ability_id)
         self.size = self.race["size"]
         self.footprint = data.SIZES[self.size]["footprint"]   # squares per side (Large = 2 -> 2x2)
-        self.languages = [self.race["language"]] if self.race["language"] else []   # the dead speak none
+        self.languages = list(self.race.get("languages", (self.race["language"],) if self.race["language"] else ()))
         for _ in range(self._ability.extra_languages):
             extras = [i for i in data.LANGUAGES if i not in self.languages]
             if extras:
                 self.languages.append(random.choice(extras))
         self.age = int(round(self._age_base * self.race["age_mult"]))
 
-        if self.race["name"] == "Gnome":
+        races = self.race.get("races", (self.race["name"],))
+        if "Gnome" in races:
             self.add_magic_source("nature")
             if not self.spells_known:
                 nature_spells = [s for s in magic.SPELLS.values() if "nature" in s.sources and s.level == 0]
                 if nature_spells:
                     self.spells_known.append(random.choice(nature_spells).id)
-        elif self.race["name"] == "Kobold":
+        if "Kobold" in races:
             self.add_magic_source("blood")
 
     def _apply_occupation(self):

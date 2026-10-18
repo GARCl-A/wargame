@@ -412,7 +412,7 @@ Two axes -- order (Lawful/Neutral/Chaotic) and morality (Good/Neutral/Evil).
 
 ## Talent trees
 
-One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 racial levels; its nodes are race-gated. A magic node belongs to a school; each school's root is granted by its initiation, not picked.
+One tree per track. A new level in a track grants one pick in its tree; `requires` gates the deeper nodes. The racial track's level is `combat + work + magic` on a scale (`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 racial levels; its nodes are race-gated. The magic track is school-agnostic.
 
 ### Combat track
 
@@ -489,16 +489,19 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Great Serpent | a second shedding: your size goes up another step (Medium to Large, 2x2). | serpent_growth | Snake |
 | 1 | Snake Venom | your fangs run with venom: a bite that hurts forces a Constitution save (DC 11 + your racial level) or the victim is poisoned, one stack more per failed save, each eating a point of Constitution. | -- | Snake |
 | 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- | Wolf |
+| 1 | Dragon | dragon blood runs in you: your hide hardens into scales (+1 AC). | -- | Dragon |
+| 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | dragon | Dragon |
 
 ### Magic track
 
-| Tier | Talent | Effect | Requires | School |
-|---|---|---|---|---|
-| 1 | Bloodline | initiated into Blood: the magic was born with you, in your veins. | granted | blood |
-| 2 | Dragon | dragon blood runs in you: your hide hardens into scales (+1 AC). | bloodline | blood |
-| 3 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | dragon | blood |
-| 1 | Nature Initiated | initiated into Nature: the green answers you. | granted | nature |
-| 1 | Faith Initiated | initiated into Faith: a higher call answers you. | granted | faith |
+| Tier | Talent | Effect | Requires |
+|---|---|---|---|
+| 1 | Arcane Mind | +1 Intelligence. | -- |
+| 2 | Spell Focus | +1 to hit with spell attacks. | arcane_mind |
+| 2 | Destructive Casting | +1 damage with damaging spells. | arcane_mind |
+| 2 | Blessed Hands | +1 HP restored with healing spells. | arcane_mind |
+| 2 | Focused Will | +1 Mental Defense. | arcane_mind |
+| 3 | Far Cast | +1 square of range with non-melee spells. | spell_focus |
 
 ## Factions and deeds
 

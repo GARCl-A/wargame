@@ -5,7 +5,10 @@
   "auto_name": true,
   "portrait_id": 907705138,
   "portrait_file": "snake_dragon/0.png",
-  "race": "Snake",
+  "race": [
+    "Snake",
+    "Dragon"
+  ],
   "occupation": "Wild Beast",
   "alignment": "Chaotic and Evil",
   "crime": 0,
@@ -18,8 +21,8 @@
   "hp": 46,
   "share_food": true,
   "combat_xp": 136,
-  "magic_xp": 10,
-  "work_hours": 0,
+  "magic_xp": 0,
+  "work_hours": 2496,
   "bio": "An ordinary snake, but for the dragon blood in it: the scales, the breath, the eyes.",
   "arena_title": false,
   "recipes": [],
@@ -45,12 +48,10 @@
     ],
     "work": [],
     "racial": [
-      "serpent_growth"
-    ],
-    "magic": [
       "dragon",
       "dragon_breath"
-    ]
+    ],
+    "magic": []
   },
   "level_hp_rolls": [
     4,
@@ -60,12 +61,12 @@
     2
   ],
   "base_attributes": {
-    "strength": 8,
+    "strength": 3,
     "dexterity": 9,
-    "constitution": 16,
-    "intelligence": 16,
-    "wisdom": 12,
-    "charisma": 17
+    "constitution": 12,
+    "intelligence": 14,
+    "wisdom": 10,
+    "charisma": 15
   },
   "age_base": 98,
   "age": 20,

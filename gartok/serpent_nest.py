@@ -10,8 +10,8 @@ Two steps, each its own rule here:
   shallow and deep water, and the Snake Dragon in it. The fight is won the moment the
   Snake Dragon is down for good -- dead, or bound (`actions.Capture`).
 
-The Snake Dragon is authored (`npcs/snake_dragon.json`): an ordinary Snake whose dragon is
-all in its magic talents (Dragon, Dragon Breath).
+The Snake Dragon is authored (`npcs/snake_dragon.json`): a `["Snake", "Dragon"]` hybrid with
+the Dragon racial talents (`dragon`, `dragon_breath`).
 """
 
 import random
@@ -45,7 +45,7 @@ PASSAGES = (
 )
 POOL_SHALLOW = (34, 5, 37, 12)
 POOL_DEEP = (35, 7, 36, 10)
-DRAGON_CELL = (38, 3)
+DRAGON_CELL = (37, 3)
 PACKS = (                              # (room index, snakes, spiders)
     (0, 2, 0),
     (1, 2, 0),
@@ -96,8 +96,9 @@ def build_enemies(level, rng=random, dragon=True):
     and the Snake Dragon in its lair (unless `dragon` is False: it was delivered). Every
     one sleeps until a foe comes near."""
     out = []
+    lair_spot = _cells(DRAGON_CELL[0], DRAGON_CELL[1], DRAGON_CELL[0] + 1, DRAGON_CELL[1] + 1)
     for room, snakes, spiders in PACKS:
-        free = sorted(c for c in _cells(*ROOMS[room]) - _cells(*POOL_SHALLOW)
+        free = sorted(c for c in _cells(*ROOMS[room]) - _cells(*POOL_SHALLOW) - lair_spot
                       if min(grid_distance(c, d) for d in _cells(*DEPLOY)) > AWARENESS)
         cells = rng.sample(free, snakes + spiders)
         for i, cell in enumerate(cells):

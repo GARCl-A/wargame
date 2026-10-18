@@ -191,16 +191,12 @@ def _talent_trees():
            "one pick in its tree; `requires` gates the deeper nodes. The racial "
            "track's level is `combat + work + magic` on a scale "
            "(`progression.RACIAL_XP_THRESHOLDS`) and grants a pick every 5 racial "
-           "levels; its nodes are race-gated. A magic "
-           "node belongs to a school; each school's root is granted by its initiation, "
-           "not picked."]
+           "levels; its nodes are race-gated. The magic track is school-agnostic."]
     for track in talents.TRACKS:
-        racial, magic = track == "racial", track == "magic"
-        head = (("Tier", "Talent", "Effect", "Requires") + (("Race",) if racial else ())
-                + (("School",) if magic else ()))
+        racial = track == "racial"
+        head = ("Tier", "Talent", "Effect", "Requires") + (("Race",) if racial else ())
         rows = [(t.tier, t.name, t.effect, "granted" if t.granted else t.requires or "--")
                 + ((", ".join(t.races) or "any",) if racial else ())
-                + ((t.school,) if magic else ())
                 for t in talents.TREE[track]]
         out.append(f"### {track.capitalize()} track\n\n" + _table(head, rows))
     return "\n\n".join(out)

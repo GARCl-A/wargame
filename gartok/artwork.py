@@ -107,7 +107,10 @@ def icon(category, name, px, color=_WHITE):
 
 def race_icon(race_name, px, color=_WHITE):
     """The head silhouette for a race, or None if the race isn't mapped."""
-    return icon("head", RACE_ICON.get(race_name), px, color)
+    slug = RACE_ICON.get(race_name)
+    if slug is None and isinstance(race_name, str) and "," in race_name:
+        slug = RACE_ICON.get(race_name.split(",")[0].strip())
+    return icon("head", slug, px, color)
 
 
 def _load_scaled_portrait(path, px):
@@ -147,7 +150,7 @@ def portrait(race_name, portrait_id, px):
                 r_clean = "treefolk"
             folder = os.path.join(_PORTRAITS, r_clean)
             if not os.path.isdir(folder):
-                alt = r_clean.replace(" ", "_") if " " in r_clean else r_clean.replace("_", " ")
+                alt = r_clean.replace(", ", "_").replace(" ", "_") if " " in r_clean else r_clean.replace("_", " ")
                 folder = os.path.join(_PORTRAITS, alt)
             if os.path.isdir(folder):
                 search_dirs.append(folder)
@@ -170,7 +173,7 @@ def portrait(race_name, portrait_id, px):
         r_clean = "treefolk"
     folder = os.path.join(_PORTRAITS, r_clean)
     if not os.path.isdir(folder):
-        alt = r_clean.replace(" ", "_") if " " in r_clean else r_clean.replace("_", " ")
+        alt = r_clean.replace(", ", "_").replace(" ", "_") if " " in r_clean else r_clean.replace("_", " ")
         alt_folder = os.path.join(_PORTRAITS, alt)
         if os.path.isdir(alt_folder):
             folder = alt_folder

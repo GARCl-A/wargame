@@ -84,7 +84,7 @@ def unit_to_dict(u):
         "auto_name": u._auto_name,
         "portrait_id": u.portrait_id,
         "portrait_file": getattr(u, "portrait_file", None),
-        "race": u.race["name"],
+        "race": list(u.race["races"]) if len(u.race.get("races", ())) > 1 else u.race["name"],
         "occupation": u.occupation["name"],
         "alignment": u.alignment,
         "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node

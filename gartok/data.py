@@ -10,6 +10,7 @@ design-prose doc; `python -m gartok.reference` turns these tables into
 `REFERENCE.md`, the authoritative catalog.
 """
 
+import math
 import random
 
 from . import items
@@ -189,8 +190,9 @@ RACES = [
 def _race_dict(threshold, name, token, mods, ability, language, age, hd, size,
                kind="humanoid", drop_item=None, drop_chance=0.0, speed=None, also_drops=(), flight=0.0):
     return {
-        "name": name, "token": token, "mods": mods, "ability": ability,
-        "language": language, "age_mult": age, "hd": hd, "size": size, "kind": kind,
+        "name": name, "races": (name,), "token": token, "mods": mods, "ability": ability,
+        "language": language, "languages": (language,) if language else (),
+        "age_mult": age, "hd": hd, "size": size, "kind": kind,
         "drop_item": drop_item, "drop_chance": drop_chance,
         "also_drops": also_drops,                      # [(item, chance, qty)] beyond the trophy
         "flight": flight,                              # livestock: chance per roll it bolts when left unminded
@@ -285,6 +287,8 @@ BEAST_NAMES = [r["name"] for r in _BEASTS]
 UNDEAD_NAMES = [r["name"] for r in _UNDEAD]
 GIANT_NAMES = [r["name"] for r in _GIANTS]
 ALL_RACE_NAMES = RACE_NAMES + BEAST_NAMES + UNDEAD_NAMES + GIANT_NAMES   # what the creator offers; RACE_NAMES stays the playable set
+_SIZE_ORDER = ("Tiny", "Small", "Medium", "Large", "Huge")
+_HD_STEPS = (6, 8, 10, 12)
 
 
 def roll_race():
@@ -295,13 +299,50 @@ def roll_race():
     return None  # unreachable
 
 
-def race_by_name(name):
+def _single_race(name):
     if name == "Leshy":
         name = "Treefolk"
     for race in _RACES + _BEASTS + _UNDEAD + _GIANTS:
         if race["name"] == name:
             return dict(race)
     return None
+
+
+def race_by_name(name):
+    if isinstance(name, str) and "," not in name:
+        return _single_race(name)
+    names = [s.strip() for s in name.split(",")] if isinstance(name, str) else list(name)
+    parts = [r for n in names if (r := _single_race(n)) is not None]
+    if not parts:
+        return None
+    if len(parts) == 1:
+        return parts[0]
+    base = dict(parts[0])
+    races = tuple(r["name"] for r in parts)
+    mods = tuple(sum(r["mods"][i] for r in parts) for i in range(6))
+    hd_mean = sum(r["hd"] for r in parts) / len(parts)
+    hd = max((d for d in _HD_STEPS if d <= hd_mean), default=_HD_STEPS[0])
+    size_idx = math.ceil(sum(_SIZE_ORDER.index(r["size"]) for r in parts) / len(parts))
+    size = _SIZE_ORDER[size_idx]
+    abilities = []
+    for r in parts:
+        ab = r["ability"]
+        for aid in (ab if isinstance(ab, tuple) else (ab,) if ab else ()):
+            if aid not in abilities:
+                abilities.append(aid)
+    langs = tuple(dict.fromkeys(r["language"] for r in parts if r["language"]))
+    base.update({
+        "name": ", ".join(races),
+        "races": races,
+        "mods": mods,
+        "hd": hd,
+        "size": size,
+        "speed": SIZES[size]["speed"],
+        "ability": tuple(abilities) if len(abilities) != 1 else abilities[0],
+        "language": langs[0] if langs else "",
+        "languages": langs,
+    })
+    return base
 
 
 # --------------------------------------------------------------------------- #

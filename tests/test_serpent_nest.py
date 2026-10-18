@@ -19,8 +19,9 @@ def _sanctuaries_open():
 
 def test_the_snake_dragon_is_a_snake_with_dragon_blood():
     d = npc_lib.load_npc(serpent_nest.DRAGON_SLUG)
-    assert d.race["name"] == "Snake" and d.combat_level == 8
-    assert d.size == "Medium" and d.has_talent("serpent_growth")
+    assert d.race["name"] == "Snake, Dragon" and d.race["races"] == ("Snake", "Dragon")
+    assert d.combat_level == 8 and d.race["hd"] == 8
+    assert d.size == "Large" and d.has_talent("dragon")
     assert d.has_talent("dragon_breath") and "blood" in d.magic_sources
     assert d.picks_available("racial") == 0 and d.picks_available("magic") == 0
 

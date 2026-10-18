@@ -247,8 +247,8 @@ game:
 - **Skills / attribute checks**: presumably `d20 + mod` vs a difficulty.
 - **Magic**: no caster class appears in the generator; "Primal Blood", "Holy
   Symbol" and "Scroll" hinted it existed. A first system now does (see
-  "Magic" below) — four spells, a racial-talent path to a magic source, and
-  a slow study-at-the-tavern path to learn more. Four spells exist today.
+  "Magic" below) — twelve spells across three schools (`nature`, `blood`, `faith`),
+  school initiation at hidden sanctuaries, and a study-at-the-tavern path to learn more.
 - **Weapons and equipment**: damage, weight, price are set; **armor and shields
   are not** — the wargame designed a five-tier armor table 🟡.
 - **The effect of the racial abilities** (§7).
@@ -289,7 +289,12 @@ track** earns no XP of its own — its "XP" is the sum of the other track levels
 dice scale with every racial level (L1+), a **racial talent pick comes only every
 5 racial levels**: one at 5, 10, 15, 20... (`progression.racial_picks`). Its nodes are **race-gated**
 (e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
-`Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox).
+`Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox,
+`Dragon` and `Dragon Breath` for Dragon). A character's race may also be a **composite array**
+(e.g. `["Snake", "Dragon"]` for the Snake Dragon, resolved in `data.race_by_name`): attribute
+modifiers sum element-wise, the hit die is the average of the component HDs rounded down onto
+`(6, 8, 10, 12)`, size is the average on the 5-step scale rounded up, and the racial talent tree
+is the union of the component races' trees.
 No level is the last: an authored NPC can sit past 15 (the editors stop at
 `progression.LEVEL_UI_CAP`, 30, only as a stepper limit). A fight scaled to the squad's level holds
 its generated enemies at combat 7 / work 6 (`constants.ENEMY_*_CAP`, `encounters.clamp_level`); an
@@ -314,14 +319,13 @@ tier 3, behind Crafter) is the arrow-carver (see *Ammo*). The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
 **The magic track** (`magic_xp`, `progression.MAGIC_XP_THRESHOLDS`, combat's curve for now). Magic XP
-comes from a last hit dealt with magic (a spell or a magic talent's action: the combat rule's amount,
-banked as magic instead of combat) and from finishing the study of a spell (`spell level + 1`). Each
-school has one **root, granted and never picked**: a character holds it while that school is in its
-`magic_sources` (*Bloodline* for Blood, *Nature Initiated*, *Faith Initiated*), and only under a root it
-holds can it spend picks. Losing a school drops its branch. **Blood is bloodline**: the magic is born in
-you (a dragon, an angel, a demon in the line). Its first branch is **Bloodline → Dragon** (scales,
-+1 AC) **→ Dragon Breath** (see the combat rules). The player reaches the track through initiation
-(next in the magic arc); today the Snake Dragon and the Blood-born Kobold hold it.
+comes from a last hit dealt with magic (a spell or a magic action: the combat rule's amount,
+banked as magic instead of combat) and from finishing the study of a spell (`spell level + 1`).
+The tree is **school-agnostic** (6 nodes): **Arcane Mind** (tier 1, +1 Intelligence) branches into
+**Spell Focus** (+1 to hit with spell attacks), **Destructive Casting** (+1 damage with damaging
+spells), **Blessed Hands** (+1 HP restored with healing spells), and **Focused Will** (+1 Mental
+Defense) at tier 2, with **Far Cast** (tier 3, behind Spell Focus, +1 square of range with non-melee
+spells) below.
 
 **Hit die by racial level.** Each racial level grants a hit die: `1d(racial HD) +
 CON mod` (min 1), added to max HP. The rolls are saved (`_level_hp_rolls`) —
@@ -335,7 +339,7 @@ character creator. `mean_level` survives only as the encounter-difficulty scalar
 
 State on `unit.py` (`magic_sources`, `spells_known`, `study_target`,
 `study_progress`); the registry in `gartok/magic.py` (`Spell(id, name, level,
-sources)`); casting in `actions.py`'s `CastSpellAction` (+ `ShareMagicAction`
+sources)`); casting in `actions/spells.py`'s `CastSpellAction` (+ `ShareMagicAction`
 for the Sprite); AI use in `ai.py`; the `Sleeping` condition in
 `conditions.py`. A first foothold, not a full system — twelve spells today, and each school has a
 level-0 and a level-1 spell of its own.
@@ -480,7 +484,7 @@ always studying at most one thing (a spell *or* a language, never both).
 
 Where each part lives: the persistent character in `gartok/unit.py`, the
 combatant in a battle (HP, AP, conditions, hands, combat behaviour) in
-`gartok/combatant.py`, actions in `gartok/actions.py`, conditions in
+`gartok/combatant.py`, actions in `gartok/actions/`, conditions in
 `gartok/conditions.py`, abilities in `gartok/abilities.py`, vision/light in
 `gartok/vision.py`, board/pathfinding/LOS in `gartok/board.py`, ground objects
 and neutral creatures in `gartok/ground.py`, map assembly in
@@ -672,7 +676,7 @@ to the fight, as before.
 ### Falling, stabilizing and death 🟡
 
 States and the clock in `combatant.py`; the `Stabilize` / `FirstAid` actions in
-`actions.py`; turn flow and victory in `battle.py`.
+`actions/support.py`; turn flow and victory in `battle.py`.
 
 > **Design premise (from the author):** at the first levels mortality is very
 > high and the starting squad is **disposable**. Whoever survives the first
@@ -1014,7 +1018,7 @@ shown (`intel.known_fields`).**
 
 ### Demoralize 🟡
 
-Rule in `actions.py` (the `Demoralize` class). A **social** attack: it saps the
+Rule in `actions/support.py` (the `Demoralize` class). A **social** attack: it saps the
 target's confidence instead of wounding them.
 
 - **Cost:** 1 action point.
@@ -1051,7 +1055,7 @@ target's confidence instead of wounding them.
 
 ### Fleeing 🟡
 
-Action in `actions.py` (the `Flee` class). For **both sides** — player and AI.
+Action in `actions/movement.py` (the `Flee` class). For **both sides** — player and AI.
 
 - **Cost:** 1 point, and it **ends the turn** (you are running, not fighting).
 - **Position requirement:** you can only flee from a cell **on the map edge**

@@ -72,10 +72,13 @@
       "blacksmith",
       "fletcher"
     ],
-    "racial": [],
-    "magic": [
+    "racial": [
       "dragon",
       "dragon_breath"
+    ],
+    "magic": [
+      "arcane_mind",
+      "destructive_casting"
     ]
   },
   "level_hp_rolls": [
@@ -104,7 +107,7 @@
     "strength": 15,
     "dexterity": 6,
     "constitution": 14,
-    "intelligence": 7,
+    "intelligence": 6,
     "wisdom": 9,
     "charisma": 9
   },

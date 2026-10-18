@@ -8,9 +8,9 @@ copper *and* in XP.
 
 Written 2026-10-08, extended the same day after the first round of answers (the Medic, the
 Games, the Claim, the racial level, the tavern; see [Answers received](#answers-received)).
-The arc closes here: the next step is the play recorder (backlog), three 30-day runs of your own
-play, and a `human` policy built from them. Until then every policy is my guess at how a person plays.
-Nothing here is committed yet. The last three sections are the ones to read first when
+The play recorder (`gartok/recorder.py`, `scripts/play_analysis.py`) and the `human` policy
+in `scripts/economy_guild.py` are now built; the next step is three 30-day runs of your own
+play to calibrate the `human` policy's thresholds. The last three sections are the ones to read first when
 validating the work: [Decisions made without asking](#decisions-made-without-asking),
 [Answers received](#answers-received) and
 [Questions and decisions to validate](#questions-and-decisions-to-validate).
@@ -519,12 +519,6 @@ What is still open after your answers, in rough order of how much they change th
    until the parallel crafting lands, since that changes how much a crafter's hour is worth.
 10. **The late-game scenario.** Level 3 with $250 is my guess at "a squad a week in". If you play
     toward another point (say level 2 with $100), say so and the report's section 4 moves.
-11. **Nothing is committed.** The files: `AGENTS.md`, `README.md`, `docs/plans/backlog.md`,
-    `docs/plans/economy_sim_v2.md`, `scripts/economy_activities.py`, `scripts/economy_exploits.py`,
-    `scripts/economy_guild.py`, `scripts/economy_report.py`, `scripts/economy_sim.py` (deleted),
-    `tests/test_economy_exploits.py`, `tests/test_economy_sim.py`, and the `project-context`
-    notes (`SKILL.md`, three references, one new). I would commit the scripts and tests together,
-    the notes and the doc separately.
 
 ## Known limitations
 

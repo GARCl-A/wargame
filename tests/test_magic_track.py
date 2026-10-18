@@ -1,51 +1,96 @@
-"""The magic track (talents.py / progression.py) and the Dragon Breath it grants."""
+"""The magic track (talents.py / progression.py), composite races, and Dragon racial talents."""
 
 from unittest.mock import patch
 
-from gartok import ai, campaign, magic, progression
+from gartok import ai, campaign, data, magic, progression, talents
 from gartok.board import cone_cells
 from tests.helpers import Battle, Combatant, Unit, actions, persist
 
 
-def _blooded(level=2, *picks):
-    u = Unit("enemy")
+def _mage(level=3, *picks):
+    u = Unit("player")
     u.add_magic_source("blood")
+    u.add_magic_source("faith")
     u.set_track_level("magic", level)
     for tid in picks:
         assert u.choose_talent("magic", tid)
     return u
 
 
-def test_the_school_root_is_granted_by_initiation_never_picked():
-    u = Unit("player")
-    assert not u.holds_talent("magic", "bloodline")
-    u.add_magic_source("blood")
-    assert u.holds_talent("magic", "bloodline") and u.has_talent("bloodline")
-    u.set_track_level("magic", 1)
-    assert not u.choose_talent("magic", "bloodline")
-    assert u.talents["magic"] == []
+def _dragon_breather():
+    u = Unit("enemy", race=data.race_by_name(["Snake", "Dragon"]))
+    u.set_track_level("racial", 10)
+    assert u.choose_talent("racial", "dragon")
+    assert u.choose_talent("racial", "dragon_breath")
+    return u
 
 
-def test_a_branch_opens_only_under_a_school_the_unit_holds():
+def test_magic_tree_is_school_agnostic_and_gated_by_arcane_mind():
     u = Unit("player")
-    u.set_track_level("magic", 2)
-    assert not u.choose_talent("magic", "dragon")
-    assert "magic" not in u.pending_picks
-    u.add_magic_source("blood")
+    u.set_track_level("magic", 3)
     assert "magic" in u.pending_picks
-    assert u.choose_talent("magic", "dragon")
+    assert not u.choose_talent("magic", "spell_focus")
+    assert not u.choose_talent("magic", "far_cast")
+    int_before = u.intelligence
+    md_before = u.mental_defense
+    assert u.choose_talent("magic", "arcane_mind")
+    assert u.intelligence == int_before + 1
+    assert u.choose_talent("magic", "focused_will")
+    assert u.mental_defense >= md_before + 1
+    assert not u.choose_talent("magic", "far_cast")
+    assert u.choose_talent("magic", "spell_focus")
 
 
-def test_dragon_hardens_the_hide_and_losing_the_school_drops_the_branch():
-    u = Unit("player")
+def test_spell_focus_destructive_casting_blessed_hands_and_far_cast():
+    caster = _mage(4, "arcane_mind", "spell_focus", "destructive_casting", "far_cast")
+    caster.set_spell_known("magic_missile", True)
+    caster.set_spell_known("healing_touch", True)
+    foe = Unit("enemy")
+    batt = Battle([caster], [foe])
+    batt.board.walls.clear()
+    me, target = batt.player_units[0], batt.enemy_units[0]
+    me.pos, target.pos = (2, 2), (9, 2)               # distance 7: base 6 + Far Cast 1
+    mm = actions.CastSpellAction("magic_missile")
+    assert mm.can(batt, me, target)
+    target.pos = (10, 2)
+    assert not mm.can(batt, me, target)
+    target.pos = (9, 2)
+    target.hp = 30
+    with patch("gartok.actions.spells.d20", return_value=10), \
+            patch("gartok.actions.spells.data.roll", return_value=3):
+        mm.execute(batt, me, target)
+    assert target.hp == 30 - 4                        # 3 rolled + 1 Destructive Casting
+
+    # Blessed Hands adds +1 HP to Healing Touch, and Far Cast does not extend touch range
+    caster.drop_talent("magic", "far_cast")
+    assert caster.choose_talent("magic", "blessed_hands")
+    heal = actions.CastSpellAction("healing_touch")
+    me.hp = 1
+    me.ap = 2
+    with patch("gartok.actions.spells.data.roll", return_value=4):
+        heal.execute(batt, me, me)
+    assert me.hp == 1 + 5                             # 4 rolled + 1 Blessed Hands
+
+
+def test_composite_race_sums_mods_floors_hd_ceils_size_and_merges_racial_trees():
+    hybrid = data.race_by_name(["Snake", "Dragon"])
+    snake, dragon = data.race_by_name("Snake"), data.race_by_name("Dragon")
+    assert hybrid["name"] == "Snake, Dragon"
+    assert hybrid["races"] == ("Snake", "Dragon")
+    assert hybrid["mods"] == tuple(a + b for a, b in zip(snake["mods"], dragon["mods"]))
+    assert hybrid["hd"] == 8                          # (6 + 12) / 2 = 9 -> floored to d8
+    assert hybrid["size"] == "Large"                  # ceil((Small + Huge) / 2) -> Large
+    tree_ids = {t.id for t in talents.racial_tree(hybrid["name"])}
+    assert {"serpent_growth", "snake_venom", "dragon", "dragon_breath"} <= tree_ids
+
+    u = Unit("enemy", race=hybrid)
     ac = u.ac
-    u.add_magic_source("blood")
-    u.set_track_level("magic", 2)
-    u.choose_talent("magic", "dragon")
-    u.choose_talent("magic", "dragon_breath")
+    u.set_track_level("racial", 10)
+    assert u.choose_talent("racial", "dragon")
+    assert u.choose_talent("racial", "dragon_breath")
     assert u.ac == ac + 1
-    u.set_magic_source("blood", False)
-    assert u.talents["magic"] == [] and u.ac == ac
+    back = Unit.from_save(persist.unit_to_dict(u))
+    assert back.race["races"] == ("Snake", "Dragon") and back.size == "Large"
 
 
 def test_magic_levels_feed_the_racial_track():
@@ -90,9 +135,9 @@ def test_finishing_a_spell_study_banks_magic_xp():
 
 
 def test_magic_xp_and_picks_survive_a_save():
-    u = _blooded(2, "dragon")
+    u = _mage(2, "arcane_mind", "spell_focus")
     back = Unit.from_save(persist.unit_to_dict(u))
-    assert back.magic_xp == u.magic_xp and back.talents["magic"] == ["dragon"]
+    assert back.magic_xp == u.magic_xp and back.talents["magic"] == ["arcane_mind", "spell_focus"]
 
 
 def test_a_save_without_a_magic_track_still_loads():
@@ -111,7 +156,10 @@ def test_a_cone_is_one_three_and_five_cells_wide():
 
 
 def _breath_battle(players, breather_pos=(5, 5)):
-    batt = Battle([Unit("player") for _ in players], [_blooded(2, "dragon", "dragon_breath")])
+    breather = _dragon_breather()
+    breather.size = "Medium"
+    breather.footprint = 1
+    batt = Battle([Unit("player") for _ in players], [breather])
     batt.board.walls.clear()
     for u, pos in zip(batt.player_units, players):
         u.pos = pos

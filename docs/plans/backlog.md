@@ -28,26 +28,24 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 **Before the playtest (author 2026-10-18):** done the same day: the founding screen redrawn, the map's crowded
-names, the arena bosses' lines in the dialogue system, the big screens split, the level-2 scrolls and the AI's
-Invisibility. What is left before the playtest is the magic tree (item 1).
+names, the arena bosses' lines in the dialogue system, the big screens split, the level-2 scrolls, the AI's
+Invisibility, composite races (`["Snake", "Dragon"]`), the Dragon racial talents (`dragon`, `dragon_breath`) and the
+6-node school-agnostic magic talent tree.
 
-1. **Magic Arc, to the end** (*Ready to do -> Medium*). **Next:** the magic talent tree, school-agnostic (*Medium -> Magic Arc*). The frontier supply run walks since
-   2026-10-18 (RULES.md *Ledger Hold*).
-   How a player gets the new scrolls is deferred past the arc (author 2026-10-17: scrolls are never sold).
-   The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
-   test holds it; the level curves have no top since the same day); the Ogre stays racial 10 with a fixed
-   level-6 escort (2026-10-17).
-2. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): starts once the
-   magic arc closes (author 2026-10-17); the walked supply run is in; the rite and the tier 0/1 spells are in. The AI work it waited on is done (2026-10-16);
+1. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): the magic
+   arc's pre-playtest work is in (the walked supply run, the rite, the tier 0/1/2 spells and scrolls, the 6-node
+   magic talent tree, composite races and Dragon racial talents). The AI work it waited on is done (2026-10-16);
    what the AI still lacks is a short list (*Teach the AI the newer actions*), and the weapon actions' cases are
    tuned from this playtest.
+2. **Magic Arc follow-ups** (*Ready to do -> Medium*): scroll acquisition sources (deferred past the arc, author
+   2026-10-17: scrolls are never sold), sim initiation policy, and tuning after the playtest.
 3. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
    magic arc (author 2026-10-17: the playtest and the tuning it feeds).
 4. **Production chain between groups** (*Large*, after magic).
 5. **Talent trees as long as the levels** (*Large*, after magic).
 6. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
 7. **Cooking and temporary meal buffs** (after magic).
-8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 2's data is in.
+8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 1's data is in.
 
 ---
 
@@ -72,28 +70,20 @@ Invisibility. What is left before the playtest is the magic tree (item 1).
   with its faction (a threshold, not spent); exclusivity is intended and the guild's choices may close a school
   (accepted 2026-10-16); the third missions are the endgame bosses, each worth a racial-15 character, so they are
   authored NPCs (generated enemies stop at `constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`); Faith consumes a Holy
-  Symbol (uncommon, $80 since 2026-10-18; from the Priest's birth or a Priest's loot; shops buy it, none stocks it); Blood is bloodline (new branches follow
-  Bloodline -> Dragon -> Dragon Breath) and Blood magic costs no hit points. Left:
-  1. *To close the arc:* the magic talent tree (author 2026-10-18). Today the tree has 5 nodes: Blood's chain (Bloodline -> Dragon ->
-     Dragon Breath) and the granted roots `nature_initiated` / `faith_initiated`, which do nothing on their own, so a
-     Nature or Faith caster has nothing to pick. **Direction (author 2026-10-18):** a school is not a talent; the
-     school roots leave the tree and magic talents do not depend on which school a character is initiated in. The
-     spells themselves stay as they are. The author designs the new nodes; open is where Blood's bloodline chain
-     (Bloodline -> Dragon -> Dragon Breath) goes once its root is not a talent.
-  2. *Scrolls (deferred past the arc, author 2026-10-17):* scrolls are never sold; how a player gets Hex, Spare the
+  Symbol (uncommon, $80 since 2026-10-18; from the Priest's birth or a Priest's loot; shops buy it, none stocks it); Blood tests `magic_blood` first and costs no hit points. Done 2026-10-18: the magic talent tree is 6 school-agnostic nodes (`arcane_mind`, `spell_focus`, `destructive_casting`, `blessed_hands`, `focused_will`, `far_cast`), `dragon` and `dragon_breath` moved to the `Dragon` racial talent tree, and the Snake Dragon is a composite `["Snake", "Dragon"]` race (`unit.races`, summed attribute modifiers, HD average rounded down to `d8`, size average rounded up to `Large`, union of abilities, languages and racial talent trees). Left:
+  1. *Scrolls (deferred past the arc, author 2026-10-17):* scrolls are never sold; how a player gets Hex, Spare the
      Dying, Healing Touch, Invisibility and Raise Dead is designed later (every spell has its scroll since 2026-10-18;
      the level-2 ones are $750, `economy.scroll_price`).
      Today Grasping Roots comes as the Scribe's starting Scroll and with the `nature_magic` race (Gnome).
-  3. *The sim does not initiate anyone:* no policy boards a member, the same multi-day investment step the Claim oven
+  2. *The sim does not initiate anyone:* no policy boards a member, the same multi-day investment step the Claim oven
      lacks; both land with the sim's tuning after the playtest (*Playtest on the current build*, step 4).
-  4. *Blood's fourth mission* (the robbed dragon keeps attacking): not designed; not before every test scheduled
+  3. *Blood's fourth mission* (the robbed dragon keeps attacking): not designed; not before every test scheduled
      after the arc (author 2026-10-17).
-  5. *Open-ended:* the Blood bloodlines are dragon (built), angel and demon (author 2026-10-18); more magic XP sources (today a magic kill and a
+  4. *Open-ended:* future Blood bloodlines (angel and demon, author 2026-10-18); more magic XP sources (today a magic kill and a
      finished study, `progression.py`, on combat's curve as a placeholder); hatching a Dragon Egg (an author idea,
      not designed; today the egg is only sold).
-  6. *Racial trees for the authored beasts:* no racial talent belongs to the Dragon, so Kharzuul's four picks
-     wait unspent; the Zombie has no tree either. Neither blocks anything.
-  7. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
+  5. *Racial trees for the authored beasts:* the Dragon now has `dragon` (tier 1) and `dragon_breath` (tier 2), leaving two of Kharzuul's four picks unspent until higher tiers exist; the Zombie has no tree yet. Neither blocks anything.
+  6. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
      captive and the 3-day corpse are first picks. **After the racial rule (2026-10-16):** the Ribbit Brothers went
      from work 2 to 4 to earn their one racial talent at racial 5, so they are mean 5 (the arena rule was boss = +1
      over an expected level 3, i.e. 4) with one more hit die each (Bufo 38 -> 44 HP, Peep 23 -> 27, Ribit 31 -> 37);
@@ -171,15 +161,11 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
   the button gave no reason. Whatever the darkness rework decides, a fight needs a way to end.
 - **Tavern hub tabs keep the old party** after a recruit signs: Food & Drink and Study list 3 of 4 until
   the tavern is left and reopened (tabs built once in `hub_screen.for_node`).
-- **Attack needs two clicks** (arm, then confirm, `battle_screen._click`) but the combat card says one.
 - **Rest "until full" stopped at 23:59** with a member at 6/12 HP and no reason given.
-- **Medic prices by whole potion:** 1 HP costs $56, the same as 2 HP.
 - **Hunt summary wording:** "Fought off 1 pack" after the squad fled; "6 h of daylight left" at 00:13.
 - **The battle only ends on End Turn** after the last foe falls; an extra click on the body walks onto it.
 - **A noon fight looks like night:** the Old Road ambush at 11:59 drew the board as dark as the night one,
   lit only around the torches. Check whether the scenario reads the hour at all.
-- **Arena start puts the squad next to a foe:** the first bout opened with the orc at (2,0) beside an
-  enemy at (3,0). Check whether the arena's deployment mixes the sides on purpose.
 - **The board goes black on a wipe:** with the whole squad down nobody is left to see, so the defeat
   screen shows an empty dark board.
 
@@ -267,8 +253,8 @@ feature that needs it is next, not before. Debts already written as part of a fe
 pointed to, not repeated.
 
 - **Big screen files.** Split 2026-10-13 (`app.py` into `app_*.py`, `battle_draw.py`) and 2026-10-18 (`map_inspector.py`,
-  `market_draw.py` / `market_trade.py`, `group_draw.py`, `taverna_draw.py`): no screen is over 800 lines now. Next in
-  line are `map_editor_screen.py` (970), `guild_screen.py` (811) and `char_editor_screen.py` (807). When one takes a new
+  `market_draw.py` / `market_trade.py`, `group_draw.py`, `taverna_draw.py`): only `map_editor_screen.py` (970),
+  `guild_screen.py` (811) and `char_editor_screen.py` (807) remain over 800 lines. When one takes a new
   node or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Decided 2026-10-12: keep the strict premise that "an older shape does not load"; no migration bridge needed for now. **Cost: zero.**
 
@@ -529,10 +515,10 @@ building them:
 # Needs more information
 
 - **Playtest 2026-10-18: open design questions** (being discussed with the author, no code yet).
-  - **Guild objectives list.** Agreed 2026-10-18 as the shape of the tutorial; the detail is open. A list
+  - **Guild objectives list.** Agreed 2026-10-18 as the shape of the tutorial: a pure onboarding checklist
     on the Guild screen (the first card sends the player there) with first steps ("buy food", "equip a
-    torch", the work level 2 chain, a first win) next to the factions' deeds. Battle Brothers' Ambitions is
-    the market reference. Open: the list, the order, what each one gives.
+    torch", the work level 2 chain, a first win) next to the factions' deeds, with no mechanical reward
+    (fame or coins). Open: the exact list and order.
   - **Healing dominates the early economy.** An arena bout nets $2 and costs about 3 days of rest or
     $112-224 a member at the Medic. Author 2026-10-18: cheap healing should stay a milestone (potions
     from a production chain), so do not make healing cheap across the board. "Rest until full" already
