@@ -72,12 +72,12 @@ def test_spell_focus_destructive_casting_blessed_hands_and_far_cast():
     assert me.hp == 1 + 5                             # 4 rolled + 1 Blessed Hands
 
 
-def test_composite_race_sums_mods_floors_hd_ceils_size_and_merges_racial_trees():
+def test_composite_race_averages_mods_floors_hd_ceils_size_and_merges_racial_trees():
     hybrid = data.race_by_name(["Snake", "Dragon"])
     snake, dragon = data.race_by_name("Snake"), data.race_by_name("Dragon")
     assert hybrid["name"] == "Snake, Dragon"
     assert hybrid["races"] == ("Snake", "Dragon")
-    assert hybrid["mods"] == tuple(a + b for a, b in zip(snake["mods"], dragon["mods"]))
+    assert hybrid["mods"] == tuple((a + b) // 2 for a, b in zip(snake["mods"], dragon["mods"]))
     assert hybrid["hd"] == 8                          # (6 + 12) / 2 = 9 -> floored to d8
     assert hybrid["size"] == "Large"                  # ceil((Small + Huge) / 2) -> Large
     tree_ids = {t.id for t in talents.racial_tree(hybrid["name"])}

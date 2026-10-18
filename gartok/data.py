@@ -319,7 +319,7 @@ def race_by_name(name):
         return parts[0]
     base = dict(parts[0])
     races = tuple(r["name"] for r in parts)
-    mods = tuple(sum(r["mods"][i] for r in parts) for i in range(6))
+    mods = tuple(sum(r["mods"][i] for r in parts) // len(parts) for i in range(6))
     hd_mean = sum(r["hd"] for r in parts) / len(parts)
     hd = max((d for d in _HD_STEPS if d <= hd_mean), default=_HD_STEPS[0])
     size_idx = math.ceil(sum(_SIZE_ORDER.index(r["size"]) for r in parts) / len(parts))

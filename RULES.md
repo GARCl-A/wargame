@@ -292,8 +292,8 @@ dice scale with every racial level (L1+), a **racial talent pick comes only ever
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox,
 `Dragon` and `Dragon Breath` for Dragon). A character's race may also be a **composite array**
 (e.g. `["Snake", "Dragon"]` for the Snake Dragon, resolved in `data.race_by_name`): attribute
-modifiers sum element-wise, the hit die is the average of the component HDs rounded down onto
-`(6, 8, 10, 12)`, size is the average on the 5-step scale rounded up, and the racial talent tree
+modifiers are the element-wise average rounded down, the hit die is the average of the component
+HDs rounded down onto `(6, 8, 10, 12)`, size is the average on the 5-step scale rounded up, and the racial talent tree
 is the union of the component races' trees.
 No level is the last: an authored NPC can sit past 15 (the editors stop at
 `progression.LEVEL_UI_CAP`, 30, only as a stepper limit). A fight scaled to the squad's level holds
