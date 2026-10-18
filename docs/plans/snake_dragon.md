@@ -92,6 +92,8 @@ One beast, two outcomes: the first delivery closes the other, and the closed one
   **(default)**; *Dragon Breath* grants the action above.
 - For the player the track becomes reachable with initiation (Magic Slice 2). Now it ships so the
   Snake Dragon can carry it, and so a Kobold (born `blood`) already sees the Blood root.
+  *As built 2026-10-17:* initiation is the rite at each sanctuary (`rite.py`), which grants the school
+  and its Initiated root.
 
 ## Build order
 

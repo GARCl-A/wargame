@@ -31,12 +31,13 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
 1. **Magic Arc, to the end** (*Ready to do -> Medium*): the six school missions are built (2026-10-16: the
    dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
    [dragon_lair.md](dragon_lair.md)); the keepers, the initiation and each school's own level-0 / level-1
-   spells are built (2026-10-17). **Next:** a source for the new scrolls (item 4 of the arc).
+   spells are built (2026-10-17). **Next:** the talk before the arena's first boss fights (*Playtest notes*).
+   How a player gets the new scrolls is deferred past the arc (author 2026-10-17: scrolls are never sold).
    The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
-   test holds it; the level curves have no top since the same day); the Ogre's fight is still short of a
-   racial-15 boss (item 1's endgame note).
-2. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): the
-   rite and the tier 0/1 spells are in, so it plays magic once their scrolls have a source. The AI work it waited on is done (2026-10-16);
+   test holds it; the level curves have no top since the same day); the Ogre stays racial 10 with a fixed
+   level-6 escort (2026-10-17).
+2. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): starts once the
+   magic arc closes (author 2026-10-17); the rite and the tier 0/1 spells are in. The AI work it waited on is done (2026-10-16);
    what the AI still lacks is a short list (*Teach the AI the newer actions*), and the weapon actions' cases are
    tuned from this playtest.
 3. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
@@ -96,12 +97,11 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      *The third missions are the game's endgame for now (author 2026-10-15):* each boss is a fight worth a
      **racial-15** character (the endgame target: a track sum of 30; the levels themselves have no top since
      2026-10-16). Generated enemies stop at combat 7 / work 6
-     (`constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`, mean 6), so the bosses are authored NPCs. The Ogre (racial
-     10) and his escort clamped at mean 6 do not reach it yet (see Tuning). The Dragon's Clutch already took the
-     second way: its kobolds keep the cap (`lair.py` builds them through `encounters.clamp_level`) and the
-     racial-20 dragon carries the fight. **Decision left for the Ogre:** lift the escort's cap inside his fight (the
-     scaled bodies follow the squad past mean 6), or keep the cap and make the Ogre himself carry the weight, as
-     the Clutch does.
+     (`constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`, mean 6), so the bosses are authored NPCs. The Dragon's
+     Clutch keeps the cap on its kobolds (`lair.py` builds them through `encounters.clamp_level`) and the racial-20
+     dragon carries the fight. **The Ogre stays racial 10, his escort fixed at level 6 whatever the squad's
+     (`wildfire.ESCORT_LEVEL`, author 2026-10-17):** the AI squad already loses to him (see Tuning), so the
+     playtest says whether it holds.
   2. *Faith requirement (decided 2026-10-13):* initiating into Faith **consumes** a `Holy Symbol`. It is not sold: no
      shop stocks it. It comes from birth (the Priest) or from a Priest among a humanoid ambush pack (checked
      2026-10-15: a rolled Priest carries it in the pack and `loot.field_loot` drops it). Fantasy reason: the god picks
@@ -111,13 +111,14 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      Symbol and 180 points, Blood's 7-day test of `Unit.magic_blood` (5%, rolled at creation) and 90 points, Nature's
      270, the $3 board on a foodless day; the keepers are each sanctuary's `shrine` `Vendor` (Ssareth Coldvein,
      Thorne Mossmane, Brother Quillon). Their portraits are in (2026-10-17, `npc/blood_keeper.png`,
-     `grove_keeper.png`, `cathedral_keeper.png`). Left: the sim does not initiate anyone (no policy boards a member).
+     `grove_keeper.png`, `cathedral_keeper.png`). Left: the sim does not initiate anyone (no policy boards a member; the same multi-day investment step the Claim oven lacks, see *Mine
+     leftovers*, so both land with the planner).
   4. *Tier 0/1 spells per school:* **built 2026-10-17**, each with its AI and a scroll: **Grasping Roots** (Nature 0),
      **Hex** (Blood 0), **Spare the Dying** (Faith 0), **Healing Touch** (Faith 1), beside Water Jet (Nature 1) and
-     Dragonfire (Blood 1); RULES.md *Magic* has their numbers. **Left, a question for the author:** where a player gets
-     the scrolls of Hex, Spare the Dying and Healing Touch. The rite teaches no spell and no shop sells a scroll;
-     Grasping Roots comes as the Scroll occupation's starting item (a random Nature level-0 scroll) and Gnomes may be
-     born knowing it, the other three have no source yet (a keeper's shelf for initiates? a mission reward? loot?).
+     Dragonfire (Blood 1); RULES.md *Magic* has their numbers. **Deferred (author 2026-10-17):** how a player gets
+     the scrolls of Hex, Spare the Dying and Healing Touch (and Invisibility, Raise Dead). **Scrolls are never sold**;
+     the way to obtain spells is designed later, not in this arc. Today Grasping Roots comes as the Scroll
+     occupation's starting item (a random Nature level-0 scroll) and Gnomes may be born knowing it.
      **Blood magic costs no hit points** (author 2026-10-16: Dragonfire's 1d4 HP price is gone).
   5. *Blood is bloodline (decided 2026-10-15; the Cult's blurb rewritten):* the magic is born in you (a dragon, an
      angel, a demon in the line). New Blood branches follow the same shape as Bloodline -> Dragon -> Dragon Breath
@@ -130,9 +131,9 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      over an expected level 3, i.e. 4) with one more hit die each (Bufo 38 -> 44 HP, Peep 23 -> 27, Ribit 31 -> 37);
      the Ancient Archivist lost Deft Bones (3 talents at racial 10, which earns 2); the Aurochs carries work 13
      instead of a pin (same 13 HD). Re-check those fights in the lab. **The Ogre's Wildfire:** the Ogre is 4d6-drop-lowest (STR 17,
-     98 HP), in Plate Armor (AC 15, speed 4) with a Huge Club; his escort is clamped at mean 6. AI against AI in the
-     lab (`combat_lab` "fortress", squad at mean 6): 2/30 wins with four, 4/30 with six. Play it in the lab first (an
-     AI squad plays far below a person), then decide the escort's cap (item 1), the fire (2d6 a cell, 1-2 cells a
+     98 HP), in Plate Armor (AC 15, speed 4) with a Huge Club; his escort is 5 at level 6 (7 at the hostile fortress).
+     AI against AI in the lab (`combat_lab` "fortress", squad at mean 6): the squad wins 2/30 with four, 4/30 with
+     six. Play it in the lab first (an AI squad plays far below a person), then tune the fire (2d6 a cell, 1-2 cells a
      round), the camp's crew (3 Goblins + a Hobgoblin a level over), the DCs (13 / 15, -1 a taught focus), the
      put-out (16 h, DC 13) and the meat loss (5% a burned focus, for good). **The Necromancer at the Front:** the field
      (48 x 30, night), the sides (4 soldiers at -2, 8 raiders and 4 Zombies at +1, 6 bodies), the necromancer (racial 15,
@@ -163,10 +164,10 @@ its functions are tabs inside.
   buy food -> gather again. Large; ties to `orders.py` and the sim's planner.
 
 **Factions, nodes and world**
-- **The Battlefield beyond the Faith mission (author 2026-10-15).** The node is meant to host fights
-  without a mission too, but for now its only use is the Faith Order's skirmish. Revisit: what an open
-  skirmish pays, how often the front has a fight, whether Ledger Hold reputation ties in.
-- **Frontier supply run as a real trip (author 2026-10-15).** The run (`orders.supply_run`,
+- **The Battlefield beyond the Faith mission (author 2026-10-15).** For now its only use is the Faith
+  Order's errands, and it stays that way (author 2026-10-17). Later it becomes one more place of Ledger
+  Hold work and missions: what an open skirmish pays, how often the front has a fight.
+- **Frontier supply run as a real trip (author 2026-10-15; important, 2026-10-17).** The run (`orders.supply_run`,
   `Guild.supply_run_shift`) is still a 10 h work order the group spends standing at Ledger Hold; the
   Frontier Outpost node exists now (with the Battlefield) but does nothing. Revisit: the escort walks the
   caravan to the Outpost and back, the ambush on that road.
@@ -178,11 +179,13 @@ its functions are tabs inside.
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
 - **The Ogre's fortress after the Wildfire** ([ogre_wildfire.md](ogre_wildfire.md)). Convinced, it stays as a
-  friendly node with the Ogre as its `Vendor` and **no function yet**: what it offers is open. Hostile, it
-  can be attacked later (the finished fortress, a harder fight; winning removes the node): not built.
+  friendly node with the Ogre as its `Vendor` and **no function** (author 2026-10-17: it stays so; trade with
+  him later, once richer trade subsystems exist). Hostile, STORM THE FORTRESS is built (the finished
+  walls, 7 escorts; winning removes the node).
 - **A talk before the arena's first boss fights (author 2026-10-16).** The arena does not move to the
   dialogue (it is about winning the fight on the board), but the first bout against Adelio and the first
-  against the Ribbit Brothers may open a short dialogue, for immersion only.
+  against the Ribbit Brothers may open a short dialogue, for immersion only. Goes in before the playtest
+  (author 2026-10-17).
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
@@ -224,7 +227,7 @@ pointed to, not repeated.
   within a run's swing of the line above. These are the new numbers to beat.
   Left: (1) a 2-point weapon action cannot follow a walk (two points a turn): the rule, not the AI (Javelin Charge
   is the exception, 1 point after a walk since 2026-10-16); (2) the player's side has no use for Raise Dead or
-  Invisibility (no scroll or other source teaches either: `items.py` has scrolls for the other six spells only);
+  Invisibility (no scroll or other source teaches either: `items.py` has scrolls for the other ten spells only);
   (3) the tier 0/1 spells have their AI (2026-10-17, `ai._hex_or_roots`, `_try_healing_touch`), but Grasping
   Roots and Hex are rules of thumb, not scored in `ai._strike_worth`'s expected-damage terms; (4) Dragon Breath's breather does not move to set up a better cone.
 - **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16 (author: two plain attacks
@@ -513,4 +516,3 @@ for a system that does not exist yet:
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
-  Priest's loot in an ambush. Works as a drop already; waits for the rite.
