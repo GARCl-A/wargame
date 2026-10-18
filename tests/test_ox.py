@@ -28,7 +28,7 @@ from gartok.clock import Clock
 from gartok.guild import Guild
 from gartok.hunt import HuntState
 from gartok.unit import Unit
-from tests.helpers import fixed_d20
+from tests.helpers import fixed_d20, skip_aftermath
 
 
 def _guild(hour=9, node="country_roads"):
@@ -448,6 +448,7 @@ def test_killing_aurochs_closes_the_trail_and_losing_the_hide_fails_the_job():
     app._battle_end(battle)
     assert missions.pending_ox(guild) is None and m.ambush_done
     assert app._hunt.hours_left == 0
+    skip_aftermath(app)
     assert isinstance(app.scene, loot_screen_mod.LootScreen)             # the hide and the horn on the field
     app.scene.on_done()                                          # ...left lying
     assert m.state == "failed"

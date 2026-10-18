@@ -169,8 +169,6 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
   board without contact. The aggressor's search (`ai.py`) never found the squad; an unseen foe stood in
   the cell next to a squad member and could not be attacked; Flee was blocked by that unseen foe and
   the button gave no reason. Whatever the darkness rework decides, a fight needs a way to end.
-- **Victory / defeat panel contradicts itself:** the header reads VICTORY while the box reads DEFEAT and
-  the centre says "The AI won" (seen after fleeing and after an arena loss).
 - **Tavern hub tabs keep the old party** after a recruit signs: Food & Drink and Study list 3 of 4 until
   the tavern is left and reopened (tabs built once in `hub_screen.for_node`).
 - **Attack needs two clicks** (arm, then confirm, `battle_screen._click`) but the combat card says one.
@@ -221,13 +219,12 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
   the guild objectives (work level 1 -> buy Axes -> work level 2), not a card.
 
 **Reward feedback (agreed 2026-10-18, ready to do)**
-Today all three are a generic `AlertScreen` tuple (`app_battle.py` "LEVEL UP!", `unit_levels` work
-level lines) or a small green line (the tavern). Each becomes its own screen built on `ui/`:
-- **Level up:** the portrait large, the new level stamped, the numbers climbing from before to after
-  (HP, hit dice) and a button straight to the talent picks (`LevelScreen`).
+The fight's level-ups, the after-action report and the memorial card are built (`level_up_screen`,
+`report_screen`, `memorial_screen`). A work level is still a line from `unit_levels` and a recruit a small
+green line at the tavern:
+- **Work level up:** the same `LevelUpScreen` after a work shift, the work track on the stamp.
 - **Recruit signed:** the new member's card slides into the roster with an ink signature and a line
   of their own.
-- **After-action report** before the loot screen: who downed whom, XP bars filling, loot, deeds earned.
 - **The ambush itself:** a Wilds ambush is three lines of text on an empty hunt screen, the tensest moment
   of a hunt. Give it the same weight (the foes' portraits, the odds, the choice).
 
@@ -255,8 +252,6 @@ level lines) or a small green line (the tavern). Each becomes its own screen bui
   place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the
   Ruins...); today every board is the same grey.
 - **The log on the board:** floating damage numbers, a hit flash, a mark on the fallen, a crit banner.
-- **Memorial card on a death:** portrait, name, race, days lived, who downed them, the log line; built to
-  be screenshotted.
 - **Friend / foe apart from the banner colour:** a fixed ring or shape per side; the banner only as a
   detail. A red banner makes the squad and the foes the same red.
 - **Bigger vendor portrait** in the shop screens, with a line of their own. Decided 2026-10-18: no accent

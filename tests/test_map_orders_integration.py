@@ -280,7 +280,7 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
     app_mod.MarketScreen = lambda *a, **k: (opened.append("market"), object())[1]
     try:
         app._advance()
-        while getattr(app.scene, "title", None) == "DEATH ALERT":
+        while app.scene.__class__.__name__ == "MemorialScreen":
             app.scene.on_done()
     finally:
         app_mod.MarketScreen = orig

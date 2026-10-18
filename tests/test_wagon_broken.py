@@ -419,14 +419,14 @@ def test_what_falls_due_during_that_hour_is_queued_for_the_map():
 
 
 def test_leaving_the_screen_reports_whoever_starved_there():
-    from gartok.alert_screen import AlertScreen
+    from gartok.memorial_screen import MemorialScreen
     guild, _group, _wagon, _ = _setup()
     app, _started = _app(guild)
     gone = _unit()
     app._screen_dead = (gone,)
     app.scene = None
     app._after_activity()
-    assert isinstance(app.scene, AlertScreen) and app._screen_dead == ()
+    assert isinstance(app.scene, MemorialScreen) and app._screen_dead == ()
 
 
 def test_a_trip_with_no_route_keeps_the_broken_wagon(monkeypatch):

@@ -151,3 +151,13 @@ def make_app(guild):
     app._pending_event = None
     app._save = lambda: None
     return app
+
+
+def skip_aftermath(app):
+    """Click through the memorials, the after-action report and the level-ups, to what
+    the fight leads to (loot, the purse, the map)."""
+    from gartok.level_up_screen import LevelUpScreen
+    from gartok.memorial_screen import MemorialScreen
+    from gartok.report_screen import ReportScreen
+    while isinstance(app.scene, (MemorialScreen, ReportScreen, LevelUpScreen)):
+        app.scene.on_done()

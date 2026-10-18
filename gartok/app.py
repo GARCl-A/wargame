@@ -436,11 +436,11 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
             busy_before = {g.gid for g in self.guild.groups if g.busy}
             result = campaign.advance(self.guild, dt=dt)
             self._map_notices += result.events
+            all_casualties.extend(result.casualties)
             if result.wiped:
                 self._hunt = None
-                self._campaign_over()
+                self._mourn(all_casualties, self._campaign_over)
                 return
-            all_casualties.extend(result.casualties)
 
             if not chase or result.pending:
                 break
@@ -451,8 +451,15 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
 
         self._report_casualties(all_casualties, self._after_activity)
 
+    def _mourn(self, casualties, nxt):
+        """A memorial card for each of `casualties` lost off the field, then `nxt`."""
+        from . import aftermath, memorial_screen
+        cards = [getattr(u, "memorial", None) or aftermath.starved(u, day=self.guild.clock.day)
+                 for u in casualties]
+        memorial_screen.chain(self, cards, nxt, resume_to=self.scene)
+
     def _report_casualties(self, casualties, nxt):
-        """Whoever starved in the last stretch of clock: a death alert, then the loot
+        """Whoever starved in the last stretch of clock: a memorial card each, then the loot
         screen for what they carried, then `nxt`. No popup for hunger itself --
         COMMAND's alert icon (map_screen._messages) covers it every frame the map is up."""
         if casualties:
@@ -467,12 +474,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                 else:
                     nxt()
 
-            def show_death_alert():
-                from .alert_screen import AlertScreen
-                msgs = [f"{u.name} starved to death." for u in casualties]
-                self.scene = AlertScreen(self.ui_fonts, self.scene, "DEATH ALERT", msgs, on_done=show_starvation_loot, is_danger=True)
-
-            show_death_alert()
+            self._mourn(casualties, show_starvation_loot)
         else:
             nxt()
 
@@ -487,7 +489,8 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         self._pending += result.pending
         self._screen_dead = (*self._screen_dead, *result.casualties)
         if result.wiped:
-            self._campaign_over()
+            dead, self._screen_dead = self._screen_dead, ()
+            self._mourn(dead, self._campaign_over)
         return result.events, result.casualties
 
     def _map_dialogue(self, group, encounter, done):

@@ -6,6 +6,7 @@ by hours; battle time (`clock.advance_rounds`) is seconds and skips upkeep.
 """
 
 from . import (
+    aftermath,
     captives,
     cohesion,
     data,
@@ -210,6 +211,9 @@ class UpkeepMixin:
             if outcome == "dead":
                 casualties.append(u)
                 recorder.death(u, "starvation", unfed_days=u.unfed_days)
+                g = self.group_of(u)
+                u.memorial = aftermath.starved(u, day=self.clock.day,
+                                               place=world.node(g.node).name if g is not None and g.node else None)
                 events.append(f"{u.name} starved to death.")
             elif outcome == "hungry":
                 events.append(f"{u.name} did not eat today: {u.hunger_label}.")

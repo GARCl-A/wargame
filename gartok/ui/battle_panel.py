@@ -18,7 +18,7 @@ Data shapes::
                  "ap": int, "ap_max": int,
                  "walk": (moved, speed) | None, "note": str | None}
 
-    victory_card = {"won": bool, "stabilized": [str], "fallen": [str]}
+    victory_card = {"result": "VICTORY" | "FLED" | "DEFEAT", "stabilized": [str], "fallen": [str]}
 
     action_item = {"key": any, "label": str, "enabled": bool, "armed": bool,
                    "icon": str | None,          # icons.icon id
@@ -92,8 +92,8 @@ def _init_chip(surf, F, r, e):
 # panel header and cards                                                 #
 # ---------------------------------------------------------------------- #
 def draw_title(surf, F, rect, title, state, vision_on):
-    """`state` is "victory", "mopping" or None and only picks the colour."""
-    col = T.BRASS if state == "victory" else WARN if state == "mopping" else T.TX
+    """`state` is "victory", "defeat", "mopping" or None and only picks the colour."""
+    col = {"victory": T.BRASS, "defeat": DANGER, "mopping": WARN}.get(state, T.TX)
     text(surf, F["titleb"], title, (rect.x, rect.y - 4), col)
     label = "ACTIVE" if vision_on else "SQUAD"
     text(surf, F["body_sm"], f"vision {label}  [L]", (rect.right, rect.y + 4),
@@ -128,10 +128,11 @@ def draw_turn_card(surf, F, card, data):
 
 
 def draw_victory_card(surf, F, card, data):
-    won = data["won"]
-    box(surf, card, fill=T.TABLE, border=T.BRASS if won else DANGER, width=1)
+    result = data["result"]
+    col = {"VICTORY": T.BRASS, "FLED": T.TX_MUTED}.get(result, DANGER)
+    box(surf, card, fill=T.TABLE, border=col, width=1)
     x = card.x + T.S * 2
-    text(surf, F["head"], "VICTORY" if won else "DEFEAT", (x, card.y + 6), T.BRASS if won else DANGER)
+    text(surf, F["head"], result, (x, card.y + 6), col)
 
     stabilized, fallen = data["stabilized"], data["fallen"]
     if stabilized and fallen:

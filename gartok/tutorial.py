@@ -13,7 +13,7 @@ TUTORIALS = (
     "draft.intro", "draft.vocation", "draft.pick", "draft.identity", "combat_lab",
     "map",
     "guild.members", "guild.overview", "guild.reputations",
-    "squad", "battle", "loot", "reward",
+    "squad", "battle", "report", "memorial", "level_up", "loot", "reward",
     "market", "taverna", "hunt", "bank", "level", "library",
     "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "watch", "garage", "gathering", "initiation",
     "group_turn"

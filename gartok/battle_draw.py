@@ -4,7 +4,7 @@ Mixed into `battle_screen.BattleScreen`; input and turn flow stay there."""
 
 import pygame
 
-from . import actions, data, vision
+from . import actions, aftermath, data, vision
 from .scenario import own_half
 from .ui import battle_panel, board_render, board_style, foe_panel
 from .ui import primitives as ui_primitives
@@ -249,9 +249,10 @@ class BattleDrawMixin:
         pr = self._L["panel"]
         F = self.F
 
-        title = ("VICTORY" if b.winner else "AID THE DOWNED" if b.mopping_up
+        result = aftermath.result_word(b, self.me) if b.winner else None
+        title = (result if b.winner else "AID THE DOWNED" if b.mopping_up
                  else "BIND THE FALLEN" if b.binding_captives else f"Round {b.round_no}")
-        state = ("victory" if b.winner else "mopping" if (b.mopping_up or b.binding_captives)
+        state = (("victory" if result == "VICTORY" else "defeat") if b.winner else "mopping" if (b.mopping_up or b.binding_captives)
                  else None)
         vision_active = self._is_player_turn() and not self.view_squad
         head_r = pygame.Rect(pr.x, pr.y, pr.w, battle_panel.TITLE_H)
@@ -293,7 +294,7 @@ class BattleDrawMixin:
         else:
             card_r = pygame.Rect(pr.x, cur_y, pr.w, battle_panel.VICTORY_CARD_H)
             vdata = {
-                "won": b.winner == self.me,
+                "result": result,
                 "stabilized": [u.name for u in b.units if u.team == self.me and u.status in ("stable", "broken")],
                 "fallen": [u.name for u in b.units if u.team == self.me and u.status == "dead"],
             }
@@ -518,6 +519,8 @@ class BattleDrawMixin:
             return "Player 1 won" if winner == "player" else "Player 2 won"
         if self._human(winner):
             return "You won"
+        if aftermath.result_word(self.battle, self.me) == "FLED":
+            return "You fled"
         return "The AI won"
 
     def _draw_handoff(self, screen):

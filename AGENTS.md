@@ -110,6 +110,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `magic.py` | spell registry + study-difficulty math (casting is in actions/spells.py) |
 | `encounters.py` | enemy packs scaled to a target mean level (`clamp_level` holds a scaled fight under the enemy caps); `level_weights` makes a table's headcount / level weights from a bell leaning low |
 | `progression.py` | XP curves + combat-XP rule |
+| `aftermath.py` | what the screens after a fight read, filled by `campaign.absorb_battle`: the report rows and takedowns, each `LevelUp` (numbers before / after), each `Memorial` (in battle or starved, `Unit.joined_day` counts the days); `result_word` is the VICTORY / FLED / DEFEAT both the board and the report show. `app_battle` plays memorials -> report -> level-ups -> loot / purse / map, the state already settled |
 | `autowin.py` | auto-resolve a battle via Monte Carlo estimate |
 | `tutorial.py` / `tutorial_card.py` | tutorial state + the modal card per screen (`ui/intro_card.py`); copy in `locales/en.json` |
 | `ui/` | war-table component kit; see `ui/README.md` |

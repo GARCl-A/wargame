@@ -51,7 +51,7 @@ SAVE_DEFAULTS = {
     "locked_items": {}, "equipped_weapon": None, "equipped_offhand": None,
     "equipped_armor": None, "equipped_tongue": None, "equipped_artifact": None, "natural_armor": 0,
     "hp_override": None, "racial_override": None, "dormant": False, "awareness_radius": 8,
-    "portrait_file": None, "afoot": False,
+    "portrait_file": None, "afoot": False, "joined_day": 1,
 }
 
 
@@ -60,6 +60,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.team = team                     # "player" / "enemy" (vestigial: Combatant owns the real one)
         self.uid = uuid.uuid4().hex          # stable identity: survives save/load, outlives the name
         self.recruited_by = None             # uid of the guild member who recruited this one, or None
+        self.joined_day = 1                  # the guild day this one signed on (the memorial counts from it)
         self.talents = {t: [] for t in talents.TRACKS}   # picked talent ids per XP track
         self.poisons = {}                    # poison id -> {"level", "hours", "dc"} (see unit_poison.py)
         self.antidote_cooldown = 0           # hours until another Antidote may be used
@@ -136,6 +137,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.team = "player"
         u.uid = d["uid"]
         u.recruited_by = d["recruited_by"]
+        u.joined_day = d["joined_day"]
         u.talents = {t: list(d["talents"].get(t, [])) for t in talents.TRACKS}
         u.poisons = {pid: dict(st) for pid, st in d["poisons"].items()}
         u.antidote_cooldown = d["antidote_cooldown"]

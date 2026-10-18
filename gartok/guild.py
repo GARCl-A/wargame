@@ -303,6 +303,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         return len(group.members) < group.capacity or self.free_slots > 0
 
     def add_member(self, unit, group):
+        unit.joined_day = self.clock.day
         group.members.append(unit)
         self._sync_leadership()
 

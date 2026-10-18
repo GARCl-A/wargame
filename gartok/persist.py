@@ -79,6 +79,7 @@ def unit_to_dict(u):
     return {
         "uid": u.uid,                            # stable identity (recruiter binding references it)
         "recruited_by": u.recruited_by,          # uid of the member who recruited this one, or None
+        "joined_day": u.joined_day,
         "name": u.name,
         "auto_name": u._auto_name,
         "portrait_id": u.portrait_id,

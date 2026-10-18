@@ -103,6 +103,24 @@
         "Your own dead are on the field too: their gear can be recovered the same way."
       ]
     },
+    "report": {
+      "title": "After the fight",
+      "body": [
+        "Who stood, who fell and who put whom down. The bars are combat XP toward the next level; a kill only pays XP against a foe at or above the killer's level."
+      ]
+    },
+    "memorial": {
+      "title": "The fallen",
+      "body": [
+        "Death in Gartok is for good: the character is gone with whatever they were. What they carried may still be on the field."
+      ]
+    },
+    "level_up": {
+      "title": "A new level",
+      "body": [
+        "A level can bring a talent pick: PICK TALENTS spends it now, or later from the guild roster. A new racial level also rolls one more hit die."
+      ]
+    },
     "reward": {
       "title": "The purse",
       "body": [

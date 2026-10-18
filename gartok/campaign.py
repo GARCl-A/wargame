@@ -28,6 +28,7 @@ import random
 from dataclasses import dataclass, field
 
 from . import (
+    aftermath,
     arena,
     captives,
     data,
@@ -61,6 +62,11 @@ class BattleOutcome:
     stabilized: list = field(default_factory=list) # survivors that were stabilized / broken at end of combat
     leveled_up: list = field(default_factory=list) # survivors that gained a combat or magic level from XP
     captive_notes: list = field(default_factory=list)  # lines for the foes bound and led away
+    report: list = field(default_factory=list)    # aftermath.ReportRow per squad member
+    takedowns: list = field(default_factory=list)  # aftermath.takedowns: (who, whom, mine)
+    level_ups: list = field(default_factory=list)  # aftermath.LevelUp, before / after numbers
+    memorials: list = field(default_factory=list)  # aftermath.Memorial per fallen member
+    result: str = ""                              # aftermath.result_word: VICTORY / FLED / DEFEAT
 
 
 def _carry_forward(member, combatant):
@@ -138,25 +144,41 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     `arena_offer` is the `world.Bout` for an arena fight, or None.
     """
     survivors, fallen, fallen_combatants, stabilized, xp_awards, leveled_up = [], [], [], [], {}, []
+    report, level_ups, memorials = [], [], []
+    takedowns, downed = aftermath.takedowns(battle), {}
+    for who, whom, _mine in takedowns:
+        downed.setdefault(who, []).append(whom)
     for combatant, member in zip(battle.player_units, squad):
+        report.append(aftermath.ReportRow(member.name, member.race["name"], member.portrait_id,
+                                          aftermath.status_of(combatant), downed.get(combatant.name, []),
+                                          member.combat_xp, combatant.combat_xp_earned,
+                                          combatant.magic_xp_earned))
         if combatant.survived:
             if combatant.status in ("stable", "broken"):
                 stabilized.append(member)
             earned = combatant.combat_xp_earned + combatant.magic_xp_earned
             if earned:                            # XP scaled by the level gap of each kill
-                old_lvls = (member.combat_level, member.magic_level)
+                before = aftermath.level_snapshot(member)
                 member.combat_xp += combatant.combat_xp_earned
                 member.magic_xp += combatant.magic_xp_earned
                 member.collect_levels()           # a new racial level rolls a hit die
                 xp_awards[member.name] = earned
-                if (member.combat_level, member.magic_level) > old_lvls:
+                after = aftermath.level_snapshot(member)
+                if (after["combat"], after["magic"]) > (before["combat"], before["magic"]):
                     leveled_up.append(member)
+                    level_ups.append(aftermath.LevelUp(member, before, after))
             _carry_forward(member, combatant)
             survivors.append(member)
         else:
             fallen.append(member)
             fallen_combatants.append(combatant)
-            recorder.death(member, "combat", **_death_note(battle, combatant))
+            note = _death_note(battle, combatant)
+            recorder.death(member, "combat", **note)
+            killer = getattr(combatant, "downed_by", None)
+            memorials.append(aftermath.memorial(
+                member, day=guild.clock.day, cause="Killed in combat",
+                place=getattr(node, "name", None), killer=killer.name if killer is not None else None,
+                line=note["trail"][-1] if note["trail"] else None))
 
     guild.remove_members(fallen)
     guild.clock.advance_rounds(battle.round_no)
@@ -168,7 +190,9 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     outcome = BattleOutcome(won, survivors, fallen, xp_awards=xp_awards,
                             squad_size=len(squad), player_kos=player_kos,
                             arena_tier=arena_offer, stabilized=stabilized,
-                            leveled_up=leveled_up)
+                            leveled_up=leveled_up, report=report, level_ups=level_ups,
+                            memorials=memorials, takedowns=takedowns,
+                            result=aftermath.result_word(battle))
 
     if guild.empty:                               # full wipe: campaign over
         outcome.campaign_over = True

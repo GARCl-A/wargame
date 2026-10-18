@@ -279,6 +279,7 @@ gartok/
   combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector) / guild_screen.py
   group_screen.py + group_draw.py (everything it paints)
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
+  memorial_screen.py / report_screen.py / level_up_screen.py (after a fight: the fallen, the after-action report, each level-up; data in aftermath.py)
   market_screen.py + market_draw.py (painting) + market_trade.py (drops, buying, selling) / taverna_screen.py + taverna_draw.py (painting)
   prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py

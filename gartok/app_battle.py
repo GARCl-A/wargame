@@ -11,6 +11,7 @@ from . import (
     factions,
     forced,
     matchup,
+    memorial_screen,
     missions,
     necromancer,
     persist,
@@ -23,7 +24,9 @@ from .battle import Battle
 from .battle_screen import BattleScreen
 from .combat_log import CombatLog
 from .dialogue_screen import DialogueScreen
+from .level_up_screen import LevelUpScreen
 from .loot_screen import LootScreen
+from .report_screen import ReportScreen
 from .reward_screen import RewardScreen
 from .taverna_screen import TavernaScreen
 
@@ -145,7 +148,7 @@ class BattleFlowMixin:
             self._left_outside = None
             self._hunt = None
             self._pause_order = self._pause_group = None
-            self._campaign_over()
+            memorial_screen.chain(self, outcome.memorials, self._campaign_over, resume_to=self.scene)
             return
 
         def after_arena_reward():
@@ -167,10 +170,20 @@ class BattleFlowMixin:
             # falls through to the normal loot/`_after_activity` handling below --
             # a claim fight is never a pause_order/hunt/arena bout
 
+        # the state settles now; only the screens wait behind the report
+        if pause_order is not None:                # a forced battle: the guard's patrol, or an ambush
+            self._pause_order = self._pause_group = None
+            self._map_notices += forced.resolve(self.guild, pause_group, pause_order, outcome)
+        won = battle.winner == "player"
+        if hunt_state is not None:                 # an ambush during a hunt
+            hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
+            if hunt_state.target == "ox":
+                hunt_state.hours_left = 0          # one chase per trail found
+                if won:
+                    missions.slay_ox(self.guild)
+
         def do_next_step():
-            if pause_order is not None:            # a forced battle: the guard's patrol, or an ambush
-                self._pause_order = self._pause_group = None
-                self._map_notices += forced.resolve(self.guild, pause_group, pause_order, outcome)
+            if pause_order is not None:
                 if outcome.loot_pool and outcome.survivors:
                     self._save()
                     self.scene = LootScreen(self.ui_fonts, self.guild, outcome.survivors,
@@ -179,13 +192,7 @@ class BattleFlowMixin:
                 self._after_activity()
                 return
 
-            if hunt_state is not None:            # an ambush during a hunt
-                hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
-                won = battle.winner == "player"
-                if hunt_state.target == "ox":
-                    hunt_state.hours_left = 0          # one chase per trail found
-                    if won:
-                        missions.slay_ox(self.guild)
+            if hunt_state is not None:
                 resume = won and hunt_state.party and hunt_state.hours_left > 0
                 step = self._resume_hunt if resume else self._finish_hunt
 
@@ -224,32 +231,27 @@ class BattleFlowMixin:
                 return
             self._after_activity()
 
-        alerts = []
-        if outcome.fallen:
-            msgs = [f"{u.name} was killed in combat." for u in outcome.fallen]
-            alerts.append(("DEATH ALERT", msgs, True))
-        if outcome.stabilized:
-            msgs = [f"{u.name} was stabilized and survived unconscious." for u in outcome.stabilized]
-            alerts.append(("STABILIZED", msgs, False))
-        if getattr(outcome, "leveled_up", None):
-            msgs = [f"{u.name} reached combat level {u.combat_level}!" for u in outcome.leveled_up]
-            alerts.append(("LEVEL UP!", msgs, False))
-            self._map_notices += msgs
+        if outcome.leveled_up:
+            self._map_notices += [f"{u.name} reached combat level {u.combat_level}!" for u in outcome.leveled_up]
 
-        def run_alert(idx):
-            if idx >= len(alerts):
+        def level_up(i=0):
+            if i >= len(outcome.level_ups):
                 do_next_step()
                 return
-            title, msgs, is_danger = alerts[idx]
-            from .alert_screen import AlertScreen
-            self.scene = AlertScreen(self.ui_fonts, self.scene, title, msgs,
-                                     on_done=lambda: run_alert(idx + 1),
-                                     is_danger=is_danger)
+            lu = outcome.level_ups[i]
 
-        if alerts:
-            run_alert(0)
-        else:
-            do_next_step()
+            def nxt():
+                level_up(i + 1)
+            self.scene = LevelUpScreen(self.ui_fonts, lu, nxt,
+                                       on_talents=lambda: self._open_level(lu.unit, on_back=nxt),
+                                       index=i, total=len(outcome.level_ups))
+
+        def report():
+            self.scene = ReportScreen(self.ui_fonts, outcome, level_up,
+                                      place=getattr(battle_node, "name", None), rounds=battle.round_no,
+                                      deeds=outcome.arena_reward is None)
+
+        memorial_screen.chain(self, outcome.memorials, report, resume_to=self.scene)
 
     def _prompt_recruit_adelio(self, survivors, node):
         from . import arena

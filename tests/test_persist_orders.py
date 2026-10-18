@@ -281,7 +281,7 @@ def test_loading_a_save_with_nothing_pending_just_lands_on_the_map():
 
 
 def test_the_fight_is_no_longer_pending_once_the_battle_is_over():
-    """Death alerts play before the aftermath is resolved -- a save taken there
+    """The memorials and the report play before the loot -- a save taken there
     must not replay a fight that already happened."""
     guild, g = _ambushed(members=2)
     app = make_app(guild)
@@ -298,7 +298,7 @@ def test_the_fight_is_no_longer_pending_once_the_battle_is_over():
 
     app._battle_end(battle)
 
-    assert app.scene.__class__.__name__ == "AlertScreen"
+    assert app.scene.__class__.__name__ == "MemorialScreen"
     assert g.pending is None
 
 

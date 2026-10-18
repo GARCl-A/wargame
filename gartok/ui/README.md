@@ -68,6 +68,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
 | `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
+| `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
 | `mission_offer_screen.py` | base class for NPC job boards: lists every job the giver has (`get_templates`), scrolls when they do not fit |
 
