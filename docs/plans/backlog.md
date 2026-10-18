@@ -28,17 +28,21 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 **Before the playtest (author 2026-10-18):** done the same day: the founding screen redrawn, the map's crowded
-names, the arena bosses' lines in the dialogue system, the big screens split, the level-2 scrolls, the AI's
-Invisibility, composite races (`["Snake", "Dragon"]`), the Dragon racial talents (`dragon`, `dragon_breath`) and the
-6-node school-agnostic magic talent tree.
+names, the arena bosses' lines in the dialogue system, the post-battle report / level-up / memorial screens
+(`aftermath.py`), the big screens split, the level-2 scrolls, the AI's Invisibility, composite races
+(`["Snake", "Dragon"]`), the Dragon racial talents (`dragon`, `dragon_breath`), the 6-node school-agnostic
+magic talent tree, non-lethal damage clearing after 24 h of unbroken rest, fresh food across larder before Rotten Food,
+outdoor road/city guard scenarios (`StreetScenario`), work `LevelUpScreen`, Wilds ambush card, tavern recruitment
+signature, UI overlap fixes, and tutorial copy fixes.
 
-1. **Playtest on the current build, then feed it and the Caravana run to the AI and the sim** (*Large*): the magic
+1. **Playtest on the current build, then feed it to the AI and the sim** (*Large*): the magic
    arc's pre-playtest work is in (the walked supply run, the rite, the tier 0/1/2 spells and scrolls, the 6-node
    magic talent tree, composite races and Dragon racial talents). The AI work it waited on is done (2026-10-16);
    what the AI still lacks is a short list (*Teach the AI the newer actions*), and the weapon actions' cases are
    tuned from this playtest.
 2. **Magic Arc follow-ups** (*Ready to do -> Medium*): scroll acquisition sources (deferred past the arc, author
-   2026-10-17: scrolls are never sold), sim initiation policy, and tuning after the playtest.
+   2026-10-17 & 2026-10-18: scrolls are never sold; they will come from enemy/boss loot and missions for their
+   respective factions), sim initiation policy, and tuning after the playtest.
 3. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
    magic arc (author 2026-10-17: the playtest and the tuning it feeds).
 4. **Production chain between groups** (*Large*, after magic).
@@ -71,10 +75,13 @@ Invisibility, composite races (`["Snake", "Dragon"]`), the Dragon racial talents
   (accepted 2026-10-16); the third missions are the endgame bosses, each worth a racial-15 character, so they are
   authored NPCs (generated enemies stop at `constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`); Faith consumes a Holy
   Symbol (uncommon, $80 since 2026-10-18; from the Priest's birth or a Priest's loot; shops buy it, none stocks it); Blood tests `magic_blood` first and costs no hit points. Done 2026-10-18: the magic talent tree is 6 school-agnostic nodes (`arcane_mind`, `spell_focus`, `destructive_casting`, `blessed_hands`, `focused_will`, `far_cast`), `dragon` and `dragon_breath` moved to the `Dragon` racial talent tree, and the Snake Dragon is a composite `["Snake", "Dragon"]` race (`unit.races`, attribute modifiers averaged and rounded down, HD average rounded down to `d8`, size average rounded up to `Large`, union of abilities, languages and racial talent trees). Left:
-  1. *Scrolls (deferred past the arc, author 2026-10-17):* scrolls are never sold; how a player gets Hex, Spare the
-     Dying, Healing Touch, Invisibility and Raise Dead is designed later (every spell has its scroll since 2026-10-18;
-     the level-2 ones are $750, `economy.scroll_price`).
-     Today Grasping Roots comes as the Scribe's starting Scroll and with the `nature_magic` race (Gnome).
+  1. *Scrolls (deferred past the arc, author 2026-10-17 & 2026-10-18):* scrolls are never sold; the remaining unplaced
+     scrolls (`Hex`, `Spare the Dying`) will come from enemy/boss loot and missions for their respective school factions,
+     while `Scroll of Invisibility` does not clearly fit anywhere in the game right now (every spell has its scroll
+     since 2026-10-18; the level-2 ones are $750, `economy.scroll_price`).
+     Today the 4 level-0 Nature scrolls come as the Scribe's starting Scroll (`Magic Missile` also drops from the
+     Ancient Archivist), `Sleep` is in the Ancient Ruins chest, `Raise Dead` and `Healing Touch` are carried by the
+     Necromancer, `Water Jet` is the Nature Coven's Wildfire reward, and `Dragonfire` is the Blood Cult's Dragon's Clutch reward.
   2. *The sim does not initiate anyone:* no policy boards a member, the same multi-day investment step the Claim oven
      lacks; both land with the sim's tuning after the playtest (*Playtest on the current build*, step 4).
   3. *Blood's fourth mission* (the robbed dragon keeps attacking): not designed; not before every test scheduled
@@ -151,51 +158,28 @@ two members sick. Screenshots and the full write-up: the "GARTOK em 30 Dias" art
 raised by the same run are under *Needs more information -> Playtest 2026-10-18*.
 
 **Bugs**
-- **Rotten food eaten before a groupmate's fresh food.** `unit_hunger.take_ration` prefers fresh food
-  only inside one pack; `HungerMixin._take_ration` takes the first ration found walking own pack then
-  `larder`, so a member with Rotten Food in their own pack eats it while a groupmate carries Potatoes.
-  Seen twice (three members sick on day 22, two again on day 30). Nothing on the map announced it.
 - **Blind night fight never ends.** Wilds ambush at night, no light on either side: 117 rounds on a 16x12
   board without contact. The aggressor's search (`ai.py`) never found the squad; an unseen foe stood in
   the cell next to a squad member and could not be attacked; Flee was blocked by that unseen foe and
   the button gave no reason. Whatever the darkness rework decides, a fight needs a way to end.
-- **Tavern hub tabs keep the old party** after a recruit signs: Food & Drink and Study list 3 of 4 until
-  the tavern is left and reopened (tabs built once in `hub_screen.for_node`).
-- **Rest "until full" stopped at 23:59** with a member at 6/12 HP and no reason given.
-- **Hunt summary wording:** "Fought off 1 pack" after the squad fled; "6 h of daylight left" at 00:13.
-- **The battle only ends on End Turn** after the last foe falls; an extra click on the body walks onto it.
-- **A noon fight looks like night:** the Old Road ambush at 11:59 drew the board as dark as the night one,
-  lit only around the torches. Check whether the scenario reads the hour at all.
-- **The board goes black on a wipe:** with the whole squad down nobody is left to see, so the defeat
-  screen shows an empty dark board.
-
-**UI overlaps and layout**
-- Lumber Yard panel: when the "past this job bare-handed" line shows, BROWSE THE YARD is drawn over
-  MANAGE GEAR & QUESTS.
-- Rest menu: the "until full" detail line runs past both panel edges; the hover tooltip covers the 8 H row.
-- Farm hub: "party holds $N" overlaps the STABLES tab.
-- Loot: "FOOD · MATERIAL" runs under the quantity buttons.
-- The "⋮" glyph renders as a box in the tutorial card's serif font (Market, Bank cards).
-- A hub opens on a tab that is not the node's point: the Farm on Stables, the Apothecary on an empty
-  CRAFT tab with no empty-state line.
-- With 4+ members, shop columns past the third need a sideways scroll.
 
 **Tutorials (review all of them)**
-- Wrong facts: the map card sends the player to the Market for Potatoes and Meat (they are at the Farm);
-  the Crafting card says Salt is sold at the Market (Farm); the Library card promises dictionaries the
-  shelf does not show (gated, unexplained).
 - Volume: about 25 modal cards, the map's with six paragraphs; the guild's goal ("what you're playing
   for") is the 12th. Decided 2026-10-18: the first card only says "this is your guild; your objectives
-  are here" and points to the **guild objectives** list (*Needs more information*); every other card gets
+  are here" and points to the **guild objectives** list (initial items decided below); every other card gets
   much shorter, since each stays one `?` click away.
+- **Guild objectives list (decided 2026-10-18, ready to do):** pure onboarding checklist on the Guild screen
+  next to the factions' deeds, with no mechanical reward (fame or coins). Initial list: (1) Buy food,
+  (2) Participate in an Arena bout, (3) Reach Combat Lv 1, (4) Work Lv 1 -> buy Axes -> Work Lv 2 chain,
+  (5) Recruit a character at the Tavern, (6) Recruit a character at the Prison, (7) Buy a Torch. More
+  items will be added after the next playtest.
 
 **Discoverability**
 - Nothing suggests a light source before a night hunt (a Torch is $2 and decides the fight).
 - Nothing points a wounded group to the Medic.
 - Ledger Hold is reachable before the Bankers hand over the chest, so the first visit is a wasted, risky
-  trip. Still open. Hiding it (`Node.hidden`) would hide the Frontier Outpost and the Battlefield behind
-  it too. **Rejected 2026-10-18:** listing on the map panel what a node holds before the trip; arriving and
-  finding out is the old-school exploration the game wants.
+  trip. **Decided 2026-10-18:** keep as old-school exploration (`ledger_screen.py` shows a narrative gatehouse
+  sentry line before the Bankers' trust test is completed).
 - The Library's "A New Translation" asks for a Dictionary of an Unarchived Tongue and nothing says how
   one is made (presumably the WRITE tab).
 - Direction 2026-10-18: teach at the moment of the decision (one line where the choice is made) rather
@@ -203,21 +187,6 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
 - The work level 2 opening (level 1 at the Yard, buy Axes, level 2: a second hit die) is the author's
   own first move every run, and nothing in the game shows it. Decided 2026-10-18: it becomes a chain in
   the guild objectives (work level 1 -> buy Axes -> work level 2), not a card.
-
-**Reward feedback (agreed 2026-10-18, ready to do)**
-The fight's level-ups, the after-action report and the memorial card are built (`level_up_screen`,
-`report_screen`, `memorial_screen`). A work level is still a line from `unit_levels` and a recruit a small
-green line at the tavern:
-- **Work level up:** the same `LevelUpScreen` after a work shift, the work track on the stamp.
-- **Recruit signed:** the new member's card slides into the roster with an ink signature and a line
-  of their own.
-- **The ambush itself:** a Wilds ambush is three lines of text on an empty hunt screen, the tensest moment
-  of a hunt. Give it the same weight (the foes' portraits, the odds, the choice).
-
-**Non-lethal damage heals with a day of rest (decided 2026-10-18)**
-- Damage taken in a non-lethal fight (the arena) heals in full after 24 h of unbroken rest. Lethal
-  damage keeps today's pace (`guild_upkeep.rest_heal`), so cheap healing stays a milestone for the
-  production chains. Needs non-lethal damage tracked apart from lethal damage on the unit.
 
 **Darkness: fog of war (direction agreed 2026-10-18)**
 - Three states per cell: never seen (black), seen before but out of light now (terrain dimmed, no units),
@@ -280,8 +249,7 @@ pointed to, not repeated.
   Left: (1) a 2-point weapon action cannot follow a walk (two points a turn): the rule, not the AI (Javelin Charge
   is the exception, 1 point after a walk since 2026-10-16); (2) done 2026-10-18: Raise Dead and Invisibility
   have scrolls, and any caster uses Invisibility as a way out (`ai._try_vanish`: when it would run, or at a third of
-  its HP with a foe in reach; invisible at half or less it makes for the edge); the player's side still has no source
-  for either scroll (*Magic Arc*, 2); (3) the tier 0/1 spells have their AI (2026-10-17, `ai._hex_or_roots`, `_try_healing_touch`), but Grasping
+  its HP with a foe in reach; invisible at half or less it makes for the edge); the Necromancer carries `Scroll of Raise Dead` and `Scroll of Healing Touch`, while `Scroll of Invisibility` has no world source yet (*Magic Arc*, 1); (3) the tier 0/1 spells have their AI (2026-10-17, `ai._hex_or_roots`, `_try_healing_touch`), but Grasping
   Roots and Hex are rules of thumb, not scored in `ai._strike_worth`'s expected-damage terms; (4) Dragon Breath's breather does not move to set up a better cone.
 - **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16 (author: two plain attacks
   win in general, the 2-point action wins in its favoured case): out of its case an action is one strike; in it
@@ -289,31 +257,29 @@ pointed to, not repeated.
   premise held by `test_ai_actions`); Javelin Charge is 1 point after a walk. Left: whether each case comes up
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
   the slimmest), and the old Extreme Shot / Power Shot niches.
-- **Playtest on the current build, then feed it and the Caravana run to the AI and the sim.**
-  The *Caravana Do Homem Verde* run (world `95ea6648`, 205 days, the longest) is archived but **never analysed**:
-  its `play.jsonl` is in `recordings/2026-10-12/` and its 62 fights in `combat_lab/campaign/`, yet the
-  `human` profile (`recordings/2026-10-10/human_profile_4runs.json`) and the `combat_pairs.py` baseline
-  (72 logs, 2026-10-11) were both made before it. Order: (1) teach the AI the newer actions (above, done 2026-10-16), so
-  the enemy is worth feeling; (2) play a fresh run on the current build with `record_play` ON (weapon actions,
-  2-AP actions, magic once in); (3) run `play_analysis.py` over the four earlier runs + Caravana + the new
-  one into a new profile, and re-baseline `combat_pairs.py` with the new campaign logs; (4) then settle
-  *Economy report prints a FAIL* and the planner with that data. Same pass, the Mine's leftovers in the sim:
-  `Crafter.pick` (`economy_guild.py`) skips every recipe with a `economy.MINE_SUPPLIES` input (Coal, Iron Ore,
-  Stone Brick), so the forge's Coal recipes and Iron Bar go unpriced, and no policy builds the Claim oven.
+- **Playtest on the current build, then feed it to the AI and the sim.**
+  Order: (1) teach the AI the newer actions (above, done 2026-10-16), so the enemy is worth feeling;
+  (2) play a fresh run on the current build with `record_play` ON (weapon actions, 2-AP actions, magic once in);
+  (3) run `play_analysis.py` over the new run into a fresh profile, and re-baseline `combat_pairs.py` with the
+  new campaign logs; (4) then settle *Economy report prints a FAIL* and the planner with that data. Same pass,
+  the Mine's leftovers in the sim: `Crafter.pick` (`economy_guild.py`) skips every recipe with a
+  `economy.MINE_SUPPLIES` input (Coal, Iron Ore, Stone Brick), so the forge's Coal recipes and Iron Bar go
+  unpriced, and no policy builds the Claim oven.
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
   group's output is another's input, which is the heart of the open-world vision. Lumber feeds a
   carpenter (bows, wagons: the Tanner holds the Shortbow and Light Crossbow until one exists), Coal feeds the
   Smith (Iron Bar is already a forge recipe). Gives Coal and the gems a use and closes `sources.py`'s
   `traded` goods one chain at a time. Needs recipes, a carpenter node or function, the sim's `crafter`
-  policy and tests.
+  policy and tests. **Lumber saturating wood price (decided 2026-10-18):** enters together with or right after
+  this production chain (the Yard produces Lumber by how many work there, so endless day labour floods the market).
 - **Talent trees are shorter than the levels (to be authored by hand, after the magic arc).** The XP
   curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat has
   15 nodes and work 14 (checked 2026-10-15), so a pick past the last node waits unspent and neither tree
   has room to choose. The racial
-  track has 32 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
+  track has 34 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
   its own (one pick at racial 5, 10 and 15), and most have 1. Goal: **at least 30
   combat and 30 work talents**, and 3+ racial nodes per race. Nothing built; the author will design them.
-  The magic track (5 nodes since 2026-10-17) is being reviewed by the author: its size and how it is
+  The magic track (6 school-agnostic nodes since 2026-10-18) is being reviewed by the author: its size and how it is
   managed are open.
 - **Gathering: loose ends (built 2026-10-11, `gather.py`, RULES.md).** The licence, the drop tables,
   the pay rule, the ambush and the sim's `gatherer` policy (and `miner` gathering once it can afford
@@ -515,30 +481,25 @@ building them:
 # Needs more information
 
 - **Playtest 2026-10-18: open design questions** (being discussed with the author, no code yet).
-  - **Guild objectives list.** Agreed 2026-10-18 as the shape of the tutorial: a pure onboarding checklist
-    on the Guild screen (the first card sends the player there) with first steps ("buy food", "equip a
-    torch", the work level 2 chain, a first win) next to the factions' deeds, with no mechanical reward
-    (fame or coins). Open: the exact list and order.
   - **Healing dominates the early economy.** An arena bout nets $2 and costs about 3 days of rest or
     $112-224 a member at the Medic. Author 2026-10-18: cheap healing should stay a milestone (potions
     from a production chain), so do not make healing cheap across the board. "Rest until full" already
     removes the tedium; what is left is the ratio between what an early fight pays and the food-days it
-    costs to recover (`guild_upkeep.rest_heal`: 1 HP per 8 h at racial level 1). The arena side is decided
-    (non-lethal damage heals with a day of rest, *Ready to do*).
+    costs to recover (`guild_upkeep.rest_heal`: 1 HP per 8 h at racial level 1, lethal ambushes/hunts). The
+    arena side is built (non-lethal damage clears after 24 h of unbroken rest).
   - **The world moving by itself and members with a will of their own** (a Wilds node turns into a lair
     if nobody clears it; an idle veteran asks for work or threatens to leave). The author's long-term
     vision for time pressure; non-trivial in design and code and waits on earlier subsystems.
-  - **Lumber as an endless floor.** Day labour nets about $1 a member a day; risk-free, so a patient
-    player never has a reason to fight. Author's plan: the Yard produces Lumber by how many work there,
-    so a guild working it floods the market. Open: today's time pressures (Bankers' rent, the title
+  - **Time pressures from the world itself.** Today's time pressures (Bankers' rent, the title
     defence, the Ogre's deadline) are all ones the player chooses; nothing comes from the world itself.
+    (Lumber saturating the wood price was decided 2026-10-18 to enter with/after the production chain.)
   - **Darkness.** Pitch black stays the rule (author 2026-10-18), but foes in adjacent cells should be
     known and attackable as obscured (a penalty), not invisible.
   - **Darkness vs fog on screen.** Settled as fog of war (*Ready to do*). Still open: how weather fog, if
     it ever exists, looks apart from darkness.
   - **Art direction for the board and shops.** The author is not an artist and worries that an engraved
     board, or AI-made textures, would look bad or cause trouble later.
-  - **Tutorial shape.** Fewer, shorter modal cards and the guild objectives list (above); still open
+  - **Tutorial shape.** Fewer, shorter modal cards and the guild objectives list (*Ready to do*); still open
     which rules move to one-line hints at the moment of the decision and which go to the wiki.
 
 - **Magic as the vertical progression.** The biggest content gap; the arc's work is in *Ready to do -> Medium*.
@@ -564,7 +525,7 @@ building them:
     (does an NPC react to it?), and the cost of changing one.
   - **Presentation, later:** a founding charter that writes itself line by line, signed with
     the banner and the oath, kept as the first entry of the guild's chronicle. (The look of the
-    founding screen itself is in *Ready to do*.)
+    founding screen itself is built.)
 
 - **Better food (not started; direction 2026-10-09: buffs for eating good food, which leads to a
   recipe book).** Food only quells hunger today and the Potato does that at the

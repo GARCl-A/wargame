@@ -49,11 +49,11 @@
         "The guild is split into groups. The list on the left shows them: click one to select it, then click a place on the map to send it there. The panel on the right shows what that group can do where it stands -- shop, fight, work, recruit, hunt. GUILD, top right, opens your roster.",
         "TRAVEL, under the panel's bottom buttons, flips an idle group between Normal and Cautious. Cautious only helps through your guild's vocation or an Elf's Woodland Scout, and it only touches ambushes on the Old Road and on hunts -- never the guard or a raid on your Claim.",
         "There is no advance button. Once every group has an order the clock runs by itself, and stops when a group is free again or something needs a decision (an ambush, a shop, a fight). REST sends the selected group to rest for 1 hour, 8 hours or until its wounds are healed (it always keeps a day of rations); the other groups carry on meanwhile. With every group garrisoned, ADVANCE passes a day for the whole world.",
-        "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes ($3) and Meat ($5) are sold at the Market, and you can hunt Meat in the wilds.",
+        "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes ($3) and Meat ($5) are sold at the Farm, and you can hunt Meat in the wilds.",
         "At the Lumber Yard and the Mine a group can work a shift for the wage, or buy the node's licence once (it covers the whole guild) and gather instead: Lumber and Fruit, or stone, coal, ore and gems. A gathering shift is worth more than the wage on average, but a pack may find the crew.",
         "Copper lives on each character -- there is no shared treasury. Death is permanent, and the run ends only if the whole guild is wiped out."
       ],
-      "suggestion": "Good first stops: the Market for food, the Arena to train at low risk, the Lumber Yard if you go broke."
+      "suggestion": "Good first stops: the Farm for food, the Arena to train at low risk, the Lumber Yard if you go broke."
     },
     "guild": {
       "members": {
@@ -133,7 +133,7 @@
         "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out. Coins in the group's cart or animals count toward the purse and pay their share, but never take change.",
         "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half. Every shop buys anything at half price, but each keeps its own shelf: weapons and metal armour at the Smithy, leather and bows at the Tannery, potions at the Apothecary, raw food at the Farm, beer and jerky at the Tavern, the odds and ends here. A shop only pays out of its own cash, shown at the top: what you spend goes in, what you sell comes out, and a day refills a little.",
         "Potatoes ($3) and Meat ($5), sold at the Farm, feed one character for a day.",
-        "Tired of picking the same items? Open an item's ⋮ menu and mark it to auto-sell: SELL MARKED then takes every marked stack in the party's packs at once."
+        "Tired of picking the same items? Open an item's ... menu and mark it to auto-sell: SELL MARKED then takes every marked stack in the party's packs at once."
       ]
     },
     "taverna": {
@@ -163,8 +163,8 @@
       "title": "The strongbox",
       "body": [
         "Rent a chest once ($90, holds 30 kg), then stash spares here for free -- gear the guild isn't carrying but doesn't want to lose. Drag an item onto the chest to store it, or onto a member to take it back out.",
-        "Coins are items like any other: the rent comes out of everyone's purse in proportion to what they carry, and a stack of coins can be stored in the chest or handed to a member from its ⋮ menu.",
-        "Money is $: a Copper Coin is $1, a Gold Coin $100 and just as light. This is the only place to mint or melt gold -- open a coin stack's ⋮ menu (or right-click it), pick how many, and pay $1 per coin each way. Shops spend your copper first and break a gold coin only when they must, giving the change back."
+        "Coins are items like any other: the rent comes out of everyone's purse in proportion to what they carry, and a stack of coins can be stored in the chest or handed to a member from its ... menu.",
+        "Money is $: a Copper Coin is $1, a Gold Coin $100 and just as light. This is the only place to mint or melt gold -- open a coin stack's ... menu (or right-click it), pick how many, and pay $1 per coin each way. Shops spend your copper first and break a gold coin only when they must, giving the change back."
       ]
     },
     "level": {
@@ -177,8 +177,8 @@
     "library": {
       "title": "The Library Catalog",
       "body": [
-        "The library sells dictionaries for you to learn new tongues.",
-        "The number of dictionaries available each day depends on the guild's reputation with the scholars."
+        "The library sells dictionaries once the guild has earned standing with the scholars (1 reputation from their jobs tab). Anyone who already speaks a tongue can also write its dictionary on the WRITE tab using Paper and Ink.",
+        "The number of dictionaries on the shelf each day grows with your reputation with the scholars."
       ]
     },
     "group": {
@@ -213,7 +213,7 @@
       "title": "Crafting",
       "body": [
         "Only recipes a member of the party has learned appear. Pick one and the materials are consumed at once, taken from every pack in the group (a padlocked item is never used); progress is a d20 + INT roll over hours of work. A recipe may also name a tool (a Chisel, say): it is not consumed and any pack in the group may hold it, but without it the recipe cannot start.",
-        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the market) make two Jerky, which keeps for 20 days instead of 2. Work as many hours as you like: each hour rolls toward a batch, leftover progress carries into the next one, and the shift ends early when the materials run out. The campfire at the claim stays lit while a garrison is there, and goes out the day nobody is.",
+        "Cooking is the exception: everyone knows how. Two Meat and a Salt (sold at the Farm) make two Jerky, which keeps for 20 days instead of 2. Work as many hours as you like: each hour rolls toward a batch, leftover progress carries into the next one, and the shift ends early when the materials run out. The campfire at the claim stays lit while a garrison is there, and goes out the day nobody is.",
         "WORK makes the whole group wait out the hours. ALONE sends the crafter off instead: they split off into a group of their own (it takes a free group slot, and only their own pack feeds the craft), the others keep playing, and the craft is rolled when the hours are up. Merge them back by hand."
       ]
     },

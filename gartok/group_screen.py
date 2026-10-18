@@ -285,6 +285,9 @@ class GroupScreen(GroupDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixi
                 self._give_many(*hit)
             return
 
+        if self.tab == "gear" and self.view == "bags" and self._cols.click(px):
+            return
+
         if self.back_rect is not None and self.back_rect.collidepoint(px):
             self.on_back()
             return

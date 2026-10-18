@@ -252,3 +252,16 @@ def test_the_screens_draw_headless():
         ReportScreen(None, outcome, lambda: None, place="The Wilds", rounds=4,
                      notes=["A captive is led away."]).draw(s)
         LevelUpScreen(None, outcome.level_ups[0], lambda: None, on_talents=lambda: None).draw(s)
+
+
+def test_work_shift_level_up_queues_pending_level_up():
+    from gartok import economy, orders
+    u = _unit(seed=7)
+    guild = Guild([u], node="lumber_yard")
+    u.work_hours = 2 * economy.LUMBER_XP_HOURS - 2
+    guild.groups[0].order = orders.work(guild, guild.groups[0], 4)
+    res = campaign.advance(guild)
+    assert len(res.level_ups) == 1
+    lu = res.level_ups[0]
+    assert lu.unit is u
+    assert ("Work level", 0, 1) in lu.gains

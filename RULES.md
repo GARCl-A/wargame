@@ -1869,8 +1869,8 @@ it). One beast, so one delivery closes the other (failed, like the Codex), +1 re
 With either job out, a group at the Lumber Yard can **search for the nest** (2 h, Wisdom DC 10). The
 **Serpent's Nest** is a dark dungeon of five chambers: packs of snakes (a Giant Spider at most) scaled
 to the squad sleep in the first four until a foe comes within 5 squares; the fifth is the lair, a pool
-of shallow and deep water, and the **Snake Dragon** (`npcs/snake_dragon.json`): a level-8 Snake,
-Serpent Growth (Medium), Dragon and Dragon Breath. The fight is won the moment it is dead or bound.
+of shallow and deep water, and the **Snake Dragon** (`npcs/snake_dragon.json`): a level-8 composite
+`["Snake", "Dragon"]` (Large 2x2), with `Dragon` and `Dragon Breath`. The fight is won the moment it is dead or bound.
 Taken alive, it is delivered from the group's captives (`MissionTemplate.goal_captive`); dead, its body
 (the *Snake Dragon Corpse*, 3 days before it rots). Once delivered, the lair stays empty.
 

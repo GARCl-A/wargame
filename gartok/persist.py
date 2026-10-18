@@ -93,6 +93,8 @@ def unit_to_dict(u):
         "medicine_attempted_today": u.medicine_attempted_today,
         "treated": u.treated,
         "consecutive_rest_hours": u.consecutive_rest_hours,
+        "unbroken_rest_hours": u.unbroken_rest_hours,
+        "non_lethal_damage": u.non_lethal_damage,
         "last_daily_luck_day": u.last_daily_luck_day,
         "hp": u.hp,
         "share_food": u.share_food,              # pools rations for hungry guild-mates

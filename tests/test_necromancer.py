@@ -317,7 +317,7 @@ def test_the_field_is_rich_with_what_every_body_wore_and_his_pack():
     worn = [u.char.equipped_armor for u in batt.units if u.team != "player" and u.char.equipped_armor]
     pool = loot.field_loot(batt, [], random.Random(0))
     assert worn and all(pool.count(a) >= worn.count(a) for a in set(worn))
-    assert "Precious Gemstone" in pool and "Scroll of Sleep" in pool
+    assert "Precious Gemstone" in pool and "Scroll of Raise Dead" in pool and "Scroll of Healing Touch" in pool
     assert "Gold Coin" not in pool and "Copper Coin" not in pool
 
 

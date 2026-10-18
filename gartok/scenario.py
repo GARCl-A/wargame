@@ -241,6 +241,24 @@ class ErmosScenario(Scenario):
         return Board(min_seg=1, max_seg=2)
 
 
+class StreetScenario(Scenario):
+    """City streets: `outdoor` -- lit by day, lit around street torches by night."""
+
+    outdoor = True
+    torch_count = 6
+
+
+def scenario_for(node):
+    """A node's fight scenario: its own `node.scenario()`, `StreetScenario` inside the
+    City's jurisdiction (daylight by day, street torches at night), or `ErmosScenario`
+    out in the open."""
+    if node.scenario is not None:
+        return node.scenario()
+    if getattr(node, "jurisdiction", None) == "the_city":
+        return StreetScenario()
+    return ErmosScenario()
+
+
 class ReplayScenario(Scenario):
     """A fight put back at the opening row of a combat log (`combat_log.rebuild`): its board, the
     cells each unit stood on and the light, with nothing rolled. Only the base rule (a side loses

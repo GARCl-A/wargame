@@ -84,6 +84,17 @@ class DerivationMixin:
         enc = -2 if self.encumbered and a in ("strength", "dexterity") else 0
         return getattr(self, a) + self.hunger_attribute_penalty + enc
 
+    @property
+    def hp(self):
+        return getattr(self, "_hp", getattr(self, "hp_max", 1))
+
+    @hp.setter
+    def hp(self, value):
+        self._hp = value
+        hp_max = getattr(self, "hp_max", None)
+        if hp_max is not None and hasattr(self, "non_lethal_damage"):
+            self.non_lethal_damage = max(0, min(self.non_lethal_damage, hp_max - value))
+
     def recalculate_hp(self):
         """Re-derive attribute mods and HP max, preserving/shifting current HP by any delta."""
         self._derive_attribute_mods()
@@ -95,7 +106,7 @@ class DerivationMixin:
         are fixed, so re-deriving never re-rolls. A sandbox `_hp_override` (set in
         the creator) replaces the whole formula. Starving (tier 2+) caps it at 1."""
         old_max = getattr(self, "hp_max", None)
-        old_hp = getattr(self, "hp", None)
+        old_hp = getattr(self, "_hp", None)
         if self._hp_roll is None:
             self._hp_roll = roll(1, self.race["hd"])
         con = self.mod_constitution
@@ -115,7 +126,7 @@ class DerivationMixin:
             delta = self.hp_max - old_max
             self.hp = max(1, min(old_hp + delta, self.hp_max))
         else:
-            self.hp = getattr(self, "hp", self.hp_max)
+            self.hp = old_hp if old_hp is not None else self.hp_max
 
     def hp_breakdown(self):
         """Detailed breakdown of how this unit's max HP was calculated.

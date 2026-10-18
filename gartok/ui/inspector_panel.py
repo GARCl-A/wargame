@@ -80,7 +80,32 @@ def block_height(item):
     return 0
 
 
-def draw_blocks(surf, F, x, y, w, blocks, mpos, button):
+def _blocks_height(F, w, blocks, compact=False):
+    total = 0
+    fnt = F.get("body_sm", F["body"])
+    for item in blocks:
+        gap = item.get("gap_before", 0)
+        if compact:
+            gap = min(gap, 4) if gap > 0 else 0
+        total += gap
+        kind = item["type"]
+        if kind == "section":
+            total += 12 if compact else T.S * 2
+        elif kind == "text":
+            total += 13 if compact else item.get("line_h", 16)
+        elif kind == "wrapped_text":
+            lh = 13 if compact else item.get("line_h", 15)
+            total += lh * len(wrap(fnt, item["text"], w))
+        elif kind in ("button", "button_row"):
+            default_h = 34 if kind == "button_row" else T.S * 5
+            h = item.get("height", default_h)
+            if compact:
+                h = max(24, h - 8)
+            total += h + (4 if compact else T.S)
+    return total
+
+
+def draw_blocks(surf, F, x, y, w, blocks, mpos, button, max_y=None):
     """Lays out `blocks` top-down from `(x, y)`, `w` wide. Returns the y
     just past the last block. Each block is one of:
       {"type": "section", "label": str}
@@ -91,40 +116,48 @@ def draw_blocks(surf, F, x, y, w, blocks, mpos, button):
       {"type": "button_row", "items": [{...same as button, minus height}],
        "height": int, "gap": int}
     """
+    compact = max_y is not None and (y + _blocks_height(F, w, blocks, compact=False) > max_y)
     for item in blocks:
-        y += item.get("gap_before", 0)
+        gap = item.get("gap_before", 0)
+        if compact and gap > 0:
+            gap = min(gap, 4)
+        y += gap
         kind = item["type"]
         if kind == "section":
             caps(surf, F["micro"], item["label"], (x, y), T.TX_FAINT)
-            y += T.S * 2
+            y += 12 if compact else T.S * 2
         elif kind == "text":
             text(surf, item.get("font") or F["body_sm"] if "body_sm" in F else F["body"],
                 item["text"], (x, y), item.get("color", T.TX_FAINT))
-            y += item.get("line_h", 16)
+            y += 13 if compact else item.get("line_h", 16)
         elif kind == "wrapped_text":
             lines = wrap(F.get("body_sm", F["body"]), item["text"], w)
-            line_h = item.get("line_h", 15)
+            line_h = 13 if compact else item.get("line_h", 15)
             for ln in lines:
                 text(surf, F.get("body_sm", F["body"]), ln, (x, y), item.get("color", T.TX_FAINT))
                 y += line_h
         elif kind == "button":
             h = item.get("height", T.S * 5)
+            if compact:
+                h = max(24, h - 8)
             r = pygame.Rect(x, y, w, h)
             button(surf, F, r, mpos, key=item.get("key"), label=item["label"],
                   sub=item.get("sub"), primary=item.get("primary", False),
                   danger=item.get("danger", False), enabled=item.get("enabled", True),
                   font=item.get("font"), tooltip=item.get("tooltip"))
-            y = r.bottom + T.S
+            y = r.bottom + (4 if compact else T.S)
         elif kind == "button_row":
             h = item.get("height", 34)
-            gap = item.get("gap", T.S)
+            if compact:
+                h = max(24, h - 8)
+            gap_x = item.get("gap", T.S)
             n = len(item["items"])
-            col_w = (w - (n - 1) * gap) // n
+            col_w = (w - (n - 1) * gap_x) // n
             for i, sub_item in enumerate(item["items"]):
-                r = pygame.Rect(x + i * (col_w + gap), y, col_w, h)
+                r = pygame.Rect(x + i * (col_w + gap_x), y, col_w, h)
                 button(surf, F, r, mpos, key=sub_item.get("key"), label=sub_item["label"],
                       enabled=sub_item.get("enabled", True), font=sub_item.get("font"))
-            y += h + T.S
+            y += h + (4 if compact else T.S)
     return y
 
 
@@ -170,11 +203,12 @@ def draw_inspector(surf, F, rect, name, state_label, state_color, where, party,
     y += T.S * 2
 
     hline(surf, x, x + w, y)
-    y += T.S * 4
-
-    y = draw_blocks(surf, F, x, y, w, blocks, mpos, button)
-
     bottom_h = T.S * 2 + sum(block_height(b) + b.get("gap_before", 0) + T.S for b in bottom_blocks)
     by = max(rect.y + T.S * 4, rect.bottom - bottom_h)
+    y += T.S * 2 if (y + T.S * 4 + _blocks_height(F, w, blocks) > by) else T.S * 4
+
+    y = draw_blocks(surf, F, x, y, w, blocks, mpos, button, max_y=by - T.S)
+
+    pygame.draw.rect(surf, T.STEEL, pygame.Rect(rect.x + 1, by, rect.w - 1, rect.bottom - by))
     hline(surf, x, x + w, by)
     draw_blocks(surf, F, x, by + T.S * 2, w, bottom_blocks, mpos, button)

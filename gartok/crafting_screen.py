@@ -182,6 +182,10 @@ class CraftingScreen(Screen):
             self.roster_rows.append((r, m))
             y += 74 + T.S
 
+        if not self.roster_rows:
+            text(screen, F["body_sm"], "No one in the party knows a recipe for this station.",
+                 (area.x + 12, y + 8), T.TX_FAINT)
+
     def _draw_crafting(self, screen, area):
         F = self._F
         panel(screen, area)
@@ -190,6 +194,11 @@ class CraftingScreen(Screen):
         y = section(screen, F, "RECIPES", x, area.y + 12, w)
 
         if not self.selected_crafter:
+            text(screen, F["body"], "No known recipes for this station yet.",
+                 (x, y + 8), T.TX_MUTED)
+            text(screen, F["body_sm"],
+                 "Learn crafting recipes through Work talent picks on the Guild screen, or from starting occupations.",
+                 (x, y + 32), T.TX_FAINT)
             return
 
         m = self.selected_crafter

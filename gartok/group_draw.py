@@ -156,7 +156,7 @@ class GroupDrawMixin:
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, u, idx))
 
-        self._cols.hint(screen, F, area)
+        self._cols.hint(screen, F, area, self.mouse)
 
         hidden = len(members) - len([u for u in shown if not self._is_store(u)])
         if hidden > 0:

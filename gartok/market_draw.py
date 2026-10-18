@@ -99,6 +99,8 @@ class MarketDrawMixin:
             return self._menu_hovering()
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):
             return True
+        if self._col_scroll.hovering(self.mouse):
+            return True
         hot = (self.tab_hits, self.qty_hits, self.size_hits, self.header_size_hits, self._dots_hits,
                self.lock_hits, self.info_hits, self.item_rows, self.stock_rows)
         return any(h[0].collidepoint(self.mouse) for group in hot for h in group)
@@ -223,7 +225,7 @@ class MarketDrawMixin:
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, m, idx))
 
-        self._col_scroll.hint(screen, F, area)
+        self._col_scroll.hint(screen, F, area, self.mouse)
 
     def _draw_cargo(self, screen, F, area, owners):
         rows = []

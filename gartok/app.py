@@ -432,11 +432,13 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
             self._focus_gid = self.scene.selected.gid
         chase = dt is None
         all_casualties = []
+        all_level_ups = []
         while True:
             busy_before = {g.gid for g in self.guild.groups if g.busy}
             result = campaign.advance(self.guild, dt=dt)
             self._map_notices += result.events
             all_casualties.extend(result.casualties)
+            all_level_ups.extend(result.level_ups)
             if result.wiped:
                 self._hunt = None
                 self._mourn(all_casualties, self._campaign_over)
@@ -449,7 +451,26 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                 break
         self._pending = list(result.pending)
 
-        self._report_casualties(all_casualties, self._after_activity)
+        self._report_casualties(
+            all_casualties,
+            lambda: self._chain_level_ups(all_level_ups, self._after_activity),
+        )
+
+    def _chain_level_ups(self, level_ups, nxt):
+        from .level_up_screen import LevelUpScreen
+
+        def step(i=0):
+            if i >= len(level_ups):
+                nxt()
+                return
+            lu = level_ups[i]
+
+            def cont():
+                step(i + 1)
+            self.scene = LevelUpScreen(self.ui_fonts, lu, cont,
+                                       on_talents=lambda: self._open_level(lu.unit, on_back=cont),
+                                       index=i, total=len(level_ups))
+        step()
 
     def _mourn(self, casualties, nxt):
         """A memorial card for each of `casualties` lost off the field, then `nxt`."""

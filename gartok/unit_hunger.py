@@ -6,10 +6,11 @@ Mixed into `unit.Unit`; see RULES.md (the Leshy "Autotroph" is exempt).
 from . import data, items
 
 
-def take_ration(pack):
+def take_ration(pack, allow_rotten=True):
     """Eat one ration out of `pack` (a stacked pack list, in place). Oldest fresh
     food first (highest days_old), tie-broken by cheapest, then pack order; Rotten
-    Food only when nothing fresh is left. Returns the food's name, or None."""
+    Food only when nothing fresh is left (and `allow_rotten` is True). Returns the
+    food's name, or None."""
     fresh_candidates = []
     rotten_candidates = []
     for i, entry in enumerate(pack):
@@ -27,7 +28,7 @@ def take_ration(pack):
     if fresh_candidates:
         fresh_candidates.sort()
         idx = fresh_candidates[0][2]
-    elif rotten_candidates:
+    elif allow_rotten and rotten_candidates:
         idx = rotten_candidates[0]
     else:
         idx = None
@@ -68,13 +69,20 @@ class HungerMixin:
         """Collapsed from hunger -- cannot be sent into a fight."""
         return self.hunger_level >= 3
 
-    def _take_ration(self, larder=None):
-        """Eat one ration: this character's own pack first, then each pack in
-        `larder` (guild-mates sharing food, the group's wagon)."""
-        for pack in (self._base_inventory, *(larder or ())):
-            name = take_ration(pack)
+    def _take_ration(self, larder=None, allow_rotten=True):
+        """Eat one ration: fresh food first (this character's own pack, then each
+        pack in `larder`), and only when nothing fresh is left in any pack does it
+        fall back to Rotten Food."""
+        packs = (self._base_inventory, *(larder or ()))
+        for pack in packs:
+            name = take_ration(pack, allow_rotten=False)
             if name is not None:
                 return name
+        if allow_rotten:
+            for pack in packs:
+                name = take_ration(pack, allow_rotten=True)
+                if name is not None:
+                    return name
         return None
 
     def consume_daily_food(self, larder=None):
@@ -93,14 +101,14 @@ class HungerMixin:
         self.unfed_days += 1
         return "dead" if self.unfed_days >= data.STARVATION_DEATH_DAYS else "hungry"
 
-    def eat_now(self, larder=None):
+    def eat_now(self, larder=None, allow_rotten=True):
         """Eat a ration this instant -- the guild stopping to have a meal rather
         than waiting for the day to turn. Only bites if the character is actually
         hungry and a ration is to be had (own pack, then `larder`); never advances
         hunger. Returns True if a meal was eaten. The caller re-derives combat."""
         if self.hunger_level == 0:
             return False
-        food = self._take_ration(larder)
+        food = self._take_ration(larder, allow_rotten=allow_rotten)
         if not food:
             return False
         self.unfed_days = 0

@@ -360,7 +360,7 @@ class HuntScreen(SheetModalMixin, Screen):
         else:
             tally = (f"{self.state.shrooms_found} mushroom(s) and "
                      f"{self.state.fruit_found} fruit(s) so far.")
-        text(screen, F["body"], f"Pack driven off. {self.state.hours_left} h of daylight left, "
+        text(screen, F["body"], f"Pack driven off. {self.state.hours_left} h left in the shift, "
              f"{tally}", (m, top), T.TX_MUTED)
         top += 24
         self._draw_events(screen, top)
@@ -377,11 +377,14 @@ class HuntScreen(SheetModalMixin, Screen):
         self._draw_events(screen, top)
 
     def _draw_ambush(self, screen, top):
+        from . import artwork
+        from .ui.primitives import caps, ellipsize
+
         F = self._F
         m = T.S * 3
         w = screen.get_width() - 2 * m
         if self._tracking:
-            top = section(screen, F, "THE TRAIL IS FRESH!", m, top, w)
+            top = section(screen, F, "THE TRAIL IS FRESH!", m, top, w, color=T.BLOOD)
             text(screen, F["bodyb"], "Aurochs is grazing somewhere on the open fields ahead.", (m, top), T.BLOOD)
             top += 24
             text(screen, F["body_sm"], "A lethal chase: he runs from anyone near. Pin him in a canyon "
@@ -389,18 +392,48 @@ class HuntScreen(SheetModalMixin, Screen):
             top += 24
             self._draw_events(screen, top)
             return
-        top = section(screen, F, "THE BIWOLF!" if self.state.biwolf else "AMBUSH IN THE WILDS!", m, top, w)
-        if self.state.biwolf:
-            text(screen, F["body_sm"], "The smell of your meat drew it out of the dark.", (m, top), T.TX_FAINT)
-            top += 20
-        n = len(self.ambush_pack or [])
-        enemies_desc = ", ".join(u.name for u in (self.ambush_pack or []))
-        text(screen, F["bodyb"], f"A pack of {n} hostile{'s' if n > 1 else ''} intercepted the party!", (m, top), T.BLOOD)
-        top += 24
-        text(screen, F["body"], f"Enemies: {enemies_desc}", (m, top), T.TX)
-        top += 24
-        text(screen, F["body_sm"], "A lethal fight -- victory leaves the field to loot.", (m, top), T.TX_MUTED)
-        top += 24
+        top = section(screen, F, "THE BIWOLF!" if self.state.biwolf else "AMBUSH IN THE WILDS!",
+                      m, top, w, color=T.BLOOD)
+        foes = list(self.ambush_pack or [])
+        n = len(foes)
+        lead = ("The smell of your meat drew the Biwolf out of the dark!"
+                if self.state.biwolf else
+                f"A pack of {n} hostile{'s' if n != 1 else ''} cuts across the trail -- lethal fight, victory leaves the field to loot.")
+        text(screen, F["bodyb"], lead, (m, top), T.BLOOD)
+        est = self.autowin_estimator.result
+        if est is not None:
+            pct = round(est.win_rate * 100)
+            ocol = T.GREEN if est.win_rate >= 0.8 else (T.BRASS if est.win_rate >= 0.5 else T.BLOOD)
+            caps(screen, F["micro"], f"ESTIMATED ODDS: {pct}% WIN", (m + w, top + 3), ocol, right=True)
+        top += 26
+        if foes:
+            cols = min(len(foes), max(1, w // 220))
+            gap = T.S
+            cw = (w - (cols - 1) * gap) // cols
+            ch = 64
+            for i, u in enumerate(foes[:cols]):
+                r = pygame.Rect(m + i * (cw + gap), top, cw, ch)
+                panel(screen, r, width=1)
+                psize = 48
+                px, py = r.x + T.S, r.y + (ch - psize) // 2
+                race_name = u.race["name"]
+                port = artwork.portrait(race_name, u.portrait_file or u.portrait_id, psize)
+                if port is not None:
+                    screen.blit(port, (px, py))
+                    pygame.draw.circle(screen, T.BLOOD, (px + psize // 2, py + psize // 2), psize // 2, 1)
+                else:
+                    pygame.draw.circle(screen, T.PANEL_ALT, (px + psize // 2, py + psize // 2), psize // 2)
+                    pygame.draw.circle(screen, T.BLOOD, (px + psize // 2, py + psize // 2), psize // 2, 1)
+                    icon = artwork.race_icon(race_name, psize // 2, T.TX_MUTED)
+                    if icon is not None:
+                        screen.blit(icon, (px + psize // 4, py + psize // 4))
+                tx = px + psize + T.S
+                avail = r.right - T.S - tx
+                text(screen, F["bodyb"], ellipsize(u.name, F["bodyb"], avail), (tx, r.y + 10), T.TX)
+                wpn = u.equipped_weapon or "Claws & teeth"
+                sub = f"{race_name} · {wpn}"
+                text(screen, F["body_sm"], ellipsize(sub, F["body_sm"], avail), (tx, r.y + 34), T.TX_MUTED)
+            top += ch + T.S
         self._draw_events(screen, top)
 
     def _draw_events(self, screen, top):

@@ -422,3 +422,55 @@ def test_fletcher_crafts_quivers_on_rest():
     assert crafter.count_of("Lumber") == 1
     assert not any("carved arrows" in ev for ev in res2.events)
 
+
+def test_non_lethal_damage_clears_after_24_hours_of_unbroken_rest():
+    u = _hurt(missing=8, meals=10)
+    u.non_lethal_damage = 8
+    guild, g = _guild(u)
+    plan = rest.until_full(guild, g)
+    assert plan.available and plan.hours == 24
+    g.order = orders.rest(plan.hours)
+    _run_to_idle(guild, g)
+    assert u.hp == u.hp_max
+    assert u.non_lethal_damage == 0
+
+
+def test_heal_hp_reduces_lethal_damage_before_non_lethal_damage():
+    u = _hurt(missing=8, meals=2)
+    u.non_lethal_damage = 3
+    # Missing 8 HP total: 5 lethal + 3 non-lethal. Healing 4 HP cures 4 lethal, leaving 3 non-lethal.
+    u.hp += 4
+    assert u.hp == u.hp_max - 4
+    assert u.non_lethal_damage == 3
+    # Healing 2 more HP leaves 2 missing HP total, so non_lethal_damage clamps to 2.
+    u.hp += 2
+    assert u.hp == u.hp_max - 2
+    assert u.non_lethal_damage == 2
+
+
+def test_fresh_food_in_shared_larder_is_eaten_before_own_rotten_food():
+    random.seed(3)
+    eater = Unit("player")
+    eater._base_inventory = packed(["Rotten Food"])
+    eater._derive_combat()
+    sharer = Unit("player")
+    sharer.share_food = True
+    sharer._base_inventory = packed(["Jerky", "Jerky"])
+    sharer._derive_combat()
+    guild, _ = _guild(eater, sharer)
+    guild.pass_time(24)
+    assert eater.count_of("Rotten Food") == 1
+    assert sharer.count_of("Jerky") == 0
+    assert not eater.sick
+
+
+def test_rotten_food_sickness_emits_daily_upkeep_notice():
+    random.seed(3)
+    eater = Unit("player")
+    eater._base_inventory = packed(["Rotten Food"])
+    eater._derive_combat()
+    guild, _ = _guild(eater)
+    events, _ = guild.pass_time(24, busy=[eater])
+    assert eater.sick
+    assert any("ate Rotten Food and fell sick" in ev for ev in events)
+

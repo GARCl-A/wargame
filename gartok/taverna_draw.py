@@ -176,17 +176,23 @@ class TavernaDrawMixin:
         right_rect = pygame.Rect(right_x, top, right_w, height)
         panel(screen, right_rect)
 
+        cx = right_rect.x + 20
+        cy = right_rect.y + 12
+        signed = getattr(self, "signed", None)
+        if signed is not None:
+            cy = self._draw_signed_banner(screen, F, pygame.Rect(cx, cy, right_w - 40, 74), signed) + 10
+
         if self.sel is None or self.sel >= len(self.candidates):
-            text(screen, F["body"], "Select a candidate from the left to view their dossier and make a pitch.",
-                 (right_rect.x + 24, right_rect.y + 24), T.TX_FAINT)
+            if signed is None:
+                text(screen, F["body"], "Select a candidate from the left to view their dossier and make a pitch.",
+                     (right_rect.x + 24, cy + 12), T.TX_FAINT)
             return
 
         cand = self.candidates[self.sel]
-        caps(screen, F["micro"], "SELECTED CANDIDATE DOSSIER", (right_rect.x + 20, right_rect.y + 12), T.TX_MUTED)
+        caps(screen, F["micro"], "SELECTED CANDIDATE DOSSIER", (cx, cy), T.TX_MUTED)
 
         # Candidate banner
-        cx = right_rect.x + 20
-        cy = right_rect.y + 36
+        cy += 24
         token_badge(screen, F, (cx + 30, cy + 30), cand, r=28)
 
         tx = cx + 72
@@ -240,29 +246,32 @@ class TavernaDrawMixin:
         cy += 20
 
         rw = right_w - 40
+        card_h = 52 if signed is not None else 56
         for m in self.party:
-            mr = pygame.Rect(cx, cy, rw, 56)
+            mr = pygame.Rect(cx, cy, rw, card_h)
             self.party_cards.append((mr, m))
             is_recruiter = (self.selected_recruiter == m)
+            just_signed = (signed is not None and signed["unit"] is m)
             m_hov = mr.collidepoint(self.mouse)
             if m_hov:
                 self._hot = True
 
-            rbg = mix(T.BRASS, T.TABLE, 0.9) if is_recruiter else T.STEEL if m_hov else T.TABLE
-            rborder = T.BRASS if is_recruiter else T.STEEL_HI if m_hov else T.STEEL_LINE
+            rbg = mix(T.BRASS, T.TABLE, 0.9) if is_recruiter else mix(T.GREEN, T.TABLE, 0.9) if just_signed else T.STEEL if m_hov else T.TABLE
+            rborder = T.BRASS if is_recruiter else T.GREEN if just_signed else T.STEEL_HI if m_hov else T.STEEL_LINE
             pygame.draw.rect(screen, rbg, mr, border_radius=4)
-            pygame.draw.rect(screen, rborder, mr, 2 if is_recruiter else 1, border_radius=4)
+            pygame.draw.rect(screen, rborder, mr, 2 if (is_recruiter or just_signed) else 1, border_radius=4)
 
             # Recruiter token
             token_badge(screen, F, (mr.x + 26, mr.centery), m, r=16)
 
             rtx = mr.x + 52
-            text(screen, F["bodyb"], m.name, (rtx, mr.y + 8), T.TX)
+            name_rect = text(screen, F["bodyb"], m.name, (rtx, mr.y + 6), T.TX)
+            if just_signed:
+                caps(screen, F["microb"], f"SIGNED  ·  ✕ {m.name}", (name_rect.right + 10, mr.y + 9), T.GREEN)
 
             free_slots = recruit.slots_free(self.guild, m)
-            slot_col = T.BLOOD if free_slots <= 0 else T.TX_MUTED
             caps(screen, F["micro"], f"CHA {m.mod_charisma:+} · Speaks: {', '.join(m.languages)}",
-                 (rtx, mr.y + 30), T.TX_MUTED)
+                 (rtx, mr.y + 28), T.TX_MUTED)
 
             # Eligibility / Odds
             if free_slots <= 0:
@@ -276,7 +285,7 @@ class TavernaDrawMixin:
                 cond_col = T.GREEN
 
             caps(screen, F["microb"], cond_text, (mr.right - 14, mr.centery - 6), cond_col, right=True)
-            cy += 64
+            cy += card_h + 6
 
         # Action Pitch Button
         can_pitch = False
@@ -550,6 +559,27 @@ class TavernaDrawMixin:
         cancel_r = pygame.Rect(dialog.right - 24 - 120, by, 120, 36)
         draw_button(screen, F, cancel_r, "CANCEL", mpos=self.mouse)
         self.modal_buttons.append(("cancel", cancel_r, None))
+
+    # ------------------------------------------------------------------ #
+    def _draw_signed_banner(self, screen, F, rect, signed):
+        u, by, line = signed["unit"], signed["by"], signed["line"]
+        bg = mix(T.GREEN, T.TABLE, 0.88)
+        pygame.draw.rect(screen, bg, rect, border_radius=4)
+        pygame.draw.rect(screen, T.GREEN, rect, 2, border_radius=4)
+        token_badge(screen, F, (rect.x + 28, rect.centery), u, r=20)
+        tx = rect.x + 60
+        caps(screen, F["microb"], f"CONTRACT SIGNED  ·  JOINED {by.name.upper()}'S ROSTER",
+             (tx, rect.y + 8), T.GREEN)
+        text(screen, F["bodyb"], f"{u.name} — \"{line}\"", (tx, rect.y + 24), T.TX)
+        sig = f"✕  {u.name}"
+        text(screen, F["bodyb"], sig, (rect.right - 14, rect.bottom - 24), T.BRASS, right=True)
+        sig_w = F["bodyb"].size(sig)[0]
+        pygame.draw.line(screen, T.BRASS_DIM,
+                         (rect.right - 14 - sig_w - 6, rect.bottom - 6),
+                         (rect.right - 14, rect.bottom - 6), 1)
+        caps(screen, F["micro"], f"{u.race['name']} · {u.occupation['name']} · HP {u.hp_max} · AC {u.ac}",
+             (tx, rect.y + 48), T.TX_MUTED)
+        return rect.bottom
 
     # ------------------------------------------------------------------ #
     def _draw_footer(self, screen, F):

@@ -30,7 +30,7 @@ class TabbedHubScreen(Screen):
         self.tab = first or self.tabs[0][0]
         self.buttons = []
         for _key, _label, screen in self.tabs:
-            if isinstance(screen, MarketScreen):
+            if hasattr(screen, "header_reserve"):
                 screen.header_reserve = len(self.tabs) * (TAB_W + T.S) + T.S * 2
 
     @classmethod
@@ -65,15 +65,15 @@ class TabbedHubScreen(Screen):
             jobs = TannerScreen(fonts, guild, group, on_done)
             tabs.append(("jobs", "JOBS", jobs))
         if node.has("apothecary"):
-            from .medic_screen import MedicScreen
             from .apothecary_mission_screen import ApothecaryMissionScreen
+            from .medic_screen import MedicScreen
             medic = MedicScreen(fonts, guild, group, on_done)
             jobs = ApothecaryMissionScreen(fonts, guild, group, on_done)
             tabs.append(("medic", "MEDIC", medic))
             tabs.append(("jobs", "JOBS", jobs))
         if node.has("library"):
-            from .library_screen import LibraryScreen
             from .library_mission_screen import LibraryMissionScreen
+            from .library_screen import LibraryScreen
             study = LibraryScreen(fonts, guild, list(group.members), node, on_done)
             jobs = LibraryMissionScreen(fonts, guild, group, on_done)
             tabs.append(("study", "STUDY", study))
@@ -102,6 +102,8 @@ class TabbedHubScreen(Screen):
 
     def active_screen(self):
         screen = next(s for k, _label, s in self.tabs if k == self.tab)
+        if hasattr(screen, "sync_group"):
+            screen.sync_group()
         if hasattr(screen, "hide_tabs") and screen.hide_tabs:
             if self.tab in ("recruits", "rooms", "perform"):
                 screen.tab = self.tab

@@ -124,13 +124,13 @@
       "qty": 1
     },
     {
-      "id": "scroll_of_sleep",
-      "name": "Scroll of Sleep",
+      "id": "scroll_of_raise_dead",
+      "name": "Scroll of Raise Dead",
       "qty": 1
     },
     {
-      "id": "scroll_of_magic_missile",
-      "name": "Scroll of Magic Missile",
+      "id": "scroll_of_healing_touch",
+      "name": "Scroll of Healing Touch",
       "qty": 1
     },
     {

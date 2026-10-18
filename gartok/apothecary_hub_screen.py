@@ -19,4 +19,4 @@ class ApothecaryHubScreen(ShopHubScreen):
                          [("medic", "MEDIC", MedicScreen(F, guild, group, on_done)),
                           ("craft", "CRAFT", craft),
                           ("jobs", "JOBS", ApothecaryMissionScreen(F, guild, group, on_done))],
-                         on_done, first="craft")
+                         on_done, first="shop")

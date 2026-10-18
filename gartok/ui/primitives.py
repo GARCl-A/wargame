@@ -167,11 +167,16 @@ def wrap(font, s, w):
 
 def draw_button(surf, F, rect, label, sub=None, primary=False, danger=False,
                  ghost=False, enabled=True, mpos=(-1, -1), fnt=None):
+    lbl_fnt = fnt or F["microb"]
+    sub_fnt = F.get("body_sm", F["body"])
+    max_w = max(8, rect.w - T.S * 2)
+    lbl_txt = ellipsize((label or "").upper(), lbl_fnt, max_w)
+    sub_txt = ellipsize(sub, sub_fnt, max_w) if sub else None
     if not enabled:
-        ly = rect.centery - (9 if sub else 0)
-        caps(surf, fnt or F["microb"], label, (rect.centerx, ly), T.TX_FAINT, center=True)
-        if sub:
-            text(surf, F.get("body_sm", F["body"]), sub, (rect.centerx, rect.centery + 9), T.TX_FAINT, center=True)
+        ly = rect.centery - (9 if sub_txt else 0)
+        caps(surf, lbl_fnt, lbl_txt, (rect.centerx, ly), T.TX_FAINT, center=True)
+        if sub_txt:
+            text(surf, sub_fnt, sub_txt, (rect.centerx, rect.centery + 9), T.TX_FAINT, center=True)
         pygame.draw.rect(surf, T.STEEL_LINE, rect, 1)
         return rect.bottom + T.S
 
@@ -195,10 +200,10 @@ def draw_button(surf, F, rect, label, sub=None, primary=False, danger=False,
         elif hover:
             fg = T.TX
 
-    ly = rect.centery - (10 if sub else 0)
-    caps(surf, fnt or F["microb"], label, (rect.centerx, ly), fg, center=True)
-    if sub:
-        text(surf, F["body"], sub, (rect.centerx, rect.centery + 10),
+    ly = rect.centery - (10 if sub_txt else 0)
+    caps(surf, lbl_fnt, lbl_txt, (rect.centerx, ly), fg, center=True)
+    if sub_txt:
+        text(surf, sub_fnt, sub_txt, (rect.centerx, rect.centery + 10),
              mix(fg, T.TABLE, .25) if primary else T.TX_FAINT, center=True)
     return rect.bottom + T.S
 

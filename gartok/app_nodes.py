@@ -148,7 +148,7 @@ class NodeScreensMixin:
         if node is not None and node.has("shop"):
             from .hub_screen import TabbedHubScreen
             self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
-                                                  on_done=self._after_activity, first="stable")
+                                                  on_done=self._after_activity, first="shop")
         else:
             from .stables_screen import StablesScreen
             self.scene = StablesScreen(self.ui_fonts, self.guild, group, on_done=self._after_activity)

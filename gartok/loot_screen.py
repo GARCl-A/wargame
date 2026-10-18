@@ -199,6 +199,9 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
             self.selected, self._sel_qty = [], {}
             return
 
+        if self._cols.click(px):
+            return
+
         lock_hit = self._lock_at(px)
         if lock_hit is not None:
             lock_hit[0].toggle_lock(lock_hit[1])
@@ -325,11 +328,13 @@ class LootScreen(PackColumnMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
             self._draw_member(screen, F, r, u)
             cx += col_w + pad
         cols_area = pygame.Rect(chest_r.right + pad, y, avail_w, H - y - T.S * 4)
-        self._cols.hint(screen, F, cols_area)
+        self._cols.hint(screen, F, cols_area, self.mouse)
 
         set_pointer(self._hovering())
 
     def _hovering(self):
+        if self._cols.hovering(self.mouse):
+            return True
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):
             return True
         if any(r.collidepoint(self.mouse) for r, *_ in self.sources):

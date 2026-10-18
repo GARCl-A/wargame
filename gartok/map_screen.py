@@ -420,7 +420,7 @@ class MapScreen(MapInspectorMixin, Screen):
         self.add_button(surf, rect, key, label, enabled=enabled, primary=primary,
                         danger=danger, font=font, sub=sub)
         if rect.collidepoint(self.mouse) and tooltip:
-            self._inspector_tooltip = (self.mouse[0], self.mouse[1], tooltip, T.TX)
+            self._inspector_tooltip = (rect.x - T.S, rect.centery, tooltip, T.TX, "left")
 
     # ------------------------------------------------------------------ #
     def _here(self):
@@ -744,9 +744,10 @@ class MapScreen(MapInspectorMixin, Screen):
         set_pointer(self._hovering())
 
     def _draw_tooltip(self, screen, hover, size):
-        hx, hy, htxt, hcol = hover
+        hx, hy, htxt, hcol = hover[:4]
+        side = hover[4] if len(hover) > 4 else None
         t_img = self._F["body"].render(htxt, True, T.TX)
-        t_rect = t_img.get_rect(midbottom=(hx, hy - 12))
+        t_rect = t_img.get_rect(midright=(hx - 8, hy)) if side == "left" else t_img.get_rect(midbottom=(hx, hy - 12))
         t_bg = t_rect.inflate(16, 16)
         t_bg.right = min(t_bg.right, size[0] - T.S)
         t_bg.left = max(t_bg.left, T.S)

@@ -468,6 +468,7 @@ class BattleScreen(BattleDrawMixin, Screen):
         if target is None or not actions.ATTACK.can(b, b.active, target):
             return
         actions.ATTACK.execute(b, b.active, target)
+        self._note_felled(b.active, target)
         self._armed = None
         self._after_player_action()
 

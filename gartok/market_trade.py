@@ -23,6 +23,9 @@ class MarketTradeMixin:
                     return
             return
 
+        if self._col_scroll.click(px):
+            return
+
         for rect, pick, delta in self.qty_hits:
             if rect.collidepoint(px):
                 self._bump_qty(pick, delta)

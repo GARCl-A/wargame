@@ -140,19 +140,42 @@ def _blocked(group):
     return None
 
 
+def _hp_after_ticks(unit, ticks):
+    """`unit`'s HP after `ticks` 8-hour stretches of rest from its current state."""
+    if ticks <= 0 or unit.hp >= unit.hp_max:
+        return unit.hp
+    each = rest_heal(unit)
+    hp = unit.hp
+    non_lethal = max(0, min(getattr(unit, "non_lethal_damage", 0), unit.hp_max - hp))
+    done_before = int(round((getattr(unit, "unbroken_rest_hours", 0) - unit.consecutive_rest_hours) / HOURS_PER_HEAL))
+    clear_tick = max(1, 3 - done_before)
+    for t in range(1, ticks + 1):
+        hp = min(unit.hp_max, hp + each)
+        non_lethal = max(0, min(non_lethal, unit.hp_max - hp))
+        if t >= clear_tick and non_lethal > 0:
+            hp = min(unit.hp_max, hp + non_lethal)
+            non_lethal = 0
+        if hp >= unit.hp_max:
+            break
+    return hp
+
+
 def _heal_times(unit):
     """Hours into the rest at which each heal lands, from the carried-over rest."""
-    each = rest_heal(unit)
-    count = math.ceil((unit.hp_max - unit.hp) / each)
     start = HOURS_PER_HEAL - unit.consecutive_rest_hours
-    return [start + HOURS_PER_HEAL * i for i in range(count)]
+    times = []
+    i = 0
+    while _hp_after_ticks(unit, i) < unit.hp_max:
+        times.append(start + HOURS_PER_HEAL * i)
+        i += 1
+    return times
 
 
 def _worst(members, heals, hours):
     worst = None
     for u in members:
         done = sum(1 for t in heals.get(id(u), ()) if t <= hours + 1e-9)
-        hp = min(u.hp_max, u.hp + rest_heal(u) * done)
+        hp = _hp_after_ticks(u, done)
         if worst is None or hp / u.hp_max < worst[1] / worst[2]:
             worst = (u.name, hp, u.hp_max)
     return worst

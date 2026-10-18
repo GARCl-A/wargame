@@ -78,16 +78,18 @@ def tag_pill(surf, F, tag, pos, max_x=None):
     would run past `max_x`."""
     x, y = pos
     font = F["micro"]
-    parts = tag.split(TAG_SEP)
+    parts = [p for p in tag.split(TAG_SEP) if p]
+    sep_w = font.size(TAG_SEP)[0]
     for i, part in enumerate(parts):
         w = font.size(part.upper())[0]
-        if max_x is not None and x + w > max_x:
+        need = w + (sep_w if i > 0 else 0)
+        if max_x is not None and x + need > max_x:
             return
+        if i > 0:
+            caps(surf, font, TAG_SEP, (x, y), T.TX_FAINT)
+            x += sep_w
         caps(surf, font, part, (x, y), TAG_COLOR.get(part, T.TX_FAINT))
         x += w
-        if i < len(parts) - 1:
-            caps(surf, font, TAG_SEP, (x, y), T.TX_FAINT)
-            x += font.size(TAG_SEP)[0]
 
 
 SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "artifact": "artifact", "armor": "armor",
@@ -386,7 +388,6 @@ def shop_row(surf, F, rect, item, *, qty_sel, mouse):
     fg = T.TX_FAINT if not ok else (T.TX_MUTED if sel else T.TX)
     label = name if held == 1 else f"{name}  ×{held}"
     text(surf, F["body"], label, (name_x, rect.centery - 13), fg)
-    tag_pill(surf, F, tag, (name_x, rect.centery + 3), rect.right - T.S * 24)
     if blocked:
         caps(surf, F["micro"], blocked, (name_x + F["body"].size(label)[0] + T.S,
              rect.centery - 11), T.BLOOD)
@@ -399,7 +400,8 @@ def shop_row(surf, F, rect, item, *, qty_sel, mouse):
     if price is not None:
         caps(surf, F["microb"], price, (cursor, rect.centery - 13),
              T.BRASS if ok else T.TX_FAINT, right=True)
-    cursor -= T.S * 9
+    if stock_left is not None or price is not None:
+        cursor -= T.S * 9
 
     if held > 1:
         bh = T.S * 2 + 2
@@ -424,8 +426,10 @@ def shop_row(surf, F, rect, item, *, qty_sel, mouse):
                  T.BRASS, center=True)
         cursor = minus.x - T.S
 
-    caps(surf, F["micro"], f"{weight * max(held, 1):.1f} kg", (cursor, rect.centery + 3),
-         T.TX_FAINT, right=True)
+    wt_txt = f"{weight * max(held, 1):.1f} kg"
+    caps(surf, F["micro"], wt_txt, (cursor, rect.centery + 3), T.TX_FAINT, right=True)
+    tag_max_x = cursor - F["micro"].size(wt_txt.upper())[0] - T.S
+    tag_pill(surf, F, tag, (name_x, rect.centery + 3), tag_max_x)
     return hits
 
 

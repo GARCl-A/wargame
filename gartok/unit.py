@@ -43,7 +43,8 @@ from .unit_poison import PoisonMixin
 SAVE_DEFAULTS = {
     "recruited_by": None, "poisons": {}, "antidote_cooldown": 0, "level_hp_rolls": [],
     "crime": 0, "unfed_days": 0, "sick": False, "medicine_attempted_today": False,
-    "treated": False, "consecutive_rest_hours": 0, "last_daily_luck_day": 0,
+    "treated": False, "consecutive_rest_hours": 0, "unbroken_rest_hours": 0, "non_lethal_damage": 0,
+    "last_daily_luck_day": 0,
     "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
     "magic_sources": [], "spells_known": [], "study_target": None, "study_progress": 0,
     "magic_blood": None, "blood_tested": False, "blood_test_days": 0, "rite_school": None, "rite_progress": {},
@@ -109,6 +110,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.equipped_tongue = None                    # Grippli Tongue slot: a 1-handed weapon, an extra limb (see the `tongue` talent)
         self.group_overextension = 0                    # set by Guild._sync_leadership, not persisted -- see group.py
         self.consecutive_rest_hours = 0
+        self.unbroken_rest_hours = 0
+        self.non_lethal_damage = 0
         self.last_daily_luck_day = 0
         self.afoot = False                             # the player has this member walk beside the wagon
         self.dormant = False                           # authored NPC that sleeps until a foe comes within awareness_radius
@@ -171,6 +174,8 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.medicine_attempted_today = d["medicine_attempted_today"]
         u.treated = d["treated"]
         u.consecutive_rest_hours = d["consecutive_rest_hours"]
+        u.unbroken_rest_hours = d["unbroken_rest_hours"]
+        u.non_lethal_damage = 0
         u.last_daily_luck_day = d["last_daily_luck_day"]
         u.share_food = d["share_food"]
         u.combat_xp = d["combat_xp"]
@@ -212,6 +217,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u._apply_attributes()                            # the worn artifact is only known now
         u._derive_combat()                               # rebuilds hp_max from _hp_roll
         u.hp = d["hp"]
+        u.non_lethal_damage = max(0, min(d["non_lethal_damage"], u.hp_max - u.hp))
         u._sync_dictionary_recipes()
         return u
 

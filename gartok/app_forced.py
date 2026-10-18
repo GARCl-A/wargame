@@ -13,7 +13,7 @@ from . import (
 )
 from .battle import Battle
 from .dialogue_screen import DialogueScreen
-from .scenario import Scenario
+from .scenario import scenario_for
 
 
 class ForcedFightsMixin:
@@ -102,7 +102,7 @@ class ForcedFightsMixin:
             u.hp = max(1, u.hp - round(avg_dmg))
 
         node = world.node(group.node)
-        scenario = node.scenario() if node.scenario else Scenario()
+        scenario = scenario_for(node)
         battle = Battle(list(group.members), list(order.pack), scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day)
@@ -132,9 +132,7 @@ class ForcedFightsMixin:
         self._battle_node = node
         self._arena_offer = None
         self._pause_order, self._pause_group = order, group
-        # most jurisdiction/unsafe nodes (city/market/tavern/road) carry no
-        # `scenario` -- nobody fought there before these systems made it necessary.
-        scenario = node.scenario() if node.scenario else Scenario()
+        scenario = scenario_for(node)
         battle = Battle(list(group.members), enemies, scenario=scenario,
                         daylight=self.guild.clock.is_daylight, lethal=True, arena=False,
                         clock_day=self.guild.clock.day, aggressor="enemy")

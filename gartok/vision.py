@@ -25,8 +25,11 @@ def ground_light(obj):
 
 
 def _light_sources(battle):
+    aftermath = getattr(battle, "winner", None) is not None and not any(
+        u.alive and u.team == "player" for u in battle.units
+    )
     for u in battle.units:
-        radius = unit_light(u)
+        radius = u.light_radius if aftermath else unit_light(u)
         if radius:
             for c in cells(u.pos, u.footprint):   # a large creature lights from its whole footprint
                 yield c, radius
@@ -88,13 +91,21 @@ def observers(battle, view_squad, team="player"):
 
     On your turn the vision is the ACTIVE character's; `view_squad` (key L) toggles
     to the union of your living team. On the enemy turn it is always the whole squad.
+    Once the fight is over and nobody on `team` is left standing, the fallen squad's
+    last view stays lit so the defeat screen is not an empty black board.
     """
     if battle.winner is None and battle.active.team == team and not view_squad:
         return [battle.active]
-    return [u for u in battle.units if u.alive and u.team == team]
+    living = [u for u in battle.units if u.alive and u.team == team]
+    if living or battle.winner is None:
+        return living
+    return [u for u in battle.units if u.team == team]
 
 
 def enemy_visible(battle, obs, u):
+    if battle.winner is not None and obs and not any(o.alive for o in obs):
+        return (not u.dead and not u.hidden_from(obs[0].team)
+                and any(can_see(battle, o, c) for o in obs for c in cells(u.pos, u.footprint)))
     return any(can_see_unit(battle, o, u) for o in obs)
 
 

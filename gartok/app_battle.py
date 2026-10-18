@@ -176,6 +176,8 @@ class BattleFlowMixin:
             self._map_notices += forced.resolve(self.guild, pause_group, pause_order, outcome)
         won = battle.winner == "player"
         if hunt_state is not None:                 # an ambush during a hunt
+            if not won and hunt_state.fights > 0:
+                hunt_state.fights -= 1
             hunt_state.party = [u for u in outcome.survivors if u in self.guild.roster]
             if hunt_state.target == "ox":
                 hunt_state.hours_left = 0          # one chase per trail found

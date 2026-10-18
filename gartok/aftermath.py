@@ -45,17 +45,18 @@ class LevelUp:
     @property
     def gains(self):
         """`[(label, before, after)]` for every number that moved, in reading order."""
-        return [(label, self.before[k], self.after[k]) for k, label in LEVEL_FIELDS
-                if self.after[k] != self.before[k]]
+        return [(label, self.before.get(k, 0), self.after.get(k, 0)) for k, label in LEVEL_FIELDS
+                if self.after.get(k, 0) != self.before.get(k, 0)]
 
 
-LEVEL_FIELDS = (("combat", "Combat level"), ("magic", "Magic level"), ("racial", "Racial level"),
-                ("hit_dice", "Hit dice"), ("hp_max", "Max HP"))
+LEVEL_FIELDS = (("combat", "Combat level"), ("work", "Work level"), ("magic", "Magic level"),
+                ("racial", "Racial level"), ("hit_dice", "Hit dice"), ("hp_max", "Max HP"))
 
 
 def level_snapshot(unit):
-    return {"combat": unit.combat_level, "magic": unit.magic_level, "racial": unit.racial_level,
-            "hit_dice": 1 + len(unit._level_hp_rolls), "hp_max": unit.hp_max}
+    return {"combat": unit.combat_level, "work": unit.work_level, "magic": unit.magic_level,
+            "racial": unit.racial_level, "hit_dice": 1 + len(unit._level_hp_rolls),
+            "hp_max": unit.hp_max}
 
 
 @dataclass

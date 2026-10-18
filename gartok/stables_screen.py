@@ -30,6 +30,7 @@ def _tack_price(name):
 
 class StablesScreen(Screen):
     native = True
+    header_reserve = 0
 
     def tutorial_key(self):
         return "stable"
@@ -142,7 +143,8 @@ class StablesScreen(Screen):
         text(screen, F["titleb"], "THE STABLES", (m, m - 2), T.TX)
         text(screen, F["body"], "buy and sell animals, wagons and tack  ·  hitching and riding are managed on the group's gear screen",
              (m, m + 30), T.TX_MUTED)
-        text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (screen.get_width() - m, m + 4), T.BRASS, right=True)
+        purse_x = screen.get_width() - m - (28 + T.S if self.tutorial_key() else 0) - self.header_reserve
+        text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (purse_x, m + 4), T.BRASS, right=True)
 
         top = m + 62
         area = pygame.Rect(m, top, min(760, screen.get_width() - 2 * m), screen.get_height() - top - 80)

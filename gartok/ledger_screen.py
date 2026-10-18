@@ -186,7 +186,12 @@ class LedgerScreen(Screen):
             card0 = pygame.Rect(m, cy, card_w, 80)
             panel(screen, card0)
             x, y = card0.x + pad, card0.y + pad
-            text(screen, F["body_sm"], "Nothing to hand over here. Complete the Bankers' trust test to earn their standing.", (x, y), T.TX_FAINT)
+            text(screen, F["body_sm"],
+                 "The sentries look your band over from the gatehouse.",
+                 (x, y), T.TX_MUTED)
+            text(screen, F["body_sm"],
+                 "Commander Varkas only receives couriers bearing the counting-house seal or bands the Bankers vouch for.",
+                 (x, y + 22), T.TX_FAINT)
 
         self._draw_footer(screen)
 

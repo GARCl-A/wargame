@@ -42,5 +42,9 @@ class LibraryScreen(MarketScreen):
             cats.append(("RESALE", "resale", shop.strays()))
         return cats
 
+    def sync_group(self):
+        super().sync_group()
+        self._custom_categories = self._build_categories()
+
     def tutorial_key(self):
         return "library"

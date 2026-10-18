@@ -91,6 +91,15 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         self._cargo_scroll = 0
         self._cargo_rect = None
 
+    def sync_group(self):
+        if self.group is None:
+            return
+        self.shoppers = list(self.group.members)
+        self.stores = [*self.group.herd, *self.group.wagons]
+        self.deal = economy.deal_mods(self.shoppers, getattr(self.node, "language", None),
+                                      getattr(self.node, "alignment", None),
+                                      leader=self.group.leader)
+
     def _stock_weapon_size(self, base_name):
         return self._weapon_sizes.get(base_name, self.weapon_size)
 

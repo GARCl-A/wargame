@@ -167,7 +167,11 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
                 if (after["combat"], after["magic"]) > (before["combat"], before["magic"]):
                     leveled_up.append(member)
                     level_ups.append(aftermath.LevelUp(member, before, after))
+            prev_hp = member.hp
             _carry_forward(member, combatant)
+            if not battle.lethal and member.hp < prev_hp:
+                member.non_lethal_damage = min(member.hp_max - member.hp,
+                                               getattr(member, "non_lethal_damage", 0) + (prev_hp - member.hp))
             survivors.append(member)
         else:
             fallen.append(member)
@@ -289,6 +293,7 @@ class TickResult:
     wiped: bool = False                          # the guild starved out entirely mid-tick
     casualties: list = field(default_factory=list) # characters who died during upkeep
     hungry: list = field(default_factory=list)     # characters who are starving
+    level_ups: list = field(default_factory=list)  # aftermath.LevelUp gained during the tick
 
 
 def advance(guild, dt=None, busy=()):
@@ -326,6 +331,8 @@ def _advance(guild, dt=None, busy=()):
     instead), so folding it in here would either wreck the soonest-completion
     jump (its `remaining` is meaningless) or, on a forced stop, decrement it
     toward a spurious "completion" no kind branch below handles."""
+    from . import rest
+
     jumped = dt is not None
     active = [g for g in guild.groups if g.busy and g.order.kind != "garrison"]
     if not jumped:
@@ -333,6 +340,7 @@ def _advance(guild, dt=None, busy=()):
             return TickResult(hungry=[u for u in guild.roster if u.hunger_level > 0])
         dt = min(g.order.remaining for g in active)
 
+    before_levels = {u.uid: aftermath.level_snapshot(u) for u in guild.roster}
     start_day = guild.clock.day
     events, casualties = guild.pass_time(dt, busy=busy)
     days_crossed = guild.clock.day - start_day
@@ -404,6 +412,10 @@ def _advance(guild, dt=None, busy=()):
         elif order.kind == "rest":
             events += guild.eat_now_pass(g.members)
             events += _fletcher_rest_pass(guild, g)
+            still_hurt = [u for u in g.members if u.hp < u.hp_max]
+            if still_hurt and rest.hours_to_midnight(guild) <= rest.JUST_BEFORE_MIDNIGHT * 2:
+                who = ", ".join(f"{u.name} {u.hp}/{u.hp_max} HP" for u in still_hurt)
+                events.append(f"{g.display_name}: stopped resting before midnight to keep a day of rations ({who}).")
         elif order.kind == "solo":
             events += solo.finish(guild, g, order)
         elif order.interactive:                # arena/market/bank/recruit/hunt
@@ -414,7 +426,16 @@ def _advance(guild, dt=None, busy=()):
     for g, order in pending:
         if order.kind in forced.EVENTS:
             g.pending = order
-    return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties, hungry=hungry)
+    level_ups = []
+    for u in guild.roster:
+        b = before_levels.get(u.uid)
+        if b is None:
+            continue
+        a = aftermath.level_snapshot(u)
+        if (a["combat"], a.get("work", 0), a["magic"]) > (b["combat"], b.get("work", 0), b["magic"]):
+            level_ups.append(aftermath.LevelUp(u, b, a))
+    return TickResult(events=events, pending=pending, wiped=guild.empty, casualties=casualties,
+                      hungry=hungry, level_ups=level_ups)
 
 
 def _fletcher_rest_pass(guild, group):

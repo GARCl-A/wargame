@@ -34,10 +34,12 @@ class LevelUpScreen(Screen):
         return min(1.0, self.elapsed / CLIMB_MS)
 
     def headline(self):
-        """`(track, level)` the card is about: combat first, else magic."""
+        """`(track, level)` the card is about: combat first, work second, else magic."""
         lu = self.level_up
         if lu.after["combat"] > lu.before["combat"]:
             return "COMBAT", lu.after["combat"]
+        if lu.after.get("work", 0) > lu.before.get("work", 0):
+            return "WORK", lu.after["work"]
         return "MAGIC", lu.after["magic"]
 
     def data(self):

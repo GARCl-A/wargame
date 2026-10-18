@@ -23,6 +23,7 @@ from . import (
 )
 
 HOURS_PER_HEAL = 8
+HOURS_PER_NONLETHAL_CLEAR = 24
 
 
 def rest_heal(unit):
@@ -97,10 +98,12 @@ class UpkeepMixin:
                 waiting = g.busy and g.order.kind == "solo" and u.uid != g.order.who
                 if ((g.busy and not resting and not waiting) or u in busy) and not (on_the_job and u.talent_bonus("work_rest")):
                     u.consecutive_rest_hours = 0
+                    u.unbroken_rest_hours = 0
                     continue
                 if not (u.hp < u.hp_max or getattr(u, "sick", False)):
                     continue
                 u.consecutive_rest_hours += hours
+                u.unbroken_rest_hours = getattr(u, "unbroken_rest_hours", 0) + hours
                 while u.consecutive_rest_hours >= HOURS_PER_HEAL:
                     u.consecutive_rest_hours -= HOURS_PER_HEAL
                     if getattr(u, "sick", False):
@@ -125,8 +128,17 @@ class UpkeepMixin:
                         u.hp = min(u.hp_max, u.hp + heal)
                         events.append(f"{u.name} rests and recovers {heal} HP.")
 
+                    rested_ticks = u.unbroken_rest_hours - u.consecutive_rest_hours
+                    if (rested_ticks >= HOURS_PER_NONLETHAL_CLEAR - 1e-9
+                            and getattr(u, "non_lethal_damage", 0) > 0 and u.unfed_days == 0):
+                        cleared = u.non_lethal_damage
+                        u.hp = min(u.hp_max, u.hp + cleared)
+                        u.non_lethal_damage = 0
+                        events.append(f"{u.name} shakes off {cleared} non-lethal damage after a full day's rest.")
+
                     if u.hp == u.hp_max and not getattr(u, "sick", False):
                         u.consecutive_rest_hours = 0
+                        u.unbroken_rest_hours = 0
                         break
 
         recorder.day_tick(self)
@@ -204,9 +216,10 @@ class UpkeepMixin:
             for u in magic.rent_covered(g)
         } | rite.board(self)
 
-        # Everyone eats from their own pack first (a full pass), so a hungry mate
-        # drawing on the shared larder next can't take a ration its owner still
+        # Everyone eats fresh food from their own pack first (a full pass), so a hungry
+        # mate drawing on the shared larder next can't take a ration its owner still
         # needs. Only then does the still-unfed hit the larder / the hunger step.
+        was_sick = {u for u in self.roster if u.sick}
         for u, outcome in self._meal_pass(self.roster, self._shared_larder, board_fed).items():
             if outcome == "dead":
                 casualties.append(u)
@@ -219,6 +232,8 @@ class UpkeepMixin:
                 events.append(f"{u.name} did not eat today: {u.hunger_label}.")
             elif outcome == "ate" and u.ability.id != "autotroph":
                 ate.append(u)
+                if u.sick and u not in was_sick:
+                    events.append(f"{u.name} ate Rotten Food and fell sick.")
         if ate:
             who = "1 member ate" if len(ate) == 1 else f"{len(ate)} members ate"
             events.append(f"{who} ({self.rations} rations left).")
@@ -246,14 +261,14 @@ class UpkeepMixin:
 
     @staticmethod
     def _meal_pass(units, larder_of, free=()):
-        """One day's meal for `units`: everyone eats from their own pack first (a
-        full pass), so a hungry mate drawing on the larder next can't take a
+        """One day's meal for `units`: everyone eats fresh food from their own pack
+        first (a full pass), so a hungry mate drawing on the larder next can't take a
         ration its owner still needs; only then does the still-unfed hit
         `larder_of(unit)` / the hunger step. `free` are fed without a ration.
         Returns `{unit: "ate" | "hungry" | "dead"}`. Touches only the units and
         packs it is handed, so `rest.py` runs it on copies to plan a rest."""
         ate_own = {u for u in units
-                   if u not in free and u.ability.id != "autotroph" and u._take_ration()}
+                   if u not in free and u.ability.id != "autotroph" and u._take_ration(allow_rotten=False)}
         outcomes = {}
         for u in units:
             if u in free or u in ate_own:
@@ -265,8 +280,8 @@ class UpkeepMixin:
 
     @staticmethod
     def _eat_now(units, larder_of):
-        """The hungry among `units` eat right now (own pack first); returns who."""
-        fed = [u for u in units if u.eat_now()]
+        """The hungry among `units` eat right now (own fresh food first); returns who."""
+        fed = [u for u in units if u.eat_now(allow_rotten=False)]
         for u in units:
             if u.hunger_level and u not in fed and u.eat_now(larder_of(u)):
                 fed.append(u)

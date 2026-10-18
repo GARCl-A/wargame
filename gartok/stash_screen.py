@@ -245,6 +245,9 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
             self.selected, self._sel_qty = [], {}
             return
 
+        if self._cols.click(px):
+            return
+
         pick = self._dots_at(px)
         if pick is not None:
             self._open_menu(px, self._menu_picks_for(pick))
@@ -482,7 +485,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
             for dr, idx in res["dots_hits"]:
                 self._dots_hits.append((dr, u, idx))
 
-        self._cols.hint(screen, F, area)
+        self._cols.hint(screen, F, area, self.mouse)
         if not shown:
             text(screen, F["body"], "Pin a member on the left to see their gear.",
                 area.center, T.TX_FAINT, center=True)

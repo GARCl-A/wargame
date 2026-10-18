@@ -230,7 +230,7 @@ _LIST = [
 
     # ================================================================== #
     # racial -- race-gated; the level is racial_level (sum of the other    #
-    # tracks on a scale). One authored node so far.                       #
+    # tracks on a scale).                                                 #
     # ================================================================== #
     Talent("tongue", "racial", 1, "Tongue",
            "your tongue is a third limb and a weapon: +1 square of reach on "

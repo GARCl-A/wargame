@@ -71,6 +71,13 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         self.study_modal_member = None      # Unit for whom we are picking a study target
         self.modal_buttons = []             # [(key, rect, action_arg)]
         self._tooltips = []                 # [(rect, text)]
+        self.signed = None                  # {"unit", "by", "pitch", "line"} of the most recent sign-on
+
+    def sync_group(self):
+        if self.group is not None:
+            self.party = list(self.group.members)
+            if self.selected_recruiter not in self.party:
+                self.selected_recruiter = self.party[0] if self.party else None
 
     # ------------------------------------------------------------------ #
     # tutorial (screen.py)                                               #
@@ -208,6 +215,7 @@ class TavernaScreen(TavernaDrawMixin, Screen):
                 for rect, i in self.cand_cards:
                     if rect.collidepoint(px):
                         self.sel = i
+                        self.signed = None
                         self.notice = None
                         cand = self.candidates[i]
                         best = self._best(cand)
@@ -234,6 +242,19 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         self.notice = "  ".join(events)
 
     # ------------------------------------------------------------------ #
+    @staticmethod
+    def _signed_line(cand):
+        align = getattr(cand, "alignment", "")
+        if "Good" in align:
+            return "You have my word and my blade. Point the way."
+        if "Evil" in align:
+            return "Pay my share on time and nobody else bleeds."
+        if "Lawful" in align:
+            return "A fair contract. Tell me where I stand in the line."
+        if "Chaotic" in align:
+            return "Better than drinking alone. Let's see what you're walking into."
+        return "My kit is packed. Lead on."
+
     def _pitch(self, member):
         if self.sel is None or self.sel >= len(self.candidates):
             return
@@ -260,8 +281,12 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         recorder.emit("recruit", pitcher=member.name, candidate=cand.name, bail=cost, ok=bool(pitch.ok))
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
+            if cand not in self.party:
+                self.party.append(cand)
+            self.sync_group()
             if cand in self.candidates:
                 self.candidates.remove(cand)
+            self.signed = {"unit": cand, "by": member, "pitch": pitch, "line": self._signed_line(cand)}
             paid = "Bail paid! " if cost else ""
             self.notice = f"{paid}{cand.name} signs with the guild (recruited by {member.name})!"
             if self.candidates:
