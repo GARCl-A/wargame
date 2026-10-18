@@ -28,11 +28,7 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
 
-1. **Magic Arc, to the end** (*Ready to do -> Medium*): the six school missions are built (2026-10-16: the
-   dialogue before initiative, [dialogue.md](dialogue.md), and Blood's third, the Dragon's Clutch,
-   [dragon_lair.md](dragon_lair.md)); the keepers, the initiation and each school's own level-0 / level-1
-   spells are built (2026-10-17). The talk before the arena's first boss fights is built (2026-10-18,
-   `boss_talk_screen.py`). **Next:** a few choices in the magic tree for Nature and Faith (*Medium -> Magic Arc*). The frontier supply run walks since
+1. **Magic Arc, to the end** (*Ready to do -> Medium*). **Next:** a few choices in the magic tree for Nature and Faith (*Medium -> Magic Arc*). The frontier supply run walks since
    2026-10-18 (RULES.md *Ledger Hold*).
    How a player gets the new scrolls is deferred past the arc (author 2026-10-17: scrolls are never sold).
    The racial rule is settled (2026-10-16: a pick every 5 racial levels, no authored NPC pins its level, a
@@ -79,11 +75,8 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   Options when the map gets there: names only past a zoom level or on hover, or a wider spacing.
 ## Medium
 
-- **Magic Arc — what is left.** Built: the six school missions, the keepers and the initiation (`rite.py`), each
-  school's level-0 / level-1 spells with their AI. RULES.md *Secret nodes*, *Magic* (with *Initiation*), *Capture*,
-  *Dragon Breath*, *Fire on the board*; plans and as-built notes in [snake_dragon.md](snake_dragon.md),
-  [ogre_wildfire.md](ogre_wildfire.md), [necromancer.md](necromancer.md), [dragon_lair.md](dragon_lair.md),
-  [dialogue.md](dialogue.md). Premises that stay: initiation belongs to the character; a school takes 2 reputation
+- **Magic Arc — what is left.** The rules of what is built are in RULES.md (*Secret nodes*, *Magic*, *Capture*,
+  *Dragon Breath*, *Fire on the board*, *Dialogue before initiative*). Premises that stay: initiation belongs to the character; a school takes 2 reputation
   with its faction (a threshold, not spent); exclusivity is intended and the guild's choices may close a school
   (accepted 2026-10-16); the third missions are the endgame bosses, each worth a racial-15 character, so they are
   authored NPCs (generated enemies stop at `constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`); Faith consumes a Holy
@@ -101,8 +94,11 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
   4. *Blood's fourth mission* (the robbed dragon keeps attacking): not designed; not before every test scheduled
      after the arc (author 2026-10-17).
   5. *Open-ended:* the Blood bloodlines are dragon (built), angel and demon (author 2026-10-18); more magic XP sources (today a magic kill and a
-     finished study, `progression.py`, on combat's curve as a placeholder).
-  6. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
+     finished study, `progression.py`, on combat's curve as a placeholder); hatching a Dragon Egg (an author idea,
+     not designed; today the egg is only sold).
+  6. *Racial trees for the authored beasts:* no racial talent belongs to the Dragon, so Kharzuul's four picks
+     wait unspent; the Zombie has no tree either. Neither blocks anything.
+  7. *Tuning, after a playtest:* the Battlefield's sides (4 soldiers at -2, 6 raiders at +1, the 6 potions); the Snake Dragon's numbers (level 8, Dragon Breath 2d6, the nest's packs), the 7-day
      captive and the 3-day corpse are first picks. **After the racial rule (2026-10-16):** the Ribbit Brothers went
      from work 2 to 4 to earn their one racial talent at racial 5, so they are mean 5 (the arena rule was boss = +1
      over an expected level 3, i.e. 4) with one more hit die each (Bufo 38 -> 44 HP, Peep 23 -> 27, Ribit 31 -> 37);
@@ -119,7 +115,7 @@ the seams they need. **The magic arc is the whole focus until it closes** (autho
      14-cell hearing), the patrols (two of three, sight 6, a torch each), the dragon (racial 20, 227 HP, AC 15, a
      Huge body the tunnel keeps out), the hoard and the egg prices ($400 at the Market, $1200 at a keeper); AI
      against AI at level 3 the squad gets out with an egg in 4 of 20 (`combat_lab` "lair"). **The dialogue
-     before initiative** ([dialogue.md](dialogue.md)): every number is a first pick (`dialogue.BASE_DC` 10 +
+     before initiative:** every number is a first pick (`dialogue.BASE_DC` 10 +
      the leader's WIS, a bribe of $3 a foe per level + 1 and $10 a crime point for a patrol, Persuade's ±3 by
      alignment, Intimidate's ±4 and the rout at +5, the +5 initiative a failed Intimidate gives, +2 a bluff
      told in a Challenge).
@@ -152,10 +148,9 @@ its functions are tabs inside.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
   Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
-- **The Ogre's fortress after the Wildfire** ([ogre_wildfire.md](ogre_wildfire.md)). Convinced, it stays as a
-  friendly node with the Ogre as its `Vendor` and **no function** (author 2026-10-17: it stays so; trade with
-  him later, once richer trade subsystems exist). Hostile, STORM THE FORTRESS is built (the finished
-  walls, 7 escorts; winning removes the node).
+- **The Ogre's fortress after the Wildfire.** Convinced, it stays as a friendly node with the Ogre as its
+  `Vendor` and **no function** (author 2026-10-17: it stays so; trade with him later, once richer trade
+  subsystems exist).
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
@@ -455,6 +450,11 @@ building them:
     a richer composed banner, and an opening scene: a founding charter that writes itself
     line by line, signed with the banner and the oath, kept as the first entry of the
     guild's chronicle.
+
+- **The arena's prompts in the dialogue system?** The dialogue before initiative (`dialogue.py`) took the
+  ambushes, the guard, the Wildfire and the lair's patrols; Adelio's and the Ribbit Brothers' prompts
+  (`boss_talk_screen.py`, `ribbit_prompt_screen.py`) stayed their own screens "for now" (author 2026-10-16).
+  Open: whether they move in, and with which verbs.
 
 - **Sprite's *Nature Initiate* gives no free spell when already initiated** (`Unit.magic_sources` is a list without repeats since
   2026-10-13), unlike Faith Initiate; equalise if it ever matters. Share Magic stays battle-only on purpose.
