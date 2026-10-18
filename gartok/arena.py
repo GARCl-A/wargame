@@ -26,6 +26,7 @@ any ordinary pit bout fields him as one of the opponents. He never levels.
 import random
 
 from . import constants, encounters, i18n, npc_lib, world
+from .dialogue import BossTalk
 
 CHAMPION_SLUG = "adelio-small-knife"
 
@@ -232,20 +233,19 @@ def boss_talk_key(offer):
 
 
 def boss_talk(guild, offer):
-    """The cards the bosses speak before `offer`, the first time this guild fights them, else [].
-    Each card is {"name", "race", "portrait", "caption", "line"}."""
+    """The `dialogue.BossTalk` the bosses speak before `offer`, the first time this guild fights
+    them, else None."""
     key = boss_talk_key(offer)
     if key is None or key in guild.boss_talks_seen:
-        return []
-    cards = []
+        return None
+    lines = []
     for slug, caption in BOSS_TALKS[key]:
         try:
             npc = npc_lib.load_npc(slug)
         except OSError:
             continue
-        cards.append({"name": npc.name, "race": npc.race["name"], "portrait": npc.portrait_file,
-                      "caption": caption, "line": i18n.t(f"arena_talk.{slug}")})
-    return cards
+        lines.append((npc, caption, i18n.t(f"arena_talk.{slug}")))
+    return BossTalk(offer.name.upper(), lines) if lines else None
 
 
 def load_ribbit_brothers():

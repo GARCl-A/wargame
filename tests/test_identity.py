@@ -157,3 +157,44 @@ def test_draft_renaming_unit():
 
     assert ds.editing_unit_idx is None
     assert ds.picks[0].name == "Galahad"
+
+
+def _identity_screen(size):
+    from gartok.draft_screen import DraftScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+    pygame.init()
+    screen = pygame.display.set_mode(size)
+    random.seed(9)
+    ds = DraftScreen(ui_fonts(), lambda *a: None)
+    ds.draw(screen)
+    for rect, _unit in ds.card_rects[:3]:
+        ds._click(rect.center)
+    ds.draw(screen)
+    ds._click(ds.continue_rect.center)
+    ds.draw(screen)
+    return ds, screen
+
+
+def test_the_founding_screen_fits_every_window_from_1000x640():
+    for size in ((1000, 640), (1280, 720), (1920, 1080)):
+        ds, screen = _identity_screen(size)
+        bounds = screen.get_rect()
+        assert bounds.contains(ds.continue_rect), size
+        for rect, _unit in ds.leader_rects:
+            assert bounds.contains(rect), size
+        for rect, _ in ds.icon_rects + ds.color_rects:
+            assert bounds.contains(rect), size
+        assert not any(a.colliderect(b) for (a, _), (b, _) in
+                       zip(ds.leader_rects, ds.leader_rects[1:])), size
+
+
+def test_each_leader_card_shows_what_the_guild_leader_could_recruit():
+    from gartok import draft_screen, recruit
+    from gartok.guild import Guild
+    ds, _screen = _identity_screen((1280, 720))
+    for u in ds.picks:
+        total, parts = draft_screen._leader_recruits(u)
+        guild = Guild([u])
+        guild.leader = u
+        assert total == recruit.capacity(guild, u)
+        assert f"CHA {u.mod_charisma:+d}" in parts

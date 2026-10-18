@@ -21,8 +21,8 @@ from . import (
 )
 from .battle import Battle
 from .battle_screen import BattleScreen
-from .boss_talk_screen import BossTalkScreen
 from .combat_log import CombatLog
+from .dialogue_screen import DialogueScreen
 from .loot_screen import LootScreen
 from .reward_screen import RewardScreen
 from .taverna_screen import TavernaScreen
@@ -41,9 +41,10 @@ class BattleFlowMixin:
                         daylight=self.guild.clock.is_daylight, lethal=node.lethal,
                         arena=node.arena, clock_day=self.guild.clock.day)
         talk = arena.boss_talk(self.guild, offer)
-        if talk:
+        if talk is not None:
             self.guild.boss_talks_seen.add(arena.boss_talk_key(offer))
-            self.scene = BossTalkScreen(self.ui_fonts, talk, lambda: self._enter_battle(battle, node))
+            self.scene = DialogueScreen(self.ui_fonts, self.guild, self.guild.group_of(squad[0]), talk,
+                                        lambda _result: self._enter_battle(battle, node), decided=talk.current())
             return
         self._enter_battle(battle, node)
 

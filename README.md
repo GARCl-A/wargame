@@ -276,12 +276,14 @@ gartok/
   # every screen draws straight to the real window and lays out from screen.get_size()
   screen.py         the screens' base class (click dispatch -> self._click)
   start_screen.py / menu_screen.py / saves_screen.py / settings_screen.py / wiki_screen.py
-  combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py / guild_screen.py / group_screen.py
+  combat_lab_screen.py / vocation_screen.py / draft_screen.py / map_screen.py + map_inspector.py (the node's inspector) / guild_screen.py
+  group_screen.py + group_draw.py (everything it paints)
   squad_screen.py / battle_screen.py (input + turn flow) / battle_draw.py (everything it paints) / loot_screen.py / reward_screen.py
-  market_screen.py / taverna_screen.py / prison_screen.py / hunt_screen.py / level_screen.py
+  market_screen.py + market_draw.py (painting) + market_trade.py (drops, buying, selling) / taverna_screen.py + taverna_draw.py (painting)
+  prison_screen.py / hunt_screen.py / level_screen.py
   bank_screen.py / bank_view_screen.py / tanner_screen.py / trust_screen.py / ledger_screen.py / crafting_screen.py
   city_property_screen.py / garage_screen.py / abandon_screen.py / watch_screen.py / wilds_claim_screen.py / dialogue_screen.py
-  alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py / boss_talk_screen.py / group_turn_screen.py
+  alert_screen.py / adelio_prompt_screen.py / ribbit_prompt_screen.py / group_turn_screen.py
   bank_hub_screen.py / forge_hub_screen.py / tanner_hub_screen.py / library_hub_screen.py / apothecary_hub_screen.py
   (tabbed hubs wrapping a shop/strongbox, crafting and a mission board)
   library_screen.py / library_mission_screen.py / apothecary_mission_screen.py

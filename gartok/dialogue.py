@@ -165,6 +165,13 @@ class Encounter:
     def offered(self):
         return self.verbs
 
+    def caption(self, unit):
+        return f"{unit.race['name']} {unit.occupation['name']}"
+
+    def advance(self):
+        """The next step once the player has read a `next` result; None goes back to the verbs."""
+        return None
+
     def note(self, verb):
         return ""
 
@@ -396,6 +403,33 @@ class WildfireTalk(Encounter):
         if result.over:
             self.result = result
         return result
+
+
+class BossTalk(Encounter):
+    """An arena boss presents themself before the guild's first bout against them (`arena.boss_talk`):
+    one line per speaker, in order, and no verbs. The last line ends in the fight."""
+    kind = "boss"
+    language_gate = False
+
+    def __init__(self, title, lines):
+        """`lines`: [(unit, caption, line)], in the order they speak."""
+        self.lines = list(lines)
+        self.step = 0
+        super().__init__([u for u, _, _ in self.lines], title, self.lines[0][2])
+        self.leader = self.lines[0][0]
+
+    def caption(self, unit):
+        return self.lines[self.step][1]
+
+    def current(self):
+        if self.step < len(self.lines) - 1:
+            return Result("next", f"{self.lines[self.step + 1][0].name} steps up.")
+        return Result("fight", "The crowd roars. The bout begins.", Opening())
+
+    def advance(self):
+        self.step += 1
+        self.leader, _, self.line = self.lines[self.step]
+        return self.current()
 
 
 # --------------------------------------------------------------------------- #

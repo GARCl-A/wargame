@@ -327,13 +327,23 @@ def _b_attributes(s, F, r, ch, d, ed, mouse, tip):
     n = len(ch["attrs"])
     if d == "compact":
         step = r.w // n
+
+        def width(nm, v, mod):
+            return (F["micro"].size(nm)[0] + 4 + F["body"].size(f"{v}")[0] + 3
+                    + F["micro"].size(f"{mod:+d}")[0] + T.S)
+
+        # too narrow for the modifier: the value itself takes its colour
+        with_mod = all(width(nm, v, mod) <= step for nm, v, mod, _ in ch["attrs"])
         for i, (nm, v, mod, penalized) in enumerate(ch["attrs"]):
             x = r.x + i * step
             caps(s, F["micro"], nm, (x, r.y + 2), T.TX_FAINT)
             vx = x + F["micro"].size(nm)[0] + 4
-            text(s, F["body"], f"{v}", (vx, r.y - 1), T.BLOOD if penalized else T.TX)
-            caps(s, F["micro"], f"{mod:+d}", (vx + F["body"].size(f"{v}")[0] + 3, r.y + 2),
-                 T.GREEN if mod > 0 else T.BLOOD if mod < 0 else T.TX_FAINT)
+            tone = T.GREEN if mod > 0 else T.BLOOD if mod < 0 else T.TX
+            text(s, F["body"], f"{v}", (vx, r.y - 1),
+                 T.BLOOD if penalized else (T.TX if with_mod else tone))
+            if with_mod:
+                caps(s, F["micro"], f"{mod:+d}", (vx + F["body"].size(f"{v}")[0] + 3, r.y + 2),
+                     T.GREEN if mod > 0 else T.BLOOD if mod < 0 else T.TX_FAINT)
         return
     cw = (r.w - T.S * (n - 1)) // n
     for i, (nm, v, mod, penalized) in enumerate(ch["attrs"]):

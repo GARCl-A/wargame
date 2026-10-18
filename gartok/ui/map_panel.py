@@ -153,9 +153,15 @@ def draw_node_label(surf, F, name, r):
     surf.blit(lab, r)
 
 
-def place_labels(F, centers, names, bounds):
-    """node -> Rect for each name: below its mark when free, else the spot around it that
-    overlaps the other names and marks the least (a few passes settle the order)."""
+LABEL_MARK_OVERLAP = 0.15     # a name may cover this share of its area with another node's mark
+
+
+def place_labels(F, centers, names, bounds, keep=()):
+    """node -> Rect for each name shown: below its mark when free, else the spot around it that
+    overlaps the other names and marks the least (a few passes settle the order). A name that
+    still lands on another name or covers a mark is left out, unless its node is in `keep`
+    (the selected node, the one under the mouse, where a band stands): a crowded town reads
+    by hovering instead of as a pile."""
     reach = NODE_R + 9
     marks = {k: pygame.Rect(x - reach, y - reach, 2 * reach, 2 * reach) for k, (x, y) in centers.items()}
     font, gap = F["inkb"], NODE_R + 6
@@ -186,7 +192,15 @@ def place_labels(F, centers, names, bounds):
         for k in order:
             others = {j: r for j, r in placed.items() if j != k}
             placed[k] = min(enumerate(cands[k]), key=lambda ir: cost(k, ir[0], ir[1], others))[1]
-    return placed
+    rank = {k: i for i, k in enumerate(order)}
+    shown = {}
+    for k in sorted(placed, key=lambda k: (k not in keep, rank[k])):
+        r = placed[k]
+        covers = sum(area(r, m) for j, m in marks.items() if j != k)
+        if k in keep or (not any(r.colliderect(o) for o in shown.values())
+                         and covers <= r.w * r.h * LABEL_MARK_OVERLAP):
+            shown[k] = r
+    return shown
 
 
 def draw_pawn(surf, p, color=T.BRASS, alert=False):
@@ -329,10 +343,11 @@ def draw_map(surf, F, rect, cam, nodes, edges, wash, region_r, groups, selected,
     sel_at = next((g["at"] for g in groups if g["key"] == selected), None)
     for k, n in nodes.items():
         draw_map_node(surf, F, k, n, w2s(n["pos"]), selected=(k == sel_at), icon_fn=icon_fn)
+    keep = {sel_at, hover_node} | {g["at"] for g in groups if isinstance(g["at"], str)}
     spots = place_labels(F, {k: w2s(n["pos"]) for k, n in nodes.items()},
-                         {k: n["name"] for k, n in nodes.items()}, inner)
-    for k, n in nodes.items():
-        draw_node_label(surf, F, n["name"], spots[k])
+                         {k: n["name"] for k, n in nodes.items()}, inner, keep)
+    for k, r in spots.items():
+        draw_node_label(surf, F, nodes[k]["name"], r)
 
     # 5. pawns
     for g in groups:

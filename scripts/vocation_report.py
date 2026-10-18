@@ -10,7 +10,7 @@ The wage `w` is the copper a member earns per day, at two points: early (the yar
 unit's alignment lets it carry out (`cohesion.depart`), taken here as `--kit` copper.
 
 Not priced: the Wilds perk, because the travel stance makes it a choice and not a flow, and
-Scholars, which waits for the combat info modal. Shares the sim does not count yet (how much of a day is
+Scholars, whose +2 on the read (`intel.py`) needs a fight-level measure, not copper a day. Shares the sim does not count yet (how much of a day is
 gathering or travelling, how much food rots) are arguments with a stated default.
 
     python scripts/vocation_report.py

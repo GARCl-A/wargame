@@ -346,7 +346,8 @@ level-0 and a level-1 spell of its own.
   already initiated in one takes another's initiation on top (`Unit.add_magic_source`). A
   school comes from a race (Gnome starts `nature`, Kobold starts `blood`), a racial talent
   (the Kenku's and the Skeleton's "Faith Initiate", the Sprite's "Nature Initiate"; a
-  Faith Initiate who already holds `faith` gains a free faith spell instead) or the school's
+  Faith Initiate who already holds `faith` gains a free faith spell instead; the Sprite's
+  talent is worth its *Share Magic* action whether or not it already holds `nature`) or the school's
   **initiation** at its hidden sanctuary (see *Initiation* below). The creator
   toggles each school on its own; dropping one forgets only the spells no remaining school casts.
 - **Casting** costs 1 action point (a level-2 spell, both) and only shows up once the spell's id is
@@ -370,14 +371,16 @@ level-0 and a level-1 spell of its own.
     Its scroll is the Blood Cult's reward for the Dragon's Clutch; the dragon under the Mine knows
     it. The AI casts it when it beats its hand weapon.
   - **Invisibility** (level 2, every school, 2 points) — the caster vanishes from every other
-    side's sight (`conditions.Invisible`, see *Invisibility*). No scroll yet: only the
-    necromancer at the front knows it.
+    side's sight (`conditions.Invisible`, see *Invisibility*). The necromancer at the front knows it;
+    its scroll exists ($750, `economy.scroll_price(2)`), but no source hands it out yet. The AI casts it
+    as a way out of a lethal fight: when it would break and run, or when it is down to a third and a foe
+    it sees can reach it; invisible and at half its HP or less, it makes for the edge instead of striking.
   - **Raise Dead** (level 2, **Faith only**, 2 points) — a **dead** body (not dying, not stable)
     within 6 cells and in sight stands up again with **1 HP on the caster's side**, the same body with
     its gear, immune to Sleep. A raised body that falls again is dead for good and is never raised
     twice; a guild member's body can be raised against the guild. The log names the cell it rises on.
-    A teaser of what a strong caster does: only the necromancer at the front knows it, and no source
-    teaches it yet.
+    A teaser of what a strong caster does: only the necromancer at the front knows it; its scroll
+    exists ($750), but no source hands it out yet.
   - **Grasping Roots** (level 0, **Nature only**) — a foe within 6 cells and in sight, `d20 + INT`
     vs AC: on a hit it walks **1 cell** at most until the end of its next turn (`conditions.Rooted`).
     Recast, it refreshes. The AI roots a flag runner, or a melee foe still closing on a caster or
@@ -2012,8 +2015,9 @@ it can catch up with a character wherever the City's authority reaches
 ### The Champion of the Pit 🟡
 
 Before the guild's first bout against Adelio, and its first against the Ribbit Brothers, each
-boss says one line beside his portrait (the brothers one card each, Ribit first), then the fight
-starts. No choices: it is flavour, and it is heard once a guild.
+boss says one line beside his portrait (the brothers one after another, Ribit first), then the fight
+starts. It is the dialogue screen with no verbs (`dialogue.BossTalk`): no choices, it presents the
+boss, and it is heard once a guild.
 
 Beating the champion team hands the **Champion of the Pit** title to whoever on
 the winning squad lands the blow that puts Adelio down. It is a *character's*

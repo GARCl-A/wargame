@@ -49,6 +49,8 @@ class DialogueScreen(Screen):
         return self._F
 
     def tutorial_key(self):
+        if self.encounter.kind == "boss":
+            return None
         if self.encounter.kind == "guard":
             return "guard"
         return "dialogue"
@@ -69,7 +71,14 @@ class DialogueScreen(Screen):
         if result.over:
             self.on_done(result)
         else:
-            self.result = None
+            self.result = self.encounter.advance()
+
+    def handle_event(self, event):
+        if (event.type == pygame.KEYDOWN and self.result is not None
+                and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE)):
+            self.go_on()
+            return
+        super().handle_event(event)
 
     def _click(self, pos):
         if self.result is not None:
@@ -90,10 +99,10 @@ class DialogueScreen(Screen):
         enc = self.encounter
         lead = enc.leader
         leader = None if lead is None else {
-            "name": lead.name, "caption": f"{lead.race['name']} {lead.occupation['name']}",
+            "name": lead.name, "caption": enc.caption(lead),
             "race": lead.race["name"], "portrait": lead.portrait_file or lead.portrait_id}
         speakers = []
-        for u in self.members:
+        for u in self.members if enc.offered() else ():
             langs = ", ".join(u.languages) or "no language"
             speakers.append({"id": u.uid, "name": u.name, "selected": u is self.speaker,
                              "caption": f"CHA {u.mod_charisma:+d} · INT {u.mod_intelligence:+d} · {langs}"})

@@ -74,10 +74,14 @@ def capacity(guild, unit):
     guild leader's own racial level (both XP tracks) adds on top -- the one
     mechanical thing `Guild.leader` does today, and the reason the role is
     worth holding onto beyond flavour."""
-    cap = BASE_RECRUIT_CAPACITY + unit.mod_charisma
     if unit is guild.leader:
-        cap += unit.racial_level
-    return max(0, cap)
+        return leader_capacity(unit)
+    return max(0, BASE_RECRUIT_CAPACITY + unit.mod_charisma)
+
+
+def leader_capacity(unit):
+    """`capacity` for the guild's leader: the racial level adds on top."""
+    return max(0, BASE_RECRUIT_CAPACITY + unit.mod_charisma + unit.racial_level)
 
 
 def slots_used(guild, unit):

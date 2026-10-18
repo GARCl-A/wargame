@@ -46,7 +46,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
 | `board_style.py` | the battle board's palette, `battle_layout`, `BoardView` (pan/zoom camera) |
 | `camera.py` | `MapCamera`: pan / zoom around a screen-space centre |
-| `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns, `place_labels` (names that overlap neither each other nor a mark) |
+| `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns, `place_labels` (names that overlap neither each other nor a mark; one with no room waits for the hover, the selected node and where a band stands always show) |
 | `command_bar.py` | the COMMAND zone: clock, alerts, headline stats |
 | `roster_panel.py` | the ROSTER zone: one card per group, events timeline |
 | `inspector_panel.py` | the INSPECTOR zone: selected band, status, available orders |
@@ -61,12 +61,11 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
 | `initiation_panel.py` | a sanctuary's initiation: the school's terms, one row per member with where they stand (or why they cannot), the begin / leave footer |
 | `party_panel.py` | the figures on a party row (HP, AC, load, rations, work-XP bar) and the party's total load |
-| `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal, the identity form |
+| `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal; the founding screen (the banner on a shield beside the name, colour and emblem, one card per leader candidate with portrait, recruits and attributes) and `draw_shield` |
 | `loadout_panel.py` | bag / cargo / shop pieces (rail, column, container, send menu) |
 | `market_panel.py` | the market's vendor shelf: category tabs, stock list and drag ghost |
 | `intro_card.py` | the centred, veiled card (title, paragraphs, optional brass note, one button) used by every tutorial card |
-| `boss_line.py` | an arena boss's line before the first bout: the veiled card with the portrait, name, caption, the line and one button |
-| `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button; one line each when space is short |
+| `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
 | `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |

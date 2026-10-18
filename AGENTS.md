@@ -49,6 +49,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `combatant.py` | a Unit *inside one battle* (HP, AP, status, conditions) |
 | `battle.py` | board + units + turn flow; wraps each Unit in a Combatant; any number of sides (`others={team: units}`: hostile to all, played by `ai.py`; `foe_units` is everyone off the player's side) and `withdraw` once the scenario allows it |
 | `battle_screen.py` / `battle_draw.py` | the fight's screen: input and turn flow / everything it paints (`BattleDrawMixin`) |
+| `map_screen.py` / `map_inspector.py` | the map: groups, orders, travel / what the inspector shows at the selected band's node (`MapInspectorMixin`) |
+| `market_screen.py` / `market_trade.py` / `market_draw.py`, `group_screen.py` / `group_draw.py`, `taverna_screen.py` / `taverna_draw.py` | each screen's state and input / its trades (`MarketTradeMixin`) / everything it paints (`*DrawMixin`) |
 | `actions/` | every combat action is an `Action` subclass; `base` / `combat` / `movement` / `support` / `spells` / `weapon_actions`, registry in `__init__.py` |
 | `abilities.py` | `Ability` frozen-dataclass registry (passives + hooks) |
 | `talents.py` | talent-tree registry mirroring abilities.py |
@@ -103,8 +105,8 @@ When the two disagree, `REFERENCE.md` wins.
 | `captives.py` | a foe bound in battle (`actions.Capture`) kept by a group (`Group.captives`): not a member, counts 1 on the herd limit, walks in the pace, dies 7 days after capture (`daily`), a body worth keeping (`CORPSES`) left with the leader |
 | `ox.py` / `ox_fields.py` | the tanner's last job: the Country Roads search, the daylight tracking of Aurochs (`ox.track`, DC climbs per found trail) and the big skittish-beast field (`OxFieldsScenario`: terrain, the herd's call, win on his fall); `ai._skitter` is his flight |
 | `justice.py` | crime per character, City jurisdiction, patrols, prison |
-| `dialogue.py` / `dialogue_screen.py` | the talk before a fight: an `Encounter` (`Ambush`, `Patrol`, `Challenge`, `WildfireTalk`) offers verbs (`VERBS`), `choose` rolls one into a `Result` (peace / fight with an `Opening` for `Battle.open_with` / leave / surrender); `forced.encounter` builds it for the guard and the ambushes, `Order.parley` keeps a rolled one; `ai_choice` is the squad's side |
-| `arena.py` / `ribbit_prompt_screen.py` / `boss_talk_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer; before the guild's first bout against Adelio or the Ribbit Brothers each boss says one line (`arena.boss_talk`, `Guild.boss_talks_seen`, copy in `locales/en.json` under `arena_talk`) |
+| `dialogue.py` / `dialogue_screen.py` | the talk before a fight: an `Encounter` (`Ambush`, `Patrol`, `Challenge`, `WildfireTalk`, `BossTalk`) offers verbs (`VERBS`), `choose` rolls one into a `Result` (peace / fight with an `Opening` for `Battle.open_with` / leave / surrender); `forced.encounter` builds it for the guard and the ambushes, `Order.parley` keeps a rolled one; `ai_choice` is the squad's side |
+| `arena.py` / `ribbit_prompt_screen.py` | Champion of the Pit title and its defense cycle; ribbit_prompt_screen handles brothers' post-battle recruit offer; before the guild's first bout against Adelio or the Ribbit Brothers each boss says one line, a `dialogue.BossTalk` with no verbs on the dialogue screen (`arena.boss_talk`, `Guild.boss_talks_seen`, copy in `locales/en.json` under `arena_talk`) |
 | `magic.py` | spell registry + study-difficulty math (casting is in actions/spells.py) |
 | `encounters.py` | enemy packs scaled to a target mean level (`clamp_level` holds a scaled fight under the enemy caps); `level_weights` makes a table's headcount / level weights from a bell leaning low |
 | `progression.py` | XP curves + combat-XP rule |

@@ -837,6 +837,30 @@ def _should_flee(battle, unit):
     return hurt and outmatched
 
 
+def _try_vanish(battle, unit):
+    """Invisibility as a way out of a lethal fight: cast when the unit would break and run, or
+    when it is down to a third and a foe it sees can reach it this round. Returns True if it vanished."""
+    vanish = actions.CastSpellAction("invisibility")
+    if not battle.lethal or _mindless(unit) or not vanish.available(battle, unit):
+        return False
+    if _should_flee(battle, unit):
+        vanish.execute(battle, unit)
+        return True
+    foes = intel.visible_foes(battle, unit)
+    if unit.hp <= unit.hp_max * 0.34 and any(
+            battle.units_distance(unit, f) <= (f.attack_range if f.ranged else f.speed + 1) for f in foes):
+        vanish.execute(battle, unit)
+        return True
+    return False
+
+
+def _slipping_away(battle, unit):
+    """An invisible unit at half its HP or less makes for the edge instead of striking (a blow
+    would show it)."""
+    return (battle.lethal and unit.has_condition("invisible") and not _mindless(unit)
+            and unit.hp <= unit.hp_max * 0.5)
+
+
 def _should_delay(battle, unit):
     """A melee unit that cannot reach anyone this turn waits for an ally that is
     already in the fight, so it arrives after the line has formed. Never a flag
@@ -1249,7 +1273,10 @@ def take_turn(battle, unit):
                     continue
                 # genuinely walled off from the flag -- fight through this turn
 
-        if _should_flee(battle, unit):
+        if _try_vanish(battle, unit):
+            continue
+
+        if _should_flee(battle, unit) or _slipping_away(battle, unit):
             if actions.FLEE.available(battle, unit):
                 actions.FLEE.execute(battle, unit)
                 break

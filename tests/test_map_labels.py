@@ -45,3 +45,16 @@ def test_autofit_keeps_a_regions_terrain_inside_the_frame():
     cam.set_rect(pygame.Rect(0, 0, 800, 600))
     cam.autofit(nodes, pad=(0, 0), radii={"a": 0.1, "b": 0.0})
     assert cam.world_to_screen((0.2, 0.0))[1] >= 0
+
+
+def test_a_name_with_no_room_is_left_for_the_hover_but_a_kept_node_always_shows():
+    F = _setup()
+    bounds = pygame.Rect(0, 0, 400, 400)
+    centers = {n.id: (60 + n.pos[0] * 280, 60 + n.pos[1] * 280) for n in world.NODES}
+    names = {n.id: n.name for n in world.NODES}
+    spots = map_panel.place_labels(F, centers, names, bounds, keep={"city", "smith"})
+    assert {"city", "smith"} <= set(spots) and len(spots) < len(centers)
+    shown = [k for k in spots if k not in ("city", "smith")]
+    for i, a in enumerate(shown):
+        for b in shown[i + 1:]:
+            assert not spots[a].colliderect(spots[b]), (a, b)

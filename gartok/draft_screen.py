@@ -17,7 +17,7 @@ run's one free way to change your mind).
 
 import pygame
 
-from . import artwork, vocations
+from . import artwork, recruit, vocations
 from .archetypes import (
     ARCHETYPES,
     generate_candidate,
@@ -52,6 +52,14 @@ COMMISSION_TOKENS = 3
 _MAX_GUILD_NAME = 24
 _ATTRS = (("STR", "strength"), ("DEX", "dexterity"), ("CON", "constitution"),
           ("INT", "intelligence"), ("WIS", "wisdom"), ("CHA", "charisma"))
+
+
+def _leader_recruits(u):
+    """How many people `u` could sponsor as the guild's leader, and why."""
+    parts = [f"base {recruit.BASE_RECRUIT_CAPACITY}", f"CHA {u.mod_charisma:+d}"]
+    if u.racial_level:
+        parts.append(f"level {u.racial_level:+d}")
+    return recruit.leader_capacity(u), " · ".join(parts)
 
 
 class DraftScreen(Screen):
@@ -416,8 +424,8 @@ class DraftScreen(Screen):
                 "color": self.banner_color, "icon": self.banner_icon,
                 "colors": [color for _, color in BANNER_COLORS],
                 "icons": [slug for _, slug, _label in artwork.BANNER_ICONS],
-                "leaders": [{"ch": unit_to_ch(Combatant(u)), "selected": u == self.leader_pick}
-                            for u in self.picks],
+                "leaders": [{"ch": unit_to_ch(Combatant(u)), "selected": u == self.leader_pick,
+                             "recruits": _leader_recruits(u)} for u in self.picks],
                 "can_continue": self.leader_pick is not None,
                 "editing_unit_idx": self.editing_unit_idx,
                 "unit_name_buf": self.unit_name_buf}

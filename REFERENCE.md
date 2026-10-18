@@ -332,8 +332,10 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Scroll of Grasping Roots | 0.1 kg | -- |
 | Scroll of Healing Touch | 0.1 kg | -- |
 | Scroll of Hex | 0.1 kg | -- |
+| Scroll of Invisibility | 0.1 kg | -- |
 | Scroll of Light Globe | 0.1 kg | -- |
 | Scroll of Magic Missile | 0.1 kg | -- |
+| Scroll of Raise Dead | 0.1 kg | -- |
 | Scroll of Sleep | 0.1 kg | -- |
 | Scroll of Spare the Dying | 0.1 kg | -- |
 | Scroll of Water Jet | 0.1 kg | -- |

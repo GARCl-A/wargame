@@ -346,6 +346,8 @@ _register(ItemDef(id="scroll_of_grasping_roots", name="Scroll of Grasping Roots"
 _register(ItemDef(id="scroll_of_hex", name="Scroll of Hex", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="hex"), "scroll_hex")
 _register(ItemDef(id="scroll_of_spare_the_dying", name="Scroll of Spare the Dying", type=ItemType.SCROLL, rarity=ItemRarity.UNCOMMON, weight=0.1, price=180, spell_id="spare_the_dying"), "scroll_spare_the_dying")
 _register(ItemDef(id="scroll_of_healing_touch", name="Scroll of Healing Touch", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=465, spell_id="healing_touch"), "scroll_healing_touch")
+_register(ItemDef(id="scroll_of_invisibility", name="Scroll of Invisibility", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=750, spell_id="invisibility"), "scroll_invisibility")
+_register(ItemDef(id="scroll_of_raise_dead", name="Scroll of Raise Dead", type=ItemType.SCROLL, rarity=ItemRarity.RARE, weight=0.1, price=750, spell_id="raise_dead"), "scroll_raise_dead")
 
 # Dictionaries
 _register(ItemDef(id="dictionary", name="Dictionary", type=ItemType.DICTIONARY, rarity=ItemRarity.COMMON, weight=2.0, price=4))

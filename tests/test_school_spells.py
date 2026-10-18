@@ -1,5 +1,6 @@
 """Each school's own level-0 / level-1 spells: Grasping Roots (Nature 0), Hex (Blood 0), Spare
-the Dying (Faith 0) and Healing Touch (Faith 1), what they do on the board and how the AI uses them."""
+the Dying (Faith 0) and Healing Touch (Faith 1), what they do on the board and how the AI uses them;
+a scroll for every spell, and Invisibility as the AI's way out of a lethal fight."""
 
 import random
 
@@ -203,3 +204,45 @@ def test_a_good_ai_spares_a_dying_friend_with_the_spell_not_the_coin_flip():
     with fixed_d20(1):                                     # a Stabilize would fail on this roll
         ai.take_turn(b, me)
     assert mate.status == "stable"
+
+
+# --- Level 2: the scrolls, and Invisibility as a way out ----------------------------- #
+
+def test_every_spell_has_a_scroll_priced_by_its_level():
+    from gartok import economy
+    for spell in magic.SPELLS.values():
+        scroll = items.get(f"Scroll of {spell.name}")
+        assert scroll is not None and scroll.spell_id == spell.id, spell.id
+        assert scroll.price == economy.scroll_price(spell.level), spell.id
+
+
+def test_a_hurt_caster_a_foe_can_reach_vanishes():
+    b, me, foe = _duel("nature", "invisibility")
+    me.hp = me.hp_max // 4
+    assert ai._try_vanish(b, me)
+    assert me.has_condition("invisible") and me.ap == 0
+
+
+def test_a_healthy_caster_does_not_spend_its_turn_vanishing():
+    b, me, foe = _duel("nature", "invisibility")
+    me.hp = me.hp_max
+    assert not ai._try_vanish(b, me) and not me.has_condition("invisible")
+
+
+def test_no_vanishing_in_an_arena_bout():
+    b, me, foe = _duel("nature", "invisibility")
+    b.lethal = False
+    me.hp = me.hp_max // 4
+    assert not ai._try_vanish(b, me)
+
+
+def test_a_hurt_invisible_unit_makes_for_the_edge_instead_of_striking():
+    from gartok.conditions import Invisible
+    b, me, foe = _duel("nature", "invisibility")
+    me.add_condition(Invisible())
+    me.hp = me.hp_max // 3
+    foe.pos = (6, 5)                                       # right beside it
+    start = me.pos
+    ai.take_turn(b, me)
+    assert me.has_condition("invisible")                   # it never struck
+    assert foe.hp == foe.hp_max and me.pos != start

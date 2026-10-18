@@ -155,9 +155,10 @@ def draw_dialogue(surf, F, rect, d, mpos=(-1, -1)):
     panel(surf, right)
     speakers, options = d.get("speakers", ()), d.get("options", ())
     compact = not _fits(w, right.h - 2 * pad, speakers, options)
-    y = _speakers(surf, F, x, y, w, speakers, mpos, hits["speakers"], compact)
-    hline(surf, x, x + w, y)
-    y += T.S * 2
+    if speakers:
+        y = _speakers(surf, F, x, y, w, speakers, mpos, hits["speakers"], compact)
+        hline(surf, x, x + w, y)
+        y += T.S * 2
     if d.get("result"):
         hits["button"] = _result(surf, F, x, y, w, d["result"], mpos)
     else:
