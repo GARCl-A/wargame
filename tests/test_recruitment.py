@@ -423,7 +423,7 @@ def _taverna(guild, cand, monkeypatch):
     scr.sel = 0
     scr.selected_recruiter = guild.roster[0]
     drawn = []
-    import gartok.taverna_screen as mod
+    import gartok.taverna_draw as mod
     real = mod.text
     monkeypatch.setattr(mod, "text", lambda s, f, t, *a, **k: (drawn.append(t), real(s, f, t, *a, **k))[1])
     scr.draw(surf)
