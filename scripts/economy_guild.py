@@ -1154,10 +1154,68 @@ class Wary(Cautious):
 
 class Balanced(Policy):
     name = "balanced"
-    BUFFER_DAYS = 3
+    BUFFER_DAYS = 1
+    HIDE = "1sqm Hide"
+    DICTIONARY = "Dictionary of Ankarin"
+
+    def __init__(self):
+        super().__init__()
+        self.opened = False
+        self.dictionary_done = False
+        self.mission = None
 
     def buffer(self, sim):
-        return self.stake(sim) + self.BUFFER_DAYS * len(sim.members) * cheapest_food_price()
+        return self.BUFFER_DAYS * len(sim.members) * cheapest_food_price()
+
+    def hp_frac(self, sim):
+        return min(max(0, u.hp) / max(1, u.hp_max) for u in sim.members)
+
+    def has_hide(self, sim):
+        return any(u.count_of(self.HIDE) for u in sim.members)
+
+    def upkeep(self, sim):
+        sim.keep_fed(low=1.0, target=7.0)
+        if not self.dictionary_done:
+            sim.sellable[self.HIDE] = 0
+        if sim.badly_hurt:
+            sim.heal()
+
+    def open(self, sim):
+        for u in sim.members:
+            for item in getattr(u, "_base_inventory", ()):
+                if not items.is_coin(item.name) and not items.is_food(item.name):
+                    sim.sellable[item.name] += item.qty
+        with sim.market() as shop:
+            shop.sell_loot()
+
+    def make_dictionary(self, sim):
+        crafter = max(sim.members, key=lambda u: u.mod_intelligence)
+        holders = [u for u in sim.members if u.count_of(self.HIDE)]
+        if not holders:
+            return False
+        holder = holders[0]
+        sim.goto("library")
+        shop = MarketScreen(None, sim.guild, sim.members, world.node("library"), lambda: None)
+        for name in economy.LIBRARY_SUPPLIES:
+            if not crafter.count_of(name):
+                shop.qty[name] = 1
+                shop.selected = [("stock", name)]
+                shop._buy(crafter, [name])
+        if holder is not crafter:
+            holder.remove_named(self.HIDE, 1)
+            crafter.give_to_pack(self.HIDE)
+        if self.mission is None:
+            self.mission = missions.accept(sim.guild, crafter, missions.LIBRARY_DICTIONARY)
+        mission = self.mission
+        for _ in range(8):
+            sim.guild.crafting_shift(crafter, self.DICTIONARY, 4)
+            if crafter.count_of(self.DICTIONARY):
+                break
+        if missions.can_turn_in(sim.guild, mission):
+            missions.turn_in(sim.guild, mission)
+            self.dictionary_done = True
+        sim.snap()
+        return True
 
     def gear(self, sim):
         """Armor first, then a weapon, then the strongbox, whenever the buffer survives it."""
@@ -1190,15 +1248,35 @@ class Balanced(Policy):
 
     def adventure(self, sim):
         """The risky day this policy prefers once the squad is ready; False if it did none."""
-        if not self.ready(sim):
-            return False
-        sim.hunt()
-        sim.heal()
-        return True
+        if (not self.dictionary_done and not self.has_hide(sim)
+                and sim.champion_beaten and self.hp_frac(sim) >= 0.85
+                and sim.food_days >= 2 and sim.money >= self.buffer(sim)):
+            sim.hunt()
+            sim.sellable[self.HIDE] = 0
+            if sim.hurt:
+                self.lumber_day(sim)
+            return True
+        return False
 
     def step(self, sim):
+        if not self.opened:
+            self.opened = True
+            self.open(sim)
         self.upkeep(sim)
-        self.gear(sim)
+        if not self.dictionary_done and self.has_hide(sim):
+            dict_cost = sum(items.get(n).price for n in economy.LIBRARY_SUPPLIES)
+            if sim.money >= self.buffer(sim) + dict_cost:
+                if self.make_dictionary(sim):
+                    return
+        if not sim.champion_beaten:
+            stake = act.BOUTS["champion"]().entry * len(sim.members)
+            if self.hp_frac(sim) >= 0.85 and sim.money >= stake + self.buffer(sim):
+                if sim.bout("champion") is not None:
+                    if sim.hurt:
+                        self.lumber_day(sim)
+                    return
+        if sim.champion_beaten:
+            self.gear(sim)
         if self.adventure(sim):
             return
         self.level_up_bout(sim, self.BUFFER_DAYS * len(sim.members) * cheapest_food_price())
@@ -1227,6 +1305,7 @@ class Grower(Balanced):
     FIGHTERS = 3
 
     def __init__(self):
+        super().__init__()
         self.visited = -1
 
     def step(self, sim):
@@ -1386,6 +1465,7 @@ class Rush(Human):
     CRAFT_CHUNKS = 8
 
     def __init__(self):
+        super().__init__()
         self.opened = False
         self.dictionary_done = False
         self.mission = None
@@ -1582,8 +1662,7 @@ class Crafter(Policy):
         deal = MarketScreen(None, sim.guild, sim.members, world.node("market"), lambda: None).deal
         for name in crafter.known_recipes:
             recipe = items.CRAFTING_RECIPES.get(name)
-            if recipe is None or not all(economy.freely_buyable(m) and m not in economy.MINE_SUPPLIES
-                                         for m in recipe.materials):
+            if recipe is None or not all(economy.freely_buyable(m) for m in recipe.materials):
                 continue
             margin = (recipe.yield_qty * economy.sell_price(recipe.target, deal)
                       - sum(economy.buy_price(m, deal) for m in recipe.materials))

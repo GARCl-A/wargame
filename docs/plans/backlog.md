@@ -39,23 +39,20 @@ targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
 **Shipped 2026-10-19:** combat camera WASD pan, attack confirmation Enter/F, 11 weapon action vector icons (`icons.py`),
 zero-cost node entry when already present, autosell stores support, crafting roll modifier display, rotten food
 starvation emergency restriction, shelf-life prioritized shared larder consumption, coin rebalance & locked item
-magnet in distribute load, map alert `!` for faction jobs, and AI 2-action tactical lookahead with replanning (`ai.py`).
+magnet in distribute load, map alert `!` for faction jobs, AI 2-action tactical lookahead with replanning (`ai.py`),
+archived 40 campaign playtest logs and extracted human profile (`recordings/2026-10-19/`), calibrated Balanced policy
+and resolved day-30 milestone verdict in economy report.
 
-1. **Feed the 40 campaign playtest logs to the AI and the sim** (*Large*): the author's fresh campaign runs
-   ("Olhos de Odin", 21 days, and "Caneco Mijado", 103 days) are completed and 40 combat logs are archived in
-   `combat_lab/campaign/`. What remains: run `scripts/play_analysis.py` into a fresh profile, re-baseline
-   `scripts/combat_pairs.py` with the new campaign logs (preliminary 10-trial run: Pit Scrapper 77%, Champion 90%,
-   Defend Title 95%, hunts 92%), and tune weapon action frequencies and economy sim thresholds.
-2. **Magic Arc follow-ups** (*Ready to do -> Medium*): scroll acquisition sources (deferred past the arc, author
+1. **Magic Arc follow-ups** (*Ready to do -> Medium*): scroll acquisition sources (deferred past the arc, author
    2026-10-17 & 2026-10-18: scrolls are never sold; they will come from enemy/boss loot and missions for their
    respective factions), sim initiation policy, and tuning after the playtest.
-3. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
+2. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
    magic arc (author 2026-10-17: the playtest and the tuning it feeds).
-4. **Production chain between groups** (*Large*, after magic).
-5. **Talent trees as long as the levels** (*Large*, after magic).
-6. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
-7. **Cooking and temporary meal buffs** (after magic).
-8. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner), once item 1's data is in.
+3. **Production chain between groups** (*Large*, after magic).
+4. **Talent trees as long as the levels** (*Large*, after magic).
+5. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
+6. **Cooking and temporary meal buffs** (after magic).
+7. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
 
 ---
 
@@ -253,14 +250,6 @@ pointed to, not repeated.
   premise held by `test_ai_actions`); Javelin Charge is 1 point after a walk. Left: whether each case comes up
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
   the slimmest), and the old Extreme Shot / Power Shot niches.
-- **Playtest on the current build, then feed it to the AI and the sim.**
-  Order: (1) teach the AI the newer actions (above, done 2026-10-16), so the enemy is worth feeling;
-  (2) play a fresh run on the current build with `record_play` ON (weapon actions, 2-AP actions, magic once in);
-  (3) run `play_analysis.py` over the new run into a fresh profile, and re-baseline `combat_pairs.py` with the
-  new campaign logs; (4) then settle *Economy report prints a FAIL* and the planner with that data. Same pass,
-  the Mine's leftovers in the sim: `Crafter.pick` (`economy_guild.py`) skips every recipe with a
-  `economy.MINE_SUPPLIES` input (Coal, Iron Ore, Stone Brick), so the forge's Coal recipes and Iron Bar go
-  unpriced, and no policy builds the Claim oven.
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
   group's output is another's input, which is the heart of the open-world vision. Lumber feeds a
   carpenter (bows, wagons: the Tanner holds the Shortbow and Light Crossbow until one exists), Coal feeds the
@@ -286,9 +275,6 @@ pointed to, not repeated.
 - **Combat AI benchmarking against player performance.**
   Current benchmark across the 40 campaign logs (`combat_pairs.py`): Scrapper 77% (player 80%), Champion 90% (player 100%), Defend Title 95% (player 100%), hunts 92% (player 92%), road ambushes 72% AI vs 40% player.
   Left: derive combat policy thresholds into `ai.py` (retreating when low HP, objective prioritization in CTF).
-- **Feed the recorded runs to the economy sim.**
-  Thresholds from campaign runs (Caneco Mijado 103d, Olhos de Odin 21d) extracted to `sim_results/human_profile.json`.
-  Left: integrate updated thresholds into `economy_guild.py` and calibrate day-30 milestone with the planner.
 - **Sim policies that find the opportunities themselves.**
   Offers list built (`scripts/economy_offers.py`); left: policy planner that enumerates and prices offers dynamically in copper and days.
 - **Finite stock and a target per item, in every shop.**

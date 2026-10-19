@@ -1,0 +1,14 @@
+{
+  "axe_cash_per_member": 22.34,
+  "axe_food_days": 3.0,
+  "bout_cash_per_member": 11.33,
+  "bout_min_hp": 0.8,
+  "bout_win_rate": 0.86,
+  "food_low_days": 0.0,
+  "food_target_days": 6.0,
+  "hunt_min_hp": 0.98,
+  "hunt_min_level": 0.85,
+  "hunt_win_rate": 0.5,
+  "yard_leave_day": 7.0,
+  "runs": 2
+}

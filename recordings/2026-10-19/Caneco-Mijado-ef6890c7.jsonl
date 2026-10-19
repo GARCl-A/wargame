@@ -1,0 +1,988 @@
+{"e":"session","t":0,"members":3,"money":83,"food_days":0.0,"node":"city"}
+{"e":"order","t":0,"members":3,"money":83,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"city","dest":"smith","hours":0.42,"size":3}
+{"e":"order","t":1530,"members":3,"money":83,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":3}
+{"e":"buy","t":5130,"members":3,"money":51,"food_days":0.0,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"buy","t":5130,"members":3,"money":19,"food_days":0.0,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"sell","t":5130,"members":3,"money":23,"food_days":0.0,"node":"smith","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":5130,"members":3,"money":28,"food_days":0.0,"node":"smith","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":5130,"members":3,"money":28,"food_days":0.0,"node":"smith","item":"Pliers","qty":1,"price":1}
+{"e":"sell","t":5130,"members":3,"money":29,"food_days":0.0,"node":"smith","item":"Map","qty":1,"price":1}
+{"e":"order","t":5130,"members":3,"money":29,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"lumber_yard","hours":0.42,"size":3}
+{"e":"order","t":9720,"members":3,"money":29,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"talent","t":67320,"members":3,"money":43,"food_days":0.0,"unit":"Righromnyx","track":"work","talent":"charismatic"}
+{"e":"talent","t":67320,"members":3,"money":43,"food_days":0.0,"unit":"Nyxuln","track":"work","talent":"carrier"}
+{"e":"order","t":67320,"members":3,"money":43,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"smith","hours":0.85,"size":3}
+{"e":"order","t":71910,"members":3,"money":43,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":3}
+{"e":"buy","t":75510,"members":3,"money":11,"food_days":0.0,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"sell","t":75510,"members":3,"money":15,"food_days":0.0,"node":"smith","item":"Dagger","qty":1,"price":4}
+{"e":"order","t":75510,"members":3,"money":15,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"lumber_yard","hours":0.42,"size":3}
+{"e":"order","t":80100,"members":3,"money":15,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":137700,"members":3,"money":15,"food_days":0.0,"day":2,"roster":[{"name":"Righromnyx","money":3,"hp":7,"hp_max":7,"combat":0,"work":1},{"name":"Nyxuln","money":4,"hp":1,"hp_max":1,"combat":0,"work":1},{"name":"Muntik","money":8,"hp":8,"hp_max":8,"combat":0,"work":0}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":3}]}
+{"e":"talent","t":137700,"members":3,"money":30,"food_days":0.0,"unit":"Muntik","track":"work","talent":"carrier"}
+{"e":"order","t":137700,"members":3,"money":30,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":0.85,"size":3}
+{"e":"order","t":146880,"members":3,"money":30,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":3}
+{"e":"buy","t":150480,"members":3,"money":0,"food_days":3.33,"node":"farm","item":"Potato","qty":10,"price":3,"zone":"pack"}
+{"e":"order","t":150480,"members":3,"money":0,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"lumber_yard","hours":1.7,"size":3}
+{"e":"order","t":159660,"members":3,"money":0,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"tavern","hours":0.85,"size":3}
+{"e":"order","t":165780,"members":3,"money":0,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":3}
+{"e":"recruit","t":169380,"members":3,"money":0,"food_days":3.33,"pitcher":"Righromnyx","candidate":"Othobtikdrix","bail":0,"ok":false}
+{"e":"order","t":169380,"members":3,"money":0,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"lumber_yard","hours":0.85,"size":3}
+{"e":"day","t":175500,"members":3,"money":0,"food_days":2.33,"day":3,"roster":[{"name":"Righromnyx","money":0,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Nyxuln","money":0,"hp":2,"hp_max":2,"combat":0,"work":1},{"name":"Muntik","money":0,"hp":9,"hp_max":9,"combat":0,"work":1}],"rations":7,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":3}]}
+{"e":"order","t":175500,"members":3,"money":0,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":233100,"members":3,"money":15,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":290700,"members":3,"money":15,"food_days":1.33,"day":4,"roster":[{"name":"Righromnyx","money":5,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Nyxuln","money":5,"hp":2,"hp_max":2,"combat":0,"work":1},{"name":"Muntik","money":5,"hp":9,"hp_max":9,"combat":0,"work":1}],"rations":4,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":3}]}
+{"e":"order","t":290700,"members":3,"money":30,"food_days":1.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":348300,"members":3,"money":30,"food_days":0.33,"day":5,"roster":[{"name":"Righromnyx","money":10,"hp":8,"hp_max":8,"combat":0,"work":1},{"name":"Nyxuln","money":10,"hp":2,"hp_max":2,"combat":0,"work":1},{"name":"Muntik","money":10,"hp":9,"hp_max":9,"combat":0,"work":1}],"rations":1,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":3}]}
+{"e":"talent","t":348300,"members":3,"money":45,"food_days":0.33,"unit":"Righromnyx","track":"work","talent":"fixer"}
+{"e":"talent","t":348300,"members":3,"money":45,"food_days":0.33,"unit":"Nyxuln","track":"work","talent":"brisk_hands"}
+{"e":"talent","t":348300,"members":3,"money":45,"food_days":0.33,"unit":"Muntik","track":"work","talent":"brisk_hands"}
+{"e":"order","t":348300,"members":3,"money":45,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"smith","hours":0.85,"size":3}
+{"e":"order","t":352890,"members":3,"money":45,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":3}
+{"e":"order","t":356490,"members":3,"money":45,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"farm","hours":0.42,"size":3}
+{"e":"order","t":364140,"members":3,"money":45,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":3}
+{"e":"buy","t":367740,"members":3,"money":0,"food_days":5.33,"node":"farm","item":"Potato","qty":15,"price":3,"zone":"pack"}
+{"e":"order","t":367740,"members":3,"money":0,"food_days":5.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"lumber_yard","hours":1.7,"size":3}
+{"e":"order","t":376920,"members":3,"money":0,"food_days":5.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":434520,"members":3,"money":0,"food_days":4.33,"day":6,"roster":[{"name":"Righromnyx","money":0,"hp":15,"hp_max":15,"combat":0,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":0,"work":2}],"rations":13,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":3}]}
+{"e":"order","t":434520,"members":3,"money":15,"food_days":4.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":492120,"members":3,"money":30,"food_days":4.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"arena","hours":0.85,"size":3}
+{"e":"order","t":501300,"members":3,"money":30,"food_days":4.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"fight","t":504912,"members":3,"money":21,"food_days":4.33,"hp_frac":1.0,"level_before":0.0,"members_before":3,"money_before":21,"food_days_before":4.33,"node":"arena","kind":"The Pit: Scrapper","won":true,"squad":3,"deaths":0,"foes":3,"xp":3,"level":0.0}
+{"e":"order","t":504912,"members":3,"money":32,"food_days":4.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"fight","t":508536,"members":3,"money":23,"food_days":4.33,"hp_frac":1.0,"level_before":0.0,"members_before":3,"money_before":23,"food_days_before":4.33,"node":"arena","kind":"The Pit: Scrapper","won":true,"squad":3,"deaths":0,"foes":3,"xp":3,"level":0.33}
+{"e":"talent","t":508536,"members":3,"money":23,"food_days":4.33,"unit":"Righromnyx","track":"combat","talent":"strong"}
+{"e":"order","t":508536,"members":3,"money":34,"food_days":4.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"arena","dest":null,"hours":24,"size":3}
+{"e":"day","t":594936,"members":3,"money":34,"food_days":3.33,"day":7,"roster":[{"name":"Righromnyx","money":1,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":23,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Muntik","money":10,"hp":12,"hp_max":12,"combat":0,"work":2}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"arena","size":3}]}
+{"e":"order","t":594936,"members":3,"money":34,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"fight","t":598554,"members":3,"money":25,"food_days":3.33,"hp_frac":1.0,"level_before":0.33,"members_before":3,"money_before":25,"food_days_before":3.33,"node":"arena","kind":"The Pit: Scrapper","won":true,"squad":3,"deaths":0,"foes":3,"xp":3,"level":0.67}
+{"e":"talent","t":598554,"members":3,"money":25,"food_days":3.33,"unit":"Muntik","track":"combat","talent":"strong"}
+{"e":"order","t":598554,"members":3,"money":36,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"fight","t":602178,"members":3,"money":27,"food_days":3.33,"hp_frac":1.0,"level_before":0.67,"members_before":3,"money_before":27,"food_days_before":3.33,"node":"arena","kind":"The Pit: Scrapper","won":true,"squad":3,"deaths":0,"foes":3,"xp":2,"level":1.0}
+{"e":"talent","t":602178,"members":3,"money":38,"food_days":3.33,"unit":"Nyxuln","track":"combat","talent":"strong"}
+{"e":"order","t":602178,"members":3,"money":38,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"day","t":605778,"members":3,"money":38,"food_days":2.33,"day":8,"roster":[{"name":"Righromnyx","money":1,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":27,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":10,"hp":12,"hp_max":12,"combat":1,"work":2}],"rations":7,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"arena","size":3}]}
+{"e":"order","t":605778,"members":3,"money":38,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"tavern","hours":1.7,"size":3}
+{"e":"order","t":614958,"members":3,"money":38,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":3}
+{"e":"recruit","t":618558,"members":3,"money":38,"food_days":2.33,"pitcher":"Righromnyx","candidate":"Raxdorfelir","bail":0,"ok":false}
+{"e":"order","t":618558,"members":3,"money":38,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"lumber_yard","hours":0.85,"size":3}
+{"e":"order","t":624678,"members":3,"money":38,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"order","t":682278,"members":3,"money":53,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":739878,"members":3,"money":53,"food_days":1.33,"day":9,"roster":[{"name":"Righromnyx","money":6,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":32,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2}],"rations":4,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":3}]}
+{"e":"order","t":739878,"members":3,"money":68,"food_days":1.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"arena","hours":0.85,"size":3}
+{"e":"order","t":749058,"members":3,"money":68,"food_days":1.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":3}
+{"e":"fight","t":752682,"members":3,"money":8,"food_days":1.33,"hp_frac":1.0,"level_before":1.0,"members_before":3,"money_before":8,"food_days_before":1.33,"node":"arena","kind":"Challenge the Champion","won":true,"squad":3,"deaths":0,"foes":3,"xp":1,"level":1.0}
+{"e":"recruit","t":752682,"members":3,"money":128,"food_days":1.33,"pitcher":"Righromnyx","candidate":"Adelio Small-Knife","bail":0,"ok":true}
+{"e":"order","t":752682,"members":4,"money":160,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"smith","hours":2.55,"size":4}
+{"e":"order","t":764157,"members":4,"money":160,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":4}
+{"e":"buy","t":767757,"members":4,"money":66,"food_days":1.0,"node":"smith","item":"Broadsword","qty":1,"price":94,"zone":"hand"}
+{"e":"sell","t":767757,"members":4,"money":67,"food_days":1.0,"node":"smith","item":"Cloak","qty":1,"price":1}
+{"e":"order","t":767757,"members":4,"money":67,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"farm","hours":0.64,"size":4}
+{"e":"day","t":779232,"members":4,"money":67,"food_days":0.0,"day":10,"roster":[{"name":"Righromnyx","money":3,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":50,"hp":1,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":14,"hp":9,"hp_max":9,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":4}]}
+{"e":"order","t":779232,"members":4,"money":67,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":782832,"members":4,"money":1,"food_days":5.5,"node":"farm","item":"Potato","qty":22,"price":3,"zone":"pack"}
+{"e":"order","t":782832,"members":4,"money":1,"food_days":5.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"lumber_yard","hours":2.55,"size":4}
+{"e":"order","t":796602,"members":4,"money":1,"food_days":5.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":854202,"members":4,"money":19,"food_days":5.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":911802,"members":4,"money":19,"food_days":4.5,"day":11,"roster":[{"name":"Righromnyx","money":5,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":6,"hp":1,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":4,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":9,"hp_max":9,"combat":1,"work":1}],"rations":18,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":911802,"members":4,"money":37,"food_days":4.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":969402,"members":4,"money":37,"food_days":3.5,"day":12,"roster":[{"name":"Righromnyx","money":10,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":11,"hp":1,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":8,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":8,"hp":9,"hp_max":9,"combat":1,"work":1}],"rations":14,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":969402,"members":4,"money":55,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":1027002,"members":4,"money":73,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1084602,"members":4,"money":73,"food_days":2.5,"day":13,"roster":[{"name":"Righromnyx","money":20,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":21,"hp":1,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":16,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":16,"hp":9,"hp_max":9,"combat":1,"work":1}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1084602,"members":4,"money":91,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1142202,"members":4,"money":91,"food_days":1.5,"day":14,"roster":[{"name":"Righromnyx","money":25,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":26,"hp":1,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":20,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":20,"hp":9,"hp_max":9,"combat":1,"work":1}],"rations":6,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1142202,"members":4,"money":110,"food_days":1.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":1199802,"members":4,"money":129,"food_days":1.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1257402,"members":4,"money":129,"food_days":0.5,"day":15,"roster":[{"name":"Righromnyx","money":35,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":36,"hp":1,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":28,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":30,"hp":9,"hp_max":9,"combat":1,"work":1}],"rations":2,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1257402,"members":4,"money":148,"food_days":0.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1315002,"members":4,"money":148,"food_days":0.0,"day":16,"roster":[{"name":"Righromnyx","money":40,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":41,"hp":1,"hp_max":4,"combat":1,"work":2},{"name":"Muntik","money":32,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":35,"hp":7,"hp_max":7,"combat":1,"work":1}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"talent","t":1315002,"members":4,"money":167,"food_days":0.0,"unit":"Adelio Small-Knife","track":"work","talent":"charismatic"}
+{"e":"order","t":1315002,"members":4,"money":167,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.7,"size":4}
+{"e":"order","t":1333362,"members":4,"money":167,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":1336962,"members":4,"money":83,"food_days":7.0,"node":"farm","item":"Potato","qty":28,"price":3,"zone":"pack"}
+{"e":"order","t":1336962,"members":4,"money":83,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"sell","t":1340562,"members":4,"money":101,"food_days":7.0,"node":"farm","item":"Axe","qty":1,"price":18}
+{"e":"order","t":1340562,"members":4,"money":101,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"market","hours":3.4,"size":4}
+{"e":"order","t":1358922,"members":4,"money":101,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"market","dest":null,"hours":1,"size":4}
+{"e":"buy","t":1362522,"members":4,"money":99,"food_days":7.0,"node":"market","item":"Torch","qty":1,"price":2,"zone":"offhand"}
+{"e":"buy","t":1362522,"members":4,"money":97,"food_days":7.0,"node":"market","item":"Torch","qty":1,"price":2,"zone":"offhand"}
+{"e":"order","t":1362522,"members":4,"money":97,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"market","dest":"tanner","hours":1.27,"size":4}
+{"e":"order","t":1369407,"members":4,"money":97,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"tanner","node":"tanner","dest":null,"hours":1,"size":4}
+{"e":"buy","t":1373007,"members":4,"money":42,"food_days":7.0,"node":"tanner","item":"Studded Leather","qty":1,"price":55,"zone":"armor"}
+{"e":"order","t":1373007,"members":4,"money":42,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tanner","dest":"tavern","hours":0.64,"size":4}
+{"e":"order","t":1379892,"members":4,"money":42,"food_days":7.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":4}
+{"e":"day","t":1383492,"members":4,"money":42,"food_days":6.0,"day":17,"roster":[{"name":"Righromnyx","money":15,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":9,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":18,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":24,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"tavern","size":4}]}
+{"e":"recruit","t":1383492,"members":4,"money":42,"food_days":6.0,"pitcher":"Righromnyx","candidate":"Maimbexquen","bail":0,"ok":false}
+{"e":"recruit","t":1383492,"members":4,"money":42,"food_days":6.0,"pitcher":"Adelio Small-Knife","candidate":"Maimbexquen","bail":0,"ok":false}
+{"e":"recruit","t":1383492,"members":4,"money":42,"food_days":6.0,"pitcher":"Adelio Small-Knife","candidate":"Torcazskel","bail":0,"ok":false}
+{"e":"recruit","t":1383492,"members":4,"money":42,"food_days":6.0,"pitcher":"Righromnyx","candidate":"Torcazskel","bail":0,"ok":false}
+{"e":"order","t":1383492,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.27,"size":4}
+{"e":"order","t":1392672,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":4}
+{"e":"order","t":1396272,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"tanner","hours":1.27,"size":4}
+{"e":"order","t":1403157,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"tanner","node":"tanner","dest":null,"hours":1,"size":4}
+{"e":"order","t":1406757,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tanner","dest":"smith","hours":0.38,"size":4}
+{"e":"order","t":1408134,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":4}
+{"e":"order","t":1411734,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"arena","hours":0.64,"size":4}
+{"e":"order","t":1423209,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":4}
+{"e":"order","t":1426809,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"lumber_yard","hours":2.55,"size":4}
+{"e":"order","t":1440579,"members":4,"money":42,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1498179,"members":4,"money":42,"food_days":5.0,"day":18,"roster":[{"name":"Righromnyx","money":15,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":9,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":18,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":20,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1498179,"members":4,"money":60,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1555779,"members":4,"money":60,"food_days":4.0,"day":19,"roster":[{"name":"Righromnyx","money":20,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":14,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":22,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":16,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1555779,"members":4,"money":78,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":1613379,"members":4,"money":96,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1670979,"members":4,"money":96,"food_days":3.0,"day":20,"roster":[{"name":"Righromnyx","money":30,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":24,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":30,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":12,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":12,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1670979,"members":4,"money":114,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1728579,"members":4,"money":114,"food_days":2.0,"day":21,"roster":[{"name":"Righromnyx","money":35,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":29,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":34,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":16,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":8,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1728579,"members":4,"money":132,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":1786179,"members":4,"money":150,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"smith","hours":1.27,"size":4}
+{"e":"order","t":1793064,"members":4,"money":150,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":4}
+{"e":"buy","t":1796664,"members":4,"money":6,"food_days":2.0,"node":"smith","item":"Chainmail","qty":1,"price":144,"zone":"armor"}
+{"e":"order","t":1796664,"members":4,"money":6,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"lumber_yard","hours":0.64,"size":4}
+{"e":"order","t":1803549,"members":4,"money":6,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":1861149,"members":4,"money":6,"food_days":1.0,"day":22,"roster":[{"name":"Righromnyx","money":2,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":1,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":2,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":1,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":4,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":1861149,"members":4,"money":24,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.27,"size":4}
+{"e":"order","t":1874919,"members":4,"money":24,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":1878519,"members":4,"money":0,"food_days":3.0,"node":"farm","item":"Potato","qty":8,"price":3,"zone":"pack"}
+{"e":"order","t":1878519,"members":4,"money":0,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"tavern","hours":2.55,"size":4}
+{"e":"order","t":1892289,"members":4,"money":0,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":4}
+{"e":"order","t":1895889,"members":4,"money":0,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"lumber_yard","hours":1.27,"size":4}
+{"e":"day","t":1905069,"members":4,"money":0,"food_days":2.0,"day":23,"roster":[{"name":"Righromnyx","money":0,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":8,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":4}]}
+{"e":"order","t":1905069,"members":4,"money":0,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":1962669,"members":4,"money":18,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":2020269,"members":4,"money":18,"food_days":1.0,"day":24,"roster":[{"name":"Righromnyx","money":5,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":5,"hp":3,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":4,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":4,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":2020269,"members":4,"money":36,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":2077869,"members":4,"money":36,"food_days":0.0,"day":25,"roster":[{"name":"Righromnyx","money":10,"hp":7,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":10,"hp":1,"hp_max":2,"combat":1,"work":2},{"name":"Muntik","money":8,"hp":8,"hp_max":8,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":8,"hp":5,"hp_max":5,"combat":1,"work":2}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":2077869,"members":4,"money":54,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.27,"size":4}
+{"e":"order","t":2091639,"members":4,"money":54,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":2095239,"members":4,"money":0,"food_days":4.5,"node":"farm","item":"Potato","qty":18,"price":3,"zone":"pack"}
+{"e":"order","t":2095239,"members":4,"money":0,"food_days":4.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"farm","dest":null,"hours":8.0,"size":4}
+{"e":"order","t":2124039,"members":4,"money":0,"food_days":4.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"farm","dest":null,"hours":8.0,"size":4}
+{"e":"order","t":2152839,"members":4,"money":0,"food_days":4.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"arena","hours":2.55,"size":4}
+{"e":"day","t":2162019,"members":4,"money":0,"food_days":3.5,"day":26,"roster":[{"name":"Righromnyx","money":0,"hp":9,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":14,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"farm","size":4}]}
+{"e":"order","t":2171199,"members":4,"money":0,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":4}
+{"e":"talent","t":2174799,"members":4,"money":0,"food_days":3.5,"unit":"Zathalald","track":"combat","talent":"strong"}
+{"e":"talent","t":2174799,"members":4,"money":0,"food_days":3.5,"unit":"Zathalald","track":"work","talent":"charismatic"}
+{"e":"talent","t":2174799,"members":4,"money":0,"food_days":3.5,"unit":"Zathalald","track":"work","talent":"clever"}
+{"e":"talent","t":2174799,"members":4,"money":0,"food_days":3.5,"unit":"Zathalald","track":"work","talent":"crafter"}
+{"e":"fight","t":2174817,"members":4,"money":0,"food_days":3.5,"hp_frac":0.6,"level_before":1.0,"members_before":4,"money_before":0,"food_days_before":3.5,"node":"arena","kind":"Defend the Title","won":true,"squad":1,"deaths":0,"foes":1,"xp":1,"level":1.0}
+{"e":"order","t":2174817,"members":4,"money":90,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"prison","hours":2.55,"size":4}
+{"e":"order","t":2188587,"members":4,"money":90,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":4}
+{"e":"order","t":2192187,"members":4,"money":90,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"prison","dest":null,"hours":24,"size":4}
+{"e":"day","t":2278587,"members":4,"money":90,"food_days":2.5,"day":27,"roster":[{"name":"Righromnyx","money":90,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"prison","size":4}]}
+{"e":"order","t":2278587,"members":4,"money":90,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"road","hours":1.27,"size":4}
+{"e":"order","t":2301537,"members":4,"money":90,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"road","dest":"wilds","hours":7.65,"size":4}
+{"e":"order","t":2329077,"members":4,"money":90,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"hunt","node":"wilds","dest":null,"hours":1,"size":4}
+{"e":"day","t":2347077,"members":4,"money":90,"food_days":1.5,"day":28,"roster":[{"name":"Righromnyx","money":90,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":6,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":4}]}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Torbrae","track":"work","talent":"clever"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Torbrae","track":"work","talent":"crafter"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Tasulntiktor","track":"combat","talent":"alert"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Tasulntiktor","track":"work","talent":"clever"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Tasulntiktor","track":"work","talent":"crafter"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Tasulntiktor","track":"work","talent":"blacksmith"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Tasulntiktor","track":"work","talent":"apothecary"}
+{"e":"talent","t":2347077,"members":4,"money":90,"food_days":1.5,"unit":"Tasulntiktor","track":"work","talent":"charismatic"}
+{"e":"fight","t":2347089,"members":4,"money":90,"food_days":1.5,"hp_frac":1.0,"level_before":1.0,"members_before":4,"money_before":90,"food_days_before":1.5,"node":"wilds","kind":"hunt","won":true,"squad":4,"deaths":0,"foes":2,"xp":1,"level":1.0}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Bexkethlys","track":"combat","talent":"agile"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Bexkethlys","track":"work","talent":"clever"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Bexkethlys","track":"work","talent":"charismatic"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Bexkethlys","track":"work","talent":"linguist"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Bexkethlys","track":"work","talent":"fixer"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Bexkethlys","track":"work","talent":"carrier"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Felhrom","track":"work","talent":"carrier"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Felhrom","track":"work","talent":"clever"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Felhrom","track":"work","talent":"charismatic"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Felhrom","track":"work","talent":"linguist"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Felhrom","track":"work","talent":"piecework"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Felhrom","track":"work","talent":"fixer"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Ashgarorn","track":"combat","talent":"tough"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Ashgarorn","track":"combat","talent":"strong"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Ashgarorn","track":"combat","talent":"hardy"}
+{"e":"talent","t":2354289,"members":4,"money":90,"food_days":1.5,"unit":"Ashgarorn","track":"work","talent":"charismatic"}
+{"e":"fight","t":2354319,"members":4,"money":90,"food_days":1.5,"hp_frac":1.0,"level_before":1.0,"members_before":4,"money_before":90,"food_days_before":1.5,"node":"wilds","kind":"hunt","won":true,"squad":4,"deaths":0,"foes":4,"xp":4,"level":1.0}
+{"e":"order","t":2361519,"members":4,"money":90,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"wilds","dest":null,"hours":40.01,"size":4}
+{"e":"day","t":2505540,"members":4,"money":90,"food_days":2.75,"day":29,"roster":[{"name":"Righromnyx","money":90,"hp":11,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":11,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":4}]}
+{"e":"order","t":2505540,"members":4,"money":90,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"wilds","dest":null,"hours":8.0,"size":4}
+{"e":"day","t":2534340,"members":4,"money":90,"food_days":1.75,"day":30,"roster":[{"name":"Righromnyx","money":90,"hp":12,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2}],"rations":7,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":4}]}
+{"e":"order","t":2534340,"members":4,"money":90,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"wilds","dest":null,"hours":8.0,"size":4}
+{"e":"order","t":2563140,"members":4,"money":90,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds","dest":"tavern","hours":7.65,"size":4}
+{"e":"day","t":2609040,"members":4,"money":90,"food_days":0.75,"day":31,"roster":[{"name":"Righromnyx","money":90,"hp":13,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":5,"hp_max":5,"combat":1,"work":2}],"rations":3,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"road","size":4}]}
+{"e":"order","t":2613630,"members":4,"money":90,"food_days":0.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":4}
+{"e":"recruit","t":2617230,"members":4,"money":90,"food_days":0.75,"pitcher":"Righromnyx","candidate":"Ashgarpyrgar","bail":0,"ok":false}
+{"e":"recruit","t":2617230,"members":4,"money":90,"food_days":0.75,"pitcher":"Adelio Small-Knife","candidate":"Ashgarpyrgar","bail":0,"ok":false}
+{"e":"recruit","t":2617230,"members":4,"money":90,"food_days":0.75,"pitcher":"Righromnyx","candidate":"Surkaeldralka","bail":0,"ok":true}
+{"e":"recruit","t":2617230,"members":5,"money":113,"food_days":0.6,"pitcher":"Surkaeldralka","candidate":"Ashgarpyrgar","bail":0,"ok":false}
+{"e":"order","t":2617230,"members":5,"money":113,"food_days":0.6,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.27,"size":5}
+{"e":"order","t":2626410,"members":5,"money":113,"food_days":0.6,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":5}
+{"e":"order","t":2630010,"members":5,"money":113,"food_days":0.6,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"library","hours":1.27,"size":5}
+{"e":"order","t":2639190,"members":5,"money":113,"food_days":0.6,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"library","dest":"farm","hours":1.27,"size":5}
+{"e":"order","t":2652960,"members":5,"money":113,"food_days":0.6,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":5}
+{"e":"buy","t":2656560,"members":5,"money":23,"food_days":6.6,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"sell","t":2656560,"members":5,"money":27,"food_days":6.6,"node":"farm","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":2656560,"members":5,"money":32,"food_days":6.6,"node":"farm","item":"Light Pick","qty":1,"price":5}
+{"e":"sell","t":2656560,"members":5,"money":35,"food_days":6.4,"node":"farm","item":"Rotten Food","qty":1,"price":1}
+{"e":"sell","t":2656560,"members":5,"money":35,"food_days":6.4,"node":"farm","item":"Shovel","qty":1,"price":2}
+{"e":"sell","t":2656560,"members":5,"money":68,"food_days":6.2,"node":"farm","item":"Semi-precious Gemstone","qty":1,"price":32}
+{"e":"sell","t":2656560,"members":5,"money":68,"food_days":6.2,"node":"farm","item":"Rotten Food","qty":1,"price":1}
+{"e":"sell","t":2656560,"members":5,"money":69,"food_days":6.0,"node":"farm","item":"Rotten Food","qty":1,"price":1}
+{"e":"order","t":2656560,"members":5,"money":69,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"smith","hours":2.55,"size":5}
+{"e":"order","t":2668035,"members":5,"money":69,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":5}
+{"e":"buy","t":2671635,"members":5,"money":37,"food_days":6.0,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"sell","t":2671635,"members":5,"money":40,"food_days":6.0,"node":"smith","item":"Quarterstaff","qty":1,"price":3}
+{"e":"order","t":2671635,"members":5,"money":40,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"lumber_yard","hours":0.64,"size":5}
+{"e":"day","t":2678520,"members":5,"money":40,"food_days":5.0,"day":32,"roster":[{"name":"Righromnyx","money":28,"hp":13,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":5,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":7,"hp":4,"hp_max":4,"combat":0,"work":0}],"rations":25,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":5}]}
+{"e":"order","t":2678520,"members":5,"money":40,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"talent","t":2736120,"members":5,"money":63,"food_days":5.0,"unit":"Surkaeldralka","track":"work","talent":"charismatic"}
+{"e":"order","t":2736120,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"day","t":2793720,"members":5,"money":63,"food_days":4.0,"day":33,"roster":[{"name":"Righromnyx","money":33,"hp":13,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":5,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":9,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":12,"hp":4,"hp_max":4,"combat":0,"work":1}],"rations":20,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"order","t":2793720,"members":5,"money":86,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"day","t":2851320,"members":5,"money":86,"food_days":3.0,"day":34,"roster":[{"name":"Righromnyx","money":38,"hp":13,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":10,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":13,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":8,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":17,"hp":4,"hp_max":4,"combat":0,"work":1}],"rations":15,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"order","t":2851320,"members":5,"money":109,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"order","t":2908920,"members":5,"money":132,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"day","t":2966520,"members":5,"money":132,"food_days":2.0,"day":35,"roster":[{"name":"Righromnyx","money":48,"hp":13,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":20,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":21,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":16,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":27,"hp":4,"hp_max":4,"combat":0,"work":1}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"talent","t":2966520,"members":5,"money":155,"food_days":2.0,"unit":"Surkaeldralka","track":"work","talent":"fixer"}
+{"e":"order","t":2966520,"members":5,"money":155,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"lumber_yard","dest":null,"hours":8.0,"size":5}
+{"e":"order","t":2995320,"members":5,"money":155,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"lumber_yard","dest":null,"hours":8.0,"size":5}
+{"e":"day","t":3024120,"members":5,"money":155,"food_days":1.0,"day":36,"roster":[{"name":"Righromnyx","money":53,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":25,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":25,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":20,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":32,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":5,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"order","t":3024120,"members":5,"money":155,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"order","t":3081720,"members":5,"money":178,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"day","t":3139320,"members":5,"money":178,"food_days":0.0,"day":37,"roster":[{"name":"Righromnyx","money":58,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":30,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":29,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":24,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":37,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"order","t":3139320,"members":5,"money":201,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.7,"size":5}
+{"e":"order","t":3157680,"members":5,"money":201,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":5}
+{"e":"buy","t":3161280,"members":5,"money":111,"food_days":6.0,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"order","t":3161280,"members":5,"money":111,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"tavern","hours":3.4,"size":5}
+{"e":"order","t":3179640,"members":5,"money":111,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":5}
+{"e":"recruit","t":3183240,"members":5,"money":111,"food_days":6.0,"pitcher":"Righromnyx","candidate":"Drofelquenim","bail":0,"ok":false}
+{"e":"recruit","t":3183240,"members":5,"money":111,"food_days":6.0,"pitcher":"Adelio Small-Knife","candidate":"Drofelquenim","bail":0,"ok":false}
+{"e":"recruit","t":3183240,"members":5,"money":111,"food_days":6.0,"pitcher":"Surkaeldralka","candidate":"Drofelquenim","bail":0,"ok":false}
+{"e":"order","t":3183240,"members":5,"money":111,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.7,"size":5}
+{"e":"order","t":3195480,"members":5,"money":111,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":5}
+{"e":"day","t":3199080,"members":5,"money":111,"food_days":5.0,"day":38,"roster":[{"name":"Righromnyx","money":33,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":19,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":19,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":20,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":20,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":25,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"prison","size":5}]}
+{"e":"order","t":3199080,"members":5,"money":111,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"apothecary","hours":1.7,"size":5}
+{"e":"order","t":3208260,"members":5,"money":111,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":5}
+{"e":"order","t":3240660,"members":5,"money":108,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"apothecary","dest":"arena","hours":0.64,"size":5}
+{"e":"order","t":3252135,"members":5,"money":108,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":5}
+{"e":"fight","t":3255765,"members":5,"money":105,"food_days":5.0,"hp_frac":1.0,"level_before":1.0,"members_before":5,"money_before":105,"food_days_before":5.0,"node":"arena","kind":"The Pit: Scrapper","won":true,"squad":1,"deaths":0,"foes":3,"xp":0,"level":0.8}
+{"e":"order","t":3255765,"members":5,"money":116,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"arena","dest":null,"hours":8.0,"size":5}
+{"e":"day","t":3284565,"members":5,"money":116,"food_days":4.0,"day":39,"roster":[{"name":"Righromnyx","money":38,"hp":5,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":19,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":19,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":20,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":20,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":20,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"arena","size":5}]}
+{"e":"order","t":3284565,"members":5,"money":116,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"arena","dest":null,"hours":16.0,"size":5}
+{"e":"order","t":3342165,"members":5,"money":116,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"city","hours":2.55,"size":5}
+{"e":"order","t":3351345,"members":5,"money":116,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"bank","node":"city","dest":null,"hours":1,"size":5}
+{"e":"asset","t":3354945,"members":5,"money":26,"food_days":4.0,"what":"bank_chest"}
+{"e":"order","t":3354945,"members":5,"money":26,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"city","dest":"road","hours":5.1,"size":5}
+{"e":"day","t":3373305,"members":5,"money":26,"food_days":3.0,"day":40,"roster":[{"name":"Righromnyx","money":9,"hp":15,"hp_max":15,"combat":1,"work":2},{"name":"Nyxuln","money":4,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":4,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":5,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":15,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":5}]}
+{"e":"order","t":3373305,"members":5,"money":26,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"road","dest":"wilds","hours":7.65,"size":5}
+{"e":"order","t":3400845,"members":5,"money":26,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"hunt","node":"wilds","dest":null,"hours":1,"size":5}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Oblys","track":"combat","talent":"tough"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Oblys","track":"combat","talent":"alert"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Oblys","track":"work","talent":"carrier"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Oblys","track":"work","talent":"clever"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Morobven","track":"work","talent":"charismatic"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Morobven","track":"work","talent":"negotiator"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Morobven","track":"work","talent":"clever"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Morobven","track":"work","talent":"provisioner"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Bexfelob","track":"combat","talent":"alert"}
+{"e":"talent","t":3411645,"members":5,"money":26,"food_days":3.0,"unit":"Bexfelob","track":"combat","talent":"strong"}
+{"e":"fight","t":3411669,"members":5,"money":26,"food_days":3.0,"hp_frac":1.0,"level_before":0.8,"members_before":5,"money_before":26,"food_days_before":3.0,"node":"wilds","kind":"hunt","won":true,"squad":5,"deaths":0,"foes":5,"xp":6,"level":1.0}
+{"e":"talent","t":3411669,"members":5,"money":26,"food_days":3.0,"unit":"Righromnyx","track":"combat","talent":"sure_strike"}
+{"e":"order","t":3433269,"members":5,"money":26,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"wilds","dest":null,"hours":40,"size":5}
+{"e":"day","t":3577269,"members":5,"money":26,"food_days":2.0,"day":42,"roster":[{"name":"Righromnyx","money":9,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":4,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":4,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":5,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":5}]}
+{"e":"order","t":3577269,"members":5,"money":26,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds","dest":"arena","hours":7.65,"size":5}
+{"e":"order","t":3618579,"members":5,"money":26,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":5}
+{"e":"talent","t":3622179,"members":5,"money":26,"food_days":2.0,"unit":"Dunpyrirvok","track":"work","talent":"charismatic"}
+{"e":"talent","t":3622179,"members":5,"money":26,"food_days":2.0,"unit":"Dunpyrirvok","track":"work","talent":"fixer"}
+{"e":"talent","t":3622179,"members":5,"money":26,"food_days":2.0,"unit":"Dunpyrirvok","track":"work","talent":"carrier"}
+{"e":"talent","t":3622179,"members":5,"money":26,"food_days":2.0,"unit":"Dunpyrirvok","track":"work","talent":"brisk_hands"}
+{"e":"talent","t":3622179,"members":5,"money":26,"food_days":2.0,"unit":"Dunpyrirvok","track":"work","talent":"piecework"}
+{"e":"talent","t":3622179,"members":5,"money":26,"food_days":2.0,"unit":"Dunpyrirvok","track":"work","talent":"steady_pace"}
+{"e":"fight","t":3622209,"members":5,"money":26,"food_days":2.0,"hp_frac":1.0,"level_before":2.0,"members_before":5,"money_before":26,"food_days_before":2.0,"node":"arena","kind":"Defend the Title","won":true,"squad":1,"deaths":0,"foes":1,"xp":0,"level":1.0}
+{"e":"order","t":3622209,"members":5,"money":116,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"lumber_yard","hours":2.55,"size":5}
+{"e":"day","t":3631389,"members":5,"money":116,"food_days":1.0,"day":43,"roster":[{"name":"Righromnyx","money":99,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":4,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":4,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":4,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":5,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":5,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"arena","size":5}]}
+{"e":"order","t":3635979,"members":5,"money":116,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"order","t":3693579,"members":5,"money":139,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"day","t":3751179,"members":5,"money":139,"food_days":0.0,"day":44,"roster":[{"name":"Righromnyx","money":104,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":9,"hp":2,"hp_max":2,"combat":1,"work":2},{"name":"Muntik","money":8,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":8,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":10,"hp":2,"hp_max":2,"combat":0,"work":2}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"order","t":3751179,"members":5,"money":162,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.27,"size":5}
+{"e":"order","t":3764949,"members":5,"money":162,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":5}
+{"e":"buy","t":3768549,"members":5,"money":72,"food_days":6.0,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"order","t":3768549,"members":5,"money":72,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"apothecary","hours":2.55,"size":5}
+{"e":"order","t":3780024,"members":5,"money":72,"food_days":6.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":5}
+{"e":"day","t":3812424,"members":5,"money":63,"food_days":5.0,"day":45,"roster":[{"name":"Righromnyx","money":40,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":5,"hp":2,"hp_max":2,"combat":1,"work":2},{"name":"Muntik","money":6,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":6,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":6,"hp":2,"hp_max":2,"combat":0,"work":2}],"rations":25,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"apothecary","size":5}]}
+{"e":"order","t":3812424,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"apothecary","dest":"tavern","hours":0.64,"size":5}
+{"e":"order","t":3819309,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":5}
+{"e":"order","t":3822909,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.27,"size":5}
+{"e":"order","t":3832089,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":5}
+{"e":"order","t":3835689,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"lumber_yard","hours":1.27,"size":5}
+{"e":"order","t":3844869,"members":5,"money":63,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"day","t":3902469,"members":5,"money":63,"food_days":4.0,"day":46,"roster":[{"name":"Righromnyx","money":40,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":5,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":6,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":6,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":6,"hp":6,"hp_max":6,"combat":0,"work":2}],"rations":20,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":5}]}
+{"e":"order","t":3902469,"members":5,"money":86,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":5}
+{"e":"order","t":3960069,"members":5,"money":109,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"prison","hours":1.27,"size":5}
+{"e":"order","t":3969249,"members":5,"money":109,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":5}
+{"e":"recruit","t":3972849,"members":5,"money":17,"food_days":4.0,"pitcher":"Righromnyx","candidate":"Rurigtikquen","bail":92,"ok":true}
+{"e":"order","t":3972849,"members":6,"money":45,"food_days":3.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"smith","hours":1.27,"size":6}
+{"e":"day","t":3977439,"members":6,"money":45,"food_days":2.33,"day":47,"roster":[{"name":"Righromnyx","money":0,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":3,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":14,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":28,"hp":5,"hp_max":5,"combat":0,"work":0}],"rations":14,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"prison","size":6}]}
+{"e":"order","t":3979734,"members":6,"money":45,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":6}
+{"e":"buy","t":3983334,"members":6,"money":13,"food_days":2.33,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"sell","t":3983334,"members":6,"money":21,"food_days":2.33,"node":"smith","item":"Dagger","qty":2,"price":4}
+{"e":"sell","t":3983334,"members":6,"money":29,"food_days":2.33,"node":"smith","item":"Dagger","qty":2,"price":4}
+{"e":"sell","t":3983334,"members":6,"money":33,"food_days":2.33,"node":"smith","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":3983334,"members":6,"money":34,"food_days":2.33,"node":"smith","item":"Cloak","qty":1,"price":1}
+{"e":"sell","t":3983334,"members":6,"money":35,"food_days":2.33,"node":"smith","item":"Scissors","qty":1,"price":1}
+{"e":"sell","t":3983334,"members":6,"money":40,"food_days":2.33,"node":"smith","item":"Hatchet","qty":1,"price":5}
+{"e":"order","t":3983334,"members":6,"money":40,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"city","hours":0.64,"size":6}
+{"e":"order","t":3985629,"members":6,"money":40,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"bank","node":"city","dest":null,"hours":1,"size":6}
+{"e":"order","t":3989229,"members":6,"money":40,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"city","dest":"lumber_yard","hours":1.27,"size":6}
+{"e":"order","t":3993819,"members":6,"money":40,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":6}
+{"e":"talent","t":4051419,"members":6,"money":68,"food_days":2.33,"unit":"Rurigtikquen","track":"work","talent":"charismatic"}
+{"e":"order","t":4051419,"members":6,"money":68,"food_days":2.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":6}
+{"e":"day","t":4109019,"members":6,"money":68,"food_days":1.33,"day":48,"roster":[{"name":"Righromnyx","money":14,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":6,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":18,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":8,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":5,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":17,"hp":5,"hp_max":5,"combat":0,"work":1}],"rations":8,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":6}]}
+{"e":"order","t":4109019,"members":6,"money":96,"food_days":1.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":6}
+{"e":"day","t":4166619,"members":6,"money":96,"food_days":0.33,"day":49,"roster":[{"name":"Righromnyx","money":19,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":11,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":22,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":12,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":10,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":22,"hp":5,"hp_max":5,"combat":0,"work":1}],"rations":2,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":6}]}
+{"e":"order","t":4166619,"members":6,"money":124,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":6}
+{"e":"order","t":4224219,"members":6,"money":152,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":6}
+{"e":"day","t":4281819,"members":6,"money":152,"food_days":0.0,"day":50,"roster":[{"name":"Righromnyx","money":29,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":21,"hp":4,"hp_max":4,"combat":1,"work":2},{"name":"Muntik","money":30,"hp":10,"hp_max":10,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":20,"hp":7,"hp_max":7,"combat":1,"work":2},{"name":"Surkaeldralka","money":20,"hp":4,"hp_max":4,"combat":0,"work":2},{"name":"Rurigtikquen","money":32,"hp":5,"hp_max":5,"combat":0,"work":1}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":6}]}
+{"e":"talent","t":4281819,"members":6,"money":180,"food_days":0.0,"unit":"Rurigtikquen","track":"work","talent":"fixer"}
+{"e":"order","t":4281819,"members":6,"money":180,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.7,"size":6}
+{"e":"order","t":4300179,"members":6,"money":180,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":6}
+{"e":"buy","t":4303779,"members":6,"money":90,"food_days":5.0,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"order","t":4303779,"members":6,"money":90,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"tavern","hours":3.4,"size":6}
+{"e":"day","t":4322139,"members":6,"money":90,"food_days":4.0,"day":51,"roster":[{"name":"Righromnyx","money":15,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":15,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":15,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":15,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":15,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":24,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":6}]}
+{"e":"order","t":4322139,"members":6,"money":90,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":6}
+{"e":"recruit","t":4325739,"members":6,"money":90,"food_days":4.0,"pitcher":"Righromnyx","candidate":"Felorn","bail":0,"ok":false}
+{"e":"recruit","t":4325739,"members":6,"money":90,"food_days":4.0,"pitcher":"Surkaeldralka","candidate":"Felorn","bail":0,"ok":false}
+{"e":"recruit","t":4325739,"members":6,"money":90,"food_days":4.0,"pitcher":"Adelio Small-Knife","candidate":"Felorn","bail":0,"ok":false}
+{"e":"recruit","t":4325739,"members":6,"money":90,"food_days":4.0,"pitcher":"Rurigtikquen","candidate":"Felorn","bail":0,"ok":true}
+{"e":"order","t":4325739,"members":7,"money":114,"food_days":3.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.27,"size":7}
+{"e":"order","t":4334919,"members":7,"money":114,"food_days":3.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":7}
+{"e":"order","t":4338519,"members":7,"money":114,"food_days":3.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"smith","hours":1.27,"size":7}
+{"e":"order","t":4345404,"members":7,"money":114,"food_days":3.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":7}
+{"e":"sell","t":4349004,"members":7,"money":115,"food_days":3.43,"node":"smith","item":"Pliers","qty":1,"price":1}
+{"e":"buy","t":4349004,"members":7,"money":83,"food_days":3.43,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"sell","t":4349004,"members":7,"money":87,"food_days":3.43,"node":"smith","item":"Dagger","qty":1,"price":4}
+{"e":"order","t":4349004,"members":7,"money":87,"food_days":3.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"lumber_yard","hours":0.64,"size":7}
+{"e":"order","t":4355889,"members":7,"money":87,"food_days":3.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":7}
+{"e":"day","t":4413489,"members":7,"money":87,"food_days":2.43,"day":52,"roster":[{"name":"Righromnyx","money":10,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":11,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":11,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":11,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":11,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":11,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":22,"hp":8,"hp_max":8,"combat":0,"work":0}],"rations":17,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":7}]}
+{"e":"talent","t":4413489,"members":7,"money":120,"food_days":2.43,"unit":"Felorn","track":"work","talent":"carrier"}
+{"e":"order","t":4413489,"members":7,"money":120,"food_days":2.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":7}
+{"e":"order","t":4471089,"members":7,"money":153,"food_days":2.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":7}
+{"e":"day","t":4528689,"members":7,"money":153,"food_days":1.43,"day":53,"roster":[{"name":"Righromnyx","money":20,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":21,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":19,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":19,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":21,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":21,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":32,"hp":8,"hp_max":8,"combat":0,"work":1}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":7}]}
+{"e":"order","t":4528689,"members":7,"money":186,"food_days":1.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":7}
+{"e":"day","t":4586289,"members":7,"money":186,"food_days":0.43,"day":54,"roster":[{"name":"Righromnyx","money":25,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":26,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":23,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":23,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":26,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":26,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":37,"hp":8,"hp_max":8,"combat":0,"work":1}],"rations":3,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":7}]}
+{"e":"order","t":4586289,"members":7,"money":219,"food_days":0.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":7}
+{"e":"talent","t":4643889,"members":7,"money":252,"food_days":0.43,"unit":"Felorn","track":"work","talent":"brisk_hands"}
+{"e":"order","t":4643889,"members":7,"money":252,"food_days":0.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.27,"size":7}
+{"e":"order","t":4657659,"members":7,"money":252,"food_days":0.43,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":7}
+{"e":"buy","t":4661259,"members":7,"money":162,"food_days":4.71,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"buy","t":4661259,"members":7,"money":112,"food_days":6.14,"node":"farm","item":"Meat","qty":10,"price":5,"zone":"pack"}
+{"e":"buy","t":4661259,"members":7,"money":94,"food_days":6.14,"node":"farm","item":"Salt","qty":6,"price":3,"zone":"pack"}
+{"e":"order","t":4661259,"members":7,"money":94,"food_days":6.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"lumber_yard","hours":2.55,"size":7}
+{"e":"day","t":4670439,"members":7,"money":94,"food_days":5.14,"day":55,"roster":[{"name":"Righromnyx","money":13,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":13,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":13,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":13,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":14,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":14,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":14,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":36,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"farm","size":7}]}
+{"e":"order","t":4675029,"members":7,"money":94,"food_days":5.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"lumber_yard","dest":null,"hours":1,"size":7}
+{"e":"buy","t":4678629,"members":7,"money":87,"food_days":5.14,"node":"lumber_yard","item":"Lumber","qty":1,"price":7,"zone":"pack"}
+{"e":"buy","t":4678629,"members":7,"money":80,"food_days":5.14,"node":"lumber_yard","item":"Lumber","qty":1,"price":7,"zone":"pack"}
+{"e":"order","t":4678629,"members":7,"money":80,"food_days":5.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"smith","hours":1.27,"size":7}
+{"e":"order","t":4685514,"members":7,"money":80,"food_days":5.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":7}
+{"e":"order","t":4689114,"members":7,"money":80,"food_days":5.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"mine","hours":0.64,"size":7}
+{"e":"order","t":4737309,"members":7,"money":80,"food_days":5.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"mine","dest":null,"hours":1,"size":7}
+{"e":"buy","t":4740909,"members":7,"money":75,"food_days":5.14,"node":"mine","item":"1kg Coal","qty":1,"price":5,"zone":"pack"}
+{"e":"order","t":4740909,"members":7,"money":75,"food_days":5.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"mine","dest":"market","hours":7.65,"size":7}
+{"e":"day","t":4768449,"members":7,"money":75,"food_days":4.14,"day":56,"roster":[{"name":"Righromnyx","money":9,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":38,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":28,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":0,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":29,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"mine","size":7}]}
+{"e":"order","t":4791399,"members":7,"money":75,"food_days":4.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"market","dest":null,"hours":1,"size":7}
+{"e":"buy","t":4794999,"members":7,"money":40,"food_days":4.14,"node":"market","item":"Flint and Steel","qty":1,"price":35,"zone":"pack"}
+{"e":"order","t":4794999,"members":7,"money":40,"food_days":4.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"market","dest":null,"hours":1,"size":7}
+{"e":"craft","t":4802199,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":0}
+{"e":"craft","t":4805799,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"craft","t":4809399,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"craft","t":4812999,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"craft","t":4816599,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"craft","t":4820199,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"craft","t":4823799,"members":7,"money":40,"food_days":4.0,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"craft","t":4827399,"members":7,"money":40,"food_days":4.14,"unit":"Surkaeldralka","recipe":"Roast Meat","hours":1,"made":1}
+{"e":"order","t":4827399,"members":7,"money":40,"food_days":4.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"market","dest":"wilds","hours":1.27,"size":7}
+{"e":"day","t":4850349,"members":7,"money":40,"food_days":3.14,"day":57,"roster":[{"name":"Righromnyx","money":5,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":20,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":0,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":22,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":7}]}
+{"e":"order","t":4877889,"members":7,"money":40,"food_days":3.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds","dest":"arena","hours":7.65,"size":7}
+{"e":"order","t":4919199,"members":7,"money":40,"food_days":3.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":7}
+{"e":"talent","t":4922799,"members":7,"money":40,"food_days":3.14,"unit":"Dundorgormel","track":"combat","talent":"alert"}
+{"e":"talent","t":4922799,"members":7,"money":40,"food_days":3.14,"unit":"Dundorgormel","track":"combat","talent":"strong"}
+{"e":"talent","t":4922799,"members":7,"money":40,"food_days":3.14,"unit":"Dundorgormel","track":"combat","talent":"agile"}
+{"e":"talent","t":4922799,"members":7,"money":40,"food_days":3.14,"unit":"Dundorgormel","track":"combat","talent":"quick_wits"}
+{"e":"talent","t":4922799,"members":7,"money":40,"food_days":3.14,"unit":"Dundorgormel","track":"combat","talent":"tough"}
+{"e":"talent","t":4922799,"members":7,"money":40,"food_days":3.14,"unit":"Dundorgormel","track":"combat","talent":"long_reach"}
+{"e":"fight","t":4922823,"members":7,"money":40,"food_days":3.14,"hp_frac":1.0,"level_before":2.0,"members_before":7,"money_before":40,"food_days_before":3.14,"node":"arena","kind":"Defend the Title","won":true,"squad":1,"deaths":0,"foes":1,"xp":5,"level":0.71}
+{"e":"order","t":4922823,"members":7,"money":130,"food_days":3.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"arena","dest":null,"hours":24,"size":7}
+{"e":"day","t":5009223,"members":7,"money":130,"food_days":2.14,"day":58,"roster":[{"name":"Righromnyx","money":95,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":20,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":0,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":15,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"arena","size":7}]}
+{"e":"order","t":5009223,"members":7,"money":130,"food_days":2.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"tavern","hours":2.55,"size":7}
+{"e":"day","t":5018403,"members":7,"money":130,"food_days":1.14,"day":59,"roster":[{"name":"Righromnyx","money":95,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":20,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":0,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":0,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":8,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"arena","size":7}]}
+{"e":"order","t":5022993,"members":7,"money":130,"food_days":1.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":7}
+{"e":"order","t":5026593,"members":7,"money":130,"food_days":1.14,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"wilds","hours":1.27,"size":7}
+{"e":"talent","t":5049543,"members":7,"money":130,"food_days":1.14,"unit":"Kanim","track":"work","talent":"clever"}
+{"e":"talent","t":5049543,"members":7,"money":130,"food_days":1.14,"unit":"Kanim","track":"work","talent":"linguist"}
+{"e":"fight","t":5049555,"members":7,"money":130,"food_days":1.14,"hp_frac":1.0,"level_before":0.71,"members_before":7,"money_before":130,"food_days_before":1.14,"node":"road","kind":"ambush","won":true,"squad":7,"deaths":0,"foes":3,"xp":0,"level":0.71}
+{"e":"order","t":5049555,"members":7,"money":130,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"road","dest":"wilds","hours":7.65,"size":7}
+{"e":"order","t":5077095,"members":7,"money":130,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"hunt","node":"wilds","dest":null,"hours":1,"size":7}
+{"e":"talent","t":5084295,"members":7,"money":130,"food_days":2.0,"unit":"Dundorwen","track":"combat","talent":"alert"}
+{"e":"talent","t":5084295,"members":7,"money":130,"food_days":2.0,"unit":"Dundorwen","track":"combat","talent":"strong"}
+{"e":"talent","t":5084295,"members":7,"money":130,"food_days":2.0,"unit":"Dundorwen","track":"combat","talent":"heavy_hand"}
+{"e":"talent","t":5084295,"members":7,"money":130,"food_days":2.0,"unit":"Dundorwen","track":"combat","talent":"tough"}
+{"e":"talent","t":5084295,"members":7,"money":130,"food_days":2.0,"unit":"Nimbraeothlys","track":"combat","talent":"tough"}
+{"e":"talent","t":5084295,"members":7,"money":130,"food_days":2.0,"unit":"Nimbraeothlys","track":"work","talent":"charismatic"}
+{"e":"fight","t":5084307,"members":7,"money":130,"food_days":2.0,"hp_frac":1.0,"level_before":0.71,"members_before":7,"money_before":130,"food_days_before":2.0,"node":"wilds","kind":"hunt","won":true,"squad":7,"deaths":0,"foes":3,"xp":7,"level":0.86}
+{"e":"talent","t":5084307,"members":7,"money":130,"food_days":2.0,"unit":"Surkaeldralka","track":"combat","talent":"strong"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Velel","track":"work","talent":"charismatic"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Velel","track":"work","talent":"clever"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Tordunmun","track":"combat","talent":"strong"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Tordunmun","track":"combat","talent":"heavy_hand"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Tordunmun","track":"combat","talent":"agile"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Tordunmun","track":"combat","talent":"alert"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Shoka","track":"combat","talent":"tough"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Shoka","track":"work","talent":"charismatic"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Shoka","track":"work","talent":"carrier"}
+{"e":"talent","t":5087907,"members":7,"money":130,"food_days":2.86,"unit":"Shoka","track":"work","talent":"clever"}
+{"e":"fight","t":5087919,"members":7,"money":130,"food_days":2.86,"hp_frac":1.0,"level_before":0.86,"members_before":7,"money_before":130,"food_days_before":2.86,"node":"wilds","kind":"hunt","won":true,"squad":7,"deaths":0,"foes":3,"xp":3,"level":0.86}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"combat","talent":"strong"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"combat","talent":"tough"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"combat","talent":"bulwark"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"combat","talent":"armor_bearer"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"work","talent":"carrier"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"work","talent":"clever"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"work","talent":"brisk_hands"}
+{"e":"talent","t":5091519,"members":7,"money":130,"food_days":3.71,"unit":"Morekshoald","track":"work","talent":"linguist"}
+{"e":"fight","t":5091531,"members":7,"money":130,"food_days":3.71,"hp_frac":1.0,"level_before":0.86,"members_before":7,"money_before":130,"food_days_before":3.71,"node":"wilds","kind":"hunt","won":true,"squad":7,"deaths":0,"foes":3,"xp":4,"level":0.86}
+{"e":"day","t":5102331,"members":7,"money":130,"food_days":3.57,"day":60,"roster":[{"name":"Righromnyx","money":95,"hp":15,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":20,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":0,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":25,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":7}]}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Tikketh","track":"combat","talent":"tough"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Tikketh","track":"combat","talent":"agile"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Tikketh","track":"combat","talent":"long_reach"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Tikketh","track":"combat","talent":"strong"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Tikketh","track":"combat","talent":"deadeye"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Tikketh","track":"work","talent":"carrier"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"combat","talent":"alert"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"combat","talent":"tough"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"work","talent":"charismatic"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"work","talent":"clever"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"work","talent":"linguist"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"work","talent":"fixer"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"work","talent":"negotiator"}
+{"e":"talent","t":5102331,"members":7,"money":130,"food_days":3.57,"unit":"Raxquen","track":"work","talent":"carrier"}
+{"e":"fight","t":5102343,"members":7,"money":130,"food_days":3.57,"hp_frac":0.97,"level_before":0.86,"members_before":7,"money_before":130,"food_days_before":3.57,"node":"wilds","kind":"hunt","won":true,"squad":7,"deaths":0,"foes":3,"xp":8,"level":1.0}
+{"e":"talent","t":5102343,"members":7,"money":130,"food_days":3.57,"unit":"Nyxuln","track":"combat","talent":"sure_strike"}
+{"e":"order","t":5109543,"members":7,"money":130,"food_days":5.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"wilds","dest":null,"hours":44.67,"size":7}
+{"e":"day","t":5270340,"members":7,"money":130,"food_days":4.29,"day":61,"roster":[{"name":"Righromnyx","money":0,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":120,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":7,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":10,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":30,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":7}]}
+{"e":"order","t":5270340,"members":7,"money":130,"food_days":4.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"hunt","node":"wilds","dest":null,"hours":1,"size":7}
+{"e":"day","t":5273940,"members":7,"money":130,"food_days":3.29,"day":62,"roster":[{"name":"Righromnyx","money":0,"hp":19,"hp_max":19,"combat":2,"work":2},{"name":"Nyxuln","money":120,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":0,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":7,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Felorn","money":10,"hp":13,"hp_max":13,"combat":0,"work":2}],"rations":23,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":7}]}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"combat","talent":"strong"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"combat","talent":"heavy_hand"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"combat","talent":"agile"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"combat","talent":"deadeye"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"combat","talent":"tough"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"work","talent":"charismatic"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"work","talent":"carrier"}
+{"e":"talent","t":5284740,"members":7,"money":130,"food_days":3.29,"unit":"Gormzayldral","track":"work","talent":"brisk_hands"}
+{"e":"fight","t":5284752,"members":7,"money":130,"food_days":3.29,"hp_frac":0.97,"level_before":1.0,"members_before":7,"money_before":130,"food_days_before":3.29,"node":"wilds","kind":"hunt","won":true,"squad":7,"deaths":0,"foes":3,"xp":6,"level":1.29}
+{"e":"talent","t":5284752,"members":7,"money":130,"food_days":3.29,"unit":"Righromnyx","track":"combat","talent":"heavy_hand"}
+{"e":"talent","t":5284752,"members":7,"money":130,"food_days":3.29,"unit":"Rurigtikquen","track":"combat","talent":"strong"}
+{"e":"order","t":5331552,"members":7,"money":130,"food_days":3.71,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds","dest":"city","hours":7.65,"size":7}
+{"e":"day","t":5359092,"members":7,"money":130,"food_days":2.71,"day":63,"roster":[{"name":"Righromnyx","money":0,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":120,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":0,"hp":8,"hp_max":8,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":0,"hp":3,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":0,"hp":2,"hp_max":2,"combat":1,"work":2},{"name":"Rurigtikquen","money":0,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":10,"hp":9,"hp_max":9,"combat":0,"work":2}],"rations":19,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":7}]}
+{"e":"order","t":5383572,"members":7,"money":130,"food_days":2.71,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"bank","node":"city","dest":null,"hours":1,"size":7}
+{"e":"order","t":5387172,"members":7,"money":130,"food_days":2.71,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"city","dest":"tanner","hours":0.64,"size":7}
+{"e":"order","t":5389467,"members":7,"money":130,"food_days":2.71,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"tanner","node":"tanner","dest":null,"hours":1,"size":7}
+{"e":"mission","t":5393067,"members":7,"money":130,"food_days":2.71,"what":"accept","id":"tanner_hides","reward":200,"deadline":5}
+{"e":"mission","t":5393067,"members":7,"money":330,"food_days":2.71,"what":"turn_in","id":"tanner_hides","reward":200}
+{"e":"order","t":5393067,"members":7,"money":330,"food_days":2.71,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tanner","dest":"farm","hours":0.64,"size":7}
+{"e":"order","t":5404542,"members":7,"money":330,"food_days":2.71,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":7}
+{"e":"sell","t":5408142,"members":7,"money":339,"food_days":2.14,"node":"farm","item":"Hatchet","qty":1,"price":5}
+{"e":"sell","t":5408142,"members":7,"money":339,"food_days":2.14,"node":"farm","item":"Rotten Food","qty":4,"price":1}
+{"e":"sell","t":5408142,"members":7,"money":342,"food_days":1.71,"node":"farm","item":"Rotten Food","qty":3,"price":1}
+{"e":"sell","t":5408142,"members":7,"money":347,"food_days":1.0,"node":"farm","item":"Rotten Food","qty":5,"price":1}
+{"e":"sell","t":5408142,"members":7,"money":350,"food_days":0.57,"node":"farm","item":"Rotten Food","qty":3,"price":1}
+{"e":"sell","t":5408142,"members":7,"money":353,"food_days":0.14,"node":"farm","item":"Rotten Food","qty":3,"price":1}
+{"e":"sell","t":5408142,"members":7,"money":359,"food_days":0.0,"node":"farm","item":"Rotten Food","qty":1,"price":1}
+{"e":"sell","t":5408142,"members":7,"money":359,"food_days":0.0,"node":"farm","item":"Hatchet","qty":1,"price":5}
+{"e":"sell","t":5408142,"members":7,"money":362,"food_days":0.0,"node":"farm","item":"Club","qty":1,"price":3}
+{"e":"sell","t":5408142,"members":7,"money":374,"food_days":0.0,"node":"farm","item":"1sqm Hide","qty":2,"price":6}
+{"e":"sell","t":5408142,"members":7,"money":386,"food_days":0.0,"node":"farm","item":"1sqm Hide","qty":2,"price":6}
+{"e":"sell","t":5408142,"members":7,"money":404,"food_days":0.0,"node":"farm","item":"1sqm Hide","qty":3,"price":6}
+{"e":"buy","t":5408142,"members":7,"money":393,"food_days":0.0,"node":"farm","item":"1sqm Hide","qty":1,"price":11,"zone":"pack"}
+{"e":"order","t":5408142,"members":7,"money":393,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":7}
+{"e":"buy","t":5411742,"members":7,"money":303,"food_days":4.29,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"order","t":5411742,"members":7,"money":303,"food_days":4.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"library","hours":3.4,"size":7}
+{"e":"order","t":5430102,"members":7,"money":303,"food_days":4.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"library","node":"library","dest":null,"hours":1,"size":7}
+{"e":"buy","t":5433702,"members":7,"money":293,"food_days":4.29,"node":"library","item":"Paper","qty":1,"price":10,"zone":"pack"}
+{"e":"buy","t":5433702,"members":7,"money":246,"food_days":4.29,"node":"library","item":"Ink","qty":1,"price":47,"zone":"pack"}
+{"e":"order","t":5433702,"members":7,"money":246,"food_days":4.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"library","dest":null,"hours":16,"size":7}
+{"e":"day","t":5491302,"members":7,"money":246,"food_days":3.29,"day":64,"roster":[{"name":"Righromnyx","money":25,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":96,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":25,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":23,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":25,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":26,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":26,"hp":9,"hp_max":9,"combat":0,"work":2}],"rations":23,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"library","size":7}]}
+{"e":"order","t":5491302,"members":7,"money":246,"food_days":3.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"library","node":"library","dest":null,"hours":1,"size":7}
+{"e":"craft","t":5498502,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5502102,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5505702,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5509302,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5512902,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5516502,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5520102,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":0}
+{"e":"craft","t":5523702,"members":7,"money":246,"food_days":3.29,"unit":"Surkaeldralka","recipe":"Dictionary of Ankarin","hours":1,"made":1}
+{"e":"mission","t":5523702,"members":7,"money":246,"food_days":3.29,"what":"accept","id":"library_dictionary","reward":250,"deadline":15}
+{"e":"mission","t":5523702,"members":7,"money":496,"food_days":3.29,"what":"turn_in","id":"library_dictionary","reward":250}
+{"e":"order","t":5523702,"members":7,"money":496,"food_days":3.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"library","dest":"tavern","hours":1.7,"size":7}
+{"e":"day","t":5529822,"members":7,"money":496,"food_days":2.29,"day":65,"roster":[{"name":"Righromnyx","money":61,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":132,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":61,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":59,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":61,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":61,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":61,"hp":9,"hp_max":9,"combat":0,"work":2}],"rations":16,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"library","size":7}]}
+{"e":"order","t":5535942,"members":7,"money":496,"food_days":2.29,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":7}
+{"e":"recruit","t":5539542,"members":7,"money":496,"food_days":2.29,"pitcher":"Righromnyx","candidate":"Braeorn","bail":0,"ok":false}
+{"e":"recruit","t":5539542,"members":7,"money":496,"food_days":2.29,"pitcher":"Adelio Small-Knife","candidate":"Braeorn","bail":0,"ok":false}
+{"e":"recruit","t":5539542,"members":7,"money":496,"food_days":2.29,"pitcher":"Surkaeldralka","candidate":"Braeorn","bail":0,"ok":false}
+{"e":"recruit","t":5539542,"members":7,"money":496,"food_days":2.29,"pitcher":"Rurigtikquen","candidate":"Braeorn","bail":0,"ok":true}
+{"e":"order","t":5539542,"members":8,"money":531,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.7,"size":8}
+{"e":"order","t":5551782,"members":8,"money":531,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":8}
+{"e":"order","t":5555382,"members":8,"money":531,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"lumber_yard","hours":1.7,"size":8}
+{"e":"order","t":5567622,"members":8,"money":531,"food_days":2.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":8}
+{"e":"day","t":5625222,"members":8,"money":531,"food_days":1.0,"day":66,"roster":[{"name":"Righromnyx","money":61,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":132,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":61,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":59,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":61,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":61,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":61,"hp":9,"hp_max":9,"combat":0,"work":2},{"name":"Braeorn","money":35,"hp":2,"hp_max":2,"combat":0,"work":0}],"rations":8,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":8}]}
+{"e":"talent","t":5625222,"members":8,"money":569,"food_days":1.0,"unit":"Braeorn","track":"work","talent":"charismatic"}
+{"e":"order","t":5625222,"members":8,"money":569,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":8}
+{"e":"order","t":5682822,"members":8,"money":607,"food_days":1.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":8}
+{"e":"day","t":5740422,"members":8,"money":607,"food_days":0.0,"day":67,"roster":[{"name":"Righromnyx","money":71,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":142,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":69,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":67,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":71,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":71,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":71,"hp":9,"hp_max":9,"combat":0,"work":2},{"name":"Braeorn","money":45,"hp":2,"hp_max":2,"combat":0,"work":1}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":8}]}
+{"e":"order","t":5740422,"members":8,"money":645,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":8}
+{"e":"day","t":5798022,"members":8,"money":645,"food_days":0.0,"day":68,"roster":[{"name":"Righromnyx","money":76,"hp":16,"hp_max":16,"combat":3,"work":2},{"name":"Nyxuln","money":147,"hp":8,"hp_max":8,"combat":2,"work":2},{"name":"Muntik","money":73,"hp":10,"hp_max":10,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":71,"hp":3,"hp_max":3,"combat":1,"work":2},{"name":"Surkaeldralka","money":76,"hp":4,"hp_max":4,"combat":1,"work":2},{"name":"Rurigtikquen","money":76,"hp":11,"hp_max":11,"combat":1,"work":2},{"name":"Felorn","money":76,"hp":7,"hp_max":7,"combat":0,"work":2},{"name":"Braeorn","money":50,"hp":1,"hp_max":1,"combat":0,"work":1}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":8}]}
+{"e":"order","t":5798022,"members":8,"money":683,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.7,"size":8}
+{"e":"order","t":5816382,"members":8,"money":683,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"buy","t":5819982,"members":8,"money":593,"food_days":3.75,"node":"farm","item":"Potato","qty":30,"price":3,"zone":"pack"}
+{"e":"order","t":5819982,"members":8,"money":593,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"lumber_yard","hours":3.4,"size":8}
+{"e":"order","t":5838342,"members":8,"money":593,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":8}
+{"e":"day","t":5895942,"members":8,"money":593,"food_days":2.75,"day":69,"roster":[{"name":"Righromnyx","money":69,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":122,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":69,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":69,"hp":5,"hp_max":5,"combat":1,"work":2},{"name":"Surkaeldralka","money":69,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":70,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":70,"hp":9,"hp_max":9,"combat":0,"work":2},{"name":"Braeorn","money":55,"hp":2,"hp_max":2,"combat":0,"work":1}],"rations":22,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":8}]}
+{"e":"talent","t":5895942,"members":8,"money":631,"food_days":2.75,"unit":"Braeorn","track":"work","talent":"fixer"}
+{"e":"order","t":5895942,"members":8,"money":631,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"smith","hours":1.7,"size":8}
+{"e":"order","t":5905122,"members":8,"money":631,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":8}
+{"e":"sell","t":5908722,"members":8,"money":633,"food_days":2.75,"node":"smith","item":"Rope","qty":1,"price":2}
+{"e":"buy","t":5908722,"members":8,"money":273,"food_days":2.75,"node":"smith","item":"Brigandine","qty":1,"price":360,"zone":"armor"}
+{"e":"buy","t":5908722,"members":8,"money":129,"food_days":2.75,"node":"smith","item":"Chainmail","qty":1,"price":144,"zone":"armor"}
+{"e":"order","t":5908722,"members":8,"money":129,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"apothecary","hours":0.51,"size":8}
+{"e":"order","t":5910558,"members":8,"money":129,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":8}
+{"e":"order","t":5942958,"members":8,"money":123,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"apothecary","dest":"city","hours":0.64,"size":8}
+{"e":"order","t":5945253,"members":8,"money":123,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"bank","node":"city","dest":null,"hours":1,"size":8}
+{"e":"order","t":5948853,"members":8,"money":123,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"city","dest":"wilds","hours":5.1,"size":8}
+{"e":"day","t":5967213,"members":8,"money":123,"food_days":1.75,"day":70,"roster":[{"name":"Righromnyx","money":15,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":20,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":12,"combat":1,"work":2},{"name":"Adelio Small-Knife","money":15,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":15,"hp":6,"hp_max":6,"combat":1,"work":2},{"name":"Rurigtikquen","money":15,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":15,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Braeorn","money":13,"hp":4,"hp_max":4,"combat":0,"work":2}],"rations":14,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":8}]}
+{"e":"order","t":5994753,"members":8,"money":123,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"hunt","node":"wilds","dest":null,"hours":1,"size":8}
+{"e":"talent","t":6005553,"members":8,"money":123,"food_days":1.75,"unit":"Mabrae","track":"combat","talent":"alert"}
+{"e":"talent","t":6005553,"members":8,"money":123,"food_days":1.75,"unit":"Mabrae","track":"combat","talent":"tough"}
+{"e":"talent","t":6005553,"members":8,"money":123,"food_days":1.75,"unit":"Mabrae","track":"combat","talent":"quick_wits"}
+{"e":"talent","t":6005553,"members":8,"money":123,"food_days":1.75,"unit":"Mabrae","track":"combat","talent":"hardy"}
+{"e":"fight","t":6005565,"members":8,"money":123,"food_days":1.75,"hp_frac":1.0,"level_before":1.12,"members_before":8,"money_before":123,"food_days_before":1.75,"node":"wilds","kind":"hunt","won":true,"squad":8,"deaths":0,"foes":3,"xp":3,"level":1.12}
+{"e":"talent","t":6009165,"members":8,"money":123,"food_days":2.5,"unit":"Cazrax","track":"combat","talent":"tough"}
+{"e":"talent","t":6009165,"members":8,"money":123,"food_days":2.5,"unit":"Cazrax","track":"combat","talent":"strong"}
+{"e":"talent","t":6009165,"members":8,"money":123,"food_days":2.5,"unit":"Cazrax","track":"combat","talent":"alert"}
+{"e":"talent","t":6009165,"members":8,"money":123,"food_days":2.5,"unit":"Cazrax","track":"work","talent":"charismatic"}
+{"e":"talent","t":6009165,"members":8,"money":123,"food_days":2.5,"unit":"Kethdrodun","track":"combat","talent":"tough"}
+{"e":"talent","t":6009165,"members":8,"money":123,"food_days":2.5,"unit":"Kethdrodun","track":"combat","talent":"alert"}
+{"e":"fight","t":6009177,"members":8,"money":123,"food_days":2.5,"hp_frac":1.0,"level_before":1.12,"members_before":8,"money_before":123,"food_days_before":2.5,"node":"wilds","kind":"hunt","won":true,"squad":8,"deaths":0,"foes":3,"xp":5,"level":1.25}
+{"e":"talent","t":6009177,"members":8,"money":123,"food_days":2.5,"unit":"Surkaeldralka","track":"combat","talent":"sure_strike"}
+{"e":"talent","t":6041577,"members":8,"money":123,"food_days":3.25,"unit":"Dunothkethnyx","track":"combat","talent":"strong"}
+{"e":"talent","t":6041577,"members":8,"money":123,"food_days":3.25,"unit":"Dunothkethnyx","track":"combat","talent":"tough"}
+{"e":"talent","t":6041577,"members":8,"money":123,"food_days":3.25,"unit":"Dunothkethnyx","track":"combat","talent":"alert"}
+{"e":"talent","t":6041577,"members":8,"money":123,"food_days":3.25,"unit":"Dunothkethnyx","track":"work","talent":"charismatic"}
+{"e":"fight","t":6041583,"members":8,"money":123,"food_days":3.25,"hp_frac":1.0,"level_before":1.25,"members_before":8,"money_before":123,"food_days_before":3.25,"node":"wilds","kind":"hunt","won":true,"squad":8,"deaths":0,"foes":2,"xp":4,"level":1.38}
+{"e":"talent","t":6041583,"members":8,"money":123,"food_days":3.25,"unit":"Muntik","track":"combat","talent":"sure_strike"}
+{"e":"day","t":6055983,"members":8,"money":123,"food_days":2.75,"day":71,"roster":[{"name":"Righromnyx","money":15,"hp":19,"hp_max":19,"combat":3,"work":2},{"name":"Nyxuln","money":20,"hp":11,"hp_max":11,"combat":2,"work":2},{"name":"Muntik","money":15,"hp":12,"hp_max":18,"combat":2,"work":2},{"name":"Adelio Small-Knife","money":15,"hp":9,"hp_max":9,"combat":1,"work":2},{"name":"Surkaeldralka","money":15,"hp":6,"hp_max":6,"combat":2,"work":2},{"name":"Rurigtikquen","money":15,"hp":13,"hp_max":13,"combat":1,"work":2},{"name":"Felorn","money":15,"hp":13,"hp_max":13,"combat":0,"work":2},{"name":"Braeorn","money":13,"hp":4,"hp_max":4,"combat":0,"work":2}],"rations":22,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds","size":8}]}
+{"e":"talent","t":6055983,"members":8,"money":123,"food_days":2.75,"unit":"Vashirraxvash","track":"work","talent":"clever"}
+{"e":"talent","t":6055983,"members":8,"money":123,"food_days":2.75,"unit":"Vashirraxvash","track":"work","talent":"charismatic"}
+{"e":"talent","t":6055983,"members":8,"money":123,"food_days":2.75,"unit":"Munek","track":"combat","talent":"alert"}
+{"e":"talent","t":6055983,"members":8,"money":123,"food_days":2.75,"unit":"Munek","track":"combat","talent":"strong"}
+{"e":"fight","t":6055995,"members":8,"money":123,"food_days":2.75,"hp_frac":0.96,"level_before":1.38,"members_before":8,"money_before":123,"food_days_before":2.75,"node":"wilds","kind":"hunt","won":true,"squad":8,"deaths":0,"foes":3,"xp":1,"level":1.38}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":4.0,"unit":"Righromnyx","track":"work","talent":"negotiator"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":4.5,"unit":"Muntik","track":"work","talent":"steady_pace"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":5.0,"unit":"Surkaeldralka","track":"work","talent":"negotiator"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":5.5,"unit":"Felorn","track":"work","talent":"steady_pace"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":6.0,"unit":"Nyxuln","track":"work","talent":"steady_pace"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":6.5,"unit":"Adelio Small-Knife","track":"work","talent":"fixer"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":7.0,"unit":"Rurigtikquen","track":"work","talent":"negotiator"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":7.5,"unit":"Braeorn","track":"work","talent":"negotiator"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":8.0,"unit":"Righromnyx","track":"work","talent":"provisioner"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":8.5,"unit":"Muntik","track":"work","talent":"piecework"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":9.0,"unit":"Surkaeldralka","track":"work","talent":"provisioner"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":9.5,"unit":"Felorn","track":"work","talent":"piecework"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":10.0,"unit":"Nyxuln","track":"work","talent":"piecework"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":10.5,"unit":"Adelio Small-Knife","track":"work","talent":"provisioner"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":11.0,"unit":"Rurigtikquen","track":"work","talent":"provisioner"}
+{"e":"talent","t":6055995,"members":8,"money":123,"food_days":11.5,"unit":"Braeorn","track":"work","talent":"provisioner"}
+{"e":"order","t":6055995,"members":8,"money":123,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds","dest":"city","hours":7.65,"size":8}
+{"e":"talent","t":6083535,"members":8,"money":123,"food_days":12.0,"unit":"Rigsur","track":"combat","talent":"strong"}
+{"e":"talent","t":6083535,"members":8,"money":123,"food_days":12.0,"unit":"Rigsur","track":"combat","talent":"tough"}
+{"e":"talk","t":6083535,"members":8,"money":114,"food_days":12.0,"kind":"ambush","result":"peace","paid":9}
+{"e":"order","t":6083535,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"road","dest":"city","hours":5.1,"size":8}
+{"e":"order","t":6101895,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"city","dest":"tavern","hours":1.27,"size":8}
+{"e":"order","t":6106485,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":8}
+{"e":"order","t":6110085,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.27,"size":8}
+{"e":"order","t":6119265,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":8}
+{"e":"order","t":6122865,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"apothecary","hours":1.27,"size":8}
+{"e":"order","t":6129750,"members":8,"money":114,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":8}
+{"e":"mission","t":6133350,"members":8,"money":114,"food_days":12.0,"what":"accept","id":"apothecary_mushrooms","reward":150,"deadline":10}
+{"e":"mission","t":6133350,"members":8,"money":264,"food_days":12.0,"what":"turn_in","id":"apothecary_mushrooms","reward":150}
+{"e":"order","t":6133350,"members":8,"money":264,"food_days":12.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":8}
+{"e":"day","t":6136950,"members":8,"money":264,"food_days":11.0,"day":72,"roster":[{"name":"Righromnyx","money":34,"hp":23,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":30,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":34,"hp":15,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":34,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":34,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":34,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Felorn","money":33,"hp":16,"hp_max":16,"combat":0,"work":4},{"name":"Braeorn","money":31,"hp":5,"hp_max":5,"combat":0,"work":4}],"rations":88,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"apothecary","size":8}]}
+{"e":"sell","t":6136950,"members":8,"money":304,"food_days":11.0,"node":"apothecary","item":"Red Mushroom","qty":2,"price":5}
+{"e":"sell","t":6136950,"members":8,"money":304,"food_days":11.0,"node":"apothecary","item":"1sqm Hide","qty":5,"price":6}
+{"e":"sell","t":6136950,"members":8,"money":401,"food_days":11.0,"node":"apothecary","item":"Red Mushroom","qty":17,"price":5}
+{"e":"sell","t":6136950,"members":8,"money":401,"food_days":11.0,"node":"apothecary","item":"1sqm Hide","qty":2,"price":6}
+{"e":"sell","t":6136950,"members":8,"money":492,"food_days":11.0,"node":"apothecary","item":"Red Mushroom","qty":17,"price":5}
+{"e":"sell","t":6136950,"members":8,"money":492,"food_days":11.0,"node":"apothecary","item":"1sqm Hide","qty":1,"price":6}
+{"e":"sell","t":6136950,"members":8,"money":504,"food_days":11.0,"node":"apothecary","item":"1sqm Hide","qty":2,"price":6}
+{"e":"sell","t":6136950,"members":8,"money":510,"food_days":11.0,"node":"apothecary","item":"1sqm Hide","qty":1,"price":6}
+{"e":"order","t":6136950,"members":8,"money":510,"food_days":11.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"apothecary","dest":"farm","hours":0.64,"size":8}
+{"e":"order","t":6148425,"members":8,"money":510,"food_days":11.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"buy","t":6152025,"members":8,"money":450,"food_days":11.0,"node":"farm","item":"Sugar","qty":15,"price":4,"zone":"pack"}
+{"e":"buy","t":6152025,"members":8,"money":390,"food_days":11.0,"node":"farm","item":"Salt","qty":20,"price":3,"zone":"pack"}
+{"e":"order","t":6152025,"members":8,"money":390,"food_days":11.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"tavern","hours":2.55,"size":8}
+{"e":"order","t":6165795,"members":8,"money":390,"food_days":11.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":8}
+{"e":"order","t":6169395,"members":8,"money":390,"food_days":11.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"mine","hours":1.27,"size":8}
+{"e":"order","t":6219885,"members":8,"money":390,"food_days":11.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"mine","dest":null,"hours":1,"size":8}
+{"e":"day","t":6223485,"members":8,"money":390,"food_days":10.0,"day":73,"roster":[{"name":"Righromnyx","money":50,"hp":23,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":60,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":160,"hp":15,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":30,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":30,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":30,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Felorn","money":0,"hp":16,"hp_max":16,"combat":0,"work":4},{"name":"Braeorn","money":30,"hp":5,"hp_max":5,"combat":0,"work":4}],"rations":80,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"mine","size":8}]}
+{"e":"buy","t":6223485,"members":8,"money":370,"food_days":10.0,"node":"mine","item":"1kg Coal","qty":4,"price":5,"zone":"pack"}
+{"e":"order","t":6223485,"members":8,"money":370,"food_days":10.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"mine","dest":"wilds_territory","hours":3.4,"size":8}
+{"e":"craft","t":6246525,"members":8,"money":370,"food_days":10.0,"unit":"Surkaeldralka","recipe":"Jerky","hours":3,"made":4}
+{"e":"order","t":6246525,"members":8,"money":370,"food_days":10.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds_territory","dest":"apothecary","hours":3.4,"size":8}
+{"e":"day","t":6319965,"members":8,"money":370,"food_days":9.0,"day":74,"roster":[{"name":"Righromnyx","money":46,"hp":23,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":56,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":152,"hp":15,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":29,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":29,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":29,"hp":11,"hp_max":11,"combat":1,"work":4},{"name":"Felorn","money":0,"hp":10,"hp_max":10,"combat":0,"work":4},{"name":"Braeorn","money":29,"hp":1,"hp_max":1,"combat":0,"work":4}],"rations":72,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"road","size":8}]}
+{"e":"order","t":6323025,"members":8,"money":370,"food_days":9.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":8}
+{"e":"sell","t":6326625,"members":8,"money":386,"food_days":7.0,"node":"apothecary","item":"Rotten Food","qty":16,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":398,"food_days":5.5,"node":"apothecary","item":"Rotten Food","qty":12,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":401,"food_days":5.12,"node":"apothecary","item":"Rotten Food","qty":3,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":403,"food_days":4.88,"node":"apothecary","item":"Rotten Food","qty":2,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":412,"food_days":3.75,"node":"apothecary","item":"Rotten Food","qty":9,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":429,"food_days":1.62,"node":"apothecary","item":"Rotten Food","qty":17,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":436,"food_days":0.75,"node":"apothecary","item":"Rotten Food","qty":7,"price":1}
+{"e":"sell","t":6326625,"members":8,"money":442,"food_days":0.0,"node":"apothecary","item":"Rotten Food","qty":6,"price":1}
+{"e":"order","t":6326625,"members":8,"money":442,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"apothecary","dest":"farm","hours":0.64,"size":8}
+{"e":"order","t":6338100,"members":8,"money":442,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"buy","t":6341700,"members":8,"money":382,"food_days":3.75,"node":"farm","item":"Potato","qty":30,"price":2,"zone":"pack"}
+{"e":"order","t":6341700,"members":8,"money":382,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"arena","hours":2.55,"size":8}
+{"e":"order","t":6360060,"members":8,"money":382,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"arena","node":"arena","dest":null,"hours":1,"size":8}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"combat","talent":"agile"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"combat","talent":"alert"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"combat","talent":"long_reach"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"combat","talent":"quick_wits"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"combat","talent":"deadeye"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"combat","talent":"strong"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"work","talent":"clever"}
+{"e":"talent","t":6363660,"members":8,"money":382,"food_days":3.75,"unit":"Ruven","track":"work","talent":"carrier"}
+{"e":"fight","t":6363690,"members":8,"money":382,"food_days":3.75,"hp_frac":1.0,"level_before":3.0,"members_before":8,"money_before":382,"food_days_before":3.75,"node":"arena","kind":"Defend the Title","won":true,"squad":1,"deaths":0,"foes":1,"xp":4,"level":1.38}
+{"e":"order","t":6363690,"members":8,"money":472,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"arena","dest":"apothecary","hours":2.55,"size":8}
+{"e":"order","t":6375165,"members":8,"money":472,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":8}
+{"e":"day","t":6407565,"members":8,"money":463,"food_days":2.75,"day":75,"roster":[{"name":"Righromnyx","money":131,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":50,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":125,"hp":16,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":31,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":38,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":46,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":35,"hp":1,"hp_max":1,"combat":0,"work":4},{"name":"Felorn","money":7,"hp":16,"hp_max":16,"combat":0,"work":4}],"rations":22,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"apothecary","size":7},{"gid":"3114d41aa68947b3b631f7d5c79e5859","node":"apothecary","size":1}]}
+{"e":"order","t":6407565,"members":8,"money":463,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"apothecary","dest":"wilds_territory","hours":0.64,"size":7}
+{"e":"order","t":6407565,"members":8,"money":463,"food_days":2.75,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"travel","node":"apothecary","dest":"arena","hours":0.42,"size":1}
+{"e":"order","t":6415215,"members":8,"money":463,"food_days":2.75,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"arena","node":"arena","dest":null,"hours":1,"size":1}
+{"e":"fight","t":6418839,"members":8,"money":460,"food_days":2.75,"hp_frac":1.0,"level_before":0.0,"members_before":8,"money_before":460,"food_days_before":2.75,"node":"arena","kind":"The Pit: Scrapper","won":false,"squad":1,"deaths":0,"foes":3,"xp":0,"level":1.38}
+{"e":"order","t":6418839,"members":8,"money":460,"food_days":2.75,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"travel","node":"arena","dest":"farm","hours":1.7,"size":1}
+{"e":"order","t":6431079,"members":8,"money":460,"food_days":2.75,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"stable","node":"farm","dest":null,"hours":1,"size":1}
+{"e":"buy","t":6434679,"members":8,"money":457,"food_days":2.88,"node":"farm","item":"Potato","qty":1,"price":3,"zone":"pack"}
+{"e":"order","t":6434679,"members":8,"money":457,"food_days":2.88,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"travel","node":"farm","dest":"lumber_yard","hours":1.7,"size":1}
+{"e":"order","t":6443859,"members":8,"money":457,"food_days":2.88,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"work","node":"lumber_yard","dest":null,"hours":14.4,"size":1}
+{"e":"order","t":6464964,"members":8,"money":457,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"claim","node":"wilds_territory","dest":null,"hours":1,"size":7}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Tormundungar","track":"combat","talent":"agile"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Tormundungar","track":"combat","talent":"tough"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Tormundungar","track":"combat","talent":"long_reach"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Tormundungar","track":"work","talent":"charismatic"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Felnim","track":"combat","talent":"alert"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Felnim","track":"combat","talent":"iron_will"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Felnim","track":"work","talent":"carrier"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Felnim","track":"work","talent":"clever"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Helgrok","track":"work","talent":"charismatic"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Helgrok","track":"work","talent":"carrier"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Helgrok","track":"work","talent":"negotiator"}
+{"e":"talent","t":6475764,"members":8,"money":457,"food_days":2.88,"unit":"Helgrok","track":"work","talent":"brisk_hands"}
+{"e":"fight","t":6475782,"members":8,"money":457,"food_days":2.88,"hp_frac":0.87,"level_before":1.57,"members_before":8,"money_before":457,"food_days_before":2.88,"node":"wilds_territory","kind":"wilds_territory","won":true,"squad":7,"deaths":0,"foes":3,"xp":3,"level":1.38}
+{"e":"order","t":6475782,"members":8,"money":457,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"claim","node":"wilds_territory","dest":null,"hours":1,"size":7}
+{"e":"order","t":6479382,"members":8,"money":457,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds_territory","dest":"lumber_yard","hours":2.55,"size":7}
+{"e":"day","t":6488562,"members":8,"money":457,"food_days":1.88,"day":76,"roster":[{"name":"Righromnyx","money":131,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":50,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":125,"hp":14,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":31,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":38,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":46,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":35,"hp":5,"hp_max":5,"combat":0,"work":4},{"name":"Felorn","money":1,"hp":3,"hp_max":16,"combat":0,"work":4}],"rations":15,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":7},{"gid":"3114d41aa68947b3b631f7d5c79e5859","node":"lumber_yard","size":1}]}
+{"e":"order","t":6502917,"members":8,"money":463,"food_days":1.88,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"travel","node":"lumber_yard","dest":"farm","hours":0.85,"size":1}
+{"e":"order","t":6512097,"members":8,"money":463,"food_days":1.88,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"stable","node":"farm","dest":null,"hours":1,"size":1}
+{"e":"buy","t":6515697,"members":8,"money":457,"food_days":2.12,"node":"farm","item":"Potato","qty":2,"price":3,"zone":"pack"}
+{"e":"order","t":6515697,"members":8,"money":457,"food_days":2.12,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"travel","node":"farm","dest":"lumber_yard","hours":1.7,"size":1}
+{"e":"order","t":6524877,"members":8,"money":457,"food_days":2.12,"gid":"3114d41aa68947b3b631f7d5c79e5859","kind":"work","node":"lumber_yard","dest":null,"hours":7.2,"size":1}
+{"e":"order","t":6539052,"members":8,"money":457,"food_days":2.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"market","node":"lumber_yard","dest":null,"hours":1,"size":7}
+{"e":"buy","t":6542652,"members":8,"money":387,"food_days":2.12,"node":"lumber_yard","item":"Lumber","qty":10,"price":7,"zone":"pack"}
+{"e":"order","t":6542652,"members":8,"money":387,"food_days":2.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"lumber_yard","dest":null,"hours":1.0,"size":7}
+{"e":"order","t":6546252,"members":8,"money":387,"food_days":2.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"lumber_yard","dest":null,"hours":1.0,"size":7}
+{"e":"order","t":6549852,"members":8,"money":387,"food_days":2.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"lumber_yard","dest":null,"hours":1.0,"size":7}
+{"e":"order","t":6550797,"members":8,"money":389,"food_days":2.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.27,"size":8}
+{"e":"order","t":6564567,"members":8,"money":389,"food_days":2.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"day","t":6568167,"members":8,"money":389,"food_days":1.12,"day":77,"roster":[{"name":"Righromnyx","money":111,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":40,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":105,"hp":14,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":31,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":31,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":36,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":32,"hp":5,"hp_max":5,"combat":0,"work":4},{"name":"Felorn","money":3,"hp":5,"hp_max":16,"combat":0,"work":4}],"rations":9,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"farm","size":8}]}
+{"e":"animal","t":6568167,"members":8,"money":209,"food_days":1.12,"what":"buy","species":"Donkey","price":180}
+{"e":"order","t":6568167,"members":8,"money":29,"food_days":1.12,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"buy","t":6571767,"members":8,"money":1,"food_days":2.88,"node":"farm","item":"Potato","qty":14,"price":2,"zone":"pack"}
+{"e":"order","t":6571767,"members":8,"money":1,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"sell","t":6575367,"members":8,"money":2,"food_days":2.88,"node":"farm","item":"Scissors","qty":1,"price":1}
+{"e":"sell","t":6575367,"members":8,"money":20,"food_days":2.88,"node":"farm","item":"Hammer","qty":1,"price":18}
+{"e":"sell","t":6575367,"members":8,"money":62,"food_days":2.88,"node":"farm","item":"Light Crossbow","qty":1,"price":42}
+{"e":"sell","t":6575367,"members":8,"money":66,"food_days":2.88,"node":"farm","item":"Dagger","qty":1,"price":4}
+{"e":"order","t":6575367,"members":8,"money":66,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":8}
+{"e":"sell","t":6578967,"members":8,"money":74,"food_days":2.88,"node":"farm","item":"Iron Bar","qty":1,"price":8}
+{"e":"order","t":6578967,"members":8,"money":74,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"wilds_territory","hours":2.55,"size":8}
+{"e":"order","t":6643227,"members":8,"money":74,"food_days":2.88,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"claim","node":"wilds_territory","dest":null,"hours":1,"size":8}
+{"e":"day","t":6675627,"members":8,"money":74,"food_days":1.75,"day":78,"roster":[{"name":"Righromnyx","money":18,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":46,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":15,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":0,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":0,"hp":13,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":0,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":0,"hp":5,"hp_max":5,"combat":0,"work":4},{"name":"Felorn","money":10,"hp":7,"hp_max":16,"combat":0,"work":4}],"rations":14,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":8}]}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Gormaldmirka","track":"combat","talent":"agile"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Gormaldmirka","track":"combat","talent":"tough"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Gormaldmirka","track":"combat","talent":"deadeye"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Gormaldmirka","track":"combat","talent":"strong"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Othskelvok","track":"combat","talent":"agile"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Othskelvok","track":"combat","talent":"deadeye"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Othskelvok","track":"work","talent":"clever"}
+{"e":"talent","t":6675627,"members":8,"money":74,"food_days":1.75,"unit":"Othskelvok","track":"work","talent":"charismatic"}
+{"e":"fight","t":6675645,"members":8,"money":74,"food_days":1.75,"hp_frac":0.81,"level_before":1.38,"members_before":8,"money_before":74,"food_days_before":1.75,"node":"wilds_territory","kind":"wilds_territory","won":true,"squad":8,"deaths":0,"foes":2,"xp":4,"level":1.38}
+{"e":"order","t":6675645,"members":8,"money":74,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"claim","node":"wilds_territory","dest":null,"hours":1,"size":8}
+{"e":"order","t":6679245,"members":8,"money":74,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"garrison","node":"wilds_territory","dest":null,"hours":0.0,"size":8}
+{"e":"day","t":6765645,"members":8,"money":74,"food_days":0.62,"day":79,"roster":[{"name":"Righromnyx","money":18,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":46,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":18,"hp_max":21,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":0,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":13,"combat":2,"work":4},{"name":"Rurigtikquen","money":0,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":0,"hp":5,"hp_max":5,"combat":0,"work":4},{"name":"Felorn","money":10,"hp":16,"hp_max":16,"combat":0,"work":4}],"rations":5,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":8}]}
+{"e":"order","t":6765645,"members":8,"money":74,"food_days":0.62,"gid":"5c8b2ee3461b454e8953535150a5fd5b","kind":"travel","node":"wilds_territory","dest":"tavern","hours":2.55,"size":4}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Zathrogdor","track":"combat","talent":"agile"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Zathrogdor","track":"combat","talent":"tough"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Zathrogdor","track":"combat","talent":"strong"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Zathrogdor","track":"combat","talent":"alert"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Zathrogdor","track":"work","talent":"charismatic"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Zathrogdor","track":"work","talent":"negotiator"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldvash","track":"combat","talent":"alert"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldvash","track":"combat","talent":"iron_will"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldun","track":"combat","talent":"agile"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldun","track":"work","talent":"clever"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldun","track":"work","talent":"crafter"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldun","track":"work","talent":"charismatic"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldun","track":"work","talent":"negotiator"}
+{"e":"talent","t":6802365,"members":8,"money":74,"food_days":0.62,"unit":"Aldun","track":"work","talent":"fletcher"}
+{"e":"talk","t":6802365,"members":8,"money":74,"food_days":0.62,"kind":"ambush","result":"peace","paid":0}
+{"e":"order","t":6802365,"members":8,"money":74,"food_days":0.62,"gid":"5c8b2ee3461b454e8953535150a5fd5b","kind":"travel","node":"road","dest":"tavern","hours":5.1,"size":4}
+{"e":"order","t":6825315,"members":8,"money":74,"food_days":0.62,"gid":"5c8b2ee3461b454e8953535150a5fd5b","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":4}
+{"e":"day","t":6828915,"members":8,"money":74,"food_days":0.0,"day":80,"roster":[{"name":"Righromnyx","money":18,"hp":3,"hp_max":19,"combat":3,"work":4},{"name":"Nyxuln","money":46,"hp":12,"hp_max":12,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":16,"hp_max":17,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":2,"hp_max":9,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":0,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Rurigtikquen","money":0,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":0,"hp":5,"hp_max":5,"combat":0,"work":4},{"name":"Felorn","money":10,"hp":16,"hp_max":16,"combat":0,"work":4}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4},{"gid":"5c8b2ee3461b454e8953535150a5fd5b","node":"tavern","size":4}]}
+{"e":"order","t":6828915,"members":8,"money":74,"food_days":0.0,"gid":"5c8b2ee3461b454e8953535150a5fd5b","kind":"travel","node":"tavern","dest":"farm","hours":1.27,"size":4}
+{"e":"order","t":6842685,"members":8,"money":74,"food_days":0.0,"gid":"5c8b2ee3461b454e8953535150a5fd5b","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":6846285,"members":8,"money":64,"food_days":0.62,"node":"farm","item":"Potato","qty":5,"price":2,"zone":"pack"}
+{"e":"sell","t":6846285,"members":8,"money":76,"food_days":0.62,"node":"farm","item":"Dagger","qty":1,"price":5}
+{"e":"sell","t":6846285,"members":8,"money":76,"food_days":0.62,"node":"farm","item":"1sqm Hide","qty":1,"price":7}
+{"e":"sell","t":6846285,"members":8,"money":78,"food_days":0.62,"node":"farm","item":"Shovel","qty":1,"price":2}
+{"e":"buy","t":6846285,"members":8,"money":64,"food_days":1.5,"node":"farm","item":"Potato","qty":7,"price":2,"zone":"pack"}
+{"e":"order","t":6846285,"members":8,"money":64,"food_days":1.5,"gid":"5c8b2ee3461b454e8953535150a5fd5b","kind":"travel","node":"farm","dest":"wilds_territory","hours":2.55,"size":4}
+{"e":"order","t":6910545,"members":8,"money":0,"food_days":1.5,"gid":"36d5552cac5b41088077694ca0d301d3","kind":"travel","node":"wilds_territory","dest":"farm","hours":2.55,"size":4}
+{"e":"day","t":6919725,"members":8,"money":0,"food_days":1.0,"day":81,"roster":[{"name":"Righromnyx","money":0,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":20,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":13,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":0,"hp":10,"hp_max":10,"combat":1,"work":4},{"name":"Rurigtikquen","money":0,"hp":14,"hp_max":14,"combat":1,"work":4},{"name":"Braeorn","money":0,"hp":2,"hp_max":2,"combat":0,"work":4},{"name":"Felorn","money":0,"hp":13,"hp_max":13,"combat":0,"work":4}],"rations":8,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4},{"gid":"36d5552cac5b41088077694ca0d301d3","node":"wilds_territory","size":4}]}
+{"e":"order","t":6974805,"members":8,"money":0,"food_days":1.0,"gid":"36d5552cac5b41088077694ca0d301d3","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":6978405,"members":8,"money":0,"food_days":3.5,"node":"farm","item":"Potato","qty":20,"price":2,"zone":"pack"}
+{"e":"buy","t":6978405,"members":8,"money":0,"food_days":4.5,"node":"farm","item":"Potato","qty":8,"price":2,"zone":"pack"}
+{"e":"sell","t":6978405,"members":8,"money":5,"food_days":4.5,"node":"farm","item":"Light Pick","qty":1,"price":5}
+{"e":"order","t":6978405,"members":8,"money":5,"food_days":4.5,"gid":"36d5552cac5b41088077694ca0d301d3","kind":"travel","node":"farm","dest":"wilds_territory","hours":2.55,"size":4}
+{"e":"day","t":7005945,"members":8,"money":5,"food_days":3.38,"day":82,"roster":[{"name":"Righromnyx","money":0,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":6,"hp_max":13,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":5,"hp":13,"hp_max":13,"combat":1,"work":4},{"name":"Rurigtikquen","money":0,"hp":17,"hp_max":17,"combat":1,"work":4},{"name":"Braeorn","money":0,"hp":5,"hp_max":5,"combat":0,"work":4},{"name":"Felorn","money":0,"hp":16,"hp_max":16,"combat":0,"work":4}],"rations":27,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4},{"gid":"36d5552cac5b41088077694ca0d301d3","node":"city","size":4}]}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Senbrae","track":"combat","talent":"strong"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Senbrae","track":"combat","talent":"tough"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Senbrae","track":"work","talent":"clever"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Senbrae","track":"work","talent":"crafter"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Senbrae","track":"work","talent":"charismatic"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Senbrae","track":"work","talent":"fixer"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Zanyxtasel","track":"work","talent":"clever"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Zanyxtasel","track":"work","talent":"crafter"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Zanyxtasel","track":"work","talent":"charismatic"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Zanyxtasel","track":"work","talent":"blacksmith"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Zanyxtasel","track":"work","talent":"fixer"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Zanyxtasel","track":"work","talent":"carrier"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Lyslyskael","track":"combat","talent":"agile"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Lyslyskael","track":"combat","talent":"strong"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Lyslyskael","track":"combat","talent":"sure_strike"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Lyslyskael","track":"combat","talent":"tough"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Lyslyskael","track":"combat","talent":"deadeye"}
+{"e":"talent","t":7005945,"members":8,"money":5,"food_days":3.38,"unit":"Lyslyskael","track":"combat","talent":"fleet"}
+{"e":"fight","t":7005957,"members":8,"money":5,"food_days":3.38,"hp_frac":0.69,"level_before":2.25,"members_before":8,"money_before":5,"food_days_before":3.38,"node":"wilds_territory","kind":"wilds_raid","won":true,"squad":4,"deaths":0,"foes":3,"xp":6,"level":1.38}
+{"e":"order","t":7005957,"members":8,"money":5,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"garrison","node":"wilds_territory","dest":null,"hours":0.0,"size":4}
+{"e":"order","t":7042677,"members":8,"money":0,"food_days":3.5,"gid":"8014bf2b96124f93b259a743d6d56c3e","kind":"travel","node":"wilds_territory","dest":"farm","hours":2.55,"size":4}
+{"e":"talent","t":7079397,"members":8,"money":0,"food_days":3.5,"unit":"Grokhelmaven","track":"combat","talent":"alert"}
+{"e":"talent","t":7079397,"members":8,"money":0,"food_days":3.5,"unit":"Grokhelmaven","track":"work","talent":"clever"}
+{"e":"talent","t":7079397,"members":8,"money":0,"food_days":3.5,"unit":"Zadro","track":"work","talent":"clever"}
+{"e":"talent","t":7079397,"members":8,"money":0,"food_days":3.5,"unit":"Zadro","track":"work","talent":"charismatic"}
+{"e":"talk","t":7079397,"members":8,"money":0,"food_days":3.5,"kind":"ambush","result":"fight","paid":0}
+{"e":"fight","t":7079421,"members":8,"money":0,"food_days":3.5,"hp_frac":1.0,"level_before":0.5,"members_before":8,"money_before":0,"food_days_before":3.5,"node":"road","kind":"ambush","won":true,"squad":4,"deaths":0,"foes":3,"xp":2,"level":1.38}
+{"e":"order","t":7079421,"members":8,"money":0,"food_days":3.5,"gid":"8014bf2b96124f93b259a743d6d56c3e","kind":"travel","node":"road","dest":"farm","hours":5.1,"size":4}
+{"e":"day","t":7097781,"members":8,"money":0,"food_days":3.0,"day":83,"roster":[{"name":"Righromnyx","money":0,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Adelio Small-Knife","money":0,"hp":10,"hp_max":10,"combat":1,"work":4},{"name":"Rurigtikquen","money":0,"hp":14,"hp_max":14,"combat":1,"work":4},{"name":"Braeorn","money":0,"hp":2,"hp_max":2,"combat":0,"work":4},{"name":"Felorn","money":0,"hp":1,"hp_max":13,"combat":0,"work":4}],"rations":24,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4},{"gid":"8014bf2b96124f93b259a743d6d56c3e","node":"road","size":4}]}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Veldornimka","track":"work","talent":"carrier"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Veldornimka","track":"work","talent":"clever"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Veldornimka","track":"work","talent":"crafter"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Veldornimka","track":"work","talent":"piecework"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Veldornimka","track":"work","talent":"apothecary"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Veldornimka","track":"work","talent":"charismatic"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Groknimfel","track":"combat","talent":"alert"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Groknimfel","track":"combat","talent":"tough"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Groknimfel","track":"work","talent":"clever"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Groknimfel","track":"work","talent":"charismatic"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Groknimfel","track":"work","talent":"negotiator"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Groknimfel","track":"work","talent":"fixer"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Throgsurnimorn","track":"work","talent":"clever"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Throgsurnimorn","track":"work","talent":"carrier"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Throgsurnimorn","track":"work","talent":"charismatic"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Throgsurnimorn","track":"work","talent":"fixer"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Throgsurnimorn","track":"work","talent":"piecework"}
+{"e":"talent","t":7097781,"members":8,"money":0,"food_days":3.0,"unit":"Throgsurnimorn","track":"work","talent":"brisk_hands"}
+{"e":"fight","t":7097799,"members":8,"money":0,"food_days":3.0,"hp_frac":0.6,"level_before":2.25,"members_before":8,"money_before":0,"food_days_before":3.0,"node":"wilds_territory","kind":"wilds_raid","won":true,"squad":4,"deaths":0,"foes":3,"xp":0,"level":1.38}
+{"e":"order","t":7097799,"members":8,"money":0,"food_days":3.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"garrison","node":"wilds_territory","dest":null,"hours":0.0,"size":4}
+{"e":"order","t":7106979,"members":8,"money":0,"food_days":3.0,"gid":"8014bf2b96124f93b259a743d6d56c3e","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"sell","t":7110579,"members":8,"money":28,"food_days":3.0,"node":"farm","item":"Scissors","qty":1,"price":1}
+{"e":"sell","t":7110579,"members":8,"money":28,"food_days":3.0,"node":"farm","item":"Hammer","qty":1,"price":19}
+{"e":"sell","t":7110579,"members":8,"money":28,"food_days":3.0,"node":"farm","item":"Dagger","qty":2,"price":4}
+{"e":"sell","t":7110579,"members":8,"money":56,"food_days":3.0,"node":"farm","item":"Hatchet","qty":1,"price":5}
+{"e":"sell","t":7110579,"members":8,"money":56,"food_days":3.0,"node":"farm","item":"Dagger","qty":1,"price":4}
+{"e":"sell","t":7110579,"members":8,"money":56,"food_days":3.0,"node":"farm","item":"Axe","qty":1,"price":19}
+{"e":"buy","t":7110579,"members":8,"money":19,"food_days":5.5,"node":"farm","item":"Potato","qty":20,"price":2,"zone":"pack"}
+{"e":"order","t":7110579,"members":8,"money":19,"food_days":5.5,"gid":"8014bf2b96124f93b259a743d6d56c3e","kind":"travel","node":"farm","dest":"wilds_territory","hours":2.55,"size":4}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Hromirhelfel","track":"work","talent":"clever"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Hromirhelfel","track":"work","talent":"charismatic"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Hromirhelfel","track":"work","talent":"crafter"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Hromirhelfel","track":"work","talent":"carrier"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Hromirhelfel","track":"work","talent":"fixer"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Hromirhelfel","track":"work","talent":"apothecary"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Yldun","track":"combat","talent":"agile"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Yldun","track":"combat","talent":"long_reach"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Yldun","track":"combat","talent":"deadeye"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Yldun","track":"combat","talent":"strong"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Yldun","track":"work","talent":"clever"}
+{"e":"talent","t":7138119,"members":8,"money":19,"food_days":5.5,"unit":"Yldun","track":"work","talent":"linguist"}
+{"e":"death","t":7138119,"members":8,"money":19,"food_days":5.5,"name":"Adelio Small-Knife","race":"Halfling","occupation":"Thief","combat":1,"work":4,"hp_max":10,"cause":"combat","how":"defeat","round":4,"foes":["Hromirhelfel","Yldun"],"trail":["Yldun moves (1 action point).","Yldun -> Adelio Small-Knife: d20(18) +5(STR) +2(Pack Tactics [circumstance]) = 25 vs AC 13  -> hit.","Adelio Small-Knife takes 7 damage (HP 0/10).","Adelio Small-Knife goes down, dying (4 turns to the death save)."]}
+{"e":"death","t":7138119,"members":8,"money":19,"food_days":5.5,"name":"Rurigtikquen","race":"Human","occupation":"Tanner","combat":1,"work":4,"hp_max":14,"cause":"combat","how":"defeat","round":4,"foes":["Hromirhelfel","Yldun"],"trail":["Rurigtikquen takes 8 damage (HP 6/14).","Yldun -> Rurigtikquen: d20(11) +5(STR) +2(Pack Tactics [circumstance]) = 18 vs AC 10  -> hit.","Rurigtikquen takes 7 damage (HP 0/14).","Rurigtikquen goes down, dying (4 turns to the death save)."]}
+{"e":"death","t":7138119,"members":8,"money":19,"food_days":5.5,"name":"Braeorn","race":"Human","occupation":"Mercenary","combat":0,"work":4,"hp_max":2,"cause":"combat","how":"defeat","round":4,"foes":["Hromirhelfel","Yldun"],"trail":["Hromirhelfel's turn (enemy).","Hromirhelfel -> Braeorn: d20(7) +1(STR) +2(Pack Tactics [circumstance]) = 10 vs AC 9  -> hit.","Braeorn takes 5 damage (HP 0/2).","Braeorn goes down, dying (4 turns to the death save)."]}
+{"e":"death","t":7138119,"members":8,"money":19,"food_days":5.5,"name":"Felorn","race":"Human","occupation":"Goldsmith","combat":0,"work":4,"hp_max":13,"cause":"combat","how":"defeat","round":4,"foes":["Hromirhelfel","Yldun"],"trail":["Hromirhelfel's turn (enemy).","Hromirhelfel -> Felorn: d20(20) +1(STR) +2(Pack Tactics [circumstance]) = 23 vs AC 10  -> CRITICAL HIT!","Felorn takes 4 damage (HP 0/13).","Felorn goes down, dying (4 turns to the death save)."]}
+{"e":"fight","t":7138143,"members":4,"money":0,"food_days":6.0,"hp_frac":0.77,"level_before":0.5,"members_before":8,"money_before":19,"food_days_before":5.5,"node":"road","kind":"ambush","won":false,"squad":4,"deaths":4,"foes":2,"xp":0,"level":2.25}
+{"e":"day","t":7224543,"members":4,"money":0,"food_days":5.0,"day":84,"roster":[{"name":"Righromnyx","money":0,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":20,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4}]}
+{"e":"day","t":7310943,"members":4,"money":0,"food_days":4.0,"day":85,"roster":[{"name":"Righromnyx","money":0,"hp":7,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":16,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4}]}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Drohel","track":"combat","talent":"agile"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Drohel","track":"combat","talent":"strong"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Drohel","track":"combat","talent":"tough"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Drohel","track":"combat","talent":"sure_strike"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Drohel","track":"combat","talent":"bulwark"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Drohel","track":"combat","talent":"armor_bearer"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Sendrix","track":"combat","talent":"agile"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Sendrix","track":"combat","talent":"tough"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Sendrix","track":"work","talent":"clever"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Sendrix","track":"work","talent":"charismatic"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Sendrix","track":"work","talent":"carrier"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Sendrix","track":"work","talent":"fixer"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Bexsuroth","track":"combat","talent":"agile"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Bexsuroth","track":"work","talent":"clever"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Bexsuroth","track":"work","talent":"linguist"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Bexsuroth","track":"work","talent":"charismatic"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Bexsuroth","track":"work","talent":"negotiator"}
+{"e":"talent","t":7310943,"members":4,"money":0,"food_days":4.0,"unit":"Bexsuroth","track":"work","talent":"fixer"}
+{"e":"fight","t":7310967,"members":4,"money":0,"food_days":4.0,"hp_frac":0.6,"level_before":2.25,"members_before":4,"money_before":0,"food_days_before":4.0,"node":"wilds_territory","kind":"wilds_raid","won":true,"squad":4,"deaths":0,"foes":3,"xp":5,"level":2.25}
+{"e":"order","t":7310967,"members":4,"money":0,"food_days":4.25,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"garrison","node":"wilds_territory","dest":null,"hours":0.0,"size":4}
+{"e":"day","t":7397367,"members":4,"money":0,"food_days":3.25,"day":86,"roster":[{"name":"Righromnyx","money":0,"hp":6,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":13,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4}]}
+{"e":"day","t":7483767,"members":4,"money":0,"food_days":2.25,"day":87,"roster":[{"name":"Righromnyx","money":0,"hp":6,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":9,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4}]}
+{"e":"day","t":7570167,"members":4,"money":0,"food_days":1.25,"day":88,"roster":[{"name":"Righromnyx","money":0,"hp":6,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":2,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":5,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"wilds_territory","size":4}]}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Ashob","track":"work","talent":"clever"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Ashob","track":"work","talent":"crafter"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Ashob","track":"work","talent":"charismatic"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Ashob","track":"work","talent":"negotiator"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Ashob","track":"work","talent":"apothecary"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Ashob","track":"work","talent":"linguist"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Thaldral","track":"combat","talent":"strong"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Thaldral","track":"work","talent":"clever"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Thaldral","track":"work","talent":"charismatic"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Thaldral","track":"work","talent":"linguist"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Thaldral","track":"work","talent":"crafter"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Thaldral","track":"work","talent":"blacksmith"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Torbexgrokbex","track":"combat","talent":"strong"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Torbexgrokbex","track":"combat","talent":"tough"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Torbexgrokbex","track":"combat","talent":"heavy_hand"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Torbexgrokbex","track":"combat","talent":"alert"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Torbexgrokbex","track":"combat","talent":"iron_will"}
+{"e":"talent","t":7570167,"members":4,"money":0,"food_days":1.25,"unit":"Torbexgrokbex","track":"combat","talent":"agile"}
+{"e":"fight","t":7570191,"members":4,"money":0,"food_days":1.25,"hp_frac":0.58,"level_before":2.25,"members_before":4,"money_before":0,"food_days_before":1.25,"node":"wilds_territory","kind":"wilds_seizure","won":true,"squad":4,"deaths":0,"foes":3,"xp":5,"level":2.5}
+{"e":"talent","t":7570191,"members":4,"money":0,"food_days":1.25,"unit":"Muntik","track":"combat","talent":"heavy_hand"}
+{"e":"order","t":7570191,"members":4,"money":0,"food_days":1.25,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"wilds_territory","dest":"smith","hours":2.55,"size":4}
+{"e":"day","t":7606911,"members":4,"money":0,"food_days":0.25,"day":89,"roster":[{"name":"Righromnyx","money":0,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Nyxuln","money":0,"hp":16,"hp_max":16,"combat":2,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":1,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"mine","size":4}]}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Mirdorobketh","track":"combat","talent":"tough"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Mirdorobketh","track":"work","talent":"charismatic"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Mirdorobketh","track":"work","talent":"negotiator"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Mirdorobketh","track":"work","talent":"clever"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Mirdorobketh","track":"work","talent":"linguist"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Mirdorobketh","track":"work","talent":"carrier"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Venvyr","track":"work","talent":"clever"}
+{"e":"talent","t":7606911,"members":4,"money":0,"food_days":0.25,"unit":"Venvyr","track":"work","talent":"carrier"}
+{"e":"talk","t":7606911,"members":4,"money":0,"food_days":0.25,"kind":"ambush","result":"fight","paid":0}
+{"e":"death","t":7606911,"members":4,"money":0,"food_days":0.25,"name":"Nyxuln","race":"Lizardfolk","occupation":"Goldsmith","combat":2,"work":4,"hp_max":16,"cause":"combat","how":"defeat","round":8,"foes":["Brangorm","Nimbraesen","Mirdorobketh","Throgdraltherfel","Venvyr"],"trail":["Nimbraesen moves (1 action point).","Nimbraesen throws Light Pick at Nyxuln: d20(20)  = 20 vs AC 12  -> CRITICAL HIT!","Nyxuln takes 12 damage (HP 0/16).","Nyxuln goes down, dying (4 turns to the death save)."]}
+{"e":"fight","t":7606959,"members":3,"money":0,"food_days":0.33,"hp_frac":0.53,"level_before":2.5,"members_before":4,"money_before":0,"food_days_before":0.25,"node":"road","kind":"ambush","won":false,"squad":4,"deaths":1,"foes":5,"xp":0,"level":2.67}
+{"e":"order","t":7606959,"members":3,"money":0,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"road","dest":"smith","hours":5.1,"size":3}
+{"e":"order","t":7627614,"members":3,"money":0,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":3}
+{"e":"sell","t":7631214,"members":3,"money":17,"food_days":0.33,"node":"smith","item":"Dagger","qty":2,"price":4}
+{"e":"sell","t":7631214,"members":3,"money":17,"food_days":0.33,"node":"smith","item":"Cloak","qty":1,"price":1}
+{"e":"sell","t":7631214,"members":3,"money":17,"food_days":0.33,"node":"smith","item":"Club","qty":1,"price":3}
+{"e":"sell","t":7631214,"members":3,"money":17,"food_days":0.33,"node":"smith","item":"Chains","qty":1,"price":5}
+{"e":"sell","t":7631214,"members":3,"money":26,"food_days":0.33,"node":"smith","item":"Dagger","qty":2,"price":4}
+{"e":"sell","t":7631214,"members":3,"money":26,"food_days":0.33,"node":"smith","item":"Cloak","qty":1,"price":1}
+{"e":"sell","t":7631214,"members":3,"money":28,"food_days":0.33,"node":"smith","item":"Rope","qty":1,"price":2}
+{"e":"sell","t":7631214,"members":3,"money":80,"food_days":0.33,"node":"smith","item":"Lumber","qty":13,"price":4}
+{"e":"sell","t":7631214,"members":3,"money":118,"food_days":0.33,"node":"smith","item":"Musical Instrument","qty":1,"price":2}
+{"e":"sell","t":7631214,"members":3,"money":118,"food_days":0.33,"node":"smith","item":"Lumber","qty":9,"price":4}
+{"e":"sell","t":7631214,"members":3,"money":120,"food_days":0.33,"node":"smith","item":"Salt","qty":1,"price":2}
+{"e":"sell","t":7631214,"members":3,"money":176,"food_days":0.33,"node":"smith","item":"Chisel","qty":1,"price":1}
+{"e":"sell","t":7631214,"members":3,"money":176,"food_days":0.33,"node":"smith","item":"Light Hammer","qty":1,"price":5}
+{"e":"sell","t":7631214,"members":3,"money":176,"food_days":0.33,"node":"smith","item":"Quiver","qty":1,"price":14}
+{"e":"sell","t":7631214,"members":3,"money":176,"food_days":0.33,"node":"smith","item":"Lumber","qty":9,"price":4}
+{"e":"order","t":7631214,"members":3,"money":176,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"farm","hours":0.51,"size":3}
+{"e":"order","t":7640394,"members":3,"money":176,"food_days":0.33,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":3}
+{"e":"buy","t":7643994,"members":3,"money":92,"food_days":9.67,"node":"farm","item":"Potato","qty":28,"price":3,"zone":"pack"}
+{"e":"order","t":7643994,"members":3,"money":92,"food_days":9.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"tavern","hours":2.04,"size":3}
+{"e":"order","t":7655010,"members":3,"money":92,"food_days":9.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":3}
+{"e":"recruit","t":7658610,"members":3,"money":92,"food_days":9.67,"pitcher":"Righromnyx","candidate":"Dralbraethrogbex","bail":0,"ok":false}
+{"e":"order","t":7658610,"members":3,"money":92,"food_days":9.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.02,"size":3}
+{"e":"order","t":7665954,"members":3,"money":92,"food_days":9.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":3}
+{"e":"order","t":7669554,"members":3,"money":92,"food_days":9.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"lumber_yard","hours":1.02,"size":3}
+{"e":"order","t":7676898,"members":3,"money":92,"food_days":9.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":3}
+{"e":"day","t":7734498,"members":3,"money":92,"food_days":8.67,"day":90,"roster":[{"name":"Righromnyx","money":43,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":19,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":30,"hp":1,"hp_max":13,"combat":2,"work":4}],"rations":26,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":3}]}
+{"e":"order","t":7734498,"members":3,"money":107,"food_days":8.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"prison","hours":1.02,"size":3}
+{"e":"order","t":7741842,"members":3,"money":107,"food_days":8.67,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":3}
+{"e":"recruit","t":7745442,"members":3,"money":6,"food_days":8.67,"pitcher":"Righromnyx","candidate":"Helvyr","bail":101,"ok":true}
+{"e":"order","t":7745442,"members":4,"money":36,"food_days":6.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"smith","hours":1.02,"size":4}
+{"e":"order","t":7750950,"members":4,"money":36,"food_days":6.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"forge","node":"smith","dest":null,"hours":1,"size":4}
+{"e":"buy","t":7754550,"members":4,"money":4,"food_days":6.75,"node":"smith","item":"Axe","qty":1,"price":32,"zone":"hand"}
+{"e":"sell","t":7754550,"members":4,"money":5,"food_days":6.5,"node":"smith","item":"Rotten Food","qty":1,"price":1}
+{"e":"sell","t":7754550,"members":4,"money":10,"food_days":6.5,"node":"smith","item":"Hatchet","qty":1,"price":5}
+{"e":"order","t":7754550,"members":4,"money":10,"food_days":6.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"smith","dest":"lumber_yard","hours":0.51,"size":4}
+{"e":"order","t":7760058,"members":4,"money":10,"food_days":6.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":7817658,"members":4,"money":10,"food_days":5.5,"day":91,"roster":[{"name":"Righromnyx","money":1,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":1,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":8,"hp":5,"hp_max":5,"combat":0,"work":0}],"rations":22,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"talent","t":7817658,"members":4,"money":30,"food_days":5.5,"unit":"Helvyr","track":"work","talent":"charismatic"}
+{"e":"order","t":7817658,"members":4,"money":30,"food_days":5.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":7875258,"members":4,"money":30,"food_days":4.5,"day":92,"roster":[{"name":"Righromnyx","money":6,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":6,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":5,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":13,"hp":5,"hp_max":5,"combat":0,"work":1}],"rations":18,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":7875258,"members":4,"money":50,"food_days":4.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":7932858,"members":4,"money":70,"food_days":4.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":7990458,"members":4,"money":70,"food_days":3.5,"day":93,"roster":[{"name":"Righromnyx","money":16,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":16,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":15,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":23,"hp":5,"hp_max":5,"combat":0,"work":1}],"rations":14,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":7990458,"members":4,"money":90,"food_days":3.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8048058,"members":4,"money":90,"food_days":2.5,"day":94,"roster":[{"name":"Righromnyx","money":21,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":21,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":20,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":28,"hp":5,"hp_max":5,"combat":0,"work":1}],"rations":10,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"talent","t":8048058,"members":4,"money":110,"food_days":2.5,"unit":"Helvyr","track":"work","talent":"fixer"}
+{"e":"order","t":8048058,"members":4,"money":110,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"tavern","hours":1.02,"size":4}
+{"e":"order","t":8055402,"members":4,"money":110,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":4}
+{"e":"recruit","t":8059002,"members":4,"money":110,"food_days":2.5,"pitcher":"Righromnyx","candidate":"Eltas","bail":0,"ok":false}
+{"e":"recruit","t":8059002,"members":4,"money":110,"food_days":2.5,"pitcher":"Helvyr","candidate":"Eltas","bail":0,"ok":false}
+{"e":"order","t":8059002,"members":4,"money":110,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"prison","hours":1.02,"size":4}
+{"e":"order","t":8066346,"members":4,"money":110,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":4}
+{"e":"recruit","t":8069946,"members":4,"money":33,"food_days":2.5,"pitcher":"Righromnyx","candidate":"Kethtasrig","bail":77,"ok":false}
+{"e":"order","t":8069946,"members":4,"money":33,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"lumber_yard","hours":1.02,"size":4}
+{"e":"order","t":8077290,"members":4,"money":33,"food_days":2.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8134890,"members":4,"money":33,"food_days":1.5,"day":95,"roster":[{"name":"Righromnyx","money":0,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":8,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":25,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":0,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":6,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8134890,"members":4,"money":53,"food_days":1.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":8192490,"members":4,"money":73,"food_days":1.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8250090,"members":4,"money":73,"food_days":0.5,"day":96,"roster":[{"name":"Righromnyx","money":10,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":18,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":35,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":10,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":2,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8250090,"members":4,"money":93,"food_days":0.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"farm","hours":1.02,"size":4}
+{"e":"order","t":8261106,"members":4,"money":93,"food_days":0.5,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":8264706,"members":4,"money":30,"food_days":5.75,"node":"farm","item":"Potato","qty":21,"price":3,"zone":"pack"}
+{"e":"order","t":8264706,"members":4,"money":30,"food_days":5.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"lumber_yard","hours":2.04,"size":4}
+{"e":"order","t":8275722,"members":4,"money":30,"food_days":5.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8333322,"members":4,"money":30,"food_days":4.75,"day":97,"roster":[{"name":"Righromnyx","money":5,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":5,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":15,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":5,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":19,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8333322,"members":4,"money":50,"food_days":4.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8390922,"members":4,"money":50,"food_days":3.75,"day":98,"roster":[{"name":"Righromnyx","money":10,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":10,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":20,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":10,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":15,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8390922,"members":4,"money":70,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":8448522,"members":4,"money":90,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"prison","hours":1.02,"size":4}
+{"e":"order","t":8455866,"members":4,"money":90,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":4}
+{"e":"recruit","t":8459466,"members":4,"money":13,"food_days":3.75,"pitcher":"Surkaeldralka","candidate":"Kethtasrig","bail":77,"ok":false}
+{"e":"order","t":8459466,"members":4,"money":13,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"lumber_yard","hours":1.02,"size":4}
+{"e":"order","t":8466810,"members":4,"money":13,"food_days":3.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8524410,"members":4,"money":13,"food_days":2.75,"day":99,"roster":[{"name":"Righromnyx","money":0,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":0,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":0,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":13,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":11,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8524410,"members":4,"money":33,"food_days":2.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8582010,"members":4,"money":33,"food_days":1.75,"day":100,"roster":[{"name":"Righromnyx","money":5,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":5,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":5,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":18,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":7,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8582010,"members":4,"money":53,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"order","t":8639610,"members":4,"money":73,"food_days":1.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"work","node":"lumber_yard","dest":null,"hours":16,"size":4}
+{"e":"day","t":8697210,"members":4,"money":73,"food_days":0.75,"day":101,"roster":[{"name":"Righromnyx","money":15,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":15,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":15,"hp":1,"hp_max":13,"combat":2,"work":4},{"name":"Helvyr","money":28,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":3,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"lumber_yard","size":4}]}
+{"e":"order","t":8697210,"members":4,"money":93,"food_days":0.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"lumber_yard","dest":"prison","hours":1.02,"size":4}
+{"e":"order","t":8704554,"members":4,"money":93,"food_days":0.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"prison","node":"prison","dest":null,"hours":1,"size":4}
+{"e":"order","t":8708154,"members":4,"money":93,"food_days":0.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"prison","dest":"tavern","hours":1.02,"size":4}
+{"e":"order","t":8715498,"members":4,"money":93,"food_days":0.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"recruit","node":"tavern","dest":null,"hours":1,"size":4}
+{"e":"order","t":8719098,"members":4,"money":93,"food_days":0.75,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"tavern","dest":"farm","hours":1.02,"size":4}
+{"e":"day","t":8730114,"members":4,"money":93,"food_days":0.0,"day":102,"roster":[{"name":"Righromnyx","money":20,"hp":1,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":20,"hp":13,"hp_max":13,"combat":3,"work":4},{"name":"Surkaeldralka","money":20,"hp":1,"hp_max":5,"combat":2,"work":4},{"name":"Helvyr","money":33,"hp":12,"hp_max":12,"combat":0,"work":2}],"rations":0,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"city","size":4}]}
+{"e":"order","t":8730114,"members":4,"money":93,"food_days":0.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"stable","node":"farm","dest":null,"hours":1,"size":4}
+{"e":"buy","t":8733714,"members":4,"money":30,"food_days":5.25,"node":"farm","item":"Potato","qty":21,"price":3,"zone":"pack"}
+{"e":"order","t":8733714,"members":4,"money":30,"food_days":5.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"rest","node":"farm","dest":null,"hours":32,"size":4}
+{"e":"day","t":8848914,"members":4,"money":30,"food_days":4.0,"day":103,"roster":[{"name":"Righromnyx","money":6,"hp":23,"hp_max":23,"combat":3,"work":4},{"name":"Muntik","money":6,"hp":21,"hp_max":21,"combat":3,"work":4},{"name":"Surkaeldralka","money":6,"hp":5,"hp_max":5,"combat":2,"work":4},{"name":"Helvyr","money":12,"hp":14,"hp_max":14,"combat":0,"work":2}],"rations":16,"groups":[{"gid":"e177bcf055bc428c9ee4c870de8c1c25","node":"farm","size":4}]}
+{"e":"order","t":8848914,"members":4,"money":30,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"travel","node":"farm","dest":"apothecary","hours":2.04,"size":4}
+{"e":"order","t":8858094,"members":4,"money":30,"food_days":4.0,"gid":"e177bcf055bc428c9ee4c870de8c1c25","kind":"apothecary","node":"apothecary","dest":null,"hours":1,"size":4}
