@@ -186,3 +186,8 @@ class BoardView:
         self.cam[0] -= dx / self.tile
         self.cam[1] -= dy / self.tile
         self._clamp()
+
+    def pan_tiles(self, dx, dy):
+        self.cam[0] += dx
+        self.cam[1] += dy
+        self._clamp()

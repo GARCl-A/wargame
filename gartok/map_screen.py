@@ -68,6 +68,7 @@ from . import (
     dialogue,
     encounters,
     lair,
+    missions,
     orders,
     ox,
     recruit,
@@ -182,7 +183,7 @@ class MapScreen(MapInspectorMixin, Screen):
     def __init__(self, fonts, guild, on_guild, on_wipe, on_advance, on_manage_group,
                 pending_event=None, on_resolve_event=None, on_autowin=None,
                 on_visit_tavern=None, on_visit_claim=None, on_abandon=None,
-                on_cook=None, on_dialogue=None):
+                on_cook=None, on_dialogue=None, on_interactive=None):
         super().__init__()
         self.fonts = fonts
         self.guild = guild
@@ -198,6 +199,7 @@ class MapScreen(MapInspectorMixin, Screen):
         self.on_abandon = on_abandon
         self.on_visit_tavern = on_visit_tavern
         self.on_visit_claim = on_visit_claim
+        self.on_interactive = on_interactive
         self.autowin_estimator = autowin.AutoWinEstimator()
         if self._pending_event is not None:
             g, o = self._pending_event
@@ -238,6 +240,7 @@ class MapScreen(MapInspectorMixin, Screen):
         self._nodes = {n.id: self._node_dict(n) for n in world.known(self.guild)}
         self._region_r = {n.id: (WILDS_REGION_R if n.kind == "wilds" else DEFAULT_REGION_R)
                           for n in world.NODES if n.id in self._nodes}
+        self._sync_node_alerts()
 
     # ------------------------------------------------------------------ #
     # adapters: real objects -> the plain dicts gartok.ui components draw #
@@ -249,13 +252,16 @@ class MapScreen(MapInspectorMixin, Screen):
 
     def _sync_node_alerts(self):
         """A "!" on a node that has something new to do: the taverna or the
-        prison turned over its strangers since the guild last walked in."""
+        prison turned over its strangers since the guild last walked in, or
+        an unaccepted job is on offer on its mission board."""
         g = self.guild
         for node in world.NODES:
             d = self._nodes.get(node.id)
             if d is not None:
-                d["alert"] = any(node.has(fn) and recruit.has_new_faces(g, key)
-                                 for fn, key in recruit.SEEN_FUNCTIONS.items())
+                has_recruits = any(node.has(fn) and recruit.has_new_faces(g, key)
+                                   for fn, key in recruit.SEEN_FUNCTIONS.items())
+                has_jobs = bool(missions.offers_at(g, node.id))
+                d["alert"] = has_recruits or has_jobs
 
     def _group_blocked(self, group):
         """True for the one group `self._pending_event` is paused on -- it
@@ -652,7 +658,10 @@ class MapScreen(MapInspectorMixin, Screen):
             self.notices.append(msg)
             self._maybe_auto_advance()
         elif key in orders.INTERACTIVE_KINDS:
-            self._issue(orders.interactive(key))
+            if self.on_interactive:
+                self.on_interactive(self.selected, key)
+            else:
+                self._issue(orders.interactive(key, hours=0))
 
     def _wildfire_talk(self):
         """TALK at a focus: the dialogue (`dialogue.WildfireTalk`); a miss or ATTACK sends the

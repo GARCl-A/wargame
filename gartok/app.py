@@ -303,7 +303,8 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                                on_visit_claim=self._visit_claim,
                                on_abandon=self._abandon_broken,
                                on_cook=lambda g: self._open_kitchen(g, "CAMPFIRE COOKING", self._start_map),
-                               on_dialogue=self._map_dialogue)
+                               on_dialogue=self._map_dialogue,
+                               on_interactive=self._open_interactive)
         if self._map_notices:
             self.scene.notices = self._map_notices
             self._map_notices = []

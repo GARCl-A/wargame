@@ -995,10 +995,10 @@ def _unflank_worth(battle, unit, foe):
 
 def _try_shove(battle, unit):
     """Push a foe when the shove is worth more than a swing: into the flames, or with a Mighty
-    Shove against a wall. Returns True if it shoved."""
+    Shove against a wall. Returns the foe if it shoved, else None."""
     push = actions.PUSH
     if not push.available(battle, unit):
-        return False
+        return None
     swing = SHOVE_HIT_ODDS * (_hand_die(unit) + unit.mod_strength)
     best, best_worth = None, max(0.0, swing)
     for foe in push.highlight_targets(battle, unit):
@@ -1008,9 +1008,32 @@ def _try_shove(battle, unit):
         if worth > best_worth:
             best, best_worth = foe, worth
     if best is None:
-        return False
+        return None
     push.execute(battle, unit, best)
-    return True
+    return best
+
+
+def _retreat_from(battle, unit, foe):
+    """Back away from `foe` into a safe cell that increases distance from it,
+    or Defend if no retreat cell is available. Returns True if acted."""
+    if unit.ap < 1 or not unit.alive:
+        return False
+    reach = battle.reachable(unit)
+    cur_dist = battle.units_distance(unit, foe)
+    safe = [
+        p for p in reach
+        if all(c not in battle.fire for c in cells(p, unit.footprint))
+        and grid_distance(p, foe.pos) > cur_dist
+    ]
+    if safe:
+        dest = max(safe, key=lambda p: grid_distance(p, foe.pos))
+        actions.MOVE.execute(battle, unit, dest)
+        unit.walking = False
+        return True
+    if actions.DEFEND.available(battle, unit):
+        actions.DEFEND.execute(battle, unit)
+        return True
+    return False
 
 
 def _leave_fire(battle, unit):
@@ -1348,12 +1371,50 @@ def take_turn(battle, unit):
         if _try_breath(battle, unit):
             continue
 
-        if _try_shove(battle, unit):
+        shoved_foe = _try_shove(battle, unit)
+        if shoved_foe is not None:
+            if unit.ap > 0 and unit.alive:
+                # Compound 2-action tactical replanning:
+                # If shove succeeded (foe displaced): execute planned Retreat or Ranged Attack
+                # If shove failed (foe remained adjacent): pivot to Defend (+2 AC)
+                shove_succeeded = (shoved_foe not in battle.units or not shoved_foe.alive
+                                   or battle.units_distance(unit, shoved_foe) > 1)
+                if shove_succeeded:
+                    atk = _pick_attack(battle, unit, shoved_foe)
+                    if atk is not None:
+                        atk.execute(battle, unit, shoved_foe)
+                    else:
+                        _retreat_from(battle, unit, shoved_foe)
+                else:
+                    if actions.DEFEND.available(battle, unit):
+                        actions.DEFEND.execute(battle, unit)
+                    else:
+                        atk = _pick_attack(battle, unit, shoved_foe)
+                        if atk is not None:
+                            atk.execute(battle, unit, shoved_foe)
+            continue
+
+        # Compound [Demoralize, Attack] evaluation when 2 AP available
+        if (unit.ap >= 2 and not target.demoralized and actions.DEMORALIZE.can(battle, unit, target)
+                and target.hp > _hand_die(unit)):
+            actions.DEMORALIZE.execute(battle, unit, target)
+            if unit.ap > 0 and unit.alive:
+                atk = _pick_attack(battle, unit, target)
+                if atk is not None:
+                    atk.execute(battle, unit, target)
             continue
 
         atk = _pick_attack(battle, unit, target)
         if atk is not None:
             atk.execute(battle, unit, target)
+            if unit.ap > 0 and unit.alive:
+                if (unit.hp <= unit.hp_max * 0.35 and battle.units_distance(unit, target) <= 1
+                        and actions.DEFEND.available(battle, unit)):
+                    actions.DEFEND.execute(battle, unit)
+                else:
+                    second_atk = _pick_attack(battle, unit, target)
+                    if second_atk is not None:
+                        second_atk.execute(battle, unit, target)
             continue
 
         if _spin_web(battle, unit, target):

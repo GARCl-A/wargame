@@ -290,3 +290,16 @@ def test_a_group_that_starves_out_before_resolution_is_skipped():
 
 def test_every_order_kind_that_reaches_the_app_has_an_opener():
     assert (orders.INTERACTIVE_KINDS | set(forced.EVENTS)) <= set(App._ACTIVITY_OPENERS)
+
+
+def test_interactive_button_on_map_opens_directly_with_zero_advance():
+    random.seed(1)
+    g = Group([walker()], node="market")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    app._start_map()
+    clock_before = guild.clock.seconds
+    assert app.scene.__class__.__name__ == "MapScreen"
+    app.scene._handle_button("market")
+    assert guild.clock.seconds == clock_before
+    assert app.scene.__class__.__name__ in ("MarketScreen", "TabbedHubScreen", "ShopHubScreen")

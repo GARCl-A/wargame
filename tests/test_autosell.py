@@ -45,6 +45,23 @@ def test_sell_marked_takes_every_marked_stack_from_every_shopper_and_keeps_the_r
     assert a.money + b.money - before == economy.sell_price("Dagger", s.deal) * 3
 
 
+def test_autosell_includes_wagons_and_pack_animals():
+    from gartok.wagon import Wagon
+    a = _unit(("Club", 1))
+    guild = Guild([a])
+    guild.autosell = {"Dagger"}
+    guild.shop(NODE.id).cash = 10_000
+    grp = guild.groups[0]
+    cart = Wagon("Cart")
+    cart.give_to_pack("Dagger", 4)
+    grp.wagons.append(cart)
+    s = MarketScreen(None, guild, [a], NODE, lambda: None)
+    assert cart in s.stores
+    assert s._marked_total() == economy.sell_price("Dagger", s.deal) * 4
+    s._sell_marked()
+    assert cart.count_of("Dagger") == 0
+
+
 def test_a_padlocked_part_of_a_marked_stack_stays():
     u = _unit(("Dagger", 3))
     u.locked_items["Dagger"] = 1

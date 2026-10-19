@@ -227,6 +227,14 @@ class MapInspectorMixin:
             blocks.append(btn)
             blocks += self._function_notes(fn)
 
+        job_offers = missions.offers_at(self.guild, here.id)
+        if job_offers:
+            count = len(job_offers)
+            label = "New mission on offer" if count == 1 else f"{count} new missions on offer"
+            names = ", ".join(t.name for t in job_offers)
+            blocks.append({"type": "text", "color": T.BRASS,
+                           "text": f"! {label}: {names}"})
+
         if here.id == "road" and not self.guild.is_node_revealed("ancient_ruins"):
             blocks.append({"type": "button", "key": "scout_ruins", "label": "EXPLORE THE AREA (4 h)",
                           "gap_before": T.S * 2})

@@ -247,6 +247,128 @@ def _unlock(surf, rect, c):
     pygame.draw.rect(surf, c, body, w, border_radius=max(1, int(s * 0.1)))
 
 
+def _sneak_attack(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.lines(surf, c, False, [(x, y + s * 0.4), (x + s * 0.35, y), (x + s * 0.7, y)], w)
+    pygame.draw.line(surf, c, (x + s * 0.2, y + s * 0.6), (x + s * 0.85, y + s * 0.15), w + 1)
+    pygame.draw.line(surf, c, (x + s * 0.15, y + s * 0.45), (x + s * 0.35, y + s * 0.75), w)
+    pygame.draw.line(surf, c, (x + s * 0.05, y + s * 0.75), (x + s * 0.2, y + s * 0.6), w)
+    pygame.draw.line(surf, c, (x + s * 0.95, y + s * 0.1), (x + s * 0.75, y + s * 0.05), w)
+    pygame.draw.line(surf, c, (x + s * 0.9, y + s * 0.3), (x + s * 0.95, y + s * 0.1), w)
+
+
+def _cleave(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.arc(surf, c, (x, y + s * 0.05, s * 0.9, s * 0.9), 0.2, 2.7, w + 1)
+    pygame.draw.polygon(surf, c, [(x + s * 0.6, y + s * 0.1), (x + s * 0.95, y + s * 0.3),
+                                  (x + s * 0.8, y + s * 0.65), (x + s * 0.5, y + s * 0.45)], w)
+    pygame.draw.line(surf, c, (x + s * 0.55, y + s * 0.4), (x + s * 0.1, y + s * 0.9), w)
+    pygame.draw.line(surf, c, (x + s * 0.15, y + s * 0.2), (x + s * 0.35, y + s * 0.4), w)
+    pygame.draw.line(surf, c, (x + s * 0.3, y + s * 0.1), (x + s * 0.5, y + s * 0.3), w)
+
+
+def _precise_thrust(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.1, y + s * 0.85), (x + s * 0.88, y + s * 0.18), w)
+    pygame.draw.arc(surf, c, (x + s * 0.15, y + s * 0.65, s * 0.3, s * 0.25), 0.5, 3.5, w)
+    cx, cy = x + s * 0.85, y + s * 0.2
+    pts = [(cx, cy - s * 0.16), (cx + s * 0.14, cy), (cx, cy + s * 0.16), (cx - s * 0.14, cy)]
+    pygame.draw.polygon(surf, c, pts, w)
+
+
+def _repel_strike(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.35, y + s * 0.1), (x + s * 0.35, y + s * 0.85), w + 1)
+    pygame.draw.line(surf, c, (x + s * 0.2, y + s * 0.7), (x + s * 0.5, y + s * 0.7), w)
+    pygame.draw.arc(surf, c, (x + s * 0.35, y + s * 0.25, s * 0.35, s * 0.5), -1.2, 1.2, w)
+    pygame.draw.arc(surf, c, (x + s * 0.45, y + s * 0.12, s * 0.5, s * 0.76), -1.2, 1.2, w)
+
+
+def _maiming_strike(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.15, y + s * 0.15), (x + s * 0.65, y + s * 0.65), w)
+    pygame.draw.rect(surf, c, pygame.Rect(x + s * 0.5, y + s * 0.4, s * 0.35, s * 0.25), w)
+    pygame.draw.lines(surf, c, False,
+                      [(x + s * 0.1, y + s * 0.85), (x + s * 0.45, y + s * 0.85),
+                       (x + s * 0.55, y + s * 0.75), (x + s * 0.65, y + s * 0.95),
+                       (x + s * 0.9, y + s * 0.85)], w)
+
+
+def _armor_pierce(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.6, y + s * 0.1), (x + s * 0.6, y + s * 0.4), w + 1)
+    pygame.draw.line(surf, c, (x + s * 0.6, y + s * 0.6), (x + s * 0.6, y + s * 0.9), w + 1)
+    pygame.draw.polygon(surf, c, [(x + s * 0.1, y + s * 0.5), (x + s * 0.85, y + s * 0.44),
+                                  (x + s * 0.85, y + s * 0.56)], 0)
+    pygame.draw.line(surf, c, (x + s * 0.65, y + s * 0.35), (x + s * 0.8, y + s * 0.25), w)
+    pygame.draw.line(surf, c, (x + s * 0.65, y + s * 0.65), (x + s * 0.8, y + s * 0.75), w)
+
+
+def _power_shot(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.arc(surf, c, (x + s * 0.05, y + s * 0.1, s * 0.5, s * 0.8), -1.4, 1.4, w)
+    pygame.draw.line(surf, c, (x + s * 0.15, y + s * 0.5), (x + s * 0.95, y + s * 0.5), w + 1)
+    pygame.draw.lines(surf, c, False, [(x + s * 0.78, y + s * 0.32), (x + s * 0.96, y + s * 0.5),
+                                       (x + s * 0.78, y + s * 0.68)], w)
+    pygame.draw.line(surf, c, (x + s * 0.4, y + s * 0.28), (x + s * 0.6, y + s * 0.28), w)
+    pygame.draw.line(surf, c, (x + s * 0.4, y + s * 0.72), (x + s * 0.6, y + s * 0.72), w)
+
+
+def _extreme_shot(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.arc(surf, c, (x, y + s * 0.1, s * 0.88, s * 0.9), 0.4, 2.5, w)
+    pygame.draw.lines(surf, c, False, [(x + s * 0.75, y + s * 0.45), (x + s * 0.88, y + s * 0.6),
+                                       (x + s * 0.88, y + s * 0.42)], w)
+    pygame.draw.circle(surf, c, (int(x + s * 0.85), int(y + s * 0.65)), max(2, int(s * 0.14)), w)
+    pygame.draw.line(surf, c, (x + s * 0.1, y + s * 0.85), (x + s * 0.3, y + s * 0.85), w)
+    pygame.draw.line(surf, c, (x + s * 0.4, y + s * 0.85), (x + s * 0.6, y + s * 0.85), w)
+
+
+def _hook_shield(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    s_pts = [(x + s * 0.65, y + s * 0.15), (x + s * 0.95, y + s * 0.25),
+             (x + s * 0.85, y + s * 0.75), (x + s * 0.65, y + s * 0.95)]
+    pygame.draw.lines(surf, c, False, s_pts, w)
+    pygame.draw.line(surf, c, (x + s * 0.05, y + s * 0.85), (x + s * 0.55, y + s * 0.35), w)
+    pygame.draw.lines(surf, c, False,
+                      [(x + s * 0.55, y + s * 0.35), (x + s * 0.7, y + s * 0.2),
+                       (x + s * 0.8, y + s * 0.28), (x + s * 0.7, y + s * 0.42)], w + 1)
+
+
+def _javelin_charge(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.05, y + s * 0.5), (x + s * 0.92, y + s * 0.5), w)
+    pts = [(x + s * 0.72, y + s * 0.38), (x + s * 0.95, y + s * 0.5),
+           (x + s * 0.72, y + s * 0.62), (x + s * 0.76, y + s * 0.5)]
+    pygame.draw.polygon(surf, c, pts, 0)
+    for ox in (0.15, 0.35):
+        pygame.draw.lines(surf, c, False,
+                          [(x + s * ox, y + s * 0.25), (x + s * (ox + 0.12), y + s * 0.5),
+                           (x + s * ox, y + s * 0.75)], w)
+
+
+def _parry_strike(surf, rect, c):
+    x, y, s = _box(rect)
+    w = _lw(s)
+    pygame.draw.line(surf, c, (x + s * 0.15, y + s * 0.85), (x + s * 0.75, y + s * 0.15), w)
+    pygame.draw.line(surf, c, (x + s * 0.1, y + s * 0.65), (x + s * 0.35, y + s * 0.9), w)
+    pygame.draw.line(surf, c, (x + s * 0.25, y + s * 0.2), (x + s * 0.9, y + s * 0.8), w + 1)
+    pygame.draw.line(surf, c, (x + s * 0.2, y + s * 0.35), (x + s * 0.4, y + s * 0.15), w)
+    cx, cy = x + s * 0.48, y + s * 0.48
+    pygame.draw.line(surf, c, (cx - s * 0.1, cy), (cx + s * 0.1, cy), w)
+    pygame.draw.line(surf, c, (cx, cy - s * 0.1), (cx, cy + s * 0.1), w)
+
+
 _GLYPHS = {
     "move": _move, "attack": _sword, "attack_tongue": _throw, "throw": _throw,
     "demoralize": _shout, "assess": _eye, "eat_corpse": _bite, "spin_web": _web, "signal_horn": _horn,
@@ -254,6 +376,10 @@ _GLYPHS = {
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,
     "lock": _lock, "unlock": _unlock,
+    "sneak_attack": _sneak_attack, "cleave": _cleave, "precise_thrust": _precise_thrust,
+    "repel_strike": _repel_strike, "maiming_strike": _maiming_strike, "armor_pierce": _armor_pierce,
+    "power_shot": _power_shot, "extreme_shot": _extreme_shot, "hook_shield": _hook_shield,
+    "javelin_charge": _javelin_charge, "parry_strike": _parry_strike,
 }
 
 NAMES = tuple(_GLYPHS)

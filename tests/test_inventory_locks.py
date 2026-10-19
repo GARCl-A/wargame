@@ -186,9 +186,23 @@ def test_distribute_load_fills_locked_stackable_first_within_capacity():
     a.locked_items["Salt"] = 5
     b.give_to_pack("Salt", qty=8)
 
-    # a is heavier (11kg vs 4kg), but a has an unmet lock for 3 more Salt
+    # a has Salt locked, acting as magnet for surplus Salt up to carry_normal
     unit_module.distribute_load([a, b])
 
+    assert a.count_of("Salt") == 10
+    assert b.count_of("Salt") == 0
+
+
+def test_distribute_load_shared_locked_items():
+    a, b = _bare(), _bare()
+    a._base_inventory = []
+    b._base_inventory = []
+    a.give_to_pack("Salt", qty=2)
+    b.give_to_pack("Salt", qty=8)
+    a.locked_items["Salt"] = 5
+    b.locked_items["Salt"] = 5
+
+    unit_module.distribute_load([a, b])
     assert a.count_of("Salt") == 5
     assert b.count_of("Salt") == 5
 

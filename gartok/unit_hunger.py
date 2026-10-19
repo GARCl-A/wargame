@@ -7,10 +7,10 @@ from . import data, items
 
 
 def take_ration(pack, allow_rotten=True):
-    """Eat one ration out of `pack` (a stacked pack list, in place). Oldest fresh
-    food first (highest days_old), tie-broken by cheapest, then pack order; Rotten
-    Food only when nothing fresh is left (and `allow_rotten` is True). Returns the
-    food's name, or None."""
+    """Eat one ration out of `pack` (a stacked pack list, in place). Fresh food nearing
+    spoilage first (lowest remaining shelf life: lifespan - days_old), tie-broken by cheapest,
+    then pack order; Rotten Food only when nothing fresh is left (and `allow_rotten` is True).
+    Returns the food's name, or None."""
     fresh_candidates = []
     rotten_candidates = []
     for i, entry in enumerate(pack):
@@ -18,10 +18,11 @@ def take_ration(pack, allow_rotten=True):
         is_rotten = entry.is_rotten() or entry.name.startswith("Rotten Food")
         days_old = entry.days_old
         price = entry.defn.price
+        lifespan = entry.defn.lifespan
 
         if is_food and not is_rotten:
-            # Sort key: (-days_old: oldest first, price: cheapest first, i: pack order)
-            fresh_candidates.append((-days_old, price, i))
+            rem_life = (lifespan - days_old) if lifespan is not None else 999999
+            fresh_candidates.append((rem_life, price, i))
         elif is_rotten:
             rotten_candidates.append(i)
 
@@ -70,28 +71,56 @@ class HungerMixin:
         return self.hunger_level >= 3
 
     def _take_ration(self, larder=None, allow_rotten=True):
-        """Eat one ration: fresh food first (this character's own pack, then each
-        pack in `larder`), and only when nothing fresh is left in any pack does it
-        fall back to Rotten Food."""
+        """Eat one ration across the shared larder (eater's pack and `larder` evaluated together):
+        fresh food nearing spoilage first (lowest remaining shelf life: lifespan - days_old),
+        tie-broken by cheapest, preference for eater's own pack, then pack order.
+        Only when nothing fresh is left in any pack does it fall back to Rotten Food (if allow_rotten)."""
         packs = (self._base_inventory, *(larder or ()))
-        for pack in packs:
-            name = take_ration(pack, allow_rotten=False)
-            if name is not None:
-                return name
-        if allow_rotten:
-            for pack in packs:
-                name = take_ration(pack, allow_rotten=True)
-                if name is not None:
-                    return name
+        fresh_candidates = []
+        rotten_candidates = []
+        for p_idx, pack in enumerate(packs):
+            for i, entry in enumerate(pack):
+                is_food = entry.defn.food or items.is_food(entry.defn.id)
+                is_rotten = entry.is_rotten() or entry.name.startswith("Rotten Food")
+                days_old = entry.days_old
+                price = entry.defn.price
+                lifespan = entry.defn.lifespan
+
+                if is_food and not is_rotten:
+                    rem_life = (lifespan - days_old) if lifespan is not None else 999999
+                    fresh_candidates.append((rem_life, price, p_idx, i))
+                elif is_rotten:
+                    rotten_candidates.append((p_idx, i))
+
+        target = None
+        if fresh_candidates:
+            fresh_candidates.sort()
+            target = fresh_candidates[0][2:]
+        elif allow_rotten and rotten_candidates:
+            target = rotten_candidates[0]
+
+        if target is not None:
+            p_idx, i = target
+            pack = packs[p_idx]
+            entry = pack[i]
+            name = entry.name
+            if entry.qty > 1:
+                entry.qty -= 1
+            else:
+                pack.pop(i)
+            return "Rotten Food" if name.startswith("Rotten Food") else name
         return None
 
     def consume_daily_food(self, larder=None):
-        """Resolve one day's meal: eat a ration (own pack, then `larder`) if one
-        is to be had, else go hungrier. Returns 'ate' | 'hungry' | 'dead'. The
-        caller re-derives combat stats and clears the dead from the roster."""
+        """Resolve one day's meal: eat a ration (own pack and `larder` evaluated together)
+        if one is to be had, else go hungrier. Rotten Food is eaten automatically only as
+        a last resort against starvation death (on the day before dying).
+        Returns 'ate' | 'hungry' | 'dead'. The caller re-derives combat stats and clears
+        the dead from the roster."""
         if self._ability.id == "autotroph":
             return "ate"
-        food = self._take_ration(larder)
+        allow_rotten = self.unfed_days >= data.STARVATION_DEATH_DAYS - 1
+        food = self._take_ration(larder, allow_rotten=allow_rotten)
         if food:
             self.unfed_days = 0
             if food == "Rotten Food" and self._ability.id != "strong_stomach":

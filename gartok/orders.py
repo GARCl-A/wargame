@@ -42,7 +42,7 @@ INTERACTIVE_KINDS = frozenset({"arena", "market", "bank", "recruit", "prison", "
                                "serpents_nest", "skirmish", "camp_fight", "ogre_fight", "dragon_lair"})
 WORK_KINDS = frozenset({"work", "garrison"})     # a group on these is working where it stands (not travelling)
 
-APPROACH_HOURS = 1          # a small "walk in and get started" cost for the interactive kinds
+APPROACH_HOURS = 1          # default approach cost when dispatched from away
 
 
 @dataclass

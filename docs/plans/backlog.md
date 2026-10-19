@@ -68,52 +68,6 @@ targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
 - **Enemy info: tune the difficulties and bonuses, after the playtest (built 2026-10-11, `intel.py`).** Only the
   numbers (author 2026-10-18): `intel.BASE_DC` 8, the bands at margin 0 / +5 / +10, `RACE_DISCOUNT` 2,
   `ASSESS_BONUS` 4 and the Scholars' +2 (`vocations.info_bonus`), read off the playtest's fights.
-- **Battle map camera panning with WASD (playtest 2026-10-18).** The battle camera is currently
-  only moved via mouse drag (middle/right button), while arrow keys step the active unit
-  tile-by-tile. Add WASD panning to `BoardView` (`battle_screen.py`). Check key conflicts:
-  hotkey `A` currently confirms an armed attack (`_confirm_armed_attack`), so rebind or
-  distinguish camera panning inputs.
-- **Vector line-art icons for weapon actions (`icons.py`, playtest 2026-10-18).** The 11 weapon
-  actions (`sneak_attack`, `cleave`, `precise_thrust`, `repel_strike`, `maiming_strike`,
-  `armor_pierce`, `power_shot`, `extreme_shot`, `hook_shield`, `javelin_charge`, `parry_strike`)
-  pass `action.id` to `battle_panel.draw_action_list`, but `gartok/icons.py`'s `_GLYPHS` lacks
-  glyphs for these IDs, causing the action buttons to render without icons. Add vector line-art
-  draw routines for each weapon action.
-- **Zero-cost node entry when already at node (`orders.py`, `map_screen.py`, playtest 2026-10-19).**
-  `orders.interactive(kind, hours=APPROACH_HOURS)` currently charges 1 hour to enter a node function
-  (Tavern, Shop, Forge, etc.) via `APPROACH_HOURS = 1`. If the group is already standing at the node,
-  clicking to enter should cost 0 hours and open the screen directly without auto-advancing the world clock.
-- **Autosell includes wagon and pack animals (`market_screen.py`, playtest 2026-10-19).** `_marked_stock`
-  iterates only over `self.shoppers` (`self.group.members`), ignoring `self.stores` (`self.group.wagons`
-  and `herd`). Change to `(*self.shoppers, *self.stores)` so marked items stored in wagons/carts are
-  included in SELL MARKED.
-- **Display crafting roll modifier on crafters panel (`crafting_screen.py`, playtest 2026-10-19).**
-  `_draw_roster` shows recipe count and in-progress status, but hides the crafter's progress check modifier
-  (`1d20 + INT mod + craft_bonus`). Display the net modifier (e.g. `+3` or `d20+3`) next to each crafter
-  to inform recipe assignment without inspecting character sheets.
-- **Rotten food eaten only as last resort against starvation death (`unit_hunger.py`, playtest 2026-10-19).**
-  Daily meals currently fall back to `Rotten Food` on day 1 of missing fresh food, immediately inflicting
-  Sickness (-2 attributes, prevents rest healing) instead of mild 1-day hunger. Restrict automatic
-  consumption of Rotten Food to when the character would die of starvation on the next day
-  (`unfed_days >= data.STARVATION_DEATH_DAYS - 1`), or when explicitly forced by the player.
-- **Food consumption priority order across shared larder (`unit_hunger.py`, playtest 2026-10-19).**
-  `take_ration` sorts candidates by `-days_old` (absolute age) instead of remaining shelf life
-  (`lifespan - days_old`), causing durable foods like potatoes to be consumed before short-lived meats.
-  Furthermore, a character currently checks only their own pack before the shared larder. Evaluate candidate
-  rations from the entire shared larder (eater + members with `share_food = True`) and prioritize by lowest
-  remaining lifespan (`lifespan - days_old` ascending) so foods nearing spoilage are eaten first.
-- **Distribute load coin rebalancing & wagon handling (`unit_loadout.py`, `market_screen.py`, `stash_screen.py`, playtest 2026-10-19).**
-  `market_screen` and `stash_screen` call `distribute_load(..., share_coins=False)`, locking coins completely
-  so that characters selling or withdrawing copper become overloaded and cannot rebalance coins. Allow coin
-  distribution or adjust coin redistribution so players aren't stranded with overloaded characters.
-- **Locked items act as distribution magnet up to normal capacity (`unit_loadout.py`, playtest 2026-10-19).**
-  In `distribute_load`, when an item is locked on a unit, prioritize pulling surplus copies of that item from
-  the pool to that unit until their `carry_normal` is filled, before scattering remainder to others.
-- **Map alert indicator for new faction jobs (`map_screen.py`, `missions.py`, playtest 2026-10-19).**
-  Nodes currently show an alert `!` only for tavern/prison recruit rotation (`recruit.has_new_faces`). Add
-  visual alert on the map node (and inspector note) when an unaccepted job is available on a node's
-  mission board (e.g. Library Ancient Codex, Tanner Biwolf), so major questlines and magic unlocking
-  are discoverable.
 
 ## Medium
 
@@ -124,17 +78,6 @@ targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
   the killing blow receives combat XP. Characters spend 80+ days at Work level 4 while stranded at Combat
   level 1. Design and implement a smoother combat progression curve: evaluate assist/squad combat XP
   participation, intermediate arena bouts accessible to level 1 fighters, and fractional XP or training options.
-
-- **AI 2-action tactical lookahead with replanning (`gartok/ai.py`, playtest 2026-10-19).**
-  The AI currently operates as a greedy 1-ply decision maker (`take_turn` loop spends 1 AP at a time with no
-  intent memory). This causes nonsensical sequences: on AP 1 the AI shoves a player to break a flank, and on
-  AP 2, finding itself out of melee reach, executes `_step_toward` and immediately walks right back into melee,
-  wasting both APs with 0 net damage dealt. Implement compound 2-action evaluation with replanning:
-  1. Evaluate candidate pairs of actions `(a1, a2)` (e.g. `[Shove, Retreat]`, `[Attack, Defend]`, `[Attack, Attack]`,
-     `[Demoralize, Attack]`) so futile sequences like `[Shove, Walk back to target]` are eliminated.
-  2. Execute `a1`.
-  3. Re-evaluate the board state for `a2` given `a1`'s outcome (e.g. if Shove succeeds, execute the planned Retreat;
-     if Shove fails and the target remains adjacent, pivot to Defend (+2 AC) instead of stepping into danger).
 
 - **Magic Arc — what is left.** The rules of what is built are in RULES.md (*Secret nodes*, *Magic*, *Capture*,
   *Dragon Breath*, *Fire on the board*, *Dialogue before initiative*). Premises that stay: initiation belongs to the character; a school takes 2 reputation

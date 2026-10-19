@@ -369,9 +369,9 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
 
     def _distribute_load(self):
         from . import unit as unit_module
-        if len(self.party) <= 1:
+        if len(self.party) + len(self.stores) <= 1:
             return
-        unit_module.distribute_load(self.party, share_coins=False)
+        unit_module.distribute_load(self.party, share_coins=True, creatures=self.stores)
         self.notice = "redistributed packs by carrying capacity."
 
     def _purse_members(self):

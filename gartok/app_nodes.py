@@ -10,6 +10,7 @@ from . import (
     missions,
     necromancer,
     node_functions,
+    orders,
     serpent_nest,
     wagon_watch,
     wildfire,
@@ -291,6 +292,12 @@ class NodeScreensMixin:
             return
         self._pending = []
         self._open_wilds_claim(group, node)
+
+    def _open_interactive(self, group, kind):
+        node = world.node(group.node)
+        handler = self._ACTIVITY_OPENERS.get(kind)
+        if handler:
+            handler(self, group, node, orders.interactive(kind, hours=0))
 
     def _open_taverna(self, party, node, _offer, group=None):
         grp = group or (self.guild.groups[0] if self.guild.groups else None)

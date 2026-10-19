@@ -255,10 +255,10 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         return f"{tag} · AUTO-SELL" if name in self._marked() else tag
 
     def _marked_stock(self):
-        """`([(member, loc)], {pick: qty})` for every marked item the shoppers carry -- all of a
+        """`([(member, loc)], {pick: qty})` for every marked item the shoppers and stores carry -- all of a
         stack but the padlocked part."""
         picks, qty = [], {}
-        for member in self.shoppers:
+        for member in (*self.shoppers, *self.stores):
             left = {n: member.unlocked_of(n) for n in self._marked()}
             for loc, (name, held) in enumerate(member._base_inventory):
                 take = min(held, left.get(name, 0))
@@ -504,9 +504,8 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
 
 
     def _distribute_load(self):
-
         from . import unit as unit_module
-        unit_module.distribute_load(self.shoppers, share_coins=False)
+        unit_module.distribute_load(self.shoppers, share_coins=True, creatures=self.stores)
         self.selected = []
         self.notice = "redistributed packs by carrying capacity."
 

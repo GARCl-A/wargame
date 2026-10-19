@@ -455,7 +455,14 @@ def distribute_load(units, share_coins=True, creatures=()):
             best = min(locked_candidates, key=lambda m: m.load / max(1.0, m.carry_normal))
             unmet_locks[best][iname] -= 1
         else:
-            best = min(bearers, key=lambda m: m.load / max(1.0, m.carry_normal))
+            magnet_candidates = [
+                u for u in bearers
+                if getattr(u, "locked_items", {}).get(iname, 0) > 0 and (u.load + w <= u.carry_normal)
+            ]
+            if magnet_candidates:
+                best = min(magnet_candidates, key=lambda m: m.load / max(1.0, m.carry_normal))
+            else:
+                best = min(bearers, key=lambda m: m.load / max(1.0, m.carry_normal))
         best.give_to_pack(item)
         best._derive_combat()
 

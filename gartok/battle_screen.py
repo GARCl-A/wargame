@@ -30,6 +30,8 @@ ENEMY_DELAY = 450  # ms between AI actions
 FELLED_STREAK_SECONDS = 1.0     # longest pause that still counts as the same run of clicks
 ARROW_STEPS = {pygame.K_LEFT: (-1, 0), pygame.K_RIGHT: (1, 0),
                pygame.K_UP: (0, -1), pygame.K_DOWN: (0, 1)}
+WASD_STEPS = {pygame.K_a: (-1, 0), pygame.K_d: (1, 0),
+              pygame.K_w: (0, -1), pygame.K_s: (0, 1)}
 
 
 DEBUG_EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "debug_exports")
@@ -122,7 +124,10 @@ class BattleScreen(BattleDrawMixin, Screen):
                 self._chord_ms = settings.get("chord_ms")
             elif event.key == pygame.K_l:
                 self.view_squad = not self.view_squad
-            elif event.key == pygame.K_a and self._is_player_turn():
+            elif event.key in WASD_STEPS:
+                dx, dy = WASD_STEPS[event.key]
+                self.view.pan_tiles(dx, dy)
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_f) and self._is_player_turn():
                 self._confirm_armed_attack()
             elif pygame.K_1 <= event.key <= pygame.K_9:
                 self._hotkey_action(event.key - pygame.K_1)

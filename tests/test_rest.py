@@ -466,8 +466,10 @@ def test_fresh_food_in_shared_larder_is_eaten_before_own_rotten_food():
 
 def test_rotten_food_sickness_emits_daily_upkeep_notice():
     random.seed(3)
+    from gartok import data
     eater = Unit("player")
     eater._base_inventory = packed(["Rotten Food"])
+    eater.unfed_days = data.STARVATION_DEATH_DAYS - 1
     eater._derive_combat()
     guild, _ = _guild(eater)
     events, _ = guild.pass_time(24, busy=[eater])

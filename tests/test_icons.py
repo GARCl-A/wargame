@@ -21,3 +21,15 @@ def test_every_occupation_has_an_icon():
     names = {o[1] for o in data.OCCUPATIONS} | {data.BEAST_OCCUPATION["name"]}
     assert set(artwork.OCCUPATION_ICON) == names
     assert all(_exists(s) for s in artwork.OCCUPATION_ICON.values())
+
+
+def test_every_weapon_action_has_a_glyph():
+    import pygame
+    from gartok import actions, icons
+    surf = pygame.Surface((32, 32))
+    rect = pygame.Rect(0, 0, 32, 32)
+    color = (255, 255, 255)
+    for act in actions.WEAPON_ACTIONS:
+        assert act.id in icons.NAMES
+        assert act.id in icons._GLYPHS
+        icons.icon(surf, act.id, rect, color)

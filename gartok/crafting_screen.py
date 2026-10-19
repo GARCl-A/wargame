@@ -164,9 +164,13 @@ class CraftingScreen(Screen):
         def _trailing(surf, r, ch):
             u = ch["unit"]
             count = sum(1 for r in u.known_recipes if not self.station or any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])))
+            mod = u.mod_intelligence + u.talent_bonus("craft_bonus") + (u.craft_bonuses.get(self.station, 0) if self.station else 0)
+            roll_str = f"d20{mod:+d}"
             caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
             if u.crafting_target:
-                caps(surf, F["micro"], "IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
+                caps(surf, F["micro"], f"{roll_str} · IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
+            else:
+                caps(surf, F["micro"], roll_str, (r.right - T.S * 2, r.centery + 10), T.TX_FAINT, right=True)
 
         for m in self.group.members:
             has_recipes = any(any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])) for r in m.known_recipes) if self.station else bool(m.known_recipes)

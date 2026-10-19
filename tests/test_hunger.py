@@ -206,15 +206,15 @@ def test_hunger_survives_a_save_round_trip():
     assert v.hp_max == v._hp_roll + v.mod_constitution + v._ability.hp_max
 
 
-def test_food_consumption_priority_oldest_then_cheapest():
+def test_food_consumption_priority_shelf_life_then_cheapest():
     from gartok import items
     u = Unit("player")
     u.unfed_days = 1
 
-    # 1. Oldest food is eaten first
-    p_fresh = items.create_instance("Potato")
+    # 1. Soonest to spoil (lowest remaining shelf life: lifespan - days_old) is eaten first
+    p_fresh = items.create_instance("Potato")  # lifespan 7, days_old 0 -> 7 days left
     p_fresh.days_old = 0
-    p_old = items.create_instance("Potato")
+    p_old = items.create_instance("Potato")    # lifespan 7, days_old 2 -> 5 days left
     p_old.days_old = 2
     u._base_inventory = [p_fresh, p_old]
 
@@ -223,20 +223,31 @@ def test_food_consumption_priority_oldest_then_cheapest():
     assert p_fresh in u._base_inventory
     assert p_old not in u._base_inventory
 
-    # 2. Same age: cheapest food is eaten first (Potato price 3 vs Meat price 5)
+    # 2. Short-lived food (Meat: 2 days left) is eaten before durable food (Potato: 7 days left)
     u.unfed_days = 1
-    meat = items.create_instance("Meat")
+    meat = items.create_instance("Meat")      # lifespan 2, days_old 0 -> 2 days left
     meat.days_old = 0
-    potato = items.create_instance("Potato")
+    potato = items.create_instance("Potato")  # lifespan 7, days_old 0 -> 7 days left
     potato.days_old = 0
     u._base_inventory = [meat, potato]
 
     eaten = u._take_ration()
-    assert eaten == "Potato"
-    assert meat in u._base_inventory
-    assert potato not in u._base_inventory
+    assert eaten == "Meat"
+    assert potato in u._base_inventory
+    assert meat not in u._base_inventory
 
-    # 3. Same age and same price: original inventory order tie-breaker
+    # 3. Same remaining shelf life: cheapest food is eaten first
+    u.unfed_days = 1
+    roast = items.create_instance("Roast Meat")  # lifespan 5, days_old 0 -> 5 days left, price 6
+    p_same = items.create_instance("Potato")     # lifespan 7, days_old 2 -> 5 days left, price 3
+    p_same.days_old = 2
+    u._base_inventory = [roast, p_same]
+    eaten = u._take_ration()
+    assert eaten == "Potato"
+    assert roast in u._base_inventory
+    assert p_same not in u._base_inventory
+
+    # 4. Same shelf life and same price: original inventory order tie-breaker
     u.unfed_days = 1
     p1 = items.create_instance("Potato")
     p2 = items.create_instance("Potato")
@@ -244,6 +255,54 @@ def test_food_consumption_priority_oldest_then_cheapest():
     eaten = u._take_ration()
     assert len(u._base_inventory) == 1
     assert u._base_inventory[0] is p2
+
+
+def test_rotten_food_eaten_only_as_last_resort_against_starvation():
+    from gartok import data, items
+    u = Unit("player")
+    u._base_inventory = [items.create_instance("Rotten Food")]
+
+    # Day 1: missing fresh food, unfed_days goes 0 -> 1 without eating Rotten Food
+    u.unfed_days = 0
+    assert u.consume_daily_food() == "hungry"
+    assert u.unfed_days == 1
+    assert not u.sick
+    assert len(u._base_inventory) == 1
+
+    # Day 2: missing fresh food, unfed_days goes 1 -> 2 without eating Rotten Food
+    assert u.consume_daily_food() == "hungry"
+    assert u.unfed_days == 2
+    assert not u.sick
+    assert len(u._base_inventory) == 1
+
+    # Day 3: missing fresh food, unfed_days goes 2 -> 3 without eating Rotten Food
+    assert u.consume_daily_food() == "hungry"
+    assert u.unfed_days == 3
+    assert not u.sick
+    assert len(u._base_inventory) == 1
+
+    # Day 4 (unfed_days == STARVATION_DEATH_DAYS - 1 == 3): starving emergency! Eats Rotten Food to survive
+    assert u.consume_daily_food() == "ate"
+    assert u.unfed_days == 0
+    assert u.sick
+    assert len(u._base_inventory) == 0
+
+
+def test_shared_larder_prioritizes_soonest_to_spoil_across_all_members():
+    from gartok import items
+    u1 = Unit("player")
+    u1.unfed_days = 1
+    # u1 has durable Potato (lifespan 7, days_old 0 -> 7 left)
+    u1._base_inventory = [items.create_instance("Potato")]
+
+    # Mate has Meat (lifespan 2, days_old 0 -> 2 left)
+    mate_pack = [items.create_instance("Meat")]
+
+    # When u1 eats from shared larder, Meat from mate is eaten before u1's own Potato!
+    eaten = u1._take_ration(larder=[mate_pack])
+    assert eaten == "Meat"
+    assert len(mate_pack) == 0
+    assert len(u1._base_inventory) == 1
 
 
 # --------------------------------------------------------------------------- #

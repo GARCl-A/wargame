@@ -58,3 +58,21 @@ def test_a_name_with_no_room_is_left_for_the_hover_but_a_kept_node_always_shows(
     for i, a in enumerate(shown):
         for b in shown[i + 1:]:
             assert not spots[a].colliderect(spots[b]), (a, b)
+
+
+def test_map_node_alert_indicator_for_unaccepted_faction_jobs():
+    from gartok import missions
+    from gartok.guild import Guild
+    from gartok.group import Group
+    from gartok.unit import Unit
+    from gartok.map_screen import MapScreen
+    F = _setup()
+    u = Unit("player")
+    g = Group([u], node="tanner")
+    guild = Guild([u], groups=[g])
+    offers = missions.offers_at(guild, "tanner")
+    assert any(t.id == "tanner_hides" for t in offers)
+    m = MapScreen(F, guild, lambda: None, lambda: None, lambda **k: None, lambda g: None)
+    assert m._nodes["tanner"]["alert"] is True
+    blocks = m._inspector_content(g, world.node("tanner"))
+    assert any("mission" in b.get("text", "").lower() for b in blocks)
