@@ -24,7 +24,6 @@ def draw_vendor(surf, F, topleft, card, size=VENDOR_SIZE):
     if port is None:
         return 0
     surf.blit(port, topleft)
-    pygame.draw.circle(surf, T.STEEL_LINE, (topleft[0] + size // 2, topleft[1] + size // 2), size // 2, 1)
     return size + _GAP
 
 

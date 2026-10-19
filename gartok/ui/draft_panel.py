@@ -318,7 +318,6 @@ def _leader_card(surf, F, r, i, leader, form, mpos, out):
     pr = max(T.S * 3, min(w // 2 - T.S, (r.h - _CARD_FIXED) // 2, _PORTRAIT_R_MAX))
     py = band.bottom + T.S * 2 + pr
     token_badge(surf, F, (r.centerx, py), ch["unit"], r=pr)
-    pygame.draw.circle(surf, T.BRASS_DIM if sel else T.STEEL_LINE, (r.centerx, py), pr, 1)
     y = py + pr + T.S * 2
 
     if form.get("editing_unit_idx") == i:

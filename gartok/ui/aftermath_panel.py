@@ -34,6 +34,7 @@ from .primitives import (
     modal_card,
     panel,
     section,
+    smooth_circle,
     text,
     wrap,
 )
@@ -53,11 +54,11 @@ def _medallion(surf, center, size, race, portrait_id, ring, grey=False):
             port = pygame.transform.grayscale(port)
         surf.blit(port, (x, y))
     else:
-        pygame.draw.circle(surf, T.STEEL_HI, center, size // 2)
+        smooth_circle(surf, T.STEEL_HI, center, size // 2)
         icon = artwork.race_icon(race, size // 2, T.TX_MUTED)
         if icon is not None:
             surf.blit(icon, (x + size // 4, y + size // 4))
-    pygame.draw.circle(surf, ring, center, size // 2, 2)
+    smooth_circle(surf, ring, center, size // 2, 2)
 
 
 def _card_w(surf, lo, hi, frac):

@@ -277,14 +277,27 @@ def smooth_circle(surf, color, center, radius, width=0):
     (the unit token disc, mainly)."""
     x, y = int(center[0]), int(center[1])
     r = int(radius)
-    if width == 0:
-        gfxdraw.filled_circle(surf, x, y, r, color)
-        gfxdraw.aacircle(surf, x, y, r, color)
-    else:
-        pygame.draw.circle(surf, color, center, radius, width)
-        gfxdraw.aacircle(surf, x, y, r, color)
-        if width > 1:
-            gfxdraw.aacircle(surf, x, y, r - width + 1, color)
+    if r <= 0:
+        return
+    if width <= 0 or width >= r:
+        try:
+            gfxdraw.filled_circle(surf, x, y, r, color)
+            gfxdraw.aacircle(surf, x, y, r, color)
+        except (pygame.error, OverflowError):
+            pygame.draw.circle(surf, color, (x, y), r)
+        return
+    scale = 2
+    pad = int(width) + 2
+    box_size = (r + pad) * 2
+    s_size = box_size * scale
+    c = s_size // 2
+    try:
+        temp = pygame.Surface((s_size, s_size), pygame.SRCALPHA)
+        pygame.draw.circle(temp, color, (c, c), r * scale, max(1, int(width * scale)))
+        scaled = pygame.transform.smoothscale(temp, (box_size, box_size))
+        surf.blit(scaled, (x - box_size // 2, y - box_size // 2))
+    except (pygame.error, ValueError):
+        pygame.draw.circle(surf, color, (x, y), r, int(width))
 
 
 TOKEN_INK = (15, 15, 20)               # ink for the race glyph / letter on a unit token

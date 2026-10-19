@@ -24,6 +24,7 @@ from .ui.primitives import (
     footer_bar,
     panel,
     section,
+    smooth_circle,
     text,
     wrap,
 )
@@ -420,10 +421,9 @@ class HuntScreen(SheetModalMixin, Screen):
                 port = artwork.portrait(race_name, u.portrait_file or u.portrait_id, psize)
                 if port is not None:
                     screen.blit(port, (px, py))
-                    pygame.draw.circle(screen, T.BLOOD, (px + psize // 2, py + psize // 2), psize // 2, 1)
                 else:
-                    pygame.draw.circle(screen, T.PANEL_ALT, (px + psize // 2, py + psize // 2), psize // 2)
-                    pygame.draw.circle(screen, T.BLOOD, (px + psize // 2, py + psize // 2), psize // 2, 1)
+                    smooth_circle(screen, T.PANEL_ALT, (px + psize // 2, py + psize // 2), psize // 2)
+                    smooth_circle(screen, T.BLOOD, (px + psize // 2, py + psize // 2), psize // 2, 1)
                     icon = artwork.race_icon(race_name, psize // 2, T.TX_MUTED)
                     if icon is not None:
                         screen.blit(icon, (px + psize // 4, py + psize // 4))

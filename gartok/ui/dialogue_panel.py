@@ -20,7 +20,7 @@ options or the result and its one button. Sizes come from `rect`; when the full 
 import pygame
 
 from .. import artwork
-from .primitives import caps, draw_button, ellipsize, hline, panel, section, text, wrap
+from .primitives import caps, draw_button, ellipsize, hline, panel, section, smooth_circle, text, wrap
 from .tokens import T
 
 _ROW_H = T.S * 7
@@ -41,8 +41,8 @@ def _foe_column(surf, F, rect, d):
     port = artwork.portrait(leader.get("race"), leader.get("portrait"), size)
     if port is not None:
         surf.blit(port, (x, y))
-        pygame.draw.circle(surf, T.STEEL_LINE, (x + size // 2, y + size // 2), size // 2, 1)
     else:
+        smooth_circle(surf, T.STEEL_HI, (x + size // 2, y + size // 2), size // 2)
         icon = artwork.race_icon(leader.get("race"), size // 2, T.TX_MUTED)
         if icon is not None:
             surf.blit(icon, (x + size // 4, y + size // 4))
