@@ -53,8 +53,11 @@ Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
 | Pick a character (draft) | click up to three of the nine cards (click again to put one back), then **CONTINUE** |
 | Replace a candidate (draft) | **COMMISSION** (top right) → choose archetypes → click the card to replace |
 | Walk (1 point) | click a green cell — the path to the cursor is drawn; the walked trail this turn is marked |
-| Attack (1 point) | click an enemy with a red outline to arm, click again to strike |
-| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In | panel buttons (the aimed ones ask for a target click) |
+| Attack (1 point) | click an enemy with a red outline to arm, click again or press `Enter` / `F` to strike |
+| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In | panel buttons (the aimed ones ask for a target click) or hotkeys `1`–`9` |
+| Switch action tab | `Tab` (toggles combat ↔ utility actions) |
+| Pan camera | `WASD` or middle/right mouse drag |
+| Zoom | mousewheel |
 | Toggle character ↔ squad vision | `L` |
 | Inspect a sheet | click any unit |
 | End turn | `Space` (defends first when it can) or the button |

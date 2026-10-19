@@ -72,6 +72,7 @@ def soldiers_lost(battle):
 class BattlefieldScenario(Scenario):
     outdoor = True
     torch_count = 0
+    is_battlefield = True
 
     def __init__(self, squad, rng=random):
         level = encounters.squad_level(squad)

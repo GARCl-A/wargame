@@ -88,9 +88,7 @@ class SneakAttack(Action):
         flanked = self.favoured(battle, actor, target)
         bonus_dmg = roll(1, 4) + _second_blow(actor, True) if flanked else 0
 
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -134,9 +132,7 @@ class PreciseThrust(Action):
         actor.walking = False
 
         favoured = self.favoured(battle, actor, target)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if favoured:
             mods.append((2, "circumstance", "Precise Thrust"))
 
@@ -197,9 +193,7 @@ class Cleave(Action):
         sec = self.second(battle, actor, target)
 
         # 1. Primary strike
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if sec is not None:
             mods.append((2, "circumstance", "Cleave"))
         bonus, applied = resolve_bonus(mods)
@@ -210,9 +204,7 @@ class Cleave(Action):
 
         # 2. Secondary strike on adjacent foe
         if sec is not None and sec.alive:
-            mods2 = actor.attack_mods(sec, _pack_flank(battle, actor, sec))
-            if _flanked(battle, actor, sec):
-                mods2.append((2, "circumstance", "Flank"))
+            mods2 = actor.attack_mods(sec, _pack_flank(battle, actor, sec), battle=battle)
             mods2.append((2, "circumstance", "Cleave"))
             bonus2, applied2 = resolve_bonus(mods2)
             detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
@@ -266,9 +258,7 @@ class RepelStrike(Action):
         actor.walking = False
 
         pinned = self.favoured(battle, actor, target)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -337,9 +327,7 @@ class MaimingStrike(Action):
         actor.walking = False
 
         unguarded = self.favoured(battle, actor, target)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         if unguarded:
             mods.append((2, "circumstance", "Maiming Strike"))
         bonus, applied = resolve_bonus(mods)
@@ -390,9 +378,7 @@ class ArmorPierce(Action):
         actor.walking = False
 
         armoured = self.favoured(battle, actor, target)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -544,9 +530,7 @@ class HookShield(Action):
         if shielded:
             target.add_condition(ShieldHooked())
             battle.log(f"  {actor.name} hooks {target.name}'s shield and wrenches it aside (loses shield AC)!")
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -649,9 +633,7 @@ class ParryStrike(Action):
         actor.walking = False
 
         pressed = self.favoured(battle, actor, target)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
-        if _flanked(battle, actor, target):
-            mods.append((2, "circumstance", "Flank"))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()

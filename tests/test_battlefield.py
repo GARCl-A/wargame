@@ -252,3 +252,25 @@ def test_without_the_errand_the_skirmish_does_not_open():
     app._enter_battle = lambda battle, node: (_ for _ in ()).throw(AssertionError("no fight"))
     app._enter_skirmish(guild.groups[0], world.node("battlefield"))
     assert app._skirmish is None
+
+
+def test_battlefield_defeated_enemies_can_drop_scroll_of_spare_the_dying():
+    from gartok import loot
+    _guild_obj, squad = _guild(node="battlefield")
+    batt, _sc = _skirmish(squad)
+    for foe in batt.enemy_units:
+        foe.hp, foe.status = 0, "dead"
+
+    class AlwaysRoll:
+        def random(self):
+            return 0.0005
+
+    class NeverRoll:
+        def random(self):
+            return 0.5
+
+    drop_pool = loot.field_loot(batt, [], rng=AlwaysRoll())
+    assert loot.SPARE_THE_DYING_SCROLL in drop_pool
+
+    no_drop_pool = loot.field_loot(batt, [], rng=NeverRoll())
+    assert loot.SPARE_THE_DYING_SCROLL not in no_drop_pool

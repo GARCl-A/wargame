@@ -133,7 +133,8 @@ def _store(battle, team, target, margin):
 
 
 def _roll(battle, team, roller, bonus=0):
-    return battle.intel.rng.randint(1, 20) + roller.mod_intelligence + battle.intel.bonus[team] + bonus
+    t_bonus = getattr(roller.char, "talent_bonus", lambda x: 0)("assess_bonus") if hasattr(roller, "char") else 0
+    return battle.intel.rng.randint(1, 20) + roller.mod_intelligence + battle.intel.bonus[team] + bonus + t_bonus
 
 
 def _sight(battle, team):
@@ -201,7 +202,8 @@ def assess(battle, actor, target):
     team = actor.team
     observe(battle, team)
     before = _open(battle, team, target)
-    total = _roll(battle, team, actor, ASSESS_BONUS)
+    act_bonus = getattr(actor.char, "talent_bonus", lambda x: 0)("assess_active_bonus") if hasattr(actor, "char") else 0
+    total = _roll(battle, team, actor, ASSESS_BONUS + act_bonus)
     margin = total - dc(battle, team, target)
     battle.intel.assessed[(team, target)] = battle.round_no
     _store(battle, team, target, margin)
@@ -297,6 +299,16 @@ def knows(battle, team, target, name):
     return name in _open(battle, team, target)
 
 
+def has_full_intel(battle, team, target):
+    """Whether team knows all information about target."""
+    if target is None:
+        return False
+    if target.team == team:
+        return True
+    margin = battle.intel.margin[team].get(target)
+    return margin is not None and margin >= HARD
+
+
 def known_fields(battle, team, target):
     """What `team` knows of `target`: the one read the modal, the board and `ai.py` share."""
     observe(battle, team)
@@ -307,7 +319,7 @@ def known_fields(battle, team, target):
                "alignment": target.alignment, "conditions": _conditions(target),
                "weapon": target.weapon_name, "armor": target.armor_name if target.armor else None,
                "artifact": target.equipped_artifact}
-    return Known(full=target.team == team, margin=battle.intel.margin[team].get(target),
+    return Known(full=has_full_intel(battle, team, target), margin=battle.intel.margin[team].get(target),
                  dc=dc(battle, team, target), steps=health_steps(target), fields=fields, visible=visible)
 
 

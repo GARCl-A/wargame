@@ -15,6 +15,7 @@ from .base import (  # noqa: F401
     _cell_free,
     _drop_cell,
     _facing,
+    _flank_penalty,
     _flanked,
     _hostile_target,
     _pack_flank,

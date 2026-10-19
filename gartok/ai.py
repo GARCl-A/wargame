@@ -149,11 +149,10 @@ def _reckoned_ac(battle, unit, target, armor_pierce=False):
 
 
 def _hit_odds(battle, unit, target, extra=0, armor_pierce=False, thrown=False):
-    mods = unit.attack_mods(target, actions._pack_flank(battle, unit, target), thrown=thrown)
-    if actions._flanked(battle, unit, target):
-        mods.append((2, "circumstance", "Flank"))
+    mods = unit.attack_mods(target, actions._pack_flank(battle, unit, target), thrown=thrown, battle=battle)
+    flank_pen = actions._flank_penalty(battle, unit, target)
     bonus, _ = data.resolve_bonus(mods)
-    need = _reckoned_ac(battle, unit, target, armor_pierce) - bonus - extra
+    need = (_reckoned_ac(battle, unit, target, armor_pierce) - flank_pen) - bonus - extra
     return max(0.05, min(0.95, (21 - need) / 20))
 
 
@@ -168,7 +167,10 @@ def _blow(unit, thrown=False):
 
 
 def _strike_worth(battle, unit, target, extra=0, bonus_damage=0, **kw):
-    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage)
+    cull = 0
+    if getattr(target, "demoralized", False) and hasattr(unit, "char"):
+        cull = getattr(unit.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
+    return _hit_odds(battle, unit, target, extra, **kw) * (_blow(unit, kw.get("thrown", False)) + bonus_damage + cull)
 
 
 def _two_points(battle, unit, target):

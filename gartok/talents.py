@@ -44,6 +44,14 @@ exactly one consumer that reads it back:
     spell_damage      actions.SpellAction              --
     spell_heal        actions.SpellAction              --
     spell_range       actions.SpellAction              --
+    obscured_penalty_relief actions.base.obscured_penalty --
+    flank_defense     actions.base._flank_penalty      --
+    demoralize_bonus  actions.combat.Demoralize        --
+    gruesome_takedown actions.base._resolve_hit        --
+    demoralized_target_damage actions.base._resolve_hit --
+    assess_bonus      intel._roll                      --
+    assess_active_bonus intel.assess                   --
+    full_intel_to_hit Combatant.attack_mods            --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -139,6 +147,9 @@ _LIST = [
     Talent("sure_strike", "combat", 2, "Sure Strike",
            "+1 to hit with Strength-based attacks.", requires="strong",
            effects=(Effect("to_hit", 1, "strength"),), icon="action/targeting"),
+    Talent("blind_strike", "combat", 3, "Blind Strike",
+           "reduces the attack penalty against obscured or dark targets by 1.", requires="sure_strike",
+           effects=(Effect("obscured_penalty_relief", 1),), icon="head/blindfold"),
     Talent("heavy_hand", "combat", 2, "Heavy Hand",
            "+1 damage on melee attacks.", requires="strong",
            effects=(Effect("melee_damage", 1),), icon="action/crush"),
@@ -173,9 +184,38 @@ _LIST = [
     Talent("quick_wits", "combat", 2, "Quick Wits", "+2 initiative.",
            requires="alert",
            effects=(Effect("initiative", 2),), icon="head/quick-man"),
+    Talent("peripheral_vision", "combat", 3, "Peripheral Vision",
+           "when flanked, your AC is only reduced by 1 instead of 2.",
+           requires="quick_wits",
+           effects=(Effect("flank_defense", 1),), icon="head/one-eyed"),
     Talent("iron_will", "combat", 2, "Iron Will", "+2 Mental Defense.",
            requires="alert",
            effects=(Effect("mental_defense", 2),), icon="action/meditation"),
+
+    Talent("imposing", "combat", 1, "Imposing", "+1 Charisma.",
+           effects=(Effect("attr", 1, "charisma"),), icon="action/shouting"),
+    Talent("menacing", "combat", 2, "Menacing",
+           "+1 to Demoralize checks.", requires="imposing",
+           effects=(Effect("demoralize_bonus", 1),), icon="action/shouting"),
+    Talent("gruesome_takedown", "combat", 2, "Gruesome Takedown",
+           "upon downing a foe, immediately make a free Demoralize check against "
+           "the nearest enemy within range (ignores language).", requires="imposing",
+           effects=(Effect("gruesome_takedown", 1),), icon="body/deadly-strike"),
+    Talent("cull_the_broken", "combat", 3, "Cull the Broken",
+           "+2 damage on attacks against demoralized targets.", requires="menacing",
+           effects=(Effect("demoralized_target_damage", 2),), icon="action/boot-stomp"),
+
+    Talent("tactical_mind", "combat", 1, "Tactical Mind", "+1 Intelligence.",
+           effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
+    Talent("sharp_analysis", "combat", 2, "Sharp Analysis",
+           "+1 on all Assess and enemy observation checks.", requires="tactical_mind",
+           effects=(Effect("assess_bonus", 1),), icon="head/spectacles"),
+    Talent("combat_analysis", "combat", 2, "Combat Analysis",
+           "+2 on active Assess checks made during battle.", requires="tactical_mind",
+           effects=(Effect("assess_active_bonus", 2),), icon="action/targeting"),
+    Talent("exploit_weakness", "combat", 3, "Exploit Weakness",
+           "+2 to hit against enemies with Full Intel.", requires="combat_analysis",
+           effects=(Effect("full_intel_to_hit", 2),), icon="gui/convergence-target"),
 
     # ================================================================== #
     # work -- two roots, carrier and negotiator                           #

@@ -30,12 +30,10 @@ PUSH_DC_BASE = 10          # Shove: Strength vs 10 + the target's Constitution m
 # --------------------------------------------------------------------------- #
 
 def _strike(battle, actor, target, *, weapon=None, prefix=None):
-    """The shared attack resolution once the AP is paid: assemble the mods (flank,
-    feint), roll, resolve the hit, fire the on-miss ability. `weapon` overrides the
+    """The shared attack resolution once the AP is paid: assemble the mods (feint),
+    roll, resolve the hit, fire the on-miss ability. `weapon` overrides the
     held one (the Tongue). Returns 'hit'|'miss'|'crit'."""
-    mods = actor.attack_mods(target, _pack_flank(battle, actor, target), weapon=weapon)
-    if _flanked(battle, actor, target):
-        mods.append((2, "circumstance", "Flank"))
+    mods = actor.attack_mods(target, _pack_flank(battle, actor, target), weapon=weapon, battle=battle)
 
     ab = actor.ability
     if ab.feint and actor.spend_once("feint"):
@@ -324,43 +322,51 @@ class Demoralize(Action):
             return
         actor.ap -= 1
         actor.walking = False
+        execute_demoralize(battle, actor, target)
 
-        base_mod = actor.mod_charisma
-        using_str = False
-        has_talent = getattr(actor.char, "has_talent", lambda x: False)
-        if has_talent("intimidating_presence") and actor.mod_strength > actor.mod_charisma:
-            base_mod = actor.mod_strength
-            using_str = True
 
-        mods = [(base_mod, None, "STR" if using_str else "CHA")]
-        titled = battle.arena and getattr(actor, "arena_title", False)
-        if titled and _shared_language(actor, target):
-            mods.append((1, "circumstance", "Champion of the Pit"))
-        browbeat = actor.ability.demoralize_vs_weaker
-        if browbeat and actor.mod_strength > target.mod_strength:
-            mods.append((browbeat, "circumstance", "Browbeat"))
-        bonus, applied = resolve_bonus(mods)
-        detail = " ".join(f"{v:+}({r})" for v, r in applied)
+def execute_demoralize(battle, actor, target, *, free=False, ignore_language=False):
+    base_mod = actor.mod_charisma
+    using_str = False
+    has_talent = getattr(actor.char, "has_talent", lambda x: False)
+    if has_talent("intimidating_presence") and actor.mod_strength > actor.mod_charisma:
+        base_mod = actor.mod_strength
+        using_str = True
 
-        if actor.ability.demoralize_ignores_language and not _shared_language(actor, target):
+    mods = [(base_mod, None, "STR" if using_str else "CHA")]
+    titled = battle.arena and getattr(actor, "arena_title", False)
+    if titled and _shared_language(actor, target):
+        mods.append((1, "circumstance", "Champion of the Pit"))
+    browbeat = actor.ability.demoralize_vs_weaker
+    if browbeat and actor.mod_strength > target.mod_strength:
+        mods.append((browbeat, "circumstance", "Browbeat"))
+    demo_bonus = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_bonus") if hasattr(actor, "char") else 0
+    if demo_bonus:
+        mods.append((demo_bonus, "training", "Menacing"))
+    bonus, applied = resolve_bonus(mods)
+    detail = " ".join(f"{v:+}({r})" for v, r in applied)
+
+    if (actor.ability.demoralize_ignores_language or ignore_language) and not _shared_language(actor, target):
+        if not free:
             battle.log(f"{actor.name} mimics {target.name}'s voice to provoke them.")
 
-        nat = d20()
-        total = nat + bonus
-        md = target.mental_defense
-        if battle.arena and getattr(target, "arena_title", False):
-            md += 1                                # the champion is hard to rattle in their own pit
-        crit = nat == 20
-        desc = (f"{actor.name} tries to demoralize {target.name}: "
-                f"d20({nat}) {detail} = {total} vs MD {intel.shown(battle, target, 'md', md)}")
-        if nat == 1:
-            battle.log(desc + "  -> critical miss.")
-        elif crit or total >= md:
-            target.add_condition(Demoralized())
-            battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> lands.")
-                       + f" {target.name} is demoralized (-1 status until the end of their turn).")
-        else:
-            battle.log(desc + "  -> no effect.")
+    nat = d20()
+    total = nat + bonus
+    md = target.mental_defense
+    if battle.arena and getattr(target, "arena_title", False):
+        md += 1                                # the champion is hard to rattle in their own pit
+    crit = nat == 20
+    prefix = f"{actor.name} tries to demoralize {target.name}" if not free else f"  {actor.name} intimidates {target.name}"
+    desc = (f"{prefix}: "
+            f"d20({nat}) {detail} = {total} vs MD {intel.shown(battle, target, 'md', md)}")
+    if nat == 1:
+        battle.log(desc + "  -> critical miss.")
+    elif crit or total >= md:
+        target.add_condition(Demoralized())
+        battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> lands.")
+                   + f" {target.name} is demoralized (-1 status until the end of their turn).")
+    else:
+        battle.log(desc + "  -> no effect.")
 
 
 # --------------------------------------------------------------------------- #

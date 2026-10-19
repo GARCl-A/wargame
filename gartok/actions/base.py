@@ -219,8 +219,34 @@ def obscured_penalty(battle, attacker, target):
         return 0
     from .. import vision
     if vision.is_obscured(battle, attacker, target):
-        return OBSCURED_PENALTY
+        relief = getattr(attacker.char, "talent_bonus", lambda x: 0)("obscured_penalty_relief") if hasattr(attacker, "char") else 0
+        return max(0, OBSCURED_PENALTY - relief)
     return 0
+
+
+def _flank_penalty(battle, attacker, target):
+    """Strict flank: the attacker and an ally are both adjacent to the target and
+    on opposite sides. Defender suffers -2 AC (reduced to -1 AC if target has
+    flank_defense / Peripheral Vision)."""
+    if not _flanked(battle, attacker, target):
+        return 0
+    relief = getattr(target.char, "talent_bonus", lambda x: 0)("flank_defense") if hasattr(target, "char") else 0
+    return max(0, 2 - relief)
+
+
+def _check_gruesome_takedown(battle, attacker, downed_target):
+    if not hasattr(attacker, "char") or not attacker.char.has_talent("gruesome_takedown"):
+        return
+    from ..data import DEMORALIZE_RANGE
+    from .combat import execute_demoralize
+    foes = [u for u in battle.units if u.alive and u.team != attacker.team and u is not downed_target
+            and not u.hidden_from(attacker.team) and battle.units_distance(attacker, u) <= DEMORALIZE_RANGE]
+    if not foes:
+        return
+    foes.sort(key=lambda u: battle.units_distance(attacker, u))
+    victim = foes[0]
+    battle.log(f"  Gruesome Takedown! {attacker.name} roars at {victim.name}:")
+    execute_demoralize(battle, attacker, victim, free=True, ignore_language=True)
 
 
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
@@ -235,6 +261,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         detail += f" -{obscured}(obscured)"
     total = nat + bonus
     ac = target.ac_vs(attacker, armor_pierce=armor_pierce)
+    flank_pen = _flank_penalty(battle, attacker, target)
+    if flank_pen:
+        ac -= flank_pen
     phalanx = _phalanxed(battle, target)
     if phalanx:
         ac += 1
@@ -247,7 +276,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         crit_range = 20
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
-    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {shown}" + (" [Phalanx]" if phalanx and shown != "?" else "")
+    flank_tag = f" [Flank -{flank_pen}]" if flank_pen else ""
+    phalanx_tag = " [Phalanx]" if phalanx and shown != "?" else ""
+    desc = f"{prefix}: d20({nat}) {detail} = {total} vs AC {shown}{flank_tag}{phalanx_tag}"
     fx_text = f"{total} vs AC {shown}"
     if nat == 1:
         battle.log(desc + "  -> critical miss.")
@@ -264,15 +295,20 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
             return "crit" if crit else "hit"
         battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> hit."))
         was_up = target.alive
+        cull = 0
+        if getattr(target, "demoralized", False) and hasattr(attacker, "char"):
+            cull = getattr(attacker.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
         target.take_damage(
             attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon,
-                                 crit_mult=crit_mult, bonus_damage=bonus_damage),
+                                 crit_mult=crit_mult, bonus_damage=bonus_damage + cull),
             battle.log, knockout=bool(pulled))
         if was_up and target.team != attacker.team:
             if not target.alive:
                 attacker.credit_kill(target)
             elif target.hp <= 0 and target.ferocity_downer is None:
                 target.ferocity_downer = attacker
+            if not target.alive or target.hp <= 0:
+                _check_gruesome_takedown(battle, attacker, target)
         if not thrown and target.team != attacker.team:
             _envenom(battle, attacker, target)
         return "crit" if crit else "hit"

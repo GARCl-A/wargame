@@ -420,6 +420,7 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 |---|---|---|---|
 | 1 | Strong | +1 Strength. | -- |
 | 2 | Sure Strike | +1 to hit with Strength-based attacks. | strong |
+| 3 | Blind Strike | reduces the attack penalty against obscured or dark targets by 1. | sure_strike |
 | 2 | Heavy Hand | +1 damage on melee attacks. | strong |
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | agile |
@@ -432,7 +433,16 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 3 | Armor Bearer | reduces the carried weight of equipped armor by up to 6 kg. | bulwark |
 | 1 | Alert | +1 Wisdom. | -- |
 | 2 | Quick Wits | +2 initiative. | alert |
+| 3 | Peripheral Vision | when flanked, your AC is only reduced by 1 instead of 2. | quick_wits |
 | 2 | Iron Will | +2 Mental Defense. | alert |
+| 1 | Imposing | +1 Charisma. | -- |
+| 2 | Menacing | +1 to Demoralize checks. | imposing |
+| 2 | Gruesome Takedown | upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | imposing |
+| 3 | Cull the Broken | +2 damage on attacks against demoralized targets. | menacing |
+| 1 | Tactical Mind | +1 Intelligence. | -- |
+| 2 | Sharp Analysis | +1 on all Assess and enemy observation checks. | tactical_mind |
+| 2 | Combat Analysis | +2 on active Assess checks made during battle. | tactical_mind |
+| 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | combat_analysis |
 
 ### Work track
 

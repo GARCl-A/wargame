@@ -25,6 +25,8 @@ from . import captives, items
 
 UNIQUE_DROPS = {"biwolf": (items.BIWOLF_LEATHER_ITEM,),
                "aurochs": (items.THUNDERHIDE_ITEM, items.LEGENDARY_HORN_ITEM)}
+BATTLEFIELD_SPARE_THE_DYING_CHANCE = 0.001
+SPARE_THE_DYING_SCROLL = "Scroll of Spare the Dying"
 
 
 def parse_currency(it):
@@ -116,6 +118,10 @@ def field_loot(battle, fallen_combatants, rng=random):
             for name, chance, qty in char.race.get("also_drops", ()):
                 if rng.random() < chance:
                     pool += [name] * qty
+            if (getattr(getattr(battle, "scenario", None), "is_battlefield", False)
+                    and u in battle.foe_units and not u.alive):
+                if rng.random() < BATTLEFIELD_SPARE_THE_DYING_CHANCE:
+                    pool.append(SPARE_THE_DYING_SCROLL)
     for obj in battle.ground:
         if obj.is_weapon and obj.weapon_name:
             pool.append(obj.weapon_name)

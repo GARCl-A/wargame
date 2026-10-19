@@ -15,7 +15,7 @@ back (permadeath, a torch that carried forward); everything else is discarded
 and the next fight re-seeds a new Combatant from the character.
 """
 
-from . import data, items, progression
+from . import data, intel, items, progression
 from .conditions import Hexed
 from .data import resolve_bonus, roll
 from .unit import flatten_pack
@@ -543,7 +543,7 @@ class Combatant:
         return (self.mod_wisdom + self._ability.initiative
                 + self.talent_bonus("initiative"))
 
-    def attack_mods(self, target, flanking=False, thrown=False, weapon=None):
+    def attack_mods(self, target, flanking=False, thrown=False, weapon=None, battle=None):
         """List of (value, type, label) that enter the attack roll. `weapon` (a
         WEAPONS dict) overrides the held one -- the Tongue weapon, always a plain
         1-handed melee strike."""
@@ -587,6 +587,10 @@ class Combatant:
         if self._ability.attack_mods:
             mods += self._ability.attack_mods(self, target, flanking)
         mods += self._condition_mods("attack_mods")
+        if battle is not None and target is not None and hasattr(self, "char"):
+            full_bonus = self.char.talent_bonus("full_intel_to_hit")
+            if full_bonus and intel.has_full_intel(battle, self.team, target):
+                mods.append((full_bonus, "circumstance", "Exploit Weakness"))
         return mods
 
     def damage_roll(self, crit=False, thrown=False, weapon=None, crit_mult=None, bonus_damage=0):

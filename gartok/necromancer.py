@@ -84,6 +84,7 @@ class NecromancerScenario(Scenario):
     ambient_light = False
     torch_count = 0
     strips_the_dead = True             # the pay is the field: every body's armour and kit
+    is_battlefield = True
 
     def __init__(self, squad, rng=random):
         level = encounters.squad_level(squad)
