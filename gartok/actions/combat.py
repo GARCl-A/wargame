@@ -401,12 +401,29 @@ class Flee(Action):
         return (actor.ap >= self.cost and self._at_edge(battle, actor)
                 and self._escapes(battle, actor))
 
-    def label(self, battle, actor):
+    def blocked_reason(self, battle, actor):
+        if actor.ap < self.cost:
+            return "need 1 AP"
         if not self._at_edge(battle, actor):
-            return "Flee (reach the map edge)"
-        if not self._escapes(battle, actor):
-            return "Flee (pursuers too fast / too close)"
-        return "Flee the fight (1 pt, ends the turn)"
+            return "reach map edge"
+        pursuers = self._pursuers(battle, actor)
+        if not pursuers:
+            return ""
+        fastest = max(p.speed for p in pursuers)
+        nearest = min(battle.units_distance(actor, p) for p in pursuers)
+        if actor.speed <= fastest and nearest <= fastest:
+            close = [p for p in pursuers if battle.units_distance(actor, p) == nearest]
+            seen = any(battle.can_see_unit(actor, p) for p in close)
+            if nearest <= 1:
+                return "enemy right beside you" if seen else "enemy sounds right beside you"
+            return "pursuers too close" if seen else "sounds of pursuers nearby"
+        return ""
+
+    def label(self, battle, actor):
+        if not self.available(battle, actor):
+            reason = self.blocked_reason(battle, actor)
+            return f"Flee ({reason})" if reason else "Flee"
+        return "Flee (1 pt, ends the turn)"
 
     def execute(self, battle, actor, target=None):
         if not self.available(battle, actor):

@@ -126,6 +126,7 @@ class BattleDrawMixin:
                 "downed": u.downed,
                 "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
                 "broken": u.broken,
+                "obscured": vision.is_obscured(b, b.active, u) if (u.team != self.me and b.active) else False,
             }
             board_render.draw_unit(screen, self.F, r, tok)
 
@@ -417,7 +418,10 @@ class BattleDrawMixin:
                 hotkey_num = hotkey_i
                 self._hotkey_actions.append(action)
 
-            name = action.label(b, act) if getattr(action, "toggle", False) else action.name
+            if getattr(action, "toggle", False) or (not enabled and hasattr(action, "blocked_reason")):
+                name = action.label(b, act)
+            else:
+                name = action.name
             label = name if not armed else f"{name}: click the target"
             if not applies:
                 label += f" ({reason})"
@@ -506,6 +510,10 @@ class BattleDrawMixin:
                 break
 
         desc = getattr(hovered_action, "desc", "") if hovered_action else ""
+        if hovered_action and hasattr(hovered_action, "blocked_reason") and hasattr(self, "battle") and self.battle.active:
+            reason = hovered_action.blocked_reason(self.battle, self.battle.active)
+            if reason:
+                desc = f"{desc}\n\nBlocked: {reason}."
         if desc and btn_rect:
             battle_panel.draw_action_tip(screen, self.F, btn_rect, desc)
 

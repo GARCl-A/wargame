@@ -173,11 +173,12 @@ class MarketTradeMixin:
         return getattr(getattr(self, "node", None), "id", None)
 
     def _settle_market(self):
-
         """Bankers deeds read the guild's lifetime market tallies straight off
         `guild.total_spent`/`items_sold_kinds` (`factions.py`) -- fire this
         after any buy or sell that could have just crossed one, and append a
         DEED line to `self.notice` the same way the tanner does."""
+        from . import objectives
+        objectives.check_and_bank(self.guild)
         for d in factions.settle(self.guild, factions.Event("market", node=self.node)):
             self.notice = (self.notice or "") + "  ·  " + factions.deed_notice(d)
 
@@ -216,6 +217,11 @@ class MarketTradeMixin:
             self.qty.pop(name, None)
             recorder.emit("buy", node=self._node_id(), item=name, qty=1, price=price, zone=zone)
             self.notice = f"{member.name} bought & equipped {name}."
+            from . import items, objectives
+            if items.is_food(name):
+                objectives.complete(self.guild, "obj_buy_food")
+            if name in ("Torch", "Lantern"):
+                objectives.complete(self.guild, "obj_buy_torch")
             self._settle_market()
             return
 
@@ -251,6 +257,12 @@ class MarketTradeMixin:
         for name, qty in paid.items():
             recorder.emit("buy", node=self._node_id(), item=name, qty=qty,
                           price=economy.buy_price(name, self.deal), zone=zone)
+        from . import items, objectives
+        for name in paid:
+            if items.is_food(name):
+                objectives.complete(self.guild, "obj_buy_food")
+            if name in ("Torch", "Lantern"):
+                objectives.complete(self.guild, "obj_buy_torch")
         for name in names:
             self.qty.pop(name, None)             # reset the steppers after a buy
         what = names[0] if len(names) == 1 else "items"

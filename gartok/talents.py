@@ -60,9 +60,9 @@ which chains: `fleet` (tier 3) pulls in `deadeye` then `agile`.
 **The racial track** (`racial`) earns no XP of its own -- its level is
 `progression.racial_level(combat_level + work_level + magic_level)`, so every level
 anywhere grants a hit die, and every 5th racial level a racial pick. Its nodes are **race-gated**: a `Talent`
-with `race` set only shows / can be picked for that race (or any component race of a hybrid). Grippli is the first
-race with authored nodes (`tongue`, `webbed_feet`); other races have racial levels and picks
-but no nodes yet, same way the combat / work trees started.
+with `race` set only shows / can be picked for that race (or any component race of a hybrid).
+Most races have authored nodes (e.g. Grippli's `tongue` and `webbed_feet`, Dragon's `dragon` and `dragon_breath`,
+Wolf's `pack_hunter`); other races have racial levels and picks and gain nodes as they are designed.
 
 **The magic track** (`magic`) earns magic XP (`progression.py`). Its nodes are school-agnostic
 and open to any caster, regardless of which school they are initiated in.

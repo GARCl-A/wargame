@@ -698,3 +698,56 @@ def test_browbeat_is_silent_against_an_equal_or_stronger_target():
 def test_hobgoblin_has_browbeat_and_dwarf_keeps_darkvision():
     assert data.race_by_name("Hobgoblin")["ability"] == "browbeat"
     assert data.race_by_name("Dwarf")["ability"] == "darkvision"
+
+
+def test_adjacent_foe_in_darkness_is_sensed_and_attackable_with_obscured_penalty():
+    from gartok import conditions, vision
+    batt, a, d = _melee_battle()
+    batt.ambient_light = False
+    batt.daylight = False
+    batt.ground = []
+    a._ability = abilities.get("none")
+    d._ability = abilities.get("none")
+    a.torch_hand = False
+    d.torch_hand = False
+    # In darkness, adjacent cell is not in visible_cells
+    assert d.pos not in vision.visible_cells(batt, [a])
+    # But can_see_unit returns True (sensed by proximity)
+    assert batt.can_see_unit(a, d)
+    assert vision.is_obscured(batt, a, d)
+
+    # Attack is available
+    assert actions.ATTACK.available(batt, a)
+    assert d in actions.ATTACK.highlight_targets(batt, a)
+
+    # Obscured penalty applies in combat roll
+    logs = []
+    batt.log = logs.append
+    with fixed_d20(15):
+        actions.ATTACK.execute(batt, a, d)
+    assert "-4(obscured)" in " ".join(logs)
+
+
+def test_invisible_foe_is_not_sensed_even_when_adjacent():
+    from gartok import conditions
+    batt, a, d = _melee_battle()
+    d.conditions.append(conditions.Invisible())
+    assert d.hidden_from(a.team)
+    assert not batt.can_see_unit(a, d)
+
+
+def test_flee_blocked_reasons():
+    batt, a, d = _melee_battle()
+    a.speed, d.speed = 4, 4
+    flee = actions.Flee()
+    # Not on map edge
+    a.pos = (5, 5)
+    assert not flee.available(batt, a)
+    assert "reach map edge" in flee.blocked_reason(batt, a).lower()
+
+    # On edge, but enemy adjacent and as fast
+    a.pos = (0, 5)
+    d.pos = (1, 5)
+    assert not flee.available(batt, a)
+    assert "right beside you" in flee.blocked_reason(batt, a).lower()
+

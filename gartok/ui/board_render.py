@@ -355,6 +355,8 @@ def _body(surf, F, r, tok):
     d = rad // 2
     pygame.draw.line(surf, ring, (center[0] - d, center[1] - d), (center[0] + d, center[1] + d), 2)
     pygame.draw.line(surf, ring, (center[0] - d, center[1] + d), (center[0] + d, center[1] - d), 2)
+    if tok.get("obscured"):
+        pygame.draw.circle(surf, INK_FAINT, center, rad, 1)
     if tok["dying"]:
         _badge(surf, F, (r.centerx, r.y + 8), 20, tok["dying"], DANGER)
     elif tok.get("broken"):
@@ -378,6 +380,8 @@ def _standing(surf, F, r, tok):
         pygame.draw.circle(surf, DANGER, center, rad - 3, 2)
     if tok.get("demoralized"):
         pygame.draw.circle(surf, DEMO_HL, (r.x + 8, r.y + 8), 4)
+    if tok.get("obscured"):
+        pygame.draw.circle(surf, INK_FAINT, center, rad - 3, 2)
     _face(surf, F, center, rad - 5, round(rad * 1.5), tok)
     pygame.draw.circle(surf, ring_color(tok["team"]), center, rad - 4, 3)
     hp_bar(surf, pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4), tok["hp_frac"], tok.get("hp_steps"))

@@ -75,9 +75,9 @@ signature, UI overlap fixes, and tutorial copy fixes.
   (accepted 2026-10-16); the third missions are the endgame bosses, each worth a racial-15 character, so they are
   authored NPCs (generated enemies stop at `constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`); Faith consumes a Holy
   Symbol (uncommon, $80 since 2026-10-18; from the Priest's birth or a Priest's loot; shops buy it, none stocks it); Blood tests `magic_blood` first and costs no hit points. Done 2026-10-18: the magic talent tree is 6 school-agnostic nodes (`arcane_mind`, `spell_focus`, `destructive_casting`, `blessed_hands`, `focused_will`, `far_cast`), `dragon` and `dragon_breath` moved to the `Dragon` racial talent tree, and the Snake Dragon is a composite `["Snake", "Dragon"]` race (`unit.races`, attribute modifiers averaged and rounded down, HD average rounded down to `d8`, size average rounded up to `Large`, union of abilities, languages and racial talent trees). Left:
-  1. *Scrolls (deferred past the arc, author 2026-10-17 & 2026-10-18):* scrolls are never sold; the remaining unplaced
-     scrolls (`Hex`, `Spare the Dying`) will come from enemy/boss loot and missions for their respective school factions,
-     while `Scroll of Invisibility` does not clearly fit anywhere in the game right now (every spell has its scroll
+  1. *Scrolls (decided 2026-10-18):* scrolls are never sold. `Scroll of Hex` will be secret loot inside the
+     Dragon's Lair (`lair.py`); `Scroll of Spare the Dying` will be a reward from a Faith quest; `Scroll of Invisibility`
+     is deferred out of this stage, to enter only with future quests. (Every spell has its scroll
      since 2026-10-18; the level-2 ones are $750, `economy.scroll_price`).
      Today the 4 level-0 Nature scrolls come as the Scribe's starting Scroll (`Magic Missile` also drops from the
      Ancient Archivist), `Sleep` is in the Ancient Ruins chest, `Raise Dead` and `Healing Touch` are carried by the
@@ -161,14 +161,16 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
 - **Blind night fight never ends.** Wilds ambush at night, no light on either side: 117 rounds on a 16x12
   board without contact. The aggressor's search (`ai.py`) never found the squad; an unseen foe stood in
   the cell next to a squad member and could not be attacked; Flee was blocked by that unseen foe and
-  the button gave no reason. Whatever the darkness rework decides, a fight needs a way to end.
+  the button gave no reason. **Decided 2026-10-18:** author rejected ending by stalemate/timeout; instead,
+  display an explicit reason when Flee is blocked (e.g. enemy sounds nearby) and allow attacking adjacent
+  obscured cells when sounds/footsteps are heard.
 
 **Tutorials (review all of them)**
 - Volume: about 25 modal cards, the map's with six paragraphs; the guild's goal ("what you're playing
   for") is the 12th. Decided 2026-10-18: the first card only says "this is your guild; your objectives
   are here" and points to the **guild objectives** list (initial items decided below); every other card gets
   much shorter, since each stays one `?` click away.
-- **Guild objectives list (decided 2026-10-18, ready to do):** pure onboarding checklist on the Guild screen
+- **Guild objectives list (built 2026-10-18, `gartok/objectives.py`):** pure onboarding checklist on the Guild screen
   next to the factions' deeds, with no mechanical reward (fame or coins). Initial list: (1) Buy food,
   (2) Participate in an Arena bout, (3) Reach Combat Lv 1, (4) Work Lv 1 -> buy Axes -> Work Lv 2 chain,
   (5) Recruit a character at the Tavern, (6) Recruit a character at the Prison, (7) Buy a Torch. More
@@ -483,10 +485,9 @@ building them:
 - **Playtest 2026-10-18: open design questions** (being discussed with the author, no code yet).
   - **Healing dominates the early economy.** An arena bout nets $2 and costs about 3 days of rest or
     $112-224 a member at the Medic. Author 2026-10-18: cheap healing should stay a milestone (potions
-    from a production chain), so do not make healing cheap across the board. "Rest until full" already
-    removes the tedium; what is left is the ratio between what an early fight pays and the food-days it
-    costs to recover (`guild_upkeep.rest_heal`: 1 HP per 8 h at racial level 1, lethal ambushes/hunts). The
-    arena side is built (non-lethal damage clears after 24 h of unbroken rest).
+    from a production chain), so do not make healing cheap across the board. Getting wounded is intentionally
+    expensive in time and food. "Rest until full" already removes the tedium; the arena side is built (non-lethal
+    damage clears after 24 h of unbroken rest), and lethal recovery stays at 1 HP per 8 h at racial level 1.
   - **The world moving by itself and members with a will of their own** (a Wilds node turns into a lair
     if nobody clears it; an idle veteran asks for work or threatens to leave). The author's long-term
     vision for time pressure; non-trivial in design and code and waits on earlier subsystems.
@@ -499,8 +500,9 @@ building them:
     it ever exists, looks apart from darkness.
   - **Art direction for the board and shops.** The author is not an artist and worries that an engraved
     board, or AI-made textures, would look bad or cause trouble later.
-  - **Tutorial shape.** Fewer, shorter modal cards and the guild objectives list (*Ready to do*); still open
-    which rules move to one-line hints at the moment of the decision and which go to the wiki.
+  - **Tutorial shape.** Both coexist (author 2026-10-18): the guild objectives list (*Ready to do*) guides
+    the player with small actionable tasks on the guild screen, while the denser modal tutorial cards remain
+    to explain game systems in detail.
 
 - **Magic as the vertical progression.** The biggest content gap; the arc's work is in *Ready to do -> Medium*.
   The schools are rival factions but not mutually exclusive for a character. Magic comes strictly before

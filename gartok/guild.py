@@ -116,7 +116,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
                  wilds_claim_campfire=False, claim_oven=False, claim_garage=None,
                  leaving=None, ox_trails=0, vocation=None, recruit_seen=None,
                  licences=None, revealed=None, supply_runs_completed=0, met_factions=None,
-                 wildfire=None, boss_talks_seen=None):
+                 wildfire=None, boss_talks_seen=None, objectives_done=None):
         # `groups` (a list[Group]) wins when given (persist's new save shape);
         # else `roster`/`node` build the one starting group (draft, every
         # existing test call site) -- the guild leader, if given, also
@@ -126,6 +126,7 @@ class Guild(HoldingsMixin, WildsClaimMixin, UpkeepMixin, LaborMixin):
         self.battles_won = battles_won
         self.reputation = dict(reputation or {})   # {faction_id: score}, moved by deeds only
         self.deeds_done = list(deeds_done or [])   # ids of completed factions.Deed
+        self.objectives_done = list(objectives_done or [])   # ids of completed objectives (objectives.py)
         self.arena_challenge_day = arena_challenge_day  # day a title defense falls due, or None (arena.py)
         self.clock = clock or Clock()
         self.bank = bank if bank is not None else Stash()   # the rented strongbox; capacity 0 = none rented

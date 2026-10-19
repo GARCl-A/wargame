@@ -207,8 +207,20 @@ def _envenom(battle, attacker, target):
 NONLETHAL_PENALTY = 1      # to hit, while a character pulls its blows (the Non-lethal toggle)
 
 
+OBSCURED_PENALTY = 4
+
+
 def nonlethal_penalty(attacker):
     return NONLETHAL_PENALTY if getattr(attacker, "nonlethal_blows", False) else 0
+
+
+def obscured_penalty(battle, attacker, target):
+    if not (hasattr(battle, "board") and hasattr(target, "pos")):
+        return 0
+    from .. import vision
+    if vision.is_obscured(battle, attacker, target):
+        return OBSCURED_PENALTY
+    return 0
 
 
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
@@ -217,6 +229,10 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     if pulled:
         bonus -= pulled
         detail += f" -{pulled}(non-lethal)"
+    obscured = obscured_penalty(battle, attacker, target)
+    if obscured:
+        bonus -= obscured
+        detail += f" -{obscured}(obscured)"
     total = nat + bonus
     ac = target.ac_vs(attacker, armor_pierce=armor_pierce)
     phalanx = _phalanxed(battle, target)

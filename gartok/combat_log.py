@@ -275,7 +275,7 @@ def load(path):
 _AGGRESSOR_OF_KIND = {"hunt": "enemy", "ambush": "enemy", "guard": "enemy", "raid": "enemy",
                       "gather_ambush": "enemy", "supply_ambush": "enemy"}
 
-REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "CustomScenario")
+REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "WildsScenario", "CustomScenario")
 
 
 def rebuild(rows):

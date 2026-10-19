@@ -281,6 +281,8 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         recorder.emit("recruit", pitcher=member.name, candidate=cand.name, bail=cost, ok=bool(pitch.ok))
         if pitch.ok:
             recruit.enlist(self.guild, cand, member)
+            from . import objectives
+            objectives.complete(self.guild, "obj_recruit_prison" if cost else "obj_recruit_tavern")
             if cand not in self.party:
                 self.party.append(cand)
             self.sync_group()

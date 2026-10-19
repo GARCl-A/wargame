@@ -77,9 +77,19 @@ def can_see(battle, observer, target_pos):
 
 def can_see_unit(battle, observer, target):
     # a downed body (dying/stable) can still be seen -- e.g. to be finished off
-    return (observer.alive and not target.dead and not target.hidden_from(observer.team)
-            and any(can_see(battle, observer, c)
-                    for c in cells(target.pos, target.footprint)))
+    if not (observer.alive and not target.dead and not target.hidden_from(observer.team)):
+        return False
+    if any(can_see(battle, observer, c) for c in cells(target.pos, target.footprint)):
+        return True
+    # Heard / adjacent in the dark: a body within 1 cell is sensed by sound/presence unless blocked by wall
+    if battle.units_distance(observer, target) <= 1 and battle.los_between(observer, target):
+        return True
+    return False
+
+
+def is_obscured(battle, observer, target):
+    """True if `target` is not visually in light for `observer` (e.g. only heard in the dark)."""
+    return not any(can_see(battle, observer, c) for c in cells(target.pos, target.footprint))
 
 
 # --------------------------------------------------------------------------- #

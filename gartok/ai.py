@@ -368,7 +368,7 @@ def _target(battle, unit):
         # someone is running off with OUR flag -- stopping them beats whatever
         # else this unit would otherwise pick a fight over
         runner = battle.flag_carrier[unit.team]
-        if runner in pool:
+        if runner and runner in enemies:
             return runner
     return min(pool, key=lambda e: _focus_key(battle, unit, e))
 

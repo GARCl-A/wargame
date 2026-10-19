@@ -63,7 +63,7 @@ level 2-3 only. The Wilds give little XP on purpose: the arena and the dungeon a
 - **Work XP** follows `progression.work_xp_hours`: an hour banks `activity - worker + 1` hours,
   16 banked hours = 1 mark; work levels 1/2/3 need 2/6/12 marks. Lumber is level 0 (1 with an
   own Axe), the tavern 1, the Wilds 3, a recipe its `craft_level`.
-- The racial track is combat level + work level, so both feed it.
+- The racial track is combat level + work level + magic level, so all three feed it.
 - Reported per activity: XP per member per day and days to the next combat / work level.
 
 ## Player skill is a parameter

@@ -765,8 +765,9 @@ class GuildScreen(Screen):
 
     # ------------------------------------------------------------------ #
     def _draw_reputations(self, screen, F, rect):
+        from . import objectives
         done = set(self.guild.deeds_done)
-        data = []
+        data = [objectives.card_data(self.guild)]
         for fac in factions.known(self.guild):
             rep = self.guild.reputation.get(fac.id, 0)
             data.append({

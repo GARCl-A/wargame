@@ -9,7 +9,7 @@ battle and populates its `board`, `units[*].pos`, `creatures`, `ground` and the
 `Scenario` is the shared machinery (side deployment, the unit's own creatures,
 torch scatter). A concrete location on the world map picks a subclass:
 - `ArenaScenario` -- the dungeon pit fight: cluttered, always dark, torches around;
-- `ErmosScenario` -- open country: `outdoor`, so ambient light follows the
+- `WildsScenario` (or `ErmosScenario`) -- open country: `outdoor`, so ambient light follows the
   campaign clock (`battle.daylight`) -- lit by day, pitch dark by night (bring
   your own torch; nothing scattered).
 - `CustomScenario` -- a map hand-laid in the editor (`map_lib` dict): fixed
@@ -230,7 +230,7 @@ class FlagScenario(_FlagObjective, ArenaScenario):
     `ArenaScenario` floor and torch scatter, plus the flag objective."""
 
 
-class ErmosScenario(Scenario):
+class WildsScenario(Scenario):
     """Open country: sparse walls, `outdoor` -- lit by day, pitch dark by night.
     Nothing lying around: bring your own torch."""
 
@@ -239,6 +239,9 @@ class ErmosScenario(Scenario):
 
     def _make_board(self):
         return Board(min_seg=1, max_seg=2)
+
+
+ErmosScenario = WildsScenario
 
 
 class StreetScenario(Scenario):
@@ -250,13 +253,13 @@ class StreetScenario(Scenario):
 
 def scenario_for(node):
     """A node's fight scenario: its own `node.scenario()`, `StreetScenario` inside the
-    City's jurisdiction (daylight by day, street torches at night), or `ErmosScenario`
+    City's jurisdiction (daylight by day, street torches at night), or `WildsScenario`
     out in the open."""
     if node.scenario is not None:
         return node.scenario()
     if getattr(node, "jurisdiction", None) == "the_city":
         return StreetScenario()
-    return ErmosScenario()
+    return WildsScenario()
 
 
 class ReplayScenario(Scenario):

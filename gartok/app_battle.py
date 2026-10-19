@@ -106,6 +106,9 @@ class BattleFlowMixin:
         was_boss_bout = bool(self._arena_offer and getattr(self._arena_offer, "boss", False))
         battle_node = self._battle_node
         offer = self._arena_offer
+        if offer is not None:
+            from . import objectives
+            objectives.complete(self.guild, "obj_arena_bout")
         outcome = campaign.absorb_battle(self.guild, self._battle_squad, battle,
                                          node=self._battle_node,
                                          arena_offer=offer)

@@ -43,12 +43,12 @@ def _draw_card(surf, F, rect, f, mpos):
 
     tracked(surf, F["microb"], f["name"].upper(), (x, y), T.BRASS)
     text(surf, F["big"], str(f["rep"]), (x + w, y - 4), T.BRASS if f["rep"] else T.TX_FAINT, right=True)
-    caps(surf, F["micro"], "standing", (x + w, y + 26), T.TX_FAINT, right=True)
+    caps(surf, F["micro"], f.get("rep_label", "standing"), (x + w, y + 26), T.TX_FAINT, right=True)
     for i, ln in enumerate(_wrap_two(F["body_sm"], f["blurb"], w - T.S * 10)):
         text(surf, F["body_sm"], ln, (x, y + T.S * 2 + i * 16), T.TX_MUTED)
     y = rect.y + HEAD_H
 
-    y = section(surf, F, "Deeds", x, y, w)
+    y = section(surf, F, f.get("section_title", "Deeds"), x, y, w)
     if not f["deeds"]:
         text(surf, F["body_sm"], "None yet -- this faction's standing does not move.", (x, y), T.TX_FAINT)
         y += DEED_H
@@ -59,8 +59,10 @@ def _draw_card(surf, F, rect, f, mpos):
         text(surf, F["bodyb"], name, (x + T.S * 2, y), T.GREEN if done else T.TX_FAINT if failed else T.TX)
         text(surf, F["body_sm"], ellipsize(blurb, F["body_sm"], w - T.S * 2 - T.S * 10),
              (x + T.S * 2, y + 18), T.TX_FAINT if failed else T.TX_MUTED)
-        caps(surf, F["microb"], "DONE" if done else "FAILED" if failed else f"+{rep} REP", (x + w, y + 2),
-             T.GREEN if done else T.BLOOD if failed else T.BRASS, right=True)
+        badge = "DONE" if done else "FAILED" if failed else f"+{rep} REP" if rep else ""
+        if badge:
+            caps(surf, F["microb"], badge, (x + w, y + 2),
+                 T.GREEN if done else T.BLOOD if failed else T.BRASS, right=True)
         y += DEED_H
 
     if f["unlocks"]:

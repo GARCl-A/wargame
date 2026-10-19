@@ -235,7 +235,7 @@ PAYLOAD_DEFAULTS = {
     "recruit_seen": {},
     "leader": None, "leader_swaps_used": 0, "leaving": {}, "vocation": None,
     "tutorial_seen": [], "tutorial_enabled": True, "revealed": [], "met_factions": [], "supply_runs_completed": 0,
-    "wildfire": None, "boss_talks_seen": [],
+    "wildfire": None, "boss_talks_seen": [], "objectives_done": [],
 }
 
 
@@ -248,6 +248,7 @@ def _payload(guild, kind, label):
         "battles_won": guild.battles_won,
         "reputation": dict(guild.reputation),
         "deeds_done": list(guild.deeds_done),
+        "objectives_done": list(guild.objectives_done),
         "arena_challenge_day": guild.arena_challenge_day,
         "clock_seconds": guild.clock.seconds,
         "bank_capacity": guild.bank.capacity,
@@ -395,7 +396,8 @@ def load_game(world, save_id=CURRENT):
                  supply_runs_completed=payload["supply_runs_completed"],
                  wildfire=wildfire.from_dict(payload["wildfire"]),
                  tutorial=TutorialState(seen=payload["tutorial_seen"],
-                                       enabled=payload["tutorial_enabled"]))
+                                       enabled=payload["tutorial_enabled"]),
+                 objectives_done=payload["objectives_done"])
     wildfire.sync_world(guild)
     return guild
 

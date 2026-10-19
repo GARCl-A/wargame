@@ -42,7 +42,7 @@ When evaluating fitness and observing agent behaviors, the following rule intera
    - *Rule:* Encounter scaling relies on `mean_level = sum(track_levels) // len(track_levels)`.
    - *Exploit:* Bringing 1 high-level veteran (Level 3) + 3 sacrificial Level 0 recruits results in `(3 + 0 + 0 + 0) // 4 = 0`. The game generates Level 0 enemies while the squad has a Level 3 juggernaut.
 3. **"Cross-Training" Safe HP Farming (Racial Track):**
-   - *Rule:* Hit Dice and base HP scale with Racial Level, which is `combat_level + work_level`.
+   - *Rule:* Hit Dice and base HP scale with Racial Level, which is `combat_level + work_level + magic_level`.
    - *Exploit:* Gaining Work XP via safe day-labour (Lumber Yard with an Axe to hit Lv 1, then Hunting) allows units to accumulate high HP before risking permadeath in combat.
 4. **Market Churning & Untouchable CTF (Reputation Deeds):**
    - *Rule:* Reputation is earned through one-shot deeds ([factions.py](../../gartok/factions.py)).
