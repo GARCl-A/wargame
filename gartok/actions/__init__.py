@@ -32,11 +32,14 @@ from .combat import (  # noqa: F401
     Defend,
     Demoralize,
     DragonBreath,
+    EscapeGrapple,
     Flee,
+    Grab,
     NonLethal,
     Push,
     Reload,
     Throw,
+    ZombieBite,
     _strike,
 )
 from .movement import (  # noqa: F401
@@ -133,6 +136,9 @@ DISARM = Disarm()
 DRINK_POTION = DrinkPotion()
 SIGNAL_HORN = SignalHorn()
 DRAGON_BREATH = DragonBreath()
+GRAB = Grab()
+ESCAPE_GRAPPLE = EscapeGrapple()
+ZOMBIE_BITE = ZombieBite()
 NONLETHAL = NonLethal()
 CAPTURE = Capture()
 
@@ -168,6 +174,9 @@ COMBAT_ACTIONS = [
     ATTACK,
     *WEAPON_ACTIONS,
     DRAGON_BREATH,
+    ZOMBIE_BITE,
+    GRAB,
+    ESCAPE_GRAPPLE,
     THROW,
     DEMORALIZE,
     ASSESS,

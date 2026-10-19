@@ -48,13 +48,13 @@ class Combatant:
     # ------------------------------------------------------------------ #
     @property
     def flies(self):
-        return self._ability.flies
+        return self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
 
     @property
     def can_move_vertically(self):
         """Changes floor height as ordinary movement -- a flier or a climber --
         so the pathfinder is allowed to route them in and out of a pit."""
-        return self._ability.flies or self._ability.climb_speed
+        return self.flies or self._ability.climb_speed
 
     @property
     def water_breathing(self):
@@ -450,6 +450,8 @@ class Combatant:
 
     @property
     def speed(self):
+        if self.has_condition("grappled"):
+            return 0
         s = getattr(self, "_override_speed", None)
         if s is None:
             s = self.char.speed

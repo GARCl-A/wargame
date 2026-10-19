@@ -52,6 +52,10 @@ exactly one consumer that reads it back:
     assess_bonus      intel._roll                      --
     assess_active_bonus intel.assess                   --
     full_intel_to_hit Combatant.attack_mods            --
+    grab_bonus        actions.combat.Grab              --
+    unarmed_cleave    actions.weapon_actions.Cleave    --
+    flies             Combatant.flies                  --
+    fly_speed         Unit._derive_speed               --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -401,6 +405,25 @@ _LIST = [
            "against everyone in it, allies too, 2d6 damage on each hit.",
            requires="dragon", race="Dragon",
            effects=(Effect("dragon_breath", 1),), icon="body/fire-dash"),
+    Talent("sweeping_claws", "racial", 2, "Sweeping Claws",
+           "your claws sweep in wide lethal arcs: you can use Cleave while unarmed, "
+           "striking two adjacent foes with your natural weapon.",
+           requires="dragon", race="Dragon",
+           effects=(Effect("unarmed_cleave", 1),), icon="action/deadly-strike"),
+    Talent("draconic_wings", "racial", 3, "Draconic Wings",
+           "massive leathery wings carry you aloft: you gain flight (move freely across "
+           "3D terrain and pits, immune to fall damage) and your speed increases to 12 squares.",
+           requires="dragon", race="Dragon",
+           effects=(Effect("flies", 1), Effect("fly_speed", 12)), icon="action/flying-fox"),
+    Talent("death_grip", "racial", 1, "Death Grip",
+           "your cold dead hands lock like iron: +2 to grab checks.",
+           race="Zombie",
+           effects=(Effect("grab_bonus", 2),), icon="action/grab"),
+    Talent("zombie_bite", "racial", 2, "Zombie Bite",
+           "sink your teeth into held flesh: an attack targeting a grappled foe; "
+           "+2 to hit, deals 1d8 + Strength damage.",
+           requires="death_grip", race="Zombie",
+           effects=(Effect("zombie_bite", 1),), icon="head/snake-bite"),
 
     # ================================================================== #
     # magic -- school-agnostic spellcasting mastery                      #

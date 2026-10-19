@@ -87,6 +87,28 @@ class Entangled(Condition):
         return self.held
 
 
+class Grappled(Condition):
+    """Held fast: speed is 0 (cannot walk or flee) and -2 AC.
+    Ends if the grappler falls, dies, moves away, or if the victim escapes."""
+    id = "grappled"
+
+    def __init__(self, grappler=None):
+        self.grappler = grappler
+
+    def ac_mods(self):
+        return [(-2, "status", "Grappled")]
+
+    def modify_speed(self, speed):
+        return 0
+
+    def on_turn_start(self, unit, log):
+        if self.grappler is not None:
+            if not getattr(self.grappler, "alive", True):
+                log(f"{unit.name} is no longer grappled (grappler is down).")
+                return True
+        return False
+
+
 class Sleeping(Condition):
     id = "sleeping"
 

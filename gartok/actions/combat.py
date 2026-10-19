@@ -4,7 +4,7 @@ the Non-lethal toggle."""
 
 from .. import intel
 from ..board import cells, cells_in_radius, cone_cells
-from ..conditions import Defending, Demoralized
+from ..conditions import Defending, Demoralized, Grappled
 from ..data import DEMORALIZE_RANGE, d20, resolve_bonus, roll
 from ..ground import GroundObject
 from .base import (
@@ -404,12 +404,14 @@ class Flee(Action):
         return actor.speed > fastest or nearest > fastest
 
     def available(self, battle, actor):
-        return (actor.ap >= self.cost and self._at_edge(battle, actor)
-                and self._escapes(battle, actor))
+        return (actor.ap >= self.cost and not actor.has_condition("grappled")
+                and self._at_edge(battle, actor) and self._escapes(battle, actor))
 
     def blocked_reason(self, battle, actor):
         if actor.ap < self.cost:
             return "need 1 AP"
+        if actor.has_condition("grappled"):
+            return "grappled"
         if not self._at_edge(battle, actor):
             return "reach map edge"
         pursuers = self._pursuers(battle, actor)
@@ -584,6 +586,8 @@ class Push(Action):
             elif target.hp <= 0 and target.ferocity_downer is None:
                 target.ferocity_downer = actor
 
+        battle.check_grapples()
+
 
 # --------------------------------------------------------------------------- #
 # Dragon Breath                                                                #
@@ -676,7 +680,184 @@ class DragonBreath(Action):
                     u.ferocity_downer = actor
         if getattr(battle.scenario, "breath_burns", False):
             battle.fire.update(self.area_cells(battle, actor, target))
-            battle.log("  The breath leaves the ground burning.")
+# --------------------------------------------------------------------------- #
+# Grab                                                                        #
+# --------------------------------------------------------------------------- #
+
+class Grab(Action):
+    """Grab an adjacent enemy: 1 AP, Strength vs 10 + target's higher of STR/DEX.
+    On success, the target is Grappled (speed 0, -2 AC) until they break free
+    or the grappler is downed or moves away."""
+    id, name, cost, target, aimed = "grab", "Grab", 1, "enemy", True
+    desc = "Grab an adjacent foe to hold them in place (0 speed, -2 AC)."
+
+    def _targets(self, battle, actor):
+        return [u for u in battle.units
+                if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and bool(self._targets(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or not _hostile_target(actor, target):
+            return False
+        if not target.alive or target.has_condition("grappled"):
+            return False
+        if battle.units_distance(actor, target) > 1:
+            return False
+        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
+            return False
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def label(self, battle, actor):
+        char = getattr(actor, "char", actor)
+        bonus = getattr(char, "talent_bonus", lambda _: 0)("grab_bonus")
+        if bonus:
+            return f"Grab (1 pt, STR{bonus:+} vs 10 + target STR/DEX)"
+        return "Grab (1 pt, STR vs 10 + target STR/DEX)"
+
+    def highlight_targets(self, battle, actor):
+        return self._targets(battle, actor)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        dc = 10 + max(target.mod_strength, target.mod_dexterity)
+        nat = d20()
+        char = getattr(actor, "char", actor)
+        bonus = actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("grab_bonus")
+        total = nat + bonus
+        desc = (f"{actor.name} grabs {target.name}: d20({nat}) "
+                f"{bonus:+}(STR) = {total} vs DC {dc}")
+        if nat == 20 or total >= dc:
+            target.add_condition(Grappled(grappler=actor))
+            battle.log(desc + f" -> {target.name} is grappled!")
+            battle.fx(target.pos, "grappled", "ok")
+        else:
+            battle.log(desc + " -> failed.")
+
+
+# --------------------------------------------------------------------------- #
+# Escape Grapple                                                              #
+# --------------------------------------------------------------------------- #
+
+class EscapeGrapple(Action):
+    """Attempt to break free from a grapple (1 AP: Strength or Dexterity vs 10 + grappler Strength)."""
+    id, name, cost, target = "escape_grapple", "Escape Grapple", 1, "none"
+    desc = "Break free from a grapple (STR or DEX vs 10 + grappler STR)."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.has_condition("grappled"):
+            return False, "not grappled"
+        return True, ""
+
+    def available(self, battle, actor):
+        return actor.ap >= self.cost and actor.has_condition("grappled")
+
+    def label(self, battle, actor):
+        return "Escape Grapple (1 pt, STR/DEX)"
+
+    def execute(self, battle, actor, target=None):
+        if not self.available(battle, actor):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        cond = actor.condition("grappled")
+        grappler = getattr(cond, "grappler", None)
+        g_char = getattr(grappler, "char", grappler) if grappler else None
+        g_bonus = getattr(g_char, "talent_bonus", lambda _: 0)("grab_bonus") if g_char else 0
+        dc = 10 + (grappler.mod_strength + g_bonus if grappler else 0)
+        nat = d20()
+        esc_bonus = max(actor.mod_strength, actor.mod_dexterity)
+        total = nat + esc_bonus
+        desc = (f"{actor.name} attempts to break free: d20({nat}) "
+                f"{esc_bonus:+} = {total} vs DC {dc}")
+        if nat == 20 or total >= dc:
+            if cond in actor.conditions:
+                actor.conditions.remove(cond)
+            battle.log(desc + " -> Escaped!")
+            battle.fx(actor.pos, "free", "ok")
+        else:
+            battle.log(desc + " -> failed.")
+
+
+# --------------------------------------------------------------------------- #
+# Zombie Bite                                                                 #
+# --------------------------------------------------------------------------- #
+
+class ZombieBite(Action):
+    """Zombie Bite: a savage bite targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage."""
+    id, name, cost, target, aimed = "zombie_bite", "Bite", 1, "enemy", True
+    desc = "Sink teeth into a grappled foe (+2 to hit, 1d8 + STR damage)."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        char = getattr(actor, "char", actor)
+        if not getattr(char, "has_talent", lambda _: False)("zombie_bite"):
+            return False, "requires Zombie Bite talent"
+        return True, ""
+
+    def _targets(self, battle, actor):
+        return [u for u in battle.units
+                if u.alive and u.team != actor.team and self.can(battle, actor, u)]
+
+    def available(self, battle, actor):
+        char = getattr(actor, "char", actor)
+        has_talent = getattr(char, "has_talent", lambda _: False)("zombie_bite")
+        return actor.ap >= self.cost and has_talent and bool(self._targets(battle, actor))
+
+    def can(self, battle, actor, target=None):
+        if actor.ap < self.cost or not _hostile_target(actor, target):
+            return False
+        char = getattr(actor, "char", actor)
+        if not getattr(char, "has_talent", lambda _: False)("zombie_bite"):
+            return False
+        if not target.alive or not target.has_condition("grappled"):
+            return False
+        if battle.units_distance(actor, target) > 1:
+            return False
+        if abs(battle.elevation(actor) - battle.elevation(target)) > 1:
+            return False
+        return battle.los_between(actor, target) and battle.can_see_unit(actor, target)
+
+    def label(self, battle, actor):
+        return "Zombie Bite (1 pt, +2 to hit, 1d8+STR)"
+
+    def highlight_targets(self, battle, actor):
+        return self._targets(battle, actor)
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= 1
+        actor.walking = False
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
+        mods.append((2, "circumstance", "Bite Grappled Foe"))
+        bonus, applied = resolve_bonus(mods)
+        detail = " ".join(f"{v:+}({r})" for v, r in applied)
+        nat = d20()
+        prefix = f"{actor.name} Bite -> {target.name}"
+        total = nat + bonus
+        ac = target.ac_vs(actor)
+        crit = nat == 20 or (nat != 1 and total >= ac + 10)
+        hit = nat != 1 and (nat == 20 or total >= ac)
+        if not hit:
+            battle.log(f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac} -> miss.")
+            battle.fx(target.pos, "miss", "miss")
+            return
+        res = "crit" if crit else "hit"
+        dice = roll(2, 8) if crit else roll(1, 8)
+        char = getattr(actor, "char", actor)
+        dmg = max(1, dice + actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("melee_damage"))
+        battle.log(f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac} -> {res.upper()} for {dmg} damage!")
+        battle.fx(target.pos, f"-{dmg}", res)
+        target.take_damage(dmg, battle.log, knockout=actor.nonlethal_blows)
+        if not target.alive and target.team != actor.team:
+            actor.credit_kill(target)
+        battle.check_grapples()
 
 
 # --------------------------------------------------------------------------- #

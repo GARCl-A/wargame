@@ -242,12 +242,18 @@ class DerivationMixin:
     def speed_breakdown(self):
         """Where `speed` (squares per turn) comes from, as `[(label, value)]`."""
         armor = self.armor
-        return self._breakdown([
+        terms = [
             (f"{self.race['name']} base", data.squares(self.race["speed"])),
-            (self._ability.name, self._ability.speed), ("talents", self.talent_bonus("speed")),
-            (f"{self.armor_name} (drag)" if armor else "armor", -(armor.speed_penalty if armor else 0)),
-            ("overloaded", -1 if self.encumbered else 0),
-        ], self.speed)
+            (self._ability.name, self._ability.speed),
+            ("talents", self.talent_bonus("speed")),
+        ]
+        fly_target = self.talent_bonus("fly_speed")
+        base_spd = data.squares(self.race["speed"]) + self._ability.speed + self.talent_bonus("speed")
+        if fly_target and fly_target > base_spd:
+            terms.append(("flight (wings)", fly_target - base_spd))
+        terms.append((f"{self.armor_name} (drag)" if armor else "armor", -(armor.speed_penalty if armor else 0)))
+        terms.append(("overloaded", -1 if self.encumbered else 0))
+        return self._breakdown(terms, self.speed)
 
     def initiative_breakdown(self):
         """Where `Combatant.initiative_bonus()` comes from, as `[(label, value)]`."""
@@ -282,6 +288,9 @@ class DerivationMixin:
         overloaded. Floored at 1."""
         self.speed = (data.squares(self.race["speed"])
                       + self._ability.speed + self.talent_bonus("speed"))
+        fly_target = self.talent_bonus("fly_speed")
+        if fly_target:
+            self.speed = max(self.speed, fly_target)
         armor = self.armor
         if armor is not None and armor.speed_penalty:
             self.speed = max(1, self.speed - armor.speed_penalty)

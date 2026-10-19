@@ -26,33 +26,15 @@ The *Suggested order* below comes first.
 
 Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
 sim work is ahead of the content it balances, so the order favours content verticals and
-the seams they need. **The magic arc is the whole focus until it closes** (author, 2026-10-15).
-**Before the playtest (author 2026-10-18):** done the same day: the founding screen redrawn, the map's crowded
-names, the arena bosses' lines in the dialogue system, the post-battle report / level-up / memorial screens
-(`aftermath.py`), the big screens split, the level-2 scrolls, the AI's Invisibility, composite races
-(`["Snake", "Dragon"]`), the Dragon racial talents (`dragon`, `dragon_breath`), the 6-node school-agnostic
-magic talent tree, non-lethal damage clearing after 24 h of unbroken rest, fresh food across larder before Rotten Food,
-outdoor road/city guard scenarios (`StreetScenario`), work `LevelUpScreen`, Wilds ambush card, tavern recruitment
-signature, UI overlap fixes, tutorial copy fixes, guild onboarding objectives checklist (`objectives.py`),
-hearing adjacent targets in the dark with -4 obscured penalty, explicit Flee blocked reasons, CTF AI flag carrier
-targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
-**Shipped 2026-10-19:** combat camera WASD pan, attack confirmation Enter/F, 11 weapon action vector icons (`icons.py`),
-zero-cost node entry when already present, autosell stores support, crafting roll modifier display, rotten food
-starvation emergency restriction, shelf-life prioritized shared larder consumption, coin rebalance & locked item
-magnet in distribute load, map alert `!` for faction jobs, AI 2-action tactical lookahead with replanning (`ai.py`),
-archived 40 campaign playtest logs and extracted human profile (`recordings/2026-10-19/`), calibrated Balanced policy
-and resolved day-30 milestone verdict in economy report.
+the seams they need.
 
-1. **Magic Arc follow-ups** (*Ready to do -> Medium*): scroll acquisition sources (deferred past the arc, author
-   2026-10-17 & 2026-10-18: scrolls are never sold; they will come from enemy/boss loot and missions for their
-   respective factions), sim initiation policy, and tuning after the playtest.
-2. **Blood's fourth mission** (the robbed dragon strikes back): only after every test scheduled after the
-   magic arc (author 2026-10-17: the playtest and the tuning it feeds).
-3. **Production chain between groups** (*Large*, after magic).
-4. **Talent trees as long as the levels** (*Large*, after magic).
-5. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery; after magic).
-6. **Cooking and temporary meal buffs** (after magic).
-7. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
+1. **Production chain between groups** (*Large*).
+2. **Talent trees as long as the levels** (*Large*).
+3. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery).
+4. **Cooking and temporary meal buffs**.
+5. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
+6. **Magic Arc follow-ups** (*Ready to do -> Medium*): `Scroll of Invisibility` library quest, Blood's fourth mission (robbed dragon strikes back), and encounter tuning after campaign playtests.
+
 
 ---
 
@@ -60,20 +42,10 @@ and resolved day-30 milestone verdict in economy report.
 
 ## Medium
 
-- **Combat level stepping-stone progression (Levels 1 to 2) and encounter curve tuning (playtest 2026-10-19).**
-  Level 0->1 requires 3 XP (3 kills of level 0 enemies); Level 1->2 requires 10 cumulative XP (7 kills of
-  level 1+ enemies). However, downing enemies below attacker level yields 0 XP (`xp_award`), Pit Scrapper
-  fields only level 0 opponents, Pit Brawl costs 30 cp, Wilds packs heavily weight level 0 beasts, and only
-  the killing blow receives combat XP. Characters spend 80+ days at Work level 4 while stranded at Combat
-  level 1. Design and implement a smoother combat progression curve: evaluate assist/squad combat XP
-  participation, intermediate arena bouts accessible to level 1 fighters, and fractional XP or training options.
-
-- **Magic Arc — what is left.**
-  1. *Scroll sources:* `Scroll of Hex` is placed in Dragon's Lair hoard (`lair.py`); `Scroll of Spare the Dying` has 0.1% drop chance on Battlefield enemy defeat (`loot.py`); `Scroll of Invisibility`: Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
-  2. *Sim initiation policy:* no policy boards a member; lands with sim tuning after playtests.
-  3. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
-  4. *Racial trees for authored beasts:* Zombie has no racial tree yet; Dragon Kharzuul has higher tier picks unspent.
-  5. *Tuning after playtests:* balance numbers for Battlefield, Snake Dragon, Ogre Wildfire, Necromancer at the Front, and Dragon's Clutch.
+- **Magic Arc follow-ups (future drops, quests & tuning).**
+  1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
+  2. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
+  3. *Tuning after playtests:* balance numbers for Battlefield, Snake Dragon, Ogre Wildfire, Necromancer at the Front, and Dragon's Clutch once further campaign runs reach them.
 
 ## Playtest notes 2026-10-12
 
@@ -215,7 +187,7 @@ The author's 103-day campaign run from a fresh game (`ef6890c7`), archiving 33 c
   - Day 89 road ambush: Group 0 returning on the road was ambushed by 5 humanoids; two fighters entered
     with 1 HP, and a natural 20 critical throw from a dwarven Light Pick (12 damage) dropped Nyxuln,
     resulting in heavy casualties.
-- **Open takeaway:** Combat leveling bottleneck (Lv 1 -> 2) tracked in *Ready to do -> Medium*.
+- **Open takeaway:** Combat leveling bottleneck (Lv 1 -> 2) resolved by rebalancing Wilds encounter weights to 60% Lv 1 (commit `142b6f5`); deeper assist XP / intermediate arena bout deferred to future playtests.
 
 ---
 
@@ -252,12 +224,13 @@ pointed to, not repeated.
   curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat has
   25 nodes (updated 2026-10-19 with CHA and INT branches) and work 14, so work picks past the last node wait unspent
   and neither tree has full room to choose. The racial
-  track has 34 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
-  its own (one pick at racial 5, 10 and 15), and most have 1. Goal: **at least 30
-  combat and 30 work talents**, and 3+ racial nodes per race. Only 5 combat nodes remain to hit the 30-talent goal;
+  track has 38 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
+  its own (one pick at racial 5, 10 and 15), and most have 1. Authored beasts: Dragon has 4 nodes
+  (`dragon`, `dragon_breath`, `sweeping_claws`, `draconic_wings`) spending all 4 picks for Kharzuul;
+  Zombie has 2 nodes (`death_grip`, `zombie_bite`).
+  Goal: **at least 30 combat and 30 work talents**, and 3+ racial nodes per race. Only 5 combat nodes remain to hit the 30-talent goal;
   work track requires further expansion.
-  The magic track (6 school-agnostic nodes since 2026-10-18) is being reviewed by the author: its size and how it is
-  managed are open.
+  The magic track (6 school-agnostic nodes since 2026-10-18) is complete.
 - **Gathering: loose ends.**
   Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art. (Fruit preservation completed with Fruit Compote recipe).
 - **Item properties: base material sources (after the production chain).**

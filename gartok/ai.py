@@ -50,6 +50,12 @@ def _pick_attack(battle, unit, target):
     if w_act is not None:
         return w_act
 
+    if actions.ZOMBIE_BITE.can(battle, unit, target):
+        return actions.ZOMBIE_BITE
+
+    if _should_grab(battle, unit, target):
+        return actions.GRAB
+
     opts = [a for a in (actions.ATTACK, actions.ATTACK_TONGUE)
             if a.can(battle, unit, target)]
 
@@ -260,7 +266,11 @@ def _weapon_action_worth(battle, unit, act, target):
 
 def _weapon_action(battle, unit, target):
     """The 2-point weapon action worth at least the two plain attacks it costs, the best one, or None."""
-    if unit.ap < 2 or unit.unarmed or not unit.weapon:
+    if unit.ap < 2:
+        return None
+    char = getattr(unit, "char", unit)
+    has_unarmed_cleave = getattr(char, "has_talent", lambda _: False)("sweeping_claws")
+    if (unit.unarmed or not unit.weapon) and not has_unarmed_cleave:
         return None
     best, best_worth = None, _two_points(battle, unit, target)
     for act in actions.WEAPON_ACTIONS:
@@ -270,6 +280,38 @@ def _weapon_action(battle, unit, target):
         if worth >= best_worth and worth > 0:
             best, best_worth = act, worth
     return best
+
+
+def _should_grab(battle, unit, target):
+    """Grab when the unit has grab/bite talents (pins the foe to bite it), or when stopping
+    a fleeing enemy or flag runner."""
+    if not actions.GRAB.can(battle, unit, target):
+        return False
+    char = getattr(unit, "char", unit)
+    has_bite = getattr(char, "has_talent", lambda _: False)("zombie_bite")
+    has_grip = getattr(char, "has_talent", lambda _: False)("death_grip")
+    if (has_bite or has_grip) and target.hp > 3:
+        return True
+    if getattr(target, "ctf_runner", False) or getattr(target, "fleeing", False):
+        return True
+    return False
+
+
+def _try_escape_grapple(battle, unit):
+    """Attempt to break free from a grapple when holding a ranged weapon, fleeing,
+    unable to hit any foe, or heavily hurt."""
+    if not actions.ESCAPE_GRAPPLE.available(battle, unit):
+        return False
+    foes_in_reach = [f for f in battle.units if f.alive and f.team != unit.team
+                     and actions.ATTACK.can(battle, unit, f)]
+    wants_dist = unit.ranged or unit.needs_ammo or bool(unit.weapon and unit.weapon.get("range", 0) > 1)
+    if wants_dist or _should_flee(battle, unit) or not foes_in_reach:
+        actions.ESCAPE_GRAPPLE.execute(battle, unit)
+        return True
+    if unit.hp <= unit.hp_max * 0.4:
+        actions.ESCAPE_GRAPPLE.execute(battle, unit)
+        return True
+    return False
 
 
 def _jet_avg(unit):
@@ -1217,6 +1259,9 @@ def take_turn(battle, unit):
         if _leave_fire(battle, unit):
             continue
 
+        if _try_escape_grapple(battle, unit):
+            continue
+
         if _is_skittish(unit):
             mode = _skitter(battle, unit)
             if mode == "moved":
@@ -1410,6 +1455,8 @@ def take_turn(battle, unit):
         if atk is not None:
             atk.execute(battle, unit, target)
             if unit.ap > 0 and unit.alive:
+                if _try_escape_grapple(battle, unit):
+                    continue
                 if (unit.hp <= unit.hp_max * 0.35 and battle.units_distance(unit, target) <= 1
                         and actions.DEFEND.available(battle, unit)):
                     actions.DEFEND.execute(battle, unit)

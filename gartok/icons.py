@@ -375,6 +375,7 @@ _GLYPHS = {
     "pickup": _hand, "defend": _shield, "end": _hourglass, "delay": _restart, "restart": _restart,
     "stabilize": _pulse, "first_aid": _cross, "flee": _flee, "eye": _eye,
     "push": _push, "climb": _climb, "drop": _drop, "jump": _jump,
+    "grab": _hand, "escape_grapple": _flee, "zombie_bite": _bite,
     "lock": _lock, "unlock": _unlock,
     "sneak_attack": _sneak_attack, "cleave": _cleave, "precise_thrust": _precise_thrust,
     "repel_strike": _repel_strike, "maiming_strike": _maiming_strike, "armor_pierce": _armor_pierce,

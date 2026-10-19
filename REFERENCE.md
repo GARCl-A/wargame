@@ -501,6 +501,10 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Dire Growth | you grow past your kin: your size goes up one step (a Wolf becomes Large). | -- | Wolf |
 | 1 | Dragon | dragon blood runs in you: your hide hardens into scales (+1 AC). | -- | Dragon |
 | 2 | Dragon Breath | 2 points: breathe a cone 3 squares deep (1, 3 and 5 wide); one attack roll against everyone in it, allies too, 2d6 damage on each hit. | dragon | Dragon |
+| 2 | Sweeping Claws | your claws sweep in wide lethal arcs: you can use Cleave while unarmed, striking two adjacent foes with your natural weapon. | dragon | Dragon |
+| 3 | Draconic Wings | massive leathery wings carry you aloft: you gain flight (move freely across 3D terrain and pits, immune to fall damage) and your speed increases to 12 squares. | dragon | Dragon |
+| 1 | Death Grip | your cold dead hands lock like iron: +2 to grab checks. | -- | Zombie |
+| 2 | Zombie Bite | sink your teeth into held flesh: an attack targeting a grappled foe; +2 to hit, deals 1d8 + Strength damage. | death_grip | Zombie |
 
 ### Magic track
 

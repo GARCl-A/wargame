@@ -156,7 +156,13 @@ class Cleave(Action):
     @classmethod
     def applicable(cls, battle, actor):
         w = actor.weapon
-        if getattr(actor, "unarmed", False) or w is None or not w.has_trait("cleave"):
+        unarmed = getattr(actor, "unarmed", False)
+        char = getattr(actor, "char", actor)
+        has_unarmed_cleave = bool(getattr(char, "talent_bonus", lambda _: 0)("unarmed_cleave"))
+        if unarmed:
+            if not has_unarmed_cleave:
+                return False, "requires axe"
+        elif w is None or not w.has_trait("cleave"):
             return False, "requires axe"
         return True, ""
 
@@ -168,6 +174,9 @@ class Cleave(Action):
         return battle.los_between(actor, target)
 
     def label(self, battle, actor):
+        char = getattr(actor, "char", actor)
+        if getattr(actor, "unarmed", False) and getattr(char, "talent_bonus", lambda _: 0)("unarmed_cleave"):
+            return "Sweeping Claws (2 pts, strike 2 adjacent foes at +2)"
         return "Cleave (2 pts, strike 2 adjacent foes at +2)"
 
     @staticmethod
@@ -199,7 +208,8 @@ class Cleave(Action):
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
-        prefix = f"{actor.name} Cleave -> {target.name}"
+        prefix_name = "Sweeping Claws" if getattr(actor, "unarmed", False) else "Cleave"
+        prefix = f"{actor.name} {prefix_name} -> {target.name}"
         _resolve_hit(battle, actor, target, nat, bonus, detail, prefix)
 
         # 2. Secondary strike on adjacent foe
@@ -209,7 +219,7 @@ class Cleave(Action):
             bonus2, applied2 = resolve_bonus(mods2)
             detail2 = " ".join(f"{v:+}({r})" for v, r in applied2)
             nat2 = d20()
-            prefix2 = f"  Cleave sweeps into -> {sec.name}"
+            prefix2 = f"  {prefix_name} sweeps into -> {sec.name}"
             _resolve_hit(battle, actor, sec, nat2, bonus2, detail2, prefix2)
 
 

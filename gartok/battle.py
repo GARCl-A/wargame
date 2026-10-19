@@ -430,7 +430,7 @@ class Battle:
     def reachable(self, unit, budget=None):
         """Reachable anchors -> {pos: cost}. Straight steps cost 1; the diagonals
         along a route alternate 1, 2, 1, 2 ... (`board.path_cost`)."""
-        if unit.has_condition("entangled"):
+        if unit.has_condition("entangled") or unit.has_condition("grappled"):
             return {}
         if budget is None:
             if unit.walking:
@@ -582,7 +582,18 @@ class Battle:
 
         if unit.moved >= unit.speed or not unit.alive:          # walk exhausted; next step = new action
             unit.walking = False
+        self.check_grapples()
         return True
+
+    def check_grapples(self):
+        """Clean up grapples where the grappler has died, downed, or is no longer adjacent."""
+        for u in self.units:
+            cond = u.condition("grappled")
+            if cond and getattr(cond, "grappler", None) is not None:
+                grappler = cond.grappler
+                if not grappler.alive or getattr(grappler, "downed", False) or self.units_distance(u, grappler) > 1:
+                    u.conditions.remove(cond)
+                    self.log(f"  {u.name} is no longer grappled.")
 
     # ------------------------------------------------------------------ #
     # turn flow                                                          #
