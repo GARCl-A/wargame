@@ -756,3 +756,30 @@ def test_the_caravan_sim_walks_faster():
         sim.goto("road")
         walkers[vid] = sim.guild.clock.seconds - before
     assert walkers["caravan"] < walkers[None]
+
+
+def test_sim_tracks_faction_deeds_on_arena_wins():
+    sim = _sim("balanced", capital=200, library=_WON)
+    assert "arena_first_blood" not in sim.guild.deeds_done
+    sim.bout()
+    assert "arena_first_blood" in sim.guild.deeds_done
+
+
+def test_sim_study_language_learns_and_updates_member():
+    sim = _sim("balanced", capital=500, library=_WON)
+    sim.members[0].languages = ["Ankarin", "Dwarvish"]
+    sim.members[1].languages = ["Ankarin"]
+    sim.members[0].give_to_pack("1sqm Hide")
+    ok = sim.study_language("Dwarvish", sim.members[1])
+    assert ok is True
+    assert sim.languages_learned == 1
+    assert "Dwarvish" in sim.members[1].languages
+
+
+def test_sim_initiate_mage_trains_school():
+    sim = _sim("balanced", capital=500, library=_WON)
+    sim.guild.reputation["faith_order"] = 3
+    ok = sim.initiate_mage("faith", sim.members[0])
+    assert ok is True
+    assert sim.mages_trained == 1
+    assert any("faith" in u.magic_sources for u in sim.members)

@@ -63,10 +63,13 @@ from gartok import (
     dialogue,
     economy,
     encounters,
+    factions,
     forced,
     gather,
     hunt,
     items,
+    library_screen,
+    magic,
     matchup,
     medic,
     missions,
@@ -75,6 +78,7 @@ from gartok import (
     recorder,
     recruit,
     rest,
+    rite,
     solo,
     vocations,
     wagon,
@@ -313,6 +317,8 @@ class Sim:
         self.snapshots = []
         self.starved = 0
         self.milestone_day = None
+        self.languages_learned = 0
+        self.mages_trained = 0
         self._stock_day = 0
         if restock:
             for name in dict.fromkeys(economy.MARKET_STOCK):
@@ -580,6 +586,121 @@ class Sim:
             u.money = 0
         self.members[0].money += total
 
+    # -- advancement & education ------------------------------------------- #
+    def study_language(self, language, student=None):
+        """Put a student on a study order with a Dictionary of `language` until learned.
+        Returns True if learned, False otherwise."""
+        dict_name = f"Dictionary of {language}"
+        holders = (*self.members, *getattr(self.group, "stores", ()))
+        has_dict = any(u.has_item(dict_name) for u in holders)
+
+        if not has_dict:
+            if dict_name in library_screen.library_stock_dictionaries(self.guild):
+                cost = items.get(dict_name).price
+                if self.money >= cost + 20:
+                    with self.market("library") as mkt:
+                        mkt.buy(self.members[0], dict_name)
+                    has_dict = any(u.has_item(dict_name) for u in self.members)
+
+        if not has_dict:
+            speakers = [u for u in self.guild.roster if language in u.languages]
+            if speakers:
+                crafter = max(speakers, key=lambda u: u.mod_intelligence)
+                supplies = ("Paper", "Ink", "1sqm Hide")
+                supplies_cost = sum(items.get(n).price for n in supplies if not crafter.count_of(n))
+                if self.money >= supplies_cost + 20:
+                    with self.market() as mkt:
+                        for n in supplies:
+                            if not crafter.count_of(n):
+                                mkt.buy(crafter, n)
+                    for _ in range(3):
+                        self.guild.crafting_shift(crafter, dict_name, 4)
+                        if crafter.count_of(dict_name):
+                            break
+                    has_dict = any(u.has_item(dict_name) for u in self.members)
+
+        if not has_dict:
+            return False
+
+        candidates = [u for u in self.members if language not in u.languages]
+        if not candidates:
+            return False
+        student = student or max(candidates, key=lambda u: u.mod_intelligence)
+
+        self.keep_fed(target=16)
+        magic.begin_study(student, language, (*self.members, *getattr(self.group, "stores", ())))
+        self.goto("tavern")
+        self.group.order = orders.garrison("study")
+
+        for _ in range(16):
+            if language in student.languages:
+                break
+            if self.food_days < 1 and self.money < economy.TAVERN_STUDY_COST_PER_DAY * self.mouths:
+                break
+            result = campaign.advance(self.guild, dt=24)
+            self._refill_shelves()
+            if result.wiped or self.guild.empty:
+                raise Wiped
+            self.snap()
+
+        self.group.order = None
+        magic.end_study(student)
+        learned = language in student.languages
+        if learned:
+            self.languages_learned += 1
+        return learned
+
+    def initiate_mage(self, school, student=None):
+        """Board a member at the sanctuary for `school` until initiated."""
+        sanctuary_node = next((n for n, s in rite.SANCTUARY.items() if s == school), None)
+        if not sanctuary_node:
+            return False
+        faction_id = rite.FACTION.get(school)
+        if self.guild.reputation.get(faction_id, 0) < rite.REP_NEEDED:
+            return False
+
+        candidates = [u for u in self.members if school not in u.magic_sources]
+        if not candidates:
+            return False
+        student = student or max(candidates, key=lambda u: u.mod_intelligence)
+
+        if school == "faith" and not rite.paid(student, school):
+            if not any(u.has_item(rite.HOLY_SYMBOL) for u in self.members):
+                symbol_cost = items.get(rite.HOLY_SYMBOL).price
+                if self.money >= symbol_cost:
+                    with self.market() as mkt:
+                        mkt.buy(student, rite.HOLY_SYMBOL)
+                if not any(u.has_item(rite.HOLY_SYMBOL) for u in self.members):
+                    return False
+
+        self.keep_fed(target=25)
+        self.goto(sanctuary_node)
+
+        ok, _ = rite.begin(self.guild, self.group, student, school)
+        if not ok:
+            return False
+
+        for _ in range(25):
+            if school in student.magic_sources:
+                break
+            if self.food_days < 1 and self.money < rite.BOARD_PER_DAY * self.mouths:
+                break
+            result = campaign.advance(self.guild, dt=24)
+            self._refill_shelves()
+            if result.wiped or self.guild.empty:
+                raise Wiped
+            self.snap()
+
+        student_group = self.guild.group_of(student)
+        if student_group is not None and student_group is not self.group:
+            self.guild.merge_groups(self.group, student_group)
+        self.group.order = None
+        done = school in student.magic_sources
+        if done:
+            self.mages_trained += 1
+            spend_picks(student)
+        return done
+
     # -- fights ------------------------------------------------------------ #
     def apply(self, sample, party, relief=1.0, kind=None):
         """Fold a drawn fight into the real guild: hurt, kill, level, then hand out the loot.
@@ -737,6 +858,9 @@ class Sim:
             survivors[0].money += sample.purse
             if kind == "champion":
                 self.champion_beaten = True
+            outcome = SimpleNamespace(won=sample.won, arena_tier=bout, squad_size=len(party),
+                                      player_kos=len(party) - len(survivors))
+            factions.settle(self.guild, factions.Event("battle", node=world.node("arena"), outcome=outcome))
         return sample
 
     def hunt(self, hours=SHIFT_HOURS):
@@ -1280,6 +1404,12 @@ class Balanced(Policy):
         if self.adventure(sim):
             return
         self.level_up_bout(sim, self.BUFFER_DAYS * len(sim.members) * cheapest_food_price())
+        for school, faction in rite.FACTION.items():
+            if (sim.guild.reputation.get(faction, 0) >= rite.REP_NEEDED
+                    and not any(school in u.magic_sources for u in sim.members)
+                    and sim.money >= self.buffer(sim) + 80):
+                if sim.initiate_mage(school):
+                    return
         if self.show_pays(sim):
             for _ in range(SHIFT_HOURS // 4):
                 sim.stage_show(4)
@@ -1317,8 +1447,23 @@ class Grower(Balanced):
             sim.recruit("tavern")
             if len(sim.guild.roster) < self.TARGET:
                 sim.recruit("prison", reserve=reserve)
+            if len(sim.guild.roster) < self.TARGET and sim.money >= self.buffer(sim) + 250:
+                self.expand_languages(sim)
             sim.seat_extras(self.FIGHTERS)
         super().step(sim)
+
+    def expand_languages(self, sim):
+        """Identify candidate languages in the tavern pool that no member speaks, and study one."""
+        pool = recruit.refresh_pool(sim.guild)
+        known = {l for u in sim.guild.roster for l in u.languages}
+        unspoken = []
+        for cand in pool:
+            missing = [l for l in cand.languages if l not in known]
+            if missing and not any(l in known for l in cand.languages):
+                unspoken.extend(missing)
+        if unspoken:
+            target_lang = Counter(unspoken).most_common(1)[0][0]
+            sim.study_language(target_lang)
 
 
 class Games(Balanced):
@@ -1726,6 +1871,9 @@ class Result:
     bail: int = 0                                  # copper paid in bail
     alive: dict = field(default_factory=dict)      # day -> roster size, for a guild that grew
     xp: int = 0                                    # combat XP the survivors gained
+    deeds: list = field(default_factory=list)      # faction deeds completed
+    languages: int = 0                             # foreign languages learned through study
+    mages: int = 0                                 # members initiated into magic
 
 
 def at_day(snaps, day):
@@ -1761,7 +1909,10 @@ def run_guild(policy_name, *, days=30, seed=0, size=3, level=0, skill=None, libr
                  claim_lumber=sim.claim_lumber, treated=sim.treated,
                  champion=sim.champion_beaten, bouts=sim.bouts, recruited=sim.recruited,
                  pitches=sim.pitches, bail=sim.bail_spent,
-                 xp=sum(u.combat_xp for u in sim.guild.roster) - sim.start_xp)
+                 xp=sum(u.combat_xp for u in sim.guild.roster) - sim.start_xp,
+                 deeds=list(sim.guild.deeds_done),
+                 languages=sim.languages_learned,
+                 mages=sim.mages_trained)
     def dead_by(day):
         return wiped_at is not None and wiped_at <= day
 
@@ -1814,22 +1965,41 @@ def summarize(results, marks=(7, 30)):
     out["recruited"] = statistics.mean(r.recruited for r in results)
     out["bail"] = statistics.mean(r.bail for r in results)
     out["xp"] = statistics.mean(r.xp for r in results) / results[0].members_start
+    out["deeds"] = statistics.mean(len(r.deeds) for r in results)
+    out["deeds_set"] = sorted(set(d for r in results for d in r.deeds))
+    out["languages"] = statistics.mean(r.languages for r in results)
+    out["mages"] = statistics.mean(r.mages for r in results)
     return out
+
+
+def deeds_report(table, label="FACTION DEEDS"):
+    """Summary of deeds banked, languages learned, and mages trained across policies."""
+    lines = [f"== {label} (28 deeds total in world)",
+             f"{'policy':<10}{'deeds':>7}{'langs':>7}{'mages':>7}  {'deeds completed'}"]
+    for name, s in table.items():
+        deeds_count = f"{s.get('deeds', 0):.1f}"
+        langs = f"{s.get('languages', 0):.1f}"
+        mages = f"{s.get('mages', 0):.1f}"
+        deeds_list = ", ".join(s.get("deeds_set", [])) or "none"
+        lines.append(f"{name:<10}{deeds_count:>7}{langs:>7}{mages:>7}  {deeds_list}")
+    return "\n".join(lines)
 
 
 def adventure_report(table, label):
     """What a squad past its first week does with the arena's ladder, the Claim and the Medic."""
     lines = [f"== {label}",
-             f"{'policy':<10}{'champion':>9}{'bouts':>7}{'cXP/mbr':>9}{'claim':>7}{'on day':>8}{'seized':>8}{'lumber':>8}{'medic $':>9}{'recruits':>9}{'bail $':>8}"]
+             f"{'policy':<10}{'champion':>9}{'bouts':>7}{'cXP/mbr':>9}{'claim':>7}{'on day':>8}{'seized':>8}{'lumber':>8}{'medic $':>9}{'recruits':>9}{'bail $':>8}{'deeds':>7}"]
     for name, s in table.items():
         day = f"{s['claim_day']:.0f}" if s["claim_day"] is not None else "-"
+        deeds = f"{s.get('deeds', 0):.1f}"
         lines.append(f"{name:<10}{s['champion'] * 100:>8.0f}%{s['bouts']:>7.1f}{s['xp']:>9.1f}"
                      f"{s['claim'] * 100:>6.0f}%{day:>8}{s['seized'] * 100:>7.0f}%"
-                     f"{s['claim_lumber']:>8.1f}{s['treated']:>9.0f}{s['recruited']:>9.1f}{s['bail']:>8.0f}")
+                     f"{s['claim_lumber']:>8.1f}{s['treated']:>9.0f}{s['recruited']:>9.1f}{s['bail']:>8.0f}{deeds:>7}")
     lines.append("   (champion: guilds that beat the champion; bouts / cXP: arena bouts fought and "
                  "combat XP gained per member; claim: guilds that made the Claim theirs, on the "
                  "median day; seized: lost it after; lumber: gathered by the garrison; medic $: "
-                 "paid per guild; recruits: strangers who signed on; bail: paid at the prison)")
+                 "paid per guild; recruits: strangers who signed on; bail: paid at the prison; "
+                 "deeds: faction deeds banked)")
     return chr(10).join(lines)
 
 

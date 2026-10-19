@@ -147,6 +147,10 @@ def build(settings):
         + guild_sim.adventure_report(late_table, "without a Medic") + "\n\n"
         + guild_sim.report(late_medic, marks, late + ", with a Medic") + "\n\n"
         + guild_sim.adventure_report(late_medic, "with a Medic")))
+    out.append(_section(
+        "4. FACTION DEEDS & ADVANCEMENT",
+        guild_sim.deeds_report(table, label) + "\n\n"
+        + guild_sim.deeds_report(late_table, late)))
     ranked = guild_sim.rank_traits(ranking_results["lumber"], settings.days)
     out.append(_section("5. RANKING", guild_sim.ranking_report(
         ranked, f"lumber, {settings.ranking_guilds} guilds, day {settings.days}")))

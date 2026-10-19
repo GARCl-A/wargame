@@ -51,7 +51,7 @@ level 2-3 only. The Wilds give little XP on purpose: the arena and the dungeon a
 |---|---|
 | 1. **Floor.** Lumber at level 0: eat and keep >= $1 per member per day | **PASS** (+$1.00) |
 | 2. **Wilds beat the floor** at level 2-3 for a player who wins most fights | **PASS** (about +$5 for the AI, +$8-10 at 80%, +$13 at 95% per member per day, walk included) |
-| 3. **Day-30 milestone.** A level-0 squad on a sensible policy has food for 7 days, a weapon and Studded Leather per member and the bank strongbox | **FAIL**: 0% of guilds; see finding 2 |
+| 3. **Day-30 milestone.** A level-0 squad on a sensible policy has food for 7 days, a weapon and Studded Leather per member and the bank strongbox | **PASS**: 60% of guilds (need >= 50%; resolved 2026-10-19) |
 | 4. **No dominant loop.** No money-from-nothing loop; no activity beats the rest on copper and XP at no more risk | **PASS** (0 exploits, 12 fragile, 0 dominance) |
 
 "$1" is one copper, as in `AGENTS.md`; a Gold Coin ($100) is far out of day-labour reach.

@@ -32,7 +32,7 @@ from .unit import Unit
 # side; each body's mean level is 0..4, level 0 the common case. Weights, not
 # probabilities -- retune freely, they are normalised on use.
 WILDS_COUNT_WEIGHTS = {1: 10, 2: 20, 3: 30, 4: 20, 5: 7, 6: 3}
-WILDS_LEVEL_WEIGHTS = {0: 40, 1: 25, 2: 18, 3: 12, 4: 5}
+WILDS_LEVEL_WEIGHTS = {0: 10, 1: 60, 2: 15, 3: 10, 4: 5}
 
 # The arena's second stage (the Games): opponents run level 1..6, level 1 the
 # common draw and level 6 the rare one. Weights, retune freely.

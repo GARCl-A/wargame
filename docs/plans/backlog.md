@@ -58,15 +58,6 @@ and resolved day-30 milestone verdict in economy report.
 
 # Ready to do
 
-## Small
-
-- **Economy report prints a FAIL on the day-30 milestone.** `scripts/economy_report.py --quick`
-  (re-run 2026-10-10, after the vocations: unchanged): the `balanced` policy reaches the milestone
-  in 0% of guilds (need 50%), cost from $423. It is the known gap with the recorded runs (11-14
-  days by hand), so it settles with *Feed the recorded runs* and the planner, not by tuning
-  prices. **Decided 2026-10-10:** recalibrate the sim until it matches the recorded runs (both
-  ~60-day saves reached day 30 easily), starting with the offers list (built). The run exits 1 on a failed verdict, but no test or gate reads it.
-
 ## Medium
 
 - **Combat level stepping-stone progression (Levels 1 to 2) and encounter curve tuning (playtest 2026-10-19).**
@@ -78,9 +69,9 @@ and resolved day-30 milestone verdict in economy report.
   participation, intermediate arena bouts accessible to level 1 fighters, and fractional XP or training options.
 
 - **Magic Arc — what is left.**
-  1. *Scroll sources:* `Scroll of Hex` is placed in Dragon's Lair hoard (`lair.py`); `Scroll of Spare the Dying` has 0.1% drop chance on Battlefield enemy defeat (`loot.py`); `Scroll of Invisibility` deferred to future quests.
+  1. *Scroll sources:* `Scroll of Hex` is placed in Dragon's Lair hoard (`lair.py`); `Scroll of Spare the Dying` has 0.1% drop chance on Battlefield enemy defeat (`loot.py`); `Scroll of Invisibility`: Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
   2. *Sim initiation policy:* no policy boards a member; lands with sim tuning after playtests.
-  3. *Blood's fourth mission* (robbed dragon strikes back): not designed; scheduled after current arc validation.
+  3. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
   4. *Racial trees for authored beasts:* Zombie has no racial tree yet; Dragon Kharzuul has higher tier picks unspent.
   5. *Tuning after playtests:* balance numbers for Battlefield, Snake Dragon, Ogre Wildfire, Necromancer at the Front, and Dragon's Clutch.
 
@@ -259,19 +250,20 @@ pointed to, not repeated.
   this production chain (the Yard produces Lumber by how many work there, so endless day labour floods the market).
 - **Talent trees are shorter than the levels (to be authored by hand, after the magic arc).** The XP
   curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat has
-  15 nodes and work 14 (checked 2026-10-15), so a pick past the last node waits unspent and neither tree
-  has room to choose. The racial
+  25 nodes (updated 2026-10-19 with CHA and INT branches) and work 14, so work picks past the last node wait unspent
+  and neither tree has full room to choose. The racial
   track has 34 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
   its own (one pick at racial 5, 10 and 15), and most have 1. Goal: **at least 30
-  combat and 30 work talents**, and 3+ racial nodes per race. Nothing built; the author will design them.
+  combat and 30 work talents**, and 3+ racial nodes per race. Only 5 combat nodes remain to hit the 30-talent goal;
+  work track requires further expansion.
   The magic track (6 school-agnostic nodes since 2026-10-18) is being reviewed by the author: its size and how it is
   managed are open.
 - **Gathering: loose ends.**
-  Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art; (4) Fruit preservation crafting recipes (preventing 24 h rot).
+  Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art. (Fruit preservation completed with Fruit Compote recipe).
 - **Item properties: base material sources (after the production chain).**
   Left: (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
 - **Prisoners.**
-  Left: what a captive is for beyond a mission (ransom, questioning, recruiting, the prison), enemy side capturing player's units, and rescuing a captive in battle.
+  Left: what a captive is for beyond a mission (decided 2026-10-19: sell to prison if bandit/outlaw, recruit or enslave), enemy side capturing player's units, and rescuing a captive in battle.
 - **Combat AI benchmarking against player performance.**
   Current benchmark across the 40 campaign logs (`combat_pairs.py`): Scrapper 77% (player 80%), Champion 90% (player 100%), Defend Title 95% (player 100%), hunts 92% (player 92%), road ambushes 72% AI vs 40% player.
   Left: derive combat policy thresholds into `ai.py` (retreating when low HP, objective prioritization in CTF).
