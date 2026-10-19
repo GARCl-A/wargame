@@ -79,8 +79,62 @@ targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
   pass `action.id` to `battle_panel.draw_action_list`, but `gartok/icons.py`'s `_GLYPHS` lacks
   glyphs for these IDs, causing the action buttons to render without icons. Add vector line-art
   draw routines for each weapon action.
+- **Zero-cost node entry when already at node (`orders.py`, `map_screen.py`, playtest 2026-10-19).**
+  `orders.interactive(kind, hours=APPROACH_HOURS)` currently charges 1 hour to enter a node function
+  (Tavern, Shop, Forge, etc.) via `APPROACH_HOURS = 1`. If the group is already standing at the node,
+  clicking to enter should cost 0 hours and open the screen directly without auto-advancing the world clock.
+- **Autosell includes wagon and pack animals (`market_screen.py`, playtest 2026-10-19).** `_marked_stock`
+  iterates only over `self.shoppers` (`self.group.members`), ignoring `self.stores` (`self.group.wagons`
+  and `herd`). Change to `(*self.shoppers, *self.stores)` so marked items stored in wagons/carts are
+  included in SELL MARKED.
+- **Display crafting roll modifier on crafters panel (`crafting_screen.py`, playtest 2026-10-19).**
+  `_draw_roster` shows recipe count and in-progress status, but hides the crafter's progress check modifier
+  (`1d20 + INT mod + craft_bonus`). Display the net modifier (e.g. `+3` or `d20+3`) next to each crafter
+  to inform recipe assignment without inspecting character sheets.
+- **Rotten food eaten only as last resort against starvation death (`unit_hunger.py`, playtest 2026-10-19).**
+  Daily meals currently fall back to `Rotten Food` on day 1 of missing fresh food, immediately inflicting
+  Sickness (-2 attributes, prevents rest healing) instead of mild 1-day hunger. Restrict automatic
+  consumption of Rotten Food to when the character would die of starvation on the next day
+  (`unfed_days >= data.STARVATION_DEATH_DAYS - 1`), or when explicitly forced by the player.
+- **Food consumption priority order across shared larder (`unit_hunger.py`, playtest 2026-10-19).**
+  `take_ration` sorts candidates by `-days_old` (absolute age) instead of remaining shelf life
+  (`lifespan - days_old`), causing durable foods like potatoes to be consumed before short-lived meats.
+  Furthermore, a character currently checks only their own pack before the shared larder. Evaluate candidate
+  rations from the entire shared larder (eater + members with `share_food = True`) and prioritize by lowest
+  remaining lifespan (`lifespan - days_old` ascending) so foods nearing spoilage are eaten first.
+- **Distribute load coin rebalancing & wagon handling (`unit_loadout.py`, `market_screen.py`, `stash_screen.py`, playtest 2026-10-19).**
+  `market_screen` and `stash_screen` call `distribute_load(..., share_coins=False)`, locking coins completely
+  so that characters selling or withdrawing copper become overloaded and cannot rebalance coins. Allow coin
+  distribution or adjust coin redistribution so players aren't stranded with overloaded characters.
+- **Locked items act as distribution magnet up to normal capacity (`unit_loadout.py`, playtest 2026-10-19).**
+  In `distribute_load`, when an item is locked on a unit, prioritize pulling surplus copies of that item from
+  the pool to that unit until their `carry_normal` is filled, before scattering remainder to others.
+- **Map alert indicator for new faction jobs (`map_screen.py`, `missions.py`, playtest 2026-10-19).**
+  Nodes currently show an alert `!` only for tavern/prison recruit rotation (`recruit.has_new_faces`). Add
+  visual alert on the map node (and inspector note) when an unaccepted job is available on a node's
+  mission board (e.g. Library Ancient Codex, Tanner Biwolf), so major questlines and magic unlocking
+  are discoverable.
 
 ## Medium
+
+- **Combat level stepping-stone progression (Levels 1 to 2) and encounter curve tuning (playtest 2026-10-19).**
+  Level 0->1 requires 3 XP (3 kills of level 0 enemies); Level 1->2 requires 10 cumulative XP (7 kills of
+  level 1+ enemies). However, downing enemies below attacker level yields 0 XP (`xp_award`), Pit Scrapper
+  fields only level 0 opponents, Pit Brawl costs 30 cp, Wilds packs heavily weight level 0 beasts, and only
+  the killing blow receives combat XP. Characters spend 80+ days at Work level 4 while stranded at Combat
+  level 1. Design and implement a smoother combat progression curve: evaluate assist/squad combat XP
+  participation, intermediate arena bouts accessible to level 1 fighters, and fractional XP or training options.
+
+- **AI 2-action tactical lookahead with replanning (`gartok/ai.py`, playtest 2026-10-19).**
+  The AI currently operates as a greedy 1-ply decision maker (`take_turn` loop spends 1 AP at a time with no
+  intent memory). This causes nonsensical sequences: on AP 1 the AI shoves a player to break a flank, and on
+  AP 2, finding itself out of melee reach, executes `_step_toward` and immediately walks right back into melee,
+  wasting both APs with 0 net damage dealt. Implement compound 2-action evaluation with replanning:
+  1. Evaluate candidate pairs of actions `(a1, a2)` (e.g. `[Shove, Retreat]`, `[Attack, Defend]`, `[Attack, Attack]`,
+     `[Demoralize, Attack]`) so futile sequences like `[Shove, Walk back to target]` are eliminated.
+  2. Execute `a1`.
+  3. Re-evaluate the board state for `a2` given `a1`'s outcome (e.g. if Shove succeeds, execute the planned Retreat;
+     if Shove fails and the target remains adjacent, pivot to Defend (+2 AC) instead of stepping into danger).
 
 - **Magic Arc — what is left.** The rules of what is built are in RULES.md (*Secret nodes*, *Magic*, *Capture*,
   *Dragon Breath*, *Fire on the board*, *Dialogue before initiative*). Premises that stay: initiation belongs to the character; a school takes 2 reputation
@@ -249,6 +303,49 @@ The author's 21-day campaign run from a fresh game.
   6. *Economy & Rest loop:* The initial Lumber Yard + Potato loop is fast and painless; 24 h of rest after
      one bout + 16 h of lumber work felt balanced and reasonable without leading to a poverty spiral.
   7. *Magic arc:* Untested in this run; left for a subsequent run reaching faction reputation 2.
+
+## Playtest notes 2026-10-19 (Author's run: "Caneco Mijado", 100 days)
+
+The author's 103-day campaign run from a fresh game (`ef6890c7`), archiving 33 combat logs (`Caneco-Mijado-ef6890c7`).
+- **Milestones reached:** 30 battles won, 9 faction deeds completed (Arena champion dethroning Adelio,
+  Bankers steady customer / good for business / diverse portfolio, Tanners hides, Library initiate,
+  Apothecary mushrooms). Bank chest expanded to 30 kg. The Wilds Claim scouted, fenced, and established.
+- **Caravan & Logistics:** Purchased a Donkey ($180) and Cart ($150) with Harness at the Stables.
+  Divided the guild into two groups: Group 0 holding The Claim (4 members), Group 1 operating as a supply
+  caravan with Donkey + Cart (4 members led by Adelio).
+- **Ambush parleys:** Pre-combat dialogue occurred in 4 road ambushes: 2 successfully de-escalated
+  without casualties (one by paying a 9 cp toll, another resolved peacefully for 0 cp); 2 resulted in fights.
+- **Crafting & Scriptorium:** 17 crafting shifts executed: 8 roasting meat, 1 making Jerky, and 8 shifts
+  by Surkaeldralka to complete the *Dictionary of Ankarin* for the Library mission.
+- **The turn of events & casualties:**
+  - Day 83 road ambush: Group 1 (supply caravan with Donkey + Cart) was ambushed by 2 wolves with Pack
+    Tactics (one with 27 HP). Two characters entered with 1-2 HP and unfed; squad was overwhelmed in round 4,
+    resulting in the death of Adelio, Rurigtikquen, Braeorn, and Felorn, and losing the Cart and Donkey.
+  - Day 88 Claim seizure: Group 0 successfully retook/defended the Claim but suffered heavy injuries.
+  - Day 89 road ambush: Group 0 returning on the road was ambushed by 5 humanoids; two fighters entered
+    with 1 HP, and a natural 20 critical throw from a dwarven Light Pick (12 damage) dropped Nyxuln,
+    resulting in heavy casualties.
+- **Key takeaways & design decisions:**
+  1. *Entering a node:* Clicking to enter a node the group is already standing on should cost 0 hours
+     rather than advancing the world clock by `APPROACH_HOURS = 1`.
+  2. *NPC talent bug:* Adelio had `negotiator` (Tier 2, requires `charismatic`) while at work level 1.
+     Fixed in `npcs/adelio-small-knife.json` to `charismatic`.
+  3. *Combat leveling curve (Lv 1 -> 2):* Combat leveling bottleneck: level 0 foes grant 0 XP to level 1
+     fighters, only killing blows award XP, and low-level accessible arena bouts are lacking. Added to
+     *Ready to do -> Medium*.
+  4. *Rotten food:* Automatic daily eating of Rotten Food is a trap on day 1 of hunger; restrict automatic
+     eating to starvation emergencies (`unfed_days >= STARVATION_DEATH_DAYS - 1`).
+  5. *Food consumption order:* Evaluate candidates across the shared larder (`share_food`) and prioritize
+     by soonest to spoil (`lifespan - days_old` ascending) rather than absolute age.
+  6. *Coin distribution:* Coin rebalancing must function in market/stash/group so characters don't become
+     trapped in overloaded states.
+  7. *Locked items as distribution magnet:* A locked item on a unit should attract surplus copies of that
+     item up to normal carrying capacity (`carry_normal`).
+  8. *Crafting roll modifier visibility:* Show net roll modifier (`d20 + N`) on crafter panel.
+  9. *Autosell includes wagon stores:* Include `self.stores` in `_marked_stock`.
+  10. *Map alert for faction jobs:* Add map indicator `!` when an NPC faction has unaccepted jobs on its board.
+  11. *AI push frequency:* The AI's 13 uses of `push` were driven by `_unflank_worth` (breaking flanking
+      pairs formed by player positioning) and Mighty Shove wall-slam expected damage exceeding weapon swings.
 
 ---
 
