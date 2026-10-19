@@ -33,7 +33,9 @@ names, the arena bosses' lines in the dialogue system, the post-battle report / 
 (`["Snake", "Dragon"]`), the Dragon racial talents (`dragon`, `dragon_breath`), the 6-node school-agnostic
 magic talent tree, non-lethal damage clearing after 24 h of unbroken rest, fresh food across larder before Rotten Food,
 outdoor road/city guard scenarios (`StreetScenario`), work `LevelUpScreen`, Wilds ambush card, tavern recruitment
-signature, UI overlap fixes, and tutorial copy fixes.
+signature, UI overlap fixes, tutorial copy fixes, guild onboarding objectives checklist (`objectives.py`),
+hearing adjacent targets in the dark with -4 obscured penalty, explicit Flee blocked reasons, CTF AI flag carrier
+targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
 
 1. **Playtest on the current build, then feed it to the AI and the sim** (*Large*): the magic
    arc's pre-playtest work is in (the walked supply run, the rite, the tier 0/1/2 spells and scrolls, the 6-node
@@ -75,13 +77,14 @@ signature, UI overlap fixes, and tutorial copy fixes.
   (accepted 2026-10-16); the third missions are the endgame bosses, each worth a racial-15 character, so they are
   authored NPCs (generated enemies stop at `constants.ENEMY_COMBAT_CAP` / `ENEMY_WORK_CAP`); Faith consumes a Holy
   Symbol (uncommon, $80 since 2026-10-18; from the Priest's birth or a Priest's loot; shops buy it, none stocks it); Blood tests `magic_blood` first and costs no hit points. Done 2026-10-18: the magic talent tree is 6 school-agnostic nodes (`arcane_mind`, `spell_focus`, `destructive_casting`, `blessed_hands`, `focused_will`, `far_cast`), `dragon` and `dragon_breath` moved to the `Dragon` racial talent tree, and the Snake Dragon is a composite `["Snake", "Dragon"]` race (`unit.races`, attribute modifiers averaged and rounded down, HD average rounded down to `d8`, size average rounded up to `Large`, union of abilities, languages and racial talent trees). Left:
-  1. *Scrolls (decided 2026-10-18):* scrolls are never sold. `Scroll of Hex` will be secret loot inside the
-     Dragon's Lair (`lair.py`); `Scroll of Spare the Dying` will be a reward from a Faith quest; `Scroll of Invisibility`
-     is deferred out of this stage, to enter only with future quests. (Every spell has its scroll
+  1. *Scrolls (decided 2026-10-18):* scrolls are never sold. `Scroll of Hex` is secret loot inside the
+     Dragon's Lair (`lair.py`, placed 2026-10-18); `Scroll of Spare the Dying` will be a reward from a Faith quest;
+     `Scroll of Invisibility` is deferred out of this stage, to enter only with future quests. (Every spell has its scroll
      since 2026-10-18; the level-2 ones are $750, `economy.scroll_price`).
      Today the 4 level-0 Nature scrolls come as the Scribe's starting Scroll (`Magic Missile` also drops from the
      Ancient Archivist), `Sleep` is in the Ancient Ruins chest, `Raise Dead` and `Healing Touch` are carried by the
-     Necromancer, `Water Jet` is the Nature Coven's Wildfire reward, and `Dragonfire` is the Blood Cult's Dragon's Clutch reward.
+     Necromancer, `Hex` is in the Dragon's Lair hoard, `Water Jet` is the Nature Coven's Wildfire reward, and
+     `Dragonfire` is the Blood Cult's Dragon's Clutch reward.
   2. *The sim does not initiate anyone:* no policy boards a member, the same multi-day investment step the Claim oven
      lacks; both land with the sim's tuning after the playtest (*Playtest on the current build*, step 4).
   3. *Blood's fourth mission* (the robbed dragon keeps attacking): not designed; not before every test scheduled
@@ -157,24 +160,11 @@ guild played from the main menu to day 30 through the real UI (real clicks; some
 two members sick. Screenshots and the full write-up: the "GARTOK em 30 Dias" artifact. Design questions
 raised by the same run are under *Needs more information -> Playtest 2026-10-18*.
 
-**Bugs**
-- **Blind night fight never ends.** Wilds ambush at night, no light on either side: 117 rounds on a 16x12
-  board without contact. The aggressor's search (`ai.py`) never found the squad; an unseen foe stood in
-  the cell next to a squad member and could not be attacked; Flee was blocked by that unseen foe and
-  the button gave no reason. **Decided 2026-10-18:** author rejected ending by stalemate/timeout; instead,
-  display an explicit reason when Flee is blocked (e.g. enemy sounds nearby) and allow attacking adjacent
-  obscured cells when sounds/footsteps are heard.
-
 **Tutorials (review all of them)**
 - Volume: about 25 modal cards, the map's with six paragraphs; the guild's goal ("what you're playing
   for") is the 12th. Decided 2026-10-18: the first card only says "this is your guild; your objectives
-  are here" and points to the **guild objectives** list (initial items decided below); every other card gets
+  are here" and points to the guild objectives list (`gartok/objectives.py`); every other card gets
   much shorter, since each stays one `?` click away.
-- **Guild objectives list (built 2026-10-18, `gartok/objectives.py`):** pure onboarding checklist on the Guild screen
-  next to the factions' deeds, with no mechanical reward (fame or coins). Initial list: (1) Buy food,
-  (2) Participate in an Arena bout, (3) Reach Combat Lv 1, (4) Work Lv 1 -> buy Axes -> Work Lv 2 chain,
-  (5) Recruit a character at the Tavern, (6) Recruit a character at the Prison, (7) Buy a Torch. More
-  items will be added after the next playtest.
 
 **Discoverability**
 - Nothing suggests a light source before a night hunt (a Torch is $2 and decides the fight).
@@ -225,7 +215,7 @@ pointed to, not repeated.
 
 - **Big screen files.** Split 2026-10-13 (`app.py` into `app_*.py`, `battle_draw.py`) and 2026-10-18 (`map_inspector.py`,
   `market_draw.py` / `market_trade.py`, `group_draw.py`, `taverna_draw.py`): only `map_editor_screen.py` (970),
-  `guild_screen.py` (811) and `char_editor_screen.py` (807) remain over 800 lines. When one takes a new
+  `guild_screen.py` (812) and `char_editor_screen.py` (807) remain over 800 lines. When one takes a new
   node or tab, split by concern instead of growing it. **Cost: low per split.**
 - **Saves have no migration (on purpose).** Fine while the author is the only player. Decided 2026-10-12: keep the strict premise that "an older shape does not load"; no migration bridge needed for now. **Cost: zero.**
 
@@ -494,15 +484,13 @@ building them:
   - **Time pressures from the world itself.** Today's time pressures (Bankers' rent, the title
     defence, the Ogre's deadline) are all ones the player chooses; nothing comes from the world itself.
     (Lumber saturating the wood price was decided 2026-10-18 to enter with/after the production chain.)
-  - **Darkness.** Pitch black stays the rule (author 2026-10-18), but foes in adjacent cells should be
-    known and attackable as obscured (a penalty), not invisible.
   - **Darkness vs fog on screen.** Settled as fog of war (*Ready to do*). Still open: how weather fog, if
     it ever exists, looks apart from darkness.
   - **Art direction for the board and shops.** The author is not an artist and worries that an engraved
     board, or AI-made textures, would look bad or cause trouble later.
-  - **Tutorial shape.** Both coexist (author 2026-10-18): the guild objectives list (*Ready to do*) guides
-    the player with small actionable tasks on the guild screen, while the denser modal tutorial cards remain
-    to explain game systems in detail.
+  - **Tutorial shape.** Both coexist (author 2026-10-18): the guild objectives list (`gartok/objectives.py`)
+    guides the player with small actionable tasks on the guild screen, while the modal tutorial cards remain
+    to explain game systems in detail (to be shortened).
 
 - **Magic as the vertical progression.** The biggest content gap; the arc's work is in *Ready to do -> Medium*.
   The schools are rival factions but not mutually exclusive for a character. Magic comes strictly before

@@ -174,6 +174,16 @@ def test_picking_up_a_hoard_pile_pays_the_carrier_at_once():
     assert me.char.money > before and sc.noise == lair.HOARD
 
 
+def test_the_hoard_contains_the_scroll_of_hex():
+    b, _ = _lair()
+    hex_chest = next(o for o in b.ground if o.is_chest and o.pos == lair.HEX_CELL)
+    assert lair.HEX_SCROLL in hex_chest.contents
+    me = b.player_units[0]
+    me.pos = hex_chest.pos
+    actions.PICK_UP.execute(b, me)
+    assert lair.HEX_SCROLL in me.inventory
+
+
 # --- the breath -------------------------------------------------------------------- #
 
 def test_the_dragons_breath_leaves_the_lair_burning():

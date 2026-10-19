@@ -50,6 +50,8 @@ PILLARS = ((12, 8), (12, 13), (15, 8), (15, 13))
 DRAGON_CELL = (37, 9)
 EGG_CELLS = ((24, 14), (27, 14), (24, 17), (27, 17))
 HOARD_PILES = ((23, 3), (26, 3), (29, 3), (24, 6), (27, 6), (23, 8), (29, 8), (26, 8))
+HEX_SCROLL = "Scroll of Hex"
+HEX_CELL = (29, 3)
 PILE_COPPER = (15, 40)
 PILE_GEM_ODDS = 0.25
 TORCHES = ((2, 9), (2, 12))
@@ -179,6 +181,8 @@ class LairScenario(Scenario):
             pile = [f"{self.rng.randint(*PILE_COPPER)} copper"]
             if self.rng.random() < PILE_GEM_ODDS:
                 pile.append(data.GEM_ITEM)
+            if p == HEX_CELL:
+                pile.append(HEX_SCROLL)
             battle.ground.append(GroundObject.chest(p, pile))
         for u in battle.foe_units:
             u.patrol_step = 0
