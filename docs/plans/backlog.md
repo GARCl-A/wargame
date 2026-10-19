@@ -68,6 +68,17 @@ targeting, and `Scroll of Hex` placed in the Dragon's Lair hoard (`lair.py`).
 - **Enemy info: tune the difficulties and bonuses, after the playtest (built 2026-10-11, `intel.py`).** Only the
   numbers (author 2026-10-18): `intel.BASE_DC` 8, the bands at margin 0 / +5 / +10, `RACE_DISCOUNT` 2,
   `ASSESS_BONUS` 4 and the Scholars' +2 (`vocations.info_bonus`), read off the playtest's fights.
+- **Battle map camera panning with WASD (playtest 2026-10-18).** The battle camera is currently
+  only moved via mouse drag (middle/right button), while arrow keys step the active unit
+  tile-by-tile. Add WASD panning to `BoardView` (`battle_screen.py`). Check key conflicts:
+  hotkey `A` currently confirms an armed attack (`_confirm_armed_attack`), so rebind or
+  distinguish camera panning inputs.
+- **Vector line-art icons for weapon actions (`icons.py`, playtest 2026-10-18).** The 11 weapon
+  actions (`sneak_attack`, `cleave`, `precise_thrust`, `repel_strike`, `maiming_strike`,
+  `armor_pierce`, `power_shot`, `extreme_shot`, `hook_shield`, `javelin_charge`, `parry_strike`)
+  pass `action.id` to `battle_panel.draw_action_list`, but `gartok/icons.py`'s `_GLYPHS` lacks
+  glyphs for these IDs, causing the action buttons to render without icons. Add vector line-art
+  draw routines for each weapon action.
 
 ## Medium
 
@@ -204,6 +215,40 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
 - **Bigger vendor portrait** in the shop screens, with a line of their own. Decided 2026-10-18: no accent
   colour per shop (the game would change colour all the time) and the stock stays as rows, not an icon
   grid (name and weight matter; the icons are not strong enough to lead).
+
+## Playtest notes 2026-10-18 (Author's run: "Olhos de Odin")
+
+The author's 21-day campaign run from a fresh game.
+- **Squad & opening:** Veldrix (Kenku Mercenary), Garia (Human Musician), Ashelin (Halfling Guard).
+  Started with the classic Lumber Yard work opening -> bought 2 Axes on days 2 and 5 -> stocked
+  potatoes at the Farm -> Tavern & Prison visits -> entered the Pit.
+- **Pit & Champion:** 3 Scrapper victories (d08, d09, d09), learning combat talents (`tough`, `strong`).
+  On day 12 challenged Champion Adelio Small-Knife in "Challenge the Champion", defeating his team in
+  4 rounds to claim the Champion of the Pit title (`factions.arena_dethrone`) and a $120 purse ($148 total).
+  Recruitment pitch on Adelio failed. Bought two Rapiers at the Smith ($130) on day 12.
+- **Turn of events & wipe:**
+  - Day 19 Pit Scrapper bout: 1v3 (only Veldrix was fielded; two critical misses dropped Veldrix at
+    0 HP; non-lethal knockout).
+  - Day 20 Road ambush: ambushed by 3 bandits (Morskelcaz, Bexmor, Rigtikgormmir) with Pack Tactics.
+    Ashelin fled round 1; Veldrix and Garia downed Morskelcaz, but bandits stabilized him and
+    flanked/focused both fighters down in round 3 (lethal; both died).
+  - Day 21 Wilds hunt: Ashelin hunted alone in the Wilds against 4 beasts. Downed one foe (Irtasbexma),
+    which was stabilized by the pack, then was overwhelmed 3v1 by enemies with Pack Tactics (+4 to hit)
+    in round 3 -> full guild wipe.
+- **Player notes & takeaways:**
+  1. *WASD camera panning on the battle board:* currently only middle/right mouse drag pans the camera;
+     arrow keys step the active unit. Added to *Ready to do -> Small*.
+  2. *Missing weapon action icons:* all 11 weapon actions render with blank icon boxes because
+     `gartok/icons.py` has no glyphs for their action IDs. Added to *Ready to do -> Small*.
+  3. *Weapon actions feel:* Cleave felt cool ("Cleave foi maneiro"); Cleave and Flank conditions are
+     reasonable to position on the board. Rapier's Finesse makes it feel distinctly different from an Axe.
+  4. *Intel feel:* Main use is reading enemy AC and sometimes HP; works well and didn't feel unfair for
+     martial squads (casters still to be evaluated).
+  5. *Lethality feel:* The road ambush wipe was a clear player error (fighting 2v3 without armour against
+     stronger enemies with Pack Tactics, instead of retreating as a full squad).
+  6. *Economy & Rest loop:* The initial Lumber Yard + Potato loop is fast and painless; 24 h of rest after
+     one bout + 16 h of lumber work felt balanced and reasonable without leading to a poverty spiral.
+  7. *Magic arc:* Untested in this run; left for a subsequent run reaching faction reputation 2.
 
 ---
 
