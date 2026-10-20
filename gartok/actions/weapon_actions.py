@@ -441,7 +441,7 @@ class PowerShot(Action):
 
         far = self.favoured(battle, actor, target)
         str_bonus = max(1 if far else 0, actor.mod_strength)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -490,7 +490,7 @@ class ExtremeShot(Action):
         actor.ap -= self.cost
         actor.walking = False
 
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target))
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()
@@ -590,7 +590,7 @@ class JavelinCharge(Action):
         weapon_name = actor.weapon_name
 
         bonus_dmg = roll(1, 4)
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True)
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True, battle=battle)
         bonus, applied = resolve_bonus(mods)
         detail = " ".join(f"{v:+}({r})" for v, r in applied)
         nat = d20()

@@ -146,8 +146,13 @@ class Jump(Action):
     id, name, cost, target, aimed = "jump", "Jump", 1, "cell", True
     desc = "Jump across gaps or obstacles."
 
+    @staticmethod
+    def _reach(actor, total):
+        """Squares a jump of `total` clears: never past your speed, plus Frog Leap's squares."""
+        return max(0, min(total // JUMP_DIVISOR, actor.speed)) + int(actor.char.talent_bonus("jump_reach"))
+
     def _max_reach(self, battle, actor):
-        return max(0, min((20 + actor.mod_strength) // JUMP_DIVISOR, actor.speed))
+        return self._reach(actor, 20 + actor.mod_strength)
 
     def available(self, battle, actor):
         return actor.ap >= self.cost and self._max_reach(battle, actor) >= 1
@@ -176,7 +181,7 @@ class Jump(Action):
         actor.walking = False
         nat = d20()
         total = nat + actor.mod_strength
-        dist = max(0, min(total // JUMP_DIVISOR, actor.speed))
+        dist = self._reach(actor, total)
         landing = actor.pos
         for step, cell in enumerate(line_cells(actor.pos, target)[1:], start=1):
             if step > dist or cell in battle.board.walls \
@@ -188,7 +193,7 @@ class Jump(Action):
         actor.pos = landing
         actor.z = z_to
         battle.log(f"{actor.name} jumps: d20({nat}) {actor.mod_strength:+}(STR) = "
-                   f"{total} -> {total // JUMP_DIVISOR} squares, lands at {landing}.")
+                   f"{total} -> {dist} squares, lands at {landing}.")
         if z_to < z_from:
             battle.apply_fall(actor, z_from - z_to, battle.log)
 

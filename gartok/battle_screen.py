@@ -227,8 +227,8 @@ class BattleScreen(BattleDrawMixin, Screen):
                     and self._plays(b.active))
 
     def _autoplace_setup(self):
-        """A side no person controls gets its flag planted and its traps skipped, so the fight
-        can begin."""
+        """A side no person controls gets its flag planted and its traps set where `ai.trap_cell`
+        says, so the fight can begin."""
         b = self.battle
         if b.awaiting_flag and not self._human("player"):
             tiles = [(x, y) for x in own_half("player", b.board.cols) for y in range(b.board.rows)
@@ -236,7 +236,11 @@ class BattleScreen(BattleDrawMixin, Screen):
             b.plant_flag(random.choice(tiles) if tiles else (0, b.board.rows // 2))
             return True
         if b.awaiting_trap and not self._human("player"):
-            b.trap_setup_queue.clear()
+            cell = ai.trap_cell(b, b.awaiting_trap)
+            if cell is None:
+                b.skip_traps()
+            else:
+                b.plant_trap(b.awaiting_trap, cell)
             return True
         return False
 

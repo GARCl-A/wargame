@@ -4,6 +4,7 @@ import random
 
 from .. import combat_log, intel, poisons
 from ..board import cells
+from ..data import roll
 
 
 def _sign(v):
@@ -145,6 +146,13 @@ def _phalanxed(battle, target):
     return False
 
 
+def _held_line(battle, target):
+    """Hobgoblin Hold the Line: the AC an ally Defending beside `target` lends it."""
+    return max((u.char.talent_bonus("hold_the_line") for u in battle.units
+                if u.alive and u.team == target.team and u is not target and u.defending
+                and battle.units_distance(u, target) <= 1), default=0)
+
+
 def _hostile_target(actor, target):
     return (target is not None and target.alive and target.team != actor.team
             and not target.hidden_from(actor.team))
@@ -249,6 +257,42 @@ def _check_gruesome_takedown(battle, attacker, downed_target):
     execute_demoralize(battle, attacker, victim, free=True, ignore_language=True)
 
 
+def _stone_endurance(battle, target, dmg):
+    """Goliath Stone's Endurance: the first blow of the fight that hurts is cut by 1d4 + CON."""
+    die = int(target.char.talent_bonus("stone_endurance"))
+    if not die or dmg <= target.dr or not target.spend_once("stone_endurance"):
+        return dmg
+    cut = max(0, roll(1, die) + target.mod_constitution)
+    battle.log(f"  {target.name} takes the blow like stone: -{cut} damage [Stone's Endurance].")
+    return max(0, dmg - cut)
+
+
+def _thornskin(battle, attacker, target):
+    """Treefolk Thornskin: a melee blow that lands pricks the one who struck it."""
+    thorns = int(target.char.talent_bonus("thornskin"))
+    if thorns and attacker.alive and attacker.team != target.team:
+        battle.log(f"  {attacker.name} is pricked by {target.name}'s thorns.")
+        attacker.take_damage(thorns, battle.log)
+
+
+GORE_RUN_UP = 4     # squares walked this turn before the Ox's blow throws the target
+
+
+def _gore_charge(battle, attacker, target):
+    """Ox Gore Charge: after a run-up, the blow throws the target straight back, no roll."""
+    squares = int(attacker.char.talent_bonus("gore_charge"))
+    if (not squares or len(attacker.path) - 1 < GORE_RUN_UP or not target.alive
+            or target.team == attacker.team or battle.units_distance(attacker, target) > 1):
+        return
+    from .combat import Push
+    if Push.direction(attacker, target) == (0, 0):
+        return
+    path, _ = Push.landing(battle, attacker, target, squares=squares)
+    if path:
+        battle.log(f"  {attacker.name} gores {target.name} and throws them to {path[-1]}!")
+        Push.throw(battle, attacker, target, path)
+
+
 def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=False,
                  weapon=None, armor_pierce=False, bonus_damage=0, crit_mult=None):
     pulled = nonlethal_penalty(attacker)
@@ -260,13 +304,15 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         bonus -= obscured
         detail += f" -{obscured}(obscured)"
     total = nat + bonus
-    ac = target.ac_vs(attacker, armor_pierce=armor_pierce)
+    melee = not thrown and (weapon is not None or not attacker.ranged)
+    ac = target.ac_vs(attacker, armor_pierce=armor_pierce, ranged=not melee)
     flank_pen = _flank_penalty(battle, attacker, target)
     if flank_pen:
         ac -= flank_pen
     phalanx = _phalanxed(battle, target)
     if phalanx:
         ac += 1
+    ac += _held_line(battle, target)
     w = weapon if weapon is not None else attacker.weapon
     if hasattr(w, "crit_range"):
         crit_range = w.crit_range
@@ -304,10 +350,16 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         flank_finesse = 0
         if _flanked(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
             flank_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("flank_finesse_damage")
-        target.take_damage(
-            attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon,
-                                 crit_mult=crit_mult, bonus_damage=bonus_damage + cull + flank_finesse),
-            battle.log, knockout=bool(pulled))
+        frenzy = attacker.char.talent_bonus("blood_frenzy") if melee and target.hp < target.hp_max / 2 else 0
+        dmg = attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon, crit_mult=crit_mult,
+                                   bonus_damage=bonus_damage + cull + flank_finesse + frenzy)
+        dmg = _stone_endurance(battle, target, dmg)
+        target.take_damage(dmg, battle.log, knockout=bool(pulled))
+        if dmg > 0:
+            target.hurt_by.add(attacker)
+        if melee:
+            _thornskin(battle, attacker, target)
+            _gore_charge(battle, attacker, target)
         if was_up and target.team != attacker.team:
             if not target.alive:
                 attacker.credit_kill(target)

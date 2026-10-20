@@ -5,7 +5,7 @@ import random
 from .. import data, intel, items
 from ..board import cells, chebyshev
 from ..captives import capture_tool
-from ..conditions import Demoralized
+from ..conditions import Demoralized, PixieFlight
 from ..constants import fmt_money
 from ..data import d20
 from ..ground import GroundObject
@@ -417,6 +417,80 @@ class Mount(Action):
         target.rider = actor
         actor.pos = target.pos
         battle.log(f"{actor.name} mounts {target.name}.")
+
+
+class LiftRider(Action):
+    """Centaur Lift Rider: the centaur swings an adjacent ally onto its back, standing or
+    fallen -- the way a body is carried off. A rider who is up climbs down with Dismount."""
+    id, name, cost, target, aimed = "lift_rider", "Lift Rider", 1, "ally", True
+    desc = "Put an adjacent Small or Medium ally, awake or fallen, on your back."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.char.talent_bonus("lift_rider"):
+            return False, "Missing 'lift_rider' talent."
+        return True, ""
+
+    def available(self, battle, actor):
+        return (super().available(battle, actor) and actor.rider is None
+                and any(self.can(battle, actor, u) for u in battle.units))
+
+    def can(self, battle, actor, target=None):
+        return (actor.ap >= self.cost and actor.char.talent_bonus("lift_rider") and actor.alive
+                and actor.rider is None and actor.mounted_on is None
+                and target is not None and target is not actor and target.team == actor.team
+                and (target.alive or target.downed) and not target.captured
+                and target.size in ("Small", "Medium")
+                and target.mounted_on is None and target.rider is None
+                and battle.units_distance(actor, target) <= 1)
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units if self.can(battle, actor, u)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        target.mounted_on = actor
+        actor.rider = target
+        target.pos = actor.pos
+        target.z = actor.z
+        how = "hauls the fallen" if target.downed else "swings"
+        battle.log(f"{actor.name} {how} {target.name} onto their back.")
+
+
+class PixieDust(Action):
+    """Sprite Pixie Dust: an adjacent ally flies through the end of their next turn -- over pits
+    and deep water, with no fall."""
+    id, name, cost, target, aimed = "pixie_dust", "Pixie Dust", 1, "ally", True
+    desc = "An adjacent ally takes wing through the end of their next turn."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.char.talent_bonus("pixie_dust"):
+            return False, "Missing 'pixie_dust' talent."
+        return True, ""
+
+    def available(self, battle, actor):
+        return super().available(battle, actor) and any(self.can(battle, actor, u) for u in battle.units)
+
+    def can(self, battle, actor, target=None):
+        return (actor.ap >= self.cost and actor.char.talent_bonus("pixie_dust")
+                and target is not None and target is not actor and target.alive
+                and target.team == actor.team and not target.flies
+                and battle.units_distance(actor, target) <= 1)
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units if self.can(battle, actor, u)]
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        target.add_condition(PixieFlight())
+        battle.log(f"{actor.name} showers {target.name} in pixie dust: they take wing.")
 
 
 class Dismount(Action):

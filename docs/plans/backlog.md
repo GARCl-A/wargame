@@ -29,13 +29,14 @@ what changes the numbers first, then what measures them, last what describes the
 screens. Each item's detail stays in its own entry below.
 
 **Phase 1 — content that moves balance** (measuring AI or stats before it is rework)
-1. **The racial track is thin** (*Large*): 3+ racial nodes per race.
+1. ~~The racial track is thin~~ done 2026-10-20: 38 new nodes, every playable race and the Ox hold 3+.
 2. **Gold spent on equipment per level** (*Playtest notes 2026-10-12*): kit by level in `encounters.py`
    and the Battlefield generators.
 3. ~~The Ogre's fortress~~ done 2026-10-20: the friendly fortress is the only shelf of Large weapons.
 
 **Phase 2 — AI** (one `scripts/combat_pairs.py` run before the phase and one after, not per item)
-4. **Teach the AI the newer actions** (*Large*): the four left, plus the racial actions from item 1.
+4. **Teach the AI the newer actions** (*Large*): the four left (item 1's Lift Rider, Tail Sweep and
+   Pixie Dust shipped with their AI).
 5. **Combat AI benchmarking against player performance** (*Large*): retreat and CTF thresholds.
 
 **Phase 3 — measure and economy** (one `scripts/economy_report.py` run at the end)
@@ -247,15 +248,6 @@ pointed to, not repeated.
   Next: Coal for Smith (Iron Bar recipe), wagon crafting, the sim's `crafter` policy and tests. Gives Coal and the
   gems a use and closes `sources.py`'s `traded` goods one chain at a time. **Market supply and demand / lumber saturation:**
   simulate relatively complex market dynamics with supply and demand (so endless day labour at the Yard floods wood prices).
-- **The racial track is thin (to be authored by hand).** The XP
-  curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat
-  and work both have 30 nodes (5 per attribute root: combat since 2026-10-19, work since 2026-10-20),
-  so picks past the 30th wait unspent. The racial
-  track has 38 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
-  its own (one pick at racial 5, 10 and 15), and most have 1. Authored beasts: Dragon has 4 nodes
-  (`dragon`, `dragon_breath`, `sweeping_claws`, `draconic_wings`) spending all 4 picks for Kharzuul;
-  Zombie has 2 nodes (`death_grip`, `zombie_bite`).
-  Left: 3+ racial nodes per race. The magic track (6 school-agnostic nodes since 2026-10-18) is complete.
 - **Gathering: loose ends.**
   Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art. (Fruit preservation completed with Fruit Compote recipe).
 - **Item properties: base material sources (after the production chain).**

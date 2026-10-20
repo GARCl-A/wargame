@@ -52,6 +52,12 @@ def cell_lit(battle, pos):
                for fp, radius in _light_sources(battle))
 
 
+def dark_range(unit):
+    """How far `unit` sees in the dark with no light: darkvision, or the Elf's Twilight Sight."""
+    twilight = unit.char.talent_bonus("twilight_sight") if hasattr(unit, "char") else 0
+    return max(unit.ability.darkvision, int(twilight))
+
+
 def can_see(battle, observer, target_pos):
     """Does `observer` see the cell `target_pos`?
 
@@ -69,7 +75,7 @@ def can_see(battle, observer, target_pos):
         return False
     if getattr(battle, "ambient_light", False):
         return True
-    dark = observer.ability.darkvision
+    dark = dark_range(observer)
     if dark and dist <= dark:
         return True
     return cell_lit(battle, target_pos)
@@ -84,7 +90,14 @@ def can_see_unit(battle, observer, target):
     # Heard / adjacent in the dark: a body within 1 cell is sensed by sound/presence unless blocked by wall
     if battle.units_distance(observer, target) <= 1 and battle.los_between(observer, target):
         return True
-    return False
+    return smells_blood(battle, observer, target)
+
+
+def smells_blood(battle, observer, target):
+    """Gnoll Bloodscent: a foe below half its HP is known within range, through walls and dark."""
+    scent = observer.char.talent_bonus("bloodscent") if hasattr(observer, "char") else 0
+    return bool(scent and target.team != observer.team and target.hp < target.hp_max / 2
+                and battle.units_distance(observer, target) <= scent)
 
 
 def is_obscured(battle, observer, target):
@@ -147,6 +160,8 @@ def vision_desc(unit):
     """Short phrase for the panel: how this unit sees in the dark."""
     if unit.ability.darkvision:
         return f"darkvision, {unit.ability.darkvision} squares"
+    if dark_range(unit):
+        return f"twilight sight, {dark_range(unit)} squares"
     if unit.has_torch:
         return f"torch in hand, {data.TORCH_RADIUS} squares"
     if unit.has_lantern:

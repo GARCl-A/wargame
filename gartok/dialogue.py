@@ -41,6 +41,8 @@ class Verb:
     spoken: bool              # needs a language shared with the leader
 
 
+PARLEY_VERBS = ("persuade", "bluff", "intimidate")   # the Human's Parley talent adds to these
+
 VERBS = {v.id: v for v in (
     Verb("persuade", "Persuade", "charisma", True),
     Verb("teach", "Teach", "intelligence", True),
@@ -152,9 +154,10 @@ class Encounter:
         return bool(recruit.shared_languages(speaker, self.leader))
 
     def mod(self, verb, speaker):
+        parley = speaker.talent_bonus("parley") if verb in PARLEY_VERBS else 0
         if verb == "intimidate" and speaker.has_talent("intimidating_presence"):
-            return max(speaker.mod_charisma, speaker.mod_strength)
-        return getattr(speaker, f"mod_{VERBS[verb].attr}")
+            return max(speaker.mod_charisma, speaker.mod_strength) + parley
+        return getattr(speaker, f"mod_{VERBS[verb].attr}") + parley
 
     def dc(self, verb):
         return BASE_DC + (self.leader.mod_wisdom if self.leader is not None else 0)

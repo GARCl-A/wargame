@@ -38,6 +38,7 @@ from .combat import (  # noqa: F401
     NonLethal,
     Push,
     Reload,
+    TailSweep,
     Throw,
     ZombieBite,
     _strike,
@@ -79,8 +80,10 @@ from .support import (
     EndTurn,
     FirstAid,
     Investigate,
+    LiftRider,
     Mount,
     PickUp,
+    PixieDust,
     SignalHorn,
     SpinWeb,
     Stabilize,
@@ -141,6 +144,9 @@ ESCAPE_GRAPPLE = EscapeGrapple()
 ZOMBIE_BITE = ZombieBite()
 NONLETHAL = NonLethal()
 CAPTURE = Capture()
+TAIL_SWEEP = TailSweep()
+LIFT_RIDER = LiftRider()
+PIXIE_DUST = PixieDust()
 
 # Weapon 2-AP actions
 SNEAK_ATTACK = SneakAttack()
@@ -174,6 +180,7 @@ COMBAT_ACTIONS = [
     ATTACK,
     *WEAPON_ACTIONS,
     DRAGON_BREATH,
+    TAIL_SWEEP,
     ZOMBIE_BITE,
     GRAB,
     ESCAPE_GRAPPLE,
@@ -208,6 +215,8 @@ UTILITY_ACTIONS = [
     SPIN_WEB,
     MOUNT,
     DISMOUNT,
+    LIFT_RIDER,
+    PIXIE_DUST,
     WAKE_UP,
 ]
 

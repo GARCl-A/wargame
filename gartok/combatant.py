@@ -21,6 +21,7 @@ from .data import resolve_bonus, roll
 from .unit import flatten_pack
 
 AP_PER_TURN = 2
+UNDER_THE_WHIP_RANGE = 6     # squares to the stronger ally a Goblin fights for
 
 
 
@@ -48,7 +49,8 @@ class Combatant:
     # ------------------------------------------------------------------ #
     @property
     def flies(self):
-        return self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
+        return (self._ability.flies or bool(getattr(self.char, "talent_bonus", lambda _: 0)("flies"))
+                or self.has_condition("pixie_flight"))
 
     @property
     def can_move_vertically(self):
@@ -125,6 +127,8 @@ class Combatant:
         self.ctf_runner = False       # capture-the-flag: this enemy rushes the player's flag (set by Battle)
         self.mounted_on = None        # another Combatant this unit is riding (Centaur mount)
         self.rider = None             # a Combatant riding this one (Centaur mount)
+        self.hurt_by = set()          # who has landed a blow on this unit this fight (Grudge)
+        self.turns_taken = 0          # turns begun this fight (Ambush Predator)
 
     def credit_kill(self, victim, magic=False):
         """Book a downed enemy: +1 to the kill count, plus XP scaled by the level gap
@@ -488,15 +492,20 @@ class Combatant:
                 ac -= shield.ac
         return ac
 
-    def ac_vs(self, attacker, armor_pierce=False):
+    def ac_vs(self, attacker, armor_pierce=False, ranged=None):
         """AC against one particular attacker: the Leather of Biwolf adds 1 against
-        anything that is not a humanoid. If armor_pierce is True, ignores worn armor AC."""
+        anything that is not a humanoid. If armor_pierce is True, ignores worn armor AC.
+        `ranged` is whether the blow comes from afar (default: the attacker's held weapon)."""
         base = self.ac
         if armor_pierce and self.armor:
             base -= self.armor.ac
         if (self.artifact_name == items.BIWOLF_LEATHER_ITEM
                 and attacker.char.race.get("kind", "humanoid") != "humanoid"):
-            return base + 1
+            base += 1
+        if data.SIZE_ORDER.index(attacker.size) >= data.SIZE_ORDER.index("Large"):
+            base += self.char.talent_bonus("underfoot")
+        if attacker.ranged if ranged is None else ranged:
+            base += self.char.talent_bonus("tiny_target")
         return base
 
     @property
@@ -606,6 +615,33 @@ class Combatant:
             full_bonus = self.char.talent_bonus("full_intel_to_hit")
             if full_bonus and intel.has_full_intel(battle, self.team, target):
                 mods.append((full_bonus, "circumstance", "Exploit Weakness"))
+            mods += self.racial_hit_mods(battle, target)
+        return mods
+
+    def racial_hit_mods(self, battle, target):
+        """The racial talents that add to this unit's attack on `target`. Untyped, so they stack."""
+        c = self.char
+        mods = []
+        grudge = c.talent_bonus("grudge")
+        if grudge and target in self.hurt_by:
+            mods.append((grudge, None, "Grudge"))
+        ambush = c.talent_bonus("ambush_predator")
+        if ambush and target.turns_taken == 0:
+            mods.append((ambush, None, "Ambush Predator"))
+        whip = c.talent_bonus("under_the_whip")
+        if whip and any(u.alive and u.team == self.team and u is not self
+                        and u.combat_level > self.combat_level
+                        and battle.units_distance(self, u) <= UNDER_THE_WHIP_RANGE
+                        for u in battle.units):
+            mods.append((whip, None, "Under the Whip"))
+        arena = c.talent_bonus("arena_born")
+        if arena and getattr(battle, "arena", False):
+            mods.append((arena, None, "Arena Born"))
+        mount = self.mounted_on
+        if mount is not None and len(mount.path) > 1:
+            charge = mount.char.talent_bonus("cavalry_charge")
+            if charge:
+                mods.append((charge, None, "Cavalry Charge"))
         return mods
 
     def damage_roll(self, crit=False, thrown=False, weapon=None, crit_mult=None, bonus_damage=0):
@@ -621,6 +657,9 @@ class Combatant:
             mult = crit_mult or (self.weapon.get("crit_mult", 2) if self.weapon else 2)
         
         crit_dice = sum(roll(n, faces) for _ in range(max(1, mult) - 1)) if crit else 0
+        savage = int(self.char.talent_bonus("savage_attacks")) if crit else 0
+        if savage:
+            crit_dice += roll(savage, faces)
         dice = roll(n, faces) + crit_dice + bonus_damage
         bonus = 0
         if thrown:
@@ -654,6 +693,7 @@ class Combatant:
     # turn cycle                                                         #
     # ------------------------------------------------------------------ #
     def start_turn(self, log):
+        self.turns_taken += 1
         self.ap = AP_PER_TURN
         self.walking = False
         self.moved = 0

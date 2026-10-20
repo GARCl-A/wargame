@@ -38,6 +38,7 @@ ICONS = {
     "Dwarf Shield": ("shield", "iron", {"boss": TONES["brass"]}),
     "Meat": ("steak", "flesh", {}),
     "Fruit": ("apple", "fruit", {}),
+    "Bloom Fruit": ("apple", "fruit", {}),
     "Potato": ("potato", "potato", {}),
     "1L Beer": ("mug", "oak", {}),
     "Jerky": ("jerky", "jerky", {}),

@@ -5,6 +5,9 @@ Mixed into `unit.Unit`; see RULES.md (the Leshy "Autotroph" is exempt).
 
 from . import data, items
 
+BLOOM_FRUIT = "Bloom Fruit"     # what a Treefolk with Bountiful Harvest bears: food that heals
+BLOOM_HEAL = (1, 4)
+
 
 def take_ration(pack, allow_rotten=True):
     """Eat one ration out of `pack` (a stacked pack list, in place). Fresh food nearing
@@ -121,13 +124,15 @@ class HungerMixin:
         the dead from the roster."""
         if self._ability.id == "autotroph":
             return "ate"
+        if self.full_belly and self.unfed_days == 0 and self.talent_bonus("small_appetite"):
+            self.full_belly = False
+            return "ate"
         allow_rotten = self.unfed_days >= data.STARVATION_DEATH_DAYS - 1
         food = self._take_ration(larder, allow_rotten=allow_rotten)
         if food:
             self.unfed_days = 0
-            if food == "Rotten Food" and self._ability.id != "strong_stomach":
-                self.sick = True
-                self._apply_attributes()
+            self.full_belly = True
+            self._digest(food)
             return "ate"
         self.unfed_days += 1
         limit = data.STARVATION_DEATH_DAYS + int(self.talent_bonus("deep_reserves"))
@@ -144,10 +149,24 @@ class HungerMixin:
         if not food:
             return False
         self.unfed_days = 0
+        self.full_belly = True
+        self._digest(food)
+        return True
+
+    def dawn_bloom(self):
+        """What a Fruitful Treefolk bears at dawn: `(item, count)` -- Bountiful Harvest bears two
+        Bloom Fruit."""
+        if self.talent_bonus("bountiful_harvest"):
+            return BLOOM_FRUIT, 2
+        return "Fruit", 1
+
+    def _digest(self, food):
+        """What a meal does past filling you: Rotten Food sickens, a Bloom Fruit heals."""
         if food == "Rotten Food" and self._ability.id != "strong_stomach":
             self.sick = True
             self._apply_attributes()
-        return True
+        elif food == BLOOM_FRUIT:
+            self.hp = min(self.hp_max, self.hp + data.roll(*BLOOM_HEAL))
 
     @property
     def rations(self):

@@ -79,7 +79,7 @@ class _Camp:
             guild._rot_food(pack)
         for u in self.members:
             if u.has_talent("fruitful"):
-                u.give_to_pack("Fruit")
+                u.give_to_pack(*u.dawn_bloom())
         rotten = self._rotten()
         outcomes = guild._meal_pass(self.members, self.larder)
         return self._rotten() == rotten and all(o == "ate" for o in outcomes.values())

@@ -12,7 +12,15 @@ roster and a rematch could reuse the same picks.
 import random
 
 from . import captives, data, intel, vision
-from .board import COLS, ROWS, cells, cells_distance, chebyshev
+from .board import (
+    COLS,
+    ROWS,
+    cells,
+    cells_distance,
+    cells_in_radius,
+    chebyshev,
+    grid_distance,
+)
 from .combatant import AP_PER_TURN, Combatant
 from .conditions import Entangled
 from .data import d20
@@ -177,13 +185,24 @@ class Battle:
             return run()
         return self.sink.record(self, name, actor, target, {}, run)
 
+    def trap_reach(self, trapper):
+        """How far from its body `trapper` plants a trap: next to it, or Trap Master's squares."""
+        return max(1, int(trapper.char.talent_bonus("trap_range")))
+
+    def trap_cells(self, trapper):
+        """The cells `trapper` may plant its next trap on."""
+        reach = self.trap_reach(trapper)
+        body = self.cells_of(trapper)
+        near = {p for c in body for p in cells_in_radius(c, reach)}
+        return sorted(p for p in near if self.can_plant_trap(trapper, p))
+
     def can_plant_trap(self, trapper, tile):
         """Is `tile` free (no unit / wall / creature / ground object) and within
-        `trapper`'s reach (its own footprint or an adjacent cell)?"""
+        `trapper`'s reach (an adjacent cell, or as far as Trap Master lets it)?"""
         taken = self.occupied() | self.board.walls | self.creature_cells() | {o.pos for o in self.ground}
         if tile in taken or not self.board.in_bounds(tile):
             return False
-        return tile in cells(trapper.pos, trapper.footprint) or tile in self.board.neighbors(trapper.pos)
+        return min(grid_distance(c, tile) for c in self.cells_of(trapper)) <= self.trap_reach(trapper)
 
     def plant_trap(self, trapper, tile):
         """Plant the next queued trap from `trapper`'s pack at `tile` (see

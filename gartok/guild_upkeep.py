@@ -210,8 +210,9 @@ class UpkeepMixin:
         for u in self.roster:
             u.medicine_attempted_today = False
             if u.has_talent("fruitful"):
-                u.give_to_pack("Fruit")
-                events.append(f"{u.name} blooms at dawn and yields a fresh Fruit.")
+                fruit, n = u.dawn_bloom()
+                u.give_to_pack(fruit, n)
+                events.append(f"{u.name} blooms at dawn and yields {n} fresh {fruit}.")
             if u.ability.id == "innocent_face" and u.crime > 0 and self.clock.day > 0 and self.clock.day % 7 == 0:
                 u.crime -= 1
                 events.append(f"{u.name}'s criminal record fades by 1 (Innocent Face).")

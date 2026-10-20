@@ -16,7 +16,7 @@ the morality axis mostly:
 """
 
 from . import actions, data, intel, items, vision
-from .board import cells, grid_distance, line_cells
+from .board import cells, cells_distance, grid_distance, line_cells
 
 
 def _avg_die(nf):
@@ -45,6 +45,9 @@ def _pick_attack(battle, unit, target):
     hold = _hex_or_roots(battle, unit, target)
     if hold is not None:
         return hold
+
+    if _tail_sweep_pays(battle, unit, target):
+        return actions.TAIL_SWEEP
 
     w_act = _weapon_action(battle, unit, target)
     if w_act is not None:
@@ -282,6 +285,52 @@ def _weapon_action(battle, unit, target):
     return best
 
 
+def _tail_sweep_pays(battle, unit, target):
+    """Sweep when the two tail strikes and the two shoves beat the two points as plain attacks."""
+    sweep = actions.TAIL_SWEEP
+    if not sweep.can(battle, unit, target):
+        return False
+    tail = _avg_die(unit.unarmed_damage) + unit.mod_strength + unit.char.talent_bonus("melee_damage")
+    foes = [target] + [u for u in (sweep.second(battle, unit, target),) if u is not None]
+    worth = sum(_hit_odds(battle, unit, f) * tail + _shove_worth(battle, unit, f) for f in foes)
+    return worth >= _two_points(battle, unit, target) and worth > 0
+
+
+def _try_lift_rider(battle, unit):
+    """A Centaur with Lift Rider takes a dying ally beside it onto its back, out from under the
+    blows that would finish it, and carries it on."""
+    lift = actions.LIFT_RIDER
+    if not lift.available(battle, unit):
+        return False
+    fallen = [u for u in lift.highlight_targets(battle, unit) if u.dying]
+    if not fallen:
+        return False
+    lift.execute(battle, unit, max(fallen, key=lambda u: u.death_clock))
+    return True
+
+
+def _try_pixie_dust(battle, unit):
+    """A Sprite gives wings to an ally beside it whose way to the foes is cut by water or a pit."""
+    dust = actions.PIXIE_DUST
+    if not dust.available(battle, unit):
+        return False
+    for ally in dust.highlight_targets(battle, unit):
+        if ally.has_condition("entangled") or ally.has_condition("grappled"):
+            continue
+        foes = [f for f in battle.units if f.alive and f.team != ally.team and battle.can_see_unit(ally, f)]
+        if not foes or any(battle.units_distance(ally, f) <= ally.attack_range for f in foes):
+            continue
+        walk = battle.reachable(ally, budget=WHOLE_BOARD)
+        if not any(cells_distance(cells(p, ally.footprint), battle.cells_of(f)) <= ally.attack_range
+                   for f in foes for p in walk):
+            dust.execute(battle, unit, ally)
+            return True
+    return False
+
+
+WHOLE_BOARD = 10 ** 6       # a movement budget no walk runs out of
+
+
 def _should_grab(battle, unit, target):
     """Grab when the unit has grab/bite talents (pins the foe to bite it), or when stopping
     a fleeing enemy or flag runner."""
@@ -512,7 +561,7 @@ def _torches_on_ground(battle):
 def _recover_torch(battle, unit):
     """If in the dark with no darkvision and no torch in hand, and cannot see
     any enemies, prioritize fetching a torch on the ground to illuminate."""
-    if getattr(battle, "ambient_light", False) or unit.ability.darkvision or unit.torch_hand:
+    if getattr(battle, "ambient_light", False) or vision.dark_range(unit) or unit.torch_hand:
         return False
     if any(battle.can_see_unit(unit, e) for e in battle.units if e.alive and e.team != unit.team):
         return False
@@ -717,7 +766,7 @@ def _jump_spots(battle, unit):
     (a longer one hurts), and nothing it could have walked to."""
     if not actions.JUMP.available(battle, unit):
         return []
-    sure = max(0, min((10 + unit.mod_strength) // actions.movement.JUMP_DIVISOR, unit.speed))
+    sure = actions.JUMP._reach(unit, 10 + unit.mod_strength)
     z = battle.elevation(unit)
     walk = battle.reachable(unit)
     spots = []
@@ -730,6 +779,15 @@ def _jump_spots(battle, unit):
         if all(p not in battle.board.walls and actions._cell_free(battle, unit, p) for p in line):
             spots.append(c)
     return spots
+
+
+def trap_cell(battle, trapper):
+    """Where an unplayed squad plants `trapper`'s next trap: the open cell closest to a foe."""
+    foes = [u for u in battle.units if u.alive and u.team != trapper.team]
+    spots = battle.trap_cells(trapper)
+    if not foes or not spots:
+        return None
+    return min(spots, key=lambda c: min(grid_distance(c, f.pos) for f in foes))
 
 
 def _visible_traps(battle, unit):
@@ -1270,6 +1328,12 @@ def take_turn(battle, unit):
                 break
 
         if _try_mount(battle, unit):          # mount a Centaur ally if adjacent
+            continue
+
+        if _try_lift_rider(battle, unit):
+            continue
+
+        if _try_pixie_dust(battle, unit):
             continue
 
         if _try_signal_horn(battle, unit):

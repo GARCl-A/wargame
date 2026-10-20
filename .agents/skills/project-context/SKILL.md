@@ -46,7 +46,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | File | What it covers |
 |---|---|
 | `gartok-crafting-traps.md` | Crafting system (recipes, materials, progress rolls), interactive/AI trap placement, and `campaign._carry_forward` state sync for consumed items/thrown weapons. |
-| `gartok-talent-trees.md` | General→specialist premise, tier-2 spec, Alert root, Fleet tier-3; racial track; Grippli Tongue; both trees at 30 (6 roots x 5), Heavy Haul as carry not yield, Field Medic out of combat. |
+| `gartok-talent-trees.md` | General→specialist premise, tier-2 spec, Alert root, Fleet tier-3; racial track; Grippli Tongue; both trees at 30 (6 roots x 5), Heavy Haul as carry not yield, Field Medic out of combat; racial pass 2 (3+ per race) and the rules the author vetted it by. |
 | `gartok-high-identity-races.md` | High-identity tier-1 racial talents (Leshy Fruitful, Human Cosmopolitan, Halfling Luck); 24h daily framework (clock.day); Racial Level 5 talent gate. |
 | `gartok-z-axis.md` | Per-cell elevation & pits: fall damage, Climb/Push/Jump/Drop-in, flight/climber. |
 | `gartok-map-size-water.md` | Board carries cols/rows; water terrain (shallow=difficult, deep=Swim+breath/drown); Amphibious; camera zoom/scroll. |

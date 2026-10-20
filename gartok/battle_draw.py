@@ -155,12 +155,8 @@ class BattleDrawMixin:
         board_render.draw_placement(screen, self.F, self.view, valid, hover, banner)
 
     def _draw_trap_setup(self, screen):
-        board = self.battle.board
         trapper = self.battle.awaiting_trap
-        candidates = [
-            p for c in self.battle.cells_of(trapper) for p in board.neighbors(c)
-            if board.in_bounds(p) and self.battle.can_plant_trap(trapper, p)
-        ]
+        candidates = self.battle.trap_cells(trapper)
         hover = self._tile_at_px(self.mouse)
         if hover is not None and not self.battle.can_plant_trap(trapper, hover):
             hover = None

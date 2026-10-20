@@ -158,8 +158,26 @@ class AttackTongue(Action):
             return
         actor.ap -= 1
         actor.walking = False
-        _strike(battle, actor, target, weapon=actor.tongue_weapon,
-                prefix=f"{actor.name} -> {target.name} (tongue)")
+        result = _strike(battle, actor, target, weapon=actor.tongue_weapon,
+                         prefix=f"{actor.name} -> {target.name} (tongue)")
+        if result != "miss" and actor.char.talent_bonus("sticky_tongue"):
+            self.reel(battle, actor, target)
+
+    @staticmethod
+    def reel(battle, actor, target):
+        """Grippli Sticky Tongue: the lashed foe is pulled a square in and, once beside the
+        Grippli, held fast."""
+        if not target.alive or target.has_condition("grappled"):
+            return
+        if battle.units_distance(actor, target) > 1:
+            dx, dy = Push.direction(actor, target)
+            dest = (target.pos[0] - dx, target.pos[1] - dy)
+            if Push._stopper(battle, target, dest, False) is None:
+                Push.throw(battle, actor, target, [dest])
+                battle.log(f"  The tongue reels {target.name} in to {dest}.")
+        if target.alive and battle.units_distance(actor, target) <= 1:
+            target.add_condition(Grappled(grappler=actor))
+            battle.log(f"  {target.name} is stuck to the tongue: grappled!")
 
 
 # --------------------------------------------------------------------------- #
@@ -265,7 +283,7 @@ class Throw(Action):
         actor.walking = False
         weapon_name = actor.weapon_name
 
-        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True)
+        mods = actor.attack_mods(target, _pack_flank(battle, actor, target), thrown=True, battle=battle)
         if _flanked(battle, actor, target):
             mods.append((2, "circumstance", "Flank"))
         bonus, applied = resolve_bonus(mods)
@@ -517,17 +535,19 @@ class Push(Action):
                 return u
         return None
 
-    def landing(self, battle, actor, target):
+    @classmethod
+    def landing(cls, battle, actor, target, squares=None):
         """Where a shove would leave `target` and what stops it: `(cells walked, stopper)`, the
         stopper None when the shove ran its full length. Read by the AI before it shoves."""
-        dx, dy = self.direction(actor, target)
+        dx, dy = cls.direction(actor, target)
         mighty = bool(actor.char.talent_bonus("mighty_shove"))
-        squares = self.MIGHTY_SQUARES if mighty else 1
+        if squares is None:
+            squares = cls.MIGHTY_SQUARES if mighty else 1
         pos, path = target.pos, []
         z = battle.elevation(target)
         for _ in range(squares):
             dest = (pos[0] + dx, pos[1] + dy)
-            stop = self._stopper(battle, target, dest, mighty)
+            stop = cls._stopper(battle, target, dest, mighty)
             if stop is not None:
                 return path, stop
             path.append(dest)
@@ -541,6 +561,11 @@ class Push(Action):
             return
         actor.ap -= 1
         actor.walking = False
+        self.shove(battle, actor, target)
+
+    @classmethod
+    def shove(cls, battle, actor, target):
+        """The shove itself, with no point spent: the roll, then the throw (Tail Sweep shoves too)."""
         dc = PUSH_DC_BASE + target.mod_constitution
         nat = d20()
         push_b = getattr(actor.char, "talent_bonus", lambda x: 0)("push_bonus") if hasattr(actor, "char") else 0
@@ -552,15 +577,37 @@ class Push(Action):
         if nat != 20 and (nat == 1 or total < dc):
             battle.log(desc + "  -> holds their ground.")
             return
-        if self.direction(actor, target) == (0, 0):
+        if cls.direction(actor, target) == (0, 0):
             battle.log(desc + "  -> no room to shove.")
             return
-        path, stopper = self.landing(battle, actor, target)
+        path, stopper = cls.landing(battle, actor, target)
         if not path and not mighty:
             battle.log(desc + f"  -> {target.name} is shoved against something and can't move.")
             return
 
         was_up = target.alive
+        battle.log(desc + (f"  -> {target.name} is thrown to {path[-1]}." if path
+                           else f"  -> {target.name} is slammed where they stand."))
+
+        if mighty:
+            target.take_damage(roll(*cls.MIGHTY_DIE), battle.log)
+            if stopper is not None:
+                what = "a wall" if stopper == "wall" else stopper.name
+                battle.log(f"  {target.name} crashes into {what}!")
+                target.take_damage(roll(*cls.MIGHTY_DIE), battle.log)
+                if stopper != "wall":
+                    body_up = stopper.alive
+                    stopper.take_damage(roll(*cls.MIGHTY_DIE), battle.log)
+                    if body_up and not stopper.alive and stopper.team != actor.team:
+                        actor.credit_kill(stopper)
+
+        cls.throw(battle, actor, target, path, was_up)
+
+    @staticmethod
+    def throw(battle, actor, target, path, was_up=None):
+        """Carry `target` along `path` (cells from `landing`): what lies at the end springs, the
+        flames on the way burn, a drop is a fall; whatever that drops is `actor`'s kill."""
+        was_up = target.alive if was_up is None else was_up
         z_from = battle.elevation(target)
         before = set(battle.cells_of(target))
         entered = set()
@@ -570,21 +617,6 @@ class Push(Action):
         target.walking = False
         z_to = battle.elevation_at(target.pos, target)
         target.z = z_to
-        battle.log(desc + (f"  -> {target.name} is thrown to {target.pos}." if path
-                           else f"  -> {target.name} is slammed where they stand."))
-
-        if mighty:
-            target.take_damage(roll(*self.MIGHTY_DIE), battle.log)
-            if stopper is not None:
-                what = "a wall" if stopper == "wall" else stopper.name
-                battle.log(f"  {target.name} crashes into {what}!")
-                target.take_damage(roll(*self.MIGHTY_DIE), battle.log)
-                if stopper != "wall":
-                    body_up = stopper.alive
-                    stopper.take_damage(roll(*self.MIGHTY_DIE), battle.log)
-                    if body_up and not stopper.alive and stopper.team != actor.team:
-                        actor.credit_kill(stopper)
-
         trap = battle.ground_at(target.pos)
         if trap and battle.springs(trap, target):
             battle.trigger_trap(target, trap)
@@ -900,3 +932,59 @@ class NonLethal(Action):
         actor.nonlethal_blows = not actor.nonlethal_blows
         battle.log(f"{actor.name} " + ("pulls their blows (non-lethal)." if actor.nonlethal_blows
                                        else "fights to kill again."))
+
+
+# --------------------------------------------------------------------------- #
+# Tail Sweep                                                                   #
+# --------------------------------------------------------------------------- #
+
+class TailSweep(Action):
+    """Lizardfolk Tail Sweep: 2 points, the tail sweeps two adjacent foes -- an unarmed strike
+    and a shove (`Push.shove`, its own roll) on each. With one foe beside you it sweeps that one."""
+    id, name, cost, target, aimed = "tail_sweep", "Tail Sweep", 2, "enemy", True
+    desc = "2 points: an unarmed tail strike and a Push on two adjacent foes."
+
+    @classmethod
+    def applicable(cls, battle, actor):
+        if not actor.char.talent_bonus("tail_sweep"):
+            return False, "Missing 'tail_sweep' talent."
+        return True, ""
+
+    def can(self, battle, actor, target=None):
+        if not self.available(battle, actor) or not _hostile_target(actor, target):
+            return False
+        return battle.units_distance(actor, target) <= 1 and battle.los_between(actor, target)
+
+    def label(self, battle, actor):
+        return "Tail Sweep (2 pts, strike and shove 2 adjacent foes)"
+
+    def highlight_targets(self, battle, actor):
+        return [u for u in battle.units if self.can(battle, actor, u)]
+
+    @staticmethod
+    def tail(actor):
+        """The tail as a weapon: the unarmed die, swung with Strength."""
+        return {"name": "Tail", "damage": actor.unarmed_damage, "crit_mult": 2, "crit_range": 20}
+
+    @staticmethod
+    def second(battle, actor, target):
+        """The other foe the sweep carries into: beside the sweeper, the weakest."""
+        candidates = [u for u in battle.units
+                      if u.alive and u.team != actor.team and u is not target
+                      and not u.hidden_from(actor.team) and battle.units_distance(actor, u) <= 1
+                      and battle.los_between(actor, u)]
+        return min(candidates, key=lambda c: c.hp) if candidates else None
+
+    def execute(self, battle, actor, target=None):
+        if not self.can(battle, actor, target):
+            return
+        actor.ap -= self.cost
+        actor.walking = False
+        swept = [target] + [u for u in (self.second(battle, actor, target),) if u is not None]
+        tail = self.tail(actor)
+        for foe in swept:
+            if foe.alive:
+                _strike(battle, actor, foe, weapon=tail, prefix=f"{actor.name} Tail Sweep -> {foe.name}")
+        for foe in swept:
+            if foe.alive and battle.units_distance(actor, foe) <= 1:
+                Push.shove(battle, actor, foe)

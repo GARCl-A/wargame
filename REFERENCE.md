@@ -226,6 +226,7 @@ Pack items and their weights. Weapons and armor weigh the same stowed as worn.
 | Antidote | 0.2 kg | consumable |
 | Axe | 3 kg | -- |
 | Bear Trap | 3 kg | -- |
+| Bloom Fruit | 0.2 kg | food, consumable |
 | Brigandine | 18 kg | -- |
 | Broadsword | 4 kg | -- |
 | Chainmail | 10 kg | -- |
@@ -364,6 +365,7 @@ Raw goods no recipe makes, and where each comes from (`gartok/sources.py`).
 | 1L Beer | traded: Market |
 | 1kg Coal | gathered: mine |
 | 1sqm Hide | dropped: Wolf |
+| Bloom Fruit | grown: a Treefolk's Bountiful Harvest |
 | Dragon Egg | quest: the Dragon's Lair, under the Mine |
 | Fruit | gathered: lumber_yard |
 | Ink | traded: Library |
@@ -509,6 +511,44 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 1 | Dwarven Forging | your ancestral craft: you learn the recipes to forge the Dwarf Axe, Shield and Armor. | -- | Dwarf |
 | 1 | Trapper | cunning mechanisms: you learn the recipes for the Bear and Alarm traps, and can deploy them. | -- | Kobold |
 | 1 | Aurochs Might | a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks. | -- | Ox |
+| 1 | Thick Hide | +1 AC. | -- | Ox |
+| 1 | Gore Charge | after walking 4+ squares this turn, a melee hit also throws the target 2 squares straight back. | -- | Ox |
+| 1 | Deep Miner | at home under the mountain: the odds of a pack finding your crew while gathering at the Mine are 25% lower. | -- | Dwarf |
+| 1 | Grudge | a dwarf never forgets: +1 to hit anyone who has hurt you this fight. | -- | Dwarf |
+| 1 | Self-Repair | your works mend themselves: heal 1 HP after every fight you survive. | -- | Automaton |
+| 1 | Iron Plating | +1 AC. | -- | Automaton |
+| 2 | Cavalry Charge | your rider strikes with your weight behind the blow: +2 to hit for whoever rides you, on a turn you have moved. | centaur_mount | Centaur |
+| 1 | Lift Rider | 1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, and carry them as you move. | -- | Centaur |
+| 1 | Twilight Sight | elven eyes in the dusk: in the dark you see 6 m as if the ground were lit. | -- | Elf |
+| 1 | Light Step | +1 square of Speed. | -- | Elf |
+| 1 | Blood Frenzy | +2 damage on melee attacks against a target below half its HP. | -- | Gnoll |
+| 1 | Bloodscent | you smell the wounded: you know where every foe below half its HP is within 6 squares, seen or not. | -- | Gnoll |
+| 2 | Arcane Curiosity | +1 square of range with non-melee spells. | gnome_magic_excitement | Gnome |
+| 1 | Underfoot | +2 AC against attackers of Large size or bigger. | -- | Gnome |
+| 1 | Small Appetite | a goblin lives on scraps: you need a meal only every other day. | -- | Goblin |
+| 1 | Under the Whip | +1 to hit while an ally of a higher combat level than yours stands within 6 squares. | -- | Goblin |
+| 1 | Stone's Endurance | once per fight, the first blow that hurts you deals 1d4 + your Constitution modifier less. | -- | Goliath |
+| 1 | Arena Born | +1 to hit in arena bouts. | -- | Goliath |
+| 2 | Sticky Tongue | a Lash that hits also grabs the target and reels it 1 square in. | tongue | Grippli |
+| 1 | Frog Leap | +2 squares on every Jump. | -- | Grippli |
+| 1 | Brave | +2 Mental Defense. | -- | Halfling |
+| 1 | Second Breakfast | recover +1 additional HP for every 8 hours of unbroken rest. | -- | Halfling |
+| 1 | Quartermaster | an orderly camp: +2 on the daily cohesion roll of an overextended group you lead. | -- | Hobgoblin |
+| 1 | Hold the Line | while you Defend, every ally adjacent to you has +1 AC. | -- | Hobgoblin |
+| 1 | Ambush Predator | +2 to hit a foe that has not yet had a turn this fight. | -- | Lizardfolk |
+| 1 | Tail Sweep | 2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push on each. | -- | Lizardfolk |
+| 2 | Polyglot | +2 to progress rolls when studying a foreign language. | cosmopolitan | Human |
+| 1 | Parley | +1 when you Persuade, Bluff or Intimidate in the talk before a fight. | -- | Human |
+| 1 | Eye for Detail | +1 on all Assess and enemy observation checks. | -- | Kenku |
+| 1 | Mimic Voices | +1 on performance rolls when playing on the tavern stage. | -- | Kenku |
+| 2 | Trap Master | plant your traps up to 3 squares away when a fight begins. | kobold_trapper | Kobold |
+| 1 | Trap Salvage | after a won fight, your traps that never sprang go back into your pack. | -- | Kobold |
+| 1 | Savage Attacks | a critical hit rolls one more weapon die. | -- | Orc |
+| 1 | War Cry | +1 to Demoralize checks. | -- | Orc |
+| 1 | Tiny Target | +2 AC against ranged and thrown attacks. | -- | Sprite |
+| 1 | Pixie Dust | 1 point: an adjacent ally takes wing through the end of their next turn. | -- | Sprite |
+| 2 | Bountiful Harvest | you bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it. | fruitful | Treefolk |
+| 1 | Thornskin | whoever hits you in melee takes 1 damage. | -- | Treefolk |
 | 1 | Rending Bite | jaws that tear: roll one extra die on your unarmed attack. | -- | Wolf |
 | 1 | Elder Skeleton | centuries of unlife sharpen the mind and the voice: +4 Intelligence and +4 Charisma. | -- | Skeleton |
 | 1 | Faith Initiate | a vow that outlasted death: you become initiated in faith magic. If already initiated, gain a free spell. | -- | Skeleton |

@@ -290,7 +290,8 @@ dice scale with every racial level (L1+), a **racial talent pick comes only ever
 5 racial levels**: one at 5, 10, 15, 20... (`progression.racial_picks`). Its nodes are **race-gated**
 (e.g., `Tongue` and `Webbed Feet` for Grippli, `Fruitful` for Treefolk, `Cosmopolitan` for Human,
 `Halfling Luck` for Halfling, `Rending Bite` and `Dire Growth` for Wolf, `Aurochs Might` for Ox,
-`Dragon` and `Dragon Breath` for Dragon). A character's race may also be a **composite array**
+`Dragon` and `Dragon Breath` for Dragon); every playable race and the Ox hold at least three of
+their own, one for each pick through racial 15 (the full list is in REFERENCE.md). A character's race may also be a **composite array**
 (e.g. `["Snake", "Dragon"]` for the Snake Dragon, resolved in `data.race_by_name`): attribute
 modifiers are the element-wise average rounded down, the hit die is the average of the component
 HDs rounded down onto `(6, 8, 10, 12)`, size is the average on the 5-step scale rounded up, and the racial talent tree
@@ -596,6 +597,15 @@ and neutral creatures in `gartok/ground.py`, map assembly in
   mounted). Dismounting spends 1 point to step onto a free cell around the mount's body. The AI
   rider waits (Delay) for its mount's turn to be carried, gets off beside a foe when it still has
   the point to strike, or off a mount that cannot move, and does not climb back up with a foe in reach.
+- **Lift Rider** (1 point) = a Centaur with the talent swings an adjacent Small or Medium ally
+  onto its back, standing or fallen, and carries it as it moves (`Mount` from the other side);
+  a rider who is up climbs down with Dismount. The AI centaur lifts a dying ally beside it.
+- **Tail Sweep** (2 points) = a Lizardfolk with the talent strikes two adjacent foes with the
+  tail (the unarmed die, Strength) and then shoves each (`Push`, its own roll). The AI sweeps
+  when the strikes and the shoves beat two plain attacks (`ai._tail_sweep_pays`).
+- **Pixie Dust** (1 point) = a Sprite with the talent lets an adjacent ally fly through the end
+  of that ally's next turn (`PixieFlight`): over pits and deep water, no fall. The AI dusts an
+  ally whose walk to every foe it sees is cut.
 - **Eat Corpse** (1 point) = a Gnoll with the `Corpse Eater` talent feasts on an
   adjacent dead body: satiates hunger for the day and inflicts an immediate AoE
   Demoralize test on all enemy witnesses within line of sight.
@@ -1463,7 +1473,10 @@ abandoned craft doesn't get them back.
   (`Battle.springs` / `Battle.trigger_trap`) — a Bear Trap damages and stops the
   mover, an Alarm Trap stops it and wakes every dormant unit on the board — and
   the trap is removed. The one exception is a web: the spider's own side walks
-  through it.
+  through it. A trap goes on a cell next to the carrier, or up to 3 squares out with the
+  Kobold's `Trap Master` (`Battle.trap_cells`); a squad no person plays plants it on the open
+  cell closest to a foe (`ai.trap_cell`). After a won fight, `Trap Salvage` puts the squad's
+  unsprung bear and alarm traps back in the Kobold's pack.
 
 ### The Medic: quick treatment and the hospital 🟡
 

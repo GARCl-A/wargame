@@ -82,6 +82,12 @@ def _resolve_notices(guild):
     return events
 
 
+def quartermaster(group):
+    """The Hobgoblin Quartermaster's hold on the group they lead, added to its cohesion roll."""
+    leader = group.leader
+    return leader.talent_bonus("quartermaster") if leader in group.members else 0
+
+
 def _roll_groups(guild, d20):
     events = []
     noticed = {guild.group_of(u) for u in guild.roster if u.uid in guild.leaving}
@@ -89,7 +95,7 @@ def _roll_groups(guild, d20):
         if not group.overextension or group.locked or group in noticed:
             continue
         unit = weakest(guild, group)
-        if unit is None or d20() < unit.mental_defense + vocations.cohesion_bonus(guild):
+        if unit is None or d20() < unit.mental_defense + vocations.cohesion_bonus(guild) + quartermaster(group):
             continue
         if guild.free_slots:
             guild.split_group(group, [unit])

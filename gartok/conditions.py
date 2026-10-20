@@ -230,3 +230,21 @@ class Hexed(Condition):
         unit.hp_max += self.hp_lost
         log(f"{unit.name} shakes off the hex.")
         return True
+
+
+class PixieFlight(Condition):
+    """Sprite's Pixie Dust: the unit flies (`Combatant.flies`) through the end of its next turn."""
+    id = "pixie_flight"
+
+    def __init__(self):
+        self.held = False
+
+    def on_turn_start(self, unit, log):
+        self.held = True
+        return False
+
+    def on_turn_end(self, unit, log):
+        if not self.held:
+            return False
+        log(f"{unit.name}'s pixie dust wears off.")
+        return True

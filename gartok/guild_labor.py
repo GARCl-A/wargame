@@ -90,6 +90,8 @@ class LaborMixin:
         the caller to fight, and the haul waits for `bank_haul` on a win."""
         node_id = group.node
         mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
+        if node_id == "mine":
+            mult *= 1 - max((u.talent_bonus("deep_miner") for u in group.members), default=0)
         if gather.ambushed(node_id, order.hours, mult):
             name = world.node(node_id).name
             return ([f"{name}: a pack finds {group.display_name} at work."],

@@ -42,7 +42,7 @@ from .unit_poison import PoisonMixin
 # `__init__` starts with. A new optional field goes here, not into a SAVE_VERSION bump.
 SAVE_DEFAULTS = {
     "recruited_by": None, "poisons": {}, "antidote_cooldown": 0, "level_hp_rolls": [],
-    "crime": 0, "unfed_days": 0, "sick": False, "medicine_attempted_today": False,
+    "crime": 0, "unfed_days": 0, "full_belly": False, "sick": False, "medicine_attempted_today": False,
     "treated": False, "consecutive_rest_hours": 0, "unbroken_rest_hours": 0, "non_lethal_damage": 0,
     "last_daily_luck_day": 0,
     "share_food": True, "combat_xp": 0, "magic_xp": 0, "work_hours": 0, "bio": "", "arena_title": False,
@@ -93,6 +93,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         self.money = 0 if self.race["kind"] == "beast" else purse
         self.crime = 0                                  # rap sheet; the guard tests it at a jurisdiction node (justice.py)
         self.unfed_days = 0                            # consecutive days without a meal
+        self.full_belly = False                        # Small Appetite: yesterday's meal still holds
         self.sick = False                              # food poisoning
         self.medicine_attempted_today = False          # if a medkit treatment was attempted today
         self.treated = False                           # if a medkit treatment succeeded (cures after 8h rest)
@@ -170,6 +171,7 @@ class Unit(HungerMixin, LevelingMixin, EditMixin, DerivationMixin, LoadoutMixin,
         u.alignment = d["alignment"]
         u.crime = d["crime"]
         u.unfed_days = d["unfed_days"]
+        u.full_belly = d["full_belly"]
         u.sick = d["sick"]
         u.medicine_attempted_today = d["medicine_attempted_today"]
         u.treated = d["treated"]

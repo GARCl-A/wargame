@@ -74,6 +74,27 @@ exactly one consumer that reads it back:
     unarmed_cleave    actions.weapon_actions.Cleave    --
     flies             Combatant.flies                  --
     fly_speed         Unit._derive_speed               --
+    grudge / ambush_predator / under_the_whip / arena_born / cavalry_charge
+                      Combatant.racial_hit_mods         --
+    underfoot / tiny_target  Combatant.ac_vs            --
+    hold_the_line     actions.base._held_line          --
+    blood_frenzy / thornskin / stone_endurance / gore_charge
+                      actions.base._resolve_hit        --
+    savage_attacks    Combatant.damage_roll            --
+    twilight_sight    vision.dark_range                --
+    bloodscent        vision.can_see_unit              --
+    sticky_tongue     actions.AttackTongue             --
+    jump_reach        actions.Jump                     --
+    tail_sweep        actions.TailSweep                --
+    lift_rider        actions.LiftRider                --
+    pixie_dust        actions.PixieDust                --
+    trap_range        Battle.can_plant_trap            --
+    trap_salvage      campaign.absorb_battle           --
+    deep_miner        Guild.gather_shift               --
+    quartermaster     cohesion._roll_groups            --
+    parley            dialogue.Encounter.mod           --
+    small_appetite    Unit.consume_daily_food          --
+    bountiful_harvest guild_upkeep / rest (Bloom Fruit) --
 
 Adding a node that reuses a channel = editing only this file. A node that needs
 a brand-new channel adds one consumer call site -- no plugin bus, same as the
@@ -448,6 +469,127 @@ _LIST = [
            "a gore that lifts a man: +5 squares of speed and +3 damage on melee attacks.",
            race="Ox", effects=(Effect("speed", 5), Effect("melee_damage", 3)),
            icon="action/crush"),
+    Talent("thick_hide", "racial", 1, "Thick Hide", "+1 AC.", race="Ox",
+           effects=(Effect("ac", 1),), icon="body/surrounded-shield"),
+    Talent("gore_charge", "racial", 1, "Gore Charge",
+           "after walking 4+ squares this turn, a melee hit also throws the target 2 squares "
+           "straight back.", race="Ox",
+           effects=(Effect("gore_charge", 2),), icon="action/back-forth"),
+    Talent("deep_miner", "racial", 1, "Deep Miner",
+           "at home under the mountain: the odds of a pack finding your crew while gathering "
+           "at the Mine are 25% lower.", race="Dwarf",
+           effects=(Effect("deep_miner", 0.25),), icon="action/mining"),
+    Talent("grudge", "racial", 1, "Grudge",
+           "a dwarf never forgets: +1 to hit anyone who has hurt you this fight.", race="Dwarf",
+           effects=(Effect("grudge", 1),), icon="head/dwarf-face"),
+    Talent("self_repair", "racial", 1, "Self-Repair",
+           "your works mend themselves: heal 1 HP after every fight you survive.", race="Automaton",
+           effects=(Effect("post_combat_heal", 1),), icon="gui/auto-repair"),
+    Talent("iron_plating", "racial", 1, "Iron Plating", "+1 AC.", race="Automaton",
+           effects=(Effect("ac", 1),), icon="head/metal-golem-head"),
+    Talent("cavalry_charge", "racial", 2, "Cavalry Charge",
+           "your rider strikes with your weight behind the blow: +2 to hit for whoever rides "
+           "you, on a turn you have moved.", requires="centaur_mount", race="Centaur",
+           effects=(Effect("cavalry_charge", 2),), icon="body/mounted-knight"),
+    Talent("lift_rider", "racial", 1, "Lift Rider",
+           "1 point: swing an adjacent Small or Medium ally onto your back, awake or fallen, "
+           "and carry them as you move.", race="Centaur",
+           effects=(Effect("lift_rider", 1),), icon="body/lift"),
+    Talent("twilight_sight", "racial", 1, "Twilight Sight",
+           "elven eyes in the dusk: in the dark you see 6 m as if the ground were lit.", race="Elf",
+           effects=(Effect("twilight_sight", 4),), icon="head/elf-ear"),
+    Talent("light_step", "racial", 1, "Light Step", "+1 square of Speed.", race="Elf",
+           effects=(Effect("speed", 1),), icon="action/sprint"),
+    Talent("blood_frenzy", "racial", 1, "Blood Frenzy",
+           "+2 damage on melee attacks against a target below half its HP.", race="Gnoll",
+           effects=(Effect("blood_frenzy", 2),), icon="body/enrage"),
+    Talent("bloodscent", "racial", 1, "Bloodscent",
+           "you smell the wounded: you know where every foe below half its HP is within "
+           "6 squares, seen or not.", race="Gnoll",
+           effects=(Effect("bloodscent", 6),), icon="head/nose-side"),
+    Talent("arcane_curiosity", "racial", 2, "Arcane Curiosity",
+           "+1 square of range with non-melee spells.", requires="gnome_magic_excitement",
+           race="Gnome", effects=(Effect("spell_range", 1),), icon="hat/pointy-hat"),
+    Talent("underfoot", "racial", 1, "Underfoot",
+           "+2 AC against attackers of Large size or bigger.", race="Gnome",
+           effects=(Effect("underfoot", 2),), icon="action/dodging"),
+    Talent("small_appetite", "racial", 1, "Small Appetite",
+           "a goblin lives on scraps: you need a meal only every other day.", race="Goblin",
+           effects=(Effect("small_appetite", 1),), icon="head/goblin-head"),
+    Talent("under_the_whip", "racial", 1, "Under the Whip",
+           "+1 to hit while an ally of a higher combat level than yours stands within "
+           "6 squares.", race="Goblin",
+           effects=(Effect("under_the_whip", 1),), icon="body/slavery-whip"),
+    Talent("stone_endurance", "racial", 1, "Stone's Endurance",
+           "once per fight, the first blow that hurts you deals 1d4 + your Constitution "
+           "modifier less.", race="Goliath",
+           effects=(Effect("stone_endurance", 4),), icon="body/stone-bust"),
+    Talent("arena_born", "racial", 1, "Arena Born",
+           "+1 to hit in arena bouts.", race="Goliath",
+           effects=(Effect("arena_born", 1),), icon="body/medallist"),
+    Talent("sticky_tongue", "racial", 2, "Sticky Tongue",
+           "a Lash that hits also grabs the target and reels it 1 square in.",
+           requires="tongue", race="Grippli",
+           effects=(Effect("sticky_tongue", 1),), icon="action/pull"),
+    Talent("frog_leap", "racial", 1, "Frog Leap",
+           "+2 squares on every Jump.", race="Grippli",
+           effects=(Effect("jump_reach", 2),), icon="action/jump-across"),
+    Talent("brave", "racial", 1, "Brave", "+2 Mental Defense.", race="Halfling",
+           effects=(Effect("mental_defense", 2),), icon="body/ninja-heroic-stance"),
+    Talent("second_breakfast", "racial", 1, "Second Breakfast",
+           "recover +1 additional HP for every 8 hours of unbroken rest.", race="Halfling",
+           effects=(Effect("rest_heal_bonus", 1),), icon="body/cook"),
+    Talent("quartermaster", "racial", 1, "Quartermaster",
+           "an orderly camp: +2 on the daily cohesion roll of an overextended group you lead.",
+           race="Hobgoblin",
+           effects=(Effect("quartermaster", 2),), icon="body/guards"),
+    Talent("hold_the_line", "racial", 1, "Hold the Line",
+           "while you Defend, every ally adjacent to you has +1 AC.", race="Hobgoblin",
+           effects=(Effect("hold_the_line", 1),), icon="body/pikeman"),
+    Talent("ambush_predator", "racial", 1, "Ambush Predator",
+           "+2 to hit a foe that has not yet had a turn this fight.", race="Lizardfolk",
+           effects=(Effect("ambush_predator", 2),), icon="head/lizardman"),
+    Talent("tail_sweep", "racial", 1, "Tail Sweep",
+           "2 points: your tail sweeps two adjacent foes -- an unarmed strike and a Push "
+           "on each.", race="Lizardfolk",
+           effects=(Effect("tail_sweep", 1),), icon="action/slalom"),
+    Talent("polyglot", "racial", 2, "Polyglot",
+           "+2 to progress rolls when studying a foreign language.", requires="cosmopolitan",
+           race="Human", effects=(Effect("language_study", 2),), icon="action/conversation"),
+    Talent("parley", "racial", 1, "Parley",
+           "+1 when you Persuade, Bluff or Intimidate in the talk before a fight.", race="Human",
+           effects=(Effect("parley", 1),), icon="action/discussion"),
+    Talent("eye_for_detail", "racial", 1, "Eye for Detail",
+           "+1 on all Assess and enemy observation checks.", race="Kenku",
+           effects=(Effect("assess_bonus", 1),), icon="head/kenku-head"),
+    Talent("mimic_voices", "racial", 1, "Mimic Voices",
+           "+1 on performance rolls when playing on the tavern stage.", race="Kenku",
+           effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
+    Talent("trap_master", "racial", 2, "Trap Master",
+           "plant your traps up to 3 squares away when a fight begins.",
+           requires="kobold_trapper", race="Kobold",
+           effects=(Effect("trap_range", 3),), icon="body/sinking-trap"),
+    Talent("trap_salvage", "racial", 1, "Trap Salvage",
+           "after a won fight, your traps that never sprang go back into your pack.",
+           race="Kobold", effects=(Effect("trap_salvage", 1),), icon="action/snatch"),
+    Talent("savage_attacks", "racial", 1, "Savage Attacks",
+           "a critical hit rolls one more weapon die.", race="Orc",
+           effects=(Effect("savage_attacks", 1),), icon="head/orc-head"),
+    Talent("war_cry", "racial", 1, "War Cry", "+1 to Demoralize checks.", race="Orc",
+           effects=(Effect("demoralize_bonus", 1),), icon="action/screaming"),
+    Talent("tiny_target", "racial", 1, "Tiny Target",
+           "+2 AC against ranged and thrown attacks.", race="Sprite",
+           effects=(Effect("tiny_target", 2),), icon="action/evasion"),
+    Talent("pixie_dust", "racial", 1, "Pixie Dust",
+           "1 point: an adjacent ally takes wing through the end of their next turn.",
+           race="Sprite", effects=(Effect("pixie_dust", 1),), icon="action/flying-fox"),
+    Talent("bountiful_harvest", "racial", 2, "Bountiful Harvest",
+           "you bloom twice at dawn, and your fruit heals 1d4 HP to whoever eats it.",
+           requires="fruitful", race="Treefolk",
+           effects=(Effect("bountiful_harvest", 1),), icon="head/sprout"),
+    Talent("thornskin", "racial", 1, "Thornskin",
+           "whoever hits you in melee takes 1 damage.", race="Treefolk",
+           effects=(Effect("thornskin", 1),), icon="body/spiked-wall"),
     Talent("rending_bite", "racial", 1, "Rending Bite",
            "jaws that tear: roll one extra die on your unarmed attack.", race="Wolf",
            effects=(Effect("unarmed_dice", 1),), icon="action/eating"),
@@ -505,7 +647,7 @@ _LIST = [
            "your claws sweep in wide lethal arcs: you can use Cleave while unarmed, "
            "striking two adjacent foes with your natural weapon.",
            requires="dragon", race="Dragon",
-           effects=(Effect("unarmed_cleave", 1),), icon="action/deadly-strike"),
+           effects=(Effect("unarmed_cleave", 1),), icon="body/deadly-strike"),
     Talent("draconic_wings", "racial", 3, "Draconic Wings",
            "massive leathery wings carry you aloft: you gain flight (move freely across "
            "3D terrain and pits, immune to fall damage) and your speed increases to 12 squares.",

@@ -136,6 +136,18 @@ def _death_note(battle, combatant):
     return {"how": how, "round": battle.round_no, "foes": foes, "trail": trail}
 
 
+def _salvage_traps(battle, survivors):
+    """Kobold Trap Salvage: the squad's bear and alarm traps that never sprang go back into
+    the pack of a survivor who holds the talent."""
+    salvager = next((m for m in survivors if m.talent_bonus("trap_salvage")), None)
+    if salvager is None:
+        return
+    for obj in battle.ground:
+        if (obj.is_trap and obj.trap_owner_team == "player"
+                and obj.trap_type in ("bear trap", "alarm trap")):
+            salvager.give_to_pack(obj.trap_type.title())
+
+
 def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     """Fold `battle`'s result into `guild` (mutates it) and return a `BattleOutcome`.
 
@@ -189,6 +201,7 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
     won = battle.winner == "player"
     if won:
         guild.record_victory()
+        _salvage_traps(battle, survivors)
 
     player_kos = sum(c.kills for c in battle.player_units)
     outcome = BattleOutcome(won, survivors, fallen, xp_awards=xp_awards,

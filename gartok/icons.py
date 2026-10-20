@@ -381,6 +381,7 @@ _GLYPHS = {
     "repel_strike": _repel_strike, "maiming_strike": _maiming_strike, "armor_pierce": _armor_pierce,
     "power_shot": _power_shot, "extreme_shot": _extreme_shot, "hook_shield": _hook_shield,
     "javelin_charge": _javelin_charge, "parry_strike": _parry_strike,
+    "tail_sweep": _cleave, "lift_rider": _hand, "pixie_dust": _jump,
 }
 
 NAMES = tuple(_GLYPHS)

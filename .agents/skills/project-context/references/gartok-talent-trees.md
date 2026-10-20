@@ -230,3 +230,38 @@ Decisions not to redo:
   a tree change shifts seeded fights: the lair heist test had its seeds moved.
 - The sim's `TALENT_PLAN` lists the new work talents, but 30-day sim members reach
   at most 2 work picks, so the economy report does not see them yet (backlog item).
+
+## The racial track's second pass (2026-10-20)
+
+Every playable race and the Ox now hold 3+ racial nodes of their own (one per pick
+through racial 15); 38 new nodes, `tests/test_racial_track.py`. The author vetted the
+list over several rounds; the rules that came out of it, for the next pass:
+
+- **No immunities** ("can't be pushed / grabbed / demoralized") -- an anti-mechanic.
+- **No extra AP or extra actions.** Tail Sweep (2 AP for 2 strikes + 2 shoves) was the
+  author's own design and stays; measure it in Phase 2.
+- **Check the cost exists before discounting it**: leaving melee is just walking, traps
+  are planted at setup for 0 AP, daylight sight has no radius (only LOS). Trap Master
+  became range, Twilight Sight a short darkvision.
+- **No conjured loot or loot multipliers** (coins after fights, more hides): Skinner +
+  Organic Harvester already stack.
+- **A talent must matter across the world**, not at one node (Dragon Kin was cut);
+  repeatable places (Mine, arena) are fine.
+- Watch magnitude: Bulwark is +1 AC, so a flat +1 AC is the racial ceiling too (+2 only
+  against one kind of attacker: Underfoot, Tiny Target).
+
+Decisions not to redo:
+
+- **To-hit racial mods live in `Combatant.racial_hit_mods`**, called from `attack_mods`
+  when a battle is passed (every attack call site passes it now), so `ai._hit_odds` sees
+  them. AC ones go in `ac_vs(..., ranged=)` (Underfoot, Tiny Target) or beside Phalanx
+  in `_resolve_hit` (`_held_line`); damage ones in `_resolve_hit` / `damage_roll`.
+- **Push is split**: `Push.shove` (the roll, no AP) and `Push.throw` (carry along a path:
+  traps, fire, falls, kill credit). Gore Charge, Tail Sweep and Sticky Tongue reuse them.
+- **"Moved this turn" is `len(path) - 1`**, not `moved` (that survives an earlier walk):
+  Gore Charge's run-up and Cavalry Charge both read it. Gore's "straight line" was dropped.
+- **Bountiful Harvest made a new item, Bloom Fruit** (heals 1d4 when eaten,
+  `Unit._digest`), so a bought Fruit never heals. Small Appetite is a saved flag,
+  `Unit.full_belly`.
+- **A squad no person plays now plants its traps** (`ai.trap_cell`, closest to a foe)
+  instead of skipping them.

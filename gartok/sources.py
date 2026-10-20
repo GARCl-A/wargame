@@ -14,8 +14,8 @@ from . import data, gather, items
 
 Source = namedtuple("Source", "kind where")
 
-GATHERED, DROPPED, HUNTED, FORAGED, QUEST, TRADED, SPOILED = (
-    "gathered", "dropped", "hunted", "foraged", "quest", "traded", "spoiled")
+GATHERED, DROPPED, HUNTED, FORAGED, QUEST, TRADED, SPOILED, GROWN = (
+    "gathered", "dropped", "hunted", "foraged", "quest", "traded", "spoiled", "grown")
 
 RAW_TYPES = (items.ItemType.MATERIAL, items.ItemType.FOOD, items.ItemType.GEM)
 
@@ -25,6 +25,7 @@ DECLARED = {
     "Legendary Horn": (Source(QUEST, "the tanner's last job"),),
     "Dragon Egg": (Source(QUEST, "the Dragon's Lair, under the Mine"),),
     "Rotten Food": (Source(SPOILED, "food left to rot"),),
+    "Bloom Fruit": (Source(GROWN, "a Treefolk's Bountiful Harvest"),),
     # the shops supply these; no node produces them until the production chain exists.
     # Farm and Smith are the shops they will move to; the Market sells them until then
     "Potato": (Source(TRADED, "Farm"),),

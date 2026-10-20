@@ -326,6 +326,7 @@ _register(ItemDef(id="dwarf_shield", name="Dwarf Shield", type=ItemType.SHIELD, 
 # Food
 _register(ItemDef(id="meat", name="Meat", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=5, food=True, lifespan=2))
 _register(ItemDef(id="fruit", name="Fruit", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=0.2, price=4, food=True, lifespan=1))
+_register(ItemDef(id="bloom_fruit", name="Bloom Fruit", type=ItemType.FOOD, rarity=ItemRarity.UNCOMMON, weight=0.2, price=6, food=True, lifespan=1))
 _register(ItemDef(id="potato", name="Potato", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=3, food=True, lifespan=7))
 _register(ItemDef(id="1l_beer", name="1L Beer", type=ItemType.FOOD, rarity=ItemRarity.COMMON, weight=1.0, price=4, food=True, lifespan=30), "beer")
 _register(ItemDef(id="salt", name="Salt", type=ItemType.MATERIAL, rarity=ItemRarity.COMMON, weight=0.5, price=3))

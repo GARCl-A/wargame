@@ -89,6 +89,7 @@ def unit_to_dict(u):
         "alignment": u.alignment,
         "crime": u.crime,                        # rap sheet the guard tests at a jurisdiction node
         "unfed_days": u.unfed_days,              # hunger counter (0 = fed today)
+        "full_belly": u.full_belly,
         "sick": u.sick,                          # food poisoning
         "medicine_attempted_today": u.medicine_attempted_today,
         "treated": u.treated,
