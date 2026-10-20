@@ -55,9 +55,9 @@ def test_a_day_refills_every_market():
 def test_spending_at_the_market_fills_its_cash():
     u = _shopper(500)
     s = _screen(u, cash=0)
-    s.selected = [("stock", "Dagger")]
-    s._buy(u, ["Dagger"])
-    assert s.guild.shop(NODE.id).cash == economy.buy_price("Dagger", s.deal)
+    s.selected = [("stock", "Rope")]
+    s._buy(u, ["Rope"])
+    assert s.guild.shop(NODE.id).cash == economy.buy_price("Rope", s.deal)
 
 
 def test_selling_drains_the_market_cash_by_what_it_paid():

@@ -192,6 +192,12 @@ SHELVES = {
     "carpenter": {
         "Shortbow": (2, 0.3), "Light Crossbow": (2, 0.3), "Quarterstaff": (4, 1),
     },
+    # the friendly Ogre's fortress (wildfire.FORTRESS_ID): the only shelf of Large weapons
+    "ogre_fortress": {
+        "Large Club": (3, 0.5), "Large Dagger": (3, 0.5), "Large Hatchet": (3, 0.5),
+        "Large Shortspear": (2, 0.3), "Large Axe": (2, 0.3), "Large Pick": (2, 0.3),
+        "Large Hammer": (2, 0.3), "Large Broadsword": (1, 0.15), "Large Rapier": (1, 0.1),
+    },
 }
 NODE_SHELVES = {node_id: (node_id,) for node_id in SHELVES}
 

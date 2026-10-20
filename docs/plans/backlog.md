@@ -18,22 +18,50 @@ Parts:
 - **Starting items waiting on another system** — not a question: a list of items whose
   system does not exist yet.
 
-The *Suggested order* below comes first.
+The *Pre-playtest plan* below comes first.
 
 ---
 
-# Suggested order (updated 2026-10-19)
+# Pre-playtest plan (agreed 2026-10-20)
 
-Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Balance and
-sim work is ahead of the content it balances, so the order favours content verticals and
-the seams they need.
+Goal: a "stable" build for the author's playtest and one with friends. Rule of the order:
+what changes the numbers first, then what measures them, last what describes the final
+screens. Each item's detail stays in its own entry below.
 
-1. **Production chain between groups** (*Large*): Carpenter node opened (connected to City and Lumber Yard, Treefolk keeper Rowan, crafting station for bows, crossbows, spear, club, torch). Next: Coal for Smith, and sim crafter policy.
-2. **The racial track** (*Large*): combat and work both have 30 talents (6 roots x 5, done 2026-10-20). Next: 3+ racial nodes per race.
-3. **Cooking and temporary meal buffs**: cooking dishes with 24h stat buffs; only the most recent meal buff is active.
-4. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
-5. **Magic Arc follow-ups** (*Ready to do -> Medium*): `Scroll of Invisibility` library quest, Blood's fourth mission (robbed dragon strikes back), and encounter tuning after campaign playtests.
-6. **Archaeology at Ancient Ruins** (postponed: awaiting design of an innovative and fun excavation system).
+**Phase 1 — content that moves balance** (measuring AI or stats before it is rework)
+1. **The racial track is thin** (*Large*): 3+ racial nodes per race.
+2. **Gold spent on equipment per level** (*Playtest notes 2026-10-12*): kit by level in `encounters.py`
+   and the Battlefield generators.
+3. ~~The Ogre's fortress~~ done 2026-10-20: the friendly fortress is the only shelf of Large weapons.
+
+**Phase 2 — AI** (one `scripts/combat_pairs.py` run before the phase and one after, not per item)
+4. **Teach the AI the newer actions** (*Large*): the four left, plus the racial actions from item 1.
+5. **Combat AI benchmarking against player performance** (*Large*): retreat and CTF thresholds.
+
+**Phase 3 — measure and economy** (one `scripts/economy_report.py` run at the end)
+6. **The economy report does not measure the work talents** (*Medium*).
+7. **Gathering: loose ends** (*Large*): (1) calibration and (2) the shift picker's worth, which reuses
+   item 6's pricing; Mine art stays under *Art*.
+8. **Finite stock and a target per item** (*Large*): confirm Paper, Ink, Lumber and Jerky.
+9. **Which stats matter:** measure with `balance_sim.py` (the magic-arc gate is past); tune only what
+   is glaring, the playtest decides the rest.
+
+**Phase 4 — combat presentation** (same files: `battle_draw.py`, `lighting.py`)
+10. **Darkness: fog of war.**
+11. **Presentation (agreed directions):** the log on the board, friend / foe ring, bigger vendor portrait.
+12. **Sound:** with item 11, the same events (hit, crit, fall) fire the number and the sound; coins,
+    level up and UI clicks in the same pass.
+13. **A floor per place:** step 1 only (the prototype images for the author to judge).
+
+**Phase 5 — tutorials** (last: they describe the final screens)
+14. **Tutorials (review all of them)**, with the two *Discoverability* items that teach at the moment
+    of the decision (the Medic for a wounded group, how the Dictionary is made).
+15. **Big screen files:** split `guild_screen.py` when phase 5 touches it; the two editors stay out.
+
+**After the playtest** (the playtest answers them, or they are content past it): weapon actions
+tuning, *Tune the specialised shops*, Magic Arc tuning, production chain (Coal for the Smith, sim
+crafter policy), cooking with meal buffs, the sim planner (`economy_offers.py` -> policy), the
+other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 
 ---
@@ -82,9 +110,6 @@ its functions are tabs inside.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there.
   Decided 2026-10-12 & 2026-10-19: postponed to design an innovative and fun excavation system with tools (Shovel/Pick), multi-step iterations, artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
-- **The Ogre's fortress after the Wildfire.** Convinced, it stays as a friendly node with the Ogre as its
-  `Vendor` and **no function** (author 2026-10-17: it stays so; trade with him later, once richer trade
-  subsystems exist).
 
 **Balance question**
 - **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
@@ -93,8 +118,8 @@ its functions are tabs inside.
 
 ## Playtest notes 2026-10-18 (Claude's 30-day run from a new game)
 
-**Not the author's playtest.** This is a run Claude played through a headless driver; the playtest in
-*Suggested order* item 2 (after the magic arc) is still the author's own and still to do. A fresh Warband
+**Not the author's playtest.** This is a run Claude played through a headless driver; the author's own
+playtests are logged below it. A fresh Warband
 guild played from the main menu to day 30 through the real UI (real clicks; some fights left to the AI). End state: 4 members, no deaths, $66 (started $89), 1 reputation,
 two members sick. Screenshots and the full write-up: the "GARTOK em 30 Dias" artifact. Design questions
 raised by the same run are under *Needs more information -> Playtest 2026-10-18*.
@@ -106,7 +131,6 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
   much shorter, since each stays one `?` click away.
 
 **Discoverability**
-- Nothing suggests a light source before a night hunt (a Torch is $2 and decides the fight).
 - Nothing points a wounded group to the Medic.
 - Ledger Hold is reachable before the Bankers hand over the chest, so the first visit is a wasted, risky
   trip. **Decided 2026-10-18:** keep as old-school exploration (`ledger_screen.py` shows a narrative gatehouse
@@ -115,15 +139,12 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
   one is made (presumably the WRITE tab).
 - Direction 2026-10-18: teach at the moment of the decision (one line where the choice is made) rather
   than with a card earlier.
-- The work level 2 opening (level 1 at the Yard, buy Axes, level 2: a second hit die) is the author's
-  own first move every run, and nothing in the game shows it. Decided 2026-10-18: it becomes a chain in
-  the guild objectives (work level 1 -> buy Axes -> work level 2), not a card.
 
 **Darkness: fog of war (direction agreed 2026-10-18)**
 - Three states per cell: never seen (black), seen before but out of light now (terrain dimmed, no units),
   visible. A first visit starts black and the torch reveals it; a known place (arena, city, the Claim)
-  starts in the second state. Pairs with *heard* adjacent foes (attackable with a penalty) and a way for
-  a contact-less fight to end, both under *Needs more information*.
+  starts in the second state. *Heard* adjacent foes (`vision.py`) and the AI's search when nobody is in
+  sight are built; what is left is the three-state drawing and the per-cell memory of what was seen.
 
 **Sound**
 - The author dropped four Kenney packs in `scratch/audios/` (impact, interface, RPG, UI; about 330 files,

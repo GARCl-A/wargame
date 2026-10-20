@@ -160,7 +160,9 @@ def test_talking_the_ogre_round_ends_the_errand_with_a_friendly_fortress():
     assert ok and m.state == "done" and "nature_wildfire" in guild.deeds_done
     assert guild.reputation["nature_coven"] == 1
     assert a.count_of(wildfire.REWARD) == 1 and wildfire.REWARD in msg
-    assert state.fortress == "friendly" and world.node(wildfire.FORTRESS_ID).functions == ()
+    fortress = world.node(wildfire.FORTRESS_ID)
+    assert state.fortress == "friendly" and fortress.functions == ("shop",)
+    assert world.vendor(fortress.id, "shop").race == "Ogre" and fortress.language == "Jotun"
     assert not world.exists(wildfire.GREAT_ID)
     assert factions.DEEDS["nature_wildfire"].faction == "nature_coven"
     _days(guild, wildfire.DAYS)
@@ -359,3 +361,49 @@ def test_a_cleared_camp_opens_no_fight():
     app._after_activity = lambda: calls.append("back")
     app._enter_wildfire_fight(guild.groups[0], world.node(f.id))
     assert calls == ["back"] and app._wildfire_node is None
+
+
+# --- the friendly fortress: the only shelf of Large weapons ------------------------- #
+
+def test_the_friendly_ogre_sells_the_large_forge_weapons_and_restocks_them():
+    from gartok import economy, items
+    from gartok.market_screen import MarketScreen
+
+    guild, (a, b), _m, state = _started()
+    wildfire.talk(guild, state.great, a, _FixedRNG(20))
+    wildfire.talk(guild, state.great, b, _FixedRNG(20))
+    shelf = economy.targets_of(wildfire.FORTRESS_ID)
+    assert shelf and all(items.weapon_size(n) == "Large" for n in shelf)
+    assert {n.removeprefix("Large ") for n in shelf} <= set(economy.SHELVES["smith"])
+    assert not any(n.startswith("Large ") for n in economy.MARKET_STOCK)
+
+    shop = guild.shop(wildfire.FORTRESS_ID)
+    shop.stock["Large Axe"] = 0
+    for _ in range(10):
+        guild.pass_time(24)
+    assert shop.stock["Large Axe"] > 0
+
+    a.give_to_pack(items.COIN_ITEM, 500)
+    s = MarketScreen(None, guild, [a], world.node(wildfire.FORTRESS_ID), lambda: None)
+    rows = s._stock_data()["rows"]
+    assert s.weapon_size == "Large" and all(r["name"].startswith("Large ") for r in rows)
+    assert all(not r["base_name"].startswith("Large ") for r in rows)
+    s._set_weapon_size("Axe", "Medium")
+    assert s._active_stock_name("Axe") == "Axe" and s._stock_of("Axe") == 0
+
+
+def test_a_town_shop_has_no_large_weapon_until_a_player_sells_one():
+    from gartok import items
+    from gartok.market_screen import MarketScreen
+
+    guild, (a, _b) = _guild(node="smith")
+    a.give_to_pack(items.COIN_ITEM, 500)
+    s = MarketScreen(None, guild, [a], world.node("smith"), lambda: None)
+    assert s.weapon_size == "Medium"
+    s._set_weapon_size("Axe", "Large")
+    assert s._active_stock_name("Axe") == "Large Axe" and s._stock_of("Large Axe") == 0
+
+    guild.shop("smith").add("Large Axe", 1)
+    names = next(n for _l, k, n in s.get_categories() if k == "weapons")
+    assert "Large Axe" not in names and names.count("Axe") == 1
+    assert s._stock_of("Large Axe") == 1

@@ -64,7 +64,8 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
                                       getattr(node, "alignment", None),
                                       leader=group.leader if group else None)
         self.tab = self.get_categories()[0][1]     # "weapons"
-        self.weapon_size = "Medium"
+        self.weapon_size = "Large" if any(items.weapon_size(n) == "Large"
+                                          for n in economy.targets_of(self._node_id())) else "Medium"
         self._weapon_sizes = {}              # base_name -> "Medium" | "Large"
         self.size_hits = []                  # [(rect, base_name, size)]
         self.header_size_hits = []           # [(rect, size)]
@@ -139,7 +140,11 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
 
     def get_categories(self):
         shop = self._shop()
-        return economy.market_categories(self._node_id(), shop.strays() if shop else ())
+        cats = economy.market_categories(self._node_id(), shop.strays() if shop else ())
+
+        def base_names(names):     # a weapon row is its Medium name; the size toggle picks the Large one
+            return list(dict.fromkeys(n.removeprefix("Large ") for n in names))
+        return [(lbl, key, base_names(names) if key == "weapons" else names) for lbl, key, names in cats]
 
     # ------------------------------------------------------------------ #
     def _ui_fonts(self):
@@ -332,8 +337,11 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
 
     def _stock_of(self, name):
         """Units of `name` left to buy, or None if the shop has no count -- also None with
-        no `guild` (a few tests build a bare screen with no campaign behind it)."""
+        no `guild` (a few tests build a bare screen with no campaign behind it). A weapon the
+        shelf does not keep is 0: the size toggle can name one."""
         shop = self._shop()
+        if shop and name not in shop.stock and items.is_weapon(name):
+            return 0
         return economy.stock_of(shop.stock, name) if shop else None
 
     def _cash(self):

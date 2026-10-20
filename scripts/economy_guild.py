@@ -1011,7 +1011,8 @@ class MarketVisit:
 
     def stand_at(self, name):
         """Walk to the shop that sells `name`, unless the one we are at has it."""
-        if self.node is not None and self._screen._stock_of(name) is not None:
+        shop = self._screen._shop() if self.node is not None else None
+        if shop is not None and name in shop.stock:
             return
         node_id = economy.shop_of(name)
         if node_id and (self.node is None or node_id != self.node.id):

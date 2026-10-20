@@ -1118,7 +1118,8 @@ must be reloaded between shots.
 
 - **Weapon sizes:** Base weapons are **Medium**. **Large** variants have double
   weight (`weight × 2`) and deal **+1 damage step** (`1d4 -> 1d6 -> 1d8 -> 1d10 -> 1d12 -> 2d8`).
-  **Huge** variants weigh `× 4`, cost `× 4` and step the die **twice**. Neither is sold.
+  **Huge** variants weigh `× 4`, cost `× 4` and step the die **twice**. Large ones are sold only at the friendly **Ogre's Fortress** (the
+  Large forge weapons, finite stock); a town shop holds one only if a player sold it there. Huge is never sold.
 - **Wielding requirements:** a weapon above Medium needs a body that big (a Large
   Centaur holds a Large weapon). **Giant's Grip** (a racial talent of the Goliath and
   the Ogre) lifts that one size: a Goliath holds a Large weapon, an Ogre a Huge one.
@@ -1928,7 +1929,8 @@ The Wilds and the foci an hour off the Great Focus.
   Giant's Grip and Mighty Shove -- and **5 Goblins and Hobgoblins** at level **6**, whatever the squad's level). The fight is
   won when the Ogre is down. Either way the errand is **done**: +1 reputation with the Nature Coven and
   a **Scroll of Water Jet** to the signer. Talked round, he builds it right: **The Ogre's Fortress**
-  stays as a friendly node with nothing to offer yet. The small foci still burning keep their clock.
+  stays as a friendly node and **Grumbold**, its Ogre chieftain, sells the Large forge weapons there
+  (Jotun, Chaotic Neutral). The small foci still burning keep their clock.
 - **Day 14**: every focus still burning is lost. With the Ogre unbeaten the errand **fails** and the
   fortress stands **hostile** for good: more ambushes on a Wilds hunt (above), and **STORM THE
   FORTRESS** there (the finished walls with one gate, **7** escorts at level 6) takes it down.
