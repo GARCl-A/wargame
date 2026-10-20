@@ -364,6 +364,13 @@ class LoadoutMixin(CoinPurse):
         """The progress one batch of `recipe` takes."""
         return items.recipe_goal(items.get_recipe(recipe) or items.CRAFTING_RECIPES.get(recipe))
 
+    def craft_bonus(self, station=None):
+        """What the talents add to a progress roll at `station` (none: the station-free part)."""
+        bonus = self.talent_bonus("craft_bonus") + self.craft_bonuses.get(station, 0)
+        if station == items.CraftingStation.CARPENTER:
+            bonus += self.talent_bonus("woodcarver_bonus")
+        return bonus
+
     def progress_crafting(self):
         """Roll 1d20 + INT to advance crafting. Returns (progress_made, is_done)."""
         if not self.crafting_target:
@@ -371,8 +378,7 @@ class LoadoutMixin(CoinPurse):
         target_val = self.crafting_goal(self.crafting_target)
         recipe_data = items.get_recipe(self.crafting_target) or items.CRAFTING_RECIPES[self.crafting_target]
         station = recipe_data.station
-        bonus = self.talent_bonus("craft_bonus") + self.craft_bonuses.get(station, 0)
-        prog = roll(1, 20) + self.mod_intelligence + bonus
+        prog = roll(1, 20) + self.mod_intelligence + self.craft_bonus(station)
         prog = max(1, prog)
         self.crafting_progress += prog
         

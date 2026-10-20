@@ -20,16 +20,25 @@ def carry_thresholds(score, size, ability):
 class DerivationMixin:
 
     def _carry_relief(self):
-        """Kg the Carrier talent adds to the stagger threshold: up to the talent's
-        `carry_buffer`, but no more than the real weight of the pack cargo that is
-        neither a weapon nor a consumable -- it is headroom for hauling gear, not
-        for food or spare weapons. No such cargo -> no relief."""
-        buf = self.talent_bonus("carry_buffer")
-        if not buf:
+        """Kg the hauling talents add to the stagger threshold, never more than the real
+        weight of the pack cargo each one covers: Carrier's `carry_buffer` covers what is
+        neither a weapon nor a consumable (gear, not food or spare weapons), Heavy Haul's
+        `haul_buffer` what is not equipment (no weapon, armor, shield or artifact). No
+        such cargo -> no relief."""
+        gear_buf = self.talent_bonus("carry_buffer")
+        haul_buf = self.talent_bonus("haul_buffer")
+        if not gear_buf and not haul_buf:
             return 0.0
-        cargo = sum(items.item_weight(name) * qty for name, qty in self._base_inventory
-                    if not self.is_weapon(name) and not items.is_consumable(name))
-        return round(min(buf, cargo), 1)
+        gear = haul = either = 0.0
+        for name, qty in self._base_inventory:
+            w = items.item_weight(name) * qty
+            is_gear = not self.is_weapon(name) and not items.is_consumable(name)
+            is_haul = not (self.is_weapon(name) or items.is_armor(name)
+                           or items.is_shield(name) or items.is_artifact(name))
+            gear += w * is_gear
+            haul += w * is_haul
+            either += w * (is_gear or is_haul)
+        return round(min(min(gear_buf, gear) + min(haul_buf, haul), either), 1)
 
     # ------------------------------------------------------------------ #
     # combat derivation                                                  #

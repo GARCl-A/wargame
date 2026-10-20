@@ -342,7 +342,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
             return
         wagon = next((w for w in group.wagons if w.broken), None)
         if wagon is None:
-            group.order = orders.travel(group, dest, vocations.travel_mult(self.guild))
+            group.order = orders.travel(group, dest, vocations.travel_mult(self.guild, group))
             self._start_map()
             return
 

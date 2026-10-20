@@ -321,7 +321,7 @@ class MapScreen(MapInspectorMixin, Screen):
                 "lead": g.leader.name if g.leader is not None else "",
                 "at": _position(g),
                 "busy": g.busy,
-                "pace": world.hours(1, g.speed) * vocations.travel_mult(self.guild),
+                "pace": world.hours(1, g.speed) * vocations.travel_mult(self.guild, g),
                 "needs_orders": self._is_idle(g),
                 "alert": blocked,
                 "state_label": label,
@@ -470,7 +470,7 @@ class MapScreen(MapInspectorMixin, Screen):
             return
         try:
             self.selected.order = orders.travel(self.selected, target.id,
-                                                vocations.travel_mult(self.guild))
+                                                vocations.travel_mult(self.guild, self.selected))
         except ValueError:
             return
         self._maybe_auto_advance()

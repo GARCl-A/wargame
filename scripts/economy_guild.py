@@ -103,9 +103,12 @@ STEP_LIMIT = 4000
 CREW_FOOD_DAYS = 6                   # rations the crew is kept stocked with at each shop visit
 CREW_CHUNK_HOURS = 4                 # the crew's orders are checked this often while the squad is busy
 # what a member spends talent picks on, in order: the work track pays (Piecework +20% coin,
-# Brisk Hands, Steady Pace heals on the job), the combat track keeps the squad alive
+# Brisk Hands, Steady Pace heals on the job), then hauls, rests, travels and performs better;
+# the combat track keeps the squad alive
 TALENT_PLAN = {
-    "work": ("carrier", "piecework", "brisk_hands", "steady_pace"),
+    "work": ("carrier", "piecework", "brisk_hands", "steady_pace", "heavy_haul",
+             "sturdy", "restful_sleep", "deep_reserves", "observant", "beast_whisperer",
+             "pathfinder", "field_medic", "triage", "charismatic", "fixer", "troubadour"),
     "combat": ("tough", "hardy", "bulwark", "recovery"),
 }
 AXE_BUFFER_DAYS = 3                  # days of food kept in hand when buying an Axe
@@ -475,7 +478,7 @@ class Sim:
 
     def goto(self, node_id):
         if self.group.node != node_id:
-            self.run_order(orders.travel(self.group, node_id, vocations.travel_mult(self.guild)))
+            self.run_order(orders.travel(self.group, node_id, vocations.travel_mult(self.guild, self.group)))
 
     def arrive(self, kind, node_id):
         self.goto(node_id)
@@ -568,7 +571,7 @@ class Sim:
         if crew.busy:
             return
         if crew.node != "lumber_yard":
-            crew.order = orders.travel(crew, "lumber_yard", vocations.travel_mult(self.guild))
+            crew.order = orders.travel(crew, "lumber_yard", vocations.travel_mult(self.guild, crew))
             return
         self._crew_works = not self._crew_works
         crew.order = (orders.work(self.guild, crew, SHIFT_HOURS) if self._crew_works

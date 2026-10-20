@@ -24,11 +24,19 @@ from . import (
 
 HOURS_PER_HEAL = 8
 HOURS_PER_NONLETHAL_CLEAR = 24
+HARDENED_NONLETHAL_CLEAR = 16              # two heal stretches: the clock checks every HOURS_PER_HEAL
 
 
-def rest_heal(unit):
-    """HP one full stretch of rest (`HOURS_PER_HEAL` hours) gives back."""
-    return max(1, unit.racial_level * unit.mod_constitution)
+def rest_heal(unit, triage=False):
+    """HP one full stretch of rest (`HOURS_PER_HEAL` hours) gives back; `triage` is a
+    Triage talent anywhere in the unit's group."""
+    return (max(1, unit.racial_level * unit.mod_constitution)
+            + int(unit.talent_bonus("rest_heal_bonus")) + triage)
+
+
+def nonlethal_clear_hours(unit):
+    """Unbroken rest that wipes `unit`'s non-lethal damage."""
+    return HARDENED_NONLETHAL_CLEAR if unit.has_talent("hardened") else HOURS_PER_NONLETHAL_CLEAR
 
 
 class UpkeepMixin:
@@ -124,17 +132,18 @@ class UpkeepMixin:
                             u.treated = False
 
                     if u.hp < u.hp_max and u.unfed_days == 0:
-                        heal = rest_heal(u)
+                        grp = self.group_of(u)
+                        heal = rest_heal(u, triage=bool(grp and grp.has_talent("triage")))
                         u.hp = min(u.hp_max, u.hp + heal)
                         events.append(f"{u.name} rests and recovers {heal} HP.")
 
                     rested_ticks = u.unbroken_rest_hours - u.consecutive_rest_hours
-                    if (rested_ticks >= HOURS_PER_NONLETHAL_CLEAR - 1e-9
+                    if (rested_ticks >= nonlethal_clear_hours(u) - 1e-9
                             and getattr(u, "non_lethal_damage", 0) > 0 and u.unfed_days == 0):
                         cleared = u.non_lethal_damage
                         u.hp = min(u.hp_max, u.hp + cleared)
                         u.non_lethal_damage = 0
-                        events.append(f"{u.name} shakes off {cleared} non-lethal damage after a full day's rest.")
+                        events.append(f"{u.name} shakes off {cleared} non-lethal damage after rest.")
 
                     if u.hp == u.hp_max and not getattr(u, "sick", False):
                         u.consecutive_rest_hours = 0

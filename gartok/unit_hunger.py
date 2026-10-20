@@ -55,7 +55,9 @@ class HungerMixin:
         """0 fed · 1 hungry · 2 starving · 3 starving to death."""
         if self._ability.id == "autotroph":
             return 0
-        return min(self.unfed_days, 3)
+        relief = int(self.talent_bonus("deep_reserves"))
+        effective = max(0, self.unfed_days - relief)
+        return min(effective, 3)
 
     @property
     def hunger_attribute_penalty(self):
@@ -128,7 +130,8 @@ class HungerMixin:
                 self._apply_attributes()
             return "ate"
         self.unfed_days += 1
-        return "dead" if self.unfed_days >= data.STARVATION_DEATH_DAYS else "hungry"
+        limit = data.STARVATION_DEATH_DAYS + int(self.talent_bonus("deep_reserves"))
+        return "dead" if self.unfed_days >= limit else "hungry"
 
     def eat_now(self, larder=None, allow_rotten=True):
         """Eat a ration this instant -- the guild stopping to have a meal rather

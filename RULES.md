@@ -190,7 +190,7 @@ The design choices worth stating in prose:
   drops it immediately.
 - **Pack Tactics** (Goblin) — drops the "opposite sides" requirement of a flank:
   the attacker and one ally both adjacent to the target is enough (+2
-  [circumstance]). Being circumstance, it does not stack with a strict flank.
+  [circumstance] to attack). Stacks with the defender's flanking AC penalty.
 - **Extra Language** (Human) — a second random language; can Demoralize anyone
   who shares either tongue. This is the Human's edge in market haggling too.
 - **Mimic Sounds** (Kenku) — may Demoralize with no shared language (offense
@@ -315,7 +315,7 @@ just needs the one above it first (`requires`), which chains down the branch. Th
 first tier-3 node is `Fleet` (+1 Speed, behind Deadeye); **Armor Bearer** (combat tier 3, behind
 Bulwark) takes up to 6 kg off the carried weight of the armor worn (never more than the armor
 weighs, `armor_weight_relief`), so heavy plate stops counting against encumbrance; **Fletcher** (work
-tier 3, behind Crafter) is the arrow-carver (see *Ammo*). The node list with
+tier 3, behind Woodcarver) is the arrow-carver (see *Ammo*). The node list with
 effects is in [`REFERENCE.md`](REFERENCE.md) (§ Talent trees).
 
 **The magic track** (`magic_xp`, `progression.MAGIC_XP_THRESHOLDS`, combat's curve for now). Magic XP
@@ -609,8 +609,8 @@ and neutral creatures in `gartok/ground.py`, map assembly in
 
 Implemented in `data.resolve_bonus()`. Types in use: `circumstance`, `natural`,
 `status`. Example: Defend (+1 circ. to AC) does not stack with any other
-circumstance bonus to AC; Pack Tactics (+2 circ. to attack) does not add to the
-+2 of a strict flank — a Goblin flanking gets +2, not +4.
+circumstance bonus to AC; Pack Tactics (+2 circ. to attack) does not stack with
+another circumstance bonus to attack.
 
 ### Dialogue before initiative 🟡
 
@@ -656,11 +656,12 @@ to the fight, as before.
   - other mods are typed and pass through the accumulation rule above.
   - **natural 20** = automatic hit + crit (roll the damage die twice).
   - **natural 1** = automatic miss.
-- **Flanking**: `+2 [circumstance]` to the attack when the attacker **and** an
-  ally are both adjacent to the target and on **opposite sides** — the line
-  between their cells crosses the target's footprint. Pack Tactics (Goblin) drops
-  the "opposite sides" requirement. Both being circumstance, flank and Pack
-  Tactics do **not** add (+2, never +4).
+- **Flanking**: the defender suffers a **−2 penalty to AC** (reduced to −1 by
+  the `Peripheral Vision` talent) when the attacker **and** an ally are both
+  adjacent to the target and on **opposite sides** — the line between their cells
+  crosses the target's footprint. Pack Tactics (Goblin) gives the attacker +2 to
+  hit when an ally is adjacent; because flanking penalises the defender's AC rather
+  than modifying the attack roll, both benefits combine.
 - **Damage**: `weapon die (+ Strength mod if melee)`, minimum 1, minus the
   target's damage reduction.
 - **Reach**: melee = adjacent cells; ranged = the weapon's range in cells; the
@@ -962,7 +963,7 @@ Rules in `board.py` (`los_clear`) and `vision.py` (`cell_lit`, `can_see`).
   dropped weapon when unarmed). What it counts for fleeing, waiting and the
   Signal Horn is the foes some unit of its side sees.
 - **Flanking:** a melee unit that can walk to the far side of a foe an ally is already beside
-  (a cell where `_flanked` holds) goes there first and strikes with the +2; archers and units
+  (a cell where `_flanked` holds) goes there first and strikes against the foe's −2 AC; archers and units
   already beside the foe do not reposition.
 - **With nobody in sight the AI acts by its role** (`Battle.aggressor`, set where the map
   builds the fight): the side that *brought* the fight (an ambush, a patrol, a raid, a hunt

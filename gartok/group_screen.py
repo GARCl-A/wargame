@@ -499,7 +499,8 @@ class GroupScreen(GroupDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixi
         target.medicine_attempted_today = True
 
         nat = data.d20()
-        total = nat + healer.mod_wisdom
+        med_bonus = int(healer.talent_bonus("field_medic_bonus"))
+        total = nat + healer.mod_wisdom + med_bonus
         
         if total >= data.FIRST_AID_DC:
             target.treated = True

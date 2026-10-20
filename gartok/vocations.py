@@ -21,6 +21,7 @@ COHESION_BONUS = 1          # Warband: added to Mental Defense in the daily cohe
 GATHER_BONUS = 0.15         # Delvers: extra yield from gathering work
 CAUTIOUS_AMBUSH = 0.8       # Wilds: x on the ambush chance while the group is Cautious
 TRAVEL_FACTOR = 0.85        # Caravan: x on travel hours, after wagon and animal speed
+PATHFINDER_FACTOR = 0.90    # a Pathfinder in the group: x on travel hours, stacks with Caravan
 FOOD_PAUSE_EVERY = 10       # Marsh: on every 10th day of the guild's clock no food ages
 INFO_BONUS = 2              # Scholars: bonus on the INT roll that reveals enemy info (the opening read and Assess)
 
@@ -95,8 +96,11 @@ def gather_pay(guild, copper, rng=random):
     return copper + whole + (rng.random() < extra - whole)
 
 
-def travel_mult(guild):
-    return TRAVEL_FACTOR if _is(guild, CARAVAN) else 1.0
+def travel_mult(guild, group=None):
+    mult = TRAVEL_FACTOR if _is(guild, CARAVAN) else 1.0
+    if group is not None and group.has_talent("pathfinder"):
+        mult *= PATHFINDER_FACTOR
+    return mult
 
 
 def ambush_mult(guild, stance, scout=False):

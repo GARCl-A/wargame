@@ -164,7 +164,7 @@ class CraftingScreen(Screen):
         def _trailing(surf, r, ch):
             u = ch["unit"]
             count = sum(1 for r in u.known_recipes if not self.station or any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])))
-            mod = u.mod_intelligence + u.talent_bonus("craft_bonus") + (u.craft_bonuses.get(self.station, 0) if self.station else 0)
+            mod = u.mod_intelligence + u.craft_bonus(self.station)
             roll_str = f"d20{mod:+d}"
             caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
             if u.crafting_target:
@@ -235,7 +235,7 @@ class CraftingScreen(Screen):
                 target_val = m.crafting_goal(r_data)
 
                 station = r_data.station
-                bonus = m.talent_bonus("craft_bonus") + m.craft_bonuses.get(station, 0)
+                bonus = m.craft_bonus(station)
                 total_mod = m.mod_intelligence + bonus
                 mod_sign = f"+ {total_mod}" if total_mod >= 0 else f"- {abs(total_mod)}"
 

@@ -116,7 +116,7 @@ class LaborMixin:
         """The travel order for the next leg of a supply run (`src` -> `path[0]`). Each leg rolls
         `SUPPLY_RUN_AMBUSH_CHANCE` once; a hit stops the order somewhere along the road and keeps
         the rest of the leg in `owed` for after the fight."""
-        order = orders.next_leg(src, path, group.speed, vocations.travel_mult(self))
+        order = orders.next_leg(src, path, group.speed, vocations.travel_mult(self, group))
         order.task = "supply_run"
         mult = vocations.ambush_mult(self, group.stance, scout=group.has_talent("woodland_scout"))
         if rng.random() < economy.SUPPLY_RUN_AMBUSH_CHANCE * mult:
@@ -168,7 +168,8 @@ class LaborMixin:
         shows = []
         xp_lines = []
         for u in (u for u in crew if u in self.roster):     # a long show can starve one
-            pay = economy.perform_pay(hours, u.mod_charisma)
+            cha_mod = u.mod_charisma + int(u.talent_bonus("tavern_perform_bonus"))
+            pay = economy.perform_pay(hours, cha_mod)
             shows.append((u, self._pay_worker(u, pay, hours, economy.PERFORM_LEVEL, xp_lines)))
         if shows:
             tips = ", ".join(f"{u.name} {fmt_money(g)}" for u, g in shows)

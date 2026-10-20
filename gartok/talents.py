@@ -28,6 +28,7 @@ exactly one consumer that reads it back:
     initiative        Combatant.initiative_bonus       --
     speed             Unit._derive_speed               --
     carry_buffer      Unit._carry_relief (capped)      --
+    haul_buffer       Unit._carry_relief (capped)      --
     armor_weight_relief Unit.load / Combatant.load     --
     haggle_cha        Unit.haggle_charisma_mod         --
     food_haggle       Unit.price_mods (economy)        --
@@ -38,6 +39,18 @@ exactly one consumer that reads it back:
     craft_bonus       Unit.progress_crafting           --
     language_study    magic._progress_language         --
     fletcher          campaign._fletcher_rest_pass     --
+    tavern_perform_bonus Guild.perform_shift           --
+    woodcarver_bonus  Unit.craft_bonus                 --
+    skinner_bonus     hunt.grant_haul / campaign       --
+    wheelwright       Guild.repair_wagon               --
+    deep_reserves     Unit.hunger_level                --
+    rest_heal_bonus   guild_upkeep.rest_heal           --
+    field_cook        Group.light_campfire             --
+    hardened          guild_upkeep.nonlethal_clear_hours --
+    field_medic_bonus GroupScreen first aid (no combat) --
+    herd_capacity_bonus Group.herd_capacity            --
+    triage            guild_upkeep.rest_heal           --
+    pathfinder        vocations.travel_mult            --
     dragon_breath     actions.DragonBreath             --
     mighty_shove      actions.Push                     --
     spell_to_hit      actions.SpellAction              --
@@ -245,8 +258,9 @@ _LIST = [
            effects=(Effect("full_intel_crit_range", 1),), icon="head/spectacles"),
 
     # ================================================================== #
-    # work -- two roots, carrier and negotiator                           #
+    # work -- 6 attribute roots, 5 talents each = 30 talents             #
     # ================================================================== #
+    # --- STR: Heavy Labor & Carrying ---
     Talent("carrier", "work", 1, "Carrier",
            "carry up to 1 kg more gear before you stagger (not food or weapons).",
            effects=(Effect("carry_buffer", 1),), icon="body/lift"),
@@ -256,12 +270,17 @@ _LIST = [
     Talent("brisk_hands", "work", 2, "Brisk Hands",
            "work finishes 10% faster -- you keep the time.", requires="carrier",
            effects=(Effect("activity_speed", ACTIVITY_SPEEDUP),), icon="action/sprint"),
-
     Talent("steady_pace", "work", 3, "Steady Pace",
            "work counts as rest: you recover HP while you work, as if resting.",
            requires="brisk_hands",
            effects=(Effect("work_rest", 1),), icon="body/knee-bandage"),
+    Talent("heavy_haul", "work", 3, "Heavy Haul",
+           "carry up to 6 kg more before you stagger, in anything that is not equipment "
+           "(materials, food, loot -- not weapons, armor, shields or artifacts).",
+           requires="piecework",
+           effects=(Effect("haul_buffer", 6),), icon="body/weight-lifting-up"),
 
+    # --- CHA: Market, Recruitment & Tavern ---
     Talent("charismatic", "work", 1, "Charismatic", "+1 Charisma.",
            effects=(Effect("attr", 1, "charisma"),), icon="action/talk"),
     Talent("negotiator", "work", 2, "Negotiator",
@@ -273,7 +292,11 @@ _LIST = [
     Talent("provisioner", "work", 3, "Provisioner",
            "+1 to haggling on food, shared language or not.", requires="negotiator",
            effects=(Effect("food_haggle", 1),), icon="action/trade"),
+    Talent("troubadour", "work", 3, "Troubadour",
+           "+1 on performance rolls when playing on the tavern stage.", requires="fixer",
+           effects=(Effect("tavern_perform_bonus", 1),), icon="action/sing"),
 
+    # --- INT: Crafting & Lore ---
     Talent("clever", "work", 1, "Clever", "+1 Intelligence.",
            effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
     Talent("linguist", "work", 2, "Linguist",
@@ -290,10 +313,60 @@ _LIST = [
            "learn a random forge recipe (or +1 forging rolls if all known).",
            requires="crafter",
            effects=(), icon="body/blacksmith"),
+
+    # --- DEX: Woodworking, Leather & Wagons ---
+    Talent("nimble_fingers", "work", 1, "Nimble Fingers", "+1 Dexterity.",
+           effects=(Effect("attr", 1, "dexterity"),), icon="action/button-finger"),
+    Talent("woodcarver", "work", 2, "Woodcarver",
+           "+1 to progress rolls on the Carpenter's recipes.", requires="nimble_fingers",
+           effects=(Effect("woodcarver_bonus", 1),), icon="action/stone-crafting"),
+    Talent("skinner", "work", 2, "Skinner",
+           "harvest 1 additional 1sqm Hide when hunting beasts in the Wilds.", requires="nimble_fingers",
+           effects=(Effect("skinner_bonus", 1),), icon="map/hide"),
     Talent("fletcher", "work", 3, "Fletcher",
            "carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests.",
-           requires="crafter",
+           requires="woodcarver",
            effects=(Effect("fletcher", 1),), icon="action/bowman"),
+    Talent("wheelwright", "work", 3, "Wheelwright",
+           "skilled cartwright: repairs restore double HP on damaged wagons.",
+           requires="woodcarver",
+           effects=(Effect("wheelwright", 1),), icon="gui/auto-repair"),
+
+    # --- CON: Field Endurance & Recovery ---
+    Talent("sturdy", "work", 1, "Sturdy", "+1 Constitution.",
+           effects=(Effect("attr", 1, "constitution"),), icon="body/heart-inside"),
+    Talent("deep_reserves", "work", 2, "Deep Reserves",
+           "tolerate missing 1 daily meal before suffering hunger penalties.", requires="sturdy",
+           effects=(Effect("deep_reserves", 1),), icon="body/spartan"),
+    Talent("restful_sleep", "work", 2, "Restful Sleep",
+           "recover +1 additional HP for every 8 hours of unbroken rest.", requires="sturdy",
+           effects=(Effect("rest_heal_bonus", 1),), icon="body/sleeping-bag"),
+    Talent("field_cook", "work", 3, "Field Cook",
+           "efficient camp cook: field campfires burn for 6 hours instead of 4.",
+           requires="deep_reserves",
+           effects=(Effect("field_cook", 1),), icon="body/cook"),
+    Talent("hardened", "work", 3, "Hardened",
+           "tough worker frame: clear non-lethal damage after 16 hours of unbroken rest instead of 24.",
+           requires="restful_sleep",
+           effects=(Effect("hardened", 1),), icon="body/strong"),
+
+    # --- WIS: Field Medicine, Animals & Scouting ---
+    Talent("observant", "work", 1, "Observant", "+1 Wisdom.",
+           effects=(Effect("attr", 1, "wisdom"),), icon="head/gaze"),
+    Talent("field_medic", "work", 2, "Field Medic",
+           "+2 to First Aid and Stabilize checks outside of combat.", requires="observant",
+           effects=(Effect("field_medic_bonus", 2),), icon="body/arm-bandage"),
+    Talent("beast_whisperer", "work", 2, "Beast Whisperer",
+           "skilled with pack animals: grants +1 herd capacity to the group.", requires="observant",
+           effects=(Effect("herd_capacity_bonus", 1),), icon="map/ox"),
+    Talent("triage", "work", 3, "Triage",
+           "field medic triage: everyone in your group recovers +1 extra HP per 8 hours of rest.",
+           requires="field_medic",
+           effects=(Effect("triage", 1),), icon="body/knee-bandage"),
+    Talent("pathfinder", "work", 3, "Pathfinder",
+           "skilled trail scout: reduces travel time by 10% on paths and roads.",
+           requires="beast_whisperer",
+           effects=(Effect("pathfinder", 1),), icon="gui/path-distance"),
 
     # ================================================================== #
     # racial -- race-gated; the level is racial_level (sum of the other    #

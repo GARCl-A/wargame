@@ -218,7 +218,7 @@ def resume_arrival(guild, group, order):
         return []
     if order.resume_path:
         group.order = orders.next_leg(group.node, list(order.resume_path), group.speed,
-                                      vocations.travel_mult(guild))
+                                      vocations.travel_mult(guild, group))
         return []
     events = arrival_notices(guild, group.node)
     group.order = orders.idle()

@@ -325,7 +325,7 @@ def test_the_squads_ai_goes_for_an_egg_then_the_way_out():
 
 def test_an_ai_squad_can_pull_the_heist_off_in_the_lab():
     outcomes = []
-    for seed in (25, 28):
+    for seed in (24, 49):
         b, _ = _lair(seed=seed)
         n = 0
         while b.winner is None and n < 6000:

@@ -248,10 +248,11 @@ class Group:
     @property
     def herd_capacity(self):
         """How much herd the leader can control -- `HERD_BASE` + their Wisdom
-        modifier. Each animal costs its species' `herd_weight`."""
+        modifier (+ Beast Whisperer bonus). Each animal costs its species' `herd_weight`."""
+        bonus = sum(int(u.talent_bonus("herd_capacity_bonus")) for u in self.members)
         if not self.leader:
-            return HERD_BASE
-        return max(1, HERD_BASE + self.leader.mod_wisdom)
+            return HERD_BASE + bonus
+        return max(1, HERD_BASE + self.leader.mod_wisdom + bonus)
 
     @property
     def herd_load(self):
@@ -367,6 +368,7 @@ class Group:
                     if needed <= 0:
                         break
         self.campfire_node = self.node
-        self.campfire_expires = clock_seconds + economy.FIELD_CAMPFIRE_HOURS * 3600
+        bonus_hours = 2 if any(u.has_talent("field_cook") for u in self.members) else 0
+        self.campfire_expires = clock_seconds + (economy.FIELD_CAMPFIRE_HOURS + bonus_hours) * 3600
         return True
 

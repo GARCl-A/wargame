@@ -222,6 +222,11 @@ def absorb_battle(guild, squad, battle, node=None, arena_offer=None):
                     extra = math.ceil(count * 0.2)
                     outcome.loot_pool.extend([it] * extra)
 
+        # Skinner: one more hide off whatever beasts fell
+        if (any(s.has_talent("skinner") for s in survivors)
+                and any(it in ("Meat", "1sqm Hide") for it in outcome.loot_pool)):
+            outcome.loot_pool.append("1sqm Hide")
+
         # Award currency from any unopened chests remaining on the battlefield
         for obj in battle.ground:
             if getattr(obj, "is_chest", False) and survivors:
@@ -386,7 +391,7 @@ def _advance(guild, dt=None, busy=()):
                 g.order = guild.supply_leg(g, order.dest, list(order.path))
             else:
                 g.order = orders.next_leg(order.dest, list(order.path), g.speed,
-                                          vocations.travel_mult(guild))
+                                          vocations.travel_mult(guild, g))
             continue
         g.order = None                         # resolved -- the group goes idle
         if order.kind == "travel":

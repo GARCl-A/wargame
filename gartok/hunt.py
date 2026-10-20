@@ -172,6 +172,9 @@ def grant_haul(state):
         if meat:
             lines.append(f"{who} bring back {meat} kg of meat "
                          f"({state.hours_hunted} h hunted).")
+            if any(u.has_talent("skinner") for u in hunters):
+                hunters[0].give_to_pack("1sqm Hide")
+                lines.append(f"{hunters[0].name} skins 1sqm Hide from the hunt.")
         else:
             lines.append(f"{who} come back empty-handed ({state.hours_hunted} h "
                          f"hunted -- not enough for a kill).")

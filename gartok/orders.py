@@ -133,7 +133,7 @@ def supply_hours(guild, group):
     """How long `group` walks a whole supply run, there and back, with no ambush."""
     from . import vocations
     distance = world.route(SUPPLY_START, SUPPLY_TURN)[1] + world.route(SUPPLY_TURN, SUPPLY_START)[1]
-    return world.hours(distance, group.speed) * vocations.travel_mult(guild)
+    return world.hours(distance, group.speed) * vocations.travel_mult(guild, group)
 
 
 def supply_run(guild, group):

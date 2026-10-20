@@ -9,8 +9,8 @@ copper *and* in XP.
 Written 2026-10-08, extended the same day after the first round of answers (the Medic, the
 Games, the Claim, the racial level, the tavern; see [Answers received](#answers-received)).
 The play recorder (`gartok/recorder.py`, `scripts/play_analysis.py`) and the `human` policy
-in `scripts/economy_guild.py` are now built; the next step is three 30-day runs of your own
-play to calibrate the `human` policy's thresholds. The last three sections are the ones to read first when
+in `scripts/economy_guild.py` are now built; two campaign runs (Olhos de Odin 21d, Caneco Mijado 103d;
+40 fights total) were archived in `recordings/2026-10-19/` and calibrated into `human_profile.json`. The last three sections are the ones to read first when
 validating the work: [Decisions made without asking](#decisions-made-without-asking),
 [Answers received](#answers-received) and
 [Questions and decisions to validate](#questions-and-decisions-to-validate).

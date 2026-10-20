@@ -214,30 +214,26 @@ pointed to, not repeated.
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
   the slimmest), and the old Extreme Shot / Power Shot niches.
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
-  group's output is another's input, which is the heart of the open-world vision. First step is opening
-  a new node 'Carpenter' associated with the Lumber Yard and Ankareth (direction 2026-10-19). Lumber feeds the
-  carpenter (bows, wagons: the Tanner holds the Shortbow and Light Crossbow until one exists), Coal feeds the
-  Smith (Iron Bar is already a forge recipe). Gives Coal and the gems a use and closes `sources.py`'s
-  `traded` goods one chain at a time. Needs recipes, the carpenter node, the sim's `crafter`
-  policy and tests. **Lumber saturating wood price (decided 2026-10-18):** enters together with or right after
-  this production chain (the Yard produces Lumber by how many work there, so endless day labour floods the market).
-- **Talent trees are shorter than the levels (to be authored by hand, after the magic arc).** The XP
-  curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat has
-  25 nodes (updated 2026-10-19 with CHA and INT branches) and work 14, so work picks past the last node wait unspent
-  and neither tree has full room to choose. The racial
+  group's output is another's input, which is the heart of the open-world vision. Carpenter node opened
+  on 2026-10-19 (crafting station for bows, crossbows, spear, club, torch; Rowan keeper; bows migrated from Tanner).
+  Next: Coal for Smith (Iron Bar recipe), wagon crafting, the sim's `crafter` policy and tests. Gives Coal and the
+  gems a use and closes `sources.py`'s `traded` goods one chain at a time. **Market supply and demand / lumber saturation:**
+  simulate relatively complex market dynamics with supply and demand (so endless day labour at the Yard floods wood prices).
+- **The racial track is thin (to be authored by hand).** The XP
+  curves have no top since 2026-10-16 (`progression.Curve`), and each level grants one pick: combat
+  and work both have 30 nodes (5 per attribute root: combat since 2026-10-19, work since 2026-10-20),
+  so picks past the 30th wait unspent. The racial
   track has 38 nodes split across races (some shared, like Giant's Grip); a race needs only 3 of
   its own (one pick at racial 5, 10 and 15), and most have 1. Authored beasts: Dragon has 4 nodes
   (`dragon`, `dragon_breath`, `sweeping_claws`, `draconic_wings`) spending all 4 picks for Kharzuul;
   Zombie has 2 nodes (`death_grip`, `zombie_bite`).
-  Goal: **at least 30 combat (6 attribute roots balanced with 5 nodes each) and 30 work talents**, and 3+ racial nodes per race. Combat tree reached 30 talents on 2026-10-19 (5 balanced per attribute root: Wrestler, Nimble Skirmisher, Iron Stance, Inspiring Shout, Anatomist);
-  work track requires further expansion (currently 14 talents).
-  The magic track (6 school-agnostic nodes since 2026-10-18) is complete.
+  Left: 3+ racial nodes per race. The magic track (6 school-agnostic nodes since 2026-10-18) is complete.
 - **Gathering: loose ends.**
   Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art. (Fruit preservation completed with Fruit Compote recipe).
 - **Item properties: base material sources (after the production chain).**
   Left: (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
 - **Prisoners.**
-  Left: what a captive is for beyond a mission (decided 2026-10-19: sell to prison if bandit/outlaw, recruit, or forced manual labor in lumber/mine with escape/revolt risks), enemy side capturing player's units, and rescuing a captive in battle.
+  Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on captive level/crime; (2) recruit contest; (3) forced manual labor in lumber/mine: captive eats group food (or starves), escape/revolt check fires daily after captive recovers to full HP. Left: UI tabs, escape check implementation, enemy capturing player units, and battlefield rescue.
 - **Combat AI benchmarking against player performance.**
   Current benchmark across the 40 campaign logs (`combat_pairs.py`): Scrapper 77% (player 80%), Champion 90% (player 100%), Defend Title 95% (player 100%), hunts 92% (player 92%), road ambushes 72% AI vs 40% player.
   Left: derive combat policy thresholds into `ai.py` (retreating when low HP, objective prioritization in CTF).
@@ -246,7 +242,7 @@ pointed to, not repeated.
 - **Finite stock and a target per item, in every shop.**
   Left: confirm Paper 20/5, Ink 10/2 and Lumber 20/6 shelf targets; verify Jerky ($8, 10/3) doesn't undercut camp cooking; sim food fallback for long expeditions.
 - **Tune the specialised shops.**
-  Left: confirm distances and alignments of shop keepers; verify world-tied restocking and carpenter node.
+  Left: confirm distances and alignments of shop keepers; verify world-tied restocking (carpenter node verified 2026-10-19).
 
 ## Art (made by hand, not code)
 

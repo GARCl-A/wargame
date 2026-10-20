@@ -401,8 +401,8 @@ def test_fletcher_crafts_quivers_on_rest():
     crafter = Unit("player")
     crafter.work_hours = economy.LUMBER_XP_HOURS * 12
     crafter._derive_combat()
-    assert crafter.choose_talent("work", "clever")
-    assert crafter.choose_talent("work", "crafter")
+    assert crafter.choose_talent("work", "nimble_fingers")
+    assert crafter.choose_talent("work", "woodcarver")
     assert crafter.choose_talent("work", "fletcher")
     crafter.give_to_pack("Lumber")
 

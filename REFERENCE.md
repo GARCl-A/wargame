@@ -457,16 +457,32 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Piecework | +20% coin from work that pays in coin. | carrier |
 | 2 | Brisk Hands | work finishes 10% faster -- you keep the time. | carrier |
 | 3 | Steady Pace | work counts as rest: you recover HP while you work, as if resting. | brisk_hands |
+| 3 | Heavy Haul | carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot -- not weapons, armor, shields or artifacts). | piecework |
 | 1 | Charismatic | +1 Charisma. | -- |
 | 2 | Negotiator | +1 Charisma for market buy and sell checks. | charismatic |
 | 2 | Fixer | +1 to your pitch when talking someone into the guild. | charismatic |
 | 3 | Provisioner | +1 to haggling on food, shared language or not. | negotiator |
+| 3 | Troubadour | +1 on performance rolls when playing on the tavern stage. | fixer |
 | 1 | Clever | +1 Intelligence. | -- |
 | 2 | Linguist | +2 to progress rolls when studying a foreign language. | clever |
 | 2 | Crafter | +1 to progress rolls when crafting items. | clever |
 | 3 | Apothecary | learn a random apothecary recipe (or +1 brewing rolls if all known). | crafter |
 | 3 | Blacksmith | learn a random forge recipe (or +1 forging rolls if all known). | crafter |
-| 3 | Fletcher | carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests. | crafter |
+| 1 | Nimble Fingers | +1 Dexterity. | -- |
+| 2 | Woodcarver | +1 to progress rolls on the Carpenter's recipes. | nimble_fingers |
+| 2 | Skinner | harvest 1 additional 1sqm Hide when hunting beasts in the Wilds. | nimble_fingers |
+| 3 | Fletcher | carve arrows on rest: consumes 1 Lumber to refill quivers whenever the group rests. | woodcarver |
+| 3 | Wheelwright | skilled cartwright: repairs restore double HP on damaged wagons. | woodcarver |
+| 1 | Sturdy | +1 Constitution. | -- |
+| 2 | Deep Reserves | tolerate missing 1 daily meal before suffering hunger penalties. | sturdy |
+| 2 | Restful Sleep | recover +1 additional HP for every 8 hours of unbroken rest. | sturdy |
+| 3 | Field Cook | efficient camp cook: field campfires burn for 6 hours instead of 4. | deep_reserves |
+| 3 | Hardened | tough worker frame: clear non-lethal damage after 16 hours of unbroken rest instead of 24. | restful_sleep |
+| 1 | Observant | +1 Wisdom. | -- |
+| 2 | Field Medic | +2 to First Aid and Stabilize checks outside of combat. | observant |
+| 2 | Beast Whisperer | skilled with pack animals: grants +1 herd capacity to the group. | observant |
+| 3 | Triage | field medic triage: everyone in your group recovers +1 extra HP per 8 hours of rest. | field_medic |
+| 3 | Pathfinder | skilled trail scout: reduces travel time by 10% on paths and roads. | beast_whisperer |
 
 ### Racial track
 

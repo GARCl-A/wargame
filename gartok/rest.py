@@ -18,7 +18,7 @@ import math
 from dataclasses import dataclass
 
 from .clock import SECONDS_PER_DAY, SECONDS_PER_HOUR
-from .guild_upkeep import HOURS_PER_HEAL, rest_heal
+from .guild_upkeep import HOURS_PER_HEAL, nonlethal_clear_hours, rest_heal
 
 MAX_DAYS = 200
 JUST_BEFORE_MIDNIGHT = 1 / 60          # a capped rest stops a minute short of the meal it cannot afford
@@ -107,7 +107,8 @@ def until_full(guild, group):
     if starved is not None:
         return RestPlan(reason=f"{starved.name} is hungry and has nothing to eat")
 
-    heals = {id(u): _heal_times(u) for u in camp.members if u.hp < u.hp_max}
+    triage = group.has_talent("triage")
+    heals = {id(u): _heal_times(u, triage) for u in camp.members if u.hp < u.hp_max}
     full_at = max(times[-1] for times in heals.values())
     first = hours_to_midnight(guild)
     wanted = midnights(guild, full_at)
@@ -128,7 +129,7 @@ def until_full(guild, group):
     if hours <= 0:
         return RestPlan(reason="the group is already down to its last day of rations")
     return RestPlan(hours=hours, meals=allowed if capped else wanted, capped=capped,
-                    worst=_worst(camp.members, heals, hours), short_days=wanted - allowed if capped else 0)
+                    worst=_worst(camp.members, heals, hours, triage), short_days=wanted - allowed if capped else 0)
 
 
 def _blocked(group):
@@ -140,15 +141,15 @@ def _blocked(group):
     return None
 
 
-def _hp_after_ticks(unit, ticks):
+def _hp_after_ticks(unit, ticks, triage=False):
     """`unit`'s HP after `ticks` 8-hour stretches of rest from its current state."""
     if ticks <= 0 or unit.hp >= unit.hp_max:
         return unit.hp
-    each = rest_heal(unit)
+    each = rest_heal(unit, triage)
     hp = unit.hp
     non_lethal = max(0, min(getattr(unit, "non_lethal_damage", 0), unit.hp_max - hp))
     done_before = int(round((getattr(unit, "unbroken_rest_hours", 0) - unit.consecutive_rest_hours) / HOURS_PER_HEAL))
-    clear_tick = max(1, 3 - done_before)
+    clear_tick = max(1, math.ceil(nonlethal_clear_hours(unit) / HOURS_PER_HEAL) - done_before)
     for t in range(1, ticks + 1):
         hp = min(unit.hp_max, hp + each)
         non_lethal = max(0, min(non_lethal, unit.hp_max - hp))
@@ -160,22 +161,22 @@ def _hp_after_ticks(unit, ticks):
     return hp
 
 
-def _heal_times(unit):
+def _heal_times(unit, triage=False):
     """Hours into the rest at which each heal lands, from the carried-over rest."""
     start = HOURS_PER_HEAL - unit.consecutive_rest_hours
     times = []
     i = 0
-    while _hp_after_ticks(unit, i) < unit.hp_max:
+    while _hp_after_ticks(unit, i, triage) < unit.hp_max:
         times.append(start + HOURS_PER_HEAL * i)
         i += 1
     return times
 
 
-def _worst(members, heals, hours):
+def _worst(members, heals, hours, triage=False):
     worst = None
     for u in members:
         done = sum(1 for t in heals.get(id(u), ()) if t <= hours + 1e-9)
-        hp = _hp_after_ticks(u, done)
+        hp = _hp_after_ticks(u, done, triage)
         if worst is None or hp / u.hp_max < worst[1] / worst[2]:
             worst = (u.name, hp, u.hp_max)
     return worst

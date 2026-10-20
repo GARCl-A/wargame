@@ -70,7 +70,8 @@ class HoldingsMixin:
             miss = (f"{smith.name} fails to mend the {name} ({total} vs DC {wagons.REPAIR_DC}) "
                     f"-- the {wagons.REPAIR_ITEM} is wasted.")
             return False, [miss, *events], casualties
-        gained = wagon.repair()
+        mult = 2 if any(u.has_talent('wheelwright') for u in crew) else 1
+        gained = wagon.repair(mult=mult)
         return True, [f"{smith.name} mends the {name}: +{gained} HP ({wagon.hp}/{wagon.hp_max}).", *events], casualties
 
     def abandon_wagon(self, group, wagon):

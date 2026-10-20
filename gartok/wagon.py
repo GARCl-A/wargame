@@ -112,9 +112,9 @@ class Wagon(Creature):
         self.hp -= lost
         return lost
 
-    def repair(self):
-        """Mend it by half its maximum. Returns the HP gained."""
-        gained = min(self.repair_amount, self.hp_max - self.hp)
+    def repair(self, mult=1):
+        """Mend it by half its maximum (scaled by `mult`). Returns the HP gained."""
+        gained = min(self.repair_amount * mult, self.hp_max - self.hp)
         self.hp += gained
         return gained
 
