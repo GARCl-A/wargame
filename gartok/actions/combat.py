@@ -224,7 +224,9 @@ class Defend(Action):
             battle.log(f"{actor.name} is already defending (circumstance bonus doesn't stack).")
         else:
             actor.add_condition(Defending())
-            battle.log(f"{actor.name} defends: +1 AC [circumstance] until next turn.")
+            iron = getattr(actor.char, "talent_bonus", lambda _: 0)("defend_mental_defense") if hasattr(actor, "char") else 0
+            iron_txt = f", +{iron} Mental Defense [Iron Stance]" if iron else ""
+            battle.log(f"{actor.name} defends: +1 AC [circumstance]{iron_txt} until next turn.")
 
 
 # --------------------------------------------------------------------------- #
@@ -365,6 +367,15 @@ def execute_demoralize(battle, actor, target, *, free=False, ignore_language=Fal
         target.add_condition(Demoralized())
         battle.log(desc + ("  -> CRITICAL HIT!" if crit else "  -> lands.")
                    + f" {target.name} is demoralized (-1 status until the end of their turn).")
+        init_boost = getattr(actor.char, "talent_bonus", lambda x: 0)("demoralize_ally_initiative") if hasattr(actor, "char") else 0
+        if init_boost and hasattr(battle, "order") and hasattr(battle, "raise_initiative"):
+            allies = [u for u in battle.order if u.alive and u.team == actor.team and u is not actor]
+            if allies:
+                idx = getattr(battle, "turn_idx", 0)
+                after = [u for u in battle.order[idx + 1:] if u in allies]
+                target_ally = after[0] if after else allies[0]
+                battle.raise_initiative([target_ally], init_boost)
+                battle.log(f"  Inspiring Shout! {target_ally.name} gains +{init_boost} initiative.")
     else:
         battle.log(desc + "  -> no effect.")
 
@@ -532,10 +543,12 @@ class Push(Action):
         actor.walking = False
         dc = PUSH_DC_BASE + target.mod_constitution
         nat = d20()
-        total = nat + actor.mod_strength
+        push_b = getattr(actor.char, "talent_bonus", lambda x: 0)("push_bonus") if hasattr(actor, "char") else 0
+        total = nat + actor.mod_strength + push_b
         mighty = bool(actor.char.talent_bonus("mighty_shove"))
+        b_txt = f" {push_b:+}(push talent)" if push_b else ""
         desc = (f"{actor.name} {'heaves' if mighty else 'shoves'} {target.name}: d20({nat}) "
-                f"{actor.mod_strength:+}(STR) = {total} vs {dc}")
+                f"{actor.mod_strength:+}(STR){b_txt} = {total} vs {dc}")
         if nat != 20 and (nat == 1 or total < dc):
             battle.log(desc + "  -> holds their ground.")
             return

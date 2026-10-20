@@ -54,7 +54,7 @@ Tests: `python -m pytest tests/` (rules) and `python sim_test.py`
 | Replace a candidate (draft) | **COMMISSION** (top right) → choose archetypes → click the card to replace |
 | Walk (1 point) | click a green cell — the path to the cursor is drawn; the walked trail this turn is marked |
 | Attack (1 point) | click an enemy with a red outline to arm, click again or press `Enter` / `F` to strike |
-| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In | panel buttons (the aimed ones ask for a target click) or hotkeys `1`–`9` |
+| Throw / Demoralize / Stabilize / First Aid / Pick Up / Defend / Flee / Climb / Push / Jump / Drop In / Grab / Escape | panel buttons (the aimed ones ask for a target click) or hotkeys `1`–`9` |
 | Switch action tab | `Tab` (toggles combat ↔ utility actions) |
 | Pan camera | `WASD` or middle/right mouse drag |
 | Zoom | mousewheel |

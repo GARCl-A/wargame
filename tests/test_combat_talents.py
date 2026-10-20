@@ -229,3 +229,133 @@ def test_exploit_weakness_grants_plus_2_to_hit_on_full_intel():
     assert intel.has_full_intel(b, "player", foe)
     mods_full = c.attack_mods(foe, battle=b)
     assert any("Exploit Weakness" in label and val == 2 for val, _, label in mods_full)
+
+
+# --------------------------------------------------------------------------- #
+# New Tier 3 Combat Talents (30-talent expansion)                             #
+# --------------------------------------------------------------------------- #
+
+def test_wrestler_bonus_push_and_grab():
+    u = Unit("player", name="Grappler", race=data.race_by_name("Human"))
+    u.set_track_level("combat", 1)
+    u.choose_talent("combat", "strong")
+    u.set_track_level("combat", 2)
+    u.choose_talent("combat", "heavy_hand")
+    u.set_track_level("combat", 3)
+    assert u.choose_talent("combat", "wrestler")
+    assert u.talent_bonus("push_bonus") == 1
+    assert u.talent_bonus("grab_bonus") == 1
+
+    f = Unit("enemy", name="Gobbo", race=data.race_by_name("Goblin"))
+    b = Battle([u], [f])
+    c, foe = b.units
+    c.pos, foe.pos = (5, 5), (6, 5)
+
+    # Push with wrestler
+    with fixed_d20(10):
+        actions.PUSH.execute(b, c, foe)
+    assert any("push talent" in line for line in b.log_lines)
+
+
+def test_nimble_skirmisher_flank_damage():
+    u1 = Unit("player", name="Rogue", race=data.race_by_name("Human"))
+    u1.set_track_level("combat", 1)
+    u1.choose_talent("combat", "agile")
+    u1.set_track_level("combat", 2)
+    u1.choose_talent("combat", "deadeye")
+    u1.set_track_level("combat", 3)
+    assert u1.choose_talent("combat", "nimble_skirmisher")
+    assert u1.talent_bonus("flank_finesse_damage") == 2
+
+    u2 = Unit("player", name="Buddy", race=data.race_by_name("Human"))
+    f = Unit("enemy", name="FlankTarget", race=data.race_by_name("Goblin"))
+    f.hp = 30
+    f.max_hp = 30
+
+    b = Battle([u1, u2], [f])
+    c1, c2, cf = b.units
+    c1.equip_weapon("Rapier")
+    # Flank positions: c1 at (4, 5), cf at (5, 5), c2 at (6, 5)
+    c1.pos, cf.pos, c2.pos = (4, 5), (5, 5), (6, 5)
+
+    initial_hp = cf.hp
+    with fixed_d20(15):
+        actions.ATTACK.execute(b, c1, cf)
+    dmg = initial_hp - cf.hp
+    # Rapier 1d8 + DEX mod + 2 flank damage
+    assert dmg > 0
+    assert any("hit" in line for line in b.log_lines)
+
+
+def test_iron_stance_defend_mental_defense():
+    u = Unit("player", name="Monk", race=data.race_by_name("Human"))
+    u.set_track_level("combat", 1)
+    u.choose_talent("combat", "alert")
+    u.set_track_level("combat", 2)
+    u.choose_talent("combat", "iron_will")
+    u.set_track_level("combat", 3)
+    assert u.choose_talent("combat", "iron_stance")
+    assert u.talent_bonus("defend_mental_defense") == 2
+
+    b = Battle([u], [Unit("enemy", name="Foe", race=data.race_by_name("Goblin"))])
+    c, _ = b.units
+    base_md = c.mental_defense
+    actions.DEFEND.execute(b, c)
+    assert c.has_condition("defending")
+    assert c.mental_defense == base_md + 2
+
+
+def test_inspiring_shout_demoralize_initiative():
+    u1 = Unit("player", name="Leader", race=data.race_by_name("Human"))
+    u1.set_track_level("combat", 1)
+    u1.choose_talent("combat", "imposing")
+    u1.set_track_level("combat", 2)
+    u1.choose_talent("combat", "gruesome_takedown")
+    u1.set_track_level("combat", 3)
+    assert u1.choose_talent("combat", "inspiring_shout")
+    assert u1.talent_bonus("demoralize_ally_initiative") == 1
+
+    u2 = Unit("player", name="Follower", race=data.race_by_name("Human"))
+    f = Unit("enemy", name="WeakFoe", race=data.race_by_name("Goblin"))
+
+    f.languages = u1.languages
+    b = Battle([u1, u2], [f])
+    c1, c2, cf = b.units
+    c1.pos, c2.pos, cf.pos = (5, 5), (5, 6), (6, 5)
+
+    init_before = c2.initiative
+    with fixed_d20(20):
+        actions.DEMORALIZE.execute(b, c1, cf)
+    assert cf.has_condition("demoralized")
+    assert c2.initiative == init_before + 1
+    assert any("Inspiring Shout" in line for line in b.log_lines)
+
+
+def test_anatomist_crit_range_full_intel():
+    u = Unit("player", name="Doctor", race=data.race_by_name("Human"))
+    u.set_track_level("combat", 1)
+    u.choose_talent("combat", "tactical_mind")
+    u.set_track_level("combat", 2)
+    u.choose_talent("combat", "sharp_analysis")
+    u.set_track_level("combat", 3)
+    assert u.choose_talent("combat", "anatomist")
+    assert u.talent_bonus("full_intel_crit_range") == 1
+
+    f = Unit("enemy", name="Specimen", race=data.race_by_name("Goblin"))
+    f.hp = 30
+    f.max_hp = 30
+    b = Battle([u], [f])
+    c, cf = b.units
+    c.pos, cf.pos = (5, 5), (6, 5)
+
+    # Not full intel: roll 19 is normal hit (crit is 20)
+    b.intel.margin["player"][cf] = 2
+    with fixed_d20(19):
+        res = actions.base._resolve_hit(b, c, cf, 19, 0, "+0", "Test")
+        assert res == "hit"
+
+    # Full intel: roll 19 becomes CRITICAL HIT (crit is 19-20)
+    b.intel.margin["player"][cf] = 12
+    with fixed_d20(19):
+        res = actions.base._resolve_hit(b, c, cf, 19, 0, "+0", "Test")
+        assert res == "crit"

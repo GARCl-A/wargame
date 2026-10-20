@@ -106,7 +106,7 @@ DEFAULT_REGION_R = 0.045
 WILDS_REGION_R = 0.09
 
 NODE_ICON = {
-    "city": ("map", "city"), "lumber_yard": ("action", "stick-splitting"), "mine": ("action", "mining"),
+    "city": ("map", "city"), "lumber_yard": ("action", "stick-splitting"), "carpenter": ("action", "crafting"), "mine": ("action", "mining"),
     "arena": ("body", "sword-tie"), "market": ("action", "trade"), "smith": ("map", "smith"),
     "tanner": ("map", "hide"), "apothecary": ("map", "flask"), "tavern": ("action", "drinking"),
     "prison": ("body", "imprisoned"), "road": ("map", "signpost"), "wilds": ("action", "wolf-howl"),

@@ -228,6 +228,7 @@ def test_taverna_perform_tab_plays_a_show():
     bard, mute = Unit("player"), Unit("player")
     bard.set_base_attribute("charisma", 18)
     bard._base_inventory = packed(["Musical Instrument"])
+    mute._base_inventory = []
     bard.money = mute.money = 0
     g = Guild([bard, mute])
     group = Group(list(g.roster), "city")

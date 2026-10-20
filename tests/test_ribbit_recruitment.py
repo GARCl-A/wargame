@@ -73,7 +73,7 @@ def test_unrecruited_ribbit_brothers_can_cameo_in_games():
     brawl = arena.brawl_bout()
 
     names = set()
-    for seed in range(80):
+    for seed in range(160):
         random.seed(seed)
         enemies, _ = matchup.build(world.node("arena"), brawl, squad_size=3, guild=guild)
         names.update(e.name for e in enemies)
@@ -90,7 +90,7 @@ def test_recruited_ribbit_brothers_never_cameo():
     brawl = arena.brawl_bout()
 
     names = set()
-    for seed in range(80):
+    for seed in range(160):
         random.seed(seed)
         enemies, _ = matchup.build(world.node("arena"), brawl, squad_size=3, guild=guild)
         names.update(e.name for e in enemies)
@@ -106,7 +106,7 @@ def test_recruited_adelio_never_cameos():
     rookie = arena.scrapper_bout()
 
     names = set()
-    for seed in range(80):
+    for seed in range(160):
         random.seed(seed)
         enemies, _ = matchup.build(world.node("arena"), rookie, squad_size=1, guild=guild)
         names.update(e.name for e in enemies)

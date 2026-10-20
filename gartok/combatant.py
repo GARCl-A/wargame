@@ -439,6 +439,16 @@ class Combatant:
         return 1 + self.char.talent_bonus("melee_reach")
 
     @property
+    def is_dex_melee(self):
+        if self.ranged:
+            return False
+        w = self.weapon
+        finesse = (w.has_trait("finesse") if (w and hasattr(w, "has_trait")) else getattr(w, "finesse", False)) or self.ability.finesse
+        if w is None and (getattr(self.char, "talent_bonus", lambda _: 0)("unarmed_finesse") or self.ability.finesse):
+            finesse = True
+        return bool(finesse and self.mod_dexterity >= self.mod_strength)
+
+    @property
     def can_throw(self):
         return not self.unarmed and self.weapon["thrown"] > 0
 
@@ -492,7 +502,10 @@ class Combatant:
     @property
     def mental_defense(self):
         total, _ = resolve_bonus(self._condition_mods("mental_defense_mods"))
-        return self.mental_defense_base + total
+        bonus = 0
+        if self.has_condition("defending") and hasattr(self, "char"):
+            bonus += getattr(self.char, "talent_bonus", lambda _: 0)("defend_mental_defense")
+        return self.mental_defense_base + total + bonus
 
     def _attr_delta(self, a):
         hexed = self.condition("hexed")

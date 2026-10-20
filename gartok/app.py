@@ -556,6 +556,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         "trust": lambda s, g, n, o: s._open_trust_offer(g, n, None),
         "ledger": lambda s, g, n, o: s._open_ledger_desk(g, n, None),
         "forge": lambda s, g, n, o: s._open_forge(g, n, None),
+        "carpenter": lambda s, g, n, o: s._open_carpenter(g, n, None),
         "apothecary": lambda s, g, n, o: s._open_apothecary(g, n, None),
         "library": lambda s, g, n, o: s._open_library(g, n, None),
         "stable": lambda s, g, n, o: s._open_stables(g),

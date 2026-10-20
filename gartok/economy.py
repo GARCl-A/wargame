@@ -176,7 +176,7 @@ SHELVES = {
     },
     "tanner": {
         "Cloak": (15, 4), "1sqm Hide": (0, 0), "Leather Jerkin": (3, 0.5), "Studded Leather": (3, 0.3),
-        "Quiver": (5, 1), "Light Crossbow": (2, 0.3), "Shortbow": (1, 0.15),
+        "Quiver": (5, 1),
     },
     "apothecary": {"Vial": (10, 3), "First Aid Kit": (5, 1), "Minor Healing Potion": (3, 0.5)},
     "farm": {"Potato": (30, 10), "Salt": (20, 5), "Sugar": (15, 5), "Meat": (10, 3), "Fruit": (10, 3)},
@@ -189,11 +189,14 @@ SHELVES = {
     "lumber_yard": {"Lumber": (20, 6), "Fruit": (10, 3)},
     "mine": {"Stone Brick": (10, 3), "Iron Ore": (10, 2), "1kg Coal": (15, 4)},
     "library": {"Paper": (20, 5), "Ink": (10, 2)},
+    "carpenter": {
+        "Shortbow": (2, 0.3), "Light Crossbow": (2, 0.3), "Quarterstaff": (4, 1),
+    },
 }
 NODE_SHELVES = {node_id: (node_id,) for node_id in SHELVES}
 
 # What the town's shops sell between them (the yard, the mine and the library keep their own).
-TOWN_SHOPS = ("smith", "tanner", "apothecary", "farm", "tavern", "market")
+TOWN_SHOPS = ("smith", "tanner", "apothecary", "farm", "tavern", "market", "carpenter")
 MARKET_STOCK = list(dict.fromkeys(name for node_id in TOWN_SHOPS for name in SHELVES[node_id]))
 
 

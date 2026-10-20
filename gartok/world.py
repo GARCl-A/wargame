@@ -184,6 +184,14 @@ NODES = [
          "buys what it yields and sells its lumber and fruit.",
          functions=("work", "shop"), shop_label="BROWSE THE YARD",
          vendors={"shop": Vendor("Grashnak", "Orc", "foreman", "lumberjack.png")}),
+    Node("carpenter", "The Carpenter", "town", (0.26, 0.57),
+         "A fragrant workshop of cedar shavings and drying timber between the city walls and the sawmill. "
+         "Bows, crossbows, cart wheels and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
+         jurisdiction="the_city", language="Verdant", alignment="Neutral and Good",
+         functions=("carpenter", "shop"),
+         vendors={"carpenter": Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png"),
+                  "shop": Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png")}),
+
     Node("mine", "The Mine", "town", (0.78, 0.54),
          "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal "
          "for sale are sold here.", functions=("work", "shop"), shop_label="BROWSE THE MINE",
@@ -285,6 +293,8 @@ WILDS_TERRITORY_NODE = "wilds_territory"
 EDGES = [
     ("city", "arena", 2),
     ("city", "lumber_yard", 1),
+    ("city", "carpenter", 0.5),
+    ("lumber_yard", "carpenter", 0.5),
     ("city", "market", 1),
     ("city", "tavern", 1),
     ("city", "prison", 1),

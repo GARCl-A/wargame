@@ -60,6 +60,14 @@ class TabbedHubScreen(Screen):
             from .crafting_screen import CraftingScreen
             craft = CraftingScreen(fonts, guild, group, on_done, vendor=world.vendor(node.id, "forge"))
             tabs.append(("forge", "FORGE", craft))
+        if node.has("carpenter"):
+            from .crafting_screen import CraftingScreen
+            craft = CraftingScreen(fonts, guild, group, on_done,
+                                   title="CARPENTRY",
+                                   subtitle="craft wooden bows, crossbows and tools  ·  needs recipes and materials",
+                                   station="carpenter",
+                                   vendor=world.vendor(node.id, "carpenter"))
+            tabs.append(("carpenter", "CARPENTRY", craft))
         if node.has("tanner"):
             from .tanner_screen import TannerScreen
             jobs = TannerScreen(fonts, guild, group, on_done)

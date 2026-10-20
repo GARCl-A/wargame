@@ -422,10 +422,12 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Sure Strike | +1 to hit with Strength-based attacks. | strong |
 | 3 | Blind Strike | reduces the attack penalty against obscured or dark targets by 1. | sure_strike |
 | 2 | Heavy Hand | +1 damage on melee attacks. | strong |
+| 3 | Wrestler | +1 to Push and Grab checks. | heavy_hand |
 | 1 | Agile | +1 Dexterity. | -- |
 | 2 | Long Reach | +1 square of range with ranged and thrown weapons. | agile |
 | 2 | Deadeye | +1 to hit with Dexterity-based attacks. | agile |
 | 3 | Fleet | +1 square of Speed. | deadeye |
+| 3 | Nimble Skirmisher | +2 damage on Dexterity melee attacks against flanked targets. | deadeye |
 | 1 | Tough | +1 Constitution. | -- |
 | 2 | Hardy | +1 max HP for every Hit Die you have. | tough |
 | 3 | Recovery | heal 1 HP after every fight you survive. | hardy |
@@ -435,14 +437,17 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 | 2 | Quick Wits | +2 initiative. | alert |
 | 3 | Peripheral Vision | when flanked, your AC is only reduced by 1 instead of 2. | quick_wits |
 | 2 | Iron Will | +2 Mental Defense. | alert |
+| 3 | Iron Stance | using Defend grants +2 Mental Defense in addition to AC until your next turn. | iron_will |
 | 1 | Imposing | +1 Charisma. | -- |
 | 2 | Menacing | +1 to Demoralize checks. | imposing |
 | 2 | Gruesome Takedown | upon downing a foe, immediately make a free Demoralize check against the nearest enemy within range (ignores language). | imposing |
 | 3 | Cull the Broken | +2 damage on attacks against demoralized targets. | menacing |
+| 3 | Inspiring Shout | upon successfully demoralizing an enemy, grant +1 initiative to the next ally in turn order. | gruesome_takedown |
 | 1 | Tactical Mind | +1 Intelligence. | -- |
 | 2 | Sharp Analysis | +1 on all Assess and enemy observation checks. | tactical_mind |
 | 2 | Combat Analysis | +2 on active Assess checks made during battle. | tactical_mind |
 | 3 | Exploit Weakness | +2 to hit against enemies with Full Intel. | combat_analysis |
+| 3 | Anatomist | your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20). | sharp_analysis |
 
 ### Work track
 

@@ -17,8 +17,10 @@ def test_the_levels_the_difficulty_works_out_for_every_recipe():
     levels = {name: r.level for name, r in items.CRAFTING_RECIPES.items()
               if not name.startswith("Dictionary of ") or name == "Dictionary of Ankarin"}
     assert levels == {
-        "Jerky": 1, "Roast Meat": 1, "Fruit Compote": 1, "Iron Bar": 1, "Bear Trap": 1, "Alarm Trap": 1, "Dwarf Shield": 2, "Dictionary of Ankarin": 2,
-        "Dwarf Axe": 3, "Dwarf Armor": 3, "Minor Healing Potion": 3, "Antidote": 3, "Signal Horn": 4,
+        "Jerky": 1, "Roast Meat": 1, "Fruit Compote": 1, "Iron Bar": 1, "Bear Trap": 1, "Alarm Trap": 1,
+        "Dwarf Shield": 2, "Dictionary of Ankarin": 2, "Torch": 2, "Club": 2, "Shortspear": 2, "Light Crossbow": 2,
+        "Dwarf Axe": 3, "Dwarf Armor": 3, "Minor Healing Potion": 3, "Antidote": 3, "Shortbow": 3,
+        "Signal Horn": 4,
     }
 
 

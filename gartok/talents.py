@@ -53,6 +53,11 @@ exactly one consumer that reads it back:
     assess_active_bonus intel.assess                   --
     full_intel_to_hit Combatant.attack_mods            --
     grab_bonus        actions.combat.Grab              --
+    push_bonus        actions.combat.Push              --
+    flank_finesse_damage actions.base._resolve_hit     --
+    defend_mental_defense Combatant.mental_defense     --
+    demoralize_ally_initiative actions.combat.execute_demoralize --
+    full_intel_crit_range actions.base._resolve_hit    --
     unarmed_cleave    actions.weapon_actions.Cleave    --
     flies             Combatant.flies                  --
     fly_speed         Unit._derive_speed               --
@@ -157,6 +162,9 @@ _LIST = [
     Talent("heavy_hand", "combat", 2, "Heavy Hand",
            "+1 damage on melee attacks.", requires="strong",
            effects=(Effect("melee_damage", 1),), icon="action/crush"),
+    Talent("wrestler", "combat", 3, "Wrestler",
+           "+1 to Push and Grab checks.", requires="heavy_hand",
+           effects=(Effect("push_bonus", 1), Effect("grab_bonus", 1)), icon="action/grab"),
 
     Talent("agile", "combat", 1, "Agile", "+1 Dexterity.",
            effects=(Effect("attr", 1, "dexterity"),), icon="action/acrobatic"),
@@ -168,6 +176,9 @@ _LIST = [
            effects=(Effect("to_hit", 1, "dexterity"),), icon="action/ricochet"),
     Talent("fleet", "combat", 3, "Fleet", "+1 square of Speed.", requires="deadeye",
            effects=(Effect("speed", 1),), icon="action/leapfrog"),
+    Talent("nimble_skirmisher", "combat", 3, "Nimble Skirmisher",
+           "+2 damage on Dexterity melee attacks against flanked targets.", requires="deadeye",
+           effects=(Effect("flank_finesse_damage", 2),), icon="action/backstab"),
 
     Talent("tough", "combat", 1, "Tough", "+1 Constitution.",
            effects=(Effect("attr", 1, "constitution"),), icon="body/bell-shield"),
@@ -195,6 +206,10 @@ _LIST = [
     Talent("iron_will", "combat", 2, "Iron Will", "+2 Mental Defense.",
            requires="alert",
            effects=(Effect("mental_defense", 2),), icon="action/meditation"),
+    Talent("iron_stance", "combat", 3, "Iron Stance",
+           "using Defend grants +2 Mental Defense in addition to AC until your next turn.",
+           requires="iron_will",
+           effects=(Effect("defend_mental_defense", 2),), icon="body/bell-shield"),
 
     Talent("imposing", "combat", 1, "Imposing", "+1 Charisma.",
            effects=(Effect("attr", 1, "charisma"),), icon="action/shouting"),
@@ -208,6 +223,10 @@ _LIST = [
     Talent("cull_the_broken", "combat", 3, "Cull the Broken",
            "+2 damage on attacks against demoralized targets.", requires="menacing",
            effects=(Effect("demoralized_target_damage", 2),), icon="action/boot-stomp"),
+    Talent("inspiring_shout", "combat", 3, "Inspiring Shout",
+           "upon successfully demoralizing an enemy, grant +1 initiative to the next ally in turn order.",
+           requires="gruesome_takedown",
+           effects=(Effect("demoralize_ally_initiative", 1),), icon="action/shouting"),
 
     Talent("tactical_mind", "combat", 1, "Tactical Mind", "+1 Intelligence.",
            effects=(Effect("attr", 1, "intelligence"),), icon="head/brain"),
@@ -220,6 +239,10 @@ _LIST = [
     Talent("exploit_weakness", "combat", 3, "Exploit Weakness",
            "+2 to hit against enemies with Full Intel.", requires="combat_analysis",
            effects=(Effect("full_intel_to_hit", 2),), icon="gui/convergence-target"),
+    Talent("anatomist", "combat", 3, "Anatomist",
+           "your critical hit range expands by 1 against enemies with Full Intel (crits on 19-20).",
+           requires="sharp_analysis",
+           effects=(Effect("full_intel_crit_range", 1),), icon="head/spectacles"),
 
     # ================================================================== #
     # work -- two roots, carrier and negotiator                           #

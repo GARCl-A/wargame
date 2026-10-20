@@ -139,6 +139,11 @@ class NodeScreensMixin:
         self.scene = ForgeHubScreen(self.ui_fonts, self.guild, group, node,
                                     on_done=self._after_activity)
 
+    def _open_carpenter(self, group, node, _offer):
+        from .hub_screen import TabbedHubScreen
+        self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
+                                              on_done=self._after_activity, first="shop")
+
     def _open_apothecary(self, group, node, _offer):
         from .apothecary_hub_screen import ApothecaryHubScreen
         self.scene = ApothecaryHubScreen(self.ui_fonts, self.guild, group,

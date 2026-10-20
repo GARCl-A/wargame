@@ -52,6 +52,7 @@ class CraftingStation(StrEnum):
     APOTHECARY = "apothecary"
     SCRIPTORIUM = "scriptorium"
     COOKING = "cooking"
+    CARPENTER = "carpenter"
 
 
 @dataclass(frozen=True)
@@ -807,6 +808,49 @@ CRAFTING_RECIPES: dict[str, list[CraftingRecipe]] = RecipeDict({
             materials=["Iron Bar", "Rope"],
             complexity=5,
             station=CraftingStation.FORGE,
+        ),
+    ],
+
+    "Shortbow": [
+        CraftingRecipe(
+            target="Shortbow",
+            materials=["Lumber", "Lumber", "1sqm Hide"],
+            complexity=12,
+            station=CraftingStation.CARPENTER,
+        ),
+    ],
+    "Light Crossbow": [
+        CraftingRecipe(
+            target="Light Crossbow",
+            materials=["Lumber", "Lumber", "Iron Bar"],
+            complexity=15,
+            station=CraftingStation.CARPENTER,
+        ),
+    ],
+    "Shortspear": [
+        CraftingRecipe(
+            target="Shortspear",
+            materials=["Lumber", "Iron Bar"],
+            complexity=8,
+            station=CraftingStation.CARPENTER,
+        ),
+    ],
+    "Club": [
+        CraftingRecipe(
+            target="Club",
+            materials=["Lumber"],
+            complexity=4,
+            station=CraftingStation.CARPENTER,
+            yield_qty=2,
+        ),
+    ],
+    "Torch": [
+        CraftingRecipe(
+            target="Torch",
+            materials=["Lumber"],
+            complexity=4,
+            station=CraftingStation.CARPENTER,
+            yield_qty=3,
         ),
     ],
     "Iron Bar": [

@@ -10,7 +10,7 @@ it here and, if it changed a design premise, record it in `AGENTS.md` or the doc
 
 Parts:
 
-- **Ready to do** — the task is defined enough to start. Sorted by size: small (a sitting),
+- **Ready to do** — the task is defined enough to start. Sorted by size:
   *Playtest notes* (raw, to be sized as they are picked up), *Architecture debt* (past choices to
   pay when a feature needs them), large (a system: UI, AI and tests), *Art* (made by hand) and epic (its own arc).
 - **Needs more information** — a design question, a repro or another system has to land
@@ -28,12 +28,12 @@ Goal read: a sandbox open-world guild manager; the run ends only on a wipe. Bala
 sim work is ahead of the content it balances, so the order favours content verticals and
 the seams they need.
 
-1. **Production chain between groups** (*Large*).
-2. **Talent trees as long as the levels** (*Large*).
-3. **Archaeology at Ancient Ruins** (Shovel tool, discovery rolls, artifact recovery).
-4. **Cooking and temporary meal buffs**.
-5. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
-6. **Magic Arc follow-ups** (*Ready to do -> Medium*): `Scroll of Invisibility` library quest, Blood's fourth mission (robbed dragon strikes back), and encounter tuning after campaign playtests.
+1. **Production chain between groups** (*Large*): Carpenter node opened (connected to City and Lumber Yard, Treefolk keeper Rowan, crafting station for bows, crossbows, spear, club, torch). Next: Coal for Smith, and sim crafter policy.
+2. **Talent trees as long as the levels** (*Large*): Combat tree milestone reached (30 talents: 6 attribute roots with 5 talents each, balanced). Next: work track expansion (14 -> 30).
+3. **Cooking and temporary meal buffs**: cooking dishes with 24h stat buffs; only the most recent meal buff is active.
+4. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
+5. **Magic Arc follow-ups** (*Ready to do -> Medium*): `Scroll of Invisibility` library quest, Blood's fourth mission (robbed dragon strikes back), and encounter tuning after campaign playtests.
+6. **Archaeology at Ancient Ruins** (postponed: awaiting design of an innovative and fun excavation system).
 
 
 ---
@@ -72,8 +72,8 @@ its functions are tabs inside.
   level should carry (weapon, armour, consumables), for the enemy generators (`encounters.py`, the
   Battlefield's soldiers and warband) and for future balance. Today a generated body carries its
   occupation's weapon and item whatever its level.
-- **Ancient Ruins as an archaeological site:** start "archaeology" work there (deferred to after the magic arc).
-  Decided 2026-10-12: complex system requiring tools (Shovel/Pick), multi-step iterations and costs to unearth artifacts, money and lost lore.
+- **Ancient Ruins as an archaeological site:** start "archaeology" work there.
+  Decided 2026-10-12 & 2026-10-19: postponed to design an innovative and fun excavation system with tools (Shovel/Pick), multi-step iterations, artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.
 - **The Ogre's fortress after the Wildfire.** Convinced, it stays as a friendly node with the Ogre as its
   `Vendor` and **no function** (author 2026-10-17: it stays so; trade with him later, once richer trade
@@ -214,10 +214,11 @@ pointed to, not repeated.
   often enough (Repel Strike's wall, Maiming Strike's helpless foe, Parry & Strike's two foes, whose margin is
   the slimmest), and the old Extreme Shot / Power Shot niches.
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
-  group's output is another's input, which is the heart of the open-world vision. Lumber feeds a
+  group's output is another's input, which is the heart of the open-world vision. First step is opening
+  a new node 'Carpenter' associated with the Lumber Yard and Ankareth (direction 2026-10-19). Lumber feeds the
   carpenter (bows, wagons: the Tanner holds the Shortbow and Light Crossbow until one exists), Coal feeds the
   Smith (Iron Bar is already a forge recipe). Gives Coal and the gems a use and closes `sources.py`'s
-  `traded` goods one chain at a time. Needs recipes, a carpenter node or function, the sim's `crafter`
+  `traded` goods one chain at a time. Needs recipes, the carpenter node, the sim's `crafter`
   policy and tests. **Lumber saturating wood price (decided 2026-10-18):** enters together with or right after
   this production chain (the Yard produces Lumber by how many work there, so endless day labour floods the market).
 - **Talent trees are shorter than the levels (to be authored by hand, after the magic arc).** The XP
@@ -228,15 +229,15 @@ pointed to, not repeated.
   its own (one pick at racial 5, 10 and 15), and most have 1. Authored beasts: Dragon has 4 nodes
   (`dragon`, `dragon_breath`, `sweeping_claws`, `draconic_wings`) spending all 4 picks for Kharzuul;
   Zombie has 2 nodes (`death_grip`, `zombie_bite`).
-  Goal: **at least 30 combat and 30 work talents**, and 3+ racial nodes per race. Only 5 combat nodes remain to hit the 30-talent goal;
-  work track requires further expansion.
+  Goal: **at least 30 combat (6 attribute roots balanced with 5 nodes each) and 30 work talents**, and 3+ racial nodes per race. Combat tree reached 30 talents on 2026-10-19 (5 balanced per attribute root: Wrestler, Nimble Skirmisher, Iron Stance, Inspiring Shout, Anatomist);
+  work track requires further expansion (currently 14 talents).
   The magic track (6 school-agnostic nodes since 2026-10-18) is complete.
 - **Gathering: loose ends.**
   Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art. (Fruit preservation completed with Fruit Compote recipe).
 - **Item properties: base material sources (after the production chain).**
   Left: (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
 - **Prisoners.**
-  Left: what a captive is for beyond a mission (decided 2026-10-19: sell to prison if bandit/outlaw, recruit or enslave), enemy side capturing player's units, and rescuing a captive in battle.
+  Left: what a captive is for beyond a mission (decided 2026-10-19: sell to prison if bandit/outlaw, recruit, or forced manual labor in lumber/mine with escape/revolt risks), enemy side capturing player's units, and rescuing a captive in battle.
 - **Combat AI benchmarking against player performance.**
   Current benchmark across the 40 campaign logs (`combat_pairs.py`): Scrapper 77% (player 80%), Champion 90% (player 100%), Defend Title 95% (player 100%), hunts 92% (player 92%), road ambushes 72% AI vs 40% player.
   Left: derive combat policy thresholds into `ai.py` (retreating when low HP, objective prioritization in CTF).
@@ -338,9 +339,8 @@ building them:
   fast (a bonus for the meal, a short `lifespan`), so what rots matters and a larder is a choice.
   Marsh's slower rot (see the charter) is priced low until this lands. **Decided 2026-10-10 & 2026-10-12:**
   cooking is an ordinary craft activity, and eating the dish gives a temporary buff that moves
-  one number for 24 h (HP, an attribute, advantage on a named kind of action...). Only the most recent meal
-  buff is active by default, but the data model on `Unit` stores an active buff list to support future talents that
-  allow multiple buffs simultaneously. Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Dishes with temporary stat buffs are explicitly scheduled for AFTER the magic arc. Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
+  one number for 24 h (HP, an attribute, advantage on a named kind of action...). Confirmed 2026-10-19: strictly only the most recent meal
+  buff is active (eating a new meal buff overwrites the previous one). Specific upcoming recipes built 2026-10-12: (1) Jerky (2 Meat + 1 Salt); (2) Roast Meat (pure Meat + campfire, quick cooked meat); (3) Fruit Compote (introduces new base item `Sugar`; Sugar + Vial + Fruit -> long-lasting Fruit Compote, preventing gathered fruit from spoiling in 24 h). Decided 2026-10-12: neither of these two new recipes grant temporary stat buffs; their purpose is food preservation (extending lifespan of raw gathered meat and fruit). Dishes with temporary stat buffs are explicitly scheduled for AFTER the magic arc. Open: future premium dishes that grant temporary buff stats per dish, and the cost to the economy sim
   (`cheapest_food_price` stops being the one price of a meal).
 
 ---

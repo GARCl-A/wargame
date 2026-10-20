@@ -274,6 +274,9 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         crit_range = w.get("crit_range", 20)
     else:
         crit_range = 20
+    if hasattr(attacker, "char") and intel.has_full_intel(battle, attacker.team, target):
+        crit_relief = getattr(attacker.char, "talent_bonus", lambda x: 0)("full_intel_crit_range")
+        crit_range = max(2, crit_range - crit_relief)
     crit = nat >= crit_range
     shown = intel.shown(battle, target, "ac", ac)
     flank_tag = f" [Flank -{flank_pen}]" if flank_pen else ""
@@ -298,9 +301,12 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         cull = 0
         if getattr(target, "demoralized", False) and hasattr(attacker, "char"):
             cull = getattr(attacker.char, "talent_bonus", lambda x: 0)("demoralized_target_damage")
+        flank_finesse = 0
+        if _flanked(battle, attacker, target) and getattr(attacker, "is_dex_melee", False) and not thrown and hasattr(attacker, "char"):
+            flank_finesse = getattr(attacker.char, "talent_bonus", lambda x: 0)("flank_finesse_damage")
         target.take_damage(
             attacker.damage_roll(crit=crit, thrown=thrown, weapon=weapon,
-                                 crit_mult=crit_mult, bonus_damage=bonus_damage + cull),
+                                 crit_mult=crit_mult, bonus_damage=bonus_damage + cull + flank_finesse),
             battle.log, knockout=bool(pulled))
         if was_up and target.team != attacker.team:
             if not target.alive:

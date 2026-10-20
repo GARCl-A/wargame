@@ -38,6 +38,7 @@ FUNCTIONS = {f.id: f for f in (
     NodeFunction("trust", "trust"),
     NodeFunction("tanner", "tanner", "VISIT THE TANNER", absorbs=("shop",)),
     NodeFunction("forge", "forge", "VISIT THE FORGE", absorbs=("shop",)),
+    NodeFunction("carpenter", "carpenter", "VISIT THE CARPENTER", absorbs=("shop",)),
     NodeFunction("apothecary", "apothecary", "VISIT THE APOTHECARY", absorbs=("shop",)),
     NodeFunction("stable", "stable", "ENTER THE FARM", absorbs=("shop",)),
     NodeFunction("library", "library", "VISIT THE LIBRARY", absorbs=("shop",)),
