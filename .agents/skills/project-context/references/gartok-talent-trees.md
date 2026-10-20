@@ -194,3 +194,39 @@ into `mental_defense_base` so both Unit + Combatant see it), `initiative`
 (`Combatant.initiative_bonus`), `speed` (`Unit._derive_speed`, added to the base
 before armor/encumbrance subtraction). Icons: `head/gaze`, `head/quick-man`,
 `action/meditation`, `action/leapfrog`. Tests in `test_progression.py`.
+
+## Both trees at 30 nodes (Oct 2026, commits `27b16f1` combat, `a7e649d` work)
+
+Combat and work now share one shape: **6 attribute roots x 5 nodes** (a tier-1
+root, two tier-2 forks, two tier-3 nodes). Work roots, in order: `carrier` (STR),
+`charismatic`, `clever`, `nimble_fingers` (DEX), `sturdy` (CON), `observant` (WIS).
+`tests/test_work_talents.py` holds the 30 / 6 / 5 structure. The old `negotiator`
+root became a CHA tier-2 node; `fletcher` moved from INT (behind Crafter) to DEX
+(behind Woodcarver).
+
+Decisions not to redo:
+
+- **Heavy Haul is carry, not yield.** It first gave an extra roll on the gathering
+  table; that was a flat bonus per shift (4 x 4 h shifts = 4 extra rolls a day,
+  ~+$25/day at the Mine) and, even prorated, +44% gathering yield -- the Delvers'
+  vocation perk (+15%) in a talent any guild takes. The author's call: **+6 kg
+  before the stagger for cargo that is not equipment** (`haul_buffer`, folded into
+  `Unit._carry_relief` beside Carrier's `carry_buffer`; a kg covered by both counts
+  once; never touches `load` or `carry_max`). Yield bonuses belong to the vocation.
+- **Piecework is coin only** (`coin_gain` in `_pay_worker`): wage shifts and the
+  tavern stage, never a gathering shift, which pays in items.
+- **Field Medic is out of combat only**: the Group screen's first aid; `Stabilize`
+  / `FirstAid` in battle do not read it (a work tree must not buy combat odds).
+- **Pathfinder lives in `vocations.travel_mult(guild, group)`** (`PATHFINDER_FACTOR`
+  0.90, stacks with Caravan), so every caller that times a walk -- the order, each
+  leg, the map's ETA, the supply run, the sim -- passes the group and agrees.
+- **Rest talents go through the rest plan too**: `rest_heal(unit, triage)` and
+  `nonlethal_clear_hours(unit)` are read by both the clock and `rest.until_full`,
+  so "until full" never lies. Hardened is 16 h, not 12: the clock checks
+  non-lethal damage only at each 8 h heal stretch.
+- **Woodcarver is the Carpenter station only** (`Unit.craft_bonus(station)`); there
+  is no tanning station yet, so the "leather" half was dropped from its text.
+- The talent picks of generated enemies (`encounters.py`) come from these trees, so
+  a tree change shifts seeded fights: the lair heist test had its seeds moved.
+- The sim's `TALENT_PLAN` lists the new work talents, but 30-day sim members reach
+  at most 2 work picks, so the economy report does not see them yet (backlog item).

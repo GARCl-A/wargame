@@ -29,7 +29,7 @@ sim work is ahead of the content it balances, so the order favours content verti
 the seams they need.
 
 1. **Production chain between groups** (*Large*): Carpenter node opened (connected to City and Lumber Yard, Treefolk keeper Rowan, crafting station for bows, crossbows, spear, club, torch). Next: Coal for Smith, and sim crafter policy.
-2. **Talent trees as long as the levels** (*Large*): Combat tree milestone reached (30 talents: 6 attribute roots with 5 talents each, balanced). Next: work track expansion (14 -> 30).
+2. **The racial track** (*Large*): combat and work both have 30 talents (6 roots x 5, done 2026-10-20). Next: 3+ racial nodes per race.
 3. **Cooking and temporary meal buffs**: cooking dishes with 24h stat buffs; only the most recent meal buff is active.
 4. **Sim planner / offers integration** (`scripts/economy_offers.py` -> policy planner).
 5. **Magic Arc follow-ups** (*Ready to do -> Medium*): `Scroll of Invisibility` library quest, Blood's fourth mission (robbed dragon strikes back), and encounter tuning after campaign playtests.
@@ -46,6 +46,13 @@ the seams they need.
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
   2. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
   3. *Tuning after playtests:* balance numbers for Battlefield, Snake Dragon, Ogre Wildfire, Necromancer at the Front, and Dragon's Clutch once further campaign runs reach them.
+- **The economy report does not measure the work talents (found 2026-10-20).** `TALENT_PLAN` in
+  `scripts/economy_guild.py` now lists the 16 new work talents, but a 30-day sim member reaches at most
+  2 work picks (Carrier, Piecework), so none of them is ever taken inside the report's horizon. Wanted: a
+  section in `economy_report.py` that prices each work talent directly (one member with and without it on
+  the activity tables: Troubadour's tips, Restful Sleep / Triage hours to full, Pathfinder's hours on the
+  road, Skinner's hide, Heavy Haul's kg against the Lumber / Ore a crew carries back), without waiting for
+  a guild to level. Sized medium; blocks nothing.
 
 ## Playtest notes 2026-10-12
 
