@@ -283,7 +283,7 @@ def _pathfinder(tid):
 
 
 ROWS = {
-    "carrier": _haul, "heavy_haul": _haul, "piecework": _piecework, "brisk_hands": _brisk,
+    "brawny": _haul, "heavy_haul": _haul, "piecework": _piecework, "brisk_hands": _brisk,
     "steady_pace": _steady, "charismatic": _tips, "troubadour": _tips, "negotiator": _negotiator,
     "fixer": _fixer, "provisioner": _provisioner, "clever": _clever, "linguist": _linguist,
     "crafter": _craft("Jerky"),

@@ -17,7 +17,6 @@ from tests.helpers import (
     actions,
     data,
     economy,
-    packed,
     persist,
     recruit,
     talents,
@@ -162,24 +161,13 @@ def test_negotiator_lifts_only_the_haggle_charisma():
         u.charisma + u.hunger_attribute_penalty + 1)
 
 
-def test_carrier_widens_the_stagger_threshold_by_up_to_a_kg_of_gear():
+def test_brawny_is_the_work_trees_plus_one_strength():
     u = _unit(seed=5)
     u.work_hours = economy.LUMBER_XP_HOURS * 2
-    u._base_inventory = packed(["Rope", "Meat"])      # 2 kg cargo + a consumable
     u._derive_combat()
-    load, base_normal = u.load, u.carry_normal
-    assert u.choose_talent("work", "carrier")
-    assert u.load == load                         # displayed weight unchanged
-    assert u.carry_relief == 1.0                  # a full kg: the Rope covers it
-    assert u.carry_normal == round(base_normal + 1.0, 1)
-
-    u._base_inventory = packed(["Chisel"])       # 0.3 kg of cargo -> only 0.3 relief
-    u._derive_combat()
-    assert u.carry_relief == round(data.item_weight("Chisel"), 1)
-
-    u._base_inventory = packed(["Meat", "Axe"])      # only food + a weapon -> no relief
-    u._derive_combat()
-    assert u.carry_relief == 0.0 and u.carry_normal == base_normal
+    strength = u.strength
+    assert u.choose_talent("work", "brawny")
+    assert u.strength == strength + 1 and u.carry_relief == 0.0
 
 
 def test_talent_effects_resolve_by_channel_and_stat():
@@ -202,16 +190,6 @@ def test_talent_effects_resolve_by_channel_and_stat():
     assert u.attack_bonus == (u.mod_strength, "STR")  # Deadeye (DEX-only) adds nothing
     u.equipped_weapon = "Light Crossbow"             # ranged -> a DEX attack
     assert u.attack_bonus == (u.mod_dexterity + 1, "DEX")
-
-
-def test_carrier_never_lifts_the_carry_max_ceiling():
-    u = _unit(seed=5)
-    u.work_hours = economy.LUMBER_XP_HOURS * 2
-    u._base_inventory = packed(["Rope"])
-    u._derive_combat()
-    ceiling = u.carry_max
-    assert u.choose_talent("work", "carrier")
-    assert u.carry_max == ceiling
 
 
 def test_mean_level_grants_a_hit_die():
@@ -517,8 +495,8 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
     from gartok.guild import Guild
     random.seed(3)
     plain = _work_ready()
-    rich = _work_ready("carrier", "piecework")
-    quick = _work_ready("carrier", "brisk_hands")
+    rich = _work_ready("brawny", "piecework")
+    quick = _work_ready("brawny", "brisk_hands")
 
     # mixed crew: pay is per-worker; the guild leaves when the SLOWEST is done
     guild = Guild([plain, rich, quick], clock=Clock(6 * 3600))
@@ -532,7 +510,7 @@ def test_piecework_lifts_pay_and_brisk_hands_is_individual():
     assert guild.clock.seconds == 6 * 3600 + 16 * 3600    # plain drags: full 16 h
 
     # a Brisk worker on their own: 16 h of work banked in 14.4 h of the clock
-    solo = Guild([_work_ready("carrier", "brisk_hands")], clock=Clock(6 * 3600))
+    solo = Guild([_work_ready("brawny", "brisk_hands")], clock=Clock(6 * 3600))
     solo.work_shift(solo.roster, 16)
     assert solo.roster[0].work_hours == economy.LUMBER_XP_HOURS * 6   # already outgrew this job
     assert solo.clock.seconds == 6 * 3600 + round(16 * 0.9 * 3600)
@@ -684,7 +662,6 @@ def test_work_xp_hours_scale_like_combat_xp():
 
 
 def test_armor_bearer_requires_bulwark_and_reduces_armor_weight():
-    from gartok import items
     from gartok.combatant import Combatant
 
     u = _unit(seed=1)

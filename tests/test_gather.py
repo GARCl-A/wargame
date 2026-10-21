@@ -310,7 +310,7 @@ def test_piecework_lifts_the_wage_a_shift_is_weighed_against():
     _, before, _ = guild.shift_worth(group, "lumber_yard", 16)
     u = group.members[0]
     u.set_track_level("work", 2)
-    u.choose_talent("work", "carrier")
+    u.choose_talent("work", "brawny")
     u.choose_talent("work", "piecework")
     _, after, _ = guild.shift_worth(group, "lumber_yard", 16)
     assert after == pytest.approx(before * 1.2)

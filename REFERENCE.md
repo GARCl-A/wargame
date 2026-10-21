@@ -471,9 +471,9 @@ One tree per track. A new level in a track grants one pick in its tree; `require
 
 | Tier | Talent | Effect | Requires |
 |---|---|---|---|
-| 1 | Carrier | carry up to 1 kg more gear before you stagger (not food or weapons). | -- |
-| 2 | Piecework | +20% coin from work that pays in coin. | carrier |
-| 2 | Brisk Hands | work finishes 10% faster -- you keep the time. | carrier |
+| 1 | Brawny | +1 Strength. | -- |
+| 2 | Piecework | +20% coin from work that pays in coin. | brawny |
+| 2 | Brisk Hands | work finishes 10% faster -- you keep the time. | brawny |
 | 3 | Steady Pace | work counts as rest: you recover HP while you work, as if resting. | brisk_hands |
 | 3 | Heavy Haul | carry up to 6 kg more before you stagger, in anything that is not equipment (materials, food, loot -- not weapons, armor, shields or artifacts). | piecework |
 | 1 | Charismatic | +1 Charisma. | -- |

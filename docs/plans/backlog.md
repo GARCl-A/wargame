@@ -65,12 +65,6 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   128 for 7 (its till refills $25 a day), the Mine in 86 and 70. Open: a cost for going without sleep, a lower
   wage, or a new premise. Layer 1's floor check still counts one shift a day.
 
-- **The work tree's STR root breaks the pattern (author 2026-10-21).** Five of the six work roots are
-  "+1 attribute" (Charismatic, Clever, Nimble Fingers, Sturdy, Observant); the STR root is `carrier`
-  (+1 kg of gear before staggering), not "+1 Strength" (`talents.py`, the work block). Open: make the STR
-  root +1 Strength and move Carrier's carry buffer deeper in the branch (or fold it into Heavy Haul),
-  then re-run `scripts/economy_talents.py` and fix REFERENCE.md.
-
 ## Playtest notes 2026-10-12
 
 Raw notes, to be sized as they are picked up. Guiding rule: **fewest possible buttons on the
@@ -203,7 +197,3 @@ for a system that does not exist yet:
 - **Map** (Cartographer). Finds treasures and secret zones.
 - **Compass** (Guide). Avoids getting lost on very long trips; waits for a getting-lost system.
 - **Deck of Cards** (Gambler). A card minigame at the tavern, among others. Its own arc.
-
------
-
-as carroças deveriam ser vendidas no carpinteiro

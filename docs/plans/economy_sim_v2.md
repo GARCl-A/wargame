@@ -337,10 +337,10 @@ Still 0% at day 30. Levels do not raise the yard's wage (finding in the answers:
 not the work level); a squad starting at combat 1 / work 2 with $45 ends 20 days later with $59
 per member and 0% on the milestone.
 
-**17. Talents and the climb.** The work track pays: one pick per level, **Carrier** (tier 1) then
+**17. Talents and the climb.** The work track pays: one pick per level, **Brawny** (tier 1, +1 Strength) then
 **Piecework** (+20% coin from paid work: the Axe's $5 becomes $6), **Brisk Hands** (10% faster)
 and **Steady Pace** (heal while working, work level 4). The sim now spends picks on
-`TALENT_PLAN` (work: Carrier, Piecework, Brisk Hands, Steady Pace; combat: Tough, Hardy, Bulwark,
+`TALENT_PLAN` (work: Brawny, Piecework, Brisk Hands, Steady Pace; combat: Tough, Hardy, Bulwark,
 Recovery) for guild members and for the library's fighters. From level 0, a lumber guild with the
 Axe (work 2 by about day 5) and Piecework holds **$50 per member at day 30** (was $35) and meets
 the full milestone in **42% of guilds by day 60** (median day 49); still 0% at day 30. The

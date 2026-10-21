@@ -93,7 +93,7 @@ CREW_CHUNK_HOURS = 4                 # the crew's orders are checked this often 
 # Brisk Hands, Steady Pace heals on the job), then hauls, rests, travels and performs better;
 # the combat track keeps the squad alive
 TALENT_PLAN = {
-    "work": ("carrier", "piecework", "brisk_hands", "steady_pace", "heavy_haul",
+    "work": ("brawny", "piecework", "brisk_hands", "steady_pace", "heavy_haul",
              "sturdy", "restful_sleep", "deep_reserves", "observant", "beast_whisperer",
              "pathfinder", "field_medic", "triage", "charismatic", "fixer", "troubadour"),
     "combat": ("tough", "hardy", "bulwark", "recovery"),

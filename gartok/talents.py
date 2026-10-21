@@ -27,7 +27,6 @@ exactly one consumer that reads it back:
     mental_defense    Unit._derive_ac                  --
     initiative        Combatant.initiative_bonus       --
     speed             Unit._derive_speed               --
-    carry_buffer      Unit._carry_relief (capped)      --
     haul_buffer       Unit._carry_relief (capped)      --
     armor_weight_relief Unit.load / Combatant.load     --
     haggle_cha        Unit.haggle_charisma_mod         --
@@ -282,14 +281,13 @@ _LIST = [
     # work -- 6 attribute roots, 5 talents each = 30 talents             #
     # ================================================================== #
     # --- STR: Heavy Labor & Carrying ---
-    Talent("carrier", "work", 1, "Carrier",
-           "carry up to 1 kg more gear before you stagger (not food or weapons).",
-           effects=(Effect("carry_buffer", 1),), icon="body/lift"),
+    Talent("brawny", "work", 1, "Brawny", "+1 Strength.",
+           effects=(Effect("attr", 1, "strength"),), icon="body/lift"),
     Talent("piecework", "work", 2, "Piecework",
-           "+20% coin from work that pays in coin.", requires="carrier",
+           "+20% coin from work that pays in coin.", requires="brawny",
            effects=(Effect("coin_gain", COIN_BONUS),), icon="action/profit"),
     Talent("brisk_hands", "work", 2, "Brisk Hands",
-           "work finishes 10% faster -- you keep the time.", requires="carrier",
+           "work finishes 10% faster -- you keep the time.", requires="brawny",
            effects=(Effect("activity_speed", ACTIVITY_SPEEDUP),), icon="action/sprint"),
     Talent("steady_pace", "work", 3, "Steady Pace",
            "work counts as rest: you recover HP while you work, as if resting.",

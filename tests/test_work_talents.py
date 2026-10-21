@@ -25,7 +25,7 @@ def test_work_tree_structure_30_talents_6_roots():
 
     roots = [t for t in work_nodes if not t.requires]
     assert len(roots) == 6
-    assert [r.id for r in roots] == ["carrier", "charismatic", "clever", "nimble_fingers", "sturdy", "observant"]
+    assert [r.id for r in roots] == ["brawny", "charismatic", "clever", "nimble_fingers", "sturdy", "observant"]
 
     # Verify each root has exactly 5 talents in its subtree
     for r in roots:
@@ -55,24 +55,23 @@ def _enough(name, kg):
 
 
 def test_heavy_haul_widens_the_stagger_threshold_by_six_kg_of_non_equipment():
-    u = _make_worker("carrier", "piecework")
+    u = _make_worker("brawny", "piecework")
     base = u.carry_normal
-    assert _relief(u, _enough("Meat", 10)) == 0.0          # Carrier alone never covers food
+    assert _relief(u, _enough("Meat", 10)) == 0.0
     assert u.choose_talent("work", "heavy_haul")
     assert _relief(u, _enough("Meat", 10)) == 6.0
     assert u.carry_normal == round(base + 6.0, 1)
-    assert _relief(u, _enough("Lumber", 10)) == 7.0        # materials: Carrier's kg + Heavy Haul's 6
+    assert _relief(u, _enough("Lumber", 10)) == 6.0
     assert _relief(u, ["Meat"]) == round(items.item_weight("Meat"), 1)
 
 
 def test_heavy_haul_does_not_cover_equipment():
-    u = _make_worker("carrier", "piecework", "heavy_haul")
-    assert _relief(u, ["Axe", "Studded Leather"]) == 1.0   # only Carrier's kg, on the pack armor
-    assert _relief(u, ["Axe"]) == 0.0
+    u = _make_worker("brawny", "piecework", "heavy_haul")
+    assert _relief(u, ["Axe", "Studded Leather"]) == 0.0
 
 
 def test_heavy_haul_never_raises_the_carry_ceiling_nor_the_load():
-    u = _make_worker("carrier", "piecework")
+    u = _make_worker("brawny", "piecework")
     _relief(u, _enough("Meat", 10))
     ceiling, load = u.carry_max, u.load
     assert u.choose_talent("work", "heavy_haul")
@@ -285,7 +284,7 @@ def test_a_work_talent_is_priced_against_the_same_member_without_it():
     import economy_talents
 
     rows = {t.id: (worth, per_day) for t, worth, _unit, per_day, _how in economy_talents.rows()}
-    assert rows["heavy_haul"][0] > rows["carrier"][0] > 0
+    assert rows["heavy_haul"][0] > rows["brawny"][0] > 0
     assert rows["piecework"][1] > 0
     assert rows["troubadour"][1] > 0
     assert rows["restful_sleep"][0] > 0 and rows["triage"][0] > 0
