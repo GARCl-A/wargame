@@ -214,3 +214,7 @@ for a system that does not exist yet:
 - **Map** (Cartographer). Finds treasures and secret zones.
 - **Compass** (Guide). Avoids getting lost on very long trips; waits for a getting-lost system.
 - **Deck of Cards** (Gambler). A card minigame at the tavern, among others. Its own arc.
+
+-----
+
+as carroças deveriam ser vendidas no carpinteiro
