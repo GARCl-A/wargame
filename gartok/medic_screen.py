@@ -78,25 +78,24 @@ class MedicScreen(Screen):
                 {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
 
     def draw(self, screen):
-        F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
+        F = ui_fonts()
+        W, H = screen.get_size()
         screen.fill(T.TABLE)
-        m = T.S * 3
-        sub = ("Quick treatment: potions and doses at a discount, the whole group waits. "
-               "A long poison is a hospital stay.")
+        m = T.S * 5
+        aside = "potions and doses at a discount while the group waits; a long poison is a hospital stay"
         if self.framed:
-            text(screen, F["body"], sub, (m, 0), T.TX_MUTED)
-            top = T.S * 5
+            top = 0
         else:
-            caps(screen, F["head"], "THE APOTHECARY (MEDIC)", (m, m), T.TX)
-            text(screen, F["body"], sub, (m, m + T.S * 4), T.TX_MUTED)
-            top = m + T.S * 8
+            caps(screen, F["head"], "THE APOTHECARY (MEDIC)", (T.S * 3, T.S * 3), T.TX)
+            top = T.S * 8
         notice_h = 0
         if self.notice:
-            lines = wrap(F["body_sm"], self.notice, screen.get_width() - 2 * m)
+            lines = wrap(F["hub_body"], self.notice, W - 2 * m)
+            lh = F["hub_body"].get_linesize()
             for i, ln in enumerate(lines):
-                text(screen, F["body_sm"], ln, (m, screen.get_height() - m - T.S * 2 - (len(lines) - i) * 18), T.BRASS)
-            notice_h = len(lines) * 18 + T.S
-        area = pygame.Rect(m, top, screen.get_width() - 2 * m, screen.get_height() - top - m - notice_h)
+                text(screen, F["hub_body"], ln, (m, H - T.S * 3 - (len(lines) - i) * lh), T.BRASS)
+            notice_h = len(lines) * lh + T.S
+        area = pygame.Rect(m, top, W - 2 * m, H - top - T.S * 4 - notice_h)
 
         picked = self._picked_quotes()
         stay = self._stay()
@@ -104,15 +103,20 @@ class MedicScreen(Screen):
         def lines(q):
             return [f"{lbl} ${c}" for lbl, c, _ in q.parts] + ([] if q.offered else ["hospital stay"])
 
-        rows = [{"key": q.uid, "name": q.name, "lines": lines(q),
-                 "cost": q.cost, "hours": q.hours, "picked": q.uid in self.picked,
-                 "enabled": True, "note": ""}
-                for q in self._quotes()]
+        by_uid = {u.uid: u for u in self.group.members}
+        rows = []
+        for q in self._quotes():
+            u = by_uid[q.uid]
+            rows.append({"key": q.uid, "name": q.name, "lines": lines(q), "cost": q.cost, "hours": q.hours,
+                         "picked": q.uid in self.picked,
+                         "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None),
+                                  "token": u.token},
+                         "sub": f"{u.race['name']} {u.occupation['name'].lower()}  ·  HP {u.hp} / {u.hp_max}"})
         can_pay = sum(u.money for u in (*self.group.members, *getattr(self.group, "stores", ()))) >= cost
         where = ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
                  else "the whole group waits (no free group slot)")
         self.row_rects, self.treat_rect, self.leave_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,
-                                                     stay=where if stay else None,
-                                                     leave_label=None if self.framed else "LEAVE THE MEDIC")
+                                                     stay=where if stay else None, aside=aside,
+                                                     leave_label=None if self.framed else "Leave the medic")
         set_pointer(any(r.collidepoint(self.mouse) for _, r in self.row_rects)
                     or self.treat_rect.collidepoint(self.mouse) or self.leave_rect.collidepoint(self.mouse))
