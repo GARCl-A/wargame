@@ -9,7 +9,6 @@ from . import (
     lair,
     missions,
     necromancer,
-    node_functions,
     orders,
     serpent_nest,
     wagon_watch,
@@ -51,7 +50,7 @@ class NodeScreensMixin:
 
     def _open_market_stalls(self, shoppers, node, _offer):
         group = next((g for g in self.guild.groups if g.node == node.id), None) or (self.guild.groups[0] if self.guild.groups else None)
-        if group is not None and len(node.functions) > 1 and len(node_functions.offered(node)) <= 1:
+        if group is not None and len(node.functions) > 1:
             from .hub_screen import TabbedHubScreen
             self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
                                                   on_done=self._after_activity, first="shop")

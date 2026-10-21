@@ -41,7 +41,7 @@ def test_a_function_that_hosts_another_hides_its_button():
 def test_the_map_shows_one_button_per_offered_function():
     assert _buttons("market") == ["market"]
     assert _buttons("library") == ["library"]
-    assert _buttons("lumber_yard") == ["buy_licence", "market"]
+    assert _buttons("lumber_yard") == ["market"]
     assert _buttons("tavern") == ["recruit"]
     assert _buttons("farm") == ["stable"]
     assert _buttons("smith") == ["forge"]
@@ -68,7 +68,7 @@ def test_tabbed_hub_screen_for_node():
 
     hub_yard = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node("lumber_yard"), lambda: None)
     assert isinstance(hub_yard, TabbedHubScreen)
-    assert [k for k, _, _ in hub_yard.tabs] == ["shop", "gather"]
+    assert [k for k, _, _ in hub_yard.tabs] == ["shop", "work", "gather"]
 
 
 def test_a_place_with_nothing_to_offer_says_so():

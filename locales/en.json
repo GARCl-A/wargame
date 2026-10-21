@@ -50,7 +50,7 @@
         "TRAVEL, under the panel's bottom buttons, flips an idle group between Normal and Cautious. Cautious only helps through your guild's vocation or an Elf's Woodland Scout, and it only touches ambushes on the Old Road and on hunts -- never the guard or a raid on your Claim.",
         "There is no advance button. Once every group has an order the clock runs by itself, and stops when a group is free again or something needs a decision (an ambush, a shop, a fight). REST sends the selected group to rest for 1 hour, 8 hours or until its wounds are healed (it always keeps a day of rations); the other groups carry on meanwhile. With every group garrisoned, ADVANCE passes a day for the whole world.",
         "Everyone eats one food item a day, from their own pack first, then a group-mate's. Check the RATIONS line on each group's card. One day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead. Potatoes ($3) and Meat ($5) are sold at the Farm, and you can hunt Meat in the wilds.",
-        "At the Lumber Yard and the Mine a group can work a shift for the wage, or buy the node's licence once (it covers the whole guild) and gather instead: Lumber and Fruit, or stone, coal, ore and gems. A gathering shift is worth more than the wage on average, but a pack may find the crew.",
+        "Enter the Lumber Yard or the Mine to work a shift for the wage (WORK tab), or buy the node's licence once (it covers the whole guild) and gather instead (GATHERING tab): Lumber and Fruit, or stone, coal, ore and gems. A gathering shift is worth more than the wage on average, but a pack may find the crew.",
         "Copper lives on each character -- there is no shared treasury. Death is permanent, and the run ends only if the whole guild is wiped out."
       ],
       "suggestion": "Good first stops: the Farm for food, the Arena to train at low risk, the Lumber Yard if you go broke."
@@ -299,6 +299,15 @@
         "Animals eat a ration a day from what the group carries and starve after three unfed days. If the whole group dies, the animals and the wagon go with it; if anyone gets away, they stay.",
         "The road wears a wagon down, 1 HP every 100 units travelled. At 0 HP it breaks: it stops pulling and carrying until you REPAIR it on the group screen (Lumber and an hour; the group's best INT rolls against DC 15), and setting out with it broken means leaving it behind."
       ]
+    },
+    "work": {
+      "title": "Day labour",
+      "body": [
+        "Pick a shift (4 to 16 hours) and the whole group works it for the foreman. The wage is paid by the block, so leftover hours earn nothing.",
+        "A worker with their own tool (an Axe at the Lumber Yard, a Pick at the Mine) is paid more than with the foreman's, and keeps earning work XP once past the first level. Each crew card says which tool they use and what a 16 h shift pays them.",
+        "It pays little, but nothing attacks a wage crew. The GATHERING tab trades the wage for what the crew finds, with a licence and a risk of ambush."
+      ],
+      "suggestion": "Work a 16 h shift when the guild runs out of copper; adventure pays better."
     },
     "gathering": {
       "title": "Gathering materials",

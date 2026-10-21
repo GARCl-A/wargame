@@ -18,7 +18,6 @@ from .constants import fmt_money
 from .group import CAUTIOUS, NORMAL
 from .ui.tokens import T
 
-WORK_HOURS = (4, 8, 12, 16)
 STANCE_NOTES = {NORMAL: "no change to the ambush chance",
                 CAUTIOUS: "fewer ambushes on the road and on hunts"}
 
@@ -62,28 +61,14 @@ class MapInspectorMixin:
     # ------------------------------------------------------------------ #
     # INSPECTOR content                                                   #
     # ------------------------------------------------------------------ #
-    def _gather_blocks(self, g, here):
-        """The inspector's gathering rows at a work node: the shift buttons once the guild holds
-        the licence, else the licence to buy."""
-        top = WORK_HOURS[-1]
-        drops = " · ".join(f"{name} {pct}%" for name, pct in gather.drops(here.id))
-        blocks = [{"type": "section", "label": "gather a shift", "gap_before": T.S}]
-        if self.guild.has_licence(here.id):
-            blocks.append({"type": "button_row", "height": 34,
-                           "items": [{"key": f"gather:{h}", "label": f"{h} h"} for h in WORK_HOURS]})
-            blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
-                           "text": f"{gather.rolls(top):.1f} rolls a worker per {top} h  ·  a pack may find the crew"})
-        else:
-            short = self.guild.licence_shortfall(here.id, g)
-            blocks.append({"type": "button", "key": "buy_licence", "height": 40,
-                           "label": f"BUY THE LICENCE ({fmt_money(gather.licence_price(here.id))})",
-                           "enabled": not short})
-            if short:
-                blocks.append({"type": "text", "color": T.BRASS, "text": f"{fmt_money(short)} short"})
-            blocks.append({"type": "wrapped_text", "color": T.TX_FAINT,
-                           "text": "gather items instead of the wage  ·  one licence for the whole guild"})
-        blocks.append({"type": "wrapped_text", "color": T.TX_FAINT, "text": f"drops: {drops}"})
-        return blocks
+    def _work_line(self, g, here):
+        """A work node's one line on the map: what a day's shift pays the group and whether the
+        guild may gather here; the shifts themselves are the hub's WORK and GATHERING tabs."""
+        day = sum(economy.work_pay(here.id, 16, economy.work_level(u, here.id)) for u in g.members)
+        parts = [f"a 16 h shift pays the group {fmt_money(day)}"]
+        if gather.can_gather(here.id):
+            parts.append("gathering licence held" if self.guild.has_licence(here.id) else "no gathering licence")
+        return {"type": "text", "color": T.TX_FAINT, "text": "  ·  ".join(parts)}
 
     def _has_property_business(self):
         house = self.guild.house
@@ -163,39 +148,6 @@ class MapInspectorMixin:
                    else "non-lethal · stake money, win the purse" if here.arena
                    else "lethal combat · loot the bodies")
             blocks.append({"type": "text", "text": note, "color": T.BRASS if defense else T.TX_FAINT})
-        if here.has("work"):
-            blocks.append({"type": "section", "label": "work a shift"})
-            blocks.append({"type": "button_row", "height": 34,
-                          "items": [{"key": f"work:{h}", "label": f"{h} h"} for h in WORK_HOURS]})
-            blocks.append({"type": "text",
-                          "text": "trade hours of the day for money  ·  pays little, but it's sure",
-                          "color": T.TX_FAINT})
-            tool = economy.WORK_TOOLS[here.id]
-            for u in g.members:
-                level = economy.work_level(u, here.id)
-                own_axe = level >= economy.LUMBER_LEVEL_OWN_AXE
-                day = economy.work_pay(here.id, WORK_HOURS[-1], level)
-                status = f"own {tool}" if own_axe else f"foreman's {tool.lower()}"
-                blocks.append({"type": "text",
-                              "text": f"{u.name}: {status} -- {fmt_money(day)} / "
-                                      f"{WORK_HOURS[-1]}h shift",
-                              "color": T.GREEN if own_axe else T.TX_FAINT})
-            if gather.can_gather(here.id):
-                blocks += self._gather_blocks(g, here)
-            need_axe = [u for u in g.members if u.work_level > 0 and economy.work_level(u, here.id) == 0]
-            capped = [u for u in g.members if economy.work_level(u, here.id) >= economy.LUMBER_LEVEL_OWN_AXE
-                     and u.work_level > economy.work_level(u, here.id)]
-            if need_axe:
-                names = ", ".join(u.name for u in need_axe)
-                blocks.append({"type": "wrapped_text", "color": T.BRASS,
-                              "text": f"{names}: past this job bare-handed -- bring their own "
-                                      f"{tool} for a better wage and to keep banking work XP"})
-            if capped:
-                names = ", ".join(u.name for u in capped)
-                blocks.append({"type": "wrapped_text", "color": T.BRASS,
-                              "text": f"{names}: has outgrown this job even with their own {tool} "
-                                      "-- no more work XP here, look for tougher work"})
-
         focus = wildfire.focus_at(self.guild, here.id)
         if focus is not None:
             blocks += self._wildfire_blocks(g, focus)
@@ -226,6 +178,8 @@ class MapInspectorMixin:
                 btn["gap_before"] = T.S * 2
             blocks.append(btn)
             blocks += self._function_notes(fn)
+            if fn.id == "shop" and here.has("work"):
+                blocks.append(self._work_line(g, here))
 
         job_offers = missions.offers_at(self.guild, here.id)
         if job_offers:

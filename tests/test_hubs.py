@@ -266,3 +266,49 @@ def test_every_node_builds_as_a_tabbed_hub():
         scr = TabbedHubScreen.for_node(ui_fonts(), guild, guild.groups[0], node, on_done=lambda *a: None)
         scr.mouse = (10, 10)
         scr.draw(surf)
+
+
+def test_a_work_node_opened_from_the_map_shows_its_gathering_tab():
+    from types import SimpleNamespace
+
+    from gartok.app_nodes import NodeScreensMixin
+    pygame.init()
+    guild = Guild([Unit("player")], node="mine")
+    app = SimpleNamespace(guild=guild, ui_fonts=ui_fonts(), scene=None, _after_activity=lambda: None)
+    for node_id in ("mine", "lumber_yard"):
+        NodeScreensMixin._open_market_stalls(app, list(guild.roster), world.node(node_id), None)
+        assert [k for k, _l, _s in app.scene.tabs] == ["shop", "work", "gather"]
+
+
+def _work_screen(node_id="mine"):
+    from gartok.group import Group
+    from gartok.work_screen import WorkScreen
+    pygame.init()
+    u = Unit("player")
+    u._base_inventory = []
+    u.equipped_weapon = None
+    g = Guild([u], node=node_id)
+    done = []
+    scr = WorkScreen(ui_fonts(), g, g.groups[0], world.node(node_id), lambda: done.append(1))
+    return scr, g, u, done
+
+
+def test_the_work_tab_issues_a_paid_shift_and_closes():
+    scr, g, u, done = _work_screen()
+    scr.draw(pygame.Surface((1600, 800)))
+    assert [k for k, _ in scr.buttons] == [f"work:{h}" for h in (4, 8, 12, 16)]
+    scr._on_button("work:8")
+    group = g.groups[0]
+    assert group.order.kind == "work" and not group.order.gather and group.order.hours == 8
+    assert done == [1]
+
+
+def test_the_work_tab_pays_by_each_workers_tool():
+    from gartok import economy, progression
+    scr, g, u, _ = _work_screen("lumber_yard")
+    assert scr._wage(16) == economy.work_pay("lumber_yard", 16, economy.work_level(u, "lumber_yard"))
+    assert scr._crew_note(u, "Axe") is None
+    u.work_hours = economy.LUMBER_XP_HOURS * next(x for x in range(1000) if progression.work_level(x) >= 1)
+    note, tone = scr._crew_note(u, "Axe")
+    assert "bare-handed" in note and tone == "money"
+    assert scr.hub_cards()[0]["value"] == f"${scr._wage(16)}"

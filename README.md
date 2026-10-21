@@ -224,6 +224,7 @@ gartok/
   node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
   shop.py           a shop's own till and finite shelf, one per node that offers `shop`
   hub_screen.py     a node's screens behind one row of tabs, in the frame it owns (keeper header, tab row, back); `for_node` builds the hub of every node with a shop
+  work_screen.py    the Work tab of a work node (Lumber Yard, Mine): paid shifts, each worker's tool and wage
   gather_screen.py  the Gathering tab of a work node (Lumber Yard, Mine): licence purchase and shift picker
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;

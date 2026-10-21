@@ -97,14 +97,15 @@ def test_the_mine_has_a_till_of_its_own():
     assert guild.shop("mine").cash != guild.shop("market").cash
 
 
-def test_the_mine_screen_shows_the_foreman_pick_and_a_shop_button():
+def test_the_map_shows_the_mine_as_one_enter_button_and_a_line():
     g = Guild([_worker()], node="mine")
     ms = MapScreen(ui_fonts(), g, lambda: None, lambda: None, lambda: None, lambda grp: None)
     blocks = ms._inspector_content(g.groups[0], world.node("mine"))
-    texts = [b["text"] for b in blocks if b["type"] == "text"]
-    assert any("foreman's pick" in t for t in texts)
-    assert [b["key"] for b in blocks if b["type"] == "button" and b["key"] != "buy_licence"] == ["market"]
-    assert any(b["type"] == "button_row" for b in blocks)
+    assert [(b["key"], b["label"]) for b in blocks if b["type"] == "button"] == [("market", "ENTER THE MINE")]
+    assert not any(b["type"] == "button_row" for b in blocks)
+    pay = economy.work_pay("mine", 16, 0)
+    assert any(f"pays the group ${pay}" in b.get("text", "") and "no gathering licence" in b["text"]
+               for b in blocks)
 
 
 def test_work_xp_lists_the_mine_beside_the_yard():

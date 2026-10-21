@@ -111,6 +111,9 @@ class TabbedHubScreen(Screen):
             tabs.append(("jobs", "JOBS", ShrineMissionScreen(fonts, guild, group, on_done)))
             tabs.append(("initiation", "INITIATION", InitiationScreen(fonts, guild, group, on_done)))
         from . import gather
+        if node.has("work"):
+            from .work_screen import WorkScreen
+            tabs.append(("work", "WORK", WorkScreen(fonts, guild, group, node, on_done)))
         if node.has("work") and gather.can_gather(node.id):
             from .gather_screen import GatherScreen
             gathering = GatherScreen(fonts, guild, group, node, on_done)

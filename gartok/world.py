@@ -192,7 +192,7 @@ NODES = [
          "a tree that isn't yours and take only the wage for the hours. The yard "
          "buys what it yields and sells its lumber and fruit.",
          language="Orcish", alignment="Chaotic and Neutral",
-         functions=("work", "shop"), shop_label="BROWSE THE YARD",
+         functions=("work", "shop"), shop_label="ENTER THE YARD",
          vendors={"shop": Vendor("Grashnak", "Orc", "foreman", "lumberjack.png",
                                  line="Sixteen hours, one axe, one wage. Don't bleed on the logs.")}),
     Node("carpenter", "The Carpenter", "town", (0.26, 0.57),
@@ -205,7 +205,7 @@ NODES = [
     Node("mine", "The Mine", "town", (0.78, 0.54),
          "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal "
          "for sale are sold here.", language="Goblin", alignment="Neutral and Evil",
-         functions=("work", "shop"), shop_label="BROWSE THE MINE",
+         functions=("work", "shop"), shop_label="ENTER THE MINE",
          vendors={"shop": Vendor("Nikkit", "Goblin", "foreman", "miner.png",
                                  line="Down there it's dark, deep and mine. You just rent the dark.")}),
     Node("arena", "Arena", "battle", (0.405, 0.32),

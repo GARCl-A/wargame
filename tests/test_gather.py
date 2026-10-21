@@ -240,28 +240,21 @@ def _blocks(guild, node_id):
     return ms, ms._inspector_content(guild.groups[0], world.node(node_id))
 
 
-def test_the_map_offers_the_licence_until_it_is_held_then_the_shifts():
+def test_the_map_names_the_licence_and_leaves_the_shifts_to_the_hub():
     guild, group = _crew("mine", licensed=False, money=100)
-    ms, blocks = _blocks(guild, "mine")
-    buy = next(b for b in blocks if b.get("key") == "buy_licence")
-    assert not buy["enabled"] and any("short" in b.get("text", "") for b in blocks)
-    group.members[0].money = gather.licence_price("mine") + 175
-    ms, blocks = _blocks(guild, "mine")
-    assert next(b for b in blocks if b.get("key") == "buy_licence")["enabled"]
-    ms.selected = group
-    ms._handle_button("buy_licence")
-    assert guild.has_licence("mine") and group.members[0].money == 175
-    ms, blocks = _blocks(guild, "mine")
-    row = next(b for b in blocks if b["type"] == "button_row" and b["items"][0]["key"].startswith("gather:"))
-    assert [i["key"] for i in row["items"]] == [f"gather:{h}" for h in SHIFTS]
-    assert not any(b.get("key") == "buy_licence" for b in blocks)
+    _ms, blocks = _blocks(guild, "mine")
+    assert not any(b.get("key") in ("buy_licence",) or b["type"] == "button_row" for b in blocks)
+    assert any("no gathering licence" in b.get("text", "") for b in blocks)
+    guild.licences.add("mine")
+    _ms, blocks = _blocks(guild, "mine")
+    assert any("gathering licence held" in b.get("text", "") for b in blocks)
 
 
-def test_a_gather_button_issues_a_gathering_order_the_map_names():
+def test_a_gathering_order_from_the_hub_is_named_on_the_map():
+    from gartok.gather_screen import GatherScreen
     guild, group = _crew("lumber_yard")
     ms, _ = _blocks(guild, "lumber_yard")
-    ms.selected = group
-    ms._handle_button("gather:8")
+    GatherScreen(ui_fonts(), guild, group, world.node("lumber_yard"), lambda: None)._on_button("gather:8")
     assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
     assert ms._order_status(group).startswith("gathering")
     assert ms._state(group)[0] == "GATHER"

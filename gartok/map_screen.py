@@ -625,14 +625,6 @@ class MapScreen(MapInspectorMixin, Screen):
                 self.notices.append(f"{g.display_name}: campfire lit. Burns for 4 hours.")
                 if self.on_cook:
                     self.on_cook(g)
-        elif key.startswith("work:"):
-            self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1])))
-        elif key.startswith("gather:"):
-            self._issue(orders.work(self.guild, self.selected, int(key.split(":")[1]), gather=True))
-        elif key == "buy_licence":
-            node = world.node(self.selected.node)
-            if self.guild.buy_licence(node.id, self.selected):
-                self.notices.append(f"{node.name}: the guild now holds the gathering licence.")
         elif key == "scout_ruins":
             success, msg = campaign.scout_ancient_ruins(self.guild, self.selected)
             self._refresh_nodes()
