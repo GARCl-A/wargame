@@ -23,16 +23,15 @@ AI, measure and economy), the fog of war, and the log on the board with its soun
 banner, `battle_fx.py` / `sound.py`) are done; what is left:
 
 **Phase 4 — combat presentation** (same files: `battle_draw.py`, `lighting.py`)
-2. **The sounds by ear** (the author; small). Each cue's files (`sound.CUES`) were picked from the
-   Kenney packs by name, never heard; listen in play and swap files or levels (`sound.LEVEL`).
 3. **A floor per place, step 2** (waits on the author's go). Step 1, the prototype (Arena sand and
    stone, Wilds grass and roots, under the per-cell light), was rendered 2026-10-21. Step 2: every
    place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the
    Ruins...); today every board is the same grey. Brogue is the reference.
 4. **Hub tab bodies in the new type.** The frame (`ui/hub_frame.py`) and the shop tab are done and every
-   tab sits inside the frame; the other bodies (Tavern, Stables, Forge / Carpentry / Write, the jobs
-   boards, Medic, Initiation, Gathering, the Bank's vault) are still drawn in the old small type.
-   Restyle each in the hub kit as the shop (title ~34 px serif small caps, body 15-17), one commit per screen.
+   tab sits inside the frame; the Tavern (Recruit, Study, Perform, and the Prison that shares it) is
+   redrawn on `ui/hub_body.py`. Left in the old small type: Stables, Forge / Carpentry / Write, the jobs
+   boards, Medic, Initiation, Gathering, the Bank's vault. Restyle each on `hub_body` as the Tavern,
+   one commit per screen.
 
 **Phase 5 — tutorials** (last: they describe the final screens)
 5. **Tutorials (review all of them).** About 25 modal cards, the map's with six paragraphs; the guild's

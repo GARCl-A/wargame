@@ -27,7 +27,7 @@ from .constants import fmt_money
 from .data import alignment_distance
 from .screen import Screen
 from .taverna_draw import TavernaDrawMixin
-from .ui.primitives import draw_button
+from .ui.hub_frame import hub_button
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -117,8 +117,7 @@ class TavernaScreen(TavernaDrawMixin, Screen):
         self.buttons.append((key, rect))
         if rect.collidepoint(self.mouse):
             self._hot = True
-        return draw_button(surf, self._F, rect, label, primary=primary, enabled=enabled,
-                           danger=danger, mpos=self.mouse)
+        return hub_button(surf, self._F, rect, label, primary=primary, enabled=enabled, mpos=self.mouse)
 
     # ------------------------------------------------------------------ #
     def _barred(self, cand, member):

@@ -259,10 +259,7 @@ def test_taverna_screen_renders_archetype_badges():
     scr = TavernaScreen(F, g, g.roster, None, lambda *a: None, candidates=[c1, c2])
     scr.draw(surf)
     card = scr.cand_cards[0][0]
-
-    scr.mouse = (card.x + 16, card.y + 88)           # over the first badge pill
-    scr.draw(surf)
-    assert any("LEADER" in str(tip) for _, tip in scr._tooltips)
+    assert any("LEADER" in str(tip) and card.contains(r) for r, tip in scr._tooltips)
 
 
 def test_prison_screen_pitch_removes_candidate_without_index_error(monkeypatch):

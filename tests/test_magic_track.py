@@ -126,6 +126,7 @@ def test_absorbing_a_battle_banks_the_magic_xp():
 
 def test_finishing_a_spell_study_banks_magic_xp():
     u = Unit("player")
+    u.money = 50                     # the day's rent; a rolled purse can fall short of it
     u.add_magic_source("nature")
     u.give_to_pack("Scroll of Light Globe")
     magic.begin_study(u, "light_globe")
