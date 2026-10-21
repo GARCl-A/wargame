@@ -821,6 +821,8 @@ def test_the_sim_guild_is_led_by_its_drafted_leader():
 
 def test_the_library_dresses_a_squad_in_the_kit_most_of_the_party_wears():
     a, b, c = (Unit("player") for _ in range(3))
+    for u in (a, b, c):
+        u.equipped_weapon = None                 # a rolled occupation can start with an Axe
     for u in (a, b):
         u.give_to_armor("Studded Leather")
     a.give_to_hand("Axe")

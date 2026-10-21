@@ -5,6 +5,7 @@ shop's FOR SALE and PARTY panels look like, for the tabs that are not a shop.
                                                               (`aside` follows the title, muted)
     draw_person(surf, F, rect, p, mpos)                    -> [(rect, label)] of its chips
     draw_offer(surf, F, rect, o, mpos)                     -> [(rect, key)] of its enabled buttons
+    draw_items(surf, F, pos, names, color, max_x)          -> the x where the line ends
     draw_chip(surf, F, pos, label, tone, anchor)           -> rect
     draw_toggle(surf, F, rect, label, on, mpos)            -> None: a pill that is picked or not
     draw_bar(surf, rect, frac, tone)                       -> None: a thin progress bar
@@ -177,3 +178,22 @@ def draw_offer(surf, F, rect, o, mpos):
         text(surf, F["hub_subb"], ellipsize(note, F["hub_subb"], bx - T.S * 2 - sub.right),
              (sub.right + T.S if o.get("sub") else x, sub.y), TONE[tone])
     return hits
+
+
+def draw_items(surf, F, pos, names, color=T.TX, max_x=None):
+    """`names` on one line, equal names counted ("2 × Iron Bar"), each behind its small icon;
+    what does not fit before `max_x` becomes "...". """
+    counts = {}
+    for n in names:
+        counts[n] = counts.get(n, 0) + 1
+    font, size = F["hub_body"], T.S * 3
+    x, y = pos
+    items = list(counts.items())
+    for i, (name, qty) in enumerate(items):
+        label = (f"{qty} × " if qty > 1 else "") + name + (",  " if i < len(items) - 1 else "")
+        w = size + T.S + font.size(label)[0]
+        if max_x is not None and x + w > max_x:
+            return text(surf, font, "...", (x, y), color).right
+        draw_icon(surf, pygame.Rect(x, y + (font.get_height() - size) // 2, size, size), name)
+        x = text(surf, font, label, (x + size + T.S, y), color).right
+    return x

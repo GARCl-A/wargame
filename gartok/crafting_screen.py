@@ -10,23 +10,17 @@ from collections import Counter
 import pygame
 
 from . import items, progression, solo
+from .item_icon import draw_icon
 from .screen import Screen
-from .ui.loadout_panel import icon_list, item_icon
-from .ui.primitives import (
-    caps,
-    draw_button,
-    footer_bar,
-    panel,
-    section,
-    text,
-)
-from .ui.tokens import T
+from .ui import hub_body as hb
+from .ui.hub_frame import hub_button
+from .ui.primitives import ellipsize, footer_bar, text
+from .ui.tokens import T, mix
 from .ui.tokens import fonts as ui_fonts
 from .ui.vendor_panel import draw_vendor, draw_vendor_name
 from .unit_loadout import pooled_unlocked
 
-SIDE_W = 340
-ROW_H = 150
+CARD_H = T.S * 13
 
 class CraftingScreen(Screen):
     native = True
@@ -67,16 +61,14 @@ class CraftingScreen(Screen):
         self._hot = False
         self.roster_rows = []     # [(rect, member)]
         self.notices = []
+        self.scroll = self.max_scroll = 0
 
     def _reset_buttons(self):
         self.buttons = []
         self._hot = False
 
-    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
-                   danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
-        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
-                   enabled=enabled, mpos=self.mouse, fnt=font)
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False, danger=False):
+        hub_button(surf, self._F, rect, label, primary=primary, enabled=enabled, mpos=self.mouse)
         hov = enabled and rect.collidepoint(self.mouse)
         if enabled:
             self.buttons.append((key, rect))
@@ -106,6 +98,9 @@ class CraftingScreen(Screen):
         return not self._get_missing_materials(recipe) and not self._get_missing_tools(recipe)
 
     def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL:
+            self.scroll = max(0, min(self.max_scroll, self.scroll - event.y))
+            return
         if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
             return
         px = event.pos
@@ -135,173 +130,161 @@ class CraftingScreen(Screen):
             if rect.collidepoint(px):
                 self.selected_crafter = m
                 self.notices = []
+                self.scroll = 0
                 return
+
+    def _recipes(self, m):
+        """`(recipe_id, data, active)` for each recipe `m` works at this station."""
+        out = []
+        for r_name in m.known_recipes:
+            found = items.CRAFTING_RECIPES.get(r_name, [])
+            variants = found if isinstance(found, (list, tuple)) else [found] if found else []
+            for i, r_data in enumerate(variants):
+                if not r_data or (self.station and r_data.station != self.station):
+                    continue
+                recipe_id = f"{r_name}:{i}" if len(variants) > 1 else r_name
+                active = m.crafting_target == recipe_id or (len(variants) == 1 and m.crafting_target == r_name)
+                out.append((recipe_id, r_data, active))
+        return out
 
     def draw(self, screen):
         F = self._F
-        m = T.S * 3
+        W, H = screen.get_size()
         screen.fill(T.TABLE)
         self._reset_buttons()
         self.roster_rows = []
 
         if self.framed:
-            text(screen, F["body"], self.subtitle.capitalize(), (m, 0), T.TX_MUTED)
-            top, bottom = T.S * 4, T.S * 2 + T.S * 3 * len(self.notices)
+            top, bottom = 0, H - T.S * 4 - T.S * 3 * len(self.notices)
         else:
+            m = T.S * 3
             card = self.vendor.card if self.vendor else None
             tx = m + draw_vendor(screen, F, (m, m - 4), card, size=T.S * 7)
             title = text(screen, F["titleb"], self.title, (tx, m - 2), T.TX)
             draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
             text(screen, F["body"], self.subtitle, (tx, m + 30), T.TX_MUTED)
-            top, bottom = m + 62, 72
-        left_panel = pygame.Rect(m, top, SIDE_W, screen.get_height() - top - bottom)
-        right_panel = pygame.Rect(left_panel.right + m, top,
-                                  screen.get_width() - left_panel.right - 2 * m, left_panel.h)
-
-        self._draw_roster(screen, left_panel)
-        self._draw_crafting(screen, right_panel)
+            top, bottom = m + 62, H - 72 - T.S * 3 * len(self.notices)
+        body = pygame.Rect(T.S * 5, top, W - T.S * 10, bottom - top)
+        side_w = max(T.S * 44, min(T.S * 56, round(body.w * 0.28)))
+        self._draw_roster(screen, pygame.Rect(body.x, body.y, side_w, body.h))
+        self._draw_crafting(screen, pygame.Rect(body.x + side_w + T.S * 3, body.y, body.w - side_w - T.S * 3, body.h))
         self._draw_footer(screen)
 
     def _draw_roster(self, screen, area):
-        from .combatant import Combatant
-        from .ui.sheet_card import draw_row, unit_to_ch
-
         F = self._F
-        panel(screen, area)
-        y = section(screen, F, "CRAFTERS", area.x + 12, area.y + 12, area.w - 24)
-
-        def _trailing(surf, r, ch):
-            u = ch["unit"]
-            count = sum(1 for r in u.known_recipes if self._for_station(r))
-            mod = u.mod_intelligence + u.craft_bonus(self.station)
-            roll_str = f"d20{mod:+d}"
-            caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
-            if u.crafting_target:
-                caps(surf, F["micro"], f"{roll_str} · IN PROGRESS", (r.right - T.S * 2, r.centery + 10), T.BRASS, right=True)
-            else:
-                caps(surf, F["micro"], roll_str, (r.right - T.S * 2, r.centery + 10), T.TX_FAINT, right=True)
-
-        for m in self.group.members:
-            if not any(self._for_station(r) for r in m.known_recipes):
-                continue
-
-            r = pygame.Rect(area.x + 12, y, area.w - 24, 74)
-            sel = m is self.selected_crafter
-            
-            c = Combatant(m)
-            draw_row(screen, F, r, unit_to_ch(c), selected=sel, draw_trailing=_trailing)
-
+        inner = hb.draw_panel(screen, F, area, "Crafters", "pick who works")
+        y = inner.y
+        for m in self.crafters:
+            r = pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.PERSON_H + T.S * 3)
+            count = len(self._recipes(m))
+            mod = m.mod_intelligence + m.craft_bonus(self.station)
+            hb.draw_person(screen, F, r, {
+                "face": {"race": m.race["name"], "portrait_id": getattr(m, "portrait_id", None), "token": m.token},
+                "name": m.name, "state": "on" if m is self.selected_crafter else None,
+                "sub": f"{m.occupation['name']}  ·  d20{mod:+d}  ·  {count} recipe{'s' if count != 1 else ''}",
+                "note": f"working on {m.crafting_target.split(':')[0]}" if m.crafting_target else None},
+                self.mouse)
+            self._hot = self._hot or r.collidepoint(self.mouse)
             self.roster_rows.append((r, m))
-            y += 74 + T.S
-
-        if not self.roster_rows:
-            text(screen, F["body_sm"], "No one in the party knows a recipe for this station.",
-                 (area.x + 12, y + 8), T.TX_FAINT)
+            y += r.h + T.S
+        if not self.crafters:
+            for line in ("No one in the party knows a recipe", "for this station."):
+                text(screen, F["hub_body"], line, (inner.x, y), T.TX_FAINT)
+                y += F["hub_body"].get_linesize()
 
     def _draw_crafting(self, screen, area):
         F = self._F
-        panel(screen, area)
-        x = area.x + 12
-        w = area.w - 24
-        y = section(screen, F, "RECIPES", x, area.y + 12, w)
-
-        if not self.selected_crafter:
-            text(screen, F["body"], "No known recipes for this station yet.",
-                 (x, y + 8), T.TX_MUTED)
-            text(screen, F["body_sm"],
-                 "Learn crafting recipes through Work talent picks on the Guild screen, or from starting occupations.",
-                 (x, y + 32), T.TX_FAINT)
-            return
-
         m = self.selected_crafter
+        inner = hb.draw_panel(screen, F, area, "Recipes",
+                              f"{m.name}'s, from the group's packs" if m else None)
+        if not m:
+            text(screen, F["hub_body"], "No known recipes for this station yet.", (inner.x, inner.y), T.TX)
+            text(screen, F["hub_sub"], "Recipes come from Work talent picks on the Guild screen, "
+                 "or from a starting occupation.", (inner.x, inner.y + T.S * 3 + 4), T.TX_MUTED)
+            return
+        recipes = self._recipes(m)
+        fit = max(1, (inner.h + T.S) // (CARD_H + T.S))
+        self.max_scroll = max(0, len(recipes) - fit)
+        self.scroll = max(0, min(self.scroll, self.max_scroll))
+        y = inner.y
+        for recipe_id, r_data, active in recipes[self.scroll:self.scroll + fit]:
+            self._draw_recipe(screen, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, CARD_H), m, recipe_id,
+                              r_data, active)
+            y += CARD_H + T.S
+        if self.max_scroll:
+            text(screen, F["hub_sub"], f"{self.scroll + 1}-{self.scroll + fit} of {len(recipes)}  ·  scroll for more",
+                 (inner.right, area.bottom - T.S * 3), T.TX_FAINT, right=True)
 
-        for r_name in m.known_recipes:
-            recipe_list = items.CRAFTING_RECIPES.get(r_name, [])
-            if not isinstance(recipe_list, (list, tuple)):
-                recipe_list = [recipe_list] if recipe_list else []
-            for variant_idx, r_data in enumerate(recipe_list):
-                if not r_data:
-                    continue
-                if self.station and r_data.station != self.station:
-                    continue
+    def _draw_recipe(self, screen, r, m, recipe_id, r_data, active):
+        F = self._F
+        pygame.draw.rect(screen, mix(T.STEEL, T.BRASS, 0.07) if active else mix(T.STEEL, T.TABLE, 0.35), r,
+                         border_radius=6)
+        if active:
+            pygame.draw.rect(screen, T.BRASS_DIM, r, 1, border_radius=6)
+        icon = pygame.Rect(r.x + T.S * 2, r.y + T.S * 2, T.S * 7, T.S * 7)
+        draw_icon(screen, icon, r_data.target)
+        x = icon.right + T.S * 2
+        buttons_w = T.S * 42
+        right = r.right - buttons_w - T.S * 3
 
-                recipe_id = f"{r_name}:{variant_idx}" if len(recipe_list) > 1 else r_name
-                is_active = (m.crafting_target == recipe_id or (len(recipe_list) == 1 and m.crafting_target == r_name))
-                r = pygame.Rect(x, y, w, ROW_H)
-                hov = r.collidepoint(self.mouse)
-                panel(screen, r, hover=is_active or hov, width=2 if is_active else 1)
+        name = text(screen, F["hub_row"], r_data.target, (x, r.y + T.S + 6), T.TX)
+        xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
+        chips = [(f"level {r_data.level}", "money"), (f"×{xp_mult} work XP" if xp_mult else "no work XP", "muted")]
+        if r_data.yield_qty > 1:
+            chips.append((f"makes {r_data.yield_qty}", "good"))
+        cx = name.right + T.S * 2
+        for label, tone in chips:
+            cx = hb.draw_chip(screen, F, (cx, name.centery), label, tone, anchor="midleft").right + T.S
 
-                tx = item_icon(screen, r_data.target, r.x + T.S, r.y + T.S + 20)
-                text(screen, F["bodyb"], r_data.target, (tx, r.y + T.S), T.TX)
-                xp_mult = progression.work_xp_hours(1, r_data.level, m.work_level)
-                xp_note = f"x{xp_mult} work XP" if xp_mult else "no work XP"
-                caps(screen, F["micro"], f"LEVEL {r_data.level}  ·  {xp_note}",
-                     (tx + F["bodyb"].size(r_data.target)[0] + T.S, r.y + T.S + 4), T.BRASS)
-                if r_data.yield_qty > 1:
-                    caps(screen, F["micro"], f"MAKES {r_data.yield_qty}", (r.right - T.S, r.y + T.S + 4), T.GREEN, right=True)
+        y = r.y + T.S * 5
+        lab = hb.draw_section(screen, F, (x, y + 3), "Uses")
+        end = hb.draw_items(screen, F, (lab.right + T.S * 2, y), r_data.materials, T.TX, right)
+        if r_data.tools:
+            lab = hb.draw_section(screen, F, (end + T.S * 3, y + 3), "Tools")
+            hb.draw_items(screen, F, (lab.right + T.S * 2, y), r_data.tools, T.TX, right)
 
-                target_val = m.crafting_goal(r_data)
+        y = r.y + T.S * 9
+        goal = m.crafting_goal(r_data)
+        mod = m.mod_intelligence + m.craft_bonus(r_data.station)
+        if active:
+            bar = pygame.Rect(x, y + T.S, min(T.S * 30, right - x - T.S * 16), 6)
+            hb.draw_bar(screen, bar, m.crafting_progress / max(1, goal))
+            text(screen, F["hub_body"], f"{m.crafting_progress} / {goal} progress", (bar.right + T.S * 2, y), T.BRASS)
+        else:
+            line = text(screen, F["hub_body"], f"needs {goal} progress  ·  rolls d20{mod:+d} an hour", (x, y),
+                        T.TX_MUTED)
+            lacking = self._get_missing_materials(recipe_id) + [f"a {t}" for t in self._get_missing_tools(recipe_id)]
+            if lacking:
+                text(screen, F["hub_bodyb"], ellipsize("missing " + ", ".join(lacking), F["hub_bodyb"],
+                                                       right - line.right - T.S * 2),
+                     (line.right + T.S * 2, y), T.BLOOD)
 
-                station = r_data.station
-                bonus = m.craft_bonus(station)
-                total_mod = m.mod_intelligence + bonus
-                mod_sign = f"+ {total_mod}" if total_mod >= 0 else f"- {abs(total_mod)}"
-
-                if is_active:
-                    status_color = T.BRASS
-                    status_text = f"IN PROGRESS: {m.crafting_progress}/{target_val} progress"
-                else:
-                    missing = self._get_missing_materials(recipe_id)
-                    has_mat = len(missing) == 0
-                    status_color = T.GREEN if has_mat else T.BLOOD
-                    status_text = f"Target Progress: {target_val} (Roll: 1d20 {mod_sign})"
-                    if not has_mat:
-                        status_text += f" - MISSING: {', '.join(missing)}"
-                    lacking = self._get_missing_tools(recipe_id)
-                    if lacking:
-                        status_color = T.BLOOD
-                        status_text += f" - NEEDS: {', '.join(lacking)}"
-
-                line = text(screen, F["body_sm"], "Materials: ", (tx, r.y + T.S + 20), T.TX_MUTED)
-                end = icon_list(screen, F, (line.right, r.y + T.S + 20), r_data.materials, T.TX_MUTED, r.right - T.S)
-                if r_data.tools:
-                    line = text(screen, F["body_sm"], "  |  Tools: ", (end, r.y + T.S + 20), T.TX_MUTED)
-                    icon_list(screen, F, (line.right, r.y + T.S + 20), r_data.tools, T.TX_MUTED, r.right - T.S)
-                text(screen, F["body_sm"], status_text, (tx, r.y + T.S + 40), status_color)
-
-                if is_active or self._has_materials(recipe_id):
-                    bw = 100
-                    bx = r.x + T.S
-                    by = r.y + T.S + 65
-                    for h in [1, 4, 8]:
-                        btn_r = pygame.Rect(bx, by, bw, 32)
-                        self.add_button(screen, btn_r, f"work:{h}:{recipe_id}", f"Work {h}h",
-                                        font=F["body_sm"])
-                        bx += bw + T.S
-                    alone_ok = ((len(self.group.members) == 1 or bool(self.guild.free_slots))
-                                and self.guild.craft_blocker(m, recipe_id, [m]) is None)
-                    bx, by = r.x + T.S, by + 36
-                    for h in [4, 8, 16]:
-                        btn_r = pygame.Rect(bx, by, bw, 32)
-                        self.add_button(screen, btn_r, f"alone:{h}:{recipe_id}", f"Alone {h}h",
-                                        enabled=alone_ok, font=F["body_sm"])
-                        bx += bw + T.S
-                    if not alone_ok:
-                        text(screen, F["body_sm"], "Alone: needs a free group slot and the materials in their own pack.",
-                             (bx, by + 6), T.TX_FAINT)
-                else:
-                    text(screen, F["body_sm"], "Requires materials in the group's packs to start.",
-                         (r.x + T.S, r.y + T.S + 65), T.TX_FAINT)
-
-                y += ROW_H + T.S
+        bx0 = r.right - T.S * 2 - buttons_w
+        if not (active or self._has_materials(recipe_id)):
+            text(screen, F["hub_sub"], "the materials must be in the group's packs to start",
+                 (r.right - T.S * 2, r.centery - T.S), T.TX_FAINT, right=True)
+            return
+        alone_ok = ((len(self.group.members) == 1 or bool(self.guild.free_slots))
+                    and self.guild.craft_blocker(m, recipe_id, [m]) is None)
+        bw, bh = (buttons_w - T.S * 12) // 3, T.S * 4 + 4
+        rows = (("Group waits", "work", (1, 4, 8), True), ("Alone", "alone", (4, 8, 16), alone_ok))
+        for row, (label, kind, hours, ok) in enumerate(rows):
+            by = r.y + T.S * 2 + row * (bh + T.S * 2)
+            text(screen, F["hub_sub"], label, (bx0, by + (bh - F["hub_sub"].get_height()) // 2),
+                 T.TX_MUTED if ok else T.TX_FAINT)
+            for i, h in enumerate(hours):
+                b = pygame.Rect(bx0 + T.S * 12 + i * (bw + T.S), by, bw, bh)
+                self.add_button(screen, b, f"{kind}:{h}:{recipe_id}", f"{h} h", enabled=ok)
+        if not alone_ok:
+            text(screen, F["hub_sub"], "alone needs a free group slot and the materials in their own pack",
+                 (r.right - T.S * 2, r.bottom - T.S * 3), T.TX_FAINT, right=True)
 
     def _draw_footer(self, screen):
         F = self._F
-        m = T.S * 3
-        y = screen.get_height() - (T.S if self.framed else 52)
-        ny = y - 22
+        H = screen.get_height()
+        ny = H - (T.S * 3 if self.framed else 72) - T.S * 3 * (len(self.notices) - 1)
         for notice in self.notices:
-            text(screen, F["body_sm"], notice, (m, ny), T.BRASS)
-            ny -= 20
+            text(screen, F["hub_body"], notice, (T.S * 5, ny), T.BRASS)
+            ny += T.S * 3
         if not self.framed:
             footer_bar(self, screen, F, primary=("done", f"LEAVE {self.title}"))

@@ -200,17 +200,17 @@ def test_the_forge_card_shows_each_recipes_level_and_what_it_teaches(monkeypatch
     u = Unit("player")
     u.recipes.append("Bear Trap")
     guild = Guild(roster=[u], node="city")
-    shown, real_caps = [], mod.caps
+    shown, real_chip = [], mod.hb.draw_chip
 
-    def recording_caps(surf, font, s, pos, color, **kw):
-        shown.append(s)
-        return real_caps(surf, font, s, pos, color, **kw)
+    def recording_chip(surf, F, pos, label, *a, **kw):
+        shown.append(label)
+        return real_chip(surf, F, pos, label, *a, **kw)
 
-    monkeypatch.setattr(mod, "caps", recording_caps)
+    monkeypatch.setattr(mod.hb, "draw_chip", recording_chip)
     mod.CraftingScreen(None, guild, guild.group_of(u), on_done=lambda: None,
                        station="forge").draw(pygame.Surface((1280, 720)))
     level = items.CRAFTING_RECIPES["Bear Trap"].level
-    assert any(f"LEVEL {level}" in s and f"x{level + 1} work XP" in s for s in shown)
+    assert f"level {level}" in shown and f"×{level + 1} work XP" in shown
 
 
 def _pair():
