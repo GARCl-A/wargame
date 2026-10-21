@@ -29,10 +29,11 @@ from .constants import fmt_money
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin
 from .screen import Screen
-from .ui import loadout_panel
+from .ui import hub_party, loadout_panel
 from .ui.hscroll import ColumnScroll
+from .ui.hub_frame import button_width, hub_button
 from .ui.inspector_panel import role_for
-from .ui.primitives import draw_button, header, set_pointer, text
+from .ui.primitives import draw_button, ellipsize, header, set_pointer, small_caps, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -530,6 +531,13 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         self.zones, self.sources, self.buttons, self._service_hits = [], [], [], []
         self._stash_steppers = []
         self._dots_hits = []
+        self._rail_hits = []
+
+        if self.framed:
+            self._draw_hub(screen, F, W, H)
+            self._draw_menu(screen)
+            set_pointer(self._hovering())
+            return
 
         head = pygame.Rect(0, 0, W, 0 if self.framed else T.S * 9)
         body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * (6 if self.framed else 10))
@@ -570,6 +578,75 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
                 text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
         self._draw_menu(screen)
         set_pointer(self._hovering())
+
+    # ------------------------------------------------------------------ #
+    # inside a hub: the stash as the shop's shelf, the party as its cards  #
+    # ------------------------------------------------------------------ #
+    def _draw_hub(self, screen, F, W, H):
+        self.back_rect = pygame.Rect(0, 0, 0, 0)
+        m = T.S * 5
+        stash_w = round(max(T.S * 52, min(T.S * 70, W * 0.28)))
+        y = self._draw_status(screen, F, m, 0, stash_w)
+        stash_r = pygame.Rect(m, y, stash_w, H - y)
+        stash, held = self._stash(), self._open()
+        data = {"label": self.LABEL,
+                "capacity": (stash.load, stash.capacity) if held else None,
+                "rows": self._stash_rows() if held else [],
+                "services": self._services(),
+                "drop": held and any(o != self.OWNER for o, _ in self.selected)}
+        res = hub_party.container_card(screen, F, stash_r, data, self._stash_scroll, self.mouse)
+        self._stash_scroll = res["scroll"]
+        self._service_hits += res["service_hits"]
+        for r, idx in res["row_hits"]:
+            self.sources.append((r, self.OWNER, idx))
+        for idx, ctl in res["row_controls"].items():
+            for key, delta in (("minus", -1), ("plus", 1), ("all", 999)):
+                if ctl[key]:
+                    self._stash_steppers.append((ctl[key], (self.OWNER, idx), delta))
+        if held:
+            self.zones.append((stash_r, self.OWNER, self.OWNER))
+
+        party = pygame.Rect(stash_r.right + T.S * 3 + 4, 0, W - m - (stash_r.right + T.S * 3 + 4), H)
+        title = small_caps(screen, F["hub_head"], F["hub_head_sc"], "Party", (party.x, T.S + 2), T.TX)
+        x = party.right
+        if self.CAN_DISTRIBUTE and len(self.party) > 1:
+            r = pygame.Rect(0, 0, button_width(F, "distribute load"), T.S * 5 + 4)
+            r.topright = (x, 0)
+            hub_button(screen, F, r, "distribute load", mpos=self.mouse)
+            self.buttons.append(("distribute", r))
+            x = r.x - T.S
+        line, color = ((self.notice, T.BRASS) if self.notice
+                       else (f"drag items between the packs and {self.LABEL}", T.TX_MUTED))
+        text(screen, F["hub_body"], ellipsize(line, F["hub_body"], x - title.right - T.S * 4),
+             (title.right + T.S * 2, title.y + 6), color)
+
+        cols = pygame.Rect(party.x, T.S * 8, party.w, H - T.S * 8)
+        shown = [*self.party, *self.stores]
+        window, col_w = self._cols.fit(len(shown), cols.w, T.S * 2, COL_MIN, COL_MAX)
+        carried = self._carried_names()
+        for i, u in enumerate(shown[window]):
+            r = pygame.Rect(cols.x + i * (col_w + T.S * 2), cols.y, col_w, cols.h)
+            store = store_column.is_store(u)
+            if store:
+                member = store_column.store_dict(self.group, u, {loc for o, loc in self.selected if o is u}, carried)
+                member.pop("action", None)
+                member.pop("tack", None)
+            else:
+                member = self._member_dict(u, carried)
+            res = hub_party.member_card(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
+            self._pack_scroll[id(u)] = res["scroll"]
+            for kind, slot_rect in res["slot_rects"].items():
+                if slot_rect is None or store:
+                    continue
+                self.zones.append((slot_rect, u, kind))
+                if member[kind]["name"]:
+                    self.sources.append((slot_rect, u, kind))
+            self.zones.append((res["pack_zone"], u, "pack"))
+            for pr, idx in res["pack_hits"]:
+                self.sources.append((pr, u, idx))
+            for dr, idx in res["dots_hits"]:
+                self._dots_hits.append((dr, u, idx))
+        self._cols.hint(screen, F, cols, self.mouse)
 
     def _hovering(self):
         if self.menu is not None or self.split_prompt is not None:
