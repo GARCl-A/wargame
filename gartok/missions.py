@@ -135,7 +135,8 @@ APOTHECARY_MUSHROOMS = MissionTemplate(
 
 LIBRARY_DICTIONARY = MissionTemplate(
     "library_dictionary", "library", "library", "A New Translation",
-    "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted.",
+    "The library wants a dictionary to expand its archives. Dictionaries currently in our shop catalog will not be accepted: "
+    "write one on the WRITE tab, in a tongue someone in your group speaks, with Paper and Ink.",
     goal_item="Any Dictionary", goal_qty=1, reward=250, deadline_days=15,
     tags=("library", "scholarly"),
 )

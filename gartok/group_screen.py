@@ -420,7 +420,7 @@ class GroupScreen(GroupDrawMixin, ItemMenuMixin, PackColumnMixin, DragSelectMixi
                 if self.on_cook:
                     self.on_cook()
             else:
-                self.notice = "Campfire requires Flint & Steel, 1 Lumber, and 1 Coal in the pack."
+                self.notice = "Campfire requires Flint and Steel, 1 Lumber and 1 Coal in the pack."
         elif key == "rename":
             self.editing_name = True
             self.name_buf = self.group.name or ""

@@ -23,7 +23,7 @@ def test_missing_key_falls_back_to_the_key_itself_not_a_crash():
 
 
 def test_has_tells_a_real_string_apart_from_one_that_only_looks_like_its_key():
-    assert i18n.has("tutorial.map.suggestion")            # map's card really has one
+    assert i18n.has("tutorial.work.suggestion")           # work's card really has one
     assert not i18n.has("tutorial.squad.suggestion")       # squad's doesn't
     assert not i18n.has("tutorial.does_not_exist.title")
 
@@ -399,3 +399,39 @@ def test_no_registered_card_is_orphaned():
     for tid in TUTORIALS:
         if not tid.startswith(("guild.", "draft.")):
             assert f'return "{tid}"' in src, tid
+
+
+def test_the_maps_first_card_closes_onto_the_objectives():
+    import os
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+    from gartok.app import App
+    from gartok.guild import Guild
+    from gartok.guild_screen import GuildScreen
+
+    app = App()
+    app.guild = Guild([Unit("a")])
+    app._dismiss_tutorial("map")
+    assert isinstance(app.scene, GuildScreen) and app.scene.tab == "reputations"
+
+    app.scene = None
+    app.tutorial.reopen("map")
+    app._dismiss_tutorial("map")                 # the card reopened with "?" just closes
+    assert app.scene is None
+
+
+def test_a_hurt_group_is_pointed_to_the_medic_on_the_map():
+    from gartok.guild import Guild
+    from gartok.map_screen import MapScreen
+
+    u = Unit("a")
+    g = Guild([u])
+    ms = MapScreen.__new__(MapScreen)
+    ms.guild, ms.on_cook, ms._pending_event, ms._rest_open = g, None, None, False
+    ms.selected = g.groups[0]
+
+    def medic_line():
+        return any("Medic" in b.get("text", "") for b in ms._inspector_bottom(g.groups[0]))
+
+    assert not medic_line()
+    u.hp = max(0, u.hp_max - 1)
+    assert medic_line()

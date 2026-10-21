@@ -403,10 +403,11 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         self.guild = self.world = None
         self._start_menu(notice="The guild was wiped out. Load an earlier save to try again.")
 
-    def _open_guild(self):
+    def _open_guild(self, tab="members"):
         self.scene = GuildScreen(self.ui_fonts, self.guild,
                                  on_back=self._start_map, on_level=self._open_level,
-                                 on_manage=lambda g: self._open_group(g, back=self._open_guild), on_bank=self._open_vault_view)
+                                 on_manage=lambda g: self._open_group(g, back=self._open_guild), on_bank=self._open_vault_view,
+                                 tab=tab)
 
     def _open_vault_view(self):
         from .bank_view_screen import BankViewScreen
@@ -728,14 +729,22 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                 or not self.tutorial.should_show(key)):
             return False
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self.tutorial.dismiss(key)
+            self._dismiss_tutorial(key)
             self._debounce_tutorial_click()
             return True
         if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER,
                                                           pygame.K_SPACE):
-            self.tutorial.dismiss(key)
+            self._dismiss_tutorial(key)
             return True
         return event.type in mouse or event.type == pygame.KEYDOWN
+
+    def _dismiss_tutorial(self, key):
+        """The map's card is the first one after the draft: its first close takes the
+        player to the objectives instead of leaving them on an empty map."""
+        first = key not in self.tutorial.seen
+        self.tutorial.dismiss(key)
+        if key == "map" and first and self.guild is not None:
+            self._open_guild(tab="reputations")
 
     def _dispatch(self, event):
         """Hand `event` to the scene with its sounds: a click on something clickable (the hand

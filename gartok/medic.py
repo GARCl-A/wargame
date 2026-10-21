@@ -12,7 +12,7 @@ no free group slot the whole group waits with them instead. Either way the price
 import math
 from dataclasses import dataclass
 
-from . import economy, items, orders, poisons
+from . import economy, items, objectives, orders, poisons
 
 POTION = "Minor Healing Potion"
 
@@ -92,6 +92,7 @@ def treat(guild, group, patients):
     if sum(u.money for u in holders) < cost:
         return False, [f"The group cannot pay ${cost}."]
     economy.charge_richest_first(holders, cost)
+    objectives.complete(guild, "obj_medic")
     events, _ = guild.pass_time(hours)
     for u, _ in picked:
         if u in guild.roster:
@@ -117,6 +118,7 @@ def admit(guild, group, patient):
     if sum(u.money for u in holders) < q.cost:
         return False, [f"The group cannot pay ${q.cost}."]
     economy.charge_richest_first(holders, q.cost)
+    objectives.complete(guild, "obj_medic")
     order = orders.solo("hospital", patient.uid, q.hours)
     if guild.send_alone(group, patient, order, f"{patient.name} (hospital)") is None:
         group.order = order

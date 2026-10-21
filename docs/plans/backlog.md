@@ -23,15 +23,10 @@ AI, measure and economy, combat presentation: the fog of war, the log on the boa
 a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what is left:
 
 **Phase 5 — tutorials** (last: they describe the final screens)
-5. **Tutorials (review all of them).** About 25 modal cards, the map's with six paragraphs; the guild's
-   goal is the 12th. Decided 2026-10-18: the first card only says "this is your guild; your objectives
-   are here" and points to the objectives list (`gartok/objectives.py`); every other card gets much
-   shorter, since each stays one `?` click away. Both coexist: the objectives list guides with small
-   tasks, the cards explain the systems. With it, teach at the moment of the decision (one line where
-   the choice is made):
-   - nothing points a wounded group to the Medic;
-   - the Library's "A New Translation" asks for a Dictionary of an Unarchived Tongue and nothing says
-     how one is made (the WRITE tab).
+5. **Tutorials.** Done 2026-10-21: every card checked against the code and cut to the rule it
+   teaches (~4,800 words -> ~3,000); the map's card closes onto the objectives (16, all open,
+   `gartok/objectives.py`); the wounded group's Medic line and the Library's WRITE hint are in.
+   Left: the author reads every card in play and flags what still rings false.
 6. **Big screen files:** split `guild_screen.py` (812 lines) when phase 5 touches it; the two editors
    (`map_editor_screen.py` 970, `char_editor_screen.py` 807) stay out. When any of them takes a new
    node or tab, split by concern instead of growing it.

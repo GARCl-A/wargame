@@ -234,3 +234,19 @@ def test_the_sanctuary_hub_has_an_initiation_tab_that_starts_the_rite():
     screen._click(screen.begin_rect.center)
     assert a.rite_school == "faith" and not done and "Holy Symbol" in screen.notice
     assert screen.tutorial_key() == "initiation"
+
+
+def test_a_defeated_priest_is_where_the_holy_symbol_comes_from():
+    """No shelf sells the Faith rite's Holy Symbol, by design: it is loot off an enemy Priest."""
+    import random
+
+    from gartok import economy, encounters, loot, rite
+
+    assert economy.shop_of(rite.HOLY_SYMBOL) is None
+    for seed in range(4000):
+        random.seed(seed)
+        foe = encounters.build_enemy(2, rng=random.Random(seed))
+        if foe.occupation["name"] == "Priest":
+            assert rite.HOLY_SYMBOL in loot.carried_by(foe)
+            return
+    raise AssertionError("no Priest rolled")

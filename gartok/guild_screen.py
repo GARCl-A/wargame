@@ -89,7 +89,7 @@ def _needs_attention(unit):
 class GuildScreen(Screen):
     native = True
 
-    def __init__(self, fonts, guild, on_back, on_level=None, on_manage=None, on_bank=None):
+    def __init__(self, fonts, guild, on_back, on_level=None, on_manage=None, on_bank=None, tab="members"):
         super().__init__()
         self.fonts = fonts
         self._F = None
@@ -100,7 +100,7 @@ class GuildScreen(Screen):
         self.on_level = on_level
         self.on_manage = on_manage
         self.on_bank = on_bank               # opens the read-only City vault
-        self.tab = "members"
+        self.tab = tab
         pending = [u for u in self.roster if u.pending_picks]
         self.member = pending[0] if pending else (self.roster[0] if self.roster else None)
 

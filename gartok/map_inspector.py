@@ -19,7 +19,7 @@ from .group import CAUTIOUS, NORMAL
 from .ui.tokens import T
 
 STANCE_NOTES = {NORMAL: "no change to the ambush chance",
-                CAUTIOUS: "fewer ambushes on the road and on hunts"}
+                CAUTIOUS: "fewer ambushes only with the Wilds vocation or a Woodland Scout"}
 
 
 class MapInspectorMixin:
@@ -266,7 +266,7 @@ class MapInspectorMixin:
                 else:
                     missing = []
                     if not any(u.has_item(economy.FIELD_CAMPFIRE_TOOL) for u in (*g.members, *g.stores)):
-                        missing.append("Flint & Steel")
+                        missing.append(economy.FIELD_CAMPFIRE_TOOL)
                     if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_LUMBER) for u in g.members) < 1:
                         missing.append("1 Lumber")
                     if sum(u.unlocked_of(economy.FIELD_CAMPFIRE_COAL) for u in g.members) < 1:
@@ -275,6 +275,11 @@ class MapInspectorMixin:
                     items.append({"type": "button", "key": "campfire_cook",
                                   "label": "LIGHT CAMPFIRE & COOK", "enabled": not missing,
                                   "sub": sub, "gap_before": 2, "height": 32})
+            hurt = [u for u in g.members if u.hp < u.hp_max or u.sick or u.poisoned]
+            if hurt:
+                items.append({"type": "wrapped_text", "color": T.BRASS, "gap_before": T.S,
+                              "text": f"{len(hurt)} wounded, sick or poisoned: REST, or the Medic "
+                                      "at the Apothecary treats them at once."})
             items.append({"type": "button", "key": "stance", "gap_before": 2, "height": 32,
                           "label": f"TRAVEL: {g.stance.upper()}",
                           "sub": STANCE_NOTES[g.stance]})

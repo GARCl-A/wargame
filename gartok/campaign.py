@@ -36,6 +36,7 @@ from . import (
     factions,
     forced,
     loot,
+    objectives,
     orders,
     recorder,
     solo,
@@ -322,6 +323,7 @@ def advance(guild, dt=None, busy=()):
         return _advance(guild, dt, busy)
     finally:
         recorder.orders_settled(guild)
+        objectives.check_and_bank(guild)
 
 
 def _advance(guild, dt=None, busy=()):
