@@ -2,10 +2,12 @@
 
 import pygame
 
-from . import gather, orders
+from . import economy, gather, orders
 from .constants import fmt_money
 from .screen import Screen
-from .ui.primitives import caps, draw_button, footer_bar, header, panel, set_pointer, text
+from .ui import hub_body as hb
+from .ui.hub_frame import hub_button
+from .ui.primitives import footer_bar, header, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
@@ -18,7 +20,7 @@ class GatherScreen(Screen):
     def __init__(self, fonts, guild, group, node, on_done):
         super().__init__()
         self.fonts = fonts
-        self._F = fonts if (isinstance(fonts, dict) and "body" in fonts) else ui_fonts()
+        self._F = ui_fonts()
         self.guild = guild
         self.group = group
         self.node = node
@@ -70,8 +72,7 @@ class GatherScreen(Screen):
 
     def add_button(self, surf, rect, key, label, enabled=True, primary=False, danger=False):
         self.buttons.append((key, rect))
-        return draw_button(surf, self._F, rect, label, primary=primary, enabled=enabled,
-                           danger=danger, mpos=self.mouse)
+        hub_button(surf, self._F, rect, label, primary=primary, enabled=enabled, mpos=self.mouse)
 
     framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
 
@@ -90,77 +91,80 @@ class GatherScreen(Screen):
         self.buttons.clear()
         self._hot = False
 
-        blurb = "Harvest materials instead of wages · One licence covers the whole guild"
         if self.framed:
-            text(surf, F["body"], blurb, (T.S * 3, 0), T.TX_MUTED)
+            top = 0
         else:
             header(surf, F, pygame.Rect(0, 0, W, 72), f"{self.node.name.upper()} — GATHERING",
-                   blurb, (), None, mpos=self.mouse)
-
-        has_lic = self.guild.has_licence(self.node.id)
-        price = gather.licence_price(self.node.id)
-        shortfall = self.guild.licence_shortfall(self.node.id, self.group)
-
-        pad = T.S * 4
-        cw = min(720, W - pad * 2)
-        cx = (W - cw) // 2
-        cy = T.S * 5 if self.framed else 96
-
-        card_rect = pygame.Rect(cx, cy, cw, 460)
-        panel(surf, card_rect)
-
-        y = card_rect.y + T.S * 3
-        # Licence Status
-        caps(surf, F["micro"], "LICENCE STATUS", (cx + T.S * 3, y), T.TX_FAINT)
-        y += 24
-        if has_lic:
-            caps(surf, F["titleb"], "ACTIVE FOR THE GUILD", (cx + T.S * 3, y), T.GREEN)
-        else:
-            caps(surf, F["titleb"], f"NOT HELD — {fmt_money(price)}", (cx + T.S * 3, y), T.BRASS)
-            if shortfall > 0:
-                text(surf, F["body_sm"], f"Group is short {fmt_money(shortfall)}", (cx + T.S * 3, y + 28), T.TX_MUTED)
-        y += 48
-
-        # Drop Table
-        caps(surf, F["micro"], "DROP TABLE (PERCENT PER ROLL)", (cx + T.S * 3, y), T.TX_FAINT)
-        y += 20
-        drops = gather.drops(self.node.id)
-        drop_str = "   ·   ".join(f"{name}: {pct}%" for name, pct in drops)
-        text(surf, F["body"], drop_str, (cx + T.S * 3, y), T.TX)
-        y += 40
-
-        # Info notes
-        text(surf, F["body_sm"], f"Shift yield: {gather.rolls(16):.1f} rolls/worker for 16 h · Pro-rated for shorter shifts.",
-             (cx + T.S * 3, y), T.TX_MUTED)
-        y += 24
-        text(surf, F["body_sm"], "A pack may ambush the crew · Fight must be won to secure the haul.",
-             (cx + T.S * 3, y), T.BLOOD)
-        y += 24
-        text(surf, F["body_sm"], self._payback_line(price), (cx + T.S * 3, y), T.TX_MUTED)
-        y += 36
-
-        # Action buttons
-        if not has_lic:
-            btn_r = pygame.Rect(cx + T.S * 3, y, 320, 44)
-            can_buy = shortfall == 0
-            self.add_button(surf, btn_r, "buy_licence", f"BUY LICENCE ({fmt_money(price)})",
-                            primary=can_buy, enabled=can_buy)
-        else:
-            caps(surf, F["micro"], "START A GATHERING SHIFT", (cx + T.S * 3, y), T.TX_FAINT)
-            y += 24
-            btn_w = (cw - T.S * 6 - (len(SHIFTS) - 1) * T.S * 2) // len(SHIFTS)
-            for i, h in enumerate(SHIFTS):
-                btn_r = pygame.Rect(cx + T.S * 3 + i * (btn_w + T.S * 2), y, btn_w, 40)
-                self.add_button(surf, btn_r, f"gather:{h}", f"{h} HOURS", primary=True)
-                haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, h)
-                text(surf, F["body_sm"], f"haul ~{fmt_money(round(haul))}", (btn_r.x, btn_r.bottom + 6),
-                     T.GREEN if haul > wage else T.TX_MUTED)
-                text(surf, F["micro"], f"wage {fmt_money(round(wage))} · {risk * 100:.0f}% ambush",
-                     (btn_r.x, btn_r.bottom + 26), T.TX_FAINT)
+                   "harvest materials instead of wages", (), None, mpos=self.mouse)
+            top = 96
+        bottom = H - T.S * 4 - (T.S * 3 if self.notice else 0)
+        body = pygame.Rect(T.S * 5, top, W - T.S * 10, bottom - top)
+        left_w = max(T.S * 56, min(T.S * 72, round(body.w * 0.4)))
+        self._draw_licence(surf, pygame.Rect(body.x, body.y, left_w, body.h))
+        self._draw_shifts(surf, pygame.Rect(body.x + left_w + T.S * 3, body.y, body.w - left_w - T.S * 3, body.h))
 
         if self.notice:
-            text(surf, F["body"], self.notice, (cx + T.S * 3, card_rect.bottom - 40), T.BRASS)
-
+            text(surf, F["hub_body"], self.notice, (T.S * 5, H - T.S * 3 - (0 if self.framed else 64)), T.BRASS)
         if not self.framed:
             footer_bar(self, surf, F, back=("leave", "BACK TO MAP"))
-        set_pointer(any(r.collidepoint(self.mouse) for _, r in self.buttons))
+        self._hot = any(r.collidepoint(self.mouse) for _, r in self.buttons)
+        set_pointer(self._hot)
+
+    def _draw_licence(self, surf, rect):
+        F = self._F
+        inner = hb.draw_panel(surf, F, rect, "The Licence", "one licence covers the whole guild")
+        held = self.guild.has_licence(self.node.id)
+        price = gather.licence_price(self.node.id)
+        short = self.guild.licence_shortfall(self.node.id, self.group)
+        rows = [("Status", "held: every group gathers here" if held else f"not held  ·  {fmt_money(price)}",
+                 "good" if held else "money")]
+        if not held:
+            rows.append(("Purse", f"the group is short {fmt_money(short)}" if short > 0
+                         else "the group can pay it now", "bad" if short > 0 else "muted"))
+        y = hb.draw_facts(surf, F, (inner.x, inner.y), inner.w, rows)
+        if not held:
+            b = pygame.Rect(inner.x, y, inner.w, T.S * 6 + 4)
+            self.add_button(surf, b, "buy_licence", f"Buy the licence  {fmt_money(price)}", primary=True,
+                            enabled=short == 0)
+            y = b.bottom + T.S * 2
+        y += T.S
+        pygame.draw.line(surf, T.STEEL_LINE, (inner.x, y), (inner.right, y))
+        y += T.S * 2
+        lab = hb.draw_section(surf, F, (inner.x, y), "What the ground gives")
+        text(surf, F["hub_sub"], f"{gather.rolls(gather.DAY_HOURS):.1f} rolls a worker in {gather.DAY_HOURS} h",
+             (lab.right + T.S * 2, lab.y - 1), T.TX_MUTED)
+        y = lab.bottom + T.S
+        for name, pct in gather.drops(self.node.id):
+            if y + hb.OFFER_H > inner.bottom + T.S * 2:
+                break
+            hb.draw_offer(surf, F, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.OFFER_H), {
+                "icon": {"item": name}, "name": name, "sub": f"sells for {fmt_money(economy.sell_price(name))}",
+                "price": f"{pct}%", "price_tone": None}, (-1, -1))
+            y += hb.OFFER_H + T.S
+
+    def _draw_shifts(self, surf, rect):
+        F = self._F
+        inner = hb.draw_panel(surf, F, rect, "Shifts", "the crew keeps what it finds instead of a wage")
+        held = self.guild.has_licence(self.node.id)
+        main = gather.drops(self.node.id)[0][0]
+        y = inner.y
+        for h in SHIFTS:
+            haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, h)
+            self._offer(surf, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.OFFER_H), {
+                "icon": {"item": main}, "name": f"{h} hours",
+                "sub": f"the same hours' wage {fmt_money(round(wage))}  ·  {risk * 100:.0f}% ambush",
+                "price": f"~{fmt_money(round(haul))}", "price_tone": "good" if haul > wage else "muted",
+                "buttons": [(f"gather:{h}", "Gather", True, held)], "dim": not held})
+            y += hb.OFFER_H + T.S
+        if not held:
+            text(surf, F["hub_body"], "Gathering needs the licence.", (inner.x, y + T.S), T.TX_FAINT)
+        foot = inner.bottom - T.S * 6
+        pygame.draw.line(surf, T.STEEL_LINE, (rect.x, foot), (rect.right - 1, foot))
+        text(surf, F["hub_body"], "A pack may ambush the crew: the fight must be won to keep the haul.",
+             (inner.x, foot + T.S * 2), T.BLOOD)
+        text(surf, F["hub_sub"], self._payback_line(gather.licence_price(self.node.id)),
+             (inner.x, foot + T.S * 5), T.TX_MUTED)
+
+    def _offer(self, surf, rect, o):
+        for b, key in hb.draw_offer(surf, self._F, rect, o, self.mouse):
+            self.buttons.append((key, b))

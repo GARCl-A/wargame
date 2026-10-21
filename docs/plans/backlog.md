@@ -29,8 +29,8 @@ banner, `battle_fx.py` / `sound.py`) are done; what is left:
    Ruins...); today every board is the same grey. Brogue is the reference.
 4. **Hub tab bodies in the new type.** The frame (`ui/hub_frame.py`) and the shop tab are done and every
    tab sits inside the frame; the Tavern (Recruit, Study, Perform, and the Prison that shares it) is
-   redrawn on `ui/hub_body.py`, then the Stables, Forge / Carpentry / Write and the Medic. Left in the old small type: the jobs
-   boards, Initiation, Gathering, the Bank's vault. Restyle each on `hub_body` as those,
+   redrawn on `ui/hub_body.py`, then the Stables, Forge / Carpentry / Write, the Medic and Gathering. Left in the old small type: the
+   jobs boards, Initiation, the Bank's vault. Restyle each on `hub_body` as those,
    one commit per screen.
 
 **Phase 5 — tutorials** (last: they describe the final screens)
