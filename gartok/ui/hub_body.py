@@ -13,7 +13,7 @@ shop's FOR SALE and PARTY panels look like, for the tabs that are not a shop.
     draw_section(surf, F, pos, label)                      -> rect: a tracked caps label
 
 A person `p` is {"face": {"race", "portrait_id", "token"}, "name", "sub", "note" (optional second
-line), "chips": [(label, tone)], "status": (text, tone) | None, "state": None | "on" | "good"
+line: a string, or (text, tone)), "chips": [(label, tone)], "status": (text, tone) | None, "state": None | "on" | "good"
 | "hot", "reserve": px kept free at the right for the caller's buttons}. An offer `o` is
 {"icon": icon, "name", "sub", "note": (text, tone) | None, "price": str | None, "price_tone",
 "buttons": [(key, label, primary, enabled)], "dim": bool}; an icon is {"item": name}, {"face":
@@ -128,7 +128,8 @@ def draw_person(surf, F, rect, p, mpos):
         text(surf, F["hub_sub"], ellipsize(p["sub"], F["hub_sub"], right - x), (x, y), T.TX_MUTED)
         y += T.S * 2 + 4
     if p.get("note"):
-        text(surf, F["hub_body"], ellipsize(p["note"], F["hub_body"], right - x), (x, y), T.TX)
+        note, tone = p["note"] if isinstance(p["note"], tuple) else (p["note"], None)
+        text(surf, F["hub_body"], ellipsize(note, F["hub_body"], right - x), (x, y), TONE[tone])
         y += T.S * 3
     hits = []
     cx = x

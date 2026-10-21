@@ -76,6 +76,9 @@ class InitiationScreen(Screen):
         for u in self.group.members:
             blocked = rite.blocker(self.guild, self.group, u, self.school)
             rows.append({"key": u.uid, "name": u.name, "status": self._status(u),
+                         "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None),
+                                  "token": u.token},
+                         "sub": f"{u.race['name']} {u.occupation['name'].lower()}  ·  INT {u.mod_intelligence:+}",
                          "note": blocked or "", "enabled": blocked is None, "picked": u.uid == self.picked})
         return rows
 
@@ -111,26 +114,26 @@ class InitiationScreen(Screen):
         return [{"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
 
     def draw(self, screen):
-        F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
+        F = ui_fonts()
+        W, H = screen.get_size()
         screen.fill(T.TABLE)
-        m = T.S * 3
-        sub = "Leave one member to board here until the school takes them in."
+        m = T.S * 5
         if self.framed:
-            text(screen, F["body"], sub, (m, 0), T.TX_MUTED)
-            top = T.S * 5
+            top = 0
         else:
-            face = draw_vendor(screen, F, (m, m), self.vendor_card)
-            caps(screen, F["head"], f"{world.node(self.group.node).name.upper()}  ·  INITIATION", (m + face, m), T.TX)
-            draw_vendor_name(screen, F, (m + face, m + T.S * 4), self.vendor_card)
-            text(screen, F["body"], sub, (m + face, m + T.S * 7), T.TX_MUTED)
-            top = m + T.S * 11
+            face = draw_vendor(screen, F, (T.S * 3, T.S * 3), self.vendor_card)
+            caps(screen, F["head"], f"{world.node(self.group.node).name.upper()}  ·  INITIATION",
+                 (T.S * 3 + face, T.S * 3), T.TX)
+            draw_vendor_name(screen, F, (T.S * 3 + face, T.S * 7), self.vendor_card)
+            top = T.S * 12
         notice_h = 0
         if self.notice:
-            lines = wrap(F["body_sm"], self.notice, screen.get_width() - 2 * m)
+            lines = wrap(F["hub_body"], self.notice, W - 2 * m)
+            lh = F["hub_body"].get_linesize()
             for i, ln in enumerate(lines):
-                text(screen, F["body_sm"], ln, (m, screen.get_height() - m - T.S * 2 - (len(lines) - i) * 18), T.BRASS)
-            notice_h = len(lines) * 18 + T.S
-        area = pygame.Rect(m, top, screen.get_width() - 2 * m, screen.get_height() - top - m - notice_h)
+                text(screen, F["hub_body"], ln, (m, H - T.S * 3 - (len(lines) - i) * lh), T.BRASS)
+            notice_h = len(lines) * lh + T.S
+        area = pygame.Rect(m, top, W - 2 * m, H - top - T.S * 4 - notice_h)
         self.row_rects, self.begin_rect, self.leave_rect = draw_initiation(
             screen, F, area, self._terms(), self._rows(), self._action(),
             None if self.framed else "LEAVE THE SANCTUARY", self.mouse)
