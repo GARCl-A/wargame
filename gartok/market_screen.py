@@ -30,7 +30,7 @@ import pygame
 from . import economy, items
 from .constants import fmt_money
 from .dragselect import DragSelectMixin
-from .market_draw import MARGIN, MarketDrawMixin
+from .market_draw import MarketDrawMixin
 from .market_trade import MarketTradeMixin
 from .packbox import ItemMenuMixin, PackColumnMixin
 from .screen import Screen
@@ -45,9 +45,8 @@ _BENT_WORDS = {0: "same bent", 1: "close bent", 2: "different bent", 3: "far ben
 
 class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMenuMixin, PackColumnMixin,
                    DragSelectMixin, SheetModalMixin, Screen):
+    framed = True           # drawn for a hub's frame (`hub_screen.TabbedHubScreen`)
     native = True
-    header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
-    vendor_function = "shop"  # which of the node's functions the keeper behind this stall serves
 
     def __init__(self, fonts, guild, shoppers, node, on_done):
         super().__init__()
@@ -94,6 +93,10 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         self.group_view = False             # one table of every stack instead of a column per member
         self._cargo_scroll = 0
         self._cargo_rect = None
+        self._shelf_scroll = 0                # shelf rows scrolled past
+        self._shelf_max = 0
+        self._shelf_rect = None              # the FOR SALE panel: drop pack items on it to sell
+        self._shelf_list = None
 
     def sync_group(self):
         if self.group is None:
@@ -137,10 +140,6 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
     def tutorial_key(self):
         return "market"
 
-    def tutorial_badge_rect(self, size):
-        W, H = size
-        return pygame.Rect(W - MARGIN - 28, MARGIN - 4, 28, 28)
-
     def get_categories(self):
         shop = self._shop()
         cats = economy.market_categories(self._node_id(), shop.strays() if shop else ())
@@ -164,8 +163,8 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         dn, faces = w.damage
         dmg = f"{dn}d{faces}"
         if (w.range == 0 or (w.has_trait("thrown") if hasattr(w, "has_trait") else getattr(w, "thrown", 0))) and unit.mod_strength:
-            dmg += f" {unit.mod_strength:+}"
-        return f"{hit_bonus:+} hit  ·  {dmg} dmg"
+            dmg += f"{unit.mod_strength:+}"
+        return f"{hit_bonus:+}  ·  {dmg}"
 
     @staticmethod
     def _armor_note(unit):
@@ -361,17 +360,16 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         guild, node = getattr(self, "guild", None), getattr(self, "node", None)
         return guild.shop(node.id) if guild and node else None
 
-    def _vendor_card(self, keeper):
-        """The keeper for `vendor_panel.draw_vendor_header`: who they are, the tongues they
-        haggle in and their bent (the node's)."""
-        alignment = getattr(self.node, "alignment", None)
-        bent = []
-        if alignment:
-            law, moral = alignment.split(" and ")
-            bent = [law] if law == moral else [law, moral]
-        return {**keeper.card, "place": self.node.name,
-                "tongues": list(economy.vendor_tongues(getattr(self.node, "language", None))),
-                "bent": bent}
+    def hub_cards(self):
+        """The hub header's cards for the shop: the deal, the party's purse, the till."""
+        deal = self._deal_card()
+        cards = [{"label": "your deal", "value": deal["headline"].capitalize(), "sub": "  ·  ".join(deal["why"]),
+                  "tone": deal["tone"] if deal["tone"] != "none" else None, "warm": True},
+                 {"label": "party purse", "value": fmt_money(self.purse), "tone": "money"}]
+        cash = self._cash()
+        if cash is not None:
+            cards.append({"label": "shop can pay", "value": fmt_money(cash)})
+        return cards
 
     def _deal_card(self):
         """How the party's haggling moved the prices, for the header's deal block."""
@@ -434,8 +432,8 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
                     held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
                     self._sel_qty[src] = held
             return
-        if src not in self.selected or src[0] == "stock":
-            self.selected = [src]
+        if src not in self.selected:
+            self.selected = [src]           # a cart row dragged takes the whole cart along
 
     def handle_event(self, event):
         if self._menu_event(event):
@@ -452,6 +450,9 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
                 self._pack_scroll[id(hit)] = max(0, min(n - 1, cur - hy))
                 return
 
+            if self._shelf_list is not None and self._shelf_list.collidepoint(self.mouse):
+                self._shelf_scroll = max(0, min(self._shelf_max, self._shelf_scroll - hy))
+                return
             if self._cargo_rect is not None and self._cargo_rect.collidepoint(self.mouse):
                 self._cargo_scroll = max(0, self._cargo_scroll - hy * 40)
                 return

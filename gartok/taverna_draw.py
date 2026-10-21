@@ -49,23 +49,28 @@ class TavernaDrawMixin:
         else:
             sub = "Rent a quiet room for the day · anyone with a study target will make daily progress"
 
-        tabs_list = ["RECRUIT", "STUDY", "PERFORM"] if (is_tavern and not self.hide_tabs) else []
-        active_tab_label = {"recruits": "RECRUIT", "rooms": "STUDY", "perform": "PERFORM"}[self.tab]
-        header_rect = pygame.Rect(0, 0, W, 72)
-        tab_hits = header(screen, F, header_rect, self.title if not is_tavern else "THE TAVERN",
-                          sub, tabs_list, active_tab_label, mpos=self.mouse, has_tutorial=True,
-                          vendor=getattr(self, "vendor", None))
-
-        for tab_name, r in tab_hits.items():
-            if tab_name == "RECRUIT" and self.tab != "recruits":
-                self.buttons.append(("tab_recruits", r))
-            elif tab_name == "STUDY" and self.tab != "rooms":
-                self.buttons.append(("tab_rooms", r))
-            elif tab_name == "PERFORM" and self.tab != "perform":
-                self.buttons.append(("tab_perform", r))
-
-        content_top = 88
-        content_bottom = H - FOOTER_H - 12
+        if self.framed:                      # the hub draws the keeper, the tabs and the back button
+            content_top = 0
+            if self.tab != "recruits":       # the recruit facts are the hub's cards; these say what the tab does
+                text(screen, F["body"], sub, (T.S * 3, 0), T.TX_MUTED)
+                content_top = T.S * 4
+            content_bottom = H - T.S * 4
+        else:
+            tabs_list = ["RECRUIT", "STUDY", "PERFORM"] if is_tavern else []
+            active_tab_label = {"recruits": "RECRUIT", "rooms": "STUDY", "perform": "PERFORM"}[self.tab]
+            header_rect = pygame.Rect(0, 0, W, 72)
+            tab_hits = header(screen, F, header_rect, self.title if not is_tavern else "THE TAVERN",
+                              sub, tabs_list, active_tab_label, mpos=self.mouse, has_tutorial=True,
+                              vendor=getattr(self, "vendor", None))
+            for tab_name, r in tab_hits.items():
+                if tab_name == "RECRUIT" and self.tab != "recruits":
+                    self.buttons.append(("tab_recruits", r))
+                elif tab_name == "STUDY" and self.tab != "rooms":
+                    self.buttons.append(("tab_rooms", r))
+                elif tab_name == "PERFORM" and self.tab != "perform":
+                    self.buttons.append(("tab_perform", r))
+            content_top = 88
+            content_bottom = H - FOOTER_H - 12
         content_h = content_bottom - content_top
 
         if self.tab == "recruits":
@@ -586,6 +591,10 @@ class TavernaDrawMixin:
         col = T.GREEN if (self.notice and ("signs" in self.notice or "begins" in self.notice)) else T.TX_MUTED
         if self.notice and ("lost" in self.notice or "Not enough" in self.notice):
             col = T.BLOOD
+        if self.framed:
+            if self.notice:
+                text(screen, F["body_sm"], self.notice, (T.S * 3, screen.get_height() - T.S * 3), col)
+            return
         btn_label = self._leave_label()
         footer_bar(self, screen, F, primary=("done", btn_label),
                    notice=self.notice, notice_color=col)

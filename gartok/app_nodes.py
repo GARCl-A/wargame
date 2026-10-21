@@ -56,8 +56,10 @@ class NodeScreensMixin:
             self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
                                                   on_done=self._after_activity, first="shop")
         else:
-            self.scene = MarketScreen(self.ui_fonts, self.guild, shoppers, node,
-                                      on_done=self._after_activity)
+            from .hub_screen import TabbedHubScreen
+            shop = MarketScreen(self.ui_fonts, self.guild, shoppers, node, on_done=self._after_activity)
+            self.scene = TabbedHubScreen(self.ui_fonts, [("shop", "SHOP", shop)], node=node,
+                                         on_done=self._after_activity)
 
     def _open_bank_vault(self, group, node, _offer):
         from .bank_hub_screen import BankHubScreen

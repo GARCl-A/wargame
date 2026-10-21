@@ -44,6 +44,18 @@ class T:
     F_HEAD    = 18   # card / section heading
     F_BIG     = 28   # clock reading / critical number
 
+    # the hub screens (a node's tabs: shop, forge, recruit...) read at a larger size
+    F_HUB_TITLE = 34   # the keeper's name, serif small caps
+    F_HUB_HEAD  = 22   # a panel's heading ("For Sale", "Party"), serif small caps
+    F_HUB_CARD  = 20   # a member card's name, serif small caps
+    F_HUB_ROW   = 17   # an item row's name
+    F_HUB_BODY  = 15   # body text, tracked tab and button labels
+    F_HUB_SUB   = 13   # the line under a row, hints
+    F_HUB_LABEL = 12   # tracked caps labels
+    F_HUB_VALUE = 32   # a header card's figure
+    F_HUB_DEAL  = 19   # the deal card's headline
+    F_HUB_PRICE = 20   # a shelf row's price
+
 
 ARCHETYPE_COLORS = {"brass": T.BRASS, "green": T.GREEN, "muted": T.TX_MUTED}
 
@@ -53,6 +65,25 @@ def mix(a, b, t):
 
 
 _font_cache = None
+
+
+def _hub_fonts(serif):
+    """The hub screens' set (`hub_*`): plain sans (not condensed) for text, serif small caps
+    for names and headings -- each small-caps size comes with its `_sc` lower-case partner."""
+    sans = "dejavusans,arial"
+    out = {}
+    for key, size in (("hub_title", T.F_HUB_TITLE), ("hub_head", T.F_HUB_HEAD), ("hub_card", T.F_HUB_CARD)):
+        out[key] = pygame.font.SysFont(serif, size, bold=True)
+        out[key + "_sc"] = pygame.font.SysFont(serif, int(size * 0.76), bold=True)
+    for key, size, bold in (("hub_row", T.F_HUB_ROW, False), ("hub_body", T.F_HUB_BODY, False),
+                            ("hub_bodyb", T.F_HUB_BODY, True), ("hub_sub", T.F_HUB_SUB, False),
+                            ("hub_subb", T.F_HUB_SUB, True), ("hub_label", T.F_HUB_LABEL, True),
+                            ("hub_value", T.F_HUB_VALUE, True), ("hub_deal", T.F_HUB_DEAL, True),
+                            ("hub_price", T.F_HUB_PRICE, True)):
+        out[key] = pygame.font.SysFont(sans, size, bold=bold)
+    out["hub_quote"] = pygame.font.SysFont(sans, T.F_HUB_BODY + 1, italic=True)
+    out["hub_quote_sm"] = pygame.font.SysFont(sans, T.F_HUB_SUB, italic=True)
+    return out
 
 
 def fonts():
@@ -78,5 +109,6 @@ def fonts():
             "big":     pygame.font.SysFont(cond, T.F_BIG, bold=True),
             "ink":     pygame.font.SysFont(serif, T.F_BODY),
             "inkb":    pygame.font.SysFont(serif, T.F_BODY, bold=True),
+            **_hub_fonts(serif),
         }
     return _font_cache

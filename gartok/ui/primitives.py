@@ -331,6 +331,54 @@ def tracked(surf, font, s, pos, color, spacing=1):
     return x
 
 
+def spaced(surf, font, s, pos, color, *, spacing=2, anchor="topleft"):
+    """`s` in tracked capitals placed by any rect anchor ("center", "midleft", "topright"...).
+    Returns its rect."""
+    imgs = [font.render(ch, True, color) for ch in s.upper()]
+    r = pygame.Rect(0, 0, sum(i.get_width() for i in imgs) + spacing * max(0, len(imgs) - 1), font.get_height())
+    setattr(r, anchor, pos)
+    x = r.x
+    for img in imgs:
+        surf.blit(img, (x, r.y))
+        x += img.get_width() + spacing
+    return r
+
+
+def spaced_width(font, s, spacing=2):
+    return sum(font.size(ch)[0] for ch in s.upper()) + spacing * max(0, len(s) - 1)
+
+
+def small_caps(surf, big, small, s, pos, color, *, anchor="topleft"):
+    """`s` in small capitals: each word's first letter in `big`, the rest upper-cased in
+    `small`, on one baseline. Returns its rect."""
+    parts = []
+    for wi, word in enumerate(s.split(" ")):
+        if wi:
+            parts.append((small, " "))
+        parts += [(big if ci == 0 or not ch.isalpha() else small, ch.upper()) for ci, ch in enumerate(word)]
+    imgs = [(f, f.render(ch, True, color)) for f, ch in parts]
+    r = pygame.Rect(0, 0, sum(i.get_width() for _, i in imgs), big.get_height())
+    setattr(r, anchor, pos)
+    x, asc = r.x, big.get_ascent()
+    for f, img in imgs:
+        surf.blit(img, (x, r.y + asc - f.get_ascent()))
+        x += img.get_width()
+    return r
+
+
+def dashed_rect(surf, rect, color, dash=8, gap=6):
+    """A rect outline of dashes -- a drop zone."""
+    for (x0, y0), (x1, y1) in ((rect.topleft, rect.topright), (rect.bottomleft, rect.bottomright),
+                               (rect.topleft, rect.bottomleft), (rect.topright, rect.bottomright)):
+        length = max(abs(x1 - x0), abs(y1 - y0))
+        for start in range(0, length, dash + gap):
+            end = min(length, start + dash)
+            if y0 == y1:
+                pygame.draw.line(surf, color, (x0 + start, y0), (x0 + end, y0))
+            else:
+                pygame.draw.line(surf, color, (x0, y0 + start), (x0, y0 + end))
+
+
 def section(surf, F, label, x, y, w, *, color=None):
     """A small tracked keyword with an underline; returns the y below it."""
     tracked(surf, F["micro"], label.upper(), (x, y), color or T.BRASS)

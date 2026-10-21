@@ -82,6 +82,22 @@ class TavernaScreen(TavernaDrawMixin, Screen):
     # ------------------------------------------------------------------ #
     # tutorial (screen.py)                                               #
     # ------------------------------------------------------------------ #
+    @property
+    def framed(self):
+        """Inside the Tavern's hub (its tabs hidden) the hub draws the header and the back."""
+        return self.hide_tabs
+
+    def hub_cards(self):
+        purse = {"label": "party purse", "value": fmt_money(self._wealth()), "tone": "money"}
+        if self.tab != "recruits":
+            return [purse]
+        size = len(self.guild.roster)
+        days = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
+        return [{"label": "guild size", "value": str(size)},
+                {"label": "crowd penalty", "value": f"-{recruit.size_penalty(size)}"},
+                {"label": "new faces in", "value": f"{days} day{'s' if days != 1 else ''}"},
+                purse]
+
     def tutorial_key(self):
         return "taverna"
 

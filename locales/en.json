@@ -130,10 +130,10 @@
     "market": {
       "title": "Buying and selling",
       "body": [
-        "The shopping party pools its coin for the visit. Drag a stock row onto a member to buy it, drag one of their items onto SELL to cash it in, or onto another member to hand it over. What's left in the purse splits evenly on the way out. Coins in the group's cart or animals count toward the purse and pay their share, but never take change.",
-        "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half. Every shop buys anything at half price, but each keeps its own shelf: weapons and metal armour at the Smithy, leather and bows at the Tannery, potions at the Apothecary, raw food at the Farm, beer and jerky at the Tavern, the odds and ends here. A shop only pays out of its own cash, shown at the top: what you spend goes in, what you sell comes out, and a day refills a little.",
+        "The shopping party pools its coin for the visit. Click a row on the shelf to put it in the cart (- and + set how many) and BUY shares the cart out to whoever has room, or drag a row onto one member to buy it for them. Pick items from a pack and drop them anywhere on the shelf, or press SELL, to cash them in; drop them on another member to hand them over. What's left in the purse splits evenly on the way out. Coins in the group's cart or animals count toward the purse and pay their share, but never take change.",
+        "The group's leader does the haggling: their Charisma, a language shared with the vendor and how close their alignment is to the vendor's all move the price. You always sell for far less than you pay -- roughly half. Every shop buys anything at half price, but each keeps its own shelf: weapons and metal armour at the Smithy, leather and bows at the Tannery, potions at the Apothecary, raw food at the Farm, beer and jerky at the Tavern, the odds and ends here. A shop only pays out of its own cash, shown at the top (SHOP CAN PAY): what you spend goes in, what you sell comes out, and a day refills a little.",
         "Potatoes ($3) and Meat ($5), sold at the Farm, feed one character for a day.",
-        "Tired of picking the same items? Open an item's ... menu and mark it to auto-sell: SELL MARKED then takes every marked stack in the party's packs at once."
+        "Tired of picking the same items? Open an item's ... menu and mark it to auto-sell: with nothing picked, the shelf's footer sells every marked stack in the party's packs at once."
       ]
     },
     "taverna": {

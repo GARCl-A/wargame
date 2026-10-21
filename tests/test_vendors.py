@@ -79,7 +79,6 @@ def test_screens_draw_with_the_keeper_and_without():
     for scr in screens:
         scr.mouse = (0, 0)
         scr.draw(pygame.Surface((1280, 720)))
-    assert screens[0].vendor_function == "shop" and screens[2].vendor_function == "library"
     assert screens[5].vendor_card["name"] == world.vendor("tanner", "tanner").name
     assert screens[7].vendor.name == "Elysia"
     assert screens[8].vendor.name == "Captain Caelen"

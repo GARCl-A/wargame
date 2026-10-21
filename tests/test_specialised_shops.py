@@ -89,9 +89,9 @@ def test_the_hub_opens_on_a_tab_and_switches_when_clicked(node_id):
     surf = pygame.Surface((1280, 800))
     hub.mouse = (0, 0)
     hub.draw(surf)
-    others = [key for key, _rect in hub.buttons]
-    assert others and hub.tab not in others
-    key, rect = hub.buttons[0]
+    others = [(key, rect) for rect, key in hub._tab_hits if key != hub.tab]
+    assert others
+    key, rect = others[0]
     hub.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=rect.center))
     assert hub.tab == key
     hub.draw(surf)
@@ -103,7 +103,6 @@ def test_the_shop_tab_buys_from_the_nodes_own_till(node_id):
     shop_screen = {k: s for k, _l, s in hub.tabs}["shop"]
     assert shop_screen.node.id == node_id
     assert shop_screen._shop() is guild.shop(node_id)
-    assert shop_screen.header_reserve > 0
 
 
 def test_the_tanners_job_is_offered_at_the_tannery_not_the_city():

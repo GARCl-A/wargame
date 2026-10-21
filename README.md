@@ -223,7 +223,7 @@ gartok/
   world.py          the map graph: nodes, edges (distance), route (Dijkstra), Bout (arena offers)
   node_functions.py what a node can offer (shop, bank, forge...): order kind + map button, one entry each
   shop.py           a shop's own till and finite shelf, one per node that offers `shop`
-  hub_screen.py     a node's screens behind one row of tabs; `for_node` builds dynamic tabbed hubs for multi-function nodes (Tavern, Farm, Lumber Yard, Mine)
+  hub_screen.py     a node's screens behind one row of tabs, in the frame it owns (keeper header, tab row, back); `for_node` builds the hub of every node with a shop
   gather_screen.py  the Gathering tab of a work node (Lumber Yard, Mine): licence purchase and shift picker
   clock.py          the campaign clock (seconds), day/night
   guild.py          the guild = shared state (reputation, taverna pool, leadership, fame slots) + every group;

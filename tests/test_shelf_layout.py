@@ -1,11 +1,10 @@
-"""The market shelf and the quantity box lay their columns out from what the rows hold, so
-neighbours never land on each other; the load menu summarises a guild's squad by count."""
+"""The hub shelf keeps its rows' controls inside them and scrolls when long; the quantity box keeps
+its amount clear of its buttons; the load menu summarises a guild's squad by count."""
 
 import pygame
 
-from gartok.ui import market_panel
+from gartok.ui import shop_shelf
 from gartok.ui.loadout_panel import quantity_prompt
-from gartok.ui.tokens import T
 from gartok.ui.tokens import fonts as ui_fonts
 
 
@@ -15,30 +14,26 @@ def _row(name="Musical Instrument", price=4, base=4, stock=30, tag="light"):
             "tag": tag, "qty": 1, "size": None}
 
 
-def test_each_column_sits_left_of_the_next_whatever_the_rows_hold():
+def _shelf(rows, kind="kit"):
     pygame.init()
-    F = ui_fonts()
-    wt_x = 380
-    for kit, weapons in ((True, False), (False, True), (False, False)):
-        rows = [_row(price=12345, base=99999, stock=0), _row(tag="material")]
-        c = market_panel._columns(F, 16, wt_x, rows, kit, weapons)
-        ctl_w = market_panel._STEPPER_W if kit else market_panel._SIZE_W if weapons else 0
-        assert c["name_right"] <= c["ctl_x"] - T.S + (T.S if not ctl_w else 0)
-        assert c["ctl_x"] + ctl_w <= c["tag_x"]
-        assert c["tag_x"] < c["price_x"] - F["body"].size("$12,345")[0] < wt_x
-        assert c["name_right"] > 16 + 40            # the name keeps some room
+    surf = pygame.Surface((1920, 1080))
+    data = {"kind": kind, "all_size": None, "rows": rows, "cats": [("Consumables & kit", "kit")], "cat": "kit",
+            "foot": {"left": "Auto-sell · mark a kind", "button": "sell marked", "enabled": False}}
+    return shop_shelf.draw_shelf(surf, ui_fonts(), pygame.Rect(40, 0, 540, 700), data, (0, 0))
 
 
-def test_the_shelf_draws_a_row_with_a_was_price_and_a_sold_out_tag_inside_its_panel():
-    pygame.init()
-    F = ui_fonts()
-    surf = pygame.Surface((520, 300))
-    rect = pygame.Rect(8, 8, 412, 280)
-    data = {"kind": "kit", "all_size": None, "hover": False, "rows": [_row(price=27, base=30, stock=0)]}
-    out = market_panel.stock_list(surf, F, rect, data, (0, 0))
+def test_a_shelf_row_keeps_its_stepper_inside_it():
+    out = _shelf([_row(price=27, base=30, stock=0)])
     assert len(out["rows"]) == 1 and len(out["qty_hits"]) == 2
     for r, _, _ in out["qty_hits"]:
         assert out["rows"][0][0].contains(r)
+
+
+def test_a_long_shelf_scrolls_instead_of_running_into_the_footer():
+    out = _shelf([_row(name=f"Item {i}") for i in range(30)], kind="weapons")
+    assert out["max_scroll"] > 0
+    assert all(r.bottom <= out["list"].bottom for r, _ in out["rows"])
+    assert out["button"] is None                    # nothing marked: the auto-sell is off
 
 
 def test_the_quantity_box_keeps_the_amount_clear_of_its_buttons():

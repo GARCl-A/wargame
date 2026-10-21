@@ -21,6 +21,8 @@ class MarketTradeMixin:
                 if key == "sell" and rect.collidepoint(px):
                     self._sell()
                     return
+            if self._goods(self.selected) and self._shelf_rect is not None and self._shelf_rect.collidepoint(px):
+                self._sell()
             return
 
         if self._col_scroll.click(px):
@@ -55,6 +57,8 @@ class MarketTradeMixin:
             if rect.collidepoint(px):
                 if key == "done":
                     self._checkout()
+                elif key == "buy_cart":
+                    self._buy_cart()
                 elif key == "sell":
                     self._sell()
                 elif key == "sell_all":
@@ -71,7 +75,7 @@ class MarketTradeMixin:
 
         for rect, key in self.tab_hits:
             if rect.collidepoint(px):
-                self.tab, self.selected, self.notice = key, [], None
+                self.tab, self.selected, self.notice, self._shelf_scroll = key, [], None, 0
                 return
 
         for rect, member in self.info_hits:
@@ -94,6 +98,13 @@ class MarketTradeMixin:
                 if not isinstance(loc, str):
                     held = owner._base_inventory[loc][1] if loc < len(owner._base_inventory) else 0
                     self._sel_qty[src] = held
+            return
+
+        if not dragging and src is not None and src[0] == "stock" and self._buying:
+            if src in self.selected:                       # the cart: a click adds a row or takes it out
+                self.selected = [p for p in self.selected if p != src]
+            else:
+                self.selected.append(src)
             return
 
         if self.selected:
@@ -225,46 +236,18 @@ class MarketTradeMixin:
             self._settle_market()
             return
 
-        bought = 0
-        paid = {}
-
-        wanted = sum(self._buy_qty(n) for n in names)
-        stopped = None
+        paid, wanted, stopped = {}, sum(self._buy_qty(n) for n in names), None
         for name in names:
             for _ in range(self._buy_qty(name)):
-                stock = self._stock_of(name)
-                if stock is not None and stock <= 0:
-                    stopped = f"no {name} in stock"
+                stopped = self._buy_one(member, name)
+                if stopped:
                     break
-                price = economy.buy_price(name, self.deal)
-                if self.purse < price:
-                    stopped = "out of money"
-                    break
-                if not self._fits(member, name):
-                    stopped = f"{name} won't fit {member.name}'s load"
-                    break
-                self.purse -= price
-                self._till(price)
-                self.guild.total_spent += price
-                member.give_to_pack(name)
-                if stock is not None:
-                    self._shop().stock[name] = stock - 1
-                bought += 1
                 paid[name] = paid.get(name, 0) + 1
             if stopped:
                 break
         member._derive_combat()
-        for name, qty in paid.items():
-            recorder.emit("buy", node=self._node_id(), item=name, qty=qty,
-                          price=economy.buy_price(name, self.deal), zone=zone)
-        from . import items, objectives
-        for name in paid:
-            if items.is_food(name):
-                objectives.complete(self.guild, "obj_buy_food")
-            if name in ("Torch", "Lantern"):
-                objectives.complete(self.guild, "obj_buy_torch")
-        for name in names:
-            self.qty.pop(name, None)             # reset the steppers after a buy
+        self._bought(paid, names, zone)
+        bought = sum(paid.values())
         what = names[0] if len(names) == 1 else "items"
         if bought and stopped:
             self.notice = f"{member.name} bought {bought} of {wanted}  ·  {stopped}."
@@ -272,8 +255,72 @@ class MarketTradeMixin:
             self.notice = f"{member.name} bought {bought}× {what}."
         elif stopped:
             self.notice = f"{stopped[0].upper()}{stopped[1:]}."
-        if bought:
+
+    def _buy_one(self, member, name):
+        """Buy one `name` into `member`'s pack; the reason it can't, or None."""
+        stock = self._stock_of(name)
+        if stock is not None and stock <= 0:
+            return f"no {name} in stock"
+        price = economy.buy_price(name, self.deal)
+        if self.purse < price:
+            return "out of money"
+        if not self._fits(member, name):
+            return f"{name} won't fit {member.name}'s load"
+        self.purse -= price
+        self._till(price)
+        self.guild.total_spent += price
+        member.give_to_pack(name)
+        if stock is not None:
+            self._shop().stock[name] = stock - 1
+        return None
+
+    def _bought(self, paid, names, zone="pack"):
+        """After a buy: log it, tick the opening goals, reset the steppers, settle the till."""
+        from . import objectives
+        for name, qty in paid.items():
+            recorder.emit("buy", node=self._node_id(), item=name, qty=qty,
+                          price=economy.buy_price(name, self.deal), zone=zone)
+            if items.is_food(name):
+                objectives.complete(self.guild, "obj_buy_food")
+            if name in ("Torch", "Lantern"):
+                objectives.complete(self.guild, "obj_buy_torch")
+        for name in names:
+            self.qty.pop(name, None)
+        if paid:
             self._settle_market()
+
+    def _buy_cart(self):
+        """BUY: every row in the cart, each one into whoever has the most room for it."""
+        names = [n for kind, n in self.selected if kind == "stock"]
+        buyers = [*self.shoppers, *self.stores]
+        paid, touched, stopped = {}, set(), None
+        wanted = sum(self._buy_qty(n) for n in names)
+        for name in names:
+            for _ in range(self._buy_qty(name)):
+                room = [m for m in buyers if self._fits(m, name)]
+                if not room:
+                    stopped = f"no one has room for {name}"
+                    break
+                member = max(room, key=lambda m: m.carry_max - m.load)
+                stopped = self._buy_one(member, name)
+                if stopped:
+                    break
+                paid[name] = paid.get(name, 0) + 1
+                touched.add(member)
+            if stopped:
+                break
+        for member in touched:
+            if hasattr(member, "_derive_combat"):
+                member._derive_combat()
+        self._bought(paid, names)
+        bought = sum(paid.values())
+        if bought == wanted:
+            self.selected = []
+            self.notice = f"bought {bought} item{'s' if bought != 1 else ''}, shared out by room."
+        elif bought:
+            self.notice = f"bought {bought} of {wanted}  ·  {stopped}."
+        else:
+            self.notice = f"{stopped[0].upper()}{stopped[1:]}."
 
     def _sell(self):
         picks = self._goods(self.selected)

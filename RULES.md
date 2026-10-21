@@ -1613,9 +1613,11 @@ Neutral**).
   Library's Kobold in Draconic, the Lumber Yard's Orc in Orcish, the Mine's Goblin in Goblin; the Apothecary's
   Gnome (Gnomish), the Tavern's Halfling (Halfling) and the Farm's Human (Ankarin and Sylvan; `Node.language`
   may be a tuple). Every shop has a tongue and a bent (a test fails for one without). A guild with nobody who
-  speaks it pays the tabled price. The shop screen's header shows the keeper big (`ui.vendor_panel.
-  draw_vendor_header`): portrait, their line, the tongues and the bent, and the party's deal -- who haggles
-  for it (`economy.haggle_voice`), their Charisma and how far their bent sits from the keeper's. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
+  speaks it pays the tabled price. The hub's header shows the keeper big (`ui.hub_frame`): portrait, their
+  line, their bent, and the shop's cards -- the deal (who haggles for the party, `economy.haggle_voice`, their
+  Charisma and how far their bent sits from the keeper's), the party's purse and the shop's till. The shelf
+  has a cart: a click puts a row in it, BUY shares it out to whoever has room (`MarketScreen._buy_cart`); a
+  drag still buys for one member, and pack items dropped on the shelf are sold. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
   (`hub_screen.py`); the Farm and the Tavern show the shop beside their stables / recruiting.
   A tab with nothing on it is not listed.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a

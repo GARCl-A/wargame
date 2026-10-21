@@ -1,21 +1,30 @@
-"""Everything the Market screen paints: the shoppers' columns, the shelf, the cargo, the status
-line and the footer (`MarketDrawMixin`, mixed into `MarketScreen`)."""
+"""Everything the Market screen paints: the shelf and its cart, the party's cards and the cargo
+table (`MarketDrawMixin`, mixed into `MarketScreen`)."""
 
 import pygame
 
-from . import economy, items, store_column, world
+from . import economy, items, store_column
 from .constants import fmt_money
-from .ui import loadout_panel, market_panel
-from .ui.primitives import draw_button, draw_tooltip, format_tooltip, set_pointer
+from .ui import hub_party, loadout_panel, market_panel, shop_shelf
+from .ui.hub_frame import button_width, hub_button
+from .ui.primitives import (
+    draw_tooltip,
+    ellipsize,
+    format_tooltip,
+    set_pointer,
+    small_caps,
+)
 from .ui.primitives import text as ui_text
 from .ui.tokens import T
-from .ui.vendor_panel import draw_vendor_header
 
-STOCK_W = 412
 MARGIN = T.S * 2
 
 
 class MarketDrawMixin:
+    """The shop tab's body inside its hub (`hub_screen.TabbedHubScreen` draws the keeper, the
+    tabs and the back button): the shelf with its cart at the left, the party's cards at the
+    right."""
+
     def draw(self, screen):
         F = self._ui_fonts()
         screen.fill(T.TABLE)
@@ -29,53 +38,29 @@ class MarketDrawMixin:
         self._pack_areas = []
         self.zones = []
         W, H = screen.get_size()
-
-        keeper = world.vendor(self.node.id, self.vendor_function)
-        has_tut = self.tutorial_key() is not None
-        purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
-        head_h = max(T.S * 12, min(T.S * 16, H // 7))
-        if keeper:
-            bottom = draw_vendor_header(screen, F, pygame.Rect(MARGIN, MARGIN, purse_x - MARGIN, head_h),
-                                        self._vendor_card(keeper), self._deal_card())
-        else:
-            bottom = ui_text(screen, F["head"], self.node.name.upper(), (MARGIN, MARGIN - 2), T.TX).bottom
-        row = bottom + T.S
-        msg, col = self._status_line()
-        ui_text(screen, F["body"], msg, (MARGIN, row), col)
-        cash = self._cash()
-        money = f"common purse: {fmt_money(self.purse)}"
-        if cash is not None:
-            money += f"   ·   shop can pay: {fmt_money(cash)}"
-        ui_text(screen, F["body_sm"], money, (W - MARGIN, row + 2), T.BRASS, right=True)
-
-        top = row + T.S * 4
-        cats = [(label, key) for label, key, _names in self.get_categories()]
-        self.tab_hits = market_panel.category_tabs(
-            screen, F, pygame.Rect(MARGIN, top, STOCK_W, 28), cats, self.tab, self.mouse)
-        btn_x = W - MARGIN
-        if len(self.shoppers) > 1:
-            dl_btn = pygame.Rect(btn_x - 160, top, 160, 28)
-            draw_button(screen, F, dl_btn, "distribute load", mpos=self.mouse)
-            self.buttons.append(("distribute", dl_btn))
-            btn_x = dl_btn.x - T.S
-        if len(self.shoppers) + len(self.stores) > 1:
-            gv_btn = pygame.Rect(btn_x - 160, top, 160, 28)
-            draw_button(screen, F, gv_btn, "per member" if self.group_view else "all items", mpos=self.mouse)
-            self.buttons.append(("group_view", gv_btn))
-
-        body_top = top + 28 + T.S
-        stock = pygame.Rect(MARGIN, body_top, STOCK_W, H - body_top - 72)
-        hits = market_panel.stock_list(screen, F, stock, self._stock_data(), self.mouse)
+        m = T.S * 5
+        shelf_w = round(max(T.S * 52, min(T.S * 70, W * 0.28)))
+        shelf = pygame.Rect(m, 0, shelf_w, H)
+        data = {**self._stock_data(), "cats": [(label.capitalize(), key) for label, key, _ in self.get_categories()],
+                "cat": self.tab, "scroll": self._shelf_scroll, "foot": self._shelf_foot(),
+                "drop": bool(self._goods(self.selected))}
+        hits = shop_shelf.draw_shelf(screen, F, shelf, data, self.mouse)
+        self._shelf_rect, self._shelf_list = hits["panel"], hits["list"]
+        self._shelf_scroll = min(self._shelf_scroll, hits["max_scroll"])
+        self._shelf_max = hits["max_scroll"]
         self.stock_rows = hits["rows"]
         self.qty_hits = [(r, ("stock", name), delta) for r, name, delta in hits["qty_hits"]]
         self.size_hits = hits["size_hits"]
         self.header_size_hits = hits["header_size_hits"]
+        self.tab_hits = hits["cat_hits"]
+        if hits["button"]:
+            self.buttons.append((self._foot_action(), hits["button"]))
         if hits["hovered"]:
             self.tooltip = self._item_tooltip(hits["hovered"], F)
 
-        self._draw_shoppers(screen, pygame.Rect(stock.right + MARGIN, body_top,
-                                                W - stock.right - 2 * MARGIN, stock.h))
-        self._draw_footer(screen)
+        party = pygame.Rect(shelf.right + T.S * 3 + 4, 0, W - m - (shelf.right + T.S * 3 + 4), H)
+        self._draw_party_head(screen, F, party)
+        self._draw_shoppers(screen, pygame.Rect(party.x, T.S * 8, party.w, H - T.S * 8))
 
         names = self._selected_names()
         if self._dragging and names:
@@ -95,6 +80,61 @@ class MarketDrawMixin:
         self._draw_menu(screen)
         self.draw_sheet_modal(screen)
         set_pointer(self._hovering())
+
+    def _draw_party_head(self, screen, F, area):
+        title = small_caps(screen, F["hub_head"], F["hub_head_sc"], "Party", (area.x, T.S + 2), T.TX)
+        line, color = (self.notice, T.BRASS) if self.notice else             (f"{len(self.shoppers)} shopping  ·  drag items between packs", T.TX_MUTED)
+        x = area.right
+        actions = []
+        if len(self.shoppers) > 1:
+            actions.append(("distribute", "distribute load"))
+        if len(self.shoppers) + len(self.stores) > 1:
+            actions.append(("group_view", "per member" if self.group_view else "all items"))
+        for key, label in actions:
+            r = pygame.Rect(0, 0, button_width(F, label), T.S * 5 + 4)
+            r.topright = (x, 0)
+            hub_button(screen, F, r, label, mpos=self.mouse)
+            self.buttons.append((key, r))
+            x = r.x - T.S + 4
+        ui_text(screen, F["hub_body"], ellipsize(line, F["hub_body"], x - title.right - T.S * 4),
+                (title.right + T.S * 2, title.y + 6), color)
+
+    def _shelf_foot(self):
+        """The shelf's footer: the cart and BUY, the picked pack items and SELL, or the
+        auto-sell when nothing is picked."""
+        purse = self.purse
+        if self._buying:
+            cart = [(n, self._buy_qty(n)) for kind, n in self.selected if kind == "stock"]
+            total = sum(economy.buy_price(n, self.deal) * q for n, q in cart)
+            kg = sum(items.item_weight(n) * q for n, q in cart)
+            what = ", ".join(f"{q} {n}" for n, q in cart)
+            ok = purse >= total
+            return {"left": f"Cart · {what} · {kg:.1f} kg", "right": ("Purse after:", fmt_money(purse - total)),
+                    "right_bad": not ok, "button": f"buy for {fmt_money(total)}" if ok else "not enough copper",
+                    "primary": True, "enabled": ok}
+        goods = self._goods(self.selected)
+        if goods:
+            total = self._sell_total()
+            what = ", ".join(f"{self._get_qty(p)} {self._name_of(p)}" for p in goods)
+            owners = list(dict.fromkeys(p[0].name.split()[0] for p in goods))
+            return {"left": f"Selling · {what} from {', '.join(owners)}",
+                    "right": ("Purse after:", fmt_money(purse + total)),
+                    "button": f"sell for {fmt_money(total)}", "primary": True}
+        marked = sorted(self._marked())
+        if not marked:
+            return {"left": "Auto-sell · mark a kind from a pack's ⋮ menu", "button": "sell marked",
+                    "enabled": False}
+        picks, _qty = self._marked_stock()
+        total = self._marked_total()
+        return {"left": f"Auto-sell · {', '.join(marked)} marked",
+                "right": ("", f"{len(picks)} stack{'' if len(picks) == 1 else 's'} in the packs"),
+                "button": f"sell marked for {fmt_money(total)}" if total else "sell marked",
+                "enabled": bool(total)}
+
+    def _foot_action(self):
+        if self._buying:
+            return "buy_cart"
+        return "sell" if self._goods(self.selected) else "sell_marked"
 
     def _hovering(self):
         if self.menu is not None or self.split_prompt is not None:
@@ -117,24 +157,8 @@ class MarketDrawMixin:
             return names[0] if q == 1 else f"{names[0]} ×{q}"
         return names[0] if len(names) == 1 else f"{len(names)} items"
 
-    def _status_line(self):
-        """The line under the title: what the current pick will do, or the
-        party and its haggling when nothing is picked up."""
-        names = self._selected_names()
-        if not names:
-            return f"{len(self.shoppers)} shopping", T.TX_FAINT
-        if self._buying:
-            name = names[0]
-            q = self._buy_qty(name)
-            msg = (f"buy {self._pick_label(names)} ({economy.buy_price(name, self.deal) * q})"
-                   "  ·  drop on a member")
-        else:
-            msg = (f"moving {self._pick_label(names)}  ·  drop on another member, or on SELL "
-                   f"(+{self._sell_total()})")
-        return msg + "  ·  click outside to cancel", T.BRASS
-
     def _stock_data(self):
-        """The current tab's shelf in `market_panel.stock_list`'s shape."""
+        """The current tab's shelf in `shop_shelf.draw_shelf`'s row shape."""
         names = next((c[2] for c in self.get_categories() if c[1] == self.tab), [])
         kind = self.tab if self.tab in ("weapons", "armor") else "kit"
         rows = []
@@ -204,7 +228,7 @@ class MarketDrawMixin:
                 member = store_column.store_dict(self.group, m, picked, carried)
             else:
                 member = self._member_dict(m, carried)
-            res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(m), 0), self.mouse)
+            res = hub_party.member_card(screen, F, r, member, self._pack_scroll.get(id(m), 0), self.mouse)
             self._pack_scroll[id(m)] = res["scroll"]
             if not store:
                 self.info_hits.append((res["sheet_rect"], m))
@@ -249,30 +273,3 @@ class MarketDrawMixin:
             self.lock_hits.append((r, o, o._base_inventory[idx][0]))
         for r, (oid, idx) in res["dots_hits"]:
             self._dots_hits.append((r, by_key[oid], idx))
-
-    def _draw_footer(self, screen):
-        F = self._ui_fonts()
-        W, H = screen.get_size()
-        
-        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 25, T.S * 4)
-        draw_button(screen, F, done_r, "back to guild", primary=True, mpos=self.mouse)
-        self.buttons.append(("done", done_r))
-
-        names = self._selected_names()
-        if not self._buying and any(not items.is_coin(n) for n in names):
-            sell_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
-            sell_r.center = (W // 2, H - T.S * 8 + T.S * 2)
-            draw_button(screen, F, sell_r, f"SELL FOR {fmt_money(self._sell_total())}", mpos=self.mouse)
-            self.buttons.append(("sell", sell_r))
-
-        if not self._buying and self._marked():
-            total = self._marked_total()
-            marked_r = pygame.Rect(0, 0, T.S * 25, T.S * 4)
-            marked_r.center = (W // 2 + T.S * 26, H - T.S * 8 + T.S * 2)
-            draw_button(screen, F, marked_r, f"SELL MARKED (+{fmt_money(total)})" if total else "SELL MARKED",
-                        enabled=bool(total), mpos=self.mouse)
-            if total:
-                self.buttons.append(("sell_marked", marked_r))
-
-        if self.notice:
-            ui_text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
