@@ -455,6 +455,7 @@ def test_a_log_rebuilds_into_the_same_squads_on_the_same_cells(tmp_path):
     assert [(u.name, u.team, u.hp_max, u.ac, u.speed, u.weapon_name) for u in rebuilt.units] ==         [(s["name"], s["team"], s["hp_max"], s["ac"], s["speed"], s["weapon"]) for s in rows[0]["units"]]
     assert [tuple(u.pos) for u in rebuilt.units] == [tuple(v[:2]) for v in rows[0]["state"]["units"]]
     assert rebuilt.board.walls == {tuple(w) for w in rows[0]["board"]["walls"]}
+    assert rebuilt.scenario.floor == rows[0]["board"]["floor"]
     assert combat_pairs.drift(rows) == []
 
 

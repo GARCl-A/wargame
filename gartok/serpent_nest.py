@@ -121,6 +121,7 @@ def dragon_of(battle):
 
 
 class NestScenario(Scenario):
+    floor = "cave"
     ambient_light = False
     outdoor = False
     torch_count = 0

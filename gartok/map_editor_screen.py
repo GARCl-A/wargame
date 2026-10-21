@@ -26,10 +26,9 @@ import pygame
 from . import data, items, map_lib, npc_lib
 from .board import COLS, ROWS, Board, grid_distance
 from .screen import Screen
+from .ui import floors
 from .ui.board_style import (
     ENEMY_C,
-    FLOOR_A,
-    FLOOR_B,
     NIGHT,
     PLAYER_C,
     TORCH_C,
@@ -129,6 +128,7 @@ class MapEditorScreen(Screen):
         self.relics = {(e[0], e[1]): e[2] for e in m.get("relics", []) if len(e) >= 3}
         self.ambient = bool(m.get("ambient_light"))
         self.outdoor = bool(m.get("outdoor"))
+        self.floor = m.get("floor") or ("grass" if self.outdoor else floors.DEFAULT)
         self.slug = slug
         self.edit_name = False
         self.picking = None
@@ -159,7 +159,7 @@ class MapEditorScreen(Screen):
                 "chests": sorted([x, y, list(itms)] for (x, y), itms in self.chests.items()),
                 "relics": sorted([x, y, r] for (x, y), r in self.relics.items()),
                 "ambient_light": self.ambient and not self.outdoor,
-                "outdoor": self.outdoor}
+                "outdoor": self.outdoor, "floor": self.floor}
 
     def _save(self):
         self.slug = map_lib.save_map(self._to_dict(), self.slug)
@@ -428,6 +428,9 @@ class MapEditorScreen(Screen):
                 self.ambient = not self.ambient
         elif kind == "outdoor":
             self.outdoor = not self.outdoor
+        elif kind == "floor":
+            i = floors.FLOORS.index(self.floor) if self.floor in floors.FLOORS else 0
+            self.floor = floors.FLOORS[(i + action[1]) % len(floors.FLOORS)]
         elif kind == "clear":
             self.walls, self.secret_walls, self.torches = set(), set(), set()
             self.zone_p, self.zone_e, self.npc_at = set(), set(), {}
@@ -511,10 +514,7 @@ class MapEditorScreen(Screen):
         self._grid = (gx, gy, cell)
 
         lit = self.ambient or self.outdoor
-        for cy in range(rows):
-            for cx in range(cols):
-                tone = FLOOR_A if (cx + cy) & 1 else FLOOR_B
-                screen.fill(tone, (gx + cx * cell, gy + cy * cell, cell, cell))
+        screen.blit(floors.ground(self.floor, cols, rows, cell), (gx, gy))
 
         for (cx, cy), z in self.elev.items():    # a pit: recessed dark, darker the deeper
             r = pygame.Rect(gx + cx * cell, gy + cy * cell, cell, cell)
@@ -752,6 +752,8 @@ class MapEditorScreen(Screen):
                        on=bool(val))
             self.hits.append((r, (key,)))
             y += 24 + T.S // 2
+        self._stepper(screen, pygame.Rect(x, y, w, 24), f"FLOOR  {self.floor}", "floor")
+        y += 24 + T.S // 2
         y += T.S
 
         y = section(screen, F, "MAP LIBRARY", x, y, w)

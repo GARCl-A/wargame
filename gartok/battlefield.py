@@ -70,6 +70,7 @@ def soldiers_lost(battle):
 
 
 class BattlefieldScenario(Scenario):
+    floor = "earth"
     outdoor = True
     torch_count = 0
     is_battlefield = True

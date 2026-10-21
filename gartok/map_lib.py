@@ -7,7 +7,7 @@ ship with the game.
 
 A file is a flat dict -- the grid size, the wall / torch / player+enemy cells
 (each a sorted `[x, y]` pair), `deploy_npc` as `[x, y, slug]` triples pinning a
-named library character to a cell, and the two lighting flags -- plus a
+named library character to a cell, the two lighting flags and the `floor` (`ui/floors.py`) -- plus a
 `map_slug` (the file's stem, the stable id). `scenario.CustomScenario` +
 `npc_units` turn one back into a playable battle. The first consumer is the arena
 title bout: `arena.champion_bout()` carries `map_slug="the-pit"` and
@@ -32,7 +32,7 @@ _CELL_KEYS = ("walls", "secret_walls", "torches", "deploy_player", "deploy_enemy
 def new_map(name="Untitled", cols=COLS, rows=ROWS):
     """A blank map dict: full grid, nothing on it, indoor and dark."""
     d = {"name": name, "cols": cols, "rows": rows,
-         "ambient_light": False, "outdoor": False}
+         "ambient_light": False, "outdoor": False, "floor": "stone"}
     for key in _CELL_KEYS:
         d[key] = []
     return d
@@ -52,6 +52,8 @@ def save_map(data, slug=None):
                "ambient_light": bool(data.get("ambient_light")),
                "outdoor": bool(data.get("outdoor")),
                "map_slug": slug}
+    if data.get("floor"):
+        payload["floor"] = data["floor"]
     for key in _CELL_KEYS:
         val = data.get(key, [])
         if key == "chests":

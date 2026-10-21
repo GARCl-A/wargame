@@ -80,6 +80,7 @@ def the_necromancer(battle):
 
 
 class NecromancerScenario(Scenario):
+    floor = "earth"
     outdoor = False                    # night on the front, whatever the clock says
     ambient_light = False
     torch_count = 0

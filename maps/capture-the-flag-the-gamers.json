@@ -4,6 +4,7 @@
   "rows": 17,
   "ambient_light": false,
   "outdoor": false,
+  "floor": "arena",
   "map_slug": "capture-the-flag-the-gamers",
   "walls": [
     [2, 4],

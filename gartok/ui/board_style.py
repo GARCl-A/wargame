@@ -40,8 +40,30 @@ OBJ_C     = (205, 180, 95)
 WALL_FILL = (74, 78, 92)
 WALL_HI   = (110, 116, 132)
 WALL_LO   = (18, 19, 26)
-FLOOR_A   = (44, 48, 56)               # the two checker tones
+FLOOR_A   = (44, 48, 56)               # the map editor's checker, a map with no floor painted
 FLOOR_B   = (39, 43, 51)
+
+# each place's floor (`floors.py`): the ground's two noise tones, its details and its walls
+FLOOR_STYLES = {
+    "stone": {"lo": (39, 43, 51), "hi": (50, 54, 63), "joint": (27, 30, 37), "crack": (31, 34, 41),
+              "wall": "block", "wall_fill": WALL_FILL, "wall_hi": WALL_HI, "wall_lo": WALL_LO},
+    "arena": {"lo": (92, 78, 58), "hi": (116, 99, 72), "grit": (60, 50, 38), "drag": (70, 58, 42),
+              "stain": (80, 30, 26), "pebble": (88, 85, 80), "apron": (79, 76, 73), "joint": (30, 28, 26),
+              "wall": "block", "wall_fill": (104, 98, 90), "wall_hi": (130, 123, 112), "wall_lo": (58, 54, 50)},
+    "grass": {"lo": (50, 70, 42), "hi": (74, 94, 54), "bare": (88, 74, 52), "blade": (120, 140, 80),
+              "root": (66, 52, 36), "pebble": (92, 90, 84),
+              "flowers": ((196, 186, 110), (170, 150, 190), (210, 210, 200)),
+              "wall": "tree", "trunk": (58, 42, 28), "leaf_lo": (34, 56, 32), "leaf_hi": (52, 78, 42),
+              "leaf_speck": (78, 104, 58)},
+    "earth": {"lo": (78, 64, 46), "hi": (98, 82, 58), "rut": (62, 50, 36), "pebble": (112, 102, 88),
+              "blade": (96, 108, 62),
+              "wall": "rock", "wall_fill": (92, 84, 74), "wall_hi": (122, 112, 98), "wall_lo": (48, 42, 36)},
+    "cobble": {"lo": (74, 72, 72), "hi": (92, 89, 86), "mortar": (42, 41, 42), "cap": (110, 106, 101),
+               "wall": "block", "wall_fill": (88, 74, 66), "wall_hi": (118, 100, 88), "wall_lo": (40, 34, 30)},
+    "cave": {"lo": (34, 32, 34), "hi": (48, 45, 46), "speck": (64, 60, 58), "puddle": (25, 29, 36),
+             "wall": "rock", "wall_fill": (60, 56, 54), "wall_hi": (86, 81, 76), "wall_lo": (22, 20, 20)},
+}
+FLOOR_GRID   = (0, 0, 0, 40)           # the cell lines over a painted floor
 
 # tactical overlay
 MOVE_HL   = (78, 150, 96)

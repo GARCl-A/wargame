@@ -9,7 +9,8 @@ Data shapes::
 
     terrain = {"cols": int, "rows": int, "walls": set[(x, y)],
                "elevation": {(x, y): z}, "water": set, "ropes": set,
-               "fire": set}                       # optional: burning cells
+               "fire": set,                       # optional: burning cells
+               "floor": str}                      # optional: a `floors.FLOORS` id
 
     prop = {"kind": "torch" | "chest" | "relic" | "trap" | "disk" | "corpse" | "item",
             "pos": (x, y), "trap_type": str, "elevation": int,
@@ -30,7 +31,7 @@ Data shapes::
 import pygame
 
 from .. import artwork
-from . import banner
+from . import banner, floors
 from .board_style import (
     ALLY_C,
     BADGE_INK,
@@ -49,8 +50,6 @@ from .board_style import (
     ENEMY_C,
     FIRE_C,
     FIRE_CORE,
-    FLOOR_A,
-    FLOOR_B,
     HP_TRACK,
     INK_FAINT,
     LIGHT_C,
@@ -79,19 +78,13 @@ from .board_style import (
     TRAP_TEETH,
     TRAP_WIRE,
     UNDEAD_C,
-    WALL_FILL,
-    WALL_HI,
     WALL_LO,
-    WALL_SHADOW,
     WARN,
     WATER_C,
     WEB_C,
 )
 from .primitives import TOKEN_INK, box, text
 from .tokens import T
-
-WALL_RADIUS = 6
-
 
 _SIDE_C = {"ally": ALLY_C, "undead": UNDEAD_C}
 
@@ -127,20 +120,16 @@ def _badge(surf, F, center, w, label, fill):
 # terrain                                                                #
 # ---------------------------------------------------------------------- #
 def draw_terrain(surf, F, view, terrain):
-    """A quiet checker for the floor, sunken pits, water, ropes, the grid,
-    and raised stone blocks for the walls (corners rounded only where a wall
-    face is exposed, so clusters read as one mass)."""
+    """The place's floor with its walls (`floors.py`), then sunken pits, water, fire and
+    ropes over it."""
     vr, tile = view.rect, view.tile
-    walls = terrain["walls"]
     elevation = terrain["elevation"]
 
     def vis(cx, cy):
         return view.cell_rect(cx, cy).colliderect(vr)
 
-    for cy in range(terrain["rows"]):
-        for cx in range(terrain["cols"]):
-            if vis(cx, cy):
-                surf.fill(FLOOR_A if (cx + cy) & 1 else FLOOR_B, view.cell_rect(cx, cy))
+    floors.blit_board(surf, view, terrain.get("floor", floors.DEFAULT), terrain["cols"], terrain["rows"],
+                      terrain["walls"])
 
     for (cx, cy), z in elevation.items():
         if not vis(cx, cy):
@@ -170,24 +159,6 @@ def draw_terrain(surf, F, view, terrain):
         pygame.draw.line(surf, ROPE_C, (r.centerx, r.top + 3), (r.centerx, r.bottom - 3),
                          max(2, tile // 12))
 
-    for cx in range(terrain["cols"] + 1):
-        x = round(vr.x + (cx - view.cam[0]) * tile)
-        pygame.draw.line(surf, T.STEEL_LINE, (x, vr.top), (x, vr.bottom))
-    for cy in range(terrain["rows"] + 1):
-        y = round(vr.y + (cy - view.cam[1]) * tile)
-        pygame.draw.line(surf, T.STEEL_LINE, (vr.left, y), (vr.right, y))
-
-    # shadows first so each block covers its neighbours' -> only the exposed
-    # south and east faces cast onto the floor, and the grid reads as 2.5D
-    shadow = pygame.Surface((tile, tile), pygame.SRCALPHA)
-    pygame.draw.rect(shadow, WALL_SHADOW, shadow.get_rect(), border_radius=WALL_RADIUS)
-    shown = [w for w in walls if vis(*w)]
-    for wx, wy in shown:
-        r = view.cell_rect(wx, wy)
-        surf.blit(shadow, (r.x + 5, r.y + 5))
-    for wx, wy in shown:
-        _wall_block(surf, view.cell_rect(wx, wy).inflate(-2, -2), wx, wy, walls)
-
 
 def _flame(surf, r, tile):
     """A burning cell: an ember wash and a tongue of flame."""
@@ -197,29 +168,6 @@ def _flame(surf, r, tile):
     cx, base, h, w = r.centerx, r.bottom - tile // 6, tile * 2 // 3, tile // 3
     pygame.draw.polygon(surf, FIRE_C, [(cx - w, base), (cx, base - h), (cx + w, base)])
     pygame.draw.polygon(surf, FIRE_CORE, [(cx - w // 2, base), (cx, base - h // 2), (cx + w // 2, base)])
-
-
-def _wall_block(surf, r, wx, wy, walls):
-    open_n = (wx, wy - 1) not in walls
-    open_s = (wx, wy + 1) not in walls
-    open_w = (wx - 1, wy) not in walls
-    open_e = (wx + 1, wy) not in walls
-
-    def rad(a, b):
-        return WALL_RADIUS if a and b else 0
-
-    kw = dict(border_top_left_radius=rad(open_n, open_w),
-              border_top_right_radius=rad(open_n, open_e),
-              border_bottom_left_radius=rad(open_s, open_w),
-              border_bottom_right_radius=rad(open_s, open_e))
-    pygame.draw.rect(surf, WALL_FILL, r, **kw)
-    lower = pygame.Rect(r.x, r.centery, r.w, r.h - r.h // 2)
-    sh = pygame.Surface(lower.size, pygame.SRCALPHA)
-    sh.fill((*WALL_LO, 55))
-    surf.blit(sh, lower.topleft)
-    pygame.draw.rect(surf, WALL_LO, r, 1, **kw)
-    if open_n:
-        pygame.draw.rect(surf, WALL_HI, pygame.Rect(r.x + 3, r.y + 3, r.w - 6, 4), border_radius=2)
 
 
 # ---------------------------------------------------------------------- #

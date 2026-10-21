@@ -79,7 +79,7 @@ class CombatLog:
             "lethal": battle.lethal, "arena": battle.arena, "daylight": battle.daylight,
             "ambient_light": battle.ambient_light, "aggressor": battle.aggressor,
             "opening": battle.opening,
-            "board": {"cols": board.cols, "rows": board.rows,
+            "board": {"cols": board.cols, "rows": board.rows, "floor": battle.scenario.floor,
                       "walls": sorted(_cell(c) for c in board.walls),
                       "elevation": sorted([*_cell(c), z] for c, z in board.elevation.items()),
                       "ropes": sorted(_cell(c) for c in board.ropes),

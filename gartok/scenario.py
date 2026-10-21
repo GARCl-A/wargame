@@ -30,6 +30,7 @@ class Scenario:
     """Base scenario: side deployment + the unit's own creatures. Subclasses set
     the terrain (`_make_board`) and the lighting (`ambient_light` / `torch_count`)."""
 
+    floor = "stone"          # the board's look (`ui/floors.py`); presentation only
     ambient_light = False    # indoor default: seen only by torchlight / darkvision
     outdoor = False          # outdoor: ambient light tracks the clock (battle.daylight)
     torch_count = 6
@@ -153,6 +154,8 @@ class ArenaScenario(Scenario):
     """The dungeon pit fight the game has shipped with: cluttered wall segments,
     no ambient light, torches scattered anywhere on the floor to fight over."""
 
+    floor = "arena"
+
 
 def own_half(team, cols=COLS):
     """The columns a side may keep its flag in: the player's is the left half of
@@ -234,6 +237,7 @@ class WildsScenario(Scenario):
     """Open country: sparse walls, `outdoor` -- lit by day, pitch dark by night.
     Nothing lying around: bring your own torch."""
 
+    floor = "grass"
     outdoor = True
     torch_count = 0
 
@@ -247,6 +251,7 @@ ErmosScenario = WildsScenario
 class StreetScenario(Scenario):
     """City streets: `outdoor` -- lit by day, lit around street torches by night."""
 
+    floor = "cobble"
     outdoor = True
     torch_count = 6
 
@@ -254,12 +259,16 @@ class StreetScenario(Scenario):
 def scenario_for(node):
     """A node's fight scenario: its own `node.scenario()`, `StreetScenario` inside the
     City's jurisdiction (daylight by day, street torches at night), or `WildsScenario`
-    out in the open."""
+    out in the open -- on the node's own floor when it names one (a road's packed earth)."""
     if node.scenario is not None:
-        return node.scenario()
-    if getattr(node, "jurisdiction", None) == "the_city":
-        return StreetScenario()
-    return WildsScenario()
+        scen = node.scenario()
+    elif getattr(node, "jurisdiction", None) == "the_city":
+        scen = StreetScenario()
+    else:
+        scen = WildsScenario()
+    if getattr(node, "floor", None):
+        scen.floor = node.floor
+    return scen
 
 
 class ReplayScenario(Scenario):
@@ -269,6 +278,7 @@ class ReplayScenario(Scenario):
 
     def __init__(self, start):
         self.start = start
+        self.floor = start["board"].get("floor", Scenario.floor)
 
     def _make_board(self):
         b = self.start["board"]
@@ -309,6 +319,7 @@ class CustomScenario(Scenario):
     def __init__(self, data):
         self.ambient_light = bool(data.get("ambient_light"))
         self.outdoor = bool(data.get("outdoor"))
+        self.floor = data.get("floor") or ("grass" if self.outdoor else Scenario.floor)
         self._cols = int(data.get("cols") or COLS)
         self._rows = int(data.get("rows") or ROWS)
         self._walls = [tuple(c) for c in data.get("walls", [])]
@@ -411,6 +422,7 @@ class AncientRuinsScenario(Scenario):
         self._rows = int(m.get("rows", 18))
         self.ambient_light = m.get("ambient_light", False)
         self.outdoor = m.get("outdoor", False)
+        self.floor = m.get("floor", Scenario.floor)
         self._walls = [tuple(c) for c in m.get("walls")] if "walls" in m else self._build_walls()
         self._torches = [tuple(c) for c in m.get("torches", [(2, 4), (2, 12), (18, 1), (19, 8), (24, 8)])]
         self._traps = [list(c) for c in m.get("traps", [[11, 8, "bear trap"], [13, 8, "alarm trap"]])]

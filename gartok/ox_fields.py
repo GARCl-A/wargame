@@ -96,6 +96,7 @@ def direction_name(src, dst):
 class OxFieldsScenario(Scenario):
     """The hunt for Aurochs. See the module docstring."""
 
+    floor = "grass"
     ambient_light = True
     outdoor = False
     torch_count = 0

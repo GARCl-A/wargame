@@ -18,15 +18,9 @@ Parts:
 
 # Pre-playtest plan (agreed 2026-10-20)
 
-Goal: a "stable" build for the author's playtest and one with friends. Phases 1-3 (content,
-AI, measure and economy), the fog of war, and the log on the board with its sound (hit flash, crit
-banner, `battle_fx.py` / `sound.py`) are done; what is left:
-
-**Phase 4 — combat presentation** (same files: `battle_draw.py`, `lighting.py`)
-3. **A floor per place, step 2** (waits on the author's go). Step 1, the prototype (Arena sand and
-   stone, Wilds grass and roots, under the per-cell light), was rendered 2026-10-21. Step 2: every
-   place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the
-   Ruins...); today every board is the same grey. Brogue is the reference.
+Goal: a "stable" build for the author's playtest and one with friends. Phases 1-4 (content,
+AI, measure and economy, combat presentation: the fog of war, the log on the board with its sound,
+a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what is left:
 
 **Phase 5 — tutorials** (last: they describe the final screens)
 5. **Tutorials (review all of them).** About 25 modal cards, the map's with six paragraphs; the guild's

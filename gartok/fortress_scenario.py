@@ -46,6 +46,7 @@ def yard():
 
 
 class FortressScenario(Scenario):
+    floor = "earth"
     outdoor = True
     torch_count = 0
 

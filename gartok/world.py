@@ -101,7 +101,7 @@ class Node:
                  lethal=True, arena=False, language=None, alignment=None, functions=(),
                  jurisdiction=None, unsafe=False, encounter_table=None,
                  garrison_job=None, wagon_risk=0.0, vendors=None, shop_label=None,
-                 hidden=False):
+                 hidden=False, floor=None):
         self.id = id
         self.name = name
         self.kind = kind
@@ -121,6 +121,7 @@ class Node:
         self.vendors = dict(vendors or {})   # function id -> the Vendor behind it
         self.shop_label = shop_label         # the map button's text for the `shop` function (default: the function's)
         self.hidden = hidden
+        self.floor = floor                   # its fights' floor (`ui/floors.py`) over the scenario's own
 
     def has(self, function):
         return function in self.functions
@@ -247,7 +248,7 @@ NODES = [
                                    line="Every cell here was empty once. Help me keep one of them that way.")}),
     Node("road", "Old Road", "town", (0.60, 0.50),
          "A dirt track cutting across the open country to the east.",
-         unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
+         unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE, floor="earth"),
     Node("wilds", "The Wilds", "wilds", (0.91, 0.37),
          "Open ground under the sky, outside the walls. Hunt it for meat -- and "
          "risk what else hunts here.", ErmosScenario, functions=("hunt",)),
@@ -303,7 +304,7 @@ NODES = [
          "Kobolds walk the dark here, and something vast sleeps below.",
          functions=("dragon_lair",), hidden=True),
     Node("country_roads", "Country Roads", "town", (0.44, 0.92),
-         "Dirt lanes between the farmsteads south of the city. Quiet, and wide open."),
+         "Dirt lanes between the farmsteads south of the city. Quiet, and wide open.", floor="earth"),
     Node("ox_fields", "Legendary Ox Fields", "town", (0.62, 0.88),
          "Fertile grazing land where something very old and very large has outlived every hunter sent after it.",
          OxFieldsScenario, functions=("ox_hunt",), hidden=True),

@@ -44,7 +44,8 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `item_icons.py` | item silhouettes drawn in code (`draw_item_icon`: ~50 kinds, one generator each, a `wagon` for the Stables; `gartok/item_icon.py` maps items and the six vocations to them) |
 | `hscroll.py` | `ColumnScroll`: sideways scroll over a row of equal columns (`fit`, `wheel`, `hint`, `click`) |
 | `banner.py` | the guild's banner colour (`BANNER_COLORS`, `player_color()`, `set_player_color`) -- the one run-wide presentation state |
-| `board_style.py` | the battle board's palette, `battle_layout`, `BoardView` (pan/zoom camera) |
+| `board_style.py` | the battle board's palette (each place's floor in `FLOOR_STYLES`), `battle_layout`, `BoardView` (pan/zoom camera) |
+| `floors.py` | each place's floor (flagstones, Arena sand and stone, grass and trees, packed earth, cobbles, cave rock): the board painted once at `TEX` px a cell, cached, and scaled to the view (`blit_board`); `ground` is the editor's; a scenario names its `floor`, a node or an authored map may override it |
 | `camera.py` | `MapCamera`: pan / zoom around a screen-space centre |
 | `map_panel.py` | the MAP zone: `draw_map`, `draw_minimap`, node glyphs, pawns, `place_labels` (names that overlap neither each other nor a mark; one with no room waits for the hover, the selected node and where a band stands always show) |
 | `command_bar.py` | the COMMAND zone: clock, alerts, headline stats |
@@ -71,7 +72,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `intro_card.py` | the centred, veiled card (title, paragraphs, optional brass note, one button) used by every tutorial card |
 | `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
-| `board_render.py` | the battle board: terrain, props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
+| `board_render.py` | the battle board: terrain (the floor from `floors.py`, then pits, water, fire, ropes), props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |

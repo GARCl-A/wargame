@@ -4,6 +4,7 @@
   "rows": 12,
   "ambient_light": false,
   "outdoor": false,
+  "floor": "arena",
   "map_slug": "the-pit",
   "walls": [
     [2, 2],
