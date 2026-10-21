@@ -109,6 +109,8 @@ def until_full(guild, group):
 
     triage = group.has_talent("triage")
     heals = {id(u): _heal_times(u, triage) for u in camp.members if u.hp < u.hp_max}
+    if not heals:
+        return RestPlan(reason="nobody is hurt once they have eaten")
     full_at = max(times[-1] for times in heals.values())
     first = hours_to_midnight(guild)
     wanted = midnights(guild, full_at)

@@ -124,6 +124,18 @@ def test_until_full_is_refused_with_a_reason():
     assert "last day of rations" in rest.until_full(guild, g).reason
 
 
+def test_until_full_when_the_meal_itself_mends_the_last_hp():
+    random.seed(3)
+    u = Unit("player")
+    u.unfed_days = 1
+    u._derive_combat()
+    u.hp = u.hp_max - 1
+    u._base_inventory = packed(["Bloom Fruit"] * 4)
+    u._derive_combat()
+    guild, g = _guild(u)
+    assert rest.until_full(guild, g).reason == "nobody is hurt once they have eaten"
+
+
 def test_until_full_with_plenty_of_food_runs_to_full_health():
     u = _hurt(missing=3, meals=20)
     guild, g = _guild(u)
