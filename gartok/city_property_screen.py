@@ -20,18 +20,13 @@ from . import economy
 from .constants import fmt_money
 from .screen import Screen
 from .stash_screen import StashScreen
-from .ui.primitives import draw_button
-from .ui.primitives import text as ui_text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 
 class CityPropertyScreen(StashScreen):
     OWNER = "house"
-    TITLE = "The City Property"
-    SUBTITLE = "a house inside the walls, bought from the Bankers -- taxed on a cycle"
     LABEL = "the house"
-    LEAVE_LABEL = "leave the property"
     CLOSED_NOTICE = "buy the house first."
     WHERE = "at the property"
 
@@ -51,8 +46,11 @@ class CityPropertyScreen(StashScreen):
 
     def _services(self):
         g = self.guild
+        rows = []
+        if g.bankers_debt > 0:
+            rows.append(("pay_debt", "PAY TOWARD THE DEBT", "the Bankers' other services are shut until it is paid",
+                         self.purse > 0))
         if g.house.owned:
-            rows = []
             if not g.house.oven:
                 rows.append(("oven", "BUY AN OVEN", f"{fmt_money(economy.OVEN_PRICE)}  ·  unlocks cooking at the house",
                              self.purse >= economy.OVEN_PRICE))
@@ -65,12 +63,12 @@ class CityPropertyScreen(StashScreen):
                 rows.append(("garage", "GARAGE", sub, True))
             return rows
         if g.house.squatting:
-            return []
+            return rows
         rep_ok = g.reputation.get("bankers", 0) >= economy.CITY_PROPERTY_REP_GATE
         can_buy = rep_ok and not g.bankers_services_blocked and self.purse >= economy.CITY_PROPERTY_PRICE
         sub = (f"{fmt_money(economy.CITY_PROPERTY_PRICE)}  ·  needs {economy.CITY_PROPERTY_REP_GATE} "
               f"standing with the Bankers (have {g.reputation.get('bankers', 0)})")
-        return [("buy", "BUY THE HOUSE", sub, can_buy)]
+        return [*rows, ("buy", "BUY THE HOUSE", sub, can_buy)]
 
     def _run_service(self, key):
         if key == "buy":
@@ -105,39 +103,21 @@ class CityPropertyScreen(StashScreen):
             self.notice = (f"paid {fmt_money(amount)} toward the debt." if self.guild.bankers_debt > 0
                            else "debt cleared -- the Bankers deal with the guild again.")
 
-    def _draw_status(self, screen, F, x, y, w):
+    def hub_cards(self):
         g, house = self.guild, self.guild.house
-        if g.bankers_debt > 0:
-            for ln in (f"owed to the Bankers: {fmt_money(g.bankers_debt)}",
-                      "their other services are shut until it's paid"):
-                ui_text(screen, F["body_sm"], ln, (x, y), T.BLOOD)
-                y += 16
-            y += T.S
-            can_pay = self.purse > 0
-            r = pygame.Rect(x, y, w, T.S * 4)
-            draw_button(screen, F, r, "PAY TOWARD THE DEBT", primary=can_pay,
-                       ghost=not can_pay, mpos=self.mouse)
-            if can_pay:
-                self._service_hits.append((r, "pay_debt"))
-            y = r.bottom + T.S * 2
-
+        cards = super().hub_cards()
         if house.squatting:
-            ui_text(screen, F["body_sm"], "squatting -- no tax, but the guard raids this place",
-                (x, y), T.BLOOD)
-            y += 16 + T.S
+            cards.insert(0, {"label": "squatting", "value": "no tax", "sub": "the guard raids this place",
+                             "tone": "bad"})
         elif house.owned:
-            ui_text(screen, F["body_sm"],
-                f"next tax due day {house.tax_due_day}: {fmt_money(economy.CITY_PROPERTY_TAX)}",
-                (x, y), T.TX_FAINT)
-            y += 16
-            if house.missed_payments:
-                left = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT - house.missed_payments
-                ui_text(screen, F["body_sm"],
-                    f"{house.missed_payments} cycle(s) missed -- "
-                    f"{max(0, left)} more before the Bankers act", (x, y), T.BRASS)
-                y += 16
-            y += T.S
-        return y
+            left = economy.CITY_PROPERTY_MISSED_PAYMENTS_LIMIT - house.missed_payments
+            sub = (f"{house.missed_payments} missed  ·  {max(0, left)} more before the Bankers act"
+                   if house.missed_payments else f"{fmt_money(economy.CITY_PROPERTY_TAX)} a cycle")
+            cards.insert(0, {"label": "next tax", "value": f"day {house.tax_due_day}", "sub": sub,
+                             "tone": "bad" if house.missed_payments else None})
+        if g.bankers_debt > 0:
+            cards.insert(0, {"label": "owed to the bankers", "value": fmt_money(g.bankers_debt), "tone": "bad"})
+        return cards
 
 
 class RepossessionScreen(Screen):

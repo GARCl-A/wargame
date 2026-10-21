@@ -2,15 +2,17 @@
 
 `bank_screen.BankScreen` (the strongbox) and `city_property_screen.
 CityPropertyScreen` (the house) differ only in which `holdings.Stash` they
-open, what they sell, and their copy -- the drag/click mechanics, the pinned
-member columns and the pooled purse are all here.
+open, what they sell, and their copy -- the drag/click mechanics, the member
+columns and the pooled purse are all here. Both are drawn as a hub's tab (the hub
+draws the keeper, the tabs and the back button): the stash where the shop's shelf
+sits, the party as the shop's member cards.
 
 Interaction: drag an item where it goes, or click to pick it up and click the
 destination (shift/ctrl gathers more first). The stash's own rows carry a
 `- N +` stepper for a partial move; a member's pack row always moves as a
 whole stack (its ⋮ menu has "split stack" to peel off part first). The row's
 ⋮ button (or a right-click) opens a menu to send that stack to the stash or
-another pinned member.
+another member.
 
 `self.purse` is the party's real Copper Coin stacks added up (`economy.
 PartyPurse`): a rent or a debt payment comes out of the members in proportion
@@ -29,32 +31,26 @@ from .constants import fmt_money
 from .dragselect import DragSelectMixin, LoadoutMoveMixin
 from .packbox import ItemMenuMixin
 from .screen import Screen
-from .ui import hub_party, loadout_panel
+from .ui import hub_party
 from .ui.hscroll import ColumnScroll
 from .ui.hub_frame import button_width, hub_button
 from .ui.inspector_panel import role_for
-from .ui.primitives import draw_button, ellipsize, header, set_pointer, small_caps, text
+from .ui.primitives import ellipsize, set_pointer, small_caps, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
-RAIL_W = 230
 COL_MIN, COL_MAX = 300, 420
-STASH_W = 360
 
 
 class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMoveMixin, Screen):
     native = True
 
     OWNER = ""              # pick-owner key for the stash: "bank" / "house"
-    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
-    TITLE = ""
-    SUBTITLE = ""
+    framed = True
     LABEL = ""              # panel label, e.g. "the strongbox"
-    LEAVE_LABEL = ""
     CLOSED_NOTICE = ""      # shown when depositing into a stash the guild doesn't hold yet
     WHERE = ""              # "in the chest" -- completes "won't fit -- N kg free ..."
     CAN_DISTRIBUTE = False
-    header_reserve = 0      # px of the header's right edge a host (a hub's tabs) has taken
 
     def __init__(self, fonts, guild, party, on_done):
         super().__init__()
@@ -65,25 +61,18 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         self.on_done = on_done
         self.selected = []                    # [(owner, loc)] -- owner is OWNER or a Unit
         self._sel_qty = {}                    # (owner, idx) -> qty picked; member picks always move whole
-        self.pinned = list(party)             # columns shown, clamped to fit at draw time
         self.notice = None
         self.buttons = []                     # [(key, rect)]
         self.sources = []                     # [(rect, owner, loc)]
         self.zones = []                       # [(rect, owner_or_OWNER, zone)]
-        self._rail_hits = []
-        self._rail_rect = None
-        self._rail_scroll = 0
-        self._rail_max_scroll = 0
         self._pack_scroll = {}                # id(unit) -> pack rows scrolled past
         self._stash_scroll = 0
         self._service_hits = []               # [(rect, key)]
         self._stash_steppers = []             # [(rect, pick, delta)]
         self._dots_hits = []                  # [(rect, unit, idx)] -- the pack row's menu button
-        self._unit_by_uid = {u.uid: u for u in party}
         self.group = guild.group_of(party[0]) if party else None
         self.stores = [*self.group.herd, *self.group.wagons] if self.group else []
         self._cols = ColumnScroll()
-        self.back_rect = None
 
     # ------------------------------------------------------------------ #
     # hooks                                                              #
@@ -101,10 +90,6 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
 
     def _run_service(self, key):
         raise NotImplementedError
-
-    def _draw_status(self, screen, F, x, y, w):
-        """Extra lines above the panel (debt, tax); returns the new `y`."""
-        return y
 
     def _ui_fonts(self):
         if self._F is None:
@@ -230,13 +215,8 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
     def handle_event(self, event):
         if self._menu_event(event):
             return
-        if event.type == pygame.MOUSEWHEEL:
-            if self._cols.wheel(event, over=False):
-                return
-            if self._rail_rect and self._rail_rect.collidepoint(self.mouse):
-                self._rail_scroll = max(0, min(self._rail_max_scroll,
-                                               self._rail_scroll - event.y * 40))
-                return
+        if event.type == pygame.MOUSEWHEEL and self._cols.wheel(event, over=False):
+            return
         super().handle_event(event)
 
     def _drop(self, px, dragging, src):
@@ -267,9 +247,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
 
         for key, rect in self.buttons:
             if rect.collidepoint(px):
-                if key == "done":
-                    self._leave()
-                elif key == "distribute":
+                if key == "distribute":
                     self._distribute_load()
                 return
 
@@ -295,14 +273,6 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
             else:
                 self.selected, self._sel_qty = [], {}
             return
-
-        for rect, unit in self._rail_hits:
-            if rect.collidepoint(px):
-                if unit in self.pinned:
-                    self.pinned.remove(unit)
-                else:
-                    self.pinned.append(unit)
-                return
 
         self.selected = [src] if src is not None else []
 
@@ -359,7 +329,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         self.selected = list(picks)
         owners = {id(p[0]) for p in picks}
         lift = len(owners) > 1 or any(isinstance(p[1], str) or p[0] == self.OWNER for p in picks)
-        rows = [("member", f"to {u.name}", u) for u in self.pinned if lift or id(u) not in owners]
+        rows = [("member", f"to {u.name}", u) for u in self.party if lift or id(u) not in owners]
         if any(p[0] != self.OWNER for p in picks):
             rows.insert(0, ("stash", f"to {self.LABEL}", self.OWNER))
         return rows
@@ -382,11 +352,8 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
     def _purse_stores(self):
         return self.stores
 
-    def _leave(self):
-        self.on_done()
-
     # ------------------------------------------------------------------ #
-    # adapters: real Unit -> the plain dicts loadout_panel draws          #
+    # adapters: real Unit -> the plain dicts hub_party draws              #
     # ------------------------------------------------------------------ #
     def _hand_note(self, unit):
         name = unit.equipped_weapon
@@ -442,79 +409,6 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         return rows
 
     # ------------------------------------------------------------------ #
-    def _draw_rail(self, screen, F, rect):
-        members = [{"key": u.uid, "name": u.name, "role": role_for(u.occupation),
-                    "kg": u.load, "cap": u.carry_normal} for u in self.party]
-        pinned_keys = {u.uid for u in self.pinned}
-        hits, max_scroll = loadout_panel.rail(screen, F, rect, members, pinned_keys,
-                                              bool(self.selected), self._rail_scroll, self.mouse)
-        self._rail_rect = rect
-        self._rail_max_scroll = max_scroll
-        self._rail_scroll = max(0, min(self._rail_scroll, max_scroll))
-        self._rail_hits = [(r, self._unit_by_uid[uid]) for r, uid in hits]
-        for r, u in self._rail_hits:
-            self.zones.append((r, u, "pack"))
-
-    def _draw_columns(self, screen, F, area):
-        gap = T.S * 2
-        members = [u for u in self.pinned if u in self.party]
-        shown = members + self.stores
-        window, col_w = self._cols.fit(len(shown), area.w, gap, COL_MIN, COL_MAX)
-        shown = shown[window]
-        carried = self._carried_names()
-
-        for i, u in enumerate(shown):
-            r = pygame.Rect(area.x + i * (col_w + gap), area.y, col_w, area.h)
-            store = store_column.is_store(u)
-            if store:
-                picked = {loc for o, loc in self.selected if o is u}
-                member = store_column.store_dict(self.group, u, picked, carried)
-                member.pop("action", None)
-                member.pop("tack", None)
-            else:
-                member = self._member_dict(u, carried)
-            res = loadout_panel.column(screen, F, r, member, self._pack_scroll.get(id(u), 0), self.mouse)
-            self._pack_scroll[id(u)] = res["scroll"]
-            for kind, slot_rect in res["slot_rects"].items():
-                if slot_rect is None:
-                    continue
-                self.zones.append((slot_rect, u, kind))
-                if member[kind]["name"]:
-                    self.sources.append((slot_rect, u, kind))
-            self.zones.append((res["pack_zone"], u, "pack"))
-            for pr, idx in res["pack_hits"]:
-                self.sources.append((pr, u, idx))
-            for dr, idx in res["dots_hits"]:
-                self._dots_hits.append((dr, u, idx))
-
-        self._cols.hint(screen, F, area, self.mouse)
-        if not shown:
-            text(screen, F["body"], "Pin a member on the left to see their gear.",
-                area.center, T.TX_FAINT, center=True)
-
-    def _draw_stash(self, screen, F, rect):
-        x, w = rect.x + T.S * 2, rect.w - T.S * 4
-        y = self._draw_status(screen, F, x, rect.y + T.S * 2, w)
-        panel_rect = pygame.Rect(rect.x, y, rect.w, rect.bottom - y)
-
-        stash, held = self._stash(), self._open()
-        data_ = {"label": self.LABEL,
-                "capacity": (stash.load, stash.capacity) if held else None,
-                "rows": self._stash_rows() if held else [],
-                "services": self._services()}
-        res = loadout_panel.container_panel(screen, F, panel_rect, data_, self._stash_scroll, self.mouse)
-        self._stash_scroll = res["scroll"]
-        self._service_hits += res["service_hits"]
-        for r, idx in res["row_hits"]:
-            self.sources.append((r, self.OWNER, idx))
-        for idx, ctl in res["row_controls"].items():
-            pick = (self.OWNER, idx)
-            for key, delta in (("minus", -1), ("plus", 1), ("all", 999)):
-                if ctl[key]:
-                    self._stash_steppers.append((ctl[key], pick, delta))
-        if held:
-            self.zones.append((panel_rect, self.OWNER, self.OWNER))
-
     # ------------------------------------------------------------------ #
     def hub_cards(self):
         cards = [{"label": "party purse", "value": fmt_money(self.purse), "tone": "money"}]
@@ -527,55 +421,10 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         F = self._ui_fonts()
         W, H = screen.get_size()
         screen.fill(T.TABLE)
-        self._unit_by_uid = {u.uid: u for u in self.party}
         self.zones, self.sources, self.buttons, self._service_hits = [], [], [], []
         self._stash_steppers = []
         self._dots_hits = []
-        self._rail_hits = []
-
-        if self.framed:
-            self._draw_hub(screen, F, W, H)
-            self._draw_menu(screen)
-            set_pointer(self._hovering())
-            return
-
-        head = pygame.Rect(0, 0, W, 0 if self.framed else T.S * 9)
-        body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * (6 if self.framed else 10))
-        stash_rect = pygame.Rect(0, body.y, STASH_W, body.h)
-        rail_rect = pygame.Rect(stash_rect.right, body.y, RAIL_W, body.h)
-        cols = pygame.Rect(rail_rect.right, body.y, W - rail_rect.right, body.h)
-
-        if self.framed:
-            self.back_rect = pygame.Rect(0, 0, 0, 0)
-        else:
-            header(screen, F, head, self.TITLE, self.SUBTITLE, (), None, mpos=self.mouse,
-                   vendor=getattr(self, "vendor", None))
-            self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
-            has_tut = self.tutorial_key() is not None
-            purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0) - self.header_reserve
-            text(screen, F["microb"], f"purse {fmt_money(self.purse)}", (purse_x, T.S * 3), T.BRASS, right=True)
-
-        self._draw_stash(screen, F, stash_rect)
-        self._draw_rail(screen, F, rail_rect)
-        self._draw_columns(screen, F, cols.inflate(-T.S * 2, -T.S * 2))
-
-        row_y = H - T.S * (5 if self.framed else 8)
-        x = T.S * 2
-        if not self.framed:
-            done_r = pygame.Rect(x, row_y, T.S * 25, T.S * 4)
-            draw_button(screen, F, done_r, self.LEAVE_LABEL, primary=True, mpos=self.mouse)
-            self.buttons.append(("done", done_r))
-            x = done_r.right + T.S * 2
-        if self.CAN_DISTRIBUTE and len(self.party) > 1:
-            dist_r = pygame.Rect(x, row_y, T.S * 22, T.S * 4)
-            draw_button(screen, F, dist_r, "distribute load", mpos=self.mouse)
-            self.buttons.append(("distribute", dist_r))
-            x = dist_r.right + T.S * 2
-        if self.notice:
-            if self.framed:
-                text(screen, F["body_sm"], self.notice, (x, row_y + T.S + 2), T.BRASS)
-            else:
-                text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
+        self._draw_hub(screen, F, W, H)
         self._draw_menu(screen)
         set_pointer(self._hovering())
 
@@ -583,11 +432,9 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
     # inside a hub: the stash as the shop's shelf, the party as its cards  #
     # ------------------------------------------------------------------ #
     def _draw_hub(self, screen, F, W, H):
-        self.back_rect = pygame.Rect(0, 0, 0, 0)
         m = T.S * 5
         stash_w = round(max(T.S * 52, min(T.S * 70, W * 0.28)))
-        y = self._draw_status(screen, F, m, 0, stash_w)
-        stash_r = pygame.Rect(m, y, stash_w, H - y)
+        stash_r = pygame.Rect(m, 0, stash_w, H)
         stash, held = self._stash(), self._open()
         data = {"label": self.LABEL,
                 "capacity": (stash.load, stash.capacity) if held else None,
@@ -653,11 +500,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
             return self._menu_hovering()
         if any(r.collidepoint(self.mouse) for r, *_ in self._dots_hits):
             return True
-        if self.back_rect is not None and self.back_rect.collidepoint(self.mouse):
-            return True
         if any(r.collidepoint(self.mouse) for _, r in self.buttons):
-            return True
-        if any(r.collidepoint(self.mouse) for r, _ in self._rail_hits):
             return True
         if any(r.collidepoint(self.mouse) for r, *_ in self._service_hits):
             return True

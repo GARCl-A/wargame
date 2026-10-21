@@ -73,7 +73,7 @@ class TavernaDrawMixin:
                 break
 
     def _draw_own_header(self, screen, F, W, H):
-        """Out of the hub (the Prison): the old header with its own tabs. Returns the body's top and bottom."""
+        """Out of the hub: the old header with its own tabs. Returns the body's top and bottom."""
         is_tavern = self.title == "TAVERN"
         days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
         if self.tab == "recruits":

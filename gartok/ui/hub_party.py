@@ -220,7 +220,7 @@ def _stash_row(surf, F, r, item, sel_qty, mouse):
 
 
 def container_card(surf, F, rect, data, scroll, mouse):
-    """A non-member inventory (the bank's strongbox) as a hub panel. Same contract as
+    """A non-member inventory (the bank's strongbox, the house) as a hub panel. Same contract as
     `loadout_panel.container_panel`: `data` is {"label", "capacity": (used, total) | None,
     "rows": [(key, name, tag, weight, qty, price, stock_left, blocked, sel_qty)], "services":
     [(key, label, sub, enabled)], "drop": bool (items picked: the panel takes them)}; returns

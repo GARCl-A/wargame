@@ -70,7 +70,6 @@ def test_buying_debits_the_pooled_purse_and_starts_the_tax_clock():
     assert s.purse == 20 and p.money == 20                                 # debited at once
     assert guild.house.tax_due_day == guild.clock.day + economy.CITY_PROPERTY_TAX_PERIOD_DAYS
 
-    s._leave()
     assert p.money == 20
 
 
@@ -197,8 +196,30 @@ def test_paying_off_the_debt_unblocks_bankers_services():
     assert guild.bankers_debt == 0 and not guild.bankers_services_blocked
     assert guild.bankers_debt_since is None
     assert s.purse == 1000 - 120
-    s._leave()
     assert p.money == 1000 - 120
+
+
+def test_the_debt_and_the_tax_show_in_the_hub_header_and_the_debt_is_a_service():
+    random.seed(1)
+    p = Unit("player")
+    p.money = 1000
+    guild = Guild([p])
+    guild.buy_city_property()
+    guild.house.missed_payments = 1
+    guild.bankers_debt = 120
+    s = _screen(guild, [p])
+    s.on_cook = s.on_garage = None
+
+    cards = {c["label"]: c for c in s.hub_cards()}
+    assert cards["owed to the bankers"]["tone"] == "bad"
+    assert cards["next tax"]["value"] == f"day {guild.house.tax_due_day}"
+    assert "1 missed" in cards["next tax"]["sub"]
+    assert ("pay_debt", True) in [(key, enabled) for key, _l, _s, enabled in s._services()]
+
+    guild.bankers_debt = 0
+    guild.house.missed_payments = 0
+    assert "owed to the bankers" not in {c["label"] for c in s.hub_cards()}
+    assert "pay_debt" not in [key for key, *_ in s._services()]
 
 
 def test_paying_off_the_debt_never_overpays():
@@ -268,7 +289,7 @@ def test_app_opens_the_normal_property_screen_otherwise():
     app = _app(guild)
 
     app._open_city_property(g, world.node("city"))
-    assert isinstance(app.scene, CityPropertyScreen)
+    assert isinstance(app.scene.active_screen(), CityPropertyScreen)
 
 
 # --------------------------------------------------------------------------- #

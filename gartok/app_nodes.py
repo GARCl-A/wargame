@@ -74,12 +74,15 @@ class NodeScreensMixin:
                                             on_return=self._resolve_repossession_return,
                                             on_squat=self._resolve_repossession_squat)
             return
-        self.scene = CityPropertyScreen(self.ui_fonts, self.guild, list(group.members),
-                                        on_done=self._after_activity,
-                                        on_cook=lambda: self._open_kitchen(
-                                            group, "THE HOUSE KITCHEN",
-                                            lambda: self._open_city_property(group, node)),
-                                        on_garage=lambda: self._open_garage(group, node))
+        from .hub_screen import TabbedHubScreen
+        house = CityPropertyScreen(self.ui_fonts, self.guild, list(group.members),
+                                   on_done=self._after_activity,
+                                   on_cook=lambda: self._open_kitchen(
+                                       group, "THE HOUSE KITCHEN",
+                                       lambda: self._open_city_property(group, node)),
+                                   on_garage=lambda: self._open_garage(group, node))
+        self.scene = TabbedHubScreen(self.ui_fonts, [("property", "THE HOUSE", house)],
+                                     node=world.node("city"), on_done=self._after_activity)
 
     def _open_garage(self, group, node):
         from .garage_screen import GarageScreen
@@ -132,8 +135,10 @@ class NodeScreensMixin:
                                  on_done=self._after_activity)
 
     def _open_ledger_desk(self, group, node, _offer):
-        self.scene = LedgerScreen(self.ui_fonts, self.guild, group,
-                                 on_done=self._after_activity)
+        from .hub_screen import TabbedHubScreen
+        desk = LedgerScreen(self.ui_fonts, self.guild, group, on_done=self._after_activity)
+        self.scene = TabbedHubScreen(self.ui_fonts, [("ledger", "THE DESK", desk)],
+                                     node=world.node("ledger_hold"), on_done=self._after_activity)
 
     def _open_forge(self, group, node, _offer):
         from .forge_hub_screen import ForgeHubScreen
@@ -316,6 +321,8 @@ class NodeScreensMixin:
                                        on_done=self._after_activity, group=group)
 
     def _open_prison(self, party, node, _offer):
+        from .hub_screen import TabbedHubScreen
         from .prison_screen import PrisonScreen
-        self.scene = PrisonScreen(self.ui_fonts, self.guild, party, node,
-                                  on_done=self._after_activity)
+        cells = PrisonScreen(self.ui_fonts, self.guild, party, node, on_done=self._after_activity)
+        self.scene = TabbedHubScreen(self.ui_fonts, [("prison", "THE CELLS", cells)],
+                                     node=world.node("prison"), on_done=self._after_activity)

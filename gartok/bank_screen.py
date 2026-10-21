@@ -19,15 +19,11 @@ from . import economy, items
 from .constants import fmt_money
 from .stash_screen import StashScreen
 from .ui import loadout_panel
-from .ui.tokens import T
 
 
 class BankScreen(StashScreen):
     OWNER = "bank"
-    TITLE = "The Bank"
-    SUBTITLE = "the Bankers rent one strongbox  ·  coin stacks turn into gold here, for a fee"
     LABEL = "the strongbox"
-    LEAVE_LABEL = "leave the bank"
     CLOSED_NOTICE = "rent a strongbox first."
     WHERE = "in the chest"
     CAN_DISTRIBUTE = True
@@ -41,10 +37,6 @@ class BankScreen(StashScreen):
 
     def tutorial_key(self):
         return "bank"
-
-    def tutorial_badge_rect(self, size):
-        W, H = size
-        return pygame.Rect(W - T.S * 3 - 28, T.S * 2, 28, 28)
 
     def _stash(self):
         return self.guild.bank

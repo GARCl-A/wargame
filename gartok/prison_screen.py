@@ -7,7 +7,6 @@ gratitude. If the pitch fails they walk free and take the money with them.
 """
 
 from . import recruit
-from .constants import fmt_money
 from .taverna_screen import TavernaScreen
 
 BAIL_BONUS = (2, "paid bail")
@@ -23,7 +22,7 @@ class PrisonScreen(TavernaScreen):
     def __init__(self, fonts, guild, party, node, on_done, candidates=None, title=None):
         pool = list(candidates) if candidates is not None else recruit.refresh_prison_pool(guild)
         super().__init__(fonts, guild, party, node, on_done, candidates=pool,
-                         title=title or "CITY PRISON")
+                         title=title or "CITY PRISON", hide_tabs=True)
 
     @property
     def vendor(self):
@@ -33,9 +32,6 @@ class PrisonScreen(TavernaScreen):
     def tutorial_key(self):
         return "prison"
 
-    def _leave_label(self):
-        return "LEAVE THE PRISON"
-
     def _barred(self, cand, member):
         return recruit.prison_barred(self.guild, cand, member)
 
@@ -44,7 +40,3 @@ class PrisonScreen(TavernaScreen):
 
     def _bail(self, cand):
         return recruit.bail_cost(cand)
-
-    def _sub_extra(self):
-        days_left = recruit.REFRESH_DAYS - (self.guild.clock.day - 1) % recruit.REFRESH_DAYS
-        return f" · party holds {fmt_money(self._wealth())} · new faces in {days_left} day(s)"

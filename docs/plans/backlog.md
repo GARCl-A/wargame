@@ -27,10 +27,6 @@ banner, `battle_fx.py` / `sound.py`) are done; what is left:
    stone, Wilds grass and roots, under the per-cell light), was rendered 2026-10-21. Step 2: every
    place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the
    Ruins...); today every board is the same grey. Brogue is the reference.
-4. **Old type outside the hubs** (small, found 2026-10-21). Every hub tab is on the hub kit
-   (`ui/hub_body.py`, `hub_party.container_card`); screens opened on their own still use the old small
-   type: the house (`city_property_screen.py`, it shares `StashScreen`'s unframed path), the Prison's
-   header, Ledger Hold's desk (`ledger_screen.py`). Move each on the same kit when it is touched.
 
 **Phase 5 — tutorials** (last: they describe the final screens)
 5. **Tutorials (review all of them).** About 25 modal cards, the map's with six paragraphs; the guild's

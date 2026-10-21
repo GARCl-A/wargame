@@ -36,15 +36,14 @@ def test_renting_debits_the_pooled_purse_and_flips_the_capacity_on():
     assert sum(m.money for m in party) == s.purse      # debited at once, not only on _leave
 
 
-def test_leaving_settles_the_purse_proportional_to_what_each_member_brought():
+def test_a_payment_comes_out_in_proportion_to_what_each_member_brought():
     random.seed(9)
     rich, broke = Unit("player"), Unit("player")
     rich.money, broke.money = 90, 30
     guild = Guild([rich, broke])
     s = BankScreen(None, guild, [rich, broke], on_done=lambda: None)
 
-    s.purse -= 40                     # simulate 40 copper spent during the visit
-    s._leave()
+    s.purse -= 40
     assert rich.money + broke.money == 80
     assert rich.money == 3 * broke.money      # 90:30 == 3:1, preserved exactly
 

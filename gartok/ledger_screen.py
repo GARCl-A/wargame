@@ -10,15 +10,16 @@ import pygame
 from . import data, economy, orders
 from .constants import fmt_money
 from .screen import Screen
-from .ui.primitives import draw_button, footer_bar, panel, text
+from .ui import hub_body as hb
+from .ui.hub_frame import hub_button
+from .ui.primitives import set_pointer, text, wrap
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-
-CARD_W = 560
 
 
 class LedgerScreen(Screen):
     native = True
+    framed = True
 
     def tutorial_key(self):
         return "ledger"
@@ -38,16 +39,11 @@ class LedgerScreen(Screen):
         self.buttons = []
         self._hot = False
 
-    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False,
-                   danger=False, font=None, sub=None):
-        """Draws through `ui.primitives.draw_button` and tracks button hit rects."""
-        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
-                   enabled=enabled, mpos=self.mouse, fnt=font)
-        hov = enabled and rect.collidepoint(self.mouse)
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False):
+        hub_button(surf, self._F, rect, label, primary=primary, enabled=enabled, mpos=self.mouse)
         if enabled:
             self.buttons.append((key, rect))
-            self._hot = self._hot or hov
-        return hov
+            self._hot = self._hot or rect.collidepoint(self.mouse)
 
     def _carrier(self):
         return next((u for u in self.group.members
@@ -86,114 +82,113 @@ class LedgerScreen(Screen):
                 except ValueError as err:
                     self.notice = str(err)
                 return
-            elif key == "done":
-                self.on_done()
-                return
             return
 
     # ------------------------------------------------------------------ #
+    def hub_cards(self):
+        cards = [{"label": "party purse", "value": fmt_money(sum(u.money for u in self.group.members)),
+                  "tone": "money"}]
+        if "bankers_trust" in self.guild.deeds_done:
+            done = "ledger_hold_supply_run" in self.guild.deeds_done
+            cards.insert(0, {"label": "supply runs", "value": f"{self.guild.supply_runs_completed} / 10",
+                             "tone": "good" if done else None})
+        return cards
+
     def draw(self, screen):
         F = self._F
-        m = T.S * 3
+        W, H = screen.get_size()
         screen.fill(T.TABLE)
         self._reset_buttons()
 
-        from . import world
-        from .ui.vendor_panel import draw_vendor, draw_vendor_name
-        vendor = world.vendor("ledger_hold", "ledger")
-        card = vendor.card if vendor else None
-        tx = m + draw_vendor(screen, F, (m, m - 4), card, size=T.S * 7)
-        title = text(screen, F["titleb"], "LEDGER HOLD", (tx, m - 2), T.TX)
-        draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
-        text(screen, F["body"], "\"State your business.\"", (tx, m + 30), T.TX_MUTED)
-
-        card_w = min(CARD_W, screen.get_width() - 2 * m)
-        cy = m + 70
-        pad = 12
-
-        # 1. Bankers' sealed chest exchange
         carrier = self._carrier()
+        trusted = "bankers_trust" in self.guild.deeds_done
+        panels = []
         if carrier is not None:
-            card1 = pygame.Rect(m, cy, card_w, 100)
-            panel(screen, card1)
-            x, y = card1.x + pad, card1.y + pad
-            text(screen, F["body_sm"], f"{carrier.name} carries the Bankers' sealed chest.",
-                 (x, y), T.TX_MUTED)
-            r = pygame.Rect(x, y + 26, card1.w - 2 * pad, 36)
-            self.add_button(screen, r, "exchange", "HAND OVER THE CHEST", primary=True)
-            cy = card1.bottom + T.S * 2
+            panels.append(self._draw_chest)
+        if trusted:
+            panels += [self._draw_mentorship, self._draw_supply_run]
+        if not panels:
+            panels.append(self._draw_gate)
 
-        # 2. Treefolk mentorship mission
-        if "bankers_trust" in self.guild.deeds_done:
-            m_tree = next((m for m in self.guild.missions if m.template_id == "ledger_treefolk"), None)
-            card2 = pygame.Rect(m, cy, card_w, 130)
-            panel(screen, card2)
-            x, y = card2.x + pad, card2.y + pad
-            text(screen, F["bodyb"], "GARRISON MENTORSHIP", (x, y), T.BRASS)
-            y += 24
-            if m_tree is None:
-                text(screen, F["body_sm"], "Commander Varkas offers a green Treefolk recruit to train to racial level 2.", (x, y), T.TX)
-                r = pygame.Rect(x, y + 24, card2.w - 2 * pad, 36)
-                self.add_button(screen, r, "accept_mentorship", "ACCEPT RECRUIT & MENTORSHIP", primary=True, sub="Receive Treefolk recruit (lvl 0)")
-            elif m_tree.state == "active":
-                recruit = next((u for u in self.guild.roster if u.uid == m_tree.recruit_uid), None)
-                if recruit is None:
-                    m_tree.state = "failed"
-                    text(screen, F["body_sm"], "The Treefolk recruit fell in battle. The mentorship has failed.", (x, y), T.RED)
-                elif recruit in self.group.members:
-                    lvl = recruit.racial_level
-                    ready = lvl >= 2
-                    msg = f"{recruit.name} is ready for garrison service (Racial Lvl {lvl})!" if ready else f"{recruit.name} is training (Racial Lvl {lvl}/2)."
-                    text(screen, F["body_sm"], msg, (x, y), T.GREEN if ready else T.TX_MUTED)
-                    r = pygame.Rect(x, y + 24, card2.w - 2 * pad, 36)
-                    self.add_button(screen, r, "deliver_recruit", "DELIVER TRAINED RECRUIT", enabled=ready, primary=ready,
-                                    sub="$230 reward  ·  leaves the guild" if ready else "Requires racial level 2")
-                else:
-                    text(screen, F["body_sm"], f"{recruit.name} is in another group. Bring them here to hand over.", (x, y), T.TX_MUTED)
+        bottom = H - T.S * 4 - (T.S * 3 if self.notice else 0)
+        body = pygame.Rect(T.S * 5, 0, W - T.S * 10, bottom)
+        gap = T.S * 3
+        w = min(T.S * 72, (body.w - gap * (len(panels) - 1)) // len(panels))
+        for i, draw_panel in enumerate(panels):
+            draw_panel(screen, pygame.Rect(body.x + i * (w + gap), body.y, w, body.h))
+
+        if self.notice:
+            text(screen, F["hub_body"], self.notice, (T.S * 5, H - T.S * 3), T.BRASS)
+        set_pointer(self._hot)
+
+    def _draw_chest(self, screen, rect):
+        F = self._F
+        inner = hb.draw_panel(screen, F, rect, "The Sealed Chest", "the Bankers' trust")
+        y = hb.draw_facts(screen, F, (inner.x, inner.y), inner.w, [
+            ("Carrier", self._carrier().name, None),
+            ("In return", "a letter of receipt, to take back to the City", "muted")])
+        self.add_button(screen, pygame.Rect(inner.x, y + T.S, inner.w, T.S * 6 + 4), "exchange",
+                        "Hand over the chest", primary=True)
+
+    def _draw_mentorship(self, screen, rect):
+        from . import missions
+        F = self._F
+        inner = hb.draw_panel(screen, F, rect, "Garrison Mentorship", "Commander Varkas")
+        m_tree = next((m for m in self.guild.missions if m.template_id == "ledger_treefolk"), None)
+        button = None
+        if m_tree is None:
+            rows = [("Offer", "a green Treefolk recruit (racial level 0) joins the group", None),
+                    ("Task", "train them to racial level 2, then bring them back", "muted")]
+            button = ("accept_mentorship", "Accept the recruit", True)
+        elif m_tree.state == "active":
+            recruit = next((u for u in self.guild.roster if u.uid == m_tree.recruit_uid), None)
+            if recruit is None:
+                m_tree.state = "failed"
+                rows = [("Status", "the Treefolk recruit fell in battle: the mentorship has failed", "bad")]
+            elif recruit in self.group.members:
+                lvl = recruit.racial_level
+                ready = lvl >= 2
+                rows = [("Recruit", recruit.name, None),
+                        ("Training", f"racial level {lvl} / 2", "good" if ready else "muted"),
+                        ("Reward", f"{fmt_money(missions.LEDGER_TREEFOLK.reward)}  ·  the recruit leaves the guild",
+                         "money")]
+                button = ("deliver_recruit", "Deliver the recruit", ready)
             else:
-                text(screen, F["body_sm"], "Commander Varkas salutes: 'The Treefolk soldier serves with honor.'", (x, y), T.GREEN)
-                text(screen, F["body_sm"], "Ledger Hold's gates stand open to your guild.", (x, y + 20), T.TX_MUTED)
-            cy = card2.bottom + T.S * 2
+                rows = [("Recruit", f"{recruit.name} is in another group: bring them here to hand over", "muted")]
+        else:
+            rows = [("Status", "the Treefolk soldier serves with honour", "good"),
+                    ("Gates", "Ledger Hold stands open to the guild", "muted")]
+        y = hb.draw_facts(screen, F, (inner.x, inner.y), inner.w, rows)
+        if button:
+            key, label, enabled = button
+            self.add_button(screen, pygame.Rect(inner.x, y + T.S, inner.w, T.S * 6 + 4), key, label,
+                            enabled=enabled, primary=True)
 
-            # 3. Frontier Supply Run
-            card3 = pygame.Rect(m, cy, card_w, 140)
-            panel(screen, card3)
-            x, y = card3.x + pad, card3.y + pad
-            text(screen, F["bodyb"], "FRONTIER SUPPLY RUN", (x, y), T.BRASS)
-            y += 24
-            runs = self.guild.supply_runs_completed
-            deed_done = "ledger_hold_supply_run" in self.guild.deeds_done
-            trip = orders.supply_hours(self.guild, self.group)
-            status_text = (f"Walk 20 kg to the Frontier Outpost and back ({trip:.1f} h) · "
-                           f"{runs}/10 deliveries{' (Deed earned)' if deed_done else ''}.")
-            text(screen, F["body_sm"], status_text, (x, y), T.TX)
-            y += 20
-            cargo = self.group.free_cargo_capacity
-            can_run = cargo >= economy.SUPPLY_RUN_CARGO_KG
-            stat_msg = (
-                f"Free cargo capacity: {cargo:.1f} kg / {economy.SUPPLY_RUN_CARGO_KG:.0f} kg required  ·  "
-                f"+{fmt_money(economy.SUPPLY_RUN_PAY)} each  ·  Work Lv {economy.SUPPLY_RUN_LEVEL}"
-                if can_run else
-                f"Free cargo capacity: {cargo:.1f} kg / {economy.SUPPLY_RUN_CARGO_KG:.0f} kg required (bring pack animals or lighten load)"
-            )
-            text(screen, F["body_sm"], stat_msg, (x, y), T.GREEN if can_run else T.RED)
-            r = pygame.Rect(x, y + 24, card3.w - 2 * pad, 36)
-            self.add_button(screen, r, "supply_run", "DEPART WITH SUPPLY CARAVAN", enabled=can_run, primary=can_run,
-                            sub=f"{trip:.1f} hours  ·  +{fmt_money(economy.SUPPLY_RUN_PAY)} each  ·  "
-                                f"enemy soldiers may ambush each leg")
-            cy = card3.bottom + T.S * 2
-        elif carrier is None:
-            card0 = pygame.Rect(m, cy, card_w, 80)
-            panel(screen, card0)
-            x, y = card0.x + pad, card0.y + pad
-            text(screen, F["body_sm"],
-                 "The sentries look your band over from the gatehouse.",
-                 (x, y), T.TX_MUTED)
-            text(screen, F["body_sm"],
-                 "Commander Varkas only receives couriers bearing the counting-house seal or bands the Bankers vouch for.",
-                 (x, y + 22), T.TX_FAINT)
+    def _draw_supply_run(self, screen, rect):
+        F = self._F
+        inner = hb.draw_panel(screen, F, rect, "Frontier Supply Run", "to the Frontier Outpost and back")
+        trip = orders.supply_hours(self.guild, self.group)
+        cargo = self.group.free_cargo_capacity
+        need = economy.SUPPLY_RUN_CARGO_KG
+        can_run = cargo >= need
+        y = hb.draw_facts(screen, F, (inner.x, inner.y), inner.w, [
+            ("Trip", f"{trip:.1f} hours, walking {need:.0f} kg of supplies", None),
+            ("Pay", f"{fmt_money(economy.SUPPLY_RUN_PAY)} each  ·  work level {economy.SUPPLY_RUN_LEVEL}", "money"),
+            ("Cargo", f"{cargo:.1f} / {need:.0f} kg free" if can_run
+             else f"{cargo:.1f} / {need:.0f} kg free: bring pack animals or lighten the load",
+             "good" if can_run else "bad")])
+        b = pygame.Rect(inner.x, y + T.S, inner.w, T.S * 6 + 4)
+        self.add_button(screen, b, "supply_run", "Depart with the caravan", enabled=can_run, primary=True)
+        text(screen, F["hub_body"], "Enemy soldiers may ambush each leg.", (inner.x, b.bottom + T.S * 2), T.BLOOD)
 
-        self._draw_footer(screen)
-
-    def _draw_footer(self, screen):
-        footer_bar(self, screen, self._F, primary=("done", "LEAVE LEDGER HOLD"), notice=self.notice)
+    def _draw_gate(self, screen, rect):
+        F = self._F
+        inner = hb.draw_panel(screen, F, rect, "The Gatehouse")
+        y = inner.y
+        for line in ("The sentries look the band over from the gatehouse.",
+                     ("Commander Varkas only receives couriers bearing the counting-house seal, "
+                      "or bands the Bankers vouch for.")):
+            for ln in wrap(F["hub_body"], line, inner.w):
+                text(screen, F["hub_body"], ln, (inner.x, y), T.TX_MUTED)
+                y += F["hub_body"].get_linesize()
+            y += T.S
