@@ -82,10 +82,10 @@ screens. Each item's detail stays in its own entry below.
     a drag still buys for one member), the footer turns to SELL when pack items are picked and to
     the auto-sell when nothing is, and the party's columns. Bigger type (title ~34 px serif small
     caps, body 15-17) for these screens. Done 2026-10-21: the frame (`ui/hub_frame.py`), the shop
-    tab (`ui/shop_shelf.py`, `ui/hub_party.py`), the Tavern's Recruit / Study / Perform and the Library
-    hub on it. Left, one commit per screen: the tabs still drawing their own header and footer under
-    the tab row (Stables, Forge / Carpentry / Write, the jobs boards, Medic, Initiation, Gathering) get `framed` and
-    their `hub_cards`; the Bank hub moves onto `TabbedHubScreen`.
+    tab (`ui/shop_shelf.py`, `ui/hub_party.py`), and every other tab inside the frame (Tavern, Stables,
+    Forge / Carpentry / Write, the jobs boards, Medic, Initiation, Gathering, the Bank's vault): each
+    drops its own header and back for `framed`, and gives its facts as `hub_cards`. Left, one commit per
+    screen: those bodies are still drawn in the old small type; restyle each in the hub kit as the shop.
 
 **Phase 5 — tutorials** (last: they describe the final screens)
 14. **Tutorials (review all of them)**, with the two *Discoverability* items that teach at the moment
@@ -392,3 +392,8 @@ for a system that does not exist yet:
 - **Compass.** Avoids getting lost on very long trips through unknown paths. Waits for a
   getting-lost system.
 - **Deck of Cards.** A card minigame at the tavern, among others. Its own arc.
+
+
+----
+
+Na arvore de work, todas as raízes são atributos, externo a que "deveria" de força...

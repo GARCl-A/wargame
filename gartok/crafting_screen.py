@@ -30,6 +30,18 @@ ROW_H = 150
 
 class CraftingScreen(Screen):
     native = True
+    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
+
+    def hub_cards(self):
+        known = {r for u in self.crafters for r in u.known_recipes if self._for_station(r)}
+        return [{"label": "crafters", "value": f"{len(self.crafters)} of {len(self.group.members)}"},
+                {"label": "recipes known", "value": str(len(known))}]
+
+    def _for_station(self, recipe):
+        """Is `recipe` worked at this screen's station (any station when it has none)?"""
+        found = items.CRAFTING_RECIPES.get(recipe)
+        variants = found if isinstance(found, list) else [found] if found else []
+        return not self.station or any(rc.station == self.station for rc in variants)
 
     def tutorial_key(self):
         return "craft"
@@ -48,13 +60,7 @@ class CraftingScreen(Screen):
         self.station = station
         self.vendor = vendor
         
-        # List members that have recipes for this station
-        if self.station:
-            self.crafters = [u for u in group.members
-                             if any(any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else []))
-                                    for r in u.known_recipes)]
-        else:
-            self.crafters = [u for u in group.members if u.known_recipes]
+        self.crafters = [u for u in group.members if any(self._for_station(r) for r in u.known_recipes)]
         self.selected_crafter = self.crafters[0] if self.crafters else None
 
         self.buttons = []         # [(key, rect)]
@@ -138,14 +144,17 @@ class CraftingScreen(Screen):
         self._reset_buttons()
         self.roster_rows = []
 
-        card = self.vendor.card if self.vendor else None
-        tx = m + draw_vendor(screen, F, (m, m - 4), card, size=T.S * 7)
-        title = text(screen, F["titleb"], self.title, (tx, m - 2), T.TX)
-        draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
-        text(screen, F["body"], self.subtitle, (tx, m + 30), T.TX_MUTED)
-
-        top = m + 62
-        left_panel = pygame.Rect(m, top, SIDE_W, screen.get_height() - top - 72)
+        if self.framed:
+            text(screen, F["body"], self.subtitle.capitalize(), (m, 0), T.TX_MUTED)
+            top, bottom = T.S * 4, T.S * 2 + T.S * 3 * len(self.notices)
+        else:
+            card = self.vendor.card if self.vendor else None
+            tx = m + draw_vendor(screen, F, (m, m - 4), card, size=T.S * 7)
+            title = text(screen, F["titleb"], self.title, (tx, m - 2), T.TX)
+            draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
+            text(screen, F["body"], self.subtitle, (tx, m + 30), T.TX_MUTED)
+            top, bottom = m + 62, 72
+        left_panel = pygame.Rect(m, top, SIDE_W, screen.get_height() - top - bottom)
         right_panel = pygame.Rect(left_panel.right + m, top,
                                   screen.get_width() - left_panel.right - 2 * m, left_panel.h)
 
@@ -163,7 +172,7 @@ class CraftingScreen(Screen):
 
         def _trailing(surf, r, ch):
             u = ch["unit"]
-            count = sum(1 for r in u.known_recipes if not self.station or any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])))
+            count = sum(1 for r in u.known_recipes if self._for_station(r))
             mod = u.mod_intelligence + u.craft_bonus(self.station)
             roll_str = f"d20{mod:+d}"
             caps(surf, F["micro"], f"{count} RECIPES", (r.right - T.S * 2, r.centery - 10), T.TX_MUTED, right=True)
@@ -173,8 +182,7 @@ class CraftingScreen(Screen):
                 caps(surf, F["micro"], roll_str, (r.right - T.S * 2, r.centery + 10), T.TX_FAINT, right=True)
 
         for m in self.group.members:
-            has_recipes = any(any(rc.station == self.station for rc in (items.CRAFTING_RECIPES.get(r, []) if isinstance(items.CRAFTING_RECIPES.get(r), list) else [items.CRAFTING_RECIPES.get(r)] if items.CRAFTING_RECIPES.get(r) else [])) for r in m.known_recipes) if self.station else bool(m.known_recipes)
-            if not has_recipes:
+            if not any(self._for_station(r) for r in m.known_recipes):
                 continue
 
             r = pygame.Rect(area.x + 12, y, area.w - 24, 74)
@@ -290,10 +298,10 @@ class CraftingScreen(Screen):
     def _draw_footer(self, screen):
         F = self._F
         m = T.S * 3
-        y = screen.get_height() - 52
+        y = screen.get_height() - (T.S if self.framed else 52)
         ny = y - 22
         for notice in self.notices:
             text(screen, F["body_sm"], notice, (m, ny), T.BRASS)
             ny -= 20
-
-        footer_bar(self, screen, F, primary=("done", f"LEAVE {self.title}"))
+        if not self.framed:
+            footer_bar(self, screen, F, primary=("done", f"LEAVE {self.title}"))

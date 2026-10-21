@@ -24,6 +24,15 @@ BACK_LABEL = "← back to guild"
 HINTS = "Esc · back    Tab · next service"
 
 
+def _can_frame(screen):
+    """A tab whose class offers a plain `framed = False` switch (a property, like the Tavern's,
+    decides for itself)."""
+    for klass in type(screen).__mro__:
+        if "framed" in klass.__dict__:
+            return klass.__dict__["framed"] is False
+    return False
+
+
 class TabbedHubScreen(Screen):
     native = True
 
@@ -35,6 +44,9 @@ class TabbedHubScreen(Screen):
         self.tab = first or self.tabs[0][0]
         self.node = node
         self.on_done = on_done
+        for _key, _label, screen in self.tabs:
+            if _can_frame(screen):
+                screen.framed = True             # a tab that can draw for the frame does so here
         self._tab_hits = []
         self._back = None
         self._help = pygame.Rect(0, 0, 0, 0)

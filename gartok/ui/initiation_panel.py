@@ -51,6 +51,8 @@ def draw_initiation(surf, F, rect, terms, rows, action, leave_label, mpos):
     btn_w = min(T.S * 26, rect.w // 2 - T.S * 2)
     begin = pygame.Rect(rect.right - btn_w, fy, btn_w, T.S * 4)
     draw_button(surf, F, begin, action or "PICK WHO STAYS", primary=bool(action), enabled=bool(action), mpos=mpos)
+    if leave_label is None:                       # a hub's frame has its own back
+        return row_rects, begin, pygame.Rect(0, 0, 0, 0)
     leave = pygame.Rect(begin.x - T.S * 3 - btn_w, fy, btn_w, T.S * 4)
     draw_button(surf, F, leave, leave_label, mpos=mpos)
     return row_rects, begin, leave

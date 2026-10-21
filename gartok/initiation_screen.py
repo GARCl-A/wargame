@@ -3,6 +3,7 @@
 import pygame
 
 from . import factions, rite, world
+from .constants import fmt_money
 from .screen import Screen
 from .ui.initiation_panel import draw_initiation
 from .ui.primitives import caps, set_pointer, text, wrap
@@ -103,17 +104,26 @@ class InitiationScreen(Screen):
                     self.notice = rite.blocker(self.guild, self.group, self._member(uid), self.school)
                 return
 
+    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
+
+    def hub_cards(self):
+        purse = sum(u.money for u in self.group.members)
+        return [{"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+
     def draw(self, screen):
         F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
         screen.fill(T.TABLE)
         m = T.S * 3
-        face = draw_vendor(screen, F, (m, m), self.vendor_card)
-        caps(screen, F["head"], f"{world.node(self.group.node).name.upper()}  ·  INITIATION", (m + face, m), T.TX)
-        draw_vendor_name(screen, F, (m + face, m + T.S * 4), self.vendor_card)
         sub = "Leave one member to board here until the school takes them in."
-        text(screen, F["body"], sub, (m + face, m + T.S * 7), T.TX_MUTED)
-
-        top = m + T.S * 11
+        if self.framed:
+            text(screen, F["body"], sub, (m, 0), T.TX_MUTED)
+            top = T.S * 5
+        else:
+            face = draw_vendor(screen, F, (m, m), self.vendor_card)
+            caps(screen, F["head"], f"{world.node(self.group.node).name.upper()}  ·  INITIATION", (m + face, m), T.TX)
+            draw_vendor_name(screen, F, (m + face, m + T.S * 4), self.vendor_card)
+            text(screen, F["body"], sub, (m + face, m + T.S * 7), T.TX_MUTED)
+            top = m + T.S * 11
         notice_h = 0
         if self.notice:
             lines = wrap(F["body_sm"], self.notice, screen.get_width() - 2 * m)
@@ -122,6 +132,7 @@ class InitiationScreen(Screen):
             notice_h = len(lines) * 18 + T.S
         area = pygame.Rect(m, top, screen.get_width() - 2 * m, screen.get_height() - top - m - notice_h)
         self.row_rects, self.begin_rect, self.leave_rect = draw_initiation(
-            screen, F, area, self._terms(), self._rows(), self._action(), "LEAVE THE SANCTUARY", self.mouse)
+            screen, F, area, self._terms(), self._rows(), self._action(),
+            None if self.framed else "LEAVE THE SANCTUARY", self.mouse)
         set_pointer(any(r.collidepoint(self.mouse) for _, r in self.row_rects)
                     or self.begin_rect.collidepoint(self.mouse) or self.leave_rect.collidepoint(self.mouse))

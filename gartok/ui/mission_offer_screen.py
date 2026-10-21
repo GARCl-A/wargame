@@ -3,6 +3,7 @@
 import pygame
 
 from .. import factions, missions, world
+from ..constants import fmt_money
 from ..item_icon import draw_icon
 from ..screen import Screen
 from .primitives import (
@@ -36,6 +37,17 @@ TAG_COLOR = {
 class MissionOfferScreen(Screen):
     native = True
     VENDOR = None      # (node id, function) of the keeper whose face the card shows
+    framed = False     # a hub's tab: the hub draws the keeper, the tabs and the back
+
+    def hub_cards(self):
+        """The jobs board's cards: how many jobs are up, how many the guild holds here."""
+        templates = self.get_templates()
+        ids = {t.id for t in templates}
+        held = sum(1 for m in self.guild.missions if m.template_id in ids and m.state == "active")
+        purse = sum(u.money for u in self.group.members)
+        return [{"label": "jobs on the board", "value": str(len(templates))},
+                {"label": "taken", "value": str(held)},
+                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
 
     def __init__(self, fonts, guild, group, on_done):
         super().__init__()
@@ -277,11 +289,13 @@ class MissionOfferScreen(Screen):
         inner_w = card_w - 2 * pad
         gap = T.S
 
-        face = T.S * 7 if self.vendor_card else 0
+        framed = self.framed
+        face = T.S * 7 if (self.vendor_card and not framed) else 0
         subtitle_lines = (wrap(F["body"], self.subtitle_text, inner_w - face - T.S * 2)
                           if self.subtitle_text else [])
-        name_h = 20 if self.vendor_card else 0
-        header_h = max(30 + name_h + (len(subtitle_lines) * 22 if subtitle_lines else 0), face)
+        name_h = 20 if (self.vendor_card and not framed) else 0
+        title_h = 0 if framed else 30
+        header_h = max(title_h + name_h + (len(subtitle_lines) * 22 if subtitle_lines else 0), face)
 
         layouts = [self._quest_layout(F, t, inner_w - 4 * T.S) for t in self.get_templates()]
         list_h = (sum(lay["h"] for lay in layouts) + gap * (len(layouts) - 1)) if layouts else 70
@@ -293,7 +307,8 @@ class MissionOfferScreen(Screen):
             notice_h = 10 + len(notice_lines) * 18 + 10
 
         footer_btn_h = 34
-        footer_h = T.S * 2 + 1 + T.S * 2 + footer_btn_h
+        extra = self.footer_action()
+        footer_h = (T.S * 2 + 1 + T.S * 2 + footer_btn_h) if (extra is not None or not framed) else 0
         chrome_h = pad + header_h + T.S * 2 + (T.S * 2 + notice_h if self.notice else 0) + footer_h + pad
         visible_h = max(120, min(list_h, screen.get_height() - T.S * 4 - chrome_h))
         self._max_scroll = max(0, list_h - visible_h)
@@ -305,10 +320,11 @@ class MissionOfferScreen(Screen):
             cx = card.x + pad
             cy = card.y + pad
 
-            draw_vendor(screen, F, (cx + inner_w - face, cy), self.vendor_card, size=face)
-            caps(screen, F["head"], self.title_text, (cx, cy), T.TX)
-            draw_vendor_name(screen, F, (cx, cy + 28), self.vendor_card)
-            cy += 30 + name_h
+            if not framed:
+                draw_vendor(screen, F, (cx + inner_w - face, cy), self.vendor_card, size=face)
+                caps(screen, F["head"], self.title_text, (cx, cy), T.TX)
+                draw_vendor_name(screen, F, (cx, cy + 28), self.vendor_card)
+            cy += title_h + name_h
             for ln in subtitle_lines:
                 text(screen, F["body"], ln, (cx, cy), T.TX_MUTED)
                 cy += 22
@@ -344,18 +360,21 @@ class MissionOfferScreen(Screen):
                         ny += 18
                 cy = r_notice.bottom
 
-            cy += T.S * 2
-            hline(screen, cx, card.right - pad, cy)
-
+            if footer_h:
+                cy += T.S * 2
+                hline(screen, cx, card.right - pad, cy)
             bw = 180
-            btn_leave = pygame.Rect(card.right - pad - bw, card.bottom - pad - footer_btn_h, bw, footer_btn_h)
-            draw_button(screen, F, btn_leave, self.leave_label, mpos=self.mouse)
-            self.buttons.append(("done", btn_leave))
-            extra = self.footer_action()
+            btn_y = card.bottom - pad - footer_btn_h
+            right = card.right - pad                    # framed: the hub has the back, the extra takes its place
+            if not framed:
+                btn_leave = pygame.Rect(right - bw, btn_y, bw, footer_btn_h)
+                draw_button(screen, F, btn_leave, self.leave_label, mpos=self.mouse)
+                self.buttons.append(("done", btn_leave))
+                right = btn_leave.x - T.S * 2
             if extra is not None:
                 label, enabled = extra
-                aw = min(T.S * 36, btn_leave.x - cx - T.S * 2)
-                btn_extra = pygame.Rect(btn_leave.x - T.S * 2 - aw, btn_leave.y, aw, footer_btn_h)
+                aw = min(T.S * 36, right - cx)
+                btn_extra = pygame.Rect(right - aw, btn_y, aw, footer_btn_h)
                 draw_button(screen, F, btn_extra, label, enabled=enabled, primary=enabled, mpos=self.mouse)
                 if enabled:
                     self.buttons.append(("footer_action", btn_extra))

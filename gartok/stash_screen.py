@@ -45,6 +45,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
     native = True
 
     OWNER = ""              # pick-owner key for the stash: "bank" / "house"
+    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
     TITLE = ""
     SUBTITLE = ""
     LABEL = ""              # panel label, e.g. "the strongbox"
@@ -514,6 +515,13 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
             self.zones.append((panel_rect, self.OWNER, self.OWNER))
 
     # ------------------------------------------------------------------ #
+    def hub_cards(self):
+        cards = [{"label": "party purse", "value": fmt_money(self.purse), "tone": "money"}]
+        if self._open():
+            stash = self._stash()
+            cards.insert(0, {"label": self.LABEL, "value": f"{stash.load:.1f} / {stash.capacity:.0f} kg"})
+        return cards
+
     def draw(self, screen):
         F = self._ui_fonts()
         W, H = screen.get_size()
@@ -523,32 +531,43 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
         self._stash_steppers = []
         self._dots_hits = []
 
-        head = pygame.Rect(0, 0, W, T.S * 9)
-        body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * 10)
+        head = pygame.Rect(0, 0, W, 0 if self.framed else T.S * 9)
+        body = pygame.Rect(0, head.bottom, W, H - head.bottom - T.S * (6 if self.framed else 10))
         stash_rect = pygame.Rect(0, body.y, STASH_W, body.h)
         rail_rect = pygame.Rect(stash_rect.right, body.y, RAIL_W, body.h)
         cols = pygame.Rect(rail_rect.right, body.y, W - rail_rect.right, body.h)
 
-        header(screen, F, head, self.TITLE, self.SUBTITLE, (), None, mpos=self.mouse,
-               vendor=getattr(self, "vendor", None))
-        self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
-        has_tut = self.tutorial_key() is not None
-        purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0) - self.header_reserve
-        text(screen, F["microb"], f"purse {fmt_money(self.purse)}", (purse_x, T.S * 3), T.BRASS, right=True)
+        if self.framed:
+            self.back_rect = pygame.Rect(0, 0, 0, 0)
+        else:
+            header(screen, F, head, self.TITLE, self.SUBTITLE, (), None, mpos=self.mouse,
+                   vendor=getattr(self, "vendor", None))
+            self.back_rect = pygame.Rect(head.x, head.y, T.S * 6, head.h)
+            has_tut = self.tutorial_key() is not None
+            purse_x = W - T.S * 3 - (28 + T.S if has_tut else 0) - self.header_reserve
+            text(screen, F["microb"], f"purse {fmt_money(self.purse)}", (purse_x, T.S * 3), T.BRASS, right=True)
 
         self._draw_stash(screen, F, stash_rect)
         self._draw_rail(screen, F, rail_rect)
         self._draw_columns(screen, F, cols.inflate(-T.S * 2, -T.S * 2))
 
-        done_r = pygame.Rect(T.S * 2, H - T.S * 8, T.S * 25, T.S * 4)
-        draw_button(screen, F, done_r, self.LEAVE_LABEL, primary=True, mpos=self.mouse)
-        self.buttons.append(("done", done_r))
+        row_y = H - T.S * (5 if self.framed else 8)
+        x = T.S * 2
+        if not self.framed:
+            done_r = pygame.Rect(x, row_y, T.S * 25, T.S * 4)
+            draw_button(screen, F, done_r, self.LEAVE_LABEL, primary=True, mpos=self.mouse)
+            self.buttons.append(("done", done_r))
+            x = done_r.right + T.S * 2
         if self.CAN_DISTRIBUTE and len(self.party) > 1:
-            dist_r = pygame.Rect(done_r.right + T.S * 2, H - T.S * 8, T.S * 22, T.S * 4)
+            dist_r = pygame.Rect(x, row_y, T.S * 22, T.S * 4)
             draw_button(screen, F, dist_r, "distribute load", mpos=self.mouse)
             self.buttons.append(("distribute", dist_r))
+            x = dist_r.right + T.S * 2
         if self.notice:
-            text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
+            if self.framed:
+                text(screen, F["body_sm"], self.notice, (x, row_y + T.S + 2), T.BRASS)
+            else:
+                text(screen, F["body_sm"], self.notice, (T.S * 2, H - T.S * 10), T.BRASS)
         self._draw_menu(screen)
         set_pointer(self._hovering())
 

@@ -3,6 +3,7 @@
 import pygame
 
 from . import medic
+from .constants import fmt_money
 from .screen import Screen
 from .ui.medic_panel import draw_medic
 from .ui.primitives import caps, set_pointer, text, wrap
@@ -68,16 +69,27 @@ class MedicScreen(Screen):
                     self.picked = {uid}
                 return
 
+    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
+
+    def hub_cards(self):
+        hurt = sum(1 for q in self._quotes())
+        purse = sum(u.money for u in (*self.group.members, *getattr(self.group, "stores", ())))
+        return [{"label": "need treating", "value": str(hurt)},
+                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+
     def draw(self, screen):
         F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
         screen.fill(T.TABLE)
         m = T.S * 3
-        caps(screen, F["head"], "THE APOTHECARY (MEDIC)", (m, m), T.TX)
         sub = ("Quick treatment: potions and doses at a discount, the whole group waits. "
                "A long poison is a hospital stay.")
-        text(screen, F["body"], sub, (m, m + T.S * 4), T.TX_MUTED)
-
-        top = m + T.S * 8
+        if self.framed:
+            text(screen, F["body"], sub, (m, 0), T.TX_MUTED)
+            top = T.S * 5
+        else:
+            caps(screen, F["head"], "THE APOTHECARY (MEDIC)", (m, m), T.TX)
+            text(screen, F["body"], sub, (m, m + T.S * 4), T.TX_MUTED)
+            top = m + T.S * 8
         notice_h = 0
         if self.notice:
             lines = wrap(F["body_sm"], self.notice, screen.get_width() - 2 * m)
@@ -100,6 +112,7 @@ class MedicScreen(Screen):
         where = ("in the hospital, out of the group" if self.guild.free_slots or len(self.group.members) == 1
                  else "the whole group waits (no free group slot)")
         self.row_rects, self.treat_rect, self.leave_rect = draw_medic(screen, F, area, rows, cost, hours, can_pay, self.mouse,
-                                                     stay=where if stay else None)
+                                                     stay=where if stay else None,
+                                                     leave_label=None if self.framed else "LEAVE THE MEDIC")
         set_pointer(any(r.collidepoint(self.mouse) for _, r in self.row_rects)
                     or self.treat_rect.collidepoint(self.mouse) or self.leave_rect.collidepoint(self.mouse))

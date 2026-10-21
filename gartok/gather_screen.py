@@ -73,6 +73,16 @@ class GatherScreen(Screen):
         return draw_button(surf, self._F, rect, label, primary=primary, enabled=enabled,
                            danger=danger, mpos=self.mouse)
 
+    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
+
+    def hub_cards(self):
+        price = gather.licence_price(self.node.id)
+        held = self.guild.has_licence(self.node.id)
+        purse = sum(u.money for u in self.group.members)
+        return [{"label": "licence", "value": "held" if held else fmt_money(price),
+                 "tone": "good" if held else None},
+                {"label": "party purse", "value": fmt_money(purse), "tone": "money"}]
+
     def draw(self, surf):
         W, H = surf.get_size()
         surf.fill(T.TABLE)
@@ -80,9 +90,12 @@ class GatherScreen(Screen):
         self.buttons.clear()
         self._hot = False
 
-        header(surf, F, pygame.Rect(0, 0, W, 72), f"{self.node.name.upper()} — GATHERING",
-               "Harvest materials instead of wages · One licence covers the whole guild",
-               (), None, mpos=self.mouse)
+        blurb = "Harvest materials instead of wages · One licence covers the whole guild"
+        if self.framed:
+            text(surf, F["body"], blurb, (T.S * 3, 0), T.TX_MUTED)
+        else:
+            header(surf, F, pygame.Rect(0, 0, W, 72), f"{self.node.name.upper()} — GATHERING",
+                   blurb, (), None, mpos=self.mouse)
 
         has_lic = self.guild.has_licence(self.node.id)
         price = gather.licence_price(self.node.id)
@@ -91,7 +104,7 @@ class GatherScreen(Screen):
         pad = T.S * 4
         cw = min(720, W - pad * 2)
         cx = (W - cw) // 2
-        cy = 96
+        cy = T.S * 5 if self.framed else 96
 
         card_rect = pygame.Rect(cx, cy, cw, 460)
         panel(surf, card_rect)
@@ -148,5 +161,6 @@ class GatherScreen(Screen):
         if self.notice:
             text(surf, F["body"], self.notice, (cx + T.S * 3, card_rect.bottom - 40), T.BRASS)
 
-        footer_bar(self, surf, F, back=("leave", "BACK TO MAP"))
+        if not self.framed:
+            footer_bar(self, surf, F, back=("leave", "BACK TO MAP"))
         set_pointer(any(r.collidepoint(self.mouse) for _, r in self.buttons))

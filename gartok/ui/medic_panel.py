@@ -4,7 +4,8 @@ footer that totals the picked ones.
 `rows` is a list of dicts: `{key, name, lines: [str], cost, hours, picked, enabled,
 note}` (`lines` the ailments). `stay` is the hospital stay picked, if any: its footer line
 and button replace the quick treatment's. Returns
-`(row_rects, treat_rect, leave_rect)`; `row_rects` is `[(key, rect)]`.
+`(row_rects, treat_rect, leave_rect)`; `row_rects` is `[(key, rect)]`. `leave_label=None` draws no
+leave button (a hub's frame has its own back) and returns an empty `leave_rect`.
 """
 
 import pygame
@@ -15,7 +16,8 @@ from .tokens import T, mix
 ROW_H = T.S * 8
 
 
-def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos, stay=None):
+def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos, stay=None,
+               leave_label="LEAVE THE MEDIC"):
     row_rects = []
     y = rect.y
     footer_h = T.S * 6
@@ -47,6 +49,8 @@ def draw_medic(surf, F, rect, rows, total_cost, total_hours, can_pay, mpos, stay
     treat = pygame.Rect(rect.right - T.S * 22, fy, T.S * 22, T.S * 4)
     draw_button(surf, F, treat, ("ADMIT" if stay else "TREAT") if can_pay or not total_cost else "CANNOT PAY",
                 primary=bool(total_cost and can_pay), enabled=bool(total_cost and can_pay), mpos=mpos)
+    if leave_label is None:
+        return row_rects, treat, pygame.Rect(0, 0, 0, 0)
     leave = pygame.Rect(treat.x - T.S * 3 - T.S * 22, fy, T.S * 22, T.S * 4)
-    draw_button(surf, F, leave, "LEAVE THE MEDIC", mpos=mpos)
+    draw_button(surf, F, leave, leave_label, mpos=mpos)
     return row_rects, treat, leave

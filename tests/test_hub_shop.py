@@ -29,6 +29,7 @@ def _shoppers(*tongues, alignment="Lawful and Neutral"):
 def _hub(node_id, units, first="shop"):
     pygame.init()
     g = Guild(units)
+    g.groups[0].node = node_id
     hub = TabbedHubScreen.for_node(ui_fonts(), g, g.groups[0], world.node(node_id), lambda *a: None, first=first)
     return hub, g
 
@@ -194,9 +195,25 @@ def test_the_tavern_tabs_sit_in_the_frame_and_give_the_recruit_facts_as_cards():
 
 
 def test_an_unframed_tab_keeps_its_own_footer_under_the_tab_row():
-    hub, _ = _hub("smith", _shoppers(["Ankarin"]), first="forge")
+    from gartok.screen import Screen
+
+    class Plain(Screen):
+        def draw(self, surf):
+            surf.fill((0, 0, 0))
+
+    hub = TabbedHubScreen(ui_fonts(), [("plain", "PLAIN", Plain())], node=world.node("smith"))
     _draw(hub)
     assert hub._back is None and hub._body.y == hub._tab_hits[0][0].bottom + 1
+
+
+def test_every_tab_a_node_hub_builds_draws_in_the_frame():
+    for node_id, first in (("smith", "forge"), ("lumber_yard", "gather"), ("farm", "stable"),
+                           ("apothecary", "medic"), ("apothecary", "jobs"), ("tanner", "jobs"),
+                           ("faith_cathedral", "initiation"), ("faith_cathedral", "jobs")):
+        hub, _ = _hub(node_id, _shoppers(["Ankarin"]), first=first)
+        _draw(hub)
+        assert hub.tab == first and hub._back is not None, (node_id, first)
+        assert hub.active_screen().hub_cards(), (node_id, first)
 
 
 def test_the_weapon_note_is_short():

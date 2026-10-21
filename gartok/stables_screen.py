@@ -31,6 +31,13 @@ def _tack_price(name):
 class StablesScreen(Screen):
     native = True
     header_reserve = 0
+    framed = False          # a hub's tab: the hub draws the keeper, the tabs and the back
+
+    def hub_cards(self):
+        g = self.group
+        return [{"label": "herd", "value": f"{len(g.herd)} / {g.herd_capacity}"},
+                {"label": "wagons", "value": str(len(g.wagons))},
+                {"label": "party purse", "value": fmt_money(self.wealth), "tone": "money"}]
 
     def tutorial_key(self):
         return "stable"
@@ -140,19 +147,25 @@ class StablesScreen(Screen):
         self.buttons = []
         self._hot = False
 
-        text(screen, F["titleb"], "THE STABLES", (m, m - 2), T.TX)
-        text(screen, F["body"], "buy and sell animals, wagons and tack  ·  hitching and riding are managed on the group's gear screen",
-             (m, m + 30), T.TX_MUTED)
-        purse_x = screen.get_width() - m - (28 + T.S if self.tutorial_key() else 0) - self.header_reserve
-        text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (purse_x, m + 4), T.BRASS, right=True)
-
-        top = m + 62
-        area = pygame.Rect(m, top, min(760, screen.get_width() - 2 * m), screen.get_height() - top - 80)
+        blurb = "buy and sell animals, wagons and tack  ·  hitching and riding are managed on the group's gear screen"
+        if self.framed:
+            text(screen, F["body"], blurb.capitalize(), (m, 0), T.TX_MUTED)
+            top, bottom = T.S * 4, T.S * 4
+        else:
+            text(screen, F["titleb"], "THE STABLES", (m, m - 2), T.TX)
+            text(screen, F["body"], blurb, (m, m + 30), T.TX_MUTED)
+            purse_x = screen.get_width() - m - (28 + T.S if self.tutorial_key() else 0) - self.header_reserve
+            text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (purse_x, m + 4), T.BRASS, right=True)
+            top, bottom = m + 62, 80
+        area = pygame.Rect(m, top, min(760, screen.get_width() - 2 * m), screen.get_height() - top - bottom)
         panel(screen, area)
         x, w = area.x + 12, area.w - 24
         y = self._draw_wagon(screen, x, area.y + 12, w)
         self._draw_animals(screen, x, y + T.S, w)
-        footer_bar(self, screen, F, primary=("done", "LEAVE THE STABLES"), notice=self.notice)
+        if not self.framed:
+            footer_bar(self, screen, F, primary=("done", "LEAVE THE STABLES"), notice=self.notice)
+        elif self.notice:
+            text(screen, F["body_sm"], self.notice, (m, screen.get_height() - T.S * 3), T.TX_MUTED)
 
     def _wagon_label(self, w):
         """"Cart" alone, "Cart 2" when the group keeps several."""

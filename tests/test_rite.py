@@ -224,7 +224,7 @@ def test_the_sanctuary_hub_has_an_initiation_tab_that_starts_the_rite():
     hub.tab = "initiation"
     screen = hub.active_screen()
     assert isinstance(screen, InitiationScreen)
-    surf = pygame.Surface((1000, 640))
+    surf = pygame.Surface((1920, 1080))
     hub.mouse = (0, 0)
     hub.draw(surf)
     row = dict(screen.row_rects)[a.uid]
