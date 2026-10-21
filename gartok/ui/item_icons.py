@@ -415,6 +415,21 @@ def _chest(g, sealed=False):
         g.circle((50, 46), 2, g.dark)
 
 
+def _wagon(g, covered=False):
+    if covered:
+        g.poly(_arc(48, 46, 32, 26, 180, 360) + [(80, 46), (16, 46)], mix(g.lite, (255, 255, 255), .35))
+        g.line(_arc(48, 46, 32, 26, 180, 360), g.dark, 1.6)
+        for x in (32, 48, 64):
+            g.line([(x, 46), (x, 22 if x == 48 else 26)], g.dark, 1.2)
+    g.poly(_rect(14, 46, 68, 16), g.tone)
+    g.line([(14, 46), (82, 46)], g.lite, 2)
+    g.line([(82, 56), (96, 50)], g.dark, 3)
+    for cx in (30, 66):
+        g.circle((cx, 70), 12, g.dark)
+        g.circle((cx, 70), 9, g.tone, 2)
+        g.circle((cx, 70), 2.5, g.lite)
+
+
 def _beartrap(g):
     g.circle((50, 54), 30, g.tone)
     g.circle((50, 54), 22, g.dark, 2)
@@ -595,7 +610,7 @@ KINDS = {
     "ingot": _ingot, "rocks": _rocks, "brick": _brick, "sheet": _sheet, "horn": _horn,
     "scroll": _scroll, "book": _book, "torch": _torch, "lantern": _lantern,
     "aid_kit": _aid_kit, "quiver": _quiver, "chest": _chest, "beartrap": _beartrap, "alarm": _alarm,
-    "coin": _coin, "saddle": _saddle, "harness": _harness,
+    "coin": _coin, "saddle": _saddle, "harness": _harness, "wagon": _wagon,
     "rope": _rope, "scissors": _scissors, "shovel": _shovel, "chisel": _chisel, "pliers": _pliers,
     "compass": _compass, "cards": _cards, "lute": _lute, "holy": _holy, "chains": _chains, "map": _map,
     "gem": _gem, "gems": _gems, "letter": _letter, "storm_hide": _lightning,

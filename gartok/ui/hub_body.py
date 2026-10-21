@@ -4,6 +4,7 @@ shop's FOR SALE and PARTY panels look like, for the tabs that are not a shop.
     draw_panel(surf, F, rect, title, aside=None, hot=False) -> the inner rect under the head rule
                                                               (`aside` follows the title, muted)
     draw_person(surf, F, rect, p, mpos)                    -> [(rect, label)] of its chips
+    draw_offer(surf, F, rect, o, mpos)                     -> [(rect, key)] of its enabled buttons
     draw_chip(surf, F, pos, label, tone, anchor)           -> rect
     draw_toggle(surf, F, rect, label, on, mpos)            -> None: a pill that is picked or not
     draw_bar(surf, rect, frac, tone)                       -> None: a thin progress bar
@@ -12,13 +13,19 @@ shop's FOR SALE and PARTY panels look like, for the tabs that are not a shop.
 
 A person `p` is {"face": {"race", "portrait_id", "token"}, "name", "sub", "note" (optional second
 line), "chips": [(label, tone)], "status": (text, tone) | None, "state": None | "on" | "good"
-| "hot", "reserve": px kept free at the right for the caller's buttons}. A fact row is
+| "hot", "reserve": px kept free at the right for the caller's buttons}. An offer `o` is
+{"icon": icon, "name", "sub", "note": (text, tone) | None, "price": str | None, "price_tone",
+"buttons": [(key, label, primary, enabled)], "dim": bool}; an icon is {"item": name}, {"face":
+face} or {"glyph": kind, "tone": material, **shape} (`item_icons.KINDS`). A fact row is
 (label, value, tone). A tone is "money" | "good" | "bad" | "muted" | "faint" | None (plain ink).
 """
 
 import pygame
 
+from ..item_icon import draw_icon
 from .board_render import draw_face
+from .hub_frame import button_width, hub_button
+from .item_icons import TONES, draw_item_icon
 from .primitives import ellipsize, small_caps, spaced, spaced_width, text, wrap
 from .tokens import T, mix
 
@@ -28,6 +35,7 @@ PAD = T.S * 3
 HEAD_H = T.S * 8
 PERSON_H = T.S * 9 + 2           # a person row with a name and one line under it
 PERSON_TALL_H = T.S * 14         # with a note and chips too
+OFFER_H = T.S * 9 + 2            # the shop shelf's row
 
 
 def draw_panel(surf, F, rect, title, aside=None, hot=False):
@@ -127,4 +135,45 @@ def draw_person(surf, F, rect, p, mpos):
         c = draw_chip(surf, F, (cx, y + 2), label, tone)
         hits.append((c, label))
         cx = c.right + T.S
+    return hits
+
+
+def _icon(surf, F, rect, icon):
+    if "face" in icon:
+        draw_face(surf, F, rect.center, rect.w // 2, icon["face"], fallback_color=T.STEEL_HI)
+    elif "item" in icon:
+        draw_icon(surf, rect, icon["item"])
+    else:
+        shape = {k: v for k, v in icon.items() if k not in ("glyph", "tone")}
+        draw_item_icon(surf, rect, icon["glyph"], TONES[icon.get("tone", "wood")], **shape)
+
+
+def draw_offer(surf, F, rect, o, mpos):
+    hits = []
+    pygame.draw.rect(surf, T.STEEL_HI if rect.collidepoint(mpos) and not o.get("dim") else
+                     mix(T.STEEL, T.TABLE, 0.35), rect, border_radius=6)
+    icon = pygame.Rect(rect.x + T.S + 4, rect.y + (rect.h - T.S * 6) // 2, T.S * 6, T.S * 6)
+    _icon(surf, F, icon, o["icon"])
+    bx = rect.right - T.S * 2
+    bh = T.S * 5
+    for key, label, primary, enabled in reversed(o.get("buttons", [])):
+        b = pygame.Rect(0, rect.y + (rect.h - bh) // 2, button_width(F, label) - T.S * 2, bh)
+        b.right = bx
+        hub_button(surf, F, b, label, primary=primary, enabled=enabled, mpos=mpos)
+        if enabled:
+            hits.append((b, key))
+        bx = b.x - T.S
+    if o.get("price"):
+        p = text(surf, F["hub_price"], o["price"], (bx - T.S, rect.y + T.S + 2), TONE[o.get("price_tone", "money")],
+                 right=True)
+        bx = p.x - T.S
+    x = icon.right + T.S * 2
+    ink = T.TX_FAINT if o.get("dim") else T.TX
+    text(surf, F["hub_row"], ellipsize(o["name"], F["hub_row"], bx - T.S - x), (x, rect.y + T.S + 4), ink)
+    sub = text(surf, F["hub_sub"], ellipsize(o.get("sub", ""), F["hub_sub"], bx - T.S - x), (x, rect.y + T.S * 5),
+               T.TX_MUTED)
+    if o.get("note"):
+        note, tone = o["note"]
+        text(surf, F["hub_subb"], ellipsize(note, F["hub_subb"], bx - T.S * 2 - sub.right),
+             (sub.right + T.S if o.get("sub") else x, sub.y), TONE[tone])
     return hits

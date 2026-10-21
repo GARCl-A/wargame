@@ -306,7 +306,8 @@ def test_a_shift_is_worth_its_table_per_worker_against_their_wage(node_id):
     guild, group = _crew(node_id, 3)
     haul, wage, risk = guild.shift_worth(group, node_id, 16)
     assert haul == pytest.approx(3 * gather.expected_value(node_id, 16))
-    assert wage == pytest.approx(3 * economy.work_pay(node_id, 16, 0))
+    assert wage == pytest.approx(sum(economy.work_pay(node_id, 16, economy.work_level(u, node_id))
+                                     for u in group.members))
     assert haul > wage
     assert risk == pytest.approx(gather.ambush_chance(node_id, 16))
 

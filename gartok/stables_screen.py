@@ -11,13 +11,11 @@ import pygame
 
 from . import animals, data, economy, items, recorder, wagon
 from .constants import fmt_money
-from .item_icon import draw_icon
 from .screen import Screen
-from .ui.primitives import draw_button, ellipsize, footer_bar, panel, section, text
+from .ui import hub_body as hb
+from .ui.primitives import draw_button, footer_bar, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
-
-ICON = T.S * 3
 
 
 def _resale(price):
@@ -132,107 +130,114 @@ class StablesScreen(Screen):
         self.notice = f"sold the {animal.species}."
 
     # ------------------------------------------------------------------ #
-    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False, danger=False,
-                   font=None, sub=None):
-        draw_button(surf, self._F, rect, label, sub=sub, primary=primary, danger=danger,
-                    enabled=enabled, mpos=self.mouse, fnt=font)
-        if enabled:
-            self.buttons.append((key, rect))
-            self._hot = self._hot or rect.collidepoint(self.mouse)
+    def _offer(self, screen, rect, o):
+        for b, key in hb.draw_offer(screen, self._F, rect, o, self.mouse):
+            self.buttons.append((key, b))
+            self._hot = self._hot or b.collidepoint(self.mouse)
 
     def draw(self, screen):
         F = self._F
-        m = T.S * 3
+        W, H = screen.get_size()
         screen.fill(T.TABLE)
         self.buttons = []
         self._hot = False
 
-        blurb = "buy and sell animals, wagons and tack  ·  hitching and riding are managed on the group's gear screen"
         if self.framed:
-            text(screen, F["body"], blurb.capitalize(), (m, 0), T.TX_MUTED)
-            top, bottom = T.S * 4, T.S * 4
+            top, bottom = 0, H - T.S * 4
         else:
+            m = T.S * 3
             text(screen, F["titleb"], "THE STABLES", (m, m - 2), T.TX)
-            text(screen, F["body"], blurb, (m, m + 30), T.TX_MUTED)
-            purse_x = screen.get_width() - m - (28 + T.S if self.tutorial_key() else 0) - self.header_reserve
-            text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}", (purse_x, m + 4), T.BRASS, right=True)
-            top, bottom = m + 62, 80
-        area = pygame.Rect(m, top, min(760, screen.get_width() - 2 * m), screen.get_height() - top - bottom)
-        panel(screen, area)
-        x, w = area.x + 12, area.w - 24
-        y = self._draw_wagon(screen, x, area.y + 12, w)
-        self._draw_animals(screen, x, y + T.S, w)
+            text(screen, F["body"], "buy and sell animals, wagons and tack", (m, m + 30), T.TX_MUTED)
+            text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}",
+                 (W - m - (28 + T.S) - self.header_reserve, m + 4), T.BRASS, right=True)
+            top, bottom = m + 62, H - 80
+        body = pygame.Rect(T.S * 5, top, W - T.S * 10, bottom - top)
+        left_w = max(T.S * 56, min(T.S * 76, round(body.w * 0.42)))
+        self._draw_market(screen, pygame.Rect(body.x, body.y, left_w, body.h))
+        self._draw_herd(screen, pygame.Rect(body.x + left_w + T.S * 3, body.y, body.w - left_w - T.S * 3, body.h))
         if not self.framed:
             footer_bar(self, screen, F, primary=("done", "LEAVE THE STABLES"), notice=self.notice)
         elif self.notice:
-            text(screen, F["body_sm"], self.notice, (m, screen.get_height() - T.S * 3), T.TX_MUTED)
+            text(screen, F["hub_body"], self.notice, (T.S * 5, H - T.S * 3), T.TX_MUTED)
+
+    def add_button(self, surf, rect, key, label, *, enabled=True, primary=False, danger=False):
+        draw_button(surf, self._F, rect, label, primary=primary, danger=danger, enabled=enabled, mpos=self.mouse)
+        if enabled:
+            self.buttons.append((key, rect))
+            self._hot = self._hot or rect.collidepoint(self.mouse)
+
+    def _draw_market(self, screen, rect):
+        F, g = self._F, self.group
+        inner = hb.draw_panel(screen, F, rect, "For Sale", "wagons and animals")
+        y = hb.draw_section(screen, F, (inner.x, inner.y), "Wagons").bottom + T.S
+        for vehicle in wagon.VEHICLES.values():
+            can = self.wealth >= vehicle.price
+            self._offer(screen, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.OFFER_H), {
+                "icon": {"glyph": "wagon", "covered": vehicle.name == "Carriage"},
+                "name": vehicle.name, "price": fmt_money(vehicle.price), "price_tone": "money" if can else "faint",
+                "sub": f"holds {vehicle.capacity} kg  ·  {vehicle.slots} animal{'s' if vehicle.slots != 1 else ''} to pull",
+                "buttons": [(f"buy_wagon:{vehicle.name}", "Buy", True, can)], "dim": not can})
+            y += hb.OFFER_H + T.S
+        y += T.S
+        lab = hb.draw_section(screen, F, (inner.x, y), f"Animals  ·  herd {g.herd_load} / {g.herd_capacity}")
+        if g.herd_load >= g.herd_capacity:
+            text(screen, F["hub_subb"], f"full: {self._keeper.name} controls no more", (lab.right + T.S * 2, lab.y - 1),
+                 T.BLOOD)
+        y = lab.bottom + T.S
+        for species in data.LIVESTOCK:
+            sample = animals.Animal(species)
+            can = g.can_take(sample) and self.wealth >= sample.price
+            self._offer(screen, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.OFFER_H), {
+                "icon": {"face": {"race": species, "portrait_id": None, "token": species[0]}},
+                "name": species, "price": fmt_money(sample.price), "price_tone": "money" if can else "faint",
+                "sub": f"carries {sample.back_load} kg  ·  draws {sample.draw} kg  ·  speed {sample.speed:g} m",
+                "buttons": [(f"buy:{species}", "Buy", True, can)], "dim": not can})
+            y += hb.OFFER_H + T.S
+        text(screen, F["hub_sub"], "Every animal eats a ration a day; tack decides what it does.",
+             (inner.x, y + T.S), T.TX_FAINT)
 
     def _wagon_label(self, w):
         """"Cart" alone, "Cart 2" when the group keeps several."""
         same = [x for x in self.group.wagons if x.kind == w.kind]
-        return w.kind.lower() if len(same) == 1 else f"{w.kind.lower()} {same.index(w) + 1}"
+        return w.kind if len(same) == 1 else f"{w.kind} {same.index(w) + 1}"
 
-    def _draw_wagon(self, screen, x, y, w):
+    def _draw_herd(self, screen, rect):
         F, g = self._F, self.group
-        y = section(screen, F, "WAGONS", x, y, w)
+        inner = hb.draw_panel(screen, F, rect, "The Group's Herd",
+                              "hitching and riding are set on the group's gear screen")
+        y = hb.draw_section(screen, F, (inner.x, inner.y), "Wagons").bottom + T.S
         for i, w_ in enumerate(g.wagons):
             pulled = " + ".join(a.species for a in w_.draft) or "nothing hitched"
-            text(screen, F["bodyb"], f"{self._wagon_label(w_).capitalize()}  ·  cargo {w_.stash.load:g} / {w_.capacity:g} kg"
-                 f"  ·  pulled by {pulled}", (x, y), T.TX)
             speed = f"{w_.speed:g} m" if w_.speed else "--"
-            riders = f"{w_.passenger_weight:g} kg of riders  ·  " if w_.passengers else ""
-            text(screen, F["body_sm"], f"HP {w_.hp}  ·  speed {speed}  ·  {w_.rations} meals aboard  ·  {riders}"
-                 f"carries up to {w_.budget:g} kg, {w_.vehicle.slots} to hitch", (x, y + 20), T.TX_MUTED)
-            if not w_.draft:
-                text(screen, F["body_sm"], "Nothing is pulling it -- the cargo box is shut.", (x, y + 38), T.BLOOD)
-            if not w_.stash.items:
-                self.add_button(screen, pygame.Rect(x + w - 190, y, 190, 28), f"sell_wagon:{i}",
-                                f"SELL  ·  {fmt_money(_resale(w_.price))}")
-            y += 62
+            riders = f"  ·  {w_.passenger_weight:g} kg of riders" if w_.passengers else ""
+            sell = [] if w_.stash.items else [(f"sell_wagon:{i}", f"Sell {fmt_money(_resale(w_.price))}", False, True)]
+            self._offer(screen, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.OFFER_H), {
+                "icon": {"glyph": "wagon", "covered": w_.kind == "Carriage"},
+                "name": f"{self._wagon_label(w_)}  ·  cargo {w_.stash.load:g} / {w_.capacity:g} kg  ·  {pulled}",
+                "sub": f"HP {w_.hp}  ·  speed {speed}  ·  {w_.rations} meals aboard{riders}  ·  "
+                       f"draws up to {w_.budget:g} kg",
+                "note": None if w_.draft else ("nothing pulls it: the cargo box is shut", "bad"),
+                "buttons": sell})
+            y += hb.OFFER_H + T.S
         if not g.wagons:
-            text(screen, F["body_sm"], "Cargo that never goes into a fight and feeds the group on the road. "
-                 "Animals wearing a Harness pull it, as much as they can draw.", (x, y), T.TX_MUTED)
-            y += 24
-        half = (w - T.S) // 2
-        for n, vehicle in enumerate(wagon.VEHICLES.values()):
-            can = self.wealth >= vehicle.price
-            self.add_button(screen, pygame.Rect(x + n * (half + T.S), y, half, 40), f"buy_wagon:{vehicle.name}",
-                            f"BUY A {vehicle.name.upper()}  ·  {fmt_money(vehicle.price)}", enabled=can, primary=can,
-                            sub=f"holds {vehicle.capacity} kg  ·  {vehicle.slots} animal(s) to pull")
-        return y + 46
-
-    def _draw_animals(self, screen, x, y, w):
-        F, g = self._F, self.group
-        y = section(screen, F, f"ANIMALS  (herd {g.herd_load} / {g.herd_capacity})", x, y, w)
+            text(screen, F["hub_body"], "No wagon. Cargo in a wagon never goes into a fight and feeds the group "
+                 "on the road; animals in a Harness pull it.", (inner.x, y), T.TX_FAINT)
+            y += T.S * 4
+        y += T.S
+        y = hb.draw_section(screen, F, (inner.x, y), "Animals").bottom + T.S
         for i, a in enumerate(g.herd):
             role = {"pack": "carries cargo", "draft": "pulls a wagon"}.get(a.role, "no tack")
-            note = f"{role}  ·  speed {a.speed:g} m  ·  HP {a.hp}"
-            if a.unfed_days:
-                note = f"unfed {a.unfed_days} day(s)  ·  " + note
-            text(screen, F["bodyb"], a.species, (x + (ICON + T.S if a.tack else 0), y + 4), T.TX)
-            if a.tack:
-                draw_icon(screen, pygame.Rect(x, y + 2, ICON, ICON), a.tack)
-            bx = x + w - 130
-            self.add_button(screen, pygame.Rect(bx, y, 130, 28), f"sell:{i}", f"SELL · {fmt_money(_resale(a.price))}")
+            buttons = []
             if not a.tack:
-                for tack in (animals.HARNESS, animals.PACK_SADDLE):
-                    price = _tack_price(tack)
-                    bx -= 168
-                    self.add_button(screen, pygame.Rect(bx, y, 160, 28), f"fit:{i}:{tack}",
-                                    f"{tack.upper()} · {fmt_money(price)}", enabled=self.wealth >= price)
-                    draw_icon(screen, pygame.Rect(bx + 3, y + 3, 22, 22), tack)
-            text(screen, F["body_sm"], ellipsize(note, F["body_sm"], bx - (x + 80 + (ICON if a.tack else 0)) - T.S),
-                 (x + 80 + (ICON if a.tack else 0), y + 6), T.BLOOD if a.unfed_days else T.TX_MUTED)
-            y += 36
+                buttons = [(f"fit:{i}:{tack}", f"{tack} {fmt_money(_tack_price(tack))}", False,
+                            self.wealth >= _tack_price(tack)) for tack in (animals.HARNESS, animals.PACK_SADDLE)]
+            buttons.append((f"sell:{i}", f"Sell {fmt_money(_resale(a.price))}", False, True))
+            self._offer(screen, pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.OFFER_H), {
+                "icon": {"face": {"race": a.species, "portrait_id": None, "token": a.species[0]}},
+                "name": a.species + (f"  ·  {a.tack}" if a.tack else ""),
+                "sub": f"{role}  ·  speed {a.speed:g} m  ·  HP {a.hp}",
+                "note": (f"unfed {a.unfed_days} day{'s' if a.unfed_days != 1 else ''}", "bad") if a.unfed_days else None,
+                "buttons": buttons})
+            y += hb.OFFER_H + T.S
         if not g.herd:
-            text(screen, F["body_sm"], "No animals yet.", (x, y), T.TX_FAINT)
-            y += 24
-        y += T.S
-        for species in data.LIVESTOCK:
-            sample = animals.Animal(species)
-            can = g.can_take(sample) and self.wealth >= sample.price
-            self.add_button(screen, pygame.Rect(x, y, w, 40), f"buy:{species}",
-                            f"BUY A {species.upper()}  ·  {fmt_money(sample.price)}", enabled=can, primary=can,
-                            sub=(f"carries {sample.back_load} kg  ·  draws {sample.draw} kg  ·  speed {sample.speed:g} m"
-                                 "  ·  eats a ration a day"))
-            y += 46
+            text(screen, F["hub_body"], "No animals yet.", (inner.x, y), T.TX_FAINT)
