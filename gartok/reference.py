@@ -24,6 +24,7 @@ from . import (
     factions,
     hunt,
     items,
+    outfit,
     progression,
     sources,
     talents,
@@ -142,6 +143,17 @@ def _shields():
     return "## Shields\n\n" + _table(head, rows)
 
 
+def _enemy_kit():
+    rows = [(level, cost, f"{cost * outfit.ARMOR_SHARE:.0f}" if level else "--",
+             f"{cost * outfit.WEAPON_SHARE:.0f}" if level else "--")
+            for level, cost in outfit.KIT_BUDGET.items()]
+    head = ("Racial level", "Kit budget ($)", "Armor up to ($)", "Weapon up to ($)")
+    return ("## Enemy kit by level\n\nWhat a generated humanoid of each racial level is outfitted "
+            f"with (`outfit.py`); the rest of the budget buys up to {outfit.POTION_CAP} "
+            f"{outfit.POTION}s. Level 0 keeps the occupation's kit; beasts carry none.\n\n"
+            + _table(head, rows))
+
+
 def _items():
     rows = []
     for name, item in sorted(items.all_items().items()):
@@ -248,7 +260,7 @@ def _constants():
            "`progression.py`.\n\n" + _table(("Knob", "Value"), rows)
 
 
-_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _weapon_traits, _armor, _shields, _items, _base_materials,
+_SECTIONS = (_races, _abilities, _archetypes, _vocations, _occupations, _weapons, _weapon_traits, _armor, _shields, _enemy_kit, _items, _base_materials,
              _sizes, _alignments, _talent_trees, _factions, _constants)
 
 

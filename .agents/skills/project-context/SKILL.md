@@ -56,6 +56,7 @@ Each file in `references/` covers one completed initiative or standing rule.
 | `gartok-autowin.md` | **Auto-Win & Anti-Grind.** Monte Carlo simulation, 100% win / 0 casualties / 0 consumables gate, pre-battle ambush resolution on map & hunt. |
 | `gartok-balance-sim.md` | balance_sim.py: AI tournaments ranking races/occupations/combos (its old `economy_sim.py` half was replaced, see the next row). |
 | `gartok-economy-sim-v2.md` | **Economy sim v2** (scripts/economy_*.py): per-activity table, whole-guild sim on the real engine, exploit detector, Medic / Games / Claim, the day-30 milestone. |
+| `gartok-enemy-kit-by-level.md` | **Oct 2026.** Enemy kit by racial level: `wealth_by_level.py` (the career sim and what it found), `outfit.py`'s buying rules (Dex-capped armour, archetype weapons, potions, a light per band) and the author's calls. |
 
 ### Tools
 | File | What it covers |

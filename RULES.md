@@ -302,6 +302,18 @@ its generated enemies at combat 7 / work 6 (`constants.ENEMY_*_CAP`, `encounters
 encounter table may ask for more (the supply run's soldiers reach 8), and past the caps both tracks
 climb together.
 
+**A generated enemy carries the kit its level paid for** (`outfit.py`). Each racial level has a
+budget (`outfit.KIT_BUDGET`, $56 at 0 up to $5741 at 8: what a character who climbed there had to
+spend, measured by `scripts/wealth_by_level.py`). A humanoid of level 1 and up spends it: the armour
+that adds the most AC under its Dex cap (a body with Dex +3 stops at Studded Leather), a weapon by how
+it fights (Strength over Dexterity: a one-handed blade with a light, or a Broadsword; otherwise a
+bow with a quiver, or a one-handed finesse blade with a light), then up to 3 Minor Healing Potions,
+never loading itself past the overload. The occupation's weapon is dropped; level 0 keeps it, and
+beasts carry nothing. Every outfitted band brings a light to the field: if nobody holds one, a free
+hand takes a torch, else a two-handed fighter swaps to one hand (`outfit.light_the_band`, run by
+`Battle`). What it carries falls as loot by the usual rules (weapon and pack; armour only where the
+dead are stripped).
+
 **Combat XP — only from enemies at your level or above.** Downing a standing
 enemy is worth `(their combat level − yours) + 1`, and **nothing** if they are
 below you. L0 kills L0 → +1; L0 kills L10 → +11; L3 kills L0 → 0.

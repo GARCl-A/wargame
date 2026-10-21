@@ -25,7 +25,7 @@ import math
 import random
 from dataclasses import dataclass
 
-from . import constants, data, talents
+from . import constants, data, outfit, talents
 from .unit import Unit
 
 # The Wilds: a pack is 1..6 bodies, most often 3, tapering faster on the high
@@ -81,7 +81,8 @@ def clamp_level(mean_level):
 
 def build_enemy(mean_level, rng=random, race_pool=None):
     """A fresh `Unit("enemy")` pitched at `mean_level`: track levels split at
-    random to that mean, then random talent picks that respect each tree.
+    random to that mean, then random talent picks that respect each tree, then the kit
+    its racial level has paid for (`outfit`).
     `race_pool` (a list of race dicts, e.g. `data.BEAST_POOL`) draws the body
     from there instead of a fresh random humanoid -- None keeps the old
     behaviour (`Unit`'s own `data.roll_race()`)."""
@@ -102,6 +103,7 @@ def build_enemy(mean_level, rng=random, race_pool=None):
             if not options:
                 break
             u.choose_talent(track, rng.choice(options))
+    outfit.outfit(u, u.racial_level, rng)
     return u
 
 

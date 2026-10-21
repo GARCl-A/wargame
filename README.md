@@ -196,6 +196,7 @@ gartok/
   ground.py         ground objects (GroundObject) and neutral creatures (Creature)
   scenario.py       builds a battle's map: terrain, deployment, torches; win_check seam
   encounters.py     enemy packs scaled to a target mean level
+  outfit.py         a generated enemy's kit bought with its racial level's budget
   matchup.py        (node, arena Bout) -> the opponents + the scenario for one fight
   unit.py           Unit = the persistent character (init, save/load, generation), built from mixins:
                     unit_hunger / unit_levels / unit_edit / unit_derive / unit_loadout / unit_poison

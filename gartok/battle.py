@@ -11,7 +11,7 @@ roster and a rematch could reuse the same picks.
 
 import random
 
-from . import captives, data, intel, vision
+from . import captives, data, intel, outfit, vision
 from .board import (
     COLS,
     ROWS,
@@ -44,6 +44,8 @@ class Battle:
         self.aggressor = aggressor           # "player" | "enemy": who brought the fight (ai.py: it searches, the other side groups); None = neither
         self.wanted_alive = set()            # foes the player's side means to capture: its AI pulls its blows on them
         self.scenario = scenario or ArenaScenario()
+        for band in (enemy_units, allies, *(others or {}).values()):
+            outfit.light_the_band(band)
         self.player_units = ([Combatant(u, "player") for u in player_units]
                              + [Combatant(u, "player", ai_ally=True) for u in allies])
         self.enemy_units = [Combatant(u, "enemy") for u in enemy_units]

@@ -118,6 +118,8 @@ def build_patrols(level, rng=random):
             u.awareness_radius = PATROL_SIGHT
             if i == 0:
                 u.equipped_offhand = data.TORCH_ITEM
+            elif u.equipped_offhand == data.TORCH_ITEM:
+                u.equipped_offhand = None
             out.append(u)
     return out
 

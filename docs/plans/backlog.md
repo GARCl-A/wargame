@@ -30,8 +30,8 @@ screens. Each item's detail stays in its own entry below.
 
 **Phase 1 — content that moves balance** (measuring AI or stats before it is rework)
 1. ~~The racial track is thin~~ done 2026-10-20: 38 new nodes, every playable race and the Ox hold 3+.
-2. **Gold spent on equipment per level** (*Playtest notes 2026-10-12*): kit by level in `encounters.py`
-   and the Battlefield generators.
+2. ~~Gold spent on equipment per level~~ done 2026-10-20: `outfit.KIT_BUDGET` (from
+   `scripts/wealth_by_level.py`) outfits every humanoid `build_enemy` makes.
 3. ~~The Ogre's fortress~~ done 2026-10-20: the friendly fortress is the only shelf of Large weapons.
 
 **Phase 2 — AI** (one `scripts/combat_pairs.py` run before the phase and one after, not per item)
@@ -104,10 +104,6 @@ its functions are tabs inside.
   Order's errands, and it stays that way (author 2026-10-17). Later it becomes one more place of Ledger
   Hold work and missions: what an open skirmish pays, how often the front has a fight. The supply run's
   walked order with an ambush part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse.
-- **Gold spent on equipment per level (author 2026-10-15).** A table of how much kit a body of a given
-  level should carry (weapon, armour, consumables), for the enemy generators (`encounters.py`, the
-  Battlefield's soldiers and warband) and for future balance. Today a generated body carries its
-  occupation's weapon and item whatever its level.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there.
   Decided 2026-10-12 & 2026-10-19: postponed to design an innovative and fun excavation system with tools (Shovel/Pick), multi-step iterations, artifacts, money and lost lore.
 - **The Claim:** let the player build their own farm to stock food.

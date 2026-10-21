@@ -212,6 +212,22 @@ Properties and keywords carried by weapons.
 |---|---|---|---|
 | Dwarf Shield | +2 | 3 kg | 60 |
 
+## Enemy kit by level
+
+What a generated humanoid of each racial level is outfitted with (`outfit.py`); the rest of the budget buys up to 3 Minor Healing Potions. Level 0 keeps the occupation's kit; beasts carry none.
+
+| Racial level | Kit budget ($) | Armor up to ($) | Weapon up to ($) |
+|---|---|---|---|
+| 0 | 56 | -- | -- |
+| 1 | 67 | 34 | 23 |
+| 2 | 120 | 60 | 42 |
+| 3 | 216 | 108 | 76 |
+| 4 | 344 | 172 | 120 |
+| 5 | 1054 | 527 | 369 |
+| 6 | 1995 | 998 | 698 |
+| 7 | 2960 | 1480 | 1036 |
+| 8 | 5741 | 2870 | 2009 |
+
 ## Items
 
 Pack items and their weights. Weapons and armor weigh the same stowed as worn.

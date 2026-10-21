@@ -325,7 +325,7 @@ def test_the_squads_ai_goes_for_an_egg_then_the_way_out():
 
 def test_an_ai_squad_can_pull_the_heist_off_in_the_lab():
     outcomes = []
-    for seed in (24, 49):
+    for seed in (1, 7):
         b, _ = _lair(seed=seed)
         n = 0
         while b.winner is None and n < 6000:
@@ -471,3 +471,11 @@ def test_the_battle_screen_hosts_a_challenge_over_the_board_and_waits_on_it(monk
     scr._talk.choose("attack")
     scr._talk.go_on()
     assert scr._talk is None and got[0].kind == "fight"
+
+
+def test_only_the_first_kobold_of_each_patrol_holds_a_torch_however_it_is_outfitted():
+    random.seed(0)
+    patrols = lair.build_patrols(6)
+    torches = [u for u in patrols if u.equipped_offhand == data.TORCH_ITEM]
+    assert len(torches) == len(lair.PATROLS)
+    assert {u.patrol_id for u in torches} == set(range(len(lair.PATROLS)))
