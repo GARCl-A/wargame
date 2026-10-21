@@ -275,19 +275,28 @@ def load(path):
 _AGGRESSOR_OF_KIND = {"hunt": "enemy", "ambush": "enemy", "guard": "enemy", "raid": "enemy",
                       "gather_ambush": "enemy", "supply_ambush": "enemy"}
 
-REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "WildsScenario", "CustomScenario")
+FLAG_SCENARIOS = ("FlagScenario", "CustomFlagScenario")
+REPLAYABLE = ("Scenario", "ArenaScenario", "ErmosScenario", "WildsScenario", "CustomScenario") + FLAG_SCENARIOS
 
 
 def rebuild(rows):
     """A `Battle` standing at the opening of the fight in `rows`: the same characters (rebuilt from
     their saved dicts), the same board and cells. The turn order and the dice are fresh, so
-    each rebuild is one more way the same fight could have gone. Raises `ValueError` for a fight
-    with an objective of its own (flags, the Ruins), which the rebuild does not carry."""
+    each rebuild is one more way the same fight could have gone. A capture-the-flag fight comes back
+    with both flags already planted. Raises `ValueError` for a fight with another objective of its
+    own (the Ruins, a mission's), which the rebuild does not carry."""
     from .battle import Battle
-    from .scenario import ReplayScenario
+    from .scenario import ReplayFlagScenario, ReplayScenario
     from .unit import Unit
     start = rows[0]
-    if start["scenario"] not in REPLAYABLE:
+    if start["scenario"] in FLAG_SCENARIOS:
+        planted = _planted_flags(rows)
+        if planted is None:
+            raise ValueError("the log never planted both flags")
+        scenario = ReplayFlagScenario(start, planted)
+    elif start["scenario"] in REPLAYABLE:
+        scenario = ReplayScenario(start)
+    else:
         raise ValueError(f"cannot rebuild a {start['scenario']} fight")
     sides = {"player": [], "enemy": []}
     for static in start["units"]:
@@ -295,12 +304,21 @@ def rebuild(rows):
         unit.team = static["team"]
         sides.setdefault(static["team"], []).append(unit)
     player, enemy = sides.pop("player"), sides.pop("enemy")
-    battle = Battle(player, enemy, scenario=ReplayScenario(start), others=sides,
+    battle = Battle(player, enemy, scenario=scenario, others=sides,
                     daylight=start["daylight"], lethal=start["lethal"], arena=start["arena"],
                     aggressor=start.get("aggressor") or _AGGRESSOR_OF_KIND.get(start["meta"].get("kind")))
     if start.get("opening"):
         battle.open_with(**start["opening"])
     return battle
+
+
+def _planted_flags(rows):
+    """Both flags' cells the first time the log has them planted, or None."""
+    for row in rows:
+        flags = (row.get("state") or {}).get("world", {}).get("flags")
+        if flags and all(isinstance(flags.get(t), list) for t in ("player", "enemy")):
+            return flags
+    return None
 
 
 def frames(rows):

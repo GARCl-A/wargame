@@ -29,6 +29,16 @@ from .scenario import ArenaScenario, own_half
 
 __all__ = ["COLS", "ROWS", "Battle", "chebyshev"]
 
+FLAG_RUNNERS = 1        # a person sends one runner for the flag and keeps the rest home
+
+
+def tag_flag_runners(side, count=None):
+    """Tag the `count` (`FLAG_RUNNERS`) fastest of `side` as flag runners: the AI sends them for the
+    other side's flag while the rest hold and fight."""
+    count = FLAG_RUNNERS if count is None else count
+    for i, c in enumerate(sorted(side, key=lambda c: c.speed, reverse=True)):
+        c.ctf_runner = i < count
+
 
 class Battle:
     def __init__(self, player_units, enemy_units, scenario=None, daylight=True,
@@ -224,12 +234,8 @@ class Battle:
         self._recorded("skip_traps", trapper, None, self.trap_setup_queue.clear)
 
     def _assign_flag_runners(self):
-        """Tag the fastest half of the enemy side as flag runners -- the AI sends
-        them for the player's flag while the rest hold and fight."""
-        ranked = sorted(self.enemy_units, key=lambda c: c.speed, reverse=True)
-        cut = max(1, (len(ranked) + 1) // 2)      # ceil(half) -- a 3v3 sends 2 runners
-        for i, c in enumerate(ranked):
-            c.ctf_runner = i < cut
+        for side in (self.player_units, self.enemy_units):
+            tag_flag_runners(side)
 
     @property
     def can_withdraw(self):

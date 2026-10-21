@@ -35,9 +35,16 @@ screens. Each item's detail stays in its own entry below.
 3. ~~The Ogre's fortress~~ done 2026-10-20: the friendly fortress is the only shelf of Large weapons.
 
 **Phase 2 — AI** (one `scripts/combat_pairs.py` run before the phase and one after, not per item)
-4. **Teach the AI the newer actions** (*Large*): the four left (item 1's Lift Rider, Tail Sweep and
-   Pixie Dust shipped with their AI).
-5. **Combat AI benchmarking against player performance** (*Large*): retreat and CTF thresholds.
+4. ~~Teach the AI the newer actions~~ done 2026-10-20: Hex and Grasping Roots weighed in hit points
+   against the point's strike (`ai._hex_worth`, `_roots_worth`), the breather walks to next turn's cone
+   (`ai._breath_spot`); "a 2-point action after a walk" is the rule, not the AI, and every spell already
+   had its AI (2026-10-18).
+5. ~~Combat AI benchmarking against player performance~~ done 2026-10-20: flag fights replay
+   (`ReplayFlagScenario`), `combat_pairs.py --set` weighs a threshold head to head and counts the dead;
+   from the 40 logs: one flag runner a side, flee at 10% (neutral), no Defend with the last point.
+   Before -> after (40 trials, AI on both sides): Scrapper 66 -> 67%, champion 92%, Defend the Title 65%,
+   hunts 87%, ambushes 85%; capture the flag 99% and Ribbit Brothers 67% (person 5/6) now measured.
+   Dead a fight in ambushes 0.51 -> 0.58: the foes also fight on to 10% now.
 
 **Phase 3 — measure and economy** (one `scripts/economy_report.py` run at the end)
 6. **The economy report does not measure the work talents** (*Medium*).
@@ -230,8 +237,6 @@ pointed to, not repeated.
 
 ## Large
 
-- **Teach the AI the newer actions: what is left.**
-  Left: (1) a 2-point weapon action cannot follow a walk (two points a turn; Javelin Charge is 1 point after walk); (2) AI use of scrolls for all spell types; (3) Grasping Roots and Hex scored in expected-damage terms rather than rule of thumb; (4) Dragon Breath breather moving to position optimal cones.
 - **Weapon actions: tune the favoured cases after a playtest.** Rebalanced 2026-10-16 (author: two plain attacks
   win in general, the 2-point action wins in its favoured case): out of its case an action is one strike; in it
   the strike lands twice over plus a small edge (RULES.md *Weapon actions*, `favoured` on each action, the
@@ -250,9 +255,6 @@ pointed to, not repeated.
   Left: (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
 - **Prisoners.**
   Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on captive level/crime; (2) recruit contest; (3) forced manual labor in lumber/mine: captive eats group food (or starves), escape/revolt check fires daily after captive recovers to full HP. Left: UI tabs, escape check implementation, enemy capturing player units, and battlefield rescue.
-- **Combat AI benchmarking against player performance.**
-  Current benchmark across the 40 campaign logs (`combat_pairs.py`): Scrapper 77% (player 80%), Champion 90% (player 100%), Defend Title 95% (player 100%), hunts 92% (player 92%), road ambushes 72% AI vs 40% player.
-  Left: derive combat policy thresholds into `ai.py` (retreating when low HP, objective prioritization in CTF).
 - **Sim policies that find the opportunities themselves.**
   Offers list built (`scripts/economy_offers.py`); left: policy planner that enumerates and prices offers dynamically in copper and days.
 - **Finite stock and a target per item, in every shop.**

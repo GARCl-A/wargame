@@ -131,15 +131,26 @@ def test_standing_on_your_own_flag_does_nothing():
 # --------------------------------------------------------------------------- #
 # the flag-seeking AI                                                          #
 # --------------------------------------------------------------------------- #
-def test_fastest_enemies_are_tagged_as_flag_runners():
+def test_each_side_s_fastest_is_its_one_flag_runner():
     b = _ctf_battle(n_enemy=3)
     b.enemy_units[0].char.speed = 3
     b.enemy_units[1].char.speed = 9
     b.enemy_units[2].char.speed = 6
     b._assign_flag_runners()                                # re-tag after tweaking speed
-    runners = [c for c in b.enemy_units if c.ctf_runner]
-    assert len(runners) == 2                                # ceil(half) of a 3v3
-    assert b.enemy_units[1] in runners and b.enemy_units[0] not in runners  # the slow one holds
+    assert [c for c in b.enemy_units if c.ctf_runner] == [b.enemy_units[1]]
+    assert sum(c.ctf_runner for c in b.player_units) == 1   # the AI runs the player's side too
+
+
+def test_a_player_side_runner_goes_for_the_enemy_flag_and_brings_it_home():
+    b = _ctf_battle()
+    b.board.walls = set()
+    b.flags["player"] = (1, 5)
+    runner = b.player_units[0]
+    runner.ctf_runner = True
+    runner.pos = (5, 5)
+    assert ai._ctf_goal(b, runner) == b.flags["enemy"]
+    b.flag_carrier["enemy"] = runner
+    assert ai._ctf_goal(b, runner) == (1, 5)
 
 
 def test_a_runner_closes_on_the_player_flag():

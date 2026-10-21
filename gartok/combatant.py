@@ -546,6 +546,11 @@ class Combatant:
             return 0
         return min(1 + len(getattr(self.char, "_level_hp_rolls", ())), self.hp_max - 1)
 
+    def hex_ac_delta(self, deltas):
+        """What a Hex does to the AC: the Dexterity drop, as far as worn armour lets Dexterity count."""
+        dex, cap = self.char.mod_dexterity, (self.armor.max_dex if self.armor is not None else None)
+        return (min(dex + deltas["dexterity"], cap) - min(dex, cap)) if cap is not None else deltas["dexterity"]
+
     def hex(self, log):
         """Lay a Hex on this unit; a recast on a hexed unit only renews its length. The AC follows
         the Dexterity drop as far as worn armour lets Dexterity count; an even Constitution takes
@@ -555,10 +560,8 @@ class Combatant:
             old.held = False
             return
         deltas = self.hex_deltas()
-        dex, cap = self.char.mod_dexterity, (self.armor.max_dex if self.armor is not None else None)
-        ac_delta = (min(dex + deltas["dexterity"], cap) - min(dex, cap)) if cap is not None else deltas["dexterity"]
         lost = self.hex_hp_cost(deltas)
-        self.add_condition(Hexed(deltas, ac_delta, lost))
+        self.add_condition(Hexed(deltas, self.hex_ac_delta(deltas), lost))
         if lost:
             self.hp_max -= lost
             self.take_damage(lost, log)

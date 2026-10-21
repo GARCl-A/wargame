@@ -400,8 +400,9 @@ level-0 and a level-1 spell of its own.
     exists ($750), but no source hands it out yet.
   - **Grasping Roots** (level 0, **Nature only**) — a foe within 6 cells and in sight, `d20 + INT`
     vs AC: on a hit it walks **1 cell** at most until the end of its next turn (`conditions.Rooted`).
-    Recast, it refreshes. The AI roots a flag runner, or a melee foe still closing on a caster or
-    archer that would rather keep its distance.
+    Recast, it refreshes. The AI weighs it in hit points against what the point buys as a strike
+    (`ai._roots_worth`): a foe carrying a flag or a walk from one (as much as Maiming Strike's stop), or a
+    melee foe a walk from the AI's side held out of reach, the two blows it would have landed.
   - **Hex** (level 0, **Blood only**) — a foe within 6 cells and in sight, `d20 + INT` vs Mental
     Defense: on a hit, **-1 on each of its six attribute scores** until the end of its next turn
     (`conditions.Hexed`, never stacked: a recast refreshes it). A modifier is `(score - 10) // 2`, so
@@ -410,8 +411,9 @@ level-0 and a level-1 spell of its own.
     Defense through Wisdom). An even Constitution also costs one max HP **and** one current HP per hit
     die; when the hex wears off the max comes back and the current HP does not, so in practice it is
     damage equal to the level. Reading the foe's attributes (Assess) tells whether it is worth it: the
-    AI casts it only on a foe whose attributes its side has read, where three modifiers drop or the
-    Constitution loss finishes it.
+    AI casts it only on a foe whose attributes its side has read, when its worth in hit points (the
+    Constitution loss, the blows its side lands more often on the lower AC, the foe's own blows
+    landing less often and for less, `ai._hex_worth`) beats what the point buys as a strike.
   - **Spare the Dying** (level 0, **Faith only**) — touch: a **dying** ally in reach is stable, no
     check (Stabilize is a coin flip). A good AI casts it instead of Stabilize.
   - **Healing Touch** (level 1, **Faith only**) — touch: an ally in reach, or the caster, heals **1d6**,
@@ -798,7 +800,9 @@ deep, 1, 3 and 5 wide, toward one of the 8 directions (click a cell beside the b
 shows the cone). Walls stop it. **One attack roll** (`d20 + CON mod`) against the AC of every
 standing unit in it, **allies included**; each hit takes **2d6** (a natural 20 doubles the dice, a
 natural 1 sputters out). A kill is magic XP. The AI breathes only on a cone with at least 3 foes
-and fewer allies than foes.
+and fewer allies than foes; with none from where it stands at the start of its turn, it walks to a
+cell where one is (staying within a blow of its foe when it already was) and strikes or braces there,
+for next turn's breath.
 
 ### Ammo and improvised weapon 🟡
 
@@ -1108,6 +1112,9 @@ moral axis:
   a **lethal** fight — in the arena it just knocks out.
 - **Good:** **stabilizes** an adjacent downed ally before anything else and, when
   it flees, drags the wounded along.
+- **Neutral:** breaks and runs at **HP ≤ 10 %** with more than one foe in sight past its standing
+  allies (`ai.FLEE_HP`: a person fights on until nearly down, and running later did not lose the AI
+  fights or lives head to head, `scripts/combat_pairs.py --set`).
 - **Chaotic:** breaks and runs **sooner** (HP ≤ 50 %, and merely outnumbered).
   **Lawful:** flees only when **no ally is still up**.
 - **Pathfinding to flee:** when an AI unit breaks and runs, it moves toward the
@@ -1687,6 +1694,10 @@ the champion, and dethroning the champion unlocks The Games (`arena.py`'s
 stage 2 bouts): **Bloodsport** (win a stage 2 bout), **Flag Runner** (capture enemy
 flag), **Untouchable** (capture flag without KOs), and **The Ribbit Brothers** (beat
 the 3 Grippli boss team). Each bout is defined in `arena.py` and assembled in `matchup.build`.
+In a capture-the-flag bout the AI sends **one** runner, its side's fastest (`battle.FLAG_RUNNERS`,
+what a person does; one runner beat half the side head to head on the logged flag fights), the
+nearest of the rest stands on its own flag and the others fight; anyone carrying its side's flag
+away is everyone's target.
 
 **Faction #2 — The Bankers (`bankers`).** The coin-keepers of the City. Four deeds
 measure the guild's standing:

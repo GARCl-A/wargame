@@ -1,5 +1,6 @@
 """The magic track (talents.py / progression.py), composite races, and Dragon racial talents."""
 
+import random
 from unittest.mock import patch
 
 from gartok import ai, campaign, data, magic, progression, talents
@@ -227,3 +228,39 @@ def test_the_ai_holds_its_breath_when_its_own_side_would_take_as_much():
     for pos in ((8, 3), (8, 4), (8, 5)):
         _join(batt, "enemy", pos)
     assert not ai._try_breath(batt, dragon)
+
+
+def test_the_ai_walks_to_where_next_turn_s_cone_catches_three_foes_and_stays():
+    random.seed(0)
+    batt, dragon = _breath_battle([(9, 4), (9, 5), (9, 6)], breather_pos=(3, 5))
+    batt.ambient_light = True
+    assert ai._best_cone(batt, dragon) == (None, 0)
+    spot = ai._breath_spot(batt, dragon, ai._target(batt, dragon))
+    assert spot is not None
+    ai.take_turn(batt, dragon)
+    assert dragon.pos == spot
+    dragon.ap = 2                             # next turn
+    assert ai._best_cone(batt, dragon)[1] == 3
+
+
+def test_the_ai_does_not_reposition_with_a_cone_already_there_or_without_the_talent():
+    batt, dragon = _breath_battle([(6, 5), (7, 4), (7, 6)])
+    assert ai._breath_spot(batt, dragon, batt.player_units[0]) is None
+    batt = Battle([Unit("player") for _ in range(3)], [Unit("enemy")])
+    batt.board.walls.clear()
+    for u, pos in zip(batt.player_units, ((9, 4), (9, 5), (9, 6))):
+        u.pos = pos
+    plain = batt.enemy_units[0]
+    plain.pos, plain.ap = (3, 5), 2
+    assert ai._breath_spot(batt, plain, batt.player_units[1]) is None
+
+
+def test_a_breather_in_reach_of_its_foe_repositions_only_within_a_blow_of_it():
+    random.seed(0)
+    batt, dragon = _breath_battle([(6, 5), (7, 7), (8, 7)])
+    target = batt.player_units[0]
+    spot = ai._breath_spot(batt, dragon, target)
+    assert spot is not None
+    dragon.pos = spot
+    assert batt.units_distance(dragon, target) <= dragon.attack_range
+    assert ai._best_cone(batt, dragon)[1] == 3

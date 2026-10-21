@@ -69,18 +69,27 @@ def test_grasping_roots_rolls_int_against_ac_and_reaches_six():
     assert not roots.can(b, me, foe)
 
 
-def test_the_ai_roots_a_melee_foe_closing_on_an_archer_or_a_flag_runner():
+def test_the_ai_roots_a_melee_foe_a_walk_away_when_holding_it_beats_the_shot():
     b, me, foe = _duel("nature", "grasping_roots")
     me.equip_weapon("Shortbow")
     me.ammo = 5
-    foe.equip_weapon("Axe")
+    _scores(foe, strength=18)
+    foe.equip_weapon("Greataxe")
     assert ai._hex_or_roots(b, me, foe).id == "cast_grasping_roots"
-    foe.pos = (6, 5)                          # already on it: shoot instead
+    foe.pos = (6, 5)                          # already on it: roots hold nothing
     assert ai._hex_or_roots(b, me, foe) is None
-    me.equip_weapon("Axe")
-    foe.pos = (8, 5)
+    foe.pos = (5 + 2 + foe.speed + 1, 5)      # no walk brings it in reach this turn anyway
     assert ai._hex_or_roots(b, me, foe) is None
-    foe.ctf_runner = True
+
+
+def test_the_ai_shoots_a_weak_foe_instead_of_rooting_it_but_always_roots_a_flag_runner():
+    b, me, foe = _duel("nature", "grasping_roots")
+    me.equip_weapon("Shortbow")
+    me.ammo = 5
+    _scores(foe, strength=6)
+    foe.equip_weapon("Dagger")
+    assert ai._hex_or_roots(b, me, foe) is None
+    b.flags, b.flag_carrier = {"player": None, "enemy": (11, 5)}, {"player": None, "enemy": None}  # a walk from it
     assert ai._hex_or_roots(b, me, foe).id == "cast_grasping_roots"
 
 
@@ -137,15 +146,29 @@ def test_hex_rolls_int_against_mental_defense_and_never_stacks():
     assert foe.mod_strength == foe.char.mod_strength - 1
 
 
-def test_the_ai_hexes_only_a_foe_it_has_read_and_where_three_scores_drop():
+def test_the_ai_hexes_a_read_foe_when_the_hex_beats_its_own_blow():
     b, me, foe = _duel("blood", "hex")
-    _scores(foe, strength=14, dexterity=12, constitution=11, intelligence=10, wisdom=13, charisma=9)
+    _scores(me, intelligence=16)
+    me.drop_weapon()
+    _scores(foe, strength=16, dexterity=12, constitution=11, intelligence=10, wisdom=10, charisma=9)
+    foe.equip_weapon("Greataxe")
     b.intel.margin[me.team][foe] = -10
     assert ai._hex_or_roots(b, me, foe) is None            # attributes unread: Assess first
     b.intel.margin[me.team][foe] = 20
     assert ai._hex_or_roots(b, me, foe).id == "cast_hex"
-    _scores(foe, strength=14, dexterity=13, constitution=11, intelligence=11, wisdom=13, charisma=9)
+    _scores(foe, strength=17, dexterity=13, constitution=11, intelligence=11, wisdom=11, charisma=9)
+    assert ai._hex_or_roots(b, me, foe) is None            # odd scores: nothing gives
+
+
+def test_the_ai_swings_rather_than_hex_unless_an_even_constitution_finishes_the_foe():
+    b, me, foe = _duel("blood", "hex")
+    _scores(me, strength=16, intelligence=12)
+    me.equip_weapon("Greataxe")
+    _scores(foe, strength=12, dexterity=12, constitution=12, intelligence=10, wisdom=10, charisma=10)
+    b.intel.margin[me.team][foe] = 20
     assert ai._hex_or_roots(b, me, foe) is None
+    foe.hp = 1
+    assert ai._hex_or_roots(b, me, foe).id == "cast_hex"
 
 
 # --- Spare the Dying and Healing Touch ------------------------------------------------ #

@@ -102,31 +102,106 @@ def _pick_attack(battle, unit, target):
     return opts[0]
 
 
-def _hex_bites(battle, unit, target):
-    """How many of the target's modifiers a Hex would drop, as far as the unit's side has read its
-    attributes (None when it has not: Assess first), and whether its even CON would down it."""
+D20_STEP = 0.05            # one point on a d20 roll
+
+
+def _spell_odds(battle, unit, target, spell):
+    """Chance a hostile spell lands on `target`: `d20 + INT` against the defence it reads, the AC as
+    `_reckoned_ac` has it, the Mental Defense once read (else a bare 10)."""
+    if getattr(spell, "against", "ac") == "ac":
+        defence = _reckoned_ac(battle, unit, target)
+    else:
+        defence = target.mental_defense if intel.knows(battle, unit.team, target, "md") else 10
+    return max(0.05, min(0.95, (21 - defence + spell.spell_to_hit(unit)) / 20))
+
+
+def _other_side(team):
+    return "enemy" if team == "player" else "player"
+
+
+def _runs_flag(battle, target):
+    """`target` carries a flag, or stands a walk from the flag of the other side (it can scoop it
+    up this turn): what the foes see of a runner, not the runner tag of its own side."""
+    if not battle.is_ctf:
+        return False
+    if target in battle.flag_carrier.values():
+        return True
+    theirs = _other_side(target.team)
+    flag = (battle.flags or {}).get(theirs)
+    return flag is not None and battle.flag_carrier.get(theirs) is None and min(
+        grid_distance(c, flag) for c in battle.cells_of(target)) <= target.speed
+
+
+def _hex_worth(battle, unit, target):
+    """The hit points a Hex on `target` is expected to be worth through the foe's next turn, or None
+    while the unit's side has not read its attributes (Assess first): what an even Constitution
+    takes (and the foe's next blows, when that downs it), the blows the unit's side lands more often
+    on the lower AC, and the foe's own two blows landing less often and for less."""
     if not intel.knows(battle, unit.team, target, "attrs"):
-        return None, False
+        return None
     deltas = target.hex_deltas()
-    return sum(1 for d in deltas.values() if d), target.hex_hp_cost(deltas) >= target.hp > 0
+    lost = target.hex_hp_cost(deltas)
+    worth = float(min(lost, max(target.hp, 0)))
+    if lost >= target.hp > 0:
+        worth += 2 * _blow(target)
+    strikers = [a for a in battle.units if a.alive and a.team == unit.team
+                and battle.units_distance(a, target) <= a.attack_range + a.speed]
+    worth += -target.hex_ac_delta(deltas) * D20_STEP * sum(2 * _blow(a) for a in strikers)
+    to_hit = -(deltas["dexterity"] if target.ranged else deltas["strength"])
+    damage = 0 if target.ranged else -deltas["strength"]
+    worth += 2 * (to_hit * D20_STEP * _blow(target) + SHOVE_HIT_ODDS * damage)
+    return _spell_odds(battle, unit, target, actions.CastSpellAction("hex")) * worth
+
+
+def _roots_worth(battle, unit, target):
+    """The hit points Grasping Roots on `target` is expected to be worth: a flag runner held short
+    of where it is going (as much as Maiming Strike's stop), or a melee foe a walk from the unit's
+    side held out of reach for its next turn, the two blows it would have landed."""
+    if _runs_flag(battle, target):
+        held = 2 * _blow(unit)
+    elif target.ranged:
+        return 0.0
+    else:
+        mine = [a for a in battle.units if a.alive and a.team == unit.team]
+        near = min(mine, key=lambda a: battle.units_distance(a, target))
+        gap = battle.units_distance(near, target)
+        if not target.attack_range + 1 < gap <= target.attack_range + target.speed:
+            return 0.0
+        held = 2 * _hit_odds(battle, target, near) * _blow(target)
+    return _spell_odds(battle, unit, target, actions.CastSpellAction("grasping_roots")) * held
+
+
+def _point_worth(battle, unit, target):
+    """What one point is worth as a plain strike on `target`: a swing or shot it can make now or
+    after a walk this turn, else a Magic Missile, else nothing."""
+    distance = battle.units_distance(unit, target)
+    if actions.ATTACK.can(battle, unit, target) or (
+            unit.ap >= 2 and distance <= unit.speed + unit.attack_range and not unit.ranged):
+        return _strike_worth(battle, unit, target)
+    mm = actions.CastSpellAction("magic_missile")
+    if "magic_missile" in getattr(unit, "spells_known", []) and mm.can(battle, unit, target):
+        return _spell_odds(battle, unit, target, mm) * (2.5 + unit.talent_bonus("spell_damage"))
+    return 0.0
+
+
+HOLDING_SPELLS = (("hex", "hexed", _hex_worth), ("grasping_roots", "rooted", _roots_worth))
 
 
 def _hex_or_roots(battle, unit, target):
-    """Hex when it drops three modifiers or more (or an even CON would finish the foe); Grasping
-    Roots on a flag runner, or on a melee foe still closing on a unit that would rather stay off."""
+    """Hex or Grasping Roots on `target`, whichever is expected to be worth more than the point
+    buys as a strike (`_point_worth`), or None."""
     known = getattr(unit, "spells_known", [])
-    if "hex" in known and not target.has_condition("hexed"):
-        hex_spell = actions.CastSpellAction("hex")
-        bites, kills = _hex_bites(battle, unit, target)
-        if hex_spell.can(battle, unit, target) and bites is not None and (bites >= 3 or kills):
-            return hex_spell
-    if "grasping_roots" in known and not target.has_condition("rooted"):
-        roots = actions.CastSpellAction("grasping_roots")
-        keeps_off = unit.ranged or ("magic_missile" in known and _hand_die(unit) < 2.5)
-        closing = not target.ranged and battle.units_distance(unit, target) >= 2
-        if roots.can(battle, unit, target) and (target.ctf_runner or (keeps_off and closing)):
-            return roots
-    return None
+    best, best_worth = None, _point_worth(battle, unit, target)
+    for spell_id, condition, worth_of in HOLDING_SPELLS:
+        if spell_id not in known or target.has_condition(condition):
+            continue
+        spell = actions.CastSpellAction(spell_id)
+        if not spell.can(battle, unit, target):
+            continue
+        worth = worth_of(battle, unit, target)
+        if worth is not None and worth > best_worth:
+            best, best_worth = spell, worth
+    return best
 
 
 def _try_healing_touch(battle, unit):
@@ -341,7 +416,7 @@ def _should_grab(battle, unit, target):
     has_grip = getattr(char, "has_talent", lambda _: False)("death_grip")
     if (has_bite or has_grip) and target.hp > 3:
         return True
-    if getattr(target, "ctf_runner", False) or getattr(target, "fleeing", False):
+    if _runs_flag(battle, target) or getattr(target, "fleeing", False):
         return True
     return False
 
@@ -885,7 +960,7 @@ def _try_assess(battle, unit):
 
 def _ctf_goal(battle, unit):
     """The cell a capture-the-flag runner or defender is racing for:
-    - a runner heads for the opposing flag, then races it home to score;
+    - a runner heads for the other side's flag, then races it home to score;
     - a non-runner defends their own side's flag by standing directly on its square.
     None before both flags are down or if an ally already guards the home flag."""
     if not battle.is_ctf:
@@ -893,9 +968,12 @@ def _ctf_goal(battle, unit):
     if battle.flags["player"] is None or battle.flags["enemy"] is None:
         return None
     if getattr(unit, "ctf_runner", False):
-        if battle.flag_carrier["player"] is unit:
-            return battle.flags["enemy"]          # got it -- now get it home
-        return battle.flag_pos("player")          # not carrying yet: go get it
+        theirs = _other_side(unit.team)
+        if battle.flag_carrier[theirs] is unit:
+            return battle.flags[unit.team]        # got it -- now get it home
+        if battle.flag_carrier[theirs] is None:
+            return battle.flag_pos(theirs)        # not carrying yet: go get it
+        return None                               # a mate has it: fight on
 
     # Non-runner / defender:
     # If the team's flag is currently stolen, pursue the carrier (handled by _target).
@@ -922,6 +1000,11 @@ def _mindless(unit):
     return getattr(unit, "raised", False) or unit.race.get("kind") == "undead"
 
 
+FLEE_HP = 0.1               # share of its HP at which a unit thinks of running (a person runs near 0)
+FLEE_HP_CHAOTIC = 0.5
+FLEE_OUTNUMBERED = 1        # foes in sight past the allies standing before it runs (chaotic: 0)
+
+
 def _should_flee(battle, unit):
     """Whether the unit breaks and runs this turn. Never from a non-lethal bout
     (the arena -- nobody dies). Chaotic units break sooner and while less outnumbered;
@@ -936,8 +1019,8 @@ def _should_flee(battle, unit):
         return False
     if order > 0 and allies:                 # lawful: hold the line
         return False
-    hurt = unit.hp <= unit.hp_max * (0.5 if order < 0 else 0.34)
-    outmatched = len(foes) > len(allies) + (0 if order < 0 else 1)
+    hurt = unit.hp <= unit.hp_max * (FLEE_HP_CHAOTIC if order < 0 else FLEE_HP)
+    outmatched = len(foes) > len(allies) + (0 if order < 0 else FLEE_OUTNUMBERED)
     return hurt and outmatched
 
 
@@ -1035,22 +1118,53 @@ def _skitter(battle, unit):
 BREATH_MIN_FOES = 3
 
 
-def _try_breath(battle, unit):
-    """Dragon Breath, only when a cone catches at least `BREATH_MIN_FOES` foes and fewer
-    allies than foes. Returns True if it breathed."""
+def _best_cone(battle, unit):
+    """`(cell, foes)` of the cone from where the unit stands that catches the most foes, at least
+    `BREATH_MIN_FOES` and more foes than allies, or `(None, 0)`."""
     breath = actions.DRAGON_BREATH
-    if not breath.available(battle, unit):
-        return False
     best, best_foes = None, 0
     for cell in breath.highlight_cells(battle, unit):
         caught = breath.caught(battle, unit, cell)
         foes = sum(1 for u in caught if u.team != unit.team)
         if foes >= BREATH_MIN_FOES and foes > len(caught) - foes and foes > best_foes:
             best, best_foes = cell, foes
+    return best, best_foes
+
+
+def _try_breath(battle, unit):
+    """Dragon Breath, only when a cone catches at least `BREATH_MIN_FOES` foes and fewer
+    allies than foes. Returns True if it breathed."""
+    if not actions.DRAGON_BREATH.available(battle, unit):
+        return False
+    best, _ = _best_cone(battle, unit)
     if best is None:
         return False
-    breath.execute(battle, unit, best)
+    actions.DRAGON_BREATH.execute(battle, unit, best)
     return True
+
+
+def _breath_spot(battle, unit, target):
+    """At the start of its turn, with no cone worth breathing from here: the cell it can walk to
+    from which one is (the most foes, then the shortest walk), for next turn's breath, kept within
+    a blow of `target` when it already stands within one. None when there is none."""
+    breath = actions.DRAGON_BREATH
+    if unit.ap < breath.cost or not breath.applicable(battle, unit)[0] or _best_cone(battle, unit)[0]:
+        return None
+    in_reach = battle.units_distance(unit, target) <= unit.attack_range
+    home, best = unit.pos, None
+    for pos, cost in battle.reachable(unit).items():
+        if pos == home or (battle.fire and any(c in battle.fire for c in cells(pos, unit.footprint))):
+            continue
+        unit.pos = pos
+        try:
+            if in_reach and battle.units_distance(unit, target) > unit.attack_range:
+                continue
+            foes = _best_cone(battle, unit)[1]
+        finally:
+            unit.pos = home
+        if foes and (best is None or (-foes, cost) < best[0]):
+            best = ((-foes, cost), pos)
+    return best[1] if best else None
 
 
 SHOVE_HIT_ODDS = 0.6        # how often the AI reckons a swing lands, to weigh a shove against it
@@ -1482,6 +1596,17 @@ def take_turn(battle, unit):
         if _try_breath(battle, unit):
             continue
 
+        spot = _breath_spot(battle, unit, target)
+        if spot is not None:                  # there for next turn's breath: strike or brace, not walk off
+            actions.MOVE.execute(battle, unit, spot)
+            unit.walking = False
+            atk = _pick_attack(battle, unit, target)
+            if atk is not None:
+                atk.execute(battle, unit, target)
+            elif actions.DEFEND.available(battle, unit):
+                actions.DEFEND.execute(battle, unit)
+            break
+
         shoved_foe = _try_shove(battle, unit)
         if shoved_foe is not None:
             if unit.ap > 0 and unit.alive:
@@ -1521,13 +1646,9 @@ def take_turn(battle, unit):
             if unit.ap > 0 and unit.alive:
                 if _try_escape_grapple(battle, unit):
                     continue
-                if (unit.hp <= unit.hp_max * 0.35 and battle.units_distance(unit, target) <= 1
-                        and actions.DEFEND.available(battle, unit)):
-                    actions.DEFEND.execute(battle, unit)
-                else:
-                    second_atk = _pick_attack(battle, unit, target)
-                    if second_atk is not None:
-                        second_atk.execute(battle, unit, target)
+                second_atk = _pick_attack(battle, unit, target)
+                if second_atk is not None:
+                    second_atk.execute(battle, unit, target)
             continue
 
         if _spin_web(battle, unit, target):

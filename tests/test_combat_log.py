@@ -458,21 +458,44 @@ def test_a_log_rebuilds_into_the_same_squads_on_the_same_cells(tmp_path):
     assert combat_pairs.drift(rows) == []
 
 
-def test_a_fight_with_an_objective_of_its_own_is_not_rebuilt(tmp_path):
+def test_a_flag_fight_rebuilds_with_both_flags_where_the_log_planted_them(tmp_path):
     battle, meta = combat_lab.build("ctf", 2, 3, seed=5)
     log = combat_log.CombatLog(str(tmp_path / "ctf.jsonl"), meta, HUMAN_AI)
     battle.record_to(log)
     log.end(battle)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):                         # the player's flag never went down
         combat_log.rebuild(combat_log.load(log.path))
+    battle, meta = combat_lab.build("ctf", 2, 3, seed=5)
+    log = combat_log.CombatLog(str(tmp_path / "planted.jsonl"), meta, HUMAN_AI)
+    battle.record_to(log)
+    battle.plant_flag(next(c for c in ((x, y) for x in range(4) for y in range(battle.board.rows))
+                           if battle.can_plant_flag(c)))
+    log.end(battle)
+    rebuilt = combat_log.rebuild(combat_log.load(log.path))
+    assert rebuilt.is_ctf and rebuilt.flags == battle.flags
+    assert sum(u.ctf_runner for u in rebuilt.player_units) == sum(u.ctf_runner for u in rebuilt.enemy_units) == 1
 
 
 def test_the_pairs_script_gives_the_same_ai_rate_every_run(tmp_path):
     _lab_log(tmp_path, "mine.jsonl", HUMAN_AI)
     rows = combat_log.load(str(tmp_path / "mine.jsonl"))
     first = combat_pairs.ai_win_rate(lambda: combat_log.rebuild(rows), 3)
-    assert 0 <= first <= 1
+    assert 0 <= first[0] <= 1 and first[1] >= 0
     assert combat_pairs.ai_win_rate(lambda: combat_log.rebuild(rows), 3) == first
+
+
+def test_a_threshold_set_for_the_player_s_side_holds_only_on_its_turns():
+    seen = []
+    real, flee_hp = ai.take_turn, ai.FLEE_HP
+    ai.take_turn = lambda battle, unit: seen.append((unit.team, ai.FLEE_HP))
+    try:
+        turn = combat_pairs._turn({"FLEE_HP": 0.05})
+        battle, _ = combat_lab.build("scrapper", 0, 1, seed=5)
+        turn(battle, battle.player_units[0])
+        turn(battle, battle.enemy_units[0])
+    finally:
+        ai.take_turn = real
+    assert seen == [("player", 0.05), ("enemy", flee_hp)] and ai.FLEE_HP == flee_hp
 
 
 def test_the_lab_has_a_tutorial_card_with_copy():

@@ -287,6 +287,18 @@ class ReplayScenario(Scenario):
                 battle.ground.append(GroundObject.weapon((x, y), name))
 
 
+class ReplayFlagScenario(_FlagObjective, ReplayScenario):
+    """A capture-the-flag fight put back at its opening: the replay's board and cells, and both
+    flags where the log has them once the player's was planted (`planted`)."""
+
+    def __init__(self, start, planted):
+        super().__init__(start)
+        self.planted = {team: tuple(cell) for team, cell in planted.items()}
+
+    def auto_place_enemy_flag(self, battle, rng=random):
+        battle.flags.update(self.planted)
+
+
 class CustomScenario(Scenario):
     """A battle built from a map laid out in the editor (`map_lib`): fixed walls,
     fixed torches, and the deployment cells the author painted -- a player zone, a
