@@ -177,7 +177,9 @@ class BattleScreen(BattleDrawMixin, Screen):
             self._chord_ms -= dt
             if self._chord_ms <= 0:
                 self._step_with_arrows()
-        self.fx.detect(b, self.view.tile, self._unit_rect, self._cell_rect)
+        visible = getattr(self, "_visible", None)
+        self.fx.detect(b, self.view.tile, self._unit_rect, self._cell_rect,
+                       seen=None if visible is None else visible.__contains__)
         if (b.winner is None and self._pan is None and self.view.rect.w > 2
                 and self._centered_on is not b.active):
             self._centered_on = b.active

@@ -72,7 +72,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
 | `board_render.py` | the battle board: terrain, props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
-| `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
+| `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, log well, and the crit banner across the board |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
 | `medic_panel.py` | the Apothecary's Medic tab: party treatment rows, bill breakdown, quick treat / admit actions |
 | `vocation_panel.py` | the founding vocation picker: six vocation cards with race icons and guild perk |

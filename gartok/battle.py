@@ -80,9 +80,15 @@ class Battle:
         -- battle state stays presentation-agnostic, the screen picks the colour."""
         self.fx_events.append((pos, text, kind))
 
+    def cue(self, kind, pos):
+        """Queue a moment the screen marks on the board and in sound: "crit" or "miss" at `pos`.
+        Hits and falls need no cue, the screen reads them off the HP."""
+        self.cues.append((kind, pos))
+
     def setup(self):
         self.log_lines.clear()
         self.fx_events = []
+        self.cues = []
         self.ambient_light = False           # scenario.build sets the real value
         self.ground = []                     # GroundObject list (dropped weapons, torches)
         self.units = list(self.player_units) + list(self.enemy_units) + list(self.other_units)

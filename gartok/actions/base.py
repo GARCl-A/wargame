@@ -332,9 +332,12 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
     if nat == 1:
         battle.log(desc + "  -> critical miss.")
         battle.fx(target.pos, "Crit Miss!", "faint")
+        battle.cue("miss", target.pos)
         return "miss"
     if crit or total >= ac:
         battle.fx(target.pos, fx_text, "ok" if not crit else "crit")
+        if crit:
+            battle.cue("crit", target.pos)
         if target.dying:
             if pulled:
                 battle.log(desc + "  -> the blow is pulled; the fallen is spared.")
@@ -372,4 +375,5 @@ def _resolve_hit(battle, attacker, target, nat, bonus, detail, prefix, thrown=Fa
         return "crit" if crit else "hit"
     battle.log(desc + "  -> misses.")
     battle.fx(target.pos, fx_text, "faint")
+    battle.cue("miss", target.pos)
     return "miss"

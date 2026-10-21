@@ -15,6 +15,7 @@ PATH = os.path.join(os.path.dirname(persist.SAVE_DIR), "settings.json")
 SPEC = {
     "chord_ms": ("ARROW CHORD", (0, 20, 40, 70, 100), 40),
     "record_play": ("PLAY RECORDER", ("OFF", "ON"), "OFF"),
+    "volume": ("VOLUME", (0, 25, 50, 75, 100), 75),
 }
 
 _values = None
@@ -56,7 +57,11 @@ def cycle(key):
 def label(key):
     name, _, _ = SPEC[key]
     value = get(key)
-    return f"{name}: {value} MS" if key.endswith("_ms") else f"{name}: {value}"
+    if key.endswith("_ms"):
+        return f"{name}: {value} MS"
+    if key == "volume":
+        return f"{name}: {value}%" if value else f"{name}: OFF"
+    return f"{name}: {value}"
 
 
 def reload():

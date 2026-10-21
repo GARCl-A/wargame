@@ -3,6 +3,7 @@ from before to after, and a way straight to the talent picks."""
 
 import pygame
 
+from . import sound
 from .screen import Screen
 from .ui.aftermath_panel import draw_level_up
 from .ui.tokens import T
@@ -25,6 +26,7 @@ class LevelUpScreen(Screen):
         self.elapsed = 0
         self._buttons = []
         self._hot = False
+        sound.play("level_up")
 
     def tutorial_key(self):
         return "level_up"

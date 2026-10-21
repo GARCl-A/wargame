@@ -308,7 +308,8 @@ gartok/
                     portraits under assets/portraits/; `RACE_ICON` and `OCCUPATION_ICON`
                     name each race's and occupation's glyph (`map_screen.NODE_ICON` the nodes')
   lighting.py       LightRenderer: the darkness layer + radial light holes
-  battle_fx.py      combat juice: floating numbers, hit/lunge reactions
+  battle_fx.py      combat juice: floating numbers, hit/lunge reactions, hit flash, crit banner, combat sounds
+  sound.py          sound cues (assets/sounds/, Kenney CC0): silent until the app enables it, `volume` setting
   dragselect.py     shared press/drag/drop plumbing for the item screens
   packbox.py        shared drag bookkeeping for the gear and group screens
   store_column.py   shared wagon/animal store column for group, market and stash screens

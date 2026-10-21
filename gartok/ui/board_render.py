@@ -23,7 +23,8 @@ Data shapes::
              "flag": "player" | "enemy" | None,   # whose flag it carries
              "focus": None | "inspect" | "armed",
              "downed": bool, "dying": str | None,  # "2/3" death clock
-             "broken": bool}
+             "broken": bool,
+             "flash": float}                      # optional: 0..1, a hit just taken
 """
 
 import pygame
@@ -354,9 +355,18 @@ def draw_unit(surf, F, r, tok):
         _body(surf, F, r, tok)
     else:
         _standing(surf, F, r, tok)
+    if tok.get("flash"):
+        _flash(surf, r, tok["flash"])
     if tok.get("focus"):
         armed = tok["focus"] == "armed"
         pygame.draw.rect(surf, DANGER if armed else T.TX, r, 2 if armed else 1, border_radius=4)
+
+
+def _flash(surf, r, amount):
+    """A red burst over the token the instant it is struck, fading as `amount` drops."""
+    veil = pygame.Surface(r.size, pygame.SRCALPHA)
+    pygame.draw.circle(veil, (*DANGER, round(190 * amount)), (r.w // 2, r.h // 2), r.w // 2 - 4)
+    surf.blit(veil, r.topleft)
 
 
 def _body(surf, F, r, tok):

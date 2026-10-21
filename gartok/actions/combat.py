@@ -712,8 +712,11 @@ class DragonBreath(Action):
             if nat != 20 and total < ac:
                 battle.log(f"  {u.name} (AC {shown}) -> misses.")
                 battle.fx(u.pos, f"{total} vs AC {shown}", "faint")
+                battle.cue("miss", u.pos)
                 continue
             battle.fx(u.pos, f"{total} vs AC {shown}", "crit" if nat == 20 else "ok")
+            if nat == 20:
+                battle.cue("crit", u.pos)
             dice = self.DICE[0] * (2 if nat == 20 else 1)
             battle.log(f"  {u.name} (AC {shown}) -> " + ("CRITICAL HIT!" if nat == 20 else "hit."))
             was_up = u.alive
@@ -892,8 +895,11 @@ class ZombieBite(Action):
         if not hit:
             battle.log(f"{prefix}: d20({nat}) {detail} = {total} vs AC {ac} -> miss.")
             battle.fx(target.pos, "miss", "miss")
+            battle.cue("miss", target.pos)
             return
         res = "crit" if crit else "hit"
+        if crit:
+            battle.cue("crit", target.pos)
         dice = roll(2, 8) if crit else roll(1, 8)
         char = getattr(actor, "char", actor)
         dmg = max(1, dice + actor.mod_strength + getattr(char, "talent_bonus", lambda _: 0)("melee_damage"))

@@ -40,7 +40,7 @@ from .board_style import (
     WARN,
     aim_color,
 )
-from .primitives import box, pips, scrollbar, text, tracked, wrap
+from .primitives import box, pips, scrollbar, spaced, text, tracked, wrap
 from .tokens import T
 
 TITLE_H = 30
@@ -341,6 +341,22 @@ def draw_log(surf, F, rect, lines, scrolled):
         text(surf, F["micro"], f"v {scrolled} more below (scroll to follow)",
              (rect.right - T.S, rect.bottom - T.S // 2 - 14), INK_FAINT, right=True)
     return export
+
+
+def draw_crit_banner(surf, F, board, title, alpha):
+    """A band across the upper third of the `board` rect with `title` in big spaced caps,
+    drawn at `alpha` (0..1) so the caller fades it in and out."""
+    if alpha <= 0:
+        return
+    h = T.S * 7
+    band = pygame.Rect(board.x, board.y + board.h * 3 // 10 - h // 2, board.w, h)
+    layer = pygame.Surface(band.size, pygame.SRCALPHA)
+    layer.fill((*T.TABLE, 210))
+    pygame.draw.line(layer, WARN, (0, 0), (band.w, 0), 2)
+    pygame.draw.line(layer, WARN, (0, band.h - 2), (band.w, band.h - 2), 2)
+    spaced(layer, F["titleb"], title, (band.w // 2, band.h // 2), WARN, spacing=4, anchor="center")
+    layer.set_alpha(round(255 * alpha))
+    surf.blit(layer, band.topleft)
 
 
 def draw_winner(surf, F, center, title):

@@ -50,6 +50,7 @@ from . import (
     persist,
     recorder,
     settings,
+    sound,
     tutorial_card,
     vocations,
     wildfire,
@@ -90,6 +91,13 @@ TUTORIAL_DEBOUNCE_MS = 300      # clicks swallowed right after a tutorial card c
 SCENE_DEBOUNCE_MS = 250         # clicks swallowed right after landing back on the map
 
 
+def _pointer_hot():
+    try:
+        return pygame.mouse.get_cursor() == pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_HAND)
+    except pygame.error:
+        return False
+
+
 class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
     _left_outside = None    # (group, node, guarded): a wagon waiting outside the node the party entered
     _skirmish = None        # the Faith Order's errand (a Mission) the Battlefield fight in flight decides
@@ -97,6 +105,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
 
     def __init__(self):
         pygame.init()
+        sound.enable()
         pygame.display.set_caption("GARTOK Tactical")
         self.window = pygame.display.set_mode(START_SIZE, pygame.RESIZABLE | pygame.WINDOWMAXIMIZED)
         self.clock = pygame.time.Clock()
@@ -728,6 +737,17 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
             return True
         return event.type in mouse or event.type == pygame.KEYDOWN
 
+    def _dispatch(self, event):
+        """Hand `event` to the scene with its sounds: a click on something clickable (the hand
+        cursor is up) clicks, and coins chink when the guild's money moved."""
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and _pointer_hot():
+            sound.play("click")
+        guild = self.guild
+        before = guild.money if guild is not None else None
+        self.scene.handle_event(event)
+        if guild is not None and self.guild is guild and guild.money != before:
+            sound.play("coins")
+
     def run(self):
         self._running = True
         while self._running:
@@ -747,7 +767,7 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
                       and pygame.time.get_ticks() < self._scene_block_until):
                     pass
                 else:
-                    self.scene.handle_event(event)
+                    self._dispatch(event)
 
             self.scene.update(dt)
             self.window.fill(T.TABLE)

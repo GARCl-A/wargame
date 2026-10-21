@@ -19,15 +19,12 @@ Parts:
 # Pre-playtest plan (agreed 2026-10-20)
 
 Goal: a "stable" build for the author's playtest and one with friends. Phases 1-3 (content,
-AI, measure and economy) and the fog of war are done; what is left:
+AI, measure and economy), the fog of war, and the log on the board with its sound (hit flash, crit
+banner, `battle_fx.py` / `sound.py`) are done; what is left:
 
 **Phase 4 — combat presentation** (same files: `battle_draw.py`, `lighting.py`)
-1. **The log on the board:** a hit flash and a crit banner. The floating damage numbers
-   (`battle_fx.py`), the friend / foe plate and the mark of the dead are built.
-2. **Sound:** with item 1, the same events (hit, crit, fall) fire the number and the sound; coins,
-   level up and UI clicks in the same pass. The author dropped four Kenney packs in `scratch/audios/`
-   (impact, interface, RPG, UI; about 330 files, all CC0, licence files included). `scratch/` is
-   git-ignored, so the sounds used move to `gartok/assets/` with their licence.
+2. **The sounds by ear** (the author; small). Each cue's files (`sound.CUES`) were picked from the
+   Kenney packs by name, never heard; listen in play and swap files or levels (`sound.LEVEL`).
 3. **A floor per place, step 2** (waits on the author's go). Step 1, the prototype (Arena sand and
    stone, Wilds grass and roots, under the per-cell light), was rendered 2026-10-21. Step 2: every
    place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the

@@ -52,6 +52,11 @@ class BattleDrawMixin:
         if self.battle.awaiting_trap:
             self._draw_trap_setup(screen)
         self.fx.draw(screen, self.F, self.view.rect)
+        if self.fx.banner is not None:
+            b = self.battle.board
+            board = self._cell_rect(0, 0).union(self._cell_rect(b.cols - 1, b.rows - 1)).clip(self.view.rect)
+            battle_panel.draw_crit_banner(screen, self.F, board,
+                                          self.fx.banner["text"], self.fx.banner_alpha())
         screen.set_clip(clip)
 
         self._draw_initiative(screen)
@@ -144,6 +149,7 @@ class BattleDrawMixin:
                 "dying": f"{u.death_clock}/{data.DYING_TURNS}" if u.dying else None,
                 "broken": u.broken,
                 "obscured": vision.is_obscured(b, b.active, u) if (u.team != self.me and b.active) else False,
+                "flash": self.fx.flash_for(u),
             }
             board_render.draw_unit(screen, self.F, r, tok)
 

@@ -1,19 +1,24 @@
-"""Combat juice for the battle screen: floating damage/heal/roll numbers and
-the squash-and-hop hit/lunge reactions, both driven off the same per-frame
-tick. Pure presentation state -- nothing here reads or writes battle rules,
-it only watches HP deltas and drains `battle.fx_events` (the semantic-kind
-pings `actions.py` queues through `battle.fx`)."""
+"""Combat juice for the battle screen: floating damage/heal/roll numbers, the
+squash-and-hop hit/lunge reactions, the hit flash, the crit banner and the
+sounds, all driven off the same per-frame tick. Pure presentation state --
+nothing here reads or writes battle rules, it only watches HP deltas and
+drains `battle.fx_events` and `battle.cues` (the pings `actions.py` queues
+through `battle.fx` / `battle.cue`). What the side cannot see is heard, never shown."""
 
 import math
 import random
 
 import pygame
 
+from . import sound
 from .ui.board_style import DANGER, INK_FAINT, OK, WARN
 
 # `battle.fx` hands back a semantic kind, not a colour -- combat state stays
 # presentation-agnostic, this is the one place that maps kind -> colour.
 _FX_COLORS = {"ok": OK, "crit": WARN, "faint": INK_FAINT}
+
+FLASH_MS = 180
+BANNER_MS = 1100
 
 
 def _sgn(v):
@@ -23,25 +28,49 @@ def _sgn(v):
 class BattleFX:
     def __init__(self):
         self._hp_seen = {}      # id(unit) -> last hp we drew
+        self._up_seen = {}      # id(unit) -> was it standing last frame
         self._floaters = []     # rising damage / heal / roll numbers
         self._react = {}        # id(unit) -> {kind, t, dur, [dir]} squash + hop
+        self._flash = {}        # id(unit) -> ms left of its hit flash
+        self.banner = None      # {"text", "t"}: the crit banner across the board
 
-    def detect(self, battle, tile, unit_rect, cell_rect):
-        """Compare each unit's HP to last frame; spawn a floating number and a
-        hit reaction on a change, and a lunge on whoever is acting. Also drains
-        `battle.fx_events` into floaters of their own."""
+    def detect(self, battle, tile, unit_rect, cell_rect, seen=None):
+        """Compare each unit's HP to last frame; spawn a floating number, a flash
+        and a hit reaction on a change, and a lunge on whoever is acting. Also
+        drains `battle.fx_events` into floaters and `battle.cues` into the crit
+        banner. `seen(pos)` says whether the side sees a cell: what it does not
+        see only makes a sound. Each sound plays once a frame, however many hits."""
+        seen = seen or (lambda pos: True)
+        sounds = set()
+        for kind, pos in getattr(battle, "cues", []):
+            sounds.add(kind)
+            if kind == "crit" and seen(pos):
+                self.banner = {"text": "Critical hit", "t": 0.0}
+        if hasattr(battle, "cues"):
+            battle.cues.clear()
+
         actor = battle.active if battle.winner is None else None
         for u in battle.units:
             hp = u.hp
+            up = u.alive and hp > 0
             prev = self._hp_seen.get(id(u))
+            was_up = self._up_seen.get(id(u))
             self._hp_seen[id(u)] = hp
+            self._up_seen[id(u)] = up
+            if was_up and not up:
+                sounds.add("fall")
             if prev is None or hp == prev:
                 continue
-            r = unit_rect(u)
             delta = hp - prev
+            if delta < 0:
+                sounds.add("hit")
+            if not seen(u.pos):
+                continue
+            r = unit_rect(u)
             if delta < 0:
                 self._spawn(r, tile, str(delta), DANGER)
                 self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 260.0}
+                self._flash[id(u)] = FLASH_MS
                 if actor and actor.alive and actor.team != u.team and actor is not u:
                     ax, ay = actor.pos
                     self._react[id(actor)] = {
@@ -52,9 +81,15 @@ class BattleFX:
                 self._react[id(u)] = {"kind": "hit", "t": 0.0, "dur": 240.0}
 
         for pos, text_str, kind in getattr(battle, "fx_events", []):
-            self._spawn(cell_rect(*pos), tile, text_str, _FX_COLORS.get(kind, INK_FAINT))
+            if seen(pos):
+                self._spawn(cell_rect(*pos), tile, text_str, _FX_COLORS.get(kind, INK_FAINT))
         if hasattr(battle, "fx_events"):
             battle.fx_events.clear()
+
+        if "crit" in sounds:
+            sounds.discard("hit")
+        for cue in sorted(sounds):
+            sound.play(cue)
 
     def _spawn(self, r, tile, s, color):
         stack = sum(1 for f in self._floaters
@@ -76,6 +111,22 @@ class BattleFX:
             self._react[k]["t"] += dt
             if self._react[k]["t"] >= self._react[k]["dur"]:
                 del self._react[k]
+        self._flash = {k: ms - dt for k, ms in self._flash.items() if ms > dt}
+        if self.banner is not None:
+            self.banner["t"] += dt
+            if self.banner["t"] >= BANNER_MS:
+                self.banner = None
+
+    def flash_for(self, unit):
+        """How red `unit`'s token burns from a hit just taken: 1 at the blow, 0 when gone."""
+        return max(0.0, self._flash.get(id(unit), 0) / FLASH_MS)
+
+    def banner_alpha(self):
+        """The crit banner's opacity: a quick fade in, a hold, a slower fade out."""
+        if self.banner is None:
+            return 0.0
+        t = self.banner["t"]
+        return min(1.0, t / 90, (BANNER_MS - t) / 400)
 
     def rect_for(self, unit, r):
         """Offset + squash `r` for `unit`'s current hit reaction (a 3px hop on a

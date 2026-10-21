@@ -7,6 +7,8 @@ assets/
     map/                 drawn for this game: the map nodes and occupations game-icons.net lacks
     LICENSE.txt          CC BY 3.0 — see file (covers everything but map/)
   portraits/        engraved medallion portraits, one folder per race.
+  sounds/           Kenney sound effects (OGG, CC0, LICENSE.txt). `gartok/sound.py` names each cue's files;
+                    the full packs live in the git-ignored scratch/audios/.
 ```
 
 ## icons/ — used by the game
