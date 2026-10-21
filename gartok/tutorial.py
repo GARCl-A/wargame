@@ -15,7 +15,7 @@ TUTORIALS = (
     "guild.members", "guild.overview", "guild.reputations",
     "squad", "battle", "report", "memorial", "level_up", "loot", "reward",
     "market", "taverna", "hunt", "bank", "level", "library",
-    "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "watch", "garage", "gathering", "initiation",
+    "group", "missions", "trust", "ledger", "craft", "medic", "property", "claim", "guard", "dialogue", "prison", "stable", "wagon_yard", "watch", "garage", "gathering", "initiation",
     "group_turn"
 )
 

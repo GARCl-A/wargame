@@ -1,22 +1,27 @@
-"""The Stables: buying and selling a wagon, animals and tack with the party's coin."""
+"""The Stables (animals and tack) and the Carpenter's wagon yard, paid with the party's coin."""
 
 import pygame
 
 from gartok import animals, data, economy, items, orders, wagon, world
 from gartok.group import HERD_BASE, Group
 from gartok.guild import Guild
-from gartok.stables_screen import StablesScreen
+from gartok.hub_screen import TabbedHubScreen
+from gartok.stables_screen import StablesScreen, WagonYardScreen
 from gartok.ui.tokens import fonts as ui_fonts
 from tests.helpers import Unit
 
 
-def _stables(coins, w=None, pets=(), wis=0):
+def _stables(coins, w=None, pets=(), wis=0, screen=StablesScreen):
     a, b = Unit("player"), Unit("player")
     a.money, b.money = coins, 0
     a.mod_wisdom = b.mod_wisdom = wis
     g = Group([a, b], node="farm", wagons=[w] if w else [], herd=list(pets))
     guild = Guild(None, groups=[g])
-    return StablesScreen(ui_fonts(), guild, g, lambda: None), g, a
+    return screen(ui_fonts(), guild, g, lambda: None), g, a
+
+
+def _yard(coins, w=None, pets=()):
+    return _stables(coins, w, pets, screen=WagonYardScreen)
 
 
 def _keys(scr):
@@ -34,15 +39,28 @@ def test_the_stables_are_on_the_farm_outside_the_city_and_the_map_can_send_a_gro
     assert "stable" in orders.INTERACTIVE_KINDS
 
 
+def test_wagons_are_sold_at_the_carpenter_and_no_longer_at_the_stables():
+    scr, g, _ = _stables(10_000, wagon.Wagon())
+    assert not any(k.startswith(("buy_wagon", "sell_wagon")) for k in _keys(scr))
+    scr._click("buy_wagon:Cart")
+    assert len(g.wagons) == 1
+
+    def tabs(node_id):
+        return {k: s for k, _, s in TabbedHubScreen.for_node(ui_fonts(), scr.guild, g, world.node(node_id),
+                                                             lambda: None).tabs}
+    assert "wagons" not in tabs("farm") and isinstance(tabs("farm")["stable"], StablesScreen)
+    assert isinstance(tabs("carpenter")["wagons"], WagonYardScreen)
+
+
 def test_buying_the_wagon_takes_the_coin_and_gives_the_group_a_wagon():
-    scr, g, a = _stables(wagon.VEHICLES["Cart"].price + 7)
+    scr, g, a = _yard(wagon.VEHICLES["Cart"].price + 7)
     assert "buy_wagon:Cart" in _keys(scr)
     scr._click("buy_wagon:Cart")
     assert len(g.wagons) == 1 and a.money == 7 and g.wagons[0]._group is g
 
 
 def test_the_wagon_is_refused_when_the_party_cannot_pay():
-    scr, g, _ = _stables(wagon.VEHICLES["Cart"].price - 1)
+    scr, g, _ = _yard(wagon.VEHICLES["Cart"].price - 1)
     assert "buy_wagon:Cart" not in _keys(scr)
     scr._click("buy_wagon:Cart")
     assert g.wagons == []
@@ -109,7 +127,7 @@ def test_selling_an_animal_pays_the_resale_and_keeps_the_tack():
 def test_the_wagon_can_only_be_sold_empty():
     w = wagon.Wagon()
     w.stash.items.append(items.create_instance("Rope"))
-    scr, g, _ = _stables(0, w)
+    scr, g, _ = _yard(0, w)
     scr._click("sell_wagon:0")
     assert g.wagons
 
@@ -123,12 +141,13 @@ def test_the_screen_draws_in_every_state():
     pets = [animals.Animal("Donkey", tack=animals.HARNESS), animals.Animal("Ox"),
             animals.Animal("Donkey", tack=animals.PACK_SADDLE)]
     for w, p in ((None, ()), (wagon.Wagon(), ()), (wagon.Wagon(), pets), (None, pets)):
-        scr, _, _ = _stables(500, w, p)
-        _keys(scr)
+        for screen in (StablesScreen, WagonYardScreen):
+            scr, _, _ = _stables(500, w, p, screen=screen)
+            _keys(scr)
 
 
 def test_a_carriage_is_bought_beside_a_cart():
-    scr, g, a = _stables(10_000, wagon.Wagon())
+    scr, g, a = _yard(10_000, wagon.Wagon())
     assert {"buy_wagon:Cart", "buy_wagon:Carriage"} <= _keys(scr)
     scr._click("buy_wagon:Carriage")
     assert [w.kind for w in g.wagons] == ["Cart", "Carriage"]
@@ -137,14 +156,14 @@ def test_a_carriage_is_bought_beside_a_cart():
 
 def test_a_new_wagon_takes_the_idle_harnessed_animal():
     pet = animals.Animal("Ox", tack=animals.HARNESS)
-    scr, g, _ = _stables(1000, pets=[pet])
+    scr, g, _ = _yard(1000, pets=[pet])
     scr._click("buy_wagon:Cart")
     assert g.pulling(pet) is g.wagons[0]
 
 
 def test_selling_a_wagon_pays_its_own_price_and_frees_its_animals():
     pet = animals.Animal("Ox", tack=animals.HARNESS)
-    scr, g, _ = _stables(0, wagon.Wagon("Carriage"), pets=[pet])
+    scr, g, _ = _yard(0, wagon.Wagon("Carriage"), pets=[pet])
     g.hitch_idle()
     scr._click("sell_wagon:0")
     assert g.wagons == [] and pet.hitch is None

@@ -232,7 +232,7 @@ gartok/
   holdings.py       Stash (weight-capped storage, in stash.py) and CityProperty (house, tax, squat, oven) and Garage (parked wagons and animals)
   creature.py       shared base of animals and wagons (HP, load, pack-owner calls)
   animals.py        livestock races (Donkey, Ox, Horse) kept in Group.herd, tack decides the role
-  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at stables_screen.py; wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt
+  wagon.py          a Group's wagons (cart 1 HD, carriage 3 HD) and the draft animals hitched to them (passengers and cargo by weight, feeding); the road wears 1 HP per 100 distance, 0 HP breaks one (repaired for Lumber, or left behind via abandon_screen.py); bought at the Carpenter (stables_screen.WagonYardScreen); wagon_watch.py / watch_screen.py handle the wagon left outside the Ruins or a hunt
   group.py          Group = a physical subset of the guild: its own node + squad + order;
                     fame buys group slots (`BASE_SLOTS`, `group_slots`)
   cohesion.py       the daily sweep over overextended groups: the weakest member may walk

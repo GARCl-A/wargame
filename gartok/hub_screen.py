@@ -18,7 +18,7 @@ from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
 
 # which keeper a tab shows when the node has one per function
-_TAB_FUNCTION = {"shop": "shop", "forge": "forge", "craft": "forge", "carpenter": "carpenter",
+_TAB_FUNCTION = {"shop": "shop", "forge": "forge", "craft": "forge", "carpenter": "carpenter", "wagons": "carpenter",
                  "jobs": "tanner", "library": "library", "study": "library", "initiation": "shrine"}
 BACK_LABEL = "← back to guild"
 HINTS = "Esc · back    Tab · next service"
@@ -87,6 +87,8 @@ class TabbedHubScreen(Screen):
                                    station="carpenter",
                                    vendor=world.vendor(node.id, "carpenter"))
             tabs.append(("carpenter", "CARPENTRY", craft))
+            from .stables_screen import WagonYardScreen
+            tabs.append(("wagons", "WAGONS", WagonYardScreen(fonts, guild, group, on_done)))
         if node.has("tanner"):
             from .tanner_screen import TannerScreen
             jobs = TannerScreen(fonts, guild, group, on_done)

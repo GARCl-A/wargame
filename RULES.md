@@ -1241,8 +1241,10 @@ different questions:
   into a fight, everyone eats from it, and it is lost with the group. People ride
   by weight, the slowest first, and every rider takes room the cargo could use;
   the RIDES button on a member's column of the group's gear screen makes them walk
-  beside the wagon instead. The stables only buy and sell; hitching (the button on a
-  draft animal's column, or dragging it onto the wagon) is done on the gear screen too.
+  beside the wagon instead. Wagons are bought and sold at the Carpenter (its WAGONS
+  tab), animals and tack at the Farm's stables; neither hitches: hitching (the
+  button on a draft animal's column, or dragging it onto the wagon) is done on the
+  gear screen too.
 - **Broken wagons.** A vehicle has Hit Dice of d8 and no Constitution at all: a
   cart is 1 HD (5 HP), a carriage 3 HD (13 HP), the mean of the dice, never
   rolled. Every 100 units of map distance a group travels costs each of its

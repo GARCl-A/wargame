@@ -198,7 +198,7 @@ NODES = [
                                  line="Sixteen hours, one axe, one wage. Don't bleed on the logs.")}),
     Node("carpenter", "The Carpenter", "town", (0.26, 0.57),
          "A fragrant workshop of cedar shavings and drying timber between the city walls and the sawmill. "
-         "Bows, crossbows, cart wheels and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
+         "Bows, crossbows, carts, carriages and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
          jurisdiction="the_city", language="Verdant", alignment="Neutral and Good",
          functions=("carpenter", "shop"),
          vendors={"carpenter": _ROWAN, "shop": _ROWAN}),
@@ -273,7 +273,7 @@ NODES = [
          vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png",
                                     line="We keep what the world forgets. Some of it, it forgot on purpose.")}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
-         "A farmstead beyond the walls. It sells what the fields give and keeps the stables: wagons and the animals that pull them.",
+         "A farmstead beyond the walls. It sells what the fields give and keeps the stables: the animals that carry and pull, and their tack.",
          language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop"), shop_label="BROWSE THE FARM",
          vendors={"shop": Vendor("Edric Ashvale", "Human", "farmer", "farmer.png",
                                  line="My children ask about every guild that buys here. Come back, so I've something to tell them.")}),
