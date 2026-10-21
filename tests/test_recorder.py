@@ -13,7 +13,7 @@ sys.path.insert(0, SCRIPTS)
 import economy_guild as sim_mod
 import play_analysis as pa
 
-from gartok import campaign, economy, orders, recorder, settings
+from gartok import campaign, orders, recorder, settings
 from gartok.clock import SECONDS_PER_DAY
 from gartok.guild import Guild
 from gartok.unit import Unit
@@ -136,19 +136,6 @@ def test_a_run_that_never_hunted_has_no_hunt_threshold():
     assert "hunt_min_hp" not in pa.thresholds([_buy(0, "Axe", 1, 35, 65, 3.0)])
 
 
-def test_the_human_policy_plays_by_the_profile(tmp_path):
-    prof = tmp_path / "profile.json"
-    prof.write_text(json.dumps({"yard_leave_day": 3, "axe_cash_per_member": 20,
-                                "food_low_days": 1.5, "food_target_days": 4}), encoding="utf-8")
-    sim_mod.Human.load(str(prof))
-    try:
-        res = sim_mod.run_guild("human", days=6, seed=2, library=_LIBRARY, marks=(6,))
-    finally:
-        sim_mod.Human.profile = {}
-    assert not res.crashed
-    assert res.money[6] >= 0
-
-
 def test_missions_and_crafts_are_logged(tmp_path):
     from gartok import missions
     guild = Guild([Unit("player")], node="city")
@@ -162,28 +149,6 @@ def test_missions_and_crafts_are_logged(tmp_path):
     got = {r["e"]: r for r in _rows(tmp_path)}
     assert got["mission"]["what"] == "accept" and got["mission"]["id"] == template.id
     assert got["craft"]["recipe"] == "Jerky"
-
-
-class _SurvivableLibrary(sim_mod.FightLibrary):
-    """The real won fights with the deaths taken out: the test is about the line the policy
-    walks, not about the dice of a 6-fight library deciding whether the squad lives to walk it."""
-
-    def pool(self, kind, level, size):
-        fights = _LIBRARY.pool(kind, level, size)
-        won = [f for f in fights if f.won] or fights
-        return [sim_mod.Sample(f.won, f.rounds, [(min(lost, 1), False, xp) for lost, _, xp in f.members],
-                               f.loot, f.purse) for f in won]
-
-
-def test_the_rush_policy_follows_the_recorded_line():
-    sim = sim_mod.Sim(sim_mod.Rush(), seed=6, library=_SurvivableLibrary(), skill=0.95, horizon=30)
-    for _ in range(500):
-        if sim.elapsed >= 30 or sim.policy.dictionary_done:
-            break
-        sim.policy.step(sim)
-    assert sim.champion_beaten and sim.policy.dictionary_done
-    assert sim.guild.missions[0].state == "done"
-    assert all(economy.lumber_level(u) > 0 for u in sim.members)
 
 
 def test_a_fall_in_battle_leaves_a_death_row_with_how_it_happened(tmp_path):

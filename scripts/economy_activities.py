@@ -15,12 +15,15 @@ squad's level are judged:
   one-off      the champion bout and the Ribbit Brothers: a gate and a capstone, shown not judged
   side income  the tavern stage
 
-The AI plays the squad badly next to a person, so a fight's win rate is a parameter:
-the AI's own is shown first, then `--skills` for a player who wins that share.
+The AI plays the squad worse than a person, so how much better is a parameter: `skill` is the
+share of the AI's losses a player turns into wins (`player_odds`), so a fight the AI wins more
+often, a squad a level up, is one the player wins more often too. The AI's own row is shown
+first, then one per `--skills`. `SKILL` is measured: the author's 164 campaign fights against
+the AI replaying the same squads (`scripts/combat_pairs.py combat_lab/campaign`, 2026-10-21).
 
     python scripts/economy_activities.py                       # level 0: floor + leveling
     python scripts/economy_activities.py --level 3             # the Wilds' band
-    python scripts/economy_activities.py --level 3 --skills 0.5,0.8
+    python scripts/economy_activities.py --level 3 --skills 0.3,0.8
 """
 
 from __future__ import annotations
@@ -37,8 +40,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from gartok import (
     ai,
+    archetypes,
     arena,
     data,
+    draft_screen,
     economy,
     hunt,
     items,
@@ -62,6 +67,8 @@ ROUND_SECONDS = 6
 MEDIC_POTION_HP = economy.MEDIC_POTION_HP
 MEDIC_PRICE_FACTOR = economy.MEDIC_PRICE_FACTOR      # --medic-factor overrides it
 
+SKILL = 0.5                  # share of the AI's losses the author turns into wins (92% to its 83%)
+
 # activity -> (role, lowest level, highest level) the squad is meant to do it at
 ROLES = {
     "Lumber yard": ("floor", 0, 1),
@@ -84,17 +91,80 @@ BOUTS = {
 }
 
 
+def player_odds(ai_rate, skill):
+    """A player's chance to win a fight the AI wins at `ai_rate`: they turn `skill` of its losses
+    into wins. None `skill` is the AI itself."""
+    return ai_rate if skill is None else 1 - (1 - ai_rate) * (1 - skill)
+
+
+def relief(ai_rate, skill):
+    """The share of the AI's casualties in won fights a player still takes: the losses they turn
+    around are the close ones, so `1 - skill` of them (1 for the AI itself)."""
+    return 1.0 if skill is None or ai_rate >= 1 else 1 - skill
+
+
 def cheapest_meal():
     return min(items.get(n).price for n in data.FOOD_ITEMS if n != "Rotten Food")
 
 
-def make_squad(size, level, team="player"):
+DRAFT_POOL = 3               # candidates a place past the draft's three: a recruit is picked too
+
+
+def draft_score(unit):
+    """How the author ranks a candidate: no negative Constitution, then the attributes that win
+    fights, weighed as `balance_sim.py`'s STATS section measures them (Strength about twice the
+    others), then hit points."""
+    return (unit.mod_constitution >= 0,
+            2 * unit.mod_strength + unit.mod_constitution + unit.mod_dexterity, unit.hp_max)
+
+
+def is_leader(unit):
+    return archetypes.ARCHETYPES["LEADER"].predicate(unit)
+
+
+def draft(team="player"):
+    """The author's draft (`draft_screen`): a pool of nine, the best three by `draft_score`; with
+    no LEADER among them, a Commission Token calls one in place of a candidate left out, the
+    tokens left call a STRONG + TOUGH and then a TOUGH the same way; then the pool is judged again,
+    the best LEADER in first. -> `(picks, leader)`."""
+    pool = [Unit(team) for _ in range(draft_screen.POOL_SIZE)]
+    tokens = draft_screen.COMMISSION_TOKENS
+
+    def best_leader():
+        return max((u for u in pool if is_leader(u)), key=draft_score, default=None)
+
+    def left_out():
+        keep = sorted(pool, key=draft_score, reverse=True)[:draft_screen.TEAM_SIZE] + [best_leader()]
+        return min((u for u in pool if u not in keep), key=draft_score)
+
+    def commission(labels):
+        nonlocal tokens
+        fresh = archetypes.generate_candidate(labels)
+        fresh.team = team
+        pool[pool.index(left_out())] = fresh
+        tokens -= len(labels)
+
+    if not any(is_leader(u) for u in sorted(pool, key=draft_score, reverse=True)[:draft_screen.TEAM_SIZE]):
+        commission(["LEADER"])
+    for labels in (["STRONG", "TOUGH"], ["TOUGH"]):
+        if tokens >= len(labels):
+            commission(labels)
+    leader = best_leader() or max(pool, key=lambda u: u.mod_charisma)
+    rest = sorted((u for u in pool if u is not leader), key=draft_score, reverse=True)
+    return [leader] + rest[:draft_screen.TEAM_SIZE - 1], leader
+
+
+def make_squad(size, level, team="player", draft_pool=DRAFT_POOL):
     """`level` is one number for both tracks, or `(combat, work)`. The racial level (hit dice)
-    is the two tracks added up, so a squad that only fights is not as tough as one that also works."""
+    is the two tracks added up, so a squad that only fights is not as tough as one that also works.
+    The squad is drafted as the author drafts (`draft`, its leader first); a place past the
+    draft's three is the best of `draft_pool` candidates."""
     combat, work = level if isinstance(level, tuple) else (level, level)
+    picks, _ = draft(team)
+    extra = sorted((Unit(team) for _ in range(max(0, size - len(picks)) * max(1, draft_pool))),
+                   key=draft_score, reverse=True)
     squad = []
-    for _ in range(size):
-        u = Unit(team)
+    for u in (picks + extra)[:size]:
         if combat:
             u.set_track_level("combat", combat)
         if work:
@@ -232,8 +302,8 @@ def tavern_table(shift=WORK_DAY_HOURS):
 
 def arena_row(size, level, trials, bout=None, skill=None, samples=None, medic=False):
     """A staked arena bout (the Pit's Scrapper, the champion, the Games). Non-lethal, so the
-    cost of losing is the stake and the HP. `skill` replaces the AI's measured win rate with a
-    player win probability. With a `medic` the bouts a day are not capped by healing: each
+    cost of losing is the stake and the HP. `skill` lifts the AI's measured win rate to a
+    player's (`player_odds`). With a `medic` the bouts a day are not capped by healing: each
     member's damage is paid for in potions instead."""
     bout = bout or arena.scrapper_bout()
     if samples is None:
@@ -249,7 +319,7 @@ def arena_row(size, level, trials, bout=None, skill=None, samples=None, medic=Fa
     won = [x for x in samples if x[0]] or samples
     lost = [x for x in samples if not x[0]] or samples
     ai_rate = sum(x[0] for x in samples) / len(samples)
-    p = ai_rate if skill is None else skill
+    p = player_odds(ai_rate, skill)
     mean = statistics.mean
     damage = mean(x[2] for x in samples) if skill is None else mean(x[2] for x in won)
     xp = p * mean(x[3] for x in won) + (1 - p) * mean(x[3] for x in lost)
@@ -318,14 +388,13 @@ def _hunt_live(size, level, trials, shift):
 
 
 def _hunt_skilled(size, level, trials, shift, skill, fights, rng):
-    """The same hunt with each ambush won at probability `skill`; loot, XP and casualties
-    are drawn from the fights the AI actually played, split by outcome. A better player also
-    loses fewer members in the fights he wins: casualties in wins scale by `relief`,
-    1 at the AI's own win rate down to 0 at a perfect record (an assumption, not data)."""
+    """The same hunt with each ambush won at a player's odds (`player_odds`); loot, XP and
+    casualties are drawn from the fights the AI actually played, split by outcome. A better
+    player also loses fewer members in the fights they win (`relief`, an assumption)."""
     won_pool = [f for f in fights if f[0]] or [(True, 0, 0.0, 0.0)]
     lost_pool = [f for f in fights if not f[0]] or [(False, 0, 1.0, 0.0)]
     ai_rate = sum(f[0] for f in fights) / len(fights) if fights else 0.0
-    relief = min(1.0, (1 - skill) / (1 - ai_rate)) if ai_rate < 1 else 1.0
+    p, spared = player_odds(ai_rate, skill), relief(ai_rate, skill)
     meat = hours_used = loot_total = dead_total = xp_total = 0
     for _ in range(trials):
         state = hunt.HuntState(party=make_squad(size, level), node=None, hours_left=shift)
@@ -333,11 +402,11 @@ def _hunt_skilled(size, level, trials, shift, skill, fights, rng):
             _, ambushed = hunt.hunt_stretch(state, rng)
             if not ambushed:
                 continue
-            won = rng.random() < skill
+            won = rng.random() < p
             _, value, frac, xp = rng.choice(won_pool if won else lost_pool)
             loot_total += value
             xp_total += xp * len(state.party)
-            dead = sum(rng.random() < frac * (relief if won else 1.0) for _ in state.party)
+            dead = sum(rng.random() < frac * (spared if won else 1.0) for _ in state.party)
             state.party = state.party[dead:]
             dead_total += dead
             if not won:
@@ -361,8 +430,8 @@ def hunt_row(size, level, trials, shift=WORK_DAY_HOURS, skill=None, samples=None
         fights = samples
         meat, hours_used, loot_total, dead_total, xp_total = _hunt_skilled(
             size, level, trials, shift, skill, fights, random.Random(trials))
-        win = skill
         ai_rate = sum(f[0] for f in fights) / len(fights) if fights else 0
+        win = player_odds(ai_rate, skill)
         note = f"meat is food, not copper; the AI wins {ai_rate * 100:.0f}% of these ambushes"
     note += (f"; a {trip:.0f} h walk each way (the Old Road's {world.ROAD_AMBUSH_CHANCE * 100:.0f}% "
              "ambush per pass is layer 2's)")
@@ -442,7 +511,7 @@ def build_tables(level, size, trials, skills, medic=False):
     for skill in skills:
         fights = [b[skill] for b in bouts.values()]
         fights.append(hunt_row(size, level, trials, skill=skill, samples=hunt_ai.samples))
-        tables.append((skill, f"the player wins {skill * 100:.0f}% of fights" + suffix,
+        tables.append((skill, f"the player wins {skill * 100:.0f}% of the fights the AI loses" + suffix,
                        fixed + fights))
     return cheapest_meal(), tables
 
@@ -454,9 +523,9 @@ def main():
     ap.add_argument("--squad", type=int, default=3)
     ap.add_argument("--trials", type=int, default=200)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--skills", default="0.8,0.95",
-                    help="player win probabilities shown beside the AI's own")
-    ap.add_argument("--judge", type=float, default=0.8,
+    ap.add_argument("--skills", default=f"{SKILL},0.8",
+                    help="shares of the AI's losses a player turns into wins, shown beside the AI's own")
+    ap.add_argument("--judge", type=float, default=SKILL,
                     help="the skill the verdict and the exit code use")
     ap.add_argument("--medic", action="store_true",
                     help="bouts are healed by the Medic, paid in potions, not by resting")

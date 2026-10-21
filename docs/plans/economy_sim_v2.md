@@ -8,8 +8,14 @@ copper *and* in XP.
 
 Written 2026-10-08, extended the same day after the first round of answers (the Medic, the
 Games, the Claim, the racial level, the tavern; see [Answers received](#answers-received)).
-The play recorder (`gartok/recorder.py`, `scripts/play_analysis.py`) and the `human` policy
-in `scripts/economy_guild.py` are now built; two campaign runs (Olhos de Odin 21d, Caneco Mijado 103d;
+**2026-10-21:** the sim now plays as a person: the player turns `SKILL` (0.5, measured from the
+author's 164 campaign fights) of the AI's losses into wins, so a level up counts; the fight library
+dresses its squads in the guild's kit and drafts them as the author drafts (Commission Tokens for a
+LEADER, then STRONG + TOUGH); an arena bout fields three and its damage is non-lethal; shifts follow
+shifts (the game has no fatigue). The policies were cut to `lumber` and `balanced`, the author's line,
+plus the gathering probes; the results sections below predate this and are kept as history.
+The play recorder (`gartok/recorder.py`, `scripts/play_analysis.py`) was built with a `human` policy
+(now folded into `balanced`); two campaign runs (Olhos de Odin 21d, Caneco Mijado 103d;
 40 fights total) were archived in `recordings/2026-10-19/` and calibrated into `human_profile.json`. The last three sections are the ones to read first when
 validating the work: [Decisions made without asking](#decisions-made-without-asking),
 [Answers received](#answers-received) and
@@ -102,20 +108,14 @@ Policies (a class with `step(sim)`; each step spends time):
 
 | Policy | Behaviour |
 |---|---|
-| `lumber` | the floor: 16 h at the yard, 8 h sleep, shop when the packs run low |
-| `cautious` | lumber, plus a Scrapper bout in the evening until everyone is combat 1; hunts only at mean level 3, healthy and fed |
-| `balanced` | Scrapper to combat 1, lumber for a buffer, buys Studded Leather, then a weapon, then the strongbox when the buffer survives it; hunts from mean level 2; a day of shows only if it out-pays the yard |
-| `greedy` | Scrapper and the Wilds from day one, buys food only when the packs are empty |
-| `maxev` | each cycle picks the activity with the best expected copper per day from the fight library |
-| `crafter` | the best crafter buys inputs, works a forge shift, sells the product (the restock experiment) |
-| `games` | `balanced`, but its risky day is the arena's ladder: the champion first (it opens the Games), then the Games bout with the best expected purse, only if the stake and 3 days of food are covered |
-| `claimer` | `balanced`, but its risky day is the Wilds claim: it sets aside the trip's food and the fences' Lumber first, then scouts, clears, fences, sweeps and garrisons the Claim, fighting the raids |
-| `rush` | the line two recorded runs took: sell the starting kit for Axes, the Champion at level 0 once the stake is in hand, armor, one Wilds hunt for a Hide, Paper and Ink at the Library, craft the Dictionary the Library's one-off mission wants, then the rest of the gear and the strongbox (thresholds from `--profile`, like `human`) |
+| `lumber` | the floor: the yard's wage shift after shift, shop when the packs run low |
+| `balanced` | the author's line: the sprint to the day-30 milestone (Axes on day one, the yard to work 2, the Champion at combat 0, armor, the strongbox), then the Pit, a recruit and the Wilds hunt as the income |
+| `gatherer`, `miner`, `miner_wage` | probes, not players: a licence against its wage for the GATHERING section |
 
 Knobs: `--level`, `--size`, `--skill`, `--capital N` (a guild past its first week), `--assets
 house,Donkey,Cart` (what it must keep), `--restock TARGET:PER_DAY` (finite shelves), `--medic`
 (the Medic, below), `--mixed` (work while healing), `--set economy.LUMBER_WAGE=2` and `--price "Studded Leather=40"`
-(what-ifs), `--curve`, `--ranking`, `--restock-sweep`.
+(what-ifs), `--curve`, `--ranking`.
 
 **The fight library is keyed by combat and work level.** Hit dice are `1 + racial level` and the
 racial level is combat level + work level, so a squad that only fights is not the same fighter

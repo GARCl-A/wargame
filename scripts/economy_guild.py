@@ -8,36 +8,27 @@ tavern shifts, hunts and rests go through the same calls the game makes.
 
 The one stand-in is the fight. A policy only decides *what* to do; fights are drawn from a
 library of real battles (`Battle` + `ai`, folded in by `campaign.absorb_battle`) played ahead
-of time for each (kind, level, party size). `--skill` replaces the AI's win rate with a
-player's, drawing a won or a lost sample, because the AI plays much worse than a person.
+of time for each (kind, level, party size). `--skill` lifts the AI's win rate to a player's
+(`economy_activities.player_odds`: they turn that share of the AI's losses into wins), drawing a
+won or a lost sample, because the AI plays worse than a person.
 
-A policy is a class with `step(sim)`; each step spends time. Policies:
+A policy is a class with `step(sim)`; each step spends time. The game has no fatigue, so a
+shift follows a shift and only the wounded rest. Policies:
 
-  lumber    the floor: work the yard 16 h, rest 8 h, eat
-  miner     day labour at the Mine: a trip past the Old Road, a stay of six shifts, back (miner_short: two)
-  cautious  lumber, plus the Scrapper bout until everyone is combat 1; hunts only at mean
-            level 3 and full health
-  wary      cautious, with the group's travel stance always on Cautious (the Wilds perk's policy;
-            pair with --vocation wilds and compare against cautious)
-  balanced  Scrapper to combat 1, lumber to build a buffer, buys Studded Leather, a weapon
-            and the strongbox in turn, hunts from mean level 2
-  greedy    Scrapper and the Wilds from day one, buys food only when the packs are empty
-  maxev     each cycle picks the activity with the best expected copper per day
-  human     balanced, playing by thresholds measured from recorded play (--profile)
-  rush      the recorded line: Axes, the Champion at level 0, one hunt for a Hide, the Dictionary mission
-  crafter   a specialist guild: the best crafter buys inputs and crafts on a solo order
-            while the rest work the yard, then sells at the market (the experiment for
-            the restock limiter; needs `--recipes`)
+  lumber    the floor: the yard's wage, shift after shift, and food
+  balanced  the game played as the author plays it (see the class): the sprint to the day-30
+            milestone, then the Pit, a recruit and the Wilds hunt as the income
 
-    python scripts/economy_guild.py                         # every policy, 7 and 30 days
-    python scripts/economy_guild.py --policies lumber,balanced --guilds 60 --skill 0.95
-    python scripts/economy_guild.py --policies crafter --recipes "Bear Trap" --restock 4:1
+The gathering probes (`gatherer`, `miner`, `miner_wage`) do not play the game: they measure a
+licence against its wage for the report's GATHERING section (`gather_payback`).
+
+    python scripts/economy_guild.py                         # lumber and balanced, 7 and 30 days
+    python scripts/economy_guild.py --guilds 60 --skill 0.5 --ranking
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import random
 import statistics
@@ -45,7 +36,6 @@ import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from types import SimpleNamespace
-from typing import ClassVar
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
@@ -56,9 +46,7 @@ import economy_activities as act
 
 from gartok import (
     animals,
-    arena,
     campaign,
-    craft_level,
     data,
     dialogue,
     economy,
@@ -79,20 +67,19 @@ from gartok import (
     recruit,
     rest,
     rite,
-    solo,
     vocations,
     wagon,
     world,
 )
 from gartok.clock import SECONDS_PER_DAY
-from gartok.group import CAUTIOUS, NORMAL
+from gartok.group import NORMAL
 from gartok.guild import Guild
 from gartok.market_screen import MarketScreen
 from gartok.prison_screen import BAIL_BONUS
 from gartok.scenario import ErmosScenario, Scenario
 
 SHIFT_HOURS = 16                     # a work shift; the other 8 h of the day are sleep
-SLEEP_HOURS = 24 - SHIFT_HOURS
+SLEEP_HOURS = 24 - SHIFT_HOURS        # a night's rest, for the wounded: the game has no fatigue
 FOOD_LOW_DAYS = 2                    # shop when the packs hold less than this many days
 FOOD_TARGET_DAYS = 6                 # ...and buy up to this many (a Potato keeps 7)
 MILESTONE_WEAPON = "Axe"             # the weapon the day-30 milestone prices
@@ -111,6 +98,8 @@ TALENT_PLAN = {
              "pathfinder", "field_medic", "triage", "charismatic", "fixer", "troubadour"),
     "combat": ("tough", "hardy", "bulwark", "recovery"),
 }
+PIT_MIN_HP = 0.8                     # the mean HP the author's recorded bouts started at
+PIT_REST_HOURS = 24                  # unbroken rest after a bout: it wipes the Pit's non-lethal damage
 AXE_BUFFER_DAYS = 3                  # days of food kept in hand when buying an Axe
 MIXED_DAYS = 14                      # most days a mixed guild works its wounds off before giving up
 
@@ -152,6 +141,17 @@ CLAIM_FIGHTS = {
 }
 
 
+NAKED = (None, None)                 # a library squad's kit: no armor, each its own starting weapon
+
+
+def kit_of(party):
+    """`(armor, weapon)` the fight library dresses a squad in for `party`: the armor most of them
+    wear, and a weapon only when two in three hold the same one (else each keeps their own)."""
+    armor, _ = Counter(getattr(u, "equipped_armor", None) for u in party).most_common(1)[0]
+    weapon, held = Counter(u.equipped_weapon for u in party).most_common(1)[0]
+    return armor, (weapon if held * 3 >= 2 * len(party) else None)
+
+
 def as_levels(level):
     """A library key: `(combat, work)`. The racial level, and with it the hit dice, is the two
     added, so a combat-only squad and a squad that also works are not the same fighters."""
@@ -167,24 +167,29 @@ class FightLibrary:
         self.samples = samples
         self.cache = {}
 
-    def pool(self, kind, level, size):
-        key = (kind, as_levels(level), size)
+    def pool(self, kind, level, size, kit=NAKED):
+        key = (kind, as_levels(level), size) + ((kit,) if kit != NAKED else ())
         if key not in self.cache:
             state, names_state = random.getstate(), names._rng.getstate()
             random.seed(repr(key))      # the same fights for a key whatever ran first
             names._rng.seed(repr(key))  # names seed the foes' intel read (intel.py), so they change the fight
             try:
-                self.cache[key] = [self._play(kind, key[1], size) for _ in range(self.samples)]
+                self.cache[key] = [self._play(kind, key[1], size, kit) for _ in range(self.samples)]
             finally:
                 random.setstate(state)
                 names._rng.setstate(names_state)
         return self.cache[key]
 
     @staticmethod
-    def _play(kind, level, size):
+    def _play(kind, level, size, kit=NAKED):
         squad = act.make_squad(size, level)
+        armor, weapon = kit
         for u in squad:
             spend_picks(u)
+            if armor:
+                u.give_to_armor(armor)
+            if weapon:
+                u.give_to_hand(weapon)
         guild = Guild(squad, node="city")
         before = [(u.hp, u.combat_xp) for u in squad]
         if kind in act.BOUTS:
@@ -215,31 +220,28 @@ class FightLibrary:
         return Sample(outcome.won, battle.round_no, members, list(outcome.loot_pool),
                       outcome.arena_reward or 0)
 
-    def draw(self, kind, level, size, rng, skill=None):
-        """One sample: the AI's own mix, or a won / lost one with a player's win chance."""
-        pool = self.pool(kind, level, size)
+    def draw(self, kind, level, size, rng, skill=None, kit=NAKED):
+        """One sample: the AI's own mix, or a won / lost one at a player's odds
+        (`act.player_odds`: a squad the AI wins more with, the player does too)."""
+        pool = self.pool(kind, level, size, kit)
         if skill is None:
             return rng.choice(pool)
         wins = [s for s in pool if s.won]
         losses = [s for s in pool if not s.won]
-        want_win = rng.random() < skill
+        want_win = rng.random() < act.player_odds(len(wins) / len(pool), skill)
         chosen = (wins if want_win else losses) or pool
         return rng.choice(chosen)
 
-    def relief(self, kind, level, size, skill=None):
-        """How much of the AI's casualties in won fights a better player still takes: 1 at the
-        AI's own win rate, 0 at a perfect record (an assumption, as in layer 1's hunts)."""
-        if skill is None:
-            return 1.0
-        pool = self.pool(kind, level, size)
-        ai = sum(s.won for s in pool) / len(pool)
-        return 1.0 if ai >= 1 else min(1.0, (1 - skill) / (1 - ai))
+    def relief(self, kind, level, size, skill=None, kit=NAKED):
+        """How much of the AI's casualties in won fights a better player still takes (`act.relief`)."""
+        pool = self.pool(kind, level, size, kit)
+        return act.relief(sum(s.won for s in pool) / len(pool), skill)
 
-    def stats(self, kind, level, size, skill=None):
+    def stats(self, kind, level, size, skill=None, kit=NAKED):
         """(win chance, mean loot value, mean deaths) of a fight, for a policy to weigh."""
-        pool = self.pool(kind, level, size)
+        pool = self.pool(kind, level, size, kit)
         wins = [s for s in pool if s.won]
-        p = (len(wins) / len(pool)) if skill is None else skill
+        p = act.player_odds(len(wins) / len(pool), skill)
         value = statistics.mean(act.loot_value(s.loot) for s in wins) if wins else 0.0
         deaths = statistics.mean(sum(m[1] for m in s.members) for s in pool)
         return p, value, deaths
@@ -288,11 +290,10 @@ class Sim:
             u.recipes.extend(r for r in recipes if r not in u.recipes)
         if capital:
             squad[0].give_to_pack(items.COIN_ITEM, capital)
-        self.guild = Guild(squad, node="city", vocation=vocation)
+        self.guild = Guild(squad, node="city", vocation=vocation, leader=squad[0])
         self.main = self.guild.groups[0]
         self.main.stance = policy.stance
         self.crew = None                      # the group that works the yard while the squad is out
-        self._crew_works = False
         self.recruited = 0                    # strangers who signed on
         self.pitches = 0                      # pitches made
         self.bail_spent = 0                   # copper paid in bail
@@ -505,7 +506,7 @@ class Sim:
         return events
 
     # -- a growing guild --------------------------------------------------- #
-    def recruit(self, node="tavern", reserve=0):
+    def recruit(self, node="tavern", reserve=0, limit=None):
         """A visit to the tavern (free; the Charisma contest decides) or the prison (the bail is
         paid first, +2 to the contest, and lost if the pitch fails). The best talker with a free
         sponsor slot and a shared language pitches each stranger. -> how many signed on."""
@@ -517,6 +518,8 @@ class Sim:
         bar = recruit.prison_bar if prison else recruit.bar
         hired = 0
         for cand in list(pool):
+            if limit is not None and len(guild.roster) >= limit:
+                break
             talkers = [m for m in self.members if recruit.slots_free(guild, m) > 0
                        and recruit.can_pitch(m, cand) and not barred(guild, cand, m)]
             if not talkers:
@@ -573,9 +576,8 @@ class Sim:
         if crew.node != "lumber_yard":
             crew.order = orders.travel(crew, "lumber_yard", vocations.travel_mult(self.guild, crew))
             return
-        self._crew_works = not self._crew_works
-        crew.order = (orders.work(self.guild, crew, SHIFT_HOURS) if self._crew_works
-                      else orders.rest(SLEEP_HOURS))
+        hurt = any(u.hp < u.hp_max for u in crew.members)
+        crew.order = orders.rest(SLEEP_HOURS) if hurt else orders.work(self.guild, crew, SHIFT_HOURS)
 
     def crew_pay_in(self):
         """The crew hands its wages to the squad at a shop visit (no treasury: the coins are
@@ -707,7 +709,10 @@ class Sim:
     # -- fights ------------------------------------------------------------ #
     def apply(self, sample, party, relief=1.0, kind=None):
         """Fold a drawn fight into the real guild: hurt, kill, level, then hand out the loot.
-        `relief` thins the deaths of a won fight (see `FightLibrary.relief`)."""
+        `relief` thins the deaths of a won fight (see `FightLibrary.relief`). An arena bout's
+        damage is non-lethal, as the game marks it (`campaign.absorb_battle`): a day's unbroken
+        rest wipes it."""
+        lethal = kind not in act.BOUTS
         dead = []
         slots = list(sample.members)
         self.rng.shuffle(slots)           # a library squad's slots are exchangeable: no member is always the one who kills
@@ -720,7 +725,11 @@ class Sim:
                                hp_frac=round(max(0, unit.hp) / unit.hp_max, 2), squad=len(party),
                                unfed_days=unit.unfed_days)
                 continue
+            before = unit.hp
             unit.hp = max(1, unit.hp - lost)
+            if not lethal:
+                unit.non_lethal_damage = min(unit.hp_max - unit.hp,
+                                             unit.non_lethal_damage + before - unit.hp)
             if xp:
                 unit.combat_xp += xp
                 unit.collect_levels()
@@ -751,8 +760,9 @@ class Sim:
 
     def fight(self, kind, party):
         level = self._levels(party)
-        sample = self.library.draw(kind, level, len(party), self.rng, self.skill)
-        relief = self.library.relief(kind, level, len(party), self.skill)
+        kit = kit_of(party)
+        sample = self.library.draw(kind, level, len(party), self.rng, self.skill, kit)
+        relief = self.library.relief(kind, level, len(party), self.skill, kit)
         return sample, self.apply(sample, party, relief, kind)
 
     def talked_down(self, kind, group, pend):
@@ -762,7 +772,7 @@ class Sim:
         if enc is None:
             return False
         party = list(group.members)
-        odds, _, _ = self.library.stats(kind, self._levels(party), len(party), self.skill)
+        odds, _, _ = self.library.stats(kind, self._levels(party), len(party), self.skill, kit_of(party))
         if dialogue.ai_play(enc, party, odds, self.rng).kind != "peace":
             return False
         forced.settle_talk(self.guild, group, pend)
@@ -845,11 +855,17 @@ class Sim:
         self.snap()
         return True
 
+    def bout_stake(self, kind="arena"):
+        """What a bout costs to enter: the entry for each fighter fielded (`Bout.player_cap`)."""
+        bout = act.BOUTS[kind]()
+        return bout.entry * min(len(self.members), bout.player_cap)
+
     def bout(self, kind="arena"):
         """One staked bout (`act.BOUTS`: the Scrapper by default): stake, fight, and the purse to
         whoever the player picks. Beating the champion opens the Games."""
         bout = act.BOUTS[kind]()
-        party = self.members
+        party = sorted(self.members, key=lambda u: (u.combat_level, u.hp / u.hp_max, u.hp_max),
+                       reverse=True)[:bout.player_cap]
         stake = bout.entry * len(party)
         if self.money < stake:
             return None
@@ -1071,6 +1087,15 @@ class MarketVisit:
         sim.sold_total += sim.money - before
         return sim.money - before
 
+    def sell_round(self, nodes=economy.TOWN_SHOPS):
+        """Sell the loot shop by shop through `nodes` until it is gone: one till refills only
+        `MARKET_CASH_REGEN` a day, less than a crew's haul."""
+        for node_id in nodes:
+            if not any(self.sim.sellable.values()):
+                break
+            self.go(node_id)
+            self.sell_loot()
+
     def buy(self, member, name, qty=1, zone="pack"):
         self.stand_at(name)
         screen = self.screen
@@ -1082,15 +1107,25 @@ class MarketVisit:
 
     def buy_food(self, target_days):
         """Buy the cheapest food up to `target_days` of rations, each unit into whichever
-        pack has the most room, until the money, the shelf or the room runs out."""
+        pack has the most room, until the money, the shelf or the room runs out. A food covers
+        only the days before it spoils (the meals nearest to spoiling are eaten first), so a
+        long trip takes the cheap food for its first days and what keeps for the rest, never dearer
+        than `TRIP_FOOD_PRICE`; what the shelves leave uncovered is the cheapest food, eaten stale."""
         sim = self.sim
-        need = int(target_days * sim.mouths) - sim.rations
-        for name in foods_by_price():
-            while need > 0:
+        covered = sim.rations
+        need = int(target_days * sim.mouths) - covered
+        passes = [(n, int(min(target_days, items.get(n).lifespan or target_days) * sim.mouths))
+                  for n in foods_by_price() if items.get(n).price <= TRIP_FOOD_PRICE]
+        for name, keeps in passes + [(cheapest_food(), None)]:
+            while need > 0 and (keeps is None or covered < keeps):
                 roomy = sorted(sim.members, key=lambda u: u.carry_max - u.load, reverse=True)
                 if sim.money < economy.buy_price(name, self.screen.deal) or not self.buy(roomy[0], name):
                     break
                 need -= 1
+                covered += 1
+
+
+TRIP_FOOD_PRICE = items.get("Jerky").price   # the dearest ration bought for a trip; Compote is a cook's
 
 
 def foods_by_price():
@@ -1159,7 +1194,6 @@ class Policy:
 
     def lumber_day(self, sim):
         sim.work_shift()
-        sim.sleep()
 
     def work_node_shift(self, sim, node):
         """A day's shift at `node`: gathered once the guild holds the licence, bought when the
@@ -1174,15 +1208,7 @@ class Policy:
             sim.work_shift(node=node)
 
     def stake(self, sim):
-        return arena.scrapper_bout().entry * len(sim.members)
-
-    def level_up_bout(self, sim, spare):
-        """A Scrapper bout in the evening, while someone is still combat 0 and the stake and
-        `spare` copper (the next meals) are covered."""
-        if sim.min_combat < 1 and not sim.hurt and sim.money >= self.stake(sim) + spare:
-            sim.bout()
-            return True
-        return False
+        return sim.bout_stake()
 
     def step(self, sim):
         raise NotImplementedError
@@ -1205,10 +1231,13 @@ class Gatherer(Policy):
     def step(self, sim):
         self.upkeep(sim)
         self.work_node_shift(sim, "lumber_yard")
-        sim.sleep()
-        if sum(sim.sellable.values()) >= self.SELL_EVERY * sim.mouths * gather.rolls(SHIFT_HOURS):
+        day = sim.mouths * gather.rolls(SHIFT_HOURS)
+        if sum(sim.sellable.values()) >= self.SELL_EVERY * day:
             with sim.market("lumber_yard") as shop:
                 shop.sell_loot()
+        if sum(sim.sellable.values()) >= 2 * self.SELL_EVERY * day:
+            with sim.market() as shop:
+                shop.sell_round()
 
 
 class Miner(Policy):
@@ -1229,7 +1258,9 @@ class Miner(Policy):
                 sim.goto("market")
                 return
             self.work_node_shift(sim, "mine")
-            sim.sleep()
+            if any(sim.sellable.values()):
+                with sim.market("mine") as shop:
+                    shop.sell_loot()
             self.left -= 1
             if self.left == 0:
                 sim.goto("market")
@@ -1248,7 +1279,7 @@ class Miner(Policy):
         trip_food = (self.STAY_DAYS + 1) * sim.mouths * cheapest_food_price()
         pick = items.get(economy.WORK_TOOLS["mine"]).price
         with sim.market() as shop:
-            shop.sell_loot()
+            shop.sell_round()
             for u in sim.members:
                 if economy.work_level(u, "mine") == 0 and sim.money >= pick + trip_food:
                     shop.buy(u, economy.WORK_TOOLS["mine"])
@@ -1256,33 +1287,33 @@ class Miner(Policy):
         return sim.food_days >= self.STAY_DAYS
 
 
-class MinerShort(Miner):
-    """The same trip for two shifts: does the premium survive a short stay?"""
-    name = "miner_short"
-    STAY_DAYS = 2
+class MinerWage(Miner):
+    """The Miner's trip with the wage only, never the licence: what gathering there is measured against."""
+    name = "miner_wage"
 
-
-class Cautious(Policy):
-    name = "cautious"
-
-    def step(self, sim):
-        self.upkeep(sim)
-        if sim.mean_combat >= 3 and not sim.hurt and sim.food_days >= 3:
-            sim.hunt()
-            sim.heal()
-            return
-        self.level_up_bout(sim, 3 * len(sim.members))
-        self.lumber_day(sim)
-
-
-class Wary(Cautious):
-    name = "wary"
-    stance = CAUTIOUS
+    def work_node_shift(self, sim, node):
+        sim.work_shift(node=node)
 
 
 class Balanced(Policy):
+    """The line the author plays. First the sprint to the day-30 milestone (the author's 14-day
+    run): Axes on day one, the yard to work 2 (racial 1, a hit die), the Champion at combat 0, armor,
+    the strongbox. Then the long game: the Pit until the squad can hunt, a recruit, the Wilds hunt
+    as the income (its Hide makes the Library's Dictionary), the yard only while it heals."""
     name = "balanced"
     BUFFER_DAYS = 1
+    WORK_GOAL = 2                        # work 2 with an Axe: racial level 1 in about five days
+    HUNT_LEVEL = 0.33                    # one of three at combat 1: where the author's recorded runs
+                                         # took the Champion and their first hunts (median)
+    HUNT_HP = 0.8                        # the most wounded member, before a hunt or the Champion
+    PIT_READY = 2                        # members at `WORK_GOAL` before the Pit: the author's runs went in
+                                         # at work [2, 2, 1]
+    OPENING_FOOD_DAYS = 1                # food kept back when the Axes are bought on day one
+    FOOD_LOW_DAYS = 2                    # shop at two days left: a step (a walk and a shift) runs past one
+    HUNT_SQUAD = 4                       # the author's runs signed a fourth before the first hunt; the
+                                         # one that hunted with three lost it
+    TRIO_LEVEL = 0.67                    # three hunt once two of them are combat 1 (the Pit, while no one signs)
+    SELL_AT = 15                         # loot worth a day's wages for three is carried to the market
     HIDE = "1sqm Hide"
     DICTIONARY = "Dictionary of Ankarin"
 
@@ -1291,9 +1322,20 @@ class Balanced(Policy):
         self.opened = False
         self.dictionary_done = False
         self.mission = None
+        self.pitched_week = -1
 
     def buffer(self, sim):
         return self.BUFFER_DAYS * len(sim.members) * cheapest_food_price()
+
+    def sign_on(self, sim):
+        """A free pitch at the tavern once a week, once the milestone is met (a recruit raises it),
+        until the squad can hunt at `HUNT_SQUAD`."""
+        week = recruit.current_week(sim.guild.clock)
+        if (self.sprinting(sim) or len(sim.guild.roster) >= self.HUNT_SQUAD
+                or week == self.pitched_week or sim.food_days < 1):
+            return
+        self.pitched_week = week
+        sim.recruit("tavern", limit=self.HUNT_SQUAD)
 
     def hp_frac(self, sim):
         return min(max(0, u.hp) / max(1, u.hp_max) for u in sim.members)
@@ -1302,11 +1344,27 @@ class Balanced(Policy):
         return any(u.count_of(self.HIDE) for u in sim.members)
 
     def upkeep(self, sim):
-        sim.keep_fed(low=1.0, target=7.0)
+        self.buy_axes(sim)
+        sim.keep_fed(low=self.FOOD_LOW_DAYS, target=7.0, at_low=True)
         if not self.dictionary_done:
             sim.sellable[self.HIDE] = 0
         if sim.badly_hurt:
             sim.heal()
+
+    def hunt_level(self):
+        return self.HUNT_LEVEL
+
+    @staticmethod
+    def sprinting(sim):
+        return sim.milestone_day is None
+
+    def hunt_ready(self, sim):
+        """Armored, healed, fed and with the buffer: the squad may leave the yard for the Wilds."""
+        squad = len(sim.members) >= self.HUNT_SQUAD or sim.mean_combat >= self.TRIO_LEVEL
+        return (squad and kit_of(sim.members)[0] is not None
+                and sim.mean_combat >= self.hunt_level()
+                and self.hp_frac(sim) >= self.HUNT_HP and sim.food_days >= 2
+                and sim.money >= self.buffer(sim))
 
     def open(self, sim):
         for u in sim.members:
@@ -1315,6 +1373,11 @@ class Balanced(Policy):
                     sim.sellable[item.name] += item.qty
         with sim.market() as shop:
             shop.sell_loot()
+            axe = items.get(MILESTONE_WEAPON).price
+            reserve = self.OPENING_FOOD_DAYS * sim.mouths * cheapest_food_price()
+            for u in sim.members:
+                if economy.lumber_level(u) == 0 and sim.money >= axe + reserve:
+                    shop.buy(u, MILESTONE_WEAPON)
 
     def make_dictionary(self, sim):
         crafter = max(sim.members, key=lambda u: u.mod_intelligence)
@@ -1346,7 +1409,12 @@ class Balanced(Policy):
         return True
 
     def gear(self, sim):
-        """Armor first, then a weapon, then the strongbox, whenever the buffer survives it."""
+        """Armor first, then a weapon (the Axe in the pack is wielded, not bought twice), then the
+        strongbox, whenever the buffer survives it."""
+        for u in sim.members:
+            if u.equipped_weapon != MILESTONE_WEAPON and u.count_of(MILESTONE_WEAPON):
+                u.remove_named(MILESTONE_WEAPON, 1)
+                u.give_to_hand(MILESTONE_WEAPON)
         wants = []
         for u in sim.members:
             if not _owns_at_least(u, MILESTONE_ARMOR, getattr(u, "equipped_armor", None) or ""):
@@ -1369,55 +1437,79 @@ class Balanced(Policy):
             economy.charge_richest_first(sim.members, economy.BANK_CHEST_PRICE)
             sim.guild.rent_bank_chest()
 
-    def ready(self, sim):
-        """Healthy, fed and with the buffer to spare: the squad may leave the yard for a risk."""
-        return (sim.mean_combat >= 2 and not sim.hurt and sim.food_days >= 3
-                and sim.money >= self.buffer(sim))
-
     def adventure(self, sim):
         """The risky day this policy prefers once the squad is ready; False if it did none."""
-        if (not self.dictionary_done and not self.has_hide(sim)
-                and sim.champion_beaten and self.hp_frac(sim) >= 0.85
-                and sim.food_days >= 2 and sim.money >= self.buffer(sim)):
-            sim.hunt()
+        if self.sprinting(sim) or not self.hunt_ready(sim):
+            return False
+        sim.hunt()
+        if not self.dictionary_done:
             sim.sellable[self.HIDE] = 0
-            if sim.hurt:
+        if sum(economy.sell_price(n) * q for n, q in sim.sellable.items()) >= self.SELL_AT:
+            with sim.market() as shop:
+                shop.sell_loot()
+        if sim.hurt:
+            sim.heal()
+        return True
+
+    def pit_bout(self, sim):
+        """A Scrapper bout on the way up. The Pit does not kill, so the squad goes in wounded (the
+        mean HP the author bouts at, `PIT_MIN_HP`) and rests a day after, as the author did."""
+        if (sim.min_combat >= 1 or sim.money < self.stake(sim) + self.buffer(sim)
+                or statistics.mean(u.hp / u.hp_max for u in sim.members) < PIT_MIN_HP):
+            return False
+        sim.bout()
+        if sim.hurt:
+            sim.sleep(PIT_REST_HOURS)
+        return True
+
+    def climb(self, sim):
+        """The way to the Champion: the yard to `WORK_GOAL`, the Pit to `hunt_level` (not while
+        sprinting: work 2 beats him at combat 0), then the Champion himself. True when it spent
+        the day."""
+        if sum(u.work_level >= self.WORK_GOAL for u in sim.members) < self.PIT_READY:
+            self.lumber_day(sim)
+            return True
+        if not self.sprinting(sim) and sim.mean_combat < self.hunt_level():
+            if not self.pit_bout(sim):
                 self.lumber_day(sim)
             return True
-        return False
+        if sim.champion_beaten:
+            return (not self.sprinting(sim) and len(sim.members) < self.HUNT_SQUAD
+                    and sim.mean_combat < self.TRIO_LEVEL and self.pit_bout(sim))
+        stake = sim.bout_stake("champion")
+        if self.hp_frac(sim) >= self.HUNT_HP and sim.money >= stake + self.buffer(sim):
+            if sim.bout("champion") is not None:
+                if sim.hurt:
+                    sim.heal()
+                return True
+        self.lumber_day(sim)
+        return True
 
     def step(self, sim):
         if not self.opened:
             self.opened = True
             self.open(sim)
         self.upkeep(sim)
+        self.sign_on(sim)
         if not self.dictionary_done and self.has_hide(sim):
             dict_cost = sum(items.get(n).price for n in economy.LIBRARY_SUPPLIES)
             if sim.money >= self.buffer(sim) + dict_cost:
                 if self.make_dictionary(sim):
                     return
-        if not sim.champion_beaten:
-            stake = act.BOUTS["champion"]().entry * len(sim.members)
-            if self.hp_frac(sim) >= 0.85 and sim.money >= stake + self.buffer(sim):
-                if sim.bout("champion") is not None:
-                    if sim.hurt:
-                        self.lumber_day(sim)
-                    return
-        if sim.champion_beaten:
-            self.gear(sim)
-        if self.adventure(sim):
+        if self.climb(sim):
             return
-        self.level_up_bout(sim, self.BUFFER_DAYS * len(sim.members) * cheapest_food_price())
+        self.gear(sim)
         for school, faction in rite.FACTION.items():
             if (sim.guild.reputation.get(faction, 0) >= rite.REP_NEEDED
                     and not any(school in u.magic_sources for u in sim.members)
                     and sim.money >= self.buffer(sim) + 80):
                 if sim.initiate_mage(school):
                     return
+        if self.adventure(sim):
+            return
         if self.show_pays(sim):
             for _ in range(SHIFT_HOURS // 4):
                 sim.stage_show(4)
-            sim.sleep()
         else:
             self.lumber_day(sim)
 
@@ -1430,413 +1522,7 @@ class Balanced(Policy):
         return tips * SHIFT_HOURS > wages
 
 
-class Grower(Balanced):
-    """Balanced, but it recruits once a week until the guild has `TARGET` members, and everyone
-    past the three fighters works the yard as a crew while the squad is out. Strangers come
-    from the tavern (free) and, when the purse allows, the prison (bail)."""
-    name = "grower"
-    TARGET = 6
-    FIGHTERS = 3
-
-    def __init__(self):
-        super().__init__()
-        self.visited = -1
-
-    def step(self, sim):
-        self.upkeep(sim)
-        week = recruit.current_week(sim.guild.clock)
-        if len(sim.guild.roster) < self.TARGET and week != self.visited and sim.food_days >= 2:
-            self.visited = week
-            reserve = self.buffer(sim)
-            sim.recruit("tavern")
-            if len(sim.guild.roster) < self.TARGET:
-                sim.recruit("prison", reserve=reserve)
-            if len(sim.guild.roster) < self.TARGET and sim.money >= self.buffer(sim) + 250:
-                self.expand_languages(sim)
-            sim.seat_extras(self.FIGHTERS)
-        super().step(sim)
-
-    def expand_languages(self, sim):
-        """Identify candidate languages in the tavern pool that no member speaks, and study one."""
-        pool = recruit.refresh_pool(sim.guild)
-        known = {l for u in sim.guild.roster for l in u.languages}
-        unspoken = []
-        for cand in pool:
-            missing = [l for l in cand.languages if l not in known]
-            if missing and not any(l in known for l in cand.languages):
-                unspoken.extend(missing)
-        if unspoken:
-            target_lang = Counter(unspoken).most_common(1)[0][0]
-            sim.study_language(target_lang)
-
-
-class Games(Balanced):
-    """Balanced, but its adventure is the arena's ladder instead of the Wilds: the champion
-    first (it opens the Games), then whichever Games bout pays best."""
-    name = "games"
-
-    def adventure(self, sim):
-        if not self.ready(sim):
-            return False
-        size, level = len(sim.members), sim.fight_level
-        options = {}
-        spare = self.BUFFER_DAYS * size * cheapest_food_price()
-        for kind in ("brawl", "ctf") if sim.champion_beaten else ("champion",):
-            bout = act.BOUTS[kind]()
-            if sim.money < bout.entry * size + spare:
-                continue
-            p, _, _ = sim.library.stats(kind, level, size, sim.skill)
-            options[kind] = p * bout.purse / size - bout.entry
-        if not options:
-            return False
-        kind = max(options, key=options.get)
-        if options[kind] <= 0 and kind != "champion":
-            return False
-        if sim.bout(kind) is None:
-            return False
-        sim.heal()
-        return True
-
-
-class Climber(Games):
-    """Follows the XP: each day it does the rung that still teaches. The yard until it stops
-    (work 1, or 2 with an Axe), the Scrapper until combat 1, then the Games (the champion first)
-    from combat 1, and the Wilds hunt once the squad is combat 3; the yard pays in between.
-    The talents it picks (Piecework, Hardy ...) come from `TALENT_PLAN`."""
-    name = "climber"
-    GAMES_LEVEL = 0.6                 # two of three at combat 1: the slowest member catches up in the Games
-    WILDS_LEVEL = 3
-
-    def ready(self, sim):
-        return (sim.mean_combat >= self.GAMES_LEVEL and not sim.hurt and sim.food_days >= 3
-                and sim.money >= self.buffer(sim))
-
-    def adventure(self, sim):
-        if sim.mean_combat >= self.WILDS_LEVEL and self.ready(sim):
-            sim.hunt()
-            sim.heal()
-            return True
-        return super().adventure(sim)
-
-
-class Claimer(Balanced):
-    """Balanced, but its adventure is the Wilds claim: scout, clear, fence, sweep, then hold it.
-    Starts once the squad is combat 2 and can pay for the trip."""
-    name = "claimer"
-
-    def buffer(self, sim):
-        """The gear waits for the trip's food and fence Lumber to be set aside first."""
-        return super().buffer(sim) + sim.claim_cost()
-
-    def adventure(self, sim):
-        if sim.guild.wilds_claim_stage == "ESTABLISHED" and sim.guild.wilds_claim_owner == "guild":
-            if not (sim.food_days >= 3 and not sim.hurt):
-                return False
-        elif not self.ready(sim):
-            return False
-        sim.claim_run()
-        sim.heal()
-        return True
-
-
-class Human(Balanced):
-    """`balanced`, but every decision threshold is the one measured from recorded play
-    (`scripts/play_analysis.py --out`, loaded with `--profile`): the cash held when the Axe was
-    bought, the days of food shopped at and up to, the HP and level before a bout or a hunt, the
-    day the yard was left. A threshold the recordings never showed keeps `balanced`'s rule."""
-    name = "human"
-    profile: ClassVar[dict] = {}
-
-    @classmethod
-    def load(cls, path):
-        with open(path, encoding="utf-8") as f:
-            cls.profile = json.load(f)
-
-    def want(self, key, default):
-        return self.profile.get(key, default)
-
-    @staticmethod
-    def hp_frac(sim):
-        return statistics.mean(max(0, u.hp) / u.hp_max for u in sim.members)
-
-    def upkeep(self, sim):
-        sim.keep_fed(self.want("food_low_days", FOOD_LOW_DAYS),
-                     self.want("food_target_days", FOOD_TARGET_DAYS), at_low=True)
-        self.buy_axes(sim)
-        if sim.badly_hurt:
-            sim.heal()
-
-    def buy_axes(self, sim):
-        axe = items.get(MILESTONE_WEAPON).price
-        lacking = [u for u in sim.members if economy.lumber_level(u) == 0]
-        if not lacking or sim.food_days < self.want("axe_food_days", AXE_BUFFER_DAYS):
-            return
-        if sim.money / len(sim.members) < self.want("axe_cash_per_member", axe):
-            return
-        with sim.market() as shop:
-            for u in lacking:
-                if sim.money < axe:
-                    break
-                shop.buy(u, MILESTONE_WEAPON)
-
-    def level_up_bout(self, sim, spare):
-        if (sim.min_combat >= 1 or self.hp_frac(sim) < self.want("bout_min_hp", 1.0)
-                or sim.money < self.stake(sim)
-                or sim.money / len(sim.members) < self.want("bout_cash_per_member", 0)):
-            return False
-        sim.bout()
-        return True
-
-    def ready(self, sim):
-        return (sim.mean_combat >= self.want("hunt_min_level", 2)
-                and self.hp_frac(sim) >= self.want("hunt_min_hp", 1.0)
-                and sim.food_days >= 3 and sim.money >= self.buffer(sim))
-
-    def step(self, sim):
-        if sim.elapsed < self.want("yard_leave_day", 0) - 1:
-            self.upkeep(sim)
-            self.lumber_day(sim)
-            return
-        super().step(sim)
-
-
-class Rush(Human):
-    """The line two recorded runs took to the day-30 milestone in 11-14 days: sell the starting
-    kit and buy Axes, work the yard until the Champion's stake is in hand (level does not
-    matter), beat him, wear armor, hunt the Wilds once for a Hide, buy Paper and Ink at the
-    Library, craft the Dictionary the Library's one-off mission wants, and only then the rest of
-    the gear and the strongbox. Thresholds come from `--profile` like `human`'s."""
-    name = "rush"
-    HIDE = "1sqm Hide"
-    DICTIONARY = "Dictionary of Ankarin"
-    HUNT_HOURS = 6
-    CRAFT_CHUNK = 4
-    CRAFT_CHUNKS = 8
-
-    def __init__(self):
-        super().__init__()
-        self.opened = False
-        self.dictionary_done = False
-        self.mission = None
-
-    def open(self, sim):
-        """Day 0: the starting kit that is not food goes to the market, then Axes."""
-        for u in sim.members:
-            for name, qty in u._base_inventory:
-                if not items.is_coin(name) and not items.is_food(name):
-                    sim.sellable[name] += qty
-        with sim.market() as shop:
-            shop.sell_loot()
-        self.buy_axes(sim)
-
-    def buffer(self, sim):
-        return self.BUFFER_DAYS * len(sim.members) * cheapest_food_price()
-
-    def gear(self, sim):
-        if self.dictionary_done:
-            return super().gear(sim)
-        wants = [u for u in sim.members
-                 if not _owns_at_least(u, MILESTONE_ARMOR, getattr(u, "equipped_armor", None) or "")]
-        price = items.get(MILESTONE_ARMOR).price
-        wants = [u for u in wants if sim.money >= self.buffer(sim) + price]
-        if not wants:
-            return
-        with sim.market() as shop:
-            for u in wants:
-                if sim.money >= self.buffer(sim) + price:
-                    shop.buy(u, MILESTONE_ARMOR, zone="armor")
-
-    def has_hide(self, sim):
-        return any(u.count_of(self.HIDE) for u in sim.members)
-
-    def hunt_ready(self, sim):
-        return (sim.mean_combat >= self.want("hunt_min_level", 0)
-                and self.hp_frac(sim) >= self.want("hunt_min_hp", 0.9)
-                and sim.food_days >= 2 and sim.money >= self.buffer(sim))
-
-    def dictionary_cost(self):
-        return sum(items.get(n).price for n in economy.LIBRARY_SUPPLIES)
-
-    def make_dictionary(self, sim):
-        """Paper and Ink at the Library, the Hide to the crafter, accept the mission, craft, hand in."""
-        guild = sim.guild
-        crafter = max(sim.members, key=lambda u: u.mod_intelligence)
-        holder = next(u for u in sim.members if u.count_of(self.HIDE))
-        sim.goto("library")
-        shop = MarketScreen(None, guild, sim.members, world.node("library"), lambda: None)
-        for name in economy.LIBRARY_SUPPLIES:
-            if not crafter.count_of(name):
-                shop.qty[name] = 1
-                shop.selected = [("stock", name)]
-                shop._buy(crafter, [name])
-        if holder is not crafter:
-            holder.remove_named(self.HIDE, 1)
-            crafter.give_to_pack(self.HIDE)
-        if self.mission is None:
-            self.mission = missions.accept(guild, crafter, missions.LIBRARY_DICTIONARY)
-        mission = self.mission
-        for _ in range(self.CRAFT_CHUNKS):
-            guild.crafting_shift(crafter, self.DICTIONARY, self.CRAFT_CHUNK)
-            if crafter.count_of(self.DICTIONARY):
-                break
-        if missions.can_turn_in(guild, mission):
-            missions.turn_in(guild, mission)
-            self.dictionary_done = True
-        sim.snap()
-
-    def step(self, sim):
-        if not self.opened:
-            self.opened = True
-            self.open(sim)
-        self.upkeep(sim)
-        if not sim.champion_beaten:
-            stake = act.BOUTS["champion"]().entry * len(sim.members)
-            if sim.money >= stake and sim.bout("champion") is not None:
-                sim.heal()
-                return
-        elif not self.has_hide(sim):
-            self.gear(sim)
-        if sim.champion_beaten and not self.dictionary_done:
-            if not self.has_hide(sim):
-                if self.hunt_ready(sim):
-                    sim.hunt(self.HUNT_HOURS)
-                    sim.sellable[self.HIDE] = 0
-                    sim.heal()
-                    return
-            elif sim.money >= self.buffer(sim) + self.dictionary_cost():
-                self.make_dictionary(sim)
-                return
-        if self.dictionary_done:
-            Balanced.step(self, sim)
-            return
-        self.lumber_day(sim)
-
-
-class Greedy(Policy):
-    name = "greedy"
-
-    def upkeep(self, sim):
-        sim.keep_fed(low=0.5)
-        if sim.hurt:
-            sim.heal()
-
-    def step(self, sim):
-        self.upkeep(sim)
-        if sim.min_combat < 1 and sim.money >= self.stake(sim):
-            sim.bout()
-            sim.heal()
-        elif sim.food_days >= 1:
-            sim.hunt()
-            sim.heal()
-        else:
-            self.lumber_day(sim)
-
-
-class MaxEV(Policy):
-    name = "maxev"
-
-    def step(self, sim):
-        self.upkeep(sim)
-        size, level = len(sim.members), sim.fight_level
-        options = {"lumber": self.lumber_ev(sim)}
-        bout = arena.scrapper_bout()
-        if sim.money >= bout.entry * size and not sim.hurt:
-            p, _, _ = sim.library.stats("arena", level, size, sim.skill)
-            options["arena"] = p * bout.purse / size - bout.entry
-        if not sim.hurt and sim.food_days >= 2:
-            p, value, deaths = sim.library.stats("wilds", level, size, sim.skill)
-            options["hunt"] = (p * value / size) / 2.0 - deaths * 4
-        choice = max(options, key=options.get)
-        if choice == "arena":
-            sim.bout()
-            sim.heal()
-        elif choice == "hunt":
-            sim.hunt()
-            sim.heal()
-        else:
-            self.lumber_day(sim)
-
-    @staticmethod
-    def lumber_ev(sim):
-        return statistics.mean(economy.lumber_pay(SHIFT_HOURS, economy.lumber_level(u))
-                               for u in sim.members)
-
-
-class Crafter(Policy):
-    """The guild's best crafter buys inputs for a few batches, works a shift at the forge on a
-    solo order (`solo.craft`) and sells the product at the market. The rest of the guild works
-    the yard as a crew meanwhile; its wages pay for the next batches."""
-    name = "crafter"
-    BATCHES = 6
-
-    def step(self, sim):
-        self.seat(sim)
-        sim.keep_fed()
-        crafter = max(sim.members, key=lambda u: u.mod_intelligence)
-        recipe = self.pick(sim, crafter)
-        if recipe is None:
-            self.lumber_day(sim)
-            return
-        with sim.market() as shop:
-            self.stock_up(sim, shop, crafter, recipe)
-            shop.sell_loot()
-        need = items.CRAFTING_RECIPES[recipe].materials
-        if crafter.crafting_target != recipe and not all(crafter.count_of(m) for m in need):
-            self.lumber_day(sim)                    # too poor for a batch: the floor job
-            return
-        sim.goto("city")
-        ok, _ = solo.craft(sim.guild, sim.group, crafter, recipe, SHIFT_HOURS)
-        if not ok:
-            self.lumber_day(sim)
-            return
-        sim.run_order(sim.group.order)
-        target = items.CRAFTING_RECIPES[recipe].target
-        sim.sellable[target] = max(sim.sellable[target], crafter.count_of(target))
-        sim.snap()
-        sim.sleep()
-
-    @staticmethod
-    def seat(sim):
-        """The best crafter stays with the main group; everyone else becomes the yard crew."""
-        if sim.crew is not None or len(sim.members) < 2:
-            return
-        members = sim.main.members
-        members.insert(0, members.pop(members.index(max(members, key=lambda u: u.mod_intelligence))))
-        sim.seat_extras(1)
-
-    @staticmethod
-    def pick(sim, crafter):
-        """The known recipe that sells best per hour of work, or None if none sells at a profit."""
-        best, best_rate = None, 0.0
-        deal = MarketScreen(None, sim.guild, sim.members, world.node("market"), lambda: None).deal
-        for name in crafter.known_recipes:
-            recipe = items.CRAFTING_RECIPES.get(name)
-            if recipe is None or not all(economy.freely_buyable(m) for m in recipe.materials):
-                continue
-            margin = (recipe.yield_qty * economy.sell_price(recipe.target, deal)
-                      - sum(economy.buy_price(m, deal) for m in recipe.materials))
-            rate = margin / (items.recipe_goal(recipe) / craft_level.AVG_ROLL)
-            if rate > best_rate:
-                best, best_rate = name, rate
-        return best
-
-    @classmethod
-    def stock_up(cls, sim, shop, unit, recipe):
-        need = Counter(items.CRAFTING_RECIPES[recipe].materials)
-        reserve = FOOD_LOW_DAYS * len(sim.guild.roster) * cheapest_food_price()
-        for _ in range(cls.BATCHES - min(unit.count_of(m) // q for m, q in need.items())):
-            if any(sim.guild.shop(economy.shop_of(m)).stock.get(m, 1) < q for m, q in need.items()):
-                break
-            cost = sum(economy.buy_price(m, shop.screen.deal) * q for m, q in need.items())
-            if sim.money < cost + reserve:
-                break
-            spent = [shop.buy(unit, m, q) for m, q in need.items()]
-            sim.input_spend += sum(spent)
-            if not all(spent):
-                break
-
-
-POLICIES = {cls.name: cls for cls in (Lumber, Gatherer, Miner, MinerShort, Cautious, Wary, Balanced, Games, Climber, Claimer, Grower, Human, Rush, Greedy, MaxEV, Crafter)}
+POLICIES = {cls.name: cls for cls in (Lumber, Balanced, Gatherer, Miner, MinerWage)}
 
 
 # --------------------------------------------------------------------------- #
@@ -1856,7 +1542,7 @@ class Result:
     starved: int = 0
     crashed: str = ""
     start_money: int = 0
-    milestone_met: bool = False                    # at the last mark: alive and able to afford it all
+    milestone_met: bool = False                    # it could afford it all on some day by the last mark
     sold: int = 0
     input_spend: int = 0
     armor: dict = field(default_factory=dict)      # day -> share of members in Studded Leather or better
@@ -1934,9 +1620,7 @@ def run_guild(policy_name, *, days=30, seed=0, size=3, level=0, skill=None, libr
         if d <= days:
             snap = at_day(sim.snapshots, d)
             res.curve[d] = 0 if dead_by(d) else snap.money / (snap.alive if sim.recruited else size)
-    if sim.snapshots and not dead_by(marks[-1]):
-        last = at_day(sim.snapshots, marks[-1])
-        res.milestone_met = last.money >= last.gear_cost
+    res.milestone_met = sim.milestone_day is not None and sim.milestone_day <= marks[-1]
     return res
 
 
@@ -2084,29 +1768,6 @@ def apply_overrides(sets, prices):
                 items._LOOKUP[key] = new
 
 
-def restock_sweep(settings, *, policy, guilds, days, skill, recipes, size, level, seed, capital):
-    """One policy under each shelf setting (`inf` = infinite stock, today's rule): how much a
-    specialist guild pulls out of the market a day, net of the inputs it buys, against what the
-    same guild would earn at the lumber yard. The table that sizes the restock limiter."""
-    library = FightLibrary()
-    squad_lumber = size * economy.LUMBER_WAGE * (SHIFT_HOURS // economy.LUMBER_BLOCK_HOURS)
-    lines = [(f"== restock sweep: {policy}, {guilds} guilds of {size}, {days} days, "
-              f"{capital} copper to start"),
-             f"   a squad at the lumber yard earns ${squad_lumber}/day",
-             f"{'shelves':<10}{'sales':>8}{'inputs':>8}{'profit/d':>10}{'x lumber':>10}{'wiped':>7}"]
-    for setting in settings:
-        restock = Restock.parse(setting) if setting != "inf" else None
-        runs = [run_guild(policy, days=days, seed=seed + i, size=size, level=level, skill=skill,
-                          library=library, restock=restock, recipes=recipes, marks=(days,),
-                          capital=capital)
-                for i in range(guilds)]
-        sold = statistics.mean(r.sold for r in runs) / days
-        spent = statistics.mean(r.input_spend for r in runs) / days
-        profit = sold - spent
-        lines.append(f"{setting:<10}{sold:>8.1f}{spent:>8.1f}{profit:>10.1f}"
-                     f"{profit / squad_lumber:>10.2f}{sum(r.wiped for r in runs) / len(runs) * 100:>6.0f}%")
-    return chr(10).join(lines)
-
 
 def curve_report(table):
     days = sorted({d for s in table.values() for d in s["curve"]})
@@ -2117,19 +1778,71 @@ def curve_report(table):
     return chr(10).join(lines)
 
 
+# --------------------------------------------------------------------------- #
+# gathering: the licence's payback in the engine against the table's promise  #
+# --------------------------------------------------------------------------- #
+GATHER_PAIRS = {"lumber_yard": ("gatherer", "lumber"), "mine": ("miner", "miner_wage")}
+GATHER_DAYS = 60
+GATHER_CREWS = (3, 7)                # a small crew, and the full group a good leader keeps there
+GATHER_LEVEL = 3                     # the licence is bought once a squad has climbed out of the Scrapper
+GATHER_SPARE = 150                   # copper on top of the licence: food and tools for both sides
+
+
+def gather_payback(node, *, guilds, seed, library, skill, level=0, size=3, days=GATHER_DAYS):
+    """The same guilds gathering at `node` (the licence bought on day one) and working its wage.
+    -> dict: the copper edge a day gathering adds over the wage, the days that edge takes to pay
+    the licence, the share of each side wiped, and what the table alone promises."""
+    price = gather.licence_price(node)
+    capital = price + GATHER_SPARE * size // 3
+    out = {}
+    for side, policy in zip(("gather", "wage"), GATHER_PAIRS[node]):
+        runs = [run_guild(policy, days=days, seed=seed + i, capital=capital, library=library,
+                          skill=skill, level=level, size=size, marks=(days,)) for i in range(guilds)]
+        alive = [r for r in runs if not r.wiped] or runs
+        out[side] = {"gain": statistics.mean(r.money[days] - r.start_money for r in runs),
+                     "alive_gain": statistics.mean(r.money[days] - r.start_money for r in alive),
+                     "wiped": sum(r.wiped for r in runs) / len(runs)}
+    edge = (out["gather"]["gain"] + price - out["wage"]["gain"]) / days
+    alive_edge = (out["gather"]["alive_gain"] + price - out["wage"]["alive_gain"]) / days
+    promise = size * (gather.expected_value(node, gather.DAY_HOURS)
+                      - economy.work_pay(node, gather.DAY_HOURS, economy.LUMBER_LEVEL_OWN_AXE))
+    return {"node": node, "level": level, "size": size, "price": price, "edge": edge,
+            "alive_edge": alive_edge, "promise": promise,
+            "payback": price / edge if edge > 0 else None,
+            "alive_payback": price / alive_edge if alive_edge > 0 else None,
+            "wiped": out["gather"]["wiped"], "wage_wiped": out["wage"]["wiped"]}
+
+
+def gather_report(rows, label):
+    def days(x):
+        return f"{x:.0f}" if x else "never"
+    lines = [f"== the gathering licence, measured ({label})",
+             (f"   each node gathered from day one against its wage, {GATHER_DAYS} days; edge = copper a day "
+              f"gathering adds for the guild"),
+             (f"{'node':<13}{'lvl':>4}{'crew':>5}{'licence':>8}{'promised':>10}{'edge':>7}{'payback':>9}"
+              f"{'alive edge':>12}{'payback':>9}{'wiped':>7}{'wage wiped':>12}")]
+    for r in rows:
+        lines.append(f"{r['node']:<13}{r['level']:>4}{r['size']:>5}{r['price']:>8}{r['promise']:>9.1f}/d"
+                     f"{r['edge']:>7.1f}{days(r['payback']):>9}{r['alive_edge']:>12.1f}{days(r['alive_payback']):>9}"
+                     f"{r['wiped'] * 100:>6.0f}%{r['wage_wiped'] * 100:>11.0f}%")
+    lines.append(f"   promised: the crew's table value over an Axe-armed wage ({gather.PAYBACK_CREW} workers "
+                 f"pay the licence in {gather.PAYBACK_DAYS} days on the table); alive: wiped guilds left out")
+    return "\n".join(lines)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--policies", default="lumber,cautious,balanced,greedy,maxev")
+    ap.add_argument("--policies", default="lumber,balanced")
     ap.add_argument("--guilds", type=int, default=40)
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--size", type=int, default=3)
     ap.add_argument("--level", type=int, default=0)
     ap.add_argument("--skill", type=float, default=None,
-                    help="a player's win chance in every fight (default: the AI's own)")
+                    help="the share of the AI's losses a player turns into wins (default: the AI's own)")
     ap.add_argument("--restock", default=None, metavar="TARGET:PER_DAY",
                     help="finite shelves: every free market item holds TARGET, refills PER_DAY")
-    ap.add_argument("--recipes", default="", help="comma list given to every member (crafter)")
+    ap.add_argument("--recipes", default="", help="comma list of recipes every member knows")
     ap.add_argument("--assets", default="",
                     help="comma list the guild starts with and must keep: house, Donkey, Ox, Horse, Cart")
     ap.add_argument("--medic", action="store_true",
@@ -2142,11 +1855,7 @@ def main():
                     help=f"the Medic's price as a share of the potions ({act.MEDIC_PRICE_FACTOR})")
     ap.add_argument("--capital", type=int, default=0,
                     help="extra copper at the start, for a guild past its first week")
-    ap.add_argument("--profile", default=None, metavar="JSON",
-                    help="thresholds measured from recorded play (play_analysis.py --out) for the human policy")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--restock-sweep", default=None, metavar="inf,TARGET:PER_DAY,...",
-                    help="run the first policy under each shelf setting and compare")
     ap.add_argument("--curve", action="store_true",
                     help="also print each policy's copper per member by day")
     ap.add_argument("--ranking", action="store_true",
@@ -2157,19 +1866,11 @@ def main():
                     help="what-if: override an item's price, e.g. \"Studded Leather=40\"")
     args = ap.parse_args()
     apply_overrides(args.set, args.price)
-    if args.profile:
-        Human.load(args.profile)
     if args.medic_factor is not None:
         act.MEDIC_PRICE_FACTOR = args.medic_factor
     marks = tuple(d for d in (7, 30) if d <= args.days) or (args.days,)
     recipes = [r for r in args.recipes.split(",") if r]
     assets = [a for a in args.assets.split(",") if a]
-    if args.restock_sweep:
-        print(restock_sweep(args.restock_sweep.split(","), policy=args.policies.split(",")[0],
-                            guilds=args.guilds, days=args.days, skill=args.skill, recipes=recipes,
-                            size=args.size, level=args.level, seed=args.seed,
-                            capital=args.capital))
-        return
     restock = Restock.parse(args.restock) if args.restock else None
     library = FightLibrary()
     table, ranked = {}, []
@@ -2184,7 +1885,7 @@ def main():
         if args.ranking:
             ranked.append(ranking_report(rank_traits(results, marks[-1]),
                                          f"{name}, day {marks[-1]}"))
-    skill = "the AI plays" if args.skill is None else f"a player wins {args.skill * 100:.0f}%"
+    skill = "the AI plays" if args.skill is None else f"a player wins {args.skill * 100:.0f}% of the AI's losses"
     print(report(table, marks, f"{args.guilds} guilds of {args.size}, level {args.level}, "
                                f"{skill}" + (f", shelves {args.restock}" if restock else "")))
     if args.curve:

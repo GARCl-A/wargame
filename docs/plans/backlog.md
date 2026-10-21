@@ -47,12 +47,23 @@ screens. Each item's detail stays in its own entry below.
    Dead a fight in ambushes 0.51 -> 0.58: the foes also fight on to 10% now.
 
 **Phase 3 — measure and economy** (one `scripts/economy_report.py` run at the end)
-6. **The economy report does not measure the work talents** (*Medium*).
-7. **Gathering: loose ends** (*Large*): (1) calibration and (2) the shift picker's worth, which reuses
-   item 6's pricing; Mine art stays under *Art*.
-8. **Finite stock and a target per item** (*Large*): confirm Paper, Ink, Lumber and Jerky.
-9. **Which stats matter:** measure with `balance_sim.py` (the magic-arc gate is past); tune only what
-   is glaring, the playtest decides the rest.
+6. ~~The economy report does not measure the work talents~~ done 2026-10-20: `scripts/economy_talents.py`
+   prices all 30 with and without (report section 3, WORK TALENTS; a test fails for one with no row).
+   Steady Pace is the only one worth a day's wage; the hour talents are pennies at the yard's $0.31/h.
+7. ~~Gathering: loose ends~~ done 2026-10-20: the shift buttons show haul / wage / ambush odds
+   (`Guild.shift_worth`) and the licence's payback for the group; report section 3, GATHERING, measures the
+   payback in the engine. The author's premise (2026-10-20): the licence is for a whole group left there, so no
+   numbers moved. Since shifts run back to back (2026-10-21) the wage grew more than the haul: level 3, the Yard
+   pays back in 47 days for 3 and 128 for 7 (the Yard's till refills $25 a day), the Mine in 86 and 70; see
+   *No fatigue* below.
+   The sim's gatherers now sell at the node's till then shop by shop (one till refills $25 a day).
+8. ~~Finite stock and a target per item~~ done 2026-10-20: Paper 20/5, Ink 10/2 (one each a Dictionary, no
+   policy buys them in 30 days) and Lumber 20/6 (never below 10) confirmed; shop Jerky ($8) stays dearer than
+   the fire's (~$6.50) on purpose, and Beer (15 on the shelf, 30-day life) is too scarce to be an expedition's
+   ration (author). The sim buys food by shelf life (Claim expeditions: hungry days 151 -> 90, wipes 4 -> 2 of 16).
+9. ~~Which stats matter~~ done 2026-10-20: `balance_sim.py` STATS section (score per +1 modifier, race and
+   occupation out). L0 / L3 geared: STR +0.024 / +0.025, CON +0.014 / +0.019, DEX +0.013 / +0.010, the mental
+   three 0 in combat (they work in the world). Matches the playtest feel; nothing glaring, nothing tuned.
 
 **Phase 4 — combat presentation** (same files: `battle_draw.py`, `lighting.py`)
 10. **Darkness: fog of war.**
@@ -82,13 +93,20 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
   2. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
   3. *Tuning after playtests:* balance numbers for Battlefield, Snake Dragon, Ogre Wildfire, Necromancer at the Front, and Dragon's Clutch once further campaign runs reach them.
-- **The economy report does not measure the work talents (found 2026-10-20).** `TALENT_PLAN` in
-  `scripts/economy_guild.py` now lists the 16 new work talents, but a 30-day sim member reaches at most
-  2 work picks (Carrier, Piecework), so none of them is ever taken inside the report's horizon. Wanted: a
-  section in `economy_report.py` that prices each work talent directly (one member with and without it on
-  the activity tables: Troubadour's tips, Restful Sleep / Triage hours to full, Pathfinder's hours on the
-  road, Skinner's hide, Heavy Haul's kg against the Lumber / Ore a crew carries back), without waiting for
-  a guild to level. Sized medium; blocks nothing.
+
+- **The sim's long game (found 2026-10-21).** `economy_guild.Balanced` now plays the author's line (the draft
+  with Commission Tokens, Axes on day one, shift after shift with no forced sleep, the Champion at combat 0, armor,
+  the strongbox): 92% of guilds meet the day-30 milestone (fastest day 13.9, the author's own playtest took 14),
+  none die before it. Past it (the Pit, a recruit, the Wilds hunt as the income) 18 of 40 die by day 60, all
+  hunting: a lost lethal fight takes the whole group. The sim gives the player `SKILL = 0.5` of the AI's losses in
+  every fight; the author's 87 hunts measure 0.84 (arena 0.44, road ambushes ~0, `combat_pairs.py`).
+  Decided 2026-10-21: keep 0.5 and leave the long game for later.
+
+- **No fatigue: shifts run back to back (found 2026-10-21).** Rest only heals HP, clears non-lethal damage and
+  sickness, and a meal falls once a calendar day whatever the hours worked, so a crew chains 16 h shifts (~1.5 a
+  day; the author's 14-day milestone run did). The yard then pays about 50% over the premise's floor
+  ("16 h = cheapest meal + $1"): `lumber` alone affords the day-30 milestone in about half its guilds. Open:
+  a cost for going without sleep, a lower wage, or a new premise. Layer 1's floor check still counts one shift a day.
 
 ## Playtest notes 2026-10-12
 
@@ -116,9 +134,6 @@ its functions are tabs inside.
 - **The Claim:** let the player build their own farm to stock food.
 
 **Balance question**
-- **Which stats matter.** Playtest feel: CON > STR > DEX > CHA > INT > WIS in importance. Negative STR/CON is very punishing
-  (armour is hard to wear, healing is slow); low CHA caps guild growth; the mental stats hurt little.
-  Decided 2026-10-12: keep current stat severity for now; revisit attribute weighting and severity after the magic arc lands.
 
 ## Playtest notes 2026-10-18 (Claude's 30-day run from a new game)
 
@@ -246,19 +261,15 @@ pointed to, not repeated.
 - **Production chain between groups (after the magic arc, author 2026-10-15).** The first place where one
   group's output is another's input, which is the heart of the open-world vision. Carpenter node opened
   on 2026-10-19 (crafting station for bows, crossbows, spear, club, torch; Rowan keeper; bows migrated from Tanner).
-  Next: Coal for Smith (Iron Bar recipe), wagon crafting, the sim's `crafter` policy and tests. Gives Coal and the
+  Next: Coal for Smith (Iron Bar recipe), wagon crafting, a crafting branch for the sim's `balanced` policy and tests. Gives Coal and the
   gems a use and closes `sources.py`'s `traded` goods one chain at a time. **Market supply and demand / lumber saturation:**
   simulate relatively complex market dynamics with supply and demand (so endless day labour at the Yard floods wood prices).
-- **Gathering: loose ends.**
-  Left: (1) sim payback gap calibration vs day labour; (2) shift picker displaying average worth of a shift against wage; (3) Mine visual art. (Fruit preservation completed with Fruit Compote recipe).
 - **Item properties: base material sources (after the production chain).**
   Left: (1) widen base materials beyond `RAW_TYPES` to include gear recipes as the Smith's chain lands; (2) seven declared `traded` goods (Potato, Sugar, Salt, 1L Beer, Vial, Paper, Ink) awaiting their production chains.
 - **Prisoners.**
   Decided 2026-10-19: (1) sell to City Prison via interactive tab/dialogue for bounty based on captive level/crime; (2) recruit contest; (3) forced manual labor in lumber/mine: captive eats group food (or starves), escape/revolt check fires daily after captive recovers to full HP. Left: UI tabs, escape check implementation, enemy capturing player units, and battlefield rescue.
 - **Sim policies that find the opportunities themselves.**
   Offers list built (`scripts/economy_offers.py`); left: policy planner that enumerates and prices offers dynamically in copper and days.
-- **Finite stock and a target per item, in every shop.**
-  Left: confirm Paper 20/5, Ink 10/2 and Lumber 20/6 shelf targets; verify Jerky ($8, 10/3) doesn't undercut camp cooking; sim food fallback for long expeditions.
 - **Tune the specialised shops.**
   Left: confirm distances and alignments of shop keepers; verify world-tied restocking (carpenter node verified 2026-10-19).
 
@@ -271,6 +282,8 @@ GPU a portrait, curated by hand). Each task below is its own sitting of art-maki
 the ones that also need code say so. Order is the suggested priority.
 
 - **Fill the short portrait pools.** Pools with 12+ portraits are complete (Goblin, Centaur, Kenku, Treefolk, Automaton, Gnoll, Gnome, Elf, Human, Orc, Kobold, Grippli, Halfling, Hobgoblin, Sprite). Remaining short (< 12): Ogre (3), Snake (3), Giant Spider (4), Donkey (4), Horse (4), Sheep (4), Ox (7), Wolf (8), Skeleton (9), Lizardfolk (11), Goliath (10), Dwarf (11), Zombie (3, the former `portraits/undead/`), Dragon (2), Snake Dragon (1).
+- **The Mine's art.** The Mine (a gathering node since 2026-10) has no visual of its own on the map
+  or its screens; the Lumber Yard's look is the model.
 - **Battle-board objects.** Dropped weapon, torch and the neutral corpse (`ground.py`) are
   drawn procedurally. Lowest priority.
 
@@ -329,10 +342,9 @@ building them:
 - **Found-the-guild charter** (`draft_screen.py`, `vocation_screen.py`). Founding the guild should be the
   heaviest choice of the run: squad members die, the guild does not, and the player *is*
   the guild. The vocation is built (`vocations.py`, see RULES.md); what is left:
-  - **Measure the Wilds perk.** The sim has the `wary` policy (`cautious` with the group always
-    *Cautious*) and `--vocation`; `scripts/vocation_report.py` still does not price the Wilds
-    perk. Compare `cautious` and `wary` under `--vocation wilds` at level 3+ (level 0 never
-    reaches an ambush) and price the ambushes avoided.
+  - **Measure the Wilds perk.** The sim takes `--vocation`; `scripts/vocation_report.py` still does
+    not price the Wilds perk. Run `balanced` under `--vocation wilds` with its group's stance set to
+    *Cautious* against the same on *Normal*, past the milestone (the hunts), and price the ambushes avoided.
   - **Price the Scholars' perk.** It is live since 2026-10-11 (`vocations.info_bonus`: +2 on the opening
     read and on Assess), and `vocation_report.py` does not price it yet; the perk's value is how much
     sooner a guild reads a foe, so it needs a fight-level measure, not a copper-a-day one.

@@ -27,8 +27,8 @@ class _WonOnly(sim_mod.FightLibrary):
     road: which of a library's six samples a seeded sim draws changes with every AI change. A pool
     with no win (a level 0 squad on the Old Road) gets its first fight turned into one."""
 
-    def pool(self, kind, level, size):
-        fights = super().pool(kind, level, size)
+    def pool(self, kind, level, size, kit=sim_mod.NAKED):
+        fights = super().pool(kind, level, size, kit)
         won = [f for f in fights if f.won]
         if won:
             return won
@@ -231,11 +231,6 @@ def test_the_miner_policy_buys_a_pick_and_works_the_mine_past_the_old_road():
     assert sim.group.node in ("mine", "market")
 
 
-def test_the_short_miner_makes_the_same_trip_for_fewer_shifts():
-    assert sim_mod.MinerShort.STAY_DAYS < sim_mod.Miner.STAY_DAYS
-    assert {"miner", "miner_short"} <= set(sim_mod.POLICIES)
-
-
 def test_the_gatherer_buys_the_yards_licence_then_gathers_and_sells_the_haul(monkeypatch):
     monkeypatch.setattr(gather, "ambushed", lambda *a, **k: False)
     sim = _run(_sim("gatherer", capital=900), 6)
@@ -260,13 +255,13 @@ def test_a_pack_on_a_gathering_shift_is_fought_with_its_own_pack_and_a_win_banks
 
 
 def test_every_policy_runs_a_few_days_without_breaking():
-    for name in ("cautious", "balanced", "greedy", "maxev"):
+    for name in sim_mod.POLICIES:
         sim = _run(_sim(name, seed=2), 4)
         assert sim.snapshots and sim.elapsed >= 4 or not sim.guild.roster, name
 
 
 def test_a_guild_that_dies_is_reported_as_wiped():
-    result = sim_mod.run_guild("greedy", days=15, seed=3, skill=None, library=_lib())
+    result = sim_mod.run_guild("balanced", days=15, seed=3, skill=None, library=_lib())
     assert result.members_end <= result.members_start
     assert result.wiped == (result.members_end == 0)
 
@@ -317,18 +312,6 @@ def test_finite_shelves_run_out_and_refill_each_morning():
     sim.guild.shop("smith").stock["Iron Bar"] = 0
     sim.sleep(24)
     assert sim.guild.shop("smith").stock["Iron Bar"] >= 1
-
-
-def test_the_tighter_the_shelves_the_less_a_crafter_pulls_out_of_the_market():
-    library = _lib()
-
-    def profit(restock):
-        runs = [sim_mod.run_guild("crafter", days=12, seed=i, library=library, restock=restock,
-                                  recipes=["Bear Trap"], marks=(12,), capital=300)
-                for i in range(6)]
-        return sum(r.sold - r.input_spend for r in runs)
-
-    assert profit(None) > profit(sim_mod.Restock(1, 1))
 
 
 # ------------------------------------------------------------------ #
@@ -494,7 +477,7 @@ def test_the_medic_turns_away_a_squad_that_could_not_eat_afterwards():
 
 
 def test_heal_goes_to_the_medic_when_there_is_one_and_to_a_bed_when_there_is_not():
-    with_medic, without = _sim(medic=True, capital=300, level=3), _sim(capital=300, level=3)
+    with_medic, without = _sim(medic=True, capital=1000, level=3), _sim(capital=1000, level=3)
     for sim in (with_medic, without):
         sim.members[0].hp = 1
     started = with_medic.guild.clock.seconds
@@ -518,24 +501,6 @@ def test_beating_the_champion_opens_the_games_bouts():
     assert sim.champion_beaten
 
 
-def test_the_games_policy_goes_for_the_champion_first_then_the_games():
-    games = sim_mod.Games()
-    sim = _sim("games", level=3, capital=400, skill=1.0, library=_fixed(
-        champion=[_win()], brawl=[_win()], ctf=[_win()]))
-    games.upkeep(sim)
-    kinds = []
-    real = sim.bout
-    sim.bout = lambda kind="arena": (kinds.append(kind), real(kind))[1]
-    assert games.adventure(sim) and games.adventure(sim)
-    assert kinds[0] == "champion" and kinds[1] in ("brawl", "ctf")
-
-
-def test_a_games_bout_that_loses_money_is_skipped():
-    sim = _sim("games", level=3, capital=400, skill=0.05, library=_fixed(brawl=[_lost()], ctf=[_lost()]))
-    sim.champion_beaten = True
-    assert not sim_mod.Games().adventure(sim)
-
-
 def test_arena_rows_cover_the_pit_and_the_games_with_a_ai_row_and_a_skilled_row():
     rows = act.arena_rows(3, 3, 6, [0.8], keys=("arena", "brawl"))
     assert set(rows) == {"arena", "brawl"}
@@ -554,7 +519,7 @@ def _claim_sim(monkeypatch, raids=0.0, **pools):
     monkeypatch.setattr(world, "ROAD_AMBUSH_CHANCE", 0.0)
     monkeypatch.setattr(economy, "WILDS_RAID_CHANCE", raids)
     library = _fixed(**pools)
-    sim = _sim("claimer", level=3, capital=400, skill=1.0, library=library, horizon=40)
+    sim = _sim("balanced", level=3, capital=400, skill=1.0, library=library, horizon=40)
     return sim
 
 
@@ -603,24 +568,16 @@ def test_arriving_at_a_seized_claim_means_a_fight_to_retake_it(monkeypatch):
     assert guild.wilds_claim_owner == "guild"
 
 
-def test_a_squad_must_afford_the_trip_before_the_claimer_policy_goes():
-    sim = _sim("claimer", level=3, skill=1.0, library=_fixed())
-    policy = sim_mod.Claimer()
-    assert sim.claim_cost() > 0
-    assert policy.buffer(sim) > sim_mod.Balanced().buffer(sim)
-    assert not policy.adventure(sim)
-
-
 def test_the_tavern_table_names_the_charisma_from_which_the_stage_beats_the_yard():
     text = act.tavern_table()
     assert "one or the other" in text and "from CHA +2" in text
 
 
 def test_the_adventure_report_lists_the_ladder_the_claim_and_the_medic():
-    table = {"claimer": sim_mod.summarize([sim_mod.run_guild(
+    table = {"balanced": sim_mod.summarize([sim_mod.run_guild(
         "lumber", days=2, seed=1, library=_lib(), marks=(2,))], (2,))}
     text = sim_mod.adventure_report(table, "t")
-    assert "champion" in text and "claimer" in text and "medic $" in text
+    assert "champion" in text and "balanced" in text and "medic $" in text
 
 
 def test_a_mixed_guild_works_the_yard_while_it_heals_instead_of_resting():
@@ -700,16 +657,17 @@ def test_a_squad_that_dies_ends_the_guild_even_if_the_crew_lives():
 # ------------------------------------------------------------------ #
 # vocations and the travel stance in the sim                         #
 # ------------------------------------------------------------------ #
-def test_the_wary_policy_keeps_its_group_cautious_and_the_rest_normal():
-    from gartok.group import CAUTIOUS, NORMAL
-    assert _sim("wary").main.stance == CAUTIOUS
-    for name in ("cautious", "lumber", "balanced"):
+def test_every_policy_travels_on_the_normal_stance():
+    from gartok.group import NORMAL
+    for name in sim_mod.POLICIES:
         assert _sim(name).main.stance == NORMAL
 
 
 def test_a_sim_guild_carries_its_vocation_and_the_hunt_reads_it():
     from gartok import hunt
-    sim = _sim("wary", vocation="wilds", library=_WON)
+    from gartok.group import CAUTIOUS
+    sim = _sim("balanced", vocation="wilds", library=_WON)
+    sim.main.stance = CAUTIOUS
     assert sim.guild.vocation == "wilds"
     seen = {}
     orig = hunt.hunt_stretch
@@ -740,9 +698,9 @@ def test_a_delvers_sim_hunt_gathers_more_and_a_normal_stance_does_not_dodge():
 
     hunt.hunt_stretch = spy
     try:
-        _sim("cautious", vocation="wilds", library=_WON).hunt(hours=4)
+        _sim("balanced", vocation="wilds", library=_WON).hunt(hours=4)
         assert seen["ambush"] == 1.0                      # Wilds perk needs Cautious
-        _sim("cautious", vocation="delvers", library=_WON).hunt(hours=4)
+        _sim("balanced", vocation="delvers", library=_WON).hunt(hours=4)
         assert seen["yield"] == 1.15
     finally:
         hunt.hunt_stretch = orig
@@ -783,3 +741,157 @@ def test_sim_initiate_mage_trains_school():
     assert ok is True
     assert sim.mages_trained == 1
     assert any("faith" in u.magic_sources for u in sim.members)
+
+
+def _food_bought(sim):
+    return {n: sum(u.count_of(n) for u in sim.members) for n in sim_mod.foods_by_price()}
+
+
+def test_a_long_trip_buys_food_that_keeps_past_the_cheap_foods_life():
+    sim = _sim("balanced", capital=500, library=_WON)
+    with sim.market() as shop:
+        shop.buy_food(12)
+    bought = _food_bought(sim)
+    cheap = sim_mod.cheapest_food()
+    assert bought[cheap] <= items.get(cheap).lifespan * sim.mouths
+    assert sim.food_days >= 12
+    assert all(items.get(n).price <= sim_mod.TRIP_FOOD_PRICE for n, q in bought.items() if q)
+
+
+def test_a_short_trip_buys_only_the_cheapest_food():
+    sim = _sim("balanced", capital=500, library=_WON)
+    with sim.market() as shop:
+        shop.buy_food(3)
+    bought = _food_bought(sim)
+    assert {n for n, q in bought.items() if q} == {sim_mod.cheapest_food()}
+
+
+def test_a_crew_sells_its_haul_shop_by_shop_once_one_till_runs_dry():
+    sim = _sim("gatherer", capital=500, library=_WON)
+    holder = sim.members[0]
+    holder.give_to_pack("Stone Brick", 60)
+    sim.sellable["Stone Brick"] = 60
+    with sim.market() as shop:
+        shop.sell_round()
+    sold = 60 - holder.count_of("Stone Brick")
+    assert sold * economy.sell_price("Stone Brick") > economy.MARKET_CASH_START
+
+
+def test_the_gathering_report_measures_both_nodes_against_their_wage():
+    rows = [sim_mod.gather_payback(node, guilds=1, seed=0, library=_WON, skill=1.0, days=3)
+            for node in sim_mod.GATHER_PAIRS]
+    assert [r["node"] for r in rows] == list(sim_mod.GATHER_PAIRS)
+    assert all(r["promise"] > 0 for r in rows)
+    text = sim_mod.gather_report(rows, "smoke")
+    assert "lumber_yard" in text and "mine" in text
+
+
+# ------------------------------------------------------------------ #
+# the sim plays as a person: odds, draft, kit, the arena, the clock  #
+# ------------------------------------------------------------------ #
+def test_a_player_turns_a_share_of_the_ais_losses_into_wins():
+    assert act.player_odds(0.25, None) == 0.25
+    assert act.player_odds(0.25, 0.5) == pytest.approx(0.625)
+    assert act.player_odds(0.8, 0.5) > act.player_odds(0.25, 0.5)
+    assert act.relief(0.25, 0.5) == pytest.approx(0.5) and act.relief(0.25, None) == 1.0
+
+
+def test_the_draft_takes_a_leader_and_fighters_with_no_weak_constitution():
+    random.seed(4)
+    for _ in range(20):
+        picks, leader = act.draft()
+        assert len(picks) == 3 and picks[0] is leader and act.is_leader(leader)
+        assert all(u.mod_constitution >= 0 for u in picks[1:])
+
+
+def test_a_drafted_squad_fights_harder_than_three_strangers():
+    random.seed(5)
+    drafted = [u for _ in range(30) for u in act.make_squad(3, 0)[1:]]
+    random.seed(5)
+    strangers = [Unit("player") for _ in range(60)]
+    def score(us):
+        return sum(act.draft_score(u)[1] for u in us) / len(us)
+    assert score(drafted) > score(strangers) + 1
+
+
+def test_the_sim_guild_is_led_by_its_drafted_leader():
+    sim = _sim()
+    assert sim.guild.leader is sim.members[0] and act.is_leader(sim.members[0])
+
+
+def test_the_library_dresses_a_squad_in_the_kit_most_of_the_party_wears():
+    a, b, c = (Unit("player") for _ in range(3))
+    for u in (a, b):
+        u.give_to_armor("Studded Leather")
+    a.give_to_hand("Axe")
+    assert sim_mod.kit_of([a, b, c]) == ("Studded Leather", None)
+    b.give_to_hand("Axe")
+    assert sim_mod.kit_of([a, b, c]) == ("Studded Leather", "Axe")
+
+
+def test_a_library_fight_is_played_in_the_kit_it_was_asked_for(monkeypatch):
+    seen = []
+    real = act.play
+    monkeypatch.setattr(act, "play", lambda squad, *a, **k: (seen.append(list(squad)), real(squad, *a, **k))[1])
+    lib = sim_mod.FightLibrary(samples=1)
+    lib.pool("arena", 0, 3, ("Studded Leather", "Axe"))
+    assert ("arena", (0, 0), 3, ("Studded Leather", "Axe")) in lib.cache
+    assert all(u.equipped_armor == "Studded Leather" and u.equipped_weapon == "Axe" for u in seen[0])
+
+
+def test_an_arena_bout_fields_and_stakes_only_the_opponent_count():
+    sim = _sim(level=3, capital=300, skill=1.0, library=_fixed(champion=[_win()]))
+    sim.guild.add_member(Unit("player"), sim.main)
+    fielded = []
+    real = sim.fight
+    sim.fight = lambda kind, party: (fielded.append(len(party)), real(kind, party))[1]
+    before = sim.money
+    assert sim.bout_stake("champion") == 3 * arena.champion_bout().entry
+    sim.bout("champion")
+    assert fielded == [3]
+    assert before - sim.money == 3 * arena.champion_bout().entry       # the test sample pays no purse
+
+
+def test_an_arena_bouts_damage_is_non_lethal_and_a_hunts_is_not():
+    sim = _sim(level=3, library=_WON)
+    u = sim.members[0]
+    hit = sim_mod.Sample(True, 3, [(4, False, 0)] * 3, [], 0)
+    sim.apply(hit, [u], kind="arena")
+    assert u.non_lethal_damage == min(4, u.hp_max - 1)
+    v = sim.members[1]
+    sim.apply(hit, [v], kind="wilds")
+    assert v.non_lethal_damage == 0
+
+
+def test_a_shift_is_followed_by_the_next_with_no_forced_sleep():
+    sim = _sim()
+    sim.goto("lumber_yard")
+    start = sim.elapsed
+    sim_mod.Lumber().lumber_day(sim)
+    assert sim.elapsed - start < 0.8
+
+
+def test_the_balanced_opening_buys_an_axe_for_everyone_it_can():
+    sim = _sim("balanced", capital=150)
+    sim.policy.open(sim)
+    assert all(economy.lumber_level(u) for u in sim.members)
+
+
+def test_the_sprint_goes_for_the_champion_at_combat_zero_and_signs_no_one(monkeypatch):
+    sim = _sim("balanced", capital=300, library=_WON)
+    for u in sim.members:
+        u.set_track_level("work", 2)
+    pitched, fought = [], []
+    monkeypatch.setattr(sim, "recruit", lambda *a, **k: pitched.append(a) or 0)
+    real = sim.bout
+    monkeypatch.setattr(sim, "bout", lambda kind="arena": (fought.append(kind), real(kind))[1])
+    assert sim.policy.sprinting(sim)
+    sim.policy.sign_on(sim)
+    sim.policy.climb(sim)
+    assert not pitched and fought == ["champion"]
+
+
+def test_once_the_milestone_is_met_the_long_game_starts():
+    sim = _sim("balanced", library=_WON)
+    sim.milestone_day = 10
+    assert not sim.policy.sprinting(sim)
