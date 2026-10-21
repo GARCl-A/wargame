@@ -66,11 +66,23 @@ screens. Each item's detail stays in its own entry below.
    three 0 in combat (they work in the world). Matches the playtest feel; nothing glaring, nothing tuned.
 
 **Phase 4 — combat presentation** (same files: `battle_draw.py`, `lighting.py`)
-10. **Darkness: fog of war.**
-11. **Presentation (agreed directions):** the log on the board, friend / foe ring, bigger vendor portrait.
+10. ~~**Darkness: fog of war.**~~ done 2026-10-21: `fog.FogMemory` per side on the battle screen; no place
+    starts known (author), a flag / trap placement reveals its cells.
+11. **Presentation (agreed directions):** the log on the board (hit flash, crit banner left). Done 2026-10-21:
+    friend / foe plate (disc / diamond, banner as a pennant), the mark of the dead, the big vendor header.
 12. **Sound:** with item 11, the same events (hit, crit, fall) fire the number and the sound; coins,
     level up and UI clicks in the same pass.
-13. **A floor per place:** step 1 only (the prototype images for the author to judge).
+13. **A floor per place:** step 1 only (the prototype images for the author to judge). Prototyped
+    2026-10-21 (Arena sand and stone, Wilds grass and roots, under the per-cell light); step 2 waits
+    on the author's go.
+13b. **The hub screens' new layout (approved 2026-10-21):** the hub owns the header (keeper portrait,
+    name, caption and bent, their line, cards per tab: the deal, the purse, the till...), a tab row
+    under it and the footer; each tab draws only its body. The shop tab becomes the author's mock:
+    the shelf with a cart (click adds, - / + sets the quantity, BUY hands it to whoever has room;
+    a drag still buys for one member), the footer turns to SELL when pack items are picked and to
+    the auto-sell when nothing is, and the party's columns. Bigger type (title ~34 px serif small
+    caps, body 15-17) for these screens. Large: every hub tab screen loses its own header, one
+    commit per screen.
 
 **Phase 5 — tutorials** (last: they describe the final screens)
 14. **Tutorials (review all of them)**, with the two *Discoverability* items that teach at the moment
@@ -159,12 +171,6 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
 - Direction 2026-10-18: teach at the moment of the decision (one line where the choice is made) rather
   than with a card earlier.
 
-**Darkness: fog of war (direction agreed 2026-10-18)**
-- Three states per cell: never seen (black), seen before but out of light now (terrain dimmed, no units),
-  visible. A first visit starts black and the torch reveals it; a known place (arena, city, the Claim)
-  starts in the second state. *Heard* adjacent foes (`vision.py`) and the AI's search when nobody is in
-  sight are built; what is left is the three-state drawing and the per-cell memory of what was seen.
-
 **Sound**
 - The author dropped four Kenney packs in `scratch/audios/` (impact, interface, RPG, UI; about 330 files,
   all CC0, licence files included). To explore: hits, coins, level up, UI clicks. `scratch/` is git-ignored,
@@ -177,12 +183,8 @@ raised by the same run are under *Needs more information -> Playtest 2026-10-18*
   is the reference for simple tiles made beautiful by colour and light). Step 2, if approved: every
   place gets its own floor (Wilds grass and roots, Old Road packed earth, Arena sand and stone, the
   Ruins...); today every board is the same grey.
-- **The log on the board:** floating damage numbers, a hit flash, a mark on the fallen, a crit banner.
-- **Friend / foe apart from the banner colour:** a fixed ring or shape per side; the banner only as a
-  detail. A red banner makes the squad and the foes the same red.
-- **Bigger vendor portrait** in the shop screens, with a line of their own. Decided 2026-10-18: no accent
-  colour per shop (the game would change colour all the time) and the stock stays as rows, not an icon
-  grid (name and weight matter; the icons are not strong enough to lead).
+- **The log on the board:** floating damage numbers (built, `battle_fx.py`) and the mark of the dead (built);
+  left: a hit flash, a crit banner.
 
 ## Playtest notes 2026-10-18 (Author's run: "Olhos de Odin")
 
@@ -327,7 +329,7 @@ building them:
   - **Time pressures from the world itself.** Today's time pressures (Bankers' rent, the title
     defence, the Ogre's deadline) are all ones the player chooses; nothing comes from the world itself.
     (Lumber saturating the wood price was decided 2026-10-18 to enter with/after the production chain.)
-  - **Darkness vs fog on screen.** Settled as fog of war (*Ready to do*). Still open: how weather fog, if
+  - **Darkness vs fog on screen.** Settled as fog of war (done 2026-10-21). Still open: how weather fog, if
     it ever exists, looks apart from darkness.
   - **Art direction for the board and shops.** The author is not an artist and worries that an engraved
     board, or AI-made textures, would look bad or cause trouble later.

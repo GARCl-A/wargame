@@ -309,17 +309,17 @@ def speaks_with(vendor_language, member):
     return any(t in member.languages for t in vendor_tongues(vendor_language))
 
 
-def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
-    """The base deal for the whole party: only members who share the vendor's
-    language haggle. Among those, the party's **leader** speaks (see
-    `Group.leader`, `guild.py`) if they're eligible; otherwise -- no leader
-    passed in, or the leader doesn't share the tongue -- the highest Charisma
-    modifier does. Their Charisma narrows the spread; alignment distance
-    nudges it (same bent = a break, opposite = a premium)."""
+def haggle_voice(party, vendor_language, vendor_alignment, leader=None):
+    """Who haggles for the party, and their effective alignment distance to the vendor:
+    only members who share the vendor's language may. Among those, the party's **leader**
+    speaks (see `Group.leader`, `guild.py`) if they're eligible; otherwise -- no leader
+    passed in, or the leader doesn't share the tongue -- the highest Charisma modifier
+    does. (None, None) when nobody can."""
     speakers = [m for m in party if vendor_alignment is not None
                 and speaks_with(vendor_language, m)]
     if not speakers:
-        return 0.0
+        return None, None
+
     def _eff_dist(m):
         raw = data.alignment_distance(m.alignment, vendor_alignment)
         red = int(m.talent_bonus("align_distance_reduction"))
@@ -328,11 +328,18 @@ def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
     if leader is not None and leader in speakers:
         voice = leader
     else:
-        voice = max(speakers, key=lambda m: (m.haggle_charisma_mod,
-                    -_eff_dist(m)))
+        voice = max(speakers, key=lambda m: (m.haggle_charisma_mod, -_eff_dist(m)))
+    return voice, _eff_dist(voice)
+
+
+def _haggle_fraction(party, vendor_language, vendor_alignment, leader=None):
+    """The base deal for the whole party, spoken by `haggle_voice`: their Charisma narrows
+    the spread; alignment distance nudges it (same bent = a break, opposite = a premium)."""
+    voice, dist = haggle_voice(party, vendor_language, vendor_alignment, leader)
+    if voice is None:
+        return 0.0
     cha = max(0, voice.haggle_charisma_mod) * CHA_DEAL_STEP
-    align = _ALIGN_DEAL[_eff_dist(voice)]
-    return round(max(DEAL_MIN, min(DEAL_MAX, cha + align)), 3)
+    return round(max(DEAL_MIN, min(DEAL_MAX, cha + _ALIGN_DEAL[dist])), 3)
 
 
 def market_deal(party, vendor_language, vendor_alignment, leader=None):

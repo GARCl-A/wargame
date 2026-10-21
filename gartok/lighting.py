@@ -1,122 +1,117 @@
-"""Darkness + light-radius rendering for the battle grid.
+"""Darkness and light on the battle grid, one level per cell.
 
-Was ~100 lines buried in the old `app.py` god class. Holds its own mask cache;
-one instance per battle screen.
+Each cell the character sees (`vision.visible_cells`) gets one light level: how close it
+sits to a light that reaches it along the line of sight -- the rule `vision.cell_lit` uses --
+or to the character's own eyes (darkvision, the own cell). A cell out of sight is dark
+outright: dimmed if the side has seen it before (`fog.FogMemory`), black if never. The
+drawing never shows what the rules hide, and each cell is one flat tone, like Brogue's.
+One instance per battle screen.
 """
 
 import math
-import random
 
 import pygame
 
 from . import vision
 from .ui.board_style import NIGHT
 
+_NIGHT_SEEN = 200     # a remembered cell at night: the terrain just shows through
+_DAY_SEEN = 110       # a remembered cell by day: a haze over it
+_SEEN_NOW = 0.42      # the least light a cell in sight gets, so it never reads as remembered
+_OWN_CELL = 0.6       # the light of a character's own cell with nothing lit around them
+_TORCH_CORE = 0.30    # share of a torch's reach in full light
+_DARK_CORE = 0.55     # same for darkvision
+
+
+def _falloff(dist, radius, core):
+    """Light 0..1 at `dist` cells from a source reaching `radius` cells."""
+    t = dist / (radius + 0.5)
+    fade = min(1.0, max(0.0, (t - core) / (1 - core)))
+    return 1 - (6 + 249 * fade ** 1.5) / 255
+
+
+def cell_levels(battle, visible, observers):
+    """{cell: light 0..1} for every cell in `visible`."""
+    board = battle.board
+    if getattr(battle, "ambient_light", False):
+        return dict.fromkeys(visible, 1.0)
+    sources = vision.light_sources(battle)
+    levels = {}
+    for cell in visible:
+        if cell in board.walls:
+            continue
+        light = 0.0
+        for pos, radius in sources:
+            d = math.dist(pos, cell)
+            if d <= radius + 0.5 and board.los_clear(pos, cell):
+                light = max(light, _falloff(d, radius, _TORCH_CORE))
+        for o in observers:
+            d = math.dist(o.pos, cell)
+            dark = vision.dark_range(o)
+            if d == 0:
+                light = max(light, _OWN_CELL)
+            elif dark and d <= dark + 0.5:
+                light = max(light, _falloff(d, dark, _DARK_CORE))
+        levels[cell] = max(_SEEN_NOW, light)
+    for wx, wy in set(visible) & board.walls:      # a wall face takes the light of the floor before it
+        near = [levels[n] for n in ((wx + 1, wy), (wx - 1, wy), (wx, wy + 1), (wx, wy - 1)) if n in levels]
+        levels[(wx, wy)] = max(near) if near else _SEEN_NOW
+    return levels
+
 
 class LightRenderer:
     def __init__(self):
-        self._mask_cache = {}          # (radius_px, core) -> darkness mask
         self.view = None               # BoardView, set each frame by `draw`
+        self._tiles = {}               # (size, alpha) -> a NIGHT tile
 
-    # ------------------------------------------------------------------ #
-    def _cell_center_px(self, pos):
-        r = self.view.cell_rect(*pos)
-        return r.center
+    def _tile(self, size, alpha):
+        key = (size, alpha)
+        tile = self._tiles.get(key)
+        if tile is None:
+            if len(self._tiles) > 512:
+                self._tiles.clear()
+            tile = pygame.Surface(size, pygame.SRCALPHA)
+            tile.fill((*NIGHT, alpha))
+            self._tiles[key] = tile
+        return tile
 
-    def _flicker_px(self, pos):
-        """A small per-frame wobble on a torch's reach -- a sine sway plus light
-        noise, so static darkness breathes. Snapped to 2px steps to keep the
-        mask cache down to a handful of keys per radius."""
-        t = pygame.time.get_ticks() / 1000.0
-        phase = pos[0] * 12.9898 + pos[1] * 78.233      # per-torch offset
-        wobble = math.sin(t * 8 + phase) * 2 + random.uniform(-1, 1)
-        return int(round(wobble / 2)) * 2
-
-    def _source_visible(self, pos, visible):
-        """Is the source at `pos` inside (or hugging) the area the character sees?"""
-        return pos in visible or any(
-            (pos[0] + dx, pos[1] + dy) in visible
-            for dx in (-1, 0, 1) for dy in (-1, 0, 1))
-
-    def _sources(self, battle, visible, observers):
-        """[(center_px, radius_px, core)] of the lights affecting the scene now."""
-        tile = self.view.tile
-        result = []
-        for pos, radius in vision.light_sources(battle):
-            if self._source_visible(pos, visible):
-                reach = radius * tile + tile // 2 + self._flicker_px(pos)
-                result.append((self._cell_center_px(pos), reach, 0.30))
-        for o in observers:                        # darkvision / own cell
-            dark = o.ability.darkvision
-            result.append((self._cell_center_px(o.pos),
-                           (dark if dark else 0) * tile + tile // 2, 0.55))
-        return result
-
-    def _mask(self, radius_px, core):
-        """Darkness mask for a light of `radius_px`: transparent at the centre,
-        opaque at the edge. `core` = fraction of the radius in full light."""
-        key = (radius_px, core)
-        m = self._mask_cache.get(key)
-        if m is None:
-            m = pygame.Surface((radius_px * 2, radius_px * 2), pygame.SRCALPHA)
-            m.fill((*NIGHT, 255))
-            for i in range(64, 0, -1):
-                t = i / 64                         # 1 at the edge -> 0 at the centre
-                falloff = min(1.0, max(0.0, (t - core) / (1 - core)))
-                pygame.draw.circle(m, (*NIGHT, int(6 + 249 * falloff ** 1.5)),
-                                   (radius_px, radius_px), max(1, int(radius_px * t)))
-            self._mask_cache[key] = m
-        return m
-
-    def draw(self, screen, battle, visible, observers, view):
+    def draw(self, screen, battle, visible, observers, view, seen=None):
+        """Darken each cell for what `observers` see now. `seen` is the side's fog memory
+        (`fog.FogMemory.seen`): a cell out of sight is dimmed if seen before and black if
+        never; None treats every cell as seen."""
         self.view = view
         vr = view.rect
         if vr.w < 4 or vr.h < 4:
             return
-        tile = view.tile
-        ox, oy = vr.topleft
-        if getattr(battle, "ambient_light", False):
-            self._draw_daylight_fog(screen, battle, visible, view, vr, tile, ox, oy)
-            return
-        ceiling = max(vr.w, vr.h)
-        darkness = pygame.Surface(vr.size, pygame.SRCALPHA)
-        darkness.fill((*NIGHT, 255))
-        for (cxpx, cypx), radius_px, core in self._sources(battle, visible, observers):
-            radius_px = int(max(tile // 2, min(radius_px, ceiling)))
-            mask = self._mask(radius_px, core)
-            darkness.blit(mask, (cxpx - ox - radius_px, cypx - oy - radius_px),
-                          special_flags=pygame.BLEND_RGBA_MIN)
-        occl = pygame.Surface((tile, tile), pygame.SRCALPHA)   # re-occlude what the character can't see
-        occl.fill((*NIGHT, 244))
+        ambient = getattr(battle, "ambient_light", False)
+        remembered = _DAY_SEEN if ambient else _NIGHT_SEEN
+        levels = cell_levels(battle, visible, observers)
         board = battle.board
+        if not ambient:                       # off the board is night too
+            area = pygame.Rect(view.cell_rect(0, 0).topleft, (board.cols * view.tile, board.rows * view.tile))
+            for strip in _outside(vr, area):
+                screen.fill(NIGHT, strip)
         for cx in range(board.cols):
             for cy in range(board.rows):
-                if (cx, cy) not in visible:
-                    r = view.cell_rect(cx, cy)
-                    if r.colliderect(vr):
-                        darkness.blit(occl, (r.x - ox, r.y - oy))
-        # blur the edges to kill the square aliasing of the cells
-        f = 4
-        small = (max(1, vr.w // f), max(1, vr.h // f))
-        darkness = pygame.transform.smoothscale(darkness, small)
-        darkness = pygame.transform.smoothscale(darkness, vr.size)
-        screen.blit(darkness, vr.topleft)
+                r = view.cell_rect(cx, cy)
+                if not r.colliderect(vr):
+                    continue
+                light = levels.get((cx, cy))
+                if light is not None:
+                    alpha = int(255 * (1 - light))
+                else:
+                    alpha = remembered if (seen is None or (cx, cy) in seen) else 255
+                if alpha:
+                    screen.blit(self._tile(r.size, alpha), r)
 
-    def _draw_daylight_fog(self, screen, battle, visible, view, vr, tile, ox, oy):
-        """Daylight has no darkness to speak of, but LOS still cuts off at walls
-        and range -- without some marker every cell reads as equally seen, which
-        is exactly the complaint: no way to tell whether a given square is in
-        the active character's LOS. A flat haze over out-of-vision cells (as
-        opposed to night's opaque black) answers that without pretending it's
-        dark out."""
-        fog = pygame.Surface((tile, tile), pygame.SRCALPHA)
-        fog.fill((*NIGHT, 110))
-        board = battle.board
-        overlay = pygame.Surface(vr.size, pygame.SRCALPHA)
-        for cx in range(board.cols):
-            for cy in range(board.rows):
-                if (cx, cy) not in visible:
-                    r = view.cell_rect(cx, cy)
-                    if r.colliderect(vr):
-                        overlay.blit(fog, (r.x - ox, r.y - oy))
-        screen.blit(overlay, vr.topleft)
+
+def _outside(area, board):
+    """The strips of `area` off the `board` rect."""
+    inner = board.clip(area)
+    if not inner.w or not inner.h:
+        return [area]
+    strips = (pygame.Rect(area.x, area.y, inner.x - area.x, area.h),
+              pygame.Rect(inner.right, area.y, area.right - inner.right, area.h),
+              pygame.Rect(inner.x, area.y, inner.w, inner.y - area.y),
+              pygame.Rect(inner.x, inner.bottom, inner.w, area.bottom - inner.bottom))
+    return [r for r in strips if r.w > 0 and r.h > 0]

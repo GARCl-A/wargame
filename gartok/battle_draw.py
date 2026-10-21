@@ -34,12 +34,14 @@ class BattleDrawMixin:
 
         self._obs = self._observers()
         self._visible = vision.visible_cells(self.battle, self._obs)
+        self._remember()
 
         clip = screen.get_clip()
         screen.set_clip(self.view.rect)
         self._draw_grid(screen)
         self._draw_ground(screen)
-        self.lighting.draw(screen, self.battle, self._visible, self._obs, self.view)
+        self.lighting.draw(screen, self.battle, self._visible, self._obs, self.view,
+                           self.fog.seen(self.me))
         self._draw_creatures(screen)
         self._draw_units(screen)
         if self.battle.is_ctf:
@@ -75,11 +77,24 @@ class BattleDrawMixin:
         }
         board_render.draw_terrain(screen, self.F, self.view, terrain)
 
+    def _remember(self):
+        """Add what the side sees now to its fog memory; a placement phase reveals the cells it
+        offers (the squad walked its own half before the fight)."""
+        b = self.battle
+        self.fog.remember(self.me, self._visible, self._ground_props())
+        if b.awaiting_flag:
+            self.fog.reveal(self.me, self._flag_cells())
+        elif b.awaiting_trap:
+            self.fog.reveal(self.me, b.trap_cells(b.awaiting_trap))
+
     def _draw_ground(self, screen):
+        props = [p for p in self._ground_props() if p["pos"] in self._visible]
+        props += self.fog.remembered_props(self.me, self._visible)
+        board_render.draw_props(screen, self.F, self.view, props)
+
+    def _ground_props(self):
         props = []
         for o in self.battle.ground:
-            if o.pos not in self._visible:
-                continue
             kind = ("torch" if o.is_torch else
                     "chest" if getattr(o, "is_chest", False) else
                     "relic" if getattr(o, "is_relic", False) else
@@ -91,7 +106,9 @@ class BattleDrawMixin:
                 "trap_type": getattr(o, "trap_type", ""),
                 "elevation": getattr(o, "elevation", 0),
             })
-        board_render.draw_props(screen, self.F, self.view, props)
+        props += [{"kind": "corpse", "pos": u.pos, "size": u.footprint}
+                  for u in self.battle.units if u.dead]
+        return props
 
     def _draw_creatures(self, screen):
         for cr in self.battle.creatures:
@@ -111,7 +128,7 @@ class BattleDrawMixin:
             focus = "armed" if (self.inspect is u and self._armed is u) else ("inspect" if self.inspect is u else None)
             flag = next((t for t, c in b.flag_carrier.items() if c is u), None) if b.is_ctf else None
             tok = {
-                "team": "ally" if u.ai_ally else u.team,
+                "team": self._side(u),
                 "active": u is b.active and b.winner is None,
                 "race": u.race["name"],
                 "portrait_id": getattr(u, "portrait_id", None),
@@ -130,6 +147,14 @@ class BattleDrawMixin:
             }
             board_render.draw_unit(screen, self.F, r, tok)
 
+    def _side(self, u):
+        """`u`'s side as the seat sees it: its own squad is "player" whichever team sits."""
+        if u.ai_ally:
+            return "ally" if self.me == "player" else "enemy"
+        if u.team == self.me:
+            return "player"
+        return "enemy" if u.team == "player" else u.team
+
     def _draw_pennant(self, screen, pos, color):
         board_render.draw_pennant(screen, self._cell_rect(*pos), color)
 
@@ -142,12 +167,13 @@ class BattleDrawMixin:
                 continue
             self._draw_pennant(screen, pos, board_render.team_color(team))
 
-    def _draw_flag_setup(self, screen):
+    def _flag_cells(self):
         board = self.battle.board
-        valid = [
-            (x, y) for x in own_half("player", board.cols)
-            for y in range(board.rows) if (x, y) not in board.walls
-        ]
+        return [(x, y) for x in own_half("player", board.cols)
+                for y in range(board.rows) if (x, y) not in board.walls]
+
+    def _draw_flag_setup(self, screen):
+        valid = self._flag_cells()
         hover = self._tile_at_px(self.mouse)
         if hover is not None and not self.battle.can_plant_flag(hover):
             hover = None
@@ -230,7 +256,7 @@ class BattleDrawMixin:
             known = u.team == self.me or self._enemy_visible(u)
             entries.append({
                 "name": u.name.split()[0] if known else "Enemy",
-                "team": "ally" if u.ai_ally else u.team,
+                "team": self._side(u),
                 "known": known,
                 "active": u is b.active and b.winner is None,
                 "race": u.race["name"],

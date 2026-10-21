@@ -23,6 +23,10 @@ ENEMY_C   = (214, 103, 92)
 ALLY_C    = (112, 186, 150)            # an allied NPC on the player's side, played by the AI
 UNDEAD_C  = (166, 128, 214)            # a third side, hostile to both (the necromancer's dead)
 NEUTRAL_C = (176, 170, 154)
+CORPSE_FILL   = (52, 52, 54)           # the dead: grey, no side colour
+CORPSE_RIM    = (74, 73, 72)
+CORPSE_INK    = (110, 108, 104)
+CORPSE_SHADOW = (36, 36, 38)
 
 OK        = (111, 191, 115)
 WARN      = (224, 149, 75)

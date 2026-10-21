@@ -17,6 +17,7 @@ from .battle_fx import BattleFX
 from .board import cells
 from .dialogue_screen import DialogueScreen
 from .foe_card import foe_card
+from .fog import FogMemory
 from .lighting import LightRenderer
 from .scenario import own_half
 from .screen import Screen
@@ -85,6 +86,7 @@ class BattleScreen(BattleDrawMixin, Screen):
         self._visible = set()
 
         self.fx = BattleFX()    # combat juice: floaters + hit reactions (battle_fx.py)
+        self.fog = FogMemory()
         self._talk = None       # a challenge on the board being answered (`DialogueScreen`)
         if self._human("player"):
             battle.talk_handler = self._open_talk

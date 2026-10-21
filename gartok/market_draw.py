@@ -9,7 +9,7 @@ from .ui import loadout_panel, market_panel
 from .ui.primitives import draw_button, draw_tooltip, format_tooltip, set_pointer
 from .ui.primitives import text as ui_text
 from .ui.tokens import T
-from .ui.vendor_panel import draw_vendor, draw_vendor_name
+from .ui.vendor_panel import draw_vendor_header
 
 STOCK_W = 412
 MARGIN = T.S * 2
@@ -31,22 +31,24 @@ class MarketDrawMixin:
         W, H = screen.get_size()
 
         keeper = world.vendor(self.node.id, self.vendor_function)
-        card = keeper.card if keeper else None
-        tx = MARGIN + draw_vendor(screen, F, (MARGIN, MARGIN - 4), card)
-        title = ui_text(screen, F["head"], self.node.name.upper(), (tx, MARGIN - 2), T.TX)
-        draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 6), card)
         has_tut = self.tutorial_key() is not None
         purse_x = W - MARGIN - (28 + T.S if has_tut else 0) - self.header_reserve
-        ui_text(screen, F["body_sm"], f"common purse: {fmt_money(self.purse)}",
-                (purse_x, MARGIN + 2), T.BRASS, right=True)
-        cash = self._cash()
-        if cash is not None:
-            ui_text(screen, F["body_sm"], f"shop can pay: {fmt_money(cash)}",
-                    (purse_x, MARGIN + 24), T.TX_FAINT, right=True)
+        head_h = max(T.S * 12, min(T.S * 16, H // 7))
+        if keeper:
+            bottom = draw_vendor_header(screen, F, pygame.Rect(MARGIN, MARGIN, purse_x - MARGIN, head_h),
+                                        self._vendor_card(keeper), self._deal_card())
+        else:
+            bottom = ui_text(screen, F["head"], self.node.name.upper(), (MARGIN, MARGIN - 2), T.TX).bottom
+        row = bottom + T.S
         msg, col = self._status_line()
-        ui_text(screen, F["body"], msg, (tx, MARGIN + 30), col)
+        ui_text(screen, F["body"], msg, (MARGIN, row), col)
+        cash = self._cash()
+        money = f"common purse: {fmt_money(self.purse)}"
+        if cash is not None:
+            money += f"   ·   shop can pay: {fmt_money(cash)}"
+        ui_text(screen, F["body_sm"], money, (W - MARGIN, row + 2), T.BRASS, right=True)
 
-        top = MARGIN + 62
+        top = row + T.S * 4
         cats = [(label, key) for label, key, _names in self.get_categories()]
         self.tab_hits = market_panel.category_tabs(
             screen, F, pygame.Rect(MARGIN, top, STOCK_W, 28), cats, self.tab, self.mouse)
@@ -120,7 +122,7 @@ class MarketDrawMixin:
         party and its haggling when nothing is picked up."""
         names = self._selected_names()
         if not names:
-            return f"{len(self.shoppers)} shopping  ·  {self._deal_note()}", T.TX_FAINT
+            return f"{len(self.shoppers)} shopping", T.TX_FAINT
         if self._buying:
             name = names[0]
             q = self._buy_qty(name)

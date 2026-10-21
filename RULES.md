@@ -1170,6 +1170,11 @@ Design premises that hold across them:
 - **Adventure out-earns day labour.** The lumber yard is a floor (16 h buys the cheapest
   meal plus $1); the arena and the wilds pay more for the risk.
 - **Vision is per-character**: you see what the active unit sees.
+- **Fog of war**: the side remembers what any of its members saw this fight. Light is drawn per
+  cell (one tone for each cell in sight, by its distance to the light that reaches it). A cell never
+  seen is black, one seen before and out of sight now shows its terrain dimmed and the
+  ground objects where they were last seen, never a unit. Every board starts black; a flag
+  or trap placement reveals the cells it offers (the squad walked its own half).
 
 ### Identity 🟡
 
@@ -1179,9 +1184,10 @@ emblem, both from a small curated set (`ui.banner`,
 `artwork.BANNER_ICONS`), not a free painter. The chosen colour becomes every
 unit token's fill for the rest of the run (`ui.banner.set_player_color`, read live
 by the token badge — every roster card in the game uses it without
-knowing it changed). `battle_screen`'s player/enemy colour-coding is untouched
-on purpose: that one is a readability cue, not an identity, and must stay
-distinct from `ENEMY_C`. A save from before this existed shows "The Guild" in
+knowing it changed). On the battle board it is only a pennant on the squad's
+tokens: the side is told by the plate each token stands on (a disc in the side's
+fixed colour for the squad and its allies, a diamond for a foe), a readability cue,
+not an identity, that a red banner can never blur into `ENEMY_C`. A save from before this existed shows "The Guild" in
 a default colour (`Guild.DEFAULT_BANNER_COLOR`/`DEFAULT_BANNER_ICON`).
 
 ### Leadership 🟡
@@ -1604,9 +1610,12 @@ Neutral**).
   node of its own, 0.5 h from Ankareth and 0.3 h from each other (`world.EDGES`), so a guild kitting
   out walks a round of them. The keeper's race sets the shop's tongue and bent: the Smithy's Dwarf
   haggles in Dwarvish, the Tannery's Gnoll in Orcish (a Gnoll's native tongue is Orcish in `data.RACES`), the
-  Library's Kobold in Draconic; the Apothecary's Gnome (Gnomish), the Tavern's Halfling (Halfling) and the Farm's
-  Human (Ankarin and Sylvan; `Node.language` may be a tuple) are planned keepers. A guild with nobody who speaks
-  it pays the tabled price. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
+  Library's Kobold in Draconic, the Lumber Yard's Orc in Orcish, the Mine's Goblin in Goblin; the Apothecary's
+  Gnome (Gnomish), the Tavern's Halfling (Halfling) and the Farm's Human (Ankarin and Sylvan; `Node.language`
+  may be a tuple). Every shop has a tongue and a bent (a test fails for one without). A guild with nobody who
+  speaks it pays the tabled price. The shop screen's header shows the keeper big (`ui.vendor_panel.
+  draw_vendor_header`): portrait, their line, the tongues and the bent, and the party's deal -- who haggles
+  for it (`economy.haggle_voice`), their Charisma and how far their bent sits from the keeper's. A shop with a trade (Smithy, Tannery, Apothecary) is one hub screen with a SHOP tab
   (`hub_screen.py`); the Farm and the Tavern show the shop beside their stables / recruiting.
   A tab with nothing on it is not listed.
 - Haggling is generalised: a price modifier is a `PriceMod` contribution, not a

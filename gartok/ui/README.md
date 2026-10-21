@@ -58,7 +58,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `combat_card.py` | unit cards for recruit / squad lists and party rows |
 | `sheet_card.py` | the character sheet at three densities |
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
-| `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
+| `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line; `draw_vendor_header` is the shop's big one (portrait, line in a speech bubble, tongue / bent chips, the party's deal) |
 | `initiation_panel.py` | a sanctuary's initiation: the school's terms, one row per member with where they stand (or why they cannot), the begin / leave footer |
 | `party_panel.py` | the figures on a party row (HP, AC, load, rations, work-XP bar) and the party's total load |
 | `draft_panel.py` | the founding draft: pool candidate card, squad rail, commission modal; the founding screen (the banner on a shield beside the name, colour and emblem, one card per leader candidate with portrait, recruits and attributes) and `draw_shield` |
@@ -67,7 +67,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `intro_card.py` | the centred, veiled card (title, paragraphs, optional brass note, one button) used by every tutorial card |
 | `dialogue_panel.py` | the talk before a fight: the foe's leader and line, who speaks, the answers with their odds (a closed one says why), then the result and its button (with no answers, as an arena boss's line, the speakers go too); one line each when space is short |
 | `turn_card.py` | the group hand-over card: band tag, name, node, what is about to open, the crew, one button (blood for a forced fight) |
-| `board_render.py` | the battle board: terrain, props, unit tokens/bodies, flags and tactical overlay |
+| `board_render.py` | the battle board: terrain, props (a `corpse` is a grey disc with a cross), unit tokens on a side plate (disc for the squad and allies, diamond for foes; the banner is only a pennant) / bodies, flags and tactical overlay |
 | `aftermath_panel.py` | after a fight: the memorial card, the after-action report (squad rows with XP bars, takedowns, deeds), the level-up card with its stamp and climbing numbers |
 | `battle_panel.py` | the battle screen chrome: initiative strip, side panel cards/actions, and log well |
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |

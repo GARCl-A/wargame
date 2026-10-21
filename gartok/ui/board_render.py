@@ -11,8 +11,9 @@ Data shapes::
                "elevation": {(x, y): z}, "water": set, "ropes": set,
                "fire": set}                       # optional: burning cells
 
-    prop = {"kind": "torch" | "chest" | "relic" | "trap" | "disk" | "item",
-            "pos": (x, y), "trap_type": str, "elevation": int}
+    prop = {"kind": "torch" | "chest" | "relic" | "trap" | "disk" | "corpse" | "item",
+            "pos": (x, y), "trap_type": str, "elevation": int,
+            "size": int}                          # corpse: the body's footprint in cells
 
     token = {"team": "player" | "enemy", "active": bool,
              "race": str, "portrait_id": str | None, "token": str,
@@ -34,6 +35,10 @@ from .board_style import (
     BADGE_INK,
     CHEST_TRIM,
     CHEST_WOOD,
+    CORPSE_FILL,
+    CORPSE_INK,
+    CORPSE_RIM,
+    CORPSE_SHADOW,
     CREATURE_INK,
     DANGER,
     DEMO_HL,
@@ -92,12 +97,6 @@ _SIDE_C = {"ally": ALLY_C, "undead": UNDEAD_C}
 
 def team_color(team):
     return PLAYER_C if team == "player" else _SIDE_C.get(team, ENEMY_C)
-
-
-def ring_color(team):
-    """The ring around a token: the guild's banner colour for the player, green for an allied
-    NPC (`"ally"`), violet for a third side (`"undead"`), red for the enemy."""
-    return banner.player_color() if team == "player" else _SIDE_C.get(team, ENEMY_C)
 
 
 def hp_color(frac):
@@ -242,8 +241,23 @@ def draw_props(surf, F, view, props):
             _trap(surf, r.center, max(6, view.tile // 3), (p.get("trap_type") or "").lower())
         elif kind == "disk":
             _disk(surf, F, r, p.get("elevation", 0))
+        elif kind == "corpse":
+            size = p.get("size", 1)
+            _corpse(surf, pygame.Rect(r.x, r.y, r.w * size, r.h * size))
         else:
             _diamond(surf, r.center, view.tile // 4, OBJ_C, PROP_EDGE)
+
+
+def _corpse(surf, r):
+    """The dead: a grey disc the size of a downed body, with a cross."""
+    c, rad = r.center, r.w // 2 - 6
+    pygame.draw.circle(surf, CORPSE_FILL, c, rad)
+    pygame.draw.circle(surf, CORPSE_RIM, c, rad, 2)
+    h, w, t = int(rad * 1.2), int(rad * 0.8), max(3, rad // 6)
+    top = c[1] - h // 2 - rad // 10
+    for (dx, dy), col in (((2, 2), CORPSE_SHADOW), ((0, 0), CORPSE_INK)):
+        pygame.draw.rect(surf, col, pygame.Rect(c[0] - t // 2 + dx, top + dy, t, h))
+        pygame.draw.rect(surf, col, pygame.Rect(c[0] - w // 2 + dx, top + h // 4 + dy, w, t))
 
 
 def _diamond(surf, center, d, fill, edge):
@@ -363,27 +377,53 @@ def _body(surf, F, r, tok):
         _badge(surf, F, (r.centerx, r.y + 8), 34, "BRKN", WARN)
 
 
+def _hostile(team):
+    return team not in ("player", "ally")
+
+
+def _plate(surf, r, team, active):
+    """The base a token stands on: a disc for the squad and its allies, a diamond for a foe,
+    in the side's colour -- the banner colour never decides which side a token is on."""
+    c, h = r.center, r.w // 2 - 1
+    side = team_color(team)
+    fill = tuple(v // 2 for v in side)
+    edge = T.BRASS if active else side
+    if _hostile(team):
+        pts = [(c[0], c[1] - h), (c[0] + h, c[1]), (c[0], c[1] + h), (c[0] - h, c[1])]
+        pygame.draw.polygon(surf, fill, pts)
+        pygame.draw.polygon(surf, edge, pts, 3)
+    else:
+        pygame.draw.circle(surf, fill, c, h - 1)
+        pygame.draw.circle(surf, edge, c, h - 1, 3)
+
+
+def _pennant(surf, r):
+    x, y = r.x + 6, r.y + 4
+    pygame.draw.line(surf, T.TX_MUTED, (x, y), (x, y + 16), 2)
+    pygame.draw.polygon(surf, banner.player_color(), [(x + 1, y), (x + 13, y + 4), (x + 1, y + 8)])
+
+
 def _standing(surf, F, r, tok):
-    center = r.center
-    rad = r.w // 2
+    _plate(surf, r, tok["team"], tok["active"])
+    inner = r.inflate(-10, -10)
+    center = inner.center
+    rad = inner.w // 2
     base = team_color(tok["team"])
-    if tok["active"]:
-        pygame.draw.circle(surf, T.BRASS, center, rad - 1)
-    pygame.draw.circle(surf, base, center, rad - 5)
-    pygame.draw.circle(surf, (*base, 60), center, rad - 5, 1)
+    pygame.draw.circle(surf, base, center, rad - 1)
     if tok.get("torch"):
-        pygame.draw.circle(surf, TORCH_C, center, rad - 3, 2)
+        pygame.draw.circle(surf, TORCH_C, center, rad, 2)
         pygame.draw.circle(surf, LIGHT_C, (r.right - 8, r.y + 8), 4)
     if tok.get("defending"):
-        pygame.draw.circle(surf, T.TX, center, rad - 5, 2)
+        pygame.draw.circle(surf, T.TX, center, rad - 1, 2)
     if tok.get("ferocity"):
-        pygame.draw.circle(surf, DANGER, center, rad - 3, 2)
-    if tok.get("demoralized"):
-        pygame.draw.circle(surf, DEMO_HL, (r.x + 8, r.y + 8), 4)
+        pygame.draw.circle(surf, DANGER, center, rad, 2)
     if tok.get("obscured"):
-        pygame.draw.circle(surf, INK_FAINT, center, rad - 3, 2)
-    _face(surf, F, center, rad - 5, round(rad * 1.5), tok)
-    pygame.draw.circle(surf, ring_color(tok["team"]), center, rad - 4, 3)
+        pygame.draw.circle(surf, INK_FAINT, center, rad, 2)
+    _face(surf, F, center, rad - 1, round(rad * 1.5), tok)
+    if tok["team"] == "player":
+        _pennant(surf, r)
+    if tok.get("demoralized"):
+        pygame.draw.circle(surf, DEMO_HL, (r.x + 8, r.bottom - 14), 4)
     hp_bar(surf, pygame.Rect(r.x + 5, r.bottom - 8, r.w - 10, 4), tok["hp_frac"], tok.get("hp_steps"))
     if tok.get("flag"):
         _badge(surf, F, (r.centerx, r.y + 8), 34, "FLAG", team_color(tok["flag"]))

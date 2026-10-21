@@ -1041,7 +1041,7 @@ def test_market_lists_the_coin_stack_and_it_is_pickable_like_any_item():
     u.give_to_pack("Rope")
     ms = MarketScreen(ui_fonts(), None, [u], mnode, lambda: None)
     assert any(name == items.COIN_ITEM for name, *_ in ms._member_dict(u, [])["pack"])
-    ms.draw(pygame.Surface((1400, 900)))
+    ms.draw(pygame.Surface((1400, 1000)))
     assert _pack_rows_of(ms.item_rows, u) >= {"Torch", "Rope"}
     assert items.COIN_ITEM in _pack_rows_of(ms.item_rows, u)
     assert items.COIN_ITEM in {name for _, _, name in ms.lock_hits}

@@ -57,7 +57,7 @@ When the two disagree, `REFERENCE.md` wins.
 | `talents.py` | talent-tree registry mirroring abilities.py |
 | `conditions.py` | `Condition` subclasses (Defending, Demoralized, Invisible, ...) |
 | `board.py` | grid geometry, walls, LOS, pathfinding (pure, no battle state) |
-| `vision.py` | free fns over battle: light, can_see, visible_cells |
+| `vision.py` / `fog.py` | free fns over battle: light, can_see, visible_cells / the side's memory of the cells it has seen (`FogMemory`, held by the battle screen, never saved): never seen is black, seen before is dimmed; `lighting.py` lights per cell (`cell_levels`: one flat level per cell in sight, from the torches that reach it along the line of sight), so the drawing never shows what the rules hide |
 | `intel.py` / `foe_card.py` | what a side knows of a foe: the opening INT read, its bands, Assess, the guild's `Bestiary`, `known_fields` (the one read the foe card, the log and `ai.py` share); `foe_card` adapts it for `ui/foe_panel.py` |
 | `ground.py` | GroundObject (weapon, torch) + Creature (neutral body) |
 | `scenario.py` | deployment, board setup; the seam for objectives / maps |

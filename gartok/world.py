@@ -88,10 +88,12 @@ class Vendor:
     race: str
     role: str
     portrait: str
+    line: str = ""          # what they say when the guild walks in
 
     @property
     def card(self):
-        return {"name": self.name, "caption": f"{self.race} {self.role}", "portrait": self.portrait}
+        return {"name": self.name, "caption": f"{self.race} {self.role}", "portrait": self.portrait,
+                "line": self.line}
 
 
 class Node:
@@ -170,66 +172,79 @@ class Bout:
 # in app.py (using the scrapper/champion bouts before The Games).
 
 
+_ELYSIA = Vendor("Elysia", "Sprite", "banker", "banker.png",
+                 line="Small hands, long memory. I never forget a debt, or a depositor.")
+_ROWAN = Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png",
+                line="A wheel is a tree that learned to travel. Treat it kindly.")
+_THALASHGROK = Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png",
+                      line="Good steel costs. Cheap steel costs more, later, in blood.")
+_DUNGORM = Vendor("Dungorm", "Gnoll", "tanner", "tanner.png",
+                  line="Bring me hides. Fresh. I can smell when they're not.")
+
 NODES = [
     Node("city", "Ankareth", "town", (0.30, 0.50),
          "The walled burg. Where the guild sets out from -- and where the "
          "Bankers keep their strongboxes.", jurisdiction="the_city",
          functions=("bank", "trust", "property"),
-         vendors={"bank": Vendor("Elysia", "Sprite", "banker", "banker.png"),
-                  "trust": Vendor("Elysia", "Sprite", "banker", "banker.png"),
-                  "property": Vendor("Elysia", "Sprite", "banker", "banker.png")}),
+         vendors={"bank": _ELYSIA, "trust": _ELYSIA, "property": _ELYSIA}),
     Node("lumber_yard", "Lumber Yard", "town", (0.22, 0.64),
          "A sawmill just outside the walls. The foreman lends the axe -- you fell "
          "a tree that isn't yours and take only the wage for the hours. The yard "
          "buys what it yields and sells its lumber and fruit.",
+         language="Orcish", alignment="Chaotic and Neutral",
          functions=("work", "shop"), shop_label="BROWSE THE YARD",
-         vendors={"shop": Vendor("Grashnak", "Orc", "foreman", "lumberjack.png")}),
+         vendors={"shop": Vendor("Grashnak", "Orc", "foreman", "lumberjack.png",
+                                 line="Sixteen hours, one axe, one wage. Don't bleed on the logs.")}),
     Node("carpenter", "The Carpenter", "town", (0.26, 0.57),
          "A fragrant workshop of cedar shavings and drying timber between the city walls and the sawmill. "
          "Bows, crossbows, cart wheels and timber crafting are offered here, and the treefolk keeper bends living wood to shape.",
          jurisdiction="the_city", language="Verdant", alignment="Neutral and Good",
          functions=("carpenter", "shop"),
-         vendors={"carpenter": Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png"),
-                  "shop": Vendor("Rowan", "Treefolk", "carpenter", "carpenter.png")}),
+         vendors={"carpenter": _ROWAN, "shop": _ROWAN}),
 
     Node("mine", "The Mine", "town", (0.78, 0.54),
          "A working quarry past the Old Road. The foreman lends the pick, and the only stone, ore and coal "
-         "for sale are sold here.", functions=("work", "shop"), shop_label="BROWSE THE MINE",
-         vendors={"shop": Vendor("Nikkit", "Goblin", "foreman", "miner.png")}),
+         "for sale are sold here.", language="Goblin", alignment="Neutral and Evil",
+         functions=("work", "shop"), shop_label="BROWSE THE MINE",
+         vendors={"shop": Vendor("Nikkit", "Goblin", "foreman", "miner.png",
+                                 line="Down there it's dark, deep and mine. You just rent the dark.")}),
     Node("arena", "Arena", "battle", (0.405, 0.32),
          "Staked bouts in the pits under the city. Nobody dies -- you lose the purse.",
          ArenaScenario, lethal=False, arena=True, jurisdiction="the_city",
-         vendors={"arena": Vendor("Thok'Gar", "Goliath", "pit master", "arena_master.png")}),
+         vendors={"arena": Vendor("Gorrum Sandfist", "Goliath", "pit master", "arena_master.png",
+                                  line="The sand doesn't care who you were. Step in and show it who you are.")}),
     Node("market", "Market", "market", (0.38, 0.64),
          "Buy and sell gear for copper. The traders speak Ankarin.",
          language="Ankarin", alignment="Lawful and Neutral", jurisdiction="the_city",
-         functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png")}, shop_label="ENTER THE MARKET"),
+         functions=("shop",), vendors={"shop": Vendor("Surmanyx", "Automaton", "merchant", "merchant.png",
+                                                      line="Price recorded. Weight recorded. Haggling permitted within tolerance.")}, shop_label="ENTER THE MARKET"),
     Node("smith", "The Smithy", "town", (0.47, 0.57),
          "A forge on the road out of the walls, loud enough to hear from the gate. Weapons, metal armour and "
          "iron bars are sold here, and the smith lends the anvil.",
          jurisdiction="the_city", language="Dwarvish", alignment="Lawful and Neutral", functions=("forge", "shop"),
-         vendors={"forge": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png"),
-                  "shop": Vendor("Thalashgrok", "Dwarf", "blacksmith", "blacksmith.png")}),
+         vendors={"forge": _THALASHGROK, "shop": _THALASHGROK}),
     Node("tanner", "The Tannery", "town", (0.10, 0.72),
          "Racks of hide downwind of the lumber yard. Leather armour, cloaks, quivers and bows, and a tanner with "
          "work for anyone who hunts.",
          language="Orcish", alignment="Chaotic and Neutral", functions=("tanner", "shop"),
-         vendors={"tanner": Vendor("Dungorm", "Gnoll", "tanner", "tanner.png"),
-                  "shop": Vendor("Dungorm", "Gnoll", "tanner", "tanner.png")}),
+         vendors={"tanner": _DUNGORM, "shop": _DUNGORM}),
     Node("apothecary", "The Apothecary", "town", (0.29, 0.20),
          "A herbalist's shop past the arena, smelling of vinegar and smoke. Potions, vials and first aid kits, "
          "brewed to order.",
          jurisdiction="the_city", language="Gnomish", alignment="Chaotic and Good", functions=("apothecary", "shop"),
-         vendors={"shop": Vendor("Pimbletwig", "Gnome", "apothecary", "apothecary.png")}),
+         vendors={"shop": Vendor("Pimbletwig", "Gnome", "apothecary", "apothecary.png",
+                                 line="Tell me where it hurts. Then tell me what you ate.")}),
     Node("tavern", "Tavern", "tavern", (0.135, 0.50),
          "Smoke, warm beer and folk with no contract. Talk someone into joining the guild.",
          jurisdiction="the_city", garrison_job="study",
          language="Halfling", alignment="Neutral and Good", functions=("recruit", "shop"), shop_label="BUY FOOD AND DRINK",
-         vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png")}),
+         vendors={"shop": Vendor("Tobbin Hearthcup", "Halfling", "innkeeper", "innkeeper.png",
+                                 line="Everyone who walks in here is hungry for something. Food I can sell.")}),
     Node("prison", "Prison", "prison", (0.22, 0.36),
          "The City's holding cells for minor criminals. Pay someone's bail for a chance to recruit them.",
          jurisdiction="the_city", functions=("prison",),
-         vendors={"prison": Vendor("Captain Caelen", "Elf", "warden", "prison_guard.png")}),
+         vendors={"prison": Vendor("Captain Caelen", "Elf", "warden", "prison_guard.png",
+                                   line="Every cell here was empty once. Help me keep one of them that way.")}),
     Node("road", "Old Road", "town", (0.60, 0.50),
          "A dirt track cutting across the open country to the east.",
          unsafe=True, encounter_table=encounters.OLD_ROAD_TABLE),
@@ -239,7 +254,8 @@ NODES = [
     Node("ledger_hold", "Ledger Hold", "town", (0.76, 0.73),
          "A fortified counting-house the Bankers keep well outside the walls -- "
          "armed, and used to precious cargo.", fortress_scenario, functions=("ledger",),
-         vendors={"ledger": Vendor("Commander Varkas", "Hobgoblin", "officer", "ledger_hold_officer.png")}),
+         vendors={"ledger": Vendor("Commander Varkas", "Hobgoblin", "officer", "ledger_hold_officer.png",
+                                   line="The front eats supplies and soldiers. Bring me the first kind.")}),
     Node("frontier_outpost", "Frontier Outpost", "town", (0.90, 0.64),
          "A palisade at the edge of the march, where Ledger Hold's caravans end and its soldiers "
          "take over. Nothing for hire here -- the war is one road further."),
@@ -253,26 +269,31 @@ NODES = [
     Node("library", "The Library", "town", (0.12, 0.32),
          "A quiet place of study just outside the city. Sells dictionaries and seeks lost knowledge.",
          jurisdiction="the_city", language="Draconic", alignment="Lawful and Evil", functions=("library", "shop"),
-         vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png")}),
+         vendors={"library": Vendor("Thalfel", "Kobold", "librarian", "librarian.png",
+                                    line="We keep what the world forgets. Some of it, it forgot on purpose.")}),
     Node("farm", "The Farm", "town", (0.30, 0.84),
          "A farmstead beyond the walls. It sells what the fields give and keeps the stables: wagons and the animals that pull them.",
          language=("Ankarin", "Sylvan"), alignment="Lawful and Good", functions=("stable", "shop"), shop_label="BROWSE THE FARM",
-         vendors={"shop": Vendor("Edric Ashvale", "Human", "farmer", "farmer.png")}),
+         vendors={"shop": Vendor("Edric Ashvale", "Human", "farmer", "farmer.png",
+                                 line="My children ask about every guild that buys here. Come back, so I've something to tell them.")}),
     Node("ancient_ruins", "Ancient Ruins", "town", (0.52, 0.22),
          "Crumbling stone spires buried in the wild scrub. The lost library vaults lie beneath.",
          functions=("ancient_ruins",), wagon_risk=ROAD_AMBUSH_CHANCE, hidden=True),
     Node("blood_sanctuary", "Blood Sanctuary", "town", (0.66, 0.10),
          "A sunken chapel under the ruins' spires, its floor stained dark. The blood mages keep it.",
          alignment="Chaotic and Evil", functions=("shrine",), garrison_job="rite", hidden=True,
-         vendors={"shrine": Vendor("Ssareth Coldvein", "Lizardfolk", "blood keeper", "blood_keeper.png")}),
+         vendors={"shrine": Vendor("Ssareth Coldvein", "Lizardfolk", "blood keeper", "blood_keeper.png",
+                                   line="Your blood speaks before you do. Let us hear what it says.")}),
     Node("nature_grove", "Nature Grove", "town", (0.95, 0.20),
          "A ring of old trees deep in the Wilds where no path leads. The nature mages keep it.",
          alignment="Neutral and Good", functions=("shrine",), garrison_job="rite", hidden=True,
-         vendors={"shrine": Vendor("Thorne Mossmane", "Centaur", "grove keeper", "grove_keeper.png")}),
+         vendors={"shrine": Vendor("Thorne Mossmane", "Centaur", "grove keeper", "grove_keeper.png",
+                                   line="Guests of the Wilds leave footprints. Thieves leave stumps.")}),
     Node("faith_cathedral", "Faith Cathedral", "town", (0.88, 0.85),
          "A white-stone cathedral in the hills behind Ledger Hold. The faith mages keep it.",
          alignment="Lawful and Good", functions=("shrine",), garrison_job="rite", hidden=True,
-         vendors={"shrine": Vendor("Brother Quillon", "Kenku", "cathedral keeper", "cathedral_keeper.png")}),
+         vendors={"shrine": Vendor("Brother Quillon", "Kenku", "cathedral keeper", "cathedral_keeper.png",
+                                   line="Light a candle for whoever you left behind. Then go and bring the rest home.")}),
     Node("serpents_nest", "Serpent's Nest", "town", (0.10, 0.74),
          "A split in the rock below the Lumber Yard, hung with shed skins. Snakes den here, and "
          "something older than snakes.",

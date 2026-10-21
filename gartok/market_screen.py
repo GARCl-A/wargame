@@ -39,6 +39,9 @@ from .ui.hscroll import ColumnScroll
 from .ui.inspector_panel import role_for
 from .ui.tokens import fonts as ui_fonts
 
+# how far the voice's alignment sits from the vendor's (`data.alignment_distance`)
+_BENT_WORDS = {0: "same bent", 1: "close bent", 2: "different bent", 3: "far bent", 4: "opposite bent"}
+
 
 class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMenuMixin, PackColumnMixin,
                    DragSelectMixin, SheetModalMixin, Screen):
@@ -358,23 +361,41 @@ class MarketScreen(MarketTradeMixin, MarketDrawMixin, economy.PartyPurse, ItemMe
         guild, node = getattr(self, "guild", None), getattr(self, "node", None)
         return guild.shop(node.id) if guild and node else None
 
-    def _deal_note(self):
-        """One-line summary of how the party's haggling moved the prices."""
+    def _vendor_card(self, keeper):
+        """The keeper for `vendor_panel.draw_vendor_header`: who they are, the tongues they
+        haggle in and their bent (the node's)."""
+        alignment = getattr(self.node, "alignment", None)
+        bent = []
+        if alignment:
+            law, moral = alignment.split(" and ")
+            bent = [law] if law == moral else [law, moral]
+        return {**keeper.card, "place": self.node.name,
+                "tongues": list(economy.vendor_tongues(getattr(self.node, "language", None))),
+                "bent": bent}
+
+    def _deal_card(self):
+        """How the party's haggling moved the prices, for the header's deal block."""
         lang = getattr(self.node, "language", None)
+        alignment = getattr(self.node, "alignment", None)
+        sell = f"you sell at {int(economy.SELL_FACTOR * 100)}% of the price"
+        if not lang or not alignment:
+            return {"headline": "fixed prices", "tone": "none", "why": [sell]}
+        voice, dist = economy.haggle_voice(self.shoppers, lang, alignment,
+                                           self.group.leader if self.group else None)
+        if voice is None:
+            tongues = " or ".join(economy.vendor_tongues(lang))
+            return {"headline": "no haggling", "tone": "none", "why": [f"no one speaks {tongues}", sell]}
         general = economy.deal_value(self.deal, None, "buy")
         food = economy.deal_value(self.deal, next(iter(items.food_items())), "buy")
-        food_tag = (f"  ·  food -{round(food * 100)}%"
-                    if round(food, 3) != round(general, 3) else "")
-        if not lang:
-            return f"resale at {int(economy.SELL_FACTOR * 100)}% of price"
         pct = round(general * 100)
-        tongues = " or ".join(economy.vendor_tongues(lang))
-        if not any(economy.speaks_with(lang, m) for m in self.shoppers):
-            return (f"no one speaks {tongues}: no haggling "
-                    f"(resale at {int(economy.SELL_FACTOR * 100)}%)" + food_tag)
-        how = (f"{pct}% discount" if pct > 0
-               else f"{-pct}% markup" if pct < 0 else "no margin")
-        return f"vendor speaks {tongues} · {self.node.alignment} · {how}{food_tag}"
+        headline = f"{pct}% off" if pct > 0 else f"{-pct}% markup" if pct < 0 else "list price"
+        tone = "good" if pct > 0 else "bad" if pct < 0 else "none"
+        cha = voice.haggle_charisma_mod
+        why = [f"{voice.name} speaks for the group",
+               f"Charisma {cha:+d}  ·  {_BENT_WORDS[dist]}"]
+        if round(food, 3) != round(general, 3):
+            why.append(f"food {round(food * 100)}% off")
+        return {"headline": headline, "tone": tone, "why": why}
 
     # ------------------------------------------------------------------ #
     # input: click / shift-click to (multi-)select, or drag onto a card  #

@@ -107,7 +107,8 @@ def _fortress_node(state):
                           "and keeps his goblins to the axe now. Their forge beats out weapons sized for "
                           "bodies like his.",
                           language="Jotun", alignment="Chaotic and Neutral", functions=("shop",),
-                          vendors={"shop": world.Vendor("Grumbold the Builder", "Ogre", "chieftain", "ogre.png")})
+                          vendors={"shop": world.Vendor("Grumbold the Builder", "Ogre", "chieftain", "ogre.png",
+                                                        line="Big walls, big axes. Little people pay double. Joke! ...Mostly.")})
     return world.Node(FORTRESS_ID, "The Ogre's Fortress", "town", state.fortress_pos,
                       "Black stumps for a mile round a finished keep. The Ogre's goblins range the Wilds "
                       "from it.", functions=("ogre_fight",))

@@ -135,5 +135,5 @@ def test_squad_screen_draws_arena_vendor():
     scr.draw(surf)
     v = world.vendor("arena", "arena")
     assert v is not None
-    assert v.name == "Thok'Gar"
+    assert v.name == "Gorrum Sandfist"
     assert v.portrait == "arena_master.png"
