@@ -57,6 +57,17 @@ class GatherScreen(Screen):
     def update(self, dt):
         pass
 
+    def _payback_line(self, price):
+        """A full day's haul against the wage for this group, and the days a licence takes to pay."""
+        haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, gather.DAY_HOURS)
+        line = (f"{gather.DAY_HOURS} h for this group: haul ~{fmt_money(round(haul))} sold, "
+                f"wage {fmt_money(round(wage))}, {risk * 100:.0f}% ambush")
+        if self.guild.has_licence(self.node.id):
+            return line
+        if haul <= wage:
+            return line + " · the licence never pays back"
+        return line + f" · licence pays back in ~{price / (haul - wage):.0f} days"
+
     def add_button(self, surf, rect, key, label, enabled=True, primary=False, danger=False):
         self.buttons.append((key, rect))
         return draw_button(surf, self._F, rect, label, primary=primary, enabled=enabled,
@@ -111,7 +122,9 @@ class GatherScreen(Screen):
         y += 24
         text(surf, F["body_sm"], "A pack may ambush the crew · Fight must be won to secure the haul.",
              (cx + T.S * 3, y), T.BLOOD)
-        y += 44
+        y += 24
+        text(surf, F["body_sm"], self._payback_line(price), (cx + T.S * 3, y), T.TX_MUTED)
+        y += 36
 
         # Action buttons
         if not has_lic:
@@ -126,6 +139,11 @@ class GatherScreen(Screen):
             for i, h in enumerate(SHIFTS):
                 btn_r = pygame.Rect(cx + T.S * 3 + i * (btn_w + T.S * 2), y, btn_w, 40)
                 self.add_button(surf, btn_r, f"gather:{h}", f"{h} HOURS", primary=True)
+                haul, wage, risk = self.guild.shift_worth(self.group, self.node.id, h)
+                text(surf, F["body_sm"], f"haul ~{fmt_money(round(haul))}", (btn_r.x, btn_r.bottom + 6),
+                     T.GREEN if haul > wage else T.TX_MUTED)
+                text(surf, F["micro"], f"wage {fmt_money(round(wage))} · {risk * 100:.0f}% ambush",
+                     (btn_r.x, btn_r.bottom + 26), T.TX_FAINT)
 
         if self.notice:
             text(surf, F["body"], self.notice, (cx + T.S * 3, card_rect.bottom - 40), T.BRASS)

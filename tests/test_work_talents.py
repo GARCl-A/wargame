@@ -267,3 +267,26 @@ def test_triage_and_restful_sleep_shorten_the_rest_plan_and_the_clock_agrees():
         campaign.advance(guild)
     assert guild.clock.seconds - start == round(plan.hours * 3600)
     assert hurt.hp == hurt.hp_max
+
+
+def test_the_economy_report_prices_every_work_talent():
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
+    import economy_talents
+
+    assert set(economy_talents.ROWS) == {t.id for t in talents.TREE["work"]}
+
+
+def test_a_work_talent_is_priced_against_the_same_member_without_it():
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
+    import economy_talents
+
+    rows = {t.id: (worth, per_day) for t, worth, _unit, per_day, _how in economy_talents.rows()}
+    assert rows["heavy_haul"][0] > rows["carrier"][0] > 0
+    assert rows["piecework"][1] > 0
+    assert rows["troubadour"][1] > 0
+    assert rows["restful_sleep"][0] > 0 and rows["triage"][0] > 0
+    assert rows["pathfinder"][0] > 0

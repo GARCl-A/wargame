@@ -9,8 +9,10 @@ crew wins. `Guild.gather_shift` runs it, `campaign` and `app` play the fight.
 The tables, the rate and the licence prices are tuned so that a shift sold to a shop is worth more
 than the best wage for the same hours, and a full day (16 h) at least `PREMIUM` copper more (a test
 holds both); a licence pays back in about `PAYBACK_DAYS` days for `PAYBACK_CREW` workers gathering
-16 h a day. Rolls are a rate, not a count: a shift gets `hours / HOURS_PER_ROLL` of them, the
-fraction left over being the chance of one more.
+16 h a day on the table. In the engine it takes longer (sell trips, rest after an ambush, a wage
+that also runs shift after shift): the licence is meant for a full group left at the node, and
+`economy_report.py` measures its payback for a crew of 3 and of 7. Rolls are a rate, not a count:
+a shift gets `hours / HOURS_PER_ROLL` of them, the fraction left over being the chance of one more.
 """
 
 import random
@@ -71,10 +73,13 @@ def expected_value(node_id, hours):
     return per_roll * rolls(hours)
 
 
+def ambush_chance(node_id, hours, chance_mult=1.0):
+    """The odds a pack finds a crew that gathers `hours`: at least one hour's roll."""
+    return 1 - (1 - RISK_PER_HOUR[node_id] * chance_mult) ** hours
+
+
 def ambushed(node_id, hours, chance_mult=1.0, rng=random):
-    """Whether a pack finds a crew that gathered `hours` (the odds of at least one hour's roll)."""
-    per_hour = RISK_PER_HOUR[node_id] * chance_mult
-    return rng.random() < 1 - (1 - per_hour) ** hours
+    return rng.random() < ambush_chance(node_id, hours, chance_mult)
 
 
 def ambush_pack(node_id, rng=random):

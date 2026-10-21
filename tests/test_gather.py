@@ -292,3 +292,56 @@ def test_gather_screen_interaction():
     assert group.order.kind == "work" and group.order.gather and group.order.hours == 8
     assert done == [True]
 
+
+
+def test_ambush_chance_is_the_odds_of_at_least_one_hours_roll():
+    per_hour = gather.RISK_PER_HOUR["mine"]
+    assert gather.ambush_chance("mine", 16) == pytest.approx(1 - (1 - per_hour) ** 16)
+    assert gather.ambush_chance("mine", 16, 0.5) < gather.ambush_chance("mine", 16)
+    assert gather.ambush_chance("mine", 0) == 0
+
+
+@pytest.mark.parametrize("node_id", sorted(gather.TABLES))
+def test_a_shift_is_worth_its_table_per_worker_against_their_wage(node_id):
+    guild, group = _crew(node_id, 3)
+    haul, wage, risk = guild.shift_worth(group, node_id, 16)
+    assert haul == pytest.approx(3 * gather.expected_value(node_id, 16))
+    assert wage == pytest.approx(3 * economy.work_pay(node_id, 16, 0))
+    assert haul > wage
+    assert risk == pytest.approx(gather.ambush_chance(node_id, 16))
+
+
+def test_piecework_lifts_the_wage_a_shift_is_weighed_against():
+    guild, group = _crew("lumber_yard", 1)
+    _, before, _ = guild.shift_worth(group, "lumber_yard", 16)
+    u = group.members[0]
+    u.set_track_level("work", 2)
+    u.choose_talent("work", "carrier")
+    u.choose_talent("work", "piecework")
+    _, after, _ = guild.shift_worth(group, "lumber_yard", 16)
+    assert after == pytest.approx(before * 1.2)
+
+
+def test_a_cautious_crew_weighs_lower_ambush_odds():
+    from gartok.group import CAUTIOUS
+    guild, group = _crew("mine", 2)
+    guild.vocation = "wilds"
+    _, _, normal = guild.shift_worth(group, "mine", 16)
+    group.stance = CAUTIOUS
+    _, _, cautious = guild.shift_worth(group, "mine", 16)
+    assert cautious < normal
+
+
+def test_the_shift_buttons_show_each_shift_against_the_wage():
+    import pygame
+
+    from gartok import world
+    from gartok.gather_screen import GatherScreen
+    from gartok.ui.tokens import fonts as ui_fonts
+
+    guild, group = _crew("mine", 3)
+    gs = GatherScreen(ui_fonts(), guild, group, world.node("mine"), on_done=lambda: None)
+    gs.draw(pygame.Surface((1280, 720)))
+    assert "pays back" not in gs._payback_line(gather.licence_price("mine"))
+    guild.licences.clear()
+    assert "licence pays back in ~" in gs._payback_line(gather.licence_price("mine"))

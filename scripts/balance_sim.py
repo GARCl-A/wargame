@@ -137,21 +137,24 @@ def _scenario(name):
 
 def run_battle(combo_a, combo_b, seed, size, scenario_name, daylight, levels=None):
     """Play combo_a (player side) vs combo_b (enemy side). Returns
-    ('A' | 'B' | 'draw', rounds, talents_a, talents_b) -- the talent ids each
-    unit of a side ended up with."""
+    ('A' | 'B' | 'draw', rounds, talents_a, talents_b, mods_a, mods_b) -- the talent ids
+    and the six attribute modifiers each unit of a side ended up with."""
     random.seed(seed)
     levels = levels or Build()
     a = _squad(combo_a, "player", size, levels)
     b = _squad(combo_b, "enemy", size, levels)
     tal_a = [tuple(t for tr in talents.TRACKS for t in u.talents[tr]) for u in a]
     tal_b = [tuple(t for tr in talents.TRACKS for t in u.talents[tr]) for u in b]
+    def mods(side):
+        return [tuple(data.mod(getattr(u, at)) for at in data.ATTRIBUTES) for u in side]
+    mods_a, mods_b = mods(a), mods(b)
     battle = Battle(a, b, scenario=_scenario(scenario_name), daylight=daylight)
     guard = 0
     while battle.winner is None and guard < GUARD:
         guard += 1
         ai.take_turn(battle, battle.active)
     result = {"player": "A", "enemy": "B"}.get(battle.winner, "draw")
-    return result, battle.round_no, tal_a, tal_b
+    return result, battle.round_no, tal_a, tal_b, mods_a, mods_b
 
 
 # --------------------------------------------------------------------------- #
@@ -161,9 +164,9 @@ def _work(chunk):
     size, scenario_name, daylight, levels, jobs = chunk
     out = []
     for combo_a, combo_b, seed in jobs:
-        result, rounds, tal_a, tal_b = run_battle(
+        result, rounds, tal_a, tal_b, mods_a, mods_b = run_battle(
             combo_a, combo_b, seed, size, scenario_name, daylight, levels)
-        out.append((combo_a, combo_b, result, rounds, tal_a, tal_b))
+        out.append((combo_a, combo_b, result, rounds, tal_a, tal_b, mods_a, mods_b))
     return out
 
 
@@ -227,7 +230,7 @@ def aggregate(results):
     rounds = []
     side = Counter()               # did the player (side A) or enemy (side B) win
 
-    for combo_a, combo_b, result, r, _tal_a, _tal_b in results:
+    for combo_a, combo_b, result, r, *_ in results:
         rounds.append(r)
         ra, oa = combo_a
         rb, ob = combo_b
@@ -288,7 +291,7 @@ def talent_effects(results, agg):
     occ_mean = {o: agg["occ"][o].score for o in OCCUPATIONS}
     samples = defaultdict(list)
     slots = 0
-    for combo_a, combo_b, result, _r, tal_a, tal_b in results:
+    for combo_a, combo_b, result, _r, tal_a, tal_b, *_ in results:
         sa = {"A": 1.0, "B": 0.0, "draw": 0.5}[result]
         for (race, occ), score, squad in ((combo_a, sa, tal_a), (combo_b, 1.0 - sa, tal_b)):
             expected = race_mean[race] + occ_mean[occ] - overall
@@ -307,6 +310,32 @@ def talent_effects(results, agg):
     return out
 
 
+def stat_effects(results, agg):
+    """Per attribute: how much a unit's score moves per +1 of its modifier, once its race and
+    occupation are taken out (the slope of the residual on the modifier). Unit-slot attribution
+    like `talent_effects`; the six rolls are independent, so each slope stands on its own."""
+    overall = sum(t.score * t.n for t in agg["combo"].values()) / sum(t.n for t in agg["combo"].values())
+    race_mean = {r: agg["race"][r].score for r in RACES}
+    occ_mean = {o: agg["occ"][o].score for o in OCCUPATIONS}
+    rows = []
+    for combo_a, combo_b, result, _r, _ta, _tb, mods_a, mods_b in results:
+        sa = {"A": 1.0, "B": 0.0, "draw": 0.5}[result]
+        for (race, occ), score, squad in ((combo_a, sa, mods_a), (combo_b, 1.0 - sa, mods_b)):
+            expected = race_mean[race] + occ_mean[occ] - overall
+            rows += [(mods, score - expected) for mods in squad]
+    out = {}
+    for i, stat in enumerate(data.ATTRIBUTES):
+        xs = [m[i] for m, _ in rows]
+        ys = [y for _, y in rows]
+        n = len(xs)
+        mx, my = sum(xs) / n, sum(ys) / n
+        sxx = sum((x - mx) ** 2 for x in xs)
+        slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx if sxx else 0.0
+        resid = sum((y - my - slope * (x - mx)) ** 2 for x, y in zip(xs, ys)) / max(1, n - 2)
+        out[stat] = {"n": n, "slope": slope, "se": math.sqrt(resid / sxx) if sxx else 0.0}
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # report                                                                      #
 # --------------------------------------------------------------------------- #
@@ -316,7 +345,7 @@ def _bar(x, lo=0.30, hi=0.70, width=20):
     return "#" * fill + "." * (width - fill)
 
 
-def build_report(agg, cfg, tal_fx=None):
+def build_report(agg, cfg, tal_fx=None, stat_fx=None):
     combo_elo = elo(agg["combo_games"])
     race_elo = elo(agg["race_games"])
     occ_elo = elo(agg["occ_games"])
@@ -404,6 +433,17 @@ def build_report(agg, cfg, tal_fx=None):
     p("STRONGEST ANTI-SYNERGY:")
     for c, dv in resid[:12]:
         p(f"  {c[0]+' '+c[1]:<24}{dv:+.3f}   (combo {agg['combo'][c].score:.3f})")
+
+    if stat_fx:
+        p("")
+        p("-" * 78)
+        p("STATS  (score per +1 of the unit's own modifier, race and occupation taken out)")
+        p("unit-slot attribution like TALENTS; a squad's +1 on all three is about 3x the slope")
+        p("-" * 78)
+        p(f"  {'attribute':<14}{'slope':>8}{'+/-SE':>8}{'z':>7}")
+        for stat, fx in sorted(stat_fx.items(), key=lambda kv: -kv[1]["slope"]):
+            z = fx["slope"] / fx["se"] if fx["se"] else 0.0
+            p(f"  {stat:<14}{fx['slope']:>+8.4f}{fx['se']:>8.4f}{z:>7.1f}")
 
     if tal_fx:
         p("")
@@ -585,7 +625,8 @@ def main():
     agg = aggregate(results)
     leveled = any(levels[:2]) or levels[2] or levels.gear != "starting"
     tal_fx = talent_effects(results, agg) if leveled else None
-    report, elos = build_report(agg, cfg, tal_fx)
+    stat_fx = stat_effects(results, agg)
+    report, elos = build_report(agg, cfg, tal_fx, stat_fx)
     print("\n" + report)
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -603,6 +644,7 @@ def main():
             "config": cfg,
             "elo": elos,
             "talents": tal_fx or {},
+            "stats": stat_fx,
             "race": {r: vars_of(agg["race"][r]) for r in RACES},
             "occ": {o: vars_of(agg["occ"][o]) for o in OCCUPATIONS},
             "combo": {f"{r}|{o}": vars_of(agg["combo"][(r, o)]) for r, o in COMBOS},
