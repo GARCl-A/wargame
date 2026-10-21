@@ -6,32 +6,19 @@ from .. import factions, missions, world
 from ..constants import fmt_money
 from ..item_icon import draw_icon
 from ..screen import Screen
-from .primitives import (
-    caps,
-    contained,
-    draw_button,
-    hline,
-    modal_card,
-    set_pointer,
-    text,
-    wrap,
-)
+from .hub_body import draw_chip, draw_panel
+from .hub_frame import button_width, hub_button
+from .primitives import caps, contained, ellipsize, set_pointer, small_caps, text, wrap
 from .tokens import T, mix
 from .tokens import fonts as ui_fonts
 from .vendor_panel import draw_vendor, draw_vendor_name
 
-CARD_W = 560
+CARD_MIN_W = T.S * 70           # a job card's width; the board lays as many columns as fit
+CARD_PAD = T.S * 3
+ICON = T.S * 7
+BTN_H = T.S * 5 + 4
 
-TAG_COLOR = {
-    "economic": T.BRASS,
-    "trust": T.BRASS,
-    "bankers": T.BRASS_DIM,
-    "apothecary": T.GREEN,
-    "library": T.TX_MUTED,
-    "tanner": T.TX_MUTED,
-    "scholarly": T.TX_MUTED,
-    "ruins": T.BLOOD,
-}
+TAG_TONE = {"economic": "money", "trust": "money", "bankers": "money", "apothecary": "good", "ruins": "bad"}
 
 
 class MissionOfferScreen(Screen):
@@ -199,185 +186,149 @@ class MissionOfferScreen(Screen):
                         self.notice += "  ·  " + factions.deed_notice(d)
             return
 
-    def _quest_layout(self, F, t, qw):
-        """Everything a job's card needs to be sized and drawn, worked out once."""
-        qpad = T.S * 2
+    def _quest_layout(self, F, t, w):
+        """Everything a job's card needs to be sized and drawn, worked out once for a card `w` wide."""
         m = self._mission_of(t)
         tags = getattr(t, "tags", ()) or ((t.tag,) if getattr(t, "tag", None) else ())
-        blurb_lines = wrap(F["body_sm"], t.blurb, qw) if getattr(t, "blurb", None) else []
-        lay = {"t": t, "m": m, "tags": tags, "blurb_lines": blurb_lines}
+        tw = w - CARD_PAD * 2 - ICON - T.S * 2
+        body = F["hub_body"]
+        lay = {"t": t, "m": m, "tags": tags,
+               "blurb_lines": wrap(body, t.blurb, tw) if getattr(t, "blurb", None) else []}
         if m is None:
-            lay["req_lines"] = wrap(F["body_sm"], self.get_req_str(t), qw)
-            detail_h = len(lay["req_lines"]) * 20
+            lay["detail"] = wrap(body, self.get_req_str(t), tw)
         else:
             progress = missions.progress(self.guild, m)
             lay["progress"] = progress
             lay["ready"] = progress >= t.goal_qty
-            lay["status_lines"] = wrap(F["body"], self.get_status_str(
-                t, progress, lay["ready"], missions.days_left(self.guild, m)), qw)
-            detail_h = len(lay["status_lines"]) * 24
-        lay["h"] = (qpad + 24 + (22 + 8 if tags else 0) + (len(blurb_lines) * 18 + 12 if blurb_lines else 0)
-                    + detail_h + 16 + 36 + qpad)
+            lay["detail"] = wrap(body, self.get_status_str(t, progress, lay["ready"],
+                                                           missions.days_left(self.guild, m)), tw)
+        lh = body.get_linesize()
+        text_h = (T.S * 4 + (T.S * 4 if tags else 0) + (len(lay["blurb_lines"]) * lh + T.S if lay["blurb_lines"] else 0)
+                  + len(lay["detail"]) * lh + T.S * 2 + BTN_H)
+        lay["h"] = CARD_PAD * 2 + max(ICON, text_h)
         return lay
 
+    def _job_button(self, t, m, lay):
+        """`(key, label, enabled)` of the button at the foot of `t`'s card."""
+        if m is not None:
+            ready = lay["ready"]
+            return ("turn_in", t.id), self.get_turn_in_label(t, lay["progress"], ready), ready
+        offered = self._is_offered(t)
+        wait = missions.retry_in(self.guild, t)
+        if wait:
+            label = f"Failed: try again in {wait} day{'s' if wait != 1 else ''}"
+        elif missions.closed(self.guild, t):
+            label = "Failed: it went to another school"
+        elif self._completed_of(t):
+            done = any(x.template_id == t.id and x.state == "done" for x in self.guild.missions)
+            label = "Job completed" if done else "Job failed"
+        elif offered:
+            label = self.accept_label
+        else:
+            label = "Out with another group"
+        return ("accept", t.id), label, offered
+
     def _draw_quest(self, screen, F, rect, lay):
-        t, m, qpad, btn_h = lay["t"], lay["m"], T.S * 2, 36
-        qw = rect.w - 2 * qpad
-        pygame.draw.rect(screen, T.STEEL_HI, rect, border_radius=4)
-        pygame.draw.rect(screen, T.STEEL_LINE, rect, 1, border_radius=4)
-        with contained(screen, rect):
-            qx = rect.x + qpad
-            qy = rect.y + qpad
-            draw_icon(screen, pygame.Rect(rect.right - qpad - T.S * 5, qy, T.S * 5, T.S * 5), t.goal_item)
-            caps(screen, F["head"], t.name, (qx, qy), T.TX)
-            qy += 24
-            if lay["tags"]:
-                qy += 4
-                tx = qx
-                for tag in lay["tags"]:
-                    label = tag.upper()
-                    col = TAG_COLOR.get(tag.lower(), T.TX_MUTED)
-                    pw = F["microb"].size(label)[0] + 12
-                    pill = pygame.Rect(tx, qy, pw, 18)
-                    pygame.draw.rect(screen, T.TABLE, pill, border_radius=4)
-                    pygame.draw.rect(screen, col, pill, 1, border_radius=4)
-                    text(screen, F["microb"], label, pill.center, col, center=True)
-                    tx += pw + T.S
-                qy += 22 + 4
-            if lay["blurb_lines"]:
-                for ln in lay["blurb_lines"]:
-                    text(screen, F["body_sm"], ln, (qx, qy), T.TX_MUTED)
-                    qy += 18
-                qy += 12
-            btn_r = pygame.Rect(qx, rect.bottom - qpad - btn_h, qw, btn_h)
-            if m is None:
-                for ln in lay["req_lines"]:
-                    text(screen, F["body_sm"], ln, (qx, qy), T.BRASS)
-                    qy += 20
-                offered = self._is_offered(t)
-                wait = missions.retry_in(self.guild, t)
-                if wait:
-                    label = f"FAILED -- TRY AGAIN IN {wait} DAY(S)"
-                elif missions.closed(self.guild, t):
-                    label = "FAILED -- IT WENT TO ANOTHER SCHOOL"
-                elif self._completed_of(t):
-                    label = ("JOB COMPLETED" if any(x.template_id == t.id and x.state == "done"
-                                                    for x in self.guild.missions)
-                             else "JOB FAILED")
-                elif offered:
-                    label = self.accept_label
-                else:
-                    label = "ALREADY OUT WITH ANOTHER GROUP"
-                draw_button(screen, F, btn_r, label, enabled=offered, primary=offered, mpos=self.mouse)
-                self.buttons.append((("accept", t.id), btn_r))
-            else:
-                for ln in lay["status_lines"]:
-                    text(screen, F["body"], ln, (qx, qy), T.GREEN if lay["ready"] else T.TX_MUTED)
-                    qy += 24
-                ready = lay["ready"]
-                label = self.get_turn_in_label(t, lay["progress"], ready)
-                draw_button(screen, F, btn_r, label, enabled=ready, primary=ready, mpos=self.mouse)
-                self.buttons.append((("turn_in", t.id), btn_r))
+        t, m = lay["t"], lay["m"]
+        pygame.draw.rect(screen, mix(T.STEEL, T.BRASS, 0.05) if m else mix(T.STEEL, T.TABLE, 0.35), rect,
+                         border_radius=6)
+        pygame.draw.rect(screen, T.BRASS_DIM if m else T.STEEL_LINE, rect, 1, border_radius=6)
+        icon = pygame.Rect(rect.x + CARD_PAD, rect.y + CARD_PAD, ICON, ICON)
+        draw_icon(screen, icon, t.goal_item)
+        x = icon.right + T.S * 2
+        right = rect.right - CARD_PAD
+        y = rect.y + CARD_PAD - 2
+        small_caps(screen, F["hub_card"], F["hub_card_sc"], ellipsize(t.name, F["hub_card"], right - x), (x, y), T.TX)
+        y += T.S * 4
+        if lay["tags"]:
+            cx = x
+            for tag in lay["tags"]:
+                cx = draw_chip(screen, F, (cx, y), tag.lower(), TAG_TONE.get(tag.lower(), "muted")).right + T.S
+            y += T.S * 4
+        lh = F["hub_body"].get_linesize()
+        for ln in lay["blurb_lines"]:
+            text(screen, F["hub_body"], ln, (x, y), T.TX_MUTED)
+            y += lh
+        if lay["blurb_lines"]:
+            y += T.S
+        color = T.BRASS if m is None else (T.GREEN if lay["ready"] else T.TX)
+        for ln in lay["detail"]:
+            text(screen, F["hub_body"], ln, (x, y), color)
+            y += lh
+        key, label, enabled = self._job_button(t, m, lay)
+        btn = pygame.Rect(x, rect.bottom - CARD_PAD - BTN_H, right - x, BTN_H)
+        hub_button(screen, F, btn, label, primary=True, enabled=enabled, mpos=self.mouse)
+        self.buttons.append((key, btn))
 
     def draw(self, screen):
-        F = self.fonts if (isinstance(self.fonts, dict) and "body" in self.fonts) else ui_fonts()
+        F = ui_fonts()
+        W, H = screen.get_size()
         screen.fill(T.TABLE)
         self.buttons.clear()
+        m = T.S * 5
 
-        card_w = min(CARD_W, screen.get_width() - 2 * T.S * 3)
-        pad = T.S * 3
-        inner_w = card_w - 2 * pad
-        gap = T.S
+        top = 0
+        if not self.framed:
+            face = draw_vendor(screen, F, (T.S * 3, T.S * 3), self.vendor_card, size=T.S * 7) if self.vendor_card else 0
+            caps(screen, F["head"], self.title_text, (T.S * 3 + face, T.S * 3), T.TX)
+            draw_vendor_name(screen, F, (T.S * 3 + face, T.S * 7), self.vendor_card)
+            top = T.S * 12
+        notice_lines = wrap(F["hub_body"], self.notice, W - 2 * m) if self.notice else []
+        lh = F["hub_body"].get_linesize()
+        bottom = H - T.S * 4 - len(notice_lines) * lh - (T.S * 9 if not self.framed else 0)
+        panel_r = pygame.Rect(m, top, W - 2 * m, bottom - top)
+        inner = draw_panel(screen, F, panel_r, "Jobs", self.subtitle_text or None)
 
-        framed = self.framed
-        face = T.S * 7 if (self.vendor_card and not framed) else 0
-        subtitle_lines = (wrap(F["body"], self.subtitle_text, inner_w - face - T.S * 2)
-                          if self.subtitle_text else [])
-        name_h = 20 if (self.vendor_card and not framed) else 0
-        title_h = 0 if framed else 30
-        header_h = max(title_h + name_h + (len(subtitle_lines) * 22 if subtitle_lines else 0), face)
-
-        layouts = [self._quest_layout(F, t, inner_w - 4 * T.S) for t in self.get_templates()]
-        list_h = (sum(lay["h"] for lay in layouts) + gap * (len(layouts) - 1)) if layouts else 70
-
-        notice_lines = []
-        notice_h = 0
-        if self.notice:
-            notice_lines = wrap(F["body_sm"], self.notice, inner_w - 24)
-            notice_h = 10 + len(notice_lines) * 18 + 10
-
-        footer_btn_h = 34
         extra = self.footer_action()
-        footer_h = (T.S * 2 + 1 + T.S * 2 + footer_btn_h) if (extra is not None or not framed) else 0
-        chrome_h = pad + header_h + T.S * 2 + (T.S * 2 + notice_h if self.notice else 0) + footer_h + pad
-        visible_h = max(120, min(list_h, screen.get_height() - T.S * 4 - chrome_h))
-        self._max_scroll = max(0, list_h - visible_h)
+        list_bottom = inner.bottom
+        if extra is not None:
+            foot_y = panel_r.bottom - T.S * 11
+            pygame.draw.line(screen, T.STEEL_LINE, (panel_r.x, foot_y), (panel_r.right - 1, foot_y))
+            label, enabled = extra
+            b = pygame.Rect(inner.x, foot_y + T.S * 3, inner.w, BTN_H + T.S)
+            hub_button(screen, F, b, label, primary=True, enabled=enabled, mpos=self.mouse)
+            if enabled:
+                self.buttons.append(("footer_action", b))
+            list_bottom = foot_y - T.S * 2
+        list_rect = pygame.Rect(inner.x - T.S, inner.y, inner.w + T.S * 2, list_bottom - inner.y)
+
+        templates = self.get_templates()
+        cols = max(1, min(3, list_rect.w // CARD_MIN_W))
+        gap = T.S * 2
+        col_w = (list_rect.w - gap * (cols - 1)) // cols
+        layouts = [self._quest_layout(F, t, col_w) for t in templates]
+        heights = [0] * cols
+        placed = []
+        for lay in layouts:
+            c = heights.index(min(heights))
+            placed.append((c, heights[c], lay))
+            heights[c] += lay["h"] + gap
+        list_h = max(heights) - gap if layouts else 0
+        self._max_scroll = max(0, list_h - list_rect.h)
         self.scroll = min(self.scroll, self._max_scroll)
 
-        card = modal_card(screen, (card_w, chrome_h + visible_h))
+        job_buttons = []
+        with contained(screen, list_rect):
+            if not layouts:
+                text(screen, F["hub_body"], "Nothing on offer here right now.", (inner.x, inner.y), T.TX_FAINT)
+            outer, self.buttons = self.buttons, []
+            for c, y, lay in placed:
+                self._draw_quest(screen, F, pygame.Rect(list_rect.x + c * (col_w + gap), list_rect.y + y - self.scroll,
+                                                        col_w, lay["h"]), lay)
+            job_buttons, self.buttons = self.buttons, outer
+        self.buttons += [(k, r.clip(list_rect)) for k, r in job_buttons if r.clip(list_rect).w]
+        if self._max_scroll:
+            text(screen, F["hub_sub"], "scroll for more jobs", (inner.right, panel_r.bottom - T.S * 3), T.TX_FAINT,
+                 right=True)
 
-        with contained(screen, card):
-            cx = card.x + pad
-            cy = card.y + pad
-
-            if not framed:
-                draw_vendor(screen, F, (cx + inner_w - face, cy), self.vendor_card, size=face)
-                caps(screen, F["head"], self.title_text, (cx, cy), T.TX)
-                draw_vendor_name(screen, F, (cx, cy + 28), self.vendor_card)
-            cy += title_h + name_h
-            for ln in subtitle_lines:
-                text(screen, F["body"], ln, (cx, cy), T.TX_MUTED)
-                cy += 22
-
-            cy += T.S * 2
-
-            list_rect = pygame.Rect(cx, cy, inner_w, visible_h)
-            with contained(screen, list_rect):
-                if not layouts:
-                    box = pygame.Rect(cx, cy, inner_w, 70)
-                    pygame.draw.rect(screen, T.STEEL_HI, box, border_radius=4)
-                    pygame.draw.rect(screen, T.STEEL_LINE, box, 1, border_radius=4)
-                    text(screen, F["body_sm"], "Nothing on offer here right now.",
-                         box.center, T.TX_FAINT, center=True)
-                y = cy - self.scroll
-                for lay in layouts:
-                    self._draw_quest(screen, F, pygame.Rect(cx, y, inner_w, lay["h"]), lay)
-                    y += lay["h"] + gap
-            self.buttons = [(k, r.clip(list_rect)) for k, r in self.buttons]
-            self.buttons = [(k, r) for k, r in self.buttons if r.w and r.h]
-
-            cy = list_rect.bottom
-
-            if self.notice:
-                cy += T.S * 2
-                r_notice = pygame.Rect(cx, cy, inner_w, notice_h)
-                pygame.draw.rect(screen, mix(T.BRASS, T.TABLE, 0.90), r_notice, border_radius=4)
-                pygame.draw.rect(screen, mix(T.BRASS, T.STEEL_LINE, 0.4), r_notice, 1, border_radius=4)
-                with contained(screen, r_notice):
-                    ny = r_notice.y + 10
-                    for ln in notice_lines:
-                        text(screen, F["body_sm"], ln, (r_notice.x + 12, ny), T.BRASS)
-                        ny += 18
-                cy = r_notice.bottom
-
-            if footer_h:
-                cy += T.S * 2
-                hline(screen, cx, card.right - pad, cy)
-            bw = 180
-            btn_y = card.bottom - pad - footer_btn_h
-            right = card.right - pad                    # framed: the hub has the back, the extra takes its place
-            if not framed:
-                btn_leave = pygame.Rect(right - bw, btn_y, bw, footer_btn_h)
-                draw_button(screen, F, btn_leave, self.leave_label, mpos=self.mouse)
-                self.buttons.append(("done", btn_leave))
-                right = btn_leave.x - T.S * 2
-            if extra is not None:
-                label, enabled = extra
-                aw = min(T.S * 36, right - cx)
-                btn_extra = pygame.Rect(right - aw, btn_y, aw, footer_btn_h)
-                draw_button(screen, F, btn_extra, label, enabled=enabled, primary=enabled, mpos=self.mouse)
-                if enabled:
-                    self.buttons.append(("footer_action", btn_extra))
+        y = panel_r.bottom + T.S
+        for ln in notice_lines:
+            text(screen, F["hub_body"], ln, (m, y), T.BRASS)
+            y += lh
+        if not self.framed:
+            leave = pygame.Rect(m, H - T.S * 9, button_width(F, self.leave_label), T.S * 6)
+            hub_button(screen, F, leave, self.leave_label, mpos=self.mouse)
+            self.buttons.append(("done", leave))
 
         self._hot = any(rect.collidepoint(self.mouse) for _, rect in self.buttons)
         set_pointer(self._hot)

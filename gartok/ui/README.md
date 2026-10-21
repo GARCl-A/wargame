@@ -77,7 +77,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `lab_panel.py` | the combat lab setup screen: benchmark fight list, level/size steppers, controller toggles |
 | `medic_panel.py` | the Apothecary's Medic tab on the hub kit: one patient row each (ailments as chips, price and hours), the till footer with the total and treat / admit |
 | `vocation_panel.py` | the founding vocation picker: six vocation cards with race icons and guild perk |
-| `mission_offer_screen.py` | base class for NPC job boards: lists every job the giver has (`get_templates`), scrolls when they do not fit |
+| `mission_offer_screen.py` | base class for NPC job boards: a Jobs panel with one card per job the giver has (`get_templates`) in as many columns as fit (up to 3), scrolls when they do not fit, a keeper's extra button in its footer |
 
 ## Adding to the kit
 
