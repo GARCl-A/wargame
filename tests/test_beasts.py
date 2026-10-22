@@ -477,7 +477,7 @@ def test_a_wolf_also_drops_meat_beside_its_hide():
 
     batt = Battle([Unit("player")], [_wolf()])
     pool = loot.field_loot(batt, [], rng=AlwaysDrop())
-    assert pool.count("Meat") == 2 and pool.count("1sqm Hide") == 1
+    assert pool.count("Meat") == 1 and pool.count("1sqm Hide") == 1
 
 
 def test_a_beast_without_a_second_drop_adds_nothing_extra():

@@ -78,7 +78,6 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - Hit sounds feel off (the UI sounds are fine).
   - Reorder the combat hotkeys: Delay is used a lot and is running out of room.
 - **The Wilds:**
-  - Wolves drop too much Meat: a group that only forages often gets enough to skip hunting.
   - A DISTRIBUTE LOAD button during the hunt.
 
 ## Playtest notes 2026-10-12
