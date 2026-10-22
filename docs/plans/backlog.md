@@ -42,6 +42,18 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 ## Medium
 
+- **Missing weapons: Sword, Glaive, Longbow (author 2026-10-22).** Three catalog entries in `items.py`, each with
+  its shop shelf, `item_icon.ICONS` entry, `outfit.py` pick and REFERENCE.md regen.
+  1. *Sword:* one hand, 1d8, the same weapon action as the Broadsword (`parry_strike`).
+  2. *Glaive:* two hands, 1d10, reach +1 square (strikes 2 squares away). Its 2 AP action: +1 more square of reach
+     and +1 to hit. Melee reach does not exist yet — adjacency is assumed in attack range, opportunity attacks and
+     `ai.py` positioning, so this is the bulk of the work.
+  3. *Longbow:* 1d8, 50% more range than the Shortbow (14 → 21), the same action (`power_shot`).
+
+- **Races in the Wiki (author 2026-10-22).** `wiki_screen.py` has ITEMS, RECIPES, ACTIONS, TALENTS,
+  BEASTS and RULES but no tab for the playable races. Add a RACES tab read off the live race data: attribute
+  modifiers, racial abilities, the racial talent track, languages, and each race's glyph (`artwork.RACE_ICON`).
+
 - **Magic Arc follow-ups (future drops, quests & tuning).**
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
   2. *Blood's fourth mission* (robbed dragon strikes back): the dragon attacks node-by-node seeking its eggs, closest first, with consequences if nodes are destroyed; postponed to after magic arc core content (author 2026-10-19).
