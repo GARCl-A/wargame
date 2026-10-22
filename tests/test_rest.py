@@ -124,6 +124,17 @@ def test_until_full_is_refused_with_a_reason():
     assert "last day of rations" in rest.until_full(guild, g).reason
 
 
+def test_until_full_names_the_food_that_spoils_before_it_is_eaten():
+    u = _hurt(missing=4, meals=3, food="Meat")
+    for entry in u._base_inventory:
+        entry.days_old = 1
+    guild, g = _guild(u, at=24 * 3600 - 60)
+    assert u.rations == 3
+    plan = rest.until_full(guild, g)
+    assert not plan.available
+    assert "Meat spoils" in plan.reason
+
+
 def test_until_full_when_the_meal_itself_mends_the_last_hp():
     random.seed(3)
     u = Unit("player")

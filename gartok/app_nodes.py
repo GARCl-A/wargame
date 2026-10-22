@@ -53,7 +53,8 @@ class NodeScreensMixin:
         if group is not None and len(node.functions) > 1:
             from .hub_screen import TabbedHubScreen
             self.scene = TabbedHubScreen.for_node(self.ui_fonts, self.guild, group, node,
-                                                  on_done=self._after_activity, first="shop")
+                                                  on_done=self._after_activity, first="shop",
+                                                  on_work=lambda order: self._work_shift(group, order))
         else:
             from .hub_screen import TabbedHubScreen
             shop = MarketScreen(self.ui_fonts, self.guild, shoppers, node, on_done=self._after_activity)

@@ -17,6 +17,7 @@ from .ui.primitives import (
     footer_bar,
     format_tooltip,
     header,
+    scrollbar,
     small_caps,
     spaced,
     text,
@@ -220,17 +221,30 @@ class TavernaDrawMixin:
         hb.draw_section(screen, F, (inner.x, y), "Who makes the pitch")
         y += T.S * 3 + 4
         rows_end = btn.y - T.S * (5 if hint or who is not None else 2)
-        row_h = max(T.S * 7, min(hb.PERSON_H, (rows_end - y) // max(1, len(self.party)) - ROW_GAP))
+        area = pygame.Rect(inner.x, y, inner.w, max(0, rows_end - y))
+        row_h = max(T.S * 7, min(hb.PERSON_H, area.h // max(1, len(self.party)) - ROW_GAP))
+        content_h = len(self.party) * (row_h + ROW_GAP) - ROW_GAP
+        self.pitch_area, self.pitch_max = area, max(0, content_h - area.h)
+        self.pitch_scroll = min(self.pitch_scroll, self.pitch_max)
+        clip = screen.get_clip()
+        screen.set_clip(area.clip(clip))
+        y = area.y - self.pitch_scroll
         for m in self.party:
-            mr = pygame.Rect(inner.x, y, inner.w, row_h)
-            self.party_cards.append((mr, m))
+            mr = pygame.Rect(inner.x, y, inner.w - (T.S if self.pitch_max else 0), row_h)
+            y += row_h + ROW_GAP
+            seen = mr.clip(area)
+            if not seen.h:
+                continue
+            self.party_cards.append((seen, m))
             just_signed = signed is not None and signed["unit"] is m
             self._person(screen, mr, {
                 "face": _face(m), "name": m.name + ("  ·  signed" if just_signed else ""),
                 "sub": f"CHA {m.mod_charisma:+}  ·  speaks {', '.join(m.languages)}",
                 "status": self._pitch_condition(cand, m),
                 "state": "good" if just_signed else "on" if self.selected_recruiter is m else None})
-            y += row_h + ROW_GAP
+        screen.set_clip(clip)
+        if self.pitch_max:
+            scrollbar(screen, area, self.pitch_scroll, self.pitch_max, content_h)
 
         can_pitch = (who is not None and recruit.can_pitch(who, cand) and not self._barred(cand, who)
                      and recruit.slots_free(self.guild, who) > 0)

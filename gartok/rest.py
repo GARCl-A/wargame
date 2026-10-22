@@ -116,7 +116,7 @@ def until_full(guild, group):
     wanted = midnights(guild, full_at)
 
     if not camp.can_feed_tomorrow(guild):
-        return RestPlan(reason="the group is already down to its last day of rations")
+        return RestPlan(reason=_last_day(group))
     allowed = 0
     while allowed < min(wanted, MAX_DAYS):
         camp.midnight(guild)
@@ -129,9 +129,23 @@ def until_full(guild, group):
     else:
         hours, capped = first + 24 * allowed - JUST_BEFORE_MIDNIGHT, True
     if hours <= 0:
-        return RestPlan(reason="the group is already down to its last day of rations")
+        return RestPlan(reason=_last_day(group))
     return RestPlan(hours=hours, meals=allowed if capped else wanted, capped=capped,
                     worst=_worst(camp.members, heals, hours, triage), short_days=wanted - allowed if capped else 0)
+
+
+def _last_day(group):
+    """Why the floor stops the rest at once. Food that spoils before it is eaten counts
+    in RATIONS, so a pack that looks full can still be down to its last day."""
+    food = [e for pack in [u._base_inventory for u in group.members] + group.food_stores()
+            for e in pack if e.defn.food]
+    spoiling = sorted({e.name for e in food if not e.is_rotten() and e.defn.lifespan is not None
+                       and e.days_old + 2 > e.defn.lifespan})
+    if spoiling:
+        return f"the group is down to its last day of fresh food ({', '.join(spoiling)} spoils within two days)"
+    if any(e.name.startswith("Rotten Food") for e in food):
+        return "the group is down to its last day of fresh food (the rest is Rotten Food)"
+    return "the group is already down to its last day of rations"
 
 
 def _blocked(group):

@@ -60,6 +60,32 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   128 for 7 (its till refills $25 a day), the Mine in 86 and 70. Open: a cost for going without sleep, a lower
   wage, or a new premise. Layer 1's floor check still counts one shift a day.
 
+## Playtest notes 2026-10-21 (guild Herança)
+
+Raw notes from the author's playtest, to be sized as they are picked up.
+
+- **Presentation:**
+  - The start screen still looks amateurish; the main menu is the ugliest part.
+  - The pause menu (Esc) lists many options that belong behind one SETTINGS entry.
+  - *Choose a vocation* makes poor use of the space.
+  - Since the shop screens moved to the hub kit everything feels oversized, like a website at 200% zoom.
+  - Too few icons for the guild banner.
+  - Guild objectives are cut with "..." at 1920x1080: the texts are too long for their row.
+- **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
+- **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter.
+- **Text input:** on rename, the arrow keys do not move the typing cursor.
+- **Combat board:**
+  - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
+  - Hit sounds feel off (the UI sounds are fine).
+  - Reorder the combat hotkeys: Delay is used a lot and is running out of room.
+  - The Wilds: the green reachable-cells overlay vanishes on the green floor; make it more translucent.
+- **The Wilds:**
+  - A wolf ambush with a single wolf makes no sense: at least 2 wolves.
+  - Wolves drop too much Meat: a group that only forages often gets enough to skip hunting.
+  - A DISTRIBUTE LOAD button during the hunt.
+- **Objectives:** split *Take the road* in two: a pack animal alone already carries load; the wagon
+  is the second step.
+
 ## Playtest notes 2026-10-12
 
 Raw notes, to be sized as they are picked up. Guiding rule: **fewest possible buttons on the

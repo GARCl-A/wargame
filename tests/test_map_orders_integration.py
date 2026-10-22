@@ -303,3 +303,40 @@ def test_interactive_button_on_map_opens_directly_with_zero_advance():
     app.scene._handle_button("market")
     assert guild.clock.seconds == clock_before
     assert app.scene.__class__.__name__ in ("MarketScreen", "TabbedHubScreen", "ShopHubScreen")
+
+
+class _Hub:
+    """Stands in for the work node's hub: the tab the shift's report lands on."""
+
+    def __init__(self):
+        self.tab = type("Tab", (), {"report": []})()
+
+    def active_screen(self):
+        return self.tab
+
+
+def test_work_shift_runs_the_clock_and_keeps_the_work_tab_up():
+    random.seed(1)
+    g = Group([walker()], node="lumber_yard")
+    guild = Guild(None, groups=[g])
+    app = _app(guild)
+    hub = app.scene = _Hub()
+    before, start = g.members[0].money, guild.clock.seconds
+    app._work_shift(g, orders.work(guild, g, 8))
+    assert app.scene is hub
+    assert g.order is None and guild.clock.seconds - start == 8 * 3600
+    assert g.members[0].money > before
+    assert hub.tab.report
+
+
+def test_work_shift_leaves_the_tab_when_another_group_needs_an_order_first():
+    random.seed(1)
+    worker = Group([walker()], node="lumber_yard")
+    walking = Group([walker()], node="city")
+    guild = Guild(None, groups=[worker, walking])
+    app = _app(guild)
+    hub = app.scene = _Hub()
+    walking.order = orders.travel(walking, "market")
+    app._work_shift(worker, orders.work(guild, worker, 16))
+    assert isinstance(app.scene, (MapScreen, GroupTurnScreen)) and app.scene is not hub
+    assert worker.busy and worker.order.remaining < 16

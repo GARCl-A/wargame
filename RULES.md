@@ -1386,8 +1386,11 @@ copper instead of walking into the wilds and dying. The yard is also a shop
 (its own till, like the Mine's): it sells Lumber and Fruit and buys anything at the usual rate.
 
 - **How it works:** pick a group standing at the yard and a **shift** — 4, 8, 12
-  or 16 h — which issues a work order; ADVANCE resolves it: passes the time (can
-  cross midnight and trigger the day's meal) and pays each worker.
+  or 16 h — on the WORK tab, which issues a work order and runs the clock right
+  there (`App._work_shift`, the map's own loop): it passes the time (can cross
+  midnight and trigger the day's meal), pays each worker and leaves the tab up
+  with what the shift paid. When something else falls due on the way (another
+  group idle, a fight, a death), the map takes over and the shift runs on there.
 - **Pay:** `economy.LUMBER_WAGE` = **$1 per whole 4-hour block** bare-handed
   (work level 0); with an **Axe** in their pack or hand (work level 1) the pay is
   `LUMBER_AXE_RATIO` = **4/3** of that, floored. A partial hour does not count.

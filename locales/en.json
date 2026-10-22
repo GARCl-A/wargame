@@ -54,7 +54,7 @@
       "members": {
         "title": "Your roster",
         "body": [
-          "Members are listed by group; click one for their sheet, levels and talents. Gear is moved on the group screen (MANAGE GEAR & QUESTS on the map).",
+          "Members are listed by group; click one for their sheet, levels and talents. MANAGE GEAR, at the bottom, opens the selected member's group to move gear between them.",
           "SHARE RATIONS lets group-mates eat from that member's pack. A day unfed: hungry (-2 to attributes). Two: starving (max HP 1). Three: too weak to fight. Four: dead.",
           "Death is permanent; the run ends only when the whole guild is gone."
         ],

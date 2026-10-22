@@ -35,6 +35,7 @@ lays itself out from `screen.get_size()`. `START_SIZE` is just the
 opening window size.
 """
 
+from dataclasses import dataclass, field
 from typing import ClassVar
 
 import pygame
@@ -89,6 +90,16 @@ from .wiki_screen import WikiScreen
 START_SIZE = (1212, 832)
 TUTORIAL_DEBOUNCE_MS = 300      # clicks swallowed right after a tutorial card closes
 SCENE_DEBOUNCE_MS = 250         # clicks swallowed right after landing back on the map
+
+
+@dataclass
+class ClockRun:
+    """What one run of the clock left behind (`App._run_clock`)."""
+    events: list = field(default_factory=list)
+    casualties: list = field(default_factory=list)
+    level_ups: list = field(default_factory=list)
+    pending: list = field(default_factory=list)
+    idle: set = field(default_factory=set)     # gids that went idle on the last hop
 
 
 def _pointer_hot():
@@ -441,31 +452,61 @@ class App(NodeScreensMixin, ForcedFightsMixin, HuntFlowMixin, BattleFlowMixin):
         `_after_activity`."""
         if isinstance(self.scene, MapScreen):
             self._focus_gid = self.scene.selected.gid
-        chase = dt is None
-        all_casualties = []
-        all_level_ups = []
+        run = self._run_clock(dt)
+        if run is None:
+            return
+        self._map_notices += run.events
+        self._settle_run(run)
+
+    def _run_clock(self, dt=None):
+        """The loop behind `_advance`: returns a `ClockRun`, or None when the guild was wiped
+        (the mourning is already on screen)."""
+        run = ClockRun()
         while True:
             busy_before = {g.gid for g in self.guild.groups if g.busy}
             result = campaign.advance(self.guild, dt=dt)
-            self._map_notices += result.events
-            all_casualties.extend(result.casualties)
-            all_level_ups.extend(result.level_ups)
+            run.events += result.events
+            run.casualties += result.casualties
+            run.level_ups += result.level_ups
             if result.wiped:
                 self._hunt = None
-                self._mourn(all_casualties, self._campaign_over)
-                return
+                self._mourn(run.casualties, self._campaign_over)
+                return None
+            run.pending = list(result.pending)
+            run.idle = {g.gid for g in self.guild.groups if g.gid in busy_before and not g.busy}
+            if dt is not None or result.pending:
+                return run
+            if run.idle or not any(g.busy for g in self.guild.groups):
+                return run
 
-            if not chase or result.pending:
-                break
-            went_idle = any(g.gid in busy_before and not g.busy for g in self.guild.groups)
-            if went_idle or not any(g.busy for g in self.guild.groups):
-                break
-        self._pending = list(result.pending)
-
+    def _settle_run(self, run, nxt=None):
+        self._pending = run.pending
         self._report_casualties(
-            all_casualties,
-            lambda: self._chain_level_ups(all_level_ups, self._after_activity),
+            run.casualties,
+            lambda: self._chain_level_ups(run.level_ups, nxt or self._after_activity),
         )
+
+    def _work_shift(self, group, order):
+        """WORK on a work node's tab: the clock runs as the map's would, and the tab stays up
+        when the shift's end is all that stopped it. Anything else that falls due on the way
+        (another group idle, a fight, a death) plays out on the map's usual path, the shift
+        still running there."""
+        hub = self.scene
+        group.order = order
+        self._focus_gid = group.gid
+        run = self._run_clock()
+        if run is None:
+            return
+        if group.busy or run.pending or run.casualties or run.idle - {group.gid}:
+            self._map_notices += run.events
+            self._settle_run(run)
+            return
+        self._save()
+        hub.active_screen().report = run.events
+
+        def back():
+            self.scene = hub
+        self._settle_run(run, back)
 
     def _chain_level_ups(self, level_ups, nxt):
         from .level_up_screen import LevelUpScreen

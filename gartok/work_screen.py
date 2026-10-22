@@ -17,13 +17,15 @@ class WorkScreen(Screen):
     native = True
     framed = True           # only ever a hub's tab: the hub draws the keeper, the tabs and the back
 
-    def __init__(self, fonts, guild, group, node, on_done):
+    def __init__(self, fonts, guild, group, node, on_done, on_work=None):
         super().__init__()
         self._F = ui_fonts()
         self.guild = guild
         self.group = group
         self.node = node
         self.on_done = on_done
+        self.on_work = on_work          # runs the shift and keeps the tab up (App._work_shift)
+        self.report = []                # what the last shift paid
         self.buttons = []
         self._hot = False
 
@@ -42,7 +44,11 @@ class WorkScreen(Screen):
 
     def _on_button(self, key):
         if key.startswith("work:"):
-            self.group.order = orders.work(self.guild, self.group, int(key.split(":")[1]))
+            order = orders.work(self.guild, self.group, int(key.split(":")[1]))
+            if self.on_work is not None:
+                self.on_work(order)
+                return
+            self.group.order = order
             self.on_done()
 
     def _wage(self, hours):
@@ -52,7 +58,9 @@ class WorkScreen(Screen):
     def hub_cards(self):
         return [{"label": f"wage for {SHIFTS[-1]} h", "value": fmt_money(self._wage(SHIFTS[-1])), "tone": "money"},
                 {"label": "party purse", "value": fmt_money(sum(u.money for u in self.group.members)),
-                 "tone": "money"}]
+                 "tone": "money"},
+                {"label": "rations", "value": f"{self.group.rations}  ·  {self.group.rations_days} d",
+                 "tone": "bad" if self.group.rations_days < 1 else None}]
 
     def _crew_note(self, u, tool):
         level = economy.work_level(u, self.node.id)
@@ -75,11 +83,15 @@ class WorkScreen(Screen):
         crew = pygame.Rect(body.x, body.y, left_w, body.h)
         inner = hb.draw_panel(surf, F, crew, "The Crew", f"their own {tool} pays more than the foreman's")
         y = inner.y
+        row_h = max(hb.PERSON_H, min(hb.PERSON_H + T.S * 3,
+                                     (inner.h + T.S) // max(1, len(self.group.members)) - T.S))
         for u in self.group.members:
             level = economy.work_level(u, self.node.id)
             own = level >= economy.LUMBER_LEVEL_OWN_AXE
             day = economy.work_pay(self.node.id, SHIFTS[-1], level)
-            r = pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.PERSON_H + T.S * 3)
+            r = pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, row_h)
+            if r.bottom > inner.bottom + T.S * 2:
+                break
             hb.draw_person(surf, F, r, {
                 "face": {"race": u.race["name"], "portrait_id": getattr(u, "portrait_id", None), "token": u.token},
                 "name": u.name, "sub": f"own {tool.lower()}" if own else f"the foreman's {tool.lower()}",
@@ -99,8 +111,12 @@ class WorkScreen(Screen):
                     "buttons": [(f"work:{h}", "Work", True, True)]}, self.mouse):
                 self.buttons.append((key, b))
             y += hb.OFFER_H + T.S
-        text(surf, F["hub_sub"], "The licence on the Gathering tab trades the wage for what the crew finds.",
-             (inner.x, y + T.S), T.TX_FAINT)
+        y = text(surf, F["hub_sub"], "The licence on the Gathering tab trades the wage for what the crew finds.",
+                 (inner.x, y + T.S), T.TX_FAINT).bottom + T.S * 3
+        step = F["hub_body"].get_linesize() + T.S
+        fit = max(0, (inner.bottom - y) // step)
+        for line in self.report[-fit:] if fit else ():
+            y = text(surf, F["hub_body"], line, (inner.x, y), T.BRASS).bottom + T.S
 
         self._hot = any(r.collidepoint(self.mouse) for _, r in self.buttons)
         set_pointer(self._hot)

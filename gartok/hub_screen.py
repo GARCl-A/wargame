@@ -53,7 +53,7 @@ class TabbedHubScreen(Screen):
         self._body = pygame.Rect(0, 0, 0, 0)
 
     @classmethod
-    def for_node(cls, fonts, guild, group, node, on_done, first=None):
+    def for_node(cls, fonts, guild, group, node, on_done, first=None, on_work=None):
         """Constructs a TabbedHubScreen dynamically from node.functions."""
         from . import world
         tabs = []
@@ -115,7 +115,7 @@ class TabbedHubScreen(Screen):
         from . import gather
         if node.has("work"):
             from .work_screen import WorkScreen
-            tabs.append(("work", "WORK", WorkScreen(fonts, guild, group, node, on_done)))
+            tabs.append(("work", "WORK", WorkScreen(fonts, guild, group, node, on_done, on_work)))
         if node.has("work") and gather.can_gather(node.id):
             from .gather_screen import GatherScreen
             gathering = GatherScreen(fonts, guild, group, node, on_done)

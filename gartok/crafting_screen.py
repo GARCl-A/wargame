@@ -14,7 +14,7 @@ from .item_icon import draw_icon
 from .screen import Screen
 from .ui import hub_body as hb
 from .ui.hub_frame import hub_button
-from .ui.primitives import ellipsize, footer_bar, text
+from .ui.primitives import ellipsize, footer_bar, scrollbar, text
 from .ui.tokens import T, mix
 from .ui.tokens import fonts as ui_fonts
 from .ui.vendor_panel import draw_vendor, draw_vendor_name
@@ -62,6 +62,8 @@ class CraftingScreen(Screen):
         self.roster_rows = []     # [(rect, member)]
         self.notices = []
         self.scroll = self.max_scroll = 0
+        self.roster_area = pygame.Rect(0, 0, 0, 0)
+        self.roster_scroll = self.roster_max = 0
 
     def _reset_buttons(self):
         self.buttons = []
@@ -98,6 +100,9 @@ class CraftingScreen(Screen):
         return not self._get_missing_materials(recipe) and not self._get_missing_tools(recipe)
 
     def handle_event(self, event):
+        if event.type == pygame.MOUSEWHEEL and self.roster_area.collidepoint(self.mouse):
+            self.roster_scroll = max(0, min(self.roster_max, self.roster_scroll - event.y * T.S * 4))
+            return
         if event.type == pygame.MOUSEWHEEL:
             self.scroll = max(0, min(self.max_scroll, self.scroll - event.y))
             return
@@ -173,9 +178,21 @@ class CraftingScreen(Screen):
     def _draw_roster(self, screen, area):
         F = self._F
         inner = hb.draw_panel(screen, F, area, "Crafters", "pick who works")
-        y = inner.y
+        n = max(1, len(self.crafters))
+        row_h = max(hb.PERSON_H, min(hb.PERSON_H + T.S * 3, (inner.h + T.S) // n - T.S))
+        content_h = n * (row_h + T.S) - T.S
+        self.roster_area, self.roster_max = inner, max(0, content_h - inner.h)
+        self.roster_scroll = min(self.roster_scroll, self.roster_max)
+        view = inner.inflate(T.S * 2, 0)
+        clip = screen.get_clip()
+        screen.set_clip(view.clip(clip))
+        y = inner.y - self.roster_scroll
         for m in self.crafters:
-            r = pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2, hb.PERSON_H + T.S * 3)
+            r = pygame.Rect(inner.x - T.S, y, inner.w + T.S * 2 - (T.S if self.roster_max else 0), row_h)
+            y += r.h + T.S
+            seen = r.clip(view)
+            if not seen.h:
+                continue
             count = len(self._recipes(m))
             mod = m.mod_intelligence + m.craft_bonus(self.station)
             hb.draw_person(screen, F, r, {
@@ -184,10 +201,13 @@ class CraftingScreen(Screen):
                 "sub": f"{m.occupation['name']}  ·  d20{mod:+d}  ·  {count} recipe{'s' if count != 1 else ''}",
                 "note": f"working on {m.crafting_target.split(':')[0]}" if m.crafting_target else None},
                 self.mouse)
-            self._hot = self._hot or r.collidepoint(self.mouse)
-            self.roster_rows.append((r, m))
-            y += r.h + T.S
+            self._hot = self._hot or seen.collidepoint(self.mouse)
+            self.roster_rows.append((seen, m))
+        screen.set_clip(clip)
+        if self.roster_max:
+            scrollbar(screen, view, self.roster_scroll, self.roster_max, content_h)
         if not self.crafters:
+            y = inner.y
             for line in ("No one in the party knows a recipe", "for this station."):
                 text(screen, F["hub_body"], line, (inner.x, y), T.TX_FAINT)
                 y += F["hub_body"].get_linesize()
@@ -264,20 +284,25 @@ class CraftingScreen(Screen):
             text(screen, F["hub_sub"], "the materials must be in the group's packs to start",
                  (r.right - T.S * 2, r.centery - T.S), T.TX_FAINT, right=True)
             return
-        alone_ok = ((len(self.group.members) == 1 or bool(self.guild.free_slots))
-                    and self.guild.craft_blocker(m, recipe_id, [m]) is None)
+        if len(self.group.members) > 1 and not self.guild.free_slots:
+            alone_no = "no free group slot"
+        elif self.guild.craft_blocker(m, recipe_id, [m]) is not None:
+            alone_no = "not in their own pack"
+        else:
+            alone_no = None
         bw, bh = (buttons_w - T.S * 12) // 3, T.S * 4 + 4
-        rows = (("Group waits", "work", (1, 4, 8), True), ("Alone", "alone", (4, 8, 16), alone_ok))
-        for row, (label, kind, hours, ok) in enumerate(rows):
+        rows = (("Group waits", "work", (1, 4, 8), None), ("Alone", "alone", (4, 8, 16), alone_no))
+        for row, (label, kind, hours, no) in enumerate(rows):
             by = r.y + T.S * 2 + row * (bh + T.S * 2)
-            text(screen, F["hub_sub"], label, (bx0, by + (bh - F["hub_sub"].get_height()) // 2),
-                 T.TX_MUTED if ok else T.TX_FAINT)
+            mid = by + (bh - F["hub_sub"].get_height()) // 2
+            text(screen, F["hub_sub"], label, (bx0, mid), T.TX_FAINT if no else T.TX_MUTED)
+            if no:
+                text(screen, F["hub_sub"], ellipsize(no, F["hub_sub"], buttons_w - T.S * 12),
+                     (bx0 + T.S * 12, mid), T.TX_FAINT)
+                continue
             for i, h in enumerate(hours):
                 b = pygame.Rect(bx0 + T.S * 12 + i * (bw + T.S), by, bw, bh)
-                self.add_button(screen, b, f"{kind}:{h}:{recipe_id}", f"{h} h", enabled=ok)
-        if not alone_ok:
-            text(screen, F["hub_sub"], "alone needs a free group slot and the materials in their own pack",
-                 (r.right - T.S * 2, r.bottom - T.S * 3), T.TX_FAINT, right=True)
+                self.add_button(screen, b, f"{kind}:{h}:{recipe_id}", f"{h} h")
 
     def _draw_footer(self, screen):
         F = self._F
