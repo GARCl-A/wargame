@@ -27,8 +27,8 @@ a floor per place in `ui/floors.py`, every screen on the hub kit) are done; what
    teaches (~4,800 words -> ~3,000); the map's card closes onto the objectives (17, all open,
    `gartok/objectives.py`); the wounded group's Medic line and the Library's WRITE hint are in.
    Left: the author reads every card in play and flags what still rings false.
-6. **Big screen files:** split `guild_screen.py` (812 lines) when phase 5 touches it; the two editors
-   (`map_editor_screen.py` 970, `char_editor_screen.py` 807) stay out. When any of them takes a new
+6. **Big screen files:** split `guild_screen.py` (~800 lines) when phase 5 touches it; the two editors
+   (`map_editor_screen.py`, `char_editor_screen.py`, ~800-970) stay out. When any of them takes a new
    node or tab, split by concern instead of growing it.
 
 **After the playtest** (the playtest answers them, or they are content past it): weapon actions
@@ -44,15 +44,20 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
 
 - **Missing weapons: Sword, Glaive, Longbow (author 2026-10-22).** Three catalog entries in `items.py`, each with
   its shop shelf, `item_icon.ICONS` entry, `outfit.py` pick and REFERENCE.md regen.
-  1. *Sword:* one hand, 1d8, the same weapon action as the Broadsword (`parry_strike`).
-  2. *Glaive:* two hands, 1d10, reach +1 square (strikes 2 squares away). Its 2 AP action: +1 more square of reach
-     and +1 to hit. Melee reach does not exist yet — adjacency is assumed in attack range, opportunity attacks and
-     `ai.py` positioning, so this is the bulk of the work.
-  3. *Longbow:* 1d8, 50% more range than the Shortbow (14 → 21), the same action (`power_shot`).
+  1. *Sword:* one hand, 1d8, the same weapon action as the Broadsword (`parry_strike`); priced with the Axe,
+     Hammer and Pick (~$35).
+  2. *Glaive:* two hands, 1d10, reach +1 square (strikes 2 squares away), 30% over the Broadsword ($105 → ~$137).
+     Its 2 AP action: +1 more square of reach and +1 to hit (decided). There are no opportunity attacks; the one
+     melee reach today is the Grippli Lash (`Combatant.tongue_reach`, `actions.AttackTongue`, `ai.py`). Generalise
+     it into a weapon's reach (Attack's range check, the target cells, the AI's distance) instead of a Glaive case.
+  3. *Longbow:* 1d8, 50% more range than the Shortbow (14 → 21), the same action (`power_shot`), twice its price
+     ($320 → $640).
+  Sword and Longbow are catalog entries only and can ship before the Glaive.
 
 - **Races in the Wiki (author 2026-10-22).** `wiki_screen.py` has ITEMS, RECIPES, ACTIONS, TALENTS,
-  BEASTS and RULES but no tab for the playable races. Add a RACES tab read off the live race data: attribute
-  modifiers, racial abilities, the racial talent track, languages, and each race's glyph (`artwork.RACE_ICON`).
+  BEASTS and RULES but no tab for the playable races. Add a RACES tab read off the live race data (`data.RACES`,
+  the playable races only; BEASTS keeps the animals): attribute modifiers, racial abilities, the racial talent
+  track, languages, and each race's glyph (`artwork.RACE_ICON`).
 
 - **Magic Arc follow-ups (future drops, quests & tuning).**
   1. *Scroll of Invisibility:* Library quest unlocked at max library reputation + caster initiated in magic (direction 2026-10-19).
@@ -69,14 +74,12 @@ other Magic Arc follow-ups, Prisoners, Archaeology at Ancient Ruins.
   sickness, and a meal falls once a calendar day whatever the hours worked, so a crew chains 16 h shifts (~1.5 a
   day). The yard then pays about 50% over the premise's floor ("16 h = cheapest meal + $1"): `lumber` alone
   affords the day-30 milestone in about half its guilds, and the licence pays back in 47 days for 3 at the Yard,
-  128 for 7 (its till refills $25 a day), the Mine in 86 and 70. Open: a cost for going without sleep, a lower
-  wage, or a new premise. Layer 1's floor check still counts one shift a day.
+  128 for 7 (its till refills $25 a day), the Mine in 86 and 70. Decided 2026-10-22: no fatigue system, hunger is
+  the one upkeep. Open: a lower wage, the wood price falling with supply (*Production chain*), or accept it. Layer
+  1's floor check still counts one shift a day.
 
 ## Playtest notes 2026-10-22
 
-- **Double click on the map (bug, needs a repro).** Depending on the button pressed, the same click also seems to
-  land on the map and order a forced trip to the Battlefield. Likely one click handled twice: by the button and
-  by the node under it.
 - **Cancel a trip (with 2+ groups).** Like STOP RESTING (`map_inspector.py`, `stop_rest`), a travelling group gets
   a button to cancel its trip; it does not stop on the spot but at the next node of the route.
 - **Read the fight without the log.** Today only the log says *what* hit: an arrow, a Javelin Charge and Magic
@@ -102,7 +105,7 @@ Raw notes from the author's playtest, to be sized as they are picked up.
 - **Text input:** on rename, the arrow keys do not move the typing cursor.
 - **Combat board:**
   - Shadows and fog of war are not continuous: hard to tell fog (not seen) from darkness (seen, unlit).
-  - Hit sounds feel off (the UI sounds are fine).
+  - Hit sounds do not fit the game (the UI sounds are fine); swap the Kenney variants in `assets/sounds/`.
   - Reorder the combat hotkeys: Delay is used a lot and is running out of room.
 - **The Wilds:**
   - A DISTRIBUTE LOAD button during the hunt.
@@ -124,7 +127,8 @@ map**: a node has one "Enter" button and its functions are tabs inside.
   ambush part-way (`Guild.supply_leg`, `Order.owed`) is the shape to reuse.
 - **Ancient Ruins as an archaeological site:** start "archaeology" work there. Postponed (2026-10-12 &
   2026-10-19) to design an excavation system with tools (Shovel / Pick), multi-step iterations,
-  artifacts, money and lost lore.
+  artifacts, money and lost lore. The Ruins now remember a raid (`Guild.ruins_cleared`) and drop off the
+  inspector once empty, so a dig needs the node to keep offering something after it is cleared.
 - **The Claim:** let the player build their own farm to stock food.
 - **Combat leveling (Lv 1 -> 2):** the Wilds weights were fixed (`142b6f5`); assist XP or an
   intermediate arena bout wait on future playtests.

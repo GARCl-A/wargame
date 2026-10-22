@@ -212,6 +212,7 @@ class MapScreen(MapInspectorMixin, Screen):
                          next((g for g in guild.groups if not g.busy and not g.empty),
                               guild.groups[0]))
         self.split_picks = set()              # unit uids toggled to leave, while splitting
+        self._pressed = False                 # the release that closed the last screen is not a click here
         self.notices = []                     # lines shown after a tick (route, meals, deaths)
         self.hits = []                        # [(rect, node)]
         self.buttons = []                     # [(key, rect)]
@@ -372,7 +373,10 @@ class MapScreen(MapInspectorMixin, Screen):
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
             self._cam.zoom_at(pygame.mouse.get_pos(), event.y)
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._pressed = True
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self._pressed:
+            self._pressed = False
             self._click(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button in (2, 3):
             if self._cam.rect.collidepoint(event.pos):

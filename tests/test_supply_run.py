@@ -64,7 +64,7 @@ def test_supply_run_requires_ledger_hold_and_cargo():
         orders.supply_run(g, grp)
     grp.node = "ledger_hold"
     for u in units:
-        u.give_to_pack("Iron Ingot", 50)
+        u.give_to_pack("Lumber", 40)            # past even a Large race's carry
     with pytest.raises(ValueError, match="free cargo capacity"):
         orders.supply_run(g, grp)
 

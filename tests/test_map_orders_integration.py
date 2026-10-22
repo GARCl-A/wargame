@@ -8,6 +8,7 @@ objects are needed."""
 
 import random
 
+import pygame
 import pytest
 
 from gartok import campaign, forced, orders
@@ -16,6 +17,7 @@ from gartok.group import Group
 from gartok.group_turn_screen import GroupTurnScreen
 from gartok.guild import Guild
 from gartok.map_screen import MapScreen
+from gartok.ui.tokens import fonts as ui_fonts
 from tests.helpers import Unit, packed, walker, world
 
 
@@ -371,3 +373,22 @@ def test_work_shift_waits_for_the_order_of_a_group_still_idle():
     app._work_shift(worker, orders.work(guild, worker, 8))
     assert isinstance(app.scene, (MapScreen, GroupTurnScreen)) and app.scene is not hub
     assert guild.clock.seconds == start and worker.order.remaining == 8
+
+
+def test_a_release_with_no_press_on_the_map_orders_no_trip():
+    """A button on the screen before the map closes it on the press; the release then lands
+    on the map, over whatever node sits under it. Only a press made on the map is a click."""
+    random.seed(1)
+    a = Group([walker()], node="city")
+    b = Group([walker()], node="city")
+    guild = Guild(None, groups=[a, b])
+    scr = MapScreen(ui_fonts(), guild, lambda: None, lambda: None, lambda: None, lambda g: None)
+    scr.draw(pygame.Surface((1920, 1080)))
+    rect, node = next((r, n) for r, n in scr.hits if n.id != "city")
+    up = pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=rect.center)
+    scr.handle_event(up)
+    assert scr.selected.order is None
+
+    scr.handle_event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=rect.center))
+    scr.handle_event(up)
+    assert scr.selected.order is not None and scr.selected.order.dest == node.id
