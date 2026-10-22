@@ -60,7 +60,7 @@ bundle are gone. Screens take the `fonts()` dict as their constructor argument.
 | `sheet_card.py` | the character sheet at three densities |
 | `foe_panel.py` | what a side knows of a foe: its visible traits and the fields Intelligence opened, `?` for the rest |
 | `vendor_panel.py` | a shop's keeper in the screen header: the portrait medallion and a name line |
-| `hub_frame.py` | the hub screens' frame: `hub_layout`, the keeper header with its cards, the tab row, the footer, `hub_button`; the `hub_*` fonts (bigger, serif small caps for names via `primitives.small_caps`) |
+| `hub_frame.py` | the hub screens' frame: `hub_layout`, the keeper header with its cards, the tab row, the footer, `hub_button`, `MARGIN` (the side margin a tab's body lines up with); the `hub_*` fonts (a step above the base set, serif small caps for names via `primitives.small_caps`) |
 | `hub_body.py` | a hub tab's body in the shop's type: `draw_panel` (serif small-caps title, an aside, the head rule), `draw_person` (portrait, name, a line, chips, a status), `draw_offer` (the shelf's row: icon, name, a line, price, buttons), `draw_items` (item names behind their icons, counted), `draw_chip`, `draw_toggle`, `draw_bar`, `draw_facts` (label / value rows), `draw_section` |
 | `shop_shelf.py` | a hub's FOR SALE panel: category chips, the shelf rows with their steppers, the cart / sell / auto-sell footer |
 | `hub_party.py` | a party member as a hub card (`member_card`, same contract as `loadout_panel.column`): load bar, the slots two by two, the pack, a drop area; `container_card` is a stash (the bank's strongbox, the house) as a hub panel, same contract as `loadout_panel.container_panel` |

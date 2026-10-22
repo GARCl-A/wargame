@@ -44,17 +44,17 @@ class T:
     F_HEAD    = 18   # card / section heading
     F_BIG     = 28   # clock reading / critical number
 
-    # the hub screens (a node's tabs: shop, forge, recruit...) read at a larger size
-    F_HUB_TITLE = 34   # the keeper's name, serif small caps
-    F_HUB_HEAD  = 22   # a panel's heading ("For Sale", "Party"), serif small caps
-    F_HUB_CARD  = 20   # a member card's name, serif small caps
-    F_HUB_ROW   = 17   # an item row's name
-    F_HUB_BODY  = 15   # body text, tracked tab and button labels
-    F_HUB_SUB   = 13   # the line under a row, hints
-    F_HUB_LABEL = 12   # tracked caps labels
-    F_HUB_VALUE = 32   # a header card's figure
-    F_HUB_DEAL  = 19   # the deal card's headline
-    F_HUB_PRICE = 20   # a shelf row's price
+    # the hub screens (a node's tabs: shop, forge, recruit...) read a step above the base set
+    F_HUB_TITLE = 26   # the keeper's name, serif small caps
+    F_HUB_HEAD  = 18   # a panel's heading ("For Sale", "Party"), serif small caps
+    F_HUB_CARD  = 16   # a member card's name, serif small caps
+    F_HUB_ROW   = 14   # an item row's name
+    F_HUB_BODY  = 13   # body text, tracked tab and button labels
+    F_HUB_SUB   = 12   # the line under a row, hints
+    F_HUB_LABEL = 11   # tracked caps labels
+    F_HUB_VALUE = 24   # a header card's figure
+    F_HUB_DEAL  = 16   # the deal card's headline
+    F_HUB_PRICE = 16   # a shelf row's price
 
 
 ARCHETYPE_COLORS = {"brass": T.BRASS, "green": T.GREEN, "muted": T.TX_MUTED}

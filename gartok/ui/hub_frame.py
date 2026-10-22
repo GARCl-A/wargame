@@ -19,19 +19,20 @@ from .primitives import small_caps, spaced, spaced_width, text, wrap
 from .tokens import T, mix
 
 _TONE = {"money": T.BRASS, "good": T.GREEN, "bad": T.BLOOD, None: T.TX}
-HELP_W = T.S * 6               # the reopen-tutorial disc at the header's right
+MARGIN = T.S * 3               # the frame's side margin; a tab's body lines up with it
+HELP_W = T.S * 5               # the reopen-tutorial disc at the header's right
 
 
 def hub_layout(size):
     """The frame's rects for a window of `size`: the header, the tab row under it, the
     tab's body and the footer row."""
     W, H = size
-    m = T.S * 5
-    head_h = round(max(T.S * 19, min(T.S * 21, H * 0.156)))      # room for a two-line keeper's line
-    tabs = pygame.Rect(0, head_h, W, T.S * 7)
-    foot_h = T.S * 6
-    footer = pygame.Rect(m, H - T.S * 8 - foot_h, W - 2 * m, foot_h)
-    body = pygame.Rect(0, tabs.bottom + T.S * 3, W, max(1, footer.y - T.S * 3 - (tabs.bottom + T.S * 3)))
+    m = MARGIN
+    head_h = round(max(T.S * 14, min(T.S * 16, H * 0.12)))      # room for a two-line keeper's line
+    tabs = pygame.Rect(0, head_h, W, T.S * 5 + 4)
+    foot_h = T.S * 5
+    footer = pygame.Rect(m, H - T.S * 3 - foot_h, W - 2 * m, foot_h)
+    body = pygame.Rect(0, tabs.bottom + T.S * 2, W, max(1, footer.y - T.S * 2 - (tabs.bottom + T.S * 2)))
     return {"header": pygame.Rect(0, 0, W, head_h), "tabs": tabs, "body": body, "footer": footer, "margin": m}
 
 
@@ -48,19 +49,19 @@ def hub_button(surf, F, rect, label, *, primary=False, enabled=True, mpos=(-1, -
 
 
 def button_width(F, label):
-    return spaced_width(F["hub_bodyb"], label) + T.S * 6
+    return spaced_width(F["hub_bodyb"], label) + T.S * 5
 
 
 def _card(surf, F, rect, card):
     fill = mix(T.STEEL, T.BRASS, 0.04) if card.get("warm") else T.STEEL
     pygame.draw.rect(surf, fill, rect, border_radius=6)
     pygame.draw.rect(surf, T.STEEL_LINE, rect, 1, border_radius=6)
-    x = rect.x + T.S * 2 + 4
-    label = spaced(surf, F["hub_label"], card["label"], (x, rect.y + T.S + 4), T.TX_MUTED)
+    x = rect.x + T.S * 2
+    label = spaced(surf, F["hub_label"], card["label"], (x, rect.y + T.S + 2), T.TX_MUTED)
     color = _TONE[card.get("tone")]
     if card.get("sub"):
         sub = F["hub_sub"]
-        text(surf, sub, card["sub"], (x - 1, rect.bottom - T.S - 2 - sub.get_height()), T.TX_MUTED)
+        text(surf, sub, card["sub"], (x - 1, rect.bottom - T.S - sub.get_height()), T.TX_MUTED)
         text(surf, F["hub_deal"], card["value"], (x - 2, label.bottom + 2), color)
     else:
         value = F["hub_value"]
@@ -70,14 +71,14 @@ def _card(surf, F, rect, card):
 def card_width(F, card):
     sub = F["hub_sub"].size(card.get("sub", ""))[0]
     head = F["hub_deal" if card.get("sub") else "hub_value"].size(card["value"])[0]
-    return max(T.S * 25, sub + T.S * 6, head + T.S * 6, spaced_width(F["hub_label"], card["label"]) + T.S * 6)
+    return max(T.S * 18, sub + T.S * 4, head + T.S * 4, spaced_width(F["hub_label"], card["label"]) + T.S * 4)
 
 
 def draw_header(surf, F, rect, keeper, cards, help_w=HELP_W):
     """The keeper big at the left; `cards` right-aligned, leaving `help_w` at the right edge
     for the tutorial disc. Returns the rect the tutorial disc sits in."""
-    m = T.S * 5
-    card_h = max(T.S * 11 + 4, rect.h - T.S * 10 - 2)      # room for a label, a headline and a reason
+    m = MARGIN
+    card_h = max(T.S * 9, rect.h - T.S * 6)      # room for a label, a headline and a reason
     card_y = rect.y + (rect.h - card_h) // 2
     help_r = pygame.Rect(rect.right - m - help_w, card_y, help_w, help_w)
     right = help_r.x - T.S * 2
@@ -88,33 +89,33 @@ def draw_header(surf, F, rect, keeper, cards, help_w=HELP_W):
         _card(surf, F, r, card)
         right = cards_left = r.x - T.S * 2
 
-    port = rect.h - T.S * 6
+    port = rect.h - T.S * 4
     x = rect.x + m
     if keeper.get("portrait"):
         img = artwork.portrait(None, keeper["portrait"], port)
         if img is not None:
-            surf.blit(img, (x, rect.y + T.S * 3 + 4))
-            x += port + T.S * 3
+            surf.blit(img, (x, rect.y + T.S * 2))
+            x += port + T.S * 2 + 4
     if not keeper.get("name"):
         small_caps(surf, F["hub_title"], F["hub_title_sc"], keeper["place"], (x, rect.centery), T.TX,
                    anchor="midleft")
         return help_r
-    place = spaced(surf, F["hub_label"], keeper["place"], (x, rect.y + T.S * 4), T.BRASS)
-    name = small_caps(surf, F["hub_title"], F["hub_title_sc"], keeper["name"], (x, rect.y + T.S * 6 + 4), T.TX)
+    place = spaced(surf, F["hub_label"], keeper["place"], (x, rect.y + T.S * 2 + 4), T.BRASS)
+    name = small_caps(surf, F["hub_title"], F["hub_title_sc"], keeper["name"], (x, place.bottom + 2), T.TX)
     tag = "  ·  ".join(p for p in (keeper.get("caption"), keeper.get("bent")) if p)
     if tag and name.right + T.S * 2 + F["hub_body"].size(tag)[0] < cards_left - T.S * 2:
-        text(surf, F["hub_body"], tag, (name.right + T.S * 2, name.bottom - T.S * 3 + 2), T.TX_MUTED)
+        text(surf, F["hub_body"], tag, (name.right + T.S * 2, name.bottom - F["hub_body"].get_height() - 3), T.TX_MUTED)
     elif tag:
         text(surf, F["hub_sub"], tag, (place.right + T.S * 2, place.y - 1), T.TX_MUTED)
     if keeper.get("line"):
-        _quote(surf, F, x, name.bottom + T.S + 2, cards_left - T.S * 2 - x, f"“{keeper['line']}”")
+        _quote(surf, F, x, name.bottom + T.S - 2, cards_left - T.S * 2 - x, f"“{keeper['line']}”")
     return help_r
 
 
 def _quote(surf, F, x, y, room, quote):
     """The keeper's line in its box: at full size if it fits `room`, smaller if not, and in two
     lines at the smaller size as the last resort."""
-    pad = T.S * 2 + 2
+    pad = T.S + 4
     font = F["hub_quote"]
     lines = [quote]
     if font.size(quote)[0] + 2 * pad > room:
@@ -123,7 +124,7 @@ def _quote(surf, F, x, y, room, quote):
             lines = wrap(font, quote, room - 2 * pad)[:2]
     lh = font.get_linesize()
     w = max(font.size(line)[0] for line in lines) + 2 * pad
-    q = pygame.Rect(x, y, min(w, room), max(T.S * 5, len(lines) * lh + T.S * 2))
+    q = pygame.Rect(x, y, min(w, room), max(T.S * 3 + 4, len(lines) * lh + T.S))
     pygame.draw.rect(surf, mix(T.STEEL, T.TABLE, 0.3), q, border_radius=6)
     pygame.draw.rect(surf, T.STEEL_LINE, q, 1, border_radius=6)
     ty = q.centery - len(lines) * lh // 2
@@ -137,9 +138,9 @@ def draw_tabs(surf, F, rect, tabs, active, mpos):
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, rect.y), (rect.right, rect.y))
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, rect.bottom - 1), (rect.right, rect.bottom - 1))
     hits = []
-    x = rect.x + T.S * 5
+    x = rect.x + T.S * 3
     for key, label in tabs:
-        w = spaced_width(F["hub_bodyb"], label) + T.S * 6
+        w = spaced_width(F["hub_bodyb"], label) + T.S * 4
         r = pygame.Rect(x, rect.y + 1, w, rect.h - 2)
         on = key == active
         hot = not on and r.collidepoint(mpos)

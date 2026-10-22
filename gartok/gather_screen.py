@@ -6,7 +6,7 @@ from . import economy, gather, orders
 from .constants import fmt_money
 from .screen import Screen
 from .ui import hub_body as hb
-from .ui.hub_frame import hub_button
+from .ui.hub_frame import MARGIN, hub_button
 from .ui.primitives import footer_bar, header, set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -98,13 +98,13 @@ class GatherScreen(Screen):
                    "harvest materials instead of wages", (), None, mpos=self.mouse)
             top = 96
         bottom = H - T.S * 4 - (T.S * 3 if self.notice else 0)
-        body = pygame.Rect(T.S * 5, top, W - T.S * 10, bottom - top)
+        body = pygame.Rect(MARGIN, top, W - 2 * MARGIN, bottom - top)
         left_w = max(T.S * 56, min(T.S * 72, round(body.w * 0.4)))
         self._draw_licence(surf, pygame.Rect(body.x, body.y, left_w, body.h))
         self._draw_shifts(surf, pygame.Rect(body.x + left_w + T.S * 3, body.y, body.w - left_w - T.S * 3, body.h))
 
         if self.notice:
-            text(surf, F["hub_body"], self.notice, (T.S * 5, H - T.S * 3 - (0 if self.framed else 64)), T.BRASS)
+            text(surf, F["hub_body"], self.notice, (MARGIN, H - T.S * 3 - (0 if self.framed else 64)), T.BRASS)
         if not self.framed:
             footer_bar(self, surf, F, back=("leave", "BACK TO MAP"))
         self._hot = any(r.collidepoint(self.mouse) for _, r in self.buttons)

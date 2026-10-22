@@ -6,7 +6,7 @@ import pygame
 from . import economy, items, store_column
 from .constants import fmt_money
 from .ui import hub_party, loadout_panel, market_panel, shop_shelf
-from .ui.hub_frame import button_width, hub_button
+from .ui.hub_frame import MARGIN, button_width, hub_button
 from .ui.primitives import (
     draw_tooltip,
     ellipsize,
@@ -16,8 +16,6 @@ from .ui.primitives import (
 )
 from .ui.primitives import text as ui_text
 from .ui.tokens import T
-
-MARGIN = T.S * 2
 
 
 class MarketDrawMixin:
@@ -38,7 +36,7 @@ class MarketDrawMixin:
         self._pack_areas = []
         self.zones = []
         W, H = screen.get_size()
-        m = T.S * 5
+        m = MARGIN
         shelf_w = round(max(T.S * 52, min(T.S * 70, W * 0.28)))
         shelf = pygame.Rect(m, 0, shelf_w, H)
         data = {**self._stock_data(), "cats": [(label.capitalize(), key) for label, key, _ in self.get_categories()],

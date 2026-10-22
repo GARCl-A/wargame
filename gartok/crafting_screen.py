@@ -13,7 +13,7 @@ from . import items, progression, solo
 from .item_icon import draw_icon
 from .screen import Screen
 from .ui import hub_body as hb
-from .ui.hub_frame import hub_button
+from .ui.hub_frame import MARGIN, hub_button
 from .ui.primitives import ellipsize, footer_bar, scrollbar, text
 from .ui.tokens import T, mix
 from .ui.tokens import fonts as ui_fonts
@@ -173,7 +173,7 @@ class CraftingScreen(Screen):
             draw_vendor_name(screen, F, (title.right + T.S * 2, title.y + 10), card)
             text(screen, F["body"], self.subtitle, (tx, m + 30), T.TX_MUTED)
             top, bottom = m + 62, H - 72 - T.S * 3 * len(self.notices)
-        body = pygame.Rect(T.S * 5, top, W - T.S * 10, bottom - top)
+        body = pygame.Rect(MARGIN, top, W - 2 * MARGIN, bottom - top)
         side_w = max(T.S * 44, min(T.S * 56, round(body.w * 0.28)))
         self._draw_roster(screen, pygame.Rect(body.x, body.y, side_w, body.h))
         self._draw_crafting(screen, pygame.Rect(body.x + side_w + T.S * 3, body.y, body.w - side_w - T.S * 3, body.h))
@@ -313,7 +313,7 @@ class CraftingScreen(Screen):
         H = screen.get_height()
         ny = H - (T.S * 3 if self.framed else 72) - T.S * 3 * (len(self.notices) - 1)
         for notice in self.notices:
-            text(screen, F["hub_body"], notice, (T.S * 5, ny), T.BRASS)
+            text(screen, F["hub_body"], notice, (MARGIN, ny), T.BRASS)
             ny += T.S * 3
         if not self.framed:
             footer_bar(self, screen, F, primary=("done", f"LEAVE {self.title}"))

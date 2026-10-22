@@ -32,17 +32,17 @@ from .tokens import T, mix
 
 TONE = {"money": T.BRASS, "good": T.GREEN, "bad": T.BLOOD, "muted": T.TX_MUTED, "faint": T.TX_FAINT,
         None: T.TX}
-PAD = T.S * 3
-HEAD_H = T.S * 8
-PERSON_H = T.S * 9 + 2           # a person row with a name and one line under it
-PERSON_TALL_H = T.S * 14         # with a note and chips too
-OFFER_H = T.S * 9 + 2            # the shop shelf's row
+PAD = T.S * 2 + 4
+HEAD_H = T.S * 6 + 4
+PERSON_H = T.S * 7 + 2           # a person row with a name and one line under it
+PERSON_TALL_H = T.S * 11 + 4     # with a note and chips too
+OFFER_H = T.S * 7 + 2            # the shop shelf's row
 
 
 def draw_panel(surf, F, rect, title, aside=None, hot=False):
     pygame.draw.rect(surf, T.STEEL, rect, border_radius=8)
     pygame.draw.rect(surf, T.BRASS if hot else T.STEEL_LINE, rect, 2 if hot else 1, border_radius=8)
-    t = small_caps(surf, F["hub_head"], F["hub_head_sc"], title, (rect.x + PAD, rect.y + T.S * 3), T.TX)
+    t = small_caps(surf, F["hub_head"], F["hub_head_sc"], title, (rect.x + PAD, rect.y + T.S * 2 + 2), T.TX)
     if aside:
         x = t.right + T.S * 2
         text(surf, F["hub_body"], ellipsize(aside, F["hub_body"], rect.right - PAD - x),
@@ -58,7 +58,7 @@ def draw_section(surf, F, pos, label):
 
 def draw_chip(surf, F, pos, label, tone=None, anchor="topleft"):
     font = F["hub_subb"]
-    r = pygame.Rect(0, 0, font.size(label)[0] + T.S * 2, T.S * 3)
+    r = pygame.Rect(0, 0, font.size(label)[0] + T.S * 2, T.S * 2 + 4)
     setattr(r, anchor, pos)
     color = TONE[tone]
     pygame.draw.rect(surf, mix(T.STEEL, color, 0.12), r, border_radius=r.h // 2)
@@ -109,28 +109,28 @@ def draw_person(surf, F, rect, p, mpos):
         pygame.draw.rect(surf, mix(T.STEEL, T.TABLE, 0.35), rect, border_radius=6)
 
     r = min(T.S * 3, rect.h // 2 - T.S)
-    face_c = (rect.x + T.S * 2 + r, rect.y + T.S + 4 + r if p.get("note") or p.get("chips") else rect.centery)
+    face_c = (rect.x + T.S + 4 + r, rect.y + T.S + r if p.get("note") or p.get("chips") else rect.centery)
     draw_face(surf, F, face_c, r, p["face"], fallback_color=T.STEEL_HI)
 
     x = face_c[0] + r + T.S * 2
     right = rect.right - T.S * 2 - p.get("reserve", 0)
     status = p.get("status")
     if status:
-        s = text(surf, F["hub_bodyb"], status[0], (right, rect.y + T.S + 6), TONE[status[1]], right=True)
+        s = text(surf, F["hub_bodyb"], status[0], (right, rect.y + T.S + 2), TONE[status[1]], right=True)
         right_name = s.x - T.S * 2
     else:
         right_name = right
-    y = rect.y + T.S + 2
+    y = rect.y + T.S - 1
     small_caps(surf, F["hub_card"], F["hub_card_sc"], ellipsize(p["name"], F["hub_card"], right_name - x),
                (x, y), T.TX)
-    y += T.S * 3 + 4
+    y += T.S * 2 + 6
     if p.get("sub"):
         text(surf, F["hub_sub"], ellipsize(p["sub"], F["hub_sub"], right - x), (x, y), T.TX_MUTED)
-        y += T.S * 2 + 4
+        y += T.S * 2 + 2
     if p.get("note"):
         note, tone = p["note"] if isinstance(p["note"], tuple) else (p["note"], None)
         text(surf, F["hub_body"], ellipsize(note, F["hub_body"], right - x), (x, y), TONE[tone])
-        y += T.S * 3
+        y += T.S * 2 + 4
     hits = []
     cx = x
     for label, tone in p.get("chips", []):
@@ -154,10 +154,10 @@ def draw_offer(surf, F, rect, o, mpos):
     hits = []
     pygame.draw.rect(surf, T.STEEL_HI if rect.collidepoint(mpos) and not o.get("dim") else
                      mix(T.STEEL, T.TABLE, 0.35), rect, border_radius=6)
-    icon = pygame.Rect(rect.x + T.S + 4, rect.y + (rect.h - T.S * 6) // 2, T.S * 6, T.S * 6)
+    icon = pygame.Rect(rect.x + T.S, rect.y + (rect.h - T.S * 5) // 2, T.S * 5, T.S * 5)
     _icon(surf, F, icon, o["icon"])
     bx = rect.right - T.S * 2
-    bh = T.S * 5
+    bh = T.S * 4
     for key, label, primary, enabled in reversed(o.get("buttons", [])):
         b = pygame.Rect(0, rect.y + (rect.h - bh) // 2, button_width(F, label) - T.S * 2, bh)
         b.right = bx
@@ -166,13 +166,13 @@ def draw_offer(surf, F, rect, o, mpos):
             hits.append((b, key))
         bx = b.x - T.S
     if o.get("price"):
-        p = text(surf, F["hub_price"], o["price"], (bx - T.S, rect.y + T.S + 2), TONE[o.get("price_tone", "money")],
+        p = text(surf, F["hub_price"], o["price"], (bx - T.S, rect.y + T.S - 1), TONE[o.get("price_tone", "money")],
                  right=True)
         bx = p.x - T.S
     x = icon.right + T.S * 2
     ink = T.TX_FAINT if o.get("dim") else T.TX
-    text(surf, F["hub_row"], ellipsize(o["name"], F["hub_row"], bx - T.S - x), (x, rect.y + T.S + 4), ink)
-    sub = text(surf, F["hub_sub"], ellipsize(o.get("sub", ""), F["hub_sub"], bx - T.S - x), (x, rect.y + T.S * 5),
+    text(surf, F["hub_row"], ellipsize(o["name"], F["hub_row"], bx - T.S - x), (x, rect.y + T.S - 1), ink)
+    sub = text(surf, F["hub_sub"], ellipsize(o.get("sub", ""), F["hub_sub"], bx - T.S - x), (x, rect.y + T.S * 3 + 4),
                T.TX_MUTED)
     if o.get("note"):
         note, tone = o["note"]
@@ -187,7 +187,7 @@ def draw_items(surf, F, pos, names, color=T.TX, max_x=None):
     counts = {}
     for n in names:
         counts[n] = counts.get(n, 0) + 1
-    font, size = F["hub_body"], T.S * 3
+    font, size = F["hub_body"], T.S * 2 + 4
     x, y = pos
     items = list(counts.items())
     for i, (name, qty) in enumerate(items):

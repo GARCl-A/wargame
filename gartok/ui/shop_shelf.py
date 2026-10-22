@@ -22,14 +22,14 @@ from .hub_frame import hub_button
 from .primitives import dashed_rect, ellipsize, scrollbar, small_caps, text
 from .tokens import T, mix
 
-ROW_H = T.S * 9 + 2
-FOOT_H = T.S * 15
+ROW_H = T.S * 7 + 2
+FOOT_H = T.S * 11
 
 
 def _chip(surf, F, x, y, label, on, mpos):
     font = F["hub_subb"] if on else F["hub_sub"]
-    w = font.size(label)[0] + T.S * 3
-    r = pygame.Rect(x - w, y, w, T.S * 3 + 4)
+    w = font.size(label)[0] + T.S * 2 + 4
+    r = pygame.Rect(x - w, y, w, T.S * 3)
     hot = not on and r.collidepoint(mpos)
     pygame.draw.rect(surf, mix(T.STEEL, T.BRASS, 0.15) if on else T.STEEL, r, border_radius=r.h // 2)
     pygame.draw.rect(surf, T.BRASS if on else (T.TX_MUTED if hot else T.STEEL_LINE), r, 1, border_radius=r.h // 2)
@@ -38,7 +38,7 @@ def _chip(surf, F, x, y, label, on, mpos):
 
 
 def _stepper(surf, F, r, name, qty, mpos):
-    box = pygame.Rect(r.right - T.S * 15 - 6, r.y + T.S * 2, T.S * 15, T.S * 5)
+    box = pygame.Rect(r.right - T.S * 12 - 6, r.y + (r.h - T.S * 4) // 2, T.S * 12, T.S * 4)
     pygame.draw.rect(surf, T.TABLE, box, border_radius=4)
     pygame.draw.rect(surf, T.STEEL_LINE, box, 1, border_radius=4)
     third = box.w // 3
@@ -63,7 +63,7 @@ def _row(surf, F, r, row, weapons, hover, mpos, out):
         pygame.draw.rect(surf, T.BRASS_DIM, r, 1, border_radius=6)
     elif hover:
         pygame.draw.rect(surf, T.STEEL_HI, r, border_radius=6)
-    icon = pygame.Rect(r.x + T.S + 4, r.y + T.S + 2, T.S * 6, T.S * 6)
+    icon = pygame.Rect(r.x + T.S, r.y + (r.h - T.S * 5) // 2, T.S * 5, T.S * 5)
     pygame.draw.rect(surf, mix(T.STEEL, T.TABLE, 0.5), icon, border_radius=4)
     draw_icon(surf, icon.inflate(-6, -6), row["name"])
 
@@ -72,9 +72,9 @@ def _row(surf, F, r, row, weapons, hover, mpos, out):
     price, base = row["price"], row["base_price"]
     color = (T.TX_FAINT if not row["afford"] else T.GREEN if price < base
              else T.BLOOD if price > base else T.BRASS)
-    pr = text(surf, F["hub_price"], fmt_money(price), (box.x - T.S * 2, r.y + T.S + 2), color, right=True)
+    pr = text(surf, F["hub_price"], fmt_money(price), (box.x - T.S * 2, r.y + T.S - 1), color, right=True)
     if base != price:
-        was = text(surf, F["hub_sub"], fmt_money(base), (pr.x - T.S, r.y + T.S + 6), T.TX_FAINT, right=True)
+        was = text(surf, F["hub_sub"], fmt_money(base), (pr.x - T.S, r.y + T.S + 2), T.TX_FAINT, right=True)
         pygame.draw.line(surf, T.TX_FAINT, (was.x, was.centery), (was.right, was.centery))
         pr = was
 
@@ -83,20 +83,20 @@ def _row(surf, F, r, row, weapons, hover, mpos, out):
     if weapons:
         is_l = row.get("size") == "Large"
         for i, (label, size) in enumerate((("M", "Medium"), ("L", "Large"))):
-            b = pygame.Rect(pr.x - T.S * 2 - (2 - i) * (T.S * 3), r.y + T.S + 2, T.S * 3, T.S * 3)
+            b = pygame.Rect(pr.x - T.S * 2 - (2 - i) * (T.S * 2 + 4), r.y + T.S - 1, T.S * 2 + 2, T.S * 2 + 2)
             on = (size == "Large") == is_l
             pygame.draw.rect(surf, T.BRASS if on else T.STEEL, b, border_radius=3)
             pygame.draw.rect(surf, T.STEEL_LINE, b, 1, border_radius=3)
             text(surf, F["hub_subb"], label, b.center, T.TABLE if on else T.TX_MUTED, center=True)
             out["size_hits"].append((b, row["base_name"], size))
-        room -= T.S * 7
+        room -= T.S * 6
     ink = T.TX if (row["afford"] and not sold_out) or sel else T.TX_FAINT
-    text(surf, F["hub_row"], ellipsize(row["name"], F["hub_row"], room), (x, r.y + T.S + 4), ink)
+    text(surf, F["hub_row"], ellipsize(row["name"], F["hub_row"], room), (x, r.y + T.S - 1), ink)
     left = "sold out" if sold_out else f"{row['stock']} left" if row["stock"] is not None else ""
     bits = [b for b in (row.get("tag", "").title(), row.get("spec", ""),
                         f"{row['weight']:.1f} kg", left) if b]
     sub = text(surf, F["hub_sub"], ellipsize("  ·  ".join(bits), F["hub_sub"], box.x - T.S * 2 - x),
-               (x, r.y + T.S * 5), T.TX_MUTED)
+               (x, r.y + T.S * 3 + 4), T.TX_MUTED)
     if not row["fits"]:
         text(surf, F["hub_subb"], "too heavy for anyone", (sub.right + T.S, sub.y), T.BLOOD)
 
@@ -107,18 +107,18 @@ def draw_shelf(surf, F, rect, data, mpos):
     drop = data.get("drop")
     pygame.draw.rect(surf, T.STEEL, rect, border_radius=8)
     pygame.draw.rect(surf, T.BRASS if drop else T.STEEL_LINE, rect, 2 if drop else 1, border_radius=8)
-    pad = T.S * 3
-    small_caps(surf, F["hub_head"], F["hub_head_sc"], "For Sale", (rect.x + pad, rect.y + T.S * 3), T.TX)
+    pad = T.S * 2 + 4
+    small_caps(surf, F["hub_head"], F["hub_head_sc"], "For Sale", (rect.x + pad, rect.y + T.S * 2 + 2), T.TX)
     x = rect.right - pad
     cats = data.get("cats", [])
     if len(cats) > 1:
         for label, key in reversed(cats):
-            r = _chip(surf, F, x, rect.y + T.S * 3 - 2, label, key == data.get("cat"), mpos)
+            r = _chip(surf, F, x, rect.y + T.S * 2, label, key == data.get("cat"), mpos)
             out["cat_hits"].append((r, key))
             x = r.x - T.S
     elif cats:
-        text(surf, F["hub_sub"], cats[0][0], (x, rect.y + T.S * 4), T.TX_MUTED, right=True)
-    head = rect.y + T.S * 8
+        text(surf, F["hub_sub"], cats[0][0], (x, rect.y + T.S * 3 - 2), T.TX_MUTED, right=True)
+    head = rect.y + T.S * 6 + 4
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, head), (rect.right - 1, head))
 
     weapons = data.get("kind") == "weapons"
@@ -130,11 +130,11 @@ def draw_shelf(surf, F, rect, data, mpos):
             r = _chip(surf, F, bx, top, label, all_size == size, mpos)
             out["header_size_hits"].append((r, size))
             bx = r.x - T.S
-        text(surf, F["hub_sub"], "all sizes", (bx - T.S, top + 4), T.TX_FAINT, right=True)
-        top += T.S * 4 + 4
+        text(surf, F["hub_sub"], "all sizes", (bx - T.S, top + 5), T.TX_FAINT, right=True)
+        top += T.S * 4
 
     foot_y = rect.bottom - FOOT_H
-    lst = pygame.Rect(rect.x + T.S + 4, top, rect.w - T.S * 3, foot_y - T.S - top)
+    lst = pygame.Rect(rect.x + T.S, top, rect.w - T.S * 2, foot_y - T.S - top)
     out["list"] = lst
     rows = data["rows"]
     fit = max(1, lst.h // ROW_H)
@@ -163,7 +163,7 @@ def draw_shelf(surf, F, rect, data, mpos):
 
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, foot_y), (rect.right - 1, foot_y))
     foot = data["foot"]
-    ty = foot_y + T.S * 3 - F["hub_body"].get_height() // 2
+    ty = foot_y + T.S * 2 + 4 - F["hub_body"].get_height() // 2
     right_x = rect.right - pad
     if foot.get("right"):
         label, value = foot["right"]
@@ -172,7 +172,7 @@ def draw_shelf(surf, F, rect, data, mpos):
     text(surf, F["hub_body"], ellipsize(foot["left"], F["hub_body"], right_x - T.S * 2 - (rect.x + pad)),
          (rect.x + pad, ty), T.TX_MUTED)
     if foot.get("button"):
-        b = pygame.Rect(rect.x + pad, foot_y + T.S * 6, rect.w - 2 * pad, T.S * 6 + 4)
+        b = pygame.Rect(rect.x + pad, foot_y + T.S * 5, rect.w - 2 * pad, T.S * 5)
         hub_button(surf, F, b, foot["button"], primary=foot.get("primary", False),
                    enabled=foot.get("enabled", True), mpos=mpos)
         if foot.get("enabled", True):

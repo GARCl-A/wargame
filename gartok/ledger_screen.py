@@ -11,7 +11,7 @@ from . import data, economy, orders
 from .constants import fmt_money
 from .screen import Screen
 from .ui import hub_body as hb
-from .ui.hub_frame import hub_button
+from .ui.hub_frame import MARGIN, hub_button
 from .ui.primitives import set_pointer, text, wrap
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -111,14 +111,14 @@ class LedgerScreen(Screen):
             panels.append(self._draw_gate)
 
         bottom = H - T.S * 4 - (T.S * 3 if self.notice else 0)
-        body = pygame.Rect(T.S * 5, 0, W - T.S * 10, bottom)
+        body = pygame.Rect(MARGIN, 0, W - 2 * MARGIN, bottom)
         gap = T.S * 3
         w = min(T.S * 72, (body.w - gap * (len(panels) - 1)) // len(panels))
         for i, draw_panel in enumerate(panels):
             draw_panel(screen, pygame.Rect(body.x + i * (w + gap), body.y, w, body.h))
 
         if self.notice:
-            text(screen, F["hub_body"], self.notice, (T.S * 5, H - T.S * 3), T.BRASS)
+            text(screen, F["hub_body"], self.notice, (MARGIN, H - T.S * 3), T.BRASS)
         set_pointer(self._hot)
 
     def _draw_chest(self, screen, rect):

@@ -68,7 +68,6 @@ Raw notes from the author's playtest, to be sized as they are picked up.
   - The start screen still looks amateurish; the main menu is the ugliest part.
   - The pause menu (Esc) lists many options that belong behind one SETTINGS entry.
   - *Choose a vocation* makes poor use of the space.
-  - Since the shop screens moved to the hub kit everything feels oversized, like a website at 200% zoom.
   - Too few icons for the guild banner.
 - **World and soul:** the world needs story depth before the Archaeology arc; the game still lacks "soul".
 - **Occupations are bland:** today they only roll the starting items. Give each one a reason to matter.

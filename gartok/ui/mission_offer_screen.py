@@ -7,7 +7,7 @@ from ..constants import fmt_money
 from ..item_icon import draw_icon
 from ..screen import Screen
 from .hub_body import draw_chip, draw_panel
-from .hub_frame import button_width, hub_button
+from .hub_frame import MARGIN, button_width, hub_button
 from .primitives import caps, contained, ellipsize, set_pointer, small_caps, text, wrap
 from .tokens import T, mix
 from .tokens import fonts as ui_fonts
@@ -265,7 +265,7 @@ class MissionOfferScreen(Screen):
         W, H = screen.get_size()
         screen.fill(T.TABLE)
         self.buttons.clear()
-        m = T.S * 5
+        m = MARGIN
 
         top = 0
         if not self.framed:

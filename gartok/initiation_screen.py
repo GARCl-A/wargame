@@ -5,6 +5,7 @@ import pygame
 from . import factions, rite, world
 from .constants import fmt_money
 from .screen import Screen
+from .ui.hub_frame import MARGIN
 from .ui.initiation_panel import draw_initiation
 from .ui.primitives import caps, set_pointer, text, wrap
 from .ui.tokens import T
@@ -117,7 +118,7 @@ class InitiationScreen(Screen):
         F = ui_fonts()
         W, H = screen.get_size()
         screen.fill(T.TABLE)
-        m = T.S * 5
+        m = MARGIN
         if self.framed:
             top = 0
         else:

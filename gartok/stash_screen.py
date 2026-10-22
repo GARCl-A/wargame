@@ -33,7 +33,7 @@ from .packbox import ItemMenuMixin
 from .screen import Screen
 from .ui import hub_party
 from .ui.hscroll import ColumnScroll
-from .ui.hub_frame import button_width, hub_button
+from .ui.hub_frame import MARGIN, button_width, hub_button
 from .ui.inspector_panel import role_for
 from .ui.primitives import ellipsize, set_pointer, small_caps, text
 from .ui.tokens import T
@@ -432,7 +432,7 @@ class StashScreen(economy.PartyPurse, ItemMenuMixin, DragSelectMixin, LoadoutMov
     # inside a hub: the stash as the shop's shelf, the party as its cards  #
     # ------------------------------------------------------------------ #
     def _draw_hub(self, screen, F, W, H):
-        m = T.S * 5
+        m = MARGIN
         stash_w = round(max(T.S * 52, min(T.S * 70, W * 0.28)))
         stash_r = pygame.Rect(m, 0, stash_w, H)
         stash, held = self._stash(), self._open()

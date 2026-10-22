@@ -5,6 +5,7 @@ import pygame
 from . import medic
 from .constants import fmt_money
 from .screen import Screen
+from .ui.hub_frame import MARGIN
 from .ui.medic_panel import draw_medic
 from .ui.primitives import caps, set_pointer, text, wrap
 from .ui.tokens import T
@@ -81,7 +82,7 @@ class MedicScreen(Screen):
         F = ui_fonts()
         W, H = screen.get_size()
         screen.fill(T.TABLE)
-        m = T.S * 5
+        m = MARGIN
         aside = "potions and doses at a discount while the group waits; a long poison is a hospital stay"
         if self.framed:
             top = 0

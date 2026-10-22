@@ -13,6 +13,7 @@ from . import animals, data, economy, items, recorder, wagon
 from .constants import fmt_money
 from .screen import Screen
 from .ui import hub_body as hb
+from .ui.hub_frame import MARGIN
 from .ui.primitives import draw_button, footer_bar, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -143,14 +144,14 @@ class StablesScreen(Screen):
             text(screen, F["bodyb"], f"party holds {fmt_money(self.wealth)}",
                  (W - m - (28 + T.S) - self.header_reserve, m + 4), T.BRASS, right=True)
             top, bottom = m + 62, H - 80
-        body = pygame.Rect(T.S * 5, top, W - T.S * 10, bottom - top)
+        body = pygame.Rect(MARGIN, top, W - 2 * MARGIN, bottom - top)
         left_w = max(T.S * 56, min(T.S * 76, round(body.w * 0.42)))
         self._draw_market(screen, pygame.Rect(body.x, body.y, left_w, body.h))
         self._draw_herd(screen, pygame.Rect(body.x + left_w + T.S * 3, body.y, body.w - left_w - T.S * 3, body.h))
         if not self.framed:
             footer_bar(self, screen, F, primary=("done", self.leave), notice=self.notice)
         elif self.notice:
-            text(screen, F["hub_body"], self.notice, (T.S * 5, H - T.S * 3), T.TX_MUTED)
+            text(screen, F["hub_body"], self.notice, (MARGIN, H - T.S * 3), T.TX_MUTED)
 
     def add_button(self, surf, rect, key, label, *, enabled=True, primary=False, danger=False):
         draw_button(surf, self._F, rect, label, primary=primary, danger=danger, enabled=enabled, mpos=self.mouse)

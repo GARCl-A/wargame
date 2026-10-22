@@ -31,8 +31,8 @@ from .tokens import T, mix
 SLOT_LABELS = {"hand": "main hand", "offhand": "off hand", "tongue": "tongue", "artifact": "artifact",
                "armor": "armor", "tack": "tack"}
 SLOT_ORDER = ("hand", "offhand", "armor", "artifact", "tongue", "tack")
-SLOT_H = T.S * 8 - 2
-ROW_H = T.S * 7 - 4
+SLOT_H = T.S * 6 + 4
+ROW_H = T.S * 5 + 4
 
 
 def _load(surf, F, x, y, w, load):
@@ -40,15 +40,15 @@ def _load(surf, F, x, y, w, load):
     text(surf, F["hub_sub"], "Load", (x, y), T.TX_MUTED)
     text(surf, F["hub_subb"], load_meter.figure(*load) + (f"  ·  {note}" if note else ""), (x + w, y),
          load_meter.color(*load), right=True)
-    load_meter.draw_bar(surf, pygame.Rect(x, y + T.S * 3 - 2, w, 7), *load)
+    load_meter.draw_bar(surf, pygame.Rect(x, y + T.S * 2 + 2, w, 6), *load)
 
 
 def _slot(surf, F, r, kind, held, mouse):
     if held is None:
         pygame.draw.rect(surf, T.STEEL, r, border_radius=4)
         pygame.draw.rect(surf, T.STEEL_LINE, r, 1, border_radius=4)
-        spaced(surf, F["hub_label"], SLOT_LABELS[kind], (r.x + T.S + 4, r.y + T.S + 2), T.TX_FAINT, spacing=1)
-        text(surf, F["hub_sub"], "2-handed weapon", (r.x + T.S + 4, r.y + T.S * 4), T.TX_FAINT)
+        spaced(surf, F["hub_label"], SLOT_LABELS[kind], (r.x + T.S, r.y + T.S - 2), T.TX_FAINT, spacing=1)
+        text(surf, F["hub_sub"], "2-handed weapon", (r.x + T.S, r.y + T.S * 3), T.TX_FAINT)
         return
     name, sel = held["name"], held["sel"]
     drop = held["accepts"] and not sel and r.collidepoint(mouse)
@@ -56,24 +56,24 @@ def _slot(surf, F, r, kind, held, mouse):
     pygame.draw.rect(surf, fill, r, border_radius=4)
     pygame.draw.rect(surf, T.BRASS if (sel or drop) else T.STEEL_LINE, r, 1, border_radius=4)
     x = r.x + T.S
-    room_with_icon = r.right - (x + T.S * 5) - T.S
+    room_with_icon = r.right - (x + T.S * 4 + 4) - T.S
     if name and F["hub_body"].size(name)[0] <= room_with_icon:
-        icon = pygame.Rect(x, r.centery - T.S * 2, T.S * 4, T.S * 4)
+        icon = pygame.Rect(x, r.centery - T.S * 2 + 2, T.S * 3 + 4, T.S * 3 + 4)
         pygame.draw.rect(surf, mix(T.STEEL, T.TABLE, 0.5), icon, border_radius=4)
         draw_icon(surf, icon.inflate(-4, -4), name)
         x = icon.right + T.S
-    label = spaced(surf, F["hub_label"], SLOT_LABELS[kind], (x, r.y + T.S), T.TX_MUTED, spacing=1)
+    label = spaced(surf, F["hub_label"], SLOT_LABELS[kind], (x, r.y + T.S - 2), T.TX_MUTED, spacing=1)
     room = r.right - x - T.S
     note = held.get("note")
     font = F["hub_bodyb"] if name and F["hub_bodyb"].size(name)[0] <= room else F["hub_body"]
     if not name or font.size(name)[0] <= room:
-        text(surf, font, ellipsize(name or "—", font, room), (x, r.y + T.S * 3 - 2), T.TX if name else T.TX_FAINT)
+        text(surf, font, ellipsize(name or "—", font, room), (x, r.y + T.S * 2 + 2), T.TX if name else T.TX_FAINT)
         if note:
-            text(surf, F["hub_sub"], ellipsize(note, F["hub_sub"], room), (x, r.y + T.S * 5 + 2), T.TX_MUTED)
+            text(surf, F["hub_sub"], ellipsize(note, F["hub_sub"], room), (x, r.y + T.S * 4 + 2), T.TX_MUTED)
         return
     # a long name takes two lines; the note moves up beside the label
     for i, line in enumerate(wrap(font, name, room)[:2]):
-        text(surf, font, ellipsize(line, font, room), (x, r.y + T.S * 3 - 2 + i * (T.S * 2 + 2)), T.TX)
+        text(surf, font, ellipsize(line, font, room), (x, r.y + T.S * 2 + 2 + i * (T.S * 2)), T.TX)
     if note:
         text(surf, F["hub_sub"], ellipsize(note, F["hub_sub"], r.right - T.S - label.right - T.S),
              (r.right - T.S, label.y - 1), T.TX_MUTED, right=True)
@@ -84,48 +84,48 @@ def _pack_row(surf, F, r, item, mouse):
     fill = mix(T.STEEL, T.BRASS, 0.1) if sel else mix(T.STEEL, T.TABLE, 0.2)
     pygame.draw.rect(surf, fill, r, border_radius=4)
     pygame.draw.rect(surf, T.BRASS if sel else T.STEEL_LINE, r, 2 if sel else 1, border_radius=4)
-    lock = pygame.Rect(r.x + T.S, r.centery - 9, 18, 18)
+    lock = pygame.Rect(r.x + T.S, r.centery - 8, 16, 16)
     icons.icon(surf, "lock" if locked else "unlock", lock, T.BRASS if locked else T.TX_FAINT)
-    disc = (lock.right + T.S * 2 + 4, r.centery)
-    pygame.draw.circle(surf, mix(T.STEEL, T.TABLE, 0.6), disc, 17)
-    draw_icon(surf, pygame.Rect(disc[0] - 14, disc[1] - 14, 28, 28), name)
-    dots = pygame.Rect(r.right - T.S * 3 - 4, r.centery - 11, 22, 22)
+    disc = (lock.right + T.S * 2 + 2, r.centery)
+    pygame.draw.circle(surf, mix(T.STEEL, T.TABLE, 0.6), disc, 14)
+    draw_icon(surf, pygame.Rect(disc[0] - 11, disc[1] - 11, 22, 22), name)
+    dots = pygame.Rect(r.right - T.S * 3, r.centery - 10, 20, 20)
     if dots.collidepoint(mouse):
         pygame.draw.rect(surf, T.STEEL_HI, dots, border_radius=4)
     text(surf, F["hub_bodyb"], "⋮", dots.center, T.TX_MUTED, center=True)
-    kg = text(surf, F["hub_sub"], f"{weight * qty:.1f} kg", (dots.x - T.S, r.centery - 8),
+    kg = text(surf, F["hub_sub"], f"{weight * qty:.1f} kg", (dots.x - T.S, r.centery - 7),
               T.BLOOD if weight * qty >= 10 else T.TX_MUTED, right=True)
-    x = disc[0] + T.S * 3
+    x = disc[0] + T.S * 2 + 4
     room = kg.x - T.S - x
     label = name if qty == 1 else f"{name}  ×{qty}"
-    text(surf, F["hub_body"], ellipsize(label, F["hub_body"], room), (x, r.y + T.S - 1),
+    text(surf, F["hub_body"], ellipsize(label, F["hub_body"], room), (x, r.y + T.S - 3),
          T.TX_FAINT if locked else T.TX)
     tag_color = T.BRASS if "AUTO-SELL" in (tag or "") else T.TX_MUTED
-    text(surf, F["hub_sub"], ellipsize((tag or "").title(), F["hub_sub"], room), (x, r.y + T.S * 3 + 4), tag_color)
+    text(surf, F["hub_sub"], ellipsize((tag or "").title(), F["hub_sub"], room), (x, r.y + T.S * 3 - 1), tag_color)
     return lock, dots
 
 
 def member_card(surf, F, rect, member, scroll, mouse):
     pygame.draw.rect(surf, T.STEEL, rect, border_radius=8)
     pygame.draw.rect(surf, T.STEEL_LINE, rect, 1, border_radius=8)
-    pad = T.S * 2 + 4
+    pad = T.S * 2
     x, w = rect.x + pad, rect.w - 2 * pad
-    head = pygame.Rect(rect.x, rect.y, rect.w, T.S * 13 + 4)
+    head = pygame.Rect(rect.x, rect.y, rect.w, T.S * 10)
 
-    sheet_rect = pygame.Rect(rect.right - pad - 30, rect.y + T.S * 2 + 2, 30, 30)
+    sheet_rect = pygame.Rect(rect.right - pad - 24, rect.y + T.S + 4, 24, 24)
     edge = sheet_rect.x - T.S
     if not member.get("no_sheet"):
         hot = sheet_rect.collidepoint(mouse)
-        pygame.draw.circle(surf, T.TX_MUTED if hot else T.STEEL_LINE, sheet_rect.center, 15, 1)
+        pygame.draw.circle(surf, T.TX_MUTED if hot else T.STEEL_LINE, sheet_rect.center, 12, 1)
         text(surf, F["hub_sub"], "?", sheet_rect.center, T.TX if hot else T.TX_MUTED, center=True)
     if member.get("pending_picks"):
         edge = spaced(surf, F["hub_label"], "● level up", (edge, sheet_rect.centery), T.BRASS,
                       spacing=1, anchor="midright").x - T.S
     clip = surf.get_clip()
     surf.set_clip(pygame.Rect(x, rect.y, edge - x, head.h).clip(clip))
-    small_caps(surf, F["hub_card"], F["hub_card_sc"], member["name"], (x, rect.y + T.S * 2 + 4), T.TX)
+    small_caps(surf, F["hub_card"], F["hub_card_sc"], member["name"], (x, rect.y + T.S * 2), T.TX)
     surf.set_clip(clip)
-    _load(surf, F, x, rect.y + T.S * 7 + 2, w, (member["kg"], member["normal"], member["max"]))
+    _load(surf, F, x, rect.y + T.S * 5, w, (member["kg"], member["normal"], member["max"]))
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, head.bottom), (rect.right - 1, head.bottom))
 
     y = head.bottom + T.S * 2
@@ -137,7 +137,7 @@ def member_card(surf, F, rect, member, scroll, mouse):
     action_rect = None
     if member.get("action"):
         act = member["action"]
-        action_rect = pygame.Rect(x, y, w, T.S * 5)
+        action_rect = pygame.Rect(x, y, w, T.S * 4 + 4)
         hub_button(surf, F, action_rect, act["label"], enabled=act.get("enabled", True), mpos=mouse)
         y = action_rect.bottom + T.S * 2
 
@@ -149,14 +149,14 @@ def member_card(surf, F, rect, member, scroll, mouse):
         _slot(surf, F, r, kind, member[kind], mouse)
         slot_rects[kind] = r if member[kind] is not None else None
     if kinds:
-        y += ((len(kinds) + 1) // 2) * (SLOT_H + T.S) + T.S * 2
+        y += ((len(kinds) + 1) // 2) * (SLOT_H + T.S) + T.S
 
     items = member["pack"]
     kg = sum(wt * q for _, _, wt, q, *_ in items)
     spaced(surf, F["hub_label"], "pack", (x, y), T.TX_MUTED)
     spaced(surf, F["hub_label"], f"{len(items)} stack{'' if len(items) == 1 else 's'} · {kg:.1f} kg",
            (x + w, y), T.TX_MUTED, spacing=1, anchor="topright")
-    y += T.S * 3 + 2
+    y += T.S * 2 + 4
     list_rect = pygame.Rect(x, y, w, rect.bottom - pad - y)
     pack_hits, lock_hits, dots_hits = [], [], []
     fit = max(1, list_rect.h // (ROW_H + T.S))
@@ -190,13 +190,13 @@ def _stash_row(surf, F, r, item, sel_qty, mouse):
     fill = mix(T.STEEL, T.BRASS, 0.1) if sel else (T.STEEL_HI if r.collidepoint(mouse) else mix(T.STEEL, T.TABLE, 0.2))
     pygame.draw.rect(surf, fill, r, border_radius=4)
     pygame.draw.rect(surf, T.BRASS if sel else T.STEEL_LINE, r, 2 if sel else 1, border_radius=4)
-    disc = (r.x + T.S * 3, r.centery)
-    pygame.draw.circle(surf, mix(T.STEEL, T.TABLE, 0.6), disc, 17)
-    draw_icon(surf, pygame.Rect(disc[0] - 14, disc[1] - 14, 28, 28), name)
+    disc = (r.x + T.S * 2 + 4, r.centery)
+    pygame.draw.circle(surf, mix(T.STEEL, T.TABLE, 0.6), disc, 14)
+    draw_icon(surf, pygame.Rect(disc[0] - 11, disc[1] - 11, 22, 22), name)
     controls = {"minus": None, "plus": None, "all": None}
     right = r.right - T.S
     if qty > 1:
-        box = pygame.Rect(r.right - T.S - T.S * 13, r.centery - T.S * 2, T.S * 13, T.S * 4)
+        box = pygame.Rect(r.right - T.S - T.S * 11, r.centery - T.S * 2 + 2, T.S * 11, T.S * 3 + 4)
         pygame.draw.rect(surf, T.TABLE, box, border_radius=4)
         pygame.draw.rect(surf, T.STEEL_LINE, box, 1, border_radius=4)
         third = box.w // 3
@@ -207,13 +207,13 @@ def _stash_row(surf, F, r, item, sel_qty, mouse):
             text(surf, F["hub_bodyb" if key == "all" else "hub_body"], glyph, cell.center, T.TX, center=True)
             controls[key] = cell
         right = box.x - T.S
-    kg = text(surf, F["hub_sub"], f"{weight * qty:.1f} kg", (right - T.S, r.centery - 8),
+    kg = text(surf, F["hub_sub"], f"{weight * qty:.1f} kg", (right - T.S, r.centery - 7),
               T.BLOOD if weight * qty >= 10 else T.TX_MUTED, right=True)
-    x = disc[0] + T.S * 3
+    x = disc[0] + T.S * 2 + 4
     room = kg.x - T.S - x
     text(surf, F["hub_body"], ellipsize(name if qty == 1 else f"{name}  ×{qty}", F["hub_body"], room),
-         (x, r.y + T.S - 1), T.TX)
-    text(surf, F["hub_sub"], ellipsize((tag or "").title(), F["hub_sub"], room), (x, r.y + T.S * 3 + 4), T.TX_MUTED)
+         (x, r.y + T.S - 3), T.TX)
+    text(surf, F["hub_sub"], ellipsize((tag or "").title(), F["hub_sub"], room), (x, r.y + T.S * 3 - 1), T.TX_MUTED)
     return controls
 
 
@@ -226,10 +226,10 @@ def container_card(surf, F, rect, data, scroll, mouse):
     drop = data.get("drop")
     pygame.draw.rect(surf, T.STEEL, rect, border_radius=8)
     pygame.draw.rect(surf, T.BRASS if drop else T.STEEL_LINE, rect, 2 if drop else 1, border_radius=8)
-    pad = T.S * 3
+    pad = T.S * 2 + 4
     x, w = rect.x + pad, rect.w - 2 * pad
-    title = small_caps(surf, F["hub_head"], F["hub_head_sc"], data["label"].title(), (x, rect.y + T.S * 3), T.TX)
-    head = rect.y + T.S * 8
+    title = small_caps(surf, F["hub_head"], F["hub_head_sc"], data["label"].title(), (x, rect.y + T.S * 2 + 2), T.TX)
+    head = rect.y + T.S * 6 + 4
     pygame.draw.line(surf, T.STEEL_LINE, (rect.x, head), (rect.right - 1, head))
     if data.get("capacity") is not None:
         load = (*data["capacity"], data["capacity"][1])
@@ -242,7 +242,7 @@ def container_card(surf, F, rect, data, scroll, mouse):
         top = head + T.S * 2
 
     services = data.get("services") or ()
-    foot_h = (T.S * 10 * len(services) + T.S) if services else 0
+    foot_h = (T.S * 8 * len(services) + T.S) if services else 0
     lst = pygame.Rect(x - T.S, top, w + T.S * 2, rect.bottom - pad - foot_h - top)
     rows = data["rows"]
     row_h = ROW_H + T.S
@@ -275,11 +275,11 @@ def container_card(surf, F, rect, data, scroll, mouse):
     if services:
         pygame.draw.line(surf, T.STEEL_LINE, (rect.x, sy - T.S * 2), (rect.right - 1, sy - T.S * 2))
     for key, label, sub, enabled in services:
-        b = pygame.Rect(x, sy, w, T.S * 5 + 4)
+        b = pygame.Rect(x, sy, w, T.S * 4 + 4)
         hub_button(surf, F, b, label, primary=enabled, enabled=enabled, mpos=mouse)
         if sub:
             text(surf, F["hub_sub"], sub, (x, b.bottom + 4), T.TX_MUTED)
         if enabled:
             service_hits.append((b, key))
-        sy += T.S * 10
+        sy += T.S * 8
     return {"row_hits": row_hits, "row_controls": row_controls, "service_hits": service_hits, "scroll": scroll}

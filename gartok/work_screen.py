@@ -6,6 +6,7 @@ from . import economy, orders
 from .constants import fmt_money
 from .screen import Screen
 from .ui import hub_body as hb
+from .ui.hub_frame import MARGIN
 from .ui.primitives import set_pointer, text
 from .ui.tokens import T
 from .ui.tokens import fonts as ui_fonts
@@ -77,7 +78,7 @@ class WorkScreen(Screen):
         F = self._F
         self.buttons = []
         tool = economy.WORK_TOOLS[self.node.id]
-        body = pygame.Rect(T.S * 5, 0, W - T.S * 10, H - T.S * 4)
+        body = pygame.Rect(MARGIN, 0, W - 2 * MARGIN, H - T.S * 4)
         left_w = max(T.S * 56, min(T.S * 76, round(body.w * 0.42)))
 
         crew = pygame.Rect(body.x, body.y, left_w, body.h)

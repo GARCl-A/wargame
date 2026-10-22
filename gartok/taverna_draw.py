@@ -9,7 +9,7 @@ from .archetypes import unit_archetypes
 from .constants import fmt_money
 from .ui import hub_body as hb
 from .ui.board_render import draw_face
-from .ui.hub_frame import hub_button
+from .ui.hub_frame import MARGIN, hub_button
 from .ui.loadout_panel import icon_strip
 from .ui.primitives import (
     FOOTER_H,
@@ -55,7 +55,7 @@ class TavernaDrawMixin:
         else:
             content_top, content_bottom = self._draw_own_header(screen, F, W, H)
 
-        body = pygame.Rect(T.S * 5, content_top, W - T.S * 10, content_bottom - content_top)
+        body = pygame.Rect(MARGIN, content_top, W - 2 * MARGIN, content_bottom - content_top)
         if self.tab == "recruits":
             self._draw_recruits_master_detail(screen, body)
         elif self.tab == "rooms":
@@ -473,7 +473,7 @@ class TavernaDrawMixin:
             col = T.BLOOD
         if self.framed:
             if self.notice:
-                text(screen, F["hub_body"], self.notice, (T.S * 5, screen.get_height() - T.S * 3), col)
+                text(screen, F["hub_body"], self.notice, (MARGIN, screen.get_height() - T.S * 3), col)
             return
         footer_bar(self, screen, F, primary=("done", self._leave_label()),
                    notice=self.notice, notice_color=col)
